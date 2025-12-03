@@ -341,24 +341,26 @@ async function kit({ svelte_config }) {
 					]
 				}
 			};
-			if(is_rolldown && new_config.optimizeDeps) {
+			if (is_rolldown && new_config.optimizeDeps) {
 				delete new_config.optimizeDeps.esbuildOptions; // vite 8 logs a warning when esbuildOptions is used
-				if(kit.experimental.remoteFunctions) {
+				if (kit.experimental.remoteFunctions) {
 					const id_filter = new RegExp(
 						`.remote(${kit.moduleExtensions.join('|')})$`.replaceAll('.', '\\.')
 					);
 					//@ts-ignore rolldownOptions only exists in vite8
 					new_config.optimizeDeps.rolldownOptions = {
-						plugins:[{
-							name: 'vite-plugin-sveltekit-setup:optimize',
-							load: {
-								filter: { id: id_filter },
-								handler() {
-									return '' // treat .remote.js files as empty for the purposes of prebundling
+						plugins: [
+							{
+								name: 'vite-plugin-sveltekit-setup:optimize',
+								load: {
+									filter: { id: id_filter },
+									handler() {
+										return ''; // treat .remote.js files as empty for the purposes of prebundling
+									}
 								}
 							}
-						}]
-					}
+						]
+					};
 				}
 			}
 
