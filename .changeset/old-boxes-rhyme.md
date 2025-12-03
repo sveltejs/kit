@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-posixify the instrumentation file import on Windows
+fix: posixify the instrumentation file import on Windows
