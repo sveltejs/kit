@@ -298,23 +298,6 @@ async function kit({ svelte_config }) {
 						`${kit.files.routes}/**/+*.{svelte,js,ts}`,
 						`!${kit.files.routes}/**/+*server.*`
 					],
-					esbuildOptions: {
-						plugins: [
-							{
-								name: 'vite-plugin-sveltekit-setup:optimize',
-								setup(build) {
-									if (!kit.experimental.remoteFunctions) return;
-
-									const filter = new RegExp(
-										`.remote(${kit.moduleExtensions.join('|')})$`.replaceAll('.', '\\.')
-									);
-
-									// treat .remote.js files as empty for the purposes of prebundling
-									build.onLoad({ filter }, () => ({ contents: '' }));
-								}
-							}
-						]
-					},
 					exclude: [
 						// Without this SvelteKit will be prebundled on the client, which means we end up with two versions of Redirect etc.
 						// Also see https://github.com/sveltejs/kit/issues/5952#issuecomment-1218844057
@@ -341,26 +324,38 @@ async function kit({ svelte_config }) {
 					]
 				}
 			};
-			if (is_rolldown && new_config.optimizeDeps) {
-				delete new_config.optimizeDeps.esbuildOptions; // vite 8 logs a warning when esbuildOptions is used
-				if (kit.experimental.remoteFunctions) {
-					const id_filter = new RegExp(
-						`.remote(${kit.moduleExtensions.join('|')})$`.replaceAll('.', '\\.')
-					);
-					//@ts-ignore rolldownOptions only exists in vite8
-					new_config.optimizeDeps.rolldownOptions = {
-						plugins: [
-							{
-								name: 'vite-plugin-sveltekit-setup:optimize',
-								load: {
-									filter: { id: id_filter },
-									handler() {
-										return ''; // treat .remote.js files as empty for the purposes of prebundling
-									}
-								}
+
+			if (kit.experimental.remoteFunctions) {
+				// treat .remote.js files as empty for the purposes of prebundling
+				// detects rolldown to avoid a warning message in vite 8 beta
+				const remote_id_filter = new RegExp(
+					`.remote(${kit.moduleExtensions.join('|')})$`.replaceAll('.', '\\.')
+				);
+				new_config.optimizeDeps ??= {}; // for some reason ts says this could be undefined even though it was set above
+				if (is_rolldown) {
+					// @ts-ignore
+					new_config.optimizeDeps.rolldownOptions ??= {};
+					// @ts-ignore
+					new_config.optimizeDeps.rolldownOptions.plugins ??= [];
+					// @ts-ignore
+					new_config.optimizeDeps.rolldownOptions.plugins.push({
+						name: 'vite-plugin-sveltekit-setup:optimize-remote-functions',
+						load: {
+							filter: { id: remote_id_filter },
+							handler() {
+								return '';
 							}
-						]
-					};
+						}
+					});
+				} else {
+					new_config.optimizeDeps.esbuildOptions ??= {};
+					new_config.optimizeDeps.esbuildOptions.plugins ??= [];
+					new_config.optimizeDeps.esbuildOptions.plugins.push({
+						name: 'vite-plugin-sveltekit-setup:optimize-remote-functions',
+						setup(build) {
+							build.onLoad({ filter: remote_id_filter }, () => ({ contents: '' }));
+						}
+					});
 				}
 			}
 
