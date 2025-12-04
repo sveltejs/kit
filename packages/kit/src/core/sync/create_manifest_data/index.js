@@ -4,11 +4,11 @@ import process from 'node:process';
 import colors from 'kleur';
 import { lookup } from 'mrmime';
 import { list_files, runtime_directory } from '../../utils.js';
-import { posixify, read, resolve_entry } from '../../../utils/filesystem.js';
+import { posixify, resolve_entry } from '../../../utils/filesystem.js';
 import { parse_route_id } from '../../../utils/routing.js';
 import { sort_routes } from './sort.js';
 import { isSvelte5Plus } from '../utils.js';
-import { statically_analyse_page_options } from '../../../exports/vite/static_analysis/index.js';
+import { create_node_analyser } from '../../../exports/vite/static_analysis/index.js';
 
 /**
  * Generates the manifest data used for the client-side manifest and types generation.
@@ -126,12 +126,6 @@ function create_routes_and_nodes(cwd, config, fallback) {
 
 	/** @type {import('types').PageNode[]} */
 	const nodes = [];
-
-	/** @type {Map<import('types').PageNode, import('types').TrailingSlash>} */
-	const node_trailing_slash = new Map();
-
-	/** @type {Map<string, import('types').TrailingSlash>} */
-	const endpoint_trailing_slash = new Map();
 
 	if (fs.existsSync(config.kit.files.routes)) {
 		/**
@@ -332,20 +326,6 @@ function create_routes_and_nodes(cwd, config, fallback) {
 					}
 
 					route.layout[item.kind] = project_relative;
-
-					// Extract trailingSlash from server and universal files
-					if (item.kind === 'server' || item.kind === 'universal') {
-						const file_path = path.join(cwd, project_relative);
-						if (fs.existsSync(file_path)) {
-							try {
-								const input = read(file_path);
-								const page_options = statically_analyse_page_options(project_relative, input);
-								if (page_options?.trailingSlash !== undefined) {
-									node_trailing_slash.set(route.layout, page_options.trailingSlash);
-								}
-							} catch {}
-						}
-					}
 				} else if (item.is_page) {
 					if (!route.leaf) {
 						route.leaf = { depth };
@@ -357,20 +337,6 @@ function create_routes_and_nodes(cwd, config, fallback) {
 					}
 
 					route.leaf[item.kind] = project_relative;
-
-					// Extract trailingSlash from server and universal files
-					if (item.kind === 'server' || item.kind === 'universal') {
-						const file_path = path.join(cwd, project_relative);
-						if (fs.existsSync(file_path)) {
-							try {
-								const input = read(file_path);
-								const page_options = statically_analyse_page_options(project_relative, input);
-								if (page_options?.trailingSlash !== undefined) {
-									node_trailing_slash.set(route.leaf, page_options.trailingSlash);
-								}
-							} catch {}
-						}
-					}
 				} else {
 					if (route.endpoint) {
 						throw duplicate_files_error('endpoint', route.endpoint.file);
@@ -379,18 +345,6 @@ function create_routes_and_nodes(cwd, config, fallback) {
 					route.endpoint = {
 						file: project_relative
 					};
-
-					// Extract trailingSlash from endpoint files
-					const file_path = path.join(cwd, project_relative);
-					if (fs.existsSync(file_path)) {
-						try {
-							const input = read(file_path);
-							const page_options = statically_analyse_page_options(project_relative, input);
-							if (page_options?.trailingSlash !== undefined) {
-								endpoint_trailing_slash.set(route.id, page_options.trailingSlash);
-							}
-						} catch {}
-					}
 				}
 			}
 
@@ -506,14 +460,39 @@ function create_routes_and_nodes(cwd, config, fallback) {
 		}
 	}
 
-	// Extract and propagate trailingSlash from routes
+	// Extract and propagate trailingSlash from routes using static analysis
+	const node_analyser = create_node_analyser();
+	/** @type {Map<import('types').PageNode, import('types').TrailingSlash>} */
+	const node_trailing_slash = new Map();
+	/** @type {Map<string, import('types').TrailingSlash>} */
+	const route_trailing_slash = new Map();
+
+	// Extract trailingSlash from nodes
+	for (const node of nodes) {
+		const page_options = node_analyser.get_page_options(node);
+		if (page_options?.trailingSlash !== undefined) {
+			node_trailing_slash.set(node, page_options.trailingSlash);
+		}
+	}
+
+	// Extract trailingSlash from server files
+	for (const route of routes) {
+		if (route.leaf?.server) {
+			const page_options = node_analyser.get_page_options(route.leaf);
+			if (page_options?.trailingSlash !== undefined) {
+				route_trailing_slash.set(route.id, page_options.trailingSlash);
+			}
+		}
+	}
+
+	// Propagate trailingSlash to routes
 	for (const route of routes) {
 		/** @type {import('types').TrailingSlash | undefined} */
 		let trailing_slash;
 
 		if (route.endpoint) {
 			// For endpoints, use the endpoint's trailingSlash directly
-			trailing_slash = endpoint_trailing_slash.get(route.id);
+			trailing_slash = route_trailing_slash.get(route.id);
 		} else if (route.leaf) {
 			// For pages, check leaf first, then walk up parent layouts
 			trailing_slash = node_trailing_slash.get(route.leaf);

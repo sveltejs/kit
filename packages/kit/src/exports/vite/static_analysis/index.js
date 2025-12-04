@@ -250,11 +250,7 @@ export function create_node_analyser({ static_exports = new Map() } = {}) {
 					return null;
 				}
 
-				for (const page_option in inheritable_page_options) {
-					if (page_option in server_page_options) {
-						page_options[page_option] = server_page_options[page_option];
-					}
-				}
+				page_options = { ...page_options, ...server_page_options };
 			} catch {
 				// If we can't read or analyze the file, mark it as unanalysable
 				if (key) {
