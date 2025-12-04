@@ -24,6 +24,7 @@ import {
 	stackless
 } from './utils.js';
 import { write_client_manifest } from '../../core/sync/write_client_manifest.js';
+import { write_non_ambient } from '../../core/sync/write_non_ambient.js';
 import prerender from '../../core/postbuild/prerender.js';
 import analyse from '../../core/postbuild/analyse.js';
 import { s } from '../../utils/misc.js';
@@ -1067,6 +1068,9 @@ async function kit({ svelte_config }) {
 				});
 
 				build_metadata = metadata;
+
+				// Regenerate types with accurate trailingSlash information from analysis
+				write_non_ambient(kit, manifest_data);
 
 				log.info('Building app');
 

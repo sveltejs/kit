@@ -31,9 +31,13 @@ pathname = '/foo/1/2/';
 
 // Test layout groups
 pathname = '/path-a';
+// @ts-expect-error trailing slash is not part of the pathname type
 pathname = '/path-a/';
 // @ts-expect-error layout group names are NOT part of the pathname type
 pathname = '/(group)/path-a';
+
+// Test trailing-slash
+pathname = '/path-a/trailing-slash/always/';
 
 // read `pathname` otherwise it is treated as unused
 pathname;

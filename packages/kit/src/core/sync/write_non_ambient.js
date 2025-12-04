@@ -13,6 +13,27 @@ const remove_group_segments = (/** @type {string} */ id) => {
 	return '/' + get_route_segments(id).join('/');
 };
 
+/**
+ * Get pathnames to add based on trailingSlash setting
+ * @param {string} pathname
+ * @param {import('types').TrailingSlash} trailing_slash
+ * @returns {string[]}
+ */
+function get_pathnames_for_trailing_slash(pathname, trailing_slash) {
+	if (pathname === '/') {
+		return [pathname];
+	}
+
+	if (trailing_slash === 'never') {
+		return [pathname];
+	} else if (trailing_slash === 'always') {
+		return [pathname + '/'];
+	} else {
+		// 'ignore' → both versions
+		return [pathname, pathname + '/'];
+	}
+}
+
 // `declare module "svelte/elements"` needs to happen in a non-ambient module, and dts-buddy generates one big ambient module,
 // so we can't add it there - therefore generate the typings ourselves here.
 // We're not using the `declare namespace svelteHTML` variant because that one doesn't augment the HTMLAttributes interface
@@ -59,6 +80,8 @@ function generate_app_types(manifest_data) {
 	const layouts = [];
 
 	for (const route of manifest_data.routes) {
+		const trailing_slash = route.trailingSlash ?? 'never';
+
 		if (route.params.length > 0) {
 			const params = route.params.map((p) => `${p.name}${p.optional ? '?:' : ':'} string`);
 			const route_type = `${s(route.id)}: { ${params.join('; ')} }`;
@@ -67,19 +90,14 @@ function generate_app_types(manifest_data) {
 
 			const pathname = remove_group_segments(route.id);
 			const replaced_pathname = replace_required_params(replace_optional_params(pathname));
-			pathnames.add(`\`${replaced_pathname}\` & {}`);
 
-			if (pathname !== '/') {
-				// Support trailing slash
-				pathnames.add(`\`${replaced_pathname + '/'}\` & {}`);
+			for (const p of get_pathnames_for_trailing_slash(replaced_pathname, trailing_slash)) {
+				pathnames.add(`\`${p}\` & {}`);
 			}
 		} else {
 			const pathname = remove_group_segments(route.id);
-			pathnames.add(s(pathname));
-
-			if (pathname !== '/') {
-				// Support trailing slash
-				pathnames.add(s(pathname + '/'));
+			for (const p of get_pathnames_for_trailing_slash(pathname, trailing_slash)) {
+				pathnames.add(s(p));
 			}
 		}
 

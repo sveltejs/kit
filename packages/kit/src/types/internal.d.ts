@@ -279,6 +279,8 @@ export interface RouteData {
 	endpoint: {
 		file: string;
 	} | null;
+
+	trailingSlash?: TrailingSlash;
 }
 
 export type ServerRedirectNode = {

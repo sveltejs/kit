@@ -4,10 +4,11 @@ import process from 'node:process';
 import colors from 'kleur';
 import { lookup } from 'mrmime';
 import { list_files, runtime_directory } from '../../utils.js';
-import { posixify, resolve_entry } from '../../../utils/filesystem.js';
+import { posixify, read, resolve_entry } from '../../../utils/filesystem.js';
 import { parse_route_id } from '../../../utils/routing.js';
 import { sort_routes } from './sort.js';
 import { isSvelte5Plus } from '../utils.js';
+import { statically_analyse_page_options } from '../../../exports/vite/static_analysis/index.js';
 
 /**
  * Generates the manifest data used for the client-side manifest and types generation.
@@ -125,6 +126,12 @@ function create_routes_and_nodes(cwd, config, fallback) {
 
 	/** @type {import('types').PageNode[]} */
 	const nodes = [];
+
+	/** @type {Map<import('types').PageNode, import('types').TrailingSlash>} */
+	const node_trailing_slash = new Map();
+
+	/** @type {Map<string, import('types').TrailingSlash>} */
+	const endpoint_trailing_slash = new Map();
 
 	if (fs.existsSync(config.kit.files.routes)) {
 		/**
@@ -325,6 +332,22 @@ function create_routes_and_nodes(cwd, config, fallback) {
 					}
 
 					route.layout[item.kind] = project_relative;
+
+					// Extract trailingSlash from server files
+					if (item.kind === 'server') {
+						const file_path = path.join(cwd, project_relative);
+						if (fs.existsSync(file_path)) {
+							try {
+								const input = read(file_path);
+								const page_options = statically_analyse_page_options(project_relative, input);
+								if (page_options?.trailingSlash !== undefined) {
+									node_trailing_slash.set(route.layout, page_options.trailingSlash);
+								}
+							} catch {
+								// If static analysis fails, we'll default to 'never' later
+							}
+						}
+					}
 				} else if (item.is_page) {
 					if (!route.leaf) {
 						route.leaf = { depth };
@@ -336,6 +359,23 @@ function create_routes_and_nodes(cwd, config, fallback) {
 					}
 
 					route.leaf[item.kind] = project_relative;
+
+					// Extract trailingSlash from server files
+					if (item.kind === 'server') {
+						const file_path = path.join(cwd, project_relative);
+						if (fs.existsSync(file_path)) {
+							try {
+								const input = read(file_path);
+								const page_options = statically_analyse_page_options(project_relative, input);
+								if (page_options?.trailingSlash !== undefined) {
+									node_trailing_slash.set(route.leaf, page_options.trailingSlash);
+								}
+							} catch (error) {
+								// If static analysis fails, we'll default to 'never' later
+								// This can happen if the file has complex exports that can't be statically analyzed
+							}
+						}
+					}
 				} else {
 					if (route.endpoint) {
 						throw duplicate_files_error('endpoint', route.endpoint.file);
@@ -344,6 +384,20 @@ function create_routes_and_nodes(cwd, config, fallback) {
 					route.endpoint = {
 						file: project_relative
 					};
+
+					// Extract trailingSlash from endpoint files
+					const file_path = path.join(cwd, project_relative);
+					if (fs.existsSync(file_path)) {
+						try {
+							const input = read(file_path);
+							const page_options = statically_analyse_page_options(project_relative, input);
+							if (page_options?.trailingSlash !== undefined) {
+								endpoint_trailing_slash.set(route.id, page_options.trailingSlash);
+							}
+						} catch {
+							// If static analysis fails, we'll default to 'never' later
+						}
+					}
 				}
 			}
 
@@ -457,6 +511,36 @@ function create_routes_and_nodes(cwd, config, fallback) {
 		if (parent_id !== undefined) {
 			throw new Error(`${current_node.component} references missing segment "${parent_id}"`);
 		}
+	}
+
+	// Extract and propagate trailingSlash from routes
+	for (const route of routes) {
+		/** @type {import('types').TrailingSlash | undefined} */
+		let trailing_slash;
+
+		if (route.endpoint) {
+			// For endpoints, use the endpoint's trailingSlash directly
+			trailing_slash = endpoint_trailing_slash.get(route.id);
+		} else if (route.leaf) {
+			// For pages, check leaf first, then walk up parent layouts
+			trailing_slash = node_trailing_slash.get(route.leaf);
+
+			// Walk up the parent chain to find trailingSlash from layouts
+			if (trailing_slash === undefined) {
+				let current_route = route.parent;
+				while (current_route && trailing_slash === undefined) {
+					if (current_route.layout) {
+						trailing_slash = node_trailing_slash.get(current_route.layout);
+					}
+					if (trailing_slash === undefined) {
+						current_route = current_route.parent;
+					}
+				}
+			}
+		}
+
+		// Set trailingSlash on route (default to 'never' if not found)
+		route.trailingSlash = trailing_slash ?? 'never';
 	}
 
 	return {
