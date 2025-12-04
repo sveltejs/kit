@@ -129,12 +129,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes) {
 			return;
 		}
 
-		const node_analyser = create_node_analyser({
-			resolve: async (server_node) => {
-				const { module } = await resolve(server_node);
-				return module;
-			}
-		});
+		const node_analyser = create_node_analyser();
 		invalidate_page_options = node_analyser.invalidate_page_options;
 
 		manifest = {
@@ -215,7 +210,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes) {
 						}
 
 						if (node.universal) {
-							const page_options = await node_analyser.get_page_options(node);
+							const page_options = node_analyser.get_page_options(node);
 							if (page_options?.ssr === false) {
 								result.universal = page_options;
 							} else {

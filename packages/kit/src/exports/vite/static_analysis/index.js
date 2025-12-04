@@ -200,17 +200,16 @@ export function get_name(node) {
 
 /**
  * @param {{
- *   resolve: (file: string) => Promise<Record<string, any>>;
  *   static_exports?: Map<string, { page_options: Record<string, any> | null, children: string[] }>;
  * }} opts
  */
-export function create_node_analyser({ resolve, static_exports = new Map() }) {
+export function create_node_analyser({ static_exports = new Map() } = {}) {
 	/**
 	 * Computes the final page options (may include load function as `load: null`; special case) for a node (if possible). Otherwise, returns `null`.
 	 * @param {import('types').PageNode} node
-	 * @returns {Promise<Record<string, any> | null>}
+	 * @returns {Record<string, any> | null}
 	 */
-	const get_page_options = async (node) => {
+	const get_page_options = (node) => {
 		const key = node.universal || node.server;
 		if (key && static_exports.has(key)) {
 			return { ...static_exports.get(key)?.page_options };
@@ -220,7 +219,7 @@ export function create_node_analyser({ resolve, static_exports = new Map() }) {
 		let page_options = {};
 
 		if (node.parent) {
-			const parent_options = await get_page_options(node.parent);
+			const parent_options = get_page_options(node.parent);
 
 			const parent_key = node.parent.universal || node.parent.server;
 			if (key && parent_key) {
@@ -240,24 +239,51 @@ export function create_node_analyser({ resolve, static_exports = new Map() }) {
 		}
 
 		if (node.server) {
-			const module = await resolve(node.server);
-			for (const page_option in inheritable_page_options) {
-				if (page_option in module) {
-					page_options[page_option] = module[page_option];
+			try {
+				const input = read(node.server);
+				const server_page_options = statically_analyse_page_options(node.server, input);
+
+				if (server_page_options === null) {
+					if (key) {
+						static_exports.set(key, { page_options: null, children: [] });
+					}
+					return null;
 				}
+
+				for (const page_option in inheritable_page_options) {
+					if (page_option in server_page_options) {
+						page_options[page_option] = server_page_options[page_option];
+					}
+				}
+			} catch {
+				// If we can't read or analyze the file, mark it as unanalysable
+				if (key) {
+					static_exports.set(key, { page_options: null, children: [] });
+				}
+				return null;
 			}
 		}
 
 		if (node.universal) {
-			const input = read(node.universal);
-			const universal_page_options = statically_analyse_page_options(node.universal, input);
+			try {
+				const input = read(node.universal);
+				const universal_page_options = statically_analyse_page_options(node.universal, input);
 
-			if (universal_page_options === null) {
-				static_exports.set(node.universal, { page_options: null, children: [] });
+				if (universal_page_options === null) {
+					if (key) {
+						static_exports.set(key, { page_options: null, children: [] });
+					}
+					return null;
+				}
+
+				page_options = { ...page_options, ...universal_page_options };
+			} catch {
+				// If we can't read or analyze the file, mark it as unanalysable
+				if (key) {
+					static_exports.set(key, { page_options: null, children: [] });
+				}
 				return null;
 			}
-
-			page_options = { ...page_options, ...universal_page_options };
 		}
 
 		if (key) {
