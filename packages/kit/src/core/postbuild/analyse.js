@@ -153,15 +153,6 @@ async function analyse({
 		const api_methods = endpoint?.methods ?? [];
 		const entries = page?.entries ?? endpoint?.entries;
 
-		// Get trailingSlash: from page nodes, endpoint, or default to 'never'
-		const trailing_slash = page?.trailingSlash ?? endpoint?.trailingSlash ?? 'never';
-
-		// Set trailingSlash on the route in manifest_data
-		const route_data = manifest_data.routes.find((r) => r.id === route.id);
-		if (route_data) {
-			route_data.trailingSlash = trailing_slash;
-		}
-
 		metadata.routes.set(route.id, {
 			config: route_config,
 			methods: Array.from(new Set([...page_methods, ...api_methods])),
@@ -228,8 +219,7 @@ function analyse_endpoint(route, mod) {
 		config: mod.config,
 		entries: mod.entries,
 		methods,
-		prerender: mod.prerender ?? false,
-		trailingSlash: mod.trailingSlash
+		prerender: mod.prerender ?? false
 	};
 }
 
@@ -249,8 +239,7 @@ function analyse_page(layouts, leaf) {
 		config: nodes.get_config(),
 		entries: leaf.universal?.entries ?? leaf.server?.entries,
 		methods,
-		prerender: nodes.prerender(),
-		trailingSlash: nodes.trailing_slash()
+		prerender: nodes.prerender()
 	};
 }
 
