@@ -464,24 +464,12 @@ function create_routes_and_nodes(cwd, config, fallback) {
 	const node_analyser = create_node_analyser();
 	/** @type {Map<import('types').PageNode, import('types').TrailingSlash>} */
 	const node_trailing_slash = new Map();
-	/** @type {Map<string, import('types').TrailingSlash>} */
-	const route_trailing_slash = new Map();
 
-	// Extract trailingSlash from nodes
+	// Extract trailingSlash from all nodes
 	for (const node of nodes) {
 		const page_options = node_analyser.get_page_options(node);
 		if (page_options?.trailingSlash !== undefined) {
 			node_trailing_slash.set(node, page_options.trailingSlash);
-		}
-	}
-
-	// Extract trailingSlash from server files
-	for (const route of routes) {
-		if (route.leaf?.server) {
-			const page_options = node_analyser.get_page_options(route.leaf);
-			if (page_options?.trailingSlash !== undefined) {
-				route_trailing_slash.set(route.id, page_options.trailingSlash);
-			}
 		}
 	}
 
@@ -490,23 +478,18 @@ function create_routes_and_nodes(cwd, config, fallback) {
 		/** @type {import('types').TrailingSlash | undefined} */
 		let trailing_slash;
 
-		if (route.endpoint) {
-			// For endpoints, use the endpoint's trailingSlash directly
-			trailing_slash = route_trailing_slash.get(route.id);
-		} else if (route.leaf) {
+		if (route.leaf) {
 			// For pages, check leaf first, then walk up parent layouts
 			trailing_slash = node_trailing_slash.get(route.leaf);
 
 			// Walk up the parent chain to find trailingSlash from layouts
-			if (trailing_slash === undefined) {
+			for (
 				let current_route = route.parent;
-				while (current_route && trailing_slash === undefined) {
-					if (current_route.layout) {
-						trailing_slash = node_trailing_slash.get(current_route.layout);
-					}
-					if (trailing_slash === undefined) {
-						current_route = current_route.parent;
-					}
+				current_route && trailing_slash === undefined;
+				current_route = current_route.parent
+			) {
+				if (current_route.layout) {
+					trailing_slash = node_trailing_slash.get(current_route.layout);
 				}
 			}
 		}
