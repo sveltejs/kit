@@ -333,8 +333,8 @@ function create_routes_and_nodes(cwd, config, fallback) {
 
 					route.layout[item.kind] = project_relative;
 
-					// Extract trailingSlash from server files
-					if (item.kind === 'server') {
+					// Extract trailingSlash from server and universal files
+					if (item.kind === 'server' || item.kind === 'universal') {
 						const file_path = path.join(cwd, project_relative);
 						if (fs.existsSync(file_path)) {
 							try {
@@ -360,8 +360,8 @@ function create_routes_and_nodes(cwd, config, fallback) {
 
 					route.leaf[item.kind] = project_relative;
 
-					// Extract trailingSlash from server files
-					if (item.kind === 'server') {
+					// Extract trailingSlash from server and universal files
+					if (item.kind === 'server' || item.kind === 'universal') {
 						const file_path = path.join(cwd, project_relative);
 						if (fs.existsSync(file_path)) {
 							try {
