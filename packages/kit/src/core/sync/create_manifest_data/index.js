@@ -343,9 +343,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 								if (page_options?.trailingSlash !== undefined) {
 									node_trailing_slash.set(route.layout, page_options.trailingSlash);
 								}
-							} catch {
-								// If static analysis fails, we'll default to 'never' later
-							}
+							} catch {}
 						}
 					}
 				} else if (item.is_page) {
@@ -370,10 +368,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 								if (page_options?.trailingSlash !== undefined) {
 									node_trailing_slash.set(route.leaf, page_options.trailingSlash);
 								}
-							} catch (error) {
-								// If static analysis fails, we'll default to 'never' later
-								// This can happen if the file has complex exports that can't be statically analyzed
-							}
+							} catch {}
 						}
 					}
 				} else {
@@ -394,9 +389,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 							if (page_options?.trailingSlash !== undefined) {
 								endpoint_trailing_slash.set(route.id, page_options.trailingSlash);
 							}
-						} catch {
-							// If static analysis fails, we'll default to 'never' later
-						}
+						} catch {}
 					}
 				}
 			}
