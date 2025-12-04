@@ -277,6 +277,7 @@ test.describe('Navigation lifecycle functions', () => {
 	});
 
 	test('navigation.event is populated', async ({ page, clicknav }) => {
+		/** @type {string[]} */
 		const logs = [];
 
 		await page.goto('/navigation-lifecycle/before-navigate/event/a');
@@ -922,11 +923,13 @@ test.describe('Routing', () => {
 	});
 
 	test('responds to <form method="GET"> submission without reload', async ({ page }) => {
-		await page.goto('/routing/form-get');
+		// wait until load to ensure that all in-flight requests are completed before
+		// we start watching requests
+		await page.goto('/routing/form-get', { waitUntil: 'load' });
 
-		expect(await page.textContent('h1')).toBe('...');
-		expect(await page.textContent('h2')).toBe('enter');
-		expect(await page.textContent('h3')).toBe('...');
+		await expect(page.locator('h1')).toHaveText('...');
+		await expect(page.locator('h2')).toHaveText('enter');
+		await expect(page.locator('h3')).toHaveText('...');
 
 		/** @type {string[]} */
 		const requests = [];
@@ -936,10 +939,10 @@ test.describe('Routing', () => {
 		await page.locator('button').click();
 
 		// Filter out server-side route resolution request
+		await expect(page.locator('h1')).toHaveText('updated');
+		await expect(page.locator('h2')).toHaveText('form');
+		await expect(page.locator('h3')).toHaveText('bar');
 		expect(requests.filter((r) => !r.includes('__route.js'))).toEqual([]);
-		expect(await page.textContent('h1')).toBe('updated');
-		expect(await page.textContent('h2')).toBe('form');
-		expect(await page.textContent('h3')).toBe('bar');
 	});
 
 	test('responds to <form target="_blank"> submission with new tab', async ({ page }) => {

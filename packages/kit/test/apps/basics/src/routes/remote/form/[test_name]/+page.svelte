@@ -1,10 +1,12 @@
 <script>
 	import { get_message, set_message, resolve_deferreds } from './form.remote.js';
 
-	const message = get_message();
+	const { params } = $props();
 
-	const scoped = set_message.for('scoped');
-	const enhanced = set_message.for('enhanced');
+	const message = get_message(params.test_name);
+
+	const scoped = set_message.for(`scoped:${params.test_name}`);
+	const enhanced = set_message.for(`enhanced:${params.test_name}`);
 </script>
 
 <p>message.current: {message.current}</p>
@@ -22,6 +24,8 @@
 	{/if}
 
 	<input {...set_message.fields.message.as('text')} />
+	<input {...set_message.fields.test_name.as('hidden', params.test_name)} />
+
 	<button {...set_message.fields.action.as('submit', 'normal')}>set message</button>
 	<button {...set_message.fields.action.as('submit', 'reverse')}>set reverse message</button>
 </form>
@@ -38,6 +42,7 @@
 	{/if}
 
 	<input {...scoped.fields.message.as('text')} />
+	<input {...scoped.fields.test_name.as('hidden', params.test_name)} />
 	<button>set scoped message</button>
 </form>
 
@@ -50,7 +55,9 @@
 <form
 	data-enhanced
 	{...enhanced.enhance(async ({ data, submit }) => {
-		await submit().updates(get_message().withOverride(() => data.message + ' (override)'));
+		await submit().updates(
+			get_message(params.test_name).withOverride(() => data.message + ' (override)')
+		);
 	})}
 >
 	{#if enhanced.fields.message.issues()}
@@ -58,6 +65,7 @@
 	{/if}
 
 	<input {...enhanced.fields.message.as('text')} />
+	<input {...enhanced.fields.test_name.as('hidden', params.test_name)} />
 	<button><span>set enhanced message</span></button>
 </form>
 
@@ -69,4 +77,5 @@
 
 <form {...resolve_deferreds}>
 	<button>resolve deferreds</button>
+	<input {...resolve_deferreds.fields.test_name.as('hidden', params.test_name)} />
 </form>

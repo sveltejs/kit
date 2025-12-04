@@ -1659,7 +1659,7 @@ test.describe('remote functions', () => {
 	});
 
 	test('form works', async ({ page, javaScriptEnabled }) => {
-		await page.goto('/remote/form');
+		await page.goto('/remote/form/basic');
 
 		if (javaScriptEnabled) {
 			// TODO remove the `if` — once async SSR lands these assertions should always succeed
@@ -1682,7 +1682,7 @@ test.describe('remote functions', () => {
 		}
 
 		await expect(page.getByText('set_message.result')).toHaveText('set_message.result: hello');
-		await expect(page.locator('[data-unscoped] input')).toHaveValue('');
+		await expect(page.locator('[data-unscoped] input[name="message"]')).toHaveValue('');
 	});
 
 	test('form submitters work', async ({ page }) => {
@@ -1694,7 +1694,7 @@ test.describe('remote functions', () => {
 	});
 
 	test('form updates inputs live', async ({ page, javaScriptEnabled }) => {
-		await page.goto('/remote/form');
+		await page.goto('/remote/form/live-update');
 
 		await page.fill('input', 'hello');
 
@@ -1716,7 +1716,7 @@ test.describe('remote functions', () => {
 	});
 
 	test('form reports validation issues', async ({ page }) => {
-		await page.goto('/remote/form');
+		await page.goto('/remote/form/validation-issues');
 
 		await page.fill('input', 'invalid');
 		await page.getByText('set message').click();
@@ -1725,7 +1725,7 @@ test.describe('remote functions', () => {
 	});
 
 	test('form handles unexpected error', async ({ page }) => {
-		await page.goto('/remote/form');
+		await page.goto('/remote/form/unexpected-error');
 
 		await page.fill('input', 'unexpected error');
 		await page.getByText('set message').click();
@@ -1736,7 +1736,7 @@ test.describe('remote functions', () => {
 	});
 
 	test('form handles expected error', async ({ page }) => {
-		await page.goto('/remote/form');
+		await page.goto('/remote/form/expected-error');
 
 		await page.fill('input', 'expected error');
 		await page.getByText('set message').click();
@@ -1745,7 +1745,7 @@ test.describe('remote functions', () => {
 	});
 
 	test('form redirects', async ({ page }) => {
-		await page.goto('/remote/form');
+		await page.goto('/remote/form/redirect');
 
 		await page.fill('input', 'redirect');
 		await page.getByText('set message').click();
@@ -1754,7 +1754,7 @@ test.describe('remote functions', () => {
 	});
 
 	test('form multiple submit buttons work', async ({ page, javaScriptEnabled }) => {
-		await page.goto('/remote/form');
+		await page.goto('/remote/form/multiple-submit');
 
 		await page.fill('[data-unscoped] input', 'backwards');
 		await page.getByText('set reverse message').click();
@@ -1771,7 +1771,7 @@ test.describe('remote functions', () => {
 	});
 
 	test('form scoping with for(...) works', async ({ page, javaScriptEnabled }) => {
-		await page.goto('/remote/form');
+		await page.goto('/remote/form/form-scoped');
 
 		await page.fill('[data-scoped] input', 'hello');
 		await page.getByText('set scoped message').click();
@@ -1785,12 +1785,14 @@ test.describe('remote functions', () => {
 			await expect(page.getByText('await get_message():')).toHaveText('await get_message(): hello');
 		}
 
-		await expect(page.getByText('scoped.result')).toHaveText('scoped.result: hello (from: scoped)');
-		await expect(page.locator('[data-scoped] input')).toHaveValue('');
+		await expect(page.getByText('scoped.result')).toHaveText(
+			'scoped.result: hello (from: scoped:form-scoped)'
+		);
+		await expect(page.locator('[data-scoped] input[name="message"]')).toHaveValue('');
 	});
 
 	test('form enhance(...) works', async ({ page, javaScriptEnabled }) => {
-		await page.goto('/remote/form');
+		await page.goto('/remote/form/enhanced');
 
 		await page.fill('[data-enhanced] input', 'hello');
 
@@ -1805,12 +1807,16 @@ test.describe('remote functions', () => {
 			await page.getByText('resolve deferreds').click();
 			await expect(page.getByText('enhanced.pending:')).toHaveText('enhanced.pending: 0');
 			await expect(page.getByText('await get_message():')).toHaveText('await get_message(): hello');
+
+			// enhanced submission should not clear the input; the developer must do that at the appropriate time
+			await expect(page.locator('[data-enhanced] input[name="message"]')).toHaveValue('hello');
+		} else {
+			await expect(page.locator('[data-enhanced] input[name="message"]')).toHaveValue('');
 		}
 
 		await expect(page.getByText('enhanced.result')).toHaveText(
-			'enhanced.result: hello (from: enhanced)'
+			'enhanced.result: hello (from: enhanced:enhanced)'
 		);
-		await expect(page.locator('[data-enhanced] input')).toHaveValue('');
 	});
 
 	test('form preflight works', async ({ page, javaScriptEnabled }) => {
@@ -1836,28 +1842,52 @@ test.describe('remote functions', () => {
 		}
 	});
 
+	test('form preflight-only validation works', async ({ page, javaScriptEnabled }) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/form/preflight-only');
+
+		const a = page.locator('[name="a"]');
+		const button = page.locator('button');
+		const issues = page.locator('.issues');
+
+		await button.click();
+		await expect(issues).toContainText('a is too short');
+		await expect(issues).toContainText('b is too short');
+		await expect(issues).toContainText('c is too short');
+
+		await a.fill('aaaaaaaa');
+		await expect(issues).toContainText('a is too long');
+
+		// server issues should be preserved...
+		await expect(issues).toContainText('b is too short');
+		await expect(issues).toContainText('c is too short');
+
+		// ...unless overridden by client issues
+		await expect(issues).not.toContainText('a is too short');
+	});
+
 	test('form validate works', async ({ page, javaScriptEnabled }) => {
 		if (!javaScriptEnabled) return;
 
 		await page.goto('/remote/form/validate');
 
+		const myForm = page.locator('form#my-form');
 		const foo = page.locator('input[name="foo"]');
 		const bar = page.locator('input[name="bar"]');
 		const submit = page.locator('button:has-text("imperative validation")');
 
 		await foo.fill('a');
-		await expect(page.locator('form')).not.toContainText('Invalid type: Expected');
+		await expect(myForm).not.toContainText('Invalid type: Expected');
 
 		await bar.fill('g');
-		await expect(page.locator('form')).toContainText(
-			'Invalid type: Expected ("d" | "e") but received "g"'
-		);
+		await expect(myForm).toContainText('Invalid type: Expected ("d" | "e") but received "g"');
 
 		await bar.fill('d');
-		await expect(page.locator('form')).not.toContainText('Invalid type: Expected');
+		await expect(myForm).not.toContainText('Invalid type: Expected');
 
 		await page.locator('#trigger-validate').click();
-		await expect(page.locator('form')).toContainText(
+		await expect(myForm).toContainText(
 			'Invalid type: Expected "submitter" but received "incorrect_value"'
 		);
 
@@ -1865,7 +1895,42 @@ test.describe('remote functions', () => {
 		await foo.fill('c');
 		await bar.fill('d');
 		await submit.click();
-		await expect(page.locator('form')).toContainText('Imperative: foo cannot be c');
+		await expect(myForm).toContainText('Imperative: foo cannot be c');
+
+		const nestedValue = page.locator('input[name="nested.value"]');
+		const validate = page.locator('button#validate');
+		const allIssues = page.locator('#allIssues');
+
+		await nestedValue.fill('in');
+		await validate.click();
+		await expect(allIssues).toContainText('"path":["nested","value"]');
+	});
+
+	test('form validation issues cleared', async ({ page, javaScriptEnabled }) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/form/validate');
+
+		const baz = page.locator('input[name="baz"]');
+		const submit = page.locator('#my-form-2 button');
+
+		await baz.fill('c');
+		await submit.click();
+		await expect(page.locator('#my-form-2')).toContainText('Invalid type: Expected');
+
+		await baz.fill('a');
+		await submit.click();
+		await expect(page.locator('#my-form-2')).not.toContainText('Invalid type: Expected');
+		await expect(page.locator('[data-error]')).toHaveText('An error occurred');
+
+		await baz.fill('c');
+		await submit.click();
+		await expect(page.locator('#my-form-2')).toContainText('Invalid type: Expected');
+
+		await baz.fill('b');
+		await submit.click();
+		await expect(page.locator('#my-form-2')).not.toContainText('Invalid type: Expected');
+		await expect(page.locator('[data-error]')).toHaveText('No error');
 	});
 
 	test('form inputs excludes underscore-prefixed fields', async ({ page, javaScriptEnabled }) => {
@@ -1987,6 +2052,53 @@ test.describe('remote functions', () => {
 
 		await page.fill('input', 'hello');
 		await expect(page.locator('select')).toHaveValue('one');
+	});
+	test('file uploads work', async ({ page }) => {
+		await page.goto('/remote/form/file-upload');
+
+		await page.locator('input[name="file1"]').setInputFiles({
+			name: 'a.txt',
+			mimeType: 'text/plain',
+			buffer: Buffer.from('a')
+		});
+		await page.locator('input[name="file2"]').setInputFiles({
+			name: 'b.txt',
+			mimeType: 'text/plain',
+			buffer: Buffer.from('b')
+		});
+		await page.locator('input[type="checkbox"]').check();
+		await page.locator('button').click();
+
+		await expect(page.locator('pre')).toHaveText(
+			JSON.stringify({
+				text: 'Hello world',
+				file1: 'a',
+				file2: 'b'
+			})
+		);
+	});
+	test('large file uploads work', async ({ page }) => {
+		await page.goto('/remote/form/file-upload');
+
+		await page.locator('input[name="file1"]').setInputFiles({
+			name: 'a.txt',
+			mimeType: 'text/plain',
+			buffer: Buffer.alloc(1024 * 1024 * 10)
+		});
+		await page.locator('input[name="file2"]').setInputFiles({
+			name: 'b.txt',
+			mimeType: 'text/plain',
+			buffer: Buffer.from('b')
+		});
+		await page.locator('button').click();
+
+		await expect(page.locator('pre')).toHaveText(
+			JSON.stringify({
+				text: 'Hello world',
+				file1: 1024 * 1024 * 10,
+				file2: 1
+			})
+		);
 	});
 });
 

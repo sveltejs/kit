@@ -3,6 +3,7 @@ packages:
   - packages/adapter-cloudflare/test/apps/*
   - packages/adapter-netlify/test/apps/*
   - packages/adapter-static/test/apps/*
+  - packages/enhanced-img/test/apps/*
   - packages/kit/test/apps/*
   - packages/kit/test/prerendering/*
   - packages/kit/test/build-errors/**
@@ -13,8 +14,8 @@ catalog:
   '@changesets/cli': ^2.29.6
   '@fontsource/libre-barcode-128-text': ^5.1.0
   '@netlify/edge-functions': ^2.15.1
-  '@netlify/functions': ^4.0.0
-  '@opentelemetry/sdk-node': ^0.206.0
+  '@netlify/functions': ^5.0.0
+  '@opentelemetry/sdk-node': ^0.208.0
   '@opentelemetry/sdk-trace-node': ^2.0.1
   '@playwright/test': ^1.51.1
   '@polka/url': ^1.0.0-next.28
@@ -29,7 +30,6 @@ catalog:
   '@types/node': ^18.19.119
   '@types/semver': ^7.5.6
   '@types/set-cookie-parser': ^2.4.7
-  '@vercel/nft': ^0.30.0
   '@vitest/browser': ^3.2.4
   dropcss: ^1.0.16
   dts-buddy: ^0.6.2
@@ -40,7 +40,7 @@ catalog:
   publint: ^0.3.0
   semver: ^7.5.4
   sirv-cli: ^3.0.0
-  svelte: ^5.39.8
+  svelte: ^5.42.1
   svelte-check: ^4.1.1
   svelte-preprocess: ^6.0.0
   typescript-eslint: ^8.43.0

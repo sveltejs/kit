@@ -1,5 +1,11 @@
 import { building, dev } from '$app/environment';
-import { prerender } from '$app/server';
+import { prerender, read } from '$app/server';
+import text from './test.txt?url';
+
+// test that using `read()` at the top-level of a remote function file doesn't
+// throw an error when we evaluate the remote function files during build
+const response = read(text);
+const content = await response.text();
 
 export const prerendered = prerender(() => {
 	if (!building && !dev) {
@@ -23,3 +29,7 @@ export const prerendered_entries = prerender(
 	},
 	{ inputs: () => ['a', 'b', /* to test correct encoding */ '中文'], dynamic: true }
 );
+
+export const with_read = prerender(() => {
+	return content;
+});

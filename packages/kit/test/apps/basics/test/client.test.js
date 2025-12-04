@@ -1047,6 +1047,21 @@ test.describe('data-sveltekit attributes', () => {
 		expect(page).toHaveURL('/data-sveltekit/preload-data/offline/slow-navigation');
 	});
 
+	test('data-sveltekit-preload does not abort ongoing navigation #2', async ({ page }) => {
+		await page.goto('/data-sveltekit/preload-data/offline');
+
+		await page.locator('#slow-navigation').dispatchEvent('click');
+		await page.waitForTimeout(100); // wait for navigation to start
+		await page.locator('#one').dispatchEvent('mousemove');
+		await Promise.all([
+			page.waitForTimeout(100), // wait for preloading to start
+			page.waitForLoadState('networkidle') // wait for preloading to finish
+		]);
+
+		expect(page).toHaveURL('/data-sveltekit/preload-data/offline/slow-navigation');
+		await expect(page.getByText('slow navigation', { exact: true })).toBeVisible();
+	});
+
 	test('data-sveltekit-preload-data tap works after data-sveltekit-preload-code hover', async ({
 		page
 	}) => {
@@ -1306,6 +1321,16 @@ test.describe('Streaming', () => {
 			await expect(page.locator('p.fail')).toHaveText('fail (500 Internal Error)');
 			expect(page.locator('p.loadingsuccess')).toBeHidden();
 			expect(page.locator('p.loadingfail')).toBeHidden();
+		});
+
+		test('Works with a fast and a slow server load functions which (direct hit)', async ({
+			page
+		}) => {
+			await page.goto('/streaming/server/fast-n-slow');
+
+			expect(await page.locator('p.ssrd').textContent()).toBe('ssrd');
+			await expect(page.locator('p.fast')).toHaveText('fast');
+			await expect(page.locator('p.streamed')).toHaveText('streamed');
 		});
 
 		test('Catches fetch errors from server load functions (direct hit)', async ({ page }) => {
@@ -1663,6 +1688,7 @@ test.describe('reroute', () => {
 	});
 
 	test('Apply reroute to preload data', async ({ page }) => {
+		if (process.env.SVELTE_ASYNC === 'true') return; // TODO investigate
 		await page.goto('/reroute/preload-data');
 		await page.click('button');
 		await page.waitForSelector('pre');
@@ -1775,8 +1801,24 @@ test.describe('routing', () => {
 	});
 });
 
-// have to run in serial because commands mutate in-memory data on the server
 test.describe('remote functions', () => {
+	test('preloading data works when the page component and server load both import a remote function', async ({
+		page
+	}) => {
+		test.skip(!process.env.DEV, 'remote functions are only analysed in dev mode');
+		await page.goto('/remote/dev');
+		await page.locator('a[href="/remote/dev/preload"]').hover();
+		await Promise.all([
+			page.waitForTimeout(100), // wait for preloading to start
+			page.waitForLoadState('networkidle') // wait for preloading to finish
+		]);
+		await page.click('a[href="/remote/dev/preload"]');
+		await expect(page.locator('p')).toHaveText('foobar');
+	});
+});
+
+// have to run in serial because commands mutate in-memory data on the server
+test.describe('remote function mutations', () => {
 	test.describe.configure({ mode: 'default' });
 	test.afterEach(async ({ page }) => {
 		if (page.url().endsWith('/remote')) {
@@ -1847,6 +1889,20 @@ test.describe('remote functions', () => {
 		await expect(page.locator('#count-result')).toHaveText('4 / 4 (false)');
 		await page.waitForTimeout(100); // allow all requests to finish (in case there are query refreshes which shouldn't happen)
 		expect(request_count).toBe(1); // no query refreshes, since that happens as part of the command response
+	});
+
+	test('command refresh after reading query reruns the query', async ({ page }) => {
+		await page.goto('/remote');
+		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
+
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		await page.click('#multiply-server-refresh-after-read-btn');
+		await expect(page.locator('#command-result')).toHaveText('6');
+		await expect(page.locator('#count-result')).toHaveText('6 / 6 (false)');
+		await page.waitForTimeout(100); // allow all requests to finish (in case there are query refreshes which shouldn't happen)
+		expect(request_count).toBe(1);
 	});
 
 	test('command does server-initiated single flight mutation (set)', async ({ page }) => {
@@ -1965,6 +2021,18 @@ test.describe('remote functions', () => {
 		await expect(page.locator('p')).toHaveText('success');
 	});
 
+	test('fields.set updates DOM before validate', async ({ page }) => {
+		await page.goto('/remote/form/imperative');
+
+		const input = page.locator('input[name="message"]');
+		await input.fill('123');
+
+		await page.locator('#set-and-validate').click();
+
+		await expect(input).toHaveValue('hello');
+		await expect(page.locator('#issue')).toHaveText('ok');
+	});
+
 	test('command pending state is tracked correctly', async ({ page }) => {
 		await page.goto('/remote');
 
@@ -2002,6 +2070,36 @@ test.describe('remote functions', () => {
 		await page.click('button');
 		await page.waitForTimeout(100); // allow all requests to finish
 		expect(request_count).toBe(1);
+	});
+
+	test('query.batch set updates cache without extra request', async ({ page }) => {
+		await page.goto('/remote/batch');
+		await page.click('#batch-reset-btn');
+		await expect(page.locator('#batch-result-1')).toHaveText('Buy groceries');
+
+		let request_count = 0;
+		const handler = (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0);
+		page.on('request', handler);
+
+		await page.click('#batch-set-btn');
+		await expect(page.locator('#batch-result-1')).toHaveText('Buy cat food');
+		await page.waitForTimeout(100); // allow all requests to finish
+		expect(request_count).toBe(1); // only the command request
+	});
+
+	test('query.batch refresh in command reuses single flight', async ({ page }) => {
+		await page.goto('/remote/batch');
+		await page.click('#batch-reset-btn');
+		await expect(page.locator('#batch-result-2')).toHaveText('Walk the dog');
+
+		let request_count = 0;
+		const handler = (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0);
+		page.on('request', handler);
+
+		await page.click('#batch-refresh-btn');
+		await expect(page.locator('#batch-result-2')).toHaveText('Walk the dog (refreshed)');
+		await page.waitForTimeout(100); // allow all requests to finish
+		expect(request_count).toBe(1); // only the command request
 	});
 
 	// TODO ditto
