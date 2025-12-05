@@ -423,8 +423,6 @@ function create_routes_and_nodes(cwd, config, fallback) {
 	for (const route of routes) {
 		if (!route.leaf) continue;
 
-		node_analyser.get_page_options(route.leaf);
-
 		route.page = {
 			layouts: [],
 			errors: [],
@@ -468,6 +466,10 @@ function create_routes_and_nodes(cwd, config, fallback) {
 
 	for (const node of nodes) {
 		node.page_options = node_analyser.get_page_options(node);
+	}
+
+	for (const route of routes) {
+		if (route.leaf) route.page_options = node_analyser.get_page_options(route.leaf);
 	}
 
 	return {
