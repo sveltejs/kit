@@ -24,13 +24,14 @@ function get_pathnames_for_trailing_slash(pathname, trailing_slash) {
 		return [pathname];
 	}
 
-	if (trailing_slash === 'never') {
-		return [pathname];
+	// 'ignore' → both versions
+	if (trailing_slash === 'ignore') {
+		return [pathname, pathname + '/'];
 	} else if (trailing_slash === 'always') {
 		return [pathname + '/'];
 	} else {
-		// 'ignore' → both versions
-		return [pathname, pathname + '/'];
+		// 'never' or undefined → no trailing slash
+		return [pathname];
 	}
 }
 

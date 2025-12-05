@@ -33,8 +33,8 @@ const parser = Parser.extend(tsPlugin());
  * @returns {PageOptions | null}
  */
 export function statically_analyse_page_options(filename, input) {
-	// if there's a chance there are no page exports or export all declaration,
-	// then we can skip the AST parsing which is expensive
+	// if there's a chance there are no page exports or an unparseable
+	// export all declaration, then we can skip the AST parsing which is expensive
 	if (!skip_parsing_regex.test(input)) {
 		return {};
 	}
