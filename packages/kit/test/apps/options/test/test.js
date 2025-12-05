@@ -25,11 +25,11 @@ test.describe('base path', () => {
 	test('serves /', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/path-base/');
 
-		expect(await page.textContent('h1')).toBe('I am in the template');
-		expect(await page.textContent('h2')).toBe("We're on index.svelte");
+		await expect(page.locator('h1')).toHaveText('I am in the template');
+		await expect(page.locator('h2')).toHaveText("We're on index.svelte");
 
 		const mode = process.env.DEV ? 'dev' : 'prod';
-		expect(await page.textContent('p')).toBe(
+		await expect(page.locator('p')).toHaveText(
 			`Hello from the ${javaScriptEnabled ? 'client' : 'server'} in ${mode} mode!`
 		);
 	});
@@ -46,13 +46,13 @@ test.describe('base path', () => {
 
 	test('paths available on server side', async ({ page }) => {
 		await page.goto('/path-base/base/');
-		expect(await page.textContent('[data-source="base"]')).toBe('/path-base');
-		expect(await page.textContent('[data-source="assets"]')).toBe('/_svelte_kit_assets');
+		await expect(page.locator('[data-source="base"]')).toHaveText('/path-base');
+		await expect(page.locator('[data-source="assets"]')).toHaveText('/_svelte_kit_assets');
 	});
 
 	test('loads javascript', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/path-base/base/');
-		expect(await page.textContent('button')).toBe('clicks: 0');
+		await expect(page.locator('button')).toHaveText('clicks: 0');
 
 		if (javaScriptEnabled) {
 			await page.click('button');
@@ -88,17 +88,17 @@ test.describe('base path', () => {
 	test('sets params correctly', async ({ page, clicknav }) => {
 		await page.goto('/path-base/base/one');
 
-		expect(await page.textContent('h2')).toBe('one');
+		await expect(page.locator('h2')).toHaveText('one');
 
 		await clicknav('[href="/path-base/base/two"]');
-		expect(await page.textContent('h2')).toBe('two');
+		await expect(page.locator('h2')).toHaveText('two');
 	});
 
 	test('resolveRoute accounts for base path', async ({ baseURL, page, clicknav }) => {
 		await page.goto('/path-base/resolve-route');
 		await clicknav('[data-id=target]');
 		expect(page.url()).toBe(`${baseURL}/path-base/resolve-route/resolved/`);
-		expect(await page.textContent('h2')).toBe('resolved');
+		await expect(page.locator('h2')).toHaveText('resolved');
 	});
 });
 
@@ -136,7 +136,7 @@ test.describe('CSP', () => {
 		expect(response?.headers()['content-security-policy']).toMatch(
 			/require-trusted-types-for 'script'/
 		);
-		expect(await page.textContent('h2')).toBe('Moo Deng!');
+		await expect(page.locator('h2')).toHaveText('Moo Deng!');
 	});
 
 	test("quotes 'script'", async ({ page }) => {
@@ -150,36 +150,36 @@ test.describe('CSP', () => {
 test.describe('Custom extensions', () => {
 	test('works with arbitrary extensions', async ({ page }) => {
 		await page.goto('/path-base/custom-extensions/');
-		expect(await page.textContent('h2')).toBe('Great success!');
+		await expect(page.locator('h2')).toHaveText('Great success!');
 	});
 
 	test('works with other arbitrary extensions', async ({ page }) => {
 		await page.goto('/path-base/custom-extensions/const');
-		expect(await page.textContent('h2')).toBe('Tremendous!');
+		await expect(page.locator('h2')).toHaveText('Tremendous!');
 
 		await page.goto('/path-base/custom-extensions/a');
 
-		expect(await page.textContent('h2')).toBe('a');
+		await expect(page.locator('h2')).toHaveText('a');
 
 		await page.goto('/path-base/custom-extensions/test-slug');
 
-		expect(await page.textContent('h2')).toBe('TEST-SLUG');
+		await expect(page.locator('h2')).toHaveText('TEST-SLUG');
 
 		await page.goto('/path-base/custom-extensions/unsafe-replacement');
 
-		expect(await page.textContent('h2')).toBe('Bazooom!');
+		await expect(page.locator('h2')).toHaveText('Bazooom!');
 	});
 });
 
 test.describe('env', () => {
 	test('resolves downwards', async ({ page }) => {
 		await page.goto('/path-base/env');
-		expect(await page.textContent('#public')).toBe('and thank you');
+		await expect(page.locator('#public')).toHaveText('and thank you');
 	});
 	test('respects private prefix', async ({ page }) => {
 		await page.goto('/path-base/env');
-		expect(await page.textContent('#private')).toBe('shhhh');
-		expect(await page.textContent('#neither')).toBe('');
+		await expect(page.locator('#private')).toHaveText('shhhh');
+		await expect(page.locator('#neither')).toHaveText('');
 	});
 });
 
@@ -198,11 +198,11 @@ test.describe('trailingSlash', () => {
 		await page.goto('/path-base/slash');
 
 		expect(page.url()).toBe(`${baseURL}/path-base/slash/`);
-		expect(await page.textContent('h2')).toBe('/path-base/slash/');
+		await expect(page.locator('h2')).toHaveText('/path-base/slash/');
 
 		await clicknav('[data-testid="child"]');
 		expect(page.url()).toBe(`${baseURL}/path-base/slash/child/`);
-		expect(await page.textContent('h2')).toBe('/path-base/slash/child/');
+		await expect(page.locator('h2')).toHaveText('/path-base/slash/child/');
 	});
 
 	test('removes trailing slash on endpoint', async ({ baseURL, request }) => {
@@ -339,7 +339,7 @@ test.describe('Vite options', () => {
 		await page.goto('/path-base/mode');
 
 		const mode = process.env.DEV ? 'development' : 'custom';
-		expect(await page.textContent('h2')).toBe(`${mode} === ${mode} === ${mode}`);
+		await expect(page.locator('h2')).toHaveText(`${mode} === ${mode} === ${mode}`);
 	});
 });
 

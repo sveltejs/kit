@@ -11,15 +11,15 @@ test.describe.configure({ mode: 'parallel' });
 test.describe('env', () => {
 	test('resolves upwards', async ({ page }) => {
 		await page.goto('/basepath/env');
-		expect(await page.textContent('[data-testid="static"]')).toBe('static: resolves upwards!');
-		expect(await page.textContent('[data-testid="dynamic"]')).toBe('dynamic: resolves upwards!');
+		await expect(page.locator('[data-testid="static"]')).toHaveText('static: resolves upwards!');
+		await expect(page.locator('[data-testid="dynamic"]')).toHaveText('dynamic: resolves upwards!');
 	});
 });
 
 test.describe('paths', () => {
 	test('serves /basepath', async ({ page }) => {
 		await page.goto('/basepath');
-		expect(await page.textContent('h1')).toBe('Hello');
+		await expect(page.locator('h1')).toHaveText('Hello');
 	});
 
 	test('serves assets from /basepath', async ({ request }) => {
@@ -31,14 +31,14 @@ test.describe('paths', () => {
 		await page.goto('/basepath');
 
 		let base = javaScriptEnabled ? '/basepath' : '.';
-		expect(await page.textContent('[data-testid="base"]')).toBe(`base: ${base}`);
-		expect(await page.textContent('[data-testid="assets"]')).toBe(`assets: ${base}`);
+		await expect(page.locator('[data-testid="base"]')).toHaveText(`base: ${base}`);
+		await expect(page.locator('[data-testid="assets"]')).toHaveText(`assets: ${base}`);
 
 		await page.goto('/basepath/deeply/nested/page');
 
 		base = javaScriptEnabled ? '/basepath' : '../..';
-		expect(await page.textContent('[data-testid="base"]')).toBe(`base: ${base}`);
-		expect(await page.textContent('[data-testid="assets"]')).toBe(`assets: ${base}`);
+		await expect(page.locator('[data-testid="base"]')).toHaveText(`base: ${base}`);
+		await expect(page.locator('[data-testid="assets"]')).toHaveText(`assets: ${base}`);
 	});
 
 	test('serves /basepath with trailing slash always', async ({ page }) => {
@@ -118,7 +118,7 @@ test.describe('trailing slash', () => {
 			await page.goto('/basepath/trailing-slash-server');
 
 			await clicknav('a[href="/basepath/trailing-slash-server/prerender"]');
-			expect(await page.textContent('h2')).toBe('/basepath/trailing-slash-server/prerender/');
+			await expect(page.locator('h2')).toHaveText('/basepath/trailing-slash-server/prerender/');
 		});
 	}
 });

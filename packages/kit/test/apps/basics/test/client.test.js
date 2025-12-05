@@ -44,48 +44,48 @@ test.describe('Load', () => {
 	test('load function is only called when necessary', async ({ app, page }) => {
 		test.slow();
 		await page.goto('/load/change-detection/one/a');
-		expect(await page.textContent('h1')).toBe('layout loads: 1');
-		expect(await page.textContent('h2')).toBe('x: a: 1');
+		await expect(page.locator('h1')).toHaveText('layout loads: 1');
+		await expect(page.locator('h2')).toHaveText('x: a: 1');
 
 		await app.goto('/load/change-detection/one/a?unused=whatever');
-		expect(await page.textContent('h2')).toBe('x: a: 1');
+		await expect(page.locator('h2')).toHaveText('x: a: 1');
 
 		await app.goto('/load/change-detection/two/b');
-		expect(await page.textContent('h2')).toBe('y: b: 1');
+		await expect(page.locator('h2')).toHaveText('y: b: 1');
 
 		await app.goto('/load/change-detection/one/a');
-		expect(await page.textContent('h2')).toBe('x: a: 2');
+		await expect(page.locator('h2')).toHaveText('x: a: 2');
 
 		await app.goto('/load/change-detection/one/b');
-		expect(await page.textContent('h2')).toBe('x: b: 3');
+		await expect(page.locator('h2')).toHaveText('x: b: 3');
 
 		await app.invalidate('/load/change-detection/data.json');
-		expect(await page.textContent('h1')).toBe('layout loads: 2');
-		expect(await page.textContent('h2')).toBe('x: b: 3');
+		await expect(page.locator('h1')).toHaveText('layout loads: 2');
+		await expect(page.locator('h2')).toHaveText('x: b: 3');
 
 		await app.invalidate('/load/change-detection/data.json');
-		expect(await page.textContent('h1')).toBe('layout loads: 3');
-		expect(await page.textContent('h2')).toBe('x: b: 3');
+		await expect(page.locator('h1')).toHaveText('layout loads: 3');
+		await expect(page.locator('h2')).toHaveText('x: b: 3');
 
 		await app.invalidate('custom:change-detection-layout');
-		expect(await page.textContent('h1')).toBe('layout loads: 4');
-		expect(await page.textContent('h2')).toBe('x: b: 3');
+		await expect(page.locator('h1')).toHaveText('layout loads: 4');
+		await expect(page.locator('h2')).toHaveText('x: b: 3');
 
 		await page.click('button:has-text("invalidate change-detection/data.json")');
 		await page.waitForFunction('window.invalidated');
-		expect(await page.textContent('h1')).toBe('layout loads: 5');
-		expect(await page.textContent('h2')).toBe('x: b: 3');
+		await expect(page.locator('h1')).toHaveText('layout loads: 5');
+		await expect(page.locator('h2')).toHaveText('x: b: 3');
 
 		await page.click('button:has-text("invalidate all")');
 		await page.waitForFunction('window.invalidated');
-		expect(await page.textContent('h1')).toBe('layout loads: 6');
-		expect(await page.textContent('h2')).toBe('x: b: 4');
+		await expect(page.locator('h1')).toHaveText('layout loads: 6');
+		await expect(page.locator('h2')).toHaveText('x: b: 4');
 	});
 
 	if (process.env.DEV) {
 		test('accessing url.hash from load errors and suggests using page state', async ({ page }) => {
 			await page.goto('/load/url-hash#please-dont-send-me-to-load');
-			expect(await page.textContent('#message')).toBe(
+			await expect(page.locator('#message')).toHaveText(
 				'This is your custom error page saying: "Cannot access event.url.hash. Consider using `page.url.hash` inside a component instead (500 Internal Error)"'
 			);
 		});
@@ -93,7 +93,7 @@ test.describe('Load', () => {
 
 	test('url instance methods work in load', async ({ page }) => {
 		await page.goto('/load/url-to-string');
-		expect(await page.textContent('h1')).toBe("I didn't break!");
+		await expect(page.locator('h1')).toHaveText("I didn't break!");
 	});
 
 	test('server data from previous is not reused if next page has no load function', async ({
@@ -101,14 +101,14 @@ test.describe('Load', () => {
 		app
 	}) => {
 		await page.goto('/load/server-data-reuse/with-server-load');
-		expect(await page.textContent('pre')).toBe(
+		await expect(page.locator('pre')).toHaveText(
 			JSON.stringify({ foo: { bar: 'Custom layout' }, server: true })
 		);
 		await app.goto('/load/server-data-reuse/no-load');
-		expect(await page.textContent('pre')).toBe(JSON.stringify({ foo: { bar: 'Custom layout' } }));
+		await expect(page.locator('pre')).toHaveText(JSON.stringify({ foo: { bar: 'Custom layout' } }));
 
 		await page.goto('/load/server-data-reuse/with-changing-parent/with-server-load');
-		expect(await page.textContent('pre')).toBe(
+		await expect(page.locator('pre')).toHaveText(
 			JSON.stringify({
 				foo: { bar: 'Custom layout' },
 				title: '/load/server-data-reuse/with-changing-parent/with-server-load',
@@ -116,7 +116,7 @@ test.describe('Load', () => {
 			})
 		);
 		await app.goto('/load/server-data-reuse/with-changing-parent/no-load');
-		expect(await page.textContent('pre')).toBe(
+		await expect(page.locator('pre')).toHaveText(
 			JSON.stringify({
 				foo: { bar: 'Custom layout' },
 				title: '/load/server-data-reuse/with-changing-parent/no-load'
@@ -130,20 +130,20 @@ test.describe('Load', () => {
 	}) => {
 		await page.goto('/load/url-query-param');
 
-		expect(await page.textContent('h1')).toBe('Hello ');
-		expect(await page.textContent('p')).toBe('This text comes from the server load function');
+		await expect(page.locator('h1')).toHaveText('Hello ');
+		await expect(page.locator('p')).toHaveText('This text comes from the server load function');
 
 		await clicknav('a[href="/load/url-query-param?currentClientState=ABC"]');
-		expect(await page.textContent('h1')).toBe('Hello ABC');
-		expect(await page.textContent('p')).toBe('This text comes from the server load function');
+		await expect(page.locator('h1')).toHaveText('Hello ABC');
+		await expect(page.locator('p')).toHaveText('This text comes from the server load function');
 
 		await clicknav('a[href="/load/url-query-param?currentClientState=DEF"]');
-		expect(await page.textContent('h1')).toBe('Hello DEF');
-		expect(await page.textContent('p')).toBe('This text comes from the server load function');
+		await expect(page.locator('h1')).toHaveText('Hello DEF');
+		await expect(page.locator('p')).toHaveText('This text comes from the server load function');
 
 		await clicknav('a[href="/load/url-query-param"]');
-		expect(await page.textContent('h1')).toBe('Hello ');
-		expect(await page.textContent('p')).toBe('This text comes from the server load function');
+		await expect(page.locator('h1')).toHaveText('Hello ');
+		await expect(page.locator('p')).toHaveText('This text comes from the server load function');
 	});
 
 	test('load does not call fetch if max-age allows it', async ({ page }) => {
@@ -198,8 +198,8 @@ test.describe('Load', () => {
 	test('cache with body hash', async ({ page, clicknav }) => {
 		// 1. go to the page (first load, we expect the right data)
 		await page.goto('/load/fetch-cache-control/load-data');
-		expect(await page.textContent('div#fr')).toBe(JSON.stringify({ hi: 'bonjour' }));
-		expect(await page.textContent('div#hu')).toBe(JSON.stringify({ hi: 'szia' }));
+		await expect(page.locator('div#fr')).toHaveText(JSON.stringify({ hi: 'bonjour' }));
+		await expect(page.locator('div#hu')).toHaveText(JSON.stringify({ hi: 'szia' }));
 
 		// 2. change to another route (client side)
 		await clicknav('[href="/load/fetch-cache-control"]');
@@ -214,8 +214,8 @@ test.describe('Load', () => {
 		await clicknav('[href="/load/fetch-cache-control/load-data"]');
 
 		// 4. data should still be the same (and cached)
-		expect(await page.textContent('div#fr')).toBe(JSON.stringify({ hi: 'bonjour' }));
-		expect(await page.textContent('div#hu')).toBe(JSON.stringify({ hi: 'szia' }));
+		await expect(page.locator('div#fr')).toHaveText(JSON.stringify({ hi: 'bonjour' }));
+		await expect(page.locator('div#hu')).toHaveText(JSON.stringify({ hi: 'szia' }));
 		expect(did_request_data).toBe(false);
 	});
 
@@ -223,7 +223,7 @@ test.describe('Load', () => {
 		await page.goto('/load/fetch-cache-control/headers-diff');
 
 		// 1. We expect the right data
-		expect(await page.textContent('h2')).toBe('a / b');
+		await expect(page.locator('h2')).toHaveText('a / b');
 
 		// 2. Change to another route (client side)
 		await clicknav('[href="/load/fetch-cache-control"]');
@@ -235,13 +235,13 @@ test.describe('Load', () => {
 		await clicknav('[href="/load/fetch-cache-control/headers-diff"]');
 
 		// 4. We expect the same data and no new request (except a navigation request in case of server-side route resolution) because it was cached.
-		expect(await page.textContent('h2')).toBe('a / b');
+		await expect(page.locator('h2')).toHaveText('a / b');
 		expect(requests.filter((r) => !r.includes('/__route.js'))).toEqual([]);
 	});
 
 	test('use correct cache result when fetching same url multiple times', async ({ page }) => {
 		await page.goto('/load/fetch-same-url');
-		expect(await page.textContent('h1')).toBe('the result is 1,2,3');
+		await expect(page.locator('h1')).toHaveText('the result is 1,2,3');
 	});
 
 	test('permits 3rd party patching of fetch in universal load functions', async ({ page }) => {
@@ -254,7 +254,7 @@ test.describe('Load', () => {
 		});
 
 		await page.goto('/load/window-fetch/patching');
-		expect(await page.textContent('h1')).toBe('42');
+		await expect(page.locator('h1')).toHaveText('42');
 
 		expect(logs).toContain('Called a patched window.fetch');
 	});
@@ -271,7 +271,7 @@ test.describe('Load', () => {
 
 		await page.getByText('Go To Page with Server Load').click();
 
-		expect(await page.textContent('h1')).toBe('server load data');
+		await expect(page.locator('h1')).toHaveText('server load data');
 
 		expect(logs).toContain('Called a patched window.fetch for server load request');
 	});
@@ -305,7 +305,7 @@ test.describe('Load', () => {
 					timeout: 3_000
 				})
 			]);
-			expect(await page.textContent('h1')).toBe('42');
+			await expect(page.locator('h1')).toHaveText('42');
 
 			/** @type {string[]} */
 			const warnings = [];
@@ -316,7 +316,7 @@ test.describe('Load', () => {
 			});
 
 			await page.goto('/load/window-fetch/correct');
-			expect(await page.textContent('h1')).toBe('42');
+			await expect(page.locator('h1')).toHaveText('42');
 
 			expect(warnings).not.toContain(
 				`Loading ${baseURL}/load/window-fetch/data.json using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://svelte.dev/docs/kit/load#making-fetch-requests`
@@ -517,12 +517,12 @@ test.describe('Invalidation', () => {
 		clicknav
 	}) => {
 		await page.goto('/load/unchanged/isolated/a');
-		expect(await page.textContent('h1')).toBe('slug: a');
-		expect(await page.textContent('h2')).toBe('count: 0');
+		await expect(page.locator('h1')).toHaveText('slug: a');
+		await expect(page.locator('h2')).toHaveText('count: 0');
 
 		await clicknav('[href="/load/unchanged/isolated/b"]');
-		expect(await page.textContent('h1')).toBe('slug: b');
-		expect(await page.textContent('h2')).toBe('count: 0');
+		await expect(page.locator('h1')).toHaveText('slug: b');
+		await expect(page.locator('h2')).toHaveText('count: 0');
 	});
 
 	test('+layout.server.js re-runs when await parent() is called from downstream load function', async ({
@@ -530,27 +530,27 @@ test.describe('Invalidation', () => {
 		clicknav
 	}) => {
 		await page.goto('/load/unchanged-parent/uses-parent/a');
-		expect(await page.textContent('h1')).toBe('slug: a');
-		expect(await page.textContent('h2')).toBe('count: 0');
-		expect(await page.textContent('h3')).toBe('doubled: 0');
+		await expect(page.locator('h1')).toHaveText('slug: a');
+		await expect(page.locator('h2')).toHaveText('count: 0');
+		await expect(page.locator('h3')).toHaveText('doubled: 0');
 
 		await clicknav('[href="/load/unchanged-parent/uses-parent/b"]');
-		expect(await page.textContent('h1')).toBe('slug: b');
-		expect(await page.textContent('h2')).toBe('count: 0');
+		await expect(page.locator('h1')).toHaveText('slug: b');
+		await expect(page.locator('h2')).toHaveText('count: 0');
 
 		// this looks wrong, but is actually the intended behaviour (the increment side-effect in a GET would be a bug in a real app)
-		expect(await page.textContent('h3')).toBe('doubled: 2');
+		await expect(page.locator('h3')).toHaveText('doubled: 2');
 	});
 
 	test('load function re-runs when searchParams change', async ({ page, clicknav }) => {
 		await page.goto('/load/invalidation/url?a=1');
-		expect(await page.textContent('h1')).toBe('1');
+		await expect(page.locator('h1')).toHaveText('1');
 
 		await clicknav('[href="?a=2"]');
-		expect(await page.textContent('h1')).toBe('2');
+		await expect(page.locator('h1')).toHaveText('2');
 
 		await clicknav('[href="?a=3"]');
-		expect(await page.textContent('h1')).toBe('3');
+		await expect(page.locator('h1')).toHaveText('3');
 	});
 
 	test('load function only re-runs when tracked searchParams change (universal)', async ({
@@ -558,11 +558,11 @@ test.describe('Invalidation', () => {
 		clicknav
 	}) => {
 		await page.goto('/load/invalidation/search-params/universal?tracked=0');
-		expect(await page.textContent('span')).toBe('count: 0');
+		await expect(page.locator('span')).toHaveText('count: 0');
 		await clicknav('[data-id="tracked"]');
-		expect(await page.textContent('span')).toBe('count: 1');
+		await expect(page.locator('span')).toHaveText('count: 1');
 		await clicknav('[data-id="untracked"]');
-		expect(await page.textContent('span')).toBe('count: 1');
+		await expect(page.locator('span')).toHaveText('count: 1');
 	});
 
 	test('load function only re-runs when tracked searchParams change (server)', async ({
@@ -570,41 +570,41 @@ test.describe('Invalidation', () => {
 		clicknav
 	}) => {
 		await page.goto('/load/invalidation/search-params/server?tracked=0');
-		expect(await page.textContent('span')).toBe('count: 0');
+		await expect(page.locator('span')).toHaveText('count: 0');
 		await clicknav('[data-id="tracked"]');
-		expect(await page.textContent('span')).toBe('count: 1');
+		await expect(page.locator('span')).toHaveText('count: 1');
 		await clicknav('[data-id="untracked"]');
-		expect(await page.textContent('span')).toBe('count: 1');
+		await expect(page.locator('span')).toHaveText('count: 1');
 	});
 
 	test('server-only load functions are re-run following forced invalidation', async ({ page }) => {
 		await page.goto('/load/invalidation/forced');
-		expect(await page.textContent('h1')).toBe('a: 0, b: 1');
+		await expect(page.locator('h1')).toHaveText('a: 0, b: 1');
 
 		await page.click('button.invalidateall');
 		await page.evaluate(
 			() => /** @type {Window & typeof globalThis & { promise: Promise<void> }} */ (window).promise
 		);
-		expect(await page.textContent('h1')).toBe('a: 2, b: 3');
+		await expect(page.locator('h1')).toHaveText('a: 2, b: 3');
 
 		await page.click('button.invalidateall');
 		await page.evaluate(
 			() => /** @type {Window & typeof globalThis & { promise: Promise<void> }} */ (window).promise
 		);
-		expect(await page.textContent('h1')).toBe('a: 4, b: 5');
+		await expect(page.locator('h1')).toHaveText('a: 4, b: 5');
 	});
 
 	test('server-only load functions are re-run following goto with forced invalidation', async ({
 		page
 	}) => {
 		await page.goto('/load/invalidation/forced-goto');
-		expect(await page.textContent('h1')).toBe('a: 0, b: 1');
+		await expect(page.locator('h1')).toHaveText('a: 0, b: 1');
 
 		await page.click('button.goto');
 		await page.evaluate(
 			() => /** @type {Window & typeof globalThis & { promise: Promise<void> }} */ (window).promise
 		);
-		expect(await page.textContent('h1')).toBe('a: 2, b: 3');
+		await expect(page.locator('h1')).toHaveText('a: 2, b: 3');
 	});
 
 	test('multiple invalidations run concurrently', async ({ page }) => {
@@ -639,8 +639,8 @@ test.describe('Invalidation', () => {
 
 	test('+layout(.server).js is re-run when server dep is invalidated', async ({ page }) => {
 		await page.goto('/load/invalidation/depends');
-		const server = await page.textContent('p.server');
-		const shared = await page.textContent('p.shared');
+		const server = await page.locator('p.server').textContent();
+		const shared = await page.locator('p.shared').textContent();
 		expect(server).toBeDefined();
 		expect(shared).toBeDefined();
 
@@ -648,8 +648,8 @@ test.describe('Invalidation', () => {
 		await page.evaluate(
 			() => /** @type {Window & typeof globalThis & { promise: Promise<void> }} */ (window).promise
 		);
-		const next_server = await page.textContent('p.server');
-		const next_shared = await page.textContent('p.shared');
+		const next_server = await page.locator('p.server').textContent();
+		const next_shared = await page.locator('p.shared').textContent();
 		expect(server).not.toBe(next_server);
 		expect(shared).not.toBe(next_shared);
 
@@ -657,8 +657,8 @@ test.describe('Invalidation', () => {
 		await page.evaluate(
 			() => /** @type {Window & typeof globalThis & { promise: Promise<void> }} */ (window).promise
 		);
-		expect(await page.textContent('p.server')).toBe(next_server);
-		expect(await page.textContent('p.shared')).toBe(next_shared);
+		await expect(page.locator('p.server')).toHaveText(next_server);
+		await expect(page.locator('p.shared')).toHaveText(next_shared);
 	});
 
 	test('fetch in server load cannot be invalidated', async ({ page, app, request }) => {
@@ -668,15 +668,15 @@ test.describe('Invalidation', () => {
 		await page.goto('/load/invalidation/server-fetch');
 		const selector = '[data-testid="count"]';
 
-		expect(await page.textContent(selector)).toBe('1');
+		await expect(page.locator(selector)).toHaveText('1');
 		await app.invalidate('/load/invalidation/server-fetch/count.json');
-		expect(await page.textContent(selector)).toBe('1');
+		await expect(page.locator(selector)).toHaveText('1');
 	});
 
 	test('+layout.js is re-run when shared dep is invalidated', async ({ page }) => {
 		await page.goto('/load/invalidation/depends');
-		const server = await page.textContent('p.server');
-		const shared = await page.textContent('p.shared');
+		const server = await page.locator('p.server').textContent();
+		const shared = await page.locator('p.shared').textContent();
 		expect(server).toBeDefined();
 		expect(shared).toBeDefined();
 
@@ -684,8 +684,8 @@ test.describe('Invalidation', () => {
 		await page.evaluate(
 			() => /** @type {Window & typeof globalThis & { promise: Promise<void> }} */ (window).promise
 		);
-		const next_server = await page.textContent('p.server');
-		const next_shared = await page.textContent('p.shared');
+		const next_server = await page.locator('p.server').textContent();
+		const next_shared = await page.locator('p.shared').textContent();
 		expect(server).toBe(next_server);
 		expect(shared).not.toBe(next_shared);
 
@@ -693,17 +693,17 @@ test.describe('Invalidation', () => {
 		await page.evaluate(
 			() => /** @type {Window & typeof globalThis & { promise: Promise<void> }} */ (window).promise
 		);
-		expect(await page.textContent('p.server')).toBe(next_server);
-		expect(await page.textContent('p.shared')).toBe(next_shared);
+		await expect(page.locator('p.server')).toHaveText(next_server);
+		await expect(page.locator('p.shared')).toHaveText(next_shared);
 	});
 
 	test('+page(.server).js is re-run when server dep is invalidated following goto', async ({
 		page
 	}) => {
 		await page.goto('/load/invalidation/depends-goto');
-		const layout = await page.textContent('p.layout');
-		const server = await page.textContent('p.server');
-		const shared = await page.textContent('p.shared');
+		const layout = await page.locator('p.layout').textContent();
+		const server = await page.locator('p.server').textContent();
+		const shared = await page.locator('p.shared').textContent();
 		expect(layout).toBeDefined();
 		expect(server).toBeDefined();
 		expect(shared).toBeDefined();
@@ -712,9 +712,9 @@ test.describe('Invalidation', () => {
 		await page.evaluate(
 			() => /** @type {Window & typeof globalThis & { promise: Promise<void> }} */ (window).promise
 		);
-		const next_layout = await page.textContent('p.layout');
-		const next_server = await page.textContent('p.server');
-		const next_shared = await page.textContent('p.shared');
+		const next_layout = await page.locator('p.layout').textContent();
+		const next_server = await page.locator('p.server').textContent();
+		const next_shared = await page.locator('p.shared').textContent();
 		expect(layout).toBe(next_layout);
 		expect(server).not.toBe(next_server);
 		expect(shared).not.toBe(next_shared);
@@ -723,16 +723,16 @@ test.describe('Invalidation', () => {
 		await page.evaluate(
 			() => /** @type {Window & typeof globalThis & { promise: Promise<void> }} */ (window).promise
 		);
-		expect(await page.textContent('p.layout')).toBe(next_layout);
-		expect(await page.textContent('p.server')).toBe(next_server);
-		expect(await page.textContent('p.shared')).toBe(next_shared);
+		await expect(page.locator('p.layout')).toHaveText(next_layout);
+		await expect(page.locator('p.server')).toHaveText(next_server);
+		await expect(page.locator('p.shared')).toHaveText(next_shared);
 	});
 
 	test('+page.js is re-run when shared dep is invalidated following goto', async ({ page }) => {
 		await page.goto('/load/invalidation/depends-goto');
-		const layout = await page.textContent('p.layout');
-		const server = await page.textContent('p.server');
-		const shared = await page.textContent('p.shared');
+		const layout = await page.locator('p.layout').textContent();
+		const server = await page.locator('p.server').textContent();
+		const shared = await page.locator('p.shared').textContent();
 		expect(layout).toBeDefined();
 		expect(server).toBeDefined();
 		expect(shared).toBeDefined();
@@ -741,9 +741,9 @@ test.describe('Invalidation', () => {
 		await page.evaluate(
 			() => /** @type {Window & typeof globalThis & { promise: Promise<void> }} */ (window).promise
 		);
-		const next_layout = await page.textContent('p.layout');
-		const next_server = await page.textContent('p.server');
-		const next_shared = await page.textContent('p.shared');
+		const next_layout = await page.locator('p.layout').textContent();
+		const next_server = await page.locator('p.server').textContent();
+		const next_shared = await page.locator('p.shared').textContent();
 		expect(layout).toBe(next_layout);
 		expect(server).toBe(next_server);
 		expect(shared).not.toBe(next_shared);
@@ -752,16 +752,16 @@ test.describe('Invalidation', () => {
 		await page.evaluate(
 			() => /** @type {Window & typeof globalThis & { promise: Promise<void> }} */ (window).promise
 		);
-		expect(await page.textContent('p.layout')).toBe(next_layout);
-		expect(await page.textContent('p.server')).toBe(next_server);
-		expect(await page.textContent('p.shared')).toBe(next_shared);
+		await expect(page.locator('p.layout')).toHaveText(next_layout);
+		await expect(page.locator('p.server')).toHaveText(next_server);
+		await expect(page.locator('p.shared')).toHaveText(next_shared);
 	});
 
 	test('Specified dependencies are re-run following goto', async ({ page }) => {
 		await page.goto('/load/invalidation/depends-goto');
-		const layout = await page.textContent('p.layout');
-		const server = await page.textContent('p.server');
-		const shared = await page.textContent('p.shared');
+		const layout = await page.locator('p.layout').textContent();
+		const server = await page.locator('p.server').textContent();
+		const shared = await page.locator('p.shared').textContent();
 		expect(layout).toBeDefined();
 		expect(server).toBeDefined();
 		expect(shared).toBeDefined();
@@ -770,9 +770,9 @@ test.describe('Invalidation', () => {
 		await page.evaluate(
 			() => /** @type {Window & typeof globalThis & { promise: Promise<void> }} */ (window).promise
 		);
-		const next_layout = await page.textContent('p.layout');
-		const next_server = await page.textContent('p.server');
-		const next_shared = await page.textContent('p.shared');
+		const next_layout = await page.locator('p.layout').textContent();
+		const next_server = await page.locator('p.server').textContent();
+		const next_shared = await page.locator('p.shared').textContent();
 		expect(layout).not.toBe(next_layout);
 		expect(server).toBe(next_server);
 		expect(shared).not.toBe(next_shared);
@@ -781,9 +781,9 @@ test.describe('Invalidation', () => {
 		await page.evaluate(
 			() => /** @type {Window & typeof globalThis & { promise: Promise<void> }} */ (window).promise
 		);
-		expect(await page.textContent('p.layout')).toBe(next_layout);
-		expect(await page.textContent('p.server')).toBe(next_server);
-		expect(await page.textContent('p.shared')).toBe(next_shared);
+		await expect(page.locator('p.layout')).toHaveText(next_layout);
+		await expect(page.locator('p.server')).toHaveText(next_server);
+		await expect(page.locator('p.shared')).toHaveText(next_shared);
 	});
 
 	test('Parameter use is tracked even for routes that do not use the parameters', async ({
@@ -793,39 +793,39 @@ test.describe('Invalidation', () => {
 		await page.goto('/load/invalidation/params');
 
 		await clicknav('[href="/load/invalidation/params/1"]');
-		expect(await page.textContent('pre')).toBe('{"a":"1"}');
+		await expect(page.locator('pre')).toHaveText('{"a":"1"}');
 
 		await clicknav('[href="/load/invalidation/params/1/x"]');
-		expect(await page.textContent('pre')).toBe('{"a":"1","b":"x"}');
+		await expect(page.locator('pre')).toHaveText('{"a":"1","b":"x"}');
 
 		await page.goBack();
-		expect(await page.textContent('pre')).toBe('{"a":"1"}');
+		await expect(page.locator('pre')).toHaveText('{"a":"1"}');
 	});
 
 	test('route.id use is tracked for server-only load functions', async ({ page, clicknav }) => {
 		await page.goto('/load/invalidation/route/server/a');
-		expect(await page.textContent('h1')).toBe('route.id: /load/invalidation/route/server/a');
+		await expect(page.locator('h1')).toHaveText('route.id: /load/invalidation/route/server/a');
 
 		await clicknav('[href="/load/invalidation/route/server/b"]');
-		expect(await page.textContent('h1')).toBe('route.id: /load/invalidation/route/server/b');
+		await expect(page.locator('h1')).toHaveText('route.id: /load/invalidation/route/server/b');
 	});
 
 	test('route.id use is tracked for shared load functions', async ({ page, clicknav }) => {
 		await page.goto('/load/invalidation/route/shared/a');
-		expect(await page.textContent('h1')).toBe('route.id: /load/invalidation/route/shared/a');
+		await expect(page.locator('h1')).toHaveText('route.id: /load/invalidation/route/shared/a');
 
 		await clicknav('[href="/load/invalidation/route/shared/b"]');
-		expect(await page.textContent('h1')).toBe('route.id: /load/invalidation/route/shared/b');
+		await expect(page.locator('h1')).toHaveText('route.id: /load/invalidation/route/shared/b');
 	});
 
 	test('route.id does not rerun layout if unchanged', async ({ page, clicknav }) => {
 		await page.goto('/load/invalidation/route/shared/unchanged-x');
-		expect(await page.textContent('h1')).toBe('route.id: /load/invalidation/route/shared/[x]');
-		const id = await page.textContent('h2');
+		await expect(page.locator('h1')).toHaveText('route.id: /load/invalidation/route/shared/[x]');
+		const id = await page.locator('h2').textContent();
 
 		await clicknav('[href="/load/invalidation/route/shared/unchanged-y"]');
-		expect(await page.textContent('h1')).toBe('route.id: /load/invalidation/route/shared/[x]');
-		expect(await page.textContent('h2')).toBe(id);
+		await expect(page.locator('h1')).toHaveText('route.id: /load/invalidation/route/shared/[x]');
+		await expect(page.locator('h2')).toHaveText(id);
 	});
 
 	test('page.url can safely be mutated', async ({ page }) => {
@@ -838,8 +838,8 @@ test.describe('Invalidation', () => {
 
 	test('goto after invalidation does not reset state', async ({ page }) => {
 		await page.goto('/load/invalidation/invalidate-then-goto');
-		const layout = await page.textContent('p.layout');
-		const _page = await page.textContent('p.page');
+		const layout = await page.locator('p.layout').textContent();
+		const _page = await page.locator('p.page').textContent();
 		expect(layout).toBeDefined();
 		expect(_page).toBeDefined();
 
@@ -847,8 +847,8 @@ test.describe('Invalidation', () => {
 		await page.evaluate(
 			() => /** @type {Window & typeof globalThis & { promise: Promise<void> }} */ (window).promise
 		);
-		const next_layout_1 = await page.textContent('p.layout');
-		const next_page_1 = await page.textContent('p.page');
+		const next_layout_1 = await page.locator('p.layout').textContent();
+		const next_page_1 = await page.locator('p.page').textContent();
 		expect(next_layout_1).not.toBe(layout);
 		expect(next_page_1).toBe(_page);
 
@@ -856,8 +856,8 @@ test.describe('Invalidation', () => {
 		await page.evaluate(
 			() => /** @type {Window & typeof globalThis & { promise: Promise<void> }} */ (window).promise
 		);
-		const next_layout_2 = await page.textContent('p.layout');
-		const next_page_2 = await page.textContent('p.page');
+		const next_layout_2 = await page.locator('p.layout').textContent();
+		const next_page_2 = await page.locator('p.page').textContent();
 		expect(next_layout_2).toBe(next_layout_1);
 		expect(next_page_2).not.toBe(next_page_1);
 	});
@@ -1165,7 +1165,7 @@ test.describe('Content negotiation', () => {
 		const response = await page.goto('/routing/content-negotiation');
 
 		expect(response?.headers()['vary']).toBe('Accept');
-		expect(await page.textContent('p')).toBe('Hi');
+		await expect(page.locator('p')).toHaveText('Hi');
 
 		const pre = page.locator('pre');
 		for (const method of ['GET', 'PUT', 'PATCH', 'POST', 'DELETE']) {
@@ -1518,20 +1518,20 @@ test.describe('goto', () => {
 test.describe('untrack', () => {
 	test('untracks server load function', async ({ page, clicknav }) => {
 		await page.goto('/untrack/server/1');
-		expect(await page.textContent('p.url')).toBe('/untrack/server/1');
-		const id = await page.textContent('p.id');
+		await expect(page.locator('p.url')).toHaveText('/untrack/server/1');
+		const id = await page.locator('p.id').textContent();
 		await clicknav('a[href="/untrack/server/2"]');
-		expect(await page.textContent('p.url')).toBe('/untrack/server/2');
-		expect(await page.textContent('p.id')).toBe(id);
+		await expect(page.locator('p.url')).toHaveText('/untrack/server/2');
+		await expect(page.locator('p.id')).toHaveText(id);
 	});
 
 	test('untracks universal load function', async ({ page, clicknav }) => {
 		await page.goto('/untrack/universal/1');
-		expect(await page.textContent('p.url')).toBe('/untrack/universal/1');
-		const id = await page.textContent('p.id');
+		await expect(page.locator('p.url')).toHaveText('/untrack/universal/1');
+		const id = await page.locator('p.id').textContent();
 		await clicknav('a[href="/untrack/universal/2"]');
-		expect(await page.textContent('p.url')).toBe('/untrack/universal/2');
-		expect(await page.textContent('p.id')).toBe(id);
+		await expect(page.locator('p.url')).toHaveText('/untrack/universal/2');
+		await expect(page.locator('p.id')).toHaveText(id);
 	});
 });
 
@@ -1652,7 +1652,7 @@ test.describe('reroute', () => {
 	test('Apply reroute during client side navigation', async ({ page }) => {
 		await page.goto('/reroute/basic');
 		await page.click("a[href='/reroute/basic/a']");
-		expect(await page.textContent('h1')).toContain(
+		await expect(page.locator('h1')).toContainText(
 			'Successfully rewritten, URL should still show a: /reroute/basic/a'
 		);
 	});
@@ -1663,7 +1663,7 @@ test.describe('reroute', () => {
 			.addCookies([{ name: 'reroute-cookie', value: 'yes', path: '/', domain: 'localhost' }]);
 		await page.goto('/reroute/async');
 		await page.click("a[href='/reroute/async/a']");
-		expect(await page.textContent('h1')).toContain(
+		await expect(page.locator('h1')).toContainText(
 			'Successfully rewritten, URL should still show a: /reroute/async/a'
 		);
 	});
@@ -1671,7 +1671,7 @@ test.describe('reroute', () => {
 	test('Apply async prerendered reroute during client side navigation', async ({ page }) => {
 		await page.goto('/reroute/async');
 		await page.click("a[href='/reroute/async/c']");
-		expect(await page.textContent('h1')).toContain(
+		await expect(page.locator('h1')).toContainText(
 			'Successfully rewritten, URL should still show a: /reroute/async/c'
 		);
 	});
@@ -1679,12 +1679,12 @@ test.describe('reroute', () => {
 	test('Apply reroute to prerendered page during client side navigation', async ({ page }) => {
 		await page.goto('/reroute/prerendered');
 		await page.click("a[href='/reroute/prerendered/to-destination']");
-		expect(await page.textContent('h1')).toContain('reroute that points to prerendered page works');
+		await expect(page.locator('h1')).toContainText('reroute that points to prerendered page works');
 	});
 
 	test('Apply reroute after client-only redirects', async ({ page }) => {
 		await page.goto('/reroute/client-only-redirect');
-		expect(await page.textContent('h1')).toContain('Successfully rewritten');
+		await expect(page.locator('h1')).toContainText('Successfully rewritten');
 	});
 
 	test('Apply reroute to preload data', async ({ page }) => {
@@ -1692,7 +1692,7 @@ test.describe('reroute', () => {
 		await page.goto('/reroute/preload-data');
 		await page.click('button');
 		await page.waitForSelector('pre');
-		expect(await page.textContent('pre')).toContain('"success": true');
+		await expect(page.locator('pre')).toContainText('"success": true');
 	});
 
 	test('reroute does not get applied to external URLs', async ({ page }) => {
@@ -1713,7 +1713,7 @@ test.describe('reroute', () => {
 		//click the link with the text External URL
 		await page.click('a#client-error');
 
-		expect(await page.textContent('h1')).toContain('Full Navigation');
+		await expect(page.locator('h1')).toContainText('Full Navigation');
 	});
 
 	test('reroute works with invalidate', async ({ page }) => {
