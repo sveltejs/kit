@@ -359,6 +359,17 @@ function form_tests() {
 	// doesn't use data
 	const f9 = form(() => Promise.resolve({ success: true }));
 	f9.result?.success === true;
+
+	// file upload progress
+	const f10 = form(null as any as StandardSchemaV1<{ file: File; nonfile: number }>, () => {});
+	f10.fields.file.progress().uploaded;
+	f10.fields.file.progress().total;
+	// @ts-expect-error
+	f10.fields.file.progress().uploaded = 123;
+	// @ts-expect-error
+	f10.fields.file.progress().total = 123;
+	// @ts-expect-error
+	f10.fields.nonfile.progress();
 }
 form_tests();
 
