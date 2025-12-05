@@ -65,11 +65,8 @@ async function analyse({
 	internal.set_manifest(manifest);
 	internal.set_read_implementation((file) => createReadableStream(`${server_root}/server/${file}`));
 
-	/** @type {Map<string, { page_options: Record<string, any> | null, children: string[] }>} */
-	const static_exports = new Map();
-
 	// first, build server nodes without the client manifest so we can analyse it
-	await build_server_nodes(
+	build_server_nodes(
 		out,
 		config,
 		manifest_data,
@@ -78,7 +75,6 @@ async function analyse({
 		null,
 		null,
 		output_config,
-		static_exports
 	);
 
 	/** @type {import('types').ServerMetadata} */
@@ -188,7 +184,7 @@ async function analyse({
 		metadata.remotes.set(remote.hash, exports);
 	}
 
-	return { metadata, static_exports };
+	return { metadata };
 }
 
 /**

@@ -32,6 +32,7 @@ import {
 	TrailingSlash
 } from './private.js';
 import { Span } from '@opentelemetry/api';
+import type { PageOptions } from '../exports/vite/static_analysis/index.js';
 
 export interface ServerModule {
 	Server: typeof InternalServer;
@@ -214,6 +215,7 @@ export interface PageNode {
 	parent?: PageNode;
 	/** Filled with the pages that reference this layout (if this is a layout). */
 	child_pages?: PageNode[];
+	page_options?: PageOptions | null;
 }
 
 export interface PrerenderDependency {
@@ -280,7 +282,7 @@ export interface RouteData {
 		file: string;
 	} | null;
 
-	trailingSlash?: TrailingSlash;
+	page_options: PageOptions | null;
 }
 
 export type ServerRedirectNode = {

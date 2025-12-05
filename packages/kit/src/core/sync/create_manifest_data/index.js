@@ -201,7 +201,8 @@ function create_routes_and_nodes(cwd, config, fallback) {
 				error: null,
 				leaf: null,
 				page: null,
-				endpoint: null
+				endpoint: null,
+				page_options: null
 			};
 
 			// important to do this before walking children, so that child
@@ -379,7 +380,8 @@ function create_routes_and_nodes(cwd, config, fallback) {
 			error: null,
 			leaf: null,
 			page: null,
-			endpoint: null
+			endpoint: null,
+			page_options: null
 		});
 	}
 
@@ -416,6 +418,8 @@ function create_routes_and_nodes(cwd, config, fallback) {
 
 	const indexes = new Map(nodes.map((node, i) => [node, i]));
 
+	const node_analyser = create_node_analyser();
+
 	for (const route of routes) {
 		if (!route.leaf) continue;
 
@@ -424,6 +428,8 @@ function create_routes_and_nodes(cwd, config, fallback) {
 			errors: [],
 			leaf: /** @type {number} */ (indexes.get(route.leaf))
 		};
+
+		route.page_options = node_analyser.get_page_options(route.leaf);
 
 		/** @type {import('types').RouteData | null} */
 		let current_route = route;
@@ -460,42 +466,8 @@ function create_routes_and_nodes(cwd, config, fallback) {
 		}
 	}
 
-	// Extract and propagate trailingSlash from routes using static analysis
-	const node_analyser = create_node_analyser();
-	/** @type {Map<import('types').PageNode, import('types').TrailingSlash>} */
-	const node_trailing_slash = new Map();
-
-	// Extract trailingSlash from all nodes
 	for (const node of nodes) {
-		const page_options = node_analyser.get_page_options(node);
-		if (page_options?.trailingSlash !== undefined) {
-			node_trailing_slash.set(node, page_options.trailingSlash);
-		}
-	}
-
-	// Propagate trailingSlash to routes
-	for (const route of routes) {
-		/** @type {import('types').TrailingSlash | undefined} */
-		let trailing_slash;
-
-		if (route.leaf) {
-			// For pages, check leaf first, then walk up parent layouts
-			trailing_slash = node_trailing_slash.get(route.leaf);
-
-			// Walk up the parent chain to find trailingSlash from layouts
-			for (
-				let current_route = route.parent;
-				current_route && trailing_slash === undefined;
-				current_route = current_route.parent
-			) {
-				if (current_route.layout) {
-					trailing_slash = node_trailing_slash.get(current_route.layout);
-				}
-			}
-		}
-
-		// Set trailingSlash on route (default to 'never' if not found)
-		route.trailingSlash = trailing_slash ?? 'never';
+		node.page_options = node_analyser.get_page_options(node);
 	}
 
 	return {

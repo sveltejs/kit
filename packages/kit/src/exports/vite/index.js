@@ -1054,7 +1054,7 @@ async function kit({ svelte_config }) {
 
 				log.info('Analysing routes');
 
-				const { metadata, static_exports } = await analyse({
+				const { metadata } = await analyse({
 					hash: kit.router.type === 'hash',
 					manifest_path,
 					manifest_data,
@@ -1254,7 +1254,7 @@ async function kit({ svelte_config }) {
 				);
 
 				// regenerate nodes with the client manifest...
-				await build_server_nodes(
+				build_server_nodes(
 					out,
 					kit,
 					manifest_data,
@@ -1263,7 +1263,6 @@ async function kit({ svelte_config }) {
 					bundle,
 					client_chunks,
 					svelte_config.kit.output,
-					static_exports
 				);
 
 				// ...and prerender

@@ -2390,6 +2390,7 @@ declare module '@sveltejs/kit' {
 		rest: boolean;
 	}
 
+	/** @default 'never' */
 	type TrailingSlash = 'never' | 'always' | 'ignore';
 	interface Asset {
 		file: string;
@@ -2465,6 +2466,7 @@ declare module '@sveltejs/kit' {
 		parent?: PageNode;
 		/** Filled with the pages that reference this layout (if this is a layout). */
 		child_pages?: PageNode[];
+		page_options?: PageOptions | null;
 	}
 
 	type RecursiveRequired<T> = {
@@ -2511,7 +2513,7 @@ declare module '@sveltejs/kit' {
 			file: string;
 		} | null;
 
-		trailingSlash?: TrailingSlash;
+		page_options: PageOptions | null;
 	}
 
 	interface SSRComponent {
@@ -2754,6 +2756,9 @@ declare module '@sveltejs/kit' {
 	};
 	export type LessThan<TNumber extends number, TArray extends any[] = []> = TNumber extends TArray["length"] ? TArray[number] : LessThan<TNumber, [...TArray, TArray["length"]]>;
 	export type NumericRange<TStart extends number, TEnd extends number> = Exclude<TEnd | LessThan<TEnd>, LessThan<TStart>>;
+	type ValidPageOption = (typeof valid_page_options_array)[number];
+	type PageOptions = Partial<Record<ValidPageOption, any>>;
+	const valid_page_options_array: readonly ["ssr", "prerender", "csr", "trailingSlash", "config", "entries", "load"];
 	export const VERSION: string;
 	class HttpError_1 {
 		

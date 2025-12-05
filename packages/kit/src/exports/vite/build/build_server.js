@@ -4,8 +4,6 @@ import { filter_fonts, find_deps, resolve_symlinks } from './utils.js';
 import { s } from '../../../utils/misc.js';
 import { normalizePath } from 'vite';
 import { basename } from 'node:path';
-import { create_node_analyser } from '../static_analysis/index.js';
-
 
 /**
  * @param {string} out
@@ -16,9 +14,8 @@ import { create_node_analyser } from '../static_analysis/index.js';
  * @param {import('vite').Rollup.OutputBundle | null} server_bundle
  * @param {import('vite').Rollup.RollupOutput['output'] | null} client_chunks
  * @param {import('types').RecursiveRequired<import('types').ValidatedConfig['kit']['output']>} output_config
- * @param {Map<string, { page_options: Record<string, any> | null, children: string[] }>} static_exports
  */
-export async function build_server_nodes(out, kit, manifest_data, server_manifest, client_manifest, server_bundle, client_chunks, output_config, static_exports) {
+export function build_server_nodes(out, kit, manifest_data, server_manifest, client_manifest, server_bundle, client_chunks, output_config) {
 	mkdirp(`${out}/server/nodes`);
 	mkdirp(`${out}/server/stylesheets`);
 
@@ -57,8 +54,6 @@ export async function build_server_nodes(out, kit, manifest_data, server_manifes
 		}
 	}
 
-	const { get_page_options } = create_node_analyser({ static_exports });
-
 	for (let i = 0; i < manifest_data.nodes.length; i++) {
 		const node = manifest_data.nodes[i];
 
@@ -89,9 +84,8 @@ export async function build_server_nodes(out, kit, manifest_data, server_manifes
 		}
 
 		if (node.universal) {
-			const page_options = await get_page_options(node);
-			if (!!page_options && page_options.ssr === false) {
-				exports.push(`export const universal = ${s(page_options, null, 2)};`)
+			if (!!node.page_options && node.page_options.ssr === false) {
+				exports.push(`export const universal = ${s(node.page_options, null, 2)};`)
 			} else {
 				imports.push(
 					`import * as universal from '../${resolve_symlinks(server_manifest, node.universal).chunk.file}';`
