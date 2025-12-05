@@ -1871,6 +1871,8 @@ declare module '@sveltejs/kit' {
 		value(): T;
 		/** Set the values that will be submitted */
 		set(input: T): T;
+		/** Whether the field or any nested field has been interacted with since the form was mounted */
+		touched(): boolean;
 		/** Validation issues, if any */
 		issues(): RemoteFormIssue[] | undefined;
 	};

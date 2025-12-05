@@ -84,7 +84,7 @@ export function form(id) {
 		let element = null;
 
 		/** @type {Record<string, boolean>} */
-		let touched = {};
+		let touched = $state({});
 
 		let submitted = false;
 
@@ -324,15 +324,15 @@ export function form(id) {
 					// but that makes the types unnecessarily awkward
 					const element = /** @type {HTMLInputElement} */ (e.target);
 
-					let name = element.name;
-					if (!name) return;
+					const original_name = element.name;
+					if (!original_name) return;
 
-					const is_array = name.endsWith('[]');
-					if (is_array) name = name.slice(0, -2);
+					const is_array = original_name.endsWith('[]');
+					const base_name = is_array ? original_name.slice(0, -2) : original_name;
 
 					const is_file = element.type === 'file';
 
-					touched[name] = true;
+					const sanitized_name = base_name.replace(/^[nb]:/, '');
 
 					if (is_array) {
 						let value;
@@ -344,7 +344,7 @@ export function form(id) {
 							);
 						} else {
 							const elements = /** @type {HTMLInputElement[]} */ (
-								Array.from(form.querySelectorAll(`[name="${name}[]"]`))
+								Array.from(form.querySelectorAll(`[name="${base_name}[]"]`))
 							);
 
 							if (DEV) {
@@ -365,39 +365,38 @@ export function form(id) {
 							}
 						}
 
-						set_nested_value(input, name, value);
+						set_nested_value(input, base_name, value);
 					} else if (is_file) {
 						if (DEV && element.multiple) {
 							throw new Error(
-								`Can only use the \`multiple\` attribute when \`name\` includes a \`[]\` suffix — consider changing "${name}" to "${name}[]"`
+								`Can only use the \`multiple\` attribute when \`name\` includes a \`[]\` suffix — consider changing "${sanitized_name}" to "${sanitized_name}[]"`
 							);
 						}
 
 						const file = /** @type {HTMLInputElement & { files: FileList }} */ (element).files[0];
 
 						if (file) {
-							set_nested_value(input, name, file);
+							set_nested_value(input, base_name, file);
 						} else {
 							// Remove the property by setting to undefined and clean up
-							const path_parts = name.split(/\.|\[|\]/).filter(Boolean);
+							const path_parts = sanitized_name.split(/\.|\[|\]/).filter(Boolean);
 							let current = /** @type {any} */ (input);
 							for (let i = 0; i < path_parts.length - 1; i++) {
-								if (current[path_parts[i]] == null) return;
-								current = current[path_parts[i]];
+								const part = path_parts[i];
+								if (current[part] == null) return;
+								current = current[part];
 							}
 							delete current[path_parts[path_parts.length - 1]];
 						}
 					} else {
 						set_nested_value(
 							input,
-							name,
+							base_name,
 							element.type === 'checkbox' && !element.checked ? null : element.value
 						);
 					}
 
-					name = name.replace(/^[nb]:/, '');
-
-					touched[name] = true;
+					touched[sanitized_name] = true;
 				});
 
 				form.addEventListener('reset', async () => {
@@ -406,6 +405,7 @@ export function form(id) {
 					await tick();
 
 					input = convert_formdata(new FormData(form));
+					touched = {};
 				});
 
 				return () => {
@@ -508,7 +508,8 @@ export function form(id) {
 								touched[key] = true;
 							}
 						},
-						() => issues
+						() => issues,
+						() => touched
 					)
 			},
 			result: {
