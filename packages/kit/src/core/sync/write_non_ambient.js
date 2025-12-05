@@ -14,25 +14,37 @@ const remove_group_segments = (/** @type {string} */ id) => {
 };
 
 /**
- * Get pathnames to add based on trailingSlash setting
+ * Get pathnames to add based on trailingSlash settings
  * @param {string} pathname
- * @param {import('types').TrailingSlash} trailing_slash
+ * @param {import('types').RouteData} route
  * @returns {string[]}
  */
-function get_pathnames_for_trailing_slash(pathname, trailing_slash) {
+function get_pathnames_for_trailing_slash(pathname, route) {
 	if (pathname === '/') {
 		return [pathname];
 	}
 
-	// 'ignore' → both versions
-	if (trailing_slash === 'ignore') {
-		return [pathname, pathname + '/'];
-	} else if (trailing_slash === 'always') {
-		return [pathname + '/'];
-	} else {
-		// 'never' or undefined → no trailing slash
-		return [pathname];
+	/** @type {({ trailingSlash?: import('types').TrailingSlash } | null)[]} */
+	const routes = [];
+
+	if (route.page) routes.push(route.page.page_options);
+	if (route.endpoint) routes.push(route.endpoint.page_options);
+
+	/** @type {Set<string>} */
+	const pathnames = new Set();
+
+	for (const page_options of routes) {
+		if (page_options === null || page_options.trailingSlash === 'ignore') {
+			pathnames.add(pathname);
+			pathnames.add(pathname + '/');
+		} else if (page_options.trailingSlash === 'always') {
+			pathnames.add(pathname + '/');
+		} else {
+			pathnames.add(pathname);
+		}
 	}
+
+	return Array.from(pathnames);
 }
 
 // `declare module "svelte/elements"` needs to happen in a non-ambient module, and dts-buddy generates one big ambient module,
@@ -90,18 +102,12 @@ function generate_app_types(manifest_data) {
 			const pathname = remove_group_segments(route.id);
 			const replaced_pathname = replace_required_params(replace_optional_params(pathname));
 
-			for (const p of get_pathnames_for_trailing_slash(
-				replaced_pathname,
-				route.page_options?.trailingSlash
-			)) {
+			for (const p of get_pathnames_for_trailing_slash(replaced_pathname, route)) {
 				pathnames.add(`\`${p}\` & {}`);
 			}
 		} else {
 			const pathname = remove_group_segments(route.id);
-			for (const p of get_pathnames_for_trailing_slash(
-				pathname,
-				route.page_options?.trailingSlash
-			)) {
+			for (const p of get_pathnames_for_trailing_slash(pathname, route)) {
 				pathnames.add(s(p));
 			}
 		}

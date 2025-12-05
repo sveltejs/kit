@@ -8,7 +8,10 @@ import { posixify, resolve_entry } from '../../../utils/filesystem.js';
 import { parse_route_id } from '../../../utils/routing.js';
 import { sort_routes } from './sort.js';
 import { isSvelte5Plus } from '../utils.js';
-import { create_node_analyser } from '../../../exports/vite/static_analysis/index.js';
+import {
+	create_node_analyser,
+	get_page_options
+} from '../../../exports/vite/static_analysis/index.js';
 
 /**
  * Generates the manifest data used for the client-side manifest and types generation.
@@ -201,8 +204,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 				error: null,
 				leaf: null,
 				page: null,
-				endpoint: null,
-				page_options: null
+				endpoint: null
 			};
 
 			// important to do this before walking children, so that child
@@ -344,7 +346,8 @@ function create_routes_and_nodes(cwd, config, fallback) {
 					}
 
 					route.endpoint = {
-						file: project_relative
+						file: project_relative,
+						page_options: null // will be filled later
 					};
 				}
 			}
@@ -380,8 +383,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 			error: null,
 			leaf: null,
 			page: null,
-			endpoint: null,
-			page_options: null
+			endpoint: null
 		});
 	}
 
@@ -426,7 +428,8 @@ function create_routes_and_nodes(cwd, config, fallback) {
 		route.page = {
 			layouts: [],
 			errors: [],
-			leaf: /** @type {number} */ (indexes.get(route.leaf))
+			leaf: /** @type {number} */ (indexes.get(route.leaf)),
+			page_options: null
 		};
 
 		/** @type {import('types').RouteData | null} */
@@ -469,7 +472,12 @@ function create_routes_and_nodes(cwd, config, fallback) {
 	}
 
 	for (const route of routes) {
-		if (route.leaf) route.page_options = node_analyser.get_page_options(route.leaf);
+		if (route.leaf && route.page) {
+			route.page.page_options = node_analyser.get_page_options(route.leaf);
+		}
+		if (route.endpoint) {
+			route.endpoint.page_options = get_page_options(route.endpoint.file);
+		}
 	}
 
 	return {

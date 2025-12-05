@@ -2466,6 +2466,7 @@ declare module '@sveltejs/kit' {
 		parent?: PageNode;
 		/** Filled with the pages that reference this layout (if this is a layout). */
 		child_pages?: PageNode[];
+		/** The final page options for a node if it was statically analysable */
 		page_options?: PageOptions | null;
 	}
 
@@ -2507,13 +2508,15 @@ declare module '@sveltejs/kit' {
 			layouts: Array<number | undefined>;
 			errors: Array<number | undefined>;
 			leaf: number;
+			/** The final page options for the page if it was statically analysable */
+			page_options: PageOptions | null;
 		} | null;
 
 		endpoint: {
 			file: string;
+			/** The final page options for the endpoint if it was statically analysable */
+			page_options: PageOptions | null;
 		} | null;
-
-		page_options: PageOptions | null;
 	}
 
 	interface SSRComponent {

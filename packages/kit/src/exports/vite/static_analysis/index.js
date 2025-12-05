@@ -215,11 +215,10 @@ function get_name(node) {
  * @param {string} filepath
  * @returns {PageOptions | null} Returns the page options for the file or `null` if unanalysable
  */
-function get_file_page_options(filepath) {
+export function get_page_options(filepath) {
 	try {
 		const input = read(filepath);
 		const page_options = statically_analyse_page_options(filepath, input);
-
 		if (page_options === null) {
 			return null;
 		}
@@ -230,17 +229,14 @@ function get_file_page_options(filepath) {
 	}
 }
 
-/**
- * @param {{
- *   static_exports?: Map<string, { page_options: PageOptions | null, children: string[] }>;
- * }} opts
- */
-export function create_node_analyser({ static_exports = new Map() } = {}) {
+export function create_node_analyser() {
+	const static_exports = new Map();
+
 	/**
 	 * @param {string | undefined} key
 	 * @param {PageOptions | null} page_options
 	 */
-	const cache_static_analysis = (key, page_options) => {
+	const cache = (key, page_options) => {
 		if (key) static_exports.set(key, { page_options, children: [] });
 	};
 
@@ -249,7 +245,7 @@ export function create_node_analyser({ static_exports = new Map() } = {}) {
 	 * @param {import('types').PageNode} node
 	 * @returns {PageOptions | null}
 	 */
-	const get_page_options = (node) => {
+	const crawl = (node) => {
 		const key = node.universal || node.server;
 		if (key && static_exports.has(key)) {
 			return { ...static_exports.get(key)?.page_options };
@@ -259,7 +255,7 @@ export function create_node_analyser({ static_exports = new Map() } = {}) {
 		let page_options = {};
 
 		if (node.parent) {
-			const parent_options = get_page_options(node.parent);
+			const parent_options = crawl(node.parent);
 
 			const parent_key = node.parent.universal || node.parent.server;
 			if (key && parent_key) {
@@ -269,7 +265,7 @@ export function create_node_analyser({ static_exports = new Map() } = {}) {
 			if (parent_options === null) {
 				// if the parent cannot be analysed, we can't know what page options
 				// the child node inherits, so we also mark it as unanalysable
-				cache_static_analysis(key, null);
+				cache(key, null);
 				return null;
 			}
 
@@ -277,29 +273,29 @@ export function create_node_analyser({ static_exports = new Map() } = {}) {
 		}
 
 		if (node.server) {
-			const server_page_options = get_file_page_options(node.server);
+			const server_page_options = get_page_options(node.server);
 			if (server_page_options === null) {
-				cache_static_analysis(key, null);
+				cache(key, null);
 				return null;
 			}
 			page_options = { ...page_options, ...server_page_options };
 		}
 
 		if (node.universal) {
-			const universal_page_options = get_file_page_options(node.universal);
+			const universal_page_options = get_page_options(node.universal);
 			if (universal_page_options === null) {
-				cache_static_analysis(key, null);
+				cache(key, null);
 				return null;
 			}
 			page_options = { ...page_options, ...universal_page_options };
 		}
 
-		cache_static_analysis(key, page_options);
+		cache(key, page_options);
 
 		return page_options;
 	};
 
 	return {
-		get_page_options
+		get_page_options: crawl
 	};
 }

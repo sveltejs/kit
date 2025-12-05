@@ -77,34 +77,35 @@ test('creates routes', () => {
 		{
 			id: '/',
 			pattern: '/^/$/',
-			page: { layouts: [0], errors: [1], leaf: 2 }
+			page: { layouts: [0], errors: [1], leaf: 2, page_options: {} }
 		},
 		{
 			id: '/about',
 			pattern: '/^/about/?$/',
-			page: { layouts: [0], errors: [1], leaf: 3 }
+			page: { layouts: [0], errors: [1], leaf: 3, page_options: {} }
 		},
 		{
 			id: '/blog.json',
 			pattern: '/^/blog.json/?$/',
-			endpoint: { file: 'samples/basic/blog.json/+server.js' }
+			endpoint: { file: 'samples/basic/blog.json/+server.js', page_options: null }
 		},
 		{
 			id: '/blog',
 			pattern: '/^/blog/?$/',
-			page: { layouts: [0], errors: [1], leaf: 4 }
+			page: { layouts: [0], errors: [1], leaf: 4, page_options: {} }
 		},
 		{
 			id: '/blog/[slug].json',
 			pattern: '/^/blog/([^/]+?).json/?$/',
 			endpoint: {
-				file: 'samples/basic/blog/[slug].json/+server.ts'
+				file: 'samples/basic/blog/[slug].json/+server.ts',
+				page_options: null
 			}
 		},
 		{
 			id: '/blog/[slug]',
 			pattern: '/^/blog/([^/]+?)/?$/',
-			page: { layouts: [0], errors: [1], leaf: 5 }
+			page: { layouts: [0], errors: [1], leaf: 5, page_options: {} }
 		}
 	]);
 });
@@ -155,13 +156,13 @@ test('creates routes with layout', () => {
 		{
 			id: '/',
 			pattern: '/^/$/',
-			page: { layouts: [0], errors: [1], leaf: 3 }
+			page: { layouts: [0], errors: [1], leaf: 3, page_options: {} }
 		},
 
 		{
 			id: '/foo',
 			pattern: '/^/foo/?$/',
-			page: { layouts: [0, 2], errors: [1, undefined], leaf: 4 }
+			page: { layouts: [0, 2], errors: [1, undefined], leaf: 4, page_options: {} }
 		}
 	]);
 });
@@ -269,7 +270,7 @@ test('sorts routes with rest correctly', () => {
 		{
 			id: '/a/[...rest]',
 			pattern: '/^/a(?:/([^]*))?/?$/',
-			page: { layouts: [0], errors: [1], leaf: 2 }
+			page: { layouts: [0], errors: [1], leaf: 2, page_options: {} }
 		},
 		{
 			id: '/b',
@@ -278,7 +279,7 @@ test('sorts routes with rest correctly', () => {
 		{
 			id: '/b/[...rest]',
 			pattern: '/^/b(?:/([^]*))?/?$/',
-			page: { layouts: [0], errors: [1], leaf: 3 }
+			page: { layouts: [0], errors: [1], leaf: 3, page_options: {} }
 		}
 	]);
 });
@@ -302,13 +303,14 @@ test('allows rest parameters inside segments', () => {
 		{
 			id: '/prefix-[...rest]',
 			pattern: '/^/prefix-([^]*?)/?$/',
-			page: { layouts: [0], errors: [1], leaf: 2 }
+			page: { layouts: [0], errors: [1], leaf: 2, page_options: {} }
 		},
 		{
 			id: '/[...rest].json',
 			pattern: '/^/([^]*?).json/?$/',
 			endpoint: {
-				file: 'samples/rest-prefix-suffix/[...rest].json/+server.js'
+				file: 'samples/rest-prefix-suffix/[...rest].json/+server.js',
+				page_options: null
 			}
 		}
 	]);
@@ -346,7 +348,7 @@ test('optional parameters', () => {
 		{
 			id: '/[[foo]]bar',
 			pattern: '/^/([^/]*)?bar/?$/',
-			endpoint: { file: 'samples/optional/[[foo]]bar/+server.js' }
+			endpoint: { file: 'samples/optional/[[foo]]bar/+server.js', page_options: null }
 		},
 		{ id: '/nested', pattern: '/^/nested/?$/' },
 		{
@@ -356,7 +358,8 @@ test('optional parameters', () => {
 				layouts: [0],
 				errors: [1],
 				// see above, linux/windows difference -> find the index dynamically
-				leaf: nodes.findIndex((node) => node.component?.includes('nested/[[optional]]'))
+				leaf: nodes.findIndex((node) => node.component?.includes('nested/[[optional]]')),
+				page_options: {}
 			}
 		},
 		{ id: '/nested/[[optional]]', pattern: '/^/nested(?:/([^/]+))?/?$/' },
@@ -367,7 +370,8 @@ test('optional parameters', () => {
 				layouts: [0],
 				errors: [1],
 				// see above, linux/windows difference -> find the index dynamically
-				leaf: nodes.findIndex((node) => node.component?.includes('prefix[[suffix]]'))
+				leaf: nodes.findIndex((node) => node.component?.includes('prefix[[suffix]]')),
+				page_options: {}
 			}
 		},
 		{
@@ -377,7 +381,8 @@ test('optional parameters', () => {
 				layouts: [0],
 				errors: [1],
 				// see above, linux/windows difference -> find the index dynamically
-				leaf: nodes.findIndex((node) => node.component?.includes('optional/[[optional]]'))
+				leaf: nodes.findIndex((node) => node.component?.includes('optional/[[optional]]')),
+				page_options: {}
 			}
 		}
 	]);
@@ -402,7 +407,8 @@ test('nested optionals', () => {
 			page: {
 				layouts: [0],
 				errors: [1],
-				leaf: nodes.findIndex((node) => node.component?.includes('/[[a]]/[[b]]'))
+				leaf: nodes.findIndex((node) => node.component?.includes('/[[a]]/[[b]]')),
+				page_options: {}
 			}
 		},
 		{
@@ -444,7 +450,8 @@ test('group preceding optional parameters', () => {
 				// see above, linux/windows difference -> find the index dynamically
 				leaf: nodes.findIndex((node) =>
 					node.component?.includes('optional-group/[[optional]]/(group)')
-				)
+				),
+				page_options: {}
 			}
 		},
 		{
@@ -478,7 +485,8 @@ test('allows multiple slugs', () => {
 			id: '/[file].[ext]',
 			pattern: '/^/([^/]+?).([^/]+?)/?$/',
 			endpoint: {
-				file: 'samples/multiple-slugs/[file].[ext]/+server.js'
+				file: 'samples/multiple-slugs/[file].[ext]/+server.js',
+				page_options: null
 			}
 		}
 	]);
@@ -502,7 +510,8 @@ test('ignores things that look like lockfiles', () => {
 			id: '/foo',
 			pattern: '/^/foo/?$/',
 			endpoint: {
-				file: 'samples/lockfiles/foo/+server.js'
+				file: 'samples/lockfiles/foo/+server.js',
+				page_options: null
 			}
 		}
 	]);
@@ -526,36 +535,38 @@ test('works with custom extensions', () => {
 		{
 			id: '/',
 			pattern: '/^/$/',
-			page: { layouts: [0], errors: [1], leaf: 2 }
+			page: { layouts: [0], errors: [1], leaf: 2, page_options: {} }
 		},
 		{
 			id: '/about',
 			pattern: '/^/about/?$/',
-			page: { layouts: [0], errors: [1], leaf: 3 }
+			page: { layouts: [0], errors: [1], leaf: 3, page_options: {} }
 		},
 		{
 			id: '/blog.json',
 			pattern: '/^/blog.json/?$/',
 			endpoint: {
-				file: 'samples/custom-extension/blog.json/+server.js'
+				file: 'samples/custom-extension/blog.json/+server.js',
+				page_options: null
 			}
 		},
 		{
 			id: '/blog',
 			pattern: '/^/blog/?$/',
-			page: { layouts: [0], errors: [1], leaf: 4 }
+			page: { layouts: [0], errors: [1], leaf: 4, page_options: {} }
 		},
 		{
 			id: '/blog/[slug].json',
 			pattern: '/^/blog/([^/]+?).json/?$/',
 			endpoint: {
-				file: 'samples/custom-extension/blog/[slug].json/+server.js'
+				file: 'samples/custom-extension/blog/[slug].json/+server.js',
+				page_options: null
 			}
 		},
 		{
 			id: '/blog/[slug]',
 			pattern: '/^/blog/([^/]+?)/?$/',
-			page: { layouts: [0], errors: [1], leaf: 5 }
+			page: { layouts: [0], errors: [1], leaf: 5, page_options: {} }
 		}
 	]);
 });
@@ -606,7 +617,12 @@ test('includes nested error components', () => {
 		{
 			id: '/foo/bar/baz',
 			pattern: '/^/foo/bar/baz/?$/',
-			page: { layouts: [0, 2, undefined, 4], errors: [1, undefined, 3, 5], leaf: 6 }
+			page: {
+				layouts: [0, 2, undefined, 4],
+				errors: [1, undefined, 3, 5],
+				leaf: 6,
+				page_options: {}
+			}
 		}
 	]);
 });
@@ -647,42 +663,42 @@ test('creates routes with named layouts', () => {
 		{
 			id: '/a/a1',
 			pattern: '/^/a/a1/?$/',
-			page: { layouts: [0, 4], errors: [1, undefined], leaf: 10 }
+			page: { layouts: [0, 4], errors: [1, undefined], leaf: 10, page_options: {} }
 		},
 		{
 			id: '/(special)/a/a2',
 			pattern: '/^/a/a2/?$/',
-			page: { layouts: [0, 2], errors: [1, undefined], leaf: 9 }
+			page: { layouts: [0, 2], errors: [1, undefined], leaf: 9, page_options: {} }
 		},
 		{
 			id: '/(special)/(alsospecial)/b/c/c1',
 			pattern: '/^/b/c/c1/?$/',
-			page: { layouts: [0, 2, 3], errors: [1, undefined, undefined], leaf: 8 }
+			page: { layouts: [0, 2, 3], errors: [1, undefined, undefined], leaf: 8, page_options: {} }
 		},
 		{
 			id: '/b/c/c2',
 			pattern: '/^/b/c/c2/?$/',
-			page: { layouts: [0], errors: [1], leaf: 11 }
+			page: { layouts: [0], errors: [1], leaf: 11, page_options: {} }
 		},
 		{
 			id: '/b/d/(special)',
 			pattern: '/^/b/d/?$/',
-			page: { layouts: [0, 6], errors: [1, undefined], leaf: 12 }
+			page: { layouts: [0, 6], errors: [1, undefined], leaf: 12, page_options: {} }
 		},
 		{
 			id: '/b/d/d1',
 			pattern: '/^/b/d/d1/?$/',
-			page: { layouts: [0], errors: [1], leaf: 15 }
+			page: { layouts: [0], errors: [1], leaf: 15, page_options: {} }
 		},
 		{
 			id: '/b/d/(special)/(extraspecial)/d2',
 			pattern: '/^/b/d/d2/?$/',
-			page: { layouts: [0, 6, 7], errors: [1, undefined, undefined], leaf: 13 }
+			page: { layouts: [0, 6, 7], errors: [1, undefined, undefined], leaf: 13, page_options: {} }
 		},
 		{
 			id: '/b/d/(special)/(extraspecial)/d3',
 			pattern: '/^/b/d/d3/?$/',
-			page: { layouts: [0, 6], errors: [1, undefined], leaf: 14 }
+			page: { layouts: [0, 6], errors: [1, undefined], leaf: 14, page_options: {} }
 		}
 	]);
 });
@@ -706,7 +722,7 @@ test('handles pages without .svelte file', () => {
 		{
 			id: '/',
 			pattern: '/^/$/',
-			page: { layouts: [0], errors: [1], leaf: 5 }
+			page: { layouts: [0], errors: [1], leaf: 5, page_options: {} }
 		},
 		{
 			id: '/error',
@@ -715,7 +731,7 @@ test('handles pages without .svelte file', () => {
 		{
 			id: '/error/[...path]',
 			pattern: '/^/error(?:/([^]*))?/?$/',
-			page: { layouts: [0, undefined], errors: [1, 2], leaf: 6 }
+			page: { layouts: [0, undefined], errors: [1, 2], leaf: 6, page_options: {} }
 		},
 		{
 			id: '/layout',
@@ -724,12 +740,12 @@ test('handles pages without .svelte file', () => {
 		{
 			id: '/layout/exists',
 			pattern: '/^/layout/exists/?$/',
-			page: { layouts: [0, 3, 4], errors: [1, undefined, undefined], leaf: 7 }
+			page: { layouts: [0, 3, 4], errors: [1, undefined, undefined], leaf: 7, page_options: {} }
 		},
 		{
 			id: '/layout/redirect',
 			pattern: '/^/layout/redirect/?$/',
-			page: { layouts: [0, 3], errors: [1, undefined], leaf: 8 }
+			page: { layouts: [0, 3], errors: [1, undefined], leaf: 8, page_options: {} }
 		}
 	]);
 });
