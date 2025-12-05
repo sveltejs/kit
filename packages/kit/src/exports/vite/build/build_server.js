@@ -57,13 +57,7 @@ export async function build_server_nodes(out, kit, manifest_data, server_manifes
 		}
 	}
 
-	const { get_page_options } = create_node_analyser({
-		resolve: (server_node) => {
-			// Windows needs the file:// protocol for absolute path dynamic imports
-			return import(`file://${join(out, 'server', resolve_symlinks(server_manifest, server_node).chunk.file)}`);
-		},
-		static_exports
-	});
+	const { get_page_options } = create_node_analyser({ static_exports });
 
 	for (let i = 0; i < manifest_data.nodes.length; i++) {
 		const node = manifest_data.nodes[i];
