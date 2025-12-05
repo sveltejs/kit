@@ -215,6 +215,7 @@ export interface PageNode {
 	parent?: PageNode;
 	/** Filled with the pages that reference this layout (if this is a layout). */
 	child_pages?: PageNode[];
+	/** The final page options for a node if it was statically analysable */
 	page_options?: PageOptions | null;
 }
 
