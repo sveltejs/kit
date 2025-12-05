@@ -84,21 +84,6 @@ export function form(validate_or_fn, maybe_fn) {
 			}
 		});
 
-		const button_props = {
-			type: 'submit',
-			onclick: () => {}
-		};
-
-		Object.defineProperty(button_props, 'enhance', {
-			value: () => {
-				return { type: 'submit', formaction: instance.buttonProps.formaction, onclick: () => {} };
-			}
-		});
-
-		Object.defineProperty(instance, 'buttonProps', {
-			value: button_props
-		});
-
 		/** @type {RemoteInfo} */
 		const __ = {
 			type: 'form',
@@ -190,11 +175,6 @@ export function form(validate_or_fn, maybe_fn) {
 			enumerable: true
 		});
 
-		Object.defineProperty(button_props, 'formaction', {
-			get: () => `?/remote=${__.id}`,
-			enumerable: true
-		});
-
 		Object.defineProperty(instance, 'fields', {
 			get() {
 				const data = get_cache(__)?.[''];
@@ -222,6 +202,15 @@ export function form(validate_or_fn, maybe_fn) {
 		// TODO 3.0 remove
 		if (DEV) {
 			throw_on_old_property_access(instance);
+
+			Object.defineProperty(instance, 'buttonProps', {
+				get() {
+					throw new Error(
+						'`form.buttonProps` has been removed: Instead of `<button {...form.buttonProps}>, use `<button {...form.fields.action.as("submit", "value")}>`.' +
+							' See the PR for more info: https://github.com/sveltejs/kit/pull/14622'
+					);
+				}
+			});
 		}
 
 		Object.defineProperty(instance, 'result', {
@@ -236,11 +225,6 @@ export function form(validate_or_fn, maybe_fn) {
 
 		// On the server, pending is always 0
 		Object.defineProperty(instance, 'pending', {
-			get: () => 0
-		});
-
-		// On the server, buttonProps.pending is always 0
-		Object.defineProperty(button_props, 'pending', {
 			get: () => 0
 		});
 
