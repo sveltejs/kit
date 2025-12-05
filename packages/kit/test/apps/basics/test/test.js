@@ -1760,7 +1760,8 @@ test.describe('remote functions', () => {
 		await page.getByText('set reverse message').click();
 
 		if (javaScriptEnabled) {
-			await page.getByText('message.current: sdrawkcab').waitFor();
+			await page.getByText('message.current').waitFor();
+			await expect(page.getByText('message.current:')).toHaveText('message.current: sdrawkcab');
 			await expect(page.getByText('await get_message():')).toHaveText(
 				'await get_message(): sdrawkcab'
 			);
@@ -1771,10 +1772,9 @@ test.describe('remote functions', () => {
 		);
 	});
 
-	test('form scoping with for(...) works', async ({ page, javaScriptEnabled }) => {
+	test('form scoping with key works', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/remote/form/form-scoped');
 
-		await page.fill('[data-scoped] input', 'hello');
 		await page.getByText('set scoped message').click();
 
 		if (javaScriptEnabled) {
@@ -1789,7 +1789,7 @@ test.describe('remote functions', () => {
 		await expect(page.getByText('scoped.result')).toHaveText(
 			'scoped.result: hello (from: scoped:form-scoped)'
 		);
-		await expect(page.locator('[data-scoped] input[name="message"]')).toHaveValue('');
+		await expect(page.locator('[data-scoped] input[name="message"]')).toHaveValue('hello');
 	});
 
 	test('form enhance(...) works', async ({ page, javaScriptEnabled }) => {
