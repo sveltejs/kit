@@ -2,10 +2,12 @@ import { expect } from '@playwright/test';
 import { test } from '../../../utils.js';
 
 test.describe('remote functions', () => {
-	test('query returns correct data', async ({ page }) => {
+	test('query returns correct data', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/remote');
 		await expect(page.locator('#echo-result')).toHaveText('Hello world');
-		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
+		if (javaScriptEnabled) {
+			await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
+		}
 	});
 
 	test('query redirects on page load (query in common layout)', async ({ page }) => {
@@ -44,17 +46,21 @@ test.describe('remote functions', () => {
 	test('form works', async ({ page, javaScriptEnabled }) => {
 		await page.goto(`/remote/form/basic-${javaScriptEnabled}`);
 
-		await expect(page.getByText('message.current:')).toHaveText('message.current: initial');
+		if (javaScriptEnabled) {
+			await expect(page.getByText('message.current:')).toHaveText('message.current: initial');
+		}
 		await expect(page.getByText('await get_message():')).toHaveText('await get_message(): initial');
 
 		await page.fill('[data-unscoped] input', 'hello');
 		await page.getByText('set message').click();
 
-		await expect(page.getByText('set_message.pending:')).toHaveText('set_message.pending: 1');
-		await page.getByText('resolve deferreds').click();
-		await expect(page.getByText('set_message.pending:')).toHaveText('set_message.pending: 0');
+		if (javaScriptEnabled) {
+			await expect(page.getByText('set_message.pending:')).toHaveText('set_message.pending: 1');
+			await page.getByText('resolve deferreds').click();
+			await expect(page.getByText('set_message.pending:')).toHaveText('set_message.pending: 0');
+			await expect(page.getByText('message.current:')).toHaveText('message.current: hello');
+		}
 
-		await expect(page.getByText('message.current:')).toHaveText('message.current: hello');
 		await expect(page.getByText('await get_message():')).toHaveText('await get_message(): hello');
 
 		await expect(page.getByText('set_message.result')).toHaveText('set_message.result: hello');
@@ -69,14 +75,16 @@ test.describe('remote functions', () => {
 		await expect(page.locator('#result')).toHaveText('hello');
 	});
 
-	test('form updates inputs live', async ({ page }) => {
+	test('form updates inputs live', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/remote/form/live-update');
 
 		await page.fill('input', 'hello');
 
-		await expect(page.getByText('set_message.input.message:')).toHaveText(
-			'set_message.input.message: hello'
-		);
+		if (javaScriptEnabled) {
+			await expect(page.getByText('set_message.input.message:')).toHaveText(
+				'set_message.input.message: hello'
+			);
+		}
 
 		await page.getByText('set message').click();
 

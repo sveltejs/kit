@@ -2,3 +2,10 @@
 export const handleValidationError = ({ issues }) => {
 	return { message: issues[0].message };
 };
+
+/** @type {import('@sveltejs/kit').HandleServerError} */
+export const handleError = ({ error: e, status, message }) => {
+	const error = /** @type {Error} */ (e);
+
+	return { message: `${error.message} (${status} ${message})` };
+};

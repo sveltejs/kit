@@ -23,7 +23,6 @@
 </script>
 
 <p id="echo-result">{data.echo_result}</p>
-<!-- TODO use await here once async lands -->
 {#if browser}
 	<p id="count-result">
 		{await count} / {count.current} ({count.loading})
@@ -110,4 +109,8 @@
 </button>
 <button id="resolve-deferreds" onclick={() => resolve_deferreds()}>Resolve Deferreds</button>
 
-<a href="/remote/event">/remote/event</a>
+<!-- 
+	TODO: preloading currently breaks this, because the fork is run on the current route
+	or something like that. Remove `data-sveltekit-preload-data="off"` when fixed.
+-->
+<a href="/remote/event" data-sveltekit-preload-data="off">/remote/event</a>
