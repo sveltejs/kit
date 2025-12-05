@@ -12,9 +12,9 @@ id = '/nope';
 
 /** @type {import('$app/types').RouteParams<'/foo/[bar]/[baz]'>} */
 const params = {
-  bar: 'A',
-  baz: 'B'
-}
+	bar: 'A',
+	baz: 'B'
+};
 
 // @ts-expect-error foo is not a param
 params.foo;
