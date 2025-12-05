@@ -1262,7 +1262,7 @@ async function kit({ svelte_config }) {
 					client_manifest,
 					bundle,
 					client_chunks,
-					svelte_config.kit.output,
+					svelte_config.kit.output
 				);
 
 				// ...and prerender

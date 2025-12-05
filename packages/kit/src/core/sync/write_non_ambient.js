@@ -89,12 +89,18 @@ function generate_app_types(manifest_data) {
 			const pathname = remove_group_segments(route.id);
 			const replaced_pathname = replace_required_params(replace_optional_params(pathname));
 
-			for (const p of get_pathnames_for_trailing_slash(replaced_pathname, route.page_options?.trailingSlash)) {
+			for (const p of get_pathnames_for_trailing_slash(
+				replaced_pathname,
+				route.page_options?.trailingSlash
+			)) {
 				pathnames.add(`\`${p}\` & {}`);
 			}
 		} else {
 			const pathname = remove_group_segments(route.id);
-			for (const p of get_pathnames_for_trailing_slash(pathname, route.page_options?.trailingSlash)) {
+			for (const p of get_pathnames_for_trailing_slash(
+				pathname,
+				route.page_options?.trailingSlash
+			)) {
 				pathnames.add(s(p));
 			}
 		}
