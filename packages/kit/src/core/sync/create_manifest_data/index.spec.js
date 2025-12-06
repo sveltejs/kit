@@ -612,11 +612,7 @@ test('includes nested error components', () => {
 		{
 			id: '/foo/bar/baz',
 			pattern: '/^/foo/bar/baz/?$/',
-			page: {
-				layouts: [0, 2, undefined, 4],
-				errors: [1, undefined, 3, 5],
-				leaf: 6
-			}
+			page: { layouts: [0, 2, undefined, 4], errors: [1, undefined, 3, 5], leaf: 6 }
 		}
 	]);
 });
