@@ -27,7 +27,7 @@ function get_pathnames_for_trailing_slash(pathname, route) {
 	/** @type {({ trailingSlash?: import('types').TrailingSlash } | null)[]} */
 	const routes = [];
 
-	if (route.page) routes.push(route.page.page_options);
+	if (route.leaf) routes.push(route.leaf.page_options ?? null);
 	if (route.endpoint) routes.push(route.endpoint.page_options);
 
 	/** @type {Set<string>} */

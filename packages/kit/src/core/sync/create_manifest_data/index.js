@@ -428,8 +428,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 		route.page = {
 			layouts: [],
 			errors: [],
-			leaf: /** @type {number} */ (indexes.get(route.leaf)),
-			page_options: null
+			leaf: /** @type {number} */ (indexes.get(route.leaf))
 		};
 
 		/** @type {import('types').RouteData | null} */
@@ -472,9 +471,6 @@ function create_routes_and_nodes(cwd, config, fallback) {
 	}
 
 	for (const route of routes) {
-		if (route.leaf && route.page) {
-			route.page.page_options = node_analyser.get_page_options(route.leaf);
-		}
 		if (route.endpoint) {
 			route.endpoint.page_options = get_page_options(route.endpoint.file);
 		}

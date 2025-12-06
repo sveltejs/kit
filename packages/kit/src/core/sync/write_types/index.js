@@ -153,6 +153,8 @@ export function write_types(config, manifest_data, file) {
 	if (!route) return;
 	if (!route.leaf && !route.layout && !route.endpoint) return; // nothing to do
 
+	// TODO: statically analyse page options for the file
+
 	update_types(config, create_routes_map(manifest_data), route);
 }
 

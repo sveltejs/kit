@@ -357,7 +357,8 @@ export async function dev(vite, vite_config, svelte_config, get_remotes) {
 	watch('unlink', () => debounce(update_manifest));
 	watch('change', (file) => {
 		// Don't run for a single file if the whole manifest is about to get updated
-		if (timeout || restarting) return;
+		// Unless it's a file where the trailing slash page option might have changed
+		if (timeout || restarting || !/\+(page|layout|server).*$/.test(file)) return;
 		sync.update(svelte_config, manifest_data, file);
 	});
 

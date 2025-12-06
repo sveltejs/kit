@@ -277,8 +277,6 @@ export interface RouteData {
 		layouts: Array<number | undefined>;
 		errors: Array<number | undefined>;
 		leaf: number;
-		/** The final page options for the page if it was statically analysable */
-		page_options: PageOptions | null;
 	} | null;
 
 	endpoint: {
