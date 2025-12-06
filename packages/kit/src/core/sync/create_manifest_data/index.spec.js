@@ -87,7 +87,7 @@ test('creates routes', () => {
 		{
 			id: '/blog.json',
 			pattern: '/^/blog.json/?$/',
-			endpoint: { file: 'samples/basic/blog.json/+server.js' }
+			endpoint: { file: 'samples/basic/blog.json/+server.js', page_options: null }
 		},
 		{
 			id: '/blog',
@@ -98,7 +98,8 @@ test('creates routes', () => {
 			id: '/blog/[slug].json',
 			pattern: '/^/blog/([^/]+?).json/?$/',
 			endpoint: {
-				file: 'samples/basic/blog/[slug].json/+server.ts'
+				file: 'samples/basic/blog/[slug].json/+server.ts',
+				page_options: null
 			}
 		},
 		{
@@ -308,7 +309,8 @@ test('allows rest parameters inside segments', () => {
 			id: '/[...rest].json',
 			pattern: '/^/([^]*?).json/?$/',
 			endpoint: {
-				file: 'samples/rest-prefix-suffix/[...rest].json/+server.js'
+				file: 'samples/rest-prefix-suffix/[...rest].json/+server.js',
+				page_options: null
 			}
 		}
 	]);
@@ -346,7 +348,7 @@ test('optional parameters', () => {
 		{
 			id: '/[[foo]]bar',
 			pattern: '/^/([^/]*)?bar/?$/',
-			endpoint: { file: 'samples/optional/[[foo]]bar/+server.js' }
+			endpoint: { file: 'samples/optional/[[foo]]bar/+server.js', page_options: null }
 		},
 		{ id: '/nested', pattern: '/^/nested/?$/' },
 		{
@@ -478,7 +480,8 @@ test('allows multiple slugs', () => {
 			id: '/[file].[ext]',
 			pattern: '/^/([^/]+?).([^/]+?)/?$/',
 			endpoint: {
-				file: 'samples/multiple-slugs/[file].[ext]/+server.js'
+				file: 'samples/multiple-slugs/[file].[ext]/+server.js',
+				page_options: null
 			}
 		}
 	]);
@@ -502,7 +505,8 @@ test('ignores things that look like lockfiles', () => {
 			id: '/foo',
 			pattern: '/^/foo/?$/',
 			endpoint: {
-				file: 'samples/lockfiles/foo/+server.js'
+				file: 'samples/lockfiles/foo/+server.js',
+				page_options: null
 			}
 		}
 	]);
@@ -537,7 +541,8 @@ test('works with custom extensions', () => {
 			id: '/blog.json',
 			pattern: '/^/blog.json/?$/',
 			endpoint: {
-				file: 'samples/custom-extension/blog.json/+server.js'
+				file: 'samples/custom-extension/blog.json/+server.js',
+				page_options: null
 			}
 		},
 		{
@@ -549,7 +554,8 @@ test('works with custom extensions', () => {
 			id: '/blog/[slug].json',
 			pattern: '/^/blog/([^/]+?).json/?$/',
 			endpoint: {
-				file: 'samples/custom-extension/blog/[slug].json/+server.js'
+				file: 'samples/custom-extension/blog/[slug].json/+server.js',
+				page_options: null
 			}
 		},
 		{
