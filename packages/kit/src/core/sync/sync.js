@@ -45,6 +45,8 @@ export function create(config) {
  * @param {string} file
  */
 export function update(config, manifest_data, file) {
+	// TODO: statically analyse page options for the file and update the manifest_data
+
 	write_types(config, manifest_data, file);
 }
 

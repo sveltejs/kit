@@ -153,8 +153,6 @@ export function write_types(config, manifest_data, file) {
 	if (!route) return;
 	if (!route.leaf && !route.layout && !route.endpoint) return; // nothing to do
 
-	// TODO: statically analyse page options for the file
-
 	update_types(config, create_routes_map(manifest_data), route);
 }
 
@@ -362,6 +360,10 @@ function update_types(config, routes, route, to_delete = new Set()) {
 
 	if (route.leaf?.server || route.layout?.server || route.endpoint) {
 		exports.push('export type RequestEvent = Kit.RequestEvent<RouteParams, RouteId>;');
+	}
+
+	if (route.leaf || route.endpoint) {
+		//  TODO: update Pathname app type
 	}
 
 	const output = [imports.join('\n'), declarations.join('\n'), exports.join('\n')]
