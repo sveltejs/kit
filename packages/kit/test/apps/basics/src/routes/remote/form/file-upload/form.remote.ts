@@ -5,7 +5,9 @@ export const upload = form(
 	v.object({
 		text: v.string(),
 		file1: v.file(),
-		file2: v.file(),
+		deep: v.object({
+			files: v.array(v.file())
+		}),
 		read_files: v.optional(v.boolean())
 	}),
 	async (data) => {
@@ -13,13 +15,13 @@ export const upload = form(
 			return {
 				text: data.text,
 				file1: data.file1.size,
-				file2: data.file2.size
+				files: data.deep.files.map((f) => f.size)
 			};
 		}
 		return {
 			text: data.text,
 			file1: await data.file1.text(),
-			file2: await data.file2.text()
+			files: await Promise.all(data.deep.files.map((f) => f.text()))
 		};
 	}
 );
