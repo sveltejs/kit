@@ -1,6 +1,6 @@
 import { base, assets, relative, initial_base } from './internal/server.js';
-import { resolve_route, exec } from '../../../utils/routing.js';
-import { decode_params, decode_pathname } from '../../../utils/url.js';
+import { resolve_route, find_route } from '../../../utils/routing.js';
+import { decode_pathname } from '../../../utils/url.js';
 import { try_get_request_store } from '@sveltejs/kit/internal/server';
 import { manifest } from '__sveltekit/server';
 import { get_hooks } from '__SERVER__/internal.js';
@@ -55,18 +55,13 @@ export async function match(url) {
 	}
 
 	const matchers = await manifest._.matchers();
+	const result = find_route(resolved_path, manifest._.routes, matchers);
 
-	for (const route of manifest._.routes) {
-		const match = route.pattern.exec(resolved_path);
-		if (!match) continue;
-
-		const matched = exec(match, route.params, matchers);
-		if (matched) {
-			return {
-				id: /** @type {import('$app/types').RouteId} */ (route.id),
-				params: decode_params(matched)
-			};
-		}
+	if (result) {
+		return {
+			id: /** @type {import('$app/types').RouteId} */ (result.route.id),
+			params: result.params
+		};
 	}
 
 	return null;
