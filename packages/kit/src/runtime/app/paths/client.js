@@ -70,7 +70,7 @@ export function resolve(...args) {
  * // → { id: '/blog/[slug]', params: { slug: 'hello-world' } }
  *
  *
- * @param {Pathname | string | URL} url
+ * @param {Pathname | URL | (string & {})} url
  * @returns {Promise<{ id: RouteId, params: Record<string, string> } | null>}
  */
 export async function match(url) {
