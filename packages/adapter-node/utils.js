@@ -13,3 +13,34 @@ export function parse_as_bytes(value) {
 		}[value[value.length - 1]?.toUpperCase()] ?? 1;
 	return Number(multiplier != 1 ? value.substring(0, value.length - 1) : value) * multiplier;
 }
+
+/**
+ * Parses and validates an origin URL.
+ *
+ * @param {string | undefined} value - Origin URL with http:// or https:// protocol
+ * @returns {string | undefined} The validated origin, or undefined if value is undefined
+ */
+export function parse_origin(value) {
+	if (value === undefined) {
+		return undefined;
+	}
+
+	const trimmed = value.trim();
+
+	if (trimmed === '') {
+		return undefined;
+	}
+
+	try {
+		const url = new URL(trimmed);
+
+		// Verify protocol is http or https
+		if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+			return undefined;
+		}
+
+		return url.origin;
+	} catch {
+		return undefined;
+	}
+}
