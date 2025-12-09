@@ -2,8 +2,7 @@
 /** @import { ResolveArgs } from './types.js' */
 import { base, assets, hash_routing } from './internal/client.js';
 import { resolve_route } from '../../../utils/routing.js';
-import { decode_params } from '../../../utils/url.js';
-import { get_routes } from '../../client/client.js';
+import { get_navigation_intent } from '../../client/client.js';
 
 /**
  * Resolve the URL of an asset in your `static` directory, by prefixing it with [`config.kit.paths.assets`](https://svelte.dev/docs/kit/configuration#paths) if configured, or otherwise by prefixing it with the base path.
@@ -75,22 +74,14 @@ export function resolve(...args) {
  * @returns {Promise<{ id: RouteId, params: Record<string, string> } | null>}
  */
 export async function match(pathname) {
-	let path = pathname;
+	const url = new URL(pathname, location.href);
+	const intent = await get_navigation_intent(url, false);
 
-	if (base && path.startsWith(base)) {
-		path = path.slice(base.length) || '/';
-	}
-
-	if (hash_routing && path.startsWith('#')) {
-		path = path.slice(1) || '/';
-	}
-
-	const routes = get_routes();
-	for (const route of routes) {
-		const params = route.exec(path);
-		if (params) {
-			return { id: /** @type {RouteId} */ (route.id), params: decode_params(params) };
-		}
+	if (intent) {
+		return {
+			id: /** @type {RouteId} */ (intent.route.id),
+			params: intent.params
+		};
 	}
 
 	return null;

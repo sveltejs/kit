@@ -203,6 +203,8 @@ export function get_routes() {
  */
 export let remote_responses = {};
 
+export { get_navigation_intent };
+
 /** @type {Array<((url: URL) => boolean)>} */
 const invalidated = [];
 

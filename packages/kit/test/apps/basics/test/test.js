@@ -779,7 +779,8 @@ test.describe('$app/paths', () => {
 				path: '/match/slug/test-slug',
 				expected: { id: '/match/slug/[slug]', params: { slug: 'test-slug' } }
 			},
-			{ path: '/match/not-a-real-route-that-exists', expected: null }
+			{ path: '/match/not-a-real-route-that-exists', expected: null },
+			{ path: '/reroute/basic/a', expected: { id: '/reroute/basic/b', params: {} } }
 		];
 
 		for (const { path, expected } of samples) {

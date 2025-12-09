@@ -1,8 +1,9 @@
 import { base, assets, relative, initial_base } from './internal/server.js';
 import { resolve_route, exec } from '../../../utils/routing.js';
-import { decode_params } from '../../../utils/url.js';
+import { decode_params, decode_pathname } from '../../../utils/url.js';
 import { try_get_request_store } from '@sveltejs/kit/internal/server';
 import { manifest } from '__sveltekit/server';
+import { get_hooks } from '__SERVER__/internal.js';
 
 /** @type {import('./client.js').asset} */
 export function asset(file) {
@@ -31,16 +32,29 @@ export function resolve(id, params) {
 
 /** @type {import('./client.js').match} */
 export async function match(pathname) {
-	let path = pathname;
+	const store = try_get_request_store();
+	const origin = store?.event.url.origin ?? 'http://sveltekit';
+	const url = new URL(pathname, origin);
 
-	if (base && path.startsWith(base)) {
-		path = path.slice(base.length) || '/';
+	const { reroute } = await get_hooks();
+
+	let resolved_path =
+		(await reroute?.({ url, fetch: store?.event.fetch ?? fetch })) ?? url.pathname;
+
+	try {
+		resolved_path = decode_pathname(resolved_path);
+	} catch {
+		return null;
+	}
+
+	if (base && resolved_path.startsWith(base)) {
+		resolved_path = resolved_path.slice(base.length) || '/';
 	}
 
 	const matchers = await manifest._.matchers();
 
 	for (const route of manifest._.routes) {
-		const match = route.pattern.exec(path);
+		const match = route.pattern.exec(resolved_path);
 		if (!match) continue;
 
 		const matched = exec(match, route.params, matchers);
