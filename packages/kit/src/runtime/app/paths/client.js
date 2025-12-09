@@ -60,7 +60,7 @@ export function resolve(...args) {
 }
 
 /**
- * Match a pathname to a route ID and extracts any parameters.
+ * Match a path or URL to a route ID and extracts any parameters.
  *
  * @example
  * ```js
@@ -70,11 +70,14 @@ export function resolve(...args) {
  * // → { id: '/blog/[slug]', params: { slug: 'hello-world' } }
  *
  *
- * @param {Pathname} pathname
+ * @param {Pathname | string | URL} url
  * @returns {Promise<{ id: RouteId, params: Record<string, string> } | null>}
  */
-export async function match(pathname) {
-	const url = new URL(pathname, location.href);
+export async function match(url) {
+	if (typeof url === 'string') {
+		url = new URL(url, location.href);
+	}
+
 	const intent = await get_navigation_intent(url, false);
 
 	if (intent) {

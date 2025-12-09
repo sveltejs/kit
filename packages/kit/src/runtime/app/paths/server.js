@@ -31,15 +31,18 @@ export function resolve(id, params) {
 }
 
 /** @type {import('./client.js').match} */
-export async function match(pathname) {
+export async function match(url) {
 	const store = try_get_request_store();
-	const origin = store?.event.url.origin ?? 'http://sveltekit';
-	const url = new URL(pathname, origin);
+
+	if (typeof url === 'string') {
+		const origin = store?.event.url.origin ?? 'http://sveltekit';
+		url = new URL(url, origin);
+	}
 
 	const { reroute } = await get_hooks();
 
 	let resolved_path =
-		(await reroute?.({ url, fetch: store?.event.fetch ?? fetch })) ?? url.pathname;
+		(await reroute?.({ url: new URL(url), fetch: store?.event.fetch ?? fetch })) ?? url.pathname;
 
 	try {
 		resolved_path = decode_pathname(resolved_path);
