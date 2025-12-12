@@ -1,7 +1,5 @@
 <script>
 	import { page } from '$app/state';
-
-	console.log('hi');
 </script>
 
 <svelte:head>
