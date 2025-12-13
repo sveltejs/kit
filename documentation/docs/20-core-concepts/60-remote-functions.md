@@ -160,9 +160,9 @@ export const getPost = query(v.string(), async (slug) => {
 
 Both the argument and the return value are serialized with [devalue](https://github.com/sveltejs/devalue), which handles types like `Date` and `Map` (and custom types defined in your [transport hook](hooks#Universal-hooks-transport)) in addition to JSON.
 
-### Refreshing queries
+### Updating queries
 
-Any query can be re-fetched via its `refresh` method, which retrieves the latest value from the server:
+Any query can be updated via its `refresh` method, which retrieves the latest value from the server:
 
 ```svelte
 <button onclick={() => getPosts().refresh()}>
@@ -171,6 +171,8 @@ Any query can be re-fetched via its `refresh` method, which retrieves the latest
 ```
 
 > [!NOTE] Queries are cached while they're on the page, meaning `getPosts() === getPosts()`. This means you don't need a reference like `const posts = getPosts()` in order to update the query.
+
+> [!NOTE] For more advanced update patterns including optimistic updates, see the [command](#command) section.
 
 ## query.batch
 
@@ -619,7 +621,7 @@ You can prevent sensitive data (such as passwords and credit card numbers) from 
 
 In this example, if the data does not validate, only the first `<input>` will be populated when the page reloads.
 
-### Single-flight mutations
+### Updating queries after form submissions
 
 By default, all queries used on the page (along with any `load` functions) are automatically refreshed following a successful form submission. This ensures that everything is up-to-date, but it's also inefficient: many queries will be unchanged, and it requires a second trip to the server to get the updated data.
 
@@ -664,6 +666,8 @@ export const updatePost = form(
 	}
 );
 ```
+
+> [!NOTE] For basic query updates, see the [query](#query) section. For programmatic updates outside of forms, see the [command](#command) section.
 
 The second is to drive the single-flight mutation from the client, which we'll see in the section on [`enhance`](#form-enhance).
 
@@ -764,7 +768,7 @@ We can customize what happens when the form is submitted with the `enhance` meth
 
 The callback receives the `form` element, the `data` it contains, and a `submit` function.
 
-To enable client-driven [single-flight mutations](#form-Single-flight-mutations), use `submit().updates(...)`. For example, if the `getPosts()` query was used on this page, we could refresh it like so:
+To enable client-driven [query updates after form submissions](#updating-queries-after-form-submissions), use `submit().updates(...)`. For example, if the `getPosts()` query was used on this page, we could refresh it like so:
 
 ```ts
 import type { RemoteQuery, RemoteQueryOverride } from '@sveltejs/kit';
@@ -990,6 +994,8 @@ try {
 	showToast('Something went wrong!');
 }
 ```
+
+> [!NOTE] This section covers programmatic query updates. For updates triggered by user interactions, see the [form](#form) section. For basic refresh patterns, see the [query](#query) section.
 
 ## prerender
 
