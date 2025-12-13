@@ -13,8 +13,8 @@ test.describe('embed', () => {
 			await expect(page.getByTestId('a')).toHaveText('a (browser)');
 			await expect(page.getByTestId('b')).toHaveText('b (browser)');
 		} else {
-			expect(await page.textContent('[data-testid="a"]')).toBe('a (server)');
-			expect(await page.textContent('[data-testid="b"]')).toBe('b (server)');
+			await expect(page.locator('[data-testid="a"]')).toHaveText('a (server)');
+			await expect(page.locator('[data-testid="b"]')).toHaveText('b (server)');
 		}
 	});
 });

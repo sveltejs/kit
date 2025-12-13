@@ -47,7 +47,7 @@ test('only includes CSS for rendered components', async ({ page, baseURL }) => {
 test('http-equiv tags are removed', async ({ page }) => {
 	await page.goto('/http-equiv/cache-control');
 
-	expect(await page.textContent('h1')).toBe(
+	await expect(page.locator('h1')).toHaveText(
 		'the cache-control headers should be removed from this page'
 	);
 	expect(await page.innerHTML('head')).not.toContain('http-equiv="cache-control"');
@@ -67,7 +67,7 @@ test.skip('prints validation errors', async ({ page, baseURL }) => {
 test.skip('throws error on encountering stylesheet links', async ({ page }) => {
 	await page.goto('/invalid/has-stylesheet');
 
-	expect(await page.textContent('body')).toContain(
+	await expect(page.locator('body')).toContainText(
 		'An AMP document cannot contain <link rel="stylesheet"> — ensure that inlineStyleThreshold is set to Infinity, and remove links from your page template and <svelte:head> elements'
 	);
 });

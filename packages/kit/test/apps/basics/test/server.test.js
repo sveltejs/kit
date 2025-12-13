@@ -465,13 +465,13 @@ test.describe('Errors', () => {
 
 	test('stack traces are not fixed twice', async ({ page }) => {
 		await page.goto('/errors/stack-trace');
-		expect(await page.textContent('#message')).toBe(
+		await expect(page.locator('#message')).toHaveText(
 			'This is your custom error page saying: "Cannot read properties of undefined (reading \'toUpperCase\') (500 Internal Error)"'
 		);
 
 		// check the stack wasn't mutated
 		await page.goto('/errors/stack-trace');
-		expect(await page.textContent('#message')).toBe(
+		await expect(page.locator('#message')).toHaveText(
 			'This is your custom error page saying: "Cannot read properties of undefined (reading \'toUpperCase\') (500 Internal Error)"'
 		);
 	});
@@ -515,7 +515,7 @@ test.describe('Errors', () => {
 		const error = read_errors('/errors/endpoint-throw-redirect');
 		expect(error).toBe(undefined);
 
-		expect(await page.textContent('h1')).toBe('the answer is 42');
+		await expect(page.locator('h1')).toHaveText('the answer is 42');
 	});
 
 	test('POST to missing page endpoint', async ({ request }) => {
@@ -636,7 +636,7 @@ test.describe('Load', () => {
 
 	test('includes origin header on non-GET internal request', async ({ page, baseURL }) => {
 		await page.goto('/load/fetch-origin-internal');
-		expect(await page.textContent('h1')).toBe(`origin: ${new URL(baseURL).origin}`);
+		await expect(page.locator('h1')).toHaveText(`origin: ${new URL(baseURL).origin}`);
 	});
 
 	test('includes origin header on external request', async ({ page, baseURL, start_server }) => {
@@ -655,7 +655,7 @@ test.describe('Load', () => {
 		});
 
 		await page.goto(`/load/fetch-origin-external?port=${port}`);
-		expect(await page.textContent('h1')).toBe(`origin: ${new URL(baseURL).origin}`);
+		await expect(page.locator('h1')).toHaveText(`origin: ${new URL(baseURL).origin}`);
 	});
 
 	test('does not run when using invalid request methods', async ({ request }) => {
@@ -682,7 +682,7 @@ test.describe('Load', () => {
 	test('allows logging URL search params', async ({ page }) => {
 		await page.goto('/load/server-log-search-param');
 
-		expect(await page.textContent('p')).toBe('hello world');
+		await expect(page.locator('p')).toHaveText('hello world');
 	});
 });
 
@@ -822,7 +822,7 @@ test.describe('Miscellaneous', () => {
 test.describe('reroute', () => {
 	test('Apply reroute when directly accessing a page', async ({ page }) => {
 		await page.goto('/reroute/basic/a');
-		expect(await page.textContent('h1')).toContain(
+		await expect(page.locator('h1')).toContainText(
 			'Successfully rewritten, URL should still show a: /reroute/basic/a'
 		);
 	});
@@ -832,21 +832,21 @@ test.describe('reroute', () => {
 			.context()
 			.addCookies([{ name: 'reroute-cookie', value: 'yes', path: '/', domain: 'localhost' }]);
 		await page.goto('/reroute/async/a');
-		expect(await page.textContent('h1')).toContain(
+		await expect(page.locator('h1')).toContainText(
 			'Successfully rewritten, URL should still show a: /reroute/async/a'
 		);
 	});
 
 	test('Apply async prerendered reroute when directly accessing a page', async ({ page }) => {
 		await page.goto('/reroute/async/c');
-		expect(await page.textContent('h1')).toContain(
+		await expect(page.locator('h1')).toContainText(
 			'Successfully rewritten, URL should still show a: /reroute/async/c'
 		);
 	});
 
 	test('Apply reroute to prerendered page when directly accessing a page', async ({ page }) => {
 		await page.goto('/reroute/prerendered/to-destination');
-		expect(await page.textContent('h1')).toContain('reroute that points to prerendered page works');
+		await expect(page.locator('h1')).toContainText('reroute that points to prerendered page works');
 	});
 
 	test('Returns a 500 response if reroute throws an error on the server', async ({ page }) => {
