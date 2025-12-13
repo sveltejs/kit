@@ -67,6 +67,17 @@ export function stringify_remote_arg(value, transport) {
 }
 
 /**
+ * Parses `string` with `devalue.parse`, using the provided transport decoders.
+ * @param {string} string
+ * @param {Transport} transport
+ */
+export function parse(string, transport) {
+	const decoders = Object.fromEntries(Object.entries(transport).map(([k, v]) => [k, v.decode]));
+
+	return devalue.parse(string, decoders);
+}
+
+/**
  * Parses the argument (if any) for a remote function
  * @param {string} string
  * @param {Transport} transport
@@ -79,9 +90,7 @@ export function parse_remote_arg(string, transport) {
 		base64_decode(string.replaceAll('-', '+').replaceAll('_', '/'))
 	);
 
-	const decoders = Object.fromEntries(Object.entries(transport).map(([k, v]) => [k, v.decode]));
-
-	return devalue.parse(json_string, decoders);
+	return parse(json_string, transport);
 }
 
 /**
