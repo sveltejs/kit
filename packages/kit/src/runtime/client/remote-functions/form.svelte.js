@@ -86,7 +86,7 @@ export function form(id) {
 		/** @type {Record<string, boolean>} */
 		let touched = {};
 
-		let submitted = false;
+		let submitted = $state(false);
 
 		/**
 		 * @param {FormData} form_data
@@ -516,6 +516,9 @@ export function form(id) {
 			},
 			pending: {
 				get: () => pending_count
+			},
+			submitted: {
+				get: () => submitted
 			},
 			preflight: {
 				/** @type {RemoteForm<T, U>['preflight']} */
