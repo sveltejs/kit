@@ -190,10 +190,20 @@ let target;
 export let app;
 
 /**
+ * Returns the client-side routes array. Used by `$app/paths` for route matching.
+ * @returns {import('types').CSRRoute[]}
+ */
+export function get_routes() {
+	return routes;
+}
+
+/**
  * Data that was serialized during SSR. This is cleared when the user first navigates
  * @type {Record<string, any>}
  */
 export let remote_responses = {};
+
+export { get_navigation_intent };
 
 /** @type {Array<((url: URL) => boolean)>} */
 const invalidated = [];
