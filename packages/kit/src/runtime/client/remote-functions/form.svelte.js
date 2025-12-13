@@ -1,6 +1,6 @@
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
-/** @import { RemoteFormInput, RemoteForm, RemoteQueryOverride } from '@sveltejs/kit' */
-/** @import { InternalRemoteFormIssue, RemoteFunctionResponse } from 'types' */
+/** @import { RemoteFormInput, RemoteForm, RemoteQueryOverride, RemoteFormFactory, RemoteFormFactoryOptions } from '@sveltejs/kit' */
+/** @import { ExtractId, InternalRemoteFormIssue, RemoteFunctionResponse } from 'types' */
 /** @import { Query } from './query.svelte.js' */
 import { app_dir, base } from '$app/paths/internal/client';
 import * as devalue from 'devalue';
@@ -49,22 +49,23 @@ function merge_with_server_issues(form_data, current_issues, client_issues) {
  * @template {RemoteFormInput} T
  * @template U
  * @param {string} id
- * @returns {RemoteForm<T, U>}
+ * @returns {RemoteFormFactory<T, U>}
  */
 export function form(id) {
 	/** @type {Map<any, { count: number, instance: RemoteForm<T, U> }>} */
 	const instances = new Map();
 
-	/** @param {string | number | boolean} [key] */
-	function create_instance(key) {
+	/** @param {RemoteFormFactoryOptions<T>} options */
+	function create_instance(options) {
+		const { key, preflight, initialData, resetAfterSuccess = true } = options;
 		const action_id_without_key = id;
-		const action_id = id + (key != undefined ? `/${JSON.stringify(key)}` : '');
+		const action_id = id + (key !== undefined ? `/${JSON.stringify(key)}` : '');
 		const action = '?/remote=' + encodeURIComponent(action_id);
 
 		/**
 		 * @type {Record<string, string | string[] | File | File[]>}
 		 */
-		let input = $state({});
+		let input = $state(initialData ?? {});
 
 		/** @type {InternalRemoteFormIssue[]} */
 		let raw_issues = $state.raw([]);
@@ -78,7 +79,7 @@ export function form(id) {
 		let pending_count = $state(0);
 
 		/** @type {StandardSchemaV1 | undefined} */
-		let preflight_schema = undefined;
+		let preflight_schema = preflight;
 
 		/** @type {HTMLFormElement | null} */
 		let element = null;
@@ -418,7 +419,7 @@ export function form(id) {
 		instance[createAttachmentKey()] = create_attachment(
 			form_onsubmit(({ submit, form }) =>
 				submit().then(() => {
-					if (!issues.$) {
+					if (!issues.$ && resetAfterSuccess) {
 						form.reset();
 					}
 				})
@@ -459,7 +460,7 @@ export function form(id) {
 			formaction: action,
 			onclick: form_action_onclick(({ submit, form }) =>
 				submit().then(() => {
-					if (!issues.$) {
+					if (!issues.$ && resetAfterSuccess) {
 						form.reset();
 					}
 				})
@@ -516,13 +517,6 @@ export function form(id) {
 			},
 			pending: {
 				get: () => pending_count
-			},
-			preflight: {
-				/** @type {RemoteForm<T, U>['preflight']} */
-				value: (schema) => {
-					preflight_schema = schema;
-					return instance;
-				}
 			},
 			validate: {
 				/** @type {RemoteForm<any, any>['validate']} */
@@ -605,37 +599,43 @@ export function form(id) {
 		return instance;
 	}
 
-	const instance = create_instance();
+	/** @type {RemoteFormFactory<T, U>} */
+	const factory = (arg) => {
+		/** @type {RemoteFormFactoryOptions<T> | undefined } */
+		const options = arg && typeof arg === 'object' ? arg : undefined;
+		const key = options ? options.key : /** @type {ExtractId<T> | undefined} */ (arg);
+		const cache_key = id + (key !== undefined ? `/${JSON.stringify(key)}` : '');
+		const entry = instances.get(cache_key) ?? {
+			count: 0,
+			instance: create_instance(options ?? { key })
+		};
 
-	Object.defineProperty(instance, 'for', {
-		/** @type {RemoteForm<T, U>['for']} */
-		value: (key) => {
-			const entry = instances.get(key) ?? { count: 0, instance: create_instance(key) };
+		try {
+			$effect.pre(() => {
+				if (options?.initialData)
+					entry.instance.fields.set(/** @type {any} */ (options?.initialData));
 
-			try {
-				$effect.pre(() => {
-					return () => {
-						entry.count--;
+				return () => {
+					entry.count--;
 
-						void tick().then(() => {
-							if (entry.count === 0) {
-								instances.delete(key);
-							}
-						});
-					};
-				});
+					void tick().then(() => {
+						if (entry.count === 0) {
+							instances.delete(cache_key);
+						}
+					});
+				};
+			});
 
-				entry.count += 1;
-				instances.set(key, entry);
-			} catch {
-				// not in an effect context
-			}
-
-			return entry.instance;
+			entry.count += 1;
+			instances.set(cache_key, entry);
+		} catch {
+			// not in an effect context
 		}
-	});
 
-	return instance;
+		return entry.instance;
+	};
+
+	return factory;
 }
 
 /**
