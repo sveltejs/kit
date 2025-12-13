@@ -213,4 +213,33 @@ describe('binary form serializer', () => {
 		expect(await world_slice.text()).toBe('World');
 		expect(world_slice.type).toBe(file.type);
 	});
+
+	// Regression test for https://github.com/sveltejs/kit/issues/14971
+	test('DataView offset for shared memory', async () => {
+		const { blob } = serialize_binary_form({ a: 1 }, {});
+		const chunk = new Uint8Array(await blob.arrayBuffer());
+		// Simulate a stream that has extra bytes at the start in the underlying buffer
+		const stream = new ReadableStream({
+			start(controller) {
+				const offset_buffer = new Uint8Array(chunk.byteLength + 10);
+				offset_buffer.fill(255);
+				offset_buffer.set(chunk, 10);
+				controller.enqueue(offset_buffer.subarray(10));
+			}
+		});
+
+		const res = await deserialize_binary_form(
+			new Request('http://test', {
+				method: 'POST',
+				body: stream,
+				// @ts-expect-error duplex required in node
+				duplex: 'half',
+				headers: {
+					'Content-Type': BINARY_FORM_CONTENT_TYPE
+				}
+			})
+		);
+
+		expect(res.data).toEqual({ a: 1 });
+	});
 });
