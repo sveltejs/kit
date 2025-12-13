@@ -90,6 +90,9 @@ export async function respond_with_error({
 			);
 		}
 
+		const error_body = await handle_error_and_jsonify(event, event_state, options, error);
+		const status = event_state.error_status_code ?? get_status(error);
+
 		return await render_response({
 			options,
 			manifest,
@@ -99,7 +102,7 @@ export async function respond_with_error({
 				csr
 			},
 			status,
-			error: await handle_error_and_jsonify(event, event_state, options, error),
+			error: error_body,
 			branch,
 			fetched,
 			event,
@@ -114,10 +117,8 @@ export async function respond_with_error({
 			return redirect_response(e.status, e.location);
 		}
 
-		return static_error_page(
-			options,
-			get_status(e),
-			(await handle_error_and_jsonify(event, event_state, options, e)).message
-		);
+		const status = event_state.error_status_code ?? get_status(e);
+		const error = await handle_error_and_jsonify(event, event_state, options, e);
+		return static_error_page(options, status, error.message);
 	}
 }
