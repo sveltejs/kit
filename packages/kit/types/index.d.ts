@@ -2516,13 +2516,17 @@ declare module '@sveltejs/kit' {
 		default: {
 			render(
 				props: Record<string, any>,
-				opts: { context: Map<any, any> }
+				opts: { context: Map<any, any>; csp?: { nonce?: string; hash?: boolean } }
 			): {
 				html: string;
 				head: string;
 				css: {
 					code: string;
 					map: any; // TODO
+				};
+				/** Until we require all Svelte versions that support hashes, this might not be defined */
+				hashes?: {
+					script: Array<`sha256-${string}`>;
 				};
 			};
 		};
@@ -2765,7 +2769,7 @@ declare module '@sveltejs/kit' {
 	class Redirect_1 {
 		
 		constructor(status: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308, location: string);
-		status: 301 | 302 | 303 | 307 | 308 | 300 | 304 | 305 | 306;
+		status: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308;
 		location: string;
 	}
 
