@@ -92,6 +92,7 @@ When building for Cloudflare Workers, this adapter expects to find a [Wrangler c
 	"name": "<any-name-you-want>",
 	"main": ".svelte-kit/cloudflare/_worker.js",
 	"compatibility_date": "2025-01-01",
+	"compatibility_flags": ["nodejs_als"],
 	"assets": {
 		"binding": "ASSETS",
 		"directory": ".svelte-kit/cloudflare",
@@ -116,7 +117,7 @@ If you're using the [Git integration](https://developers.cloudflare.com/pages/ge
 - Build output directory – `.svelte-kit/cloudflare`
 
 
-Once configured, go to the **Runtime** section of your project settings, and add the `nodejs_als` compability flag to enable the [Node.js AsyncLocalStorage](https://developers.cloudflare.com/workers/configuration/compatibility-flags/#nodejs-asynclocalstorage).
+Once configured, go to the **Runtime** section of your project settings, and add the `nodejs_als` compability flag to enable the [Node.js AsyncLocalStorage](https://developers.cloudflare.com/workers/configuration/compatibility-flags/#nodejs-asynclocalstorage). Alternatively, do this in your wrangler config using the `compatibility_flags` array.
 
 ### Further reading
 
