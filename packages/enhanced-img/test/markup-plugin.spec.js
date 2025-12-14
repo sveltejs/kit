@@ -18,7 +18,7 @@ it('Image preprocess snapshot test', async () => {
 			throw new Error(`unrecognized id ${id}`);
 		}
 	});
-	const plugin_context = /** @type {import('rollup').TransformPluginContext} */ (
+	const plugin_context = /** @type {import('vite').Rollup.TransformPluginContext} */ (
 		/** @type {unknown} */ ({
 			// @ts-ignore
 			resolve(url) {
@@ -27,8 +27,9 @@ it('Image preprocess snapshot test', async () => {
 		})
 	);
 	const transform =
-		/** @type {(this: import('rollup').TransformPluginContext, code: string, id: string, options?: {ssr?: boolean;}) => Promise<import('rollup').TransformResult>} */ (
-			vite_plugin.transform
+		/** @type {(this: import('vite').Rollup.TransformPluginContext, code: string, id: string, options?: {ssr?: boolean;}) => Promise<import('vite').Rollup.TransformResult>} */ (
+			// @ts-expect-error fails until vite is updated
+			vite_plugin.transform.handler
 		);
 	const transformed = await transform.call(
 		plugin_context,

@@ -1,5 +1,5 @@
-import { join } from 'node:path';
 import process from 'node:process';
+import colors from 'kleur';
 
 /** @typedef {import('./types.js').Validator} Validator */
 
@@ -109,7 +109,12 @@ const options = object(
 			}),
 
 			csrf: object({
-				checkOrigin: boolean(true)
+				checkOrigin: deprecate(
+					boolean(true),
+					(keypath) =>
+						`\`${keypath}\` has been deprecated in favour of \`csrf.trustedOrigins\`. It will be removed in a future version`
+				),
+				trustedOrigins: string_array([])
 			}),
 
 			embedded: boolean(false),
@@ -120,19 +125,30 @@ const options = object(
 				privatePrefix: string('')
 			}),
 
-			files: object({
-				assets: string('static'),
-				hooks: object({
-					client: string(join('src', 'hooks.client')),
-					server: string(join('src', 'hooks.server')),
-					universal: string(join('src', 'hooks'))
+			experimental: object({
+				tracing: object({
+					server: boolean(false)
 				}),
-				lib: string(join('src', 'lib')),
-				params: string(join('src', 'params')),
-				routes: string(join('src', 'routes')),
-				serviceWorker: string(join('src', 'service-worker')),
-				appTemplate: string(join('src', 'app.html')),
-				errorTemplate: string(join('src', 'error.html'))
+				instrumentation: object({
+					server: boolean(false)
+				}),
+				remoteFunctions: boolean(false)
+			}),
+
+			files: object({
+				src: deprecate(string('src')),
+				assets: deprecate(string('static')),
+				hooks: object({
+					client: deprecate(string(null)),
+					server: deprecate(string(null)),
+					universal: deprecate(string(null))
+				}),
+				lib: deprecate(string(null)),
+				params: deprecate(string(null)),
+				routes: deprecate(string(null)),
+				serviceWorker: deprecate(string(null)),
+				appTemplate: deprecate(string(null)),
+				errorTemplate: deprecate(string(null))
 			}),
 
 			inlineStyleThreshold: number(0),
@@ -241,6 +257,20 @@ const options = object(
 					}
 				),
 
+				handleUnseenRoutes: validate(
+					(/** @type {any} */ { message }) => {
+						throw new Error(
+							message +
+								'\nTo suppress or handle this error, implement `handleUnseenRoutes` in https://svelte.dev/docs/kit/configuration#prerender'
+						);
+					},
+					(input, keypath) => {
+						if (typeof input === 'function') return input;
+						if (['fail', 'warn', 'ignore'].includes(input)) return input;
+						throw new Error(`${keypath} should be "fail", "warn", "ignore" or a custom function`);
+					}
+				),
+
 				origin: validate('http://sveltekit-prerender', (input, keypath) => {
 					assert_string(input, keypath);
 
@@ -267,6 +297,9 @@ const options = object(
 
 			serviceWorker: object({
 				register: boolean(true),
+				// options could be undefined but if it is defined we only validate that
+				// it's an object since the type comes from the browser itself
+				options: validate(undefined, object({}, true)),
 				files: fun((filename) => !/\.DS_Store/.test(filename))
 			}),
 
@@ -282,6 +315,25 @@ const options = object(
 	},
 	true
 );
+
+/**
+ * @param {Validator} fn
+ * @param {(keypath: string) => string} get_message
+ * @returns {Validator}
+ */
+function deprecate(
+	fn,
+	get_message = (keypath) =>
+		`The \`${keypath}\` option is deprecated, and will be removed in a future version`
+) {
+	return (input, keypath) => {
+		if (input !== undefined) {
+			console.warn(colors.bold().yellow(get_message(keypath)));
+		}
+
+		return fn(input, keypath);
+	};
+}
 
 /**
  * @param {Record<string, Validator>} children

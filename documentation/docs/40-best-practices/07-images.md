@@ -32,8 +32,8 @@ Doing this manually is tedious. There are a variety of techniques you can use, d
 
 Install:
 
-```bash
-npm install --save-dev @sveltejs/enhanced-img
+```sh
+npm i -D @sveltejs/enhanced-img
 ```
 
 Adjust `vite.config.js`:
@@ -84,7 +84,7 @@ You can also use [Vite's `import.meta.glob`](https://vitejs.dev/guide/features.h
 ```svelte
 <script>
 	const imageModules = import.meta.glob(
-		'/path/to/assets/*.{avif,gif,heif,jpeg,jpg,png,tiff,webp,svg}',
+		'/path/to/assets/*.{avif,gif,heif,jpeg,jpg,png,tiff,webp}',
 		{
 			eager: true,
 			query: {
@@ -98,6 +98,8 @@ You can also use [Vite's `import.meta.glob`](https://vitejs.dev/guide/features.h
 	<enhanced:img src={module.default} alt="some alt text" />
 {/each}
 ```
+
+> [!NOTE] svg images are currently only supported statically
 
 ### Intrinsic Dimensions
 

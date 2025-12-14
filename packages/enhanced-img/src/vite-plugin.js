@@ -1,8 +1,6 @@
 /** @import { AST } from 'svelte/compiler' */
-
 import { existsSync } from 'node:fs';
 import path from 'node:path';
-import { loadSvelteConfig } from '@sveltejs/vite-plugin-svelte';
 import MagicString from 'magic-string';
 import sharp from 'sharp';
 import { parse } from 'svelte-parse-markup';
@@ -17,47 +15,33 @@ const OPTIMIZABLE = /^[^?]+\.(avif|heif|gif|jpeg|jpg|png|tiff|webp)(\?.*)?$/;
  * @returns {import('vite').Plugin<void>}
  */
 export function image_plugin(imagetools_plugin) {
-	// TODO: clear this map in dev mode to avoid memory leak
-	/**
-	 * URL to image details
-	 * @type {Map<string, import('vite-imagetools').Picture>}
-	 */
-	const images = new Map();
-
 	/** @type {import('vite').ResolvedConfig} */
 	let vite_config;
 
-	/** @type {Partial<import('@sveltejs/vite-plugin-svelte').SvelteConfig | undefined>} */
-	let svelte_config;
-
 	const name = 'vite-plugin-enhanced-img-markup';
 
-	return {
+	/** @type {import('vite').Plugin<void>} */
+	const plugin = {
 		name,
-		enforce: 'pre',
-		async configResolved(config) {
+		configResolved(config) {
 			vite_config = config;
-			for (const plugin of config.plugins || []) {
-				if (plugin.name === name) {
-					break;
-				}
-				if (plugin.name === 'vite-plugin-svelte') {
-					throw new Error(
-						'@sveltejs/enhanced-img must come before the Svelte or SvelteKit plugins'
-					);
-				}
+			const svelteConfigPlugin = config.plugins.find((p) => p.name === 'vite-plugin-svelte:config');
+			if (!svelteConfigPlugin) {
+				throw new Error(
+					'@sveltejs/enhanced-img requires @sveltejs/vite-plugin-svelte 6 or higher to be installed'
+				);
 			}
-			svelte_config = await loadSvelteConfig();
-			if (!svelte_config) throw new Error('Could not load Svelte config file');
+			// @ts-expect-error plugin.transform is defined below before configResolved is called
+			plugin.transform.filter.id = svelteConfigPlugin.api.idFilter.id;
 		},
-		async transform(content, filename) {
-			const plugin_context = this;
-			const extensions = svelte_config?.extensions || ['.svelte'];
-			if (extensions.some((ext) => filename.endsWith(ext))) {
-				if (!content.includes('<enhanced:img')) {
-					return;
-				}
+		transform: {
+			order: 'pre', // puts it before vite-plugin-svelte:compile
+			filter: {
+				code: /<enhanced:img/ // code filter must match in addition to the id filter set in configResolved hook above
+			},
 
+			async handler(content, filename) {
+				const plugin_context = this;
 				const s = new MagicString(content);
 				const ast = parse(content, { filename, modern: true });
 
@@ -126,21 +110,20 @@ export function image_plugin(imagetools_plugin) {
 					}
 
 					if (OPTIMIZABLE.test(url)) {
-						let image = images.get(resolved_id);
-						if (!image) {
-							image = await process_id(resolved_id, plugin_context, imagetools_plugin);
-							images.set(resolved_id, image);
-						}
+						const image = await process_id(resolved_id, plugin_context, imagetools_plugin);
 						s.update(node.start, node.end, img_to_picture(content, node, image));
 					} else {
 						const metadata = await sharp(resolved_id).metadata();
 						// this must come after the await so that we don't hand off processing between getting
 						// the imports.size and incrementing the imports.size
 						const name = imports.get(original_url) || '__IMPORTED_ASSET_' + imports.size + '__';
+						if (!metadata.width || !metadata.height) {
+							console.warn(`Could not determine intrinsic dimensions for ${resolved_id}`);
+						}
 						const new_markup = `<img ${serialize_img_attributes(content, node.attributes, {
 							src: `{${name}}`,
-							width: metadata.width || 0,
-							height: metadata.height || 0
+							width: metadata.width,
+							height: metadata.height
 						})} />`;
 						s.update(node.start, node.end, new_markup);
 						imports.set(original_url, name);
@@ -172,18 +155,18 @@ export function image_plugin(imagetools_plugin) {
 				await Promise.all(pending_ast_updates);
 
 				// add imports
-				let text = '';
 				if (imports.size) {
+					let text = '';
 					for (const [path, import_name] of imports.entries()) {
 						text += `\timport ${import_name} from "${path}";\n`;
 					}
-				}
 
-				if (ast.instance) {
-					// @ts-ignore
-					s.appendLeft(ast.instance.content.start, text);
-				} else {
-					s.prepend(`<script>${text}</script>\n`);
+					if (ast.instance) {
+						// @ts-ignore
+						s.appendLeft(ast.instance.content.start, text);
+					} else {
+						s.prepend(`<script>${text}</script>\n`);
+					}
 				}
 
 				if (ast.css) {
@@ -196,11 +179,12 @@ export function image_plugin(imagetools_plugin) {
 
 				return {
 					code: s.toString(),
-					map: s.generateMap()
+					map: s.generateMap({ hires: 'boundary' })
 				};
 			}
 		}
 	};
+	return plugin;
 }
 
 /**
@@ -266,8 +250,8 @@ function get_attr_value(node, attr) {
  * @param {import('../types/internal.js').Attribute[]} attributes
  * @param {{
  *   src: string,
- *   width: string | number,
- *   height: string | number
+ *   width?: string | number,
+ *   height?: string | number
  * }} details
  */
 function serialize_img_attributes(content, attributes, details) {
@@ -291,21 +275,23 @@ function serialize_img_attributes(content, attributes, details) {
 			}
 		}
 	}
-	if (!user_width && !user_height) {
-		attribute_strings.push(`width=${details.width}`);
-		attribute_strings.push(`height=${details.height}`);
-	} else if (!user_width && user_height) {
-		attribute_strings.push(
-			`width=${Math.round(
-				(stringToNumber(details.width) * user_height) / stringToNumber(details.height)
-			)}`
-		);
-	} else if (!user_height && user_width) {
-		attribute_strings.push(
-			`height=${Math.round(
-				(stringToNumber(details.height) * user_width) / stringToNumber(details.width)
-			)}`
-		);
+	if (details.width && details.height) {
+		if (!user_width && !user_height) {
+			attribute_strings.push(`width=${details.width}`);
+			attribute_strings.push(`height=${details.height}`);
+		} else if (!user_width && user_height) {
+			attribute_strings.push(
+				`width=${Math.round(
+					(stringToNumber(details.width) * user_height) / stringToNumber(details.height)
+				)}`
+			);
+		} else if (!user_height && user_width) {
+			attribute_strings.push(
+				`height=${Math.round(
+					(stringToNumber(details.height) * user_width) / stringToNumber(details.width)
+				)}`
+			);
+		}
 	}
 
 	return attribute_strings.join(' ');
@@ -324,7 +310,7 @@ function stringToNumber(param) {
  * @param {import('vite-imagetools').Picture} image
  */
 function img_to_picture(content, node, image) {
-	/** @type {import('../types/internal.js').Attribute[]} attributes */
+	/** @type {import('../types/internal.js').Attribute[]} */
 	const attributes = node.attributes;
 	const index = attributes.findIndex(
 		(attribute) => 'name' in attribute && attribute.name === 'sizes'
@@ -366,29 +352,42 @@ function to_value(src) {
  */
 function dynamic_img_to_picture(content, node, src_var_name) {
 	const attributes = node.attributes;
-	const index = attributes.findIndex(
-		(attribute) => 'name' in attribute && attribute.name === 'sizes'
-	);
+	/**
+	 * @param attribute_name {string}
+	 */
+	function index(attribute_name) {
+		return attributes.findIndex(
+			(attribute) => 'name' in attribute && attribute.name === attribute_name
+		);
+	}
+	const size_index = index('sizes');
+	const width_index = index('width');
+	const height_index = index('height');
 	let sizes_string = '';
-	if (index >= 0) {
-		sizes_string = ' ' + content.substring(attributes[index].start, attributes[index].end);
-		attributes.splice(index, 1);
+	if (size_index >= 0) {
+		sizes_string =
+			' ' + content.substring(attributes[size_index].start, attributes[size_index].end);
+		attributes.splice(size_index, 1);
 	}
 
-	const details = {
-		src: `{${src_var_name}.img.src}`,
-		width: `{${src_var_name}.img.w}`,
-		height: `{${src_var_name}.img.h}`
-	};
-
 	return `{#if typeof ${src_var_name} === 'string'}
-	<img ${serialize_img_attributes(content, attributes, details)} />
+	{#if import.meta.DEV && ${!width_index && !height_index}}
+		{${src_var_name}} was not enhanced. Cannot determine dimensions.
+	{:else}
+		<img ${serialize_img_attributes(content, attributes, {
+			src: `{${src_var_name}}`
+		})} />
+	{/if}
 {:else}
 	<picture>
 		{#each Object.entries(${src_var_name}.sources) as [format, srcset]}
 			<source {srcset}${sizes_string} type={'image/' + format} />
 		{/each}
-		<img ${serialize_img_attributes(content, attributes, details)} />
+		<img ${serialize_img_attributes(content, attributes, {
+			src: `{${src_var_name}.img.src}`,
+			width: `{${src_var_name}.img.w}`,
+			height: `{${src_var_name}.img.h}`
+		})} />
 	</picture>
 {/if}`;
 }

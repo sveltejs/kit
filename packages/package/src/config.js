@@ -4,19 +4,25 @@ import fs from 'node:fs';
 import url from 'node:url';
 
 /**
- * Loads and validates svelte.config.js
+ * Loads and validates Svelte config file
  * @param {{ cwd?: string }} options
  * @returns {Promise<import('./types.js').Options['config']>}
  */
 export async function load_config({ cwd = process.cwd() } = {}) {
-	const config_file = path.join(cwd, 'svelte.config.js');
+	const config_files = ['js', 'ts']
+		.map((ext) => path.join(cwd, `svelte.config.${ext}`))
+		.filter((f) => fs.existsSync(f));
 
-	if (!fs.existsSync(config_file)) {
+	if (config_files.length === 0) {
 		return {};
 	}
-
-	const module = await import(`${url.pathToFileURL(config_file).href}?ts=${Date.now()}`);
-	const config = module.default;
+	const config_file = config_files[0];
+	if (config_files.length > 1) {
+		console.log(
+			`Found multiple Svelte config files in ${cwd}: ${config_files.map((f) => path.basename(f)).join(', ')}. Using ${path.basename(config_file)}`
+		);
+	}
+	const config = (await import(`${url.pathToFileURL(config_file).href}?ts=${Date.now()}`)).default;
 
 	if (config.package) {
 		throw new Error(
