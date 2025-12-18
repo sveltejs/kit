@@ -177,11 +177,9 @@ Cookie-based skew protection comes with one caveat: if a user has multiple versi
 
 ## Notes
 
-### Platform-specific context
+### Vercel utilities
 
-The [`event.platform`](https://svelte.dev/docs/kit/adapters#Platform-specific-context) property is available in server load functions and endpoints and exposes the [`waitUntil`](https://vercel.com/docs/functions/functions-api-reference/vercel-functions-package#waituntil) function.
-
-Use the package [`@vercel/functions`](https://vercel.com/docs/functions/functions-api-reference/vercel-functions-package) for more utilities.
+If you need Vercel-specific utilities like `waitUntil`, use the package [`@vercel/functions`](https://vercel.com/docs/functions/functions-api-reference/vercel-functions-package).
 
 ### Vercel functions
 
