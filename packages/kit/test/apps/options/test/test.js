@@ -351,3 +351,25 @@ test.describe('Routing', () => {
 		await expect(page.locator('h2')).toHaveText('target: 0');
 	});
 });
+
+test.describe('Async', () => {
+	test("updates the DOM before onNavigate's promise is resolved", async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		test.skip(!javaScriptEnabled);
+
+		await page.goto('/path-base/on-navigate/a');
+
+		/** @type {string[]} */
+		const logs = [];
+		page.on('console', (msg) => {
+			logs.push(msg.text());
+		});
+
+		await page.getByRole('link', { name: 'b' }).click();
+
+		await expect(page.locator('h1', { hasText: 'Page B' })).toBeVisible();
+		expect(logs).toEqual(['mounted', 'navigated']);
+	});
+});

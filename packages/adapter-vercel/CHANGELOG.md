@@ -1,5 +1,59 @@
 # @sveltejs/adapter-vercel
 
+## 6.2.0
+### Minor Changes
+
+
+- feat: Node 24 support ([#14982](https://github.com/sveltejs/kit/pull/14982))
+
+## 6.1.2
+### Patch Changes
+
+
+- chore(deps): upgrade to `@vercel/nft` version 1.0.0 to reduce dependencies ([#14950](https://github.com/sveltejs/kit/pull/14950))
+
+- Updated dependencies [[`0889a2a`](https://github.com/sveltejs/kit/commit/0889a2aa897b64194bc55183d7224df65d8147c1), [`2ff3951`](https://github.com/sveltejs/kit/commit/2ff3951e79e59b522c648138c846f31ad858d5b0), [`5b30755`](https://github.com/sveltejs/kit/commit/5b30755a1d84a1054370b211e56d576e3c96d442)]:
+  - @sveltejs/kit@2.48.7
+
+## 6.1.1
+### Patch Changes
+
+
+- chore: improve runtime config parsing ([#14838](https://github.com/sveltejs/kit/pull/14838))
+
+- Updated dependencies [[`cd72d94`](https://github.com/sveltejs/kit/commit/cd72d942a75eed2c1c2ee4b9d6cba5829a4fdb7a), [`53b1b73`](https://github.com/sveltejs/kit/commit/53b1b73256d5b314b1e08ff13f920d520c4a6aed), [`2ccc638`](https://github.com/sveltejs/kit/commit/2ccc63806fa4049c0c05ebc43dce8905e355ed5a)]:
+  - @sveltejs/kit@2.48.3
+
+## 6.1.0
+### Minor Changes
+
+
+- feat: Add experimental support for Bun runtime ([#14817](https://github.com/sveltejs/kit/pull/14817))
+
+
+### Patch Changes
+
+- Updated dependencies [[`102aecf`](https://github.com/sveltejs/kit/commit/102aecfd228dd632664d748b9e87bc6d219294c4)]:
+  - @sveltejs/kit@2.48.1
+
+## 6.0.0
+### Major Changes
+
+
+- breaking: remove Node polyfills (and by extension support for Node 18) ([#14732](https://github.com/sveltejs/kit/pull/14732))
+
+
+### Minor Changes
+
+
+- feat: parse isr.expiration, allowing it to be a string ([#14691](https://github.com/sveltejs/kit/pull/14691))
+
+
+### Patch Changes
+
+- Updated dependencies [[`9c933a2`](https://github.com/sveltejs/kit/commit/9c933a29e64c04db03e9150fa4e2d74a894d3d12), [`dedda71`](https://github.com/sveltejs/kit/commit/dedda7184dc04543e2ba6ea3e7f50b3836505463)]:
+  - @sveltejs/kit@2.47.0
+
 ## 5.10.3
 ### Patch Changes
 

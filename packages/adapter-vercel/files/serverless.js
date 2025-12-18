@@ -1,11 +1,8 @@
-import { installPolyfills } from '@sveltejs/kit/node/polyfills';
 import { createReadableStream } from '@sveltejs/kit/node';
 import { Server } from 'SERVER';
 import { manifest } from 'MANIFEST';
 import process from 'node:process';
 import { waitUntil } from '@vercel/functions';
-
-installPolyfills();
 
 const server = new Server(manifest);
 
