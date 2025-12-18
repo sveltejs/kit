@@ -2,4 +2,4 @@
 '@sveltejs/adapter-vercel': minor
 ---
 
-feat: expose `waitUntil` also for serverless runtime
+chore: mark `RequestContext` as deprecated and refer to `@vercel/functions`
