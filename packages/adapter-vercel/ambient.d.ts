@@ -1,3 +1,5 @@
+import type { RequestContext } from 'index.js';
+
 declare global {
 	namespace App {
 		export interface Platform {
@@ -6,10 +8,7 @@ declare global {
 			 *
 			 * @deprecated Vercel's context is deprecated. Use [`@vercel/functions`](https://vercel.com/docs/functions/functions-api-reference/vercel-functions-package) instead.
 			 */
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			context?: any;
+			context?: RequestContext;
 		}
 	}
 }
-
-export {};
