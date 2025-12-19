@@ -19,7 +19,7 @@ ENVIRONMENT=production
 PUBLIC_BASE_URL=http://site.com
 ```
 
-If the `publicPrefix` is set to `PUBLIC_` and the `privatePrefix` is not set (the default behaviour):
+Assuming the `publicPrefix` is set to `PUBLIC_` and the `privatePrefix` is not set (the default behaviour), this is what would happen at runtime, even if the environment variables at runtime are different:
 
 ```ts
 import { ENVIRONMENT, PUBLIC_BASE_URL } from '$env/static/private';
