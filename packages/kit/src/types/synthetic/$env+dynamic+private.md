@@ -1,6 +1,6 @@
 This module provides access to environment variables set _dynamically_ at runtime and that are limited to _private_ access.
 
-| Access | Runtime | Buildtime |
+| | Runtime | Buildtime |
 |-|-|-|
 | Private | `$env/dynamic/private` | [`$env/static/private`](https://svelte.dev/docs/kit/$env-static-private) |
 | Public | [`$env/dynamic/public`](https://svelte.dev/docs/kit/$env-dynamic-public) | [`$env/static/public`](https://svelte.dev/docs/kit/$env-static-public) |
