@@ -25,5 +25,5 @@ If the `publicPrefix` is set to `PUBLIC_` and the `privatePrefix` is not set (th
 import { ENVIRONMENT, PUBLIC_BASE_URL } from '$env/static/private';
 
 console.log(ENVIRONMENT); // => "production"
-console.log(PUBLIC_BASE_URL); // => undefined
+console.log(PUBLIC_BASE_URL); // => undefined, throws error during build
 ```
