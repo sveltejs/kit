@@ -1,4 +1,9 @@
-Similar to [`$env/dynamic/private`](https://svelte.dev/docs/kit/$env-dynamic-private), this module provides access to environment variables set _dynamically_ at runtime, but that are _publicly_ accessible.
+This module provides access to environment variables set _dynamically_ at runtime and that are _publicly_ accessible.
+
+| | Runtime | Buildtime |
+|-|-|-|
+| Private | [`$env/dynamic/private`](https://svelte.dev/docs/kit/$env-dynamic-private) | [`$env/static/private`](https://svelte.dev/docs/kit/$env-static-private) |
+| Public | `$env/dynamic/public` | [`$env/static/public`](https://svelte.dev/docs/kit/$env-static-public) |
 
 Runtime environment variables are defined by the platform you're running on. For example if you're using [`adapter-node`](https://github.com/sveltejs/kit/tree/main/packages/adapter-node) (or running [`vite preview`](https://svelte.dev/docs/kit/cli)), this is equivalent to `process.env`.
 
@@ -8,17 +13,27 @@ Runtime environment variables are defined by the platform you're running on. For
 
 > [!NOTE] In `dev`, `$env/dynamic` includes environment variables from `.env`. In `prod`, this behavior will depend on your adapter.
 
+> [!NOTE] To get correct types, environment variables referenced in your code should be declared (for example in an `.env` file), even if they don't have a value until the app is deployed:
+> ```
+> MY_FEATURE_FLAG=
+> ```
+> You can override `.env` values from the command line like so:
+> ```sh
+> MY_FEATURE_FLAG="enabled" npm run dev
+> ```
+
 For example, suppose the runtime environment variables were set like this:
 
 ```env
-PUBLIC_EXAMPLE_VARIABLE=foo
-OTHER_VARIABLE=bar
+ENVIRONMENT=production
+PUBLIC_BASE_URL=http://site.com
 ```
 
 If the `publicPrefix` is set to `PUBLIC_` and the `privatePrefix` is not set (the default behaviour):
 
 ```ts
 import { env } from '$env/dynamic/public';
-console.log(env.PUBLIC_EXAMPLE_VARIABLE); // => "foo"
-console.log(env.OTHER_VARIABLE); // => undefined
+
+console.log(env.ENVIRONMENT); // => undefined
+console.log(env.PUBLIC_BASE_URL); // => "http://site.com"
 ```
