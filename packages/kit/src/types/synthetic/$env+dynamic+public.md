@@ -14,7 +14,7 @@ Runtime environment variables are defined by the platform you're running on. For
 > [!NOTE] In `dev`, `$env/dynamic` includes environment variables from `.env`. In `prod`, this behavior will depend on your adapter.
 
 > [!NOTE] To get correct types, environment variables referenced in your code should be declared (for example in an `.env` file), even if they don't have a value until the app is deployed:
-> ```
+> ```env
 > MY_FEATURE_FLAG=
 > ```
 > You can override `.env` values from the command line like so:
