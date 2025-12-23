@@ -1652,7 +1652,7 @@ test.describe('reroute', () => {
 	test('Apply reroute during client side navigation', async ({ page }) => {
 		await page.goto('/reroute/basic');
 		await page.click("a[href='/reroute/basic/a']");
-		expect(await page.textContent('h1')).toContain(
+		await expect(page.locator('h1')).toHaveText(
 			'Successfully rewritten, URL should still show a: /reroute/basic/a'
 		);
 	});

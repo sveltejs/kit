@@ -389,13 +389,14 @@ test.describe('Scrolling', () => {
 		await page.locator('#scroll-anchor').click();
 		const originalScrollY = /** @type {number} */ (await page.evaluate(() => scrollY));
 		await clicknav('#routing-page');
-		await page.goBack();
+		await page.waitForURL('/routing/hashes/target');
 
-		await expect(page).toHaveURL('/anchor#last-anchor-2');
+		await page.goBack();
+		await page.waitForURL('/anchor#last-anchor-2');
 		expect(await page.evaluate(() => scrollY)).toEqual(originalScrollY);
 
 		await page.goBack();
-		await expect(page).toHaveURL('/anchor');
+		await page.waitForURL('/anchor');
 		expect(await page.evaluate(() => scrollY)).toEqual(0);
 	});
 
@@ -735,13 +736,13 @@ test.describe('Prefetching', () => {
 		await page.goto('/routing/hashes/a');
 
 		await clicknav('[href="#preload"]');
-		expect(page.url()).toBe(`${baseURL}/routing/hashes/a#preload`);
+		await page.waitForURL(`${baseURL}/routing/hashes/a#preload`);
 
 		await clicknav('[href="/routing/hashes/a"]');
-		expect(page.url()).toBe(`${baseURL}/routing/hashes/a`);
+		await page.waitForURL(`${baseURL}/routing/hashes/a`);
 
 		await clicknav('[href="#preload"]');
-		expect(page.url()).toBe(`${baseURL}/routing/hashes/a#preload`);
+		await page.waitForURL(`${baseURL}/routing/hashes/a#preload`);
 	});
 
 	test('does not rerun load on calls to duplicate preload hash route', async ({ app, page }) => {
@@ -804,17 +805,17 @@ test.describe('Routing', () => {
 
 	test('page.url.hash is correctly set on navigation', async ({ page }) => {
 		await page.goto('/routing/hashes/pagestate');
-		expect(await page.textContent('#window-hash')).toBe('');
-		expect(await page.textContent('#page-url-hash')).toBe('');
+		await expect(page.locator('#window-hash')).toHaveText('');
+		await expect(page.locator('#page-url-hash')).toHaveText('');
 		await page.locator('[href="#target"]').click();
-		expect(await page.textContent('#window-hash')).toBe('#target');
-		expect(await page.textContent('#page-url-hash')).toBe('#target');
+		await expect(page.locator('#window-hash')).toHaveText('#target');
+		await expect(page.locator('#page-url-hash')).toHaveText('#target');
 		await page.locator('[href="/routing/hashes/pagestate"]').click();
 		await expect(page.locator('#window-hash')).toHaveText('#target'); // hashchange doesn't fire for these
 		await expect(page.locator('#page-url-hash')).toHaveText('');
 		await page.goBack();
-		expect(await page.textContent('#window-hash')).toBe('#target');
-		expect(await page.textContent('#page-url-hash')).toBe('#target');
+		await expect(page.locator('#window-hash')).toHaveText('#target');
+		await expect(page.locator('#page-url-hash')).toHaveText('#target');
 	});
 
 	test('clicking on a hash link focuses the associated element', async ({ page }) => {
@@ -833,11 +834,11 @@ test.describe('Routing', () => {
 	}) => {
 		await page.goto('/data-sveltekit/reload/hash');
 		await page.locator('a[href="#example"]').click();
-		expect(page.url()).toBe(`${baseURL}/data-sveltekit/reload/hash#example`);
+		await page.waitForURL(`${baseURL}/data-sveltekit/reload/hash#example`);
 		await clicknav('a[href="/data-sveltekit/reload/hash/new"]');
-		expect(page.url()).toBe(`${baseURL}/data-sveltekit/reload/hash/new`);
+		await page.waitForURL(`${baseURL}/data-sveltekit/reload/hash/new`);
 		await page.goBack();
-		expect(page.url()).toBe(`${baseURL}/data-sveltekit/reload/hash#example`);
+		await page.waitForURL(`${baseURL}/data-sveltekit/reload/hash#example`);
 		await expect(page.getByRole('textbox')).toBeVisible();
 	});
 
@@ -862,11 +863,9 @@ test.describe('Routing', () => {
 		await page.goto('/routing/hashes/a');
 
 		await page.locator('[href="#hash-target"]').click();
-		expect(page.url()).toBe(`${baseURL}/routing/hashes/a#hash-target`);
+		await page.waitForURL(`${baseURL}/routing/hashes/a#hash-target`);
 
 		await clicknav('[href="/routing/hashes/b"]');
-		expect(await page.textContent('h1')).toBe('b');
-
 		await expect(page.locator('h1')).toHaveText('b');
 		await page.goBack();
 		await expect(page.locator('h1')).toHaveText('a');
@@ -880,13 +879,13 @@ test.describe('Routing', () => {
 		await page.goto('/routing/hashes/a');
 
 		await clicknav('[href="#hash-target"]');
-		expect(page.url()).toBe(`${baseURL}/routing/hashes/a#hash-target`);
+		await page.waitForURL(`${baseURL}/routing/hashes/a#hash-target`);
 
 		await clicknav('[href="#replace-state"]');
-		expect(page.url()).toBe(`${baseURL}/routing/hashes/a#replace-state`);
+		await page.waitForURL(`${baseURL}/routing/hashes/a#replace-state`);
 
 		await page.goBack();
-		expect(page.url()).toBe(`${baseURL}/routing/hashes/a`);
+		await page.waitForURL(`${baseURL}/routing/hashes/a`);
 	});
 
 	test('does not normalize external path', async ({ page, start_server }) => {
