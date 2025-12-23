@@ -65,7 +65,7 @@ If you added [Vitest](https://vitest.dev) when you set up your project, your uni
 
 ### static
 
-Any static assets that should be served as-is, like `robots.txt` or `favicon.png`, go in here.
+Any static assets that should be served as-is without [Vite's built-in handling](docs/kit/images#Vite's-built-in-handling) go in here. E.g. `robots.txt`.
 
 ### tests
 
