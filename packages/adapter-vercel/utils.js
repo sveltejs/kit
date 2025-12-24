@@ -121,6 +121,7 @@ export function resolve_runtime(default_key, override_key) {
 }
 
 const valid_node_versions = [20, 22, 24];
+const formatter = new Intl.ListFormat('en', { type: 'disjunction' });
 
 /** @returns {RuntimeKey} */
 function get_default_runtime() {
@@ -131,7 +132,7 @@ function get_default_runtime() {
 
 	if (!valid_node_versions.includes(major)) {
 		throw new Error(
-			`Unsupported Node.js version: ${process.version}. Please use Node ${valid_node_versions.slice(0, -1).join(', ')} or ${valid_node_versions.at(-1)} to build your project, or explicitly specify a runtime in your adapter configuration.`
+			`Unsupported Node.js version: ${process.version}. Please use Node ${formatter.format(valid_node_versions.map((v) => `${v}`))} to build your project, or explicitly specify a runtime in your adapter configuration.`
 		);
 	}
 
