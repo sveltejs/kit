@@ -799,14 +799,14 @@ test.describe('Routing', () => {
 		expect(await page.textContent('#page-url-hash')).toBe('#target');
 	});
 
-	test('page.url.hash is correctly set on navigation', async ({ page }) => {
+	test('page.url.hash is correctly set on navigation', async ({ page, clicknav }) => {
 		await page.goto('/routing/hashes/pagestate');
 		await expect(page.locator('#window-hash')).toHaveText('');
 		await expect(page.locator('#page-url-hash')).toHaveText('');
-		await page.locator('[href="#target"]').click();
+		await clicknav('[href="#target"]');
 		await expect(page.locator('#window-hash')).toHaveText('#target');
 		await expect(page.locator('#page-url-hash')).toHaveText('#target');
-		await page.locator('[href="/routing/hashes/pagestate"]').click();
+		await clicknav('[href="/routing/hashes/pagestate"]');
 		await expect(page.locator('#window-hash')).toHaveText('#target'); // hashchange doesn't fire for these
 		await expect(page.locator('#page-url-hash')).toHaveText('');
 		await page.goBack();
@@ -829,10 +829,12 @@ test.describe('Routing', () => {
 		baseURL
 	}) => {
 		await page.goto('/data-sveltekit/reload/hash');
-		await page.locator('a[href="#example"]').click();
-		await page.waitForURL(`${baseURL}/data-sveltekit/reload/hash#example`);
-		await clicknav('a[href="/data-sveltekit/reload/hash/new"]');
-		await page.waitForURL(`${baseURL}/data-sveltekit/reload/hash/new`);
+		await clicknav('a[href="#example"]', {
+			waitForURL: `${baseURL}/data-sveltekit/reload/hash#example`
+		});
+		await clicknav('a[href="/data-sveltekit/reload/hash/new"]', {
+			waitForURL: `${baseURL}/data-sveltekit/reload/hash/new`
+		});
 		await page.goBack();
 		await page.waitForURL(`${baseURL}/data-sveltekit/reload/hash#example`);
 		await expect(page.getByRole('textbox')).toBeVisible();
