@@ -28,9 +28,9 @@ export const test = base.extend({
 	clicknav: async ({ page, javaScriptEnabled }, use) => {
 		/**
 		 * @param {string} selector
-		 * @param {{ timeout?: number, waitForURL?: string }} options
+		 * @param {{ timeout?: number, waitForURL?: string }} [options]
 		 */
-		async function clicknav(selector, { timeout, waitForURL }) {
+		async function clicknav(selector, { timeout, waitForURL } = {}) {
 			const element = page.locator(selector);
 			if (javaScriptEnabled) {
 				const promises = [page.waitForNavigation({ timeout }), element.click()];
