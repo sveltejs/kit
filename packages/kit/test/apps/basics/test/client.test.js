@@ -1649,10 +1649,10 @@ test.describe('Shallow routing', () => {
 });
 
 test.describe('reroute', () => {
-	test('Apply reroute during client side navigation', async ({ page }) => {
+	test('Apply reroute during client side navigation', async ({ page, clicknav }) => {
 		await page.goto('/reroute/basic');
-		await page.click("a[href='/reroute/basic/a']");
-		await expect(page.locator('h1')).toHaveText(
+		await clicknav('a[href="/reroute/basic/a"]', { waitForURL: '/reroute/basic/a' });
+		expect(await page.textContent('h1')).toContain(
 			'Successfully rewritten, URL should still show a: /reroute/basic/a'
 		);
 	});
