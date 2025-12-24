@@ -1104,23 +1104,23 @@ test.describe('data-sveltekit attributes', () => {
 	});
 
 	test('data-sveltekit-reload', async ({ baseURL, page, clicknav }) => {
-		/** @type {string[]} */
-		const requests = [];
-		page.on('request', (r) => requests.push(r.url()));
+		await page.goto('/data-sveltekit/reload');
+		let request_promise = page.waitForRequest(`${baseURL}/data-sveltekit/reload/target`);
+		await clicknav('#one');
+		await request_promise;
 
 		await page.goto('/data-sveltekit/reload');
-		await clicknav('#one', { waitForURL: '/data-sveltekit/reload#one' });
-		expect(requests).toContain(`${baseURL}/data-sveltekit/reload/target`);
+		request_promise = page.waitForRequest(`${baseURL}/data-sveltekit/reload/target`);
+		await clicknav('#two');
+		await request_promise;
 
-		requests.length = 0;
 		await page.goto('/data-sveltekit/reload');
-		await clicknav('#two', { waitForURL: '/data-sveltekit/reload#two' });
-		expect(requests).toContain(`${baseURL}/data-sveltekit/reload/target`);
-
-		requests.length = 0;
-		await page.goto('/data-sveltekit/reload');
-		await clicknav('#three', { waitForURL: '/data-sveltekit/reload#three' });
-		expect(requests).not.toContain(`${baseURL}/data-sveltekit/reload/target`);
+		request_promise = page.waitForRequest(`${baseURL}/data-sveltekit/reload/target`, {
+			timeout: 1000
+		});
+		request_promise.catch(() => {});
+		await clicknav('#three');
+		await expect(request_promise).rejects.toThrow();
 	});
 
 	test('data-sveltekit-noscroll', async ({ page, clicknav }) => {
