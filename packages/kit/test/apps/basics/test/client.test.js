@@ -1109,17 +1109,17 @@ test.describe('data-sveltekit attributes', () => {
 		page.on('request', (r) => requests.push(r.url()));
 
 		await page.goto('/data-sveltekit/reload');
-		await clicknav('#one');
+		await clicknav('#one', { waitForURL: '/data-sveltekit/reload#one' });
 		expect(requests).toContain(`${baseURL}/data-sveltekit/reload/target`);
 
 		requests.length = 0;
 		await page.goto('/data-sveltekit/reload');
-		await clicknav('#two');
+		await clicknav('#two', { waitForURL: '/data-sveltekit/reload#two' });
 		expect(requests).toContain(`${baseURL}/data-sveltekit/reload/target`);
 
 		requests.length = 0;
 		await page.goto('/data-sveltekit/reload');
-		await clicknav('#three');
+		await clicknav('#three', { waitForURL: '/data-sveltekit/reload#three' });
 		expect(requests).not.toContain(`${baseURL}/data-sveltekit/reload/target`);
 	});
 

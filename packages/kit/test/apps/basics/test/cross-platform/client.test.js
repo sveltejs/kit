@@ -14,15 +14,14 @@ test.describe('a11y', () => {
 
 		await page.goto('/accessibility/a');
 
-		await clicknav('[href="/accessibility/b"]');
-		expect(await page.innerHTML('h1')).toBe('b');
+		await clicknav('[href="/accessibility/b"]', { waitForURL: '/accessibility/b' });
 		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('BODY');
 		await page.keyboard.press(tab);
 
 		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('BUTTON');
 		expect(await page.evaluate(() => (document.activeElement || {}).textContent)).toBe('focus me');
 
-		await clicknav('[href="/accessibility/a"]');
+		await clicknav('[href="/accessibility/a"]', { waitForURL: '/accessibility/a' });
 		expect(await page.innerHTML('h1')).toBe('a');
 		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('BODY');
 
@@ -36,7 +35,9 @@ test.describe('a11y', () => {
 	test('applies autofocus after a navigation', async ({ page, clicknav }) => {
 		await page.goto('/accessibility/autofocus/a');
 
-		await clicknav('[href="/accessibility/autofocus/b"]');
+		await clicknav('[href="/accessibility/autofocus/b"]', {
+			waitForURL: '/accessibility/autofocus/b'
+		});
 		expect(await page.innerHTML('h1')).toBe('b');
 		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('INPUT');
 	});
@@ -388,8 +389,7 @@ test.describe('Scrolling', () => {
 		await page.goto('/anchor');
 		await page.locator('#scroll-anchor').click();
 		const originalScrollY = /** @type {number} */ (await page.evaluate(() => scrollY));
-		await clicknav('#routing-page');
-		await page.waitForURL('/routing/hashes/target');
+		await clicknav('#routing-page', { waitForURL: '/routing/hashes/target' });
 
 		await page.goBack();
 		await page.waitForURL('/anchor#last-anchor-2');
@@ -735,14 +735,10 @@ test.describe('Prefetching', () => {
 	test('same route hash links work more than once', async ({ page, clicknav, baseURL }) => {
 		await page.goto('/routing/hashes/a');
 
-		await clicknav('[href="#preload"]');
-		await page.waitForURL(`${baseURL}/routing/hashes/a#preload`);
+		await clicknav('[href="#preload"]', { waitForURL: `${baseURL}/routing/hashes/a#preload` });
 
-		await clicknav('[href="/routing/hashes/a"]');
-		await page.waitForURL(`${baseURL}/routing/hashes/a`);
-
-		await clicknav('[href="#preload"]');
-		await page.waitForURL(`${baseURL}/routing/hashes/a#preload`);
+		await clicknav('[href="/routing/hashes/a"]', { waitForURL: `${baseURL}/routing/hashes/a` });
+		await clicknav('[href="#preload"]', { waitForURL: `${baseURL}/routing/hashes/a#preload` });
 	});
 
 	test('does not rerun load on calls to duplicate preload hash route', async ({ app, page }) => {
@@ -878,11 +874,13 @@ test.describe('Routing', () => {
 	}) => {
 		await page.goto('/routing/hashes/a');
 
-		await clicknav('[href="#hash-target"]');
-		await page.waitForURL(`${baseURL}/routing/hashes/a#hash-target`);
+		await clicknav('[href="#hash-target"]', {
+			waitForURL: `${baseURL}/routing/hashes/a#hash-target`
+		});
 
-		await clicknav('[href="#replace-state"]');
-		await page.waitForURL(`${baseURL}/routing/hashes/a#replace-state`);
+		await clicknav('[href="#replace-state"]', {
+			waitForURL: `${baseURL}/routing/hashes/a#replace-state`
+		});
 
 		await page.goBack();
 		await page.waitForURL(`${baseURL}/routing/hashes/a`);
