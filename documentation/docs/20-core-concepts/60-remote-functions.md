@@ -454,11 +454,12 @@ Alternatively, you could use `select` and `select multiple`:
 
 ### Programmatic validation
 
-In addition to declarative schema validation, you can programmatically mark fields as invalid inside the form handler using the `invalid` function. This is useful for cases where you can't know if something is valid until you try to perform some action:
+In addition to declarative schema validation, you can programmatically mark fields as invalid inside the form handler using the `invalid` function. This is useful for cases where you can't know if something is valid until you try to perform some action. Just like `redirect` or `error`, `invalid` throws. It expects a list of strings (for issues relating to the form as a whole) or standard-schema-compliant issues (for those relating to a specific field). Use the `issue` parameter for type-safe creation of such issues:
 
 ```js
 /// file: src/routes/shop/data.remote.js
 import * as v from 'valibot';
+import { invalid } from '@sveltejs/kit';
 import { form } from '$app/server';
 import * as db from '$lib/server/database';
 
@@ -469,13 +470,13 @@ export const buyHotcakes = form(
 			v.minValue(1, 'you must buy at least one hotcake')
 		)
 	}),
-	async (data, invalid) => {
+	async (data, issue) => {
 		try {
 			await db.buy(data.qty);
 		} catch (e) {
 			if (e.code === 'OUT_OF_STOCK') {
 				invalid(
-					invalid.qty(`we don't have enough hotcakes`)
+					issue.qty(`we don't have enough hotcakes`)
 				);
 			}
 		}
@@ -828,7 +829,7 @@ This attribute exists on the `buttonProps` property of a form object:
 ```svelte
 <!--- file: src/routes/login/+page.svelte --->
 <script>
-	import { login, register } from '$lib/auth';
+	import { login, register } from '$lib/auth.remote';
 </script>
 
 <form {...login}>
@@ -1073,8 +1074,6 @@ export const getPost = prerender(
 	}
 );
 ```
-
-> [!NOTE] Svelte does not yet support asynchronous server-side rendering, so it's likely that you're only calling remote functions from the browser, rather than during prerendering. Because of this, you will need to use `inputs`, for now. We're actively working on this roadblock.
 
 By default, prerender functions are excluded from your server bundle, which means that you cannot call them with any arguments that were _not_ prerendered. You can set `dynamic: true` to change this behaviour:
 

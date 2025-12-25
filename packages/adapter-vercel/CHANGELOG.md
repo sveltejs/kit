@@ -1,5 +1,20 @@
 # @sveltejs/adapter-vercel
 
+## 6.2.0
+### Minor Changes
+
+
+- feat: Node 24 support ([#14982](https://github.com/sveltejs/kit/pull/14982))
+
+## 6.1.2
+### Patch Changes
+
+
+- chore(deps): upgrade to `@vercel/nft` version 1.0.0 to reduce dependencies ([#14950](https://github.com/sveltejs/kit/pull/14950))
+
+- Updated dependencies [[`0889a2a`](https://github.com/sveltejs/kit/commit/0889a2aa897b64194bc55183d7224df65d8147c1), [`2ff3951`](https://github.com/sveltejs/kit/commit/2ff3951e79e59b522c648138c846f31ad858d5b0), [`5b30755`](https://github.com/sveltejs/kit/commit/5b30755a1d84a1054370b211e56d576e3c96d442)]:
+  - @sveltejs/kit@2.48.7
+
 ## 6.1.1
 ### Patch Changes
 

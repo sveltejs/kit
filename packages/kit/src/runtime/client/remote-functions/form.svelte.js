@@ -18,7 +18,9 @@ import {
 	set_nested_value,
 	throw_on_old_property_access,
 	build_path_string,
-	normalize_issue
+	normalize_issue,
+	serialize_binary_form,
+	BINARY_FORM_CONTENT_TYPE
 } from '../../form-utils.js';
 
 /**
@@ -55,6 +57,7 @@ export function form(id) {
 
 	/** @param {string | number | boolean} [key] */
 	function create_instance(key) {
+		const action_id_without_key = id;
 		const action_id = id + (key != undefined ? `/${JSON.stringify(key)}` : '');
 		const action = '?/remote=' + encodeURIComponent(action_id);
 
@@ -182,17 +185,18 @@ export function form(id) {
 				try {
 					await Promise.resolve();
 
-					if (updates.length > 0) {
-						data.set('sveltekit:remote_refreshes', JSON.stringify(updates.map((u) => u._key)));
-					}
+					const { blob } = serialize_binary_form(convert(data), {
+						remote_refreshes: updates.map((u) => u._key)
+					});
 
-					const response = await fetch(`${base}/${app_dir}/remote/${action_id}`, {
+					const response = await fetch(`${base}/${app_dir}/remote/${action_id_without_key}`, {
 						method: 'POST',
-						body: data,
 						headers: {
+							'Content-Type': BINARY_FORM_CONTENT_TYPE,
 							'x-sveltekit-pathname': location.pathname,
 							'x-sveltekit-search': location.search
-						}
+						},
+						body: blob
 					});
 
 					if (!response.ok) {
@@ -202,6 +206,9 @@ export function form(id) {
 					}
 
 					const form_result = /** @type { RemoteFunctionResponse} */ (await response.json());
+
+					// reset issues in case it's a redirect or error (but issues passed in that case)
+					raw_issues = [];
 
 					if (form_result.type === 'result') {
 						({ issues: raw_issues = [], result } = devalue.parse(form_result.result, app.decoders));
@@ -519,7 +526,7 @@ export function form(id) {
 			},
 			validate: {
 				/** @type {RemoteForm<any, any>['validate']} */
-				value: async ({ includeUntouched = false, preflightOnly = false, submitter } = {}) => {
+				value: async ({ includeUntouched = false, preflightOnly = false } = {}) => {
 					if (!element) return;
 
 					const id = ++validate_id;
@@ -527,12 +534,18 @@ export function form(id) {
 					// wait a tick in case the user is calling validate() right after set() which takes time to propagate
 					await tick();
 
-					const form_data = new FormData(element, submitter);
+					const default_submitter = /** @type {HTMLElement | undefined} */ (
+						element.querySelector('button:not([type]), [type="submit"]')
+					);
+
+					const form_data = new FormData(element, default_submitter);
 
 					/** @type {InternalRemoteFormIssue[]} */
 					let array = [];
 
-					const validated = await preflight_schema?.['~standard'].validate(convert(form_data));
+					const data = convert(form_data);
+
+					const validated = await preflight_schema?.['~standard'].validate(data);
 
 					if (validate_id !== id) {
 						return;
@@ -541,11 +554,16 @@ export function form(id) {
 					if (validated?.issues) {
 						array = validated.issues.map((issue) => normalize_issue(issue, false));
 					} else if (!preflightOnly) {
-						form_data.set('sveltekit:validate_only', 'true');
-
-						const response = await fetch(`${base}/${app_dir}/remote/${action_id}`, {
+						const response = await fetch(`${base}/${app_dir}/remote/${action_id_without_key}`, {
 							method: 'POST',
-							body: form_data
+							headers: {
+								'Content-Type': BINARY_FORM_CONTENT_TYPE,
+								'x-sveltekit-pathname': location.pathname,
+								'x-sveltekit-search': location.search
+							},
+							body: serialize_binary_form(data, {
+								validate_only: true
+							}).blob
 						});
 
 						const result = await response.json();
@@ -637,12 +655,6 @@ function clone(element) {
  */
 function validate_form_data(form_data, enctype) {
 	for (const key of form_data.keys()) {
-		if (key.startsWith('sveltekit:')) {
-			throw new Error(
-				'FormData keys starting with `sveltekit:` are reserved for internal use and should not be set manually'
-			);
-		}
-
 		if (/^\$[.[]?/.test(key)) {
 			throw new Error(
 				'`$` is used to collect all FormData validation issues and cannot be used as the `name` of a form control'

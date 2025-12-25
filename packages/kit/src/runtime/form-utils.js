@@ -1,8 +1,10 @@
 /** @import { RemoteForm } from '@sveltejs/kit' */
-/** @import { InternalRemoteFormIssue } from 'types' */
+/** @import { BinaryFormMeta, InternalRemoteFormIssue } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 
 import { DEV } from 'esm-env';
+import * as devalue from 'devalue';
+import { text_decoder, text_encoder } from './utils.js';
 
 /**
  * Sets a value in a nested object using a path string, mutating the original object
@@ -31,10 +33,6 @@ export function convert_formdata(data) {
 	const result = {};
 
 	for (let key of data.keys()) {
-		if (key.startsWith('sveltekit:')) {
-			continue;
-		}
-
 		const is_array = key.endsWith('[]');
 		/** @type {any[]} */
 		let values = data.getAll(key);
@@ -62,6 +60,344 @@ export function convert_formdata(data) {
 	}
 
 	return result;
+}
+
+export const BINARY_FORM_CONTENT_TYPE = 'application/x-sveltekit-formdata';
+const BINARY_FORM_VERSION = 0;
+
+/**
+ * The binary format is as follows:
+ * - 1 byte: Format version
+ * - 4 bytes: Length of the header (u32)
+ * - 2 bytes: Length of the file offset table (u16)
+ * - header: devalue.stringify([data, meta])
+ * - file offset table: JSON.stringify([offset1, offset2, ...]) (empty if no files) (offsets start from the end of the table)
+ * - file1, file2, ...
+ * @param {Record<string, any>} data
+ * @param {BinaryFormMeta} meta
+ */
+export function serialize_binary_form(data, meta) {
+	/** @type {Array<BlobPart>} */
+	const blob_parts = [new Uint8Array([BINARY_FORM_VERSION])];
+
+	/** @type {Array<[file: File, index: number]>} */
+	const files = [];
+
+	if (!meta.remote_refreshes?.length) {
+		delete meta.remote_refreshes;
+	}
+
+	const encoded_header = devalue.stringify([data, meta], {
+		File: (file) => {
+			if (!(file instanceof File)) return;
+
+			files.push([file, files.length]);
+			return [file.name, file.type, file.size, file.lastModified, files.length - 1];
+		}
+	});
+
+	const encoded_header_buffer = text_encoder.encode(encoded_header);
+
+	let encoded_file_offsets = '';
+	if (files.length) {
+		// Sort small files to the front
+		files.sort(([a], [b]) => a.size - b.size);
+
+		/** @type {Array<number>} */
+		const file_offsets = new Array(files.length);
+		let start = 0;
+		for (const [file, index] of files) {
+			file_offsets[index] = start;
+			start += file.size;
+		}
+		encoded_file_offsets = JSON.stringify(file_offsets);
+	}
+
+	const length_buffer = new Uint8Array(4);
+	const length_view = new DataView(length_buffer.buffer);
+
+	length_view.setUint32(0, encoded_header_buffer.byteLength, true);
+	blob_parts.push(length_buffer.slice());
+
+	length_view.setUint16(0, encoded_file_offsets.length, true);
+	blob_parts.push(length_buffer.slice(0, 2));
+
+	blob_parts.push(encoded_header_buffer);
+	blob_parts.push(encoded_file_offsets);
+
+	for (const [file] of files) {
+		blob_parts.push(file);
+	}
+
+	return {
+		blob: new Blob(blob_parts)
+	};
+}
+
+/**
+ * @param {Request} request
+ * @returns {Promise<{ data: Record<string, any>; meta: BinaryFormMeta; form_data: FormData | null }>}
+ */
+export async function deserialize_binary_form(request) {
+	if (request.headers.get('content-type') !== BINARY_FORM_CONTENT_TYPE) {
+		const form_data = await request.formData();
+		return { data: convert_formdata(form_data), meta: {}, form_data };
+	}
+	if (!request.body) {
+		throw new Error('Could not deserialize binary form: no body');
+	}
+
+	const reader = request.body.getReader();
+
+	/** @type {Array<Promise<Uint8Array<ArrayBuffer> | undefined>>} */
+	const chunks = [];
+
+	/**
+	 * @param {number} index
+	 * @returns {Promise<Uint8Array<ArrayBuffer> | undefined>}
+	 */
+	async function get_chunk(index) {
+		if (index in chunks) return chunks[index];
+
+		let i = chunks.length;
+		while (i <= index) {
+			chunks[i] = reader.read().then((chunk) => chunk.value);
+			i++;
+		}
+		return chunks[index];
+	}
+
+	/**
+	 * @param {number} offset
+	 * @param {number} length
+	 * @returns {Promise<Uint8Array | null>}
+	 */
+	async function get_buffer(offset, length) {
+		/** @type {Uint8Array} */
+		let start_chunk;
+		let chunk_start = 0;
+		/** @type {number} */
+		let chunk_index;
+		for (chunk_index = 0; ; chunk_index++) {
+			const chunk = await get_chunk(chunk_index);
+			if (!chunk) return null;
+
+			const chunk_end = chunk_start + chunk.byteLength;
+			// If this chunk contains the target offset
+			if (offset >= chunk_start && offset < chunk_end) {
+				start_chunk = chunk;
+				break;
+			}
+			chunk_start = chunk_end;
+		}
+		// If the buffer is completely contained in one chunk, do a subarray
+		if (offset + length <= chunk_start + start_chunk.byteLength) {
+			return start_chunk.subarray(offset - chunk_start, offset + length - chunk_start);
+		}
+		// Otherwise, copy the data into a new buffer
+		const buffer = new Uint8Array(length);
+		buffer.set(start_chunk.subarray(offset - chunk_start));
+		let cursor = start_chunk.byteLength - offset + chunk_start;
+		while (cursor < length) {
+			chunk_index++;
+			let chunk = await get_chunk(chunk_index);
+			if (!chunk) return null;
+			if (chunk.byteLength > length - cursor) {
+				chunk = chunk.subarray(0, length - cursor);
+			}
+			buffer.set(chunk, cursor);
+			cursor += chunk.byteLength;
+		}
+
+		return buffer;
+	}
+
+	const header = await get_buffer(0, 1 + 4 + 2);
+	if (!header) throw new Error('Could not deserialize binary form: too short');
+
+	if (header[0] !== BINARY_FORM_VERSION) {
+		throw new Error(
+			`Could not deserialize binary form: got version ${header[0]}, expected version ${BINARY_FORM_VERSION}`
+		);
+	}
+	const header_view = new DataView(header.buffer, header.byteOffset, header.byteLength);
+	const data_length = header_view.getUint32(1, true);
+	const file_offsets_length = header_view.getUint16(5, true);
+
+	// Read the form data
+	const data_buffer = await get_buffer(1 + 4 + 2, data_length);
+	if (!data_buffer) throw new Error('Could not deserialize binary form: data too short');
+
+	/** @type {Array<number>} */
+	let file_offsets;
+	/** @type {number} */
+	let files_start_offset;
+	if (file_offsets_length > 0) {
+		// Read the file offset table
+		const file_offsets_buffer = await get_buffer(1 + 4 + 2 + data_length, file_offsets_length);
+		if (!file_offsets_buffer)
+			throw new Error('Could not deserialize binary form: file offset table too short');
+
+		file_offsets = /** @type {Array<number>} */ (
+			JSON.parse(text_decoder.decode(file_offsets_buffer))
+		);
+		files_start_offset = 1 + 4 + 2 + data_length + file_offsets_length;
+	}
+
+	const [data, meta] = devalue.parse(text_decoder.decode(data_buffer), {
+		File: ([name, type, size, last_modified, index]) => {
+			return new Proxy(
+				new LazyFile(
+					name,
+					type,
+					size,
+					last_modified,
+					get_chunk,
+					files_start_offset + file_offsets[index]
+				),
+				{
+					getPrototypeOf() {
+						// Trick validators into thinking this is a normal File
+						return File.prototype;
+					}
+				}
+			);
+		}
+	});
+
+	// Read the request body asyncronously so it doesn't stall
+	void (async () => {
+		let has_more = true;
+		while (has_more) {
+			const chunk = await get_chunk(chunks.length);
+			has_more = !!chunk;
+		}
+	})();
+
+	return { data, meta, form_data: null };
+}
+
+/** @implements {File} */
+class LazyFile {
+	/** @type {(index: number) => Promise<Uint8Array<ArrayBuffer> | undefined>} */
+	#get_chunk;
+	/** @type {number} */
+	#offset;
+	/**
+	 * @param {string} name
+	 * @param {string} type
+	 * @param {number} size
+	 * @param {number} last_modified
+	 * @param {(index: number) => Promise<Uint8Array<ArrayBuffer> | undefined>} get_chunk
+	 * @param {number} offset
+	 */
+	constructor(name, type, size, last_modified, get_chunk, offset) {
+		this.name = name;
+		this.type = type;
+		this.size = size;
+		this.lastModified = last_modified;
+		this.webkitRelativePath = '';
+		this.#get_chunk = get_chunk;
+		this.#offset = offset;
+
+		// TODO - hacky, required for private members to be accessed on proxy
+		this.arrayBuffer = this.arrayBuffer.bind(this);
+		this.bytes = this.bytes.bind(this);
+		this.slice = this.slice.bind(this);
+		this.stream = this.stream.bind(this);
+		this.text = this.text.bind(this);
+	}
+	/** @type {ArrayBuffer | undefined} */
+	#buffer;
+	async arrayBuffer() {
+		this.#buffer ??= await new Response(this.stream()).arrayBuffer();
+		return this.#buffer;
+	}
+	async bytes() {
+		return new Uint8Array(await this.arrayBuffer());
+	}
+	/**
+	 * @param {number=} start
+	 * @param {number=} end
+	 * @param {string=} contentType
+	 */
+	slice(start = 0, end = this.size, contentType = this.type) {
+		// https://github.com/nodejs/node/blob/a5f3cd8cb5ba9e7911d93c5fd3ebc6d781220dd8/lib/internal/blob.js#L240
+		if (start < 0) {
+			start = Math.max(this.size + start, 0);
+		} else {
+			start = Math.min(start, this.size);
+		}
+
+		if (end < 0) {
+			end = Math.max(this.size + end, 0);
+		} else {
+			end = Math.min(end, this.size);
+		}
+		const size = Math.max(end - start, 0);
+		const file = new LazyFile(
+			this.name,
+			contentType,
+			size,
+			this.lastModified,
+			this.#get_chunk,
+			this.#offset + start
+		);
+
+		return file;
+	}
+	stream() {
+		let cursor = 0;
+		let chunk_index = 0;
+		return new ReadableStream({
+			start: async (controller) => {
+				let chunk_start = 0;
+				let start_chunk = null;
+				for (chunk_index = 0; ; chunk_index++) {
+					const chunk = await this.#get_chunk(chunk_index);
+					if (!chunk) return null;
+
+					const chunk_end = chunk_start + chunk.byteLength;
+					// If this chunk contains the target offset
+					if (this.#offset >= chunk_start && this.#offset < chunk_end) {
+						start_chunk = chunk;
+						break;
+					}
+					chunk_start = chunk_end;
+				}
+				// If the buffer is completely contained in one chunk, do a subarray
+				if (this.#offset + this.size <= chunk_start + start_chunk.byteLength) {
+					controller.enqueue(
+						start_chunk.subarray(this.#offset - chunk_start, this.#offset + this.size - chunk_start)
+					);
+					controller.close();
+				} else {
+					controller.enqueue(start_chunk.subarray(this.#offset - chunk_start));
+					cursor = start_chunk.byteLength - this.#offset + chunk_start;
+				}
+			},
+			pull: async (controller) => {
+				chunk_index++;
+				let chunk = await this.#get_chunk(chunk_index);
+				if (!chunk) {
+					controller.error('Could not deserialize binary form: incomplete file data');
+					controller.close();
+					return;
+				}
+				if (chunk.byteLength > this.size - cursor) {
+					chunk = chunk.subarray(0, this.size - cursor);
+				}
+				controller.enqueue(chunk);
+				cursor += chunk.byteLength;
+				if (cursor >= this.size) {
+					controller.close();
+				}
+			}
+		});
+	}
+	async text() {
+		return text_decoder.decode(await this.arrayBuffer());
+	}
 }
 
 const path_regex = /^[a-zA-Z_$]\w*(\.[a-zA-Z_$]\w*|\[\d+\])*$/;
