@@ -1062,6 +1062,53 @@ test.describe('data-sveltekit attributes', () => {
 		await expect(page.getByText('slow navigation', { exact: true })).toBeVisible();
 	});
 
+	test('preloading one route then navigating to another shows correct content', async ({
+		page
+	}) => {
+		await page.goto('/data-sveltekit/preload-data/offline');
+
+		// Hover over "target" link to trigger preload
+		await page.locator('#one').dispatchEvent('mousemove');
+		await Promise.all([
+			page.waitForTimeout(100), // wait for preloading to start
+			page.waitForLoadState('networkidle') // wait for preloading to finish
+		]);
+
+		// Now click on "slow-navigation" link (different from preloaded route)
+		await page.locator('#slow-navigation').click();
+		await page.waitForURL('/data-sveltekit/preload-data/offline/slow-navigation');
+
+		// Verify the correct content is displayed (not the preloaded route's content)
+		await expect(page.getByText('slow navigation', { exact: true })).toBeVisible();
+		// Make sure the preloaded route's content is NOT displayed
+		await expect(page.getByText('target', { exact: true })).not.toBeVisible();
+	});
+
+	test('preloading route with layout A then navigating to route with layout B shows correct layout', async ({
+		page
+	}) => {
+		await page.goto('/data-sveltekit/preload-data/layout-switch');
+
+		// Hover over link to Page A (triggers preload for Page A with Layout A)
+		await page.locator('#link-a').dispatchEvent('mousemove');
+		await Promise.all([
+			page.waitForTimeout(100), // wait for preloading to start
+			page.waitForLoadState('networkidle') // wait for preloading to finish
+		]);
+
+		// Now click on link to Page B (different layout group)
+		await page.locator('#link-b').click();
+		await page.waitForURL('/data-sveltekit/preload-data/layout-switch/page-b');
+
+		// Verify Layout B is displayed (not Layout A from preload)
+		await expect(page.locator('#layout-b')).toBeVisible();
+		await expect(page.locator('#layout-a')).not.toBeVisible();
+
+		// Verify Page B content is displayed
+		await expect(page.locator('#page-b-content')).toBeVisible();
+		await expect(page.locator('#page-a-content')).not.toBeVisible();
+	});
+
 	test('data-sveltekit-preload-data tap works after data-sveltekit-preload-code hover', async ({
 		page
 	}) => {
