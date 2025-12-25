@@ -2,16 +2,17 @@
 /** @import { RemoteFunctionResponse } from 'types' */
 /** @import { Query } from './query.svelte.js' */
 import * as devalue from 'devalue';
-import { app, goto, query_map, remote_responses } from '../client.js';
+import { app, goto, redirect_fork, query_map, remote_responses } from '../client.js';
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
-import { tick } from 'svelte';
+import { getContext, tick } from 'svelte';
 import { create_remote_key, stringify_remote_arg } from '../../shared.js';
 
 /**
  *
  * @param {string} url
+ * @param {Map<import('svelte').Fork | undefined, number>} forks
  */
-export async function remote_request(url) {
+export async function remote_request(url, forks = new Map()) {
 	const response = await fetch(url, {
 		headers: {
 			// TODO in future, when we support forking, we will likely need
@@ -29,7 +30,27 @@ export async function remote_request(url) {
 	const result = /** @type {RemoteFunctionResponse} */ (await response.json());
 
 	if (result.type === 'redirect') {
-		await goto(result.location);
+		if (
+			forks.size === 0 ||
+			Array.from(forks.keys()).some(
+				(fork) =>
+					!fork ||
+					!fork.isDiscarded || // isDiscarded et al was introduced later, do this for backwards compatibility
+					fork.isCommitted()
+			)
+		) {
+			// If this query is used in at least one non-forked context,
+			// it means it's part of the current world, therefore perform a regular redirect
+			await goto(result.location);
+		} else {
+			for (const fork of /** @type {MapIterator<import('svelte').Fork>} */ (forks.keys())) {
+				if (!fork.isDiscarded()) {
+					redirect_fork(fork, result.location);
+					break; // there can only be one current fork
+				}
+			}
+		}
+
 		throw new Redirect(307, result.location);
 	}
 
@@ -43,10 +64,18 @@ export async function remote_request(url) {
 /**
  * Client-version of the `query`/`prerender`/`cache` function from `$app/server`.
  * @param {string} id
- * @param {(key: string, args: string) => any} create
+ * @param {(key: string, args: string, forks: Map<import('svelte').Fork | undefined, number>) => any} create
  */
 export function create_remote_function(id, create) {
 	return (/** @type {any} */ arg) => {
+		/** @type {import('svelte').Fork | undefined} */
+		let fork = undefined;
+		try {
+			fork = getContext('__sveltekit_fork')?.();
+		} catch {
+			// not called in a reactive context
+		}
+
 		const payload = stringify_remote_arg(arg, app.hooks.transport);
 		const cache_key = create_remote_key(id, payload);
 		let entry = query_map.get(cache_key);
@@ -54,11 +83,22 @@ export function create_remote_function(id, create) {
 		let tracking = true;
 		try {
 			$effect.pre(() => {
-				if (entry) entry.count++;
+				if (entry) {
+					entry.count++;
+					entry.forks.set(fork, (entry.forks.get(fork) ?? 0) + 1);
+				}
 				return () => {
 					const entry = query_map.get(cache_key);
 					if (entry) {
 						entry.count--;
+
+						const fork_count = /** @type {number} */ (entry.forks.get(fork)) - 1;
+						if (fork_count === 0) {
+							entry.forks.delete(fork);
+						} else {
+							entry.forks.set(fork, fork_count);
+						}
+
 						void tick().then(() => {
 							if (!entry.count && entry === query_map.get(cache_key)) {
 								query_map.delete(cache_key);
@@ -74,7 +114,8 @@ export function create_remote_function(id, create) {
 
 		let resource = entry?.resource;
 		if (!resource) {
-			resource = create(cache_key, payload);
+			const forks = new Map([[fork, 1]]);
+			resource = create(cache_key, payload, forks);
 
 			Object.defineProperty(resource, '_key', {
 				value: cache_key
@@ -84,6 +125,7 @@ export function create_remote_function(id, create) {
 				cache_key,
 				(entry = {
 					count: tracking ? 1 : 0,
+					forks,
 					resource
 				})
 			);
