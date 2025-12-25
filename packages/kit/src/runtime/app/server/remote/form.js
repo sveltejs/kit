@@ -1,5 +1,5 @@
-/** @import { RemoteFormInput, RemoteForm, InvalidField } from '@sveltejs/kit' */
-/** @import { InternalRemoteFormIssue, MaybePromise, RemoteInfo } from 'types' */
+/** @import { RemoteFormInput, RemoteForm, RemoteFormFactory, RemoteFormFactoryOptions, InvalidField } from '@sveltejs/kit' */
+/** @import { ExtractId, InternalRemoteFormIssue, MaybePromise, RemoteInfo } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 import { get_request_store } from '@sveltejs/kit/internal/server';
 import { DEV } from 'esm-env';
@@ -15,18 +15,18 @@ import { get_cache, run_remote_function } from './shared.js';
 import { ValidationError } from '@sveltejs/kit/internal';
 
 /**
- * Creates a form object that can be spread onto a `<form>` element.
+ * Creates a factory function that returns form instances which can be spread onto a `<form>` element.
  *
  * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
  *
  * @template Output
  * @overload
  * @param {() => MaybePromise<Output>} fn
- * @returns {RemoteForm<void, Output>}
+ * @returns {RemoteFormFactory<void, Output>}
  * @since 2.27
  */
 /**
- * Creates a form object that can be spread onto a `<form>` element.
+ * Creates a factory function that returns form instances which can be spread onto a `<form>` element.
  *
  * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
  *
@@ -35,11 +35,11 @@ import { ValidationError } from '@sveltejs/kit/internal';
  * @overload
  * @param {'unchecked'} validate
  * @param {(data: Input, issue: InvalidField<Input>) => MaybePromise<Output>} fn
- * @returns {RemoteForm<Input, Output>}
+ * @returns {RemoteFormFactory<Input, Output>}
  * @since 2.27
  */
 /**
- * Creates a form object that can be spread onto a `<form>` element.
+ * Creates a factory function that returns form instances which can be spread onto a `<form>` element.
  *
  * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
  *
@@ -48,7 +48,7 @@ import { ValidationError } from '@sveltejs/kit/internal';
  * @overload
  * @param {Schema} validate
  * @param {(data: StandardSchemaV1.InferOutput<Schema>, issue: InvalidField<StandardSchemaV1.InferInput<Schema>>) => MaybePromise<Output>} fn
- * @returns {RemoteForm<StandardSchemaV1.InferInput<Schema>, Output>}
+ * @returns {RemoteFormFactory<StandardSchemaV1.InferInput<Schema>, Output>}
  * @since 2.27
  */
 /**
@@ -56,7 +56,7 @@ import { ValidationError } from '@sveltejs/kit/internal';
  * @template Output
  * @param {any} validate_or_fn
  * @param {(data_or_issue: any, issue?: any) => MaybePromise<Output>} [maybe_fn]
- * @returns {RemoteForm<Input, Output>}
+ * @returns {RemoteFormFactory<Input, Output>}
  * @since 2.27
  */
 /*@__NO_SIDE_EFFECTS__*/
@@ -70,9 +70,131 @@ export function form(validate_or_fn, maybe_fn) {
 		!maybe_fn || validate_or_fn === 'unchecked' ? null : /** @type {any} */ (validate_or_fn);
 
 	/**
-	 * @param {string | number | boolean} [key]
+	 * Creates the form handler function that processes form submissions
+	 * @param {RemoteInfo & { type: 'form' }} cache_info - The info object to use for caching results
+	 * @returns {(body: Record<string, any>, meta: any, form_data: FormData | null) => Promise<any>}
+	 */
+	function remote_handler(cache_info) {
+		return async (
+			/** @type {Record<string, any>} */ data,
+			/** @type {any} */ meta,
+			/** @type {FormData | null} */ form_data
+		) => {
+			// TODO 3.0 remove this warning
+			if (DEV && !data) {
+				const error = () => {
+					throw new Error(
+						'Remote form functions no longer get passed a FormData object. ' +
+							"`form` now has the same signature as `query` or `command`, i.e. it expects to be invoked like `form(schema, callback)` or `form('unchecked', callback)`. " +
+							'The payload of the callback function is now a POJO instead of a FormData object. See https://kit.svelte.dev/docs/remote-functions#form for details.'
+					);
+				};
+				data = {};
+				for (const key of [
+					'append',
+					'delete',
+					'entries',
+					'forEach',
+					'get',
+					'getAll',
+					'has',
+					'keys',
+					'set',
+					'values'
+				]) {
+					Object.defineProperty(data, key, { get: error });
+				}
+			}
+
+			/** @type {{ submission: true, input?: Record<string, any>, issues?: InternalRemoteFormIssue[], result: Output }} */
+			const output = {};
+
+			// make it possible to differentiate between user submission and programmatic `field.set(...)` updates
+			output.submission = true;
+
+			const { event, state } = get_request_store();
+			const validated = await schema?.['~standard'].validate(data);
+
+			if (meta.validate_only) {
+				return validated?.issues?.map((issue) => normalize_issue(issue, true)) ?? [];
+			}
+
+			if (validated?.issues !== undefined) {
+				handle_issues(output, validated.issues, form_data);
+			} else {
+				if (validated !== undefined) {
+					data = validated.value;
+				}
+
+				state.refreshes ??= {};
+
+				const issue = create_issues();
+
+				try {
+					output.result = await run_remote_function(
+						event,
+						state,
+						true,
+						data,
+						(d) => d,
+						(data) => (!maybe_fn ? fn() : fn(data, issue))
+					);
+				} catch (e) {
+					if (e instanceof ValidationError) {
+						handle_issues(output, e.issues, form_data);
+					} else {
+						throw e;
+					}
+				}
+			}
+
+			// We don't need to care about args or deduplicating calls, because uneval results are only relevant in full page reloads
+			// where only one form submission is active at the same time
+			// Cache using the provided cache_info so keyed instances have separate caches
+			if (!event.isRemoteRequest) {
+				get_cache(cache_info, state)[''] ??= output;
+			}
+
+			return output;
+		};
+	}
+
+	/** @type {RemoteInfo & { type: 'form' }} */
+	const __ = {
+		type: 'form',
+		name: '',
+		id: '',
+		fn: /** @type {any} */ (null)
+	};
+	// Assign fn after __ is created to avoid circular reference
+	__.fn = remote_handler(__);
+
+	/**
+	 * @param {ExtractId<Input>} [key]
+	 * @returns {RemoteForm<Input, Output>}
 	 */
 	function create_instance(key) {
+		const { state } = get_request_store();
+		const instance_id = key !== undefined ? `${__.id}/${JSON.stringify(key)}` : __.id;
+
+		// Create instance-specific info object with the correct id
+		/** @type {RemoteInfo & { type: 'form' }} */
+		const instance_info = {
+			type: 'form',
+			name: __.name,
+			id: instance_id,
+			fn: /** @type {any} */ (null)
+		};
+		// Assign fn after instance_info is created to avoid circular reference
+		instance_info.fn = remote_handler(instance_info);
+
+		// Check cache for keyed instances
+		const cache_key = instance_info.id + '|' + JSON.stringify(key);
+		const cached = (state.form_instances ??= new Map()).get(cache_key);
+		if (cached) {
+			return cached;
+		}
+
 		/** @type {RemoteForm<Input, Output>} */
 		const instance = {};
 
@@ -99,105 +221,21 @@ export function form(validate_or_fn, maybe_fn) {
 			value: button_props
 		});
 
-		/** @type {RemoteInfo} */
-		const __ = {
-			type: 'form',
-			name: '',
-			id: '',
-			fn: async (data, meta, form_data) => {
-				// TODO 3.0 remove this warning
-				if (DEV && !data) {
-					const error = () => {
-						throw new Error(
-							'Remote form functions no longer get passed a FormData object. ' +
-								"`form` now has the same signature as `query` or `command`, i.e. it expects to be invoked like `form(schema, callback)` or `form('unchecked', callback)`. " +
-								'The payload of the callback function is now a POJO instead of a FormData object. See https://kit.svelte.dev/docs/remote-functions#form for details.'
-						);
-					};
-					data = {};
-					for (const key of [
-						'append',
-						'delete',
-						'entries',
-						'forEach',
-						'get',
-						'getAll',
-						'has',
-						'keys',
-						'set',
-						'values'
-					]) {
-						Object.defineProperty(data, key, { get: error });
-					}
-				}
-
-				/** @type {{ submission: true, input?: Record<string, any>, issues?: InternalRemoteFormIssue[], result: Output }} */
-				const output = {};
-
-				// make it possible to differentiate between user submission and programmatic `field.set(...)` updates
-				output.submission = true;
-
-				const { event, state } = get_request_store();
-				const validated = await schema?.['~standard'].validate(data);
-
-				if (meta.validate_only) {
-					return validated?.issues?.map((issue) => normalize_issue(issue, true)) ?? [];
-				}
-
-				if (validated?.issues !== undefined) {
-					handle_issues(output, validated.issues, form_data);
-				} else {
-					if (validated !== undefined) {
-						data = validated.value;
-					}
-
-					state.refreshes ??= {};
-
-					const issue = create_issues();
-
-					try {
-						output.result = await run_remote_function(
-							event,
-							state,
-							true,
-							data,
-							(d) => d,
-							(data) => (!maybe_fn ? fn() : fn(data, issue))
-						);
-					} catch (e) {
-						if (e instanceof ValidationError) {
-							handle_issues(output, e.issues, form_data);
-						} else {
-							throw e;
-						}
-					}
-				}
-
-				// We don't need to care about args or deduplicating calls, because uneval results are only relevant in full page reloads
-				// where only one form submission is active at the same time
-				if (!event.isRemoteRequest) {
-					get_cache(__, state)[''] ??= output;
-				}
-
-				return output;
-			}
-		};
-
-		Object.defineProperty(instance, '__', { value: __ });
+		Object.defineProperty(instance, '__', { value: instance_info });
 
 		Object.defineProperty(instance, 'action', {
-			get: () => `?/remote=${__.id}`,
+			get: () => `?/remote=${instance_info.id}`,
 			enumerable: true
 		});
 
 		Object.defineProperty(button_props, 'formaction', {
-			get: () => `?/remote=${__.id}`,
+			get: () => `?/remote=${instance_info.id}`,
 			enumerable: true
 		});
 
 		Object.defineProperty(instance, 'fields', {
 			get() {
-				const data = get_cache(__)?.[''];
+				const data = get_cache(instance_info)?.[''];
 				const issues = flatten_issues(data?.issues ?? []);
 
 				return create_field_proxy(
@@ -212,7 +250,7 @@ export function form(validate_or_fn, maybe_fn) {
 						const input =
 							path.length === 0 ? value : deep_set(data?.input ?? {}, path.map(String), value);
 
-						(get_cache(__)[''] ??= {}).input = input;
+						(get_cache(instance_info)[''] ??= {}).input = input;
 					},
 					() => issues
 				);
@@ -227,7 +265,7 @@ export function form(validate_or_fn, maybe_fn) {
 		Object.defineProperty(instance, 'result', {
 			get() {
 				try {
-					return get_cache(__)?.['']?.result;
+					return get_cache(instance_info)?.['']?.result;
 				} catch {
 					return undefined;
 				}
@@ -244,42 +282,40 @@ export function form(validate_or_fn, maybe_fn) {
 			get: () => 0
 		});
 
-		Object.defineProperty(instance, 'preflight', {
-			// preflight is a noop on the server
-			value: () => instance
-		});
-
 		Object.defineProperty(instance, 'validate', {
 			value: () => {
 				throw new Error('Cannot call validate() on the server');
 			}
 		});
 
-		if (key == undefined) {
-			Object.defineProperty(instance, 'for', {
-				/** @type {RemoteForm<any, any>['for']} */
-				value: (key) => {
-					const { state } = get_request_store();
-					const cache_key = __.id + '|' + JSON.stringify(key);
-					let instance = (state.form_instances ??= new Map()).get(cache_key);
-
-					if (!instance) {
-						instance = create_instance(key);
-						instance.__.id = `${__.id}/${encodeURIComponent(JSON.stringify(key))}`;
-						instance.__.name = __.name;
-
-						state.form_instances.set(cache_key, instance);
-					}
-
-					return instance;
-				}
-			});
-		}
+		// Cache keyed instances
+		const form_instances = state.form_instances ?? (state.form_instances = new Map());
+		form_instances.set(cache_key, instance);
 
 		return instance;
 	}
 
-	return create_instance();
+	/** @type {RemoteFormFactory<Input, Output>} */
+	const factory = (arg) => {
+		/** @type {RemoteFormFactoryOptions<Input> | undefined } */
+		const options = arg && typeof arg === 'object' ? arg : undefined;
+		const key = options ? options.key : /** @type {ExtractId<Input> | undefined} */ (arg);
+
+		const instance = create_instance(key);
+
+		if (options?.initialData) {
+			// seed initial input into cache for SSR
+			const { state } = get_request_store();
+			const cache = get_cache(/** @type any */ (instance).__, state);
+			(cache[''] ??= {}).input = options.initialData;
+		}
+
+		return instance;
+	};
+
+	Object.defineProperty(factory, '__', { value: __ });
+
+	return factory;
 }
 
 /**
