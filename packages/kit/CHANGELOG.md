@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.49.3
+### Patch Changes
+
+
+- fix: add `typescript` as an optional peer dependency ([#15074](https://github.com/sveltejs/kit/pull/15074))
+
 ## 2.49.2
 ### Patch Changes
 
