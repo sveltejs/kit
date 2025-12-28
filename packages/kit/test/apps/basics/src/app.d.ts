@@ -12,6 +12,7 @@ declare global {
 		interface PageState {
 			active?: boolean;
 			count?: number;
+			showOther?: boolean;
 		}
 	}
 }
