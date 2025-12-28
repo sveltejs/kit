@@ -1646,6 +1646,19 @@ test.describe('Shallow routing', () => {
 		await page.locator('button').click();
 		await expect(page.locator('p')).toHaveText('count: 1');
 	});
+
+	test('preloadData updates local state in component rendered via pushState', async ({ page }) => {
+		await page.goto('/shallow-routing/preload-push');
+		await expect(page.locator('#initial')).toHaveText('Initial page');
+
+		await page.locator('#show-other').click();
+		await expect(page.locator('#other-component')).toBeVisible();
+		await expect(page.locator('#result')).toHaveText('Result: -');
+
+		await page.locator('#other-component button').click();
+
+		await expect(page.locator('#result')).toHaveText('Result: Preloaded data');
+	});
 });
 
 test.describe('reroute', () => {

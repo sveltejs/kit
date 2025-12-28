@@ -308,3 +308,18 @@ test.describe('remote function mutations', () => {
 		await expect(page.locator('h1')).toHaveText('hello from remote function!');
 	});
 });
+
+test.describe('shallow routing', () => {
+	// https://github.com/sveltejs/kit/issues/14960
+	test('preloadData updates local state in component rendered via pushState', async ({ page }) => {
+		await page.goto('/shallow-routing/preload-push');
+		await expect(page.locator('#initial')).toHaveText('Initial page');
+
+		await page.locator('#show-other').click();
+		await expect(page.locator('#other-component')).toBeVisible();
+		await expect(page.locator('#result')).toHaveText('Result: -');
+
+		await page.locator('#other-component button').click();
+		await expect(page.locator('#result')).toHaveText('Result: Preloaded data');
+	});
+});
