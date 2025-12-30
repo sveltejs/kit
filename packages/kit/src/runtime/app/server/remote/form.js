@@ -1,10 +1,9 @@
-/** @import { RemoteFormInput, RemoteForm } from '@sveltejs/kit' */
+/** @import { RemoteFormInput, RemoteForm, InvalidField } from '@sveltejs/kit' */
 /** @import { InternalRemoteFormIssue, MaybePromise, RemoteInfo } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 import { get_request_store } from '@sveltejs/kit/internal/server';
 import { DEV } from 'esm-env';
 import {
-	convert_formdata,
 	create_field_proxy,
 	set_nested_value,
 	throw_on_old_property_access,
@@ -13,6 +12,7 @@ import {
 	flatten_issues
 } from '../../../form-utils.js';
 import { get_cache, run_remote_function } from './shared.js';
+import { ValidationError } from '@sveltejs/kit/internal';
 
 /**
  * Creates a form object that can be spread onto a `<form>` element.
@@ -21,7 +21,7 @@ import { get_cache, run_remote_function } from './shared.js';
  *
  * @template Output
  * @overload
- * @param {(invalid: import('@sveltejs/kit').Invalid<void>) => MaybePromise<Output>} fn
+ * @param {() => MaybePromise<Output>} fn
  * @returns {RemoteForm<void, Output>}
  * @since 2.27
  */
@@ -34,7 +34,7 @@ import { get_cache, run_remote_function } from './shared.js';
  * @template Output
  * @overload
  * @param {'unchecked'} validate
- * @param {(data: Input, invalid: import('@sveltejs/kit').Invalid<Input>) => MaybePromise<Output>} fn
+ * @param {(data: Input, issue: InvalidField<Input>) => MaybePromise<Output>} fn
  * @returns {RemoteForm<Input, Output>}
  * @since 2.27
  */
@@ -47,7 +47,7 @@ import { get_cache, run_remote_function } from './shared.js';
  * @template Output
  * @overload
  * @param {Schema} validate
- * @param {(data: StandardSchemaV1.InferOutput<Schema>, invalid: import('@sveltejs/kit').Invalid<StandardSchemaV1.InferInput<Schema>>) => MaybePromise<Output>} fn
+ * @param {(data: StandardSchemaV1.InferOutput<Schema>, issue: InvalidField<StandardSchemaV1.InferInput<Schema>>) => MaybePromise<Output>} fn
  * @returns {RemoteForm<StandardSchemaV1.InferInput<Schema>, Output>}
  * @since 2.27
  */
@@ -55,7 +55,7 @@ import { get_cache, run_remote_function } from './shared.js';
  * @template {RemoteFormInput} Input
  * @template Output
  * @param {any} validate_or_fn
- * @param {(data_or_invalid: any, invalid?: any) => MaybePromise<Output>} [maybe_fn]
+ * @param {(data_or_issue: any, issue?: any) => MaybePromise<Output>} [maybe_fn]
  * @returns {RemoteForm<Input, Output>}
  * @since 2.27
  */
@@ -104,19 +104,7 @@ export function form(validate_or_fn, maybe_fn) {
 			type: 'form',
 			name: '',
 			id: '',
-			/** @param {FormData} form_data */
-			fn: async (form_data) => {
-				const validate_only = form_data.get('sveltekit:validate_only') === 'true';
-
-				let data = maybe_fn ? convert_formdata(form_data) : undefined;
-
-				if (data && data.id === undefined) {
-					const id = form_data.get('sveltekit:id');
-					if (typeof id === 'string') {
-						data.id = JSON.parse(id);
-					}
-				}
-
+			fn: async (data, meta, form_data) => {
 				// TODO 3.0 remove this warning
 				if (DEV && !data) {
 					const error = () => {
@@ -152,12 +140,12 @@ export function form(validate_or_fn, maybe_fn) {
 				const { event, state } = get_request_store();
 				const validated = await schema?.['~standard'].validate(data);
 
-				if (validate_only) {
-					return validated?.issues ?? [];
+				if (meta.validate_only) {
+					return validated?.issues?.map((issue) => normalize_issue(issue, true)) ?? [];
 				}
 
 				if (validated?.issues !== undefined) {
-					handle_issues(output, validated.issues, event.isRemoteRequest, form_data);
+					handle_issues(output, validated.issues, form_data);
 				} else {
 					if (validated !== undefined) {
 						data = validated.value;
@@ -165,7 +153,7 @@ export function form(validate_or_fn, maybe_fn) {
 
 					state.refreshes ??= {};
 
-					const invalid = create_invalid();
+					const issue = create_issues();
 
 					try {
 						output.result = await run_remote_function(
@@ -174,11 +162,11 @@ export function form(validate_or_fn, maybe_fn) {
 							true,
 							data,
 							(d) => d,
-							(data) => (!maybe_fn ? fn(invalid) : fn(data, invalid))
+							(data) => (!maybe_fn ? fn() : fn(data, issue))
 						);
 					} catch (e) {
 						if (e instanceof ValidationError) {
-							handle_issues(output, e.issues, event.isRemoteRequest, form_data);
+							handle_issues(output, e.issues, form_data);
 						} else {
 							throw e;
 						}
@@ -311,15 +299,14 @@ export function form(validate_or_fn, maybe_fn) {
 /**
  * @param {{ issues?: InternalRemoteFormIssue[], input?: Record<string, any>, result: any }} output
  * @param {readonly StandardSchemaV1.Issue[]} issues
- * @param {boolean} is_remote_request
- * @param {FormData} form_data
+ * @param {FormData | null} form_data - null if the form is progressively enhanced
  */
-function handle_issues(output, issues, is_remote_request, form_data) {
+function handle_issues(output, issues, form_data) {
 	output.issues = issues.map((issue) => normalize_issue(issue, true));
 
 	// if it was a progressively-enhanced submission, we don't need
 	// to return the input — it's already there
-	if (!is_remote_request) {
+	if (form_data) {
 		output.input = {};
 
 		for (let key of form_data.keys()) {
@@ -342,89 +329,72 @@ function handle_issues(output, issues, is_remote_request, form_data) {
 
 /**
  * Creates an invalid function that can be used to imperatively mark form fields as invalid
- * @returns {import('@sveltejs/kit').Invalid}
+ * @returns {InvalidField<any>}
  */
-function create_invalid() {
-	/**
-	 * @param {...(string | StandardSchemaV1.Issue)} issues
-	 * @returns {never}
-	 */
-	function invalid(...issues) {
-		throw new ValidationError(
-			issues.map((issue) => {
-				if (typeof issue === 'string') {
-					return {
-						path: [],
-						message: issue
-					};
+function create_issues() {
+	return /** @type {InvalidField<any>} */ (
+		new Proxy(
+			/** @param {string} message */
+			(message) => {
+				// TODO 3.0 remove
+				if (typeof message !== 'string') {
+					throw new Error(
+						'`invalid` should now be imported from `@sveltejs/kit` to throw validation issues. ' +
+							"The second parameter provided to the form function (renamed to `issue`) is still used to construct issues, e.g. `invalid(issue.field('message'))`. " +
+							'For more info see https://github.com/sveltejs/kit/pulls/14768'
+					);
 				}
 
-				return issue;
-			})
-		);
-	}
+				return create_issue(message);
+			},
+			{
+				get(target, prop) {
+					if (typeof prop === 'symbol') return /** @type {any} */ (target)[prop];
 
-	return /** @type {import('@sveltejs/kit').Invalid} */ (
-		new Proxy(invalid, {
-			get(target, prop) {
-				if (typeof prop === 'symbol') return /** @type {any} */ (target)[prop];
-
-				/**
-				 * @param {string} message
-				 * @param {(string | number)[]} path
-				 * @returns {StandardSchemaV1.Issue}
-				 */
-				const create_issue = (message, path = []) => ({
-					message,
-					path
-				});
-
-				return create_issue_proxy(prop, create_issue, []);
+					return create_issue_proxy(prop, []);
+				}
 			}
-		})
+		)
 	);
-}
-
-/**
- * Error thrown when form validation fails imperatively
- */
-class ValidationError extends Error {
-	/**
-	 * @param {StandardSchemaV1.Issue[]} issues
-	 */
-	constructor(issues) {
-		super('Validation failed');
-		this.name = 'ValidationError';
-		this.issues = issues;
-	}
-}
-
-/**
- * Creates a proxy that builds up a path and returns a function to create an issue
- * @param {string | number} key
- * @param {(message: string, path: (string | number)[]) => StandardSchemaV1.Issue} create_issue
- * @param {(string | number)[]} path
- */
-function create_issue_proxy(key, create_issue, path) {
-	const new_path = [...path, key];
 
 	/**
 	 * @param {string} message
+	 * @param {(string | number)[]} path
 	 * @returns {StandardSchemaV1.Issue}
 	 */
-	const issue_func = (message) => create_issue(message, new_path);
+	function create_issue(message, path = []) {
+		return {
+			message,
+			path
+		};
+	}
 
-	return new Proxy(issue_func, {
-		get(target, prop) {
-			if (typeof prop === 'symbol') return /** @type {any} */ (target)[prop];
+	/**
+	 * Creates a proxy that builds up a path and returns a function to create an issue
+	 * @param {string | number} key
+	 * @param {(string | number)[]} path
+	 */
+	function create_issue_proxy(key, path) {
+		const new_path = [...path, key];
 
-			// Handle array access like invalid.items[0]
-			if (/^\d+$/.test(prop)) {
-				return create_issue_proxy(parseInt(prop, 10), create_issue, new_path);
+		/**
+		 * @param {string} message
+		 * @returns {StandardSchemaV1.Issue}
+		 */
+		const issue_func = (message) => create_issue(message, new_path);
+
+		return new Proxy(issue_func, {
+			get(target, prop) {
+				if (typeof prop === 'symbol') return /** @type {any} */ (target)[prop];
+
+				// Handle array access like invalid.items[0]
+				if (/^\d+$/.test(prop)) {
+					return create_issue_proxy(parseInt(prop, 10), new_path);
+				}
+
+				// Handle property access like invalid.field.nested
+				return create_issue_proxy(prop, new_path);
 			}
-
-			// Handle property access like invalid.field.nested
-			return create_issue_proxy(prop, create_issue, new_path);
-		}
-	});
+		});
+	}
 }

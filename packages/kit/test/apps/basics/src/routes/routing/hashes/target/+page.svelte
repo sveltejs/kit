@@ -3,8 +3,8 @@
 	<li><a href="#p2">second paragraph</a></li>
 </ol>
 
-<p id="p1">paragraph 1</p>
-<p id="p2">paragraph 2</p>
+<p tabindex="-1" id="p1">paragraph 1</p>
+<p tabindex="-1" id="p2">paragraph 2</p>
 
 <li><button>next focus element</button></li>
 
