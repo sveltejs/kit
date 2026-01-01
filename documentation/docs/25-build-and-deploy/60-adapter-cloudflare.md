@@ -176,7 +176,7 @@ export {};
 
 Cloudflare specific values in the `platform` property are emulated during dev and preview modes. Local [bindings](https://developers.cloudflare.com/workers/wrangler/configuration/#bindings) are created based on your [Wrangler configuration file](https://developers.cloudflare.com/workers/wrangler/) and are used to populate `platform.env` during development and preview. Use the adapter config [`platformProxy` option](#Options-platformProxy) to change your preferences for the bindings.
 
-For testing the build, you should use [Wrangler](https://developers.cloudflare.com/workers/wrangler/) version 4. Once you have built your site, run `wrangler dev .svelte-kit/cloudflare` if you're testing for Cloudflare Workers or `wrangler pages dev .svelte-kit/cloudflare` for Cloudflare Pages.
+For testing the build, you should use [Wrangler](https://developers.cloudflare.com/workers/wrangler/) version 4. Once you have built your site, run `wrangler dev .svelte-kit/cloudflare/_worker.js` if you're testing for Cloudflare Workers or `wrangler pages dev .svelte-kit/cloudflare` for Cloudflare Pages.
 
 ## Headers and redirects
 
@@ -237,7 +237,7 @@ export default config;
 /// file: wrangler.toml
 ---site.bucket = ".cloudflare/public"---
 +++assets.directory = ".cloudflare/public"
-assets.binding = "ASSETS"+++
+assets.binding = "ASSETS" # Exclude this if you don't have a `main` key configured.+++
 ```
 
 ### wrangler.jsonc
@@ -250,7 +250,7 @@ assets.binding = "ASSETS"+++
 	},---
 +++	"assets": {
 		"directory": ".cloudflare/public",
-		"binding": "ASSETS"
+		"binding": "ASSETS" // Exclude this if you don't have a `main` key configured.
 	}+++
 }
 ```

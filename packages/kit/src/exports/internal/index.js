@@ -1,3 +1,5 @@
+/** @import { StandardSchemaV1 } from '@standard-schema/spec' */
+
 export class HttpError {
 	/**
 	 * @param {number} status
@@ -62,4 +64,18 @@ export class ActionFailure {
 	}
 }
 
-export { validate_remote_functions } from './remote-functions.js';
+/**
+ * Error thrown when form validation fails imperatively
+ */
+export class ValidationError extends Error {
+	/**
+	 * @param {StandardSchemaV1.Issue[]} issues
+	 */
+	constructor(issues) {
+		super('Validation failed');
+		this.name = 'ValidationError';
+		this.issues = issues;
+	}
+}
+
+export { init_remote_functions } from './remote-functions.js';

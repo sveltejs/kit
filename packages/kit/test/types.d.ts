@@ -21,7 +21,10 @@ export const test: TestType<
 				preloadCode(pathname: string): Promise<void>;
 				preloadData(url: string): Promise<void>;
 			};
-			clicknav(selector: string, options?: Parameters<Page['waitForNavigation']>[0]): Promise<void>;
+			clicknav(
+				selector: string,
+				options?: { timeout?: number; waitForURL?: string }
+			): Promise<void>;
 			scroll_to(x: number, y: number): Promise<void>;
 			in_view(selector: string): Promise<boolean>;
 			get_computed_style(selector: string, prop: string): Promise<string>;
@@ -29,6 +32,7 @@ export const test: TestType<
 			 * `handleError` defines the shape
 			 */
 			read_errors(href: string): Record<string, any>;
+			read_traces(test_id: string): SpanTree[];
 			start_server(
 				handler: (req: IncomingMessage, res: ServerResponse) => void
 			): Promise<{ port: number }>;
@@ -42,3 +46,25 @@ export const test: TestType<
 		},
 	PlaywrightWorkerArgs & PlaywrightWorkerOptions
 >;
+
+export interface SpanData {
+	name: string;
+	status: {
+		code: number;
+		message?: string;
+	};
+	start_time: [number, number]; // HrTime tuple: [seconds, nanoseconds]
+	end_time: [number, number]; // HrTime tuple: [seconds, nanoseconds]
+	attributes: Record<string, string | number | boolean | Array<string | number | boolean>>;
+	links: Array<{
+		context: any;
+		attributes?: Record<string, string | number | boolean | Array<string | number | boolean>>;
+	}>;
+	trace_id: string;
+	span_id: string;
+	parent_span_id: string | undefined;
+}
+
+export type SpanTree = Omit<SpanData, 'parent_span_id'> & {
+	children: SpanTree[];
+};

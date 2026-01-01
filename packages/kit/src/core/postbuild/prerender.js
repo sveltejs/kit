@@ -15,6 +15,7 @@ import * as devalue from 'devalue';
 import { createReadableStream } from '@sveltejs/kit/node';
 import generate_fallback from './fallback.js';
 import { stringify_remote_arg } from '../../runtime/shared.js';
+import { filter_env } from '../../utils/env.js';
 
 export default forked(import.meta.url, prerender);
 
@@ -157,6 +158,15 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 		config.prerender.handleEntryGeneratorMismatch,
 		({ generatedFromId, entry, matchedId }) => {
 			return `The entries export from ${generatedFromId} generated entry ${entry}, which was matched by ${matchedId} - see the \`handleEntryGeneratorMismatch\` option in https://svelte.dev/docs/kit/configuration#prerender for more info.`;
+		}
+	);
+
+	const handle_not_prerendered_route = normalise_error_handler(
+		log,
+		config.prerender.handleUnseenRoutes,
+		({ routes }) => {
+			const list = routes.map((id) => `  - ${id}`).join('\n');
+			return `The following routes were marked as prerenderable, but were not prerendered because they were not found while crawling your app:\n${list}\n\nSee the \`handleUnseenRoutes\` option in https://svelte.dev/docs/kit/configuration#prerender for more info.`;
 		}
 	);
 
@@ -310,7 +320,8 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 		// avoid triggering `filterSerializeResponseHeaders` guard
 		const headers = Object.fromEntries(response.headers);
 
-		if (config.prerender.crawl && headers['content-type'] === 'text/html') {
+		// if it's a 200 HTML response, crawl it. Skip error responses, as we don't save those
+		if (response.ok && config.prerender.crawl && headers['content-type'] === 'text/html') {
 			const { ids, hrefs } = crawl(body.toString(), decoded);
 
 			actual_hashlinks.set(decoded, ids);
@@ -474,13 +485,24 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 		}
 	}
 
+	// the user's remote function modules may reference environment variables,
+	// `read` or the `manifest` at the top-level so we need to set them before
+	// evaluating those modules to avoid potential runtime errors
+	const { publicPrefix: public_prefix, privatePrefix: private_prefix } = config.env;
+	const private_env = filter_env(env, private_prefix, public_prefix);
+	const public_env = filter_env(env, public_prefix, private_prefix);
+	internal.set_private_env(private_env);
+	internal.set_public_env(public_env);
+	internal.set_manifest(manifest);
+	internal.set_read_implementation((file) => createReadableStream(`${out}/server/${file}`));
+
 	/** @type {Array<import('types').RemoteInfo & { type: 'prerender'}>} */
 	const prerender_functions = [];
 
 	for (const loader of Object.values(manifest._.remotes)) {
 		const module = await loader();
 
-		for (const fn of Object.values(module)) {
+		for (const fn of Object.values(module.default)) {
 			if (fn?.__?.type === 'prerender') {
 				prerender_functions.push(fn.__);
 				should_prerender = true;
@@ -492,13 +514,15 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 		return { prerendered, prerender_map };
 	}
 
-	log.info('Prerendering');
-
+	// only run the server after the `should_prerender` check so that we
+	// don't run the user's init hook unnecessarily
 	const server = new Server(manifest);
 	await server.init({
 		env,
 		read: (file) => createReadableStream(`${config.outDir}/output/server/${file}`)
 	});
+
+	log.info('Prerendering');
 
 	for (const entry of config.prerender.entries) {
 		if (entry === '*') {
@@ -562,11 +586,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 	}
 
 	if (not_prerendered.length > 0) {
-		const list = not_prerendered.map((id) => `  - ${id}`).join('\n');
-
-		throw new Error(
-			`The following routes were marked as prerenderable, but were not prerendered because they were not found while crawling your app:\n${list}\n\nSee https://svelte.dev/docs/kit/page-options#prerender-troubleshooting for info on how to solve this`
-		);
+		handle_not_prerendered_route({ routes: not_prerendered });
 	}
 
 	return { prerendered, prerender_map };

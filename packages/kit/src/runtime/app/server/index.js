@@ -1,5 +1,5 @@
 import { read_implementation, manifest } from '__sveltekit/server';
-import { base } from '__sveltekit/paths';
+import { base } from '$app/paths';
 import { DEV } from 'esm-env';
 import { base64_decode } from '../../utils.js';
 
@@ -73,6 +73,6 @@ export function read(asset) {
 	throw new Error(`Asset does not exist: ${file}`);
 }
 
-export { getRequestEvent } from './event.js';
+export { getRequestEvent } from '@sveltejs/kit/internal/server';
 
 export { query, prerender, command, form } from './remote/index.js';

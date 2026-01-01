@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-netlify",
-	"version": "5.1.1",
+	"version": "5.2.4",
 	"description": "A SvelteKit adapter that creates a Netlify app",
 	"keywords": [
 		"adapter",
@@ -16,7 +16,7 @@
 		"directory": "packages/adapter-netlify"
 	},
 	"license": "MIT",
-	"homepage": "https://svelte.dev",
+	"homepage": "https://svelte.dev/docs/kit/adapter-netlify",
 	"type": "module",
 	"exports": {
 		".": {
@@ -48,15 +48,17 @@
 		"set-cookie-parser": "^2.6.0"
 	},
 	"devDependencies": {
-		"@netlify/edge-functions": "^2.15.1",
-		"@netlify/functions": "^4.0.0",
-		"@rollup/plugin-commonjs": "^28.0.1",
-		"@rollup/plugin-json": "^6.1.0",
-		"@rollup/plugin-node-resolve": "^16.0.0",
+		"@netlify/edge-functions": "catalog:",
+		"@netlify/functions": "catalog:",
+		"@netlify/node-cookies": "^0.1.0",
+		"@netlify/types": "^2.1.0",
+		"@rollup/plugin-commonjs": "catalog:",
+		"@rollup/plugin-json": "catalog:",
+		"@rollup/plugin-node-resolve": "catalog:",
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "catalog:",
-		"@types/node": "^18.19.119",
-		"@types/set-cookie-parser": "^2.4.7",
+		"@types/node": "catalog:",
+		"@types/set-cookie-parser": "catalog:",
 		"rollup": "^4.14.2",
 		"typescript": "^5.3.3",
 		"vitest": "catalog:"
