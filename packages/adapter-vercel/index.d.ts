@@ -110,6 +110,8 @@ export type Config = (EdgeConfig | ServerlessConfig) & {
 /**
  * An extension to the standard `Request` object that is passed to every Edge Function.
  *
+ * @deprecated - use [`@vercel/functions`](https://vercel.com/docs/functions/functions-api-reference/vercel-functions-package) instead.
+ *
  * @example
  * ```ts
  * import type { RequestContext } from '@vercel/edge';
