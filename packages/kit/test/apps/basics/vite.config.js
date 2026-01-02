@@ -26,15 +26,13 @@ export default defineConfig({
 				extends: './vite.config.js',
 				test: {
 					name: 'client',
-					environment: 'browser',
 					browser: {
 						enabled: true,
 						provider: playwright(),
 						instances: [{ browser: 'chromium' }],
 						headless: true
 					},
-					include: ['unit-test/**/*.spec.js'],
-					setupFiles: ['./vitest-setup-client.ts']
+					include: ['unit-test/**/*.spec.js']
 				}
 			}
 		]
