@@ -17,7 +17,6 @@ export default defineConfig({
 		},
 		pool: 'threads',
 		maxWorkers: 1,
-		isolate: false,
 		include: ['src/**/*.spec.js'],
 		exclude: [
 			'**/node_modules/**',
