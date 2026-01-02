@@ -1,6 +1,6 @@
 import * as path from 'node:path';
 import { sveltekit } from '@sveltejs/kit/vite';
-import { playwright } from '@vitest/browser-playwright'
+import { playwright } from '@vitest/browser-playwright';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
