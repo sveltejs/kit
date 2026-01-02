@@ -32,8 +32,7 @@
 		"typescript": "^5.5.4",
 		"valibot": "catalog:",
 		"vite": "catalog:",
-		"vitest": "catalog:",
-		"vitest-browser-svelte": "^2.0.1"
+		"vitest": "catalog:"
 	},
 	"type": "module"
 }
