@@ -749,10 +749,10 @@ We can customize what happens when the form is submitted with the `enhance` meth
 <form {...createPost.enhance(async ({ form, data, submit }) => {
 	try {
 		await submit();
-		form.reset();
 		if (!createPost.fields.allIssues()) {
 			// Access return data in createPost.results
 			showToast('Successfully published!');
+			form.reset();
 	  }
 	  else {
 			showToast('Oh no! Something went wrong');
