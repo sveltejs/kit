@@ -942,6 +942,7 @@ async function kit({ svelte_config }) {
 			} else {
 				new_config = {
 					appType: 'custom',
+					base: kit.paths.base,
 					build: {
 						rollupOptions: {
 							// Vite dependency crawler needs an explicit JS entry point
@@ -951,8 +952,6 @@ async function kit({ svelte_config }) {
 					},
 					publicDir: kit.files.assets
 				};
-
-				if (kit.paths.base) new_config.base = kit.paths.base;
 			}
 
 			warn_overridden_config(config, new_config);
