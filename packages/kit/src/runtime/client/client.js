@@ -1355,7 +1355,8 @@ async function get_rerouted_url(url) {
 					url: new URL(url),
 					fetch: async (input, init) => {
 						return resolve_fetch_url(input, init, url).promise;
-					}
+					},
+					cache: reroute_cache
 				})) ?? url;
 
 			if (typeof rerouted === 'string') {
