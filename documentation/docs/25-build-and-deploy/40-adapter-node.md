@@ -142,7 +142,7 @@ When using systemd socket activation, `IDLE_TIMEOUT` specifies the number of sec
 
 ### `KEEP_ALIVE_TIMEOUT` and `HEADERS_TIMEOUT`
 
-When present, override the default [keepAliveTimeout](https://nodejs.org/api/http.html#serverkeepalivetimeout) and / or [headersTimeout](https://nodejs.org/api/http.html#serverheaderstimeout) for Node's underlying web server. These values should be supplied in seconds (they will be converted to milliseconds automatically).
+When present, override the default [keepAliveTimeout](https://nodejs.org/api/http.html#serverkeepalivetimeout) and / or [headersTimeout](https://nodejs.org/api/http.html#serverheaderstimeout) for the underlying web server. These values should be supplied in seconds (they will be converted to milliseconds automatically).
 
 ## Options
 
