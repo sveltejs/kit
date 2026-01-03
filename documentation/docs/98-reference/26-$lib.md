@@ -6,7 +6,7 @@ SvelteKit automatically makes files under `src/lib` available using the `$lib` i
 
 ```svelte
 <!--- file: src/lib/Component.svelte --->
-<!-- A reusable component -->
+A reusable component
 ```
 
 ```svelte
