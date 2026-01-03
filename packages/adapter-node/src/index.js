@@ -88,10 +88,7 @@ function graceful_shutdown(reason) {
 		process.emit('sveltekit:shutdown', reason);
 	});
 
-	shutdown_timeout_id = setTimeout(
-		() => httpServer.closeAllConnections(),
-		shutdown_timeout * 1000
-	);
+	shutdown_timeout_id = setTimeout(() => httpServer.closeAllConnections(), shutdown_timeout * 1000);
 }
 
 httpServer.on(
