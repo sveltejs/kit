@@ -147,6 +147,64 @@ export async function run_remote_function(event, state, allow_cookies, arg, vali
 }
 
 /**
+ * Like `run_remote_function` but returns validated args along with resolver function.
+ * @template T
+ * @param {RequestEvent} event
+ * @param {RequestState} state
+ * @param {boolean} allow_cookies
+ * @param {any} arg
+ * @param {(arg: any) => any} validate
+ * @param {(arg?: any) => T} fn
+ */
+export async function run_remote_batch_function(event, state, allow_cookies, arg, validate, fn) {
+	/** @type {RequestStore} */
+	const store = {
+		event: {
+			...event,
+			setHeaders: () => {
+				throw new Error('setHeaders is not allowed in remote functions');
+			},
+			cookies: {
+				...event.cookies,
+				set: (name, value, opts) => {
+					if (!allow_cookies) {
+						throw new Error('Cannot set cookies in `query` or `prerender` functions');
+					}
+
+					if (opts.path && !opts.path.startsWith('/')) {
+						throw new Error('Cookies set in remote functions must have an absolute path');
+					}
+
+					return event.cookies.set(name, value, opts);
+				},
+				delete: (name, opts) => {
+					if (!allow_cookies) {
+						throw new Error('Cannot delete cookies in `query` or `prerender` functions');
+					}
+
+					if (opts.path && !opts.path.startsWith('/')) {
+						throw new Error('Cookies deleted in remote functions must have an absolute path');
+					}
+
+					return event.cookies.delete(name, opts);
+				}
+			}
+		},
+		state: {
+			...state,
+			is_in_remote_function: true
+		}
+	};
+
+	// In two parts, each with_event, so that runtimes without async local storage can still get the event at the start of the function
+	const validated = await with_request_store(store, () => validate(arg));
+	return {
+		resolver: with_request_store(store, () => fn(validated)),
+		validated_args: validated
+	};
+}
+
+/**
  * @param {RemoteInfo} info
  * @param {RequestState} state
  */
