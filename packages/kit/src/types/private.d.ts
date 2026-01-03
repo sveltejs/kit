@@ -240,4 +240,5 @@ export interface RouteSegment {
 	rest: boolean;
 }
 
+/** @default 'never' */
 export type TrailingSlash = 'never' | 'always' | 'ignore';
