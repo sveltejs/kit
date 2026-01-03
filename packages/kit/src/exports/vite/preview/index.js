@@ -35,6 +35,11 @@ export async function preview(vite, vite_config, svelte_config) {
 		throw new Error(`Server files not found at ${dir}, did you run \`build\` first?`);
 	}
 
+	const instrumentation = join(dir, 'instrumentation.server.js');
+	if (fs.existsSync(instrumentation)) {
+		await import(pathToFileURL(instrumentation).href);
+	}
+
 	/** @type {import('types').ServerInternalModule} */
 	const { set_assets } = await import(pathToFileURL(join(dir, 'internal.js')).href);
 
