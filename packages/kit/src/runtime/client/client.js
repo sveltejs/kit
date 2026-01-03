@@ -542,7 +542,10 @@ async function _preload_data(intent) {
 					try {
 						return svelte.fork(() => {
 							root.$set(result.props);
-							update(result.props.page);
+							// Don't call update() here - it mutates the shared page object
+							// from state.svelte.js immediately, even inside a fork, which
+							// breaks components using shallow routing (page.state).
+							// The page state will be updated when the fork commits during navigation.
 						});
 					} catch {
 						// if it errors, it's because the experimental flag isn't enabled
