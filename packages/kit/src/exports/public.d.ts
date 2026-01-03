@@ -356,8 +356,6 @@ export interface KitConfig {
 	 * };
 	 * ```
 	 *
-	 * > [!NOTE] The built-in `$lib` alias is controlled by `config.kit.files.lib` as it is used for packaging.
-	 *
 	 * > [!NOTE] You will need to run `npm run dev` to have SvelteKit automatically generate the required alias configuration in `jsconfig.json` or `tsconfig.json`.
 	 * @default {}
 	 */
