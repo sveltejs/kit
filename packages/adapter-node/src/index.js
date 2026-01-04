@@ -10,8 +10,6 @@ export const port = env('PORT', !path && '3000');
 
 const shutdown_timeout = parseInt(env('SHUTDOWN_TIMEOUT', '30'));
 const idle_timeout = parseInt(env('IDLE_TIMEOUT', '0'));
-const keep_alive_timeout = parseInt(env('KEEP_ALIVE_TIMEOUT', '0'));
-const headers_timeout = parseInt(env('HEADERS_TIMEOUT', '0'));
 const listen_pid = parseInt(env('LISTEN_PID', '0'));
 const listen_fds = parseInt(env('LISTEN_FDS', '0'));
 // https://www.freedesktop.org/software/systemd/man/latest/sd_listen_fds.html
@@ -39,16 +37,26 @@ let idle_timeout_id;
 // properties after the server has started listening could lead to race conditions.
 const httpServer = http.createServer();
 
-// If unspecified, let Node.js use its default keepAliveTimeout:
-// https://nodejs.org/api/http.html#serverkeepalivetimeout
-if (keep_alive_timeout) {
+const keep_alive_timeout_var = env('KEEP_ALIVE_TIMEOUT', '');
+if (keep_alive_timeout_var) {
+	const keep_alive_timeout = parseInt(keep_alive_timeout_var);
+	if (isNaN(keep_alive_timeout) || keep_alive_timeout < 0) {
+		throw new Error(
+			`invalid KEEP_ALIVE_TIMEOUT value ${keep_alive_timeout_var}, expected a non-negative integer`
+		);
+	}
 	// Convert the keep-alive timeout from seconds to milliseconds (the unit Node.js expects).
 	httpServer.keepAliveTimeout = keep_alive_timeout * 1000;
 }
 
-// If unspecified, let Node.js use its default headersTimeout:
-// https://nodejs.org/api/http.html#serverheaderstimeout
-if (headers_timeout) {
+const headers_timeout_var = env('HEADERS_TIMEOUT', '');
+if (headers_timeout_var) {
+	const headers_timeout = parseInt(headers_timeout_var);
+	if (isNaN(headers_timeout) || headers_timeout < 0) {
+		throw new Error(
+			`invalid HEADERS_TIMEOUT value ${headers_timeout_var}, expected a non-negative integer`
+		);
+	}
 	// Convert the headers timeout from seconds to milliseconds (the unit Node.js expects).
 	httpServer.headersTimeout = headers_timeout * 1000;
 }
