@@ -1,8 +1,8 @@
 ---
-'@sveltejs/kit': patch
+'@sveltejs/kit': minor
 ---
 
-Fix: provide cache to reroute
+feat: allow providing cache to `reroute`
 
 This provides cache as an argument to reroute and doesn't affect the default caching behavior, but enables the choice of which routes should be cached and which ones should always run the hook.
 
