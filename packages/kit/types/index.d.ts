@@ -332,8 +332,6 @@ declare module '@sveltejs/kit' {
 		 * };
 		 * ```
 		 *
-		 * > [!NOTE] The built-in `$lib` alias is controlled by `config.kit.files.lib` as it is used for packaging.
-		 *
 		 * > [!NOTE] You will need to run `npm run dev` to have SvelteKit automatically generate the required alias configuration in `jsconfig.json` or `tsconfig.json`.
 		 * @default {}
 		 */
@@ -3037,7 +3035,7 @@ declare module '$app/navigation' {
 	 * */
 	export function invalidate(resource: string | URL | ((url: URL) => boolean)): Promise<void>;
 	/**
-	 * Causes all `load` functions belonging to the currently active page to re-run. Returns a `Promise` that resolves when the page is subsequently updated.
+	 * Causes all `load` and `query` functions belonging to the currently active page to re-run. Returns a `Promise` that resolves when the page is subsequently updated.
 	 * */
 	export function invalidateAll(): Promise<void>;
 	/**

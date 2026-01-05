@@ -1,5 +1,11 @@
 # @sveltejs/adapter-vercel
 
+## 6.2.0
+### Minor Changes
+
+
+- feat: Node 24 support ([#14982](https://github.com/sveltejs/kit/pull/14982))
+
 ## 6.1.2
 ### Patch Changes
 
