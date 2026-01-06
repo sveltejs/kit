@@ -1,5 +1,5 @@
 ---
-'@sveltejs/adapter-node': minor
+'@sveltejs/adapter-node': patch
 ---
 
-validate ORIGIN env var at startup
+fix: validate `ORIGIN` env var at startup
