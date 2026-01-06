@@ -62,11 +62,6 @@ export const handleError = ({ event, error: e, status, message }) => {
 		: { message: `${error.message} (${status} ${message})` };
 };
 
-/** @type {import('@sveltejs/kit').HandleValidationError} */
-export const handleValidationError = ({ issues }) => {
-	return { message: issues[0].message };
-};
-
 export const handle = sequence(
 	// eslint-disable-next-line prefer-arrow-callback -- this needs a name for tests
 	function set_tracing_test_id({ event, resolve }) {
