@@ -42,7 +42,7 @@ import { import_peer } from '../../utils/import.js';
 import { compact } from '../../utils/array.js';
 import { should_ignore } from './static_analysis/utils.js';
 
-const cwd = process.cwd();
+const cwd = posixify(process.cwd());
 
 /** @type {import('./types.js').EnforcedConfig} */
 const enforced_config = {

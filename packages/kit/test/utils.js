@@ -28,12 +28,16 @@ export const test = base.extend({
 	clicknav: async ({ page, javaScriptEnabled }, use) => {
 		/**
 		 * @param {string} selector
-		 * @param {{ timeout: number }} options
+		 * @param {{ timeout?: number, waitForURL?: string }} [options]
 		 */
-		async function clicknav(selector, options) {
+		async function clicknav(selector, { timeout, waitForURL } = {}) {
 			const element = page.locator(selector);
 			if (javaScriptEnabled) {
-				await Promise.all([page.waitForNavigation(options), element.click()]);
+				const promises = [page.waitForNavigation({ timeout }), element.click()];
+				if (waitForURL) {
+					promises.push(page.waitForURL(waitForURL, { timeout }));
+				}
+				await Promise.all(promises);
 			} else {
 				await element.click();
 			}

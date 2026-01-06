@@ -2,6 +2,7 @@ import { beforeAll, describe, expect, test } from 'vitest';
 import {
 	BINARY_FORM_CONTENT_TYPE,
 	convert_formdata,
+	deep_set,
 	deserialize_binary_form,
 	serialize_binary_form,
 	split_path
@@ -241,5 +242,18 @@ describe('binary form serializer', () => {
 		);
 
 		expect(res.data).toEqual({ a: 1 });
+	});
+});
+
+describe('deep_set', () => {
+	test('always creates own property', () => {
+		const target = {};
+
+		deep_set(target, ['toString', 'property'], 'hello');
+
+		// @ts-ignore
+		expect(target.toString.property).toBe('hello');
+		// @ts-ignore
+		expect(Object.prototype.toString.property).toBeUndefined();
 	});
 });
