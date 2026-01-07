@@ -47,13 +47,17 @@ export async function build_server_nodes(out, kit, manifest_data, server_manifes
 			}
 		}
 
-		// map server stylesheet source to the client stylesheet name
+		// map server stylesheet styles to the client stylesheet name
 		for (const [client_file, server_file] of stylesheets_to_inline) {
-			const source = server.stylesheet_content.get(server_file);
-			if (!source) {
+			const styles = server.stylesheet_content.get(server_file);
+			if (styles === undefined) {
 				throw new Error(`Server stylesheet source not found for client stylesheet ${client_file}`);
 			}
-			stylesheets_to_inline.set(client_file, source);
+			// skip inlining if styles is an empty string because the source only contains comments
+			else if (!styles) {
+				continue;
+			}
+			stylesheets_to_inline.set(client_file, styles);
 		}
 	}
 
