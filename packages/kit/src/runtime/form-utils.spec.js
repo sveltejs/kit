@@ -124,7 +124,8 @@ describe('binary form serializer', () => {
 				method: 'POST',
 				body: blob,
 				headers: {
-					'Content-Type': BINARY_FORM_CONTENT_TYPE
+					'Content-Type': BINARY_FORM_CONTENT_TYPE,
+					'Content-Length': blob.size.toString()
 				}
 			})
 		);
@@ -139,7 +140,8 @@ describe('binary form serializer', () => {
 				large: new File([new Uint8Array(1024).fill('a'.charCodeAt(0))], 'large.txt', {
 					type: 'text/plain',
 					lastModified: 100
-				})
+				}),
+				empty: new File([], 'empty.txt', { type: 'text/plain' })
 			},
 			{}
 		);
@@ -160,11 +162,16 @@ describe('binary form serializer', () => {
 				// @ts-expect-error duplex required in node
 				duplex: 'half',
 				headers: {
-					'Content-Type': BINARY_FORM_CONTENT_TYPE
+					'Content-Type': BINARY_FORM_CONTENT_TYPE,
+					'Content-Length': blob.size.toString()
 				}
 			})
 		);
-		const { small, large } = res.data;
+		const { small, large, empty } = res.data;
+		expect(empty.name).toBe('empty.txt');
+		expect(empty.type).toBe('text/plain');
+		expect(empty.size).toBe(0);
+		expect(await empty.text()).toBe('');
 		expect(small.name).toBe('a.txt');
 		expect(small.type).toBe('text/plain');
 		expect(small.size).toBe(1);
@@ -196,7 +203,8 @@ describe('binary form serializer', () => {
 				method: 'POST',
 				body: blob,
 				headers: {
-					'Content-Type': BINARY_FORM_CONTENT_TYPE
+					'Content-Type': BINARY_FORM_CONTENT_TYPE,
+					'Content-Length': blob.size.toString()
 				}
 			})
 		);
@@ -213,6 +221,95 @@ describe('binary form serializer', () => {
 		const world_slice = file.slice(-5);
 		expect(await world_slice.text()).toBe('World');
 		expect(world_slice.type).toBe(file.type);
+	});
+
+	test('throws when Content-Length is invalid', async () => {
+		await expect(
+			deserialize_binary_form(
+				new Request('http://test', {
+					method: 'POST',
+					body: 'foo',
+					headers: {
+						'Content-Type': BINARY_FORM_CONTENT_TYPE
+					}
+				})
+			)
+		).rejects.toThrow('invalid Content-Length header');
+		await expect(
+			deserialize_binary_form(
+				new Request('http://test', {
+					method: 'POST',
+					body: 'foo',
+					headers: {
+						'Content-Type': BINARY_FORM_CONTENT_TYPE,
+						'Content-Length': 'invalid'
+					}
+				})
+			)
+		).rejects.toThrow('invalid Content-Length header');
+	});
+
+	test('data length check', async () => {
+		const { blob } = serialize_binary_form(
+			{
+				foo: 'bar'
+			},
+			{}
+		);
+		await expect(
+			deserialize_binary_form(
+				new Request('http://test', {
+					method: 'POST',
+					body: blob,
+					headers: {
+						'Content-Type': BINARY_FORM_CONTENT_TYPE,
+						'Content-Length': (blob.size - 1).toString()
+					}
+				})
+			)
+		).rejects.toThrow('data overflow');
+	});
+
+	test('file offset table length check', async () => {
+		const { blob } = serialize_binary_form(
+			{
+				file: new File([''], 'a.txt')
+			},
+			{}
+		);
+		await expect(
+			deserialize_binary_form(
+				new Request('http://test', {
+					method: 'POST',
+					body: blob,
+					headers: {
+						'Content-Type': BINARY_FORM_CONTENT_TYPE,
+						'Content-Length': (blob.size - 1).toString()
+					}
+				})
+			)
+		).rejects.toThrow('file offset table overflow');
+	});
+
+	test('file length check', async () => {
+		const { blob } = serialize_binary_form(
+			{
+				file: new File(['a'], 'a.txt')
+			},
+			{}
+		);
+		await expect(
+			deserialize_binary_form(
+				new Request('http://test', {
+					method: 'POST',
+					body: blob,
+					headers: {
+						'Content-Type': BINARY_FORM_CONTENT_TYPE,
+						'Content-Length': (blob.size - 1).toString()
+					}
+				})
+			)
+		).rejects.toThrow('file data overflow');
 	});
 
 	// Regression test for https://github.com/sveltejs/kit/issues/14971
@@ -236,7 +333,8 @@ describe('binary form serializer', () => {
 				// @ts-expect-error duplex required in node
 				duplex: 'half',
 				headers: {
-					'Content-Type': BINARY_FORM_CONTENT_TYPE
+					'Content-Type': BINARY_FORM_CONTENT_TYPE,
+					'Content-Length': blob.size.toString()
 				}
 			})
 		);

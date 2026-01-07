@@ -64,7 +64,7 @@ export function convert_formdata(data) {
 
 export const BINARY_FORM_CONTENT_TYPE = 'application/x-sveltekit-formdata';
 const BINARY_FORM_VERSION = 0;
-
+const HEADER_BYTES = 1 + 4 + 2;
 /**
  * The binary format is as follows:
  * - 1 byte: Format version
@@ -144,7 +144,11 @@ export async function deserialize_binary_form(request) {
 		return { data: convert_formdata(form_data), meta: {}, form_data };
 	}
 	if (!request.body) {
-		throw new Error('Could not deserialize binary form: no body');
+		throw new Error('no body');
+	}
+	const content_length = parseInt(request.headers.get('content-length') ?? '');
+	if (Number.isNaN(content_length)) {
+		throw new Error('invalid Content-Length header');
 	}
 
 	const reader = request.body.getReader();
@@ -212,21 +216,28 @@ export async function deserialize_binary_form(request) {
 		return buffer;
 	}
 
-	const header = await get_buffer(0, 1 + 4 + 2);
-	if (!header) throw new Error('Could not deserialize binary form: too short');
+	const header = await get_buffer(0, HEADER_BYTES);
+	if (!header) throw new Error('too short');
 
 	if (header[0] !== BINARY_FORM_VERSION) {
-		throw new Error(
-			`Could not deserialize binary form: got version ${header[0]}, expected version ${BINARY_FORM_VERSION}`
-		);
+		throw new Error(`got version ${header[0]}, expected version ${BINARY_FORM_VERSION}`);
 	}
 	const header_view = new DataView(header.buffer, header.byteOffset, header.byteLength);
 	const data_length = header_view.getUint32(1, true);
+
+	if (HEADER_BYTES + data_length > content_length) {
+		throw new Error('data overflow');
+	}
+
 	const file_offsets_length = header_view.getUint16(5, true);
 
+	if (HEADER_BYTES + data_length + file_offsets_length > content_length) {
+		throw new Error('file offset table overflow');
+	}
+
 	// Read the form data
-	const data_buffer = await get_buffer(1 + 4 + 2, data_length);
-	if (!data_buffer) throw new Error('Could not deserialize binary form: data too short');
+	const data_buffer = await get_buffer(HEADER_BYTES, data_length);
+	if (!data_buffer) throw new Error('data too short');
 
 	/** @type {Array<number>} */
 	let file_offsets;
@@ -234,18 +245,20 @@ export async function deserialize_binary_form(request) {
 	let files_start_offset;
 	if (file_offsets_length > 0) {
 		// Read the file offset table
-		const file_offsets_buffer = await get_buffer(1 + 4 + 2 + data_length, file_offsets_length);
-		if (!file_offsets_buffer)
-			throw new Error('Could not deserialize binary form: file offset table too short');
+		const file_offsets_buffer = await get_buffer(HEADER_BYTES + data_length, file_offsets_length);
+		if (!file_offsets_buffer) throw new Error('file offset table too short');
 
 		file_offsets = /** @type {Array<number>} */ (
 			JSON.parse(text_decoder.decode(file_offsets_buffer))
 		);
-		files_start_offset = 1 + 4 + 2 + data_length + file_offsets_length;
+		files_start_offset = HEADER_BYTES + data_length + file_offsets_length;
 	}
 
 	const [data, meta] = devalue.parse(text_decoder.decode(data_buffer), {
 		File: ([name, type, size, last_modified, index]) => {
+			if (files_start_offset + file_offsets[index] + size > content_length) {
+				throw new Error('file data overflow');
+			}
 			return new Proxy(
 				new LazyFile(
 					name,
@@ -380,7 +393,7 @@ class LazyFile {
 				chunk_index++;
 				let chunk = await this.#get_chunk(chunk_index);
 				if (!chunk) {
-					controller.error('Could not deserialize binary form: incomplete file data');
+					controller.error('incomplete file data');
 					controller.close();
 					return;
 				}
