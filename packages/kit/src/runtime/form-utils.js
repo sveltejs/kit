@@ -160,7 +160,7 @@ export async function deserialize_binary_form(request) {
 	 * @param {number} index
 	 * @returns {Promise<Uint8Array<ArrayBuffer> | undefined>}
 	 */
-	async function get_chunk(index) {
+	function get_chunk(index) {
 		if (index in chunks) return chunks[index];
 
 		let i = chunks.length;
@@ -199,8 +199,7 @@ export async function deserialize_binary_form(request) {
 			return start_chunk.subarray(offset - chunk_start, offset + length - chunk_start);
 		}
 		// Otherwise, copy the data into a new buffer
-		const buffer = new Uint8Array(length);
-		buffer.set(start_chunk.subarray(offset - chunk_start));
+		const chunks = [start_chunk.subarray(offset - chunk_start)];
 		let cursor = start_chunk.byteLength - offset + chunk_start;
 		while (cursor < length) {
 			chunk_index++;
@@ -209,6 +208,12 @@ export async function deserialize_binary_form(request) {
 			if (chunk.byteLength > length - cursor) {
 				chunk = chunk.subarray(0, length - cursor);
 			}
+			chunks.push(chunk);
+			cursor += chunk.byteLength;
+		}
+		const buffer = new Uint8Array(length);
+		cursor = 0;
+		for (const chunk of chunks) {
 			buffer.set(chunk, cursor);
 			cursor += chunk.byteLength;
 		}
