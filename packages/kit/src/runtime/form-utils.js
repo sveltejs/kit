@@ -220,7 +220,7 @@ export async function deserialize_binary_form(request) {
 			`Could not deserialize binary form: got version ${header[0]}, expected version ${BINARY_FORM_VERSION}`
 		);
 	}
-	const header_view = new DataView(header.buffer);
+	const header_view = new DataView(header.buffer, header.byteOffset, header.byteLength);
 	const data_length = header_view.getUint32(1, true);
 	const file_offsets_length = header_view.getUint16(5, true);
 
@@ -441,7 +441,7 @@ export function deep_set(object, keys, value) {
 		check_prototype_pollution(key);
 
 		const is_array = /^\d+$/.test(keys[i + 1]);
-		const exists = key in current;
+		const exists = Object.hasOwn(current, key);
 		const inner = current[key];
 
 		if (exists && is_array !== Array.isArray(inner)) {

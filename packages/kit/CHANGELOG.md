@@ -1,5 +1,29 @@
 # @sveltejs/kit
 
+## 2.49.3
+### Patch Changes
+
+
+- fix: avoid false-positive Vite config overridden warning when using Vitest 4 ([#15121](https://github.com/sveltejs/kit/pull/15121))
+
+
+- fix: add `typescript` as an optional peer dependency ([#15074](https://github.com/sveltejs/kit/pull/15074))
+
+
+- fix: use hasOwn check when deep-setting object properties ([#15127](https://github.com/sveltejs/kit/pull/15127))
+
+## 2.49.2
+### Patch Changes
+
+
+- fix: Stop re-loading already-loaded CSS during server-side route resolution ([#15014](https://github.com/sveltejs/kit/pull/15014))
+
+
+- fix: posixify the instrumentation file import on Windows ([#14993](https://github.com/sveltejs/kit/pull/14993))
+
+
+- fix: Correctly handle shared memory when decoding binary form data ([#15028](https://github.com/sveltejs/kit/pull/15028))
+
 ## 2.49.1
 ### Patch Changes
 
