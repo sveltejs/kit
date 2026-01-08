@@ -2033,6 +2033,7 @@ export type RemoteForm<Input extends RemoteFormInput | void, Output> = {
 		callback: (opts: {
 			form: HTMLFormElement;
 			data: Input;
+			formData: FormData;
 			submit: () => Promise<void> & {
 				updates: (...queries: Array<RemoteQuery<any> | RemoteQueryOverride>) => Promise<void>;
 			};
