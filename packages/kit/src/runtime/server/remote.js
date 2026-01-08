@@ -117,15 +117,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 				);
 			}
 
-			const { data, meta, form_data } = await deserialize_binary_form(event.request).catch(
-				(err) => {
-					throw new SvelteKitError(
-						400,
-						'Bad Request',
-						`Could not deserialize binary form: ${err.message}`
-					);
-				}
-			);
+			const { data, meta, form_data } = await deserialize_binary_form(event.request);
 
 			// If this is a keyed form instance (created via form.for(key)), add the key to the form data (unless already set)
 			// Note that additional_args will only be set if the form is not enhanced, as enhanced forms transfer the key inside `data`.
@@ -301,13 +293,8 @@ async function handle_remote_form_post_internal(event, state, manifest, id) {
 	try {
 		const fn = /** @type {RemoteInfo & { type: 'form' }} */ (/** @type {any} */ (form).__).fn;
 
-		const { data, meta, form_data } = await deserialize_binary_form(event.request).catch((err) => {
-			throw new SvelteKitError(
-				400,
-				'Bad Request',
-				`Could not deserialize binary form: ${err.message}`
-			);
-		});
+		const { data, meta, form_data } = await deserialize_binary_form(event.request);
+
 		if (action_id && !('id' in data)) {
 			data.id = JSON.parse(decodeURIComponent(action_id));
 		}
