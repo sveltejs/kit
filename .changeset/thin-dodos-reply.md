@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix: Add length checks to remote forms
+fix: add length checks to remote forms
