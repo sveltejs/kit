@@ -80,7 +80,8 @@ const get_defaults = (prefix = '') => ({
 		experimental: {
 			tracing: { server: false },
 			instrumentation: { server: false },
-			remoteFunctions: false
+			remoteFunctions: false,
+			enhancedPreloading: false
 		},
 		files: {
 			src: join(prefix, 'src'),
@@ -477,6 +478,30 @@ test('errors on invalid tracing values', () => {
 			}
 		});
 	}, /^config\.kit\.experimental\.tracing\.server should be true or false, if specified$/);
+});
+
+test('errors on invalid enhancedPreloading values', () => {
+	assert.throws(() => {
+		validate_config({
+			kit: {
+				experimental: {
+					// @ts-expect-error - given value expected to throw
+					enhancedPreloading: 'true'
+				}
+			}
+		});
+	}, /^config\.kit\.experimental\.enhancedPreloading should be true or false, if specified$/);
+
+	assert.throws(() => {
+		validate_config({
+			kit: {
+				experimental: {
+					// @ts-expect-error - given value expected to throw
+					enhancedPreloading: 1
+				}
+			}
+		});
+	}, /^config\.kit\.experimental\.enhancedPreloading should be true or false, if specified$/);
 });
 
 test('uses src prefix for other kit.files options', async () => {

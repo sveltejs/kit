@@ -505,6 +505,12 @@ export interface KitConfig {
 		 * @default false
 		 */
 		remoteFunctions?: boolean;
+
+		/**
+		 * Whether to enable the experimental enhanced preloading feature using Svelte's fork API.
+		 * @default false
+		 */
+		enhancedPreloading?: boolean;
 	};
 	/**
 	 * Where to find various files within your project.
