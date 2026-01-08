@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix: put forking behind `experimental.enhancedPreloading`
+fix: put forking behind `experimental.forkPreloads`

@@ -483,10 +483,10 @@ declare module '@sveltejs/kit' {
 			remoteFunctions?: boolean;
 
 			/**
-			 * Whether to enable the experimental enhanced preloading feature using Svelte's fork API.
+			 * Whether to enable the experimental forked preloading feature using Svelte's fork API.
 			 * @default false
 			 */
-			enhancedPreloading?: boolean;
+			forkPreloads?: boolean;
 		};
 		/**
 		 * Where to find various files within your project.
