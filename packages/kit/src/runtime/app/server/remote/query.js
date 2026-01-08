@@ -156,8 +156,7 @@ function batch(validate_or_fn, maybe_fn) {
 		name: '',
 		run: (args) => {
 			const { event, state } = get_request_store();
-
-			return run_remote_function(
+			return run_remote_batch_function(
 				event,
 				state,
 				false,
