@@ -1,6 +1,8 @@
 # SvelteKit Coding Agent Guide
 
-This guide is for AI coding agents working in the SvelteKit monorepo. For detailed human-focused documentation, see `CONTRIBUTING.md`.
+This guide is for AI coding agents working in the SvelteKit monorepo.
+
+**Important:** Read and follow `CONTRIBUTING.md` as well - it contains essential information about testing, code structure, and contribution guidelines that applies here.
 
 ## Quick Reference
 
@@ -48,20 +50,15 @@ pnpm test:others
 ### Pre-submission Checklist
 
 1. `pnpm run format` - Auto-format code
-2. `pnpm run lint` - Check code style (don't cancel)
-3. `pnpm run check` - Type checking (don't cancel)
+2. `pnpm run lint` - Check code style (don't cancel early)
+3. `pnpm run check` - Type checking (don't cancel early)
 4. `pnpm -F @sveltejs/kit test:unit` - Run unit tests
 5. For @sveltejs/kit changes: `pnpm -F @sveltejs/kit prepublishOnly` - Generate types
 6. Run `pnpm changeset` to document changes (prefix with `fix`, `feat`, `breaking`, or `chore`)
 
-## Code Style Guidelines
+## Code Style Examples
 
-### Naming Conventions
-
-- **Functions and variables**: `snake_case` (internal) - e.g., `coalesce_to_error`, `min_priority`
-- **Public APIs**: `camelCase` - e.g., `filterSerializedResponseHeaders`
-- **Constants**: `SCREAMING_SNAKE_CASE` - e.g., `BINARY_FORM_CONTENT_TYPE`
-- **Principle**: Internal code uses snake_case, external APIs use camelCase
+The coding style guidelines are in `CONTRIBUTING.md`. Here are additional examples:
 
 ### Imports
 
@@ -126,11 +123,6 @@ const content_type = request.headers.get('content-type')?.split(';', 1)[0];
 - **100 character line width**
 - Files are auto-formatted by `pnpm run format`
 
-### API Design
-
-- Provide single object as argument to public APIs with multiple properties
-- Example: `function process(options)` not `function process(arg1, arg2, arg3)`
-
 ### Comments
 
 ````javascript
@@ -151,101 +143,13 @@ const content_type = request.headers.get('content-type')?.split(';', 1)[0];
 // no match equals invalid header — ignore
 ````
 
-## Testing Guidelines
-
-### Unit Tests
-
-- Located in `packages/kit/src/**/*.spec.js`
-- Use vitest for unit tests
-- Run with: `pnpm -F @sveltejs/kit test:unit`
-
-### Integration Tests
-
-- Located in `packages/kit/test/apps/*`
-- Use Playwright for browser tests
-- **Avoid creating new test apps** - reuse existing ones when possible
-- Tests live in `test/` subdirectories of each app
-
-### Running Single Tests
-
-```bash
-# Unit test
-pnpm -F @sveltejs/kit test:unit:dev path/to/test.spec.js
-
-# Playwright integration test (must use workdir - no pnpm -F shorthand)
-cd packages/kit/test/apps/basics && npx playwright test --grep "test description"
-
-# Run test repeatedly to check for flakiness
-npx playwright test --workers=1 --repeat-each 1000 --max-failures 1 -g "test name"
-```
-
-## Repository Structure
-
-### Key Packages (packages/ directory)
+## Key Packages
 
 - `@sveltejs/kit` - Main framework (`packages/kit/`)
 - `adapter-*` - Platform adapters (node, cloudflare, netlify, vercel, static, auto)
 - `@sveltejs/package` - Package building utilities
 - `@sveltejs/enhanced-img` - Enhanced image component
 - `@sveltejs/amp` - AMP support
-
-### Important Directories
-
-- `packages/kit/src/core/` - Build-time code
-- `packages/kit/src/runtime/` - Runtime code
-- `packages/kit/src/exports/vite/` - Vite plugin
-- `packages/kit/test/` - Integration tests
-- `playgrounds/basic/` - Development playground
-
-### Important Files
-
-- `pnpm-workspace.yaml` - Workspace configuration
-- `package.json` - Root package with scripts
-- `packages/kit/svelte-kit.js` - CLI entry point
-
-## Working with Types
-
-```bash
-# Generate types (required after type changes)
-pnpm -F @sveltejs/kit generate:types
-
-# Must commit generated type changes (don't format with Prettier!)
-git add types/
-```
-
-## Common Workflows
-
-### Making Changes to @sveltejs/kit
-
-1. Make code changes
-2. Generate types: `pnpm -F @sveltejs/kit prepublishOnly`
-3. Run unit tests: `pnpm -F @sveltejs/kit test:unit`
-4. Format: `pnpm run format`
-5. Lint: `pnpm run lint`
-6. Type check: `pnpm run check`
-7. Create changeset: `pnpm changeset`
-
-### Testing Local Changes
-
-Use pnpm overrides in external project's `package.json`:
-
-```json
-{
-	"pnpm": {
-		"overrides": {
-			"@sveltejs/kit": "link:../path/to/kit/packages/kit"
-		}
-	}
-}
-```
-
-### Development Server
-
-```bash
-cd playgrounds/basic
-pnpm run dev
-# Opens at http://localhost:5173/
-```
 
 ## Troubleshooting
 
