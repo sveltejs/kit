@@ -40,7 +40,7 @@ export function find_deps(manifest, entry, add_dynamic_css) {
 		if (add_js) imports.add(chunk.file);
 
 		if (chunk.assets) {
-			chunk.assets.forEach(asset => imported_assets.add(asset));
+			chunk.assets.forEach((asset) => imported_assets.add(asset));
 		}
 
 		if (chunk.css) {
@@ -48,7 +48,9 @@ export function find_deps(manifest, entry, add_dynamic_css) {
 		}
 
 		if (chunk.imports) {
-			chunk.imports.forEach((file) => traverse(file, add_js, initial_importer, dynamic_import_depth));
+			chunk.imports.forEach((file) =>
+				traverse(file, add_js, initial_importer, dynamic_import_depth)
+			);
 		}
 
 		if (!add_dynamic_css) return;
@@ -58,7 +60,9 @@ export function find_deps(manifest, entry, add_dynamic_css) {
 			// a transitive dependency, it doesn't have a suitable name we can map back to
 			// the server manifest
 			if (stylesheet_map.has(initial_importer)) {
-				const { css, assets } = /** @type {{ css: Set<string>; assets: Set<string> }} */ (stylesheet_map.get(initial_importer));
+				const { css, assets } = /** @type {{ css: Set<string>; assets: Set<string> }} */ (
+					stylesheet_map.get(initial_importer)
+				);
 				if (chunk.css) chunk.css.forEach((file) => css.add(file));
 				if (chunk.assets) chunk.assets.forEach((file) => assets.add(file));
 			} else {
@@ -111,14 +115,14 @@ export function resolve_symlinks(manifest, file) {
 }
 
 /**
- * @param {string[]} assets 
+ * @param {string[]} assets
  * @returns {string[]}
  */
 export function filter_fonts(assets) {
 	return assets.filter((asset) => /\.(woff2?|ttf|otf)$/.test(asset));
 }
 
-const method_names = new Set((['GET', 'HEAD', 'PUT', 'POST', 'DELETE', 'PATCH', 'OPTIONS']));
+const method_names = new Set(['GET', 'HEAD', 'PUT', 'POST', 'DELETE', 'PATCH', 'OPTIONS']);
 
 // If we'd written this in TypeScript, it could be easy...
 /**
