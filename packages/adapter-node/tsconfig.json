@@ -14,6 +14,13 @@
 			"@sveltejs/kit": ["../kit/types/index"]
 		}
 	},
-	"include": ["index.js", "src/**/*.js", "tests/**/*.js", "tests/**/*.ts", "internal.d.ts", "utils.js"],
+	"include": [
+		"index.js",
+		"src/**/*.js",
+		"tests/**/*.js",
+		"tests/**/*.ts",
+		"internal.d.ts",
+		"utils.js"
+	],
 	"exclude": ["tests/smoke.spec_disabled.js"]
 }
