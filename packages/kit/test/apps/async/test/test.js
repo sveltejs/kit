@@ -135,22 +135,21 @@ test.describe('remote functions', () => {
 		await page.waitForURL('/remote');
 	});
 
-	test('form.buttonProps works', async ({ page, javaScriptEnabled }) => {
-		await page.goto('/remote/form/button-props');
+	test('form multiple submit buttons work', async ({ page, javaScriptEnabled }) => {
+		await page.goto('/remote/form/multiple-submit');
 
 		await page.fill('[data-unscoped] input', 'backwards');
 		await page.getByText('set reverse message').click();
 
 		if (javaScriptEnabled) {
+			await page.getByText('resolve deferreds').click();
 			await page.getByText('message.current: sdrawkcab').waitFor();
 			await expect(page.getByText('await get_message():')).toHaveText(
 				'await get_message(): sdrawkcab'
 			);
 		}
 
-		await expect(page.getByText('set_reverse_message.result')).toHaveText(
-			'set_reverse_message.result: sdrawkcab'
-		);
+		await expect(page.getByText('set_message.result')).toHaveText('set_message.result: sdrawkcab');
 	});
 
 	test('form scoping with for(...) works', async ({ page, javaScriptEnabled }) => {
