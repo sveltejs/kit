@@ -15,7 +15,9 @@ import {
 	PrerenderUnseenRoutesHandlerValue,
 	PrerenderOption,
 	RequestOptions,
-	RouteSegment
+	RouteSegment,
+	DeepPartial,
+	ExtractId
 } from '../types/private.js';
 import { BuildData, SSRNodeLoader, SSRRoute, ValidatedConfig } from 'types';
 import { SvelteConfig } from '@sveltejs/vite-plugin-svelte';
@@ -1987,14 +1989,6 @@ export interface RemoteFormIssue {
 	path: Array<string | number>;
 }
 
-// If the schema specifies `id` as a string or number, ensure that `for(...)`
-// only accepts that type. Otherwise, accept `string | number`
-type ExtractId<Input> = Input extends { id: infer Id }
-	? Id extends string | number
-		? Id
-		: string | number
-	: string | number;
-
 /**
  * A function and proxy object used to imperatively create validation errors in form handlers.
  *
@@ -2025,8 +2019,26 @@ export interface ValidationError {
 	issues: StandardSchemaV1.Issue[];
 }
 
+export type RemoteFormFactoryOptions<Input extends RemoteFormInput | void> = {
+	/** Optional key to create a scoped instance */
+	key?: ExtractId<Input>;
+	/** Client-side preflight schema for validation before submit */
+	preflight?: StandardSchemaV1<Input, any>;
+	/** Initial input values for the form fields */
+	initialData?: DeepPartial<Input>;
+	/** Reset the form values after successful submission, for non-enhanced forms (default: true) */
+	resetAfterSuccess?: boolean;
+};
+
 /**
  * The return value of a remote `form` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
+ */
+export type RemoteFormFactory<Input extends RemoteFormInput | void, Output> = (
+	keyOrOptions?: ExtractId<Input> | RemoteFormFactoryOptions<Input>
+) => RemoteForm<Input, Output>;
+
+/**
+ * The remote form instance created by the form factory function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
  */
 export type RemoteForm<Input extends RemoteFormInput | void, Output> = {
 	/** Attachment that sets up an event handler that intercepts the form submission on the client to prevent a full page reload */
@@ -2048,23 +2060,6 @@ export type RemoteForm<Input extends RemoteFormInput | void, Output> = {
 		action: string;
 		[attachment: symbol]: (node: HTMLFormElement) => void;
 	};
-	/**
-	 * Create an instance of the form for the given `id`.
-	 * The `id` is stringified and used for deduplication to potentially reuse existing instances.
-	 * Useful when you have multiple forms that use the same remote form action, for example in a loop.
-	 * ```svelte
-	 * {#each todos as todo}
-	 *	{@const todoForm = updateTodo.for(todo.id)}
-	 *	<form {...todoForm}>
-	 *		{#if todoForm.result?.invalid}<p>Invalid data</p>{/if}
-	 *		...
-	 *	</form>
-	 *	{/each}
-	 * ```
-	 */
-	for(id: ExtractId<Input>): Omit<RemoteForm<Input, Output>, 'for'>;
-	/** Preflight checks */
-	preflight(schema: StandardSchemaV1<Input, any>): RemoteForm<Input, Output>;
 	/** Validate the form contents programmatically */
 	validate(options?: {
 		/** Set this to `true` to also show validation issues of fields that haven't been touched yet. */
