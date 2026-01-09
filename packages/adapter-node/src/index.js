@@ -1,7 +1,7 @@
 import http from 'node:http';
 import process from 'node:process';
 import { handler } from 'HANDLER';
-import { env } from 'ENV';
+import { env, timeout_env } from 'ENV';
 import polka from 'polka';
 
 export const path = env('SOCKET_PATH', false);
@@ -37,26 +37,14 @@ let idle_timeout_id;
 // properties after the server has started listening could lead to race conditions.
 const httpServer = http.createServer();
 
-const keep_alive_timeout_var = env('KEEP_ALIVE_TIMEOUT', '');
-if (keep_alive_timeout_var) {
-	const keep_alive_timeout = parseInt(keep_alive_timeout_var);
-	if (isNaN(keep_alive_timeout) || keep_alive_timeout < 0) {
-		throw new Error(
-			`invalid KEEP_ALIVE_TIMEOUT value ${keep_alive_timeout_var}, expected a non-negative integer`
-		);
-	}
+const keep_alive_timeout = timeout_env('KEEP_ALIVE_TIMEOUT');
+if (keep_alive_timeout !== undefined) {
 	// Convert the keep-alive timeout from seconds to milliseconds (the unit Node.js expects).
 	httpServer.keepAliveTimeout = keep_alive_timeout * 1000;
 }
 
-const headers_timeout_var = env('HEADERS_TIMEOUT', '');
-if (headers_timeout_var) {
-	const headers_timeout = parseInt(headers_timeout_var);
-	if (isNaN(headers_timeout) || headers_timeout < 0) {
-		throw new Error(
-			`invalid HEADERS_TIMEOUT value ${headers_timeout_var}, expected a non-negative integer`
-		);
-	}
+const headers_timeout = timeout_env('HEADERS_TIMEOUT');
+if (headers_timeout !== undefined) {
 	// Convert the headers timeout from seconds to milliseconds (the unit Node.js expects).
 	httpServer.headersTimeout = headers_timeout * 1000;
 }
