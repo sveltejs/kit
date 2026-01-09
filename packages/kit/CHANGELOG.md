@@ -1,5 +1,17 @@
 # @sveltejs/kit
 
+## 2.49.4
+### Patch Changes
+
+
+- fix: support instrumentation for `vite preview` ([#15105](https://github.com/sveltejs/kit/pull/15105))
+
+
+- fix: support for `URLSearchParams.has(name, value)` overload ([#15076](https://github.com/sveltejs/kit/pull/15076))
+
+
+- fix: put forking behind `experimental.forkPreloads` ([#15135](https://github.com/sveltejs/kit/pull/15135))
+
 ## 2.49.3
 ### Patch Changes
 
