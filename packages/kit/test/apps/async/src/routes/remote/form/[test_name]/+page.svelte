@@ -1,5 +1,10 @@
 <script>
-	import { get_message, set_message, resolve_deferreds } from './form.remote.js';
+	import {
+		get_message,
+		set_message,
+		resolve_deferreds,
+		set_reverse_message
+	} from './form.remote.js';
 
 	const { params } = $props();
 
@@ -22,14 +27,19 @@
 
 	<input {...set_message.fields.message.as('text')} />
 	<input {...set_message.fields.test_name.as('hidden', params.test_name)} />
-
-	<button {...set_message.fields.action.as('submit', 'normal')}>set message</button>
-	<button {...set_message.fields.action.as('submit', 'reverse')}>set reverse message</button>
+	<!--
+	 NOTE: there really probably should be a `set_reverse_message' test_name hidden field here, but it collides with the one above.
+	 This kind of lines up with our discussions from earlier where we were talking about needing to include the RF hash in the field name.
+	 If we do that and this test starts failing, all we'll need to do is add the hidden field back in.
+	-->
+	<button>set message</button>
+	<button {...set_reverse_message.buttonProps}>set reverse message</button>
 </form>
 
 <p>set_message.input.message: {set_message.fields.message.value()}</p>
 <p>set_message.pending: {set_message.pending}</p>
 <p>set_message.result: {set_message.result}</p>
+<p>set_reverse_message.result: {set_reverse_message.result}</p>
 
 <hr />
 
