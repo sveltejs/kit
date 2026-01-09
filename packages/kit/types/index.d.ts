@@ -2048,6 +2048,21 @@ declare module '@sveltejs/kit' {
 			/** Set this to `true` to only run the `preflight` validation. */
 			preflightOnly?: boolean;
 		}): Promise<void>;
+		/** Reset the form to its initial state */
+		reset(options?: {
+			/**
+			 * Set this to the new values to reset the form to.
+			 * Set this to `false` to not reset the values.
+			 * @default true
+			 */
+			values?: DeepPartial<Input> | boolean;
+			/** Set this to `false` to not reset the issues. */
+			issues?: boolean;
+			/** Set this to `false` to not reset the result. */
+			result?: boolean;
+			/** Set this to `false` to not reset the touched fields. */
+			touched?: boolean;
+		}): void;
 		/** The result of the form submission */
 		get result(): Output | undefined;
 		/** The number of pending submissions */
@@ -2395,6 +2410,14 @@ declare module '@sveltejs/kit' {
 	}
 
 	type TrailingSlash = 'never' | 'always' | 'ignore';
+
+	type DeepPartial<T> = T extends Record<PropertyKey, unknown> | unknown[]
+		? {
+				[K in keyof T]?: T[K] extends Record<PropertyKey, unknown> | unknown[]
+					? DeepPartial<T[K]>
+					: T[K];
+			}
+		: T | undefined;
 	interface Asset {
 		file: string;
 		size: number;
