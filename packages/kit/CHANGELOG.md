@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.50.0
+### Minor Changes
+
+
+- breaking: remove `buttonProps` from experimental remote form functions; use e.g. `<button {...myForm.fields.action.as('submit', 'register')}>Register</button>` button instead ([#14622](https://github.com/sveltejs/kit/pull/14622))
+
 ## 2.49.4
 ### Patch Changes
 
