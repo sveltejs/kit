@@ -46,7 +46,7 @@ export async function build_server_nodes(
 				const css_dir = dirname(fileName);
 				const rewritten = content.replace(
 					/url\(\s*['"]?(\.[^'")]+)['"]?\s*\)/g,
-					(match, relative_path) => {
+					(_match, relative_path) => {
 						const resolved = posix.normalize(posix.join(css_dir, relative_path));
 						return `url(${base}${resolved})`;
 					}
