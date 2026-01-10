@@ -1261,7 +1261,6 @@ async function kit({ svelte_config }) {
 					manifest_data,
 					server_manifest,
 					client_manifest,
-					bundle,
 					client_chunks,
 					svelte_config.kit.output,
 					static_exports

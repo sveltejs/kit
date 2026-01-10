@@ -12,7 +12,6 @@ import { create_node_analyser } from '../static_analysis/index.js';
  * @param {import('types').ManifestData} manifest_data
  * @param {import('vite').Manifest} server_manifest
  * @param {import('vite').Manifest | null} client_manifest
- * @param {import('vite').Rollup.OutputBundle | null} server_bundle
  * @param {import('vite').Rollup.RollupOutput['output'] | null} client_chunks
  * @param {import('types').RecursiveRequired<import('types').ValidatedConfig['kit']['output']>} output_config
  * @param {Map<string, { page_options: Record<string, any> | null, children: string[] }>} static_exports
@@ -23,7 +22,6 @@ export async function build_server_nodes(
 	manifest_data,
 	server_manifest,
 	client_manifest,
-	server_bundle,
 	client_chunks,
 	output_config,
 	static_exports
