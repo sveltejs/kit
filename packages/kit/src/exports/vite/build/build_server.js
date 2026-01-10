@@ -1,9 +1,9 @@
 import fs from 'node:fs';
 import { mkdirp } from '../../../utils/filesystem.js';
-import { filter_fonts, find_deps, resolve_symlinks } from './utils.js';
+import { assets_base, filter_fonts, find_deps, resolve_symlinks } from './utils.js';
 import { s } from '../../../utils/misc.js';
 import { normalizePath } from 'vite';
-import { basename, join } from 'node:path';
+import { basename, dirname, join, posix } from 'node:path';
 import { create_node_analyser } from '../static_analysis/index.js';
 
 /**
@@ -34,35 +34,27 @@ export async function build_server_nodes(
 	/** @type {Map<string, string>} */
 	const stylesheets_to_inline = new Map();
 
-	if (server_bundle && client_chunks && kit.inlineStyleThreshold > 0) {
-		const client = get_stylesheets(client_chunks);
-		const server = get_stylesheets(Object.values(server_bundle));
+	if (client_chunks && kit.inlineStyleThreshold > 0) {
+		const stylesheet_content = get_stylesheet_content(client_chunks);
+		const base = assets_base(kit);
 
-		// map server stylesheet name to the client stylesheet name
-		for (const [id, client_stylesheet] of client.stylesheets_used) {
-			const server_stylesheet = server.stylesheets_used.get(id);
-			if (!server_stylesheet) {
-				continue;
+		// Use client CSS content directly, rewriting relative URLs to absolute paths.
+		// We use client CSS instead of server CSS because server builds may tree-shake
+		// CSS for conditionally rendered components (e.g., inside {#if} blocks),
+		// resulting in incomplete styles when inlined.
+		for (const [fileName, content] of stylesheet_content) {
+			if (content.length < kit.inlineStyleThreshold) {
+				// Rewrite relative url() references to use the assets base path
+				const css_dir = dirname(fileName);
+				const rewritten = content.replace(
+					/url\(\s*['"]?(\.[^'")]+)['"]?\s*\)/g,
+					(match, relative_path) => {
+						const resolved = posix.normalize(posix.join(css_dir, relative_path));
+						return `url(${base}${resolved})`;
+					}
+				);
+				stylesheets_to_inline.set(fileName, rewritten);
 			}
-			client_stylesheet.forEach((file, i) => {
-				stylesheets_to_inline.set(file, server_stylesheet[i]);
-			});
-		}
-
-		// filter out stylesheets that should not be inlined
-		for (const [fileName, content] of client.stylesheet_content) {
-			if (content.length >= kit.inlineStyleThreshold) {
-				stylesheets_to_inline.delete(fileName);
-			}
-		}
-
-		// map server stylesheet source to the client stylesheet name
-		for (const [client_file, server_file] of stylesheets_to_inline) {
-			const source = server.stylesheet_content.get(server_file);
-			if (!source) {
-				throw new Error(`Server stylesheet source not found for client stylesheet ${client_file}`);
-			}
-			stylesheets_to_inline.set(client_file, source);
 		}
 	}
 
@@ -211,35 +203,19 @@ export async function build_server_nodes(
 }
 
 /**
+ * Extracts CSS content from client build chunks.
  * @param {(import('vite').Rollup.OutputAsset | import('vite').Rollup.OutputChunk)[]} chunks
+ * @returns {Map<string, string>} A map of stylesheet filenames to their content
  */
-function get_stylesheets(chunks) {
-	/**
-	 * A map of module IDs and the stylesheets they use.
-	 * @type {Map<string, string[]>}
-	 */
-	const stylesheets_used = new Map();
-
-	/**
-	 * A map of stylesheet names and their content.
-	 * @type {Map<string, string>}
-	 */
+function get_stylesheet_content(chunks) {
+	/** @type {Map<string, string>} */
 	const stylesheet_content = new Map();
 
 	for (const chunk of chunks) {
-		if (chunk.type === 'asset') {
-			if (chunk.fileName.endsWith('.css')) {
-				stylesheet_content.set(chunk.fileName, chunk.source.toString());
-			}
-			continue;
-		}
-
-		if (chunk.viteMetadata?.importedCss.size) {
-			const css = Array.from(chunk.viteMetadata.importedCss);
-			for (const id of chunk.moduleIds) {
-				stylesheets_used.set(id, css);
-			}
+		if (chunk.type === 'asset' && chunk.fileName.endsWith('.css')) {
+			stylesheet_content.set(chunk.fileName, chunk.source.toString());
 		}
 	}
-	return { stylesheets_used, stylesheet_content };
+
+	return stylesheet_content;
 }

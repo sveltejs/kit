@@ -331,6 +331,29 @@ if (!process.env.DEV) {
 			expect(loaded_css).toBe(false);
 			expect(await get_computed_style('p', 'color')).toEqual('rgb(0, 0, 255)');
 		});
+
+		test('styles conditionally rendered components when parent has styles', async ({
+			page,
+			get_computed_style,
+			javaScriptEnabled
+		}) => {
+			test.skip(!javaScriptEnabled);
+
+			await page.goto('/path-base/inline-assets/conditional');
+
+			// Verify parent styles are applied
+			expect(await get_computed_style('section', 'background-color')).toEqual('rgb(245, 245, 220)');
+
+			// Toggle to show the conditional component
+			await page.click('button');
+
+			// Wait for the conditional component to appear
+			await expect(page.locator('p')).toHaveText("I'm conditionally rendered");
+
+			// The conditional component's styles should be applied
+			expect(await get_computed_style('p', 'color')).toEqual('rgb(0, 128, 0)');
+			expect(await get_computed_style('p', 'font-weight')).toEqual('700');
+		});
 	});
 }
 
