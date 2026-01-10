@@ -151,6 +151,25 @@ const content_type = request.headers.get('content-type')?.split(';', 1)[0];
 - `@sveltejs/enhanced-img` - Enhanced image component
 - `@sveltejs/amp` - AMP support
 
+## Creating Pull Requests
+
+Before opening a PR, ensure you have:
+
+1. **Run the full pre-submission checklist** (see above) - format, lint, check, and test
+2. **Added a changeset** - Run `pnpm changeset` or manually create a `.changeset/*.md` file:
+
+   ```markdown
+   ---
+   '@sveltejs/kit': patch
+   ---
+
+   fix: description of the fix
+   ```
+
+   Use `patch` for bug fixes, `minor` for new features, `major` for breaking changes.
+
+3. **Written a clear PR description** explaining the problem and solution
+
 ## Troubleshooting
 
 - **Browser tests fail**: `pnpm playwright install chromium`
