@@ -8,7 +8,7 @@ import { test } from '../../../utils.js';
 test.describe.configure({ mode: 'parallel' });
 
 test.describe('base path', () => {
-	test.skip(!!process.env.PATHS_ASSETS);
+	test.skip(!process.env.PATHS_ASSETS);
 
 	test('serves a useful 404 when visiting unprefixed path', async ({ request }) => {
 		const html = await request.get('/slash/', { headers: { Accept: 'text/html' } });
@@ -36,15 +36,13 @@ test.describe('base path', () => {
 		);
 	});
 
-	if (process.env.DEV) {
-		test('serves files in source directory', async ({ request, javaScriptEnabled }) => {
-			if (!javaScriptEnabled) return;
+	test('serves files in source directory', async ({ request, javaScriptEnabled }) => {
+		test.skip(!process.env.DEV || !javaScriptEnabled);
 
-			const response = await request.get('/path-base/source/pages/test.txt');
-			expect(response.ok()).toBe(true);
-			expect(await response.text()).toBe('hello there world\n');
-		});
-	}
+		const response = await request.get('/path-base/source/pages/test.txt');
+		expect(response.ok()).toBe(true);
+		expect(await response.text()).toBe('hello there world\n');
+	});
 
 	test('paths available on server side', async ({ page }) => {
 		await page.goto('/path-base/base/');
@@ -65,26 +63,6 @@ test.describe('base path', () => {
 	test('loads CSS', async ({ page, get_computed_style }) => {
 		await page.goto('/path-base/base/');
 		expect(await get_computed_style('p', 'color')).toBe('rgb(255, 0, 0)');
-	});
-
-	test('inlines CSS', async ({ page, javaScriptEnabled }) => {
-		await page.goto('/path-base/base/');
-		if (process.env.DEV) {
-			const ssr_style = await page.$('style[data-sveltekit]');
-
-			if (javaScriptEnabled) {
-				// <style data-sveltekit> is removed upon hydration
-				expect(ssr_style).toBeNull();
-			} else {
-				expect(ssr_style).not.toBeNull();
-			}
-
-			expect(await page.$('link[rel="stylesheet"]')).toBeNull();
-		} else {
-			expect(await page.$('style')).not.toBeNull();
-			expect(await page.$('link[rel="stylesheet"][disabled]')).not.toBeNull();
-			expect(await page.$('link[rel="stylesheet"]:not([disabled])')).not.toBeNull();
-		}
 	});
 
 	test('sets params correctly', async ({ page, clicknav }) => {
@@ -318,7 +296,29 @@ test.describe('serviceWorker', () => {
 });
 
 test.describe('inlineStyleThreshold', () => {
+	test('inlines CSS', async ({ page, javaScriptEnabled }) => {
+		await page.goto('/path-base/base/');
+		if (process.env.DEV) {
+			const ssr_style = await page.$('style[data-sveltekit]');
+
+			if (javaScriptEnabled) {
+				// <style data-sveltekit> is removed upon hydration
+				expect(ssr_style).toBeNull();
+			} else {
+				expect(ssr_style).not.toBeNull();
+			}
+
+			expect(await page.$('link[rel="stylesheet"]')).toBeNull();
+		} else {
+			expect(await page.$('style')).not.toBeNull();
+			expect(await page.$('link[rel="stylesheet"][disabled]')).not.toBeNull();
+			expect(await page.$('link[rel="stylesheet"]:not([disabled])')).not.toBeNull();
+		}
+	});
+
 	test('loads assets', async ({ page }) => {
+		test.skip(!!process.env.DEV);
+
 		let fontLoaded = false;
 		page.on('response', (response) => {
 			if (response.url().endsWith('.woff2') || response.url().endsWith('.woff')) {
@@ -333,6 +333,8 @@ test.describe('inlineStyleThreshold', () => {
 		page,
 		get_computed_style
 	}) => {
+		test.skip(!!process.env.DEV);
+
 		let loaded_css = false;
 		page.on('response', (response) => {
 			if (response.url().endsWith('.css')) {
@@ -343,6 +345,18 @@ test.describe('inlineStyleThreshold', () => {
 		await expect(page.locator('p')).toHaveText("I'm dynamically imported");
 		expect(loaded_css).toBe(false);
 		expect(await get_computed_style('p', 'color')).toEqual('rgb(0, 0, 255)');
+	});
+
+	test('inlines conditionally rendered component styles', async ({ page, get_computed_style, javaScriptEnabled }) => {
+		test.skip(!!process.env.DEV || !javaScriptEnabled);
+
+		await page.goto('/path-base/inline-assets/conditional-rendering');
+		await expect(page.locator('#always')).toBeVisible();
+		expect(await get_computed_style('#always', 'color')).toBe('rgb(255, 0, 0)');
+
+		await page.locator('button', { hasText: 'show component' }).click();
+		await expect(page.locator('#conditionally')).toBeVisible();
+		expect(await get_computed_style('#conditionally', 'color')).toBe('rgb(0, 0, 255)');
 	});
 });
 
