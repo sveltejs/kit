@@ -347,7 +347,11 @@ test.describe('inlineStyleThreshold', () => {
 		expect(await get_computed_style('p', 'color')).toEqual('rgb(0, 0, 255)');
 	});
 
-	test('inlines conditionally rendered component styles', async ({ page, get_computed_style, javaScriptEnabled }) => {
+	test('inlines conditionally rendered component styles', async ({
+		page,
+		get_computed_style,
+		javaScriptEnabled
+	}) => {
 		test.skip(!!process.env.DEV || !javaScriptEnabled);
 
 		await page.goto('/path-base/inline-assets/conditional-rendering');
