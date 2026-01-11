@@ -8,6 +8,8 @@ import { test } from '../../../utils.js';
 test.describe.configure({ mode: 'parallel' });
 
 test.describe('base path', () => {
+	test.skip(!!process.env.PATHS_ASSETS);
+
 	test('serves a useful 404 when visiting unprefixed path', async ({ request }) => {
 		const html = await request.get('/slash/', { headers: { Accept: 'text/html' } });
 		expect(html.status()).toBe(404);
@@ -103,6 +105,8 @@ test.describe('base path', () => {
 });
 
 test.describe('assets path', () => {
+	test.skip(!process.env.PATHS_ASSETS);
+
 	test('serves static assets with correct prefix', async ({ page, request }) => {
 		await page.goto('/path-base/');
 		const href = await page.locator('link[rel="icon"]').getAttribute('href');
@@ -113,6 +117,8 @@ test.describe('assets path', () => {
 });
 
 test.describe('CSP', () => {
+	test.skip(!!process.env.PATHS_ASSETS);
+
 	test('blocks script from external site', async ({ page, start_server }) => {
 		const { port } = await start_server((req, res) => {
 			if (req.url === '/blocked.js') {
@@ -148,6 +154,8 @@ test.describe('CSP', () => {
 });
 
 test.describe('Custom extensions', () => {
+	test.skip(!!process.env.PATHS_ASSETS);
+
 	test('works with arbitrary extensions', async ({ page }) => {
 		await page.goto('/path-base/custom-extensions/');
 		expect(await page.textContent('h2')).toBe('Great success!');
@@ -172,6 +180,8 @@ test.describe('Custom extensions', () => {
 });
 
 test.describe('env', () => {
+	test.skip(!!process.env.PATHS_ASSETS);
+
 	test('resolves downwards', async ({ page }) => {
 		await page.goto('/path-base/env');
 		expect(await page.textContent('#public')).toBe('and thank you');
@@ -184,6 +194,8 @@ test.describe('env', () => {
 });
 
 test.describe('trailingSlash', () => {
+	test.skip(!!process.env.PATHS_ASSETS);
+
 	test('adds trailing slash', async ({ baseURL, page, clicknav }) => {
 		// we can't use Playwright's `request` here, because it resolves redirects
 		const status = await new Promise((fulfil, reject) => {
@@ -296,45 +308,47 @@ test.describe('trailingSlash', () => {
 	});
 });
 
-if (!process.env.DEV) {
-	test.describe('serviceWorker', () => {
-		test('does not register service worker if none created', async ({ page }) => {
-			await page.goto('/path-base/');
-			expect(await page.content()).not.toMatch('navigator.serviceWorker');
+test.describe('serviceWorker', () => {
+	test.skip(!!process.env.PATHS_ASSETS || !!process.env.DEV);
+
+	test('does not register service worker if none created', async ({ page }) => {
+		await page.goto('/path-base/');
+		expect(await page.content()).not.toMatch('navigator.serviceWorker');
+	});
+});
+
+test.describe('inlineStyleThreshold', () => {
+	test('loads assets', async ({ page }) => {
+		let fontLoaded = false;
+		page.on('response', (response) => {
+			if (response.url().endsWith('.woff2') || response.url().endsWith('.woff')) {
+				fontLoaded = response.ok();
+			}
 		});
+		await page.goto('/path-base/inline-assets');
+		expect(fontLoaded).toBeTruthy();
 	});
 
-	test.describe('inlineStyleThreshold', () => {
-		test('loads assets', async ({ page }) => {
-			let fontLoaded = false;
-			page.on('response', (response) => {
-				if (response.url().endsWith('.woff2') || response.url().endsWith('.woff')) {
-					fontLoaded = response.ok();
-				}
-			});
-			await page.goto('/path-base/inline-assets');
-			expect(fontLoaded).toBeTruthy();
+	test('includes components dynamically imported in universal load', async ({
+		page,
+		get_computed_style
+	}) => {
+		let loaded_css = false;
+		page.on('response', (response) => {
+			if (response.url().endsWith('.css')) {
+				loaded_css = true;
+			}
 		});
-
-		test('includes components dynamically imported in universal load', async ({
-			page,
-			get_computed_style
-		}) => {
-			let loaded_css = false;
-			page.on('response', (response) => {
-				if (response.url().endsWith('.css')) {
-					loaded_css = true;
-				}
-			});
-			await page.goto('/path-base/inline-assets/dynamic-import');
-			await expect(page.locator('p')).toHaveText("I'm dynamically imported");
-			expect(loaded_css).toBe(false);
-			expect(await get_computed_style('p', 'color')).toEqual('rgb(0, 0, 255)');
-		});
+		await page.goto('/path-base/inline-assets/dynamic-import');
+		await expect(page.locator('p')).toHaveText("I'm dynamically imported");
+		expect(loaded_css).toBe(false);
+		expect(await get_computed_style('p', 'color')).toEqual('rgb(0, 0, 255)');
 	});
-}
+});
 
 test.describe('Vite options', () => {
+	test.skip(!!process.env.PATHS_ASSETS);
+
 	test('Respects --mode', async ({ page }) => {
 		await page.goto('/path-base/mode');
 
@@ -344,6 +358,8 @@ test.describe('Vite options', () => {
 });
 
 test.describe('Routing', () => {
+	test.skip(!!process.env.PATHS_ASSETS);
+
 	test('ignores clicks outside the app target', async ({ page }) => {
 		await page.goto('/path-base/routing/link-outside-app-target/source/');
 
@@ -353,6 +369,8 @@ test.describe('Routing', () => {
 });
 
 test.describe('Async', () => {
+	test.skip(!!process.env.PATHS_ASSETS);
+
 	test("updates the DOM before onNavigate's promise is resolved", async ({
 		page,
 		javaScriptEnabled
