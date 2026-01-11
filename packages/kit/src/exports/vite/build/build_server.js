@@ -5,6 +5,7 @@ import { s } from '../../../utils/misc.js';
 import { normalizePath } from 'vite';
 import { basename, join } from 'node:path';
 import { create_node_analyser } from '../static_analysis/index.js';
+import { replace_css_relative_url } from '../../../utils/css.js';
 
 /**
  * @param {string} out
@@ -12,7 +13,7 @@ import { create_node_analyser } from '../static_analysis/index.js';
  * @param {import('types').ManifestData} manifest_data
  * @param {import('vite').Manifest} server_manifest
  * @param {import('vite').Manifest | null} client_manifest
- * @param {import('vite').Rollup.OutputBundle | null} server_bundle
+ * @param {string | null} assets_path
  * @param {import('vite').Rollup.RollupOutput['output'] | null} client_chunks
  * @param {import('types').RecursiveRequired<import('types').ValidatedConfig['kit']['output']>} output_config
  * @param {Map<string, { page_options: Record<string, any> | null, children: string[] }>} static_exports
@@ -23,7 +24,7 @@ export async function build_server_nodes(
 	manifest_data,
 	server_manifest,
 	client_manifest,
-	server_bundle,
+	assets_path,
 	client_chunks,
 	output_config,
 	static_exports
@@ -34,35 +35,16 @@ export async function build_server_nodes(
 	/** @type {Map<string, string>} */
 	const stylesheets_to_inline = new Map();
 
-	if (server_bundle && client_chunks && kit.inlineStyleThreshold > 0) {
-		const client = get_stylesheets(client_chunks);
-		const server = get_stylesheets(Object.values(server_bundle));
-
-		// map server stylesheet name to the client stylesheet name
-		for (const [id, client_stylesheet] of client.stylesheets_used) {
-			const server_stylesheet = server.stylesheets_used.get(id);
-			if (!server_stylesheet) {
+	if (client_chunks && kit.inlineStyleThreshold > 0) {
+		for (const chunk of client_chunks) {
+			if (chunk.type !== 'asset' || !chunk.fileName.endsWith('.css')) {
 				continue;
 			}
-			client_stylesheet.forEach((file, i) => {
-				stylesheets_to_inline.set(file, server_stylesheet[i]);
-			});
-		}
 
-		// filter out stylesheets that should not be inlined
-		for (const [fileName, content] of client.stylesheet_content) {
-			if (content.length >= kit.inlineStyleThreshold) {
-				stylesheets_to_inline.delete(fileName);
+			const source = chunk.source.toString();
+			if (source.length < kit.inlineStyleThreshold) {
+				stylesheets_to_inline.set(chunk.fileName, source);
 			}
-		}
-
-		// map server stylesheet source to the client stylesheet name
-		for (const [client_file, server_file] of stylesheets_to_inline) {
-			const source = server.stylesheet_content.get(server_file);
-			if (!source) {
-				throw new Error(`Server stylesheet source not found for client stylesheet ${client_file}`);
-			}
-			stylesheets_to_inline.set(client_file, source);
 		}
 	}
 
@@ -187,11 +169,14 @@ export async function build_server_nodes(
 			if (stylesheets_to_inline.has(file)) {
 				const filename = basename(file);
 				const dest = `${out}/server/stylesheets/${filename}.js`;
-				const source = stylesheets_to_inline.get(file);
-				if (!source) {
-					throw new Error(`Server stylesheet source not found for client stylesheet ${file}`);
+
+				let contents = /** @type {string} */ (stylesheets_to_inline.get(file));
+
+				if (kit.paths.assets) {
+					contents = replace_css_relative_url(contents, `${kit.paths.assets}/${assets_path}`);
 				}
-				fs.writeFileSync(dest, `// ${filename}\nexport default ${s(source)};`);
+
+				fs.writeFileSync(dest, `// ${filename}\nexport default ${s(contents)};`);
 
 				const name = `stylesheet_${i}`;
 				imports.push(`import ${name} from '../stylesheets/${filename}.js';`);
@@ -208,38 +193,4 @@ export async function build_server_nodes(
 			`${imports.join('\n')}\n\n${exports.join('\n')}\n`
 		);
 	}
-}
-
-/**
- * @param {(import('vite').Rollup.OutputAsset | import('vite').Rollup.OutputChunk)[]} chunks
- */
-function get_stylesheets(chunks) {
-	/**
-	 * A map of module IDs and the stylesheets they use.
-	 * @type {Map<string, string[]>}
-	 */
-	const stylesheets_used = new Map();
-
-	/**
-	 * A map of stylesheet names and their content.
-	 * @type {Map<string, string>}
-	 */
-	const stylesheet_content = new Map();
-
-	for (const chunk of chunks) {
-		if (chunk.type === 'asset') {
-			if (chunk.fileName.endsWith('.css')) {
-				stylesheet_content.set(chunk.fileName, chunk.source.toString());
-			}
-			continue;
-		}
-
-		if (chunk.viteMetadata?.importedCss.size) {
-			const css = Array.from(chunk.viteMetadata.importedCss);
-			for (const id of chunk.moduleIds) {
-				stylesheets_used.set(id, css);
-			}
-		}
-	}
-	return { stylesheets_used, stylesheet_content };
 }

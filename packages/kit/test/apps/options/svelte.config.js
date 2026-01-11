@@ -31,7 +31,8 @@ const config = {
 		},
 		paths: {
 			base: '/path-base',
-			assets: 'https://cdn.example.com/stuff'
+			// @ts-expect-error our env var string can't match the https template literal
+			assets: process.env.PATHS_ASSETS || ''
 		},
 		env: {
 			dir: './env-dir',
