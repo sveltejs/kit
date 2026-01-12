@@ -7,5 +7,5 @@
  * @returns {string}
  */
 export function replace_css_relative_url(contents, base) {
-	return contents.replaceAll(/url\((['"]?)\.\//g, `url($1${base}/`);
+	return contents.replaceAll(/url\((['"]?)\.\//ig, `url($1${base}/`);
 }
