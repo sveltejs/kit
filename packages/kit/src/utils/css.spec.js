@@ -20,6 +20,13 @@ describe('replace_css_relative_url', () => {
 		);
 	});
 
+	test('case-insensitive urls', () => {
+		assert.equal(
+			replace_css_relative_url('uRl("./image.png")', '/assets'),
+			'url("/assets/image.png")'
+		);
+	});
+
 	test('replaces multiple relative urls', () => {
 		const input = `
 			background: url(./bg.png);
