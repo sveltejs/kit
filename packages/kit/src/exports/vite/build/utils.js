@@ -122,17 +122,6 @@ export function filter_fonts(assets) {
 	return assets.filter((asset) => /\.(woff2?|ttf|otf)$/.test(asset));
 }
 
-const method_names = new Set(['GET', 'HEAD', 'PUT', 'POST', 'DELETE', 'PATCH', 'OPTIONS']);
-
-// If we'd written this in TypeScript, it could be easy...
-/**
- * @param {string} str
- * @returns {str is import('types').HttpMethod}
- */
-export function is_http_method(str) {
-	return method_names.has(str);
-}
-
 /**
  * @param {import('types').ValidatedKitConfig} config
  * @returns {string}
