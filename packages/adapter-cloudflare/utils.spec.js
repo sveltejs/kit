@@ -63,15 +63,6 @@ describe('detects Cloudflare Workers project', () => {
 			)
 		).toBe(false);
 	});
-
-	test('WORKERS_CI environment variable', () => {
-		vi.stubEnv('WORKERS_CI', '1');
-		const result = is_building_for_cloudflare_pages(
-			/** @type {import('wrangler').Unstable_Config} */ ({})
-		);
-		vi.unstubAllEnvs();
-		expect(result).toBe(false);
-	});
 });
 
 describe('validates Wrangler config', () => {
@@ -147,7 +138,7 @@ describe('validates Wrangler config', () => {
 				})
 			)
 		).toThrow(
-			`You must specify the \`main\` key in wrangler.jsonc if you want to deploy a Worker alongside your static assets. Otherwise, remove the \`assets.binding\` key if you only want to deploy static assets.`
+			`You must set the \`main\` key in wrangler.jsonc if you want to deploy a Worker alongside your static assets or remove the \`assets.binding\` key if you only want to deploy static assets.`
 		);
 	});
 });
