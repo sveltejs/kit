@@ -22,7 +22,7 @@ jobs:
   pkg-pr-new:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: pnpm/action-setup@v4.2.0
       - uses: actions/setup-node@v6
         with:
@@ -34,7 +34,7 @@ jobs:
   lint-all:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: pnpm/action-setup@v4.2.0
       - uses: actions/setup-node@v6
         with:
@@ -67,7 +67,7 @@ jobs:
       KIT_E2E_BROWSER: ${{matrix.e2e-browser}}
     steps:
       - run: git config --global core.autocrlf false
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: pnpm/action-setup@v4.2.0
       - uses: actions/setup-node@v6
         with:
@@ -87,7 +87,7 @@ jobs:
         run: find packages -type d -name test-results -not -empty | tar -czf test-results.tar.gz --files-from=-
       - name: Upload test results
         if: failure()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           retention-days: 3
           name: test-failure-${{ github.run_id }}-${{ matrix.os }}-${{ matrix.node-version }}-${{ matrix.e2e-browser }}
@@ -127,7 +127,7 @@ jobs:
       KIT_E2E_BROWSER: ${{matrix.e2e-browser}}
     steps:
       - run: git config --global core.autocrlf false
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: pnpm/action-setup@v4.2.0
       - uses: actions/setup-node@v6
         with:
@@ -145,7 +145,7 @@ jobs:
         run: find packages -type d -name test-results -not -empty | tar -czf test-results-cross-platform-${{ matrix.mode }}.tar.gz --files-from=-
       - name: Upload test results
         if: failure()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           retention-days: 3
           name: test-failure-cross-platform-${{ matrix.mode }}-${{ github.run_id }}-${{ matrix.os }}-${{ matrix.node-version }}-${{ matrix.e2e-browser }}
@@ -161,7 +161,7 @@ jobs:
           - mode: 'build'
     steps:
       - run: git config --global core.autocrlf false
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: pnpm/action-setup@v4.2.0
       - uses: actions/setup-node@v6
         with:
@@ -179,7 +179,7 @@ jobs:
         run: find packages -type d -name test-results -not -empty | tar -czf test-results-server-side-route-resolution-${{ matrix.mode }}.tar.gz --files-from=-
       - name: Upload test results
         if: failure()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           retention-days: 3
           name: test-failure-server-side-route-resolution-${{ matrix.mode }}-${{ github.run_id }}
@@ -195,7 +195,7 @@ jobs:
           - mode: 'build'
     steps:
       - run: git config --global core.autocrlf false
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: pnpm/action-setup@v4.2.0
       - uses: actions/setup-node@v6
         with:
@@ -213,7 +213,7 @@ jobs:
         run: find packages -type d -name test-results -not -empty | tar -czf test-results-svelte-async-${{ matrix.mode }}.tar.gz --files-from=-
       - name: Upload test results
         if: failure()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           retention-days: 3
           name: test-failure-svelte-async-${{ matrix.mode }}-${{ github.run_id }}
@@ -224,7 +224,7 @@ jobs:
       matrix:
         node-version: [18, 20, 22, 24]
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: pnpm/action-setup@v4.2.0
       - uses: actions/setup-node@v6
         with:

@@ -285,7 +285,7 @@ const plugin = function (defaults = {}) {
 
 					if (runtime === 'edge') {
 						throw new Error(
-							`${directory}: Routes using \`isr\` must use a Node.js or Bun runtime (for example 'nodejs22.x' or 'experimental_bun1.x')`
+							`${directory}: Routes using \`isr\` must use a Node.js or Bun runtime (for example 'nodejs24.x' or 'experimental_bun1.x')`
 						);
 					}
 

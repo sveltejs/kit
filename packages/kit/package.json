@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/kit",
-	"version": "2.48.4",
+	"version": "2.49.4",
 	"description": "SvelteKit is the fastest way to build Svelte apps",
 	"keywords": [
 		"framework",
@@ -51,10 +51,14 @@
 		"@sveltejs/vite-plugin-svelte": "^3.0.0 || ^4.0.0-next.1 || ^5.0.0 || ^6.0.0-next.0",
 		"@opentelemetry/api": "^1.0.0",
 		"svelte": "^4.0.0 || ^5.0.0-next.0",
+		"typescript": "^5.3.3",
 		"vite": "^5.0.3 || ^6.0.0 || ^7.0.0-beta.0"
 	},
 	"peerDependenciesMeta": {
 		"@opentelemetry/api": {
+			"optional": true
+		},
+		"typescript": {
 			"optional": true
 		}
 	},

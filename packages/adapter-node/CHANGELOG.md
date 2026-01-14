@@ -1,5 +1,11 @@
 # @sveltejs/adapter-node
 
+## 5.5.0
+### Minor Changes
+
+
+- feat: add env vars for keepAliveTimeout and headersTimeout ([#15125](https://github.com/sveltejs/kit/pull/15125))
+
 ## 5.4.0
 ### Minor Changes
 
