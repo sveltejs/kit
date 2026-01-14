@@ -19,7 +19,7 @@ export interface AdapterOptions {
 	 * Wrangler configuration setting is set to `"404-page"`, this page will be
 	 * served if a request fails to match an asset. If `assets.not_found_handling`
 	 * is set to `"single-page-application"`, the adapter will render a SPA fallback
-	 * index.html page regardless of the `fallback` option specified.
+	 * `index.html` page regardless of the `fallback` option specified.
 	 *
 	 * For Cloudflare Pages, this page will only be served when a request that
 	 * matches an entry in `routes.exclude` fails to match an asset.
