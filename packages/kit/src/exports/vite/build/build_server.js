@@ -6,7 +6,6 @@ import { normalizePath } from 'vite';
 import { basename, join } from 'node:path';
 import { create_node_analyser } from '../static_analysis/index.js';
 
-
 /**
  * @param {string} out
  * @param {import('types').ValidatedKitConfig} kit
@@ -18,7 +17,17 @@ import { create_node_analyser } from '../static_analysis/index.js';
  * @param {import('types').RecursiveRequired<import('types').ValidatedConfig['kit']['output']>} output_config
  * @param {Map<string, { page_options: Record<string, any> | null, children: string[] }>} static_exports
  */
-export async function build_server_nodes(out, kit, manifest_data, server_manifest, client_manifest, server_bundle, client_chunks, output_config, static_exports) {
+export async function build_server_nodes(
+	out,
+	kit,
+	manifest_data,
+	server_manifest,
+	client_manifest,
+	server_bundle,
+	client_chunks,
+	output_config,
+	static_exports
+) {
 	mkdirp(`${out}/server/nodes`);
 	mkdirp(`${out}/server/stylesheets`);
 
@@ -37,7 +46,7 @@ export async function build_server_nodes(out, kit, manifest_data, server_manifes
 			}
 			client_stylesheet.forEach((file, i) => {
 				stylesheets_to_inline.set(file, server_stylesheet[i]);
-			}) 
+			});
 		}
 
 		// filter out stylesheets that should not be inlined
@@ -60,7 +69,9 @@ export async function build_server_nodes(out, kit, manifest_data, server_manifes
 	const { get_page_options } = create_node_analyser({
 		resolve: (server_node) => {
 			// Windows needs the file:// protocol for absolute path dynamic imports
-			return import(`file://${join(out, 'server', resolve_symlinks(server_manifest, server_node).chunk.file)}`);
+			return import(
+				`file://${join(out, 'server', resolve_symlinks(server_manifest, server_node).chunk.file)}`
+			);
 		},
 		static_exports
 	});
@@ -97,7 +108,7 @@ export async function build_server_nodes(out, kit, manifest_data, server_manifes
 		if (node.universal) {
 			const page_options = await get_page_options(node);
 			if (!!page_options && page_options.ssr === false) {
-				exports.push(`export const universal = ${s(page_options, null, 2)};`)
+				exports.push(`export const universal = ${s(page_options, null, 2)};`);
 			} else {
 				imports.push(
 					`import * as universal from '../${resolve_symlinks(server_manifest, node.universal).chunk.file}';`
@@ -116,14 +127,18 @@ export async function build_server_nodes(out, kit, manifest_data, server_manifes
 			exports.push(`export const server_id = ${s(node.server)};`);
 		}
 
-		if (client_manifest && (node.universal || node.component) && output_config.bundleStrategy === 'split') {
+		if (
+			client_manifest &&
+			(node.universal || node.component) &&
+			output_config.bundleStrategy === 'split'
+		) {
 			const entry_path = `${normalizePath(kit.outDir)}/generated/client-optimized/nodes/${i}.js`;
 			const entry = find_deps(client_manifest, entry_path, true);
 
 			// eagerly load client stylesheets and fonts imported by the SSR-ed page to avoid FOUC.
 			// However, if it is not used during SSR (not present in the server manifest),
 			// then it can be lazily loaded in the browser.
-	
+
 			/** @type {import('types').AssetDependencies | undefined} */
 			let component;
 			if (node.component) {
@@ -149,8 +164,8 @@ export async function build_server_nodes(out, kit, manifest_data, server_manifes
 				}
 
 				if (component?.stylesheet_map.has(filepath) || universal?.stylesheet_map.has(filepath)) {
-					value.css.forEach(file => eager_css.add(file));
-					value.assets.forEach(file => eager_assets.add(file));
+					value.css.forEach((file) => eager_css.add(file));
+					value.assets.forEach((file) => eager_assets.add(file));
 				}
 			});
 
@@ -196,7 +211,7 @@ export async function build_server_nodes(out, kit, manifest_data, server_manifes
 }
 
 /**
- * @param {(import('vite').Rollup.OutputAsset | import('vite').Rollup.OutputChunk)[]} chunks 
+ * @param {(import('vite').Rollup.OutputAsset | import('vite').Rollup.OutputChunk)[]} chunks
  */
 function get_stylesheets(chunks) {
 	/**
@@ -222,7 +237,7 @@ function get_stylesheets(chunks) {
 		if (chunk.viteMetadata?.importedCss.size) {
 			const css = Array.from(chunk.viteMetadata.importedCss);
 			for (const id of chunk.moduleIds) {
-				stylesheets_used.set(id, css );
+				stylesheets_used.set(id, css);
 			}
 		}
 	}

@@ -1,5 +1,50 @@
 # @sveltejs/kit
 
+## 2.49.4
+### Patch Changes
+
+
+- fix: support instrumentation for `vite preview` ([#15105](https://github.com/sveltejs/kit/pull/15105))
+
+
+- fix: support for `URLSearchParams.has(name, value)` overload ([#15076](https://github.com/sveltejs/kit/pull/15076))
+
+
+- fix: put forking behind `experimental.forkPreloads` ([#15135](https://github.com/sveltejs/kit/pull/15135))
+
+## 2.49.3
+### Patch Changes
+
+
+- fix: avoid false-positive Vite config overridden warning when using Vitest 4 ([#15121](https://github.com/sveltejs/kit/pull/15121))
+
+
+- fix: add `typescript` as an optional peer dependency ([#15074](https://github.com/sveltejs/kit/pull/15074))
+
+
+- fix: use hasOwn check when deep-setting object properties ([#15127](https://github.com/sveltejs/kit/pull/15127))
+
+## 2.49.2
+### Patch Changes
+
+
+- fix: Stop re-loading already-loaded CSS during server-side route resolution ([#15014](https://github.com/sveltejs/kit/pull/15014))
+
+
+- fix: posixify the instrumentation file import on Windows ([#14993](https://github.com/sveltejs/kit/pull/14993))
+
+
+- fix: Correctly handle shared memory when decoding binary form data ([#15028](https://github.com/sveltejs/kit/pull/15028))
+
+## 2.49.1
+### Patch Changes
+
+
+- fix: suppress `state_referenced_locally` warnings in `.svelte-kit/generated/root.svelte` ([#15013](https://github.com/sveltejs/kit/pull/15013))
+
+
+- fix: TypeError when doing response.clone() in page load ([#15005](https://github.com/sveltejs/kit/pull/15005))
+
 ## 2.49.0
 ### Minor Changes
 
