@@ -107,7 +107,7 @@ test.describe('assets path', () => {
 		await page.goto('/path-base/');
 		const href = await page.locator('link[rel="icon"]').getAttribute('href');
 
-		const response = await request.get(href);
+		const response = await request.get(href ?? '');
 		expect(response.status()).toBe(200);
 	});
 });
@@ -133,7 +133,7 @@ test.describe('CSP', () => {
 	test('ensure CSP header in stream response', async ({ page, javaScriptEnabled }) => {
 		if (!javaScriptEnabled) return;
 		const response = await page.goto('/path-base/csp-with-stream');
-		expect(response.headers()['content-security-policy']).toMatch(
+		expect(response?.headers()['content-security-policy']).toMatch(
 			/require-trusted-types-for 'script'/
 		);
 		expect(await page.textContent('h2')).toBe('Moo Deng!');
@@ -141,7 +141,7 @@ test.describe('CSP', () => {
 
 	test("quotes 'script'", async ({ page }) => {
 		const response = await page.goto('/path-base');
-		expect(response.headers()['content-security-policy']).toMatch(
+		expect(response?.headers()['content-security-policy']).toMatch(
 			/require-trusted-types-for 'script'/
 		);
 	});
@@ -305,18 +305,31 @@ if (!process.env.DEV) {
 	});
 
 	test.describe('inlineStyleThreshold', () => {
-		test('loads asset', async ({ page }) => {
+		test('loads assets', async ({ page }) => {
 			let fontLoaded = false;
-
 			page.on('response', (response) => {
 				if (response.url().endsWith('.woff2') || response.url().endsWith('.woff')) {
 					fontLoaded = response.ok();
 				}
 			});
-
 			await page.goto('/path-base/inline-assets');
-
 			expect(fontLoaded).toBeTruthy();
+		});
+
+		test('includes components dynamically imported in universal load', async ({
+			page,
+			get_computed_style
+		}) => {
+			let loaded_css = false;
+			page.on('response', (response) => {
+				if (response.url().endsWith('.css')) {
+					loaded_css = true;
+				}
+			});
+			await page.goto('/path-base/inline-assets/dynamic-import');
+			await expect(page.locator('p')).toHaveText("I'm dynamically imported");
+			expect(loaded_css).toBe(false);
+			expect(await get_computed_style('p', 'color')).toEqual('rgb(0, 0, 255)');
 		});
 	});
 }
@@ -336,5 +349,27 @@ test.describe('Routing', () => {
 
 		await page.click('[href="/path-base/routing/link-outside-app-target/target/"]');
 		await expect(page.locator('h2')).toHaveText('target: 0');
+	});
+});
+
+test.describe('Async', () => {
+	test("updates the DOM before onNavigate's promise is resolved", async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		test.skip(!javaScriptEnabled);
+
+		await page.goto('/path-base/on-navigate/a');
+
+		/** @type {string[]} */
+		const logs = [];
+		page.on('console', (msg) => {
+			logs.push(msg.text());
+		});
+
+		await page.getByRole('link', { name: 'b' }).click();
+
+		await expect(page.locator('h1', { hasText: 'Page B' })).toBeVisible();
+		expect(logs).toEqual(['mounted', 'navigated']);
 	});
 });

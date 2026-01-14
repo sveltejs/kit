@@ -28,7 +28,13 @@ export async function emit_dts(input, output, final_output, cwd, alias, files, t
 	const require = createRequire(import.meta.url);
 	const pkg = load_pkg_json(cwd);
 	const svelte_dep = pkg.peerDependencies?.svelte || pkg.dependencies?.svelte || '3.0';
-	const no_svelte_3 = !semver.intersects(svelte_dep, '^3.0.0');
+	let no_svelte_3;
+	try {
+		no_svelte_3 = !semver.intersects(svelte_dep, '^3.0.0');
+	} catch {
+		// Not all version specs are valid semver, e.g. "latest" or "next" or catalog references
+		no_svelte_3 = true;
+	}
 	await emitDts({
 		libRoot: input,
 		svelteShimsPath: no_svelte_3
@@ -88,10 +94,11 @@ export async function emit_dts(input, output, final_output, cwd, alias, files, t
  * @param {string | undefined} tsconfig
  * @param {string} filename
  * @param {string} source
+ * @param {Map<string, import('typescript').CompilerOptions>} cache
  */
-export async function transpile_ts(tsconfig, filename, source) {
+export async function transpile_ts(tsconfig, filename, source, cache) {
 	const ts = await try_load_ts();
-	const options = load_tsconfig(tsconfig, filename, ts);
+	const options = await load_tsconfig(tsconfig, filename, cache, ts);
 	// transpileModule treats NodeNext as CommonJS because it doesn't read the package.json. Therefore we need to override it.
 	// Also see https://github.com/microsoft/TypeScript/issues/53022 (the filename workaround doesn't work).
 	return ts.transpileModule(source, {
@@ -117,14 +124,29 @@ async function try_load_ts() {
 /**
  * @param {string | undefined} tsconfig
  * @param {string} filename
- * @param {import('typescript')} ts
+ * @param {Map<string, import('typescript').CompilerOptions>} cache
+ * @param {import('typescript')} [ts]
  */
-function load_tsconfig(tsconfig, filename, ts) {
+export async function load_tsconfig(tsconfig, filename, cache, ts) {
+	if (!ts) {
+		ts = await try_load_ts();
+	}
+
 	let config_filename;
+	/** @type {string[]} */
+	const traversed_dirs = [];
 
 	if (tsconfig) {
 		if (fs.existsSync(tsconfig)) {
 			config_filename = tsconfig;
+
+			const cached = cache.get(config_filename);
+			if (cached) {
+				return cached;
+			} else {
+				// This isn't really a dir, but it simplifies the caching logic
+				traversed_dirs.push(config_filename);
+			}
 		} else {
 			throw new Error('Failed to locate provided tsconfig or jsconfig');
 		}
@@ -134,6 +156,16 @@ function load_tsconfig(tsconfig, filename, ts) {
 		// so we implement it ourselves
 		let dir = filename;
 		while (dir !== (dir = path.dirname(dir))) {
+			const cached = cache.get(dir);
+			if (cached) {
+				for (const traversed of traversed_dirs) {
+					cache.set(traversed, cached);
+				}
+				return cached;
+			}
+
+			traversed_dirs.push(dir);
+
 			const tsconfig = path.join(dir, 'tsconfig.json');
 			const jsconfig = path.join(dir, 'jsconfig.json');
 
@@ -169,5 +201,10 @@ function load_tsconfig(tsconfig, filename, ts) {
 		{ sourceMap: false },
 		config_filename
 	);
+
+	for (const dir of traversed_dirs) {
+		cache.set(dir, options);
+	}
+
 	return options;
 }
