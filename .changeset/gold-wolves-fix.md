@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix: reusing `kit.base.path` default in different phases
+fix: avoid overriding Vite default `base` when running Vitest 4
