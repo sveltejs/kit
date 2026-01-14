@@ -803,6 +803,8 @@ async function kit({ svelte_config }) {
 			/** @type {import('vite').UserConfig} */
 			let new_config;
 
+			const kit_paths_base = kit.paths.base || '/';
+
 			if (is_build) {
 				const ssr = /** @type {boolean} */ (config.build?.ssr);
 				const prefix = `${kit.appDir}/immutable`;
@@ -884,7 +886,7 @@ async function kit({ svelte_config }) {
 				// That's larger and takes longer to run and also causes an HTML diff between SSR and client
 				// causing us to do a more expensive hydration check.
 				const client_base =
-					kit.paths.relative !== false || kit.paths.assets ? './' : kit.paths.base || '/';
+					kit.paths.relative !== false || kit.paths.assets ? './' : kit_paths_base;
 
 				const inline = !ssr && svelte_config.kit.output.bundleStrategy === 'inline';
 				const split = ssr || svelte_config.kit.output.bundleStrategy === 'split';
@@ -943,7 +945,7 @@ async function kit({ svelte_config }) {
 			} else {
 				new_config = {
 					appType: 'custom',
-					base: kit.paths.base,
+					base: kit_paths_base,
 					build: {
 						rollupOptions: {
 							// Vite dependency crawler needs an explicit JS entry point
