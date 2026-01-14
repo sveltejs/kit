@@ -1,5 +1,4 @@
 ---
-'@sveltejs/adapter-cloudflare': patch
 '@sveltejs/adapter-auto': minor
 ---
 
