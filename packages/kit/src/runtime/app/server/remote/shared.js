@@ -30,9 +30,8 @@ export function create_validator(validate_or_fn, maybe_fn) {
 		return async (arg) => {
 			// Get event before async validation to ensure it's available in server environments without AsyncLocalStorage, too
 			const { event, state } = get_request_store();
-			const validate = validate_or_fn['~standard'].validate;
-
-			const result = await validate(arg);
+			// access property and call method in one go to preserve potential this context
+			const result = await validate_or_fn['~standard'].validate(arg);
 
 			// if the `issues` field exists, the validation failed
 			if (result.issues) {
@@ -69,7 +68,7 @@ export function create_validator(validate_or_fn, maybe_fn) {
  * @returns {Promise<T>}
  */
 export async function get_response(info, arg, state, get_result) {
-	// wait a beat, in case `myQuery().set(...)` is immediately called
+	// wait a beat, in case `myQuery().set(...)` or `myQuery().refresh()` is immediately called
 	// eslint-disable-next-line @typescript-eslint/await-thenable
 	await 0;
 
