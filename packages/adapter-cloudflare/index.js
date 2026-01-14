@@ -44,7 +44,9 @@ export default function (options = {}) {
 				);
 			}
 
-			const { wrangler_config, building_for_cloudflare_pages } = validate_wrangler_config(options.config);
+			const { wrangler_config, building_for_cloudflare_pages } = validate_wrangler_config(
+				options.config
+			);
 
 			let dest = builder.getBuildDirectory('cloudflare');
 			let worker_dest = `${dest}/_worker.js`;
