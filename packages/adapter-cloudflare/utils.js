@@ -9,7 +9,7 @@ export function is_building_for_cloudflare_pages(wrangler_config) {
 		return true;
 	}
 
-	if (!!process.env.WORKERS_CI || wrangler_config.main || wrangler_config.assets) {
+	if (wrangler_config.main || wrangler_config.assets) {
 		return false;
 	}
 

@@ -324,7 +324,7 @@ function validate_wrangler_config(config_file = undefined) {
 
 	// we don't need to validate the config if we're building for Cloudflare Pages
 	// because the `main` and `assets` values cannot be changed there
-	if (!is_building_for_cloudflare_pages(wrangler_config)) {
+	if (!building_for_cloudflare_pages) {
 		validate_worker_settings(wrangler_config);
 	}
 
