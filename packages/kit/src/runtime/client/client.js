@@ -514,6 +514,8 @@ async function _preload_data(intent) {
 	// then a later one is becoming the real navigation and the preload tokens
 	// get out of sync.
 	if (intent.id !== load_cache?.id) {
+		discard_load_cache();
+
 		const preload = {};
 		preload_tokens.add(preload);
 		load_cache = {
@@ -530,7 +532,7 @@ async function _preload_data(intent) {
 			fork: null
 		};
 
-		if (svelte.fork) {
+		if (__SVELTEKIT_FORK_PRELOADS__ && svelte.fork) {
 			const lc = load_cache;
 
 			lc.fork = lc.promise.then((result) => {
@@ -543,7 +545,7 @@ async function _preload_data(intent) {
 							update(result.props.page);
 						});
 					} catch {
-						// if it errors, it's because the experimental flag isn't enabled
+						// if it errors, it's because the experimental flag isn't enabled in Svelte
 					}
 				}
 
@@ -1688,8 +1690,9 @@ async function navigate({
 		}
 	}
 
+	// also compare ids to avoid using wrong fork (e.g. a new one could've been added while navigating)
+	const load_cache_fork = intent && load_cache?.id === intent.id ? load_cache.fork : null;
 	// reset preload synchronously after the history state has been set to avoid race conditions
-	const load_cache_fork = load_cache?.fork;
 	load_cache = null;
 
 	navigation_result.props.page.state = state;
@@ -2142,7 +2145,7 @@ function push_invalidated(resource) {
 }
 
 /**
- * Causes all `load` functions belonging to the currently active page to re-run. Returns a `Promise` that resolves when the page is subsequently updated.
+ * Causes all `load` and `query` functions belonging to the currently active page to re-run. Returns a `Promise` that resolves when the page is subsequently updated.
  * @returns {Promise<void>}
  */
 export function invalidateAll() {
