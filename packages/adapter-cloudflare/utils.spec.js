@@ -147,7 +147,7 @@ describe('validates Wrangler config', () => {
 				})
 			)
 		).toThrow(
-			`You must set the \`main\` key in wrangler.jsonc if you want to deploy a Worker alongside your static assets or remove the \`assets.binding\` key if you only want to deploy static assets.`
+			`You must specify the \`main\` key in wrangler.jsonc if you want to deploy a Worker alongside your static assets. Otherwise, remove the \`assets.binding\` key if you only want to deploy static assets.`
 		);
 	});
 });
