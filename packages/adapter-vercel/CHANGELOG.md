@@ -1,5 +1,53 @@
 # @sveltejs/adapter-vercel
 
+## 6.3.0
+### Minor Changes
+
+
+- chore: mark `RequestContext` as deprecated and refer to `@vercel/functions` ([#14725](https://github.com/sveltejs/kit/pull/14725))
+
+
+### Patch Changes
+
+- Updated dependencies [[`e67613c`](https://github.com/sveltejs/kit/commit/e67613cf0dde5b7b22e7ef2e2fa2d9171505c784), [`a5c313e`](https://github.com/sveltejs/kit/commit/a5c313e026659874981868fe9628ed6a311dcc06), [`06de550`](https://github.com/sveltejs/kit/commit/06de5506b6db0e39e2ded47e239af39f64d647a8)]:
+  - @sveltejs/kit@2.49.3
+
+## 6.2.0
+### Minor Changes
+
+
+- feat: Node 24 support ([#14982](https://github.com/sveltejs/kit/pull/14982))
+
+## 6.1.2
+### Patch Changes
+
+
+- chore(deps): upgrade to `@vercel/nft` version 1.0.0 to reduce dependencies ([#14950](https://github.com/sveltejs/kit/pull/14950))
+
+- Updated dependencies [[`0889a2a`](https://github.com/sveltejs/kit/commit/0889a2aa897b64194bc55183d7224df65d8147c1), [`2ff3951`](https://github.com/sveltejs/kit/commit/2ff3951e79e59b522c648138c846f31ad858d5b0), [`5b30755`](https://github.com/sveltejs/kit/commit/5b30755a1d84a1054370b211e56d576e3c96d442)]:
+  - @sveltejs/kit@2.48.7
+
+## 6.1.1
+### Patch Changes
+
+
+- chore: improve runtime config parsing ([#14838](https://github.com/sveltejs/kit/pull/14838))
+
+- Updated dependencies [[`cd72d94`](https://github.com/sveltejs/kit/commit/cd72d942a75eed2c1c2ee4b9d6cba5829a4fdb7a), [`53b1b73`](https://github.com/sveltejs/kit/commit/53b1b73256d5b314b1e08ff13f920d520c4a6aed), [`2ccc638`](https://github.com/sveltejs/kit/commit/2ccc63806fa4049c0c05ebc43dce8905e355ed5a)]:
+  - @sveltejs/kit@2.48.3
+
+## 6.1.0
+### Minor Changes
+
+
+- feat: Add experimental support for Bun runtime ([#14817](https://github.com/sveltejs/kit/pull/14817))
+
+
+### Patch Changes
+
+- Updated dependencies [[`102aecf`](https://github.com/sveltejs/kit/commit/102aecfd228dd632664d748b9e87bc6d219294c4)]:
+  - @sveltejs/kit@2.48.1
+
 ## 6.0.0
 ### Major Changes
 

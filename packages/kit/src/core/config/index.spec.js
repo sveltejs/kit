@@ -80,7 +80,8 @@ const get_defaults = (prefix = '') => ({
 		experimental: {
 			tracing: { server: false },
 			instrumentation: { server: false },
-			remoteFunctions: false
+			remoteFunctions: false,
+			forkPreloads: false
 		},
 		files: {
 			src: join(prefix, 'src'),
@@ -477,6 +478,30 @@ test('errors on invalid tracing values', () => {
 			}
 		});
 	}, /^config\.kit\.experimental\.tracing\.server should be true or false, if specified$/);
+});
+
+test('errors on invalid forkPreloads values', () => {
+	assert.throws(() => {
+		validate_config({
+			kit: {
+				experimental: {
+					// @ts-expect-error - given value expected to throw
+					forkPreloads: 'true'
+				}
+			}
+		});
+	}, /^config\.kit\.experimental\.forkPreloads should be true or false, if specified$/);
+
+	assert.throws(() => {
+		validate_config({
+			kit: {
+				experimental: {
+					// @ts-expect-error - given value expected to throw
+					forkPreloads: 1
+				}
+			}
+		});
+	}, /^config\.kit\.experimental\.forkPreloads should be true or false, if specified$/);
 });
 
 test('uses src prefix for other kit.files options', async () => {
