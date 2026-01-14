@@ -316,17 +316,30 @@ test.describe('inlineStyleThreshold', () => {
 		}
 	});
 
-	test('loads assets', async ({ page }) => {
-		test.skip(!!process.env.DEV);
+	test('loads assets', async ({ page, javaScriptEnabled }) => {
+		test.skip(!!process.env.DEV || javaScriptEnabled);
 
-		let fontLoaded = false;
+		let font_loaded = false;
 		page.on('response', (response) => {
 			if (response.url().endsWith('.woff2') || response.url().endsWith('.woff')) {
-				fontLoaded = response.ok();
+				font_loaded = response.ok();
 			}
 		});
-		await page.goto('/path-base/inline-assets');
-		expect(fontLoaded).toBeTruthy();
+		await page.goto('/path-base/inline-style');
+		expect(font_loaded).toBeTruthy();
+	});
+
+	test('loads assets located in static directory', async ({ page, javaScriptEnabled }) => {
+		test.skip(!!process.env.DEV || javaScriptEnabled);
+
+		let image_loaded = false;
+		page.on('response', (response) => {
+			if (response.url().endsWith('favicon.png?v=1')) {
+				image_loaded = response.ok();
+			}
+		});
+		await page.goto('/path-base/inline-style/static-dir');
+		expect(image_loaded).toBeTruthy();
 	});
 
 	test('includes components dynamically imported in universal load', async ({
@@ -341,20 +354,20 @@ test.describe('inlineStyleThreshold', () => {
 				loaded_css = true;
 			}
 		});
-		await page.goto('/path-base/inline-assets/dynamic-import');
+		await page.goto('/path-base/inline-style/dynamic-import');
 		await expect(page.locator('p')).toHaveText("I'm dynamically imported");
 		expect(loaded_css).toBe(false);
 		expect(await get_computed_style('p', 'color')).toEqual('rgb(0, 0, 255)');
 	});
 
-	test('inlines conditionally rendered component styles', async ({
+	test('includes conditionally rendered component styles', async ({
 		page,
 		get_computed_style,
 		javaScriptEnabled
 	}) => {
 		test.skip(!!process.env.DEV || !javaScriptEnabled);
 
-		await page.goto('/path-base/inline-assets/conditional-rendering');
+		await page.goto('/path-base/inline-style/conditional-rendering');
 		await expect(page.locator('#always')).toBeVisible();
 		expect(await get_computed_style('#always', 'color')).toBe('rgb(255, 0, 0)');
 
