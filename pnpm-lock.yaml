@@ -250,6 +250,9 @@ importers:
         specifier: ^2.6.0
         version: 2.6.0
     devDependencies:
+      '@netlify/dev':
+        specifier: 'catalog:'
+        version: 4.8.7(@netlify/api@14.0.12)(rollup@4.50.1)
       '@netlify/edge-functions':
         specifier: 'catalog:'
         version: 2.15.1
@@ -295,9 +298,6 @@ importers:
 
   packages/adapter-netlify/test/apps/basic:
     devDependencies:
-      '@netlify/dev':
-        specifier: 'catalog:'
-        version: 4.8.7(@netlify/api@14.0.12)(rollup@4.50.1)
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../../../../kit
@@ -316,9 +316,6 @@ importers:
 
   packages/adapter-netlify/test/apps/edge:
     devDependencies:
-      '@netlify/dev':
-        specifier: 'catalog:'
-        version: 4.8.7(@netlify/api@14.0.12)(rollup@4.50.1)
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../../../../kit

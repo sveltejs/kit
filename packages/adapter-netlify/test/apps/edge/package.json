@@ -5,12 +5,11 @@
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
-		"preview": "srvx --port=8888",
+		"preview": "srvx ../../preview.js --port=8888",
 		"prepare": "svelte-kit sync || echo ''",
 		"test": "playwright test"
 	},
 	"devDependencies": {
-		"@netlify/dev": "catalog:",
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "catalog:",
 		"srvx": "catalog:",

@@ -1,15 +1,16 @@
+// This allows to run `netlify dev` without installing the Netlify CLI
+
 import { NetlifyDev } from '@netlify/dev';
 
-const netlifyDev = new NetlifyDev({
-	projectRoot: 'build'
-});
+const netlifyDev = new NetlifyDev({});
 
 const serverReady = netlifyDev.start();
-console.log(
-	`Environment loaded. Emulating features: ${netlifyDev.getEnabledFeatures().join(', ')}.`
-);
 
 export default {
+	/**
+	 * @param {Request} req
+	 * @returns {Promise<Response>}
+	 */
 	async fetch(req) {
 		await serverReady;
 		const res = await netlifyDev.handle(req);
