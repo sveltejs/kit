@@ -40,7 +40,6 @@ catalog:
   publint: ^0.3.0
   semver: ^7.5.4
   sirv-cli: ^3.0.0
-  srvx: ^0.8.15
   svelte: ^5.42.1
   svelte-check: ^4.3.4
   svelte-preprocess: ^6.0.0
