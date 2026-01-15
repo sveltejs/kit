@@ -1,5 +1,14 @@
 # @sveltejs/adapter-cloudflare
 
+## 7.2.5
+### Patch Changes
+
+
+- fix: await `init` on every request to prevent race condition ([#15161](https://github.com/sveltejs/kit/pull/15161))
+
+- Updated dependencies [[`81cd545`](https://github.com/sveltejs/kit/commit/81cd545dd78b60ee994a04d8abacb58bf63584d7), [`d9ae9b0`](https://github.com/sveltejs/kit/commit/d9ae9b00b14f5574d109f3fd548f960594346226), [`8ed8155`](https://github.com/sveltejs/kit/commit/8ed8155215b9a74012fecffb942ad9a793b274e5)]:
+  - @sveltejs/kit@2.49.5
+
 ## 7.2.4
 ### Patch Changes
 
