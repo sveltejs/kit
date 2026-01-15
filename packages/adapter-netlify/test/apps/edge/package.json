@@ -5,7 +5,7 @@
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
-		"preview": "srvx ../../preview.js --port=8888",
+		"preview": "node ../../preview.js --port=8888",
 		"prepare": "svelte-kit sync || echo ''",
 		"test": "playwright test"
 	},
