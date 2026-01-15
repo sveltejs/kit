@@ -12,7 +12,6 @@
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "catalog:",
-		"srvx": "catalog:",
 		"svelte": "catalog:",
 		"vite": "catalog:"
 	},

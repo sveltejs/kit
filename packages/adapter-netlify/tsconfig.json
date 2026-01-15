@@ -11,8 +11,15 @@
 		"allowSyntheticDefaultImports": true,
 		"baseUrl": ".",
 		"paths": {
-			"@sveltejs/kit": ["../kit/types/index"]
+			"@sveltejs/kit": [
+				"../kit/types/index"
+			]
 		}
 	},
-	"include": ["*.js", "src/**/*.js", "internal.d.ts", "test/utils.js", "test/preview.js"]
+	"include": [
+		"*.js",
+		"src/**/*.js",
+		"internal.d.ts",
+		"test/utils.js"
+	]
 }

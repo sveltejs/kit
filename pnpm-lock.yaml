@@ -90,9 +90,6 @@ catalogs:
     sirv-cli:
       specifier: ^3.0.0
       version: 3.0.0
-    srvx:
-      specifier: ^0.8.15
-      version: 0.8.16
     svelte:
       specifier: ^5.42.1
       version: 5.42.2
@@ -304,9 +301,6 @@ importers:
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
         version: 6.0.0-next.3(svelte@5.42.2)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
-      srvx:
-        specifier: 'catalog:'
-        version: 0.8.16
       svelte:
         specifier: 'catalog:'
         version: 5.42.2
@@ -322,9 +316,6 @@ importers:
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
         version: 6.0.0-next.3(svelte@5.42.2)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
-      srvx:
-        specifier: 'catalog:'
-        version: 0.8.16
       svelte:
         specifier: 'catalog:'
         version: 5.42.2
@@ -5428,11 +5419,6 @@ packages:
   sprintf-js@1.0.3:
     resolution: {integrity: sha512-D9cPgkvLlV3t3IzL0D0YLvGA9Ahk4PcvVwUbN0dSGr1aP0Nrt4AEnTUbuGvquEC0mA64Gqt1fzirlRs5ibXx8g==}
 
-  srvx@0.8.16:
-    resolution: {integrity: sha512-hmcGW4CgroeSmzgF1Ihwgl+Ths0JqAJ7HwjP2X7e3JzY7u4IydLMcdnlqGQiQGUswz+PO9oh/KtCpOISIvs9QQ==}
-    engines: {node: '>=20.16.0'}
-    hasBin: true
-
   stack-trace@0.0.10:
     resolution: {integrity: sha512-KGzahc7puUKkzyMt+IqAep+TVNbKP+k2Lmwhub39m1AsTSkaDutx56aDCo+HLDzf/D26BIHTJWNiTG1KAJiQCg==}
 
@@ -10245,8 +10231,6 @@ snapshots:
   spdx-license-ids@3.0.21: {}
 
   sprintf-js@1.0.3: {}
-
-  srvx@0.8.16: {}
 
   stack-trace@0.0.10: {}
 
