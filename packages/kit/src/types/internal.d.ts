@@ -22,7 +22,8 @@ import {
 	ClientInit,
 	Transport,
 	HandleValidationError,
-	RemoteFormIssue
+	RemoteFormIssue,
+	RemoteForm
 } from '@sveltejs/kit';
 import {
 	HttpMethod,

@@ -1,11 +1,13 @@
 <script>
 	import { myform } from './form.remote.js';
+
+	const myform_form = myform();
 </script>
 
-<form {...myform}>
-	<input {...myform.fields.message.as('text')} />
+<form {...myform_form}>
+	<input {...myform_form.fields.message.as('text')} />
 
-	<select {...myform.fields.number.as('select')}>
+	<select {...myform_form.fields.number.as('select')}>
 		<option>one</option>
 		<option>two</option>
 		<option>three</option>

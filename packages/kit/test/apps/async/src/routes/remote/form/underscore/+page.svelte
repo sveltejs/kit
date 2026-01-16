@@ -1,15 +1,17 @@
 <script>
 	import { register } from './form.remote.js';
+
+	const register_form = register();
 </script>
 
-<form {...register}>
-	<input {...register.fields.username.as('text')} />
-	<input {...register.fields._password.as('password')} />
+<form {...register_form}>
+	<input {...register_form.fields.username.as('text')} />
+	<input {...register_form.fields._password.as('password')} />
 
 	<button>submit</button>
 </form>
 
-<pre>{JSON.stringify(register.fields.issues(), null, '  ')}</pre>
+<pre>{JSON.stringify(register_form.fields.issues(), null, '  ')}</pre>
 
 <style>
 	[aria-invalid='true'] {

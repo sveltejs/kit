@@ -1,4 +1,4 @@
-/** @import { ActionResult, RemoteForm, RequestEvent, SSRManifest } from '@sveltejs/kit' */
+/** @import { ActionResult, RequestEvent, SSRManifest } from '@sveltejs/kit' */
 /** @import { RemoteFunctionResponse, RemoteInfo, RequestState, SSROptions } from 'types' */
 
 import { json, error } from '@sveltejs/kit';
@@ -267,9 +267,11 @@ async function handle_remote_form_post_internal(event, state, manifest, id) {
 	const remotes = manifest._.remotes;
 	const module = await remotes[hash]?.();
 
-	let form = /** @type {RemoteForm<any, any>} */ (module?.default[name]);
+	const form_factory = /** @type {import("@sveltejs/kit").RemoteFormFactory<any, any>} */ (
+		module?.default[name]
+	);
 
-	if (!form) {
+	if (!form_factory) {
 		event.setHeaders({
 			// https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/405
 			// "The server must generate an Allow header field in a 405 status code response"
@@ -285,9 +287,12 @@ async function handle_remote_form_post_internal(event, state, manifest, id) {
 		};
 	}
 
+	let form;
 	if (action_id) {
-		// @ts-expect-error
-		form = with_request_store({ event, state }, () => form.for(JSON.parse(action_id)));
+		const key = JSON.parse(action_id);
+		form = with_request_store({ event, state }, () => form_factory(key));
+	} else {
+		form = with_request_store({ event, state }, () => form_factory());
 	}
 
 	try {
@@ -296,7 +301,7 @@ async function handle_remote_form_post_internal(event, state, manifest, id) {
 		const { data, meta, form_data } = await deserialize_binary_form(event.request);
 
 		if (action_id && !('id' in data)) {
-			data.id = JSON.parse(decodeURIComponent(action_id));
+			data.id = JSON.parse(action_id);
 		}
 
 		await with_request_store({ event, state }, () => fn(data, meta, form_data));

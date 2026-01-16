@@ -292,7 +292,7 @@ export const createPost = form(
 
 <h1>Create a new post</h1>
 
-<form {...createPost}>
+<form {...createPost()}>
 	<!-- form content goes here -->
 
 	<button>Publish!</button>
@@ -308,15 +308,15 @@ As with `query`, if the callback uses the submitted `data`, it should be [valida
 A form is composed of a set of _fields_, which are defined by the schema. In the case of `createPost`, we have two fields, `title` and `content`, which are both strings. To get the attributes for a field, call its `.as(...)` method, specifying which [input type](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/input#input_types) to use:
 
 ```svelte
-<form {...createPost}>
+<form {...createPost()}>
 	<label>
 		<h2>Title</h2>
-		+++<input {...createPost.fields.title.as('text')} />+++
+		+++<input {...createPost().fields.title.as('text')} />+++
 	</label>
 
 	<label>
 		<h2>Write your post</h2>
-		+++<textarea {...createPost.fields.content.as('text')}></textarea>+++
+		+++<textarea {...createPost().fields.content.as('text')}></textarea>+++
 	</label>
 
 	<button>Publish!</button>
@@ -353,10 +353,10 @@ export const createProfile = form(datingProfile, (data) => { /* ... */ });
 <script>
 	import { createProfile } from './data.remote';
 
-	const { name, photo, info, attributes } = createProfile.fields;
+	const { name, photo, info, attributes } = createProfile().fields;
 </script>
 
-<form {...createProfile} enctype="multipart/form-data">
+<form {...createProfile()} enctype="multipart/form-data">
 	<label>
 		<input {...name.as('text')} /> Name
 	</label>
@@ -403,12 +403,12 @@ export const survey = form(
 ```
 
 ```svelte
-<form {...survey}>
+<form {...survey()}>
 	<h2>Which operating system do you use?</h2>
 
 	{#each ['windows', 'mac', 'linux'] as os}
 		<label>
-			<input {...survey.fields.operatingSystem.as('radio', os)}>
+			<input {...survey().fields.operatingSystem.as('radio', os)}>
 			{os}
 		</label>
 	{/each}
@@ -417,7 +417,7 @@ export const survey = form(
 
 	{#each ['html', 'css', 'js'] as language}
 		<label>
-			<input {...survey.fields.languages.as('checkbox', language)}>
+			<input {...survey().fields.languages.as('checkbox', language)}>
 			{language}
 		</label>
 	{/each}
@@ -429,10 +429,10 @@ export const survey = form(
 Alternatively, you could use `select` and `select multiple`:
 
 ```svelte
-<form {...survey}>
+<form {...survey()}>
 	<h2>Which operating system do you use?</h2>
 
-	<select {...survey.fields.operatingSystem.as('select')}>
+	<select {...survey().fields.operatingSystem.as('select')}>
 		<option>windows</option>
 		<option>mac</option>
 		<option>linux</option>
@@ -440,7 +440,7 @@ Alternatively, you could use `select` and `select multiple`:
 
 	<h2>Which languages do you write code in?</h2>
 
-	<select {...survey.fields.languages.as('select multiple')}>
+	<select {...survey().fields.languages.as('select multiple')}>
 		<option>html</option>
 		<option>css</option>
 		<option>js</option>
@@ -492,25 +492,25 @@ export const buyHotcakes = form(
 If the submitted data doesn't pass the schema, the callback will not run. Instead, each invalid field's `issues()` method will return an array of `{ message: string }` objects, and the `aria-invalid` attribute (returned from `as(...)`) will be set to `true`:
 
 ```svelte
-<form {...createPost}>
+<form {...createPost()}>
 	<label>
 		<h2>Title</h2>
 
-+++		{#each createPost.fields.title.issues() as issue}
++++		{#each createPost().fields.title.issues() as issue}
 			<p class="issue">{issue.message}</p>
 		{/each}+++
 
-		<input {...createPost.fields.title.as('text')} />
+		<input {...createPost().fields.title.as('text')} />
 	</label>
 
 	<label>
 		<h2>Write your post</h2>
 
-+++		{#each createPost.fields.content.issues() as issue}
++++		{#each createPost().fields.content.issues() as issue}
 			<p class="issue">{issue.message}</p>
 		{/each}+++
 
-		<textarea {...createPost.fields.content.as('text')}></textarea>
+		<textarea {...createPost().fields.content.as('text')}></textarea>
 	</label>
 
 	<button>Publish!</button>
@@ -520,7 +520,7 @@ If the submitted data doesn't pass the schema, the callback will not run. Instea
 You don't need to wait until the form is submitted to validate the data — you can call `validate()` programmatically, for example in an `oninput` callback (which will validate the data on every keystroke) or an `onchange` callback:
 
 ```svelte
-<form {...createPost} oninput={() => createPost.validate()}>
+<form {...createPost()} oninput={() => form.validate()}>
 	<!-- -->
 </form>
 ```
@@ -538,11 +538,15 @@ For client-side validation, you can specify a _preflight_ schema which will popu
 		title: v.pipe(v.string(), v.nonEmpty()),
 		content: v.pipe(v.string(), v.nonEmpty())
 	});
+
+	const form = createPost(+++{
+		preflight: schema
+	}+++)
 </script>
 
 <h1>Create a new post</h1>
 
-<form {...+++createPost.preflight(schema)+++}>
+<form {...form}>
 	<!-- -->
 </form>
 ```
@@ -552,7 +556,7 @@ For client-side validation, you can specify a _preflight_ schema which will popu
 To get a list of _all_ issues, rather than just those belonging to a single field, you can use the `fields.allIssues()` method:
 
 ```svelte
-{#each createPost.fields.allIssues() as issue}
+{#each createPost().fields.allIssues() as issue}
 	<p>{issue.message}</p>
 {/each}
 ```
@@ -562,17 +566,17 @@ To get a list of _all_ issues, rather than just those belonging to a single fiel
 Each field has a `value()` method that reflects its current value. As the user interacts with the form, it is automatically updated:
 
 ```svelte
-<form {...createPost}>
+<form {...createPost()}>
 	<!-- -->
 </form>
 
 <div class="preview">
-	<h2>{createPost.fields.title.value()}</h2>
-	<div>{@html render(createPost.fields.content.value())}</div>
+	<h2>{createPost().fields.title.value()}</h2>
+	<div>{@html render(createPost().fields.content.value())}</div>
 </div>
 ```
 
-Alternatively, `createPost.fields.value()` would return a `{ title, content }` object.
+Alternatively, `createPost().fields.value()` would return a `{ title, content }` object.
 
 You can update a field (or a collection of fields) via the `set(...)` method:
 
@@ -581,14 +585,14 @@ You can update a field (or a collection of fields) via the `set(...)` method:
 	import { createPost } from '../data.remote';
 
 	// this...
-	createPost.fields.set({
+	createPost().fields.set({
 		title: 'My new blog post',
 		content: 'Lorem ipsum dolor sit amet...'
 	});
 
 	// ...is equivalent to this:
-	createPost.fields.title.set('My new blog post');
-	createPost.fields.content.set('Lorem ipsum dolor sit amet');
+	createPost().fields.title.set('My new blog post');
+	createPost().fields.content.set('Lorem ipsum dolor sit amet');
 </script>
 ```
 
@@ -599,15 +603,15 @@ In the case of a non-progressively-enhanced form submission (i.e. where JavaScri
 You can prevent sensitive data (such as passwords and credit card numbers) from being sent back to the user by using a name with a leading underscore:
 
 ```svelte
-<form {...register}>
+<form {...register()}>
 	<label>
 		Username
-		<input {...register.fields.username.as('text')} />
+		<input {...register().fields.username.as('text')} />
 	</label>
 
 	<label>
 		Password
-		<input +++{...register.fields._password.as('password')}+++ />
+		<input +++{...register().fields._password.as('password')}+++ />
 	</label>
 
 	<button>Sign up!</button>
@@ -666,7 +670,7 @@ The second is to drive the single-flight mutation from the client, which we'll s
 
 ### Returns and redirects
 
-The example above uses [`redirect(...)`](@sveltejs-kit#redirect), which sends the user to the newly created page. Alternatively, the callback could return data, in which case it would be available as `createPost.result`:
+The example above uses [`redirect(...)`](@sveltejs-kit#redirect), which sends the user to the newly created page. Alternatively, the callback could return data, in which case it would be available as `createPost().result`:
 
 ```ts
 /// file: src/routes/blog/data.remote.js
@@ -715,11 +719,11 @@ export const createPost = form(
 
 <h1>Create a new post</h1>
 
-<form {...createPost}>
+<form {...createPost()}>
 	<!-- -->
 </form>
 
-{#if createPost.result?.success}
+{#if createPost().result?.success}
 	<p>Successfully published!</p>
 {/if}
 ```
@@ -743,7 +747,7 @@ We can customize what happens when the form is submitted with the `enhance` meth
 
 <h1>Create a new post</h1>
 
-<form {...createPost.enhance(async ({ form, data, submit }) => {
+<form {...createPost().enhance(async ({ form, data, submit }) => {
 	try {
 		await submit();
 		form.reset();
@@ -796,7 +800,7 @@ The override will be applied immediately, and released when the submission compl
 
 ### Multiple instances of a form
 
-Some forms may be repeated as part of a list. In this case you can create separate instances of a form function via `for(id)` to achieve isolation.
+Some forms may be repeated as part of a list. In this case you can create separate instances of a form function via `form(id)` to achieve isolation.
 
 ```svelte
 <!--- file: src/routes/todos/+page.svelte --->
@@ -807,13 +811,45 @@ Some forms may be repeated as part of a list. In this case you can create separa
 <h1>Todos</h1>
 
 {#each await getTodos() as todo}
-	{@const modify = modifyTodo.for(todo.id)}
+	{@const modify = modifyTodo(todo.id)}
 	<form {...modify}>
 		<!-- -->
-		<button disabled={!!modify.pending}>save changes</button>
+		<button disabled={!!modify.pending}>Save Changes</button>
 	</form>
 {/each}
 ```
+
+### Initial form data
+
+There are times when you want a form to be pre-filled with certain values when it first renders. For example, you might want to populate a form with values fetched from the server or set default values for a new data entry.
+
+You can do this by passing the `initialData` option when creating a form instance. This will set the initial state of the form fields, both for their values and for client-side validation.
+
+Here's an example of how to set initial form data using `initialData`:
+
+```svelte
+<!--- file: src/routes/edit-post/[postId]/+page.svelte --->
+<script>
+	import { getPost, editPost } from '../data.remote';
+
+	const { params } = $props();
+
+	// Fetch the data to pre-fill the form
+	const data = $derived(await getPost(params.postId));
+
+	// Pass initialData when creating the form instance
+	const form = $derived(editPost({
+		initialData: data
+	}));
+</script>
+
+<form {...form}>
+	<!-- Render your form fields here, which will use the initial values from `data` -->
+	<button disabled={!!form.pending}>Save Changes</button>
+</form>
+```
+
+You can also pass a partial object to `initialData` if you only want to set values for some fields. If `initialData` is omitted, the fields will be empty by default.
 
 ### buttonProps
 
@@ -829,19 +865,19 @@ This attribute exists on the `buttonProps` property of a form object:
 	import { login, register } from '$lib/auth.remote';
 </script>
 
-<form {...login}>
+<form {...login()}>
 	<label>
 		Your username
-		<input {...login.fields.username.as('text')} />
+		<input {...login().fields.username.as('text')} />
 	</label>
 
 	<label>
 		Your password
-		<input {...login.fields._password.as('password')} />
+		<input {...login().fields._password.as('password')} />
 	</label>
 
 	<button>login</button>
-	<button {...register.buttonProps}>register</button>
+	<button {...register().buttonProps}>register</button>
 </form>
 ```
 

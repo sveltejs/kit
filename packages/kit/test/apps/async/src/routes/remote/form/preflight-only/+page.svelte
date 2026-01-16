@@ -9,6 +9,9 @@
 		b: v.string(),
 		c: v.string()
 	});
+	const set_form = set({
+		preflight: schema
+	});
 </script>
 
 <p>a: {(await data).a}</p>
@@ -18,19 +21,19 @@
 <hr />
 
 <form
-	{...set.preflight(schema)}
-	oninput={() => set.validate({ preflightOnly: true })}
-	onchange={() => set.validate()}
+	{...set_form}
+	oninput={() => set_form.validate({ preflightOnly: true })}
+	onchange={() => set_form.validate()}
 >
-	<input {...set.fields.a.as('text')} />
-	<input {...set.fields.b.as('text')} />
-	<input {...set.fields.c.as('text')} />
+	<input {...set_form.fields.a.as('text')} />
+	<input {...set_form.fields.b.as('text')} />
+	<input {...set_form.fields.c.as('text')} />
 
 	<button>submit</button>
 </form>
 
 <div class="issues">
-	{#each set.fields.allIssues() as issue}
+	{#each set_form.fields.allIssues() as issue}
 		<p>{issue.message}</p>
 	{/each}
 </div>

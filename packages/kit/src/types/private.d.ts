@@ -241,3 +241,19 @@ export interface RouteSegment {
 }
 
 export type TrailingSlash = 'never' | 'always' | 'ignore';
+
+export type DeepPartial<T> = T extends Record<PropertyKey, unknown> | unknown[]
+	? {
+			[K in keyof T]?: T[K] extends Record<PropertyKey, unknown> | unknown[]
+				? DeepPartial<T[K]>
+				: T[K];
+		}
+	: T | undefined;
+
+// If the schema specifies `id` as a string or number, ensure that `for(...)`
+// only accepts that type. Otherwise, accept `string | number`
+export type ExtractId<Input> = Input extends { id: infer Id }
+	? Id extends string | number
+		? Id
+		: string | number
+	: string | number;
