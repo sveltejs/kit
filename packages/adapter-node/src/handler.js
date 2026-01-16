@@ -201,7 +201,9 @@ function normalise_header(name, value) {
  * @returns {string}
  */
 function get_origin(headers) {
-	const protocol = decodeURIComponent(normalise_header(protocol_header, headers[protocol_header]) || 'https');
+	const protocol = decodeURIComponent(
+		normalise_header(protocol_header, headers[protocol_header]) || 'https'
+	);
 
 	// this helps us avoid host injections through the protocol header
 	if (protocol.includes(':')) {
