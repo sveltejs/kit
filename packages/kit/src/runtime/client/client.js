@@ -532,7 +532,7 @@ async function _preload_data(intent) {
 			fork: null
 		};
 
-		if (svelte.fork) {
+		if (__SVELTEKIT_FORK_PRELOADS__ && svelte.fork) {
 			const lc = load_cache;
 
 			lc.fork = lc.promise.then((result) => {
@@ -545,7 +545,7 @@ async function _preload_data(intent) {
 							update(result.props.page);
 						});
 					} catch {
-						// if it errors, it's because the experimental flag isn't enabled
+						// if it errors, it's because the experimental flag isn't enabled in Svelte
 					}
 				}
 

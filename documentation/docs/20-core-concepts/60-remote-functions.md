@@ -454,7 +454,10 @@ Alternatively, you could use `select` and `select multiple`:
 
 ### Programmatic validation
 
-In addition to declarative schema validation, you can programmatically mark fields as invalid inside the form handler using the `invalid` function. This is useful for cases where you can't know if something is valid until you try to perform some action. Just like `redirect` or `error`, `invalid` throws. It expects a list of strings (for issues relating to the form as a whole) or standard-schema-compliant issues (for those relating to a specific field). Use the `issue` parameter for type-safe creation of such issues:
+In addition to declarative schema validation, you can programmatically mark fields as invalid inside the form handler using the `invalid` helper from `@sveltejs/kit`. This is useful for cases where you can't know if something is valid until you try to perform some action.
+
+- It throws just like `redirect` or `error`
+- It accepts multiple arguments that can be strings (for issues relating to the form as a whole — these will only show up in `fields.allIssues()`) or standard-schema-compliant issues (for those relating to a specific field). Use the `issue` parameter for type-safe creation of such issues:
 
 ```js
 /// file: src/routes/shop/data.remote.js
@@ -483,12 +486,6 @@ export const buyHotcakes = form(
 	}
 );
 ```
-
-The `invalid` function works as both a function and a proxy:
-
-- Call `invalid(issue1, issue2, ...issueN)` to throw a validation error
-- If an issue is a `string`, it applies to the form as a whole (and will show up in `fields.allIssues()`)
-- Use `invalid.fieldName(message)` to create an issue for a specific field. Like `fields` this is type-safe and you can use regular property access syntax to create issues for deeply nested objects (e.g. `invalid.profile.email('Email already exists')` or `invalid.items[0].qty('Insufficient stock')`)
 
 ### Validation
 
