@@ -45,9 +45,11 @@ export function find_server_assets(build_data, routes) {
 	}
 
 	if (build_data.manifest_data.hooks.server) {
-		console.log(build_data.manifest_data.hooks.server);
-		console.log(build_data.server_manifest);
 		add_assets(build_data.manifest_data.hooks.server);
+	}
+
+	if (build_data.manifest_data.hooks.universal) {
+		add_assets(build_data.manifest_data.hooks.universal);
 	}
 
 	return Array.from(server_assets);
