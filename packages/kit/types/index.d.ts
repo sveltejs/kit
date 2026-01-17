@@ -1872,9 +1872,9 @@ declare module '@sveltejs/kit' {
 
 	type RemoteFormFieldMethods<T> = {
 		/** The values that will be submitted */
-		value(): T;
+		value(): DeepPartial<T>;
 		/** Set the values that will be submitted */
-		set(input: T): T;
+		set(input: DeepPartial<T>): DeepPartial<T>;
 		/** Validation issues, if any */
 		issues(): RemoteFormIssue[] | undefined;
 	};
@@ -2371,6 +2371,14 @@ declare module '@sveltejs/kit' {
 	}
 
 	type TrailingSlash = 'never' | 'always' | 'ignore';
+
+	type DeepPartial<T> = T extends Record<PropertyKey, unknown> | unknown[]
+		? {
+				[K in keyof T]?: T[K] extends Record<PropertyKey, unknown> | unknown[]
+					? DeepPartial<T[K]>
+					: T[K];
+			}
+		: T | undefined;
 	interface Asset {
 		file: string;
 		size: number;

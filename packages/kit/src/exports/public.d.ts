@@ -15,7 +15,8 @@ import {
 	PrerenderUnseenRoutesHandlerValue,
 	PrerenderOption,
 	RequestOptions,
-	RouteSegment
+	RouteSegment,
+	DeepPartial
 } from '../types/private.js';
 import { BuildData, SSRNodeLoader, SSRRoute, ValidatedConfig } from 'types';
 import { SvelteConfig } from '@sveltejs/vite-plugin-svelte';
@@ -1896,9 +1897,9 @@ type InputElementProps<T extends keyof InputTypeMap> = T extends 'checkbox' | 'r
 
 type RemoteFormFieldMethods<T> = {
 	/** The values that will be submitted */
-	value(): T;
+	value(): DeepPartial<T>;
 	/** Set the values that will be submitted */
-	set(input: T): T;
+	set(input: DeepPartial<T>): DeepPartial<T>;
 	/** Validation issues, if any */
 	issues(): RemoteFormIssue[] | undefined;
 };
