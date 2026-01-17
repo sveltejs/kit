@@ -848,6 +848,14 @@ async function kit({ svelte_config }) {
 						input[name] = path.resolve(file);
 					});
 
+					// ...and the hooks files
+					if (manifest_data.hooks.server) {
+						input['entries/hooks.server'] = path.resolve(manifest_data.hooks.server);
+					}
+					if (manifest_data.hooks.universal) {
+						input['entries/hooks.universal'] = path.resolve(manifest_data.hooks.universal);
+					}
+
 					// ...and the server instrumentation file
 					const server_instrumentation = resolve_entry(
 						path.join(kit.files.src, 'instrumentation.server')

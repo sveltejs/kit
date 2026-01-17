@@ -13,7 +13,6 @@ export function find_server_assets(build_data, routes) {
 	 */
 	const used_nodes = new Set([0, 1]);
 
-	// TODO add hooks.server.js asset imports
 	/** @type {Set<string>} */
 	const server_assets = new Set();
 
@@ -47,6 +46,10 @@ export function find_server_assets(build_data, routes) {
 
 	if (build_data.manifest_data.hooks.server) {
 		add_assets(build_data.manifest_data.hooks.server);
+	}
+
+	if (build_data.manifest_data.hooks.universal) {
+		add_assets(build_data.manifest_data.hooks.universal);
 	}
 
 	return Array.from(server_assets);
