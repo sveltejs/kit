@@ -301,6 +301,35 @@ test.describe('remote function mutations', () => {
 		expect(request_count).toBe(1); // only the command request
 	});
 
+	test('query.batch ssr resolver function has first argument of type Output', async ({ page }) => {
+		await page.goto('/remote/batch_ssr', {
+			waitUntil: 'domcontentloaded'
+		});
+
+		const items = page.locator('#ssr_batch div');
+		let count = await items.count();
+		expect(count).toBe(3);
+
+		let textContent = await items.allTextContents();
+
+		expect(textContent).toEqual(['object', 'object', 'object']);
+	});
+
+	test('query.batch csr resolver function has first argument of type Output', async ({ page }) => {
+		await page.goto('/remote/batch_csr', {
+			waitUntil: 'domcontentloaded'
+		});
+
+		await page.locator('body.started').waitFor({ state: 'visible' });
+		const items = page.locator('#csr_batch div');
+		let count = await items.count();
+		expect(count).toBe(3);
+
+		let textContent = await items.allTextContents();
+
+		expect(textContent).toEqual(['object', 'object', 'object']);
+	});
+
 	// TODO ditto
 	test('query works with transport', async ({ page }) => {
 		await page.goto('/remote/transport');

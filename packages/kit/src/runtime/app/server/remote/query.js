@@ -4,7 +4,13 @@
 import { get_request_store } from '@sveltejs/kit/internal/server';
 import { create_remote_key, stringify_remote_arg } from '../../../shared.js';
 import { prerendering } from '__sveltekit/environment';
-import { create_validator, get_cache, get_response, run_remote_function } from './shared.js';
+import {
+	create_validator,
+	get_cache,
+	get_response,
+	run_remote_batch_function,
+	run_remote_function
+} from './shared.js';
 
 /**
  * Creates a remote query. When called from the browser, the function will be invoked on the server via a `fetch` call.
@@ -150,8 +156,7 @@ function batch(validate_or_fn, maybe_fn) {
 		name: '',
 		run: (args) => {
 			const { event, state } = get_request_store();
-
-			return run_remote_function(
+			return run_remote_batch_function(
 				event,
 				state,
 				false,
@@ -190,7 +195,7 @@ function batch(validate_or_fn, maybe_fn) {
 					batching = { args: [], resolvers: [] };
 
 					try {
-						const get_result = await run_remote_function(
+						const result = await run_remote_batch_function(
 							event,
 							state,
 							false,
@@ -201,7 +206,7 @@ function batch(validate_or_fn, maybe_fn) {
 
 						for (let i = 0; i < batched.resolvers.length; i++) {
 							try {
-								batched.resolvers[i].resolve(get_result(batched.args[i], i));
+								batched.resolvers[i].resolve(result.resolver(result.validated_args[i], i));
 							} catch (error) {
 								batched.resolvers[i].reject(error);
 							}

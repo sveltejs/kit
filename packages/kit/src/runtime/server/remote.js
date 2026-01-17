@@ -76,9 +76,9 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 			const args = payloads.map((payload) => parse_remote_arg(payload, transport));
 			const get_result = await with_request_store({ event, state }, () => info.run(args));
 			const results = await Promise.all(
-				args.map(async (arg, i) => {
+				get_result.validated_args.map(async (arg, i) => {
 					try {
-						return { type: 'result', data: get_result(arg, i) };
+						return { type: 'result', data: get_result.resolver(arg, i) };
 					} catch (error) {
 						return {
 							type: 'error',
