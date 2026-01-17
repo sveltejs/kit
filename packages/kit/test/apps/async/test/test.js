@@ -50,12 +50,18 @@ test.describe('remote functions', () => {
 			await expect(page.getByText('message.current:')).toHaveText('message.current: initial');
 		}
 		await expect(page.getByText('await get_message():')).toHaveText('await get_message(): initial');
+		await expect(page.getByText('set_message.submitted:')).toHaveText(
+			'set_message.submitted: false'
+		);
 
 		await page.fill('[data-unscoped] input', 'hello');
 		await page.getByText('set message').click();
 
 		if (javaScriptEnabled) {
 			await expect(page.getByText('set_message.pending:')).toHaveText('set_message.pending: 1');
+			await expect(page.getByText('set_message.submitted:')).toHaveText(
+				'set_message.submitted: true'
+			);
 			await page.getByText('resolve deferreds').click();
 			await expect(page.getByText('set_message.pending:')).toHaveText('set_message.pending: 0');
 			await expect(page.getByText('message.current:')).toHaveText('message.current: hello');
