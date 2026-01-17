@@ -12,6 +12,7 @@ import { env } from 'ENV';
 import { parse_as_bytes } from '../utils.js';
 
 /* global ENV_PREFIX */
+/* global PRECOMPRESS */
 
 const server = new Server(manifest);
 
@@ -47,8 +48,8 @@ function serve(path, client = false) {
 	return fs.existsSync(path)
 		? sirv(path, {
 				etag: true,
-				gzip: true,
-				brotli: true,
+				gzip: PRECOMPRESS,
+				brotli: PRECOMPRESS,
 				setHeaders: client
 					? (res, pathname) => {
 							// only apply to build directory, not e.g. version.json
