@@ -31,8 +31,9 @@ export function image_plugin(imagetools_plugin) {
 					'@sveltejs/enhanced-img requires @sveltejs/vite-plugin-svelte 6 or higher to be installed'
 				);
 			}
+			const api = svelteConfigPlugin.api;
 			// @ts-expect-error plugin.transform is defined below before configResolved is called
-			plugin.transform.filter.id = svelteConfigPlugin.api.idFilter.id;
+			plugin.transform.filter.id = (api.filter ?? api.idFilter).id; // TODO: idFilter was used by earlier versions of vite-plugin-svelte@6, remove when @7 is required
 		},
 		transform: {
 			order: 'pre', // puts it before vite-plugin-svelte:compile
