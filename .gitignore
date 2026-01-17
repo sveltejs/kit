@@ -19,3 +19,4 @@ vite.config.js.timestamp-*
 symlink-from
 .idea/
 _tmp_flaky_test_output.txt
+playgrounds/repro
