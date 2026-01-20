@@ -2,4 +2,4 @@
 '@sveltejs/adapter-node': patch
 ---
 
-fix: don't send "Vary: Accept-Encoding" header when precompress=false
+fix: disable gzip and brotli when precompress=false
