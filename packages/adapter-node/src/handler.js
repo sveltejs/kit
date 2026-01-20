@@ -12,6 +12,7 @@ import { env } from 'ENV';
 import { parse_as_bytes } from '../utils.js';
 
 /* global ENV_PREFIX */
+/* global PRECOMPRESS */
 
 const server = new Server(manifest);
 
@@ -47,8 +48,8 @@ function serve(path, client = false) {
 	return fs.existsSync(path)
 		? sirv(path, {
 				etag: true,
-				gzip: true,
-				brotli: true,
+				gzip: PRECOMPRESS,
+				brotli: PRECOMPRESS,
 				setHeaders: client
 					? (res, pathname) => {
 							// only apply to build directory, not e.g. version.json
@@ -201,7 +202,9 @@ function normalise_header(name, value) {
  * @returns {string}
  */
 function get_origin(headers) {
-	const protocol = decodeURIComponent(normalise_header(protocol_header, headers[protocol_header]) || 'https');
+	const protocol = decodeURIComponent(
+		normalise_header(protocol_header, headers[protocol_header]) || 'https'
+	);
 
 	// this helps us avoid host injections through the protocol header
 	if (protocol.includes(':')) {
