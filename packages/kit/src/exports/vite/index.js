@@ -131,10 +131,11 @@ const warning_preprocessor = {
 
 /**
  * Returns the SvelteKit Vite plugins.
+ * @param {{ cwd?: string }} [options]
  * @returns {Promise<import('vite').Plugin[]>}
  */
-export async function sveltekit() {
-	const svelte_config = await load_config();
+export async function sveltekit({ cwd } = {}) {
+	const svelte_config = await load_config({ cwd });
 
 	/** @type {import('@sveltejs/vite-plugin-svelte').Options['preprocess']} */
 	let preprocess = svelte_config.preprocess;
@@ -162,7 +163,7 @@ export async function sveltekit() {
 
 	const { svelte } = await import_peer('@sveltejs/vite-plugin-svelte');
 
-	return [...svelte(vite_plugin_svelte_options), ...(await kit({ svelte_config }))];
+	return [...svelte(vite_plugin_svelte_options), ...(await kit({ svelte_config, root: cwd }))];
 }
 
 // These variables live outside the `kit()` function because it is re-invoked by each Vite build
@@ -185,10 +186,10 @@ let build_metadata = undefined;
  * - https://rollupjs.org/guide/en/#build-hooks
  * - https://rollupjs.org/guide/en/#output-generation-hooks
  *
- * @param {{ svelte_config: import('types').ValidatedConfig }} options
+ * @param {{ svelte_config: import('types').ValidatedConfig, root?: string }} options
  * @return {Promise<import('vite').Plugin[]>}
  */
-async function kit({ svelte_config }) {
+async function kit({ svelte_config, root = cwd }) {
 	/** @type {import('vite')} */
 	const vite = await import_peer('vite');
 
@@ -276,7 +277,7 @@ async function kit({ svelte_config }) {
 						...get_config_aliases(kit)
 					]
 				},
-				root: cwd,
+				root,
 				server: {
 					cors: { preflightContinue: true },
 					fs: {
