@@ -869,6 +869,46 @@ export const loginOrRegister = form(
 );
 ```
 
+### Resetting the form programmatically
+
+You can programmatically reset a form using the `reset()` method. When called with no arguments, `reset()` will:
+
+- Reset the HTML form element (clearing all input values)
+- Clear all validation issues
+- Clear the `result` value
+- Clear all touched field tracking
+- Set `submitted` to `false`
+
+```svelte
+<!--- file: +page.svelte --->
+<script>
+	import { login } from './auth.remote';
+</script>
+
+<form {...login}>
+	<input {...login.fields.username.as('text')} />
+	<input {...login.fields._password.as('password')} />
+	<button>login</button>
+</form>
+
+<button onclick={() => login.reset()}>
+	Clear form
+</button>
+```
+
+The available options are:
+
+- `values` — Set to `true` (default) to reset the HTML form element, `false` to keep current values, or pass an object with partial values to reset to specific values
+- `issues` — Set to `false` to preserve validation issues (default is `true`)
+- `result` — Set to `false` to preserve the result value (default is `true`)
+- `touched` — Set to `false` to preserve touched field tracking (default is `true`)
+
+```svelte
+<button onclick={() => login.reset({ values: { username: 'guest', password: 'guest' } })}>
+	Login as guest
+</button>
+```
+
 ## command
 
 The `command` function, like `form`, allows you to write data to the server. Unlike `form`, it's not specific to an element and can be called from anywhere.
