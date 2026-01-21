@@ -1860,8 +1860,8 @@ if (import.meta.hot) {
 function setup_preload() {
 	/** @type {NodeJS.Timeout} */
 	let mousemove_timeout;
-	/** @type {Element} */
-	let current_a;
+	/** @type {{ element: Element | SVGAElement | undefined; href: string | SVGAnimatedString | undefined }} */
+	let current_a = { element: undefined, href: undefined };
 	/** @type {PreloadDataPriority} */
 	let current_priority;
 
@@ -1903,7 +1903,8 @@ function setup_preload() {
 		const a = find_anchor(element, container);
 
 		// we don't want to preload data again if the user has already hovered/tapped
-		const interacted = a === current_a && priority >= current_priority;
+		const interacted =
+			a === current_a.element && a?.href === current_a.href && priority >= current_priority;
 		if (!a || interacted) return;
 
 		const { url, external, download } = get_link_info(a, base, app.hash);
@@ -1916,7 +1917,7 @@ function setup_preload() {
 		if (options.reload || same_url) return;
 
 		if (priority <= options.preload_data) {
-			current_a = a;
+			current_a = { element: a, href: a.href };
 			// we don't want to preload data again on tap if we've already preloaded it on hover
 			current_priority = PRELOAD_PRIORITIES.tap;
 
@@ -1938,7 +1939,7 @@ function setup_preload() {
 				void _preload_data(intent);
 			}
 		} else if (priority <= options.preload_code) {
-			current_a = a;
+			current_a = { element: a, href: a.href };
 			current_priority = priority;
 			void _preload_code(/** @type {URL} */ (url));
 		}
