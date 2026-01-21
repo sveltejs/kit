@@ -241,3 +241,11 @@ export interface RouteSegment {
 }
 
 export type TrailingSlash = 'never' | 'always' | 'ignore';
+
+export type DeepPartial<T> = T extends Record<PropertyKey, unknown> | unknown[]
+	? {
+			[K in keyof T]?: T[K] extends Record<PropertyKey, unknown> | unknown[]
+				? DeepPartial<T[K]>
+				: T[K];
+		}
+	: T | undefined;
