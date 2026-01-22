@@ -466,7 +466,7 @@ importers:
   packages/enhanced-img:
     dependencies:
       magic-string:
-        specifier: ^0.30.5
+        specifier: 'catalog:'
         version: 0.30.21
       sharp:
         specifier: ^0.34.1
