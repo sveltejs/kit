@@ -12,7 +12,7 @@ import * as svelte from 'svelte/compiler';
  * @param {string} css
  * @param {Set<string>} known_assets
  * @param {string} assets
- * @param {string=} base
+ * @param {string} base
  * @returns {string}
  */
 export function replace_css_relative_url(css, known_assets, assets, base) {
@@ -43,22 +43,31 @@ export function replace_css_relative_url(css, known_assets, assets, base) {
 
 	for (const child of parsed.children) {
 		find_declarations(child, (declaration) => {
-			const match = /url\(\s*(['"]?)((?:\.\/)|(?:\.\.\/\.\.\/\.\.\/))([\w\S\s]+)(['"]?)\)/gi.exec(
-				declaration.value
-			);
-			if (!match) return;
+			/** @type {string} */
+			let new_value = declaration.value;
 
-			const [, quote, prefix, filename] = match;
+			let match;
+			while (
+				(match = /url\(\s*(['"]?)((?:\.\/)|(?:\.\.\/\.\.\/\.\.\/))([\w\S]+)(['"]?)\)/gi.exec(
+					new_value
+				))
+			) {
+				const [matched, quote, prefix, filename] = match;
 
-			if (!known_assets.has(filename)) return;
-
-			if (prefix === './') {
-				declaration.value = `url(${quote}${assets}/${filename}${quote})`;
-			} else {
-				declaration.value = `url(${quote}${base}/${filename}${quote})`;
+				// assets processed by Vite
+				if (prefix === './' && known_assets.has(filename)) {
+					new_value = new_value.replace(matched, `url(${quote}${assets}/${filename}${quote})`);
+				}
+				// unprocessed assets from the `static` directory
+				// TODO: there should be a better way to confirm it's from the static directory
+				else if (prefix === '../../../') {
+					new_value = new_value.replace(matched, `url(${quote}${base}/${filename}${quote})`);
+				}
 			}
 
-			s.update(declaration.start, declaration.end, `${declaration.property}:${declaration.value};`);
+			if (declaration.value !== new_value) {
+				s.update(declaration.start, declaration.end, `${declaration.property}: ${new_value}`);
+			}
 		});
 	}
 

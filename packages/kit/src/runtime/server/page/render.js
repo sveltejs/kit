@@ -251,7 +251,7 @@ export async function render_response({
 						return;
 					}
 
-					inline_styles.set(filename, css(base, `${assets}/${paths.app_dir}/immutable/assets`));
+					inline_styles.set(filename, css(`${assets}/${paths.app_dir}/immutable/assets`, base));
 				});
 			}
 		}

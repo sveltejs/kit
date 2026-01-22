@@ -93,20 +93,16 @@ export async function build_server_nodes(
 	 */
 	let prepare_css_for_inlining = (css) => s(css);
 
-	if (kit.paths.assets) {
+	// when paths.assets is set we still need the paths to be dynamic because we 
+	// set a fake path (/_svelte_kit_assets) at runtime when running `vite preview`
+	if (kit.paths.assets || kit.paths.relative) {
 		prepare_css_for_inlining = (css, eager_assets) => {
-			css = replace_css_relative_url(
-				css,
-				eager_assets,
-				`${kit.paths.assets}/${assets_path}`,
-				kit.paths.assets
-			);
+			const transformed_css = replace_css_relative_url(css, eager_assets, '${assets}', '${base}');
+			// only convert to a function if there are URLs to replace
+			if (css !== transformed_css) {
+				return `function css(assets, base) { return \`${s(transformed_css).slice(1, -1)}\`; }`;
+			}
 			return s(css);
-		};
-	} else if (kit.paths.relative) {
-		prepare_css_for_inlining = (css, eager_assets) => {
-			css = replace_css_relative_url(css, eager_assets, '${assets}', '${base}');
-			return `function css(assets, base) { return \`${s(css)}\`; }`;
 		};
 	}
 
@@ -131,7 +127,7 @@ export async function build_server_nodes(
 		let fonts = [];
 
 		/** @type {Set<string>} */
-		const eager_assets = new Set();
+		let eager_assets = new Set();
 
 		if (node.component && client_manifest) {
 			exports.push(
@@ -215,9 +211,13 @@ export async function build_server_nodes(
 			`export const fonts = ${s(fonts)};`
 		);
 
-		if (eager_assets.size) {
-			console.log(eager_assets);
-			// TODO: strip immutable path prefix from assets?
+		// assets that have been processed by Vite (with the asset path stripped)
+		if (assets_path && eager_assets.size) {
+			eager_assets = new Set(
+				Array.from(eager_assets).map((asset) => {
+					return asset.replace(`${assets_path}/`, '');
+				})
+			);
 		}
 
 		/** @type {string[]} */
