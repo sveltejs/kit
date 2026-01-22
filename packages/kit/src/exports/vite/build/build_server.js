@@ -93,7 +93,7 @@ export async function build_server_nodes(
 	 */
 	let prepare_css_for_inlining = (css) => s(css);
 
-	// when paths.assets is set we still need the paths to be dynamic because we 
+	// when paths.assets is set we still need the paths to be dynamic because we
 	// set a fake path (/_svelte_kit_assets) at runtime when running `vite preview`
 	if (kit.paths.assets || kit.paths.relative) {
 		prepare_css_for_inlining = (css, eager_assets) => {
