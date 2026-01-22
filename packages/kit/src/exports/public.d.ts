@@ -357,8 +357,6 @@ export interface KitConfig {
 	 * };
 	 * ```
 	 *
-	 * > [!NOTE] The built-in `$lib` alias is controlled by `config.kit.files.lib` as it is used for packaging.
-	 *
 	 * > [!NOTE] You will need to run `npm run dev` to have SvelteKit automatically generate the required alias configuration in `jsconfig.json` or `tsconfig.json`.
 	 * @default {}
 	 */
@@ -508,6 +506,12 @@ export interface KitConfig {
 		 * @default false
 		 */
 		remoteFunctions?: boolean;
+
+		/**
+		 * Whether to enable the experimental forked preloading feature using Svelte's fork API.
+		 * @default false
+		 */
+		forkPreloads?: boolean;
 	};
 	/**
 	 * Where to find various files within your project.
@@ -2087,30 +2091,6 @@ export type RemoteForm<Input extends RemoteFormInput | void, Output> = {
 	get pending(): number;
 	/** Access form fields using object notation */
 	fields: RemoteFormFieldsRoot<Input>;
-	/** Spread this onto a `<button>` or `<input type="submit">` */
-	buttonProps: {
-		type: 'submit';
-		formmethod: 'POST';
-		formaction: string;
-		onclick: (event: Event) => void;
-		/** Use the `enhance` method to influence what happens when the form is submitted. */
-		enhance(
-			callback: (opts: {
-				form: HTMLFormElement;
-				data: Input;
-				submit: () => Promise<void> & {
-					updates: (...queries: Array<RemoteQuery<any> | RemoteQueryOverride>) => Promise<void>;
-				};
-			}) => void | Promise<void>
-		): {
-			type: 'submit';
-			formmethod: 'POST';
-			formaction: string;
-			onclick: (event: Event) => void;
-		};
-		/** The number of pending submissions */
-		get pending(): number;
-	};
 };
 
 /**

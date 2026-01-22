@@ -285,7 +285,7 @@ const plugin = function (defaults = {}) {
 
 					if (runtime === 'edge') {
 						throw new Error(
-							`${directory}: Routes using \`isr\` must use a Node.js or Bun runtime (for example 'nodejs22.x' or 'experimental_bun1.x')`
+							`${directory}: Routes using \`isr\` must use a Node.js or Bun runtime (for example 'nodejs24.x' or 'experimental_bun1.x')`
 						);
 					}
 
@@ -377,6 +377,31 @@ const plugin = function (defaults = {}) {
 					/** @type {any} */ ({ ...defaults, runtime }),
 					[]
 				);
+			}
+
+			if (builder.config.kit.experimental.remoteFunctions) {
+				// Ensure remote functions are always handled by the catchall route, which will be symlinked to /_app/remote.
+				// This stops them from being affected by ISR config from other routes that match /[...rest] (ref: #15085)
+				// and also makes them show as handled by `/_app/remote` in Vercel's observability.
+
+				const app_path = builder.getAppPath();
+				const remote_dir = path.join(dirs.functions, app_path, 'remote'); // Usually .vercel/output/functions/_app/remote
+				const remote_symlink_path = `${remote_dir}.func`;
+
+				// Handle remote functions with the catchall route as it won't have any ISR settings
+				const target = path.join(dirs.functions, INTERNAL, 'catchall.func');
+
+				// Ensure the parent directory exists before symlinking
+				builder.mkdirp(path.join(dirs.functions, app_path));
+
+				const relative = path.relative(path.dirname(remote_symlink_path), target);
+
+				fs.symlinkSync(relative, remote_symlink_path);
+
+				static_config.routes.push({
+					src: `/${app_path}/remote/.+`,
+					dest: `/${app_path}/remote` // Maps to /![-]/catchall via the symlink
+				});
 			}
 
 			for (const route of builder.routes) {

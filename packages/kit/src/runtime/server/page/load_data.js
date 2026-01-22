@@ -316,7 +316,7 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 		let teed_body;
 
 		const proxy = new Proxy(response, {
-			get(response, key, _receiver) {
+			get(response, key, receiver) {
 				/**
 				 * @param {string | undefined} body
 				 * @param {boolean} is_b64
@@ -427,7 +427,28 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 					};
 				}
 
-				return Reflect.get(response, key, response);
+				const value = Reflect.get(response, key, response);
+
+				if (value instanceof Function) {
+					// On Node v24+, the Response object has a private element #state – we
+					// need to bind this function to the response in order to allow it to
+					// access this private element. Defining the name and length ensure it
+					// is identical to the original function when introspected.
+					return Object.defineProperties(
+						/**
+						 * @this {any}
+						 */
+						function () {
+							return Reflect.apply(value, this === receiver ? response : this, arguments);
+						},
+						{
+							name: { value: value.name },
+							length: { value: value.length }
+						}
+					);
+				}
+
+				return value;
 			}
 		});
 

@@ -15,13 +15,6 @@ const OPTIMIZABLE = /^[^?]+\.(avif|heif|gif|jpeg|jpg|png|tiff|webp)(\?.*)?$/;
  * @returns {import('vite').Plugin<void>}
  */
 export function image_plugin(imagetools_plugin) {
-	// TODO: clear this map in dev mode to avoid memory leak
-	/**
-	 * URL to image details
-	 * @type {Map<string, import('vite-imagetools').Picture>}
-	 */
-	const images = new Map();
-
 	/** @type {import('vite').ResolvedConfig} */
 	let vite_config;
 
@@ -38,8 +31,9 @@ export function image_plugin(imagetools_plugin) {
 					'@sveltejs/enhanced-img requires @sveltejs/vite-plugin-svelte 6 or higher to be installed'
 				);
 			}
+			const api = svelteConfigPlugin.api;
 			// @ts-expect-error plugin.transform is defined below before configResolved is called
-			plugin.transform.filter.id = svelteConfigPlugin.api.idFilter.id;
+			plugin.transform.filter.id = (api.filter ?? api.idFilter).id; // TODO: idFilter was used by earlier versions of vite-plugin-svelte@6, remove when @7 is required
 		},
 		transform: {
 			order: 'pre', // puts it before vite-plugin-svelte:compile
@@ -117,11 +111,7 @@ export function image_plugin(imagetools_plugin) {
 					}
 
 					if (OPTIMIZABLE.test(url)) {
-						let image = images.get(resolved_id);
-						if (!image) {
-							image = await process_id(resolved_id, plugin_context, imagetools_plugin);
-							images.set(resolved_id, image);
-						}
+						const image = await process_id(resolved_id, plugin_context, imagetools_plugin);
 						s.update(node.start, node.end, img_to_picture(content, node, image));
 					} else {
 						const metadata = await sharp(resolved_id).metadata();

@@ -87,7 +87,7 @@ jobs:
         run: find packages -type d -name test-results -not -empty | tar -czf test-results.tar.gz --files-from=-
       - name: Upload test results
         if: failure()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           retention-days: 3
           name: test-failure-${{ github.run_id }}-${{ matrix.os }}-${{ matrix.node-version }}-${{ matrix.e2e-browser }}
@@ -145,7 +145,7 @@ jobs:
         run: find packages -type d -name test-results -not -empty | tar -czf test-results-cross-platform-${{ matrix.mode }}.tar.gz --files-from=-
       - name: Upload test results
         if: failure()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           retention-days: 3
           name: test-failure-cross-platform-${{ matrix.mode }}-${{ github.run_id }}-${{ matrix.os }}-${{ matrix.node-version }}-${{ matrix.e2e-browser }}
@@ -179,7 +179,7 @@ jobs:
         run: find packages -type d -name test-results -not -empty | tar -czf test-results-server-side-route-resolution-${{ matrix.mode }}.tar.gz --files-from=-
       - name: Upload test results
         if: failure()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           retention-days: 3
           name: test-failure-server-side-route-resolution-${{ matrix.mode }}-${{ github.run_id }}
@@ -213,7 +213,7 @@ jobs:
         run: find packages -type d -name test-results -not -empty | tar -czf test-results-svelte-async-${{ matrix.mode }}.tar.gz --files-from=-
       - name: Upload test results
         if: failure()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           retention-days: 3
           name: test-failure-svelte-async-${{ matrix.mode }}-${{ github.run_id }}
@@ -230,6 +230,10 @@ jobs:
         with:
           node-version: ${{matrix.node-version}}
           cache: pnpm
+      # required for testing netlify edge functions
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: ^2.2.4
       - run: pnpm install --frozen-lockfile
       - run: pnpm playwright install chromium
       - run: cd packages/kit && pnpm prepublishOnly

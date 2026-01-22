@@ -332,8 +332,6 @@ declare module '@sveltejs/kit' {
 		 * };
 		 * ```
 		 *
-		 * > [!NOTE] The built-in `$lib` alias is controlled by `config.kit.files.lib` as it is used for packaging.
-		 *
 		 * > [!NOTE] You will need to run `npm run dev` to have SvelteKit automatically generate the required alias configuration in `jsconfig.json` or `tsconfig.json`.
 		 * @default {}
 		 */
@@ -483,6 +481,12 @@ declare module '@sveltejs/kit' {
 			 * @default false
 			 */
 			remoteFunctions?: boolean;
+
+			/**
+			 * Whether to enable the experimental forked preloading feature using Svelte's fork API.
+			 * @default false
+			 */
+			forkPreloads?: boolean;
 		};
 		/**
 		 * Where to find various files within your project.
@@ -2062,30 +2066,6 @@ declare module '@sveltejs/kit' {
 		get pending(): number;
 		/** Access form fields using object notation */
 		fields: RemoteFormFieldsRoot<Input>;
-		/** Spread this onto a `<button>` or `<input type="submit">` */
-		buttonProps: {
-			type: 'submit';
-			formmethod: 'POST';
-			formaction: string;
-			onclick: (event: Event) => void;
-			/** Use the `enhance` method to influence what happens when the form is submitted. */
-			enhance(
-				callback: (opts: {
-					form: HTMLFormElement;
-					data: Input;
-					submit: () => Promise<void> & {
-						updates: (...queries: Array<RemoteQuery<any> | RemoteQueryOverride>) => Promise<void>;
-					};
-				}) => void | Promise<void>
-			): {
-				type: 'submit';
-				formmethod: 'POST';
-				formaction: string;
-				onclick: (event: Event) => void;
-			};
-			/** The number of pending submissions */
-			get pending(): number;
-		};
 	};
 
 	/**
@@ -2779,7 +2759,7 @@ declare module '@sveltejs/kit' {
 	class Redirect_1 {
 		
 		constructor(status: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308, location: string);
-		status: 301 | 302 | 303 | 307 | 308 | 300 | 304 | 305 | 306;
+		status: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308;
 		location: string;
 	}
 
@@ -3049,7 +3029,7 @@ declare module '$app/navigation' {
 	 * */
 	export function invalidate(resource: string | URL | ((url: URL) => boolean)): Promise<void>;
 	/**
-	 * Causes all `load` functions belonging to the currently active page to re-run. Returns a `Promise` that resolves when the page is subsequently updated.
+	 * Causes all `load` and `query` functions belonging to the currently active page to re-run. Returns a `Promise` that resolves when the page is subsequently updated.
 	 * */
 	export function invalidateAll(): Promise<void>;
 	/**

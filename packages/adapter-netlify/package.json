@@ -48,6 +48,7 @@
 		"set-cookie-parser": "^2.6.0"
 	},
 	"devDependencies": {
+		"@netlify/dev": "catalog:",
 		"@netlify/edge-functions": "catalog:",
 		"@netlify/functions": "catalog:",
 		"@netlify/node-cookies": "^0.1.0",
