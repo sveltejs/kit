@@ -1929,6 +1929,18 @@ declare module '@sveltejs/kit' {
 		[key: string | number]: UnknownField<any>;
 	};
 
+	type RemoteFormFieldsRoot<Input extends RemoteFormInput | void> =
+		IsAny<Input> extends true
+			? RecursiveFormFields
+			: Input extends void
+				? {
+						/** Validation issues, if any */
+						issues(): RemoteFormIssue[] | undefined;
+						/** Validation issues belonging to this or any of the fields that belong to it, if any */
+						allIssues(): RemoteFormIssue[] | undefined;
+					}
+				: RemoteFormFields<Input>;
+
 	/**
 	 * Recursive type to build form fields structure with proxy access
 	 */
@@ -2053,7 +2065,7 @@ declare module '@sveltejs/kit' {
 		/** The number of pending submissions */
 		get pending(): number;
 		/** Access form fields using object notation */
-		fields: RemoteFormFields<Input>;
+		fields: RemoteFormFieldsRoot<Input>;
 	};
 
 	/**
@@ -2371,6 +2383,8 @@ declare module '@sveltejs/kit' {
 	}
 
 	type TrailingSlash = 'never' | 'always' | 'ignore';
+
+	type IsAny<T> = 0 extends 1 & T ? true : false;
 	interface Asset {
 		file: string;
 		size: number;

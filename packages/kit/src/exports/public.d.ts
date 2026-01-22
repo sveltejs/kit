@@ -15,7 +15,8 @@ import {
 	PrerenderUnseenRoutesHandlerValue,
 	PrerenderOption,
 	RequestOptions,
-	RouteSegment
+	RouteSegment,
+	IsAny
 } from '../types/private.js';
 import { BuildData, SSRNodeLoader, SSRRoute, ValidatedConfig } from 'types';
 import { SvelteConfig } from '@sveltejs/vite-plugin-svelte';
@@ -1953,6 +1954,18 @@ type UnknownField<Value> = RemoteFormFieldMethods<Value> & {
 	[key: string | number]: UnknownField<any>;
 };
 
+type RemoteFormFieldsRoot<Input extends RemoteFormInput | void> =
+	IsAny<Input> extends true
+		? RecursiveFormFields
+		: Input extends void
+			? {
+					/** Validation issues, if any */
+					issues(): RemoteFormIssue[] | undefined;
+					/** Validation issues belonging to this or any of the fields that belong to it, if any */
+					allIssues(): RemoteFormIssue[] | undefined;
+				}
+			: RemoteFormFields<Input>;
+
 /**
  * Recursive type to build form fields structure with proxy access
  */
@@ -2077,7 +2090,7 @@ export type RemoteForm<Input extends RemoteFormInput | void, Output> = {
 	/** The number of pending submissions */
 	get pending(): number;
 	/** Access form fields using object notation */
-	fields: RemoteFormFields<Input>;
+	fields: RemoteFormFieldsRoot<Input>;
 };
 
 /**
