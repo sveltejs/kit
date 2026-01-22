@@ -431,7 +431,9 @@ export interface SSRNode {
 	server_id?: string;
 
 	/** inlined styles */
-	inline_styles?(): MaybePromise<Record<string, string>>;
+	inline_styles?(): MaybePromise<
+		Record<string, string | ((assets: string, base: string) => string)>
+	>;
 	/** Svelte component */
 	component?: SSRComponentLoader;
 	/** +page.js or +layout.js */

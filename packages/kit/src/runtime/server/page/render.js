@@ -17,7 +17,6 @@ import { try_get_request_store, with_request_store } from '@sveltejs/kit/interna
 import { text_encoder } from '../../utils.js';
 import { get_global_name } from '../utils.js';
 import { create_remote_key } from '../../shared.js';
-import { replace_css_relative_url } from '../../../utils/css.js';
 
 // TODO rename this function/module
 
@@ -246,11 +245,13 @@ export async function render_response({
 			for (const url of node.fonts) fonts.add(url);
 
 			if (node.inline_styles && !client.inline) {
-				Object.entries(await node.inline_styles()).forEach(([k, v]) => {
-					if (paths.relative) {
-						v = replace_css_relative_url(v, `${assets}/${paths.app_dir}/immutable/assets`);
+				Object.entries(await node.inline_styles()).forEach(([filename, css]) => {
+					if (typeof css === 'string') {
+						inline_styles.set(filename, css);
+						return;
 					}
-					inline_styles.set(k, v);
+
+					inline_styles.set(filename, css(base, `${assets}/${paths.app_dir}/immutable/assets`));
 				});
 			}
 		}

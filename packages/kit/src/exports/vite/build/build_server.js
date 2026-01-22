@@ -8,6 +8,34 @@ import { create_node_analyser } from '../static_analysis/index.js';
 import { replace_css_relative_url } from '../../../utils/css.js';
 
 /**
+ * Regenerate server nodes after acquiring client manifest
+ * @overload
+ * @param {string} out
+ * @param {import('types').ValidatedKitConfig} kit
+ * @param {import('types').ManifestData} manifest_data
+ * @param {import('vite').Manifest} server_manifest
+ * @param {import('vite').Manifest} client_manifest
+ * @param {string} assets_path
+ * @param {import('vite').Rollup.RollupOutput['output']} client_chunks
+ * @param {import('types').RecursiveRequired<import('types').ValidatedConfig['kit']['output']>} output_config
+ * @param {Map<string, { page_options: Record<string, any> | null, children: string[] }>} static_exports
+ * @returns {Promise<void>}
+ */
+/**
+ * Build server nodes without client manifest for analysis phase
+ * @overload
+ * @param {string} out
+ * @param {import('types').ValidatedKitConfig} kit
+ * @param {import('types').ManifestData} manifest_data
+ * @param {import('vite').Manifest} server_manifest
+ * @param {null} client_manifest
+ * @param {null} assets_path
+ * @param {null} client_chunks
+ * @param {import('types').RecursiveRequired<import('types').ValidatedConfig['kit']['output']>} output_config
+ * @param {Map<string, { page_options: Record<string, any> | null, children: string[] }>} static_exports
+ * @returns {Promise<void>}
+ */
+/**
  * @param {string} out
  * @param {import('types').ValidatedKitConfig} kit
  * @param {import('types').ManifestData} manifest_data
@@ -58,6 +86,30 @@ export async function build_server_nodes(
 		static_exports
 	});
 
+	/**
+	 * For CSS inlining, we either store a string or a function that returns the
+	 * styles with the correct asset base path
+	 * @type {(css: string, eager_assets: Set<string>) => string}
+	 */
+	let prepare_css_for_inlining = (css) => s(css);
+
+	if (kit.paths.assets) {
+		prepare_css_for_inlining = (css, eager_assets) => {
+			css = replace_css_relative_url(
+				css,
+				eager_assets,
+				`${kit.paths.assets}/${assets_path}`,
+				kit.paths.assets
+			);
+			return s(css);
+		};
+	} else if (kit.paths.relative) {
+		prepare_css_for_inlining = (css, eager_assets) => {
+			css = replace_css_relative_url(css, eager_assets, '${assets}', '${base}');
+			return `function css(assets, base) { return \`${s(css)}\`; }`;
+		};
+	}
+
 	for (let i = 0; i < manifest_data.nodes.length; i++) {
 		const node = manifest_data.nodes[i];
 
@@ -77,6 +129,9 @@ export async function build_server_nodes(
 
 		/** @type {string[]} */
 		let fonts = [];
+
+		/** @type {Set<string>} */
+		const eager_assets = new Set();
 
 		if (node.component && client_manifest) {
 			exports.push(
@@ -135,8 +190,6 @@ export async function build_server_nodes(
 
 			/** @type {Set<string>} */
 			const eager_css = new Set();
-			/** @type {Set<string>} */
-			const eager_assets = new Set();
 
 			entry.stylesheet_map.forEach((value, filepath) => {
 				// pages and layouts are renamed to node indexes when optimised for the client
@@ -162,6 +215,11 @@ export async function build_server_nodes(
 			`export const fonts = ${s(fonts)};`
 		);
 
+		if (eager_assets.size) {
+			console.log(eager_assets);
+			// TODO: strip immutable path prefix from assets?
+		}
+
 		/** @type {string[]} */
 		const inline_styles = [];
 
@@ -170,14 +228,12 @@ export async function build_server_nodes(
 				const filename = basename(file);
 				const dest = `${out}/server/stylesheets/${filename}.js`;
 
-				let contents = /** @type {string} */ (stylesheets_to_inline.get(file));
+				let css = /** @type {string} */ (stylesheets_to_inline.get(file));
 
-				if (kit.paths.assets) {
-					contents = replace_css_relative_url(contents, `${kit.paths.assets}/${assets_path}`);
-				}
-
-				fs.writeFileSync(dest, `// ${filename}\nexport default ${s(contents)};`);
-
+				fs.writeFileSync(
+					dest,
+					`// ${filename}\nexport default ${prepare_css_for_inlining(css, eager_assets)};`
+				);
 				const name = `stylesheet_${i}`;
 				imports.push(`import ${name} from '../stylesheets/${filename}.js';`);
 				inline_styles.push(`\t${s(file)}: ${name}`);
