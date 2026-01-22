@@ -1,5 +1,17 @@
 # @sveltejs/kit
 
+## 2.50.1
+### Patch Changes
+
+
+- fix: include `hooks.server` and `hooks.universal` as explicit Vite build inputs to ensure assets imported by hooks files are correctly discovered ([#15178](https://github.com/sveltejs/kit/pull/15178))
+
+
+- fix: improves fields type for generic components ([#14974](https://github.com/sveltejs/kit/pull/14974))
+
+
+- fix: preload links if href changes ([#15191](https://github.com/sveltejs/kit/pull/15191))
+
 ## 2.50.0
 ### Minor Changes
 
