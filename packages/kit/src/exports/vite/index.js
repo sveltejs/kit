@@ -41,6 +41,7 @@ import {
 import { import_peer } from '../../utils/import.js';
 import { compact } from '../../utils/array.js';
 import { should_ignore } from './static_analysis/utils.js';
+import { create_client_import_plugin } from './plugin_client_import.js';
 
 const cwd = posixify(process.cwd());
 
@@ -231,6 +232,17 @@ async function kit({ svelte_config }) {
 	 * @type {Record<string, string[]>}
 	 */
 	const tracked_features = {};
+
+	// Create client import plugin
+	const {
+		plugin: plugin_client_import,
+		write_client_import_manifest,
+		get_client_build_inputs
+	} = create_client_import_plugin({
+		kit,
+		out,
+		cwd
+	});
 
 	const sourcemapIgnoreList = /** @param {string} relative_path */ (relative_path) =>
 		relative_path.includes('node_modules') || relative_path.includes(kit.outDir);
@@ -1108,7 +1120,25 @@ async function kit({ svelte_config }) {
 							},
 							optimizeDeps: {
 								force: vite_config.optimizeDeps.force
-							}
+							},
+							plugins: [
+								{
+									name: 'vite-plugin-sveltekit-client-imports-input',
+									enforce: 'pre',
+									options(options) {
+										const client_import_inputs = get_client_build_inputs();
+										if (Object.keys(client_import_inputs).length > 0) {
+											return {
+												...options,
+												input: {
+													...(typeof options.input === 'object' ? options.input : {}),
+													...client_import_inputs
+												}
+											};
+										}
+									}
+								}
+							]
 						})
 					);
 
@@ -1163,6 +1193,9 @@ async function kit({ svelte_config }) {
 
 				/** @type {import('vite').Manifest} */
 				const client_manifest = JSON.parse(read(`${out}/client/.vite/manifest.json`));
+
+				// Write client import manifest after client build completes
+				write_client_import_manifest(client_manifest);
 
 				/**
 				 * @param {string} entry
@@ -1375,6 +1408,7 @@ async function kit({ svelte_config }) {
 		kit.experimental.remoteFunctions && plugin_remote,
 		plugin_virtual_modules,
 		plugin_guard,
+		plugin_client_import,
 		plugin_compile
 	].filter((p) => !!p);
 }
