@@ -249,7 +249,7 @@ function generate_lambda_functions({ builder, publish, split }) {
 		'0SERVER': './server/index.js' // digit prefix prevents CJS build from using this as a variable name, which would also get replaced
 	};
 
-	builder.copy(files, '.netlify', { replace });
+	builder.copy(files, '.netlify', { replace, filter: (name) => !name.endsWith('edge.js') });
 
 	// Configuring the function to use ESM as the output format.
 	const fn_config = JSON.stringify({ config: { nodeModuleFormat: 'esm' }, version: 1 });

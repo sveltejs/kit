@@ -979,6 +979,33 @@ test.describe('data-sveltekit attributes', () => {
 			page.waitForLoadState('networkidle') // wait for preloading to finish
 		]);
 		expect(requests.length).toBe(2);
+
+		requests.length = 0;
+		await page.goto('/data-sveltekit/preload-data');
+		await page.locator('#dynamic').hover();
+		await page.locator('#dynamic').dispatchEvent('touchstart');
+		await Promise.all([
+			page.waitForTimeout(100), // wait for preloading to start
+			page.waitForLoadState('networkidle') // wait for preloading to finish
+		]);
+		expect(requests.length).toBe(2);
+		await page.waitForTimeout(100);
+		await page.locator('#dynamic').hover();
+		await page.locator('#dynamic').dispatchEvent('touchstart');
+		await Promise.all([
+			page.waitForTimeout(100), // wait for preloading to start
+			page.waitForLoadState('networkidle') // wait for preloading to finish
+		]);
+		expect(requests.length).toBe(2);
+		await page.locator('#change_dynamic').click();
+		await page.waitForTimeout(100);
+		await page.locator('#dynamic').hover();
+		await page.locator('#dynamic').dispatchEvent('touchstart');
+		await Promise.all([
+			page.waitForTimeout(100), // wait for preloading to start
+			page.waitForLoadState('networkidle') // wait for preloading to finish
+		]);
+		expect(requests.length).toBe(3);
 	});
 
 	test('data-sveltekit-preload-data network failure does not trigger navigation', async ({
