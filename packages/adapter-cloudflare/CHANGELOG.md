@@ -1,5 +1,14 @@
 # @sveltejs/adapter-cloudflare
 
+## 7.2.6
+### Patch Changes
+
+
+- fix: ensure manifest paths are relative when building worker ([#15163](https://github.com/sveltejs/kit/pull/15163))
+
+- Updated dependencies [[`46c1ebd`](https://github.com/sveltejs/kit/commit/46c1ebd9f662f0de499e921bfee2661316449e9d), [`2dd74c8`](https://github.com/sveltejs/kit/commit/2dd74c8c86ae4855c3e9d74d8cf241e86dcd5b36), [`8871b54`](https://github.com/sveltejs/kit/commit/8871b5444413d0c7d7ef4d260996c3b5c359d0b8)]:
+  - @sveltejs/kit@2.50.1
+
 ## 7.2.5
 ### Patch Changes
 
