@@ -5,31 +5,45 @@ import * as svelte from 'svelte/compiler';
 
 /** @typedef {{ property: string; value: string; start: number; end: number; type: 'Declaration' }} Declaration */
 
-const OFFSET = '<style>'.length;
+const parser = svelte.parseCss
+	? svelte.parseCss
+	: /** @param {string} css */
+		(css) => {
+			return /** @type {{ css: { children: StyleSheetChildren } }} */ (
+				svelte.parse(`<style>${css}</style>`)
+			).css;
+		};
+
+const AST_OFFSET = '<style>'.length;
+
+const VITE_ASSET_PREFIX = './';
+
+const STATIC_ASSET_PREFIX = '../../../';
+
+const FRAGMENT_OR_QUERY_REGEX = /[?#]/;
 
 /**
  * Vite's static asset handling for the client changes the asset URLs in a CSS
  * file to start with `./` or `../../../`. This is incorrect if we're inlining
  * the CSS or if `paths.assets` is set, so we need to fix them.
- * @param {string} css
- * @param {Set<string>} known_assets
- * @param {string} assets
- * @param {string} base
+ * @param {{
+ * 	css: string;
+ * 	vite_assets: Set<string>;
+ * 	static_assets: Set<string>;
+ * 	assets: string;
+ * 	base: string
+ * }} opts
  * @returns {string}
  */
-export function replace_css_relative_url(css, known_assets, assets, base) {
+export function fix_css_urls({ css, vite_assets, static_assets, assets, base }) {
 	// skip parsing if there are no url(...) occurrences
 	if (!css.match(/url\(/i)) {
 		return css;
 	}
 
-	const parsed = svelte.parseCss
-		? svelte.parseCss(css)
-		: /** @type {{ css: { children: StyleSheetChildren } }} */ (
-				svelte.parse(`<style>${css}</style>`)
-			).css;
-
 	const s = new MagicString(css);
+
+	const parsed = parser(css);
 
 	for (const child of parsed.children) {
 		find_declarations(child, (declaration) => {
@@ -37,41 +51,48 @@ export function replace_css_relative_url(css, known_assets, assets, base) {
 			let new_value = declaration.value;
 
 			/** @type {RegExpExecArray | null} */
-			let match;
-			// TODO: this is matching the closing quote too early
-			const regex = /url\(\s*(['"]?)((?:\.\/)|(?:\.\.\/\.\.\/\.\.\/))([\w\S]+)(?:['"]?)\)/gi;
-			while ((match = regex.exec(declaration.value))) {
-				const [matched, quote, prefix, filename] = match;
+			let url_declaration_match;
+			const url_declaration_regex = /url\(\s*[^)]*\)/gi;
+			while ((url_declaration_match = url_declaration_regex.exec(declaration.value))) {
+				const [url_declaration] = url_declaration_match;
 
-				// assets processed by Vite
-				// TODO: do we need to remove ? and # from filename before checking against the known asset list?
-				if (prefix === './' && known_assets.has(filename)) {
-					new_value = new_value.replace(matched, `url(${quote}${assets}/${filename}${quote})`);
+				const url_value_match = /url\(\s*(['"]?)(.*?)\1\s*\)/i.exec(url_declaration);
+				if (!url_value_match) continue;
+
+				const [, , url] = url_value_match;
+
+				/** @type {string | undefined} */
+				let new_prefix;
+
+				let current_prefix = url.slice(0, VITE_ASSET_PREFIX.length);
+				let [filename] = url.slice(VITE_ASSET_PREFIX.length).split(FRAGMENT_OR_QUERY_REGEX);
+
+				// Vite assets
+				if (current_prefix === VITE_ASSET_PREFIX && vite_assets.has(filename)) {
+					new_prefix = assets;
 				}
-				// unprocessed assets from the `static` directory
-				// TODO: there should be a better way to confirm it's from the static directory
-				else if (prefix === '../../../') {
-					new_value = new_value.replace(matched, `url(${quote}${base}/${filename}${quote})`);
-				} else {
-					console.log({
-						matched,
-						quote,
-						prefix,
-						filename,
-						known_assets,
-						prefix_check: prefix === './',
-						known_check: known_assets.has(filename)
-					});
+				// Static assets
+				else {
+					current_prefix = url.slice(0, STATIC_ASSET_PREFIX.length);
+					[filename] = url.slice(STATIC_ASSET_PREFIX.length).split(FRAGMENT_OR_QUERY_REGEX);
+
+					if (current_prefix === STATIC_ASSET_PREFIX && static_assets.has(filename)) {
+						new_prefix = base;
+					}
 				}
+
+				if (!new_prefix) continue;
+
+				new_value = new_value.replace(`${current_prefix}${filename}`, `${new_prefix}/${filename}`);
 			}
 
-			if (declaration.value !== new_value) {
-				if (!svelte.parseCss) {
-					declaration.start = declaration.start - OFFSET;
-					declaration.end = declaration.end - OFFSET;
-				}
-				s.update(declaration.start, declaration.end, `${declaration.property}: ${new_value}`);
+			if (declaration.value === new_value) return;
+
+			if (!svelte.parseCss) {
+				declaration.start = declaration.start - AST_OFFSET;
+				declaration.end = declaration.end - AST_OFFSET;
 			}
+			s.update(declaration.start, declaration.end, `${declaration.property}: ${new_value}`);
 		});
 	}
 

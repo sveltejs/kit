@@ -5,7 +5,7 @@ import { s } from '../../../utils/misc.js';
 import { normalizePath } from 'vite';
 import { basename, join } from 'node:path';
 import { create_node_analyser } from '../static_analysis/index.js';
-import { replace_css_relative_url } from '../../../utils/css.js';
+import { fix_css_urls } from '../../../utils/css.js';
 
 /**
  * Regenerate server nodes after acquiring client manifest
@@ -96,8 +96,16 @@ export async function build_server_nodes(
 	// when paths.assets is set we still need the paths to be dynamic because we
 	// set a fake path (/_svelte_kit_assets) at runtime when running `vite preview`
 	if (kit.paths.assets || kit.paths.relative) {
+		const static_assets = new Set(manifest_data.assets.map((a) => a.file));
 		prepare_css_for_inlining = (css, eager_assets) => {
-			const transformed_css = replace_css_relative_url(css, eager_assets, '${assets}', '${base}');
+			// TODO: pass in manifest_data.assets
+			const transformed_css = fix_css_urls({
+				css,
+				vite_assets: eager_assets,
+				static_assets,
+				assets: '${assets}',
+				base: '${base}'
+			});
 			// only convert to a function if there are URLs to replace
 			if (css !== transformed_css) {
 				return `function css(assets, base) { return \`${s(transformed_css).slice(1, -1)}\`; }`;
