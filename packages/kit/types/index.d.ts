@@ -3546,4 +3546,13 @@ declare module '$app/types' {
 	export type Asset = ReturnType<AppTypes['Asset']>;
 }
 
+/**
+ * Type declarations for the `?client-import` query parameter, which allows importing
+ * Svelte components from server code for client-side rendering.
+ */
+declare module '*.svelte?client-import' {
+	const component: string;
+	export default component;
+}
+
 //# sourceMappingURL=index.d.ts.map
