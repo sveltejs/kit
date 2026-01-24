@@ -307,10 +307,10 @@ test.describe('remote function mutations', () => {
 		});
 
 		const items = page.locator('#ssr_batch div');
-		let count = await items.count();
+		const count = await items.count();
 		expect(count).toBe(3);
 
-		let textContent = await items.allTextContents();
+		const textContent = await items.allTextContents();
 
 		expect(textContent).toEqual(['object', 'object', 'object']);
 	});
@@ -322,10 +322,10 @@ test.describe('remote function mutations', () => {
 
 		await page.locator('body.started').waitFor({ state: 'visible' });
 		const items = page.locator('#csr_batch div');
-		let count = await items.count();
+		const count = await items.count();
 		expect(count).toBe(3);
 
-		let textContent = await items.allTextContents();
+		const textContent = await items.allTextContents();
 
 		expect(textContent).toEqual(['object', 'object', 'object']);
 	});
