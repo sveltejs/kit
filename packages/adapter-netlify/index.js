@@ -1,6 +1,6 @@
 /** @import { BuildOptions } from 'esbuild' */
 import { appendFileSync, existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { dirname, join, resolve, posix } from 'node:path';
+import { join, resolve, posix } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { builtinModules } from 'node:module';
 import process from 'node:process';
@@ -241,8 +241,6 @@ async function generate_edge_functions({ builder }) {
 function generate_lambda_functions({ builder, publish, split }) {
 	builder.mkdirp('.netlify/functions-internal/.svelte-kit');
 
-	/** @type {string[]} */
-	const redirects = [];
 	builder.writeServer('.netlify/server');
 
 	const replace = {
@@ -250,9 +248,6 @@ function generate_lambda_functions({ builder, publish, split }) {
 	};
 
 	builder.copy(files, '.netlify', { replace, filter: (name) => !name.endsWith('edge.js') });
-
-	// Configuring the function to use ESM as the output format.
-	const fn_config = JSON.stringify({ config: { nodeModuleFormat: 'esm' }, version: 1 });
 
 	builder.log.minor('Generating serverless functions...');
 
@@ -302,33 +297,27 @@ function generate_lambda_functions({ builder, publish, split }) {
 				routes
 			});
 
-			const fn = `import { init } from '../serverless.js';\n\nexport const handler = init(${manifest});\n`;
+			const fn = `import { init } from '../serverless.js';\n\nexport default init(${manifest});\n\nexport const config = {\n\tpath: "${pattern}",\n\tpreferStatic: true\n};\n`;
 
 			writeFileSync(`.netlify/functions-internal/${name}.mjs`, fn);
-			writeFileSync(`.netlify/functions-internal/${name}.json`, fn_config);
 			if (builder.hasServerInstrumentationFile?.()) {
 				builder.instrument?.({
 					entrypoint: `.netlify/functions-internal/${name}.mjs`,
 					instrumentation: '.netlify/server/instrumentation.server.js',
 					start: `.netlify/functions-start/${name}.start.mjs`,
 					module: {
-						exports: ['handler']
+						exports: ['default']
 					}
 				});
 			}
-
-			const redirect = `/.netlify/functions/${name} 200`;
-			redirects.push(`${pattern} ${redirect}`);
-			redirects.push(`${pattern === '/' ? '' : pattern}/__data.json ${redirect}`);
 		}
 	} else {
 		const manifest = builder.generateManifest({
 			relativePath: '../server'
 		});
 
-		const fn = `import { init } from '../serverless.js';\n\nexport const handler = init(${manifest});\n`;
+		const fn = `import { init } from '../serverless.js';\n\nexport default init(${manifest});\n\nexport const config = {\n\tpath: "/*",\n\tpreferStatic: true\n};\n`;
 
-		writeFileSync(`.netlify/functions-internal/${FUNCTION_PREFIX}render.json`, fn_config);
 		writeFileSync(`.netlify/functions-internal/${FUNCTION_PREFIX}render.mjs`, fn);
 		if (builder.hasServerInstrumentationFile?.()) {
 			builder.instrument?.({
@@ -336,24 +325,18 @@ function generate_lambda_functions({ builder, publish, split }) {
 				instrumentation: '.netlify/server/instrumentation.server.js',
 				start: `.netlify/functions-start/${FUNCTION_PREFIX}render.start.mjs`,
 				module: {
-					exports: ['handler']
+					exports: ['default']
 				}
 			});
 		}
-
-		redirects.push(`* /.netlify/functions/${FUNCTION_PREFIX}render 200`);
 	}
 
-	// this should happen at the end, after builder.writeClient(...),
-	// so that generated redirects are appended to custom redirects
-	// rather than replaced by them
-	builder.log.minor('Writing redirects...');
-	const redirects_file = join(publish, '_redirects');
+	// Copy user's custom _redirects file if it exists
 	if (existsSync('_redirects')) {
+		builder.log.minor('Copying user redirects...');
+		const redirects_file = join(publish, '_redirects');
 		builder.copy('_redirects', redirects_file);
 	}
-	builder.mkdirp(dirname(redirects_file));
-	appendFileSync(redirects_file, `\n\n${redirects.join('\n')}`);
 }
 
 function get_netlify_config() {
@@ -378,11 +361,6 @@ function get_publish_directory(netlify_config, builder) {
 			return;
 		}
 
-		if (netlify_config.redirects) {
-			throw new Error(
-				"Redirects are not supported in netlify.toml. Use _redirects instead. For more details consult the readme's troubleshooting section."
-			);
-		}
 		if (resolve(netlify_config.build.publish) === process.cwd()) {
 			throw new Error(
 				'The publish directory cannot be set to the site root. Please change it to another value such as "build" in netlify.toml.'

@@ -243,9 +243,6 @@ importers:
       esbuild:
         specifier: ^0.25.4
         version: 0.25.9
-      set-cookie-parser:
-        specifier: ^2.6.0
-        version: 2.6.0
     devDependencies:
       '@netlify/dev':
         specifier: 'catalog:'
@@ -280,9 +277,6 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 18.19.119
-      '@types/set-cookie-parser':
-        specifier: 'catalog:'
-        version: 2.4.7
       rollup:
         specifier: ^4.14.2
         version: 4.50.1
