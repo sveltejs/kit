@@ -1,5 +1,47 @@
 # @sveltejs/kit
 
+## 2.50.1
+### Patch Changes
+
+
+- fix: include `hooks.server` and `hooks.universal` as explicit Vite build inputs to ensure assets imported by hooks files are correctly discovered ([#15178](https://github.com/sveltejs/kit/pull/15178))
+
+
+- fix: improves fields type for generic components ([#14974](https://github.com/sveltejs/kit/pull/14974))
+
+
+- fix: preload links if href changes ([#15191](https://github.com/sveltejs/kit/pull/15191))
+
+## 2.50.0
+### Minor Changes
+
+
+- breaking: remove `buttonProps` from experimental remote form functions; use e.g. `<button {...myForm.fields.action.as('submit', 'register')}>Register</button>` button instead ([#15144](https://github.com/sveltejs/kit/pull/15144))
+
+## 2.49.5
+### Patch Changes
+
+
+- fix: avoid overriding Vite default `base` when running Vitest 4 ([#14866](https://github.com/sveltejs/kit/pull/14866))
+
+
+- fix: ensure url decoded pathnames are not mistaken as rerouted requests ([`d9ae9b0`](https://github.com/sveltejs/kit/commit/d9ae9b00b14f5574d109f3fd548f960594346226))
+
+
+- fix: add length checks to remote forms ([`8ed8155`](https://github.com/sveltejs/kit/commit/8ed8155215b9a74012fecffb942ad9a793b274e5))
+
+## 2.49.4
+### Patch Changes
+
+
+- fix: support instrumentation for `vite preview` ([#15105](https://github.com/sveltejs/kit/pull/15105))
+
+
+- fix: support for `URLSearchParams.has(name, value)` overload ([#15076](https://github.com/sveltejs/kit/pull/15076))
+
+
+- fix: put forking behind `experimental.forkPreloads` ([#15135](https://github.com/sveltejs/kit/pull/15135))
+
 ## 2.49.3
 ### Patch Changes
 

@@ -230,6 +230,10 @@ jobs:
         with:
           node-version: ${{matrix.node-version}}
           cache: pnpm
+      # required for testing netlify edge functions
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: ^2.2.4
       - run: pnpm install --frozen-lockfile
       - run: pnpm playwright install chromium
       - run: cd packages/kit && pnpm prepublishOnly

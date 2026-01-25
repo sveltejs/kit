@@ -1,5 +1,11 @@
 # @sveltejs/enhanced-img
 
+## 0.9.3
+### Patch Changes
+
+
+- fix: ensure compatibility with vite-plugin-svelte@7 (use api.filter instead of api.idFilter) ([#15179](https://github.com/sveltejs/kit/pull/15179))
+
 ## 0.9.2
 ### Patch Changes
 

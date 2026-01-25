@@ -731,6 +731,10 @@ test.describe('$app/environment', () => {
 
 test.describe('$app/paths', () => {
 	test('includes paths', async ({ page, javaScriptEnabled }) => {
+		test.skip(
+			process.env.SVELTE_ASYNC === 'true',
+			'does not work with async, should use new functions instead'
+		);
 		await page.goto('/paths');
 
 		let base = javaScriptEnabled ? '' : '.';
@@ -749,6 +753,10 @@ test.describe('$app/paths', () => {
 		page,
 		javaScriptEnabled
 	}) => {
+		test.skip(
+			process.env.SVELTE_ASYNC === 'true',
+			'does not work with async, should use new functions instead'
+		);
 		const absolute = `${baseURL}/favicon.png`;
 
 		await page.goto('/');
