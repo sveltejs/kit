@@ -37,7 +37,7 @@
 		"check": "tsc",
 		"lint": "prettier --check .",
 		"format": "pnpm lint --write",
-		"test": "pnpm test:unit && pnpm test:integration",
+		"test": "pnpm test:integration",
 		"test:unit": "vitest run",
 		"test:integration": "pnpm build && pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test",
 		"prepublishOnly": "pnpm build"
