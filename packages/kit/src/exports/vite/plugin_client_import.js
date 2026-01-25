@@ -190,7 +190,7 @@ export function create_client_import_plugin({ kit: _kit, out, cwd }) {
 				const info = client_imports.get(hash_id);
 				if (info) {
 					const dev_url = file_to_dev_url(info.file, resolved_config.root, resolved_config.base);
-					return `export default '${dev_url}';`;
+					return `export default ${JSON.stringify(dev_url)};`;
 				}
 
 				return `export default '';`;
@@ -216,7 +216,7 @@ export function create_client_import_plugin({ kit: _kit, out, cwd }) {
 					resolved_config.root,
 					resolved_config.base
 				);
-				return `export default '${dev_url}';`;
+				return `export default ${JSON.stringify(dev_url)};`;
 			}
 
 			// Handle ?client-import queries in client context
@@ -298,10 +298,10 @@ export function create_client_import_plugin({ kit: _kit, out, cwd }) {
 				if (css_paths.length > 0) {
 					wrapper_code += '// Inject CSS\n';
 					for (const css_path of css_paths) {
-						wrapper_code += `if (!document.querySelector('link[href="${css_path}"]')) {\n`;
+						wrapper_code += `if (!document.querySelector('link[href=${JSON.stringify(css_path)}]')) {\n`;
 						wrapper_code += `  const link = document.createElement('link');\n`;
 						wrapper_code += `  link.rel = 'stylesheet';\n`;
-						wrapper_code += `  link.href = '${css_path}';\n`;
+						wrapper_code += `  link.href = ${JSON.stringify(css_path)};\n`;
 						wrapper_code += `  document.head.appendChild(link);\n`;
 						wrapper_code += `}\n`;
 					}
@@ -309,7 +309,7 @@ export function create_client_import_plugin({ kit: _kit, out, cwd }) {
 				}
 
 				// Re-export the component
-				wrapper_code += `export { default } from '${js_path}';\n`;
+				wrapper_code += `export { default } from ${JSON.stringify(js_path)};\n`;
 
 				fs.writeFileSync(wrapper_path, wrapper_code);
 
