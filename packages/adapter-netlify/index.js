@@ -297,7 +297,7 @@ function generate_lambda_functions({ builder, publish, split }) {
 				routes
 			});
 
-			const fn = `import { init } from '../serverless.js';\n\nexport default init(${manifest});\n\nexport const config = {\n\tpath: "${pattern}",\n\tpreferStatic: true\n};\n`;
+			const fn = `import { init } from '../serverless.js';\n\nexport default init(${manifest});\n\nexport const config = {\n\tpath: "${pattern}",\n\texcludedPath: "/.netlify/*",\n\tpreferStatic: true\n};\n`;
 
 			writeFileSync(`.netlify/functions-internal/${name}.mjs`, fn);
 			if (builder.hasServerInstrumentationFile?.()) {
@@ -316,7 +316,7 @@ function generate_lambda_functions({ builder, publish, split }) {
 			relativePath: '../server'
 		});
 
-		const fn = `import { init } from '../serverless.js';\n\nexport default init(${manifest});\n\nexport const config = {\n\tpath: "/*",\n\tpreferStatic: true\n};\n`;
+		const fn = `import { init } from '../serverless.js';\n\nexport default init(${manifest});\n\nexport const config = {\n\tpath: "/*",\n\texcludedPath: "/.netlify/*",\n\tpreferStatic: true\n};\n`;
 
 		writeFileSync(`.netlify/functions-internal/${FUNCTION_PREFIX}render.mjs`, fn);
 		if (builder.hasServerInstrumentationFile?.()) {
