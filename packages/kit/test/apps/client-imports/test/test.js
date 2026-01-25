@@ -20,6 +20,9 @@ test.describe('Client Import Feature', () => {
 		await page.goto('/basic');
 		// Wait a bit for the first module to compile
 		await page.waitForTimeout(2000);
+
+		await page.goto('/dynamic?component=ComponentA');
+		await page.waitForTimeout(2000);
 	});
 
 	test.describe('Basic Import', () => {
@@ -55,6 +58,75 @@ test.describe('Client Import Feature', () => {
 
 		test('shows no error messages', async ({ page }) => {
 			await page.goto('/basic');
+
+			// Should not show error
+			await expect(page.locator('[data-testid="error"]')).not.toBeVisible();
+
+			// Should not show loading state after component loads
+			await page.waitForTimeout(1000);
+			await expect(page.locator('[data-testid="loading"]')).not.toBeVisible();
+		});
+	});
+
+	test.describe('Dynamic Import', () => {
+		test('resolves dynamic client import to valid path (ComponentA)', async ({ page }) => {
+			await page.goto('/dynamic?component=ComponentA');
+
+			const pathElement = page.locator('[data-testid="component-path"]');
+			await expect(pathElement).toBeVisible();
+
+			const pathText = await pathElement.textContent();
+
+			if (!is_dev) {
+				expect(pathText).toMatch(/Component Path: \/_app\/immutable\//);
+			}
+
+			await expect(page.locator('[data-testid="component-a"]')).toBeVisible({ timeout: 15000 });
+		});
+
+		test('resolves dynamic client import to valid path (ComponentB)', async ({ page }) => {
+			await page.goto('/dynamic?component=ComponentB');
+
+			// Check that component path is present and valid
+			const pathElement = page.locator('[data-testid="component-path"]');
+			await expect(pathElement).toBeVisible();
+
+			const pathText = await pathElement.textContent();
+
+			if (!is_dev) {
+				expect(pathText).toMatch(/Component Path: \/_app\/immutable\//);
+			}
+
+			await expect(page.locator('[data-testid="component-b"]')).toBeVisible({ timeout: 15000 });
+		});
+
+		test('loads component with correct content from dynamic import', async ({ page }) => {
+			await page.goto('/dynamic?component=ComponentA');
+
+			const component = page.locator('[data-testid="component-a"]');
+			await expect(component).toBeVisible({ timeout: 15000 });
+
+			// Check component contains expected text
+			await expect(component.locator('h2')).toHaveText('Component A');
+			await expect(component.locator('p')).toContainText(
+				'Dynamically loaded from dynamic server import!'
+			);
+		});
+
+		test('switches between components based on URL param', async ({ page }) => {
+			// Load Component A
+			await page.goto('/dynamic?component=ComponentA');
+			await expect(page.locator('[data-testid="component-a"]')).toBeVisible({ timeout: 15000 });
+			await expect(page.locator('[data-testid="component-b"]')).not.toBeVisible();
+
+			// Load Component B
+			await page.goto('/dynamic?component=ComponentB');
+			await expect(page.locator('[data-testid="component-b"]')).toBeVisible({ timeout: 15000 });
+			await expect(page.locator('[data-testid="component-a"]')).not.toBeVisible();
+		});
+
+		test('shows no error messages with dynamic import', async ({ page }) => {
+			await page.goto('/dynamic?component=ComponentA');
 
 			// Should not show error
 			await expect(page.locator('[data-testid="error"]')).not.toBeVisible();

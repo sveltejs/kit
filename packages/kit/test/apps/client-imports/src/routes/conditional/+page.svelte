@@ -1,21 +1,7 @@
 <script>
-	export let data;
+	const { data } = $props();
 
-	let Component;
-	let error = null;
-
-	$: if (data.componentPath) {
-		loadComponent(data.componentPath);
-	}
-
-	async function loadComponent(path) {
-		try {
-			const module = await import(/* @vite-ignore */ path);
-			Component = module.default;
-		} catch (e) {
-			error = e.message;
-		}
-	}
+	const component = $derived(import(/* @vite-ignore */ data.componentPath));
 </script>
 
 <div data-testid="conditional-page">
@@ -29,13 +15,13 @@
 		<a href="/conditional?variant=b" data-testid="link-variant-b">Load Variant B</a>
 	</div>
 
-	{#if error}
-		<div class="error" data-testid="error">Error: {error}</div>
-	{:else if Component}
-		<svelte:component this={Component} message="Loaded variant {data.variant.toUpperCase()}!" />
-	{:else}
+	{#await component}
 		<p data-testid="loading">Loading component...</p>
-	{/if}
+	{:then component}
+		<component.default message="Loaded variant {data.variant.toUpperCase()}!" />
+	{:catch error}
+		<div class="error" data-testid="error">Error: {error}</div>
+	{/await}
 </div>
 
 <style>
