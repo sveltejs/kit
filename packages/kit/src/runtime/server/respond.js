@@ -74,15 +74,20 @@ export async function internal_respond(request, options, manifest, state) {
 	const is_data_request = has_data_suffix(url.pathname);
 	const remote_id = get_remote_id(url);
 
-	if (!DEV) {
+	if (!DEV && options.csrf_check_origin) {
 		const request_origin = request.headers.get('origin');
 
 		if (remote_id) {
-			if (request.method !== 'GET' && request_origin !== url.origin) {
+			const forbidden =
+				request.method !== 'GET' &&
+				request_origin !== url.origin &&
+				(!request_origin || !options.csrf_trusted_origins.includes(request_origin));
+
+			if (forbidden) {
 				const message = 'Cross-site remote requests are forbidden';
 				return json({ message }, { status: 403 });
 			}
-		} else if (options.csrf_check_origin) {
+		} else {
 			const forbidden =
 				is_form_content_type(request) &&
 				(request.method === 'POST' ||
