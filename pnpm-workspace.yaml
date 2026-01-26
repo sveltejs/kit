@@ -56,7 +56,6 @@ catalogs:
     vite: ^8.0.0-beta.9
     '@sveltejs/vite-plugin-svelte': ^7.0.0-next.0
 overrides:
-  vite: ^8.0.0-beta.9
-  '@sveltejs/vite-plugin-svelte': ^7.0.0-next.0
+
 # ci script replaces all overrides with the vite-xxx catalogs above.
 # if you want to introduce an override, make sure to add it to all of them too
