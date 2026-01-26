@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-static",
-	"version": "3.0.9",
+	"version": "3.0.10",
 	"description": "Adapter for SvelteKit apps that prerenders your entire site as a collection of static files",
 	"keywords": [
 		"adapter",
@@ -17,7 +17,7 @@
 		"directory": "packages/adapter-static"
 	},
 	"license": "MIT",
-	"homepage": "https://svelte.dev",
+	"homepage": "https://svelte.dev/docs/kit/adapter-static",
 	"type": "module",
 	"exports": {
 		".": {

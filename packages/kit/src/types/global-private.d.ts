@@ -11,8 +11,22 @@ declare global {
 	const __SVELTEKIT_SERVER_TRACING_ENABLED__: boolean;
 	/** true if corresponding config option is set to true */
 	const __SVELTEKIT_EXPERIMENTAL__REMOTE_FUNCTIONS__: boolean;
+	/** True if `config.kit.experimental.forkPreloads` is `true` */
+	const __SVELTEKIT_FORK_PRELOADS__: boolean;
 	/** True if `config.kit.router.resolution === 'client'` */
 	const __SVELTEKIT_CLIENT_ROUTING__: boolean;
+	/** True if `config.kit.router.type === 'hash'` */
+	const __SVELTEKIT_HASH_ROUTING__: boolean;
+	/**
+	 * True if any node in the manifest has a server load function.
+	 * Used for treeshaking server load code from client bundles when no server loads exist.
+	 */
+	const __SVELTEKIT_HAS_SERVER_LOAD__: boolean;
+	/**
+	 * True if any node in the manifest has a universal load function.
+	 * Used for treeshaking universal load code from client bundles when no universal loads exist.
+	 */
+	const __SVELTEKIT_HAS_UNIVERSAL_LOAD__: boolean;
 	/** The `__sveltekit_abc123` object in the init `<script>` */
 	const __SVELTEKIT_PAYLOAD__: {
 		/** The basepath, usually relative to the current page */
