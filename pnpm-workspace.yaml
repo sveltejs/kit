@@ -10,6 +10,7 @@ packages:
   - packages/kit/test/build-errors/apps/*
   - '!.test-tmp/**'
   - playgrounds/*
+
 catalog:
   '@changesets/cli': ^2.29.6
   '@fontsource/libre-barcode-128-text': ^5.1.0
@@ -18,7 +19,7 @@ catalog:
   '@netlify/functions': ^5.0.0
   '@opentelemetry/sdk-node': ^0.208.0
   '@opentelemetry/sdk-trace-node': ^2.0.1
-  '@playwright/test': 1.56.0
+  '@playwright/test': ^1.58.0
   '@polka/url': ^1.0.0-next.28
   '@rollup/plugin-commonjs': ^28.0.1
   '@rollup/plugin-json': ^6.1.0
