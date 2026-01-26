@@ -87,8 +87,9 @@ jobs:
         if: matrix.vite != 'current'
         run: | # copies catalogs.vite-xxx to overrides in pnpm-workspace.yaml so the subsequent `pnpm install` enforces them
           yq -i '.overrides =.catalogs."vite-${{matrix.vite}}"' pnpm-workspace.yaml
-          pnpm install
-          pnpm ls vite
+          pnpm install --no-frozen-lockfile
+          git checkout pnpm-lock.yaml pnpm-workspace.yaml # revert changes to pnpm files to avoid cache key changes
+          pnpm --dir packages/kit ls vite
       - run: pnpm playwright install ${{ matrix.e2e-browser }}
       - run: pnpm run sync-all
       - run: pnpm test:kit
