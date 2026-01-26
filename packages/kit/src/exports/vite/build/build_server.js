@@ -76,6 +76,16 @@ export async function build_server_nodes(
 		static_exports
 	});
 
+	/** @type {string[] | undefined} */
+	let root_stylesheets;
+	if (client_manifest) {
+		root_stylesheets = find_deps(
+			client_manifest,
+			`${normalizePath(kit.outDir)}/generated/client-optimized/app.js`,
+			false
+		).stylesheets;
+	}
+
 	for (let i = 0; i < manifest_data.nodes.length; i++) {
 		const node = manifest_data.nodes[i];
 
@@ -134,7 +144,6 @@ export async function build_server_nodes(
 		) {
 			const entry_path = `${normalizePath(kit.outDir)}/generated/client-optimized/nodes/${i}.js`;
 			const entry = find_deps(client_manifest, entry_path, true);
-
 			// eagerly load client stylesheets and fonts imported by the SSR-ed page to avoid FOUC.
 			// However, if it is not used during SSR (not present in the server manifest),
 			// then it can be lazily loaded in the browser.
@@ -152,7 +161,7 @@ export async function build_server_nodes(
 			}
 
 			/** @type {Set<string>} */
-			const eager_css = new Set();
+			const eager_css = new Set(root_stylesheets);
 			/** @type {Set<string>} */
 			const eager_assets = new Set();
 
