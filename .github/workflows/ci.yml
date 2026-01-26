@@ -73,6 +73,7 @@ jobs:
             vite: 'beta'
     env:
       KIT_E2E_BROWSER: ${{matrix.e2e-browser}}
+      MATRIX_VITE: ${{matrix.vite}}
     steps:
       - run: git config --global core.autocrlf false
       - uses: actions/checkout@v6
@@ -82,15 +83,11 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: use baseline version of vite
-        if: matrix.vite == 'baseline'
-        run: |
-          pnpm update -r --no-save vite@5.0.3 @sveltejs/vite-plugin-svelte@4.0.0
-          pnpm ls vite
-      - name: use beta version of vite
-        if: matrix.vite == 'beta'
-        run: |
-          pnpm update -r --no-save vite@^8.0.0-beta.9 @sveltejs/vite-plugin-svelte@^7.0.0-next.0
+      - name: setup overrides for matrix.vite
+        if: matrix.vite != 'current'
+        run: | # copies catalogs.vite-xxx to overrides in pnpm-workspace.yaml so the subsequent `pnpm install` enforces them
+          yq -yi '. + {overrides: .catalogs."vite-${{matrix.vite}}"}' pnpm-workspace.yaml
+          pnpm install
           pnpm ls vite
       - run: pnpm playwright install ${{ matrix.e2e-browser }}
       - run: pnpm run sync-all
