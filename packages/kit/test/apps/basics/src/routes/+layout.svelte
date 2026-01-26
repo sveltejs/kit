@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
 	import { setup } from '../../../../setup.js';
 
 	/** @type {import('./$types').LayoutData} */

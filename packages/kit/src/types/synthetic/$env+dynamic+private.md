@@ -2,11 +2,9 @@ This module provides access to runtime environment variables, as defined by the 
 
 This module cannot be imported into client-side code.
 
-Dynamic environment variables cannot be used during prerendering.
-
 ```ts
 import { env } from '$env/dynamic/private';
 console.log(env.DEPLOYMENT_SPECIFIC_VARIABLE);
 ```
 
-> In `dev`, `$env/dynamic` always includes environment variables from `.env`. In `prod`, this behavior will depend on your adapter.
+> [!NOTE] In `dev`, `$env/dynamic` always includes environment variables from `.env`. In `prod`, this behavior will depend on your adapter.

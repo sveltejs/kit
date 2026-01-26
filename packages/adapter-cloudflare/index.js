@@ -1,9 +1,15 @@
 import { VERSION } from '@sveltejs/kit';
 import { copyFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
+import process from 'node:process';
 import { fileURLToPath } from 'node:url';
-import { is_building_for_cloudflare_pages, get_routes_json, parse_redirects } from './utils.js';
 import { getPlatformProxy, unstable_readConfig } from 'wrangler';
+import {
+	is_building_for_cloudflare_pages,
+	validate_worker_settings,
+	get_routes_json,
+	parse_redirects
+} from './utils.js';
 
 const name = '@sveltejs/adapter-cloudflare';
 const [kit_major, kit_minor] = VERSION.split('.');
@@ -12,6 +18,7 @@ const [kit_major, kit_minor] = VERSION.split('.');
 export default function (options = {}) {
 	return {
 		name,
+		/** @param {Builder2_0_0} builder */
 		async adapt(builder) {
 			if (
 				existsSync('_routes.json') ||
@@ -34,8 +41,9 @@ export default function (options = {}) {
 				);
 			}
 
-			const wrangler_config = validate_config(options.config);
-			const building_for_cloudflare_pages = is_building_for_cloudflare_pages(wrangler_config);
+			const { wrangler_config, building_for_cloudflare_pages } = validate_wrangler_config(
+				options.config
+			);
 
 			let dest = builder.getBuildDirectory('cloudflare');
 			let worker_dest = `${dest}/_worker.js`;
@@ -51,7 +59,12 @@ export default function (options = {}) {
 					worker_dest = wrangler_config.main;
 				}
 				if (wrangler_config.assets?.directory) {
-					dest = wrangler_config.assets.directory;
+					// wrangler doesn't resolve `assets.directory` to an absolute path unlike
+					// `main` and `pages_build_output_dir` so we need to do it ourselves here
+					const parent_dir = wrangler_config.configPath
+						? path.dirname(path.resolve(wrangler_config.configPath))
+						: process.cwd();
+					dest = path.resolve(parent_dir, wrangler_config.assets.directory);
 				}
 				if (wrangler_config.assets?.binding) {
 					assets_binding = wrangler_config.assets.binding;
@@ -105,12 +118,20 @@ export default function (options = {}) {
 				replace: {
 					// the paths returned by the Wrangler config might be Windows paths,
 					// so we need to convert them to POSIX paths or else the backslashes
-					// will be interpreted as escape characters and create an incorrect import path
-					SERVER: `${posixify(path.relative(worker_dest_dir, builder.getServerDirectory()))}/index.js`,
-					MANIFEST: `${posixify(path.relative(worker_dest_dir, tmp))}/manifest.js`,
+					// will be interpreted as escape characters and create an incorrect import path.
+					// We also need to ensure the relative imports start with ./ since Wrangler
+					// errors if a relative import looks like a package import
+					SERVER: `./${posixify(path.relative(worker_dest_dir, builder.getServerDirectory()))}/index.js`,
+					MANIFEST: `./${posixify(path.relative(worker_dest_dir, tmp))}/manifest.js`,
 					ASSETS: assets_binding
 				}
 			});
+			if (builder.hasServerInstrumentationFile?.()) {
+				builder.instrument?.({
+					entrypoint: worker_dest,
+					instrumentation: `${builder.getServerDirectory()}/instrumentation.server.js`
+				});
+			}
 
 			// _headers
 			const headers_src = '_headers';
@@ -202,7 +223,8 @@ export default function (options = {}) {
 				}
 
 				return true;
-			}
+			},
+			instrumentation: () => true
 		}
 	};
 }
@@ -255,39 +277,27 @@ _redirects
 }
 
 /**
- * @param {string} config_file
- * @returns {import('wrangler').Unstable_Config}
+ * @param {string | undefined} config_file
+ * @returns {{
+ * 	wrangler_config: import('wrangler').Unstable_Config,
+ * 	building_for_cloudflare_pages: boolean
+ * }}
  */
-function validate_config(config_file = undefined) {
+function validate_wrangler_config(config_file = undefined) {
 	const wrangler_config = unstable_readConfig({ config: config_file });
 
-	// we don't support workers sites
-	if (wrangler_config.site) {
-		throw new Error(
-			`You must remove all \`site\` keys in ${wrangler_config.configPath}. Consult https://svelte.dev/docs/kit/adapter-cloudflare#Migrating-from-Workers-Sites-to-Workers-Static-Assets`
-		);
+	const building_for_cloudflare_pages = is_building_for_cloudflare_pages(wrangler_config);
+
+	// we don't need to validate the config if we're building for Cloudflare Pages
+	// because the `main` and `assets` values cannot be changed there
+	if (!building_for_cloudflare_pages) {
+		validate_worker_settings(wrangler_config);
 	}
 
-	if (is_building_for_cloudflare_pages(wrangler_config)) {
-		return wrangler_config;
-	}
-
-	// probably deploying to Cloudflare Workers
-	if (wrangler_config.main || wrangler_config.assets) {
-		if (!wrangler_config.assets?.directory) {
-			throw new Error(
-				`You must specify the \`assets.directory\` key in ${wrangler_config.configPath}. Consult https://developers.cloudflare.com/workers/static-assets/binding/#directory`
-			);
-		}
-
-		if (!wrangler_config.assets?.binding) {
-			throw new Error(
-				`You must specify the \`assets.binding\` key in ${wrangler_config.configPath}. Consult https://developers.cloudflare.com/workers/static-assets/binding/#binding`
-			);
-		}
-	}
-
-	return wrangler_config;
+	return {
+		wrangler_config,
+		building_for_cloudflare_pages
+	};
 }
 
 /** @param {string} str */

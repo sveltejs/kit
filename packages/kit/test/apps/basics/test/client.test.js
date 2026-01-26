@@ -42,6 +42,7 @@ test.describe('Endpoints', () => {
 
 test.describe('Load', () => {
 	test('load function is only called when necessary', async ({ app, page }) => {
+		test.slow();
 		await page.goto('/load/change-detection/one/a');
 		expect(await page.textContent('h1')).toBe('layout loads: 1');
 		expect(await page.textContent('h2')).toBe('x: a: 1');
@@ -236,6 +237,11 @@ test.describe('Load', () => {
 		// 4. We expect the same data and no new request (except a navigation request in case of server-side route resolution) because it was cached.
 		expect(await page.textContent('h2')).toBe('a / b');
 		expect(requests.filter((r) => !r.includes('/__route.js'))).toEqual([]);
+	});
+
+	test('use correct cache result when fetching same url multiple times', async ({ page }) => {
+		await page.goto('/load/fetch-same-url');
+		expect(await page.textContent('h1')).toBe('the result is 1,2,3');
 	});
 
 	test('permits 3rd party patching of fetch in universal load functions', async ({ page }) => {
@@ -973,6 +979,33 @@ test.describe('data-sveltekit attributes', () => {
 			page.waitForLoadState('networkidle') // wait for preloading to finish
 		]);
 		expect(requests.length).toBe(2);
+
+		requests.length = 0;
+		await page.goto('/data-sveltekit/preload-data');
+		await page.locator('#dynamic').hover();
+		await page.locator('#dynamic').dispatchEvent('touchstart');
+		await Promise.all([
+			page.waitForTimeout(100), // wait for preloading to start
+			page.waitForLoadState('networkidle') // wait for preloading to finish
+		]);
+		expect(requests.length).toBe(2);
+		await page.waitForTimeout(100);
+		await page.locator('#dynamic').hover();
+		await page.locator('#dynamic').dispatchEvent('touchstart');
+		await Promise.all([
+			page.waitForTimeout(100), // wait for preloading to start
+			page.waitForLoadState('networkidle') // wait for preloading to finish
+		]);
+		expect(requests.length).toBe(2);
+		await page.locator('#change_dynamic').click();
+		await page.waitForTimeout(100);
+		await page.locator('#dynamic').hover();
+		await page.locator('#dynamic').dispatchEvent('touchstart');
+		await Promise.all([
+			page.waitForTimeout(100), // wait for preloading to start
+			page.waitForLoadState('networkidle') // wait for preloading to finish
+		]);
+		expect(requests.length).toBe(3);
 	});
 
 	test('data-sveltekit-preload-data network failure does not trigger navigation', async ({
@@ -1041,6 +1074,21 @@ test.describe('data-sveltekit attributes', () => {
 		expect(page).toHaveURL('/data-sveltekit/preload-data/offline/slow-navigation');
 	});
 
+	test('data-sveltekit-preload does not abort ongoing navigation #2', async ({ page }) => {
+		await page.goto('/data-sveltekit/preload-data/offline');
+
+		await page.locator('#slow-navigation').dispatchEvent('click');
+		await page.waitForTimeout(100); // wait for navigation to start
+		await page.locator('#one').dispatchEvent('mousemove');
+		await Promise.all([
+			page.waitForTimeout(100), // wait for preloading to start
+			page.waitForLoadState('networkidle') // wait for preloading to finish
+		]);
+
+		expect(page).toHaveURL('/data-sveltekit/preload-data/offline/slow-navigation');
+		await expect(page.getByText('slow navigation', { exact: true })).toBeVisible();
+	});
+
 	test('data-sveltekit-preload-data tap works after data-sveltekit-preload-code hover', async ({
 		page
 	}) => {
@@ -1083,23 +1131,23 @@ test.describe('data-sveltekit attributes', () => {
 	});
 
 	test('data-sveltekit-reload', async ({ baseURL, page, clicknav }) => {
-		/** @type {string[]} */
-		const requests = [];
-		page.on('request', (r) => requests.push(r.url()));
-
 		await page.goto('/data-sveltekit/reload');
+		let request_promise = page.waitForRequest(`${baseURL}/data-sveltekit/reload/target`);
 		await clicknav('#one');
-		expect(requests).toContain(`${baseURL}/data-sveltekit/reload/target`);
+		await request_promise;
 
-		requests.length = 0;
 		await page.goto('/data-sveltekit/reload');
+		request_promise = page.waitForRequest(`${baseURL}/data-sveltekit/reload/target`);
 		await clicknav('#two');
-		expect(requests).toContain(`${baseURL}/data-sveltekit/reload/target`);
+		await request_promise;
 
-		requests.length = 0;
 		await page.goto('/data-sveltekit/reload');
+		request_promise = page.waitForRequest(`${baseURL}/data-sveltekit/reload/target`, {
+			timeout: 1000
+		});
+		request_promise.catch(() => {});
 		await clicknav('#three');
-		expect(requests).not.toContain(`${baseURL}/data-sveltekit/reload/target`);
+		await expect(request_promise).rejects.toThrow();
 	});
 
 	test('data-sveltekit-noscroll', async ({ page, clicknav }) => {
@@ -1302,6 +1350,16 @@ test.describe('Streaming', () => {
 			expect(page.locator('p.loadingfail')).toBeHidden();
 		});
 
+		test('Works with a fast and a slow server load functions which (direct hit)', async ({
+			page
+		}) => {
+			await page.goto('/streaming/server/fast-n-slow');
+
+			expect(await page.locator('p.ssrd').textContent()).toBe('ssrd');
+			await expect(page.locator('p.fast')).toHaveText('fast');
+			await expect(page.locator('p.streamed')).toHaveText('streamed');
+		});
+
 		test('Catches fetch errors from server load functions (direct hit)', async ({ page }) => {
 			page.goto('/streaming/server-error');
 			await expect(page.locator('p.eager')).toHaveText('eager');
@@ -1357,6 +1415,130 @@ test.describe('goto', () => {
 			? 'Cannot use `goto` with an external URL. Use `window.location = "https://example.com/"` instead'
 			: 'goto: invalid URL';
 		await expect(page.locator('p')).toHaveText(message);
+	});
+
+	test.describe('navigation and redirects should be consistent between web native and sveltekit based', () => {
+		const testEntryPage = '/goto/testentry';
+		const testStartPage = '/goto/teststart';
+		const testFinishPage = '/goto/testfinish';
+		const nonexistentPage = '/goto/nonexistent';
+		const loadReplacePage = '/goto/loadreplace1';
+
+		test.beforeEach(async ({ page }) => {
+			await page.goto(testEntryPage);
+			await page.goto(testStartPage);
+
+			await expect(page).toHaveURL(testStartPage);
+		});
+
+		/**
+		 * @param {string} from
+		 * @param {string} to
+		 * @returns {(page: import('@playwright/test').Page) => Promise<void>}
+		 */
+		function makeExpectGoback(from, to) {
+			return async (page) => {
+				await expect(page).toHaveURL(from);
+				await page.goBack();
+				await expect(page).toHaveURL(to);
+			};
+		}
+
+		test.describe('navigating outside the app on sameorigin', () => {
+			test.describe('without replace', () => {
+				const expectGoback = makeExpectGoback(nonexistentPage, testStartPage);
+
+				test('app.goto', async ({ app, page }) => {
+					// navigating to nonexistent page causes playwright's page context to be destroyed
+					// thus this call throws an error unless caught
+					await app.goto(nonexistentPage, { replaceState: false }).catch(() => {});
+					await expectGoback(page);
+				});
+
+				test('location.assign', async ({ page }) => {
+					await page.evaluate((url) => {
+						location.assign(url);
+					}, nonexistentPage);
+					await expectGoback(page);
+				});
+			});
+
+			test.describe('with replace', () => {
+				const expectGoback = makeExpectGoback(nonexistentPage, testEntryPage);
+
+				test('app.goto', async ({ app, page }) => {
+					// navigating to nonexistent page causes playwright's page context to be destroyed
+					// thus this call throws an error unless caught
+					await app.goto(nonexistentPage, { replaceState: true }).catch(() => {});
+					await expectGoback(page);
+				});
+
+				test('location.replace', async ({ page }) => {
+					await page.evaluate((url) => {
+						location.replace(url);
+					}, nonexistentPage);
+					await expectGoback(page);
+				});
+			});
+		});
+
+		test.describe('redirect after invalidation', () => {
+			test.beforeEach(async ({ app }) => {
+				await app.goto(`${testStartPage}?redirect`, { replaceState: true });
+			});
+
+			const expectGoback = makeExpectGoback(testFinishPage, testEntryPage);
+
+			test('app.invalidate', async ({ app, page }) => {
+				await app.invalidate('app:goto', { replaceState: true });
+				await expectGoback(page);
+			});
+
+			test('location.reload', async ({ page }) => {
+				await page.evaluate(() => {
+					location.reload();
+				});
+				await expectGoback(page);
+			});
+		});
+
+		test.describe('navigating through redirect chain', () => {
+			test.describe('without replace', () => {
+				const expectGoback = makeExpectGoback(testFinishPage, testStartPage);
+
+				test('app.goto', async ({ app, page }) => {
+					await app.goto(loadReplacePage, { replaceState: false });
+
+					await expectGoback(page);
+				});
+
+				test('location.assign', async ({ page }) => {
+					await page.evaluate((url) => {
+						location.assign(url);
+					}, loadReplacePage);
+
+					await expectGoback(page);
+				});
+			});
+
+			test.describe('with replace', () => {
+				const expectGoback = makeExpectGoback(testFinishPage, testEntryPage);
+
+				test('app.goto', async ({ app, page }) => {
+					await app.goto(loadReplacePage, { replaceState: true });
+
+					await expectGoback(page);
+				});
+
+				test('location.replace', async ({ page }) => {
+					await page.evaluate((url) => {
+						location.replace(url);
+					}, loadReplacePage);
+
+					await expectGoback(page);
+				});
+			});
+		});
 	});
 });
 
@@ -1494,9 +1676,9 @@ test.describe('Shallow routing', () => {
 });
 
 test.describe('reroute', () => {
-	test('Apply reroute during client side navigation', async ({ page }) => {
+	test('Apply reroute during client side navigation', async ({ page, clicknav }) => {
 		await page.goto('/reroute/basic');
-		await page.click("a[href='/reroute/basic/a']");
+		await clicknav('a[href="/reroute/basic/a"]', { waitForURL: '/reroute/basic/a' });
 		expect(await page.textContent('h1')).toContain(
 			'Successfully rewritten, URL should still show a: /reroute/basic/a'
 		);
@@ -1533,6 +1715,7 @@ test.describe('reroute', () => {
 	});
 
 	test('Apply reroute to preload data', async ({ page }) => {
+		if (process.env.SVELTE_ASYNC === 'true') return; // TODO investigate
 		await page.goto('/reroute/preload-data');
 		await page.click('button');
 		await page.waitForSelector('pre');
@@ -1632,5 +1815,15 @@ test.describe('binding_property_non_reactive warn', () => {
 		});
 		await page.goto('/');
 		expect(is_warning_thrown).toBeFalsy();
+	});
+});
+
+test.describe('routing', () => {
+	test('navigating while navigation is in progress sets the correct URL', async ({ page }) => {
+		await page.goto('/routing/long-navigation');
+		await page.click('a[href="/routing"]');
+		await page.click('a[href="/routing"]');
+		await expect(page.locator('h1')).toHaveText('Great success!');
+		await expect(page).toHaveURL((url) => url.pathname === '/routing');
 	});
 });

@@ -20,7 +20,8 @@ Install with `npm i -D @sveltejs/adapter-cloudflare`, then add the adapter to yo
 /// file: svelte.config.js
 import adapter from '@sveltejs/adapter-cloudflare';
 
-export default {
+/** @type {import('@sveltejs/kit').Config} */
+const config = {
 	kit: {
 		adapter: adapter({
 			// See below for an explanation of these options
@@ -38,6 +39,8 @@ export default {
 		})
 	}
 };
+
+export default config;
 ```
 
 ## Options
@@ -54,13 +57,11 @@ Preferences for the emulated `platform.env` local bindings. See the [getPlatform
 
 Whether to render a plaintext 404.html page or a rendered SPA fallback page for non-matching asset requests.
 
-For Cloudflare Workers, the default behaviour is to return a null-body 404-status response for non-matching assets requests. However, if the [`assets.not_found_handling`](https://developers.cloudflare.com/workers/static-assets/routing/#2-not_found_handling) Wrangler configuration setting is set to `"404-page"`, this page will be served if a request fails to match an asset. If `assets.not_found_handling` is set to `"single-page-application"`, the adapter will render a SPA fallback index.html page regardless of the `fallback` option specified.
+For Cloudflare Workers, the default behaviour is to return a null-body 404-status response for non-matching assets requests. However, if the [`assets.not_found_handling`](https://developers.cloudflare.com/workers/static-assets/routing/#2-not_found_handling) Wrangler configuration setting is set to `"404-page"`, this page will be served if a request fails to match an asset. If `assets.not_found_handling` is set to `"single-page-application"`, the adapter will render a SPA fallback `index.html` page regardless of the `fallback` option specified.
 
 For Cloudflare Pages, this page will only be served when a request that matches an entry in `routes.exclude` fails to match an asset.
 
-Most of the time `plaintext` is sufficient, but if you are using `routes.exclude` to manually
-exclude a set of prerendered pages without exceeding the 100 route limit, you may wish to
-use `spa` instead to avoid showing an unstyled 404 page to users.
+Most of the time `plaintext` is sufficient, but if you are using `routes.exclude` to manually exclude a set of prerendered pages without exceeding the 100 route limit, you may wish to use `spa` instead to avoid showing an unstyled 404 page to users.
 
 See Cloudflare Pages' [Not Found behaviour](https://developers.cloudflare.com/pages/configuration/serving-pages/#not-found-behavior) for more info.
 
@@ -89,7 +90,7 @@ When building for Cloudflare Workers, this adapter expects to find a [Wrangler c
 {
 	"name": "<any-name-you-want>",
 	"main": ".svelte-kit/cloudflare/_worker.js",
-	"compatibility_date": "2025-01-01",
+	"compatibility_date": "<YYYY-MM-DD>",
 	"assets": {
 		"binding": "ASSETS",
 		"directory": ".svelte-kit/cloudflare",
@@ -99,7 +100,7 @@ When building for Cloudflare Workers, this adapter expects to find a [Wrangler c
 
 ### Deployment
 
-Please follow the [framework guide](https://developers.cloudflare.com/workers/frameworks/framework-guides/svelte/) for Cloudflare Workers to begin.
+You can use the Wrangler CLI to deploy your application by running `npx wrangler deploy` or use the [Cloudflare Git integration](https://developers.cloudflare.com/workers/ci-cd/builds/) to enable automatic builds and deployments on push.
 
 ## Cloudflare Pages
 
@@ -126,9 +127,25 @@ Functions contained in the [`/functions` directory](https://developers.cloudflar
 The [`env`](https://developers.cloudflare.com/workers/runtime-apis/fetch-event#parameters) object contains your project's [bindings](https://developers.cloudflare.com/workers/runtime-apis/bindings/), which consist of KV/DO namespaces, etc. It is passed to SvelteKit via the `platform` property, along with [`ctx`](https://developers.cloudflare.com/workers/runtime-apis/context/), [`caches`](https://developers.cloudflare.com/workers/runtime-apis/cache/), and [`cf`](https://developers.cloudflare.com/workers/runtime-apis/request/#incomingrequestcfproperties), meaning that you can access it in hooks and endpoints:
 
 ```js
-// @errors: 7031
+// @filename: ambient.d.ts
+import { DurableObjectNamespace } from '@cloudflare/workers-types';
+
+declare global {
+	namespace App {
+		interface Platform {
+			env: {
+				YOUR_DURABLE_OBJECT_NAMESPACE: DurableObjectNamespace;
+			};
+		}
+	}
+}
+// @filename: +server.js
+// ---cut---
+// @errors: 2355 2322
+/// file: +server.js
+/** @type {import('./$types').RequestHandler} */
 export async function POST({ request, platform }) {
-	const x = platform.env.YOUR_DURABLE_OBJECT_NAMESPACE.idFromName('x');
+	const x = platform?.env.YOUR_DURABLE_OBJECT_NAMESPACE.idFromName('x');
 }
 ```
 
@@ -143,7 +160,7 @@ To make these types available to your app, install [`@cloudflare/workers-types`]
 declare global {
 	namespace App {
 		interface Platform {
-+++			env?: {
++++			env: {
 				YOUR_KV_NAMESPACE: KVNamespace;
 				YOUR_DURABLE_OBJECT_NAMESPACE: DurableObjectNamespace;
 			};+++
@@ -158,7 +175,7 @@ export {};
 
 Cloudflare specific values in the `platform` property are emulated during dev and preview modes. Local [bindings](https://developers.cloudflare.com/workers/wrangler/configuration/#bindings) are created based on your [Wrangler configuration file](https://developers.cloudflare.com/workers/wrangler/) and are used to populate `platform.env` during development and preview. Use the adapter config [`platformProxy` option](#Options-platformProxy) to change your preferences for the bindings.
 
-For testing the build, you should use [Wrangler](https://developers.cloudflare.com/workers/wrangler/) version 4. Once you have built your site, run `wrangler dev .svelte-kit/cloudflare` if you're testing for Cloudflare Workers or `wrangler pages dev .svelte-kit/cloudflare` for Cloudflare Pages.
+For testing the build, you should use [Wrangler](https://developers.cloudflare.com/workers/wrangler/) version 4. Once you have built your site, run `wrangler dev .svelte-kit/cloudflare/_worker.js` if you're testing for Cloudflare Workers or `wrangler pages dev .svelte-kit/cloudflare` for Cloudflare Pages.
 
 ## Headers and redirects
 
@@ -185,7 +202,11 @@ When deploying your application, the server generated by SvelteKit is bundled in
 
 ### Accessing the file system
 
-You can't use `fs` in Cloudflare Workers — you must [prerender](page-options#prerender) the routes in question.
+You can't use `fs` in Cloudflare Workers.
+
+Instead, use the [`read`]($app-server#read) function from `$app/server` to access your files. It works by fetching the file from the deployed public assets location.
+
+Alternatively, you can [prerender](page-options#prerender) the routes in question.
 
 ## Migrating from Workers Sites
 
@@ -194,15 +215,19 @@ Cloudflare no longer recommends using [Workers Sites](https://developers.cloudfl
 ### svelte.config.js
 
 ```js
+// @errors: 2307
 /// file: svelte.config.js
 ---import adapter from '@sveltejs/adapter-cloudflare-workers';---
 +++import adapter from '@sveltejs/adapter-cloudflare';+++
 
-export default {
+/** @type {import('@sveltejs/kit').Config} */
+const config = {
 	kit: {
 		adapter: adapter()
 	}
 };
+
+export default config;
 ```
 
 ### wrangler.toml
@@ -211,7 +236,7 @@ export default {
 /// file: wrangler.toml
 ---site.bucket = ".cloudflare/public"---
 +++assets.directory = ".cloudflare/public"
-assets.binding = "ASSETS"+++
+assets.binding = "ASSETS" # Exclude this if you don't have a `main` key configured.+++
 ```
 
 ### wrangler.jsonc
@@ -224,7 +249,7 @@ assets.binding = "ASSETS"+++
 	},---
 +++	"assets": {
 		"directory": ".cloudflare/public",
-		"binding": "ASSETS"
+		"binding": "ASSETS" // Exclude this if you don't have a `main` key configured.
 	}+++
 }
 ```

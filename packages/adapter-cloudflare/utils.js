@@ -17,6 +17,42 @@ export function is_building_for_cloudflare_pages(wrangler_config) {
 }
 
 /**
+ * @param {import('wrangler').Unstable_Config} wrangler_config
+ */
+export function validate_worker_settings(wrangler_config) {
+	const config_path = wrangler_config.configPath || 'your wrangler.jsonc file';
+
+	// we don't support workers sites
+	if (wrangler_config.site) {
+		throw new Error(
+			`You must remove all \`site\` keys in ${config_path}. Consult https://svelte.dev/docs/kit/adapter-cloudflare#Migrating-from-Workers-Sites`
+		);
+	}
+
+	// we need the `assets.directory` key so that the static assets are deployed
+	if ((wrangler_config.main || wrangler_config.assets) && !wrangler_config.assets?.directory) {
+		throw new Error(
+			`You must specify the \`assets.directory\` key in ${config_path}. Consult https://developers.cloudflare.com/workers/static-assets/binding/#directory`
+		);
+	}
+
+	// we need the `assets.binding` key so that the Worker can access the static assets
+	if (wrangler_config.main && !wrangler_config.assets?.binding) {
+		throw new Error(
+			`You must specify the \`assets.binding\` key in ${config_path} before deploying your Worker. Consult https://developers.cloudflare.com/workers/static-assets/binding/#binding`
+		);
+	}
+
+	// the user might have forgot the `main` key or should remove the `assets.binding`
+	// key to deploy static assets without a Worker
+	if (!wrangler_config.main && wrangler_config.assets?.binding) {
+		throw new Error(
+			`You must specify the \`main\` key in ${config_path} if you want to deploy a Worker alongside your static assets. Otherwise, remove the \`assets.binding\` key if you only want to deploy static assets.`
+		);
+	}
+}
+
+/**
  * Extracts the redirect source from each line of a [_redirects](https://developers.cloudflare.com/pages/configuration/redirects/)
  * file so we can exclude them in [_routes.json](https://developers.cloudflare.com/pages/functions/routing/#create-a-_routesjson-file)
  * to ensure the redirect is invoked instead of the Cloudflare Worker.
@@ -45,7 +81,7 @@ export function parse_redirects(file_contents) {
 /**
  * Generates the [_routes.json](https://developers.cloudflare.com/pages/functions/routing/#create-a-_routesjson-file)
  * file that dictates which routes invoke the Cloudflare Worker.
- * @param {import('@sveltejs/kit').Builder} builder
+ * @param {Builder2_0_0} builder
  * @param {string[]} client_assets
  * @param {string[]} redirects
  * @param {import('./index.js').AdapterOptions['routes']} routes
