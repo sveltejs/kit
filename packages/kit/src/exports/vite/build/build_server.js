@@ -34,7 +34,12 @@ export async function build_server_nodes(
 	/** @type {Map<string, string>} */
 	const stylesheets_to_inline = new Map();
 
-	if (server_bundle && client_chunks && kit.inlineStyleThreshold > 0) {
+	if (
+		server_bundle &&
+		client_chunks &&
+		kit.inlineStyleThreshold > 0 &&
+		output_config.bundleStrategy === 'split'
+	) {
 		const client = get_stylesheets(client_chunks);
 		const server = get_stylesheets(Object.values(server_bundle));
 
@@ -78,7 +83,7 @@ export async function build_server_nodes(
 
 	/** @type {string[] | undefined} */
 	let root_stylesheets;
-	if (client_manifest) {
+	if (client_manifest && output_config.bundleStrategy === 'split') {
 		root_stylesheets = find_deps(
 			client_manifest,
 			`${normalizePath(kit.outDir)}/generated/client-optimized/app.js`,
