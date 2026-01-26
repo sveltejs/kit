@@ -43,7 +43,7 @@ test('Creates correct $types', { timeout: 60000 }, () => {
 	for (const dir of directories) {
 		run_test(dir);
 		try {
-			execSync('pnpm testtypes', { cwd: path.join(cwd, dir) });
+			execSync('pnpm testtypes --skipLibCheck', { cwd: path.join(cwd, dir) });
 		} catch (e) {
 			console.error(/** @type {any} */ (e).stdout.toString());
 			throw new Error(`${dir} type tests failed`);

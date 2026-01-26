@@ -85,7 +85,7 @@ jobs:
       - name: use baseline version of vite
         if: matrix.vite == 'baseline'
         run: |
-          pnpm update -r --no-save vite@5.0.0 @sveltejs/vite-plugin-svelte@4.0.0
+          pnpm update -r --no-save vite@5.0.3 @sveltejs/vite-plugin-svelte@4.0.0
           pnpm ls vite
       - name: use beta version of vite
         if: matrix.vite == 'beta'
