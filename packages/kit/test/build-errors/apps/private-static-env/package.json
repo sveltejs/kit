@@ -2,6 +2,7 @@
 	"name": "private-static-env",
 	"version": "0.0.1",
 	"private": true,
+	"type": "module",
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
@@ -17,6 +18,5 @@
 		"svelte-check": "catalog:",
 		"typescript": "^5.5.4",
 		"vite": "catalog:"
-	},
-	"type": "module"
+	}
 }

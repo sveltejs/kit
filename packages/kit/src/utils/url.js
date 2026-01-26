@@ -98,7 +98,7 @@ export function make_trackable(url, callback, search_params_callback, allow_hash
 		value: new Proxy(tracked.searchParams, {
 			get(obj, key) {
 				if (key === 'get' || key === 'getAll' || key === 'has') {
-					return (/** @type {string} */ param, /** @type {string[]} */ ...rest) => {
+					return (/** @type {string} */ param /** @type {string[]} */, ...rest) => {
 						search_params_callback(param);
 						return obj[key](param, ...rest);
 					};

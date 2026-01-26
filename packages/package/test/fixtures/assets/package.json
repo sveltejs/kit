@@ -1,15 +1,15 @@
 {
 	"name": "assets",
-	"private": true,
 	"version": "1.0.0",
+	"private": true,
 	"description": "no tampering assets",
-	"peerDependencies": {
-		"svelte": "^4.0.0"
-	},
 	"exports": {
 		".": {
 			"types": "./dist/index.d.ts",
 			"svelte": "./dist/index.js"
 		}
+	},
+	"peerDependencies": {
+		"svelte": "^4.0.0"
 	}
 }

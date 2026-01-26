@@ -22,9 +22,8 @@ const initialized = server.init({
 	env,
 	read: async (file) => {
 		const url = `${origin}/${file}`;
-		const response = await /** @type {{ ASSETS: { fetch: typeof fetch } }} */ (env).ASSETS.fetch(
-			url
-		);
+		const response =
+			await /** @type {{ ASSETS: { fetch: typeof fetch } }} */ (env).ASSETS.fetch(url);
 
 		if (!response.ok) {
 			throw new Error(

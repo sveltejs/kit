@@ -1,6 +1,6 @@
 {
 	"name": "error-no-lib-folder",
-	"private": true,
 	"version": "1.0.0",
+	"private": true,
 	"description": "validate no lib folder error output"
 }

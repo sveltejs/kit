@@ -11,14 +11,20 @@
 		"svelte",
 		"sveltekit"
 	],
+	"homepage": "https://svelte.dev/docs/kit/adapter-static",
+	"license": "MIT",
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/sveltejs/kit.git",
 		"directory": "packages/adapter-static"
 	},
-	"license": "MIT",
-	"homepage": "https://svelte.dev/docs/kit/adapter-static",
+	"files": [
+		"index.js",
+		"index.d.ts",
+		"platforms.js"
+	],
 	"type": "module",
+	"types": "index.d.ts",
 	"exports": {
 		".": {
 			"types": "./index.d.ts",
@@ -26,16 +32,10 @@
 		},
 		"./package.json": "./package.json"
 	},
-	"types": "index.d.ts",
-	"files": [
-		"index.js",
-		"index.d.ts",
-		"platforms.js"
-	],
 	"scripts": {
-		"lint": "prettier --check .",
+		"lint": "oxfmt --check .",
 		"check": "tsc",
-		"format": "pnpm lint --write",
+		"format": "oxfmt --write .",
 		"test": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test"
 	},
 	"devDependencies": {

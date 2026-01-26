@@ -5,14 +5,11 @@ import { sequence } from './sequence.js';
 import { installPolyfills } from '../node/polyfills.js';
 import { noop_span } from '../../runtime/telemetry/noop.js';
 
-const dummy_event = vi.hoisted(
-	() =>
-		/** @type {RequestEvent} */ ({
-			tracing: {
-				root: {}
-			}
-		})
-);
+const dummy_event = vi.hoisted(() => /** @type {RequestEvent} */ ({
+	tracing: {
+		root: {}
+	}
+}));
 
 vi.mock(import('@sveltejs/kit/internal/server'), async (actualPromise) => {
 	const actual = await actualPromise();

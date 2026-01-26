@@ -10,22 +10,13 @@
 		"sveltekit",
 		"vercel"
 	],
+	"homepage": "https://svelte.dev/docs/kit/adapter-vercel",
+	"license": "MIT",
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/sveltejs/kit.git",
 		"directory": "packages/adapter-vercel"
 	},
-	"license": "MIT",
-	"homepage": "https://svelte.dev/docs/kit/adapter-vercel",
-	"type": "module",
-	"exports": {
-		".": {
-			"types": "./index.d.ts",
-			"import": "./index.js"
-		},
-		"./package.json": "./package.json"
-	},
-	"types": "index.d.ts",
 	"files": [
 		"files",
 		"index.js",
@@ -33,9 +24,18 @@
 		"index.d.ts",
 		"ambient.d.ts"
 	],
+	"type": "module",
+	"types": "index.d.ts",
+	"exports": {
+		".": {
+			"types": "./index.d.ts",
+			"import": "./index.js"
+		},
+		"./package.json": "./package.json"
+	},
 	"scripts": {
-		"lint": "prettier --check .",
-		"format": "pnpm lint --write",
+		"lint": "oxfmt --check .",
+		"format": "oxfmt --write .",
 		"check": "tsc",
 		"test": "vitest run"
 	},

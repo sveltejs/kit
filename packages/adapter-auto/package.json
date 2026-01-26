@@ -11,14 +11,21 @@
 		"svelte",
 		"sveltekit"
 	],
+	"homepage": "https://svelte.dev/docs/kit/adapter-auto",
+	"license": "MIT",
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/sveltejs/kit.git",
 		"directory": "packages/adapter-auto"
 	},
-	"license": "MIT",
-	"homepage": "https://svelte.dev/docs/kit/adapter-auto",
+	"files": [
+		"files",
+		"index.js",
+		"index.d.ts",
+		"adapters.js"
+	],
 	"type": "module",
+	"types": "index.d.ts",
 	"exports": {
 		".": {
 			"types": "./index.d.ts",
@@ -26,16 +33,9 @@
 		},
 		"./package.json": "./package.json"
 	},
-	"types": "index.d.ts",
-	"files": [
-		"files",
-		"index.js",
-		"index.d.ts",
-		"adapters.js"
-	],
 	"scripts": {
-		"lint": "prettier --check .",
-		"format": "pnpm lint --write",
+		"lint": "oxfmt --check .",
+		"format": "oxfmt --write .",
 		"check": "tsc",
 		"test": "vitest run"
 	},

@@ -10,14 +10,20 @@
 		"svelte",
 		"sveltekit"
 	],
+	"homepage": "https://svelte.dev/docs/kit/adapter-netlify",
+	"license": "MIT",
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/sveltejs/kit.git",
 		"directory": "packages/adapter-netlify"
 	},
-	"license": "MIT",
-	"homepage": "https://svelte.dev/docs/kit/adapter-netlify",
+	"files": [
+		"files",
+		"index.js",
+		"index.d.ts"
+	],
 	"type": "module",
+	"types": "index.d.ts",
 	"exports": {
 		".": {
 			"types": "./index.d.ts",
@@ -25,18 +31,12 @@
 		},
 		"./package.json": "./package.json"
 	},
-	"types": "index.d.ts",
-	"files": [
-		"files",
-		"index.js",
-		"index.d.ts"
-	],
 	"scripts": {
 		"dev": "rollup -cw",
 		"build": "rollup -c",
 		"check": "tsc",
-		"lint": "prettier --check .",
-		"format": "pnpm lint --write",
+		"lint": "oxfmt --check .",
+		"format": "oxfmt --write .",
 		"test": "pnpm test:unit && pnpm test:integration",
 		"test:unit": "vitest run",
 		"test:integration": "pnpm build && pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test",

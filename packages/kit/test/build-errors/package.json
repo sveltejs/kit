@@ -1,12 +1,12 @@
 {
 	"name": "test-build-errors",
-	"private": true,
 	"version": "0.0.0-next.0",
+	"private": true,
+	"type": "module",
 	"scripts": {
 		"test": "vitest run",
 		"test:cross-platform:build": "vitest run"
 	},
-	"type": "module",
 	"devDependencies": {
 		"vitest": "catalog:"
 	}

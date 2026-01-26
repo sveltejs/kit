@@ -1,7 +1,7 @@
 {
 	"name": "test-async",
-	"private": true,
 	"version": "0.0.1",
+	"private": true,
 	"type": "module",
 	"scripts": {
 		"dev": "vite dev",

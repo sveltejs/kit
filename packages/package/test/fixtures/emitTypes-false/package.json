@@ -1,15 +1,15 @@
 {
 	"name": "emit-types",
-	"private": true,
 	"version": "1.0.0",
+	"private": true,
 	"description": "emitTypes settings disabled",
 	"type": "module",
-	"peerDependencies": {
-		"svelte": "^4.0.0"
-	},
 	"exports": {
 		".": {
 			"svelte": "./dist/index.js"
 		}
+	},
+	"peerDependencies": {
+		"svelte": "^4.0.0"
 	}
 }

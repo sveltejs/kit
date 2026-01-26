@@ -2,41 +2,41 @@
 	"name": "@sveltejs/enhanced-img",
 	"version": "0.9.3",
 	"description": "Image optimization for your Svelte apps",
+	"keywords": [
+		"component",
+		"enhanced",
+		"image",
+		"plugin",
+		"preprocessor",
+		"svelte",
+		"sveltekit",
+		"vite"
+	],
+	"homepage": "https://svelte.dev/docs/kit/images#sveltejs-enhanced-img",
+	"license": "MIT",
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/sveltejs/kit.git",
 		"directory": "packages/enhanced-img"
 	},
-	"keywords": [
-		"component",
-		"enhanced",
-		"image",
-		"preprocessor",
-		"plugin",
-		"svelte",
-		"sveltekit",
-		"vite"
-	],
-	"license": "MIT",
-	"homepage": "https://svelte.dev/docs/kit/images#sveltejs-enhanced-img",
-	"type": "module",
-	"scripts": {
-		"lint": "prettier --check .",
-		"check": "tsc",
-		"format": "prettier --write .",
-		"test": "pnpm test:unit && pnpm test:integration",
-		"test:unit": "vitest run",
-		"test:integration": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test"
-	},
 	"files": [
 		"src",
 		"types"
 	],
+	"type": "module",
+	"types": "types/index.d.ts",
 	"exports": {
 		"types": "./types/index.d.ts",
 		"import": "./src/index.js"
 	},
-	"types": "types/index.d.ts",
+	"scripts": {
+		"lint": "oxfmt --check .",
+		"check": "tsc",
+		"format": "oxfmt --write .",
+		"test": "pnpm test:unit && pnpm test:integration",
+		"test:unit": "vitest run",
+		"test:integration": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test"
+	},
 	"dependencies": {
 		"magic-string": "^0.30.5",
 		"sharp": "^0.34.1",

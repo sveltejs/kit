@@ -8,14 +8,19 @@
 		"svelte",
 		"sveltekit"
 	],
+	"homepage": "https://svelte.dev",
+	"license": "MIT",
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/sveltejs/kit.git",
 		"directory": "packages/amp"
 	},
-	"license": "MIT",
-	"homepage": "https://svelte.dev",
+	"files": [
+		"index.js",
+		"index.d.ts"
+	],
 	"type": "module",
+	"types": "index.d.ts",
 	"exports": {
 		".": {
 			"types": "./index.d.ts",
@@ -23,15 +28,10 @@
 		},
 		"./package.json": "./package.json"
 	},
-	"types": "index.d.ts",
-	"files": [
-		"index.js",
-		"index.d.ts"
-	],
 	"scripts": {
 		"check": "tsc",
-		"lint": "prettier --check .",
-		"format": "pnpm lint --write"
+		"lint": "oxfmt --check .",
+		"format": "oxfmt --write ."
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:^",

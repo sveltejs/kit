@@ -1,7 +1,8 @@
 {
 	"name": "test-options-2",
-	"private": true,
 	"version": "0.0.1",
+	"private": true,
+	"type": "module",
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
@@ -21,6 +22,5 @@
 		"typescript": "^5.5.4",
 		"valibot": "catalog:",
 		"vite": "catalog:"
-	},
-	"type": "module"
+	}
 }

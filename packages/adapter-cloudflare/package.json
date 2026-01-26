@@ -10,22 +10,13 @@
 		"svelte",
 		"sveltekit"
 	],
+	"homepage": "https://svelte.dev/docs/kit/adapter-cloudflare",
+	"license": "MIT",
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/sveltejs/kit.git",
 		"directory": "packages/adapter-cloudflare"
 	},
-	"license": "MIT",
-	"homepage": "https://svelte.dev/docs/kit/adapter-cloudflare",
-	"type": "module",
-	"exports": {
-		".": {
-			"types": "./index.d.ts",
-			"import": "./index.js"
-		},
-		"./package.json": "./package.json"
-	},
-	"types": "index.d.ts",
 	"files": [
 		"files",
 		"index.js",
@@ -33,10 +24,19 @@
 		"index.d.ts",
 		"ambient.d.ts"
 	],
+	"type": "module",
+	"types": "index.d.ts",
+	"exports": {
+		".": {
+			"types": "./index.d.ts",
+			"import": "./index.js"
+		},
+		"./package.json": "./package.json"
+	},
 	"scripts": {
 		"build": "esbuild src/worker.js --bundle --outfile=files/worker.js --external:SERVER --external:MANIFEST --external:cloudflare:workers --format=esm",
-		"lint": "prettier --check .",
-		"format": "pnpm lint --write",
+		"lint": "oxfmt --check .",
+		"format": "oxfmt --write .",
 		"check": "tsc --skipLibCheck",
 		"test:unit": "vitest run",
 		"test:e2e": "pnpm build && pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test",

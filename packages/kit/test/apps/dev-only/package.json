@@ -1,7 +1,8 @@
 {
 	"name": "test-dev-only",
-	"private": true,
 	"version": "0.0.2-next.0",
+	"private": true,
+	"type": "module",
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
@@ -27,6 +28,5 @@
 		"svelte-check": "catalog:",
 		"typescript": "^5.5.4",
 		"vite": "catalog:"
-	},
-	"type": "module"
+	}
 }

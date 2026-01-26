@@ -1,7 +1,8 @@
 {
 	"name": "test-basics",
-	"private": true,
 	"version": "0.0.2-next.0",
+	"private": true,
+	"type": "module",
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
@@ -33,6 +34,5 @@
 		"valibot": "catalog:",
 		"vite": "catalog:",
 		"vitest": "catalog:"
-	},
-	"type": "module"
+	}
 }

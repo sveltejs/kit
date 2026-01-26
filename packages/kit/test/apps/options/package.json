@@ -1,7 +1,8 @@
 {
 	"name": "test-options",
-	"private": true,
 	"version": "0.0.1",
+	"private": true,
+	"type": "module",
 	"scripts": {
 		"dev": "vite dev -c vite.custom.config.js",
 		"build": "vite build -c vite.custom.config.js --mode custom",
@@ -22,6 +23,5 @@
 		"svelte-check": "catalog:",
 		"typescript": "^5.5.4",
 		"vite": "catalog:"
-	},
-	"type": "module"
+	}
 }

@@ -2,6 +2,7 @@
 	"name": "test-cloudflare-workers",
 	"version": "0.0.1",
 	"private": true,
+	"type": "module",
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
@@ -18,6 +19,5 @@
 		"svelte": "catalog:",
 		"vite": "catalog:",
 		"wrangler": "catalog:"
-	},
-	"type": "module"
+	}
 }
