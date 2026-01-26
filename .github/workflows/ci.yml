@@ -86,7 +86,7 @@ jobs:
       - name: setup overrides for matrix.vite
         if: matrix.vite != 'current'
         run: | # copies catalogs.vite-xxx to overrides in pnpm-workspace.yaml so the subsequent `pnpm install` enforces them
-          yq -yi '. + {overrides: .catalogs."vite-${{matrix.vite}}"}' pnpm-workspace.yaml
+          yq -i '. + {overrides: .catalogs."vite-${{matrix.vite}}"}' pnpm-workspace.yaml
           pnpm install
           pnpm ls vite
       - run: pnpm playwright install ${{ matrix.e2e-browser }}
@@ -105,7 +105,7 @@ jobs:
         uses: actions/upload-artifact@v6
         with:
           retention-days: 3
-          name: test-failure-${{ github.run_id }}-${{ matrix.os }}-${{ matrix.node-version }}-${{ matrix.e2e-browser }}
+          name: test-failure-${{ github.run_id }}-${{ matrix.os }}-${{ matrix.node-version }}-${{ matrix.e2e-browser }}-vite-${{matrix.vite}}
           path: test-results.tar.gz
   test-kit-cross-browser:
     runs-on: ${{ matrix.os }}
