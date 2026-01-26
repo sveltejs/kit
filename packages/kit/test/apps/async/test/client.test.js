@@ -6,7 +6,8 @@ test.skip(({ javaScriptEnabled }) => !javaScriptEnabled);
 
 test.describe('remote functions', () => {
 	test('preloading data works when the page component and server load both import a remote function', async ({
-		page
+		page,
+		clicknav
 	}) => {
 		test.skip(!process.env.DEV, 'remote functions are only analysed in dev mode');
 		await page.goto('/remote/dev');
@@ -15,7 +16,7 @@ test.describe('remote functions', () => {
 			page.waitForTimeout(100), // wait for preloading to start
 			page.waitForLoadState('networkidle') // wait for preloading to finish
 		]);
-		await page.click('a[href="/remote/dev/preload"]');
+		await clicknav('a[href="/remote/dev/preload"]', { waitForURL: '/remote/dev/preload' });
 		await expect(page.locator('p')).toHaveText('foobar');
 	});
 });
