@@ -86,7 +86,7 @@ jobs:
       - name: setup overrides for matrix.vite
         if: matrix.vite != 'current'
         run: | # copies catalogs.vite-xxx to overrides in pnpm-workspace.yaml so the subsequent `pnpm install` enforces them
-          yq -i '. + {overrides: .catalogs."vite-${{matrix.vite}}"}' pnpm-workspace.yaml
+          yq -i '.overrides =.catalogs."vite-${{matrix.vite}}"' pnpm-workspace.yaml
           pnpm install
           pnpm ls vite
       - run: pnpm playwright install ${{ matrix.e2e-browser }}
