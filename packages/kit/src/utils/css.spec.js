@@ -2,271 +2,176 @@ import { assert, describe, test } from 'vitest';
 import { fix_css_urls } from './css.js';
 
 describe('fix_css_urls', () => {
-	test('fixes Vite asset URL', () => {
-		assert.equal(
-			fix_css_urls({
-				css: 'div { background: url(./image.png); }',
-				vite_assets: new Set(['image.png']),
-				static_assets: new Set(),
-				assets: 'https://cdn.example.com/_app/immutable/assets',
-				base: 'https://cdn.example.com'
-			}),
-			'div { background: url(https://cdn.example.com/_app/immutable/assets/image.png); }'
-		);
-	});
+	const cdn_assets = 'https://cdn.example.com/_app/immutable/assets';
+	const cdn_base = 'https://cdn.example.com';
+	const local_assets = './_app/immutable/assets';
+	const local_base = '.';
 
-	test('fixes static asset URL', () => {
-		assert.equal(
-			fix_css_urls({
-				css: 'div { background: url(../../../image.png); }',
-				vite_assets: new Set(),
-				static_assets: new Set(['image.png']),
-				assets: 'https://cdn.example.com/_app/immutable/assets',
-				base: 'https://cdn.example.com'
-			}),
-			'div { background: url(https://cdn.example.com/image.png); }'
-		);
-	});
-
-	test('keeps single quotes', () => {
-		assert.equal(
-			fix_css_urls({
-				css: "div { background: url('../../../image.png'); }",
-				vite_assets: new Set(),
-				static_assets: new Set(['image.png']),
-				assets: 'https://cdn.example.com/_app/immutable/assets',
-				base: 'https://cdn.example.com'
-			}),
-			"div { background: url('https://cdn.example.com/image.png'); }"
-		);
-	});
-
-	test('keeps double-quotes', () => {
-		assert.equal(
-			fix_css_urls({
-				css: 'div { background: url("./image.png"); }',
-				vite_assets: new Set(['image.png']),
-				static_assets: new Set(),
-				assets: 'https://cdn.example.com/_app/immutable/assets',
-				base: 'https://cdn.example.com'
-			}),
-			'div { background: url("https://cdn.example.com/_app/immutable/assets/image.png"); }'
-		);
-	});
-
-	test('works with case-insensitive URL function', () => {
-		assert.equal(
-			fix_css_urls({
-				css: 'div { background: uRl(./image.png); }',
-				vite_assets: new Set(['image.png']),
-				static_assets: new Set(),
-				assets: 'https://cdn.example.com/_app/immutable/assets',
-				base: 'https://cdn.example.com'
-			}),
-			'div { background: uRl(https://cdn.example.com/_app/immutable/assets/image.png); }'
-		);
-	});
-
-	test('works with multiple declarations', () => {
-		const input = `
-		div {
-			background: url(./bg.png);
-			border-image: url(./border.svg);
-			mask: url(./mask.png);
+	test.each([
+		{
+			name: 'uses paths.assets imported asset',
+			css: 'div { background: url(./image.png); }',
+			expected: `div { background: url(${cdn_assets}/image.png); }`,
+			vite_assets: ['image.png'],
+			assets: cdn_assets,
+			base: cdn_base
+		},
+		{
+			name: 'uses paths.base for static asset',
+			css: 'div { background: url(../../../image.png); }',
+			expected: `div { background: url(${cdn_base}/image.png); }`,
+			static_assets: ['image.png'],
+			assets: cdn_assets,
+			base: cdn_base
+		},
+		{
+			name: 'keeps single quotes',
+			css: "div { background: url('../../../image.png'); }",
+			expected: `div { background: url('${cdn_base}/image.png'); }`,
+			static_assets: ['image.png'],
+			assets: cdn_assets,
+			base: cdn_base
+		},
+		{
+			name: 'keeps double-quotes',
+			css: 'div { background: url("./image.png"); }',
+			expected: `div { background: url("${cdn_assets}/image.png"); }`,
+			vite_assets: ['image.png'],
+			assets: cdn_assets,
+			base: cdn_base
+		},
+		{
+			name: 'works with case-insensitive URL function',
+			css: 'div { background: uRl(./image.png); }',
+			expected: `div { background: uRl(${cdn_assets}/image.png); }`,
+			vite_assets: ['image.png'],
+			assets: cdn_assets,
+			base: cdn_base
+		},
+		{
+			name: 'works with multiple declarations',
+			css: `
+				div {
+					background: url(./bg.png);
+					border-image: url(./border.svg);
+					mask: url(./mask.png);
+				}
+			`,
+			expected: `
+				div {
+					background: url(${local_assets}/bg.png);
+					border-image: url(${local_assets}/border.svg);
+					mask: url(${local_assets}/mask.png);
+				}
+			`,
+			vite_assets: ['bg.png', 'border.svg', 'mask.png']
+		},
+		{
+			name: 'ignores URL with leading slash',
+			css: 'div { background: url(/absolute/image.png); }',
+			expected: 'div { background: url(/absolute/image.png); }'
+		},
+		{
+			name: 'ignores URL with protocol',
+			css: `div { background: url(${cdn_base}/image.png); }`,
+			expected: `div { background: url(${cdn_base}/image.png); }`
+		},
+		{
+			name: 'ignores data URL',
+			css: 'div { background: url(data:image/png;base64,abc); }',
+			expected: 'div { background: url(data:image/png;base64,abc); }'
+		},
+		{
+			name: 'ignores URL prefixed with ./ but from the static directory',
+			css: 'div { background: url(./image.png); }',
+			expected: 'div { background: url(./image.png); }',
+			static_assets: ['image.png']
+		},
+		{
+			name: 'ignores URL prefixed with ../../../ but imported',
+			css: 'div { background: url(../../../image.png); }',
+			expected: 'div { background: url(../../../image.png); }',
+			vite_assets: ['image.png']
+		},
+		{
+			name: 'ignores URL prefixed with ../../../ but navigates to deeper levels',
+			css: 'div { background: url(../../../../image.png); }',
+			expected: 'div { background: url(../../../../image.png); }'
+		},
+		{
+			name: 'handles whitespace after opening parenthesis',
+			css: 'div { background: url( ./image.png); }',
+			expected: `div { background: url( ${local_assets}/image.png); }`,
+			vite_assets: ['image.png']
+		},
+		{
+			name: 'handles multiple spaces before quoted path',
+			css: 'div { background: url(  "./image.png"); }',
+			expected: `div { background: url(  "${local_assets}/image.png"); }`,
+			vite_assets: ['image.png']
+		},
+		{
+			name: 'handles tab before single-quoted path',
+			css: "div { background: url(\t'./image.png'); }",
+			expected: `div { background: url(\t'${local_assets}/image.png'); }`,
+			vite_assets: ['image.png']
+		},
+		{
+			name: 'handles url with query string',
+			css: 'div { background: url(./image.png?v=123); }',
+			expected: `div { background: url(${local_assets}/image.png?v=123); }`,
+			vite_assets: ['image.png']
+		},
+		{
+			name: 'handles url with hash fragment',
+			css: "div { background: url('./image.png#section'); }",
+			expected: `div { background: url('${local_assets}/image.png#section'); }`,
+			vite_assets: ['image.png']
+		},
+		{
+			name: 'handles url with both query string and fragment',
+			css: 'div { background: url("./image.png?a=1&b=2#anchor"); }',
+			expected: `div { background: url("${local_assets}/image.png?a=1&b=2#anchor"); }`,
+			vite_assets: ['image.png']
+		},
+		{
+			name: 'handles multiple URLs in a single declaration',
+			css: 'div { background: image-set(url(./a.png) 1x, url(./b.png) 2x); }',
+			expected: `div { background: image-set(url(${local_assets}/a.png) 1x, url(${local_assets}/b.png) 2x); }`,
+			vite_assets: ['a.png', 'b.png']
+		},
+		{
+			name: 'ignores relative url without ./ prefix',
+			css: 'div { background: url(image.png); }',
+			expected: 'div { background: url(image.png); }',
+			vite_assets: ['image.png']
+		},
+		{
+			name: 'handles backslashed quotes',
+			css: "div { background: url('./image.png?\\''); }",
+			expected: `div { background: url('${local_assets}/image.png?\\''); }`,
+			vite_assets: ['image.png']
 		}
-		`;
-		const expected = `
-		div {
-			background: url(./_app/immutable/assets/bg.png);
-			border-image: url(./_app/immutable/assets/border.svg);
-			mask: url(./_app/immutable/assets/mask.png);
+	])(
+		'$name',
+		({
+			css,
+			expected,
+			vite_assets = [],
+			static_assets = [],
+			assets = local_assets,
+			base = local_base
+		}) => {
+			assert.equal(
+				fix_css_urls({
+					css,
+					vite_assets: new Set(vite_assets),
+					static_assets: new Set(static_assets),
+					assets,
+					base
+				}),
+				expected
+			);
 		}
-		`;
-		assert.equal(
-			fix_css_urls({
-				css: input,
-				vite_assets: new Set(['bg.png', 'border.svg', 'mask.png']),
-				static_assets: new Set(),
-				assets: './_app/immutable/assets',
-				base: '.'
-			}),
-			expected
-		);
-	});
-
-	test('does not replace non-relative urls', () => {
-		assert.equal(
-			fix_css_urls({
-				css: 'div { background: url(/absolute/image.png); }',
-				vite_assets: new Set(),
-				static_assets: new Set(),
-				assets: './_app/immutable/assets',
-				base: '.'
-			}),
-			'div { background: url(/absolute/image.png); }'
-		);
-		assert.equal(
-			fix_css_urls({
-				css: 'div { background: url(https://example.com/image.png); }',
-				vite_assets: new Set(),
-				static_assets: new Set(),
-				assets: './_app/immutable/assets',
-				base: '.'
-			}),
-			'div { background: url(https://example.com/image.png); }'
-		);
-		assert.equal(
-			fix_css_urls({
-				css: 'div { background: url(data:image/png;base64,abc); }',
-				vite_assets: new Set(),
-				static_assets: new Set(),
-				assets: './_app/immutable/assets',
-				base: '.'
-			}),
-			'div { background: url(data:image/png;base64,abc); }'
-		);
-	});
-
-	test('does not replace unrelated URLs', () => {
-		assert.equal(
-			fix_css_urls({
-				css: 'div { background: url(./image.png); }',
-				vite_assets: new Set(),
-				static_assets: new Set(['image.png']),
-				assets: './_app/immutable/assets',
-				base: '.'
-			}),
-			'div { background: url(./image.png); }'
-		);
-
-		assert.equal(
-			fix_css_urls({
-				css: 'div { background: url(../../../image.png); }',
-				vite_assets: new Set(),
-				static_assets: new Set(),
-				assets: './_app/immutable/assets',
-				base: '.'
-			}),
-			'div { background: url(../../../image.png); }'
-		);
-
-		assert.equal(
-			fix_css_urls({
-				css: 'div { background: url(../../../../image.png); }',
-				vite_assets: new Set(),
-				static_assets: new Set(),
-				assets: './_app/immutable/assets',
-				base: '.'
-			}),
-			'div { background: url(../../../../image.png); }'
-		);
-	});
-
-	test('handles whitespace after opening parenthesis', () => {
-		assert.equal(
-			fix_css_urls({
-				css: 'div { background: url( ./image.png); }',
-				vite_assets: new Set(['image.png']),
-				static_assets: new Set(),
-				assets: './_app/immutable/assets',
-				base: '.'
-			}),
-			'div { background: url( ./_app/immutable/assets/image.png); }'
-		);
-	});
-
-	test('handles multiple spaces before quoted path', () => {
-		assert.equal(
-			fix_css_urls({
-				css: 'div { background: url(  "./image.png"); }',
-				vite_assets: new Set(['image.png']),
-				static_assets: new Set(),
-				assets: './_app/immutable/assets',
-				base: '.'
-			}),
-			'div { background: url(  "./_app/immutable/assets/image.png"); }'
-		);
-	});
-
-	test('handles tab before single-quoted path', () => {
-		assert.equal(
-			fix_css_urls({
-				css: "div { background: url(\t'./image.png'); }",
-				vite_assets: new Set(['image.png']),
-				static_assets: new Set(),
-				assets: './_app/immutable/assets',
-				base: '.'
-			}),
-			"div { background: url(\t'./_app/immutable/assets/image.png'); }"
-		);
-	});
-
-	test('handles url with query string', () => {
-		assert.equal(
-			fix_css_urls({
-				css: 'div { background: url(./image.png?v=123); }',
-				vite_assets: new Set(['image.png']),
-				static_assets: new Set(),
-				assets: './_app/immutable/assets',
-				base: '.'
-			}),
-			'div { background: url(./_app/immutable/assets/image.png?v=123); }'
-		);
-	});
-
-	test('handles url with hash fragment', () => {
-		assert.equal(
-			fix_css_urls({
-				css: "div { background: url('./image.png#section'); }",
-				vite_assets: new Set(['image.png']),
-				static_assets: new Set(),
-				assets: './_app/immutable/assets',
-				base: '.'
-			}),
-			"div { background: url('./_app/immutable/assets/image.png#section'); }"
-		);
-	});
-
-	test('handles url with both query string and fragment', () => {
-		assert.equal(
-			fix_css_urls({
-				css: 'div { background: url("./image.png?a=1&b=2#anchor"); }',
-				vite_assets: new Set(['image.png']),
-				static_assets: new Set(),
-				assets: './_app/immutable/assets',
-				base: '.'
-			}),
-			'div { background: url("./_app/immutable/assets/image.png?a=1&b=2#anchor"); }'
-		);
-	});
-
-	test('handles multiple URLs in a single declaration', () => {
-		const input = 'div { background: image-set(url(./a.png) 1x, url(./b.png) 2x); }';
-		const expected =
-			'div { background: image-set(url(./_app/immutable/assets/a.png) 1x, url(./_app/immutable/assets/b.png) 2x); }';
-
-		assert.equal(
-			fix_css_urls({
-				css: input,
-				vite_assets: new Set(['a.png', 'b.png']),
-				static_assets: new Set(),
-				assets: './_app/immutable/assets',
-				base: '.'
-			}),
-			expected
-		);
-	});
-
-	test('does not replace relative url without ./ prefix', () => {
-		assert.equal(
-			fix_css_urls({
-				css: 'div { background: url(image.png); }',
-				vite_assets: new Set(['image.png']),
-				static_assets: new Set(),
-				assets: './_app/immutable/assets',
-				base: '.'
-			}),
-			'div { background: url(image.png); }'
-		);
-	});
+	);
 });
