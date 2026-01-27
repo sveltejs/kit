@@ -48,6 +48,15 @@ export function fix_css_urls({ css, vite_assets, static_assets, paths_assets, ba
 		return css;
 	}
 
+	// safe guard in case of trailing slashes (but this should never happen)
+	if (paths_assets.endsWith('/')) {
+		paths_assets = paths_assets.slice(0, -1);
+	}
+
+	if (base.endsWith('/')) {
+		base = base.slice(0, -1);
+	}
+
 	const s = new MagicString(css);
 
 	const parsed = parse(css);
