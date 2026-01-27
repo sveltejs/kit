@@ -9,11 +9,11 @@ describe('fix_css_urls', () => {
 
 	test.each([
 		{
-			name: 'uses paths.assets imported asset',
+			name: 'uses paths.assets for assets processed by Vite',
 			css: 'div { background: url(./image.png); }',
 			expected: `div { background: url(${cdn_assets}/image.png); }`,
 			vite_assets: ['image.png'],
-			assets: cdn_assets,
+			paths_assets: cdn_assets,
 			base: cdn_base
 		},
 		{
@@ -21,7 +21,7 @@ describe('fix_css_urls', () => {
 			css: 'div { background: url(../../../image.png); }',
 			expected: `div { background: url(${cdn_base}/image.png); }`,
 			static_assets: ['image.png'],
-			assets: cdn_assets,
+			paths_assets: cdn_assets,
 			base: cdn_base
 		},
 		{
@@ -29,7 +29,7 @@ describe('fix_css_urls', () => {
 			css: "div { background: url('../../../image.png'); }",
 			expected: `div { background: url('${cdn_base}/image.png'); }`,
 			static_assets: ['image.png'],
-			assets: cdn_assets,
+			paths_assets: cdn_assets,
 			base: cdn_base
 		},
 		{
@@ -37,7 +37,7 @@ describe('fix_css_urls', () => {
 			css: 'div { background: url("./image.png"); }',
 			expected: `div { background: url("${cdn_assets}/image.png"); }`,
 			vite_assets: ['image.png'],
-			assets: cdn_assets,
+			paths_assets: cdn_assets,
 			base: cdn_base
 		},
 		{
@@ -45,7 +45,7 @@ describe('fix_css_urls', () => {
 			css: 'div { background: uRl(./image.png); }',
 			expected: `div { background: uRl(${cdn_assets}/image.png); }`,
 			vite_assets: ['image.png'],
-			assets: cdn_assets,
+			paths_assets: cdn_assets,
 			base: cdn_base
 		},
 		{
@@ -171,7 +171,7 @@ describe('fix_css_urls', () => {
 			expected,
 			vite_assets = [],
 			static_assets = [],
-			assets = local_assets,
+			paths_assets = local_assets,
 			base = local_base
 		}) => {
 			assert.equal(
@@ -179,7 +179,7 @@ describe('fix_css_urls', () => {
 					css,
 					vite_assets: new Set(vite_assets),
 					static_assets: new Set(static_assets),
-					assets,
+					paths_assets,
 					base
 				}),
 				expected

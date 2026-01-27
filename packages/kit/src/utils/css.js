@@ -37,12 +37,12 @@ const URL_VALUE_REGEX = /url\(\s*(['"]?)(.*?)\1\s*\)/i;
  * 	css: string;
  * 	vite_assets: Set<string>;
  * 	static_assets: Set<string>;
- * 	assets: string;
+ * 	paths_assets: string;
  * 	base: string
  * }} opts
  * @returns {string}
  */
-export function fix_css_urls({ css, vite_assets, static_assets, assets, base }) {
+export function fix_css_urls({ css, vite_assets, static_assets, paths_assets, base }) {
 	// skip parsing if there are no url(...) occurrences
 	if (!css.match(/url\(/i)) {
 		return css;
@@ -76,7 +76,7 @@ export function fix_css_urls({ css, vite_assets, static_assets, assets, base }) 
 
 				// Vite assets
 				if (current_prefix === VITE_ASSET_PREFIX && vite_assets.has(filename)) {
-					new_prefix = assets;
+					new_prefix = paths_assets;
 				}
 				// Static assets
 				else {

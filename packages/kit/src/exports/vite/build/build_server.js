@@ -103,7 +103,7 @@ export async function build_server_nodes(
 				css,
 				vite_assets: eager_assets,
 				static_assets,
-				assets: '${assets}',
+				paths_assets: '${assets}',
 				base: '${base}'
 			});
 			// only convert to a function if there are URLs to replace
