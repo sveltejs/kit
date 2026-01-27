@@ -25,6 +25,20 @@ test.describe('remote functions', () => {
 		await expect(page.locator('#redirected')).toHaveText('redirected');
 	});
 
+	test('query redirects on page load (query on page without boundary)', async ({ page }) => {
+		await page.goto('/remote/query-redirect');
+		await page.click('a[href="/remote/query-redirect/from-page-unhandled"]');
+		await expect(page.locator('#redirected')).toHaveText('redirected');
+	});
+
+	test('query redirects during SSR (direct page load without boundary)', async ({ page }) => {
+		// This tests the SSR case where a query throws a redirect during server-side rendering
+		// without a <svelte:boundary> to catch it. The server should return an HTTP redirect response.
+		// See https://github.com/sveltejs/kit/issues/14883
+		await page.goto('/remote/query-redirect/from-page-unhandled');
+		await expect(page.locator('#redirected')).toHaveText('redirected');
+	});
+
 	test('non-exported queries do not clobber each other', async ({ page }) => {
 		await page.goto('/remote/query-non-exported');
 
