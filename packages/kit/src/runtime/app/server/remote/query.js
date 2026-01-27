@@ -157,7 +157,7 @@ function batch(validate_or_fn, maybe_fn) {
 				event,
 				state,
 				false,
-				async () => (Promise.all(args.map(validate))),
+				async () => Promise.all(args.map(validate)),
 				async (/** @type {any[]} */ input) => {
 					const get_result = await fn(input);
 
@@ -170,7 +170,9 @@ function batch(validate_or_fn, maybe_fn) {
 									type: 'error',
 									error: await handle_error_and_jsonify(event, state, options, error),
 									status:
-										error instanceof HttpError || error instanceof SvelteKitError ? error.status : 500
+										error instanceof HttpError || error instanceof SvelteKitError
+											? error.status
+											: 500
 								};
 							}
 						})
@@ -212,7 +214,7 @@ function batch(validate_or_fn, maybe_fn) {
 							event,
 							state,
 							false,
-							async () => (Promise.all(batched.args.map(validate))),
+							async () => Promise.all(batched.args.map(validate)),
 							async (input) => {
 								const get_result = await fn(input);
 
