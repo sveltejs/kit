@@ -14,10 +14,10 @@ const parse = svelte.parseCss
 			).css;
 		};
 
-/** Capture a single url(...) where there may be many */
+/** Capture a single url(...) so we can process them one at a time */
 const URL_DECLARATION_REGEX = /url\(\s*[^)]*\)/gi;
 
-/** Captures the URL value from a CSS url(...) */
+/** Captures the value inside a CSS url(...) */
 const URL_VALUE_REGEX = /url\(\s*(['"]?)(.*?)\1\s*\)/i;
 
 /** Splits the URL if there's a query string or hash fragment */
@@ -83,7 +83,7 @@ export function fix_css_urls({ css, vite_assets, static_assets, paths_assets, ba
 
 				// Check if it's an asset processed by Vite...
 				let current_prefix = url_without_hash_or_query.slice(0, VITE_ASSET_PREFIX.length);
-				let [filename] = url_without_hash_or_query.slice(VITE_ASSET_PREFIX.length);
+				let filename = url_without_hash_or_query.slice(VITE_ASSET_PREFIX.length);
 				const decoded = decodeURIComponent(filename);
 
 				if (current_prefix === VITE_ASSET_PREFIX && vite_assets.has(decoded)) {
@@ -91,7 +91,7 @@ export function fix_css_urls({ css, vite_assets, static_assets, paths_assets, ba
 				} else {
 					// ...or if it's from the static directory
 					current_prefix = url_without_hash_or_query.slice(0, STATIC_ASSET_PREFIX.length);
-					[filename] = url_without_hash_or_query.slice(STATIC_ASSET_PREFIX.length);
+					filename = url_without_hash_or_query.slice(STATIC_ASSET_PREFIX.length);
 					const decoded = decodeURIComponent(filename);
 
 					if (current_prefix === STATIC_ASSET_PREFIX && static_assets.has(decoded)) {

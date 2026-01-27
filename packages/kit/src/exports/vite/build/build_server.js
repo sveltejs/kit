@@ -90,7 +90,9 @@ export async function build_server_nodes(
 		// Although `paths.assets` is static, we need to pass in a fake path
 		// `/_svelte_kit_assets` at runtime when running `vite preview`
 		if (kit.paths.assets || kit.paths.relative) {
-			const static_assets = new Set(manifest_data.assets.map((a) => a.file));
+			const static_assets = new Set(
+				manifest_data.assets.map((asset) => decodeURIComponent(asset.file))
+			);
 
 			prepare_css_for_inlining = (css, eager_assets) => {
 				const transformed_css = fix_css_urls({
