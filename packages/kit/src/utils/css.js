@@ -14,9 +14,7 @@ const parse = svelte.parseCss
 			).css;
 		};
 
-const COMMENT_REGEX = /\/\*.*\*\//g;
-
-const STRING_REGEX = /(['"]).*?\1/g;
+const SKIP_PARSING_REGEX = /url\(/i;
 
 /** Capture a single url(...) so we can process them one at a time */
 const URL_FUNCTION_REGEX = /url\(\s*.*?\)/gi;
@@ -47,7 +45,7 @@ const AST_OFFSET = '<style>'.length;
  */
 export function fix_css_urls({ css, vite_assets, static_assets, paths_assets, base }) {
 	// skip parsing if there are no url(...) occurrences
-	if (!css.match(/url\(/i)) {
+	if (!SKIP_PARSING_REGEX.test(css)) {
 		return css;
 	}
 
@@ -66,29 +64,9 @@ export function fix_css_urls({ css, vite_assets, static_assets, paths_assets, ba
 
 	for (const child of parsed.children) {
 		find_declarations(child, (declaration) => {
-			/** The CSS declaration value without strings and comments */
-			let clean_value = declaration.value;
+			if (!SKIP_PARSING_REGEX.test) return;
 
-			// replace comments with whitespace if the user has not minified their CSS
-			/** @type {RegExpExecArray | null} */
-			let comment_found;
-			COMMENT_REGEX.lastIndex = 0;
-			while ((comment_found = COMMENT_REGEX.exec(clean_value))) {
-				const [comment] = comment_found;
-				const replacement = ' '.repeat(comment.length);
-				clean_value = clean_value.replace(comment, replacement);
-			}
-
-			// temporarily replace string values with whitespace to avoid matching
-			// content inside a string such as 'inside a string url(...)'
-			/** @type {RegExpExecArray | null} */
-			let string_found;
-			STRING_REGEX.lastIndex = 0;
-			while ((string_found = STRING_REGEX.exec(clean_value))) {
-				const [string] = string_found;
-				const replacement = ' '.repeat(string.length);
-				clean_value = clean_value.replace(string, replacement);
-			}
+			const cleaned = tippex_comments_and_strings(declaration.value);
 
 			/** @type {string} */
 			let new_value = declaration.value;
@@ -96,7 +74,7 @@ export function fix_css_urls({ css, vite_assets, static_assets, paths_assets, ba
 			/** @type {RegExpExecArray | null} */
 			let url_function_found;
 			URL_FUNCTION_REGEX.lastIndex = 0;
-			while ((url_function_found = URL_FUNCTION_REGEX.exec(clean_value))) {
+			while ((url_function_found = URL_FUNCTION_REGEX.exec(cleaned))) {
 				const [url_function] = url_function_found;
 
 				// After finding a legitimate url(...), we want to operate on the original
@@ -167,4 +145,64 @@ function find_declarations(rule, callback) {
 		}
 		callback(child);
 	}
+}
+
+/**
+ * Replaces comment and string contents with whitespace.
+ * @param {string} value
+ * @returns {string}
+ */
+function tippex_comments_and_strings(value) {
+	let new_value = '';
+	let escaped = false;
+	let in_url = false;
+	let in_comment = false;
+
+	/** @type {null | '"' | "'"} */
+	let quote_mark = null;
+
+	let i = 0;
+	while (i < value.length) {
+		const char = value[i];
+
+		if (in_comment) {
+			if (char === '*' && value[i + 1] === '/') {
+				in_comment = false;
+				new_value += char;
+			} else {
+				new_value += ' ';
+			}
+		} else if (!quote_mark && !escaped && char === '*' && value[i - 1] === '/') {
+			in_comment = true;
+			new_value += char;
+			// TODO: eat everything until close of comment instead?
+		} else if (escaped) {
+			new_value += '  ';
+			escaped = false;
+		} else if (char === '\\') {
+			escaped = true;
+		} else if (char === quote_mark) {
+			quote_mark = null;
+			new_value += char;
+		} else if (quote_mark) {
+			new_value += ' ';
+		} else if (char === ')') {
+			in_url = false;
+			new_value += char;
+		} else if (quote_mark === null && (char === '"' || char === "'")) {
+			quote_mark = char;
+			new_value += char;
+		} else if (char === '(' && value.slice(-3) === 'url') {
+			in_url = true;
+			new_value += char;
+		} else if (in_url && !quote_mark) {
+			return new_value.trim();
+		} else {
+			new_value += char;
+		}
+
+		i++;
+	}
+
+	return new_value.trim();
 }

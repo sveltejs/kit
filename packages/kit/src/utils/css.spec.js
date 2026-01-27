@@ -170,6 +170,7 @@ describe('fix_css_urls', () => {
 			expected: 'div { background: blue /* url(./image.png) */; }',
 			vite_assets: ['image.png']
 		}
+		// TODO: add edge case test for comment in string and quotes in strings
 	])(
 		'$name',
 		({
