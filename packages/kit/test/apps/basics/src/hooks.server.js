@@ -57,6 +57,10 @@ export const handleError = ({ event, error: e, status, message }) => {
 		message = ev.locals.message;
 	}
 
+	if (event.url.pathname.startsWith('/errors/custom-error')) {
+		event.setStatusCode(422);
+	}
+
 	return event.url.pathname.endsWith('404-fallback')
 		? undefined
 		: { message: `${error.message} (${status} ${message})` };

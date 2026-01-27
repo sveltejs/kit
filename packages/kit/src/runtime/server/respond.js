@@ -198,6 +198,14 @@ export async function internal_respond(request, options, manifest, state) {
 				}
 			}
 		},
+		setStatusCode: (code) => {
+			if (typeof code !== 'number' || code < 100 || code > 599) {
+				throw new Error(
+					`Invalid status code: ${code}. Status code must be a number between 100 and 599`
+				);
+			}
+			event_state.error_status_code = code;
+		},
 		url,
 		isDataRequest: is_data_request,
 		isSubRequest: state.depth > 0,
