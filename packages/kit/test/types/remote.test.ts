@@ -1,6 +1,12 @@
 import { query, prerender, command, form } from '$app/server';
 import { StandardSchemaV1 } from '@standard-schema/spec';
-import { RemotePrerenderFunction, RemoteQueryFunction, invalid } from '@sveltejs/kit';
+import {
+	RemoteForm,
+	RemoteFormInput,
+	RemotePrerenderFunction,
+	RemoteQueryFunction,
+	invalid
+} from '@sveltejs/kit';
 
 const schema: StandardSchemaV1<string> = null as any;
 const schema2: StandardSchemaV1<string, number> = null as any;
@@ -359,6 +365,16 @@ function form_tests() {
 	// doesn't use data
 	const f9 = form(() => Promise.resolve({ success: true }));
 	f9.result?.success === true;
+
+	// generic form
+	function f10<
+		Schema extends StandardSchemaV1<RemoteFormInput, unknown>,
+		Form extends RemoteForm<StandardSchemaV1.InferInput<Schema>, unknown>
+	>(data: StandardSchemaV1.InferInput<Schema>, form: Form) {
+		form.fields.set(data);
+		form.fields.allIssues();
+	}
+	void f10;
 }
 form_tests();
 
