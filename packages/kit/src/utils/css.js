@@ -14,20 +14,20 @@ const parse = svelte.parseCss
 			).css;
 		};
 
-const AST_OFFSET = '<style>'.length;
-
-const VITE_ASSET_PREFIX = './';
-
-const STATIC_ASSET_PREFIX = '../../../';
-
-/** Splits the URL if there's a query string or hash fragment */
-const HASH_OR_QUERY_REGEX = /[#?]/;
-
 /** Capture a single url(...) where there may be many */
 const URL_DECLARATION_REGEX = /url\(\s*[^)]*\)/gi;
 
 /** Captures the URL value from a CSS url(...) */
 const URL_VALUE_REGEX = /url\(\s*(['"]?)(.*?)\1\s*\)/i;
+
+/** Splits the URL if there's a query string or hash fragment */
+const HASH_OR_QUERY_REGEX = /[#?]/;
+
+const VITE_ASSET_PREFIX = './';
+
+const STATIC_ASSET_PREFIX = '../../../';
+
+const AST_OFFSET = '<style>'.length;
 
 /**
  * Vite's static asset handling for the client changes the asset URLs in a CSS
@@ -76,22 +76,22 @@ export function fix_css_urls({ css, vite_assets, static_assets, paths_assets, ba
 				if (!url_value_match) continue;
 
 				const [, , url] = url_value_match;
+				const [url_without_hash_or_query] = url.split(HASH_OR_QUERY_REGEX);
 
 				/** @type {string | undefined} */
 				let new_prefix;
 
-				let current_prefix = url.slice(0, VITE_ASSET_PREFIX.length);
-				let [filename] = url.slice(VITE_ASSET_PREFIX.length).split(HASH_OR_QUERY_REGEX);
+				// Check if it's an asset processed by Vite...
+				let current_prefix = url_without_hash_or_query.slice(0, VITE_ASSET_PREFIX.length);
+				let [filename] = url_without_hash_or_query.slice(VITE_ASSET_PREFIX.length);
 				const decoded = decodeURIComponent(filename);
 
-				// Vite assets
 				if (current_prefix === VITE_ASSET_PREFIX && vite_assets.has(decoded)) {
 					new_prefix = paths_assets;
-				}
-				// Static assets
-				else {
-					current_prefix = url.slice(0, STATIC_ASSET_PREFIX.length);
-					[filename] = url.slice(STATIC_ASSET_PREFIX.length).split(HASH_OR_QUERY_REGEX);
+				} else {
+					// ...or if it's from the static directory
+					current_prefix = url_without_hash_or_query.slice(0, STATIC_ASSET_PREFIX.length);
+					[filename] = url_without_hash_or_query.slice(STATIC_ASSET_PREFIX.length);
 					const decoded = decodeURIComponent(filename);
 
 					if (current_prefix === STATIC_ASSET_PREFIX && static_assets.has(decoded)) {
@@ -110,6 +110,7 @@ export function fix_css_urls({ css, vite_assets, static_assets, paths_assets, ba
 				declaration.start = declaration.start - AST_OFFSET;
 				declaration.end = declaration.end - AST_OFFSET;
 			}
+
 			s.update(declaration.start, declaration.end, `${declaration.property}: ${new_value}`);
 		});
 	}
