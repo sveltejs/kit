@@ -5,7 +5,7 @@ import * as svelte from 'svelte/compiler';
 
 /** @typedef {{ property: string; value: string; start: number; end: number; type: 'Declaration' }} Declaration */
 
-const parser = svelte.parseCss
+const parse = svelte.parseCss
 	? svelte.parseCss
 	: /** @param {string} css */
 		(css) => {
@@ -43,7 +43,7 @@ export function fix_css_urls({ css, vite_assets, static_assets, assets, base }) 
 
 	const s = new MagicString(css);
 
-	const parsed = parser(css);
+	const parsed = parse(css);
 
 	for (const child of parsed.children) {
 		find_declarations(child, (declaration) => {
