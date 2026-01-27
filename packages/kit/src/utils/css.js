@@ -16,8 +16,10 @@ const parse = svelte.parseCss
 
 const COMMENT_REGEX = /\/\*.*\*\//g;
 
+const STRING_REGEX = /(['"]).*?\1/g;
+
 /** Capture a single url(...) so we can process them one at a time */
-const URL_FUNCTION_REGEX = /url\(\s*\S*\)/gi;
+const URL_FUNCTION_REGEX = /url\(\s*.*?\)/gi;
 
 /** Captures the value inside a CSS url(...) */
 const URL_PARAMETER_REGEX = /url\(\s*(['"]?)(.*?)\1\s*\)/i;
@@ -64,31 +66,50 @@ export function fix_css_urls({ css, vite_assets, static_assets, paths_assets, ba
 
 	for (const child of parsed.children) {
 		find_declarations(child, (declaration) => {
+			/** The CSS declaration value without strings and comments */
+			let clean_value = declaration.value;
+
 			// replace comments with whitespace if the user has not minified their CSS
 			/** @type {RegExpExecArray | null} */
-			let match;
+			let comment_found;
 			COMMENT_REGEX.lastIndex = 0;
-			while ((match = COMMENT_REGEX.exec(declaration.value))) {
-				const [comment] = match;
+			while ((comment_found = COMMENT_REGEX.exec(clean_value))) {
+				const [comment] = comment_found;
 				const replacement = ' '.repeat(comment.length);
-				declaration.value = declaration.value.replace(comment, replacement);
+				clean_value = clean_value.replace(comment, replacement);
 			}
 
-			// TODO: replace string values with whitespace
+			// temporarily replace string values with whitespace to avoid matching
+			// content inside a string such as 'inside a string url(...)'
+			/** @type {RegExpExecArray | null} */
+			let string_found;
+			STRING_REGEX.lastIndex = 0;
+			while ((string_found = STRING_REGEX.exec(clean_value))) {
+				const [string] = string_found;
+				const replacement = ' '.repeat(string.length);
+				clean_value = clean_value.replace(string, replacement);
+			}
 
 			/** @type {string} */
 			let new_value = declaration.value;
 
 			/** @type {RegExpExecArray | null} */
-			let url_function_match;
+			let url_function_found;
 			URL_FUNCTION_REGEX.lastIndex = 0;
-			while ((url_function_match = URL_FUNCTION_REGEX.exec(declaration.value))) {
-				const [url_function] = url_function_match;
+			while ((url_function_found = URL_FUNCTION_REGEX.exec(clean_value))) {
+				const [url_function] = url_function_found;
 
-				const url_parameter_match = URL_PARAMETER_REGEX.exec(url_function);
-				if (!url_parameter_match) continue;
+				// After finding a legitimate url(...), we want to operate on the original
+				// that may have a string inside it
+				const original_url_function = declaration.value.slice(
+					url_function_found.index,
+					url_function_found.index + url_function.length
+				);
 
-				const [, , url] = url_parameter_match;
+				const url_parameter_found = URL_PARAMETER_REGEX.exec(original_url_function);
+				if (!url_parameter_found) continue;
+
+				const [, , url] = url_parameter_found;
 				const [url_without_hash_or_query] = url.split(HASH_OR_QUERY_REGEX);
 
 				/** @type {string | undefined} */
