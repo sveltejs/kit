@@ -14,11 +14,13 @@ const parse = svelte.parseCss
 			).css;
 		};
 
+const COMMENT_REGEX = /\/\*.*\*\//g;
+
 /** Capture a single url(...) so we can process them one at a time */
-const URL_DECLARATION_REGEX = /url\(\s*[^)]*\)/gi;
+const URL_FUNCTION_REGEX = /url\(\s*\S*\)/gi;
 
 /** Captures the value inside a CSS url(...) */
-const URL_VALUE_REGEX = /url\(\s*(['"]?)(.*?)\1\s*\)/i;
+const URL_PARAMETER_REGEX = /url\(\s*(['"]?)(.*?)\1\s*\)/i;
 
 /** Splits the URL if there's a query string or hash fragment */
 const HASH_OR_QUERY_REGEX = /[#?]/;
@@ -30,9 +32,8 @@ const STATIC_ASSET_PREFIX = '../../../';
 const AST_OFFSET = '<style>'.length;
 
 /**
- * Vite's static asset handling for the client changes the asset URLs in a CSS
- * file to start with `./` or `../../../`. This is incorrect if we're inlining
- * the CSS or if `paths.assets` is set, so we need to fix them.
+ * We need to fix the asset URLs in the CSS before we inline them into a document
+ * because they are now relative to the document instead of the CSS file.
  * @param {{
  * 	css: string;
  * 	vite_assets: Set<string>;
@@ -63,19 +64,31 @@ export function fix_css_urls({ css, vite_assets, static_assets, paths_assets, ba
 
 	for (const child of parsed.children) {
 		find_declarations(child, (declaration) => {
+			// replace comments with whitespace if the user has not minified their CSS
+			/** @type {RegExpExecArray | null} */
+			let match;
+			COMMENT_REGEX.lastIndex = 0;
+			while ((match = COMMENT_REGEX.exec(declaration.value))) {
+				const [comment] = match;
+				const replacement = ' '.repeat(comment.length);
+				declaration.value = declaration.value.replace(comment, replacement);
+			}
+
+			// TODO: replace string values with whitespace
+
 			/** @type {string} */
 			let new_value = declaration.value;
 
 			/** @type {RegExpExecArray | null} */
-			let url_declaration_match;
-			URL_DECLARATION_REGEX.lastIndex = 0;
-			while ((url_declaration_match = URL_DECLARATION_REGEX.exec(declaration.value))) {
-				const [url_declaration] = url_declaration_match;
+			let url_function_match;
+			URL_FUNCTION_REGEX.lastIndex = 0;
+			while ((url_function_match = URL_FUNCTION_REGEX.exec(declaration.value))) {
+				const [url_function] = url_function_match;
 
-				const url_value_match = URL_VALUE_REGEX.exec(url_declaration);
-				if (!url_value_match) continue;
+				const url_parameter_match = URL_PARAMETER_REGEX.exec(url_function);
+				if (!url_parameter_match) continue;
 
-				const [, , url] = url_value_match;
+				const [, , url] = url_parameter_match;
 				const [url_without_hash_or_query] = url.split(HASH_OR_QUERY_REGEX);
 
 				/** @type {string | undefined} */
