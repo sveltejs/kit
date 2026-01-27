@@ -162,7 +162,7 @@ function find_declarations(rule, callback) {
  * @param {string} value
  * @returns {string}
  */
-function tippex_comments_and_strings(value) {
+export function tippex_comments_and_strings(value) {
 	let new_value = '';
 	let escaped = false;
 	let in_comment = false;
@@ -181,15 +181,16 @@ function tippex_comments_and_strings(value) {
 			} else {
 				new_value += ' ';
 			}
-		} else if (!quote_mark && !escaped && value[i - 1] === '/' && char === '*') {
+		} else if (!quote_mark && char === '/' && value[i + 1] === '*') {
 			in_comment = true;
-			new_value += char;
-			// TODO: eat everything until close of comment instead?
+			new_value += '/*';
+			i++; // skip the '*' since we already added it
 		} else if (escaped) {
-			new_value += '  ';
+			new_value += ' ';
 			escaped = false;
-		} else if (char === '\\') {
+		} else if (quote_mark && char === '\\') {
 			escaped = true;
+			new_value += ' ';
 		} else if (char === quote_mark) {
 			quote_mark = null;
 			new_value += char;
@@ -205,5 +206,5 @@ function tippex_comments_and_strings(value) {
 		i++;
 	}
 
-	return new_value.trim();
+	return new_value;
 }

@@ -1,5 +1,5 @@
 import { assert, describe, test } from 'vitest';
-import { fix_css_urls } from './css.js';
+import { fix_css_urls, tippex_comments_and_strings } from './css.js';
 
 describe('fix_css_urls', () => {
 	const cdn_assets = 'https://cdn.example.com/_app/immutable/assets';
@@ -193,4 +193,76 @@ describe('fix_css_urls', () => {
 			);
 		}
 	);
+});
+
+describe('tippex_comments_and_strings', () => {
+	test.each([
+		// Basic string handling
+		["'hello'", "'     '"],
+		['"hello"', '"     "'],
+		["''", "''"],
+		['""', '""'],
+		["before 'inside' after", "before '      ' after"],
+
+		// Basic comment handling
+		['/* comment */', '/*         */'],
+		['/**/', '/**/'],
+		['/* * */', '/*   */'],
+		['before /* inside */ after', 'before /*        */ after'],
+
+		// Escape sequences inside strings
+		["'it\\'s'", "'     '"],
+		['"say \\"hi\\""', '"          "'],
+		["'test\\\\'", "'      '"],
+		["'a\\\\'", "'   '"], // escaped backslash does not escape following quote
+		["'a\\\\b'", "'    '"], // escaped backslash followed by more content
+
+		// Mixed quotes (no escaping needed)
+		['\'say "hi"\'', "'        '"],
+		['"it\'s"', '"    "'],
+
+		// Comment-like patterns inside strings (should not start comment)
+		["'/* not a comment */'", "'                   '"],
+		['"/* also not */"', '"              "'],
+
+		// String-like patterns inside comments (should not start string)
+		["/* 'not a string' */", '/*                */'],
+		['/* "also not" */', '/*            */'],
+
+		// Multiple constructs
+		["'a' and 'b'", "' ' and ' '"],
+		['/* a */ and /* b */', '/*   */ and /*   */'],
+		["'str' /* comment */", "'   ' /*         */"],
+		["/* comment */ 'string'", "/*         */ '      '"],
+
+		// Real CSS patterns
+		['url(./image.png)', 'url(./image.png)'],
+		["content: 'url(./fake.png)'", "content: '               '"],
+		['/* url(./x.png) */ url(./y.png)', '/*              */ url(./y.png)'],
+		[
+			"background: url('./a.png') /* fallback */, url('./b.png')",
+			"background: url('       ') /*          */, url('       ')"
+		],
+
+		// Edge cases
+		['a \\/* comment */', 'a \\/*         */'], // backslash outside string should not affect comment detection
+		["'unterminated", "'            "], // unterminated single-quoted string
+		['"unterminated', '"            '], // unterminated double-quoted string
+		['/* unterminated', '/*             '], // unterminated comment
+		['/* start */', '/*       */'], // comment at start
+		["'start'", "'     '"], // string at start
+		['   ', '   '], // whitespace preserved
+		['', ''], // empty input
+		["'\\\\\\\\'", "'    '"], // consecutive escape sequences (two escaped backslashes)
+		["'test\\", "'     "] // escape at end of unterminated string
+	])('%s → %s', (input, expected) => {
+		const result = tippex_comments_and_strings(input);
+		assert.equal(result, expected);
+		assert.equal(
+			input.length,
+			expected.length,
+			'test is correctly formed (input and expected lengths should always match)'
+		);
+		assert.equal(result.length, input.length, 'output length must equal input length');
+	});
 });
