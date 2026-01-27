@@ -156,10 +156,11 @@ function batch(validate_or_fn, maybe_fn) {
 				state,
 				false,
 				args,
-				(array) => Promise.all(array.map(validate)),
+				(array) => array,
 				fn
 			);
-		}
+		},
+		validate
 	};
 
 	/** @type {{ args: any[], resolvers: Array<{resolve: (value: any) => void, reject: (error: any) => void}> }} */
@@ -180,7 +181,7 @@ function batch(validate_or_fn, maybe_fn) {
 			// then execute them as one backend request.
 			return new Promise((resolve, reject) => {
 				// We don't need to deduplicate args here, because get_response already caches/reuses identical calls
-				batching.args.push(arg);
+				batching.args.push(validate(arg));
 				batching.resolvers.push({ resolve, reject });
 
 				if (batching.args.length > 1) return;
@@ -195,7 +196,7 @@ function batch(validate_or_fn, maybe_fn) {
 							state,
 							false,
 							batched.args,
-							(array) => Promise.all(array.map(validate)),
+							(array) => Promise.all(array),
 							fn
 						);
 
