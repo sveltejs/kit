@@ -41,7 +41,7 @@ catalog:
   publint: ^0.3.0
   semver: ^7.5.4
   sirv-cli: ^3.0.0
-  svelte: ^5.48.0
+  svelte: ^5.48.4
   svelte-check: ^4.3.4
   svelte-preprocess: ^6.0.0
   typescript-eslint: ^8.43.0
