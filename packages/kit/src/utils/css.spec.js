@@ -148,8 +148,8 @@ describe('fix_css_urls', () => {
 		},
 		{
 			name: 'handles escaped quotes',
-			css: "div { background: url('./image.png?\\''); }",
-			expected: `div { background: url('${local_assets}/image.png?\\''); }`,
+			css: "div::after { content: \"'\\\"\"; } div { background: url('./image.png?\\''); }",
+			expected: `div::after { content: "'\\""; } div { background: url('${local_assets}/image.png?\\''); }`,
 			vite_assets: ['image.png']
 		},
 		{
@@ -166,11 +166,10 @@ describe('fix_css_urls', () => {
 		},
 		{
 			name: 'ignores url(...) inside a comment',
-			css: 'div { background: blue /* url(./image.png) */; }',
-			expected: 'div { background: blue /* url(./image.png) */; }',
+			css: 'div::before { content: "/*"; } div { background: blue /* url(./image.png) */; }',
+			expected: 'div::before { content: "/*"; } div { background: blue /* url(./image.png) */; }',
 			vite_assets: ['image.png']
 		}
-		// TODO: add edge case test for comment in string and quotes in strings
 	])(
 		'$name',
 		({
