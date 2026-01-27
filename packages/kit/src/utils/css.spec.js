@@ -151,6 +151,18 @@ describe('fix_css_urls', () => {
 			css: "div { background: url('./image.png?\\''); }",
 			expected: `div { background: url('${local_assets}/image.png?\\''); }`,
 			vite_assets: ['image.png']
+		},
+		{
+			name: 'ignores url(...) inside a string',
+			css: "div::after { content: 'url(./image.png)'; }",
+			expected: "div::after { content: 'url(./image.png)'; }",
+			vite_assets: ['image.png']
+		},
+		{
+			name: 'ignores url(...) inside a comment',
+			css: 'div { background: blue /* url(./image.png) */; }',
+			expected: 'div { background: blue /* url(./image.png) */; }',
+			vite_assets: ['image.png']
 		}
 	])(
 		'$name',
