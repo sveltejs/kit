@@ -301,33 +301,12 @@ test.describe('remote function mutations', () => {
 		expect(request_count).toBe(1); // only the command request
 	});
 
-	test('query.batch ssr resolver function has first argument of type Output', async ({ page }) => {
-		await page.goto('/remote/batch_ssr', {
-			waitUntil: 'domcontentloaded'
-		});
+	test('query.batch resolver function always receives validated arguments', async ({ page }) => {
+		await page.goto('/remote/batch-validation');
 
-		const items = page.locator('#ssr_batch div');
-		const count = await items.count();
-		expect(count).toBe(3);
-
-		const textContent = await items.allTextContents();
-
-		expect(textContent).toEqual(['object', 'object', 'object']);
-	});
-
-	test('query.batch csr resolver function has first argument of type Output', async ({ page }) => {
-		await page.goto('/remote/batch_csr', {
-			waitUntil: 'domcontentloaded'
-		});
-
-		await page.locator('body.started').waitFor({ state: 'visible' });
-		const items = page.locator('#csr_batch div');
-		const count = await items.count();
-		expect(count).toBe(3);
-
-		const textContent = await items.allTextContents();
-
-		expect(textContent).toEqual(['object', 'object', 'object']);
+		await expect(page.locator('#phrase')).toHaveText('use the force');
+		await page.locator('button').click();
+		await expect(page.locator('#phrase')).toHaveText('i am your father');
 	});
 
 	// TODO ditto
