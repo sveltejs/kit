@@ -147,9 +147,15 @@ describe('fix_css_urls', () => {
 			vite_assets: ['image.png']
 		},
 		{
-			name: 'handles backslashed quotes',
+			name: 'handles escaped quotes',
 			css: "div { background: url('./image.png?\\''); }",
 			expected: `div { background: url('${local_assets}/image.png?\\''); }`,
+			vite_assets: ['image.png']
+		},
+		{
+			name: 'handles escaped parenthesis',
+			css: "div { background: url('./image.png?\\)'); }",
+			expected: `div { background: url('${local_assets}/image.png?\\)'); }`,
 			vite_assets: ['image.png']
 		},
 		{
