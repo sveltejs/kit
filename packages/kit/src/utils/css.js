@@ -25,9 +25,11 @@ const URL_PARAMETER_REGEX = /url\(\s*(['"]?)(.*?)\1\s*\)/i;
 /** Splits the URL if there's a query string or hash fragment */
 const HASH_OR_QUERY_REGEX = /[#?]/;
 
+/**
+ * Assets handled by Vite that are referenced in the stylesheet always start
+ * with this prefix because Vite emits them into the same directory as the CSS file
+ */
 const VITE_ASSET_PREFIX = './';
-
-const STATIC_ASSET_PREFIX = '../../../';
 
 const AST_OFFSET = '<style>'.length;
 
@@ -39,11 +41,19 @@ const AST_OFFSET = '<style>'.length;
  * 	vite_assets: Set<string>;
  * 	static_assets: Set<string>;
  * 	paths_assets: string;
- * 	base: string
+ * 	base: string;
+ * 	static_asset_prefix: string;
  * }} opts
  * @returns {string}
  */
-export function fix_css_urls({ css, vite_assets, static_assets, paths_assets, base }) {
+export function fix_css_urls({
+	css,
+	vite_assets,
+	static_assets,
+	paths_assets,
+	base,
+	static_asset_prefix
+}) {
 	// skip parsing if there are no url(...) occurrences
 	if (!SKIP_PARSING_REGEX.test(css)) {
 		return css;
@@ -102,11 +112,11 @@ export function fix_css_urls({ css, vite_assets, static_assets, paths_assets, ba
 					new_prefix = paths_assets;
 				} else {
 					// ...or if it's from the static directory
-					current_prefix = url_without_hash_or_query.slice(0, STATIC_ASSET_PREFIX.length);
-					filename = url_without_hash_or_query.slice(STATIC_ASSET_PREFIX.length);
+					current_prefix = url_without_hash_or_query.slice(0, static_asset_prefix.length);
+					filename = url_without_hash_or_query.slice(static_asset_prefix.length);
 					const decoded = decodeURIComponent(filename);
 
-					if (current_prefix === STATIC_ASSET_PREFIX && static_assets.has(decoded)) {
+					if (current_prefix === static_asset_prefix && static_assets.has(decoded)) {
 						new_prefix = base;
 					}
 				}
@@ -155,7 +165,6 @@ function find_declarations(rule, callback) {
 function tippex_comments_and_strings(value) {
 	let new_value = '';
 	let escaped = false;
-	let in_url = false;
 	let in_comment = false;
 
 	/** @type {null | '"' | "'"} */
@@ -172,7 +181,7 @@ function tippex_comments_and_strings(value) {
 			} else {
 				new_value += ' ';
 			}
-		} else if (!quote_mark && !escaped && char === '*' && value[i - 1] === '/') {
+		} else if (!quote_mark && !escaped && value[i - 1] === '/' && char === '*') {
 			in_comment = true;
 			new_value += char;
 			// TODO: eat everything until close of comment instead?
@@ -186,17 +195,9 @@ function tippex_comments_and_strings(value) {
 			new_value += char;
 		} else if (quote_mark) {
 			new_value += ' ';
-		} else if (char === ')') {
-			in_url = false;
-			new_value += char;
 		} else if (quote_mark === null && (char === '"' || char === "'")) {
 			quote_mark = char;
 			new_value += char;
-		} else if (char === '(' && value.slice(-3) === 'url') {
-			in_url = true;
-			new_value += char;
-		} else if (in_url && !quote_mark) {
-			return new_value.trim();
 		} else {
 			new_value += char;
 		}

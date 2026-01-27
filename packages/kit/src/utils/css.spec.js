@@ -186,7 +186,8 @@ describe('fix_css_urls', () => {
 					vite_assets: new Set(vite_assets),
 					static_assets: new Set(static_assets),
 					paths_assets,
-					base
+					base,
+					static_asset_prefix: '../../../'
 				}),
 				expected
 			);

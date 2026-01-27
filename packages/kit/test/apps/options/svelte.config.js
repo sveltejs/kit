@@ -23,7 +23,7 @@ const config = {
 			// while we specify a path for the service worker, we expect it to not exist in the test
 			serviceWorker: 'source/service-worker'
 		},
-		appDir: '_wheee',
+		appDir: '_wheee/nested',
 		inlineStyleThreshold: 1024,
 		outDir: '.custom-out-dir',
 		output: {

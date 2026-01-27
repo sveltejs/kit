@@ -94,13 +94,17 @@ export async function build_server_nodes(
 				manifest_data.assets.map((asset) => decodeURIComponent(asset.file))
 			);
 
+			const segments = /** @type {string} */ (assets_path).split('/');
+			const static_asset_prefix = segments.map(() => '..').join('/') + '/';
+
 			prepare_css_for_inlining = (css, eager_assets) => {
 				const transformed_css = fix_css_urls({
 					css,
 					vite_assets: eager_assets,
 					static_assets,
 					paths_assets: '${assets}',
-					base: '${base}'
+					base: '${base}',
+					static_asset_prefix
 				});
 
 				// only convert to a function if we have adjusted any URLs
