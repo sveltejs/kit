@@ -75,7 +75,7 @@ export function query(validate_or_fn, maybe_fn) {
 		const { event, state } = get_request_store();
 
 		const get_remote_function_result = () =>
-			run_remote_function(event, state, false, arg, validate, fn);
+			run_remote_function(event, state, false, () => validate(arg), fn);
 
 		/** @type {Promise<any> & Partial<RemoteQuery<any>>} */
 		const promise = get_response(__, arg, state, get_remote_function_result);
@@ -160,8 +160,7 @@ function batch(validate_or_fn, maybe_fn) {
 				event,
 				state,
 				false,
-				args,
-				async (array) => (validated = await Promise.all(array.map(validate))),
+				async () => (validated = await Promise.all(args.map(validate))),
 				fn
 			);
 
@@ -217,8 +216,7 @@ function batch(validate_or_fn, maybe_fn) {
 							event,
 							state,
 							false,
-							batched.args,
-							async (array) => (validated = await Promise.all(array.map(validate))),
+							async () => (validated = await Promise.all(batched.args.map(validate))),
 							fn
 						);
 
