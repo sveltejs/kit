@@ -20,7 +20,14 @@ const VITE_ASSET_PREFIX = './';
 
 const STATIC_ASSET_PREFIX = '../../../';
 
-const FRAGMENT_OR_QUERY_REGEX = /[?#]/;
+/** Splits the URL if there's a query string or hash fragment */
+const HASH_OR_QUERY_REGEX = /[#?]/;
+
+/** Capture a single url(...) where there may be many */
+const URL_DECLARATION_REGEX = /url\(\s*[^)]*\)/gi;
+
+/** Captures the URL value from a CSS url(...) */
+const URL_VALUE_REGEX = /url\(\s*(['"]?)(.*?)\1\s*\)/i;
 
 /**
  * Vite's static asset handling for the client changes the asset URLs in a CSS
@@ -52,11 +59,11 @@ export function fix_css_urls({ css, vite_assets, static_assets, assets, base }) 
 
 			/** @type {RegExpExecArray | null} */
 			let url_declaration_match;
-			const url_declaration_regex = /url\(\s*[^)]*\)/gi;
-			while ((url_declaration_match = url_declaration_regex.exec(declaration.value))) {
+			URL_DECLARATION_REGEX.lastIndex = 0;
+			while ((url_declaration_match = URL_DECLARATION_REGEX.exec(declaration.value))) {
 				const [url_declaration] = url_declaration_match;
 
-				const url_value_match = /url\(\s*(['"]?)(.*?)\1\s*\)/i.exec(url_declaration);
+				const url_value_match = URL_VALUE_REGEX.exec(url_declaration);
 				if (!url_value_match) continue;
 
 				const [, , url] = url_value_match;
@@ -65,7 +72,7 @@ export function fix_css_urls({ css, vite_assets, static_assets, assets, base }) 
 				let new_prefix;
 
 				let current_prefix = url.slice(0, VITE_ASSET_PREFIX.length);
-				let [filename] = url.slice(VITE_ASSET_PREFIX.length).split(FRAGMENT_OR_QUERY_REGEX);
+				let [filename] = url.slice(VITE_ASSET_PREFIX.length).split(HASH_OR_QUERY_REGEX);
 
 				// Vite assets
 				if (current_prefix === VITE_ASSET_PREFIX && vite_assets.has(filename)) {
@@ -74,7 +81,7 @@ export function fix_css_urls({ css, vite_assets, static_assets, assets, base }) 
 				// Static assets
 				else {
 					current_prefix = url.slice(0, STATIC_ASSET_PREFIX.length);
-					[filename] = url.slice(STATIC_ASSET_PREFIX.length).split(FRAGMENT_OR_QUERY_REGEX);
+					[filename] = url.slice(STATIC_ASSET_PREFIX.length).split(HASH_OR_QUERY_REGEX);
 
 					if (current_prefix === STATIC_ASSET_PREFIX && static_assets.has(filename)) {
 						new_prefix = base;
