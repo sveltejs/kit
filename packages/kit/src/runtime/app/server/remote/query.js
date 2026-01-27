@@ -153,17 +153,20 @@ function batch(validate_or_fn, maybe_fn) {
 		run: async (args, options) => {
 			const { event, state } = get_request_store();
 
+			/** @type {any[]} */
+			let validated = [];
+
 			const get_result = await run_remote_function(
 				event,
 				state,
 				false,
 				args,
-				(array) => array,
+				async (array) => (validated = await Promise.all(array.map(validate))),
 				fn
 			);
 
 			return Promise.all(
-				args.map(async (arg, i) => {
+				validated.map(async (arg, i) => {
 					try {
 						return { type: 'result', data: get_result(arg, i) };
 					} catch (error) {
@@ -176,8 +179,7 @@ function batch(validate_or_fn, maybe_fn) {
 					}
 				})
 			);
-		},
-		validate
+		}
 	};
 
 	/** @type {{ args: any[], resolvers: Array<{resolve: (value: any) => void, reject: (error: any) => void}> }} */
@@ -198,7 +200,7 @@ function batch(validate_or_fn, maybe_fn) {
 			// then execute them as one backend request.
 			return new Promise((resolve, reject) => {
 				// We don't need to deduplicate args here, because get_response already caches/reuses identical calls
-				batching.args.push(validate(arg));
+				batching.args.push(arg);
 				batching.resolvers.push({ resolve, reject });
 
 				if (batching.args.length > 1) return;
@@ -208,18 +210,21 @@ function batch(validate_or_fn, maybe_fn) {
 					batching = { args: [], resolvers: [] };
 
 					try {
+						/** @type {any[]} */
+						let validated = [];
+
 						const get_result = await run_remote_function(
 							event,
 							state,
 							false,
 							batched.args,
-							(array) => Promise.all(array),
+							async (array) => (validated = await Promise.all(array.map(validate))),
 							fn
 						);
 
 						for (let i = 0; i < batched.resolvers.length; i++) {
 							try {
-								batched.resolvers[i].resolve(get_result(batched.args[i], i));
+								batched.resolvers[i].resolve(get_result(validated[i], i));
 							} catch (error) {
 								batched.resolvers[i].reject(error);
 							}

@@ -572,7 +572,6 @@ export type RemoteInfo =
 			name: string;
 			/** Direct access to the function, for remote functions called from the client */
 			run: (args: any[], options: SSROptions) => Promise<any[]>;
-			validate: (arg: any) => any;
 	  }
 	| {
 			type: 'form';
