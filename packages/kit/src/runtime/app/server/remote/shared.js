@@ -156,7 +156,6 @@ export async function run_remote_function(event, state, allow_cookies, arg, vali
 
 /**
  * Additionally-constrained version of `run_remote_function` that handles the array/validation dance of batching.
- * Uses `Promise.allSettled` so that individual item errors can be captured and returned separately.
  * @template T
  * @param {RequestEvent} event
  * @param {RequestState} state
@@ -171,9 +170,13 @@ export async function run_remote_batch_function(event, state, allow_cookies, arg
 	// In two parts, each with_event, so that runtimes without async local storage can still get the event at the start of the function
 	const validated = await with_request_store(store, () => validate(arg));
 	const resolver = await with_request_store(store, () => fn(validated));
-	return Promise.allSettled(
-		validated.map(async (value, index) => Promise.resolve(resolver(value, index)))
-	);
+	return validated.map((value, index) => {
+		try {
+			return { status: 'fulfilled', value: resolver(value, index) };
+		} catch (e) {
+			return { status: 'rejected', reason: e };
+		}
+	});
 }
 
 /**
