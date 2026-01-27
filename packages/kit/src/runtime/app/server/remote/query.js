@@ -5,6 +5,8 @@ import { get_request_store } from '@sveltejs/kit/internal/server';
 import { create_remote_key, stringify_remote_arg } from '../../../shared.js';
 import { prerendering } from '__sveltekit/environment';
 import { create_validator, get_cache, get_response, run_remote_function } from './shared.js';
+import { handle_error_and_jsonify } from '../../../server/utils.js';
+import { HttpError, SvelteKitError } from '@sveltejs/kit/internal';
 
 /**
  * Creates a remote query. When called from the browser, the function will be invoked on the server via a `fetch` call.
@@ -148,16 +150,31 @@ function batch(validate_or_fn, maybe_fn) {
 		type: 'query_batch',
 		id: '',
 		name: '',
-		run: (args) => {
+		run: async (args, options) => {
 			const { event, state } = get_request_store();
 
-			return run_remote_function(
+			const get_result = await run_remote_function(
 				event,
 				state,
 				false,
 				args,
 				(array) => array,
 				fn
+			);
+
+			return Promise.all(
+				args.map(async (arg, i) => {
+					try {
+						return { type: 'result', data: get_result(arg, i) };
+					} catch (error) {
+						return {
+							type: 'error',
+							error: await handle_error_and_jsonify(event, state, options, error),
+							status:
+								error instanceof HttpError || error instanceof SvelteKitError ? error.status : 500
+						};
+					}
+				})
 			);
 		},
 		validate
