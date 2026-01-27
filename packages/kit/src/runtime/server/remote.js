@@ -1,4 +1,4 @@
-/** @import { ActionResult, RemoteForm, RequestEvent, SSRManifest, Transport } from '@sveltejs/kit' */
+/** @import { ActionResult, RemoteForm, RequestEvent, SSRManifest } from '@sveltejs/kit' */
 /** @import { RemoteFunctionResponse, RemoteInfo, RequestState, SSROptions } from 'types' */
 
 import { json, error } from '@sveltejs/kit';
@@ -74,8 +74,28 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 			const { payloads } = await event.request.json();
 
 			const args = payloads.map((payload) => parse_remote_arg(payload, transport));
-			const results = await info.run(args);
-			return batch_to_response(results, transport, event, state, options);
+			const get_result = await with_request_store({ event, state }, () => info.run(args));
+			const results = await Promise.all(
+				args.map(async (arg, i) => {
+					try {
+						return { type: 'result', data: get_result(arg, i) };
+					} catch (error) {
+						return {
+							type: 'error',
+							error: await handle_error_and_jsonify(event, state, options, error),
+							status:
+								error instanceof HttpError || error instanceof SvelteKitError ? error.status : 500
+						};
+					}
+				})
+			);
+
+			return json(
+				/** @type {RemoteFunctionResponse} */ ({
+					type: 'result',
+					result: stringify(results, transport)
+				})
+			);
 		}
 
 		if (info.type === 'form') {
@@ -320,34 +340,4 @@ export function get_remote_id(url) {
  */
 export function get_remote_action(url) {
 	return url.searchParams.get('/remote');
-}
-
-/**
- * @param {PromiseSettledResult<any>[]} results
- * @param {Transport} transport
- * @param {RequestEvent} event
- * @param {RequestState} state
- * @param {SSROptions} options
- * @returns {Promise<Response>}
- */
-async function batch_to_response(results, transport, event, state, options) {
-	const data = await Promise.all(
-		results.map(async (result) => {
-			if (result.status === 'fulfilled') {
-				return { type: 'result', data: result.value };
-			} else {
-				const err = result.reason;
-				return {
-					type: 'error',
-					error: await handle_error_and_jsonify(event, state, options, err),
-					status: err instanceof HttpError || err instanceof SvelteKitError ? err.status : 500
-				};
-			}
-		})
-	);
-
-	return json({
-		type: 'result',
-		result: stringify(data, transport)
-	});
 }

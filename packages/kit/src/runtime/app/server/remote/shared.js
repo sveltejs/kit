@@ -92,13 +92,18 @@ export function parse_remote_response(data, transport) {
 }
 
 /**
+ * Like `with_event` but removes things from `event` you cannot see/call in remote functions, such as `setHeaders`.
+ * @template T
  * @param {RequestEvent} event
  * @param {RequestState} state
  * @param {boolean} allow_cookies
- * @returns {RequestStore}
+ * @param {any} arg
+ * @param {(arg: any) => any} validate
+ * @param {(arg?: any) => T} fn
  */
-function sanitize_event_for_remote_function(event, state, allow_cookies) {
-	return {
+export async function run_remote_function(event, state, allow_cookies, arg, validate, fn) {
+	/** @type {RequestStore} */
+	const store = {
 		event: {
 			...event,
 			setHeaders: () => {
@@ -135,48 +140,10 @@ function sanitize_event_for_remote_function(event, state, allow_cookies) {
 			is_in_remote_function: true
 		}
 	};
-}
 
-/**
- * Like `with_event` but removes things from `event` you cannot see/call in remote functions, such as `setHeaders`.
- * @template T
- * @param {RequestEvent} event
- * @param {RequestState} state
- * @param {boolean} allow_cookies
- * @param {any} arg
- * @param {(arg: any) => any} validate
- * @param {(arg?: any) => T} fn
- */
-export async function run_remote_function(event, state, allow_cookies, arg, validate, fn) {
-	const store = sanitize_event_for_remote_function(event, state, allow_cookies);
 	// In two parts, each with_event, so that runtimes without async local storage can still get the event at the start of the function
 	const validated = await with_request_store(store, () => validate(arg));
 	return with_request_store(store, () => fn(validated));
-}
-
-/**
- * Additionally-constrained version of `run_remote_function` that handles the array/validation dance of batching.
- * @template T
- * @param {RequestEvent} event
- * @param {RequestState} state
- * @param {boolean} allow_cookies
- * @param {any} arg
- * @param {(arg: any[]) => MaybePromise<any[]>} validate
- * @param {(arg?: any[]) => MaybePromise<(arg: any, idx: number) => T>} fn
- * @returns {Promise<PromiseSettledResult<T>[]>}
- */
-export async function run_remote_batch_function(event, state, allow_cookies, arg, validate, fn) {
-	const store = sanitize_event_for_remote_function(event, state, allow_cookies);
-	// In two parts, each with_event, so that runtimes without async local storage can still get the event at the start of the function
-	const validated = await with_request_store(store, () => validate(arg));
-	const resolver = await with_request_store(store, () => fn(validated));
-	return validated.map((value, index) => {
-		try {
-			return { status: 'fulfilled', value: resolver(value, index) };
-		} catch (e) {
-			return { status: 'rejected', reason: e };
-		}
-	});
 }
 
 /**
