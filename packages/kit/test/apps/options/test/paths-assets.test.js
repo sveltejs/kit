@@ -5,7 +5,7 @@ import { test } from '../../../utils.js';
 test.describe.configure({ mode: 'parallel' });
 
 test.describe('base path', () => {
-  test.skip(!process.env.PATHS_ASSETS);
+	test.skip(!process.env.PATHS_ASSETS);
 
 	test('serves a useful 404 when visiting unprefixed path', async ({ request }) => {
 		const html = await request.get('/slash/', { headers: { Accept: 'text/html' } });
@@ -80,7 +80,7 @@ test.describe('base path', () => {
 });
 
 test.describe('assets path', () => {
-  test.skip(!process.env.PATHS_ASSETS);
+	test.skip(!process.env.PATHS_ASSETS);
 
 	test('serves static assets with correct prefix', async ({ page, request }) => {
 		await page.goto('/path-base/');
@@ -135,6 +135,20 @@ test.describe('inlineStyleThreshold', () => {
 			}
 		});
 		await page.goto('/path-base/inline-style/static-dir');
+		expect(image_loaded).toBeTruthy();
+	});
+
+	test('loads assets with URL encoded characters', async ({ page, javaScriptEnabled }) => {
+		test.skip(!!process.env.DEV || javaScriptEnabled);
+
+		let image_loaded = false;
+		page.on('response', (response) => {
+			console.log(response.url());
+			if (response.url().match(/%E6%84%9B.C8ge1hZN\.\w+\.png$/)) {
+				image_loaded = response.ok();
+			}
+		});
+		await page.goto('/path-base/inline-style/url-encoded');
 		expect(image_loaded).toBeTruthy();
 	});
 
