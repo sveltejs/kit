@@ -82,17 +82,19 @@ export function fix_css_urls({ css, vite_assets, static_assets, paths_assets, ba
 
 				let current_prefix = url.slice(0, VITE_ASSET_PREFIX.length);
 				let [filename] = url.slice(VITE_ASSET_PREFIX.length).split(HASH_OR_QUERY_REGEX);
+				const decoded = decodeURIComponent(filename);
 
 				// Vite assets
-				if (current_prefix === VITE_ASSET_PREFIX && vite_assets.has(filename)) {
+				if (current_prefix === VITE_ASSET_PREFIX && vite_assets.has(decoded)) {
 					new_prefix = paths_assets;
 				}
 				// Static assets
 				else {
 					current_prefix = url.slice(0, STATIC_ASSET_PREFIX.length);
 					[filename] = url.slice(STATIC_ASSET_PREFIX.length).split(HASH_OR_QUERY_REGEX);
+					const decoded = decodeURIComponent(filename);
 
-					if (current_prefix === STATIC_ASSET_PREFIX && static_assets.has(filename)) {
+					if (current_prefix === STATIC_ASSET_PREFIX && static_assets.has(decoded)) {
 						new_prefix = base;
 					}
 				}

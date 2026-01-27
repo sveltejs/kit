@@ -143,8 +143,7 @@ test.describe('inlineStyleThreshold', () => {
 
 		let image_loaded = false;
 		page.on('response', (response) => {
-			console.log(response.url());
-			if (response.url().match(/%E6%84%9B.C8ge1hZN\.\w+\.png$/)) {
+			if (response.url().match(/%E6%84%9B\.\w+\.png$/)) {
 				image_loaded = response.ok();
 			}
 		});
