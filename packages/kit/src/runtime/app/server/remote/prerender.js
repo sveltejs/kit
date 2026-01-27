@@ -131,7 +131,7 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 			}
 
 			const promise = get_response(__, arg, state, () =>
-				run_remote_function(event, state, false, arg, validate, fn)
+				run_remote_function(event, state, false, () => validate(arg), fn)
 			);
 
 			if (state.prerendering) {
