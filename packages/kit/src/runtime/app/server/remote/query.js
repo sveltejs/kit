@@ -178,7 +178,7 @@ function batch(validate_or_fn, maybe_fn) {
 			);
 		}
 
-		const { event, state } = get_request_store();
+		const { state } = get_request_store();
 
 		const get_remote_function_result = () => {
 			// Collect all the calls to the same query in the same macrotask,
@@ -195,20 +195,14 @@ function batch(validate_or_fn, maybe_fn) {
 					batching = { args: [], resolvers: [] };
 
 					try {
-						const result = await run_remote_batch_function(
-							event,
-							state,
-							false,
-							batched.args,
-							(array) => Promise.all(array.map(validate)),
-							fn
-						);
+						const results = await __.run(batched.args);
 
 						for (let i = 0; i < batched.resolvers.length; i++) {
-							try {
-								batched.resolvers[i].resolve(result.resolver(result.validated_args[i], i));
-							} catch (error) {
-								batched.resolvers[i].reject(error);
+							const result = results[i];
+							if (result.status === 'fulfilled') {
+								batched.resolvers[i].resolve(result.value);
+							} else {
+								batched.resolvers[i].reject(result.reason);
 							}
 						}
 					} catch (error) {

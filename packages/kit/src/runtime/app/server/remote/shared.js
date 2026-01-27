@@ -92,6 +92,52 @@ export function parse_remote_response(data, transport) {
 }
 
 /**
+ * @param {RequestEvent} event
+ * @param {RequestState} state
+ * @param {boolean} allow_cookies
+ * @returns {RequestStore}
+ */
+function sanitize_event_for_remote_function(event, state, allow_cookies) {
+	return {
+		event: {
+			...event,
+			setHeaders: () => {
+				throw new Error('setHeaders is not allowed in remote functions');
+			},
+			cookies: {
+				...event.cookies,
+				set: (name, value, opts) => {
+					if (!allow_cookies) {
+						throw new Error('Cannot set cookies in `query` or `prerender` functions');
+					}
+
+					if (opts.path && !opts.path.startsWith('/')) {
+						throw new Error('Cookies set in remote functions must have an absolute path');
+					}
+
+					return event.cookies.set(name, value, opts);
+				},
+				delete: (name, opts) => {
+					if (!allow_cookies) {
+						throw new Error('Cannot delete cookies in `query` or `prerender` functions');
+					}
+
+					if (opts.path && !opts.path.startsWith('/')) {
+						throw new Error('Cookies deleted in remote functions must have an absolute path');
+					}
+
+					return event.cookies.delete(name, opts);
+				}
+			}
+		},
+		state: {
+			...state,
+			is_in_remote_function: true
+		}
+	};
+}
+
+/**
  * Like `with_event` but removes things from `event` you cannot see/call in remote functions, such as `setHeaders`.
  * @template T
  * @param {RequestEvent} event
@@ -102,106 +148,32 @@ export function parse_remote_response(data, transport) {
  * @param {(arg?: any) => T} fn
  */
 export async function run_remote_function(event, state, allow_cookies, arg, validate, fn) {
-	/** @type {RequestStore} */
-	const store = {
-		event: {
-			...event,
-			setHeaders: () => {
-				throw new Error('setHeaders is not allowed in remote functions');
-			},
-			cookies: {
-				...event.cookies,
-				set: (name, value, opts) => {
-					if (!allow_cookies) {
-						throw new Error('Cannot set cookies in `query` or `prerender` functions');
-					}
-
-					if (opts.path && !opts.path.startsWith('/')) {
-						throw new Error('Cookies set in remote functions must have an absolute path');
-					}
-
-					return event.cookies.set(name, value, opts);
-				},
-				delete: (name, opts) => {
-					if (!allow_cookies) {
-						throw new Error('Cannot delete cookies in `query` or `prerender` functions');
-					}
-
-					if (opts.path && !opts.path.startsWith('/')) {
-						throw new Error('Cookies deleted in remote functions must have an absolute path');
-					}
-
-					return event.cookies.delete(name, opts);
-				}
-			}
-		},
-		state: {
-			...state,
-			is_in_remote_function: true
-		}
-	};
-
+	const store = sanitize_event_for_remote_function(event, state, allow_cookies);
 	// In two parts, each with_event, so that runtimes without async local storage can still get the event at the start of the function
 	const validated = await with_request_store(store, () => validate(arg));
 	return with_request_store(store, () => fn(validated));
 }
 
 /**
- * Like `run_remote_function` but returns validated args along with resolver function.
+ * Additionally-constrained version of `run_remote_function` that handles the array/validation dance of batching.
+ * Uses `Promise.allSettled` so that individual item errors can be captured and returned separately.
  * @template T
  * @param {RequestEvent} event
  * @param {RequestState} state
  * @param {boolean} allow_cookies
  * @param {any} arg
- * @param {(arg: any) => any} validate
- * @param {(arg?: any) => T} fn
+ * @param {(arg: any[]) => MaybePromise<any[]>} validate
+ * @param {(arg?: any[]) => MaybePromise<(arg: any, idx: number) => T>} fn
+ * @returns {Promise<PromiseSettledResult<T>[]>}
  */
 export async function run_remote_batch_function(event, state, allow_cookies, arg, validate, fn) {
-	/** @type {RequestStore} */
-	const store = {
-		event: {
-			...event,
-			setHeaders: () => {
-				throw new Error('setHeaders is not allowed in remote functions');
-			},
-			cookies: {
-				...event.cookies,
-				set: (name, value, opts) => {
-					if (!allow_cookies) {
-						throw new Error('Cannot set cookies in `query` or `prerender` functions');
-					}
-
-					if (opts.path && !opts.path.startsWith('/')) {
-						throw new Error('Cookies set in remote functions must have an absolute path');
-					}
-
-					return event.cookies.set(name, value, opts);
-				},
-				delete: (name, opts) => {
-					if (!allow_cookies) {
-						throw new Error('Cannot delete cookies in `query` or `prerender` functions');
-					}
-
-					if (opts.path && !opts.path.startsWith('/')) {
-						throw new Error('Cookies deleted in remote functions must have an absolute path');
-					}
-
-					return event.cookies.delete(name, opts);
-				}
-			}
-		},
-		state: {
-			...state,
-			is_in_remote_function: true
-		}
-	};
-
+	const store = sanitize_event_for_remote_function(event, state, allow_cookies);
 	// In two parts, each with_event, so that runtimes without async local storage can still get the event at the start of the function
 	const validated = await with_request_store(store, () => validate(arg));
-	return {
-		resolver: with_request_store(store, () => fn(validated)),
-		validated_args: validated
-	};
+	const resolver = await with_request_store(store, () => fn(validated));
+	return Promise.allSettled(
+		validated.map(async (value, index) => Promise.resolve(resolver(value, index)))
+	);
 }
 
 /**

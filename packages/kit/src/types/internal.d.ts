@@ -571,9 +571,7 @@ export type RemoteInfo =
 			id: string;
 			name: string;
 			/** Direct access to the function without batching etc logic, for remote functions called from the client */
-			run: (
-				args: any[]
-			) => Promise<{ resolver: (arg: any, idx: number) => any; validated_args: any[] }>;
+			run: (args: any[]) => Promise<Array<PromiseSettledResult<any>>>;
 	  }
 	| {
 			type: 'form';
