@@ -607,9 +607,6 @@ test.describe('Invalidation', () => {
 		baseURL
 	}) => {
 		const res = await request.post(baseURL + '/load/invalidation/forced-goto/reset-states');
-		if(!res.ok()){
-			throw new Error(await res.text());
-		}
 		expect(res.ok()).toBe(true);
 		await page.goto('/load/invalidation/forced-goto');
 		expect(await page.textContent('h1')).toBe('a: 0, b: 0');
