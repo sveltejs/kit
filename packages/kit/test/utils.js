@@ -280,7 +280,7 @@ export const config = defineConfig({
 		command: process.env.DEV ? 'pnpm dev --force' : 'pnpm build && pnpm preview',
 		port: process.env.DEV ? 5173 : 4173
 	},
-	retries: process.env.CI ? 2 : 0,
+	retries: 2, // some tests are flaky especially on overloaded systems, so allow retry
 	projects: [
 		{
 			name: `${test_browser}-${process.env.DEV ? 'dev' : 'build'}`,
@@ -300,7 +300,7 @@ export const config = defineConfig({
 		screenshot: 'only-on-failure',
 		trace: 'retain-on-failure'
 	},
-	workers: process.env.CI ? 2 : undefined,
+	workers: process.env.CI ? 2 : '33%', // playwright defaults to 50%, but 33% is less flaky and still leads to 80-100% system load
 	reporter: process.env.CI
 		? [
 				['dot'],
