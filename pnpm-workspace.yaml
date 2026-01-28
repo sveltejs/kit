@@ -10,6 +10,9 @@ packages:
   - packages/kit/test/build-errors/apps/*
   - '!.test-tmp/**'
   - playgrounds/*
+# pnpm catalogs are currently only suitable for dependencies that
+# wouldn't require publishing a new package version
+# see https://github.com/changesets/changesets/issues/1707
 catalog:
   '@changesets/cli': ^2.29.6
   '@fontsource/libre-barcode-128-text': ^5.1.0
