@@ -115,27 +115,27 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - node-version: 18
+          - node-version: 24
             os: windows-latest
             e2e-browser: 'chromium'
             mode: 'dev'
-          - node-version: 18
+          - node-version: 24
             os: ubuntu-latest
             e2e-browser: 'firefox'
             mode: 'dev'
-          - node-version: 18
+          - node-version: 24
             os: macOS-latest
             e2e-browser: 'webkit'
             mode: 'dev'
-          - node-version: 18
+          - node-version: 24
             os: windows-latest
             e2e-browser: 'chromium'
             mode: 'build'
-          - node-version: 18
+          - node-version: 24
             os: ubuntu-latest
             e2e-browser: 'firefox'
             mode: 'build'
-          - node-version: 18
+          - node-version: 24
             os: macOS-latest
             e2e-browser: 'webkit'
             mode: 'build'
@@ -150,13 +150,6 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: setup overrides for matrix.node
-        if: matrix.node-version == 18
-        run: | # copies catalogs.node-xx to overrides in pnpm-workspace.yaml so the subsequent `pnpm install` enforces them
-          yq -i '.overrides =.catalogs."node-18"' pnpm-workspace.yaml
-          pnpm install --no-frozen-lockfile
-          git checkout pnpm-lock.yaml pnpm-workspace.yaml # revert changes to pnpm files to avoid cache key changes
-          pnpm --dir packages/kit ls vite @sveltejs/vite-plugin-svelte
       - run: pnpm playwright install ${{ matrix.e2e-browser }}
       - run: pnpm run sync-all
       - run: pnpm test:cross-platform:${{ matrix.mode }}
