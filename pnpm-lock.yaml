@@ -81,9 +81,6 @@ catalogs:
     eslint:
       specifier: ^9.34.0
       version: 9.34.0
-    magic-string:
-      specifier: ^0.30.21
-      version: 0.30.21
     polka:
       specifier: ^1.0.0-next.28
       version: 1.0.0-next.28
@@ -466,7 +463,7 @@ importers:
   packages/enhanced-img:
     dependencies:
       magic-string:
-        specifier: 'catalog:'
+        specifier: ^0.30.5
         version: 0.30.21
       sharp:
         specifier: ^0.34.1
@@ -551,7 +548,7 @@ importers:
         specifier: ^4.1.5
         version: 4.1.5
       magic-string:
-        specifier: 'catalog:'
+        specifier: ^0.30.5
         version: 0.30.21
       mrmime:
         specifier: ^2.0.0
