@@ -138,14 +138,20 @@ class BaseProvider {
 		}
 
 		/** @param {(import('types').Csp.Source | import('types').Csp.ActionSource)[] | undefined} directive */
-		const needs_csp = (directive) =>
+		const style_needs_csp = (directive) =>
 			!!directive && !directive.some((value) => value === 'unsafe-inline');
 
-		this.#script_src_needs_csp = needs_csp(effective_script_src);
-		this.#script_src_elem_needs_csp = needs_csp(script_src_elem);
-		this.#style_src_needs_csp = needs_csp(effective_style_src);
-		this.#style_src_attr_needs_csp = needs_csp(style_src_attr);
-		this.#style_src_elem_needs_csp = needs_csp(style_src_elem);
+		/** @param {(import('types').Csp.Source | import('types').Csp.ActionSource)[] | undefined} directive */
+		const script_needs_csp = (directive) =>
+			!!directive &&
+			(!directive.some((value) => value === 'unsafe-inline') ||
+				directive.some((value) => value === 'strict-dynamic'));
+
+		this.#script_src_needs_csp = script_needs_csp(effective_script_src);
+		this.#script_src_elem_needs_csp = script_needs_csp(script_src_elem);
+		this.#style_src_needs_csp = style_needs_csp(effective_style_src);
+		this.#style_src_attr_needs_csp = style_needs_csp(style_src_attr);
+		this.#style_src_elem_needs_csp = style_needs_csp(style_src_elem);
 
 		this.#script_needs_csp = this.#script_src_needs_csp || this.#script_src_elem_needs_csp;
 		this.#style_needs_csp =
