@@ -217,6 +217,11 @@ export async function render_response({
 							).then((r) => r)
 						: maybe_promise;
 
+				if (options.async && 'then' in maybe_promise) {
+					// Ensure rejection is handled before the next microtask
+					rendered.catch(() => {});
+				}
+
 				// TODO 3.0 remove options.async
 				if (options.async) {
 					// we reset this synchronously, rather than after async rendering is complete,
