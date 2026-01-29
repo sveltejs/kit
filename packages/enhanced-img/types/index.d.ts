@@ -3,6 +3,8 @@ import type { Plugin } from 'vite';
 import type { Picture } from 'vite-imagetools';
 import './ambient.js';
 
+export type { Picture } from 'vite-imagetools';
+
 type EnhancedImgAttributes = Omit<HTMLImgAttributes, 'src'> & { src: string | Picture };
 
 // https://svelte.dev/docs/svelte/typescript#enhancing-built-in-dom-types
