@@ -23,27 +23,6 @@ import { PageNodes } from '../../../utils/page_nodes.js';
  */
 const MAX_DEPTH = 10;
 
-// During async SSR, redirects thrown in remote queries can trigger Node's
-// unhandledRejection before render_page's try/catch runs. Ignore Redirect
-// rejections but preserve crash-on-unhandled behavior for everything else.
-const process_handle =
-	typeof process !== 'undefined'
-		? /** @type {NodeJS.Process & { __sveltekit_redirect_handler?: (reason: unknown) => void }} */ (
-				process
-			)
-		: null;
-
-if (process_handle && !process_handle.__sveltekit_redirect_handler) {
-	const should_rethrow = process_handle.listenerCount('unhandledRejection') === 0;
-	/** @param {unknown} reason */
-	const handler = (reason) => {
-		if (reason instanceof Redirect) return;
-		if (should_rethrow) throw reason;
-	};
-	process_handle.__sveltekit_redirect_handler = handler;
-	process_handle.on('unhandledRejection', handler);
-}
-
 /**
  * @param {import('@sveltejs/kit').RequestEvent} event
  * @param {import('types').RequestState} event_state
@@ -358,7 +337,7 @@ export async function render_page(
 			});
 		}
 
-		const response = await render_response({
+		return await render_response({
 			event,
 			event_state,
 			options,
@@ -377,14 +356,7 @@ export async function render_page(
 			data_serializer:
 				ssr === false ? server_data_serializer(event, event_state, options) : data_serializer
 		});
-
-		return response;
 	} catch (e) {
-		const err = normalize_error(e);
-		if (err instanceof Redirect) {
-			return redirect_response(err.status, err.location);
-		}
-
 		// if we end up here, it means the data loaded successfully
 		// but the page failed to render, or that a prerendering error occurred
 		return await respond_with_error({
@@ -394,7 +366,7 @@ export async function render_page(
 			manifest,
 			state,
 			status: 500,
-			error: err,
+			error: e,
 			resolve_opts
 		});
 	}
