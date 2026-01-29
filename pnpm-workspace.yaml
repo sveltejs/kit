@@ -10,6 +10,9 @@ packages:
   - packages/kit/test/build-errors/apps/*
   - '!.test-tmp/**'
   - playgrounds/*
+# pnpm catalogs are currently only suitable for dependencies that
+# wouldn't require publishing a new package version
+# see https://github.com/changesets/changesets/issues/1707
 catalog:
   '@changesets/cli': ^2.29.6
   '@fontsource/libre-barcode-128-text': ^5.1.0
@@ -40,7 +43,7 @@ catalog:
   publint: ^0.3.0
   semver: ^7.5.4
   sirv-cli: ^3.0.0
-  svelte: ^5.46.4
+  svelte: ^5.48.4
   svelte-check: ^4.3.4
   svelte-preprocess: ^6.0.0
   typescript-eslint: ^8.43.0
