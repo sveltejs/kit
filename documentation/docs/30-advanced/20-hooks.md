@@ -183,12 +183,9 @@ export async function handleFetch({ event, request, fetch }) {
 
 #### on the client
 
-This function allows you to modify (or replace) `fetch` requests that happens on the client.
+This function allows you to modify (or replace) the result of an `event.fetch` call or `fetch` call to a server `load`, form action, or remote function.
 
-This allows, for example, to pass custom headers to server when running `load` or `action` function on the server *(inside a `+page.server.ts` or `+layout.server.ts`)*, to automatically includes credentials to requests to your API or to collect logs or metrics.
-
-*Note: on the client, the `event` argument is not passed to the hook.*
-
+For example, you can add custom headers to the request before it reaches a `load` or form action on the server (inside a `+page.server.ts` or `+layout.server.ts` file). This enables you to automatically include credentials for requests to your API or to collect logs and metrics.
 
 ```js
 /// file: src/hooks.client.js
@@ -207,6 +204,8 @@ export async function handleFetch({ request, fetch }) {
 	});
 }
 ```
+
+[!NOTE] In `src/hooks.client.js`, the event argument is not passed to the hook.
 
 
 ### handleError
