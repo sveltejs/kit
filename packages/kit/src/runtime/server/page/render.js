@@ -672,14 +672,14 @@ class Head {
 	}
 
 	build() {
-		return (
-			Head.#accumulate(this.#http_equiv) +
-			Head.#accumulate(this.#link_tags) +
-			Head.#accumulate(this.#script_preloads) +
-			Head.#accumulate(this.#style_tags) +
-			Head.#accumulate(this.#stylesheet_links) +
+		return [
+			Head.#accumulate(this.#http_equiv),
+			Head.#accumulate(this.#link_tags),
+			Head.#accumulate(this.#script_preloads),
+			Head.#accumulate(this.#style_tags),
+			Head.#accumulate(this.#stylesheet_links),
 			this.#rendered
-		);
+		].join('\n\t\t');
 	}
 
 	/**
