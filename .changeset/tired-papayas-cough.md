@@ -2,4 +2,4 @@
 '@sveltejs/enhanced-img': minor
 ---
 
-feat: export type Picture
+feat: re-export the `Picture` type from `vite-imagetools`
