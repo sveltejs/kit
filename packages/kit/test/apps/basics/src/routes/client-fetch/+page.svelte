@@ -4,7 +4,7 @@
 	let header = $state('loading');
 
 	onMount(async () => {
-		const res = await fetch('/api');
+		const res = await fetch('/client-fetch/api');
 		const data = await res.json();
 		header = data.header;
 	});

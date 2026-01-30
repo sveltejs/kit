@@ -1641,3 +1641,31 @@ test.describe('service worker option', () => {
 		}
 	});
 });
+
+test.describe('client handleFetch hook', () => {
+	test('intercepts fetch to server load function', async ({ page, javaScriptEnabled }) => {
+		await page.goto('/client-fetch-load/initialize-client');
+		await page.click('.navigate-to-load');
+
+		if (javaScriptEnabled) {
+			await expect(page.getByTestId('header')).toHaveText('imtheclient');
+		} else {
+			await expect(page.getByTestId('header')).toHaveText('empty');
+		}
+	});
+
+	test('does not run for server load function fetch', async ({ page }) => {
+		await page.goto('/client-fetch-load');
+		await expect(page.getByTestId('header')).toHaveText('empty');
+	});
+
+	test('intercepts fetch requests', async ({ page, javaScriptEnabled }) => {
+		await page.goto('/client-fetch');
+
+		if (javaScriptEnabled) {
+			await expect(page.getByTestId('header')).toHaveText('imtheclient');
+		} else {
+			await expect(page.getByTestId('header')).toHaveText('loading');
+		}
+	});
+});
