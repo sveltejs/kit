@@ -3,7 +3,7 @@ import type { Plugin } from 'vite';
 import type { Picture } from 'vite-imagetools';
 import './ambient.js';
 
-export type { Picture } from 'vite-imagetools';
+export { Picture };
 
 type EnhancedImgAttributes = Omit<HTMLImgAttributes, 'src'> & { src: string | Picture };
 
