@@ -460,7 +460,7 @@ test.describe('remote functions', () => {
 			JSON.stringify({
 				text: 'Hello world',
 				file1: 'a',
-				file2: ['b', 'c']
+				files: ['b', 'c']
 			})
 		);
 	});
@@ -488,7 +488,7 @@ test.describe('remote functions', () => {
 			JSON.stringify({
 				text: 'Hello world',
 				file1: 1024 * 1024 * 10,
-				file2: [1, 1]
+				files: [1, 1]
 			})
 		);
 	});
