@@ -33,7 +33,7 @@
 		"prettier-plugin-svelte": "^3.4.0",
 		"typescript-eslint": "catalog:"
 	},
-	"packageManager": "pnpm@10.23.0",
+	"packageManager": "pnpm@10.27.0",
 	"engines": {
 		"pnpm": ">=9.0.0"
 	},
@@ -41,7 +41,6 @@
 		"onlyBuiltDependencies": [
 			"@parcel/watcher",
 			"esbuild",
-			"netlify-cli",
 			"protobufjs",
 			"rolldown",
 			"sharp",

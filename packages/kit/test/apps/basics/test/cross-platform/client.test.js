@@ -14,15 +14,14 @@ test.describe('a11y', () => {
 
 		await page.goto('/accessibility/a');
 
-		await clicknav('[href="/accessibility/b"]');
-		expect(await page.innerHTML('h1')).toBe('b');
+		await clicknav('[href="/accessibility/b"]', { waitForURL: '/accessibility/b' });
 		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('BODY');
 		await page.keyboard.press(tab);
 
 		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('BUTTON');
 		expect(await page.evaluate(() => (document.activeElement || {}).textContent)).toBe('focus me');
 
-		await clicknav('[href="/accessibility/a"]');
+		await clicknav('[href="/accessibility/a"]', { waitForURL: '/accessibility/a' });
 		expect(await page.innerHTML('h1')).toBe('a');
 		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('BODY');
 
@@ -36,7 +35,9 @@ test.describe('a11y', () => {
 	test('applies autofocus after a navigation', async ({ page, clicknav }) => {
 		await page.goto('/accessibility/autofocus/a');
 
-		await clicknav('[href="/accessibility/autofocus/b"]');
+		await clicknav('[href="/accessibility/autofocus/b"]', {
+			waitForURL: '/accessibility/autofocus/b'
+		});
 		expect(await page.innerHTML('h1')).toBe('b');
 		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('INPUT');
 	});
@@ -388,14 +389,14 @@ test.describe('Scrolling', () => {
 		await page.goto('/anchor');
 		await page.locator('#scroll-anchor').click();
 		const originalScrollY = /** @type {number} */ (await page.evaluate(() => scrollY));
-		await clicknav('#routing-page');
-		await page.goBack();
+		await clicknav('#routing-page', { waitForURL: '/routing/hashes/target' });
 
-		await expect(page).toHaveURL('/anchor#last-anchor-2');
+		await page.goBack();
+		await page.waitForURL('/anchor#last-anchor-2');
 		expect(await page.evaluate(() => scrollY)).toEqual(originalScrollY);
 
 		await page.goBack();
-		await expect(page).toHaveURL('/anchor');
+		await page.waitForURL('/anchor');
 		expect(await page.evaluate(() => scrollY)).toEqual(0);
 	});
 
@@ -734,14 +735,10 @@ test.describe('Prefetching', () => {
 	test('same route hash links work more than once', async ({ page, clicknav, baseURL }) => {
 		await page.goto('/routing/hashes/a');
 
-		await clicknav('[href="#preload"]');
-		expect(page.url()).toBe(`${baseURL}/routing/hashes/a#preload`);
+		await clicknav('[href="#preload"]', { waitForURL: `${baseURL}/routing/hashes/a#preload` });
 
-		await clicknav('[href="/routing/hashes/a"]');
-		expect(page.url()).toBe(`${baseURL}/routing/hashes/a`);
-
-		await clicknav('[href="#preload"]');
-		expect(page.url()).toBe(`${baseURL}/routing/hashes/a#preload`);
+		await clicknav('[href="/routing/hashes/a"]', { waitForURL: `${baseURL}/routing/hashes/a` });
+		await clicknav('[href="#preload"]', { waitForURL: `${baseURL}/routing/hashes/a#preload` });
 	});
 
 	test('does not rerun load on calls to duplicate preload hash route', async ({ app, page }) => {
@@ -802,19 +799,19 @@ test.describe('Routing', () => {
 		expect(await page.textContent('#page-url-hash')).toBe('#target');
 	});
 
-	test('page.url.hash is correctly set on navigation', async ({ page }) => {
+	test('page.url.hash is correctly set on navigation', async ({ page, clicknav }) => {
 		await page.goto('/routing/hashes/pagestate');
-		expect(await page.textContent('#window-hash')).toBe('');
-		expect(await page.textContent('#page-url-hash')).toBe('');
-		await page.locator('[href="#target"]').click();
-		expect(await page.textContent('#window-hash')).toBe('#target');
-		expect(await page.textContent('#page-url-hash')).toBe('#target');
-		await page.locator('[href="/routing/hashes/pagestate"]').click();
+		await expect(page.locator('#window-hash')).toHaveText('');
+		await expect(page.locator('#page-url-hash')).toHaveText('');
+		await clicknav('[href="#target"]');
+		await expect(page.locator('#window-hash')).toHaveText('#target');
+		await expect(page.locator('#page-url-hash')).toHaveText('#target');
+		await clicknav('[href="/routing/hashes/pagestate"]');
 		await expect(page.locator('#window-hash')).toHaveText('#target'); // hashchange doesn't fire for these
 		await expect(page.locator('#page-url-hash')).toHaveText('');
 		await page.goBack();
-		expect(await page.textContent('#window-hash')).toBe('#target');
-		expect(await page.textContent('#page-url-hash')).toBe('#target');
+		await expect(page.locator('#window-hash')).toHaveText('#target');
+		await expect(page.locator('#page-url-hash')).toHaveText('#target');
 	});
 
 	test('clicking on a hash link focuses the associated element', async ({ page }) => {
@@ -832,12 +829,14 @@ test.describe('Routing', () => {
 		baseURL
 	}) => {
 		await page.goto('/data-sveltekit/reload/hash');
-		await page.locator('a[href="#example"]').click();
-		expect(page.url()).toBe(`${baseURL}/data-sveltekit/reload/hash#example`);
-		await clicknav('a[href="/data-sveltekit/reload/hash/new"]');
-		expect(page.url()).toBe(`${baseURL}/data-sveltekit/reload/hash/new`);
+		await clicknav('a[href="#example"]', {
+			waitForURL: `${baseURL}/data-sveltekit/reload/hash#example`
+		});
+		await clicknav('a[href="/data-sveltekit/reload/hash/new"]', {
+			waitForURL: `${baseURL}/data-sveltekit/reload/hash/new`
+		});
 		await page.goBack();
-		expect(page.url()).toBe(`${baseURL}/data-sveltekit/reload/hash#example`);
+		await page.waitForURL(`${baseURL}/data-sveltekit/reload/hash#example`);
 		await expect(page.getByRole('textbox')).toBeVisible();
 	});
 
@@ -862,11 +861,9 @@ test.describe('Routing', () => {
 		await page.goto('/routing/hashes/a');
 
 		await page.locator('[href="#hash-target"]').click();
-		expect(page.url()).toBe(`${baseURL}/routing/hashes/a#hash-target`);
+		await page.waitForURL(`${baseURL}/routing/hashes/a#hash-target`);
 
 		await clicknav('[href="/routing/hashes/b"]');
-		expect(await page.textContent('h1')).toBe('b');
-
 		await expect(page.locator('h1')).toHaveText('b');
 		await page.goBack();
 		await expect(page.locator('h1')).toHaveText('a');
@@ -879,14 +876,16 @@ test.describe('Routing', () => {
 	}) => {
 		await page.goto('/routing/hashes/a');
 
-		await clicknav('[href="#hash-target"]');
-		expect(page.url()).toBe(`${baseURL}/routing/hashes/a#hash-target`);
+		await clicknav('[href="#hash-target"]', {
+			waitForURL: `${baseURL}/routing/hashes/a#hash-target`
+		});
 
-		await clicknav('[href="#replace-state"]');
-		expect(page.url()).toBe(`${baseURL}/routing/hashes/a#replace-state`);
+		await clicknav('[href="#replace-state"]', {
+			waitForURL: `${baseURL}/routing/hashes/a#replace-state`
+		});
 
 		await page.goBack();
-		expect(page.url()).toBe(`${baseURL}/routing/hashes/a`);
+		await page.waitForURL(`${baseURL}/routing/hashes/a`);
 	});
 
 	test('does not normalize external path', async ({ page, start_server }) => {
@@ -927,9 +926,9 @@ test.describe('Routing', () => {
 		// we start watching requests
 		await page.goto('/routing/form-get', { waitUntil: 'load' });
 
-		expect(await page.textContent('h1')).toBe('...');
-		expect(await page.textContent('h2')).toBe('enter');
-		expect(await page.textContent('h3')).toBe('...');
+		await expect(page.locator('h1')).toHaveText('...');
+		await expect(page.locator('h2')).toHaveText('enter');
+		await expect(page.locator('h3')).toHaveText('...');
 
 		/** @type {string[]} */
 		const requests = [];
@@ -939,10 +938,10 @@ test.describe('Routing', () => {
 		await page.locator('button').click();
 
 		// Filter out server-side route resolution request
+		await expect(page.locator('h1')).toHaveText('updated');
+		await expect(page.locator('h2')).toHaveText('form');
+		await expect(page.locator('h3')).toHaveText('bar');
 		expect(requests.filter((r) => !r.includes('__route.js'))).toEqual([]);
-		expect(await page.textContent('h1')).toBe('updated');
-		expect(await page.textContent('h2')).toBe('form');
-		expect(await page.textContent('h3')).toBe('bar');
 	});
 
 	test('responds to <form target="_blank"> submission with new tab', async ({ page }) => {

@@ -1,6 +1,12 @@
 import { query, prerender, command, form } from '$app/server';
 import { StandardSchemaV1 } from '@standard-schema/spec';
-import { RemotePrerenderFunction, RemoteQueryFunction, invalid } from '@sveltejs/kit';
+import {
+	RemoteForm,
+	RemoteFormInput,
+	RemotePrerenderFunction,
+	RemoteQueryFunction,
+	invalid
+} from '@sveltejs/kit';
 
 const schema: StandardSchemaV1<string> = null as any;
 const schema2: StandardSchemaV1<string, number> = null as any;
@@ -360,16 +366,27 @@ function form_tests() {
 	const f9 = form(() => Promise.resolve({ success: true }));
 	f9.result?.success === true;
 
+	// generic form
+	function f10<
+		Schema extends StandardSchemaV1<RemoteFormInput, unknown>,
+		Form extends RemoteForm<StandardSchemaV1.InferInput<Schema>, unknown>
+	>(data: StandardSchemaV1.InferInput<Schema>, form: Form) {
+		form.fields.set(data);
+		form.fields.allIssues();
+	}
+	void f10;
+
 	// file upload progress
-	const f10 = form(null as any as StandardSchemaV1<{ file: File; nonfile: number }>, () => {});
-	f10.fields.file.progress().uploaded;
-	f10.fields.file.progress().total;
+	const f11 = form(null as any as StandardSchemaV1<{ file: File; nonfile: number }>, () => {});
+	f11.fields.file.progress().uploaded;
+	f11.fields.file.progress().total;
+	// readonly:
 	// @ts-expect-error
-	f10.fields.file.progress().uploaded = 123;
+	f11.fields.file.progress().uploaded = 123;
 	// @ts-expect-error
-	f10.fields.file.progress().total = 123;
+	f11.fields.file.progress().total = 123;
 	// @ts-expect-error
-	f10.fields.nonfile.progress();
+	f11.fields.nonfile.progress();
 }
 form_tests();
 
