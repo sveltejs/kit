@@ -9,8 +9,8 @@
 		"prepare": "svelte-kit sync",
 		"check": "svelte-kit sync && tsc && svelte-check",
 		"test": "pnpm test:dev && pnpm test:build",
-		"test:dev": "DEV=true playwright test",
-		"test:build": "playwright test",
+		"test:dev": "DEV=true playwright test && DEV=true PATHS_ASSETS=https://cdn.example.com/stuff playwright test",
+		"test:build": "playwright test && PATHS_ASSETS=https://cdn.example.com/stuff playwright test",
 		"test:server-side-route-resolution:dev": "rm -rf test/errors.json && DEV=true ROUTER_RESOLUTION=server playwright test",
 		"test:server-side-route-resolution:build": "rm -rf test/errors.json && ROUTER_RESOLUTION=server playwright test"
 	},

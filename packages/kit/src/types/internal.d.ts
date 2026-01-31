@@ -435,7 +435,9 @@ export interface SSRNode {
 	server_id?: string;
 
 	/** inlined styles */
-	inline_styles?(): MaybePromise<Record<string, string>>;
+	inline_styles?(): MaybePromise<
+		Record<string, string | ((assets: string, base: string) => string)>
+	>;
 	/** Svelte component */
 	component?: SSRComponentLoader;
 	/** +page.js or +layout.js */
@@ -574,8 +576,8 @@ export type RemoteInfo =
 			type: 'query_batch';
 			id: string;
 			name: string;
-			/** Direct access to the function without batching etc logic, for remote functions called from the client */
-			run: (args: any[]) => Promise<(arg: any, idx: number) => any>;
+			/** Direct access to the function, for remote functions called from the client */
+			run: (args: any[], options: SSROptions) => Promise<any[]>;
 	  }
 	| {
 			type: 'form';
