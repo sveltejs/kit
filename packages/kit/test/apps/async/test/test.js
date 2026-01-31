@@ -443,10 +443,15 @@ test.describe('remote functions', () => {
 			mimeType: 'text/plain',
 			buffer: Buffer.from('a')
 		});
-		await page.locator('input[name="file2"]').setInputFiles({
+		await page.locator('input[name="deep.files[0]"]').setInputFiles({
 			name: 'b.txt',
 			mimeType: 'text/plain',
 			buffer: Buffer.from('b')
+		});
+		await page.locator('input[name="deep.files[1]"]').setInputFiles({
+			name: 'c.txt',
+			mimeType: 'text/plain',
+			buffer: Buffer.from('c')
 		});
 		await page.locator('input[type="checkbox"]').check();
 		await page.locator('button').click();
@@ -455,7 +460,7 @@ test.describe('remote functions', () => {
 			JSON.stringify({
 				text: 'Hello world',
 				file1: 'a',
-				file2: 'b'
+				file2: ['b', 'c']
 			})
 		);
 	});
@@ -467,10 +472,15 @@ test.describe('remote functions', () => {
 			mimeType: 'text/plain',
 			buffer: Buffer.alloc(1024 * 1024 * 10)
 		});
-		await page.locator('input[name="file2"]').setInputFiles({
+		await page.locator('input[name="deep.files[0]"]').setInputFiles({
 			name: 'b.txt',
 			mimeType: 'text/plain',
 			buffer: Buffer.from('b')
+		});
+		await page.locator('input[name="deep.files[1]"]').setInputFiles({
+			name: 'c.txt',
+			mimeType: 'text/plain',
+			buffer: Buffer.from('c')
 		});
 		await page.locator('button').click();
 
@@ -478,8 +488,48 @@ test.describe('remote functions', () => {
 			JSON.stringify({
 				text: 'Hello world',
 				file1: 1024 * 1024 * 10,
-				file2: 1
+				file2: [1, 1]
 			})
 		);
+	});
+	test('file upload progress works', async ({ page, context, javaScriptEnabled }) => {
+		if (!javaScriptEnabled) return;
+		await page.goto('/remote/form/file-upload');
+		const cdp = await context.newCDPSession(page);
+		await cdp.send('Network.emulateNetworkConditions', {
+			offline: false,
+			latency: 0,
+			downloadThroughput: -1,
+			uploadThroughput: 1024 * 1024 * 5 // throttle so it'll take 2 seconds to upload
+		});
+		try {
+			const progress = page.locator('#progress1');
+			expect(progress).toHaveText('{"uploaded":0,"total":0}');
+			await page.locator('input[name="file1"]').setInputFiles({
+				name: 'a.txt',
+				mimeType: 'text/plain',
+				buffer: Buffer.alloc(1024 * 1024 * 10)
+			});
+			expect(progress).toHaveText('{"uploaded":0,"total":10485760}');
+			await page.locator('input[name="deep.files[0]"]').setInputFiles({
+				name: 'b.txt',
+				mimeType: 'text/plain',
+				buffer: Buffer.from('b')
+			});
+			await page.locator('input[name="deep.files[1]"]').setInputFiles({
+				name: 'c.txt',
+				mimeType: 'text/plain',
+				buffer: Buffer.from('c')
+			});
+			await page.locator('button').click();
+			await expect(progress).not.toHaveText('{"uploaded":0,');
+		} finally {
+			await cdp.send('Network.emulateNetworkConditions', {
+				offline: false,
+				latency: 0,
+				downloadThroughput: -1,
+				uploadThroughput: -1
+			});
+		}
 	});
 });
