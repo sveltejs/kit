@@ -19,6 +19,7 @@ export function parse_as_bytes(value) {
  *
  * @param {string | undefined} value - Origin URL with http:// or https:// protocol
  * @returns {string | undefined} The validated origin, or undefined if value is undefined
+ * @throws {Error} If value is provided but invalid
  */
 export function parse_origin(value) {
 	if (value === undefined) {
@@ -28,7 +29,11 @@ export function parse_origin(value) {
 	const trimmed = value.trim();
 
 	if (trimmed === '') {
-		return undefined;
+		throw new Error(
+			`Invalid ORIGIN: empty string. ` +
+				`ORIGIN must be a valid URL with http:// or https:// protocol. ` +
+				`For example: 'http://localhost:3000' or 'https://my.site'`
+		);
 	}
 
 	try {
@@ -36,11 +41,25 @@ export function parse_origin(value) {
 
 		// Verify protocol is http or https
 		if (url.protocol !== 'http:' && url.protocol !== 'https:') {
-			return undefined;
+			throw new Error(
+				`Invalid ORIGIN: '${trimmed}'. ` +
+					`Only http:// and https:// protocols are supported. ` +
+					`Received protocol: ${url.protocol}`
+			);
 		}
 
 		return url.origin;
-	} catch {
-		return undefined;
+	} catch (error) {
+		// Re-throw if already our custom error
+		if (error instanceof Error && error.message.startsWith('Invalid ORIGIN')) {
+			throw error;
+		}
+
+		// URL constructor threw - invalid URL format
+		throw new Error(
+			`Invalid ORIGIN: '${trimmed}'. ` +
+				`ORIGIN must be a valid URL with http:// or https:// protocol. ` +
+				`For example: 'http://localhost:3000' or 'https://my.site'`
+		);
 	}
 }

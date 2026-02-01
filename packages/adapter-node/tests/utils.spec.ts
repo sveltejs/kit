@@ -40,13 +40,10 @@ describe('parse_origin', () => {
 		expect(parse_origin(input)).toBe(expected);
 	});
 
-	test.each([
-		'localhost:3000',
-		'example.com',
-		'',
-		'   ',
-		'ftp://localhost:3000'
-	] as const)('throws error for invalid origin: %s', (input) => {
-		expect(() => parse_origin(input)).toThrow('Invalid ORIGIN');
-	});
+	test.each(['localhost:3000', 'example.com', '', '   ', 'ftp://localhost:3000'] as const)(
+		'throws error for invalid origin: %s',
+		(input) => {
+			expect(() => parse_origin(input)).toThrow('Invalid ORIGIN');
+		}
+	);
 });
