@@ -679,9 +679,9 @@ class Head {
 			...this.#http_equiv,
 			...this.#link_tags,
 			...this.#script_preloads,
+			this.#rendered,
 			...this.#style_tags,
-			...this.#stylesheet_links,
-			this.#rendered
+			...this.#stylesheet_links
 		].join('\n\t\t');
 	}
 
