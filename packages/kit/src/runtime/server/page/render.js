@@ -252,8 +252,7 @@ export async function render_response({
 		rendered = { head: '', html: '', css: { code: '', map: null } };
 	}
 
-	const head = new Head(!!state.prerendering);
-	head.add_rendered(rendered.head);
+	const head = new Head(rendered.head, !!state.prerendering);
 	let body = rendered.html;
 
 	const csp = new Csp(options.csp, {
@@ -653,31 +652,35 @@ export async function render_response({
 }
 
 class Head {
+	#rendered;
 	#prerendering;
-	/** @type {Set<string>} */
-	#http_equiv = new Set();
-	/** @type {Set<string>} */
-	#link_tags = new Set();
-	/** @type {Set<string>} */
-	#script_preloads = new Set();
-	/** @type {Set<string>} */
-	#style_tags = new Set();
-	/** @type {Set<string>} */
-	#stylesheet_links = new Set();
-	#rendered = '';
+	/** @type {string[]} */
+	#http_equiv = [];
+	/** @type {string[]} */
+	#link_tags = [];
+	/** @type {string[]} */
+	#script_preloads = [];
+	/** @type {string[]} */
+	#style_tags = [];
+	/** @type {string[]} */
+	#stylesheet_links = [];
 
-	/** @param {boolean} prerendering */
-	constructor(prerendering) {
+	/**
+	 * @param {string} rendered
+	 * @param {boolean} prerendering
+	 */
+	constructor(rendered, prerendering) {
+		this.#rendered = rendered;
 		this.#prerendering = prerendering;
 	}
 
 	build() {
 		return [
-			Head.#accumulate(this.#http_equiv),
-			Head.#accumulate(this.#link_tags),
-			Head.#accumulate(this.#script_preloads),
-			Head.#accumulate(this.#style_tags),
-			Head.#accumulate(this.#stylesheet_links),
+			...this.#http_equiv,
+			...this.#link_tags,
+			...this.#script_preloads,
+			...this.#style_tags,
+			...this.#stylesheet_links,
 			this.#rendered
 		].join('\n\t\t');
 	}
@@ -687,7 +690,7 @@ class Head {
 	 * @param {string[]} attributes
 	 */
 	add_style(style, attributes) {
-		this.#style_tags.add(
+		this.#style_tags.push(
 			`<style${attributes.length ? ' ' + attributes.join(' ') : ''}>${style}</style>`
 		);
 	}
@@ -697,12 +700,12 @@ class Head {
 	 * @param {string[]} attributes
 	 */
 	add_stylesheet(href, attributes) {
-		this.#stylesheet_links.add(`<link href="${href}" ${attributes.join(' ')}>`);
+		this.#stylesheet_links.push(`<link href="${href}" ${attributes.join(' ')}>`);
 	}
 
 	/** @param {string} href */
 	add_script_preload(href) {
-		this.#script_preloads.add(
+		this.#script_preloads.push(
 			`<link rel="preload" as="script" crossorigin="anonymous" href="${href}">`
 		);
 	}
@@ -713,29 +716,12 @@ class Head {
 	 */
 	add_link_tag(href, attributes) {
 		if (!this.#prerendering) return;
-		this.#link_tags.add(`<link href="${href}" ${attributes.join(' ')}>`);
+		this.#link_tags.push(`<link href="${href}" ${attributes.join(' ')}>`);
 	}
 
 	/** @param {string} tag */
 	add_http_equiv(tag) {
 		if (!this.#prerendering) return;
-		this.#http_equiv.add(tag);
-	}
-
-	/** @param {string} rendered */
-	add_rendered(rendered) {
-		this.#rendered = rendered;
-	}
-
-	/**
-	 * @param {Set<string>} set
-	 * @returns {string}
-	 */
-	static #accumulate(set) {
-		let result = '';
-		for (const item of set) {
-			result += item + '\n\t\t';
-		}
-		return result;
+		this.#http_equiv.push(tag);
 	}
 }
