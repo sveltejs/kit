@@ -143,7 +143,7 @@ How to setup rewrites in production will depend on your deployment platform. If 
 /// file: src/routes/api/[...path]/+server.js
 /** @type {import('./$types').RequestHandler} */
 export function GET({ params, url }) {
-	return fetch(`https://my-api-server.com/${params.path + url.search}`);
+	return fetch(`https://example.com/${params.path + url.search}`);
 }
 ```
 
@@ -195,14 +195,14 @@ Currently ESM Support within the latest Yarn (version 3) is considered [experime
 
 The below seems to work although your results may vary. First create a new application:
 
-```bash
+```sh
 yarn create svelte myapp
 cd myapp
 ```
 
 And enable Yarn Berry:
 
-```bash
+```sh
 yarn set version berry
 yarn install
 ```

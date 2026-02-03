@@ -13,8 +13,8 @@
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "catalog:",
-		"svelte": "^5.35.5",
-		"svelte-check": "^4.1.1",
+		"svelte": "catalog:",
+		"svelte-check": "catalog:",
 		"typescript": "^5.5.4",
 		"vite": "catalog:"
 	},

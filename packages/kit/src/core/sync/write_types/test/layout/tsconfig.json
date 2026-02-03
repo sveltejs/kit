@@ -1,0 +1,20 @@
+{
+	"compilerOptions": {
+		"allowJs": true,
+		"checkJs": true,
+		"noEmit": true,
+		"strict": true,
+		"target": "es2022",
+		"module": "es2022",
+		"moduleResolution": "bundler",
+		"allowSyntheticDefaultImports": true,
+		"baseUrl": ".",
+		"paths": {
+			"@sveltejs/kit": ["../../../../../exports/public"],
+			"types": ["../../../../../types/internal"],
+			"$app/types": ["../../../../../types/ambient.d.ts"]
+		}
+	},
+	"include": ["./**/*.js", "./**/*.ts", ".svelte-kit/non-ambient.d.ts"],
+	"exclude": ["..svelte-kit/**"]
+}

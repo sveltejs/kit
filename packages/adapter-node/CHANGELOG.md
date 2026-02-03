@@ -1,5 +1,104 @@
 # @sveltejs/adapter-node
 
+## 5.5.2
+### Patch Changes
+
+
+- fix: disable gzip and brotli when precompress=false ([#15182](https://github.com/sveltejs/kit/pull/15182))
+
+- Updated dependencies [[`46c1ebd`](https://github.com/sveltejs/kit/commit/46c1ebd9f662f0de499e921bfee2661316449e9d), [`2dd74c8`](https://github.com/sveltejs/kit/commit/2dd74c8c86ae4855c3e9d74d8cf241e86dcd5b36), [`8871b54`](https://github.com/sveltejs/kit/commit/8871b5444413d0c7d7ef4d260996c3b5c359d0b8)]:
+  - @sveltejs/kit@2.50.1
+
+## 5.5.1
+### Patch Changes
+
+
+- fix: add validations for protocol, host, and port header values ([`d9ae9b0`](https://github.com/sveltejs/kit/commit/d9ae9b00b14f5574d109f3fd548f960594346226))
+
+- Updated dependencies [[`81cd545`](https://github.com/sveltejs/kit/commit/81cd545dd78b60ee994a04d8abacb58bf63584d7), [`d9ae9b0`](https://github.com/sveltejs/kit/commit/d9ae9b00b14f5574d109f3fd548f960594346226), [`8ed8155`](https://github.com/sveltejs/kit/commit/8ed8155215b9a74012fecffb942ad9a793b274e5)]:
+  - @sveltejs/kit@2.49.5
+
+## 5.5.0
+### Minor Changes
+
+
+- feat: add env vars for keepAliveTimeout and headersTimeout ([#15125](https://github.com/sveltejs/kit/pull/15125))
+
+## 5.4.0
+### Minor Changes
+
+
+- feat: add [`signal`](https://developer.mozilla.org/en-US/docs/Web/API/Request/signal) property to request ([#14715](https://github.com/sveltejs/kit/pull/14715))
+
+
+### Patch Changes
+
+- Updated dependencies [[`9c933a2`](https://github.com/sveltejs/kit/commit/9c933a29e64c04db03e9150fa4e2d74a894d3d12), [`dedda71`](https://github.com/sveltejs/kit/commit/dedda7184dc04543e2ba6ea3e7f50b3836505463)]:
+  - @sveltejs/kit@2.47.0
+
+## 5.3.3
+### Patch Changes
+
+
+- chore: update "homepage" field in package.json ([#14579](https://github.com/sveltejs/kit/pull/14579))
+
+## 5.3.2
+### Patch Changes
+
+
+- fix: bump bundled sirv version to 3.0.2 ([#14385](https://github.com/sveltejs/kit/pull/14385))
+
+- Updated dependencies [[`e6c3171`](https://github.com/sveltejs/kit/commit/e6c317150d330413a7691c1b00dc94ce121fdb89)]:
+  - @sveltejs/kit@2.38.0
+
+## 5.3.1
+### Patch Changes
+
+
+- fix: avoid erroring on builder properties that only exist on the latest version of SvelteKit ([#14233](https://github.com/sveltejs/kit/pull/14233))
+
+- Updated dependencies [[`f2db41c`](https://github.com/sveltejs/kit/commit/f2db41c0d3a0aefbb080ab6a9aa5822b3e41625c)]:
+  - @sveltejs/kit@2.31.1
+
+## 5.3.0
+### Minor Changes
+
+
+- feat: add `instrumentation.server.ts` for tracing and observability setup ([#13899](https://github.com/sveltejs/kit/pull/13899))
+
+
+### Patch Changes
+
+- Updated dependencies [[`f635678`](https://github.com/sveltejs/kit/commit/f63567812505597b1edc3e01010eca622b03b126), [`f635678`](https://github.com/sveltejs/kit/commit/f63567812505597b1edc3e01010eca622b03b126)]:
+  - @sveltejs/kit@2.31.0
+
+## 5.2.16
+### Patch Changes
+
+
+- fix: handling of PROTOCOL_HEADER and HOST_HEADER env vars ([#14221](https://github.com/sveltejs/kit/pull/14221))
+
+- Updated dependencies [[`ea95533`](https://github.com/sveltejs/kit/commit/ea9553380a9f1b5f3b2fcf3bebd15f900c51d77c)]:
+  - @sveltejs/kit@2.30.1
+
+## 5.2.15
+### Patch Changes
+
+
+- fix: fallback to `host` header if header specified by `HOST_HEADER` is not in request headers ([#11154](https://github.com/sveltejs/kit/pull/11154))
+
+- Updated dependencies [[`6ab60e5`](https://github.com/sveltejs/kit/commit/6ab60e509f28e13dae9e15a4af340e92ec6fcdf3), [`bfdb564`](https://github.com/sveltejs/kit/commit/bfdb5643968f201ead51d890207b9c42e400a227), [`94b30c4`](https://github.com/sveltejs/kit/commit/94b30c468ce6f6d1fa0aa985d86ef9216cff83f2)]:
+  - @sveltejs/kit@2.30.0
+
+## 5.2.14
+### Patch Changes
+
+
+- chore: add `.git` to the end of `package.json` repository url ([#14134](https://github.com/sveltejs/kit/pull/14134))
+
+- Updated dependencies [[`c968aef`](https://github.com/sveltejs/kit/commit/c968aef5727f978244d5160657b4a7ac651384ae)]:
+  - @sveltejs/kit@2.27.3
+
 ## 5.2.13
 ### Patch Changes
 

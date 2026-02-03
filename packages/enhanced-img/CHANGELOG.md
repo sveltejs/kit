@@ -1,5 +1,77 @@
 # @sveltejs/enhanced-img
 
+## 0.9.3
+### Patch Changes
+
+
+- fix: ensure compatibility with vite-plugin-svelte@7 (use api.filter instead of api.idFilter) ([#15179](https://github.com/sveltejs/kit/pull/15179))
+
+## 0.9.2
+### Patch Changes
+
+
+- chore: remove duplicate caching layer ([#14988](https://github.com/sveltejs/kit/pull/14988))
+
+## 0.9.1
+### Patch Changes
+
+
+- fix: update vite-imagetools for caching fixes to avoid crashes ([#14976](https://github.com/sveltejs/kit/pull/14976))
+
+## 0.9.0
+### Minor Changes
+
+
+- chore(deps): update dependency vite-imagetools to v9 ([#14608](https://github.com/sveltejs/kit/pull/14608))
+
+## 0.8.5
+### Patch Changes
+
+
+- fix: warn rather than crash when non-enhanced image dynamically passed to `enhanced:img` ([#14845](https://github.com/sveltejs/kit/pull/14845))
+
+## 0.8.4
+### Patch Changes
+
+
+- fix: add script block only when there are imports to add ([#14604](https://github.com/sveltejs/kit/pull/14604))
+
+## 0.8.3
+### Patch Changes
+
+
+- chore: update "homepage" field in package.json ([#14579](https://github.com/sveltejs/kit/pull/14579))
+
+## 0.8.2
+### Patch Changes
+
+
+- chore: upgrade sharp to 0.34.4 ([#14478](https://github.com/sveltejs/kit/pull/14478))
+
+## 0.8.1
+### Patch Changes
+
+
+- fix(perf): correctly apply id filter from vite-plugin-svelte ([#14248](https://github.com/sveltejs/kit/pull/14248))
+
+## 0.8.0
+### Minor Changes
+
+
+- breaking: upgrade to vite-imagetools 8 to auto-rotate images ([#14172](https://github.com/sveltejs/kit/pull/14172))
+
+## 0.7.1
+### Patch Changes
+
+
+- chore: add `.git` to the end of `package.json` repository url ([#14134](https://github.com/sveltejs/kit/pull/14134))
+
+## 0.7.0
+### Minor Changes
+
+
+- breaking: use new filters and enhancements from `vite-plugin-svelte`. Requires `vite >= 6.3` and `vite-plugin-svelte >= 6.0`. ([#13967](https://github.com/sveltejs/kit/pull/13967))
+
 ## 0.6.1
 ### Patch Changes
 

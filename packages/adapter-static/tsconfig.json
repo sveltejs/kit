@@ -4,6 +4,7 @@
 		"checkJs": true,
 		"noEmit": true,
 		"noImplicitAny": true,
+		"strictNullChecks": true,
 		"target": "es2022",
 		"module": "node16",
 		"moduleResolution": "node16",
@@ -13,5 +14,5 @@
 			"@sveltejs/kit": ["../kit/types/index"]
 		}
 	},
-	"include": ["index.js", "test/utils.js"]
+	"include": ["index.js", "internal.d.ts", "test/utils.js"]
 }

@@ -26,7 +26,7 @@ export function parse_route_id(id) {
 									rest: true,
 									chained: true
 								});
-								return '(?:/(.*))?';
+								return '(?:/([^]*))?';
 							}
 							// special case — /[[optional]]/ could contain zero segments
 							const optional_match = /^\[\[(\w+)(?:=(\w+))?\]\]$/.exec(segment);
@@ -86,7 +86,7 @@ export function parse_route_id(id) {
 											rest: !!is_rest,
 											chained: is_rest ? i === 1 && parts[0] === '' : false
 										});
-										return is_rest ? '(.*?)' : is_optional ? '([^/]*)?' : '([^/]+?)';
+										return is_rest ? '([^]*?)' : is_optional ? '([^/]*)?' : '([^/]+?)';
 									}
 
 									return escape(content);
@@ -117,7 +117,7 @@ export function remove_optional_params(id) {
  * @param {string} segment
  */
 function affects_path(segment) {
-	return !/^\([^)]+\)$/.test(segment);
+	return segment !== '' && !/^\([^)]+\)$/.test(segment);
 }
 
 /**
@@ -162,8 +162,12 @@ export function exec(match, params, matchers) {
 
 		// if `value` is undefined, it means this is an optional or rest parameter
 		if (value === undefined) {
-			if (param.rest) result[param.name] = '';
-			continue;
+			if (param.rest) {
+				// We need to allow the matcher to run so that it can decide if this optional rest param should be allowed to match
+				value = '';
+			} else {
+				continue;
+			}
 		}
 
 		if (!param.matcher || matchers[param.matcher](value)) {
@@ -240,6 +244,8 @@ const basic_param_pattern = /\[(\[)?(\.\.\.)?(\w+?)(?:=(\w+))?\]\]?/g;
  */
 export function resolve_route(id, params) {
 	const segments = get_route_segments(id);
+	const has_id_trailing_slash = id != '/' && id.endsWith('/');
+
 	return (
 		'/' +
 		segments
@@ -262,7 +268,8 @@ export function resolve_route(id, params) {
 				})
 			)
 			.filter(Boolean)
-			.join('/')
+			.join('/') +
+		(has_id_trailing_slash ? '/' : '')
 	);
 }
 

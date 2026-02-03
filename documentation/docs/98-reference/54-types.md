@@ -190,6 +190,8 @@ Others are required for SvelteKit to work properly, and should also be left unto
 }
 ```
 
+Use the [`typescript.config` setting](configuration#typescript) in `svelte.config.js` to extend or modify the generated `tsconfig.json`.
+
 ## $lib
 
 This is a simple alias to `src/lib`, or whatever directory is specified as [`config.kit.files.lib`](configuration#files). It allows you to access common components and utility modules without `../../../../` nonsense.

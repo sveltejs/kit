@@ -2,3 +2,6 @@
 # repeating them here as a faux .prettierignore
 /.svelte-kit/
 /dist/
+/build
+/src/lib
+/src/routes

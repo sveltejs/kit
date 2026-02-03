@@ -139,7 +139,7 @@ Setting the `sideEffects` field in `package.json` can help the bundler to be mor
 }
 ```
 
-> If the scripts in your library have side effects, ensure that you update the `sideEffects` field. All scripts are marked as side effect free by default in newly created projects. If a file with side effects is incorrectly marked as having no side effects, it can result in broken functionality.
+> [!NOTE] If the scripts in your library have side effects, ensure that you update the `sideEffects` field. All scripts are marked as side effect free by default in newly created projects. If a file with side effects is incorrectly marked as having no side effects, it can result in broken functionality.
 
 If your package has files with side effects, you can specify them in an array:
 
@@ -242,6 +242,7 @@ You can create so-called declaration maps (`d.ts.map` files) by setting `"declar
 - `-w`/`--watch` — watch files in `src/lib` for changes and rebuild the package
 - `-i`/`--input` — the input directory which contains all the files of the package. Defaults to `src/lib`
 - `-o`/`--output` — the output directory where the processed files are written to. Your `package.json`'s `exports` should point to files inside there, and the `files` array should include that folder. Defaults to `dist`
+- `-p`/`--preserve-output` — prevent deletion of the output directory before packaging. Defaults to `false`, which means that the output directory will be emptied first
 - `-t`/`--types` — whether or not to create type definitions (`d.ts` files). We strongly recommend doing this as it fosters ecosystem library quality. Defaults to `true`
 - `--tsconfig` - the path to a tsconfig or jsconfig. When not provided, searches for the next upper tsconfig/jsconfig in the workspace path.
 
@@ -249,7 +250,7 @@ You can create so-called declaration maps (`d.ts.map` files) by setting `"declar
 
 To publish the generated package:
 
-```bash
+```sh
 npm publish
 ```
 

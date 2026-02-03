@@ -6,7 +6,7 @@ title: Advanced routing
 
 If the number of route segments is unknown, you can use rest syntax — for example you might implement GitHub's file viewer like so...
 
-```bash
+```sh
 /[org]/[repo]/tree/[branch]/[...file]
 ```
 
@@ -101,7 +101,7 @@ Each module in the `params` directory corresponds to a matcher, with the excepti
 
 It's possible for multiple routes to match a given path. For example each of these routes would match `/foo-abc`:
 
-```bash
+```sh
 src/routes/[...catchall]/+page.svelte
 src/routes/[[a=x]]/+page.svelte
 src/routes/[b]/+page.svelte
@@ -118,7 +118,7 @@ SvelteKit needs to know which route is being requested. To do so, it sorts them 
 
 ...resulting in this ordering, meaning that `/foo-abc` will invoke `src/routes/foo-abc/+page.svelte`, and `/foo-def` will invoke `src/routes/foo-[c]/+page.svelte` rather than less specific routes:
 
-```bash
+```sh
 src/routes/foo-abc/+page.svelte
 src/routes/foo-[c]/+page.svelte
 src/routes/[[a=x]]/+page.svelte

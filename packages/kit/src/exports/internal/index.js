@@ -1,3 +1,5 @@
+/** @import { StandardSchemaV1 } from '@standard-schema/spec' */
+
 export class HttpError {
 	/**
 	 * @param {number} status
@@ -49,7 +51,7 @@ export class SvelteKitError extends Error {
 }
 
 /**
- * @template {Record<string, unknown> | undefined} [T=undefined]
+ * @template [T=undefined]
  */
 export class ActionFailure {
 	/**
@@ -61,3 +63,19 @@ export class ActionFailure {
 		this.data = data;
 	}
 }
+
+/**
+ * Error thrown when form validation fails imperatively
+ */
+export class ValidationError extends Error {
+	/**
+	 * @param {StandardSchemaV1.Issue[]} issues
+	 */
+	constructor(issues) {
+		super('Validation failed');
+		this.name = 'ValidationError';
+		this.issues = issues;
+	}
+}
+
+export { init_remote_functions } from './remote-functions.js';

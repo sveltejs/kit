@@ -1,11 +1,12 @@
+import { DEV } from 'esm-env';
 import { escape_html } from '../../../utils/escape.js';
-import { base64, sha256 } from './crypto.js';
+import { sha256 } from './crypto.js';
 
 const array = new Uint8Array(16);
 
 function generate_nonce() {
 	crypto.getRandomValues(array);
-	return base64(array);
+	return btoa(String.fromCharCode(...array));
 }
 
 const quoted = new Set([
@@ -77,7 +78,7 @@ class BaseProvider {
 	 */
 	constructor(use_hashes, directives, nonce) {
 		this.#use_hashes = use_hashes;
-		this.#directives = __SVELTEKIT_DEV__ ? { ...directives } : directives; // clone in dev so we can safely mutate
+		this.#directives = DEV ? { ...directives } : directives; // clone in dev so we can safely mutate
 
 		const d = this.#directives;
 
@@ -93,7 +94,7 @@ class BaseProvider {
 		const style_src_attr = d['style-src-attr'];
 		const style_src_elem = d['style-src-elem'];
 
-		if (__SVELTEKIT_DEV__) {
+		if (DEV) {
 			// remove strict-dynamic in dev...
 			// TODO reinstate this if we can figure out how to make strict-dynamic work
 			// if (d['default-src']) {
@@ -137,18 +138,24 @@ class BaseProvider {
 		}
 
 		/** @param {(import('types').Csp.Source | import('types').Csp.ActionSource)[] | undefined} directive */
-		const needs_csp = (directive) =>
+		const style_needs_csp = (directive) =>
 			!!directive && !directive.some((value) => value === 'unsafe-inline');
 
-		this.#script_src_needs_csp = needs_csp(effective_script_src);
-		this.#script_src_elem_needs_csp = needs_csp(script_src_elem);
-		this.#style_src_needs_csp = needs_csp(effective_style_src);
-		this.#style_src_attr_needs_csp = needs_csp(style_src_attr);
-		this.#style_src_elem_needs_csp = needs_csp(style_src_elem);
+		/** @param {(import('types').Csp.Source | import('types').Csp.ActionSource)[] | undefined} directive */
+		const script_needs_csp = (directive) =>
+			!!directive &&
+			(!directive.some((value) => value === 'unsafe-inline') ||
+				directive.some((value) => value === 'strict-dynamic'));
+
+		this.#script_src_needs_csp = script_needs_csp(effective_script_src);
+		this.#script_src_elem_needs_csp = script_needs_csp(script_src_elem);
+		this.#style_src_needs_csp = style_needs_csp(effective_style_src);
+		this.#style_src_attr_needs_csp = style_needs_csp(style_src_attr);
+		this.#style_src_elem_needs_csp = style_needs_csp(style_src_elem);
 
 		this.#script_needs_csp = this.#script_src_needs_csp || this.#script_src_elem_needs_csp;
 		this.#style_needs_csp =
-			!__SVELTEKIT_DEV__ &&
+			!DEV &&
 			(this.#style_src_needs_csp ||
 				this.#style_src_attr_needs_csp ||
 				this.#style_src_elem_needs_csp);

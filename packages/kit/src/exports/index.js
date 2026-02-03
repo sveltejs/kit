@@ -1,4 +1,6 @@
-import { HttpError, Redirect, ActionFailure } from './internal/index.js';
+/** @import { StandardSchemaV1 } from '@standard-schema/spec' */
+
+import { HttpError, Redirect, ActionFailure, ValidationError } from './internal/index.js';
 import { BROWSER, DEV } from 'esm-env';
 import {
 	add_data_suffix,
@@ -8,6 +10,7 @@ import {
 	strip_data_suffix,
 	strip_resolution_suffix
 } from '../runtime/pathname.js';
+import { text_encoder } from '../runtime/utils.js';
 
 export { VERSION } from '../version.js';
 
@@ -142,7 +145,7 @@ export function json(data, init) {
 	// means less duplicated work
 	const headers = new Headers(init?.headers);
 	if (!headers.has('content-length')) {
-		headers.set('content-length', encoder.encode(body).byteLength.toString());
+		headers.set('content-length', text_encoder.encode(body).byteLength.toString());
 	}
 
 	if (!headers.has('content-type')) {
@@ -155,8 +158,6 @@ export function json(data, init) {
 	});
 }
 
-const encoder = new TextEncoder();
-
 /**
  * Create a `Response` object from the supplied body.
  * @param {string} body The value that will be used as-is.
@@ -165,7 +166,7 @@ const encoder = new TextEncoder();
 export function text(body, init) {
 	const headers = new Headers(init?.headers);
 	if (!headers.has('content-length')) {
-		const encoded = encoder.encode(body);
+		const encoded = text_encoder.encode(body);
 		headers.set('content-length', encoded.byteLength.toString());
 		return new Response(encoded, {
 			...init,
@@ -188,7 +189,7 @@ export function text(body, init) {
  */
 /**
  * Create an `ActionFailure` object. Call when form submission fails.
- * @template {Record<string, unknown> | undefined} [T=undefined]
+ * @template [T=undefined]
  * @param {number} status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
  * @param {T} data Data associated with the failure (e.g. validation errors)
  * @overload
@@ -214,6 +215,49 @@ export function fail(status, data) {
  */
 export function isActionFailure(e) {
 	return e instanceof ActionFailure;
+}
+
+/**
+ * Use this to throw a validation error to imperatively fail form validation.
+ * Can be used in combination with `issue` passed to form actions to create field-specific issues.
+ *
+ * @example
+ * ```ts
+ * import { invalid } from '@sveltejs/kit';
+ * import { form } from '$app/server';
+ * import { tryLogin } from '$lib/server/auth';
+ * import * as v from 'valibot';
+ *
+ * export const login = form(
+ *   v.object({ name: v.string(), _password: v.string() }),
+ *   async ({ name, _password }) => {
+ *     const success = tryLogin(name, _password);
+ *     if (!success) {
+ *       invalid('Incorrect username or password');
+ *     }
+ *
+ *     // ...
+ *   }
+ * );
+ * ```
+ * @param  {...(StandardSchemaV1.Issue | string)} issues
+ * @returns {never}
+ * @since 2.47.3
+ */
+export function invalid(...issues) {
+	throw new ValidationError(
+		issues.map((issue) => (typeof issue === 'string' ? { message: issue } : issue))
+	);
+}
+
+/**
+ * Checks whether this is an validation error thrown by {@link invalid}.
+ * @param {unknown} e The object to check.
+ * @return {e is import('./public.js').ActionFailure}
+ * @since 2.47.3
+ */
+export function isValidationError(e) {
+	return e instanceof ValidationError;
 }
 
 /**

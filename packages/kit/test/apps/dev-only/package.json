@@ -8,12 +8,11 @@
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync",
 		"check": "svelte-kit sync && tsc && svelte-check",
-		"test": "cross-env DEV=true playwright test"
+		"test": "DEV=true playwright test"
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "catalog:",
-		"cross-env": "catalog:",
 		"e2e-test-dep-error": "file:./_test_dependencies/cjs-only",
 		"e2e-test-dep-hooks": "file:./_test_dependencies/cjs-only",
 		"e2e-test-dep-hooks-client": "file:./_test_dependencies/cjs-only",
@@ -24,8 +23,8 @@
 		"e2e-test-dep-page-svelte": "file:./_test_dependencies/cjs-only",
 		"e2e-test-dep-page-universal": "file:./_test_dependencies/cjs-only",
 		"e2e-test-dep-server": "file:./_test_dependencies/cjs-only",
-		"svelte": "^5.35.5",
-		"svelte-check": "^4.1.1",
+		"svelte": "catalog:",
+		"svelte-check": "catalog:",
 		"typescript": "^5.5.4",
 		"vite": "catalog:"
 	},

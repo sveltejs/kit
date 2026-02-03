@@ -12,14 +12,14 @@ import { normalizeUrl } from '../index.js';
  * // replace __HOOKS__ with the path to the reroute hook obtained from `builder.getReroutePath()`
  * import { reroute } from '__HOOKS__';
  *
- * export default async function middleware(request) {
+ * export default function middleware(request) {
  *   return applyReroute(request.url, reroute);
  * }
  * ```
  * @param {string} url
  * @param {import("@sveltejs/kit").Reroute} reroute
  * @returns {Promise<URL>}
- * @since 2.21.0
+ * @since 2.51.0
  */
 export async function applyReroute(url, reroute) {
 	const url_copy = new URL(url);

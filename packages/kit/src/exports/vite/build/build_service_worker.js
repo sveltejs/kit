@@ -6,6 +6,9 @@ import { get_config_aliases, strip_virtual_prefix, get_env, normalize_id } from 
 import { create_static_module } from '../../../core/env.js';
 import { env_static_public, service_worker } from '../module_ids.js';
 
+// @ts-ignore `vite.rolldownVersion` only exists in `rolldown-vite`
+const isRolldown = !!vite.rolldownVersion;
+
 /**
  * @param {string} out
  * @param {import('types').ValidatedKitConfig} kit
@@ -103,8 +106,7 @@ export async function build_service_worker(
 				},
 				output: {
 					// .mjs so that esbuild doesn't incorrectly inject `export` https://github.com/vitejs/vite/issues/15379
-					// @ts-ignore `vite.rolldownVersion` only exists in `rolldown-vite`
-					entryFileNames: `service-worker.${vite.rolldownVersion ? 'js' : 'mjs'}`,
+					entryFileNames: `service-worker.${isRolldown ? 'js' : 'mjs'}`,
 					assetFileNames: `${kit.appDir}/immutable/assets/[name].[hash][extname]`,
 					inlineDynamicImports: true
 				}
@@ -130,8 +132,7 @@ export async function build_service_worker(
 	});
 
 	// rename .mjs to .js to avoid incorrect MIME types with ancient webservers
-	// @ts-ignore `vite.rolldownVersion` only exists in `rolldown-vite`
-	if (!vite.rolldownVersion) {
+	if (!isRolldown) {
 		fs.renameSync(`${out}/client/service-worker.mjs`, `${out}/client/service-worker.js`);
 	}
 }
