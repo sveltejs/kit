@@ -53,20 +53,29 @@ class BaseProvider {
 	/** @type {import('types').CspDirectives} */
 	#directives;
 
-	/** @type {import('types').Csp.Source[]} */
+	/** @type {Set<import('types').Csp.Source>} */
 	#script_src;
 
-	/** @type {import('types').Csp.Source[]} */
+	/** @type {Set<import('types').Csp.Source>} */
 	#script_src_elem;
 
-	/** @type {import('types').Csp.Source[]} */
+	/** @type {Set<import('types').Csp.Source>} */
 	#style_src;
 
-	/** @type {import('types').Csp.Source[]} */
+	/** @type {Set<import('types').Csp.Source>} */
 	#style_src_attr;
 
-	/** @type {import('types').Csp.Source[]} */
+	/** @type {Set<import('types').Csp.Source>} */
 	#style_src_elem;
+
+	/** @type {boolean} */
+	script_needs_nonce;
+
+	/** @type {boolean} */
+	style_needs_nonce;
+
+	/** @type {boolean} */
+	script_needs_hash;
 
 	/** @type {string} */
 	#nonce;
@@ -82,11 +91,11 @@ class BaseProvider {
 
 		const d = this.#directives;
 
-		this.#script_src = [];
-		this.#script_src_elem = [];
-		this.#style_src = [];
-		this.#style_src_attr = [];
-		this.#style_src_elem = [];
+		this.#script_src = new Set();
+		this.#script_src_elem = new Set();
+		this.#style_src = new Set();
+		this.#style_src_attr = new Set();
+		this.#style_src_elem = new Set();
 
 		const effective_script_src = d['script-src'] || d['default-src'];
 		const script_src_elem = d['script-src-elem'];
@@ -138,14 +147,20 @@ class BaseProvider {
 		}
 
 		/** @param {(import('types').Csp.Source | import('types').Csp.ActionSource)[] | undefined} directive */
-		const needs_csp = (directive) =>
+		const style_needs_csp = (directive) =>
 			!!directive && !directive.some((value) => value === 'unsafe-inline');
 
-		this.#script_src_needs_csp = needs_csp(effective_script_src);
-		this.#script_src_elem_needs_csp = needs_csp(script_src_elem);
-		this.#style_src_needs_csp = needs_csp(effective_style_src);
-		this.#style_src_attr_needs_csp = needs_csp(style_src_attr);
-		this.#style_src_elem_needs_csp = needs_csp(style_src_elem);
+		/** @param {(import('types').Csp.Source | import('types').Csp.ActionSource)[] | undefined} directive */
+		const script_needs_csp = (directive) =>
+			!!directive &&
+			(!directive.some((value) => value === 'unsafe-inline') ||
+				directive.some((value) => value === 'strict-dynamic'));
+
+		this.#script_src_needs_csp = script_needs_csp(effective_script_src);
+		this.#script_src_elem_needs_csp = script_needs_csp(script_src_elem);
+		this.#style_src_needs_csp = style_needs_csp(effective_style_src);
+		this.#style_src_attr_needs_csp = style_needs_csp(style_src_attr);
+		this.#style_src_elem_needs_csp = style_needs_csp(style_src_elem);
 
 		this.#script_needs_csp = this.#script_src_needs_csp || this.#script_src_elem_needs_csp;
 		this.#style_needs_csp =
@@ -156,6 +171,7 @@ class BaseProvider {
 
 		this.script_needs_nonce = this.#script_needs_csp && !this.#use_hashes;
 		this.style_needs_nonce = this.#style_needs_csp && !this.#use_hashes;
+		this.script_needs_hash = this.#script_needs_csp && this.#use_hashes;
 
 		this.#nonce = nonce;
 	}
@@ -168,11 +184,23 @@ class BaseProvider {
 		const source = this.#use_hashes ? `sha256-${sha256(content)}` : `nonce-${this.#nonce}`;
 
 		if (this.#script_src_needs_csp) {
-			this.#script_src.push(source);
+			this.#script_src.add(source);
 		}
 
 		if (this.#script_src_elem_needs_csp) {
-			this.#script_src_elem.push(source);
+			this.#script_src_elem.add(source);
+		}
+	}
+
+	/** @param {`sha256-${string}`[]} hashes */
+	add_script_hashes(hashes) {
+		for (const hash of hashes) {
+			if (this.#script_src_needs_csp) {
+				this.#script_src.add(hash);
+			}
+			if (this.#script_src_elem_needs_csp) {
+				this.#script_src_elem.add(hash);
+			}
 		}
 	}
 
@@ -184,11 +212,11 @@ class BaseProvider {
 		const source = this.#use_hashes ? `sha256-${sha256(content)}` : `nonce-${this.#nonce}`;
 
 		if (this.#style_src_needs_csp) {
-			this.#style_src.push(source);
+			this.#style_src.add(source);
 		}
 
 		if (this.#style_src_attr_needs_csp) {
-			this.#style_src_attr.push(source);
+			this.#style_src_attr.add(source);
 		}
 
 		if (this.#style_src_elem_needs_csp) {
@@ -201,13 +229,13 @@ class BaseProvider {
 			if (
 				d['style-src-elem'] &&
 				!d['style-src-elem'].includes(sha256_empty_comment_hash) &&
-				!this.#style_src_elem.includes(sha256_empty_comment_hash)
+				!this.#style_src_elem.has(sha256_empty_comment_hash)
 			) {
-				this.#style_src_elem.push(sha256_empty_comment_hash);
+				this.#style_src_elem.add(sha256_empty_comment_hash);
 			}
 
 			if (source !== sha256_empty_comment_hash) {
-				this.#style_src_elem.push(source);
+				this.#style_src_elem.add(source);
 			}
 		}
 	}
@@ -224,35 +252,35 @@ class BaseProvider {
 
 		const directives = { ...this.#directives };
 
-		if (this.#style_src.length > 0) {
+		if (this.#style_src.size > 0) {
 			directives['style-src'] = [
 				...(directives['style-src'] || directives['default-src'] || []),
 				...this.#style_src
 			];
 		}
 
-		if (this.#style_src_attr.length > 0) {
+		if (this.#style_src_attr.size > 0) {
 			directives['style-src-attr'] = [
 				...(directives['style-src-attr'] || []),
 				...this.#style_src_attr
 			];
 		}
 
-		if (this.#style_src_elem.length > 0) {
+		if (this.#style_src_elem.size > 0) {
 			directives['style-src-elem'] = [
 				...(directives['style-src-elem'] || []),
 				...this.#style_src_elem
 			];
 		}
 
-		if (this.#script_src.length > 0) {
+		if (this.#script_src.size > 0) {
 			directives['script-src'] = [
 				...(directives['script-src'] || directives['default-src'] || []),
 				...this.#script_src
 			];
 		}
 
-		if (this.#script_src_elem.length > 0) {
+		if (this.#script_src_elem.size > 0) {
 			directives['script-src-elem'] = [
 				...(directives['script-src-elem'] || []),
 				...this.#script_src_elem
@@ -345,6 +373,10 @@ export class Csp {
 		this.report_only_provider = new CspReportOnlyProvider(use_hashes, reportOnly, this.nonce);
 	}
 
+	get script_needs_hash() {
+		return this.csp_provider.script_needs_hash || this.report_only_provider.script_needs_hash;
+	}
+
 	get script_needs_nonce() {
 		return this.csp_provider.script_needs_nonce || this.report_only_provider.script_needs_nonce;
 	}
@@ -357,6 +389,12 @@ export class Csp {
 	add_script(content) {
 		this.csp_provider.add_script(content);
 		this.report_only_provider.add_script(content);
+	}
+
+	/** @param {`sha256-${string}`[]} hashes */
+	add_script_hashes(hashes) {
+		this.csp_provider.add_script_hashes(hashes);
+		this.report_only_provider.add_script_hashes(hashes);
 	}
 
 	/** @param {string} content */
