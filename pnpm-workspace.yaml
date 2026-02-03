@@ -41,6 +41,7 @@ catalog:
   eslint: ^9.34.0
   polka: ^1.0.0-next.28
   publint: ^0.3.0
+  rollup: ^4.57.1
   semver: ^7.5.4
   sirv-cli: ^3.0.0
   svelte: ^5.48.4

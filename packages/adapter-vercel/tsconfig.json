@@ -15,5 +15,12 @@
 			"@sveltejs/kit": ["../kit/types/index"]
 		}
 	},
-	"include": ["src/serverless.js", "index.js", "internal.d.ts", "utils.js", "test/**/*.js"]
+	"include": [
+		"files/serverless.js",
+		"files/middleware.js",
+		"index.js",
+		"internal.d.ts",
+		"utils.js",
+		"test/**/*.js"
+	]
 }

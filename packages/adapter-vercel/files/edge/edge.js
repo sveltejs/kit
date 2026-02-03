@@ -49,9 +49,8 @@ const initialized = server.init({
 
 /**
  * @param {Request} request
- * @param {import('@vercel/edge').RequestContext} context
  */
-export default async (request, context) => {
+export default async (request) => {
 	if (!origin) {
 		origin = new URL(request.url).origin;
 		await initialized;
@@ -60,9 +59,6 @@ export default async (request, context) => {
 	return server.respond(request, {
 		getClientAddress() {
 			return /** @type {string} */ (request.headers.get('x-forwarded-for'));
-		},
-		platform: {
-			context
 		}
 	});
 };
