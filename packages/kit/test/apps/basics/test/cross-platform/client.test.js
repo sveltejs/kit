@@ -376,6 +376,16 @@ test.describe('Scrolling', () => {
 		expect(await in_view('#go-to-element')).toBe(true);
 	});
 
+	test('scrolling to url-supplied anchor respects scroll-margin', async ({ page, clicknav }) => {
+		await page.goto('/anchor');
+		await clicknav('#to-scroll-margin');
+		expect(
+			await page.evaluate(
+				() => document.getElementById('scroll-margin')?.getBoundingClientRect().top
+			)
+		).toBe(40);
+	});
+
 	test('no-anchor url will scroll to top when navigated from bottom of page', async ({
 		clicknav,
 		page
