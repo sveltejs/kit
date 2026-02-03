@@ -522,10 +522,16 @@ test.describe('remote functions', () => {
 				buffer: Buffer.from('c')
 			});
 			await page.locator('button').click();
-			await expect(progress).not.toHaveText('{"uploaded":0,');
-			const progress_value = JSON.parse(await progress.textContent());
-			expect(progress_value.percent).toBeGreaterThan(0);
-			expect(progress_value.percent).toBeCloseTo(progress_value.uploaded / progress_value.total);
+			await expect(progress).not.toHaveText(/"uploaded":0/);
+			async function check_percent() {
+				const progress_value = JSON.parse(await progress.textContent());
+				expect(progress_value.percent).toBeGreaterThan(0);
+				expect(progress_value.percent).toBeCloseTo(progress_value.uploaded / progress_value.total);
+			}
+			const progress_text = await progress.textContent();
+			await check_percent();
+			await expect(progress).not.toHaveText(progress_text);
+			await check_percent();
 		} finally {
 			await cdp.send('Network.emulateNetworkConditions', {
 				offline: false,
