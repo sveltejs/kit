@@ -70,10 +70,10 @@ export async function internal_respond(request, options, manifest, state) {
 	/** URL but stripped from the potential `/__data.json` suffix and its search param  */
 	const url = new URL(request.url);
 
-	// If reroute ran in an edge middleware, it would have already resolved the URL
-	// pathname. So we save that and restore the original URL to invoke the correct route
 	let resolved_path = url.pathname;
 
+	// If reroute ran in an edge middleware, Vercel doesn't change the request URL but Netlify does.
+	// So, we always restore the original URL pathname to ensure that the correct route is invoked
 	if (manifest._.reroute_middleware && url.searchParams.has(ORIGINAL_PATH_PARAM)) {
 		url.pathname = /** @type {string} */ (url.searchParams.get(ORIGINAL_PATH_PARAM));
 		url.searchParams.delete(ORIGINAL_PATH_PARAM);
