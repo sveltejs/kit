@@ -274,7 +274,7 @@ async function bundle_edge_function({ builder, name, reroute_middleware }) {
 			{
 				function: name,
 				path: '/*',
-				excludedPath: /** @type {`/${string}`[]} */ (excluded),
+				excludedPath: /** @type {`/${string}`[]} */ (excluded)
 			}
 		],
 		version: 1
