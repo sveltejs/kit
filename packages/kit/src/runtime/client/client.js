@@ -3018,7 +3018,7 @@ function reset_focus(url, scroll = null) {
 				// if we're using hash routing, we need to restore the original hash after
 				// setting the focus with `location.replace()`. Although we're calling
 				// `location.replace()` again, the focus won't shift to the new hash
-				// unless there's an element with the ID `/pathname#hash`, etc.
+				// unless there's an element with the ID `/current-pathname#hash`, etc.
 				if (app.hash) {
 					location.replace(url);
 				}
@@ -3026,7 +3026,7 @@ function reset_focus(url, scroll = null) {
 				// but Firefox has a bug that sets the history state to `null` so we
 				// need to restore it after.
 				// See https://bugzilla.mozilla.org/show_bug.cgi?id=1199924
-				history.replaceState(history_state, '', url);
+				history.replaceState(history_state, '');
 
 				// Scroll management has already happened earlier so we need to restore
 				// the scroll position after setting the sequential focus navigation starting point
