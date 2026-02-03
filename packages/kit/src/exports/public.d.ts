@@ -1906,6 +1906,8 @@ type RemoteFormFieldMethods<T> = {
 	? {
 			/** Current file upload progress */
 			progress(): {
+				/** Percentage of upload progress, from 0.0 to 1.0 */
+				readonly percent: number;
 				/** Bytes uploaded so far */
 				readonly uploaded: number;
 				/** Total bytes to upload */

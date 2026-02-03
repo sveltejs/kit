@@ -504,13 +504,13 @@ test.describe('remote functions', () => {
 		});
 		try {
 			const progress = page.locator('#progress1');
-			expect(progress).toHaveText('{"uploaded":0,"total":0}');
+			expect(progress).toHaveText('{"uploaded":0,"total":0,"percent":0}');
 			await page.locator('input[name="file1"]').setInputFiles({
 				name: 'a.txt',
 				mimeType: 'text/plain',
 				buffer: Buffer.alloc(1024 * 1024 * 10)
 			});
-			expect(progress).toHaveText('{"uploaded":0,"total":10485760}');
+			expect(progress).toHaveText('{"uploaded":0,"total":10485760,"percent":0}');
 			await page.locator('input[name="deep.files[0]"]').setInputFiles({
 				name: 'b.txt',
 				mimeType: 'text/plain',
@@ -523,6 +523,9 @@ test.describe('remote functions', () => {
 			});
 			await page.locator('button').click();
 			await expect(progress).not.toHaveText('{"uploaded":0,');
+			const progress_value = JSON.parse(await progress.textContent());
+			expect(progress_value.percent).toBeGreaterThan(0);
+			expect(progress_value.percent).toBeCloseTo(progress_value.uploaded / progress_value.total);
 		} finally {
 			await cdp.send('Network.emulateNetworkConditions', {
 				offline: false,

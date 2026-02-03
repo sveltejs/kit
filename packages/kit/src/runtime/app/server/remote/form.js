@@ -197,8 +197,9 @@ export function form(validate_or_fn, maybe_fn) {
 						get_issues: () => issues,
 						get_progress: () => ({
 							uploaded: 0,
-							total: 0
-						}) /* upload progress is always 0 on the server */
+							total: 0,
+							percent: 0 /* upload progress is always 0 on the server */
+						})
 					}
 				);
 			}

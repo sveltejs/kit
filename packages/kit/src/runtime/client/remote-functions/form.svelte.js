@@ -69,7 +69,7 @@ export function form(id) {
 		let input = $state({});
 
 		/**
-		 * @type {Record<string, {uploaded: number, total: number}>}
+		 * @type {Record<string, { uploaded: number, total: number, percent: number }>}
 		 */
 		let upload_progress = $state({});
 
@@ -222,7 +222,14 @@ export function form(id) {
 						if (file_offsets) {
 							const file_paths = get_file_paths(data);
 							for (const [file, path] of file_paths) {
-								deep_set(upload_progress, path, { uploaded: 0, total: file.size });
+								deep_set(upload_progress, path, {
+									uploaded: 0,
+									total: file.size,
+									get percent() {
+										if (this.total === 0) return 0;
+										return this.uploaded / this.total;
+									}
+								});
 							}
 							xhr.upload.addEventListener('progress', (ev) => {
 								for (const file of file_offsets) {
@@ -416,7 +423,14 @@ export function form(id) {
 
 						if (file) {
 							set_nested_value(input, name, file);
-							set_nested_value(upload_progress, name, { uploaded: 0, total: file.size });
+							set_nested_value(upload_progress, name, {
+								uploaded: 0,
+								total: file.size,
+								get percent() {
+									if (this.total === 0) return 0;
+									return this.uploaded / this.total;
+								}
+							});
 						} else {
 							// Remove the property by setting to undefined and clean up
 							const path_parts = name.split(/\.|\[|\]/).filter(Boolean);
@@ -500,7 +514,8 @@ export function form(id) {
 								}
 							},
 							get_issues: () => issues,
-							get_progress: (path) => deep_get(upload_progress, path) ?? { uploaded: 0, total: 0 }
+							get_progress: (path) =>
+								deep_get(upload_progress, path) ?? { uploaded: 0, total: 0, percent: 0 }
 						}
 					)
 			},

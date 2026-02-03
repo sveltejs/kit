@@ -135,7 +135,7 @@ export function serialize_binary_form(data, meta) {
 		blob_parts.push(file);
 	}
 
-	const file_offset_start = 1 + 4 + 2 + encoded_header.length + encoded_file_offsets.length;
+	const file_offset_start = HEADER_BYTES + encoded_header.length + encoded_file_offsets.length;
 
 	return {
 		blob: new Blob(blob_parts),
@@ -597,7 +597,7 @@ export function deep_get(object, path) {
 /**
  * Creates a proxy-based field accessor for form data
  * @param {any} target - Function or empty POJO
- * @param {{ get_input: () => Record<string, any>, set_input: (path: (string | number)[], value: any) => void, get_issues: () => Record<string, InternalRemoteFormIssue[]>, get_progress: (path: (string | number)[]) => { uploaded: number, total: number } }} accessors - Accessor functions
+ * @param {{ get_input: () => Record<string, any>, set_input: (path: (string | number)[], value: any) => void, get_issues: () => Record<string, InternalRemoteFormIssue[]>, get_progress: (path: (string | number)[]) => { uploaded: number, total: number, percent: number } }} accessors - Accessor functions
  * @param {(string | number)[]} path - Current access path
  *
  * @returns {any} Proxy object with name(), value(), and issues() methods
