@@ -16,11 +16,12 @@
 		}
 	},
 	"include": [
-		"files/serverless.js",
-		"files/middleware.js",
+		"src/serverless.js",
+		"src/reroute.js",
 		"index.js",
 		"internal.d.ts",
 		"utils.js",
-		"test/**/*.js"
+		"test/**/*.js",
+		"rollup.config.js"
 	]
 }

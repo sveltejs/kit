@@ -3,7 +3,7 @@ import commonjs from '@rollup/plugin-commonjs';
 import json from '@rollup/plugin-json';
 import { rmSync } from 'node:fs';
 
-const EXTERNAL = new Set(['0SERVER', 'MANIFEST', '__HOOKS__']);
+const EXTERNAL = new Set(['SERVER', 'MANIFEST', '__HOOKS__']);
 
 /**
  * @param {string} filepath
@@ -26,8 +26,7 @@ function clearOutput(filepath) {
 const config = {
 	input: {
 		serverless: 'src/serverless.js',
-		shims: 'src/shims.js',
-		edge: 'src/edge.js',
+		edge: 'src/edge/edge.js',
 		reroute: 'src/reroute.js'
 	},
 	output: {

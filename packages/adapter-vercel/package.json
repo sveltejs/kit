@@ -35,10 +35,13 @@
 		"ambient.d.ts"
 	],
 	"scripts": {
+		"dev": "rollup -cw",
+		"build": "rollup -c",
 		"lint": "prettier --check .",
 		"format": "pnpm lint --write",
 		"check": "tsc",
-		"test": "vitest run"
+		"test": "vitest run",
+		"prepublishOnly": "pnpm build"
 	},
 	"dependencies": {
 		"@vercel/nft": "^1.0.0",
@@ -47,7 +50,12 @@
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "catalog:",
+		"@rollup/plugin-commonjs": "catalog:",
+		"@rollup/plugin-json": "catalog:",
+		"@rollup/plugin-node-resolve": "catalog:",
 		"@types/node": "catalog:",
+		"@vercel/functions": "^3.4.0",
+		"rollup": "catalog:",
 		"typescript": "^5.3.3",
 		"vitest": "catalog:"
 	},

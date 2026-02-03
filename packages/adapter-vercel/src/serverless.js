@@ -1,18 +1,7 @@
-import { createReadStream } from 'node:fs';
-import { Readable } from 'node:stream';
+import { createReadableStream } from '@sveltejs/kit/node';
 import { Server } from 'SERVER';
 import { manifest } from 'MANIFEST';
 import process from 'node:process';
-
-/**
- * Converts a file on disk to a readable stream
- * @param {string} file
- * @returns {ReadableStream}
- * @since 2.4.0
- */
-function createReadableStream(file) {
-	return /** @type {ReadableStream} */ (Readable.toWeb(createReadStream(file)));
-}
 
 const server = new Server(manifest);
 
@@ -23,7 +12,7 @@ await server.init({
 
 const DATA_SUFFIX = '/__data.json';
 
-var serverless = {
+export default {
 	/**
 	 * @param {Request} request
 	 * @returns {Promise<Response>}
@@ -51,5 +40,3 @@ var serverless = {
 		});
 	}
 };
-
-export { serverless as default };

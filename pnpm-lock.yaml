@@ -453,6 +453,15 @@ importers:
         specifier: ^0.25.4
         version: 0.25.9
     devDependencies:
+      '@rollup/plugin-commonjs':
+        specifier: 'catalog:'
+        version: 29.0.0(rollup@4.57.1)
+      '@rollup/plugin-json':
+        specifier: 'catalog:'
+        version: 6.1.0(rollup@4.57.1)
+      '@rollup/plugin-node-resolve':
+        specifier: 'catalog:'
+        version: 16.0.0(rollup@4.57.1)
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../kit
@@ -462,6 +471,12 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 18.19.119
+      '@vercel/functions':
+        specifier: ^3.4.0
+        version: 3.4.0
+      rollup:
+        specifier: 'catalog:'
+        version: 4.57.1
       typescript:
         specifier: ^5.3.3
         version: 5.8.3
@@ -3409,6 +3424,15 @@ packages:
     resolution: {integrity: sha512-oy+wV7xDKFPRyNggmXuZQSBzvoLnpmJs+GhzRhPjrxl2b/jIlyjVokzm47CZCDUdXKr2zd7ZLodPfOBpOPyPlg==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
+  '@vercel/functions@3.4.0':
+    resolution: {integrity: sha512-lKWDWEhFcpt/zL3ueWqII8W5BY73MC5WUuZyudditbbya6mP8jCLQEuXBxJetpEKgnEn+5xCyK962rw4v1RSVA==}
+    engines: {node: '>= 20'}
+    peerDependencies:
+      '@aws-sdk/credential-provider-web-identity': '*'
+    peerDependenciesMeta:
+      '@aws-sdk/credential-provider-web-identity':
+        optional: true
+
   '@vercel/nft@0.29.4':
     resolution: {integrity: sha512-6lLqMNX3TuycBPABycx7A9F1bHQR7kiQln6abjFbPrf5C/05qHM9M5E4PeTE59c7z8g6vHnx1Ioihb2AQl7BTA==}
     engines: {node: '>=18'}
@@ -3418,6 +3442,10 @@ packages:
     resolution: {integrity: sha512-7pDSGV++fd3goikE2y9GkwKx9NPVOghBv2wD2YqQlcmfGkaPsWDdZMZNC7MyzUr37vZYgnfZZWZYVauJbm6KXw==}
     engines: {node: '>=20'}
     hasBin: true
+
+  '@vercel/oidc@3.1.0':
+    resolution: {integrity: sha512-Fw28YZpRnA3cAHHDlkt7xQHiJ0fcL+NRcIqsocZQUSmbzeIKRpwttJjik5ZGanXP+vlA4SbTg+AbA3bP363l+w==}
+    engines: {node: '>= 20'}
 
   '@vitest/browser-playwright@4.0.16':
     resolution: {integrity: sha512-I2Fy/ANdphi1yI46d15o0M1M4M0UJrUiVKkH5oKeRZZCdPg0fw/cfTKZzv9Ge9eobtJYp4BGblMzXdXH0vcl5g==}
@@ -8126,6 +8154,10 @@ snapshots:
       '@typescript-eslint/types': 8.53.1
       eslint-visitor-keys: 4.2.1
 
+  '@vercel/functions@3.4.0':
+    dependencies:
+      '@vercel/oidc': 3.1.0
+
   '@vercel/nft@0.29.4(rollup@4.57.1)':
     dependencies:
       '@mapbox/node-pre-gyp': 2.0.0
@@ -8163,6 +8195,8 @@ snapshots:
       - encoding
       - rollup
       - supports-color
+
+  '@vercel/oidc@3.1.0': {}
 
   '@vitest/browser-playwright@4.0.16(playwright@1.56.0)(vite@6.3.6(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))(vitest@4.0.16)':
     dependencies:
