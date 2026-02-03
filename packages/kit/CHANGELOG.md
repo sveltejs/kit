@@ -1,5 +1,29 @@
 # @sveltejs/kit
 
+## 2.50.2
+### Patch Changes
+
+
+- fix: ensure inlined CSS follows `paths.assets` and `paths.relative` settings ([#15153](https://github.com/sveltejs/kit/pull/15153))
+
+
+- fix: emit script CSP nonces when `unsafe-inline` is present if `strict-dynamic` is also present ([#15221](https://github.com/sveltejs/kit/pull/15221))
+
+
+- fix: re-export browser/dev from esm-env ([#15206](https://github.com/sveltejs/kit/pull/15206))
+
+
+- fix: use validated args in batch resolver in both csr and ssr ([#15215](https://github.com/sveltejs/kit/pull/15215))
+
+
+- fix: ensure CSS inlining includes components that are conditionally rendered ([#15153](https://github.com/sveltejs/kit/pull/15153))
+
+
+- fix: only match rest params with matchers when the matcher matches ([#15216](https://github.com/sveltejs/kit/pull/15216))
+
+
+- fix: properly handle percent-encoded anchors (e.g. `<a href="#sparkles-%E2%9C%A8">`) during prerendering. ([#15231](https://github.com/sveltejs/kit/pull/15231))
+
 ## 2.50.1
 ### Patch Changes
 
