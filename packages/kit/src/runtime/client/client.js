@@ -1,56 +1,56 @@
+import { base } from '$app/paths';
+import { HttpError, Redirect, SvelteKitError } from '@sveltejs/kit/internal';
+import * as devalue from 'devalue';
 import { BROWSER, DEV } from 'esm-env';
 import * as svelte from 'svelte';
-import { HttpError, Redirect, SvelteKitError } from '@sveltejs/kit/internal';
-const { onMount, tick } = svelte;
-// Svelte 4 and under don't have `untrack`, so we have to fallback if `untrack` is not exported
-const untrack = svelte.untrack ?? ((value) => value());
+import { writable } from 'svelte/store';
+import { compact } from '../../utils/array.js';
+import { get_message, get_status } from '../../utils/error.js';
+import { validate_page_exports } from '../../utils/exports.js';
 import {
 	decode_params,
 	decode_pathname,
-	strip_hash,
 	make_trackable,
-	normalize_path
+	normalize_path,
+	strip_hash
 } from '../../utils/url.js';
-import { dev_fetch, initial_fetch, lock_fetch, subsequent_fetch, unlock_fetch } from './fetcher.js';
-import { parse, parse_server_route } from './parse.js';
-import * as storage from './session-storage.js';
-import {
-	find_anchor,
-	resolve_url,
-	get_link_info,
-	get_router_options,
-	is_external_url,
-	origin,
-	scroll_state,
-	notifiable_store,
-	create_updated_store,
-	load_css
-} from './utils.js';
-import { base } from '$app/paths';
-import * as devalue from 'devalue';
-import {
-	HISTORY_INDEX,
-	NAVIGATION_INDEX,
-	PRELOAD_PRIORITIES,
-	SCROLL_KEY,
-	STATES_KEY,
-	SNAPSHOT_KEY,
-	PAGE_URL_KEY
-} from './constants.js';
-import { validate_page_exports } from '../../utils/exports.js';
-import { compact } from '../../utils/array.js';
+import { add_data_suffix, add_resolution_suffix } from '../pathname.js';
 import {
 	INVALIDATED_PARAM,
 	TRAILING_SLASH_PARAM,
 	validate_depends,
 	validate_load_response
 } from '../shared.js';
-import { get_message, get_status } from '../../utils/error.js';
-import { writable } from 'svelte/store';
-import { page, update, navigating } from './state.svelte.js';
-import { add_data_suffix, add_resolution_suffix } from '../pathname.js';
 import { noop_span } from '../telemetry/noop.js';
 import { text_decoder } from '../utils.js';
+import {
+	HISTORY_INDEX,
+	NAVIGATION_INDEX,
+	PAGE_URL_KEY,
+	PRELOAD_PRIORITIES,
+	SCROLL_KEY,
+	SNAPSHOT_KEY,
+	STATES_KEY
+} from './constants.js';
+import { dev_fetch, initial_fetch, lock_fetch, subsequent_fetch, unlock_fetch } from './fetcher.js';
+import { parse, parse_server_route } from './parse.js';
+import * as storage from './session-storage.js';
+import { navigating, page, update } from './state.svelte.js';
+import {
+	create_updated_store,
+	find_anchor,
+	get_link_info,
+	get_router_options,
+	is_external_url,
+	load_css,
+	notifiable_store,
+	origin,
+	resolve_url,
+	scroll_state
+} from './utils.js';
+const { onMount, tick } = svelte;
+// Svelte 4 and under don't have `untrack`, so we have to fallback if `untrack` is not exported
+const untrack = svelte.untrack ?? ((value) => value());
 
 export { load_css };
 const ICON_REL_ATTRIBUTES = new Set(['icon', 'shortcut icon', 'apple-touch-icon']);
@@ -1758,26 +1758,18 @@ async function navigate({
 	await svelte.tick();
 
 	// we reset scroll before dealing with focus, to avoid a flash of unscrolled content
-	let scroll = popped ? popped.scroll : noscroll ? scroll_state() : null;
+	/** @type {Element | null | ''} */
+	let deep_linked = null;
 
 	if (autoscroll) {
-		const deep_linked = url.hash && document.getElementById(get_id(url));
+		const scroll = popped ? popped.scroll : noscroll ? scroll_state() : null;
 		if (scroll) {
 			scrollTo(scroll.x, scroll.y);
-		} else if (deep_linked) {
+		} else if ((deep_linked = url.hash && document.getElementById(get_id(url)))) {
 			// Here we use `scrollIntoView` on the element instead of `scrollTo`
 			// because it natively supports the `scroll-margin` and `scroll-behavior`
 			// CSS properties.
 			deep_linked.scrollIntoView();
-
-			// Get target position at this point because with smooth scrolling the scroll position
-			// retrieved from current x/y above might be wrong (since we might not have arrived at the destination yet)
-			const { top, left } = deep_linked.getBoundingClientRect();
-
-			scroll = {
-				x: pageXOffset + left,
-				y: pageYOffset + top
-			};
 		} else {
 			scrollTo(0, 0);
 		}
@@ -1791,7 +1783,7 @@ async function navigate({
 		document.activeElement !== document.body;
 
 	if (!keepfocus && !changed_focus) {
-		reset_focus(url, scroll);
+		reset_focus(url, !deep_linked);
 	}
 
 	autoscroll = true;
@@ -2991,9 +2983,9 @@ let resetting_focus = false;
 
 /**
  * @param {URL} url
- * @param {{ x: number, y: number } | null} scroll
+ * @param {boolean} [scroll]
  */
-function reset_focus(url, scroll = null) {
+function reset_focus(url, scroll = true) {
 	const autofocus = document.querySelector('[autofocus]');
 	if (autofocus) {
 		// @ts-ignore
@@ -3005,7 +2997,7 @@ function reset_focus(url, scroll = null) {
 		// starting point to the fragment identifier.
 		const id = get_id(url);
 		if (id && document.getElementById(id)) {
-			const { x, y } = scroll ?? scroll_state();
+			const { x, y } = scroll_state();
 
 			// `element.focus()` doesn't work on Safari and Firefox Ubuntu so we need
 			// to use this hack with `location.replace()` instead.
@@ -3030,7 +3022,7 @@ function reset_focus(url, scroll = null) {
 
 				// Scroll management has already happened earlier so we need to restore
 				// the scroll position after setting the sequential focus navigation starting point
-				scrollTo(x, y);
+				if (scroll) scrollTo(x, y);
 				resetting_focus = false;
 			});
 		} else {
