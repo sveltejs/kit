@@ -23,7 +23,7 @@ catalog:
   '@opentelemetry/sdk-trace-node': ^2.0.1
   '@playwright/test': 1.56.0
   '@polka/url': ^1.0.0-next.28
-  '@rollup/plugin-commonjs': ^28.0.1
+  '@rollup/plugin-commonjs': ^29.0.0
   '@rollup/plugin-json': ^6.1.0
   '@rollup/plugin-node-resolve': ^16.0.0
   '@sveltejs/eslint-config': ^8.2.0
