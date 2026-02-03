@@ -84,6 +84,7 @@ export async function render_response({
 	// TODO if we add a client entry point one day, we will need to include inline_styles with the entry, otherwise stylesheets will be linked even if they are below inlineStyleThreshold
 	const inline_styles = new Map();
 
+	/** @type {ReturnType<typeof options.root.render>} */
 	let rendered;
 
 	const form_value =
@@ -102,6 +103,10 @@ export async function render_response({
 	 * We use a relative path when possible to support IPFS, the internet archive, etc.
 	 */
 	let base_expression = s(paths.base);
+
+	const csp = new Csp(options.csp, {
+		prerender: !!state.prerendering
+	});
 
 	// if appropriate, use relative paths for greater portability
 	if (paths.relative) {
@@ -170,7 +175,8 @@ export async function render_response({
 						page: props.page
 					}
 				]
-			])
+			]),
+			csp: csp.script_needs_nonce ? { nonce: csp.nonce } : { hash: csp.script_needs_hash }
 		};
 
 		const fetch = globalThis.fetch;
@@ -220,9 +226,15 @@ export async function render_response({
 					paths.reset();
 				}
 
-				const { head, html, css } = options.async ? await rendered : rendered;
+				const { head, html, css, hashes } = /** @type {ReturnType<typeof options.root.render>} */ (
+					options.async ? await rendered : rendered
+				);
 
-				return { head, html, css };
+				if (hashes) {
+					csp.add_script_hashes(hashes.script);
+				}
+
+				return { head, html, css, hashes };
 			});
 		} finally {
 			if (DEV) {
@@ -249,15 +261,11 @@ export async function render_response({
 			}
 		}
 	} else {
-		rendered = { head: '', html: '', css: { code: '', map: null } };
+		rendered = { head: '', html: '', css: { code: '', map: null }, hashes: { script: [] } };
 	}
 
 	const head = new Head(rendered.head, !!state.prerendering);
 	let body = rendered.html;
-
-	const csp = new Csp(options.csp, {
-		prerender: !!state.prerendering
-	});
 
 	/** @param {string} path */
 	const prefixed = (path) => {
