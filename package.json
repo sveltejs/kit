@@ -44,9 +44,7 @@
 			"protobufjs",
 			"rolldown",
 			"sharp",
-			"unix-dgram",
 			"svelte-preprocess",
-			"unix-dgram",
 			"workerd"
 		]
 	}
