@@ -70,8 +70,6 @@ export async function internal_respond(request, options, manifest, state) {
 	/** URL but stripped from the potential `/__data.json` suffix and its search param  */
 	const url = new URL(request.url);
 
-	let resolved_path = url.pathname;
-
 	if (manifest._.reroute_middleware && url.searchParams.has(ORIGINAL_PATH_PARAM)) {
 		url.pathname = /** @type {string} */ (url.searchParams.get(ORIGINAL_PATH_PARAM));
 		url.searchParams.delete(ORIGINAL_PATH_PARAM);
@@ -227,8 +225,9 @@ export async function internal_respond(request, options, manifest, state) {
 		});
 	}
 
-	// skip reroute if it already ran earlier in an edge middleware
-	if (!remote_id || !resolved_path) {
+	let resolved_path = url.pathname;
+
+	if (!remote_id || !manifest._.reroute_middleware) {
 		const prerendering_reroute_state = state.prerendering?.inside_reroute;
 		try {
 			// For the duration or a reroute, disable the prerendering state as reroute could call API endpoints
