@@ -514,4 +514,70 @@ describe.skipIf(process.env.NODE_ENV !== 'production')('CSPs in prod', () => {
 		assert.ok(!csp.script_needs_hash);
 		assert.ok(csp.script_needs_nonce);
 	});
+
+	test('adds nonce when both unsafe-inline and strict-dynamic are present', () => {
+		const csp = new Csp(
+			{
+				mode: 'nonce',
+				directives: {
+					'script-src': ['strict-dynamic', 'unsafe-inline']
+				},
+				reportOnly: {}
+			},
+			{ prerender: false }
+		);
+
+		csp.add_script('');
+
+		const header = csp.csp_provider.get_header();
+		// Should include nonce even though unsafe-inline is present,
+		// because strict-dynamic causes browsers to ignore unsafe-inline
+		assert.ok(header.includes("'nonce-"));
+		assert.ok(header.includes("'strict-dynamic'"));
+		assert.ok(header.includes("'unsafe-inline'"));
+	});
+
+	test('adds nonce with strict-dynamic in default-src', () => {
+		const csp = new Csp(
+			{
+				mode: 'nonce',
+				directives: {
+					'default-src': ['strict-dynamic', 'unsafe-inline']
+				},
+				reportOnly: {}
+			},
+			{ prerender: false }
+		);
+
+		csp.add_script('');
+
+		const header = csp.csp_provider.get_header();
+		// Should include nonce even though unsafe-inline is present
+		assert.ok(header.includes("'nonce-"));
+		assert.ok(header.includes("'strict-dynamic'"));
+		assert.ok(header.includes("'unsafe-inline'"));
+	});
+
+	test('strict-dynamic does not affect style-src', () => {
+		const csp = new Csp(
+			{
+				mode: 'nonce',
+				directives: {
+					// strict-dynamic only affects scripts, not styles per CSP spec
+					'style-src': ['strict-dynamic', 'unsafe-inline']
+				},
+				reportOnly: {}
+			},
+			{ prerender: false }
+		);
+
+		csp.add_style('');
+
+		const header = csp.csp_provider.get_header();
+		// Should NOT include nonce because strict-dynamic doesn't affect styles
+		// and unsafe-inline is present
+		assert.ok(!header.includes("'nonce-"));
+		assert.ok(header.includes("'strict-dynamic'"));
+		assert.ok(header.includes("'unsafe-inline'"));
+	});
 });
