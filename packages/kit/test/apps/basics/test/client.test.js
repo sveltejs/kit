@@ -979,6 +979,33 @@ test.describe('data-sveltekit attributes', () => {
 			page.waitForLoadState('networkidle') // wait for preloading to finish
 		]);
 		expect(requests.length).toBe(2);
+
+		requests.length = 0;
+		await page.goto('/data-sveltekit/preload-data');
+		await page.locator('#dynamic').hover();
+		await page.locator('#dynamic').dispatchEvent('touchstart');
+		await Promise.all([
+			page.waitForTimeout(100), // wait for preloading to start
+			page.waitForLoadState('networkidle') // wait for preloading to finish
+		]);
+		expect(requests.length).toBe(2);
+		await page.waitForTimeout(100);
+		await page.locator('#dynamic').hover();
+		await page.locator('#dynamic').dispatchEvent('touchstart');
+		await Promise.all([
+			page.waitForTimeout(100), // wait for preloading to start
+			page.waitForLoadState('networkidle') // wait for preloading to finish
+		]);
+		expect(requests.length).toBe(2);
+		await page.locator('#change_dynamic').click();
+		await page.waitForTimeout(100);
+		await page.locator('#dynamic').hover();
+		await page.locator('#dynamic').dispatchEvent('touchstart');
+		await Promise.all([
+			page.waitForTimeout(100), // wait for preloading to start
+			page.waitForLoadState('networkidle') // wait for preloading to finish
+		]);
+		expect(requests.length).toBe(3);
 	});
 
 	test('data-sveltekit-preload-data network failure does not trigger navigation', async ({
@@ -1104,23 +1131,23 @@ test.describe('data-sveltekit attributes', () => {
 	});
 
 	test('data-sveltekit-reload', async ({ baseURL, page, clicknav }) => {
-		/** @type {string[]} */
-		const requests = [];
-		page.on('request', (r) => requests.push(r.url()));
-
 		await page.goto('/data-sveltekit/reload');
+		let request_promise = page.waitForRequest(`${baseURL}/data-sveltekit/reload/target`);
 		await clicknav('#one');
-		expect(requests).toContain(`${baseURL}/data-sveltekit/reload/target`);
+		await request_promise;
 
-		requests.length = 0;
 		await page.goto('/data-sveltekit/reload');
+		request_promise = page.waitForRequest(`${baseURL}/data-sveltekit/reload/target`);
 		await clicknav('#two');
-		expect(requests).toContain(`${baseURL}/data-sveltekit/reload/target`);
+		await request_promise;
 
-		requests.length = 0;
 		await page.goto('/data-sveltekit/reload');
+		request_promise = page.waitForRequest(`${baseURL}/data-sveltekit/reload/target`, {
+			timeout: 1000
+		});
+		request_promise.catch(() => {});
 		await clicknav('#three');
-		expect(requests).not.toContain(`${baseURL}/data-sveltekit/reload/target`);
+		await expect(request_promise).rejects.toThrow();
 	});
 
 	test('data-sveltekit-noscroll', async ({ page, clicknav }) => {
@@ -1649,9 +1676,9 @@ test.describe('Shallow routing', () => {
 });
 
 test.describe('reroute', () => {
-	test('Apply reroute during client side navigation', async ({ page }) => {
+	test('Apply reroute during client side navigation', async ({ page, clicknav }) => {
 		await page.goto('/reroute/basic');
-		await page.click("a[href='/reroute/basic/a']");
+		await clicknav('a[href="/reroute/basic/a"]', { waitForURL: '/reroute/basic/a' });
 		expect(await page.textContent('h1')).toContain(
 			'Successfully rewritten, URL should still show a: /reroute/basic/a'
 		);

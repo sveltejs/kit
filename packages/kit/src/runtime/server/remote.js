@@ -73,22 +73,11 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 			/** @type {{ payloads: string[] }} */
 			const { payloads } = await event.request.json();
 
-			const args = payloads.map((payload) => parse_remote_arg(payload, transport));
-			const get_result = await with_request_store({ event, state }, () => info.run(args));
-			const results = await Promise.all(
-				args.map(async (arg, i) => {
-					try {
-						return { type: 'result', data: get_result(arg, i) };
-					} catch (error) {
-						return {
-							type: 'error',
-							error: await handle_error_and_jsonify(event, state, options, error),
-							status:
-								error instanceof HttpError || error instanceof SvelteKitError ? error.status : 500
-						};
-					}
-				})
+			const args = await Promise.all(
+				payloads.map((payload) => parse_remote_arg(payload, transport))
 			);
+
+			const results = await with_request_store({ event, state }, () => info.run(args, options));
 
 			return json(
 				/** @type {RemoteFunctionResponse} */ ({
@@ -294,6 +283,7 @@ async function handle_remote_form_post_internal(event, state, manifest, id) {
 		const fn = /** @type {RemoteInfo & { type: 'form' }} */ (/** @type {any} */ (form).__).fn;
 
 		const { data, meta, form_data } = await deserialize_binary_form(event.request);
+
 		if (action_id && !('id' in data)) {
 			data.id = JSON.parse(decodeURIComponent(action_id));
 		}

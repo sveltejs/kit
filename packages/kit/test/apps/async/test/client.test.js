@@ -301,6 +301,14 @@ test.describe('remote function mutations', () => {
 		expect(request_count).toBe(1); // only the command request
 	});
 
+	test('query.batch resolver function always receives validated arguments', async ({ page }) => {
+		await page.goto('/remote/batch-validation');
+
+		await expect(page.locator('#phrase')).toHaveText('use the force');
+		await page.locator('button').click();
+		await expect(page.locator('#phrase')).toHaveText('i am your father');
+	});
+
 	// TODO ditto
 	test('query works with transport', async ({ page }) => {
 		await page.goto('/remote/transport');

@@ -2,6 +2,7 @@ import { beforeAll, describe, expect, test } from 'vitest';
 import {
 	BINARY_FORM_CONTENT_TYPE,
 	convert_formdata,
+	deep_set,
 	deserialize_binary_form,
 	serialize_binary_form,
 	split_path
@@ -123,7 +124,8 @@ describe('binary form serializer', () => {
 				method: 'POST',
 				body: blob,
 				headers: {
-					'Content-Type': BINARY_FORM_CONTENT_TYPE
+					'Content-Type': BINARY_FORM_CONTENT_TYPE,
+					'Content-Length': blob.size.toString()
 				}
 			})
 		);
@@ -138,7 +140,8 @@ describe('binary form serializer', () => {
 				large: new File([new Uint8Array(1024).fill('a'.charCodeAt(0))], 'large.txt', {
 					type: 'text/plain',
 					lastModified: 100
-				})
+				}),
+				empty: new File([], 'empty.txt', { type: 'text/plain' })
 			},
 			{}
 		);
@@ -159,11 +162,16 @@ describe('binary form serializer', () => {
 				// @ts-expect-error duplex required in node
 				duplex: 'half',
 				headers: {
-					'Content-Type': BINARY_FORM_CONTENT_TYPE
+					'Content-Type': BINARY_FORM_CONTENT_TYPE,
+					'Content-Length': blob.size.toString()
 				}
 			})
 		);
-		const { small, large } = res.data;
+		const { small, large, empty } = res.data;
+		expect(empty.name).toBe('empty.txt');
+		expect(empty.type).toBe('text/plain');
+		expect(empty.size).toBe(0);
+		expect(await empty.text()).toBe('');
 		expect(small.name).toBe('a.txt');
 		expect(small.type).toBe('text/plain');
 		expect(small.size).toBe(1);
@@ -195,7 +203,8 @@ describe('binary form serializer', () => {
 				method: 'POST',
 				body: blob,
 				headers: {
-					'Content-Type': BINARY_FORM_CONTENT_TYPE
+					'Content-Type': BINARY_FORM_CONTENT_TYPE,
+					'Content-Length': blob.size.toString()
 				}
 			})
 		);
@@ -212,6 +221,166 @@ describe('binary form serializer', () => {
 		const world_slice = file.slice(-5);
 		expect(await world_slice.text()).toBe('World');
 		expect(world_slice.type).toBe(file.type);
+	});
+
+	test('throws when Content-Length is invalid', async () => {
+		await expect(
+			deserialize_binary_form(
+				new Request('http://test', {
+					method: 'POST',
+					body: 'foo',
+					headers: {
+						'Content-Type': BINARY_FORM_CONTENT_TYPE
+					}
+				})
+			)
+		).rejects.toThrow('invalid Content-Length header');
+		await expect(
+			deserialize_binary_form(
+				new Request('http://test', {
+					method: 'POST',
+					body: 'foo',
+					headers: {
+						'Content-Type': BINARY_FORM_CONTENT_TYPE,
+						'Content-Length': 'invalid'
+					}
+				})
+			)
+		).rejects.toThrow('invalid Content-Length header');
+	});
+
+	test('data length check', async () => {
+		const { blob } = serialize_binary_form(
+			{
+				foo: 'bar'
+			},
+			{}
+		);
+		await expect(
+			deserialize_binary_form(
+				new Request('http://test', {
+					method: 'POST',
+					body: blob,
+					headers: {
+						'Content-Type': BINARY_FORM_CONTENT_TYPE,
+						'Content-Length': (blob.size - 1).toString()
+					}
+				})
+			)
+		).rejects.toThrow('data overflow');
+	});
+
+	test('file offset table length check', async () => {
+		const { blob } = serialize_binary_form(
+			{
+				file: new File([''], 'a.txt')
+			},
+			{}
+		);
+		await expect(
+			deserialize_binary_form(
+				new Request('http://test', {
+					method: 'POST',
+					body: blob,
+					headers: {
+						'Content-Type': BINARY_FORM_CONTENT_TYPE,
+						'Content-Length': (blob.size - 1).toString()
+					}
+				})
+			)
+		).rejects.toThrow('file offset table overflow');
+	});
+
+	test('file length check', async () => {
+		const { blob } = serialize_binary_form(
+			{
+				file: new File(['a'], 'a.txt')
+			},
+			{}
+		);
+		await expect(
+			deserialize_binary_form(
+				new Request('http://test', {
+					method: 'POST',
+					body: blob,
+					headers: {
+						'Content-Type': BINARY_FORM_CONTENT_TYPE,
+						'Content-Length': (blob.size - 1).toString()
+					}
+				})
+			)
+		).rejects.toThrow('file data overflow');
+	});
+
+	test('does not preallocate large buffers for incomplete bodies', async () => {
+		const OriginalUint8Array = Uint8Array;
+		const header_bytes = 1 + 4 + 2;
+		const data_length = 32 * 1024 * 1024;
+
+		// This test should fail on the vulnerable implementation. To make the overallocation observable,
+		// temporarily guard allocations of large Uint8Arrays — the fixed code only allocates after reading
+		// the full range, so it should not trip this guard for an incomplete body.
+		class GuardedUint8Array extends OriginalUint8Array {
+			/** @param {...any} args */
+			constructor(...args) {
+				if (typeof args[0] === 'number' && args[0] === data_length) {
+					throw new Error('EAGER_ALLOC');
+				}
+
+				if (args.length === 0) {
+					super();
+				} else if (args.length === 1) {
+					super(/** @type {any} */ (args[0]));
+				} else if (args.length === 2) {
+					super(/** @type {any} */ (args[0]), /** @type {any} */ (args[1]));
+				} else {
+					super(
+						/** @type {any} */ (args[0]),
+						/** @type {any} */ (args[1]),
+						/** @type {any} */ (args[2])
+					);
+				}
+			}
+		}
+
+		/** @type {any} */ (globalThis).Uint8Array = GuardedUint8Array;
+		try {
+			// First chunk must include at least 1 byte past the header so that `get_buffer(header_bytes, data_length)`
+			// takes the multi-chunk path.
+			const first_chunk = new OriginalUint8Array(header_bytes + 1);
+			first_chunk[0] = 0;
+			const header_view = new DataView(
+				first_chunk.buffer,
+				first_chunk.byteOffset,
+				first_chunk.byteLength
+			);
+			header_view.setUint32(1, data_length, true);
+			header_view.setUint16(5, 0, true);
+
+			const stream = new ReadableStream({
+				start(controller) {
+					controller.enqueue(first_chunk);
+					controller.close();
+				}
+			});
+
+			await expect(
+				deserialize_binary_form(
+					new Request('http://test', {
+						method: 'POST',
+						body: stream,
+						// @ts-expect-error duplex required in node
+						duplex: 'half',
+						headers: {
+							'Content-Type': BINARY_FORM_CONTENT_TYPE,
+							'Content-Length': (header_bytes + data_length).toString()
+						}
+					})
+				)
+			).rejects.toThrow('data too short');
+		} finally {
+			/** @type {any} */ (globalThis).Uint8Array = OriginalUint8Array;
+		}
 	});
 
 	// Regression test for https://github.com/sveltejs/kit/issues/14971
@@ -235,11 +404,25 @@ describe('binary form serializer', () => {
 				// @ts-expect-error duplex required in node
 				duplex: 'half',
 				headers: {
-					'Content-Type': BINARY_FORM_CONTENT_TYPE
+					'Content-Type': BINARY_FORM_CONTENT_TYPE,
+					'Content-Length': blob.size.toString()
 				}
 			})
 		);
 
 		expect(res.data).toEqual({ a: 1 });
+	});
+});
+
+describe('deep_set', () => {
+	test('always creates own property', () => {
+		const target = {};
+
+		deep_set(target, ['toString', 'property'], 'hello');
+
+		// @ts-ignore
+		expect(target.toString.property).toBe('hello');
+		// @ts-ignore
+		expect(Object.prototype.toString.property).toBeUndefined();
 	});
 });
