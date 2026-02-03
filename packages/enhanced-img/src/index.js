@@ -1,4 +1,3 @@
-import path from 'node:path';
 import process from 'node:process';
 import { imagetools } from 'vite-imagetools';
 import { image_plugin } from './vite-plugin.js';
@@ -12,18 +11,6 @@ export function enhancedImages() {
 		? [image_plugin(imagetools_instance), imagetools_instance]
 		: [];
 }
-
-/** @type {Record<string,string>} */
-const fallback = {
-	'.avif': 'png',
-	'.gif': 'gif',
-	'.heif': 'jpg',
-	'.jpeg': 'jpg',
-	'.jpg': 'jpg',
-	'.png': 'png',
-	'.tiff': 'jpg',
-	'.webp': 'png'
-};
 
 function imagetools_plugin() {
 	/** @type {Partial<import('vite-imagetools').VitePluginOptions>} */
@@ -41,7 +28,7 @@ function imagetools_plugin() {
 			const { widths, kind } = get_widths(width, qs.get('imgSizes'));
 			return new URLSearchParams({
 				as: 'picture',
-				format: `avif;webp;${fallback[path.extname(pathname)] ?? 'png'}`,
+				format: 'avif;webp;jpg',
 				w: widths.join(';'),
 				...(kind === 'x' && !qs.has('w') && { basePixels: widths[0].toString() })
 			});
