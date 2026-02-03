@@ -897,7 +897,7 @@ test.describe('Routing', () => {
 
 		await clicknav('#navigate');
 
-		await page.waitForTimeout(10);
+		await expect(page.locator('p')).toHaveText('X');
 		expect(page.url()).toBe(`${baseURL}/routing/hashes/base/a#x`);
 	});
 
