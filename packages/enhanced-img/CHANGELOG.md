@@ -1,5 +1,11 @@
 # @sveltejs/enhanced-img
 
+## 0.10.0
+### Minor Changes
+
+
+- feat: re-export the `Picture` type from `vite-imagetools` ([#15225](https://github.com/sveltejs/kit/pull/15225))
+
 ## 0.9.3
 ### Patch Changes
 
