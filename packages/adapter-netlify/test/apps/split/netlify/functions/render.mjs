@@ -1,7 +1,7 @@
 // This is a temporary workaround to be compatible with Netlify's new dev server
 // TODO: remove this once we overhaul the Netlify adapter to use Netlify's new serverless function format https://docs.netlify.com/build/functions/get-started/?data-tab=TypeScript#write-a-function
 
-import { handler } from '../../.netlify/functions-internal/sveltekit-render.mjs';
+import { handler } from '../../.netlify/functions-internal/sveltekit-reroute.mjs';
 
 /**
  * @param {Request} request

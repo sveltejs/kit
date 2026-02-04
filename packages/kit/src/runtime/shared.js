@@ -20,6 +20,12 @@ export const INVALIDATED_PARAM = 'x-sveltekit-invalidated';
 export const TRAILING_SLASH_PARAM = 'x-sveltekit-trailing-slash';
 
 /**
+ * If an adapter enables running reroute early in its own server, the original
+ * pathname is stored in this query parameter
+ */
+export const ORIGINAL_PATH_PARAM = 'x-sveltekit-original-path';
+
+/**
  * @param {any} data
  * @param {string} [location_description]
  */

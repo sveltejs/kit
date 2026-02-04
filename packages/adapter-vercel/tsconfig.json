@@ -15,5 +15,13 @@
 			"@sveltejs/kit": ["../kit/types/index"]
 		}
 	},
-	"include": ["*.js", "files/**/*.js", "internal.d.ts", "test/**/*.js"]
+	"include": [
+		"src/serverless.js",
+		"src/reroute.js",
+		"index.js",
+		"internal.d.ts",
+		"utils.js",
+		"test/**/*.js",
+		"rollup.config.js"
+	]
 }

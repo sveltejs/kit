@@ -146,9 +146,15 @@ export interface Builder {
 
 	/**
 	 * Generate a server-side manifest to initialise the SvelteKit [server](https://svelte.dev/docs/kit/@sveltejs-kit#Server) with.
-	 * @param opts a relative path to the base directory of the app and optionally in which format (esm or cjs) the manifest should be generated
+	 * @param opts.relativePath a relative path to the base directory of the app
+	 * @param opts.routes optional. In which format (esm or cjs) the manifest should be generated
+	 * @param opts.rerouteMiddleware optional. True if the `reroute` hook will run in a middleware before the main handler using the [`applyReroute`](https://svelte.dev/docs/kit/@sveltejs-kit-adapter#applyReroute) function
 	 */
-	generateManifest: (opts: { relativePath: string; routes?: RouteDefinition[] }) => string;
+	generateManifest: (opts: {
+		relativePath: string;
+		routes?: RouteDefinition[];
+		rerouteMiddleware?: boolean;
+	}) => string;
 
 	/**
 	 * Resolve a path to the `name` directory inside `outDir`, e.g. `/path/to/.svelte-kit/my-adapter`.
@@ -161,6 +167,29 @@ export interface Builder {
 	getServerDirectory: () => string;
 	/** Get the application path including any configured `base` path, e.g. `my-base-path/_app`. */
 	getAppPath: () => string;
+	/**
+	 * Get the fully resolved path to the file containing the `reroute` hook if it exists.
+	 * @example
+	 * ```js
+	 * const reroutePath = builder.getReroutePath();
+	 * if (split && reroutePath) {
+	 *   // generate a server-side manifest with the `rerouteMiddleware` option set to `true`
+	 *   fs.writeFileSync(
+	 *     `${output}/manifest.js`,
+	 *     `export const manifest = ${builder.generateManifest({ relativePath, routes, rerouteMiddleware: true })};\n`
+	 *   );
+	 *
+	 *   // create a middleware that imports and runs the `reroute` hook
+	 *   builder.copy(`${files}/reroute.js`, `${output}/entry.js`, {
+	 *     replace: {
+	 *       __HOOKS__: reroutePath
+	 *     }
+	 *   });
+	 * }
+	 * ```
+	 * @since 2.51.0
+	 */
+	getReroutePath: () => Promise<string | void>;
 
 	/**
 	 * Write client assets to `dest`.
@@ -1632,6 +1661,8 @@ export interface SSRManifest {
 		matchers: () => Promise<Record<string, ParamMatcher>>;
 		/** A `[file]: size` map of all assets imported by server code. */
 		server_assets: Record<string, number>;
+		/** True if the `reroute` hook will run in a middleware before the main handler */
+		reroute_middleware: boolean;
 	};
 }
 

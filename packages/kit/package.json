@@ -40,7 +40,7 @@
 		"@types/node": "catalog:",
 		"@types/set-cookie-parser": "catalog:",
 		"dts-buddy": "catalog:",
-		"rollup": "^4.14.2",
+		"rollup": "catalog:",
 		"svelte": "catalog:",
 		"svelte-preprocess": "catalog:",
 		"typescript": "^5.3.3",
@@ -105,6 +105,14 @@
 			"types": "./types/index.d.ts",
 			"import": "./src/exports/index.js"
 		},
+		"./adapter": {
+			"types": "./types/index.d.ts",
+			"import": "./src/exports/adapter/index.js"
+		},
+		"./hooks": {
+			"types": "./types/index.d.ts",
+			"import": "./src/exports/hooks/index.js"
+		},
 		"./internal": {
 			"types": "./types/index.d.ts",
 			"import": "./src/exports/internal/index.js"
@@ -120,10 +128,6 @@
 		"./node/polyfills": {
 			"types": "./types/index.d.ts",
 			"import": "./src/exports/node/polyfills.js"
-		},
-		"./hooks": {
-			"types": "./types/index.d.ts",
-			"import": "./src/exports/hooks/index.js"
 		},
 		"./vite": {
 			"types": "./types/index.d.ts",

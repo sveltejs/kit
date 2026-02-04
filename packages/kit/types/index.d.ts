@@ -122,9 +122,15 @@ declare module '@sveltejs/kit' {
 
 		/**
 		 * Generate a server-side manifest to initialise the SvelteKit [server](https://svelte.dev/docs/kit/@sveltejs-kit#Server) with.
-		 * @param opts a relative path to the base directory of the app and optionally in which format (esm or cjs) the manifest should be generated
+		 * @param opts.relativePath a relative path to the base directory of the app
+		 * @param opts.routes optional. In which format (esm or cjs) the manifest should be generated
+		 * @param opts.rerouteMiddleware optional. True if the `reroute` hook will run in a middleware before the main handler using the [`applyReroute`](https://svelte.dev/docs/kit/@sveltejs-kit-adapter#applyReroute) function
 		 */
-		generateManifest: (opts: { relativePath: string; routes?: RouteDefinition[] }) => string;
+		generateManifest: (opts: {
+			relativePath: string;
+			routes?: RouteDefinition[];
+			rerouteMiddleware?: boolean;
+		}) => string;
 
 		/**
 		 * Resolve a path to the `name` directory inside `outDir`, e.g. `/path/to/.svelte-kit/my-adapter`.
@@ -137,6 +143,29 @@ declare module '@sveltejs/kit' {
 		getServerDirectory: () => string;
 		/** Get the application path including any configured `base` path, e.g. `my-base-path/_app`. */
 		getAppPath: () => string;
+		/**
+		 * Get the fully resolved path to the file containing the `reroute` hook if it exists.
+		 * @example
+		 * ```js
+		 * const reroutePath = builder.getReroutePath();
+		 * if (split && reroutePath) {
+		 *   // generate a server-side manifest with the `rerouteMiddleware` option set to `true`
+		 *   fs.writeFileSync(
+		 *     `${output}/manifest.js`,
+		 *     `export const manifest = ${builder.generateManifest({ relativePath, routes, rerouteMiddleware: true })};\n`
+		 *   );
+		 *
+		 *   // create a middleware that imports and runs the `reroute` hook
+		 *   builder.copy(`${files}/reroute.js`, `${output}/entry.js`, {
+		 *     replace: {
+		 *       __HOOKS__: reroutePath
+		 *     }
+		 *   });
+		 * }
+		 * ```
+		 * @since 2.51.0
+		 */
+		getReroutePath: () => Promise<string | void>;
 
 		/**
 		 * Write client assets to `dest`.
@@ -1607,6 +1636,8 @@ declare module '@sveltejs/kit' {
 			matchers: () => Promise<Record<string, ParamMatcher>>;
 			/** A `[file]: size` map of all assets imported by server code. */
 			server_assets: Record<string, number>;
+			/** True if the `reroute` hook will run in a middleware before the main handler */
+			reroute_middleware: boolean;
 		};
 	}
 
@@ -2768,6 +2799,29 @@ declare module '@sveltejs/kit' {
 		status: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308;
 		location: string;
 	}
+
+	export {};
+}
+
+declare module '@sveltejs/kit/adapter' {
+	/**
+	 * If your deployment platform supports splitting your app into multiple functions,
+	 * you should run this in a middleware that runs before the main handler
+	 * to reroute the request to the correct function and [generate a server-side manifest](https://svelte.dev/docs/kit/@sveltejs-kit#Builder)
+	 * with the `rerouteMiddleware` option set to `true`.
+	 * @example
+	 * ```js
+	 * import { applyReroute } from '@sveltejs/kit/adapter';
+	 * // replace __HOOKS__ with the path to the reroute hook obtained from `builder.getReroutePath()`
+	 * import { reroute } from '__HOOKS__';
+	 *
+	 * export default function middleware(request) {
+	 *   return applyReroute(request.url, reroute);
+	 * }
+	 * ```
+	 * @since 2.51.0
+	 */
+	export function applyReroute(url: string, reroute: import("@sveltejs/kit").Reroute): Promise<URL>;
 
 	export {};
 }

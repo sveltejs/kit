@@ -1,0 +1,16 @@
+{
+	"compilerOptions": {
+		"allowJs": true,
+		"checkJs": true,
+		"strict": true,
+		"noEmit": true,
+		"noImplicitAny": true,
+		"strictNullChecks": true,
+		"target": "es2022",
+		"module": "es2022",
+		"moduleResolution": "bundler",
+		"allowSyntheticDefaultImports": true,
+		"baseUrl": "."
+	},
+	"include": ["*.js", "../../internal.d.ts"]
+}

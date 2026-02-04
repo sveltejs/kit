@@ -23,7 +23,7 @@ import { create_fetch } from './fetch.js';
 import { PageNodes } from '../../utils/page_nodes.js';
 import { validate_server_exports } from '../../utils/exports.js';
 import { action_json_redirect, is_action_json_request } from './page/actions.js';
-import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM } from '../shared.js';
+import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM, ORIGINAL_PATH_PARAM } from '../shared.js';
 import { get_public_env } from './env_module.js';
 import { resolve_route } from './page/server_routing.js';
 import { validateHeaders } from './validate-headers.js';
@@ -69,6 +69,15 @@ export const respond = propagate_context(internal_respond);
 export async function internal_respond(request, options, manifest, state) {
 	/** URL but stripped from the potential `/__data.json` suffix and its search param  */
 	const url = new URL(request.url);
+
+	let resolved_path = url.pathname;
+
+	// If reroute ran in an edge middleware, Vercel doesn't change the request URL but Netlify does.
+	// So, we always restore the original URL pathname to ensure that the correct route is invoked
+	if (manifest._.reroute_middleware && url.searchParams.has(ORIGINAL_PATH_PARAM)) {
+		url.pathname = /** @type {string} */ (url.searchParams.get(ORIGINAL_PATH_PARAM));
+		url.searchParams.delete(ORIGINAL_PATH_PARAM);
+	}
 
 	const is_route_resolution_request = has_resolution_suffix(url.pathname);
 	const is_data_request = has_data_suffix(url.pathname);
@@ -220,9 +229,7 @@ export async function internal_respond(request, options, manifest, state) {
 		});
 	}
 
-	let resolved_path = url.pathname;
-
-	if (!remote_id) {
+	if (!remote_id || !manifest._.reroute_middleware) {
 		const prerendering_reroute_state = state.prerendering?.inside_reroute;
 		try {
 			// For the duration or a reroute, disable the prerendering state as reroute could call API endpoints

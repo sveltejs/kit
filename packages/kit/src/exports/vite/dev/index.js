@@ -313,7 +313,8 @@ export async function dev(vite, vite_config, svelte_config, get_remotes) {
 					}
 
 					return matchers;
-				}
+				},
+				reroute_middleware: false
 			}
 		};
 	}

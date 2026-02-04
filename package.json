@@ -45,7 +45,6 @@
 			"rolldown",
 			"sharp",
 			"svelte-preprocess",
-			"unix-dgram",
 			"workerd"
 		]
 	}

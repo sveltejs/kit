@@ -57,7 +57,7 @@ export function init(manifest) {
  * @param {import('@netlify/functions').HandlerEvent} event
  * @returns {Request}
  */
-function to_request({ httpMethod, headers, rawUrl, body, isBase64Encoded }) {
+function to_request({ httpMethod, headers, rawUrl, rawQuery, body, isBase64Encoded }) {
 	/** @type {RequestInit} */
 	const init = {
 		method: httpMethod,
@@ -69,7 +69,7 @@ function to_request({ httpMethod, headers, rawUrl, body, isBase64Encoded }) {
 		init.body = typeof body === 'string' ? Buffer.from(body, encoding) : body;
 	}
 
-	return new Request(rawUrl, init);
+	return new Request(rawUrl + (rawQuery ? `?${rawQuery}` : ''), init);
 }
 
 const text_types = new Set([
