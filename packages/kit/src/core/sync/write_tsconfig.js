@@ -100,7 +100,8 @@ export function get_tsconfig(kit) {
 			// generated options
 			paths: {
 				...get_tsconfig_paths(kit),
-				'$env/*': ['./env/*'],
+				// This allows files outside the Vite pipeline to access $env
+				'$env/*': ['./generated/env/*'],
 				'$app/types': ['./types/index.d.ts']
 			},
 			rootDirs: [config_relative('.'), './types'],
