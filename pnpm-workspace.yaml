@@ -53,7 +53,7 @@ catalog:
   wrangler: ^4.14.3
 catalogs:
   vite-baseline:
-    vite: 5.2.0 # should be 5.0.3 but older versions cause a resolve error in amp test app
+    vite: ^5.4.21 # should be 5.0.3 but older versions cause errors in some tests
     '@sveltejs/vite-plugin-svelte': ^4.0.0
     'vitest>vite': ^6.0.0 # vitest@4 doesn't work with vite@5, vite@7 doesn't work on node18
   vite-beta:
