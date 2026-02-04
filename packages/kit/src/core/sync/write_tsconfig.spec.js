@@ -21,6 +21,7 @@ test('Creates tsconfig path aliases from kit.alias', () => {
 	// check in the implementation
 	expect(compilerOptions.paths).toEqual({
 		'$app/types': ['./types/index.d.ts'],
+		'$env/*': ['./env/*'],
 		simpleKey: ['../simple/value'],
 		'simpleKey/*': ['../simple/value/*'],
 		key: ['../value'],
