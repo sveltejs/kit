@@ -62,8 +62,10 @@ export function get_tsconfig(kit) {
 		config_relative('vite.config.js'),
 		config_relative('vite.config.ts')
 	]);
-	const src_includes = [kit.files.routes, kit.files.lib, kit.files.src].filter((dir) => {
-		const relative = path.relative(kit.files.src, dir);
+	// TODO(v2): find a better way to include all src files. We can't just use routes/lib only because
+	// people might have other folders/files in src that they want included.
+	const src_includes = [kit.files.routes, kit.files.lib, path.resolve('src')].filter((dir) => {
+		const relative = path.relative(path.resolve('src'), dir);
 		return !relative || relative.startsWith('..');
 	});
 	for (const dir of src_includes) {
@@ -74,10 +76,6 @@ export function get_tsconfig(kit) {
 
 	// Test folder is a special case - we advocate putting tests in a top-level test folder
 	// and it's not configurable (should we make it?)
-	const test_folder = project_relative('test');
-	include.add(config_relative(`${test_folder}/**/*.js`));
-	include.add(config_relative(`${test_folder}/**/*.ts`));
-	include.add(config_relative(`${test_folder}/**/*.svelte`));
 	const tests_folder = project_relative('tests');
 	include.add(config_relative(`${tests_folder}/**/*.js`));
 	include.add(config_relative(`${tests_folder}/**/*.ts`));
