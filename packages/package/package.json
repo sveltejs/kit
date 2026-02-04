@@ -55,6 +55,6 @@
 		"./package.json": "./package.json"
 	},
 	"engines": {
-		"node": "^16.14 || >=18"
+		"node": ">=20.12"
 	}
 }
