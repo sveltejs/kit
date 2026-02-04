@@ -17,7 +17,7 @@ import { get_env } from '../../exports/vite/utils.js';
  * @param {import('../../exports/vite/types.js').Env} env
  */
 export function init(config, mode, env) {
-	write_env(config.kit, env);
+	write_env(config.kit, mode, env);
 	write_tsconfig(config.kit);
 	write_ambient(config.kit, mode);
 }

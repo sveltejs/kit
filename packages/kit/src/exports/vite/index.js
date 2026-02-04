@@ -482,7 +482,7 @@ async function kit({ svelte_config }) {
 				case env_dynamic_private:
 					return vite_config_env.command === 'serve'
 						? read(`${kit.outDir}/generated/env/dynamic/private.js`)
-						: create_dynamic_module('private', undefined);
+						: create_dynamic_module('private');
 
 				case env_dynamic_public:
 					// populate `$env/dynamic/public` from `window`
@@ -491,7 +491,7 @@ async function kit({ svelte_config }) {
 					}
 					return vite_config_env.command === 'serve'
 						? read(`${kit.outDir}/generated/env/dynamic/public.js`)
-						: create_dynamic_module('public', undefined);
+						: create_dynamic_module('public');
 
 				case service_worker:
 					return create_service_worker_module(svelte_config);
