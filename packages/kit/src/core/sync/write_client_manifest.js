@@ -1,8 +1,8 @@
 import path from 'node:path';
+import { styleText } from 'node:util';
 import { relative_path, resolve_entry } from '../../utils/filesystem.js';
 import { s } from '../../utils/misc.js';
 import { dedent, isSvelte5Plus, write_if_changed } from './utils.js';
-import { styleText } from 'node:util';
 
 /**
  * Writes the client manifest to disk. The manifest is used to power the router. It contains the
