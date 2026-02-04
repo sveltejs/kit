@@ -76,10 +76,14 @@ export function get_tsconfig(kit) {
 
 	// Test folder is a special case - we advocate putting tests in a top-level test folder
 	// and it's not configurable (should we make it?)
-	const test_folder = project_relative('tests');
+	const test_folder = project_relative('test');
 	include.add(config_relative(`${test_folder}/**/*.js`));
 	include.add(config_relative(`${test_folder}/**/*.ts`));
 	include.add(config_relative(`${test_folder}/**/*.svelte`));
+	const tests_folder = project_relative('tests');
+	include.add(config_relative(`${tests_folder}/**/*.js`));
+	include.add(config_relative(`${tests_folder}/**/*.ts`));
+	include.add(config_relative(`${tests_folder}/**/*.svelte`));
 
 	const exclude = [config_relative('node_modules/**')];
 	// Add service worker to exclude list so that worker types references in it don't spill over into the rest of the app
