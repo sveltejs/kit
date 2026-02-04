@@ -3,7 +3,7 @@ import { filter_env } from '../../utils/env.js';
 
 /**
  * Load environment variables from process.env and .env files
- * @param {import('types').ValidatedKitConfig['env']} env_config
+ * @param {{ dir: string; publicPrefix: string; privatePrefix: string }} env_config
  * @param {string} mode
  * @returns {import('./types.js').Env}
  */
