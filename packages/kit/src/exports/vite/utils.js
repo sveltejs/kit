@@ -65,6 +65,7 @@ function escape_for_regexp(str) {
  * Load environment variables from process.env and .env files
  * @param {import('types').ValidatedKitConfig['env']} env_config
  * @param {string} mode
+ * @returns {import('./types.js').Env}
  */
 export function get_env(env_config, mode) {
 	const { publicPrefix: public_prefix, privatePrefix: private_prefix } = env_config;

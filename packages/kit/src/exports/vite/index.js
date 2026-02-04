@@ -5,7 +5,7 @@ import process from 'node:process';
 import colors from 'kleur';
 
 import { copy, mkdirp, posixify, read, resolve_entry, rimraf } from '../../utils/filesystem.js';
-import { create_static_module, create_dynamic_module } from '../../core/env.js';
+import { create_dynamic_module } from '../../core/env.js';
 import * as sync from '../../core/sync/sync.js';
 import { create_assets } from '../../core/sync/create_manifest_data/index.js';
 import { runtime_directory, logger } from '../../core/utils.js';
@@ -32,8 +32,6 @@ import { dedent, isSvelte5Plus } from '../../core/sync/utils.js';
 import {
 	env_dynamic_private,
 	env_dynamic_public,
-	env_static_private,
-	env_static_public,
 	service_worker,
 	sveltekit_environment,
 	sveltekit_server
@@ -209,7 +207,7 @@ async function kit({ svelte_config }) {
 	/** @type {boolean} */
 	let is_build;
 
-	/** @type {{ public: Record<string, string>; private: Record<string, string> }} */
+	/** @type {import('./types.js').Env} */
 	let env;
 
 	/** @type {() => Promise<void>} */
@@ -370,7 +368,7 @@ async function kit({ svelte_config }) {
 				};
 
 				if (!secondary_build_started) {
-					manifest_data = sync.all(svelte_config, config_env.mode).manifest_data;
+					manifest_data = sync.all(svelte_config, config_env.mode, env).manifest_data;
 					// During the initial server build we don't know yet
 					new_config.define.__SVELTEKIT_HAS_SERVER_LOAD__ = 'true';
 					new_config.define.__SVELTEKIT_HAS_UNIVERSAL_LOAD__ = 'true';
@@ -423,7 +421,7 @@ async function kit({ svelte_config }) {
 	const plugin_virtual_modules = {
 		name: 'vite-plugin-sveltekit-virtual-modules',
 
-		resolveId(id, importer) {
+		resolveId(id, importer, options) {
 			if (id === '__sveltekit/manifest') {
 				return `${kit.outDir}/generated/client-optimized/app.js`;
 			}
@@ -450,8 +448,14 @@ async function kit({ svelte_config }) {
 				}
 			}
 
+			const browser = !options?.ssr;
+
 			// treat $env/static/[public|private] as virtual
-			if (id.startsWith('$env/') || id === '$service-worker') {
+			if (
+				(id.startsWith('$env/dynamic') && vite_config_env.command !== 'serve') ||
+				(id === '$env/dynamic/public' && browser) ||
+				id === '$service-worker'
+			) {
 				// ids with :$ don't work with reverse proxies like nginx
 				return `\0virtual:${id.substring(1)}`;
 			}
@@ -473,28 +477,15 @@ async function kit({ svelte_config }) {
 				: 'globalThis.__sveltekit_dev';
 
 			switch (id) {
-				case env_static_private:
-					return create_static_module('$env/static/private', env.private);
-
-				case env_static_public:
-					return create_static_module('$env/static/public', env.public);
-
 				case env_dynamic_private:
-					return create_dynamic_module(
-						'private',
-						vite_config_env.command === 'serve' ? env.private : undefined
-					);
+					return create_dynamic_module('private', undefined);
 
 				case env_dynamic_public:
 					// populate `$env/dynamic/public` from `window`
 					if (browser) {
 						return `export const env = ${global}.env;`;
 					}
-
-					return create_dynamic_module(
-						'public',
-						vite_config_env.command === 'serve' ? env.public : undefined
-					);
+					return create_dynamic_module('public', undefined);
 
 				case service_worker:
 					return create_service_worker_module(svelte_config);
@@ -590,7 +581,7 @@ async function kit({ svelte_config }) {
 
 			if (is_server_only) {
 				// in dev, this doesn't exist, so we need to create it
-				manifest_data ??= sync.all(svelte_config, vite_config_env.mode).manifest_data;
+				manifest_data ??= sync.all(svelte_config, vite_config_env.mode, env).manifest_data;
 
 				/** @type {Set<string>} */
 				const entrypoints = new Set();
@@ -975,7 +966,7 @@ async function kit({ svelte_config }) {
 		 * @see https://vitejs.dev/guide/api-plugin.html#configureserver
 		 */
 		async configureServer(vite) {
-			return await dev(vite, vite_config, svelte_config, () => remotes);
+			return await dev(vite, vite_config, svelte_config, () => remotes, env);
 		},
 
 		/**

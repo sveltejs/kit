@@ -100,6 +100,7 @@ export function get_tsconfig(kit) {
 			// generated options
 			paths: {
 				...get_tsconfig_paths(kit),
+				'$env/*': ['./env/*'],
 				'$app/types': ['./types/index.d.ts']
 			},
 			rootDirs: [config_relative('.'), './types'],

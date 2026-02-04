@@ -1,6 +1,7 @@
 import { dedent, isSvelte5Plus, write_if_changed } from './utils.js';
 
 /**
+ * Creates the "App.svelte" root component used to mount the user's layouts and pages
  * @param {import('types').ManifestData} manifest_data
  * @param {string} output
  */
