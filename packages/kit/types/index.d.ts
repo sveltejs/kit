@@ -2510,13 +2510,17 @@ declare module '@sveltejs/kit' {
 		default: {
 			render(
 				props: Record<string, any>,
-				opts: { context: Map<any, any> }
+				opts: { context: Map<any, any>; csp?: { nonce?: string; hash?: boolean } }
 			): {
 				html: string;
 				head: string;
 				css: {
 					code: string;
 					map: any; // TODO
+				};
+				/** Until we require all Svelte versions that support hashes, this might not be defined */
+				hashes?: {
+					script: Array<`sha256-${string}`>;
 				};
 			};
 		};
@@ -2560,7 +2564,9 @@ declare module '@sveltejs/kit' {
 		server_id?: string;
 
 		/** inlined styles */
-		inline_styles?(): MaybePromise<Record<string, string>>;
+		inline_styles?(): MaybePromise<
+			Record<string, string | ((assets: string, base: string) => string)>
+		>;
 		/** Svelte component */
 		component?: SSRComponentLoader;
 		/** +page.js or +layout.js */
