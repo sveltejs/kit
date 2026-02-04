@@ -13,7 +13,7 @@ test.describe('remote functions', () => {
 		clicknav
 	}) => {
 		test.skip(!process.env.DEV, 'remote functions are only analysed in dev mode');
-		// TODO why?!, hopefully noone is crazy enough to use an experimental feature with old node and vite
+		// TODO: remove with SvelteKit 3
 		test.skip(is_node18 && is_vite5, 'vite5 in node18 fails to resolve remote function export');
 		await page.goto('/remote/dev');
 		await page.locator('a[href="/remote/dev/preload"]').hover();

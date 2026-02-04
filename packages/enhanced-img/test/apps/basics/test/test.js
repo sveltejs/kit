@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import process from 'node:process';
 const is_node18 = process.versions.node.startsWith('18.');
+// TODO: remove with SvelteKit 3
 test.skip(is_node18, 'enhanced-img requires vite-plugin-svelte@6 which requires node20');
 test('images are properly rendered', async ({ page }) => {
 	await page.goto('/');

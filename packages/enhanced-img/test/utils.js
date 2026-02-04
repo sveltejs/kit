@@ -1,5 +1,6 @@
 import { devices } from '@playwright/test';
 import process from 'node:process';
+// TODO: remove with SvelteKit 3
 const is_node18 = process.versions.node.startsWith('18.');
 /** @type {import('@playwright/test').PlaywrightTestConfig} */
 export const config = {
