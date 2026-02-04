@@ -50,6 +50,7 @@ export interface SvelteKitApp {
 	decode: (type: string, value: any) => any;
 
 	decoders: Record<string, (data: any) => any>;
+	encoders: Record<string, (data: any) => any>;
 
 	/**
 	 * Whether or not we're using hash-based routing
@@ -125,4 +126,6 @@ export interface HydrateOptions {
 	server_route?: CSRRouteServer;
 	data: Array<ServerDataNode | null>;
 	form: Record<string, any> | null;
+	/** The results of all remote functions executed during SSR so that they can be reused during hydration */
+	remote: Record<string, any>;
 }

@@ -1,0 +1,23 @@
+{
+	"name": "test-options-3",
+	"private": true,
+	"version": "0.0.1",
+	"scripts": {
+		"dev": "vite dev",
+		"build": "vite build",
+		"preview": "vite preview",
+		"prepare": "svelte-kit sync",
+		"check": "svelte-kit sync && tsc && svelte-check",
+		"test": "playwright test"
+	},
+	"devDependencies": {
+		"@sveltejs/adapter-node": "workspace:^",
+		"@sveltejs/kit": "workspace:^",
+		"@sveltejs/vite-plugin-svelte": "catalog:",
+		"svelte": "catalog:",
+		"svelte-check": "catalog:",
+		"typescript": "^5.5.4",
+		"vite": "catalog:"
+	},
+	"type": "module"
+}

@@ -1,6 +1,8 @@
 import { parse, serialize } from 'cookie';
+import { DEV } from 'esm-env';
 import { normalize_path, resolve } from '../../utils/url.js';
 import { add_data_suffix } from '../pathname.js';
+import { text_encoder } from '../utils.js';
 
 // eslint-disable-next-line no-control-regex -- control characters are invalid in cookie names
 const INVALID_COOKIE_CHARACTER_REGEX = /[\x00-\x1F\x7F()<>@,;:"/[\]?={} \t]/;
@@ -27,6 +29,21 @@ function validate_options(options) {
 }
 
 /**
+ * Generates a unique key for a cookie based on its domain, path, and name in
+ * the format: `<domain>/<path>?<name>`.
+ * If domain is undefined, it will be omitted.
+ * For example: `/?name`, `example.com/foo?name`.
+ *
+ * @param {string | undefined} domain
+ * @param {string} path
+ * @param {string} name
+ * @returns {string}
+ */
+function generate_cookie_key(domain, path, name) {
+	return `${domain || ''}${path}?${encodeURIComponent(name)}`;
+}
+
+/**
  * @param {Request} request
  * @param {URL} url
  */
@@ -37,8 +54,8 @@ export function get_cookies(request, url) {
 	/** @type {string | undefined} */
 	let normalized_url;
 
-	/** @type {Record<string, import('./page/types.js').Cookie>} */
-	const new_cookies = {};
+	/** @type {Map<string, import('./page/types.js').Cookie>} */
+	const new_cookies = new Map();
 
 	/** @type {import('cookie').CookieSerializeOptions} */
 	const defaults = {
@@ -59,13 +76,19 @@ export function get_cookies(request, url) {
 		 * @param {import('cookie').CookieParseOptions} [opts]
 		 */
 		get(name, opts) {
-			const c = new_cookies[name];
-			if (
-				c &&
-				domain_matches(url.hostname, c.options.domain) &&
-				path_matches(url.pathname, c.options.path)
-			) {
-				return c.value;
+			// Look for the most specific matching cookie from new_cookies
+			const best_match = Array.from(new_cookies.values())
+				.filter((c) => {
+					return (
+						c.name === name &&
+						domain_matches(url.hostname, c.options.domain) &&
+						path_matches(url.pathname, c.options.path)
+					);
+				})
+				.sort((a, b) => b.options.path.length - a.options.path.length)[0];
+
+			if (best_match) {
+				return best_match.options.maxAge === 0 ? undefined : best_match.value;
 			}
 
 			const req_cookies = parse(header, { decode: opts?.decode });
@@ -74,7 +97,7 @@ export function get_cookies(request, url) {
 			// in development, if the cookie was set during this session with `cookies.set`,
 			// but at a different path, warn the user. (ignore cookies from request headers,
 			// since we don't know which path they were set at)
-			if (__SVELTEKIT_DEV__ && !cookie) {
+			if (DEV && !cookie) {
 				const paths = Array.from(cookie_paths[name] ?? []).filter((path) => {
 					// we only care about paths that are _more_ specific than the current path
 					return path_matches(path, url.pathname) && path !== url.pathname;
@@ -97,13 +120,26 @@ export function get_cookies(request, url) {
 		getAll(opts) {
 			const cookies = parse(header, { decode: opts?.decode });
 
-			for (const c of Object.values(new_cookies)) {
+			// Group cookies by name and find the most specific one for each name
+			const lookup = new Map();
+
+			for (const c of new_cookies.values()) {
 				if (
 					domain_matches(url.hostname, c.options.domain) &&
 					path_matches(url.pathname, c.options.path)
 				) {
-					cookies[c.name] = c.value;
+					const existing = lookup.get(c.name);
+
+					// If no existing cookie or this one has a more specific (longer) path, use this one
+					if (!existing || c.options.path.length > existing.options.path.length) {
+						lookup.set(c.name, c);
+					}
 				}
+			}
+
+			// Add the most specific cookies to the result
+			for (const c of lookup.values()) {
+				cookies[c.name] = c.value;
 			}
 
 			return Object.entries(cookies).map(([name, value]) => ({ name, value }));
@@ -171,8 +207,7 @@ export function get_cookies(request, url) {
 		};
 
 		// cookies previous set during this event with cookies.set have higher precedence
-		for (const key in new_cookies) {
-			const cookie = new_cookies[key];
+		for (const cookie of new_cookies.values()) {
 			if (!domain_matches(destination.hostname, cookie.options.domain)) continue;
 			if (!path_matches(destination.pathname, cookie.options.path)) continue;
 
@@ -213,11 +248,14 @@ export function get_cookies(request, url) {
 			path = resolve(normalized_url, path);
 		}
 
-		new_cookies[name] = { name, value, options: { ...options, path } };
+		// Generate unique key for cookie storage
+		const cookie_key = generate_cookie_key(options.domain, path, name);
+		const cookie = { name, value, options: { ...options, path } };
+		new_cookies.set(cookie_key, cookie);
 
-		if (__SVELTEKIT_DEV__) {
-			const serialized = serialize(name, value, new_cookies[name].options);
-			if (new TextEncoder().encode(serialized).byteLength > MAX_COOKIE_SIZE) {
+		if (DEV) {
+			const serialized = serialize(name, value, cookie.options);
+			if (text_encoder.encode(serialized).byteLength > MAX_COOKIE_SIZE) {
 				throw new Error(`Cookie "${name}" is too large, and will be discarded by the browser`);
 			}
 
@@ -270,7 +308,7 @@ export function path_matches(path, constraint) {
 
 /**
  * @param {Headers} headers
- * @param {import('./page/types.js').Cookie[]} cookies
+ * @param {MapIterator<import('./page/types.js').Cookie>} cookies
  */
 export function add_cookies_to_headers(headers, cookies) {
 	for (const new_cookie of cookies) {

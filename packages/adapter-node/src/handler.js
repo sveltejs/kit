@@ -12,6 +12,7 @@ import { env } from 'ENV';
 import { parse_as_bytes } from '../utils.js';
 
 /* global ENV_PREFIX */
+/* global PRECOMPRESS */
 
 const server = new Server(manifest);
 
@@ -19,7 +20,7 @@ const origin = env('ORIGIN', undefined);
 const xff_depth = parseInt(env('XFF_DEPTH', '1'));
 const address_header = env('ADDRESS_HEADER', '').toLowerCase();
 const protocol_header = env('PROTOCOL_HEADER', '').toLowerCase();
-const host_header = env('HOST_HEADER', 'host').toLowerCase();
+const host_header = env('HOST_HEADER', '').toLowerCase();
 const port_header = env('PORT_HEADER', '').toLowerCase();
 
 const body_size_limit = parse_as_bytes(env('BODY_SIZE_LIMIT', '512K'));
@@ -35,7 +36,7 @@ const dir = path.dirname(fileURLToPath(import.meta.url));
 const asset_dir = `${dir}/client${base}`;
 
 await server.init({
-	env: process.env,
+	env: /** @type {Record<string, string>} */ (process.env),
 	read: (file) => createReadableStream(`${asset_dir}/${file}`)
 });
 
@@ -44,22 +45,24 @@ await server.init({
  * @param {boolean} client
  */
 function serve(path, client = false) {
-	return (
-		fs.existsSync(path) &&
-		sirv(path, {
-			etag: true,
-			gzip: true,
-			brotli: true,
-			setHeaders:
-				client &&
-				((res, pathname) => {
-					// only apply to build directory, not e.g. version.json
-					if (pathname.startsWith(`/${manifest.appPath}/immutable/`) && res.statusCode === 200) {
-						res.setHeader('cache-control', 'public,max-age=31536000,immutable');
-					}
-				})
-		})
-	);
+	return fs.existsSync(path)
+		? sirv(path, {
+				etag: true,
+				gzip: PRECOMPRESS,
+				brotli: PRECOMPRESS,
+				setHeaders: client
+					? (res, pathname) => {
+							// only apply to build directory, not e.g. version.json
+							if (
+								pathname.startsWith(`/${manifest.appPath}/immutable/`) &&
+								res.statusCode === 200
+							) {
+								res.setHeader('cache-control', 'public,max-age=31536000,immutable');
+							}
+						}
+					: undefined
+			})
+		: undefined;
 }
 
 // required because the static file server ignores trailing slashes
@@ -77,7 +80,7 @@ function serve_prerendered() {
 		}
 
 		if (prerendered.has(pathname)) {
-			return handler(req, res, next);
+			return handler?.(req, res, next);
 		}
 
 		// remove or add trailing slash as appropriate
@@ -178,25 +181,59 @@ function sequence(handlers) {
 }
 
 /**
+ * @param {string} name
+ * @param {string | string[] | undefined} value
+ * @returns {string | undefined}
+ */
+function normalise_header(name, value) {
+	if (!name) return undefined;
+	if (Array.isArray(value)) {
+		if (value.length === 0) return undefined;
+		if (value.length === 1) return value[0];
+		throw new Error(
+			`Multiple values provided for ${name} header where only one expected: ${value}`
+		);
+	}
+	return value;
+}
+
+/**
  * @param {import('http').IncomingHttpHeaders} headers
- * @returns
+ * @returns {string}
  */
 function get_origin(headers) {
-	const protocol = (protocol_header && headers[protocol_header]) || 'https';
-	const host = headers[host_header];
-	const port = port_header && headers[port_header];
-	if (port) {
-		return `${protocol}://${host}:${port}`;
-	} else {
-		return `${protocol}://${host}`;
+	const protocol = decodeURIComponent(
+		normalise_header(protocol_header, headers[protocol_header]) || 'https'
+	);
+
+	// this helps us avoid host injections through the protocol header
+	if (protocol.includes(':')) {
+		throw new Error(
+			`The ${protocol_header} header specified ${protocol} which is an invalid because it includes \`:\`. It should only contain the protocol scheme (e.g. \`https\`)`
+		);
 	}
+
+	const host =
+		normalise_header(host_header, headers[host_header]) ||
+		normalise_header('host', headers['host']);
+	if (!host) {
+		const header_names = host_header ? `${host_header} or host headers` : 'host header';
+		throw new Error(
+			`Could not determine host. The request must have a value provided by the ${header_names}`
+		);
+	}
+
+	const port = normalise_header(port_header, headers[port_header]);
+	if (port && isNaN(+port)) {
+		throw new Error(
+			`The ${port_header} header specified ${port} which is an invalid port because it is not a number. The value should only contain the port number (e.g. 443)`
+		);
+	}
+
+	return port ? `${protocol}://${host}:${port}` : `${protocol}://${host}`;
 }
 
 export const handler = sequence(
-	[
-		serve(path.join(dir, 'client'), true),
-		serve(path.join(dir, 'static')),
-		serve_prerendered(),
-		ssr
-	].filter(Boolean)
+	/** @type {(import('sirv').RequestHandler | import('polka').Middleware)[]} */
+	([serve(path.join(dir, 'client'), true), serve_prerendered(), ssr].filter(Boolean))
 );

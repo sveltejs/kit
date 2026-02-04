@@ -8,6 +8,7 @@ import { create_builder } from './builder.js';
  * @param {import('types').Prerendered} prerendered
  * @param {import('types').PrerenderMap} prerender_map
  * @param {import('types').Logger} log
+ * @param {import('types').RemoteChunk[]} remotes
  * @param {import('vite').ResolvedConfig} vite_config
  */
 export async function adapt(
@@ -17,6 +18,7 @@ export async function adapt(
 	prerendered,
 	prerender_map,
 	log,
+	remotes,
 	vite_config
 ) {
 	// This is only called when adapter is truthy, so the cast is safe
@@ -32,6 +34,7 @@ export async function adapt(
 		prerendered,
 		prerender_map,
 		log,
+		remotes,
 		vite_config
 	});
 

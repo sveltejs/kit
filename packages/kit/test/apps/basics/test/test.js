@@ -246,6 +246,11 @@ test.describe('Load', () => {
 		);
 	});
 
+	test('Server data serialization removes empty nodes', async ({ page }) => {
+		await page.goto('/load/serialization-empty-node');
+		expect(await page.textContent('h1')).toBe('42');
+	});
+
 	test('POST fetches are serialized', async ({ page, javaScriptEnabled }) => {
 		/** @type {string[]} */
 		const requests = [];
@@ -311,6 +316,28 @@ test.describe('Load', () => {
 			);
 			const post_script_content = await page.innerHTML(
 				'script[data-sveltekit-fetched][data-b64][data-url="/load/fetch-arraybuffer-b64/data"][data-hash="16h3sp1"]'
+			);
+
+			expect(script_content).toBe(payload);
+			expect(post_script_content).toBe(post_payload);
+		}
+	});
+
+	test('fetches using a body stream serialized with b64', async ({ page, javaScriptEnabled }) => {
+		await page.goto('/load/fetch-body-stream-b64');
+
+		expect(await page.textContent('.test-content')).toBe('[1,2,3,4]');
+
+		if (!javaScriptEnabled) {
+			const payload = '{"status":200,"statusText":"","headers":{},"body":"AQIDBA=="}';
+			const post_payload =
+				'{"status":200,"statusText":"","headers":{},"body":"AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWltcXV5fYGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6e3x9fn+AgYKDhIWGh4iJiouMjY6PkJGSk5SVlpeYmZqbnJ2en6ChoqOkpaanqKmqq6ytrq+wsbKztLW2t7i5uru8vb6/wMHCw8TFxsfIycrLzM3Oz9DR0tPU1dbX2Nna29zd3t/g4eLj5OXm5+jp6uvs7e7v8PHy8/T19vf4+fr7/P3+/w=="}';
+
+			const script_content = await page.innerHTML(
+				'script[data-sveltekit-fetched][data-b64][data-url="/load/fetch-body-stream-b64/data"]'
+			);
+			const post_script_content = await page.innerHTML(
+				'script[data-sveltekit-fetched][data-b64][data-url="/load/fetch-body-stream-b64/data"][data-hash="16h3sp1"]'
 			);
 
 			expect(script_content).toBe(payload);
@@ -577,6 +604,11 @@ test.describe('Load', () => {
 		expect(await page.textContent('.aborted-during-request')).toBe('Aborted during request: true');
 		expect(await page.textContent('.successful-data')).toContain('"message":"success"');
 	});
+
+	test('event.fetch handles response without body', async ({ page }) => {
+		await page.goto('/load/fetch-no-body');
+		expect(await page.textContent('h1')).toBe('ok: true');
+	});
 });
 
 test.describe('Nested layouts', () => {
@@ -699,6 +731,10 @@ test.describe('$app/environment', () => {
 
 test.describe('$app/paths', () => {
 	test('includes paths', async ({ page, javaScriptEnabled }) => {
+		test.skip(
+			process.env.SVELTE_ASYNC === 'true',
+			'does not work with async, should use new functions instead'
+		);
 		await page.goto('/paths');
 
 		let base = javaScriptEnabled ? '' : '.';
@@ -717,6 +753,10 @@ test.describe('$app/paths', () => {
 		page,
 		javaScriptEnabled
 	}) => {
+		test.skip(
+			process.env.SVELTE_ASYNC === 'true',
+			'does not work with async, should use new functions instead'
+		);
 		const absolute = `${baseURL}/favicon.png`;
 
 		await page.goto('/');
@@ -1522,7 +1562,7 @@ test.describe('Serialization', () => {
 	});
 
 	test('A custom data type can be serialized/deserialized on POST', async ({ page }) => {
-		await page.goto('/serialization-form2');
+		await page.goto('/serialization-form-non-enhanced');
 		await page.click('button');
 		await expect(page.locator('h1')).toHaveText('It works!');
 
@@ -1534,9 +1574,20 @@ test.describe('Serialization', () => {
 	test('A custom data type can be serialized/deserialized on POST with use:enhance', async ({
 		page
 	}) => {
-		await page.goto('/serialization-form2');
+		await page.goto('/serialization-form-enhanced');
 		await page.click('button');
 		await expect(page.locator('h1')).toHaveText('It works!');
+
+		// Test navigating to the basic page works as intended
+		await page.locator('a').first().click();
+		await expect(page.locator('h1')).toHaveText('It works!');
+	});
+
+	test('works with streaming', async ({ page, javaScriptEnabled }) => {
+		test.skip(!javaScriptEnabled, 'skip when JavaScript is disabled');
+
+		await page.goto('/serialization-stream');
+		await expect(page.locator('h1', { hasText: 'It works!' })).toBeVisible();
 	});
 });
 
@@ -1554,5 +1605,39 @@ test.describe('getRequestEvent', () => {
 
 		await page.goto('/get-request-event/with-error');
 		expect(await page.textContent('h1')).toBe('Crashing now (500 hello from hooks.server.js)');
+	});
+});
+
+test.describe('params prop', () => {
+	test('params prop is passed to the page', async ({ page, clicknav }) => {
+		await page.goto('/params-prop');
+
+		await clicknav('[href="/params-prop/123"]');
+		await expect(page.locator('p')).toHaveText('x: 123');
+
+		await clicknav('[href="/params-prop/456"]');
+		await expect(page.locator('p')).toHaveText('x: 456');
+	});
+});
+
+test.describe('service worker option', () => {
+	test('pass the options to the service worker', async ({ page }) => {
+		await page.goto('/');
+		const content = await page.content();
+		const matching = content.match(/navigator\.serviceWorker\.register\(.+?, (?<options>{.+?})\)/);
+		let options = {};
+		if (matching && matching.groups) {
+			options = JSON.parse(matching.groups.options);
+		}
+		if (process.env.DEV) {
+			expect(options).toMatchObject({
+				type: 'module',
+				updateViaCache: 'imports'
+			});
+		} else {
+			expect(options).toMatchObject({
+				updateViaCache: 'imports'
+			});
+		}
 	});
 });
