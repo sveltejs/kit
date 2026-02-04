@@ -1,8 +1,6 @@
 import path from 'node:path';
-import { loadEnv } from 'vite';
 import { posixify } from '../../utils/filesystem.js';
 import { negotiate } from '../../utils/http.js';
-import { filter_env } from '../../utils/env.js';
 import { escape_html } from '../../utils/escape.js';
 import { dedent } from '../../core/sync/utils.js';
 import {
@@ -59,22 +57,6 @@ export function get_config_aliases(config) {
  */
 function escape_for_regexp(str) {
 	return str.replace(/[.*+?^${}()|[\]\\]/g, (match) => '\\' + match);
-}
-
-/**
- * Load environment variables from process.env and .env files
- * @param {import('types').ValidatedKitConfig['env']} env_config
- * @param {string} mode
- * @returns {import('./types.js').Env}
- */
-export function get_env(env_config, mode) {
-	const { publicPrefix: public_prefix, privatePrefix: private_prefix } = env_config;
-	const env = loadEnv(mode, env_config.dir, '');
-
-	return {
-		public: filter_env(env, public_prefix, private_prefix),
-		private: filter_env(env, private_prefix, public_prefix)
-	};
 }
 
 /**
