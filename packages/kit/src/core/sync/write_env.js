@@ -1,6 +1,28 @@
 import path from 'node:path';
-import { write_if_changed } from './utils.js';
-import { create_dynamic_module, create_static_module } from '../env.js';
+import { dedent, write_if_changed } from './utils.js';
+import { create_static_module } from '../env.js';
+import { runtime_directory } from '../utils.js';
+import { s } from '../../utils/misc.js';
+
+/**
+ * This version deviates from the one in env.js because we don't want to
+ * serialise the user's dynamic environment variables. Instead, it loads the
+ * environment variables directly. This is okay because it will only be used by
+ * modules importing $env/dynamic/* from outside the Vite pipeline. Those inside
+ * the Vite pipeline will load the virtual module which reuses the already loaded
+ * environment variables.
+ * @param {import('../env.js').EnvType} type
+ * @param {string} mode
+ * @param {import('types').ValidatedKitConfig['env']} env_config
+ * @returns {string}
+ */
+function create_dynamic_module(type, mode, env_config) {
+	return dedent`
+		import { get_env } from '${runtime_directory}/../exports/vite/utils.js';
+
+		export const env = get_env(${s(env_config)}, ${s(mode)}).${type};
+	`;
+}
 
 /**
  * Writes env variable modules to the output directory
@@ -22,6 +44,7 @@ export function write_env(config, mode, env) {
 	);
 
 	const env_dynamic_private = create_dynamic_module('private', mode, config.env);
+
 	write_if_changed(
 		path.join(config.outDir, 'generated', 'env', 'dynamic', 'private.js'),
 		env_dynamic_private

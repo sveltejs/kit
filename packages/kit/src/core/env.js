@@ -1,7 +1,6 @@
 import { GENERATED_COMMENT } from '../constants.js';
-import { s } from '../utils/misc.js';
 import { dedent } from './sync/utils.js';
-import { runtime_base, runtime_directory } from './utils.js';
+import { runtime_base } from './utils.js';
 
 /**
  * @typedef {'public' | 'private'} EnvType
@@ -31,30 +30,16 @@ export function create_static_module(id, env) {
 }
 
 /**
- * @overload
  * @param {EnvType} type
+ * @param {Record<string, string> | undefined} dev_values If in a development mode, values to pre-populate the module with.
  * @returns {string}
  */
-/**
- * @overload
- * @param {EnvType} type
- * @param {string} mode
- * @param {import('types').ValidatedKitConfig['env']} env_config
- * @returns {string}
- */
-/**
- * @param {EnvType} type
- * @param {string} [mode]
- * @param {import('types').ValidatedKitConfig['env']} [env_config]
- * @returns {string}
- */
-export function create_dynamic_module(type, mode, env_config) {
-	if (mode && env_config) {
-		return dedent`
-			import { get_env } from '${runtime_directory}/../exports/vite/utils.js';
-
-			export const env = get_env(${s(env_config)}, ${s(mode)}).${type};
-		`;
+export function create_dynamic_module(type, dev_values) {
+	if (dev_values) {
+		const keys = Object.entries(dev_values).map(
+			([k, v]) => `${JSON.stringify(k)}: ${JSON.stringify(v)}`
+		);
+		return `export const env = {\n${keys.join(',\n')}\n}`;
 	}
 	return `export { ${type}_env as env } from '${runtime_base}/shared-server.js';`;
 }
