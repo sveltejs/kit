@@ -1490,7 +1490,7 @@ test.describe('goto', () => {
 			const expectGoback = makeExpectGoback(testFinishPage, testEntryPage);
 
 			test('app.invalidate', async ({ app, page }) => {
-				await app.invalidate('app:goto', { replaceState: true });
+				await app.invalidate('app:goto');
 				await expectGoback(page);
 			});
 
@@ -1807,7 +1807,7 @@ test.describe('binding_property_non_reactive warn', () => {
 		let is_warning_thrown = false;
 		page.on('console', (m) => {
 			if (
-				m.type() === 'warn' &&
+				m.type() === 'warning' &&
 				m.text().includes('binding_property_non_reactive `bind:this={components[0]}`')
 			) {
 				is_warning_thrown = true;
