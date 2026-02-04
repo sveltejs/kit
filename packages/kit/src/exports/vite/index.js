@@ -16,12 +16,7 @@ import { build_service_worker } from './build/build_service_worker.js';
 import { assets_base, find_deps, resolve_symlinks } from './build/utils.js';
 import { dev } from './dev/index.js';
 import { preview } from './preview/index.js';
-import {
-	error_for_missing_config,
-	get_config_aliases,
-	normalize_id,
-	stackless
-} from './utils.js';
+import { error_for_missing_config, get_config_aliases, normalize_id, stackless } from './utils.js';
 import { write_client_manifest } from '../../core/sync/write_client_manifest.js';
 import prerender from '../../core/postbuild/prerender.js';
 import analyse from '../../core/postbuild/analyse.js';
