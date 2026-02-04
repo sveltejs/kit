@@ -1,4 +1,5 @@
-import { join } from 'node:path';
+import process from 'node:process';
+import colors from 'kleur';
 
 /** @typedef {import('./types.js').Validator} Validator */
 
@@ -67,7 +68,7 @@ const options = object(
 						message += ', rather than the name of an adapter';
 					}
 
-					throw new Error(`${message}. See https://kit.svelte.dev/docs/adapters`);
+					throw new Error(`${message}. See https://svelte.dev/docs/kit/adapters`);
 				}
 
 				return input;
@@ -91,7 +92,7 @@ const options = object(
 				if (input) {
 					if (input.startsWith('/') || input.endsWith('/')) {
 						throw new Error(
-							"config.kit.appDir cannot start or end with '/'. See https://kit.svelte.dev/docs/configuration"
+							"config.kit.appDir cannot start or end with '/'. See https://svelte.dev/docs/kit/configuration"
 						);
 					}
 				} else {
@@ -108,7 +109,12 @@ const options = object(
 			}),
 
 			csrf: object({
-				checkOrigin: boolean(true)
+				checkOrigin: deprecate(
+					boolean(true),
+					(keypath) =>
+						`\`${keypath}\` has been deprecated in favour of \`csrf.trustedOrigins\`. It will be removed in a future version`
+				),
+				trustedOrigins: string_array([])
 			}),
 
 			embedded: boolean(false),
@@ -119,19 +125,31 @@ const options = object(
 				privatePrefix: string('')
 			}),
 
-			files: object({
-				assets: string('static'),
-				hooks: object({
-					client: string(join('src', 'hooks.client')),
-					server: string(join('src', 'hooks.server')),
-					universal: string(join('src', 'hooks'))
+			experimental: object({
+				tracing: object({
+					server: boolean(false)
 				}),
-				lib: string(join('src', 'lib')),
-				params: string(join('src', 'params')),
-				routes: string(join('src', 'routes')),
-				serviceWorker: string(join('src', 'service-worker')),
-				appTemplate: string(join('src', 'app.html')),
-				errorTemplate: string(join('src', 'error.html'))
+				instrumentation: object({
+					server: boolean(false)
+				}),
+				remoteFunctions: boolean(false),
+				forkPreloads: boolean(false)
+			}),
+
+			files: object({
+				src: deprecate(string('src')),
+				assets: deprecate(string('static')),
+				hooks: object({
+					client: deprecate(string(null)),
+					server: deprecate(string(null)),
+					universal: deprecate(string(null))
+				}),
+				lib: deprecate(string(null)),
+				params: deprecate(string(null)),
+				routes: deprecate(string(null)),
+				serviceWorker: deprecate(string(null)),
+				appTemplate: deprecate(string(null)),
+				errorTemplate: deprecate(string(null))
 			}),
 
 			inlineStyleThreshold: number(0),
@@ -141,7 +159,8 @@ const options = object(
 			outDir: string('.svelte-kit'),
 
 			output: object({
-				preloadStrategy: list(['modulepreload', 'preload-js', 'preload-mjs'], 'modulepreload')
+				preloadStrategy: list(['modulepreload', 'preload-js', 'preload-mjs']),
+				bundleStrategy: list(['split', 'single', 'inline'])
 			}),
 
 			paths: object({
@@ -150,7 +169,7 @@ const options = object(
 
 					if (input !== '' && (input.endsWith('/') || !input.startsWith('/'))) {
 						throw new Error(
-							`${keypath} option must either be the empty string or a root-relative path that starts but doesn't end with '/'. See https://kit.svelte.dev/docs/configuration#paths`
+							`${keypath} option must either be the empty string or a root-relative path that starts but doesn't end with '/'. See https://svelte.dev/docs/kit/configuration#paths`
 						);
 					}
 
@@ -162,13 +181,13 @@ const options = object(
 					if (input) {
 						if (!/^[a-z]+:\/\//.test(input)) {
 							throw new Error(
-								`${keypath} option must be an absolute path, if specified. See https://kit.svelte.dev/docs/configuration#paths`
+								`${keypath} option must be an absolute path, if specified. See https://svelte.dev/docs/kit/configuration#paths`
 							);
 						}
 
 						if (input.endsWith('/')) {
 							throw new Error(
-								`${keypath} option must not end with '/'. See https://kit.svelte.dev/docs/configuration#paths`
+								`${keypath} option must not end with '/'. See https://svelte.dev/docs/kit/configuration#paths`
 							);
 						}
 					}
@@ -201,7 +220,7 @@ const options = object(
 					(/** @type {any} */ { message }) => {
 						throw new Error(
 							message +
-								'\nTo suppress or handle this error, implement `handleHttpError` in https://kit.svelte.dev/docs/configuration#prerender'
+								'\nTo suppress or handle this error, implement `handleHttpError` in https://svelte.dev/docs/kit/configuration#prerender'
 						);
 					},
 					(input, keypath) => {
@@ -215,7 +234,7 @@ const options = object(
 					(/** @type {any} */ { message }) => {
 						throw new Error(
 							message +
-								'\nTo suppress or handle this error, implement `handleMissingId` in https://kit.svelte.dev/docs/configuration#prerender'
+								'\nTo suppress or handle this error, implement `handleMissingId` in https://svelte.dev/docs/kit/configuration#prerender'
 						);
 					},
 					(input, keypath) => {
@@ -229,7 +248,21 @@ const options = object(
 					(/** @type {any} */ { message }) => {
 						throw new Error(
 							message +
-								'\nTo suppress or handle this error, implement `handleEntryGeneratorMismatch` in https://kit.svelte.dev/docs/configuration#prerender'
+								'\nTo suppress or handle this error, implement `handleEntryGeneratorMismatch` in https://svelte.dev/docs/kit/configuration#prerender'
+						);
+					},
+					(input, keypath) => {
+						if (typeof input === 'function') return input;
+						if (['fail', 'warn', 'ignore'].includes(input)) return input;
+						throw new Error(`${keypath} should be "fail", "warn", "ignore" or a custom function`);
+					}
+				),
+
+				handleUnseenRoutes: validate(
+					(/** @type {any} */ { message }) => {
+						throw new Error(
+							message +
+								'\nTo suppress or handle this error, implement `handleUnseenRoutes` in https://svelte.dev/docs/kit/configuration#prerender'
 						);
 					},
 					(input, keypath) => {
@@ -246,7 +279,7 @@ const options = object(
 
 					try {
 						origin = new URL(input).origin;
-					} catch (e) {
+					} catch {
 						throw new Error(`${keypath} must be a valid origin`);
 					}
 
@@ -258,8 +291,16 @@ const options = object(
 				})
 			}),
 
+			router: object({
+				type: list(['pathname', 'hash']),
+				resolution: list(['client', 'server'])
+			}),
+
 			serviceWorker: object({
 				register: boolean(true),
+				// options could be undefined but if it is defined we only validate that
+				// it's an object since the type comes from the browser itself
+				options: validate(undefined, object({}, true)),
 				files: fun((filename) => !/\.DS_Store/.test(filename))
 			}),
 
@@ -275,6 +316,25 @@ const options = object(
 	},
 	true
 );
+
+/**
+ * @param {Validator} fn
+ * @param {(keypath: string) => string} get_message
+ * @returns {Validator}
+ */
+function deprecate(
+	fn,
+	get_message = (keypath) =>
+		`The \`${keypath}\` option is deprecated, and will be removed in a future version`
+) {
+	return (input, keypath) => {
+		if (input !== undefined) {
+			console.warn(colors.bold().yellow(get_message(keypath)));
+		}
+
+		return fn(input, keypath);
+	};
+}
 
 /**
  * @param {Record<string, Validator>} children

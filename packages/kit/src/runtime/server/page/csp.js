@@ -1,11 +1,12 @@
-import { escape_html_attr } from '../../../utils/escape.js';
-import { base64, sha256 } from './crypto.js';
+import { DEV } from 'esm-env';
+import { escape_html } from '../../../utils/escape.js';
+import { sha256 } from './crypto.js';
 
 const array = new Uint8Array(16);
 
 function generate_nonce() {
 	crypto.getRandomValues(array);
-	return base64(array);
+	return btoa(String.fromCharCode(...array));
 }
 
 const quoted = new Set([
@@ -32,25 +33,49 @@ class BaseProvider {
 	#script_needs_csp;
 
 	/** @type {boolean} */
+	#script_src_needs_csp;
+
+	/** @type {boolean} */
+	#script_src_elem_needs_csp;
+
+	/** @type {boolean} */
 	#style_needs_csp;
+
+	/** @type {boolean} */
+	#style_src_needs_csp;
+
+	/** @type {boolean} */
+	#style_src_attr_needs_csp;
+
+	/** @type {boolean} */
+	#style_src_elem_needs_csp;
 
 	/** @type {import('types').CspDirectives} */
 	#directives;
 
-	/** @type {import('types').Csp.Source[]} */
+	/** @type {Set<import('types').Csp.Source>} */
 	#script_src;
 
-	/** @type {import('types').Csp.Source[]} */
+	/** @type {Set<import('types').Csp.Source>} */
 	#script_src_elem;
 
-	/** @type {import('types').Csp.Source[]} */
+	/** @type {Set<import('types').Csp.Source>} */
 	#style_src;
 
-	/** @type {import('types').Csp.Source[]} */
+	/** @type {Set<import('types').Csp.Source>} */
 	#style_src_attr;
 
-	/** @type {import('types').Csp.Source[]} */
+	/** @type {Set<import('types').Csp.Source>} */
 	#style_src_elem;
+
+	/** @type {boolean} */
+	script_needs_nonce;
+
+	/** @type {boolean} */
+	style_needs_nonce;
+
+	/** @type {boolean} */
+	script_needs_hash;
 
 	/** @type {string} */
 	#nonce;
@@ -62,15 +87,15 @@ class BaseProvider {
 	 */
 	constructor(use_hashes, directives, nonce) {
 		this.#use_hashes = use_hashes;
-		this.#directives = __SVELTEKIT_DEV__ ? { ...directives } : directives; // clone in dev so we can safely mutate
+		this.#directives = DEV ? { ...directives } : directives; // clone in dev so we can safely mutate
 
 		const d = this.#directives;
 
-		this.#script_src = [];
-		this.#script_src_elem = [];
-		this.#style_src = [];
-		this.#style_src_attr = [];
-		this.#style_src_elem = [];
+		this.#script_src = new Set();
+		this.#script_src_elem = new Set();
+		this.#style_src = new Set();
+		this.#style_src_attr = new Set();
+		this.#style_src_elem = new Set();
 
 		const effective_script_src = d['script-src'] || d['default-src'];
 		const script_src_elem = d['script-src-elem'];
@@ -78,7 +103,7 @@ class BaseProvider {
 		const style_src_attr = d['style-src-attr'];
 		const style_src_elem = d['style-src-elem'];
 
-		if (__SVELTEKIT_DEV__) {
+		if (DEV) {
 			// remove strict-dynamic in dev...
 			// TODO reinstate this if we can figure out how to make strict-dynamic work
 			// if (d['default-src']) {
@@ -121,92 +146,96 @@ class BaseProvider {
 			}
 		}
 
-		this.#script_needs_csp =
-			(!!effective_script_src &&
-				effective_script_src.filter((value) => value !== 'unsafe-inline').length > 0) ||
-			(!!script_src_elem &&
-				script_src_elem.filter((value) => value !== 'unsafe-inline').length > 0);
+		/** @param {(import('types').Csp.Source | import('types').Csp.ActionSource)[] | undefined} directive */
+		const style_needs_csp = (directive) =>
+			!!directive && !directive.some((value) => value === 'unsafe-inline');
 
+		/** @param {(import('types').Csp.Source | import('types').Csp.ActionSource)[] | undefined} directive */
+		const script_needs_csp = (directive) =>
+			!!directive &&
+			(!directive.some((value) => value === 'unsafe-inline') ||
+				directive.some((value) => value === 'strict-dynamic'));
+
+		this.#script_src_needs_csp = script_needs_csp(effective_script_src);
+		this.#script_src_elem_needs_csp = script_needs_csp(script_src_elem);
+		this.#style_src_needs_csp = style_needs_csp(effective_style_src);
+		this.#style_src_attr_needs_csp = style_needs_csp(style_src_attr);
+		this.#style_src_elem_needs_csp = style_needs_csp(style_src_elem);
+
+		this.#script_needs_csp = this.#script_src_needs_csp || this.#script_src_elem_needs_csp;
 		this.#style_needs_csp =
-			!__SVELTEKIT_DEV__ &&
-			((!!effective_style_src &&
-				effective_style_src.filter((value) => value !== 'unsafe-inline').length > 0) ||
-				(!!style_src_attr &&
-					style_src_attr.filter((value) => value !== 'unsafe-inline').length > 0) ||
-				(!!style_src_elem &&
-					style_src_elem.filter((value) => value !== 'unsafe-inline').length > 0));
+			!DEV &&
+			(this.#style_src_needs_csp ||
+				this.#style_src_attr_needs_csp ||
+				this.#style_src_elem_needs_csp);
 
 		this.script_needs_nonce = this.#script_needs_csp && !this.#use_hashes;
 		this.style_needs_nonce = this.#style_needs_csp && !this.#use_hashes;
+		this.script_needs_hash = this.#script_needs_csp && this.#use_hashes;
+
 		this.#nonce = nonce;
 	}
 
 	/** @param {string} content */
 	add_script(content) {
-		if (this.#script_needs_csp) {
-			const d = this.#directives;
+		if (!this.#script_needs_csp) return;
 
-			if (this.#use_hashes) {
-				const hash = sha256(content);
+		/** @type {`nonce-${string}` | `sha256-${string}`} */
+		const source = this.#use_hashes ? `sha256-${sha256(content)}` : `nonce-${this.#nonce}`;
 
-				this.#script_src.push(`sha256-${hash}`);
+		if (this.#script_src_needs_csp) {
+			this.#script_src.add(source);
+		}
 
-				if (d['script-src-elem']?.length) {
-					this.#script_src_elem.push(`sha256-${hash}`);
-				}
-			} else {
-				if (this.#script_src.length === 0) {
-					this.#script_src.push(`nonce-${this.#nonce}`);
-				}
-				if (d['script-src-elem']?.length) {
-					this.#script_src_elem.push(`nonce-${this.#nonce}`);
-				}
+		if (this.#script_src_elem_needs_csp) {
+			this.#script_src_elem.add(source);
+		}
+	}
+
+	/** @param {`sha256-${string}`[]} hashes */
+	add_script_hashes(hashes) {
+		for (const hash of hashes) {
+			if (this.#script_src_needs_csp) {
+				this.#script_src.add(hash);
+			}
+			if (this.#script_src_elem_needs_csp) {
+				this.#script_src_elem.add(hash);
 			}
 		}
 	}
 
 	/** @param {string} content */
 	add_style(content) {
-		if (this.#style_needs_csp) {
-			// this is the hash for "/* empty */"
+		if (!this.#style_needs_csp) return;
+
+		/** @type {`nonce-${string}` | `sha256-${string}`} */
+		const source = this.#use_hashes ? `sha256-${sha256(content)}` : `nonce-${this.#nonce}`;
+
+		if (this.#style_src_needs_csp) {
+			this.#style_src.add(source);
+		}
+
+		if (this.#style_src_attr_needs_csp) {
+			this.#style_src_attr.add(source);
+		}
+
+		if (this.#style_src_elem_needs_csp) {
+			// this is the sha256 hash for the string "/* empty */"
 			// adding it so that svelte does not break csp
 			// see https://github.com/sveltejs/svelte/pull/7800
-			const empty_comment_hash = '9OlNO0DNEeaVzHL4RZwCLsBHA8WBQ8toBp/4F5XV2nc=';
-
+			const sha256_empty_comment_hash = 'sha256-9OlNO0DNEeaVzHL4RZwCLsBHA8WBQ8toBp/4F5XV2nc=';
 			const d = this.#directives;
 
-			if (this.#use_hashes) {
-				const hash = sha256(content);
+			if (
+				d['style-src-elem'] &&
+				!d['style-src-elem'].includes(sha256_empty_comment_hash) &&
+				!this.#style_src_elem.has(sha256_empty_comment_hash)
+			) {
+				this.#style_src_elem.add(sha256_empty_comment_hash);
+			}
 
-				this.#style_src.push(`sha256-${hash}`);
-
-				if (d['style-src-attr']?.length) {
-					this.#style_src_attr.push(`sha256-${hash}`);
-				}
-				if (d['style-src-elem']?.length) {
-					if (
-						hash !== empty_comment_hash &&
-						!d['style-src-elem'].includes(`sha256-${empty_comment_hash}`)
-					) {
-						this.#style_src_elem.push(`sha256-${empty_comment_hash}`);
-					}
-
-					this.#style_src_elem.push(`sha256-${hash}`);
-				}
-			} else {
-				if (this.#style_src.length === 0 && !d['style-src']?.includes('unsafe-inline')) {
-					this.#style_src.push(`nonce-${this.#nonce}`);
-				}
-				if (d['style-src-attr']?.length) {
-					this.#style_src_attr.push(`nonce-${this.#nonce}`);
-				}
-				if (d['style-src-elem']?.length) {
-					if (!d['style-src-elem'].includes(`sha256-${empty_comment_hash}`)) {
-						this.#style_src_elem.push(`sha256-${empty_comment_hash}`);
-					}
-
-					this.#style_src_elem.push(`nonce-${this.#nonce}`);
-				}
+			if (source !== sha256_empty_comment_hash) {
+				this.#style_src_elem.add(source);
 			}
 		}
 	}
@@ -223,35 +252,35 @@ class BaseProvider {
 
 		const directives = { ...this.#directives };
 
-		if (this.#style_src.length > 0) {
+		if (this.#style_src.size > 0) {
 			directives['style-src'] = [
 				...(directives['style-src'] || directives['default-src'] || []),
 				...this.#style_src
 			];
 		}
 
-		if (this.#style_src_attr.length > 0) {
+		if (this.#style_src_attr.size > 0) {
 			directives['style-src-attr'] = [
 				...(directives['style-src-attr'] || []),
 				...this.#style_src_attr
 			];
 		}
 
-		if (this.#style_src_elem.length > 0) {
+		if (this.#style_src_elem.size > 0) {
 			directives['style-src-elem'] = [
 				...(directives['style-src-elem'] || []),
 				...this.#style_src_elem
 			];
 		}
 
-		if (this.#script_src.length > 0) {
+		if (this.#script_src.size > 0) {
 			directives['script-src'] = [
 				...(directives['script-src'] || directives['default-src'] || []),
 				...this.#script_src
 			];
 		}
 
-		if (this.#script_src_elem.length > 0) {
+		if (this.#script_src_elem.size > 0) {
 			directives['script-src-elem'] = [
 				...(directives['script-src-elem'] || []),
 				...this.#script_src_elem
@@ -296,7 +325,7 @@ class CspProvider extends BaseProvider {
 			return;
 		}
 
-		return `<meta http-equiv="content-security-policy" content=${escape_html_attr(content)}>`;
+		return `<meta http-equiv="content-security-policy" content="${escape_html(content, true)}">`;
 	}
 }
 
@@ -344,6 +373,10 @@ export class Csp {
 		this.report_only_provider = new CspReportOnlyProvider(use_hashes, reportOnly, this.nonce);
 	}
 
+	get script_needs_hash() {
+		return this.csp_provider.script_needs_hash || this.report_only_provider.script_needs_hash;
+	}
+
 	get script_needs_nonce() {
 		return this.csp_provider.script_needs_nonce || this.report_only_provider.script_needs_nonce;
 	}
@@ -356,6 +389,12 @@ export class Csp {
 	add_script(content) {
 		this.csp_provider.add_script(content);
 		this.report_only_provider.add_script(content);
+	}
+
+	/** @param {`sha256-${string}`[]} hashes */
+	add_script_hashes(hashes) {
+		this.csp_provider.add_script_hashes(hashes);
+		this.report_only_provider.add_script_hashes(hashes);
 	}
 
 	/** @param {string} content */

@@ -1,51 +1,41 @@
-/**
- * @returns {import('types').Deferred & { promise: Promise<any> }}}
- */
-function defer() {
-	let fulfil;
-	let reject;
-
-	const promise = new Promise((f, r) => {
-		fulfil = f;
-		reject = r;
-	});
-
-	// @ts-expect-error
-	return { promise, fulfil, reject };
-}
+import { with_resolvers } from './promise.js';
 
 /**
  * Create an async iterator and a function to push values into it
+ * @template T
  * @returns {{
- *   iterator: AsyncIterable<any>;
- *   push: (value: any) => void;
- *   done: () => void;
+ *   iterate: (transform?: (input: T) => T) => AsyncIterable<T>;
+ *   add: (promise: Promise<T>) => void;
  * }}
  */
 export function create_async_iterator() {
-	const deferred = [defer()];
+	let resolved = -1;
+	let returned = -1;
+
+	/** @type {import('./promise.js').PromiseWithResolvers<T>[]} */
+	const deferred = [];
 
 	return {
-		iterator: {
-			[Symbol.asyncIterator]() {
-				return {
-					next: async () => {
-						const next = await deferred[0].promise;
-						if (!next.done) deferred.shift();
-						return next;
-					}
-				};
-			}
+		iterate: (transform = (x) => x) => {
+			return {
+				[Symbol.asyncIterator]() {
+					return {
+						next: async () => {
+							const next = deferred[++returned];
+							if (!next) return { value: null, done: true };
+
+							const value = await next.promise;
+							return { value: transform(value), done: false };
+						}
+					};
+				}
+			};
 		},
-		push: (value) => {
-			deferred[deferred.length - 1].fulfil({
-				value,
-				done: false
+		add: (promise) => {
+			deferred.push(with_resolvers());
+			void promise.then((value) => {
+				deferred[++resolved].resolve(value);
 			});
-			deferred.push(defer());
-		},
-		done: () => {
-			deferred[deferred.length - 1].fulfil({ done: true });
 		}
 	};
 }

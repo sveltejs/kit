@@ -1,3 +1,5 @@
+import { BINARY_FORM_CONTENT_TYPE } from '../runtime/form-utils.js';
+
 /**
  * Given an Accept header and a list of possible content types, pick
  * the most suitable one to respond with
@@ -9,7 +11,7 @@ export function negotiate(accept, types) {
 	const parts = [];
 
 	accept.split(',').forEach((str, i) => {
-		const match = /([^/]+)\/([^;]+)(?:;q=([0-9.]+))?/.exec(str);
+		const match = /([^/ \t]+)\/([^; \t]+)[ \t]*(?:;[ \t]*q=([0-9.]+))?/.exec(str);
 
 		// no match equals invalid header — ignore
 		if (match) {
@@ -74,6 +76,7 @@ export function is_form_content_type(request) {
 		request,
 		'application/x-www-form-urlencoded',
 		'multipart/form-data',
-		'text/plain'
+		'text/plain',
+		BINARY_FORM_CONTENT_TYPE
 	);
 }

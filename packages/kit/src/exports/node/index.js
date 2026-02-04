@@ -1,7 +1,7 @@
 import { createReadStream } from 'node:fs';
 import { Readable } from 'node:stream';
 import * as set_cookie_parser from 'set-cookie-parser';
-import { SvelteKitError } from '../../runtime/control.js';
+import { SvelteKitError } from '../internal/index.js';
 
 /**
  * @param {import('http').IncomingMessage} req
@@ -26,7 +26,7 @@ function get_raw_body(req, body_size_limit) {
 
 	if (req.destroyed) {
 		const readable = new ReadableStream();
-		readable.cancel();
+		void readable.cancel();
 		return readable;
 	}
 
@@ -103,12 +103,42 @@ function get_raw_body(req, body_size_limit) {
  * }} options
  * @returns {Promise<Request>}
  */
+// TODO 3.0 make the signature synchronous?
+// eslint-disable-next-line @typescript-eslint/require-await
 export async function getRequest({ request, base, bodySizeLimit }) {
+	let headers = /** @type {Record<string, string>} */ (request.headers);
+	if (request.httpVersionMajor >= 2) {
+		// the Request constructor rejects headers with ':' in the name
+		headers = Object.assign({}, headers);
+		// https://www.rfc-editor.org/rfc/rfc9113.html#section-8.3.1-2.3.5
+		if (headers[':authority']) {
+			headers.host = headers[':authority'];
+		}
+		delete headers[':authority'];
+		delete headers[':method'];
+		delete headers[':path'];
+		delete headers[':scheme'];
+	}
+
+	// TODO: Whenever Node >=22 is minimum supported version, we can use `request.readableAborted`
+	// @see https://github.com/nodejs/node/blob/5cf3c3e24c7257a0c6192ed8ef71efec8ddac22b/lib/internal/streams/readable.js#L1443-L1453
+	const controller = new AbortController();
+	let errored = false;
+	let end_emitted = false;
+	request.once('error', () => (errored = true));
+	request.once('end', () => (end_emitted = true));
+	request.once('close', () => {
+		if ((errored || request.destroyed) && !end_emitted) {
+			controller.abort();
+		}
+	});
+
 	return new Request(base + request.url, {
 		// @ts-expect-error
 		duplex: 'half',
 		method: request.method,
-		headers: /** @type {Record<string, string>} */ (request.headers),
+		headers: Object.entries(headers),
+		signal: controller.signal,
 		body:
 			request.method === 'GET' || request.method === 'HEAD'
 				? undefined
@@ -121,6 +151,8 @@ export async function getRequest({ request, base, bodySizeLimit }) {
  * @param {Response} response
  * @returns {Promise<void>}
  */
+// TODO 3.0 make the signature synchronous?
+// eslint-disable-next-line @typescript-eslint/require-await
 export async function setResponse(res, response) {
 	for (const [key, value] of response.headers) {
 		try {
@@ -158,7 +190,7 @@ export async function setResponse(res, response) {
 	const reader = response.body.getReader();
 
 	if (res.destroyed) {
-		reader.cancel();
+		void reader.cancel();
 		return;
 	}
 
@@ -175,7 +207,7 @@ export async function setResponse(res, response) {
 	res.on('close', cancel);
 	res.on('error', cancel);
 
-	next();
+	void next();
 	async function next() {
 		try {
 			for (;;) {

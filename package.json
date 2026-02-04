@@ -8,31 +8,45 @@
 		"test:kit": "pnpm run --dir packages/kit test",
 		"test:cross-platform:dev": "pnpm run --dir packages/kit test:cross-platform:dev",
 		"test:cross-platform:build": "pnpm run --dir packages/kit test:cross-platform:build",
-		"test:vite-ecosystem-ci": "pnpm test --dir packages/kit",
-		"test:others": "pnpm test -r --filter=./packages/* --filter=!./packages/kit/ --workspace-concurrency=1",
+		"test:server-side-route-resolution:dev": "pnpm run --dir packages/kit test:server-side-route-resolution:dev",
+		"test:server-side-route-resolution:build": "pnpm run --dir packages/kit test:server-side-route-resolution:build",
+		"test:svelte-async:dev": "pnpm run --dir packages/kit test:svelte-async:dev",
+		"test:svelte-async:build": "pnpm run --dir packages/kit test:svelte-async:build",
+		"test:vite-ecosystem-ci": "pnpm --dir packages/kit test",
+		"test:others": "pnpm -r --filter='./packages/*' --filter=!./packages/kit/ --workspace-concurrency=1 test",
 		"check": "pnpm -r prepublishOnly && pnpm -r check",
 		"lint": "pnpm -r lint && eslint --cache --cache-location node_modules/.eslintcache 'packages/**/*.js'",
 		"format": "pnpm -r format",
 		"precommit": "pnpm format && pnpm lint",
 		"changeset:version": "changeset version && pnpm -r generate:version && git add --all",
 		"changeset:release": "changeset publish",
-		"start": "cd sites/kit.svelte.dev && npm run dev",
-		"build": "pnpm --filter @sveltejs/* -r build",
+		"build": "pnpm --filter '@sveltejs/*' -r build",
 		"sync-all": "node scripts/sync-all.js"
 	},
 	"devDependencies": {
-		"@changesets/cli": "^2.27.1",
-		"@sveltejs/eslint-config": "^6.0.4",
-		"@svitejs/changesets-changelog-github-compact": "^1.1.0",
-		"@typescript-eslint/eslint-plugin": "^7.0.0",
-		"eslint": "^8.56.0",
-		"eslint-config-prettier": "^9.1.0",
-		"eslint-plugin-svelte": "^2.35.1",
-		"eslint-plugin-unicorn": "^52.0.0",
-		"playwright": "^1.41.0"
+		"@changesets/cli": "catalog:",
+		"@playwright/test": "catalog:",
+		"@sveltejs/eslint-config": "catalog:",
+		"@svitejs/changesets-changelog-github-compact": "catalog:",
+		"eslint": "catalog:",
+		"prettier": "^3.6.0",
+		"prettier-plugin-svelte": "^3.4.0",
+		"typescript-eslint": "catalog:"
 	},
-	"packageManager": "pnpm@8.15.6",
+	"packageManager": "pnpm@10.28.2+sha512.41872f037ad22f7348e3b1debbaf7e867cfd448f2726d9cf74c08f19507c31d2c8e7a11525b983febc2df640b5438dee6023ebb1f84ed43cc2d654d2bc326264",
 	"engines": {
-		"pnpm": "^8.0.0"
+		"pnpm": ">=9.0.0"
+	},
+	"pnpm": {
+		"onlyBuiltDependencies": [
+			"@parcel/watcher",
+			"esbuild",
+			"protobufjs",
+			"rolldown",
+			"sharp",
+			"svelte-preprocess",
+			"unix-dgram",
+			"workerd"
+		]
 	}
 }

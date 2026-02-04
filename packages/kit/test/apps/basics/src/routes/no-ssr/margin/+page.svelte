@@ -1,6 +1,6 @@
 <div class="container">
 	<span> ^this is not the top of the screen</span>
-	<div class="spacer" />
+	<div class="spacer"></div>
 </div>
 
 <style>

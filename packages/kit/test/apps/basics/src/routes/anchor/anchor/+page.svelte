@@ -8,3 +8,4 @@
 <div style="height: 180vh; background-color: honeydew;">
 	<p id="go-to-.=" class="special-char-id">The browser scrolls to me</p>
 </div>
+<a id="non-ascii-anchor" href="#go-to-encöded">Anchor demo (non-ASCII)</a>

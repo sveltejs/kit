@@ -9,21 +9,20 @@ import { write_non_ambient } from './write_non_ambient.js';
 import { write_server } from './write_server.js';
 
 /**
- * Initialize SvelteKit's generated files.
+ * Initialize SvelteKit's generated files that only depend on the config and mode.
  * @param {import('types').ValidatedConfig} config
  * @param {string} mode
  */
 export function init(config, mode) {
 	write_tsconfig(config.kit);
 	write_ambient(config.kit, mode);
-	write_non_ambient(config.kit);
 }
 
 /**
  * Update SvelteKit's generated files
  * @param {import('types').ValidatedConfig} config
  */
-export async function create(config) {
+export function create(config) {
 	const manifest_data = create_manifest_data({ config });
 
 	const output = path.join(config.kit.outDir, 'generated');
@@ -31,7 +30,8 @@ export async function create(config) {
 	write_client_manifest(config.kit, manifest_data, `${output}/client`);
 	write_server(config, output);
 	write_root(manifest_data, output);
-	await write_all_types(config, manifest_data);
+	write_all_types(config, manifest_data);
+	write_non_ambient(config.kit, manifest_data);
 
 	return { manifest_data };
 }
@@ -44,10 +44,8 @@ export async function create(config) {
  * @param {import('types').ManifestData} manifest_data
  * @param {string} file
  */
-export async function update(config, manifest_data, file) {
-	await write_types(config, manifest_data, file);
-
-	return { manifest_data };
+export function update(config, manifest_data, file) {
+	write_types(config, manifest_data, file);
 }
 
 /**
@@ -55,9 +53,9 @@ export async function update(config, manifest_data, file) {
  * @param {import('types').ValidatedConfig} config
  * @param {string} mode The Vite mode
  */
-export async function all(config, mode) {
+export function all(config, mode) {
 	init(config, mode);
-	return await create(config);
+	return create(config);
 }
 
 /**
@@ -65,10 +63,11 @@ export async function all(config, mode) {
  * @param {import('types').ValidatedConfig} config
  * @param {string} mode The Vite mode
  */
-export async function all_types(config, mode) {
+export function all_types(config, mode) {
 	init(config, mode);
 	const manifest_data = create_manifest_data({ config });
-	await write_all_types(config, manifest_data);
+	write_all_types(config, manifest_data);
+	write_non_ambient(config.kit, manifest_data);
 }
 
 /**

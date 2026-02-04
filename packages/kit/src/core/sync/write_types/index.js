@@ -1,9 +1,13 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import process from 'node:process';
 import MagicString from 'magic-string';
 import { posixify, rimraf, walk } from '../../../utils/filesystem.js';
 import { compact } from '../../../utils/array.js';
 import { ts } from '../ts.js';
+const remove_relative_parent_traversals = (/** @type {string} */ path) =>
+	path.replace(/\.\.\//g, '');
+const is_whitespace = (/** @type {string} */ char) => /\s/.test(char);
 
 /**
  *  @typedef {{
@@ -28,13 +32,15 @@ const cwd = process.cwd();
  * @param {import('types').ValidatedConfig} config
  * @param {import('types').ManifestData} manifest_data
  */
-export async function write_all_types(config, manifest_data) {
+export function write_all_types(config, manifest_data) {
 	if (!ts) return;
 
 	const types_dir = `${config.kit.outDir}/types`;
 
 	// empty out files that no longer need to exist
-	const routes_dir = posixify(path.relative('.', config.kit.files.routes)).replace(/\.\.\//g, '');
+	const routes_dir = remove_relative_parent_traversals(
+		posixify(path.relative('.', config.kit.files.routes))
+	);
 	const expected_directories = new Set(
 		manifest_data.routes.map((route) => path.join(routes_dir, route.id))
 	);
@@ -133,7 +139,7 @@ export async function write_all_types(config, manifest_data) {
  * @param {import('types').ManifestData} manifest_data
  * @param {string} file
  */
-export async function write_types(config, manifest_data, file) {
+export function write_types(config, manifest_data, file) {
 	if (!ts) return;
 
 	if (!path.basename(file).startsWith('+')) {
@@ -173,7 +179,9 @@ function create_routes_map(manifest_data) {
  * @param {Set<string>} [to_delete]
  */
 function update_types(config, routes, route, to_delete = new Set()) {
-	const routes_dir = posixify(path.relative('.', config.kit.files.routes)).replace(/\.\.\//g, '');
+	const routes_dir = remove_relative_parent_traversals(
+		posixify(path.relative('.', config.kit.files.routes))
+	);
 	const outdir = path.join(config.kit.outDir, 'types', routes_dir, route.id);
 
 	// now generate new types
@@ -269,6 +277,14 @@ function update_types(config, routes, route, to_delete = new Set()) {
 				'export type Actions<OutputData extends Record<string, any> | void = Record<string, any> | void> = Kit.Actions<RouteParams, OutputData, RouteId>'
 			);
 		}
+
+		if (route.leaf.server) {
+			exports.push(
+				'export type PageProps = { params: RouteParams; data: PageData; form: ActionData }'
+			);
+		} else {
+			exports.push('export type PageProps = { params: RouteParams; data: PageData }');
+		}
 	}
 
 	if (route.layout) {
@@ -332,6 +348,10 @@ function update_types(config, routes, route, to_delete = new Set()) {
 
 		if (proxies.server?.modified) to_delete.delete(proxies.server.file_name);
 		if (proxies.universal?.modified) to_delete.delete(proxies.universal.file_name);
+
+		exports.push(
+			'export type LayoutProps = { params: LayoutParams; data: LayoutData; children: import("svelte").Snippet }'
+		);
 	}
 
 	if (route.endpoint) {
@@ -584,7 +604,7 @@ function replace_ext_with_js(file_path) {
 function generate_params_type(params, outdir, config) {
 	/** @param {string} matcher */
 	const path_to_matcher = (matcher) =>
-		posixify(path.relative(outdir, path.join(config.kit.files.params, matcher)));
+		posixify(path.relative(outdir, path.join(config.kit.files.params, matcher + '.js')));
 
 	return `{ ${params
 		.map(
@@ -720,7 +740,7 @@ export function tweak_types(content, is_server) {
 						if (declaration.type) {
 							let a = declaration.type.pos;
 							const b = declaration.type.end;
-							while (/\s/.test(content[a])) a += 1;
+							while (is_whitespace(content[a])) a += 1;
 
 							const type = content.slice(a, b);
 							code.remove(declaration.name.end, declaration.type.end);
@@ -792,7 +812,7 @@ export function tweak_types(content, is_server) {
 						if (declaration.type) {
 							let a = declaration.type.pos;
 							const b = declaration.type.end;
-							while (/\s/.test(content[a])) a += 1;
+							while (is_whitespace(content[a])) a += 1;
 
 							const type = content.slice(a, b);
 							code.remove(declaration.name.end, declaration.type.end);

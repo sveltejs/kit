@@ -76,10 +76,10 @@ test('starts tasks in sequence', async () => {
 
 test('q.add fails if queue is already finished', async () => {
 	const q = queue(1);
-	q.add(() => {});
+	void q.add(() => {});
 
 	await q.done();
-	assert.throws(() => q.add(() => {}), /Cannot add tasks to a queue that has ended/);
+	expect(() => q.add(() => {})).throws(/Cannot add tasks to a queue that has ended/);
 });
 
 test('q.done() resolves if nothing was added to the queue', async () => {

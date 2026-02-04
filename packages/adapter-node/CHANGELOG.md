@@ -1,5 +1,255 @@
 # @sveltejs/adapter-node
 
+## 5.5.2
+### Patch Changes
+
+
+- fix: disable gzip and brotli when precompress=false ([#15182](https://github.com/sveltejs/kit/pull/15182))
+
+- Updated dependencies [[`46c1ebd`](https://github.com/sveltejs/kit/commit/46c1ebd9f662f0de499e921bfee2661316449e9d), [`2dd74c8`](https://github.com/sveltejs/kit/commit/2dd74c8c86ae4855c3e9d74d8cf241e86dcd5b36), [`8871b54`](https://github.com/sveltejs/kit/commit/8871b5444413d0c7d7ef4d260996c3b5c359d0b8)]:
+  - @sveltejs/kit@2.50.1
+
+## 5.5.1
+### Patch Changes
+
+
+- fix: add validations for protocol, host, and port header values ([`d9ae9b0`](https://github.com/sveltejs/kit/commit/d9ae9b00b14f5574d109f3fd548f960594346226))
+
+- Updated dependencies [[`81cd545`](https://github.com/sveltejs/kit/commit/81cd545dd78b60ee994a04d8abacb58bf63584d7), [`d9ae9b0`](https://github.com/sveltejs/kit/commit/d9ae9b00b14f5574d109f3fd548f960594346226), [`8ed8155`](https://github.com/sveltejs/kit/commit/8ed8155215b9a74012fecffb942ad9a793b274e5)]:
+  - @sveltejs/kit@2.49.5
+
+## 5.5.0
+### Minor Changes
+
+
+- feat: add env vars for keepAliveTimeout and headersTimeout ([#15125](https://github.com/sveltejs/kit/pull/15125))
+
+## 5.4.0
+### Minor Changes
+
+
+- feat: add [`signal`](https://developer.mozilla.org/en-US/docs/Web/API/Request/signal) property to request ([#14715](https://github.com/sveltejs/kit/pull/14715))
+
+
+### Patch Changes
+
+- Updated dependencies [[`9c933a2`](https://github.com/sveltejs/kit/commit/9c933a29e64c04db03e9150fa4e2d74a894d3d12), [`dedda71`](https://github.com/sveltejs/kit/commit/dedda7184dc04543e2ba6ea3e7f50b3836505463)]:
+  - @sveltejs/kit@2.47.0
+
+## 5.3.3
+### Patch Changes
+
+
+- chore: update "homepage" field in package.json ([#14579](https://github.com/sveltejs/kit/pull/14579))
+
+## 5.3.2
+### Patch Changes
+
+
+- fix: bump bundled sirv version to 3.0.2 ([#14385](https://github.com/sveltejs/kit/pull/14385))
+
+- Updated dependencies [[`e6c3171`](https://github.com/sveltejs/kit/commit/e6c317150d330413a7691c1b00dc94ce121fdb89)]:
+  - @sveltejs/kit@2.38.0
+
+## 5.3.1
+### Patch Changes
+
+
+- fix: avoid erroring on builder properties that only exist on the latest version of SvelteKit ([#14233](https://github.com/sveltejs/kit/pull/14233))
+
+- Updated dependencies [[`f2db41c`](https://github.com/sveltejs/kit/commit/f2db41c0d3a0aefbb080ab6a9aa5822b3e41625c)]:
+  - @sveltejs/kit@2.31.1
+
+## 5.3.0
+### Minor Changes
+
+
+- feat: add `instrumentation.server.ts` for tracing and observability setup ([#13899](https://github.com/sveltejs/kit/pull/13899))
+
+
+### Patch Changes
+
+- Updated dependencies [[`f635678`](https://github.com/sveltejs/kit/commit/f63567812505597b1edc3e01010eca622b03b126), [`f635678`](https://github.com/sveltejs/kit/commit/f63567812505597b1edc3e01010eca622b03b126)]:
+  - @sveltejs/kit@2.31.0
+
+## 5.2.16
+### Patch Changes
+
+
+- fix: handling of PROTOCOL_HEADER and HOST_HEADER env vars ([#14221](https://github.com/sveltejs/kit/pull/14221))
+
+- Updated dependencies [[`ea95533`](https://github.com/sveltejs/kit/commit/ea9553380a9f1b5f3b2fcf3bebd15f900c51d77c)]:
+  - @sveltejs/kit@2.30.1
+
+## 5.2.15
+### Patch Changes
+
+
+- fix: fallback to `host` header if header specified by `HOST_HEADER` is not in request headers ([#11154](https://github.com/sveltejs/kit/pull/11154))
+
+- Updated dependencies [[`6ab60e5`](https://github.com/sveltejs/kit/commit/6ab60e509f28e13dae9e15a4af340e92ec6fcdf3), [`bfdb564`](https://github.com/sveltejs/kit/commit/bfdb5643968f201ead51d890207b9c42e400a227), [`94b30c4`](https://github.com/sveltejs/kit/commit/94b30c468ce6f6d1fa0aa985d86ef9216cff83f2)]:
+  - @sveltejs/kit@2.30.0
+
+## 5.2.14
+### Patch Changes
+
+
+- chore: add `.git` to the end of `package.json` repository url ([#14134](https://github.com/sveltejs/kit/pull/14134))
+
+- Updated dependencies [[`c968aef`](https://github.com/sveltejs/kit/commit/c968aef5727f978244d5160657b4a7ac651384ae)]:
+  - @sveltejs/kit@2.27.3
+
+## 5.2.13
+### Patch Changes
+
+
+- fix: remove unnecessary static directory serving middleware ([#13953](https://github.com/sveltejs/kit/pull/13953))
+
+- Updated dependencies [[`bcdaf21`](https://github.com/sveltejs/kit/commit/bcdaf215c2182524e7678a1049a5f1ccbbe71e21)]:
+  - @sveltejs/kit@2.22.3
+
+## 5.2.12
+### Patch Changes
+
+
+- fix: include ambient type declarations ([#12088](https://github.com/sveltejs/kit/pull/12088))
+
+- Updated dependencies [[`d440c68acac67ed64eea4b9bda267e229303db7b`](https://github.com/sveltejs/kit/commit/d440c68acac67ed64eea4b9bda267e229303db7b), [`6774ebc34330b12ae8c0cae08e98b577d819fffb`](https://github.com/sveltejs/kit/commit/6774ebc34330b12ae8c0cae08e98b577d819fffb), [`777c8ef11f17d2ab48aee0f2347c051663da5826`](https://github.com/sveltejs/kit/commit/777c8ef11f17d2ab48aee0f2347c051663da5826), [`f451f6c4a3dbbc73dc86667c6ff89ab2f46ca9d2`](https://github.com/sveltejs/kit/commit/f451f6c4a3dbbc73dc86667c6ff89ab2f46ca9d2), [`34a03ff16af29e917abebb649b31eadfc40a98a0`](https://github.com/sveltejs/kit/commit/34a03ff16af29e917abebb649b31eadfc40a98a0), [`1c77e283896058084c1cb5752d9ec207987a585e`](https://github.com/sveltejs/kit/commit/1c77e283896058084c1cb5752d9ec207987a585e), [`04958cca5905aaeeff367c9e4a5ce6e90fc64779`](https://github.com/sveltejs/kit/commit/04958cca5905aaeeff367c9e4a5ce6e90fc64779), [`9dc5c0e3e01a3c07010e9996688169be68e1dde8`](https://github.com/sveltejs/kit/commit/9dc5c0e3e01a3c07010e9996688169be68e1dde8), [`00e1a7621de554054d068e4525a9e505d1c2e588`](https://github.com/sveltejs/kit/commit/00e1a7621de554054d068e4525a9e505d1c2e588), [`9fcd1e7574197fa6e7ac000a030378d877cb8837`](https://github.com/sveltejs/kit/commit/9fcd1e7574197fa6e7ac000a030378d877cb8837), [`e541a4057a00f5ab6740fb51b7f88f17776da50a`](https://github.com/sveltejs/kit/commit/e541a4057a00f5ab6740fb51b7f88f17776da50a), [`37f72fbb075b481de8263f62c77125333735f382`](https://github.com/sveltejs/kit/commit/37f72fbb075b481de8263f62c77125333735f382), [`b60707ca8e755be95c86490122aa1b792b9bd6be`](https://github.com/sveltejs/kit/commit/b60707ca8e755be95c86490122aa1b792b9bd6be), [`699f4405c752261cf46c1ad32e4dbadceaffc75b`](https://github.com/sveltejs/kit/commit/699f4405c752261cf46c1ad32e4dbadceaffc75b), [`e2a4538c48295cde06f64fb8c7f0b333fbf95496`](https://github.com/sveltejs/kit/commit/e2a4538c48295cde06f64fb8c7f0b333fbf95496), [`a91ba1f326b6e244503de9a010771d942b461dad`](https://github.com/sveltejs/kit/commit/a91ba1f326b6e244503de9a010771d942b461dad)]:
+  - @sveltejs/kit@2.16.0
+
+## 5.2.11
+### Patch Changes
+
+
+- chore(deps): update dependency @rollup/plugin-node-resolve to v16 ([#13164](https://github.com/sveltejs/kit/pull/13164))
+
+- Updated dependencies [[`19823dd716568140011eaa86110bb8868f0e2513`](https://github.com/sveltejs/kit/commit/19823dd716568140011eaa86110bb8868f0e2513), [`5d30191d13a596bda50e27e54522c10f3f6461e3`](https://github.com/sveltejs/kit/commit/5d30191d13a596bda50e27e54522c10f3f6461e3)]:
+  - @sveltejs/kit@2.12.2
+
+## 5.2.10
+### Patch Changes
+
+
+- chore: append http on listening address ([#13146](https://github.com/sveltejs/kit/pull/13146))
+
+- Updated dependencies [[`11a9f66922199ee5925cc71c0efc513376753754`](https://github.com/sveltejs/kit/commit/11a9f66922199ee5925cc71c0efc513376753754), [`3d9e03a8a55a539b02c76d44df4874e4642bbd17`](https://github.com/sveltejs/kit/commit/3d9e03a8a55a539b02c76d44df4874e4642bbd17)]:
+  - @sveltejs/kit@2.11.0
+
+## 5.2.9
+### Patch Changes
+
+
+- docs: update URLs for new svelte.dev site ([#12857](https://github.com/sveltejs/kit/pull/12857))
+
+- Updated dependencies [[`dcbe4222a194c5f90cfc0fc020cf065f7a4e4c46`](https://github.com/sveltejs/kit/commit/dcbe4222a194c5f90cfc0fc020cf065f7a4e4c46), [`4cdbf76fbbf0c0ce7f574ef69c8daddcf954d39d`](https://github.com/sveltejs/kit/commit/4cdbf76fbbf0c0ce7f574ef69c8daddcf954d39d), [`3a9b78f04786898ca93f6d4b75ab18d26bc45192`](https://github.com/sveltejs/kit/commit/3a9b78f04786898ca93f6d4b75ab18d26bc45192), [`723eb8b31e6a22c82f730c30e485386c8676b746`](https://github.com/sveltejs/kit/commit/723eb8b31e6a22c82f730c30e485386c8676b746), [`8ec471c875345b751344e67580ff1b772ef2735b`](https://github.com/sveltejs/kit/commit/8ec471c875345b751344e67580ff1b772ef2735b)]:
+  - @sveltejs/kit@2.7.3
+
+## 5.2.8
+### Patch Changes
+
+
+- chore: upgrade @rollup/plugin-commonjs to 28.0.1 ([#12817](https://github.com/sveltejs/kit/pull/12817))
+
+## 5.2.7
+### Patch Changes
+
+
+- chore: upgrade to sirv 3.0 ([#12796](https://github.com/sveltejs/kit/pull/12796))
+
+- Updated dependencies [[`dbc9c9486f962af7dbd9123d12d8a6829700d00f`](https://github.com/sveltejs/kit/commit/dbc9c9486f962af7dbd9123d12d8a6829700d00f), [`96642d234d1f5e961e919da725a1f6188e8aba2c`](https://github.com/sveltejs/kit/commit/96642d234d1f5e961e919da725a1f6188e8aba2c)]:
+  - @sveltejs/kit@2.7.1
+
+## 5.2.6
+### Patch Changes
+
+
+- fix: use `node:` imports to support Deno ([#12785](https://github.com/sveltejs/kit/pull/12785))
+
+## 5.2.5
+### Patch Changes
+
+
+- chore: upgrade rollup plugins ([#12706](https://github.com/sveltejs/kit/pull/12706))
+
+- Updated dependencies [[`a233f53f28fcb4c3ea63d2faf156fba09a18456c`](https://github.com/sveltejs/kit/commit/a233f53f28fcb4c3ea63d2faf156fba09a18456c), [`5b40b04608023a3fcb6c601a5f2d36485ce07196`](https://github.com/sveltejs/kit/commit/5b40b04608023a3fcb6c601a5f2d36485ce07196)]:
+  - @sveltejs/kit@2.6.0
+
+## 5.2.4
+### Patch Changes
+
+
+- chore: upgrade polka to 1.0.0-next.28 ([#12693](https://github.com/sveltejs/kit/pull/12693))
+
+## 5.2.3
+### Patch Changes
+
+
+- fix: import `node:process` instead of using globals ([#12641](https://github.com/sveltejs/kit/pull/12641))
+
+- Updated dependencies [[`e798ef718f163bed4f93e1918bd8294f765376ad`](https://github.com/sveltejs/kit/commit/e798ef718f163bed4f93e1918bd8294f765376ad)]:
+  - @sveltejs/kit@2.5.28
+
+## 5.2.2
+### Patch Changes
+
+
+- chore: configure provenance in a simpler manner ([#12570](https://github.com/sveltejs/kit/pull/12570))
+
+- Updated dependencies [[`087a43d391fc38b8c008fb39a804dc6988974101`](https://github.com/sveltejs/kit/commit/087a43d391fc38b8c008fb39a804dc6988974101)]:
+  - @sveltejs/kit@2.5.22
+
+## 5.2.1
+### Patch Changes
+
+
+- chore: package provenance ([#12567](https://github.com/sveltejs/kit/pull/12567))
+
+- Updated dependencies [[`4930a8443caa53bcecee7b690cd28e429b1c8a20`](https://github.com/sveltejs/kit/commit/4930a8443caa53bcecee7b690cd28e429b1c8a20)]:
+  - @sveltejs/kit@2.5.21
+
+## 5.2.0
+
+### Minor Changes
+
+- feat: add unit suffixes to the `BODY_SIZE_LIMIT` environment variable ([#11680](https://github.com/sveltejs/kit/pull/11680))
+
+### Patch Changes
+
+- Updated dependencies [[`121836fcbf6c615fd18c79a12203613ddbe49acf`](https://github.com/sveltejs/kit/commit/121836fcbf6c615fd18c79a12203613ddbe49acf)]:
+  - @sveltejs/kit@2.5.17
+
+## 5.1.1
+
+### Patch Changes
+
+- fix: do not create more than one shutdown timeout ([#12359](https://github.com/sveltejs/kit/pull/12359))
+
+- Updated dependencies [[`835ebf6ce9979203992cca30f434b3785afae818`](https://github.com/sveltejs/kit/commit/835ebf6ce9979203992cca30f434b3785afae818)]:
+  - @sveltejs/kit@2.5.16
+
+## 5.1.0
+
+### Minor Changes
+
+- feat: add shutdown event ([#12153](https://github.com/sveltejs/kit/pull/12153))
+
+### Patch Changes
+
+- fix: close keep-alive connections as soon as possible during graceful shutdown rather than accepting new requests ([#12153](https://github.com/sveltejs/kit/pull/12153))
+
+## 5.0.2
+
+### Patch Changes
+
+- chore: update to @rollup/plugin-commonjs@26 ([#12326](https://github.com/sveltejs/kit/pull/12326))
+
+- chore(deps): update dependency @rollup/plugin-commonjs to v26 ([`9aa59db67080248eb22fd227e7a491102b011c47`](https://github.com/sveltejs/kit/commit/9aa59db67080248eb22fd227e7a491102b011c47))
+
+- chore: add keywords for discovery in npm search ([#12330](https://github.com/sveltejs/kit/pull/12330))
+
+- Updated dependencies [[`25acb1d9fce998dccd8050b93cf4142c2b082611`](https://github.com/sveltejs/kit/commit/25acb1d9fce998dccd8050b93cf4142c2b082611), [`642c4a4aff4351b786fe6274aa2f0bf7d905faf9`](https://github.com/sveltejs/kit/commit/642c4a4aff4351b786fe6274aa2f0bf7d905faf9), [`0a0e9aa897123ebec50af08e9385b2ca4fc5bb28`](https://github.com/sveltejs/kit/commit/0a0e9aa897123ebec50af08e9385b2ca4fc5bb28)]:
+  - @sveltejs/kit@2.5.11
+
 ## 5.0.1
 
 ### Patch Changes

@@ -9,12 +9,11 @@
 		"test": "playwright test"
 	},
 	"devDependencies": {
-		"@sveltejs/adapter-node": "workspace:^",
 		"@sveltejs/kit": "workspace:^",
-		"@sveltejs/vite-plugin-svelte": "^3.0.1",
-		"sirv-cli": "^2.0.2",
-		"svelte": "^4.2.10",
-		"vite": "^5.1.0"
+		"@sveltejs/vite-plugin-svelte": "catalog:",
+		"sirv-cli": "catalog:",
+		"svelte": "catalog:",
+		"vite": "catalog:"
 	},
 	"type": "module"
 }

@@ -1,10 +1,10 @@
 <script>
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 
 	let error = false;
 
 	try {
-		console.log($page);
+		console.log(page);
 	} catch (e) {
 		error = true;
 	}

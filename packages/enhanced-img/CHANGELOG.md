@@ -1,5 +1,219 @@
 # @sveltejs/enhanced-img
 
+## 0.10.0
+### Minor Changes
+
+
+- feat: re-export the `Picture` type from `vite-imagetools` ([#15225](https://github.com/sveltejs/kit/pull/15225))
+
+## 0.9.3
+### Patch Changes
+
+
+- fix: ensure compatibility with vite-plugin-svelte@7 (use api.filter instead of api.idFilter) ([#15179](https://github.com/sveltejs/kit/pull/15179))
+
+## 0.9.2
+### Patch Changes
+
+
+- chore: remove duplicate caching layer ([#14988](https://github.com/sveltejs/kit/pull/14988))
+
+## 0.9.1
+### Patch Changes
+
+
+- fix: update vite-imagetools for caching fixes to avoid crashes ([#14976](https://github.com/sveltejs/kit/pull/14976))
+
+## 0.9.0
+### Minor Changes
+
+
+- chore(deps): update dependency vite-imagetools to v9 ([#14608](https://github.com/sveltejs/kit/pull/14608))
+
+## 0.8.5
+### Patch Changes
+
+
+- fix: warn rather than crash when non-enhanced image dynamically passed to `enhanced:img` ([#14845](https://github.com/sveltejs/kit/pull/14845))
+
+## 0.8.4
+### Patch Changes
+
+
+- fix: add script block only when there are imports to add ([#14604](https://github.com/sveltejs/kit/pull/14604))
+
+## 0.8.3
+### Patch Changes
+
+
+- chore: update "homepage" field in package.json ([#14579](https://github.com/sveltejs/kit/pull/14579))
+
+## 0.8.2
+### Patch Changes
+
+
+- chore: upgrade sharp to 0.34.4 ([#14478](https://github.com/sveltejs/kit/pull/14478))
+
+## 0.8.1
+### Patch Changes
+
+
+- fix(perf): correctly apply id filter from vite-plugin-svelte ([#14248](https://github.com/sveltejs/kit/pull/14248))
+
+## 0.8.0
+### Minor Changes
+
+
+- breaking: upgrade to vite-imagetools 8 to auto-rotate images ([#14172](https://github.com/sveltejs/kit/pull/14172))
+
+## 0.7.1
+### Patch Changes
+
+
+- chore: add `.git` to the end of `package.json` repository url ([#14134](https://github.com/sveltejs/kit/pull/14134))
+
+## 0.7.0
+### Minor Changes
+
+
+- breaking: use new filters and enhancements from `vite-plugin-svelte`. Requires `vite >= 6.3` and `vite-plugin-svelte >= 6.0`. ([#13967](https://github.com/sveltejs/kit/pull/13967))
+
+## 0.6.1
+### Patch Changes
+
+
+- feat: allow `vite-plugin-svelte` 6 peer dependency ([#13921](https://github.com/sveltejs/kit/pull/13921))
+
+## 0.6.0
+### Minor Changes
+
+
+- feat: add validation to ensure plugin occurs in correct order ([`1c3f36dc10265fb79c64643c3d7a91469d34e697`](https://github.com/sveltejs/kit/commit/1c3f36dc10265fb79c64643c3d7a91469d34e697))
+
+## 0.5.1
+### Patch Changes
+
+
+- chore(deps): upgrade sharp to 0.34.1 ([#13611](https://github.com/sveltejs/kit/pull/13611))
+
+## 0.5.0
+### Minor Changes
+
+
+- feat: add support for targeting `enhanced\:img` in CSS ([#13617](https://github.com/sveltejs/kit/pull/13617))
+
+## 0.4.4
+### Patch Changes
+
+
+- fix: handle duplicate SVG images ([`8073d7c7dcc391d406c658729221a18ac6f18102`](https://github.com/sveltejs/kit/commit/8073d7c7dcc391d406c658729221a18ac6f18102))
+
+## 0.4.3
+### Patch Changes
+
+
+- fix: properly handle multiple SVGs ([#13127](https://github.com/sveltejs/kit/pull/13127))
+
+## 0.4.2
+### Patch Changes
+
+
+- feat: set intrinsic width and height for SVGs ([#13126](https://github.com/sveltejs/kit/pull/13126))
+
+
+- perf: directly inline values since Svelte no longer inlines variables into template ([#13035](https://github.com/sveltejs/kit/pull/13035))
+
+## 0.4.1
+### Patch Changes
+
+
+- fix: correctly handle `<enhanced:img />` elements nested in other DOM elements ([#12945](https://github.com/sveltejs/kit/pull/12945))
+
+## 0.4.0
+### Minor Changes
+
+
+- breaking: require Svelte 5 ([#12822](https://github.com/sveltejs/kit/pull/12822))
+
+## 0.3.10
+### Patch Changes
+
+
+- docs: update URLs for new svelte.dev site ([#12857](https://github.com/sveltejs/kit/pull/12857))
+
+## 0.3.9
+### Patch Changes
+
+
+- chore: upgrade svelte-parse-markup ([#12793](https://github.com/sveltejs/kit/pull/12793))
+
+## 0.3.8
+### Patch Changes
+
+
+- fix: import `node:process` instead of using globals ([#12641](https://github.com/sveltejs/kit/pull/12641))
+
+## 0.3.7
+### Patch Changes
+
+
+- fix: avoid duplicating width/height attributes ([#12673](https://github.com/sveltejs/kit/pull/12673))
+
+## 0.3.6
+### Patch Changes
+
+
+- fix: address Svelte 5 warning ([`ec04dae73702c99652e4972d2b7363f2c11ccf5a`](https://github.com/sveltejs/kit/commit/ec04dae73702c99652e4972d2b7363f2c11ccf5a))
+
+## 0.3.5
+### Patch Changes
+
+
+- perf: hoist vite asset declarations to module block ([#12627](https://github.com/sveltejs/kit/pull/12627))
+
+## 0.3.4
+### Patch Changes
+
+
+- perf: apply performance optimization to dev srcset ([#12621](https://github.com/sveltejs/kit/pull/12621))
+
+## 0.3.3
+### Patch Changes
+
+
+- chore: configure provenance in a simpler manner ([#12570](https://github.com/sveltejs/kit/pull/12570))
+
+## 0.3.2
+### Patch Changes
+
+
+- chore: package provenance ([#12567](https://github.com/sveltejs/kit/pull/12567))
+
+
+- fix: ensure src attribute is properly formed ([`65931f276ac2102032e3032c864a472eee19b7bb`](https://github.com/sveltejs/kit/commit/65931f276ac2102032e3032c864a472eee19b7bb))
+
+## 0.3.1
+### Patch Changes
+
+
+- fix: make `*?enhanced` imports available in the ambient context ([#12363](https://github.com/sveltejs/kit/pull/12363))
+
+## 0.3.0
+
+### Minor Changes
+
+- breaking: return plugin synchronously from `enhancedImages()` ([#12297](https://github.com/sveltejs/kit/pull/12297))
+
+### Patch Changes
+
+- chore: add keywords for discovery in npm search ([#12330](https://github.com/sveltejs/kit/pull/12330))
+
+## 0.2.1
+
+### Patch Changes
+
+- fix: use correct type for `*?enhanced` imports ([#12224](https://github.com/sveltejs/kit/pull/12224))
+
 ## 0.2.0
 
 ### Minor Changes
