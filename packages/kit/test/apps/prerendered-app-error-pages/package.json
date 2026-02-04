@@ -1,0 +1,25 @@
+{
+	"name": "test-prerendered-app-error-pages",
+	"private": true,
+	"version": "0.0.1",
+	"type": "module",
+	"scripts": {
+		"dev": "vite dev",
+		"build": "vite build",
+		"preview": "vite preview",
+		"prepare": "svelte-kit sync || echo ''",
+		"check": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json",
+		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json --watch",
+		"test": "pnpm test:dev && pnpm test:build",
+		"test:dev": "DEV=true playwright test",
+		"test:build": "playwright test"
+	},
+	"devDependencies": {
+		"@sveltejs/kit": "workspace:^",
+		"@sveltejs/vite-plugin-svelte": "catalog:",
+		"svelte": "catalog:",
+		"svelte-check": "catalog:",
+		"typescript": "^5.5.4",
+		"vite": "catalog:"
+	}
+}

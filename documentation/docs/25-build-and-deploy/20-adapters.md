@@ -6,14 +6,13 @@ Before you can deploy your SvelteKit app, you need to _adapt_ it for your deploy
 
 Official adapters exist for a variety of platforms — these are documented on the following pages:
 
-- [`@sveltejs/adapter-cloudflare`](adapter-cloudflare) for Cloudflare Pages
-- [`@sveltejs/adapter-cloudflare-workers`](adapter-cloudflare-workers) for Cloudflare Workers
+- [`@sveltejs/adapter-cloudflare`](adapter-cloudflare) for Cloudflare Workers and Cloudflare Pages
 - [`@sveltejs/adapter-netlify`](adapter-netlify) for Netlify
 - [`@sveltejs/adapter-node`](adapter-node) for Node servers
 - [`@sveltejs/adapter-static`](adapter-static) for static site generation (SSG)
 - [`@sveltejs/adapter-vercel`](adapter-vercel) for Vercel
 
-Additional [community-provided adapters](https://sveltesociety.dev/packages?category=sveltekit-adapters) exist for other platforms.
+Additional [community-provided adapters](/packages#sveltekit-adapters) exist for other platforms.
 
 ## Using adapters
 
