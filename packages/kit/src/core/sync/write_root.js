@@ -72,9 +72,12 @@ export function write_root(manifest_data, output) {
 				${
 					isSvelte5Plus()
 						? dedent`
-							let { stores, page, constructors, components = [], form, ${levels
+							let { stores, page, constructors, components = [], fork, form, ${levels
 								.map((l) => `data_${l} = null`)
 								.join(', ')} } = $props();
+							if (browser) {
+								setContext('__sveltekit_fork', () => fork);
+							}
 						`
 						: dedent`
 							export let stores;
