@@ -18,7 +18,7 @@ import { s } from '../../utils/misc.js';
  */
 function create_dynamic_module(type, mode, env_config) {
 	return dedent`
-		import { get_env } from '${runtime_directory}/../exports/vite/utils.js';
+		import { get_env } from '${runtime_directory}/../exports/vite/env.js';
 
 		export const env = get_env(${s(env_config)}, ${s(mode)}).${type};
 	`;

@@ -8,7 +8,7 @@ import { write_ambient } from './write_ambient.js';
 import { write_non_ambient } from './write_non_ambient.js';
 import { write_server } from './write_server.js';
 import { write_env } from './write_env.js';
-import { get_env } from '../../exports/vite/utils.js';
+import { get_env } from '../../exports/vite/env.js';
 
 /**
  * Initialize SvelteKit's generated files that only depend on the config and mode.

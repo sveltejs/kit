@@ -19,7 +19,6 @@ import { preview } from './preview/index.js';
 import {
 	error_for_missing_config,
 	get_config_aliases,
-	get_env,
 	normalize_id,
 	stackless
 } from './utils.js';
@@ -41,6 +40,7 @@ import {
 import { import_peer } from '../../utils/import.js';
 import { compact } from '../../utils/array.js';
 import { should_ignore } from './static_analysis/utils.js';
+import { get_env } from './env.js';
 
 const cwd = posixify(process.cwd());
 

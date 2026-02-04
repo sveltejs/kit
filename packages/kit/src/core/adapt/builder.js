@@ -11,7 +11,7 @@ import zlib from 'node:zlib';
 import { copy, rimraf, mkdirp, posixify } from '../../utils/filesystem.js';
 import { generate_manifest } from '../generate_manifest/index.js';
 import { get_route_segments } from '../../utils/routing.js';
-import { get_env } from '../../exports/vite/utils.js';
+import { get_env } from '../../exports/vite/env.js';
 import generate_fallback from '../postbuild/fallback.js';
 import { write } from '../sync/utils.js';
 import { list_files } from '../utils.js';

@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { get_env } from '../../exports/vite/utils.js';
+import { get_env } from '../../exports/vite/env.js';
 import { GENERATED_COMMENT } from '../../constants.js';
 import { create_dynamic_types, create_static_types } from '../env.js';
 import { write_if_changed } from './utils.js';
