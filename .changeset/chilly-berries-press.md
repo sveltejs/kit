@@ -1,5 +1,5 @@
 ---
-'@sveltejs/kit': patch
+'@sveltejs/kit': major
 ---
 
-chore: upgrade to cookie 1.0.2
+breaking: upgrade to cookie v1. Cookie names must now contain only ASCII characters
