@@ -36,30 +36,25 @@ export function parse_origin(value) {
 		);
 	}
 
+	let url;
 	try {
-		const url = new URL(trimmed);
-
-		// Verify protocol is http or https
-		if (url.protocol !== 'http:' && url.protocol !== 'https:') {
-			throw new Error(
-				`Invalid ORIGIN: '${trimmed}'. ` +
-					`Only http:// and https:// protocols are supported. ` +
-					`Received protocol: ${url.protocol}`
-			);
-		}
-
-		return url.origin;
+		url = new URL(trimmed);
 	} catch (error) {
-		// Re-throw if already our custom error
-		if (error instanceof Error && error.message.startsWith('Invalid ORIGIN')) {
-			throw error;
-		}
-
-		// URL constructor threw - invalid URL format
 		throw new Error(
 			`Invalid ORIGIN: '${trimmed}'. ` +
 				`ORIGIN must be a valid URL with http:// or https:// protocol. ` +
-				`For example: 'http://localhost:3000' or 'https://my.site'`
+				`For example: 'http://localhost:3000' or 'https://my.site'`,
+			{ cause: error }
 		);
 	}
+
+	if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+		throw new Error(
+			`Invalid ORIGIN: '${trimmed}'. ` +
+				`Only http:// and https:// protocols are supported. ` +
+				`Received protocol: ${url.protocol}`
+		);
+	}
+
+	return url.origin;
 }
