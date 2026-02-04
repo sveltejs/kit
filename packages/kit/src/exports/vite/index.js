@@ -32,6 +32,8 @@ import { dedent, isSvelte5Plus } from '../../core/sync/utils.js';
 import {
 	env_dynamic_private,
 	env_dynamic_public,
+	env_static_private,
+	env_static_public,
 	service_worker,
 	sveltekit_environment,
 	sveltekit_server
@@ -421,7 +423,7 @@ async function kit({ svelte_config }) {
 	const plugin_virtual_modules = {
 		name: 'vite-plugin-sveltekit-virtual-modules',
 
-		resolveId(id, importer, options) {
+		resolveId(id, importer) {
 			if (id === '__sveltekit/manifest') {
 				return `${kit.outDir}/generated/client-optimized/app.js`;
 			}
@@ -448,20 +450,10 @@ async function kit({ svelte_config }) {
 				}
 			}
 
-			const browser = !options?.ssr;
-
-			// treat $env/dynamic/[public|private] as virtual
-			if (
-				(id.startsWith('$env/dynamic') && vite_config_env.command !== 'serve') ||
-				(id === '$env/dynamic/public' && browser) ||
-				id === '$service-worker'
-			) {
+			// treat $env/static/[public|private] as virtual
+			if (id.startsWith('$env/') || id === '$service-worker') {
 				// ids with :$ don't work with reverse proxies like nginx
 				return `\0virtual:${id.substring(1)}`;
-			}
-
-			if (id.startsWith('$env/')) {
-				return `${kit.outDir}/generated/${id.slice(1)}.js`;
 			}
 
 			if (id === '__sveltekit/remote') {
@@ -481,15 +473,25 @@ async function kit({ svelte_config }) {
 				: 'globalThis.__sveltekit_dev';
 
 			switch (id) {
+				case env_static_private:
+					return read(`${kit.outDir}/generated/env/static/private.js`);
+
+				case env_static_public:
+					return read(`${kit.outDir}/generated/env/static/public.js`);
+
 				case env_dynamic_private:
-					return create_dynamic_module('private', undefined);
+					return vite_config_env.command === 'serve'
+						? read(`${kit.outDir}/generated/env/dynamic/private.js`)
+						: create_dynamic_module('private', undefined);
 
 				case env_dynamic_public:
 					// populate `$env/dynamic/public` from `window`
 					if (browser) {
 						return `export const env = ${global}.env;`;
 					}
-					return create_dynamic_module('public', undefined);
+					return vite_config_env.command === 'serve'
+						? read(`${kit.outDir}/generated/env/dynamic/public.js`)
+						: create_dynamic_module('public', undefined);
 
 				case service_worker:
 					return create_service_worker_module(svelte_config);
