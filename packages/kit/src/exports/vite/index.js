@@ -460,6 +460,10 @@ async function kit({ svelte_config }) {
 				return `\0virtual:${id.substring(1)}`;
 			}
 
+			if (id.startsWith('$env/')) {
+				return `${kit.outDir}/generated/${id.slice(1)}.js`;
+			}
+
 			if (id === '__sveltekit/remote') {
 				return `${runtime_directory}/client/remote-functions/index.js`;
 			}
