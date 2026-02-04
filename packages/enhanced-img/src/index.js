@@ -12,14 +12,27 @@ export function enhancedImages() {
 		: [];
 }
 
+/**
+ * @param {import('sharp').Metadata} meta
+ * @returns {string}
+ */
+function fallback_format(meta) {
+	if (meta.format === 'gif') return 'gif';
+	if (meta.hasAlpha) return 'png';
+	return 'jpg';
+}
+
 function imagetools_plugin() {
 	/** @type {Partial<import('vite-imagetools').VitePluginOptions>} */
 	const imagetools_opts = {
 		defaultDirectives: async ({ pathname, searchParams: qs }, metadata) => {
 			if (!qs.has('enhanced')) return new URLSearchParams();
 
+			const meta = await metadata();
+
 			const img_width = qs.get('imgWidth');
-			const width = img_width ? parseInt(img_width) : (await metadata()).width;
+			const width = img_width ? parseInt(img_width) : meta.width;
+
 			if (!width) {
 				console.warn(`Could not determine width of image ${pathname}`);
 				return new URLSearchParams();
@@ -28,7 +41,7 @@ function imagetools_plugin() {
 			const { widths, kind } = get_widths(width, qs.get('imgSizes'));
 			return new URLSearchParams({
 				as: 'picture',
-				format: 'avif;webp;jpg',
+				format: `avif;webp;${fallback_format(meta)}`,
 				w: widths.join(';'),
 				...(kind === 'x' && !qs.has('w') && { basePixels: widths[0].toString() })
 			});
