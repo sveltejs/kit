@@ -450,7 +450,7 @@ async function kit({ svelte_config }) {
 
 			const browser = !options?.ssr;
 
-			// treat $env/static/[public|private] as virtual
+			// treat $env/dynamic/[public|private] as virtual
 			if (
 				(id.startsWith('$env/dynamic') && vite_config_env.command !== 'serve') ||
 				(id === '$env/dynamic/public' && browser) ||
