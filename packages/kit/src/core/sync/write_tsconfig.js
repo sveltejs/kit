@@ -62,10 +62,8 @@ export function get_tsconfig(kit) {
 		config_relative('vite.config.js'),
 		config_relative('vite.config.ts')
 	]);
-	// TODO(v2): find a better way to include all src files. We can't just use routes/lib only because
-	// people might have other folders/files in src that they want included.
-	const src_includes = [kit.files.routes, kit.files.lib, path.resolve('src')].filter((dir) => {
-		const relative = path.relative(path.resolve('src'), dir);
+	const src_includes = [kit.files.routes, kit.files.lib, kit.files.src].filter((dir) => {
+		const relative = path.relative(kit.files.src, dir);
 		return !relative || relative.startsWith('..');
 	});
 	for (const dir of src_includes) {
