@@ -6,26 +6,12 @@ import { builtinModules } from 'node:module';
 import process from 'node:process';
 import esbuild from 'esbuild';
 import toml from '@iarna/toml';
-import { VERSION } from '@sveltejs/kit';
-
-const [kit_major, kit_minor] = VERSION.split('.');
 
 /**
  * @typedef {{
  *   build?: { publish?: string }
  *   functions?: { node_bundler?: 'zisi' | 'esbuild' }
  * } & toml.JsonMap} NetlifyConfig
- */
-
-/**
- * @template T
- * @template {keyof T} K
- * @typedef {Partial<Omit<T, K>> & Required<Pick<T, K>>} PartialExcept
- */
-
-/**
- * We use a custom `Builder` type here to support the minimum version of SvelteKit.
- * @typedef {PartialExcept<import('@sveltejs/kit').Builder, 'log' | 'rimraf' | 'mkdirp' | 'config' | 'prerendered' | 'routes' | 'createEntries' | 'findServerAssets' | 'generateFallback' | 'generateEnvModule' | 'generateManifest' | 'getBuildDirectory' | 'getClientDirectory' | 'getServerDirectory' | 'getAppPath' | 'writeClient' | 'writePrerendered' | 'writePrerendered' | 'writeServer' | 'copy' | 'compress'>} Builder2_4_0
  */
 
 const name = '@sveltejs/adapter-netlify';
@@ -41,7 +27,7 @@ const FUNCTION_PREFIX = 'sveltekit-';
 export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 	return {
 		name,
-		/** @param {Builder2_4_0} builder */
+		/** @param {import('@sveltejs/kit').Builder} builder */
 		async adapt(builder) {
 			if (!builder.routes) {
 				throw new Error(
@@ -109,23 +95,14 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 		},
 
 		supports: {
-			read: ({ route }) => {
-				// TODO bump peer dep in next adapter major to simplify this
-				if (edge && kit_major === '2' && kit_minor < '25') {
-					throw new Error(
-						`${name}: Cannot use \`read\` from \`$app/server\` in route \`${route.id}\` when using edge functions and SvelteKit < 2.25.0`
-					);
-				}
-
-				return true;
-			},
+			read: () => true,
 			instrumentation: () => true
 		}
 	};
 }
 /**
  * @param { object } params
- * @param {Builder2_4_0} params.builder
+ * @param {import('@sveltejs/kit').Builder} params.builder
  */
 async function generate_edge_functions({ builder }) {
 	const tmp = builder.getBuildDirectory('netlify-tmp');
@@ -234,7 +211,7 @@ async function generate_edge_functions({ builder }) {
 }
 /**
  * @param { object } params
- * @param {Builder2_4_0} params.builder
+ * @param {import('@sveltejs/kit').Builder} params.builder
  * @param { string } params.publish
  * @param { boolean } params.split
  */
@@ -352,7 +329,7 @@ function get_netlify_config() {
 
 /**
  * @param {NetlifyConfig | null} netlify_config
- * @param {Builder2_4_0} builder
+ * @param {import('@sveltejs/kit').Builder} builder
  **/
 function get_publish_directory(netlify_config, builder) {
 	if (netlify_config) {
