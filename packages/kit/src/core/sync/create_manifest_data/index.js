@@ -271,6 +271,12 @@ function create_routes_and_nodes(cwd, config, fallback) {
 					config.kit.moduleExtensions
 				);
 
+				if (config.kit.router.type === 'hash' && item.kind === 'server') {
+					throw new Error(
+						`Cannot use server-only files in an app with \`router.type === 'hash': ${project_relative}`
+					);
+				}
+
 				/**
 				 * @param {string} type
 				 * @param {string} existing_file
@@ -355,7 +361,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 			const root = routes[0];
 			if (!root.leaf && !root.error && !root.layout && !root.endpoint) {
 				throw new Error(
-					'No routes found. If you are using a custom src/routes directory, make sure it is specified in svelte.config.js'
+					'No routes found. If you are using a custom src/routes directory, make sure it is specified in your Svelte config file'
 				);
 			}
 		}

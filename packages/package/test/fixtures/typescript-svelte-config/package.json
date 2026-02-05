@@ -1,0 +1,16 @@
+{
+	"name": "typescript-nodenext",
+	"private": true,
+	"version": "1.0.0",
+	"description": "typescript package using nodenext",
+	"type": "module",
+	"peerDependencies": {
+		"svelte": "^4.0.0"
+	},
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"svelte": "./dist/index.js"
+		}
+	}
+}

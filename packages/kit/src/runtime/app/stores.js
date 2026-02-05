@@ -1,10 +1,12 @@
 import { getContext } from 'svelte';
-import { BROWSER } from 'esm-env';
+import { BROWSER, DEV } from 'esm-env';
 import { stores as browser_stores } from '../client/client.js';
 
 /**
  * A function that returns all of the contextual stores. On the server, this must be called during component initialization.
  * Only use this if you need to defer store subscription until after the component has mounted, for some reason.
+ *
+ * @deprecated Use `$app/state` instead (requires Svelte 5, [see docs for more info](https://svelte.dev/docs/kit/migrating-to-sveltekit-2#SvelteKit-2.12:-$app-stores-deprecated))
  */
 export const getStores = () => {
 	const stores = BROWSER ? browser_stores : getContext('__svelte__');
@@ -28,11 +30,12 @@ export const getStores = () => {
  *
  * On the server, this store can only be subscribed to during component initialization. In the browser, it can be subscribed to at any time.
  *
+ * @deprecated Use `page` from `$app/state` instead (requires Svelte 5, [see docs for more info](https://svelte.dev/docs/kit/migrating-to-sveltekit-2#SvelteKit-2.12:-$app-stores-deprecated))
  * @type {import('svelte/store').Readable<import('@sveltejs/kit').Page>}
  */
 export const page = {
 	subscribe(fn) {
-		const store = __SVELTEKIT_DEV__ ? get_store('page') : getStores().page;
+		const store = DEV ? get_store('page') : getStores().page;
 		return store.subscribe(fn);
 	}
 };
@@ -43,11 +46,13 @@ export const page = {
  * When navigating finishes, its value reverts to `null`.
  *
  * On the server, this store can only be subscribed to during component initialization. In the browser, it can be subscribed to at any time.
+ *
+ * @deprecated Use `navigating` from `$app/state` instead (requires Svelte 5, [see docs for more info](https://svelte.dev/docs/kit/migrating-to-sveltekit-2#SvelteKit-2.12:-$app-stores-deprecated))
  * @type {import('svelte/store').Readable<import('@sveltejs/kit').Navigation | null>}
  */
 export const navigating = {
 	subscribe(fn) {
-		const store = __SVELTEKIT_DEV__ ? get_store('navigating') : getStores().navigating;
+		const store = DEV ? get_store('navigating') : getStores().navigating;
 		return store.subscribe(fn);
 	}
 };
@@ -56,11 +61,13 @@ export const navigating = {
  * A readable store whose initial value is `false`. If [`version.pollInterval`](https://svelte.dev/docs/kit/configuration#version) is a non-zero value, SvelteKit will poll for new versions of the app and update the store value to `true` when it detects one. `updated.check()` will force an immediate check, regardless of polling.
  *
  * On the server, this store can only be subscribed to during component initialization. In the browser, it can be subscribed to at any time.
+ *
+ * @deprecated Use `updated` from `$app/state` instead (requires Svelte 5, [see docs for more info](https://svelte.dev/docs/kit/migrating-to-sveltekit-2#SvelteKit-2.12:-$app-stores-deprecated))
  * @type {import('svelte/store').Readable<boolean> & { check(): Promise<boolean> }}
  */
 export const updated = {
 	subscribe(fn) {
-		const store = __SVELTEKIT_DEV__ ? get_store('updated') : getStores().updated;
+		const store = DEV ? get_store('updated') : getStores().updated;
 
 		if (BROWSER) {
 			updated.check = store.check;

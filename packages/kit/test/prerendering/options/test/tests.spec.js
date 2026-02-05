@@ -38,3 +38,19 @@ test('populates fallback 200.html file', () => {
 test('does not prerender linked +server.js route', () => {
 	assert.isFalse(fs.existsSync(`${build}/rss.xml`));
 });
+
+test('adds CSP hashes for hydratable scripts via meta tag', () => {
+	const content = read('csp-hydratable/index.html');
+
+	// Verify the page rendered correctly
+	expect(replace_hydration_attrs(content)).toMatch(
+		'<h1 id="hydratable-result">prerendered-value</h1>'
+	);
+
+	// This hash could change if Svelte changes how it generates hydratable script elements, but the alternative
+	// (trying to extract the script block and hash it to compare) is more annoying than maybe at some point in the future
+	// having to update this
+	expect(content).toMatch(
+		/<meta http-equiv="content-security-policy" content=".*'sha256-xWnzKGZbZBWKfvJVEFtrpB\/s9zyyMDyQZt49JX2PAJQ='.*"/
+	);
+});

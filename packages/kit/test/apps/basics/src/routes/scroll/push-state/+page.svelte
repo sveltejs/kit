@@ -1,6 +1,6 @@
 <script>
 	import { pushState } from '$app/navigation';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 
 	function handleClick() {
 		pushState('', { active: true });
@@ -15,6 +15,6 @@
 
 <button id="shallow-button" type="button" on:click={handleClick}>Shallow</button>
 
-{#if $page.state.active}
+{#if page.state.active}
 	<button id="back-button" type="button" on:click={() => history.back()}>Back</button>
 {/if}

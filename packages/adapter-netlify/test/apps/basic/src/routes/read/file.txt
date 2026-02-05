@@ -1,0 +1,1 @@
+Hello! This file is read by `read` from `$app/server`.

@@ -14,10 +14,10 @@ In contrast, JWT generally are not checked against a datastore, which means they
 
 ## Integration points
 
-Auth [cookies](@sveltejs-kit#Cookies) can be checked inside [server hooks](hooks#Server-hooks). If a user is found matching the provided credentials, the user information can be stored in [`locals`](hooks#Server-hooks-handle).
+Auth [cookies](@sveltejs-kit#Cookies) can be checked inside [server hooks](hooks#Server-hooks). If a user is found matching the provided credentials, the user information can be stored in [`locals`](hooks#Server-hooks-locals).
 
 ## Guides
 
-[Lucia](https://lucia-next.pages.dev/) is a reference for session-based web app auth. It contains example code snippets and projects for implementing session-based auth within SvelteKit and other JS projects. You can add code which follows the Lucia guide to your project with `npx sv create` when creating a new project or `npx sv add lucia` for an existing project.
+[Lucia](https://lucia-auth.com/) is a good reference for session-based web app auth. It contains example code snippets and projects for implementing session-based auth within SvelteKit and other JS projects. You can add code which follows the Lucia guide to your project with `npx sv create` when creating a new project or `npx sv add lucia` for an existing project.
 
-An auth system is tightly coupled to a web framework because most of the code lies in validating user input, handling errors, and directing users to the appropriate next page. As a result, many of the generic JS auth libraries include one or more web frameworks within them. For this reason, many users will find it preferrable to follow a SvelteKit-specific guide such as the examples found in [Lucia](https://lucia-next.pages.dev/) rather than having multiple web frameworks inside their project.
+An auth system is tightly coupled to a web framework because most of the code lies in validating user input, handling errors, and directing users to the appropriate next page. As a result, many of the generic JS auth libraries include one or more web frameworks within them. For this reason, many users will find it preferrable to follow a SvelteKit-specific guide such as the examples found in [Lucia](https://lucia-auth.com/) rather than having multiple web frameworks inside their project.

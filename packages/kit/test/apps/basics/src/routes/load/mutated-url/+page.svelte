@@ -1,13 +1,13 @@
 <script>
 	import { goto } from '$app/navigation';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 
-	/** @type {import('./$types').PageData} */
-	export let data;
+	/** @type {{ data: import('./$types').PageData }} */
+	let { data } = $props();
 
 	function update_q() {
-		$page.url.searchParams.set('q', 'updated');
-		goto($page.url);
+		page.url.searchParams.set('q', 'updated');
+		goto(page.url);
 	}
 </script>
 

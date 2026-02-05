@@ -14,7 +14,7 @@ While search engines have got better in recent years at indexing content that wa
 
 ### Performance
 
-Signals such as [Core Web Vitals](https://web.dev/vitals/#core-web-vitals) impact search engine ranking. Because Svelte and SvelteKit introduce minimal overhead, it's easier to build high performance sites. You can test your site's performance using Google's [PageSpeed Insights](https://pagespeed.web.dev/) or [Lighthouse](https://developers.google.com/web/tools/lighthouse). Read [the performance page](performance) for more details.
+Signals such as [Core Web Vitals](https://web.dev/vitals/#core-web-vitals) impact search engine ranking. Because Svelte and SvelteKit introduce minimal overhead, they make it easier to build high performance sites. You can test your site's performance using Google's [PageSpeed Insights](https://pagespeed.web.dev/) or [Lighthouse](https://developers.google.com/web/tools/lighthouse). With just a few key actions like using SvelteKit's default [hybrid rendering](glossary#Hybrid-app) mode and [optimizing your images](images), you can greatly improve your site's speed. Read [the performance page](performance) for more details.
 
 ### Normalized URLs
 
@@ -26,7 +26,7 @@ SvelteKit redirects pathnames with trailing slashes to ones without (or vice ver
 
 Every page should have well-written and unique `<title>` and `<meta name="description">` elements inside a [`<svelte:head>`](../svelte/svelte-head). Guidance on how to write descriptive titles and descriptions, along with other suggestions on making content understandable by search engines, can be found on Google's [Lighthouse SEO audits](https://web.dev/lighthouse-seo/) documentation.
 
-> [!NOTE] A common pattern is to return SEO-related `data` from page [`load`](load) functions, then use it (as [`$page.data`]($app-stores)) in a `<svelte:head>` in your root [layout](routing#layout).
+> [!NOTE] A common pattern is to return SEO-related `data` from page [`load`](load) functions, then use it (as [`page.data`]($app-state)) in a `<svelte:head>` in your root [layout](routing#layout).
 
 ### Sitemaps
 
@@ -39,12 +39,12 @@ export async function GET() {
 		`
 		<?xml version="1.0" encoding="UTF-8" ?>
 		<urlset
-			xmlns="https://www.sitemaps.org/schemas/sitemap/0.9"
-			xmlns:xhtml="https://www.w3.org/1999/xhtml"
-			xmlns:mobile="https://www.google.com/schemas/sitemap-mobile/1.0"
-			xmlns:news="https://www.google.com/schemas/sitemap-news/0.9"
-			xmlns:image="https://www.google.com/schemas/sitemap-image/1.1"
-			xmlns:video="https://www.google.com/schemas/sitemap-video/1.1"
+			xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+			xmlns:xhtml="http://www.w3.org/1999/xhtml"
+			xmlns:mobile="http://www.google.com/schemas/sitemap-mobile/1.0"
+			xmlns:news="http://www.google.com/schemas/sitemap-news/0.9"
+			xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
+			xmlns:video="http://www.google.com/schemas/sitemap-video/1.1"
 		>
 			<!-- <url> elements go here -->
 		</urlset>`.trim(),

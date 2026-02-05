@@ -1,6 +1,6 @@
 <script>
 	import { replaceState } from '$app/navigation';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 
 	function one() {
 		replaceState('', { active: true });
@@ -16,4 +16,4 @@
 <button data-id="one" on:click={one}>replace state on current page</button>
 <button data-id="two" on:click={two}>replace state on child page</button>
 
-<p>active: {$page.state.active ?? false}</p>
+<p>active: {page.state.active ?? false}</p>

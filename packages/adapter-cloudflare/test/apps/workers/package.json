@@ -1,0 +1,23 @@
+{
+	"name": "test-cloudflare-workers",
+	"version": "0.0.1",
+	"private": true,
+	"scripts": {
+		"dev": "vite dev",
+		"build": "vite build",
+		"preview": "wrangler dev dist/index.js",
+		"prepare": "svelte-kit sync || echo ''",
+		"test:dev": "DEV=true playwright test",
+		"test:build": "playwright test",
+		"test": "pnpm test:dev && pnpm test:build"
+	},
+	"devDependencies": {
+		"@sveltejs/kit": "workspace:^",
+		"@sveltejs/vite-plugin-svelte": "catalog:",
+		"server-side-dep": "file:server-side-dep",
+		"svelte": "catalog:",
+		"vite": "catalog:",
+		"wrangler": "catalog:"
+	},
+	"type": "module"
+}
