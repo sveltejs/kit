@@ -44,6 +44,8 @@ export const prerender = true;
 
 > [!NOTE] You must ensure SvelteKit's [`trailingSlash`](page-options#trailingSlash) option is set appropriately for your environment. If your host does not render `/a.html` upon receiving a request for `/a` then you will need to set `trailingSlash: 'always'` in your root layout to create `/a/index.html` instead.
 
+> [!NOTE] Make sure that [`ssr`](page-options#ssr) is not set to `false` in your root layout or pages, otherwise they will be output as empty shell pages. `adapter-static` relies on the server-side render pass at build time to generate the HTML content of your pages. `ssr` is `true` by default — if you previously set it to `false`, remove that setting for prerendering to work as expected.
+
 ## Zero-config support
 
 Some platforms have zero-config support (more to come in future):
