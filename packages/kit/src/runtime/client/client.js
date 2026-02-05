@@ -532,7 +532,7 @@ async function _preload_data(intent) {
 			fork: null
 		};
 
-		if (svelte.fork) {
+		if (__SVELTEKIT_FORK_PRELOADS__ && svelte.fork) {
 			const lc = load_cache;
 
 			lc.fork = lc.promise.then((result) => {
@@ -545,7 +545,7 @@ async function _preload_data(intent) {
 							update(result.props.page);
 						});
 					} catch {
-						// if it errors, it's because the experimental flag isn't enabled
+						// if it errors, it's because the experimental flag isn't enabled in Svelte
 					}
 				}
 
@@ -1860,8 +1860,8 @@ if (import.meta.hot) {
 function setup_preload() {
 	/** @type {NodeJS.Timeout} */
 	let mousemove_timeout;
-	/** @type {Element} */
-	let current_a;
+	/** @type {{ element: Element | SVGAElement | undefined; href: string | SVGAnimatedString | undefined }} */
+	let current_a = { element: undefined, href: undefined };
 	/** @type {PreloadDataPriority} */
 	let current_priority;
 
@@ -1903,7 +1903,8 @@ function setup_preload() {
 		const a = find_anchor(element, container);
 
 		// we don't want to preload data again if the user has already hovered/tapped
-		const interacted = a === current_a && priority >= current_priority;
+		const interacted =
+			a === current_a.element && a?.href === current_a.href && priority >= current_priority;
 		if (!a || interacted) return;
 
 		const { url, external, download } = get_link_info(a, base, app.hash);
@@ -1916,7 +1917,7 @@ function setup_preload() {
 		if (options.reload || same_url) return;
 
 		if (priority <= options.preload_data) {
-			current_a = a;
+			current_a = { element: a, href: a.href };
 			// we don't want to preload data again on tap if we've already preloaded it on hover
 			current_priority = PRELOAD_PRIORITIES.tap;
 
@@ -1938,7 +1939,7 @@ function setup_preload() {
 				void _preload_data(intent);
 			}
 		} else if (priority <= options.preload_code) {
-			current_a = a;
+			current_a = { element: a, href: a.href };
 			current_priority = priority;
 			void _preload_code(/** @type {URL} */ (url));
 		}
@@ -3012,20 +3013,12 @@ function reset_focus(url, scroll = null) {
 				const history_state = history.state;
 
 				resetting_focus = true;
-				location.replace(`#${id}`);
+				location.replace(new URL(`#${id}`, location.href));
 
-				// if we're using hash routing, we need to restore the original hash after
-				// setting the focus with `location.replace()`. Although we're calling
-				// `location.replace()` again, the focus won't shift to the new hash
-				// unless there's an element with the ID `/pathname#hash`, etc.
-				if (app.hash) {
-					location.replace(url.hash);
-				}
-
-				// but Firefox has a bug that sets the history state to `null` so we
-				// need to restore it after.
-				// See https://bugzilla.mozilla.org/show_bug.cgi?id=1199924
-				history.replaceState(history_state, '', url.hash);
+				// Firefox has a bug that sets the history state to `null` so we need to
+				// restore it after. See https://bugzilla.mozilla.org/show_bug.cgi?id=1199924
+				// This is also needed to restore the original hash if we're using hash routing
+				history.replaceState(history_state, '', url);
 
 				// Scroll management has already happened earlier so we need to restore
 				// the scroll position after setting the sequential focus navigation starting point

@@ -162,8 +162,12 @@ export function exec(match, params, matchers) {
 
 		// if `value` is undefined, it means this is an optional or rest parameter
 		if (value === undefined) {
-			if (param.rest) result[param.name] = '';
-			continue;
+			if (param.rest) {
+				// We need to allow the matcher to run so that it can decide if this optional rest param should be allowed to match
+				value = '';
+			} else {
+				continue;
+			}
 		}
 
 		if (!param.matcher || matchers[param.matcher](value)) {

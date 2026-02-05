@@ -332,8 +332,6 @@ declare module '@sveltejs/kit' {
 		 * };
 		 * ```
 		 *
-		 * > [!NOTE] The built-in `$lib` alias is controlled by `config.kit.files.lib` as it is used for packaging.
-		 *
 		 * > [!NOTE] You will need to run `npm run dev` to have SvelteKit automatically generate the required alias configuration in `jsconfig.json` or `tsconfig.json`.
 		 * @default {}
 		 */
@@ -483,6 +481,12 @@ declare module '@sveltejs/kit' {
 			 * @default false
 			 */
 			remoteFunctions?: boolean;
+
+			/**
+			 * Whether to enable the experimental forked preloading feature using Svelte's fork API.
+			 * @default false
+			 */
+			forkPreloads?: boolean;
 		};
 		/**
 		 * Where to find various files within your project.
@@ -1925,6 +1929,18 @@ declare module '@sveltejs/kit' {
 		[key: string | number]: UnknownField<any>;
 	};
 
+	type RemoteFormFieldsRoot<Input extends RemoteFormInput | void> =
+		IsAny<Input> extends true
+			? RecursiveFormFields
+			: Input extends void
+				? {
+						/** Validation issues, if any */
+						issues(): RemoteFormIssue[] | undefined;
+						/** Validation issues belonging to this or any of the fields that belong to it, if any */
+						allIssues(): RemoteFormIssue[] | undefined;
+					}
+				: RemoteFormFields<Input>;
+
 	/**
 	 * Recursive type to build form fields structure with proxy access
 	 */
@@ -2049,31 +2065,7 @@ declare module '@sveltejs/kit' {
 		/** The number of pending submissions */
 		get pending(): number;
 		/** Access form fields using object notation */
-		fields: RemoteFormFields<Input>;
-		/** Spread this onto a `<button>` or `<input type="submit">` */
-		buttonProps: {
-			type: 'submit';
-			formmethod: 'POST';
-			formaction: string;
-			onclick: (event: Event) => void;
-			/** Use the `enhance` method to influence what happens when the form is submitted. */
-			enhance(
-				callback: (opts: {
-					form: HTMLFormElement;
-					data: Input;
-					submit: () => Promise<void> & {
-						updates: (...queries: Array<RemoteQuery<any> | RemoteQueryOverride>) => Promise<void>;
-					};
-				}) => void | Promise<void>
-			): {
-				type: 'submit';
-				formmethod: 'POST';
-				formaction: string;
-				onclick: (event: Event) => void;
-			};
-			/** The number of pending submissions */
-			get pending(): number;
-		};
+		fields: RemoteFormFieldsRoot<Input>;
 	};
 
 	/**
@@ -2391,6 +2383,8 @@ declare module '@sveltejs/kit' {
 	}
 
 	type TrailingSlash = 'never' | 'always' | 'ignore';
+
+	type IsAny<T> = 0 extends 1 & T ? true : false;
 	interface Asset {
 		file: string;
 		size: number;
@@ -2516,13 +2510,17 @@ declare module '@sveltejs/kit' {
 		default: {
 			render(
 				props: Record<string, any>,
-				opts: { context: Map<any, any> }
+				opts: { context: Map<any, any>; csp?: { nonce?: string; hash?: boolean } }
 			): {
 				html: string;
 				head: string;
 				css: {
 					code: string;
 					map: any; // TODO
+				};
+				/** Until we require all Svelte versions that support hashes, this might not be defined */
+				hashes?: {
+					script: Array<`sha256-${string}`>;
 				};
 			};
 		};
@@ -2566,7 +2564,9 @@ declare module '@sveltejs/kit' {
 		server_id?: string;
 
 		/** inlined styles */
-		inline_styles?(): MaybePromise<Record<string, string>>;
+		inline_styles?(): MaybePromise<
+			Record<string, string | ((assets: string, base: string) => string)>
+		>;
 		/** Svelte component */
 		component?: SSRComponentLoader;
 		/** +page.js or +layout.js */
