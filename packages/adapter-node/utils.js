@@ -29,27 +29,26 @@ export function parse_origin(value) {
 	const trimmed = value.trim();
 
 	if (trimmed === '') {
-	let url;
-	try {
-		url = new URL(trimmed);
-	} catch (error) {
-		throw new Error(
-			`Invalid ORIGIN: '${trimmed}'. ` +
-				`ORIGIN must be a valid URL with http:// or https:// protocol. ` +
-				`For example: 'http://localhost:3000' or 'https://my.site'`,
-			{ cause: error }
-		);
-	}
-	
-	if (url.protocol !== 'http:' && url.protocol !== 'https:') {
-		throw new Error(
-			`Invalid ORIGIN: '${trimmed}'. ` +
-				`Only http:// and https:// protocols are supported. ` +
-				`Received protocol: ${url.protocol}`
-		);
-	}
+		let url;
+		try {
+			url = new URL(trimmed);
+		} catch (error) {
+			throw new Error(
+				`Invalid ORIGIN: '${trimmed}'. ` +
+					`ORIGIN must be a valid URL with http:// or https:// protocol. ` +
+					`For example: 'http://localhost:3000' or 'https://my.site'`,
+				{ cause: error }
+			);
+		}
 
-	return url.origin;
+		if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+			throw new Error(
+				`Invalid ORIGIN: '${trimmed}'. ` +
+					`Only http:// and https:// protocols are supported. ` +
+					`Received protocol: ${url.protocol}`
+			);
+		}
 
-	return url.origin;
+		return url.origin;
+	}
 }
