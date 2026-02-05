@@ -101,7 +101,10 @@ export function get_tsconfig(kit) {
 			paths: {
 				...get_tsconfig_paths(kit),
 				// This allows files outside the Vite pipeline to access $env
-				'$env/*': ['./generated/env/*'],
+				'$env/static/private': ['./generated/env/static/private.js'],
+				'$env/static/public': ['./generated/env/static/public.js'],
+				'$env/dynamic/private': ['./generated/env/dynamic/private.js'],
+				'$env/dynamic/public': ['./generated/env/dynamic/public.js'],
 				'$app/types': ['./types/index.d.ts']
 			},
 			rootDirs: [config_relative('.'), './types'],

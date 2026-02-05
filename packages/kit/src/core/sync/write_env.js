@@ -12,15 +12,13 @@ import { s } from '../../utils/misc.js';
  * the Vite pipeline will load the virtual module which reuses the already loaded
  * environment variables.
  * @param {import('../env.js').EnvType} type
- * @param {string} mode
- * @param {import('types').ValidatedKitConfig['env']} env_config
  * @returns {string}
  */
-function create_dynamic_module(type, mode, env_config) {
+function create_dynamic_module(type) {
 	return dedent`
-		import { get_env } from '${runtime_directory}/../exports/vite/env.js';
+		import { env as full_env } from './internal.js';
 
-		export const env = get_env(${s(env_config)}, ${s(mode)}).${type};
+		export const env = full_env.${type};
 	`;
 }
 
@@ -43,14 +41,23 @@ export function write_env(config, mode, env) {
 		env_static_public
 	);
 
-	const env_dynamic_private = create_dynamic_module('private', mode, config.env);
+	const env_dynamic = dedent`
+		import { get_env } from '${runtime_directory}/../exports/vite/env.js';
 
+		export const env = get_env(${s(config.env)}, ${s(mode)});
+	`;
+	write_if_changed(
+		path.join(config.outDir, 'generated', 'env', 'dynamic', 'internal.js'),
+		env_dynamic
+	);
+
+	const env_dynamic_private = create_dynamic_module('private');
 	write_if_changed(
 		path.join(config.outDir, 'generated', 'env', 'dynamic', 'private.js'),
 		env_dynamic_private
 	);
 
-	const env_dynamic_public = create_dynamic_module('public', mode, config.env);
+	const env_dynamic_public = create_dynamic_module('public');
 	write_if_changed(
 		path.join(config.outDir, 'generated', 'env', 'dynamic', 'public.js'),
 		env_dynamic_public
