@@ -8,7 +8,7 @@ import { extname, resolve, join, dirname, relative } from 'node:path';
 import { pipeline } from 'node:stream';
 import { promisify } from 'node:util';
 import zlib from 'node:zlib';
-import { copy, rimraf, mkdirp } from '../../utils/filesystem.js';
+import { copy, rimraf, mkdirp, posixify } from '../../utils/filesystem.js';
 import { generate_manifest } from '../generate_manifest/index.js';
 import { get_route_segments } from '../../utils/routing.js';
 import { get_env } from '../../exports/vite/utils.js';
@@ -268,8 +268,8 @@ export function create_builder({
 				copy(`${entrypoint}.map`, `${start}.map`);
 			}
 
-			const relative_instrumentation = relative(dirname(entrypoint), instrumentation);
-			const relative_start = relative(dirname(entrypoint), start);
+			const relative_instrumentation = posixify(relative(dirname(entrypoint), instrumentation));
+			const relative_start = posixify(relative(dirname(entrypoint), start));
 
 			const facade =
 				'generateText' in module

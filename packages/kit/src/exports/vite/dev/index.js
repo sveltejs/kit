@@ -234,7 +234,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes) {
 						// in dev we inline all styles to avoid FOUC. this gets populated lazily so that
 						// components/stylesheets loaded via import() during `load` are included
 						result.inline_styles = async () => {
-							/** @type {Set<import('vite').ModuleNode>} */
+							/** @type {Set<import('vite').ModuleNode | import('vite').EnvironmentModuleNode>} */
 							const deps = new Set();
 
 							for (const module_node of module_nodes) {
@@ -610,8 +610,8 @@ function remove_static_middlewares(server) {
 
 /**
  * @param {import('vite').ViteDevServer} vite
- * @param {import('vite').ModuleNode} node
- * @param {Set<import('vite').ModuleNode>} deps
+ * @param {import('vite').ModuleNode | import('vite').EnvironmentModuleNode} node
+ * @param {Set<import('vite').ModuleNode | import('vite').EnvironmentModuleNode>} deps
  */
 async function find_deps(vite, node, deps) {
 	// since `ssrTransformResult.deps` contains URLs instead of `ModuleNode`s, this process is asynchronous.
@@ -619,7 +619,7 @@ async function find_deps(vite, node, deps) {
 	/** @type {Promise<void>[]} */
 	const branches = [];
 
-	/** @param {import('vite').ModuleNode} node */
+	/** @param {import('vite').ModuleNode | import('vite').EnvironmentModuleNode} node */
 	async function add(node) {
 		if (!deps.has(node)) {
 			deps.add(node);
@@ -629,26 +629,39 @@ async function find_deps(vite, node, deps) {
 
 	/** @param {string} url */
 	async function add_by_url(url) {
-		const node = await vite.moduleGraph.getModuleByUrl(url);
+		const node = await get_server_module_by_url(vite, url);
 
 		if (node) {
 			await add(node);
 		}
 	}
 
-	if (node.ssrTransformResult) {
-		if (node.ssrTransformResult.deps) {
-			node.ssrTransformResult.deps.forEach((url) => branches.push(add_by_url(url)));
+	const transform_result =
+		/** @type {import('vite').ModuleNode} */ (node).ssrTransformResult || node.transformResult;
+
+	if (transform_result) {
+		if (transform_result.deps) {
+			transform_result.deps.forEach((url) => branches.push(add_by_url(url)));
 		}
 
-		if (node.ssrTransformResult.dynamicDeps) {
-			node.ssrTransformResult.dynamicDeps.forEach((url) => branches.push(add_by_url(url)));
+		if (transform_result.dynamicDeps) {
+			transform_result.dynamicDeps.forEach((url) => branches.push(add_by_url(url)));
 		}
 	} else {
 		node.importedModules.forEach((node) => branches.push(add(node)));
 	}
 
 	await Promise.all(branches);
+}
+
+/**
+ * @param {import('vite').ViteDevServer} vite
+ * @param {string} url
+ */
+function get_server_module_by_url(vite, url) {
+	return vite.environments
+		? vite.environments.ssr.moduleGraph.getModuleByUrl(url)
+		: vite.moduleGraph.getModuleByUrl(url, true);
 }
 
 /**

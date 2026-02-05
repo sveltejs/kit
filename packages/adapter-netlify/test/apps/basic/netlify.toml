@@ -1,2 +1,2 @@
 [dev]
-  publish = "build"
+publish = "build"

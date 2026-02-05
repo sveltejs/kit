@@ -1,5 +1,5 @@
 /** @import { RequestEvent } from '@sveltejs/kit' */
-/** @import { ServerHooks, MaybePromise, RequestState, RemoteInfo } from 'types' */
+/** @import { ServerHooks, MaybePromise, RequestState, RemoteInfo, RequestStore } from 'types' */
 import { parse } from 'devalue';
 import { error } from '@sveltejs/kit';
 import { with_request_store, get_request_store } from '@sveltejs/kit/internal/server';
@@ -30,9 +30,8 @@ export function create_validator(validate_or_fn, maybe_fn) {
 		return async (arg) => {
 			// Get event before async validation to ensure it's available in server environments without AsyncLocalStorage, too
 			const { event, state } = get_request_store();
-			const validate = validate_or_fn['~standard'].validate;
-
-			const result = await validate(arg);
+			// access property and call method in one go to preserve potential this context
+			const result = await validate_or_fn['~standard'].validate(arg);
 
 			// if the `issues` field exists, the validation failed
 			if (result.issues) {
@@ -69,7 +68,7 @@ export function create_validator(validate_or_fn, maybe_fn) {
  * @returns {Promise<T>}
  */
 export async function get_response(info, arg, state, get_result) {
-	// wait a beat, in case `myQuery().set(...)` is immediately called
+	// wait a beat, in case `myQuery().set(...)` or `myQuery().refresh()` is immediately called
 	// eslint-disable-next-line @typescript-eslint/await-thenable
 	await 0;
 
@@ -98,49 +97,52 @@ export function parse_remote_response(data, transport) {
  * @param {RequestEvent} event
  * @param {RequestState} state
  * @param {boolean} allow_cookies
- * @param {any} arg
- * @param {(arg: any) => any} validate
+ * @param {() => any} get_input
  * @param {(arg?: any) => T} fn
  */
-export async function run_remote_function(event, state, allow_cookies, arg, validate, fn) {
-	/** @type {RequestEvent} */
-	const cleansed = {
-		...event,
-		setHeaders: () => {
-			throw new Error('setHeaders is not allowed in remote functions');
-		},
-		cookies: {
-			...event.cookies,
-			set: (name, value, opts) => {
-				if (!allow_cookies) {
-					throw new Error('Cannot set cookies in `query` or `prerender` functions');
-				}
-
-				if (opts.path && !opts.path.startsWith('/')) {
-					throw new Error('Cookies set in remote functions must have an absolute path');
-				}
-
-				return event.cookies.set(name, value, opts);
+export async function run_remote_function(event, state, allow_cookies, get_input, fn) {
+	/** @type {RequestStore} */
+	const store = {
+		event: {
+			...event,
+			setHeaders: () => {
+				throw new Error('setHeaders is not allowed in remote functions');
 			},
-			delete: (name, opts) => {
-				if (!allow_cookies) {
-					throw new Error('Cannot delete cookies in `query` or `prerender` functions');
-				}
+			cookies: {
+				...event.cookies,
+				set: (name, value, opts) => {
+					if (!allow_cookies) {
+						throw new Error('Cannot set cookies in `query` or `prerender` functions');
+					}
 
-				if (opts.path && !opts.path.startsWith('/')) {
-					throw new Error('Cookies deleted in remote functions must have an absolute path');
-				}
+					if (opts.path && !opts.path.startsWith('/')) {
+						throw new Error('Cookies set in remote functions must have an absolute path');
+					}
 
-				return event.cookies.delete(name, opts);
+					return event.cookies.set(name, value, opts);
+				},
+				delete: (name, opts) => {
+					if (!allow_cookies) {
+						throw new Error('Cannot delete cookies in `query` or `prerender` functions');
+					}
+
+					if (opts.path && !opts.path.startsWith('/')) {
+						throw new Error('Cookies deleted in remote functions must have an absolute path');
+					}
+
+					return event.cookies.delete(name, opts);
+				}
 			}
 		},
-		route: { id: null },
-		url: new URL(event.url.origin)
+		state: {
+			...state,
+			is_in_remote_function: true
+		}
 	};
 
 	// In two parts, each with_event, so that runtimes without async local storage can still get the event at the start of the function
-	const validated = await with_request_store({ event: cleansed, state }, () => validate(arg));
-	return with_request_store({ event: cleansed, state }, () => fn(validated));
+	const input = await with_request_store(store, get_input);
+	return with_request_store(store, () => fn(input));
 }
 
 /**
