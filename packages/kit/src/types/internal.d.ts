@@ -531,7 +531,7 @@ export interface SSRState {
 	prerender_default?: PrerenderOption;
 	read?: (file: string) => Buffer;
 	/**
-	 * Used to setup `__SVELTEKIT_TRACK__` which checks if a used feature is supported.
+	 * Used to set up `__SVELTEKIT_TRACK__` which checks if a used feature is supported.
 	 * E.g. if `read` from `$app/server` is used, it checks whether the route's config is compatible.
 	 */
 	before_handle?: (event: RequestEvent, config: any, prerender: PrerenderOption) => void;
