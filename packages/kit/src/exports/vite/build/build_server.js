@@ -126,6 +126,16 @@ export async function build_server_nodes(
 		static_exports
 	});
 
+	/** @type {string[] | undefined} */
+	let root_stylesheets;
+	if (client_manifest && output_config.bundleStrategy === 'split') {
+		root_stylesheets = find_deps(
+			client_manifest,
+			`${normalizePath(kit.outDir)}/generated/client-optimized/app.js`,
+			false
+		).stylesheets;
+	}
+
 	for (let i = 0; i < manifest_data.nodes.length; i++) {
 		const node = manifest_data.nodes[i];
 
@@ -205,7 +215,7 @@ export async function build_server_nodes(
 			}
 
 			/** @type {Set<string>} */
-			const eager_css = new Set();
+			const eager_css = new Set(root_stylesheets);
 
 			entry.stylesheet_map.forEach((value, filepath) => {
 				// pages and layouts are renamed to node indexes when optimised for the client
