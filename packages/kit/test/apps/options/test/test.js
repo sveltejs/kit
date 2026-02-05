@@ -40,6 +40,26 @@ test.describe('CSP', () => {
 			/require-trusted-types-for 'script'/
 		);
 	});
+
+	test('allows hydratable scripts with CSP', async ({ request }) => {
+		const response = await request.get('/path-base/csp-hydratable');
+		const html = await response.text();
+
+		const csp_header = response.headers()['content-security-policy'];
+		expect(csp_header).toBeDefined();
+
+		// Extract nonce from CSP header (e.g., 'nonce-ABC123')
+		const nonce_match = csp_header.match(/'nonce-([^']+)'/);
+		expect(nonce_match).not.toBeNull();
+		const nonce = nonce_match?.[1];
+
+		// Find the hydratable script in the raw HTML - it sets up (window.__svelte ??= {}).h
+		const hydratable_script_match = html.match(
+			/<script\s+nonce="([^"]+)"[^>]*>[^<]*\(window\.__svelte \?\?= \{\}\)\.h/
+		);
+		expect(hydratable_script_match).not.toBeNull();
+		expect(hydratable_script_match?.[1]).toBe(nonce);
+	});
 });
 
 test.describe('Custom extensions', () => {
