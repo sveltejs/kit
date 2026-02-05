@@ -5,6 +5,8 @@ import { get_request_store } from '@sveltejs/kit/internal/server';
 import { create_remote_key, stringify_remote_arg } from '../../../shared.js';
 import { prerendering } from '__sveltekit/environment';
 import { create_validator, get_cache, get_response, run_remote_function } from './shared.js';
+import { handle_error_and_jsonify } from '../../../server/utils.js';
+import { HttpError, SvelteKitError } from '@sveltejs/kit/internal';
 
 /**
  * Creates a remote query. When called from the browser, the function will be invoked on the server via a `fetch` call.
@@ -73,7 +75,7 @@ export function query(validate_or_fn, maybe_fn) {
 		const { event, state } = get_request_store();
 
 		const get_remote_function_result = () =>
-			run_remote_function(event, state, false, arg, validate, fn);
+			run_remote_function(event, state, false, () => validate(arg), fn);
 
 		/** @type {Promise<any> & Partial<RemoteQuery<any>>} */
 		const promise = get_response(__, arg, state, get_remote_function_result);
@@ -137,7 +139,7 @@ export function query(validate_or_fn, maybe_fn) {
  */
 /*@__NO_SIDE_EFFECTS__*/
 function batch(validate_or_fn, maybe_fn) {
-	/** @type {(args?: Input[]) => (arg: Input, idx: number) => Output} */
+	/** @type {(args?: Input[]) => MaybePromise<(arg: Input, idx: number) => Output>} */
 	const fn = maybe_fn ?? validate_or_fn;
 
 	/** @type {(arg?: any) => MaybePromise<Input>} */
@@ -148,16 +150,34 @@ function batch(validate_or_fn, maybe_fn) {
 		type: 'query_batch',
 		id: '',
 		name: '',
-		run: (args) => {
+		run: async (args, options) => {
 			const { event, state } = get_request_store();
 
 			return run_remote_function(
 				event,
 				state,
 				false,
-				args,
-				(array) => Promise.all(array.map(validate)),
-				fn
+				async () => Promise.all(args.map(validate)),
+				async (/** @type {any[]} */ input) => {
+					const get_result = await fn(input);
+
+					return Promise.all(
+						input.map(async (arg, i) => {
+							try {
+								return { type: 'result', data: get_result(arg, i) };
+							} catch (error) {
+								return {
+									type: 'error',
+									error: await handle_error_and_jsonify(event, state, options, error),
+									status:
+										error instanceof HttpError || error instanceof SvelteKitError
+											? error.status
+											: 500
+								};
+							}
+						})
+					);
+				}
 			);
 		}
 	};
@@ -190,22 +210,23 @@ function batch(validate_or_fn, maybe_fn) {
 					batching = { args: [], resolvers: [] };
 
 					try {
-						const get_result = await run_remote_function(
+						return await run_remote_function(
 							event,
 							state,
 							false,
-							batched.args,
-							(array) => Promise.all(array.map(validate)),
-							fn
-						);
+							async () => Promise.all(batched.args.map(validate)),
+							async (input) => {
+								const get_result = await fn(input);
 
-						for (let i = 0; i < batched.resolvers.length; i++) {
-							try {
-								batched.resolvers[i].resolve(get_result(batched.args[i], i));
-							} catch (error) {
-								batched.resolvers[i].reject(error);
+								for (let i = 0; i < batched.resolvers.length; i++) {
+									try {
+										batched.resolvers[i].resolve(get_result(input[i], i));
+									} catch (error) {
+										batched.resolvers[i].reject(error);
+									}
+								}
 							}
-						}
+						);
 					} catch (error) {
 						for (const resolver of batched.resolvers) {
 							resolver.reject(error);

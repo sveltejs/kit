@@ -246,6 +246,26 @@ describe('exec', () => {
 			expected: undefined
 		},
 		{
+			route: '/[...a=doesntmatch]/[b]',
+			path: '/foo',
+			expected: undefined
+		},
+		{
+			route: '/[...a=matches]/[b]',
+			path: '/foo',
+			expected: { a: '', b: 'foo' }
+		},
+		{
+			route: '/[...a=doesntmatch]/[b]/[c]',
+			path: '/foo/bar',
+			expected: undefined
+		},
+		{
+			route: '/[...a=matches]/[b]/[c]',
+			path: '/foo/bar',
+			expected: { a: '', b: 'foo', c: 'bar' }
+		},
+		{
 			route: '/[...catchall]',
 			path: '/\n',
 			expected: { catchall: '\n' }
