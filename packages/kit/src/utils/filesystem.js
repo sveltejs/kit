@@ -105,7 +105,7 @@ export function walk(cwd, dirs = false) {
 		}
 	}
 
-	return walk_dir(''), all_files;
+	return (walk_dir(''), all_files);
 }
 
 /** @param {string} str */
@@ -169,11 +169,12 @@ export function from_fs(str) {
 export function resolve_entry(entry) {
 	if (fs.existsSync(entry)) {
 		const stats = fs.statSync(entry);
-		const index = path.join(entry, 'index');
-
 		if (stats.isFile()) {
 			return entry;
-		} else if (fs.existsSync(index)) {
+		}
+
+		const index = path.join(entry, 'index');
+		if (fs.existsSync(index + '.js') || fs.existsSync(index + '.ts')) {
 			return resolve_entry(index);
 		}
 	}

@@ -1,6 +1,6 @@
 import { BROWSER, DEV } from 'esm-env';
 import { writable } from 'svelte/store';
-import { assets } from '__sveltekit/paths';
+import { assets } from '$app/paths';
 import { version } from '__sveltekit/environment';
 import { PRELOAD_PRIORITIES } from './constants.js';
 
@@ -130,6 +130,12 @@ export function get_link_info(a, base, uses_hash_router) {
 
 	try {
 		url = new URL(a instanceof SVGAElement ? a.href.baseVal : a.href, document.baseURI);
+
+		// if the hash doesn't start with `#/` then it's probably linking to an id on the current page
+		if (uses_hash_router && url.hash.match(/^#[^/]/)) {
+			const route = location.hash.split('#')[1] || '/';
+			url.hash = `#${route}${url.hash}`;
+		}
 	} catch {}
 
 	const target = a instanceof SVGAElement ? a.target.baseVal : a.target;
@@ -311,17 +317,49 @@ export function is_external_url(url, base, hash_routing) {
 	}
 
 	if (hash_routing) {
-		if (url.pathname === base + '/' || url.pathname === base + '/index.html') {
-			return false;
-		}
-
-		// be lenient if serving from filesystem
-		if (url.protocol === 'file:' && url.pathname.replace(/\/[^/]+\.html?$/, '') === base) {
-			return false;
-		}
-
-		return true;
+		return url.pathname !== location.pathname;
 	}
 
 	return false;
+}
+
+/** @type {Set<string> | null} */
+let seen = null;
+
+/**
+ * Used for server-side resolution, to replicate Vite's CSS loading behaviour in production.
+ *
+ * Closely modelled after https://github.com/vitejs/vite/blob/3dd12f4724130fdf8ba44c6d3252ebdff407fd47/packages/vite/src/node/plugins/importAnalysisBuild.ts#L214
+ * (which ideally we could just use directly, but it's not exported)
+ * @param {string[]} deps
+ */
+export function load_css(deps) {
+	if (__SVELTEKIT_CLIENT_ROUTING__) return;
+
+	const csp_nonce_meta = /** @type {HTMLMetaElement} */ (
+		document.querySelector('meta[property=csp-nonce]')
+	);
+	const csp_nonce = csp_nonce_meta?.nonce || csp_nonce_meta?.getAttribute('nonce');
+
+	seen ??= new Set(
+		Array.from(document.querySelectorAll('link[rel="stylesheet"]')).map((link) => {
+			return /** @type {HTMLLinkElement} */ (link).href;
+		})
+	);
+
+	for (const dep of deps) {
+		const href = new URL(dep, document.baseURI).href;
+
+		if (seen.has(href)) continue;
+		seen.add(href);
+
+		const link = document.createElement('link');
+		link.rel = 'stylesheet';
+		link.crossOrigin = '';
+		link.href = dep;
+		if (csp_nonce) {
+			link.setAttribute('nonce', csp_nonce);
+		}
+		document.head.appendChild(link);
+	}
 }

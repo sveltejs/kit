@@ -4,7 +4,8 @@ import { sveltekit } from '@sveltejs/kit/vite';
 /** @type {import('vite').UserConfig} */
 const config = {
 	build: {
-		minify: false
+		minify: false,
+		assetsInlineLimit: 0
 	},
 	clearScreen: false,
 	plugins: [sveltekit()],

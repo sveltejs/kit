@@ -6,13 +6,13 @@ declare global {
 			key: string;
 			params: Record<string, string>;
 			url?: URL;
+			message?: string;
 		}
 
 		interface PageState {
-			active: boolean;
+			active?: boolean;
+			count?: number;
 		}
-
-		interface Platform {}
 	}
 }
 

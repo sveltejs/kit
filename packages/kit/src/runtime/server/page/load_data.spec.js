@@ -58,6 +58,13 @@ test('errors when no acao header present on cors', async () => {
 	);
 });
 
+test('succeeds when fetching from local scheme', async () => {
+	const fetch = create_fetch({});
+	const response = await fetch('data:text/plain;foo');
+	const text = await response.text();
+	assert.equal(text, 'foo');
+});
+
 test('errors when trying to access non-serialized request headers on the server', async () => {
 	const fetch = create_fetch({});
 	const response = await fetch('https://domain-a.com');
