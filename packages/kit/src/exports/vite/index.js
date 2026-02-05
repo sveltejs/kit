@@ -886,9 +886,6 @@ async function kit({ svelte_config }) {
 					});
 				}
 
-				// see the kit.output.preloadStrategy option for details on why we have multiple options here
-				const ext = kit.output.preloadStrategy === 'preload-mjs' ? 'mjs' : 'js';
-
 				// We could always use a relative asset base path here, but it's better for performance not to.
 				// E.g. Vite generates `new URL('/asset.png', import.meta).href` for a relative path vs just '/asset.png'.
 				// That's larger and takes longer to run and also causes an HTML diff between SSR and client
@@ -912,8 +909,8 @@ async function kit({ svelte_config }) {
 							output: {
 								format: inline ? 'iife' : 'esm',
 								name: `__sveltekit_${version_hash}.app`,
-								entryFileNames: ssr ? '[name].js' : `${prefix}/[name].[hash].${ext}`,
-								chunkFileNames: ssr ? 'chunks/[name].js' : `${prefix}/chunks/[hash].${ext}`,
+								entryFileNames: ssr ? '[name].js' : `${prefix}/[name].[hash].js`,
+								chunkFileNames: ssr ? 'chunks/[name].js' : `${prefix}/chunks/[hash].js`,
 								assetFileNames: `${prefix}/assets/[name].[hash][extname]`,
 								hoistTransitiveImports: false,
 								sourcemapIgnoreList,
