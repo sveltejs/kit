@@ -7,13 +7,17 @@ import { write_types, write_all_types } from './write_types/index.js';
 import { write_ambient } from './write_ambient.js';
 import { write_non_ambient } from './write_non_ambient.js';
 import { write_server } from './write_server.js';
+import { write_env } from './write_env.js';
+import { get_env } from '../../exports/vite/env.js';
 
 /**
  * Initialize SvelteKit's generated files that only depend on the config and mode.
  * @param {import('types').ValidatedConfig} config
  * @param {string} mode
+ * @param {import('../../exports/vite/types.js').Env} env
  */
-export function init(config, mode) {
+export function init(config, mode, env) {
+	write_env(config.kit, mode, env);
 	write_tsconfig(config.kit);
 	write_ambient(config.kit, mode);
 }
@@ -52,19 +56,22 @@ export function update(config, manifest_data, file) {
  * Run sync.init and sync.create in series, returning the result from sync.create.
  * @param {import('types').ValidatedConfig} config
  * @param {string} mode The Vite mode
+ * @param {import('../../exports/vite/types.js').Env} env
  */
-export function all(config, mode) {
-	init(config, mode);
+export function all(config, mode, env) {
+	init(config, mode, env);
 	return create(config);
 }
 
 /**
- * Run sync.init and then generate all type files.
+ * Run sync.init and then generate all type files and $env modules.
  * @param {import('types').ValidatedConfig} config
  * @param {string} mode The Vite mode
  */
 export function all_types(config, mode) {
-	init(config, mode);
+	const env = get_env(config.kit.env, mode);
+
+	init(config, mode, env);
 	const manifest_data = create_manifest_data({ config });
 	write_all_types(config, manifest_data);
 	write_non_ambient(config.kit, manifest_data);

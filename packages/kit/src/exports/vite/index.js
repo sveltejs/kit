@@ -5,7 +5,7 @@ import process from 'node:process';
 import colors from 'kleur';
 
 import { copy, mkdirp, posixify, read, resolve_entry, rimraf } from '../../utils/filesystem.js';
-import { create_static_module, create_dynamic_module } from '../../core/env.js';
+import { create_dynamic_module } from '../../core/env.js';
 import * as sync from '../../core/sync/sync.js';
 import { create_assets } from '../../core/sync/create_manifest_data/index.js';
 import { runtime_directory, logger } from '../../core/utils.js';
@@ -16,13 +16,7 @@ import { build_service_worker } from './build/build_service_worker.js';
 import { assets_base, find_deps, resolve_symlinks } from './build/utils.js';
 import { dev } from './dev/index.js';
 import { preview } from './preview/index.js';
-import {
-	error_for_missing_config,
-	get_config_aliases,
-	get_env,
-	normalize_id,
-	stackless
-} from './utils.js';
+import { error_for_missing_config, get_config_aliases, normalize_id, stackless } from './utils.js';
 import { write_client_manifest } from '../../core/sync/write_client_manifest.js';
 import prerender from '../../core/postbuild/prerender.js';
 import analyse from '../../core/postbuild/analyse.js';
@@ -41,6 +35,7 @@ import {
 import { import_peer } from '../../utils/import.js';
 import { compact } from '../../utils/array.js';
 import { should_ignore } from './static_analysis/utils.js';
+import { get_env } from './env.js';
 
 const cwd = posixify(process.cwd());
 
@@ -209,7 +204,7 @@ async function kit({ svelte_config }) {
 	/** @type {boolean} */
 	let is_build;
 
-	/** @type {{ public: Record<string, string>; private: Record<string, string> }} */
+	/** @type {import('./types.js').Env} */
 	let env;
 
 	/** @type {() => Promise<void>} */
@@ -370,7 +365,7 @@ async function kit({ svelte_config }) {
 				};
 
 				if (!secondary_build_started) {
-					manifest_data = sync.all(svelte_config, config_env.mode).manifest_data;
+					manifest_data = sync.all(svelte_config, config_env.mode, env).manifest_data;
 					// During the initial server build we don't know yet
 					new_config.define.__SVELTEKIT_HAS_SERVER_LOAD__ = 'true';
 					new_config.define.__SVELTEKIT_HAS_UNIVERSAL_LOAD__ = 'true';
@@ -474,10 +469,10 @@ async function kit({ svelte_config }) {
 
 			switch (id) {
 				case env_static_private:
-					return create_static_module('$env/static/private', env.private);
+					return read(`${kit.outDir}/generated/env/static/private.js`);
 
 				case env_static_public:
-					return create_static_module('$env/static/public', env.public);
+					return read(`${kit.outDir}/generated/env/static/public.js`);
 
 				case env_dynamic_private:
 					return create_dynamic_module(
@@ -590,7 +585,7 @@ async function kit({ svelte_config }) {
 
 			if (is_server_only) {
 				// in dev, this doesn't exist, so we need to create it
-				manifest_data ??= sync.all(svelte_config, vite_config_env.mode).manifest_data;
+				manifest_data ??= sync.all(svelte_config, vite_config_env.mode, env).manifest_data;
 
 				/** @type {Set<string>} */
 				const entrypoints = new Set();
@@ -975,7 +970,7 @@ async function kit({ svelte_config }) {
 		 * @see https://vitejs.dev/guide/api-plugin.html#configureserver
 		 */
 		async configureServer(vite) {
-			return await dev(vite, vite_config, svelte_config, () => remotes);
+			return await dev(vite, vite_config, svelte_config, () => remotes, env);
 		},
 
 		/**

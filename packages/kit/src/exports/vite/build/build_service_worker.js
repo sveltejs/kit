@@ -2,7 +2,8 @@ import fs from 'node:fs';
 import * as vite from 'vite';
 import { dedent } from '../../../core/sync/utils.js';
 import { s } from '../../../utils/misc.js';
-import { get_config_aliases, strip_virtual_prefix, get_env, normalize_id } from '../utils.js';
+import { get_config_aliases, strip_virtual_prefix, normalize_id } from '../utils.js';
+import { get_env } from '../env.js';
 import { create_static_module } from '../../../core/env.js';
 import { env_static_public, service_worker } from '../module_ids.js';
 

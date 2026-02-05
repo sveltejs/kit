@@ -32,6 +32,7 @@ export function create_static_module(id, env) {
 /**
  * @param {EnvType} type
  * @param {Record<string, string> | undefined} dev_values If in a development mode, values to pre-populate the module with.
+ * @returns {string}
  */
 export function create_dynamic_module(type, dev_values) {
 	if (dev_values) {

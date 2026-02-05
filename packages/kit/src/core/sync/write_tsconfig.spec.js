@@ -21,6 +21,10 @@ test('Creates tsconfig path aliases from kit.alias', () => {
 	// check in the implementation
 	expect(compilerOptions.paths).toEqual({
 		'$app/types': ['./types/index.d.ts'],
+		'$env/static/private': ['./generated/env/static/private.js'],
+		'$env/static/public': ['./generated/env/static/public.js'],
+		'$env/dynamic/private': ['./generated/env/dynamic/private.js'],
+		'$env/dynamic/public': ['./generated/env/dynamic/public.js'],
 		simpleKey: ['../simple/value'],
 		'simpleKey/*': ['../simple/value/*'],
 		key: ['../value'],

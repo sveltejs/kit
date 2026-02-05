@@ -30,9 +30,10 @@ const vite_css_query_regex = /(?:\?|&)(?:raw|url|inline)(?:&|$)/;
  * @param {import('vite').ResolvedConfig} vite_config
  * @param {import('types').ValidatedConfig} svelte_config
  * @param {() => Array<{ hash: string, file: string }>} get_remotes
+ * @param {import('../types.js').Env} kit_env
  * @return {Promise<Promise<() => void>>}
  */
-export async function dev(vite, vite_config, svelte_config, get_remotes) {
+export async function dev(vite, vite_config, svelte_config, get_remotes, kit_env) {
 	installPolyfills();
 
 	const async_local_storage = new AsyncLocalStorage();
@@ -55,7 +56,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes) {
 		return fetch(info, init);
 	};
 
-	sync.init(svelte_config, vite_config.mode);
+	sync.init(svelte_config, vite_config.mode, kit_env);
 
 	/** @type {import('types').ManifestData} */
 	let manifest_data;

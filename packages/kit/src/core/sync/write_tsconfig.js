@@ -76,10 +76,10 @@ export function get_tsconfig(kit) {
 
 	// Test folder is a special case - we advocate putting tests in a top-level test folder
 	// and it's not configurable (should we make it?)
-	const test_folder = project_relative('tests');
-	include.add(config_relative(`${test_folder}/**/*.js`));
-	include.add(config_relative(`${test_folder}/**/*.ts`));
-	include.add(config_relative(`${test_folder}/**/*.svelte`));
+	const tests_folder = project_relative('tests');
+	include.add(config_relative(`${tests_folder}/**/*.js`));
+	include.add(config_relative(`${tests_folder}/**/*.ts`));
+	include.add(config_relative(`${tests_folder}/**/*.svelte`));
 
 	const exclude = [config_relative('node_modules/**')];
 	// Add service worker to exclude list so that worker types references in it don't spill over into the rest of the app
@@ -100,6 +100,11 @@ export function get_tsconfig(kit) {
 			// generated options
 			paths: {
 				...get_tsconfig_paths(kit),
+				// This allows files outside the Vite pipeline to access $env
+				'$env/static/private': ['./generated/env/static/private.js'],
+				'$env/static/public': ['./generated/env/static/public.js'],
+				'$env/dynamic/private': ['./generated/env/dynamic/private.js'],
+				'$env/dynamic/public': ['./generated/env/dynamic/public.js'],
 				'$app/types': ['./types/index.d.ts']
 			},
 			rootDirs: [config_relative('.'), './types'],
