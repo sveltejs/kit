@@ -17,6 +17,13 @@ import { parse_as_bytes } from '../utils.js';
 const server = new Server(manifest);
 
 const origin = env('ORIGIN', undefined);
+
+if (origin && !origin.startsWith('http://') && !origin.startsWith('https://')) {
+	throw new Error(
+		`Invalid ORIGIN: '${origin}'. The ORIGIN environment variable must include the protocol (e.g. 'https://localhost:3000' instead of 'localhost:3000').`
+	);
+}
+
 const xff_depth = parseInt(env('XFF_DEPTH', '1'));
 const address_header = env('ADDRESS_HEADER', '').toLowerCase();
 const protocol_header = env('PROTOCOL_HEADER', '').toLowerCase();
