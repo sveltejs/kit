@@ -29,13 +29,6 @@ export function parse_origin(value) {
 	const trimmed = value.trim();
 
 	if (trimmed === '') {
-		throw new Error(
-			`Invalid ORIGIN: empty string. ` +
-				`ORIGIN must be a valid URL with http:// or https:// protocol. ` +
-				`For example: 'http://localhost:3000' or 'https://my.site'`
-		);
-	}
-
 	let url;
 	try {
 		url = new URL(trimmed);
@@ -47,7 +40,7 @@ export function parse_origin(value) {
 			{ cause: error }
 		);
 	}
-
+	
 	if (url.protocol !== 'http:' && url.protocol !== 'https:') {
 		throw new Error(
 			`Invalid ORIGIN: '${trimmed}'. ` +
@@ -55,6 +48,8 @@ export function parse_origin(value) {
 				`Received protocol: ${url.protocol}`
 		);
 	}
+
+	return url.origin;
 
 	return url.origin;
 }
