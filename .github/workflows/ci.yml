@@ -51,9 +51,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - node-version: 20
-            os: ubuntu-latest
-            e2e-browser: 'chromium'
           - node-version: 22
             os: ubuntu-latest
             e2e-browser: 'chromium'
@@ -96,27 +93,27 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - node-version: 20
+          - node-version: 22
             os: windows-latest
             e2e-browser: 'chromium'
             mode: 'dev'
-          - node-version: 20
+          - node-version: 22
             os: ubuntu-latest
             e2e-browser: 'firefox'
             mode: 'dev'
-          - node-version: 20
+          - node-version: 22
             os: macOS-latest
             e2e-browser: 'webkit'
             mode: 'dev'
-          - node-version: 20
+          - node-version: 22
             os: windows-latest
             e2e-browser: 'chromium'
             mode: 'build'
-          - node-version: 20
+          - node-version: 22
             os: ubuntu-latest
             e2e-browser: 'firefox'
             mode: 'build'
-          - node-version: 20
+          - node-version: 22
             os: macOS-latest
             e2e-browser: 'webkit'
             mode: 'build'
@@ -219,7 +216,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [20, 22, 24]
+        node-version: [22, 24]
     steps:
       - uses: actions/checkout@v6
       - uses: pnpm/action-setup@v4.2.0
@@ -235,5 +232,3 @@ jobs:
       - run: pnpm playwright install chromium
       - run: cd packages/kit && pnpm prepublishOnly
       - run: pnpm run test:others
-        env:
-          NODE_OPTIONS: ${{matrix.node-version == 22 && '--experimental-strip-types' || ''}} # allows loading svelte.config.ts

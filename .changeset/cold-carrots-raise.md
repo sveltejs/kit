@@ -3,4 +3,4 @@
 '@sveltejs/kit': major
 ---
 
-breaking: require Node v20.12 or newer
+breaking: require Node 22 or newer
