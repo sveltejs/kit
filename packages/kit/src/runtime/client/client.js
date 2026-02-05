@@ -372,7 +372,7 @@ export async function start(_app, _target, hydrate) {
 	_start_router();
 }
 
-async function _invalidate(include_load_functions = true, reset_page_state = true) {
+async function _invalidate(include_load_functions = true, reset_page_state = false) {
 	// Accept all invalidations as they come, don't swallow any while another invalidation
 	// is running because subsequent invalidations may make earlier ones outdated,
 	// but batch multiple synchronous invalidations.

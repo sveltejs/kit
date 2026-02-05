@@ -1615,6 +1615,21 @@ test.describe('Shallow routing', () => {
 		await expect(page.locator('span')).not.toHaveText(now);
 	});
 
+	test('Preserves page state when invalidating', async ({ page }) => {
+		await page.goto('/shallow-routing/push-state');
+		await expect(page.locator('p')).toHaveText('active: false');
+
+		await page.locator('[data-id="one"]').click();
+		await expect(page.locator('p')).toHaveText('active: true');
+
+		const now = /** @type {string} */ (await page.locator('span').textContent());
+
+		await page.locator('[data-id="invalidate"]').click();
+		await expect(page.locator('span')).not.toHaveText(now);
+		// page.state should be preserved after invalidation (#11783)
+		await expect(page.locator('p')).toHaveText('active: true');
+	});
+
 	test('Does not navigate when going back to shallow route', async ({ baseURL, page }) => {
 		await page.goto('/shallow-routing/push-state');
 		await page.locator('[data-id="two"]').click();
