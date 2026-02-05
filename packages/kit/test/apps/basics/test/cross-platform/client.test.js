@@ -888,6 +888,19 @@ test.describe('Routing', () => {
 		await page.waitForURL(`${baseURL}/routing/hashes/a`);
 	});
 
+	test('navigating to a hash link works when base element is present', async ({
+		page,
+		clicknav,
+		baseURL
+	}) => {
+		await page.goto('/routing/hashes/base');
+
+		await clicknav('#navigate');
+
+		await expect(page.locator('p')).toHaveText('X');
+		expect(page.url()).toBe(`${baseURL}/routing/hashes/base/a#x`);
+	});
+
 	test('does not normalize external path', async ({ page, start_server }) => {
 		const html_ok = '<html><head></head><body>ok</body></html>';
 		const { port } = await start_server((_req, res) => {
