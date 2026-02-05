@@ -33,7 +33,7 @@ export async function handle_action_json_request(event, event_state, options, se
 		const no_actions_error = new SvelteKitError(
 			405,
 			'Method Not Allowed',
-			`POST method not allowed. No form actions exist for ${DEV ? `the page at ${event.route.id}` : 'this page'}`
+			`POST method not allowed. No form actions exist for ${DEV ? `the page at ${event.route.id}. If you're trying to use remote functions, make sure they are enabled via \`config.kit.experimental.remoteFunctions\` in svelte.config.js` : 'this page'}`
 		);
 
 		return action_json(
@@ -166,7 +166,7 @@ export async function handle_action_request(event, event_state, server) {
 			error: new SvelteKitError(
 				405,
 				'Method Not Allowed',
-				`POST method not allowed. No form actions exist for ${DEV ? `the page at ${event.route.id}` : 'this page'}`
+				`POST method not allowed. No form actions exist for ${DEV ? `the page at ${event.route.id}. If you're trying to use remote functions, make sure they are enabled via \`config.kit.experimental.remoteFunctions\` in svelte.config.js` : 'this page'}`
 			)
 		};
 	}

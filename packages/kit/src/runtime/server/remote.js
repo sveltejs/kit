@@ -41,7 +41,15 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 	const [hash, name, additional_args] = id.split('/');
 	const remotes = manifest._.remotes;
 
-	if (!remotes[hash]) error(404);
+	if (!remotes[hash]) {
+		if (DEV && Object.keys(remotes).length === 0) {
+			error(
+				404,
+				'No remote functions were found. Make sure remote functions are enabled via `config.kit.experimental.remoteFunctions` in svelte.config.js'
+			);
+		}
+		error(404);
+	}
 
 	const module = await remotes[hash]();
 	const fn = module.default[name];
@@ -269,7 +277,11 @@ async function handle_remote_form_post_internal(event, state, manifest, id) {
 			error: new SvelteKitError(
 				405,
 				'Method Not Allowed',
-				`POST method not allowed. No form actions exist for ${DEV ? `the page at ${event.route.id}` : 'this page'}`
+				DEV
+					? Object.keys(remotes).length === 0
+						? `POST method not allowed. No remote functions were found. Make sure remote functions are enabled via \`config.kit.experimental.remoteFunctions\` in svelte.config.js`
+						: `POST method not allowed. No remote form function '${name}' found in the remote module`
+					: 'POST method not allowed'
 			)
 		};
 	}
