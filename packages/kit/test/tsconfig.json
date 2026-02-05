@@ -8,5 +8,6 @@
 		"module": "esnext",
 		"moduleResolution": "node",
 		"allowSyntheticDefaultImports": true
-	}
+	},
+	"include": ["./*", "./mocks/**/*", "./prerendering/*"]
 }

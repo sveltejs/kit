@@ -13,9 +13,10 @@ test('$lib/*.server.* is not statically importable from the client', { timeout }
 			timeout
 		});
 	} catch (err) {
+		const message = /** @type {Error} */ (err).message;
 		assert.ok(
-			err.message.includes('Unexpected end of input'),
-			`received unexpected exception message ${err.message}`
+			message.includes('Unexpected end of input'),
+			`received unexpected exception message ${message}`
 		);
 		return;
 	}

@@ -98,9 +98,9 @@ export function make_trackable(url, callback, search_params_callback, allow_hash
 		value: new Proxy(tracked.searchParams, {
 			get(obj, key) {
 				if (key === 'get' || key === 'getAll' || key === 'has') {
-					return (/**@type {string}*/ param) => {
+					return (/** @type {string} */ param, /** @type {string[]} */ ...rest) => {
 						search_params_callback(param);
-						return obj[key](param);
+						return obj[key](param, ...rest);
 					};
 				}
 
@@ -198,27 +198,4 @@ function allow_nodejs_console_log(url) {
 			return inspect(new URL(url), opts);
 		};
 	}
-}
-
-const DATA_SUFFIX = '/__data.json';
-const HTML_DATA_SUFFIX = '.html__data.json';
-
-/** @param {string} pathname */
-export function has_data_suffix(pathname) {
-	return pathname.endsWith(DATA_SUFFIX) || pathname.endsWith(HTML_DATA_SUFFIX);
-}
-
-/** @param {string} pathname */
-export function add_data_suffix(pathname) {
-	if (pathname.endsWith('.html')) return pathname.replace(/\.html$/, HTML_DATA_SUFFIX);
-	return pathname.replace(/\/$/, '') + DATA_SUFFIX;
-}
-
-/** @param {string} pathname */
-export function strip_data_suffix(pathname) {
-	if (pathname.endsWith(HTML_DATA_SUFFIX)) {
-		return pathname.slice(0, -HTML_DATA_SUFFIX.length) + '.html';
-	}
-
-	return pathname.slice(0, -DATA_SUFFIX.length);
 }

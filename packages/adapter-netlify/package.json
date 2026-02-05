@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-netlify",
-	"version": "4.4.1",
+	"version": "5.2.4",
 	"description": "A SvelteKit adapter that creates a Netlify app",
 	"keywords": [
 		"adapter",
@@ -12,11 +12,11 @@
 	],
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/sveltejs/kit",
+		"url": "git+https://github.com/sveltejs/kit.git",
 		"directory": "packages/adapter-netlify"
 	},
 	"license": "MIT",
-	"homepage": "https://svelte.dev",
+	"homepage": "https://svelte.dev/docs/kit/adapter-netlify",
 	"type": "module",
 	"exports": {
 		".": {
@@ -32,31 +32,37 @@
 		"index.d.ts"
 	],
 	"scripts": {
-		"dev": "node -e \"fs.rmSync('files', { force: true, recursive: true })\" && rollup -cw",
-		"build": "node -e \"fs.rmSync('files', { force: true, recursive: true })\" && rollup -c && node -e \"fs.cpSync('src/edge.js', 'files/edge.js')\"",
-		"test": "vitest run",
+		"dev": "rollup -cw",
+		"build": "rollup -c",
 		"check": "tsc",
 		"lint": "prettier --check .",
 		"format": "pnpm lint --write",
+		"test": "pnpm test:unit && pnpm test:integration",
+		"test:unit": "vitest run",
+		"test:integration": "pnpm build && pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test",
 		"prepublishOnly": "pnpm build"
 	},
 	"dependencies": {
 		"@iarna/toml": "^2.2.5",
-		"esbuild": "^0.24.0",
-		"set-cookie-parser": "^2.6.0"
+		"esbuild": "^0.25.4",
+		"set-cookie-parser": "^3.0.0"
 	},
 	"devDependencies": {
-		"@netlify/functions": "^3.0.0",
-		"@rollup/plugin-commonjs": "^28.0.1",
-		"@rollup/plugin-json": "^6.1.0",
-		"@rollup/plugin-node-resolve": "^16.0.0",
+		"@netlify/dev": "catalog:",
+		"@netlify/edge-functions": "catalog:",
+		"@netlify/functions": "catalog:",
+		"@netlify/node-cookies": "^0.1.0",
+		"@netlify/types": "^2.1.0",
+		"@rollup/plugin-commonjs": "catalog:",
+		"@rollup/plugin-json": "catalog:",
+		"@rollup/plugin-node-resolve": "catalog:",
 		"@sveltejs/kit": "workspace:^",
-		"@sveltejs/vite-plugin-svelte": "^5.0.1",
-		"@types/node": "^18.19.48",
-		"@types/set-cookie-parser": "^2.4.7",
+		"@sveltejs/vite-plugin-svelte": "catalog:",
+		"@types/node": "catalog:",
+		"@types/set-cookie-parser": "catalog:",
 		"rollup": "^4.14.2",
 		"typescript": "^5.3.3",
-		"vitest": "^3.0.1"
+		"vitest": "catalog:"
 	},
 	"peerDependencies": {
 		"@sveltejs/kit": "^2.4.0"

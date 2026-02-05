@@ -1,3 +1,4 @@
+import { building } from '$app/environment';
 import { env } from '$env/dynamic/private';
 
 // this verifies that dynamic env vars can be read during analysis phase
@@ -12,4 +13,12 @@ export function handle({ event, resolve }) {
 		// to the DOM even if they're not included by `preload`
 		preload: ({ type }) => type !== 'css'
 	});
+}
+
+export function init() {
+	if (building) {
+		throw new Error(
+			'There are no prerendered pages or functions in this app so init() should not be called during the build'
+		);
+	}
 }

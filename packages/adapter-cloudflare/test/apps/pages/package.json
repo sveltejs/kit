@@ -1,0 +1,21 @@
+{
+	"name": "test-cloudflare-pages",
+	"version": "0.0.1",
+	"private": true,
+	"scripts": {
+		"dev": "vite dev",
+		"build": "vite build",
+		"preview": "wrangler pages dev .svelte-kit/cloudflare --port 8787",
+		"prepare": "svelte-kit sync || echo ''",
+		"test": "playwright test"
+	},
+	"devDependencies": {
+		"@sveltejs/kit": "workspace:^",
+		"@sveltejs/vite-plugin-svelte": "catalog:",
+		"server-side-dep": "file:server-side-dep",
+		"svelte": "catalog:",
+		"vite": "catalog:",
+		"wrangler": "catalog:"
+	},
+	"type": "module"
+}

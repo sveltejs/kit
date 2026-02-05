@@ -1,7 +1,8 @@
 import * as devalue from 'devalue';
-import { DEV } from 'esm-env';
+import { BROWSER, DEV } from 'esm-env';
 import { invalidateAll } from './navigation.js';
-import { app, applyAction } from '../client/client.js';
+import { app as client_app, applyAction } from '../client/client.js';
+import { app as server_app } from '../server/app.js';
 
 export { applyAction };
 
@@ -31,7 +32,9 @@ export function deserialize(result) {
 	const parsed = JSON.parse(result);
 
 	if (parsed.data) {
-		parsed.data = devalue.parse(parsed.data, app.decoders);
+		// the decoders should never be initialised at the top-level because `app`
+		// will not be initialised yet if `kit.output.bundleStrategy` is 'single' or 'inline'
+		parsed.data = devalue.parse(parsed.data, BROWSER ? client_app.decoders : server_app.decoders);
 	}
 
 	return parsed;
@@ -109,7 +112,7 @@ export function enhance(form_element, submit = () => {}) {
 			result.type === 'redirect' ||
 			result.type === 'error'
 		) {
-			applyAction(result);
+			await applyAction(result);
 		}
 	};
 
@@ -133,7 +136,7 @@ export function enhance(form_element, submit = () => {}) {
 			? /** @type {HTMLButtonElement | HTMLInputElement} */ (event.submitter).formEnctype
 			: clone(form_element).enctype;
 
-		const form_data = new FormData(form_element);
+		const form_data = new FormData(form_element, event.submitter);
 
 		if (DEV && enctype !== 'multipart/form-data') {
 			for (const value of form_data.values()) {
@@ -143,11 +146,6 @@ export function enhance(form_element, submit = () => {}) {
 					);
 				}
 			}
-		}
-
-		const submitter_name = event.submitter?.getAttribute('name');
-		if (submitter_name) {
-			form_data.append(submitter_name, event.submitter?.getAttribute('value') ?? '');
 		}
 
 		const controller = new AbortController();
@@ -205,7 +203,7 @@ export function enhance(form_element, submit = () => {}) {
 			result = { type: 'error', error };
 		}
 
-		callback({
+		await callback({
 			action,
 			formData: form_data,
 			formElement: form_element,
