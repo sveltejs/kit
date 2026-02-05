@@ -33,7 +33,7 @@ export default config;
 
 ## Overview
 
-Remote functions are exported from a `.remote.js` or `.remote.ts` file, and come in four flavours: `query`, `form`, `command` and `prerender`. On the client, the exported functions are transformed to `fetch` wrappers that invoke their counterparts on the server via a generated HTTP endpoint. Remote files must be placed in your `src` directory.
+Remote functions are exported from a `.remote.js` or `.remote.ts` file, and come in four flavours: `query`, `form`, `command` and `prerender`. On the client, the exported functions are transformed to `fetch` wrappers that invoke their counterparts on the server via a generated HTTP endpoint. Remote files can be placed anywhere in your `src` directory (except inside the `src/lib/server` directory), and third party libraries can provide them, too.
 
 ## query
 
@@ -325,6 +325,8 @@ A form is composed of a set of _fields_, which are defined by the schema. In the
 
 These attributes allow SvelteKit to set the correct input type, set a `name` that is used to construct the `data` passed to the handler, populate the `value` of the form (for example following a failed submission, to save the user having to re-enter everything), and set the [`aria-invalid`](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Attributes/aria-invalid) state.
 
+> [!NOTE] The generated `name` attribute uses JS object notation (e.g. `nested.array[0].value`). String keys that require quotes such as `object['nested-array'][0].value` are not supported. Under the hood, boolean checkbox and number field names are prefixed with `b:` and `n:`, respectively, to signal SvelteKit to coerce the values from strings prior to validation.
+
 Fields can be nested in objects and arrays, and their values can be strings, numbers, booleans or `File` objects. For example, if your schema looked like this...
 
 ```js
@@ -391,12 +393,15 @@ In the case of `radio` and `checkbox` inputs that all belong to the same field, 
 import * as v from 'valibot';
 import { form } from '$app/server';
 // ---cut---
+export const operatingSystems = /** @type {const} */ (['windows', 'mac', 'linux']);
+export const languages = /** @type {const} */ (['html', 'css', 'js']);
+
 export const survey = form(
 	v.object({
-		operatingSystem: v.picklist(['windows', 'mac', 'linux']),
-		languages: v.optional(v.array(v.picklist(['html', 'css', 'js'])), [])
+		operatingSystem: v.picklist(operatingSystems),
+		languages: v.optional(v.array(v.picklist(languages)), []),
 	}),
-	(data) => { /* ... */ }
+	(data) => { /* ... */ },
 );
 ```
 
@@ -404,7 +409,7 @@ export const survey = form(
 <form {...survey}>
 	<h2>Which operating system do you use?</h2>
 
-	{#each ['windows', 'mac', 'linux'] as os}
+	{#each operatingSystems as os}
 		<label>
 			<input {...survey.fields.operatingSystem.as('radio', os)}>
 			{os}
@@ -413,7 +418,7 @@ export const survey = form(
 
 	<h2>Which languages do you write code in?</h2>
 
-	{#each ['html', 'css', 'js'] as language}
+	{#each languages as language}
 		<label>
 			<input {...survey.fields.languages.as('checkbox', language)}>
 			{language}
@@ -431,17 +436,17 @@ Alternatively, you could use `select` and `select multiple`:
 	<h2>Which operating system do you use?</h2>
 
 	<select {...survey.fields.operatingSystem.as('select')}>
-		<option>windows</option>
-		<option>mac</option>
-		<option>linux</option>
+		{#each operatingSystems as os}
+			<option>{os}</option>
+		{/each}
 	</select>
 
 	<h2>Which languages do you write code in?</h2>
 
 	<select {...survey.fields.languages.as('select multiple')}>
-		<option>html</option>
-		<option>css</option>
-		<option>js</option>
+		{#each languages as language}
+			<option>{language}</option>
+		{/each}
 	</select>
 
 	<button>submit</button>
@@ -452,11 +457,15 @@ Alternatively, you could use `select` and `select multiple`:
 
 ### Programmatic validation
 
-In addition to declarative schema validation, you can programmatically mark fields as invalid inside the form handler using the `invalid` function. This is useful for cases where you can't know if something is valid until you try to perform some action:
+In addition to declarative schema validation, you can programmatically mark fields as invalid inside the form handler using the `invalid` helper from `@sveltejs/kit`. This is useful for cases where you can't know if something is valid until you try to perform some action.
+
+- It throws just like `redirect` or `error`
+- It accepts multiple arguments that can be strings (for issues relating to the form as a whole — these will only show up in `fields.allIssues()`) or standard-schema-compliant issues (for those relating to a specific field). Use the `issue` parameter for type-safe creation of such issues:
 
 ```js
 /// file: src/routes/shop/data.remote.js
 import * as v from 'valibot';
+import { invalid } from '@sveltejs/kit';
 import { form } from '$app/server';
 import * as db from '$lib/server/database';
 
@@ -467,25 +476,19 @@ export const buyHotcakes = form(
 			v.minValue(1, 'you must buy at least one hotcake')
 		)
 	}),
-	async (data, invalid) => {
+	async (data, issue) => {
 		try {
 			await db.buy(data.qty);
 		} catch (e) {
 			if (e.code === 'OUT_OF_STOCK') {
 				invalid(
-					invalid.qty(`we don't have enough hotcakes`)
+					issue.qty(`we don't have enough hotcakes`)
 				);
 			}
 		}
 	}
 );
 ```
-
-The `invalid` function works as both a function and a proxy:
-
-- Call `invalid(issue1, issue2, ...issueN)` to throw a validation error
-- If an issue is a `string`, it applies to the form as a whole (and will show up in `fields.allIssues()`)
-- Use `invalid.fieldName(message)` to create an issue for a specific field. Like `fields` this is type-safe and you can use regular property access syntax to create issues for deeply nested objects (e.g. `invalid.profile.email('Email already exists')` or `invalid.items[0].qty('Insufficient stock')`)
 
 ### Validation
 
@@ -815,37 +818,56 @@ Some forms may be repeated as part of a list. In this case you can create separa
 {/each}
 ```
 
-### buttonProps
+### Multiple submit buttons
 
-By default, submitting a form will send a request to the URL indicated by the `<form>` element's [`action`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/form#attributes_for_form_submission) attribute, which in the case of a remote function is a property on the form object generated by SvelteKit.
+It's possible for a `<form>` to have multiple submit buttons. For example, you might have a single form that allows you to log in or register depending on which button was clicked.
 
-It's possible for a `<button>` inside the `<form>` to send the request to a _different_ URL, using the [`formaction`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/button#formaction) attribute. For example, you might have a single form that allows you to log in or register depending on which button was clicked.
-
-This attribute exists on the `buttonProps` property of a form object:
+To accomplish this, add a field to your schema for the button value, and use `as('submit', value)` to bind it:
 
 ```svelte
 <!--- file: src/routes/login/+page.svelte --->
 <script>
-	import { login, register } from '$lib/auth';
+	import { loginOrRegister } from '$lib/auth';
 </script>
 
-<form {...login}>
+<form {...loginOrRegister}>
 	<label>
 		Your username
-		<input {...login.fields.username.as('text')} />
+		<input {...loginOrRegister.fields.username.as('text')} />
 	</label>
 
 	<label>
 		Your password
-		<input {...login.fields._password.as('password')} />
+		<input {...loginOrRegister.fields._password.as('password')} />
 	</label>
 
-	<button>login</button>
-	<button {...register.buttonProps}>register</button>
+	<button {...loginOrRegister.fields.action.as('submit', 'login')}>login</button>
+	<button {...loginOrRegister.fields.action.as('submit', 'register')}>register</button>
 </form>
 ```
 
-Like the form object itself, `buttonProps` has an `enhance` method for customizing submission behaviour.
+In your form handler, you can check which button was clicked:
+
+```js
+/// file: $lib/auth.js
+import * as v from 'valibot';
+import { form } from '$app/server';
+
+export const loginOrRegister = form(
+	v.object({
+		username: v.string(),
+		_password: v.string(),
+		action: v.picklist(['login', 'register'])
+	}),
+	async ({ username, _password, action }) => {
+		if (action === 'login') {
+			// handle login
+		} else {
+			// handle registration
+		}
+	}
+);
+```
 
 ## command
 
@@ -1071,8 +1093,6 @@ export const getPost = prerender(
 	}
 );
 ```
-
-> [!NOTE] Svelte does not yet support asynchronous server-side rendering, so it's likely that you're only calling remote functions from the browser, rather than during prerendering. Because of this, you will need to use `inputs`, for now. We're actively working on this roadblock.
 
 By default, prerender functions are excluded from your server bundle, which means that you cannot call them with any arguments that were _not_ prerendered. You can set `dynamic: true` to change this behaviour:
 

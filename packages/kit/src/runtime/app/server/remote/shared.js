@@ -30,9 +30,8 @@ export function create_validator(validate_or_fn, maybe_fn) {
 		return async (arg) => {
 			// Get event before async validation to ensure it's available in server environments without AsyncLocalStorage, too
 			const { event, state } = get_request_store();
-			const validate = validate_or_fn['~standard'].validate;
-
-			const result = await validate(arg);
+			// access property and call method in one go to preserve potential this context
+			const result = await validate_or_fn['~standard'].validate(arg);
 
 			// if the `issues` field exists, the validation failed
 			if (result.issues) {
@@ -69,7 +68,7 @@ export function create_validator(validate_or_fn, maybe_fn) {
  * @returns {Promise<T>}
  */
 export async function get_response(info, arg, state, get_result) {
-	// wait a beat, in case `myQuery().set(...)` is immediately called
+	// wait a beat, in case `myQuery().set(...)` or `myQuery().refresh()` is immediately called
 	// eslint-disable-next-line @typescript-eslint/await-thenable
 	await 0;
 
@@ -98,11 +97,10 @@ export function parse_remote_response(data, transport) {
  * @param {RequestEvent} event
  * @param {RequestState} state
  * @param {boolean} allow_cookies
- * @param {any} arg
- * @param {(arg: any) => any} validate
+ * @param {() => any} get_input
  * @param {(arg?: any) => T} fn
  */
-export async function run_remote_function(event, state, allow_cookies, arg, validate, fn) {
+export async function run_remote_function(event, state, allow_cookies, get_input, fn) {
 	/** @type {RequestStore} */
 	const store = {
 		event: {
@@ -143,8 +141,8 @@ export async function run_remote_function(event, state, allow_cookies, arg, vali
 	};
 
 	// In two parts, each with_event, so that runtimes without async local storage can still get the event at the start of the function
-	const validated = await with_request_store(store, () => validate(arg));
-	return with_request_store(store, () => fn(validated));
+	const input = await with_request_store(store, get_input);
+	return with_request_store(store, () => fn(input));
 }
 
 /**

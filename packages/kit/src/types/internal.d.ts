@@ -381,13 +381,17 @@ export interface SSRComponent {
 	default: {
 		render(
 			props: Record<string, any>,
-			opts: { context: Map<any, any> }
+			opts: { context: Map<any, any>; csp?: { nonce?: string; hash?: boolean } }
 		): {
 			html: string;
 			head: string;
 			css: {
 				code: string;
 				map: any; // TODO
+			};
+			/** Until we require all Svelte versions that support hashes, this might not be defined */
+			hashes?: {
+				script: Array<`sha256-${string}`>;
 			};
 		};
 	};
@@ -431,7 +435,9 @@ export interface SSRNode {
 	server_id?: string;
 
 	/** inlined styles */
-	inline_styles?(): MaybePromise<Record<string, string>>;
+	inline_styles?(): MaybePromise<
+		Record<string, string | ((assets: string, base: string) => string)>
+	>;
 	/** Svelte component */
 	component?: SSRComponentLoader;
 	/** +page.js or +layout.js */
@@ -552,6 +558,11 @@ export type ValidatedKitConfig = Omit<RecursiveRequired<KitConfig>, 'adapter'> &
 	adapter?: Adapter;
 };
 
+export type BinaryFormMeta = {
+	remote_refreshes?: string[];
+	validate_only?: boolean;
+};
+
 export type RemoteInfo =
 	| {
 			type: 'query' | 'command';
@@ -565,14 +576,18 @@ export type RemoteInfo =
 			type: 'query_batch';
 			id: string;
 			name: string;
-			/** Direct access to the function without batching etc logic, for remote functions called from the client */
-			run: (args: any[]) => Promise<(arg: any, idx: number) => any>;
+			/** Direct access to the function, for remote functions called from the client */
+			run: (args: any[], options: SSROptions) => Promise<any[]>;
 	  }
 	| {
 			type: 'form';
 			id: string;
 			name: string;
-			fn: (data: FormData) => Promise<any>;
+			fn: (
+				body: Record<string, any>,
+				meta: BinaryFormMeta,
+				form_data: FormData | null
+			) => Promise<any>;
 	  }
 	| {
 			type: 'prerender';

@@ -15,7 +15,8 @@ import {
 	PrerenderUnseenRoutesHandlerValue,
 	PrerenderOption,
 	RequestOptions,
-	RouteSegment
+	RouteSegment,
+	IsAny
 } from '../types/private.js';
 import { BuildData, SSRNodeLoader, SSRRoute, ValidatedConfig } from 'types';
 import { SvelteConfig } from '@sveltejs/vite-plugin-svelte';
@@ -25,9 +26,11 @@ import {
 	LayoutParams as AppLayoutParams,
 	ResolvedPathname
 } from '$app/types';
-import { Span } from '@opentelemetry/api';
 
 export { PrerenderOption } from '../types/private.js';
+
+// @ts-ignore this is an optional peer dependency so could be missing. Written like this so dts-buddy preserves the ts-ignore
+type Span = import('@opentelemetry/api').Span;
 
 /**
  * [Adapters](https://svelte.dev/docs/kit/adapters) are responsible for taking the production build and turning it into something that can be deployed to a platform of your choosing.
@@ -354,8 +357,6 @@ export interface KitConfig {
 	 * };
 	 * ```
 	 *
-	 * > [!NOTE] The built-in `$lib` alias is controlled by `config.kit.files.lib` as it is used for packaging.
-	 *
 	 * > [!NOTE] You will need to run `npm run dev` to have SvelteKit automatically generate the required alias configuration in `jsconfig.json` or `tsconfig.json`.
 	 * @default {}
 	 */
@@ -505,6 +506,12 @@ export interface KitConfig {
 		 * @default false
 		 */
 		remoteFunctions?: boolean;
+
+		/**
+		 * Whether to enable the experimental forked preloading feature using Svelte's fork API.
+		 * @default false
+		 */
+		forkPreloads?: boolean;
 	};
 	/**
 	 * Where to find various files within your project.
@@ -1865,13 +1872,28 @@ type InputElementProps<T extends keyof InputTypeMap> = T extends 'checkbox' | 'r
 				get files(): FileList | null;
 				set files(v: FileList | null);
 			}
-		: {
-				name: string;
-				type: T;
-				'aria-invalid': boolean | 'false' | 'true' | undefined;
-				get value(): string | number;
-				set value(v: string | number);
-			};
+		: T extends 'select' | 'select multiple'
+			? {
+					name: string;
+					multiple: T extends 'select' ? false : true;
+					'aria-invalid': boolean | 'false' | 'true' | undefined;
+					get value(): string | number;
+					set value(v: string | number);
+				}
+			: T extends 'text'
+				? {
+						name: string;
+						'aria-invalid': boolean | 'false' | 'true' | undefined;
+						get value(): string | number;
+						set value(v: string | number);
+					}
+				: {
+						name: string;
+						type: T;
+						'aria-invalid': boolean | 'false' | 'true' | undefined;
+						get value(): string | number;
+						set value(v: string | number);
+					};
 
 type RemoteFormFieldMethods<T> = {
 	/** The values that will be submitted */
@@ -1932,6 +1954,18 @@ type UnknownField<Value> = RemoteFormFieldMethods<Value> & {
 	[key: string | number]: UnknownField<any>;
 };
 
+type RemoteFormFieldsRoot<Input extends RemoteFormInput | void> =
+	IsAny<Input> extends true
+		? RecursiveFormFields
+		: Input extends void
+			? {
+					/** Validation issues, if any */
+					issues(): RemoteFormIssue[] | undefined;
+					/** Validation issues belonging to this or any of the fields that belong to it, if any */
+					allIssues(): RemoteFormIssue[] | undefined;
+				}
+			: RemoteFormFields<Input>;
+
 /**
  * Recursive type to build form fields structure with proxy access
  */
@@ -1963,6 +1997,7 @@ export interface RemoteFormInput {
 
 export interface RemoteFormIssue {
 	message: string;
+	path: Array<string | number>;
 }
 
 // If the schema specifies `id` as a string or number, ensure that `for(...)`
@@ -1974,10 +2009,13 @@ type ExtractId<Input> = Input extends { id: infer Id }
 	: string | number;
 
 /**
- * Recursively maps an input type to a structure where each field can create a validation issue.
- * This mirrors the runtime behavior of the `invalid` proxy passed to form handlers.
+ * A function and proxy object used to imperatively create validation errors in form handlers.
+ *
+ * Access properties to create field-specific issues: `issue.fieldName('message')`.
+ * The type structure mirrors the input data structure for type-safe field access.
+ * Call `invalid(issue.foo(...), issue.nested.bar(...))` to throw a validation error.
  */
-type InvalidField<T> =
+export type InvalidField<T> =
 	WillRecurseIndefinitely<T> extends true
 		? Record<string | number, any>
 		: NonNullable<T> extends string | number | boolean | File
@@ -1993,15 +2031,12 @@ type InvalidField<T> =
 					: Record<string, never>;
 
 /**
- * A function and proxy object used to imperatively create validation errors in form handlers.
- *
- * Call `invalid(issue1, issue2, ...issueN)` to throw a validation error.
- * If an issue is a `string`, it applies to the form as a whole (and will show up in `fields.allIssues()`)
- * Access properties to create field-specific issues: `invalid.fieldName('message')`.
- * The type structure mirrors the input data structure for type-safe field access.
+ * A validation error thrown by `invalid`.
  */
-export type Invalid<Input = any> = ((...issues: Array<string | StandardSchemaV1.Issue>) => never) &
-	InvalidField<Input>;
+export interface ValidationError {
+	/** The validation issues */
+	issues: StandardSchemaV1.Issue[];
+}
 
 /**
  * The return value of a remote `form` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
@@ -2049,39 +2084,13 @@ export type RemoteForm<Input extends RemoteFormInput | void, Output> = {
 		includeUntouched?: boolean;
 		/** Set this to `true` to only run the `preflight` validation. */
 		preflightOnly?: boolean;
-		/** Perform validation as if the form was submitted by the given button. */
-		submitter?: HTMLButtonElement | HTMLInputElement;
 	}): Promise<void>;
 	/** The result of the form submission */
 	get result(): Output | undefined;
 	/** The number of pending submissions */
 	get pending(): number;
 	/** Access form fields using object notation */
-	fields: Input extends void ? never : RemoteFormFields<Input>;
-	/** Spread this onto a `<button>` or `<input type="submit">` */
-	buttonProps: {
-		type: 'submit';
-		formmethod: 'POST';
-		formaction: string;
-		onclick: (event: Event) => void;
-		/** Use the `enhance` method to influence what happens when the form is submitted. */
-		enhance(
-			callback: (opts: {
-				form: HTMLFormElement;
-				data: Input;
-				submit: () => Promise<void> & {
-					updates: (...queries: Array<RemoteQuery<any> | RemoteQueryOverride>) => Promise<void>;
-				};
-			}) => void | Promise<void>
-		): {
-			type: 'submit';
-			formmethod: 'POST';
-			formaction: string;
-			onclick: (event: Event) => void;
-		};
-		/** The number of pending submissions */
-		get pending(): number;
-	};
+	fields: RemoteFormFieldsRoot<Input>;
 };
 
 /**

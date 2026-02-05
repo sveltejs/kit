@@ -183,7 +183,12 @@ export async function internal_respond(request, options, manifest, state) {
 						'Use `event.cookies.set(name, value, options)` instead of `event.setHeaders` to set cookies'
 					);
 				} else if (lower in headers) {
-					throw new Error(`"${key}" header is already set`);
+					// appendHeaders-style for Server-Timing https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Server-Timing
+					if (lower === 'server-timing') {
+						headers[lower] += ', ' + value;
+					} else {
+						throw new Error(`"${key}" header is already set`);
+					}
 				} else {
 					headers[lower] = value;
 
@@ -242,8 +247,10 @@ export async function internal_respond(request, options, manifest, state) {
 		return text('Malformed URI', { status: 400 });
 	}
 
+	// try to serve the rerouted prerendered resource if it exists
 	if (
-		resolved_path !== url.pathname &&
+		// the resolved path has been decoded so it should be compared to the decoded url pathname
+		resolved_path !== decode_pathname(url.pathname) &&
 		!state.prerendering?.fallback &&
 		has_prerendered_path(manifest, resolved_path)
 	) {
@@ -254,20 +261,24 @@ export async function internal_respond(request, options, manifest, state) {
 				? add_resolution_suffix(resolved_path)
 				: resolved_path;
 
-		// `fetch` automatically decodes the body, so we need to delete the related headers to not break the response
-		// Also see https://github.com/sveltejs/kit/issues/12197 for more info (we should fix this more generally at some point)
-		const response = await fetch(url, request);
-		const headers = new Headers(response.headers);
-		if (headers.has('content-encoding')) {
-			headers.delete('content-encoding');
-			headers.delete('content-length');
-		}
+		try {
+			// `fetch` automatically decodes the body, so we need to delete the related headers to not break the response
+			// Also see https://github.com/sveltejs/kit/issues/12197 for more info (we should fix this more generally at some point)
+			const response = await fetch(url, request);
+			const headers = new Headers(response.headers);
+			if (headers.has('content-encoding')) {
+				headers.delete('content-encoding');
+				headers.delete('content-length');
+			}
 
-		return new Response(response.body, {
-			headers,
-			status: response.status,
-			statusText: response.statusText
-		});
+			return new Response(response.body, {
+				headers,
+				status: response.status,
+				statusText: response.statusText
+			});
+		} catch (error) {
+			return await handle_fatal_error(event, event_state, options, error);
+		}
 	}
 
 	/** @type {import('types').SSRRoute | null} */

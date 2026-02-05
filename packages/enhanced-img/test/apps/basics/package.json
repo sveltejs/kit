@@ -1,0 +1,19 @@
+{
+	"name": "enhanced-img-basics",
+	"version": "0.0.1",
+	"private": true,
+	"scripts": {
+		"dev": "vite dev",
+		"build": "vite build",
+		"preview": "vite preview",
+		"test": "playwright test"
+	},
+	"devDependencies": {
+		"@sveltejs/enhanced-img": "workspace:^",
+		"@sveltejs/kit": "workspace:^",
+		"@sveltejs/vite-plugin-svelte": "catalog:",
+		"svelte": "catalog:",
+		"vite": "catalog:"
+	},
+	"type": "module"
+}

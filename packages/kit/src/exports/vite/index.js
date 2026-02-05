@@ -42,7 +42,7 @@ import { import_peer } from '../../utils/import.js';
 import { compact } from '../../utils/array.js';
 import { should_ignore } from './static_analysis/utils.js';
 
-const cwd = process.cwd();
+const cwd = posixify(process.cwd());
 
 /** @type {import('./types.js').EnforcedConfig} */
 const enforced_config = {
@@ -346,10 +346,12 @@ async function kit({ svelte_config }) {
 				__SVELTEKIT_APP_DIR__: s(kit.appDir),
 				__SVELTEKIT_EMBEDDED__: s(kit.embedded),
 				__SVELTEKIT_EXPERIMENTAL__REMOTE_FUNCTIONS__: s(kit.experimental.remoteFunctions),
+				__SVELTEKIT_FORK_PRELOADS__: s(kit.experimental.forkPreloads),
 				__SVELTEKIT_PATHS_ASSETS__: s(kit.paths.assets),
 				__SVELTEKIT_PATHS_BASE__: s(kit.paths.base),
 				__SVELTEKIT_PATHS_RELATIVE__: s(kit.paths.relative),
 				__SVELTEKIT_CLIENT_ROUTING__: s(kit.router.resolution === 'client'),
+				__SVELTEKIT_HASH_ROUTING__: s(kit.router.type === 'hash'),
 				__SVELTEKIT_SERVER_TRACING_ENABLED__: s(kit.experimental.tracing.server)
 			};
 
@@ -597,6 +599,9 @@ async function kit({ svelte_config }) {
 					if (node.universal) entrypoints.add(node.universal);
 				}
 
+				if (manifest_data.hooks.client) entrypoints.add(manifest_data.hooks.client);
+				if (manifest_data.hooks.universal) entrypoints.add(manifest_data.hooks.universal);
+
 				const normalized = normalize_id(id, normalized_lib, normalized_cwd);
 				const chain = [normalized];
 
@@ -697,12 +702,20 @@ async function kit({ svelte_config }) {
 			remotes.push(remote);
 
 			if (opts?.ssr) {
+				// we need to add an `await Promise.resolve()` because if the user imports this function
+				// on the client AND in a load function when loading the client module we will trigger
+				// an ssrLoadModule during dev. During a link preload, the module can be mistakenly
+				// loaded and transformed twice and the first time all its exports would be undefined
+				// triggering a dev server error. By adding a microtask we ensure that the module is fully loaded
+
 				// Extra newlines to prevent syntax errors around missing semicolons or comments
 				code +=
 					'\n\n' +
 					dedent`
 					import * as $$_self_$$ from './${path.basename(id)}';
 					import { init_remote_functions as $$_init_$$ } from '@sveltejs/kit/internal';
+
+					${dev_server ? 'await Promise.resolve()' : ''}
 
 					$$_init_$$($$_self_$$, ${s(file)}, ${s(remote.hash)});
 
@@ -790,6 +803,8 @@ async function kit({ svelte_config }) {
 			/** @type {import('vite').UserConfig} */
 			let new_config;
 
+			const kit_paths_base = kit.paths.base || '/';
+
 			if (is_build) {
 				const ssr = /** @type {boolean} */ (config.build?.ssr);
 				const prefix = `${kit.appDir}/immutable`;
@@ -833,6 +848,14 @@ async function kit({ svelte_config }) {
 						input[name] = path.resolve(file);
 					});
 
+					// ...and the hooks files
+					if (manifest_data.hooks.server) {
+						input['entries/hooks.server'] = path.resolve(manifest_data.hooks.server);
+					}
+					if (manifest_data.hooks.universal) {
+						input['entries/hooks.universal'] = path.resolve(manifest_data.hooks.universal);
+					}
+
 					// ...and the server instrumentation file
 					const server_instrumentation = resolve_entry(
 						path.join(kit.files.src, 'instrumentation.server')
@@ -871,7 +894,7 @@ async function kit({ svelte_config }) {
 				// That's larger and takes longer to run and also causes an HTML diff between SSR and client
 				// causing us to do a more expensive hydration check.
 				const client_base =
-					kit.paths.relative !== false || kit.paths.assets ? './' : kit.paths.base || '/';
+					kit.paths.relative !== false || kit.paths.assets ? './' : kit_paths_base;
 
 				const inline = !ssr && svelte_config.kit.output.bundleStrategy === 'inline';
 				const split = ssr || svelte_config.kit.output.bundleStrategy === 'split';
@@ -930,7 +953,7 @@ async function kit({ svelte_config }) {
 			} else {
 				new_config = {
 					appType: 'custom',
-					base: kit.paths.base,
+					base: kit_paths_base,
 					build: {
 						rollupOptions: {
 							// Vite dependency crawler needs an explicit JS entry point
@@ -1008,7 +1031,7 @@ async function kit({ svelte_config }) {
 		 */
 		writeBundle: {
 			sequential: true,
-			async handler(_options, bundle) {
+			async handler(_options) {
 				if (secondary_build_started) return; // only run this once
 
 				const verbose = vite_config.logLevel === 'info';
@@ -1248,7 +1271,7 @@ async function kit({ svelte_config }) {
 					manifest_data,
 					server_manifest,
 					client_manifest,
-					bundle,
+					assets_path,
 					client_chunks,
 					svelte_config.kit.output,
 					static_exports

@@ -50,6 +50,7 @@ export interface SvelteKitApp {
 	decode: (type: string, value: any) => any;
 
 	decoders: Record<string, (data: any) => any>;
+	encoders: Record<string, (data: any) => any>;
 
 	/**
 	 * Whether or not we're using hash-based routing
