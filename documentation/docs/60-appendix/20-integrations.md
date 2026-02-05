@@ -4,7 +4,7 @@ title: Integrations
 
 ## `vitePreprocess`
 
-Including [`vitePreprocess`](https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/preprocess.md) in your project will allow you to use the various flavors of CSS that Vite supports: PostCSS, SCSS, Less, Stylus, and SugarSS. If you set your project up with TypeScript it will be included by default:
+[`vitePreprocess`](https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/preprocess.md) preprocesses `<style>` and `<script>` tags in `.svelte` files.
 
 ```js
 // svelte.config.js
@@ -12,15 +12,31 @@ import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
-  preprocess: [vitePreprocess()]
+  preprocess: [
+    vitePreprocess({
+      style: true,      // default value
+      script: false     // default value
+    })
+  ]
 };
 
 export default config;
 ```
 
-You will also need to use a preprocessor if you're using TypeScript with Svelte 4. TypeScript is supported natively in Svelte 5 if you're using only the type syntax. To use more complex TypeScript syntax in Svelte 5, you will need still need a preprocessor and can use `vitePreprocess({ script: true })`.
+### `style`
 
-## Adders
+Use `vitePreprocess()` to enable CSS preprocessors in `<style>` tags: PostCSS, SCSS, Less, Stylus, and SugarSS.
+
+### `script`
+
+Use `vitePreprocess({ script: true })` if: 
+- your project is before Svelte 5
+- you are using advanced TypeScript features that emit code _(check [`vitePreprocess`](https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/preprocess.md) documentation)_
+
+> [!NOTE]
+TypeScript is supported natively in Svelte 5, so if you are using Svelte 5 and you don't need to use advanced TypeScript features that emit code, you probably don't need to use `vitePreprocess`.
+
+## Add-ons
 
 Run [`npx sv add`](/docs/cli/sv-add) to setup many different complex integrations with a single command including:
 - prettier (formatting)
@@ -34,9 +50,9 @@ Run [`npx sv add`](/docs/cli/sv-add) to setup many different complex integration
 - mdsvex (markdown)
 - storybook (frontend workshop)
 
-## Directory
+## Packages
 
-See [sveltesociety.dev](https://sveltesociety.dev/) for a full listing of [packages](https://sveltesociety.dev/packages) and [templates](https://sveltesociety.dev/templates) available for use with Svelte and SvelteKit.
+Check out [the packages page](/packages) for a curated set of high quality Svelte packages. You can also see [sveltesociety.dev](https://sveltesociety.dev/) for additional libraries, templates, and resources.
 
 ## Additional integrations
 

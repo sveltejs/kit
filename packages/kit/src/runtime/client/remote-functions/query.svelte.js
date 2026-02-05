@@ -1,29 +1,38 @@
 /** @import { RemoteQueryFunction } from '@sveltejs/kit' */
 /** @import { RemoteFunctionResponse } from 'types' */
-import { app_dir, base } from '__sveltekit/paths';
-import { app, goto, remote_responses, started } from '../client.js';
+import { app_dir, base } from '$app/paths/internal/client';
+import { app, goto, query_map, remote_responses } from '../client.js';
 import { tick } from 'svelte';
 import { create_remote_function, remote_request } from './shared.svelte.js';
 import * as devalue from 'devalue';
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
+import { DEV } from 'esm-env';
 
 /**
  * @param {string} id
  * @returns {RemoteQueryFunction<any, any>}
  */
 export function query(id) {
+	if (DEV) {
+		// If this reruns as part of HMR, refresh the query
+		for (const [key, entry] of query_map) {
+			if (key === id || key.startsWith(id + '/')) {
+				// use optional chaining in case a prerender function was turned into a query
+				entry.resource.refresh?.();
+			}
+		}
+	}
+
 	return create_remote_function(id, (cache_key, payload) => {
 		return new Query(cache_key, async () => {
-			if (!started) {
-				const result = remote_responses[cache_key];
-				if (result) {
-					return result;
-				}
+			if (Object.hasOwn(remote_responses, cache_key)) {
+				return remote_responses[cache_key];
 			}
 
 			const url = `${base}/${app_dir}/remote/${id}${payload ? `?payload=${payload}` : ''}`;
 
-			return await remote_request(url);
+			const result = await remote_request(url);
+			return devalue.parse(result, app.decoders);
 		});
 	});
 }
@@ -38,11 +47,8 @@ export function query_batch(id) {
 
 	return create_remote_function(id, (cache_key, payload) => {
 		return new Query(cache_key, () => {
-			if (!started) {
-				const result = remote_responses[cache_key];
-				if (result) {
-					return result;
-				}
+			if (Object.hasOwn(remote_responses, cache_key)) {
+				return remote_responses[cache_key];
 			}
 
 			// Collect all the calls to the same query in the same macrotask,
@@ -157,15 +163,19 @@ export class Query {
 		const p = this.#promise;
 		this.#overrides.length;
 
-		return async (resolve, reject) => {
-			try {
+		return (resolve, reject) => {
+			const result = (async () => {
 				await p;
 				// svelte-ignore await_reactivity_loss
 				await tick();
-				resolve?.(/** @type {T} */ (this.#current));
-			} catch (error) {
-				reject?.(error);
+				return /** @type {T} */ (this.#current);
+			})();
+
+			if (resolve || reject) {
+				return result.then(resolve, reject);
 			}
+
+			return result;
 		};
 	});
 
@@ -245,8 +255,14 @@ export class Query {
 		this.#then;
 		return (/** @type {any} */ fn) => {
 			return this.#then(
-				() => fn(),
-				() => fn()
+				(value) => {
+					fn();
+					return value;
+				},
+				(error) => {
+					fn();
+					throw error;
+				}
 			);
 		};
 	}
@@ -277,6 +293,7 @@ export class Query {
 	 * @returns {Promise<void>}
 	 */
 	refresh() {
+		delete remote_responses[this._key];
 		return (this.#promise = this.#run());
 	}
 

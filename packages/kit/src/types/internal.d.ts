@@ -21,7 +21,8 @@ import {
 	ServerInit,
 	ClientInit,
 	Transport,
-	HandleValidationError
+	HandleValidationError,
+	RemoteFormIssue
 } from '@sveltejs/kit';
 import {
 	HttpMethod,
@@ -369,6 +370,7 @@ export interface ServerMetadata {
 	nodes: Array<{
 		/** Also `true` when using `trailingSlash`, because we need to do a server request in that case to get its value. */
 		has_server_load: boolean;
+		has_universal_load: boolean;
 	}>;
 	routes: Map<string, ServerMetadataRoute>;
 	/** For each hashed remote file, a map of export name -> { type, dynamic }, where `dynamic` is `false` for non-dynamic prerender functions */
@@ -379,13 +381,17 @@ export interface SSRComponent {
 	default: {
 		render(
 			props: Record<string, any>,
-			opts: { context: Map<any, any> }
+			opts: { context: Map<any, any>; csp?: { nonce?: string; hash?: boolean } }
 		): {
 			html: string;
 			head: string;
 			css: {
 				code: string;
 				map: any; // TODO
+			};
+			/** Until we require all Svelte versions that support hashes, this might not be defined */
+			hashes?: {
+				script: Array<`sha256-${string}`>;
 			};
 		};
 	};
@@ -394,6 +400,7 @@ export interface SSRComponent {
 export type SSRComponentLoader = () => Promise<SSRComponent>;
 
 export interface UniversalNode {
+	/** Is `null` in case static analysis succeeds but the node is ssr=false */
 	load?: Load;
 	prerender?: PrerenderOption;
 	ssr?: boolean;
@@ -428,7 +435,9 @@ export interface SSRNode {
 	server_id?: string;
 
 	/** inlined styles */
-	inline_styles?(): MaybePromise<Record<string, string>>;
+	inline_styles?(): MaybePromise<
+		Record<string, string | ((assets: string, base: string) => string)>
+	>;
 	/** Svelte component */
 	component?: SSRComponentLoader;
 	/** +page.js or +layout.js */
@@ -441,6 +450,7 @@ export type SSRNodeLoader = () => Promise<SSRNode>;
 
 export interface SSROptions {
 	app_template_contains_nonce: boolean;
+	async: boolean;
 	csp: ValidatedConfig['kit']['csp'];
 	csrf_check_origin: boolean;
 	csrf_trusted_origins: string[];
@@ -548,6 +558,11 @@ export type ValidatedKitConfig = Omit<RecursiveRequired<KitConfig>, 'adapter'> &
 	adapter?: Adapter;
 };
 
+export type BinaryFormMeta = {
+	remote_refreshes?: string[];
+	validate_only?: boolean;
+};
+
 export type RemoteInfo =
 	| {
 			type: 'query' | 'command';
@@ -561,14 +576,18 @@ export type RemoteInfo =
 			type: 'query_batch';
 			id: string;
 			name: string;
-			/** Direct access to the function without batching etc logic, for remote functions called from the client */
-			run: (args: any[]) => Promise<(arg: any, idx: number) => any>;
+			/** Direct access to the function, for remote functions called from the client */
+			run: (args: any[], options: SSROptions) => Promise<any[]>;
 	  }
 	| {
 			type: 'form';
 			id: string;
 			name: string;
-			fn: (data: FormData) => Promise<any>;
+			fn: (
+				body: Record<string, any>,
+				meta: BinaryFormMeta,
+				form_data: FormData | null
+			) => Promise<any>;
 	  }
 	| {
 			type: 'prerender';
@@ -578,6 +597,12 @@ export type RemoteInfo =
 			dynamic?: boolean;
 			inputs?: RemotePrerenderInputsGenerator;
 	  };
+
+export interface InternalRemoteFormIssue extends RemoteFormIssue {
+	name: string;
+	path: Array<string | number>;
+	server?: boolean;
+}
 
 export type RecordSpan = <T>(options: {
 	name: string;
@@ -596,8 +621,9 @@ export interface RequestState {
 	tracing: {
 		record_span: RecordSpan;
 	};
+	is_in_remote_function: boolean;
 	form_instances?: Map<any, any>;
-	remote_data?: Record<string, MaybePromise<any>>;
+	remote_data?: Map<RemoteInfo, Record<string, MaybePromise<any>>>;
 	refreshes?: Record<string, Promise<any>>;
 	is_endpoint_request?: boolean;
 }

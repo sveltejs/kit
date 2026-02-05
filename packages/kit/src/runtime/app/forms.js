@@ -136,7 +136,7 @@ export function enhance(form_element, submit = () => {}) {
 			? /** @type {HTMLButtonElement | HTMLInputElement} */ (event.submitter).formEnctype
 			: clone(form_element).enctype;
 
-		const form_data = new FormData(form_element);
+		const form_data = new FormData(form_element, event.submitter);
 
 		if (DEV && enctype !== 'multipart/form-data') {
 			for (const value of form_data.values()) {
@@ -146,11 +146,6 @@ export function enhance(form_element, submit = () => {}) {
 					);
 				}
 			}
-		}
-
-		const submitter_name = event.submitter?.getAttribute('name');
-		if (submitter_name) {
-			form_data.append(submitter_name, event.submitter?.getAttribute('value') ?? '');
 		}
 
 		const controller = new AbortController();

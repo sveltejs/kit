@@ -10,6 +10,7 @@ import { build, watch } from '../src/index.js';
 import { load_config } from '../src/config.js';
 import { rimraf, walk } from '../src/filesystem.js';
 import { _create_validator } from '../src/validate.js';
+import { resolve_aliases } from '../src/utils.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = join(__filename, '..');
@@ -134,6 +135,10 @@ test('create package with typescript using nodenext', async () => {
 	await test_make_package('typescript-nodenext');
 });
 
+test('create package with .ts extension rewrites, including for aliases', async () => {
+	await test_make_package('typescript-ts-extension-rewrites');
+});
+
 // only run this test in newer Node versions
 // TODO: remove after dropping support for Node < 22.18
 const [major, minor] = process.versions.node.split('.', 2).map((str) => +str);
@@ -155,10 +160,6 @@ test('create package with emitTypes settings disabled', async () => {
 
 test('create package with SvelteComponentTyped for backwards compatibility', async () => {
 	await test_make_package('svelte-3-types');
-});
-
-test('create package and resolves $lib alias', async () => {
-	await test_make_package('resolve-alias');
 });
 
 test('SvelteKit interop', async () => {
@@ -350,4 +351,104 @@ test('create package with preserved output', async () => {
 	fs.mkdirSync(join(output, 'assets'), { recursive: true });
 	fs.writeFileSync(join(output, 'assets', 'theme.css'), ':root { color: red }');
 	await test_make_package('preserve-output', { preserve_output: true });
+});
+
+test('resolves aliases correctly', () => {
+	const input = '/project/src/lib';
+	const file = 'components/Button.svelte';
+	const alias = { $lib: '/project/src/lib/components', '@/': '/project/src/' };
+
+	// Test all static import variants
+	const source = `
+// Static imports
+import Button from '$lib/Button.svelte';
+import { named } from '$lib/utils.js';
+import { named1, named2 } from '$lib/utils.js';
+import defaultExport, { named } from '$lib/utils.js';
+import * as All from '$lib/utils.js';
+import { foo } from '@/foo.js';
+
+// Import types
+import type { TypedInterface } from '$lib/types.js';
+import type DefaultType from '$lib/types.js';
+import type DefaultType, { TypedInterface } from '$lib/types.js';
+import { type TypedInterface } from '$lib/types.js';
+import defaultExport, { type TypedInterface } from '$lib/types.js';
+
+// Export re-exports
+export { reexported } from '$lib/utils.js';
+export { reexported1, reexported2 } from '$lib/utils.js';
+export * from '$lib/utils.js';
+export * as NamedExport from '$lib/utils.js';
+export type { TypeExport } from '$lib/types.js';
+
+// Side-effect imports
+import '$lib/styles.css';
+import '$lib/polyfill.js';
+
+// Dynamic imports
+const dynamicImport = import('$lib/dynamic.js');
+const dynamicWithAwait = await import('$lib/async.js');
+const dynamicInFunction = () => import('$lib/function.js');
+
+// False positives that should NOT be replaced
+const notAnImport = "This string contains $lib/fake.js but is not an import";
+const inString = 'The path $lib/fake.js should not be changed';
+const invalidSyntax = 'import $lib/invalid without quotes';
+const partialMatch = '$library/notmatching.js';
+import * as AllWithDefault, { named } from '$lib/utils.js';
+
+// Edge cases with whitespace and formatting
+import  Button2  from  '$lib/Button2.svelte';
+import{named3}from'$lib/utils2.js';
+import(  '$lib/dynamic2.js'  );
+`;
+
+	const expectedResolved = `
+// Static imports
+import Button from './Button.svelte';
+import { named } from './utils.js';
+import { named1, named2 } from './utils.js';
+import defaultExport, { named } from './utils.js';
+import * as All from './utils.js';
+import { foo } from '../../foo.js';
+
+// Import types
+import type { TypedInterface } from './types.js';
+import type DefaultType from './types.js';
+import type DefaultType, { TypedInterface } from './types.js';
+import { type TypedInterface } from './types.js';
+import defaultExport, { type TypedInterface } from './types.js';
+
+// Export re-exports
+export { reexported } from './utils.js';
+export { reexported1, reexported2 } from './utils.js';
+export * from './utils.js';
+export * as NamedExport from './utils.js';
+export type { TypeExport } from './types.js';
+
+// Side-effect imports
+import './styles.css';
+import './polyfill.js';
+
+// Dynamic imports
+const dynamicImport = import('./dynamic.js');
+const dynamicWithAwait = await import('./async.js');
+const dynamicInFunction = () => import('./function.js');
+
+// False positives that should NOT be replaced
+const notAnImport = "This string contains $lib/fake.js but is not an import";
+const inString = 'The path $lib/fake.js should not be changed';
+const invalidSyntax = 'import $lib/invalid without quotes';
+const partialMatch = '$library/notmatching.js';
+import * as AllWithDefault, { named } from '$lib/utils.js';
+
+// Edge cases with whitespace and formatting
+import  Button2  from  './Button2.svelte';
+import{named3}from'./utils2.js';
+import(  './dynamic2.js'  );
+`;
+
+	const resolved = resolve_aliases(input, file, source, alias);
+	expect(resolved.trim()).toBe(expectedResolved.trim());
 });

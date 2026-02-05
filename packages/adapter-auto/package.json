@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-auto",
-	"version": "6.1.0",
+	"version": "7.0.0",
 	"description": "Automatically chooses the SvelteKit adapter for your current environment, if possible.",
 	"keywords": [
 		"adapter",
@@ -17,7 +17,7 @@
 		"directory": "packages/adapter-auto"
 	},
 	"license": "MIT",
-	"homepage": "https://svelte.dev",
+	"homepage": "https://svelte.dev/docs/kit/adapter-auto",
 	"type": "module",
 	"exports": {
 		".": {

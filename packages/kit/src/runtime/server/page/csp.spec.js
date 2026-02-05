@@ -408,4 +408,176 @@ describe.skipIf(process.env.NODE_ENV !== 'production')('CSPs in prod', () => {
 			);
 		}, '`content-security-policy-report-only` must be specified with either the `report-to` or `report-uri` directives, or both');
 	});
+
+	test('add_script_hashes adds hashes to script-src', () => {
+		const csp = new Csp(
+			{
+				mode: 'hash',
+				directives: {
+					'script-src': ['self']
+				},
+				reportOnly: {
+					'script-src': ['self'],
+					'report-uri': ['/']
+				}
+			},
+			{
+				prerender: true
+			}
+		);
+
+		csp.add_script_hashes(['sha256-abc123', 'sha256-def456']);
+
+		const csp_header = csp.csp_provider.get_header();
+		assert.ok(csp_header.includes("'sha256-abc123'"));
+		assert.ok(csp_header.includes("'sha256-def456'"));
+
+		const report_only_header = csp.report_only_provider.get_header();
+		assert.ok(report_only_header.includes("'sha256-abc123'"));
+		assert.ok(report_only_header.includes("'sha256-def456'"));
+	});
+
+	test('add_script_hashes adds to script-src-elem when configured', () => {
+		const csp = new Csp(
+			{
+				mode: 'hash',
+				directives: {
+					'script-src-elem': ['self']
+				},
+				reportOnly: {}
+			},
+			{
+				prerender: true
+			}
+		);
+
+		csp.add_script_hashes(['sha256-test123']);
+
+		const csp_header = csp.csp_provider.get_header();
+		assert.ok(csp_header.includes("script-src-elem 'self' 'sha256-test123'"));
+	});
+
+	test('add_script_hashes deduplicates hashes', () => {
+		const csp = new Csp(
+			{
+				mode: 'hash',
+				directives: {
+					'script-src': ['self']
+				},
+				reportOnly: {}
+			},
+			{
+				prerender: true
+			}
+		);
+
+		csp.add_script_hashes(['sha256-abc123']);
+		csp.add_script_hashes(['sha256-abc123']);
+
+		const csp_header = csp.csp_provider.get_header();
+		const matches = csp_header.match(/'sha256-abc123'/g);
+		assert.equal(matches?.length, 1);
+	});
+
+	test('script_needs_hash returns true when using hashes', () => {
+		const csp = new Csp(
+			{
+				mode: 'hash',
+				directives: {
+					'script-src': ['self']
+				},
+				reportOnly: {}
+			},
+			{
+				prerender: true
+			}
+		);
+
+		assert.ok(csp.script_needs_hash);
+		assert.ok(!csp.script_needs_nonce);
+	});
+
+	test('script_needs_hash returns false when using nonces', () => {
+		const csp = new Csp(
+			{
+				mode: 'nonce',
+				directives: {
+					'script-src': ['self']
+				},
+				reportOnly: {}
+			},
+			{
+				prerender: false
+			}
+		);
+
+		assert.ok(!csp.script_needs_hash);
+		assert.ok(csp.script_needs_nonce);
+	});
+
+	test('adds nonce when both unsafe-inline and strict-dynamic are present', () => {
+		const csp = new Csp(
+			{
+				mode: 'nonce',
+				directives: {
+					'script-src': ['strict-dynamic', 'unsafe-inline']
+				},
+				reportOnly: {}
+			},
+			{ prerender: false }
+		);
+
+		csp.add_script('');
+
+		const header = csp.csp_provider.get_header();
+		// Should include nonce even though unsafe-inline is present,
+		// because strict-dynamic causes browsers to ignore unsafe-inline
+		assert.ok(header.includes("'nonce-"));
+		assert.ok(header.includes("'strict-dynamic'"));
+		assert.ok(header.includes("'unsafe-inline'"));
+	});
+
+	test('adds nonce with strict-dynamic in default-src', () => {
+		const csp = new Csp(
+			{
+				mode: 'nonce',
+				directives: {
+					'default-src': ['strict-dynamic', 'unsafe-inline']
+				},
+				reportOnly: {}
+			},
+			{ prerender: false }
+		);
+
+		csp.add_script('');
+
+		const header = csp.csp_provider.get_header();
+		// Should include nonce even though unsafe-inline is present
+		assert.ok(header.includes("'nonce-"));
+		assert.ok(header.includes("'strict-dynamic'"));
+		assert.ok(header.includes("'unsafe-inline'"));
+	});
+
+	test('strict-dynamic does not affect style-src', () => {
+		const csp = new Csp(
+			{
+				mode: 'nonce',
+				directives: {
+					// strict-dynamic only affects scripts, not styles per CSP spec
+					'style-src': ['strict-dynamic', 'unsafe-inline']
+				},
+				reportOnly: {}
+			},
+			{ prerender: false }
+		);
+
+		csp.add_style('');
+
+		const header = csp.csp_provider.get_header();
+		// Should NOT include nonce because strict-dynamic doesn't affect styles
+		// and unsafe-inline is present
+		assert.ok(!header.includes("'nonce-"));
+		assert.ok(header.includes("'strict-dynamic'"));
+		assert.ok(header.includes("'unsafe-inline'"));
+	});
 });

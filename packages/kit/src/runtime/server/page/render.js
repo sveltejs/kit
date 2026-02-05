@@ -2,7 +2,7 @@ import * as devalue from 'devalue';
 import { readable, writable } from 'svelte/store';
 import { DEV } from 'esm-env';
 import { text } from '@sveltejs/kit';
-import * as paths from '__sveltekit/paths';
+import * as paths from '$app/paths/internal/server';
 import { hash } from '../../../utils/hash.js';
 import { serialize_data } from './serialize_data.js';
 import { s } from '../../../utils/misc.js';
@@ -13,9 +13,10 @@ import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import { SCHEME } from '../../../utils/url.js';
 import { create_server_routing_response, generate_route_object } from './server_routing.js';
 import { add_resolution_suffix } from '../../pathname.js';
-import { with_request_store } from '@sveltejs/kit/internal/server';
+import { try_get_request_store, with_request_store } from '@sveltejs/kit/internal/server';
 import { text_encoder } from '../../utils.js';
 import { get_global_name } from '../utils.js';
+import { create_remote_key } from '../../shared.js';
 
 // TODO rename this function/module
 
@@ -79,17 +80,11 @@ export async function render_response({
 	 */
 	const link_headers = new Set();
 
-	/**
-	 * `<link>` tags that are added to prerendered responses
-	 * (note that stylesheets are always added, prerendered or not)
-	 * @type {Set<string>}
-	 */
-	const link_tags = new Set();
-
 	/** @type {Map<string, string>} */
 	// TODO if we add a client entry point one day, we will need to include inline_styles with the entry, otherwise stylesheets will be linked even if they are below inlineStyleThreshold
 	const inline_styles = new Map();
 
+	/** @type {ReturnType<typeof options.root.render>} */
 	let rendered;
 
 	const form_value =
@@ -108,6 +103,10 @@ export async function render_response({
 	 * We use a relative path when possible to support IPFS, the internet archive, etc.
 	 */
 	let base_expression = s(paths.base);
+
+	const csp = new Csp(options.csp, {
+		prerender: !!state.prerendering
+	});
 
 	// if appropriate, use relative paths for greater portability
 	if (paths.relative) {
@@ -168,10 +167,6 @@ export async function render_response({
 			state: {}
 		};
 
-		// use relative paths during rendering, so that the resulting HTML is as
-		// portable as possible, but reset afterwards
-		if (paths.relative) paths.override({ base, assets });
-
 		const render_opts = {
 			context: new Map([
 				[
@@ -180,43 +175,73 @@ export async function render_response({
 						page: props.page
 					}
 				]
-			])
+			]),
+			csp: csp.script_needs_nonce ? { nonce: csp.nonce } : { hash: csp.script_needs_hash }
 		};
 
-		if (DEV) {
-			const fetch = globalThis.fetch;
-			let warned = false;
-			globalThis.fetch = (info, init) => {
-				if (typeof info === 'string' && !SCHEME.test(info)) {
-					throw new Error(
-						`Cannot call \`fetch\` eagerly during server-side rendering with relative URL (${info}) — put your \`fetch\` calls inside \`onMount\` or a \`load\` function instead`
-					);
-				} else if (!warned) {
-					console.warn(
-						'Avoid calling `fetch` eagerly during server-side rendering — put your `fetch` calls inside `onMount` or a `load` function instead'
-					);
-					warned = true;
+		const fetch = globalThis.fetch;
+
+		try {
+			if (DEV) {
+				let warned = false;
+				globalThis.fetch = (info, init) => {
+					if (typeof info === 'string' && !SCHEME.test(info)) {
+						throw new Error(
+							`Cannot call \`fetch\` eagerly during server-side rendering with relative URL (${info}) — put your \`fetch\` calls inside \`onMount\` or a \`load\` function instead`
+						);
+					} else if (!warned && !try_get_request_store()?.state.is_in_remote_function) {
+						console.warn(
+							'Avoid calling `fetch` eagerly during server-side rendering — put your `fetch` calls inside `onMount` or a `load` function instead'
+						);
+						warned = true;
+					}
+
+					return fetch(info, init);
+				};
+			}
+
+			rendered = await with_request_store({ event, state: event_state }, async () => {
+				// use relative paths during rendering, so that the resulting HTML is as
+				// portable as possible, but reset afterwards
+				if (paths.relative) paths.override({ base, assets });
+
+				const maybe_promise = options.root.render(props, render_opts);
+				// We have to invoke .then eagerly here in order to kick off rendering: it's only starting on access,
+				// and `await maybe_promise` would eagerly access the .then property but call its function only after a tick, which is too late
+				// for the paths.reset() below and for any eager getRequestEvent() calls during rendering without AsyncLocalStorage available.
+				const rendered =
+					options.async && 'then' in maybe_promise
+						? /** @type {ReturnType<typeof options.root.render> & Promise<any>} */ (
+								maybe_promise
+							).then((r) => r)
+						: maybe_promise;
+
+				// TODO 3.0 remove options.async
+				if (options.async) {
+					// we reset this synchronously, rather than after async rendering is complete,
+					// to avoid cross-talk between requests. This is a breaking change for
+					// anyone who opts into async SSR, since `base` and `assets` will no
+					// longer be relative to the current pathname.
+					// TODO 3.0 remove `base` and `assets` in favour of `resolve(...)` and `asset(...)`
+					paths.reset();
 				}
 
-				return fetch(info, init);
-			};
+				const { head, html, css, hashes } = /** @type {ReturnType<typeof options.root.render>} */ (
+					options.async ? await rendered : rendered
+				);
 
-			try {
-				rendered = with_request_store({ event, state: event_state }, () =>
-					options.root.render(props, render_opts)
-				);
-			} finally {
+				if (hashes) {
+					csp.add_script_hashes(hashes.script);
+				}
+
+				return { head, html, css, hashes };
+			});
+		} finally {
+			if (DEV) {
 				globalThis.fetch = fetch;
-				paths.reset();
 			}
-		} else {
-			try {
-				rendered = with_request_store({ event, state: event_state }, () =>
-					options.root.render(props, render_opts)
-				);
-			} finally {
-				paths.reset();
-			}
+
+			paths.reset(); // just in case `options.root.render(...)` failed
 		}
 
 		for (const { node } of branch) {
@@ -225,19 +250,22 @@ export async function render_response({
 			for (const url of node.fonts) fonts.add(url);
 
 			if (node.inline_styles && !client.inline) {
-				Object.entries(await node.inline_styles()).forEach(([k, v]) => inline_styles.set(k, v));
+				Object.entries(await node.inline_styles()).forEach(([filename, css]) => {
+					if (typeof css === 'string') {
+						inline_styles.set(filename, css);
+						return;
+					}
+
+					inline_styles.set(filename, css(`${assets}/${paths.app_dir}/immutable/assets`, assets));
+				});
 			}
 		}
 	} else {
-		rendered = { head: '', html: '', css: { code: '', map: null } };
+		rendered = { head: '', html: '', css: { code: '', map: null }, hashes: { script: [] } };
 	}
 
-	let head = '';
+	const head = new Head(rendered.head, !!state.prerendering);
 	let body = rendered.html;
-
-	const csp = new Csp(options.csp, {
-		prerender: !!state.prerendering
-	});
 
 	/** @param {string} path */
 	const prefixed = (path) => {
@@ -256,12 +284,10 @@ export async function render_response({
 		: Array.from(inline_styles.values()).join('\n');
 
 	if (style) {
-		const attributes = DEV ? [' data-sveltekit'] : [];
-		if (csp.style_needs_nonce) attributes.push(` nonce="${csp.nonce}"`);
-
+		const attributes = DEV ? ['data-sveltekit'] : [];
+		if (csp.style_needs_nonce) attributes.push(`nonce="${csp.nonce}"`);
 		csp.add_style(style);
-
-		head += `\n\t<style${attributes.join('')}>${style}</style>`;
+		head.add_style(style, attributes);
 	}
 
 	for (const dep of stylesheets) {
@@ -279,7 +305,7 @@ export async function render_response({
 			}
 		}
 
-		head += `\n\t\t<link href="${path}" ${attributes.join(' ')}>`;
+		head.add_stylesheet(path, attributes);
 	}
 
 	for (const dep of fonts) {
@@ -288,7 +314,7 @@ export async function render_response({
 		if (resolve_opts.preload({ type: 'font', path })) {
 			const ext = dep.slice(dep.lastIndexOf('.') + 1);
 
-			link_tags.add(`<link rel="preload" as="font" type="font/${ext}" href="${path}" crossorigin>`);
+			head.add_link_tag(path, ['rel="preload"', 'as="font"', `type="font/${ext}"`, 'crossorigin']);
 
 			link_headers.add(
 				`<${encodeURI(path)}>; rel="preload"; as="font"; type="font/${ext}"; crossorigin; nopush`
@@ -324,17 +350,11 @@ export async function render_response({
 				link_headers.add(`<${encodeURI(path)}>; rel="modulepreload"; nopush`);
 
 				if (options.preload_strategy !== 'modulepreload') {
-					head += `\n\t\t<link rel="preload" as="script" crossorigin="anonymous" href="${path}">`;
+					head.add_script_preload(path);
 				} else {
-					link_tags.add(`<link rel="modulepreload" href="${path}">`);
+					head.add_link_tag(path, ['rel="modulepreload"']);
 				}
 			}
-		}
-
-		if (state.prerendering && link_tags.size > 0) {
-			head += Array.from(link_tags)
-				.map((tag) => `\n\t\t${tag}`)
-				.join('');
 		}
 
 		// prerender a `/path/to/page/__route.js` module
@@ -459,16 +479,22 @@ export async function render_response({
 			args.push(`{\n${indent}\t${hydrate.join(`,\n${indent}\t`)}\n${indent}}`);
 		}
 
-		const { remote_data } = event_state;
+		const { remote_data: remote_cache } = event_state;
 
 		let serialized_remote_data = '';
 
-		if (remote_data) {
+		if (remote_cache) {
 			/** @type {Record<string, any>} */
 			const remote = {};
 
-			for (const key in remote_data) {
-				remote[key] = await remote_data[key];
+			for (const [info, cache] of remote_cache) {
+				// remote functions without an `id` aren't exported, and thus
+				// cannot be called from the client
+				if (!info.id) continue;
+
+				for (const key in cache) {
+					remote[create_remote_key(info.id, key)] = await cache[key];
+				}
 			}
 
 			// TODO this is repeated in a few places — dedupe it
@@ -548,19 +574,15 @@ export async function render_response({
 
 	if (state.prerendering) {
 		// TODO read headers set with setHeaders and convert into http-equiv where possible
-		const http_equiv = [];
-
 		const csp_headers = csp.csp_provider.get_meta();
 		if (csp_headers) {
-			http_equiv.push(csp_headers);
+			head.add_http_equiv(csp_headers);
 		}
 
 		if (state.prerendering.cache) {
-			http_equiv.push(`<meta http-equiv="cache-control" content="${state.prerendering.cache}">`);
-		}
-
-		if (http_equiv.length > 0) {
-			head = http_equiv.join('\n') + head;
+			head.add_http_equiv(
+				`<meta http-equiv="cache-control" content="${state.prerendering.cache}">`
+			);
 		}
 	} else {
 		const csp_header = csp.csp_provider.get_header();
@@ -577,11 +599,8 @@ export async function render_response({
 		}
 	}
 
-	// add the content after the script/css links so the link elements are parsed first
-	head += rendered.head;
-
 	const html = options.templates.app({
-		head,
+		head: head.build(),
 		body,
 		assets,
 		nonce: /** @type {string} */ (csp.nonce),
@@ -627,7 +646,7 @@ export async function render_response({
 					async start(controller) {
 						controller.enqueue(text_encoder.encode(transformed + '\n'));
 						for await (const chunk of chunks) {
-							controller.enqueue(text_encoder.encode(chunk));
+							if (chunk.length) controller.enqueue(text_encoder.encode(chunk));
 						}
 						controller.close();
 					},
@@ -638,4 +657,79 @@ export async function render_response({
 					headers
 				}
 			);
+}
+
+class Head {
+	#rendered;
+	#prerendering;
+	/** @type {string[]} */
+	#http_equiv = [];
+	/** @type {string[]} */
+	#link_tags = [];
+	/** @type {string[]} */
+	#script_preloads = [];
+	/** @type {string[]} */
+	#style_tags = [];
+	/** @type {string[]} */
+	#stylesheet_links = [];
+
+	/**
+	 * @param {string} rendered
+	 * @param {boolean} prerendering
+	 */
+	constructor(rendered, prerendering) {
+		this.#rendered = rendered;
+		this.#prerendering = prerendering;
+	}
+
+	build() {
+		return [
+			...this.#http_equiv,
+			...this.#link_tags,
+			...this.#script_preloads,
+			this.#rendered,
+			...this.#style_tags,
+			...this.#stylesheet_links
+		].join('\n\t\t');
+	}
+
+	/**
+	 * @param {string} style
+	 * @param {string[]} attributes
+	 */
+	add_style(style, attributes) {
+		this.#style_tags.push(
+			`<style${attributes.length ? ' ' + attributes.join(' ') : ''}>${style}</style>`
+		);
+	}
+
+	/**
+	 * @param {string} href
+	 * @param {string[]} attributes
+	 */
+	add_stylesheet(href, attributes) {
+		this.#stylesheet_links.push(`<link href="${href}" ${attributes.join(' ')}>`);
+	}
+
+	/** @param {string} href */
+	add_script_preload(href) {
+		this.#script_preloads.push(
+			`<link rel="preload" as="script" crossorigin="anonymous" href="${href}">`
+		);
+	}
+
+	/**
+	 * @param {string} href
+	 * @param {string[]} attributes
+	 */
+	add_link_tag(href, attributes) {
+		if (!this.#prerendering) return;
+		this.#link_tags.push(`<link href="${href}" ${attributes.join(' ')}>`);
+	}
+
+	/** @param {string} tag */
+	add_http_equiv(tag) {
+		if (!this.#prerendering) return;
+		this.#http_equiv.push(tag);
+	}
 }

@@ -1,5 +1,455 @@
 # @sveltejs/kit
 
+## 2.50.2
+### Patch Changes
+
+
+- fix: ensure inlined CSS follows `paths.assets` and `paths.relative` settings ([#15153](https://github.com/sveltejs/kit/pull/15153))
+
+
+- fix: emit script CSP nonces when `unsafe-inline` is present if `strict-dynamic` is also present ([#15221](https://github.com/sveltejs/kit/pull/15221))
+
+
+- fix: re-export browser/dev from esm-env ([#15206](https://github.com/sveltejs/kit/pull/15206))
+
+
+- fix: use validated args in batch resolver in both csr and ssr ([#15215](https://github.com/sveltejs/kit/pull/15215))
+
+
+- fix: ensure CSS inlining includes components that are conditionally rendered ([#15153](https://github.com/sveltejs/kit/pull/15153))
+
+
+- fix: only match rest params with matchers when the matcher matches ([#15216](https://github.com/sveltejs/kit/pull/15216))
+
+
+- fix: properly handle percent-encoded anchors (e.g. `<a href="#sparkles-%E2%9C%A8">`) during prerendering. ([#15231](https://github.com/sveltejs/kit/pull/15231))
+
+## 2.50.1
+### Patch Changes
+
+
+- fix: include `hooks.server` and `hooks.universal` as explicit Vite build inputs to ensure assets imported by hooks files are correctly discovered ([#15178](https://github.com/sveltejs/kit/pull/15178))
+
+
+- fix: improves fields type for generic components ([#14974](https://github.com/sveltejs/kit/pull/14974))
+
+
+- fix: preload links if href changes ([#15191](https://github.com/sveltejs/kit/pull/15191))
+
+## 2.50.0
+### Minor Changes
+
+
+- breaking: remove `buttonProps` from experimental remote form functions; use e.g. `<button {...myForm.fields.action.as('submit', 'register')}>Register</button>` button instead ([#15144](https://github.com/sveltejs/kit/pull/15144))
+
+## 2.49.5
+### Patch Changes
+
+
+- fix: avoid overriding Vite default `base` when running Vitest 4 ([#14866](https://github.com/sveltejs/kit/pull/14866))
+
+
+- fix: ensure url decoded pathnames are not mistaken as rerouted requests ([`d9ae9b0`](https://github.com/sveltejs/kit/commit/d9ae9b00b14f5574d109f3fd548f960594346226))
+
+
+- fix: add length checks to remote forms ([`8ed8155`](https://github.com/sveltejs/kit/commit/8ed8155215b9a74012fecffb942ad9a793b274e5))
+
+## 2.49.4
+### Patch Changes
+
+
+- fix: support instrumentation for `vite preview` ([#15105](https://github.com/sveltejs/kit/pull/15105))
+
+
+- fix: support for `URLSearchParams.has(name, value)` overload ([#15076](https://github.com/sveltejs/kit/pull/15076))
+
+
+- fix: put forking behind `experimental.forkPreloads` ([#15135](https://github.com/sveltejs/kit/pull/15135))
+
+## 2.49.3
+### Patch Changes
+
+
+- fix: avoid false-positive Vite config overridden warning when using Vitest 4 ([#15121](https://github.com/sveltejs/kit/pull/15121))
+
+
+- fix: add `typescript` as an optional peer dependency ([#15074](https://github.com/sveltejs/kit/pull/15074))
+
+
+- fix: use hasOwn check when deep-setting object properties ([#15127](https://github.com/sveltejs/kit/pull/15127))
+
+## 2.49.2
+### Patch Changes
+
+
+- fix: Stop re-loading already-loaded CSS during server-side route resolution ([#15014](https://github.com/sveltejs/kit/pull/15014))
+
+
+- fix: posixify the instrumentation file import on Windows ([#14993](https://github.com/sveltejs/kit/pull/14993))
+
+
+- fix: Correctly handle shared memory when decoding binary form data ([#15028](https://github.com/sveltejs/kit/pull/15028))
+
+## 2.49.1
+### Patch Changes
+
+
+- fix: suppress `state_referenced_locally` warnings in `.svelte-kit/generated/root.svelte` ([#15013](https://github.com/sveltejs/kit/pull/15013))
+
+
+- fix: TypeError when doing response.clone() in page load ([#15005](https://github.com/sveltejs/kit/pull/15005))
+
+## 2.49.0
+### Minor Changes
+
+
+- feat: stream file uploads inside `form` remote functions allowing form data to be accessed before large files finish uploading ([#14775](https://github.com/sveltejs/kit/pull/14775))
+
+## 2.48.8
+### Patch Changes
+
+
+- breaking: `invalid` now must be imported from `@sveltejs/kit` ([#14768](https://github.com/sveltejs/kit/pull/14768))
+
+
+- breaking: remove `submitter` option from experimental form `validate()` method, always provide default submitter ([#14762](https://github.com/sveltejs/kit/pull/14762))
+
+## 2.48.7
+### Patch Changes
+
+
+- fix: allow multiple `server-timing` headers ([#14700](https://github.com/sveltejs/kit/pull/14700))
+
+
+- fix: allow access to root-level issues in schema-less forms ([#14893](https://github.com/sveltejs/kit/pull/14893))
+
+
+- fix: allow hosting hash-based apps from non-index.html files ([#14825](https://github.com/sveltejs/kit/pull/14825))
+
+## 2.48.6
+### Patch Changes
+
+
+- fix: clear issues upon passing validation ([#14683](https://github.com/sveltejs/kit/pull/14683))
+
+
+- fix: don't use fork of unrelated route ([#14947](https://github.com/sveltejs/kit/pull/14947))
+
+
+- fix: prevent type errors when optional `@opentelemetry/api` dependency isn't installed ([#14949](https://github.com/sveltejs/kit/pull/14949))
+
+
+- fix: preserve `this` when invoking standard validator ([#14943](https://github.com/sveltejs/kit/pull/14943))
+
+
+- fix: treat client/universal hooks as entrypoints for illegal server import detection ([#14876](https://github.com/sveltejs/kit/pull/14876))
+
+
+- fix: correct query `.set` and `.refresh` behavior in commands ([#14877](https://github.com/sveltejs/kit/pull/14877))
+
+
+- fix: improved the accuracy of the types of the output of `field.as('...')` ([#14908](https://github.com/sveltejs/kit/pull/14908))
+
+## 2.48.5
+### Patch Changes
+
+
+- fix: wait an extra microtask in dev before calling `$_init_$` ([#14799](https://github.com/sveltejs/kit/pull/14799))
+
+
+- fix: discard preload fork before creating a new one ([#14865](https://github.com/sveltejs/kit/pull/14865))
+
+
+- fix: delete `RemoteFormAllIssue`, add `path` to `RemoteFormIssue` ([#14864](https://github.com/sveltejs/kit/pull/14864))
+
+## 2.48.4
+### Patch Changes
+
+
+- fix: adjust query's promise implementation to properly allow chaining ([#14859](https://github.com/sveltejs/kit/pull/14859))
+
+
+- fix: make prerender cache work, including in development ([#14860](https://github.com/sveltejs/kit/pull/14860))
+
+## 2.48.3
+### Patch Changes
+
+
+- fix: include hash when using `resolve` with hash routing enabled ([#14786](https://github.com/sveltejs/kit/pull/14786))
+
+
+- fix: `afterNavigate` callback not running after hydration when experimental async is enabled ([#14644](https://github.com/sveltejs/kit/pull/14644))
+  fix: Snapshot `restore` method not called after reload when experimental async is enabled
+
+- fix: expose `issue.path` in `.allIssues()` ([#14784](https://github.com/sveltejs/kit/pull/14784))
+
+## 2.48.2
+### Patch Changes
+
+
+- fix: update DOM before running navigate callbacks ([#14829](https://github.com/sveltejs/kit/pull/14829))
+
+## 2.48.1
+### Patch Changes
+
+
+- fix: wait for commit promise instead of `settled` ([#14818](https://github.com/sveltejs/kit/pull/14818))
+
+## 2.48.0
+### Minor Changes
+
+
+- feat: use experimental `fork` API when available ([#14793](https://github.com/sveltejs/kit/pull/14793))
+
+
+### Patch Changes
+
+
+- fix: await for `settled` instead of `tick` in navigate ([#14800](https://github.com/sveltejs/kit/pull/14800))
+
+## 2.47.3
+### Patch Changes
+
+
+- fix: avoid hanging when `error()` is used while streaming promises from a server `load` function ([#14722](https://github.com/sveltejs/kit/pull/14722))
+
+
+- chore: treeshake load function code if we know it's unused ([#14764](https://github.com/sveltejs/kit/pull/14764))
+
+
+- fix: `RecursiveFormFields` type for recursive or unknown schemas ([#14734](https://github.com/sveltejs/kit/pull/14734))
+
+
+- fix: rework internal representation of form value to be `$state` ([#14771](https://github.com/sveltejs/kit/pull/14771))
+
+## 2.47.2
+### Patch Changes
+
+
+- fix: streamed promise not resolving when another load function returns a fast resolving promise ([#14753](https://github.com/sveltejs/kit/pull/14753))
+
+
+- chore: allow to run preflight validation only ([#14744](https://github.com/sveltejs/kit/pull/14744))
+
+
+- fix: update overload to set `invalid` type to schema input ([#14748](https://github.com/sveltejs/kit/pull/14748))
+
+## 2.47.1
+### Patch Changes
+
+
+- fix: allow `read` to be used at the top-level of remote function files ([#14672](https://github.com/sveltejs/kit/pull/14672))
+
+
+- fix: more robust remote files generation ([#14682](https://github.com/sveltejs/kit/pull/14682))
+
+## 2.47.0
+### Minor Changes
+
+
+- feat: add [`signal`](https://developer.mozilla.org/en-US/docs/Web/API/Request/signal) property to request ([#14715](https://github.com/sveltejs/kit/pull/14715))
+
+
+### Patch Changes
+
+
+- fix: resolve remote module syntax errors with trailing expressions ([#14728](https://github.com/sveltejs/kit/pull/14728))
+
+## 2.46.5
+### Patch Changes
+
+
+- fix: ensure `form` remote functions' `fields.set` triggers reactivity ([#14661](https://github.com/sveltejs/kit/pull/14661))
+
+## 2.46.4
+### Patch Changes
+
+
+- fix: prevent access of Svelte 5-only `untrack` function ([#14658](https://github.com/sveltejs/kit/pull/14658))
+
+## 2.46.3
+### Patch Changes
+
+
+- fix: merge `field.set(...)` calls ([#14651](https://github.com/sveltejs/kit/pull/14651))
+
+
+- fix: don't automatically reset form after an enhanced submission ([#14626](https://github.com/sveltejs/kit/pull/14626))
+
+
+- fix: normalize path strings when updating field values ([#14649](https://github.com/sveltejs/kit/pull/14649))
+
+## 2.46.2
+### Patch Changes
+
+
+- fix: prevent code execution order issues around SvelteKit's `env` modules ([#14637](https://github.com/sveltejs/kit/pull/14637))
+
+## 2.46.1
+### Patch Changes
+
+
+- fix: use `$derived` for form fields ([#14621](https://github.com/sveltejs/kit/pull/14621))
+
+
+- docs: remove `@example` blocks to allow docs to deploy ([#14636](https://github.com/sveltejs/kit/pull/14636))
+
+
+- fix: require a value with `submit` and `hidden` fields ([#14635](https://github.com/sveltejs/kit/pull/14635))
+
+
+- fix: delete hydration cache on effect teardown ([#14611](https://github.com/sveltejs/kit/pull/14611))
+
+## 2.46.0
+### Minor Changes
+
+
+- feat: imperative form validation ([#14624](https://github.com/sveltejs/kit/pull/14624))
+
+
+### Patch Changes
+
+
+- fix: wait a tick before collecting form data for validation ([#14631](https://github.com/sveltejs/kit/pull/14631))
+
+
+- fix: prevent code execution order issues around SvelteKit's `env` modules ([#14632](https://github.com/sveltejs/kit/pull/14632))
+
+## 2.45.0
+### Minor Changes
+
+
+- feat: `form.for(id)` now implicitly sets id on form object ([#14623](https://github.com/sveltejs/kit/pull/14623))
+
+
+### Patch Changes
+
+
+- fix: allow `fetch` in remote function without emitting a warning ([#14610](https://github.com/sveltejs/kit/pull/14610))
+
+## 2.44.0
+### Minor Changes
+
+
+- feat: expose `event.route` and `event.url` to remote functions ([#14606](https://github.com/sveltejs/kit/pull/14606))
+
+
+- breaking: update experimental `form` API ([#14481](https://github.com/sveltejs/kit/pull/14481))
+
+
+### Patch Changes
+
+
+- fix: don't crawl error responses during prerendering ([#14596](https://github.com/sveltejs/kit/pull/14596))
+
+## 2.43.8
+### Patch Changes
+
+
+- fix: HMR for `query` ([#14587](https://github.com/sveltejs/kit/pull/14587))
+
+
+- fix: avoid client modules while traversing dependencies to prevent FOUC during dev ([#14577](https://github.com/sveltejs/kit/pull/14577))
+
+
+- fix: skip prebundling of .remote.js files ([#14583](https://github.com/sveltejs/kit/pull/14583))
+
+
+- fix: more robust remote file pattern matching ([#14578](https://github.com/sveltejs/kit/pull/14578))
+
+## 2.43.7
+### Patch Changes
+
+
+- fix: correctly type the `result` of `form` remote functions that do not accept data ([#14573](https://github.com/sveltejs/kit/pull/14573))
+
+
+- fix: force remote module chunks to isolate themselves ([#14571](https://github.com/sveltejs/kit/pull/14571))
+
+## 2.43.6
+### Patch Changes
+
+
+- fix: ensure cache key is consistent between client/server ([#14563](https://github.com/sveltejs/kit/pull/14563))
+
+
+- fix: keep resolve relative to initial base during prerender ([#14533](https://github.com/sveltejs/kit/pull/14533))
+
+
+- fix: avoid including `HEAD` twice when an unhandled HTTP method is used in a request to a `+server` handler that has both a `GET` handler and a `HEAD` handler ([#14564](https://github.com/sveltejs/kit/pull/14564))
+
+
+- fix: smoothscroll to deep link ([#14569](https://github.com/sveltejs/kit/pull/14569))
+
+## 2.43.5
+### Patch Changes
+
+
+- fix: fall back to non-relative resolution when calling `resolve(...)` outside an event context ([#14532](https://github.com/sveltejs/kit/pull/14532))
+
+## 2.43.4
+### Patch Changes
+
+
+- fix: Webcontainer AsyncLocalStorage workaround ([#14526](https://github.com/sveltejs/kit/pull/14526))
+
+## 2.43.3
+### Patch Changes
+
+
+- fix: Webcontainer AsyncLocalStorage workaround ([#14521](https://github.com/sveltejs/kit/pull/14521))
+
+
+- fix: include the value of form submitters on `form` remote functions ([#14475](https://github.com/sveltejs/kit/pull/14475))
+
+## 2.43.2
+### Patch Changes
+
+
+- fix: ensure rendering starts off synchronously ([#14517](https://github.com/sveltejs/kit/pull/14517))
+
+
+- fix: keep serialized remote data alive until navigation ([#14508](https://github.com/sveltejs/kit/pull/14508))
+
+## 2.43.1
+### Patch Changes
+
+
+- fix: consistently use bare import for internals ([#14506](https://github.com/sveltejs/kit/pull/14506))
+
+## 2.43.0
+### Minor Changes
+
+
+- feat: experimental async SSR ([#14447](https://github.com/sveltejs/kit/pull/14447))
+
+
+### Patch Changes
+
+
+- fix: ensure `__SVELTEKIT_PAYLOAD__.data` is accessed safely ([#14491](https://github.com/sveltejs/kit/pull/14491))
+
+
+- fix: create separate cache entries for non-exported remote function queries ([#14499](https://github.com/sveltejs/kit/pull/14499))
+
+## 2.42.2
+### Patch Changes
+
+
+- fix: prevent loops in postbuild analysis phase ([#14450](https://github.com/sveltejs/kit/pull/14450))
+
+
+- fix: handle nested object fields in form data ([#14469](https://github.com/sveltejs/kit/pull/14469))
+
+
+- fix: robustify form helper types ([#14463](https://github.com/sveltejs/kit/pull/14463))
+
+
+- fix: avoid running the `init` hook during builds if there's nothing to prerender ([#14464](https://github.com/sveltejs/kit/pull/14464))
+
+
+- fix: ensure SSR rendering gets request store context ([#14476](https://github.com/sveltejs/kit/pull/14476))
+
 ## 2.42.1
 ### Patch Changes
 
@@ -2151,7 +2601,7 @@
 
 ### Patch Changes
 
-- fix: add `submitter` type to `SumbitFunction` ([#9484](https://github.com/sveltejs/kit/pull/9484))
+- fix: add `submitter` type to `SubmitFunction` ([#9484](https://github.com/sveltejs/kit/pull/9484))
 
 ## 1.13.0
 
