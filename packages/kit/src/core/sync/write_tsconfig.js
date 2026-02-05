@@ -116,8 +116,8 @@ export function get_tsconfig(kit) {
 			// This is required for svelte-package to work as expected
 			// Can be overwritten
 			lib: ['esnext', 'DOM', 'DOM.Iterable'],
-			moduleResolution: 'bundler',
-			module: 'esnext',
+			moduleResolution: 'nodenext',
+			module: 'nodenext',
 			noEmit: true, // prevent tsconfig error "overwriting input files" - Vite handles the build and ignores this
 			target: 'esnext'
 		},

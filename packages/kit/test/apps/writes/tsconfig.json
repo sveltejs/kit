@@ -2,6 +2,8 @@
 	"compilerOptions": {
 		"allowJs": true,
 		"checkJs": true,
+		"module": "esnext",
+		"moduleResolution": "bundler",
 		"esModuleInterop": true,
 		"noEmit": true,
 		"resolveJsonModule": true

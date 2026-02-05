@@ -2,6 +2,8 @@
 	"compilerOptions": {
 		"allowJs": true,
 		"checkJs": true,
+		"module": "esnext",
+		"moduleResolution": "bundler",
 		"noEmit": true
 	},
 	"extends": "./.svelte-kit/tsconfig.json"
