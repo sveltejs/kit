@@ -1237,7 +1237,7 @@ declare module '@sveltejs/kit' {
 		delta?: undefined;
 
 		/**
-		 * Dispatched `Event` object when navigation occured by `popstate` or `link`.
+		 * Dispatched `Event` object when navigation occurred by `popstate` or `link`.
 		 */
 		event?: undefined;
 	}
