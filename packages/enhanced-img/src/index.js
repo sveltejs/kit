@@ -17,8 +17,12 @@ export function enhancedImages() {
  * @returns {string}
  */
 function fallback_format(meta) {
-	if (meta.format === 'gif') return 'gif';
-	if (meta.hasAlpha) return 'png';
+	if (meta.pages && meta.pages > 1) {
+		return meta.format === 'tiff' ? 'tiff' : 'gif';
+	}
+	if (meta.hasAlpha) {
+		return 'png';
+	}
 	return 'jpg';
 }
 
