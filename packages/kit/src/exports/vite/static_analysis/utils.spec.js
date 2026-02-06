@@ -153,3 +153,41 @@ test.each([
 	const result = should_warn_for_content(content, filename);
 	expect(result).toBe(should_warn);
 });
+
+// Recreate the markup children detection logic for testing (mirrors warning_preprocessor in vite/index.js)
+/**
+ * @param {string} content
+ * @returns {boolean}
+ */
+function has_children(content) {
+	return (
+		content.includes('<slot') ||
+		content.includes('{@render') ||
+		content.includes('{children}') ||
+		content.includes('children={')
+	);
+}
+
+test.each([
+	['layout with @render children()', '{@render children()}', true],
+	['layout with slot', '<slot />', true],
+	['layout with named slot', '<slot name="default" />', true],
+	[
+		'layout forwarding children as shorthand prop',
+		'<script>\n\tlet { children } = $props();\n</script>\n<Layout {children} />',
+		true
+	],
+	[
+		'layout forwarding children as explicit prop',
+		'<script>\n\tlet { children } = $props();\n</script>\n<Layout children={children} />',
+		true
+	],
+	[
+		'layout with no children handling',
+		'<script>\n\tlet { data } = $props();\n</script>\n<div>{data}</div>',
+		false
+	],
+	['empty layout', '', false]
+])('layout children detection: %s', (_description, content, expected) => {
+	expect(has_children(content)).toBe(expected);
+});

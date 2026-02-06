@@ -113,7 +113,12 @@ const warning_preprocessor = {
 
 		const basename = path.basename(filename);
 		const has_children =
-			content.includes('<slot') || (isSvelte5Plus() && content.includes('{@render'));
+			content.includes('<slot') ||
+			(isSvelte5Plus() &&
+				(content.includes('{@render') ||
+					// children may be forwarded to a child component as a prop
+					content.includes('{children}') ||
+					content.includes('children={')));
 
 		if (basename.startsWith('+layout.') && !has_children) {
 			const message =
