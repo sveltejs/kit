@@ -1132,6 +1132,15 @@ test.describe('Routing', () => {
 		expect(new URL(page.url()).pathname).toBe('/routing/trailing-slash/never');
 		await expect(page.locator('p')).toHaveText('/routing/trailing-slash/never');
 	});
+
+	test('trailing slash is preserved when error boundary truncates branch', async ({
+		page,
+		app
+	}) => {
+		await page.goto('/routing/trailing-slash');
+		await app.goto('/routing/trailing-slash/error/always-error/');
+		expect(new URL(page.url()).pathname).toBe('/routing/trailing-slash/error/always-error/');
+	});
 });
 
 test.describe('Shadow DOM', () => {
