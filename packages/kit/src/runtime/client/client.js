@@ -605,7 +605,8 @@ async function initialize(result, target, hydrate) {
 			to: {
 				params: current.params,
 				route: { id: current.route?.id ?? null },
-				url: new URL(location.href)
+				url: new URL(location.href),
+				scroll: scroll_positions[current_history_index] ?? scroll_state()
 			},
 			willUnload: false,
 			type: 'enter',
@@ -1463,12 +1464,13 @@ function get_page_key(url) {
  *   intent?: import('./types.js').NavigationIntent;
  *   delta?: number;
  *   event?: PopStateEvent | MouseEvent;
+ *   scroll?: { x: number, y: number };
  * }} opts
  */
-function _before_navigate({ url, type, intent, delta, event }) {
+function _before_navigate({ url, type, intent, delta, event, scroll }) {
 	let should_block = false;
 
-	const nav = create_navigation(current, intent, url, type);
+	const nav = create_navigation(current, intent, url, type, scroll ?? null);
 
 	if (delta !== undefined) {
 		nav.navigation.delta = delta;
@@ -1543,6 +1545,7 @@ async function navigate({
 					type,
 					delta: popped?.delta,
 					intent,
+					scroll: popped?.scroll,
 					// @ts-ignore
 					event
 				});
@@ -1799,6 +1802,11 @@ async function navigate({
 	}
 
 	nav.fulfil(undefined);
+
+	// Update to.scroll to the actual scroll position after navigation completed
+	if (nav.navigation.to) {
+		nav.navigation.to.scroll = scroll_state();
+	}
 
 	after_navigate_callbacks.forEach((fn) =>
 		fn(/** @type {import('@sveltejs/kit').AfterNavigate} */ (nav.navigation))
@@ -3086,8 +3094,9 @@ function reset_focus(url, scroll = true) {
  * @param {import('./types.js').NavigationIntent | undefined} intent
  * @param {URL | null} url
  * @param {T} type
+ * @param {{ x: number, y: number } | null} [target_scroll] The scroll position for the target (for popstate navigations)
  */
-function create_navigation(current, intent, url, type) {
+function create_navigation(current, intent, url, type, target_scroll = null) {
 	/** @type {(value: any) => void} */
 	let fulfil;
 
@@ -3107,12 +3116,14 @@ function create_navigation(current, intent, url, type) {
 		from: {
 			params: current.params,
 			route: { id: current.route?.id ?? null },
-			url: current.url
+			url: current.url,
+			scroll: scroll_state()
 		},
 		to: url && {
 			params: intent?.params ?? null,
 			route: { id: intent?.route?.id ?? null },
-			url
+			url,
+			scroll: target_scroll
 		},
 		willUnload: !intent,
 		type,

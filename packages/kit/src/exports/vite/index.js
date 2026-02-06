@@ -40,7 +40,7 @@ import {
 } from './module_ids.js';
 import { import_peer } from '../../utils/import.js';
 import { compact } from '../../utils/array.js';
-import { should_ignore } from './static_analysis/utils.js';
+import { should_ignore, has_children } from './static_analysis/utils.js';
 
 const cwd = posixify(process.cwd());
 
@@ -112,10 +112,8 @@ const warning_preprocessor = {
 		if (!filename) return;
 
 		const basename = path.basename(filename);
-		const has_children =
-			content.includes('<slot') || (isSvelte5Plus() && content.includes('{@render'));
 
-		if (basename.startsWith('+layout.') && !has_children) {
+		if (basename.startsWith('+layout.') && !has_children(content, isSvelte5Plus())) {
 			const message =
 				`\n${colors.bold().red(path.relative('.', filename))}\n` +
 				`\`<slot />\`${isSvelte5Plus() ? ' or `{@render ...}` tag' : ''}` +
