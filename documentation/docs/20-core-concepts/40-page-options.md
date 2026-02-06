@@ -117,7 +117,9 @@ export const prerender = true;
 
 ## ssr
 
-Normally, SvelteKit renders your page on the server first and sends that HTML to the client where it's [hydrated](glossary#Hydration). If you set `ssr` to `false`, it renders an empty 'shell' page instead. This is useful if your page is unable to be rendered on the server (because you use browser-only globals like `document` for example), but in most situations it's not recommended ([see appendix](glossary#SSR)).
+Normally, SvelteKit renders your page on the server before sending that HTML to the client where it's [hydrated](glossary#Hydration). This is also required for prerendering to save the full contents of a page.
+
+If you set `ssr` to `false`, it renders an empty 'shell' page instead. This is useful if your page is unable to be rendered on the server (because you use browser-only globals like `document` for example), but in most situations it's not recommended ([see appendix](glossary#SSR)).
 
 ```js
 /// file: +page.js
