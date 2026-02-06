@@ -529,9 +529,6 @@ importers:
       '@sveltejs/acorn-typescript':
         specifier: ^1.0.5
         version: 1.0.5(acorn@8.15.0)
-      '@types/cookie':
-        specifier: ^0.6.0
-        version: 0.6.0
       acorn:
         specifier: ^8.14.1
         version: 8.15.0
@@ -3206,9 +3203,6 @@ packages:
 
   '@types/connect@3.4.38':
     resolution: {integrity: sha512-K6uROf1LD88uDQqJCktA4yzL1YYAK6NgfsI0v/mTgyPKWsX1CnJ0XPSDhViejru1GcRkLWb8RlzFYJRqGUbaug==}
-
-  '@types/cookie@0.6.0':
-    resolution: {integrity: sha512-4Kh9a6B2bQciAhf7FSuMRRkUWecJgJu9nPnx3yzpsfXX/c50REIqpHY4C82bXP90qrLtXtkDxTZosYO3UpOwlA==}
 
   '@types/deep-eql@4.0.2':
     resolution: {integrity: sha512-c9h9dVVMigMPc4bwTvC5dxqtqJZwQPePsWjPlpSOnojbor6pGqdk541lfA7AqFQr5pB1BRdq0juY9db81BwyFw==}
@@ -7804,8 +7798,6 @@ snapshots:
   '@types/connect@3.4.38':
     dependencies:
       '@types/node': 18.19.119
-
-  '@types/cookie@0.6.0': {}
 
   '@types/deep-eql@4.0.2': {}
 
