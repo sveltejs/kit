@@ -1,6 +1,6 @@
 import { devices } from '@playwright/test';
 import process from 'node:process';
-import {number_from_env} from '../../../test-utils/index.js'
+import { number_from_env } from '../../../test-utils/index.js';
 
 /** @type {import('@playwright/test').PlaywrightTestConfig} */
 export const config = {

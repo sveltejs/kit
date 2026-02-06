@@ -5,7 +5,7 @@ import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 import { defineConfig, test as base, devices } from '@playwright/test';
-import {number_from_env} from '../../../test-utils/index.js'
+import { number_from_env } from '../../../test-utils/index.js';
 
 /** @type {import('./types')['test']} */
 export const test = base.extend({
