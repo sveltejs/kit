@@ -1,3 +1,4 @@
+import * as http from 'node:http';
 import { expect } from '@playwright/test';
 import { test } from '../../../utils.js';
 
@@ -23,6 +24,22 @@ test.describe('remote functions', () => {
 		await page.goto('/remote/query-redirect');
 		await page.click('a[href="/remote/query-redirect/from-page"]');
 		await expect(page.locator('#redirected')).toHaveText('redirected');
+	});
+
+	test('query redirect during SSR returns redirect response', async ({ baseURL }) => {
+		const { status, location } = await new Promise((fulfil, reject) => {
+			const request = http.get(`${baseURL}/remote/query-redirect/from-page`, (response) => {
+				fulfil({
+					status: response.statusCode,
+					location: response.headers.location
+				});
+				response.resume();
+			});
+			request.on('error', reject);
+		});
+
+		expect(status).toBe(307);
+		expect(location).toBe('/remote/query-redirect/redirected');
 	});
 
 	test('non-exported queries do not clobber each other', async ({ page }) => {
