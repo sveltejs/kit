@@ -42,7 +42,6 @@ Pre-rendered pages are not limited to static content. You can build personalized
 
 In SvelteKit, you can control prerendering with [the `prerender` page option](page-options#prerender) and [`prerender` config](configuration#prerender) in `svelte.config.js`.
 
-If you are prerendering all your pages, you are doing [Static Site Generation](#SSG).
 
 ## PWA
 
