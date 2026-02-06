@@ -127,7 +127,7 @@ export const ssr = false;
 // If both `ssr` and `csr` are `false`, nothing will be rendered!
 ```
 
-If you add `export const ssr = false` to your root `+layout.js`, your entire app will only be rendered on the client — which essentially means you turn your app into an [SPA](glossary#SPA).
+If you add `export const ssr = false` to your root `+layout.js`, your entire app will only be rendered on the client — which essentially means you turn your app into an [SPA](glossary#SPA). You should not do this if your goal is to build a (statically generated site)[glossary#SSG].
 
 SvelteKit's SSR mode can also used by `adapter-static` to [prerender static page content (SSG)](adapter-static#Usage).
 
