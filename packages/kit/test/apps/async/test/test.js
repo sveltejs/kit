@@ -201,22 +201,32 @@ test.describe('remote functions', () => {
 		);
 	});
 
-	test('form preflight works', async ({ page, javaScriptEnabled }) => {
+	test.only('form preflight works', async ({ page, javaScriptEnabled }) => {
 		if (!javaScriptEnabled) return;
 
 		await page.goto('/remote/form/preflight');
 
 		for (const enhanced of [true, false]) {
-			const input = page.locator(enhanced ? '[data-enhanced] input' : '[data-default] input');
+			const form = page.locator(enhanced ? '[data-enhanced]' : '[data-default]');
+			const input = form.locator('input');
 			const button = page.getByText(enhanced ? 'set enhanced number' : 'set number');
 
 			await input.fill('21');
 			await button.click();
-			await page.getByText('too big').waitFor();
+			await form.getByText('too big').waitFor();
 
 			await input.fill('9');
 			await button.click();
-			await page.getByText('too small').waitFor();
+			await form.getByText('too small').waitFor();
+			await expect(form.getByText('too big')).not.toBeVisible();
+
+			if (enhanced) {
+				// one more time preflight-issue only so that we can test it's cleared
+				// after it passes and before submission.
+				await input.fill('21');
+				await button.click();
+				await form.getByText('too big').waitFor();
+			}
 
 			await input.fill('15');
 			await button.click();

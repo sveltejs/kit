@@ -121,6 +121,11 @@ export function form(id) {
 				return;
 			}
 
+			// Preflight passed - clear stale client-side preflight issues
+			if (preflight_schema) {
+				raw_issues = raw_issues.filter((issue) => issue.server);
+			}
+
 			// TODO 3.0 remove this warning
 			if (DEV) {
 				const error = () => {
