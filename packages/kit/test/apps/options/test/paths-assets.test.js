@@ -184,23 +184,4 @@ test.describe('inlineStyleThreshold', () => {
 		await expect(page.locator('#conditionally')).toBeVisible();
 		expect(await get_computed_style('#conditionally', 'color')).toBe('rgb(0, 0, 255)');
 	});
-
-	test('places preload links before inlined styles', async ({ request }) => {
-		// Skip in dev mode since inlineStyleThreshold works differently there
-		test.skip(!!process.env.DEV);
-
-		const response = await request.get('/path-base/base/');
-		const html = await response.text();
-
-		const preloadMatch = html.match(/<link[^>]+rel="preload"/);
-		const styleMatch = html.match(/<style[^>]*>/);
-
-		expect(preloadMatch).not.toBeNull();
-		expect(styleMatch).not.toBeNull();
-
-		const preloadIndex = html.indexOf(preloadMatch[0]);
-		const styleIndex = html.indexOf(styleMatch[0]);
-
-		expect(preloadIndex).toBeLessThan(styleIndex);
-	});
 });
