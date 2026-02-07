@@ -1,8 +1,7 @@
 import { base, assets, relative } from '$app/paths/internal/server';
 import { text } from '@sveltejs/kit';
 import { s } from '../../../utils/misc.js';
-import { exec } from '../../../utils/routing.js';
-import { decode_params } from '../../../utils/url.js';
+import { find_route } from '../../../utils/routing.js';
 import { get_relative_path } from '../../utils.js';
 
 /**
@@ -69,26 +68,11 @@ export async function resolve_route(resolved_path, url, manifest) {
 		return text('Server-side route resolution disabled', { status: 400 });
 	}
 
-	/** @type {import('types').SSRClientRoute | null} */
-	let route = null;
-	/** @type {Record<string, string>} */
-	let params = {};
-
 	const matchers = await manifest._.matchers();
+	const result = find_route(resolved_path, manifest._.client.routes, matchers);
 
-	for (const candidate of manifest._.client.routes) {
-		const match = candidate.pattern.exec(resolved_path);
-		if (!match) continue;
-
-		const matched = exec(match, candidate.params, matchers);
-		if (matched) {
-			route = candidate;
-			params = decode_params(matched);
-			break;
-		}
-	}
-
-	return create_server_routing_response(route, params, url, manifest).response;
+	return create_server_routing_response(result?.route ?? null, result?.params ?? {}, url, manifest)
+		.response;
 }
 
 /**
