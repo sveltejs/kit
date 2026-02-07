@@ -142,12 +142,12 @@ export function write_client_manifest(kit, manifest_data, output, metadata) {
 		dedent`
 			${
 				client_hooks_file
-					? `import * as client_hooks from '${relative_path(output, client_hooks_file)}';`
+					? `import * as _client_hooks from '${relative_path(output, client_hooks_file)}';\nconst client_hooks = { ..._client_hooks };`
 					: ''
 			}
 			${
 				universal_hooks_file
-					? `import * as universal_hooks from '${relative_path(output, universal_hooks_file)}';`
+					? `import * as _universal_hooks from '${relative_path(output, universal_hooks_file)}';\nconst universal_hooks = { ..._universal_hooks };`
 					: ''
 			}
 
