@@ -362,10 +362,6 @@ function update_types(config, routes, route, to_delete = new Set()) {
 		exports.push('export type RequestEvent = Kit.RequestEvent<RouteParams, RouteId>;');
 	}
 
-	if (route.leaf || route.endpoint) {
-		//  TODO: update Pathname app type
-	}
-
 	const output = [imports.join('\n'), declarations.join('\n'), exports.join('\n')]
 		.filter(Boolean)
 		.join('\n\n');
