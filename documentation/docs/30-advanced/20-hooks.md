@@ -159,7 +159,7 @@ export const getTodo = query(v.string(), (id) => {
 });
 ```
 
-...but it is called with something that doesn't match the schema — such as a number (e.g `await getTodos(1)`) — then validation will fail, the server will respond with a [400 status code](https://http.dog/400), and the function will throw with the message 'Bad Request'.
+...but it is called with something that doesn't match the schema — such as a number (e.g. `await getTodos(1)`) — then validation will fail, the server will respond with a [400 status code](https://http.dog/400), and the function will throw with the message 'Bad Request'.
 
 To customise this message and add additional properties to the error object, implement `handleValidationError`:
 
