@@ -65,7 +65,6 @@ Static Site Generation (SSG) is a term that refers to a site where every page is
 
 In SvelteKit, you can do static site generation by using [`adapter-static`](adapter-static) or by configuring every page to be [prerendered](#Prerendering) using [the `prerender` page option](page-options#prerender) or [`prerender` config](configuration#prerender) in `svelte.config.js`.
 
-Note that you will probably want to keep the `ssr` page option enabled to ensure that [content is pre-rendered in the build phase](adapter-static#Usage).
 
 ## SSR
 
