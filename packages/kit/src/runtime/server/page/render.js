@@ -493,21 +493,29 @@ export async function render_response({
 				if (!info.id) continue;
 
 				for (const key in cache) {
-					// Don't block the response on pending remote data — if a query
-					// hasn't settled yet (e.g. caught by a svelte:boundary), skip it
-					// and let the client fetch it instead via the remote function stub.
-					const result = await Promise.race([
-						Promise.resolve(cache[key]).then(
-							(v) => /** @type {const} */ ({ settled: true, value: v }),
-							() => /** @type {const} */ ({ settled: false })
-						),
-						new Promise((resolve) => {
-							queueMicrotask(() => resolve(/** @type {const} */ ({ settled: false })));
-						})
-					]);
+					const remote_key = create_remote_key(info.id, key);
 
-					if (result.settled) {
-						remote[create_remote_key(info.id, key)] = result.value;
+					if (event_state.refreshes?.[remote_key] !== undefined) {
+						// This entry was refreshed/set by a command or form action.
+						// Always await it so the mutation result is serialized.
+						remote[remote_key] = await cache[key];
+					} else {
+						// Don't block the response on pending remote data - if a query
+						// hasn't settled yet, it wasn't awaited in the template (or is behind a pending boundary),
+						const result = await Promise.race([
+							Promise.resolve(cache[key]).then(
+								(v) => /** @type {const} */ ({ settled: true, value: v }),
+								(e) => /** @type {const} */ ({ settled: true, error: e })
+							),
+							new Promise((resolve) => {
+								queueMicrotask(() => resolve(/** @type {const} */ ({ settled: false })));
+							})
+						]);
+
+						if (result.settled) {
+							if ('error' in result) throw result.error;
+							remote[remote_key] = result.value;
+						}
 					}
 				}
 			}
