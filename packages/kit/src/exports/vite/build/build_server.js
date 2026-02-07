@@ -16,7 +16,16 @@ import { fix_css_urls } from '../../../utils/css.js';
  * @param {import('vite').Rollup.RollupOutput['output'] | null} client_chunks
  * @param {import('types').RecursiveRequired<import('types').ValidatedConfig['kit']['output']>} output_config
  */
-export function build_server_nodes(out, kit, manifest_data, server_manifest, client_manifest, assets_path, client_chunks, output_config) {
+export function build_server_nodes(
+	out,
+	kit,
+	manifest_data,
+	server_manifest,
+	client_manifest,
+	assets_path,
+	client_chunks,
+	output_config
+) {
 	mkdirp(`${out}/server/nodes`);
 	mkdirp(`${out}/server/stylesheets`);
 
