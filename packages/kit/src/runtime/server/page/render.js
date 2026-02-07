@@ -493,7 +493,22 @@ export async function render_response({
 				if (!info.id) continue;
 
 				for (const key in cache) {
-					remote[create_remote_key(info.id, key)] = await cache[key];
+					// Don't block the response on pending remote data — if a query
+					// hasn't settled yet (e.g. caught by a svelte:boundary), skip it
+					// and let the client fetch it instead via the remote function stub.
+					const result = await Promise.race([
+						Promise.resolve(cache[key]).then(
+							(v) => /** @type {const} */ ({ settled: true, value: v }),
+							() => /** @type {const} */ ({ settled: false })
+						),
+						new Promise((resolve) => {
+							queueMicrotask(() => resolve(/** @type {const} */ ({ settled: false })));
+						})
+					]);
+
+					if (result.settled) {
+						remote[create_remote_key(info.id, key)] = result.value;
+					}
 				}
 			}
 
