@@ -1,5 +1,6 @@
 import { parse, serialize } from 'cookie';
 import { DEV } from 'esm-env';
+import * as set_cookie_parser from 'set-cookie-parser';
 import { normalize_path, resolve } from '../../utils/url.js';
 import { add_data_suffix } from '../pathname.js';
 import { text_encoder } from '../utils.js';
@@ -163,6 +164,44 @@ export function get_cookies(request, url) {
 
 			validate_options(options);
 			set_internal(name, value, { ...defaults, ...options });
+		},
+
+		/**
+		 * @param {string} cookie
+		 */
+		setSerialized(cookie) {
+			if (cookie === '') {
+				throw new Error('Cannot pass empty string');
+			}
+
+			const parsed = set_cookie_parser.parseString(cookie);
+			const { name, value, path, sameSite, secure, httpOnly, ...opts } = parsed;
+
+			if (name === undefined || value === undefined || path === undefined) {
+				throw new Error('The name, value and path must be provided to create a cookie.');
+			}
+
+			/**
+			 * @type {true|false|'lax'|'strict'|'none'|undefined}
+			 */
+			const normalized_same_site = (() => {
+				if (sameSite === undefined || typeof sameSite === 'boolean') {
+					return sameSite;
+				}
+				const lower = sameSite.toLowerCase();
+				if (lower === 'lax' || lower === 'strict' || lower === 'none') {
+					return /** @type {'lax'|'strict'|'none'} */ (lower);
+				}
+				return undefined;
+			})();
+
+			this.set(name, value, {
+				...opts,
+				path,
+				sameSite: normalized_same_site,
+				secure: secure ?? false,
+				httpOnly: httpOnly ?? false
+			});
 		},
 
 		/**
