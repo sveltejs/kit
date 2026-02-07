@@ -501,7 +501,7 @@ export async function render_response({
 						remote[remote_key] = await cache[key];
 					} else {
 						// Don't block the response on pending remote data - if a query
-						// hasn't settled yet, it wasn't awaited in the template (or is behind a pending boundary),
+						// hasn't settled yet, it wasn't awaited in the template (or is behind a pending boundary).
 						const result = await Promise.race([
 							Promise.resolve(cache[key]).then(
 								(v) => /** @type {const} */ ({ settled: true, value: v }),
