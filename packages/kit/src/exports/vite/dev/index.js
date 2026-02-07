@@ -3,7 +3,7 @@ import path from 'node:path';
 import process from 'node:process';
 import { URL } from 'node:url';
 import { AsyncLocalStorage } from 'node:async_hooks';
-import colors from 'kleur';
+import { styleText } from 'node:util';
 import sirv from 'sirv';
 import { isCSSRequest, loadEnv, buildErrorMessage } from 'vite';
 import { createReadableStream, getRequest, setResponse } from '../../../exports/node/index.js';
@@ -70,7 +70,9 @@ export async function dev(vite, vite_config, svelte_config, get_remotes) {
 		try {
 			return await vite.ssrLoadModule(url, { fixStacktrace: true });
 		} catch (/** @type {any} */ err) {
-			const msg = buildErrorMessage(err, [colors.red(`Internal server error: ${err.message}`)]);
+			const msg = buildErrorMessage(err, [
+				styleText('red', `Internal server error: ${err.message}`)
+			]);
 
 			if (!vite.config.logger.hasErrorLogged(err)) {
 				vite.config.logger.error(msg, { error: err });
@@ -117,7 +119,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes) {
 		} catch (error) {
 			manifest_error = /** @type {Error} */ (error);
 
-			console.error(colors.bold().red(manifest_error.message));
+			console.error(styleText(['bold', 'red'], manifest_error.message));
 			vite.ws.send({
 				type: 'error',
 				err: {
@@ -538,7 +540,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes) {
 				});
 
 				if (manifest_error) {
-					console.error(colors.bold().red(manifest_error.message));
+					console.error(styleText(['bold', 'red'], manifest_error.message));
 
 					const error_page = load_error_page(svelte_config);
 

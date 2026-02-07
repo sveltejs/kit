@@ -1,6 +1,6 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import colors from 'kleur';
+import { styleText } from 'node:util';
 import chokidar from 'chokidar';
 import { preprocess } from 'svelte/compiler';
 import { copy, mkdirp, posixify, rimraf } from './filesystem.js';
@@ -68,9 +68,10 @@ async function do_build(options, analyse_code) {
 	copy(temp, output);
 
 	console.log(
-		colors
-			.bold()
-			.green(`${path.relative(options.cwd, input)} -> ${path.relative(options.cwd, output)}`)
+		styleText(
+			['bold', 'green'],
+			`${path.relative(options.cwd, input)} -> ${path.relative(options.cwd, output)}`
+		)
 	);
 }
 

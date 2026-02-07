@@ -1,5 +1,5 @@
 import process from 'node:process';
-import colors from 'kleur';
+import { styleText } from 'node:util';
 
 /** @typedef {import('./types.js').Validator} Validator */
 
@@ -329,7 +329,7 @@ function deprecate(
 ) {
 	return (input, keypath) => {
 		if (input !== undefined) {
-			console.warn(colors.bold().yellow(get_message(keypath)));
+			console.warn(styleText(['bold', 'yellow'], get_message(keypath)));
 		}
 
 		return fn(input, keypath);

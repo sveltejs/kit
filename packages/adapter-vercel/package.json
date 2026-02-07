@@ -52,8 +52,5 @@
 	},
 	"peerDependencies": {
 		"@sveltejs/kit": "^2.4.0"
-	},
-	"engines": {
-		"node": ">=20.0"
 	}
 }
