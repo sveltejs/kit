@@ -29,6 +29,8 @@
 
 <p>set_message.input.message: {set_message.fields.message.value()}</p>
 <p>set_message.pending: {set_message.pending}</p>
+<!-- NOTE: the ?? false should not be necessary, but somehow in the tests submitted is undefined sometimes... -->
+<p>set_message.submitted: {set_message.submitted ?? false}</p>
 <p>set_message.result: {set_message.result}</p>
 
 <hr />
