@@ -54,12 +54,13 @@ function serve(path, client = false) {
 				brotli: PRECOMPRESS,
 				setHeaders: client
 					? (res, pathname) => {
-							// only apply to build directory, not e.g. version.json
-							if (
-								pathname.startsWith(`/${manifest.appPath}/immutable/`) &&
-								res.statusCode === 200
-							) {
-								res.setHeader('cache-control', 'public,max-age=31536000,immutable');
+							if (res.statusCode === 200 && pathname.startsWith(`/${manifest.appPath}/`)) {
+								if (pathname.startsWith(`/${manifest.appPath}/immutable/`)) {
+									// only apply to build directory, not e.g. version.json
+									res.setHeader('cache-control', 'public,max-age=31536000,immutable');
+								} else {
+									res.setHeader('cache-control', 'public,max-age=0,must-revalidate');
+								}
 							}
 						}
 					: undefined
