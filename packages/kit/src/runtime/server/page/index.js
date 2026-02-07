@@ -357,6 +357,11 @@ export async function render_page(
 				ssr === false ? server_data_serializer(event, event_state, options) : data_serializer
 		});
 	} catch (e) {
+		const err = normalize_error(e);
+		if (err instanceof Redirect) {
+			return redirect_response(err.status, err.location);
+		}
+
 		// if we end up here, it means the data loaded successfully
 		// but the page failed to render, or that a prerendering error occurred
 		return await respond_with_error({
@@ -366,7 +371,7 @@ export async function render_page(
 			manifest,
 			state,
 			status: 500,
-			error: e,
+			error: err,
 			resolve_opts
 		});
 	}
