@@ -242,3 +242,5 @@ export interface RouteSegment {
 
 /** @default 'never' */
 export type TrailingSlash = 'never' | 'always' | 'ignore';
+
+export type IsAny<T> = 0 extends 1 & T ? true : false;

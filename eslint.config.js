@@ -25,6 +25,7 @@ export default [
 	{
 		ignores: [
 			'**/.svelte-kit',
+			'**/.netlify',
 			'**/.wrangler',
 			'**/test-results',
 			'**/build',
@@ -60,7 +61,8 @@ export default [
 			'packages/kit/test/apps/**/*',
 			'packages/kit/test/build-errors/**/*',
 			'packages/kit/test/prerendering/**/*',
-			'packages/test-redirect-importer/index.js'
+			'packages/test-redirect-importer/index.js',
+			'packages/adapter-netlify/test/preview.js'
 		]
 	}
 ];

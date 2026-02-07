@@ -132,7 +132,8 @@ const options = object(
 				instrumentation: object({
 					server: boolean(false)
 				}),
-				remoteFunctions: boolean(false)
+				remoteFunctions: boolean(false),
+				forkPreloads: boolean(false)
 			}),
 
 			files: object({
