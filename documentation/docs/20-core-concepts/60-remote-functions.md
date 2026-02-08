@@ -190,15 +190,14 @@ import * as v from 'valibot';
 import { query } from '$app/server';
 import * as db from '$lib/server/database';
 
-export const getWeather = query.batch(v.string(), async (cityIds) => {
+export const getWeather = query.batch(v.string(), async (cities) => {
 	const weather = await db.sql`
-		SELECT city_id, temperature, conditions
-		FROM weather
-		WHERE city_id = ANY(${cityIds})
+		SELECT * FROM weather
+		WHERE city = ANY(${cities})
 	`;
-	const lookup = new Map(weather.map((w) => [w.city_id, w]));
+	const lookup = new Map(weather.map(w => [w.city, w]));
 
-	return (cityId) => lookup.get(cityId);
+	return (city) => lookup.get(city);
 });
 ```
 
@@ -206,7 +205,7 @@ export const getWeather = query.batch(v.string(), async (cityIds) => {
 <!--- file: Weather.svelte --->
 <script>
 	import CityWeather from './CityWeather.svelte';
-	import { getWeather } from './weather.remote';
+	import { getWeather } from './weather.remote.js';
 
 	let { cities } = $props();
 	let limit = $state(5);
