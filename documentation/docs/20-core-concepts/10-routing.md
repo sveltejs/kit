@@ -39,16 +39,17 @@ A `+page.svelte` component defines a page of your app. By default, pages are ren
 
 > [!NOTE] SvelteKit uses `<a>` elements to navigate between routes, rather than a framework-specific `<Link>` component.
 
-Pages can receive data from `load` functions via the `data` prop.
+Pages can receive data from `load` functions via the `data` prop. They also receive `params`, which is typed based on the route parameters.
 
 ```svelte
 <!--- file: src/routes/blog/[slug]/+page.svelte --->
 <script>
 	/** @type {import('./$types').PageProps} */
-	let { data } = $props();
+	let { data, params } = $props();
 </script>
 
 <h1>{data.title}</h1>
+<p>slug: {params.slug}</p>
 <div>{@html data.content}</div>
 ```
 
@@ -393,13 +394,13 @@ export async function fallback({ request }) {
 
 Throughout the examples above, we've been importing types from a `$types.d.ts` file. This is a file SvelteKit creates for you in a hidden directory if you're using TypeScript (or JavaScript with JSDoc type annotations) to give you type safety when working with your root files.
 
-For example, annotating `let { data } = $props()` with `PageProps` (or `LayoutProps`, for a `+layout.svelte` file) tells TypeScript that the type of `data` is whatever was returned from `load`:
+For example, annotating `let { data, params } = $props()` with `PageProps` (or `LayoutProps`, for a `+layout.svelte` file) tells TypeScript that the type of `data` is whatever was returned from `load`, and that `params` matches the route parameters:
 
 ```svelte
 <!--- file: src/routes/blog/[slug]/+page.svelte --->
 <script>
 	/** @type {import('./$types').PageProps} */
-	let { data } = $props();
+	let { data, params } = $props();
 </script>
 ```
 
