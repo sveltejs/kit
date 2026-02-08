@@ -315,4 +315,14 @@ test.describe('remote function mutations', () => {
 
 		await expect(page.locator('h1')).toHaveText('hello from remote function!');
 	});
+
+	test('form.for() with enhance does not duplicate requests', async ({ page }) => {
+		await page.goto('/remote/form/for-duplicate');
+
+		for (let i = 1; i <= 3; i++) {
+			await page.click('#submit');
+			await page.waitForTimeout(100);
+			await expect(page.locator('#count')).toHaveText(String(i));
+		}
+	});
 });
