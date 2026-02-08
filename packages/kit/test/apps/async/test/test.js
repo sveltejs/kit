@@ -201,7 +201,7 @@ test.describe('remote functions', () => {
 		);
 	});
 
-	test.only('form preflight works', async ({ page, javaScriptEnabled }) => {
+	test('form preflight works', async ({ page, javaScriptEnabled }) => {
 		if (!javaScriptEnabled) return;
 
 		await page.goto('/remote/form/preflight');
