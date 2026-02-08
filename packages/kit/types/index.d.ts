@@ -3104,7 +3104,7 @@ declare module '$app/navigation' {
 }
 
 declare module '$app/paths' {
-	import type { RouteId, Pathname, ResolvedPathname, RouteParams, Asset } from '$app/types';
+	import type { RouteId, Pathname, ResolvedPathname, ResolveURLParams, RouteParams, Asset } from '$app/types';
 	/**
 	 * A string that matches [`config.kit.paths.base`](https://svelte.dev/docs/kit/configuration#paths).
 	 *
@@ -3131,9 +3131,9 @@ declare module '$app/paths' {
 	): ResolvedPathname;
 	type ResolveArgs<T extends RouteId | Pathname> = T extends RouteId
 		? RouteParams<T> extends Record<string, never>
-			? [route: T]
-			: [route: T, params: RouteParams<T>]
-		: [route: T];
+			? [route: T, options?: ResolveURLParams]
+			: [route: T, params: RouteParams<T>, options?: ResolveURLParams]
+		: [route: T, options?: ResolveURLParams];
 	/**
 	 * Resolve the URL of an asset in your `static` directory, by prefixing it with [`config.kit.paths.assets`](https://svelte.dev/docs/kit/configuration#paths) if configured, or otherwise by prefixing it with the base path.
 	 *
@@ -3152,7 +3152,9 @@ declare module '$app/paths' {
 	 * */
 	export function asset(file: Asset): string;
 	/**
-	 * Resolve a pathname by prefixing it with the base path, if any, or resolve a route ID by populating dynamic segments with parameters.
+	 * Resolve a pathname by prefixing it with the base path, if any,
+	 * or resolve a route ID by populating dynamic segments with route parameters.
+	 * Optionally accepts URL parameters and appends these to the resolved route.
 	 *
 	 * During server rendering, the base path is relative and depends on the page currently being rendered.
 	 *
@@ -3163,9 +3165,25 @@ declare module '$app/paths' {
 	 * // using a pathname
 	 * const resolved = resolve(`/blog/hello-world`);
 	 *
-	 * // using a route ID plus parameters
+	 * // using a route ID plus route parameters
 	 * const resolved = resolve('/blog/[slug]', {
 	 * 	slug: 'hello-world'
+	 * });
+	 *
+	 * // using a route ID plus URL parameters as Record
+	 * const resolved = resolve('/blog/search',
+	 * 	{ hash: 'results', searchParams: { author: 'John Doe', year: '2025' } }
+	 * });
+	 *
+	 * // using a route ID plus URL parameters as URLSearchParams
+	 * const resolved = resolve('/blog/search',
+	 * 	{ hash: 'results', searchParams: new URLSearchParams({ author: 'John Doe', year: '2025' }) }
+	 * });
+	 *
+	 * // using a route ID plus route parameters and URL parameters
+	 * const resolved = resolve('/blog/[slug]',
+	 * 	{ slug: 'hello-world' },
+	 * 	{ hash: 'introduction' }
 	 * });
 	 * ```
 	 * @since 2.26
@@ -3541,6 +3559,15 @@ declare module '$app/types' {
 	export type RouteParams<T extends RouteId> = T extends keyof ReturnType<AppTypes['RouteParams']>
 		? ReturnType<AppTypes['RouteParams']>[T]
 		: Record<string, never>;
+
+	/**
+	 * URL Parameters that can be optionally passed to the `resolve` function.
+	 * Used to specify a hash and/or search parameters to be included in the resolved URL.
+	 */
+	export type ResolveURLParams = {
+		hash?: string;
+		searchParams?: Record<string, string> | URLSearchParams;
+	};
 
 	/**
 	 * A utility for getting the parameters associated with a given layout, which is similar to `RouteParams` but also includes optional parameters for any child route.
