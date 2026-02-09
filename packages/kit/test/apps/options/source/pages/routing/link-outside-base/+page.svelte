@@ -1,6 +1,6 @@
 <script>
-	/** @type {{ data: { responseContentType: string } }} */
+	/** @type {{ data: { fetchUrl: string } }} */
 	const { data } = $props();
 </script>
 
-<p>{data.responseContentType}</p>
+<p data-testid="fetch-url">{data.fetchUrl}</p>

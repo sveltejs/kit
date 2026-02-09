@@ -237,10 +237,11 @@ test.describe('Routing', () => {
 		await expect(page.locator('h2')).toHaveText('target: 0');
 	});
 
-	test('fetch outside base path succeeds', async ({ request }) => {
-		const response = await request.get('/path-base/routing/link-outside-base/');
-		expect(response.status()).toBe(200);
-		expect(await response.text()).toContain('text/plain');
+	test('fetch outside base path succeeds', async ({ page, baseURL }) => {
+		await page.goto('/path-base/routing/link-outside-base/');
+		expect(await page.locator('p[data-testid="fetch-url"]').textContent()).toContain(
+			`${baseURL}/not-base-path/`
+		);
 	});
 });
 
