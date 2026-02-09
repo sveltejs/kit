@@ -191,12 +191,12 @@ import { query } from '$app/server';
 import * as db from '$lib/server/database';
 
 export const getWeather = query.batch(v.string(), async (cityIds) => {
-	const weatherData = await db.sql`
+	const weather = await db.sql`
 		SELECT city_id, temperature, conditions
 		FROM weather
 		WHERE city_id = ANY(${cityIds})
 	`;
-	const lookup = new Map(weatherData.map((w) => [w.city_id, w]));
+	const lookup = new Map(weather.map((w) => [w.city_id, w]));
 
 	return (cityId) => lookup.get(cityId);
 });
@@ -288,7 +288,7 @@ export const createPost = form(
 ```svelte
 <!--- file: src/routes/blog/new/+page.svelte --->
 <script>
-	import { createPost } from '../data.remote';
+	import { createPost } from '../data';
 </script>
 
 <h1>Create a new post</h1>
@@ -331,7 +331,7 @@ These attributes allow SvelteKit to set the correct input type, set a `name` tha
 Fields can be nested in objects and arrays, and their values can be strings, numbers, booleans or `File` objects. For example, if your schema looked like this...
 
 ```js
-/// file: data.remote.js
+/// file: data.js
 import * as v from 'valibot';
 import { form } from '$app/server';
 // ---cut---
@@ -352,7 +352,7 @@ export const createProfile = form(datingProfile, (data) => { /* ... */ });
 
 ```svelte
 <script>
-	import { createProfile } from './data.remote';
+	import { createProfile } from './data';
 
 	const { name, photo, info, attributes } = createProfile.fields;
 </script>
@@ -390,7 +390,7 @@ Because our form contains a `file` input, we've added an `enctype="multipart/for
 In the case of `radio` and `checkbox` inputs that all belong to the same field, the `value` must be specified as a second argument to `.as(...)`:
 
 ```js
-/// file: data.remote.js
+/// file: data.js
 import * as v from 'valibot';
 import { form } from '$app/server';
 // ---cut---
@@ -464,7 +464,7 @@ In addition to declarative schema validation, you can programmatically mark fiel
 - It accepts multiple arguments that can be strings (for issues relating to the form as a whole — these will only show up in `fields.allIssues()`) or standard-schema-compliant issues (for those relating to a specific field). Use the `issue` parameter for type-safe creation of such issues:
 
 ```js
-/// file: src/routes/shop/data.remote.js
+/// file: src/routes/shop/data.js
 import * as v from 'valibot';
 import { invalid } from '@sveltejs/kit';
 import { form } from '$app/server';
@@ -536,7 +536,7 @@ For client-side validation, you can specify a _preflight_ schema which will popu
 ```svelte
 <script>
 	import * as v from 'valibot';
-	import { createPost } from '../data.remote';
+	import { createPost } from '../data';
 
 	const schema = v.object({
 		title: v.pipe(v.string(), v.nonEmpty()),
@@ -551,7 +551,7 @@ For client-side validation, you can specify a _preflight_ schema which will popu
 </form>
 ```
 
-> [!NOTE] The preflight schema can be the same object as your server-side schema, if appropriate, though it won't be able to do server-side checks like 'this value already exists in the database'. Note that you cannot export a schema from a `.remote.ts` or `.remote.js` file, so the schema must either be exported from a shared module, or from a `<script module>` block in the component containing the `<form>`.
+> [!NOTE] The preflight schema can be the same object as your server-side schema, if appropriate, though it won't be able to do server-side checks like 'this value already exists in the database'. Note that you cannot export a schema from a `.ts` or `.js` file, so the schema must either be exported from a shared module, or from a `<script module>` block in the component containing the `<form>`.
 
 To get a list of _all_ issues, rather than just those belonging to a single field, you can use the `fields.allIssues()` method:
 
@@ -582,7 +582,7 @@ You can update a field (or a collection of fields) via the `set(...)` method:
 
 ```svelte
 <script>
-	import { createPost } from '../data.remote';
+	import { createPost } from '../data';
 
 	// this...
 	createPost.fields.set({
