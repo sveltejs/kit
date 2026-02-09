@@ -14,10 +14,10 @@ SvelteKit will load your `+page/layout(.server).js` files (and all files they im
 
 ```js
 +++import { building } from '$app/environment';+++
-import { setupMyDatabase } from '$lib/server/database';
+import { initialiseDatabase } from '$lib/server/database';
 
 +++if (!building) {+++
-	setupMyDatabase();
+	initialiseDatabase();
 +++}+++
 
 export function load() {

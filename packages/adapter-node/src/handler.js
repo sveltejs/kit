@@ -9,14 +9,16 @@ import { getRequest, setResponse, createReadableStream } from '@sveltejs/kit/nod
 import { Server } from 'SERVER';
 import { manifest, prerendered, base } from 'MANIFEST';
 import { env } from 'ENV';
-import { parse_as_bytes } from '../utils.js';
+import { parse_as_bytes, parse_origin } from '../utils.js';
 
 /* global ENV_PREFIX */
 /* global PRECOMPRESS */
 
 const server = new Server(manifest);
 
-const origin = env('ORIGIN', undefined);
+// parse_origin validates ORIGIN and throws descriptive errors for invalid values
+const origin = parse_origin(env('ORIGIN', undefined));
+
 const xff_depth = parseInt(env('XFF_DEPTH', '1'));
 const address_header = env('ADDRESS_HEADER', '').toLowerCase();
 const protocol_header = env('PROTOCOL_HEADER', '').toLowerCase();
