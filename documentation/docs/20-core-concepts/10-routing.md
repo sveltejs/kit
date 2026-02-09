@@ -48,8 +48,9 @@ Pages can receive data from `load` functions via the `data` prop. They also rece
 	let { data, params } = $props();
 </script>
 
+<span>blog/{params.slug}</span>
+
 <h1>{data.title}</h1>
-<p>slug: {params.slug}</p>
 <div>{@html data.content}</div>
 ```
 
