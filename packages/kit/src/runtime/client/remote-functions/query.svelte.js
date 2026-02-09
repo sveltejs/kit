@@ -194,9 +194,8 @@ export class Query {
 	#resolve_started() {
 		if (typeof this.#started === 'function') {
 			this.#started();
-		} else {
-			this.#started = true;
 		}
+		this.#started = true;
 	}
 
 	#run() {
@@ -236,7 +235,12 @@ export class Query {
 					return promise;
 				}
 			})
-			.then(() => this.#fn())
+			.then(() => {
+				// Skip fetching if we waited on override and a set() or refresh() happened in the meantime
+				const idx = this.#latest.indexOf(resolve);
+				if (idx === -1) return;
+				return this.#fn();
+			})
 			.then((value) => {
 				// Skip the response if resource was refreshed with a later promise while we were waiting for this one to resolve
 				const idx = this.#latest.indexOf(resolve);
@@ -344,6 +348,14 @@ export class Query {
 		this.#error = undefined;
 		this.#raw = value;
 		this.#promise = Promise.resolve();
+		// any in-flight-fetches are now outdated
+		for (const latest of this.#latest) {
+			latest();
+		}
+		this.#latest = [];
+		// resolve potential pending promise to prevent memory leaks (.then() in create_remote_function would never resolve).
+		// It's fine to resolve the promise because it's a noop due to if condition in #fn
+		this.#resolve_started();
 	}
 
 	/**

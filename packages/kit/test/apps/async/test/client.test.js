@@ -265,7 +265,7 @@ test.describe('remote function mutations', () => {
 		expect(request_count).toBe(1); // just the command
 
 		await page.getByText('show').click();
-		await expect(page.locator('p')).toHaveText('baz');
+		await expect(page.locator('p')).toHaveText('foo'); // set() from command mutation is obsolete as query was removed from cache
 		expect(request_count).toBe(2); // now the query, too
 	});
 
