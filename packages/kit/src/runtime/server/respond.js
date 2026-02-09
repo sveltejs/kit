@@ -425,6 +425,7 @@ export async function internal_respond(request, options, manifest, state) {
 						current: root_span
 					}
 				};
+				event_state.allows_commands = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method);
 				return await with_request_store({ event: traced_event, state: event_state }, () =>
 					options.hooks.handle({
 						event: traced_event,
