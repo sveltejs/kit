@@ -163,9 +163,7 @@ test.describe('remote function mutations', () => {
 	test('command is blocked inside load functions', async ({ page }) => {
 		const response = await page.goto('/remote/server-load-command');
 		expect(response?.status()).toBe(500);
-		await expect(page.locator('#message')).toContainText(
-			'Cannot call a command'
-		);
+		await expect(page.locator('#message')).toContainText('Cannot call a command');
 	});
 
 	test('command is blocked inside handle hook with GET', async ({ request }) => {
