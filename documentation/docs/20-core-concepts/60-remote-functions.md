@@ -191,12 +191,12 @@ import { query } from '$app/server';
 import * as db from '$lib/server/database';
 
 export const getWeather = query.batch(v.string(), async (cityIds) => {
-	const weather = await db.sql`
+	const weatherData = await db.sql`
 		SELECT city_id, temperature, conditions
 		FROM weather
 		WHERE city_id = ANY(${cityIds})
 	`;
-	const lookup = new Map(weather.map((w) => [w.city_id, w]));
+	const lookup = new Map(weatherData.map((w) => [w.city_id, w]));
 
 	return (cityId) => lookup.get(cityId);
 });
