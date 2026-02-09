@@ -236,6 +236,12 @@ test.describe('Routing', () => {
 		await page.click('[href="/path-base/routing/link-outside-app-target/target/"]');
 		await expect(page.locator('h2')).toHaveText('target: 0');
 	});
+
+	test('fetch outside base path succeeds', async ({ request }) => {
+		const response = await request.get('/path-base/routing/link-outside-base/');
+		expect(response.status()).toBe(200);
+		expect(await response.text()).toContain('text/plain');
+	});
 });
 
 test.describe('Async', () => {

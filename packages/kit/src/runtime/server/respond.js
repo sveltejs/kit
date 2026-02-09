@@ -285,10 +285,9 @@ export async function internal_respond(request, options, manifest, state) {
 	let route = null;
 
 	if (base && !state.prerendering?.fallback) {
-		if (!resolved_path.startsWith(base)) {
-			return text('Not found', { status: 404 });
+		if (resolved_path.startsWith(base)) {
+			resolved_path = resolved_path.slice(base.length) || '/';
 		}
-		resolved_path = resolved_path.slice(base.length) || '/';
 	}
 
 	if (is_route_resolution_request) {
