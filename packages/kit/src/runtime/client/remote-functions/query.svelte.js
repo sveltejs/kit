@@ -132,6 +132,8 @@ export class Query {
 	_key;
 
 	#init = false;
+	/** @type {undefined | true | (() => void)} */
+	#started;
 	/** @type {() => Promise<T>} */
 	#fn;
 	#loading = $state(true);
@@ -189,6 +191,14 @@ export class Query {
 		this.#promise = $state.raw(this.#run());
 	}
 
+	#resolve_started() {
+		if (typeof this.#started === 'function') {
+			this.#started();
+		} else {
+			this.#started = true;
+		}
+	}
+
 	#run() {
 		// Prevent state_unsafe_mutation error on first run when the resource is created within the template
 		if (this.#init) {
@@ -213,7 +223,20 @@ export class Query {
 			resolve
 		);
 
-		Promise.resolve(this.#fn())
+		Promise.resolve()
+			.then(() => {
+				// Avoid running the query if it is not used yet but withOverride was
+				// called on it already.
+				if (this.#overrides.length && !this.#started) {
+					/** @type {Promise<void>} */
+					const promise = new Promise((res) => {
+						resolve = res;
+					});
+					this.#started = resolve;
+					return promise;
+				}
+			})
+			.then(() => this.#fn())
 			.then((value) => {
 				// Skip the response if resource was refreshed with a later promise while we were waiting for this one to resolve
 				const idx = this.#latest.indexOf(resolve);
@@ -240,11 +263,21 @@ export class Query {
 		return promise;
 	}
 
+	// Hack because create_remote_function accesses .then right away,
+	// and we don't want to track that as "accessed now start" yet.
+	#first_then_invocation = false;
+
 	get then() {
+		if (this.#first_then_invocation) {
+			this.#resolve_started();
+		} else {
+			this.#first_then_invocation = true;
+		}
 		return this.#then;
 	}
 
 	get catch() {
+		this.#resolve_started();
 		this.#then;
 		return (/** @type {any} */ reject) => {
 			return this.#then(undefined, reject);
@@ -252,6 +285,7 @@ export class Query {
 	}
 
 	get finally() {
+		this.#resolve_started();
 		this.#then;
 		return (/** @type {any} */ fn) => {
 			return this.#then(
@@ -268,10 +302,12 @@ export class Query {
 	}
 
 	get current() {
+		this.#resolve_started();
 		return this.#current;
 	}
 
 	get error() {
+		this.#resolve_started();
 		return this.#error;
 	}
 
@@ -279,6 +315,7 @@ export class Query {
 	 * Returns true if the resource is loading or reloading.
 	 */
 	get loading() {
+		this.#resolve_started();
 		return this.#loading;
 	}
 
@@ -286,6 +323,7 @@ export class Query {
 	 * Returns true once the resource has been loaded for the first time.
 	 */
 	get ready() {
+		this.#resolve_started();
 		return this.#ready;
 	}
 

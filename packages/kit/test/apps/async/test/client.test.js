@@ -254,6 +254,21 @@ test.describe('remote function mutations', () => {
 		await expect(page.locator('#command-pending')).toHaveText('Command pending: 0');
 	});
 
+	test('optimistic overrides avoid unused query requests', async ({ page }) => {
+		await page.goto('/remote/optimistic-new-query');
+
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		await page.getByText('override').click();
+		await page.waitForTimeout(100); // allow any requests to happen
+		expect(request_count).toBe(1); // just the command
+
+		await page.getByText('show').click();
+		await expect(page.locator('p')).toHaveText('baz');
+		expect(request_count).toBe(2); // now the query, too
+	});
+
 	// TODO once we have async SSR adjust the test and move this into test.js
 	test('query.batch works', async ({ page }) => {
 		await page.goto('/remote/batch');
