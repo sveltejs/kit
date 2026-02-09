@@ -39,14 +39,16 @@ A `+page.svelte` component defines a page of your app. By default, pages are ren
 
 > [!NOTE] SvelteKit uses `<a>` elements to navigate between routes, rather than a framework-specific `<Link>` component.
 
-Pages can receive data from `load` functions via the `data` prop.
+Pages can receive data from `load` functions via the `data` prop. They also receive `params`, which is typed based on the route parameters.
 
 ```svelte
 <!--- file: src/routes/blog/[slug]/+page.svelte --->
 <script>
 	/** @type {import('./$types').PageProps} */
-	let { data } = $props();
+	let { data, params } = $props();
 </script>
+
+<span>blog/{params.slug}</span>
 
 <h1>{data.title}</h1>
 <div>{@html data.content}</div>
