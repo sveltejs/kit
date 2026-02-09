@@ -55,7 +55,10 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 					request.headers.delete('origin');
 				}
 
-				if (url.origin !== event.url.origin) {
+				if (
+					url.origin !== event.url.origin ||
+					(paths.base && !decodeURIComponent(url.pathname).startsWith(paths.base))
+				) {
 					// Allow cookie passthrough for "credentials: same-origin" and "credentials: include"
 					// if SvelteKit is serving my.domain.com:
 					// -        domain.com WILL NOT receive cookies
