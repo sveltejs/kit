@@ -57,7 +57,7 @@ As of 2.24, pages also receive a `params` prop which is typed based on the route
 ```svelte
 <!--- file: src/routes/blog/[slug]/+page.svelte --->
 <script>
-	import { getPost } from '$lib/server/db';
+	import { getPost } from '../blog.remote';
 
 	/** @type {import('./$types').PageProps} */
 	let { params } = $props();
