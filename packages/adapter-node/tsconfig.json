@@ -16,6 +16,7 @@
 	},
 	"include": [
 		"index.js",
+		"rolldown.config.js",
 		"src/**/*.js",
 		"tests/**/*.js",
 		"tests/**/*.ts",
