@@ -213,9 +213,7 @@ export async function render_response({
 					options.async && 'then' in maybe_promise
 						? /** @type {ReturnType<typeof options.root.render> & Promise<any>} */ (
 								maybe_promise
-							).then(
-								(r) => r
-							)
+							).then((r) => r)
 						: maybe_promise;
 
 				// TODO 3.0 remove options.async
