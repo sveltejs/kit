@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix: mark async SSR render promises as handled to avoid unhandled redirect rejections.
+fix: avoid triggering `handleError` when redirecting in a remote function
