@@ -214,10 +214,7 @@ export async function render_response({
 						? /** @type {ReturnType<typeof options.root.render> & Promise<any>} */ (
 								maybe_promise
 							).then(
-								(r) => r,
-								(e) => {
-									throw e;
-								}
+								(r) => r
 							)
 						: maybe_promise;
 

@@ -1,4 +1,4 @@
-import * as http from 'node:http';
+import http from 'node:http';
 import { expect } from '@playwright/test';
 import { test } from '../../../utils.js';
 
@@ -26,7 +26,9 @@ test.describe('remote functions', () => {
 		await expect(page.locator('#redirected')).toHaveText('redirected');
 	});
 
-	test('query redirect during SSR returns redirect response', async ({ baseURL }) => {
+	test("query that's awaited and throws a redirect doesn't trigger handleError hook", async ({
+		baseURL
+	}) => {
 		const { status, location } = await new Promise((fulfil, reject) => {
 			const request = http.get(`${baseURL}/remote/query-redirect/from-page`, (response) => {
 				fulfil({
