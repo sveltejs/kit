@@ -330,7 +330,7 @@ function get_netlify_config() {
 /**
  * Writes the Netlify Frameworks API config file
  * https://docs.netlify.com/build/frameworks/frameworks-api/
- * @param {{ builder: Builder2_4_0 }} params
+ * @param {{ builder: import('@sveltejs/kit').Builder }} params
  */
 function write_frameworks_config({ builder }) {
 	// https://docs.netlify.com/build/frameworks/frameworks-api/#headers
@@ -353,7 +353,7 @@ function write_frameworks_config({ builder }) {
 /**
  * Adds edge function configuration to the Frameworks API config file
  * https://docs.netlify.com/build/frameworks/frameworks-api/#edge-functions
- * @param {{ builder: Builder2_4_0, path: string, excluded_paths: string[] }} params
+ * @param {{ builder: import('@sveltejs/kit').Builder, path: string, excluded_paths: string[] }} params
  */
 function add_edge_function_config({ path, excluded_paths }) {
 	const config_path = '.netlify/v1/config.json';
