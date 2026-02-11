@@ -1786,6 +1786,9 @@ async function navigate({
 		document.activeElement !== document.body;
 
 	if (!keepfocus && !changed_focus) {
+    // We don't need to manually restore the scroll position if we're navigating
+    // to a fragment identifier. It is automatically done for us when we set the
+    // sequential navigation starting point with `location.replace`
 		reset_focus(url, !deep_linked);
 	}
 
