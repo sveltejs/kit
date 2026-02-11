@@ -3020,7 +3020,7 @@ function reset_focus(url, scroll = true) {
 				// This is also needed to restore the original hash if we're using hash routing
 				history.replaceState(history_state, '', url);
 
-				// Scroll management has already happened earlier so we need to restore
+				// If scroll management has already happened earlier, we need to restore
 				// the scroll position after setting the sequential focus navigation starting point
 				if (scroll) scrollTo(x, y);
 				resetting_focus = false;
