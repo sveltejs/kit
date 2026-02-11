@@ -39,19 +39,34 @@ A `+page.svelte` component defines a page of your app. By default, pages are ren
 
 > [!NOTE] SvelteKit uses `<a>` elements to navigate between routes, rather than a framework-specific `<Link>` component.
 
-Pages can receive data from `load` functions via the `data` prop. They also receive `params`, which is typed based on the route parameters.
+Pages can receive data from `load` functions via the `data` prop.
 
 ```svelte
 <!--- file: src/routes/blog/[slug]/+page.svelte --->
 <script>
 	/** @type {import('./$types').PageProps} */
-	let { data, params } = $props();
+	let { data } = $props();
 </script>
-
-<span>blog/{params.slug}</span>
 
 <h1>{data.title}</h1>
 <div>{@html data.content}</div>
+```
+
+As of 2.24, pages also receive a `params` prop which is typed based on the route parameters. This is particularly useful alongside [remote functions](remote-functions):
+
+```svelte
+<!--- file: src/routes/blog/[slug]/+page.svelte --->
+<script>
+	import { getPost } from '../blog.remote';
+
+	/** @type {import('./$types').PageProps} */
+	let { params } = $props();
+
+	const post = $derived(await getPost(params.slug));
+</script>
+
+<h1>{post.title}</h1>
+<div>{@html post.content}</div>
 ```
 
 > [!LEGACY]

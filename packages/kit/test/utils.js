@@ -5,6 +5,7 @@ import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 import { defineConfig, test as base, devices } from '@playwright/test';
+import { number_from_env } from '../../../test-utils/index.js';
 
 /** @type {import('./types')['test']} */
 export const test = base.extend({
@@ -280,7 +281,7 @@ export const config = defineConfig({
 		command: process.env.DEV ? 'pnpm dev --force' : 'pnpm build && pnpm preview',
 		port: process.env.DEV ? 5173 : 4173
 	},
-	retries: process.env.CI ? 2 : 0,
+	retries: process.env.CI ? 2 : number_from_env('KIT_E2E_RETRIES', 0),
 	projects: [
 		{
 			name: `${test_browser}-${process.env.DEV ? 'dev' : 'build'}`,
@@ -300,7 +301,7 @@ export const config = defineConfig({
 		screenshot: 'only-on-failure',
 		trace: 'retain-on-failure'
 	},
-	workers: process.env.CI ? 2 : undefined,
+	workers: process.env.CI ? 2 : number_from_env('KIT_E2E_WORKERS', undefined),
 	reporter: process.env.CI
 		? [
 				['dot'],
