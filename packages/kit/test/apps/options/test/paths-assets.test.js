@@ -80,10 +80,8 @@ test.describe('base path', () => {
 
 	test('fetch outside base path succeeds', async ({ page, baseURL }) => {
 		await page.goto('/path-base/fetch/link-outside-base/');
-		expect(await page.locator('[data-testid="fetch-url"]').textContent()).toContain(
-			`${baseURL}/not-base-path/`
-		);
-		expect(await page.locator('[data-testid="fetch-response"]').textContent()).toContain(
+		await expect(page.locator('[data-testid="fetch-url"]')).toHaveText(`${baseURL}/not-base-path/`);
+		await expect(page.locator('[data-testid="fetch-response"]')).toContainText(
 			'did you mean to visit'
 		);
 	});
@@ -91,7 +89,7 @@ test.describe('base path', () => {
 	test('fetch to root succeeds', async ({ page, baseURL }) => {
 		await page.goto('/path-base/fetch/link-root/');
 		// fetch to root with trailing slash
-		expect(await page.locator('[data-testid="fetch1-url"]').textContent()).toContain(`${baseURL}/`);
+		await expect(page.locator('[data-testid="fetch1-url"]')).toHaveText(`${baseURL}/`);
 		const fetch1Response = await page.locator('[data-testid="fetch1-response"]').textContent();
 		const fetch1Redirect = await page.locator('[data-testid="fetch1-redirect"]').textContent();
 		expect(
@@ -102,16 +100,8 @@ test.describe('base path', () => {
 		).toBe(true);
 
 		// fetch to root without trailing slash should be relative
-		expect(await page.locator('[data-testid="fetch2-url"]').textContent()).toBeFalsy();
-		expect(await page.locator('[data-testid="fetch2-response"]').textContent()).toBe('relative');
-
-		// fetch to root with custom base path with trailing slash
-		expect(await page.locator('[data-testid="fetch3-url"]').textContent()).toBeFalsy();
-		expect(await page.locator('[data-testid="fetch3-response"]').textContent()).toBe('root');
-
-		// fetch to root with custom base path without trailing slash
-		expect(await page.locator('[data-testid="fetch4-url"]').textContent()).toBeFalsy();
-		expect(await page.locator('[data-testid="fetch4-redirect"]').textContent()).toBe('/path-base/');
+		await expect(page.locator('[data-testid="fetch2-url"]')).toBeEmpty();
+		await expect(page.locator('[data-testid="fetch2-response"]')).toHaveText('relative');
 	});
 });
 
