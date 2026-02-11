@@ -277,6 +277,7 @@ test.describe('Async', () => {
 				`${baseURL}/`
 			);
 			expect(await page.locator('[data-testid="fetch1-response"]').textContent()).toContain('root');
+
 			// fetch to root without trailing slash should be relative
 			expect(await page.locator('[data-testid="fetch2-url"]').textContent()).toBeFalsy();
 			expect(await page.locator('[data-testid="fetch2-response"]').textContent()).toBe('relative');
