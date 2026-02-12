@@ -54,17 +54,26 @@ jobs:
           - node-version: 18
             os: ubuntu-latest
             e2e-browser: 'chromium'
+            vite: 'baseline'
           - node-version: 20
             os: ubuntu-latest
             e2e-browser: 'chromium'
+            vite: 'current'
           - node-version: 22
             os: ubuntu-latest
             e2e-browser: 'chromium'
+            vite: 'current'
           - node-version: 24
             os: ubuntu-latest
             e2e-browser: 'chromium'
+            vite: 'current'
+          - node-version: 24
+            os: ubuntu-latest
+            e2e-browser: 'chromium'
+            vite: 'beta'
     env:
       KIT_E2E_BROWSER: ${{matrix.e2e-browser}}
+      MATRIX_VITE: ${{matrix.vite}}
     steps:
       - run: git config --global core.autocrlf false
       - uses: actions/checkout@v6
@@ -74,6 +83,13 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: setup overrides for matrix.vite
+        if: matrix.vite != 'current'
+        run: | # copies catalogs.vite-xxx to overrides in pnpm-workspace.yaml so the subsequent `pnpm install` enforces them
+          yq -i '.overrides =.catalogs."vite-${{matrix.vite}}"' pnpm-workspace.yaml
+          pnpm install --no-frozen-lockfile
+          git checkout pnpm-lock.yaml pnpm-workspace.yaml # revert changes to pnpm files to avoid cache key changes
+          pnpm --dir packages/kit ls vite
       - run: pnpm playwright install ${{ matrix.e2e-browser }}
       - run: pnpm run sync-all
       - run: pnpm test:kit
@@ -87,10 +103,10 @@ jobs:
         run: find packages -type d -name test-results -not -empty | tar -czf test-results.tar.gz --files-from=-
       - name: Upload test results
         if: failure()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           retention-days: 3
-          name: test-failure-${{ github.run_id }}-${{ matrix.os }}-${{ matrix.node-version }}-${{ matrix.e2e-browser }}
+          name: test-failure-${{ github.run_id }}-${{ matrix.os }}-${{ matrix.node-version }}-${{ matrix.e2e-browser }}-vite-${{matrix.vite}}
           path: test-results.tar.gz
   test-kit-cross-browser:
     runs-on: ${{ matrix.os }}
@@ -99,27 +115,27 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - node-version: 18
+          - node-version: 24
             os: windows-latest
             e2e-browser: 'chromium'
             mode: 'dev'
-          - node-version: 18
+          - node-version: 24
             os: ubuntu-latest
             e2e-browser: 'firefox'
             mode: 'dev'
-          - node-version: 18
+          - node-version: 24
             os: macOS-latest
             e2e-browser: 'webkit'
             mode: 'dev'
-          - node-version: 18
+          - node-version: 24
             os: windows-latest
             e2e-browser: 'chromium'
             mode: 'build'
-          - node-version: 18
+          - node-version: 24
             os: ubuntu-latest
             e2e-browser: 'firefox'
             mode: 'build'
-          - node-version: 18
+          - node-version: 24
             os: macOS-latest
             e2e-browser: 'webkit'
             mode: 'build'
@@ -145,7 +161,7 @@ jobs:
         run: find packages -type d -name test-results -not -empty | tar -czf test-results-cross-platform-${{ matrix.mode }}.tar.gz --files-from=-
       - name: Upload test results
         if: failure()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           retention-days: 3
           name: test-failure-cross-platform-${{ matrix.mode }}-${{ github.run_id }}-${{ matrix.os }}-${{ matrix.node-version }}-${{ matrix.e2e-browser }}
@@ -179,7 +195,7 @@ jobs:
         run: find packages -type d -name test-results -not -empty | tar -czf test-results-server-side-route-resolution-${{ matrix.mode }}.tar.gz --files-from=-
       - name: Upload test results
         if: failure()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           retention-days: 3
           name: test-failure-server-side-route-resolution-${{ matrix.mode }}-${{ github.run_id }}
@@ -213,7 +229,7 @@ jobs:
         run: find packages -type d -name test-results -not -empty | tar -czf test-results-svelte-async-${{ matrix.mode }}.tar.gz --files-from=-
       - name: Upload test results
         if: failure()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           retention-days: 3
           name: test-failure-svelte-async-${{ matrix.mode }}-${{ github.run_id }}
@@ -230,7 +246,18 @@ jobs:
         with:
           node-version: ${{matrix.node-version}}
           cache: pnpm
+      # required for testing netlify edge functions
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: ^2.2.4
       - run: pnpm install --frozen-lockfile
+      - name: setup overrides for matrix.node
+        if: matrix.node-version == 18
+        run: | # copies catalogs.node-xx to overrides in pnpm-workspace.yaml so the subsequent `pnpm install` enforces them
+          yq -i '.overrides =.catalogs."node-18"' pnpm-workspace.yaml
+          pnpm install --no-frozen-lockfile
+          git checkout pnpm-lock.yaml pnpm-workspace.yaml # revert changes to pnpm files to avoid cache key changes
+          pnpm --dir packages/kit ls vite @sveltejs/vite-plugin-svelte
       - run: pnpm playwright install chromium
       - run: cd packages/kit && pnpm prepublishOnly
       - run: pnpm run test:others

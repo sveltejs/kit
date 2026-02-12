@@ -104,7 +104,8 @@ export default function (opts = {}) {
 					MANIFEST: './server/manifest.js',
 					SERVER: './server/index.js',
 					SHIMS: './shims.js',
-					ENV_PREFIX: JSON.stringify(envPrefix)
+					ENV_PREFIX: JSON.stringify(envPrefix),
+					PRECOMPRESS: JSON.stringify(precompress)
 				}
 			});
 

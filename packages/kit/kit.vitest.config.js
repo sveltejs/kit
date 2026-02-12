@@ -15,11 +15,8 @@ export default defineConfig({
 		alias: {
 			'__sveltekit/paths': fileURLToPath(new URL('./test/mocks/path.js', import.meta.url))
 		},
-		poolOptions: {
-			threads: {
-				singleThread: true
-			}
-		},
+		pool: 'threads',
+		maxWorkers: 1,
 		include: ['src/**/*.spec.js'],
 		exclude: [
 			'**/node_modules/**',

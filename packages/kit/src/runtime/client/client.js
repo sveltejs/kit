@@ -532,7 +532,7 @@ async function _preload_data(intent) {
 			fork: null
 		};
 
-		if (svelte.fork) {
+		if (__SVELTEKIT_FORK_PRELOADS__ && svelte.fork) {
 			const lc = load_cache;
 
 			lc.fork = lc.promise.then((result) => {
@@ -545,7 +545,7 @@ async function _preload_data(intent) {
 							update(result.props.page);
 						});
 					} catch {
-						// if it errors, it's because the experimental flag isn't enabled
+						// if it errors, it's because the experimental flag isn't enabled in Svelte
 					}
 				}
 
@@ -605,7 +605,8 @@ async function initialize(result, target, hydrate) {
 			to: {
 				params: current.params,
 				route: { id: current.route?.id ?? null },
-				url: new URL(location.href)
+				url: new URL(location.href),
+				scroll: scroll_positions[current_history_index] ?? scroll_state()
 			},
 			willUnload: false,
 			type: 'enter',
@@ -1463,12 +1464,13 @@ function get_page_key(url) {
  *   intent?: import('./types.js').NavigationIntent;
  *   delta?: number;
  *   event?: PopStateEvent | MouseEvent;
+ *   scroll?: { x: number, y: number };
  * }} opts
  */
-function _before_navigate({ url, type, intent, delta, event }) {
+function _before_navigate({ url, type, intent, delta, event, scroll }) {
 	let should_block = false;
 
-	const nav = create_navigation(current, intent, url, type);
+	const nav = create_navigation(current, intent, url, type, scroll ?? null);
 
 	if (delta !== undefined) {
 		nav.navigation.delta = delta;
@@ -1543,6 +1545,7 @@ async function navigate({
 					type,
 					delta: popped?.delta,
 					intent,
+					scroll: popped?.scroll,
 					// @ts-ignore
 					event
 				});
@@ -1808,6 +1811,11 @@ async function navigate({
 
 	nav.fulfil(undefined);
 
+	// Update to.scroll to the actual scroll position after navigation completed
+	if (nav.navigation.to) {
+		nav.navigation.to.scroll = scroll_state();
+	}
+
 	after_navigate_callbacks.forEach((fn) =>
 		fn(/** @type {import('@sveltejs/kit').AfterNavigate} */ (nav.navigation))
 	);
@@ -1860,8 +1868,8 @@ if (import.meta.hot) {
 function setup_preload() {
 	/** @type {NodeJS.Timeout} */
 	let mousemove_timeout;
-	/** @type {Element} */
-	let current_a;
+	/** @type {{ element: Element | SVGAElement | undefined; href: string | SVGAnimatedString | undefined }} */
+	let current_a = { element: undefined, href: undefined };
 	/** @type {PreloadDataPriority} */
 	let current_priority;
 
@@ -1903,7 +1911,8 @@ function setup_preload() {
 		const a = find_anchor(element, container);
 
 		// we don't want to preload data again if the user has already hovered/tapped
-		const interacted = a === current_a && priority >= current_priority;
+		const interacted =
+			a === current_a.element && a?.href === current_a.href && priority >= current_priority;
 		if (!a || interacted) return;
 
 		const { url, external, download } = get_link_info(a, base, app.hash);
@@ -1916,7 +1925,7 @@ function setup_preload() {
 		if (options.reload || same_url) return;
 
 		if (priority <= options.preload_data) {
-			current_a = a;
+			current_a = { element: a, href: a.href };
 			// we don't want to preload data again on tap if we've already preloaded it on hover
 			current_priority = PRELOAD_PRIORITIES.tap;
 
@@ -1938,7 +1947,7 @@ function setup_preload() {
 				void _preload_data(intent);
 			}
 		} else if (priority <= options.preload_code) {
-			current_a = a;
+			current_a = { element: a, href: a.href };
 			current_priority = priority;
 			void _preload_code(/** @type {URL} */ (url));
 		}
@@ -2145,7 +2154,7 @@ function push_invalidated(resource) {
 }
 
 /**
- * Causes all `load` functions belonging to the currently active page to re-run. Returns a `Promise` that resolves when the page is subsequently updated.
+ * Causes all `load` and `query` functions belonging to the currently active page to re-run. Returns a `Promise` that resolves when the page is subsequently updated.
  * @returns {Promise<void>}
  */
 export function invalidateAll() {
@@ -3012,20 +3021,12 @@ function reset_focus(url, scroll = null) {
 				const history_state = history.state;
 
 				resetting_focus = true;
-				location.replace(`#${id}`);
+				location.replace(new URL(`#${id}`, location.href));
 
-				// if we're using hash routing, we need to restore the original hash after
-				// setting the focus with `location.replace()`. Although we're calling
-				// `location.replace()` again, the focus won't shift to the new hash
-				// unless there's an element with the ID `/pathname#hash`, etc.
-				if (app.hash) {
-					location.replace(url.hash);
-				}
-
-				// but Firefox has a bug that sets the history state to `null` so we
-				// need to restore it after.
-				// See https://bugzilla.mozilla.org/show_bug.cgi?id=1199924
-				history.replaceState(history_state, '', url.hash);
+				// Firefox has a bug that sets the history state to `null` so we need to
+				// restore it after. See https://bugzilla.mozilla.org/show_bug.cgi?id=1199924
+				// This is also needed to restore the original hash if we're using hash routing
+				history.replaceState(history_state, '', url);
 
 				// Scroll management has already happened earlier so we need to restore
 				// the scroll position after setting the sequential focus navigation starting point
@@ -3101,8 +3102,9 @@ function reset_focus(url, scroll = null) {
  * @param {import('./types.js').NavigationIntent | undefined} intent
  * @param {URL | null} url
  * @param {T} type
+ * @param {{ x: number, y: number } | null} [target_scroll] The scroll position for the target (for popstate navigations)
  */
-function create_navigation(current, intent, url, type) {
+function create_navigation(current, intent, url, type, target_scroll = null) {
 	/** @type {(value: any) => void} */
 	let fulfil;
 
@@ -3122,12 +3124,14 @@ function create_navigation(current, intent, url, type) {
 		from: {
 			params: current.params,
 			route: { id: current.route?.id ?? null },
-			url: current.url
+			url: current.url,
+			scroll: scroll_state()
 		},
 		to: url && {
 			params: intent?.params ?? null,
 			route: { id: intent?.route?.id ?? null },
-			url
+			url,
+			scroll: target_scroll
 		},
 		willUnload: !intent,
 		type,

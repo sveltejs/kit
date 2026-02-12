@@ -5,6 +5,7 @@ import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 import { defineConfig, test as base, devices } from '@playwright/test';
+import { number_from_env } from '../../../test-utils/index.js';
 
 /** @type {import('./types')['test']} */
 export const test = base.extend({
@@ -28,12 +29,16 @@ export const test = base.extend({
 	clicknav: async ({ page, javaScriptEnabled }, use) => {
 		/**
 		 * @param {string} selector
-		 * @param {{ timeout: number }} options
+		 * @param {{ timeout?: number, waitForURL?: string }} [options]
 		 */
-		async function clicknav(selector, options) {
+		async function clicknav(selector, { timeout, waitForURL } = {}) {
 			const element = page.locator(selector);
 			if (javaScriptEnabled) {
-				await Promise.all([page.waitForNavigation(options), element.click()]);
+				const promises = [page.waitForNavigation({ timeout }), element.click()];
+				if (waitForURL) {
+					promises.push(page.waitForURL(waitForURL, { timeout }));
+				}
+				await Promise.all(promises);
 			} else {
 				await element.click();
 			}
@@ -276,7 +281,7 @@ export const config = defineConfig({
 		command: process.env.DEV ? 'pnpm dev --force' : 'pnpm build && pnpm preview',
 		port: process.env.DEV ? 5173 : 4173
 	},
-	retries: process.env.CI ? 2 : 0,
+	retries: process.env.CI ? 2 : number_from_env('KIT_E2E_RETRIES', 0),
 	projects: [
 		{
 			name: `${test_browser}-${process.env.DEV ? 'dev' : 'build'}`,
@@ -296,7 +301,7 @@ export const config = defineConfig({
 		screenshot: 'only-on-failure',
 		trace: 'retain-on-failure'
 	},
-	workers: process.env.CI ? 2 : undefined,
+	workers: process.env.CI ? 2 : number_from_env('KIT_E2E_WORKERS', undefined),
 	reporter: process.env.CI
 		? [
 				['dot'],

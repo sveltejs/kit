@@ -45,9 +45,10 @@
 	"dependencies": {
 		"@iarna/toml": "^2.2.5",
 		"esbuild": "^0.25.4",
-		"set-cookie-parser": "^2.6.0"
+		"set-cookie-parser": "^3.0.0"
 	},
 	"devDependencies": {
+		"@netlify/dev": "catalog:",
 		"@netlify/edge-functions": "catalog:",
 		"@netlify/functions": "catalog:",
 		"@netlify/node-cookies": "^0.1.0",

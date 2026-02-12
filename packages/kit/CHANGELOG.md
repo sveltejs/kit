@@ -1,5 +1,104 @@
 # @sveltejs/kit
 
+## 2.50.2
+### Patch Changes
+
+
+- fix: ensure inlined CSS follows `paths.assets` and `paths.relative` settings ([#15153](https://github.com/sveltejs/kit/pull/15153))
+
+
+- fix: emit script CSP nonces when `unsafe-inline` is present if `strict-dynamic` is also present ([#15221](https://github.com/sveltejs/kit/pull/15221))
+
+
+- fix: re-export browser/dev from esm-env ([#15206](https://github.com/sveltejs/kit/pull/15206))
+
+
+- fix: use validated args in batch resolver in both csr and ssr ([#15215](https://github.com/sveltejs/kit/pull/15215))
+
+
+- fix: ensure CSS inlining includes components that are conditionally rendered ([#15153](https://github.com/sveltejs/kit/pull/15153))
+
+
+- fix: only match rest params with matchers when the matcher matches ([#15216](https://github.com/sveltejs/kit/pull/15216))
+
+
+- fix: properly handle percent-encoded anchors (e.g. `<a href="#sparkles-%E2%9C%A8">`) during prerendering. ([#15231](https://github.com/sveltejs/kit/pull/15231))
+
+## 2.50.1
+### Patch Changes
+
+
+- fix: include `hooks.server` and `hooks.universal` as explicit Vite build inputs to ensure assets imported by hooks files are correctly discovered ([#15178](https://github.com/sveltejs/kit/pull/15178))
+
+
+- fix: improves fields type for generic components ([#14974](https://github.com/sveltejs/kit/pull/14974))
+
+
+- fix: preload links if href changes ([#15191](https://github.com/sveltejs/kit/pull/15191))
+
+## 2.50.0
+### Minor Changes
+
+
+- breaking: remove `buttonProps` from experimental remote form functions; use e.g. `<button {...myForm.fields.action.as('submit', 'register')}>Register</button>` button instead ([#15144](https://github.com/sveltejs/kit/pull/15144))
+
+## 2.49.5
+### Patch Changes
+
+
+- fix: avoid overriding Vite default `base` when running Vitest 4 ([#14866](https://github.com/sveltejs/kit/pull/14866))
+
+
+- fix: ensure url decoded pathnames are not mistaken as rerouted requests ([`d9ae9b0`](https://github.com/sveltejs/kit/commit/d9ae9b00b14f5574d109f3fd548f960594346226))
+
+
+- fix: add length checks to remote forms ([`8ed8155`](https://github.com/sveltejs/kit/commit/8ed8155215b9a74012fecffb942ad9a793b274e5))
+
+## 2.49.4
+### Patch Changes
+
+
+- fix: support instrumentation for `vite preview` ([#15105](https://github.com/sveltejs/kit/pull/15105))
+
+
+- fix: support for `URLSearchParams.has(name, value)` overload ([#15076](https://github.com/sveltejs/kit/pull/15076))
+
+
+- fix: put forking behind `experimental.forkPreloads` ([#15135](https://github.com/sveltejs/kit/pull/15135))
+
+## 2.49.3
+### Patch Changes
+
+
+- fix: avoid false-positive Vite config overridden warning when using Vitest 4 ([#15121](https://github.com/sveltejs/kit/pull/15121))
+
+
+- fix: add `typescript` as an optional peer dependency ([#15074](https://github.com/sveltejs/kit/pull/15074))
+
+
+- fix: use hasOwn check when deep-setting object properties ([#15127](https://github.com/sveltejs/kit/pull/15127))
+
+## 2.49.2
+### Patch Changes
+
+
+- fix: Stop re-loading already-loaded CSS during server-side route resolution ([#15014](https://github.com/sveltejs/kit/pull/15014))
+
+
+- fix: posixify the instrumentation file import on Windows ([#14993](https://github.com/sveltejs/kit/pull/14993))
+
+
+- fix: Correctly handle shared memory when decoding binary form data ([#15028](https://github.com/sveltejs/kit/pull/15028))
+
+## 2.49.1
+### Patch Changes
+
+
+- fix: suppress `state_referenced_locally` warnings in `.svelte-kit/generated/root.svelte` ([#15013](https://github.com/sveltejs/kit/pull/15013))
+
+
+- fix: TypeError when doing response.clone() in page load ([#15005](https://github.com/sveltejs/kit/pull/15005))
+
 ## 2.49.0
 ### Minor Changes
 

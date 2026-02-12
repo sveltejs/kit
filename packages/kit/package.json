@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/kit",
-	"version": "2.49.0",
+	"version": "2.50.2",
 	"description": "SvelteKit is the fastest way to build Svelte apps",
 	"keywords": [
 		"framework",
@@ -23,13 +23,13 @@
 		"@types/cookie": "^0.6.0",
 		"acorn": "^8.14.1",
 		"cookie": "^0.6.0",
-		"devalue": "^5.3.2",
+		"devalue": "^5.6.2",
 		"esm-env": "^1.2.2",
 		"kleur": "^4.1.5",
 		"magic-string": "^0.30.5",
 		"mrmime": "^2.0.0",
 		"sade": "^1.8.1",
-		"set-cookie-parser": "^2.6.0",
+		"set-cookie-parser": "^3.0.0",
 		"sirv": "^3.0.0"
 	},
 	"devDependencies": {
@@ -51,10 +51,14 @@
 		"@sveltejs/vite-plugin-svelte": "^3.0.0 || ^4.0.0-next.1 || ^5.0.0 || ^6.0.0-next.0",
 		"@opentelemetry/api": "^1.0.0",
 		"svelte": "^4.0.0 || ^5.0.0-next.0",
+		"typescript": "^5.3.3",
 		"vite": "^5.0.3 || ^6.0.0 || ^7.0.0-beta.0"
 	},
 	"peerDependenciesMeta": {
 		"@opentelemetry/api": {
+			"optional": true
+		},
+		"typescript": {
 			"optional": true
 		}
 	},

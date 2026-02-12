@@ -1,5 +1,35 @@
 # @sveltejs/adapter-vercel
 
+## 6.3.1
+### Patch Changes
+
+
+- feat: show remote function calls under the /_app/remote route in observability ([#15098](https://github.com/sveltejs/kit/pull/15098))
+
+
+- fix: prevent isr routes from handling remote function calls ([#15098](https://github.com/sveltejs/kit/pull/15098))
+
+- Updated dependencies [[`46c1ebd`](https://github.com/sveltejs/kit/commit/46c1ebd9f662f0de499e921bfee2661316449e9d), [`2dd74c8`](https://github.com/sveltejs/kit/commit/2dd74c8c86ae4855c3e9d74d8cf241e86dcd5b36), [`8871b54`](https://github.com/sveltejs/kit/commit/8871b5444413d0c7d7ef4d260996c3b5c359d0b8)]:
+  - @sveltejs/kit@2.50.1
+
+## 6.3.0
+### Minor Changes
+
+
+- chore: mark `RequestContext` as deprecated and refer to `@vercel/functions` ([#14725](https://github.com/sveltejs/kit/pull/14725))
+
+
+### Patch Changes
+
+- Updated dependencies [[`e67613c`](https://github.com/sveltejs/kit/commit/e67613cf0dde5b7b22e7ef2e2fa2d9171505c784), [`a5c313e`](https://github.com/sveltejs/kit/commit/a5c313e026659874981868fe9628ed6a311dcc06), [`06de550`](https://github.com/sveltejs/kit/commit/06de5506b6db0e39e2ded47e239af39f64d647a8)]:
+  - @sveltejs/kit@2.49.3
+
+## 6.2.0
+### Minor Changes
+
+
+- feat: Node 24 support ([#14982](https://github.com/sveltejs/kit/pull/14982))
+
 ## 6.1.2
 ### Patch Changes
 

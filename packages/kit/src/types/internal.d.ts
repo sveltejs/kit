@@ -176,7 +176,7 @@ export class InternalServer extends Server {
 		request: Request,
 		options: RequestOptions & {
 			prerendering?: PrerenderOptions;
-			read: (file: string) => Buffer;
+			read: (file: string) => NonSharedBuffer;
 			/** A hook called before `handle` during dev, so that `AsyncLocalStorage` can be populated. */
 			before_handle?: (event: RequestEvent, config: any, prerender: PrerenderOption) => void;
 			emulator?: Emulator;
@@ -381,13 +381,17 @@ export interface SSRComponent {
 	default: {
 		render(
 			props: Record<string, any>,
-			opts: { context: Map<any, any> }
+			opts: { context: Map<any, any>; csp?: { nonce?: string; hash?: boolean } }
 		): {
 			html: string;
 			head: string;
 			css: {
 				code: string;
 				map: any; // TODO
+			};
+			/** Until we require all Svelte versions that support hashes, this might not be defined */
+			hashes?: {
+				script: Array<`sha256-${string}`>;
 			};
 		};
 	};
@@ -431,7 +435,9 @@ export interface SSRNode {
 	server_id?: string;
 
 	/** inlined styles */
-	inline_styles?(): MaybePromise<Record<string, string>>;
+	inline_styles?(): MaybePromise<
+		Record<string, string | ((assets: string, base: string) => string)>
+	>;
 	/** Svelte component */
 	component?: SSRComponentLoader;
 	/** +page.js or +layout.js */
@@ -523,9 +529,9 @@ export interface SSRState {
 	 * prerender option is inherited by the endpoint, unless overridden.
 	 */
 	prerender_default?: PrerenderOption;
-	read?: (file: string) => Buffer;
+	read?: (file: string) => NonSharedBuffer;
 	/**
-	 * Used to setup `__SVELTEKIT_TRACK__` which checks if a used feature is supported.
+	 * Used to set up `__SVELTEKIT_TRACK__` which checks if a used feature is supported.
 	 * E.g. if `read` from `$app/server` is used, it checks whether the route's config is compatible.
 	 */
 	before_handle?: (event: RequestEvent, config: any, prerender: PrerenderOption) => void;
@@ -570,8 +576,8 @@ export type RemoteInfo =
 			type: 'query_batch';
 			id: string;
 			name: string;
-			/** Direct access to the function without batching etc logic, for remote functions called from the client */
-			run: (args: any[]) => Promise<(arg: any, idx: number) => any>;
+			/** Direct access to the function, for remote functions called from the client */
+			run: (args: any[], options: SSROptions) => Promise<any[]>;
 	  }
 	| {
 			type: 'form';

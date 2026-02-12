@@ -1,5 +1,23 @@
 # @sveltejs/enhanced-img
 
+## 0.10.0
+### Minor Changes
+
+
+- feat: re-export the `Picture` type from `vite-imagetools` ([#15225](https://github.com/sveltejs/kit/pull/15225))
+
+## 0.9.3
+### Patch Changes
+
+
+- fix: ensure compatibility with vite-plugin-svelte@7 (use api.filter instead of api.idFilter) ([#15179](https://github.com/sveltejs/kit/pull/15179))
+
+## 0.9.2
+### Patch Changes
+
+
+- chore: remove duplicate caching layer ([#14988](https://github.com/sveltejs/kit/pull/14988))
+
 ## 0.9.1
 ### Patch Changes
 
