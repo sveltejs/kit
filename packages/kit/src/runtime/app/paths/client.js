@@ -68,7 +68,7 @@ export function resolve(...args) {
  *
  * const result = await match('/blog/hello-world');
  * // → { id: '/blog/[slug]', params: { slug: 'hello-world' } }
- *
+ * ```
  *
  * @param {Pathname | URL | (string & {})} url
  * @returns {Promise<{ id: RouteId, params: Record<string, string> } | null>}
