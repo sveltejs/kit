@@ -229,6 +229,24 @@ test.describe('Vite options', () => {
 	});
 });
 
+test.describe('$app/paths', () => {
+	test('match() works with base paths', async ({ request }) => {
+		const response = await request.get('/path-base/match');
+
+		expect(await response.json()).toEqual([
+			{
+				path: '/path-base/resolve-route',
+				result: { id: '/resolve-route', params: {} }
+			},
+			{
+				path: '/path-base/resolve-route/resolved',
+				result: { id: '/resolve-route/[foo]', params: { foo: 'resolved' } }
+			},
+			{ path: '/path-base/not-a-real-route-that-exists', result: null }
+		]);
+	});
+});
+
 test.describe('Routing', () => {
 	test('ignores clicks outside the app target', async ({ page }) => {
 		await page.goto('/path-base/routing/link-outside-app-target/source/');
