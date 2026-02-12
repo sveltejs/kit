@@ -90,7 +90,7 @@ jobs:
           pnpm install --no-frozen-lockfile
           git checkout pnpm-lock.yaml pnpm-workspace.yaml # revert changes to pnpm files to avoid cache key changes
           pnpm --dir packages/kit ls vite
-      - run: pnpm playwright install ${{ matrix.e2e-browser }} ${{ matrix.e2e-browser == 'chromium' && '--no-shell' || '' }}
+      - run: pnpm playwright install ${{ matrix.e2e-browser }}
       - run: pnpm run sync-all
       - run: pnpm test:kit
         env:
@@ -150,7 +150,7 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm playwright install ${{ matrix.e2e-browser }} ${{ matrix.e2e-browser == 'chromium' && '--no-shell' || '' }}
+      - run: pnpm playwright install ${{ matrix.e2e-browser }}
       - run: pnpm run sync-all
       - run: pnpm test:cross-platform:${{ matrix.mode }}
       - name: Print flaky test report

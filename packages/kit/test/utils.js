@@ -263,10 +263,12 @@ const test_browser = /** @type {keyof typeof known_devices} */ (
 	process.env.KIT_E2E_BROWSER ?? 'chromium'
 );
 
-const test_browser_device = {
-	...known_devices[test_browser],
-	channel: test_browser === 'chromium' ? 'chromium' : undefined
-};
+const test_browser_device = known_devices[test_browser]
+	? {
+			...known_devices[test_browser],
+			channel: test_browser === 'chromium' ? 'chromium' : undefined
+		}
+	: undefined;
 
 if (!test_browser_device) {
 	throw new Error(
