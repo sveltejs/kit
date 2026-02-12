@@ -350,12 +350,18 @@ test.describe('Navigation lifecycle functions', () => {
 		expect(beforeNav.toScroll).toBe(null);
 		expect(beforeNav.type).toBe('link');
 
+		// @ts-expect-error - guaranteed to be defined since navPromise has been resolved
 		expect(onNav.fromScroll).toEqual({ x: 0, y: 500 });
+		// @ts-expect-error - guaranteed to be defined since navPromise has been resolved
 		expect(onNav.toScroll).toBe(null);
+		// @ts-expect-error - guaranteed to be defined since navPromise has been resolved
 		expect(onNav.type).toBe('link');
 
+		// @ts-expect-error - guaranteed to be defined since navPromise has been resolved
 		expect(afterNav.fromScroll).toEqual({ x: 0, y: 500 });
+		// @ts-expect-error - guaranteed to be defined since navPromise has been resolved
 		expect(afterNav.toScroll).toEqual({ x: 0, y: 0 });
+		// @ts-expect-error - guaranteed to be defined since navPromise has been resolved
 		expect(afterNav.type).toBe('link');
 	});
 
@@ -405,8 +411,11 @@ test.describe('Navigation lifecycle functions', () => {
 		expect(beforeNav.toScroll).toEqual({ x: 0, y: savedScrollY });
 		expect(beforeNav.type).toBe('popstate');
 
+		// @ts-expect-error - guaranteed to be defined since navPromise has been resolved
 		expect(onNav.fromScroll).toEqual({ x: 0, y: 0 });
+		// @ts-expect-error - guaranteed to be defined since navPromise has been resolved
 		expect(onNav.toScroll).toEqual({ x: 0, y: savedScrollY });
+		// @ts-expect-error - guaranteed to be defined since navPromise has been resolved
 		expect(onNav.type).toBe('popstate');
 
 		expect(afterNav.toScroll).toEqual({ x: 0, y: savedScrollY });
