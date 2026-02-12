@@ -41,11 +41,12 @@ export async function match(url) {
 
 	const { reroute } = await get_hooks();
 
-	let resolved_path =
-		(await reroute?.({ url: new URL(url), fetch: store?.event.fetch ?? fetch })) ?? url.pathname;
+	let resolved_path = url.pathname;
 
 	try {
-		resolved_path = decode_pathname(resolved_path);
+		resolved_path = decode_pathname(
+			(await reroute?.({ url: new URL(url), fetch: store?.event.fetch ?? fetch })) ?? url.pathname
+		);
 	} catch {
 		return null;
 	}
