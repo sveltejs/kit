@@ -1,5 +1,6 @@
 import { devices } from '@playwright/test';
 import process from 'node:process';
+import { number_from_env } from '../../../test-utils/index.js';
 
 /** @type {import('@playwright/test').PlaywrightTestConfig} */
 export const config = {
@@ -10,7 +11,7 @@ export const config = {
 		command: process.env.DEV ? 'pnpm dev' : 'pnpm build && pnpm preview',
 		port: process.env.DEV ? 5173 : 8787
 	},
-	retries: process.env.CI ? 2 : 0,
+	retries: process.env.CI ? 2 : number_from_env('KIT_E2E_RETRIES', 0),
 	projects: [
 		{
 			name: 'chromium'
@@ -19,9 +20,10 @@ export const config = {
 	use: {
 		...devices['Desktop Chrome'],
 		screenshot: 'only-on-failure',
-		trace: 'retain-on-failure'
+		trace: 'retain-on-failure',
+		channel: 'chromium'
 	},
-	workers: process.env.CI ? 2 : undefined,
+	workers: process.env.CI ? 2 : number_from_env('KIT_E2E_WORKERS', undefined),
 	reporter: 'list',
 	testDir: 'test',
 	testMatch: /(.+\.)?(test|spec)\.[jt]s/
