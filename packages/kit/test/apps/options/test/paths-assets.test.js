@@ -78,7 +78,10 @@ test.describe('base path', () => {
 		expect(await page.textContent('h2')).toBe('resolved');
 	});
 
-	test('fetch outside base path succeeds', async ({ page, baseURL }) => {
+	test('server load fetch without base path does not invoke the server', async ({
+		page,
+		baseURL
+	}) => {
 		await page.goto('/path-base/fetch/link-outside-base/');
 		await expect(page.locator('[data-testid="fetch-url"]')).toHaveText(`${baseURL}/not-base-path/`);
 		await expect(page.locator('[data-testid="fetch-response"]')).toContainText(
@@ -86,18 +89,17 @@ test.describe('base path', () => {
 		);
 	});
 
-	test('fetch to root succeeds', async ({ page, baseURL }) => {
+	test('server load fetch to root does not invoke the server', async ({ page, baseURL }) => {
 		await page.goto('/path-base/fetch/link-root/');
 		// fetch to root with trailing slash
 		await expect(page.locator('[data-testid="fetch1-url"]')).toHaveText(`${baseURL}/`);
-		const fetch1Response = await page.locator('[data-testid="fetch1-response"]').textContent();
-		const fetch1Redirect = await page.locator('[data-testid="fetch1-redirect"]').textContent();
-		expect(
-			// production
-			fetch1Response?.includes('did you mean to visit') ||
-				// dev
-				fetch1Redirect === '/path-base'
-		).toBe(true);
+		if (process.env.DEV) {
+			await expect(page.locator('[data-testid="fetch1-redirect"]')).toHaveText('/path-base');
+		} else {
+			await expect(page.locator('[data-testid="fetch1-response"]')).toContainText(
+				'did you mean to visit'
+			);
+		}
 
 		// fetch to root without trailing slash should be relative
 		await expect(page.locator('[data-testid="fetch2-url"]')).toBeEmpty();
