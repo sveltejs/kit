@@ -223,7 +223,7 @@ test.describe('Load', () => {
 		await page.goto('/load/fetch-cache-control/headers-diff');
 
 		// 1. We expect the right data
-		expect(await page.textContent('h2')).toBe('a / b');
+		await expect(page.locator('h2')).toHaveText('a / b');
 
 		// 2. Change to another route (client side)
 		await clicknav('[href="/load/fetch-cache-control"]');
@@ -231,11 +231,16 @@ test.describe('Load', () => {
 		// 3. Come back to the original page (client side)
 		/** @type {string[]} */
 		const requests = [];
-		page.on('request', (request) => requests.push(request.url()));
+		page.on('request', (request) => {
+			const url = request.url();
+			// Headless Chrome re-requests the favicon.png on every URL change
+			if (url.endsWith('/favicon.png')) return;
+			requests.push(url);
+		});
 		await clicknav('[href="/load/fetch-cache-control/headers-diff"]');
 
 		// 4. We expect the same data and no new request (except a navigation request in case of server-side route resolution) because it was cached.
-		expect(await page.textContent('h2')).toBe('a / b');
+		await expect(page.locator('h2')).toHaveText('a / b');
 		expect(requests.filter((r) => !r.includes('/__route.js'))).toEqual([]);
 	});
 
@@ -577,34 +582,45 @@ test.describe('Invalidation', () => {
 		expect(await page.textContent('span')).toBe('count: 1');
 	});
 
-	test('server-only load functions are re-run following forced invalidation', async ({ page }) => {
+	test('server-only load functions are re-run following forced invalidation', async ({
+		page,
+		request,
+		baseURL
+	}) => {
+		const res = await request.post(baseURL + '/load/invalidation/forced/reset-states');
+		expect(res.ok()).toBe(true);
+
 		await page.goto('/load/invalidation/forced');
-		expect(await page.textContent('h1')).toBe('a: 0, b: 1');
+		expect(await page.textContent('h1')).toBe('a: 0, b: 0');
 
 		await page.click('button.invalidateall');
 		await page.evaluate(
 			() => /** @type {Window & typeof globalThis & { promise: Promise<void> }} */ (window).promise
 		);
-		expect(await page.textContent('h1')).toBe('a: 2, b: 3');
+		expect(await page.textContent('h1')).toBe('a: 1, b: 1');
 
 		await page.click('button.invalidateall');
 		await page.evaluate(
 			() => /** @type {Window & typeof globalThis & { promise: Promise<void> }} */ (window).promise
 		);
-		expect(await page.textContent('h1')).toBe('a: 4, b: 5');
+		expect(await page.textContent('h1')).toBe('a: 2, b: 2');
 	});
 
 	test('server-only load functions are re-run following goto with forced invalidation', async ({
-		page
+		page,
+		request,
+		baseURL
 	}) => {
+		const res = await request.post(baseURL + '/load/invalidation/forced-goto/reset-states');
+		expect(res.ok()).toBe(true);
 		await page.goto('/load/invalidation/forced-goto');
-		expect(await page.textContent('h1')).toBe('a: 0, b: 1');
+		expect(await page.textContent('h1')).toBe('a: 0, b: 0');
 
 		await page.click('button.goto');
 		await page.evaluate(
 			() => /** @type {Window & typeof globalThis & { promise: Promise<void> }} */ (window).promise
 		);
-		expect(await page.textContent('h1')).toBe('a: 2, b: 3');
+		expect(await page.textContent('h1')).toBe('a: 1, b: 1');
 	});
 
 	test('multiple invalidations run concurrently', async ({ page }) => {

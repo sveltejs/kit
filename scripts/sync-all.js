@@ -12,7 +12,7 @@ for (const directories of [
 	for (const dir of fs.readdirSync(directories)) {
 		const cwd = path.join(directories, dir);
 
-		if (!fs.existsSync('svelte.config.js')) {
+		if (!fs.existsSync(path.join(cwd,'svelte.config.js'))) {
 			continue;
 		}
 

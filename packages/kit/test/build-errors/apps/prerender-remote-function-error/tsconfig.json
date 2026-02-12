@@ -2,7 +2,8 @@
 	"compilerOptions": {
 		"allowJs": true,
 		"checkJs": true,
-		"noEmit": true
+		"noEmit": true,
+		"allowImportingTsExtensions": true
 	},
 	"extends": "./.svelte-kit/tsconfig.json"
 }

@@ -1,6 +1,7 @@
 import { execSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
+import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 import { assert, expect, test } from 'vitest';
 import { rimraf } from '../../../utils/filesystem.js';
@@ -43,7 +44,11 @@ test('Creates correct $types', { timeout: 60000 }, () => {
 	for (const dir of directories) {
 		run_test(dir);
 		try {
-			execSync('pnpm testtypes', { cwd: path.join(cwd, dir) });
+			// we skip lib check if MATRIX_VITE is set and not 'current' because overrides for vite can cause type mismatches
+			const skipLibCheck = process.env.MATRIX_VITE != null && process.env.MATRIX_VITE !== 'current';
+			execSync(`pnpm testtypes${skipLibCheck ? ' --skipLibCheck' : ''}`, {
+				cwd: path.join(cwd, dir)
+			});
 		} catch (e) {
 			console.error(/** @type {any} */ (e).stdout.toString());
 			throw new Error(`${dir} type tests failed`);
