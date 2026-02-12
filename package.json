@@ -19,7 +19,7 @@
 		"format": "pnpm -r format",
 		"precommit": "pnpm format && pnpm lint",
 		"changeset:version": "changeset version && pnpm -r generate:version && git add --all",
-		"changeset:release": "changeset publish --tag version-3",
+		"changeset:release": "changeset publish",
 		"build": "pnpm --filter '@sveltejs/*' -r build",
 		"sync-all": "node scripts/sync-all.js"
 	},
