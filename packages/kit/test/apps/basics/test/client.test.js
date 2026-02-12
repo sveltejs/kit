@@ -223,7 +223,7 @@ test.describe('Load', () => {
 		await page.goto('/load/fetch-cache-control/headers-diff');
 
 		// 1. We expect the right data
-		expect(await page.textContent('h2')).toBe('a / b');
+		await expect(page.locator('h2')).toHaveText('a / b');
 
 		// 2. Change to another route (client side)
 		await clicknav('[href="/load/fetch-cache-control"]');
@@ -231,11 +231,16 @@ test.describe('Load', () => {
 		// 3. Come back to the original page (client side)
 		/** @type {string[]} */
 		const requests = [];
-		page.on('request', (request) => requests.push(request.url()));
+		page.on('request', (request) => {
+			const url = request.url();
+			// Headless Chrome re-requests the favicon.png on every URL change
+			if (url.endsWith('/favicon.png')) return;
+			requests.push(url);
+		});
 		await clicknav('[href="/load/fetch-cache-control/headers-diff"]');
 
 		// 4. We expect the same data and no new request (except a navigation request in case of server-side route resolution) because it was cached.
-		expect(await page.textContent('h2')).toBe('a / b');
+		await expect(page.locator('h2')).toHaveText('a / b');
 		expect(requests.filter((r) => !r.includes('/__route.js'))).toEqual([]);
 	});
 
