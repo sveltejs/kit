@@ -66,9 +66,15 @@ export function resolve(...args) {
  * ```js
  * import { match } from '$app/paths';
  *
- * const result = await match('/blog/hello-world');
- * // → { id: '/blog/[slug]', params: { slug: 'hello-world' } }
+ * const route = await match('/blog/hello-world');
+ *
+ * if (route?.id === '/blog/[slug]') {
+ * 	const slug = route.params.slug;
+ * 	const response = await fetch(`/api/posts/${slug}`);
+ * 	const post = await response.json();
+ * }
  * ```
+ * @since 2.51
  *
  * @param {Pathname | URL | (string & {})} url
  * @returns {Promise<{ id: RouteId, params: Record<string, string> } | null>}
