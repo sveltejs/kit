@@ -910,8 +910,8 @@ test.describe('$app/environment', () => {
 test.describe('tracing', () => {
 	// Helper function to find the resolve.root span deep in the handle.child chain
 	/**
-	 * @param {ReadableSpan} span
-	 * @returns {ReadableSpan | null}
+	 * @param {import('../../../types.js').SpanTree} span
+	 * @returns {import('../../../types.js').SpanTree | null}
 	 */
 	function find_resolve_root_span(span) {
 		if (span.name === 'sveltekit.resolve') {

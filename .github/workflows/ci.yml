@@ -184,7 +184,7 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm playwright install chromium
+      - run: pnpm playwright install chromium --no-shell
       - run: pnpm run sync-all
       - run: pnpm test:server-side-route-resolution:${{ matrix.mode }}
       - name: Print flaky test report
@@ -218,7 +218,7 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm playwright install chromium
+      - run: pnpm playwright install chromium --no-shell
       - run: pnpm run sync-all
       - run: pnpm test:svelte-async:${{ matrix.mode }}
       - name: Print flaky test report
@@ -258,7 +258,7 @@ jobs:
           pnpm install --no-frozen-lockfile
           git checkout pnpm-lock.yaml pnpm-workspace.yaml # revert changes to pnpm files to avoid cache key changes
           pnpm --dir packages/kit ls vite @sveltejs/vite-plugin-svelte
-      - run: pnpm playwright install chromium
+      - run: pnpm playwright install chromium --no-shell
       - run: cd packages/kit && pnpm prepublishOnly
       - run: pnpm run test:others
         env:
