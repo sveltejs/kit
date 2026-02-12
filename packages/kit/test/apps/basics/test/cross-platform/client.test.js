@@ -399,6 +399,8 @@ test.describe('Navigation lifecycle functions', () => {
 
 		await page.goBack();
 		await page.waitForURL('/navigation-lifecycle/scroll-state/a');
+		/** @type {any} */
+		let beforeNav, onNav;
 		({ beforeNav, onNav, afterNav } = await navPromise);
 
 		expect(beforeNav.fromScroll).toEqual({ x: 0, y: 0 });
