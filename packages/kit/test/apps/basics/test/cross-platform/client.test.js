@@ -805,7 +805,12 @@ test.describe('Prefetching', () => {
 
 		/** @type {string[]} */
 		let requests = [];
-		page.on('request', (r) => requests.push(r.url()));
+		page.on('request', (r) => {
+			const url = r.url();
+			// Headless Chrome re-requests the favicon.png on every URL change
+			if (url.endsWith('/favicon.png')) return;
+			requests.push(url);
+		});
 
 		// also wait for network processing to complete, see
 		// https://playwright.dev/docs/network#network-events
@@ -1057,7 +1062,12 @@ test.describe('Routing', () => {
 
 		/** @type {string[]} */
 		const requests = [];
-		page.on('request', (request) => requests.push(request.url()));
+		page.on('request', (request) => {
+			const url = request.url();
+			// Headless Chrome re-requests the favicon.png on every URL change
+			if (url.endsWith('/favicon.png')) return;
+			requests.push(url);
+		});
 
 		await page.locator('input').fill('updated');
 		await page.locator('button').click();
