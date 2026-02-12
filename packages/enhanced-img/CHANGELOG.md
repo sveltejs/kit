@@ -1,5 +1,11 @@
 # @sveltejs/enhanced-img
 
+## 0.10.2
+### Patch Changes
+
+
+- fix: upgrade vite-imagetools to 9.0.3 for fix to caching bug ([#15305](https://github.com/sveltejs/kit/pull/15305))
+
 ## 0.10.1
 ### Patch Changes
 
