@@ -29,7 +29,7 @@ export function create(config) {
 
 	write_client_manifest(config.kit, manifest_data, `${output}/client`);
 	write_server(config, output);
-	write_root(manifest_data, output);
+	write_root(manifest_data, config, output);
 	write_all_types(config, manifest_data);
 	write_non_ambient(config.kit, manifest_data);
 

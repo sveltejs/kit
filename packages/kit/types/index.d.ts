@@ -487,6 +487,14 @@ declare module '@sveltejs/kit' {
 			 * @default false
 			 */
 			forkPreloads?: boolean;
+
+			/**
+			 * Whether to enable the experimental server error boundaries feature.
+			 * When enabled, `<svelte:boundary>` is used to wrap components at each level
+			 * where there's an `+error.svelte`, rendering the error page if the component fails.
+			 * @default false
+			 */
+			serverErrorBoundaries?: boolean;
 		};
 		/**
 		 * Where to find various files within your project.
