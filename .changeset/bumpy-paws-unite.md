@@ -2,4 +2,4 @@
 '@sveltejs/enhanced-img': minor
 ---
 
-feat: Allow configuring cache directory
+feat: make the cache directory configurable
