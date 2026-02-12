@@ -41,7 +41,7 @@
 		"magic-string": "^0.30.5",
 		"sharp": "^0.34.1",
 		"svelte-parse-markup": "^0.1.5",
-		"vite-imagetools": "^9.0.2",
+		"vite-imagetools": "^9.0.3",
 		"zimmerframe": "^1.1.2"
 	},
 	"devDependencies": {
