@@ -466,8 +466,8 @@ importers:
         specifier: ^0.1.5
         version: 0.1.5(svelte@5.48.4)
       vite-imagetools:
-        specifier: ^9.0.2
-        version: 9.0.2(rollup@4.57.1)
+        specifier: ^9.0.3
+        version: 9.0.3(rollup@4.57.1)
       zimmerframe:
         specifier: ^1.1.2
         version: 1.1.2
@@ -5863,8 +5863,8 @@ packages:
     resolution: {integrity: sha512-OljLrQ9SQdOUqTaQxqL5dEfZWrXExyyWsozYlAWFawPVNuD83igl7uJD2RTkNMbniIYgt8l81eCJGIdQF7avLQ==}
     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
 
-  vite-imagetools@9.0.2:
-    resolution: {integrity: sha512-FV5DXw4swU81t+g8JOLT+T7gKuBOXuVsZ0WGhi7y0R182+GfBYkcf6V9/T0Nweu/vn1X0DA2p5ePMnaGZlRl1A==}
+  vite-imagetools@9.0.3:
+    resolution: {integrity: sha512-FwjApRNZyN+RucPW9Z9kf0dyzyi3r3zlDfrTnzHXNaYpmT3pZ5w//d6QkApy1iypbDm+3fq+Gwfv+PYA4j4uYw==}
     engines: {node: '>=20.0.0'}
 
   vite@6.4.1:
@@ -10575,7 +10575,7 @@ snapshots:
 
   validate-npm-package-name@5.0.1: {}
 
-  vite-imagetools@9.0.2(rollup@4.57.1):
+  vite-imagetools@9.0.3(rollup@4.57.1):
     dependencies:
       '@rollup/pluginutils': 5.1.3(rollup@4.57.1)
       imagetools-core: 9.1.0
