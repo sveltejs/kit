@@ -1,5 +1,11 @@
 # @sveltejs/enhanced-img
 
+## 0.10.1
+### Patch Changes
+
+
+- fix: replace erroneous `import.meta.DEV` with `import.meta.env.DEV` in generated code ([#15285](https://github.com/sveltejs/kit/pull/15285))
+
 ## 0.10.0
 ### Minor Changes
 
