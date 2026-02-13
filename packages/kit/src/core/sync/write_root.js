@@ -35,23 +35,6 @@ export function write_root(manifest_data, config, output) {
 	while (l--) {
 		let children = pyramid;
 
-		if (use_boundaries) {
-			// TODO I think we can check if an +error.svelte exists at this level, and only add the boundary if it does
-			children = dedent`
-				{#if errors[${l}]}
-					<svelte:boundary>
-						${pyramid}
-						{#snippet failed(error)}
-							{@const ErrorPage_${l} = errors[${l}]}
-							<ErrorPage_${l} {error} />
-						{/snippet}
-					</svelte:boundary>
-				{:else}
-					${pyramid}
-				{/if}
-			`;
-		}
-
 		pyramid = dedent`
 			{#if constructors[${l + 1}]}
 				${
@@ -72,13 +55,30 @@ export function write_root(manifest_data, config, output) {
 						? dedent`
 					{@const Pyramid_${l} = constructors[${l}]}
 					<!-- svelte-ignore binding_property_non_reactive -->
-					<Pyramid_${l} bind:this={components[${l}]} data={data_${l}} {form} params={page.params} />
+					<Pyramid_${l} bind:this={components[${l}]} data={data_${l}} {form} {error} params={page.params} />
 					`
 						: dedent`<svelte:component this={constructors[${l}]} bind:this={components[${l}]} data={data_${l}} {form} params={page.params} />`
 				}
 
 			{/if}
 		`;
+
+		if (
+			use_boundaries &&
+			manifest_data.routes.some((route) =>
+				route.page ? route.page.errors.length === l + 1 : false
+			)
+		) {
+			pyramid = dedent`
+				{#snippet failed_${l}(error)}
+					{@const ErrorPage_${l} = errors[${l}]}
+					<ErrorPage_${l} {error} />
+				{/snippet}
+				<svelte:boundary failed={errors[${l}] ? failed_${l} : undefined}>
+					${pyramid}
+				</svelte:boundary>
+			`;
+		}
 	}
 
 	write_if_changed(
