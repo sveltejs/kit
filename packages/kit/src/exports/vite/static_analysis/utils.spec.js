@@ -1,13 +1,6 @@
-import { expect, test, vi } from 'vitest';
+import { expect, test } from 'vitest';
 import path from 'node:path';
 import { should_ignore, has_children } from './utils.js';
-
-// Mock the colors module to avoid issues in tests
-vi.mock('kleur', () => ({
-	default: {
-		bold: () => ({ red: (/** @type {string} */ str) => str })
-	}
-}));
 
 // We need to test the warning_preprocessor functionality
 // Since it's not exported, we'll recreate the relevant parts for testing

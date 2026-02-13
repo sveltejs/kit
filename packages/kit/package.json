@@ -24,7 +24,6 @@
 		"cookie": "^1.1.1",
 		"devalue": "^5.6.2",
 		"esm-env": "^1.2.2",
-		"kleur": "^4.1.5",
 		"magic-string": "^0.30.5",
 		"mrmime": "^2.0.0",
 		"sade": "^1.8.1",
@@ -131,6 +130,6 @@
 	},
 	"types": "types/index.d.ts",
 	"engines": {
-		"node": ">=18.13"
+		"node": ">=22"
 	}
 }

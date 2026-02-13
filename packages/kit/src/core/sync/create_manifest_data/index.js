@@ -1,13 +1,13 @@
+import { lookup } from 'mrmime';
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
-import colors from 'kleur';
-import { lookup } from 'mrmime';
-import { list_files, runtime_directory } from '../../utils.js';
+import { styleText } from 'node:util';
 import { posixify, resolve_entry } from '../../../utils/filesystem.js';
 import { parse_route_id } from '../../../utils/routing.js';
-import { sort_routes } from './sort.js';
+import { list_files, runtime_directory } from '../../utils.js';
 import { isSvelte5Plus } from '../utils.js';
+import { sort_routes } from './sort.js';
 
 /**
  * Generates the manifest data used for the client-side manifest and types generation.
@@ -236,12 +236,11 @@ function create_routes_and_nodes(cwd, config, fallback) {
 						);
 					if (typo) {
 						console.log(
-							colors
-								.bold()
-								.yellow(
-									`Missing route file prefix. Did you mean +${file.name}?` +
-										` at ${path.join(dir, file.name)}`
-								)
+							styleText(
+								['bold', 'yellow'],
+								`Missing route file prefix. Did you mean +${file.name}?` +
+									` at ${path.join(dir, file.name)}`
+							)
 						);
 					}
 
