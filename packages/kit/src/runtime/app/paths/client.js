@@ -74,7 +74,7 @@ export function resolve(...args) {
  * 	const post = await response.json();
  * }
  * ```
- * @since 2.51.0
+ * @since 2.52.0
  *
  * @param {Pathname | URL | (string & {})} url
  * @returns {Promise<{ id: RouteId, params: Record<string, string> } | null>}
