@@ -3187,7 +3187,7 @@ declare module '$app/paths' {
 	 * 	const post = await response.json();
 	 * }
 	 * ```
-	 * @since 2.51.0
+	 * @since 2.52.0
 	 *
 	 * */
 	export function match(url: Pathname | URL | (string & {})): Promise<{
