@@ -6,8 +6,9 @@
 		"dev": "vite dev",
 		"build": "rm -rf ./missing_ids && mkdir ./missing_ids && vite build",
 		"preview": "vite preview",
+		"prepare": "svelte-kit sync",
 		"check": "svelte-kit sync && tsc && svelte-check",
-		"test": "vitest run",
+		"test": "svelte-kit sync && vitest run",
 		"test:cross-platform": "pnpm test"
 	},
 	"devDependencies": {

@@ -1,9 +1,8 @@
-[dev]
+[build]
 publish = "build"
 
 # TODO: remove these once we overhaul the Netlify adapter to use the new edge declarations https://docs.netlify.com/build/edge-functions/declarations/#declare-edge-functions-inline
 
-[build]
 # defaults to "netlify/edge-functions" (without the . prefix)
 edge_functions = ".netlify/edge-functions"
 
