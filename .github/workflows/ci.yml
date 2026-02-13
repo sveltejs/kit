@@ -3,7 +3,7 @@ name: CI
 on:
   push:
     branches:
-      - main
+      - version-3
   pull_request:
 
 env:
