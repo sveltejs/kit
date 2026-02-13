@@ -50,5 +50,11 @@
     "test-redirect-importer": "0.0.1",
     "playground-basic": "0.0.0"
   },
-  "changesets": []
+  "changesets": [
+    "chilly-berries-press",
+    "cold-carrots-raise",
+    "cuddly-radios-brush",
+    "salty-chefs-sleep",
+    "shaggy-walls-wave"
+  ]
 }
