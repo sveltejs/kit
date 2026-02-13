@@ -238,12 +238,14 @@ const on_navigate_callbacks = new Set();
 /** @type {Set<(navigation: import('@sveltejs/kit').AfterNavigate) => void>} */
 const after_navigate_callbacks = new Set();
 
-/** @type {import('./types.js').NavigationState} */
+/** @type {import('./types.js').NavigationState & { nav: import('@sveltejs/kit').NavigationEvent }} */
 let current = {
 	branch: [],
 	error: null,
 	// @ts-ignore - we need the initial value to be null
-	url: null
+	url: null,
+	// @ts-ignore - we need the initial value to be null
+	nav: null
 };
 
 /** this being true means we SSR'd */
@@ -415,7 +417,7 @@ async function _invalidate(include_load_functions = true, reset_page_state = tru
 			navigation_result.props.page.state = prev_state;
 		}
 		update(navigation_result.props.page);
-		current = navigation_result.state;
+		current = { ...navigation_result.state, nav: current.nav };
 		reset_invalidation();
 		root.$set(navigation_result.props);
 	} else {
@@ -577,7 +579,17 @@ async function _preload_code(url) {
 async function initialize(result, target, hydrate) {
 	if (DEV && result.state.error && document.querySelector('vite-error-overlay')) return;
 
-	current = result.state;
+	/** @type {import('@sveltejs/kit').NavigationEvent} */
+	const nav = {
+		params: current.params,
+		route: { id: current.route?.id ?? null },
+		url: new URL(location.href)
+	};
+
+	current = {
+		...result.state,
+		nav
+	};
 
 	const style = document.querySelector('style[data-sveltekit]');
 	if (style) style.remove();
@@ -595,8 +607,7 @@ async function initialize(result, target, hydrate) {
 			? /** @param {unknown} error */ (error) =>
 					app.hooks.handleError({
 						error,
-						// @ts-expect-error TODO - what do we pass here? Nothing, and the types are adjusted accordingly in SvelteKit 3?
-						event: null,
+						event: current.nav,
 						status: get_status(error),
 						message: get_message(error)
 					})
@@ -614,9 +625,7 @@ async function initialize(result, target, hydrate) {
 		const navigation = {
 			from: null,
 			to: {
-				params: current.params,
-				route: { id: current.route?.id ?? null },
-				url: new URL(location.href),
+				...nav,
 				scroll: scroll_positions[current_history_index] ?? scroll_state()
 			},
 			willUnload: false,
@@ -1775,7 +1784,16 @@ async function navigate({
 			});
 		}
 
-		current = navigation_result.state;
+		// Type-casts are save because we know this resolved a proper SvelteKit route
+		const target = /** @type {import('@sveltejs/kit').NavigationTarget} */ (nav.navigation.to);
+		current = {
+			...navigation_result.state,
+			nav: {
+				params: /** @type {Record<string, any>} */ (target.params),
+				route: target.route,
+				url: target.url
+			}
+		};
 
 		// reset url before updating page store
 		if (navigation_result.props.page) {
@@ -2459,7 +2477,7 @@ export async function set_nearest_error_page(error, status = 500) {
 			route
 		});
 
-		current = navigation_result.state;
+		current = { ...navigation_result.state, nav: current.nav };
 
 		root.$set(navigation_result.props);
 		update(navigation_result.props.page);
