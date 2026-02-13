@@ -33,8 +33,8 @@
 		"ambient.d.ts"
 	],
 	"scripts": {
-		"dev": "rollup -cw",
-		"build": "rollup -c",
+		"dev": "rolldown -cw",
+		"build": "rolldown -c",
 		"test": "vitest run",
 		"check": "tsc",
 		"lint": "prettier --check .",
@@ -52,10 +52,7 @@
 		"vitest": "catalog:"
 	},
 	"dependencies": {
-		"@rollup/plugin-commonjs": "^29.0.0",
-		"@rollup/plugin-json": "^6.1.0",
-		"@rollup/plugin-node-resolve": "^16.0.0",
-		"rollup": "^4.9.5"
+		"rolldown": "^1.0.0-rc.3"
 	},
 	"peerDependencies": {
 		"@sveltejs/kit": "^2.4.0"

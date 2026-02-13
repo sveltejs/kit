@@ -1,12 +1,9 @@
-import { nodeResolve } from '@rollup/plugin-node-resolve';
-import commonjs from '@rollup/plugin-commonjs';
-import json from '@rollup/plugin-json';
 import { builtinModules } from 'node:module';
 import { rmSync } from 'node:fs';
 
 /**
  * @param {string} filepath
- * @returns {import('rollup').Plugin}
+ * @returns {import('rolldown').Plugin}
  */
 function clearOutput(filepath) {
 	return {
@@ -22,7 +19,7 @@ function clearOutput(filepath) {
 }
 
 /**
- * @returns {import('rollup').Plugin}
+ * @returns {import('rolldown').Plugin}
  */
 function prefixBuiltinModules() {
 	return {
@@ -42,14 +39,9 @@ export default [
 			file: 'files/index.js',
 			format: 'esm'
 		},
-		plugins: [
-			clearOutput('files/index.js'),
-			nodeResolve({ preferBuiltins: true }),
-			commonjs(),
-			json(),
-			prefixBuiltinModules()
-		],
-		external: ['ENV', 'HANDLER']
+		plugins: [clearOutput('files/index.js'), prefixBuiltinModules()],
+		external: ['ENV', 'HANDLER'],
+		platform: 'node'
 	},
 	{
 		input: 'src/env.js',
@@ -57,30 +49,20 @@ export default [
 			file: 'files/env.js',
 			format: 'esm'
 		},
-		plugins: [
-			clearOutput('files/env.js'),
-			nodeResolve(),
-			commonjs(),
-			json(),
-			prefixBuiltinModules()
-		],
-		external: ['HANDLER']
+		plugins: [clearOutput('files/env.js'), prefixBuiltinModules()],
+		external: ['HANDLER'],
+		platform: 'node'
 	},
 	{
 		input: 'src/handler.js',
 		output: {
 			file: 'files/handler.js',
 			format: 'esm',
-			inlineDynamicImports: true
+			codeSplitting: false
 		},
-		plugins: [
-			clearOutput('files/handler.js'),
-			nodeResolve(),
-			commonjs(),
-			json(),
-			prefixBuiltinModules()
-		],
-		external: ['ENV', 'MANIFEST', 'SERVER', 'SHIMS']
+		plugins: [clearOutput('files/handler.js'), prefixBuiltinModules()],
+		external: ['ENV', 'MANIFEST', 'SERVER', 'SHIMS'],
+		platform: 'node'
 	},
 	{
 		input: 'src/shims.js',
@@ -88,6 +70,7 @@ export default [
 			file: 'files/shims.js',
 			format: 'esm'
 		},
-		plugins: [clearOutput('files/shims.js'), nodeResolve(), commonjs(), prefixBuiltinModules()]
+		plugins: [clearOutput('files/shims.js'), prefixBuiltinModules()],
+		platform: 'node'
 	}
 ];
