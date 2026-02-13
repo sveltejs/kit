@@ -240,13 +240,13 @@ declare module '@sveltejs/kit' {
 		 * @param name the name of the cookie
 		 * @param opts the options, passed directly to `cookie.parse`. See documentation [here](https://github.com/jshttp/cookie#cookieparsestr-options)
 		 */
-		get: (name: string, opts?: import('cookie').CookieParseOptions) => string | undefined;
+		get: (name: string, opts?: import('cookie').ParseOptions) => string | undefined;
 
 		/**
 		 * Gets all cookies that were previously set with `cookies.set`, or from the request headers.
 		 * @param opts the options, passed directly to `cookie.parse`. See documentation [here](https://github.com/jshttp/cookie#cookieparsestr-options)
 		 */
-		getAll: (opts?: import('cookie').CookieParseOptions) => Array<{ name: string; value: string }>;
+		getAll: (opts?: import('cookie').ParseOptions) => Array<{ name: string; value: string }>;
 
 		/**
 		 * Sets a cookie. This will add a `set-cookie` header to the response, but also make the cookie available via `cookies.get` or `cookies.getAll` during the current request.
@@ -261,7 +261,7 @@ declare module '@sveltejs/kit' {
 		set: (
 			name: string,
 			value: string,
-			opts: import('cookie').CookieSerializeOptions & { path: string }
+			opts: import('cookie').SerializeOptions & { path: string }
 		) => void;
 
 		/**
@@ -271,7 +271,7 @@ declare module '@sveltejs/kit' {
 		 * @param name the name of the cookie
 		 * @param opts the options, passed directly to `cookie.serialize`. The `path` must match the path of the cookie you want to delete. See documentation [here](https://github.com/jshttp/cookie#cookieserializename-value-options)
 		 */
-		delete: (name: string, opts: import('cookie').CookieSerializeOptions & { path: string }) => void;
+		delete: (name: string, opts: import('cookie').SerializeOptions & { path: string }) => void;
 
 		/**
 		 * Serialize a cookie name-value pair into a `Set-Cookie` header string, but don't apply it to the response.
@@ -287,7 +287,7 @@ declare module '@sveltejs/kit' {
 		serialize: (
 			name: string,
 			value: string,
-			opts: import('cookie').CookieSerializeOptions & { path: string }
+			opts: import('cookie').SerializeOptions & { path: string }
 		) => string;
 	}
 
