@@ -59,6 +59,11 @@ export function fix_css_urls({
 		return css;
 	}
 
+	// if we're doing string interpolation, we should escape existing $ signs first
+	if (paths_assets.includes('$') || base.includes('$')) {
+		css = css.replaceAll('$', '\\$');
+	}
+
 	// safe guard in case of trailing slashes (but this should never happen)
 	if (paths_assets.endsWith('/')) {
 		paths_assets = paths_assets.slice(0, -1);

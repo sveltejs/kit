@@ -9,11 +9,6 @@ describe('create_dynamic_css', () => {
 			expected: "function css() { return `div:after { content: '\\`'; }`; }"
 		},
 		{
-			name: 'escapes interpolations',
-			input: "div:after { content: '${example}'; }",
-			expected: "function css() { return `div:after { content: '\\${example}'; }`; }"
-		},
-		{
 			name: 'handles backslashes',
 			input: "div:after { content: '\\s'; }",
 			expected: "function css() { return `div:after { content: '\\\\s'; }`; }"

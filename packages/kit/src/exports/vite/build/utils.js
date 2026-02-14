@@ -137,7 +137,7 @@ export function assets_base(config) {
  * @returns {string}
  */
 export function create_dynamic_css(css, args) {
-	const escaped_css = s(css).slice(1, -1).replaceAll('$', '\\$').replaceAll('`', '\\`');
+	const escaped_css = s(css).slice(1, -1).replaceAll('`', '\\`');
 	const fn_args = args ? args.join(', ') : '';
 	return `function css(${fn_args}) { return \`${escaped_css}\`; }`;
 }
