@@ -87,6 +87,9 @@ if (DEV && BROWSER) {
 		if (!stack) return;
 		if (!stack[0].includes('https:') && !stack[0].includes('http:')) stack = stack.slice(1); // Chrome includes the error message in the stack
 		stack = stack.slice(2); // remove `warn` and the place where `warn` was called
+		// Filter out frames from third-party libraries that monkeypatch history methods (e.g. Sentry),
+		// since their presence in the stack doesn't mean the call originated from outside SvelteKit
+		stack = stack.filter((frame) => !frame.includes('node_modules'));
 		// Can be falsy if was called directly from an anonymous function
 		if (stack[0]?.includes(current_module_url)) return;
 
