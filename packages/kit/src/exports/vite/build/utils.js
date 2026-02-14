@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { normalizePath } from 'vite';
+import { s } from '../../../utils/misc.js';
 
 /**
  * Adds transitive JS and CSS dependencies to the js and css inputs.
@@ -128,4 +129,15 @@ export function filter_fonts(assets) {
  */
 export function assets_base(config) {
 	return (config.paths.assets || config.paths.base || '.') + '/';
+}
+
+/**
+ * @param {string} css The CSS with string interpolations
+ * @param {string[]} args
+ * @returns {string}
+ */
+export function create_dynamic_css(css, args) {
+	const escaped_css = s(css).slice(1, -1).replaceAll('$', '\\$').replaceAll('`', '\\`');
+	const fn_args = args ? args.join(', ') : '';
+	return `function css(${fn_args}) { return \`${escaped_css}\`; }`;
 }

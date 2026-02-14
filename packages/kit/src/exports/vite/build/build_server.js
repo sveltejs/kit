@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import { mkdirp } from '../../../utils/filesystem.js';
-import { filter_fonts, find_deps, resolve_symlinks } from './utils.js';
+import { create_dynamic_css, filter_fonts, find_deps, resolve_symlinks } from './utils.js';
 import { s } from '../../../utils/misc.js';
 import { normalizePath } from 'vite';
 import { basename } from 'node:path';
@@ -78,7 +78,7 @@ export function build_server_nodes(
 
 				// only convert to a function if we have adjusted any URLs
 				if (css !== transformed_css) {
-					return `function css(assets, base) { return \`${s(transformed_css).slice(1, -1)}\`; }`;
+					return create_dynamic_css(transformed_css, ['assets', 'base']);
 				}
 				return s(css);
 			};
