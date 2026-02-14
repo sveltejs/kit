@@ -1401,7 +1401,7 @@ async function get_rerouted_url(url) {
  * @param {boolean} invalidating
  * @returns {Promise<import('./types.js').NavigationIntent | undefined>}
  */
-async function get_navigation_intent(url, invalidating) {
+export async function get_navigation_intent(url, invalidating) {
 	if (!url) return;
 	if (is_external_url(url, base, app.hash)) return;
 
