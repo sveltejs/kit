@@ -50,6 +50,7 @@ export const options = {
 	root,
 	service_worker: ${has_service_worker},
 	service_worker_options: ${config.kit.serviceWorker.register ? s(config.kit.serviceWorker.options) : 'null'},
+	server_error_boundaries: ${s(!!config.kit.experimental.serverErrorBoundaries)},
 	templates: {
 		app: ({ head, body, assets, nonce, env }) => ${s(template)
 			.replace('%sveltekit.head%', '" + head + "')

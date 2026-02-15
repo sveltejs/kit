@@ -299,6 +299,7 @@ export async function render_page(
 								},
 								status,
 								error,
+								// TODO error components
 								branch: layouts.concat({
 									node,
 									data: null,
@@ -337,6 +338,32 @@ export async function render_page(
 			});
 		}
 
+		/** @type {Array<import('types').SSRComponent | undefined> | undefined} */
+		let error_components;
+		if (options.server_error_boundaries && ssr) {
+			let last_idx = -1;
+			error_components = (
+				await Promise.all(
+					branch.map((b, i) => {
+						if (!b) return null;
+
+						// Find the closest error component up to the previous branch
+						while (i > last_idx && page.errors[i] === undefined) i -= 1;
+						last_idx = i;
+
+						const idx = page.errors[i];
+						if (idx == null) return undefined;
+
+						return manifest._.nodes[idx]?.()
+							.then((e) => e.component?.())
+							.catch(() => undefined);
+					})
+				)
+			)
+				// filter out indexes where there was no branch, but keep indexes where there was a branch but no error component
+				.filter((e) => e !== null);
+		}
+
 		return await render_response({
 			event,
 			event_state,
@@ -350,11 +377,11 @@ export async function render_page(
 			},
 			status,
 			error: null,
-			branch: ssr === false ? [] : compact(branch),
+			branch: !ssr ? [] : compact(branch),
 			action_result,
 			fetched,
-			data_serializer:
-				ssr === false ? server_data_serializer(event, event_state, options) : data_serializer
+			data_serializer: !ssr ? server_data_serializer(event, event_state, options) : data_serializer,
+			error_components
 		});
 	} catch (e) {
 		// a remote function could have thrown a redirect during render

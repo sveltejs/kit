@@ -17,6 +17,7 @@ import { try_get_request_store, with_request_store } from '@sveltejs/kit/interna
 import { text_encoder } from '../../utils.js';
 import { get_global_name } from '../utils.js';
 import { create_remote_key } from '../../shared.js';
+import { get_message, get_status } from '../../../utils/error.js';
 
 // TODO rename this function/module
 
@@ -40,7 +41,8 @@ const updated = {
  *   event_state: import('types').RequestState;
  *   resolve_opts: import('types').RequiredResolveOptions;
  *   action_result?: import('@sveltejs/kit').ActionResult;
- *   data_serializer: import('./types.js').ServerDataSerializer
+ *   data_serializer: import('./types.js').ServerDataSerializer;
+ *   error_components?: Array<import('types').SSRComponent | undefined>
  * }} opts
  */
 export async function render_response({
@@ -56,7 +58,8 @@ export async function render_response({
 	event_state,
 	resolve_opts,
 	action_result,
-	data_serializer
+	data_serializer,
+	error_components
 }) {
 	if (state.prerendering) {
 		if (options.csp.mode === 'nonce') {
@@ -147,6 +150,13 @@ export async function render_response({
 			form: form_value
 		};
 
+		if (error_components) {
+			if (error) {
+				props.error = error;
+			}
+			props.errors = error_components;
+		}
+
 		let data = {};
 
 		// props_n (instead of props[n]) makes it easy to avoid
@@ -176,7 +186,16 @@ export async function render_response({
 					}
 				]
 			]),
-			csp: csp.script_needs_nonce ? { nonce: csp.nonce } : { hash: csp.script_needs_hash }
+			csp: csp.script_needs_nonce ? { nonce: csp.nonce } : { hash: csp.script_needs_hash },
+			transformError: error_components
+				? /** @param {unknown} error */ (error) =>
+						options.hooks.handleError({
+							error,
+							event,
+							status: get_status(error),
+							message: get_message(error)
+						})
+				: undefined
 		};
 
 		const fetch = globalThis.fetch;
