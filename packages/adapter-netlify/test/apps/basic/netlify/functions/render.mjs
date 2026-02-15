@@ -1,4 +1,4 @@
-export { default } from '../../.netlify/functions-internal/sveltekit-render.mjs';
+export { default } from '../../.netlify/v1/functions/sveltekit-render.mjs';
 
 export const config = {
 	path: '/*',
