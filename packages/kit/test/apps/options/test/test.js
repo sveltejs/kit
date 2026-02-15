@@ -61,7 +61,7 @@ test.describe('CSP', () => {
 		expect(hydratable_script_match?.[1]).toBe(nonce);
 	});
 
-	test('require-trusted-types-for', ({ page, javaScriptEnabled }) => {
+	test('require-trusted-types-for', async ({ page, javaScriptEnabled }) => {
 		test.skip(!javaScriptEnabled, 'trusted types only affects scripts');
 
 		const errors = [];
@@ -69,7 +69,7 @@ test.describe('CSP', () => {
 			errors.push(err.message);
 		});
 
-		page.goto('/path-base/csp-trusted-types');
+		await page.goto('/path-base/csp-trusted-types');
 		expect(errors.length).toEqual(0);
 	});
 });
