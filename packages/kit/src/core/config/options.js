@@ -30,17 +30,19 @@ const directives = object({
 	'report-uri': string_array(),
 	'report-to': string_array(),
 	'require-trusted-types-for': validate(undefined, (input, keypath) => {
-		if (!supportsTrustedTypes()) {
-			throw new Error(
-				`${keypath} is not supported by your version of Svelte. Please upgrade to Svelte 5.51.0 or later to use this directive.`
-			);
-		}
-
+		assert_trusted_types_supported(keypath);
+		return string_array()(input, keypath);
+	}),
+	'trusted-types': validate(undefined, (input, keypath) => {
+		assert_trusted_types_supported(keypath);
 		input = string_array()(input, keypath);
+
+		if (!input.includes('svelte-trusted-html')) {
+			throw new Error(`${keypath} must include "svelte-trusted-html" for Svelte to work correctly`);
+		}
 
 		return input;
 	}),
-	'trusted-types': string_array(),
 	'upgrade-insecure-requests': boolean(false),
 	'require-sri-for': string_array(),
 	'block-all-mixed-content': boolean(false),
@@ -493,6 +495,15 @@ function fun(fallback) {
 function assert_string(input, keypath) {
 	if (typeof input !== 'string') {
 		throw new Error(`${keypath} should be a string, if specified`);
+	}
+}
+
+/** @param {string} keypath */
+function assert_trusted_types_supported(keypath) {
+	if (!supportsTrustedTypes()) {
+		throw new Error(
+			`${keypath} is not supported by your version of Svelte. Please upgrade to Svelte 5.51.0 or later to use this directive.`
+		);
 	}
 }
 
