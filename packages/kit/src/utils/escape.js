@@ -60,3 +60,12 @@ export function escape_html(str, is_attr) {
 
 	return escaped_str;
 }
+
+/**
+ * Escapes backticks and dollar signs so that they can be safely used in template literals.
+ * @param {string} str
+ * @returns {string} escaped string
+ */
+export function escape_for_interpolation(str) {
+	return str.replaceAll('`', '\\`').replaceAll('$', '\\$');
+}

@@ -1,5 +1,6 @@
 import MagicString from 'magic-string';
 import * as svelte from 'svelte/compiler';
+import { escape_for_interpolation } from './escape.js';
 
 /** @typedef {ReturnType<typeof import('svelte/compiler').parseCss>['children']} StyleSheetChildren */
 
@@ -57,6 +58,11 @@ export function fix_css_urls({
 	// skip parsing if there are no url(...) occurrences
 	if (!SKIP_PARSING_REGEX.test(css)) {
 		return css;
+	}
+
+	// if we're going to do string interpolation, we should escape existing backticks and dollar sign symbols
+	if (paths_assets.includes('$') || base.includes('$')) {
+		css = escape_for_interpolation(css);
 	}
 
 	// safe guard in case of trailing slashes (but this should never happen)
