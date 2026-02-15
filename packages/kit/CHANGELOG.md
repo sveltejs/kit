@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.52.1
+### Patch Changes
+
+
+- fix: include `.txt` files in precompression ([#15259](https://github.com/sveltejs/kit/pull/15259))
+
 ## 2.52.0
 ### Minor Changes
 
