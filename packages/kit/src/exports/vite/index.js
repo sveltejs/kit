@@ -190,9 +190,6 @@ async function kit({ svelte_config }) {
 	/** @type {import('vite')} */
 	const vite = await import_peer('vite');
 
-	// @ts-ignore `vite.rolldownVersion` only exists in `rolldown-vite`
-	const isRolldown = !!vite.rolldownVersion;
-
 	const { kit } = svelte_config;
 	const out = `${kit.outDir}/output`;
 
@@ -917,21 +914,7 @@ async function kit({ svelte_config }) {
 								sourcemapIgnoreList,
 								inlineDynamicImports: !split
 							},
-							preserveEntrySignatures: 'strict',
-							onwarn(warning, handler) {
-								if (
-									(isRolldown
-										? warning.code === 'IMPORT_IS_UNDEFINED'
-										: warning.code === 'MISSING_EXPORT') &&
-									warning.id === `${kit.outDir}/generated/client-optimized/app.js`
-								) {
-									// ignore e.g. undefined `handleError` hook when
-									// referencing `client_hooks.handleError`
-									return;
-								}
-
-								handler(warning);
-							}
+							preserveEntrySignatures: 'strict'
 						},
 						ssrEmitAssets: true,
 						target: ssr ? 'node18.13' : undefined
