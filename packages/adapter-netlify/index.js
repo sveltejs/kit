@@ -97,7 +97,7 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 
 				await generate_edge_functions({ builder });
 			} else {
-				generate_lambda_functions({ builder, split, publish });
+				generate_serverless_functions({ builder, split, publish });
 			}
 		},
 
@@ -216,7 +216,7 @@ async function generate_edge_functions({ builder }) {
  * @param { string } params.publish
  * @param { boolean } params.split
  */
-function generate_lambda_functions({ builder, publish, split }) {
+function generate_serverless_functions({ builder, publish, split }) {
 	// https://docs.netlify.com/build/frameworks/frameworks-api/#netlifyv1functions
 	builder.mkdirp('.netlify/v1/functions');
 
