@@ -20,7 +20,8 @@ import {
 	build_path_string,
 	normalize_issue,
 	serialize_binary_form,
-	BINARY_FORM_CONTENT_TYPE
+	BINARY_FORM_CONTENT_TYPE,
+	split_path
 } from '../../form-utils.js';
 
 /**
@@ -298,6 +299,35 @@ export function form(id) {
 					return;
 				}
 
+				const no_validate = clone(form).noValidate; // respects <form novalidate>
+				const submitter_no_validate =
+					event.submitter &&
+					/** @type {HTMLButtonElement | HTMLInputElement} */ (event.submitter).hasAttribute(
+						'formnovalidate'
+					);
+
+				if (!no_validate && !submitter_no_validate) {
+					// reportValidity() triggers browser UI; returns false if invalid (minlength/maxlength/pattern/etc.)
+					if (!form.reportValidity()) {
+						event.preventDefault();
+						return;
+					}
+
+					const invalid_length_control = get_invalid_length_control(form);
+					if (invalid_length_control) {
+						// In this edge case the browser can miss minlength/maxlength and leave
+						// `validationMessage` empty. Setting a custom validity forces native UI.
+						invalid_length_control.setCustomValidity(
+							invalid_length_control.validationMessage ||
+								get_length_validation_message(invalid_length_control)
+						);
+						invalid_length_control.reportValidity();
+						invalid_length_control.setCustomValidity('');
+						event.preventDefault();
+						return;
+					}
+				}
+
 				event.preventDefault();
 
 				const form_data = new FormData(form, event.submitter);
@@ -509,8 +539,14 @@ export function form(id) {
 
 					/** @type {InternalRemoteFormIssue[]} */
 					let array = [];
+					let is_server_validation = false;
 
 					const data = convert(form_data);
+					const html_constraint_issues = get_html_constraint_issues(element, {
+						include_untouched: includeUntouched,
+						submitted,
+						touched
+					});
 
 					const validated = await preflight_schema?.['~standard'].validate(data);
 
@@ -520,7 +556,7 @@ export function form(id) {
 
 					if (validated?.issues) {
 						array = validated.issues.map((issue) => normalize_issue(issue, false));
-					} else if (!preflightOnly) {
+					} else if (!preflightOnly && html_constraint_issues.length === 0) {
 						const response = await fetch(`${base}/${app_dir}/remote/${action_id_without_key}`, {
 							method: 'POST',
 							headers: {
@@ -545,13 +581,23 @@ export function form(id) {
 								devalue.parse(result.result, app.decoders)
 							);
 						}
+
+						is_server_validation = true;
+					}
+
+					if (html_constraint_issues.length > 0) {
+						const html_constraint_names = new Set(
+							html_constraint_issues.map((issue) => issue.name)
+						);
+						array = [
+							...array.filter((issue) => !html_constraint_names.has(issue.name)),
+							...html_constraint_issues
+						];
 					}
 
 					if (!includeUntouched && !submitted) {
 						array = array.filter((issue) => touched[issue.name]);
 					}
-
-					const is_server_validation = !validated?.issues && !preflightOnly;
 
 					raw_issues = is_server_validation
 						? array
@@ -615,6 +661,132 @@ export function form(id) {
  */
 function clone(element) {
 	return /** @type {T} */ (HTMLElement.prototype.cloneNode.call(element));
+}
+
+/**
+ * In some cases programmatic value updates can bypass minlength/maxlength checks during submit.
+ * Re-check text controls and let the browser show its native validation UI.
+ * @param {HTMLFormElement} form
+ */
+function get_invalid_length_control(form) {
+	for (const element of form.elements) {
+		if (!(element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement)) continue;
+		if (!element.willValidate || element.disabled || !element.name) continue;
+
+		if (has_invalid_length(element)) return element;
+	}
+
+	return null;
+}
+
+/**
+ * @param {HTMLInputElement | HTMLTextAreaElement} element
+ */
+function has_invalid_length(element) {
+	const value = element.value;
+	const min_length = element.minLength;
+	const max_length = element.maxLength;
+
+	if (value.length > 0 && min_length > -1 && value.length < min_length) return true;
+	if (max_length > -1 && value.length > max_length) return true;
+	return false;
+}
+
+/**
+ * In edge cases where length validity is missed, `validationMessage` may be empty.
+ * Use a deterministic message only as a fallback.
+ * @param {HTMLInputElement | HTMLTextAreaElement} element
+ */
+function get_length_validation_message(element) {
+	const value_length = element.value.length;
+	const min_length = element.minLength;
+	const max_length = element.maxLength;
+
+	if (value_length > 0 && min_length > -1 && value_length < min_length) {
+		return `Please lengthen this text to ${min_length} characters or more.`;
+	}
+
+	if (max_length > -1 && value_length > max_length) {
+		return `Please shorten this text to ${max_length} characters or fewer.`;
+	}
+
+	return 'Please match the requested text length.';
+}
+
+/**
+ * @param {HTMLFormElement} form
+ * @param {{ include_untouched: boolean, submitted: boolean, touched: Record<string, boolean> }} options
+ * @returns {InternalRemoteFormIssue[]}
+ */
+function get_html_constraint_issues(form, options) {
+	/** @type {InternalRemoteFormIssue[]} */
+	const issues = [];
+	const seen = new Set();
+
+	for (const element of form.elements) {
+		if (
+			!(
+				element instanceof HTMLInputElement ||
+				element instanceof HTMLTextAreaElement ||
+				element instanceof HTMLSelectElement
+			)
+		) {
+			continue;
+		}
+
+		if (!element.willValidate || element.disabled || !element.name) continue;
+
+		const name = normalize_control_name(element.name);
+		const dedupe_key =
+			element instanceof HTMLInputElement && element.type === 'radio' ? `radio:${name}` : null;
+		if (dedupe_key && seen.has(dedupe_key)) continue;
+		if (!options.include_untouched && !options.submitted && !options.touched[name]) continue;
+		const invalid_length =
+			(element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) &&
+			has_invalid_length(element);
+		if (!invalid_length && element.checkValidity()) continue;
+
+		const parsed = parse_issue_path(name);
+		if (!parsed) continue;
+
+		issues.push({
+			name: parsed.name,
+			path: parsed.path,
+			message: invalid_length
+				? element.validationMessage || get_length_validation_message(element)
+				: element.validationMessage || 'Invalid value',
+			server: false
+		});
+
+		if (dedupe_key) {
+			seen.add(dedupe_key);
+		}
+	}
+
+	return issues;
+}
+
+/**
+ * @param {string} name
+ */
+function normalize_control_name(name) {
+	if (name.endsWith('[]')) name = name.slice(0, -2);
+	return name.replace(/^[nb]:/, '');
+}
+
+/**
+ * @param {string} name
+ * @returns {{ name: string, path: Array<string | number> } | null}
+ */
+function parse_issue_path(name) {
+	try {
+		return {
+			name,
+			path: split_path(name).map((segment) => (/^\d+$/.test(segment) ? Number(segment) : segment))
+		};
+	} catch {
+		return null;
+	}
 }
 
 /**

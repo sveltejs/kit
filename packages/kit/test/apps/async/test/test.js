@@ -315,6 +315,81 @@ test.describe('remote functions', () => {
 		await expect(issues).not.toContainText('a is too short');
 	});
 
+	test('form respects HTML constraints before submitting remote requests', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/form/html-constraints');
+
+		let request_count = 0;
+
+		/** @param {import('@playwright/test').Request} request */
+		const handler = (request) => {
+			if (request.url().includes('/_app/remote') && request.method() === 'POST') {
+				request_count += 1;
+			}
+		};
+
+		page.on('request', handler);
+
+		const input = page.locator('[data-submit] input[name="code"]');
+		const submit = page.locator('[data-submit] button');
+		const result = page.locator('#result');
+
+		await input.focus();
+		await input.pressSequentially('1');
+		await submit.click();
+		await expect(result).toHaveText('');
+		await page.waitForTimeout(100);
+		expect(request_count).toBe(0);
+
+		await input.fill('');
+		await input.pressSequentially('123456');
+		await submit.click();
+		await expect(result).toHaveText('123456');
+		expect(request_count).toBe(1);
+
+		page.off('request', handler);
+	});
+
+	test('form validate({ preflightOnly: true }) respects HTML constraints on dirty fields', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/form/html-constraints');
+
+		let request_count = 0;
+
+		/** @param {import('@playwright/test').Request} request */
+		const handler = (request) => {
+			if (request.url().includes('/_app/remote') && request.method() === 'POST') {
+				request_count += 1;
+			}
+		};
+
+		page.on('request', handler);
+
+		const input = page.locator('[data-preflight] input[name="code"]');
+		const issue_count = page.locator('#preflight-issue-count');
+
+		await input.focus();
+		await input.pressSequentially('1');
+		await input.blur();
+		await expect(issue_count).toHaveText('1');
+		expect(request_count).toBe(0);
+
+		await input.fill('123456');
+		await input.blur();
+		await expect(issue_count).toHaveText('0');
+		expect(request_count).toBe(0);
+
+		page.off('request', handler);
+	});
+
 	test('form validate works', async ({ page, javaScriptEnabled }) => {
 		if (!javaScriptEnabled) return;
 
