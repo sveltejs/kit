@@ -61,7 +61,8 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 			builder.rimraf(publish);
 			builder.rimraf('.netlify/v1');
 
-			// clean up legacy directories from older adapter versions
+			// clean up legacy directories from older adapter versions to avoid
+			// gnarly edge cases when an existing project is upgraded to this version
 			builder.rimraf('.netlify/edge-functions');
 			builder.rimraf('.netlify/server');
 			builder.rimraf('.netlify/package.json');
@@ -205,7 +206,7 @@ async function generate_edge_functions({ builder }) {
 		});
 	}
 
-	// https://docs.netlify.com/build/frameworks/frameworks-api/#edge-functions
+	// https://docs.netlify.com/build/frameworks/frameworks-api/#netlifyv1edge-functions
 	// Edge function config goes in config.json
 	add_edge_function_config({ builder, path, excluded_paths });
 }
