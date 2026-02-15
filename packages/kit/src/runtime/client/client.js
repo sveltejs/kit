@@ -633,7 +633,7 @@ async function initialize(result, target, hydrate) {
  */
 function get_navigation_result_from_branch({ url, params, branch, status, error, route, form }) {
 	/** @type {import('types').TrailingSlash} */
-	let slash = 'never';
+	let slash = error ? 'ignore' : 'never';
 
 	// if `paths.base === '/a/b/c`, then the root route is always `/a/b/c/`, regardless of
 	// the `trailingSlash` route option, so that relative paths to JS and CSS work
