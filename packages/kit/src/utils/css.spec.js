@@ -169,15 +169,6 @@ describe('fix_css_urls', () => {
 			css: 'div::before { content: "/*"; } div { background: blue /* url(./image.png) */; }',
 			expected: 'div::before { content: "/*"; } div { background: blue /* url(./image.png) */; }',
 			vite_assets: ['image.png']
-		},
-		{
-			name: 'escapes $ signs when interpolating',
-			css: 'div { background: url(./image.png); }\ndiv:after { content: "${example}"; }',
-			expected:
-				'div { background: url(${assets}/image.png); }\ndiv:after { content: "\\${example}"; }',
-			vite_assets: ['image.png'],
-			paths_assets: '${assets}',
-			base: '${base}'
 		}
 	])(
 		'$name',

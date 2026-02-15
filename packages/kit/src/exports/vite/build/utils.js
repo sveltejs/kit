@@ -132,12 +132,13 @@ export function assets_base(config) {
 }
 
 /**
- * @param {string} css The CSS with string interpolations
+ * @param {string} name
  * @param {string[]} args
+ * @param {string} str
  * @returns {string}
  */
-export function create_dynamic_css(css, args) {
-	const escaped_css = s(css).slice(1, -1).replaceAll('`', '\\`');
+export function create_dynamic_string(name, args, str) {
+	str = s(str).slice(1, -1);
 	const fn_args = args ? args.join(', ') : '';
-	return `function css(${fn_args}) { return \`${escaped_css}\`; }`;
+	return `function ${name}(${fn_args}) { return \`${str}\`; }`;
 }

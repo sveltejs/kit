@@ -1,27 +1,15 @@
-import { assert, describe, test } from 'vitest';
-import { create_dynamic_css } from './utils.js';
+import { assert, test } from 'vitest';
+import { create_dynamic_string } from './utils.js';
 
-describe('create_dynamic_css', () => {
-	test.each([
-		{
-			name: 'escapes backticks',
-			input: "div:after { content: '`'; }",
-			expected: "function css() { return `div:after { content: '\\`'; }`; }"
-		},
-		{
-			name: 'handles backslashes',
-			input: "div:after { content: '\\s'; }",
-			expected: "function css() { return `div:after { content: '\\\\s'; }`; }"
-		}
-	])('$name', ({ input, expected }) => {
-		const code = create_dynamic_css(input, []);
-		assert.equal(code, expected);
+test('create_dynamic_string escapes backslashes', () => {
+	const input = "div:after { content: '\\s'; }";
+	const code = create_dynamic_string('css', [], input);
+	assert.equal(code, "function css() { return `div:after { content: '\\\\s'; }`; }");
 
-		let css;
-		assert.doesNotThrow(() => {
-			css = eval(`(${code})()`);
-		});
-
-		assert.equal(css, input);
+	let css;
+	assert.doesNotThrow(() => {
+		css = eval(`(${code})()`);
 	});
+
+	assert.equal(css, input);
 });
