@@ -6,6 +6,8 @@ import { import_peer } from '../../utils/import.js';
 /** @type {{ VERSION: string }} */
 const { VERSION } = await import_peer('svelte/compiler');
 
+const [MAJOR, MINOR] = VERSION.split('.').map(Number);
+
 /** @type {Map<string, string>} */
 const previous_contents = new Map();
 
@@ -74,5 +76,9 @@ export function dedent(strings, ...values) {
 }
 
 export function isSvelte5Plus() {
-	return Number(VERSION[0]) >= 5;
+	return MAJOR >= 5;
+}
+
+export function supportsTrustedTypes() {
+	return (MAJOR === 5 && MINOR >= 51) || MAJOR > 5;
 }
