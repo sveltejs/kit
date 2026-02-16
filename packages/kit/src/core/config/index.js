@@ -3,6 +3,7 @@ import path from 'node:path';
 import process from 'node:process';
 import * as url from 'node:url';
 import options from './options.js';
+import { resolve_entry } from '../../utils/filesystem.js';
 
 /**
  * Loads the template (src/app.html by default) and validates that it has the
@@ -161,7 +162,7 @@ export function validate_config(config, cwd) {
 		}
 		if (
 			validated.kit.serviceWorker?.register &&
-			fs.existsSync(path.resolve(cwd, validated.kit.files.serviceWorker)) &&
+			resolve_entry(path.resolve(cwd, validated.kit.files.serviceWorker)) &&
 			!validated.kit.csp?.directives?.['trusted-types']?.includes('sveltekit-trusted-url')
 		) {
 			throw new Error(
