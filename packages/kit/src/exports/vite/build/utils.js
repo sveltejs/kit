@@ -132,13 +132,16 @@ export function assets_base(config) {
 }
 
 /**
- * @param {string} name
- * @param {string[]} args
- * @param {string} str
- * @returns {string}
+ * Writes a function with arguments used by a template literal.
+ * This helps us store strings in a module and inject values at runtime.
+ * @param {string} name The name of the function
+ * @param {string[]} placeholder_names The names of the placeholders in the string
+ * @param {string} str A string with placeholders such as "Hello ${arg0}".
+ * 										 It must have backticks and dollar signs escaped.
+ * @returns {string} The function written as a string
  */
-export function create_dynamic_string(name, args, str) {
+export function create_function_as_string(name, placeholder_names, str) {
 	str = s(str).slice(1, -1);
-	const fn_args = args ? args.join(', ') : '';
-	return `function ${name}(${fn_args}) { return \`${str}\`; }`;
+	const args = placeholder_names ? placeholder_names.join(', ') : '';
+	return `function ${name}(${args}) { return \`${str}\`; }`;
 }
