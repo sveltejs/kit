@@ -342,8 +342,12 @@ test.describe('remote functions', () => {
 		await input.pressSequentially('1');
 		await submit.click();
 		await expect(result).toHaveText('');
-		await page.waitForTimeout(100);
-		expect(request_count).toBe(0);
+		await expect(
+			page.waitForRequest(
+				(request) => request.url().includes('/_app/remote') && request.method() === 'POST',
+				{ timeout: 200 }
+			)
+		).rejects.toThrow();
 
 		await input.fill('');
 		await input.pressSequentially('123456');
