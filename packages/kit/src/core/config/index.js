@@ -152,7 +152,7 @@ export function validate_config(config) {
 		}
 	}
 
-	if (validated.kit.csp?.directives?.['require-trusted-types-for'].includes('script')) {
+	if (validated.kit.csp?.directives?.['require-trusted-types-for']?.includes('script')) {
 		if (!validated.kit.csp?.directives?.['trusted-types']?.includes('svelte-trusted-html')) {
 			throw new Error(
 				"The `csp.directives['trusted-types']` option must include 'svelte-trusted-html'"
