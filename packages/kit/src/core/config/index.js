@@ -117,10 +117,10 @@ function process_config(config, { cwd = process.cwd() } = {}) {
 
 /**
  * @param {import('@sveltejs/kit').Config} config
- * @param {string} cwd
+ * @param {string} [cwd]
  * @returns {import('types').ValidatedConfig}
  */
-export function validate_config(config, cwd) {
+export function validate_config(config, cwd = process.cwd()) {
 	if (typeof config !== 'object') {
 		throw new Error(
 			'The Svelte config file must have a configuration object as its default export. See https://svelte.dev/docs/kit/configuration'
