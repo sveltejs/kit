@@ -60,10 +60,7 @@ export function fix_css_urls({
 		return css;
 	}
 
-	// if we're going to do string interpolation, we should escape existing backticks and dollar sign symbols
-	if (paths_assets.includes('$') || base.includes('$')) {
-		css = escape_for_interpolation(css);
-	}
+	css = escape_for_interpolation(css);
 
 	// safe guard in case of trailing slashes (but this should never happen)
 	if (paths_assets.endsWith('/')) {
