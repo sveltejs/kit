@@ -35,13 +35,7 @@ const directives = object({
 	}),
 	'trusted-types': validate(undefined, (input, keypath) => {
 		assert_trusted_types_supported(keypath);
-		input = string_array()(input, keypath);
-
-		if (!input.includes('svelte-trusted-html')) {
-			throw new Error(`${keypath} must include "svelte-trusted-html" for Svelte to work correctly`);
-		}
-
-		return input;
+		return string_array()(input, keypath);
 	}),
 	'upgrade-insecure-requests': boolean(false),
 	'require-sri-for': string_array(),

@@ -549,8 +549,14 @@ export async function render_response({
 			// we use an anonymous function instead of an arrow function to support
 			// older browsers (https://github.com/sveltejs/kit/pull/5417)
 			blocks.push(`if ('serviceWorker' in navigator) {
+						const script_url = '${prefixed('service-worker.js')}';
+						const policy = globalThis?.window?.trustedTypes?.createPolicy(
+							'sveltekit-trusted-url',
+							{ createScriptURL(url) { return url; } }
+						);
+						const sanitised = policy?.createScriptURL(script_url) ?? script_url;
 						addEventListener('load', function () {
-							navigator.serviceWorker.register('${prefixed('service-worker.js')}'${opts});
+							navigator.serviceWorker.register(sanitised${opts});
 						});
 					}`);
 		}

@@ -125,6 +125,7 @@ export function validate_config(config) {
 		);
 	}
 
+	/** @type {import('types').ValidatedConfig} */
 	const validated = options(config, 'config');
 	const files = validated.kit.files;
 
@@ -147,6 +148,22 @@ export function validate_config(config) {
 		if (validated.kit.output.bundleStrategy !== 'split') {
 			throw new Error(
 				"The `router.resolution` option cannot be 'server' if `output.bundleStrategy` is 'inline' or 'single'"
+			);
+		}
+	}
+
+	if (validated.kit.csp?.directives?.['require-trusted-types-for'].includes('script')) {
+		if (!validated.kit.csp?.directives?.['trusted-types']?.includes('svelte-trusted-html')) {
+			throw new Error(
+				"The `csp.directives['trusted-types']` option must include 'svelte-trusted-html'"
+			);
+		}
+		if (
+			validated.kit.serviceWorker?.register &&
+			!validated.kit.csp?.directives?.['trusted-types']?.includes('sveltekit-trusted-url')
+		) {
+			throw new Error(
+				"The `csp.directives['trusted-types']` option must include 'sveltekit-trusted-url' when `serviceWorker.register` is true"
 			);
 		}
 	}
