@@ -96,7 +96,7 @@ export async function load_config({ cwd = process.cwd() } = {}) {
  * @returns {import('types').ValidatedConfig}
  */
 function process_config(config, { cwd = process.cwd() } = {}) {
-	const validated = validate_config(config);
+	const validated = validate_config(config, cwd);
 
 	validated.kit.outDir = path.resolve(cwd, validated.kit.outDir);
 
@@ -116,9 +116,10 @@ function process_config(config, { cwd = process.cwd() } = {}) {
 
 /**
  * @param {import('@sveltejs/kit').Config} config
+ * @param {string} cwd
  * @returns {import('types').ValidatedConfig}
  */
-export function validate_config(config) {
+export function validate_config(config, cwd) {
 	if (typeof config !== 'object') {
 		throw new Error(
 			'The Svelte config file must have a configuration object as its default export. See https://svelte.dev/docs/kit/configuration'
@@ -160,6 +161,7 @@ export function validate_config(config) {
 		}
 		if (
 			validated.kit.serviceWorker?.register &&
+			fs.existsSync(path.resolve(cwd, validated.kit.files.serviceWorker)) &&
 			!validated.kit.csp?.directives?.['trusted-types']?.includes('sveltekit-trusted-url')
 		) {
 			throw new Error(
