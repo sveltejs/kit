@@ -708,12 +708,10 @@ async function get_navigation_result_from_branch({
 		)
 			// filter out indexes where there was no branch, but keep indexes where there was a branch but no error component
 			.filter((e) => e !== null);
+	}
 
-		console.log('Transformed errors for the following branches:', result.props);
-
-		if (error) {
-			result.props.error = error;
-		}
+	if (error && __SVELTEKIT_EXPERIMENTAL_USE_TRANSFORM_ERROR__) {
+		result.props.error = error;
 	}
 
 	if (form !== undefined) {

@@ -188,7 +188,6 @@ export function write_root(manifest_data, config, output) {
 			dedent`
 			import { asClassComponent } from 'svelte/legacy';
 			import Root from './root.svelte';
-			console.warn(Root.toString());
 			export default asClassComponent(Root);
 		`
 		);

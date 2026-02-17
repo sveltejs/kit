@@ -132,7 +132,9 @@ test.describe('remote functions', () => {
 		await page.getByText('set message').click();
 
 		await page
-			.getByText('This is your custom error page saying: "oops (500 Internal Error)"')
+			.getByText(
+				'This is your custom error page saying: "oops (500 Internal Error, on /remote/form/unexpected-error)"'
+			)
 			.waitFor();
 	});
 
