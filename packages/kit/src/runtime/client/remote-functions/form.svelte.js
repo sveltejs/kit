@@ -110,6 +110,10 @@ export function form(id) {
 
 			submitted = true;
 
+			// Increment pending count immediately so that `pending` reflects
+			// the in-progress state during async preflight validation
+			pending_count++;
+
 			const validated = await preflight_schema?.['~standard'].validate(data);
 
 			if (validated?.issues) {
@@ -118,6 +122,7 @@ export function form(id) {
 					raw_issues,
 					validated.issues.map((issue) => normalize_issue(issue, false))
 				);
+				pending_count--;
 				return;
 			}
 
@@ -178,9 +183,6 @@ export function form(id) {
 			if (entry) {
 				entry.count++;
 			}
-
-			// Increment pending count when submission starts
-			pending_count++;
 
 			/** @type {Array<Query<any> | RemoteQueryOverride>} */
 			let updates = [];

@@ -1,5 +1,39 @@
 # @sveltejs/adapter-netlify
 
+## 6.0.0
+### Major Changes
+
+
+- breaking: `platform.context` is now the [modern Netlify Functions ([#15203](https://github.com/sveltejs/kit/pull/15203))
+  context](https://docs.netlify.com/build/functions/api/#netlify-specific-context-object)
+  
+  Previously, this was the [AWS Lambda-style
+  context](https://github.com/netlify/primitives/blob/c1ae30f2745f0a73e26e83334695e205a04ab47d/packages/functions/prod/src/function/handler_context.ts).
+  
+  If you were using this in your app (unlikely), you will need to update your code to read from new fields.
+
+### Minor Changes
+
+
+- feat: Migrate to the modern Netlify Functions API ([#15203](https://github.com/sveltejs/kit/pull/15203))
+  
+  The Netlify adapter now generates "v2" Netlify Functions, which uses modern standards (ESM, `Request`, `Response`) instead of the legacy "Lambda-compatible" or "v1" format. Under the hood, this greatly simplifies the adapter code and improves maintainability.
+  
+  For more details on features this unlocks for your SvelteKit app, see
+  https://developers.netlify.com/guides/migrating-to-the-modern-netlify-functions/.
+
+- feat: allow configuring redirects in `netlify.toml` ([#15203](https://github.com/sveltejs/kit/pull/15203))
+  
+  The limitation of only being able to configure redirects via the `_redirects` file has been removed.
+
+### Patch Changes
+
+
+- fix: populate `App.Platform` with `context` property ([#15203](https://github.com/sveltejs/kit/pull/15203))
+
+- Updated dependencies [[`37293a5`](https://github.com/sveltejs/kit/commit/37293a5c913b014e823bc823f2c8c6da38b88d6e), [`5d05ca6`](https://github.com/sveltejs/kit/commit/5d05ca6f606cf68417e4ed1ccb68cd77383f1f0f), [`ed69b77`](https://github.com/sveltejs/kit/commit/ed69b77cf9ef1af088008ff559f8de2e2a2f6bf4), [`b1fc959`](https://github.com/sveltejs/kit/commit/b1fc95966e0aeee689fdae71fa488c34b4806303), [`159aece`](https://github.com/sveltejs/kit/commit/159aece0654db020f95bc414f6a21f25fbc5f22f), [`c690579`](https://github.com/sveltejs/kit/commit/c690579620e131cd077ded0bc8e55090d3681d35), [`dc8cf2d`](https://github.com/sveltejs/kit/commit/dc8cf2defa71dd987437895eb89587c724f6e9bb), [`ace2116`](https://github.com/sveltejs/kit/commit/ace2116d95e13293dbc1e26b5b7d780202fd02dd), [`0f38f49`](https://github.com/sveltejs/kit/commit/0f38f498e0e7052db7b8cfe9ea892e7882a67b66)]:
+  - @sveltejs/kit@2.51.0
+
 ## 5.2.4
 ### Patch Changes
 
