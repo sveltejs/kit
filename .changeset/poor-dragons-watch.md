@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-chore: remove dependency on sade
+chore: remove dependency on `sade`
