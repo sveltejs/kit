@@ -604,13 +604,7 @@ async function initialize(result, target, hydrate) {
 		sync: false,
 		// @ts-ignore Svelte 5 specific: transformError allows to transform errors before they are passed to boundaries
 		transformError: __SVELTEKIT_EXPERIMENTAL_USE_TRANSFORM_ERROR__
-			? /** @param {unknown} error */ (error) =>
-					app.hooks.handleError({
-						error,
-						event: current.nav,
-						status: get_status(error),
-						message: get_message(error)
-					})
+			? /** @param {unknown} error */ (error) => handle_error(error, current.nav)
 			: undefined
 	});
 
@@ -704,7 +698,7 @@ async function get_navigation_result_from_branch({
 					if (!b) return null;
 
 					// Find the closest error component up to the previous branch
-					while (i > last_idx && !errors[i]) i -= 1;
+					while (i > last_idx + 1 && !errors[i]) i -= 1;
 					last_idx = i;
 					return errors[i]?.()
 						.then((e) => e.component)
@@ -714,6 +708,8 @@ async function get_navigation_result_from_branch({
 		)
 			// filter out indexes where there was no branch, but keep indexes where there was a branch but no error component
 			.filter((e) => e !== null);
+
+		console.log('Transformed errors for the following branches:', result.props);
 
 		if (error) {
 			result.props.error = error;

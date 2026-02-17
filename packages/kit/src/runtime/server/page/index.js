@@ -348,7 +348,7 @@ export async function render_page(
 						if (!b) return null;
 
 						// Find the closest error component up to the previous branch
-						while (i > last_idx && page.errors[i] === undefined) i -= 1;
+						while (i > last_idx + 1 && page.errors[i] === undefined) i -= 1;
 						last_idx = i;
 
 						const idx = page.errors[i];
