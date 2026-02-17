@@ -23,26 +23,49 @@ export function write_root(manifest_data, config, output) {
 	}
 
 	let l = max_depth;
+	let pyramid = '';
 
-	let pyramid = dedent`
+	if (isSvelte5Plus() && use_boundaries) {
+		pyramid = dedent`
+			{#snippet pyramid(depth)}
+				{@const Pyramid = constructors[depth]}
+				{#snippet failed(error)}
+					{@const ErrorPage = errors[depth]}
+					<ErrorPage {error} />
+				{/snippet}
+				<svelte:boundary failed={errors[depth] ? failed : undefined}>
+					{#if constructors[depth + 1]}
+						<!-- svelte-ignore binding_property_non_reactive -->
+						<Pyramid bind:this={components[depth]} data={data_${l}} {form} params={page.params}>
+							{@render pyramid(depth + 1)}
+						</Pyramid>
+					{:else}
+						<!-- svelte-ignore binding_property_non_reactive -->
+						<Pyramid bind:this={components[depth]} data={data_${l}} {form} params={page.params} {error} />
+					{/if}
+				</svelte:boundary>
+			{/snippet}
+
+			{@render pyramid(0)}
+		`;
+	} else {
+		pyramid = dedent`
 	${
 		isSvelte5Plus()
 			? `<!-- svelte-ignore binding_property_non_reactive -->
-		<Pyramid_${l} bind:this={components[${l}]} data={data_${l}} {form} params={page.params} {error} />`
+		<Pyramid_${l} bind:this={components[${l}]} data={data_${l}} {form} params={page.params} />`
 			: `<svelte:component this={constructors[${l}]} bind:this={components[${l}]} data={data_${l}} {form} params={page.params} />`
 	}`;
 
-	while (l--) {
-		let children = pyramid;
-
-		pyramid = dedent`
+		while (l--) {
+			pyramid = dedent`
 			{#if constructors[${l + 1}]}
 				${
 					isSvelte5Plus()
 						? dedent`{@const Pyramid_${l} = constructors[${l}]}
 						<!-- svelte-ignore binding_property_non_reactive -->
 						<Pyramid_${l} bind:this={components[${l}]} data={data_${l}} {form} params={page.params}>
-							${children}
+							${pyramid}
 						</Pyramid_${l}>`
 						: dedent`<svelte:component this={constructors[${l}]} bind:this={components[${l}]} data={data_${l}} params={page.params}>
 					${pyramid}
@@ -55,29 +78,13 @@ export function write_root(manifest_data, config, output) {
 						? dedent`
 					{@const Pyramid_${l} = constructors[${l}]}
 					<!-- svelte-ignore binding_property_non_reactive -->
-					<Pyramid_${l} bind:this={components[${l}]} data={data_${l}} {form} {error} params={page.params} />
+					<Pyramid_${l} bind:this={components[${l}]} data={data_${l}} {form} params={page.params} />
 					`
 						: dedent`<svelte:component this={constructors[${l}]} bind:this={components[${l}]} data={data_${l}} {form} params={page.params} />`
 				}
 
 			{/if}
 		`;
-
-		if (
-			use_boundaries &&
-			manifest_data.routes.some((route) =>
-				route.page ? route.page.errors.length === l + 1 : false
-			)
-		) {
-			pyramid = dedent`
-				{#snippet failed_${l}(error)}
-					{@const ErrorPage_${l} = errors[${l}]}
-					<ErrorPage_${l} {error} />
-				{/snippet}
-				<svelte:boundary failed={errors[${l}] ? failed_${l} : undefined}>
-					${pyramid}
-				</svelte:boundary>
-			`;
 		}
 	}
 
@@ -176,6 +183,7 @@ export function write_root(manifest_data, config, output) {
 			dedent`
 			import { asClassComponent } from 'svelte/legacy';
 			import Root from './root.svelte';
+			console.warn(Root.toString());
 			export default asClassComponent(Root);
 		`
 		);
