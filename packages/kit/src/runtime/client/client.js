@@ -695,8 +695,10 @@ async function get_navigation_result_from_branch({
 		result.props.errors = (
 			await Promise.all(
 				branch.map((b, i) => {
+					if (i === 0) return undefined; // root layout wraps root error component, not the other way around
 					if (!b) return null;
 
+					i--;
 					// Find the closest error component up to the previous branch
 					while (i > last_idx + 1 && !errors[i]) i -= 1;
 					last_idx = i;
