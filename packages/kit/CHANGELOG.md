@@ -1,5 +1,59 @@
 # @sveltejs/kit
 
+## 2.52.0
+### Minor Changes
+
+
+- feat: `match` function to map a path back to a route id and params ([#14997](https://github.com/sveltejs/kit/pull/14997))
+
+
+### Patch Changes
+
+
+- fix: respect scroll-margin when navigating to a url-supplied anchor ([#15246](https://github.com/sveltejs/kit/pull/15246))
+
+
+- fix: `resolve` will narrow types to follow trailing slash page settings ([#15027](https://github.com/sveltejs/kit/pull/15027))
+
+## 2.51.0
+### Minor Changes
+
+
+- feat: add `scroll` property to `NavigationTarget` in navigation callbacks ([#15248](https://github.com/sveltejs/kit/pull/15248))
+  
+  Navigation callbacks (`beforeNavigate`, `onNavigate`, and `afterNavigate`) now include scroll position information via the `scroll` property on `from` and `to` targets:
+  
+  - `from.scroll`: The scroll position at the moment navigation was triggered
+  - `to.scroll`: In `beforeNavigate` and `onNavigate`, this is populated for `popstate` navigations (back/forward) with the scroll position that will be restored, and `null` for other navigation types. In `afterNavigate`, this is always the final scroll position after navigation completed.
+  
+  This enables use cases like animating transitions based on the target scroll position when using browser back/forward navigation.
+
+- feat: `hydratable`'s injected script now works with CSP ([#15048](https://github.com/sveltejs/kit/pull/15048))
+
+
+### Patch Changes
+
+
+- fix: put preloads before styles ([#15232](https://github.com/sveltejs/kit/pull/15232))
+
+
+- fix: suppress false-positive inner content warning when children prop is forwarded to a child component ([#15269](https://github.com/sveltejs/kit/pull/15269))
+
+
+- fix: `fetch` not working when URL is same host but different than `paths.base` ([#15291](https://github.com/sveltejs/kit/pull/15291))
+
+
+- fix: navigate to hash link when base element is present ([#15236](https://github.com/sveltejs/kit/pull/15236))
+
+
+- fix: avoid triggering `handleError` when redirecting in a remote function ([#15222](https://github.com/sveltejs/kit/pull/15222))
+
+
+- fix: include `test` directory in generated `tsconfig.json` alongside existing `tests` entry ([#15254](https://github.com/sveltejs/kit/pull/15254))
+
+
+- fix: generate `tsconfig.json` using the value of `kit.files.src` ([#15253](https://github.com/sveltejs/kit/pull/15253))
+
 ## 2.50.2
 ### Patch Changes
 

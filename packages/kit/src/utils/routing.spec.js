@@ -1,5 +1,5 @@
 import { assert, expect, test, describe } from 'vitest';
-import { exec, parse_route_id, resolve_route } from './routing.js';
+import { exec, parse_route_id, resolve_route, find_route } from './routing.js';
 
 describe('parse_route_id', () => {
 	const tests = {
@@ -377,5 +377,58 @@ describe('resolve_route', () => {
 			() => resolve_route('/blog/[one]/[two]', { one: 'one', two: 'two/' }),
 			"Parameter 'two' in route /blog/[one]/[two] cannot start or end with a slash -- this would cause an invalid route like foo//bar"
 		);
+	});
+});
+
+describe('find_route', () => {
+	/** @param {string} id */
+	function create_route(id) {
+		const { pattern, params } = parse_route_id(id);
+		return { id, pattern, params };
+	}
+
+	test('finds matching route', () => {
+		const routes = [create_route('/blog'), create_route('/blog/[slug]'), create_route('/about')];
+
+		const result = find_route('/blog/hello-world', routes, {});
+		assert.equal(result?.route.id, '/blog/[slug]');
+		assert.deepEqual(result?.params, { slug: 'hello-world' });
+	});
+
+	test('returns first matching route', () => {
+		const routes = [create_route('/blog/[slug]'), create_route('/blog/[...rest]')];
+
+		const result = find_route('/blog/hello', routes, {});
+		assert.equal(result?.route.id, '/blog/[slug]');
+	});
+
+	test('returns null for no match', () => {
+		const routes = [create_route('/blog'), create_route('/about')];
+
+		const result = find_route('/contact', routes, {});
+		assert.equal(result, null);
+	});
+
+	test('respects matchers', () => {
+		const routes = [create_route('/blog/[slug=word]'), create_route('/blog/[slug]')];
+		/** @type {Record<string, import('@sveltejs/kit').ParamMatcher>} */
+		const matchers = {
+			word: (param) => /^\w+$/.test(param)
+		};
+
+		// "hello" matches the word matcher
+		const result1 = find_route('/blog/hello', routes, matchers);
+		assert.equal(result1?.route.id, '/blog/[slug=word]');
+
+		// "hello-world" doesn't match word matcher, falls through to [slug]
+		const result2 = find_route('/blog/hello-world', routes, matchers);
+		assert.equal(result2?.route.id, '/blog/[slug]');
+	});
+
+	test('decodes params', () => {
+		const routes = [create_route('/blog/[slug]')];
+
+		const result = find_route('/blog/hello%20world', routes, {});
+		assert.equal(result?.params.slug, 'hello world');
 	});
 });
