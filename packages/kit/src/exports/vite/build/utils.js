@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { normalizePath } from 'vite';
+import { s } from '../../../utils/misc.js';
 
 /**
  * Adds transitive JS and CSS dependencies to the js and css inputs.
@@ -40,7 +41,7 @@ export function find_deps(manifest, entry, add_dynamic_css) {
 		if (add_js) imports.add(chunk.file);
 
 		if (chunk.assets) {
-			chunk.assets.forEach(asset => imported_assets.add(asset));
+			chunk.assets.forEach((asset) => imported_assets.add(asset));
 		}
 
 		if (chunk.css) {
@@ -48,7 +49,9 @@ export function find_deps(manifest, entry, add_dynamic_css) {
 		}
 
 		if (chunk.imports) {
-			chunk.imports.forEach((file) => traverse(file, add_js, initial_importer, dynamic_import_depth));
+			chunk.imports.forEach((file) =>
+				traverse(file, add_js, initial_importer, dynamic_import_depth)
+			);
 		}
 
 		if (!add_dynamic_css) return;
@@ -58,7 +61,9 @@ export function find_deps(manifest, entry, add_dynamic_css) {
 			// a transitive dependency, it doesn't have a suitable name we can map back to
 			// the server manifest
 			if (stylesheet_map.has(initial_importer)) {
-				const { css, assets } = /** @type {{ css: Set<string>; assets: Set<string> }} */ (stylesheet_map.get(initial_importer));
+				const { css, assets } = /** @type {{ css: Set<string>; assets: Set<string> }} */ (
+					stylesheet_map.get(initial_importer)
+				);
 				if (chunk.css) chunk.css.forEach((file) => css.add(file));
 				if (chunk.assets) chunk.assets.forEach((file) => assets.add(file));
 			} else {
@@ -111,22 +116,11 @@ export function resolve_symlinks(manifest, file) {
 }
 
 /**
- * @param {string[]} assets 
+ * @param {string[]} assets
  * @returns {string[]}
  */
 export function filter_fonts(assets) {
 	return assets.filter((asset) => /\.(woff2?|ttf|otf)$/.test(asset));
-}
-
-const method_names = new Set((['GET', 'HEAD', 'PUT', 'POST', 'DELETE', 'PATCH', 'OPTIONS']));
-
-// If we'd written this in TypeScript, it could be easy...
-/**
- * @param {string} str
- * @returns {str is import('types').HttpMethod}
- */
-export function is_http_method(str) {
-	return method_names.has(str);
 }
 
 /**
@@ -135,4 +129,19 @@ export function is_http_method(str) {
  */
 export function assets_base(config) {
 	return (config.paths.assets || config.paths.base || '.') + '/';
+}
+
+/**
+ * Writes a function with arguments used by a template literal.
+ * This helps us store strings in a module and inject values at runtime.
+ * @param {string} name The name of the function
+ * @param {string[]} placeholder_names The names of the placeholders in the string
+ * @param {string} str A string with placeholders such as "Hello ${arg0}".
+ * 										 It must have backticks and dollar signs escaped.
+ * @returns {string} The function written as a string
+ */
+export function create_function_as_string(name, placeholder_names, str) {
+	str = s(str).slice(1, -1);
+	const args = placeholder_names ? placeholder_names.join(', ') : '';
+	return `function ${name}(${args}) { return \`${str}\`; }`;
 }

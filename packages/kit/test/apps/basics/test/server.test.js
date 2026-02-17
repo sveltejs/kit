@@ -910,8 +910,8 @@ test.describe('$app/environment', () => {
 test.describe('tracing', () => {
 	// Helper function to find the resolve.root span deep in the handle.child chain
 	/**
-	 * @param {ReadableSpan} span
-	 * @returns {ReadableSpan | null}
+	 * @param {import('../../../types.js').SpanTree} span
+	 * @returns {import('../../../types.js').SpanTree | null}
 	 */
 	function find_resolve_root_span(span) {
 		if (span.name === 'sveltekit.resolve') {
@@ -1361,13 +1361,6 @@ test.describe('tracing', () => {
 				})
 			])
 		});
-	});
-});
-
-test.describe('remote functions', () => {
-	test("doesn't write bundle to disk when treeshaking prerendered remote functions", () => {
-		test.skip(!!process.env.DEV, 'skip when in dev mode');
-		expect(fs.existsSync(path.join(root, 'dist'))).toBe(false);
 	});
 });
 

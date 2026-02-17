@@ -40,9 +40,9 @@ import {
 } from './module_ids.js';
 import { import_peer } from '../../utils/import.js';
 import { compact } from '../../utils/array.js';
-import { should_ignore } from './static_analysis/utils.js';
+import { should_ignore, has_children } from './static_analysis/utils.js';
 
-const cwd = process.cwd();
+const cwd = posixify(process.cwd());
 
 /** @type {import('./types.js').EnforcedConfig} */
 const enforced_config = {
@@ -112,10 +112,8 @@ const warning_preprocessor = {
 		if (!filename) return;
 
 		const basename = path.basename(filename);
-		const has_children =
-			content.includes('<slot') || (isSvelte5Plus() && content.includes('{@render'));
 
-		if (basename.startsWith('+layout.') && !has_children) {
+		if (basename.startsWith('+layout.') && !has_children(content, isSvelte5Plus())) {
 			const message =
 				`\n${colors.bold().red(path.relative('.', filename))}\n` +
 				`\`<slot />\`${isSvelte5Plus() ? ' or `{@render ...}` tag' : ''}` +
@@ -363,6 +361,7 @@ async function kit({ svelte_config }) {
 				__SVELTEKIT_APP_DIR__: s(kit.appDir),
 				__SVELTEKIT_EMBEDDED__: s(kit.embedded),
 				__SVELTEKIT_EXPERIMENTAL__REMOTE_FUNCTIONS__: s(kit.experimental.remoteFunctions),
+				__SVELTEKIT_FORK_PRELOADS__: s(kit.experimental.forkPreloads),
 				__SVELTEKIT_PATHS_ASSETS__: s(kit.paths.assets),
 				__SVELTEKIT_PATHS_BASE__: s(kit.paths.base),
 				__SVELTEKIT_PATHS_RELATIVE__: s(kit.paths.relative),
@@ -819,6 +818,8 @@ async function kit({ svelte_config }) {
 			/** @type {import('vite').UserConfig} */
 			let new_config;
 
+			const kit_paths_base = kit.paths.base || '/';
+
 			if (is_build) {
 				const ssr = /** @type {boolean} */ (config.build?.ssr);
 				const prefix = `${kit.appDir}/immutable`;
@@ -862,6 +863,14 @@ async function kit({ svelte_config }) {
 						input[name] = path.resolve(file);
 					});
 
+					// ...and the hooks files
+					if (manifest_data.hooks.server) {
+						input['entries/hooks.server'] = path.resolve(manifest_data.hooks.server);
+					}
+					if (manifest_data.hooks.universal) {
+						input['entries/hooks.universal'] = path.resolve(manifest_data.hooks.universal);
+					}
+
 					// ...and the server instrumentation file
 					const server_instrumentation = resolve_entry(
 						path.join(kit.files.src, 'instrumentation.server')
@@ -900,7 +909,7 @@ async function kit({ svelte_config }) {
 				// That's larger and takes longer to run and also causes an HTML diff between SSR and client
 				// causing us to do a more expensive hydration check.
 				const client_base =
-					kit.paths.relative !== false || kit.paths.assets ? './' : kit.paths.base || '/';
+					kit.paths.relative !== false || kit.paths.assets ? './' : kit_paths_base;
 
 				const inline = !ssr && svelte_config.kit.output.bundleStrategy === 'inline';
 				const split = ssr || svelte_config.kit.output.bundleStrategy === 'split';
@@ -959,7 +968,7 @@ async function kit({ svelte_config }) {
 			} else {
 				new_config = {
 					appType: 'custom',
-					base: kit.paths.base,
+					base: kit_paths_base,
 					build: {
 						rollupOptions: {
 							// Vite dependency crawler needs an explicit JS entry point
@@ -1037,7 +1046,7 @@ async function kit({ svelte_config }) {
 		 */
 		writeBundle: {
 			sequential: true,
-			async handler(_options, bundle) {
+			async handler(_options) {
 				if (secondary_build_started) return; // only run this once
 
 				const verbose = vite_config.logLevel === 'info';
@@ -1071,7 +1080,7 @@ async function kit({ svelte_config }) {
 
 				log.info('Analysing routes');
 
-				const { metadata, static_exports } = await analyse({
+				const { metadata } = await analyse({
 					hash: kit.router.type === 'hash',
 					manifest_path,
 					manifest_data,
@@ -1271,16 +1280,15 @@ async function kit({ svelte_config }) {
 				);
 
 				// regenerate nodes with the client manifest...
-				await build_server_nodes(
+				build_server_nodes(
 					out,
 					kit,
 					manifest_data,
 					server_manifest,
 					client_manifest,
-					bundle,
+					assets_path,
 					client_chunks,
-					svelte_config.kit.output,
-					static_exports
+					svelte_config.kit.output
 				);
 
 				// ...and prerender

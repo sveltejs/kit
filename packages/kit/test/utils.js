@@ -1,10 +1,15 @@
-/** @import {SpanData, SpanTree} from './types' */
+/** @import { SpanData, SpanTree } from './types' */
+// This helps `pnpm check` pass in the test apps without having to include
+// the ambient.d.ts file in each of their tsconfig.json files.
+/** @import {} from './ambient' */
+
 import fs from 'node:fs';
 import http from 'node:http';
 import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 import { defineConfig, test as base, devices } from '@playwright/test';
+import { number_from_env } from '../../../test-utils/index.js';
 
 /** @type {import('./types')['test']} */
 export const test = base.extend({
@@ -28,12 +33,16 @@ export const test = base.extend({
 	clicknav: async ({ page, javaScriptEnabled }, use) => {
 		/**
 		 * @param {string} selector
-		 * @param {{ timeout: number }} options
+		 * @param {{ timeout?: number, waitForURL?: string }} [options]
 		 */
-		async function clicknav(selector, options) {
+		async function clicknav(selector, { timeout, waitForURL } = {}) {
 			const element = page.locator(selector);
 			if (javaScriptEnabled) {
-				await Promise.all([page.waitForNavigation(options), element.click()]);
+				const promises = [page.waitForNavigation({ timeout }), element.click()];
+				if (waitForURL) {
+					promises.push(page.waitForURL(waitForURL, { timeout }));
+				}
+				await Promise.all(promises);
 			} else {
 				await element.click();
 			}
@@ -108,7 +117,7 @@ export const test = base.extend({
 				throw new Error(`function does not exist on page: ${fn}`);
 			}
 
-			// @ts-expect-error
+			/** @param  {...any} args */
 			async function modified_fn(...args) {
 				try {
 					// @ts-ignore
@@ -120,8 +129,7 @@ export const test = base.extend({
 				} catch (e) {
 					// Exclude this function from the stack trace so that it points to the failing test
 					// instead of this file.
-					// @ts-expect-error
-					Error.captureStackTrace(e, modified_fn);
+					Error.captureStackTrace(/** @type {Error} */ (e), modified_fn);
 					throw e;
 				}
 			}
@@ -166,12 +174,12 @@ export const test = base.extend({
 	// eslint-disable-next-line no-empty-pattern -- Playwright doesn't let us use `_` as a parameter name. It must be a destructured object
 	start_server: async ({}, use) => {
 		/**
-		 * @type {http.Server}
+		 * @type {http.Server | undefined}
 		 */
 		let server;
 
 		/**
-		 * @type {Set<import('net').Socket>}
+		 * @type {Set<import('net').Socket> | undefined}
 		 */
 		let sockets;
 
@@ -185,7 +193,7 @@ export const test = base.extend({
 			server = http.createServer(handler);
 
 			await new Promise((fulfil) => {
-				server.listen(0, 'localhost', () => {
+				/** @type {http.Server} */ (server).listen(0, 'localhost', () => {
 					fulfil(undefined);
 				});
 			});
@@ -196,9 +204,9 @@ export const test = base.extend({
 			}
 			sockets = new Set();
 			server.on('connection', (socket) => {
-				sockets.add(socket);
+				/** @type {Set<import('net').Socket>} */ (sockets).add(socket);
 				socket.on('close', () => {
-					sockets.delete(socket);
+					/** @type {Set<import('net').Socket>} */ (sockets).delete(socket);
 				});
 			});
 			return {
@@ -207,9 +215,7 @@ export const test = base.extend({
 		}
 		await use(start_server);
 
-		// @ts-expect-error use before set
 		if (server) {
-			// @ts-expect-error use before set
 			if (sockets) {
 				sockets.forEach((socket) => {
 					if (!socket.destroyed) {
@@ -219,7 +225,7 @@ export const test = base.extend({
 			}
 
 			await new Promise((fulfil, reject) => {
-				server.close((err) => {
+				/** @type {http.Server} */ (server).close((err) => {
 					if (err) {
 						reject(err);
 					} else {
@@ -258,7 +264,12 @@ const test_browser = /** @type {keyof typeof known_devices} */ (
 	process.env.KIT_E2E_BROWSER ?? 'chromium'
 );
 
-const test_browser_device = known_devices[test_browser];
+const test_browser_device = known_devices[test_browser]
+	? {
+			...known_devices[test_browser],
+			channel: test_browser === 'chromium' ? 'chromium' : undefined
+		}
+	: undefined;
 
 if (!test_browser_device) {
 	throw new Error(
@@ -276,7 +287,7 @@ export const config = defineConfig({
 		command: process.env.DEV ? 'pnpm dev --force' : 'pnpm build && pnpm preview',
 		port: process.env.DEV ? 5173 : 4173
 	},
-	retries: process.env.CI ? 2 : 0,
+	retries: process.env.CI ? 2 : number_from_env('KIT_E2E_RETRIES', 0),
 	projects: [
 		{
 			name: `${test_browser}-${process.env.DEV ? 'dev' : 'build'}`,
@@ -296,7 +307,7 @@ export const config = defineConfig({
 		screenshot: 'only-on-failure',
 		trace: 'retain-on-failure'
 	},
-	workers: process.env.CI ? 2 : undefined,
+	workers: process.env.CI ? 2 : number_from_env('KIT_E2E_WORKERS', undefined),
 	reporter: process.env.CI
 		? [
 				['dot'],
