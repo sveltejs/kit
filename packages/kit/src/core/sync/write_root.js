@@ -26,6 +26,8 @@ export function write_root(manifest_data, config, output) {
 	let pyramid = '';
 
 	if (isSvelte5Plus() && use_boundaries) {
+		// with the @const we force the data[depth] access to be derived, which is important to not fire updates needlessly
+		// TODO in Svelte 5 we should rethink the client.js side, we can likely make data a $state and only update indexes that changed there, simplifying this a lot
 		pyramid = dedent`
 			{#snippet pyramid(depth)}
 				{@const Pyramid = constructors[depth]}
@@ -35,13 +37,15 @@ export function write_root(manifest_data, config, output) {
 				{/snippet}
 				<svelte:boundary failed={errors[depth] ? failed : undefined}>
 					{#if constructors[depth + 1]}
+						{@const d = data[depth]}
 						<!-- svelte-ignore binding_property_non_reactive -->
-						<Pyramid bind:this={components[depth]} data={data_${l}} {form} params={page.params}>
+						<Pyramid bind:this={components[depth]} data={d} {form} params={page.params}>
 							{@render pyramid(depth + 1)}
 						</Pyramid>
 					{:else}
+						{@const d = data[depth]}
 						<!-- svelte-ignore binding_property_non_reactive -->
-						<Pyramid bind:this={components[depth]} data={data_${l}} {form} params={page.params} {error} />
+						<Pyramid bind:this={components[depth]} data={d} {form} params={page.params} {error} />
 					{/if}
 				</svelte:boundary>
 			{/snippet}
@@ -104,6 +108,7 @@ export function write_root(manifest_data, config, output) {
 							let { stores, page, constructors, components = [], form, ${use_boundaries ? 'errors = [], error, ' : ''}${levels
 								.map((l) => `data_${l} = null`)
 								.join(', ')} } = $props();
+							${use_boundaries ? `let data = $derived({${levels.map((l) => `'${l}': data_${l}`).join(', ')}})` : ''}
 						`
 						: dedent`
 							export let stores;
