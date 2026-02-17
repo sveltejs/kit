@@ -372,7 +372,7 @@ function dynamic_img_to_picture(content, node, src_var_name) {
 	}
 
 	return `{#if typeof ${src_var_name} === 'string'}
-	{#if import.meta.DEV && ${!width_index && !height_index}}
+	{#if import.meta.env.DEV && ${!width_index && !height_index}}
 		{${src_var_name}} was not enhanced. Cannot determine dimensions.
 	{:else}
 		<img ${serialize_img_attributes(content, attributes, {

@@ -55,7 +55,12 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 					request.headers.delete('origin');
 				}
 
-				if (url.origin !== event.url.origin) {
+				const decoded = decodeURIComponent(url.pathname);
+
+				if (
+					url.origin !== event.url.origin ||
+					(paths.base && decoded !== paths.base && !decoded.startsWith(`${paths.base}/`))
+				) {
 					// Allow cookie passthrough for "credentials: same-origin" and "credentials: include"
 					// if SvelteKit is serving my.domain.com:
 					// -        domain.com WILL NOT receive cookies
@@ -77,7 +82,6 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 				// handle fetch requests for static assets. e.g. prebaked data, etc.
 				// we need to support everything the browser's fetch supports
 				const prefix = paths.assets || paths.base;
-				const decoded = decodeURIComponent(url.pathname);
 				const filename = (
 					decoded.startsWith(prefix) ? decoded.slice(prefix.length) : decoded
 				).slice(1);

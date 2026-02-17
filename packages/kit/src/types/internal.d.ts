@@ -32,6 +32,7 @@ import {
 	TrailingSlash
 } from './private.js';
 import { Span } from '@opentelemetry/api';
+import type { PageOptions } from '../exports/vite/static_analysis/index.js';
 
 export interface ServerModule {
 	Server: typeof InternalServer;
@@ -176,7 +177,7 @@ export class InternalServer extends Server {
 		request: Request,
 		options: RequestOptions & {
 			prerendering?: PrerenderOptions;
-			read: (file: string) => Buffer;
+			read: (file: string) => NonSharedBuffer;
 			/** A hook called before `handle` during dev, so that `AsyncLocalStorage` can be populated. */
 			before_handle?: (event: RequestEvent, config: any, prerender: PrerenderOption) => void;
 			emulator?: Emulator;
@@ -214,6 +215,8 @@ export interface PageNode {
 	parent?: PageNode;
 	/** Filled with the pages that reference this layout (if this is a layout). */
 	child_pages?: PageNode[];
+	/** The final page options for a node if it was statically analysable */
+	page_options?: PageOptions | null;
 }
 
 export interface PrerenderDependency {
@@ -278,6 +281,8 @@ export interface RouteData {
 
 	endpoint: {
 		file: string;
+		/** The final page options for the endpoint if it was statically analysable */
+		page_options: PageOptions | null;
 	} | null;
 }
 
@@ -529,9 +534,9 @@ export interface SSRState {
 	 * prerender option is inherited by the endpoint, unless overridden.
 	 */
 	prerender_default?: PrerenderOption;
-	read?: (file: string) => Buffer;
+	read?: (file: string) => NonSharedBuffer;
 	/**
-	 * Used to setup `__SVELTEKIT_TRACK__` which checks if a used feature is supported.
+	 * Used to set up `__SVELTEKIT_TRACK__` which checks if a used feature is supported.
 	 * E.g. if `read` from `$app/server` is used, it checks whether the route's config is compatible.
 	 */
 	before_handle?: (event: RequestEvent, config: any, prerender: PrerenderOption) => void;
