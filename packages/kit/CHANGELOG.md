@@ -1,5 +1,17 @@
 # @sveltejs/kit
 
+## 2.52.2
+### Patch Changes
+
+
+- fix: validate `form` file information to prevent amplification attacks ([`3e607b3`](https://github.com/sveltejs/kit/commit/3e607b314aec9e5f278d32847945b8b6323e1cb8))
+
+
+- chore: upgrade `devalue` and `svelte` ([#15339](https://github.com/sveltejs/kit/pull/15339))
+
+
+- fix: parse file offset table more strictly ([`f47c01b`](https://github.com/sveltejs/kit/commit/f47c01bd8100328c24fdb8522fe35913b0735f35))
+
 ## 2.52.1
 ### Patch Changes
 
