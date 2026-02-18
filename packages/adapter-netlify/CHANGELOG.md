@@ -1,5 +1,14 @@
 # @sveltejs/adapter-netlify
 
+## 6.0.2
+### Patch Changes
+
+
+- fix: prefix param matcher with alphabetical characters so that it works with URLPattern matching ([#15332](https://github.com/sveltejs/kit/pull/15332))
+
+- Updated dependencies [[`3e607b3`](https://github.com/sveltejs/kit/commit/3e607b314aec9e5f278d32847945b8b6323e1cb8), [`62991c8`](https://github.com/sveltejs/kit/commit/62991c81db4f50ccfb08a9ac5e05ccba4ddab59e), [`f47c01b`](https://github.com/sveltejs/kit/commit/f47c01bd8100328c24fdb8522fe35913b0735f35)]:
+  - @sveltejs/kit@2.52.2
+
 ## 6.0.1
 ### Patch Changes
 
