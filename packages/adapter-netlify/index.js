@@ -191,7 +191,7 @@ async function generate_edge_functions({ builder }) {
 			outfile: '.netlify/edge-functions/render.js',
 			...esbuild_config
 		}),
-		builder.hasServerInstrumentationFile?.() &&
+		builder.hasServerInstrumentationFile() &&
 			esbuild.build({
 				entryPoints: [`${builder.getServerDirectory()}/instrumentation.server.js`],
 				outfile: '.netlify/edge/instrumentation.server.js',
@@ -199,8 +199,8 @@ async function generate_edge_functions({ builder }) {
 			})
 	]);
 
-	if (builder.hasServerInstrumentationFile?.()) {
-		builder.instrument?.({
+	if (builder.hasServerInstrumentationFile()) {
+		builder.instrument({
 			entrypoint: '.netlify/edge-functions/render.js',
 			instrumentation: '.netlify/edge/instrumentation.server.js',
 			start: '.netlify/edge/start.js'
@@ -274,18 +274,21 @@ function generate_lambda_functions({ builder, publish, split }) {
 				routes
 			});
 
-			const fn = `import { init } from '../serverless.js';\n\nexport default init(${manifest});\n\nexport const config = {\n\tpath: "${pattern}",\n\texcludedPath: "/.netlify/*",\n\tpreferStatic: true\n};\n`;
+			const fn = generate_serverless_function_module(manifest);
+			const config = generate_config_export(pattern);
 
-			writeFileSync(`.netlify/functions-internal/${name}.mjs`, fn);
-			if (builder.hasServerInstrumentationFile?.()) {
-				builder.instrument?.({
+			if (builder.hasServerInstrumentationFile()) {
+				writeFileSync(`.netlify/functions-internal/${name}.mjs`, fn);
+				builder.instrument({
 					entrypoint: `.netlify/functions-internal/${name}.mjs`,
 					instrumentation: '.netlify/server/instrumentation.server.js',
 					start: `.netlify/functions-start/${name}.start.mjs`,
 					module: {
-						exports: ['default']
+						generateText: generate_traced_module(config)
 					}
 				});
+			} else {
+				writeFileSync(`.netlify/functions-internal/${name}.mjs`, `${fn}\n${config}`);
 			}
 		}
 	} else {
@@ -293,18 +296,21 @@ function generate_lambda_functions({ builder, publish, split }) {
 			relativePath: '../server'
 		});
 
-		const fn = `import { init } from '../serverless.js';\n\nexport default init(${manifest});\n\nexport const config = {\n\tpath: "/*",\n\texcludedPath: "/.netlify/*",\n\tpreferStatic: true\n};\n`;
+		const fn = generate_serverless_function_module(manifest);
+		const config = generate_config_export('/*');
 
-		writeFileSync(`.netlify/functions-internal/${FUNCTION_PREFIX}render.mjs`, fn);
-		if (builder.hasServerInstrumentationFile?.()) {
-			builder.instrument?.({
+		if (builder.hasServerInstrumentationFile()) {
+			writeFileSync(`.netlify/functions-internal/${FUNCTION_PREFIX}render.mjs`, fn);
+			builder.instrument({
 				entrypoint: `.netlify/functions-internal/${FUNCTION_PREFIX}render.mjs`,
 				instrumentation: '.netlify/server/instrumentation.server.js',
 				start: `.netlify/functions-start/${FUNCTION_PREFIX}render.start.mjs`,
 				module: {
-					exports: ['default']
+					generateText: generate_traced_module(config)
 				}
 			});
+		} else {
+			writeFileSync(`.netlify/functions-internal/${FUNCTION_PREFIX}render.mjs`, `${fn}\n${config}`);
 		}
 	}
 
@@ -385,4 +391,45 @@ function matches(a, b) {
 	} else {
 		return b.length === 1 && b[0].rest;
 	}
+}
+
+/**
+ * @param {string} manifest
+ * @returns {string}
+ */
+function generate_serverless_function_module(manifest) {
+	return `\
+import { init } from '../serverless.js';
+
+export default init(${manifest});
+`;
+}
+
+/**
+ * @param {string} pattern
+ * @returns {string}
+ */
+function generate_config_export(pattern) {
+	return `\
+export const config = {
+	path: "${pattern}",
+	excludedPath: "/.netlify/*",
+	preferStatic: true
+};
+`;
+}
+
+/**
+ * @param {string} config
+ * @returns {(opts: { instrumentation: string; start: string }) => string}
+ */
+function generate_traced_module(config) {
+	return ({ instrumentation, start }) => {
+		return `\
+import './${instrumentation}';
+const { default: _0 } = await import('./${start}');
+export { _0 as default };
+
+${config}`;
+	};
 }
