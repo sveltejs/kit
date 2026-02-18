@@ -1,6 +1,6 @@
 <script>
 	import { tick } from 'svelte';
-	import { get_number, set_number } from './form.remote.js';
+	import { get_number, set_number } from './form.remote.ts';
 	import * as v from 'valibot';
 
 	const number = get_number();
