@@ -5,6 +5,9 @@
 		"esModuleInterop": true,
 		"noEmit": true,
 		"resolveJsonModule": true,
+		// TODO: remove when we start SvelteKit 3.0
+		// concession change for vite5, importing a .remote.ts as .remote.js doesn't
+		// work on node 18, allowing .ts import and changing the imported suffix works.
 		"allowImportingTsExtensions": true
 	},
 	"extends": "./.svelte-kit/tsconfig.json"
