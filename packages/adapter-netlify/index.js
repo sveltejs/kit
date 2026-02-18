@@ -246,7 +246,8 @@ function generate_lambda_functions({ builder, publish, split }) {
 					parts.push('*');
 					break; // Netlify redirects don't allow anything after a *
 				} else if (segment.dynamic) {
-					parts.push(`:${parts.length}`);
+					// URLPattern requires params to start with letters
+					parts.push(`:param${parts.length}`);
 				} else {
 					parts.push(segment.content);
 				}
