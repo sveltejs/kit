@@ -43,7 +43,7 @@ catalog:
   publint: ^0.3.0
   semver: ^7.5.4
   sirv-cli: ^3.0.0
-  svelte: ^5.48.4
+  svelte: ^5.51.5
   svelte-check: ^4.3.4
   svelte-preprocess: ^6.0.0
   typescript-eslint: ^8.43.0
@@ -63,6 +63,5 @@ catalogs:
     vite: ^6.0.0 # vite7 requires node20
     '@sveltejs/vite-plugin-svelte': ^5.0.0 #vps6 requires node20
 overrides:
-
 # ci script replaces all overrides with the vite-xxx or node-xx catalogs above.
 # if you want to introduce an override, make sure to add it to all of them too
