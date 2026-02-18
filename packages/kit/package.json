@@ -23,7 +23,7 @@
 		"@types/cookie": "^0.6.0",
 		"acorn": "^8.14.1",
 		"cookie": "^0.6.0",
-		"devalue": "^5.6.2",
+		"devalue": "^5.6.3",
 		"esm-env": "^1.2.2",
 		"kleur": "^4.1.5",
 		"magic-string": "^0.30.5",
