@@ -269,6 +269,15 @@ export async function deserialize_binary_form(request) {
 
 	const [data, meta] = devalue.parse(text_decoder.decode(data_buffer), {
 		File: ([name, type, size, last_modified, index]) => {
+			if (
+				typeof name !== 'string' ||
+				typeof type !== 'string' ||
+				typeof size !== 'number' ||
+				typeof last_modified !== 'number' ||
+				typeof index !== 'number'
+			) {
+				throw deserialize_error('invalid file metadata');
+			}
 			if (files_start_offset + file_offsets[index] + size > content_length) {
 				throw deserialize_error('file data overflow');
 			}
