@@ -1,7 +1,8 @@
+/** @import { Validator } from './types.js' */
+
 import process from 'node:process';
 import colors from 'kleur';
-
-/** @typedef {import('./types.js').Validator} Validator */
+import { supportsTrustedTypes } from '../sync/utils.js';
 
 const directives = object({
 	'child-src': string_array(),
@@ -28,8 +29,14 @@ const directives = object({
 	'navigate-to': string_array(),
 	'report-uri': string_array(),
 	'report-to': string_array(),
-	'require-trusted-types-for': string_array(),
-	'trusted-types': string_array(),
+	'require-trusted-types-for': validate(undefined, (input, keypath) => {
+		assert_trusted_types_supported(keypath);
+		return string_array()(input, keypath);
+	}),
+	'trusted-types': validate(undefined, (input, keypath) => {
+		assert_trusted_types_supported(keypath);
+		return string_array()(input, keypath);
+	}),
 	'upgrade-insecure-requests': boolean(false),
 	'require-sri-for': string_array(),
 	'block-all-mixed-content': boolean(false),
@@ -482,6 +489,15 @@ function fun(fallback) {
 function assert_string(input, keypath) {
 	if (typeof input !== 'string') {
 		throw new Error(`${keypath} should be a string, if specified`);
+	}
+}
+
+/** @param {string} keypath */
+function assert_trusted_types_supported(keypath) {
+	if (!supportsTrustedTypes()) {
+		throw new Error(
+			`${keypath} is not supported by your version of Svelte. Please upgrade to Svelte 5.51.0 or later to use this directive.`
+		);
 	}
 }
 
