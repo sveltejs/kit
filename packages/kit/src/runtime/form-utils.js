@@ -97,15 +97,19 @@ export function serialize_binary_form(data, meta) {
 		}
 	});
 
-	const encoded_header_buffer = text_encoder.encode(encoded_header);
+	/** @type {Array<number> | undefined} */
+	let file_offsets;
 
 	let encoded_file_offsets = '';
+
+	/** @type {Array<[file: File, index: number]>} */
+	let unsorted_files;
 	if (files.length) {
+		unsorted_files = [...files];
 		// Sort small files to the front
 		files.sort(([a], [b]) => a.size - b.size);
 
-		/** @type {Array<number>} */
-		const file_offsets = new Array(files.length);
+		file_offsets = new Array(files.length);
 		let start = 0;
 		for (const [file, index] of files) {
 			file_offsets[index] = start;
@@ -113,6 +117,7 @@ export function serialize_binary_form(data, meta) {
 		}
 		encoded_file_offsets = JSON.stringify(file_offsets);
 	}
+	const encoded_header_buffer = text_encoder.encode(encoded_header);
 
 	const length_buffer = new Uint8Array(4);
 	const length_view = new DataView(length_buffer.buffer);
@@ -130,8 +135,14 @@ export function serialize_binary_form(data, meta) {
 		blob_parts.push(file);
 	}
 
+	const file_offset_start = HEADER_BYTES + encoded_header.length + encoded_file_offsets.length;
+
 	return {
-		blob: new Blob(blob_parts)
+		blob: new Blob(blob_parts),
+		file_offsets: file_offsets?.map((o, i) => ({
+			start: o + file_offset_start,
+			file: unsorted_files[i][0]
+		}))
 	};
 }
 
@@ -468,6 +479,27 @@ function check_prototype_pollution(key) {
 }
 
 /**
+ * Finds the paths to every File in an object
+ * @param {unknown} object
+ * @param {Map<File, string[]>} paths
+ * @param {string[]} path
+ */
+export function get_file_paths(object, paths = new Map(), path = []) {
+	if (Array.isArray(object)) {
+		for (let i = 0; i < object.length; i++) {
+			get_file_paths(object[i], paths, [...path, i.toString()]);
+		}
+	} else if (object instanceof File) {
+		paths.set(object, path);
+	} else if (typeof object === 'object' && object !== null) {
+		for (const [key, value] of Object.entries(object)) {
+			get_file_paths(value, paths, [...path, key]);
+		}
+	}
+	return paths;
+}
+
+/**
  * Sets a value in a nested object using an array of keys, mutating the original object.
  * @param {Record<string, any>} object
  * @param {string[]} keys
@@ -581,15 +613,14 @@ export function deep_get(object, path) {
 /**
  * Creates a proxy-based field accessor for form data
  * @param {any} target - Function or empty POJO
- * @param {() => Record<string, any>} get_input - Function to get current input data
- * @param {(path: (string | number)[], value: any) => void} set_input - Function to set input data
- * @param {() => Record<string, InternalRemoteFormIssue[]>} get_issues - Function to get current issues
+ * @param {{ get_input: () => Record<string, any>, set_input: (path: (string | number)[], value: any) => void, get_issues: () => Record<string, InternalRemoteFormIssue[]>, get_progress: (path: (string | number)[]) => { uploaded: number, total: number, percent: number } }} accessors - Accessor functions
  * @param {(string | number)[]} path - Current access path
+ *
  * @returns {any} Proxy object with name(), value(), and issues() methods
  */
-export function create_field_proxy(target, get_input, set_input, get_issues, path = []) {
+export function create_field_proxy(target, accessors, path = []) {
 	const get_value = () => {
-		return deep_get(get_input(), path);
+		return deep_get(accessors.get_input(), path);
 	};
 
 	return new Proxy(target, {
@@ -598,29 +629,26 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 
 			// Handle array access like jobs[0]
 			if (/^\d+$/.test(prop)) {
-				return create_field_proxy({}, get_input, set_input, get_issues, [
-					...path,
-					parseInt(prop, 10)
-				]);
+				return create_field_proxy({}, accessors, [...path, parseInt(prop, 10)]);
 			}
 
 			const key = build_path_string(path);
 
 			if (prop === 'set') {
 				const set_func = function (/** @type {any} */ newValue) {
-					set_input(path, newValue);
+					accessors.set_input(path, newValue);
 					return newValue;
 				};
-				return create_field_proxy(set_func, get_input, set_input, get_issues, [...path, prop]);
+				return create_field_proxy(set_func, accessors, [...path, prop]);
 			}
 
 			if (prop === 'value') {
-				return create_field_proxy(get_value, get_input, set_input, get_issues, [...path, prop]);
+				return create_field_proxy(get_value, accessors, [...path, prop]);
 			}
 
 			if (prop === 'issues' || prop === 'allIssues') {
 				const issues_func = () => {
-					const all_issues = get_issues()[key === '' ? '$' : key];
+					const all_issues = accessors.get_issues()[key === '' ? '$' : key];
 
 					if (prop === 'allIssues') {
 						return all_issues?.map((issue) => ({
@@ -637,7 +665,13 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 						}));
 				};
 
-				return create_field_proxy(issues_func, get_input, set_input, get_issues, [...path, prop]);
+				return create_field_proxy(issues_func, accessors, [...path, prop]);
+			}
+
+			if (prop === 'progress') {
+				const progress_func = () => accessors.get_progress(path);
+
+				return create_field_proxy(progress_func, accessors, [...path, prop]);
 			}
 
 			if (prop === 'as') {
@@ -663,7 +697,7 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 					const base_props = {
 						name: prefix + key + (is_array ? '[]' : ''),
 						get 'aria-invalid'() {
-							const issues = get_issues();
+							const issues = accessors.get_issues();
 							return key in issues ? 'true' : undefined;
 						}
 					};
@@ -786,11 +820,11 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 					});
 				};
 
-				return create_field_proxy(as_func, get_input, set_input, get_issues, [...path, 'as']);
+				return create_field_proxy(as_func, accessors, [...path, 'as']);
 			}
 
 			// Handle property access (nested fields)
-			return create_field_proxy({}, get_input, set_input, get_issues, [...path, prop]);
+			return create_field_proxy({}, accessors, [...path, prop]);
 		}
 	});
 }

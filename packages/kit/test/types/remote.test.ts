@@ -375,6 +375,18 @@ function form_tests() {
 		form.fields.allIssues();
 	}
 	void f10;
+
+	// file upload progress
+	const f11 = form(null as any as StandardSchemaV1<{ file: File; nonfile: number }>, () => {});
+	f11.fields.file.progress().uploaded;
+	f11.fields.file.progress().total;
+	// readonly:
+	// @ts-expect-error
+	f11.fields.file.progress().uploaded = 123;
+	// @ts-expect-error
+	f11.fields.file.progress().total = 123;
+	// @ts-expect-error
+	f11.fields.nonfile.progress();
 }
 form_tests();
 
