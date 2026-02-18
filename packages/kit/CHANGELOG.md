@@ -1,5 +1,20 @@
 # @sveltejs/kit
 
+## 2.52.0
+### Minor Changes
+
+
+- feat: `match` function to map a path back to a route id and params ([#14997](https://github.com/sveltejs/kit/pull/14997))
+
+
+### Patch Changes
+
+
+- fix: respect scroll-margin when navigating to a url-supplied anchor ([#15246](https://github.com/sveltejs/kit/pull/15246))
+
+
+- fix: `resolve` will narrow types to follow trailing slash page settings ([#15027](https://github.com/sveltejs/kit/pull/15027))
+
 ## 2.51.0
 ### Minor Changes
 

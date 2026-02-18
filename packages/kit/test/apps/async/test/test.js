@@ -243,6 +243,43 @@ test.describe('remote functions', () => {
 		}
 	});
 
+	test('form pending is true immediately during async preflight', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/form/preflight-pending');
+
+		// Test 1: async preflight that passes — pending should be true immediately
+		await expect(page.locator('[data-passing-pending]')).toHaveText('passing pending: 0');
+
+		void page.click('[data-passing] button');
+
+		// pending should be true immediately (before async preflight finishes)
+		await expect(page.locator('[data-passing-pending]')).toHaveText('passing pending: 1');
+
+		// after submission completes, pending should return to 0
+		await expect(page.locator('[data-passing-pending]')).toHaveText('passing pending: 0', {
+			timeout: 5000
+		});
+		await expect(page.locator('[data-passing-result]')).toContainText('created:');
+
+		// Test 2: async preflight that fails — pending should be true during validation, then return to 0
+		await expect(page.locator('[data-failing-pending]')).toHaveText('failing pending: 0');
+
+		void page.click('[data-failing] button');
+
+		// pending should be true immediately
+		await expect(page.locator('[data-failing-pending]')).toHaveText('failing pending: 1');
+
+		// after preflight fails, pending should return to 0 and issues should appear
+		await expect(page.locator('[data-failing-pending]')).toHaveText('failing pending: 0', {
+			timeout: 5000
+		});
+		await expect(page.locator('[data-failing-issue]')).toHaveText('async check failed');
+	});
+
 	test('form preflight-only validation works', async ({ page, javaScriptEnabled }) => {
 		if (!javaScriptEnabled) return;
 
