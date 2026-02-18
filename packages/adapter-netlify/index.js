@@ -180,25 +180,28 @@ async function generate_edge_functions({ builder }) {
 		external: builtinModules.map((id) => `node:${id}`),
 		alias: Object.fromEntries(builtinModules.map((id) => [id, `node:${id}`]))
 	};
+
 	await Promise.all([
 		esbuild.build({
 			entryPoints: [`${tmp}/entry.js`],
-			outfile: '.netlify/v1/edge-functions/render.js',
+			outfile: `.netlify/v1/edge-functions/${FUNCTION_PREFIX}render.js`,
 			...esbuild_config
 		}),
 		builder.hasServerInstrumentationFile() &&
 			esbuild.build({
-				entryPoints: [`${builder.getServerDirectory()}/instrumentation.server.js`],
-				outfile: '.netlify/v1/edge-functions/instrumentation.server.js',
+				entryPoints: [
+					`${builder.getServerDirectory()}/${FUNCTION_PREFIX}instrumentation.server.js`
+				],
+				outfile: `.netlify/v1/edge-functions/${FUNCTION_PREFIX}instrumentation.server.js`,
 				...esbuild_config
 			})
 	]);
 
 	if (builder.hasServerInstrumentationFile()) {
-		builder.instrument?.({
-			entrypoint: '.netlify/v1/edge-functions/render.js',
-			instrumentation: '.netlify/v1/edge-functions/instrumentation.server.js',
-			start: '.netlify/v1/edge-functions/start.js'
+		builder.instrument({
+			entrypoint: `.netlify/v1/edge-functions/${FUNCTION_PREFIX}render.js`,
+			instrumentation: `.netlify/v1/edge-functions/${FUNCTION_PREFIX}instrumentation.server.js`,
+			start: `.netlify/v1/edge-functions/${FUNCTION_PREFIX}start.js`
 		});
 	}
 
@@ -366,7 +369,7 @@ function add_edge_function_config({ path, excluded_paths }) {
 	// https://docs.netlify.com/build/frameworks/frameworks-api/#edge-functions
 	config.edge_functions = [
 		{
-			function: 'render',
+			function: `${FUNCTION_PREFIX}render`,
 			name: 'SvelteKit',
 			generator: get_generator_string(),
 			path,

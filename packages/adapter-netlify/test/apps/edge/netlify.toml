@@ -1,14 +1,12 @@
 [build]
 publish = "build"
 
-# TODO: remove these once we overhaul the Netlify adapter to use the new edge declarations https://docs.netlify.com/build/edge-functions/declarations/#declare-edge-functions-inline
+# we are purposely misusing the edge functions config to discover our framework
+# build output because the Netlify dev plugin doesn't currently detect it
+edge_functions = ".netlify/v1/edge-functions"
 
-# defaults to "netlify/edge-functions" (without the . prefix)
-edge_functions = ".netlify/edge-functions"
-
-# the dev server doesn't read the manifest.json in edge-functions so we need
-# to explicitly declare this here
+# Netlify dev plugin doesn't detect .netlify/v1/config.json
 [[edge_functions]]
-path = "/*"
-function = "render"
-excludedPath = ["/_app/immutable/*", "/_app/version.json", "/.netlify/*"]
+"function" = "sveltekit-render"
+"path" = "/*"
+"excludedPath" = ["/_app/immutable/*", "/_app/version.json", "/.netlify/*"]
