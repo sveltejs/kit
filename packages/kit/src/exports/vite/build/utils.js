@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { normalizePath } from 'vite';
+import { s } from '../../../utils/misc.js';
 
 /**
  * Adds transitive JS and CSS dependencies to the js and css inputs.
@@ -128,4 +129,19 @@ export function filter_fonts(assets) {
  */
 export function assets_base(config) {
 	return (config.paths.assets || config.paths.base || '.') + '/';
+}
+
+/**
+ * Writes a function with arguments used by a template literal.
+ * This helps us store strings in a module and inject values at runtime.
+ * @param {string} name The name of the function
+ * @param {string[]} placeholder_names The names of the placeholders in the string
+ * @param {string} str A string with placeholders such as "Hello ${arg0}".
+ * 										 It must have backticks and dollar signs escaped.
+ * @returns {string} The function written as a string
+ */
+export function create_function_as_string(name, placeholder_names, str) {
+	str = s(str).slice(1, -1);
+	const args = placeholder_names ? placeholder_names.join(', ') : '';
+	return `function ${name}(${args}) { return \`${str}\`; }`;
 }
