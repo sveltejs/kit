@@ -327,7 +327,6 @@ test.describe('remote function mutations', () => {
 
 		for (let i = 1; i <= 3; i++) {
 			await page.click('#submit');
-			await page.waitForTimeout(100);
 			await expect(page.locator('#count')).toHaveText(String(i));
 		}
 	});
