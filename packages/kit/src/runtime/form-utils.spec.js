@@ -383,6 +383,71 @@ describe('binary form serializer', () => {
 		}
 	});
 
+	test('rejects memory amplification attack via nested array in file offset table', async () => {
+		// A crafted file offset table
+		// containing a nested array like [[1e20,1e20,...,1e20]]. When file_offsets[0] is
+		// added to a number, the inner array coerces to a ~273,000-char string. With
+		// ~58,000 LazyFile instances from a 1MB payload, this requires ~14.7GB of memory.
+		//
+		// We use a small payload (13 values) that is enough to trigger the validation
+		// error without risk of memory issues if the fix regresses.
+		const inner_count = 13;
+		const malicious_offsets = JSON.stringify([[...Array(inner_count).fill(1e20)]]);
+
+		// Build a minimal binary form request with the malicious offset table
+		const data = '[[1,3],{"file":2},["File",4],{},[5,6,7,8,9],"a.txt","text/plain",0,0,0]';
+		const data_buf = text_encoder.encode(data);
+		const offsets_buf = text_encoder.encode(malicious_offsets);
+		const total = 7 + data_buf.length + offsets_buf.length + 1;
+		const body = new Uint8Array(total);
+		const view = new DataView(body.buffer);
+		body[0] = 0;
+		view.setUint32(1, data_buf.length, true);
+		view.setUint16(5, offsets_buf.length, true);
+		body.set(data_buf, 7);
+		body.set(offsets_buf, 7 + data_buf.length);
+
+		await expect(
+			deserialize_binary_form(
+				new Request('http://test', {
+					method: 'POST',
+					body,
+					headers: {
+						'Content-Type': BINARY_FORM_CONTENT_TYPE,
+						'Content-Length': total.toString()
+					}
+				})
+			)
+		).rejects.toThrow('invalid file offset table');
+	}, 1000);
+
+	test.each([
+		{
+			name: 'nested array (amplification attack)',
+			offsets: '[[1e20,1e20]]'
+		},
+		{
+			name: 'non-integer float values',
+			offsets: '[0, 1.5, 3]'
+		},
+		{
+			name: 'negative values',
+			offsets: '[0, -1, 2]'
+		},
+		{
+			name: 'not an array (object)',
+			offsets: '{"0": 0}'
+		},
+		{
+			name: 'string values in array',
+			offsets: '["0", "1"]'
+		}
+	])('rejects invalid file offset table: $name', async ({ offsets }) => {
+		await expect(deserialize_binary_form(build_raw_request_with_offsets(offsets))).rejects.toThrow(
+			'invalid file offset table'
+		);
+	});
+
 	// Regression test for https://github.com/sveltejs/kit/issues/14971
 	test('DataView offset for shared memory', async () => {
 		const { blob } = serialize_binary_form({ a: 1 }, {});
@@ -412,6 +477,32 @@ describe('binary form serializer', () => {
 
 		expect(res.data).toEqual({ a: 1 });
 	});
+
+	/**
+	 * Build a binary form request with a raw devalue payload and custom file offsets JSON.
+	 * @param {string} file_offsets_json
+	 */
+	function build_raw_request_with_offsets(file_offsets_json) {
+		const devalue_data = '[[1,3],{"file":2},["File",4],{},[5,6,7,8,9],"a.txt","text/plain",0,0,0]';
+		const data_buf = text_encoder.encode(devalue_data);
+		const offsets_buf = text_encoder.encode(file_offsets_json);
+		const total = 7 + data_buf.length + offsets_buf.length + 1; // +1 for a fake file byte
+		const body = new Uint8Array(total);
+		const view = new DataView(body.buffer);
+		body[0] = 0;
+		view.setUint32(1, data_buf.length, true);
+		view.setUint16(5, offsets_buf.length, true);
+		body.set(data_buf, 7);
+		body.set(offsets_buf, 7 + data_buf.length);
+		return new Request('http://test', {
+			method: 'POST',
+			body,
+			headers: {
+				'Content-Type': BINARY_FORM_CONTENT_TYPE,
+				'Content-Length': total.toString()
+			}
+		});
+	}
 });
 
 describe('deep_set', () => {

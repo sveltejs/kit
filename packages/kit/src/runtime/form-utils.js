@@ -254,9 +254,16 @@ export async function deserialize_binary_form(request) {
 		const file_offsets_buffer = await get_buffer(HEADER_BYTES + data_length, file_offsets_length);
 		if (!file_offsets_buffer) throw deserialize_error('file offset table too short');
 
-		file_offsets = /** @type {Array<number>} */ (
-			JSON.parse(text_decoder.decode(file_offsets_buffer))
-		);
+		const parsed_offsets = JSON.parse(text_decoder.decode(file_offsets_buffer));
+
+		if (
+			!Array.isArray(parsed_offsets) ||
+			parsed_offsets.some((n) => typeof n !== 'number' || !Number.isInteger(n) || n < 0)
+		) {
+			throw deserialize_error('invalid file offset table');
+		}
+
+		file_offsets = /** @type {Array<number>} */ (parsed_offsets);
 		files_start_offset = HEADER_BYTES + data_length + file_offsets_length;
 	}
 
