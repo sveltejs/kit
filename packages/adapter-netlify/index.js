@@ -186,7 +186,7 @@ async function generate_edge_functions({ builder }) {
 			outfile: '.netlify/v1/edge-functions/render.js',
 			...esbuild_config
 		}),
-		builder.hasServerInstrumentationFile?.() &&
+		builder.hasServerInstrumentationFile() &&
 			esbuild.build({
 				entryPoints: [`${builder.getServerDirectory()}/instrumentation.server.js`],
 				outfile: '.netlify/v1/edge-functions/instrumentation.server.js',
@@ -194,7 +194,7 @@ async function generate_edge_functions({ builder }) {
 			})
 	]);
 
-	if (builder.hasServerInstrumentationFile?.()) {
+	if (builder.hasServerInstrumentationFile()) {
 		builder.instrument?.({
 			entrypoint: '.netlify/v1/edge-functions/render.js',
 			instrumentation: '.netlify/v1/edge-functions/instrumentation.server.js',
@@ -272,19 +272,21 @@ function generate_lambda_functions({ builder, publish, split }) {
 				routes
 			});
 
-			// https://docs.netlify.com/functions/get-started/?fn-language=ts#response
-			const fn = `import { init } from '../serverless.js';\n\nexport default init(${manifest});\n\nexport const config = {\n\tname: "SvelteKit server",\n\tgenerator: "${get_generator_string()}",\n\tpath: "${pattern}",\n\texcludedPath: "/.netlify/*",\n\tpreferStatic: true\n};\n`;
+			const fn = generate_serverless_function_module(manifest);
+			const config = generate_config_export(pattern);
 
-			writeFileSync(`.netlify/v1/functions/${name}.mjs`, fn);
-			if (builder.hasServerInstrumentationFile?.()) {
-				builder.instrument?.({
+			if (builder.hasServerInstrumentationFile()) {
+				writeFileSync(`.netlify/v1/functions/${name}.mjs`, fn);
+				builder.instrument({
 					entrypoint: `.netlify/v1/functions/${name}.mjs`,
 					instrumentation: '.netlify/v1/server/instrumentation.server.js',
 					start: `.netlify/v1/functions/${name}.start.mjs`,
 					module: {
-						exports: ['default']
+						generateText: generate_traced_module(config)
 					}
 				});
+			} else {
+				writeFileSync(`.netlify/v1/functions/${name}.mjs`, `${fn}\n${config}`);
 			}
 		}
 	} else {
@@ -292,19 +294,21 @@ function generate_lambda_functions({ builder, publish, split }) {
 			relativePath: '../server'
 		});
 
-		// https://docs.netlify.com/functions/get-started/?fn-language=ts#response
-		const fn = `import { init } from '../serverless.js';\n\nexport default init(${manifest});\n\nexport const config = {\n\tname: "SvelteKit server",\n\tgenerator: "${get_generator_string()}",\n\tpath: "/*",\n\texcludedPath: "/.netlify/*",\n\tpreferStatic: true\n};\n`;
+		const fn = generate_serverless_function_module(manifest);
+		const config = generate_config_export('/*');
 
-		writeFileSync(`.netlify/v1/functions/${FUNCTION_PREFIX}render.mjs`, fn);
-		if (builder.hasServerInstrumentationFile?.()) {
-			builder.instrument?.({
+		if (builder.hasServerInstrumentationFile()) {
+			writeFileSync(`.netlify/v1/functions/${FUNCTION_PREFIX}render.mjs`, fn);
+			builder.instrument({
 				entrypoint: `.netlify/v1/functions/${FUNCTION_PREFIX}render.mjs`,
 				instrumentation: '.netlify/v1/server/instrumentation.server.js',
 				start: `.netlify/v1/functions/${FUNCTION_PREFIX}render.start.mjs`,
 				module: {
-					exports: ['default']
+					generateText: generate_traced_module(config)
 				}
 			});
+		} else {
+			writeFileSync(`.netlify/v1/functions/${FUNCTION_PREFIX}render.mjs`, `${fn}\n${config}`);
 		}
 	}
 
@@ -379,4 +383,48 @@ function add_edge_function_config({ path, excluded_paths }) {
  */
 function get_generator_string() {
 	return `@sveltejs/adapter-netlify@${adapter_version}`;
+}
+
+/**
+ * https://docs.netlify.com/functions/get-started/?fn-language=ts#response
+ * @param {string} manifest
+ * @returns {string}
+ */
+function generate_serverless_function_module(manifest) {
+	return `\
+import { init } from '../serverless.js';
+
+export default init(${manifest});
+`;
+}
+
+/**
+ * @param {string} pattern
+ * @returns {string}
+ */
+function generate_config_export(pattern) {
+	return `\
+export const config = {
+	name: "SvelteKit server",
+	generator: "${get_generator_string()}",
+	path: "${pattern}",
+	excludedPath: "/.netlify/*",
+	preferStatic: true
+};
+`;
+}
+
+/**
+ * @param {string} config
+ * @returns {(opts: { instrumentation: string; start: string }) => string}
+ */
+function generate_traced_module(config) {
+	return ({ instrumentation, start }) => {
+		return `\
+import './${instrumentation}';
+const { default: _0 } = await import('./${start}');
+export { _0 as default };
+
+${config}`;
+	};
 }
