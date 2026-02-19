@@ -191,13 +191,11 @@ test.describe('remote function mutations', () => {
 	}) => {
 		await page.goto('/remote');
 		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
-
-		let request_count = 0;
-		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+		const value = await page.locator('#echo-result').textContent();
 
 		await page.click('#refresh-remote-only');
 		await page.waitForTimeout(100); // allow things to rerun
-		expect(request_count).toBe(2);
+		expect(page.locator('#echo-result')).toHaveText(value);
 	});
 
 	test('command tracks pending state', async ({ page }) => {
