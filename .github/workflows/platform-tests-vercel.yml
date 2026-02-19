@@ -3,9 +3,16 @@ name: Platform Tests (Vercel)
 on:
   workflow_dispatch:
     inputs:
-      ref:
-        description: 'Git ref to test'
+      sha:
+        description: 'Commit SHA to test'
         required: false
+        default: ''
+  workflow_call:
+    inputs:
+      sha:
+        description: 'Commit SHA to test'
+        required: false
+        type: string
         default: ''
 
 permissions:
@@ -22,7 +29,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: ${{ inputs.ref || github.ref }}
+          ref: ${{ inputs.sha || github.sha }}
 
       - uses: ./.github/actions/vercel-deploy
         id: deploy
