@@ -52,7 +52,7 @@
 		"vitest": "catalog:"
 	},
 	"dependencies": {
-		"rolldown": "^1.0.0-rc.3"
+		"rolldown": "^1.0.0-rc.5"
 	},
 	"peerDependencies": {
 		"@sveltejs/kit": "^2.4.0"
