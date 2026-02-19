@@ -2,9 +2,11 @@ name: 'Vercel Deploy'
 description: 'Set up the repo and deploy a test app to Vercel'
 
 inputs:
-  test-app-dir:
-    description: 'Path to the test app directory'
-    required: true
+  # Important: When setting up a new Vercel test app, make sure
+  # to set the root directory in the dashboard to the correct path.
+  # The `vercel deploy` command runs from the root of the repository,
+  # so it has to be able to look up the test app's dir in order to know
+  # what to deploy.
   vercel-project-id:
     description: 'Vercel project ID for the test app'
     required: true
@@ -40,7 +42,6 @@ runs:
     - name: Deploy to Vercel
       id: deploy
       shell: bash
-      working-directory: ${{ inputs.test-app-dir }}
       env:
         VERCEL_TOKEN: ${{ inputs.vercel-token }}
         VERCEL_ORG_ID: ${{ inputs.vercel-org-id }}
