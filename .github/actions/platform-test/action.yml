@@ -21,7 +21,7 @@ runs:
       working-directory: ${{ inputs.test-app-dir }}
       env:
         DEPLOYMENT_URL: ${{ inputs.deployment-url }}
-      run: pnpm test
+      run: pnpm test:platform
 
     - name: Upload test artifacts
       if: failure()

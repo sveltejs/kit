@@ -6,7 +6,7 @@
 		"dev": "vite dev",
 		"build": "vite build",
 		"prepare": "svelte-kit sync || echo ''",
-		"test": "playwright test"
+		"test:platform": "playwright test"
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:*",
