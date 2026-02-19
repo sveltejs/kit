@@ -50,7 +50,7 @@ catalog:
   valibot: ^1.1.0
   vite: ^6.3.5
   vitest: ^4.0.0
-  wrangler: ^4.65.0
+  wrangler: ^4.67.0
 catalogs:
   vite-baseline:
     vite: ^5.4.21 # should be 5.0.3 but older versions cause errors in some tests
