@@ -2,6 +2,7 @@ packages:
   - packages/*
   - packages/adapter-cloudflare/test/apps/*
   - packages/adapter-netlify/test/apps/*
+  - packages/adapter-vercel/test/apps/*
   - packages/adapter-static/test/apps/*
   - packages/enhanced-img/test/apps/*
   - packages/kit/test/apps/*
@@ -63,6 +64,5 @@ catalogs:
     vite: ^6.0.0 # vite7 requires node20
     '@sveltejs/vite-plugin-svelte': ^5.0.0 #vps6 requires node20
 overrides:
-
 # ci script replaces all overrides with the vite-xxx or node-xx catalogs above.
 # if you want to introduce an override, make sure to add it to all of them too

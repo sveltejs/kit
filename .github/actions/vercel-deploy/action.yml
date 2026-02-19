@@ -1,0 +1,48 @@
+name: 'Vercel Deploy'
+description: 'Set up the repo and deploy a test app to Vercel'
+
+inputs:
+  test-app-dir:
+    description: 'Path to the test app directory'
+    required: true
+  vercel-project-id:
+    description: 'Vercel project ID for the test app'
+    required: true
+  vercel-token:
+    description: 'Vercel authentication token'
+    required: true
+  vercel-org-id:
+    description: 'Vercel organization ID'
+    required: true
+outputs:
+  deployment-url:
+    description: 'URL of the deployed preview'
+    value: ${{ steps.deploy.outputs.url }}
+
+runs:
+  using: 'composite'
+  steps:
+    - uses: pnpm/action-setup@v4.2.0
+
+    - uses: actions/setup-node@v6
+      with:
+        node-version: 24
+        cache: pnpm
+
+    - name: Install dependencies
+      shell: bash
+      run: pnpm install --frozen-lockfile
+
+    - name: Install Vercel CLI
+      shell: bash
+      run: npm i -g vercel
+
+    - name: Deploy to Vercel
+      id: deploy
+      shell: bash
+      working-directory: ${{ inputs.test-app-dir }}
+      env:
+        VERCEL_TOKEN: ${{ inputs.vercel-token }}
+        VERCEL_ORG_ID: ${{ inputs.vercel-org-id }}
+        VERCEL_PROJECT_ID: ${{ inputs.vercel-project-id }}
+      run: echo "url=$(vercel deploy --yes --token="$VERCEL_TOKEN")" >> "$GITHUB_OUTPUT"

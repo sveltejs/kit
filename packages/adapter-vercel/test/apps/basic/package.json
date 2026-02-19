@@ -1,0 +1,19 @@
+{
+	"name": "test-vercel-basic",
+	"version": "0.0.1",
+	"private": true,
+	"scripts": {
+		"dev": "vite dev",
+		"build": "vite build",
+		"prepare": "svelte-kit sync || echo ''",
+		"test": "playwright test"
+	},
+	"devDependencies": {
+		"@sveltejs/kit": "workspace:*",
+		"@sveltejs/vite-plugin-svelte": "catalog:",
+		"svelte": "catalog:",
+		"typescript": "^5.3.3",
+		"vite": "catalog:"
+	},
+	"type": "module"
+}

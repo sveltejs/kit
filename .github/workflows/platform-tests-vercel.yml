@@ -1,0 +1,35 @@
+name: Platform Tests (Vercel)
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Git ref to test'
+        required: false
+        default: ''
+
+env:
+  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+
+jobs:
+  test-basic:
+    if: github.repository == 'sveltejs/kit'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+
+      - uses: ./.github/actions/vercel-deploy
+        id: deploy
+        with:
+          test-app-dir: packages/adapter-vercel/test/apps/basic
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_BASIC }}
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+
+      - uses: ./.github/actions/platform-test
+        with:
+          test-app-dir: packages/adapter-vercel/test/apps/basic
+          deployment-url: ${{ steps.deploy.outputs.deployment-url }}
