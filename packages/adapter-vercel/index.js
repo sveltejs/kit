@@ -709,7 +709,13 @@ async function create_function_bundle(builder, entry, dir, config) {
 	let base = entry;
 	while (base !== (base = path.dirname(base)));
 
-	const traced = await nodeFileTrace([entry], { base });
+	const is_vercel_build = !!process.env.VERCEL && entry.startsWith('/vercel/path0');
+
+	const traced = await nodeFileTrace([entry], {
+		base,
+		// TODO: remove this when https://github.com/vercel/nft/pull/568 is resolved
+		ignore: is_vercel_build ? (path) => !path.match(/^\/?vercel\/path0/) : undefined
+	});
 
 	/** @type {Map<string, string[]>} */
 	const resolution_failures = new Map();
