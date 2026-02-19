@@ -1,5 +1,23 @@
 # @sveltejs/adapter-netlify
 
+## 6.0.2
+### Patch Changes
+
+
+- fix: prefix param matcher with alphabetical characters so that it works with URLPattern matching ([#15332](https://github.com/sveltejs/kit/pull/15332))
+
+- Updated dependencies [[`3e607b3`](https://github.com/sveltejs/kit/commit/3e607b314aec9e5f278d32847945b8b6323e1cb8), [`62991c8`](https://github.com/sveltejs/kit/commit/62991c81db4f50ccfb08a9ac5e05ccba4ddab59e), [`f47c01b`](https://github.com/sveltejs/kit/commit/f47c01bd8100328c24fdb8522fe35913b0735f35)]:
+  - @sveltejs/kit@2.52.2
+
+## 6.0.1
+### Patch Changes
+
+
+- fix: export Netlify config directly from the instrumented serverless function ([#15335](https://github.com/sveltejs/kit/pull/15335))
+
+- Updated dependencies [[`e87efba`](https://github.com/sveltejs/kit/commit/e87efba90aeb04227e6a1a5e9017989e7f1c78dc), [`71ddbc7`](https://github.com/sveltejs/kit/commit/71ddbc7ff19a612cfcd483f3b7ba58586372528b), [`1bae374`](https://github.com/sveltejs/kit/commit/1bae374e2e106eb82502afd1ddf0167d66f224a1), [`20dfadf`](https://github.com/sveltejs/kit/commit/20dfadfbef312b4e750318aa871aebbfcb4396a4), [`8c2384a`](https://github.com/sveltejs/kit/commit/8c2384a346825d54eb4281f9da854388fb4d81b3)]:
+  - @sveltejs/kit@2.52.1
+
 ## 6.0.0
 ### Major Changes
 

@@ -26,9 +26,6 @@ const config = {
 		appDir: '_wheee/nested',
 		inlineStyleThreshold: 1024,
 		outDir: '.custom-out-dir',
-		output: {
-			preloadStrategy: 'preload-mjs'
-		},
 		paths: {
 			base: '/path-base',
 			// @ts-expect-error our env var string can't match the https template literal

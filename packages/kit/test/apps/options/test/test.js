@@ -175,7 +175,7 @@ test.describe('trailingSlash', () => {
 		if (process.env.DEV) {
 			expect(requests.filter((req) => req.endsWith('.svelte')).length).toBe(1);
 		} else {
-			expect(requests.filter((req) => req.endsWith('.mjs')).length).toBeGreaterThan(0);
+			expect(requests.filter((req) => req.endsWith('.js')).length).toBeGreaterThan(0);
 		}
 
 		requests = [];
@@ -207,7 +207,7 @@ test.describe('trailingSlash', () => {
 		if (process.env.DEV) {
 			expect(requests.filter((req) => req.endsWith('.svelte')).length).toBe(1);
 		} else {
-			expect(requests.filter((req) => req.endsWith('.mjs')).length).toBeGreaterThan(0);
+			expect(requests.filter((req) => req.endsWith('.js')).length).toBeGreaterThan(0);
 		}
 
 		requests = [];
@@ -231,6 +231,24 @@ test.describe('Vite options', () => {
 
 		const mode = process.env.DEV ? 'development' : 'custom';
 		expect(await page.textContent('h2')).toBe(`${mode} === ${mode} === ${mode}`);
+	});
+});
+
+test.describe('$app/paths', () => {
+	test('match() works with base paths', async ({ request }) => {
+		const response = await request.get('/path-base/match');
+
+		expect(await response.json()).toEqual([
+			{
+				path: '/path-base/resolve-route',
+				result: { id: '/resolve-route', params: {} }
+			},
+			{
+				path: '/path-base/resolve-route/resolved',
+				result: { id: '/resolve-route/[foo]', params: { foo: 'resolved' } }
+			},
+			{ path: '/path-base/not-a-real-route-that-exists', result: null }
+		]);
 	});
 });
 

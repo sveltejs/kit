@@ -110,6 +110,10 @@ export function form(id) {
 
 			submitted = true;
 
+			// Increment pending count immediately so that `pending` reflects
+			// the in-progress state during async preflight validation
+			pending_count++;
+
 			const validated = await preflight_schema?.['~standard'].validate(data);
 
 			if (validated?.issues) {
@@ -118,7 +122,13 @@ export function form(id) {
 					raw_issues,
 					validated.issues.map((issue) => normalize_issue(issue, false))
 				);
+				pending_count--;
 				return;
+			}
+
+			// Preflight passed - clear stale client-side preflight issues
+			if (preflight_schema) {
+				raw_issues = raw_issues.filter((issue) => issue.server);
 			}
 
 			// TODO 3.0 remove this warning
@@ -173,9 +183,6 @@ export function form(id) {
 			if (entry) {
 				entry.count++;
 			}
-
-			// Increment pending count when submission starts
-			pending_count++;
 
 			/** @type {Array<Query<any> | RemoteQueryOverride>} */
 			let updates = [];
@@ -319,7 +326,8 @@ export function form(id) {
 
 				form.addEventListener('submit', onsubmit);
 
-				form.addEventListener('input', (e) => {
+				/** @param {Event} e */
+				const handle_input = (e) => {
 					// strictly speaking it can be an HTMLTextAreaElement or HTMLSelectElement
 					// but that makes the types unnecessarily awkward
 					const element = /** @type {HTMLInputElement} */ (e.target);
@@ -398,17 +406,24 @@ export function form(id) {
 					name = name.replace(/^[nb]:/, '');
 
 					touched[name] = true;
-				});
+				};
 
-				form.addEventListener('reset', async () => {
+				form.addEventListener('input', handle_input);
+
+				const handle_reset = async () => {
 					// need to wait a moment, because the `reset` event occurs before
 					// the inputs are actually updated (so that it can be cancelled)
 					await tick();
 
 					input = convert_formdata(new FormData(form));
-				});
+				};
+
+				form.addEventListener('reset', handle_reset);
 
 				return () => {
+					form.removeEventListener('submit', onsubmit);
+					form.removeEventListener('input', handle_input);
+					form.removeEventListener('reset', handle_reset);
 					element = null;
 					preflight_schema = undefined;
 				};

@@ -1,40 +1,11 @@
 import fs from 'node:fs';
 import { mkdirp } from '../../../utils/filesystem.js';
-import { filter_fonts, find_deps, resolve_symlinks } from './utils.js';
+import { create_function_as_string, filter_fonts, find_deps, resolve_symlinks } from './utils.js';
 import { s } from '../../../utils/misc.js';
 import { normalizePath } from 'vite';
-import { basename, join } from 'node:path';
-import { create_node_analyser } from '../static_analysis/index.js';
+import { basename } from 'node:path';
 import { fix_css_urls } from '../../../utils/css.js';
 
-/**
- * Regenerate server nodes after acquiring client manifest
- * @overload
- * @param {string} out
- * @param {import('types').ValidatedKitConfig} kit
- * @param {import('types').ManifestData} manifest_data
- * @param {import('vite').Manifest} server_manifest
- * @param {import('vite').Manifest} client_manifest
- * @param {string} assets_path
- * @param {import('vite').Rollup.RollupOutput['output']} client_chunks
- * @param {import('types').RecursiveRequired<import('types').ValidatedConfig['kit']['output']>} output_config
- * @param {Map<string, { page_options: Record<string, any> | null, children: string[] }>} static_exports
- * @returns {Promise<void>}
- */
-/**
- * Build server nodes without client manifest for analysis phase
- * @overload
- * @param {string} out
- * @param {import('types').ValidatedKitConfig} kit
- * @param {import('types').ManifestData} manifest_data
- * @param {import('vite').Manifest} server_manifest
- * @param {null} client_manifest
- * @param {null} assets_path
- * @param {null} client_chunks
- * @param {import('types').RecursiveRequired<import('types').ValidatedConfig['kit']['output']>} output_config
- * @param {Map<string, { page_options: Record<string, any> | null, children: string[] }>} static_exports
- * @returns {Promise<void>}
- */
 /**
  * @param {string} out
  * @param {import('types').ValidatedKitConfig} kit
@@ -44,9 +15,8 @@ import { fix_css_urls } from '../../../utils/css.js';
  * @param {string | null} assets_path
  * @param {import('vite').Rollup.RollupOutput['output'] | null} client_chunks
  * @param {import('types').RecursiveRequired<import('types').ValidatedConfig['kit']['output']>} output_config
- * @param {Map<string, { page_options: Record<string, any> | null, children: string[] }>} static_exports
  */
-export async function build_server_nodes(
+export function build_server_nodes(
 	out,
 	kit,
 	manifest_data,
@@ -54,8 +24,7 @@ export async function build_server_nodes(
 	client_manifest,
 	assets_path,
 	client_chunks,
-	output_config,
-	static_exports
+	output_config
 ) {
 	mkdirp(`${out}/server/nodes`);
 	mkdirp(`${out}/server/stylesheets`);
@@ -109,22 +78,13 @@ export async function build_server_nodes(
 
 				// only convert to a function if we have adjusted any URLs
 				if (css !== transformed_css) {
-					return `function css(assets, base) { return \`${s(transformed_css).slice(1, -1)}\`; }`;
+					return create_function_as_string('css', ['assets', 'base'], transformed_css);
 				}
+
 				return s(css);
 			};
 		}
 	}
-
-	const { get_page_options } = create_node_analyser({
-		resolve: (server_node) => {
-			// Windows needs the file:// protocol for absolute path dynamic imports
-			return import(
-				`file://${join(out, 'server', resolve_symlinks(server_manifest, server_node).chunk.file)}`
-			);
-		},
-		static_exports
-	});
 
 	for (let i = 0; i < manifest_data.nodes.length; i++) {
 		const node = manifest_data.nodes[i];
@@ -159,9 +119,8 @@ export async function build_server_nodes(
 		}
 
 		if (node.universal) {
-			const page_options = await get_page_options(node);
-			if (!!page_options && page_options.ssr === false) {
-				exports.push(`export const universal = ${s(page_options, null, 2)};`);
+			if (!!node.page_options && node.page_options.ssr === false) {
+				exports.push(`export const universal = ${s(node.page_options, null, 2)};`);
 			} else {
 				imports.push(
 					`import * as universal from '../${resolve_symlinks(server_manifest, node.universal).chunk.file}';`

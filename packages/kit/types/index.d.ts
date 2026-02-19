@@ -593,6 +593,7 @@ declare module '@sveltejs/kit' {
 			 * - `preload-mjs` - uses `<link rel="preload">` but with the `.mjs` extension which prevents double-parsing in Chromium. Some static webservers will fail to serve .mjs files with a `Content-Type: application/javascript` header, which will cause your application to break. If that doesn't apply to you, this is the option that will deliver the best performance for the largest number of users, until `modulepreload` is more widely supported.
 			 * @default "modulepreload"
 			 * @since 1.8.4
+			 * @deprecated removed in 3.0.0
 			 */
 			preloadStrategy?: 'modulepreload' | 'preload-js' | 'preload-mjs';
 			/**
@@ -2395,6 +2396,7 @@ declare module '@sveltejs/kit' {
 		rest: boolean;
 	}
 
+	/** @default 'never' */
 	type TrailingSlash = 'never' | 'always' | 'ignore';
 
 	type IsAny<T> = 0 extends 1 & T ? true : false;
@@ -2472,6 +2474,8 @@ declare module '@sveltejs/kit' {
 		parent?: PageNode;
 		/** Filled with the pages that reference this layout (if this is a layout). */
 		child_pages?: PageNode[];
+		/** The final page options for a node if it was statically analysable */
+		page_options?: PageOptions | null;
 	}
 
 	type RecursiveRequired<T> = {
@@ -2516,6 +2520,8 @@ declare module '@sveltejs/kit' {
 
 		endpoint: {
 			file: string;
+			/** The final page options for the endpoint if it was statically analysable */
+			page_options: PageOptions | null;
 		} | null;
 	}
 
@@ -2639,7 +2645,7 @@ declare module '@sveltejs/kit' {
 	 * Make sure you're not catching the thrown error, which would prevent SvelteKit from handling it.
 	 * @param status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
 	 * @param body An object that conforms to the App.Error type. If a string is passed, it will be used as the message property.
-	 * @throws {HttpError} This error instructs SvelteKit to initiate HTTP error handling.
+	 * @throws {import('./public.js').HttpError} This error instructs SvelteKit to initiate HTTP error handling.
 	 * @throws {Error} If the provided status is invalid (not between 400 and 599).
 	 */
 	export function error(status: number, body: App.Error): never;
@@ -2650,7 +2656,7 @@ declare module '@sveltejs/kit' {
 	 * Make sure you're not catching the thrown error, which would prevent SvelteKit from handling it.
 	 * @param status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
 	 * @param body An object that conforms to the App.Error type. If a string is passed, it will be used as the message property.
-	 * @throws {HttpError} This error instructs SvelteKit to initiate HTTP error handling.
+	 * @throws {import('./public.js').HttpError} This error instructs SvelteKit to initiate HTTP error handling.
 	 * @throws {Error} If the provided status is invalid (not between 400 and 599).
 	 */
 	export function error(status: number, body?: {
@@ -2660,7 +2666,7 @@ declare module '@sveltejs/kit' {
 	 * Checks whether this is an error thrown by {@link error}.
 	 * @param status The status to filter for.
 	 * */
-	export function isHttpError<T extends number>(e: unknown, status?: T): e is (HttpError_1 & {
+	export function isHttpError<T extends number>(e: unknown, status?: T): e is (HttpError & {
 		status: T extends undefined ? never : T;
 	});
 	/**
@@ -2676,7 +2682,7 @@ declare module '@sveltejs/kit' {
 	 *
 	 * @param status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#redirection_messages). Must be in the range 300-308.
 	 * @param location The location to redirect to.
-	 * @throws {Redirect} This error instructs SvelteKit to redirect to the specified location.
+	 * @throws {import('./public.js').Redirect} This error instructs SvelteKit to redirect to the specified location.
 	 * @throws {Error} If the provided status is invalid.
 	 * */
 	export function redirect(status: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308 | ({} & number), location: string | URL): never;
@@ -2684,7 +2690,7 @@ declare module '@sveltejs/kit' {
 	 * Checks whether this is a redirect thrown by {@link redirect}.
 	 * @param e The object to check.
 	 * */
-	export function isRedirect(e: unknown): e is Redirect_1;
+	export function isRedirect(e: unknown): e is Redirect;
 	/**
 	 * Create a JSON `Response` object from the supplied data.
 	 * @param data The value that will be serialized as JSON.
@@ -2765,22 +2771,10 @@ declare module '@sveltejs/kit' {
 	};
 	export type LessThan<TNumber extends number, TArray extends any[] = []> = TNumber extends TArray["length"] ? TArray[number] : LessThan<TNumber, [...TArray, TArray["length"]]>;
 	export type NumericRange<TStart extends number, TEnd extends number> = Exclude<TEnd | LessThan<TEnd>, LessThan<TStart>>;
+	type ValidPageOption = (typeof valid_page_options_array)[number];
+	type PageOptions = Partial<Record<ValidPageOption, any>>;
+	const valid_page_options_array: readonly ["ssr", "prerender", "csr", "trailingSlash", "config", "entries", "load"];
 	export const VERSION: string;
-	class HttpError_1 {
-		
-		constructor(status: number, body: {
-			message: string;
-		} extends App.Error ? (App.Error | string | undefined) : App.Error);
-		status: number;
-		body: App.Error;
-		toString(): string;
-	}
-	class Redirect_1 {
-		
-		constructor(status: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308, location: string);
-		status: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308;
-		location: string;
-	}
 
 	export {};
 }
@@ -3172,6 +3166,28 @@ declare module '$app/paths' {
 	 *
 	 * */
 	export function resolve<T extends RouteId | Pathname>(...args: ResolveArgs<T>): ResolvedPathname;
+	/**
+	 * Match a path or URL to a route ID and extracts any parameters.
+	 *
+	 * @example
+	 * ```js
+	 * import { match } from '$app/paths';
+	 *
+	 * const route = await match('/blog/hello-world');
+	 *
+	 * if (route?.id === '/blog/[slug]') {
+	 * 	const slug = route.params.slug;
+	 * 	const response = await fetch(`/api/posts/${slug}`);
+	 * 	const post = await response.json();
+	 * }
+	 * ```
+	 * @since 2.52.0
+	 *
+	 * */
+	export function match(url: Pathname | URL | (string & {})): Promise<{
+		id: RouteId;
+		params: Record<string, string>;
+	} | null>;
 
 	export {};
 }

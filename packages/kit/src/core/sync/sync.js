@@ -7,6 +7,10 @@ import { write_types, write_all_types } from './write_types/index.js';
 import { write_ambient } from './write_ambient.js';
 import { write_non_ambient } from './write_non_ambient.js';
 import { write_server } from './write_server.js';
+import {
+	create_node_analyser,
+	get_page_options
+} from '../../exports/vite/static_analysis/index.js';
 
 /**
  * Initialize SvelteKit's generated files that only depend on the config and mode.
@@ -45,7 +49,20 @@ export function create(config) {
  * @param {string} file
  */
 export function update(config, manifest_data, file) {
+	const node_analyser = create_node_analyser();
+
+	for (const node of manifest_data.nodes) {
+		node.page_options = node_analyser.get_page_options(node);
+	}
+
+	for (const route of manifest_data.routes) {
+		if (route.endpoint) {
+			route.endpoint.page_options = get_page_options(route.endpoint.file);
+		}
+	}
+
 	write_types(config, manifest_data, file);
+	write_non_ambient(config.kit, manifest_data);
 }
 
 /**
