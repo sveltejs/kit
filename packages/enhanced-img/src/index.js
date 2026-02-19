@@ -3,34 +3,42 @@ import { imagetools } from 'vite-imagetools';
 import { image_plugin } from './vite-plugin.js';
 
 /**
+ * @param {import('types/index.js').VitePluginOptions} [opts]
  * @returns {import('vite').Plugin[]}
  */
-export function enhancedImages() {
-	const imagetools_instance = imagetools_plugin();
+export function enhancedImages(opts) {
+	const imagetools_instance = imagetools_plugin(opts);
 	return !process.versions.webcontainer
 		? [image_plugin(imagetools_instance), imagetools_instance]
 		: [];
 }
 
 /**
- * @param {import('sharp').Metadata} meta
- * @returns {string}
+ * @param {import('types/index.js').VitePluginOptions} [opts]
+ * @returns {import('vite').Plugin}
  */
-function fallback_format(meta) {
-	if (meta.pages && meta.pages > 1) {
-		return meta.format === 'tiff' ? 'tiff' : 'gif';
-	}
-	if (meta.hasAlpha) {
-		return 'png';
-	}
-	return 'jpg';
-}
+function imagetools_plugin(opts) {
+	const get_formats = opts?.defaultFormats ?? default_formats;
+	const get_widths = opts?.defaultWidths ?? default_widths;
 
-function imagetools_plugin() {
 	/** @type {Partial<import('vite-imagetools').VitePluginOptions>} */
 	const imagetools_opts = {
-		defaultDirectives: async ({ pathname, searchParams: qs }, metadata) => {
-			if (!qs.has('enhanced')) return new URLSearchParams();
+		...opts?.imagetools,
+
+		defaultDirectives: async (url, metadata) => {
+			const { pathname, searchParams: qs } = url;
+
+			if (!qs.has('enhanced')) {
+				if (typeof opts?.imagetools?.defaultDirectives === 'function') {
+					return opts.imagetools.defaultDirectives(url, metadata);
+				}
+
+				if (opts?.imagetools?.defaultDirectives) {
+					return opts.imagetools.defaultDirectives;
+				}
+
+				return new URLSearchParams();
+			}
 
 			const meta = await metadata();
 			const img_width = qs.get('imgWidth');
@@ -41,12 +49,10 @@ function imagetools_plugin() {
 				return new URLSearchParams();
 			}
 
-			const { widths, kind } = get_widths(width, qs.get('imgSizes'));
 			return new URLSearchParams({
 				as: 'picture',
-				format: `avif;webp;${fallback_format(meta)}`,
-				w: widths.join(';'),
-				...(kind === 'x' && !qs.has('w') && { basePixels: widths[0].toString() })
+				format: get_formats(meta),
+				...get_widths(width, qs.get('imgSizes'))
 			});
 		},
 		namedExports: false
@@ -59,11 +65,27 @@ function imagetools_plugin() {
 }
 
 /**
+ * @param {import('sharp').Metadata} meta
+ * @returns {string}
+ */
+function default_formats(meta) {
+	let fallback = 'jpg';
+
+	if (meta.pages && meta.pages > 1) {
+		fallback = meta.format === 'tiff' ? 'tiff' : 'gif';
+	} else if (meta.hasAlpha) {
+		fallback = 'png';
+	}
+
+	return `avif;webp;${fallback}`;
+}
+
+/**
  * @param {number} width
  * @param {string | null} sizes
- * @returns {{ widths: number[]; kind: 'w' | 'x' }}
+ * @returns {{ w: string; basePixels?: string }}
  */
-function get_widths(width, sizes) {
+function default_widths(width, sizes) {
 	// We don't really know what the user wants here. But if they have an image that's really big
 	// then we can probably assume they're always displaying it full viewport/breakpoint.
 	// If the user is displaying a responsive image then the size usually doesn't change that much
@@ -78,9 +100,7 @@ function get_widths(width, sizes) {
 		// https://screensiz.es/
 		// https://gs.statcounter.com/screen-resolution-stats (note: logical. we want physical)
 		// Include 1080 because lighthouse uses a moto g4 with 360 logical pixels and 3x pixel ratio.
-		const widths = [540, 768, 1080, 1366, 1536, 1920, 2560, 3000, 4096, 5120];
-		widths.push(width);
-		return { widths, kind: 'w' };
+		return { w: `540;768;1080;1366;1536;1920;2560;3000;4096;5120${width}` };
 	}
 
 	// Don't need more than 2x resolution. Note that due to this optimization, pixel density
@@ -93,5 +113,6 @@ function get_widths(width, sizes) {
 	// data. Even true 3x resolution screens are wasteful as the human eye cannot see that level of
 	// detail without something like a magnifying glass.
 	// https://blog.twitter.com/engineering/en_us/topics/infrastructure/2019/capping-image-fidelity-on-ultra-high-resolution-devices.html
-	return { widths: [Math.round(width / 2), width], kind: 'x' };
+	const small_width = Math.round(width / 2).toString();
+	return { w: `${small_width};${width}`, basePixels: small_width };
 }
