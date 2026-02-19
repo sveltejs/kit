@@ -296,7 +296,7 @@ export const query_map = new Map();
  */
 export function get_query_array() {
 	/** @type {Array<[key: string, resource: Promise<any> & { set?: any, refresh?: any }]>} */
-	let array = [];
+	const array = [];
 	for (const [key, resource] of query_map) {
 		const deref = resource.deref();
 		if (deref) {

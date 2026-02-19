@@ -61,6 +61,7 @@ export function create_remote_function(id, create) {
 			// a new instance should not use the cached response, as it may be stale.
 			delete remote_responses[cache_key];
 
+			// eslint-disable-next-line @typescript-eslint/no-floating-promises
 			Object.defineProperty(resource, '_key', {
 				value: cache_key
 			});
