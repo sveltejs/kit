@@ -189,8 +189,8 @@ async function kit({ svelte_config }) {
 	/** @type {import('vite')} */
 	const vite = await import_peer('vite');
 
-	// @ts-ignore `vite.rolldownVersion` only exists in `rolldown-vite`
-	const isRolldown = !!vite.rolldownVersion;
+	// @ts-ignore `vite.rolldownVersion` only exists in `vite 8`
+	const is_rolldown = !!vite.rolldownVersion;
 
 	const { kit } = svelte_config;
 	const out = `${kit.outDir}/output`;
@@ -295,23 +295,6 @@ async function kit({ svelte_config }) {
 						`${kit.files.routes}/**/+*.{svelte,js,ts}`,
 						`!${kit.files.routes}/**/+*server.*`
 					],
-					esbuildOptions: {
-						plugins: [
-							{
-								name: 'vite-plugin-sveltekit-setup:optimize',
-								setup(build) {
-									if (!kit.experimental.remoteFunctions) return;
-
-									const filter = new RegExp(
-										`.remote(${kit.moduleExtensions.join('|')})$`.replaceAll('.', '\\.')
-									);
-
-									// treat .remote.js files as empty for the purposes of prebundling
-									build.onLoad({ filter }, () => ({ contents: '' }));
-								}
-							}
-						]
-					},
 					exclude: [
 						// Without this SvelteKit will be prebundled on the client, which means we end up with two versions of Redirect etc.
 						// Also see https://github.com/sveltejs/kit/issues/5952#issuecomment-1218844057
@@ -338,6 +321,40 @@ async function kit({ svelte_config }) {
 					]
 				}
 			};
+
+			if (kit.experimental.remoteFunctions) {
+				// treat .remote.js files as empty for the purposes of prebundling
+				// detects rolldown to avoid a warning message in vite 8 beta
+				const remote_id_filter = new RegExp(
+					`.remote(${kit.moduleExtensions.join('|')})$`.replaceAll('.', '\\.')
+				);
+				new_config.optimizeDeps ??= {}; // for some reason ts says this could be undefined even though it was set above
+				if (is_rolldown) {
+					// @ts-ignore
+					new_config.optimizeDeps.rolldownOptions ??= {};
+					// @ts-ignore
+					new_config.optimizeDeps.rolldownOptions.plugins ??= [];
+					// @ts-ignore
+					new_config.optimizeDeps.rolldownOptions.plugins.push({
+						name: 'vite-plugin-sveltekit-setup:optimize-remote-functions',
+						load: {
+							filter: { id: remote_id_filter },
+							handler() {
+								return '';
+							}
+						}
+					});
+				} else {
+					new_config.optimizeDeps.esbuildOptions ??= {};
+					new_config.optimizeDeps.esbuildOptions.plugins ??= [];
+					new_config.optimizeDeps.esbuildOptions.plugins.push({
+						name: 'vite-plugin-sveltekit-setup:optimize-remote-functions',
+						setup(build) {
+							build.onLoad({ filter: remote_id_filter }, () => ({ contents: '' }));
+						}
+					});
+				}
+			}
 
 			const define = {
 				__SVELTEKIT_APP_DIR__: s(kit.appDir),
@@ -916,7 +933,7 @@ async function kit({ svelte_config }) {
 							preserveEntrySignatures: 'strict',
 							onwarn(warning, handler) {
 								if (
-									(isRolldown
+									(is_rolldown
 										? warning.code === 'IMPORT_IS_UNDEFINED'
 										: warning.code === 'MISSING_EXPORT') &&
 									warning.id === `${kit.outDir}/generated/client-optimized/app.js`
@@ -1059,7 +1076,7 @@ async function kit({ svelte_config }) {
 
 				log.info('Analysing routes');
 
-				const { metadata, static_exports } = await analyse({
+				const { metadata } = await analyse({
 					hash: kit.router.type === 'hash',
 					manifest_path,
 					manifest_data,
@@ -1259,7 +1276,7 @@ async function kit({ svelte_config }) {
 				);
 
 				// regenerate nodes with the client manifest...
-				await build_server_nodes(
+				build_server_nodes(
 					out,
 					kit,
 					manifest_data,
@@ -1267,8 +1284,7 @@ async function kit({ svelte_config }) {
 					client_manifest,
 					assets_path,
 					client_chunks,
-					svelte_config.kit.output,
-					static_exports
+					svelte_config.kit.output
 				);
 
 				// ...and prerender

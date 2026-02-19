@@ -2396,6 +2396,7 @@ declare module '@sveltejs/kit' {
 		rest: boolean;
 	}
 
+	/** @default 'never' */
 	type TrailingSlash = 'never' | 'always' | 'ignore';
 
 	type IsAny<T> = 0 extends 1 & T ? true : false;
@@ -2473,6 +2474,8 @@ declare module '@sveltejs/kit' {
 		parent?: PageNode;
 		/** Filled with the pages that reference this layout (if this is a layout). */
 		child_pages?: PageNode[];
+		/** The final page options for a node if it was statically analysable */
+		page_options?: PageOptions | null;
 	}
 
 	type RecursiveRequired<T> = {
@@ -2517,6 +2520,8 @@ declare module '@sveltejs/kit' {
 
 		endpoint: {
 			file: string;
+			/** The final page options for the endpoint if it was statically analysable */
+			page_options: PageOptions | null;
 		} | null;
 	}
 
@@ -2766,6 +2771,9 @@ declare module '@sveltejs/kit' {
 	};
 	export type LessThan<TNumber extends number, TArray extends any[] = []> = TNumber extends TArray["length"] ? TArray[number] : LessThan<TNumber, [...TArray, TArray["length"]]>;
 	export type NumericRange<TStart extends number, TEnd extends number> = Exclude<TEnd | LessThan<TEnd>, LessThan<TStart>>;
+	type ValidPageOption = (typeof valid_page_options_array)[number];
+	type PageOptions = Partial<Record<ValidPageOption, any>>;
+	const valid_page_options_array: readonly ["ssr", "prerender", "csr", "trailingSlash", "config", "entries", "load"];
 	export const VERSION: string;
 
 	export {};
@@ -3158,6 +3166,28 @@ declare module '$app/paths' {
 	 *
 	 * */
 	export function resolve<T extends RouteId | Pathname>(...args: ResolveArgs<T>): ResolvedPathname;
+	/**
+	 * Match a path or URL to a route ID and extracts any parameters.
+	 *
+	 * @example
+	 * ```js
+	 * import { match } from '$app/paths';
+	 *
+	 * const route = await match('/blog/hello-world');
+	 *
+	 * if (route?.id === '/blog/[slug]') {
+	 * 	const slug = route.params.slug;
+	 * 	const response = await fetch(`/api/posts/${slug}`);
+	 * 	const post = await response.json();
+	 * }
+	 * ```
+	 * @since 2.52.0
+	 *
+	 * */
+	export function match(url: Pathname | URL | (string & {})): Promise<{
+		id: RouteId;
+		params: Record<string, string>;
+	} | null>;
 
 	export {};
 }

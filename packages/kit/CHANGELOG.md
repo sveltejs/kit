@@ -1,5 +1,50 @@
 # @sveltejs/kit
 
+## 2.52.2
+### Patch Changes
+
+
+- fix: validate `form` file information to prevent amplification attacks ([`3e607b3`](https://github.com/sveltejs/kit/commit/3e607b314aec9e5f278d32847945b8b6323e1cb8))
+
+
+- chore: upgrade `devalue` and `svelte` ([#15339](https://github.com/sveltejs/kit/pull/15339))
+
+
+- fix: parse file offset table more strictly ([`f47c01b`](https://github.com/sveltejs/kit/commit/f47c01bd8100328c24fdb8522fe35913b0735f35))
+
+## 2.52.1
+### Patch Changes
+
+
+- fix: clear stale preflight issues on subsequent valid form submissions ([#15281](https://github.com/sveltejs/kit/pull/15281))
+
+
+- chore: remove dependency on `sade` ([#15272](https://github.com/sveltejs/kit/pull/15272))
+
+
+- fix: include `.txt` files in precompression ([#15259](https://github.com/sveltejs/kit/pull/15259))
+
+
+- fix: escape backticks and dollar signs when creating inlined css ([#15320](https://github.com/sveltejs/kit/pull/15320))
+
+
+- fix: increment `form.pending` count before preflight validation ([#15279](https://github.com/sveltejs/kit/pull/15279))
+
+## 2.52.0
+### Minor Changes
+
+
+- feat: `match` function to map a path back to a route id and params ([#14997](https://github.com/sveltejs/kit/pull/14997))
+
+
+### Patch Changes
+
+
+- fix: respect scroll-margin when navigating to a url-supplied anchor ([#15246](https://github.com/sveltejs/kit/pull/15246))
+
+
+- fix: `resolve` will narrow types to follow trailing slash page settings ([#15027](https://github.com/sveltejs/kit/pull/15027))
+
 ## 2.51.0
 ### Minor Changes
 

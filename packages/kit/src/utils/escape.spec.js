@@ -1,5 +1,5 @@
 import { assert, test } from 'vitest';
-import { escape_html } from './escape.js';
+import { escape_for_interpolation, escape_html } from './escape.js';
 
 test('escape_html_attr escapes special attribute characters', () => {
 	assert.equal(
@@ -16,4 +16,11 @@ test('escape_html_attr escapes invalid surrogates', () => {
 	assert.equal(escape_html('\ud800\ud800\udc00', true), '&#55296;\ud800\udc00');
 	assert.equal(escape_html('\ud800\udc00\udc00', true), '\ud800\udc00&#56320;');
 	assert.equal(escape_html('\ud800\ud800\udc00\udc00', true), '&#55296;\ud800\udc00&#56320;');
+});
+
+test('escape_for_interpolation escapes both backticks and dollar signs', () => {
+	assert.equal(
+		escape_for_interpolation('div:after { content: "` and ${example}`"; }'),
+		'div:after { content: "\\` and \\${example}\\`"; }'
+	);
 });
