@@ -24,6 +24,16 @@ test.describe('remote functions', () => {
 		await clicknav('a[href="/remote/dev/preload"]', { waitForURL: '/remote/dev/preload' });
 		await expect(page.locator('p')).toHaveText('foobar');
 	});
+
+	test('query created outside tracking is reused when tracked later', async ({ page }) => {
+		await page.goto('/remote/query-tracking');
+		await page.click('#instantiate');
+		await expect(page.locator('#instantiated')).toHaveText('instantiated');
+		await page.click('#show');
+		await expect(page.locator('#value')).toHaveText('0');
+		await page.click('#increment');
+		await expect(page.locator('#value')).toHaveText('1');
+	});
 });
 
 // have to run in serial because commands mutate in-memory data on the server (should fix this at some point)

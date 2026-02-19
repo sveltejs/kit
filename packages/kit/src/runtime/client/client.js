@@ -282,10 +282,31 @@ const preload_tokens = new Set();
 export let pending_invalidate;
 
 /**
- * @type {Map<string, {count: number, resource: any}>}
- * A map of id -> query info with all queries that currently exist in the app.
+ * @type {Map<string, WeakRef<Promise<any> & { set?: any, refresh?: any }>>}
+ * A map of id -> resource of all queries that currently exist in the app.
+ * The resource is wrapped in a WeakRef so that we can keep it in the map
+ * without having to worry about cleaning it up. It also is preferable to
+ * some kind of "in reactive context"-counter because instances could be
+ * created and held references to in non-reactive contexts, too.
  */
 export const query_map = new Map();
+
+/**
+ * Use this to iterate the query_map. Will clean up dereferenced resources as a side effect.
+ */
+export function get_query_array() {
+	/** @type {Array<[key: string, resource: Promise<any> & { set?: any, refresh?: any }]>} */
+	let array = [];
+	for (const [key, resource] of query_map) {
+		const deref = resource.deref();
+		if (deref) {
+			array.push([key, deref]);
+		} else {
+			query_map.delete(key);
+		}
+	}
+	return array;
+}
 
 /**
  * @param {import('./types.js').SvelteKitApp} _app
@@ -391,7 +412,7 @@ async function _invalidate(include_load_functions = true, reset_page_state = tru
 
 	// Rerun queries
 	if (force_invalidation) {
-		query_map.forEach(({ resource }) => {
+		get_query_array().forEach(([_, resource]) => {
 			resource.refresh?.();
 		});
 	}
@@ -423,7 +444,7 @@ async function _invalidate(include_load_functions = true, reset_page_state = tru
 	}
 
 	// Don't use allSettled yet because it's too new
-	await Promise.all([...query_map.values()].map(({ resource }) => resource)).catch(noop);
+	await Promise.all(get_query_array().map(([_, resource]) => resource)).catch(noop);
 }
 
 function reset_invalidation() {
@@ -481,7 +502,7 @@ export async function _goto(url, options, redirect_count, nav_token) {
 		accept: () => {
 			if (options.invalidateAll) {
 				force_invalidation = true;
-				query_keys = [...query_map.keys()];
+				query_keys = get_query_array().map(([key]) => key);
 			}
 
 			if (options.invalidate) {
@@ -497,7 +518,7 @@ export async function _goto(url, options, redirect_count, nav_token) {
 			.tick()
 			.then(svelte.tick)
 			.then(() => {
-				query_map.forEach(({ resource }, key) => {
+				get_query_array().forEach(([key, resource]) => {
 					// Only refresh those that already existed on the old page
 					if (query_keys?.includes(key)) {
 						resource.refresh?.();

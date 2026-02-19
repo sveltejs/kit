@@ -44,6 +44,8 @@ class Prerender {
 
 	#error = $state.raw(undefined);
 
+	[Symbol.toStringTag] = 'RemotePrerender';
+
 	/**
 	 * @param {() => Promise<T>} fn
 	 */
