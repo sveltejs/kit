@@ -1,6 +1,7 @@
 [build]
 publish = "build"
 
+# TODO: remove this once @netlify/dev works with the Netlify frameworks API
 # we are purposely misusing the user functions config to discover our framework
 # build output because the Netlify dev plugin doesn't currently detect it
 [functions]
