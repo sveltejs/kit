@@ -2422,7 +2422,6 @@ declare module '@sveltejs/kit' {
 		: T | undefined;
 
 	type IsAny<T> = 0 extends 1 & T ? true : false;
-
 	interface Asset {
 		file: string;
 		size: number;

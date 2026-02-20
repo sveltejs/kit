@@ -431,10 +431,10 @@ export function form(id) {
 		}
 
 		instance[createAttachmentKey()] = create_attachment(
-			form_onsubmit(({ submit, form }) =>
+			form_onsubmit(({ submit }) =>
 				submit().then(() => {
 					if (!issues.$) {
-						form.reset();
+						instance.reset({ result: false });
 					}
 				})
 			)
@@ -558,20 +558,22 @@ export function form(id) {
 				/** @type {RemoteForm<any, any>['reset']} */
 				value: ({
 					values = true,
-					issues: resetIssues = true,
-					result: resetResult = true,
-					touched: resetTouched = true
+					issues: reset_issues = true,
+					result: reset_result = true,
+					touched: reset_touched = true
 				} = {}) => {
 					submitted = false;
 
 					if (values === true) {
-						if (element) element.reset();
-						else input = {};
-					} else if (values) input = values;
+						element?.reset();
+						input = {};
+					} else if (values) {
+						input = values;
+					}
 
-					if (resetIssues) raw_issues = [];
-					if (resetResult) result = undefined;
-					if (resetTouched) touched = {};
+					if (reset_issues) raw_issues = [];
+					if (reset_result) result = undefined;
+					if (reset_touched) touched = {};
 				}
 			},
 			enhance: {
