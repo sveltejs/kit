@@ -565,7 +565,7 @@ async function _preload_code(url) {
 	const route = (await get_navigation_intent(url, false))?.route;
 
 	if (route) {
-		await Promise.all([...route.layouts, route.leaf].map((load) => load?.[1]()));
+		await Promise.all([...route.layouts, route.leaf].flatMap((load) => (load ? [load[1]()] : [])));
 	}
 }
 
@@ -1705,12 +1705,8 @@ async function navigate({
 	 */
 	let commit_promise;
 	if (started) {
-		const after_navigate = (
-			await Promise.all(
-				Array.from(on_navigate_callbacks, (fn) =>
-					fn(/** @type {import('@sveltejs/kit').OnNavigate} */ (nav.navigation))
-				)
-			)
+		const after_navigate = Array.from(on_navigate_callbacks, (fn) =>
+			fn(/** @type {import('@sveltejs/kit').OnNavigate} */ (nav.navigation))
 		).filter(/** @returns {value is () => void} */ (value) => typeof value === 'function');
 
 		if (after_navigate.length > 0) {
@@ -2279,7 +2275,7 @@ export function pushState(url, state) {
 			devalue.stringify(state);
 		} catch (error) {
 			// @ts-expect-error
-			throw new Error(`Could not serialize state${error.path}`);
+			throw new Error(`Could not serialize state${error.path}`, { cause: error });
 		}
 	}
 
@@ -2326,7 +2322,7 @@ export function replaceState(url, state) {
 			devalue.stringify(state);
 		} catch (error) {
 			// @ts-expect-error
-			throw new Error(`Could not serialize state${error.path}`);
+			throw new Error(`Could not serialize state${error.path}`, { cause: error });
 		}
 	}
 

@@ -393,6 +393,7 @@ class LazyFile {
 		return new ReadableStream({
 			start: async (controller) => {
 				let chunk_start = 0;
+				// eslint-disable-next-line no-useless-assignment
 				let start_chunk = null;
 				for (chunk_index = 0; ; chunk_index++) {
 					const chunk = await this.#get_chunk(chunk_index);
