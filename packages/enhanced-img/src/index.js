@@ -33,7 +33,6 @@ function imagetools_plugin() {
 			if (!qs.has('enhanced')) return new URLSearchParams();
 
 			const meta = await metadata();
-
 			const img_width = qs.get('imgWidth');
 			const width = img_width ? parseInt(img_width) : meta.width;
 
