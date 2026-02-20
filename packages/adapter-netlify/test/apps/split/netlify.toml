@@ -1,9 +1,8 @@
 [build]
 publish = "build"
 
-# TODO: remove this after we refactor to the Netlify frameworks API
+# TODO: remove this once @netlify/dev works with the Netlify frameworks API
 # we are purposely misusing the user functions config to discover our framework
-# build output because our adapter still outputs using an older API but the new
-# Netlify dev server adheres to the new API
+# build output because the Netlify dev plugin doesn't currently detect it
 [functions]
-directory = ".netlify/functions-internal"
+directory = ".netlify/v1/functions"
