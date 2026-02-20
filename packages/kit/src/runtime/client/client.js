@@ -1705,8 +1705,13 @@ async function navigate({
 	 */
 	let commit_promise;
 	if (started) {
-		const after_navigate = Array.from(on_navigate_callbacks, (fn) =>
-			fn(/** @type {import('@sveltejs/kit').OnNavigate} */ (nav.navigation))
+		const after_navigate = (
+			await Promise.all(
+				// eslint-disable-next-line @typescript-eslint/await-thenable -- we need to await because they can be asynchronous
+				Array.from(on_navigate_callbacks, (fn) =>
+					fn(/** @type {import('@sveltejs/kit').OnNavigate} */ (nav.navigation))
+				)
+			)
 		).filter(/** @returns {value is () => void} */ (value) => typeof value === 'function');
 
 		if (after_navigate.length > 0) {
