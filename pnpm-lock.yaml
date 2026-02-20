@@ -43,8 +43,8 @@ catalogs:
       specifier: ^16.0.0
       version: 16.0.0
     '@sveltejs/eslint-config':
-      specifier: ^8.2.0
-      version: 8.2.0
+      specifier: ^9.0.0
+      version: 9.0.0
     '@sveltejs/vite-plugin-svelte':
       specifier: ^6.0.0-next.3
       version: 6.2.4
@@ -127,7 +127,7 @@ importers:
         version: 1.58.2
       '@sveltejs/eslint-config':
         specifier: 'catalog:'
-        version: 8.2.0(@stylistic/eslint-plugin-js@2.1.0(eslint@9.34.0(jiti@2.4.2)))(eslint-config-prettier@9.1.0(eslint@9.34.0(jiti@2.4.2)))(eslint-plugin-n@17.16.1(eslint@9.34.0(jiti@2.4.2))(typescript@5.8.3))(eslint-plugin-svelte@3.9.3(eslint@9.34.0(jiti@2.4.2))(svelte@5.51.5)(ts-node@10.9.2(@types/node@18.19.119)(typescript@5.8.3)))(eslint@9.34.0(jiti@2.4.2))(typescript-eslint@8.43.0(eslint@9.34.0(jiti@2.4.2))(typescript@5.8.3))(typescript@5.8.3)
+        version: 9.0.0(@eslint/js@9.34.0)(@stylistic/eslint-plugin-js@2.1.0(eslint@9.34.0(jiti@2.4.2)))(eslint-config-prettier@9.1.0(eslint@9.34.0(jiti@2.4.2)))(eslint-plugin-n@17.16.1(eslint@9.34.0(jiti@2.4.2))(typescript@5.8.3))(eslint-plugin-svelte@3.9.3(eslint@9.34.0(jiti@2.4.2))(svelte@5.51.5)(ts-node@10.9.2(@types/node@18.19.119)(typescript@5.8.3)))(eslint@9.34.0(jiti@2.4.2))(typescript-eslint@8.43.0(eslint@9.34.0(jiti@2.4.2))(typescript@5.8.3))(typescript@5.8.3)
       '@svitejs/changesets-changelog-github-compact':
         specifier: 'catalog:'
         version: 1.2.0
@@ -3160,11 +3160,12 @@ packages:
     peerDependencies:
       acorn: ^8.9.0
 
-  '@sveltejs/eslint-config@8.2.0':
-    resolution: {integrity: sha512-5ab8AXjLoY+H0dsYTGB+9L8AnOvOzd9NZkECj40VAk6Uh9u7+5d8jVk+YYW6NGsEQ+HwHBUi19yij+q+5Pm+aQ==}
+  '@sveltejs/eslint-config@9.0.0':
+    resolution: {integrity: sha512-3u9VUYlU0Mc/8Bhc7eRAPgJuUBMaKHzoE8r50WrnVujoxBLW4zfPckR/BFGGNeVUh0F7QGAtxGkV/5pL6CE1Ng==}
     peerDependencies:
+      '@eslint/js': '>= 10'
       '@stylistic/eslint-plugin-js': '>= 1'
-      eslint: '>= 9'
+      eslint: '>= 10'
       eslint-config-prettier: '>= 9'
       eslint-plugin-n: '>= 17'
       eslint-plugin-svelte: '>= 3'
@@ -4331,6 +4332,10 @@ packages:
 
   globals@16.5.0:
     resolution: {integrity: sha512-c/c15i26VrJ4IRt5Z89DnIzCGDn9EcebibhAOjw5ibqEHsE1wLUgkPn9RDmNcUKyU87GeaL633nyJ+pplFR2ZQ==}
+    engines: {node: '>=18'}
+
+  globals@17.3.0:
+    resolution: {integrity: sha512-yMqGUQVVCkD4tqjOJf3TnrvaaHDMYp4VlUSObbkIiuCPe/ofdMBFIAcBbCSRFWOnos6qRiTVStDwqPLUclaxIw==}
     engines: {node: '>=18'}
 
   globby@11.1.0:
@@ -7743,14 +7748,15 @@ snapshots:
     dependencies:
       acorn: 8.15.0
 
-  '@sveltejs/eslint-config@8.2.0(@stylistic/eslint-plugin-js@2.1.0(eslint@9.34.0(jiti@2.4.2)))(eslint-config-prettier@9.1.0(eslint@9.34.0(jiti@2.4.2)))(eslint-plugin-n@17.16.1(eslint@9.34.0(jiti@2.4.2))(typescript@5.8.3))(eslint-plugin-svelte@3.9.3(eslint@9.34.0(jiti@2.4.2))(svelte@5.51.5)(ts-node@10.9.2(@types/node@18.19.119)(typescript@5.8.3)))(eslint@9.34.0(jiti@2.4.2))(typescript-eslint@8.43.0(eslint@9.34.0(jiti@2.4.2))(typescript@5.8.3))(typescript@5.8.3)':
+  '@sveltejs/eslint-config@9.0.0(@eslint/js@9.34.0)(@stylistic/eslint-plugin-js@2.1.0(eslint@9.34.0(jiti@2.4.2)))(eslint-config-prettier@9.1.0(eslint@9.34.0(jiti@2.4.2)))(eslint-plugin-n@17.16.1(eslint@9.34.0(jiti@2.4.2))(typescript@5.8.3))(eslint-plugin-svelte@3.9.3(eslint@9.34.0(jiti@2.4.2))(svelte@5.51.5)(ts-node@10.9.2(@types/node@18.19.119)(typescript@5.8.3)))(eslint@9.34.0(jiti@2.4.2))(typescript-eslint@8.43.0(eslint@9.34.0(jiti@2.4.2))(typescript@5.8.3))(typescript@5.8.3)':
     dependencies:
+      '@eslint/js': 9.34.0
       '@stylistic/eslint-plugin-js': 2.1.0(eslint@9.34.0(jiti@2.4.2))
       eslint: 9.34.0(jiti@2.4.2)
       eslint-config-prettier: 9.1.0(eslint@9.34.0(jiti@2.4.2))
       eslint-plugin-n: 17.16.1(eslint@9.34.0(jiti@2.4.2))(typescript@5.8.3)
       eslint-plugin-svelte: 3.9.3(eslint@9.34.0(jiti@2.4.2))(svelte@5.51.5)(ts-node@10.9.2(@types/node@18.19.119)(typescript@5.8.3))
-      globals: 15.15.0
+      globals: 17.3.0
       typescript: 5.8.3
       typescript-eslint: 8.43.0(eslint@9.34.0(jiti@2.4.2))(typescript@5.8.3)
 
@@ -9101,6 +9107,8 @@ snapshots:
   globals@15.15.0: {}
 
   globals@16.5.0: {}
+
+  globals@17.3.0: {}
 
   globby@11.1.0:
     dependencies:
