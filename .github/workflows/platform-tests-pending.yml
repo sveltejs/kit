@@ -20,7 +20,7 @@ jobs:
           SUMMARY="Run the platform tests for this commit:
 
           \`\`\`
-          gh workflow run platform-tests-all.yml -f sha=$SHA
+          gh workflow run platform-tests-all.yml -R ${{ github.repository }} -f sha=$SHA
           \`\`\`"
 
           gh api repos/${{ github.repository }}/check-runs \

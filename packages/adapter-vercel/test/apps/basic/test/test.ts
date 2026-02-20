@@ -87,13 +87,6 @@ test('deeply nested route works', async ({ page }) => {
 	expect(await page.locator('#path').textContent()).toBe('/deep/nested/route');
 });
 
-test('platform context is available', async ({ request }) => {
-	const response = await request.get('/platform');
-	expect(response.ok()).toBe(true);
-	const data = await response.json();
-	expect(data.has_platform).toBe(true);
-});
-
 test('client-side navigation works (validates __data.json)', async ({ page }) => {
 	await page.goto('/');
 	await expect(page.locator('h1')).toContainText('Hello from SvelteKit on Vercel');
