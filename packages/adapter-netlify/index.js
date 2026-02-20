@@ -275,7 +275,7 @@ function generate_lambda_functions({ builder, publish, split }) {
 			generate_serverless_function({
 				builder,
 				routes,
-				patterns: [pattern, `${pattern}/__data.json`],
+				patterns: [pattern, `${pattern === '/' ? '' : pattern}/__data.json`],
 				name
 			});
 		}
