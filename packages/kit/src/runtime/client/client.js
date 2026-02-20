@@ -565,7 +565,11 @@ async function _preload_code(url) {
 	const route = (await get_navigation_intent(url, false))?.route;
 
 	if (route) {
-		await Promise.all([...route.layouts, route.leaf].flatMap((load) => (load ? [load[1]()] : [])));
+		await Promise.all(
+			/** @type {[has_server_load: boolean, node_loader: import('types').CSRPageNodeLoader][]} */ (
+				[...route.layouts, route.leaf].filter(Boolean)
+			).map((load) => load[1]())
+		);
 	}
 }
 
