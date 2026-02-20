@@ -100,7 +100,7 @@ function default_widths(width, sizes) {
 		// https://screensiz.es/
 		// https://gs.statcounter.com/screen-resolution-stats (note: logical. we want physical)
 		// Include 1080 because lighthouse uses a moto g4 with 360 logical pixels and 3x pixel ratio.
-		return { w: `540;768;1080;1366;1536;1920;2560;3000;4096;5120${width}` };
+		return { w: `540;768;1080;1366;1536;1920;2560;3000;4096;5120;${width}` };
 	}
 
 	// Don't need more than 2x resolution. Note that due to this optimization, pixel density
