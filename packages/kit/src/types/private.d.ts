@@ -252,4 +252,3 @@ export type DeepPartial<T> = T extends Record<PropertyKey, unknown> | unknown[]
 	: T | undefined;
 
 export type IsAny<T> = 0 extends 1 & T ? true : false;
-
