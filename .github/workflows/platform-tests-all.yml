@@ -1,0 +1,55 @@
+name: Platform Tests (All)
+
+on:
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: 'Commit SHA to test and update check status on'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+  checks: write
+
+jobs:
+  vercel:
+    uses: ./.github/workflows/platform-tests-vercel.yml
+    with:
+      sha: ${{ inputs.sha }}
+    secrets: inherit
+
+  report-status:
+    if: always()
+    needs: [vercel]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Determine outcome
+        id: outcome
+        run: |
+          if [ "${{ contains(needs.*.result, 'failure') }}" = "true" ]; then
+            echo "conclusion=failure" >> "$GITHUB_OUTPUT"
+            echo "title=Platform tests failed" >> "$GITHUB_OUTPUT"
+            echo "summary=One or more platform test jobs failed. See the [workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details." >> "$GITHUB_OUTPUT"
+          elif [ "${{ contains(needs.*.result, 'cancelled') }}" = "true" ]; then
+            echo "conclusion=cancelled" >> "$GITHUB_OUTPUT"
+            echo "title=Platform tests cancelled" >> "$GITHUB_OUTPUT"
+            echo "summary=Platform tests were cancelled before completing." >> "$GITHUB_OUTPUT"
+          else
+            echo "conclusion=success" >> "$GITHUB_OUTPUT"
+            echo "title=Platform tests passed" >> "$GITHUB_OUTPUT"
+            echo "summary=All platform test jobs passed." >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Update check run
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api repos/${{ github.repository }}/check-runs \
+            -f name=platform-tests \
+            -f head_sha=${{ inputs.sha || github.sha }} \
+            -f status=completed \
+            -f conclusion=${{ steps.outcome.outputs.conclusion }} \
+            -f output[title]='${{ steps.outcome.outputs.title }}' \
+            -f output[summary]='${{ steps.outcome.outputs.summary }}' \
+            -f details_url='${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}'

@@ -2,6 +2,7 @@ packages:
   - packages/*
   - packages/adapter-cloudflare/test/apps/*
   - packages/adapter-netlify/test/apps/*
+  - packages/adapter-vercel/test/apps/*
   - packages/adapter-static/test/apps/*
   - packages/enhanced-img/test/apps/*
   - packages/kit/test/apps/*

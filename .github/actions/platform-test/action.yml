@@ -1,0 +1,32 @@
+name: 'Platform Test'
+description: 'Run Playwright tests against a deployed platform preview'
+
+inputs:
+  test-app-dir:
+    description: 'Path to the test app directory'
+    required: true
+  deployment-url:
+    description: 'URL of the deployed preview to test against'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Install Playwright
+      shell: bash
+      run: pnpm playwright install chromium --no-shell
+
+    - name: Run Playwright tests
+      shell: bash
+      working-directory: ${{ inputs.test-app-dir }}
+      env:
+        DEPLOYMENT_URL: ${{ inputs.deployment-url }}
+      run: pnpm test:platform
+
+    - name: Upload test artifacts
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: platform-test-results-${{ github.job }}
+        path: ${{ inputs.test-app-dir }}/test-results
+        retention-days: 3
