@@ -2,7 +2,6 @@
 /** @import { RemoteFormInput, RemoteForm, RemoteQueryOverride } from '@sveltejs/kit' */
 /** @import { InternalRemoteFormIssue, RemoteFunctionResponse } from 'types' */
 /** @import { Query } from './query.svelte.js' */
-import { SvelteMap } from 'svelte/reactivity';
 import { app_dir, base } from '$app/paths/internal/client';
 import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
@@ -53,8 +52,9 @@ function merge_with_server_issues(form_data, current_issues, client_issues) {
  * @returns {RemoteForm<T, U>}
  */
 export function form(id) {
-	/** @type {SvelteMap<any, { count: number, instance: RemoteForm<T, U> }>} */
-	const instances = new SvelteMap();
+	/** @type {Map<any, { count: number, instance: RemoteForm<T, U> }>} */
+	// eslint-disable-next-line svelte/prefer-svelte-reactivity -- we don't need reactivity for this
+	const instances = new Map();
 
 	/** @param {string | number | boolean} [key] */
 	function create_instance(key) {

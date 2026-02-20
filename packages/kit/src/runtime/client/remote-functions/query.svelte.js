@@ -1,6 +1,5 @@
 /** @import { RemoteQueryFunction } from '@sveltejs/kit' */
 /** @import { RemoteFunctionResponse } from 'types' */
-import { SvelteMap } from 'svelte/reactivity';
 import { app_dir, base } from '$app/paths/internal/client';
 import { app, goto, query_map, remote_responses } from '../client.js';
 import { tick } from 'svelte';
@@ -43,8 +42,9 @@ export function query(id) {
  * @returns {(arg: any) => Query<any>}
  */
 export function query_batch(id) {
-	/** @type {SvelteMap<string, Array<{resolve: (value: any) => void, reject: (error: any) => void}>>} */
-	let batching = new SvelteMap();
+	/** @type {Map<string, Array<{resolve: (value: any) => void, reject: (error: any) => void}>>} */
+	// eslint-disable-next-line svelte/prefer-svelte-reactivity -- we don't need reactivity for this
+	let batching = new Map();
 
 	return create_remote_function(id, (cache_key, payload) => {
 		return new Query(cache_key, () => {
@@ -67,7 +67,8 @@ export function query_batch(id) {
 				// and flushes could reveal more queries that should be batched.
 				setTimeout(async () => {
 					const batched = batching;
-					batching = new SvelteMap();
+					// eslint-disable-next-line svelte/prefer-svelte-reactivity
+					batching = new Map();
 
 					try {
 						const response = await fetch(`${base}/${app_dir}/remote/${id}`, {
