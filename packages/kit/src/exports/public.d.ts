@@ -16,7 +16,8 @@ import {
 	PrerenderUnseenRoutesHandlerValue,
 	PrerenderOption,
 	RequestOptions,
-	RouteSegment
+	RouteSegment,
+	IsAny
 } from '../types/private.js';
 import { BuildData, SSRNodeLoader, SSRRoute, ValidatedConfig } from 'types';
 import { SvelteConfig } from '@sveltejs/vite-plugin-svelte';
@@ -357,8 +358,6 @@ export interface KitConfig {
 	 * };
 	 * ```
 	 *
-	 * > [!NOTE] The built-in `$lib` alias is controlled by `config.kit.files.lib` as it is used for packaging.
-	 *
 	 * > [!NOTE] You will need to run `npm run dev` to have SvelteKit automatically generate the required alias configuration in `jsconfig.json` or `tsconfig.json`.
 	 * @default {}
 	 */
@@ -508,6 +507,12 @@ export interface KitConfig {
 		 * @default false
 		 */
 		remoteFunctions?: boolean;
+
+		/**
+		 * Whether to enable the experimental forked preloading feature using Svelte's fork API.
+		 * @default false
+		 */
+		forkPreloads?: boolean;
 	};
 	/**
 	 * Where to find various files within your project.
@@ -1196,6 +1201,19 @@ export interface NavigationTarget<
 	 * The URL that is navigated to
 	 */
 	url: URL;
+	/**
+	 * The scroll position associated with this navigation.
+	 *
+	 * For the `from` target, this is the scroll position at the moment of navigation.
+	 *
+	 * For the `to` target, this represents the scroll position that will be or was restored:
+	 * - In `beforeNavigate` and `onNavigate`, this is only available for `popstate` navigations (back/forward button)
+	 *   and will be `null` for other navigation types, since the final scroll position isn't known
+	 *   ahead of time.
+	 * - In `afterNavigate`, this is always the scroll position that was applied after the navigation
+	 *   completed.
+	 */
+	scroll: { x: number; y: number } | null;
 }
 
 /**
@@ -1245,7 +1263,7 @@ export interface NavigationEnter extends NavigationBase {
 	delta?: undefined;
 
 	/**
-	 * Dispatched `Event` object when navigation occured by `popstate` or `link`.
+	 * Dispatched `Event` object when navigation occurred by `popstate` or `link`.
 	 */
 	event?: undefined;
 }
@@ -1950,6 +1968,18 @@ type UnknownField<Value> = RemoteFormFieldMethods<Value> & {
 	[key: string | number]: UnknownField<any>;
 };
 
+type RemoteFormFieldsRoot<Input extends RemoteFormInput | void> =
+	IsAny<Input> extends true
+		? RecursiveFormFields
+		: Input extends void
+			? {
+					/** Validation issues, if any */
+					issues(): RemoteFormIssue[] | undefined;
+					/** Validation issues belonging to this or any of the fields that belong to it, if any */
+					allIssues(): RemoteFormIssue[] | undefined;
+				}
+			: RemoteFormFields<Input>;
+
 /**
  * Recursive type to build form fields structure with proxy access
  */
@@ -2089,31 +2119,7 @@ export type RemoteForm<Input extends RemoteFormInput | void, Output> = {
 	/** The number of pending submissions */
 	get pending(): number;
 	/** Access form fields using object notation */
-	fields: RemoteFormFields<Input>;
-	/** Spread this onto a `<button>` or `<input type="submit">` */
-	buttonProps: {
-		type: 'submit';
-		formmethod: 'POST';
-		formaction: string;
-		onclick: (event: Event) => void;
-		/** Use the `enhance` method to influence what happens when the form is submitted. */
-		enhance(
-			callback: (opts: {
-				form: HTMLFormElement;
-				data: Input;
-				submit: () => Promise<void> & {
-					updates: (...queries: Array<RemoteQuery<any> | RemoteQueryOverride>) => Promise<void>;
-				};
-			}) => void | Promise<void>
-		): {
-			type: 'submit';
-			formmethod: 'POST';
-			formaction: string;
-			onclick: (event: Event) => void;
-		};
-		/** The number of pending submissions */
-		get pending(): number;
-	};
+	fields: RemoteFormFieldsRoot<Input>;
 };
 
 /**

@@ -3,6 +3,7 @@ import './ambient.js';
 
 declare global {
 	const ENV_PREFIX: string;
+	const PRECOMPRESS: boolean;
 }
 
 interface AdapterOptions {

@@ -2,6 +2,7 @@ import { beforeAll, describe, expect, test } from 'vitest';
 import {
 	BINARY_FORM_CONTENT_TYPE,
 	convert_formdata,
+	deep_set,
 	deserialize_binary_form,
 	serialize_binary_form,
 	split_path
@@ -123,7 +124,8 @@ describe('binary form serializer', () => {
 				method: 'POST',
 				body: blob,
 				headers: {
-					'Content-Type': BINARY_FORM_CONTENT_TYPE
+					'Content-Type': BINARY_FORM_CONTENT_TYPE,
+					'Content-Length': blob.size.toString()
 				}
 			})
 		);
@@ -138,7 +140,8 @@ describe('binary form serializer', () => {
 				large: new File([new Uint8Array(1024).fill('a'.charCodeAt(0))], 'large.txt', {
 					type: 'text/plain',
 					lastModified: 100
-				})
+				}),
+				empty: new File([], 'empty.txt', { type: 'text/plain' })
 			},
 			{}
 		);
@@ -159,11 +162,16 @@ describe('binary form serializer', () => {
 				// @ts-expect-error duplex required in node
 				duplex: 'half',
 				headers: {
-					'Content-Type': BINARY_FORM_CONTENT_TYPE
+					'Content-Type': BINARY_FORM_CONTENT_TYPE,
+					'Content-Length': blob.size.toString()
 				}
 			})
 		);
-		const { small, large } = res.data;
+		const { small, large, empty } = res.data;
+		expect(empty.name).toBe('empty.txt');
+		expect(empty.type).toBe('text/plain');
+		expect(empty.size).toBe(0);
+		expect(await empty.text()).toBe('');
 		expect(small.name).toBe('a.txt');
 		expect(small.type).toBe('text/plain');
 		expect(small.size).toBe(1);
@@ -195,7 +203,8 @@ describe('binary form serializer', () => {
 				method: 'POST',
 				body: blob,
 				headers: {
-					'Content-Type': BINARY_FORM_CONTENT_TYPE
+					'Content-Type': BINARY_FORM_CONTENT_TYPE,
+					'Content-Length': blob.size.toString()
 				}
 			})
 		);
@@ -212,6 +221,315 @@ describe('binary form serializer', () => {
 		const world_slice = file.slice(-5);
 		expect(await world_slice.text()).toBe('World');
 		expect(world_slice.type).toBe(file.type);
+	});
+
+	test('throws when Content-Length is invalid', async () => {
+		await expect(
+			deserialize_binary_form(
+				new Request('http://test', {
+					method: 'POST',
+					body: 'foo',
+					headers: {
+						'Content-Type': BINARY_FORM_CONTENT_TYPE
+					}
+				})
+			)
+		).rejects.toThrow('invalid Content-Length header');
+		await expect(
+			deserialize_binary_form(
+				new Request('http://test', {
+					method: 'POST',
+					body: 'foo',
+					headers: {
+						'Content-Type': BINARY_FORM_CONTENT_TYPE,
+						'Content-Length': 'invalid'
+					}
+				})
+			)
+		).rejects.toThrow('invalid Content-Length header');
+	});
+
+	test('data length check', async () => {
+		const { blob } = serialize_binary_form(
+			{
+				foo: 'bar'
+			},
+			{}
+		);
+		await expect(
+			deserialize_binary_form(
+				new Request('http://test', {
+					method: 'POST',
+					body: blob,
+					headers: {
+						'Content-Type': BINARY_FORM_CONTENT_TYPE,
+						'Content-Length': (blob.size - 1).toString()
+					}
+				})
+			)
+		).rejects.toThrow('data overflow');
+	});
+
+	test('file offset table length check', async () => {
+		const { blob } = serialize_binary_form(
+			{
+				file: new File([''], 'a.txt')
+			},
+			{}
+		);
+		await expect(
+			deserialize_binary_form(
+				new Request('http://test', {
+					method: 'POST',
+					body: blob,
+					headers: {
+						'Content-Type': BINARY_FORM_CONTENT_TYPE,
+						'Content-Length': (blob.size - 1).toString()
+					}
+				})
+			)
+		).rejects.toThrow('file offset table overflow');
+	});
+
+	test('file length check', async () => {
+		const { blob } = serialize_binary_form(
+			{
+				file: new File(['a'], 'a.txt')
+			},
+			{}
+		);
+		await expect(
+			deserialize_binary_form(
+				new Request('http://test', {
+					method: 'POST',
+					body: blob,
+					headers: {
+						'Content-Type': BINARY_FORM_CONTENT_TYPE,
+						'Content-Length': (blob.size - 1).toString()
+					}
+				})
+			)
+		).rejects.toThrow('file data overflow');
+	});
+
+	test('does not preallocate large buffers for incomplete bodies', async () => {
+		const OriginalUint8Array = Uint8Array;
+		const header_bytes = 1 + 4 + 2;
+		const data_length = 32 * 1024 * 1024;
+
+		// This test should fail on the vulnerable implementation. To make the overallocation observable,
+		// temporarily guard allocations of large Uint8Arrays — the fixed code only allocates after reading
+		// the full range, so it should not trip this guard for an incomplete body.
+		class GuardedUint8Array extends OriginalUint8Array {
+			/** @param {...any} args */
+			constructor(...args) {
+				if (typeof args[0] === 'number' && args[0] === data_length) {
+					throw new Error('EAGER_ALLOC');
+				}
+
+				if (args.length === 0) {
+					super();
+				} else if (args.length === 1) {
+					super(/** @type {any} */ (args[0]));
+				} else if (args.length === 2) {
+					super(/** @type {any} */ (args[0]), /** @type {any} */ (args[1]));
+				} else {
+					super(
+						/** @type {any} */ (args[0]),
+						/** @type {any} */ (args[1]),
+						/** @type {any} */ (args[2])
+					);
+				}
+			}
+		}
+
+		/** @type {any} */ (globalThis).Uint8Array = GuardedUint8Array;
+		try {
+			// First chunk must include at least 1 byte past the header so that `get_buffer(header_bytes, data_length)`
+			// takes the multi-chunk path.
+			const first_chunk = new OriginalUint8Array(header_bytes + 1);
+			first_chunk[0] = 0;
+			const header_view = new DataView(
+				first_chunk.buffer,
+				first_chunk.byteOffset,
+				first_chunk.byteLength
+			);
+			header_view.setUint32(1, data_length, true);
+			header_view.setUint16(5, 0, true);
+
+			const stream = new ReadableStream({
+				start(controller) {
+					controller.enqueue(first_chunk);
+					controller.close();
+				}
+			});
+
+			await expect(
+				deserialize_binary_form(
+					new Request('http://test', {
+						method: 'POST',
+						body: stream,
+						// @ts-expect-error duplex required in node
+						duplex: 'half',
+						headers: {
+							'Content-Type': BINARY_FORM_CONTENT_TYPE,
+							'Content-Length': (header_bytes + data_length).toString()
+						}
+					})
+				)
+			).rejects.toThrow('data too short');
+		} finally {
+			/** @type {any} */ (globalThis).Uint8Array = OriginalUint8Array;
+		}
+	});
+
+	test('rejects type confusion attack on file metadata', async () => {
+		// Reproduces the attack from the vulnerability report: a crafted devalue payload
+		// where File metadata contains nested arrays referencing a BigInt(1e308) instead
+		// of primitive values. Without validation, arithmetic on `size` triggers recursive
+		// array-to-string coercion causing CPU exhaustion.
+		//
+		// Uses the same payload structure as the original POC but with repeats=2
+		// (enough to prove the fix, without risk of stalling if it regresses).
+		const repeats = 2;
+
+		const data = JSON.stringify([
+			// Index 0: root array referencing File proxy objects at indices 10, 11
+			[...Array(repeats)].map((_, i) => 10 + i),
+			// Index 1: holey array [, , size] — devalue HOLE (-2) creates sparse entries
+			// so the File reviver gets [undefined, undefined, <nested arrays>]
+			[-2, -2, 2],
+			// Indices 2–8: cascade of arrays referencing each other, amplifying traversal
+			[3, 3, 3, 3, 3, 3, 3],
+			[4, 4, 4, 4, 4, 4, 4],
+			[5, 5, 5, 5, 5, 5, 5, 5],
+			[6, 6, 6, 6, 6, 6, 6, 6],
+			[7, 7, 7, 7, 7, 7, 7, 7],
+			[8, 8, 8, 8, 8, 8, 8, 8],
+			[9, 9, 9, 9, 9, 9, 9, 9],
+			// Index 9: BigInt(1e308) — a 309-digit number, expensive to coerce to string
+			['BigInt', 1e308],
+			// Indices 10+: File objects referencing the holey array at index 1
+			...Array(repeats).fill(['File', 1])
+		]);
+
+		const file_offsets = JSON.stringify([0]);
+		const data_buf = text_encoder.encode(data);
+		const offsets_buf = text_encoder.encode(file_offsets);
+		const total = 7 + data_buf.length + offsets_buf.length;
+		const body = new Uint8Array(total);
+		const view = new DataView(body.buffer);
+		body[0] = 0;
+		view.setUint32(1, data_buf.length, true);
+		view.setUint16(5, offsets_buf.length, true);
+		body.set(data_buf, 7);
+		body.set(offsets_buf, 7 + data_buf.length);
+
+		await expect(
+			deserialize_binary_form(
+				new Request('http://test', {
+					method: 'POST',
+					body,
+					headers: {
+						'Content-Type': BINARY_FORM_CONTENT_TYPE,
+						'Content-Length': total.toString()
+					}
+				})
+			)
+		).rejects.toThrow('invalid file metadata');
+	}, 1000);
+
+	test.each([
+		{
+			name: 'name is a number instead of string',
+			payload: '[[1,3],{"file":2},["File",4],{},[5,6,7,8,9],123,"text/plain",0,0,0]'
+		},
+		{
+			name: 'size is an array instead of number',
+			payload: '[[1,3],{"file":2},["File",4],{},[5,6,7,8,9],"a.txt","text/plain",[10,10,10],0,0,1]'
+		},
+		{
+			name: 'last_modified is a string instead of number',
+			payload: '[[1,3],{"file":2},["File",4],{},[5,6,7,8,9],"a.txt","text/plain",0,"bad",0]'
+		},
+		{
+			name: 'sparse/holey array (fields are undefined)',
+			payload: '[[1,3],{"file":2},["File",4],{},[-2,-2,7],"a.txt","text/plain",0]'
+		}
+	])('rejects invalid file metadata: $name', async ({ payload }) => {
+		await expect(deserialize_binary_form(build_raw_request(payload))).rejects.toThrow(
+			'invalid file metadata'
+		);
+	});
+
+	test('rejects memory amplification attack via nested array in file offset table', async () => {
+		// A crafted file offset table
+		// containing a nested array like [[1e20,1e20,...,1e20]]. When file_offsets[0] is
+		// added to a number, the inner array coerces to a ~273,000-char string. With
+		// ~58,000 LazyFile instances from a 1MB payload, this requires ~14.7GB of memory.
+		//
+		// We use a small payload (13 values) that is enough to trigger the validation
+		// error without risk of memory issues if the fix regresses.
+		const inner_count = 13;
+		const malicious_offsets = JSON.stringify([[...Array(inner_count).fill(1e20)]]);
+
+		// Build a minimal binary form request with the malicious offset table
+		const data = '[[1,3],{"file":2},["File",4],{},[5,6,7,8,9],"a.txt","text/plain",0,0,0]';
+		const data_buf = text_encoder.encode(data);
+		const offsets_buf = text_encoder.encode(malicious_offsets);
+		const total = 7 + data_buf.length + offsets_buf.length + 1;
+		const body = new Uint8Array(total);
+		const view = new DataView(body.buffer);
+		body[0] = 0;
+		view.setUint32(1, data_buf.length, true);
+		view.setUint16(5, offsets_buf.length, true);
+		body.set(data_buf, 7);
+		body.set(offsets_buf, 7 + data_buf.length);
+
+		await expect(
+			deserialize_binary_form(
+				new Request('http://test', {
+					method: 'POST',
+					body,
+					headers: {
+						'Content-Type': BINARY_FORM_CONTENT_TYPE,
+						'Content-Length': total.toString()
+					}
+				})
+			)
+		).rejects.toThrow('invalid file offset table');
+	}, 1000);
+
+	test.each([
+		{
+			name: 'nested array (amplification attack)',
+			offsets: '[[1e20,1e20]]'
+		},
+		{
+			name: 'non-integer float values',
+			offsets: '[0, 1.5, 3]'
+		},
+		{
+			name: 'negative values',
+			offsets: '[0, -1, 2]'
+		},
+		{
+			name: 'not an array (object)',
+			offsets: '{"0": 0}'
+		},
+		{
+			name: 'string values in array',
+			offsets: '["0", "1"]'
+		}
+	])('rejects invalid file offset table: $name', async ({ offsets }) => {
+		await expect(
+			deserialize_binary_form(
+				build_raw_request(
+					'[[1,3],{"file":2},["File",4],{},[5,6,7,8,9],"a.txt","text/plain",0,0,0]',
+					offsets
+				)
+			)
+		).rejects.toThrow('invalid file offset table');
 	});
 
 	// Regression test for https://github.com/sveltejs/kit/issues/14971
@@ -235,11 +553,51 @@ describe('binary form serializer', () => {
 				// @ts-expect-error duplex required in node
 				duplex: 'half',
 				headers: {
-					'Content-Type': BINARY_FORM_CONTENT_TYPE
+					'Content-Type': BINARY_FORM_CONTENT_TYPE,
+					'Content-Length': blob.size.toString()
 				}
 			})
 		);
 
 		expect(res.data).toEqual({ a: 1 });
+	});
+
+	/**
+	 * Build a binary form request with a raw devalue payload.
+	 * @param {string} devalue_data
+	 * @param {string} file_offsets_json
+	 */
+	function build_raw_request(devalue_data, file_offsets_json = '[0]') {
+		const data_buf = text_encoder.encode(devalue_data);
+		const offsets_buf = text_encoder.encode(file_offsets_json);
+		const total = 7 + data_buf.length + offsets_buf.length + 1; // +1 for a fake file byte
+		const body = new Uint8Array(total);
+		const view = new DataView(body.buffer);
+		body[0] = 0;
+		view.setUint32(1, data_buf.length, true);
+		view.setUint16(5, offsets_buf.length, true);
+		body.set(data_buf, 7);
+		body.set(offsets_buf, 7 + data_buf.length);
+		return new Request('http://test', {
+			method: 'POST',
+			body,
+			headers: {
+				'Content-Type': BINARY_FORM_CONTENT_TYPE,
+				'Content-Length': total.toString()
+			}
+		});
+	}
+});
+
+describe('deep_set', () => {
+	test('always creates own property', () => {
+		const target = {};
+
+		deep_set(target, ['toString', 'property'], 'hello');
+
+		// @ts-ignore
+		expect(target.toString.property).toBe('hello');
+		// @ts-ignore
+		expect(Object.prototype.toString.property).toBeUndefined();
 	});
 });

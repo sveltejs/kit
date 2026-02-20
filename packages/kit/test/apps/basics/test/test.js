@@ -731,6 +731,10 @@ test.describe('$app/environment', () => {
 
 test.describe('$app/paths', () => {
 	test('includes paths', async ({ page, javaScriptEnabled }) => {
+		test.skip(
+			process.env.SVELTE_ASYNC === 'true',
+			'does not work with async, should use new functions instead'
+		);
 		await page.goto('/paths');
 
 		let base = javaScriptEnabled ? '' : '.';
@@ -749,6 +753,10 @@ test.describe('$app/paths', () => {
 		page,
 		javaScriptEnabled
 	}) => {
+		test.skip(
+			process.env.SVELTE_ASYNC === 'true',
+			'does not work with async, should use new functions instead'
+		);
 		const absolute = `${baseURL}/favicon.png`;
 
 		await page.goto('/');
@@ -765,6 +773,34 @@ test.describe('$app/paths', () => {
 		expect(await page.getAttribute('link[rel=icon]', 'href')).toBe(
 			javaScriptEnabled ? absolute : '../../../../favicon.png'
 		);
+	});
+
+	test('match() returns route id and params for matching routes', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		await page.goto('/match');
+
+		const samples = [
+			{ path: '/match/load/foo', expected: { id: '/match/load/foo', params: {} } },
+			{
+				path: '/match/slug/test-slug',
+				expected: { id: '/match/slug/[slug]', params: { slug: 'test-slug' } }
+			},
+			{
+				path: '/match/slug/test-slug?from=query',
+				expected: { id: '/match/slug/[slug]', params: { slug: 'test-slug' } }
+			},
+			{ path: '/match/not-a-real-route-that-exists', expected: null },
+			{ path: '/reroute/basic/a', expected: { id: '/reroute/basic/b', params: {} } }
+		];
+
+		for (const { path, expected } of samples) {
+			const results = javaScriptEnabled
+				? page.locator('#client-results')
+				: page.locator('#server-results');
+			await expect(results.locator(`[data-path="${path}"]`)).toHaveText(JSON.stringify(expected));
+		}
 	});
 });
 

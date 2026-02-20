@@ -240,6 +240,7 @@ export interface RouteSegment {
 	rest: boolean;
 }
 
+/** @default 'never' */
 export type TrailingSlash = 'never' | 'always' | 'ignore';
 
 export type DeepPartial<T> = T extends Record<PropertyKey, unknown> | unknown[]
@@ -249,3 +250,6 @@ export type DeepPartial<T> = T extends Record<PropertyKey, unknown> | unknown[]
 				: T[K];
 		}
 	: T | undefined;
+
+export type IsAny<T> = 0 extends 1 & T ? true : false;
+

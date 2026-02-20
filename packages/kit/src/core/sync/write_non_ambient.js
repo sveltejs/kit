@@ -13,6 +13,40 @@ const remove_group_segments = (/** @type {string} */ id) => {
 	return '/' + get_route_segments(id).join('/');
 };
 
+/**
+ * Get pathnames to add based on trailingSlash settings
+ * @param {string} pathname
+ * @param {import('types').RouteData} route
+ * @returns {string[]}
+ */
+function get_pathnames_for_trailing_slash(pathname, route) {
+	if (pathname === '/') {
+		return [pathname];
+	}
+
+	/** @type {({ trailingSlash?: import('types').TrailingSlash } | null)[]} */
+	const routes = [];
+
+	if (route.leaf) routes.push(route.leaf.page_options ?? null);
+	if (route.endpoint) routes.push(route.endpoint.page_options);
+
+	/** @type {Set<string>} */
+	const pathnames = new Set();
+
+	for (const page_options of routes) {
+		if (page_options === null || page_options.trailingSlash === 'ignore') {
+			pathnames.add(pathname);
+			pathnames.add(pathname + '/');
+		} else if (page_options.trailingSlash === 'always') {
+			pathnames.add(pathname + '/');
+		} else {
+			pathnames.add(pathname);
+		}
+	}
+
+	return Array.from(pathnames);
+}
+
 // `declare module "svelte/elements"` needs to happen in a non-ambient module, and dts-buddy generates one big ambient module,
 // so we can't add it there - therefore generate the typings ourselves here.
 // We're not using the `declare namespace svelteHTML` variant because that one doesn't augment the HTMLAttributes interface
@@ -67,19 +101,14 @@ function generate_app_types(manifest_data) {
 
 			const pathname = remove_group_segments(route.id);
 			const replaced_pathname = replace_required_params(replace_optional_params(pathname));
-			pathnames.add(`\`${replaced_pathname}\` & {}`);
 
-			if (pathname !== '/') {
-				// Support trailing slash
-				pathnames.add(`\`${replaced_pathname + '/'}\` & {}`);
+			for (const p of get_pathnames_for_trailing_slash(replaced_pathname, route)) {
+				pathnames.add(`\`${p}\` & {}`);
 			}
 		} else {
 			const pathname = remove_group_segments(route.id);
-			pathnames.add(s(pathname));
-
-			if (pathname !== '/') {
-				// Support trailing slash
-				pathnames.add(s(pathname + '/'));
+			for (const p of get_pathnames_for_trailing_slash(pathname, route)) {
+				pathnames.add(s(p));
 			}
 		}
 

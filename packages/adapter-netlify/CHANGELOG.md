@@ -1,5 +1,57 @@
 # @sveltejs/adapter-netlify
 
+## 6.0.2
+### Patch Changes
+
+
+- fix: prefix param matcher with alphabetical characters so that it works with URLPattern matching ([#15332](https://github.com/sveltejs/kit/pull/15332))
+
+- Updated dependencies [[`3e607b3`](https://github.com/sveltejs/kit/commit/3e607b314aec9e5f278d32847945b8b6323e1cb8), [`62991c8`](https://github.com/sveltejs/kit/commit/62991c81db4f50ccfb08a9ac5e05ccba4ddab59e), [`f47c01b`](https://github.com/sveltejs/kit/commit/f47c01bd8100328c24fdb8522fe35913b0735f35)]:
+  - @sveltejs/kit@2.52.2
+
+## 6.0.1
+### Patch Changes
+
+
+- fix: export Netlify config directly from the instrumented serverless function ([#15335](https://github.com/sveltejs/kit/pull/15335))
+
+- Updated dependencies [[`e87efba`](https://github.com/sveltejs/kit/commit/e87efba90aeb04227e6a1a5e9017989e7f1c78dc), [`71ddbc7`](https://github.com/sveltejs/kit/commit/71ddbc7ff19a612cfcd483f3b7ba58586372528b), [`1bae374`](https://github.com/sveltejs/kit/commit/1bae374e2e106eb82502afd1ddf0167d66f224a1), [`20dfadf`](https://github.com/sveltejs/kit/commit/20dfadfbef312b4e750318aa871aebbfcb4396a4), [`8c2384a`](https://github.com/sveltejs/kit/commit/8c2384a346825d54eb4281f9da854388fb4d81b3)]:
+  - @sveltejs/kit@2.52.1
+
+## 6.0.0
+### Major Changes
+
+
+- breaking: `platform.context` is now the [modern Netlify Functions ([#15203](https://github.com/sveltejs/kit/pull/15203))
+  context](https://docs.netlify.com/build/functions/api/#netlify-specific-context-object)
+  
+  Previously, this was the [AWS Lambda-style
+  context](https://github.com/netlify/primitives/blob/c1ae30f2745f0a73e26e83334695e205a04ab47d/packages/functions/prod/src/function/handler_context.ts).
+  
+  If you were using this in your app (unlikely), you will need to update your code to read from new fields.
+
+### Minor Changes
+
+
+- feat: Migrate to the modern Netlify Functions API ([#15203](https://github.com/sveltejs/kit/pull/15203))
+  
+  The Netlify adapter now generates "v2" Netlify Functions, which uses modern standards (ESM, `Request`, `Response`) instead of the legacy "Lambda-compatible" or "v1" format. Under the hood, this greatly simplifies the adapter code and improves maintainability.
+  
+  For more details on features this unlocks for your SvelteKit app, see
+  https://developers.netlify.com/guides/migrating-to-the-modern-netlify-functions/.
+
+- feat: allow configuring redirects in `netlify.toml` ([#15203](https://github.com/sveltejs/kit/pull/15203))
+  
+  The limitation of only being able to configure redirects via the `_redirects` file has been removed.
+
+### Patch Changes
+
+
+- fix: populate `App.Platform` with `context` property ([#15203](https://github.com/sveltejs/kit/pull/15203))
+
+- Updated dependencies [[`37293a5`](https://github.com/sveltejs/kit/commit/37293a5c913b014e823bc823f2c8c6da38b88d6e), [`5d05ca6`](https://github.com/sveltejs/kit/commit/5d05ca6f606cf68417e4ed1ccb68cd77383f1f0f), [`ed69b77`](https://github.com/sveltejs/kit/commit/ed69b77cf9ef1af088008ff559f8de2e2a2f6bf4), [`b1fc959`](https://github.com/sveltejs/kit/commit/b1fc95966e0aeee689fdae71fa488c34b4806303), [`159aece`](https://github.com/sveltejs/kit/commit/159aece0654db020f95bc414f6a21f25fbc5f22f), [`c690579`](https://github.com/sveltejs/kit/commit/c690579620e131cd077ded0bc8e55090d3681d35), [`dc8cf2d`](https://github.com/sveltejs/kit/commit/dc8cf2defa71dd987437895eb89587c724f6e9bb), [`ace2116`](https://github.com/sveltejs/kit/commit/ace2116d95e13293dbc1e26b5b7d780202fd02dd), [`0f38f49`](https://github.com/sveltejs/kit/commit/0f38f498e0e7052db7b8cfe9ea892e7882a67b66)]:
+  - @sveltejs/kit@2.51.0
+
 ## 5.2.4
 ### Patch Changes
 

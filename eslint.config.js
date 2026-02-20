@@ -25,6 +25,7 @@ export default [
 	{
 		ignores: [
 			'**/.svelte-kit',
+			'**/.netlify',
 			'**/.wrangler',
 			'**/test-results',
 			'**/build',
@@ -32,6 +33,7 @@ export default [
 			'**/.custom-out-dir',
 			'packages/adapter-*/files',
 			'packages/kit/src/core/config/fixtures/multiple', // dir contains svelte config with multiple extensions tripping eslint
+			'packages/kit/types/index.d.ts', // generated file
 			'packages/package/test/fixtures/typescript-svelte-config/expected',
 			'packages/package/test/errors/**/*',
 			'packages/package/test/fixtures/**/*'
@@ -59,7 +61,8 @@ export default [
 			'packages/kit/test/apps/**/*',
 			'packages/kit/test/build-errors/**/*',
 			'packages/kit/test/prerendering/**/*',
-			'packages/test-redirect-importer/index.js'
+			'packages/test-redirect-importer/index.js',
+			'packages/adapter-netlify/test/preview.js'
 		]
 	}
 ];

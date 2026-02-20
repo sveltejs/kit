@@ -379,6 +379,31 @@ const plugin = function (defaults = {}) {
 				);
 			}
 
+			if (builder.config.kit.experimental.remoteFunctions) {
+				// Ensure remote functions are always handled by the catchall route, which will be symlinked to /_app/remote.
+				// This stops them from being affected by ISR config from other routes that match /[...rest] (ref: #15085)
+				// and also makes them show as handled by `/_app/remote` in Vercel's observability.
+
+				const app_path = builder.getAppPath();
+				const remote_dir = path.join(dirs.functions, app_path, 'remote'); // Usually .vercel/output/functions/_app/remote
+				const remote_symlink_path = `${remote_dir}.func`;
+
+				// Handle remote functions with the catchall route as it won't have any ISR settings
+				const target = path.join(dirs.functions, INTERNAL, 'catchall.func');
+
+				// Ensure the parent directory exists before symlinking
+				builder.mkdirp(path.join(dirs.functions, app_path));
+
+				const relative = path.relative(path.dirname(remote_symlink_path), target);
+
+				fs.symlinkSync(relative, remote_symlink_path);
+
+				static_config.routes.push({
+					src: `/${app_path}/remote/.+`,
+					dest: `/${app_path}/remote` // Maps to /![-]/catchall via the symlink
+				});
+			}
+
 			for (const route of builder.routes) {
 				if (is_prerendered(route)) continue;
 
@@ -591,6 +616,19 @@ function static_vercel_config(builder, config, dir) {
 	}
 
 	const routes = [
+		// Strip any user-supplied __pathname query parameter; SvelteKit reserves
+		// this for ISR handlers
+		{
+			src: '.*',
+			continue: true,
+			transforms: [
+				{
+					type: 'request.query',
+					op: 'delete',
+					target: { key: '__pathname' }
+				}
+			]
+		},
 		...prerendered_redirects,
 		{
 			src: `/${builder.getAppPath()}/immutable/.+`,
@@ -639,6 +677,16 @@ function static_vercel_config(builder, config, dir) {
 
 	routes.push({
 		handle: 'filesystem'
+	});
+
+	// Prevent incorrect caching: if a request to /_app/immutable/* doesn't match
+	// a static file, return 404 instead of falling through to dynamic routes.
+	// Otherwise, we could accidentally immutably cache dynamic content served
+	// by the fallback function.
+	routes.push({
+		src: `/${builder.getAppPath()}/immutable/.+`,
+		status: 404,
+		continue: false
 	});
 
 	return {

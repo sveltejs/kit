@@ -40,9 +40,9 @@ import {
 } from './module_ids.js';
 import { import_peer } from '../../utils/import.js';
 import { compact } from '../../utils/array.js';
-import { should_ignore } from './static_analysis/utils.js';
+import { should_ignore, has_children } from './static_analysis/utils.js';
 
-const cwd = process.cwd();
+const cwd = posixify(process.cwd());
 
 /** @type {import('./types.js').EnforcedConfig} */
 const enforced_config = {
@@ -112,10 +112,8 @@ const warning_preprocessor = {
 		if (!filename) return;
 
 		const basename = path.basename(filename);
-		const has_children =
-			content.includes('<slot') || (isSvelte5Plus() && content.includes('{@render'));
 
-		if (basename.startsWith('+layout.') && !has_children) {
+		if (basename.startsWith('+layout.') && !has_children(content, isSvelte5Plus())) {
 			const message =
 				`\n${colors.bold().red(path.relative('.', filename))}\n` +
 				`\`<slot />\`${isSvelte5Plus() ? ' or `{@render ...}` tag' : ''}` +
@@ -192,8 +190,8 @@ async function kit({ svelte_config }) {
 	/** @type {import('vite')} */
 	const vite = await import_peer('vite');
 
-	// @ts-ignore `vite.rolldownVersion` only exists in `rolldown-vite`
-	const isRolldown = !!vite.rolldownVersion;
+	// @ts-ignore `vite.rolldownVersion` only exists in `vite 8`
+	const is_rolldown = !!vite.rolldownVersion;
 
 	const { kit } = svelte_config;
 	const out = `${kit.outDir}/output`;
@@ -298,23 +296,6 @@ async function kit({ svelte_config }) {
 						`${kit.files.routes}/**/+*.{svelte,js,ts}`,
 						`!${kit.files.routes}/**/+*server.*`
 					],
-					esbuildOptions: {
-						plugins: [
-							{
-								name: 'vite-plugin-sveltekit-setup:optimize',
-								setup(build) {
-									if (!kit.experimental.remoteFunctions) return;
-
-									const filter = new RegExp(
-										`.remote(${kit.moduleExtensions.join('|')})$`.replaceAll('.', '\\.')
-									);
-
-									// treat .remote.js files as empty for the purposes of prebundling
-									build.onLoad({ filter }, () => ({ contents: '' }));
-								}
-							}
-						]
-					},
 					exclude: [
 						// Without this SvelteKit will be prebundled on the client, which means we end up with two versions of Redirect etc.
 						// Also see https://github.com/sveltejs/kit/issues/5952#issuecomment-1218844057
@@ -342,10 +323,45 @@ async function kit({ svelte_config }) {
 				}
 			};
 
+			if (kit.experimental.remoteFunctions) {
+				// treat .remote.js files as empty for the purposes of prebundling
+				// detects rolldown to avoid a warning message in vite 8 beta
+				const remote_id_filter = new RegExp(
+					`.remote(${kit.moduleExtensions.join('|')})$`.replaceAll('.', '\\.')
+				);
+				new_config.optimizeDeps ??= {}; // for some reason ts says this could be undefined even though it was set above
+				if (is_rolldown) {
+					// @ts-ignore
+					new_config.optimizeDeps.rolldownOptions ??= {};
+					// @ts-ignore
+					new_config.optimizeDeps.rolldownOptions.plugins ??= [];
+					// @ts-ignore
+					new_config.optimizeDeps.rolldownOptions.plugins.push({
+						name: 'vite-plugin-sveltekit-setup:optimize-remote-functions',
+						load: {
+							filter: { id: remote_id_filter },
+							handler() {
+								return '';
+							}
+						}
+					});
+				} else {
+					new_config.optimizeDeps.esbuildOptions ??= {};
+					new_config.optimizeDeps.esbuildOptions.plugins ??= [];
+					new_config.optimizeDeps.esbuildOptions.plugins.push({
+						name: 'vite-plugin-sveltekit-setup:optimize-remote-functions',
+						setup(build) {
+							build.onLoad({ filter: remote_id_filter }, () => ({ contents: '' }));
+						}
+					});
+				}
+			}
+
 			const define = {
 				__SVELTEKIT_APP_DIR__: s(kit.appDir),
 				__SVELTEKIT_EMBEDDED__: s(kit.embedded),
 				__SVELTEKIT_EXPERIMENTAL__REMOTE_FUNCTIONS__: s(kit.experimental.remoteFunctions),
+				__SVELTEKIT_FORK_PRELOADS__: s(kit.experimental.forkPreloads),
 				__SVELTEKIT_PATHS_ASSETS__: s(kit.paths.assets),
 				__SVELTEKIT_PATHS_BASE__: s(kit.paths.base),
 				__SVELTEKIT_PATHS_RELATIVE__: s(kit.paths.relative),
@@ -802,6 +818,8 @@ async function kit({ svelte_config }) {
 			/** @type {import('vite').UserConfig} */
 			let new_config;
 
+			const kit_paths_base = kit.paths.base || '/';
+
 			if (is_build) {
 				const ssr = /** @type {boolean} */ (config.build?.ssr);
 				const prefix = `${kit.appDir}/immutable`;
@@ -845,6 +863,14 @@ async function kit({ svelte_config }) {
 						input[name] = path.resolve(file);
 					});
 
+					// ...and the hooks files
+					if (manifest_data.hooks.server) {
+						input['entries/hooks.server'] = path.resolve(manifest_data.hooks.server);
+					}
+					if (manifest_data.hooks.universal) {
+						input['entries/hooks.universal'] = path.resolve(manifest_data.hooks.universal);
+					}
+
 					// ...and the server instrumentation file
 					const server_instrumentation = resolve_entry(
 						path.join(kit.files.src, 'instrumentation.server')
@@ -883,7 +909,7 @@ async function kit({ svelte_config }) {
 				// That's larger and takes longer to run and also causes an HTML diff between SSR and client
 				// causing us to do a more expensive hydration check.
 				const client_base =
-					kit.paths.relative !== false || kit.paths.assets ? './' : kit.paths.base || '/';
+					kit.paths.relative !== false || kit.paths.assets ? './' : kit_paths_base;
 
 				const inline = !ssr && svelte_config.kit.output.bundleStrategy === 'inline';
 				const split = ssr || svelte_config.kit.output.bundleStrategy === 'split';
@@ -911,7 +937,7 @@ async function kit({ svelte_config }) {
 							preserveEntrySignatures: 'strict',
 							onwarn(warning, handler) {
 								if (
-									(isRolldown
+									(is_rolldown
 										? warning.code === 'IMPORT_IS_UNDEFINED'
 										: warning.code === 'MISSING_EXPORT') &&
 									warning.id === `${kit.outDir}/generated/client-optimized/app.js`
@@ -942,7 +968,7 @@ async function kit({ svelte_config }) {
 			} else {
 				new_config = {
 					appType: 'custom',
-					base: kit.paths.base,
+					base: kit_paths_base,
 					build: {
 						rollupOptions: {
 							// Vite dependency crawler needs an explicit JS entry point
@@ -1020,7 +1046,7 @@ async function kit({ svelte_config }) {
 		 */
 		writeBundle: {
 			sequential: true,
-			async handler(_options, bundle) {
+			async handler(_options) {
 				if (secondary_build_started) return; // only run this once
 
 				const verbose = vite_config.logLevel === 'info';
@@ -1054,7 +1080,7 @@ async function kit({ svelte_config }) {
 
 				log.info('Analysing routes');
 
-				const { metadata, static_exports } = await analyse({
+				const { metadata } = await analyse({
 					hash: kit.router.type === 'hash',
 					manifest_path,
 					manifest_data,
@@ -1254,16 +1280,15 @@ async function kit({ svelte_config }) {
 				);
 
 				// regenerate nodes with the client manifest...
-				await build_server_nodes(
+				build_server_nodes(
 					out,
 					kit,
 					manifest_data,
 					server_manifest,
 					client_manifest,
-					bundle,
+					assets_path,
 					client_chunks,
-					svelte_config.kit.output,
-					static_exports
+					svelte_config.kit.output
 				);
 
 				// ...and prerender

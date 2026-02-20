@@ -110,6 +110,10 @@ export function form(id) {
 
 			submitted = true;
 
+			// Increment pending count immediately so that `pending` reflects
+			// the in-progress state during async preflight validation
+			pending_count++;
+
 			const validated = await preflight_schema?.['~standard'].validate(data);
 
 			if (validated?.issues) {
@@ -118,7 +122,13 @@ export function form(id) {
 					raw_issues,
 					validated.issues.map((issue) => normalize_issue(issue, false))
 				);
+				pending_count--;
 				return;
+			}
+
+			// Preflight passed - clear stale client-side preflight issues
+			if (preflight_schema) {
+				raw_issues = raw_issues.filter((issue) => issue.server);
 			}
 
 			// TODO 3.0 remove this warning
@@ -173,9 +183,6 @@ export function form(id) {
 			if (entry) {
 				entry.count++;
 			}
-
-			// Increment pending count when submission starts
-			pending_count++;
 
 			/** @type {Array<Query<any> | RemoteQueryOverride>} */
 			let updates = [];
@@ -319,7 +326,8 @@ export function form(id) {
 
 				form.addEventListener('submit', onsubmit);
 
-				form.addEventListener('input', (e) => {
+				/** @param {Event} e */
+				const handle_input = (e) => {
 					// strictly speaking it can be an HTMLTextAreaElement or HTMLSelectElement
 					// but that makes the types unnecessarily awkward
 					const element = /** @type {HTMLInputElement} */ (e.target);
@@ -398,17 +406,24 @@ export function form(id) {
 					name = name.replace(/^[nb]:/, '');
 
 					touched[name] = true;
-				});
+				};
 
-				form.addEventListener('reset', async () => {
+				form.addEventListener('input', handle_input);
+
+				const handle_reset = async () => {
 					// need to wait a moment, because the `reset` event occurs before
 					// the inputs are actually updated (so that it can be cancelled)
 					await tick();
 
 					input = convert_formdata(new FormData(form));
-				});
+				};
+
+				form.addEventListener('reset', handle_reset);
 
 				return () => {
+					form.removeEventListener('submit', onsubmit);
+					form.removeEventListener('input', handle_input);
+					form.removeEventListener('reset', handle_reset);
 					element = null;
 					preflight_schema = undefined;
 				};
@@ -425,74 +440,23 @@ export function form(id) {
 			)
 		);
 
-		/** @param {Parameters<RemoteForm<any, any>['buttonProps']['enhance']>[0]} callback */
-		const form_action_onclick = (callback) => {
-			/** @param {Event} event */
-			return async (event) => {
-				const target = /** @type {HTMLButtonElement} */ (event.currentTarget);
-				const form = target.form;
-				if (!form) return;
-
-				// Prevent this from firing the form's submit event
-				event.stopPropagation();
-				event.preventDefault();
-
-				const form_data = new FormData(form, target);
-
-				if (DEV) {
-					const enctype = target.hasAttribute('formenctype')
-						? target.formEnctype
-						: clone(form).enctype;
-
-					validate_form_data(form_data, enctype);
-				}
-
-				await handle_submit(form, form_data, callback);
-			};
-		};
-
-		/** @type {RemoteForm<any, any>['buttonProps']} */
-		// @ts-expect-error we gotta set enhance as a non-enumerable property
-		const button_props = {
-			type: 'submit',
-			formmethod: 'POST',
-			formaction: action,
-			onclick: form_action_onclick(({ submit, form }) =>
-				submit().then(() => {
-					if (!issues.$) {
-						form.reset();
-					}
-				})
-			)
-		};
-
-		Object.defineProperty(button_props, 'enhance', {
-			/** @type {RemoteForm<any, any>['buttonProps']['enhance']} */
-			value: (callback) => {
-				return {
-					type: 'submit',
-					formmethod: 'POST',
-					formaction: action,
-					onclick: form_action_onclick(callback)
-				};
-			}
-		});
-
-		Object.defineProperty(button_props, 'pending', {
-			get: () => pending_count
-		});
-
 		let validate_id = 0;
 
 		// TODO 3.0 remove
 		if (DEV) {
 			throw_on_old_property_access(instance);
+
+			Object.defineProperty(instance, 'buttonProps', {
+				get() {
+					throw new Error(
+						'`form.buttonProps` has been removed: Instead of `<button {...form.buttonProps}>, use `<button {...form.fields.action.as("submit", "value")}>`.' +
+							' See the PR for more info: https://github.com/sveltejs/kit/pull/14622'
+					);
+				}
+			});
 		}
 
 		Object.defineProperties(instance, {
-			buttonProps: {
-				value: button_props
-			},
 			fields: {
 				get: () =>
 					create_field_proxy(

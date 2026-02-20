@@ -10,16 +10,20 @@ packages:
   - packages/kit/test/build-errors/apps/*
   - '!.test-tmp/**'
   - playgrounds/*
+# pnpm catalogs are currently only suitable for dependencies that
+# wouldn't require publishing a new package version
+# see https://github.com/changesets/changesets/issues/1707
 catalog:
   '@changesets/cli': ^2.29.6
   '@fontsource/libre-barcode-128-text': ^5.1.0
-  '@netlify/edge-functions': ^2.15.1
+  '@netlify/dev': ^4.11.2
+  '@netlify/edge-functions': ^3.0.0
   '@netlify/functions': ^5.0.0
-  '@opentelemetry/sdk-node': ^0.208.0
+  '@opentelemetry/sdk-node': ^0.212.0
   '@opentelemetry/sdk-trace-node': ^2.0.1
-  '@playwright/test': 1.56.0
+  '@playwright/test': 1.58.2
   '@polka/url': ^1.0.0-next.28
-  '@rollup/plugin-commonjs': ^28.0.1
+  '@rollup/plugin-commonjs': ^29.0.0
   '@rollup/plugin-json': ^6.1.0
   '@rollup/plugin-node-resolve': ^16.0.0
   '@sveltejs/eslint-config': ^8.2.0
@@ -30,21 +34,34 @@ catalog:
   '@types/node': ^18.19.119
   '@types/semver': ^7.5.6
   '@types/set-cookie-parser': ^2.4.7
-  '@vitest/browser': ^3.2.4
+  '@vitest/browser-playwright': ^4.0.0
   dropcss: ^1.0.16
   dts-buddy: ^0.6.2
   esbuild: ^0.25.4
   eslint: ^9.34.0
-  netlify-cli: ^23.5.1
   polka: ^1.0.0-next.28
   publint: ^0.3.0
   semver: ^7.5.4
   sirv-cli: ^3.0.0
-  svelte: ^5.42.1
+  svelte: ^5.51.5
   svelte-check: ^4.3.4
   svelte-preprocess: ^6.0.0
   typescript-eslint: ^8.43.0
   valibot: ^1.1.0
   vite: ^6.3.5
-  vitest: ^3.2.4
+  vitest: ^4.0.0
   wrangler: ^4.14.3
+catalogs:
+  vite-baseline:
+    vite: ^5.4.21 # should be 5.0.3 but older versions cause errors in some tests
+    '@sveltejs/vite-plugin-svelte': ^4.0.0
+    'vitest>vite': ^6.0.0 # vitest@4 doesn't work with vite@5, vite@7 doesn't work on node18
+  vite-beta:
+    vite: ^8.0.0-beta.9
+    '@sveltejs/vite-plugin-svelte': ^7.0.0-next.0
+  node-18:
+    vite: ^6.0.0 # vite7 requires node20
+    '@sveltejs/vite-plugin-svelte': ^5.0.0 #vps6 requires node20
+overrides:
+# ci script replaces all overrides with the vite-xxx or node-xx catalogs above.
+# if you want to introduce an override, make sure to add it to all of them too
