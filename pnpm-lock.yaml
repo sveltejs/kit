@@ -13,8 +13,8 @@ catalogs:
       specifier: ^5.1.0
       version: 5.1.0
     '@netlify/dev':
-      specifier: ^4.8.8
-      version: 4.8.8
+      specifier: ^4.11.2
+      version: 4.11.2
     '@netlify/edge-functions':
       specifier: ^3.0.0
       version: 3.0.3
@@ -26,7 +26,7 @@ catalogs:
       version: 0.212.0
     '@opentelemetry/sdk-trace-node':
       specifier: ^2.0.1
-      version: 2.5.0
+      version: 2.5.1
     '@playwright/test':
       specifier: 1.58.2
       version: 1.58.2
@@ -246,7 +246,7 @@ importers:
     devDependencies:
       '@netlify/dev':
         specifier: 'catalog:'
-        version: 4.8.8(@netlify/api@14.0.12)(rollup@4.57.1)
+        version: 4.11.2(rollup@4.57.1)
       '@netlify/edge-functions':
         specifier: 'catalog:'
         version: 3.0.3
@@ -555,7 +555,7 @@ importers:
         version: 1.0.0
       '@sveltejs/acorn-typescript':
         specifier: ^1.0.5
-        version: 1.0.5(acorn@8.15.0)
+        version: 1.0.9(acorn@8.15.0)
       '@types/cookie':
         specifier: ^0.6.0
         version: 0.6.0
@@ -688,7 +688,7 @@ importers:
         version: 0.212.0(@opentelemetry/api@1.9.0)
       '@opentelemetry/sdk-trace-node':
         specifier: 'catalog:'
-        version: 2.5.0(@opentelemetry/api@1.9.0)
+        version: 2.5.1(@opentelemetry/api@1.9.0)
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../../..
@@ -2497,29 +2497,27 @@ packages:
     engines: {node: '>=18'}
     hasBin: true
 
-  '@netlify/ai@0.3.5':
-    resolution: {integrity: sha512-7suwHOBy9s14yeWRxt+w3Zh6Rrx8gX7zP/xmsxqxLyJlcBykWm6siBJs2mMtJgbWvcrgI5BEgNLh5qfXlTCsRQ==}
+  '@netlify/ai@0.3.8':
+    resolution: {integrity: sha512-qz8XDb/82UzsUMKn+sB84V3ZGqeNQOvGwNo840nHIV9saJwLPTd+FOqSUoKUIxZphNA7kQ0uGeadSUkJzDz7og==}
     engines: {node: '>=20.6.1'}
-    peerDependencies:
-      '@netlify/api': '>=14.0.12'
 
-  '@netlify/api@14.0.12':
-    resolution: {integrity: sha512-4xSfHAj9PIZZ78YOPby6TBHxYnf6sOE1/jpkHSDyt2oRxF94qJ0fhp96Fo2kq/rIhvgTlU5Ce3HARi8BDY4mLw==}
+  '@netlify/api@14.0.14':
+    resolution: {integrity: sha512-/YwcFbI0RsKXof+e+f48pVqmELzkGWOrhqZuL5xCUNdHYhvUd9El0jQDv7fBjdhxHSrflnZfXFUW56xaI69k4A==}
     engines: {node: '>=18.14.0'}
 
   '@netlify/binary-info@1.0.0':
     resolution: {integrity: sha512-4wMPu9iN3/HL97QblBsBay3E1etIciR84izI3U+4iALY+JHCrI+a2jO0qbAZ/nxKoegypYEaiiqWXylm+/zfrw==}
 
-  '@netlify/blobs@10.5.0':
-    resolution: {integrity: sha512-yrdt6H1X56DYz7pS3exU/iHO+iOW5sVzseaQwRQQ9OYChB/pVjXQzkBKAjS9dHIecSpv0oynkLxd/mwSJfAJLQ==}
+  '@netlify/blobs@10.7.0':
+    resolution: {integrity: sha512-wuiaKRbRLG/L049yR+7/p7xSKa4jx6JRBnweRYwP6mMYn9D+x/wccPgsxEMtKqthmow6frs7ZSrNYTt9U3yUdQ==}
     engines: {node: ^14.16.0 || >=16.0.0}
 
-  '@netlify/cache@3.3.4':
-    resolution: {integrity: sha512-Fl4/KxP8NS7+skjfRixgekuqBNvLPay/J6qC2mxvHjkkZNu1oUs8QOc+T3Nvt4n+UMrltnt9ggg0q/q4hmBIVw==}
+  '@netlify/cache@3.3.5':
+    resolution: {integrity: sha512-u4wx2se/wRvLsU/sQlT5ruofEwMjo5kg6ybEdQLuIswH6+6+9BCFF8VX4ByBP3MZJl3/pxExmcPiFqo0TBP3tg==}
     engines: {node: '>=20.6.1'}
 
-  '@netlify/config@24.2.0':
-    resolution: {integrity: sha512-idc1D6kdQOFjG70aZC06crqElTyaSulVlnOEDZX2+5/vcmfFCBu8CJSEd5YzC6VCCXBgOW3Hw0cVxDTl5X6+CQ==}
+  '@netlify/config@24.4.0':
+    resolution: {integrity: sha512-Dg5JQQjGb2biCvxu6Ryv+KUrgVP2iTrxSVb2pYLiUgKXqx12FeUX4/gFhERNYh1ncK1mJdN1SB3+gP5WxUAFEA==}
     engines: {node: '>=18.14.0'}
     hasBin: true
 
@@ -2527,27 +2525,32 @@ packages:
     resolution: {integrity: sha512-qziF8R9kf7mRNgSpmUH96O0aV1ZiwK4c9ZecFQbDSQuYhgy9GY1WTjiQF0oQnohjTjWNtXhrU39LAeXWNLaBJg==}
     engines: {node: ^18.14.0 || >=20}
 
-  '@netlify/dev@4.8.8':
-    resolution: {integrity: sha512-tvucXIB5t0R6nSC+L/W9xPX1uV4588pwfCcSqPstkQhS8tHg6cYrnzjUTvxfUL3lPUm1zVFGDz39ExK9tqiL1Q==}
+  '@netlify/dev@4.11.2':
+    resolution: {integrity: sha512-quIKbuG7xD3yiWExuZA1Xl/b3Wc+/V3QjrNT4XX5m+dA/D54J61dABf1IGwQYNZHKiF5rVL7D3AwHNAojVQzuw==}
     engines: {node: '>=20.6.1'}
+    peerDependencies:
+      '@netlify/db-dev': 0.2.0
+    peerDependenciesMeta:
+      '@netlify/db-dev':
+        optional: true
 
-  '@netlify/edge-bundler@14.9.3':
-    resolution: {integrity: sha512-NaIIsjGfl6YcnZKRa5/BOpbBi4MK1B4U1E/ekH8VaAIy0I7aYwnWg45SZSkTrMOeHzZPGXTAwjyKqzPi8HBQ4A==}
+  '@netlify/edge-bundler@14.9.10':
+    resolution: {integrity: sha512-Ja5FQuerrDzgiEKwpCF2zHCNDz3pTfMOTE6qyicZc9EmLkKcT9d8M/Pjvv9v7XbqZidN1474EBv2IE8Yuf8d5Q==}
     engines: {node: '>=18.14.0'}
 
   '@netlify/edge-functions-bootstrap@2.16.0':
     resolution: {integrity: sha512-v8QQihSbBHj3JxtJsHoepXALpNumD9M7egHoc8z62FYl5it34dWczkaJoFFopEyhiBVKi4K/n0ZYpdzwfujd6g==}
 
-  '@netlify/edge-functions-dev@1.0.8':
-    resolution: {integrity: sha512-SvOWcPqKjDjhOKKpp5VFCgONKgRPNM3YsssVG3s2xi5OvNGSw+1KPAlzGplM+MqOfv+3oIs7N+6pULk0MtaimA==}
+  '@netlify/edge-functions-dev@1.0.11':
+    resolution: {integrity: sha512-ASybM6fkopOKHorwI1TwsbBlF+eZQCMmlddWtSpyWDunKc4P7i/FEkzdTinNQvcLX7RIGOwjrxanTMEOen/Zvg==}
     engines: {node: '>=20.6.1'}
 
   '@netlify/edge-functions@3.0.3':
     resolution: {integrity: sha512-grElRK+rTBdYrPsULPKrhcHhrW+fwpDRLPbGByqa6Xrz0fhzcFJ2D9ijxEQ/onFcSVPYHT1u1mI48GhS5bZ/Ag==}
     engines: {node: '>=18.0.0'}
 
-  '@netlify/functions-dev@1.1.8':
-    resolution: {integrity: sha512-zl5IWvs5B4ck1w8KcV6NUsdkVF1BmW2deF5FwZj14jy5yiF6Errska+lSr9S5tZZ0vJUSs75is7vauP2AxewDA==}
+  '@netlify/functions-dev@1.1.12':
+    resolution: {integrity: sha512-rWFCthzhKiuM62yPd2upDY9+y/Ww5ahEKA8+E8WS8dgQKg+5/G/Yka6zfPNpkkFM3/oNi0R7LffWn2DMxrTMPQ==}
     engines: {node: '>=20.6.1'}
 
   '@netlify/functions@5.1.2':
@@ -2570,8 +2573,8 @@ packages:
     resolution: {integrity: sha512-OAs1xG+FfLX0LoRASpqzVntVV/RpYkgpI0VrUnw2u0Q1qiZUzcPffxRK8HF3gc4GjuhG5ahOEMJ9bswBiZPq0g==}
     engines: {node: ^14.16.0 || >=16.0.0}
 
-  '@netlify/open-api@2.46.0':
-    resolution: {integrity: sha512-ONTAnExC2fX4luhAQ91DD3ORbh+YFMmzk9ebrheVg+W4cTHmNnGxLbiYbmd44IqnLQjgqn4xrmmDULEMZcMdfw==}
+  '@netlify/open-api@2.49.1':
+    resolution: {integrity: sha512-4jFX59dqSBJIlFK/qXrEmWsMDHBErS9cFSFweWmPFKRNCuIVlkeibQrRQcVtqKfek3al1UuXscVVIZEYM05LMA==}
     engines: {node: '>=14.8.0'}
 
   '@netlify/otel@5.1.1':
@@ -2582,20 +2585,20 @@ packages:
     resolution: {integrity: sha512-/HB3fcRRNgf6O/pbLn4EYNDHrU2kiadMMnazg8/OjvQK2S9i4y61vQcrICvDxYKUKQdgeEaABUuaCNAJFnfD9w==}
     engines: {node: '>=18.14.0'}
 
-  '@netlify/redirects@3.1.4':
-    resolution: {integrity: sha512-2FcF/0Q24JA+VmpWlVRp835UvhBHQe3XGVaxAQfHiDd5aXztaz2U5Y4VEZyrZJOubY5xnxr2yqumDfClAiCKxw==}
+  '@netlify/redirects@3.1.5':
+    resolution: {integrity: sha512-yU4YBqRYoqPobg/u96QI07IuevAc8+tVLAcnty6/vBJAlo5d7E72r+U6dez48EPGIJHY5hEQK4jT0m9SmKg8mg==}
     engines: {node: '>=20.6.1'}
 
-  '@netlify/runtime-utils@2.2.1':
-    resolution: {integrity: sha512-dyJeuggzQM8+Dsi0T8Z9UjfLJ6vCmNC36W6WE2aqzfTdTw4wPkh2xlEu4LoD75+TGuYK7jIhEoU2QcCXOzfyAQ==}
+  '@netlify/runtime-utils@2.3.0':
+    resolution: {integrity: sha512-cW8weDvsKV7zfia2m5EcBy6KILGoPD+eYZ3qWNGnIo05DGF28goPES0xKSDkNYgAF/2rRSIhie2qcBhbGVgSRg==}
     engines: {node: ^18.14.0 || >=20}
 
-  '@netlify/runtime@4.1.13':
-    resolution: {integrity: sha512-pnexwAHckodyApbNaHiEzNyVlw+zx33wIwUSAopkq7qU8YYUQbDWIMi5gpGE6FsIvv/CCR8uxMgeIPOBLuVk5Q==}
+  '@netlify/runtime@4.1.15':
+    resolution: {integrity: sha512-drX5NYNnqAMKnYsStRT8Q1ruNqd68QdMGdakdMtMb/aTaAtPCIug66BPP98YSWvgv9r7O5eO4NX/Ma7UkMVwvQ==}
     engines: {node: '>=20.6.1'}
 
-  '@netlify/serverless-functions-api@2.8.3':
-    resolution: {integrity: sha512-RJGKH85YeUFVvRgHz3ArNPiTwIx9w8Da9fDPqS3G40tI+keaNG3UdTVMm8HQvIAB4RS6N8Gu4oVPiU2Lqb4IIg==}
+  '@netlify/serverless-functions-api@2.9.0':
+    resolution: {integrity: sha512-D1y8y0orn/n0cdLp16pP6oJ4f+4Gc52pf+FMXNKhlJ97bLRKNce3NgSr3mbgxHUtuNd27f8Mgc4D3scJlnC4uQ==}
     engines: {node: '>=18.0.0'}
 
   '@netlify/static@3.1.3':
@@ -2606,8 +2609,8 @@ packages:
     resolution: {integrity: sha512-5gxMWh/S7wr0uHKSTbMv4bjWmWSpwpeLYvErWeVNAPll5/QNFo9aWimMAUuh8ReLY3/fg92XAroVVu7+z27Snw==}
     engines: {node: ^18.14.0 || >=20}
 
-  '@netlify/zip-it-and-ship-it@14.2.0':
-    resolution: {integrity: sha512-yM69tB71nhvl7L7orfq5fGEonmSVzi2G12/BAV8O+El7ISpkkjFz+8S8qZVxsEK3IbW4EFO+3L8l6jHJHZtxeQ==}
+  '@netlify/zip-it-and-ship-it@14.4.0':
+    resolution: {integrity: sha512-Mi0Kg71CAMH9YsErbCqBWFfKyTim67wT7nmmPLYxFM672Mzu4KNArXmDMWAqmR6Fes2t0uXnnHBVNUfDM1ajqw==}
     engines: {node: '>=18.14.0'}
     hasBin: true
 
@@ -2647,12 +2650,6 @@ packages:
     peerDependencies:
       '@opentelemetry/api': '>=1.0.0 <1.10.0'
 
-  '@opentelemetry/context-async-hooks@2.5.0':
-    resolution: {integrity: sha512-uOXpVX0ZjO7heSVjhheW2XEPrhQAWr2BScDPoZ9UDycl5iuHG+Usyc3AIfG6kZeC1GyLpMInpQ6X5+9n69yOFw==}
-    engines: {node: ^18.19.0 || >=20.6.0}
-    peerDependencies:
-      '@opentelemetry/api': '>=1.0.0 <1.10.0'
-
   '@opentelemetry/context-async-hooks@2.5.1':
     resolution: {integrity: sha512-MHbu8XxCHcBn6RwvCt2Vpn1WnLMNECfNKYB14LI5XypcgH4IE0/DiVifVR9tAkwPMyLXN8dOoPJfya3IryLQVw==}
     engines: {node: ^18.19.0 || >=20.6.0}
@@ -2662,12 +2659,6 @@ packages:
   '@opentelemetry/core@1.30.1':
     resolution: {integrity: sha512-OOCM2C/QIURhJMuKaekP3TRBxBKxG/TWWA0TL2J6nXUtDnuCtccy49LUJF8xPFXMX+0LMcxFpCo8M9cGY1W6rQ==}
     engines: {node: '>=14'}
-    peerDependencies:
-      '@opentelemetry/api': '>=1.0.0 <1.10.0'
-
-  '@opentelemetry/core@2.5.0':
-    resolution: {integrity: sha512-ka4H8OM6+DlUhSAZpONu0cPBtPPTQKxbxVzC4CzVx5+K4JnroJVBtDzLAMx4/3CDTJXRvVFhpFjtl4SaiTNoyQ==}
-    engines: {node: ^18.19.0 || >=20.6.0}
     peerDependencies:
       '@opentelemetry/api': '>=1.0.0 <1.10.0'
 
@@ -2803,12 +2794,6 @@ packages:
     peerDependencies:
       '@opentelemetry/api': '>=1.0.0 <1.10.0'
 
-  '@opentelemetry/resources@2.5.0':
-    resolution: {integrity: sha512-F8W52ApePshpoSrfsSk1H2yJn9aKjCrbpQF1M9Qii0GHzbfVeFUB+rc3X4aggyZD8x9Gu3Slua+s6krmq6Dt8g==}
-    engines: {node: ^18.19.0 || >=20.6.0}
-    peerDependencies:
-      '@opentelemetry/api': '>=1.3.0 <1.10.0'
-
   '@opentelemetry/resources@2.5.1':
     resolution: {integrity: sha512-BViBCdE/GuXRlp9k7nS1w6wJvY5fnFX5XvuEtWsTAOQFIO89Eru7lGW3WbfbxtCuZ/GbrJfAziXG0w0dpxL7eQ==}
     engines: {node: ^18.19.0 || >=20.6.0}
@@ -2839,12 +2824,6 @@ packages:
     peerDependencies:
       '@opentelemetry/api': '>=1.0.0 <1.10.0'
 
-  '@opentelemetry/sdk-trace-base@2.5.0':
-    resolution: {integrity: sha512-VzRf8LzotASEyNDUxTdaJ9IRJ1/h692WyArDBInf5puLCjxbICD6XkHgpuudis56EndyS7LYFmtTMny6UABNdQ==}
-    engines: {node: ^18.19.0 || >=20.6.0}
-    peerDependencies:
-      '@opentelemetry/api': '>=1.3.0 <1.10.0'
-
   '@opentelemetry/sdk-trace-base@2.5.1':
     resolution: {integrity: sha512-iZH3Gw8cxQn0gjpOjJMmKLd9GIaNh/E3v3ST67vyzLSxHBs14HsG4dy7jMYyC5WXGdBVEcM7U/XTF5hCQxjDMw==}
     engines: {node: ^18.19.0 || >=20.6.0}
@@ -2854,12 +2833,6 @@ packages:
   '@opentelemetry/sdk-trace-node@1.30.1':
     resolution: {integrity: sha512-cBjYOINt1JxXdpw1e5MlHmFRc5fgj4GW/86vsKFxJCJ8AL4PdVtYH41gWwl4qd4uQjqEL1oJVrXkSy5cnduAnQ==}
     engines: {node: '>=14'}
-    peerDependencies:
-      '@opentelemetry/api': '>=1.0.0 <1.10.0'
-
-  '@opentelemetry/sdk-trace-node@2.5.0':
-    resolution: {integrity: sha512-O6N/ejzburFm2C84aKNrwJVPpt6HSTSq8T0ZUMq3xT2XmqT4cwxUItcL5UWGThYuq8RTcbH8u1sfj6dmRci0Ow==}
-    engines: {node: ^18.19.0 || >=20.6.0}
     peerDependencies:
       '@opentelemetry/api': '>=1.0.0 <1.10.0'
 
@@ -3200,8 +3173,8 @@ packages:
     peerDependencies:
       eslint: '>=8.40.0'
 
-  '@sveltejs/acorn-typescript@1.0.5':
-    resolution: {integrity: sha512-IwQk4yfwLdibDlrXVE04jTZYlLnwsTT2PIOQQGNLWfjavGifnk1JD1LcZjZaBTRcxZu2FfPfNLOE04DSu9lqtQ==}
+  '@sveltejs/acorn-typescript@1.0.9':
+    resolution: {integrity: sha512-lVJX6qEgs/4DOcRTpo56tmKzVPtoWAaVbL4hfO7t7NVwl9AAXzQR6cihesW1BmNMPl+bK6dreu2sOKBP2Q9CIA==}
     peerDependencies:
       acorn: ^8.9.0
 
@@ -4628,19 +4601,19 @@ packages:
     resolution: {integrity: sha512-p/nXbhSEcu3pZRdkW1OfJhpsVtW1gd4Wa1fnQc9YLiTfAjn0312eMKimbdIQzuZl9aa9xUGaRlP9T/CJE/ditQ==}
     engines: {node: '>=0.10.0'}
 
-  jsonwebtoken@9.0.2:
-    resolution: {integrity: sha512-PRp66vJ865SSqOlgqS8hujT5U4AOgMfhrwYIuIhfKaoSCZcirrmASQr8CX7cUg+RMih+hgznrjp99o+W4pJLHQ==}
+  jsonwebtoken@9.0.3:
+    resolution: {integrity: sha512-MT/xP0CrubFRNLNKvxJ2BYfy53Zkm++5bX9dtuPbqAeQpTVe0MQTFhao8+Cp//EmJp244xt6Drw/GVEGCUj40g==}
     engines: {node: '>=12', npm: '>=6'}
 
   junk@4.0.1:
     resolution: {integrity: sha512-Qush0uP+G8ZScpGMZvHUiRfI0YBWuB3gVBYlI0v0vvOJt5FLicco+IkP0a50LqTTQhmts/m6tP5SWE+USyIvcQ==}
     engines: {node: '>=12.20'}
 
-  jwa@1.4.2:
-    resolution: {integrity: sha512-eeH5JO+21J78qMvTIDdBXidBd6nG2kZjg5Ohz/1fpa28Z4CcsWUzJ1ZZyFq/3z3N17aZy+ZuBoHljASbL1WfOw==}
+  jwa@2.0.1:
+    resolution: {integrity: sha512-hRF04fqJIP8Abbkq5NKGN0Bbr3JxlQ+qhZufXVr0DvujKy93ZCbXZMHDL4EOtodSbCWxOqR8MS1tXA5hwqCXDg==}
 
-  jws@3.2.3:
-    resolution: {integrity: sha512-byiJ0FLRdLdSVSReO/U4E7RoEyOCKnEnEPMjq3HxWtvzLsV08/i5RQKsFVNkCldrCaPr2vDNAOMsfs8T/Hze7g==}
+  jws@4.0.1:
+    resolution: {integrity: sha512-EKI/M/yqPncGUUh44xz0PxSidXFr/+r0pA70+gIYhjv+et7yxM+s29Y+VGDkovRofQem0fs7Uvf4+YmAdyRduA==}
 
   jwt-decode@4.0.0:
     resolution: {integrity: sha512-+KJGIyHgkGuIq3IEBNftfhW/LfWhXUIY6OmyVWjliu5KH1y0fw7VQ8YndE2O4qZdMSd9SqbnC8GOcZEy0Om7sA==}
@@ -5677,6 +5650,7 @@ packages:
   tar@7.5.7:
     resolution: {integrity: sha512-fov56fJiRuThVFXD6o6/Q354S7pnWMJIVlDBYijsTNx6jKSE4pvrDTs6lUnmGvNyfJwFQQwWy3owKz1ucIhveQ==}
     engines: {node: '>=18'}
+    deprecated: Old versions of tar are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
 
   term-size@2.2.1:
     resolution: {integrity: sha512-wK0Ri4fOGjv/XPy8SBHZChl8CM7uMc5VML7SqiQ0zG7+J5Vr+RMQDoHa2CNT6KHUnTGIXH34UDMkPzAUyapBZg==}
@@ -6963,35 +6937,35 @@ snapshots:
       - encoding
       - supports-color
 
-  '@netlify/ai@0.3.5(@netlify/api@14.0.12)':
+  '@netlify/ai@0.3.8':
     dependencies:
-      '@netlify/api': 14.0.12
+      '@netlify/api': 14.0.14
 
-  '@netlify/api@14.0.12':
+  '@netlify/api@14.0.14':
     dependencies:
-      '@netlify/open-api': 2.46.0
+      '@netlify/open-api': 2.49.1
       node-fetch: 3.3.2
       p-wait-for: 5.0.2
       picoquery: 2.5.0
 
   '@netlify/binary-info@1.0.0': {}
 
-  '@netlify/blobs@10.5.0':
+  '@netlify/blobs@10.7.0':
     dependencies:
       '@netlify/dev-utils': 4.3.3
       '@netlify/otel': 5.1.1
-      '@netlify/runtime-utils': 2.2.1
+      '@netlify/runtime-utils': 2.3.0
     transitivePeerDependencies:
       - supports-color
 
-  '@netlify/cache@3.3.4':
+  '@netlify/cache@3.3.5':
     dependencies:
-      '@netlify/runtime-utils': 2.2.1
+      '@netlify/runtime-utils': 2.3.0
 
-  '@netlify/config@24.2.0':
+  '@netlify/config@24.4.0':
     dependencies:
       '@iarna/toml': 2.2.5
-      '@netlify/api': 14.0.12
+      '@netlify/api': 14.0.14
       '@netlify/headers-parser': 9.0.2
       '@netlify/redirect-parser': 15.0.3
       chalk: 5.6.0
@@ -7034,18 +7008,18 @@ snapshots:
       uuid: 13.0.0
       write-file-atomic: 5.0.1
 
-  '@netlify/dev@4.8.8(@netlify/api@14.0.12)(rollup@4.57.1)':
+  '@netlify/dev@4.11.2(rollup@4.57.1)':
     dependencies:
-      '@netlify/ai': 0.3.5(@netlify/api@14.0.12)
-      '@netlify/blobs': 10.5.0
-      '@netlify/config': 24.2.0
+      '@netlify/ai': 0.3.8
+      '@netlify/blobs': 10.7.0
+      '@netlify/config': 24.4.0
       '@netlify/dev-utils': 4.3.3
-      '@netlify/edge-functions-dev': 1.0.8
-      '@netlify/functions-dev': 1.1.8(rollup@4.57.1)
+      '@netlify/edge-functions-dev': 1.0.11
+      '@netlify/functions-dev': 1.1.12(rollup@4.57.1)
       '@netlify/headers': 2.1.3
-      '@netlify/images': 1.3.3(@netlify/blobs@10.5.0)
-      '@netlify/redirects': 3.1.4
-      '@netlify/runtime': 4.1.13
+      '@netlify/images': 1.3.3(@netlify/blobs@10.7.0)
+      '@netlify/redirects': 3.1.5
+      '@netlify/runtime': 4.1.15
       '@netlify/static': 3.1.3
       ulid: 3.0.1
     transitivePeerDependencies:
@@ -7057,7 +7031,6 @@ snapshots:
       - '@azure/storage-blob'
       - '@capacitor/preferences'
       - '@deno/kv'
-      - '@netlify/api'
       - '@planetscale/database'
       - '@upstash/redis'
       - '@vercel/blob'
@@ -7071,9 +7044,12 @@ snapshots:
       - supports-color
       - uploadthing
 
-  '@netlify/edge-bundler@14.9.3':
+  '@netlify/edge-bundler@14.9.10':
     dependencies:
       '@import-maps/resolve': 2.0.0
+      '@sveltejs/acorn-typescript': 1.0.9(acorn@8.15.0)
+      acorn: 8.15.0
+      acorn-walk: 8.3.4
       ajv: 8.17.1
       ajv-errors: 3.0.0(ajv@8.17.1)
       better-ajv-errors: 1.2.0(ajv@8.17.1)
@@ -7096,25 +7072,25 @@ snapshots:
 
   '@netlify/edge-functions-bootstrap@2.16.0': {}
 
-  '@netlify/edge-functions-dev@1.0.8':
+  '@netlify/edge-functions-dev@1.0.11':
     dependencies:
       '@netlify/dev-utils': 4.3.3
-      '@netlify/edge-bundler': 14.9.3
+      '@netlify/edge-bundler': 14.9.10
       '@netlify/edge-functions': 3.0.3
       '@netlify/edge-functions-bootstrap': 2.16.0
-      '@netlify/runtime-utils': 2.2.1
+      '@netlify/runtime-utils': 2.3.0
       get-port: 7.1.0
 
   '@netlify/edge-functions@3.0.3':
     dependencies:
       '@netlify/types': 2.3.0
 
-  '@netlify/functions-dev@1.1.8(rollup@4.57.1)':
+  '@netlify/functions-dev@1.1.12(rollup@4.57.1)':
     dependencies:
-      '@netlify/blobs': 10.5.0
+      '@netlify/blobs': 10.7.0
       '@netlify/dev-utils': 4.3.3
       '@netlify/functions': 5.1.2
-      '@netlify/zip-it-and-ship-it': 14.2.0(rollup@4.57.1)
+      '@netlify/zip-it-and-ship-it': 14.4.0(rollup@4.57.1)
       cron-parser: 4.9.0
       decache: 4.6.2
       extract-zip: 2.0.1
@@ -7146,9 +7122,9 @@ snapshots:
     dependencies:
       '@netlify/headers-parser': 9.0.2
 
-  '@netlify/images@1.3.3(@netlify/blobs@10.5.0)':
+  '@netlify/images@1.3.3(@netlify/blobs@10.7.0)':
     dependencies:
-      ipx: 3.1.1(@netlify/blobs@10.5.0)
+      ipx: 3.1.1(@netlify/blobs@10.7.0)
     transitivePeerDependencies:
       - '@azure/app-configuration'
       - '@azure/cosmos'
@@ -7171,7 +7147,7 @@ snapshots:
 
   '@netlify/node-cookies@0.1.0': {}
 
-  '@netlify/open-api@2.46.0': {}
+  '@netlify/open-api@2.49.1': {}
 
   '@netlify/otel@5.1.1':
     dependencies:
@@ -7190,26 +7166,26 @@ snapshots:
       is-plain-obj: 4.1.0
       path-exists: 5.0.0
 
-  '@netlify/redirects@3.1.4':
+  '@netlify/redirects@3.1.5':
     dependencies:
       '@netlify/dev-utils': 4.3.3
       '@netlify/redirect-parser': 15.0.3
       cookie: 1.0.2
-      jsonwebtoken: 9.0.2
+      jsonwebtoken: 9.0.3
       netlify-redirector: 0.5.0
 
-  '@netlify/runtime-utils@2.2.1': {}
+  '@netlify/runtime-utils@2.3.0': {}
 
-  '@netlify/runtime@4.1.13':
+  '@netlify/runtime@4.1.15':
     dependencies:
-      '@netlify/blobs': 10.5.0
-      '@netlify/cache': 3.3.4
-      '@netlify/runtime-utils': 2.2.1
+      '@netlify/blobs': 10.7.0
+      '@netlify/cache': 3.3.5
+      '@netlify/runtime-utils': 2.3.0
       '@netlify/types': 2.3.0
     transitivePeerDependencies:
       - supports-color
 
-  '@netlify/serverless-functions-api@2.8.3': {}
+  '@netlify/serverless-functions-api@2.9.0': {}
 
   '@netlify/static@3.1.3':
     dependencies:
@@ -7217,12 +7193,12 @@ snapshots:
 
   '@netlify/types@2.3.0': {}
 
-  '@netlify/zip-it-and-ship-it@14.2.0(rollup@4.57.1)':
+  '@netlify/zip-it-and-ship-it@14.4.0(rollup@4.57.1)':
     dependencies:
       '@babel/parser': 7.27.5
       '@babel/types': 7.28.6
       '@netlify/binary-info': 1.0.0
-      '@netlify/serverless-functions-api': 2.8.3
+      '@netlify/serverless-functions-api': 2.9.0
       '@vercel/nft': 0.29.4(rollup@4.57.1)
       archiver: 7.0.1
       common-path-prefix: 3.0.0
@@ -7288,10 +7264,6 @@ snapshots:
     dependencies:
       '@opentelemetry/api': 1.9.0
 
-  '@opentelemetry/context-async-hooks@2.5.0(@opentelemetry/api@1.9.0)':
-    dependencies:
-      '@opentelemetry/api': 1.9.0
-
   '@opentelemetry/context-async-hooks@2.5.1(@opentelemetry/api@1.9.0)':
     dependencies:
       '@opentelemetry/api': 1.9.0
@@ -7300,11 +7272,6 @@ snapshots:
     dependencies:
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/semantic-conventions': 1.28.0
-
-  '@opentelemetry/core@2.5.0(@opentelemetry/api@1.9.0)':
-    dependencies:
-      '@opentelemetry/api': 1.9.0
-      '@opentelemetry/semantic-conventions': 1.36.0
 
   '@opentelemetry/core@2.5.1(@opentelemetry/api@1.9.0)':
     dependencies:
@@ -7486,12 +7453,6 @@ snapshots:
       '@opentelemetry/core': 1.30.1(@opentelemetry/api@1.9.0)
       '@opentelemetry/semantic-conventions': 1.28.0
 
-  '@opentelemetry/resources@2.5.0(@opentelemetry/api@1.9.0)':
-    dependencies:
-      '@opentelemetry/api': 1.9.0
-      '@opentelemetry/core': 2.5.0(@opentelemetry/api@1.9.0)
-      '@opentelemetry/semantic-conventions': 1.36.0
-
   '@opentelemetry/resources@2.5.1(@opentelemetry/api@1.9.0)':
     dependencies:
       '@opentelemetry/api': 1.9.0
@@ -7548,13 +7509,6 @@ snapshots:
       '@opentelemetry/resources': 1.30.1(@opentelemetry/api@1.9.0)
       '@opentelemetry/semantic-conventions': 1.28.0
 
-  '@opentelemetry/sdk-trace-base@2.5.0(@opentelemetry/api@1.9.0)':
-    dependencies:
-      '@opentelemetry/api': 1.9.0
-      '@opentelemetry/core': 2.5.0(@opentelemetry/api@1.9.0)
-      '@opentelemetry/resources': 2.5.0(@opentelemetry/api@1.9.0)
-      '@opentelemetry/semantic-conventions': 1.36.0
-
   '@opentelemetry/sdk-trace-base@2.5.1(@opentelemetry/api@1.9.0)':
     dependencies:
       '@opentelemetry/api': 1.9.0
@@ -7571,13 +7525,6 @@ snapshots:
       '@opentelemetry/propagator-jaeger': 1.30.1(@opentelemetry/api@1.9.0)
       '@opentelemetry/sdk-trace-base': 1.30.1(@opentelemetry/api@1.9.0)
       semver: 7.7.3
-
-  '@opentelemetry/sdk-trace-node@2.5.0(@opentelemetry/api@1.9.0)':
-    dependencies:
-      '@opentelemetry/api': 1.9.0
-      '@opentelemetry/context-async-hooks': 2.5.0(@opentelemetry/api@1.9.0)
-      '@opentelemetry/core': 2.5.0(@opentelemetry/api@1.9.0)
-      '@opentelemetry/sdk-trace-base': 2.5.0(@opentelemetry/api@1.9.0)
 
   '@opentelemetry/sdk-trace-node@2.5.1(@opentelemetry/api@1.9.0)':
     dependencies:
@@ -7810,7 +7757,7 @@ snapshots:
       eslint-visitor-keys: 4.2.1
       espree: 10.4.0
 
-  '@sveltejs/acorn-typescript@1.0.5(acorn@8.15.0)':
+  '@sveltejs/acorn-typescript@1.0.9(acorn@8.15.0)':
     dependencies:
       acorn: 8.15.0
 
@@ -8240,7 +8187,6 @@ snapshots:
   acorn-walk@8.3.4:
     dependencies:
       acorn: 8.15.0
-    optional: true
 
   acorn@8.14.0: {}
 
@@ -9269,7 +9215,7 @@ snapshots:
 
   inherits@2.0.4: {}
 
-  ipx@3.1.1(@netlify/blobs@10.5.0):
+  ipx@3.1.1(@netlify/blobs@10.7.0):
     dependencies:
       '@fastify/accept-negotiator': 2.0.1
       citty: 0.1.6
@@ -9285,7 +9231,7 @@ snapshots:
       sharp: 0.34.4
       svgo: 4.0.0
       ufo: 1.6.3
-      unstorage: 1.16.1(@netlify/blobs@10.5.0)
+      unstorage: 1.16.1(@netlify/blobs@10.7.0)
       xss: 1.0.15
     transitivePeerDependencies:
       - '@azure/app-configuration'
@@ -9418,9 +9364,9 @@ snapshots:
 
   jsonpointer@5.0.1: {}
 
-  jsonwebtoken@9.0.2:
+  jsonwebtoken@9.0.3:
     dependencies:
-      jws: 3.2.3
+      jws: 4.0.1
       lodash.includes: 4.3.0
       lodash.isboolean: 3.0.3
       lodash.isinteger: 4.0.4
@@ -9433,15 +9379,15 @@ snapshots:
 
   junk@4.0.1: {}
 
-  jwa@1.4.2:
+  jwa@2.0.1:
     dependencies:
       buffer-equal-constant-time: 1.0.1
       ecdsa-sig-formatter: 1.0.11
       safe-buffer: 5.2.1
 
-  jws@3.2.3:
+  jws@4.0.1:
     dependencies:
-      jwa: 1.4.2
+      jwa: 2.0.1
       safe-buffer: 5.2.1
 
   jwt-decode@4.0.0: {}
@@ -10458,7 +10404,7 @@ snapshots:
     dependencies:
       '@jridgewell/remapping': 2.3.5
       '@jridgewell/sourcemap-codec': 1.5.5
-      '@sveltejs/acorn-typescript': 1.0.5(acorn@8.15.0)
+      '@sveltejs/acorn-typescript': 1.0.9(acorn@8.15.0)
       '@types/estree': 1.0.8
       '@types/trusted-types': 2.0.7
       acorn: 8.15.0
@@ -10627,7 +10573,7 @@ snapshots:
     dependencies:
       normalize-path: 2.1.1
 
-  unstorage@1.16.1(@netlify/blobs@10.5.0):
+  unstorage@1.16.1(@netlify/blobs@10.7.0):
     dependencies:
       anymatch: 3.1.3
       chokidar: 4.0.3
@@ -10638,7 +10584,7 @@ snapshots:
       ofetch: 1.4.1
       ufo: 1.6.3
     optionalDependencies:
-      '@netlify/blobs': 10.5.0
+      '@netlify/blobs': 10.7.0
 
   untun@0.1.3:
     dependencies:
