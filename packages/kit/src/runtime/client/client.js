@@ -631,9 +631,9 @@ async function initialize(result, target, hydrate) {
  *   form?: Record<string, any> | null;
  * }} opts
  */
-function get_navigation_result_from_branch({ url, params, branch, status, error, route, form }) {
+function get_navigation_result_from_branch({ url, params, branch, status, error, route, form, trailing_slash }) {
 	/** @type {import('types').TrailingSlash} */
-	let slash = 'never';
+	let slash = trailing_slash ?? 'never';
 
 	// if `paths.base === '/a/b/c`, then the root route is always `/a/b/c/`, regardless of
 	// the `trailingSlash` route option, so that relative paths to JS and CSS work
@@ -1193,13 +1193,21 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 
 				const error_load = await load_nearest_error_page(i, branch, errors);
 				if (error_load) {
+					// preserve trailingSlash config from the full branch so that
+					// slicing the branch for error handling doesn't lose it (#13516)
+					let trailing_slash;
+					for (const node of branch) {
+						if (node?.slash !== undefined) trailing_slash = node.slash;
+					}
+
 					return get_navigation_result_from_branch({
 						url,
 						params,
 						branch: branch.slice(0, error_load.idx).concat(error_load.node),
 						status,
 						error,
-						route
+						route,
+						trailing_slash
 					});
 				} else {
 					return await server_fallback(url, { id: route.id }, error, status);
@@ -2396,13 +2404,21 @@ export async function set_nearest_error_page(error, status = 500) {
 
 	const error_load = await load_nearest_error_page(current.branch.length, branch, route.errors);
 	if (error_load) {
+		// preserve trailingSlash config from the full branch so that
+		// slicing the branch for error handling doesn't lose it (#13516)
+		let trailing_slash;
+		for (const node of branch) {
+			if (node?.slash !== undefined) trailing_slash = node.slash;
+		}
+
 		const navigation_result = get_navigation_result_from_branch({
 			url,
 			params: current.params,
 			branch: branch.slice(0, error_load.idx).concat(error_load.node),
 			status,
 			error,
-			route
+			route,
+			trailing_slash
 		});
 
 		current = navigation_result.state;
