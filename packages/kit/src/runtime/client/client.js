@@ -565,7 +565,11 @@ async function _preload_code(url) {
 	const route = (await get_navigation_intent(url, false))?.route;
 
 	if (route) {
-		await Promise.all([...route.layouts, route.leaf].map((load) => load?.[1]()));
+		await Promise.all(
+			/** @type {[has_server_load: boolean, node_loader: import('types').CSRPageNodeLoader][]} */ (
+				[...route.layouts, route.leaf].filter(Boolean)
+			).map((load) => load[1]())
+		);
 	}
 }
 
@@ -1715,6 +1719,7 @@ async function navigate({
 	if (started) {
 		const after_navigate = (
 			await Promise.all(
+				// eslint-disable-next-line @typescript-eslint/await-thenable -- we need to await because they can be asynchronous
 				Array.from(on_navigate_callbacks, (fn) =>
 					fn(/** @type {import('@sveltejs/kit').OnNavigate} */ (nav.navigation))
 				)
@@ -2287,7 +2292,7 @@ export function pushState(url, state) {
 			devalue.stringify(state);
 		} catch (error) {
 			// @ts-expect-error
-			throw new Error(`Could not serialize state${error.path}`);
+			throw new Error(`Could not serialize state${error.path}`, { cause: error });
 		}
 	}
 
@@ -2334,7 +2339,7 @@ export function replaceState(url, state) {
 			devalue.stringify(state);
 		} catch (error) {
 			// @ts-expect-error
-			throw new Error(`Could not serialize state${error.path}`);
+			throw new Error(`Could not serialize state${error.path}`, { cause: error });
 		}
 	}
 

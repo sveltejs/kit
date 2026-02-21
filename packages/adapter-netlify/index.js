@@ -237,13 +237,14 @@ function generate_lambda_functions({ builder, publish, split }) {
 
 			const routes = [route];
 
+			/** @type {string[]} */
 			const parts = [];
-			// Netlify's syntax uses '*' and ':param' as "splats" and "placeholders"
-			// https://docs.netlify.com/routing/redirects/redirect-options/#splats
+
+			// The parts should conform to URLPattern syntax
+			// https://docs.netlify.com/build/functions/get-started/?fn-language=ts&data-tab=TypeScript#route-requests
 			for (const segment of route.segments) {
 				if (segment.rest) {
 					parts.push('*');
-					break; // Netlify redirects don't allow anything after a *
 				} else if (segment.dynamic) {
 					// URLPattern requires params to start with letters
 					parts.push(`:param${parts.length}`);
@@ -252,6 +253,7 @@ function generate_lambda_functions({ builder, publish, split }) {
 				}
 			}
 
+			// Netlify handles trailing slashes for us, so we don't need to include them in the pattern
 			const pattern = `/${parts.join('/')}`;
 			const name =
 				FUNCTION_PREFIX + (parts.join('-').replace(/[:.]/g, '_').replace('*', '__rest') || 'index');
@@ -270,49 +272,22 @@ function generate_lambda_functions({ builder, publish, split }) {
 				}
 			}
 
-			const manifest = builder.generateManifest({
-				relativePath: '../server',
-				routes
+			generate_serverless_function({
+				builder,
+				routes,
+				patterns: [pattern, `${pattern === '/' ? '' : pattern}/__data.json`],
+				name
 			});
-
-			const fn = generate_serverless_function_module(manifest);
-			const config = generate_config_export(pattern);
-
-			if (builder.hasServerInstrumentationFile()) {
-				writeFileSync(`.netlify/functions-internal/${name}.mjs`, fn);
-				builder.instrument({
-					entrypoint: `.netlify/functions-internal/${name}.mjs`,
-					instrumentation: '.netlify/server/instrumentation.server.js',
-					start: `.netlify/functions-start/${name}.start.mjs`,
-					module: {
-						generateText: generate_traced_module(config)
-					}
-				});
-			} else {
-				writeFileSync(`.netlify/functions-internal/${name}.mjs`, `${fn}\n${config}`);
-			}
 		}
+
+		// TODO: add a catch-all to display a 404 page if no other functions are invoked, similar to the Vercel adapter
 	} else {
-		const manifest = builder.generateManifest({
-			relativePath: '../server'
+		generate_serverless_function({
+			builder,
+			routes: undefined,
+			patterns: ['/*'],
+			name: `${FUNCTION_PREFIX}render`
 		});
-
-		const fn = generate_serverless_function_module(manifest);
-		const config = generate_config_export('/*');
-
-		if (builder.hasServerInstrumentationFile()) {
-			writeFileSync(`.netlify/functions-internal/${FUNCTION_PREFIX}render.mjs`, fn);
-			builder.instrument({
-				entrypoint: `.netlify/functions-internal/${FUNCTION_PREFIX}render.mjs`,
-				instrumentation: '.netlify/server/instrumentation.server.js',
-				start: `.netlify/functions-start/${FUNCTION_PREFIX}render.start.mjs`,
-				module: {
-					generateText: generate_traced_module(config)
-				}
-			});
-		} else {
-			writeFileSync(`.netlify/functions-internal/${FUNCTION_PREFIX}render.mjs`, `${fn}\n${config}`);
-		}
 	}
 
 	// Copy user's custom _redirects file if it exists
@@ -395,6 +370,39 @@ function matches(a, b) {
 }
 
 /**
+ *
+ * @param {{
+ *   builder: import('@sveltejs/kit').Builder,
+ *   routes: import('@sveltejs/kit').RouteDefinition[] | undefined,
+ *   patterns: string[],
+ *   name: string
+ * }} opts
+ */
+function generate_serverless_function({ builder, routes, patterns, name }) {
+	const manifest = builder.generateManifest({
+		relativePath: '../server',
+		routes
+	});
+
+	const fn = generate_serverless_function_module(manifest);
+	const config = generate_config_export(patterns);
+
+	if (builder.hasServerInstrumentationFile()) {
+		writeFileSync(`.netlify/functions-internal/${name}.mjs`, fn);
+		builder.instrument({
+			entrypoint: `.netlify/functions-internal/${name}.mjs`,
+			instrumentation: '.netlify/server/instrumentation.server.js',
+			start: `.netlify/functions-start/${name}.start.mjs`,
+			module: {
+				generateText: generate_traced_module(config)
+			}
+		});
+	} else {
+		writeFileSync(`.netlify/functions-internal/${name}.mjs`, `${fn}\n${config}`);
+	}
+}
+
+/**
  * @param {string} manifest
  * @returns {string}
  */
@@ -407,13 +415,14 @@ export default init(${manifest});
 }
 
 /**
- * @param {string} pattern
+ * @param {string[]} patterns
  * @returns {string}
  */
-function generate_config_export(pattern) {
+function generate_config_export(patterns) {
+	// TODO: add a human friendly name for the function https://docs.netlify.com/build/frameworks/frameworks-api/#configuration-options-2
 	return `\
 export const config = {
-	path: "${pattern}",
+	path: [${patterns.map((s) => JSON.stringify(s)).join(', ')}],
 	excludedPath: "/.netlify/*",
 	preferStatic: true
 };

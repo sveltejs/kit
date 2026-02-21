@@ -51,7 +51,7 @@ test('Creates correct $types', { timeout: 60000 }, () => {
 			});
 		} catch (e) {
 			console.error(/** @type {any} */ (e).stdout.toString());
-			throw new Error(`${dir} type tests failed`);
+			throw new Error(`${dir} type tests failed`, { cause: e });
 		}
 	}
 });
