@@ -697,6 +697,7 @@ async function get_navigation_result_from_branch({
 	if (errors && __SVELTEKIT_EXPERIMENTAL_USE_TRANSFORM_ERROR__) {
 		let last_idx = -1;
 		result.props.errors = await Promise.all(
+			// eslint-disable-next-line @typescript-eslint/await-thenable
 			branch
 				.map((b, i) => {
 					if (i === 0) return undefined; // root layout wraps root error component, not the other way around

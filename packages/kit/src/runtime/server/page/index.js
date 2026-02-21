@@ -400,6 +400,7 @@ async function load_error_components(options, ssr, branch, page, manifest) {
 	if (options.server_error_boundaries && ssr) {
 		let last_idx = -1;
 		error_components = await Promise.all(
+			// eslint-disable-next-line @typescript-eslint/await-thenable
 			branch
 				.map((b, i) => {
 					if (i === 0) return undefined; // root layout wraps root error component, not the other way around
