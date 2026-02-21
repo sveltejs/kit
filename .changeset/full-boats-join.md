@@ -2,4 +2,4 @@
 '@sveltejs/adapter-netlify': patch
 ---
 
-fix: generate a catch-all function to serve a 404 when no other functions match
+fix: generate a catch-all function that handles remote function requests and unknown routes when the app is configured to use split functions
