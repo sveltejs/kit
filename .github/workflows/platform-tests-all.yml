@@ -9,8 +9,7 @@ on:
         default: ''
 
 permissions:
-  contents: read
-  checks: write
+  contents: write
 
 jobs:
   vercel:
@@ -41,15 +40,14 @@ jobs:
             echo "summary=All platform test jobs passed." >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Update check run
+      - name: Report results
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh api repos/${{ github.repository }}/check-runs \
-            -f name=platform-tests \
-            -f head_sha=${{ inputs.sha || github.sha }} \
-            -f status=completed \
-            -f conclusion=${{ steps.outcome.outputs.conclusion }} \
-            -f output[title]='${{ steps.outcome.outputs.title }}' \
-            -f output[summary]='${{ steps.outcome.outputs.summary }}' \
-            -f details_url='${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}'
+          gh api repos/${{ github.repository }}/dispatches \
+            -f event_type=platform-tests-result \
+            -f 'client_payload[sha]=${{ inputs.sha || github.sha }}' \
+            -f 'client_payload[conclusion]=${{ steps.outcome.outputs.conclusion }}' \
+            -f 'client_payload[title]=${{ steps.outcome.outputs.title }}' \
+            -f 'client_payload[summary]=${{ steps.outcome.outputs.summary }}' \
+            -f 'client_payload[details_url]=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}'
