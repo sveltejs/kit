@@ -243,13 +243,6 @@ jobs:
         with:
           deno-version: ^2.2.4
       - run: pnpm install --frozen-lockfile
-      - name: setup overrides for matrix.node
-        if: matrix.node-version == 18
-        run: | # copies catalogs.node-xx to overrides in pnpm-workspace.yaml so the subsequent `pnpm install` enforces them
-          yq -i '.overrides =.catalogs."node-18"' pnpm-workspace.yaml
-          pnpm install --no-frozen-lockfile
-          git checkout pnpm-lock.yaml pnpm-workspace.yaml # revert changes to pnpm files to avoid cache key changes
-          pnpm --dir packages/kit ls vite @sveltejs/vite-plugin-svelte
       - run: pnpm playwright install chromium --no-shell
       - run: cd packages/kit && pnpm prepublishOnly
       - run: pnpm run test:others
