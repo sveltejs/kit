@@ -1,0 +1,15 @@
+{
+	"search.exclude": {
+		"**/.custom-out-dir": true,
+		"**/.netlify": true,
+		"**/.svelte-kit": true,
+		"**/.wrangler": true,
+		"**/CHANGELOG*.md": true,
+		"**/dist": true,
+		"**/test/**/build": true,
+		"**/test-results": true,
+		"packages/adapter-cloudflare/files": true,
+		"packages/adapter-netlify/files": true,
+		"packages/adapter-node/files": true
+	}
+}

@@ -10,3 +10,8 @@ test('client-side navigation fetches server load function data', async ({ page }
 	await page.click('a');
 	await expect(page.locator('p')).toHaveText('id: 1');
 });
+
+test('falls back to catch all function if no routes match', async ({ page }) => {
+	await page.goto('/non-existent');
+	await expect(page.locator('p')).toHaveText('Custom default error page');
+});
