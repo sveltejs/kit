@@ -1,4 +1,5 @@
 <script>
+	import { tick } from 'svelte';
 	import { get_number, set_number } from './form.remote.ts';
 	import * as v from 'valibot';
 
@@ -35,6 +36,10 @@
 <form
 	data-enhanced
 	{...enhanced.preflight(schema).enhance(async ({ submit }) => {
+		await tick();
+		if (enhanced.fields.number.issues()) {
+			return;
+		}
 		await submit();
 	})}
 >

@@ -194,7 +194,7 @@ Use the [`typescript.config` setting](configuration#typescript) in `svelte.confi
 
 ## $lib
 
-This is a simple alias to `src/lib`, or whatever directory is specified as [`config.kit.files.lib`](configuration#files). It allows you to access common components and utility modules without `../../../../` nonsense.
+This is a simple alias to `src/lib`. It allows you to access common components and utility modules without `../../../../` nonsense.
 
 ### $lib/server
 

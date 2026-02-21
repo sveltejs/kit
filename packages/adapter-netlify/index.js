@@ -1,31 +1,17 @@
 /** @import { BuildOptions } from 'esbuild' */
 import { appendFileSync, existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { dirname, join, resolve, posix } from 'node:path';
+import { join, resolve, posix } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { builtinModules } from 'node:module';
 import process from 'node:process';
 import esbuild from 'esbuild';
 import toml from '@iarna/toml';
-import { VERSION } from '@sveltejs/kit';
-
-const [kit_major, kit_minor] = VERSION.split('.');
 
 /**
  * @typedef {{
  *   build?: { publish?: string }
  *   functions?: { node_bundler?: 'zisi' | 'esbuild' }
  * } & toml.JsonMap} NetlifyConfig
- */
-
-/**
- * @template T
- * @template {keyof T} K
- * @typedef {Partial<Omit<T, K>> & Required<Pick<T, K>>} PartialExcept
- */
-
-/**
- * We use a custom `Builder` type here to support the minimum version of SvelteKit.
- * @typedef {PartialExcept<import('@sveltejs/kit').Builder, 'log' | 'rimraf' | 'mkdirp' | 'config' | 'prerendered' | 'routes' | 'createEntries' | 'findServerAssets' | 'generateFallback' | 'generateEnvModule' | 'generateManifest' | 'getBuildDirectory' | 'getClientDirectory' | 'getServerDirectory' | 'getAppPath' | 'writeClient' | 'writePrerendered' | 'writePrerendered' | 'writeServer' | 'copy' | 'compress'>} Builder2_4_0
  */
 
 const name = '@sveltejs/adapter-netlify';
@@ -41,7 +27,7 @@ const FUNCTION_PREFIX = 'sveltekit-';
 export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 	return {
 		name,
-		/** @param {Builder2_4_0} builder */
+		/** @param {import('@sveltejs/kit').Builder} builder */
 		async adapt(builder) {
 			if (!builder.routes) {
 				throw new Error(
@@ -109,23 +95,14 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 		},
 
 		supports: {
-			read: ({ route }) => {
-				// TODO bump peer dep in next adapter major to simplify this
-				if (edge && kit_major === '2' && kit_minor < '25') {
-					throw new Error(
-						`${name}: Cannot use \`read\` from \`$app/server\` in route \`${route.id}\` when using edge functions and SvelteKit < 2.25.0`
-					);
-				}
-
-				return true;
-			},
+			read: () => true,
 			instrumentation: () => true
 		}
 	};
 }
 /**
  * @param { object } params
- * @param {Builder2_4_0} params.builder
+ * @param {import('@sveltejs/kit').Builder} params.builder
  */
 async function generate_edge_functions({ builder }) {
 	const tmp = builder.getBuildDirectory('netlify-tmp');
@@ -214,7 +191,7 @@ async function generate_edge_functions({ builder }) {
 			outfile: '.netlify/edge-functions/render.js',
 			...esbuild_config
 		}),
-		builder.hasServerInstrumentationFile?.() &&
+		builder.hasServerInstrumentationFile() &&
 			esbuild.build({
 				entryPoints: [`${builder.getServerDirectory()}/instrumentation.server.js`],
 				outfile: '.netlify/edge/instrumentation.server.js',
@@ -222,8 +199,8 @@ async function generate_edge_functions({ builder }) {
 			})
 	]);
 
-	if (builder.hasServerInstrumentationFile?.()) {
-		builder.instrument?.({
+	if (builder.hasServerInstrumentationFile()) {
+		builder.instrument({
 			entrypoint: '.netlify/edge-functions/render.js',
 			instrumentation: '.netlify/edge/instrumentation.server.js',
 			start: '.netlify/edge/start.js'
@@ -234,15 +211,13 @@ async function generate_edge_functions({ builder }) {
 }
 /**
  * @param { object } params
- * @param {Builder2_4_0} params.builder
+ * @param {import('@sveltejs/kit').Builder} params.builder
  * @param { string } params.publish
  * @param { boolean } params.split
  */
 function generate_lambda_functions({ builder, publish, split }) {
 	builder.mkdirp('.netlify/functions-internal/.svelte-kit');
 
-	/** @type {string[]} */
-	const redirects = [];
 	builder.writeServer('.netlify/server');
 
 	const replace = {
@@ -250,9 +225,6 @@ function generate_lambda_functions({ builder, publish, split }) {
 	};
 
 	builder.copy(files, '.netlify', { replace, filter: (name) => !name.endsWith('edge.js') });
-
-	// Configuring the function to use ESM as the output format.
-	const fn_config = JSON.stringify({ config: { nodeModuleFormat: 'esm' }, version: 1 });
 
 	builder.log.minor('Generating serverless functions...');
 
@@ -265,27 +237,32 @@ function generate_lambda_functions({ builder, publish, split }) {
 
 			const routes = [route];
 
+			/** @type {string[]} */
 			const parts = [];
-			// Netlify's syntax uses '*' and ':param' as "splats" and "placeholders"
-			// https://docs.netlify.com/routing/redirects/redirect-options/#splats
+
+			// The parts should conform to URLPattern syntax
+			// https://docs.netlify.com/build/functions/get-started/?fn-language=ts&data-tab=TypeScript#route-requests
 			for (const segment of route.segments) {
 				if (segment.rest) {
 					parts.push('*');
-					break; // Netlify redirects don't allow anything after a *
 				} else if (segment.dynamic) {
-					parts.push(`:${parts.length}`);
+					// URLPattern requires params to start with letters
+					parts.push(`:param${parts.length}`);
 				} else {
 					parts.push(segment.content);
 				}
 			}
 
+			// Netlify handles trailing slashes for us, so we don't need to include them in the pattern
 			const pattern = `/${parts.join('/')}`;
 			const name =
 				FUNCTION_PREFIX + (parts.join('-').replace(/[:.]/g, '_').replace('*', '__rest') || 'index');
 
 			// skip routes with identical patterns, they were already folded into another function
 			if (seen.has(pattern)) continue;
-			seen.add(pattern);
+
+			const patterns = [pattern, `${pattern === '/' ? '' : pattern}/__data.json`];
+			patterns.forEach((p) => seen.add(p));
 
 			// figure out which lower priority routes should be considered fallbacks
 			for (let j = i + 1; j < builder.routes.length; j += 1) {
@@ -297,63 +274,36 @@ function generate_lambda_functions({ builder, publish, split }) {
 				}
 			}
 
-			const manifest = builder.generateManifest({
-				relativePath: '../server',
-				routes
+			generate_serverless_function({
+				builder,
+				routes,
+				patterns,
+				name
 			});
-
-			const fn = `import { init } from '../serverless.js';\n\nexport const handler = init(${manifest});\n`;
-
-			writeFileSync(`.netlify/functions-internal/${name}.mjs`, fn);
-			writeFileSync(`.netlify/functions-internal/${name}.json`, fn_config);
-			if (builder.hasServerInstrumentationFile?.()) {
-				builder.instrument?.({
-					entrypoint: `.netlify/functions-internal/${name}.mjs`,
-					instrumentation: '.netlify/server/instrumentation.server.js',
-					start: `.netlify/functions-start/${name}.start.mjs`,
-					module: {
-						exports: ['handler']
-					}
-				});
-			}
-
-			const redirect = `/.netlify/functions/${name} 200`;
-			redirects.push(`${pattern} ${redirect}`);
-			redirects.push(`${pattern === '/' ? '' : pattern}/__data.json ${redirect}`);
 		}
-	} else {
-		const manifest = builder.generateManifest({
-			relativePath: '../server'
+
+		generate_serverless_function({
+			builder,
+			routes: [],
+			patterns: ['/*'],
+			name: `${FUNCTION_PREFIX}catch-all`,
+			exclude: Array.from(seen)
 		});
-
-		const fn = `import { init } from '../serverless.js';\n\nexport const handler = init(${manifest});\n`;
-
-		writeFileSync(`.netlify/functions-internal/${FUNCTION_PREFIX}render.json`, fn_config);
-		writeFileSync(`.netlify/functions-internal/${FUNCTION_PREFIX}render.mjs`, fn);
-		if (builder.hasServerInstrumentationFile?.()) {
-			builder.instrument?.({
-				entrypoint: `.netlify/functions-internal/${FUNCTION_PREFIX}render.mjs`,
-				instrumentation: '.netlify/server/instrumentation.server.js',
-				start: `.netlify/functions-start/${FUNCTION_PREFIX}render.start.mjs`,
-				module: {
-					exports: ['handler']
-				}
-			});
-		}
-
-		redirects.push(`* /.netlify/functions/${FUNCTION_PREFIX}render 200`);
+	} else {
+		generate_serverless_function({
+			builder,
+			routes: undefined,
+			patterns: ['/*'],
+			name: `${FUNCTION_PREFIX}render`
+		});
 	}
 
-	// this should happen at the end, after builder.writeClient(...),
-	// so that generated redirects are appended to custom redirects
-	// rather than replaced by them
-	builder.log.minor('Writing redirects...');
-	const redirects_file = join(publish, '_redirects');
+	// Copy user's custom _redirects file if it exists
 	if (existsSync('_redirects')) {
+		builder.log.minor('Copying user redirects...');
+		const redirects_file = join(publish, '_redirects');
 		builder.copy('_redirects', redirects_file);
 	}
-	builder.mkdirp(dirname(redirects_file));
-	appendFileSync(redirects_file, `\n\n${redirects.join('\n')}`);
 }
 
 function get_netlify_config() {
@@ -369,7 +319,7 @@ function get_netlify_config() {
 
 /**
  * @param {NetlifyConfig | null} netlify_config
- * @param {Builder2_4_0} builder
+ * @param {import('@sveltejs/kit').Builder} builder
  **/
 function get_publish_directory(netlify_config, builder) {
 	if (netlify_config) {
@@ -378,11 +328,6 @@ function get_publish_directory(netlify_config, builder) {
 			return;
 		}
 
-		if (netlify_config.redirects) {
-			throw new Error(
-				"Redirects are not supported in netlify.toml. Use _redirects instead. For more details consult the readme's troubleshooting section."
-			);
-		}
 		if (resolve(netlify_config.build.publish) === process.cwd()) {
 			throw new Error(
 				'The publish directory cannot be set to the site root. Please change it to another value such as "build" in netlify.toml.'
@@ -430,4 +375,81 @@ function matches(a, b) {
 	} else {
 		return b.length === 1 && b[0].rest;
 	}
+}
+
+/**
+ *
+ * @param {{
+ *   builder: import('@sveltejs/kit').Builder,
+ *   routes: import('@sveltejs/kit').RouteDefinition[] | undefined,
+ *   patterns: string[],
+ *   name: string,
+ *   exclude?: string[]
+ * }} opts
+ */
+function generate_serverless_function({ builder, routes, patterns, name, exclude }) {
+	const manifest = builder.generateManifest({
+		relativePath: '../server',
+		routes
+	});
+
+	const fn = generate_serverless_function_module(manifest);
+	const config = generate_config_export(patterns, exclude);
+
+	if (builder.hasServerInstrumentationFile()) {
+		writeFileSync(`.netlify/functions-internal/${name}.mjs`, fn);
+		builder.instrument({
+			entrypoint: `.netlify/functions-internal/${name}.mjs`,
+			instrumentation: '.netlify/server/instrumentation.server.js',
+			start: `.netlify/functions-start/${name}.start.mjs`,
+			module: {
+				generateText: generate_traced_module(config)
+			}
+		});
+	} else {
+		writeFileSync(`.netlify/functions-internal/${name}.mjs`, `${fn}\n${config}`);
+	}
+}
+
+/**
+ * @param {string} manifest
+ * @returns {string}
+ */
+function generate_serverless_function_module(manifest) {
+	return `\
+import { init } from '../serverless.js';
+
+export default init(${manifest});
+`;
+}
+
+/**
+ * @param {string[]} patterns
+ * @param {string[]} [exclude]
+ * @returns {string}
+ */
+function generate_config_export(patterns, exclude = []) {
+	// TODO: add a human friendly name for the function https://docs.netlify.com/build/frameworks/frameworks-api/#configuration-options-2
+	return `\
+export const config = {
+	path: [${patterns.map((s) => JSON.stringify(s)).join(', ')}],
+	excludedPath: [${['/.netlify/*', ...exclude].map((s) => JSON.stringify(s)).join(', ')}],
+	preferStatic: true
+};
+`;
+}
+
+/**
+ * @param {string} config
+ * @returns {(opts: { instrumentation: string; start: string }) => string}
+ */
+function generate_traced_module(config) {
+	return ({ instrumentation, start }) => {
+		return `\
+import './${instrumentation}';
+const { default: _0 } = await import('./${start}');
+export { _0 as default };
+
+${config}`;
+	};
 }

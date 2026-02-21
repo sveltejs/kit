@@ -1,5 +1,14 @@
 # @sveltejs/adapter-vercel
 
+## 6.3.2
+### Patch Changes
+
+
+- fix: 404 for immutable assets that don't match static files ([`c67da8a`](https://github.com/sveltejs/kit/commit/c67da8ab6380349b30c353247688369eaef58c05))
+
+- Updated dependencies [[`3e607b3`](https://github.com/sveltejs/kit/commit/3e607b314aec9e5f278d32847945b8b6323e1cb8), [`62991c8`](https://github.com/sveltejs/kit/commit/62991c81db4f50ccfb08a9ac5e05ccba4ddab59e), [`f47c01b`](https://github.com/sveltejs/kit/commit/f47c01bd8100328c24fdb8522fe35913b0735f35)]:
+  - @sveltejs/kit@2.52.2
+
 ## 6.3.1
 ### Patch Changes
 

@@ -12,8 +12,6 @@ There are three hooks files, all optional:
 
 Code in these modules will run when the application starts up, making them useful for initializing database clients and so on.
 
-> [!NOTE] You can configure the location of these files with [`config.kit.files.hooks`](configuration#files).
-
 ## Server hooks
 
 The following hooks can be added to `src/hooks.server.js`:

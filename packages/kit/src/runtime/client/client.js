@@ -567,7 +567,11 @@ async function _preload_code(url) {
 	const route = (await get_navigation_intent(url, false))?.route;
 
 	if (route) {
-		await Promise.all([...route.layouts, route.leaf].map((load) => load?.[1]()));
+		await Promise.all(
+			/** @type {[has_server_load: boolean, node_loader: import('types').CSRPageNodeLoader][]} */ (
+				[...route.layouts, route.leaf].filter(Boolean)
+			).map((load) => load[1]())
+		);
 	}
 }
 
@@ -1454,7 +1458,7 @@ async function get_rerouted_url(url) {
  * @param {boolean} invalidating
  * @returns {Promise<import('./types.js').NavigationIntent | undefined>}
  */
-async function get_navigation_intent(url, invalidating) {
+export async function get_navigation_intent(url, invalidating) {
 	if (!url) return;
 	if (is_external_url(url, base, app.hash)) return;
 
@@ -1760,6 +1764,7 @@ async function navigate({
 	if (started) {
 		const after_navigate = (
 			await Promise.all(
+				// eslint-disable-next-line @typescript-eslint/await-thenable -- we need to await because they can be asynchronous
 				Array.from(on_navigate_callbacks, (fn) =>
 					fn(/** @type {import('@sveltejs/kit').OnNavigate} */ (nav.navigation))
 				)
@@ -1823,26 +1828,18 @@ async function navigate({
 	await svelte.tick();
 
 	// we reset scroll before dealing with focus, to avoid a flash of unscrolled content
-	let scroll = popped ? popped.scroll : noscroll ? scroll_state() : null;
+	/** @type {Element | null | ''} */
+	let deep_linked = null;
 
 	if (autoscroll) {
-		const deep_linked = url.hash && document.getElementById(get_id(url));
+		const scroll = popped ? popped.scroll : noscroll ? scroll_state() : null;
 		if (scroll) {
 			scrollTo(scroll.x, scroll.y);
-		} else if (deep_linked) {
+		} else if ((deep_linked = url.hash && document.getElementById(get_id(url)))) {
 			// Here we use `scrollIntoView` on the element instead of `scrollTo`
 			// because it natively supports the `scroll-margin` and `scroll-behavior`
 			// CSS properties.
 			deep_linked.scrollIntoView();
-
-			// Get target position at this point because with smooth scrolling the scroll position
-			// retrieved from current x/y above might be wrong (since we might not have arrived at the destination yet)
-			const { top, left } = deep_linked.getBoundingClientRect();
-
-			scroll = {
-				x: pageXOffset + left,
-				y: pageYOffset + top
-			};
 		} else {
 			scrollTo(0, 0);
 		}
@@ -1856,7 +1853,10 @@ async function navigate({
 		document.activeElement !== document.body;
 
 	if (!keepfocus && !changed_focus) {
-		reset_focus(url, scroll);
+		// We don't need to manually restore the scroll position if we're navigating
+		// to a fragment identifier. It is automatically done for us when we set the
+		// sequential navigation starting point with `location.replace`
+		reset_focus(url, !deep_linked);
 	}
 
 	autoscroll = true;
@@ -2346,7 +2346,7 @@ export function pushState(url, state) {
 			devalue.stringify(state);
 		} catch (error) {
 			// @ts-expect-error
-			throw new Error(`Could not serialize state${error.path}`);
+			throw new Error(`Could not serialize state${error.path}`, { cause: error });
 		}
 	}
 
@@ -2393,7 +2393,7 @@ export function replaceState(url, state) {
 			devalue.stringify(state);
 		} catch (error) {
 			// @ts-expect-error
-			throw new Error(`Could not serialize state${error.path}`);
+			throw new Error(`Could not serialize state${error.path}`, { cause: error });
 		}
 	}
 
@@ -3063,9 +3063,9 @@ let resetting_focus = false;
 
 /**
  * @param {URL} url
- * @param {{ x: number, y: number } | null} scroll
+ * @param {boolean} [scroll]
  */
-function reset_focus(url, scroll = null) {
+function reset_focus(url, scroll = true) {
 	const autofocus = document.querySelector('[autofocus]');
 	if (autofocus) {
 		// @ts-ignore
@@ -3077,7 +3077,7 @@ function reset_focus(url, scroll = null) {
 		// starting point to the fragment identifier.
 		const id = get_id(url);
 		if (id && document.getElementById(id)) {
-			const { x, y } = scroll ?? scroll_state();
+			const { x, y } = scroll_state();
 
 			// `element.focus()` doesn't work on Safari and Firefox Ubuntu so we need
 			// to use this hack with `location.replace()` instead.
@@ -3092,9 +3092,9 @@ function reset_focus(url, scroll = null) {
 				// This is also needed to restore the original hash if we're using hash routing
 				history.replaceState(history_state, '', url);
 
-				// Scroll management has already happened earlier so we need to restore
+				// If scroll management has already happened earlier, we need to restore
 				// the scroll position after setting the sequential focus navigation starting point
-				scrollTo(x, y);
+				if (scroll) scrollTo(x, y);
 				resetting_focus = false;
 			});
 		} else {
