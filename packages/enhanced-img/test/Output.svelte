@@ -48,17 +48,15 @@
 	{:else}
 		<img src={src} alt="attribute shorthand test" />
 	{/if}
+{:else if Object.keys(src.sources).length === 1}
+	<img src={src.img.src} alt="attribute shorthand test" srcset={Object.values(src.sources)[0]} width={src.img.w} height={src.img.h} />
 {:else}
-	{#if Object.keys(src.sources).length === 1}
-		<img src={src.img.src} alt="attribute shorthand test" srcset={Object.values(src.sources)[0]} width={src.img.w} height={src.img.h} />
-	{:else}
-		<picture>
-			{#each Object.entries(src.sources) as [format, srcset]}
-				<source {srcset} type={'image/' + format} />
-			{/each}
-			<img src={src.img.src} alt="attribute shorthand test" width={src.img.w} height={src.img.h} />
-		</picture>
-	{/if}
+	<picture>
+		{#each Object.entries(src.sources) as [format, srcset]}
+			<source {srcset} type={'image/' + format} />
+		{/each}
+		<img src={src.img.src} alt="attribute shorthand test" width={src.img.w} height={src.img.h} />
+	</picture>
 {/if}
 
 {#if typeof webp_image === 'string'}
@@ -68,17 +66,15 @@
 	{:else}
 		<img src={webp_image} alt="single format dynamic test" />
 	{/if}
+{:else if Object.keys(webp_image.sources).length === 1}
+	<img src={webp_image.img.src} alt="single format dynamic test" srcset={Object.values(webp_image.sources)[0]} width={webp_image.img.w} height={webp_image.img.h} />
 {:else}
-	{#if Object.keys(webp_image.sources).length === 1}
-		<img src={webp_image.img.src} alt="single format dynamic test" srcset={Object.values(webp_image.sources)[0]} width={webp_image.img.w} height={webp_image.img.h} />
-	{:else}
-		<picture>
-			{#each Object.entries(webp_image.sources) as [format, srcset]}
-				<source {srcset} type={'image/' + format} />
-			{/each}
-			<img src={webp_image.img.src} alt="single format dynamic test" width={webp_image.img.w} height={webp_image.img.h} />
-		</picture>
-	{/if}
+	<picture>
+		{#each Object.entries(webp_image.sources) as [format, srcset]}
+			<source {srcset} type={'image/' + format} />
+		{/each}
+		<img src={webp_image.img.src} alt="single format dynamic test" width={webp_image.img.w} height={webp_image.img.h} />
+	</picture>
 {/if}
 
 {#each images as image}
@@ -89,17 +85,15 @@
 	{:else}
 		<img src={image} alt="opt-in test" />
 	{/if}
+{:else if Object.keys(image.sources).length === 1}
+	<img src={image.img.src} alt="opt-in test" srcset={Object.values(image.sources)[0]} width={image.img.w} height={image.img.h} />
 {:else}
-	{#if Object.keys(image.sources).length === 1}
-		<img src={image.img.src} alt="opt-in test" srcset={Object.values(image.sources)[0]} width={image.img.w} height={image.img.h} />
-	{:else}
-		<picture>
-			{#each Object.entries(image.sources) as [format, srcset]}
-				<source {srcset} type={'image/' + format} />
-			{/each}
-			<img src={image.img.src} alt="opt-in test" width={image.img.w} height={image.img.h} />
-		</picture>
-	{/if}
+	<picture>
+		{#each Object.entries(image.sources) as [format, srcset]}
+			<source {srcset} type={'image/' + format} />
+		{/each}
+		<img src={image.img.src} alt="opt-in test" width={image.img.w} height={image.img.h} />
+	</picture>
 {/if}
 {/each}
 
@@ -111,17 +105,15 @@
 	{:else}
 		<img src={get_image(i)} alt="opt-in test" />
 	{/if}
+{:else if Object.keys(get_image(i).sources).length === 1}
+	<img src={get_image(i).img.src} alt="opt-in test" srcset={Object.values(get_image(i).sources)[0]} width={get_image(i).img.w} height={get_image(i).img.h} />
 {:else}
-	{#if Object.keys(get_image(i).sources).length === 1}
-		<img src={get_image(i).img.src} alt="opt-in test" srcset={Object.values(get_image(i).sources)[0]} width={get_image(i).img.w} height={get_image(i).img.h} />
-	{:else}
-		<picture>
-			{#each Object.entries(get_image(i).sources) as [format, srcset]}
-				<source {srcset} type={'image/' + format} />
-			{/each}
-			<img src={get_image(i).img.src} alt="opt-in test" width={get_image(i).img.w} height={get_image(i).img.h} />
-		</picture>
-	{/if}
+	<picture>
+		{#each Object.entries(get_image(i).sources) as [format, srcset]}
+			<source {srcset} type={'image/' + format} />
+		{/each}
+		<img src={get_image(i).img.src} alt="opt-in test" width={get_image(i).img.w} height={get_image(i).img.h} />
+	</picture>
 {/if}
 {/each}
 
