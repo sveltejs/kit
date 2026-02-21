@@ -334,7 +334,7 @@ function img_to_picture(content, node, image) {
 		height: image.img.h
 	})} />`;
 
-	return (res += '</picture>');
+	return res + '</picture>';
 }
 
 /**
