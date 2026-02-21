@@ -58,6 +58,7 @@
 		"@types/node": "catalog:",
 		"rolldown": "^1.0.0-rc.5",
 		"typescript": "^5.3.3",
+		"vite": "catalog:",
 		"vitest": "catalog:"
 	},
 	"peerDependencies": {

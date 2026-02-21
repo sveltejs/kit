@@ -41,7 +41,7 @@ it('Image preprocess snapshot test', async () => {
 	if (!transformed.code) throw new Error('transform did not return any code');
 
 	// Make imports readable
-	const ouput = transformed.code.replace(/import/g, '\n\timport');
+	const ouput = transformed.code.toString().replace(/import/g, '\n\timport');
 
 	await expect(ouput).toMatchFileSnapshot('./Output.svelte');
 });
