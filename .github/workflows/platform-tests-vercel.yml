@@ -26,6 +26,7 @@ jobs:
     if: github.repository == 'sveltejs/kit'
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    environment: '@sveltejs/adapter-vercel platform tests'
     steps:
       - uses: actions/checkout@v6
         with:
