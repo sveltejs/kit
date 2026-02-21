@@ -1,11 +1,8 @@
-import { nodeResolve } from '@rollup/plugin-node-resolve';
-import commonjs from '@rollup/plugin-commonjs';
-import json from '@rollup/plugin-json';
 import { rmSync } from 'node:fs';
 
 /**
  * @param {string} filepath
- * @returns {import('rollup').Plugin}
+ * @returns {import('rolldown').Plugin}
  */
 function clearOutput(filepath) {
 	return {
@@ -20,7 +17,7 @@ function clearOutput(filepath) {
 	};
 }
 
-/** @type {import('rollup').RollupOptions} */
+/** @type {import('rolldown').RolldownOptions} */
 const config = {
 	input: {
 		serverless: 'src/serverless.js',
@@ -31,10 +28,10 @@ const config = {
 		dir: 'files',
 		format: 'esm'
 	},
-	// @ts-ignore https://github.com/rollup/plugins/issues/1329
-	plugins: [clearOutput('files'), nodeResolve({ preferBuiltins: true }), commonjs(), json()],
+	plugins: [clearOutput('files')],
 	external: (id) => id === '0SERVER' || id === 'MANIFEST' || id.startsWith('node:'),
-	preserveEntrySignatures: 'exports-only'
+	preserveEntrySignatures: 'exports-only',
+	platform: 'node'
 };
 
 export default config;

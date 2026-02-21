@@ -33,8 +33,8 @@
 		"ambient.d.ts"
 	],
 	"scripts": {
-		"dev": "rollup -cw",
-		"build": "rollup -c",
+		"dev": "rolldown -cw",
+		"build": "rolldown -c",
 		"check": "tsc",
 		"lint": "prettier --check .",
 		"format": "pnpm lint --write",
@@ -53,13 +53,10 @@
 		"@netlify/functions": "catalog:",
 		"@netlify/node-cookies": "^0.1.0",
 		"@netlify/types": "^2.1.0",
-		"@rollup/plugin-commonjs": "catalog:",
-		"@rollup/plugin-json": "catalog:",
-		"@rollup/plugin-node-resolve": "catalog:",
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "catalog:",
 		"@types/node": "catalog:",
-		"rollup": "^4.14.2",
+		"rolldown": "^1.0.0-rc.5",
 		"typescript": "^5.3.3",
 		"vitest": "catalog:"
 	},
