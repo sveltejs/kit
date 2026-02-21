@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-cloudflare",
-	"version": "7.2.8",
+	"version": "8.0.0-next.0",
 	"description": "Adapts SvelteKit applications for Cloudflare Workers or Cloudflare Pages",
 	"keywords": [
 		"adapter",

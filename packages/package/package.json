@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/package",
-	"version": "2.5.7",
+	"version": "3.0.0-next.0",
 	"description": "The fastest way to build Svelte packages",
 	"repository": {
 		"type": "git",

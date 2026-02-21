@@ -1,5 +1,23 @@
 # @sveltejs/adapter-cloudflare
 
+## 8.0.0-next.0
+### Major Changes
+
+
+- breaking: upgrade `@cloudflare/workers-types` to 4.20260219.0 ([#15347](https://github.com/sveltejs/kit/pull/15347))
+
+
+- breaking: upgrade minimum `wrangler` version to ^4.67.0 ([#15347](https://github.com/sveltejs/kit/pull/15347))
+
+
+- breaking: remove `platform.context` in favour of `platform.ctx` ([#15347](https://github.com/sveltejs/kit/pull/15347))
+
+
+### Patch Changes
+
+- Updated dependencies [[`cb9d416`](https://github.com/sveltejs/kit/commit/cb9d416d05266b6237f2856fb94df5b8a9b04279), [`caf3a18`](https://github.com/sveltejs/kit/commit/caf3a18de6581ab7d454d6fa8ad37ebdbdef95e6), [`4777827`](https://github.com/sveltejs/kit/commit/4777827246727045cf0209399751377564e7951d), [`e2f3075`](https://github.com/sveltejs/kit/commit/e2f3075ef299b91175fae116e6a76269002029cf), [`e2f3075`](https://github.com/sveltejs/kit/commit/e2f3075ef299b91175fae116e6a76269002029cf), [`d06affc`](https://github.com/sveltejs/kit/commit/d06affc9246c676fc32b644efc0bbf53b42bc67d), [`e2f3075`](https://github.com/sveltejs/kit/commit/e2f3075ef299b91175fae116e6a76269002029cf), [`caf3a18`](https://github.com/sveltejs/kit/commit/caf3a18de6581ab7d454d6fa8ad37ebdbdef95e6), [`71e8205`](https://github.com/sveltejs/kit/commit/71e82053ace295607290b5c719f57b6f17ef9bd8)]:
+  - @sveltejs/kit@3.0.0-next.0
+
 ## 7.2.8
 ### Patch Changes
 
