@@ -23,7 +23,8 @@ export function write_root(manifest_data, config, output) {
 	}
 
 	let l = max_depth;
-	let pyramid = '';
+	/** @type {string} */
+	let pyramid;
 
 	if (isSvelte5Plus() && use_boundaries) {
 		// with the @const we force the data[depth] access to be derived, which is important to not fire updates needlessly

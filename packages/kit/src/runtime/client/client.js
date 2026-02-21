@@ -696,9 +696,9 @@ async function get_navigation_result_from_branch({
 
 	if (errors && __SVELTEKIT_EXPERIMENTAL_USE_TRANSFORM_ERROR__) {
 		let last_idx = -1;
-		result.props.errors = (
-			await Promise.all(
-				branch.map((b, i) => {
+		result.props.errors = await Promise.all(
+			branch
+				.map((b, i) => {
 					if (i === 0) return undefined; // root layout wraps root error component, not the other way around
 					if (!b) return null;
 
@@ -710,10 +710,9 @@ async function get_navigation_result_from_branch({
 						.then((e) => e.component)
 						.catch(() => undefined);
 				})
-			)
-		)
-			// filter out indexes where there was no branch, but keep indexes where there was a branch but no error component
-			.filter((e) => e !== null);
+				// filter out indexes where there was no branch, but keep indexes where there was a branch but no error component
+				.filter((e) => e !== null)
+		);
 	}
 
 	if (error && __SVELTEKIT_EXPERIMENTAL_USE_TRANSFORM_ERROR__) {

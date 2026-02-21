@@ -399,9 +399,9 @@ async function load_error_components(options, ssr, branch, page, manifest) {
 
 	if (options.server_error_boundaries && ssr) {
 		let last_idx = -1;
-		error_components = (
-			await Promise.all(
-				branch.map((b, i) => {
+		error_components = await Promise.all(
+			branch
+				.map((b, i) => {
 					if (i === 0) return undefined; // root layout wraps root error component, not the other way around
 					if (!b) return null;
 
@@ -417,10 +417,9 @@ async function load_error_components(options, ssr, branch, page, manifest) {
 						.then((e) => e.component?.())
 						.catch(() => undefined);
 				})
-			)
-		)
-			// filter out indexes where there was no branch, but keep indexes where there was a branch but no error component
-			.filter((e) => e !== null);
+				// filter out indexes where there was no branch, but keep indexes where there was a branch but no error component
+				.filter((e) => e !== null)
+		);
 	}
 
 	return error_components;
