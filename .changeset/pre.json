@@ -48,7 +48,23 @@
     "prerendering-test-paths-base": "0.0.1",
     "@sveltejs/package": "2.5.7",
     "test-redirect-importer": "0.0.1",
-    "playground-basic": "0.0.0"
+    "playground-basic": "0.0.0",
+    "test-netlify-split": "0.0.1"
   },
-  "changesets": []
+  "changesets": [
+    "chilly-berries-press",
+    "cold-carrots-raise",
+    "cuddly-radios-brush",
+    "early-worlds-slide",
+    "fine-ghosts-camp",
+    "five-readers-march",
+    "fluffy-tires-judge",
+    "forty-ducks-fly",
+    "heavy-showers-leave",
+    "large-onions-attack",
+    "light-singers-lie",
+    "nine-coins-cheer",
+    "salty-chefs-sleep",
+    "shaggy-walls-wave"
+  ]
 }
