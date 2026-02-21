@@ -1,4 +1,3 @@
-import { builtinModules } from 'node:module';
 import { rmSync } from 'node:fs';
 
 /**
