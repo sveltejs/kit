@@ -2,7 +2,7 @@ import type { HTMLImgAttributes } from 'svelte/elements';
 import type { Plugin } from 'vite';
 import type { Picture, VitePluginOptions as ImagetoolsOptions } from 'vite-imagetools';
 import './ambient.js';
-import { Metadata } from 'sharp';
+import type { Metadata } from 'sharp';
 
 export type { Picture };
 
