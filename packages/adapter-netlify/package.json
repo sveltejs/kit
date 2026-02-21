@@ -61,6 +61,7 @@
 		"@types/node": "catalog:",
 		"rollup": "^4.14.2",
 		"typescript": "^5.3.3",
+		"vite": "catalog:",
 		"vitest": "catalog:"
 	},
 	"peerDependencies": {

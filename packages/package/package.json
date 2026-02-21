@@ -33,6 +33,7 @@
 		"svelte": "catalog:",
 		"svelte-preprocess": "catalog:",
 		"typescript": "^5.3.3",
+		"vite": "catalog:",
 		"vitest": "catalog:"
 	},
 	"peerDependencies": {
