@@ -42,7 +42,7 @@ export type VitePluginOptions = {
 	 * ```
 	 * (width, sizes) => {
 	 * 	if (sizes) {
-	 * 		return { w: `540;768;1080;1366;1536;1920;2560;3000;4096;5120${width}` };
+	 * 		return { w: `540;768;1080;1366;1536;1920;2560;3000;4096;5120;${width}` };
 	 * 	}
 	 *
 	 * 	const small_width = Math.round(width / 2).toString();
