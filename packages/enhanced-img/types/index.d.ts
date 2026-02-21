@@ -51,8 +51,15 @@ export type VitePluginOptions = {
 	 * ```
 	 */
 	defaultWidths?: (width: number, sizes: string | null) => { w: string; basePixels?: string };
-	/** Options for the 'vite-imagetools' plugin */
-	imagetools?: ImagetoolsOptions;
+	/**
+	 * Options for the 'vite-imagetools' plugin
+	 *
+	 * `namedExports` is always set to `false` and cannot be overridden.
+	 *
+	 * `defaultDirectives` is only used for images that aren't handled by the preprocessor,
+	 * i.e. images that aren't imported with `?enhanced` query param and aren't imported through `<enhanced:img src="..." />`.
+	 */
+	imagetools?: Omit<ImagetoolsOptions, 'namedExports'>;
 };
 
 type EnhancedImgAttributes = Omit<HTMLImgAttributes, 'src'> & { src: string | Picture };
