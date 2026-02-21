@@ -33,15 +33,6 @@ catalogs:
     '@polka/url':
       specifier: ^1.0.0-next.28
       version: 1.0.0-next.28
-    '@rollup/plugin-commonjs':
-      specifier: ^29.0.0
-      version: 29.0.0
-    '@rollup/plugin-json':
-      specifier: ^6.1.0
-      version: 6.1.0
-    '@rollup/plugin-node-resolve':
-      specifier: ^16.0.0
-      version: 16.0.0
     '@sveltejs/eslint-config':
       specifier: ^9.0.0
       version: 9.0.0
@@ -253,15 +244,6 @@ importers:
       '@netlify/types':
         specifier: ^2.1.0
         version: 2.3.0
-      '@rollup/plugin-commonjs':
-        specifier: 'catalog:'
-        version: 29.0.0(rollup@4.57.1)
-      '@rollup/plugin-json':
-        specifier: 'catalog:'
-        version: 6.1.0(rollup@4.57.1)
-      '@rollup/plugin-node-resolve':
-        specifier: 'catalog:'
-        version: 16.0.0(rollup@4.57.1)
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../kit
@@ -271,9 +253,9 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 24.10.13
-      rollup:
-        specifier: ^4.14.2
-        version: 4.57.1
+      rolldown:
+        specifier: ^1.0.0-rc.5
+        version: 1.0.0-rc.5
       typescript:
         specifier: ^5.3.3
         version: 5.8.3
@@ -481,9 +463,9 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 24.10.13
-      rollup:
-        specifier: ^4.27.4
-        version: 4.57.1
+      rolldown:
+        specifier: ^1.0.0-rc.5
+        version: 1.0.0-rc.5
       svelte:
         specifier: 'catalog:'
         version: 5.51.5
@@ -569,9 +551,9 @@ importers:
       dts-buddy:
         specifier: 'catalog:'
         version: 0.6.2(typescript@5.8.3)
-      rollup:
-        specifier: ^4.14.2
-        version: 4.57.1
+      rolldown:
+        specifier: ^1.0.0-rc.5
+        version: 1.0.0-rc.5
       svelte:
         specifier: 'catalog:'
         version: 5.51.5
@@ -2944,33 +2926,6 @@ packages:
   '@rolldown/pluginutils@1.0.0-rc.5':
     resolution: {integrity: sha512-RxlLX/DPoarZ9PtxVrQgZhPoor987YtKQqCo5zkjX+0S0yLJ7Vv515Wk6+xtTL67VONKJKxETWZwuZjss2idYw==}
 
-  '@rollup/plugin-commonjs@29.0.0':
-    resolution: {integrity: sha512-U2YHaxR2cU/yAiwKJtJRhnyLk7cifnQw0zUpISsocBDoHDJn+HTV74ABqnwr5bEgWUwFZC9oFL6wLe21lHu5eQ==}
-    engines: {node: '>=16.0.0 || 14 >= 14.17'}
-    peerDependencies:
-      rollup: ^2.68.0||^3.0.0||^4.0.0
-    peerDependenciesMeta:
-      rollup:
-        optional: true
-
-  '@rollup/plugin-json@6.1.0':
-    resolution: {integrity: sha512-EGI2te5ENk1coGeADSIwZ7G2Q8CJS2sF120T7jLw4xFw9n7wIOXHo+kIYRAoVpJAN+kmqZSoO3Fp4JtoNF4ReA==}
-    engines: {node: '>=14.0.0'}
-    peerDependencies:
-      rollup: ^1.20.0||^2.0.0||^3.0.0||^4.0.0
-    peerDependenciesMeta:
-      rollup:
-        optional: true
-
-  '@rollup/plugin-node-resolve@16.0.0':
-    resolution: {integrity: sha512-0FPvAeVUT/zdWoO0jnb/V5BlBsUSNfkIOtFHzMO4H9MOklrmQFY6FduVHKucNb/aTFxvnGhj4MNj/T1oNdDfNg==}
-    engines: {node: '>=14.0.0'}
-    peerDependencies:
-      rollup: ^2.78.0||^3.0.0||^4.0.0
-    peerDependenciesMeta:
-      rollup:
-        optional: true
-
   '@rollup/pluginutils@5.1.3':
     resolution: {integrity: sha512-Pnsb6f32CD2W3uCaLZIzDmeFyQ2b8UWMFI7xtwUezpcGBDVDW6y9XgAWIlARiGAo6eNF5FK5aQTr0LFyNyqq5A==}
     engines: {node: '>=14.0.0'}
@@ -3214,9 +3169,6 @@ packages:
 
   '@types/normalize-package-data@2.4.4':
     resolution: {integrity: sha512-37i+OaWTh9qeK4LSHPsyRC7NahnGotNuZvjLSgcPzblpHB3rrCJxAOgI5gCdKm7coonsaX1Of0ILiTcnZjbfxA==}
-
-  '@types/resolve@1.20.2':
-    resolution: {integrity: sha512-60BCwRFOZCQhDncwQdxxeOEEkbc5dIMccYLwbxsS4TUNeVECQ/pBJ0j09mrHOl/JJvpRPGwO9SvE4nR2Nb/a4Q==}
 
   '@types/retry@0.12.2':
     resolution: {integrity: sha512-XISRgDJ2Tc5q4TRqvgJtzsRkFYNJzZrhTdtMoGVBttwzzQJkPnS3WWTFc7kuDRoPtPakl+T+OfdEUjYJj7Jbow==}
@@ -3642,9 +3594,6 @@ packages:
 
   common-path-prefix@3.0.0:
     resolution: {integrity: sha512-QE33hToZseCH3jS0qN96O/bSh3kaw/h+Tq7ngyY9eWDUnTlTNUyqfqvCXioLe5Na5jFsL78ra/wuBU4iuEgd4w==}
-
-  commondir@1.0.1:
-    resolution: {integrity: sha512-W9pAhw0ja1Edb5GVdIF1mjZw/ASI0AlShXM83UUGe2DVr5TdAPEA1OA8m/g8zWp9x6On7gqufY+FatDbC3MDQg==}
 
   compress-commons@6.0.2:
     resolution: {integrity: sha512-6FqVXeETqWPoGcfzrXb37E50NP0LXT8kAMu5ooZayhWWdgEY4lBEEcbQNXtkuKQsGduxiIcI4gOTsxTmuq/bSg==}
@@ -4378,9 +4327,6 @@ packages:
     engines: {node: '>=14.16'}
     hasBin: true
 
-  is-module@1.0.0:
-    resolution: {integrity: sha512-51ypPSPCoTEIN9dy5Oy+h4pShgJmPCygKfyRCISBI+JoWT/2oJvK8QPxmwv7b/p239jXrm9M1mlQbyKJ5A152g==}
-
   is-network-error@1.1.0:
     resolution: {integrity: sha512-tUdRRAnhT+OtCZR/LxZelH/C7QtjtFrTu5tXCA8pl55eTUElUHT+GPYV8MBMBvea/j+NxQqVt3LbWMRir7Gx9g==}
     engines: {node: '>=16'}
@@ -4400,9 +4346,6 @@ packages:
   is-plain-obj@4.1.0:
     resolution: {integrity: sha512-+Pgi+vMuUNkJyExiMBt5IlFoMyKnr5zhJ4Uspz58WOhBF5QoIZkFyNHIbBAtHwzVAgk5RtndVNsDRN61/mmDqg==}
     engines: {node: '>=12'}
-
-  is-reference@1.2.1:
-    resolution: {integrity: sha512-U82MsXXiFIrjCK4otLT+o2NA2Cd2g5MLoOVXUZjIOhLurrRxpEXzI8O0KZHr3IjLvlAH1kTPYSuqer5T9ZVBKQ==}
 
   is-reference@3.0.3:
     resolution: {integrity: sha512-ixkJoqQvAP88E6wLydLGGqCJsrFUnqoH6HnaczB8XmDH1oaWU+xxdptvikTgaEhtZ53Ky6YXiBuUI2WXLMCwjw==}
@@ -7482,34 +7425,6 @@ snapshots:
 
   '@rolldown/pluginutils@1.0.0-rc.5': {}
 
-  '@rollup/plugin-commonjs@29.0.0(rollup@4.57.1)':
-    dependencies:
-      '@rollup/pluginutils': 5.1.3(rollup@4.57.1)
-      commondir: 1.0.1
-      estree-walker: 2.0.2
-      fdir: 6.5.0(picomatch@4.0.3)
-      is-reference: 1.2.1
-      magic-string: 0.30.21
-      picomatch: 4.0.3
-    optionalDependencies:
-      rollup: 4.57.1
-
-  '@rollup/plugin-json@6.1.0(rollup@4.57.1)':
-    dependencies:
-      '@rollup/pluginutils': 5.1.3(rollup@4.57.1)
-    optionalDependencies:
-      rollup: 4.57.1
-
-  '@rollup/plugin-node-resolve@16.0.0(rollup@4.57.1)':
-    dependencies:
-      '@rollup/pluginutils': 5.1.3(rollup@4.57.1)
-      '@types/resolve': 1.20.2
-      deepmerge: 4.3.1
-      is-module: 1.0.0
-      resolve: 1.22.8
-    optionalDependencies:
-      rollup: 4.57.1
-
   '@rollup/pluginutils@5.1.3(rollup@4.57.1)':
     dependencies:
       '@types/estree': 1.0.8
@@ -7692,8 +7607,6 @@ snapshots:
       undici-types: 7.16.0
 
   '@types/normalize-package-data@2.4.4': {}
-
-  '@types/resolve@1.20.2': {}
 
   '@types/retry@0.12.2': {}
 
@@ -8209,8 +8122,6 @@ snapshots:
   commander@2.20.3: {}
 
   common-path-prefix@3.0.0: {}
-
-  commondir@1.0.1: {}
 
   compress-commons@6.0.2:
     dependencies:
@@ -9048,8 +8959,6 @@ snapshots:
     dependencies:
       is-docker: 3.0.0
 
-  is-module@1.0.0: {}
-
   is-network-error@1.1.0: {}
 
   is-number@7.0.0: {}
@@ -9059,10 +8968,6 @@ snapshots:
   is-plain-obj@2.1.0: {}
 
   is-plain-obj@4.1.0: {}
-
-  is-reference@1.2.1:
-    dependencies:
-      '@types/estree': 1.0.8
 
   is-reference@3.0.3:
     dependencies:
