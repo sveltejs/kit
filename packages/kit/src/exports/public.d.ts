@@ -514,12 +514,13 @@ export interface KitConfig {
 		forkPreloads?: boolean;
 
 		/**
-		 * Whether to enable the experimental server error boundaries feature.
+		 * Whether to enable the experimental handling of rendering errors.
 		 * When enabled, `<svelte:boundary>` is used to wrap components at each level
 		 * where there's an `+error.svelte`, rendering the error page if the component fails.
+		 * In addition, error boundaries also work on the server and the error object goes through `handleError`.
 		 * @default false
 		 */
-		serverErrorBoundaries?: boolean;
+		handleRenderingErrors?: boolean;
 	};
 	/**
 	 * Where to find various files within your project.

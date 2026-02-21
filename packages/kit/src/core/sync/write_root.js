@@ -8,7 +8,7 @@ import { dedent, isSvelte5Plus, write_if_changed } from './utils.js';
 export function write_root(manifest_data, config, output) {
 	// TODO remove default layout altogether
 
-	const use_boundaries = config.kit.experimental.serverErrorBoundaries && isSvelte5Plus();
+	const use_boundaries = config.kit.experimental.handleRenderingErrors && isSvelte5Plus();
 
 	const max_depth = Math.max(
 		...manifest_data.routes.map((route) =>

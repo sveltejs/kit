@@ -9,7 +9,7 @@ const config = {
 	kit: {
 		experimental: {
 			remoteFunctions: true,
-			serverErrorBoundaries: true
+			handleRenderingErrors: true
 		}
 	}
 };
