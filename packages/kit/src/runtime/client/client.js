@@ -238,12 +238,14 @@ const on_navigate_callbacks = new Set();
 /** @type {Set<(navigation: import('@sveltejs/kit').AfterNavigate) => void>} */
 const after_navigate_callbacks = new Set();
 
-/** @type {import('./types.js').NavigationState} */
+/** @type {import('./types.js').NavigationState & { nav: import('@sveltejs/kit').NavigationEvent }} */
 let current = {
 	branch: [],
 	error: null,
 	// @ts-ignore - we need the initial value to be null
-	url: null
+	url: null,
+	// @ts-ignore - we need the initial value to be null
+	nav: null
 };
 
 /** this being true means we SSR'd */
@@ -415,7 +417,7 @@ async function _invalidate(include_load_functions = true, reset_page_state = tru
 			navigation_result.props.page.state = prev_state;
 		}
 		update(navigation_result.props.page);
-		current = navigation_result.state;
+		current = { ...navigation_result.state, nav: current.nav };
 		reset_invalidation();
 		root.$set(navigation_result.props);
 	} else {
@@ -581,7 +583,17 @@ async function _preload_code(url) {
 async function initialize(result, target, hydrate) {
 	if (DEV && result.state.error && document.querySelector('vite-error-overlay')) return;
 
-	current = result.state;
+	/** @type {import('@sveltejs/kit').NavigationEvent} */
+	const nav = {
+		params: current.params,
+		route: { id: current.route?.id ?? null },
+		url: new URL(location.href)
+	};
+
+	current = {
+		...result.state,
+		nav
+	};
 
 	const style = document.querySelector('style[data-sveltekit]');
 	if (style) style.remove();
@@ -593,7 +605,11 @@ async function initialize(result, target, hydrate) {
 		props: { ...result.props, stores, components },
 		hydrate,
 		// @ts-ignore Svelte 5 specific: asynchronously instantiate the component, i.e. don't call flushSync
-		sync: false
+		sync: false,
+		// @ts-ignore Svelte 5 specific: transformError allows to transform errors before they are passed to boundaries
+		transformError: __SVELTEKIT_EXPERIMENTAL_USE_TRANSFORM_ERROR__
+			? /** @param {unknown} error */ (error) => handle_error(error, current.nav)
+			: undefined
 	});
 
 	// Wait for a microtask in case svelte experimental async is enabled,
@@ -607,9 +623,7 @@ async function initialize(result, target, hydrate) {
 		const navigation = {
 			from: null,
 			to: {
-				params: current.params,
-				route: { id: current.route?.id ?? null },
-				url: new URL(location.href),
+				...nav,
 				scroll: scroll_positions[current_history_index] ?? scroll_state()
 			},
 			willUnload: false,
@@ -629,13 +643,23 @@ async function initialize(result, target, hydrate) {
  *   url: URL;
  *   params: Record<string, string>;
  *   branch: Array<import('./types.js').BranchNode | undefined>;
+ *   errors?: Array<import('types').CSRPageNodeLoader | undefined>;
  *   status: number;
  *   error: App.Error | null;
  *   route: import('types').CSRRoute | null;
  *   form?: Record<string, any> | null;
  * }} opts
  */
-function get_navigation_result_from_branch({ url, params, branch, status, error, route, form }) {
+async function get_navigation_result_from_branch({
+	url,
+	params,
+	branch,
+	errors,
+	status,
+	error,
+	route,
+	form
+}) {
 	/** @type {import('types').TrailingSlash} */
 	let slash = 'never';
 
@@ -669,6 +693,32 @@ function get_navigation_result_from_branch({ url, params, branch, status, error,
 			page: clone_page(page)
 		}
 	};
+
+	if (errors && __SVELTEKIT_EXPERIMENTAL_USE_TRANSFORM_ERROR__) {
+		let last_idx = -1;
+		result.props.errors = await Promise.all(
+			// eslint-disable-next-line @typescript-eslint/await-thenable
+			branch
+				.map((b, i) => {
+					if (i === 0) return undefined; // root layout wraps root error component, not the other way around
+					if (!b) return null;
+
+					i--;
+					// Find the closest error component up to the previous branch
+					while (i > last_idx + 1 && !errors[i]) i -= 1;
+					last_idx = i;
+					return errors[i]?.()
+						.then((e) => e.component)
+						.catch(() => undefined);
+				})
+				// filter out indexes where there was no branch, but keep indexes where there was a branch but no error component
+				.filter((e) => e !== null)
+		);
+	}
+
+	if (error && __SVELTEKIT_EXPERIMENTAL_USE_TRANSFORM_ERROR__) {
+		result.props.error = error;
+	}
 
 	if (form !== undefined) {
 		result.props.form = form;
@@ -1201,6 +1251,7 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 						url,
 						params,
 						branch: branch.slice(0, error_load.idx).concat(error_load.node),
+						errors,
 						status,
 						error,
 						route
@@ -1220,6 +1271,7 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 		url,
 		params,
 		branch,
+		errors,
 		status: 200,
 		error: null,
 		route,
@@ -1325,6 +1377,7 @@ async function load_root_error_page({ status, error, url, route }) {
 			branch: [root_layout, root_error],
 			status,
 			error,
+			errors: [],
 			route: null
 		});
 	} catch (error) {
@@ -1732,7 +1785,16 @@ async function navigate({
 			});
 		}
 
-		current = navigation_result.state;
+		// Type-casts are save because we know this resolved a proper SvelteKit route
+		const target = /** @type {import('@sveltejs/kit').NavigationTarget} */ (nav.navigation.to);
+		current = {
+			...navigation_result.state,
+			nav: {
+				params: /** @type {Record<string, any>} */ (target.params),
+				route: target.route,
+				url: target.url
+			}
+		};
 
 		// reset url before updating page store
 		if (navigation_result.props.page) {
@@ -2401,16 +2463,17 @@ export async function set_nearest_error_page(error, status = 500) {
 
 	const error_load = await load_nearest_error_page(current.branch.length, branch, route.errors);
 	if (error_load) {
-		const navigation_result = get_navigation_result_from_branch({
+		const navigation_result = await get_navigation_result_from_branch({
 			url,
 			params: current.params,
 			branch: branch.slice(0, error_load.idx).concat(error_load.node),
 			status,
 			error,
+			// do not set errors, we haven't changed the page so the previous ones are still current
 			route
 		});
 
-		current = navigation_result.state;
+		current = { ...navigation_result.state, nav: current.nav };
 
 		root.$set(navigation_result.props);
 		update(navigation_result.props.page);
@@ -2829,12 +2892,13 @@ async function _hydrate(
 			}
 		}
 
-		result = get_navigation_result_from_branch({
+		result = await get_navigation_result_from_branch({
 			url,
 			params,
 			branch,
 			status,
 			error,
+			errors: parsed_route?.errors, // TODO load earlier?
 			form,
 			route: parsed_route ?? null
 		});

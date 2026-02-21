@@ -331,3 +331,26 @@ test.describe('remote function mutations', () => {
 		}
 	});
 });
+
+test.describe('client error boundaries', () => {
+	test('catches client render error and shows root +error.svelte', async ({ page, app }) => {
+		await page.goto('/');
+		await app.goto('/server-error-boundary');
+		await expect(page.locator('#message')).toContainText(
+			'render error (500 Internal Error, on /server-error-boundary)'
+		);
+	});
+
+	test('catches nested server render error and shows nested +error.svelte', async ({
+		page,
+		app
+	}) => {
+		await page.goto('/');
+		await app.goto('/server-error-boundary/nested');
+		await expect(page.locator('#nested-error-message')).toContainText(
+			'nested render error (500 Internal Error, on /server-error-boundary/nested)'
+		);
+		// The nested layout should still be visible
+		await expect(page.locator('#nested-layout')).toBeVisible();
+	});
+});

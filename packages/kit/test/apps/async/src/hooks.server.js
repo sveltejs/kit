@@ -6,7 +6,7 @@ export const handleValidationError = ({ issues }) => {
 };
 
 /** @type {import('@sveltejs/kit').HandleServerError} */
-export const handleError = ({ error: e, status, message }) => {
+export const handleError = ({ error: e, event, status, message }) => {
 	// helps us catch sveltekit redirects thrown in component code
 	if (isRedirect(e)) {
 		throw new Error("Redirects shouldn't trigger the handleError hook");
@@ -14,7 +14,7 @@ export const handleError = ({ error: e, status, message }) => {
 
 	const error = /** @type {Error} */ (e);
 
-	return { message: `${error.message} (${status} ${message})` };
+	return { message: `${error.message} (${status} ${message}, on ${event.url.pathname})` };
 };
 
 // @ts-ignore this doesn't exist in old Node TODO remove SvelteKit 3 (same in test-basics)

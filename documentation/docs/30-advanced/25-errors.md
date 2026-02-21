@@ -100,6 +100,54 @@ By default, unexpected errors are printed to the console (or, in production, you
 
 Unexpected errors will go through the [`handleError`](hooks#Shared-hooks-handleError) hook, where you can add your own error handling — for example, sending errors to a reporting service, or returning a custom error object which becomes `$page.error`.
 
+## Rendering errors
+
+Ordinarily, if an error happens during server-side rendering (for example inside a component's `<script>` block or template), SvelteKit will return a 500 error page.
+
+Since SvelteKit 2.54 and Svelte 5.53, you can change this by enabling the experimental `serverErrorBoundaries` option in your config:
+
+```js
+/// file: svelte.config.js
+/** @type {import('@sveltejs/kit').Config} */
+const config = {
+	kit: {
+		experimental: {
+			serverErrorBoundaries: true
+		}
+	}
+};
+
+export default config;
+```
+
+When this is enabled, SvelteKit will wrap your route components in an error boundary. If an error occurs during rendering, the nearest [`+error.svelte`](routing#error) page will be shown, just as if the error had occurred in a `load` function.
+
+The error is first passed to [`handleError`](hooks#Shared-hooks-handleError), allowing you to report it and transform it, before the resulting object is passed to the `+error.svelte` component.
+
+> [!NOTE]
+> Since rendering errors occur after the page has started rendering, and multiple boundaries could in parallel catch distinct errors, the [`page`]($app-state#page) object (and its `error` property) will not be updated. Instead, the error is passed directly to the `+error.svelte` component as a prop.
+
+```svelte
+<!--- file: +error.svelte --->
+<script>
+	let { error } = $props();
+</script>
+
+<h1>{error.message}</h1>
+```
+
+The same applies for other error boundaries you define in your code:
+
+```svelte
+<svelte:boundary>
+	...
+	{#snippet failed(error)}
+		<!-- error went through handleError and is of type App.Error -->
+		{error.message}
+	{/snippet}
+</svelte::boundary>
+```
+
 ## Responses
 
 If an error occurs inside `handle` or inside a [`+server.js`](routing#server) request handler, SvelteKit will respond with either a fallback error page or a JSON representation of the error object, depending on the request's `Accept` headers.
@@ -126,6 +174,7 @@ SvelteKit will replace `%sveltekit.status%` and `%sveltekit.error.message%` with
 If the error instead occurs inside a `load` function while rendering a page, SvelteKit will render the [`+error.svelte`](routing#error) component nearest to where the error occurred. If the error occurs inside a `load` function in `+layout(.server).js`, the closest error boundary in the tree is an `+error.svelte` file _above_ that layout (not next to it).
 
 The exception is when the error occurs inside the root `+layout.js` or `+layout.server.js`, since the root layout would ordinarily _contain_ the `+error.svelte` component. In this case, SvelteKit uses the fallback error page.
+
 
 ## Type safety
 

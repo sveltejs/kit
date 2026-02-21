@@ -1,14 +1,17 @@
 <script>
 	import { page } from '$app/state';
+
+	let { error } = $props();
 </script>
 
 <svelte:head>
-	<title>Custom error page: {page.error.message}</title>
+	<title>Custom error page: {error.message}</title>
 </svelte:head>
 
+<!-- TODO what about status in a world of error boundaries? pass as prop, too? -->
 <h1>{page.status}</h1>
 
-<p id="message">This is your custom error page saying: "<b>{page.error.message}</b>"</p>
+<p id="message">This is your custom error page saying: "<b>{error.message}</b>"</p>
 
 <style>
 	h1,

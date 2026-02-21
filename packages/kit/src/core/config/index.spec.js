@@ -81,7 +81,8 @@ const get_defaults = (prefix = '') => ({
 			tracing: { server: false },
 			instrumentation: { server: false },
 			remoteFunctions: false,
-			forkPreloads: false
+			forkPreloads: false,
+			handleRenderingErrors: false
 		},
 		files: {
 			src: join(prefix, 'src'),
