@@ -6,7 +6,6 @@ export const test = form(
 		value: v.pipe(v.string(), v.minLength(3))
 	}),
 	async (data) => {
-		console.log(data);
 		return data;
 	}
 );
