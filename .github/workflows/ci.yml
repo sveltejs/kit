@@ -59,10 +59,10 @@ jobs:
             os: ubuntu-latest
             e2e-browser: 'chromium'
             vite: 'current'
-          - node-version: 24
-            os: ubuntu-latest
-            e2e-browser: 'chromium'
-            vite: 'beta'
+#          - node-version: 24
+#            os: ubuntu-latest
+#            e2e-browser: 'chromium'
+#            vite: 'beta'
     env:
       KIT_E2E_BROWSER: ${{matrix.e2e-browser}}
       MATRIX_VITE: ${{matrix.vite}}

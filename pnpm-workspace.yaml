@@ -50,3 +50,13 @@ catalog:
   vite: ^8.0.0-beta.15
   vitest: ^4.1.0-beta.4
   wrangler: ^4.67.0
+catalogs:
+  vite-baseline:
+    vite: ^8.0.0-beta.15
+    '@sveltejs/vite-plugin-svelte': ^7.0.0-next.0
+  vite-beta:
+    vite: ^8.0.0-beta.15
+    '@sveltejs/vite-plugin-svelte': ^7.0.0-next.0
+overrides:
+# ci script replaces all overrides with the vite-xxx or node-xx catalogs above.
+# if you want to introduce an override, make sure to add it to all of them too
