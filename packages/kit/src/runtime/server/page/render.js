@@ -493,7 +493,30 @@ export async function render_response({
 				if (!info.id) continue;
 
 				for (const key in cache) {
-					remote[create_remote_key(info.id, key)] = await cache[key];
+					const remote_key = create_remote_key(info.id, key);
+
+					if (event_state.refreshes?.[remote_key] !== undefined) {
+						// This entry was refreshed/set by a command or form action.
+						// Always await it so the mutation result is serialized.
+						remote[remote_key] = await cache[key];
+					} else {
+						// Don't block the response on pending remote data - if a query
+						// hasn't settled yet, it wasn't awaited in the template (or is behind a pending boundary).
+						const result = await Promise.race([
+							Promise.resolve(cache[key]).then(
+								(v) => /** @type {const} */ ({ settled: true, value: v }),
+								(e) => /** @type {const} */ ({ settled: true, error: e })
+							),
+							new Promise((resolve) => {
+								queueMicrotask(() => resolve(/** @type {const} */ ({ settled: false })));
+							})
+						]);
+
+						if (result.settled) {
+							if ('error' in result) throw result.error;
+							remote[remote_key] = result.value;
+						}
+					}
 				}
 			}
 

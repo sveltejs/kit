@@ -548,4 +548,19 @@ test.describe('remote functions', () => {
 			})
 		);
 	});
+
+	test('query stored as variable does not block SSR inside boundary', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		await page.goto('/remote/query-boundary');
+
+		await expect(page.locator('#delayed-pending')).toHaveText('loading delayed');
+
+		if (javaScriptEnabled) {
+			await expect(page.locator('#delayed-result')).toHaveText('delayed data', {
+				timeout: 5000
+			});
+		}
+	});
 });
