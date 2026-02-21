@@ -40,7 +40,7 @@
 		"rollup": "^4.14.2",
 		"svelte": "catalog:",
 		"svelte-preprocess": "catalog:",
-		"typescript": "^5.3.3",
+		"typescript": "catalog:",
 		"vite": "catalog:",
 		"vitest": "catalog:"
 	},
