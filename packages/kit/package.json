@@ -40,7 +40,7 @@
 		"rolldown": "^1.0.0-rc.5",
 		"svelte": "catalog:",
 		"svelte-preprocess": "catalog:",
-		"typescript": "^5.3.3",
+		"typescript": "catalog:",
 		"vite": "catalog:",
 		"vitest": "catalog:"
 	},
