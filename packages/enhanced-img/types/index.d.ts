@@ -59,7 +59,7 @@ export type VitePluginOptions = {
 	 * `defaultDirectives` is only used for images that aren't handled by the preprocessor,
 	 * i.e. images that aren't imported with `?enhanced` query param and aren't imported through `<enhanced:img src="..." />`.
 	 */
-	imagetools?: Omit<ImagetoolsOptions, 'namedExports'>;
+	imagetools?: Omit<Partial<ImagetoolsOptions>, 'namedExports'>;
 };
 
 type EnhancedImgAttributes = Omit<HTMLImgAttributes, 'src'> & { src: string | Picture };

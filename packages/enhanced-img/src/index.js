@@ -2,38 +2,49 @@ import process from 'node:process';
 import { imagetools } from 'vite-imagetools';
 import { image_plugin } from './vite-plugin.js';
 
+// copied from vite-imagetools.
+// TODO: expose this in vite-imagetools rather than duplicating it
+export const defaultViteImgtoolsOptions = /** @type {const} */ ({
+	include: /^[^?]+\.(avif|gif|heif|jpeg|jpg|png|tiff|webp)(\?.*)?$/,
+	exclude: 'public/**/*',
+	removeMetadata: true
+});
+
 /**
  * @param {import('types/index.js').VitePluginOptions} [opts]
  * @returns {import('vite').Plugin[]}
  */
 export function enhancedImages(opts) {
-	const imagetools_instance = imagetools_plugin(opts);
+	const defaulted_opts = {
+		defaultFormats: opts?.defaultFormats ?? default_formats,
+		defaultWidths: opts?.defaultWidths ?? default_widths,
+		imagetools: { ...defaultViteImgtoolsOptions, ...opts?.imagetools }
+	};
+
+	const imagetools_instance = imagetools_plugin(defaulted_opts);
 	return !process.versions.webcontainer
-		? [image_plugin(imagetools_instance), imagetools_instance]
+		? [image_plugin(imagetools_instance, defaulted_opts.imagetools), imagetools_instance]
 		: [];
 }
 
 /**
- * @param {import('types/index.js').VitePluginOptions} [opts]
+ * @param {Required<import('types/index.js').VitePluginOptions>} opts
  * @returns {import('vite').Plugin}
  */
 function imagetools_plugin(opts) {
-	const get_formats = opts?.defaultFormats ?? default_formats;
-	const get_widths = opts?.defaultWidths ?? default_widths;
-
 	/** @type {Partial<import('vite-imagetools').VitePluginOptions>} */
 	const imagetools_opts = {
-		...opts?.imagetools,
+		...opts.imagetools,
 
 		defaultDirectives: async (url, metadata) => {
 			const { pathname, searchParams: qs } = url;
 
 			if (!qs.has('enhanced')) {
-				if (typeof opts?.imagetools?.defaultDirectives === 'function') {
+				if (typeof opts.imagetools.defaultDirectives === 'function') {
 					return opts.imagetools.defaultDirectives(url, metadata);
 				}
 
-				if (opts?.imagetools?.defaultDirectives) {
+				if (opts.imagetools.defaultDirectives) {
 					return opts.imagetools.defaultDirectives;
 				}
 
@@ -51,8 +62,8 @@ function imagetools_plugin(opts) {
 
 			return new URLSearchParams({
 				as: 'picture',
-				format: get_formats(meta),
-				...get_widths(width, qs.get('imgSizes'))
+				format: opts.defaultFormats(meta),
+				...opts.defaultWidths(width, qs.get('imgSizes'))
 			});
 		},
 		namedExports: false
