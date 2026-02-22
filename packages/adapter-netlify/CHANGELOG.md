@@ -1,5 +1,11 @@
 # @sveltejs/adapter-netlify
 
+## 6.0.4
+### Patch Changes
+
+
+- fix: generate a catch-all function that handles remote function requests and unknown routes when the app is configured to use split functions ([#15375](https://github.com/sveltejs/kit/pull/15375))
+
 ## 6.0.3
 ### Patch Changes
 
