@@ -282,8 +282,9 @@ const preload_tokens = new Set();
 export let pending_invalidate;
 
 /**
- * @type {Map<string, {count: number, resource: any}>}
+ * @type {Map<string, {count: number, resource: any, forks: Map<import('svelte').Fork | undefined, number>}>}
  * A map of id -> query info with all queries that currently exist in the app.
+ * `forks` is a Map of every fork (or undefined when in the current world) and how often they're used in that context.
  */
 export const query_map = new Map();
 
@@ -540,10 +541,21 @@ async function _preload_data(intent) {
 				// resolve, bail rather than creating an orphan fork
 				if (lc === load_cache && result.type === 'loaded') {
 					try {
-						return svelte.fork(() => {
-							root.$set(result.props);
-							update(result.props.page);
-						});
+						let fork = svelte.fork(() => {});
+						if (!fork.run) {
+							// backwards compatibility for Svelte versions that don't have `fork.run`
+							fork.discard();
+							return svelte.fork(() => {
+								root.$set({ ...result.props, fork });
+								update(result.props.page);
+							});
+						} else {
+							fork.run(() => {
+								root.$set({ ...result.props, fork });
+								update(result.props.page);
+							});
+							return fork;
+						}
 					} catch {
 						// if it errors, it's because the experimental flag isn't enabled in Svelte
 					}
@@ -1861,6 +1873,16 @@ if (import.meta.hot) {
 	import.meta.hot.on('vite:beforeUpdate', () => {
 		if (current.error) location.reload();
 	});
+}
+
+/**
+ * @param {import('svelte').Fork} fork
+ * @param {string} location
+ */
+export async function redirect_fork(fork, location) {
+	if ((await load_cache?.fork) === fork && load_cache) {
+		load_cache.promise = Promise.resolve({ type: 'redirect', location });
+	}
 }
 
 /** @typedef {(typeof PRELOAD_PRIORITIES)['hover'] | (typeof PRELOAD_PRIORITIES)['tap']} PreloadDataPriority */

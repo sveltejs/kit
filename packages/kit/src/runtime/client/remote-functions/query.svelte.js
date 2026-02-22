@@ -23,7 +23,7 @@ export function query(id) {
 		}
 	}
 
-	return create_remote_function(id, (cache_key, payload) => {
+	return create_remote_function(id, (cache_key, payload, forks) => {
 		return new Query(cache_key, async () => {
 			if (Object.hasOwn(remote_responses, cache_key)) {
 				return remote_responses[cache_key];
@@ -31,7 +31,7 @@ export function query(id) {
 
 			const url = `${base}/${app_dir}/remote/${id}${payload ? `?payload=${payload}` : ''}`;
 
-			const result = await remote_request(url);
+			const result = await remote_request(url, forks);
 			return devalue.parse(result, app.decoders);
 		});
 	});
