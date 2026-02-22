@@ -963,6 +963,14 @@ async function kit({ svelte_config }) {
 								hoistTransitiveImports: false
 							}
 						}
+					},
+					experimental: {
+						renderBuiltUrl:
+							process.env.VERCEL_SKEW_PROTECTION_ENABLED === '1'
+								? (filename) => {
+										return `${kit.paths.base}/${filename}?dpl=${process.env.VERCEL_DEPLOYMENT_ID}`;
+									}
+								: undefined
 					}
 				};
 			} else {
