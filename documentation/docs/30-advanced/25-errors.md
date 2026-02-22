@@ -104,7 +104,7 @@ Unexpected errors will go through the [`handleError`](hooks#Shared-hooks-handleE
 
 Ordinarily, if an error happens during server-side rendering (for example inside a component's `<script>` block or template), SvelteKit will return a 500 error page.
 
-Since SvelteKit 2.54 and Svelte 5.53, you can change this by enabling the experimental `serverErrorBoundaries` option in your config:
+Since SvelteKit 2.54 and Svelte 5.53, you can change this by enabling the experimental `handleRenderingErrors` option in your config:
 
 ```js
 /// file: svelte.config.js
@@ -112,7 +112,7 @@ Since SvelteKit 2.54 and Svelte 5.53, you can change this by enabling the experi
 const config = {
 	kit: {
 		experimental: {
-			serverErrorBoundaries: true
+			handleRenderingErrors: true
 		}
 	}
 };
