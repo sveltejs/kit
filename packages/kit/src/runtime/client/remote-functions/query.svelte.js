@@ -1,7 +1,7 @@
 /** @import { RemoteQueryFunction } from '@sveltejs/kit' */
 /** @import { RemoteFunctionResponse } from 'types' */
 import { app_dir, base } from '$app/paths/internal/client';
-import { app, goto, query_map, remote_responses } from '../client.js';
+import { app, get_query_array, goto, remote_responses } from '../client.js';
 import { tick } from 'svelte';
 import { create_remote_function, remote_request } from './shared.svelte.js';
 import * as devalue from 'devalue';
@@ -15,10 +15,10 @@ import { DEV } from 'esm-env';
 export function query(id) {
 	if (DEV) {
 		// If this reruns as part of HMR, refresh the query
-		for (const [key, entry] of query_map) {
+		for (const [key, resource] of get_query_array()) {
 			if (key === id || key.startsWith(id + '/')) {
 				// use optional chaining in case a prerender function was turned into a query
-				entry.resource.refresh?.();
+				resource?.refresh?.();
 			}
 		}
 	}
@@ -180,6 +180,8 @@ export class Query {
 			return result;
 		};
 	});
+
+	[Symbol.toStringTag] = 'RemoteQuery';
 
 	/**
 	 * @param {string} key
