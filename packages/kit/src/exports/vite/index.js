@@ -415,8 +415,7 @@ async function kit({ svelte_config }) {
 				// These Kit dependencies are packaged as CommonJS, which means they must always be externalized.
 				// Without this, the tests will still pass but `pnpm dev` will fail in projects that link `@sveltejs/kit`.
 				/** @type {NonNullable<import('vite').UserConfig['ssr']>} */ (new_config.ssr).external = [
-					'cookie',
-					'set-cookie-parser'
+					'cookie'
 				];
 			}
 
