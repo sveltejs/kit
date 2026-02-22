@@ -57,8 +57,9 @@ export function read(asset) {
 	const file = decodeURIComponent(
 		DEV && asset.startsWith('/@fs') ? asset : asset.slice(base.length + 1)
 	);
+	const fileAsRoute = file.replace(/^\/?/, '/');
 
-	if (file in manifest._.server_assets) {
+	if (file in manifest._.server_assets || manifest._.prerendered_routes.has(fileAsRoute)) {
 		const length = manifest._.server_assets[file];
 		const type = manifest.mimeTypes[file.slice(file.lastIndexOf('.'))];
 
