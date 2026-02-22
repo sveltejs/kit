@@ -578,7 +578,7 @@ function prevent_conflicts(routes) {
 			// remove leading/trailing/duplicated slashes caused by prior
 			// manipulation of optional parameters and (groups)
 			const key = permutation
-				.replace(/\/{2,}/, '/')
+				.replace(/\/{2,}/g, '/')
 				.replace(/^\//, '')
 				.replace(/\/$/, '');
 

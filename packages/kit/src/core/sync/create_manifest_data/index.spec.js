@@ -796,6 +796,13 @@ test('prevents route conflicts between groups', () => {
 	);
 });
 
+test('prevents route conflicts between nested groups with optional params', () => {
+	assert.throws(
+		() => create('samples/conflicting-nested-groups'),
+		/routes conflict with each other/
+	);
+});
+
 test('errors with multiple layouts on same directory', () => {
 	assert.throws(
 		() => create('samples/multiple-layouts'),
