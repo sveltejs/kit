@@ -3063,13 +3063,17 @@ declare module '$app/navigation' {
 	 *
 	 * @param href Page to preload
 	 * */
-	export function preloadData(href: string): Promise<{
+	export function preloadData(href: string): Promise<({
 		type: "loaded";
-		status: number;
 		data: Record<string, any>;
 	} | {
 		type: "redirect";
 		location: string;
+	} | {
+		type: "error";
+		error: App.Error;
+	}) & {
+		status: number;
 	}>;
 	/**
 	 * Programmatically imports the code for routes that haven't yet been fetched.

@@ -182,6 +182,7 @@ export function redirect_json_response(redirect) {
 	return json_response(
 		/** @type {import('types').ServerRedirectNode} */ ({
 			type: 'redirect',
+			status: redirect.status,
 			location: redirect.location
 		})
 	);

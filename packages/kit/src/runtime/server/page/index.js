@@ -258,6 +258,7 @@ export async function render_page(
 						if (state.prerendering && should_prerender_data) {
 							const body = JSON.stringify({
 								type: 'redirect',
+								status: err.status,
 								location: err.location
 							});
 
