@@ -6,16 +6,6 @@ Service workers act as proxy servers that handle network requests inside your ap
 
 In SvelteKit, if you have a `src/service-worker.js` file (or `src/service-worker/index.js`) it will be bundled and automatically registered.
 
-You can [disable automatic registration](configuration#serviceWorker) if you need to register the service worker with your own logic or use another solution. The default registration looks something like this:
-
-```js
-if ('serviceWorker' in navigator) {
-	addEventListener('load', function () {
-		navigator.serviceWorker.register('./path/to/service-worker.js');
-	});
-}
-```
-
 ## Inside the service worker
 
 Inside the service worker you have access to the [`$service-worker` module]($service-worker), which provides you with the paths to all static assets, build files and prerendered pages. You're also provided with an app version string, which you can use for creating a unique cache name, and the deployment's `base` path. If your Vite config specifies `define` (used for global variable replacements), this will be applied to service workers as well as your server/client builds.
@@ -122,9 +112,11 @@ self.addEventListener('fetch', (event) => {
 
 > [!NOTE] Be careful when caching! In some cases, stale data might be worse than data that's unavailable while offline. Since browsers will empty caches if they get too full, you should also be careful about caching large assets like video files.
 
-## During development
+> [!NOTE] `build` and `prerendered` are empty arrays during development
 
-The service worker is bundled for production, but not during development. For that reason, only browsers that support [modules in service workers](https://web.dev/es-modules-in-sw) will be able to use them at dev time. If you are manually registering your service worker, you will need to pass the `{ type: 'module' }` option in development:
+## Manual registration
+
+You can [disable automatic registration](configuration#serviceWorker) if you need to register the service worker with your own logic. The default registration looks something like this:
 
 ```js
 import { dev } from '$app/environment';
@@ -134,7 +126,7 @@ navigator.serviceWorker.register('/service-worker.js', {
 });
 ```
 
-> [!NOTE] `build` and `prerendered` are empty arrays during development
+> [!NOTE] The service worker is bundled for production, but not during development so you will need to pass the `{ type: 'module' }` option in development.
 
 ## Other solutions
 
