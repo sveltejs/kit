@@ -26,7 +26,6 @@
 		"esm-env": "^1.2.2",
 		"magic-string": "^0.30.5",
 		"mrmime": "^2.0.0",
-		"set-cookie-parser": "^3.0.0",
 		"sirv": "^3.0.0"
 	},
 	"devDependencies": {
@@ -35,7 +34,6 @@
 		"@sveltejs/vite-plugin-svelte": "catalog:",
 		"@types/connect": "catalog:",
 		"@types/node": "catalog:",
-		"@types/set-cookie-parser": "catalog:",
 		"dts-buddy": "catalog:",
 		"rolldown": "^1.0.0-rc.5",
 		"svelte": "catalog:",

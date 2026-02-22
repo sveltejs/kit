@@ -54,9 +54,6 @@ catalogs:
     '@types/semver':
       specifier: ^7.5.6
       version: 7.5.8
-    '@types/set-cookie-parser':
-      specifier: ^2.4.7
-      version: 2.4.7
     '@vitest/browser-playwright':
       specifier: ^4.0.0
       version: 4.0.16
@@ -523,9 +520,6 @@ importers:
       mrmime:
         specifier: ^2.0.0
         version: 2.0.0
-      set-cookie-parser:
-        specifier: ^3.0.0
-        version: 3.0.1
       sirv:
         specifier: ^3.0.0
         version: 3.0.2
@@ -545,9 +539,6 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 24.10.13
-      '@types/set-cookie-parser':
-        specifier: 'catalog:'
-        version: 2.4.7
       dts-buddy:
         specifier: 'catalog:'
         version: 0.6.2(typescript@5.8.3)
@@ -3176,9 +3167,6 @@ packages:
   '@types/semver@7.5.8':
     resolution: {integrity: sha512-I8EUhyrgfLrcTkzV3TSsGyl1tSuPrEDzr0yd5m90UgNxQkyDXULk3b6MlQqTCpZpNtWe1K0hzclnZkTcLBe2UQ==}
 
-  '@types/set-cookie-parser@2.4.7':
-    resolution: {integrity: sha512-+ge/loa0oTozxip6zmhRIk8Z/boU51wl9Q6QdLZcokIGMzY5lFXYy/x7Htj2HTC6/KZP1hUbZ1ekx8DYXICvWg==}
-
   '@types/triple-beam@1.3.5':
     resolution: {integrity: sha512-6WaYesThRMCl19iryMYP7/x2OVgCtbIVflDGFpWnb9irXI3UjYE4AzmYuiUKY1AJstGijoY+MgUszMgRxIYTYw==}
 
@@ -5231,9 +5219,6 @@ packages:
 
   server-side-dep@file:packages/adapter-cloudflare/test/apps/workers/server-side-dep:
     resolution: {directory: packages/adapter-cloudflare/test/apps/workers/server-side-dep, type: directory}
-
-  set-cookie-parser@3.0.1:
-    resolution: {integrity: sha512-n7Z7dXZhJbwuAHhNzkTti6Aw9QDDjZtm3JTpTGATIdNzdQz5GuFs22w90BcvF4INfnrL5xrX3oGsuqO5Dx3A1Q==}
 
   sharp@0.34.5:
     resolution: {integrity: sha512-Ou9I5Ft9WNcCbXrU9cMgPBcCK8LiwLqcbywW3t4oDV37n1pzpuNLsYiAV8eODnjbtQlSDwZ2cUEeQz4E54Hltg==}
@@ -7612,10 +7597,6 @@ snapshots:
 
   '@types/semver@7.5.8': {}
 
-  '@types/set-cookie-parser@2.4.7':
-    dependencies:
-      '@types/node': 24.10.13
-
   '@types/triple-beam@1.3.5': {}
 
   '@types/trusted-types@2.0.7': {}
@@ -9836,8 +9817,6 @@ snapshots:
   server-side-dep@file:packages/adapter-cloudflare/test/apps/pages/server-side-dep: {}
 
   server-side-dep@file:packages/adapter-cloudflare/test/apps/workers/server-side-dep: {}
-
-  set-cookie-parser@3.0.1: {}
 
   sharp@0.34.5:
     dependencies:
