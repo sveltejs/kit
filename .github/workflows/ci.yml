@@ -1,25 +1,23 @@
 name: CI
 
-x-paths-ignore: &paths_ignore
-  - '.changeset/**'
-  - '.githooks/**'
-  - '.github/ISSUE_TEMPLATE/**'
-  - '.github/copilot-instructions.md'
-  - '.github/FUNDING.yml'
-  - '.github/PULL_REQUEST_TEMPLATE.md'
-  - 'documentation/**'
-  - 'AGENTS.md'
-  - 'CLAUDE.md'
-  - 'CONTRIBUTING.md'
-  - 'FUNDING.json'
-  - 'LICENSE'
-  - 'README.md'
-
 on:
   push:
     branches:
       - main
-    paths-ignore: *paths_ignore
+    paths-ignore: &paths_ignore
+      - '.changeset/**'
+      - '.githooks/**'
+      - '.github/ISSUE_TEMPLATE/**'
+      - '.github/copilot-instructions.md'
+      - '.github/FUNDING.yml'
+      - '.github/PULL_REQUEST_TEMPLATE.md'
+      - 'documentation/**'
+      - 'AGENTS.md'
+      - 'CLAUDE.md'
+      - 'CONTRIBUTING.md'
+      - 'FUNDING.json'
+      - 'LICENSE'
+      - 'README.md'
   pull_request:
     paths-ignore: *paths_ignore
 
