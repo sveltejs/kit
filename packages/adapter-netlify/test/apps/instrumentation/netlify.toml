@@ -5,4 +5,4 @@ publish = "build"
 # @netlify/dev does not yet have explicit support for a "serve" mode, but this funky workaround is
 # sufficient for our purposes for now. NOTE: do not do this in real apps; this is only for testing.
 [functions]
-directory = ".netlify/v1/functions"
+directory = "./.netlify/v1/functions"

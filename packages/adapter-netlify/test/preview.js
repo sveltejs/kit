@@ -6,19 +6,20 @@ import process from 'node:process';
 import { getRequest, setResponse } from '@sveltejs/kit/node';
 
 const netlifyDev = new NetlifyDev({});
-
-const serverReady = netlifyDev.start();
+await netlifyDev.start();
 
 const port = process.env.PORT ? +process.env.PORT : 8888;
 const base = `http://localhost:${port}`;
 
 http
 	.createServer(async (req, res) => {
-		await serverReady;
 		const request = await getRequest({ request: req, base });
-		const response =
-			(await netlifyDev.handle(request)) ?? new Response('Not Found', { status: 404 });
-		await setResponse(res, response);
+		const response = await netlifyDev.handle(request);
+		if (response) {
+			await setResponse(res, response);
+			return;
+		}
+		await setResponse(res, new Response('Not Found', { status: 404 }));
 	})
 	.listen(port);
 console.log(`Netlify Dev listening on http://localhost:${port}`);

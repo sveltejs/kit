@@ -1,13 +1,11 @@
 [build]
 publish = "build"
 
-# TODO: remove this once @netlify/dev works with the Netlify frameworks API
-# we are purposely misusing the edge functions config to discover our framework
-# build output because the Netlify dev plugin doesn't currently detect it
+# TODO(serhalp): remove this when @netlify/dev supports serve/preview.
+# @netlify/dev does not yet have explicit support for a "serve" mode, but this funky workaround is
+# sufficient for our purposes for now. NOTE: do not do this in real apps; this is only for testing.
 edge_functions = ".netlify/v1/edge-functions"
 
-# Netlify dev plugin doesn't detect .netlify/v1/config.json
 [[edge_functions]]
 function = "sveltekit-render"
 path = "/*"
-excludedPath = ["/_app/immutable/*", "/_app/version.json", "/.netlify/*"]
