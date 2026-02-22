@@ -19,7 +19,7 @@ for (const directories of [
 		process.chdir(cwd);
 
 		// we defer this import so that we don't try and resolve `svelte` from
-		// the root via `isSvelte5Plus`, which would blow up
+		// the root, which would blow up
 		const sync = await import('../packages/kit/src/core/sync/sync.js');
 		await sync.all(await load_config({ cwd }), 'development');
 	}

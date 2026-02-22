@@ -6,7 +6,6 @@ import { styleText } from 'node:util';
 import { posixify, resolve_entry } from '../../../utils/filesystem.js';
 import { parse_route_id } from '../../../utils/routing.js';
 import { list_files, runtime_directory } from '../../utils.js';
-import { isSvelte5Plus } from '../utils.js';
 import { sort_routes } from './sort.js';
 import {
 	create_node_analyser,
@@ -24,7 +23,7 @@ import {
  */
 export default function create_manifest_data({
 	config,
-	fallback = `${runtime_directory}/components/${isSvelte5Plus() ? 'svelte-5' : 'svelte-4'}`,
+	fallback = `${runtime_directory}/components`,
 	cwd = process.cwd()
 }) {
 	const assets = create_assets(config);
