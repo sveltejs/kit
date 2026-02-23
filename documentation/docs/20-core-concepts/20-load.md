@@ -296,7 +296,7 @@ export async function load({ fetch, params }) {
 
 ## Cookies
 
-A server `load` function can get and set [`cookies`](@sveltejs-kit#Cookies).
+A server `load` function can get [`cookies`](@sveltejs-kit#Cookies) as shown below. When setting cookies, SvelteKit provides default values for `httpOnly`, `secure`, and `path` — as described in [the API documentation](@sveltejs-kit#Cookies) — in order to improve security and developer experience.
 
 ```js
 /// file: src/routes/+layout.server.js
@@ -328,8 +328,6 @@ For example, if SvelteKit is serving my.domain.com:
 - sub.my.domain.com WILL receive cookies
 
 Other cookies will not be passed when `credentials: 'include'` is set, because SvelteKit does not know which domain which cookie belongs to (the browser does not pass this information along), so it's not safe to forward any of them. Use the [handleFetch hook](hooks#Server-hooks-handleFetch) to work around it.
-
-SvelteKit will default the cookie path to `/`.
 
 ## Headers
 
