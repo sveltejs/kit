@@ -238,13 +238,13 @@ declare module '@sveltejs/kit' {
 		/**
 		 * Gets a cookie that was previously set with `cookies.set`, or from the request headers.
 		 * @param name the name of the cookie
-		 * @param opts the options, passed directly to `cookie.parse`. See documentation [here](https://github.com/jshttp/cookie#cookieparsestr-options)
+		 * @param opts the options — with path defaulted to '/' — passed to `cookie.parse`. See documentation [here](https://github.com/jshttp/cookie#cookieparsestr-options)
 		 */
 		get: (name: string, opts?: import('cookie').ParseOptions) => string | undefined;
 
 		/**
 		 * Gets all cookies that were previously set with `cookies.set`, or from the request headers.
-		 * @param opts the options, passed directly to `cookie.parse`. See documentation [here](https://github.com/jshttp/cookie#cookieparsestr-options)
+		 * @param opts the options — with path defaulted to '/' — passed to `cookie.parse`. See documentation [here](https://github.com/jshttp/cookie#cookieparsestr-options)
 		 */
 		getAll: (opts?: import('cookie').ParseOptions) => Array<{ name: string; value: string }>;
 
@@ -256,22 +256,18 @@ declare module '@sveltejs/kit' {
 		 * You must specify a `path` for the cookie. In most cases you should explicitly set `path: '/'` to make the cookie available throughout your app. You can use relative paths, or set `path: ''` to make the cookie only available on the current path and its children
 		 * @param name the name of the cookie
 		 * @param value the cookie value
-		 * @param opts the options, passed directly to `cookie.serialize`. See documentation [here](https://github.com/jshttp/cookie#cookieserializename-value-options)
+		 * @param opts the options — with path defaulted to '/' — passed to `cookie.serialize`. See documentation [here](https://github.com/jshttp/cookie#cookieserializename-value-options)
 		 */
-		set: (
-			name: string,
-			value: string,
-			opts: import('cookie').SerializeOptions & { path: string }
-		) => void;
+		set: (name: string, value: string, opts: import('cookie').SerializeOptions) => void;
 
 		/**
 		 * Deletes a cookie by setting its value to an empty string and setting the expiry date in the past.
 		 *
 		 * You must specify a `path` for the cookie. In most cases you should explicitly set `path: '/'` to make the cookie available throughout your app. You can use relative paths, or set `path: ''` to make the cookie only available on the current path and its children
 		 * @param name the name of the cookie
-		 * @param opts the options, passed directly to `cookie.serialize`. The `path` must match the path of the cookie you want to delete. See documentation [here](https://github.com/jshttp/cookie#cookieserializename-value-options)
+		 * @param opts the options — with path defaulted to '/' — passed to `cookie.serialize`. The `path` must match the path of the cookie you want to delete. See documentation [here](https://github.com/jshttp/cookie#cookieserializename-value-options)
 		 */
-		delete: (name: string, opts: import('cookie').SerializeOptions & { path: string }) => void;
+		delete: (name: string, opts: import('cookie').SerializeOptions) => void;
 
 		/**
 		 * Serialize a cookie name-value pair into a `Set-Cookie` header string, but don't apply it to the response.
@@ -282,13 +278,9 @@ declare module '@sveltejs/kit' {
 		 *
 		 * @param name the name of the cookie
 		 * @param value the cookie value
-		 * @param opts the options, passed directly to `cookie.serialize`. See documentation [here](https://github.com/jshttp/cookie#cookieserializename-value-options)
+		 * @param opts the options — with path defaulted to '/' — passed to `cookie.serialize`. See documentation [here](https://github.com/jshttp/cookie#cookieserializename-value-options)
 		 */
-		serialize: (
-			name: string,
-			value: string,
-			opts: import('cookie').SerializeOptions & { path: string }
-		) => string;
+		serialize: (name: string, value: string, opts: import('cookie').SerializeOptions) => string;
 	}
 
 	/**

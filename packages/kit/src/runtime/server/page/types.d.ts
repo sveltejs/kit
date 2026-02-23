@@ -39,7 +39,7 @@ export interface CspOpts {
 export interface Cookie {
 	name: string;
 	value: string;
-	options: SerializeOptions & { path: string };
+	options: SerializeOptions;
 }
 
 export type ServerDataSerializer = {
