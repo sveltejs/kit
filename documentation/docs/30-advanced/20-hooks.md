@@ -215,10 +215,7 @@ declare module '@sentry/sveltekit' {
 // ---cut---
 import * as Sentry from '@sentry/sveltekit';
 
-/** @type {import('@sveltejs/kit').ServerInit} */
-export function init() {
-	Sentry.init({/*...*/});
-}
+Sentry.init({/*...*/})
 
 /** @type {import('@sveltejs/kit').HandleServerError} */
 export async function handleError({ error, event, status, message }) {
@@ -249,10 +246,7 @@ declare module '@sentry/sveltekit' {
 // ---cut---
 import * as Sentry from '@sentry/sveltekit';
 
-/** @type {import('@sveltejs/kit').ClientInit} */
-export function init() {
-	Sentry.init({/*...*/});
-}
+Sentry.init({/*...*/})
 
 /** @type {import('@sveltejs/kit').HandleClientError} */
 export async function handleError({ error, event, status, message }) {
