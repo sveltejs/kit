@@ -1,5 +1,11 @@
 # @sveltejs/adapter-vercel
 
+## 6.3.3
+### Patch Changes
+
+
+- fix: ensure build does not copy Vercel build environment system files ([#15400](https://github.com/sveltejs/kit/pull/15400))
+
 ## 6.3.2
 ### Patch Changes
 
