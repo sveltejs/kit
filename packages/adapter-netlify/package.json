@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-netlify",
-	"version": "6.0.3",
+	"version": "6.0.4",
 	"description": "A SvelteKit adapter that creates a Netlify app",
 	"keywords": [
 		"adapter",
