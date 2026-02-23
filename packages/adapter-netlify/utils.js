@@ -68,3 +68,11 @@ export function get_publish_directory(netlify_config, builder) {
 		'No netlify.toml found. Using default publish directory. Consult https://svelte.dev/docs/kit/adapter-netlify#usage for more details'
 	);
 }
+
+/**
+ * @param {*} value
+ * @returns {string}
+ */
+export function s(value) {
+	return JSON.stringify(value, null, '\t');
+}
