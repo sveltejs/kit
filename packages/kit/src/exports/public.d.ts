@@ -281,7 +281,7 @@ export interface Cookies {
 	 * You must specify a `path` for the cookie. In most cases you should explicitly set `path: '/'` to make the cookie available throughout your app. You can use relative paths, or set `path: ''` to make the cookie only available on the current path and its children
 	 * @param name the name of the cookie
 	 * @param value the cookie value
-	 * @param opts the options passed to `cookie.parse`. SvelteKit sets defaults of `path: '/'` and `httpOnly: true`, and additionally sets `secure` except when accessing localhost over HTTP. See documentation [here](https://github.com/jshttp/cookie#cookieparsestr-options)
+	 * @param opts the options passed to `cookie.serialize`. SvelteKit sets defaults of `path: '/'` and `httpOnly: true`, and additionally sets `secure` except when accessing localhost over HTTP. See documentation [here](https://github.com/jshttp/cookie#cookieserializename-value-options)
 	 */
 	set: (name: string, value: string, opts: import('cookie').SerializeOptions) => void;
 
@@ -290,7 +290,7 @@ export interface Cookies {
 	 *
 	 * You must specify a `path` for the cookie. In most cases you should explicitly set `path: '/'` to make the cookie available throughout your app. You can use relative paths, or set `path: ''` to make the cookie only available on the current path and its children
 	 * @param name the name of the cookie
-	 * @param opts the options passed to `cookie.parse`. SvelteKit sets defaults of `path: '/'` and `httpOnly: true`, and additionally sets `secure` except when accessing localhost over HTTP. See documentation [here](https://github.com/jshttp/cookie#cookieparsestr-options)
+	 * @param opts the options passed to `cookie.serialize`. SvelteKit sets defaults of `path: '/'` and `httpOnly: true`, and additionally sets `secure` except when accessing localhost over HTTP. See documentation [here](https://github.com/jshttp/cookie#cookieserializename-value-options)
 	 */
 	delete: (name: string, opts: import('cookie').SerializeOptions) => void;
 
@@ -303,7 +303,7 @@ export interface Cookies {
 	 *
 	 * @param name the name of the cookie
 	 * @param value the cookie value
-	 * @param opts the options passed to `cookie.parse`. SvelteKit sets defaults of `path: '/'` and `httpOnly: true`, and additionally sets `secure` except when accessing localhost over HTTP. See documentation [here](https://github.com/jshttp/cookie#cookieparsestr-options)
+	 * @param opts the options passed to `cookie.serialize`. SvelteKit sets defaults of `path: '/'` and `httpOnly: true`, and additionally sets `secure` except when accessing localhost over HTTP. See documentation [here](https://github.com/jshttp/cookie#cookieserializename-value-options)
 	 */
 	serialize: (name: string, value: string, opts: import('cookie').SerializeOptions) => string;
 }
