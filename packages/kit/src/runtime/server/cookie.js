@@ -177,7 +177,7 @@ export function get_cookies(request, url) {
 		/**
 		 * @param {string} name
 		 * @param {string} value
-		 *  @param {import('./page/types.js').Cookie['options']} options
+		 * @param {import('./page/types.js').Cookie['options']} options
 		 */
 		serialize(name, value, options) {
 			validate_options(options);
