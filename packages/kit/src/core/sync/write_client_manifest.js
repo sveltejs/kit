@@ -2,7 +2,7 @@ import path from 'node:path';
 import { styleText } from 'node:util';
 import { relative_path, resolve_entry } from '../../utils/filesystem.js';
 import { s } from '../../utils/misc.js';
-import { dedent, isSvelte5Plus, write_if_changed } from './utils.js';
+import { dedent, write_if_changed } from './utils.js';
 
 /**
  * Writes the client manifest to disk. The manifest is used to power the router. It contains the
@@ -176,7 +176,7 @@ export function write_client_manifest(kit, manifest_data, output, metadata) {
 
 			export const decode = (type, value) => decoders[type](value);
 
-			export { default as root } from '../root.${isSvelte5Plus() ? 'js' : 'svelte'}';
+			export { default as root } from '../root.js';
 		`
 	);
 
