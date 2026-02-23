@@ -65,7 +65,8 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 			builder.rimraf(publish);
 			builder.rimraf('.netlify/v1');
 
-			// clean up legacy directories from older adapter versions
+			// clean up legacy directories from older adapter versions to avoid
+			// gnarly edge cases when an existing project is upgraded to this version
 			builder.rimraf('.netlify/edge-functions');
 			builder.rimraf('.netlify/server');
 			builder.rimraf('.netlify/package.json');
@@ -100,7 +101,7 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 
 				await generate_edge_functions({ builder });
 			} else {
-				generate_lambda_functions({ builder, split, publish });
+				generate_serverless_functions({ builder, split, publish });
 			}
 		},
 
@@ -117,7 +118,7 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
  * @param { string } params.publish
  * @param { boolean } params.split
  */
-function generate_lambda_functions({ builder, publish, split }) {
+function generate_serverless_functions({ builder, publish, split }) {
 	// https://docs.netlify.com/build/frameworks/frameworks-api/#netlifyv1functions
 	builder.mkdirp(netlify_framework_serverless_path);
 
