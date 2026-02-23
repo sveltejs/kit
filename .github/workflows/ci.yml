@@ -4,7 +4,22 @@ on:
   push:
     branches:
       - version-3
+    paths-ignore: &paths_ignore
+      - '.changeset/**'
+      - '.githooks/**'
+      - '.github/ISSUE_TEMPLATE/**'
+      - '.github/copilot-instructions.md'
+      - '.github/FUNDING.yml'
+      - '.github/PULL_REQUEST_TEMPLATE.md'
+      - 'documentation/**'
+      - 'AGENTS.md'
+      - 'CLAUDE.md'
+      - 'CONTRIBUTING.md'
+      - 'FUNDING.json'
+      - 'LICENSE'
+      - 'README.md'
   pull_request:
+    paths-ignore: *paths_ignore
 
 env:
   # we call `pnpm playwright install` instead
@@ -77,7 +92,8 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - name: setup overrides for matrix.vite
         if: matrix.vite != 'current'
-        run: | # copies catalogs.vite-xxx to overrides in pnpm-workspace.yaml so the subsequent `pnpm install` enforces them
+        run:
+          | # copies catalogs.vite-xxx to overrides in pnpm-workspace.yaml so the subsequent `pnpm install` enforces them
           yq -i '.overrides =.catalogs."vite-${{matrix.vite}}"' pnpm-workspace.yaml
           pnpm install --no-frozen-lockfile
           git checkout pnpm-lock.yaml pnpm-workspace.yaml # revert changes to pnpm files to avoid cache key changes
@@ -245,7 +261,8 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - name: setup overrides for matrix.node
         if: matrix.node-version == 18
-        run: | # copies catalogs.node-xx to overrides in pnpm-workspace.yaml so the subsequent `pnpm install` enforces them
+        run:
+          | # copies catalogs.node-xx to overrides in pnpm-workspace.yaml so the subsequent `pnpm install` enforces them
           yq -i '.overrides =.catalogs."node-18"' pnpm-workspace.yaml
           pnpm install --no-frozen-lockfile
           git checkout pnpm-lock.yaml pnpm-workspace.yaml # revert changes to pnpm files to avoid cache key changes
