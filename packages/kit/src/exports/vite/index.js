@@ -189,9 +189,6 @@ async function kit({ svelte_config }) {
 	/** @type {import('vite')} */
 	const vite = await import_peer('vite');
 
-	// @ts-ignore `vite.rolldownVersion` only exists in `vite 8`
-	const is_rolldown = !!vite.rolldownVersion;
-
 	const { kit } = svelte_config;
 	const out = `${kit.outDir}/output`;
 
@@ -303,7 +300,27 @@ async function kit({ svelte_config }) {
 						// this does not affect app code, just handling of imported libraries that use $app or $env
 						'$app',
 						'$env'
-					]
+					],
+					rolldownOptions: kit.experimental.remoteFunctions
+						? {
+								plugins: [
+									{
+										name: 'vite-plugin-sveltekit-setup:optimize-remote-functions',
+										load: {
+											filter: {
+												// treat .remote.js files as empty for the purposes of prebundling
+												id: new RegExp(
+													`.remote(${kit.moduleExtensions.join('|')})$`.replaceAll('.', '\\.')
+												)
+											},
+											handler() {
+												return '';
+											}
+										}
+									}
+								]
+							}
+						: undefined
 				},
 				ssr: {
 					noExternal: [
@@ -321,40 +338,6 @@ async function kit({ svelte_config }) {
 					]
 				}
 			};
-
-			if (kit.experimental.remoteFunctions) {
-				// treat .remote.js files as empty for the purposes of prebundling
-				// detects rolldown to avoid a warning message in vite 8 beta
-				const remote_id_filter = new RegExp(
-					`.remote(${kit.moduleExtensions.join('|')})$`.replaceAll('.', '\\.')
-				);
-				new_config.optimizeDeps ??= {}; // for some reason ts says this could be undefined even though it was set above
-				if (is_rolldown) {
-					// @ts-ignore
-					new_config.optimizeDeps.rolldownOptions ??= {};
-					// @ts-ignore
-					new_config.optimizeDeps.rolldownOptions.plugins ??= [];
-					// @ts-ignore
-					new_config.optimizeDeps.rolldownOptions.plugins.push({
-						name: 'vite-plugin-sveltekit-setup:optimize-remote-functions',
-						load: {
-							filter: { id: remote_id_filter },
-							handler() {
-								return '';
-							}
-						}
-					});
-				} else {
-					new_config.optimizeDeps.esbuildOptions ??= {};
-					new_config.optimizeDeps.esbuildOptions.plugins ??= [];
-					new_config.optimizeDeps.esbuildOptions.plugins.push({
-						name: 'vite-plugin-sveltekit-setup:optimize-remote-functions',
-						setup(build) {
-							build.onLoad({ filter: remote_id_filter }, () => ({ contents: '' }));
-						}
-					});
-				}
-			}
 
 			const define = {
 				__SVELTEKIT_APP_DIR__: s(kit.appDir),
@@ -933,9 +916,7 @@ async function kit({ svelte_config }) {
 							preserveEntrySignatures: 'strict',
 							onwarn(warning, handler) {
 								if (
-									(is_rolldown
-										? warning.code === 'IMPORT_IS_UNDEFINED'
-										: warning.code === 'MISSING_EXPORT') &&
+									warning.code === 'IMPORT_IS_UNDEFINED' &&
 									warning.id === `${kit.outDir}/generated/client-optimized/app.js`
 								) {
 									// ignore e.g. undefined `handleError` hook when
