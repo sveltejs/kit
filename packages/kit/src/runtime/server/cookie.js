@@ -51,6 +51,7 @@ export function get_cookies(request, url) {
 	/** @type {import('cookie').SerializeOptions} */
 	const defaults = {
 		httpOnly: true,
+		path: '/',
 		sameSite: 'lax',
 		secure: url.hostname === 'localhost' && url.protocol === 'http:' ? false : true
 	};
@@ -146,7 +147,7 @@ export function get_cookies(request, url) {
 		 * @param {import('./page/types.js').Cookie['options']} options
 		 */
 		set(name, value, options) {
-			set_internal(name, value, { ...defaults, ...options, path: options.path ?? '/' });
+			set_internal(name, value, { ...defaults, ...options });
 		},
 
 		/**
