@@ -432,8 +432,8 @@ importers:
   packages/adapter-vercel:
     dependencies:
       '@vercel/nft':
-        specifier: ^1.0.0
-        version: 1.0.0(rollup@4.57.1)
+        specifier: ^1.3.2
+        version: 1.3.2(rollup@4.57.1)
       esbuild:
         specifier: ^0.25.4
         version: 0.25.12
@@ -3326,8 +3326,8 @@ packages:
     engines: {node: '>=18'}
     hasBin: true
 
-  '@vercel/nft@1.0.0':
-    resolution: {integrity: sha512-7pDSGV++fd3goikE2y9GkwKx9NPVOghBv2wD2YqQlcmfGkaPsWDdZMZNC7MyzUr37vZYgnfZZWZYVauJbm6KXw==}
+  '@vercel/nft@1.3.2':
+    resolution: {integrity: sha512-HC8venRc4Ya7vNeBsJneKHHMDDWpQie7VaKhAIOst3MKO+DES+Y/SbzSp8mFkD7OzwAE2HhHkeSuSmwS20mz3A==}
     engines: {node: '>=20'}
     hasBin: true
 
@@ -7888,7 +7888,7 @@ snapshots:
       - rollup
       - supports-color
 
-  '@vercel/nft@1.0.0(rollup@4.57.1)':
+  '@vercel/nft@1.3.2(rollup@4.57.1)':
     dependencies:
       '@mapbox/node-pre-gyp': 2.0.0
       '@rollup/pluginutils': 5.1.3(rollup@4.57.1)
