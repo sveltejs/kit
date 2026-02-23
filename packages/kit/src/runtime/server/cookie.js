@@ -17,14 +17,6 @@ const cookie_paths = {};
  */
 const MAX_COOKIE_SIZE = 4129;
 
-// TODO 3.0 remove this check
-/** @param {import('./page/types.js').Cookie['options']} options */
-function validate_options(options) {
-	if (options?.path === undefined) {
-		throw new Error('You must specify a `path` when setting, deleting or serializing cookies');
-	}
-}
-
 /**
  * Generates a unique key for a cookie based on its domain, path, and name in
  * the format: `<domain>/<path>?<name>`.
@@ -154,7 +146,6 @@ export function get_cookies(request, url) {
 		 * @param {import('./page/types.js').Cookie['options']} options
 		 */
 		set(name, value, options) {
-			validate_options(options);
 			set_internal(name, value, { ...defaults, ...options });
 		},
 
@@ -163,7 +154,6 @@ export function get_cookies(request, url) {
 		 *  @param {import('./page/types.js').Cookie['options']} options
 		 */
 		delete(name, options) {
-			validate_options(options);
 			cookies.set(name, '', { ...options, maxAge: 0 });
 		},
 
@@ -173,8 +163,6 @@ export function get_cookies(request, url) {
 		 *  @param {import('./page/types.js').Cookie['options']} options
 		 */
 		serialize(name, value, options) {
-			validate_options(options);
-
 			let path = options.path;
 
 			if (!options.domain || options.domain === url.hostname) {

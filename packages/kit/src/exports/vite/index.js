@@ -27,7 +27,7 @@ import prerender from '../../core/postbuild/prerender.js';
 import analyse from '../../core/postbuild/analyse.js';
 import { s } from '../../utils/misc.js';
 import { hash } from '../../utils/hash.js';
-import { dedent, isSvelte5Plus } from '../../core/sync/utils.js';
+import { dedent } from '../../core/sync/utils.js';
 import {
 	env_dynamic_private,
 	env_dynamic_public,
@@ -112,10 +112,10 @@ const warning_preprocessor = {
 
 		const basename = path.basename(filename);
 
-		if (basename.startsWith('+layout.') && !has_children(content, isSvelte5Plus())) {
+		if (basename.startsWith('+layout.') && !has_children(content, true)) {
 			const message =
 				`\n${styleText(['bold', 'red'], path.relative('.', filename))}\n` +
-				`\`<slot />\`${isSvelte5Plus() ? ' or `{@render ...}` tag' : ''}` +
+				'`<slot />` or `{@render ...}` tag' +
 				' missing — inner content will not be rendered';
 
 			if (!warned.has(message)) {
@@ -149,11 +149,7 @@ export async function sveltekit() {
 		extensions: svelte_config.extensions,
 		preprocess,
 		onwarn: svelte_config.onwarn,
-		compilerOptions: {
-			// @ts-ignore - ignore this property when running `pnpm check` against Svelte 5 in the ecosystem CI
-			hydratable: isSvelte5Plus() ? undefined : true,
-			...svelte_config.compilerOptions
-		},
+		compilerOptions: { ...svelte_config.compilerOptions },
 		...svelte_config.vitePlugin
 	};
 
@@ -928,7 +924,9 @@ async function kit({ svelte_config }) {
 								assetFileNames: `${prefix}/assets/[name].[hash][extname]`,
 								hoistTransitiveImports: false,
 								sourcemapIgnoreList,
-								inlineDynamicImports: !split
+								inlineDynamicImports: is_rolldown ? undefined : !split,
+								// @ts-ignore: only available in Vite 8
+								codeSplitting: is_rolldown ? split : undefined
 							},
 							preserveEntrySignatures: 'strict',
 							onwarn(warning, handler) {

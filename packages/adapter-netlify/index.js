@@ -6,10 +6,7 @@ import { builtinModules } from 'node:module';
 import process from 'node:process';
 import esbuild from 'esbuild';
 import toml from '@iarna/toml';
-import { matches, get_publish_directory } from './utils.js';
-
-const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf-8'));
-const adapter_version = pkg.version;
+import { matches, get_publish_directory, s } from './utils.js';
 
 /**
  * @typedef {{
@@ -18,12 +15,19 @@ const adapter_version = pkg.version;
  * } & toml.JsonMap} NetlifyConfig
  */
 
+const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf-8'));
+const adapter_version = pkg.version;
+
 const name = '@sveltejs/adapter-netlify';
 const files = fileURLToPath(new URL('./files', import.meta.url).href);
 
 const edge_set_in_env_var =
 	process.env.NETLIFY_SVELTEKIT_USE_EDGE === 'true' ||
 	process.env.NETLIFY_SVELTEKIT_USE_EDGE === '1';
+
+const netlify_framework_config_path = '.netlify/v1/config.json';
+const netlify_framework_serverless_path = '.netlify/v1/functions';
+const netlify_framework_edge_path = '.netlify/v1/edge-functions';
 
 const FUNCTION_PREFIX = 'sveltekit-';
 
@@ -61,7 +65,8 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 			builder.rimraf(publish);
 			builder.rimraf('.netlify/v1');
 
-			// clean up legacy directories from older adapter versions
+			// clean up legacy directories from older adapter versions to avoid
+			// gnarly edge cases when an existing project is upgraded to this version
 			builder.rimraf('.netlify/edge-functions');
 			builder.rimraf('.netlify/server');
 			builder.rimraf('.netlify/package.json');
@@ -96,7 +101,7 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 
 				await generate_edge_functions({ builder });
 			} else {
-				generate_lambda_functions({ builder, split, publish });
+				generate_serverless_functions({ builder, split, publish });
 			}
 		},
 
@@ -106,6 +111,224 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 		}
 	};
 }
+
+/**
+ * @param { object } params
+ * @param {import('@sveltejs/kit').Builder} params.builder
+ * @param { string } params.publish
+ * @param { boolean } params.split
+ */
+function generate_serverless_functions({ builder, publish, split }) {
+	// https://docs.netlify.com/build/frameworks/frameworks-api/#netlifyv1functions
+	builder.mkdirp(netlify_framework_serverless_path);
+
+	builder.writeServer('.netlify/v1/server');
+
+	const replace = {
+		'0SERVER': './server/index.js' // digit prefix prevents CJS build from using this as a variable name, which would also get replaced
+	};
+
+	builder.copy(files, '.netlify/v1', { replace, filter: (file) => !file.endsWith('edge.js') });
+
+	builder.log.minor('Generating serverless functions...');
+
+	if (split) {
+		const seen = new Set();
+
+		for (let i = 0; i < builder.routes.length; i++) {
+			const route = builder.routes[i];
+			if (route.prerender === true) continue;
+
+			const routes = [route];
+
+			/** @type {string[]} */
+			const parts = [];
+
+			// The parts should conform to URLPattern syntax
+			// https://docs.netlify.com/build/functions/get-started/?fn-language=ts&data-tab=TypeScript#route-requests
+			for (const segment of route.segments) {
+				if (segment.rest) {
+					parts.push('*');
+				} else if (segment.dynamic) {
+					// URLPattern requires params to start with letters
+					parts.push(`:param${parts.length}`);
+				} else {
+					parts.push(segment.content);
+				}
+			}
+
+			// Netlify handles trailing slashes for us, so we don't need to include them in the pattern
+			const pattern = `/${parts.join('/')}`;
+			const name =
+				FUNCTION_PREFIX + (parts.join('-').replace(/[:.]/g, '_').replace('*', '__rest') || 'index');
+
+			// skip routes with identical patterns, they were already folded into another function
+			if (seen.has(pattern)) continue;
+
+			const patterns = [pattern, `${pattern === '/' ? '' : pattern}/__data.json`];
+			patterns.forEach((p) => seen.add(p));
+
+			// figure out which lower priority routes should be considered fallbacks
+			for (let j = i + 1; j < builder.routes.length; j += 1) {
+				const other = builder.routes[j];
+				if (other.prerender === true) continue;
+
+				if (matches(route.segments, other.segments)) {
+					routes.push(other);
+				}
+			}
+
+			generate_serverless_function({
+				builder,
+				routes,
+				patterns,
+				name
+			});
+		}
+
+		generate_serverless_function({
+			builder,
+			routes: [],
+			patterns: ['/*'],
+			name: `${FUNCTION_PREFIX}catch-all`,
+			exclude: Array.from(seen)
+		});
+	} else {
+		generate_serverless_function({
+			builder,
+			routes: undefined,
+			patterns: ['/*'],
+			name: `${FUNCTION_PREFIX}render`
+		});
+	}
+
+	// Copy user's custom _redirects file if it exists
+	if (existsSync('_redirects')) {
+		builder.log.minor('Copying user redirects...');
+		const redirects_file = join(publish, '_redirects');
+		builder.copy('_redirects', redirects_file);
+	}
+}
+
+/**
+ * @returns {NetlifyConfig | null}
+ */
+function get_netlify_config() {
+	if (!existsSync('netlify.toml')) return null;
+
+	try {
+		return toml.parse(readFileSync('netlify.toml', 'utf-8'));
+	} catch (err) {
+		throw new Error(`Failed to parse netlify.toml: ${err.message}`, { cause: err });
+	}
+}
+
+/**
+ * Writes the Netlify Frameworks API config file
+ * https://docs.netlify.com/build/frameworks/frameworks-api/
+ * @param {{ builder: import('@sveltejs/kit').Builder }} params
+ */
+function write_frameworks_config({ builder }) {
+	// https://docs.netlify.com/build/frameworks/frameworks-api/#headers
+	/** @type {{ headers: Array<{ for: string, values: Record<string, string> }> }} */
+	const config = {
+		headers: [
+			{
+				for: `/${builder.getAppPath()}/immutable/*`,
+				values: {
+					'cache-control': 'public, immutable, max-age=31536000'
+				}
+			}
+		]
+	};
+
+	builder.mkdirp('.netlify/v1');
+	writeFileSync(netlify_framework_config_path, s(config));
+}
+
+/**
+ *
+ * @param {{
+ *   builder: import('@sveltejs/kit').Builder,
+ *   routes: import('@sveltejs/kit').RouteDefinition[] | undefined,
+ *   patterns: string[],
+ *   name: string,
+ *   exclude?: string[]
+ * }} opts
+ */
+function generate_serverless_function({ builder, routes, patterns, name, exclude }) {
+	const manifest = builder.generateManifest({
+		relativePath: '../server',
+		routes
+	});
+
+	const fn = generate_serverless_function_module(manifest);
+	const config = generate_config_export(patterns, exclude);
+
+	if (builder.hasServerInstrumentationFile()) {
+		writeFileSync(`${netlify_framework_serverless_path}/${name}.mjs`, fn);
+		builder.instrument({
+			entrypoint: `${netlify_framework_serverless_path}/${name}.mjs`,
+			instrumentation: '.netlify/v1/server/instrumentation.server.js',
+			start: `.netlify/v1/server/${name}.start.mjs`,
+			module: {
+				generateText: generate_traced_module(config)
+			}
+		});
+	} else {
+		writeFileSync(`${netlify_framework_serverless_path}/${name}.mjs`, `${fn}\n${config}`);
+	}
+}
+
+/**
+ * @param {string} manifest
+ * @returns {string}
+ */
+function generate_serverless_function_module(manifest) {
+	return `\
+import { init } from '../serverless.js';
+
+export default init(${manifest});
+`;
+}
+
+const generator_string = `@sveltejs/adapter-netlify@${adapter_version}`;
+
+/**
+ * @param {string[]} patterns
+ * @param {string[]} [exclude]
+ * @returns {string}
+ */
+function generate_config_export(patterns, exclude = []) {
+	// TODO: add a human friendly name for the function https://docs.netlify.com/build/frameworks/frameworks-api/#configuration-options-2
+
+	// https://docs.netlify.com/build/frameworks/frameworks-api/#configuration-options-2
+	return `\
+export const config = {
+	name: 'SvelteKit server',
+	generator: '${generator_string}',
+	path: [${patterns.map(s).join(', ')}],
+	excludedPath: [${['/.netlify/*', ...exclude].map(s).join(', ')}],
+	preferStatic: true
+};
+`;
+}
+
+/**
+ * @param {string} config
+ * @returns {(opts: { instrumentation: string; start: string }) => string}
+ */
+function generate_traced_module(config) {
+	return ({ instrumentation, start }) => {
+		return `\
+import '../server/${instrumentation}';
+const { default: _0 } = await import('../server/${start}');
+export { _0 as default };
+
+${config}`;
+	};
+}
+
 /**
  * @param { object } params
  * @param {import('@sveltejs/kit').Builder} params.builder
@@ -184,7 +407,7 @@ async function generate_edge_functions({ builder }) {
 	await Promise.all([
 		esbuild.build({
 			entryPoints: [`${tmp}/entry.js`],
-			outfile: `.netlify/v1/edge-functions/${FUNCTION_PREFIX}render.js`,
+			outfile: `${netlify_framework_edge_path}/${FUNCTION_PREFIX}render.js`,
 			...esbuild_config
 		}),
 		builder.hasServerInstrumentationFile() &&
@@ -192,243 +415,40 @@ async function generate_edge_functions({ builder }) {
 				entryPoints: [
 					`${builder.getServerDirectory()}/${FUNCTION_PREFIX}instrumentation.server.js`
 				],
-				outfile: `.netlify/v1/edge-functions/${FUNCTION_PREFIX}instrumentation.server.js`,
+				outfile: `${netlify_framework_edge_path}/${FUNCTION_PREFIX}instrumentation.server.js`,
 				...esbuild_config
 			})
 	]);
 
 	if (builder.hasServerInstrumentationFile()) {
 		builder.instrument({
-			entrypoint: `.netlify/v1/edge-functions/${FUNCTION_PREFIX}render.js`,
-			instrumentation: `.netlify/v1/edge-functions/${FUNCTION_PREFIX}instrumentation.server.js`,
-			start: `.netlify/v1/edge-functions/${FUNCTION_PREFIX}start.js`
+			entrypoint: `${netlify_framework_edge_path}/${FUNCTION_PREFIX}render.js`,
+			instrumentation: `${netlify_framework_edge_path}/${FUNCTION_PREFIX}instrumentation.server.js`,
+			start: `${netlify_framework_edge_path}/${FUNCTION_PREFIX}start.js`
 		});
 	}
 
-	// https://docs.netlify.com/build/frameworks/frameworks-api/#edge-functions
-	// Edge function config goes in config.json
 	add_edge_function_config({ builder, path, excluded_paths });
 }
-/**
- * @param { object } params
- * @param {import('@sveltejs/kit').Builder} params.builder
- * @param { string } params.publish
- * @param { boolean } params.split
- */
-function generate_lambda_functions({ builder, publish, split }) {
-	// https://docs.netlify.com/build/frameworks/frameworks-api/#netlifyv1functions
-	builder.mkdirp('.netlify/v1/functions');
-
-	builder.writeServer('.netlify/v1/server');
-
-	const replace = {
-		'0SERVER': './server/index.js' // digit prefix prevents CJS build from using this as a variable name, which would also get replaced
-	};
-
-	builder.copy(files, '.netlify/v1', { replace, filter: (file) => !file.endsWith('edge.js') });
-
-	builder.log.minor('Generating serverless functions...');
-
-	if (split) {
-		const seen = new Set();
-
-		for (let i = 0; i < builder.routes.length; i++) {
-			const route = builder.routes[i];
-			if (route.prerender === true) continue;
-
-			const routes = [route];
-
-			const parts = [];
-			// Netlify's syntax uses '*' and ':param' as "splats" and "placeholders"
-			// https://docs.netlify.com/routing/redirects/redirect-options/#splats
-			for (const segment of route.segments) {
-				if (segment.rest) {
-					parts.push('*');
-					break; // Netlify redirects don't allow anything after a *
-				} else if (segment.dynamic) {
-					// URLPattern requires params to start with letters
-					parts.push(`:param${parts.length}`);
-				} else {
-					parts.push(segment.content);
-				}
-			}
-
-			const pattern = `/${parts.join('/')}`;
-			const name =
-				FUNCTION_PREFIX + (parts.join('-').replace(/[:.]/g, '_').replace('*', '__rest') || 'index');
-
-			// skip routes with identical patterns, they were already folded into another function
-			if (seen.has(pattern)) continue;
-			seen.add(pattern);
-
-			// figure out which lower priority routes should be considered fallbacks
-			for (let j = i + 1; j < builder.routes.length; j += 1) {
-				const other = builder.routes[j];
-				if (other.prerender === true) continue;
-
-				if (matches(route.segments, other.segments)) {
-					routes.push(other);
-				}
-			}
-
-			const manifest = builder.generateManifest({
-				relativePath: '../server',
-				routes
-			});
-
-			const fn = generate_serverless_function_module(manifest);
-			const config = generate_config_export(pattern);
-
-			if (builder.hasServerInstrumentationFile()) {
-				writeFileSync(`.netlify/v1/functions/${name}.mjs`, fn);
-				builder.instrument({
-					entrypoint: `.netlify/v1/functions/${name}.mjs`,
-					instrumentation: '.netlify/v1/server/instrumentation.server.js',
-					start: `.netlify/v1/functions/${name}.start.mjs`,
-					module: {
-						generateText: generate_traced_module(config)
-					}
-				});
-			} else {
-				writeFileSync(`.netlify/v1/functions/${name}.mjs`, `${fn}\n${config}`);
-			}
-		}
-	} else {
-		const manifest = builder.generateManifest({
-			relativePath: '../server'
-		});
-
-		const fn = generate_serverless_function_module(manifest);
-		const config = generate_config_export('/*');
-
-		if (builder.hasServerInstrumentationFile()) {
-			writeFileSync(`.netlify/v1/functions/${FUNCTION_PREFIX}render.mjs`, fn);
-			builder.instrument({
-				entrypoint: `.netlify/v1/functions/${FUNCTION_PREFIX}render.mjs`,
-				instrumentation: '.netlify/v1/server/instrumentation.server.js',
-				start: `.netlify/v1/functions/${FUNCTION_PREFIX}render.start.mjs`,
-				module: {
-					generateText: generate_traced_module(config)
-				}
-			});
-		} else {
-			writeFileSync(`.netlify/v1/functions/${FUNCTION_PREFIX}render.mjs`, `${fn}\n${config}`);
-		}
-	}
-
-	// Copy user's custom _redirects file if it exists
-	if (existsSync('_redirects')) {
-		builder.log.minor('Copying user redirects...');
-		const redirects_file = join(publish, '_redirects');
-		builder.copy('_redirects', redirects_file);
-	}
-}
-
-function get_netlify_config() {
-	if (!existsSync('netlify.toml')) return null;
-
-	try {
-		return /** @type {NetlifyConfig} */ (toml.parse(readFileSync('netlify.toml', 'utf-8')));
-	} catch (err) {
-		err.message = `Error parsing netlify.toml: ${err.message}`;
-		throw err;
-	}
-}
 
 /**
- * Writes the Netlify Frameworks API config file
- * https://docs.netlify.com/build/frameworks/frameworks-api/
- * @param {{ builder: import('@sveltejs/kit').Builder }} params
- */
-function write_frameworks_config({ builder }) {
-	// https://docs.netlify.com/build/frameworks/frameworks-api/#headers
-	/** @type {{ headers: Array<{ for: string, values: Record<string, string> }> }} */
-	const config = {
-		headers: [
-			{
-				for: `/${builder.getAppPath()}/immutable/*`,
-				values: {
-					'cache-control': 'public, immutable, max-age=31536000'
-				}
-			}
-		]
-	};
-
-	builder.mkdirp('.netlify/v1');
-	writeFileSync('.netlify/v1/config.json', JSON.stringify(config, null, '\t'));
-}
-
-/**
- * Adds edge function configuration to the Frameworks API config file
- * https://docs.netlify.com/build/frameworks/frameworks-api/#edge-functions
+ * Adds edge function configuration to the Frameworks API config file `config.json`
+ * https://docs.netlify.com/build/frameworks/frameworks-api/#netlifyv1edge-functions
  * @param {{ builder: import('@sveltejs/kit').Builder, path: string, excluded_paths: string[] }} params
  */
 function add_edge_function_config({ path, excluded_paths }) {
-	const config_path = '.netlify/v1/config.json';
-	const config = JSON.parse(readFileSync(config_path, 'utf-8'));
+	const config = JSON.parse(readFileSync(netlify_framework_config_path, 'utf-8'));
 
-	// https://docs.netlify.com/build/frameworks/frameworks-api/#edge-functions
+	// https://docs.netlify.com/build/frameworks/frameworks-api/#configuration-options-1
 	config.edge_functions = [
 		{
 			function: `${FUNCTION_PREFIX}render`,
-			name: 'SvelteKit',
-			generator: get_generator_string(),
+			name: 'SvelteKit server',
+			generator: generator_string,
 			path,
 			excludedPath: excluded_paths
 		}
 	];
 
-	writeFileSync(config_path, JSON.stringify(config, null, '\t'));
-}
-
-/**
- * Gets the generator string for Netlify function metadata
- * @returns {string}
- */
-function get_generator_string() {
-	return `@sveltejs/adapter-netlify@${adapter_version}`;
-}
-
-/**
- * https://docs.netlify.com/functions/get-started/?fn-language=ts#response
- * @param {string} manifest
- * @returns {string}
- */
-function generate_serverless_function_module(manifest) {
-	return `\
-import { init } from '../serverless.js';
-
-export default init(${manifest});
-`;
-}
-
-/**
- * @param {string} pattern
- * @returns {string}
- */
-function generate_config_export(pattern) {
-	return `\
-export const config = {
-	name: "SvelteKit server",
-	generator: "${get_generator_string()}",
-	path: "${pattern}",
-	excludedPath: "/.netlify/*",
-	preferStatic: true
-};
-`;
-}
-
-/**
- * @param {string} config
- * @returns {(opts: { instrumentation: string; start: string }) => string}
- */
-function generate_traced_module(config) {
-	return ({ instrumentation, start }) => {
-		return `\
-import './${instrumentation}';
-const { default: _0 } = await import('./${start}');
-export { _0 as default };
-
-${config}`;
-	};
+	writeFileSync(netlify_framework_config_path, s(config));
 }
