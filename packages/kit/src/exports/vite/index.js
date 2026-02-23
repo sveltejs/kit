@@ -933,6 +933,7 @@ async function kit({ svelte_config }) {
 								hoistTransitiveImports: false,
 								sourcemapIgnoreList,
 								inlineDynamicImports: is_rolldown ? undefined : !split,
+								// @ts-ignore: only available in Vite 8
 								codeSplitting: is_rolldown ? split : undefined
 							},
 							preserveEntrySignatures: 'strict',
