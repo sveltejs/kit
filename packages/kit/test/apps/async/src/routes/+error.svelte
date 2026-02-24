@@ -8,7 +8,6 @@
 	<title>Custom error page: {error.message}</title>
 </svelte:head>
 
-<!-- TODO what about status in a world of error boundaries? pass as prop, too? -->
 <h1>{page.status}</h1>
 
 <p id="message">This is your custom error page saying: "<b>{error.message}</b>"</p>

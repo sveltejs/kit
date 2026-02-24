@@ -56,6 +56,14 @@ export { load_css };
 const ICON_REL_ATTRIBUTES = new Set(['icon', 'shortcut icon', 'apple-touch-icon']);
 
 let errored = false;
+/**
+ * Set via transformError, reset and read at the end of navigate.
+ * Necessary because a navigation might succeed loading but during rendering
+ * an error occurs, at which point the navigation result needs to be overridden with the error result.
+ * TODO this is all very hacky, rethink for SvelteKit 3 where we can assume Svelte 5 and do an overhaul of client.js
+ * @type {{ error: App.Error, status: number } | null}
+ */
+let rendering_error = null;
 
 // We track the scroll position associated with each history entry in sessionStorage,
 // rather than on history.state itself, because when navigation is driven by
@@ -608,7 +616,13 @@ async function initialize(result, target, hydrate) {
 		sync: false,
 		// @ts-ignore Svelte 5 specific: transformError allows to transform errors before they are passed to boundaries
 		transformError: __SVELTEKIT_EXPERIMENTAL_USE_TRANSFORM_ERROR__
-			? /** @param {unknown} error */ (error) => handle_error(error, current.nav)
+			? /** @param {unknown} e */ async (e) => {
+					const error = await handle_error(e, current.nav);
+					rendering_error = { error, status: get_status(error) };
+					page.error = error;
+					page.status = rendering_error.status;
+					return error;
+				}
 			: undefined
 	});
 
@@ -1806,7 +1820,12 @@ async function navigate({
 		if (fork) {
 			commit_promise = fork.commit();
 		} else {
+			rendering_error = null; // TODO this can break with forks, rethink for SvelteKit 3 where we can assume Svelte 5
 			root.$set(navigation_result.props);
+			// Check for sync rendering error
+			if (rendering_error) {
+				Object.assign(navigation_result.props.page, rendering_error);
+			}
 			update(navigation_result.props.page);
 
 			commit_promise = svelte.settled?.();
@@ -1862,6 +1881,10 @@ async function navigate({
 	autoscroll = true;
 
 	if (navigation_result.props.page) {
+		// Check for async rendering error
+		if (rendering_error) {
+			Object.assign(navigation_result.props.page, rendering_error);
+		}
 		Object.assign(page, navigation_result.props.page);
 	}
 

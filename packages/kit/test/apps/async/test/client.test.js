@@ -348,7 +348,7 @@ test.describe('client error boundaries', () => {
 		await page.goto('/');
 		await app.goto('/server-error-boundary/nested');
 		await expect(page.locator('#nested-error-message')).toContainText(
-			'nested render error (500 Internal Error, on /server-error-boundary/nested)'
+			'nested render error (500 Internal Error, on /server-error-boundary/nested) | true | 500'
 		);
 		// The nested layout should still be visible
 		await expect(page.locator('#nested-layout')).toBeVisible();
