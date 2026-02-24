@@ -40,8 +40,8 @@ export interface Cookie {
 	name: string;
 	value: string;
 	options: SerializeOptions & {
-    path: string;
-  };
+		path: string;
+	};
 }
 
 export type ServerDataSerializer = {
