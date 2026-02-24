@@ -77,7 +77,7 @@ export function get_cookies(request, url) {
 						path_matches(url.pathname, c.options.path)
 					);
 				})
-				.sort((a, b) => (b.options.path ?? '/').length - (a.options.path ?? '/').length)[0];
+				.sort((a, b) => b.options.path.length - a.options.path.length)[0];
 
 			if (best_match) {
 				return best_match.options.maxAge === 0 ? undefined : best_match.value;
@@ -123,7 +123,7 @@ export function get_cookies(request, url) {
 					const existing = lookup.get(c.name);
 
 					// If no existing cookie or this one has a more specific (longer) path, use this one
-					if (!existing || (c.options.path ?? '/').length > existing.options.path.length) {
+					if (!existing || c.options.path.length > existing.options.path.length) {
 						lookup.set(c.name, c);
 					}
 				}
@@ -144,7 +144,7 @@ export function get_cookies(request, url) {
 		/**
 		 * @param {string} name
 		 * @param {string} value
-		 * @param {import('./page/types.js').Cookie['options']} options
+		 * @param {import('cookie').SerializeOptions} options
 		 */
 		set(name, value, options) {
 			set_internal(name, value, { ...defaults, ...options });
@@ -152,16 +152,16 @@ export function get_cookies(request, url) {
 
 		/**
 		 * @param {string} name
-		 * @param {import('./page/types.js').Cookie['options']} options
+		 * @param {import('cookie').SerializeOptions} options
 		 */
 		delete(name, options) {
-			cookies.set(name, '', { ...options, maxAge: 0, path: options.path ?? '/' });
+			cookies.set(name, '', { ...options, maxAge: 0 });
 		},
 
 		/**
 		 * @param {string} name
 		 * @param {string} value
-		 * @param {import('./page/types.js').Cookie['options']} options
+		 * @param {import('cookie').SerializeOptions} options
 		 */
 		serialize(name, value, options) {
 			let path = options.path ?? '/';
@@ -218,7 +218,7 @@ export function get_cookies(request, url) {
 	/**
 	 * @param {string} name
 	 * @param {string} value
-	 * @param {import('./page/types.js').Cookie['options']} options
+	 * @param {import('cookie').SerializeOptions} options
 	 */
 	function set_internal(name, value, options) {
 		if (!normalized_url) {
@@ -302,7 +302,7 @@ export function add_cookies_to_headers(headers, cookies) {
 		// special case — for routes ending with .html, the route data lives in a sibling
 		// `.html__data.json` file rather than a child `/__data.json` file, which means
 		// we need to duplicate the cookie
-		if (options?.path?.endsWith('.html')) {
+		if (options.path.endsWith('.html')) {
 			const path = add_data_suffix(options.path);
 			headers.append('set-cookie', serialize(name, value, { ...options, path }));
 		}
