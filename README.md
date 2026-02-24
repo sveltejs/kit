@@ -2,7 +2,7 @@
 
 # SvelteKit
 
-just creating a test pr
+just creating a test
 
 Web development, streamlined. Read the [documentation](https://svelte.dev/docs/kit) to get started.
 
