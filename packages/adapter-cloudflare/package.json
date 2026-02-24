@@ -53,6 +53,7 @@
 		"@types/node": "catalog:",
 		"esbuild": "catalog:",
 		"typescript": "catalog:",
+		"vite": "catalog:",
 		"vitest": "catalog:"
 	},
 	"peerDependencies": {
