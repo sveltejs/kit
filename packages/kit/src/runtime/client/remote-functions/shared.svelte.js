@@ -40,10 +40,15 @@ export async function remote_request(url) {
 }
 
 /**
+ * Indicates that there was no SSRd value for this query we can use as the initial value.
+ */
+export const NOT_CACHED = {};
+
+/**
  * Client-version of the `query`/`prerender`/`cache` function from `$app/server`.
  * @template {Promise<any> & { set?: any, refresh?: any }} T
  * @param {string} id
- * @param {(key: string, args: string) => T} create
+ * @param {(key: string, args: string, cached: any) => T} create
  * @return {(arg: any) => T}
  */
 export function create_remote_function(id, create) {
@@ -54,7 +59,11 @@ export function create_remote_function(id, create) {
 		let resource = /** @type {T | undefined} */ (entry?.deref());
 
 		if (!resource) {
-			resource = create(cache_key, payload);
+			resource = create(
+				cache_key,
+				payload,
+				Object.hasOwn(remote_responses, cache_key) ? remote_responses[cache_key] : NOT_CACHED
+			);
 
 			// Delete the hydrated response from the cache at this point:
 			// If this instance is no longer referenced anywhere in the app,

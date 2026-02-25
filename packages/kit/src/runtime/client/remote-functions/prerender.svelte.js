@@ -2,8 +2,8 @@ import { app_dir, base } from '$app/paths/internal/client';
 import { version } from '__sveltekit/environment';
 import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
-import { app, remote_responses } from '../client.js';
-import { create_remote_function, remote_request } from './shared.svelte.js';
+import { app } from '../client.js';
+import { create_remote_function, NOT_CACHED, remote_request } from './shared.svelte.js';
 
 // Initialize Cache API for prerender functions
 const CACHE_NAME = DEV ? `sveltekit:${Date.now()}` : `sveltekit:${version}`;
@@ -136,20 +136,18 @@ function put(url, encoded) {
  * @param {string} id
  */
 export function prerender(id) {
-	return create_remote_function(id, (cache_key, payload) => {
+	return create_remote_function(id, (_, payload, cached) => {
 		return new Prerender(async () => {
 			await prerender_cache_ready;
 
 			const url = `${base}/${app_dir}/remote/${id}${payload ? `/${payload}` : ''}`;
 
-			if (Object.hasOwn(remote_responses, cache_key)) {
-				const data = remote_responses[cache_key];
-
+			if (cached !== NOT_CACHED) {
 				if (prerender_cache) {
-					void put(url, devalue.stringify(data, app.encoders));
+					void put(url, devalue.stringify(cached, app.encoders));
 				}
 
-				return data;
+				return cached;
 			}
 
 			// Check the Cache API first
