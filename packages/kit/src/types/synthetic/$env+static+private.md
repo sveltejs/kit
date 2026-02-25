@@ -10,8 +10,7 @@ Environment variables are [loaded by Vite](https://vitejs.dev/guide/env-and-mode
 **_Private_ access:**
 
 - This module (and [`$env/dynamic/private`](https://svelte.dev/docs/kit/$env-dynamic-private)) cannot be imported into client-side code.
-- Variables that begin with [`config.kit.env.publicPrefix`](https://svelte.dev/docs/kit/configuration#env) (which defaults to `PUBLIC_`) are **excluded**.
-- Variables that begin with [`config.kit.env.privatePrefix`](https://svelte.dev/docs/kit/configuration#env) (which defaults to allow-all) are **included**.
+- This module only includes variables that _do not_ begin with [`config.kit.env.publicPrefix`](https://svelte.dev/docs/kit/configuration#env) _and do_ start with [`config.kit.env.privatePrefix`](https://svelte.dev/docs/kit/configuration#env) (if configured)
 
 For example, given the following build time environment:
 
