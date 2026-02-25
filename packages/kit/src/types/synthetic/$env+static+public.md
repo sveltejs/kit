@@ -28,4 +28,4 @@ console.log(ENVIRONMENT); // => throws error during build
 console.log(PUBLIC_BASE_URL); // => "http://site.com"
 ```
 
-The above values will be the same _even if_ different values for `ENVIRONMENT` or `PUBLIC_BASE_URL` are set at runtime, as they are statically replaced in your code with their build-time values.
+The above values will be the same _even if_ different values for `ENVIRONMENT` or `PUBLIC_BASE_URL` are set at runtime, as they are statically replaced in your code with their build time values.
