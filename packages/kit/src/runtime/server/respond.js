@@ -15,8 +15,8 @@ import {
 	method_not_allowed,
 	redirect_response
 } from './utils.js';
-import { decode_pathname, decode_params, disable_search, normalize_path } from '../../utils/url.js';
-import { exec } from '../../utils/routing.js';
+import { decode_pathname, disable_search, normalize_path } from '../../utils/url.js';
+import { find_route } from '../../utils/routing.js';
 import { redirect_json_response, render_data } from './data/index.js';
 import { add_cookies_to_headers, get_cookies } from './cookie.js';
 import { create_fetch } from './fetch.js';
@@ -309,18 +309,12 @@ export async function internal_respond(request, options, manifest, state) {
 	if (!state.prerendering?.fallback) {
 		// TODO this could theoretically break — should probably be inside a try-catch
 		const matchers = await manifest._.matchers();
+		const result = find_route(resolved_path, manifest._.routes, matchers);
 
-		for (const candidate of manifest._.routes) {
-			const match = candidate.pattern.exec(resolved_path);
-			if (!match) continue;
-
-			const matched = exec(match, candidate.params, matchers);
-			if (matched) {
-				route = candidate;
-				event.route = { id: route.id };
-				event.params = decode_params(matched);
-				break;
-			}
+		if (result) {
+			route = result.route;
+			event.route = { id: route.id };
+			event.params = result.params;
 		}
 	}
 
