@@ -10,7 +10,7 @@ export const adapters = [
 		version: '6'
 	},
 	{
-		name: 'Cloudflare',
+		name: 'Cloudflare Pages',
 		test: () => !!process.env.CF_PAGES,
 		module: '@sveltejs/adapter-cloudflare',
 		version: '7'
