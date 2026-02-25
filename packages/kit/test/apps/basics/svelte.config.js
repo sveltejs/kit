@@ -58,7 +58,10 @@ const config = {
 			}
 		},
 		serviceWorker: {
-			register: true,
+			// TODO: remove this when Playwright starts using Firefox 147
+			// Firefox only started supporting importing ES modules in service workers
+			// as of Firefox 147 https://caniuse.com/?search=es+modules+in+service
+			register: process.env.KIT_E2E_BROWSER !== 'firefox',
 			options: {
 				updateViaCache: 'imports'
 			}

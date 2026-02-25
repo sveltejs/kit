@@ -145,8 +145,7 @@ export function form(validate_or_fn, maybe_fn) {
 							event,
 							state,
 							true,
-							data,
-							(d) => d,
+							() => data,
 							(data) => (!maybe_fn ? fn() : fn(data, issue))
 						);
 					} catch (e) {

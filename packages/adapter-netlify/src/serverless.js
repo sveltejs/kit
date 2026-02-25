@@ -1,12 +1,11 @@
 import './shims';
 import { Server } from '0SERVER';
-import { split_headers } from './headers.js';
 import { createReadableStream } from '@sveltejs/kit/node';
 import process from 'node:process';
 
 /**
  * @param {import('@sveltejs/kit').SSRManifest} manifest
- * @returns {import('@netlify/functions').Handler}
+ * @returns {(request: Request, context: import('@netlify/functions').Context) => Promise<Response>}
  */
 export function init(manifest) {
 	const server = new Server(manifest);
@@ -17,77 +16,17 @@ export function init(manifest) {
 		read: (file) => createReadableStream(`.netlify/server/${file}`)
 	});
 
-	return async (event, context) => {
+	return async (request, context) => {
 		if (init_promise !== null) {
 			await init_promise;
 			init_promise = null;
 		}
 
-		const response = await server.respond(to_request(event), {
+		return server.respond(request, {
 			platform: { context },
 			getClientAddress() {
-				return /** @type {string} */ (event.headers['x-nf-client-connection-ip']);
+				return context.ip;
 			}
 		});
-
-		const partial_response = {
-			statusCode: response.status,
-			...split_headers(response.headers)
-		};
-
-		if (!is_text(response.headers.get('content-type'))) {
-			// Function responses should be strings (or undefined), and responses with binary
-			// content should be base64 encoded and set isBase64Encoded to true.
-			// https://github.com/netlify/functions/blob/main/src/function/response.ts
-			return {
-				...partial_response,
-				isBase64Encoded: true,
-				body: Buffer.from(await response.arrayBuffer()).toString('base64')
-			};
-		}
-
-		return {
-			...partial_response,
-			body: await response.text()
-		};
 	};
-}
-
-/**
- * @param {import('@netlify/functions').HandlerEvent} event
- * @returns {Request}
- */
-function to_request({ httpMethod, headers, rawUrl, body, isBase64Encoded }) {
-	/** @type {RequestInit} */
-	const init = {
-		method: httpMethod,
-		headers: new Headers(/** @type {Record<string, string>} */ (headers))
-	};
-
-	if (httpMethod !== 'GET' && httpMethod !== 'HEAD') {
-		const encoding = isBase64Encoded ? 'base64' : 'utf-8';
-		init.body = typeof body === 'string' ? Buffer.from(body, encoding) : body;
-	}
-
-	return new Request(rawUrl, init);
-}
-
-const text_types = new Set([
-	'application/xml',
-	'application/json',
-	'application/x-www-form-urlencoded',
-	'multipart/form-data'
-]);
-
-/**
- * Decides how the body should be parsed based on its mime type
- *
- * @param {string | undefined | null} content_type The `content-type` header of a request/response.
- * @returns {boolean}
- */
-function is_text(content_type) {
-	if (!content_type) return true; // defaults to json
-	const type = content_type.split(';')[0].toLowerCase(); // get the mime type
-
-	return type.startsWith('text/') || type.endsWith('+xml') || text_types.has(type);
 }

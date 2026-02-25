@@ -1175,6 +1175,19 @@ declare module '@sveltejs/kit' {
 		 * The URL that is navigated to
 		 */
 		url: URL;
+		/**
+		 * The scroll position associated with this navigation.
+		 *
+		 * For the `from` target, this is the scroll position at the moment of navigation.
+		 *
+		 * For the `to` target, this represents the scroll position that will be or was restored:
+		 * - In `beforeNavigate` and `onNavigate`, this is only available for `popstate` navigations (back/forward button)
+		 *   and will be `null` for other navigation types, since the final scroll position isn't known
+		 *   ahead of time.
+		 * - In `afterNavigate`, this is always the scroll position that was applied after the navigation
+		 *   completed.
+		 */
+		scroll: { x: number; y: number } | null;
 	}
 
 	/**
@@ -1224,7 +1237,7 @@ declare module '@sveltejs/kit' {
 		delta?: undefined;
 
 		/**
-		 * Dispatched `Event` object when navigation occured by `popstate` or `link`.
+		 * Dispatched `Event` object when navigation occurred by `popstate` or `link`.
 		 */
 		event?: undefined;
 	}
@@ -2382,6 +2395,7 @@ declare module '@sveltejs/kit' {
 		rest: boolean;
 	}
 
+	/** @default 'never' */
 	type TrailingSlash = 'never' | 'always' | 'ignore';
 
 	type IsAny<T> = 0 extends 1 & T ? true : false;
@@ -2459,6 +2473,8 @@ declare module '@sveltejs/kit' {
 		parent?: PageNode;
 		/** Filled with the pages that reference this layout (if this is a layout). */
 		child_pages?: PageNode[];
+		/** The final page options for a node if it was statically analysable */
+		page_options?: PageOptions | null;
 	}
 
 	type RecursiveRequired<T> = {
@@ -2503,6 +2519,8 @@ declare module '@sveltejs/kit' {
 
 		endpoint: {
 			file: string;
+			/** The final page options for the endpoint if it was statically analysable */
+			page_options: PageOptions | null;
 		} | null;
 	}
 
@@ -2510,13 +2528,17 @@ declare module '@sveltejs/kit' {
 		default: {
 			render(
 				props: Record<string, any>,
-				opts: { context: Map<any, any> }
+				opts: { context: Map<any, any>; csp?: { nonce?: string; hash?: boolean } }
 			): {
 				html: string;
 				head: string;
 				css: {
 					code: string;
 					map: any; // TODO
+				};
+				/** Until we require all Svelte versions that support hashes, this might not be defined */
+				hashes?: {
+					script: Array<`sha256-${string}`>;
 				};
 			};
 		};
@@ -2560,7 +2582,9 @@ declare module '@sveltejs/kit' {
 		server_id?: string;
 
 		/** inlined styles */
-		inline_styles?(): MaybePromise<Record<string, string>>;
+		inline_styles?(): MaybePromise<
+			Record<string, string | ((assets: string, base: string) => string)>
+		>;
 		/** Svelte component */
 		component?: SSRComponentLoader;
 		/** +page.js or +layout.js */
@@ -2746,6 +2770,9 @@ declare module '@sveltejs/kit' {
 	};
 	export type LessThan<TNumber extends number, TArray extends any[] = []> = TNumber extends TArray["length"] ? TArray[number] : LessThan<TNumber, [...TArray, TArray["length"]]>;
 	export type NumericRange<TStart extends number, TEnd extends number> = Exclude<TEnd | LessThan<TEnd>, LessThan<TStart>>;
+	type ValidPageOption = (typeof valid_page_options_array)[number];
+	type PageOptions = Partial<Record<ValidPageOption, any>>;
+	const valid_page_options_array: readonly ["ssr", "prerender", "csr", "trailingSlash", "config", "entries", "load"];
 	export const VERSION: string;
 	class HttpError_1 {
 		
@@ -3153,6 +3180,28 @@ declare module '$app/paths' {
 	 *
 	 * */
 	export function resolve<T extends RouteId | Pathname>(...args: ResolveArgs<T>): ResolvedPathname;
+	/**
+	 * Match a path or URL to a route ID and extracts any parameters.
+	 *
+	 * @example
+	 * ```js
+	 * import { match } from '$app/paths';
+	 *
+	 * const route = await match('/blog/hello-world');
+	 *
+	 * if (route?.id === '/blog/[slug]') {
+	 * 	const slug = route.params.slug;
+	 * 	const response = await fetch(`/api/posts/${slug}`);
+	 * 	const post = await response.json();
+	 * }
+	 * ```
+	 * @since 2.52.0
+	 *
+	 * */
+	export function match(url: Pathname | URL | (string & {})): Promise<{
+		id: RouteId;
+		params: Record<string, string>;
+	} | null>;
 
 	export {};
 }

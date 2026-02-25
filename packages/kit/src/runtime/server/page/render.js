@@ -80,17 +80,11 @@ export async function render_response({
 	 */
 	const link_headers = new Set();
 
-	/**
-	 * `<link>` tags that are added to prerendered responses
-	 * (note that stylesheets are always added, prerendered or not)
-	 * @type {Set<string>}
-	 */
-	const link_tags = new Set();
-
 	/** @type {Map<string, string>} */
 	// TODO if we add a client entry point one day, we will need to include inline_styles with the entry, otherwise stylesheets will be linked even if they are below inlineStyleThreshold
 	const inline_styles = new Map();
 
+	/** @type {ReturnType<typeof options.root.render>} */
 	let rendered;
 
 	const form_value =
@@ -109,6 +103,10 @@ export async function render_response({
 	 * We use a relative path when possible to support IPFS, the internet archive, etc.
 	 */
 	let base_expression = s(paths.base);
+
+	const csp = new Csp(options.csp, {
+		prerender: !!state.prerendering
+	});
 
 	// if appropriate, use relative paths for greater portability
 	if (paths.relative) {
@@ -177,7 +175,8 @@ export async function render_response({
 						page: props.page
 					}
 				]
-			])
+			]),
+			csp: csp.script_needs_nonce ? { nonce: csp.nonce } : { hash: csp.script_needs_hash }
 		};
 
 		const fetch = globalThis.fetch;
@@ -227,9 +226,15 @@ export async function render_response({
 					paths.reset();
 				}
 
-				const { head, html, css } = options.async ? await rendered : rendered;
+				const { head, html, css, hashes } = /** @type {ReturnType<typeof options.root.render>} */ (
+					options.async ? await rendered : rendered
+				);
 
-				return { head, html, css };
+				if (hashes) {
+					csp.add_script_hashes(hashes.script);
+				}
+
+				return { head, html, css, hashes };
 			});
 		} finally {
 			if (DEV) {
@@ -245,19 +250,22 @@ export async function render_response({
 			for (const url of node.fonts) fonts.add(url);
 
 			if (node.inline_styles && !client.inline) {
-				Object.entries(await node.inline_styles()).forEach(([k, v]) => inline_styles.set(k, v));
+				Object.entries(await node.inline_styles()).forEach(([filename, css]) => {
+					if (typeof css === 'string') {
+						inline_styles.set(filename, css);
+						return;
+					}
+
+					inline_styles.set(filename, css(`${assets}/${paths.app_dir}/immutable/assets`, assets));
+				});
 			}
 		}
 	} else {
-		rendered = { head: '', html: '', css: { code: '', map: null } };
+		rendered = { head: '', html: '', css: { code: '', map: null }, hashes: { script: [] } };
 	}
 
-	let head = '';
+	const head = new Head(rendered.head, !!state.prerendering);
 	let body = rendered.html;
-
-	const csp = new Csp(options.csp, {
-		prerender: !!state.prerendering
-	});
 
 	/** @param {string} path */
 	const prefixed = (path) => {
@@ -276,12 +284,10 @@ export async function render_response({
 		: Array.from(inline_styles.values()).join('\n');
 
 	if (style) {
-		const attributes = DEV ? [' data-sveltekit'] : [];
-		if (csp.style_needs_nonce) attributes.push(` nonce="${csp.nonce}"`);
-
+		const attributes = DEV ? ['data-sveltekit'] : [];
+		if (csp.style_needs_nonce) attributes.push(`nonce="${csp.nonce}"`);
 		csp.add_style(style);
-
-		head += `\n\t<style${attributes.join('')}>${style}</style>`;
+		head.add_style(style, attributes);
 	}
 
 	for (const dep of stylesheets) {
@@ -299,7 +305,7 @@ export async function render_response({
 			}
 		}
 
-		head += `\n\t\t<link href="${path}" ${attributes.join(' ')}>`;
+		head.add_stylesheet(path, attributes);
 	}
 
 	for (const dep of fonts) {
@@ -308,7 +314,7 @@ export async function render_response({
 		if (resolve_opts.preload({ type: 'font', path })) {
 			const ext = dep.slice(dep.lastIndexOf('.') + 1);
 
-			link_tags.add(`<link rel="preload" as="font" type="font/${ext}" href="${path}" crossorigin>`);
+			head.add_link_tag(path, ['rel="preload"', 'as="font"', `type="font/${ext}"`, 'crossorigin']);
 
 			link_headers.add(
 				`<${encodeURI(path)}>; rel="preload"; as="font"; type="font/${ext}"; crossorigin; nopush`
@@ -344,17 +350,11 @@ export async function render_response({
 				link_headers.add(`<${encodeURI(path)}>; rel="modulepreload"; nopush`);
 
 				if (options.preload_strategy !== 'modulepreload') {
-					head += `\n\t\t<link rel="preload" as="script" crossorigin="anonymous" href="${path}">`;
+					head.add_script_preload(path);
 				} else {
-					link_tags.add(`<link rel="modulepreload" href="${path}">`);
+					head.add_link_tag(path, ['rel="modulepreload"']);
 				}
 			}
-		}
-
-		if (state.prerendering && link_tags.size > 0) {
-			head += Array.from(link_tags)
-				.map((tag) => `\n\t\t${tag}`)
-				.join('');
 		}
 
 		// prerender a `/path/to/page/__route.js` module
@@ -574,19 +574,15 @@ export async function render_response({
 
 	if (state.prerendering) {
 		// TODO read headers set with setHeaders and convert into http-equiv where possible
-		const http_equiv = [];
-
 		const csp_headers = csp.csp_provider.get_meta();
 		if (csp_headers) {
-			http_equiv.push(csp_headers);
+			head.add_http_equiv(csp_headers);
 		}
 
 		if (state.prerendering.cache) {
-			http_equiv.push(`<meta http-equiv="cache-control" content="${state.prerendering.cache}">`);
-		}
-
-		if (http_equiv.length > 0) {
-			head = http_equiv.join('\n') + head;
+			head.add_http_equiv(
+				`<meta http-equiv="cache-control" content="${state.prerendering.cache}">`
+			);
 		}
 	} else {
 		const csp_header = csp.csp_provider.get_header();
@@ -603,11 +599,8 @@ export async function render_response({
 		}
 	}
 
-	// add the content after the script/css links so the link elements are parsed first
-	head += rendered.head;
-
 	const html = options.templates.app({
-		head,
+		head: head.build(),
 		body,
 		assets,
 		nonce: /** @type {string} */ (csp.nonce),
@@ -664,4 +657,79 @@ export async function render_response({
 					headers
 				}
 			);
+}
+
+class Head {
+	#rendered;
+	#prerendering;
+	/** @type {string[]} */
+	#http_equiv = [];
+	/** @type {string[]} */
+	#link_tags = [];
+	/** @type {string[]} */
+	#script_preloads = [];
+	/** @type {string[]} */
+	#style_tags = [];
+	/** @type {string[]} */
+	#stylesheet_links = [];
+
+	/**
+	 * @param {string} rendered
+	 * @param {boolean} prerendering
+	 */
+	constructor(rendered, prerendering) {
+		this.#rendered = rendered;
+		this.#prerendering = prerendering;
+	}
+
+	build() {
+		return [
+			...this.#http_equiv,
+			...this.#link_tags,
+			...this.#script_preloads,
+			this.#rendered,
+			...this.#style_tags,
+			...this.#stylesheet_links
+		].join('\n\t\t');
+	}
+
+	/**
+	 * @param {string} style
+	 * @param {string[]} attributes
+	 */
+	add_style(style, attributes) {
+		this.#style_tags.push(
+			`<style${attributes.length ? ' ' + attributes.join(' ') : ''}>${style}</style>`
+		);
+	}
+
+	/**
+	 * @param {string} href
+	 * @param {string[]} attributes
+	 */
+	add_stylesheet(href, attributes) {
+		this.#stylesheet_links.push(`<link href="${href}" ${attributes.join(' ')}>`);
+	}
+
+	/** @param {string} href */
+	add_script_preload(href) {
+		this.#script_preloads.push(
+			`<link rel="preload" as="script" crossorigin="anonymous" href="${href}">`
+		);
+	}
+
+	/**
+	 * @param {string} href
+	 * @param {string[]} attributes
+	 */
+	add_link_tag(href, attributes) {
+		if (!this.#prerendering) return;
+		this.#link_tags.push(`<link href="${href}" ${attributes.join(' ')}>`);
+	}
+
+	/** @param {string} tag */
+	add_http_equiv(tag) {
+		if (!this.#prerendering) return;
+		this.#http_equiv.push(tag);
+	}
 }
