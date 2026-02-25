@@ -24,7 +24,7 @@ With the default `publicPrefix` and `privatePrefix`:
 ```ts
 import { ENVIRONMENT, PUBLIC_BASE_URL } from '$env/static/public';
 
-console.log(ENVIRONMENT); // => undefined, throws error during build
+console.log(ENVIRONMENT); // => throws error during build
 console.log(PUBLIC_BASE_URL); // => "http://site.com"
 ```
 
