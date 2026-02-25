@@ -28,3 +28,5 @@ import { ENVIRONMENT, PUBLIC_BASE_URL } from '$env/static/private';
 console.log(ENVIRONMENT); // => "production"
 console.log(PUBLIC_BASE_URL); // => undefined, throws error during build
 ```
+
+The above values will be the same _even if_ different values for `ENVIRONMENT` or `PUBLIC_BASE_URL` are set at runtime, as they are statically replaced in your code with their build time values.
