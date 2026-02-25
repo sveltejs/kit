@@ -3,9 +3,8 @@
 /** @import { Query } from './query.svelte.js' */
 import * as devalue from 'devalue';
 import { app, goto, query_map, remote_responses } from '../client.js';
-import { untrack } from 'svelte';
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
-import { tick } from 'svelte';
+import { tick, untrack } from 'svelte';
 import { create_remote_key, stringify_remote_arg } from '../../shared.js';
 import { page } from '../state.svelte.js';
 
