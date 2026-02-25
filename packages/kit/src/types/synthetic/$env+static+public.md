@@ -1,6 +1,6 @@
-This module provides access to environment variables that are injected _statically_ into your bundle at buildtime and are _publicly_ accessible.
+This module provides access to environment variables that are injected _statically_ into your bundle at build time and are _publicly_ accessible.
 
-|         | Runtime                                                                    | Buildtime                                                                |
+|         | Runtime                                                                    | Build time                                                                |
 | ------- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
 | Private | [`$env/dynamic/private`](https://svelte.dev/docs/kit/$env-dynamic-private) | [`$env/static/private`](https://svelte.dev/docs/kit/$env-static-private) |
 | Public  | [`$env/dynamic/public`](https://svelte.dev/docs/kit/$env-dynamic-public)   | `$env/static/public`                                                     |
