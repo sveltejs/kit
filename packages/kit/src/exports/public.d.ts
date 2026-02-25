@@ -5,7 +5,6 @@ import '../types/ambient.js';
 import {
 	AdapterEntry,
 	CspDirectives,
-	DeepPartial,
 	HttpMethod,
 	Logger,
 	MaybePromise,
