@@ -20,7 +20,7 @@ my-project/
 │ ├ hooks.client.js
 │ ├ hooks.server.js
 │ ├ service-worker.js
-│ └ tracing.server.js
+│ └ instrumentation.server.js
 ├ static/
 │ └ [your static assets]
 ├ tests/
