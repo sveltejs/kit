@@ -200,6 +200,7 @@ export async function render_response({
 				};
 			}
 
+			event_state.allows_commands = false;
 			rendered = await with_request_store({ event, state: event_state }, async () => {
 				// use relative paths during rendering, so that the resulting HTML is as
 				// portable as possible, but reset afterwards

@@ -39,6 +39,7 @@ import { server_data_serializer } from './page/data_serializer.js';
 import { get_remote_id, handle_remote_call } from './remote.js';
 import { record_span } from '../telemetry/record_span.js';
 import { otel } from '../telemetry/otel.js';
+import { MUTATIVE_METHODS } from '../../constants.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
 
@@ -419,6 +420,7 @@ export async function internal_respond(request, options, manifest, state) {
 						current: root_span
 					}
 				};
+				event_state.allows_commands = MUTATIVE_METHODS.includes(request.method);
 				return await with_request_store({ event: traced_event, state: event_state }, () =>
 					options.hooks.handle({
 						event: traced_event,
