@@ -9,7 +9,7 @@ Dynamic environment variables are defined by the platform you're running on. For
 
 **_Public_ access:**
 
-- This module (and [`$env/static/public`](https://svelte.dev/docs/kit/$env-static-public)) _can_ be imported into client-side code.
+- This module _can_ be imported into client-side code
 - **Only** variables that begin with [`config.kit.env.publicPrefix`](https://svelte.dev/docs/kit/configuration#env) (which defaults to `PUBLIC_`) are included
 
 > [!NOTE] In `dev`, `$env/dynamic` includes environment variables from `.env`. In `prod`, this behavior will depend on your adapter.
