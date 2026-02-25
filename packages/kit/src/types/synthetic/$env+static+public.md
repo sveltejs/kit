@@ -12,7 +12,7 @@ Static environment variables are [loaded by Vite](https://vitejs.dev/guide/env-a
 - This module _can_ be imported into client-side code
 - **Only** variables that begin with [`config.kit.env.publicPrefix`](https://svelte.dev/docs/kit/configuration#env) (which defaults to `PUBLIC_`) are included
 
-For example, given the following buildtime environment:
+For example, given the following build time environment:
 
 ```env
 ENVIRONMENT=production
