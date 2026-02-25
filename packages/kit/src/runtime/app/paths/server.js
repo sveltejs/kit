@@ -41,7 +41,7 @@ export async function match(url) {
 
 	const { reroute } = await get_hooks();
 
-	let resolved_path = url.pathname;
+	let resolved_path;
 
 	try {
 		resolved_path = decode_pathname(

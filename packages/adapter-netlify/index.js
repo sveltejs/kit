@@ -191,7 +191,7 @@ async function generate_edge_functions({ builder }) {
 			outfile: '.netlify/edge-functions/render.js',
 			...esbuild_config
 		}),
-		builder.hasServerInstrumentationFile?.() &&
+		builder.hasServerInstrumentationFile() &&
 			esbuild.build({
 				entryPoints: [`${builder.getServerDirectory()}/instrumentation.server.js`],
 				outfile: '.netlify/edge/instrumentation.server.js',
@@ -199,8 +199,8 @@ async function generate_edge_functions({ builder }) {
 			})
 	]);
 
-	if (builder.hasServerInstrumentationFile?.()) {
-		builder.instrument?.({
+	if (builder.hasServerInstrumentationFile()) {
+		builder.instrument({
 			entrypoint: '.netlify/edge-functions/render.js',
 			instrumentation: '.netlify/edge/instrumentation.server.js',
 			start: '.netlify/edge/start.js'
@@ -237,27 +237,32 @@ function generate_lambda_functions({ builder, publish, split }) {
 
 			const routes = [route];
 
+			/** @type {string[]} */
 			const parts = [];
-			// Netlify's syntax uses '*' and ':param' as "splats" and "placeholders"
-			// https://docs.netlify.com/routing/redirects/redirect-options/#splats
+
+			// The parts should conform to URLPattern syntax
+			// https://docs.netlify.com/build/functions/get-started/?fn-language=ts&data-tab=TypeScript#route-requests
 			for (const segment of route.segments) {
 				if (segment.rest) {
 					parts.push('*');
-					break; // Netlify redirects don't allow anything after a *
 				} else if (segment.dynamic) {
-					parts.push(`:${parts.length}`);
+					// URLPattern requires params to start with letters
+					parts.push(`:param${parts.length}`);
 				} else {
 					parts.push(segment.content);
 				}
 			}
 
+			// Netlify handles trailing slashes for us, so we don't need to include them in the pattern
 			const pattern = `/${parts.join('/')}`;
 			const name =
 				FUNCTION_PREFIX + (parts.join('-').replace(/[:.]/g, '_').replace('*', '__rest') || 'index');
 
 			// skip routes with identical patterns, they were already folded into another function
 			if (seen.has(pattern)) continue;
-			seen.add(pattern);
+
+			const patterns = [pattern, `${pattern === '/' ? '' : pattern}/__data.json`];
+			patterns.forEach((p) => seen.add(p));
 
 			// figure out which lower priority routes should be considered fallbacks
 			for (let j = i + 1; j < builder.routes.length; j += 1) {
@@ -269,43 +274,28 @@ function generate_lambda_functions({ builder, publish, split }) {
 				}
 			}
 
-			const manifest = builder.generateManifest({
-				relativePath: '../server',
-				routes
+			generate_serverless_function({
+				builder,
+				routes,
+				patterns,
+				name
 			});
-
-			const fn = `import { init } from '../serverless.js';\n\nexport default init(${manifest});\n\nexport const config = {\n\tpath: "${pattern}",\n\texcludedPath: "/.netlify/*",\n\tpreferStatic: true\n};\n`;
-
-			writeFileSync(`.netlify/functions-internal/${name}.mjs`, fn);
-			if (builder.hasServerInstrumentationFile?.()) {
-				builder.instrument?.({
-					entrypoint: `.netlify/functions-internal/${name}.mjs`,
-					instrumentation: '.netlify/server/instrumentation.server.js',
-					start: `.netlify/functions-start/${name}.start.mjs`,
-					module: {
-						exports: ['default']
-					}
-				});
-			}
 		}
-	} else {
-		const manifest = builder.generateManifest({
-			relativePath: '../server'
+
+		generate_serverless_function({
+			builder,
+			routes: [],
+			patterns: ['/*'],
+			name: `${FUNCTION_PREFIX}catch-all`,
+			exclude: Array.from(seen)
 		});
-
-		const fn = `import { init } from '../serverless.js';\n\nexport default init(${manifest});\n\nexport const config = {\n\tpath: "/*",\n\texcludedPath: "/.netlify/*",\n\tpreferStatic: true\n};\n`;
-
-		writeFileSync(`.netlify/functions-internal/${FUNCTION_PREFIX}render.mjs`, fn);
-		if (builder.hasServerInstrumentationFile?.()) {
-			builder.instrument?.({
-				entrypoint: `.netlify/functions-internal/${FUNCTION_PREFIX}render.mjs`,
-				instrumentation: '.netlify/server/instrumentation.server.js',
-				start: `.netlify/functions-start/${FUNCTION_PREFIX}render.start.mjs`,
-				module: {
-					exports: ['default']
-				}
-			});
-		}
+	} else {
+		generate_serverless_function({
+			builder,
+			routes: undefined,
+			patterns: ['/*'],
+			name: `${FUNCTION_PREFIX}render`
+		});
 	}
 
 	// Copy user's custom _redirects file if it exists
@@ -385,4 +375,81 @@ function matches(a, b) {
 	} else {
 		return b.length === 1 && b[0].rest;
 	}
+}
+
+/**
+ *
+ * @param {{
+ *   builder: import('@sveltejs/kit').Builder,
+ *   routes: import('@sveltejs/kit').RouteDefinition[] | undefined,
+ *   patterns: string[],
+ *   name: string,
+ *   exclude?: string[]
+ * }} opts
+ */
+function generate_serverless_function({ builder, routes, patterns, name, exclude }) {
+	const manifest = builder.generateManifest({
+		relativePath: '../server',
+		routes
+	});
+
+	const fn = generate_serverless_function_module(manifest);
+	const config = generate_config_export(patterns, exclude);
+
+	if (builder.hasServerInstrumentationFile()) {
+		writeFileSync(`.netlify/functions-internal/${name}.mjs`, fn);
+		builder.instrument({
+			entrypoint: `.netlify/functions-internal/${name}.mjs`,
+			instrumentation: '.netlify/server/instrumentation.server.js',
+			start: `.netlify/functions-start/${name}.start.mjs`,
+			module: {
+				generateText: generate_traced_module(config)
+			}
+		});
+	} else {
+		writeFileSync(`.netlify/functions-internal/${name}.mjs`, `${fn}\n${config}`);
+	}
+}
+
+/**
+ * @param {string} manifest
+ * @returns {string}
+ */
+function generate_serverless_function_module(manifest) {
+	return `\
+import { init } from '../serverless.js';
+
+export default init(${manifest});
+`;
+}
+
+/**
+ * @param {string[]} patterns
+ * @param {string[]} [exclude]
+ * @returns {string}
+ */
+function generate_config_export(patterns, exclude = []) {
+	// TODO: add a human friendly name for the function https://docs.netlify.com/build/frameworks/frameworks-api/#configuration-options-2
+	return `\
+export const config = {
+	path: [${patterns.map((s) => JSON.stringify(s)).join(', ')}],
+	excludedPath: [${['/.netlify/*', ...exclude].map((s) => JSON.stringify(s)).join(', ')}],
+	preferStatic: true
+};
+`;
+}
+
+/**
+ * @param {string} config
+ * @returns {(opts: { instrumentation: string; start: string }) => string}
+ */
+function generate_traced_module(config) {
+	return ({ instrumentation, start }) => {
+		return `\
+import './${instrumentation}';
+const { default: _0 } = await import('./${start}');
+export { _0 as default };
+
+${config}`;
+	};
 }

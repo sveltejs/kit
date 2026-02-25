@@ -1,5 +1,14 @@
 # @sveltejs/adapter-cloudflare
 
+## 7.2.8
+### Patch Changes
+
+
+- fix: skip comment lines in `_redirects` file ([#15325](https://github.com/sveltejs/kit/pull/15325))
+
+- Updated dependencies [[`e87efba`](https://github.com/sveltejs/kit/commit/e87efba90aeb04227e6a1a5e9017989e7f1c78dc), [`71ddbc7`](https://github.com/sveltejs/kit/commit/71ddbc7ff19a612cfcd483f3b7ba58586372528b), [`1bae374`](https://github.com/sveltejs/kit/commit/1bae374e2e106eb82502afd1ddf0167d66f224a1), [`20dfadf`](https://github.com/sveltejs/kit/commit/20dfadfbef312b4e750318aa871aebbfcb4396a4), [`8c2384a`](https://github.com/sveltejs/kit/commit/8c2384a346825d54eb4281f9da854388fb4d81b3)]:
+  - @sveltejs/kit@2.52.1
+
 ## 7.2.7
 ### Patch Changes
 
