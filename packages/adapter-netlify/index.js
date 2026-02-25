@@ -260,7 +260,9 @@ function generate_lambda_functions({ builder, publish, split }) {
 
 			// skip routes with identical patterns, they were already folded into another function
 			if (seen.has(pattern)) continue;
-			seen.add(pattern);
+
+			const patterns = [pattern, `${pattern === '/' ? '' : pattern}/__data.json`];
+			patterns.forEach((p) => seen.add(p));
 
 			// figure out which lower priority routes should be considered fallbacks
 			for (let j = i + 1; j < builder.routes.length; j += 1) {
@@ -275,12 +277,18 @@ function generate_lambda_functions({ builder, publish, split }) {
 			generate_serverless_function({
 				builder,
 				routes,
-				patterns: [pattern, `${pattern === '/' ? '' : pattern}/__data.json`],
+				patterns,
 				name
 			});
 		}
 
-		// TODO: add a catch-all to display a 404 page if no other functions are invoked, similar to the Vercel adapter
+		generate_serverless_function({
+			builder,
+			routes: [],
+			patterns: ['/*'],
+			name: `${FUNCTION_PREFIX}catch-all`,
+			exclude: Array.from(seen)
+		});
 	} else {
 		generate_serverless_function({
 			builder,
@@ -375,17 +383,18 @@ function matches(a, b) {
  *   builder: import('@sveltejs/kit').Builder,
  *   routes: import('@sveltejs/kit').RouteDefinition[] | undefined,
  *   patterns: string[],
- *   name: string
+ *   name: string,
+ *   exclude?: string[]
  * }} opts
  */
-function generate_serverless_function({ builder, routes, patterns, name }) {
+function generate_serverless_function({ builder, routes, patterns, name, exclude }) {
 	const manifest = builder.generateManifest({
 		relativePath: '../server',
 		routes
 	});
 
 	const fn = generate_serverless_function_module(manifest);
-	const config = generate_config_export(patterns);
+	const config = generate_config_export(patterns, exclude);
 
 	if (builder.hasServerInstrumentationFile()) {
 		writeFileSync(`.netlify/functions-internal/${name}.mjs`, fn);
@@ -416,14 +425,15 @@ export default init(${manifest});
 
 /**
  * @param {string[]} patterns
+ * @param {string[]} [exclude]
  * @returns {string}
  */
-function generate_config_export(patterns) {
+function generate_config_export(patterns, exclude = []) {
 	// TODO: add a human friendly name for the function https://docs.netlify.com/build/frameworks/frameworks-api/#configuration-options-2
 	return `\
 export const config = {
 	path: [${patterns.map((s) => JSON.stringify(s)).join(', ')}],
-	excludedPath: "/.netlify/*",
+	excludedPath: [${['/.netlify/*', ...exclude].map((s) => JSON.stringify(s)).join(', ')}],
 	preferStatic: true
 };
 `;

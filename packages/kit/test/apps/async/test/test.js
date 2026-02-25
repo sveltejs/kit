@@ -490,6 +490,11 @@ test.describe('remote functions', () => {
 		expect(JSON.parse(arrayValue)).toEqual([{ leaf: 'array-0-leaf' }, { leaf: 'array-1-leaf' }]);
 	});
 
+	test('nested field set is SSR rendered', async ({ page }) => {
+		await page.goto('/remote/form/set-ssr');
+		await expect(page.locator('#description')).toHaveText('Description: nested');
+	});
+
 	test('selects are not nuked when unrelated controls change', async ({
 		page,
 		javaScriptEnabled
