@@ -932,7 +932,9 @@ async function kit({ svelte_config }) {
 								assetFileNames: `${prefix}/assets/[name].[hash][extname]`,
 								hoistTransitiveImports: false,
 								sourcemapIgnoreList,
-								inlineDynamicImports: !split
+								inlineDynamicImports: is_rolldown ? undefined : !split,
+								// @ts-ignore: only available in Vite 8
+								codeSplitting: is_rolldown ? split : undefined
 							},
 							preserveEntrySignatures: 'strict',
 							onwarn(warning, handler) {

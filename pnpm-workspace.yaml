@@ -37,7 +37,7 @@ catalog:
   '@types/set-cookie-parser': ^2.4.7
   '@vitest/browser-playwright': ^4.0.0
   dropcss: ^1.0.16
-  dts-buddy: ^0.6.2
+  dts-buddy: ^0.7.0
   esbuild: ^0.25.4
   eslint: ^10.0.0
   polka: ^1.0.0-next.28
