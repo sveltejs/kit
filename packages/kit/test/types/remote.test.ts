@@ -10,6 +10,7 @@ import {
 
 const schema: StandardSchemaV1<string> = null as any;
 const schema2: StandardSchemaV1<string, number> = null as any;
+const schema3: StandardSchemaV1<string | undefined, number> = null as any;
 
 function query_tests() {
 	const no_args: RemoteQueryFunction<void, string> = query(() => 'Hello world');
@@ -39,6 +40,21 @@ function query_tests() {
 		query((_: string) => 'hi');
 	}
 	void query_without_args();
+
+	async function query_with_optional_arg() {
+		const q = query(schema3, () => 'Hello world');
+		void q();
+		void q('hi');
+		// @ts-expect-error
+		void q(1);
+
+		const q2 = query('unchecked', (a?: string) => a);
+		void q2();
+		void q2('hi');
+		// @ts-expect-error
+		void q2(1);
+	}
+	void query_with_optional_arg();
 
 	async function query_unsafe() {
 		const q = query('unchecked', (a: number) => a);
@@ -106,6 +122,21 @@ function prerender_tests() {
 	}
 	void prerender_unsafe();
 
+	async function prerender_with_optional_arg() {
+		const q = prerender(schema3, () => 'Hello world');
+		void q();
+		void q('hi');
+		// @ts-expect-error
+		void q(1);
+
+		const q2 = prerender('unchecked', (a?: string) => a);
+		void q2();
+		void q2('hi');
+		// @ts-expect-error
+		void q2(1);
+	}
+	void prerender_with_optional_arg();
+
 	async function prerender_schema() {
 		const q = prerender(schema, (a) => a);
 		const result: string = await q('1');
@@ -140,6 +171,21 @@ function command_tests() {
 		wrong;
 	}
 	void command_without_args();
+
+	async function command_with_optional_arg() {
+		const q = command(schema3, () => 'Hello world');
+		void q();
+		void q('hi');
+		// @ts-expect-error
+		void q(1);
+
+		const q2 = command('unchecked', (a?: string) => a);
+		void q2();
+		void q2('hi');
+		// @ts-expect-error
+		void q2(1);
+	}
+	void command_with_optional_arg();
 
 	async function command_unsafe() {
 		const cmd = command('unchecked', (a: string) => a);

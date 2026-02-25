@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.53.1
+### Patch Changes
+
+
+- fix: address warning about `inlineDynamicImports` when using Vite 8 ([#15403](https://github.com/sveltejs/kit/pull/15403))
+
 ## 2.53.0
 ### Minor Changes
 
