@@ -1,6 +1,5 @@
 ---
-'@sveltejs/adapter-cloudflare': minor
-'@sveltejs/adapter-auto': minor
+'@sveltejs/adapter-cloudflare': patch
 ---
 
-feat: support Cloudflare Workers Builds by detecting the `WORKERS_CI` environment variable
+chore: check the `WORKERS_CI` environment variable when determining if we're building for Cloudflare Workers
