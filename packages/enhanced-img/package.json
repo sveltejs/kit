@@ -50,7 +50,7 @@
 		"@types/node": "catalog:",
 		"rolldown": "^1.0.0-rc.5",
 		"svelte": "catalog:",
-		"typescript": "^5.6.3",
+		"typescript": "catalog:",
 		"vite": "catalog:",
 		"vitest": "catalog:"
 	},
