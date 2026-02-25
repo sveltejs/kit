@@ -17,14 +17,6 @@ const cookie_paths = {};
  */
 const MAX_COOKIE_SIZE = 4129;
 
-// TODO 3.0 remove this check
-/** @param {import('./page/types.js').Cookie['options']} options */
-function validate_options(options) {
-	if (options?.path === undefined) {
-		throw new Error('You must specify a `path` when setting, deleting or serializing cookies');
-	}
-}
-
 /**
  * Generates a unique key for a cookie based on its domain, path, and name in
  * the format: `<domain>/<path>?<name>`.
@@ -59,6 +51,7 @@ export function get_cookies(request, url) {
 	/** @type {import('cookie').SerializeOptions} */
 	const defaults = {
 		httpOnly: true,
+		path: '/',
 		sameSite: 'lax',
 		secure: url.hostname === 'localhost' && url.protocol === 'http:' ? false : true
 	};
@@ -151,31 +144,27 @@ export function get_cookies(request, url) {
 		/**
 		 * @param {string} name
 		 * @param {string} value
-		 * @param {import('./page/types.js').Cookie['options']} options
+		 * @param {import('cookie').SerializeOptions} options
 		 */
 		set(name, value, options) {
-			validate_options(options);
 			set_internal(name, value, { ...defaults, ...options });
 		},
 
 		/**
 		 * @param {string} name
-		 *  @param {import('./page/types.js').Cookie['options']} options
+		 * @param {import('cookie').SerializeOptions} options
 		 */
 		delete(name, options) {
-			validate_options(options);
 			cookies.set(name, '', { ...options, maxAge: 0 });
 		},
 
 		/**
 		 * @param {string} name
 		 * @param {string} value
-		 *  @param {import('./page/types.js').Cookie['options']} options
+		 * @param {import('cookie').SerializeOptions} options
 		 */
 		serialize(name, value, options) {
-			validate_options(options);
-
-			let path = options.path;
+			let path = options.path ?? '/';
 
 			if (!options.domain || options.domain === url.hostname) {
 				if (!normalized_url) {
@@ -229,7 +218,7 @@ export function get_cookies(request, url) {
 	/**
 	 * @param {string} name
 	 * @param {string} value
-	 * @param {import('./page/types.js').Cookie['options']} options
+	 * @param {import('cookie').SerializeOptions} options
 	 */
 	function set_internal(name, value, options) {
 		if (!normalized_url) {
@@ -237,7 +226,7 @@ export function get_cookies(request, url) {
 			return;
 		}
 
-		let path = options.path;
+		let path = options.path ?? '/';
 
 		if (!options.domain || options.domain === url.hostname) {
 			path = resolve(normalized_url, path);

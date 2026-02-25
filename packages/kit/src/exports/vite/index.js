@@ -27,7 +27,7 @@ import prerender from '../../core/postbuild/prerender.js';
 import analyse from '../../core/postbuild/analyse.js';
 import { s } from '../../utils/misc.js';
 import { hash } from '../../utils/hash.js';
-import { dedent, isSvelte5Plus } from '../../core/sync/utils.js';
+import { dedent } from '../../core/sync/utils.js';
 import {
 	env_dynamic_private,
 	env_dynamic_public,
@@ -112,10 +112,10 @@ const warning_preprocessor = {
 
 		const basename = path.basename(filename);
 
-		if (basename.startsWith('+layout.') && !has_children(content, isSvelte5Plus())) {
+		if (basename.startsWith('+layout.') && !has_children(content, true)) {
 			const message =
 				`\n${styleText(['bold', 'red'], path.relative('.', filename))}\n` +
-				`\`<slot />\`${isSvelte5Plus() ? ' or `{@render ...}` tag' : ''}` +
+				'`<slot />` or `{@render ...}` tag' +
 				' missing — inner content will not be rendered';
 
 			if (!warned.has(message)) {
@@ -149,11 +149,7 @@ export async function sveltekit() {
 		extensions: svelte_config.extensions,
 		preprocess,
 		onwarn: svelte_config.onwarn,
-		compilerOptions: {
-			// @ts-ignore - ignore this property when running `pnpm check` against Svelte 5 in the ecosystem CI
-			hydratable: isSvelte5Plus() ? undefined : true,
-			...svelte_config.compilerOptions
-		},
+		compilerOptions: { ...svelte_config.compilerOptions },
 		...svelte_config.vitePlugin
 	};
 
@@ -188,9 +184,6 @@ let build_metadata = undefined;
 async function kit({ svelte_config }) {
 	/** @type {import('vite')} */
 	const vite = await import_peer('vite');
-
-	// @ts-ignore `vite.rolldownVersion` only exists in `vite 8`
-	const is_rolldown = !!vite.rolldownVersion;
 
 	const { kit } = svelte_config;
 	const out = `${kit.outDir}/output`;
@@ -303,7 +296,27 @@ async function kit({ svelte_config }) {
 						// this does not affect app code, just handling of imported libraries that use $app or $env
 						'$app',
 						'$env'
-					]
+					],
+					rolldownOptions: kit.experimental.remoteFunctions
+						? {
+								plugins: [
+									{
+										name: 'vite-plugin-sveltekit-setup:optimize-remote-functions',
+										load: {
+											filter: {
+												// treat .remote.js files as empty for the purposes of prebundling
+												id: new RegExp(
+													`.remote(${kit.moduleExtensions.join('|')})$`.replaceAll('.', '\\.')
+												)
+											},
+											handler() {
+												return '';
+											}
+										}
+									}
+								]
+							}
+						: undefined
 				},
 				ssr: {
 					noExternal: [
@@ -321,40 +334,6 @@ async function kit({ svelte_config }) {
 					]
 				}
 			};
-
-			if (kit.experimental.remoteFunctions) {
-				// treat .remote.js files as empty for the purposes of prebundling
-				// detects rolldown to avoid a warning message in vite 8 beta
-				const remote_id_filter = new RegExp(
-					`.remote(${kit.moduleExtensions.join('|')})$`.replaceAll('.', '\\.')
-				);
-				new_config.optimizeDeps ??= {}; // for some reason ts says this could be undefined even though it was set above
-				if (is_rolldown) {
-					// @ts-ignore
-					new_config.optimizeDeps.rolldownOptions ??= {};
-					// @ts-ignore
-					new_config.optimizeDeps.rolldownOptions.plugins ??= [];
-					// @ts-ignore
-					new_config.optimizeDeps.rolldownOptions.plugins.push({
-						name: 'vite-plugin-sveltekit-setup:optimize-remote-functions',
-						load: {
-							filter: { id: remote_id_filter },
-							handler() {
-								return '';
-							}
-						}
-					});
-				} else {
-					new_config.optimizeDeps.esbuildOptions ??= {};
-					new_config.optimizeDeps.esbuildOptions.plugins ??= [];
-					new_config.optimizeDeps.esbuildOptions.plugins.push({
-						name: 'vite-plugin-sveltekit-setup:optimize-remote-functions',
-						setup(build) {
-							build.onLoad({ filter: remote_id_filter }, () => ({ contents: '' }));
-						}
-					});
-				}
-			}
 
 			const define = {
 				__SVELTEKIT_APP_DIR__: s(kit.appDir),
@@ -927,14 +906,12 @@ async function kit({ svelte_config }) {
 								assetFileNames: `${prefix}/assets/[name].[hash][extname]`,
 								hoistTransitiveImports: false,
 								sourcemapIgnoreList,
-								inlineDynamicImports: !split
+								codeSplitting: split
 							},
 							preserveEntrySignatures: 'strict',
 							onwarn(warning, handler) {
 								if (
-									(is_rolldown
-										? warning.code === 'IMPORT_IS_UNDEFINED'
-										: warning.code === 'MISSING_EXPORT') &&
+									warning.code === 'IMPORT_IS_UNDEFINED' &&
 									warning.id === `${kit.outDir}/generated/client-optimized/app.js`
 								) {
 									// ignore e.g. undefined `handleError` hook when
