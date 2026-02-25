@@ -26,7 +26,9 @@ export function query(id) {
 	return create_remote_function(id, (cache_key, payload, cached) => {
 		return new Query(cache_key, async () => {
 			if (cached !== NOT_CACHED) {
-				return cached;
+				const data = cached;
+				cached = NOT_CACHED;
+				return data;
 			}
 
 			const url = `${base}/${app_dir}/remote/${id}${payload ? `?payload=${payload}` : ''}`;
@@ -49,7 +51,9 @@ export function query_batch(id) {
 	return create_remote_function(id, (cache_key, payload, cached) => {
 		return new Query(cache_key, () => {
 			if (cached !== NOT_CACHED) {
-				return cached;
+				const data = cached;
+				cached = NOT_CACHED;
+				return data;
 			}
 
 			// Collect all the calls to the same query in the same macrotask,

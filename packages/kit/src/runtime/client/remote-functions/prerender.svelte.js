@@ -147,7 +147,9 @@ export function prerender(id) {
 					void put(url, devalue.stringify(cached, app.encoders));
 				}
 
-				return cached;
+				const data = cached;
+				cached = NOT_CACHED;
+				return data;
 			}
 
 			// Check the Cache API first
