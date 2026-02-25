@@ -231,7 +231,8 @@ const plugin = function (defaults = {}) {
 					throw new Error(
 						`Bundling with esbuild failed with ${error.errors.length} ${
 							error.errors.length === 1 ? 'error' : 'errors'
-						}`
+						}`,
+						{ cause: err }
 					);
 				}
 

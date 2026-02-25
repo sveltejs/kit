@@ -7,7 +7,8 @@ const config = {
 		experimental: {
 			instrumentation: {
 				server: true
-			}
+			},
+			remoteFunctions: true
 		}
 	}
 };

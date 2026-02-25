@@ -53,6 +53,7 @@ function merge_with_server_issues(form_data, current_issues, client_issues) {
  */
 export function form(id) {
 	/** @type {Map<any, { count: number, instance: RemoteForm<T, U> }>} */
+	// eslint-disable-next-line svelte/prefer-svelte-reactivity -- we don't need reactivity for this
 	const instances = new Map();
 
 	/** @param {string | number | boolean} [key] */
@@ -284,6 +285,7 @@ export function form(id) {
 
 				if (method !== 'post') return;
 
+				// eslint-disable-next-line svelte/prefer-svelte-reactivity
 				const action = new URL(
 					// We can't do submitter.formAction directly because that property is always set
 					event.submitter?.hasAttribute('formaction')
