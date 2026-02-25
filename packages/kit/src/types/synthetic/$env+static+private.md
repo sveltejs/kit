@@ -9,7 +9,7 @@ Static environment variables are [loaded by Vite](https://vitejs.dev/guide/env-a
 
 **_Private_ access:**
 
-- This module (and [`$env/dynamic/private`](https://svelte.dev/docs/kit/$env-dynamic-private)) cannot be imported into client-side code.
+- This module cannot be imported into client-side code
 - This module only includes variables that _do not_ begin with [`config.kit.env.publicPrefix`](https://svelte.dev/docs/kit/configuration#env) _and do_ start with [`config.kit.env.privatePrefix`](https://svelte.dev/docs/kit/configuration#env) (if configured)
 
 For example, given the following build time environment:
