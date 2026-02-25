@@ -1,9 +1,9 @@
 This module provides access to environment variables that are injected _statically_ into your bundle at build time and are limited to _private_ access.
 
-|         | Runtime                                                                    | Build time                                                              |
-| ------- | -------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| Private | [`$env/dynamic/private`](https://svelte.dev/docs/kit/$env-dynamic-private) | `$env/static/private`                                                  |
-| Public  | [`$env/dynamic/public`](https://svelte.dev/docs/kit/$env-dynamic-public)   | [`$env/static/public`](https://svelte.dev/docs/kit/$env-static-public) |
+|         | Runtime                                                                    | Build time                                                               |
+| ------- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| Private | [`$env/dynamic/private`](https://svelte.dev/docs/kit/$env-dynamic-private) | [`$env/static/private`](https://svelte.dev/docs/kit/$env-static-private) |
+| Public  | [`$env/dynamic/public`](https://svelte.dev/docs/kit/$env-dynamic-public)   | [`$env/static/public`](https://svelte.dev/docs/kit/$env-static-public)   |
 
 Static environment variables are [loaded by Vite](https://vitejs.dev/guide/env-and-mode.html#env-files) from `.env` files and `process.env` at build time and then statically injected into your bundle at build time, enabling optimisations like dead code elimination.
 

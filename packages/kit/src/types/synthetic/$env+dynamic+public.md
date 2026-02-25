@@ -1,9 +1,9 @@
 This module provides access to environment variables set _dynamically_ at runtime and that are _publicly_ accessible.
 
-|         | Runtime                                                                    | Build time                                                                |
+|         | Runtime                                                                    | Build time                                                               |
 | ------- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
 | Private | [`$env/dynamic/private`](https://svelte.dev/docs/kit/$env-dynamic-private) | [`$env/static/private`](https://svelte.dev/docs/kit/$env-static-private) |
-| Public  | `$env/dynamic/public`                                                      | [`$env/static/public`](https://svelte.dev/docs/kit/$env-static-public)   |
+| Public  | [`$env/dynamic/public`](https://svelte.dev/docs/kit/$env-dynamic-public)   | [`$env/static/public`](https://svelte.dev/docs/kit/$env-static-public)   |
 
 Dynamic environment variables are defined by the platform you're running on. For example if you're using [`adapter-node`](https://github.com/sveltejs/kit/tree/main/packages/adapter-node) (or running [`vite preview`](https://svelte.dev/docs/kit/cli)), this is equivalent to `process.env`.
 
@@ -27,14 +27,20 @@ Dynamic environment variables are defined by the platform you're running on. For
 > ```
 
 For example, given the following runtime environment:
+
 ```env
 ENVIRONMENT=production
 PUBLIC_BASE_URL=http://example.com
 ```
+
 With the default `publicPrefix` and `privatePrefix`:
+
 ```ts
 import { env } from '$env/dynamic/public';
 console.log(env.ENVIRONMENT); // => undefined, not public
 console.log(env.PUBLIC_BASE_URL); // => "http://example.com"
 ```
+
+```
+
 ```
