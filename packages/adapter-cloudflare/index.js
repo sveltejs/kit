@@ -1,24 +1,18 @@
 import { VERSION } from '@sveltejs/kit';
-import { copyFileSync, existsSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 import { getPlatformProxy, unstable_readConfig } from 'wrangler';
-import { is_building_for_cloudflare_pages, validate_worker_settings } from './utils.js';
+import {
+	is_building_for_cloudflare_pages,
+	validate_worker_settings,
+	get_routes_json,
+	parse_redirects
+} from './utils.js';
 
 const name = '@sveltejs/adapter-cloudflare';
 const [kit_major, kit_minor] = VERSION.split('.');
-
-/**
- * @template T
- * @template {keyof T} K
- * @typedef {Partial<Omit<T, K>> & Required<Pick<T, K>>} PartialExcept
- */
-
-/**
- * We use a custom `Builder` type here to support the minimum version of SvelteKit.
- * @typedef {PartialExcept<import('@sveltejs/kit').Builder, 'log' | 'rimraf' | 'mkdirp' | 'config' | 'prerendered' | 'routes' | 'createEntries' | 'generateFallback' | 'generateEnvModule' | 'generateManifest' | 'getBuildDirectory' | 'getClientDirectory' | 'getServerDirectory' | 'getAppPath' | 'writeClient' | 'writePrerendered' | 'writePrerendered' | 'writeServer' | 'copy' | 'compress'>} Builder2_0_0
- */
 
 /** @type {import('./index.js').default} */
 export default function (options = {}) {
@@ -26,7 +20,10 @@ export default function (options = {}) {
 		name,
 		/** @param {Builder2_0_0} builder */
 		async adapt(builder) {
-			if (existsSync('_routes.json')) {
+			if (
+				existsSync('_routes.json') ||
+				existsSync(`${builder.config.kit.files.assets}/_routes.json`)
+			) {
 				throw new Error(
 					"Cloudflare Pages' _routes.json should be configured in svelte.config.js. See https://svelte.dev/docs/kit/adapter-cloudflare#Options-routes"
 				);
@@ -44,9 +41,9 @@ export default function (options = {}) {
 				);
 			}
 
-			const wrangler_config = validate_wrangler_config(options.config);
-
-			const building_for_cloudflare_pages = is_building_for_cloudflare_pages(wrangler_config);
+			const { wrangler_config, building_for_cloudflare_pages } = validate_wrangler_config(
+				options.config
+			);
 
 			let dest = builder.getBuildDirectory('cloudflare');
 			let worker_dest = `${dest}/_worker.js`;
@@ -90,7 +87,9 @@ export default function (options = {}) {
 				building_for_cloudflare_pages ||
 				wrangler_config.assets?.not_found_handling === '404-page'
 			) {
-				// generate plaintext 404.html first which can then be overridden by prerendering, if the user defined such a page
+				// generate plaintext 404.html first which can then be overridden by prerendering, if the user defined such a page.
+				// This file is served when a request fails to match an asset.
+				// If we're building for Cloudflare Pages, it's only served when a request matches an entry in `routes.exclude`
 				const fallback = path.join(assets_dest, '404.html');
 				if (options.fallback === 'spa') {
 					await builder.generateFallback(fallback);
@@ -119,9 +118,11 @@ export default function (options = {}) {
 				replace: {
 					// the paths returned by the Wrangler config might be Windows paths,
 					// so we need to convert them to POSIX paths or else the backslashes
-					// will be interpreted as escape characters and create an incorrect import path
-					SERVER: `${posixify(path.relative(worker_dest_dir, builder.getServerDirectory()))}/index.js`,
-					MANIFEST: `${posixify(path.relative(worker_dest_dir, tmp))}/manifest.js`,
+					// will be interpreted as escape characters and create an incorrect import path.
+					// We also need to ensure the relative imports start with ./ since Wrangler
+					// errors if a relative import looks like a package import
+					SERVER: `./${posixify(path.relative(worker_dest_dir, builder.getServerDirectory()))}/index.js`,
+					MANIFEST: `./${posixify(path.relative(worker_dest_dir, tmp))}/manifest.js`,
 					ASSETS: assets_binding
 				}
 			});
@@ -133,28 +134,48 @@ export default function (options = {}) {
 			}
 
 			// _headers
-			if (existsSync('_headers')) {
-				copyFileSync('_headers', `${dest}/_headers`);
+			const headers_src = '_headers';
+			const headers_dest = `${dest}/_headers`;
+			if (existsSync(headers_src)) {
+				copyFileSync(headers_src, headers_dest);
 			}
-			writeFileSync(`${dest}/_headers`, generate_headers(builder.getAppPath()), { flag: 'a' });
+			writeFileSync(headers_dest, generate_headers(builder.getAppPath()), { flag: 'a' });
 
 			// _redirects
-			if (existsSync('_redirects')) {
-				copyFileSync('_redirects', `${dest}/_redirects`);
+			const redirects_src = '_redirects';
+			const redirects_dest = `${dest}/_redirects`;
+			if (existsSync(redirects_src)) {
+				copyFileSync(redirects_src, redirects_dest);
 			}
 			if (builder.prerendered.redirects.size > 0) {
-				writeFileSync(`${dest}/_redirects`, generate_redirects(builder.prerendered.redirects), {
+				writeFileSync(redirects_dest, generate_redirects(builder.prerendered.redirects), {
 					flag: 'a'
 				});
 			}
 
-			writeFileSync(`${dest}/.assetsignore`, generate_assetsignore(), { flag: 'a' });
-
 			if (building_for_cloudflare_pages) {
+				// _routes.json
+
+				// we need to add the source paths found in the `_redirects` file to the
+				// `_routes.json` file so that Cloudflare knows it shouldn't invoke the
+				// Worker but instead let the rules in the `_redirects` file take over.
+				/** @type {string[]} */
+				let redirects = [];
+				if (existsSync(redirects_dest)) {
+					const redirect_rules = readFileSync(redirects_dest, 'utf8');
+					redirects = parse_redirects(redirect_rules);
+				}
+
 				writeFileSync(
 					`${dest}/_routes.json`,
-					JSON.stringify(get_routes_json(builder, client_assets, options.routes ?? {}), null, '\t')
+					JSON.stringify(
+						get_routes_json(builder, client_assets, redirects, options.routes ?? {}),
+						null,
+						'\t'
+					)
 				);
+			} else {
+				writeFileSync(`${dest}/.assetsignore`, generate_assetsignore(), { flag: 'a' });
 			}
 		},
 		emulate() {
@@ -209,70 +230,9 @@ export default function (options = {}) {
 }
 
 /**
- * @param {Builder2_0_0} builder
- * @param {string[]} assets
- * @param {import('./index.js').AdapterOptions['routes']} routes
- * @returns {import('./index.js').RoutesJSONSpec}
+ * @param {string} app_dir
+ * @returns {string}
  */
-function get_routes_json(builder, assets, routes) {
-	let { include = ['/*'], exclude = ['<all>'] } = routes || {};
-
-	if (!Array.isArray(include) || !Array.isArray(exclude)) {
-		throw new Error('routes.include and routes.exclude must be arrays');
-	}
-
-	if (include.length === 0) {
-		throw new Error('routes.include must contain at least one route');
-	}
-
-	if (include.length > 100) {
-		throw new Error('routes.include must contain 100 or fewer routes');
-	}
-
-	exclude = exclude
-		.flatMap((rule) => (rule === '<all>' ? ['<build>', '<files>', '<prerendered>'] : rule))
-		.flatMap((rule) => {
-			if (rule === '<build>') {
-				return [`/${builder.getAppPath()}/immutable/*`, `/${builder.getAppPath()}/version.json`];
-			}
-
-			if (rule === '<files>') {
-				return assets
-					.filter(
-						(file) =>
-							!(
-								file.startsWith(`${builder.config.kit.appDir}/`) ||
-								file === '_headers' ||
-								file === '_redirects'
-							)
-					)
-					.map((file) => `${builder.config.kit.paths.base}/${file}`);
-			}
-
-			if (rule === '<prerendered>') {
-				return builder.prerendered.paths;
-			}
-
-			return rule;
-		});
-
-	const excess = include.length + exclude.length - 100;
-	if (excess > 0) {
-		const message = `Cloudflare Pages Functions' includes/excludes exceeds _routes.json limits (see https://developers.cloudflare.com/pages/platform/functions/routing/#limits). Dropping ${excess} exclude rules — this will cause unnecessary function invocations.`;
-		builder.log.warn(message);
-
-		exclude.length -= excess;
-	}
-
-	return {
-		version: 1,
-		description: 'Generated by @sveltejs/adapter-cloudflare',
-		include,
-		exclude
-	};
-}
-
-/** @param {string} app_dir */
 function generate_headers(app_dir) {
 	return `
 # === START AUTOGENERATED SVELTE IMMUTABLE HEADERS ===
@@ -286,7 +246,10 @@ function generate_headers(app_dir) {
 `.trimEnd();
 }
 
-/** @param {Map<string, { status: number; location: string }>} redirects */
+/**
+ * @param {Map<string, { status: number; location: string }>} redirects
+ * @returns {string}
+ */
 function generate_redirects(redirects) {
 	const rules = Array.from(
 		redirects.entries(),
@@ -300,6 +263,9 @@ ${rules}
 `.trimEnd();
 }
 
+/**
+ * @returns {string}
+ */
 function generate_assetsignore() {
 	// this comes from https://github.com/cloudflare/workers-sdk/blob/main/packages/create-cloudflare/templates-experimental/svelte/templates/static/.assetsignore
 	return `
@@ -307,22 +273,31 @@ _worker.js
 _routes.json
 _headers
 _redirects
-`;
+`.trimEnd();
 }
 
 /**
  * @param {string | undefined} config_file
- * @returns {import('wrangler').Unstable_Config}
+ * @returns {{
+ * 	wrangler_config: import('wrangler').Unstable_Config,
+ * 	building_for_cloudflare_pages: boolean
+ * }}
  */
 function validate_wrangler_config(config_file = undefined) {
 	const wrangler_config = unstable_readConfig({ config: config_file });
 
-	if (!is_building_for_cloudflare_pages(wrangler_config)) {
-		// probably deploying to Cloudflare Workers
+	const building_for_cloudflare_pages = is_building_for_cloudflare_pages(wrangler_config);
+
+	// we don't need to validate the config if we're building for Cloudflare Pages
+	// because the `main` and `assets` values cannot be changed there
+	if (!building_for_cloudflare_pages) {
 		validate_worker_settings(wrangler_config);
 	}
 
-	return wrangler_config;
+	return {
+		wrangler_config,
+		building_for_cloudflare_pages
+	};
 }
 
 /** @param {string} str */

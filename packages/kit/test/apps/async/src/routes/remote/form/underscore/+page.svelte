@@ -1,5 +1,5 @@
 <script>
-	import { register } from './form.remote.js';
+	import { register } from './form.remote.ts';
 </script>
 
 <form {...register}>

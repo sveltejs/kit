@@ -1,12 +1,12 @@
 import path from 'node:path';
 import process from 'node:process';
+import { styleText } from 'node:util';
 import { hash } from '../../utils/hash.js';
 import { posixify, resolve_entry } from '../../utils/filesystem.js';
 import { s } from '../../utils/misc.js';
 import { load_error_page, load_template } from '../config/index.js';
 import { runtime_directory } from '../utils.js';
-import { isSvelte5Plus, write_if_changed } from './utils.js';
-import colors from 'kleur';
+import { write_if_changed } from './utils.js';
 import { escape_html } from '../../utils/escape.js';
 
 /**
@@ -29,7 +29,7 @@ const server_template = ({
 	template,
 	error_page
 }) => `
-import root from '../root.${isSvelte5Plus() ? 'js' : 'svelte'}';
+import root from '../root.js';
 import { set_building, set_prerendering } from '__sveltekit/environment';
 import { set_assets } from '$app/paths/internal/server';
 import { set_manifest, set_read_implementation } from '__sveltekit/server';
@@ -46,7 +46,6 @@ export const options = {
 	env_private_prefix: '${config.kit.env.privatePrefix}',
 	hash_routing: ${s(config.kit.router.type === 'hash')},
 	hooks: null, // added lazily, via \`get_hooks\`
-	preload_strategy: ${s(config.kit.output.preloadStrategy)},
 	root,
 	service_worker: ${has_service_worker},
 	service_worker_options: ${config.kit.serviceWorker.register ? s(config.kit.serviceWorker.options) : 'null'},
@@ -110,12 +109,11 @@ export function write_server(config, output) {
 	const typo = resolve_entry('src/+hooks.server');
 	if (typo) {
 		console.log(
-			colors
-				.bold()
-				.yellow(
-					`Unexpected + prefix. Did you mean ${typo.split('/').at(-1)?.slice(1)}?` +
-						` at ${path.resolve(typo)}`
-				)
+			styleText(
+				['bold', 'yellow'],
+				`Unexpected + prefix. Did you mean ${typo.split('/').at(-1)?.slice(1)}?` +
+					` at ${path.resolve(typo)}`
+			)
 		);
 	}
 

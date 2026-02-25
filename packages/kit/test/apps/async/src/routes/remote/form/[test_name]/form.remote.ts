@@ -16,10 +16,11 @@ export const set_message = form(
 		test_name: v.string(),
 		id: v.optional(v.string()),
 		message: v.picklist(
-			['hello', 'goodbye', 'unexpected error', 'expected error', 'redirect'],
+			['hello', 'goodbye', 'unexpected error', 'expected error', 'redirect', 'backwards'],
 			'message is invalid'
 		),
-		uppercase: v.optional(v.string())
+		uppercase: v.optional(v.string()),
+		action: v.optional(v.picklist(['normal', 'reverse']))
 	}),
 	async (data) => {
 		if (data.message === 'unexpected error') {
@@ -37,7 +38,11 @@ export const set_message = form(
 		const instance = instances.get(data.test_name) ?? { message: 'initial', deferreds: [] };
 		instances.set(data.test_name, instance);
 
-		instance.message = data.uppercase === 'true' ? data.message.toUpperCase() : data.message;
+		if (data.action === 'reverse') {
+			instance.message = data.message.split('').reverse().join('');
+		} else {
+			instance.message = data.uppercase === 'true' ? data.message.toUpperCase() : data.message;
+		}
 
 		if (getRequestEvent().isRemoteRequest) {
 			const deferred = Promise.withResolvers<void>();

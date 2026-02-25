@@ -1,4 +1,3 @@
-import path from 'node:path';
 import process from 'node:process';
 import { imagetools } from 'vite-imagetools';
 import { image_plugin } from './vite-plugin.js';
@@ -13,17 +12,19 @@ export function enhancedImages() {
 		: [];
 }
 
-/** @type {Record<string,string>} */
-const fallback = {
-	'.avif': 'png',
-	'.gif': 'gif',
-	'.heif': 'jpg',
-	'.jpeg': 'jpg',
-	'.jpg': 'jpg',
-	'.png': 'png',
-	'.tiff': 'jpg',
-	'.webp': 'png'
-};
+/**
+ * @param {import('sharp').Metadata} meta
+ * @returns {string}
+ */
+function fallback_format(meta) {
+	if (meta.pages && meta.pages > 1) {
+		return meta.format === 'tiff' ? 'tiff' : 'gif';
+	}
+	if (meta.hasAlpha) {
+		return 'png';
+	}
+	return 'jpg';
+}
 
 function imagetools_plugin() {
 	/** @type {Partial<import('vite-imagetools').VitePluginOptions>} */
@@ -31,8 +32,10 @@ function imagetools_plugin() {
 		defaultDirectives: async ({ pathname, searchParams: qs }, metadata) => {
 			if (!qs.has('enhanced')) return new URLSearchParams();
 
+			const meta = await metadata();
 			const img_width = qs.get('imgWidth');
-			const width = img_width ? parseInt(img_width) : (await metadata()).width;
+			const width = img_width ? parseInt(img_width) : meta.width;
+
 			if (!width) {
 				console.warn(`Could not determine width of image ${pathname}`);
 				return new URLSearchParams();
@@ -41,7 +44,7 @@ function imagetools_plugin() {
 			const { widths, kind } = get_widths(width, qs.get('imgSizes'));
 			return new URLSearchParams({
 				as: 'picture',
-				format: `avif;webp;${fallback[path.extname(pathname)] ?? 'png'}`,
+				format: `avif;webp;${fallback_format(meta)}`,
 				w: widths.join(';'),
 				...(kind === 'x' && !qs.has('w') && { basePixels: widths[0].toString() })
 			});

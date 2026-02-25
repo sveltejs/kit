@@ -1,5 +1,5 @@
 import process from 'node:process';
-import colors from 'kleur';
+import { styleText } from 'node:util';
 
 /** @typedef {import('./types.js').Validator} Validator */
 
@@ -159,7 +159,6 @@ const options = object(
 			outDir: string('.svelte-kit'),
 
 			output: object({
-				preloadStrategy: list(['modulepreload', 'preload-js', 'preload-mjs']),
 				bundleStrategy: list(['split', 'single', 'inline'])
 			}),
 
@@ -329,7 +328,7 @@ function deprecate(
 ) {
 	return (input, keypath) => {
 		if (input !== undefined) {
-			console.warn(colors.bold().yellow(get_message(keypath)));
+			console.warn(styleText(['bold', 'yellow'], get_message(keypath)));
 		}
 
 		return fn(input, keypath);

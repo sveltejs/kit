@@ -113,7 +113,7 @@ for (const dir of fs.readdirSync(join(__dirname, 'errors'))) {
 				// 	break;
 
 				default:
-					throw new Error('All error test must be handled');
+					throw new Error('All error test must be handled', { cause: error });
 			}
 		} finally {
 			rimraf(output);

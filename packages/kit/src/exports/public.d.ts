@@ -15,7 +15,8 @@ import {
 	PrerenderUnseenRoutesHandlerValue,
 	PrerenderOption,
 	RequestOptions,
-	RouteSegment
+	RouteSegment,
+	IsAny
 } from '../types/private.js';
 import { BuildData, SSRNodeLoader, SSRRoute, ValidatedConfig } from 'types';
 import { SvelteConfig } from '@sveltejs/vite-plugin-svelte';
@@ -262,57 +263,50 @@ export interface Cookies {
 	/**
 	 * Gets a cookie that was previously set with `cookies.set`, or from the request headers.
 	 * @param name the name of the cookie
-	 * @param opts the options, passed directly to `cookie.parse`. See documentation [here](https://github.com/jshttp/cookie#cookieparsestr-options)
+	 * @param opts the options, passed directly to `cookie.parse`. See documentation [here](https://github.com/jshttp/cookie?tab=readme-ov-file#cookieparsecookiestr-options)
 	 */
-	get: (name: string, opts?: import('cookie').CookieParseOptions) => string | undefined;
+	get: (name: string, opts?: import('cookie').ParseOptions) => string | undefined;
 
 	/**
 	 * Gets all cookies that were previously set with `cookies.set`, or from the request headers.
-	 * @param opts the options, passed directly to `cookie.parse`. See documentation [here](https://github.com/jshttp/cookie#cookieparsestr-options)
+	 * @param opts the options, passed directly to `cookie.parse`. See documentation [here](https://github.com/jshttp/cookie?tab=readme-ov-file#cookieparsecookiestr-options)
 	 */
-	getAll: (opts?: import('cookie').CookieParseOptions) => Array<{ name: string; value: string }>;
+	getAll: (opts?: import('cookie').ParseOptions) => Array<{ name: string; value: string }>;
 
 	/**
 	 * Sets a cookie. This will add a `set-cookie` header to the response, but also make the cookie available via `cookies.get` or `cookies.getAll` during the current request.
 	 *
-	 * The `httpOnly` and `secure` options are `true` by default (except on http://localhost, where `secure` is `false`), and must be explicitly disabled if you want cookies to be readable by client-side JavaScript and/or transmitted over HTTP. The `sameSite` option defaults to `lax`.
+	 * The `httpOnly` and `secure` options are `true` by default (except on http://localhost, where `secure` is `false`), and must be explicitly disabled if you want cookies to be readable by client-side JavaScript and/or transmitted over HTTP.
 	 *
-	 * You must specify a `path` for the cookie. In most cases you should explicitly set `path: '/'` to make the cookie available throughout your app. You can use relative paths, or set `path: ''` to make the cookie only available on the current path and its children
+	 * The `path` option is `'/'` by default. You can use relative paths, or set `path: ''` to make the cookie only available on the current path and its children.
 	 * @param name the name of the cookie
 	 * @param value the cookie value
-	 * @param opts the options, passed directly to `cookie.serialize`. See documentation [here](https://github.com/jshttp/cookie#cookieserializename-value-options)
+	 * @param opts the options passed to `cookie.serialize` with the SvelteKit defaults described above. See documentation [here](https://github.com/jshttp/cookie?tab=readme-ov-file#cookiestringifysetcookiesetcookieobj-options)
 	 */
-	set: (
-		name: string,
-		value: string,
-		opts: import('cookie').CookieSerializeOptions & { path: string }
-	) => void;
+	set: (name: string, value: string, opts: import('cookie').SerializeOptions) => void;
 
 	/**
 	 * Deletes a cookie by setting its value to an empty string and setting the expiry date in the past.
 	 *
-	 * You must specify a `path` for the cookie. In most cases you should explicitly set `path: '/'` to make the cookie available throughout your app. You can use relative paths, or set `path: ''` to make the cookie only available on the current path and its children
+	 * The `httpOnly` and `secure` options are `true` by default (except on http://localhost, where `secure` is `false`), and must be explicitly disabled if you want cookies to be readable by client-side JavaScript and/or transmitted over HTTP.
+	 *
+	 * The `path` option is `'/'` by default. You can use relative paths, or set `path: ''` to make the cookie only available on the current path and its children.
 	 * @param name the name of the cookie
-	 * @param opts the options, passed directly to `cookie.serialize`. The `path` must match the path of the cookie you want to delete. See documentation [here](https://github.com/jshttp/cookie#cookieserializename-value-options)
+	 * @param opts the options passed to `cookie.serialize` with the SvelteKit defaults described above. See documentation [here](https://github.com/jshttp/cookie?tab=readme-ov-file#cookiestringifysetcookiesetcookieobj-options)
 	 */
-	delete: (name: string, opts: import('cookie').CookieSerializeOptions & { path: string }) => void;
+	delete: (name: string, opts: import('cookie').SerializeOptions) => void;
 
 	/**
 	 * Serialize a cookie name-value pair into a `Set-Cookie` header string, but don't apply it to the response.
 	 *
-	 * The `httpOnly` and `secure` options are `true` by default (except on http://localhost, where `secure` is `false`), and must be explicitly disabled if you want cookies to be readable by client-side JavaScript and/or transmitted over HTTP. The `sameSite` option defaults to `lax`.
+	 * The `httpOnly` and `secure` options are `true` by default (except on http://localhost, where `secure` is `false`), and must be explicitly disabled if you want cookies to be readable by client-side JavaScript and/or transmitted over HTTP.
 	 *
-	 * You must specify a `path` for the cookie. In most cases you should explicitly set `path: '/'` to make the cookie available throughout your app. You can use relative paths, or set `path: ''` to make the cookie only available on the current path and its children
-	 *
+	 * The `path` option is `'/'` by default. You can use relative paths, or set `path: ''` to make the cookie only available on the current path and its children.
 	 * @param name the name of the cookie
 	 * @param value the cookie value
-	 * @param opts the options, passed directly to `cookie.serialize`. See documentation [here](https://github.com/jshttp/cookie#cookieserializename-value-options)
+	 * @param opts the options passed to `cookie.serialize` with the SvelteKit defaults described above. See documentation [here](https://github.com/jshttp/cookie?tab=readme-ov-file#cookiestringifysetcookiesetcookieobj-options)
 	 */
-	serialize: (
-		name: string,
-		value: string,
-		opts: import('cookie').CookieSerializeOptions & { path: string }
-	) => string;
+	serialize: (name: string, value: string, opts: import('cookie').SerializeOptions) => string;
 }
 
 /**
@@ -617,6 +611,7 @@ export interface KitConfig {
 		 * - `preload-mjs` - uses `<link rel="preload">` but with the `.mjs` extension which prevents double-parsing in Chromium. Some static webservers will fail to serve .mjs files with a `Content-Type: application/javascript` header, which will cause your application to break. If that doesn't apply to you, this is the option that will deliver the best performance for the largest number of users, until `modulepreload` is more widely supported.
 		 * @default "modulepreload"
 		 * @since 1.8.4
+		 * @deprecated removed in 3.0.0
 		 */
 		preloadStrategy?: 'modulepreload' | 'preload-js' | 'preload-mjs';
 		/**
@@ -1199,6 +1194,19 @@ export interface NavigationTarget<
 	 * The URL that is navigated to
 	 */
 	url: URL;
+	/**
+	 * The scroll position associated with this navigation.
+	 *
+	 * For the `from` target, this is the scroll position at the moment of navigation.
+	 *
+	 * For the `to` target, this represents the scroll position that will be or was restored:
+	 * - In `beforeNavigate` and `onNavigate`, this is only available for `popstate` navigations (back/forward button)
+	 *   and will be `null` for other navigation types, since the final scroll position isn't known
+	 *   ahead of time.
+	 * - In `afterNavigate`, this is always the scroll position that was applied after the navigation
+	 *   completed.
+	 */
+	scroll: { x: number; y: number } | null;
 }
 
 /**
@@ -1248,7 +1256,7 @@ export interface NavigationEnter extends NavigationBase {
 	delta?: undefined;
 
 	/**
-	 * Dispatched `Event` object when navigation occured by `popstate` or `link`.
+	 * Dispatched `Event` object when navigation occurred by `popstate` or `link`.
 	 */
 	event?: undefined;
 }
@@ -1953,6 +1961,18 @@ type UnknownField<Value> = RemoteFormFieldMethods<Value> & {
 	[key: string | number]: UnknownField<any>;
 };
 
+type RemoteFormFieldsRoot<Input extends RemoteFormInput | void> =
+	IsAny<Input> extends true
+		? RecursiveFormFields
+		: Input extends void
+			? {
+					/** Validation issues, if any */
+					issues(): RemoteFormIssue[] | undefined;
+					/** Validation issues belonging to this or any of the fields that belong to it, if any */
+					allIssues(): RemoteFormIssue[] | undefined;
+				}
+			: RemoteFormFields<Input>;
+
 /**
  * Recursive type to build form fields structure with proxy access
  */
@@ -2077,31 +2097,7 @@ export type RemoteForm<Input extends RemoteFormInput | void, Output> = {
 	/** The number of pending submissions */
 	get pending(): number;
 	/** Access form fields using object notation */
-	fields: RemoteFormFields<Input>;
-	/** Spread this onto a `<button>` or `<input type="submit">` */
-	buttonProps: {
-		type: 'submit';
-		formmethod: 'POST';
-		formaction: string;
-		onclick: (event: Event) => void;
-		/** Use the `enhance` method to influence what happens when the form is submitted. */
-		enhance(
-			callback: (opts: {
-				form: HTMLFormElement;
-				data: Input;
-				submit: () => Promise<void> & {
-					updates: (...queries: Array<RemoteQuery<any> | RemoteQueryOverride>) => Promise<void>;
-				};
-			}) => void | Promise<void>
-		): {
-			type: 'submit';
-			formmethod: 'POST';
-			formaction: string;
-			onclick: (event: Event) => void;
-		};
-		/** The number of pending submissions */
-		get pending(): number;
-	};
+	fields: RemoteFormFieldsRoot<Input>;
 };
 
 /**

@@ -22,6 +22,7 @@
 			"files": [
 				"**/CHANGELOG.md",
 				"**/vite.config.js.timestamp-*",
+				"**/.netlify/**",
 				"**/.svelte-kit/**",
 				"**/.custom-out-dir/**",
 				"**/test-results/**",
@@ -32,7 +33,7 @@
 				"packages/package/test/watch/package/**/*",
 				"packages/kit/src/core/postbuild/fixtures/**/*",
 				"packages/adapter-cloudflare/test/apps/workers/dist/**/*",
-				"packages/*/test/**/build"
+				"packages/*/test/**/build/**"
 			],
 			"options": {
 				"rangeEnd": 0

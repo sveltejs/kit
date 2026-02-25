@@ -1,6 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { chdir } from 'node:process';
 import { load_config } from '../packages/kit/src/core/config/index.js';
+import { all as syncAll } from '../packages/kit/src/core/sync/sync.js';
 
 // This isn't strictly necessary, but it eliminates some annoying warnings in CI
 
@@ -12,15 +14,12 @@ for (const directories of [
 	for (const dir of fs.readdirSync(directories)) {
 		const cwd = path.join(directories, dir);
 
-		if (!fs.existsSync('svelte.config.js')) {
+		if (!fs.existsSync(path.join(cwd,'svelte.config.js'))) {
 			continue;
 		}
 
-		process.chdir(cwd);
+		chdir(cwd);
 
-		// we defer this import so that we don't try and resolve `svelte` from
-		// the root via `isSvelte5Plus`, which would blow up
-		const sync = await import('../packages/kit/src/core/sync/sync.js');
-		await sync.all(await load_config({ cwd }), 'development');
+		syncAll(await load_config({ cwd }), 'development');
 	}
 }

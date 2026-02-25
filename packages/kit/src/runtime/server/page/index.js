@@ -1,5 +1,5 @@
 import { text } from '@sveltejs/kit';
-import { Redirect } from '@sveltejs/kit/internal';
+import { HttpError, Redirect } from '@sveltejs/kit/internal';
 import { compact } from '../../../utils/array.js';
 import { get_status, normalize_error } from '../../../utils/error.js';
 import { add_data_suffix } from '../../pathname.js';
@@ -357,6 +357,11 @@ export async function render_page(
 				ssr === false ? server_data_serializer(event, event_state, options) : data_serializer
 		});
 	} catch (e) {
+		// a remote function could have thrown a redirect during render
+		if (e instanceof Redirect) {
+			return redirect_response(e.status, e.location);
+		}
+
 		// if we end up here, it means the data loaded successfully
 		// but the page failed to render, or that a prerendering error occurred
 		return await respond_with_error({
@@ -365,7 +370,7 @@ export async function render_page(
 			options,
 			manifest,
 			state,
-			status: 500,
+			status: e instanceof HttpError ? e.status : 500,
 			error: e,
 			resolve_opts
 		});

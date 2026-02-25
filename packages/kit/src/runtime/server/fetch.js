@@ -1,4 +1,4 @@
-import * as set_cookie_parser from 'set-cookie-parser';
+import { parseSetCookie } from 'cookie';
 import { respond } from './respond.js';
 import * as paths from '$app/paths/internal/server';
 import { read_implementation } from '__sveltekit/server';
@@ -55,7 +55,12 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 					request.headers.delete('origin');
 				}
 
-				if (url.origin !== event.url.origin) {
+				const decoded = decodeURIComponent(url.pathname);
+
+				if (
+					url.origin !== event.url.origin ||
+					(paths.base && decoded !== paths.base && !decoded.startsWith(`${paths.base}/`))
+				) {
 					// Allow cookie passthrough for "credentials: same-origin" and "credentials: include"
 					// if SvelteKit is serving my.domain.com:
 					// -        domain.com WILL NOT receive cookies
@@ -77,7 +82,6 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 				// handle fetch requests for static assets. e.g. prebaked data, etc.
 				// we need to support everything the browser's fetch supports
 				const prefix = paths.assets || paths.base;
-				const decoded = decodeURIComponent(url.pathname);
 				const filename = (
 					decoded.startsWith(prefix) ? decoded.slice(prefix.length) : decoded
 				).slice(1);
@@ -147,22 +151,17 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 
 				const response = await internal_fetch(request, options, manifest, state);
 
-				const set_cookie = response.headers.get('set-cookie');
-				if (set_cookie) {
-					for (const str of set_cookie_parser.splitCookiesString(set_cookie)) {
-						const { name, value, ...options } = set_cookie_parser.parseString(str, {
-							decodeValues: false
-						});
+				for (const str of response.headers.getSetCookie()) {
+					const { name, value, ...options } = parseSetCookie(str, { decode: (v) => v });
 
-						const path = options.path ?? (url.pathname.split('/').slice(0, -1).join('/') || '/');
+					const path = options.path ?? (url.pathname.split('/').slice(0, -1).join('/') || '/');
 
-						// options.sameSite is string, something more specific is required - type cast is safe
-						set_internal(name, value, {
-							path,
-							encode: (value) => value,
-							.../** @type {import('cookie').CookieSerializeOptions} */ (options)
-						});
-					}
+					// options.sameSite is string, something more specific is required - type cast is safe
+					set_internal(name, /** @type {string} */ (value), {
+						path,
+						encode: (value) => value,
+						.../** @type {import('cookie').SerializeOptions} */ (options)
+					});
 				}
 
 				return response;

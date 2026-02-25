@@ -1,5 +1,32 @@
 # @sveltejs/adapter-vercel
 
+## 6.3.3
+### Patch Changes
+
+
+- fix: ensure build does not copy Vercel build environment system files ([#15400](https://github.com/sveltejs/kit/pull/15400))
+
+## 6.3.2
+### Patch Changes
+
+
+- fix: 404 for immutable assets that don't match static files ([`c67da8a`](https://github.com/sveltejs/kit/commit/c67da8ab6380349b30c353247688369eaef58c05))
+
+- Updated dependencies [[`3e607b3`](https://github.com/sveltejs/kit/commit/3e607b314aec9e5f278d32847945b8b6323e1cb8), [`62991c8`](https://github.com/sveltejs/kit/commit/62991c81db4f50ccfb08a9ac5e05ccba4ddab59e), [`f47c01b`](https://github.com/sveltejs/kit/commit/f47c01bd8100328c24fdb8522fe35913b0735f35)]:
+  - @sveltejs/kit@2.52.2
+
+## 6.3.1
+### Patch Changes
+
+
+- feat: show remote function calls under the /_app/remote route in observability ([#15098](https://github.com/sveltejs/kit/pull/15098))
+
+
+- fix: prevent isr routes from handling remote function calls ([#15098](https://github.com/sveltejs/kit/pull/15098))
+
+- Updated dependencies [[`46c1ebd`](https://github.com/sveltejs/kit/commit/46c1ebd9f662f0de499e921bfee2661316449e9d), [`2dd74c8`](https://github.com/sveltejs/kit/commit/2dd74c8c86ae4855c3e9d74d8cf241e86dcd5b36), [`8871b54`](https://github.com/sveltejs/kit/commit/8871b5444413d0c7d7ef4d260996c3b5c359d0b8)]:
+  - @sveltejs/kit@2.50.1
+
 ## 6.3.0
 ### Minor Changes
 

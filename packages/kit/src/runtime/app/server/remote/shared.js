@@ -97,11 +97,10 @@ export function parse_remote_response(data, transport) {
  * @param {RequestEvent} event
  * @param {RequestState} state
  * @param {boolean} allow_cookies
- * @param {any} arg
- * @param {(arg: any) => any} validate
+ * @param {() => any} get_input
  * @param {(arg?: any) => T} fn
  */
-export async function run_remote_function(event, state, allow_cookies, arg, validate, fn) {
+export async function run_remote_function(event, state, allow_cookies, get_input, fn) {
 	/** @type {RequestStore} */
 	const store = {
 		event: {
@@ -142,8 +141,8 @@ export async function run_remote_function(event, state, allow_cookies, arg, vali
 	};
 
 	// In two parts, each with_event, so that runtimes without async local storage can still get the event at the start of the function
-	const validated = await with_request_store(store, () => validate(arg));
-	return with_request_store(store, () => fn(validated));
+	const input = await with_request_store(store, get_input);
+	return with_request_store(store, () => fn(input));
 }
 
 /**

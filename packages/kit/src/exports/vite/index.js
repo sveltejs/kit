@@ -1,8 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
-
-import colors from 'kleur';
+import { styleText } from 'node:util';
 
 import { copy, mkdirp, posixify, read, resolve_entry, rimraf } from '../../utils/filesystem.js';
 import { create_static_module, create_dynamic_module } from '../../core/env.js';
@@ -28,7 +27,7 @@ import prerender from '../../core/postbuild/prerender.js';
 import analyse from '../../core/postbuild/analyse.js';
 import { s } from '../../utils/misc.js';
 import { hash } from '../../utils/hash.js';
-import { dedent, isSvelte5Plus } from '../../core/sync/utils.js';
+import { dedent } from '../../core/sync/utils.js';
 import {
 	env_dynamic_private,
 	env_dynamic_public,
@@ -40,7 +39,7 @@ import {
 } from './module_ids.js';
 import { import_peer } from '../../utils/import.js';
 import { compact } from '../../utils/array.js';
-import { should_ignore } from './static_analysis/utils.js';
+import { should_ignore, has_children } from './static_analysis/utils.js';
 
 const cwd = posixify(process.cwd());
 
@@ -98,7 +97,7 @@ const warning_preprocessor = {
 				const fixed = basename.replace('.svelte', '(.server).js/ts');
 
 				const message =
-					`\n${colors.bold().red(path.relative('.', filename))}\n` +
+					`\n${styleText(['bold', 'red'], path.relative('.', filename))}\n` +
 					`\`${match[1]}\` will be ignored — move it to ${fixed} instead. See https://svelte.dev/docs/kit/page-options for more information.`;
 
 				if (!warned.has(message)) {
@@ -112,13 +111,11 @@ const warning_preprocessor = {
 		if (!filename) return;
 
 		const basename = path.basename(filename);
-		const has_children =
-			content.includes('<slot') || (isSvelte5Plus() && content.includes('{@render'));
 
-		if (basename.startsWith('+layout.') && !has_children) {
+		if (basename.startsWith('+layout.') && !has_children(content, true)) {
 			const message =
-				`\n${colors.bold().red(path.relative('.', filename))}\n` +
-				`\`<slot />\`${isSvelte5Plus() ? ' or `{@render ...}` tag' : ''}` +
+				`\n${styleText(['bold', 'red'], path.relative('.', filename))}\n` +
+				'`<slot />` or `{@render ...}` tag' +
 				' missing — inner content will not be rendered';
 
 			if (!warned.has(message)) {
@@ -152,11 +149,7 @@ export async function sveltekit() {
 		extensions: svelte_config.extensions,
 		preprocess,
 		onwarn: svelte_config.onwarn,
-		compilerOptions: {
-			// @ts-ignore - ignore this property when running `pnpm check` against Svelte 5 in the ecosystem CI
-			hydratable: isSvelte5Plus() ? undefined : true,
-			...svelte_config.compilerOptions
-		},
+		compilerOptions: { ...svelte_config.compilerOptions },
 		...svelte_config.vitePlugin
 	};
 
@@ -191,9 +184,6 @@ let build_metadata = undefined;
 async function kit({ svelte_config }) {
 	/** @type {import('vite')} */
 	const vite = await import_peer('vite');
-
-	// @ts-ignore `vite.rolldownVersion` only exists in `rolldown-vite`
-	const isRolldown = !!vite.rolldownVersion;
 
 	const { kit } = svelte_config;
 	const out = `${kit.outDir}/output`;
@@ -298,23 +288,6 @@ async function kit({ svelte_config }) {
 						`${kit.files.routes}/**/+*.{svelte,js,ts}`,
 						`!${kit.files.routes}/**/+*server.*`
 					],
-					esbuildOptions: {
-						plugins: [
-							{
-								name: 'vite-plugin-sveltekit-setup:optimize',
-								setup(build) {
-									if (!kit.experimental.remoteFunctions) return;
-
-									const filter = new RegExp(
-										`.remote(${kit.moduleExtensions.join('|')})$`.replaceAll('.', '\\.')
-									);
-
-									// treat .remote.js files as empty for the purposes of prebundling
-									build.onLoad({ filter }, () => ({ contents: '' }));
-								}
-							}
-						]
-					},
 					exclude: [
 						// Without this SvelteKit will be prebundled on the client, which means we end up with two versions of Redirect etc.
 						// Also see https://github.com/sveltejs/kit/issues/5952#issuecomment-1218844057
@@ -323,7 +296,27 @@ async function kit({ svelte_config }) {
 						// this does not affect app code, just handling of imported libraries that use $app or $env
 						'$app',
 						'$env'
-					]
+					],
+					rolldownOptions: kit.experimental.remoteFunctions
+						? {
+								plugins: [
+									{
+										name: 'vite-plugin-sveltekit-setup:optimize-remote-functions',
+										load: {
+											filter: {
+												// treat .remote.js files as empty for the purposes of prebundling
+												id: new RegExp(
+													`.remote(${kit.moduleExtensions.join('|')})$`.replaceAll('.', '\\.')
+												)
+											},
+											handler() {
+												return '';
+											}
+										}
+									}
+								]
+							}
+						: undefined
 				},
 				ssr: {
 					noExternal: [
@@ -401,8 +394,7 @@ async function kit({ svelte_config }) {
 				// These Kit dependencies are packaged as CommonJS, which means they must always be externalized.
 				// Without this, the tests will still pass but `pnpm dev` will fail in projects that link `@sveltejs/kit`.
 				/** @type {NonNullable<import('vite').UserConfig['ssr']>} */ (new_config.ssr).external = [
-					'cookie',
-					'set-cookie-parser'
+					'cookie'
 				];
 			}
 
@@ -848,6 +840,14 @@ async function kit({ svelte_config }) {
 						input[name] = path.resolve(file);
 					});
 
+					// ...and the hooks files
+					if (manifest_data.hooks.server) {
+						input['entries/hooks.server'] = path.resolve(manifest_data.hooks.server);
+					}
+					if (manifest_data.hooks.universal) {
+						input['entries/hooks.universal'] = path.resolve(manifest_data.hooks.universal);
+					}
+
 					// ...and the server instrumentation file
 					const server_instrumentation = resolve_entry(
 						path.join(kit.files.src, 'instrumentation.server')
@@ -878,9 +878,6 @@ async function kit({ svelte_config }) {
 					});
 				}
 
-				// see the kit.output.preloadStrategy option for details on why we have multiple options here
-				const ext = kit.output.preloadStrategy === 'preload-mjs' ? 'mjs' : 'js';
-
 				// We could always use a relative asset base path here, but it's better for performance not to.
 				// E.g. Vite generates `new URL('/asset.png', import.meta).href` for a relative path vs just '/asset.png'.
 				// That's larger and takes longer to run and also causes an HTML diff between SSR and client
@@ -904,19 +901,17 @@ async function kit({ svelte_config }) {
 							output: {
 								format: inline ? 'iife' : 'esm',
 								name: `__sveltekit_${version_hash}.app`,
-								entryFileNames: ssr ? '[name].js' : `${prefix}/[name].[hash].${ext}`,
-								chunkFileNames: ssr ? 'chunks/[name].js' : `${prefix}/chunks/[hash].${ext}`,
+								entryFileNames: ssr ? '[name].js' : `${prefix}/[name].[hash].js`,
+								chunkFileNames: ssr ? 'chunks/[name].js' : `${prefix}/chunks/[hash].js`,
 								assetFileNames: `${prefix}/assets/[name].[hash][extname]`,
 								hoistTransitiveImports: false,
 								sourcemapIgnoreList,
-								inlineDynamicImports: !split
+								codeSplitting: split
 							},
 							preserveEntrySignatures: 'strict',
 							onwarn(warning, handler) {
 								if (
-									(isRolldown
-										? warning.code === 'IMPORT_IS_UNDEFINED'
-										: warning.code === 'MISSING_EXPORT') &&
+									warning.code === 'IMPORT_IS_UNDEFINED' &&
 									warning.id === `${kit.outDir}/generated/client-optimized/app.js`
 								) {
 									// ignore e.g. undefined `handleError` hook when
@@ -928,7 +923,7 @@ async function kit({ svelte_config }) {
 							}
 						},
 						ssrEmitAssets: true,
-						target: ssr ? 'node18.13' : undefined
+						target: ssr ? 'node20.12' : undefined
 					},
 					publicDir: kit.files.assets,
 					worker: {
@@ -1023,7 +1018,7 @@ async function kit({ svelte_config }) {
 		 */
 		writeBundle: {
 			sequential: true,
-			async handler(_options, bundle) {
+			async handler(_options) {
 				if (secondary_build_started) return; // only run this once
 
 				const verbose = vite_config.logLevel === 'info';
@@ -1057,7 +1052,7 @@ async function kit({ svelte_config }) {
 
 				log.info('Analysing routes');
 
-				const { metadata, static_exports } = await analyse({
+				const { metadata } = await analyse({
 					hash: kit.router.type === 'hash',
 					manifest_path,
 					manifest_data,
@@ -1257,16 +1252,15 @@ async function kit({ svelte_config }) {
 				);
 
 				// regenerate nodes with the client manifest...
-				await build_server_nodes(
+				build_server_nodes(
 					out,
 					kit,
 					manifest_data,
 					server_manifest,
 					client_manifest,
-					bundle,
+					assets_path,
 					client_chunks,
-					svelte_config.kit.output,
-					static_exports
+					svelte_config.kit.output
 				);
 
 				// ...and prerender
@@ -1319,9 +1313,7 @@ async function kit({ svelte_config }) {
 				// created by other Vite plugins
 				finalise = async () => {
 					console.log(
-						`\nRun ${colors
-							.bold()
-							.cyan('npm run preview')} to preview your production build locally.`
+						`\nRun ${styleText(['bold', 'cyan'], 'npm run preview')} to preview your production build locally.`
 					);
 
 					if (kit.adapter) {
@@ -1337,9 +1329,9 @@ async function kit({ svelte_config }) {
 							vite_config
 						);
 					} else {
-						console.log(colors.bold().yellow('\nNo adapter specified'));
+						console.log(styleText(['bold', 'yellow'], '\nNo adapter specified'));
 
-						const link = colors.bold().cyan('https://svelte.dev/docs/kit/adapters');
+						const link = styleText(['bold', 'cyan'], 'https://svelte.dev/docs/kit/adapters');
 						console.log(
 							`See ${link} to learn how to configure your app to run on the platform of your choosing`
 						);
@@ -1380,8 +1372,10 @@ function warn_overridden_config(config, resolved_config) {
 
 	if (overridden.length > 0) {
 		console.error(
-			colors.bold().red('The following Vite config options will be overridden by SvelteKit:') +
-				overridden.map((key) => `\n  - ${key}`).join('')
+			styleText(
+				['bold', 'red'],
+				'The following Vite config options will be overridden by SvelteKit:'
+			) + overridden.map((key) => `\n  - ${key}`).join('')
 		);
 	}
 }

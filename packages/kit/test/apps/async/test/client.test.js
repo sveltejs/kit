@@ -1,21 +1,27 @@
 import process from 'node:process';
 import { expect } from '@playwright/test';
 import { test } from '../../../utils.js';
+const is_node18 = process.versions.node.startsWith('18.');
+import { version as vite_version } from 'vite';
+const is_vite5 = vite_version.startsWith('5.');
 
 test.skip(({ javaScriptEnabled }) => !javaScriptEnabled);
 
 test.describe('remote functions', () => {
 	test('preloading data works when the page component and server load both import a remote function', async ({
-		page
+		page,
+		clicknav
 	}) => {
 		test.skip(!process.env.DEV, 'remote functions are only analysed in dev mode');
+		// TODO: remove with SvelteKit 3
+		test.skip(is_node18 && is_vite5, 'vite5 in node18 fails to resolve remote function export');
 		await page.goto('/remote/dev');
 		await page.locator('a[href="/remote/dev/preload"]').hover();
 		await Promise.all([
 			page.waitForTimeout(100), // wait for preloading to start
 			page.waitForLoadState('networkidle') // wait for preloading to finish
 		]);
-		await page.click('a[href="/remote/dev/preload"]');
+		await clicknav('a[href="/remote/dev/preload"]', { waitForURL: '/remote/dev/preload' });
 		await expect(page.locator('p')).toHaveText('foobar');
 	});
 });
@@ -301,10 +307,27 @@ test.describe('remote function mutations', () => {
 		expect(request_count).toBe(1); // only the command request
 	});
 
+	test('query.batch resolver function always receives validated arguments', async ({ page }) => {
+		await page.goto('/remote/batch-validation');
+
+		await expect(page.locator('#phrase')).toHaveText('use the force');
+		await page.locator('button').click();
+		await expect(page.locator('#phrase')).toHaveText('i am your father');
+	});
+
 	// TODO ditto
 	test('query works with transport', async ({ page }) => {
 		await page.goto('/remote/transport');
 
 		await expect(page.locator('h1')).toHaveText('hello from remote function!');
+	});
+
+	test('form.for() with enhance does not duplicate requests', async ({ page }) => {
+		await page.goto('/remote/form/for-duplicate');
+
+		for (let i = 1; i <= 3; i++) {
+			await page.click('#submit');
+			await expect(page.locator('#count')).toHaveText(String(i));
+		}
 	});
 });

@@ -3,7 +3,7 @@ import path from 'node:path';
 import process from 'node:process';
 import { URL } from 'node:url';
 import { AsyncLocalStorage } from 'node:async_hooks';
-import colors from 'kleur';
+import { styleText } from 'node:util';
 import sirv from 'sirv';
 import { isCSSRequest, loadEnv, buildErrorMessage } from 'vite';
 import { createReadableStream, getRequest, setResponse } from '../../../exports/node/index.js';
@@ -19,7 +19,6 @@ import { not_found } from '../utils.js';
 import { SCHEME } from '../../../utils/url.js';
 import { check_feature } from '../../../utils/features.js';
 import { escape_html } from '../../../utils/escape.js';
-import { create_node_analyser } from '../static_analysis/index.js';
 
 const cwd = process.cwd();
 // vite-specifc queries that we should skip handling for css urls
@@ -70,7 +69,9 @@ export async function dev(vite, vite_config, svelte_config, get_remotes) {
 		try {
 			return await vite.ssrLoadModule(url, { fixStacktrace: true });
 		} catch (/** @type {any} */ err) {
-			const msg = buildErrorMessage(err, [colors.red(`Internal server error: ${err.message}`)]);
+			const msg = buildErrorMessage(err, [
+				styleText('red', `Internal server error: ${err.message}`)
+			]);
 
 			if (!vite.config.logger.hasErrorLogged(err)) {
 				vite.config.logger.error(msg, { error: err });
@@ -103,9 +104,6 @@ export async function dev(vite, vite_config, svelte_config, get_remotes) {
 		return { module, module_node, url };
 	}
 
-	/** @type {(file: string) => void} */
-	let invalidate_page_options;
-
 	function update_manifest() {
 		try {
 			({ manifest_data } = sync.create(svelte_config));
@@ -117,7 +115,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes) {
 		} catch (error) {
 			manifest_error = /** @type {Error} */ (error);
 
-			console.error(colors.bold().red(manifest_error.message));
+			console.error(styleText(['bold', 'red'], manifest_error.message));
 			vite.ws.send({
 				type: 'error',
 				err: {
@@ -128,14 +126,6 @@ export async function dev(vite, vite_config, svelte_config, get_remotes) {
 
 			return;
 		}
-
-		const node_analyser = create_node_analyser({
-			resolve: async (server_node) => {
-				const { module } = await resolve(server_node);
-				return module;
-			}
-		});
-		invalidate_page_options = node_analyser.invalidate_page_options;
 
 		manifest = {
 			appDir: svelte_config.kit.appDir,
@@ -215,9 +205,8 @@ export async function dev(vite, vite_config, svelte_config, get_remotes) {
 						}
 
 						if (node.universal) {
-							const page_options = await node_analyser.get_page_options(node);
-							if (page_options?.ssr === false) {
-								result.universal = page_options;
+							if (node.page_options?.ssr === false) {
+								result.universal = node.page_options;
 							} else {
 								// TODO: explain why the file was loaded on the server if we fail to load it
 								const { module, module_node } = await resolve(node.universal);
@@ -370,12 +359,8 @@ export async function dev(vite, vite_config, svelte_config, get_remotes) {
 	watch('unlink', () => debounce(update_manifest));
 	watch('change', (file) => {
 		// Don't run for a single file if the whole manifest is about to get updated
-		if (timeout || restarting) return;
-
-		if (/\+(page|layout).*$/.test(file)) {
-			invalidate_page_options(path.relative(cwd, file));
-		}
-
+		// Unless it's a file where the trailing slash page option might have changed
+		if (timeout || restarting || !/\+(page|layout|server).*$/.test(file)) return;
 		sync.update(svelte_config, manifest_data, file);
 	});
 
@@ -538,7 +523,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes) {
 				});
 
 				if (manifest_error) {
-					console.error(colors.bold().red(manifest_error.message));
+					console.error(styleText(['bold', 'red'], manifest_error.message));
 
 					const error_page = load_error_page(svelte_config);
 
