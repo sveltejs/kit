@@ -6,7 +6,7 @@ import * as devalue from 'devalue';
 import { HttpError } from '@sveltejs/kit/internal';
 import { app } from '../client.js';
 import { stringify_remote_arg } from '../../shared.js';
-import { refresh_queries, release_overrides } from './shared.svelte.js';
+import { get_remote_request_headers, refresh_queries, release_overrides } from './shared.svelte.js';
 
 /**
  * Client-version of the `command` function from `$app/server`.
@@ -27,6 +27,13 @@ export function command(id) {
 		// Increment pending count when command starts
 		pending_count++;
 
+		// Noone should call commands during rendering but belts and braces.
+		// Do this here, after await Svelte' reactivity context is gone.
+		const headers = {
+			'Content-Type': 'application/json',
+			...get_remote_request_headers()
+		};
+
 		/** @type {Promise<any> & { updates: (...args: any[]) => any }} */
 		const promise = (async () => {
 			try {
@@ -39,11 +46,7 @@ export function command(id) {
 						payload: stringify_remote_arg(arg, app.hooks.transport),
 						refreshes: updates.map((u) => u._key)
 					}),
-					headers: {
-						'Content-Type': 'application/json',
-						'x-sveltekit-pathname': location.pathname,
-						'x-sveltekit-search': location.search
-					}
+					headers
 				});
 
 				if (!response.ok) {

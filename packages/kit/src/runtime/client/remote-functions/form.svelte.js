@@ -201,6 +201,7 @@ export function form(id) {
 						method: 'POST',
 						headers: {
 							'Content-Type': BINARY_FORM_CONTENT_TYPE,
+							// Forms cannot be called during rendering, so it's save to use location here
 							'x-sveltekit-pathname': location.pathname,
 							'x-sveltekit-search': location.search
 						},
@@ -524,6 +525,7 @@ export function form(id) {
 							method: 'POST',
 							headers: {
 								'Content-Type': BINARY_FORM_CONTENT_TYPE,
+								// Validation should not be and will not be called during rendering, so it's save to use location here
 								'x-sveltekit-pathname': location.pathname,
 								'x-sveltekit-search': location.search
 							},
