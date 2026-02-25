@@ -18,7 +18,9 @@ import {
 	set_nested_value,
 	throw_on_old_property_access,
 	build_path_string,
-	normalize_issue
+	normalize_issue,
+	serialize_binary_form,
+	BINARY_FORM_CONTENT_TYPE
 } from '../../form-utils.js';
 
 /**
@@ -51,10 +53,12 @@ function merge_with_server_issues(form_data, current_issues, client_issues) {
  */
 export function form(id) {
 	/** @type {Map<any, { count: number, instance: RemoteForm<T, U> }>} */
+	// eslint-disable-next-line svelte/prefer-svelte-reactivity -- we don't need reactivity for this
 	const instances = new Map();
 
 	/** @param {string | number | boolean} [key] */
 	function create_instance(key) {
+		const action_id_without_key = id;
 		const action_id = id + (key != undefined ? `/${JSON.stringify(key)}` : '');
 		const action = '?/remote=' + encodeURIComponent(action_id);
 
@@ -107,6 +111,10 @@ export function form(id) {
 
 			submitted = true;
 
+			// Increment pending count immediately so that `pending` reflects
+			// the in-progress state during async preflight validation
+			pending_count++;
+
 			const validated = await preflight_schema?.['~standard'].validate(data);
 
 			if (validated?.issues) {
@@ -115,7 +123,13 @@ export function form(id) {
 					raw_issues,
 					validated.issues.map((issue) => normalize_issue(issue, false))
 				);
+				pending_count--;
 				return;
+			}
+
+			// Preflight passed - clear stale client-side preflight issues
+			if (preflight_schema) {
+				raw_issues = raw_issues.filter((issue) => issue.server);
 			}
 
 			// TODO 3.0 remove this warning
@@ -171,9 +185,6 @@ export function form(id) {
 				entry.count++;
 			}
 
-			// Increment pending count when submission starts
-			pending_count++;
-
 			/** @type {Array<Query<any> | RemoteQueryOverride>} */
 			let updates = [];
 
@@ -182,17 +193,18 @@ export function form(id) {
 				try {
 					await Promise.resolve();
 
-					if (updates.length > 0) {
-						data.set('sveltekit:remote_refreshes', JSON.stringify(updates.map((u) => u._key)));
-					}
+					const { blob } = serialize_binary_form(convert(data), {
+						remote_refreshes: updates.map((u) => u._key)
+					});
 
-					const response = await fetch(`${base}/${app_dir}/remote/${action_id}`, {
+					const response = await fetch(`${base}/${app_dir}/remote/${action_id_without_key}`, {
 						method: 'POST',
-						body: data,
 						headers: {
+							'Content-Type': BINARY_FORM_CONTENT_TYPE,
 							'x-sveltekit-pathname': location.pathname,
 							'x-sveltekit-search': location.search
-						}
+						},
+						body: blob
 					});
 
 					if (!response.ok) {
@@ -202,6 +214,9 @@ export function form(id) {
 					}
 
 					const form_result = /** @type { RemoteFunctionResponse} */ (await response.json());
+
+					// reset issues in case it's a redirect or error (but issues passed in that case)
+					raw_issues = [];
 
 					if (form_result.type === 'result') {
 						({ issues: raw_issues = [], result } = devalue.parse(form_result.result, app.decoders));
@@ -270,6 +285,7 @@ export function form(id) {
 
 				if (method !== 'post') return;
 
+				// eslint-disable-next-line svelte/prefer-svelte-reactivity
 				const action = new URL(
 					// We can't do submitter.formAction directly because that property is always set
 					event.submitter?.hasAttribute('formaction')
@@ -312,7 +328,8 @@ export function form(id) {
 
 				form.addEventListener('submit', onsubmit);
 
-				form.addEventListener('input', (e) => {
+				/** @param {Event} e */
+				const handle_input = (e) => {
 					// strictly speaking it can be an HTMLTextAreaElement or HTMLSelectElement
 					// but that makes the types unnecessarily awkward
 					const element = /** @type {HTMLInputElement} */ (e.target);
@@ -391,17 +408,24 @@ export function form(id) {
 					name = name.replace(/^[nb]:/, '');
 
 					touched[name] = true;
-				});
+				};
 
-				form.addEventListener('reset', async () => {
+				form.addEventListener('input', handle_input);
+
+				const handle_reset = async () => {
 					// need to wait a moment, because the `reset` event occurs before
 					// the inputs are actually updated (so that it can be cancelled)
 					await tick();
 
 					input = convert_formdata(new FormData(form));
-				});
+				};
+
+				form.addEventListener('reset', handle_reset);
 
 				return () => {
+					form.removeEventListener('submit', onsubmit);
+					form.removeEventListener('input', handle_input);
+					form.removeEventListener('reset', handle_reset);
 					element = null;
 					preflight_schema = undefined;
 				};
@@ -418,74 +442,23 @@ export function form(id) {
 			)
 		);
 
-		/** @param {Parameters<RemoteForm<any, any>['buttonProps']['enhance']>[0]} callback */
-		const form_action_onclick = (callback) => {
-			/** @param {Event} event */
-			return async (event) => {
-				const target = /** @type {HTMLButtonElement} */ (event.currentTarget);
-				const form = target.form;
-				if (!form) return;
-
-				// Prevent this from firing the form's submit event
-				event.stopPropagation();
-				event.preventDefault();
-
-				const form_data = new FormData(form, target);
-
-				if (DEV) {
-					const enctype = target.hasAttribute('formenctype')
-						? target.formEnctype
-						: clone(form).enctype;
-
-					validate_form_data(form_data, enctype);
-				}
-
-				await handle_submit(form, form_data, callback);
-			};
-		};
-
-		/** @type {RemoteForm<any, any>['buttonProps']} */
-		// @ts-expect-error we gotta set enhance as a non-enumerable property
-		const button_props = {
-			type: 'submit',
-			formmethod: 'POST',
-			formaction: action,
-			onclick: form_action_onclick(({ submit, form }) =>
-				submit().then(() => {
-					if (!issues.$) {
-						form.reset();
-					}
-				})
-			)
-		};
-
-		Object.defineProperty(button_props, 'enhance', {
-			/** @type {RemoteForm<any, any>['buttonProps']['enhance']} */
-			value: (callback) => {
-				return {
-					type: 'submit',
-					formmethod: 'POST',
-					formaction: action,
-					onclick: form_action_onclick(callback)
-				};
-			}
-		});
-
-		Object.defineProperty(button_props, 'pending', {
-			get: () => pending_count
-		});
-
 		let validate_id = 0;
 
 		// TODO 3.0 remove
 		if (DEV) {
 			throw_on_old_property_access(instance);
+
+			Object.defineProperty(instance, 'buttonProps', {
+				get() {
+					throw new Error(
+						'`form.buttonProps` has been removed: Instead of `<button {...form.buttonProps}>, use `<button {...form.fields.action.as("submit", "value")}>`.' +
+							' See the PR for more info: https://github.com/sveltejs/kit/pull/14622'
+					);
+				}
+			});
 		}
 
 		Object.defineProperties(instance, {
-			buttonProps: {
-				value: button_props
-			},
 			fields: {
 				get: () =>
 					create_field_proxy(
@@ -519,7 +492,7 @@ export function form(id) {
 			},
 			validate: {
 				/** @type {RemoteForm<any, any>['validate']} */
-				value: async ({ includeUntouched = false, preflightOnly = false, submitter } = {}) => {
+				value: async ({ includeUntouched = false, preflightOnly = false } = {}) => {
 					if (!element) return;
 
 					const id = ++validate_id;
@@ -527,12 +500,18 @@ export function form(id) {
 					// wait a tick in case the user is calling validate() right after set() which takes time to propagate
 					await tick();
 
-					const form_data = new FormData(element, submitter);
+					const default_submitter = /** @type {HTMLElement | undefined} */ (
+						element.querySelector('button:not([type]), [type="submit"]')
+					);
+
+					const form_data = new FormData(element, default_submitter);
 
 					/** @type {InternalRemoteFormIssue[]} */
 					let array = [];
 
-					const validated = await preflight_schema?.['~standard'].validate(convert(form_data));
+					const data = convert(form_data);
+
+					const validated = await preflight_schema?.['~standard'].validate(data);
 
 					if (validate_id !== id) {
 						return;
@@ -541,11 +520,16 @@ export function form(id) {
 					if (validated?.issues) {
 						array = validated.issues.map((issue) => normalize_issue(issue, false));
 					} else if (!preflightOnly) {
-						form_data.set('sveltekit:validate_only', 'true');
-
-						const response = await fetch(`${base}/${app_dir}/remote/${action_id}`, {
+						const response = await fetch(`${base}/${app_dir}/remote/${action_id_without_key}`, {
 							method: 'POST',
-							body: form_data
+							headers: {
+								'Content-Type': BINARY_FORM_CONTENT_TYPE,
+								'x-sveltekit-pathname': location.pathname,
+								'x-sveltekit-search': location.search
+							},
+							body: serialize_binary_form(data, {
+								validate_only: true
+							}).blob
 						});
 
 						const result = await response.json();
@@ -637,12 +621,6 @@ function clone(element) {
  */
 function validate_form_data(form_data, enctype) {
 	for (const key of form_data.keys()) {
-		if (key.startsWith('sveltekit:')) {
-			throw new Error(
-				'FormData keys starting with `sveltekit:` are reserved for internal use and should not be set manually'
-			);
-		}
-
 		if (/^\$[.[]?/.test(key)) {
 			throw new Error(
 				'`$` is used to collect all FormData validation issues and cannot be used as the `name` of a form control'

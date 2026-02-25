@@ -1,5 +1,59 @@
 # @sveltejs/enhanced-img
 
+## 0.10.3
+### Patch Changes
+
+
+- fix: use jpg as a fallback format when source doesn't have an alpha channel ([#15243](https://github.com/sveltejs/kit/pull/15243))
+
+## 0.10.2
+### Patch Changes
+
+
+- fix: upgrade vite-imagetools to 9.0.3 for fix to caching bug ([#15305](https://github.com/sveltejs/kit/pull/15305))
+
+## 0.10.1
+### Patch Changes
+
+
+- fix: replace erroneous `import.meta.DEV` with `import.meta.env.DEV` in generated code ([#15285](https://github.com/sveltejs/kit/pull/15285))
+
+## 0.10.0
+### Minor Changes
+
+
+- feat: re-export the `Picture` type from `vite-imagetools` ([#15225](https://github.com/sveltejs/kit/pull/15225))
+
+## 0.9.3
+### Patch Changes
+
+
+- fix: ensure compatibility with vite-plugin-svelte@7 (use api.filter instead of api.idFilter) ([#15179](https://github.com/sveltejs/kit/pull/15179))
+
+## 0.9.2
+### Patch Changes
+
+
+- chore: remove duplicate caching layer ([#14988](https://github.com/sveltejs/kit/pull/14988))
+
+## 0.9.1
+### Patch Changes
+
+
+- fix: update vite-imagetools for caching fixes to avoid crashes ([#14976](https://github.com/sveltejs/kit/pull/14976))
+
+## 0.9.0
+### Minor Changes
+
+
+- chore(deps): update dependency vite-imagetools to v9 ([#14608](https://github.com/sveltejs/kit/pull/14608))
+
+## 0.8.5
+### Patch Changes
+
+
+- fix: warn rather than crash when non-enhanced image dynamically passed to `enhanced:img` ([#14845](https://github.com/sveltejs/kit/pull/14845))
+
 ## 0.8.4
 ### Patch Changes
 

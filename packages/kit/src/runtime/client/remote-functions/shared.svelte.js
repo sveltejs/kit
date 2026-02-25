@@ -5,7 +5,7 @@ import * as devalue from 'devalue';
 import { app, goto, query_map, remote_responses } from '../client.js';
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
 import { tick } from 'svelte';
-import { create_remote_cache_key, stringify_remote_arg } from '../../shared.js';
+import { create_remote_key, stringify_remote_arg } from '../../shared.js';
 
 /**
  *
@@ -37,7 +37,7 @@ export async function remote_request(url) {
 		throw new HttpError(result.status ?? 500, result.error);
 	}
 
-	return devalue.parse(result.result, app.decoders);
+	return result.result;
 }
 
 /**
@@ -48,7 +48,7 @@ export async function remote_request(url) {
 export function create_remote_function(id, create) {
 	return (/** @type {any} */ arg) => {
 		const payload = stringify_remote_arg(arg, app.hooks.transport);
-		const cache_key = create_remote_cache_key(id, payload);
+		const cache_key = create_remote_key(id, payload);
 		let entry = query_map.get(cache_key);
 
 		let tracking = true;

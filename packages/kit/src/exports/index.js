@@ -1,4 +1,6 @@
-import { HttpError, Redirect, ActionFailure } from './internal/index.js';
+/** @import { StandardSchemaV1 } from '@standard-schema/spec' */
+
+import { HttpError, Redirect, ActionFailure, ValidationError } from './internal/index.js';
 import { BROWSER, DEV } from 'esm-env';
 import {
 	add_data_suffix,
@@ -213,6 +215,49 @@ export function fail(status, data) {
  */
 export function isActionFailure(e) {
 	return e instanceof ActionFailure;
+}
+
+/**
+ * Use this to throw a validation error to imperatively fail form validation.
+ * Can be used in combination with `issue` passed to form actions to create field-specific issues.
+ *
+ * @example
+ * ```ts
+ * import { invalid } from '@sveltejs/kit';
+ * import { form } from '$app/server';
+ * import { tryLogin } from '$lib/server/auth';
+ * import * as v from 'valibot';
+ *
+ * export const login = form(
+ *   v.object({ name: v.string(), _password: v.string() }),
+ *   async ({ name, _password }) => {
+ *     const success = tryLogin(name, _password);
+ *     if (!success) {
+ *       invalid('Incorrect username or password');
+ *     }
+ *
+ *     // ...
+ *   }
+ * );
+ * ```
+ * @param  {...(StandardSchemaV1.Issue | string)} issues
+ * @returns {never}
+ * @since 2.47.3
+ */
+export function invalid(...issues) {
+	throw new ValidationError(
+		issues.map((issue) => (typeof issue === 'string' ? { message: issue } : issue))
+	);
+}
+
+/**
+ * Checks whether this is an validation error thrown by {@link invalid}.
+ * @param {unknown} e The object to check.
+ * @return {e is import('./public.js').ActionFailure}
+ * @since 2.47.3
+ */
+export function isValidationError(e) {
+	return e instanceof ValidationError;
 }
 
 /**

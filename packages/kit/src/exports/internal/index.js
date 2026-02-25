@@ -1,3 +1,5 @@
+/** @import { StandardSchemaV1 } from '@standard-schema/spec' */
+
 export class HttpError {
 	/**
 	 * @param {number} status
@@ -59,6 +61,20 @@ export class ActionFailure {
 	constructor(status, data) {
 		this.status = status;
 		this.data = data;
+	}
+}
+
+/**
+ * Error thrown when form validation fails imperatively
+ */
+export class ValidationError extends Error {
+	/**
+	 * @param {StandardSchemaV1.Issue[]} issues
+	 */
+	constructor(issues) {
+		super('Validation failed');
+		this.name = 'ValidationError';
+		this.issues = issues;
 	}
 }
 

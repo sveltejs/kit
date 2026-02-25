@@ -1,5 +1,5 @@
 import { assert, test } from 'vitest';
-import { adapters } from 'adapters.js';
+import { adapters } from '../adapters.js';
 import { existsSync, readFileSync } from 'node:fs';
 
 test('adapter versions are up to date', () => {

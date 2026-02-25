@@ -52,6 +52,23 @@ Pages can receive data from `load` functions via the `data` prop.
 <div>{@html data.content}</div>
 ```
 
+As of 2.24, pages also receive a `params` prop which is typed based on the route parameters. This is particularly useful alongside [remote functions](remote-functions):
+
+```svelte
+<!--- file: src/routes/blog/[slug]/+page.svelte --->
+<script>
+	import { getPost } from '../blog.remote';
+
+	/** @type {import('./$types').PageProps} */
+	let { params } = $props();
+
+	const post = $derived(await getPost(params.slug));
+</script>
+
+<h1>{post.title}</h1>
+<div>{@html post.content}</div>
+```
+
 > [!LEGACY]
 > `PageProps` was added in 2.16.0. In earlier versions, you had to type the `data` property manually with `PageData` instead, see [$types](#\$types).
 >
@@ -319,9 +336,9 @@ By exporting `POST`/`PUT`/`PATCH`/`DELETE`/`OPTIONS`/`HEAD` handlers, `+server.j
 ```svelte
 <!--- file: src/routes/add/+page.svelte --->
 <script>
-	let a = 0;
-	let b = 0;
-	let total = 0;
+	let a = $state(0);
+	let b = $state(0);
+	let total = $state(0);
 
 	async function add() {
 		const response = await fetch('/api/add', {

@@ -140,6 +140,10 @@ The number of seconds to wait before forcefully closing any remaining connection
 
 When using systemd socket activation, `IDLE_TIMEOUT` specifies the number of seconds after which the app is automatically put to sleep when receiving no requests. If not set, the app runs continuously. See [Socket activation](#Socket-activation) for more details.
 
+### `KEEP_ALIVE_TIMEOUT` and `HEADERS_TIMEOUT`
+
+The number of seconds for [`keepAliveTimeout`](https://nodejs.org/api/http.html#serverkeepalivetimeout) and [`headersTimeout`](https://nodejs.org/api/http.html#serverheaderstimeout).
+
 ## Options
 
 The adapter can be configured with various options:
