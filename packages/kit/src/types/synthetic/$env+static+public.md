@@ -9,7 +9,7 @@ Environment variables are [loaded by Vite](https://vitejs.dev/guide/env-and-mode
 
 **_Public_ access:**
 
-- This module (and [`$env/dynamic/public`](https://svelte.dev/docs/kit/$env-dynamic-public)) _can_ be imported into client-side code.
+- This module _can_ be imported into client-side code
 - **Only** variables that begin with [`config.kit.env.publicPrefix`](https://svelte.dev/docs/kit/configuration#env) (which defaults to `PUBLIC_`) are included
 
 For example, given the following buildtime environment:
