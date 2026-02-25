@@ -13,6 +13,7 @@ on:
       - '.github/PULL_REQUEST_TEMPLATE.md'
       - 'documentation/**'
       - 'packages/*/CHANGELOG*.md'
+      - 'packages/kit/src/types/synthetic/**'
       - 'AGENTS.md'
       - 'CLAUDE.md'
       - 'CONTRIBUTING.md'
