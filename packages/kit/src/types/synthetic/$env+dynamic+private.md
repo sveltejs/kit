@@ -27,7 +27,7 @@ Runtime environment variables are defined by the platform you're running on. For
 > MY_FEATURE_FLAG="enabled" npm run dev
 > ```
 
-For example, suppose the runtime environment variables were set like this:
+For example, given the following runtime environment:
 
 ```env
 ENVIRONMENT=production
