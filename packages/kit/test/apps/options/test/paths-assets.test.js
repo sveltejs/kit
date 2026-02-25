@@ -77,6 +77,34 @@ test.describe('base path', () => {
 		expect(page.url()).toBe(`${baseURL}/path-base/resolve-route/resolved/`);
 		expect(await page.textContent('h2')).toBe('resolved');
 	});
+
+	test('server load fetch without base path does not invoke the server', async ({
+		page,
+		baseURL
+	}) => {
+		await page.goto('/path-base/fetch/link-outside-base/');
+		await expect(page.locator('[data-testid="fetch-url"]')).toHaveText(`${baseURL}/not-base-path/`);
+		await expect(page.locator('[data-testid="fetch-response"]')).toContainText(
+			'did you mean to visit'
+		);
+	});
+
+	test('server load fetch to root does not invoke the server', async ({ page, baseURL }) => {
+		await page.goto('/path-base/fetch/link-root/');
+		// fetch to root with trailing slash
+		await expect(page.locator('[data-testid="fetch1-url"]')).toHaveText(`${baseURL}/`);
+		if (process.env.DEV) {
+			await expect(page.locator('[data-testid="fetch1-redirect"]')).toHaveText('/path-base');
+		} else {
+			await expect(page.locator('[data-testid="fetch1-response"]')).toContainText(
+				'did you mean to visit'
+			);
+		}
+
+		// fetch to root without trailing slash should be relative
+		await expect(page.locator('[data-testid="fetch2-url"]')).toBeEmpty();
+		await expect(page.locator('[data-testid="fetch2-response"]')).toHaveText('relative');
+	});
 });
 
 test.describe('assets path', () => {
