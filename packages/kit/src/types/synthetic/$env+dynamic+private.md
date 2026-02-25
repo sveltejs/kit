@@ -34,7 +34,7 @@ ENVIRONMENT=production
 PUBLIC_BASE_URL=http://site.com
 ```
 
-If the `publicPrefix` is set to `PUBLIC_` and the `privatePrefix` is not set (the default behaviour):
+With the default `publicPrefix` and `privatePrefix`:
 
 ```ts
 import { env } from '$env/dynamic/private';
