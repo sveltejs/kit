@@ -26,34 +26,15 @@ Dynamic environment variables are defined by the platform you're running on. For
 > MY_FEATURE_FLAG="enabled" npm run dev
 > ```
 
-For example, suppose the buildtime environment variables were set like this:
-
+For example, given the following runtime environment:
 ```env
 ENVIRONMENT=production
-PUBLIC_BASE_URL=http://site.com
-PUBLIC_VERSION=1
+PUBLIC_BASE_URL=http://example.com
 ```
-
-And then suppose at runtime the environment variables were set like this:
-
-```env
-ENVIRONMENT=production
-PUBLIC_BASE_URL=http://not-the-same-site.com
-PUBLIC_VERSION=9001
-```
-
-Assuming the `publicPrefix` is set to `PUBLIC_` and the `privatePrefix` is not set (the default behaviour), this is what would happen at runtime:
-
+With the default `publicPrefix` and `privatePrefix`:
 ```ts
 import { env } from '$env/dynamic/public';
-
 console.log(env.ENVIRONMENT); // => undefined, not public
-console.log(env.PUBLIC_BASE_URL); // => "http://not-the-same-site.com"
-console.log(env.PUBLIC_VERSION); // => "9001"
-
-import { ENVIRONMENT, PUBLIC_BASE_URL, PUBLIC_VERSION } from '$env/static/public';
-
-console.log(env.ENVIRONMENT); // => undefined, throws error during build
-console.log(env.PUBLIC_BASE_URL); // => "http://site.com"
-console.log(env.PUBLIC_VERSION); // => "1"
+console.log(env.PUBLIC_BASE_URL); // => "http://example.com"
+```
 ```
