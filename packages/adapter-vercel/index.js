@@ -231,7 +231,8 @@ const plugin = function (defaults = {}) {
 					throw new Error(
 						`Bundling with esbuild failed with ${error.errors.length} ${
 							error.errors.length === 1 ? 'error' : 'errors'
-						}`
+						}`,
+						{ cause: err }
 					);
 				}
 
@@ -616,6 +617,19 @@ function static_vercel_config(builder, config, dir) {
 	}
 
 	const routes = [
+		// Strip any user-supplied __pathname query parameter; SvelteKit reserves
+		// this for ISR handlers
+		{
+			src: '.*',
+			continue: true,
+			transforms: [
+				{
+					type: 'request.query',
+					op: 'delete',
+					target: { key: '__pathname' }
+				}
+			]
+		},
 		...prerendered_redirects,
 		{
 			src: `/${builder.getAppPath()}/immutable/.+`,
@@ -664,6 +678,16 @@ function static_vercel_config(builder, config, dir) {
 
 	routes.push({
 		handle: 'filesystem'
+	});
+
+	// Prevent incorrect caching: if a request to /_app/immutable/* doesn't match
+	// a static file, return 404 instead of falling through to dynamic routes.
+	// Otherwise, we could accidentally immutably cache dynamic content served
+	// by the fallback function.
+	routes.push({
+		src: `/${builder.getAppPath()}/immutable/.+`,
+		status: 404,
+		continue: false
 	});
 
 	return {

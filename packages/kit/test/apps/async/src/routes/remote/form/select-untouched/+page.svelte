@@ -1,5 +1,5 @@
 <script>
-	import { myform } from './form.remote.js';
+	import { myform } from './form.remote.ts';
 </script>
 
 <form {...myform}>
