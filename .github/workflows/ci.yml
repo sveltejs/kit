@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-    paths-ignore:
+    paths-ignore: &paths_ignore
       - '.changeset/**'
       - '.githooks/**'
       - '.github/ISSUE_TEMPLATE/**'
@@ -12,6 +12,8 @@ on:
       - '.github/FUNDING.yml'
       - '.github/PULL_REQUEST_TEMPLATE.md'
       - 'documentation/**'
+      - 'packages/*/CHANGELOG*.md'
+      - 'packages/kit/src/types/synthetic/**'
       - 'AGENTS.md'
       - 'CLAUDE.md'
       - 'CONTRIBUTING.md'
@@ -19,6 +21,7 @@ on:
       - 'LICENSE'
       - 'README.md'
   pull_request:
+    paths-ignore: *paths_ignore
 
 env:
   # we call `pnpm playwright install` instead

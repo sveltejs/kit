@@ -3,7 +3,11 @@ import { version } from '__sveltekit/environment';
 import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
 import { app, remote_responses } from '../client.js';
-import { create_remote_function, remote_request } from './shared.svelte.js';
+import {
+	create_remote_function,
+	get_remote_request_headers,
+	remote_request
+} from './shared.svelte.js';
 
 // Initialize Cache API for prerender functions
 const CACHE_NAME = DEV ? `sveltekit:${Date.now()}` : `sveltekit:${version}`;
@@ -150,6 +154,9 @@ export function prerender(id) {
 				return data;
 			}
 
+			// Do this here, after await Svelte' reactivity context is gone.
+			const headers = get_remote_request_headers();
+
 			// Check the Cache API first
 			if (prerender_cache) {
 				try {
@@ -164,7 +171,7 @@ export function prerender(id) {
 				}
 			}
 
-			const encoded = await remote_request(url);
+			const encoded = await remote_request(url, headers);
 
 			// For successful prerender requests, save to cache
 			if (prerender_cache) {

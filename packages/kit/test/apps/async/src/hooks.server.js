@@ -1,4 +1,23 @@
 import { isRedirect } from '@sveltejs/kit';
+import { do_something } from './routes/remote/server-action/action.remote';
+
+/** @type {import('@sveltejs/kit').Handle} */
+export async function handle({ event, resolve }) {
+	if (event.url.pathname === '/remote/hook-command') {
+		try {
+			const result = await do_something('from-hook');
+			return new Response(JSON.stringify({ result }), {
+				headers: { 'content-type': 'application/json' }
+			});
+		} catch (e) {
+			return new Response(JSON.stringify({ error: /** @type {Error} */ (e).message }), {
+				status: 500,
+				headers: { 'content-type': 'application/json' }
+			});
+		}
+	}
+	return resolve(event);
+}
 
 /** @type {import('@sveltejs/kit').HandleValidationError} */
 export const handleValidationError = ({ issues }) => {
