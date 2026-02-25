@@ -254,14 +254,30 @@ export async function deserialize_binary_form(request) {
 		const file_offsets_buffer = await get_buffer(HEADER_BYTES + data_length, file_offsets_length);
 		if (!file_offsets_buffer) throw deserialize_error('file offset table too short');
 
-		file_offsets = /** @type {Array<number>} */ (
-			JSON.parse(text_decoder.decode(file_offsets_buffer))
-		);
+		const parsed_offsets = JSON.parse(text_decoder.decode(file_offsets_buffer));
+
+		if (
+			!Array.isArray(parsed_offsets) ||
+			parsed_offsets.some((n) => typeof n !== 'number' || !Number.isInteger(n) || n < 0)
+		) {
+			throw deserialize_error('invalid file offset table');
+		}
+
+		file_offsets = /** @type {Array<number>} */ (parsed_offsets);
 		files_start_offset = HEADER_BYTES + data_length + file_offsets_length;
 	}
 
 	const [data, meta] = devalue.parse(text_decoder.decode(data_buffer), {
 		File: ([name, type, size, last_modified, index]) => {
+			if (
+				typeof name !== 'string' ||
+				typeof type !== 'string' ||
+				typeof size !== 'number' ||
+				typeof last_modified !== 'number' ||
+				typeof index !== 'number'
+			) {
+				throw deserialize_error('invalid file metadata');
+			}
 			if (files_start_offset + file_offsets[index] + size > content_length) {
 				throw deserialize_error('file data overflow');
 			}
@@ -377,7 +393,8 @@ class LazyFile {
 		return new ReadableStream({
 			start: async (controller) => {
 				let chunk_start = 0;
-				let start_chunk = null;
+				/** @type {Uint8Array} */
+				let start_chunk;
 				for (chunk_index = 0; ; chunk_index++) {
 					const chunk = await this.#get_chunk(chunk_index);
 					if (!chunk) return null;

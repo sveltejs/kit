@@ -160,7 +160,12 @@ test.describe('trailingSlash', () => {
 
 		/** @type {string[]} */
 		let requests = [];
-		page.on('request', (r) => requests.push(new URL(r.url()).pathname));
+		page.on('request', (r) => {
+			const url = r.url();
+			// Headless Chrome re-requests the favicon.png on every URL change
+			if (url.endsWith('/favicon.png')) return;
+			return requests.push(new URL(url).pathname);
+		});
 
 		// also wait for network processing to complete, see
 		// https://playwright.dev/docs/network#network-events
@@ -226,6 +231,24 @@ test.describe('Vite options', () => {
 
 		const mode = process.env.DEV ? 'development' : 'custom';
 		expect(await page.textContent('h2')).toBe(`${mode} === ${mode} === ${mode}`);
+	});
+});
+
+test.describe('$app/paths', () => {
+	test('match() works with base paths', async ({ request }) => {
+		const response = await request.get('/path-base/match');
+
+		expect(await response.json()).toEqual([
+			{
+				path: '/path-base/resolve-route',
+				result: { id: '/resolve-route', params: {} }
+			},
+			{
+				path: '/path-base/resolve-route/resolved',
+				result: { id: '/resolve-route/[foo]', params: { foo: 'resolved' } }
+			},
+			{ path: '/path-base/not-a-real-route-that-exists', result: null }
+		]);
 	});
 });
 

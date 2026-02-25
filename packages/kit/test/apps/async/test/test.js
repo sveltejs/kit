@@ -1,3 +1,4 @@
+import http from 'node:http';
 import { expect } from '@playwright/test';
 import { test } from '../../../utils.js';
 
@@ -23,6 +24,24 @@ test.describe('remote functions', () => {
 		await page.goto('/remote/query-redirect');
 		await page.click('a[href="/remote/query-redirect/from-page"]');
 		await expect(page.locator('#redirected')).toHaveText('redirected');
+	});
+
+	test("query that's awaited and throws a redirect doesn't trigger handleError hook", async ({
+		baseURL
+	}) => {
+		const { status, location } = await new Promise((fulfil, reject) => {
+			const request = http.get(`${baseURL}/remote/query-redirect/from-page`, (response) => {
+				fulfil({
+					status: response.statusCode,
+					location: response.headers.location
+				});
+				response.resume();
+			});
+			request.on('error', reject);
+		});
+
+		expect(status).toBe(307);
+		expect(location).toBe('/remote/query-redirect/redirected');
 	});
 
 	test('non-exported queries do not clobber each other', async ({ page }) => {
@@ -207,21 +226,68 @@ test.describe('remote functions', () => {
 		await page.goto('/remote/form/preflight');
 
 		for (const enhanced of [true, false]) {
-			const input = page.locator(enhanced ? '[data-enhanced] input' : '[data-default] input');
+			const form = page.locator(enhanced ? '[data-enhanced]' : '[data-default]');
+			const input = form.locator('input');
 			const button = page.getByText(enhanced ? 'set enhanced number' : 'set number');
 
 			await input.fill('21');
 			await button.click();
-			await page.getByText('too big').waitFor();
+			await form.getByText('too big').waitFor();
 
 			await input.fill('9');
 			await button.click();
-			await page.getByText('too small').waitFor();
+			await form.getByText('too small').waitFor();
+			await expect(form.getByText('too big')).not.toBeVisible();
+
+			if (enhanced) {
+				// one more time preflight-issue only so that we can test it's cleared
+				// after it passes and before submission.
+				await input.fill('21');
+				await button.click();
+				await form.getByText('too big').waitFor();
+			}
 
 			await input.fill('15');
 			await button.click();
 			await expect(page.getByText('number.current')).toHaveText('number.current: 15');
 		}
+	});
+
+	test('form pending is true immediately during async preflight', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/form/preflight-pending');
+
+		// Test 1: async preflight that passes — pending should be true immediately
+		await expect(page.locator('[data-passing-pending]')).toHaveText('passing pending: 0');
+
+		void page.click('[data-passing] button');
+
+		// pending should be true immediately (before async preflight finishes)
+		await expect(page.locator('[data-passing-pending]')).toHaveText('passing pending: 1');
+
+		// after submission completes, pending should return to 0
+		await expect(page.locator('[data-passing-pending]')).toHaveText('passing pending: 0', {
+			timeout: 5000
+		});
+		await expect(page.locator('[data-passing-result]')).toContainText('created:');
+
+		// Test 2: async preflight that fails — pending should be true during validation, then return to 0
+		await expect(page.locator('[data-failing-pending]')).toHaveText('failing pending: 0');
+
+		void page.click('[data-failing] button');
+
+		// pending should be true immediately
+		await expect(page.locator('[data-failing-pending]')).toHaveText('failing pending: 1');
+
+		// after preflight fails, pending should return to 0 and issues should appear
+		await expect(page.locator('[data-failing-pending]')).toHaveText('failing pending: 0', {
+			timeout: 5000
+		});
+		await expect(page.locator('[data-failing-issue]')).toHaveText('async check failed');
 	});
 
 	test('form preflight-only validation works', async ({ page, javaScriptEnabled }) => {
@@ -422,6 +488,11 @@ test.describe('remote functions', () => {
 		// Test array value access
 		const arrayValue = await page.locator('#array-value').textContent();
 		expect(JSON.parse(arrayValue)).toEqual([{ leaf: 'array-0-leaf' }, { leaf: 'array-1-leaf' }]);
+	});
+
+	test('nested field set is SSR rendered', async ({ page }) => {
+		await page.goto('/remote/form/set-ssr');
+		await expect(page.locator('#description')).toHaveText('Description: nested');
 	});
 
 	test('selects are not nuked when unrelated controls change', async ({
