@@ -51,6 +51,7 @@ export function get_cookies(request, url) {
 	/** @type {import('cookie').SerializeOptions} */
 	const defaults = {
 		httpOnly: true,
+		path: '/',
 		sameSite: 'lax',
 		secure: url.hostname === 'localhost' && url.protocol === 'http:' ? false : true
 	};
@@ -143,7 +144,7 @@ export function get_cookies(request, url) {
 		/**
 		 * @param {string} name
 		 * @param {string} value
-		 * @param {import('./page/types.js').Cookie['options']} options
+		 * @param {import('cookie').SerializeOptions} options
 		 */
 		set(name, value, options) {
 			set_internal(name, value, { ...defaults, ...options });
@@ -151,7 +152,7 @@ export function get_cookies(request, url) {
 
 		/**
 		 * @param {string} name
-		 *  @param {import('./page/types.js').Cookie['options']} options
+		 * @param {import('cookie').SerializeOptions} options
 		 */
 		delete(name, options) {
 			cookies.set(name, '', { ...options, maxAge: 0 });
@@ -160,10 +161,10 @@ export function get_cookies(request, url) {
 		/**
 		 * @param {string} name
 		 * @param {string} value
-		 *  @param {import('./page/types.js').Cookie['options']} options
+		 * @param {import('cookie').SerializeOptions} options
 		 */
 		serialize(name, value, options) {
-			let path = options.path;
+			let path = options.path ?? '/';
 
 			if (!options.domain || options.domain === url.hostname) {
 				if (!normalized_url) {
@@ -217,7 +218,7 @@ export function get_cookies(request, url) {
 	/**
 	 * @param {string} name
 	 * @param {string} value
-	 * @param {import('./page/types.js').Cookie['options']} options
+	 * @param {import('cookie').SerializeOptions} options
 	 */
 	function set_internal(name, value, options) {
 		if (!normalized_url) {
@@ -225,7 +226,7 @@ export function get_cookies(request, url) {
 			return;
 		}
 
-		let path = options.path;
+		let path = options.path ?? '/';
 
 		if (!options.domain || options.domain === url.hostname) {
 			path = resolve(normalized_url, path);
