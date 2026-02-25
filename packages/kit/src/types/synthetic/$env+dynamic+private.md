@@ -2,7 +2,7 @@ This module provides access to environment variables set _dynamically_ at runtim
 
 |         | Runtime                                                                  | Build time                                                                |
 | ------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------ |
-| Private | `$env/dynamic/private`                                                   | [`$env/static/private`](https://svelte.dev/docs/kit/$env-static-private) |
+| Private | [`$env/dynamic/private`](https://svelte.dev/docs/kit/$env-dynamic-private)                                                   | [`$env/static/private`](https://svelte.dev/docs/kit/$env-static-private) |
 | Public  | [`$env/dynamic/public`](https://svelte.dev/docs/kit/$env-dynamic-public) | [`$env/static/public`](https://svelte.dev/docs/kit/$env-static-public)   |
 
 Runtime environment variables are defined by the platform you're running on. For example if you're using [`adapter-node`](https://github.com/sveltejs/kit/tree/main/packages/adapter-node) (or running [`vite preview`](https://svelte.dev/docs/kit/cli)), this is equivalent to `process.env`.
