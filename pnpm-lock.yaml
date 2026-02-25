@@ -470,7 +470,7 @@ importers:
         version: 5.51.5
       typescript:
         specifier: ^5.3.3
-        version: 5.8.3
+        version: 5.9.3
       vite:
         specifier: 'catalog:'
         version: 8.0.0-beta.15(@types/node@24.10.13)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.0)
@@ -631,10 +631,10 @@ importers:
         version: 5.51.5
       svelte-check:
         specifier: 'catalog:'
-        version: 4.3.4(picomatch@4.0.3)(svelte@5.51.5)(typescript@5.8.3)
+        version: 4.3.4(picomatch@4.0.3)(svelte@5.51.5)(typescript@5.9.3)
       typescript:
         specifier: ^5.5.4
-        version: 5.8.3
+        version: 5.9.3
       vite:
         specifier: 'catalog:'
         version: 8.0.0-beta.15(@types/node@24.10.13)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.0)
@@ -652,13 +652,13 @@ importers:
         version: 5.51.5
       svelte-check:
         specifier: 'catalog:'
-        version: 4.3.4(picomatch@4.0.3)(svelte@5.51.5)(typescript@5.8.3)
+        version: 4.3.4(picomatch@4.0.3)(svelte@5.51.5)(typescript@5.9.3)
       typescript:
         specifier: ^5.5.4
-        version: 5.8.3
+        version: 5.9.3
       valibot:
         specifier: 'catalog:'
-        version: 1.2.0(typescript@5.8.3)
+        version: 1.2.0(typescript@5.9.3)
       vite:
         specifier: 'catalog:'
         version: 8.0.0-beta.15(@types/node@24.10.13)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.0)
@@ -688,16 +688,16 @@ importers:
         version: 5.51.5
       svelte-check:
         specifier: 'catalog:'
-        version: 4.3.4(picomatch@4.0.3)(svelte@5.51.5)(typescript@5.8.3)
+        version: 4.3.4(picomatch@4.0.3)(svelte@5.51.5)(typescript@5.9.3)
       test-redirect-importer:
         specifier: workspace:*
         version: link:../../../../test-redirect-importer
       typescript:
         specifier: ^5.5.4
-        version: 5.8.3
+        version: 5.9.3
       valibot:
         specifier: 'catalog:'
-        version: 1.2.0(typescript@5.8.3)
+        version: 1.2.0(typescript@5.9.3)
       vite:
         specifier: 'catalog:'
         version: 8.0.0-beta.15(@types/node@24.10.13)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.0)
@@ -748,10 +748,10 @@ importers:
         version: 5.51.5
       svelte-check:
         specifier: 'catalog:'
-        version: 4.3.4(picomatch@4.0.3)(svelte@5.51.5)(typescript@5.8.3)
+        version: 4.3.4(picomatch@4.0.3)(svelte@5.51.5)(typescript@5.9.3)
       typescript:
         specifier: ^5.5.4
-        version: 5.8.3
+        version: 5.9.3
       vite:
         specifier: 'catalog:'
         version: 8.0.0-beta.15(@types/node@24.10.13)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.0)
@@ -769,10 +769,10 @@ importers:
         version: 5.51.5
       svelte-check:
         specifier: 'catalog:'
-        version: 4.3.4(picomatch@4.0.3)(svelte@5.51.5)(typescript@5.8.3)
+        version: 4.3.4(picomatch@4.0.3)(svelte@5.51.5)(typescript@5.9.3)
       typescript:
         specifier: ^5.5.4
-        version: 5.8.3
+        version: 5.9.3
       vite:
         specifier: 'catalog:'
         version: 8.0.0-beta.15(@types/node@24.10.13)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.0)
@@ -790,10 +790,10 @@ importers:
         version: 5.51.5
       svelte-check:
         specifier: 'catalog:'
-        version: 4.3.4(picomatch@4.0.3)(svelte@5.51.5)(typescript@5.8.3)
+        version: 4.3.4(picomatch@4.0.3)(svelte@5.51.5)(typescript@5.9.3)
       typescript:
         specifier: ^5.5.4
-        version: 5.8.3
+        version: 5.9.3
       vite:
         specifier: 'catalog:'
         version: 8.0.0-beta.15(@types/node@24.10.13)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.0)
@@ -811,10 +811,10 @@ importers:
         version: 5.51.5
       svelte-check:
         specifier: 'catalog:'
-        version: 4.3.4(picomatch@4.0.3)(svelte@5.51.5)(typescript@5.8.3)
+        version: 4.3.4(picomatch@4.0.3)(svelte@5.51.5)(typescript@5.9.3)
       typescript:
         specifier: ^5.5.4
-        version: 5.8.3
+        version: 5.9.3
       vite:
         specifier: 'catalog:'
         version: 8.0.0-beta.15(@types/node@24.10.13)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.0)
@@ -835,10 +835,10 @@ importers:
         version: 5.51.5
       svelte-check:
         specifier: 'catalog:'
-        version: 4.3.4(picomatch@4.0.3)(svelte@5.51.5)(typescript@5.8.3)
+        version: 4.3.4(picomatch@4.0.3)(svelte@5.51.5)(typescript@5.9.3)
       typescript:
         specifier: ^5.5.4
-        version: 5.8.3
+        version: 5.9.3
       vite:
         specifier: 'catalog:'
         version: 8.0.0-beta.15(@types/node@24.10.13)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.0)
@@ -859,13 +859,13 @@ importers:
         version: 5.51.5
       svelte-check:
         specifier: 'catalog:'
-        version: 4.3.4(picomatch@4.0.3)(svelte@5.51.5)(typescript@5.8.3)
+        version: 4.3.4(picomatch@4.0.3)(svelte@5.51.5)(typescript@5.9.3)
       typescript:
         specifier: ^5.5.4
-        version: 5.8.3
+        version: 5.9.3
       valibot:
         specifier: 'catalog:'
-        version: 1.2.0(typescript@5.8.3)
+        version: 1.2.0(typescript@5.9.3)
       vite:
         specifier: 'catalog:'
         version: 8.0.0-beta.15(@types/node@24.10.13)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.0)
@@ -886,10 +886,10 @@ importers:
         version: 5.51.5
       svelte-check:
         specifier: 'catalog:'
-        version: 4.3.4(picomatch@4.0.3)(svelte@5.51.5)(typescript@5.8.3)
+        version: 4.3.4(picomatch@4.0.3)(svelte@5.51.5)(typescript@5.9.3)
       typescript:
         specifier: ^5.5.4
-        version: 5.8.3
+        version: 5.9.3
       vite:
         specifier: 'catalog:'
         version: 8.0.0-beta.15(@types/node@24.10.13)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.0)
@@ -907,10 +907,10 @@ importers:
         version: 5.51.5
       svelte-check:
         specifier: 'catalog:'
-        version: 4.3.4(picomatch@4.0.3)(svelte@5.51.5)(typescript@5.8.3)
+        version: 4.3.4(picomatch@4.0.3)(svelte@5.51.5)(typescript@5.9.3)
       typescript:
         specifier: ^5.5.4
-        version: 5.8.3
+        version: 5.9.3
       vite:
         specifier: 'catalog:'
         version: 8.0.0-beta.15(@types/node@24.10.13)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.0)
@@ -928,10 +928,10 @@ importers:
         version: 5.51.5
       svelte-check:
         specifier: 'catalog:'
-        version: 4.3.4(picomatch@4.0.3)(svelte@5.51.5)(typescript@5.8.3)
+        version: 4.3.4(picomatch@4.0.3)(svelte@5.51.5)(typescript@5.9.3)
       typescript:
         specifier: ^5.5.4
-        version: 5.8.3
+        version: 5.9.3
       vite:
         specifier: 'catalog:'
         version: 8.0.0-beta.15(@types/node@24.10.13)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.0)
@@ -958,10 +958,10 @@ importers:
         version: 5.51.5
       svelte-check:
         specifier: 'catalog:'
-        version: 4.3.4(picomatch@4.0.3)(svelte@5.51.5)(typescript@5.8.3)
+        version: 4.3.4(picomatch@4.0.3)(svelte@5.51.5)(typescript@5.9.3)
       typescript:
         specifier: ^5.5.4
-        version: 5.8.3
+        version: 5.9.3
       vite:
         specifier: 'catalog:'
         version: 8.0.0-beta.15(@types/node@24.10.13)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.0)
@@ -982,10 +982,10 @@ importers:
         version: 5.51.5
       svelte-check:
         specifier: 'catalog:'
-        version: 4.3.4(picomatch@4.0.3)(svelte@5.51.5)(typescript@5.8.3)
+        version: 4.3.4(picomatch@4.0.3)(svelte@5.51.5)(typescript@5.9.3)
       typescript:
         specifier: ^5.5.4
-        version: 5.8.3
+        version: 5.9.3
       vite:
         specifier: 'catalog:'
         version: 8.0.0-beta.15(@types/node@24.10.13)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.0)
@@ -1006,10 +1006,10 @@ importers:
         version: 5.51.5
       svelte-check:
         specifier: 'catalog:'
-        version: 4.3.4(picomatch@4.0.3)(svelte@5.51.5)(typescript@5.8.3)
+        version: 4.3.4(picomatch@4.0.3)(svelte@5.51.5)(typescript@5.9.3)
       typescript:
         specifier: ^5.5.4
-        version: 5.8.3
+        version: 5.9.3
       vite:
         specifier: 'catalog:'
         version: 8.0.0-beta.15(@types/node@24.10.13)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.0)
@@ -1030,10 +1030,10 @@ importers:
         version: 5.51.5
       svelte-check:
         specifier: 'catalog:'
-        version: 4.3.4(picomatch@4.0.3)(svelte@5.51.5)(typescript@5.8.3)
+        version: 4.3.4(picomatch@4.0.3)(svelte@5.51.5)(typescript@5.9.3)
       typescript:
         specifier: ^5.5.4
-        version: 5.8.3
+        version: 5.9.3
       vite:
         specifier: 'catalog:'
         version: 8.0.0-beta.15(@types/node@24.10.13)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.0)
@@ -1051,10 +1051,10 @@ importers:
         version: 5.51.5
       svelte-check:
         specifier: 'catalog:'
-        version: 4.3.4(picomatch@4.0.3)(svelte@5.51.5)(typescript@5.8.3)
+        version: 4.3.4(picomatch@4.0.3)(svelte@5.51.5)(typescript@5.9.3)
       typescript:
         specifier: ^5.5.4
-        version: 5.8.3
+        version: 5.9.3
       vite:
         specifier: 'catalog:'
         version: 8.0.0-beta.15(@types/node@24.10.13)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.0)
@@ -1072,10 +1072,10 @@ importers:
         version: 5.51.5
       svelte-check:
         specifier: 'catalog:'
-        version: 4.3.4(picomatch@4.0.3)(svelte@5.51.5)(typescript@5.8.3)
+        version: 4.3.4(picomatch@4.0.3)(svelte@5.51.5)(typescript@5.9.3)
       typescript:
         specifier: ^5.5.4
-        version: 5.8.3
+        version: 5.9.3
       vite:
         specifier: 'catalog:'
         version: 8.0.0-beta.15(@types/node@24.10.13)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.0)
@@ -1093,10 +1093,10 @@ importers:
         version: 5.51.5
       svelte-check:
         specifier: 'catalog:'
-        version: 4.3.4(picomatch@4.0.3)(svelte@5.51.5)(typescript@5.8.3)
+        version: 4.3.4(picomatch@4.0.3)(svelte@5.51.5)(typescript@5.9.3)
       typescript:
         specifier: ^5.5.4
-        version: 5.8.3
+        version: 5.9.3
       vite:
         specifier: 'catalog:'
         version: 8.0.0-beta.15(@types/node@24.10.13)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.0)
@@ -1114,10 +1114,10 @@ importers:
         version: 5.51.5
       svelte-check:
         specifier: 'catalog:'
-        version: 4.3.4(picomatch@4.0.3)(svelte@5.51.5)(typescript@5.8.3)
+        version: 4.3.4(picomatch@4.0.3)(svelte@5.51.5)(typescript@5.9.3)
       typescript:
         specifier: ^5.5.4
-        version: 5.8.3
+        version: 5.9.3
       vite:
         specifier: 'catalog:'
         version: 8.0.0-beta.15(@types/node@24.10.13)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.0)
@@ -1135,10 +1135,10 @@ importers:
         version: 5.51.5
       svelte-check:
         specifier: 'catalog:'
-        version: 4.3.4(picomatch@4.0.3)(svelte@5.51.5)(typescript@5.8.3)
+        version: 4.3.4(picomatch@4.0.3)(svelte@5.51.5)(typescript@5.9.3)
       typescript:
         specifier: ^5.5.4
-        version: 5.8.3
+        version: 5.9.3
       vite:
         specifier: 'catalog:'
         version: 8.0.0-beta.15(@types/node@24.10.13)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.0)
@@ -1156,10 +1156,10 @@ importers:
         version: 5.51.5
       svelte-check:
         specifier: 'catalog:'
-        version: 4.3.4(picomatch@4.0.3)(svelte@5.51.5)(typescript@5.8.3)
+        version: 4.3.4(picomatch@4.0.3)(svelte@5.51.5)(typescript@5.9.3)
       typescript:
         specifier: ^5.5.4
-        version: 5.8.3
+        version: 5.9.3
       vite:
         specifier: 'catalog:'
         version: 8.0.0-beta.15(@types/node@24.10.13)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.0)
@@ -1177,10 +1177,10 @@ importers:
         version: 5.51.5
       svelte-check:
         specifier: 'catalog:'
-        version: 4.3.4(picomatch@4.0.3)(svelte@5.51.5)(typescript@5.8.3)
+        version: 4.3.4(picomatch@4.0.3)(svelte@5.51.5)(typescript@5.9.3)
       typescript:
         specifier: ^5.5.4
-        version: 5.8.3
+        version: 5.9.3
       vite:
         specifier: 'catalog:'
         version: 8.0.0-beta.15(@types/node@24.10.13)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.0)
@@ -1198,10 +1198,10 @@ importers:
         version: 5.51.5
       svelte-check:
         specifier: 'catalog:'
-        version: 4.3.4(picomatch@4.0.3)(svelte@5.51.5)(typescript@5.8.3)
+        version: 4.3.4(picomatch@4.0.3)(svelte@5.51.5)(typescript@5.9.3)
       typescript:
         specifier: ^5.5.4
-        version: 5.8.3
+        version: 5.9.3
       vite:
         specifier: 'catalog:'
         version: 8.0.0-beta.15(@types/node@24.10.13)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.0)
@@ -1219,10 +1219,10 @@ importers:
         version: 5.51.5
       svelte-check:
         specifier: 'catalog:'
-        version: 4.3.4(picomatch@4.0.3)(svelte@5.51.5)(typescript@5.8.3)
+        version: 4.3.4(picomatch@4.0.3)(svelte@5.51.5)(typescript@5.9.3)
       typescript:
         specifier: ^5.5.4
-        version: 5.8.3
+        version: 5.9.3
       vite:
         specifier: 'catalog:'
         version: 8.0.0-beta.15(@types/node@24.10.13)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.0)
@@ -1240,10 +1240,10 @@ importers:
         version: 5.51.5
       svelte-check:
         specifier: 'catalog:'
-        version: 4.3.4(picomatch@4.0.3)(svelte@5.51.5)(typescript@5.8.3)
+        version: 4.3.4(picomatch@4.0.3)(svelte@5.51.5)(typescript@5.9.3)
       typescript:
         specifier: ^5.5.4
-        version: 5.8.3
+        version: 5.9.3
       vite:
         specifier: 'catalog:'
         version: 8.0.0-beta.15(@types/node@24.10.13)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.0)
@@ -1261,10 +1261,10 @@ importers:
         version: 5.51.5
       svelte-check:
         specifier: 'catalog:'
-        version: 4.3.4(picomatch@4.0.3)(svelte@5.51.5)(typescript@5.8.3)
+        version: 4.3.4(picomatch@4.0.3)(svelte@5.51.5)(typescript@5.9.3)
       typescript:
         specifier: ^5.5.4
-        version: 5.8.3
+        version: 5.9.3
       vite:
         specifier: 'catalog:'
         version: 8.0.0-beta.15(@types/node@24.10.13)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.0)
@@ -1282,10 +1282,10 @@ importers:
         version: 5.51.5
       svelte-check:
         specifier: 'catalog:'
-        version: 4.3.4(picomatch@4.0.3)(svelte@5.51.5)(typescript@5.8.3)
+        version: 4.3.4(picomatch@4.0.3)(svelte@5.51.5)(typescript@5.9.3)
       typescript:
         specifier: ^5.5.4
-        version: 5.8.3
+        version: 5.9.3
       vite:
         specifier: 'catalog:'
         version: 8.0.0-beta.15(@types/node@24.10.13)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.0)
@@ -1306,10 +1306,10 @@ importers:
         version: 5.51.5
       svelte-check:
         specifier: 'catalog:'
-        version: 4.3.4(picomatch@4.0.3)(svelte@5.51.5)(typescript@5.8.3)
+        version: 4.3.4(picomatch@4.0.3)(svelte@5.51.5)(typescript@5.9.3)
       typescript:
         specifier: ^5.5.4
-        version: 5.8.3
+        version: 5.9.3
       vite:
         specifier: 'catalog:'
         version: 8.0.0-beta.15(@types/node@24.10.13)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.0)
@@ -1330,10 +1330,10 @@ importers:
         version: 5.51.5
       svelte-check:
         specifier: 'catalog:'
-        version: 4.3.4(picomatch@4.0.3)(svelte@5.51.5)(typescript@5.8.3)
+        version: 4.3.4(picomatch@4.0.3)(svelte@5.51.5)(typescript@5.9.3)
       typescript:
         specifier: ^5.5.4
-        version: 5.8.3
+        version: 5.9.3
       vite:
         specifier: 'catalog:'
         version: 8.0.0-beta.15(@types/node@24.10.13)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.0)
@@ -1439,13 +1439,13 @@ importers:
         version: 5.51.5
       svelte-check:
         specifier: 'catalog:'
-        version: 4.3.4(picomatch@4.0.3)(svelte@5.51.5)(typescript@5.8.3)
+        version: 4.3.4(picomatch@4.0.3)(svelte@5.51.5)(typescript@5.9.3)
       typescript:
         specifier: ^5.5.0
-        version: 5.8.3
+        version: 5.9.3
       valibot:
         specifier: 'catalog:'
-        version: 1.2.0(typescript@5.8.3)
+        version: 1.2.0(typescript@5.9.3)
       vite:
         specifier: 'catalog:'
         version: 8.0.0-beta.15(@types/node@24.10.13)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.0)
@@ -5602,11 +5602,6 @@ packages:
     peerDependencies:
       eslint: ^8.57.0 || ^9.0.0 || ^10.0.0
       typescript: '>=4.8.4 <6.0.0'
-
-  typescript@5.8.3:
-    resolution: {integrity: sha512-p1diW6TqL9L07nNxvRMM7hMMw4c5XOo/1ibL4aAIGmSAt9slTE1Xgw5KWuof2uTOvCg9BY7ZRi+GaF+7sfgPeQ==}
-    engines: {node: '>=14.17'}
-    hasBin: true
 
   typescript@5.9.3:
     resolution: {integrity: sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw==}
@@ -10088,7 +10083,7 @@ snapshots:
 
   supports-preserve-symlinks-flag@1.0.0: {}
 
-  svelte-check@4.3.4(picomatch@4.0.3)(svelte@5.51.5)(typescript@5.8.3):
+  svelte-check@4.3.4(picomatch@4.0.3)(svelte@5.51.5)(typescript@5.9.3):
     dependencies:
       '@jridgewell/trace-mapping': 0.3.25
       chokidar: 4.0.3
@@ -10096,7 +10091,7 @@ snapshots:
       picocolors: 1.1.1
       sade: 1.8.1
       svelte: 5.51.5
-      typescript: 5.8.3
+      typescript: 5.9.3
     transitivePeerDependencies:
       - picomatch
 
@@ -10275,8 +10270,6 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  typescript@5.8.3: {}
-
   typescript@5.9.3: {}
 
   ufo@1.6.3: {}
@@ -10339,9 +10332,9 @@ snapshots:
   v8-compile-cache-lib@3.0.1:
     optional: true
 
-  valibot@1.2.0(typescript@5.8.3):
+  valibot@1.2.0(typescript@5.9.3):
     optionalDependencies:
-      typescript: 5.8.3
+      typescript: 5.9.3
 
   validate-npm-package-license@3.0.4:
     dependencies:
