@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix: deep partial `.value()` and `.set(...)` types for forms
+fix: use deep partial types for form remote functions `.value()` and `.set(...)`
