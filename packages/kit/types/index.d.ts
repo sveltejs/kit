@@ -1885,9 +1885,9 @@ declare module '@sveltejs/kit' {
 
 	type RemoteFormFieldMethods<T> = {
 		/** The values that will be submitted */
-		value(): T;
+		value(): DeepPartial<T>;
 		/** Set the values that will be submitted */
-		set(input: T): T;
+		set(input: DeepPartial<T>): DeepPartial<T>;
 		/** Validation issues, if any */
 		issues(): RemoteFormIssue[] | undefined;
 	};
@@ -2100,7 +2100,7 @@ declare module '@sveltejs/kit' {
 	 * The return value of a remote `command` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#command) for full documentation.
 	 */
 	export type RemoteCommand<Input, Output> = {
-		(arg: Input): Promise<Awaited<Output>> & {
+		(arg: undefined extends Input ? Input | void : Input): Promise<Awaited<Output>> & {
 			updates(...queries: Array<RemoteQuery<any> | RemoteQueryOverride>): Promise<Awaited<Output>>;
 		};
 		/** The number of pending command executions */
@@ -2170,12 +2170,16 @@ declare module '@sveltejs/kit' {
 	/**
 	 * The return value of a remote `prerender` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#prerender) for full documentation.
 	 */
-	export type RemotePrerenderFunction<Input, Output> = (arg: Input) => RemoteResource<Output>;
+	export type RemotePrerenderFunction<Input, Output> = (
+		arg: undefined extends Input ? Input | void : Input
+	) => RemoteResource<Output>;
 
 	/**
 	 * The return value of a remote `query` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query) for full documentation.
 	 */
-	export type RemoteQueryFunction<Input, Output> = (arg: Input) => RemoteQuery<Output>;
+	export type RemoteQueryFunction<Input, Output> = (
+		arg: undefined extends Input ? Input | void : Input
+	) => RemoteQuery<Output>;
 	interface AdapterEntry {
 		/**
 		 * A string that uniquely identifies an HTTP service (e.g. serverless function) and is used for deduplication.
@@ -2420,7 +2424,7 @@ declare module '@sveltejs/kit' {
 					: T[K];
 			}
 		: T | undefined;
-
+  
 	type IsAny<T> = 0 extends 1 & T ? true : false;
 	interface Asset {
 		file: string;
