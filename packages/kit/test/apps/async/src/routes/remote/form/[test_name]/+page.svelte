@@ -1,5 +1,5 @@
 <script>
-	import { get_message, set_message, resolve_deferreds } from './form.remote.js';
+	import { get_message, set_message, resolve_deferreds } from './form.remote.ts';
 
 	const { params } = $props();
 

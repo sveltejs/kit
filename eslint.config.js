@@ -33,6 +33,7 @@ export default [
 			'**/.custom-out-dir',
 			'packages/adapter-*/files',
 			'packages/kit/src/core/config/fixtures/multiple', // dir contains svelte config with multiple extensions tripping eslint
+			'packages/kit/types/index.d.ts', // generated file
 			'packages/package/test/fixtures/typescript-svelte-config/expected',
 			'packages/package/test/errors/**/*',
 			'packages/package/test/fixtures/**/*'

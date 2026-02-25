@@ -1,3 +1,4 @@
+import { isRedirect } from '@sveltejs/kit';
 import { do_something } from './routes/remote/server-action/action.remote';
 
 /** @type {import('@sveltejs/kit').Handle} */
@@ -25,6 +26,11 @@ export const handleValidationError = ({ issues }) => {
 
 /** @type {import('@sveltejs/kit').HandleServerError} */
 export const handleError = ({ error: e, status, message }) => {
+	// helps us catch sveltekit redirects thrown in component code
+	if (isRedirect(e)) {
+		throw new Error("Redirects shouldn't trigger the handleError hook");
+	}
+
 	const error = /** @type {Error} */ (e);
 
 	return { message: `${error.message} (${status} ${message})` };

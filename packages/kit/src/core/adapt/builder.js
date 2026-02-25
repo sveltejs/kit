@@ -19,7 +19,7 @@ import { find_server_assets } from '../generate_manifest/find_server_assets.js';
 import { reserved } from '../env.js';
 
 const pipe = promisify(pipeline);
-const extensions = ['.html', '.js', '.mjs', '.json', '.css', '.svg', '.xml', '.wasm'];
+const extensions = ['.html', '.js', '.mjs', '.json', '.css', '.svg', '.xml', '.wasm', '.txt'];
 
 /**
  * Creates the Builder which is passed to adapters for building the application.
