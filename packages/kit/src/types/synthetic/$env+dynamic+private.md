@@ -10,8 +10,7 @@ Dynamic environment variables are defined by the platform you're running on. For
 **_Private_ access:**
 
 - This module cannot be imported into client-side code
-- Variables that begin with [`config.kit.env.publicPrefix`](https://svelte.dev/docs/kit/configuration#env) (which defaults to `PUBLIC_`) are **excluded**.
-- Variables that begin with [`config.kit.env.privatePrefix`](https://svelte.dev/docs/kit/configuration#env) (which defaults to allow-all) are **included**.
+- This module includes variables that _do not_ begin with [`config.kit.env.publicPrefix`](https://svelte.dev/docs/kit/configuration#env) _and do_ start with [`config.kit.env.privatePrefix`](https://svelte.dev/docs/kit/configuration#env) (if configured)
 
 > [!NOTE] In `dev`, `$env/dynamic` includes environment variables from `.env`. In `prod`, this behavior will depend on your adapter.
 
