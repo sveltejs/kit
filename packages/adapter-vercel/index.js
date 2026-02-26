@@ -48,12 +48,7 @@ const rolldown_config = {
 	},
 	output: {
 		sourcemap: true,
-		banner: (chunk) => {
-			if (chunk.name.endsWith('.js')) {
-				return 'globalThis.global = globalThis;';
-			}
-			return '';
-		},
+		banner: () => 'globalThis.global = globalThis;',
 		codeSplitting: false
 	}
 };
