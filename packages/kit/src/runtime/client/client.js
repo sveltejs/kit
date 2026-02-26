@@ -618,7 +618,7 @@ async function initialize(result, target, hydrate) {
 		transformError: __SVELTEKIT_EXPERIMENTAL_USE_TRANSFORM_ERROR__
 			? /** @param {unknown} e */ async (e) => {
 					const error = await handle_error(e, current.nav);
-					rendering_error = { error, status: get_status(error) };
+					rendering_error = { error, status: get_status(e) };
 					page.error = error;
 					page.status = rendering_error.status;
 					return error;
