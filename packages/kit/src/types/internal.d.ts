@@ -100,6 +100,8 @@ export interface BuildData {
 		stylesheets: string[];
 		fonts: string[];
 		uses_env_dynamic_public: boolean;
+		/** Maps asset file paths to SRI integrity strings (e.g. "sha384-..."). Only set when `subresourceIntegrity` is enabled. */
+		integrity?: Record<string, string>;
 		/** Only set in case of `bundleStrategy === 'inline'`. */
 		inline?: {
 			script: string;
@@ -478,6 +480,7 @@ export interface SSROptions {
 		}): string;
 		error(values: { message: string; status: number }): string;
 	};
+	integrity_policy_endpoints: string[];
 	version_hash: string;
 }
 
