@@ -4,6 +4,7 @@ import { pathToFileURL } from 'node:url';
 import { validate_server_exports } from '../../utils/exports.js';
 import { load_config } from '../config/index.js';
 import { forked } from '../../utils/fork.js';
+import { installPolyfills } from '../../exports/node/polyfills.js';
 import { ENDPOINT_METHODS } from '../../constants.js';
 import { filter_env } from '../../utils/env.js';
 import { has_server_load, resolve_route } from '../../utils/routing.js';
@@ -48,6 +49,8 @@ async function analyse({
 
 	/** @type {import('types').ServerInternalModule} */
 	const internal = await import(pathToFileURL(`${server_root}/server/internal.js`).href);
+
+	installPolyfills();
 
 	// configure `import { building } from '$app/environment'` —
 	// essential we do this before analysing the code

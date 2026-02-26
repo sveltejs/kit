@@ -2878,6 +2878,17 @@ declare module '@sveltejs/kit/node' {
 	export {};
 }
 
+declare module '@sveltejs/kit/node/polyfills' {
+	/**
+	 * Make various web APIs available as globals:
+	 * - `crypto`
+	 * - `File`
+	 */
+	export function installPolyfills(): void;
+
+	export {};
+}
+
 declare module '@sveltejs/kit/vite' {
 	/**
 	 * Returns the SvelteKit Vite plugins.

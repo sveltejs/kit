@@ -2,6 +2,7 @@
 /** @import { RequestState } from 'types' */
 import { assert, expect, test, vi } from 'vitest';
 import { sequence } from './sequence.js';
+import { installPolyfills } from '../node/polyfills.js';
 import { noop_span } from '../../runtime/telemetry/noop.js';
 
 const dummy_event = vi.hoisted(
@@ -27,6 +28,8 @@ vi.mock(import('@sveltejs/kit/internal/server'), async (actualPromise) => {
 		})
 	};
 });
+
+installPolyfills();
 
 test('applies handlers in sequence', async () => {
 	/** @type {string[]} */
