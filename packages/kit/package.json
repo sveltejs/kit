@@ -39,7 +39,7 @@
 		"@types/node": "catalog:",
 		"@types/set-cookie-parser": "catalog:",
 		"dts-buddy": "catalog:",
-		"rollup": "^4.14.2",
+		"rollup": "^4.59.0",
 		"svelte": "catalog:",
 		"svelte-preprocess": "catalog:",
 		"typescript": "^5.3.3",
