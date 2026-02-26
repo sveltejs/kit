@@ -1,5 +1,23 @@
 # @sveltejs/kit
 
+## 2.53.2
+### Patch Changes
+
+
+- fix: server-render nested form value sets ([#15378](https://github.com/sveltejs/kit/pull/15378))
+
+
+- fix: use deep partial types for form remote functions `.value()` and `.set(...)` ([#14837](https://github.com/sveltejs/kit/pull/14837))
+
+
+- fix: provide correct url info to remote functions ([#15418](https://github.com/sveltejs/kit/pull/15418))
+
+
+- fix: allow optional types for remote query/command/prerender functions ([#15293](https://github.com/sveltejs/kit/pull/15293))
+
+
+- fix: allow commands in more places ([#15288](https://github.com/sveltejs/kit/pull/15288))
+
 ## 2.53.1
 ### Patch Changes
 

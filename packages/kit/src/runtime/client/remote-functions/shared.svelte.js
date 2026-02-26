@@ -4,21 +4,32 @@
 import * as devalue from 'devalue';
 import { app, goto, query_map, remote_responses } from '../client.js';
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
-import { tick } from 'svelte';
+import { tick, untrack } from 'svelte';
 import { create_remote_key, stringify_remote_arg } from '../../shared.js';
+import { page } from '../state.svelte.js';
 
 /**
- *
- * @param {string} url
+ * @returns {{ 'x-sveltekit-pathname': string, 'x-sveltekit-search': string }}
  */
-export async function remote_request(url) {
+export function get_remote_request_headers() {
+	// This will be the correct value of the current or soon-current url,
+	// even in forks because it's state-based - therefore not using window.location.
+	// Use untrack(...) to Avoid accidental reactive dependency on pathname/search
+	return untrack(() => ({
+		'x-sveltekit-pathname': page.url.pathname,
+		'x-sveltekit-search': page.url.search
+	}));
+}
+
+/**
+ * @param {string} url
+ * @param {HeadersInit} headers
+ */
+export async function remote_request(url, headers) {
 	const response = await fetch(url, {
 		headers: {
-			// TODO in future, when we support forking, we will likely need
-			// to grab this from context as queries will run before
-			// `location.pathname` is updated
-			'x-sveltekit-pathname': location.pathname,
-			'x-sveltekit-search': location.search
+			'Content-Type': 'application/json',
+			...headers
 		}
 	});
 
