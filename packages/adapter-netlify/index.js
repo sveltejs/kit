@@ -1,11 +1,10 @@
-/** @import { BuildOptions } from 'esbuild' */
 import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, posix } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { builtinModules } from 'node:module';
 import process from 'node:process';
-import esbuild from 'esbuild';
 import toml from '@iarna/toml';
+import { build } from 'rolldown';
 import { matches, get_publish_directory, s } from './utils.js';
 
 /**
@@ -329,6 +328,24 @@ ${config}`;
 	};
 }
 
+/** @satisfies {import('rolldown').BuildOptions} */
+const rolldown_config = {
+	platform: 'browser',
+	output: {
+		sourcemap: true,
+		codeSplitting: false
+	},
+	transform: {
+		target: 'es2022'
+	},
+	// Node built-ins are allowed, but must be prefixed with `node:`
+	// https://docs.netlify.com/edge-functions/api/#runtime-environment
+	external: builtinModules.map((id) => `node:${id}`),
+	resolve: {
+		alias: Object.fromEntries(builtinModules.map((id) => [id, `node:${id}`]))
+	}
+};
+
 /**
  * @param { object } params
  * @param {import('@sveltejs/kit').Builder} params.builder
@@ -383,40 +400,23 @@ async function generate_edge_functions({ builder }) {
 		'/.netlify/*'
 	];
 
-	/** @type {BuildOptions} */
-	const esbuild_config = {
-		bundle: true,
-		format: 'esm',
-		platform: 'browser',
-		sourcemap: 'linked',
-		target: 'es2020',
-		loader: {
-			'.wasm': 'copy',
-			'.woff': 'copy',
-			'.woff2': 'copy',
-			'.ttf': 'copy',
-			'.eot': 'copy',
-			'.otf': 'copy'
-		},
-		// Node built-ins are allowed, but must be prefixed with `node:`
-		// https://docs.netlify.com/edge-functions/api/#runtime-environment
-		external: builtinModules.map((id) => `node:${id}`),
-		alias: Object.fromEntries(builtinModules.map((id) => [id, `node:${id}`]))
-	};
-
 	await Promise.all([
-		esbuild.build({
-			entryPoints: [`${tmp}/entry.js`],
-			outfile: `${netlify_framework_edge_path}/${FUNCTION_PREFIX}render.js`,
-			...esbuild_config
+		build({
+			...rolldown_config,
+			input: `${tmp}/entry.js`,
+			output: {
+				...rolldown_config.output,
+				file: `${netlify_framework_edge_path}/${FUNCTION_PREFIX}render.js`
+			}
 		}),
 		builder.hasServerInstrumentationFile() &&
-			esbuild.build({
-				entryPoints: [
-					`${builder.getServerDirectory()}/${FUNCTION_PREFIX}instrumentation.server.js`
-				],
-				outfile: `${netlify_framework_edge_path}/${FUNCTION_PREFIX}instrumentation.server.js`,
-				...esbuild_config
+			build({
+				...rolldown_config,
+				input: `${builder.getServerDirectory()}/instrumentation.server.js`,
+				output: {
+					...rolldown_config.output,
+					file: `${netlify_framework_edge_path}/${FUNCTION_PREFIX}instrumentation.server.js`
+				}
 			})
 	]);
 

@@ -1,12 +1,11 @@
-/** @import { BuildOptions } from 'esbuild' */
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
-import { nodeFileTrace } from '@vercel/nft';
-import esbuild from 'esbuild';
-import { get_pathname, parse_isr_expiration, pattern_to_src, resolve_runtime } from './utils.js';
 import { VERSION } from '@sveltejs/kit';
+import { nodeFileTrace } from '@vercel/nft';
+import { build } from 'rolldown';
+import { get_pathname, parse_isr_expiration, pattern_to_src, resolve_runtime } from './utils.js';
 
 /**
  * @template T
@@ -26,6 +25,33 @@ const [kit_major, kit_minor] = VERSION.split('.');
 
 // https://vercel.com/docs/functions/edge-functions/edge-runtime#compatible-node.js-modules
 const compatible_node_modules = ['async_hooks', 'events', 'buffer', 'assert', 'util'];
+
+/** @satisfies {import('rolldown').BuildOptions} */
+const rolldown_config = {
+	platform: 'browser',
+	resolve: {
+		conditionNames: [
+			// Vercel's Edge runtime key https://runtime-keys.proposal.wintercg.org/#edge-light
+			'edge-light',
+			// re-include these since they are included by default when no conditions are specified
+			'import',
+			'browser',
+			'default'
+		]
+	},
+	external: [...compatible_node_modules, ...compatible_node_modules.map((id) => `node:${id}`)],
+	transform: {
+		// minimum Node.js version supported is v14.6.0 that is mapped to ES2019
+		// https://edge-runtime.vercel.app/features/polyfills
+		// TODO verify the latest ES version the edge runtime supports
+		target: 'es2022'
+	},
+	output: {
+		sourcemap: true,
+		banner: () => 'globalThis.global = globalThis;',
+		codeSplitting: false
+	}
+};
 
 /** @type {import('./index.js').default} **/
 const plugin = function (defaults = {}) {
@@ -139,52 +165,33 @@ const plugin = function (defaults = {}) {
 
 				try {
 					const outdir = `${dirs.functions}/${name}.func`;
-					/** @type {BuildOptions} */
-					const esbuild_config = {
-						// minimum Node.js version supported is v14.6.0 that is mapped to ES2019
-						// https://edge-runtime.vercel.app/features/polyfills
-						// TODO verify the latest ES version the edge runtime supports
-						target: 'es2020',
-						bundle: true,
-						platform: 'browser',
-						conditions: [
-							// Vercel's Edge runtime key https://runtime-keys.proposal.wintercg.org/#edge-light
-							'edge-light',
-							// re-include these since they are included by default when no conditions are specified
-							// https://esbuild.github.io/api/#conditions
-							'module'
-						],
-						format: 'esm',
-						external: [
-							...compatible_node_modules,
-							...compatible_node_modules.map((id) => `node:${id}`),
-							...(config.external || [])
-						],
-						sourcemap: 'linked',
-						banner: { js: 'globalThis.global = globalThis;' },
-						loader: {
-							'.wasm': 'copy',
-							'.woff': 'copy',
-							'.woff2': 'copy',
-							'.ttf': 'copy',
-							'.eot': 'copy',
-							'.otf': 'copy'
-						}
+
+					const build_config = {
+						...rolldown_config,
+						external: [...rolldown_config.external, ...(config.external || [])]
 					};
-					const result = await esbuild.build({
-						entryPoints: [`${tmp}/edge.js`],
-						outfile: `${outdir}/index.js`,
-						...esbuild_config
-					});
 
-					let instrumentation_result;
+					await Promise.all([
+						build({
+							...build_config,
+							input: `${tmp}/edge.js`,
+							output: {
+								...build_config.output,
+								file: `${outdir}/index.js`
+							}
+						}),
+						builder.hasServerInstrumentationFile?.() &&
+							build({
+								...build_config,
+								input: `${builder.getServerDirectory()}/instrumentation.server.js`,
+								output: {
+									...build_config.output,
+									file: `${outdir}/instrumentation.server.js`
+								}
+							})
+					]);
+
 					if (builder.hasServerInstrumentationFile?.()) {
-						instrumentation_result = await esbuild.build({
-							entryPoints: [`${builder.getServerDirectory()}/instrumentation.server.js`],
-							outfile: `${outdir}/instrumentation.server.js`,
-							...esbuild_config
-						});
-
 						builder.instrument?.({
 							entrypoint: `${outdir}/index.js`,
 							instrumentation: `${outdir}/instrumentation.server.js`,
@@ -193,45 +200,10 @@ const plugin = function (defaults = {}) {
 							}
 						});
 					}
-
-					const warnings = instrumentation_result
-						? [...result.warnings, ...instrumentation_result.warnings]
-						: result.warnings;
-
-					if (warnings.length > 0) {
-						const formatted = await esbuild.formatMessages(warnings, {
-							kind: 'warning',
-							color: true
-						});
-
-						console.error(formatted.join('\n'));
-					}
 				} catch (err) {
-					const error = /** @type {import('esbuild').BuildFailure} */ (err);
-					for (const e of error.errors) {
-						for (const node of e.notes) {
-							const match =
-								/The package "(.+)" wasn't found on the file system but is built into node/.exec(
-									node.text
-								);
-
-							if (match) {
-								node.text = `Cannot use "${match[1]}" when deploying to Vercel Edge Functions.`;
-							}
-						}
-					}
-
-					const formatted = await esbuild.formatMessages(error.errors, {
-						kind: 'error',
-						color: true
-					});
-
-					console.error(formatted.join('\n'));
-
 					throw new Error(
-						`Bundling with esbuild failed with ${error.errors.length} ${
-							error.errors.length === 1 ? 'error' : 'errors'
-						}`,
+						'Bundling edge function with Rolldown failed' +
+							(err instanceof Error ? `: ${err.message}` : ''),
 						{ cause: err }
 					);
 				}

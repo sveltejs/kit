@@ -39,7 +39,6 @@
 	"pnpm": {
 		"onlyBuiltDependencies": [
 			"@parcel/watcher",
-			"esbuild",
 			"protobufjs",
 			"rolldown",
 			"sharp",

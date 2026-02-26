@@ -37,11 +37,13 @@
 		"lint": "prettier --check .",
 		"format": "pnpm lint --write",
 		"check": "tsc",
-		"test": "vitest run"
+		"test:unit": "vitest run",
+		"test:build": "cd test/apps/basic && pnpm build",
+		"test": "pnpm test:unit && pnpm test:build"
 	},
 	"dependencies": {
 		"@vercel/nft": "^1.3.2",
-		"esbuild": "^0.25.4"
+		"rolldown": "^1.0.0-rc.6"
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:^",

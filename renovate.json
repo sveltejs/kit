@@ -10,7 +10,6 @@
 	},
 	"ignoreDeps": [
 		"@types/node",
-		"esbuild",
 		"rollup",
 		"typescript"
 	],

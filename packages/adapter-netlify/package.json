@@ -45,7 +45,7 @@
 	},
 	"dependencies": {
 		"@iarna/toml": "^2.2.5",
-		"esbuild": "^0.25.4"
+		"rolldown": "^1.0.0-rc.6"
 	},
 	"devDependencies": {
 		"@netlify/dev": "catalog:",
@@ -56,7 +56,6 @@
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "catalog:",
 		"@types/node": "catalog:",
-		"rolldown": "^1.0.0-rc.5",
 		"typescript": "catalog:",
 		"vite": "catalog:",
 		"vitest": "catalog:"
