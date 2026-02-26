@@ -572,6 +572,16 @@ declare module '@sveltejs/kit' {
 		 */
 		inlineStyleThreshold?: number;
 		/**
+		 * Configuration for the [`Integrity-Policy`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Integrity-Policy) response header, which is set when `subresourceIntegrity` is enabled.
+		 */
+		integrityPolicy?: {
+			/**
+			 * The reporting endpoints to include in the `Integrity-Policy` header.
+			 * @default ["default"]
+			 */
+			endpoints?: string[];
+		};
+		/**
 		 * An array of file extensions that SvelteKit will treat as modules. Files with extensions that match neither `config.extensions` nor `config.kit.moduleExtensions` will be ignored by the router.
 		 * @default [".js", ".ts"]
 		 */
@@ -820,6 +830,11 @@ declare module '@sveltejs/kit' {
 					register?: false;
 			  }
 		);
+		/**
+		 * Enable [Subresource Integrity](https://developer.mozilla.org/en-US/docs/Web/Security/Subresource_Integrity) (SRI) hash generation for scripts and stylesheets. When set to a hash algorithm, SvelteKit will compute integrity hashes for all client assets at build time and add `integrity` and `crossorigin` attributes to `<link>` and `<script>` tags.
+		 * @default false
+		 */
+		subresourceIntegrity?: false | 'sha256' | 'sha384' | 'sha512';
 		typescript?: {
 			/**
 			 * A function that allows you to edit the generated `tsconfig.json`. You can mutate the config (recommended) or return a new one.
