@@ -336,7 +336,7 @@ const rolldown_config = {
 		codeSplitting: false
 	},
 	transform: {
-		target: 'es2020'
+		target: 'es2022'
 	},
 	// Node built-ins are allowed, but must be prefixed with `node:`
 	// https://docs.netlify.com/edge-functions/api/#runtime-environment

@@ -44,7 +44,7 @@ const rolldown_config = {
 		// minimum Node.js version supported is v14.6.0 that is mapped to ES2019
 		// https://edge-runtime.vercel.app/features/polyfills
 		// TODO verify the latest ES version the edge runtime supports
-		target: 'es2020'
+		target: 'es2022'
 	},
 	output: {
 		sourcemap: true,
