@@ -1,6 +1,6 @@
 ---
-'@sveltejs/adapter-netlify': patch
-'@sveltejs/adapter-vercel': patch
+'@sveltejs/adapter-netlify': major
+'@sveltejs/adapter-vercel': major
 ---
 
 chore: use `rolldown` for edge function bundling
