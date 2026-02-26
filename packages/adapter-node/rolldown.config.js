@@ -61,16 +61,7 @@ export default [
 			codeSplitting: false
 		},
 		plugins: [clearOutput('files/handler.js'), prefixBuiltinModules()],
-		external: ['ENV', 'MANIFEST', 'SERVER', 'SHIMS'],
-		platform: 'node'
-	},
-	{
-		input: 'src/shims.js',
-		output: {
-			file: 'files/shims.js',
-			format: 'esm'
-		},
-		plugins: [clearOutput('files/shims.js'), prefixBuiltinModules()],
+		external: ['ENV', 'MANIFEST', 'SERVER'],
 		platform: 'node'
 	}
 ];
