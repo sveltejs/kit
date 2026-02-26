@@ -84,7 +84,7 @@ You can also use [Vite's `import.meta.glob`](https://vitejs.dev/guide/features.h
 ```svelte
 <script>
 	const imageModules = import.meta.glob(
-		'/path/to/assets/*.{avif,gif,heif,jpeg,jpg,png,tiff,webp}',
+		'/path/to/assets/*.{avif,AVIF,gif,GIF,heif,HEIF,jpeg,JPEG,jpg,JPG,png,PNG,tiff,TIFF,webp,WEBP}',
 		{
 			eager: true,
 			query: {
