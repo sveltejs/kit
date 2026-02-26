@@ -191,7 +191,7 @@ export async function render_response({
 				? /** @param {unknown} e */ async (e) => {
 						const transformed = await handle_error_and_jsonify(event, event_state, options, e);
 						props.page.error = props.error = error = transformed;
-						props.page.status = status = get_status(error);
+						props.page.status = status = get_status(e);
 						return transformed;
 					}
 				: undefined
