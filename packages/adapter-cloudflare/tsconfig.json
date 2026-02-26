@@ -19,6 +19,7 @@
 		"index.js",
 		"utils.js",
 		"utils.spec.js",
+		"rolldown.config.js",
 		"test/utils.js",
 		"internal.d.ts",
 		"src/worker.js"

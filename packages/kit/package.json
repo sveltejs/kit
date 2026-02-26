@@ -35,7 +35,7 @@
 		"@types/connect": "catalog:",
 		"@types/node": "catalog:",
 		"dts-buddy": "catalog:",
-		"rolldown": "^1.0.0-rc.5",
+		"rolldown": "catalog:",
 		"svelte": "catalog:",
 		"svelte-preprocess": "catalog:",
 		"typescript": "catalog:",
