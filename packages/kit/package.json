@@ -112,10 +112,6 @@
 			"types": "./types/index.d.ts",
 			"import": "./src/exports/node/index.js"
 		},
-		"./node/polyfills": {
-			"types": "./types/index.d.ts",
-			"import": "./src/exports/node/polyfills.js"
-		},
 		"./hooks": {
 			"types": "./types/index.d.ts",
 			"import": "./src/exports/hooks/index.js"
