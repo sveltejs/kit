@@ -29,6 +29,10 @@ const config = {
 		output: {
 			preloadStrategy: 'preload-mjs'
 		},
+		subresourceIntegrity: 'sha384',
+		integrityPolicy: {
+			endpoints: ['other']
+		},
 		paths: {
 			base: '/path-base',
 			// @ts-expect-error our env var string can't match the https template literal
