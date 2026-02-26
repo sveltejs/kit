@@ -64,7 +64,7 @@ const get_defaults = (prefix = '') => ({
 			reportOnly: directive_defaults
 		},
 		csrf: {
-			checkOrigin: true,
+			checkOrigin: undefined,
 			trustedOrigins: []
 		},
 		embedded: false,
@@ -96,13 +96,14 @@ const get_defaults = (prefix = '') => ({
 		},
 		inlineStyleThreshold: 0,
 		moduleExtensions: ['.js', '.ts'],
-		output: { bundleStrategy: 'split' },
+		output: { bundleStrategy: 'split', preloadStrategy: undefined },
 		outDir: join(prefix, '.svelte-kit'),
 		router: {
 			type: 'pathname',
 			resolution: 'client'
 		},
 		serviceWorker: {
+			options: undefined,
 			register: true
 		},
 		typescript: {},
