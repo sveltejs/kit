@@ -37,6 +37,7 @@ import {
 	sveltekit_environment,
 	sveltekit_server
 } from './module_ids.js';
+import { exactRegex } from 'rolldown/filter';
 import { import_peer } from '../../utils/import.js';
 import { compact } from '../../utils/array.js';
 import { should_ignore, has_children } from './static_analysis/utils.js';
@@ -459,13 +460,13 @@ async function kit({ svelte_config }) {
 		load: {
 			filter: {
 				id: [
-					env_static_private,
-					env_static_public,
-					env_dynamic_private,
-					env_dynamic_public,
-					service_worker,
-					sveltekit_environment,
-					sveltekit_server
+					exactRegex(env_static_private),
+					exactRegex(env_static_public),
+					exactRegex(env_dynamic_private),
+					exactRegex(env_dynamic_public),
+					exactRegex(service_worker),
+					exactRegex(sveltekit_environment),
+					exactRegex(sveltekit_server)
 				]
 			},
 			handler(id, options) {
