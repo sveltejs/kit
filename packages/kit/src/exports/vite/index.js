@@ -423,7 +423,7 @@ async function kit({ svelte_config }) {
 			// If importing from a service-worker, only allow $service-worker & $env/static/public, but none of the other virtual modules.
 			// This check won't catch transitive imports, but it will warn when the import comes from a service-worker directly.
 			// Transitive imports will be caught during the build.
-			// TODO move this logic to plugin_guard
+			// TODO move this logic to plugin_guard. add a filter to this resolveId when doing so
 			if (importer) {
 				const parsed_importer = path.parse(importer);
 
@@ -456,45 +456,55 @@ async function kit({ svelte_config }) {
 				return `\0virtual:${id}`;
 			}
 		},
+		load: {
+			filter: {
+				id: [
+					env_static_private,
+					env_static_public,
+					env_dynamic_private,
+					env_dynamic_public,
+					service_worker,
+					sveltekit_environment,
+					sveltekit_server
+				]
+			},
+			handler(id, options) {
+				switch (id) {
+					case env_static_private:
+						return create_static_module('$env/static/private', env.private);
 
-		load(id, options) {
-			const browser = !options?.ssr;
+					case env_static_public:
+						return create_static_module('$env/static/public', env.public);
 
-			const global = is_build
-				? `globalThis.__sveltekit_${version_hash}`
-				: 'globalThis.__sveltekit_dev';
+					case env_dynamic_private:
+						return create_dynamic_module(
+							'private',
+							vite_config_env.command === 'serve' ? env.private : undefined
+						);
 
-			switch (id) {
-				case env_static_private:
-					return create_static_module('$env/static/private', env.private);
+					case env_dynamic_public: {
+						const browser = !options?.ssr;
+						// populate `$env/dynamic/public` from `window`
+						if (browser) {
+							const global = is_build
+								? `globalThis.__sveltekit_${version_hash}`
+								: 'globalThis.__sveltekit_dev';
+							return `export const env = ${global}.env;`;
+						}
 
-				case env_static_public:
-					return create_static_module('$env/static/public', env.public);
-
-				case env_dynamic_private:
-					return create_dynamic_module(
-						'private',
-						vite_config_env.command === 'serve' ? env.private : undefined
-					);
-
-				case env_dynamic_public:
-					// populate `$env/dynamic/public` from `window`
-					if (browser) {
-						return `export const env = ${global}.env;`;
+						return create_dynamic_module(
+							'public',
+							vite_config_env.command === 'serve' ? env.public : undefined
+						);
 					}
 
-					return create_dynamic_module(
-						'public',
-						vite_config_env.command === 'serve' ? env.public : undefined
-					);
+					case service_worker:
+						return create_service_worker_module(svelte_config);
 
-				case service_worker:
-					return create_service_worker_module(svelte_config);
+					case sveltekit_environment: {
+						const { version } = svelte_config.kit;
 
-				case sveltekit_environment: {
-					const { version } = svelte_config.kit;
-
-					return dedent`
+						return dedent`
 						export const version = ${s(version.name)};
 						export let building = false;
 						export let prerendering = false;
@@ -507,10 +517,10 @@ async function kit({ svelte_config }) {
 							prerendering = true;
 						}
 					`;
-				}
+					}
 
-				case sveltekit_server: {
-					return dedent`
+					case sveltekit_server: {
+						return dedent`
 						export let read_implementation = null;
 
 						export let manifest = null;
@@ -523,6 +533,7 @@ async function kit({ svelte_config }) {
 							manifest = _;
 						}
 					`;
+					}
 				}
 			}
 		}
@@ -662,12 +673,15 @@ async function kit({ svelte_config }) {
 			if (id.startsWith('\0sveltekit-remote:')) return id;
 		},
 
-		load(id) {
-			// On-the-fly generated entry point for remote file just forwards the original module
-			// We're not using manualChunks because it can cause problems with circular dependencies
-			// (e.g. https://github.com/sveltejs/kit/issues/14679) and module ordering in general
-			// (e.g. https://github.com/sveltejs/kit/issues/14590).
-			if (id.startsWith('\0sveltekit-remote:')) {
+		load: {
+			filter: {
+				id: /^\0sveltekit-remote:/
+			},
+			handler(id) {
+				// On-the-fly generated entry point for remote file just forwards the original module
+				// We're not using manualChunks because it can cause problems with circular dependencies
+				// (e.g. https://github.com/sveltejs/kit/issues/14679) and module ordering in general
+				// (e.g. https://github.com/sveltejs/kit/issues/14590).
 				const hash_id = id.slice('\0sveltekit-remote:'.length);
 				const original = remote_original_by_hash.get(hash_id);
 				if (!original) throw new Error(`Expected to find metadata for remote file ${id}`);
@@ -679,31 +693,32 @@ async function kit({ svelte_config }) {
 			dev_server = _dev_server;
 		},
 
-		async transform(code, id, opts) {
-			const normalized = normalize_id(id, normalized_lib, normalized_cwd);
-			if (!svelte_config.kit.moduleExtensions.some((ext) => normalized.endsWith(`.remote${ext}`))) {
-				return;
-			}
+		transform: {
+			filter: {
+				id: new RegExp(
+					`\\.remote(${svelte_config.kit.moduleExtensions.map((e) => e.replaceAll('.', '\\.')).join('|')})(\\?.*)?$`
+				)
+			},
+			async handler(code, id, opts) {
+				const file = posixify(path.relative(cwd, id));
+				const remote = {
+					hash: hash(file),
+					file
+				};
 
-			const file = posixify(path.relative(cwd, id));
-			const remote = {
-				hash: hash(file),
-				file
-			};
+				remotes.push(remote);
 
-			remotes.push(remote);
+				if (opts?.ssr) {
+					// we need to add an `await Promise.resolve()` because if the user imports this function
+					// on the client AND in a load function when loading the client module we will trigger
+					// an ssrLoadModule during dev. During a link preload, the module can be mistakenly
+					// loaded and transformed twice and the first time all its exports would be undefined
+					// triggering a dev server error. By adding a microtask we ensure that the module is fully loaded
 
-			if (opts?.ssr) {
-				// we need to add an `await Promise.resolve()` because if the user imports this function
-				// on the client AND in a load function when loading the client module we will trigger
-				// an ssrLoadModule during dev. During a link preload, the module can be mistakenly
-				// loaded and transformed twice and the first time all its exports would be undefined
-				// triggering a dev server error. By adding a microtask we ensure that the module is fully loaded
-
-				// Extra newlines to prevent syntax errors around missing semicolons or comments
-				code +=
-					'\n\n' +
-					dedent`
+					// Extra newlines to prevent syntax errors around missing semicolons or comments
+					code +=
+						'\n\n' +
+						dedent`
 					import * as $$_self_$$ from './${path.basename(id)}';
 					import { init_remote_functions as $$_init_$$ } from '@sveltejs/kit/internal';
 
@@ -717,69 +732,70 @@ async function kit({ svelte_config }) {
 					}
 				`;
 
-				// Emit a dedicated entry chunk for this remote in SSR builds (prod only)
-				if (!dev_server) {
-					remote_original_by_hash.set(remote.hash, id);
-					if (!emitted_remote_hashes.has(remote.hash)) {
-						this.emitFile({
-							type: 'chunk',
-							id: `\0sveltekit-remote:${remote.hash}`,
-							name: `remote-${remote.hash}`
-						});
-						emitted_remote_hashes.add(remote.hash);
+					// Emit a dedicated entry chunk for this remote in SSR builds (prod only)
+					if (!dev_server) {
+						remote_original_by_hash.set(remote.hash, id);
+						if (!emitted_remote_hashes.has(remote.hash)) {
+							this.emitFile({
+								type: 'chunk',
+								id: `\0sveltekit-remote:${remote.hash}`,
+								name: `remote-${remote.hash}`
+							});
+							emitted_remote_hashes.add(remote.hash);
+						}
+					}
+
+					return code;
+				}
+
+				// For the client, read the exports and create a new module that only contains fetch functions with the correct metadata
+
+				/** @type {Map<string, import('types').RemoteInfo['type']>} */
+				const map = new Map();
+
+				// in dev, load the server module here (which will result in this hook
+				// being called again with `opts.ssr === true` if the module isn't
+				// already loaded) so we can determine what it exports
+				if (dev_server) {
+					const module = await dev_server.ssrLoadModule(id);
+
+					for (const [name, value] of Object.entries(module)) {
+						const type = value?.__?.type;
+						if (type) {
+							map.set(name, type);
+						}
 					}
 				}
 
-				return code;
-			}
+				// in prod, we already built and analysed the server code before
+				// building the client code, so `remote_exports` is populated
+				else if (build_metadata?.remotes) {
+					const exports = build_metadata?.remotes.get(remote.hash);
+					if (!exports) throw new Error('Expected to find metadata for remote file ' + id);
 
-			// For the client, read the exports and create a new module that only contains fetch functions with the correct metadata
-
-			/** @type {Map<string, import('types').RemoteInfo['type']>} */
-			const map = new Map();
-
-			// in dev, load the server module here (which will result in this hook
-			// being called again with `opts.ssr === true` if the module isn't
-			// already loaded) so we can determine what it exports
-			if (dev_server) {
-				const module = await dev_server.ssrLoadModule(id);
-
-				for (const [name, value] of Object.entries(module)) {
-					const type = value?.__?.type;
-					if (type) {
-						map.set(name, type);
+					for (const [name, value] of exports) {
+						map.set(name, value.type);
 					}
 				}
-			}
 
-			// in prod, we already built and analysed the server code before
-			// building the client code, so `remote_exports` is populated
-			else if (build_metadata?.remotes) {
-				const exports = build_metadata?.remotes.get(remote.hash);
-				if (!exports) throw new Error('Expected to find metadata for remote file ' + id);
+				let namespace = '__remote';
+				let uid = 1;
+				while (map.has(namespace)) namespace = `__remote${uid++}`;
 
-				for (const [name, value] of exports) {
-					map.set(name, value.type);
+				const exports = Array.from(map).map(([name, type]) => {
+					return `export const ${name} = ${namespace}.${type}('${remote.hash}/${name}');`;
+				});
+
+				let result = `import * as ${namespace} from '__sveltekit/remote';\n\n${exports.join('\n')}\n`;
+
+				if (dev_server) {
+					result += `\nimport.meta.hot?.accept();\n`;
 				}
+
+				return {
+					code: result
+				};
 			}
-
-			let namespace = '__remote';
-			let uid = 1;
-			while (map.has(namespace)) namespace = `__remote${uid++}`;
-
-			const exports = Array.from(map).map(([name, type]) => {
-				return `export const ${name} = ${namespace}.${type}('${remote.hash}/${name}');`;
-			});
-
-			let result = `import * as ${namespace} from '__sveltekit/remote';\n\n${exports.join('\n')}\n`;
-
-			if (dev_server) {
-				result += `\nimport.meta.hot?.accept();\n`;
-			}
-
-			return {
-				code: result
-			};
 		}
 	};
 
