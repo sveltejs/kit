@@ -109,10 +109,8 @@ const options = object(
 			}),
 
 			csrf: object({
-				checkOrigin: deprecate(
-					boolean(true),
-					(keypath) =>
-						`\`${keypath}\` has been deprecated in favour of \`csrf.trustedOrigins\`. It will be removed in a future version`
+				checkOrigin: removed(
+					(keypath) => `\`${keypath}\` has been removed in favour of \`csrf.trustedOrigins\``
 				),
 				trustedOrigins: string_array([])
 			}),
@@ -159,6 +157,9 @@ const options = object(
 			outDir: string('.svelte-kit'),
 
 			output: object({
+				preloadStrategy: removed(
+					(keypath) => `\`${keypath}\` has been removed. modulepreload will always be used`
+				),
 				bundleStrategy: list(['split', 'single', 'inline'])
 			}),
 
@@ -332,6 +333,21 @@ function deprecate(
 		}
 
 		return fn(input, keypath);
+	};
+}
+
+/**
+ * @param {(keypath: string) => string} get_message
+ * @returns {Validator}
+ */
+function removed(
+	get_message = (keypath) =>
+		`The \`${keypath}\` option has been removed. Please see the list of breaking changes for your major release`
+) {
+	return (input, keypath) => {
+		if (typeof input !== 'undefined') {
+			throw new Error(get_message(keypath));
+		}
 	};
 }
 
