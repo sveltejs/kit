@@ -21,7 +21,6 @@ function clearOutput(filepath) {
 const config = {
 	input: {
 		serverless: 'src/serverless.js',
-		shims: 'src/shims.js',
 		edge: 'src/edge.js'
 	},
 	output: {
