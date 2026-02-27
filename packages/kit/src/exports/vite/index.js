@@ -29,6 +29,7 @@ import { s } from '../../utils/misc.js';
 import { hash } from '../../utils/hash.js';
 import { dedent } from '../../core/sync/utils.js';
 import {
+	app_server,
 	env_dynamic_private,
 	env_dynamic_public,
 	env_static_private,
@@ -583,18 +584,15 @@ async function kit({ svelte_config }) {
 							return;
 						}
 
-						// skip .server.js files outside the cwd or in node_modules, as the filename might not mean 'server-only module' in this context
-						const is_internal =
-							id.startsWith(normalized_cwd) && !id.startsWith(normalized_node_modules);
-
-						const normalized = normalize_id(id, normalized_lib, normalized_cwd);
-
 						const is_server_only =
-							normalized === '$env/static/private' ||
-							normalized === '$env/dynamic/private' ||
-							normalized === '$app/server' ||
-							normalized.startsWith('$lib/server/') ||
-							(is_internal && server_only_pattern.test(path.basename(id)));
+							id === env_static_private ||
+							id === env_dynamic_private ||
+							id === app_server ||
+							id.startsWith(`${normalized_lib}/server/`) ||
+							// skip .server.js files outside the cwd or in node_modules, as the filename might not mean 'server-only module' in this context
+							(id.startsWith(normalized_cwd) &&
+								!id.startsWith(normalized_node_modules) &&
+								server_only_pattern.test(path.basename(id)));
 
 						if (is_server_only) {
 							// in dev, this doesn't exist, so we need to create it
