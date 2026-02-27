@@ -67,7 +67,7 @@ export async function treeshake_prerendered_remotes(out, remotes, metadata, cwd,
 						modified_code.overwrite(
 							node.start,
 							node.end,
-							`const ${fn} = { __: { type: 'prerender', id: ${s(`${remote.hash}/${fn}`)}, name: ${s(fn)} } }`
+							`const ${fn} = prerender('unchecked', () => { throw new Error('Unexpectedly called prerender function. Did you forget to set { dynamic: true } ?') });`
 						);
 					}
 				}
