@@ -43,7 +43,7 @@ export async function treeshake_prerendered_remotes(out, remotes, metadata, cwd,
 			return chunk.name === remote_filename;
 		});
 
-		if (!remote_chunk) return;
+		if (!remote_chunk) continue;
 
 		const chunk_path = posixify(path.relative(cwd, `${out}/server/${remote_chunk.fileName}`));
 
