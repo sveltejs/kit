@@ -171,6 +171,15 @@ let manifest_data;
 let build_metadata = undefined;
 
 /**
+ * TODO: SvelteKit 4 - replace with RegExp.escape - available only in Node 24
+ * @param {string} str
+ * @returns
+ */
+const regExpEscape = function (str) {
+	return str.replace(/[-[\]{}()*+!<=:?.\\/\\^$|#\s,]/g, '\\$&');
+};
+
+/**
  * Returns the SvelteKit Vite plugin. Vite executes Rollup hooks as well as some of its own.
  * Background reading is available at:
  * - https://vitejs.dev/guide/api-plugin.html
@@ -579,22 +588,26 @@ async function kit({ svelte_config }) {
 		load:
 			process.env.TEST === 'true'
 				? undefined
-				: (id, options) => {
-						if (options?.ssr === true) {
-							return;
-						}
+				: {
+						filter: {
+							id: [
+								exactRegex(env_static_private),
+								exactRegex(env_dynamic_private),
+								exactRegex(app_server),
+								new RegExp(`^${normalized_lib}/server/`),
+								// skip .server.js files outside the cwd or in node_modules, as the filename might not mean 'server-only module' in this context
+								// should be equivalent to: (id.startsWith(normalized_cwd) && !id.startsWith(normalized_node_modules) && server_only_pattern.test(path.basename(id))
+								new RegExp(
+									`^(?!${regExpEscape(normalized_node_modules)})${regExpEscape(normalized_cwd)}.*(?:^|/)[^/]*${server_only_pattern.source}[^/]*$`
+								)
+							]
+						},
+						handler(id, options) {
+							// TODO: can we replace this when migrating to the environment API?
+							if (options?.ssr === true) {
+								return;
+							}
 
-						const is_server_only =
-							id === env_static_private ||
-							id === env_dynamic_private ||
-							id === app_server ||
-							id.startsWith(`${normalized_lib}/server/`) ||
-							// skip .server.js files outside the cwd or in node_modules, as the filename might not mean 'server-only module' in this context
-							(id.startsWith(normalized_cwd) &&
-								!id.startsWith(normalized_node_modules) &&
-								server_only_pattern.test(path.basename(id)));
-
-						if (is_server_only) {
 							// in dev, this doesn't exist, so we need to create it
 							manifest_data ??= sync.all(svelte_config, vite_config_env.mode).manifest_data;
 
@@ -651,9 +664,9 @@ async function kit({ svelte_config }) {
 
 									throw stackless(message);
 								}
-							}
 
-							throw new Error('An impossible situation occurred');
+								throw new Error('An impossible situation occurred');
+							}
 						}
 					}
 	};
