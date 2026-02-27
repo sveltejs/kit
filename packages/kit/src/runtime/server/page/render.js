@@ -615,15 +615,6 @@ export async function render_response({
 		if (link_headers.size) {
 			headers.set('link', Array.from(link_headers).join(', '));
 		}
-
-		if (integrity_map) {
-			const destinations = 'script style';
-			const endpoints = options.integrity_policy_endpoints.join(' ');
-			headers.set(
-				'integrity-policy',
-				`blocked-destinations=(${destinations}),endpoints=(${endpoints})`
-			);
-		}
 	}
 
 	const html = options.templates.app({

@@ -480,7 +480,6 @@ export interface SSROptions {
 		}): string;
 		error(values: { message: string; status: number }): string;
 	};
-	integrity_policy_endpoints: string[];
 	version_hash: string;
 }
 

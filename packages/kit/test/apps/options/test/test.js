@@ -62,7 +62,7 @@ test.describe('CSP', () => {
 	});
 });
 
-test.describe('subresourceIntegrity and integrityPolicy', () => {
+test.describe('subresourceIntegrity', () => {
 	test.skip(() => !!process.env.DEV);
 
 	test('adds integrity attribute to script preloads', async ({ request }) => {
@@ -143,12 +143,6 @@ test.describe('subresourceIntegrity and integrityPolicy', () => {
 		expect(script_match[2]).toBe(hash_match[1]);
 	});
 
-	test('sets integrity-policy response header', async ({ request }) => {
-		const response = await request.get('/path-base/inline-style');
-		const header = response.headers()['integrity-policy'];
-
-		expect(header).toBe('blocked-destinations=(script style),endpoints=(other)');
-	});
 });
 
 test.describe('Custom extensions', () => {

@@ -154,10 +154,6 @@ const options = object(
 
 			inlineStyleThreshold: number(0),
 
-			integrityPolicy: object({
-				endpoints: string_array(['default'])
-			}),
-
 			moduleExtensions: string_array(['.js', '.ts']),
 
 			outDir: string('.svelte-kit'),

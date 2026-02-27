@@ -100,7 +100,6 @@ const get_defaults = (prefix = '') => ({
 		},
 		inlineStyleThreshold: 0,
 		moduleExtensions: ['.js', '.ts'],
-		integrityPolicy: { endpoints: ['default'] },
 		output: {
 			preloadStrategy: 'modulepreload',
 			bundleStrategy: 'split'

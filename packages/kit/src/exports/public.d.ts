@@ -598,16 +598,6 @@ export interface KitConfig {
 	 */
 	inlineStyleThreshold?: number;
 	/**
-	 * Configuration for the [`Integrity-Policy`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Integrity-Policy) response header, which is set when `subresourceIntegrity` is enabled.
-	 */
-	integrityPolicy?: {
-		/**
-		 * The reporting endpoints to include in the `Integrity-Policy` header.
-		 * @default ["default"]
-		 */
-		endpoints?: string[];
-	};
-	/**
 	 * An array of file extensions that SvelteKit will treat as modules. Files with extensions that match neither `config.extensions` nor `config.kit.moduleExtensions` will be ignored by the router.
 	 * @default [".js", ".ts"]
 	 */
