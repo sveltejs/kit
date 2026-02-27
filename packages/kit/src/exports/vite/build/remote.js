@@ -7,7 +7,6 @@ import { Parser } from 'acorn';
 import MagicString from 'magic-string';
 import { posixify } from '../../../utils/filesystem.js';
 import { import_peer } from '../../../utils/import.js';
-import { s } from '../../../utils/misc.js';
 
 /**
  * @param {string} out
