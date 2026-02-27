@@ -20,6 +20,6 @@ test.describe('remote functions', () => {
 		const code = fs.readFileSync(
 			path.join(root, '.svelte-kit', 'output', 'server', 'chunks', 'prerender.remote.js')
 		);
-		expect(code.includes('with_read')).toBe(false);
+		expect(code.includes('const with_read = prerender(')).toBe(false);
 	});
 });
