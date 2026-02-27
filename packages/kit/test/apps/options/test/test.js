@@ -142,7 +142,6 @@ test.describe('subresourceIntegrity', () => {
 		// The hash in the page text and the script tag should match
 		expect(script_match[2]).toBe(hash_match[1]);
 	});
-
 });
 
 test.describe('Custom extensions', () => {
