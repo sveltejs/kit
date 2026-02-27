@@ -1270,7 +1270,8 @@ async function kit({ svelte_config }) {
 					}
 				}
 
-				// Compute SRI integrity hashes
+				// Compute SRI integrity hashes from the files on disk, to ensure
+				// the hash matches the content the browser will actually receive
 				if (build_data.client && svelte_config.kit.subresourceIntegrity) {
 					const algorithm = svelte_config.kit.subresourceIntegrity;
 					/** @type {Record<string, string>} */
@@ -1279,7 +1280,7 @@ async function kit({ svelte_config }) {
 					for (const chunk of /** @type {import('vite').Rollup.OutputBundle[string][]} */ (
 						client_chunks
 					)) {
-						const content = chunk.type === 'chunk' ? chunk.code : chunk.source;
+						const content = fs.readFileSync(`${out}/client/${chunk.fileName}`);
 						const hash = createHash(algorithm).update(content).digest('base64');
 						integrity[chunk.fileName] = `${algorithm}-${hash}`;
 					}

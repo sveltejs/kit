@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import * as http from 'node:http';
 import process from 'node:process';
 import { expect } from '@playwright/test';
@@ -121,6 +122,35 @@ test.describe('subresourceIntegrity', () => {
 		// Every import() URL should have a corresponding integrity preload
 		for (const url of import_urls) {
 			expect(preloaded_urls).toContain(url);
+		}
+	});
+
+	test('integrity hashes match actual file content', async ({ request }) => {
+		const response = await request.get('/path-base/inline-style');
+		const html = await response.text();
+
+		const link_tags = html.match(/<link[^>]+>/g) ?? [];
+		const links_with_integrity = link_tags
+			.filter((tag) => tag.includes('integrity='))
+			.map((tag) => {
+				const href = tag.match(/href="([^"]+)"/)?.[1];
+				const integrity = tag.match(/integrity="([^"]+)"/)?.[1];
+				return { href, integrity };
+			})
+			.filter((l) => l.href && l.integrity);
+
+		expect(links_with_integrity.length).toBeGreaterThan(0);
+
+		for (const { href, integrity } of links_with_integrity) {
+			// Resolve the relative href against the response URL to get a correct absolute path
+			const resolved = new URL(href, response.url()).pathname;
+			const res = await request.get(resolved);
+			expect(res.status(), `failed to fetch ${resolved}`).toBe(200);
+			const body = Buffer.from(await res.body());
+			const [algo, expected_hash] = integrity.split('-', 2);
+			const actual_hash = createHash(algo).update(body).digest('base64');
+
+			expect(actual_hash, `integrity mismatch for ${resolved}`).toBe(expected_hash);
 		}
 	});
 
