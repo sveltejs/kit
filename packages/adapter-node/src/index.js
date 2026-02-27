@@ -3,6 +3,7 @@ import process from 'node:process';
 import { handler } from 'HANDLER';
 import { env, timeout_env } from 'ENV';
 import polka from 'polka';
+import { unlink } from 'fs/promises';
 
 export const path = env('SOCKET_PATH', false);
 export const host = env('HOST', '0.0.0.0');
@@ -56,6 +57,14 @@ if (socket_activation) {
 		console.log(`Listening on file descriptor ${SD_LISTEN_FDS_START}`);
 	});
 } else {
+	if (path) {
+		try {
+			await unlink(path);
+		} catch (err) {
+			//ignore missing file errors
+			if (err.code !== 'ENOENT') throw err;
+		}
+	}
 	server.listen({ path, host, port }, () => {
 		console.log(`Listening on ${path || `http://${host}:${port}`}`);
 	});
