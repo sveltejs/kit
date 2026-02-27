@@ -3,7 +3,7 @@ import process from 'node:process';
 import { handler } from 'HANDLER';
 import { env, timeout_env } from 'ENV';
 import polka from 'polka';
-import { unlink } from 'fs/promises';
+import { unlink } from 'node:fs/promises';
 
 export const path = env('SOCKET_PATH', false);
 export const host = env('HOST', '0.0.0.0');
