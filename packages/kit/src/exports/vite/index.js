@@ -664,9 +664,9 @@ async function kit({ svelte_config }) {
 
 									throw stackless(message);
 								}
-
-								throw new Error('An impossible situation occurred');
 							}
+
+							throw new Error('An impossible situation occurred');
 						}
 					}
 	};
