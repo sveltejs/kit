@@ -575,83 +575,89 @@ async function kit({ svelte_config }) {
 			}
 		},
 
-		load(id, options) {
-			if (options?.ssr === true || process.env.TEST === 'true') {
-				return;
-			}
-
-			// skip .server.js files outside the cwd or in node_modules, as the filename might not mean 'server-only module' in this context
-			const is_internal = id.startsWith(normalized_cwd) && !id.startsWith(normalized_node_modules);
-
-			const normalized = normalize_id(id, normalized_lib, normalized_cwd);
-
-			const is_server_only =
-				normalized === '$env/static/private' ||
-				normalized === '$env/dynamic/private' ||
-				normalized === '$app/server' ||
-				normalized.startsWith('$lib/server/') ||
-				(is_internal && server_only_pattern.test(path.basename(id)));
-
-			if (is_server_only) {
-				// in dev, this doesn't exist, so we need to create it
-				manifest_data ??= sync.all(svelte_config, vite_config_env.mode).manifest_data;
-
-				/** @type {Set<string>} */
-				const entrypoints = new Set();
-				for (const node of manifest_data.nodes) {
-					if (node.component) entrypoints.add(node.component);
-					if (node.universal) entrypoints.add(node.universal);
-				}
-
-				if (manifest_data.hooks.client) entrypoints.add(manifest_data.hooks.client);
-				if (manifest_data.hooks.universal) entrypoints.add(manifest_data.hooks.universal);
-
-				const normalized = normalize_id(id, normalized_lib, normalized_cwd);
-				const chain = [normalized];
-
-				let current = normalized;
-				let includes_remote_file = false;
-
-				while (true) {
-					const importers = import_map.get(current);
-					if (!importers) break;
-
-					const candidates = Array.from(importers).filter((importer) => !chain.includes(importer));
-					if (candidates.length === 0) break;
-
-					chain.push((current = candidates[0]));
-
-					includes_remote_file ||= svelte_config.kit.moduleExtensions.some((ext) => {
-						return current.endsWith(`.remote${ext}`);
-					});
-
-					if (entrypoints.has(current)) {
-						const pyramid = chain
-							.reverse()
-							.map((id, i) => {
-								return `${' '.repeat(i + 1)}${id}`;
-							})
-							.join(' imports\n');
-
-						if (includes_remote_file) {
-							error_for_missing_config(
-								'remote functions',
-								'kit.experimental.remoteFunctions',
-								'true'
-							);
+		load:
+			process.env.TEST === 'true'
+				? undefined
+				: (id, options) => {
+						if (options?.ssr === true) {
+							return;
 						}
 
-						let message = `Cannot import ${normalized} into code that runs in the browser, as this could leak sensitive information.`;
-						message += `\n\n${pyramid}`;
-						message += `\n\nIf you're only using the import as a type, change it to \`import type\`.`;
+						// skip .server.js files outside the cwd or in node_modules, as the filename might not mean 'server-only module' in this context
+						const is_internal =
+							id.startsWith(normalized_cwd) && !id.startsWith(normalized_node_modules);
 
-						throw stackless(message);
+						const normalized = normalize_id(id, normalized_lib, normalized_cwd);
+
+						const is_server_only =
+							normalized === '$env/static/private' ||
+							normalized === '$env/dynamic/private' ||
+							normalized === '$app/server' ||
+							normalized.startsWith('$lib/server/') ||
+							(is_internal && server_only_pattern.test(path.basename(id)));
+
+						if (is_server_only) {
+							// in dev, this doesn't exist, so we need to create it
+							manifest_data ??= sync.all(svelte_config, vite_config_env.mode).manifest_data;
+
+							/** @type {Set<string>} */
+							const entrypoints = new Set();
+							for (const node of manifest_data.nodes) {
+								if (node.component) entrypoints.add(node.component);
+								if (node.universal) entrypoints.add(node.universal);
+							}
+
+							if (manifest_data.hooks.client) entrypoints.add(manifest_data.hooks.client);
+							if (manifest_data.hooks.universal) entrypoints.add(manifest_data.hooks.universal);
+
+							const normalized = normalize_id(id, normalized_lib, normalized_cwd);
+							const chain = [normalized];
+
+							let current = normalized;
+							let includes_remote_file = false;
+
+							while (true) {
+								const importers = import_map.get(current);
+								if (!importers) break;
+
+								const candidates = Array.from(importers).filter(
+									(importer) => !chain.includes(importer)
+								);
+								if (candidates.length === 0) break;
+
+								chain.push((current = candidates[0]));
+
+								includes_remote_file ||= svelte_config.kit.moduleExtensions.some((ext) => {
+									return current.endsWith(`.remote${ext}`);
+								});
+
+								if (entrypoints.has(current)) {
+									const pyramid = chain
+										.reverse()
+										.map((id, i) => {
+											return `${' '.repeat(i + 1)}${id}`;
+										})
+										.join(' imports\n');
+
+									if (includes_remote_file) {
+										error_for_missing_config(
+											'remote functions',
+											'kit.experimental.remoteFunctions',
+											'true'
+										);
+									}
+
+									let message = `Cannot import ${normalized} into code that runs in the browser, as this could leak sensitive information.`;
+									message += `\n\n${pyramid}`;
+									message += `\n\nIf you're only using the import as a type, change it to \`import type\`.`;
+
+									throw stackless(message);
+								}
+							}
+
+							throw new Error('An impossible situation occurred');
+						}
 					}
-				}
-
-				throw new Error('An impossible situation occurred');
-			}
-		}
 	};
 
 	/** @type {import('vite').ViteDevServer} */
