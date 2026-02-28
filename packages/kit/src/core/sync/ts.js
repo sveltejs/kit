@@ -1,6 +1,8 @@
-/** @type {import('typescript')} */
-// @ts-ignore
-export let ts = undefined;
+import { import_peer } from '../../utils/import.js';
+
+/** @type {typeof import('typescript')} */
+export let ts;
+
 try {
-	ts = (await import('typescript')).default;
+	ts = (await import_peer('typescript')).default;
 } catch {}
