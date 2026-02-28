@@ -3191,7 +3191,7 @@ declare module '$app/paths' {
 	 * @since 2.26
 	 *
 	 * */
-	export function resolve<T extends RouteId | Pathname>(...args: ResolveArgs<T>): ResolvedPathname;
+	export function resolve<T extends RouteId | ResolvablePath>(...args: ResolveArgs<T>): ResolvedPathname;
 	/**
 	 * Match a path or URL to a route ID and extracts any parameters.
 	 *
