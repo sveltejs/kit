@@ -5,7 +5,7 @@
 		// Without the fix, data was already nulled when blur fired during
 		// navigation, causing "Cannot read properties of undefined".
 		// We write to window so the result survives component teardown.
-		window.__blur_test_result = data.message;
+		/** @type {any} */ (window).__blur_test_result = data.message;
 	}
 </script>
 
