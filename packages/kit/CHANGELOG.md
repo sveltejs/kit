@@ -1,5 +1,17 @@
 # @sveltejs/kit
 
+## 2.53.4
+### Patch Changes
+
+
+- fix: avoid Vite warning about unknown `codeSplitting` option ([#15451](https://github.com/sveltejs/kit/pull/15451))
+
+## 2.53.3
+### Patch Changes
+
+
+- fix: prevent overlapping file metadata in remote functions `form` ([`faba869`](https://github.com/sveltejs/kit/commit/faba869db3644077169bf5d7c6e41fd5f3d6c65e))
+
 ## 2.53.2
 ### Patch Changes
 

@@ -245,7 +245,7 @@ export async function deserialize_binary_form(request) {
 	const data_buffer = await get_buffer(HEADER_BYTES, data_length);
 	if (!data_buffer) throw deserialize_error('data too short');
 
-	/** @type {Array<number>} */
+	/** @type {Array<number | undefined>} */
 	let file_offsets;
 	/** @type {number} */
 	let files_start_offset;
@@ -267,6 +267,8 @@ export async function deserialize_binary_form(request) {
 		files_start_offset = HEADER_BYTES + data_length + file_offsets_length;
 	}
 
+	/** @type {Array<{ offset: number, size: number }>} */
+	const file_spans = [];
 	const [data, meta] = devalue.parse(text_decoder.decode(data_buffer), {
 		File: ([name, type, size, last_modified, index]) => {
 			if (
@@ -278,27 +280,49 @@ export async function deserialize_binary_form(request) {
 			) {
 				throw deserialize_error('invalid file metadata');
 			}
-			if (files_start_offset + file_offsets[index] + size > content_length) {
+
+			let offset = file_offsets[index];
+
+			// Check that the file offset table entry has not been already
+			// used. If not, immediately mark it as used.
+			if (offset === undefined) {
+				throw deserialize_error('duplicate file offset table index');
+			}
+			file_offsets[index] = undefined;
+
+			offset += files_start_offset;
+			if (offset + size > content_length) {
 				throw deserialize_error('file data overflow');
 			}
-			return new Proxy(
-				new LazyFile(
-					name,
-					type,
-					size,
-					last_modified,
-					get_chunk,
-					files_start_offset + file_offsets[index]
-				),
-				{
-					getPrototypeOf() {
-						// Trick validators into thinking this is a normal File
-						return File.prototype;
-					}
+
+			file_spans.push({ offset, size });
+
+			return new Proxy(new LazyFile(name, type, size, last_modified, get_chunk, offset), {
+				getPrototypeOf() {
+					// Trick validators into thinking this is a normal File
+					return File.prototype;
 				}
-			);
+			});
 		}
 	});
+
+	// Sort file spans in increasing order primarily by offset
+	// and secondarily by size (to allow 0-length files).
+	file_spans.sort((a, b) => a.offset - b.offset || a.size - b.size);
+
+	// Check that file spans do not overlap and there are no gaps between them.
+	for (let i = 1; i < file_spans.length; i++) {
+		const previous = file_spans[i - 1];
+		const current = file_spans[i];
+
+		const previous_end = previous.offset + previous.size;
+		if (previous_end < current.offset) {
+			throw deserialize_error('gaps in file data');
+		}
+		if (previous_end > current.offset) {
+			throw deserialize_error('overlapping file data');
+		}
+	}
 
 	// Read the request body asyncronously so it doesn't stall
 	void (async () => {
