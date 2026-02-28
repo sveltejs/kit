@@ -175,7 +175,7 @@ let build_metadata = undefined;
  * @param {string} str
  * @returns
  */
-const regExpEscape = function (str) {
+const reg_exp_escape = function (str) {
 	return str.replace(/[-[\]{}()*+!<=:?.\\/\\^$|#\s,]/g, '\\$&');
 };
 
@@ -598,7 +598,7 @@ async function kit({ svelte_config }) {
 								// skip .server.js files outside the cwd or in node_modules, as the filename might not mean 'server-only module' in this context
 								// should be equivalent to: (id.startsWith(normalized_cwd) && !id.startsWith(normalized_node_modules) && server_only_pattern.test(path.basename(id))
 								new RegExp(
-									`^(?!${regExpEscape(normalized_node_modules)})${regExpEscape(normalized_cwd)}.*(?:^|/)[^/]*${server_only_pattern.source}[^/]*$`
+									`^(?!${reg_exp_escape(normalized_node_modules)})${reg_exp_escape(normalized_cwd)}.*(?:^|/)[^/]*${server_only_pattern.source}[^/]*$`
 								)
 							]
 						},
