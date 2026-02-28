@@ -38,7 +38,7 @@ import {
 	sveltekit_environment,
 	sveltekit_server
 } from './module_ids.js';
-import { exactRegex } from 'rolldown/filter';
+import { exactRegex, prefixRegex } from 'rolldown/filter';
 import { import_peer } from '../../utils/import.js';
 import { compact } from '../../utils/array.js';
 import { should_ignore, has_children } from './static_analysis/utils.js';
@@ -550,6 +550,7 @@ async function kit({ svelte_config }) {
 		}
 	};
 
+	const skip_plugin_guard = process.env.TEST === 'true';
 	/** @type {Map<string, Set<string>>} */
 	const import_map = new Map();
 	const server_only_pattern = /.*\.server\..+/;
@@ -566,109 +567,110 @@ async function kit({ svelte_config }) {
 		// are added to the module graph
 		enforce: 'pre',
 
-		async resolveId(id, importer, options) {
-			if (importer && !importer.endsWith('index.html')) {
-				const resolved = await this.resolve(id, importer, { ...options, skipSelf: true });
+		resolveId: skip_plugin_guard
+			? undefined
+			: async function (id, importer, options) {
+					if (importer && !importer.endsWith('index.html')) {
+						const resolved = await this.resolve(id, importer, { ...options, skipSelf: true });
 
-				if (resolved) {
-					const normalized = normalize_id(resolved.id, normalized_lib, normalized_cwd);
+						if (resolved) {
+							const normalized = normalize_id(resolved.id, normalized_lib, normalized_cwd);
 
-					let importers = import_map.get(normalized);
+							let importers = import_map.get(normalized);
 
-					if (!importers) {
-						importers = new Set();
-						import_map.set(normalized, importers);
-					}
-
-					importers.add(normalize_id(importer, normalized_lib, normalized_cwd));
-				}
-			}
-		},
-
-		load:
-			process.env.TEST === 'true'
-				? undefined
-				: {
-						filter: {
-							id: [
-								exactRegex(env_static_private),
-								exactRegex(env_dynamic_private),
-								exactRegex(app_server),
-								new RegExp(`^${normalized_lib}/server/`),
-								// skip .server.js files outside the cwd or in node_modules, as the filename might not mean 'server-only module' in this context
-								// should be equivalent to: (id.startsWith(normalized_cwd) && !id.startsWith(normalized_node_modules) && server_only_pattern.test(path.basename(id))
-								new RegExp(
-									`^(?!${reg_exp_escape(normalized_node_modules)})${reg_exp_escape(normalized_cwd)}.*(?:^|/)[^/]*${server_only_pattern.source}[^/]*$`
-								)
-							]
-						},
-						handler(id, options) {
-							// TODO: can we replace this when migrating to the environment API?
-							if (options?.ssr === true) {
-								return;
+							if (!importers) {
+								importers = new Set();
+								import_map.set(normalized, importers);
 							}
 
-							// in dev, this doesn't exist, so we need to create it
-							manifest_data ??= sync.all(svelte_config, vite_config_env.mode).manifest_data;
-
-							/** @type {Set<string>} */
-							const entrypoints = new Set();
-							for (const node of manifest_data.nodes) {
-								if (node.component) entrypoints.add(node.component);
-								if (node.universal) entrypoints.add(node.universal);
-							}
-
-							if (manifest_data.hooks.client) entrypoints.add(manifest_data.hooks.client);
-							if (manifest_data.hooks.universal) entrypoints.add(manifest_data.hooks.universal);
-
-							const normalized = normalize_id(id, normalized_lib, normalized_cwd);
-							const chain = [normalized];
-
-							let current = normalized;
-							let includes_remote_file = false;
-
-							while (true) {
-								const importers = import_map.get(current);
-								if (!importers) break;
-
-								const candidates = Array.from(importers).filter(
-									(importer) => !chain.includes(importer)
-								);
-								if (candidates.length === 0) break;
-
-								chain.push((current = candidates[0]));
-
-								includes_remote_file ||= svelte_config.kit.moduleExtensions.some((ext) => {
-									return current.endsWith(`.remote${ext}`);
-								});
-
-								if (entrypoints.has(current)) {
-									const pyramid = chain
-										.reverse()
-										.map((id, i) => {
-											return `${' '.repeat(i + 1)}${id}`;
-										})
-										.join(' imports\n');
-
-									if (includes_remote_file) {
-										error_for_missing_config(
-											'remote functions',
-											'kit.experimental.remoteFunctions',
-											'true'
-										);
-									}
-
-									let message = `Cannot import ${normalized} into code that runs in the browser, as this could leak sensitive information.`;
-									message += `\n\n${pyramid}`;
-									message += `\n\nIf you're only using the import as a type, change it to \`import type\`.`;
-
-									throw stackless(message);
-								}
-							}
-
-							throw new Error('An impossible situation occurred');
+							importers.add(normalize_id(importer, normalized_lib, normalized_cwd));
 						}
 					}
+				},
+
+		load: skip_plugin_guard
+			? undefined
+			: {
+					filter: {
+						id: [
+							exactRegex(env_static_private),
+							exactRegex(env_dynamic_private),
+							exactRegex(app_server),
+							prefixRegex(`${normalized_lib}/server/`),
+							// skip .server.js files outside the cwd or in node_modules, as the filename might not mean 'server-only module' in this context
+							// should be equivalent to: (id.startsWith(normalized_cwd) && !id.startsWith(normalized_node_modules) && server_only_pattern.test(path.basename(id))
+							new RegExp(
+								`^(?!${reg_exp_escape(normalized_node_modules)})${reg_exp_escape(normalized_cwd)}.*(?:^|/)[^/]*${server_only_pattern.source}[^/]*$`
+							)
+						]
+					},
+					handler(id, options) {
+						// TODO: replace with https://vite.dev/guide/api-environment-plugins#per-environment-plugins
+						if (options?.ssr === true) {
+							return;
+						}
+
+						// in dev, this doesn't exist, so we need to create it
+						manifest_data ??= sync.all(svelte_config, vite_config_env.mode).manifest_data;
+
+						/** @type {Set<string>} */
+						const entrypoints = new Set();
+						for (const node of manifest_data.nodes) {
+							if (node.component) entrypoints.add(node.component);
+							if (node.universal) entrypoints.add(node.universal);
+						}
+
+						if (manifest_data.hooks.client) entrypoints.add(manifest_data.hooks.client);
+						if (manifest_data.hooks.universal) entrypoints.add(manifest_data.hooks.universal);
+
+						const normalized = normalize_id(id, normalized_lib, normalized_cwd);
+						const chain = [normalized];
+
+						let current = normalized;
+						let includes_remote_file = false;
+
+						while (true) {
+							const importers = import_map.get(current);
+							if (!importers) break;
+
+							const candidates = Array.from(importers).filter(
+								(importer) => !chain.includes(importer)
+							);
+							if (candidates.length === 0) break;
+
+							chain.push((current = candidates[0]));
+
+							includes_remote_file ||= svelte_config.kit.moduleExtensions.some((ext) => {
+								return current.endsWith(`.remote${ext}`);
+							});
+
+							if (entrypoints.has(current)) {
+								const pyramid = chain
+									.reverse()
+									.map((id, i) => {
+										return `${' '.repeat(i + 1)}${id}`;
+									})
+									.join(' imports\n');
+
+								if (includes_remote_file) {
+									error_for_missing_config(
+										'remote functions',
+										'kit.experimental.remoteFunctions',
+										'true'
+									);
+								}
+
+								let message = `Cannot import ${normalized} into code that runs in the browser, as this could leak sensitive information.`;
+								message += `\n\n${pyramid}`;
+								message += `\n\nIf you're only using the import as a type, change it to \`import type\`.`;
+
+								throw stackless(message);
+							}
+						}
+
+						throw new Error('An impossible situation occurred');
+					}
+				}
 	};
 
 	/** @type {import('vite').ViteDevServer} */
@@ -687,13 +689,19 @@ async function kit({ svelte_config }) {
 	const plugin_remote = {
 		name: 'vite-plugin-sveltekit-remote',
 
-		resolveId(id) {
-			if (id.startsWith('\0sveltekit-remote:')) return id;
+		// prevent other plugins from resolving our remote virtual module
+		resolveId: {
+			filter: {
+				id: prefixRegex('\0sveltekit-remote:')
+			},
+			handler(id) {
+				return id;
+			}
 		},
 
 		load: {
 			filter: {
-				id: /^\0sveltekit-remote:/
+				id: prefixRegex('\0sveltekit-remote:')
 			},
 			handler(id) {
 				// On-the-fly generated entry point for remote file just forwards the original module
