@@ -723,7 +723,7 @@ async function kit({ svelte_config }) {
 		transform: {
 			filter: {
 				id: new RegExp(
-					`\\.remote(${svelte_config.kit.moduleExtensions.map((e) => e.replaceAll('.', '\\.')).join('|')})(\\?.*)?$`
+					`\\.remote(?:${svelte_config.kit.moduleExtensions.map((e) => e.replaceAll('.', '\\.')).join('|')})(?:\\?.*)?$`
 				)
 			},
 			async handler(code, id, opts) {
