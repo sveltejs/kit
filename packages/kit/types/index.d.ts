@@ -3124,7 +3124,7 @@ declare module '$app/navigation' {
 }
 
 declare module '$app/paths' {
-	import type { RouteId, Pathname, ResolvedPathname, RouteParams, Asset } from '$app/types';
+	import type { RouteId, ResolvablePath, ResolvedPathname, RouteParams, Asset, Pathname } from '$app/types';
 	/**
 	 * A string that matches [`config.kit.paths.base`](https://svelte.dev/docs/kit/configuration#paths).
 	 *
@@ -3146,10 +3146,10 @@ declare module '$app/paths' {
 	/**
 	 * @deprecated Use [`resolve(...)`](https://svelte.dev/docs/kit/$app-paths#resolve) instead
 	 */
-	export function resolveRoute<T extends RouteId | Pathname>(
+	export function resolveRoute<T extends RouteId | ResolvablePath>(
 		...args: ResolveArgs<T>
 	): ResolvedPathname;
-	type ResolveArgs<T extends RouteId | Pathname> = T extends RouteId
+	type ResolveArgs<T extends RouteId | ResolvablePath> = T extends RouteId
 		? RouteParams<T> extends Record<string, never>
 			? [route: T]
 			: [route: T, params: RouteParams<T>]
@@ -3595,6 +3595,16 @@ declare module '$app/types' {
 	 * A union of all valid pathnames in your app.
 	 */
 	export type Pathname = ReturnType<AppTypes['Pathname']>;
+
+	/**
+	 * A pathname that may optionally include a query string and/or hash fragment.
+	 * Used as input to the `resolve` function.
+	 */
+	export type ResolvablePath =
+		| Pathname
+		| `${Pathname}?${string}`
+		| `${Pathname}#${string}`
+		| `${Pathname}?${string}#${string}`;
 
 	/**
 	 * `Pathname`, but possibly prefixed with a base path. Used for `page.url.pathname`.

@@ -124,6 +124,16 @@ declare module '$app/types' {
 	export type Pathname = ReturnType<AppTypes['Pathname']>;
 
 	/**
+	 * A pathname that may optionally include a query string and/or hash fragment.
+	 * Used as input to the `resolve` function.
+	 */
+	export type ResolvablePath =
+		| Pathname
+		| `${Pathname}?${string}`
+		| `${Pathname}#${string}`
+		| `${Pathname}?${string}#${string}`;
+
+	/**
 	 * `Pathname`, but possibly prefixed with a base path. Used for `page.url.pathname`.
 	 */
 	export type ResolvedPathname = ReturnType<AppTypes['ResolvedPathname']>;
