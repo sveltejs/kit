@@ -608,11 +608,11 @@ async function kit({ svelte_config }) {
 							exactRegex(env_dynamic_private),
 							exactRegex(app_server),
 							prefixRegex(`${normalized_lib}/server/`),
-							// TODO: remove this check? https://github.com/sveltejs/kit/issues/12529
+							// TODO: remove the cwd portion of this check? https://github.com/sveltejs/kit/issues/12529
 							// skip .server.js files outside the cwd or in node_modules, as the filename might not mean 'server-only module' in this context
 							// should be equivalent to: (id.startsWith(normalized_cwd) && !id.startsWith(normalized_node_modules) && server_only_pattern.test(path.basename(id))
 							new RegExp(
-								`^(?!${reg_exp_escape(normalized_node_modules)})${reg_exp_escape(normalized_cwd)}${server_only_pattern.source}$`
+								`^${reg_exp_escape(normalized_cwd)}(?!${reg_exp_escape(normalized_node_modules)})${server_only_pattern.source}$`
 							)
 						]
 					},
