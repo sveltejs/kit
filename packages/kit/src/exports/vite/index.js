@@ -3,6 +3,8 @@ import path from 'node:path';
 import process from 'node:process';
 import { styleText } from 'node:util';
 
+import { exactRegex, prefixRegex } from 'rolldown/filter';
+
 import { copy, mkdirp, posixify, read, resolve_entry, rimraf } from '../../utils/filesystem.js';
 import { create_static_module, create_dynamic_module } from '../../core/env.js';
 import * as sync from '../../core/sync/sync.js';
@@ -38,7 +40,6 @@ import {
 	sveltekit_environment,
 	sveltekit_server
 } from './module_ids.js';
-import { exactRegex, prefixRegex } from 'rolldown/filter';
 import { import_peer } from '../../utils/import.js';
 import { compact } from '../../utils/array.js';
 import { should_ignore, has_children } from './static_analysis/utils.js';
