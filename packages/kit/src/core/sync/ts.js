@@ -1,6 +1,6 @@
 import { import_peer } from '../../utils/import.js';
 
-/** @type {typeof import('typescript')} */
+/** @type {import('typescript')} */
 export let ts;
 
 try {
