@@ -572,6 +572,7 @@ async function kit({ svelte_config }) {
 			? undefined
 			: {
 					// TODO: remove cast when Vite supports it
+					// https://github.com/vitejs/rolldown-vite/issues/605
 					// Vite's resolveId filter types don't yet expose the composable filter API,
 					// but rolldown (the underlying bundler) supports it at runtime
 					filter: /** @type {any} */ ([
@@ -607,6 +608,7 @@ async function kit({ svelte_config }) {
 							exactRegex(env_dynamic_private),
 							exactRegex(app_server),
 							prefixRegex(`${normalized_lib}/server/`),
+							// TODO: remove this check? https://github.com/sveltejs/kit/issues/12529
 							// skip .server.js files outside the cwd or in node_modules, as the filename might not mean 'server-only module' in this context
 							// should be equivalent to: (id.startsWith(normalized_cwd) && !id.startsWith(normalized_node_modules) && server_only_pattern.test(path.basename(id))
 							new RegExp(
