@@ -3,7 +3,7 @@ import path from 'node:path';
 import process from 'node:process';
 import { styleText } from 'node:util';
 
-import { exactRegex, prefixRegex } from 'rolldown/filter';
+import { exactRegex, exclude, importerId, include, prefixRegex } from 'rolldown/filter';
 
 import { copy, mkdirp, posixify, read, resolve_entry, rimraf } from '../../utils/filesystem.js';
 import { create_static_module, create_dynamic_module } from '../../core/env.js';
@@ -570,21 +570,30 @@ async function kit({ svelte_config }) {
 
 		resolveId: skip_plugin_guard
 			? undefined
-			: async function (id, importer, options) {
-					if (importer && !importer.endsWith('index.html')) {
-						const resolved = await this.resolve(id, importer, { ...options, skipSelf: true });
+			: {
+					// TODO: remove cast when Vite supports it
+					// Vite's resolveId filter types don't yet expose the composable filter API,
+					// but rolldown (the underlying bundler) supports it at runtime
+					filter: /** @type {any} */ ([
+						exclude(importerId(/index\.html$/)),
+						include(importerId(/.+/))
+					]),
+					async handler(id, importer, options) {
+						if (importer && !importer.endsWith('index.html')) {
+							const resolved = await this.resolve(id, importer, { ...options, skipSelf: true });
 
-						if (resolved) {
-							const normalized = normalize_id(resolved.id, normalized_lib, normalized_cwd);
+							if (resolved) {
+								const normalized = normalize_id(resolved.id, normalized_lib, normalized_cwd);
 
-							let importers = import_map.get(normalized);
+								let importers = import_map.get(normalized);
 
-							if (!importers) {
-								importers = new Set();
-								import_map.set(normalized, importers);
+								if (!importers) {
+									importers = new Set();
+									import_map.set(normalized, importers);
+								}
+
+								importers.add(normalize_id(importer, normalized_lib, normalized_cwd));
 							}
-
-							importers.add(normalize_id(importer, normalized_lib, normalized_cwd));
 						}
 					}
 				},
