@@ -238,7 +238,12 @@ export function form(id) {
 							refresh_queries(refreshes, updates);
 						}
 						// Use internal version to allow redirects to external URLs
-						void _goto(form_result.location, { invalidateAll }, 0);
+						const form_target = element?.getAttribute('target');
+						if (form_target === '_blank' || form_target === '_new') {
+							window.open(form_result.location, form_target);
+						} else {
+							void _goto(form_result.location, { invalidateAll }, 0);
+						}
 					} else {
 						throw new HttpError(form_result.status ?? 500, form_result.error);
 					}
