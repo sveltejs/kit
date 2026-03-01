@@ -571,13 +571,12 @@ async function kit({ svelte_config }) {
 		resolveId: skip_plugin_guard
 			? undefined
 			: {
-					// TODO: remove cast when Vite supports it
-					// Vite's resolveId filter types don't yet expose the composable filter API,
-					// but rolldown (the underlying bundler) supports it at runtime
-					filter: /** @type {any} */ ([
-						exclude(importerId(/index\.html$/)),
-						include(importerId(/.+/))
-					]),
+					// TODO: use composable filter API here when supported:
+					// https://github.com/vitejs/rolldown-vite/issues/605
+					// filter: ([
+					// 	exclude(importerId(/index\.html$/)),
+					// 	include(importerId(/.+/))
+					// ]),
 					async handler(id, importer, options) {
 						if (importer && !importer.endsWith('index.html')) {
 							const resolved = await this.resolve(id, importer, { ...options, skipSelf: true });
@@ -609,6 +608,9 @@ async function kit({ svelte_config }) {
 							prefixRegex(`${normalized_lib}/server/`),
 							// skip .server.js files outside the cwd or in node_modules, as the filename might not mean 'server-only module' in this context
 							// should be equivalent to: (id.startsWith(normalized_cwd) && !id.startsWith(normalized_node_modules) && server_only_pattern.test(path.basename(id))
+							// TODO: address https://github.com/sveltejs/kit/issues/12529
+							// if we decide to do it then remove the CWD portion of the regex
+							// if we decide not to do it then this regex is complicated enough that it should be refactored out and independently tested
 							new RegExp(
 								`^(?!${reg_exp_escape(normalized_node_modules)})${reg_exp_escape(normalized_cwd)}${server_only_pattern.source}$`
 							)
