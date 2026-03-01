@@ -3,6 +3,8 @@ import path from 'node:path';
 import process from 'node:process';
 import { styleText } from 'node:util';
 
+import { exactRegex, prefixRegex } from 'rolldown/filter';
+
 import { copy, mkdirp, posixify, read, resolve_entry, rimraf } from '../../utils/filesystem.js';
 import { create_static_module, create_dynamic_module } from '../../core/env.js';
 import * as sync from '../../core/sync/sync.js';
@@ -29,6 +31,7 @@ import { s } from '../../utils/misc.js';
 import { hash } from '../../utils/hash.js';
 import { dedent } from '../../core/sync/utils.js';
 import {
+	app_server,
 	env_dynamic_private,
 	env_dynamic_public,
 	env_static_private,
@@ -167,6 +170,15 @@ let manifest_data;
 
 /** @type {import('types').ServerMetadata | undefined} only set at build time once analysis is finished */
 let build_metadata = undefined;
+
+/**
+ * TODO: SvelteKit 4 - replace with RegExp.escape - available only in Node 24
+ * @param {string} str
+ * @returns
+ */
+const reg_exp_escape = function (str) {
+	return str.replace(/[-[\]{}()*+!<=:?.\\/\\^$|#\s,]/g, '\\$&');
+};
 
 /**
  * Returns the SvelteKit Vite plugin. Vite executes Rollup hooks as well as some of its own.
@@ -423,7 +435,7 @@ async function kit({ svelte_config }) {
 			// If importing from a service-worker, only allow $service-worker & $env/static/public, but none of the other virtual modules.
 			// This check won't catch transitive imports, but it will warn when the import comes from a service-worker directly.
 			// Transitive imports will be caught during the build.
-			// TODO move this logic to plugin_guard
+			// TODO move this logic to plugin_guard. add a filter to this resolveId when doing so
 			if (importer) {
 				const parsed_importer = path.parse(importer);
 
@@ -456,45 +468,55 @@ async function kit({ svelte_config }) {
 				return `\0virtual:${id}`;
 			}
 		},
+		load: {
+			filter: {
+				id: [
+					exactRegex(env_static_private),
+					exactRegex(env_static_public),
+					exactRegex(env_dynamic_private),
+					exactRegex(env_dynamic_public),
+					exactRegex(service_worker),
+					exactRegex(sveltekit_environment),
+					exactRegex(sveltekit_server)
+				]
+			},
+			handler(id, options) {
+				switch (id) {
+					case env_static_private:
+						return create_static_module('$env/static/private', env.private);
 
-		load(id, options) {
-			const browser = !options?.ssr;
+					case env_static_public:
+						return create_static_module('$env/static/public', env.public);
 
-			const global = is_build
-				? `globalThis.__sveltekit_${version_hash}`
-				: 'globalThis.__sveltekit_dev';
+					case env_dynamic_private:
+						return create_dynamic_module(
+							'private',
+							vite_config_env.command === 'serve' ? env.private : undefined
+						);
 
-			switch (id) {
-				case env_static_private:
-					return create_static_module('$env/static/private', env.private);
+					case env_dynamic_public: {
+						const browser = !options?.ssr;
+						// populate `$env/dynamic/public` from `window`
+						if (browser) {
+							const global = is_build
+								? `globalThis.__sveltekit_${version_hash}`
+								: 'globalThis.__sveltekit_dev';
+							return `export const env = ${global}.env;`;
+						}
 
-				case env_static_public:
-					return create_static_module('$env/static/public', env.public);
-
-				case env_dynamic_private:
-					return create_dynamic_module(
-						'private',
-						vite_config_env.command === 'serve' ? env.private : undefined
-					);
-
-				case env_dynamic_public:
-					// populate `$env/dynamic/public` from `window`
-					if (browser) {
-						return `export const env = ${global}.env;`;
+						return create_dynamic_module(
+							'public',
+							vite_config_env.command === 'serve' ? env.public : undefined
+						);
 					}
 
-					return create_dynamic_module(
-						'public',
-						vite_config_env.command === 'serve' ? env.public : undefined
-					);
+					case service_worker:
+						return create_service_worker_module(svelte_config);
 
-				case service_worker:
-					return create_service_worker_module(svelte_config);
+					case sveltekit_environment: {
+						const { version } = svelte_config.kit;
 
-				case sveltekit_environment: {
-					const { version } = svelte_config.kit;
-
-					return dedent`
+						return dedent`
 						export const version = ${s(version.name)};
 						export let building = false;
 						export let prerendering = false;
@@ -507,10 +529,10 @@ async function kit({ svelte_config }) {
 							prerendering = true;
 						}
 					`;
-				}
+					}
 
-				case sveltekit_server: {
-					return dedent`
+					case sveltekit_server: {
+						return dedent`
 						export let read_implementation = null;
 
 						export let manifest = null;
@@ -523,11 +545,13 @@ async function kit({ svelte_config }) {
 							manifest = _;
 						}
 					`;
+					}
 				}
 			}
 		}
 	};
 
+	const skip_plugin_guard = process.env.TEST === 'true';
 	/** @type {Map<string, Set<string>>} */
 	const import_map = new Map();
 	const server_only_pattern = /.*\.server\..+/;
@@ -544,102 +568,121 @@ async function kit({ svelte_config }) {
 		// are added to the module graph
 		enforce: 'pre',
 
-		async resolveId(id, importer, options) {
-			if (importer && !importer.endsWith('index.html')) {
-				const resolved = await this.resolve(id, importer, { ...options, skipSelf: true });
+		resolveId: skip_plugin_guard
+			? undefined
+			: {
+					// TODO: use composable filter API here when supported:
+					// https://github.com/vitejs/rolldown-vite/issues/605
+					// filter: ([
+					// 	exclude(importerId(/index\.html$/)),
+					// 	include(importerId(/.+/))
+					// ]),
+					async handler(id, importer, options) {
+						if (importer && !importer.endsWith('index.html')) {
+							const resolved = await this.resolve(id, importer, { ...options, skipSelf: true });
 
-				if (resolved) {
-					const normalized = normalize_id(resolved.id, normalized_lib, normalized_cwd);
+							if (resolved) {
+								const normalized = normalize_id(resolved.id, normalized_lib, normalized_cwd);
 
-					let importers = import_map.get(normalized);
+								let importers = import_map.get(normalized);
 
-					if (!importers) {
-						importers = new Set();
-						import_map.set(normalized, importers);
+								if (!importers) {
+									importers = new Set();
+									import_map.set(normalized, importers);
+								}
+
+								importers.add(normalize_id(importer, normalized_lib, normalized_cwd));
+							}
+						}
 					}
+				},
 
-					importers.add(normalize_id(importer, normalized_lib, normalized_cwd));
-				}
-			}
-		},
-
-		load(id, options) {
-			if (options?.ssr === true || process.env.TEST === 'true') {
-				return;
-			}
-
-			// skip .server.js files outside the cwd or in node_modules, as the filename might not mean 'server-only module' in this context
-			const is_internal = id.startsWith(normalized_cwd) && !id.startsWith(normalized_node_modules);
-
-			const normalized = normalize_id(id, normalized_lib, normalized_cwd);
-
-			const is_server_only =
-				normalized === '$env/static/private' ||
-				normalized === '$env/dynamic/private' ||
-				normalized === '$app/server' ||
-				normalized.startsWith('$lib/server/') ||
-				(is_internal && server_only_pattern.test(path.basename(id)));
-
-			if (is_server_only) {
-				// in dev, this doesn't exist, so we need to create it
-				manifest_data ??= sync.all(svelte_config, vite_config_env.mode).manifest_data;
-
-				/** @type {Set<string>} */
-				const entrypoints = new Set();
-				for (const node of manifest_data.nodes) {
-					if (node.component) entrypoints.add(node.component);
-					if (node.universal) entrypoints.add(node.universal);
-				}
-
-				if (manifest_data.hooks.client) entrypoints.add(manifest_data.hooks.client);
-				if (manifest_data.hooks.universal) entrypoints.add(manifest_data.hooks.universal);
-
-				const normalized = normalize_id(id, normalized_lib, normalized_cwd);
-				const chain = [normalized];
-
-				let current = normalized;
-				let includes_remote_file = false;
-
-				while (true) {
-					const importers = import_map.get(current);
-					if (!importers) break;
-
-					const candidates = Array.from(importers).filter((importer) => !chain.includes(importer));
-					if (candidates.length === 0) break;
-
-					chain.push((current = candidates[0]));
-
-					includes_remote_file ||= svelte_config.kit.moduleExtensions.some((ext) => {
-						return current.endsWith(`.remote${ext}`);
-					});
-
-					if (entrypoints.has(current)) {
-						const pyramid = chain
-							.reverse()
-							.map((id, i) => {
-								return `${' '.repeat(i + 1)}${id}`;
-							})
-							.join(' imports\n');
-
-						if (includes_remote_file) {
-							error_for_missing_config(
-								'remote functions',
-								'kit.experimental.remoteFunctions',
-								'true'
-							);
+		load: skip_plugin_guard
+			? undefined
+			: {
+					filter: {
+						id: [
+							exactRegex(env_static_private),
+							exactRegex(env_dynamic_private),
+							exactRegex(app_server),
+							prefixRegex(`${normalized_lib}/server/`),
+							// skip .server.js files outside the cwd or in node_modules, as the filename might not mean 'server-only module' in this context
+							// should be equivalent to: (id.startsWith(normalized_cwd) && !id.startsWith(normalized_node_modules) && server_only_pattern.test(path.basename(id))
+							// TODO: address https://github.com/sveltejs/kit/issues/12529
+							// if we decide to do it then remove the CWD portion of the regex
+							// if we decide not to do it then this regex is complicated enough that it should be refactored out and independently tested
+							new RegExp(
+								`^(?!${reg_exp_escape(normalized_node_modules)})${reg_exp_escape(normalized_cwd)}${server_only_pattern.source}$`
+							)
+						]
+					},
+					handler(id, options) {
+						// TODO: replace with https://vite.dev/guide/api-environment-plugins#per-environment-plugins
+						if (options?.ssr === true) {
+							return;
 						}
 
-						let message = `Cannot import ${normalized} into code that runs in the browser, as this could leak sensitive information.`;
-						message += `\n\n${pyramid}`;
-						message += `\n\nIf you're only using the import as a type, change it to \`import type\`.`;
+						// in dev, this doesn't exist, so we need to create it
+						manifest_data ??= sync.all(svelte_config, vite_config_env.mode).manifest_data;
 
-						throw stackless(message);
+						/** @type {Set<string>} */
+						const entrypoints = new Set();
+						for (const node of manifest_data.nodes) {
+							if (node.component) entrypoints.add(node.component);
+							if (node.universal) entrypoints.add(node.universal);
+						}
+
+						if (manifest_data.hooks.client) entrypoints.add(manifest_data.hooks.client);
+						if (manifest_data.hooks.universal) entrypoints.add(manifest_data.hooks.universal);
+
+						const normalized = normalize_id(id, normalized_lib, normalized_cwd);
+						const chain = [normalized];
+
+						let current = normalized;
+						let includes_remote_file = false;
+
+						while (true) {
+							const importers = import_map.get(current);
+							if (!importers) break;
+
+							const candidates = Array.from(importers).filter(
+								(importer) => !chain.includes(importer)
+							);
+							if (candidates.length === 0) break;
+
+							chain.push((current = candidates[0]));
+
+							includes_remote_file ||= svelte_config.kit.moduleExtensions.some((ext) => {
+								return current.endsWith(`.remote${ext}`);
+							});
+
+							if (entrypoints.has(current)) {
+								const pyramid = chain
+									.reverse()
+									.map((id, i) => {
+										return `${' '.repeat(i + 1)}${id}`;
+									})
+									.join(' imports\n');
+
+								if (includes_remote_file) {
+									error_for_missing_config(
+										'remote functions',
+										'kit.experimental.remoteFunctions',
+										'true'
+									);
+								}
+
+								let message = `Cannot import ${normalized} into code that runs in the browser, as this could leak sensitive information.`;
+								message += `\n\n${pyramid}`;
+								message += `\n\nIf you're only using the import as a type, change it to \`import type\`.`;
+
+								throw stackless(message);
+							}
+						}
+
+						throw new Error('An impossible situation occurred');
 					}
 				}
-
-				throw new Error('An impossible situation occurred');
-			}
-		}
 	};
 
 	/** @type {import('vite').ViteDevServer} */
@@ -658,16 +701,25 @@ async function kit({ svelte_config }) {
 	const plugin_remote = {
 		name: 'vite-plugin-sveltekit-remote',
 
-		resolveId(id) {
-			if (id.startsWith('\0sveltekit-remote:')) return id;
+		// prevent other plugins from resolving our remote virtual module
+		resolveId: {
+			filter: {
+				id: prefixRegex('\0sveltekit-remote:')
+			},
+			handler(id) {
+				return id;
+			}
 		},
 
-		load(id) {
-			// On-the-fly generated entry point for remote file just forwards the original module
-			// We're not using manualChunks because it can cause problems with circular dependencies
-			// (e.g. https://github.com/sveltejs/kit/issues/14679) and module ordering in general
-			// (e.g. https://github.com/sveltejs/kit/issues/14590).
-			if (id.startsWith('\0sveltekit-remote:')) {
+		load: {
+			filter: {
+				id: prefixRegex('\0sveltekit-remote:')
+			},
+			handler(id) {
+				// On-the-fly generated entry point for remote file just forwards the original module
+				// We're not using manualChunks because it can cause problems with circular dependencies
+				// (e.g. https://github.com/sveltejs/kit/issues/14679) and module ordering in general
+				// (e.g. https://github.com/sveltejs/kit/issues/14590).
 				const hash_id = id.slice('\0sveltekit-remote:'.length);
 				const original = remote_original_by_hash.get(hash_id);
 				if (!original) throw new Error(`Expected to find metadata for remote file ${id}`);
@@ -679,31 +731,32 @@ async function kit({ svelte_config }) {
 			dev_server = _dev_server;
 		},
 
-		async transform(code, id, opts) {
-			const normalized = normalize_id(id, normalized_lib, normalized_cwd);
-			if (!svelte_config.kit.moduleExtensions.some((ext) => normalized.endsWith(`.remote${ext}`))) {
-				return;
-			}
+		transform: {
+			filter: {
+				id: new RegExp(
+					`\\.remote(?:${svelte_config.kit.moduleExtensions.map((e) => e.replaceAll('.', '\\.')).join('|')})(?:\\?.*)?$`
+				)
+			},
+			async handler(code, id, opts) {
+				const file = posixify(path.relative(cwd, id));
+				const remote = {
+					hash: hash(file),
+					file
+				};
 
-			const file = posixify(path.relative(cwd, id));
-			const remote = {
-				hash: hash(file),
-				file
-			};
+				remotes.push(remote);
 
-			remotes.push(remote);
+				if (opts?.ssr) {
+					// we need to add an `await Promise.resolve()` because if the user imports this function
+					// on the client AND in a load function when loading the client module we will trigger
+					// an ssrLoadModule during dev. During a link preload, the module can be mistakenly
+					// loaded and transformed twice and the first time all its exports would be undefined
+					// triggering a dev server error. By adding a microtask we ensure that the module is fully loaded
 
-			if (opts?.ssr) {
-				// we need to add an `await Promise.resolve()` because if the user imports this function
-				// on the client AND in a load function when loading the client module we will trigger
-				// an ssrLoadModule during dev. During a link preload, the module can be mistakenly
-				// loaded and transformed twice and the first time all its exports would be undefined
-				// triggering a dev server error. By adding a microtask we ensure that the module is fully loaded
-
-				// Extra newlines to prevent syntax errors around missing semicolons or comments
-				code +=
-					'\n\n' +
-					dedent`
+					// Extra newlines to prevent syntax errors around missing semicolons or comments
+					code +=
+						'\n\n' +
+						dedent`
 					import * as $$_self_$$ from './${path.basename(id)}';
 					import { init_remote_functions as $$_init_$$ } from '@sveltejs/kit/internal';
 
@@ -717,69 +770,70 @@ async function kit({ svelte_config }) {
 					}
 				`;
 
-				// Emit a dedicated entry chunk for this remote in SSR builds (prod only)
-				if (!dev_server) {
-					remote_original_by_hash.set(remote.hash, id);
-					if (!emitted_remote_hashes.has(remote.hash)) {
-						this.emitFile({
-							type: 'chunk',
-							id: `\0sveltekit-remote:${remote.hash}`,
-							name: `remote-${remote.hash}`
-						});
-						emitted_remote_hashes.add(remote.hash);
+					// Emit a dedicated entry chunk for this remote in SSR builds (prod only)
+					if (!dev_server) {
+						remote_original_by_hash.set(remote.hash, id);
+						if (!emitted_remote_hashes.has(remote.hash)) {
+							this.emitFile({
+								type: 'chunk',
+								id: `\0sveltekit-remote:${remote.hash}`,
+								name: `remote-${remote.hash}`
+							});
+							emitted_remote_hashes.add(remote.hash);
+						}
+					}
+
+					return code;
+				}
+
+				// For the client, read the exports and create a new module that only contains fetch functions with the correct metadata
+
+				/** @type {Map<string, import('types').RemoteInfo['type']>} */
+				const map = new Map();
+
+				// in dev, load the server module here (which will result in this hook
+				// being called again with `opts.ssr === true` if the module isn't
+				// already loaded) so we can determine what it exports
+				if (dev_server) {
+					const module = await dev_server.ssrLoadModule(id);
+
+					for (const [name, value] of Object.entries(module)) {
+						const type = value?.__?.type;
+						if (type) {
+							map.set(name, type);
+						}
 					}
 				}
 
-				return code;
-			}
+				// in prod, we already built and analysed the server code before
+				// building the client code, so `remote_exports` is populated
+				else if (build_metadata?.remotes) {
+					const exports = build_metadata?.remotes.get(remote.hash);
+					if (!exports) throw new Error('Expected to find metadata for remote file ' + id);
 
-			// For the client, read the exports and create a new module that only contains fetch functions with the correct metadata
-
-			/** @type {Map<string, import('types').RemoteInfo['type']>} */
-			const map = new Map();
-
-			// in dev, load the server module here (which will result in this hook
-			// being called again with `opts.ssr === true` if the module isn't
-			// already loaded) so we can determine what it exports
-			if (dev_server) {
-				const module = await dev_server.ssrLoadModule(id);
-
-				for (const [name, value] of Object.entries(module)) {
-					const type = value?.__?.type;
-					if (type) {
-						map.set(name, type);
+					for (const [name, value] of exports) {
+						map.set(name, value.type);
 					}
 				}
-			}
 
-			// in prod, we already built and analysed the server code before
-			// building the client code, so `remote_exports` is populated
-			else if (build_metadata?.remotes) {
-				const exports = build_metadata?.remotes.get(remote.hash);
-				if (!exports) throw new Error('Expected to find metadata for remote file ' + id);
+				let namespace = '__remote';
+				let uid = 1;
+				while (map.has(namespace)) namespace = `__remote${uid++}`;
 
-				for (const [name, value] of exports) {
-					map.set(name, value.type);
+				const exports = Array.from(map).map(([name, type]) => {
+					return `export const ${name} = ${namespace}.${type}('${remote.hash}/${name}');`;
+				});
+
+				let result = `import * as ${namespace} from '__sveltekit/remote';\n\n${exports.join('\n')}\n`;
+
+				if (dev_server) {
+					result += `\nimport.meta.hot?.accept();\n`;
 				}
+
+				return {
+					code: result
+				};
 			}
-
-			let namespace = '__remote';
-			let uid = 1;
-			while (map.has(namespace)) namespace = `__remote${uid++}`;
-
-			const exports = Array.from(map).map(([name, type]) => {
-				return `export const ${name} = ${namespace}.${type}('${remote.hash}/${name}');`;
-			});
-
-			let result = `import * as ${namespace} from '__sveltekit/remote';\n\n${exports.join('\n')}\n`;
-
-			if (dev_server) {
-				result += `\nimport.meta.hot?.accept();\n`;
-			}
-
-			return {
-				code: result
-			};
 		}
 	};
 

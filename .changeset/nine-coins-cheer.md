@@ -1,4 +1,5 @@
 ---
+'@sveltejs/enhanced-img': major
 '@sveltejs/kit': major
 ---
 

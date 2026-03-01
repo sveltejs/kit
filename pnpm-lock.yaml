@@ -493,8 +493,8 @@ importers:
         specifier: ^0.1.5
         version: 0.1.5(svelte@5.53.5)
       vite-imagetools:
-        specifier: ^9.0.3
-        version: 9.0.3(rollup@4.59.0)
+        specifier: ^10.0.0
+        version: 10.0.0(rollup@4.59.0)(vite@8.0.0-beta.15(@types/node@24.10.13)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.0))
       zimmerframe:
         specifier: ^1.1.2
         version: 1.1.2
@@ -5672,9 +5672,11 @@ packages:
     resolution: {integrity: sha512-OljLrQ9SQdOUqTaQxqL5dEfZWrXExyyWsozYlAWFawPVNuD83igl7uJD2RTkNMbniIYgt8l81eCJGIdQF7avLQ==}
     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
 
-  vite-imagetools@9.0.3:
-    resolution: {integrity: sha512-FwjApRNZyN+RucPW9Z9kf0dyzyi3r3zlDfrTnzHXNaYpmT3pZ5w//d6QkApy1iypbDm+3fq+Gwfv+PYA4j4uYw==}
-    engines: {node: '>=20.0.0'}
+  vite-imagetools@10.0.0:
+    resolution: {integrity: sha512-+83L32YPU/2BOHWhudO2+9T5HBvb3+0qHoUNN7fb0+XcAoXilx7aE25cDPWU5kBi5Yc750zYCvHxgfyR+tAuMA==}
+    engines: {node: '>=22.0.0'}
+    peerDependencies:
+      vite: '>=7.0.0'
 
   vite@8.0.0-beta.15:
     resolution: {integrity: sha512-RHX7IvsJlEfjyA1rS7MY0UsmF91etdLAamslHR5lfuO3W/BXRdXm2tRE64ztpSPZbKqB4wAAZ0AwtF6QzfKZLA==}
@@ -10180,11 +10182,12 @@ snapshots:
 
   validate-npm-package-name@5.0.1: {}
 
-  vite-imagetools@9.0.3(rollup@4.59.0):
+  vite-imagetools@10.0.0(rollup@4.59.0)(vite@8.0.0-beta.15(@types/node@24.10.13)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.0)):
     dependencies:
       '@rollup/pluginutils': 5.1.3(rollup@4.59.0)
       imagetools-core: 9.1.0
       sharp: 0.34.5
+      vite: 8.0.0-beta.15(@types/node@24.10.13)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.0)
     transitivePeerDependencies:
       - rollup
 
