@@ -3,7 +3,7 @@ import path from 'node:path';
 import process from 'node:process';
 import { styleText } from 'node:util';
 
-import { exactRegex, exclude, importerId, include, prefixRegex } from 'rolldown/filter';
+import { exactRegex, prefixRegex } from 'rolldown/filter';
 
 import { copy, mkdirp, posixify, read, resolve_entry, rimraf } from '../../utils/filesystem.js';
 import { create_static_module, create_dynamic_module } from '../../core/env.js';
