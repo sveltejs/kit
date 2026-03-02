@@ -48,7 +48,7 @@
 		"@sveltejs/vite-plugin-svelte": "catalog:",
 		"@types/estree": "catalog:",
 		"@types/node": "catalog:",
-		"rollup": "^4.27.4",
+		"rollup": "^4.59.0",
 		"svelte": "catalog:",
 		"typescript": "^5.6.3",
 		"vite": "catalog:",
