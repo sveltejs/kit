@@ -219,8 +219,8 @@ async function kit({ svelte_config }) {
 	/** @type {string} */
 	let normalized_cwd;
 	const normalized_lib = vite.normalizePath(kit.files.lib);
-	const normalized_node_modules = vite.normalizePath(path.resolve(root, 'node_modules'));
-
+	/** @type {string} */
+	let normalized_node_modules;
 	/**
 	 * A map showing which features (such as `$app/server:read`) are defined
 	 * in which chunks, so that we can later determine which routes use which features
@@ -250,6 +250,7 @@ async function kit({ svelte_config }) {
 
 			root = posixify(config?.root ? path.resolve(config.root) : cwd);
 			normalized_cwd = vite.normalizePath(root);
+			normalized_node_modules = vite.normalizePath(path.resolve(root, 'node_modules'));
 
 			const allow = new Set([
 				kit.files.lib,
