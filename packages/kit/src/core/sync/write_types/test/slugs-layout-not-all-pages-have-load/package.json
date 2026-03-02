@@ -2,6 +2,6 @@
 	"private": true,
 	"type": "module",
 	"scripts": {
-		"testtypes": "tsc -p ./tsconfig.json"
+		"testtypes": "tsc"
 	}
 }
