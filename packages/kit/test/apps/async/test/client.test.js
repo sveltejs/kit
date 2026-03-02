@@ -152,6 +152,33 @@ test.describe('remote function mutations', () => {
 		await expect(page.locator('p')).toHaveText('post');
 	});
 
+	test('command inside form action works', async ({ page }) => {
+		await page.goto('/remote/server-action');
+
+		await page.getByRole('button', { name: 'submit' }).click();
+		await expect(page.locator('#result')).toHaveText('action: hello');
+	});
+
+	test('command inside handle hook works with POST', async ({ request }) => {
+		const response = await request.post('/remote/hook-command');
+		expect(response.status()).toBe(200);
+		const data = await response.json();
+		expect(data.result).toBe('action: from-hook');
+	});
+
+	test('command is blocked inside load functions', async ({ page }) => {
+		const response = await page.goto('/remote/server-load-command');
+		expect(response?.status()).toBe(500);
+		await expect(page.locator('#message')).toContainText('Cannot call a command');
+	});
+
+	test('command is blocked inside handle hook with GET', async ({ request }) => {
+		const response = await request.get('/remote/hook-command');
+		expect(response.status()).toBe(500);
+		const data = await response.json();
+		expect(data.error).toContain('Cannot call a command');
+	});
+
 	test('prerendered entries not called in prod', async ({ page }) => {
 		let request_count = 0;
 		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));

@@ -16,6 +16,7 @@ import {
 	PrerenderOption,
 	RequestOptions,
 	RouteSegment,
+	DeepPartial,
 	IsAny
 } from '../types/private.js';
 import { BuildData, SSRNodeLoader, SSRRoute, ValidatedConfig } from 'types';
@@ -1910,9 +1911,9 @@ type InputElementProps<T extends keyof InputTypeMap> = T extends 'checkbox' | 'r
 
 type RemoteFormFieldMethods<T> = {
 	/** The values that will be submitted */
-	value(): T;
+	value(): DeepPartial<T>;
 	/** Set the values that will be submitted */
-	set(input: T): T;
+	set(input: DeepPartial<T>): DeepPartial<T>;
 	/** Validation issues, if any */
 	issues(): RemoteFormIssue[] | undefined;
 };
@@ -2110,7 +2111,7 @@ export type RemoteForm<Input extends RemoteFormInput | void, Output> = {
  * The return value of a remote `command` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#command) for full documentation.
  */
 export type RemoteCommand<Input, Output> = {
-	(arg: Input): Promise<Awaited<Output>> & {
+	(arg: undefined extends Input ? Input | void : Input): Promise<Awaited<Output>> & {
 		updates(...queries: Array<RemoteQuery<any> | RemoteQueryOverride>): Promise<Awaited<Output>>;
 	};
 	/** The number of pending command executions */
@@ -2180,11 +2181,15 @@ export interface RemoteQueryOverride {
 /**
  * The return value of a remote `prerender` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#prerender) for full documentation.
  */
-export type RemotePrerenderFunction<Input, Output> = (arg: Input) => RemoteResource<Output>;
+export type RemotePrerenderFunction<Input, Output> = (
+	arg: undefined extends Input ? Input | void : Input
+) => RemoteResource<Output>;
 
 /**
  * The return value of a remote `query` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query) for full documentation.
  */
-export type RemoteQueryFunction<Input, Output> = (arg: Input) => RemoteQuery<Output>;
+export type RemoteQueryFunction<Input, Output> = (
+	arg: undefined extends Input ? Input | void : Input
+) => RemoteQuery<Output>;
 
 export * from './index.js';
