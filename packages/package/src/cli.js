@@ -30,6 +30,8 @@ prog
 		'--tsconfig',
 		'A path to a tsconfig or jsconfig file. When not provided, searches for the next upper tsconfig/jsconfig in the workspace path.'
 	)
+	.option('--incremental', 'Use incremental type generation for faster rebuilds', false)
+	.option('--tsgo', 'Use TypeScript Go compiler for type generation', false)
 	.action(async (args) => {
 		try {
 			const config = await load_config();
@@ -51,6 +53,8 @@ prog
 				preserve_output: args['preserve-output'],
 				tsconfig: args.tsconfig,
 				types: args.types,
+				incremental: args.incremental,
+				tsgo: args.tsgo,
 				config
 			};
 

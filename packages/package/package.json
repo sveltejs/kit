@@ -24,7 +24,7 @@
 		"kleur": "^4.1.5",
 		"sade": "^1.8.1",
 		"semver": "^7.5.4",
-		"svelte2tsx": "~0.7.33"
+		"svelte2tsx": "~0.7.51"
 	},
 	"devDependencies": {
 		"@sveltejs/vite-plugin-svelte": "catalog:",
@@ -37,7 +37,13 @@
 		"vitest": "catalog:"
 	},
 	"peerDependencies": {
-		"svelte": "^3.44.0 || ^4.0.0 || ^5.0.0-next.1"
+		"svelte": "^3.44.0 || ^4.0.0 || ^5.0.0-next.1",
+		"@typescript/native-preview": "*"
+	},
+	"peerDependenciesMeta": {
+		"@typescript/native-preview": {
+			"optional": true
+		}
 	},
 	"bin": {
 		"svelte-package": "svelte-package.js"
