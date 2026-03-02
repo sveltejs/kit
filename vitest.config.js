@@ -52,14 +52,13 @@ export default defineConfig({
 					name: 'kit'
 				}
 			},
-			// TODO: uncomment this when cwd is set correctly
-			// {
-			// 	extends: 'packages/kit/test/apps/basics/vite.config.js',
-			// 	test: {
-			// 		root: 'packages/kit/test/apps/basics',
-			// 		name: 'kit-apps-basics',
-			// 	}
-			// },
+			{
+				extends: 'packages/kit/test/apps/basics/vite.config.js',
+				root: 'packages/kit/test/apps/basics',
+				test: {
+					name: 'kit-apps-basics',
+				}
+			},
 			{
 				root: 'packages/kit/test/build-errors',
 				test: {
