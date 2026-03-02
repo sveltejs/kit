@@ -5,7 +5,7 @@ import create_manifest_data from './index.js';
 import { sort_routes } from './sort.js';
 import { validate_config } from '../../config/index.js';
 
-const cwd = `${import.meta.dirname}/test`;
+const cwd = path.join(import.meta.dirname, 'test');
 
 /**
  * @param {string} dir
