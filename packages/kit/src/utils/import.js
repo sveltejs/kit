@@ -42,6 +42,7 @@ function resolve_peer(dependency) {
  * Resolve a dependency relative to the current working directory,
  * rather than relative to this package (but falls back to trying that, if necessary)
  * @param {string} dependency
+ * @return {Promise<any>}
  */
 export async function import_peer(dependency) {
 	try {

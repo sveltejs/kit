@@ -28,9 +28,10 @@ const vite_css_query_regex = /(?:\?|&)(?:raw|url|inline)(?:&|$)/;
  * @param {import('vite').ResolvedConfig} vite_config
  * @param {import('types').ValidatedConfig} svelte_config
  * @param {() => Array<{ hash: string, file: string }>} get_remotes
+ * @param {string} root The project root directory
  * @return {Promise<Promise<() => void>>}
  */
-export async function dev(vite, vite_config, svelte_config, get_remotes) {
+export async function dev(vite, vite_config, svelte_config, get_remotes, root) {
 	const async_local_storage = new AsyncLocalStorage();
 
 	globalThis.__SVELTEKIT_TRACK__ = (label) => {
@@ -51,7 +52,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes) {
 		return fetch(info, init);
 	};
 
-	sync.init(svelte_config, vite_config.mode);
+	sync.init(svelte_config, vite_config.mode, root);
 
 	/** @type {import('types').ManifestData} */
 	let manifest_data;
@@ -103,7 +104,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes) {
 
 	function update_manifest() {
 		try {
-			({ manifest_data } = sync.create(svelte_config));
+			({ manifest_data } = sync.create(svelte_config, root));
 
 			if (manifest_error) {
 				manifest_error = null;
@@ -358,7 +359,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes) {
 		// Don't run for a single file if the whole manifest is about to get updated
 		// Unless it's a file where the trailing slash page option might have changed
 		if (timeout || restarting || !/\+(page|layout|server).*$/.test(file)) return;
-		sync.update(svelte_config, manifest_data, file);
+		sync.update(svelte_config, manifest_data, file, root);
 	});
 
 	const { appTemplate, errorTemplate, serviceWorker, hooks } = svelte_config.kit.files;
@@ -381,7 +382,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes) {
 			file.startsWith(serviceWorker) ||
 			file.startsWith(hooks.server)
 		) {
-			sync.server(svelte_config);
+			sync.server(svelte_config, root);
 		}
 	});
 

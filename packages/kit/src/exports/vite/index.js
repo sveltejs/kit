@@ -44,7 +44,8 @@ import { import_peer } from '../../utils/import.js';
 import { compact } from '../../utils/array.js';
 import { should_ignore, has_children } from './static_analysis/utils.js';
 
-const cwd = posixify(process.cwd());
+/** @type {string} */
+let root;
 
 /** @type {import('./types.js').EnforcedConfig} */
 const enforced_config = {
@@ -156,6 +157,7 @@ export async function sveltekit() {
 		...svelte_config.vitePlugin
 	};
 
+	/** @type {import('@sveltejs/vite-plugin-svelte')} */
 	const { svelte } = await import_peer('@sveltejs/vite-plugin-svelte');
 
 	return [...svelte(vite_plugin_svelte_options), ...(await kit({ svelte_config }))];
@@ -170,15 +172,6 @@ let manifest_data;
 
 /** @type {import('types').ServerMetadata | undefined} only set at build time once analysis is finished */
 let build_metadata = undefined;
-
-/**
- * TODO: SvelteKit 4 - replace with RegExp.escape - available only in Node 24
- * @param {string} str
- * @returns
- */
-const reg_exp_escape = function (str) {
-	return str.replace(/[-[\]{}()*+!<=:?.\\/\\^$|#\s,]/g, '\\$&');
-};
 
 /**
  * Returns the SvelteKit Vite plugin. Vite executes Rollup hooks as well as some of its own.
@@ -223,7 +216,8 @@ async function kit({ svelte_config }) {
 	const service_worker_entry_file = resolve_entry(kit.files.serviceWorker);
 	const parsed_service_worker = path.parse(kit.files.serviceWorker);
 
-	const normalized_cwd = vite.normalizePath(cwd);
+	/** @type {string} */
+	let normalized_cwd;
 	const normalized_lib = vite.normalizePath(kit.files.lib);
 	const normalized_node_modules = vite.normalizePath(path.resolve('node_modules'));
 
@@ -240,7 +234,7 @@ async function kit({ svelte_config }) {
 	/** @type {import('vite').Plugin} */
 	const plugin_setup = {
 		name: 'vite-plugin-sveltekit-setup',
-
+		enforce: 'pre',
 		/**
 		 * Build the SvelteKit-provided Vite config to be merged with the user's vite.config.js file.
 		 * @see https://vitejs.dev/guide/api-plugin.html#config
@@ -252,13 +246,16 @@ async function kit({ svelte_config }) {
 
 			env = get_env(kit.env, vite_config_env.mode);
 
+			root = posixify(config?.root ? path.resolve(config.root) : process.cwd());
+			normalized_cwd = vite.normalizePath(root);
+
 			const allow = new Set([
 				kit.files.lib,
 				kit.files.routes,
 				kit.outDir,
 				path.resolve('src'), // TODO this isn't correct if user changed all his files to sth else than src (like in test/options)
 				path.resolve('node_modules'),
-				path.resolve(vite.searchForWorkspaceRoot(cwd), 'node_modules')
+				path.resolve(root, 'node_modules')
 			]);
 
 			// We can only add directories to the allow list, so we find out
@@ -278,7 +275,7 @@ async function kit({ svelte_config }) {
 						...get_config_aliases(kit)
 					]
 				},
-				root: cwd,
+				root,
 				server: {
 					cors: { preflightContinue: true },
 					fs: {
@@ -375,7 +372,7 @@ async function kit({ svelte_config }) {
 				};
 
 				if (!secondary_build_started) {
-					manifest_data = sync.all(svelte_config, config_env.mode).manifest_data;
+					manifest_data = sync.all(svelte_config, config_env.mode, root).manifest_data;
 					// During the initial server build we don't know yet
 					new_config.define.__SVELTEKIT_HAS_SERVER_LOAD__ = 'true';
 					new_config.define.__SVELTEKIT_HAS_UNIVERSAL_LOAD__ = 'true';
@@ -606,24 +603,28 @@ async function kit({ svelte_config }) {
 							exactRegex(env_dynamic_private),
 							exactRegex(app_server),
 							prefixRegex(`${normalized_lib}/server/`),
-							// skip .server.js files outside the cwd or in node_modules, as the filename might not mean 'server-only module' in this context
-							// should be equivalent to: (id.startsWith(normalized_cwd) && !id.startsWith(normalized_node_modules) && server_only_pattern.test(path.basename(id))
-							// TODO: address https://github.com/sveltejs/kit/issues/12529
-							// if we decide to do it then remove the CWD portion of the regex
-							// if we decide not to do it then this regex is complicated enough that it should be refactored out and independently tested
-							new RegExp(
-								`^(?!${reg_exp_escape(normalized_node_modules)})${reg_exp_escape(normalized_cwd)}${server_only_pattern.source}$`
-							)
+							new RegExp(`${server_only_pattern.source}$`)
 						]
 					},
 					handler(id, options) {
 						// TODO: replace with https://vite.dev/guide/api-environment-plugins#per-environment-plugins
+						// skip .server.js files outside the cwd or in node_modules, as the filename might not mean 'server-only module' in this context
+						// should be equivalent to: (id.startsWith(normalized_cwd) && !id.startsWith(normalized_node_modules) && server_only_pattern.test(path.basename(id))
+						// TODO: address https://github.com/sveltejs/kit/issues/12529
+						// if we decide to do it then remove the CWD portion
 						if (options?.ssr === true) {
 							return;
 						}
 
+						if (
+							server_only_pattern.test(id) &&
+							(!id.startsWith(normalized_cwd) || id.startsWith(normalized_node_modules))
+						) {
+							return;
+						}
+
 						// in dev, this doesn't exist, so we need to create it
-						manifest_data ??= sync.all(svelte_config, vite_config_env.mode).manifest_data;
+						manifest_data ??= sync.all(svelte_config, vite_config_env.mode, root).manifest_data;
 
 						/** @type {Set<string>} */
 						const entrypoints = new Set();
@@ -738,7 +739,7 @@ async function kit({ svelte_config }) {
 				)
 			},
 			async handler(code, id, opts) {
-				const file = posixify(path.relative(cwd, id));
+				const file = posixify(path.relative(root, id));
 				const remote = {
 					hash: hash(file),
 					file
@@ -1016,7 +1017,7 @@ async function kit({ svelte_config }) {
 		 * @see https://vitejs.dev/guide/api-plugin.html#configureserver
 		 */
 		async configureServer(vite) {
-			return await dev(vite, vite_config, svelte_config, () => remotes);
+			return await dev(vite, vite_config, svelte_config, () => remotes, root);
 		},
 
 		/**

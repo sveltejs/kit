@@ -1,5 +1,4 @@
 import path from 'node:path';
-import process from 'node:process';
 import { styleText } from 'node:util';
 import { hash } from '../../utils/hash.js';
 import { posixify, resolve_entry } from '../../utils/filesystem.js';
@@ -101,8 +100,9 @@ export { set_assets, set_building, set_manifest, set_prerendering, set_private_e
  * Write server configuration to disk
  * @param {import('types').ValidatedConfig} config
  * @param {string} output
+ * @param {string} root The project root directory
  */
-export function write_server(config, output) {
+export function write_server(config, output, root) {
 	const server_hooks_file = resolve_entry(config.kit.files.hooks.server);
 	const universal_hooks_file = resolve_entry(config.kit.files.hooks.universal);
 
@@ -133,7 +133,7 @@ export function write_server(config, output) {
 			has_service_worker:
 				config.kit.serviceWorker.register && !!resolve_entry(config.kit.files.serviceWorker),
 			runtime_directory: relative(runtime_directory),
-			template: load_template(process.cwd(), config),
+			template: load_template(root, config),
 			error_page: load_error_page(config)
 		})
 	);

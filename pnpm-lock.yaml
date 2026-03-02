@@ -128,6 +128,9 @@ importers:
       prettier-plugin-svelte:
         specifier: ^3.4.0
         version: 3.4.0(prettier@3.6.0)(svelte@5.53.5)
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.0-beta.4(@opentelemetry/api@1.9.0)(@types/node@24.10.13)(@vitest/browser-playwright@4.1.0-beta.4)(vite@8.0.0-beta.15(@types/node@24.10.13)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.0))
 
   packages/adapter-auto:
     devDependencies:

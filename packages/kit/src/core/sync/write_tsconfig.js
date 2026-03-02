@@ -1,6 +1,5 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import process from 'node:process';
 import { styleText } from 'node:util';
 import { posixify } from '../../utils/filesystem.js';
 import { write_if_changed } from './utils.js';
@@ -37,8 +36,9 @@ function remove_trailing_slashstar(file) {
 /**
  * Generates the tsconfig that the user's tsconfig inherits from.
  * @param {import('types').ValidatedKitConfig} kit
+ * @param {string} cwd
  */
-export function write_tsconfig(kit, cwd = process.cwd()) {
+export function write_tsconfig(kit, cwd) {
 	const out = path.join(kit.outDir, 'tsconfig.json');
 
 	const user_config = load_user_tsconfig(cwd);
