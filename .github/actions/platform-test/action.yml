@@ -25,7 +25,7 @@ runs:
 
     - name: Upload test artifacts
       if: failure()
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v7
       with:
         name: platform-test-results-${{ github.job }}
         path: ${{ inputs.test-app-dir }}/test-results

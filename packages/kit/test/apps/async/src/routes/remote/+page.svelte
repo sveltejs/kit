@@ -109,8 +109,4 @@
 </button>
 <button id="resolve-deferreds" onclick={() => resolve_deferreds()}>Resolve Deferreds</button>
 
-<!-- 
-	TODO: preloading currently breaks this, because the fork is run on the current route
-	or something like that. Remove `data-sveltekit-preload-data="off"` when fixed.
--->
-<a href="/remote/event" data-sveltekit-preload-data="off">/remote/event</a>
+<a href="/remote/event">/remote/event</a>

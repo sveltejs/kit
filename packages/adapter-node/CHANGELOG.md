@@ -1,5 +1,11 @@
 # @sveltejs/adapter-node
 
+## 5.5.4
+### Patch Changes
+
+
+- chore(deps): bump rollup to 4.59.0 ([#15433](https://github.com/sveltejs/kit/pull/15433))
+
 ## 5.5.3
 ### Patch Changes
 

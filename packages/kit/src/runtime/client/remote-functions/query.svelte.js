@@ -3,7 +3,12 @@
 import { app_dir, base } from '$app/paths/internal/client';
 import { app, get_query_array, goto } from '../client.js';
 import { tick } from 'svelte';
-import { create_remote_function, NOT_CACHED, remote_request } from './shared.svelte.js';
+import {
+	create_remote_function,
+  NOT_CACHED,
+	get_remote_request_headers,
+	remote_request
+} from './shared.svelte.js';
 import * as devalue from 'devalue';
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
 import { DEV } from 'esm-env';
@@ -33,7 +38,7 @@ export function query(id) {
 
 			const url = `${base}/${app_dir}/remote/${id}${payload ? `?payload=${payload}` : ''}`;
 
-			const result = await remote_request(url);
+			const result = await remote_request(url, get_remote_request_headers());
 			return devalue.parse(result, app.decoders);
 		});
 	});
@@ -67,6 +72,15 @@ export function query_batch(id) {
 
 				if (batching.size > 1) return;
 
+				// Do this here, after await Svelte' reactivity context is gone.
+				// TODO is it possible to have batches of the same key
+				// but in different forks/async contexts and in the same macrotask?
+				// If so this would potentially be buggy
+				const headers = {
+					'Content-Type': 'application/json',
+					...get_remote_request_headers()
+				};
+
 				// Wait for the next macrotask - don't use microtask as Svelte runtime uses these to collect changes and flush them,
 				// and flushes could reveal more queries that should be batched.
 				setTimeout(async () => {
@@ -80,9 +94,7 @@ export function query_batch(id) {
 							body: JSON.stringify({
 								payloads: Array.from(batched.keys())
 							}),
-							headers: {
-								'Content-Type': 'application/json'
-							}
+							headers
 						});
 
 						if (!response.ok) {
