@@ -454,7 +454,9 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root) {
 				}`;
 
 				const decoded = decodeURI(new URL(base + req.url).pathname);
-				const file = posixify(path.resolve(decoded.slice(svelte_config.kit.paths.base.length + 1)));
+				const file = posixify(
+					path.resolve(root, decoded.slice(svelte_config.kit.paths.base.length + 1))
+				);
 				const is_file = fs.existsSync(file) && !fs.statSync(file).isDirectory();
 				const allowed =
 					!vite_config.server.fs.strict ||

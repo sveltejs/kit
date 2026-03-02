@@ -93,9 +93,10 @@ export async function load_config({ cwd = process.cwd() } = {}) {
 
 /**
  * @param {import('@sveltejs/kit').Config} config
+ * @param {{ cwd: string }} options
  * @returns {import('types').ValidatedConfig}
  */
-function process_config(config, { cwd = process.cwd() } = {}) {
+function process_config(config, { cwd }) {
 	const validated = validate_config(config);
 
 	validated.kit.outDir = path.resolve(cwd, validated.kit.outDir);

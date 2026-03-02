@@ -219,7 +219,7 @@ async function kit({ svelte_config }) {
 	/** @type {string} */
 	let normalized_cwd;
 	const normalized_lib = vite.normalizePath(kit.files.lib);
-	const normalized_node_modules = vite.normalizePath(path.resolve('node_modules'));
+	const normalized_node_modules = vite.normalizePath(path.resolve(root, 'node_modules'));
 
 	/**
 	 * A map showing which features (such as `$app/server:read`) are defined
@@ -246,16 +246,18 @@ async function kit({ svelte_config }) {
 
 			env = get_env(kit.env, vite_config_env.mode);
 
-			root = posixify(config?.root ? path.resolve(config.root) : process.cwd());
+			const cwd = process.cwd();
+
+			root = posixify(config?.root ? path.resolve(config.root) : cwd);
 			normalized_cwd = vite.normalizePath(root);
 
 			const allow = new Set([
 				kit.files.lib,
 				kit.files.routes,
 				kit.outDir,
-				path.resolve('src'), // TODO this isn't correct if user changed all his files to sth else than src (like in test/options)
-				path.resolve('node_modules'),
-				path.resolve(root, 'node_modules')
+				path.resolve(root, kit.files.src),
+				path.resolve(root, 'node_modules'),
+				path.resolve(cwd, 'node_modules')
 			]);
 
 			// We can only add directories to the allow list, so we find out
@@ -867,7 +869,7 @@ async function kit({ svelte_config }) {
 					// add entry points for every endpoint...
 					manifest_data.routes.forEach((route) => {
 						if (route.endpoint) {
-							const resolved = path.resolve(route.endpoint.file);
+							const resolved = path.resolve(root, route.endpoint.file);
 							const relative = decodeURIComponent(path.relative(kit.files.routes, resolved));
 							const name = posixify(path.join('entries/endpoints', relative.replace(/\.js$/, '')));
 							input[name] = resolved;
@@ -878,7 +880,7 @@ async function kit({ svelte_config }) {
 					manifest_data.nodes.forEach((node) => {
 						for (const file of [node.component, node.universal, node.server]) {
 							if (file) {
-								const resolved = path.resolve(file);
+								const resolved = path.resolve(root, file);
 								const relative = decodeURIComponent(path.relative(kit.files.routes, resolved));
 
 								const name = relative.startsWith('..')
@@ -892,15 +894,15 @@ async function kit({ svelte_config }) {
 					// ...and every matcher
 					Object.entries(manifest_data.matchers).forEach(([key, file]) => {
 						const name = posixify(path.join('entries/matchers', key));
-						input[name] = path.resolve(file);
+						input[name] = path.resolve(root, file);
 					});
 
 					// ...and the hooks files
 					if (manifest_data.hooks.server) {
-						input['entries/hooks.server'] = path.resolve(manifest_data.hooks.server);
+						input['entries/hooks.server'] = path.resolve(root, manifest_data.hooks.server);
 					}
 					if (manifest_data.hooks.universal) {
-						input['entries/hooks.universal'] = path.resolve(manifest_data.hooks.universal);
+						input['entries/hooks.universal'] = path.resolve(root, manifest_data.hooks.universal);
 					}
 
 					// ...and the server instrumentation file

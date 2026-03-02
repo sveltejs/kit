@@ -2,7 +2,6 @@ import { execSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
-import { fileURLToPath } from 'node:url';
 import { assert, expect, test } from 'vitest';
 import { rimraf } from '../../../utils/filesystem.js';
 import create_manifest_data from '../create_manifest_data/index.js';
