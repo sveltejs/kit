@@ -37,13 +37,7 @@
 		"vitest": "catalog:"
 	},
 	"peerDependencies": {
-		"svelte": "^3.44.0 || ^4.0.0 || ^5.0.0-next.1",
-		"@typescript/native-preview": "*"
-	},
-	"peerDependenciesMeta": {
-		"@typescript/native-preview": {
-			"optional": true
-		}
+		"svelte": "^3.44.0 || ^4.0.0 || ^5.0.0-next.1"
 	},
 	"bin": {
 		"svelte-package": "svelte-package.js"
