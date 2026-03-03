@@ -3124,7 +3124,7 @@ declare module '$app/navigation' {
 }
 
 declare module '$app/paths' {
-	import type { RouteIdWithSearchOrHash, PathnameWithSearchOrHash, ResolvedPathname, RouteId, RouteParams, Asset, Pathname } from '$app/types';
+	import type { RouteIdWithSearchOrHash, PathnameWithSearchOrHash, ResolvedPathname, RouteId, RouteParams, Asset, Pathname as Pathname_1 } from '$app/types';
 	/**
 	 * A string that matches [`config.kit.paths.base`](https://svelte.dev/docs/kit/configuration#paths).
 	 *
@@ -3149,10 +3149,10 @@ declare module '$app/paths' {
 	export function resolveRoute<T extends RouteIdWithSearchOrHash | PathnameWithSearchOrHash>(
 		...args: ResolveArgs<T>
 	): ResolvedPathname;
-	type StripSearchOrHash<T extends string> = T extends `${infer Base}?${string}`
-		? Base
-		: T extends `${infer Base}#${string}`
-			? Base
+	type StripSearchOrHash<T extends string> = T extends `${infer Pathname}?${string}`
+		? Pathname
+		: T extends `${infer Pathname}#${string}`
+			? Pathname
 			: T;
 
 	type ResolveArgs<T extends RouteIdWithSearchOrHash | PathnameWithSearchOrHash> =
@@ -3221,7 +3221,7 @@ declare module '$app/paths' {
 	 * @since 2.52.0
 	 *
 	 * */
-	export function match(url: Pathname | URL | (string & {})): Promise<{
+	export function match(url: Pathname_1 | URL | (string & {})): Promise<{
 		id: RouteId;
 		params: Record<string, string>;
 	} | null>;
