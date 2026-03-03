@@ -6,7 +6,7 @@ export default defineConfig({
 			{
 				root: 'packages/adapter-auto',
 				test: {
-					name: 'adapter-auto',
+					name: 'adapter-auto'
 				}
 			},
 			{
@@ -46,28 +46,30 @@ export default defineConfig({
 				}
 			},
 			{
-				extends: 'packages/kit/kit.vitest.config.js',
 				root: 'packages/kit',
+				extends: 'kit.vitest.config.js',
 				test: {
 					name: 'kit'
 				}
 			},
 			{
-				extends: 'packages/kit/test/apps/basics/vite.config.js',
 				root: 'packages/kit/test/apps/basics',
+				extends: 'vite.config.js',
 				test: {
-					name: 'kit-apps-basics',
+					name: 'kit-apps-basics'
 				}
 			},
 			{
 				root: 'packages/kit/test/build-errors',
+				extends: 'vitest.config.js',
 				test: {
 					name: 'kit-build-errors'
 				}
 			},
+
 			{
-				extends: 'packages/kit/test/prerendering/basics/vite.config.js',
 				root: 'packages/kit/test/prerendering/basics',
+				extends: 'vite.config.js',
 				test: {
 					name: 'kit-prerendering-basics'
 				}
