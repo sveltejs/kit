@@ -36,11 +36,11 @@ jobs:
               pull_number: context.issue.number
             });
             core.setOutput('ref', pull.head.ref);
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           ref: ${{ github.event_name == 'workflow_dispatch' && github.ref || steps.pr.outputs.ref }}
       - uses: pnpm/action-setup@v4.2.0
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: 24
           cache: pnpm
