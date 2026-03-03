@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.53.4
+### Patch Changes
+
+
+- fix: avoid Vite warning about unknown `codeSplitting` option ([#15451](https://github.com/sveltejs/kit/pull/15451))
+
 ## 2.53.3
 ### Patch Changes
 
