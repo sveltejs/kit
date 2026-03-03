@@ -15,5 +15,5 @@
 		"noUnusedLocals": true,
 		"noUnusedParameters": true
 	},
-	"include": ["src/**/*", "types/**/*", "test/**/*"]
+	"include": ["src/**/*", "types/**/*", "test/**/*", "vitest.config.js"]
 }
