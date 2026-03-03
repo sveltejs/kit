@@ -14,8 +14,16 @@ import { import_peer } from '../../../utils/import.js';
  * @param {ServerMetadata} metadata
  * @param {string} cwd
  * @param {OutputBundle} server_bundle
+ * @param {NonNullable<import('vitest/config').ViteUserConfig['build']>['sourcemap']} sourcemap
  */
-export async function treeshake_prerendered_remotes(out, remotes, metadata, cwd, server_bundle) {
+export async function treeshake_prerendered_remotes(
+	out,
+	remotes,
+	metadata,
+	cwd,
+	server_bundle,
+	sourcemap
+) {
 	if (remotes.length === 0) return;
 
 	const vite = /** @type {typeof import('vite')} */ (await import_peer('vite'));
@@ -79,9 +87,6 @@ export async function treeshake_prerendered_remotes(out, remotes, metadata, cwd,
 			}
 		}
 
-		const stubbed = modified_code.toString();
-		fs.writeFileSync(chunk_path, stubbed);
-
 		const bundle = /** @type {import('vite').Rollup.RollupOutput} */ (
 			await vite.build({
 				configFile: false,
@@ -89,8 +94,9 @@ export async function treeshake_prerendered_remotes(out, remotes, metadata, cwd,
 					write: false,
 					ssr: true,
 					target: 'esnext',
+					sourcemap,
 					rollupOptions: {
-						// treat everything as external
+						// avoid resolving imports
 						external: (id) => !id.endsWith(chunk_path),
 						input: {
 							treeshaken: chunk_path
@@ -100,10 +106,18 @@ export async function treeshake_prerendered_remotes(out, remotes, metadata, cwd,
 			})
 		);
 
-		const chunk = bundle.output.find((c) => c.type === 'chunk' && c.name === 'treeshaken');
-
+		const chunk = bundle.output.find(
+			(output) => output.type === 'chunk' && output.name === 'treeshaken'
+		);
 		if (chunk && chunk.type === 'chunk') {
 			fs.writeFileSync(chunk_path, chunk.code);
+
+			const chunk_sourcemap = bundle.output.find(
+				(output) => output.type === 'asset' && output.fileName === chunk.fileName + '.map'
+			);
+			if (chunk_sourcemap && chunk_sourcemap.type === 'asset') {
+				fs.writeFileSync(chunk_path + '.map', chunk_sourcemap.source);
+			}
 		}
 	}
 }

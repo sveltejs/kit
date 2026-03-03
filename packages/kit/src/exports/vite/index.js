@@ -1304,7 +1304,14 @@ async function kit({ svelte_config }) {
 					env: { ...env.private, ...env.public }
 				});
 
-				await treeshake_prerendered_remotes(out, remotes, metadata, cwd, server_bundle);
+				await treeshake_prerendered_remotes(
+					out,
+					remotes,
+					metadata,
+					cwd,
+					server_bundle,
+					vite_config.build.sourcemap
+				);
 
 				// generate a new manifest that doesn't include prerendered pages
 				fs.writeFileSync(
