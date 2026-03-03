@@ -611,14 +611,14 @@ async function kit({ svelte_config }) {
 					},
 					handler(id, options) {
 						// TODO: replace with https://vite.dev/guide/api-environment-plugins#per-environment-plugins
-						// skip .server.js files outside the cwd or in node_modules, as the filename might not mean 'server-only module' in this context
-						// should be equivalent to: (id.startsWith(normalized_cwd) && !id.startsWith(normalized_node_modules) && server_only_pattern.test(path.basename(id))
-						// TODO: address https://github.com/sveltejs/kit/issues/12529
-						// if we decide to do it then remove the CWD portion
 						if (options?.ssr === true) {
 							return;
 						}
 
+						// skip .server.js files outside the cwd or in node_modules, as the filename might not mean 'server-only module' in this context
+						// should be equivalent to: (id.startsWith(normalized_cwd) && !id.startsWith(normalized_node_modules) && server_only_pattern.test(path.basename(id))
+						// TODO: address https://github.com/sveltejs/kit/issues/12529
+						// if we decide to do it then remove the CWD portion
 						if (
 							server_only_pattern.test(id) &&
 							(!id.startsWith(normalized_cwd) || id.startsWith(normalized_node_modules))
