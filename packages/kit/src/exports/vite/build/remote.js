@@ -87,6 +87,9 @@ export async function treeshake_prerendered_remotes(
 			}
 		}
 
+		const stubbed = modified_code.toString();
+		fs.writeFileSync(chunk_path, stubbed);
+
 		const bundle = /** @type {import('vite').Rollup.RollupOutput} */ (
 			await vite.build({
 				configFile: false,
