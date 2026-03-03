@@ -1,12 +1,6 @@
 name: Autofix Lint
 
 on:
-  workflow_dispatch:
-    inputs:
-      pr_number:
-        description: "PR number to run against (optional, defaults to the main branch)"
-        required: false
-        type: string
   issue_comment:
     types: [created]
 
@@ -16,34 +10,34 @@ permissions:
 jobs:
   generate-types:
     # prevents this action from running on forks
-    # for issue_comment: only run when comment is '/autofix' on a PR
     if: |
       github.repository == 'sveltejs/kit' &&
-      (
-        github.event_name == 'workflow_dispatch' ||
-        (
-          github.event_name == 'issue_comment' &&
-          github.event.issue.pull_request != null &&
-          github.event.comment.body == '/autofix'
-        )
-      )
+      github.event.issue.pull_request != null &&
+      github.event.comment.body == '/autofix'
     runs-on: ubuntu-latest
     steps:
-      - name: Determine ref
-        id: ref
-        env:
-          PR_NUMBER: ${{ inputs.pr_number || (github.event_name == 'issue_comment' && github.event.issue.number || '') }}
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          if [ -n "$PR_NUMBER" ]; then
-            branch=$(gh pr view "$PR_NUMBER" --json headRefName -q .headRefName --repo ${{ github.repository }})
-            echo "ref=$branch" >> $GITHUB_OUTPUT
-          else
-            echo "ref=${{ github.ref }}" >> $GITHUB_OUTPUT
-          fi
+      - name: Check commenter has write access and get PR ref
+        id: pr
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: perm } = await github.rest.repos.getCollaboratorPermissionLevel({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              username: context.actor
+            });
+            if (!['admin', 'write'].includes(perm.permission)) {
+              core.setFailed(`${context.actor} does not have write access to trigger autofix`);
+            }
+            const { data: pull } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number
+            });
+            core.setOutput('ref', pull.head.ref);
       - uses: actions/checkout@v6
         with:
-          ref: ${{ steps.ref.outputs.ref }}
+          ref: ${{ steps.pr.outputs.ref }}
       - uses: pnpm/action-setup@v4.2.0
       - uses: actions/setup-node@v6
         with:
