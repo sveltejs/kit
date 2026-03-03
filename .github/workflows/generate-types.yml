@@ -1,0 +1,32 @@
+name: Generate Types
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write # to push the generated types commit
+
+jobs:
+  generate-types:
+    # prevents this action from running on forks
+    if: github.repository == 'sveltejs/kit'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.ref }}
+      - uses: pnpm/action-setup@v4.2.0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: cd packages/kit && pnpm generate:types
+      - name: Commit generated types
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add packages/kit/types
+          git diff --staged --quiet || git commit -m "chore: generate types"
+          git push
