@@ -1,12 +1,14 @@
-name: Generate Types
+name: Autofix Lint
 
 on:
   workflow_dispatch:
     inputs:
       pr_number:
-        description: 'PR number to run against (optional, defaults to the current branch)'
+        description: "PR number to run against (optional, defaults to the main branch)"
         required: false
         type: string
+  issue_comment:
+    types: [created]
 
 permissions:
   contents: write # to push the generated types commit
@@ -14,26 +16,31 @@ permissions:
 jobs:
   generate-types:
     # prevents this action from running on forks
-    if: github.repository == 'sveltejs/kit'
+    # for issue_comment: only run when comment is '/autofix' on a PR
+    if: |
+      github.repository == 'sveltejs/kit' &&
+      (
+        github.event_name == 'workflow_dispatch' ||
+        (
+          github.event_name == 'issue_comment' &&
+          github.event.issue.pull_request != null &&
+          github.event.comment.body == '/autofix'
+        )
+      )
     runs-on: ubuntu-latest
     steps:
       - name: Determine ref
         id: ref
+        env:
+          PR_NUMBER: ${{ inputs.pr_number || (github.event_name == 'issue_comment' && github.event.issue.number || '') }}
+          GH_TOKEN: ${{ github.token }}
         run: |
-          if [ -n "${{ inputs.pr_number }}" ]; then
-            # Check if the PR is from a fork - we can't push to fork branches
-            is_fork=$(gh pr view ${{ inputs.pr_number }} --json isCrossRepository -q .isCrossRepository --repo ${{ github.repository }})
-            if [ "$is_fork" = "true" ]; then
-              echo "::error::Cannot run this workflow for PRs from forks. The workflow needs to push commits back to the PR branch, which is not possible for fork PRs."
-              exit 1
-            fi
-            branch=$(gh pr view ${{ inputs.pr_number }} --json headRefName -q .headRefName --repo ${{ github.repository }})
+          if [ -n "$PR_NUMBER" ]; then
+            branch=$(gh pr view "$PR_NUMBER" --json headRefName -q .headRefName --repo ${{ github.repository }})
             echo "ref=$branch" >> $GITHUB_OUTPUT
           else
             echo "ref=${{ github.ref }}" >> $GITHUB_OUTPUT
           fi
-        env:
-          GH_TOKEN: ${{ github.token }}
       - uses: actions/checkout@v6
         with:
           ref: ${{ steps.ref.outputs.ref }}
@@ -43,11 +50,14 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: cd packages/kit && pnpm generate:types
-      - name: Commit generated types
+      - name: Run prettier
+        run: pnpm format
+      - name: Generate types
+        run: cd packages/kit && pnpm generate:types
+      - name: Commit changes
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add packages/kit/types
-          git diff --staged --quiet || git commit -m "chore: generate types"
+          git add -A
+          git diff --staged --quiet || git commit -m "chore: autofix lint"
           git push
