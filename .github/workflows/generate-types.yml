@@ -2,6 +2,11 @@ name: Generate Types
 
 on:
   workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'PR number to run against (optional, defaults to the current branch)'
+        required: false
+        type: string
 
 permissions:
   contents: write # to push the generated types commit
@@ -12,9 +17,20 @@ jobs:
     if: github.repository == 'sveltejs/kit'
     runs-on: ubuntu-latest
     steps:
+      - name: Determine ref
+        id: ref
+        run: |
+          if [ -n "${{ inputs.pr_number }}" ]; then
+            branch=$(gh pr view ${{ inputs.pr_number }} --json headRefName -q .headRefName --repo ${{ github.repository }})
+            echo "ref=$branch" >> $GITHUB_OUTPUT
+          else
+            echo "ref=${{ github.ref }}" >> $GITHUB_OUTPUT
+          fi
+        env:
+          GH_TOKEN: ${{ github.token }}
       - uses: actions/checkout@v6
         with:
-          ref: ${{ github.ref }}
+          ref: ${{ steps.ref.outputs.ref }}
       - uses: pnpm/action-setup@v4.2.0
       - uses: actions/setup-node@v6
         with:
