@@ -5,12 +5,13 @@ on:
     types: [created]
   workflow_dispatch:
 
-permissions:
-  contents: write # to push the generated types commit
-  pull-requests: read # to resolve the PR head ref
+permissions: {}
 
 jobs:
   autofix-lint:
+    permissions:
+      contents: write # to push the generated types commit
+      pull-requests: read # to resolve the PR head ref
     # prevents this action from running on forks
     if: |
       github.repository == 'sveltejs/kit' &&
