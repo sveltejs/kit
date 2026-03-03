@@ -1,9 +1,4 @@
-import {
-	RouteId,
-	RouteIdWithSearchOrHash,
-	PathnameWithSearchOrHash,
-	ResolvedPathname
-} from '$app/types';
+import { RouteIdWithSearchOrHash, PathnameWithSearchOrHash, ResolvedPathname } from '$app/types';
 import { ResolveArgs } from './types.js';
 
 export { resolve, asset, match } from './client.js';

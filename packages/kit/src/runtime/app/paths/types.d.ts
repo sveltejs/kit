@@ -5,10 +5,10 @@ import {
 	RouteParams
 } from '$app/types';
 
-type StripSearchOrHash<T extends string> = T extends `${infer Base}?${string}`
-	? Base
-	: T extends `${infer Base}#${string}`
-		? Base
+type StripSearchOrHash<T extends string> = T extends `${infer Pathname}?${string}`
+	? Pathname
+	: T extends `${infer Pathname}#${string}`
+		? Pathname
 		: T;
 
 export type ResolveArgs<T extends RouteIdWithSearchOrHash | PathnameWithSearchOrHash> =
