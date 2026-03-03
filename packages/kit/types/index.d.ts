@@ -110,10 +110,6 @@ declare module '@sveltejs/kit' {
 		 */
 		findServerAssets: (routes: RouteDefinition[]) => string[];
 
-		/**
-		 * Generate a fallback page for a static webserver to use when no route is matched. Useful for single-page apps.
-		 */
-		generateFallback: (dest: string) => Promise<void>;
 
 		/**
 		 * Generate a module exposing build-time environment variables as `$env/dynamic/public`.
