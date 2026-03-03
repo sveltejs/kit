@@ -21,6 +21,12 @@ jobs:
         id: ref
         run: |
           if [ -n "${{ inputs.pr_number }}" ]; then
+            # Check if the PR is from a fork - we can't push to fork branches
+            is_fork=$(gh pr view ${{ inputs.pr_number }} --json isCrossRepository -q .isCrossRepository --repo ${{ github.repository }})
+            if [ "$is_fork" = "true" ]; then
+              echo "::error::Cannot run this workflow for PRs from forks. The workflow needs to push commits back to the PR branch, which is not possible for fork PRs."
+              exit 1
+            fi
             branch=$(gh pr view ${{ inputs.pr_number }} --json headRefName -q .headRefName --repo ${{ github.repository }})
             echo "ref=$branch" >> $GITHUB_OUTPUT
           else
