@@ -6,10 +6,7 @@ import { load_config } from './core/config/index.js';
 import { coalesce_to_error } from './utils/error.js';
 
 /** @param {unknown} e */
-function handle_error(e)
-
-
-{
+function handle_error(e) {
 	const error = coalesce_to_error(e);
 
 	if (error.name === 'SyntaxError') throw error;
