@@ -3124,7 +3124,7 @@ declare module '$app/navigation' {
 }
 
 declare module '$app/paths' {
-	import type { RouteId, ResolvablePath, ResolvedPathname, RouteParams, Asset, Pathname } from '$app/types';
+	import type { RouteId, RouteIdWithSearchOrHash, PathnameWithSearchOrHash, ResolvedPathname, RouteParams, Asset, Pathname } from '$app/types';
 	/**
 	 * A string that matches [`config.kit.paths.base`](https://svelte.dev/docs/kit/configuration#paths).
 	 *
@@ -3146,14 +3146,25 @@ declare module '$app/paths' {
 	/**
 	 * @deprecated Use [`resolve(...)`](https://svelte.dev/docs/kit/$app-paths#resolve) instead
 	 */
-	export function resolveRoute<T extends RouteId | ResolvablePath>(
+	export function resolveRoute<T extends RouteIdWithSearchOrHash | PathnameWithSearchOrHash>(
 		...args: ResolveArgs<T>
 	): ResolvedPathname;
-	type ResolveArgs<T extends RouteId | ResolvablePath> = T extends RouteId
-		? RouteParams<T> extends Record<string, never>
-			? [route: T]
-			: [route: T, params: RouteParams<T>]
-		: [route: T];
+	type StripSearchOrHash<T extends string> = T extends `${infer Base}?${string}`
+		? Base
+		: T extends `${infer Base}#${string}`
+			? Base
+			: T;
+
+	type ResolveArgs<T extends RouteIdWithSearchOrHash | PathnameWithSearchOrHash> =
+		T extends RouteId
+			? RouteParams<T> extends Record<string, never>
+				? [route: T]
+				: [route: T, params: RouteParams<T>]
+			: StripSearchOrHash<T> extends infer U extends RouteId
+				? RouteParams<U> extends Record<string, never>
+					? [route: T]
+					: [route: T, params: RouteParams<U>]
+				: [route: T];
 	/**
 	 * Resolve the URL of an asset in your `static` directory, by prefixing it with [`config.kit.paths.assets`](https://svelte.dev/docs/kit/configuration#paths) if configured, or otherwise by prefixing it with the base path.
 	 *
@@ -3191,7 +3202,7 @@ declare module '$app/paths' {
 	 * @since 2.26
 	 *
 	 * */
-	export function resolve<T extends RouteId | ResolvablePath>(...args: ResolveArgs<T>): ResolvedPathname;
+	export function resolve<T extends RouteIdWithSearchOrHash | PathnameWithSearchOrHash>(...args: ResolveArgs<T>): ResolvedPathname;
 	/**
 	 * Match a path or URL to a route ID and extracts any parameters.
 	 *
@@ -3578,6 +3589,11 @@ declare module '$app/types' {
 	export type RouteId = ReturnType<AppTypes['RouteId']>;
 
 	/**
+	 * `RouteId`, but possibly suffixed with a search string and/or hash.
+	 */
+	export type RouteIdWithSearchOrHash = RouteId | `${RouteId}?${string}` | `${RouteId}#${string}`;
+
+	/**
 	 * A utility for getting the parameters associated with a given route.
 	 */
 	export type RouteParams<T extends RouteId> = T extends keyof ReturnType<AppTypes['RouteParams']>
@@ -3597,14 +3613,12 @@ declare module '$app/types' {
 	export type Pathname = ReturnType<AppTypes['Pathname']>;
 
 	/**
-	 * A pathname that may optionally include a query string and/or hash fragment.
-	 * Used as input to the `resolve` function.
+	 * `Pathname`, but possibly suffixed with a search string and/or hash.
 	 */
-	export type ResolvablePath =
+	export type PathnameWithSearchOrHash =
 		| Pathname
 		| `${Pathname}?${string}`
-		| `${Pathname}#${string}`
-		| `${Pathname}?${string}#${string}`;
+		| `${Pathname}#${string}`;
 
 	/**
 	 * `Pathname`, but possibly prefixed with a base path. Used for `page.url.pathname`.

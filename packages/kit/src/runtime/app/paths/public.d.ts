@@ -1,4 +1,9 @@
-import { RouteId, ResolvablePath, ResolvedPathname } from '$app/types';
+import {
+	RouteId,
+	RouteIdWithSearchOrHash,
+	PathnameWithSearchOrHash,
+	ResolvedPathname
+} from '$app/types';
 import { ResolveArgs } from './types.js';
 
 export { resolve, asset, match } from './client.js';
@@ -24,6 +29,6 @@ export let assets: '' | `https://${string}` | `http://${string}` | '/_svelte_kit
 /**
  * @deprecated Use [`resolve(...)`](https://svelte.dev/docs/kit/$app-paths#resolve) instead
  */
-export function resolveRoute<T extends RouteId | ResolvablePath>(
+export function resolveRoute<T extends RouteIdWithSearchOrHash | PathnameWithSearchOrHash>(
 	...args: ResolveArgs<T>
 ): ResolvedPathname;

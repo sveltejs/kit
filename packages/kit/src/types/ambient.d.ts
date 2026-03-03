@@ -105,6 +105,11 @@ declare module '$app/types' {
 	export type RouteId = ReturnType<AppTypes['RouteId']>;
 
 	/**
+	 * `RouteId`, but possibly suffixed with a search string and/or hash.
+	 */
+	export type RouteIdWithSearchOrHash = RouteId | `${RouteId}?${string}` | `${RouteId}#${string}`;
+
+	/**
 	 * A utility for getting the parameters associated with a given route.
 	 */
 	export type RouteParams<T extends RouteId> = T extends keyof ReturnType<AppTypes['RouteParams']>
@@ -124,14 +129,12 @@ declare module '$app/types' {
 	export type Pathname = ReturnType<AppTypes['Pathname']>;
 
 	/**
-	 * A pathname that may optionally include a query string and/or hash fragment.
-	 * Used as input to the `resolve` function.
+	 * `Pathname`, but possibly suffixed with a search string and/or hash.
 	 */
-	export type ResolvablePath =
+	export type PathnameWithSearchOrHash =
 		| Pathname
 		| `${Pathname}?${string}`
-		| `${Pathname}#${string}`
-		| `${Pathname}?${string}#${string}`;
+		| `${Pathname}#${string}`;
 
 	/**
 	 * `Pathname`, but possibly prefixed with a base path. Used for `page.url.pathname`.

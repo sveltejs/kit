@@ -1,7 +1,23 @@
-import { ResolvablePath, RouteId, RouteParams } from '$app/types';
+import {
+	PathnameWithSearchOrHash,
+	RouteId,
+	RouteIdWithSearchOrHash,
+	RouteParams
+} from '$app/types';
 
-export type ResolveArgs<T extends RouteId | ResolvablePath> = T extends RouteId
-	? RouteParams<T> extends Record<string, never>
-		? [route: T]
-		: [route: T, params: RouteParams<T>]
-	: [route: T];
+type StripSearchOrHash<T extends string> = T extends `${infer Base}?${string}`
+	? Base
+	: T extends `${infer Base}#${string}`
+		? Base
+		: T;
+
+export type ResolveArgs<T extends RouteIdWithSearchOrHash | PathnameWithSearchOrHash> =
+	T extends RouteId
+		? RouteParams<T> extends Record<string, never>
+			? [route: T]
+			: [route: T, params: RouteParams<T>]
+		: StripSearchOrHash<T> extends infer U extends RouteId
+			? RouteParams<U> extends Record<string, never>
+				? [route: T]
+				: [route: T, params: RouteParams<U>]
+			: [route: T];
