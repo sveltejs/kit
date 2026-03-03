@@ -10,7 +10,7 @@ permissions:
   pull-requests: read # to resolve the PR head ref
 
 jobs:
-  generate-types:
+  autofix-lint:
     # prevents this action from running on forks
     if: |
       github.repository == 'sveltejs/kit' &&
