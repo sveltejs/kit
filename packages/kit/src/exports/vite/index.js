@@ -682,17 +682,21 @@ function kit({ svelte_config }) {
 						}
 
 						// skip .server.js files outside the cwd or in node_modules, as the filename might not mean 'server-only module' in this context
-						// should be equivalent to: (id.startsWith(normalized_cwd) && !id.startsWith(normalized_node_modules) && server_only_pattern.test(path.basename(id))
+						const is_internal =
+							id.startsWith(normalized_cwd) && !id.startsWith(normalized_node_modules);
+
+						const normalized = normalize_id(id, normalized_lib, normalized_cwd);
+
+						const is_server_only =
+							normalized === '$env/static/private' ||
+							normalized === '$env/dynamic/private' ||
+							normalized === '$app/server' ||
+							normalized.startsWith('$lib/server/') ||
+							(is_internal && server_only_pattern.test(path.basename(id)));
+
+						// skip .server.js files outside the cwd or in node_modules, as the filename might not mean 'server-only module' in this context
 						// TODO: address https://github.com/sveltejs/kit/issues/12529
-						// if we decide to do it then remove the CWD portion
-						if (
-							id !== env_static_private &&
-							id !== env_dynamic_private &&
-							id !== app_server &&
-							(!id.startsWith(`${normalized_lib}/server`) ||
-								(server_only_pattern.test(id) &&
-									(!id.startsWith(normalized_cwd) || id.startsWith(normalized_node_modules))))
-						) {
+						if (!is_server_only) {
 							return;
 						}
 
@@ -709,7 +713,6 @@ function kit({ svelte_config }) {
 						if (manifest_data.hooks.client) entrypoints.add(manifest_data.hooks.client);
 						if (manifest_data.hooks.universal) entrypoints.add(manifest_data.hooks.universal);
 
-						const normalized = normalize_id(id, normalized_lib, normalized_cwd);
 						const chain = [normalized];
 
 						let current = normalized;
