@@ -161,7 +161,8 @@ export async function sveltekit() {
 }
 
 /**
- * Resolves the Svelte config using the Vite config `root` setting
+ * Resolves the Svelte config using the `vite.config.root` setting before any
+ * of our other plugins try to access the config objects
  * @param {{
  *   vite_plugin_svelte_options: import('@sveltejs/vite-plugin-svelte').Options;
  * 	 svelte_config: import('types').ValidatedConfig;
