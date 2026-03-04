@@ -672,11 +672,6 @@ function kit({ svelte_config }) {
 						// should be equivalent to: (id.startsWith(normalized_cwd) && !id.startsWith(normalized_node_modules) && server_only_pattern.test(path.basename(id))
 						// TODO: address https://github.com/sveltejs/kit/issues/12529
 						// if we decide to do it then remove the CWD portion
-						console.log({
-							id,
-							normalized_cwd,
-							normalized_node_modules
-						});
 						if (
 							id !== env_static_private &&
 							id !== env_dynamic_private &&
