@@ -1,6 +1,5 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import process from 'node:process';
 import * as url from 'node:url';
 import options from './options.js';
 
@@ -58,10 +57,10 @@ export function load_error_page(config) {
 
 /**
  * Loads and validates Svelte config file
- * @param {{ cwd?: string }} options
+ * @param {{ cwd: string }} options
  * @returns {Promise<import('types').ValidatedConfig>}
  */
-export async function load_config({ cwd = process.cwd() } = {}) {
+export async function load_config({ cwd }) {
 	const config_files = ['js', 'ts']
 		.map((ext) => path.join(cwd, `svelte.config.${ext}`))
 		.filter((f) => fs.existsSync(f));
@@ -96,9 +95,10 @@ export async function load_config({ cwd = process.cwd() } = {}) {
  * @param {{ cwd: string }} options
  * @returns {import('types').ValidatedConfig}
  */
-function process_config(config, { cwd }) {
+export function process_config(config, { cwd }) {
 	const validated = validate_config(config);
 
+	validated.kit.env.dir = path.resolve(cwd, validated.kit.env.dir);
 	validated.kit.outDir = path.resolve(cwd, validated.kit.outDir);
 
 	for (const key in validated.kit.files) {

@@ -1,6 +1,5 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import process from 'node:process';
 import { URL } from 'node:url';
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { styleText } from 'node:util';
@@ -12,14 +11,13 @@ import { from_fs, posixify, resolve_entry, to_fs } from '../../../utils/filesyst
 import { load_error_page } from '../../../core/config/index.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import * as sync from '../../../core/sync/sync.js';
-import { get_mime_lookup, runtime_base } from '../../../core/utils.js';
+import { get_mime_lookup, get_runtime_base } from '../../../core/utils.js';
 import { compact } from '../../../utils/array.js';
 import { not_found } from '../utils.js';
 import { SCHEME } from '../../../utils/url.js';
 import { check_feature } from '../../../utils/features.js';
 import { escape_html } from '../../../utils/escape.js';
 
-const cwd = process.cwd();
 // vite-specifc queries that we should skip handling for css urls
 const vite_css_query_regex = /(?:\?|&)(?:raw|url|inline)(?:&|$)/;
 
@@ -132,7 +130,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root) {
 			mimeTypes: get_mime_lookup(manifest_data),
 			_: {
 				client: {
-					start: `${runtime_base}/client/entry.js`,
+					start: `${get_runtime_base(root)}/client/entry.js`,
 					app: `${to_fs(svelte_config.kit.outDir)}/generated/client/app.js`,
 					imports: [],
 					stylesheets: [],
@@ -275,7 +273,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root) {
 							page: route.page,
 							endpoint: endpoint
 								? async () => {
-										const url = path.resolve(cwd, endpoint.file);
+										const url = path.resolve(root, endpoint.file);
 										return await loud_ssr_load_module(url);
 									}
 								: null,
@@ -289,7 +287,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root) {
 
 					for (const key in manifest_data.matchers) {
 						const file = manifest_data.matchers[key];
-						const url = path.resolve(cwd, file);
+						const url = path.resolve(root, file);
 						const module = await vite.ssrLoadModule(url, { fixStacktrace: true });
 
 						if (module.match) {
@@ -499,11 +497,13 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root) {
 
 				// we have to import `Server` before calling `set_assets`
 				const { Server } = /** @type {import('types').ServerModule} */ (
-					await vite.ssrLoadModule(`${runtime_base}/server/index.js`, { fixStacktrace: true })
+					await vite.ssrLoadModule(`${get_runtime_base(root)}/server/index.js`, {
+						fixStacktrace: true
+					})
 				);
 
 				const { set_fix_stack_trace } = await vite.ssrLoadModule(
-					`${runtime_base}/shared-server.js`
+					`${get_runtime_base(root)}/shared-server.js`
 				);
 				set_fix_stack_trace(fix_stack_trace);
 

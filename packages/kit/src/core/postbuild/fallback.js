@@ -9,12 +9,13 @@ export default forked(import.meta.url, generate_fallback);
 /**
  * @param {{
  *   manifest_path: string;
- *   env: Record<string, string>
+ *   env: Record<string, string>;
+ *   root: string;
  * }} opts
  */
-async function generate_fallback({ manifest_path, env }) {
+async function generate_fallback({ manifest_path, env, root }) {
 	/** @type {import('types').ValidatedKitConfig} */
-	const config = (await load_config()).kit;
+	const config = (await load_config({ cwd: root })).kit;
 
 	const server_root = join(config.outDir, 'output');
 

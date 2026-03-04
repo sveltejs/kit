@@ -24,7 +24,7 @@ const config = {
 	},
 
 	test: {
-		globalSetup: `${import.meta.dirname}/globalSetup.js`
+		globalSetup: path.join(import.meta.dirname, 'globalSetup.js')
 	}
 };
 

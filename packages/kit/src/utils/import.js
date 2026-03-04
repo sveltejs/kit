@@ -1,16 +1,16 @@
-import process from 'node:process';
 import fs from 'node:fs';
 import path from 'node:path';
 
 /**
- * Resolves a peer dependency relative to the current CWD. Duplicated with `packages/adapter-auto`
+ * Resolves a peer dependency relative to the current working directory. Duplicated with `packages/adapter-auto`
  * @param {string} dependency
+ * @param {string} cwd
  */
-function resolve_peer(dependency) {
+function resolve_peer(dependency, cwd) {
 	let [name, ...parts] = dependency.split('/');
 	if (name[0] === '@') name += `/${parts.shift()}`;
 
-	let dir = process.cwd();
+	let dir = cwd;
 
 	while (!fs.existsSync(`${dir}/node_modules/${name}/package.json`)) {
 		if (dir === (dir = path.dirname(dir))) {
@@ -42,10 +42,11 @@ function resolve_peer(dependency) {
  * Resolve a dependency relative to the current working directory,
  * rather than relative to this package (but falls back to trying that, if necessary)
  * @param {string} dependency
+ * @param {string} root
  */
-export async function import_peer(dependency) {
+export async function import_peer(dependency, root) {
 	try {
-		return await import(resolve_peer(dependency));
+		return await import(resolve_peer(dependency, root));
 	} catch {
 		return await import(dependency);
 	}

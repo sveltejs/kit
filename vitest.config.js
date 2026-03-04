@@ -3,80 +3,19 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
 	test: {
 		projects: [
+			'packages/*',
+			// prevent Vitest from crawling nested Vite apps in the kit test directory
+			// which do not use Vitest but have a vite.config.js file
+			'!packages/kit',
 			{
-				root: 'packages/adapter-auto',
-				extends: 'vitest.config.js',
-				test: {
-					name: 'adapter-auto'
-				}
+				extends: 'packages/kit/kit.vitest.config.js',
+				root: 'packages/kit'
 			},
+			'packages/kit/test/apps/basics',
+			'packages/kit/test/build-errors',
 			{
-				root: 'packages/adapter-cloudflare',
-				extends: 'vitest.config.js',
-				test: {
-					name: 'adapter-cloudflare'
-				}
-			},
-			{
-				root: 'packages/adapter-netlify',
-				extends: 'vitest.config.js',
-				test: {
-					name: 'adapter-netlify'
-				}
-			},
-			{
-				root: 'packages/adapter-node',
-				extends: 'vitest.config.js',
-				test: {
-					name: 'adapter-node'
-				}
-			},
-			{
-				root: 'packages/adapter-vercel',
-				extends: 'vitest.config.js',
-				test: {
-					name: 'adapter-vercel'
-				}
-			},
-			{
-				root: 'packages/enhanced-img',
-				extends: 'vitest.config.js',
-				test: {
-					name: 'enhanced-img'
-				}
-			},
-			{
-				root: 'packages/package',
-				extends: 'vitest.config.js',
-				test: {
-					name: 'package'
-				}
-			},
-			{
-				root: 'packages/kit',
-				extends: 'kit.vitest.config.js',
-				test: {
-					name: 'kit'
-				}
-			},
-			{
-				root: 'packages/kit/test/apps/basics',
-				extends: 'vite.config.js',
-				test: {
-					name: 'kit-apps-basics'
-				}
-			},
-			{
-				root: 'packages/kit/test/build-errors',
-				extends: 'vitest.config.js',
-				test: {
-					name: 'kit-build-errors'
-				}
-			},
-
-			{
+				extends: 'packages/kit/test/prerendering/basics/vite.config.js',
 				root: 'packages/kit/test/prerendering/basics',
-				extends: 'vite.config.js',
 				test: {
 					name: 'kit-prerendering-basics'
 				}

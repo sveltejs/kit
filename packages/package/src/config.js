@@ -5,10 +5,10 @@ import url from 'node:url';
 
 /**
  * Loads and validates Svelte config file
- * @param {{ cwd?: string }} options
+ * @param {{ cwd: string }} options
  * @returns {Promise<import('./types.js').Options['config']>}
  */
-export async function load_config({ cwd = process.cwd() } = {}) {
+export async function load_config({ cwd }) {
 	const config_files = ['js', 'ts']
 		.map((ext) => path.join(cwd, `svelte.config.${ext}`))
 		.filter((f) => fs.existsSync(f));
@@ -37,7 +37,7 @@ export async function load_config({ cwd = process.cwd() } = {}) {
  * @param {string} cwd
  * @returns {Record<string, any>}
  */
-export function load_pkg_json(cwd = process.cwd()) {
+export function load_pkg_json(cwd) {
 	const pkg_json_file = path.join(cwd, 'package.json');
 
 	if (!fs.existsSync(pkg_json_file)) {

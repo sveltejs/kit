@@ -32,7 +32,8 @@ prog
 	)
 	.action(async (args) => {
 		try {
-			const config = await load_config();
+			const cwd = process.cwd();
+			const config = await load_config({ cwd });
 
 			// @ts-expect-error
 			if (config.package) {
@@ -45,7 +46,7 @@ prog
 
 			/** @type {import('./types.js').Options} */
 			const options = {
-				cwd: process.cwd(),
+				cwd,
 				input: args.input ?? config.kit?.files?.lib ?? 'src/lib',
 				output: args.output,
 				preserve_output: args['preserve-output'],
