@@ -139,12 +139,14 @@ let vite_plugin_svelte;
  * @returns {Promise<import('vite').Plugin[]>}
  */
 export async function sveltekit() {
+	// the config options will be set only after the Vite `config` hook runs
+	// because we need to find `svelte.config.js` relative to `vite.config.root`
 	const svelte_config = /** @type {import('types').ValidatedConfig} */ ({});
 
 	/** @type {import('@sveltejs/vite-plugin-svelte').Options} */
 	const vite_plugin_svelte_options = {
-		// we load the config ourselves instead of relying on vite-plugin-svelte because
-		// it will try to validate the config without knowing that kit options are valid
+		// we don't want vite-plugin-svelte to load the config file itself because
+		// it will try to validate it without knowing that kit options are valid
 		configFile: false
 	};
 
