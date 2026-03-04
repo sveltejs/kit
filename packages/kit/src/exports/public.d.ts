@@ -516,64 +516,76 @@ export interface KitConfig {
 	};
 	/**
 	 * Where to find various files within your project.
+	 * @deprecated
 	 */
 	files?: {
 		/**
-		 * The location of your source code.
+		 * the location of your source code
+		 * @deprecated
 		 * @default "src"
 		 * @since 2.28
 		 */
 		src?: string;
 		/**
-		 * A place to put static files that should have stable URLs and undergo no processing, such as `favicon.ico` or `manifest.json`.
+		 * a place to put static files that should have stable URLs and undergo no processing, such as `favicon.ico` or `manifest.json`
+		 * @deprecated
 		 * @default "static"
 		 */
 		assets?: string;
 		hooks?: {
 			/**
 			 * The location of your client [hooks](https://svelte.dev/docs/kit/hooks).
+			 * @deprecated
 			 * @default "src/hooks.client"
 			 */
 			client?: string;
 			/**
 			 * The location of your server [hooks](https://svelte.dev/docs/kit/hooks).
+			 * @deprecated
 			 * @default "src/hooks.server"
 			 */
 			server?: string;
 			/**
 			 * The location of your universal [hooks](https://svelte.dev/docs/kit/hooks).
+			 * @deprecated
 			 * @default "src/hooks"
 			 * @since 2.3.0
 			 */
 			universal?: string;
 		};
 		/**
-		 * Your app's internal library, accessible throughout the codebase as `$lib`.
+		 * your app's internal library, accessible throughout the codebase as `$lib`
+		 * @deprecated
 		 * @default "src/lib"
 		 */
 		lib?: string;
 		/**
-		 * A directory containing [parameter matchers](https://svelte.dev/docs/kit/advanced-routing#Matching).
+		 * a directory containing [parameter matchers](https://svelte.dev/docs/kit/advanced-routing#Matching)
+		 * @deprecated
 		 * @default "src/params"
 		 */
 		params?: string;
 		/**
-		 * The files that define the structure of your app (see [Routing](https://svelte.dev/docs/kit/routing)).
+		 * the files that define the structure of your app (see [Routing](https://svelte.dev/docs/kit/routing))
+		 * @deprecated
 		 * @default "src/routes"
 		 */
 		routes?: string;
 		/**
-		 * The location of your service worker's entry point (see [Service workers](https://svelte.dev/docs/kit/service-workers)).
+		 * the location of your service worker's entry point (see [Service workers](https://svelte.dev/docs/kit/service-workers))
+		 * @deprecated
 		 * @default "src/service-worker"
 		 */
 		serviceWorker?: string;
 		/**
-		 * The location of the template for HTML responses.
+		 * the location of the template for HTML responses
+		 * @deprecated
 		 * @default "src/app.html"
 		 */
 		appTemplate?: string;
 		/**
-		 * The location of the template for fallback error responses.
+		 * the location of the template for fallback error responses
+		 * @deprecated
 		 * @default "src/error.html"
 		 */
 		errorTemplate?: string;
