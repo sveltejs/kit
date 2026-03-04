@@ -276,7 +276,7 @@ export function isValidationError(e) {
  * @since 2.18.0
  */
 export function normalizeUrl(url) {
-	url = new URL(url, 'http://internal');
+	url = new URL(url, 'a://a');
 
 	const is_route_resolution = has_resolution_suffix(url.pathname);
 	const is_data_request = has_data_suffix(url.pathname);
