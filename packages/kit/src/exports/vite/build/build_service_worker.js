@@ -1,3 +1,4 @@
+import process from 'node:process';
 import * as vite from 'vite';
 import { dedent } from '../../../core/sync/utils.js';
 import { s } from '../../../utils/misc.js';
