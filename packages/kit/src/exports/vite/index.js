@@ -689,9 +689,9 @@ function kit({ svelte_config }) {
 							id !== env_static_private &&
 							id !== env_dynamic_private &&
 							id !== app_server &&
-							!id.startsWith(`${normalized_lib}/server`) &&
-							server_only_pattern.test(id) &&
-							(!id.startsWith(normalized_cwd) || id.startsWith(normalized_node_modules))
+							(!id.startsWith(`${normalized_lib}/server`) ||
+								(server_only_pattern.test(id) &&
+									(!id.startsWith(normalized_cwd) || id.startsWith(normalized_node_modules))))
 						) {
 							return;
 						}
