@@ -160,6 +160,11 @@ export async function sveltekit() {
 	];
 }
 
+/** @param {import('vite').UserConfig | import('vite').ResolvedConfig} vite_config */
+function resolve_root(vite_config) {
+	return posixify(vite_config.root ? path.resolve(vite_config.root) : cwd);
+}
+
 /**
  * Resolves the Svelte config using the `vite.config.root` setting before any
  * of our other plugins try to access the config objects
@@ -176,8 +181,8 @@ function plugin_svelte_config({ vite_plugin_svelte_options, svelte_config }) {
 		enforce: 'pre',
 		config: {
 			order: 'pre',
-			async handler(vite_config) {
-				root = posixify(vite_config.root ? path.resolve(vite_config.root) : cwd);
+			async handler(config) {
+				root = resolve_root(config);
 
 				const user_svelte_config = await load_config({ cwd: root });
 
@@ -199,8 +204,14 @@ function plugin_svelte_config({ vite_plugin_svelte_options, svelte_config }) {
 
 				Object.assign(svelte_config, user_svelte_config);
 			}
+		},
+		// TODO: do we even need to set `root` based on the final Vite config?
+		configResolved: {
+			order: 'pre',
+			handler(config) {
+				root = resolve_root(config);
+			}
 		}
-		// TODO: set `root` using vite config from `configResolved` hook ?
 	};
 }
 
@@ -281,7 +292,6 @@ function kit({ svelte_config }) {
 	/** @type {import('vite').Plugin} */
 	const plugin_setup = {
 		name: 'vite-plugin-sveltekit-setup',
-		// TODO: add enforce: 'pre' and `config.order: 'pre'` ?
 		/**
 		 * Build the SvelteKit-provided Vite config to be merged with the user's vite.config.js file.
 		 * @see https://vitejs.dev/guide/api-plugin.html#config
