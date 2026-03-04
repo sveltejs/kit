@@ -11,7 +11,10 @@ export default defineConfig({
 				extends: 'packages/kit/kit.vitest.config.js',
 				root: 'packages/kit'
 			},
-			'packages/kit/test/apps/basics',
+			{
+				extends: 'packages/kit/test/apps/basics/vite.config.js',
+				root: 'packages/kit/test/apps/basics'
+			},
 			'packages/kit/test/build-errors',
 			{
 				extends: 'packages/kit/test/prerendering/basics/vite.config.js',
