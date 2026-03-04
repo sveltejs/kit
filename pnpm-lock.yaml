@@ -69,6 +69,12 @@ catalogs:
     polka:
       specifier: ^1.0.0-next.28
       version: 1.0.0-next.28
+    prettier:
+      specifier: ^3.8.1
+      version: 3.8.1
+    prettier-plugin-svelte:
+      specifier: ^3.5.1
+      version: 3.5.1
     publint:
       specifier: ^0.3.0
       version: 0.3.0
@@ -123,11 +129,11 @@ importers:
         specifier: 'catalog:'
         version: 10.0.0(jiti@2.4.2)
       prettier:
-        specifier: ^3.6.0
-        version: 3.6.0
+        specifier: 'catalog:'
+        version: 3.8.1
       prettier-plugin-svelte:
-        specifier: ^3.4.0
-        version: 3.4.0(prettier@3.6.0)(svelte@5.53.5)
+        specifier: 'catalog:'
+        version: 3.5.1(prettier@3.8.1)(svelte@5.53.5)
       vitest:
         specifier: 'catalog:'
         version: 4.1.0-beta.4(@opentelemetry/api@1.9.0)(@types/node@24.10.13)(@vitest/browser-playwright@4.1.0-beta.4)(vite@8.0.0-beta.15(@types/node@24.10.13)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.0))
@@ -469,7 +475,7 @@ importers:
         specifier: 'catalog:'
         version: 5.53.5
       typescript:
-        specifier: ^5.3.3
+        specifier: 'catalog:'
         version: 5.9.3
       vite:
         specifier: 'catalog:'
@@ -633,7 +639,7 @@ importers:
         specifier: 'catalog:'
         version: 4.3.4(picomatch@4.0.3)(svelte@5.53.5)(typescript@5.9.3)
       typescript:
-        specifier: ^5.5.4
+        specifier: 'catalog:'
         version: 5.9.3
       vite:
         specifier: 'catalog:'
@@ -654,7 +660,7 @@ importers:
         specifier: 'catalog:'
         version: 4.3.4(picomatch@4.0.3)(svelte@5.53.5)(typescript@5.9.3)
       typescript:
-        specifier: ^5.5.4
+        specifier: 'catalog:'
         version: 5.9.3
       valibot:
         specifier: 'catalog:'
@@ -693,7 +699,7 @@ importers:
         specifier: workspace:*
         version: link:../../../../test-redirect-importer
       typescript:
-        specifier: ^5.5.4
+        specifier: 'catalog:'
         version: 5.9.3
       valibot:
         specifier: 'catalog:'
@@ -750,7 +756,7 @@ importers:
         specifier: 'catalog:'
         version: 4.3.4(picomatch@4.0.3)(svelte@5.53.5)(typescript@5.9.3)
       typescript:
-        specifier: ^5.5.4
+        specifier: 'catalog:'
         version: 5.9.3
       vite:
         specifier: 'catalog:'
@@ -771,7 +777,7 @@ importers:
         specifier: 'catalog:'
         version: 4.3.4(picomatch@4.0.3)(svelte@5.53.5)(typescript@5.9.3)
       typescript:
-        specifier: ^5.5.4
+        specifier: 'catalog:'
         version: 5.9.3
       vite:
         specifier: 'catalog:'
@@ -792,7 +798,7 @@ importers:
         specifier: 'catalog:'
         version: 4.3.4(picomatch@4.0.3)(svelte@5.53.5)(typescript@5.9.3)
       typescript:
-        specifier: ^5.5.4
+        specifier: 'catalog:'
         version: 5.9.3
       vite:
         specifier: 'catalog:'
@@ -813,7 +819,7 @@ importers:
         specifier: 'catalog:'
         version: 4.3.4(picomatch@4.0.3)(svelte@5.53.5)(typescript@5.9.3)
       typescript:
-        specifier: ^5.5.4
+        specifier: 'catalog:'
         version: 5.9.3
       vite:
         specifier: 'catalog:'
@@ -837,7 +843,7 @@ importers:
         specifier: 'catalog:'
         version: 4.3.4(picomatch@4.0.3)(svelte@5.53.5)(typescript@5.9.3)
       typescript:
-        specifier: ^5.5.4
+        specifier: 'catalog:'
         version: 5.9.3
       vite:
         specifier: 'catalog:'
@@ -861,7 +867,7 @@ importers:
         specifier: 'catalog:'
         version: 4.3.4(picomatch@4.0.3)(svelte@5.53.5)(typescript@5.9.3)
       typescript:
-        specifier: ^5.5.4
+        specifier: 'catalog:'
         version: 5.9.3
       valibot:
         specifier: 'catalog:'
@@ -888,7 +894,7 @@ importers:
         specifier: 'catalog:'
         version: 4.3.4(picomatch@4.0.3)(svelte@5.53.5)(typescript@5.9.3)
       typescript:
-        specifier: ^5.5.4
+        specifier: 'catalog:'
         version: 5.9.3
       vite:
         specifier: 'catalog:'
@@ -909,7 +915,7 @@ importers:
         specifier: 'catalog:'
         version: 4.3.4(picomatch@4.0.3)(svelte@5.53.5)(typescript@5.9.3)
       typescript:
-        specifier: ^5.5.4
+        specifier: 'catalog:'
         version: 5.9.3
       vite:
         specifier: 'catalog:'
@@ -930,7 +936,7 @@ importers:
         specifier: 'catalog:'
         version: 4.3.4(picomatch@4.0.3)(svelte@5.53.5)(typescript@5.9.3)
       typescript:
-        specifier: ^5.5.4
+        specifier: 'catalog:'
         version: 5.9.3
       vite:
         specifier: 'catalog:'
@@ -960,7 +966,7 @@ importers:
         specifier: 'catalog:'
         version: 4.3.4(picomatch@4.0.3)(svelte@5.53.5)(typescript@5.9.3)
       typescript:
-        specifier: ^5.5.4
+        specifier: 'catalog:'
         version: 5.9.3
       vite:
         specifier: 'catalog:'
@@ -984,7 +990,7 @@ importers:
         specifier: 'catalog:'
         version: 4.3.4(picomatch@4.0.3)(svelte@5.53.5)(typescript@5.9.3)
       typescript:
-        specifier: ^5.5.4
+        specifier: 'catalog:'
         version: 5.9.3
       vite:
         specifier: 'catalog:'
@@ -1008,7 +1014,7 @@ importers:
         specifier: 'catalog:'
         version: 4.3.4(picomatch@4.0.3)(svelte@5.53.5)(typescript@5.9.3)
       typescript:
-        specifier: ^5.5.4
+        specifier: 'catalog:'
         version: 5.9.3
       vite:
         specifier: 'catalog:'
@@ -1032,7 +1038,7 @@ importers:
         specifier: 'catalog:'
         version: 4.3.4(picomatch@4.0.3)(svelte@5.53.5)(typescript@5.9.3)
       typescript:
-        specifier: ^5.5.4
+        specifier: 'catalog:'
         version: 5.9.3
       vite:
         specifier: 'catalog:'
@@ -1053,7 +1059,7 @@ importers:
         specifier: 'catalog:'
         version: 4.3.4(picomatch@4.0.3)(svelte@5.53.5)(typescript@5.9.3)
       typescript:
-        specifier: ^5.5.4
+        specifier: 'catalog:'
         version: 5.9.3
       vite:
         specifier: 'catalog:'
@@ -1074,7 +1080,7 @@ importers:
         specifier: 'catalog:'
         version: 4.3.4(picomatch@4.0.3)(svelte@5.53.5)(typescript@5.9.3)
       typescript:
-        specifier: ^5.5.4
+        specifier: 'catalog:'
         version: 5.9.3
       vite:
         specifier: 'catalog:'
@@ -1095,7 +1101,7 @@ importers:
         specifier: 'catalog:'
         version: 4.3.4(picomatch@4.0.3)(svelte@5.53.5)(typescript@5.9.3)
       typescript:
-        specifier: ^5.5.4
+        specifier: 'catalog:'
         version: 5.9.3
       vite:
         specifier: 'catalog:'
@@ -1116,7 +1122,7 @@ importers:
         specifier: 'catalog:'
         version: 4.3.4(picomatch@4.0.3)(svelte@5.53.5)(typescript@5.9.3)
       typescript:
-        specifier: ^5.5.4
+        specifier: 'catalog:'
         version: 5.9.3
       vite:
         specifier: 'catalog:'
@@ -1137,7 +1143,7 @@ importers:
         specifier: 'catalog:'
         version: 4.3.4(picomatch@4.0.3)(svelte@5.53.5)(typescript@5.9.3)
       typescript:
-        specifier: ^5.5.4
+        specifier: 'catalog:'
         version: 5.9.3
       vite:
         specifier: 'catalog:'
@@ -1158,7 +1164,7 @@ importers:
         specifier: 'catalog:'
         version: 4.3.4(picomatch@4.0.3)(svelte@5.53.5)(typescript@5.9.3)
       typescript:
-        specifier: ^5.5.4
+        specifier: 'catalog:'
         version: 5.9.3
       vite:
         specifier: 'catalog:'
@@ -1179,7 +1185,7 @@ importers:
         specifier: 'catalog:'
         version: 4.3.4(picomatch@4.0.3)(svelte@5.53.5)(typescript@5.9.3)
       typescript:
-        specifier: ^5.5.4
+        specifier: 'catalog:'
         version: 5.9.3
       vite:
         specifier: 'catalog:'
@@ -1200,7 +1206,7 @@ importers:
         specifier: 'catalog:'
         version: 4.3.4(picomatch@4.0.3)(svelte@5.53.5)(typescript@5.9.3)
       typescript:
-        specifier: ^5.5.4
+        specifier: 'catalog:'
         version: 5.9.3
       vite:
         specifier: 'catalog:'
@@ -1221,7 +1227,7 @@ importers:
         specifier: 'catalog:'
         version: 4.3.4(picomatch@4.0.3)(svelte@5.53.5)(typescript@5.9.3)
       typescript:
-        specifier: ^5.5.4
+        specifier: 'catalog:'
         version: 5.9.3
       vite:
         specifier: 'catalog:'
@@ -1242,7 +1248,7 @@ importers:
         specifier: 'catalog:'
         version: 4.3.4(picomatch@4.0.3)(svelte@5.53.5)(typescript@5.9.3)
       typescript:
-        specifier: ^5.5.4
+        specifier: 'catalog:'
         version: 5.9.3
       vite:
         specifier: 'catalog:'
@@ -1263,7 +1269,7 @@ importers:
         specifier: 'catalog:'
         version: 4.3.4(picomatch@4.0.3)(svelte@5.53.5)(typescript@5.9.3)
       typescript:
-        specifier: ^5.5.4
+        specifier: 'catalog:'
         version: 5.9.3
       vite:
         specifier: 'catalog:'
@@ -1284,7 +1290,7 @@ importers:
         specifier: 'catalog:'
         version: 4.3.4(picomatch@4.0.3)(svelte@5.53.5)(typescript@5.9.3)
       typescript:
-        specifier: ^5.5.4
+        specifier: 'catalog:'
         version: 5.9.3
       vite:
         specifier: 'catalog:'
@@ -1308,7 +1314,7 @@ importers:
         specifier: 'catalog:'
         version: 4.3.4(picomatch@4.0.3)(svelte@5.53.5)(typescript@5.9.3)
       typescript:
-        specifier: ^5.5.4
+        specifier: 'catalog:'
         version: 5.9.3
       vite:
         specifier: 'catalog:'
@@ -1332,7 +1338,7 @@ importers:
         specifier: 'catalog:'
         version: 4.3.4(picomatch@4.0.3)(svelte@5.53.5)(typescript@5.9.3)
       typescript:
-        specifier: ^5.5.4
+        specifier: 'catalog:'
         version: 5.9.3
       vite:
         specifier: 'catalog:'
@@ -1366,8 +1372,8 @@ importers:
         specifier: 'catalog:'
         version: 7.5.8
       prettier:
-        specifier: ^3.1.1
-        version: 3.6.0
+        specifier: 'catalog:'
+        version: 3.8.1
       svelte:
         specifier: 'catalog:'
         version: 5.53.5
@@ -1426,11 +1432,11 @@ importers:
         specifier: 'catalog:'
         version: 7.0.0(svelte@5.53.5)(vite@8.0.0-beta.15(@types/node@24.10.13)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.0))
       prettier:
-        specifier: ^3.3.2
-        version: 3.6.0
+        specifier: 'catalog:'
+        version: 3.8.1
       prettier-plugin-svelte:
-        specifier: ^3.2.6
-        version: 3.4.0(prettier@3.6.0)(svelte@5.53.5)
+        specifier: 'catalog:'
+        version: 3.5.1(prettier@3.8.1)(svelte@5.53.5)
       publint:
         specifier: 'catalog:'
         version: 0.3.0
@@ -1441,7 +1447,7 @@ importers:
         specifier: 'catalog:'
         version: 4.3.4(picomatch@4.0.3)(svelte@5.53.5)(typescript@5.9.3)
       typescript:
-        specifier: ^5.5.0
+        specifier: 'catalog:'
         version: 5.9.3
       valibot:
         specifier: 'catalog:'
@@ -5019,8 +5025,8 @@ packages:
     resolution: {integrity: sha512-vkcDPrRZo1QZLbn5RLGPpg/WmIQ65qoWWhcGKf/b5eplkkarX0m9z8ppCat4mlOqUsWpyNuYgO3VRyrYHSzX5g==}
     engines: {node: '>= 0.8.0'}
 
-  prettier-plugin-svelte@3.4.0:
-    resolution: {integrity: sha512-pn1ra/0mPObzqoIQn/vUTR3ZZI6UuZ0sHqMK5x2jMLGrs53h0sXhkVuDcrlssHwIMk7FYrMjHBPoUSyyEEDlBQ==}
+  prettier-plugin-svelte@3.5.1:
+    resolution: {integrity: sha512-65+fr5+cgIKWKiqM1Doum4uX6bY8iFCdztvvp2RcF+AJoieaw9kJOFMNcJo/bkmKYsxFaM9OsVZK/gWauG/5mg==}
     peerDependencies:
       prettier: ^3.0.0
       svelte: ^3.2.0 || ^4.0.0-next.0 || ^5.0.0-next.0
@@ -5030,8 +5036,8 @@ packages:
     engines: {node: '>=10.13.0'}
     hasBin: true
 
-  prettier@3.6.0:
-    resolution: {integrity: sha512-ujSB9uXHJKzM/2GBuE0hBOUgC77CN3Bnpqa+g80bkv3T3A93wL/xlzDATHhnhkzifz/UE2SNOvmbTz5hSkDlHw==}
+  prettier@3.8.1:
+    resolution: {integrity: sha512-UOnG6LftzbdaHZcKoPFtOcCKztrQ57WkHDeRD9t/PTQtmT0NHSeWWepj6pS0z/N7+08BHFDQVUrfmfMRcZwbMg==}
     engines: {node: '>=14'}
     hasBin: true
 
@@ -9512,14 +9518,14 @@ snapshots:
 
   prelude-ls@1.2.1: {}
 
-  prettier-plugin-svelte@3.4.0(prettier@3.6.0)(svelte@5.53.5):
+  prettier-plugin-svelte@3.5.1(prettier@3.8.1)(svelte@5.53.5):
     dependencies:
-      prettier: 3.6.0
+      prettier: 3.8.1
       svelte: 5.53.5
 
   prettier@2.8.8: {}
 
-  prettier@3.6.0: {}
+  prettier@3.8.1: {}
 
   process-nextick-args@2.0.1: {}
 

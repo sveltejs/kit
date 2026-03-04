@@ -8,19 +8,11 @@
 	"pin": {
 		"enabled": false
 	},
-	"ignoreDeps": [
-		"@types/node",
-		"rollup",
-		"typescript"
-	],
+	"ignoreDeps": ["@types/node"],
 	"packageRules": [
 		{
-			"matchPackageNames": [
-				"vite"
-			],
-			"matchUpdateTypes": [
-				"major"
-			],
+			"matchPackageNames": ["vite"],
+			"matchUpdateTypes": ["major"],
 			"enabled": false
 		}
 	]
