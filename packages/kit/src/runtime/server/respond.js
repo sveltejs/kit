@@ -15,8 +15,8 @@ import {
 	method_not_allowed,
 	redirect_response
 } from './utils.js';
-import { decode_pathname, decode_params, disable_search, normalize_path } from '../../utils/url.js';
-import { exec } from '../../utils/routing.js';
+import { decode_pathname, disable_search, normalize_path } from '../../utils/url.js';
+import { find_route } from '../../utils/routing.js';
 import { redirect_json_response, render_data } from './data/index.js';
 import { add_cookies_to_headers, get_cookies } from './cookie.js';
 import { create_fetch } from './fetch.js';
@@ -39,6 +39,7 @@ import { server_data_serializer } from './page/data_serializer.js';
 import { get_remote_id, handle_remote_call } from './remote.js';
 import { record_span } from '../telemetry/record_span.js';
 import { otel } from '../telemetry/otel.js';
+import { MUTATIVE_METHODS } from '../../constants.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
 
@@ -309,18 +310,12 @@ export async function internal_respond(request, options, manifest, state) {
 	if (!state.prerendering?.fallback) {
 		// TODO this could theoretically break — should probably be inside a try-catch
 		const matchers = await manifest._.matchers();
+		const result = find_route(resolved_path, manifest._.routes, matchers);
 
-		for (const candidate of manifest._.routes) {
-			const match = candidate.pattern.exec(resolved_path);
-			if (!match) continue;
-
-			const matched = exec(match, candidate.params, matchers);
-			if (matched) {
-				route = candidate;
-				event.route = { id: route.id };
-				event.params = decode_params(matched);
-				break;
-			}
+		if (result) {
+			route = result.route;
+			event.route = { id: route.id };
+			event.params = result.params;
 		}
 	}
 
@@ -425,6 +420,7 @@ export async function internal_respond(request, options, manifest, state) {
 						current: root_span
 					}
 				};
+				event_state.allows_commands = MUTATIVE_METHODS.includes(request.method);
 				return await with_request_store({ event: traced_event, state: event_state }, () =>
 					options.hooks.handle({
 						event: traced_event,

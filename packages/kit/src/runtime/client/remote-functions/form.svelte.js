@@ -53,6 +53,7 @@ function merge_with_server_issues(form_data, current_issues, client_issues) {
  */
 export function form(id) {
 	/** @type {Map<any, { count: number, instance: RemoteForm<T, U> }>} */
+	// eslint-disable-next-line svelte/prefer-svelte-reactivity -- we don't need reactivity for this
 	const instances = new Map();
 
 	/** @param {string | number | boolean} [key] */
@@ -110,6 +111,10 @@ export function form(id) {
 
 			submitted = true;
 
+			// Increment pending count immediately so that `pending` reflects
+			// the in-progress state during async preflight validation
+			pending_count++;
+
 			const validated = await preflight_schema?.['~standard'].validate(data);
 
 			if (validated?.issues) {
@@ -118,7 +123,13 @@ export function form(id) {
 					raw_issues,
 					validated.issues.map((issue) => normalize_issue(issue, false))
 				);
+				pending_count--;
 				return;
+			}
+
+			// Preflight passed - clear stale client-side preflight issues
+			if (preflight_schema) {
+				raw_issues = raw_issues.filter((issue) => issue.server);
 			}
 
 			// TODO 3.0 remove this warning
@@ -174,9 +185,6 @@ export function form(id) {
 				entry.count++;
 			}
 
-			// Increment pending count when submission starts
-			pending_count++;
-
 			/** @type {Array<Query<any> | RemoteQueryOverride>} */
 			let updates = [];
 
@@ -193,6 +201,7 @@ export function form(id) {
 						method: 'POST',
 						headers: {
 							'Content-Type': BINARY_FORM_CONTENT_TYPE,
+							// Forms cannot be called during rendering, so it's save to use location here
 							'x-sveltekit-pathname': location.pathname,
 							'x-sveltekit-search': location.search
 						},
@@ -277,6 +286,7 @@ export function form(id) {
 
 				if (method !== 'post') return;
 
+				// eslint-disable-next-line svelte/prefer-svelte-reactivity
 				const action = new URL(
 					// We can't do submitter.formAction directly because that property is always set
 					event.submitter?.hasAttribute('formaction')
@@ -319,7 +329,8 @@ export function form(id) {
 
 				form.addEventListener('submit', onsubmit);
 
-				form.addEventListener('input', (e) => {
+				/** @param {Event} e */
+				const handle_input = (e) => {
 					// strictly speaking it can be an HTMLTextAreaElement or HTMLSelectElement
 					// but that makes the types unnecessarily awkward
 					const element = /** @type {HTMLInputElement} */ (e.target);
@@ -398,17 +409,24 @@ export function form(id) {
 					name = name.replace(/^[nb]:/, '');
 
 					touched[name] = true;
-				});
+				};
 
-				form.addEventListener('reset', async () => {
+				form.addEventListener('input', handle_input);
+
+				const handle_reset = async () => {
 					// need to wait a moment, because the `reset` event occurs before
 					// the inputs are actually updated (so that it can be cancelled)
 					await tick();
 
 					input = convert_formdata(new FormData(form));
-				});
+				};
+
+				form.addEventListener('reset', handle_reset);
 
 				return () => {
+					form.removeEventListener('submit', onsubmit);
+					form.removeEventListener('input', handle_input);
+					form.removeEventListener('reset', handle_reset);
 					element = null;
 					preflight_schema = undefined;
 				};
@@ -507,6 +525,7 @@ export function form(id) {
 							method: 'POST',
 							headers: {
 								'Content-Type': BINARY_FORM_CONTENT_TYPE,
+								// Validation should not be and will not be called during rendering, so it's save to use location here
 								'x-sveltekit-pathname': location.pathname,
 								'x-sveltekit-search': location.search
 							},

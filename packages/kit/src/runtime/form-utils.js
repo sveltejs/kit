@@ -245,7 +245,7 @@ export async function deserialize_binary_form(request) {
 	const data_buffer = await get_buffer(HEADER_BYTES, data_length);
 	if (!data_buffer) throw deserialize_error('data too short');
 
-	/** @type {Array<number>} */
+	/** @type {Array<number | undefined>} */
 	let file_offsets;
 	/** @type {number} */
 	let files_start_offset;
@@ -254,35 +254,75 @@ export async function deserialize_binary_form(request) {
 		const file_offsets_buffer = await get_buffer(HEADER_BYTES + data_length, file_offsets_length);
 		if (!file_offsets_buffer) throw deserialize_error('file offset table too short');
 
-		file_offsets = /** @type {Array<number>} */ (
-			JSON.parse(text_decoder.decode(file_offsets_buffer))
-		);
+		const parsed_offsets = JSON.parse(text_decoder.decode(file_offsets_buffer));
+
+		if (
+			!Array.isArray(parsed_offsets) ||
+			parsed_offsets.some((n) => typeof n !== 'number' || !Number.isInteger(n) || n < 0)
+		) {
+			throw deserialize_error('invalid file offset table');
+		}
+
+		file_offsets = /** @type {Array<number>} */ (parsed_offsets);
 		files_start_offset = HEADER_BYTES + data_length + file_offsets_length;
 	}
 
+	/** @type {Array<{ offset: number, size: number }>} */
+	const file_spans = [];
 	const [data, meta] = devalue.parse(text_decoder.decode(data_buffer), {
 		File: ([name, type, size, last_modified, index]) => {
-			if (files_start_offset + file_offsets[index] + size > content_length) {
+			if (
+				typeof name !== 'string' ||
+				typeof type !== 'string' ||
+				typeof size !== 'number' ||
+				typeof last_modified !== 'number' ||
+				typeof index !== 'number'
+			) {
+				throw deserialize_error('invalid file metadata');
+			}
+
+			let offset = file_offsets[index];
+
+			// Check that the file offset table entry has not been already
+			// used. If not, immediately mark it as used.
+			if (offset === undefined) {
+				throw deserialize_error('duplicate file offset table index');
+			}
+			file_offsets[index] = undefined;
+
+			offset += files_start_offset;
+			if (offset + size > content_length) {
 				throw deserialize_error('file data overflow');
 			}
-			return new Proxy(
-				new LazyFile(
-					name,
-					type,
-					size,
-					last_modified,
-					get_chunk,
-					files_start_offset + file_offsets[index]
-				),
-				{
-					getPrototypeOf() {
-						// Trick validators into thinking this is a normal File
-						return File.prototype;
-					}
+
+			file_spans.push({ offset, size });
+
+			return new Proxy(new LazyFile(name, type, size, last_modified, get_chunk, offset), {
+				getPrototypeOf() {
+					// Trick validators into thinking this is a normal File
+					return File.prototype;
 				}
-			);
+			});
 		}
 	});
+
+	// Sort file spans in increasing order primarily by offset
+	// and secondarily by size (to allow 0-length files).
+	file_spans.sort((a, b) => a.offset - b.offset || a.size - b.size);
+
+	// Check that file spans do not overlap and there are no gaps between them.
+	for (let i = 1; i < file_spans.length; i++) {
+		const previous = file_spans[i - 1];
+		const current = file_spans[i];
+
+		const previous_end = previous.offset + previous.size;
+		if (previous_end < current.offset) {
+			throw deserialize_error('gaps in file data');
+		}
+		if (previous_end > current.offset) {
+			throw deserialize_error('overlapping file data');
+		}
+	}
 
 	// Read the request body asyncronously so it doesn't stall
 	void (async () => {
@@ -377,7 +417,8 @@ class LazyFile {
 		return new ReadableStream({
 			start: async (controller) => {
 				let chunk_start = 0;
-				let start_chunk = null;
+				/** @type {Uint8Array} */
+				let start_chunk;
 				for (chunk_index = 0; ; chunk_index++) {
 					const chunk = await this.#get_chunk(chunk_index);
 					if (!chunk) return null;

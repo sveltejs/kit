@@ -8,7 +8,8 @@ const config = {
 
 	kit: {
 		experimental: {
-			remoteFunctions: true
+			remoteFunctions: true,
+			forkPreloads: true
 		}
 	}
 };

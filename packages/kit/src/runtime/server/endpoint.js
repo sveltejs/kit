@@ -41,9 +41,8 @@ export async function render_endpoint(event, event_state, mod, state) {
 		}
 	}
 
-	event_state.is_endpoint_request = true;
-
 	try {
+		event_state.allows_commands = true;
 		const response = await with_request_store({ event, state: event_state }, () =>
 			handler(/** @type {import('@sveltejs/kit').RequestEvent<Record<string, any>>} */ (event))
 		);

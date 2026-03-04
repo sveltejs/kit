@@ -11,7 +11,7 @@
 			fetch('/request-abort', { headers: { accept: 'application/json' } }).then(
 				async (r) => (result = await r.json())
 			);
-		}, 100);
+		}, 50);
 	}
 
 	onMount(test_abort);
