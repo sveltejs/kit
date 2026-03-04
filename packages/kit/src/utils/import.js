@@ -4,13 +4,13 @@ import path from 'node:path';
 /**
  * Resolves a peer dependency relative to the current working directory. Duplicated with `packages/adapter-auto`
  * @param {string} dependency
- * @param {string} cwd
+ * @param {string} root
  */
-function resolve_peer(dependency, cwd) {
+function resolve_peer(dependency, root) {
 	let [name, ...parts] = dependency.split('/');
 	if (name[0] === '@') name += `/${parts.shift()}`;
 
-	let dir = cwd;
+	let dir = root;
 
 	while (!fs.existsSync(`${dir}/node_modules/${name}/package.json`)) {
 		if (dir === (dir = path.dirname(dir))) {

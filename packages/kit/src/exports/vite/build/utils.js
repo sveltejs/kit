@@ -8,10 +8,10 @@ import { s } from '../../../utils/misc.js';
  * @param {import('vite').Manifest} manifest
  * @param {string} entry
  * @param {boolean} add_dynamic_css
- * @param {string} cwd
+ * @param {string} root
  * @returns {import('types').AssetDependencies}
  */
-export function find_deps(manifest, entry, add_dynamic_css, cwd) {
+export function find_deps(manifest, entry, add_dynamic_css, root) {
 	/** @type {Set<string>} */
 	const seen = new Set();
 
@@ -37,7 +37,7 @@ export function find_deps(manifest, entry, add_dynamic_css, cwd) {
 		if (seen.has(current)) return;
 		seen.add(current);
 
-		const { chunk } = resolve_symlinks(manifest, current, cwd);
+		const { chunk } = resolve_symlinks(manifest, current, root);
 
 		if (add_js) imports.add(chunk.file);
 
@@ -83,7 +83,7 @@ export function find_deps(manifest, entry, add_dynamic_css, cwd) {
 		}
 	}
 
-	const { chunk, file } = resolve_symlinks(manifest, entry, cwd);
+	const { chunk, file } = resolve_symlinks(manifest, entry, root);
 
 	traverse(file, true, entry, 0);
 
