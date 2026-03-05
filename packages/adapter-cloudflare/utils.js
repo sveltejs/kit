@@ -81,7 +81,7 @@ export function parse_redirects(file_contents) {
 /**
  * Generates the [_routes.json](https://developers.cloudflare.com/pages/functions/routing/#create-a-_routesjson-file)
  * file that dictates which routes invoke the Cloudflare Worker.
- * @param {Builder2_0_0} builder
+ * @param {import('@sveltejs/kit').Builder} builder
  * @param {string[]} client_assets
  * @param {string[]} redirects
  * @param {import('./index.js').AdapterOptions['routes']} routes
