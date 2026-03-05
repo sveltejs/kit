@@ -7,21 +7,8 @@ import { nodeFileTrace } from '@vercel/nft';
 import { build } from 'rolldown';
 import { get_pathname, parse_isr_expiration, pattern_to_src, resolve_runtime } from './utils.js';
 
-/**
- * @template T
- * @template {keyof T} K
- * @typedef {Partial<Omit<T, K>> & Required<Pick<T, K>>} PartialExcept
- */
-
-/**
- * We use a custom `Builder` type here to support the minimum version of SvelteKit.
- * @typedef {PartialExcept<import('@sveltejs/kit').Builder, 'log' | 'rimraf' | 'mkdirp' | 'config' | 'prerendered' | 'routes' | 'createEntries' | 'findServerAssets' | 'generateFallback' | 'generateEnvModule' | 'generateManifest' | 'getBuildDirectory' | 'getClientDirectory' | 'getServerDirectory' | 'getAppPath' | 'writeClient' | 'writePrerendered' | 'writePrerendered' | 'writeServer' | 'copy' | 'compress'>} Builder2_4_0
- */
-
 const name = '@sveltejs/adapter-vercel';
 const INTERNAL = '![-]'; // this name is guaranteed not to conflict with user routes
-
-const [kit_major, kit_minor] = VERSION.split('.');
 
 // https://vercel.com/docs/functions/edge-functions/edge-runtime#compatible-node.js-modules
 const compatible_node_modules = ['async_hooks', 'events', 'buffer', 'assert', 'util'];
@@ -61,7 +48,7 @@ const plugin = function (defaults = {}) {
 
 	return {
 		name,
-		/** @param {Builder2_4_0} builder */
+		/** @param {import('@sveltejs/kit').Builder} builder */
 		async adapt(builder) {
 			if (!builder.routes) {
 				throw new Error(
@@ -113,8 +100,8 @@ const plugin = function (defaults = {}) {
 						MANIFEST: './manifest.js'
 					}
 				});
-				if (builder.hasServerInstrumentationFile?.()) {
-					builder.instrument?.({
+				if (builder.hasServerInstrumentationFile()) {
+					builder.instrument({
 						entrypoint: `${tmp}/index.js`,
 						instrumentation: `${builder.getServerDirectory()}/instrumentation.server.js`
 					});
@@ -180,7 +167,7 @@ const plugin = function (defaults = {}) {
 								file: `${outdir}/index.js`
 							}
 						}),
-						builder.hasServerInstrumentationFile?.() &&
+						builder.hasServerInstrumentationFile() &&
 							build({
 								...build_config,
 								input: `${builder.getServerDirectory()}/instrumentation.server.js`,
@@ -191,8 +178,8 @@ const plugin = function (defaults = {}) {
 							})
 					]);
 
-					if (builder.hasServerInstrumentationFile?.()) {
-						builder.instrument?.({
+					if (builder.hasServerInstrumentationFile()) {
+						builder.instrument({
 							entrypoint: `${outdir}/index.js`,
 							instrumentation: `${outdir}/instrumentation.server.js`,
 							module: {
@@ -458,8 +445,7 @@ const plugin = function (defaults = {}) {
 				}
 			}
 
-			// optional chaining to support older versions that don't have this setting yet
-			if (builder.config.kit.router?.resolution === 'server') {
+			if (builder.config.kit.router.resolution === 'server') {
 				// Create a separate edge function just for server-side route resolution.
 				// By omitting all routes we're ensuring it's small (the routes will still be available
 				// to the route resolution, because it does not rely on the server routing manifest)
@@ -488,18 +474,7 @@ const plugin = function (defaults = {}) {
 		},
 
 		supports: {
-			read: ({ config, route }) => {
-				const runtime = config.runtime ?? defaults.runtime;
-
-				// TODO bump peer dep in next adapter major to simplify this
-				if (runtime === 'edge' && kit_major === '2' && kit_minor < '25') {
-					throw new Error(
-						`${name}: Cannot use \`read\` from \`$app/server\` in route \`${route.id}\` configured with \`runtime: 'edge'\` and SvelteKit < 2.25.0`
-					);
-				}
-
-				return true;
-			},
+			read: () => true,
 			instrumentation: () => true
 		}
 	};
@@ -533,7 +508,7 @@ function write(file, data) {
 
 // This function is duplicated in adapter-static
 /**
- * @param {Builder2_4_0} builder
+ * @param {import('@sveltejs/kit').Builder} builder
  * @param {import('./index.js').Config} config
  * @param {string} dir
  */
@@ -671,7 +646,7 @@ function static_vercel_config(builder, config, dir) {
 }
 
 /**
- * @param {Builder2_4_0} builder
+ * @param {import('@sveltejs/kit').Builder} builder
  * @param {string} entry
  * @param {string} dir
  * @param {import('./index.js').ServerlessConfig} config
@@ -792,18 +767,10 @@ async function create_function_bundle(builder, entry, dir, config) {
 }
 
 /**
- *
- * @param {Builder2_4_0} builder
- * @param {any} vercel_config
+ * @param {import('@sveltejs/kit').Builder} builder
+ * @param {any} vercel_config see https://vercel.com/docs/project-configuration/vercel-json
  */
 function validate_vercel_json(builder, vercel_config) {
-	if (builder.routes.length > 0 && !builder.routes[0].api) {
-		// bail — we're on an older SvelteKit version that doesn't
-		// populate `route.api.methods`, so we can't check
-		// to see if cron paths are valid
-		return;
-	}
-
 	const crons = /** @type {Array<unknown>} */ (
 		Array.isArray(vercel_config?.crons) ? vercel_config.crons : []
 	);
