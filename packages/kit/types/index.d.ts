@@ -490,38 +490,38 @@ declare module '@sveltejs/kit' {
 		};
 		/**
 		 * Where to find various files within your project.
-		 * @deprecated This feature is still supported but no longer recommended. Use [monorepositories](https://levelup.video/tutorials/monorepos-with-pnpm) instead
+		 * @deprecated this feature is still supported, but it's generally recommended to use [monorepos](https://levelup.video/tutorials/monorepos-with-pnpm) instead
 		 */
 		files?: {
 			/**
 			 * The location of your source code.
-			 * @deprecated This feature is still supported but no longer recommended. Use [monorepositories](https://levelup.video/tutorials/monorepos-with-pnpm) instead
+			 * @deprecated this feature is still supported, but it's generally recommended to use [monorepos](https://levelup.video/tutorials/monorepos-with-pnpm) instead
 			 * @default "src"
 			 * @since 2.28
 			 */
 			src?: string;
 			/**
 			 * A place to put static files that should have stable URLs and undergo no processing, such as `favicon.ico` or `manifest.json`.
-			 * @deprecated This feature is still supported but no longer recommended. Use [monorepositories](https://levelup.video/tutorials/monorepos-with-pnpm) instead
+			 * @deprecated this feature is still supported, but it's generally recommended to use [monorepos](https://levelup.video/tutorials/monorepos-with-pnpm) instead
 			 * @default "static"
 			 */
 			assets?: string;
 			hooks?: {
 				/**
 				 * The location of your client [hooks](https://svelte.dev/docs/kit/hooks).
-				 * @deprecated This feature is still supported but no longer recommended. Use [monorepositories](https://levelup.video/tutorials/monorepos-with-pnpm) instead
+				 * @deprecated this feature is still supported, but it's generally recommended to use [monorepos](https://levelup.video/tutorials/monorepos-with-pnpm) instead
 				 * @default "src/hooks.client"
 				 */
 				client?: string;
 				/**
 				 * The location of your server [hooks](https://svelte.dev/docs/kit/hooks).
-				 * @deprecated This feature is still supported but no longer recommended. Use [monorepositories](https://levelup.video/tutorials/monorepos-with-pnpm) instead
+				 * @deprecated this feature is still supported, but it's generally recommended to use [monorepos](https://levelup.video/tutorials/monorepos-with-pnpm) instead
 				 * @default "src/hooks.server"
 				 */
 				server?: string;
 				/**
 				 * The location of your universal [hooks](https://svelte.dev/docs/kit/hooks).
-				 * @deprecated This feature is still supported but no longer recommended. Use [monorepositories](https://levelup.video/tutorials/monorepos-with-pnpm) instead
+				 * @deprecated this feature is still supported, but it's generally recommended to use [monorepos](https://levelup.video/tutorials/monorepos-with-pnpm) instead
 				 * @default "src/hooks"
 				 * @since 2.3.0
 				 */
@@ -529,37 +529,37 @@ declare module '@sveltejs/kit' {
 			};
 			/**
 			 * Your app's internal library, accessible throughout the codebase as `$lib`.
-			 * @deprecated This feature is still supported but no longer recommended. Use [monorepositories](https://levelup.video/tutorials/monorepos-with-pnpm) instead
+			 * @deprecated this feature is still supported, but it's generally recommended to use [monorepos](https://levelup.video/tutorials/monorepos-with-pnpm) instead
 			 * @default "src/lib"
 			 */
 			lib?: string;
 			/**
 			 * A directory containing [parameter matchers](https://svelte.dev/docs/kit/advanced-routing#Matching).
-			 * @deprecated This feature is still supported but no longer recommended. Use [monorepositories](https://levelup.video/tutorials/monorepos-with-pnpm) instead
+			 * @deprecated this feature is still supported, but it's generally recommended to use [monorepos](https://levelup.video/tutorials/monorepos-with-pnpm) instead
 			 * @default "src/params"
 			 */
 			params?: string;
 			/**
 			 * The files that define the structure of your app (see [Routing](https://svelte.dev/docs/kit/routing)).
-			 * @deprecated This feature is still supported but no longer recommended. Use [monorepositories](https://levelup.video/tutorials/monorepos-with-pnpm) instead
+			 * @deprecated this feature is still supported, but it's generally recommended to use [monorepos](https://levelup.video/tutorials/monorepos-with-pnpm) instead
 			 * @default "src/routes"
 			 */
 			routes?: string;
 			/**
 			 * The location of your service worker's entry point (see [Service workers](https://svelte.dev/docs/kit/service-workers)).
-			 * @deprecated This feature is still supported but no longer recommended. Use [monorepositories](https://levelup.video/tutorials/monorepos-with-pnpm) instead
+			 * @deprecated this feature is still supported, but it's generally recommended to use [monorepos](https://levelup.video/tutorials/monorepos-with-pnpm) instead
 			 * @default "src/service-worker"
 			 */
 			serviceWorker?: string;
 			/**
 			 * The location of the template for HTML responses.
-			 * @deprecated This feature is still supported but no longer recommended. Use [monorepositories](https://levelup.video/tutorials/monorepos-with-pnpm) instead
+			 * @deprecated this feature is still supported, but it's generally recommended to use [monorepos](https://levelup.video/tutorials/monorepos-with-pnpm) instead
 			 * @default "src/app.html"
 			 */
 			appTemplate?: string;
 			/**
 			 * The location of the template for fallback error responses.
-			 * @deprecated This feature is still supported but no longer recommended. Use [monorepositories](https://levelup.video/tutorials/monorepos-with-pnpm) instead
+			 * @deprecated this feature is still supported, but it's generally recommended to use [monorepos](https://levelup.video/tutorials/monorepos-with-pnpm) instead
 			 * @default "src/error.html"
 			 */
 			errorTemplate?: string;
