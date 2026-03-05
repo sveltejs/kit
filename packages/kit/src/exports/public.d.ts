@@ -516,7 +516,7 @@ export interface KitConfig {
 	};
 	/**
 	 * Where to find various files within your project.
-	 * @deprecated This feature is still supported but no longer recommended. Use [monorepositories](https://levelup.video/tutorials/monorepos-with-pnpm) instead
+	 * @deprecated this feature is still supported, but it's generally recommended to use [monorepos](https://levelup.video/tutorials/monorepos-with-pnpm) instead
 	 */
 	files?: {
 		/**
