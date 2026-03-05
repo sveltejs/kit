@@ -33,7 +33,7 @@ export function image_plugin(imagetools_plugin) {
 			}
 			const api = svelteConfigPlugin.api;
 			// @ts-expect-error plugin.transform is defined below before configResolved is called
-			plugin.transform.filter.id = (api.filter ?? api.idFilter).id; // TODO: idFilter was used by earlier versions of vite-plugin-svelte@6, remove when @7 is required
+			plugin.transform.filter.id = api.filter.id;
 		},
 		transform: {
 			order: 'pre', // puts it before vite-plugin-svelte:compile
