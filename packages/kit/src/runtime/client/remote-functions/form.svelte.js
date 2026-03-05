@@ -302,7 +302,7 @@ export function form(id) {
 					? /** @type {HTMLButtonElement | HTMLInputElement} */ (event.submitter).formTarget
 					: clone(form).target;
 
-				if (target && target !== '_self') {
+				if (target === '_blank') {
 					return;
 				}
 
