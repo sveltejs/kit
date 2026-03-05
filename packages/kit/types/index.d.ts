@@ -1204,7 +1204,7 @@ declare module '@sveltejs/kit' {
 		 */
 		to: NavigationTarget | null;
 		/**
-		 * Whether or not the navigation will result in the page being unloaded (i.e. not a client-side navigation)
+		 * Whether or not the navigation will result in the page being unloaded (i.e. not a client-side navigation).
 		 */
 		willUnload: boolean;
 		/**
@@ -1217,11 +1217,7 @@ declare module '@sveltejs/kit' {
 	export interface NavigationEnter extends NavigationBase {
 		/**
 		 * The type of navigation:
-		 * - `form`: The user submitted a `<form method="GET">`
-		 * - `leave`: The app is being left either because the tab is being closed or a navigation to a different document is occurring
-		 * - `link`: Navigation was triggered by a link click
-		 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
-		 * - `popstate`: Navigation was triggered by back/forward navigation
+		 * - `enter`: The app has hydrated/started
 		 */
 		type: 'enter';
 
@@ -1236,16 +1232,29 @@ declare module '@sveltejs/kit' {
 		event?: undefined;
 	}
 
-	export interface NavigationExternal extends NavigationBase {
+	export type NavigationExternal = NavigationGoto | NavigationLeave;
+
+	export interface NavigationGoto extends NavigationBase {
 		/**
 		 * The type of navigation:
-		 * - `form`: The user submitted a `<form method="GET">`
-		 * - `leave`: The app is being left either because the tab is being closed or a navigation to a different document is occurring
-		 * - `link`: Navigation was triggered by a link click
 		 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
-		 * - `popstate`: Navigation was triggered by back/forward navigation
 		 */
-		type: Exclude<NavigationType, 'enter' | 'popstate' | 'link' | 'form'>;
+		type: 'goto';
+
+		// TODO 3.0 remove this property, so that it only exists when type is 'popstate'
+		// (would possibly be a breaking change to do it prior to that)
+		/**
+		 * In case of a history back/forward navigation, the number of steps to go back/forward
+		 */
+		delta?: undefined;
+	}
+
+	export interface NavigationLeave extends NavigationBase {
+		/**
+		 * The type of navigation:
+		 * - `leave`: The app is being left either because the tab is being closed or a navigation to a different document is occurring
+		 */
+		type: 'leave';
 
 		// TODO 3.0 remove this property, so that it only exists when type is 'popstate'
 		// (would possibly be a breaking change to do it prior to that)
@@ -1259,10 +1268,6 @@ declare module '@sveltejs/kit' {
 		/**
 		 * The type of navigation:
 		 * - `form`: The user submitted a `<form method="GET">`
-		 * - `leave`: The app is being left either because the tab is being closed or a navigation to a different document is occurring
-		 * - `link`: Navigation was triggered by a link click
-		 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
-		 * - `popstate`: Navigation was triggered by back/forward navigation
 		 */
 		type: 'form';
 
@@ -1282,10 +1287,6 @@ declare module '@sveltejs/kit' {
 	export interface NavigationPopState extends NavigationBase {
 		/**
 		 * The type of navigation:
-		 * - `form`: The user submitted a `<form method="GET">`
-		 * - `leave`: The app is being left either because the tab is being closed or a navigation to a different document is occurring
-		 * - `link`: Navigation was triggered by a link click
-		 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
 		 * - `popstate`: Navigation was triggered by back/forward navigation
 		 */
 		type: 'popstate';
@@ -1304,11 +1305,7 @@ declare module '@sveltejs/kit' {
 	export interface NavigationLink extends NavigationBase {
 		/**
 		 * The type of navigation:
-		 * - `form`: The user submitted a `<form method="GET">`
-		 * - `leave`: The app is being left either because the tab is being closed or a navigation to a different document is occurring
 		 * - `link`: Navigation was triggered by a link click
-		 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
-		 * - `popstate`: Navigation was triggered by back/forward navigation
 		 */
 		type: 'link';
 
@@ -1345,13 +1342,6 @@ declare module '@sveltejs/kit' {
 	 * The argument passed to [`onNavigate`](https://svelte.dev/docs/kit/$app-navigation#onNavigate) callbacks.
 	 */
 	export type OnNavigate = Navigation & {
-		/**
-		 * The type of navigation:
-		 * - `form`: The user submitted a `<form method="GET">`
-		 * - `link`: Navigation was triggered by a link click
-		 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
-		 * - `popstate`: Navigation was triggered by back/forward navigation
-		 */
 		type: Exclude<NavigationType, 'enter' | 'leave'>;
 		/**
 		 * Since `onNavigate` callbacks are called immediately before a client-side navigation, they will never be called with a navigation that unloads the page.
@@ -1363,14 +1353,6 @@ declare module '@sveltejs/kit' {
 	 * The argument passed to [`afterNavigate`](https://svelte.dev/docs/kit/$app-navigation#afterNavigate) callbacks.
 	 */
 	export type AfterNavigate = (Navigation | NavigationEnter) & {
-		/**
-		 * The type of navigation:
-		 * - `enter`: The app has hydrated/started
-		 * - `form`: The user submitted a `<form method="GET">`
-		 * - `link`: Navigation was triggered by a link click
-		 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
-		 * - `popstate`: Navigation was triggered by back/forward navigation
-		 */
 		type: Exclude<NavigationType, 'leave'>;
 		/**
 		 * Since `afterNavigate` callbacks are called after a navigation completes, they will never be called with a navigation that unloads the page.
