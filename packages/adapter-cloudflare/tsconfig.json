@@ -20,6 +20,7 @@
 		"utils.js",
 		"utils.spec.js",
 		"rolldown.config.js",
+		"vitest.config.js",
 		"test/utils.js",
 		"internal.d.ts",
 		"src/worker.js"

@@ -1,7 +1,6 @@
 import { lookup } from 'mrmime';
 import fs from 'node:fs';
 import path from 'node:path';
-import process from 'node:process';
 import { styleText } from 'node:util';
 import { posixify, resolve_entry } from '../../../utils/filesystem.js';
 import { parse_route_id } from '../../../utils/routing.js';
@@ -17,14 +16,14 @@ import {
  * @param {{
  *   config: import('types').ValidatedConfig;
  *   fallback?: string;
- *   cwd?: string;
+ *   cwd: string;
  * }} opts
  * @returns {import('types').ManifestData}
  */
 export default function create_manifest_data({
 	config,
 	fallback = `${runtime_directory}/components`,
-	cwd = process.cwd()
+	cwd
 }) {
 	const assets = create_assets(config);
 	const hooks = create_hooks(config, cwd);
@@ -114,8 +113,8 @@ function create_matchers(config, cwd) {
 }
 
 /**
- * @param {import('types').ValidatedConfig} config
  * @param {string} cwd
+ * @param {import('types').ValidatedConfig} config
  * @param {string} fallback
  */
 function create_routes_and_nodes(cwd, config, fallback) {
@@ -418,7 +417,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 
 	const indexes = new Map(nodes.map((node, i) => [node, i]));
 
-	const node_analyser = create_node_analyser();
+	const node_analyser = create_node_analyser(cwd);
 
 	for (const route of routes) {
 		if (!route.leaf) continue;
@@ -470,7 +469,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 
 	for (const route of routes) {
 		if (route.endpoint) {
-			route.endpoint.page_options = get_page_options(route.endpoint.file);
+			route.endpoint.page_options = get_page_options(route.endpoint.file, cwd);
 		}
 	}
 

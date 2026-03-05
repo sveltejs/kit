@@ -17,6 +17,7 @@
 	"include": [
 		"index.js",
 		"rolldown.config.js",
+		"vitest.config.js",
 		"src/**/*.js",
 		"tests/**/*.js",
 		"tests/**/*.ts",

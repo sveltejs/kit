@@ -15,6 +15,7 @@ import { fix_css_urls } from '../../../utils/css.js';
  * @param {string | null} assets_path
  * @param {import('vite').Rollup.RollupOutput['output'] | null} client_chunks
  * @param {import('types').RecursiveRequired<import('types').ValidatedConfig['kit']['output']>} output_config
+ * @param {string} root
  */
 export function build_server_nodes(
 	out,
@@ -24,7 +25,8 @@ export function build_server_nodes(
 	client_manifest,
 	assets_path,
 	client_chunks,
-	output_config
+	output_config,
+	root
 ) {
 	mkdirp(`${out}/server/nodes`);
 	mkdirp(`${out}/server/stylesheets`);
@@ -113,7 +115,7 @@ export function build_server_nodes(
 			exports.push(
 				'let component_cache;',
 				`export const component = async () => component_cache ??= (await import('../${
-					resolve_symlinks(server_manifest, node.component).chunk.file
+					resolve_symlinks(server_manifest, node.component, root).chunk.file
 				}')).default;`
 			);
 		}
@@ -123,7 +125,7 @@ export function build_server_nodes(
 				exports.push(`export const universal = ${s(node.page_options, null, 2)};`);
 			} else {
 				imports.push(
-					`import * as universal from '../${resolve_symlinks(server_manifest, node.universal).chunk.file}';`
+					`import * as universal from '../${resolve_symlinks(server_manifest, node.universal, root).chunk.file}';`
 				);
 				// TODO: when building for analysis, explain why the file was loaded on the server if we fail to load it
 				exports.push('export { universal };');
@@ -133,7 +135,7 @@ export function build_server_nodes(
 
 		if (node.server) {
 			imports.push(
-				`import * as server from '../${resolve_symlinks(server_manifest, node.server).chunk.file}';`
+				`import * as server from '../${resolve_symlinks(server_manifest, node.server, root).chunk.file}';`
 			);
 			exports.push('export { server };');
 			exports.push(`export const server_id = ${s(node.server)};`);
@@ -145,7 +147,7 @@ export function build_server_nodes(
 			output_config.bundleStrategy === 'split'
 		) {
 			const entry_path = `${normalizePath(kit.outDir)}/generated/client-optimized/nodes/${i}.js`;
-			const entry = find_deps(client_manifest, entry_path, true);
+			const entry = find_deps(client_manifest, entry_path, true, root);
 
 			// Eagerly load client stylesheets and fonts imported by the SSR-ed page to avoid FOUC.
 			// However, if it is not used during SSR (not present in the server manifest),
@@ -154,13 +156,13 @@ export function build_server_nodes(
 			/** @type {import('types').AssetDependencies | undefined} */
 			let component;
 			if (node.component) {
-				component = find_deps(server_manifest, node.component, true);
+				component = find_deps(server_manifest, node.component, true, root);
 			}
 
 			/** @type {import('types').AssetDependencies | undefined} */
 			let universal;
 			if (node.universal) {
-				universal = find_deps(server_manifest, node.universal, true);
+				universal = find_deps(server_manifest, node.universal, true, root);
 			}
 
 			/** @type {Set<string>} */

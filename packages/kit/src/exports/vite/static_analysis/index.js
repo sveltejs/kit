@@ -1,3 +1,4 @@
+import path from 'node:path';
 import { tsPlugin } from '@sveltejs/acorn-typescript';
 import { Parser } from 'acorn';
 import { read } from '../../../utils/filesystem.js';
@@ -213,11 +214,13 @@ function get_name(node) {
 /**
  * Reads and statically analyses a file for page options
  * @param {string} filepath
+ * @param {string} root The project root directory
  * @returns {PageOptions | null} Returns the page options for the file or `null` if unanalysable
  */
-export function get_page_options(filepath) {
+export function get_page_options(filepath, root) {
+	const input = read(path.resolve(root, filepath));
+
 	try {
-		const input = read(filepath);
 		const page_options = statically_analyse_page_options(filepath, input);
 		if (page_options === null) {
 			return null;
@@ -229,7 +232,10 @@ export function get_page_options(filepath) {
 	}
 }
 
-export function create_node_analyser() {
+/**
+ * @param {string} root
+ */
+export function create_node_analyser(root) {
 	const static_exports = new Map();
 
 	/**
@@ -273,7 +279,7 @@ export function create_node_analyser() {
 		}
 
 		if (node.server) {
-			const server_page_options = get_page_options(node.server);
+			const server_page_options = get_page_options(node.server, root);
 			if (server_page_options === null) {
 				cache(key, null);
 				return null;
@@ -282,7 +288,7 @@ export function create_node_analyser() {
 		}
 
 		if (node.universal) {
-			const universal_page_options = get_page_options(node.universal);
+			const universal_page_options = get_page_options(node.universal, root);
 			if (universal_page_options === null) {
 				cache(key, null);
 				return null;

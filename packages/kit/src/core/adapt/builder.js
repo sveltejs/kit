@@ -147,7 +147,8 @@ export function create_builder({
 								prerendered: [],
 								relative_path: relativePath,
 								routes: Array.from(filtered),
-								remotes
+								remotes,
+								root: vite_config.root
 							})
 					});
 				}
@@ -157,7 +158,8 @@ export function create_builder({
 		findServerAssets(route_data) {
 			return find_server_assets(
 				build_data,
-				route_data.map((route) => /** @type {import('types').RouteData} */ (lookup.get(route)))
+				route_data.map((route) => /** @type {import('types').RouteData} */ (lookup.get(route))),
+				vite_config.root
 			);
 		},
 
@@ -167,7 +169,8 @@ export function create_builder({
 
 			const fallback = await generate_fallback({
 				manifest_path,
-				env: { ...env.private, ...env.public }
+				env: { ...env.private, ...env.public },
+				root: vite_config.root
 			});
 
 			if (existsSync(dest)) {
@@ -197,7 +200,8 @@ export function create_builder({
 				routes: subset
 					? subset.map((route) => /** @type {import('types').RouteData} */ (lookup.get(route)))
 					: route_data.filter((route) => prerender_map.get(route.id) !== true),
-				remotes
+				remotes,
+				root: vite_config.root
 			});
 		},
 

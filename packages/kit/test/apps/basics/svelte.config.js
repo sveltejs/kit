@@ -72,6 +72,12 @@ const config = {
 
 		router: {
 			resolution: /** @type {'client' | 'server'} */ (process.env.ROUTER_RESOLUTION) || 'client'
+		},
+
+		typescript: {
+			config: (config) => {
+				config.include.push('../unit-test');
+			}
 		}
 	},
 

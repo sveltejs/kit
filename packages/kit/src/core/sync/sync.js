@@ -1,4 +1,5 @@
 import path from 'node:path';
+import process from 'node:process';
 import create_manifest_data from './create_manifest_data/index.js';
 import { write_client_manifest } from './write_client_manifest.js';
 import { write_root } from './write_root.js';
@@ -16,25 +17,27 @@ import {
  * Initialize SvelteKit's generated files that only depend on the config and mode.
  * @param {import('types').ValidatedConfig} config
  * @param {string} mode
+ * @param {string} root The project root directory
  */
-export function init(config, mode) {
-	write_tsconfig(config.kit);
+export function init(config, mode, root) {
+	write_tsconfig(config.kit, root);
 	write_ambient(config.kit, mode);
 }
 
 /**
  * Update SvelteKit's generated files
  * @param {import('types').ValidatedConfig} config
+ * @param {string} root The project root directory
  */
-export function create(config) {
-	const manifest_data = create_manifest_data({ config });
+export function create(config, root) {
+	const manifest_data = create_manifest_data({ config, cwd: root });
 
 	const output = path.join(config.kit.outDir, 'generated');
 
 	write_client_manifest(config.kit, manifest_data, `${output}/client`);
-	write_server(config, output);
+	write_server(config, output, root);
 	write_root(manifest_data, output);
-	write_all_types(config, manifest_data);
+	write_all_types(config, manifest_data, root);
 	write_non_ambient(config.kit, manifest_data);
 
 	return { manifest_data };
@@ -47,9 +50,10 @@ export function create(config) {
  * @param {import('types').ValidatedConfig} config
  * @param {import('types').ManifestData} manifest_data
  * @param {string} file
+ * @param {string} root The project root directory
  */
-export function update(config, manifest_data, file) {
-	const node_analyser = create_node_analyser();
+export function update(config, manifest_data, file, root) {
+	const node_analyser = create_node_analyser(root);
 
 	for (const node of manifest_data.nodes) {
 		node.page_options = node_analyser.get_page_options(node);
@@ -57,11 +61,11 @@ export function update(config, manifest_data, file) {
 
 	for (const route of manifest_data.routes) {
 		if (route.endpoint) {
-			route.endpoint.page_options = get_page_options(route.endpoint.file);
+			route.endpoint.page_options = get_page_options(route.endpoint.file, root);
 		}
 	}
 
-	write_types(config, manifest_data, file);
+	write_types(config, manifest_data, file, root);
 	write_non_ambient(config.kit, manifest_data);
 }
 
@@ -69,10 +73,11 @@ export function update(config, manifest_data, file) {
  * Run sync.init and sync.create in series, returning the result from sync.create.
  * @param {import('types').ValidatedConfig} config
  * @param {string} mode The Vite mode
+ * @param {string} root The project root directory
  */
-export function all(config, mode) {
-	init(config, mode);
-	return create(config);
+export function all(config, mode, root) {
+	init(config, mode, root);
+	return create(config, root);
 }
 
 /**
@@ -81,16 +86,18 @@ export function all(config, mode) {
  * @param {string} mode The Vite mode
  */
 export function all_types(config, mode) {
-	init(config, mode);
-	const manifest_data = create_manifest_data({ config });
-	write_all_types(config, manifest_data);
+	const cwd = process.cwd();
+	init(config, mode, cwd);
+	const manifest_data = create_manifest_data({ config, cwd });
+	write_all_types(config, manifest_data, cwd);
 	write_non_ambient(config.kit, manifest_data);
 }
 
 /**
  * Regenerate __SERVER__/internal.js in response to src/{app.html,error.html,service-worker.js} changing
  * @param {import('types').ValidatedConfig} config
+ * @param {string} root The project root directory
  */
-export function server(config) {
-	write_server(config, path.join(config.kit.outDir, 'generated'));
+export function server(config, root) {
+	write_server(config, path.join(config.kit.outDir, 'generated'), root);
 }

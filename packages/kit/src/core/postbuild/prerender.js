@@ -31,10 +31,11 @@ const SPECIAL_HASHLINKS = new Set(['', 'top']);
  *   manifest_path: string;
  *   metadata: import('types').ServerMetadata;
  *   verbose: boolean;
- *   env: Record<string, string>
+ *   env: Record<string, string>;
+ *   root: string;
  * }} opts
  */
-async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
+async function prerender({ hash, out, manifest_path, metadata, verbose, env, root }) {
 	/** @type {import('@sveltejs/kit').SSRManifest} */
 	const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
 
@@ -99,12 +100,13 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 	const prerendered_routes = new Set();
 
 	/** @type {import('types').ValidatedKitConfig} */
-	const config = (await load_config()).kit;
+	const config = (await load_config({ cwd: root })).kit;
 
 	if (hash) {
 		const fallback = await generate_fallback({
 			manifest_path,
-			env
+			env,
+			root
 		});
 
 		const file = output_filename('/', true);

@@ -1,6 +1,5 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import process from 'node:process';
 import { styleText } from 'node:util';
 import { posixify } from '../../utils/filesystem.js';
 import { write_if_changed } from './utils.js';
@@ -17,10 +16,11 @@ function maybe_file(cwd, file) {
 }
 
 /**
+ * @param {string} cwd
  * @param {string} file
  */
-function project_relative(file) {
-	return posixify(path.relative('.', file));
+function project_relative(cwd, file) {
+	return posixify(path.relative(cwd, file));
 }
 
 /**
@@ -37,21 +37,23 @@ function remove_trailing_slashstar(file) {
 /**
  * Generates the tsconfig that the user's tsconfig inherits from.
  * @param {import('types').ValidatedKitConfig} kit
+ * @param {string} cwd
  */
-export function write_tsconfig(kit, cwd = process.cwd()) {
+export function write_tsconfig(kit, cwd) {
 	const out = path.join(kit.outDir, 'tsconfig.json');
 
 	const user_config = load_user_tsconfig(cwd);
 	if (user_config) validate_user_config(cwd, out, user_config);
 
-	write_if_changed(out, JSON.stringify(get_tsconfig(kit), null, '\t'));
+	write_if_changed(out, JSON.stringify(get_tsconfig(kit, cwd), null, '\t'));
 }
 
 /**
  * Generates the tsconfig that the user's tsconfig inherits from.
  * @param {import('types').ValidatedKitConfig} kit
+ * @param {string} cwd
  */
-export function get_tsconfig(kit) {
+export function get_tsconfig(kit, cwd) {
 	/** @param {string} file */
 	const config_relative = (file) => posixify(path.relative(kit.outDir, file));
 
@@ -75,11 +77,11 @@ export function get_tsconfig(kit) {
 
 	// Test folder is a special case - we advocate putting tests in a top-level test folder
 	// and it's not configurable (should we make it?)
-	const test_folder = project_relative('test');
+	const test_folder = project_relative(cwd, 'test');
 	include.add(config_relative(`${test_folder}/**/*.js`));
 	include.add(config_relative(`${test_folder}/**/*.ts`));
 	include.add(config_relative(`${test_folder}/**/*.svelte`));
-	const tests_folder = project_relative('tests');
+	const tests_folder = project_relative(cwd, 'tests');
 	include.add(config_relative(`${tests_folder}/**/*.js`));
 	include.add(config_relative(`${tests_folder}/**/*.ts`));
 	include.add(config_relative(`${tests_folder}/**/*.svelte`));
@@ -102,7 +104,7 @@ export function get_tsconfig(kit) {
 		compilerOptions: {
 			// generated options
 			paths: {
-				...get_tsconfig_paths(kit),
+				...get_tsconfig_paths(kit, cwd),
 				'$app/types': ['./types/index.d.ts']
 			},
 			rootDirs: [config_relative('.'), './types'],
@@ -176,7 +178,7 @@ function validate_user_config(cwd, out, config) {
 			);
 		}
 	} else {
-		let relative = posixify(path.relative('.', out));
+		let relative = posixify(path.relative(cwd, out));
 		if (!relative.startsWith('./')) relative = './' + relative;
 
 		console.warn(
@@ -199,8 +201,9 @@ const value_regex = /^(.*?)((\/\*)|(\.\w+))?$/;
  * Related to vite alias creation.
  *
  * @param {import('types').ValidatedKitConfig} config
+ * @param {string} cwd
  */
-function get_tsconfig_paths(config) {
+function get_tsconfig_paths(config, cwd) {
 	/** @param {string} file */
 	const config_relative = (file) => {
 		let relative_path = path.relative(config.outDir, file);
@@ -211,8 +214,8 @@ function get_tsconfig_paths(config) {
 	};
 
 	const alias = { ...config.alias };
-	if (fs.existsSync(project_relative(config.files.lib))) {
-		alias['$lib'] = project_relative(config.files.lib);
+	if (fs.existsSync(project_relative(cwd, config.files.lib))) {
+		alias['$lib'] = project_relative(cwd, config.files.lib);
 	}
 
 	/** @type {Record<string, string[]>} */

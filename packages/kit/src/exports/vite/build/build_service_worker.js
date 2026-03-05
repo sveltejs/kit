@@ -1,4 +1,3 @@
-import process from 'node:process';
 import * as vite from 'vite';
 import { dedent } from '../../../core/sync/utils.js';
 import { s } from '../../../utils/misc.js';
@@ -84,7 +83,7 @@ export async function build_service_worker(
 				return create_static_module('$env/static/public', env.public);
 			}
 
-			const normalized_cwd = vite.normalizePath(process.cwd());
+			const normalized_cwd = vite.normalizePath(vite_config.root);
 			const normalized_lib = vite.normalizePath(kit.files.lib);
 			const relative = normalize_id(id, normalized_lib, normalized_cwd);
 			const stripped = strip_virtual_prefix(relative);
@@ -116,7 +115,7 @@ export async function build_service_worker(
 		publicDir: false,
 		plugins: [sw_virtual_modules],
 		resolve: {
-			alias: [...get_config_aliases(kit)]
+			alias: [...get_config_aliases(kit, vite_config.root)]
 		},
 		experimental: {
 			renderBuiltUrl(filename) {
