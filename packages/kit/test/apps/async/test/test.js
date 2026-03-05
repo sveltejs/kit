@@ -154,12 +154,7 @@ test.describe('remote functions', () => {
 		await page.waitForURL('/remote');
 	});
 
-	test('remote form redirect opens in new tab when target=_blank', async ({
-		page,
-		javaScriptEnabled
-	}) => {
-		test.skip(!javaScriptEnabled, 'remote forms require JavaScript');
-
+	test('remote form redirect opens in new tab when target=_blank', async ({ page }) => {
 		await page.goto('/remote/form/redirect-target');
 
 		const popup_promise = page.waitForEvent('popup', { timeout: 5000 });
@@ -175,12 +170,7 @@ test.describe('remote functions', () => {
 		expect(page.url()).not.toContain('/destination');
 	});
 
-	test('remote form redirect navigates same tab without target=_blank', async ({
-		page,
-		javaScriptEnabled
-	}) => {
-		test.skip(!javaScriptEnabled, 'remote forms require JavaScript');
-
+	test('remote form redirect navigates same tab without target=_blank', async ({ page }) => {
 		await page.goto('/remote/form/redirect-target');
 
 		let popup_opened = false;
@@ -193,6 +183,21 @@ test.describe('remote functions', () => {
 
 		expect(popup_opened).toBe(false);
 		expect(page.url()).toContain('/remote/form/redirect-target/destination');
+	});
+
+	test('remote form redirect opens in new tab when formtarget=_blank on input', async ({
+		page
+	}) => {
+		await page.goto('/remote/form/redirect-target');
+
+		const popup_promise = page.waitForEvent('popup', { timeout: 5000 });
+		await page.locator('[data-testid="form-input-blank"] input').click();
+		const popup = await popup_promise;
+		await popup.waitForLoadState();
+
+		expect(popup.url()).toContain('/remote/form/redirect-target/destination');
+		expect(page.url()).toContain('/remote/form/redirect-target');
+		expect(page.url()).not.toContain('/destination');
 	});
 
 	test('form multiple submit buttons work', async ({ page, javaScriptEnabled }) => {

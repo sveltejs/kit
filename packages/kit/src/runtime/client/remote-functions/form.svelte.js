@@ -238,12 +238,7 @@ export function form(id) {
 							refresh_queries(refreshes, updates);
 						}
 						// Use internal version to allow redirects to external URLs
-						const form_target = element?.getAttribute('target');
-						if (form_target === '_blank' || form_target === '_new') {
-							window.open(form_result.location, form_target);
-						} else {
-							void _goto(form_result.location, { invalidateAll }, 0);
-						}
+						void _goto(form_result.location, { invalidateAll }, 0);
 					} else {
 						throw new HttpError(form_result.status ?? 500, form_result.error);
 					}
@@ -300,6 +295,14 @@ export function form(id) {
 				);
 
 				if (action.searchParams.get('/remote') !== action_id) {
+					return;
+				}
+
+				const target = event.submitter?.hasAttribute('formtarget')
+					? /** @type {HTMLButtonElement | HTMLInputElement} */ (event.submitter).formTarget
+					: clone(form).target;
+
+				if (target && target !== '_self') {
 					return;
 				}
 

@@ -1,12 +1,12 @@
 import { form } from '$app/server';
 import { redirect } from '@sveltejs/kit';
-import * as v from 'valibot';
+import { object, optional, string } from 'valibot';
 
 export const redirectForm = form(
-	v.object({
-		id: v.optional(v.string())
+	object({
+		id: optional(string())
 	}),
 	() => {
-		redirect(307, '/remote/form/redirect-target/destination');
+		redirect(303, '/remote/form/redirect-target/destination');
 	}
 );

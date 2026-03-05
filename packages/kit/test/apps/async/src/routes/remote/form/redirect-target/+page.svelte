@@ -9,3 +9,7 @@
 <form {...redirectForm.for('same')} data-testid="form-same">
 	<button type="submit">Submit same</button>
 </form>
+
+<form {...redirectForm.for('input')} data-testid="form-input-blank">
+	<input type="submit" formtarget="_blank" value="Submit input blank" />
+</form>
