@@ -21,6 +21,37 @@ params.foo;
 params.bar; // okay
 params.baz; // okay
 
+/** @type {import('$app/types').RouteParams<'/matcher-test/no-matcher/[locale]'>} */
+const noMatcherPageParams = {
+	locale: 'fr' // any string
+};
+
+/** @type {import('$app/types').LayoutParams<'/matcher-test/no-matcher'>} */
+const noMatcherLayoutParams = {};
+
+noMatcherPageParams.locale = 'fr'; // any string
+
+/** @type {import('$app/types').RouteParams<'/matcher-test/with-matcher/[[locale=locale]]'>} */
+const withMatcherPageParams = {};
+
+// @ts-expect-error locale should be "en" or "nb"
+withMatcherPageParams.locale = 'fr';
+withMatcherPageParams.locale = 'en'; // okay
+withMatcherPageParams.locale = 'nb'; // okay
+
+/** @type {import('$app/types').LayoutParams<'/matcher-test/with-matcher'>} */
+const withMatcherLayoutParams = {};
+
+// @ts-expect-error locale should be "en" or "nb"
+withMatcherLayoutParams.locale = 'fr';
+withMatcherLayoutParams.locale = 'en'; // okay
+withMatcherLayoutParams.locale = 'nb'; // okay
+
+/** @type {import('$app/types').LayoutParams<'/matcher-test'>} */
+const matcherParentLayoutParams = {};
+
+matcherParentLayoutParams.locale = 'fr'; // any string
+
 /** @type {import('$app/types').Pathname} */
 let pathname;
 
