@@ -2,7 +2,7 @@
 	import { page } from '$app/state';
 
 	/** @type {{ data: import('./$types').PageData }} */
-	let { data } = $props();
+	const { data } = $props();
 </script>
 
 <h1>{data.message}</h1>

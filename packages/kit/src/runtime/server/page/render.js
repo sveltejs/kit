@@ -211,24 +211,14 @@ export async function render_response({
 				// and `await maybe_promise` would eagerly access the .then property but call its function only after a tick, which is too late
 				// for the paths.reset() below and for any eager getRequestEvent() calls during rendering without AsyncLocalStorage available.
 				const rendered =
-					options.async && 'then' in maybe_promise
+					'then' in maybe_promise
 						? /** @type {ReturnType<typeof options.root.render> & Promise<any>} */ (
 								maybe_promise
 							).then((r) => r)
 						: maybe_promise;
 
-				// TODO 3.0 remove options.async
-				if (options.async) {
-					// we reset this synchronously, rather than after async rendering is complete,
-					// to avoid cross-talk between requests. This is a breaking change for
-					// anyone who opts into async SSR, since `base` and `assets` will no
-					// longer be relative to the current pathname.
-					// TODO 3.0 remove `base` and `assets` in favour of `resolve(...)` and `asset(...)`
-					paths.reset();
-				}
-
 				const { head, html, css, hashes } = /** @type {ReturnType<typeof options.root.render>} */ (
-					options.async ? await rendered : rendered
+					await rendered
 				);
 
 				if (hashes) {

@@ -1,5 +1,5 @@
 <script>
-	import { values } from './value.remote.ts';
+	import { values } from './value.remote.js';
 </script>
 
 <h1>Remote Form Value Test</h1>

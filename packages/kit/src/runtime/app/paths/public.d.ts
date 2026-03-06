@@ -8,7 +8,7 @@ export { resolve, asset, match } from './client.js';
  *
  * Example usage: `<a href="{base}/your-page">Link</a>`
  *
- * @deprecated Use [`resolve(...)`](https://svelte.dev/docs/kit/$app-paths#resolve) instead
+ * @deprecated removed in 3.0. Use [`resolve(...)`](https://svelte.dev/docs/kit/$app-paths#resolve) instead
  */
 export let base: '' | `/${string}`;
 
@@ -17,12 +17,12 @@ export let base: '' | `/${string}`;
  *
  * > [!NOTE] If a value for `config.kit.paths.assets` is specified, it will be replaced with `'/_svelte_kit_assets'` during `vite dev` or `vite preview`, since the assets don't yet live at their eventual URL.
  *
- * @deprecated Use [`asset(...)`](https://svelte.dev/docs/kit/$app-paths#asset) instead
+ * @deprecated removed in 3.0. Use [`asset(...)`](https://svelte.dev/docs/kit/$app-paths#asset) instead
  */
 export let assets: '' | `https://${string}` | `http://${string}` | '/_svelte_kit_assets';
 
 /**
- * @deprecated Use [`resolve(...)`](https://svelte.dev/docs/kit/$app-paths#resolve) instead
+ * @deprecated removed in 3.0. Use [`resolve(...)`](https://svelte.dev/docs/kit/$app-paths#resolve) instead
  */
 export function resolveRoute<T extends RouteIdWithSearchOrHash | PathnameWithSearchOrHash>(
 	...args: ResolveArgs<T>

@@ -1,5 +1,5 @@
 <script>
-	import { get_count, increment } from './form.remote.ts';
+	import { get_count, increment } from './form.remote.js';
 	const count = get_count();
 </script>
 

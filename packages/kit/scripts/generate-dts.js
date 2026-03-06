@@ -13,8 +13,7 @@ await createBundle({
 		'$app/navigation': 'src/runtime/app/navigation.js',
 		'$app/paths': 'src/runtime/app/paths/public.d.ts',
 		'$app/server': 'src/runtime/app/server/index.js',
-		'$app/state': 'src/runtime/app/state/index.js',
-		'$app/stores': 'src/runtime/app/stores.js'
+		'$app/state': 'src/runtime/app/state/index.js'
 	},
 	include: ['src']
 });
