@@ -2,4 +2,4 @@
 '@sveltejs/kit': major
 ---
 
-breaking: remove `base` and `assets` from `$app/paths`
+breaking: remove `base`, `assets`, and `resolveRoute` from `$app/paths`
