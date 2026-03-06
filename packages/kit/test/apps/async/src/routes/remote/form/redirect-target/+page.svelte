@@ -1,5 +1,5 @@
 <script>
-	import { redirectForm } from './form.remote.ts';
+	import { redirectForm } from './form.remote.js';
 </script>
 
 <form {...redirectForm.for('blank')} target="_blank" data-testid="form-blank">
