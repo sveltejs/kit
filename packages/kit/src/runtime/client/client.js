@@ -1740,7 +1740,9 @@ async function navigate({
 
 	const { activeElement } = document;
 
-	await (commit_promise ?? svelte.tick());
+	await commit_promise;
+
+	await svelte.tick();
 
 	// we reset scroll before dealing with focus, to avoid a flash of unscrolled content
 	/** @type {Element | null | ''} */
