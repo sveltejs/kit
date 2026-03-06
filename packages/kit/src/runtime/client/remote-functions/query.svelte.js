@@ -1,10 +1,11 @@
 /** @import { RemoteQueryFunction } from '@sveltejs/kit' */
 /** @import { RemoteFunctionResponse } from 'types' */
 import { app_dir, base } from '$app/paths/internal/client';
-import { app, goto, query_map, remote_responses } from '../client.js';
+import { app, get_query_array, goto } from '../client.js';
 import { tick } from 'svelte';
 import {
 	create_remote_function,
+  NOT_CACHED,
 	get_remote_request_headers,
 	remote_request
 } from './shared.svelte.js';
@@ -19,18 +20,20 @@ import { DEV } from 'esm-env';
 export function query(id) {
 	if (DEV) {
 		// If this reruns as part of HMR, refresh the query
-		for (const [key, entry] of query_map) {
+		for (const [key, resource] of get_query_array()) {
 			if (key === id || key.startsWith(id + '/')) {
 				// use optional chaining in case a prerender function was turned into a query
-				entry.resource.refresh?.();
+				resource?.refresh?.();
 			}
 		}
 	}
 
-	return create_remote_function(id, (cache_key, payload) => {
+	return create_remote_function(id, (cache_key, payload, cached) => {
 		return new Query(cache_key, async () => {
-			if (Object.hasOwn(remote_responses, cache_key)) {
-				return remote_responses[cache_key];
+			if (cached !== NOT_CACHED) {
+				const data = cached;
+				cached = NOT_CACHED;
+				return data;
 			}
 
 			const url = `${base}/${app_dir}/remote/${id}${payload ? `?payload=${payload}` : ''}`;
@@ -50,10 +53,12 @@ export function query_batch(id) {
 	// eslint-disable-next-line svelte/prefer-svelte-reactivity -- we don't need reactivity for this
 	let batching = new Map();
 
-	return create_remote_function(id, (cache_key, payload) => {
+	return create_remote_function(id, (cache_key, payload, cached) => {
 		return new Query(cache_key, () => {
-			if (Object.hasOwn(remote_responses, cache_key)) {
-				return remote_responses[cache_key];
+			if (cached !== NOT_CACHED) {
+				const data = cached;
+				cached = NOT_CACHED;
+				return data;
 			}
 
 			// Collect all the calls to the same query in the same macrotask,
@@ -192,6 +197,8 @@ export class Query {
 		};
 	});
 
+	[Symbol.toStringTag] = 'RemoteQuery';
+
 	/**
 	 * @param {string} key
 	 * @param {() => Promise<T>} fn
@@ -306,7 +313,6 @@ export class Query {
 	 * @returns {Promise<void>}
 	 */
 	refresh() {
-		delete remote_responses[this._key];
 		return (this.#promise = this.#run());
 	}
 

@@ -22,7 +22,7 @@
 	const count = browser ? get_count() : null; // so that we get a remote request in the browser
 </script>
 
-<p id="echo-result">{data.echo_result}</p>
+<p id="echo-result">{data.random} | {data.echo_result}</p>
 {#if browser}
 	<p id="count-result">
 		{await count} / {count.current} ({count.loading})

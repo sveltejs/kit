@@ -5,7 +5,7 @@ import { test } from '../../../utils.js';
 test.describe('remote functions', () => {
 	test('query returns correct data', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/remote');
-		await expect(page.locator('#echo-result')).toHaveText('Hello world');
+		await expect(page.locator('#echo-result')).toHaveText(/Hello world/);
 		if (javaScriptEnabled) {
 			await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
 		}

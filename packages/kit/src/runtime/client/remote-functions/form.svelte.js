@@ -73,7 +73,9 @@ export function form(id) {
 		const issues = $derived(flatten_issues(raw_issues));
 
 		/** @type {any} */
-		let result = $state.raw(remote_responses[action_id]);
+		let result = $state.raw(
+			Object.hasOwn(remote_responses, action_id) ? remote_responses[action_id] : undefined
+		);
 
 		/** @type {number} */
 		let pending_count = $state(0);
