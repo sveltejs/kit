@@ -1170,7 +1170,7 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 					error = err.body;
 				} else {
 					// Referenced node could have been removed due to redeploy, check
-					if (updated.current) {
+					if (await updated.check()) {
 						// Before reloading, try to update the service worker if it exists
 						await update_service_worker();
 						return await native_navigation(url);
@@ -1639,7 +1639,7 @@ async function navigate({
 			route: { id: null }
 		});
 	} else if (/** @type {number} */ (navigation_result.props.page.status) >= 400) {
-		if (updated.current) {
+		if (await updated.check()) {
 			// Before reloading, try to update the service worker if it exists
 			await update_service_worker();
 			await native_navigation(url, replace_state);
