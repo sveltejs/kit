@@ -138,7 +138,6 @@ async function get_adapter() {
 /** @type {() => Adapter} */
 export default () => ({
 	name: '@sveltejs/adapter-auto',
-	/** @param {import('@sveltejs/kit').Builder} builder */
 	adapt: async (builder) => {
 		const adapter = await get_adapter();
 
