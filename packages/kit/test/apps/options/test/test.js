@@ -192,7 +192,7 @@ test.describe('trailingSlash', () => {
 		page,
 		javaScriptEnabled
 	}) => {
-		test.skip(() => !javaScriptEnabled, 'data-sveltekit-* only works with JavaScript');
+		test.skip(!javaScriptEnabled, 'data-sveltekit-* only works with JavaScript');
 
 		await page.goto('/path-base/preloading');
 
