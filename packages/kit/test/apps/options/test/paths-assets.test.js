@@ -41,9 +41,11 @@ test.describe('base path', () => {
 		expect(await response.text()).toBe('hello there world\n');
 	});
 
-	test('paths available on server side', async ({ page }) => {
+	test('paths available on server side', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/path-base/base/');
-		expect(await page.textContent('[data-source="base"]')).toBe('/path-base');
+		expect(await page.textContent('[data-source="base"]')).toBe(
+			javaScriptEnabled ? '/path-base/' : '../'
+		);
 		expect(await page.textContent('[data-source="assets"]')).toBe('/_svelte_kit_assets');
 	});
 
