@@ -3045,47 +3045,7 @@ declare module '$app/navigation' {
 }
 
 declare module '$app/paths' {
-	import type { RouteIdWithSearchOrHash, PathnameWithSearchOrHash, ResolvedPathname, RouteId, RouteParams, Asset, Pathname as Pathname_1 } from '$app/types';
-	/**
-	 * A string that matches [`config.kit.paths.base`](https://svelte.dev/docs/kit/configuration#paths).
-	 *
-	 * Example usage: `<a href="{base}/your-page">Link</a>`
-	 *
-	 * @deprecated removed in 3.0. Use [`resolve(...)`](https://svelte.dev/docs/kit/$app-paths#resolve) instead
-	 */
-	export let base: '' | `/${string}`;
-
-	/**
-	 * An absolute path that matches [`config.kit.paths.assets`](https://svelte.dev/docs/kit/configuration#paths).
-	 *
-	 * > [!NOTE] If a value for `config.kit.paths.assets` is specified, it will be replaced with `'/_svelte_kit_assets'` during `vite dev` or `vite preview`, since the assets don't yet live at their eventual URL.
-	 *
-	 * @deprecated removed in 3.0. Use [`asset(...)`](https://svelte.dev/docs/kit/$app-paths#asset) instead
-	 */
-	export let assets: '' | `https://${string}` | `http://${string}` | '/_svelte_kit_assets';
-
-	/**
-	 * @deprecated removed in 3.0. Use [`resolve(...)`](https://svelte.dev/docs/kit/$app-paths#resolve) instead
-	 */
-	export function resolveRoute<T extends RouteIdWithSearchOrHash | PathnameWithSearchOrHash>(
-		...args: ResolveArgs<T>
-	): ResolvedPathname;
-	type StripSearchOrHash<T extends string> = T extends `${infer Pathname}?${string}`
-		? Pathname
-		: T extends `${infer Pathname}#${string}`
-			? Pathname
-			: T;
-
-	type ResolveArgs<T extends RouteIdWithSearchOrHash | PathnameWithSearchOrHash> =
-		T extends RouteId
-			? RouteParams<T> extends Record<string, never>
-				? [route: T]
-				: [route: T, params: RouteParams<T>]
-			: StripSearchOrHash<T> extends infer U extends RouteId
-				? RouteParams<U> extends Record<string, never>
-					? [route: T]
-					: [route: T, params: RouteParams<U>]
-				: [route: T];
+	import type { Asset, RouteIdWithSearchOrHash, PathnameWithSearchOrHash, ResolvedPathname, Pathname as Pathname_1, RouteId, RouteParams } from '$app/types';
 	/**
 	 * Resolve the URL of an asset in your `static` directory, by prefixing it with [`config.kit.paths.assets`](https://svelte.dev/docs/kit/configuration#paths) if configured, or otherwise by prefixing it with the base path.
 	 *
@@ -3146,6 +3106,22 @@ declare module '$app/paths' {
 		id: RouteId;
 		params: Record<string, string>;
 	} | null>;
+	type StripSearchOrHash<T extends string> = T extends `${infer Pathname}?${string}`
+		? Pathname
+		: T extends `${infer Pathname}#${string}`
+			? Pathname
+			: T;
+
+	type ResolveArgs<T extends RouteIdWithSearchOrHash | PathnameWithSearchOrHash> =
+		T extends RouteId
+			? RouteParams<T> extends Record<string, never>
+				? [route: T]
+				: [route: T, params: RouteParams<T>]
+			: StripSearchOrHash<T> extends infer U extends RouteId
+				? RouteParams<U> extends Record<string, never>
+					? [route: T]
+					: [route: T, params: RouteParams<U>]
+				: [route: T];
 
 	export {};
 }
