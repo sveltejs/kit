@@ -103,6 +103,58 @@ export function create_builder({
 			);
 		},
 
+		async createEntries(fn) {
+			const seen = new Set();
+
+			for (let i = 0; i < route_data.length; i += 1) {
+				const route = route_data[i];
+				if (prerender_map.get(route.id) === true) continue;
+				const { id, filter, complete } = fn(routes[i]);
+
+				if (seen.has(id)) continue;
+				seen.add(id);
+
+				const group = [route];
+
+				// figure out which lower priority routes should be considered fallbacks
+				for (let j = i + 1; j < route_data.length; j += 1) {
+					if (prerender_map.get(routes[j].id) === true) continue;
+					if (filter(routes[j])) {
+						group.push(route_data[j]);
+					}
+				}
+
+				const filtered = new Set(group);
+
+				// heuristic: if /foo/[bar] is included, /foo/[bar].json should
+				// also be included, since the page likely needs the endpoint
+				// TODO is this still necessary, given the new way of doing things?
+				filtered.forEach((route) => {
+					if (route.page) {
+						const endpoint = route_data.find((candidate) => candidate.id === route.id + '.json');
+
+						if (endpoint) {
+							filtered.add(endpoint);
+						}
+					}
+				});
+
+				if (filtered.size > 0) {
+					await complete({
+						generateManifest: ({ relativePath }) =>
+							generate_manifest({
+								build_data,
+								prerendered: [],
+								relative_path: relativePath,
+								routes: Array.from(filtered),
+								remotes,
+								root: vite_config.root
+							})
+					});
+				}
+			}
+		},
+
 		findServerAssets(route_data) {
 			return find_server_assets(
 				build_data,
