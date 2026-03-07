@@ -302,6 +302,14 @@ export function form(id) {
 					return;
 				}
 
+				const target = event.submitter?.hasAttribute('formtarget')
+					? /** @type {HTMLButtonElement | HTMLInputElement} */ (event.submitter).formTarget
+					: clone(form).target;
+
+				if (target === '_blank') {
+					return;
+				}
+
 				const no_validate = clone(form).noValidate; // respects <form novalidate>
 				const submitter_no_validate =
 					event.submitter &&
