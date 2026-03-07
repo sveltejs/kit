@@ -125,7 +125,7 @@ export interface Builder {
 	/**
 	 * Create separate functions that map to one or more routes of your app.
 	 * @param fn A function that groups a set of routes into an entry point
-	 * @deprecated emoved in 3.0. Use `builder.routes` instead
+	 * @deprecated removed in 3.0. Use `builder.routes` instead
 	 */
 	createEntries?: (fn: (route: RouteDefinition) => AdapterEntry) => Promise<void>;
 
