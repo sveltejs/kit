@@ -41,6 +41,7 @@ import {
 import { import_peer } from '../../utils/import.js';
 import { compact } from '../../utils/array.js';
 import { should_ignore, has_children } from './static_analysis/utils.js';
+import { treeshake_prerendered_remotes } from './build/remote.js';
 
 const cwd = posixify(process.cwd());
 
@@ -1053,7 +1054,7 @@ async function kit({ svelte_config }) {
 		 */
 		writeBundle: {
 			sequential: true,
-			async handler(_options) {
+			async handler(_options, server_bundle) {
 				if (secondary_build_started) return; // only run this once
 
 				const verbose = vite_config.logLevel === 'info';
@@ -1307,6 +1308,15 @@ async function kit({ svelte_config }) {
 					verbose,
 					env: { ...env.private, ...env.public }
 				});
+
+				await treeshake_prerendered_remotes(
+					out,
+					remotes,
+					metadata,
+					cwd,
+					server_bundle,
+					vite_config.build.sourcemap
+				);
 
 				// generate a new manifest that doesn't include prerendered pages
 				fs.writeFileSync(
