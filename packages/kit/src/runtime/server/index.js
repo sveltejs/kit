@@ -1,5 +1,3 @@
-/** @import { PromiseWithResolvers } from '../../utils/promise.js' */
-import { with_resolvers } from '../../utils/promise.js';
 import { IN_WEBCONTAINER } from './constants.js';
 import { respond } from './respond.js';
 import { set_private_env, set_public_env } from '../shared-server.js';
@@ -36,7 +34,9 @@ export class Server {
 
 			/** @type {typeof respond} */
 			this.respond = async (...args) => {
-				const { promise, resolve } = /** @type {PromiseWithResolvers<void>} */ (with_resolvers());
+				const { promise, resolve } = /** @type {PromiseWithResolvers<void>} */ (
+					Promise.withResolvers()
+				);
 
 				const previous = current;
 				current = promise;
