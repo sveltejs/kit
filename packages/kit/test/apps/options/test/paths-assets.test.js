@@ -41,11 +41,9 @@ test.describe('base path', () => {
 		expect(await response.text()).toBe('hello there world\n');
 	});
 
-	test('paths available on server side', async ({ page, javaScriptEnabled }) => {
+	test('paths available on server side', async ({ page }) => {
 		await page.goto('/path-base/base/');
-		expect(await page.textContent('[data-source="base"]')).toBe(
-			javaScriptEnabled ? '/path-base/' : '../'
-		);
+		expect(await page.textContent('[data-source="base"]')).toBe('/path-base');
 		expect(await page.textContent('[data-source="assets"]')).toBe('/_svelte_kit_assets');
 	});
 
@@ -71,6 +69,13 @@ test.describe('base path', () => {
 
 		await clicknav('[href="/path-base/base/two"]');
 		expect(await page.textContent('h2')).toBe('two');
+	});
+
+	test('resolveRoute accounts for base path', async ({ baseURL, page, clicknav }) => {
+		await page.goto('/path-base/resolve-route');
+		await clicknav('[data-id=target]');
+		expect(page.url()).toBe(`${baseURL}/path-base/resolve-route/resolved/`);
+		expect(await page.textContent('h2')).toBe('resolved');
 	});
 
 	test('server load fetch without base path does not invoke the server', async ({

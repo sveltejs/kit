@@ -67,3 +67,5 @@ export async function match(url) {
 
 	return null;
 }
+
+export { base, assets, resolve as resolveRoute };

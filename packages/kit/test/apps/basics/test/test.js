@@ -730,6 +730,22 @@ test.describe('$app/environment', () => {
 });
 
 test.describe('$app/paths', () => {
+	test('includes paths', async ({ page, javaScriptEnabled }) => {
+		test.skip(
+			process.env.SVELTE_ASYNC === 'true',
+			'does not work with async, should use new functions instead'
+		);
+		await page.goto('/paths');
+
+		let base = javaScriptEnabled ? '' : '.';
+		expect(await page.innerHTML('pre')).toBe(JSON.stringify({ base, assets: base }));
+
+		await page.goto('/paths/deeply/nested');
+
+		base = javaScriptEnabled ? '' : '../..';
+		expect(await page.innerHTML('pre')).toBe(JSON.stringify({ base, assets: base }));
+	});
+
 	// some browsers will re-request assets after a `pushState`
 	// https://github.com/sveltejs/kit/issues/3748#issuecomment-1125980897
 	test('replaces %sveltekit.assets% in template with relative path, and makes it absolute in the client', async ({
@@ -737,6 +753,11 @@ test.describe('$app/paths', () => {
 		page,
 		javaScriptEnabled
 	}) => {
+		test.skip(
+			process.env.SVELTE_ASYNC === 'true',
+			'does not work with async, should use new functions instead'
+		);
+
 		const absolute = `${baseURL}/favicon.png`;
 
 		await page.goto('/');

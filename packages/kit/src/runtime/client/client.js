@@ -2,7 +2,7 @@ import * as devalue from 'devalue';
 import { BROWSER, DEV } from 'esm-env';
 import * as svelte from 'svelte';
 import { HttpError, Redirect, SvelteKitError } from '@sveltejs/kit/internal';
-import { base } from '$app/paths/internal/client';
+import { base } from '$app/paths';
 import {
 	decode_params,
 	decode_pathname,
