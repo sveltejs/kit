@@ -335,7 +335,7 @@ test.describe('remote functions', () => {
 		page.on('request', handler);
 
 		const input = page.locator('[data-submit] input[name="code"]');
-		const submit = page.locator('[data-submit] button');
+		const submit = page.locator('[data-submit] button[type="submit"]');
 		const result = page.locator('#result');
 
 		await input.focus();
@@ -392,6 +392,45 @@ test.describe('remote functions', () => {
 		expect(request_count).toBe(0);
 
 		page.off('request', handler);
+	});
+
+	test('form allows programmatic values that only fail length constraints', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/form/html-constraints');
+
+		const input = page.locator('[data-submit] input[name="code"]');
+		const set = page.locator('[data-programmatic-submit]');
+		const submit = page.locator('[data-submit] button[type="submit"]');
+		const result = page.locator('#result');
+		const request = page.waitForRequest(
+			(request) => request.url().includes('/_app/remote') && request.method() === 'POST'
+		);
+
+		await set.click();
+		await expect(input).toHaveValue('1');
+		await submit.click();
+		await request;
+		await expect(result).toHaveText('1');
+	});
+
+	test('form validate({ preflightOnly: true }) ignores programmatic length values', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/form/html-constraints');
+
+		const input = page.locator('[data-preflight] input[name="code"]');
+		const issue_count = page.locator('#preflight-issue-count');
+
+		await page.locator('[data-programmatic-preflight]').click();
+		await expect(input).toHaveValue('1');
+		await expect(issue_count).toHaveText('0');
 	});
 
 	test('form validate works', async ({ page, javaScriptEnabled }) => {

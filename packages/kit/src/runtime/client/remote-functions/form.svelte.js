@@ -88,6 +88,9 @@ export function form(id) {
 		/** @type {Record<string, boolean>} */
 		let touched = {};
 
+		/** @type {WeakSet<HTMLInputElement | HTMLTextAreaElement>} */
+		let user_edited_text_controls = new WeakSet();
+
 		let submitted = false;
 
 		/**
@@ -313,17 +316,16 @@ export function form(id) {
 						return;
 					}
 
-					const invalid_length_control = get_invalid_length_control(form);
+					const invalid_length_control = get_invalid_length_control(
+						form,
+						user_edited_text_controls
+					);
 					if (invalid_length_control) {
-						// In this edge case the browser can miss minlength/maxlength and leave
-						// `validationMessage` empty. Setting a custom validity forces native UI.
-						invalid_length_control.setCustomValidity(
-							invalid_length_control.validationMessage ||
-								get_length_validation_message(invalid_length_control)
-						);
-						invalid_length_control.reportValidity();
-						invalid_length_control.setCustomValidity('');
 						event.preventDefault();
+						// Browser validity can miss minlength/maxlength after a user edit if the
+						// value is later reapplied programmatically. Focus the control so the submit
+						// does not silently disappear when no native message is available.
+						invalid_length_control.focus();
 						return;
 					}
 				}
@@ -356,14 +358,26 @@ export function form(id) {
 				element = form;
 
 				touched = {};
+				user_edited_text_controls = new WeakSet();
 
 				form.addEventListener('submit', onsubmit);
 
 				/** @param {Event} e */
 				const handle_input = (e) => {
-					// strictly speaking it can be an HTMLTextAreaElement or HTMLSelectElement
-					// but that makes the types unnecessarily awkward
-					const element = /** @type {HTMLInputElement} */ (e.target);
+					const element = e.target;
+					if (
+						!(
+							element instanceof HTMLInputElement ||
+							element instanceof HTMLTextAreaElement ||
+							element instanceof HTMLSelectElement
+						)
+					) {
+						return;
+					}
+
+					if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) {
+						user_edited_text_controls.add(element);
+					}
 
 					let name = element.name;
 					if (!name) return;
@@ -378,7 +392,7 @@ export function form(id) {
 					if (is_array) {
 						let value;
 
-						if (element.tagName === 'SELECT') {
+						if (element instanceof HTMLSelectElement) {
 							value = Array.from(
 								element.querySelectorAll('option:checked'),
 								(e) => /** @type {HTMLOptionElement} */ (e).value
@@ -408,13 +422,16 @@ export function form(id) {
 
 						set_nested_value(input, name, value);
 					} else if (is_file) {
-						if (DEV && element.multiple) {
+						const input_element = /** @type {HTMLInputElement} */ (element);
+
+						if (DEV && input_element.multiple) {
 							throw new Error(
 								`Can only use the \`multiple\` attribute when \`name\` includes a \`[]\` suffix — consider changing "${name}" to "${name}[]"`
 							);
 						}
 
-						const file = /** @type {HTMLInputElement & { files: FileList }} */ (element).files[0];
+						const file = /** @type {HTMLInputElement & { files: FileList }} */ (input_element)
+							.files[0];
 
 						if (file) {
 							set_nested_value(input, name, file);
@@ -432,7 +449,9 @@ export function form(id) {
 						set_nested_value(
 							input,
 							name,
-							element.type === 'checkbox' && !element.checked ? null : element.value
+							element instanceof HTMLInputElement && element.type === 'checkbox' && !element.checked
+								? null
+								: element.value
 						);
 					}
 
@@ -449,6 +468,7 @@ export function form(id) {
 					await tick();
 
 					input = convert_formdata(new FormData(form));
+					user_edited_text_controls = new WeakSet();
 				};
 
 				form.addEventListener('reset', handle_reset);
@@ -498,11 +518,13 @@ export function form(id) {
 						(path, value) => {
 							if (path.length === 0) {
 								input = value;
+								clear_user_edited_text_controls(element, user_edited_text_controls);
 							} else {
 								deep_set(input, path.map(String), value);
 
 								const key = build_path_string(path);
 								touched[key] = true;
+								clear_user_edited_text_controls(element, user_edited_text_controls, key);
 							}
 						},
 						() => issues
@@ -545,7 +567,8 @@ export function form(id) {
 					const html_constraint_issues = get_html_constraint_issues(element, {
 						include_untouched: includeUntouched,
 						submitted,
-						touched
+						touched,
+						user_edited_text_controls
 					});
 
 					const validated = await preflight_schema?.['~standard'].validate(data);
@@ -586,6 +609,7 @@ export function form(id) {
 					}
 
 					if (html_constraint_issues.length > 0) {
+						// eslint-disable-next-line svelte/prefer-svelte-reactivity
 						const html_constraint_names = new Set(
 							html_constraint_issues.map((issue) => issue.name)
 						);
@@ -665,13 +689,15 @@ function clone(element) {
 
 /**
  * In some cases programmatic value updates can bypass minlength/maxlength checks during submit.
- * Re-check text controls and let the browser show its native validation UI.
+ * Re-check text controls whose current value still came from direct user input.
  * @param {HTMLFormElement} form
+ * @param {WeakSet<HTMLInputElement | HTMLTextAreaElement>} user_edited_text_controls
  */
-function get_invalid_length_control(form) {
+function get_invalid_length_control(form, user_edited_text_controls) {
 	for (const element of form.elements) {
 		if (!(element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement)) continue;
 		if (!element.willValidate || element.disabled || !element.name) continue;
+		if (!user_edited_text_controls.has(element)) continue;
 
 		if (has_invalid_length(element)) return element;
 	}
@@ -693,34 +719,19 @@ function has_invalid_length(element) {
 }
 
 /**
- * In edge cases where length validity is missed, `validationMessage` may be empty.
- * Use a deterministic message only as a fallback.
- * @param {HTMLInputElement | HTMLTextAreaElement} element
- */
-function get_length_validation_message(element) {
-	const value_length = element.value.length;
-	const min_length = element.minLength;
-	const max_length = element.maxLength;
-
-	if (value_length > 0 && min_length > -1 && value_length < min_length) {
-		return `Please lengthen this text to ${min_length} characters or more.`;
-	}
-
-	if (max_length > -1 && value_length > max_length) {
-		return `Please shorten this text to ${max_length} characters or fewer.`;
-	}
-
-	return 'Please match the requested text length.';
-}
-
-/**
  * @param {HTMLFormElement} form
- * @param {{ include_untouched: boolean, submitted: boolean, touched: Record<string, boolean> }} options
+ * @param {{
+ *   include_untouched: boolean,
+ *   submitted: boolean,
+ *   touched: Record<string, boolean>,
+ *   user_edited_text_controls: WeakSet<HTMLInputElement | HTMLTextAreaElement>
+ * }} options
  * @returns {InternalRemoteFormIssue[]}
  */
 function get_html_constraint_issues(form, options) {
 	/** @type {InternalRemoteFormIssue[]} */
 	const issues = [];
+	// eslint-disable-next-line svelte/prefer-svelte-reactivity
 	const seen = new Set();
 
 	for (const element of form.elements) {
@@ -743,6 +754,7 @@ function get_html_constraint_issues(form, options) {
 		if (!options.include_untouched && !options.submitted && !options.touched[name]) continue;
 		const invalid_length =
 			(element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) &&
+			options.user_edited_text_controls.has(element) &&
 			has_invalid_length(element);
 		if (!invalid_length && element.checkValidity()) continue;
 
@@ -752,9 +764,7 @@ function get_html_constraint_issues(form, options) {
 		issues.push({
 			name: parsed.name,
 			path: parsed.path,
-			message: invalid_length
-				? element.validationMessage || get_length_validation_message(element)
-				: element.validationMessage || 'Invalid value',
+			message: element.validationMessage || 'Invalid value',
 			server: false
 		});
 
@@ -764,6 +774,28 @@ function get_html_constraint_issues(form, options) {
 	}
 
 	return issues;
+}
+
+/**
+ * @param {HTMLFormElement | null} form
+ * @param {WeakSet<HTMLInputElement | HTMLTextAreaElement>} user_edited_text_controls
+ * @param {string | null} [path]
+ */
+function clear_user_edited_text_controls(form, user_edited_text_controls, path = null) {
+	if (!form) return;
+
+	for (const element of form.elements) {
+		if (!(element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement)) {
+			continue;
+		}
+
+		if (path !== null) {
+			const name = normalize_control_name(element.name);
+			if (!matches_path(name, path)) continue;
+		}
+
+		user_edited_text_controls.delete(element);
+	}
 }
 
 /**
@@ -787,6 +819,14 @@ function parse_issue_path(name) {
 	} catch {
 		return null;
 	}
+}
+
+/**
+ * @param {string} name
+ * @param {string} path
+ */
+function matches_path(name, path) {
+	return name === path || name.startsWith(path + '.') || name.startsWith(path + '[');
 }
 
 /**

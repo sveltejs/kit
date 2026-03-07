@@ -9,7 +9,10 @@
 
 <form data-submit {...validate_code}>
 	<input {...validate_code.fields.code.as('text')} required minlength={6} maxlength={6} />
-	<button>submit</button>
+	<button type="submit">submit</button>
+	<button type="button" data-programmatic-submit onclick={() => validate_code.fields.code.set('1')}>
+		set programmatically
+	</button>
 </form>
 
 <p id="result">{validate_code.result || ''}</p>
@@ -20,6 +23,16 @@
 	onchange={() => validate_code_preflight.validate({ preflightOnly: true })}
 >
 	<input {...validate_code_preflight.fields.code.as('text')} required minlength={6} maxlength={6} />
+	<button
+		type="button"
+		data-programmatic-preflight
+		onclick={async () => {
+			validate_code_preflight.fields.code.set('1');
+			await validate_code_preflight.validate({ preflightOnly: true });
+		}}
+	>
+		set & validate
+	</button>
 </form>
 
 <p id="preflight-issue-count">{validate_code_preflight.fields.code.issues()?.length ?? 0}</p>
