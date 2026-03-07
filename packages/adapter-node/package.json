@@ -56,6 +56,6 @@
 		"rolldown": "^1.0.0-rc.6"
 	},
 	"peerDependencies": {
-		"@sveltejs/kit": "^2.4.0"
+		"@sveltejs/kit": "^3.0.0"
 	}
 }

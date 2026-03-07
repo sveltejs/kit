@@ -34,7 +34,6 @@ const FUNCTION_PREFIX = 'sveltekit-';
 export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 	return {
 		name,
-		/** @param {import('@sveltejs/kit').Builder} builder */
 		async adapt(builder) {
 			if (!builder.routes) {
 				throw new Error(
