@@ -1,3 +1,6 @@
+/** @import { PromiseWithResolvers } from '../../utils/promise.js' */
+import { with_resolvers } from '../../utils/promise.js';
+
 /**
  * @typedef {{
  *   fn: () => Promise<any>,
@@ -10,9 +13,7 @@
 export function queue(concurrency) {
 	/** @type {Task[]} */
 	const tasks = [];
-	const { promise, resolve, reject } = /** @type {PromiseWithResolvers<void>} */ (
-		Promise.withResolvers()
-	);
+	const { promise, resolve, reject } = /** @type {PromiseWithResolvers<void>} */ (with_resolvers());
 
 	let current = 0;
 	let closed = false;
