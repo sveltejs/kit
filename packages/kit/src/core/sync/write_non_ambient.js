@@ -25,25 +25,25 @@ function get_pathnames_for_trailing_slash(pathname, route) {
 		return [pathname];
 	}
 
-	/** @type {({ trailingSlash?: import('types').TrailingSlash } | null)[]} */
-	const routes = [];
-
-	if (route.leaf) routes.push(route.leaf.page_options ?? null);
-	if (route.endpoint) routes.push(route.endpoint.page_options);
-
 	/** @type {Set<string>} */
 	const pathnames = new Set();
 
-	for (const page_options of routes) {
-		if (page_options === null || page_options.trailingSlash === 'ignore') {
+	/**
+	 * @param {{ trailingSlash?: import('types').TrailingSlash } | null | undefined} page_options
+	 */
+	const add_pathnames = (page_options) => {
+		if (page_options === null || page_options?.trailingSlash === 'ignore') {
 			pathnames.add(pathname);
 			pathnames.add(pathname + '/');
-		} else if (page_options.trailingSlash === 'always') {
+		} else if (page_options?.trailingSlash === 'always') {
 			pathnames.add(pathname + '/');
 		} else {
 			pathnames.add(pathname);
 		}
-	}
+	};
+
+	if (route.leaf) add_pathnames(route.leaf.page_options ?? null);
+	if (route.endpoint) add_pathnames(route.endpoint.page_options);
 
 	return Array.from(pathnames);
 }
@@ -89,6 +89,59 @@ function generate_app_types(manifest_data, config) {
 	const path_to_matcher = (matcher) =>
 		posixify(path.relative(config.outDir, path.join(config.files.params, matcher + '.js')));
 
+	/** @type {Map<string, string>} */
+	const matcher_types = new Map();
+
+	/** @param {string | undefined} matcher */
+	const get_matcher_type = (matcher) => {
+		if (!matcher) return 'string';
+
+		let type = matcher_types.get(matcher);
+		if (!type) {
+			type = `MatcherParam<typeof import('${path_to_matcher(matcher)}').match>`;
+			matcher_types.set(matcher, type);
+		}
+
+		return type;
+	};
+
+	/** @param {Set<string> | null} matchers */
+	const get_matchers_type = (matchers) => {
+		if (matchers === null) return 'string';
+
+		return Array.from(matchers)
+			.map((matcher) => get_matcher_type(matcher))
+			.join(' | ');
+	};
+
+	/** @type {Set<string>} */
+	const route_ids = new Set(manifest_data.routes.map((route) => route.id));
+
+	/**
+	 * @param {string} id
+	 * @returns {string[]}
+	 */
+	const get_ancestor_route_ids = (id) => {
+		/** @type {string[]} */
+		const ancestors = [];
+
+		if (route_ids.has('/')) {
+			ancestors.push('/');
+		}
+
+		let current = '';
+		for (const segment of id.slice(1).split('/')) {
+			if (!segment) continue;
+
+			current += '/' + segment;
+			if (current !== '/' && route_ids.has(current)) {
+				ancestors.push(current);
+			}
+		}
+
+		return ancestors;
+	};
+
 	/** @type {Set<string>} */
 	const pathnames = new Set();
 
@@ -98,56 +151,71 @@ function generate_app_types(manifest_data, config) {
 	/** @type {string[]} */
 	const layouts = [];
 
+	/** @type {Map<string, Map<string, { optional: boolean, matchers: Set<string> | null }>>} */
+	const layout_params_by_route = new Map(
+		manifest_data.routes.map((route) => [
+			route.id,
+			new Map(
+				route.params.map((p) => [
+					p.name,
+					{ optional: p.optional, matchers: p.matcher ? new Set([p.matcher]) : null }
+				])
+			)
+		])
+	);
+
 	for (const route of manifest_data.routes) {
+		const ancestors = get_ancestor_route_ids(route.id);
+
+		for (const ancestor_id of ancestors) {
+			const ancestor_params = layout_params_by_route.get(ancestor_id);
+			if (!ancestor_params) continue;
+
+			for (const p of route.params) {
+				const matcher = p.matcher ?? null;
+				const entry = ancestor_params.get(p.name);
+				if (!entry) {
+					ancestor_params.set(p.name, {
+						optional: true,
+						matchers: matcher === null ? null : new Set([matcher])
+					});
+				} else {
+					if (entry.matchers === null) continue;
+					if (matcher === null) {
+						entry.matchers = null;
+					} else {
+						entry.matchers.add(matcher);
+					}
+				}
+			}
+		}
+	}
+
+	for (const route of manifest_data.routes) {
+		const pathname = remove_group_segments(route.id);
+
 		if (route.params.length > 0) {
 			const params = route.params.map((p) => {
-				const type = p.matcher
-					? `MatcherParam<typeof import('${path_to_matcher(p.matcher)}').match>`
-					: 'string';
+				const type = get_matcher_type(p.matcher);
 				return `${p.name}${p.optional ? '?:' : ':'} ${type}`;
 			});
 			const route_type = `${s(route.id)}: { ${params.join('; ')} }`;
 
 			dynamic_routes.push(route_type);
-
-			const pathname = remove_group_segments(route.id);
-			const replaced_pathname = replace_required_params(replace_optional_params(pathname));
-
-			for (const p of get_pathnames_for_trailing_slash(replaced_pathname, route)) {
-				pathnames.add(`\`${p}\` & {}`);
-			}
-		} else {
-			const pathname = remove_group_segments(route.id);
-			for (const p of get_pathnames_for_trailing_slash(pathname, route)) {
-				pathnames.add(s(p));
-			}
 		}
 
-		/** @type {Map<string, { optional: boolean, matchers: Set<string> }>} */
-		const child_params = new Map(
-			route.params.map((p) => [
-				p.name,
-				{ optional: p.optional, matchers: new Set([p.matcher ?? '']) } // '' is the default, matching any string
-			])
-		);
+		const normalized_pathname =
+			route.params.length > 0
+				? replace_required_params(replace_optional_params(pathname))
+				: pathname;
 
-		for (const child of manifest_data.routes.filter((r) => r.id.startsWith(route.id))) {
-			for (const p of child.params) {
-				if (!child_params.has(p.name)) {
-					child_params.set(p.name, { optional: true, matchers: new Set([p.matcher ?? '']) }); // always optional
-				} else {
-					child_params.get(p.name)?.matchers.add(p.matcher ?? '');
-				}
-			}
+		for (const p of get_pathnames_for_trailing_slash(normalized_pathname, route)) {
+			pathnames.add(route.params.length > 0 ? `\`${p}\` & {}` : s(p));
 		}
 
-		const layout_params = Array.from(child_params)
+		const layout_params = Array.from(layout_params_by_route.get(route.id) ?? new Map())
 			.map(([name, { optional, matchers }]) => {
-				const type = Array.from(matchers)
-					.map((matcher) =>
-						matcher ? `MatcherParam<typeof import('${path_to_matcher(matcher)}').match>` : 'string'
-					)
-					.join(' | ');
+				const type = get_matchers_type(matchers);
 				return `${name}${optional ? '?:' : ':'} ${type}`;
 			})
 			.join('; ');
@@ -160,9 +228,7 @@ function generate_app_types(manifest_data, config) {
 
 	return [
 		'declare module "$app/types" {',
-		// TS complains on infer U, which seems weird, therefore ts-ignore it
-		'\t// @ts-ignore',
-		'\ttype MatcherParam<M> = M extends (param : string) => param is infer U ? U extends string ? U : string : string;',
+		'\ttype MatcherParam<M> = M extends (param : string) => param is (infer U extends string) ? U : string;',
 		'',
 		'\texport interface AppTypes {',
 		`\t\tRouteId(): ${manifest_data.routes.map((r) => s(r.id)).join(' | ')};`,
