@@ -16,6 +16,7 @@ const name = '@sveltejs/adapter-cloudflare';
 export default function (options = {}) {
 	return {
 		name,
+		/** @param {import('@sveltejs/kit').Builder} builder */
 		async adapt(builder) {
 			if (
 				existsSync('_routes.json') ||

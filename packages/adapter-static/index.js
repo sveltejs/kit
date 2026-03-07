@@ -5,6 +5,7 @@ import { platforms } from './platforms.js';
 export default function (options) {
 	return {
 		name: '@sveltejs/adapter-static',
+		/** @param {import('./internal.js').Builder2_0_0} builder */
 		async adapt(builder) {
 			if (!options?.fallback && builder.config.kit.router?.type !== 'hash') {
 				const dynamic_routes = builder.routes.filter((route) => route.prerender !== true);
@@ -51,6 +52,7 @@ See https://svelte.dev/docs/kit/page-options#prerender for more details`
 			}
 
 			const {
+				// @ts-ignore
 				pages = 'build',
 				assets = pages,
 				fallback,

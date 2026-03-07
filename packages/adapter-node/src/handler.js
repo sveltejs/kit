@@ -10,6 +10,9 @@ import { manifest, prerendered, base } from 'MANIFEST';
 import { env } from 'ENV';
 import { parse_as_bytes, parse_origin } from '../utils.js';
 
+/* global ENV_PREFIX */
+/* global PRECOMPRESS */
+
 const server = new Server(manifest);
 
 // parse_origin validates ORIGIN and throws descriptive errors for invalid values
