@@ -8,6 +8,27 @@ import { emitDts } from 'svelte2tsx';
 import { load_pkg_json } from './config.js';
 
 /**
+ * Resolve the correct svelte2tsx shims path based on project's Svelte version.
+ * @param {string} cwd
+ * @returns {string}
+ */
+export function resolve_svelte_shims(cwd) {
+	const require = createRequire(import.meta.url);
+	const pkg = load_pkg_json(cwd);
+	const svelte_dep = pkg.peerDependencies?.svelte || pkg.dependencies?.svelte || '3.0';
+	let no_svelte_3;
+	try {
+		no_svelte_3 = !semver.intersects(svelte_dep, '^3.0.0');
+	} catch {
+		// Not all version specs are valid semver, e.g. "latest" or "next" or catalog references
+		no_svelte_3 = true;
+	}
+	return no_svelte_3
+		? require.resolve('svelte2tsx/svelte-shims-v4.d.ts')
+		: require.resolve('svelte2tsx/svelte-shims.d.ts');
+}
+
+/**
  * Generates d.ts files by invoking TypeScript's "emit d.ts files from input files".
  * The files are written to a temporary location and those which should be kept
  * are sanitized ($lib alias resolved) and copied over to the destination folder.
@@ -25,21 +46,9 @@ export async function emit_dts(input, output, final_output, cwd, alias, files, t
 	rimraf(tmp);
 	mkdirp(tmp);
 
-	const require = createRequire(import.meta.url);
-	const pkg = load_pkg_json(cwd);
-	const svelte_dep = pkg.peerDependencies?.svelte || pkg.dependencies?.svelte || '3.0';
-	let no_svelte_3;
-	try {
-		no_svelte_3 = !semver.intersects(svelte_dep, '^3.0.0');
-	} catch {
-		// Not all version specs are valid semver, e.g. "latest" or "next" or catalog references
-		no_svelte_3 = true;
-	}
 	await emitDts({
 		libRoot: input,
-		svelteShimsPath: no_svelte_3
-			? require.resolve('svelte2tsx/svelte-shims-v4.d.ts')
-			: require.resolve('svelte2tsx/svelte-shims.d.ts'),
+		svelteShimsPath: resolve_svelte_shims(cwd),
 		declarationDir: path.relative(cwd, tmp),
 		tsconfig
 	});
