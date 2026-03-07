@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
@@ -1272,6 +1273,24 @@ async function kit({ svelte_config }) {
 							style: /** @type {string | undefined} */ (style?.source)
 						};
 					}
+				}
+
+				// Compute SRI integrity hashes from the files on disk, to ensure
+				// the hash matches the content the browser will actually receive
+				if (build_data.client && svelte_config.kit.subresourceIntegrity) {
+					const algorithm = svelte_config.kit.subresourceIntegrity;
+					/** @type {Record<string, string>} */
+					const integrity = {};
+
+					for (const chunk of /** @type {import('vite').Rollup.OutputBundle[string][]} */ (
+						client_chunks
+					)) {
+						const content = fs.readFileSync(`${out}/client/${chunk.fileName}`);
+						const hash = createHash(algorithm).update(content).digest('base64');
+						integrity[chunk.fileName] = `${algorithm}-${hash}`;
+					}
+
+					build_data.client.integrity = integrity;
 				}
 
 				// regenerate manifest now that we have client entry...
