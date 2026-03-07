@@ -1,54 +1,72 @@
-import { onMount } from 'svelte';
-import { updated_listener } from './utils.js';
+import { version } from '__sveltekit/environment';
+import { assets } from '$app/paths';
+import { BROWSER, DEV } from 'esm-env';
 
 /** @type {import('@sveltejs/kit').Page} */
-export let page;
+export const page = new (class Page {
+	data = $state.raw({});
+	form = $state.raw(null);
+	error = $state.raw(null);
+	params = $state.raw({});
+	route = $state.raw({ id: null });
+	state = $state.raw({});
+	status = $state.raw(-1);
+	// eslint-disable-next-line svelte/prefer-svelte-reactivity
+	url = $state.raw(new URL('a:'));
+})();
 
 /** @type {{ current: import('@sveltejs/kit').Navigation | null }} */
-export let navigating;
+export const navigating = new (class Navigating {
+	current = $state.raw(null);
+})();
 
-/** @type {{ current: boolean }} */
-export let updated;
+/** @type {{ current: boolean; check: () => Promise<boolean> }} */
+export const updated = new (class Updated {
+	current = $state.raw(false);
+	// eslint-disable-next-line @typescript-eslint/require-await
+	check = async () => false;
+})();
 
-// this is a bootleg way to tell if we're in old svelte or new svelte
-const is_legacy =
-	onMount.toString().includes('$$') || /function \w+\(\) \{\}/.test(onMount.toString());
+if (!DEV && BROWSER) {
+	const interval = __SVELTEKIT_APP_VERSION_POLL_INTERVAL__;
 
-const placeholder_url = 'a:';
+	/** @type {number} */
+	let timeout;
 
-if (is_legacy) {
-	page = {
-		data: {},
-		form: null,
-		error: null,
-		params: {},
-		route: { id: null },
-		state: {},
-		status: -1,
-		url: new URL(placeholder_url)
-	};
-	navigating = { current: null };
-	updated = { current: false };
-} else {
-	page = new (class Page {
-		data = $state.raw({});
-		form = $state.raw(null);
-		error = $state.raw(null);
-		params = $state.raw({});
-		route = $state.raw({ id: null });
-		state = $state.raw({});
-		status = $state.raw(-1);
-		url = $state.raw(new URL(placeholder_url));
-	})();
+	/** @type {() => Promise<boolean>} */
+	async function check() {
+		window.clearTimeout(timeout);
 
-	navigating = new (class Navigating {
-		current = $state.raw(null);
-	})();
+		if (interval) timeout = window.setTimeout(check, interval);
 
-	updated = new (class Updated {
-		current = $state.raw(false);
-	})();
-	updated_listener.v = () => (updated.current = true);
+		try {
+			const res = await fetch(`${assets}/${__SVELTEKIT_APP_VERSION_FILE__}`, {
+				headers: {
+					'cache-control': 'no-cache'
+				}
+			});
+
+			if (!res.ok) {
+				return false;
+			}
+
+			const data = await res.json();
+			const new_update = data.version !== version;
+
+			if (new_update) {
+				updated.current = true;
+				window.clearTimeout(timeout);
+			}
+
+			return new_update;
+		} catch {
+			return false;
+		}
+	}
+
+	if (interval) timeout = window.setTimeout(check, interval);
+
+	updated.check = check;
 }
 
 /**

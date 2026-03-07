@@ -14,19 +14,6 @@ import { text_encoder } from '../runtime/utils.js';
 
 export { VERSION } from '../version.js';
 
-// TODO 3.0: remove these types as they are not used anymore (we can't remove them yet because that would be a breaking change)
-/**
- * @template {number} TNumber
- * @template {any[]} [TArray=[]]
- * @typedef {TNumber extends TArray['length'] ? TArray[number] : LessThan<TNumber, [...TArray, TArray['length']]>} LessThan
- */
-
-/**
- * @template {number} TStart
- * @template {number} TEnd
- * @typedef {Exclude<TEnd | LessThan<TEnd>, LessThan<TStart>>} NumericRange
- */
-
 // Keep the status codes as `number` because restricting to certain numbers makes it unnecessarily hard to use compared to the benefits
 // (we have runtime errors already to check for invalid codes). Also see https://github.com/sveltejs/kit/issues/11780
 
@@ -137,8 +124,6 @@ export function isRedirect(e) {
  * @deprecated use `Response.json`
  */
 export function json(data, init) {
-	// TODO deprecate this in favour of `Response.json` when it's
-	// more widely supported
 	const body = JSON.stringify(data);
 
 	// we can't just do `text(JSON.stringify(data), init)` because

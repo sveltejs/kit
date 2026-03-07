@@ -586,7 +586,7 @@ declare module '@sveltejs/kit' {
 			 * - `preload-mjs` - uses `<link rel="preload">` but with the `.mjs` extension which prevents double-parsing in Chromium. Some static webservers will fail to serve .mjs files with a `Content-Type: application/javascript` header, which will cause your application to break. If that doesn't apply to you, this is the option that will deliver the best performance for the largest number of users, until `modulepreload` is more widely supported.
 			 * @default "modulepreload"
 			 * @since 1.8.4
-			 * @deprecated removed in 3.0.0
+			 * @deprecated removed in 3.0
 			 */
 			preloadStrategy?: 'modulepreload' | 'preload-js' | 'preload-mjs';
 			/**
@@ -1240,13 +1240,6 @@ declare module '@sveltejs/kit' {
 		 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
 		 */
 		type: 'goto';
-
-		// TODO 3.0 remove this property, so that it only exists when type is 'popstate'
-		// (would possibly be a breaking change to do it prior to that)
-		/**
-		 * In case of a history back/forward navigation, the number of steps to go back/forward
-		 */
-		delta?: undefined;
 	}
 
 	export interface NavigationLeave extends NavigationBase {
@@ -1255,13 +1248,6 @@ declare module '@sveltejs/kit' {
 		 * - `leave`: The app is being left either because the tab is being closed or a navigation to a different document is occurring
 		 */
 		type: 'leave';
-
-		// TODO 3.0 remove this property, so that it only exists when type is 'popstate'
-		// (would possibly be a breaking change to do it prior to that)
-		/**
-		 * In case of a history back/forward navigation, the number of steps to go back/forward
-		 */
-		delta?: undefined;
 	}
 
 	export interface NavigationFormSubmit extends NavigationBase {
@@ -1275,13 +1261,6 @@ declare module '@sveltejs/kit' {
 		 * The `SubmitEvent` that caused the navigation
 		 */
 		event: SubmitEvent;
-
-		// TODO 3.0 remove this property, so that it only exists when type is 'popstate'
-		// (would possibly be a breaking change to do it prior to that)
-		/**
-		 * In case of a history back/forward navigation, the number of steps to go back/forward
-		 */
-		delta?: undefined;
 	}
 
 	export interface NavigationPopState extends NavigationBase {
@@ -1313,13 +1292,6 @@ declare module '@sveltejs/kit' {
 		 * The `PointerEvent` that caused the navigation
 		 */
 		event: PointerEvent;
-
-		// TODO 3.0 remove this property, so that it only exists when type is 'popstate'
-		// (would possibly be a breaking change to do it prior to that)
-		/**
-		 * In case of a history back/forward navigation, the number of steps to go back/forward
-		 */
-		delta?: undefined;
 	}
 
 	export type Navigation =
@@ -1361,7 +1333,7 @@ declare module '@sveltejs/kit' {
 	};
 
 	/**
-	 * The shape of the [`page`](https://svelte.dev/docs/kit/$app-state#page) reactive object and the [`$page`](https://svelte.dev/docs/kit/$app-stores) store.
+	 * The shape of the [`page`](https://svelte.dev/docs/kit/$app-state#page) reactive object.
 	 */
 	export interface Page<
 		Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
@@ -2758,8 +2730,6 @@ declare module '@sveltejs/kit' {
 		wasNormalized: boolean;
 		denormalize: (url?: string | URL) => URL;
 	};
-	export type LessThan<TNumber extends number, TArray extends any[] = []> = TNumber extends TArray["length"] ? TArray[number] : LessThan<TNumber, [...TArray, TArray["length"]]>;
-	export type NumericRange<TStart extends number, TEnd extends number> = Exclude<TEnd | LessThan<TEnd>, LessThan<TStart>>;
 	type ValidPageOption = (typeof valid_page_options_array)[number];
 	type PageOptions = Partial<Record<ValidPageOption, any>>;
 	const valid_page_options_array: readonly ["ssr", "prerender", "csr", "trailingSlash", "config", "entries", "load"];
@@ -3393,47 +3363,6 @@ declare module '$app/state' {
 	};
 
 	export {};
-}
-
-declare module '$app/stores' {
-	export function getStores(): {
-		
-		page: typeof page;
-		
-		navigating: typeof navigating;
-		
-		updated: typeof updated;
-	};
-	/**
-	 * A readable store whose value contains page data.
-	 *
-	 * On the server, this store can only be subscribed to during component initialization. In the browser, it can be subscribed to at any time.
-	 *
-	 * @deprecated Use `page` from `$app/state` instead (requires Svelte 5, [see docs for more info](https://svelte.dev/docs/kit/migrating-to-sveltekit-2#SvelteKit-2.12:-$app-stores-deprecated))
-	 * */
-	export const page: import("svelte/store").Readable<import("@sveltejs/kit").Page>;
-	/**
-	 * A readable store.
-	 * When navigating starts, its value is a `Navigation` object with `from`, `to`, `type` and (if `type === 'popstate'`) `delta` properties.
-	 * When navigating finishes, its value reverts to `null`.
-	 *
-	 * On the server, this store can only be subscribed to during component initialization. In the browser, it can be subscribed to at any time.
-	 *
-	 * @deprecated Use `navigating` from `$app/state` instead (requires Svelte 5, [see docs for more info](https://svelte.dev/docs/kit/migrating-to-sveltekit-2#SvelteKit-2.12:-$app-stores-deprecated))
-	 * */
-	export const navigating: import("svelte/store").Readable<import("@sveltejs/kit").Navigation | null>;
-	/**
-	 * A readable store whose initial value is `false`. If [`version.pollInterval`](https://svelte.dev/docs/kit/configuration#version) is a non-zero value, SvelteKit will poll for new versions of the app and update the store value to `true` when it detects one. `updated.check()` will force an immediate check, regardless of polling.
-	 *
-	 * On the server, this store can only be subscribed to during component initialization. In the browser, it can be subscribed to at any time.
-	 *
-	 * @deprecated Use `updated` from `$app/state` instead (requires Svelte 5, [see docs for more info](https://svelte.dev/docs/kit/migrating-to-sveltekit-2#SvelteKit-2.12:-$app-stores-deprecated))
-	 * */
-	export const updated: import("svelte/store").Readable<boolean> & {
-		check(): Promise<boolean>;
-	};
-
-	export {};
 }/**
  * It's possible to tell SvelteKit how to type objects inside your app by declaring the `App` namespace. By default, a new project will have a file called `src/app.d.ts` containing the following:
  *
@@ -3467,23 +3396,27 @@ declare namespace App {
 	/**
 	 * The interface that defines `event.locals`, which can be accessed in server [hooks](https://svelte.dev/docs/kit/hooks) (`handle`, and `handleError`), server-only `load` functions, and `+server.js` files.
 	 */
+	// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 	export interface Locals {}
 
 	/**
-	 * Defines the common shape of the [page.data state](https://svelte.dev/docs/kit/$app-state#page) and [$page.data store](https://svelte.dev/docs/kit/$app-stores#page) - that is, the data that is shared between all pages.
+	 * Defines the common shape of the [page.data state](https://svelte.dev/docs/kit/$app-state#page) - that is, the data that is shared between all pages.
 	 * The `Load` and `ServerLoad` functions in `./$types` will be narrowed accordingly.
 	 * Use optional properties for data that is only present on specific pages. Do not add an index signature (`[key: string]: any`).
 	 */
+	// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 	export interface PageData {}
 
 	/**
 	 * The shape of the `page.state` object, which can be manipulated using the [`pushState`](https://svelte.dev/docs/kit/$app-navigation#pushState) and [`replaceState`](https://svelte.dev/docs/kit/$app-navigation#replaceState) functions from `$app/navigation`.
 	 */
+	// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 	export interface PageState {}
 
 	/**
 	 * If your adapter provides [platform-specific context](https://svelte.dev/docs/kit/adapters#Platform-specific-context) via `event.platform`, you can specify it here.
 	 */
+	// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 	export interface Platform {}
 }
 
