@@ -1,5 +1,20 @@
 # @sveltejs/kit
 
+## 2.53.5
+### Patch Changes
+
+
+- fix: don't wait for remote functions that are not awaited in the template ([#15280](https://github.com/sveltejs/kit/pull/15280))
+
+
+- feat: allow `resolve()` to accept pathnames with a search string and/or hash ([#15458](https://github.com/sveltejs/kit/pull/15458))
+
+
+- chore: remove deprecation warnings for `config.kit.files.*` options when validating the Svelte config file ([#15482](https://github.com/sveltejs/kit/pull/15482))
+
+
+- fix: handles form target attribute in remote form redirects ([#15457](https://github.com/sveltejs/kit/pull/15457))
+
 ## 2.53.4
 ### Patch Changes
 
