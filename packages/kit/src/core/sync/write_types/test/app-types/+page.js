@@ -27,6 +27,7 @@ const noMatcherPageParams = {
 };
 
 /** @type {import('$app/types').LayoutParams<'/matcher-test/no-matcher'>} */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const noMatcherLayoutParams = {};
 
 noMatcherPageParams.locale = 'fr'; // any string
