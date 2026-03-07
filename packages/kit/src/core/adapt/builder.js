@@ -2,11 +2,10 @@
 /** @import { ResolvedConfig } from 'vite' */
 /** @import { RouteDefinition } from '@sveltejs/kit' */
 /** @import { RouteData, ValidatedConfig, BuildData, ServerMetadata, ServerMetadataRoute, Prerendered, PrerenderMap, Logger, RemoteChunk } from 'types' */
-import colors from 'kleur';
 import { createReadStream, createWriteStream, existsSync, statSync } from 'node:fs';
 import { extname, resolve, join, dirname, relative } from 'node:path';
 import { pipeline } from 'node:stream';
-import { promisify } from 'node:util';
+import { promisify, styleText } from 'node:util';
 import zlib from 'node:zlib';
 import { copy, rimraf, mkdirp, posixify } from '../../utils/filesystem.js';
 import { generate_manifest } from '../generate_manifest/index.js';
@@ -148,7 +147,8 @@ export function create_builder({
 								prerendered: [],
 								relative_path: relativePath,
 								routes: Array.from(filtered),
-								remotes
+								remotes,
+								root: vite_config.root
 							})
 					});
 				}
@@ -158,7 +158,8 @@ export function create_builder({
 		findServerAssets(route_data) {
 			return find_server_assets(
 				build_data,
-				route_data.map((route) => /** @type {import('types').RouteData} */ (lookup.get(route)))
+				route_data.map((route) => /** @type {import('types').RouteData} */ (lookup.get(route))),
+				vite_config.root
 			);
 		},
 
@@ -168,16 +169,16 @@ export function create_builder({
 
 			const fallback = await generate_fallback({
 				manifest_path,
-				env: { ...env.private, ...env.public }
+				env: { ...env.private, ...env.public },
+				root: vite_config.root
 			});
 
 			if (existsSync(dest)) {
 				console.log(
-					colors
-						.bold()
-						.yellow(
-							`Overwriting ${dest} with fallback page. Consider using a different name for the fallback.`
-						)
+					styleText(
+						['bold', 'yellow'],
+						`Overwriting ${dest} with fallback page. Consider using a different name for the fallback.`
+					)
 				);
 			}
 
@@ -199,7 +200,8 @@ export function create_builder({
 				routes: subset
 					? subset.map((route) => /** @type {import('types').RouteData} */ (lookup.get(route)))
 					: route_data.filter((route) => prerender_map.get(route.id) !== true),
-				remotes
+				remotes,
+				root: vite_config.root
 			});
 		},
 

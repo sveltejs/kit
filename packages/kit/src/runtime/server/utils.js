@@ -223,9 +223,8 @@ let relative = (file) => file;
 if (DEV) {
 	try {
 		const path = await import('node:path');
-		const process = await import('node:process');
 
-		relative = (file) => path.relative(process.cwd(), file);
+		relative = (file) => path.relative('.', file);
 	} catch {
 		// do nothing
 	}

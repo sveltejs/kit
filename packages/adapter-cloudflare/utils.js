@@ -9,7 +9,7 @@ export function is_building_for_cloudflare_pages(wrangler_config) {
 		return true;
 	}
 
-	if (wrangler_config.main || wrangler_config.assets) {
+	if (!!process.env.WORKERS_CI || wrangler_config.main || wrangler_config.assets) {
 		return false;
 	}
 
@@ -81,7 +81,7 @@ export function parse_redirects(file_contents) {
 /**
  * Generates the [_routes.json](https://developers.cloudflare.com/pages/functions/routing/#create-a-_routesjson-file)
  * file that dictates which routes invoke the Cloudflare Worker.
- * @param {Builder2_0_0} builder
+ * @param {import('@sveltejs/kit').Builder} builder
  * @param {string[]} client_assets
  * @param {string[]} redirects
  * @param {import('./index.js').AdapterOptions['routes']} routes

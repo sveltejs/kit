@@ -1,11 +1,7 @@
 import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { assert, expect, test } from 'vitest';
 import { validate_config, load_config } from './index.js';
 import process from 'node:process';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = join(__filename, '..');
 
 /**
  * mutates and remove keys from an object when check callback returns true
@@ -68,7 +64,7 @@ const get_defaults = (prefix = '') => ({
 			reportOnly: directive_defaults
 		},
 		csrf: {
-			checkOrigin: true,
+			checkOrigin: undefined,
 			trustedOrigins: []
 		},
 		embedded: false,
@@ -100,13 +96,14 @@ const get_defaults = (prefix = '') => ({
 		},
 		inlineStyleThreshold: 0,
 		moduleExtensions: ['.js', '.ts'],
-		output: { preloadStrategy: 'modulepreload', bundleStrategy: 'split' },
+		output: { bundleStrategy: 'split', preloadStrategy: undefined },
 		outDir: join(prefix, '.svelte-kit'),
 		router: {
 			type: 'pathname',
 			resolution: 'client'
 		},
 		serviceWorker: {
+			options: undefined,
 			register: true
 		},
 		typescript: {},
@@ -362,7 +359,7 @@ validate_paths(
 );
 
 test('load default config (esm)', async () => {
-	const cwd = join(__dirname, 'fixtures/default');
+	const cwd = join(import.meta.dirname, 'fixtures/default');
 
 	const config = await load_config({ cwd });
 	remove_keys(config, ([, v]) => typeof v === 'function');
@@ -374,7 +371,7 @@ test('load default config (esm)', async () => {
 });
 
 test('load default config (esm) with .ts extensions', async () => {
-	const cwd = join(__dirname, 'fixtures/typescript');
+	const cwd = join(import.meta.dirname, 'fixtures/typescript');
 
 	const config = await load_config({ cwd });
 	remove_keys(config, ([, v]) => typeof v === 'function');
@@ -386,7 +383,7 @@ test('load default config (esm) with .ts extensions', async () => {
 });
 
 test('load .js config when both .js and .ts configs are present', async () => {
-	const cwd = join(__dirname, 'fixtures/multiple');
+	const cwd = join(import.meta.dirname, 'fixtures/multiple');
 
 	const config = await load_config({ cwd });
 	remove_keys(config, ([, v]) => typeof v === 'function');
@@ -401,7 +398,7 @@ test('errors on loading config with incorrect default export', async () => {
 	let message = null;
 
 	try {
-		const cwd = join(__dirname, 'fixtures', 'export-string');
+		const cwd = join(import.meta.dirname, 'fixtures', 'export-string');
 		await load_config({ cwd });
 	} catch (/** @type {any} */ e) {
 		message = e.message;
@@ -505,7 +502,7 @@ test('errors on invalid forkPreloads values', () => {
 });
 
 test('uses src prefix for other kit.files options', async () => {
-	const cwd = join(__dirname, 'fixtures/custom-src');
+	const cwd = join(import.meta.dirname, 'fixtures/custom-src');
 
 	const config = await load_config({ cwd });
 	remove_keys(config, ([, v]) => typeof v === 'function');

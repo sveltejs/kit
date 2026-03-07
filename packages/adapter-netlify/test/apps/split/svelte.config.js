@@ -5,9 +5,6 @@ const config = {
 	kit: {
 		adapter: adapter({ split: true }),
 		experimental: {
-			instrumentation: {
-				server: true
-			},
 			remoteFunctions: true
 		}
 	}

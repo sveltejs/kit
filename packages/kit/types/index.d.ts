@@ -238,57 +238,50 @@ declare module '@sveltejs/kit' {
 		/**
 		 * Gets a cookie that was previously set with `cookies.set`, or from the request headers.
 		 * @param name the name of the cookie
-		 * @param opts the options, passed directly to `cookie.parse`. See documentation [here](https://github.com/jshttp/cookie#cookieparsestr-options)
+		 * @param opts the options, passed directly to `cookie.parse`. See documentation [here](https://github.com/jshttp/cookie?tab=readme-ov-file#cookieparsecookiestr-options)
 		 */
-		get: (name: string, opts?: import('cookie').CookieParseOptions) => string | undefined;
+		get: (name: string, opts?: import('cookie').ParseOptions) => string | undefined;
 
 		/**
 		 * Gets all cookies that were previously set with `cookies.set`, or from the request headers.
-		 * @param opts the options, passed directly to `cookie.parse`. See documentation [here](https://github.com/jshttp/cookie#cookieparsestr-options)
+		 * @param opts the options, passed directly to `cookie.parse`. See documentation [here](https://github.com/jshttp/cookie?tab=readme-ov-file#cookieparsecookiestr-options)
 		 */
-		getAll: (opts?: import('cookie').CookieParseOptions) => Array<{ name: string; value: string }>;
+		getAll: (opts?: import('cookie').ParseOptions) => Array<{ name: string; value: string }>;
 
 		/**
 		 * Sets a cookie. This will add a `set-cookie` header to the response, but also make the cookie available via `cookies.get` or `cookies.getAll` during the current request.
 		 *
-		 * The `httpOnly` and `secure` options are `true` by default (except on http://localhost, where `secure` is `false`), and must be explicitly disabled if you want cookies to be readable by client-side JavaScript and/or transmitted over HTTP. The `sameSite` option defaults to `lax`.
+		 * The `httpOnly` and `secure` options are `true` by default (except on http://localhost, where `secure` is `false`), and must be explicitly disabled if you want cookies to be readable by client-side JavaScript and/or transmitted over HTTP.
 		 *
-		 * You must specify a `path` for the cookie. In most cases you should explicitly set `path: '/'` to make the cookie available throughout your app. You can use relative paths, or set `path: ''` to make the cookie only available on the current path and its children
+		 * The `path` option is `'/'` by default. You can use relative paths, or set `path: ''` to make the cookie only available on the current path and its children.
 		 * @param name the name of the cookie
 		 * @param value the cookie value
-		 * @param opts the options, passed directly to `cookie.serialize`. See documentation [here](https://github.com/jshttp/cookie#cookieserializename-value-options)
+		 * @param opts the options passed to `cookie.serialize` with the SvelteKit defaults described above. See documentation [here](https://github.com/jshttp/cookie?tab=readme-ov-file#cookiestringifysetcookiesetcookieobj-options)
 		 */
-		set: (
-			name: string,
-			value: string,
-			opts: import('cookie').CookieSerializeOptions & { path: string }
-		) => void;
+		set: (name: string, value: string, opts: import('cookie').SerializeOptions) => void;
 
 		/**
 		 * Deletes a cookie by setting its value to an empty string and setting the expiry date in the past.
 		 *
-		 * You must specify a `path` for the cookie. In most cases you should explicitly set `path: '/'` to make the cookie available throughout your app. You can use relative paths, or set `path: ''` to make the cookie only available on the current path and its children
+		 * The `httpOnly` and `secure` options are `true` by default (except on http://localhost, where `secure` is `false`), and must be explicitly disabled if you want cookies to be readable by client-side JavaScript and/or transmitted over HTTP.
+		 *
+		 * The `path` option is `'/'` by default. You can use relative paths, or set `path: ''` to make the cookie only available on the current path and its children.
 		 * @param name the name of the cookie
-		 * @param opts the options, passed directly to `cookie.serialize`. The `path` must match the path of the cookie you want to delete. See documentation [here](https://github.com/jshttp/cookie#cookieserializename-value-options)
+		 * @param opts the options passed to `cookie.serialize` with the SvelteKit defaults described above. See documentation [here](https://github.com/jshttp/cookie?tab=readme-ov-file#cookiestringifysetcookiesetcookieobj-options)
 		 */
-		delete: (name: string, opts: import('cookie').CookieSerializeOptions & { path: string }) => void;
+		delete: (name: string, opts: import('cookie').SerializeOptions) => void;
 
 		/**
 		 * Serialize a cookie name-value pair into a `Set-Cookie` header string, but don't apply it to the response.
 		 *
-		 * The `httpOnly` and `secure` options are `true` by default (except on http://localhost, where `secure` is `false`), and must be explicitly disabled if you want cookies to be readable by client-side JavaScript and/or transmitted over HTTP. The `sameSite` option defaults to `lax`.
+		 * The `httpOnly` and `secure` options are `true` by default (except on http://localhost, where `secure` is `false`), and must be explicitly disabled if you want cookies to be readable by client-side JavaScript and/or transmitted over HTTP.
 		 *
-		 * You must specify a `path` for the cookie. In most cases you should explicitly set `path: '/'` to make the cookie available throughout your app. You can use relative paths, or set `path: ''` to make the cookie only available on the current path and its children
-		 *
+		 * The `path` option is `'/'` by default. You can use relative paths, or set `path: ''` to make the cookie only available on the current path and its children.
 		 * @param name the name of the cookie
 		 * @param value the cookie value
-		 * @param opts the options, passed directly to `cookie.serialize`. See documentation [here](https://github.com/jshttp/cookie#cookieserializename-value-options)
+		 * @param opts the options passed to `cookie.serialize` with the SvelteKit defaults described above. See documentation [here](https://github.com/jshttp/cookie?tab=readme-ov-file#cookiestringifysetcookiesetcookieobj-options)
 		 */
-		serialize: (
-			name: string,
-			value: string,
-			opts: import('cookie').CookieSerializeOptions & { path: string }
-		) => string;
+		serialize: (name: string, value: string, opts: import('cookie').SerializeOptions) => string;
 	}
 
 	/**
@@ -402,7 +395,7 @@ declare module '@sveltejs/kit' {
 			 *
 			 * To allow people to make `POST`, `PUT`, `PATCH`, or `DELETE` requests with a `Content-Type` of `application/x-www-form-urlencoded`, `multipart/form-data`, or `text/plain` to your app from other origins, you will need to disable this option. Be careful!
 			 * @default true
-			 * @deprecated Use `trustedOrigins: ['*']` instead
+			 * @deprecated removed in 3.0. Use `trustedOrigins: ['*']` instead
 			 */
 			checkOrigin?: boolean;
 			/**
@@ -593,6 +586,7 @@ declare module '@sveltejs/kit' {
 			 * - `preload-mjs` - uses `<link rel="preload">` but with the `.mjs` extension which prevents double-parsing in Chromium. Some static webservers will fail to serve .mjs files with a `Content-Type: application/javascript` header, which will cause your application to break. If that doesn't apply to you, this is the option that will deliver the best performance for the largest number of users, until `modulepreload` is more widely supported.
 			 * @default "modulepreload"
 			 * @since 1.8.4
+			 * @deprecated removed in 3.0.0
 			 */
 			preloadStrategy?: 'modulepreload' | 'preload-js' | 'preload-mjs';
 			/**
@@ -2638,7 +2632,7 @@ declare module '@sveltejs/kit' {
 	 * Make sure you're not catching the thrown error, which would prevent SvelteKit from handling it.
 	 * @param status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
 	 * @param body An object that conforms to the App.Error type. If a string is passed, it will be used as the message property.
-	 * @throws {HttpError} This error instructs SvelteKit to initiate HTTP error handling.
+	 * @throws {import('./public.js').HttpError} This error instructs SvelteKit to initiate HTTP error handling.
 	 * @throws {Error} If the provided status is invalid (not between 400 and 599).
 	 */
 	export function error(status: number, body: App.Error): never;
@@ -2649,7 +2643,7 @@ declare module '@sveltejs/kit' {
 	 * Make sure you're not catching the thrown error, which would prevent SvelteKit from handling it.
 	 * @param status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
 	 * @param body An object that conforms to the App.Error type. If a string is passed, it will be used as the message property.
-	 * @throws {HttpError} This error instructs SvelteKit to initiate HTTP error handling.
+	 * @throws {import('./public.js').HttpError} This error instructs SvelteKit to initiate HTTP error handling.
 	 * @throws {Error} If the provided status is invalid (not between 400 and 599).
 	 */
 	export function error(status: number, body?: {
@@ -2659,7 +2653,7 @@ declare module '@sveltejs/kit' {
 	 * Checks whether this is an error thrown by {@link error}.
 	 * @param status The status to filter for.
 	 * */
-	export function isHttpError<T extends number>(e: unknown, status?: T): e is (HttpError_1 & {
+	export function isHttpError<T extends number>(e: unknown, status?: T): e is (HttpError & {
 		status: T extends undefined ? never : T;
 	});
 	/**
@@ -2675,7 +2669,7 @@ declare module '@sveltejs/kit' {
 	 *
 	 * @param status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#redirection_messages). Must be in the range 300-308.
 	 * @param location The location to redirect to.
-	 * @throws {Redirect} This error instructs SvelteKit to redirect to the specified location.
+	 * @throws {import('./public.js').Redirect} This error instructs SvelteKit to redirect to the specified location.
 	 * @throws {Error} If the provided status is invalid.
 	 * */
 	export function redirect(status: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308 | ({} & number), location: string | URL): never;
@@ -2683,17 +2677,19 @@ declare module '@sveltejs/kit' {
 	 * Checks whether this is a redirect thrown by {@link redirect}.
 	 * @param e The object to check.
 	 * */
-	export function isRedirect(e: unknown): e is Redirect_1;
+	export function isRedirect(e: unknown): e is Redirect;
 	/**
 	 * Create a JSON `Response` object from the supplied data.
 	 * @param data The value that will be serialized as JSON.
 	 * @param init Options such as `status` and `headers` that will be added to the response. `Content-Type: application/json` and `Content-Length` headers will be added automatically.
+	 * @deprecated use `Response.json`
 	 */
 	export function json(data: any, init?: ResponseInit): Response;
 	/**
 	 * Create a `Response` object from the supplied body.
 	 * @param body The value that will be used as-is.
 	 * @param init Options such as `status` and `headers` that will be added to the response. A `Content-Length` header will be added automatically.
+	 * @deprecated use `new Response`
 	 */
 	export function text(body: string, init?: ResponseInit): Response;
 	/**
@@ -2768,21 +2764,6 @@ declare module '@sveltejs/kit' {
 	type PageOptions = Partial<Record<ValidPageOption, any>>;
 	const valid_page_options_array: readonly ["ssr", "prerender", "csr", "trailingSlash", "config", "entries", "load"];
 	export const VERSION: string;
-	class HttpError_1 {
-		
-		constructor(status: number, body: {
-			message: string;
-		} extends App.Error ? (App.Error | string | undefined) : App.Error);
-		status: number;
-		body: App.Error;
-		toString(): string;
-	}
-	class Redirect_1 {
-		
-		constructor(status: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308, location: string);
-		status: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308;
-		location: string;
-	}
 
 	export {};
 }
@@ -2877,17 +2858,6 @@ declare module '@sveltejs/kit/node' {
 	 * @since 2.4.0
 	 */
 	export function createReadableStream(file: string): ReadableStream;
-
-	export {};
-}
-
-declare module '@sveltejs/kit/node/polyfills' {
-	/**
-	 * Make various web APIs available as globals:
-	 * - `crypto`
-	 * - `File`
-	 */
-	export function installPolyfills(): void;
 
 	export {};
 }

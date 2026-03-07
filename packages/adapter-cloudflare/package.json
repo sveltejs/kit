@@ -34,7 +34,7 @@
 		"ambient.d.ts"
 	],
 	"scripts": {
-		"build": "esbuild src/worker.js --bundle --outfile=files/worker.js --external:SERVER --external:MANIFEST --external:cloudflare:workers --format=esm",
+		"build": "rolldown -c",
 		"lint": "prettier --check .",
 		"format": "pnpm lint --write",
 		"check": "tsc --skipLibCheck",
@@ -44,19 +44,20 @@
 		"prepublishOnly": "pnpm build"
 	},
 	"dependencies": {
-		"@cloudflare/workers-types": "^4.20250507.0",
+		"@cloudflare/workers-types": "^4.20260219.0",
 		"worktop": "0.8.0-next.18"
 	},
 	"devDependencies": {
 		"@playwright/test": "catalog:",
 		"@sveltejs/kit": "workspace:^",
 		"@types/node": "catalog:",
-		"esbuild": "catalog:",
-		"typescript": "^5.3.3",
+		"rolldown": "catalog:",
+		"typescript": "catalog:",
+		"vite": "catalog:",
 		"vitest": "catalog:"
 	},
 	"peerDependencies": {
-		"@sveltejs/kit": "^2.0.0",
-		"wrangler": "^4.0.0"
+		"@sveltejs/kit": "^3.0.0",
+		"wrangler": "^4.67.0"
 	}
 }

@@ -1,4 +1,4 @@
-/** @type {import('./.svelte-kit/types/src/core/sync/write_types/test/simple-page-server-and-shared/$types').PageLoad} */
+/** @type {import('./.svelte-kit/types/$types').PageLoad} */
 export function load({ data }) {
 	data.server;
 	// @ts-expect-error
@@ -8,7 +8,7 @@ export function load({ data }) {
 	};
 }
 
-/** @type {import('./.svelte-kit/types/src/core/sync/write_types/test/simple-page-server-and-shared/$types').PageData} */
+/** @type {import('./.svelte-kit/types/$types').PageData} */
 const data = {
 	shared: 'asd'
 };

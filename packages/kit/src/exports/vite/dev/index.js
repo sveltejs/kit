@@ -1,26 +1,23 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import process from 'node:process';
 import { URL } from 'node:url';
 import { AsyncLocalStorage } from 'node:async_hooks';
-import colors from 'kleur';
+import { styleText } from 'node:util';
 import sirv from 'sirv';
 import { isCSSRequest, loadEnv, buildErrorMessage } from 'vite';
 import { createReadableStream, getRequest, setResponse } from '../../../exports/node/index.js';
-import { installPolyfills } from '../../../exports/node/polyfills.js';
 import { coalesce_to_error } from '../../../utils/error.js';
 import { from_fs, posixify, resolve_entry, to_fs } from '../../../utils/filesystem.js';
 import { load_error_page } from '../../../core/config/index.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import * as sync from '../../../core/sync/sync.js';
-import { get_mime_lookup, runtime_base } from '../../../core/utils.js';
+import { get_mime_lookup, get_runtime_base } from '../../../core/utils.js';
 import { compact } from '../../../utils/array.js';
 import { not_found } from '../utils.js';
 import { SCHEME } from '../../../utils/url.js';
 import { check_feature } from '../../../utils/features.js';
 import { escape_html } from '../../../utils/escape.js';
 
-const cwd = process.cwd();
 // vite-specifc queries that we should skip handling for css urls
 const vite_css_query_regex = /(?:\?|&)(?:raw|url|inline)(?:&|$)/;
 
@@ -29,11 +26,10 @@ const vite_css_query_regex = /(?:\?|&)(?:raw|url|inline)(?:&|$)/;
  * @param {import('vite').ResolvedConfig} vite_config
  * @param {import('types').ValidatedConfig} svelte_config
  * @param {() => Array<{ hash: string, file: string }>} get_remotes
+ * @param {string} root The project root directory
  * @return {Promise<Promise<() => void>>}
  */
-export async function dev(vite, vite_config, svelte_config, get_remotes) {
-	installPolyfills();
-
+export async function dev(vite, vite_config, svelte_config, get_remotes, root) {
 	const async_local_storage = new AsyncLocalStorage();
 
 	globalThis.__SVELTEKIT_TRACK__ = (label) => {
@@ -54,7 +50,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes) {
 		return fetch(info, init);
 	};
 
-	sync.init(svelte_config, vite_config.mode);
+	sync.init(svelte_config, vite_config.mode, root);
 
 	/** @type {import('types').ManifestData} */
 	let manifest_data;
@@ -69,7 +65,9 @@ export async function dev(vite, vite_config, svelte_config, get_remotes) {
 		try {
 			return await vite.ssrLoadModule(url, { fixStacktrace: true });
 		} catch (/** @type {any} */ err) {
-			const msg = buildErrorMessage(err, [colors.red(`Internal server error: ${err.message}`)]);
+			const msg = buildErrorMessage(err, [
+				styleText('red', `Internal server error: ${err.message}`)
+			]);
 
 			if (!vite.config.logger.hasErrorLogged(err)) {
 				vite.config.logger.error(msg, { error: err });
@@ -104,7 +102,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes) {
 
 	function update_manifest() {
 		try {
-			({ manifest_data } = sync.create(svelte_config));
+			({ manifest_data } = sync.create(svelte_config, root));
 
 			if (manifest_error) {
 				manifest_error = null;
@@ -113,7 +111,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes) {
 		} catch (error) {
 			manifest_error = /** @type {Error} */ (error);
 
-			console.error(colors.bold().red(manifest_error.message));
+			console.error(styleText(['bold', 'red'], manifest_error.message));
 			vite.ws.send({
 				type: 'error',
 				err: {
@@ -132,7 +130,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes) {
 			mimeTypes: get_mime_lookup(manifest_data),
 			_: {
 				client: {
-					start: `${runtime_base}/client/entry.js`,
+					start: `${get_runtime_base(root)}/client/entry.js`,
 					app: `${to_fs(svelte_config.kit.outDir)}/generated/client/app.js`,
 					imports: [],
 					stylesheets: [],
@@ -275,7 +273,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes) {
 							page: route.page,
 							endpoint: endpoint
 								? async () => {
-										const url = path.resolve(cwd, endpoint.file);
+										const url = path.resolve(root, endpoint.file);
 										return await loud_ssr_load_module(url);
 									}
 								: null,
@@ -289,7 +287,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes) {
 
 					for (const key in manifest_data.matchers) {
 						const file = manifest_data.matchers[key];
-						const url = path.resolve(cwd, file);
+						const url = path.resolve(root, file);
 						const module = await vite.ssrLoadModule(url, { fixStacktrace: true });
 
 						if (module.match) {
@@ -359,7 +357,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes) {
 		// Don't run for a single file if the whole manifest is about to get updated
 		// Unless it's a file where the trailing slash page option might have changed
 		if (timeout || restarting || !/\+(page|layout|server).*$/.test(file)) return;
-		sync.update(svelte_config, manifest_data, file);
+		sync.update(svelte_config, manifest_data, file, root);
 	});
 
 	const { appTemplate, errorTemplate, serviceWorker, hooks } = svelte_config.kit.files;
@@ -382,7 +380,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes) {
 			file.startsWith(serviceWorker) ||
 			file.startsWith(hooks.server)
 		) {
-			sync.server(svelte_config);
+			sync.server(svelte_config, root);
 		}
 	});
 
@@ -454,7 +452,9 @@ export async function dev(vite, vite_config, svelte_config, get_remotes) {
 				}`;
 
 				const decoded = decodeURI(new URL(base + req.url).pathname);
-				const file = posixify(path.resolve(decoded.slice(svelte_config.kit.paths.base.length + 1)));
+				const file = posixify(
+					path.resolve(root, decoded.slice(svelte_config.kit.paths.base.length + 1))
+				);
 				const is_file = fs.existsSync(file) && !fs.statSync(file).isDirectory();
 				const allowed =
 					!vite_config.server.fs.strict ||
@@ -497,11 +497,13 @@ export async function dev(vite, vite_config, svelte_config, get_remotes) {
 
 				// we have to import `Server` before calling `set_assets`
 				const { Server } = /** @type {import('types').ServerModule} */ (
-					await vite.ssrLoadModule(`${runtime_base}/server/index.js`, { fixStacktrace: true })
+					await vite.ssrLoadModule(`${get_runtime_base(root)}/server/index.js`, {
+						fixStacktrace: true
+					})
 				);
 
 				const { set_fix_stack_trace } = await vite.ssrLoadModule(
-					`${runtime_base}/shared-server.js`
+					`${get_runtime_base(root)}/shared-server.js`
 				);
 				set_fix_stack_trace(fix_stack_trace);
 
@@ -521,7 +523,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes) {
 				});
 
 				if (manifest_error) {
-					console.error(colors.bold().red(manifest_error.message));
+					console.error(styleText(['bold', 'red'], manifest_error.message));
 
 					const error_page = load_error_page(svelte_config);
 

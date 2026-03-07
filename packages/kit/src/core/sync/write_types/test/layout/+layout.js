@@ -1,4 +1,4 @@
-/** @type {import('./.svelte-kit/types/src/core/sync/write_types/test/layout/$types').LayoutLoad} */
+/** @type {import('./.svelte-kit/types/$types').LayoutLoad} */
 export function load({ data }) {
 	data.server;
 	// @ts-expect-error
