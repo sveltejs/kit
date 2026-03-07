@@ -1,5 +1,4 @@
 import process from 'node:process';
-import { styleText } from 'node:util';
 
 /** @typedef {import('./types.js').Validator} Validator */
 
