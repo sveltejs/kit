@@ -317,24 +317,24 @@ const options = object(
 	true
 );
 
-/**
- * @param {Validator} fn
- * @param {(keypath: string) => string} get_message
- * @returns {Validator}
- */
-function deprecate(
-	fn,
-	get_message = (keypath) =>
-		`The \`${keypath}\` option is deprecated, and will be removed in a future version`
-) {
-	return (input, keypath) => {
-		if (input !== undefined) {
-			console.warn(styleText(['bold', 'yellow'], get_message(keypath)));
-		}
+// /**
+//  * @param {Validator} fn
+//  * @param {(keypath: string) => string} get_message
+//  * @returns {Validator}
+//  */
+// function deprecate(
+// 	fn,
+// 	get_message = (keypath) =>
+// 		`The \`${keypath}\` option is deprecated, and will be removed in a future version`
+// ) {
+// 	return (input, keypath) => {
+// 		if (input !== undefined) {
+// 			console.warn(styleText(['bold', 'yellow'], get_message(keypath)));
+// 		}
 
-		return fn(input, keypath);
-	};
-}
+// 		return fn(input, keypath);
+// 	};
+// }
 
 /**
  * @param {(keypath: string) => string} get_message
