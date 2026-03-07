@@ -1,5 +1,17 @@
 # @sveltejs/adapter-node
 
+## 6.0.0-next.0
+### Major Changes
+
+
+- chore: migrate from rollup to rolldown ([#15297](https://github.com/sveltejs/kit/pull/15297))
+
+
+### Patch Changes
+
+- Updated dependencies [[`cb9d416`](https://github.com/sveltejs/kit/commit/cb9d416d05266b6237f2856fb94df5b8a9b04279), [`caf3a18`](https://github.com/sveltejs/kit/commit/caf3a18de6581ab7d454d6fa8ad37ebdbdef95e6), [`4777827`](https://github.com/sveltejs/kit/commit/4777827246727045cf0209399751377564e7951d), [`a2792e2`](https://github.com/sveltejs/kit/commit/a2792e2cdc2dee91c20c7bfd921a104b539abae5), [`ba36148`](https://github.com/sveltejs/kit/commit/ba36148577ed0bc2675034a3d57001d71d328cd1), [`e2f3075`](https://github.com/sveltejs/kit/commit/e2f3075ef299b91175fae116e6a76269002029cf), [`87603d1`](https://github.com/sveltejs/kit/commit/87603d13d009cada171c9b5d5daad5adad4f72de), [`d545970`](https://github.com/sveltejs/kit/commit/d54597018308068aea5268e6c45b26398cd57607), [`e2f3075`](https://github.com/sveltejs/kit/commit/e2f3075ef299b91175fae116e6a76269002029cf), [`44503b4`](https://github.com/sveltejs/kit/commit/44503b45df4ff6d9a07980c89bf440d24bf13da6), [`d06affc`](https://github.com/sveltejs/kit/commit/d06affc9246c676fc32b644efc0bbf53b42bc67d), [`8af47eb`](https://github.com/sveltejs/kit/commit/8af47eb06f9a1a883058de059ccf81aab4e85627), [`e2f3075`](https://github.com/sveltejs/kit/commit/e2f3075ef299b91175fae116e6a76269002029cf), [`5c79eb4`](https://github.com/sveltejs/kit/commit/5c79eb400a20f756e49773a28eb53fa4d29c0b94), [`caf3a18`](https://github.com/sveltejs/kit/commit/caf3a18de6581ab7d454d6fa8ad37ebdbdef95e6), [`71e8205`](https://github.com/sveltejs/kit/commit/71e82053ace295607290b5c719f57b6f17ef9bd8), [`55df690`](https://github.com/sveltejs/kit/commit/55df6905c6d3882dacd9ab2bdb38a5caa468446b), [`8823037`](https://github.com/sveltejs/kit/commit/8823037b4a341013cc40a9bb688ee23bda3dbb04), [`1d76212`](https://github.com/sveltejs/kit/commit/1d76212740f59ed58839ef569899c653870834fd), [`56fa4fa`](https://github.com/sveltejs/kit/commit/56fa4fa31d5a11278d1f6f5291d0c9e8e39a9e0a)]:
+  - @sveltejs/kit@3.0.0-next.0
+
 ## 5.5.4
 ### Patch Changes
 
