@@ -1154,6 +1154,13 @@ test.describe('Routing', () => {
 		expect(new URL(page.url()).pathname).toBe('/routing/trailing-slash/never');
 		await expect(page.locator('p')).toHaveText('/routing/trailing-slash/never');
 	});
+
+	test('trailing slash is preserved when error boundary is above page config', async ({ page }) => {
+		await page.goto('/routing/trailing-slash/error-boundary/');
+		// The page throws an error, which triggers the error boundary.
+		// The URL should still have the trailing slash from the page's trailingSlash='always' config.
+		expect(new URL(page.url()).pathname).toBe('/routing/trailing-slash/error-boundary/');
+	});
 });
 
 test.describe('Shadow DOM', () => {
