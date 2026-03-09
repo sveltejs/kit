@@ -54,11 +54,12 @@ catalog:
 catalogs:
   # these show up in the ci.yml like `vite: 'beta'`, etc.
   vite-baseline:
-    vite: ^8.0.0-beta.15
+    vite: ^8.0.0-beta.18
     '@sveltejs/vite-plugin-svelte': ^7.0.0
-  vite-beta:
-    vite: ^9.0.0-beta.0
-    '@sveltejs/vite-plugin-svelte': ^7.0.0
+  # TODO: uncomment this when we start working on Vite 9 support
+  # vite-beta:
+  #   vite: ^9.0.0-beta.0
+  #   '@sveltejs/vite-plugin-svelte': ^7.0.0
 overrides:
 # ci script replaces all overrides with the vite-xxx or node-xx catalogs above.
 # if you want to introduce an override, make sure to add it to all of them too

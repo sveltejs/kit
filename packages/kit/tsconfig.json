@@ -4,9 +4,9 @@
 		"checkJs": true,
 		"noEmit": true,
 		"strict": true,
-		"target": "es2023",
-		"module": "node16",
-		"moduleResolution": "node16",
+		"target": "esnext",
+		"module": "nodenext",
+		"moduleResolution": "nodenext",
 		"allowSyntheticDefaultImports": true,
 		"paths": {
 			"@sveltejs/kit": ["./src/exports/public.d.ts"],

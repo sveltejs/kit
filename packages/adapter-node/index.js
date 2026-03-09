@@ -2,17 +2,6 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { rolldown } from 'rolldown';
 
-/**
- * @template T
- * @template {keyof T} K
- * @typedef {Partial<Omit<T, K>> & Required<Pick<T, K>>} PartialExcept
- */
-
-/**
- * We use a custom `Builder` type here to support the minimum version of SvelteKit.
- * @typedef {PartialExcept<import('@sveltejs/kit').Builder, 'log' | 'rimraf' | 'mkdirp' | 'config' | 'prerendered' | 'routes' | 'createEntries' | 'findServerAssets' | 'generateFallback' | 'generateEnvModule' | 'generateManifest' | 'getBuildDirectory' | 'getClientDirectory' | 'getServerDirectory' | 'getAppPath' | 'writeClient' | 'writePrerendered' | 'writePrerendered' | 'writeServer' | 'copy' | 'compress'>} Builder2_4_0
- */
-
 const files = fileURLToPath(new URL('./files', import.meta.url).href);
 
 /** @type {import('./index.js').default} */
@@ -21,7 +10,6 @@ export default function (opts = {}) {
 
 	return {
 		name: '@sveltejs/adapter-node',
-		/** @param {Builder2_4_0} builder */
 		async adapt(builder) {
 			const tmp = builder.getBuildDirectory('adapter-node');
 
@@ -62,7 +50,7 @@ export default function (opts = {}) {
 				manifest: `${tmp}/manifest.js`
 			};
 
-			if (builder.hasServerInstrumentationFile?.()) {
+			if (builder.hasServerInstrumentationFile()) {
 				input['instrumentation.server'] = `${tmp}/instrumentation.server.js`;
 			}
 
@@ -99,8 +87,8 @@ export default function (opts = {}) {
 				}
 			});
 
-			if (builder.hasServerInstrumentationFile?.()) {
-				builder.instrument?.({
+			if (builder.hasServerInstrumentationFile()) {
+				builder.instrument({
 					entrypoint: `${out}/index.js`,
 					instrumentation: `${out}/server/instrumentation.server.js`,
 					module: {
