@@ -836,7 +836,9 @@ async function kit({ svelte_config }) {
 					manifest_data.routes.forEach((route) => {
 						if (route.endpoint) {
 							const resolved = path.resolve(route.endpoint.file);
-							const relative = decodeURIComponent(path.relative(kit.files.routes, resolved));
+							const relative = decodeURIComponent(
+								path.relative(path.normalize(kit.files.routes), path.normalize(resolved))
+							);
 							const name = posixify(path.join('entries/endpoints', relative.replace(/\.js$/, '')));
 							input[name] = resolved;
 						}
@@ -847,8 +849,9 @@ async function kit({ svelte_config }) {
 						for (const file of [node.component, node.universal, node.server]) {
 							if (file) {
 								const resolved = path.resolve(file);
-								const relative = decodeURIComponent(path.relative(kit.files.routes, resolved));
-
+								const relative = decodeURIComponent(
+									path.relative(path.normalize(kit.files.routes), path.normalize(resolved))
+								);
 								const name = relative.startsWith('..')
 									? posixify(path.join('entries/fallbacks', path.basename(file)))
 									: posixify(path.join('entries/pages', relative.replace(/\.js$/, '')));
