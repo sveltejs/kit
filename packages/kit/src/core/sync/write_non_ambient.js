@@ -134,7 +134,7 @@ function generate_app_types(manifest_data, config) {
 			if (!segment) continue;
 
 			current += '/' + segment;
-			if (current !== '/' && route_ids.has(current)) {
+			if (route_ids.has(current)) {
 				ancestors.push(current);
 			}
 		}
