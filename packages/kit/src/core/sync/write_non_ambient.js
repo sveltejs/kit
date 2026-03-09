@@ -179,20 +179,27 @@ function generate_app_types(manifest_data, config) {
 						optional: true,
 						matchers: matcher === null ? null : new Set([matcher])
 					});
-				} else {
-					if (entry.matchers === null) continue;
-					if (matcher === null) {
-						entry.matchers = null;
-					} else {
-						entry.matchers.add(matcher);
-					}
+					continue;
 				}
+
+				if (entry.matchers === null) continue;
+
+				if (matcher === null) {
+					entry.matchers = null;
+					continue;
+				}
+
+				entry.matchers.add(matcher);
 			}
 		}
 	}
 
 	for (const route of manifest_data.routes) {
 		const pathname = remove_group_segments(route.id);
+		let normalized_pathname = pathname;
+
+		/** @type {(path: string) => string} */
+		let serialise = s;
 
 		if (route.params.length > 0) {
 			const params = route.params.map((p) => {
@@ -202,26 +209,30 @@ function generate_app_types(manifest_data, config) {
 			const route_type = `${s(route.id)}: { ${params.join('; ')} }`;
 
 			dynamic_routes.push(route_type);
-		}
 
-		const normalized_pathname =
-			route.params.length > 0
-				? replace_required_params(replace_optional_params(pathname))
-				: pathname;
+			normalized_pathname = replace_required_params(replace_optional_params(pathname));
+			serialise = (p) => `\`${p}\` & {}`;
+		}
 
 		for (const p of get_pathnames_for_trailing_slash(normalized_pathname, route)) {
-			pathnames.add(route.params.length > 0 ? `\`${p}\` & {}` : s(p));
+			pathnames.add(serialise(p));
 		}
 
-		const layout_params = Array.from(layout_params_by_route.get(route.id) ?? new Map())
-			.map(([name, { optional, matchers }]) => {
-				const type = get_matchers_type(matchers);
-				return `${name}${optional ? '?:' : ':'} ${type}`;
-			})
-			.join('; ');
+		let layout_type = 'Record<string, never>';
 
-		const layout_type = `${s(route.id)}: ${layout_params.length > 0 ? `{ ${layout_params} }` : 'Record<string, never>'}`;
-		layouts.push(layout_type);
+		const layout_params = layout_params_by_route.get(route.id);
+		if (layout_params) {
+			const params = Array.from(layout_params)
+				.map(([name, { optional, matchers }]) => {
+					const type = get_matchers_type(matchers);
+					return `${name}${optional ? '?:' : ':'} ${type}`;
+				})
+				.join('; ');
+
+			if (params.length > 0) layout_type = `{ ${params} }`;
+		}
+
+		layouts.push(`${s(route.id)}: ${layout_type}`);
 	}
 
 	const assets = manifest_data.assets.map((asset) => s('/' + asset.file));
