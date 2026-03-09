@@ -888,8 +888,7 @@ test.describe('$app/environment', () => {
 			path.join(root, '.svelte-kit/output/server/entries/pages/treeshaking/dev/_page.svelte.js'),
 			'utf-8'
 		);
-		// check that import { dev } from '$app/environment' is treeshaken
-		expect(code).not.toMatch(/import .*dev/);
+		expect(code).not.toContain('not prod');
 	});
 
 	test('treeshakes browser check', async () => {
@@ -902,8 +901,7 @@ test.describe('$app/environment', () => {
 			),
 			'utf-8'
 		);
-		// check that import { browser } from '$app/environment' is treeshaken
-		expect(code).not.toMatch(/import .*browser/);
+		expect(code).not.toMatch('client');
 	});
 });
 
