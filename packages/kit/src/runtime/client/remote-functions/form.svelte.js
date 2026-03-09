@@ -16,7 +16,6 @@ import {
 	create_field_proxy,
 	deep_set,
 	set_nested_value,
-	throw_on_old_property_access,
 	build_path_string,
 	normalize_issue,
 	serialize_binary_form,
@@ -130,31 +129,6 @@ export function form(id) {
 			// Preflight passed - clear stale client-side preflight issues
 			if (preflight_schema) {
 				raw_issues = raw_issues.filter((issue) => issue.server);
-			}
-
-			// TODO 3.0 remove this warning
-			if (DEV) {
-				const error = () => {
-					throw new Error(
-						'Remote form functions no longer get passed a FormData object. The payload is now a POJO. See https://kit.svelte.dev/docs/remote-functions#form for details.'
-					);
-				};
-				for (const key of [
-					'append',
-					'delete',
-					'entries',
-					'forEach',
-					'get',
-					'getAll',
-					'has',
-					'keys',
-					'set',
-					'values'
-				]) {
-					if (!(key in data)) {
-						Object.defineProperty(data, key, { get: error });
-					}
-				}
 			}
 
 			try {
@@ -452,20 +426,6 @@ export function form(id) {
 		);
 
 		let validate_id = 0;
-
-		// TODO 3.0 remove
-		if (DEV) {
-			throw_on_old_property_access(instance);
-
-			Object.defineProperty(instance, 'buttonProps', {
-				get() {
-					throw new Error(
-						'`form.buttonProps` has been removed: Instead of `<button {...form.buttonProps}>, use `<button {...form.fields.action.as("submit", "value")}>`.' +
-							' See the PR for more info: https://github.com/sveltejs/kit/pull/14622'
-					);
-				}
-			});
-		}
 
 		Object.defineProperties(instance, {
 			fields: {
