@@ -218,7 +218,7 @@ export async function render_response({
 						: maybe_promise;
 
 				const { head, html, css, hashes } = /** @type {ReturnType<typeof options.root.render>} */ (
-					await rendered
+					options.async ? await rendered : rendered
 				);
 
 				if (hashes) {
