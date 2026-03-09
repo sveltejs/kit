@@ -36,6 +36,7 @@ import { set_private_env, set_public_env } from '${runtime_directory}/shared-ser
 
 export const options = {
 	app_template_contains_nonce: ${template.includes('%sveltekit.nonce%')},
+	async: ${s(!!config.compilerOptions?.experimental?.async)},
 	csp: ${s(config.kit.csp)},
 	csrf_check_origin: ${s(!config.kit.csrf.trustedOrigins.includes('*'))},
 	csrf_trusted_origins: ${s(config.kit.csrf.trustedOrigins)},
