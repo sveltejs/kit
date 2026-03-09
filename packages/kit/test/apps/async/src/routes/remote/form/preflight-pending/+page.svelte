@@ -1,5 +1,5 @@
 <script>
-	import { create } from './form.remote.js';
+	import { create } from './form.remote.ts';
 	import * as v from 'valibot';
 
 	const passing_schema = v.pipeAsync(
