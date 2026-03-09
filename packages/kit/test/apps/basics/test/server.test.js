@@ -889,7 +889,7 @@ test.describe('$app/environment', () => {
 			'utf-8'
 		);
 		// check that import { dev } from '$app/environment' is treeshaken
-		expect(code).not.toContain(/import .*dev/);
+		expect(code).not.toMatch(/import .*dev/);
 	});
 
 	test('treeshakes browser check', async () => {
@@ -903,7 +903,7 @@ test.describe('$app/environment', () => {
 			'utf-8'
 		);
 		// check that import { browser } from '$app/environment' is treeshaken
-		expect(code).not.toContain(/import .*browser/);
+		expect(code).not.toMatch(/import .*browser/);
 	});
 });
 
