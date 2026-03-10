@@ -12,7 +12,7 @@ import { create_assets } from '../../core/sync/create_manifest_data/index.js';
 import { runtime_directory, logger } from '../../core/utils.js';
 import { generate_manifest } from '../../core/generate_manifest/index.js';
 import { build_server_nodes } from './build/build_server.js';
-import { assets_base, find_deps, resolve_symlinks } from './build/utils.js';
+import { find_deps, resolve_symlinks } from './build/utils.js';
 import { dev } from './dev/index.js';
 import { preview } from './preview/index.js';
 import {
@@ -1004,6 +1004,8 @@ function kit({ svelte_config }) {
 			/** @type {import('vite').UserConfig} */
 			let new_config;
 
+			const base = (kit.paths.assets || kit.paths.base) + '/';
+
 			if (is_build) {
 				const prefix = `${kit.appDir}/immutable`;
 
@@ -1094,7 +1096,7 @@ function kit({ svelte_config }) {
 
 				new_config = {
 					appType: 'custom',
-					base: assets_base(kit, is_build),
+					base,
 					build: {
 						cssCodeSplit: !inline,
 						cssMinify: initial_config.build?.minify == null ? true : !!initial_config.build.minify,
@@ -1519,7 +1521,7 @@ function kit({ svelte_config }) {
 			} else {
 				new_config = {
 					appType: 'custom',
-					base: assets_base(kit, is_build),
+					base,
 					build: {
 						rolldownOptions: {
 							// Vite dependency crawler needs an explicit JS entry point
