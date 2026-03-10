@@ -257,9 +257,6 @@ function kit({ svelte_config }) {
 	/** @type {import('types').ServerMetadata | undefined} only set at build time once analysis is finished */
 	let build_metadata = undefined;
 
-	/** @type {() => Promise<void>} */
-	let finalise;
-
 	/** @type {import('vite').UserConfig} */
 	let initial_config;
 
@@ -1333,34 +1330,30 @@ function kit({ svelte_config }) {
 								);
 							}
 
-							// we need to defer this to closeBundle, so that adapters copy files
-							// created by other Vite plugins
-							finalise = async () => {
-								console.log(
-									`\nRun ${styleText(['bold', 'cyan'], 'npm run preview')} to preview your production build locally.`
+							console.log(
+								`\nRun ${styleText(['bold', 'cyan'], 'npm run preview')} to preview your production build locally.`
+							);
+
+							if (kit.adapter) {
+								const { adapt } = await import('../../core/adapt/index.js');
+								await adapt(
+									svelte_config,
+									build_data,
+									metadata,
+									prerendered,
+									prerender_map,
+									log,
+									remotes,
+									vite_config
 								);
+							} else {
+								console.log(styleText(['bold', 'yellow'], '\nNo adapter specified'));
 
-								if (kit.adapter) {
-									const { adapt } = await import('../../core/adapt/index.js');
-									await adapt(
-										svelte_config,
-										build_data,
-										metadata,
-										prerendered,
-										prerender_map,
-										log,
-										remotes,
-										vite_config
-									);
-								} else {
-									console.log(styleText(['bold', 'yellow'], '\nNo adapter specified'));
-
-									const link = styleText(['bold', 'cyan'], 'https://svelte.dev/docs/kit/adapters');
-									console.log(
-										`See ${link} to learn how to configure your app to run on the platform of your choosing`
-									);
-								}
-							};
+								const link = styleText(['bold', 'cyan'], 'https://svelte.dev/docs/kit/adapters');
+								console.log(
+									`See ${link} to learn how to configure your app to run on the platform of your choosing`
+								);
+							}
 						},
 						sharedConfigBuild: true,
 						sharedPlugins: true
@@ -1465,16 +1458,6 @@ function kit({ svelte_config }) {
 				fileName: `${kit.appDir}/version.json`,
 				source: s({ version: kit.version.name })
 			});
-		},
-
-		/**
-		 * Runs the adapter.
-		 */
-		closeBundle: {
-			async handler() {
-				if (this.environment.name !== 'client') return;
-				await finalise?.();
-			}
 		}
 	};
 
