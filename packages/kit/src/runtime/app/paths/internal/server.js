@@ -1,3 +1,5 @@
+import { DEV } from 'esm-env';
+
 export let base = __SVELTEKIT_PATHS_BASE__;
 export let assets = __SVELTEKIT_PATHS_ASSETS__ || base;
 export const app_dir = __SVELTEKIT_APP_DIR__;
@@ -27,4 +29,10 @@ export function reset() {
 /** @param {string} path */
 export function set_assets(path) {
 	assets = initial.assets = path;
+}
+
+export function get_assets_prefix() {
+	// when we set Vite's base to `./`, Vite 8 weirdly prefixes imported asset paths
+	// with it in production but not in development
+	return assets || base || (DEV ? '' : '.');
 }

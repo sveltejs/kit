@@ -1,7 +1,7 @@
 import { read_implementation, manifest } from '__sveltekit/server';
+import { get_assets_prefix } from '$app/paths/internal/server';
 import { DEV } from 'esm-env';
 import { base64_decode } from '../../utils.js';
-import { get_assets_prefix } from '../../shared-server.js';
 
 /**
  * Read the contents of an imported asset from the filesystem
