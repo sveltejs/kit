@@ -56,7 +56,7 @@ async function analyse({
 	// essential we do this before analysing the code
 	internal.set_building();
 
-	// set env, in case it's used in initialisation
+	// set env, `read`, and `manifest`, in case they're used in initialisation
 	const { publicPrefix: public_prefix, privatePrefix: private_prefix } = config.env;
 	const private_env = filter_env(env, private_prefix, public_prefix);
 	const public_env = filter_env(env, public_prefix, private_prefix);
@@ -65,21 +65,8 @@ async function analyse({
 	internal.set_manifest(manifest);
 	internal.set_read_implementation((file) => createReadableStream(`${server_root}/server/${file}`));
 
-	/** @type {Map<string, { page_options: Record<string, any> | null, children: string[] }>} */
-	const static_exports = new Map();
-
 	// first, build server nodes without the client manifest so we can analyse it
-	await build_server_nodes(
-		out,
-		config,
-		manifest_data,
-		server_manifest,
-		null,
-		null,
-		null,
-		output_config,
-		static_exports
-	);
+	build_server_nodes(out, config, manifest_data, server_manifest, null, null, null, output_config);
 
 	/** @type {import('types').ServerMetadata} */
 	const metadata = {
@@ -105,7 +92,8 @@ async function analyse({
 		}
 
 		metadata.nodes[node.index] = {
-			has_server_load: has_server_load(node)
+			has_server_load: has_server_load(node),
+			has_universal_load: node.universal?.load !== undefined
 		};
 	}
 
@@ -187,7 +175,7 @@ async function analyse({
 		metadata.remotes.set(remote.hash, exports);
 	}
 
-	return { metadata, static_exports };
+	return { metadata };
 }
 
 /**

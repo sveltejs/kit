@@ -120,11 +120,25 @@ export async function getRequest({ request, base, bodySizeLimit }) {
 		delete headers[':scheme'];
 	}
 
+	// TODO: Whenever Node >=22 is minimum supported version, we can use `request.readableAborted`
+	// @see https://github.com/nodejs/node/blob/5cf3c3e24c7257a0c6192ed8ef71efec8ddac22b/lib/internal/streams/readable.js#L1443-L1453
+	const controller = new AbortController();
+	let errored = false;
+	let end_emitted = false;
+	request.once('error', () => (errored = true));
+	request.once('end', () => (end_emitted = true));
+	request.once('close', () => {
+		if ((errored || request.destroyed) && !end_emitted) {
+			controller.abort();
+		}
+	});
+
 	return new Request(base + request.url, {
 		// @ts-expect-error
 		duplex: 'half',
 		method: request.method,
 		headers: Object.entries(headers),
+		signal: controller.signal,
 		body:
 			request.method === 'GET' || request.method === 'HEAD'
 				? undefined

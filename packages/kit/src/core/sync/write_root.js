@@ -88,6 +88,7 @@ export function write_root(manifest_data, output) {
 				}
 
 				if (!browser) {
+					// svelte-ignore state_referenced_locally
 					setContext('__svelte__', stores);
 				}
 
@@ -97,6 +98,7 @@ export function write_root(manifest_data, output) {
 							if (browser) {
 								$effect.pre(() => stores.page.set(page));
 							} else {
+								// svelte-ignore state_referenced_locally
 								stores.page.set(page);
 							}
 						`

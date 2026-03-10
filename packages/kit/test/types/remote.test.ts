@@ -1,9 +1,16 @@
 import { query, prerender, command, form } from '$app/server';
 import { StandardSchemaV1 } from '@standard-schema/spec';
-import { RemotePrerenderFunction, RemoteQueryFunction } from '@sveltejs/kit';
+import {
+	RemoteForm,
+	RemoteFormInput,
+	RemotePrerenderFunction,
+	RemoteQueryFunction,
+	invalid
+} from '@sveltejs/kit';
 
 const schema: StandardSchemaV1<string> = null as any;
 const schema2: StandardSchemaV1<string, number> = null as any;
+const schema3: StandardSchemaV1<string | undefined, number> = null as any;
 
 function query_tests() {
 	const no_args: RemoteQueryFunction<void, string> = query(() => 'Hello world');
@@ -33,6 +40,21 @@ function query_tests() {
 		query((_: string) => 'hi');
 	}
 	void query_without_args();
+
+	async function query_with_optional_arg() {
+		const q = query(schema3, () => 'Hello world');
+		void q();
+		void q('hi');
+		// @ts-expect-error
+		void q(1);
+
+		const q2 = query('unchecked', (a?: string) => a);
+		void q2();
+		void q2('hi');
+		// @ts-expect-error
+		void q2(1);
+	}
+	void query_with_optional_arg();
 
 	async function query_unsafe() {
 		const q = query('unchecked', (a: number) => a);
@@ -100,6 +122,21 @@ function prerender_tests() {
 	}
 	void prerender_unsafe();
 
+	async function prerender_with_optional_arg() {
+		const q = prerender(schema3, () => 'Hello world');
+		void q();
+		void q('hi');
+		// @ts-expect-error
+		void q(1);
+
+		const q2 = prerender('unchecked', (a?: string) => a);
+		void q2();
+		void q2('hi');
+		// @ts-expect-error
+		void q2(1);
+	}
+	void prerender_with_optional_arg();
+
 	async function prerender_schema() {
 		const q = prerender(schema, (a) => a);
 		const result: string = await q('1');
@@ -135,6 +172,21 @@ function command_tests() {
 	}
 	void command_without_args();
 
+	async function command_with_optional_arg() {
+		const q = command(schema3, () => 'Hello world');
+		void q();
+		void q('hi');
+		// @ts-expect-error
+		void q(1);
+
+		const q2 = command('unchecked', (a?: string) => a);
+		void q2();
+		void q2('hi');
+		// @ts-expect-error
+		void q2(1);
+	}
+	void command_with_optional_arg();
+
 	async function command_unsafe() {
 		const cmd = command('unchecked', (a: string) => a);
 		const result: string = await cmd('test');
@@ -159,8 +211,16 @@ command_tests();
 
 function form_tests() {
 	const q = query(() => '');
-	const f = form('unchecked', (data: { input: string }) => {
+	const f = form('unchecked', (data: { input: string }, issue) => {
 		data.input;
+		if (Math.random() > 0.5) {
+			invalid(
+				'foo',
+				issue.input('bar'),
+				// @ts-expect-error
+				issue.nonexistent.prop('baz')
+			);
+		}
 		return { success: true };
 	});
 
@@ -178,7 +238,7 @@ function form_tests() {
 
 	const f2 = form(
 		null as any as StandardSchemaV1<{ a: string; nested: { prop: string } }>,
-		(data) => {
+		(data, issue) => {
 			data.a === '';
 			data.nested.prop === '';
 			// @ts-expect-error
@@ -187,28 +247,34 @@ function form_tests() {
 			data.nonexistent;
 			// @ts-expect-error
 			data.a === 123;
+			if (Math.random() > 0.5) {
+				invalid(
+					'foo',
+					issue.nested.prop('bar'),
+					// @ts-expect-error
+					issue.nonexistent.prop('baz')
+				);
+			}
 			return { success: true };
 		}
 	);
-	f2.field('a');
-	f2.field('nested.prop');
 	// @ts-expect-error
-	f2.field('nonexistent');
-	f2.issues!.a;
-	f2.issues!['nested.prop'];
+	f2.fields.as('text');
+	f2.fields.a.issues();
+	f2.fields.nested.prop.issues();
 	// @ts-expect-error
-	f2.issues!.nonexistent;
-	f2.input!.a = '';
-	f2.input!['nested.prop'] = '';
+	f2.fields.nonexistent.issues();
+	f2.fields.a.value();
+	f2.fields.nested.prop.value();
 	// @ts-expect-error
-	f2.input!.nonexistent = '';
+	f2.fields.nonexistent.value();
 	// @ts-expect-error
-	f2.input!.a = 123;
+	f2.fields.array[0].array.as('text');
 
 	// all schema properties optional
 	const f3 = form(
 		null as any as StandardSchemaV1<{ a?: string; nested?: { prop?: string } }>,
-		(data) => {
+		(data, issue) => {
 			data.a === '';
 			data.nested?.prop === '';
 			// @ts-expect-error
@@ -219,23 +285,25 @@ function form_tests() {
 			data.nonexistent;
 			// @ts-expect-error
 			data.a === 123;
+			if (Math.random() > 0.5) {
+				invalid(
+					'foo',
+					issue.nested.prop('bar'),
+					// @ts-expect-error
+					issue.nonexistent.prop('baz')
+				);
+			}
 			return { success: true };
 		}
 	);
-	f3.field('a');
-	f3.field('nested.prop');
 	// @ts-expect-error
-	f3.field('nonexistent');
-	f3.issues!.a;
-	f3.issues!['nested.prop'];
+	f3.fields.as('text');
+	f3.fields.a.issues();
+	f3.fields.a.value();
+	f3.fields.nested.prop.issues();
+	f3.fields.nested.prop.value();
 	// @ts-expect-error
-	f3.issues!.nonexistent;
-	f3.input!.a = '';
-	f3.input!['nested.prop'] = '';
-	// @ts-expect-error
-	f3.input!.nonexistent = '';
-	// @ts-expect-error
-	f3.input!.a = 123;
+	f3.fields.nonexistent.as('text');
 
 	// index signature schema
 	const f4 = form(null as any as StandardSchemaV1<Record<string, any>>, (data) => {
@@ -243,69 +311,116 @@ function form_tests() {
 		data.nested?.prop === '';
 		return { success: true };
 	});
-	f4.field('a');
-	f4.field('nested.prop');
-	f4.issues!.a;
-	f4.issues!['nested.prop'];
-	f4.input!.a = '';
-	f4.input!['nested.prop'] = '';
 	// @ts-expect-error
-	f4.input!.a = 123;
+	f4.fields.as('text');
+	f4.fields.a.issues();
+	f4.fields.a.value();
+	f4.fields.nested.prop.issues();
+	f4.fields.nested.prop.value();
 
 	// schema with union types
-	const f5 = form(null as any as StandardSchemaV1<{ foo: 'a' | 'b'; bar: 'c' | 'd' }>, (data) => {
-		data.foo === 'a';
-		data.bar === 'c';
-		// @ts-expect-error
-		data.foo === 'e';
-		return { success: true };
-	});
-	f5.field('foo');
+	const f5 = form(
+		null as any as StandardSchemaV1<{ foo: 'a' | 'b'; bar: 'c' | 'd' }>,
+		(data, issue) => {
+			data.foo === 'a';
+			data.bar === 'c';
+			// @ts-expect-error
+			data.foo === 'e';
+			if (Math.random() > 0.5) {
+				invalid(
+					'foo',
+					issue.bar('bar'),
+					// @ts-expect-error
+					issue.nonexistent.prop('baz')
+				);
+			}
+			return { success: true };
+		}
+	);
 	// @ts-expect-error
-	f5.field('nonexistent');
-	f5.issues!.foo;
-	f5.issues!.bar;
+	f5.fields.as('text');
+	f5.fields.foo.issues();
+	f5.fields.bar.issues();
+	f5.fields.foo.value();
+	f5.fields.bar.value() === 'c';
 	// @ts-expect-error
-	f5.issues!.nonexistent;
-	f5.input!.foo = 'a';
+	f5.fields.foo.value() === 'e';
 	// @ts-expect-error
-	f5.input!.foo = 123;
+	f5.fields.nonexistent.as('text');
 
 	// schema with arrays
 	const f6 = form(
 		null as any as StandardSchemaV1<{ array: Array<{ array: string[]; prop: string }> }>,
-		(data) => {
+		(data, issue) => {
 			data.array[0].prop === 'a';
 			data.array[0].array[0] === 'a';
 			// @ts-expect-error
 			data.array[0].array[0] === 1;
+			if (Math.random() > 0.5) {
+				invalid(
+					'foo',
+					issue.array[0].prop('bar'),
+					// @ts-expect-error
+					issue.nonexistent.prop('baz')
+				);
+			}
 			return { success: true };
 		}
 	);
-	f6.field('array[0].prop');
-	f6.field('array[0].array[]');
+	// @ts-expect-error
+	f6.fields.as('text');
 	// @ts-expect-error
 	f6.field('array[0].array');
-	f6.issues!.array;
-	f6.issues!['array[0].prop'];
-	f6.issues!['array[0].array'];
+	f6.fields.array.issues();
+	f6.fields.array[0].prop.issues();
+	f6.fields.array[0].array.issues();
 	// @ts-expect-error
-	f6.issues!['array[0].array[]'];
+	f6.fields.nonexistent.issues();
+	f6.fields.array[0].prop.value();
+	f6.fields.array[0].array.value();
 	// @ts-expect-error
-	f6.issues!.nonexistent;
-	f6.input!['array[0].prop'] = '';
-	f6.input!['array[0].array'] = [''];
+	f6.fields.array[0].array.as('text');
+
+	// any
+	const f7 = form(null as any, (data, issue) => {
+		data.a === '';
+		data.nested?.prop === '';
+		if (Math.random() > 0.5) {
+			invalid('foo', issue.nested.prop('bar'));
+		}
+		return { success: true };
+	});
 	// @ts-expect-error
-	f6.input!['array[0].array'] = '';
+	f7.fields.as('text');
+	f7.fields.a.issues();
+	f7.fields.a.value();
+	f7.fields.nested.prop.issues();
+	f7.fields.nested.prop.value();
+
+	// no schema
+	const f8 = form(() => {
+		invalid('foo');
+	});
+	f8.fields.issues();
+	f8.fields.allIssues();
 	// @ts-expect-error
-	f6.input!['array[0].array[]'] = [''];
+	f8.fields.x;
 	// @ts-expect-error
 	f6.input!['array[0].prop'] = 123;
 
 	// doesn't use data
-	// eslint-disable-next-line @typescript-eslint/require-await --- we are testing that the async function does not cause `result` to be typed as a Promise
-	const f7 = form(async () => ({ success: true }));
-	f7.result?.success === true;
+	const f9 = form(() => Promise.resolve({ success: true }));
+	f9.result?.success === true;
+
+	// generic form
+	function f10<
+		Schema extends StandardSchemaV1<RemoteFormInput, unknown>,
+		Form extends RemoteForm<StandardSchemaV1.InferInput<Schema>, unknown>
+	>(data: StandardSchemaV1.InferInput<Schema>, form: Form) {
+		form.fields.set(data);
+		form.fields.allIssues();
+	}
+	void f10;
 }
 form_tests();
 

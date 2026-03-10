@@ -15,8 +15,8 @@ import {
 	method_not_allowed,
 	redirect_response
 } from './utils.js';
-import { decode_pathname, decode_params, disable_search, normalize_path } from '../../utils/url.js';
-import { exec } from '../../utils/routing.js';
+import { decode_pathname, disable_search, normalize_path } from '../../utils/url.js';
+import { find_route } from '../../utils/routing.js';
 import { redirect_json_response, render_data } from './data/index.js';
 import { add_cookies_to_headers, get_cookies } from './cookie.js';
 import { create_fetch } from './fetch.js';
@@ -39,6 +39,7 @@ import { server_data_serializer } from './page/data_serializer.js';
 import { get_remote_id, handle_remote_call } from './remote.js';
 import { record_span } from '../telemetry/record_span.js';
 import { otel } from '../telemetry/otel.js';
+import { MUTATIVE_METHODS } from '../../constants.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
 
@@ -129,8 +130,8 @@ export async function internal_respond(request, options, manifest, state) {
 			.map((node) => node === '1');
 		url.searchParams.delete(INVALIDATED_PARAM);
 	} else if (remote_id) {
-		url.pathname = base;
-		url.search = '';
+		url.pathname = request.headers.get('x-sveltekit-pathname') ?? base;
+		url.search = request.headers.get('x-sveltekit-search') ?? '';
 	}
 
 	/** @type {Record<string, string>} */
@@ -148,7 +149,8 @@ export async function internal_respond(request, options, manifest, state) {
 		handleValidationError: options.hooks.handleValidationError,
 		tracing: {
 			record_span
-		}
+		},
+		is_in_remote_function: false
 	};
 
 	/** @type {import('@sveltejs/kit').RequestEvent} */
@@ -182,7 +184,12 @@ export async function internal_respond(request, options, manifest, state) {
 						'Use `event.cookies.set(name, value, options)` instead of `event.setHeaders` to set cookies'
 					);
 				} else if (lower in headers) {
-					throw new Error(`"${key}" header is already set`);
+					// appendHeaders-style for Server-Timing https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Server-Timing
+					if (lower === 'server-timing') {
+						headers[lower] += ', ' + value;
+					} else {
+						throw new Error(`"${key}" header is already set`);
+					}
 				} else {
 					headers[lower] = value;
 
@@ -241,8 +248,10 @@ export async function internal_respond(request, options, manifest, state) {
 		return text('Malformed URI', { status: 400 });
 	}
 
+	// try to serve the rerouted prerendered resource if it exists
 	if (
-		resolved_path !== url.pathname &&
+		// the resolved path has been decoded so it should be compared to the decoded url pathname
+		resolved_path !== decode_pathname(url.pathname) &&
 		!state.prerendering?.fallback &&
 		has_prerendered_path(manifest, resolved_path)
 	) {
@@ -253,20 +262,24 @@ export async function internal_respond(request, options, manifest, state) {
 				? add_resolution_suffix(resolved_path)
 				: resolved_path;
 
-		// `fetch` automatically decodes the body, so we need to delete the related headers to not break the response
-		// Also see https://github.com/sveltejs/kit/issues/12197 for more info (we should fix this more generally at some point)
-		const response = await fetch(url, request);
-		const headers = new Headers(response.headers);
-		if (headers.has('content-encoding')) {
-			headers.delete('content-encoding');
-			headers.delete('content-length');
-		}
+		try {
+			// `fetch` automatically decodes the body, so we need to delete the related headers to not break the response
+			// Also see https://github.com/sveltejs/kit/issues/12197 for more info (we should fix this more generally at some point)
+			const response = await fetch(url, request);
+			const headers = new Headers(response.headers);
+			if (headers.has('content-encoding')) {
+				headers.delete('content-encoding');
+				headers.delete('content-length');
+			}
 
-		return new Response(response.body, {
-			headers,
-			status: response.status,
-			statusText: response.statusText
-		});
+			return new Response(response.body, {
+				headers,
+				status: response.status,
+				statusText: response.statusText
+			});
+		} catch (error) {
+			return await handle_fatal_error(event, event_state, options, error);
+		}
 	}
 
 	/** @type {import('types').SSRRoute | null} */
@@ -294,21 +307,15 @@ export async function internal_respond(request, options, manifest, state) {
 		return text('Not found', { status: 404, headers });
 	}
 
-	if (!state.prerendering?.fallback && !remote_id) {
+	if (!state.prerendering?.fallback) {
 		// TODO this could theoretically break — should probably be inside a try-catch
 		const matchers = await manifest._.matchers();
+		const result = find_route(resolved_path, manifest._.routes, matchers);
 
-		for (const candidate of manifest._.routes) {
-			const match = candidate.pattern.exec(resolved_path);
-			if (!match) continue;
-
-			const matched = exec(match, candidate.params, matchers);
-			if (matched) {
-				route = candidate;
-				event.route = { id: route.id };
-				event.params = decode_params(matched);
-				break;
-			}
+		if (result) {
+			route = result.route;
+			event.route = { id: route.id };
+			event.params = result.params;
 		}
 	}
 
@@ -329,7 +336,7 @@ export async function internal_respond(request, options, manifest, state) {
 			: undefined;
 
 		// determine whether we need to redirect to add/remove a trailing slash
-		if (route) {
+		if (route && !remote_id) {
 			// if `paths.base === '/a/b/c`, then the root route is `/a/b/c/`,
 			// regardless of the `trailingSlash` route option
 			if (url.pathname === base || url.pathname === base + '/') {
@@ -413,6 +420,7 @@ export async function internal_respond(request, options, manifest, state) {
 						current: root_span
 					}
 				};
+				event_state.allows_commands = MUTATIVE_METHODS.includes(request.method);
 				return await with_request_store({ event: traced_event, state: event_state }, () =>
 					options.hooks.handle({
 						event: traced_event,

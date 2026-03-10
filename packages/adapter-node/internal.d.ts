@@ -1,5 +1,6 @@
 declare module 'ENV' {
 	export function env(key: string, fallback?: any): string;
+	export function timeout_env(key: string, fallback?: any): number | undefined;
 }
 
 declare module 'HANDLER' {

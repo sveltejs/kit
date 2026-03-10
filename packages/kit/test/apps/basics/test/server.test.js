@@ -888,8 +888,7 @@ test.describe('$app/environment', () => {
 			path.join(root, '.svelte-kit/output/server/entries/pages/treeshaking/dev/_page.svelte.js'),
 			'utf-8'
 		);
-		// check that import { dev } from '$app/environment' is treeshaken
-		expect(code).not.toContain('dev');
+		expect(code).not.toContain('not prod');
 	});
 
 	test('treeshakes browser check', async () => {
@@ -902,16 +901,15 @@ test.describe('$app/environment', () => {
 			),
 			'utf-8'
 		);
-		// check that import { browser } from '$app/environment' is treeshaken
-		expect(code).not.toContain('browser');
+		expect(code).not.toMatch('client');
 	});
 });
 
 test.describe('tracing', () => {
 	// Helper function to find the resolve.root span deep in the handle.child chain
 	/**
-	 * @param {ReadableSpan} span
-	 * @returns {ReadableSpan | null}
+	 * @param {import('../../../types.js').SpanTree} span
+	 * @returns {import('../../../types.js').SpanTree | null}
 	 */
 	function find_resolve_root_span(span) {
 		if (span.name === 'sveltekit.resolve') {
@@ -1364,13 +1362,6 @@ test.describe('tracing', () => {
 	});
 });
 
-test.describe('remote functions', () => {
-	test("doesn't write bundle to disk when treeshaking prerendered remote functions", () => {
-		test.skip(!!process.env.DEV, 'skip when in dev mode');
-		expect(fs.existsSync(path.join(root, 'dist'))).toBe(false);
-	});
-});
-
 test.describe('asset preload', () => {
 	if (!process.env.DEV) {
 		test('injects Link headers', async ({ request }) => {
@@ -1407,4 +1398,19 @@ test.describe('asset preload', () => {
 			expect(body).not.toContain('as="font"');
 		});
 	}
+});
+
+test.describe('Streaming', () => {
+	test("Discarded promises from server load functions don't hang SSR request", async ({
+		request
+	}) => {
+		let error;
+		try {
+			await request.get('/streaming/discarded-promise');
+		} catch (e) {
+			error = e;
+		}
+
+		expect(error).toBeUndefined();
+	});
 });

@@ -1,5 +1,23 @@
 # @sveltejs/package
 
+## 2.5.7
+### Patch Changes
+
+
+- chore(deps): update dependency chokidar to v5 ([#14986](https://github.com/sveltejs/kit/pull/14986))
+
+## 2.5.6
+### Patch Changes
+
+
+- fix: transform `.ts` extensions to `.js` in import/export statements of Svelte files when using `rewriteRelativeImportExtensions` ([#14936](https://github.com/sveltejs/kit/pull/14936))
+
+## 2.5.5
+### Patch Changes
+
+
+- fix: resolve aliases before transpiling for `rewriteRelativeImportExtensions` ([#14673](https://github.com/sveltejs/kit/pull/14673))
+
 ## 2.5.4
 ### Patch Changes
 

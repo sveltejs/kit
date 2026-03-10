@@ -40,9 +40,9 @@ import {
 } from './module_ids.js';
 import { import_peer } from '../../utils/import.js';
 import { compact } from '../../utils/array.js';
-import { should_ignore } from './static_analysis/utils.js';
+import { should_ignore, has_children } from './static_analysis/utils.js';
 
-const cwd = process.cwd();
+const cwd = posixify(process.cwd());
 
 /** @type {import('./types.js').EnforcedConfig} */
 const enforced_config = {
@@ -112,10 +112,8 @@ const warning_preprocessor = {
 		if (!filename) return;
 
 		const basename = path.basename(filename);
-		const has_children =
-			content.includes('<slot') || (isSvelte5Plus() && content.includes('{@render'));
 
-		if (basename.startsWith('+layout.') && !has_children) {
+		if (basename.startsWith('+layout.') && !has_children(content, isSvelte5Plus())) {
 			const message =
 				`\n${colors.bold().red(path.relative('.', filename))}\n` +
 				`\`<slot />\`${isSvelte5Plus() ? ' or `{@render ...}` tag' : ''}` +
@@ -172,8 +170,8 @@ let secondary_build_started = false;
 /** @type {import('types').ManifestData} */
 let manifest_data;
 
-/** @type {import('types').ServerMetadata['remotes'] | undefined} only set at build time */
-let remote_exports = undefined;
+/** @type {import('types').ServerMetadata | undefined} only set at build time once analysis is finished */
+let build_metadata = undefined;
 
 /**
  * Returns the SvelteKit Vite plugin. Vite executes Rollup hooks as well as some of its own.
@@ -192,8 +190,8 @@ async function kit({ svelte_config }) {
 	/** @type {import('vite')} */
 	const vite = await import_peer('vite');
 
-	// @ts-ignore `vite.rolldownVersion` only exists in `rolldown-vite`
-	const isRolldown = !!vite.rolldownVersion;
+	// @ts-ignore `vite.rolldownVersion` only exists in `vite 8`
+	const is_rolldown = !!vite.rolldownVersion;
 
 	const { kit } = svelte_config;
 	const out = `${kit.outDir}/output`;
@@ -298,23 +296,6 @@ async function kit({ svelte_config }) {
 						`${kit.files.routes}/**/+*.{svelte,js,ts}`,
 						`!${kit.files.routes}/**/+*server.*`
 					],
-					esbuildOptions: {
-						plugins: [
-							{
-								name: 'vite-plugin-sveltekit-setup:optimize',
-								setup(build) {
-									if (!kit.experimental.remoteFunctions) return;
-
-									const filter = new RegExp(
-										`.remote(${kit.moduleExtensions.join('|')})$`.replaceAll('.', '\\.')
-									);
-
-									// treat .remote.js files as empty for the purposes of prebundling
-									build.onLoad({ filter }, () => ({ contents: '' }));
-								}
-							}
-						]
-					},
 					exclude: [
 						// Without this SvelteKit will be prebundled on the client, which means we end up with two versions of Redirect etc.
 						// Also see https://github.com/sveltejs/kit/issues/5952#issuecomment-1218844057
@@ -342,14 +323,50 @@ async function kit({ svelte_config }) {
 				}
 			};
 
+			if (kit.experimental.remoteFunctions) {
+				// treat .remote.js files as empty for the purposes of prebundling
+				// detects rolldown to avoid a warning message in vite 8 beta
+				const remote_id_filter = new RegExp(
+					`.remote(${kit.moduleExtensions.join('|')})$`.replaceAll('.', '\\.')
+				);
+				new_config.optimizeDeps ??= {}; // for some reason ts says this could be undefined even though it was set above
+				if (is_rolldown) {
+					// @ts-ignore
+					new_config.optimizeDeps.rolldownOptions ??= {};
+					// @ts-ignore
+					new_config.optimizeDeps.rolldownOptions.plugins ??= [];
+					// @ts-ignore
+					new_config.optimizeDeps.rolldownOptions.plugins.push({
+						name: 'vite-plugin-sveltekit-setup:optimize-remote-functions',
+						load: {
+							filter: { id: remote_id_filter },
+							handler() {
+								return '';
+							}
+						}
+					});
+				} else {
+					new_config.optimizeDeps.esbuildOptions ??= {};
+					new_config.optimizeDeps.esbuildOptions.plugins ??= [];
+					new_config.optimizeDeps.esbuildOptions.plugins.push({
+						name: 'vite-plugin-sveltekit-setup:optimize-remote-functions',
+						setup(build) {
+							build.onLoad({ filter: remote_id_filter }, () => ({ contents: '' }));
+						}
+					});
+				}
+			}
+
 			const define = {
 				__SVELTEKIT_APP_DIR__: s(kit.appDir),
 				__SVELTEKIT_EMBEDDED__: s(kit.embedded),
 				__SVELTEKIT_EXPERIMENTAL__REMOTE_FUNCTIONS__: s(kit.experimental.remoteFunctions),
+				__SVELTEKIT_FORK_PRELOADS__: s(kit.experimental.forkPreloads),
 				__SVELTEKIT_PATHS_ASSETS__: s(kit.paths.assets),
 				__SVELTEKIT_PATHS_BASE__: s(kit.paths.base),
 				__SVELTEKIT_PATHS_RELATIVE__: s(kit.paths.relative),
 				__SVELTEKIT_CLIENT_ROUTING__: s(kit.router.resolution === 'client'),
+				__SVELTEKIT_HASH_ROUTING__: s(kit.router.type === 'hash'),
 				__SVELTEKIT_SERVER_TRACING_ENABLED__: s(kit.experimental.tracing.server)
 			};
 
@@ -369,12 +386,28 @@ async function kit({ svelte_config }) {
 
 				if (!secondary_build_started) {
 					manifest_data = sync.all(svelte_config, config_env.mode).manifest_data;
+					// During the initial server build we don't know yet
+					new_config.define.__SVELTEKIT_HAS_SERVER_LOAD__ = 'true';
+					new_config.define.__SVELTEKIT_HAS_UNIVERSAL_LOAD__ = 'true';
+				} else {
+					const nodes = Object.values(
+						/** @type {import('types').ServerMetadata} */ (build_metadata).nodes
+					);
+
+					// Through the finished analysis we can now check if any node has server or universal load functions
+					const has_server_load = nodes.some((node) => node.has_server_load);
+					const has_universal_load = nodes.some((node) => node.has_universal_load);
+
+					new_config.define.__SVELTEKIT_HAS_SERVER_LOAD__ = s(has_server_load);
+					new_config.define.__SVELTEKIT_HAS_UNIVERSAL_LOAD__ = s(has_universal_load);
 				}
 			} else {
 				new_config.define = {
 					...define,
 					__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: '0',
-					__SVELTEKIT_PAYLOAD__: 'globalThis.__sveltekit_dev'
+					__SVELTEKIT_PAYLOAD__: 'globalThis.__sveltekit_dev',
+					__SVELTEKIT_HAS_SERVER_LOAD__: 'true',
+					__SVELTEKIT_HAS_UNIVERSAL_LOAD__: 'true'
 				};
 
 				// @ts-ignore this prevents a reference error if `client.js` is imported on the server
@@ -581,6 +614,9 @@ async function kit({ svelte_config }) {
 					if (node.universal) entrypoints.add(node.universal);
 				}
 
+				if (manifest_data.hooks.client) entrypoints.add(manifest_data.hooks.client);
+				if (manifest_data.hooks.universal) entrypoints.add(manifest_data.hooks.universal);
+
 				const normalized = normalize_id(id, normalized_lib, normalized_cwd);
 				const chain = [normalized];
 
@@ -635,78 +671,31 @@ async function kit({ svelte_config }) {
 	/** @type {Array<{ hash: string, file: string }>} */
 	const remotes = [];
 
-	/**
-	 * A set of modules that imported by `.remote.ts` modules. By forcing these modules
-	 * into their own chunks, we ensure that each chunk created for a `.remote.ts`
-	 * module _only_ contains that module, hopefully avoiding any circular
-	 * dependency woes that arise from treating chunks as entries
-	 */
-	const imported_by_remotes = new Set();
-	let uid = 1;
+	/** @type {Map<string, string>} Maps remote hash -> original module id */
+	const remote_original_by_hash = new Map();
+
+	/** @type {Set<string>} Track which remote hashes have already been emitted */
+	const emitted_remote_hashes = new Set();
 
 	/** @type {import('vite').Plugin} */
 	const plugin_remote = {
 		name: 'vite-plugin-sveltekit-remote',
 
-		moduleParsed(info) {
-			if (svelte_config.kit.moduleExtensions.some((ext) => info.id.endsWith(`.remote${ext}`))) {
-				for (const id of info.importedIds) {
-					imported_by_remotes.add(id);
-				}
-			}
+		resolveId(id) {
+			if (id.startsWith('\0sveltekit-remote:')) return id;
 		},
 
-		config(config) {
-			if (!config.build?.ssr) {
-				// only set manualChunks for the SSR build
-				return;
+		load(id) {
+			// On-the-fly generated entry point for remote file just forwards the original module
+			// We're not using manualChunks because it can cause problems with circular dependencies
+			// (e.g. https://github.com/sveltejs/kit/issues/14679) and module ordering in general
+			// (e.g. https://github.com/sveltejs/kit/issues/14590).
+			if (id.startsWith('\0sveltekit-remote:')) {
+				const hash_id = id.slice('\0sveltekit-remote:'.length);
+				const original = remote_original_by_hash.get(hash_id);
+				if (!original) throw new Error(`Expected to find metadata for remote file ${id}`);
+				return `import * as m from ${s(original)};\nexport default m;`;
 			}
-
-			// Ensure build.rollupOptions.output exists
-			config.build ??= {};
-			config.build.rollupOptions ??= {};
-			config.build.rollupOptions.output ??= {};
-
-			if (Array.isArray(config.build.rollupOptions.output)) {
-				// TODO I have no idea how this could occur
-				throw new Error('rollupOptions.output cannot be an array');
-			}
-
-			// Set up manualChunks to isolate *.remote.ts files
-			const { manualChunks } = config.build.rollupOptions.output;
-
-			config.build.rollupOptions.output = {
-				...config.build.rollupOptions.output,
-				manualChunks(id, meta) {
-					// Check if this is a *.remote.ts file
-					if (svelte_config.kit.moduleExtensions.some((ext) => id.endsWith(`.remote${ext}`))) {
-						const relative = posixify(path.relative(cwd, id));
-
-						return `remote-${hash(relative)}`;
-					}
-
-					if (imported_by_remotes.has(id)) {
-						return `chunk-${uid++}`;
-					}
-
-					// If there was an existing manualChunks function, call it
-					if (typeof manualChunks === 'function') {
-						return manualChunks(id, meta);
-					}
-
-					// If manualChunks is an object, check if this module matches any patterns
-					if (manualChunks) {
-						for (const name in manualChunks) {
-							const patterns = manualChunks[name];
-
-							// TODO is `id.includes(pattern)` correct?
-							if (patterns.some((pattern) => id.includes(pattern))) {
-								return name;
-							}
-						}
-					}
-				}
-			};
 		},
 
 		configureServer(_dev_server) {
@@ -720,7 +709,6 @@ async function kit({ svelte_config }) {
 			}
 
 			const file = posixify(path.relative(cwd, id));
-
 			const remote = {
 				hash: hash(file),
 				file
@@ -729,9 +717,20 @@ async function kit({ svelte_config }) {
 			remotes.push(remote);
 
 			if (opts?.ssr) {
-				code += dedent`
+				// we need to add an `await Promise.resolve()` because if the user imports this function
+				// on the client AND in a load function when loading the client module we will trigger
+				// an ssrLoadModule during dev. During a link preload, the module can be mistakenly
+				// loaded and transformed twice and the first time all its exports would be undefined
+				// triggering a dev server error. By adding a microtask we ensure that the module is fully loaded
+
+				// Extra newlines to prevent syntax errors around missing semicolons or comments
+				code +=
+					'\n\n' +
+					dedent`
 					import * as $$_self_$$ from './${path.basename(id)}';
 					import { init_remote_functions as $$_init_$$ } from '@sveltejs/kit/internal';
+
+					${dev_server ? 'await Promise.resolve()' : ''}
 
 					$$_init_$$($$_self_$$, ${s(file)}, ${s(remote.hash)});
 
@@ -741,10 +740,17 @@ async function kit({ svelte_config }) {
 					}
 				`;
 
+				// Emit a dedicated entry chunk for this remote in SSR builds (prod only)
 				if (!dev_server) {
-					// in prod, prevent the functions from being treeshaken. This will
-					// be replaced with an `export default` in the `writeBundle` hook
-					code += `$$_export_$$($$_self_$$);`;
+					remote_original_by_hash.set(remote.hash, id);
+					if (!emitted_remote_hashes.has(remote.hash)) {
+						this.emitFile({
+							type: 'chunk',
+							id: `\0sveltekit-remote:${remote.hash}`,
+							name: `remote-${remote.hash}`
+						});
+						emitted_remote_hashes.add(remote.hash);
+					}
 				}
 
 				return code;
@@ -771,8 +777,8 @@ async function kit({ svelte_config }) {
 
 			// in prod, we already built and analysed the server code before
 			// building the client code, so `remote_exports` is populated
-			else if (remote_exports) {
-				const exports = remote_exports.get(remote.hash);
+			else if (build_metadata?.remotes) {
+				const exports = build_metadata?.remotes.get(remote.hash);
 				if (!exports) throw new Error('Expected to find metadata for remote file ' + id);
 
 				for (const [name, value] of exports) {
@@ -797,19 +803,6 @@ async function kit({ svelte_config }) {
 			return {
 				code: result
 			};
-		},
-
-		writeBundle() {
-			for (const remote of remotes) {
-				const file = `${out}/server/chunks/remote-${remote.hash}.js`;
-				const code = fs.readFileSync(file, 'utf-8');
-
-				fs.writeFileSync(
-					file,
-					// build process might have minified/adjusted the $$_self_$$ variable, but not the fake global $$_export_$$ function
-					code.replace(/\$\$_export_\$\$\((.+?)\)/, (_, name) => `export default ${name};`)
-				);
-			}
 		}
 	};
 
@@ -824,6 +817,8 @@ async function kit({ svelte_config }) {
 		config(config) {
 			/** @type {import('vite').UserConfig} */
 			let new_config;
+
+			const kit_paths_base = kit.paths.base || '/';
 
 			if (is_build) {
 				const ssr = /** @type {boolean} */ (config.build?.ssr);
@@ -868,6 +863,14 @@ async function kit({ svelte_config }) {
 						input[name] = path.resolve(file);
 					});
 
+					// ...and the hooks files
+					if (manifest_data.hooks.server) {
+						input['entries/hooks.server'] = path.resolve(manifest_data.hooks.server);
+					}
+					if (manifest_data.hooks.universal) {
+						input['entries/hooks.universal'] = path.resolve(manifest_data.hooks.universal);
+					}
+
 					// ...and the server instrumentation file
 					const server_instrumentation = resolve_entry(
 						path.join(kit.files.src, 'instrumentation.server')
@@ -906,7 +909,7 @@ async function kit({ svelte_config }) {
 				// That's larger and takes longer to run and also causes an HTML diff between SSR and client
 				// causing us to do a more expensive hydration check.
 				const client_base =
-					kit.paths.relative !== false || kit.paths.assets ? './' : kit.paths.base || '/';
+					kit.paths.relative !== false || kit.paths.assets ? './' : kit_paths_base;
 
 				const inline = !ssr && svelte_config.kit.output.bundleStrategy === 'inline';
 				const split = ssr || svelte_config.kit.output.bundleStrategy === 'split';
@@ -929,12 +932,12 @@ async function kit({ svelte_config }) {
 								assetFileNames: `${prefix}/assets/[name].[hash][extname]`,
 								hoistTransitiveImports: false,
 								sourcemapIgnoreList,
-								inlineDynamicImports: !split
+								inlineDynamicImports: is_rolldown ? undefined : !split
 							},
 							preserveEntrySignatures: 'strict',
 							onwarn(warning, handler) {
 								if (
-									(isRolldown
+									(is_rolldown
 										? warning.code === 'IMPORT_IS_UNDEFINED'
 										: warning.code === 'MISSING_EXPORT') &&
 									warning.id === `${kit.outDir}/generated/client-optimized/app.js`
@@ -962,14 +965,21 @@ async function kit({ svelte_config }) {
 						}
 					}
 				};
+
+				// we must reference Vite 8 options conditionally. Otherwise, older Vite
+				// versions throw an error about unknown config options
+				if (is_rolldown && new_config?.build?.rollupOptions?.output) {
+					// @ts-ignore only available in Vite 8
+					new_config.build.rollupOptions.output.codeSplitting = split;
+				}
 			} else {
 				new_config = {
 					appType: 'custom',
-					base: kit.paths.base,
+					base: kit_paths_base,
 					build: {
 						rollupOptions: {
 							// Vite dependency crawler needs an explicit JS entry point
-							// eventhough server otherwise works without it
+							// even though server otherwise works without it
 							input: `${runtime_directory}/client/entry.js`
 						}
 					},
@@ -1043,7 +1053,7 @@ async function kit({ svelte_config }) {
 		 */
 		writeBundle: {
 			sequential: true,
-			async handler(_options, bundle) {
+			async handler(_options) {
 				if (secondary_build_started) return; // only run this once
 
 				const verbose = vite_config.logLevel === 'info';
@@ -1077,7 +1087,7 @@ async function kit({ svelte_config }) {
 
 				log.info('Analysing routes');
 
-				const { metadata, static_exports } = await analyse({
+				const { metadata } = await analyse({
 					hash: kit.router.type === 'hash',
 					manifest_path,
 					manifest_data,
@@ -1089,7 +1099,7 @@ async function kit({ svelte_config }) {
 					remotes
 				});
 
-				remote_exports = metadata.remotes;
+				build_metadata = metadata;
 
 				log.info('Building app');
 
@@ -1277,16 +1287,15 @@ async function kit({ svelte_config }) {
 				);
 
 				// regenerate nodes with the client manifest...
-				await build_server_nodes(
+				build_server_nodes(
 					out,
 					kit,
 					manifest_data,
 					server_manifest,
 					client_manifest,
-					bundle,
+					assets_path,
 					client_chunks,
-					svelte_config.kit.output,
-					static_exports
+					svelte_config.kit.output
 				);
 
 				// ...and prerender

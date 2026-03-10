@@ -1,4 +1,4 @@
-import { existsSync, rmSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { assert, expect, test } from 'vitest';
@@ -71,4 +71,41 @@ test('compress files', async () => {
 	await builder.compress(dirname(target));
 	assert.ok(existsSync(target + '.br'));
 	assert.ok(existsSync(target + '.gz'));
+});
+
+test('instrument generates facade with posix paths', () => {
+	const fixtureDir = join(__dirname, 'fixtures/instrument');
+	const dest = join(__dirname, 'output');
+
+	rmSync(dest, { recursive: true, force: true });
+	mkdirSync(join(dest, 'server'), { recursive: true });
+	copyFileSync(join(fixtureDir, 'index.js'), join(dest, 'index.js'));
+	copyFileSync(
+		join(fixtureDir, 'server/instrumentation.server.js'),
+		join(dest, 'server/instrumentation.server.js')
+	);
+
+	const entrypoint = join(dest, 'index.js');
+	const instrumentation = join(dest, 'server', 'instrumentation.server.js');
+
+	// @ts-expect-error - we don't need the whole config for this test
+	const builder = create_builder({ route_data: [] });
+
+	builder.instrument({
+		entrypoint,
+		instrumentation,
+		module: { exports: ['default'] }
+	});
+
+	// Read the generated facade
+	const facade = readFileSync(entrypoint, 'utf-8');
+
+	// Verify it uses forward slashes (not backslashes)
+	// On Windows, path.relative() returns 'server\instrumentation.server.js'
+	// The fix ensures this becomes 'server/instrumentation.server.js'
+	expect(facade).toContain("import './server/instrumentation.server.js'");
+	expect(facade).not.toContain('\\');
+
+	// Cleanup
+	rmSync(dest, { recursive: true, force: true });
 });

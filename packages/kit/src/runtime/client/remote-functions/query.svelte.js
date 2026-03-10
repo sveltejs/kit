@@ -3,7 +3,11 @@
 import { app_dir, base } from '$app/paths/internal/client';
 import { app, goto, query_map, remote_responses } from '../client.js';
 import { stringify_remote_arg } from '../../shared.js';
-import { create_remote_function, remote_request } from './shared.svelte.js';
+import {
+	create_remote_function,
+	get_remote_request_headers,
+	remote_request
+} from './shared.svelte.js';
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
 import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
@@ -32,7 +36,8 @@ export function query(id) {
 
 			const url = `${base}/${app_dir}/remote/${id}${payload ? `?payload=${payload}` : ''}`;
 
-			return await remote_request(url);
+			const result = await remote_request(url, get_remote_request_headers());
+			return devalue.parse(result, app.decoders);
 		});
 	});
 }
@@ -43,6 +48,7 @@ export function query(id) {
  */
 export function query_batch(id) {
 	/** @type {Map<string, Array<{resolve: (value: any) => void, reject: (error: any) => void}>>} */
+	// eslint-disable-next-line svelte/prefer-svelte-reactivity -- we don't need reactivity for this
 	let batching = new Map();
 
 	return create_remote_function(id, (cache_key, payload) => {
@@ -62,10 +68,20 @@ export function query_batch(id) {
 
 				if (batching.size > 1) return;
 
+				// Do this here, after await Svelte' reactivity context is gone.
+				// TODO is it possible to have batches of the same key
+				// but in different forks/async contexts and in the same macrotask?
+				// If so this would potentially be buggy
+				const headers = {
+					'Content-Type': 'application/json',
+					...get_remote_request_headers()
+				};
+
 				// Wait for the next macrotask - don't use microtask as Svelte runtime uses these to collect changes and flush them,
 				// and flushes could reveal more queries that should be batched.
 				setTimeout(async () => {
 					const batched = batching;
+					// eslint-disable-next-line svelte/prefer-svelte-reactivity
 					batching = new Map();
 
 					try {
@@ -74,9 +90,7 @@ export function query_batch(id) {
 							body: JSON.stringify({
 								payloads: Array.from(batched.keys())
 							}),
-							headers: {
-								'Content-Type': 'application/json'
-							}
+							headers
 						});
 
 						if (!response.ok) {
@@ -382,15 +396,19 @@ export class Query {
 		const p = this.#promise;
 		this.#overrides.length;
 
-		return async (resolve, reject) => {
-			try {
+		return (resolve, reject) => {
+			const result = (async () => {
 				await p;
 				// svelte-ignore await_reactivity_loss
 				await tick();
-				resolve?.(/** @type {T} */ (this.#current));
-			} catch (error) {
-				reject?.(error);
+				return /** @type {T} */ (this.#current);
+			})();
+
+			if (resolve || reject) {
+				return result.then(resolve, reject);
 			}
+
+			return result;
 		};
 	});
 
@@ -470,8 +488,14 @@ export class Query {
 		this.#then;
 		return (/** @type {any} */ fn) => {
 			return this.#then(
-				() => fn(),
-				() => fn()
+				(value) => {
+					fn();
+					return value;
+				},
+				(error) => {
+					fn();
+					throw error;
+				}
 			);
 		};
 	}

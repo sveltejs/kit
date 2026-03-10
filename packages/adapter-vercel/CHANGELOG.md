@@ -1,5 +1,98 @@
 # @sveltejs/adapter-vercel
 
+## 6.3.3
+### Patch Changes
+
+
+- fix: ensure build does not copy Vercel build environment system files ([#15400](https://github.com/sveltejs/kit/pull/15400))
+
+## 6.3.2
+### Patch Changes
+
+
+- fix: 404 for immutable assets that don't match static files ([`c67da8a`](https://github.com/sveltejs/kit/commit/c67da8ab6380349b30c353247688369eaef58c05))
+
+- Updated dependencies [[`3e607b3`](https://github.com/sveltejs/kit/commit/3e607b314aec9e5f278d32847945b8b6323e1cb8), [`62991c8`](https://github.com/sveltejs/kit/commit/62991c81db4f50ccfb08a9ac5e05ccba4ddab59e), [`f47c01b`](https://github.com/sveltejs/kit/commit/f47c01bd8100328c24fdb8522fe35913b0735f35)]:
+  - @sveltejs/kit@2.52.2
+
+## 6.3.1
+### Patch Changes
+
+
+- feat: show remote function calls under the /_app/remote route in observability ([#15098](https://github.com/sveltejs/kit/pull/15098))
+
+
+- fix: prevent isr routes from handling remote function calls ([#15098](https://github.com/sveltejs/kit/pull/15098))
+
+- Updated dependencies [[`46c1ebd`](https://github.com/sveltejs/kit/commit/46c1ebd9f662f0de499e921bfee2661316449e9d), [`2dd74c8`](https://github.com/sveltejs/kit/commit/2dd74c8c86ae4855c3e9d74d8cf241e86dcd5b36), [`8871b54`](https://github.com/sveltejs/kit/commit/8871b5444413d0c7d7ef4d260996c3b5c359d0b8)]:
+  - @sveltejs/kit@2.50.1
+
+## 6.3.0
+### Minor Changes
+
+
+- chore: mark `RequestContext` as deprecated and refer to `@vercel/functions` ([#14725](https://github.com/sveltejs/kit/pull/14725))
+
+
+### Patch Changes
+
+- Updated dependencies [[`e67613c`](https://github.com/sveltejs/kit/commit/e67613cf0dde5b7b22e7ef2e2fa2d9171505c784), [`a5c313e`](https://github.com/sveltejs/kit/commit/a5c313e026659874981868fe9628ed6a311dcc06), [`06de550`](https://github.com/sveltejs/kit/commit/06de5506b6db0e39e2ded47e239af39f64d647a8)]:
+  - @sveltejs/kit@2.49.3
+
+## 6.2.0
+### Minor Changes
+
+
+- feat: Node 24 support ([#14982](https://github.com/sveltejs/kit/pull/14982))
+
+## 6.1.2
+### Patch Changes
+
+
+- chore(deps): upgrade to `@vercel/nft` version 1.0.0 to reduce dependencies ([#14950](https://github.com/sveltejs/kit/pull/14950))
+
+- Updated dependencies [[`0889a2a`](https://github.com/sveltejs/kit/commit/0889a2aa897b64194bc55183d7224df65d8147c1), [`2ff3951`](https://github.com/sveltejs/kit/commit/2ff3951e79e59b522c648138c846f31ad858d5b0), [`5b30755`](https://github.com/sveltejs/kit/commit/5b30755a1d84a1054370b211e56d576e3c96d442)]:
+  - @sveltejs/kit@2.48.7
+
+## 6.1.1
+### Patch Changes
+
+
+- chore: improve runtime config parsing ([#14838](https://github.com/sveltejs/kit/pull/14838))
+
+- Updated dependencies [[`cd72d94`](https://github.com/sveltejs/kit/commit/cd72d942a75eed2c1c2ee4b9d6cba5829a4fdb7a), [`53b1b73`](https://github.com/sveltejs/kit/commit/53b1b73256d5b314b1e08ff13f920d520c4a6aed), [`2ccc638`](https://github.com/sveltejs/kit/commit/2ccc63806fa4049c0c05ebc43dce8905e355ed5a)]:
+  - @sveltejs/kit@2.48.3
+
+## 6.1.0
+### Minor Changes
+
+
+- feat: Add experimental support for Bun runtime ([#14817](https://github.com/sveltejs/kit/pull/14817))
+
+
+### Patch Changes
+
+- Updated dependencies [[`102aecf`](https://github.com/sveltejs/kit/commit/102aecfd228dd632664d748b9e87bc6d219294c4)]:
+  - @sveltejs/kit@2.48.1
+
+## 6.0.0
+### Major Changes
+
+
+- breaking: remove Node polyfills (and by extension support for Node 18) ([#14732](https://github.com/sveltejs/kit/pull/14732))
+
+
+### Minor Changes
+
+
+- feat: parse isr.expiration, allowing it to be a string ([#14691](https://github.com/sveltejs/kit/pull/14691))
+
+
+### Patch Changes
+
+- Updated dependencies [[`9c933a2`](https://github.com/sveltejs/kit/commit/9c933a29e64c04db03e9150fa4e2d74a894d3d12), [`dedda71`](https://github.com/sveltejs/kit/commit/dedda7184dc04543e2ba6ea3e7f50b3836505463)]:
+  - @sveltejs/kit@2.47.0
+
 ## 5.10.3
 ### Patch Changes
 

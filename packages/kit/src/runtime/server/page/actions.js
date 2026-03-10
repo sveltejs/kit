@@ -266,6 +266,7 @@ async function call_action(event, event_state, actions) {
 		},
 		fn: async (current) => {
 			const traced_event = merge_tracing(event, current);
+			event_state.allows_commands = true;
 			const result = await with_request_store({ event: traced_event, state: event_state }, () =>
 				action(traced_event)
 			);
@@ -340,7 +341,8 @@ function try_serialize(data, fn, route_id) {
 		// if someone tries to use `json()` in their action
 		if (data instanceof Response) {
 			throw new Error(
-				`Data returned from action inside ${route_id} is not serializable. Form actions need to return plain objects or fail(). E.g. return { success: true } or return fail(400, { message: "invalid" });`
+				`Data returned from action inside ${route_id} is not serializable. Form actions need to return plain objects or fail(). E.g. return { success: true } or return fail(400, { message: "invalid" });`,
+				{ cause: e }
 			);
 		}
 
@@ -348,7 +350,7 @@ function try_serialize(data, fn, route_id) {
 		if ('path' in error) {
 			let message = `Data returned from action inside ${route_id} is not serializable: ${error.message}`;
 			if (error.path !== '') message += ` (data.${error.path})`;
-			throw new Error(message);
+			throw new Error(message, { cause: e });
 		}
 
 		throw error;

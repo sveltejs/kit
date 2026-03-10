@@ -2,9 +2,21 @@ import { tsPlugin } from '@sveltejs/acorn-typescript';
 import { Parser } from 'acorn';
 import { read } from '../../../utils/filesystem.js';
 
-const inheritable_page_options = new Set(['ssr', 'prerender', 'csr', 'trailingSlash', 'config']);
+const valid_page_options_array = /** @type {const} */ ([
+	'ssr',
+	'prerender',
+	'csr',
+	'trailingSlash',
+	'config',
+	'entries',
+	'load'
+]);
 
-const valid_page_options = new Set([...inheritable_page_options, 'entries']);
+/** @type {Set<string>} */
+const valid_page_options = new Set(valid_page_options_array);
+
+/** @typedef {typeof valid_page_options_array[number]} ValidPageOption */
+/** @typedef {Partial<Record<ValidPageOption, any>>} PageOptions */
 
 const skip_parsing_regex = new RegExp(
 	`${Array.from(valid_page_options).join('|')}|(?:export[\\s\\n]+\\*[\\s\\n]+from)`
@@ -14,14 +26,15 @@ const parser = Parser.extend(tsPlugin());
 
 /**
  * Collects page options from a +page.js/+layout.js file, ignoring reassignments
- * and using the declared value. Returns `null` if any export is too difficult to analyse.
+ * and using the declared value (except for load functions, for which the value is `true`).
+ * Returns `null` if any export is too difficult to analyse.
  * @param {string} filename The name of the file to report when an error occurs
  * @param {string} input
- * @returns {Record<string, any> | null}
+ * @returns {PageOptions | null}
  */
 export function statically_analyse_page_options(filename, input) {
-	// if there's a chance there are no page exports or export all declaration,
-	// then we can skip the AST parsing which is expensive
+	// if there's a chance there are no page exports or an unparseable
+	// export all declaration, then we can skip the AST parsing which is expensive
 	if (!skip_parsing_regex.test(input)) {
 		return {};
 	}
@@ -116,6 +129,13 @@ export function statically_analyse_page_options(filename, input) {
 									continue;
 								}
 
+								// Special case: We only want to know that 'load' is exported (in a way that doesn't cause truthy checks in other places to trigger)
+								if (variable_declarator.id.name === 'load') {
+									page_options.set('load', null);
+									export_specifiers.delete('load');
+									continue;
+								}
+
 								// references a declaration we can't easily evaluate statically
 								return null;
 							}
@@ -138,7 +158,12 @@ export function statically_analyse_page_options(filename, input) {
 			// class and function declarations
 			if (statement.declaration.type !== 'VariableDeclaration') {
 				if (valid_page_options.has(statement.declaration.id.name)) {
-					return null;
+					// Special case: We only want to know that 'load' is exported (in a way that doesn't cause truthy checks in other places to trigger)
+					if (statement.declaration.id.name === 'load') {
+						page_options.set('load', null);
+					} else {
+						return null;
+					}
 				}
 				continue;
 			}
@@ -154,6 +179,12 @@ export function statically_analyse_page_options(filename, input) {
 
 				if (declaration.init?.type === 'Literal') {
 					page_options.set(declaration.id.name, declaration.init.value);
+					continue;
+				}
+
+				// Special case: We only want to know that 'load' is exported (in a way that doesn't cause truthy checks in other places to trigger)
+				if (declaration.id.name === 'load') {
+					page_options.set('load', null);
 					continue;
 				}
 
@@ -175,33 +206,56 @@ export function statically_analyse_page_options(filename, input) {
  * @param {import('acorn').Identifier | import('acorn').Literal} node
  * @returns {string}
  */
-export function get_name(node) {
+function get_name(node) {
 	return node.type === 'Identifier' ? node.name : /** @type {string} */ (node.value);
 }
 
 /**
- * @param {{
- *   resolve: (file: string) => Promise<Record<string, any>>;
- *   static_exports?: Map<string, { page_options: Record<string, any> | null, children: string[] }>;
- * }} opts
+ * Reads and statically analyses a file for page options
+ * @param {string} filepath
+ * @returns {PageOptions | null} Returns the page options for the file or `null` if unanalysable
  */
-export function create_node_analyser({ resolve, static_exports = new Map() }) {
+export function get_page_options(filepath) {
+	try {
+		const input = read(filepath);
+		const page_options = statically_analyse_page_options(filepath, input);
+		if (page_options === null) {
+			return null;
+		}
+
+		return page_options;
+	} catch {
+		return null;
+	}
+}
+
+export function create_node_analyser() {
+	const static_exports = new Map();
+
 	/**
-	 * Computes the final page options for a node (if possible). Otherwise, returns `null`.
-	 * @param {import('types').PageNode} node
-	 * @returns {Promise<Record<string, any> | null>}
+	 * @param {string | undefined} key
+	 * @param {PageOptions | null} page_options
 	 */
-	const get_page_options = async (node) => {
+	const cache = (key, page_options) => {
+		if (key) static_exports.set(key, { page_options, children: [] });
+	};
+
+	/**
+	 * Computes the final page options (may include load function as `load: null`; special case) for a node (if possible). Otherwise, returns `null`.
+	 * @param {import('types').PageNode} node
+	 * @returns {PageOptions | null}
+	 */
+	const crawl = (node) => {
 		const key = node.universal || node.server;
 		if (key && static_exports.has(key)) {
 			return { ...static_exports.get(key)?.page_options };
 		}
 
-		/** @type {Record<string, any>} */
+		/** @type {PageOptions} */
 		let page_options = {};
 
 		if (node.parent) {
-			const parent_options = await get_page_options(node.parent);
+			const parent_options = crawl(node.parent);
 
 			const parent_key = node.parent.universal || node.parent.server;
 			if (key && parent_key) {
@@ -211,9 +265,7 @@ export function create_node_analyser({ resolve, static_exports = new Map() }) {
 			if (parent_options === null) {
 				// if the parent cannot be analysed, we can't know what page options
 				// the child node inherits, so we also mark it as unanalysable
-				if (key) {
-					static_exports.set(key, { page_options: null, children: [] });
-				}
+				cache(key, null);
 				return null;
 			}
 
@@ -221,43 +273,29 @@ export function create_node_analyser({ resolve, static_exports = new Map() }) {
 		}
 
 		if (node.server) {
-			const module = await resolve(node.server);
-			for (const page_option in inheritable_page_options) {
-				if (page_option in module) {
-					page_options[page_option] = module[page_option];
-				}
+			const server_page_options = get_page_options(node.server);
+			if (server_page_options === null) {
+				cache(key, null);
+				return null;
 			}
+			page_options = { ...page_options, ...server_page_options };
 		}
 
 		if (node.universal) {
-			const input = read(node.universal);
-			const universal_page_options = statically_analyse_page_options(node.universal, input);
-
+			const universal_page_options = get_page_options(node.universal);
 			if (universal_page_options === null) {
-				static_exports.set(node.universal, { page_options: null, children: [] });
+				cache(key, null);
 				return null;
 			}
-
 			page_options = { ...page_options, ...universal_page_options };
 		}
 
-		if (key) {
-			static_exports.set(key, { page_options, children: [] });
-		}
+		cache(key, page_options);
 
 		return page_options;
 	};
 
-	/**
-	 * @param {string} file
-	 */
-	const invalidate_page_options = (file) => {
-		static_exports.get(file)?.children.forEach((child) => static_exports.delete(child));
-		static_exports.delete(file);
-	};
-
 	return {
-		get_page_options,
-		invalidate_page_options
+		get_page_options: crawl
 	};
 }

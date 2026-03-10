@@ -8,9 +8,6 @@
 		"target": "es2022",
 		"module": "node16",
 		"moduleResolution": "node16",
-		// Some `@netlify/functions` types we don't use cause a type error
-		// see https://github.com/netlify/primitives/issues/302
-		"skipLibCheck": true,
 		"allowSyntheticDefaultImports": true,
 		"baseUrl": ".",
 		"paths": {

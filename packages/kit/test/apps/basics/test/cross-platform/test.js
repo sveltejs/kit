@@ -787,8 +787,8 @@ test.describe('Routing', () => {
 	test('focus works if page load has hash', async ({ page, browserName }) => {
 		await page.goto('/routing/hashes/target#p2');
 
+		await page.waitForSelector('#p2:focus');
 		await page.keyboard.press(browserName === 'webkit' ? 'Alt+Tab' : 'Tab');
-
 		await page.waitForSelector('button:focus');
 	});
 

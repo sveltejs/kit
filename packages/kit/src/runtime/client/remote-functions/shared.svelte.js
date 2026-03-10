@@ -2,17 +2,36 @@
 /** @import { RemoteFunctionResponse } from 'types' */
 /** @import { Query } from './query.svelte.js' */
 import * as devalue from 'devalue';
-import { app, goto, query_map } from '../client.js';
+import { app, goto, query_map, remote_responses } from '../client.js';
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
-import { tick } from 'svelte';
-import { create_remote_cache_key, stringify_remote_arg } from '../../shared.js';
+import { tick, untrack } from 'svelte';
+import { create_remote_key, stringify_remote_arg } from '../../shared.js';
+import { page } from '../state.svelte.js';
 
 /**
- *
- * @param {string} url
+ * @returns {{ 'x-sveltekit-pathname': string, 'x-sveltekit-search': string }}
  */
-export async function remote_request(url) {
-	const response = await fetch(url);
+export function get_remote_request_headers() {
+	// This will be the correct value of the current or soon-current url,
+	// even in forks because it's state-based - therefore not using window.location.
+	// Use untrack(...) to Avoid accidental reactive dependency on pathname/search
+	return untrack(() => ({
+		'x-sveltekit-pathname': page.url.pathname,
+		'x-sveltekit-search': page.url.search
+	}));
+}
+
+/**
+ * @param {string} url
+ * @param {HeadersInit} headers
+ */
+export async function remote_request(url, headers) {
+	const response = await fetch(url, {
+		headers: {
+			'Content-Type': 'application/json',
+			...headers
+		}
+	});
 
 	if (!response.ok) {
 		throw new HttpError(500, 'Failed to execute remote function');
@@ -29,7 +48,7 @@ export async function remote_request(url) {
 		throw new HttpError(result.status ?? 500, result.error);
 	}
 
-	return devalue.parse(result.result, app.decoders);
+	return result.result;
 }
 
 /**
@@ -40,7 +59,7 @@ export async function remote_request(url) {
 export function create_remote_function(id, create) {
 	return (/** @type {any} */ arg) => {
 		const payload = stringify_remote_arg(arg, app.hooks.transport);
-		const cache_key = create_remote_cache_key(id, payload);
+		const cache_key = create_remote_key(id, payload);
 		let entry = query_map.get(cache_key);
 
 		let tracking = true;
@@ -55,6 +74,7 @@ export function create_remote_function(id, create) {
 							if (!entry.count && entry === query_map.get(cache_key)) {
 								entry.resource._dispose?.();
 								query_map.delete(cache_key);
+								delete remote_responses[cache_key];
 							}
 						});
 					}
