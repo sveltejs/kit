@@ -933,9 +933,7 @@ async function kit({ svelte_config }) {
 								assetFileNames: `${prefix}/assets/[name].[hash][extname]`,
 								hoistTransitiveImports: false,
 								sourcemapIgnoreList,
-								inlineDynamicImports: is_rolldown ? undefined : !split,
-								// @ts-ignore: only available in Vite 8
-								codeSplitting: is_rolldown ? split : undefined
+								inlineDynamicImports: is_rolldown ? undefined : !split
 							},
 							preserveEntrySignatures: 'strict',
 							onwarn(warning, handler) {
@@ -968,6 +966,13 @@ async function kit({ svelte_config }) {
 						}
 					}
 				};
+
+				// we must reference Vite 8 options conditionally. Otherwise, older Vite
+				// versions throw an error about unknown config options
+				if (is_rolldown && new_config?.build?.rollupOptions?.output) {
+					// @ts-ignore only available in Vite 8
+					new_config.build.rollupOptions.output.codeSplitting = split;
+				}
 			} else {
 				new_config = {
 					appType: 'custom',
@@ -975,7 +980,7 @@ async function kit({ svelte_config }) {
 					build: {
 						rollupOptions: {
 							// Vite dependency crawler needs an explicit JS entry point
-							// eventhough server otherwise works without it
+							// even though server otherwise works without it
 							input: `${runtime_directory}/client/entry.js`
 						}
 					},

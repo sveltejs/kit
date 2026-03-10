@@ -138,19 +138,19 @@ const options = object(
 			}),
 
 			files: object({
-				src: deprecate(string('src')),
-				assets: deprecate(string('static')),
+				src: string('src'),
+				assets: string('static'),
 				hooks: object({
-					client: deprecate(string(null)),
-					server: deprecate(string(null)),
-					universal: deprecate(string(null))
+					client: string(null),
+					server: string(null),
+					universal: string(null)
 				}),
-				lib: deprecate(string(null)),
-				params: deprecate(string(null)),
-				routes: deprecate(string(null)),
-				serviceWorker: deprecate(string(null)),
-				appTemplate: deprecate(string(null)),
-				errorTemplate: deprecate(string(null))
+				lib: string(null),
+				params: string(null),
+				routes: string(null),
+				serviceWorker: string(null),
+				appTemplate: string(null),
+				errorTemplate: string(null)
 			}),
 
 			inlineStyleThreshold: number(0),

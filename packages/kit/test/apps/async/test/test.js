@@ -156,6 +156,52 @@ test.describe('remote functions', () => {
 		await page.waitForURL('/remote');
 	});
 
+	test('remote form redirect opens in new tab when target=_blank', async ({ page }) => {
+		await page.goto('/remote/form/redirect-target');
+
+		const popup_promise = page.waitForEvent('popup', { timeout: 5000 });
+
+		await page.locator('[data-testid="form-blank"] button').click();
+
+		const popup = await popup_promise;
+		await popup.waitForLoadState();
+
+		expect(popup.url()).toContain('/remote/form/redirect-target/destination');
+
+		expect(page.url()).toContain('/remote/form/redirect-target');
+		expect(page.url()).not.toContain('/destination');
+	});
+
+	test('remote form redirect navigates same tab without target=_blank', async ({ page }) => {
+		await page.goto('/remote/form/redirect-target');
+
+		let popup_opened = false;
+		page.on('popup', () => {
+			popup_opened = true;
+		});
+
+		await page.locator('form:not([target]) button').click();
+		await page.waitForURL('**/remote/form/redirect-target/destination');
+
+		expect(popup_opened).toBe(false);
+		expect(page.url()).toContain('/remote/form/redirect-target/destination');
+	});
+
+	test('remote form redirect opens in new tab when formtarget=_blank on input', async ({
+		page
+	}) => {
+		await page.goto('/remote/form/redirect-target');
+
+		const popup_promise = page.waitForEvent('popup', { timeout: 5000 });
+		await page.locator('[data-testid="form-input-blank"] input').click();
+		const popup = await popup_promise;
+		await popup.waitForLoadState();
+
+		expect(popup.url()).toContain('/remote/form/redirect-target/destination');
+		expect(page.url()).toContain('/remote/form/redirect-target');
+		expect(page.url()).not.toContain('/destination');
+	});
+
 	test('form multiple submit buttons work', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/remote/form/multiple-submit');
 
@@ -554,6 +600,21 @@ test.describe('remote functions', () => {
 				file2: 1
 			})
 		);
+	});
+
+	test('query stored as variable does not block SSR inside boundary', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		await page.goto('/remote/query-boundary');
+
+		await expect(page.locator('#delayed-pending')).toHaveText('loading delayed');
+
+		if (javaScriptEnabled) {
+			await expect(page.locator('#delayed-result')).toHaveText('delayed data', {
+				timeout: 5000
+			});
+		}
 	});
 });
 
