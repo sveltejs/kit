@@ -127,10 +127,19 @@ export function filter_fonts(assets) {
 
 /**
  * @param {import('types').ValidatedKitConfig} config
+ * @param {boolean} is_build
  * @returns {string}
  */
-export function assets_base(config) {
-	return (config.paths.assets || config.paths.base || '.') + '/';
+export function assets_base(config, is_build) {
+	// We could always use a relative asset base path here, but it's better for performance not to.
+	// E.g. Vite generates `new URL('/asset.png', import.meta).href` for a relative path vs just '/asset.png'.
+	// That's larger and takes longer to run and also causes an HTML diff between SSR and client
+	// causing us to do a more expensive hydration check.
+	if (config.paths.relative !== false || !config.paths.assets || !is_build) {
+		return (config.paths.base || '.') + '/';
+	}
+
+	return (config.paths.assets || config.paths.base) + '/';
 }
 
 /**

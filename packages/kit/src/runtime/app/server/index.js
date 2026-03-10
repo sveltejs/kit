@@ -1,5 +1,5 @@
 import { read_implementation, manifest } from '__sveltekit/server';
-import { asset as asset_path } from '$app/paths';
+import { assets } from '$app/paths/internal/server';
 import { DEV } from 'esm-env';
 import { base64_decode } from '../../utils.js';
 
@@ -54,8 +54,11 @@ export function read(asset) {
 		});
 	}
 
+	// Vite 8 uses relative paths in prod but absolute in dev
+	const base = assets || DEV ? assets : '.';
+
 	const file = decodeURIComponent(
-		DEV && asset.startsWith('/@fs') ? asset : asset.slice(asset_path('').length)
+		DEV && asset.startsWith(base + '/@fs') ? asset.slice(base.length) : asset.slice(base.length + 1)
 	);
 
 	if (file in manifest._.server_assets) {

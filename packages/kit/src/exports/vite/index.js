@@ -1004,8 +1004,6 @@ function kit({ svelte_config }) {
 			/** @type {import('vite').UserConfig} */
 			let new_config;
 
-			const kit_paths_base = kit.paths.base || '/';
-
 			if (is_build) {
 				const prefix = `${kit.appDir}/immutable`;
 
@@ -1092,20 +1090,11 @@ function kit({ svelte_config }) {
 					});
 				}
 
-				// We could always use a relative asset base path here, but it's better for performance not to.
-				// E.g. Vite generates `new URL('/asset.png', import.meta).href` for a relative path vs just '/asset.png'.
-				// That's larger and takes longer to run and also causes an HTML diff between SSR and client
-				// causing us to do a more expensive hydration check.
-				// const client_base =
-				// 	kit.paths.relative !== false || kit.paths.assets ? './' : kit_paths_base;
-
 				const inline = svelte_config.kit.output.bundleStrategy === 'inline';
 
 				new_config = {
 					appType: 'custom',
-					// TODO: use client_base for client environment when Vite allows us to set base per environment
-					// base: ssr ? assets_base(kit) : client_base,
-					base: assets_base(kit),
+					base: assets_base(kit, is_build),
 					build: {
 						cssCodeSplit: !inline,
 						cssMinify: initial_config.build?.minify == null ? true : !!initial_config.build.minify,
@@ -1134,6 +1123,46 @@ function kit({ svelte_config }) {
 						},
 						emptyOutDir: false,
 						ssrEmitAssets: true
+					},
+					environments: {
+						ssr: {
+							build: {
+								ssr: true,
+								copyPublicDir: false,
+								outDir: `${out}/server`,
+								target: 'node22',
+								rolldownOptions: {
+									input: server_input,
+									output: {
+										entryFileNames: '[name].js',
+										chunkFileNames: 'chunks/[name].js'
+									}
+								}
+							},
+							// during the initial server build we don't know yet
+							define: {
+								__SVELTEKIT_HAS_SERVER_LOAD__: 'true',
+								__SVELTEKIT_HAS_UNIVERSAL_LOAD__: 'true',
+								__SVELTEKIT_PAYLOAD__: '{}'
+							}
+						},
+						client: {
+							build: {
+								outDir: `${out}/client`,
+								rolldownOptions: {
+									input: inline ? client_input['bundle'] : client_input,
+									output: {
+										format: inline ? 'iife' : 'esm',
+										entryFileNames: `${prefix}/[name].[hash].js`,
+										chunkFileNames: `${prefix}/chunks/[hash].js`,
+										codeSplitting: svelte_config.kit.output.bundleStrategy === 'split'
+									}
+								}
+							},
+							define: {
+								__SVELTEKIT_PAYLOAD__: `globalThis.__sveltekit_${version_hash}`
+							}
+						}
 					},
 					builder: {
 						buildApp: async (builder) => {
@@ -1462,46 +1491,6 @@ function kit({ svelte_config }) {
 						sharedConfigBuild: true,
 						sharedPlugins: true
 					},
-					environments: {
-						ssr: {
-							build: {
-								ssr: true,
-								copyPublicDir: false,
-								outDir: `${out}/server`,
-								target: 'node22',
-								rolldownOptions: {
-									input: server_input,
-									output: {
-										entryFileNames: '[name].js',
-										chunkFileNames: 'chunks/[name].js'
-									}
-								}
-							},
-							// during the initial server build we don't know yet
-							define: {
-								__SVELTEKIT_HAS_SERVER_LOAD__: 'true',
-								__SVELTEKIT_HAS_UNIVERSAL_LOAD__: 'true',
-								__SVELTEKIT_PAYLOAD__: '{}'
-							}
-						},
-						client: {
-							build: {
-								outDir: `${out}/client`,
-								rolldownOptions: {
-									input: inline ? client_input['bundle'] : client_input,
-									output: {
-										format: inline ? 'iife' : 'esm',
-										entryFileNames: `${prefix}/[name].[hash].js`,
-										chunkFileNames: `${prefix}/chunks/[hash].js`,
-										codeSplitting: svelte_config.kit.output.bundleStrategy === 'split'
-									}
-								}
-							},
-							define: {
-								__SVELTEKIT_PAYLOAD__: `globalThis.__sveltekit_${version_hash}`
-							}
-						}
-					},
 					publicDir: kit.files.assets
 				};
 
@@ -1530,7 +1519,7 @@ function kit({ svelte_config }) {
 			} else {
 				new_config = {
 					appType: 'custom',
-					base: kit_paths_base,
+					base: assets_base(kit, is_build),
 					build: {
 						rolldownOptions: {
 							// Vite dependency crawler needs an explicit JS entry point
