@@ -1494,6 +1494,17 @@ function kit({ svelte_config }) {
 						sharedConfigBuild: true,
 						sharedPlugins: true
 					},
+					experimental: {
+						renderBuiltUrl() {
+							// We could always use a relative asset base path here, but it's better for performance not to.
+							// E.g. Vite generates `new URL('/asset.png', import.meta).href` for a relative path vs just '/asset.png'.
+							// That's larger and takes longer to run and also causes an HTML diff between SSR and client
+							// causing us to do a more expensive hydration check.
+							return {
+								relative: kit.paths.relative !== false || !!kit.paths.assets
+							};
+						}
+					},
 					publicDir: kit.files.assets
 				};
 
