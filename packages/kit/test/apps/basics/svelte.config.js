@@ -41,10 +41,6 @@ const config = {
 			trustedOrigins: ['https://trusted.example.com', 'https://payment-gateway.test']
 		},
 
-		paths: {
-			relative: false
-		},
-
 		prerender: {
 			entries: [
 				'*',
