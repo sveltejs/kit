@@ -1463,7 +1463,7 @@ function kit({ svelte_config }) {
 		plugin_virtual_modules,
 		process.env.TEST !== 'true' ? plugin_guard : undefined,
 		plugin_compile
-	].filter((s) => !!s);
+	].filter((p) => !!p);
 }
 
 /**
