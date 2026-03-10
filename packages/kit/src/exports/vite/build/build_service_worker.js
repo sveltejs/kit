@@ -93,10 +93,12 @@ export async function build_service_worker(
 		}
 	};
 
+	// TODO: migrate service worker to environment?
 	await vite.build({
+		appType: 'custom',
 		build: {
 			modulePreload: false,
-			rollupOptions: {
+			rolldownOptions: {
 				input: {
 					'service-worker': service_worker_entry_file
 				},
