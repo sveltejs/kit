@@ -46,7 +46,7 @@ export const navigating = {
 		return _navigating.current ? _navigating.current.willUnload : null;
 	},
 	get delta() {
-		return _navigating.current ? _navigating.current.delta : null;
+		return _navigating.current?.type === 'popstate' ? _navigating.current.delta : null;
 	},
 	get complete() {
 		return _navigating.current ? _navigating.current.complete : null;
