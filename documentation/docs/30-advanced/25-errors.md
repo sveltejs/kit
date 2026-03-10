@@ -141,7 +141,7 @@ The same applies for other error boundaries you define in your code:
 ```svelte
 <svelte:boundary>
 	...
-	{#snippet failed(error)}
+	{#snippet failed(error: App.Error)}
 		<!-- error went through handleError and is of type App.Error -->
 		{error.message}
 	{/snippet}
