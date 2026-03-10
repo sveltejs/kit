@@ -172,7 +172,7 @@ export function form(id) {
 
 		/**
 		 * @param {FormData} data
-		 * @returns {Promise<any> & { updates: (...args: any[]) => any }}
+		 * @returns {Promise<boolean> & { updates: (...args: any[]) => Promise<boolean> }}
 		 */
 		function submit(data) {
 			// Store a reference to the current instance and increment the usage count for the duration
@@ -188,7 +188,7 @@ export function form(id) {
 			/** @type {Array<Query<any> | RemoteQueryOverride>} */
 			let updates = [];
 
-			/** @type {Promise<any> & { updates: (...args: any[]) => any }} */
+			/** @type {Promise<boolean> & { updates: (...args: any[]) => Promise<boolean> }} */
 			const promise = (async () => {
 				try {
 					await Promise.resolve();
@@ -221,8 +221,9 @@ export function form(id) {
 
 					if (form_result.type === 'result') {
 						({ issues: raw_issues = [], result } = devalue.parse(form_result.result, app.decoders));
+						const succeeded = raw_issues.length === 0;
 
-						if (issues.$) {
+						if (!succeeded) {
 							release_overrides(updates);
 						} else {
 							if (form_result.refreshes) {
@@ -231,6 +232,8 @@ export function form(id) {
 								void invalidateAll();
 							}
 						}
+
+						return succeeded;
 					} else if (form_result.type === 'redirect') {
 						const refreshes = form_result.refreshes ?? '';
 						const invalidateAll = !refreshes && updates.length === 0;
@@ -239,6 +242,7 @@ export function form(id) {
 						}
 						// Use internal version to allow redirects to external URLs
 						void _goto(form_result.location, { invalidateAll }, 0);
+						return true;
 					} else {
 						throw new HttpError(form_result.status ?? 500, form_result.error);
 					}
@@ -443,8 +447,8 @@ export function form(id) {
 
 		instance[createAttachmentKey()] = create_attachment(
 			form_onsubmit(({ submit, form }) =>
-				submit().then(() => {
-					if (!issues.$) {
+				submit().then((succeeded) => {
+					if (succeeded) {
 						form.reset();
 					}
 				})

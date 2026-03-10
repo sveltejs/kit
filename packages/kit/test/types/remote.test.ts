@@ -227,9 +227,9 @@ function form_tests() {
 	f.result?.success === true;
 
 	f.enhance(async ({ submit }) => {
-		const x: void = await submit();
+		const x: boolean = await submit();
 		x;
-		const y: void = await submit().updates(
+		const y: boolean = await submit().updates(
 			q(),
 			q().withOverride(() => '')
 		);

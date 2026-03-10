@@ -2048,8 +2048,8 @@ export type RemoteForm<Input extends RemoteFormInput | void, Output> = {
 		callback: (opts: {
 			form: HTMLFormElement;
 			data: Input;
-			submit: () => Promise<void> & {
-				updates: (...queries: Array<RemoteQuery<any> | RemoteQueryOverride>) => Promise<void>;
+			submit: () => Promise<boolean> & {
+				updates: (...queries: Array<RemoteQuery<any> | RemoteQueryOverride>) => Promise<boolean>;
 			};
 		}) => void | Promise<void>
 	): {
