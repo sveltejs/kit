@@ -642,7 +642,7 @@ function kit({ svelte_config }) {
 				]
 			},
 			handler(id) {
-				if (this.environment.name !== 'client') return;
+				if (this.environment.config.consumer !== 'client') return;
 
 				// skip .server.js files outside the cwd or in node_modules, as the filename might not mean 'server-only module' in this context
 				const is_internal =
@@ -795,7 +795,7 @@ function kit({ svelte_config }) {
 
 			remotes.push(remote);
 
-			if (this.environment.name !== 'client') {
+			if (this.environment.config.consumer !== 'client') {
 				// we need to add an `await Promise.resolve()` because if the user imports this function
 				// on the client AND in a load function when loading the client module we will trigger
 				// an ssrLoadModule during dev. During a link preload, the module can be mistakenly
@@ -1447,7 +1447,7 @@ function kit({ svelte_config }) {
 		},
 
 		generateBundle() {
-			if (this.environment.name !== 'client') return;
+			if (this.environment.config.consumer !== 'client') return;
 
 			this.emitFile({
 				type: 'asset',
