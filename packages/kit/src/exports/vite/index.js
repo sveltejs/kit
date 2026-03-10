@@ -894,8 +894,6 @@ function kit({ svelte_config }) {
 		 * @see https://vitejs.dev/guide/api-plugin.html#config
 		 */
 		config(config) {
-			console.log('config');
-
 			/** @type {import('vite').UserConfig} */
 			let new_config;
 
@@ -998,7 +996,7 @@ function kit({ svelte_config }) {
 
 				new_config = {
 					appType: 'custom',
-					// TODO: Vite doesn't support different base paths for different environments
+					// TODO: Vite doesn't support changing the base path per environment
 					// base: ssr ? assets_base(kit) : client_base,
 					base: assets_base(kit),
 					build: {
@@ -1031,8 +1029,6 @@ function kit({ svelte_config }) {
 					},
 					builder: {
 						buildApp: async (builder) => {
-							console.log('buildApp');
-
 							// clears the output directories
 							if (!builder.config.build.watch) {
 								rimraf(out);
