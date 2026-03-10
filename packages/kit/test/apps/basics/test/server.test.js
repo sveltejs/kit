@@ -817,17 +817,6 @@ test.describe('Miscellaneous', () => {
 		const response = await request.get('/prerendering/中文');
 		expect(response.status()).toBe(200);
 	});
-
-	test('avoids generating relative URLs for assets on the client', async () => {
-		test.skip(!!process.env.DEV, 'only applicable to the build output');
-		const nodes = fs.readdirSync('.svelte-kit/output/client/_app/immutable/nodes');
-		const filename = nodes.find((node) => node.startsWith('103.'));
-		const code = fs.readFileSync(
-			`.svelte-kit/output/client/_app/immutable/nodes/${filename}`,
-			'utf-8'
-		);
-		expect(code).not.toMatch(/new URL\(.*, import\.meta\.url\)\.href/);
-	});
 });
 
 test.describe('reroute', () => {

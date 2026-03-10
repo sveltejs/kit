@@ -1,6 +1,7 @@
 import process from 'node:process';
 import { expect } from '@playwright/test';
 import { test } from '../../../utils.js';
+import { readdirSync, readFileSync } from 'node:fs';
 
 test.describe.configure({ mode: 'parallel' });
 
@@ -116,6 +117,17 @@ test.describe('assets path', () => {
 
 		const response = await request.get(href ?? '');
 		expect(response.status()).toBe(200);
+	});
+
+	test('client avoids generating relative URLs', async () => {
+		test.skip(!!process.env.DEV, 'only applicable to the build output');
+		const nodes = readdirSync('.custom-out-dir/output/client/_wheee/immutable/nodes');
+		const filename = nodes.find((node) => node.startsWith('29.'));
+		const code = readFileSync(
+			`.custom-out-dir/output/client/_wheee/immutable/nodes/${filename}`,
+			'utf-8'
+		);
+		expect(code).not.toMatch(/new URL\(.*, import\.meta\.url\)\.href/);
 	});
 });
 

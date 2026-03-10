@@ -126,6 +126,14 @@ export function filter_fonts(assets) {
 }
 
 /**
+ * @param {import('types').ValidatedKitConfig} config
+ * @returns {string}
+ */
+export function assets_base(config) {
+	return (config.paths.assets || config.paths.base || '.') + '/';
+}
+
+/**
  * Writes a function with arguments used by a template literal.
  * This helps us store strings in a module and inject values at runtime.
  * @param {string} name The name of the function
