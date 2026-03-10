@@ -1004,7 +1004,7 @@ function kit({ svelte_config }) {
 			/** @type {import('vite').UserConfig} */
 			let new_config;
 
-			const base = (kit.paths.assets || kit.paths.base) + '/';
+			const base = (kit.paths.assets || kit.paths.base || '.') + '/';
 
 			if (is_build) {
 				const prefix = `${kit.appDir}/immutable`;
@@ -1454,6 +1454,7 @@ function kit({ svelte_config }) {
 								builder.environments.serviceWorker.config.resolve.alias = [
 									...get_config_aliases(kit, vite_config.root)
 								];
+								// TODO: test that changing the experimental option here is applied
 								builder.environments.serviceWorker.config.experimental.renderBuiltUrl = (
 									filename
 								) => {
