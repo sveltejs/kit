@@ -479,6 +479,15 @@ declare module '@sveltejs/kit' {
 			 * @default false
 			 */
 			forkPreloads?: boolean;
+
+			/**
+			 * Whether to enable the experimental handling of rendering errors.
+			 * When enabled, `<svelte:boundary>` is used to wrap components at each level
+			 * where there's an `+error.svelte`, rendering the error page if the component fails.
+			 * In addition, error boundaries also work on the server and the error object goes through `handleError`.
+			 * @default false
+			 */
+			handleRenderingErrors?: boolean;
 		};
 		/**
 		 * Where to find various files within your project.
@@ -585,7 +594,7 @@ declare module '@sveltejs/kit' {
 			 * - `preload-mjs` - uses `<link rel="preload">` but with the `.mjs` extension which prevents double-parsing in Chromium. Some static webservers will fail to serve .mjs files with a `Content-Type: application/javascript` header, which will cause your application to break. If that doesn't apply to you, this is the option that will deliver the best performance for the largest number of users, until `modulepreload` is more widely supported.
 			 * @default "modulepreload"
 			 * @since 1.8.4
-			 * @deprecated removed in 3.0.0
+			 * @deprecated removed in 3.0
 			 */
 			preloadStrategy?: 'modulepreload' | 'preload-js' | 'preload-mjs';
 			/**
@@ -1239,13 +1248,6 @@ declare module '@sveltejs/kit' {
 		 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
 		 */
 		type: 'goto';
-
-		// TODO 3.0 remove this property, so that it only exists when type is 'popstate'
-		// (would possibly be a breaking change to do it prior to that)
-		/**
-		 * In case of a history back/forward navigation, the number of steps to go back/forward
-		 */
-		delta?: undefined;
 	}
 
 	export interface NavigationLeave extends NavigationBase {
@@ -1254,13 +1256,6 @@ declare module '@sveltejs/kit' {
 		 * - `leave`: The app is being left either because the tab is being closed or a navigation to a different document is occurring
 		 */
 		type: 'leave';
-
-		// TODO 3.0 remove this property, so that it only exists when type is 'popstate'
-		// (would possibly be a breaking change to do it prior to that)
-		/**
-		 * In case of a history back/forward navigation, the number of steps to go back/forward
-		 */
-		delta?: undefined;
 	}
 
 	export interface NavigationFormSubmit extends NavigationBase {
@@ -1274,13 +1269,6 @@ declare module '@sveltejs/kit' {
 		 * The `SubmitEvent` that caused the navigation
 		 */
 		event: SubmitEvent;
-
-		// TODO 3.0 remove this property, so that it only exists when type is 'popstate'
-		// (would possibly be a breaking change to do it prior to that)
-		/**
-		 * In case of a history back/forward navigation, the number of steps to go back/forward
-		 */
-		delta?: undefined;
 	}
 
 	export interface NavigationPopState extends NavigationBase {
@@ -1312,13 +1300,6 @@ declare module '@sveltejs/kit' {
 		 * The `PointerEvent` that caused the navigation
 		 */
 		event: PointerEvent;
-
-		// TODO 3.0 remove this property, so that it only exists when type is 'popstate'
-		// (would possibly be a breaking change to do it prior to that)
-		/**
-		 * In case of a history back/forward navigation, the number of steps to go back/forward
-		 */
-		delta?: undefined;
 	}
 
 	export type Navigation =

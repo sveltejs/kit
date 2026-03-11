@@ -130,7 +130,8 @@ const options = object(
 					server: boolean(false)
 				}),
 				remoteFunctions: boolean(false),
-				forkPreloads: boolean(false)
+				forkPreloads: boolean(false),
+				handleRenderingErrors: boolean(false)
 			}),
 
 			files: object({
