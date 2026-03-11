@@ -36,7 +36,7 @@ export function create(config, root) {
 
 	write_client_manifest(config.kit, manifest_data, `${output}/client`);
 	write_server(config, output, root);
-	write_root(manifest_data, output);
+	write_root(manifest_data, config, output);
 	write_all_types(config, manifest_data, root);
 	write_non_ambient(config.kit, manifest_data);
 
