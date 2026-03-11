@@ -40,7 +40,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - uses: pnpm/action-setup@v4.2.0
+      - uses: pnpm/action-setup@v4.3.0
       - uses: actions/setup-node@v6
         with:
           node-version: 24
@@ -52,7 +52,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - uses: pnpm/action-setup@v4.2.0
+      - uses: pnpm/action-setup@v4.3.0
       - uses: actions/setup-node@v6
         with:
           node-version: 24
@@ -86,7 +86,7 @@ jobs:
     steps:
       - run: git config --global core.autocrlf false
       - uses: actions/checkout@v6
-      - uses: pnpm/action-setup@v4.2.0
+      - uses: pnpm/action-setup@v4.3.0
       - uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node-version }}
@@ -154,7 +154,7 @@ jobs:
     steps:
       - run: git config --global core.autocrlf false
       - uses: actions/checkout@v6
-      - uses: pnpm/action-setup@v4.2.0
+      - uses: pnpm/action-setup@v4.3.0
       - uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node-version }}
@@ -188,7 +188,7 @@ jobs:
     steps:
       - run: git config --global core.autocrlf false
       - uses: actions/checkout@v6
-      - uses: pnpm/action-setup@v4.2.0
+      - uses: pnpm/action-setup@v4.3.0
       - uses: actions/setup-node@v6
         with:
           node-version: 24
@@ -222,7 +222,7 @@ jobs:
     steps:
       - run: git config --global core.autocrlf false
       - uses: actions/checkout@v6
-      - uses: pnpm/action-setup@v4.2.0
+      - uses: pnpm/action-setup@v4.3.0
       - uses: actions/setup-node@v6
         with:
           node-version: 24
@@ -251,7 +251,7 @@ jobs:
         node-version: [22, 24]
     steps:
       - uses: actions/checkout@v6
-      - uses: pnpm/action-setup@v4.2.0
+      - uses: pnpm/action-setup@v4.3.0
       - uses: actions/setup-node@v6
         with:
           node-version: ${{matrix.node-version}}

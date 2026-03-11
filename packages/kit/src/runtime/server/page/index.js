@@ -285,6 +285,11 @@ export async function render_page(
 
 							const layouts = compact(branch.slice(0, j + 1));
 							const nodes = new PageNodes(layouts.map((layout) => layout.node));
+							const error_branch = layouts.concat({
+								node,
+								data: null,
+								server_data: null
+							});
 
 							return await render_response({
 								event,
@@ -299,11 +304,14 @@ export async function render_page(
 								},
 								status,
 								error,
-								branch: layouts.concat({
-									node,
-									data: null,
-									server_data: null
-								}),
+								error_components: await load_error_components(
+									options,
+									ssr,
+									error_branch,
+									page,
+									manifest
+								),
+								branch: error_branch,
 								fetched,
 								data_serializer
 							});
@@ -350,11 +358,11 @@ export async function render_page(
 			},
 			status,
 			error: null,
-			branch: ssr === false ? [] : compact(branch),
+			branch: !ssr ? [] : compact(branch),
 			action_result,
 			fetched,
-			data_serializer:
-				ssr === false ? server_data_serializer(event, event_state, options) : data_serializer
+			data_serializer: !ssr ? server_data_serializer(event, event_state, options) : data_serializer,
+			error_components: await load_error_components(options, ssr, branch, page, manifest)
 		});
 	} catch (e) {
 		// a remote function could have thrown a redirect during render
@@ -375,4 +383,45 @@ export async function render_page(
 			resolve_opts
 		});
 	}
+}
+
+/**
+ *
+ * @param {import('types').SSROptions} options
+ * @param {boolean} ssr
+ * @param {Array<import('./types.js').Loaded | null>} branch
+ * @param {import('types').PageNodeIndexes} page
+ * @param {import('@sveltejs/kit').SSRManifest} manifest
+ */
+async function load_error_components(options, ssr, branch, page, manifest) {
+	/** @type {Array<import('types').SSRComponent | undefined> | undefined} */
+	let error_components;
+
+	if (options.server_error_boundaries && ssr) {
+		let last_idx = -1;
+		error_components = await Promise.all(
+			// eslint-disable-next-line @typescript-eslint/await-thenable
+			branch
+				.map((b, i) => {
+					if (i === 0) return undefined; // root layout wraps root error component, not the other way around
+					if (!b) return null;
+
+					i--;
+					// Find the closest error component up to the previous branch
+					while (i > last_idx + 1 && page.errors[i] === undefined) i -= 1;
+					last_idx = i;
+
+					const idx = page.errors[i];
+					if (idx == null) return undefined;
+
+					return manifest._.nodes[idx]?.()
+						.then((e) => e.component?.())
+						.catch(() => undefined);
+				})
+				// filter out indexes where there was no branch, but keep indexes where there was a branch but no error component
+				.filter((e) => e !== null)
+		);
+	}
+
+	return error_components;
 }
