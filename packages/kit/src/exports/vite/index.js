@@ -1154,7 +1154,7 @@ function kit({ svelte_config }) {
 							build: {
 								outDir: `${out}/client`,
 								rolldownOptions: {
-									input: single_output ? client_input['bundle'] : client_input,
+									input: inline ? client_input['bundle'] : client_input,
 									output: {
 										format: inline ? 'iife' : 'esm',
 										entryFileNames: `${prefix}/[name].[hash].js`,
