@@ -1079,13 +1079,10 @@ function kit({ svelte_config }) {
 					server_input['instrumentation.server'] = server_instrumentation;
 				}
 
-				const single_output = svelte_config.kit.output.bundleStrategy !== 'split';
-				const inline = svelte_config.kit.output.bundleStrategy === 'inline';
-
 				/** @type {Record<string, string>} */
 				const client_input = {};
 
-				if (single_output) {
+				if (svelte_config.kit.output.bundleStrategy !== 'split') {
 					client_input['bundle'] = `${runtime_directory}/client/bundle.js`;
 				} else {
 					client_input['entry/start'] = `${runtime_directory}/client/entry.js`;
@@ -1097,11 +1094,13 @@ function kit({ svelte_config }) {
 					});
 				}
 
+				const inline = svelte_config.kit.output.bundleStrategy === 'inline';
+
 				new_config = {
 					appType: 'custom',
 					base,
 					build: {
-						cssCodeSplit: !single_output,
+						cssCodeSplit: !inline,
 						cssMinify: initial_config.build?.minify == null ? true : !!initial_config.build.minify,
 						manifest: true,
 						rolldownOptions: {
