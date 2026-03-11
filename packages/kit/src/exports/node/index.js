@@ -35,16 +35,11 @@ function get_raw_body(req, body_size_limit) {
 	return new ReadableStream({
 		start(controller) {
 			if (body_size_limit !== undefined && content_length > body_size_limit) {
-				let message = `Content-length of ${content_length} exceeds limit of ${body_size_limit} bytes.`;
-
-				if (body_size_limit === 0) {
-					// https://github.com/sveltejs/kit/pull/11589
-					// TODO this exists to aid migration — remove in a future version
-					message += ' To disable body size limits, specify Infinity rather than 0.';
-				}
-
-				const error = new SvelteKitError(413, 'Payload Too Large', message);
-
+				const error = new SvelteKitError(
+					413,
+					'Payload Too Large',
+					`Content-length of ${content_length} exceeds limit of ${body_size_limit} bytes.`
+				);
 				controller.error(error);
 				return;
 			}
@@ -119,15 +114,9 @@ export async function getRequest({ request, base, bodySizeLimit }) {
 		delete headers[':scheme'];
 	}
 
-	// TODO: Whenever Node >=22 is minimum supported version, we can use `request.readableAborted`
-	// @see https://github.com/nodejs/node/blob/5cf3c3e24c7257a0c6192ed8ef71efec8ddac22b/lib/internal/streams/readable.js#L1443-L1453
 	const controller = new AbortController();
-	let errored = false;
-	let end_emitted = false;
-	request.once('error', () => (errored = true));
-	request.once('end', () => (end_emitted = true));
 	request.once('close', () => {
-		if ((errored || request.destroyed) && !end_emitted) {
+		if (request.readableAborted) {
 			controller.abort();
 		}
 	});

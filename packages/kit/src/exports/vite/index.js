@@ -1085,7 +1085,7 @@ function kit({ svelte_config }) {
 					build: {
 						rollupOptions: {
 							// Vite dependency crawler needs an explicit JS entry point
-							// eventhough server otherwise works without it
+							// even though server otherwise works without it
 							input: `${runtime_directory}/client/entry.js`
 						}
 					},

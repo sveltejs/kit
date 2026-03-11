@@ -1476,7 +1476,7 @@ function _before_navigate({ url, type, intent, delta, event, scroll }) {
 
 	const nav = create_navigation(current, intent, url, type, scroll ?? null);
 
-	if (delta !== undefined) {
+	if (nav.navigation.type === 'popstate' && delta !== undefined) {
 		nav.navigation.delta = delta;
 	}
 
