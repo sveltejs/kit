@@ -201,42 +201,48 @@ export async function render_response({
 			}
 
 			event_state.allows_commands = false;
-			rendered = await with_request_store({ event, state: event_state }, async () => {
-				// use relative paths during rendering, so that the resulting HTML is as
-				// portable as possible, but reset afterwards
-				if (paths.relative) paths.override({ base, assets });
+			event_state.is_in_render = true;
+			try {
+				rendered = await with_request_store({ event, state: event_state }, async () => {
+					// use relative paths during rendering, so that the resulting HTML is as
+					// portable as possible, but reset afterwards
+					if (paths.relative) paths.override({ base, assets });
 
-				const maybe_promise = options.root.render(props, render_opts);
-				// We have to invoke .then eagerly here in order to kick off rendering: it's only starting on access,
-				// and `await maybe_promise` would eagerly access the .then property but call its function only after a tick, which is too late
-				// for the paths.reset() below and for any eager getRequestEvent() calls during rendering without AsyncLocalStorage available.
-				const rendered =
-					options.async && 'then' in maybe_promise
-						? /** @type {ReturnType<typeof options.root.render> & Promise<any>} */ (
-								maybe_promise
-							).then((r) => r)
-						: maybe_promise;
+					const maybe_promise = options.root.render(props, render_opts);
+					// We have to invoke .then eagerly here in order to kick off rendering: it's only starting on access,
+					// and `await maybe_promise` would eagerly access the .then property but call its function only after a tick, which is too late
+					// for the paths.reset() below and for any eager getRequestEvent() calls during rendering without AsyncLocalStorage available.
+					const rendered =
+						options.async && 'then' in maybe_promise
+							? /** @type {ReturnType<typeof options.root.render> & Promise<any>} */ (
+									maybe_promise
+								).then((r) => r)
+							: maybe_promise;
 
-				// TODO 3.0 remove options.async
-				if (options.async) {
-					// we reset this synchronously, rather than after async rendering is complete,
-					// to avoid cross-talk between requests. This is a breaking change for
-					// anyone who opts into async SSR, since `base` and `assets` will no
-					// longer be relative to the current pathname.
-					// TODO 3.0 remove `base` and `assets` in favour of `resolve(...)` and `asset(...)`
-					paths.reset();
-				}
+					// TODO 3.0 remove options.async
+					if (options.async) {
+						// we reset this synchronously, rather than after async rendering is complete,
+						// to avoid cross-talk between requests. This is a breaking change for
+						// anyone who opts into async SSR, since `base` and `assets` will no
+						// longer be relative to the current pathname.
+						// TODO 3.0 remove `base` and `assets` in favour of `resolve(...)` and `asset(...)`
+						paths.reset();
+					}
 
-				const { head, html, css, hashes } = /** @type {ReturnType<typeof options.root.render>} */ (
-					options.async ? await rendered : rendered
-				);
+					const { head, html, css, hashes } =
+						/** @type {ReturnType<typeof options.root.render>} */ (
+							options.async ? await rendered : rendered
+						);
 
-				if (hashes) {
-					csp.add_script_hashes(hashes.script);
-				}
+					if (hashes) {
+						csp.add_script_hashes(hashes.script);
+					}
 
-				return { head, html, css, hashes };
-			});
+					return { head, html, css, hashes };
+				});
+			} finally {
+				event_state.is_in_render = false;
+			}
 		} finally {
 			if (DEV) {
 				globalThis.fetch = fetch;

@@ -5,14 +5,14 @@ import { app, goto, query_map, remote_responses } from '../client.js';
 import {
 	create_remote_function,
 	get_remote_request_headers,
-	remote_request,
-	unfriendly_hydratable
+	remote_request
 } from './shared.svelte.js';
 import * as devalue from 'devalue';
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
 import { DEV } from 'esm-env';
 import { with_resolvers } from '../../../utils/promise.js';
 import { tick } from 'svelte';
+import { unfriendly_hydratable } from '../../shared.js';
 
 /**
  * @param {string} id

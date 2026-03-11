@@ -7,9 +7,9 @@ import { app, remote_responses } from '../client.js';
 import {
 	create_remote_function,
 	get_remote_request_headers,
-	remote_request,
-	unfriendly_hydratable
+	remote_request
 } from './shared.svelte.js';
+import { unfriendly_hydratable } from '../../shared.js';
 
 // Initialize Cache API for prerender functions
 const CACHE_NAME = DEV ? `sveltekit:${Date.now()}` : `sveltekit:${version}`;

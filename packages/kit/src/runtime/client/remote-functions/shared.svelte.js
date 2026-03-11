@@ -7,7 +7,6 @@ import { HttpError, Redirect } from '@sveltejs/kit/internal';
 import { untrack } from 'svelte';
 import { create_remote_key, stringify_remote_arg } from '../../shared.js';
 import { page } from '../state.svelte.js';
-import * as svelte from 'svelte';
 
 /**
  * @typedef {{
@@ -156,17 +155,4 @@ export function refresh_queries(stringified_refreshes, updates = []) {
 		const entry = query_map.get(key);
 		entry?.resource.set(value);
 	}
-}
-
-/**
- * @template T
- * @param {string} key
- * @param {() => T} fn
- * @returns {T}
- */
-export function unfriendly_hydratable(key, fn) {
-	if (!svelte.hydratable) {
-		throw new Error('Remote functions require Svelte 5.44.0 or later');
-	}
-	return svelte.hydratable(key, fn);
 }

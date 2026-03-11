@@ -627,6 +627,7 @@ export interface RequestState {
 		record_span: RecordSpan;
 	};
 	is_in_remote_function: boolean;
+	is_in_render?: boolean;
 	is_in_universal_load?: boolean;
 	form_instances?: Map<any, any>;
 	remote_data?: Map<RemoteInfo, Record<string, { serialize: boolean; data: MaybePromise<any> }>>;
