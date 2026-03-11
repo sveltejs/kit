@@ -114,8 +114,6 @@ export async function getRequest({ request, base, bodySizeLimit }) {
 		delete headers[':scheme'];
 	}
 
-	request.readableAborted
-
 	const controller = new AbortController();
 	request.once('close', () => {
 		if (request.readableAborted) {
