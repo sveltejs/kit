@@ -1079,10 +1079,13 @@ function kit({ svelte_config }) {
 					server_input['instrumentation.server'] = server_instrumentation;
 				}
 
+				const single_output = svelte_config.kit.output.bundleStrategy !== 'split';
+				const inline = svelte_config.kit.output.bundleStrategy === 'inline';
+
 				/** @type {Record<string, string>} */
 				const client_input = {};
 
-				if (svelte_config.kit.output.bundleStrategy !== 'split') {
+				if (single_output) {
 					client_input['bundle'] = `${runtime_directory}/client/bundle.js`;
 				} else {
 					client_input['entry/start'] = `${runtime_directory}/client/entry.js`;
@@ -1094,18 +1097,15 @@ function kit({ svelte_config }) {
 					});
 				}
 
-				const inline = svelte_config.kit.output.bundleStrategy === 'inline';
-
 				new_config = {
 					appType: 'custom',
 					base,
 					build: {
-						cssCodeSplit: !inline,
+						cssCodeSplit: !single_output,
 						cssMinify: initial_config.build?.minify == null ? true : !!initial_config.build.minify,
 						manifest: true,
 						rolldownOptions: {
 							output: {
-								format: inline ? 'iife' : 'esm',
 								name: `__sveltekit_${version_hash}.app`,
 								assetFileNames: `${prefix}/assets/[name].[hash][extname]`,
 								hoistTransitiveImports: false,
@@ -1154,13 +1154,23 @@ function kit({ svelte_config }) {
 							build: {
 								outDir: `${out}/client`,
 								rolldownOptions: {
-									input: inline ? client_input['bundle'] : client_input,
+									input: single_output ? client_input['bundle'] : client_input,
 									output: {
 										format: inline ? 'iife' : 'esm',
 										entryFileNames: `${prefix}/[name].[hash].js`,
 										chunkFileNames: `${prefix}/chunks/[hash].js`,
 										codeSplitting: svelte_config.kit.output.bundleStrategy === 'split'
-									}
+									},
+									// This silences Rolldown warnings about not supporting `import.meta`
+									// for the `iife` output format. We don't care because it's
+									// only used in development and will be treeshaken away
+									transform: inline
+										? {
+												define: {
+													'import.meta': '{}'
+												}
+											}
+										: undefined
 								}
 							},
 							define: {
