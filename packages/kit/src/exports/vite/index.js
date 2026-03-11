@@ -1456,7 +1456,6 @@ function kit({ svelte_config }) {
 								builder.environments.serviceWorker.config.resolve.alias = [
 									...get_config_aliases(kit, vite_config.root)
 								];
-								// TODO: test that changing the experimental option here is applied
 								builder.environments.serviceWorker.config.experimental.renderBuiltUrl = (
 									filename
 								) => {
