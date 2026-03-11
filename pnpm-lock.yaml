@@ -566,8 +566,8 @@ importers:
         specifier: ^0.6.0
         version: 0.6.0
       devalue:
-        specifier: ^5.6.3
-        version: 5.6.3
+        specifier: ^5.6.4
+        version: 5.6.4
       esm-env:
         specifier: ^1.2.2
         version: 1.2.2
@@ -3910,6 +3910,9 @@ packages:
 
   devalue@5.6.3:
     resolution: {integrity: sha512-nc7XjUU/2Lb+SvEFVGcWLiKkzfw8+qHI7zn8WYXKkLMgfGSHbgCEaR6bJpev8Cm6Rmrb19Gfd/tZvGqx9is3wg==}
+
+  devalue@5.6.4:
+    resolution: {integrity: sha512-Gp6rDldRsFh/7XuouDbxMH3Mx8GMCcgzIb1pDTvNyn8pZGQ22u+Wa+lGV9dQCltFQ7uVw0MhRyb8XDskNFOReA==}
 
   diff@4.0.4:
     resolution: {integrity: sha512-X07nttJQkwkfKfvTPG/KSnE2OMdcUCao6+eXF3wmnIQRn2aPAHH3VxDbDOdegkd6JbPsXqShpvEOHfAT+nCNwQ==}
@@ -8525,6 +8528,8 @@ snapshots:
   dettle@1.0.5: {}
 
   devalue@5.6.3: {}
+
+  devalue@5.6.4: {}
 
   diff@4.0.4:
     optional: true
