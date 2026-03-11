@@ -1448,7 +1448,7 @@ function kit({ svelte_config }) {
 								`${out}/server/manifest.js`,
 								`export const manifest = ${generate_manifest({
 									build_data,
-									prerendered: prerender_results.prerendered.paths,
+									prerendered: prerendered.paths,
 									relative_path: '.',
 									routes: manifest_data.routes.filter(
 										(route) => prerender_results.prerender_map.get(route.id) !== true
