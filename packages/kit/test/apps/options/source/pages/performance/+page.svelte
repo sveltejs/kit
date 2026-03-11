@@ -1,5 +1,5 @@
 <script>
-	import Image from './favicon.png?no-inline';
+	import Image from './icon.svg?no-inline';
 </script>
 
 <p>

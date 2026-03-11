@@ -24,12 +24,11 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 	const server_fetch = async (info, init) => {
 		// Vite 8 mysteriously prefixes a relative base to imported asset paths only in production
 		// so we need to correct it back to an absolute path before normalising the request
-		if (
-			prefix === '.' &&
-			typeof info === 'string' &&
-			decodeURIComponent(info).slice(prefix.length + 1) in manifest._.server_assets
-		) {
-			info = info.slice(prefix.length);
+		if (prefix === '.' && typeof info === 'string') {
+			const filename = decodeURIComponent(info).slice(prefix.length + 1);
+			if (manifest.assets.has(filename) || filename in manifest._.server_assets) {
+				info = info.slice(prefix.length);
+			}
 		}
 
 		const original_request = normalize_fetch_input(info, init, event.url);

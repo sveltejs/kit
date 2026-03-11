@@ -1535,7 +1535,9 @@ function kit({ svelte_config }) {
 			} else {
 				new_config = {
 					appType: 'custom',
-					base,
+					// we avoid setting base to paths.assets in dev so that we get the
+					// trailing slash redirect to paths.base if it is set
+					base: kit.paths.base || '/',
 					build: {
 						rolldownOptions: {
 							// Vite dependency crawler needs an explicit JS entry point
