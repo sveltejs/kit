@@ -282,7 +282,7 @@ const preload_tokens = new Set();
 export let pending_invalidate;
 
 /**
- * @type {Map<string, {count: number, resource: any}>}
+ * @type {Map<string, { count: number, resource: any }>}
  * A map of id -> query info with all queries that currently exist in the app.
  */
 export const query_map = new Map();
@@ -1535,8 +1535,6 @@ async function navigate({
 	block = noop,
 	event
 }) {
-	remote_responses = {};
-
 	const prev_token = token;
 	token = nav_token;
 
@@ -2176,8 +2174,6 @@ export function refreshAll({ includeLoadFunctions = true } = {}) {
 	if (!BROWSER) {
 		throw new Error('Cannot call refreshAll() on the server');
 	}
-
-	remote_responses = {};
 
 	force_invalidation = true;
 	return _invalidate(includeLoadFunctions, false);
@@ -2855,6 +2851,8 @@ async function _hydrate(
 
 		target.textContent = '';
 		hydrate = false;
+	} finally {
+		remote_responses = {};
 	}
 
 	if (result.props.page) {

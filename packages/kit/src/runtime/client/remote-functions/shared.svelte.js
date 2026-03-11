@@ -2,11 +2,33 @@
 /** @import { RemoteFunctionResponse } from 'types' */
 /** @import { Query } from './query.svelte.js' */
 import * as devalue from 'devalue';
-import { app, goto, query_map, remote_responses } from '../client.js';
+import { app, goto, query_map } from '../client.js';
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
-import { tick, untrack } from 'svelte';
+import { untrack } from 'svelte';
 import { create_remote_key, stringify_remote_arg } from '../../shared.js';
 import { page } from '../state.svelte.js';
+import * as svelte from 'svelte';
+
+/**
+ * @typedef {{
+ * 	_key?: string;
+ * 	then: Promise<unknown>['then'];
+ * 	catch: Promise<unknown>['catch'];
+ * }} RemoteFunctionResource
+ */
+
+/**
+ * @param {() => void} noop
+ * @returns {boolean} Whether the pre effect was added successfully (indicates we are in a tracking context)
+ */
+export function safe_pre_effect(noop = () => {}) {
+	try {
+		$effect.pre(noop);
+		return true;
+	} catch {
+		return false;
+	}
+}
 
 /**
  * @returns {{ 'x-sveltekit-pathname': string, 'x-sveltekit-search': string }}
@@ -52,73 +74,56 @@ export async function remote_request(url, headers) {
 }
 
 /**
- * Client-version of the `query`/`prerender`/`cache` function from `$app/server`.
+ * @template {(arg: { cache_key: string; payload: string }) => RemoteFunctionResource} Create
+ * @template {(arg: { cache_key: string; get_resource: () => { cached: boolean; resource: ReturnType<Create> } }) => RemoteFunctionResource} Limit
+ * @template [Arg=any]
  * @param {string} id
- * @param {(key: string, args: string) => any} create
+ * @param {Create} create
+ * @param {Limit} limit
+ * @returns {(arg: Arg) => ReturnType<Create> | ReturnType<Limit>}
  */
-export function create_remote_function(id, create) {
-	return (/** @type {any} */ arg) => {
+export function create_remote_function(id, create, limit) {
+	return (arg) => {
 		const payload = stringify_remote_arg(arg, app.hooks.transport);
 		const cache_key = create_remote_key(id, payload);
-		let entry = query_map.get(cache_key);
 
-		let tracking = true;
-		try {
-			$effect.pre(() => {
-				if (entry) entry.count++;
-				return () => {
-					const entry = query_map.get(cache_key);
-					if (entry) {
-						entry.count--;
-						void tick().then(() => {
-							if (!entry.count && entry === query_map.get(cache_key)) {
-								query_map.delete(cache_key);
-								delete remote_responses[cache_key];
-							}
-						});
-					}
-				};
-			});
-		} catch {
-			tracking = false;
-		}
+		const tracking = safe_pre_effect();
 
-		let resource = entry?.resource;
-		if (!resource) {
-			resource = create(cache_key, payload);
+		let cache_entry = query_map.get(cache_key);
+		const resource = cache_entry?.resource ?? create({ cache_key, payload });
 
-			Object.defineProperty(resource, '_key', {
-				value: cache_key
-			});
+		if (tracking) {
+			if (!cache_entry) {
+				cache_entry = { count: 1, resource };
+				// we need to set this synchronously to avoid possibly creating
+				// multiple resources for subsequent synchronous calls with the same payload
+				query_map.set(cache_key, cache_entry);
+			}
 
-			query_map.set(
-				cache_key,
-				(entry = {
-					count: tracking ? 1 : 0,
-					resource
-				})
-			);
-
-			resource
-				.then(() => {
-					void tick().then(() => {
-						if (
-							!(/** @type {NonNullable<typeof entry>} */ (entry).count) &&
-							entry === query_map.get(cache_key)
-						) {
-							// If no one is tracking this resource anymore, we can delete it from the cache
-							query_map.delete(cache_key);
-						}
-					});
-				})
-				.catch(() => {
-					// error delete the resource from the cache
-					// TODO is that correct?
+			$effect.pre(() => () => {
+				if (!cache_entry) return;
+				cache_entry.count -= 1;
+				if (cache_entry.count === 0) {
 					query_map.delete(cache_key);
-				});
+				}
+			});
+
+			return resource;
 		}
 
-		return resource;
+		return limit({
+			cache_key,
+
+			get_resource: () => {
+				const cache_entry = query_map.get(cache_key);
+				return {
+					cached: !!cache_entry,
+					// we should always prefer the cached resource if it exists, but if there is no cached resource,
+					// we can fall back to the one we created above
+					resource: cache_entry?.resource ?? resource
+				};
+			}
+		});
 	};
 }
 
@@ -151,4 +156,17 @@ export function refresh_queries(stringified_refreshes, updates = []) {
 		const entry = query_map.get(key);
 		entry?.resource.set(value);
 	}
+}
+
+/**
+ * @template T
+ * @param {string} key
+ * @param {() => T} fn
+ * @returns {T}
+ */
+export function unfriendly_hydratable(key, fn) {
+	if (!svelte.hydratable) {
+		throw new Error('Remote functions require Svelte 5.44.0 or later');
+	}
+	return svelte.hydratable(key, fn);
 }

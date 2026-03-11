@@ -2097,6 +2097,12 @@ declare module '@sveltejs/kit' {
 		get error(): any;
 		/** `true` before the first result is available and during refreshes */
 		get loading(): boolean;
+		/**
+		 * Returns a plain promise with the result.
+		 * Unlike awaiting the resource directly, this can be used anywhere
+		 * (load functions, event handlers, etc) without requiring a reactive context.
+		 */
+		run(): Promise<Awaited<T>>;
 	} & (
 			| {
 					/** The current value of the query. Undefined until `ready` is `true` */
