@@ -44,7 +44,7 @@ catalog:
   semver: ^7.5.4
   sirv-cli: ^3.0.0
   svelte: ^5.53.5
-  svelte-check: ^4.3.4
+  svelte-check: ^4.4.1
   svelte-preprocess: ^6.0.0
   typescript: 5.9.3
   valibot: ^1.1.0
