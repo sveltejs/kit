@@ -30,9 +30,3 @@ export function reset() {
 export function set_assets(path) {
 	assets = initial.assets = path;
 }
-
-export function get_assets_prefix() {
-	// when we set Vite's base to `./`, Vite 8 weirdly prefixes imported asset paths
-	// with it in production but not in development
-	return assets || base || (DEV ? '' : '.');
-}

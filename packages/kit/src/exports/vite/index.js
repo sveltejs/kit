@@ -1101,6 +1101,10 @@ function kit({ svelte_config }) {
 					appType: 'custom',
 					base,
 					build: {
+						// we need to set this to prevent Vite from using a `./` prefix for
+						// imported asset paths in production but a `/` in development
+						// see https://github.com/vitejs/vite/issues/21812
+						ssr: true,
 						cssCodeSplit: !inline,
 						cssMinify: initial_config.build?.minify == null ? true : !!initial_config.build.minify,
 						manifest: true,

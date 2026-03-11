@@ -4,8 +4,6 @@ import * as paths from '$app/paths/internal/server';
 import { read_implementation } from '__sveltekit/server';
 import { has_prerendered_path } from './utils.js';
 
-const prefix = paths.get_assets_prefix();
-
 /**
  * @param {{
  *   event: import('@sveltejs/kit').RequestEvent;
@@ -22,15 +20,6 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 	 * @type {typeof fetch}
 	 */
 	const server_fetch = async (info, init) => {
-		// Vite 8 mysteriously prefixes a relative base to imported asset paths only in production
-		// so we need to correct it back to an absolute path before normalising the request
-		if (prefix === '.' && typeof info === 'string') {
-			const filename = decodeURIComponent(info).slice(prefix.length + 1);
-			if (manifest.assets.has(filename) || filename in manifest._.server_assets) {
-				info = info.slice(prefix.length);
-			}
-		}
-
 		const original_request = normalize_fetch_input(info, init, event.url);
 
 		// some runtimes (e.g. Cloudflare) error if you access `request.mode`,
@@ -93,7 +82,7 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 				// handle fetch requests for static assets. e.g. prebaked data, etc.
 				// we need to support everything the browser's fetch supports
 				const filename = (
-					decoded.startsWith(prefix) ? decoded.slice(prefix.length) : decoded
+					decoded.startsWith(paths.assets) ? decoded.slice(paths.assets.length) : decoded
 				).slice(1);
 				const filename_html = `${filename}/index.html`; // path may also match path/index.html
 
