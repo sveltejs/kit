@@ -505,6 +505,15 @@ export interface KitConfig {
 		 * @default false
 		 */
 		forkPreloads?: boolean;
+
+		/**
+		 * Whether to enable the experimental handling of rendering errors.
+		 * When enabled, `<svelte:boundary>` is used to wrap components at each level
+		 * where there's an `+error.svelte`, rendering the error page if the component fails.
+		 * In addition, error boundaries also work on the server and the error object goes through `handleError`.
+		 * @default false
+		 */
+		handleRenderingErrors?: boolean;
 	};
 	/**
 	 * Where to find various files within your project.
@@ -1265,13 +1274,6 @@ export interface NavigationGoto extends NavigationBase {
 	 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
 	 */
 	type: 'goto';
-
-	// TODO 3.0 remove this property, so that it only exists when type is 'popstate'
-	// (would possibly be a breaking change to do it prior to that)
-	/**
-	 * In case of a history back/forward navigation, the number of steps to go back/forward
-	 */
-	delta?: undefined;
 }
 
 export interface NavigationLeave extends NavigationBase {
@@ -1280,13 +1282,6 @@ export interface NavigationLeave extends NavigationBase {
 	 * - `leave`: The app is being left either because the tab is being closed or a navigation to a different document is occurring
 	 */
 	type: 'leave';
-
-	// TODO 3.0 remove this property, so that it only exists when type is 'popstate'
-	// (would possibly be a breaking change to do it prior to that)
-	/**
-	 * In case of a history back/forward navigation, the number of steps to go back/forward
-	 */
-	delta?: undefined;
 }
 
 export interface NavigationFormSubmit extends NavigationBase {
@@ -1300,13 +1295,6 @@ export interface NavigationFormSubmit extends NavigationBase {
 	 * The `SubmitEvent` that caused the navigation
 	 */
 	event: SubmitEvent;
-
-	// TODO 3.0 remove this property, so that it only exists when type is 'popstate'
-	// (would possibly be a breaking change to do it prior to that)
-	/**
-	 * In case of a history back/forward navigation, the number of steps to go back/forward
-	 */
-	delta?: undefined;
 }
 
 export interface NavigationPopState extends NavigationBase {
@@ -1338,13 +1326,6 @@ export interface NavigationLink extends NavigationBase {
 	 * The `PointerEvent` that caused the navigation
 	 */
 	event: PointerEvent;
-
-	// TODO 3.0 remove this property, so that it only exists when type is 'popstate'
-	// (would possibly be a breaking change to do it prior to that)
-	/**
-	 * In case of a history back/forward navigation, the number of steps to go back/forward
-	 */
-	delta?: undefined;
 }
 
 export type Navigation =

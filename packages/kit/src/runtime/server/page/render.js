@@ -15,8 +15,9 @@ import { create_server_routing_response, generate_route_object } from './server_
 import { add_resolution_suffix } from '../../pathname.js';
 import { try_get_request_store, with_request_store } from '@sveltejs/kit/internal/server';
 import { text_encoder } from '../../utils.js';
-import { get_global_name } from '../utils.js';
+import { get_global_name, handle_error_and_jsonify } from '../utils.js';
 import { create_remote_key } from '../../shared.js';
+import { get_status } from '../../../utils/error.js';
 
 // TODO rename this function/module
 
@@ -40,7 +41,8 @@ const updated = {
  *   event_state: import('types').RequestState;
  *   resolve_opts: import('types').RequiredResolveOptions;
  *   action_result?: import('@sveltejs/kit').ActionResult;
- *   data_serializer: import('./types.js').ServerDataSerializer
+ *   data_serializer: import('./types.js').ServerDataSerializer;
+ *   error_components?: Array<import('types').SSRComponent | undefined>
  * }} opts
  */
 export async function render_response({
@@ -56,7 +58,8 @@ export async function render_response({
 	event_state,
 	resolve_opts,
 	action_result,
-	data_serializer
+	data_serializer,
+	error_components
 }) {
 	if (state.prerendering) {
 		if (options.csp.mode === 'nonce') {
@@ -147,6 +150,13 @@ export async function render_response({
 			form: form_value
 		};
 
+		if (error_components) {
+			if (error) {
+				props.error = error;
+			}
+			props.errors = error_components;
+		}
+
 		let data = {};
 
 		// props_n (instead of props[n]) makes it easy to avoid
@@ -176,7 +186,15 @@ export async function render_response({
 					}
 				]
 			]),
-			csp: csp.script_needs_nonce ? { nonce: csp.nonce } : { hash: csp.script_needs_hash }
+			csp: csp.script_needs_nonce ? { nonce: csp.nonce } : { hash: csp.script_needs_hash },
+			transformError: error_components
+				? /** @param {unknown} e */ async (e) => {
+						const transformed = await handle_error_and_jsonify(event, event_state, options, e);
+						props.page.error = props.error = error = transformed;
+						props.page.status = status = get_status(e);
+						return transformed;
+					}
+				: undefined
 		};
 
 		const fetch = globalThis.fetch;

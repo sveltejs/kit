@@ -26,7 +26,7 @@
 
 				{#snippet failed(error)}
 					<span id="batch-result-{idx + 1}"
-						>Error loading todo {id}: {(error as any).body.message}</span
+						>Error loading todo {id}: {(error as App.Error).message}</span
 					>
 				{/snippet}
 			</svelte:boundary>
