@@ -121,10 +121,10 @@ test.describe('assets path', () => {
 
 	test('client avoids generating relative URLs if paths.assets or paths.relative are truthy', async () => {
 		test.skip(!!process.env.DEV, 'only applicable to the build output');
-		const nodes = readdirSync('.custom-out-dir/output/client/_wheee/immutable/nodes');
+		const nodes = readdirSync('.custom-out-dir/output/client/_wheee/nested/immutable/nodes');
 		for (const node of nodes) {
 			const code = readFileSync(
-				`.custom-out-dir/output/client/_wheee/immutable/nodes/${node}`,
+				`.custom-out-dir/output/client/_wheee/nested/immutable/nodes/${node}`,
 				'utf-8'
 			);
 			if (
