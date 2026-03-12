@@ -1007,8 +1007,6 @@ function kit({ svelte_config }) {
 			/** @type {import('vite').UserConfig} */
 			let new_config;
 
-			const base = assets_base(kit);
-
 			if (is_build) {
 				const prefix = `${kit.appDir}/immutable`;
 
@@ -1097,14 +1095,21 @@ function kit({ svelte_config }) {
 
 				const inline = svelte_config.kit.output.bundleStrategy === 'inline';
 
+				const config_base = assets_base(kit);
+
+				/** @type {string} */
+				const base = kit.paths.assets || kit.paths.base || '/';
+				const root_to_assets = prefix + '/assets/';
+				const assets_to_root =
+					prefix
+						.split('/')
+						.map(() => '..')
+						.join('/') + '/../';
+
 				new_config = {
 					appType: 'custom',
-					base,
+					base: config_base,
 					build: {
-						// we need to set this to prevent Vite from using differing static
-						// asset paths in production `./` and in development `/`
-						// see https://github.com/vitejs/vite/issues/21812
-						ssr: true,
 						cssCodeSplit: !inline,
 						cssMinify: initial_config.build?.minify == null ? true : !!initial_config.build.minify,
 						manifest: true,
@@ -1159,9 +1164,6 @@ function kit({ svelte_config }) {
 						},
 						client: {
 							build: {
-								// avoids absolute paths for static assets so that we can
-								// replace them ourselves in `build_server.js`
-								ssr: false,
 								outDir: `${out}/client`,
 								rolldownOptions: {
 									input: inline ? client_input['bundle'] : client_input,
@@ -1189,15 +1191,37 @@ function kit({ svelte_config }) {
 						}
 					},
 					experimental: {
-						renderBuiltUrl() {
-							// We could always use a relative asset base path here, but it's better for performance not to.
-							// E.g. Vite generates `new URL('/asset.png', import.meta).href` for a relative path vs just '/asset.png'.
-							// That's larger and takes longer to run and also causes an HTML diff between SSR and client
-							// causing us to do a more expensive hydration check.
-							return {
-								relative: kit.paths.relative !== false || !!kit.paths.assets
-							};
-						}
+						// we can't change the base path per environment so we're setting the
+						// base prefix for files here ourselves
+						renderBuiltUrl:
+							// if the Vite base is relative, we need to ensure paths used during SSR are absolute
+							config_base === './'
+								? (filename, { ssr }) => {
+										if (ssr) return base + filename;
+									}
+								: // but if the Vite base is absolute, we just need to ensure
+									// client paths are relative rather than absolute
+									(filename, { ssr, hostType }) => {
+										if (ssr) return;
+
+										if (hostType === 'js') {
+											// We could always use a relative asset base path here, but it's better for performance not to.
+											// E.g. Vite generates `new URL('/asset.png', import.meta).href` for a relative path vs just '/asset.png'.
+											// That's larger and takes longer to run and also causes an HTML diff between SSR and client
+											// causing us to do a more expensive hydration check.
+											return {
+												relative: kit.paths.relative !== false || !!kit.paths.assets
+											};
+										}
+
+										// _app/immutable/assets files
+										if (filename.startsWith(root_to_assets)) {
+											return `./${filename.slice(root_to_assets.length)}`;
+										}
+
+										// static dir files
+										return assets_to_root + filename;
+									}
 					},
 					publicDir: kit.files.assets
 				};
