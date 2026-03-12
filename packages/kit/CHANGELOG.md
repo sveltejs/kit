@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.55.0
+### Minor Changes
+
+
+- feat: page and layout params with matchers are now type narrowed in `$app/types`, leading to better type safety when working with params in `$app/types`, `$app/state`, and hooks. ([#15502](https://github.com/sveltejs/kit/pull/15502))
+
 ## 2.54.0
 ### Minor Changes
 
