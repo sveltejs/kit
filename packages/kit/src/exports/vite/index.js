@@ -1101,8 +1101,8 @@ function kit({ svelte_config }) {
 					appType: 'custom',
 					base,
 					build: {
-						// we need to set this to prevent Vite from using a `./` prefix for
-						// imported asset paths in production but a `/` in development
+						// we need to set this to prevent Vite from using differing static
+						// asset paths in production `./` and in development `/`
 						// see https://github.com/vitejs/vite/issues/21812
 						ssr: true,
 						cssCodeSplit: !inline,
@@ -1139,7 +1139,6 @@ function kit({ svelte_config }) {
 					environments: {
 						ssr: {
 							build: {
-								ssr: true,
 								copyPublicDir: false,
 								outDir: `${out}/server`,
 								target: 'node22',
@@ -1160,6 +1159,9 @@ function kit({ svelte_config }) {
 						},
 						client: {
 							build: {
+								// avoids absolute paths for static assets so that we can
+								// replace them ourselves in `build_server.js`
+								ssr: false,
 								outDir: `${out}/client`,
 								rolldownOptions: {
 									input: inline ? client_input['bundle'] : client_input,
