@@ -13,7 +13,7 @@ import { fix_css_urls } from '../../../utils/css.js';
  * @param {import('vite').Manifest} server_manifest
  * @param {import('vite').Manifest | null} client_manifest
  * @param {string | null} assets_path
- * @param {import('vite').Rollup.RollupOutput['output'] | null} client_chunks
+ * @param {import('vite').Rolldown.RolldownOutput['output'] | null} client_chunks
  * @param {import('types').RecursiveRequired<import('types').ValidatedConfig['kit']['output']>} output_config
  * @param {string} root
  */

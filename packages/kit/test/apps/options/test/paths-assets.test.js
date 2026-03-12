@@ -1,6 +1,7 @@
 import process from 'node:process';
 import { expect } from '@playwright/test';
 import { test } from '../../../utils.js';
+import { readdirSync, readFileSync } from 'node:fs';
 
 test.describe.configure({ mode: 'parallel' });
 
@@ -111,6 +112,25 @@ test.describe('assets path', () => {
 
 		const response = await request.get(href ?? '');
 		expect(response.status()).toBe(200);
+	});
+
+	test('client avoids generating relative URLs if paths.assets or paths.relative are truthy', async () => {
+		test.skip(!!process.env.DEV, 'only applicable to the build output');
+		const nodes = readdirSync('.custom-out-dir/output/client/_wheee/nested/immutable/nodes');
+		for (const node of nodes) {
+			const code = readFileSync(
+				`.custom-out-dir/output/client/_wheee/nested/immutable/nodes/${node}`,
+				'utf-8'
+			);
+			if (
+				code.includes(
+					'this app has paths.assets set so it should not use relative paths for imported assets in the client code'
+				)
+			) {
+				expect(code).not.toMatch(/new URL\(.*, import\.meta\.url\)\.href/);
+				break;
+			}
+		}
 	});
 });
 
