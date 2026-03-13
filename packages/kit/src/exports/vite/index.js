@@ -215,14 +215,14 @@ function plugin_svelte_config({ vite_plugin_svelte_options, svelte_config }) {
 }
 
 /**
- * Returns the SvelteKit Vite plugin. Vite executes Rollup hooks as well as some of its own.
+ * Returns the SvelteKit Vite plugin. Vite executes Rolldown hooks as well as some of its own.
  * Background reading is available at:
- * - https://vitejs.dev/guide/api-plugin.html
- * - https://rollupjs.org/guide/en/#plugin-development
+ * - https://vite.dev/guide/api-plugin.html
+ * - https://rolldown.rs/apis/plugin-api
  *
  * You can get an idea of the lifecycle by looking at the flow charts here:
- * - https://rollupjs.org/guide/en/#build-hooks
- * - https://rollupjs.org/guide/en/#output-generation-hooks
+ * - https://rolldown.rs/apis/plugin-api#build-hooks
+ * - https://rolldown.rs/apis/plugin-api#output-generation-hooks
  *
  * @param {{ svelte_config: import('types').ValidatedConfig }} options
  * @return {import('vite').Plugin[]}
@@ -398,7 +398,7 @@ function kit({ svelte_config }) {
 						// export conditions resolved correctly through Vite. This prevents adapters
 						// that bundle later on from resolving the export conditions incorrectly
 						// and for example include browser-only code in the server output
-						// because they for example use esbuild.build with `platform: 'browser'`
+						// because they for example use rolldown.build with `platform: 'browser'`
 						'esm-env',
 						// This forces `$app/*` modules to be bundled, since they depend on
 						// virtual modules like `__sveltekit/environment` (this isn't a valid bare
