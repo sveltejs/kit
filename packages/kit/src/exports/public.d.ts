@@ -855,6 +855,11 @@ export interface KitConfig {
 				register?: false;
 		  }
 	);
+	/**
+	 * Enable [Subresource Integrity](https://developer.mozilla.org/en-US/docs/Web/Security/Subresource_Integrity) (SRI) hash generation for scripts and stylesheets. When set to a hash algorithm, SvelteKit will compute integrity hashes for all client assets at build time and add `integrity` and `crossorigin` attributes to `<link>` and `<script>` tags.
+	 * @default false
+	 */
+	subresourceIntegrity?: false | 'sha256' | 'sha384' | 'sha512';
 	typescript?: {
 		/**
 		 * A function that allows you to edit the generated `tsconfig.json`. You can mutate the config (recommended) or return a new one.
