@@ -16,6 +16,28 @@ import { emit_dts, load_tsconfig, transpile_ts } from './typescript.js';
 import { create_validator } from './validate.js';
 
 /**
+ * Emit .d.ts files, choosing incremental or standard path based on options.
+ * @param {string} input
+ * @param {string} output
+ * @param {string} final_output
+ * @param {import('./types.js').Options} options
+ * @param {Record<string, string>} alias
+ * @param {import('./types.js').File[]} files
+ * @param {string | undefined} tsconfig
+ */
+async function emit_types(input, output, final_output, options, alias, files, tsconfig) {
+	if (options.incremental || options.tsgo) {
+		const { emit_dts_incremental } = await import('./emit-dts-incremental.js');
+		await emit_dts_incremental(input, output, final_output, options.cwd, alias, files, tsconfig, {
+			incremental: options.incremental,
+			tsgo: options.tsgo
+		});
+	} else {
+		await emit_dts(input, output, final_output, options.cwd, alias, files, tsconfig);
+	}
+}
+
+/**
  * @param {import('./types.js').Options} options
  */
 export async function build(options) {
@@ -41,7 +63,7 @@ async function do_build(options, analyse_code) {
 	const files = scan(input, extensions);
 
 	if (options.types) {
-		await emit_dts(input, temp, output, options.cwd, alias, files, tsconfig);
+		await emit_types(input, temp, output, options, alias, files, tsconfig);
 	}
 
 	/** @type {Map<string, import('typescript').CompilerOptions>} */
@@ -172,7 +194,7 @@ export async function watch(options) {
 
 			if (!errored && options.types) {
 				try {
-					await emit_dts(input, output, output, options.cwd, alias, files, tsconfig);
+					await emit_types(input, output, output, options, alias, files, tsconfig);
 					console.log('Updated .d.ts files');
 				} catch (e) {
 					errored = true;
