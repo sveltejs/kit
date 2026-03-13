@@ -98,7 +98,7 @@ export function create_query_function(id, create, options) {
 
 		let cache_entry = query_map.get(cache_key);
 		let resource = cache_entry?.resource;
-		let cleanup = () => {};
+		let cleanup = cache_entry?.cleanup ?? (() => {});
 		if (!resource) {
 			if (tracking) {
 				// this prevents the created resource from being associated with its current parent effect,
@@ -161,7 +161,7 @@ export function create_query_function(id, create, options) {
 
 		if (tracking) {
 			if (!cache_entry) {
-				cache_entry = { count: 0, resource };
+				cache_entry = { count: 0, resource, cleanup };
 				// we need to set this synchronously to avoid possibly creating
 				// multiple resources for subsequent synchronous calls with the same payload
 				query_map.set(cache_key, cache_entry);
@@ -172,11 +172,13 @@ export function create_query_function(id, create, options) {
 			$effect.pre(() => () => {
 				active = false;
 
+				const cache_entry = query_map.get(cache_key);
 				if (!cache_entry) return;
 				cache_entry.count -= 1;
 				void tick().then(() => {
+					const cache_entry = query_map.get(cache_key);
 					if (cache_entry?.count === 0) {
-						cleanup();
+						cache_entry.cleanup();
 						query_map.delete(cache_key);
 					}
 				});
