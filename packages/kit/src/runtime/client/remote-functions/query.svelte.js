@@ -55,7 +55,6 @@ export function query(id) {
 				const url = `${base}/${app_dir}/remote/${id}${payload ? `?payload=${payload}` : ''}`;
 
 				return client_hydratable_transport(cache_key, app.decoders, async () => {
-					console.log(cache_key + ' bypassed hydratable');
 					const serialized = await remote_request(url, get_remote_request_headers());
 					return devalue.parse(serialized, app.decoders);
 				});
@@ -289,10 +288,8 @@ export class Query {
 	/** @returns {Promise<T>} */
 	run() {
 		if (Object.hasOwn(query_responses, this._key)) {
-			console.log(this._key, 'serving from the cache');
 			return Promise.resolve(query_responses[this._key]);
 		}
-		console.log(this._key, 'made it past the cache');
 		return this.#fn();
 	}
 
