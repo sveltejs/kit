@@ -33,19 +33,19 @@
 		"ambient.d.ts"
 	],
 	"scripts": {
-		"dev": "rollup -cw",
-		"build": "rollup -c",
+		"dev": "rolldown -cw",
+		"build": "rolldown -c",
 		"check": "tsc",
 		"lint": "prettier --check .",
 		"format": "pnpm lint --write",
-		"test": "pnpm test:integration",
+		"test": "pnpm test:unit && pnpm test:integration",
 		"test:unit": "vitest run",
 		"test:integration": "pnpm build && pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test",
 		"prepublishOnly": "pnpm build"
 	},
 	"dependencies": {
 		"@iarna/toml": "^2.2.5",
-		"esbuild": "^0.25.4"
+		"rolldown": "^1.0.0-rc.6"
 	},
 	"devDependencies": {
 		"@netlify/dev": "catalog:",
@@ -53,14 +53,11 @@
 		"@netlify/functions": "catalog:",
 		"@netlify/node-cookies": "^0.1.0",
 		"@netlify/types": "^2.1.0",
-		"@rollup/plugin-commonjs": "catalog:",
-		"@rollup/plugin-json": "catalog:",
-		"@rollup/plugin-node-resolve": "catalog:",
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "catalog:",
 		"@types/node": "catalog:",
-		"rollup": "^4.59.0",
-		"typescript": "^5.3.3",
+		"typescript": "catalog:",
+		"vite": "catalog:",
 		"vitest": "catalog:"
 	},
 	"peerDependencies": {

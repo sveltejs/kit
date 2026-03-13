@@ -1,13 +1,6 @@
 import process from 'node:process';
-import { webcrypto } from 'node:crypto';
 import { assert, test, describe } from 'vitest';
 import { Csp } from './csp.js';
-
-// TODO: remove after bumping peer dependency to require Node 20
-if (!globalThis.crypto) {
-	// @ts-expect-error
-	globalThis.crypto = webcrypto;
-}
 
 describe.skipIf(process.env.NODE_ENV === 'production')('CSPs in dev', () => {
 	test('adds unsafe-inline styles', () => {

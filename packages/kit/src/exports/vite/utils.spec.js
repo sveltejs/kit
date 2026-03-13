@@ -18,7 +18,7 @@ test('transform kit.alias to resolve.alias', () => {
 		}
 	});
 
-	const aliases = get_config_aliases(config.kit);
+	const aliases = get_config_aliases(config.kit, '.');
 
 	const transformed = aliases.map((entry) => {
 		const replacement = posixify(path.relative('.', entry.replacement));

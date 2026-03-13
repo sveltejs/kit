@@ -45,10 +45,10 @@
 		"@types/node": "catalog:",
 		"sirv": "^3.0.0",
 		"svelte": "catalog:",
-		"typescript": "^5.3.3",
+		"typescript": "catalog:",
 		"vite": "catalog:"
 	},
 	"peerDependencies": {
-		"@sveltejs/kit": "^2.0.0"
+		"@sveltejs/kit": "^3.0.0"
 	}
 }

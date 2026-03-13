@@ -1,6 +1,5 @@
 import path from 'node:path';
 import process from 'node:process';
-import { fileURLToPath } from 'node:url';
 import { expect } from '@playwright/test';
 import { test } from '../../../utils.js';
 
@@ -126,11 +125,10 @@ test.describe('trailing slash', () => {
 test.describe('Service worker', () => {
 	if (process.env.DEV) {
 		test('import proxy /basepath/service-worker.js', async ({ request }) => {
-			const __dirname = path.dirname(fileURLToPath(import.meta.url));
 			const response = await request.get('/basepath/service-worker.js');
 			const content = await response.text();
 			expect(content).toEqual(
-				`import '${path.join('/basepath', '/@fs', __dirname, '../src/service-worker.js')}';`
+				`import '${path.join('/basepath', '/@fs', import.meta.dirname, '../src/service-worker.js')}';`
 			);
 		});
 

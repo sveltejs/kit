@@ -1,5 +1,4 @@
 import process from 'node:process';
-import colors from 'kleur';
 
 /** @typedef {import('./types.js').Validator} Validator */
 
@@ -109,10 +108,8 @@ const options = object(
 			}),
 
 			csrf: object({
-				checkOrigin: deprecate(
-					boolean(true),
-					(keypath) =>
-						`\`${keypath}\` has been deprecated in favour of \`csrf.trustedOrigins\`. It will be removed in a future version`
+				checkOrigin: removed(
+					(keypath) => `\`${keypath}\` has been removed in favour of \`csrf.trustedOrigins\``
 				),
 				trustedOrigins: string_array([])
 			}),
@@ -160,7 +157,9 @@ const options = object(
 			outDir: string('.svelte-kit'),
 
 			output: object({
-				preloadStrategy: list(['modulepreload', 'preload-js', 'preload-mjs']),
+				preloadStrategy: removed(
+					(keypath) => `\`${keypath}\` has been removed. modulepreload will always be used`
+				),
 				bundleStrategy: list(['split', 'single', 'inline'])
 			}),
 
@@ -318,22 +317,37 @@ const options = object(
 	true
 );
 
+// /**
+//  * @param {Validator} fn
+//  * @param {(keypath: string) => string} get_message
+//  * @returns {Validator}
+//  */
+// function deprecate(
+// 	fn,
+// 	get_message = (keypath) =>
+// 		`The \`${keypath}\` option is deprecated, and will be removed in a future version`
+// ) {
+// 	return (input, keypath) => {
+// 		if (input !== undefined) {
+// 			console.warn(styleText(['bold', 'yellow'], get_message(keypath)));
+// 		}
+
+// 		return fn(input, keypath);
+// 	};
+// }
+
 /**
- * @param {Validator} fn
  * @param {(keypath: string) => string} get_message
  * @returns {Validator}
  */
-function deprecate(
-	fn,
+function removed(
 	get_message = (keypath) =>
-		`The \`${keypath}\` option is deprecated, and will be removed in a future version`
+		`The \`${keypath}\` option has been removed. Please see the list of breaking changes for your major release`
 ) {
 	return (input, keypath) => {
-		if (input !== undefined) {
-			console.warn(colors.bold().yellow(get_message(keypath)));
+		if (typeof input !== 'undefined') {
+			throw new Error(get_message(keypath));
 		}
-
-		return fn(input, keypath);
 	};
 }
 
