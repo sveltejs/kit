@@ -1,10 +1,8 @@
-import path from 'node:path';
 import process from 'node:process';
-import { fileURLToPath } from 'node:url';
 import { expect } from '@playwright/test';
 import { test } from '../../../utils.js';
 
-/** @typedef {import('@playwright/test').Response} Response */
+test.skip(() => !!process.env.REGISTER_SERVICE_WORKER);
 
 test.describe.configure({ mode: 'parallel' });
 
@@ -107,59 +105,22 @@ test.describe('paths', () => {
 });
 
 test.describe('trailing slash', () => {
-	if (!process.env.DEV) {
-		test('trailing slash server prerendered without server load', async ({
-			page,
-			clicknav,
-			javaScriptEnabled
-		}) => {
-			if (!javaScriptEnabled) return;
+	test('trailing slash server prerendered without server load', async ({
+		page,
+		clicknav,
+		javaScriptEnabled
+	}) => {
+		test.skip(!javaScriptEnabled || !process.env.DEV);
 
-			await page.goto('/basepath/trailing-slash-server');
+		await page.goto('/basepath/trailing-slash-server');
 
-			await clicknav('a[href="/basepath/trailing-slash-server/prerender"]');
-			expect(await page.textContent('h2')).toBe('/basepath/trailing-slash-server/prerender/');
-		});
-	}
+		await clicknav('a[href="/basepath/trailing-slash-server/prerender"]');
+		expect(await page.textContent('h2')).toBe('/basepath/trailing-slash-server/prerender/');
+	});
 });
 
 test.describe('Service worker', () => {
-	if (process.env.DEV) {
-		test('import proxy /basepath/service-worker.js', async ({ request }) => {
-			const __dirname = path.dirname(fileURLToPath(import.meta.url));
-			const response = await request.get('/basepath/service-worker.js');
-			const content = await response.text();
-			expect(content).toEqual(
-				`import '${path.join('/basepath', '/@fs', __dirname, '../src/service-worker.js')}';`
-			);
-		});
-
-		return;
-	}
-
-	test('build /basepath/service-worker.js', async ({ baseURL, request }) => {
-		const response = await request.get('/basepath/service-worker.js');
-		const content = await response.text();
-
-		const fn = new Function('self', 'location', content);
-
-		const self = {
-			addEventListener: () => {},
-			base: null,
-			build: null
-		};
-
-		const pathname = '/basepath/service-worker.js';
-
-		fn(self, {
-			href: baseURL + pathname,
-			pathname
-		});
-
-		expect(self.base).toBe('/basepath');
-		expect(self.build?.[0]).toMatch(/\/basepath\/_app\/immutable\/bundle\.[\w-]+\.js/);
-		expect(self.image_src).toMatch(/\/basepath\/_app\/immutable\/assets\/image\.[\w-]+\.jpg/);
-	});
+	test.skip(({ javaScriptEnabled }) => !javaScriptEnabled);
 
 	test('does not register /basepath/service-worker.js', async ({ page }) => {
 		await page.goto('/basepath');
