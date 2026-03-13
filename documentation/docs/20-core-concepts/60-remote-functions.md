@@ -39,6 +39,8 @@ Remote functions are exported from a `.remote.js` or `.remote.ts` file, and come
 
 The `query` function allows you to read dynamic data from the server (for _static_ data, consider using [`prerender`](#prerender) instead):
 
+> [!NOTE] `query` functions need a server at runtime. They cannot be used while prerendering (for example when `export const prerender = true` is set on the page or a parent `+layout`). If you need data during prerendering, use [`prerender`](#prerender) instead.
+
 ```js
 /// file: src/routes/blog/data.remote.js
 // @filename: ambient.d.ts
@@ -1041,7 +1043,7 @@ You can use `prerender` functions on pages that are otherwise dynamic, allowing 
 
 In the browser, prerendered data is saved using the [`Cache`](https://developer.mozilla.org/en-US/docs/Web/API/Cache) API. This cache survives page reloads, and will be cleared when the user first visits a new deployment of your app.
 
-> [!NOTE] When the entire page has `export const prerender = true`, you cannot use queries, as they are dynamic.
+> [!NOTE] `prerender` functions run at build time, so they work on prerendered pages and in fully static builds (for example with [`adapter-static`](adapter-static)). The restriction applies to [`query`](#query): it requires a server at runtime and will fail if called during prerendering.
 
 ### Prerender arguments
 
