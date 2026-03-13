@@ -10,7 +10,7 @@ import {
 import * as devalue from 'devalue';
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
 import { DEV } from 'esm-env';
-import { lazy_promise, with_resolvers } from '../../../utils/promise.js';
+import { LazyPromise, with_resolvers } from '../../../utils/promise.js';
 import { tick } from 'svelte';
 import { client_hydratable_transport } from '../utils.js';
 
@@ -179,9 +179,6 @@ export class Query {
 	 */
 	_key;
 
-	// eslint-disable-next-line svelte/prefer-svelte-reactivity
-	static #safe_keys = new Set(['run', '_key', 'set', 'refresh']);
-
 	/** @type {boolean} */
 	#init = false;
 	/** @type {() => Promise<T>} */
@@ -243,7 +240,7 @@ export class Query {
 	constructor(key, fn) {
 		this._key = key;
 		this.#fn = fn;
-		this.#promise = $state.raw(lazy_promise(Query.#safe_keys, this.#run.bind(this)));
+		this.#promise = $state.raw(new LazyPromise(this.#run.bind(this)));
 	}
 
 	#run() {

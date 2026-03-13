@@ -30,34 +30,61 @@ export function with_resolvers() {
 
 /**
  * @template T
- * @param {Set<string>} safe_keys
- * @param {() => Promise<T>} fn
- * @returns {Promise<T>}
+ * @implements {Promise<T>}
  */
-export function lazy_promise(safe_keys, fn) {
-	const { promise, resolve, reject } = with_resolvers();
-	let started = false;
+export class LazyPromise {
+	get [Symbol.toStringTag]() {
+		return 'LazyPromise';
+	}
 
-	return new Proxy(promise, {
-		get(target, prop, receiver) {
-			if (!started && typeof prop === 'string' && !safe_keys.has(prop)) {
-				started = true;
+	/** @type {() => T | Promise<T>} */
+	#fn;
+	/** @type {Promise<T>} */
+	#promise;
+	/** @type {(value: T | PromiseLike<T>) => void} */
+	#resolve;
+	/** @type {(reason?: any) => void} */
+	#reject;
+	/** @type {boolean} */
+	#started = false;
 
-				try {
-					// we need to call `fn` synchronously so that we hit `hydratable` synchronously
-					// so that it doesn't get microtasked out of hydration
-					// TODO at some distant point in the future this can be Promise.try(fn).then(resolve, reject);
-					Promise.resolve(fn()).then(resolve, reject);
-				} catch (error) {
-					reject(error);
-				}
-			}
+	/** @param {() => T | Promise<T>} fn */
+	constructor(fn) {
+		const { promise, resolve, reject } = with_resolvers();
+		this.#promise = promise;
+		this.#resolve = resolve;
+		this.#reject = reject;
+		this.#fn = fn;
+	}
 
-			const value = Reflect.get(target, prop, receiver);
-			if (typeof value === 'function') {
-				return value.bind(target);
-			}
-			return value;
+	#start() {
+		if (this.#started) return;
+		this.#started = true;
+		try {
+			// we need to call `fn` synchronously so that we hit `hydratable` synchronously
+			// so that it doesn't get microtasked out of hydration
+			// TODO at some distant point in the future this can be Promise.try(fn).then(resolve, reject);
+			Promise.resolve(this.#fn()).then(this.#resolve, this.#reject);
+		} catch (error) {
+			this.#reject(error);
 		}
-	});
+	}
+
+	/** @type {Promise<T>['then']} */
+	then(onfulfilled, onrejected) {
+		this.#start();
+		return this.#promise.then(onfulfilled, onrejected);
+	}
+
+	/** @type {Promise<T>['catch']} */
+	catch(onrejected) {
+		this.#start();
+		return this.#promise.catch(onrejected);
+	}
+
+	/** @type {Promise<T>['finally']} */
+	finally(onfinally) {
+		this.#start();
+		return this.#promise.finally(onfinally);
+	}
 }

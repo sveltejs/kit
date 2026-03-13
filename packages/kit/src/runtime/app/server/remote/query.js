@@ -7,7 +7,7 @@ import { prerendering } from '__sveltekit/environment';
 import { create_validator, get_cache, get_response, run_remote_function } from './shared.js';
 import { handle_error_and_jsonify } from '../../../server/utils.js';
 import { HttpError, SvelteKitError } from '@sveltejs/kit/internal';
-import { lazy_promise } from '../../../../utils/promise.js';
+import { LazyPromise } from '../../../../utils/promise.js';
 
 /**
  * Creates a remote query. When called from the browser, the function will be invoked on the server via a `fetch` call.
@@ -239,8 +239,6 @@ function batch(validate_or_fn, maybe_fn) {
 	return wrapper;
 }
 
-const safe_query_keys = new Set(['run', 'set', 'refresh', '__']);
-
 /**
  * @param {object} options
  * @param {RemoteInfo} options.__
@@ -251,51 +249,53 @@ const safe_query_keys = new Set(['run', 'set', 'refresh', '__']);
  * @returns {RemoteQuery<any>}
  */
 function create_query_resource({ __, arg, state, start, refresh }) {
-	const promise = lazy_promise(safe_query_keys, start);
+	const promise = new LazyPromise(start);
 
 	return /** @type {RemoteQuery<any>} */ (
-		new Proxy(promise, {
-			get(target, property, receiver) {
-				if (state.is_in_universal_load && property !== 'run') {
-					throw new Error(
-						// TODO docs
-						'This query was called in a universal `load` function and is limited to calling `.run`.'
-					);
+		/** @type {unknown} */ (
+			new Proxy(promise, {
+				get(target, property, receiver) {
+					if (state.is_in_universal_load && property !== 'run') {
+						throw new Error(
+							// TODO docs
+							'This query was called in a universal `load` function and is limited to calling `.run`.'
+						);
+					}
+
+					if (property === 'run') {
+						return () => promise;
+					}
+
+					if (property === 'set') {
+						/** @param {any} value */
+						return (value) => update_refresh_value(get_refresh_context(__, 'set', arg), value);
+					}
+
+					if (property === 'refresh') {
+						return () => {
+							const refresh_context = get_refresh_context(__, 'refresh', arg);
+							const is_immediate_refresh = !refresh_context.cache[refresh_context.cache_key];
+							const value = is_immediate_refresh ? promise : refresh();
+							return update_refresh_value(refresh_context, value, is_immediate_refresh);
+						};
+					}
+
+					if (property === 'withOverride') {
+						return () => {
+							throw new Error(`Cannot call '${__.name}.withOverride()' on the server`);
+						};
+					}
+
+					const value = Reflect.get(target, property, receiver);
+
+					if (typeof value === 'function') {
+						return value.bind(target);
+					}
+
+					return value;
 				}
-
-				if (property === 'run') {
-					return () => promise;
-				}
-
-				if (property === 'set') {
-					/** @param {any} value */
-					return (value) => update_refresh_value(get_refresh_context(__, 'set', arg), value);
-				}
-
-				if (property === 'refresh') {
-					return () => {
-						const refresh_context = get_refresh_context(__, 'refresh', arg);
-						const is_immediate_refresh = !refresh_context.cache[refresh_context.cache_key];
-						const value = is_immediate_refresh ? promise : refresh();
-						return update_refresh_value(refresh_context, value, is_immediate_refresh);
-					};
-				}
-
-				if (property === 'withOverride') {
-					return () => {
-						throw new Error(`Cannot call '${__.name}.withOverride()' on the server`);
-					};
-				}
-
-				const value = Reflect.get(target, property, receiver);
-
-				if (typeof value === 'function') {
-					return value.bind(target);
-				}
-
-				return value;
-			}
-		})
+			})
+		)
 	);
 }
 
