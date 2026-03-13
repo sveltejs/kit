@@ -1166,6 +1166,14 @@ test.describe('data-sveltekit attributes', () => {
 		await expect(request_promise).rejects.toThrow();
 	});
 
+	test('scroll resets to top when navigating with scroll-behavior: smooth', async ({ page, clicknav }) => {
+		await page.goto('/scroll/smooth');
+		await page.evaluate(() => window.scrollTo({ top: 9999, behavior: 'instant' }));
+		expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
+		await clicknav('[href="/scroll/smooth/target"]');
+		expect(await page.evaluate(() => window.scrollY)).toBe(0);
+	});
+
 	test('data-sveltekit-noscroll', async ({ page, clicknav }) => {
 		await page.goto('/data-sveltekit/noscroll');
 		// await page.evaluate(() => window.scrollTo(0, 1000));
