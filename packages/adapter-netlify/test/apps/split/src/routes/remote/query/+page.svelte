@@ -4,7 +4,6 @@
 
 	let data = $state.raw(new Promise(() => {}));
 	onMount(() => {
-		console.log('updating');
 		data = getData();
 	});
 </script>
