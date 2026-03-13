@@ -4,9 +4,9 @@
 import * as devalue from 'devalue';
 import { app, goto, query_map } from '../client.js';
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
-import { untrack } from 'svelte';
+import { tick, untrack } from 'svelte';
 import { create_remote_key, stringify_remote_arg } from '../../shared.js';
-import { page } from '../state.svelte.js';
+import { navigating, page } from '../state.svelte.js';
 
 /**
  * @typedef {{
@@ -36,10 +36,14 @@ export function get_remote_request_headers() {
 	// This will be the correct value of the current or soon-current url,
 	// even in forks because it's state-based - therefore not using window.location.
 	// Use untrack(...) to Avoid accidental reactive dependency on pathname/search
-	return untrack(() => ({
-		'x-sveltekit-pathname': page.url.pathname,
-		'x-sveltekit-search': page.url.search
-	}));
+	return untrack(() => {
+		const url = navigating.current?.to?.url ?? page.url;
+
+		return {
+			'x-sveltekit-pathname': url.pathname,
+			'x-sveltekit-search': url.search
+		};
+	});
 }
 
 /**
@@ -74,55 +78,152 @@ export async function remote_request(url, headers) {
 
 /**
  * @template {(arg: { cache_key: string; payload: string }) => RemoteFunctionResource} Create
- * @template {(arg: { cache_key: string; get_resource: () => { cached: boolean; resource: ReturnType<Create> } }) => RemoteFunctionResource} Limit
  * @template [Arg=any]
  * @param {string} id
  * @param {Create} create
- * @param {Limit} limit
- * @returns {(arg: Arg) => ReturnType<Create> | ReturnType<Limit>}
+ * @param {{
+ * 	tracking_only_properties: Set<string | symbol>;
+ * 	limited_error: string;
+ * 	deactivated_error: string;
+ * }} options
+ * @returns {(arg: Arg) => ReturnType<Create>}
  */
-export function create_remote_function(id, create, limit) {
+export function create_query_function(id, create, options) {
 	return (arg) => {
 		const payload = stringify_remote_arg(arg, app.hooks.transport);
 		const cache_key = create_remote_key(id, payload);
 
 		const tracking = safe_pre_effect();
+		let active = true;
 
 		let cache_entry = query_map.get(cache_key);
-		const resource = cache_entry?.resource ?? create({ cache_key, payload });
+		let resource = cache_entry?.resource;
+		let cleanup = () => {};
+		if (!resource) {
+			if (tracking) {
+				// this prevents the created resource from being associated with its current parent effect,
+				// which is basically just coincidentally whichever effect is active when it's created
+				cleanup = $effect.root(() => {
+					resource = create({ cache_key, payload });
+				});
+			} else {
+				resource = create({ cache_key, payload });
+			}
+		}
+
+		const get_resource = () => {
+			const cache_entry = query_map.get(cache_key);
+
+			return {
+				cached: !!cache_entry,
+				resource: cache_entry?.resource ?? resource
+			};
+		};
+
+		const wrapper = new Proxy(resource, {
+			get(_, property) {
+				const { cached, resource } = get_resource();
+				const tracking_only = options.tracking_only_properties.has(property);
+
+				if (tracking_only) {
+					if (!active) {
+						throw new Error(options.deactivated_error);
+					}
+
+					if (!tracking) {
+						throw new Error(options.limited_error);
+					}
+				}
+
+				// TODO: calling `withOverride` while `cached` is false needs to create the resource
+				// and cache it for the duration of the override. This can be a followup as it's not any buggier
+				// than it is today
+				if (property === 'refresh' || property === 'set') {
+					if (!cached) {
+						return {
+							set: () => {},
+							refresh: () => Promise.resolve()
+						}[property];
+					}
+
+					return resource[property]?.bind(resource);
+				}
+
+				const value = resource[property];
+
+				if (typeof value === 'function') {
+					return value.bind(resource);
+				}
+
+				return value;
+			}
+		});
 
 		if (tracking) {
 			if (!cache_entry) {
-				cache_entry = { count: 1, resource };
+				cache_entry = { count: 0, resource };
 				// we need to set this synchronously to avoid possibly creating
 				// multiple resources for subsequent synchronous calls with the same payload
 				query_map.set(cache_key, cache_entry);
 			}
 
+			cache_entry.count += 1;
+
 			$effect.pre(() => () => {
+				active = false;
+
 				if (!cache_entry) return;
 				cache_entry.count -= 1;
-				if (cache_entry.count === 0) {
-					query_map.delete(cache_key);
+				void tick().then(() => {
+					if (cache_entry?.count === 0) {
+						cleanup();
+						query_map.delete(cache_key);
+					}
+				});
+			});
+
+			return wrapper;
+		}
+
+		return wrapper;
+	};
+}
+
+/** @type {Map<string, WeakRef<RemoteFunctionResource>>} */
+// eslint-disable-next-line svelte/prefer-svelte-reactivity
+const prerender_resources = new Map();
+
+/** @type {FinalizationRegistry<string> | null} */
+const prerender_resource_cleanup =
+	typeof FinalizationRegistry === 'undefined'
+		? null
+		: new FinalizationRegistry((cache_key) => {
+				const ref = prerender_resources.get(cache_key);
+				if (ref && ref.deref() === undefined) {
+					prerender_resources.delete(cache_key);
 				}
 			});
 
-			return resource;
+/**
+ * @template {(arg: { cache_key: string; payload: string }) => RemoteFunctionResource} Create
+ * @template [Arg=any]
+ * @param {string} id
+ * @param {Create} create
+ * @returns {(arg: Arg) => ReturnType<Create>}
+ */
+export function create_prerender_function(id, create) {
+	return (arg) => {
+		const payload = stringify_remote_arg(arg, app.hooks.transport);
+		const cache_key = create_remote_key(id, payload);
+
+		let resource = prerender_resources.get(cache_key)?.deref();
+		if (!resource) {
+			resource = create({ cache_key, payload });
+			prerender_resources.set(cache_key, new WeakRef(resource));
+			prerender_resource_cleanup?.register(resource, cache_key);
 		}
 
-		return limit({
-			cache_key,
-
-			get_resource: () => {
-				const cache_entry = query_map.get(cache_key);
-				return {
-					cached: !!cache_entry,
-					// we should always prefer the cached resource if it exists, but if there is no cached resource,
-					// we can fall back to the one we created above
-					resource: cache_entry?.resource ?? resource
-				};
-			}
-		});
+		return /** @type {ReturnType<Create>} */ (resource);
 	};
 }
 

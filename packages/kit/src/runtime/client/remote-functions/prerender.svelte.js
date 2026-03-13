@@ -3,13 +3,12 @@ import { app_dir, base } from '$app/paths/internal/client';
 import { version } from '__sveltekit/environment';
 import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
-import { app, remote_responses } from '../client.js';
+import { app, prerender_responses } from '../client.js';
 import {
-	create_remote_function,
+	create_prerender_function,
 	get_remote_request_headers,
 	remote_request
 } from './shared.svelte.js';
-import { unfriendly_hydratable } from '../../shared.js';
 
 // Initialize Cache API for prerender functions
 const CACHE_NAME = DEV ? `sveltekit:${Date.now()}` : `sveltekit:${version}`;
@@ -59,50 +58,49 @@ function put(url, encoded) {
  * @returns {RemotePrerenderFunction<any, any>}
  */
 export function prerender(id) {
-	const fn = create_remote_function(
-		id,
-		({ cache_key, payload }) => {
+	const fn = create_prerender_function(id, ({ cache_key, payload }) => {
+		return new Prerender(async () => {
+			await prerender_cache_ready;
+
 			const url = `${base}/${app_dir}/remote/${id}${payload ? `/${payload}` : ''}`;
 
-			return new Prerender(
-				cache_key,
-				(encoded) => put(url, encoded),
-				() => {
-					return unfriendly_hydratable(cache_key, async () => {
-						await prerender_cache_ready;
-						// Do this here, after await Svelte' reactivity context is gone.
-						const headers = get_remote_request_headers();
+			if (Object.hasOwn(prerender_responses, cache_key)) {
+				const data = prerender_responses[cache_key];
 
-						// Check the Cache API first
-						if (prerender_cache) {
-							try {
-								const cached_response = await prerender_cache.match(url);
-
-								if (cached_response) {
-									const cached_result = await cached_response.text();
-									return devalue.parse(cached_result, app.decoders);
-								}
-							} catch {
-								// Nothing we can do here
-							}
-						}
-
-						const encoded = await remote_request(url, headers);
-
-						// For successful prerender requests, save to cache
-						if (prerender_cache) {
-							void put(url, encoded);
-						}
-
-						return devalue.parse(encoded, app.decoders);
-					});
+				if (prerender_cache) {
+					void put(url, devalue.stringify(data, app.encoders));
 				}
-			);
-		},
-		({ cache_key, get_resource }) => {
-			return new LimitedPrerender(cache_key, get_resource);
-		}
-	);
+
+				return data;
+			}
+
+			// Do this here, after await Svelte' reactivity context is gone.
+			const headers = get_remote_request_headers();
+
+			// Check the Cache API first
+			if (prerender_cache) {
+				try {
+					const cached_response = await prerender_cache.match(url);
+
+					if (cached_response) {
+						const cached_result = await cached_response.text();
+						return devalue.parse(cached_result, app.decoders);
+					}
+				} catch {
+					// Nothing we can do here
+				}
+			}
+
+			const encoded = await remote_request(url, headers);
+
+			// For successful prerender requests, save to cache
+			if (prerender_cache) {
+				void put(url, encoded);
+			}
+
+			return devalue.parse(encoded, app.decoders);
+		});
+	});
 
 	return fn;
 }
@@ -112,33 +110,20 @@ export function prerender(id) {
  * @implements {Promise<T>}
  */
 class Prerender {
-	/** @type {string} */
-	_key;
-
 	/** @type {Promise<T>} */
 	#promise;
 
 	#loading = $state(true);
 	#ready = $state(false);
-	/** @type {(encoded: string) => Promise<void>} */
-	#put_to_cache;
-	/** @type {() => Promise<T>} */
-	#fn;
-
 	/** @type {T | undefined} */
 	#current = $state.raw();
 
 	#error = $state.raw(undefined);
 
 	/**
-	 * @param {string} key
-	 * @param {(encoded: string) => Promise<void>} put_to_cache
 	 * @param {() => Promise<T>} fn
 	 */
-	constructor(key, put_to_cache, fn) {
-		this._key = key;
-		this.#put_to_cache = put_to_cache;
-		this.#fn = fn;
+	constructor(fn) {
 		this.#promise = fn().then(
 			(value) => {
 				this.#loading = false;
@@ -153,19 +138,6 @@ class Prerender {
 				throw error;
 			}
 		);
-	}
-
-	/** @returns {Promise<T>} */
-	async run() {
-		if (Object.hasOwn(remote_responses, this._key)) {
-			const data = remote_responses[this._key];
-
-			if (prerender_cache) {
-				await prerender_cache_ready;
-				void this.#put_to_cache(devalue.stringify(data, app.encoders));
-			}
-		}
-		return this.#fn();
 	}
 
 	/**
@@ -216,77 +188,5 @@ class Prerender {
 
 	get [Symbol.toStringTag]() {
 		return 'Prerender';
-	}
-}
-
-/**
- * @template T
- * @implements {Promise<T>}
- */
-class LimitedPrerender {
-	/** @type {string} */
-	_key;
-
-	/** @type {() => { cached: boolean, resource: Prerender<T> }} */
-	#get_prerender;
-
-	/** @returns {never} */
-	#limited_error() {
-		throw new Error(
-			'This prerender function was not created in a reactive context and is limited to calling `.run`.'
-		);
-	}
-
-	/**
-	 * @param {string} key
-	 * @param {() => { cached: boolean, resource: Prerender<T> }} get_prerender
-	 */
-	constructor(key, get_prerender) {
-		this._key = key;
-		this.#get_prerender = get_prerender;
-	}
-
-	/** @returns {Promise<T>} */
-	run() {
-		return this.#get_prerender().resource.run();
-	}
-
-	/** @type {Promise<T>['then']} */
-	then() {
-		this.#limited_error();
-	}
-
-	/** @type {Promise<T>['catch']} */
-	catch() {
-		this.#limited_error();
-	}
-
-	/** @type {Promise<T>['finally']} */
-	finally() {
-		this.#limited_error();
-	}
-
-	/** @type {Prerender<T>['current']} */
-	get current() {
-		return this.#limited_error();
-	}
-
-	/** @type {Prerender<T>['error']} */
-	get error() {
-		return this.#limited_error();
-	}
-
-	/** @type {Prerender<T>['loading']} */
-	get loading() {
-		return this.#limited_error();
-	}
-
-	/** @type {Prerender<T>['ready']} */
-	get ready() {
-		return this.#limited_error();
-	}
-
-	get [Symbol.toStringTag]() {
-		return 'LimitedPrerender';
 	}
 }

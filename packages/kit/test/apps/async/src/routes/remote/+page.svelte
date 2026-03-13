@@ -12,24 +12,23 @@
 	} from './query-command.remote.js';
 	import { q } from './accessing-env.remote';
 
-	let { data } = $props();
+	const { data } = $props();
 
 	let command_result = $state(null);
 
 	// we just want it not to be treeshaken away
+	// eslint-disable-next-line @typescript-eslint/no-unused-expressions
 	q;
 
-	const count = browser ? get_count() : null; // so that we get a remote request in the browser
+	const count = get_count();
 </script>
 
 <p id="echo-result">{data.echo_result}</p>
-{#if browser}
-	<p id="count-result">
-		{await count} / {count.current} ({count.loading})
-	</p>
-	<!-- this is just here to check that it is re-requested after the command -->
-	{await add({ a: 2, b: 2 })}
-{/if}
+<p id="count-result">
+	{await count} / {count.current} ({count.loading})
+</p>
+<!-- this is just here to check that it is re-requested after the command -->
+{await add({ a: 2, b: 2 })}
 <p id="command-result">{command_result}</p>
 
 <!-- Test pending state for commands -->

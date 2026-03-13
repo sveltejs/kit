@@ -27,3 +27,37 @@ export function with_resolvers() {
 	// @ts-expect-error `resolve` and `reject` are assigned!
 	return { promise, resolve, reject };
 }
+
+/**
+ * @template T
+ * @param {Set<string>} safe_keys
+ * @param {() => Promise<T>} fn
+ * @returns {Promise<T>}
+ */
+export function lazy_promise(safe_keys, fn) {
+	const { promise, resolve, reject } = with_resolvers();
+	let started = false;
+
+	return new Proxy(promise, {
+		get(target, prop, receiver) {
+			if (!started && typeof prop === 'string' && !safe_keys.has(prop)) {
+				started = true;
+
+				try {
+					// we need to call `fn` synchronously so that we hit `hydratable` synchronously
+					// so that it doesn't get microtasked out of hydration
+					// TODO at some distant point in the future this can be Promise.try(fn).then(resolve, reject);
+					Promise.resolve(fn()).then(resolve, reject);
+				} catch (error) {
+					reject(error);
+				}
+			}
+
+			const value = Reflect.get(target, prop, receiver);
+			if (typeof value === 'function') {
+				return value.bind(target);
+			}
+			return value;
+		}
+	});
+}

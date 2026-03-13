@@ -2123,12 +2123,6 @@ export type RemoteResource<T> = Promise<Awaited<T>> & {
 	get error(): any;
 	/** `true` before the first result is available and during refreshes */
 	get loading(): boolean;
-	/**
-	 * Returns a plain promise with the result.
-	 * Unlike awaiting the resource directly, this can be used anywhere
-	 * (load functions, event handlers, etc) without requiring a reactive context.
-	 */
-	run(): Promise<Awaited<T>>;
 } & (
 		| {
 				/** The current value of the query. Undefined until `ready` is `true` */
@@ -2143,6 +2137,12 @@ export type RemoteResource<T> = Promise<Awaited<T>> & {
 	);
 
 export type RemoteQuery<T> = RemoteResource<T> & {
+	/**
+	 * Returns a plain promise with the result.
+	 * Unlike awaiting the resource directly, this can be used anywhere
+	 * (load functions, event handlers, etc) without requiring a reactive context.
+	 */
+	run(): Promise<Awaited<T>>;
 	/**
 	 * On the client, this function will update the value of the query without re-fetching it.
 	 *

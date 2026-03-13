@@ -488,11 +488,15 @@ export async function render_response({
 
 		const { remote_data: remote_cache } = event_state;
 
-		let serialized_remote_data = '';
+		let serialized_query_data = '';
+		let serialized_prerender_data = '';
 
 		if (remote_cache) {
 			/** @type {Record<string, any>} */
-			const remote = {};
+			const query = {};
+
+			/** @type {Record<string, any>} */
+			const prerender = {};
 
 			for (const [info, cache] of remote_cache) {
 				// remote functions without an `id` aren't exported, and thus
@@ -506,10 +510,12 @@ export async function render_response({
 
 					const remote_key = create_remote_key(info.id, key);
 
+					const store = info.type === 'prerender' ? prerender : query;
+
 					if (event_state.refreshes?.[remote_key] !== undefined) {
 						// This entry was refreshed/set by a command or form action.
 						// Always await it so the mutation result is serialized.
-						remote[remote_key] = await entry.data;
+						store[remote_key] = await entry.data;
 					} else {
 						// Don't block the response on pending remote data - if a query
 						// hasn't settled yet, it wasn't awaited in the template (or is behind a pending boundary).
@@ -525,7 +531,7 @@ export async function render_response({
 
 						if (result.settled) {
 							if ('error' in result) throw result.error;
-							remote[remote_key] = result.value;
+							store[remote_key] = result.value;
 						}
 					}
 				}
@@ -541,8 +547,16 @@ export async function render_response({
 				}
 			};
 
-			serialized_remote_data = `${global}.data = ${devalue.uneval(remote, replacer)};\n\n\t\t\t\t\t\t`;
+			if (Object.keys(query).length > 0) {
+				serialized_query_data = `${global}.query = ${devalue.uneval(query, replacer)};\n\n\t\t\t\t\t\t`;
+			}
+
+			if (Object.keys(prerender).length > 0) {
+				serialized_prerender_data = `${global}.prerender = ${devalue.uneval(prerender, replacer)};\n\n\t\t\t\t\t\t`;
+			}
 		}
+
+		const serialized_remote_data = `${serialized_query_data}${serialized_prerender_data}`;
 
 		// `client.app` is a proxy for `bundleStrategy === 'split'`
 		const boot = client.inline
