@@ -19,6 +19,7 @@ import { preview } from './preview/index.js';
 import {
 	error_for_missing_config,
 	get_config_aliases,
+	get_entry_name,
 	get_env,
 	normalize_id,
 	stackless
@@ -836,10 +837,8 @@ async function kit({ svelte_config }) {
 					// add entry points for every endpoint...
 					manifest_data.routes.forEach((route) => {
 						if (route.endpoint) {
-							const resolved = path.resolve(route.endpoint.file);
-							const relative = decodeURIComponent(path.relative(kit.files.routes, resolved));
-							const name = posixify(path.join('entries/endpoints', relative.replace(/\.js$/, '')));
-							input[name] = resolved;
+							const name = get_entry_name(kit.files.routes, route.endpoint.file, 'endpoint');
+							input[name] = path.resolve(route.endpoint.file);
 						}
 					});
 
@@ -847,13 +846,8 @@ async function kit({ svelte_config }) {
 					manifest_data.nodes.forEach((node) => {
 						for (const file of [node.component, node.universal, node.server]) {
 							if (file) {
-								const resolved = path.resolve(file);
-								const relative = decodeURIComponent(path.relative(kit.files.routes, resolved));
-
-								const name = relative.startsWith('..')
-									? posixify(path.join('entries/fallbacks', path.basename(file)))
-									: posixify(path.join('entries/pages', relative.replace(/\.js$/, '')));
-								input[name] = resolved;
+								const name = get_entry_name(kit.files.routes, file, 'page');
+								input[name] = path.resolve(file);
 							}
 						}
 					});
