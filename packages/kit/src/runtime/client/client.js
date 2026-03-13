@@ -1815,6 +1815,16 @@ async function navigate({
 			navigation_result.props.page.url = url;
 		}
 
+		// Remove focus before updating the component tree, so that blur/focusout
+		// handlers fire while the old component's data is still valid (#14575)
+		if (
+			!keepfocus &&
+			document.activeElement instanceof HTMLElement &&
+			document.activeElement !== document.body
+		) {
+			document.activeElement.blur();
+		}
+
 		const fork = load_cache_fork && (await load_cache_fork);
 
 		if (fork) {
