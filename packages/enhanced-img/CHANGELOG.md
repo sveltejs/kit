@@ -1,5 +1,17 @@
 # @sveltejs/enhanced-img
 
+## 1.0.0-next.0
+### Major Changes
+
+
+- breaking: require Node 22.17.0 or newer ([#12548](https://github.com/sveltejs/kit/pull/12548))
+
+
+### Minor Changes
+
+
+- breaking: require Vite 8 ([#15542](https://github.com/sveltejs/kit/pull/15542))
+
 ## 0.10.3
 ### Patch Changes
 
