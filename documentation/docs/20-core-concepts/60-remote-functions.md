@@ -748,10 +748,13 @@ We can customize what happens when the form is submitted with the `enhance` meth
 
 <form {...createPost.enhance(async ({ form, data, submit }) => {
 	try {
-		await submit();
-		form.reset();
+		if (await submit()) {
+			form.reset();
 
-		showToast('Successfully published!');
+			showToast('Successfully published!');
+		} else {
+			showToast('Invalid data!');
+		}
 	} catch (error) {
 		showToast('Oh no! Something went wrong');
 	}
@@ -769,8 +772,8 @@ To enable client-driven [single-flight mutations](#form-Single-flight-mutations)
 ```ts
 import type { RemoteQuery, RemoteQueryOverride } from '@sveltejs/kit';
 interface Post {}
-declare function submit(): Promise<any> & {
-	updates(...queries: Array<RemoteQuery<any> | RemoteQueryOverride>): Promise<any>;
+declare function submit(): Promise<boolean> & {
+	updates(...queries: Array<RemoteQuery<any> | RemoteQueryOverride>): Promise<boolean>;
 }
 
 declare function getPosts(): RemoteQuery<Post[]>;
@@ -783,8 +786,8 @@ We can also _override_ the current data while the submission is ongoing:
 ```ts
 import type { RemoteQuery, RemoteQueryOverride } from '@sveltejs/kit';
 interface Post {}
-declare function submit(): Promise<any> & {
-	updates(...queries: Array<RemoteQuery<any> | RemoteQueryOverride>): Promise<any>;
+declare function submit(): Promise<boolean> & {
+	updates(...queries: Array<RemoteQuery<any> | RemoteQueryOverride>): Promise<boolean>;
 }
 
 declare function getPosts(): RemoteQuery<Post[]>;
