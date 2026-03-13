@@ -57,34 +57,34 @@ export class LazyPromise {
 		this.#fn = fn;
 	}
 
-	#start() {
+	async #start() {
 		if (this.#started) return;
 		this.#started = true;
 		try {
 			// we need to call `fn` synchronously so that we hit `hydratable` synchronously
 			// so that it doesn't get microtasked out of hydration
 			// TODO at some distant point in the future this can be Promise.try(fn).then(resolve, reject);
-			Promise.resolve(this.#fn()).then(this.#resolve, this.#reject);
+			await Promise.resolve(this.#fn()).then(this.#resolve, this.#reject);
 		} catch (error) {
 			this.#reject(error);
 		}
 	}
 
 	/** @type {Promise<T>['then']} */
-	then(onfulfilled, onrejected) {
-		this.#start();
+	async then(onfulfilled, onrejected) {
+		await this.#start();
 		return this.#promise.then(onfulfilled, onrejected);
 	}
 
 	/** @type {Promise<T>['catch']} */
-	catch(onrejected) {
-		this.#start();
+	async catch(onrejected) {
+		await this.#start();
 		return this.#promise.catch(onrejected);
 	}
 
 	/** @type {Promise<T>['finally']} */
-	finally(onfinally) {
-		this.#start();
+	async finally(onfinally) {
+		await this.#start();
 		return this.#promise.finally(onfinally);
 	}
 }
