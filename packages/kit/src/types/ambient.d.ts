@@ -31,23 +31,27 @@ declare namespace App {
 	/**
 	 * The interface that defines `event.locals`, which can be accessed in server [hooks](https://svelte.dev/docs/kit/hooks) (`handle`, and `handleError`), server-only `load` functions, and `+server.js` files.
 	 */
+	// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 	export interface Locals {}
 
 	/**
-	 * Defines the common shape of the [page.data state](https://svelte.dev/docs/kit/$app-state#page) and [$page.data store](https://svelte.dev/docs/kit/$app-stores#page) - that is, the data that is shared between all pages.
+	 * Defines the common shape of the [page.data state](https://svelte.dev/docs/kit/$app-state#page) - that is, the data that is shared between all pages.
 	 * The `Load` and `ServerLoad` functions in `./$types` will be narrowed accordingly.
 	 * Use optional properties for data that is only present on specific pages. Do not add an index signature (`[key: string]: any`).
 	 */
+	// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 	export interface PageData {}
 
 	/**
 	 * The shape of the `page.state` object, which can be manipulated using the [`pushState`](https://svelte.dev/docs/kit/$app-navigation#pushState) and [`replaceState`](https://svelte.dev/docs/kit/$app-navigation#replaceState) functions from `$app/navigation`.
 	 */
+	// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 	export interface PageState {}
 
 	/**
 	 * If your adapter provides [platform-specific context](https://svelte.dev/docs/kit/adapters#Platform-specific-context) via `event.platform`, you can specify it here.
 	 */
+	// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 	export interface Platform {}
 }
 

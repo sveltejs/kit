@@ -1367,7 +1367,7 @@ export type AfterNavigate = (Navigation | NavigationEnter) & {
 };
 
 /**
- * The shape of the [`page`](https://svelte.dev/docs/kit/$app-state#page) reactive object and the [`$page`](https://svelte.dev/docs/kit/$app-stores) store.
+ * The shape of the [`page`](https://svelte.dev/docs/kit/$app-state#page) reactive object.
  */
 export interface Page<
 	Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
