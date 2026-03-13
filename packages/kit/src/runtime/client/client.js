@@ -26,7 +26,7 @@ import {
 	create_updated_store,
 	load_css
 } from './utils.js';
-import { base } from '$app/paths';
+import { base } from '$app/paths/internal/client';
 import * as devalue from 'devalue';
 import {
 	HISTORY_INDEX,
