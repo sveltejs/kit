@@ -31,6 +31,18 @@ test.describe('remote functions', () => {
 	}) => {
 		const { status, location } = await new Promise((fulfil, reject) => {
 			const request = http.get(`${baseURL}/remote/query-redirect/from-page`, (response) => {
+				if (response.statusCode !== 307) {
+					let data = '';
+
+					response.on('data', (chunk) => {
+						data += chunk;
+					});
+
+					response.on('end', () => {
+						console.log({ data });
+					});
+				}
+
 				fulfil({
 					status: response.statusCode,
 					location: response.headers.location
