@@ -1,8 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { expect, it } from 'vitest';
-import { image_plugin, parse_object } from '../src/vite-plugin.js';
-import { defaultViteImgtoolsOptions } from '../src/index.js';
+import { image_plugin, parse_object, defaultViteImgtoolsOptions } from '../src/vite-plugin.js';
 
 const resolve = /** @param {string} file */ (file) => path.resolve(__dirname, file);
 

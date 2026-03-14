@@ -1,14 +1,6 @@
 import process from 'node:process';
 import { imagetools } from 'vite-imagetools';
-import { image_plugin } from './vite-plugin.js';
-
-// copied from vite-imagetools.
-// TODO: expose this in vite-imagetools rather than duplicating it
-export const defaultViteImgtoolsOptions = /** @type {const} */ ({
-	include: /^[^?]+\.(avif|gif|heif|jpeg|jpg|png|tiff|webp)(\?.*)?$/,
-	exclude: 'public/**/*',
-	removeMetadata: true
-});
+import { image_plugin, defaultViteImgtoolsOptions } from './vite-plugin.js';
 
 /**
  * @param {import('types/index.js').VitePluginOptions} [opts]

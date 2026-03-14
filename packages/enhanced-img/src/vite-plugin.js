@@ -7,6 +7,15 @@ import sharp from 'sharp';
 import { parse } from 'svelte-parse-markup';
 import { walk } from 'zimmerframe';
 
+// copied from vite-imagetools.
+// TODO: expose this in vite-imagetools rather than duplicating it
+/** @satisfies {import('vite-imagetools').VitePluginOptions} */
+export const defaultViteImgtoolsOptions = /** @type {const} */ ({
+	include: /^[^?]+\.(avif|gif|heif|jpeg|jpg|png|tiff|webp)(\?.*)?$/,
+	exclude: 'public/**/*',
+	removeMetadata: true
+});
+
 /**
  * Creates the Svelte image plugin.
  * @param {import('vite').Plugin<void>} imagetools_plugin
