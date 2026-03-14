@@ -251,6 +251,7 @@ function get_attr_value(node, attr) {
  * @param {import('../types/internal.js').Attribute[]} attributes
  * @param {{
  *   src: string,
+ *   srcset?: string,
  *   width?: string | number,
  *   height?: string | number
  * }} details
@@ -260,8 +261,18 @@ function serialize_img_attributes(content, attributes, details) {
 		if ('name' in attribute && attribute.name === 'src') {
 			return `src=${details.src}`;
 		}
+		if ('name' in attribute && attribute.name === 'srcset' && details.srcset) {
+			return `srcset=${details.srcset}`;
+		}
 		return content.substring(attribute.start, attribute.end);
 	});
+
+	if (
+		details.srcset &&
+		!attributes.some((attribute) => 'name' in attribute && attribute.name === 'srcset')
+	) {
+		attribute_strings.push(`srcset=${details.srcset}`);
+	}
 
 	/** @type {number | undefined} */
 	let user_width;
@@ -322,6 +333,16 @@ function img_to_picture(content, node, image) {
 		attributes.splice(index, 1);
 	}
 
+	if (Object.keys(image.sources).length === 1) {
+		const srcset = Object.values(image.sources)[0];
+		return `<img ${serialize_img_attributes(content, attributes, {
+			src: to_value(image.img.src),
+			srcset: to_value(srcset),
+			width: image.img.w,
+			height: image.img.h
+		})}${sizes_string} />`;
+	}
+
 	let res = '<picture>';
 
 	for (const [format, srcset] of Object.entries(image.sources)) {
@@ -379,6 +400,13 @@ function dynamic_img_to_picture(content, node, src_var_name) {
 			src: `{${src_var_name}}`
 		})} />
 	{/if}
+{:else if Object.keys(${src_var_name}.sources).length === 1}
+	<img ${serialize_img_attributes(content, attributes, {
+		src: `{${src_var_name}.img.src}`,
+		srcset: `{Object.values(${src_var_name}.sources)[0]}`,
+		width: `{${src_var_name}.img.w}`,
+		height: `{${src_var_name}.img.h}`
+	})}${sizes_string} />
 {:else}
 	<picture>
 		{#each Object.entries(${src_var_name}.sources) as [format, srcset]}

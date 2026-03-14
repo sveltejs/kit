@@ -10,7 +10,9 @@ it('Image preprocess snapshot test', async () => {
 	const vite_plugin = image_plugin({
 		name: 'vite-imagetools-mock',
 		load(id) {
-			if (id.includes('dev')) {
+			if (id.includes('format=webp')) {
+				return 'export default {sources:{webp:"/3 1440w, /4 960w"},img:{src:"/7",w:1440,h:1440}};';
+			} else if (id.includes('dev')) {
 				return 'export default {sources:{avif:"/1 1440w, /2 960w",webp:"/3 1440w, /4 960w",png:"5 1440w, /6 960w"},img:{src:"/7",w:1440,h:1440}};';
 			} else if (id.includes('prod')) {
 				return 'export default {sources:{avif:"__VITE_ASSET__2AM7_y_a__ 1440w, __VITE_ASSET__2AM7_y_b__ 960w",webp:"__VITE_ASSET__2AM7_y_c__ 1440w, __VITE_ASSET__2AM7_y_d__ 960w",png:"__VITE_ASSET__2AM7_y_e__ 1440w, __VITE_ASSET__2AM7_y_f__ 960w"},img:{src:"__VITE_ASSET__2AM7_y_g__",w:1440,h:1440}};';
