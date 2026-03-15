@@ -167,7 +167,7 @@ export function query_batch(id) {
 }
 
 /**
- * @template {(arg: { cache_key: string; payload: string }) => RemoteFunctionResource} Create
+ * @template {(arg: { cache_key: string; payload: string }) => Query<any>} Create
  * @template [Arg=any]
  * @param {string} id
  * @param {Create} create
