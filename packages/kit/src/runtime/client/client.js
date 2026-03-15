@@ -198,10 +198,18 @@ let target;
 export let app;
 
 /**
- * Data that was serialized during SSR. This is cleared when the user first navigates
+ * Data that was serialized during SSR for queries/forms/commands.
+ * This is cleared before client-side loads run.
  * @type {Record<string, any>}
  */
-export let remote_responses = {};
+export let query_responses = {};
+
+/**
+ * Data that was serialized during SSR for prerender functions.
+ * This persists across client-side navigations.
+ * @type {Record<string, any>}
+ */
+export let prerender_responses = {};
 
 /** @type {Array<((url: URL) => boolean)>} */
 const invalidated = [];
@@ -292,7 +300,7 @@ const preload_tokens = new Set();
 export let pending_invalidate;
 
 /**
- * @type {Map<string, {count: number, resource: any}>}
+ * @type {Map<string, { count: number, resource: any, cleanup: () => void }>}
  * A map of id -> query info with all queries that currently exist in the app.
  */
 export const query_map = new Map();
@@ -309,8 +317,9 @@ export async function start(_app, _target, hydrate) {
 		);
 	}
 
-	if (__SVELTEKIT_PAYLOAD__?.data) {
-		remote_responses = __SVELTEKIT_PAYLOAD__.data;
+	if (__SVELTEKIT_PAYLOAD__) {
+		query_responses = __SVELTEKIT_PAYLOAD__.query ?? {};
+		prerender_responses = __SVELTEKIT_PAYLOAD__.prerender ?? {};
 	}
 
 	// detect basic auth credentials in the current URL
@@ -1602,8 +1611,6 @@ async function navigate({
 	block = noop,
 	event
 }) {
-	remote_responses = {};
-
 	const prev_token = token;
 	token = nav_token;
 
@@ -2261,8 +2268,6 @@ export function refreshAll({ includeLoadFunctions = true } = {}) {
 	if (!BROWSER) {
 		throw new Error('Cannot call refreshAll() on the server');
 	}
-
-	remote_responses = {};
 
 	force_invalidation = true;
 	return _invalidate(includeLoadFunctions, false);
@@ -2942,6 +2947,8 @@ async function _hydrate(
 
 		target.textContent = '';
 		hydrate = false;
+	} finally {
+		query_responses = {};
 	}
 
 	if (result.props.page) {

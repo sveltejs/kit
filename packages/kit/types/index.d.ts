@@ -2103,6 +2103,12 @@ declare module '@sveltejs/kit' {
 
 	export type RemoteQuery<T> = RemoteResource<T> & {
 		/**
+		 * Returns a plain promise with the result.
+		 * Unlike awaiting the resource directly, this can be used anywhere
+		 * (load functions, event handlers, etc) without requiring a reactive context.
+		 */
+		run(): Promise<Awaited<T>>;
+		/**
 		 * On the client, this function will update the value of the query without re-fetching it.
 		 *
 		 * On the server, this can be called in the context of a `command` or `form` and the specified data will accompany the action response back to the client.

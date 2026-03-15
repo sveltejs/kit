@@ -27,3 +27,64 @@ export function with_resolvers() {
 	// @ts-expect-error `resolve` and `reject` are assigned!
 	return { promise, resolve, reject };
 }
+
+/**
+ * @template T
+ * @implements {Promise<T>}
+ */
+export class LazyPromise {
+	get [Symbol.toStringTag]() {
+		return 'LazyPromise';
+	}
+
+	/** @type {() => T | Promise<T>} */
+	#fn;
+	/** @type {Promise<T>} */
+	#promise;
+	/** @type {(value: T | PromiseLike<T>) => void} */
+	#resolve;
+	/** @type {(reason?: any) => void} */
+	#reject;
+	/** @type {boolean} */
+	#started = false;
+
+	/** @param {() => T | Promise<T>} fn */
+	constructor(fn) {
+		const { promise, resolve, reject } = with_resolvers();
+		this.#promise = promise;
+		this.#resolve = resolve;
+		this.#reject = reject;
+		this.#fn = fn;
+	}
+
+	async #start() {
+		if (this.#started) return;
+		this.#started = true;
+		try {
+			// we need to call `fn` synchronously so that we hit `hydratable` synchronously
+			// so that it doesn't get microtasked out of hydration
+			// TODO at some distant point in the future this can be Promise.try(fn).then(resolve, reject);
+			await Promise.resolve(this.#fn()).then(this.#resolve, this.#reject);
+		} catch (error) {
+			this.#reject(error);
+		}
+	}
+
+	/** @type {Promise<T>['then']} */
+	async then(onfulfilled, onrejected) {
+		await this.#start();
+		return this.#promise.then(onfulfilled, onrejected);
+	}
+
+	/** @type {Promise<T>['catch']} */
+	async catch(onrejected) {
+		await this.#start();
+		return this.#promise.catch(onrejected);
+	}
+
+	/** @type {Promise<T>['finally']} */
+	async finally(onfinally) {
+		await this.#start();
+		return this.#promise.finally(onfinally);
+	}
+}

@@ -233,20 +233,25 @@ export async function load_data({
 		},
 		fn: async (current) => {
 			const traced_event = merge_tracing(event, current);
-			return await with_request_store({ event: traced_event, state: event_state }, () =>
-				load.call(null, {
-					url: event.url,
-					params: event.params,
-					data: server_data_node?.data ?? null,
-					route: event.route,
-					fetch: create_universal_fetch(event, state, fetched, csr, resolve_opts),
-					setHeaders: event.setHeaders,
-					depends: () => {},
-					parent,
-					untrack: (fn) => fn(),
-					tracing: traced_event.tracing
-				})
-			);
+			event_state.is_in_universal_load = true;
+			try {
+				return await with_request_store({ event: traced_event, state: event_state }, () =>
+					load.call(null, {
+						url: event.url,
+						params: event.params,
+						data: server_data_node?.data ?? null,
+						route: event.route,
+						fetch: create_universal_fetch(event, state, fetched, csr, resolve_opts),
+						setHeaders: event.setHeaders,
+						depends: () => {},
+						parent,
+						untrack: (fn) => fn(),
+						tracing: traced_event.tracing
+					})
+				);
+			} finally {
+				event_state.is_in_universal_load = false;
+			}
 		}
 	});
 

@@ -35,8 +35,10 @@ declare global {
 		assets?: string;
 		/** Public environment variables */
 		env?: Record<string, string>;
-		/** Serialized data from remote functions */
-		data?: Record<string, any>;
+		/** Serialized data from query/form/command functions */
+		query?: Record<string, any>;
+		/** Serialized data from prerender functions */
+		prerender?: Record<string, any>;
 		/** Create a placeholder promise */
 		defer?: (id: number) => Promise<any>;
 		/** Resolve a placeholder promise */

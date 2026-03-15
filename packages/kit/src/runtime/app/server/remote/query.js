@@ -7,6 +7,7 @@ import { prerendering } from '__sveltekit/environment';
 import { create_validator, get_cache, get_response, run_remote_function } from './shared.js';
 import { handle_error_and_jsonify } from '../../../server/utils.js';
 import { HttpError, SvelteKitError } from '@sveltejs/kit/internal';
+import { LazyPromise } from '../../../../utils/promise.js';
 
 /**
  * Creates a remote query. When called from the browser, the function will be invoked on the server via a `fetch` call.
@@ -74,28 +75,9 @@ export function query(validate_or_fn, maybe_fn) {
 
 		const { event, state } = get_request_store();
 
-		const get_remote_function_result = () =>
-			run_remote_function(event, state, false, () => validate(arg), fn);
-
-		/** @type {Promise<any> & Partial<RemoteQuery<any>>} */
-		const promise = get_response(__, arg, state, get_remote_function_result);
-
-		promise.catch(() => {});
-
-		promise.set = (value) => update_refresh_value(get_refresh_context(__, 'set', arg), value);
-
-		promise.refresh = () => {
-			const refresh_context = get_refresh_context(__, 'refresh', arg);
-			const is_immediate_refresh = !refresh_context.cache[refresh_context.cache_key];
-			const value = is_immediate_refresh ? promise : get_remote_function_result();
-			return update_refresh_value(refresh_context, value, is_immediate_refresh);
-		};
-
-		promise.withOverride = () => {
-			throw new Error(`Cannot call '${__.name}.withOverride()' on the server`);
-		};
-
-		return /** @type {RemoteQuery<Output>} */ (promise);
+		return create_query_resource(__, arg, state, () =>
+			run_remote_function(event, state, false, () => validate(arg), fn)
+		);
 	};
 
 	Object.defineProperty(wrapper, '__', { value: __ });
@@ -195,7 +177,7 @@ function batch(validate_or_fn, maybe_fn) {
 
 		const { event, state } = get_request_store();
 
-		const get_remote_function_result = () => {
+		return create_query_resource(__, arg, state, () => {
 			// Collect all the calls to the same query in the same macrotask,
 			// then execute them as one backend request.
 			return new Promise((resolve, reject) => {
@@ -234,32 +216,70 @@ function batch(validate_or_fn, maybe_fn) {
 					}
 				}, 0);
 			});
-		};
-
-		/** @type {Promise<any> & Partial<RemoteQuery<any>>} */
-		const promise = get_response(__, arg, state, get_remote_function_result);
-
-		promise.catch(() => {});
-
-		promise.set = (value) => update_refresh_value(get_refresh_context(__, 'set', arg), value);
-
-		promise.refresh = () => {
-			const refresh_context = get_refresh_context(__, 'refresh', arg);
-			const is_immediate_refresh = !refresh_context.cache[refresh_context.cache_key];
-			const value = is_immediate_refresh ? promise : get_remote_function_result();
-			return update_refresh_value(refresh_context, value, is_immediate_refresh);
-		};
-
-		promise.withOverride = () => {
-			throw new Error(`Cannot call '${__.name}.withOverride()' on the server`);
-		};
-
-		return /** @type {RemoteQuery<Output>} */ (promise);
+		});
 	};
 
 	Object.defineProperty(wrapper, '__', { value: __ });
 
 	return wrapper;
+}
+
+/**
+ * @param {RemoteInfo} __
+ * @param {any} arg
+ * @param {any} state
+ * @param {() => Promise<any>} get_remote_function_result
+ * @returns {RemoteQuery<any>}
+ */
+function create_query_resource(__, arg, state, get_remote_function_result) {
+	const promise = new LazyPromise(() => get_response(__, arg, state, get_remote_function_result));
+
+	return /** @type {RemoteQuery<any>} */ (
+		/** @type {unknown} */ (
+			new Proxy(promise, {
+				get(target, property, receiver) {
+					if (state.is_in_universal_load && property !== 'run') {
+						throw new Error(
+							// TODO docs
+							'This query was called in a universal `load` function and is limited to calling `.run`.'
+						);
+					}
+
+					if (property === 'run') {
+						return () => promise;
+					}
+
+					if (property === 'set') {
+						/** @param {any} value */
+						return (value) => update_refresh_value(get_refresh_context(__, 'set', arg), value);
+					}
+
+					if (property === 'refresh') {
+						return () => {
+							const refresh_context = get_refresh_context(__, 'refresh', arg);
+							const is_immediate_refresh = !refresh_context.cache[refresh_context.cache_key];
+							const value = is_immediate_refresh ? promise : get_remote_function_result();
+							return update_refresh_value(refresh_context, value, is_immediate_refresh);
+						};
+					}
+
+					if (property === 'withOverride') {
+						return () => {
+							throw new Error(`Cannot call '${__.name}.withOverride()' on the server`);
+						};
+					}
+
+					const value = Reflect.get(target, property, receiver);
+
+					if (typeof value === 'function') {
+						return value.bind(target);
+					}
+
+					return value;
+				}
+			})
+		)
+	);
 }
 
 // Add batch as a property to the query function
@@ -269,7 +289,7 @@ Object.defineProperty(query, 'batch', { value: batch, enumerable: true });
  * @param {RemoteInfo} __
  * @param {'set' | 'refresh'} action
  * @param {any} [arg]
- * @returns {{ __: RemoteInfo; state: any; refreshes: Record<string, Promise<any>>; cache: Record<string, Promise<any>>; refreshes_key: string; cache_key: string }}
+ * @returns {{ __: RemoteInfo; state: any; refreshes: Record<string, Promise<any>>; cache: Record<string, { serialize: boolean; data: any }>; refreshes_key: string; cache_key: string }}
  */
 function get_refresh_context(__, action, arg) {
 	const { state } = get_request_store();
@@ -290,7 +310,7 @@ function get_refresh_context(__, action, arg) {
 }
 
 /**
- * @param {{ __: RemoteInfo; refreshes: Record<string, Promise<any>>; cache: Record<string, Promise<any>>; refreshes_key: string; cache_key: string }} context
+ * @param {{ __: RemoteInfo; refreshes: Record<string, Promise<any>>; cache: Record<string, { serialize: boolean; data: any }>; refreshes_key: string; cache_key: string }} context
  * @param {any} value
  * @param {boolean} [is_immediate_refresh=false]
  * @returns {Promise<void>}
@@ -303,7 +323,7 @@ function update_refresh_value(
 	const promise = Promise.resolve(value);
 
 	if (!is_immediate_refresh) {
-		cache[cache_key] = promise;
+		cache[cache_key] = { serialize: true, data: promise };
 	}
 
 	if (__.id) {

@@ -31,6 +31,7 @@ test.describe('remote function mutations', () => {
 	test.afterEach(async ({ page }) => {
 		if (page.url().endsWith('/remote')) {
 			await page.click('#reset-btn');
+			await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
 		}
 	});
 
@@ -52,7 +53,7 @@ test.describe('remote function mutations', () => {
 		await page.goto('/remote');
 		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
 		// only the calls in the template are done, not the one in the load function
-		expect(request_count).toBe(2);
+		expect(request_count).toBe(0);
 	});
 
 	test('command returns correct sum but does not refresh data by default', async ({ page }) => {
@@ -134,7 +135,7 @@ test.describe('remote function mutations', () => {
 		let request_count = 0;
 		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
 
-		page.click('#multiply-override-refresh-btn');
+		await page.click('#multiply-override-refresh-btn');
 		await expect(page.locator('#count-result')).toHaveText('6 / 6 (false)');
 		await expect(page.locator('#command-result')).toHaveText('5');
 		await expect(page.locator('#count-result')).toHaveText('5 / 5 (false)');

@@ -7,14 +7,14 @@
 
 <p id="count">{count}</p>
 
-<button onclick={async () => (count = await get_count())}>get count</button>
+<button onclick={async () => (count = await get_count().run())}>get count</button>
 
 <button onclick={async () => (count = await set_count(0))} id="reset-btn">reset</button>
 
 <form
 	{...set_count_form.enhance(async ({ submit }) => {
 		await submit().updates(get_count());
-		count = await get_count();
+		count = await get_count().run();
 	})}
 >
 	<input type="number" name="count" />
