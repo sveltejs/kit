@@ -4,11 +4,16 @@ import { version } from '__sveltekit/environment';
 import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
 import { app, prerender_responses } from '../client.js';
-import {
-	create_prerender_function,
-	get_remote_request_headers,
-	remote_request
-} from './shared.svelte.js';
+import { get_remote_request_headers, remote_request } from './shared.svelte.js';
+import { create_remote_key, stringify_remote_arg } from '../../shared.js';
+
+/**
+ * @typedef {{
+ * 	_key?: string;
+ * 	then: Promise<unknown>['then'];
+ * 	catch: Promise<unknown>['catch'];
+ * }} RemoteFunctionResource
+ */
 
 // Initialize Cache API for prerender functions
 const CACHE_NAME = DEV ? `sveltekit:${Date.now()}` : `sveltekit:${version}`;
@@ -103,6 +108,44 @@ export function prerender(id) {
 	});
 
 	return fn;
+}
+
+/** @type {Map<string, WeakRef<RemoteFunctionResource>>} */
+// eslint-disable-next-line svelte/prefer-svelte-reactivity
+const prerender_resources = new Map();
+
+/** @type {FinalizationRegistry<string> | null} */
+const prerender_resource_cleanup =
+	typeof FinalizationRegistry === 'undefined'
+		? null
+		: new FinalizationRegistry((cache_key) => {
+				const ref = prerender_resources.get(cache_key);
+				if (ref && ref.deref() === undefined) {
+					prerender_resources.delete(cache_key);
+				}
+			});
+
+/**
+ * @template {(arg: { cache_key: string; payload: string }) => RemoteFunctionResource} Create
+ * @template [Arg=any]
+ * @param {string} id
+ * @param {Create} create
+ * @returns {(arg: Arg) => ReturnType<Create>}
+ */
+function create_prerender_function(id, create) {
+	return (arg) => {
+		const payload = stringify_remote_arg(arg, app.hooks.transport);
+		const cache_key = create_remote_key(id, payload);
+
+		let resource = prerender_resources.get(cache_key)?.deref();
+		if (!resource) {
+			resource = create({ cache_key, payload });
+			prerender_resources.set(cache_key, new WeakRef(resource));
+			prerender_resource_cleanup?.register(resource, cache_key);
+		}
+
+		return /** @type {ReturnType<Create>} */ (resource);
+	};
 }
 
 /**
