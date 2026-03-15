@@ -2,41 +2,11 @@ import { BROWSER, DEV } from 'esm-env';
 import { writable } from 'svelte/store';
 import { assets } from '$app/paths';
 import { version } from '__sveltekit/environment';
-import * as devalue from 'devalue';
 import { PRELOAD_PRIORITIES } from './constants.js';
-import { unfriendly_hydratable } from '../shared.js';
 
 /* global __SVELTEKIT_APP_VERSION_FILE__, __SVELTEKIT_APP_VERSION_POLL_INTERVAL__ */
 
 export const origin = BROWSER ? location.origin : '';
-
-const raw_hydratable_result = Symbol();
-
-/**
- * Client helper for hydratable data with transport support.
- * Decodes only when hydratable returns serialized data from SSR.
- *
- * @template T
- * @param {string} key
- * @param {Record<string, (value: any) => any>} decoders
- * @param {() => T | Promise<T>} fn
- * @returns {Promise<T>}
- */
-export function client_hydratable_transport(key, decoders, fn) {
-	return Promise.resolve(
-		/** @type {Promise<{ value: any } | string>} */ (
-			unfriendly_hydratable(key, () =>
-				Promise.resolve(fn()).then((value) => ({ [raw_hydratable_result]: true, value }))
-			)
-		)
-	).then((value) => {
-		if (typeof value === 'object' && value && Object.hasOwn(value, raw_hydratable_result)) {
-			return value.value;
-		}
-
-		return devalue.parse(/** @type {string} */ (value), decoders);
-	});
-}
 
 /** @param {string | URL} url */
 export function resolve_url(url) {

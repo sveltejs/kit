@@ -8,8 +8,7 @@ import { HttpError, Redirect } from '@sveltejs/kit/internal';
 import { DEV } from 'esm-env';
 import { with_resolvers } from '../../../utils/promise.js';
 import { tick, untrack } from 'svelte';
-import { client_hydratable_transport } from '../utils.js';
-import { create_remote_key, stringify_remote_arg } from '../../shared.js';
+import { create_remote_key, stringify_remote_arg, unfriendly_hydratable } from '../../shared.js';
 
 const query_proxy_options = {
 	tracking_only_properties: new Set([
@@ -29,6 +28,34 @@ const query_proxy_options = {
 		'This query instance is no longer active and can no longer be used for reactive state access. ' +
 		'This typically means you created the query in a tracking context and stashed it somewhere outside of a tracking context.'
 };
+
+const raw_hydratable_result = Symbol();
+
+/**
+ * Client helper for hydratable data with transport support.
+ * Decodes only when hydratable returns serialized data from SSR.
+ *
+ * @template T
+ * @param {string} key
+ * @param {Record<string, (value: any) => any>} decoders
+ * @param {() => T | Promise<T>} fn
+ * @returns {Promise<T>}
+ */
+function client_hydratable_transport(key, decoders, fn) {
+	return Promise.resolve(
+		/** @type {Promise<{ value: any } | string>} */ (
+			unfriendly_hydratable(key, () =>
+				Promise.resolve(fn()).then((value) => ({ [raw_hydratable_result]: true, value }))
+			)
+		)
+	).then((value) => {
+		if (typeof value === 'object' && value && Object.hasOwn(value, raw_hydratable_result)) {
+			return value.value;
+		}
+
+		return devalue.parse(/** @type {string} */ (value), decoders);
+	});
+}
 
 /**
  * @param {string} id
