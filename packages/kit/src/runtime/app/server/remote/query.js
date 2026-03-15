@@ -1,5 +1,5 @@
 /** @import { RemoteQuery, RemoteQueryFunction } from '@sveltejs/kit' */
-/** @import { RemoteInfo, MaybePromise } from 'types' */
+/** @import { RemoteInfo, MaybePromise, RequestState } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 import { get_request_store } from '@sveltejs/kit/internal/server';
 import { create_remote_key, stringify_remote_arg } from '../../../shared.js';
@@ -227,59 +227,51 @@ function batch(validate_or_fn, maybe_fn) {
 /**
  * @param {RemoteInfo} __
  * @param {any} arg
- * @param {any} state
- * @param {() => Promise<any>} get_remote_function_result
+ * @param {RequestState} state
+ * @param {() => Promise<any>} fn
  * @returns {RemoteQuery<any>}
  */
-function create_query_resource(__, arg, state, get_remote_function_result) {
-	const promise = new LazyPromise(() => get_response(__, arg, state, get_remote_function_result));
+function create_query_resource(__, arg, state, fn) {
+	const promise = new LazyPromise(() => get_response(__, arg, state, fn));
 
-	return /** @type {RemoteQuery<any>} */ (
-		/** @type {unknown} */ (
-			new Proxy(promise, {
-				get(target, property, receiver) {
-					if (state.is_in_universal_load && property !== 'run') {
-						throw new Error(
-							// TODO docs
-							'This query was called in a universal `load` function and is limited to calling `.run`.'
-						);
-					}
-
-					if (property === 'run') {
-						return () => promise;
-					}
-
-					if (property === 'set') {
-						/** @param {any} value */
-						return (value) => update_refresh_value(get_refresh_context(__, 'set', arg), value);
-					}
-
-					if (property === 'refresh') {
-						return () => {
-							const refresh_context = get_refresh_context(__, 'refresh', arg);
-							const is_immediate_refresh = !refresh_context.cache[refresh_context.cache_key];
-							const value = is_immediate_refresh ? promise : get_remote_function_result();
-							return update_refresh_value(refresh_context, value, is_immediate_refresh);
-						};
-					}
-
-					if (property === 'withOverride') {
-						return () => {
-							throw new Error(`Cannot call '${__.name}.withOverride()' on the server`);
-						};
-					}
-
-					const value = Reflect.get(target, property, receiver);
-
-					if (typeof value === 'function') {
-						return value.bind(target);
-					}
-
-					return value;
-				}
-			})
-		)
-	);
+	// TODO turn this into a class
+	return {
+		/** @type {Promise<any>['catch']} */
+		catch(onrejected) {
+			return promise.catch(onrejected);
+		},
+		current: undefined, // TODO is this right?
+		error: null, // TODO is this right?
+		/** @type {Promise<any>['finally']} */
+		finally(onfinally) {
+			return promise.finally(onfinally);
+		},
+		loading: false, // TODO is this right?
+		ready: false, // TODO is this right?
+		refresh() {
+			const refresh_context = get_refresh_context(__, 'refresh', arg);
+			const is_immediate_refresh = !refresh_context.cache[refresh_context.cache_key];
+			const value = is_immediate_refresh ? promise : fn();
+			return update_refresh_value(refresh_context, value, is_immediate_refresh);
+		},
+		run() {
+			return get_response(__, arg, state, fn);
+		},
+		/** @param {any} value */
+		set(value) {
+			return update_refresh_value(get_refresh_context(__, 'set', arg), value);
+		},
+		/** @type {Promise<any>['then']} */
+		then(onfulfilled, onrejected) {
+			return promise.then(onfulfilled, onrejected);
+		},
+		withOverride() {
+			throw new Error(`Cannot call '${__.name}.withOverride()' on the server`);
+		},
+		get [Symbol.toStringTag]() {
+			return 'QueryResource';
+		}
+	};
 }
 
 // Add batch as a property to the query function
