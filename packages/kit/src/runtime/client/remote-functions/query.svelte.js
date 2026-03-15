@@ -58,12 +58,11 @@ function client_hydratable_transport(key, decoders, fn) {
 }
 
 /**
- * @param {() => void} noop
- * @returns {boolean} Whether the pre effect was added successfully (indicates we are in a tracking context)
+ * @returns {boolean} Returns `true` if we are in an effect
  */
-function safe_pre_effect(noop = () => {}) {
+function is_in_effect() {
 	try {
-		$effect.pre(noop);
+		$effect.pre(() => {});
 		return true;
 	} catch {
 		return false;
@@ -209,7 +208,7 @@ function create_query_function(id, create) {
 		const payload = stringify_remote_arg(arg, app.hooks.transport);
 		const cache_key = create_remote_key(id, payload);
 
-		const tracking = safe_pre_effect();
+		const tracking = is_in_effect();
 		let active = true;
 
 		let cache_entry = query_map.get(cache_key);
