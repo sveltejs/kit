@@ -75,16 +75,9 @@ export function query(validate_or_fn, maybe_fn) {
 
 		const { event, state } = get_request_store();
 
-		const get_remote_function_result = () =>
-			run_remote_function(event, state, false, () => validate(arg), fn);
-
-		return create_query_resource({
-			__,
-			arg,
-			state,
-			start: () => get_response(__, arg, state, get_remote_function_result),
-			refresh: () => get_remote_function_result()
-		});
+		return create_query_resource(__, arg, state, () =>
+			run_remote_function(event, state, false, () => validate(arg), fn)
+		);
 	};
 
 	Object.defineProperty(wrapper, '__', { value: __ });
@@ -184,7 +177,7 @@ function batch(validate_or_fn, maybe_fn) {
 
 		const { event, state } = get_request_store();
 
-		const get_remote_function_result = () => {
+		return create_query_resource(__, arg, state, () => {
 			// Collect all the calls to the same query in the same macrotask,
 			// then execute them as one backend request.
 			return new Promise((resolve, reject) => {
@@ -223,14 +216,6 @@ function batch(validate_or_fn, maybe_fn) {
 					}
 				}, 0);
 			});
-		};
-
-		return create_query_resource({
-			__,
-			arg,
-			state,
-			start: () => get_response(__, arg, state, get_remote_function_result),
-			refresh: () => get_remote_function_result()
 		});
 	};
 
@@ -240,16 +225,14 @@ function batch(validate_or_fn, maybe_fn) {
 }
 
 /**
- * @param {object} options
- * @param {RemoteInfo} options.__
- * @param {any} options.arg
- * @param {any} options.state
- * @param {() => Promise<any>} options.start
- * @param {() => Promise<any>} options.refresh
+ * @param {RemoteInfo} __
+ * @param {any} arg
+ * @param {any} state
+ * @param {() => Promise<any>} get_remote_function_result
  * @returns {RemoteQuery<any>}
  */
-function create_query_resource({ __, arg, state, start, refresh }) {
-	const promise = new LazyPromise(start);
+function create_query_resource(__, arg, state, get_remote_function_result) {
+	const promise = new LazyPromise(() => get_response(__, arg, state, get_remote_function_result));
 
 	return /** @type {RemoteQuery<any>} */ (
 		/** @type {unknown} */ (
@@ -275,7 +258,7 @@ function create_query_resource({ __, arg, state, start, refresh }) {
 						return () => {
 							const refresh_context = get_refresh_context(__, 'refresh', arg);
 							const is_immediate_refresh = !refresh_context.cache[refresh_context.cache_key];
-							const value = is_immediate_refresh ? promise : refresh();
+							const value = is_immediate_refresh ? promise : get_remote_function_result();
 							return update_refresh_value(refresh_context, value, is_immediate_refresh);
 						};
 					}
