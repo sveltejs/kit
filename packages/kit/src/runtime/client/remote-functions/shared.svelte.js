@@ -8,19 +8,6 @@ import { untrack } from 'svelte';
 import { navigating, page } from '../state.svelte.js';
 
 /**
- * @param {() => void} noop
- * @returns {boolean} Whether the pre effect was added successfully (indicates we are in a tracking context)
- */
-export function safe_pre_effect(noop = () => {}) {
-	try {
-		$effect.pre(noop);
-		return true;
-	} catch {
-		return false;
-	}
-}
-
-/**
  * @returns {{ 'x-sveltekit-pathname': string, 'x-sveltekit-search': string }}
  */
 export function get_remote_request_headers() {

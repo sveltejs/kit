@@ -2,7 +2,7 @@
 /** @import { RemoteFunctionResponse } from 'types' */
 import { app_dir, base } from '$app/paths/internal/client';
 import { app, goto, query_map, query_responses } from '../client.js';
-import { get_remote_request_headers, remote_request, safe_pre_effect } from './shared.svelte.js';
+import { get_remote_request_headers, remote_request } from './shared.svelte.js';
 import * as devalue from 'devalue';
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
 import { DEV } from 'esm-env';
@@ -55,6 +55,19 @@ function client_hydratable_transport(key, decoders, fn) {
 
 		return devalue.parse(/** @type {string} */ (value), decoders);
 	});
+}
+
+/**
+ * @param {() => void} noop
+ * @returns {boolean} Whether the pre effect was added successfully (indicates we are in a tracking context)
+ */
+function safe_pre_effect(noop = () => {}) {
+	try {
+		$effect.pre(noop);
+		return true;
+	} catch {
+		return false;
+	}
 }
 
 /**
