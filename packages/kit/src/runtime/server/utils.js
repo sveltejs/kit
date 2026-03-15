@@ -217,21 +217,6 @@ export function format_server_error(status, error, event) {
 }
 
 /**
- * Server helper for hydratable data with transport support.
- * Always serializes before storing in hydratable state.
- *
- * @template T
- * @param {string} key
- * @param {Transport} transport
- * @param {() => T | Promise<T>} fn
- */
-export function server_hydratable_transport(key, transport, fn) {
-	return unfriendly_hydratable(key, () =>
-		Promise.resolve(fn()).then((value) => stringify(value, transport))
-	);
-}
-
-/**
  * In dev, tidy up stack traces by making paths relative to the current project directory
  * @param {string} file
  */
