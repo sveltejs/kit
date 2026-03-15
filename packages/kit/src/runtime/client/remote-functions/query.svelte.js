@@ -2,17 +2,14 @@
 /** @import { RemoteFunctionResponse } from 'types' */
 import { app_dir, base } from '$app/paths/internal/client';
 import { app, goto, query_map, query_responses } from '../client.js';
-import {
-	create_query_function,
-	get_remote_request_headers,
-	remote_request
-} from './shared.svelte.js';
+import { get_remote_request_headers, remote_request, safe_pre_effect } from './shared.svelte.js';
 import * as devalue from 'devalue';
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
 import { DEV } from 'esm-env';
 import { with_resolvers } from '../../../utils/promise.js';
 import { tick, untrack } from 'svelte';
 import { client_hydratable_transport } from '../utils.js';
+import { create_remote_key, stringify_remote_arg } from '../../shared.js';
 
 const query_proxy_options = {
 	tracking_only_properties: new Set([
@@ -169,6 +166,121 @@ export function query_batch(id) {
 }
 
 /**
+ * @template {(arg: { cache_key: string; payload: string }) => import('./shared.svelte.js').RemoteFunctionResource} Create
+ * @template [Arg=any]
+ * @param {string} id
+ * @param {Create} create
+ * @param {{
+ * 	tracking_only_properties: Set<string | symbol>;
+ * 	limited_error: string;
+ * 	deactivated_error: string;
+ * }} options
+ * @returns {(arg: Arg) => ReturnType<Create>}
+ */
+function create_query_function(id, create, options) {
+	return (arg) => {
+		const payload = stringify_remote_arg(arg, app.hooks.transport);
+		const cache_key = create_remote_key(id, payload);
+
+		const tracking = safe_pre_effect();
+		let active = true;
+
+		let cache_entry = query_map.get(cache_key);
+		let resource = cache_entry?.resource;
+		let cleanup = cache_entry?.cleanup ?? (() => {});
+		if (!resource) {
+			if (tracking) {
+				// this prevents the created resource from being associated with its current parent effect,
+				// which is basically just coincidentally whichever effect is active when it's created
+				cleanup = $effect.root(() => {
+					resource = create({ cache_key, payload });
+				});
+			} else {
+				resource = create({ cache_key, payload });
+			}
+		}
+
+		const get_resource = () => {
+			const cache_entry = query_map.get(cache_key);
+
+			return {
+				cached: !!cache_entry,
+				resource: cache_entry?.resource ?? resource
+			};
+		};
+
+		const wrapper = new Proxy(resource, {
+			get(_, property) {
+				const { cached, resource } = get_resource();
+				const tracking_only = options.tracking_only_properties.has(property);
+
+				if (tracking_only) {
+					if (!active) {
+						throw new Error(options.deactivated_error);
+					}
+
+					if (!tracking) {
+						throw new Error(options.limited_error);
+					}
+				}
+
+				// TODO: calling `withOverride` while `cached` is false needs to create the resource
+				// and cache it for the duration of the override. This can be a followup as it's not any buggier
+				// than it is today
+				if (property === 'refresh' || property === 'set') {
+					if (!cached) {
+						return {
+							set: () => {},
+							refresh: () => Promise.resolve()
+						}[property];
+					}
+
+					return resource[property]?.bind(resource);
+				}
+
+				const value = resource[property];
+
+				if (typeof value === 'function') {
+					return value.bind(resource);
+				}
+
+				return value;
+			}
+		});
+
+		if (tracking) {
+			if (!cache_entry) {
+				cache_entry = { count: 0, resource, cleanup };
+				// we need to set this synchronously to avoid possibly creating
+				// multiple resources for subsequent synchronous calls with the same payload
+				query_map.set(cache_key, cache_entry);
+			}
+
+			cache_entry.count += 1;
+
+			$effect.pre(() => () => {
+				active = false;
+
+				const cache_entry = query_map.get(cache_key);
+				if (!cache_entry) return;
+				cache_entry.count -= 1;
+				void tick().then(() => {
+					const cache_entry = query_map.get(cache_key);
+					if (cache_entry?.count === 0) {
+						cache_entry.cleanup();
+						query_map.delete(cache_key);
+					}
+				});
+			});
+
+			return wrapper;
+		}
+
+		return wrapper;
+	};
+}
+
+/**
  * @template T
  * @implements {Promise<T>}
  */
@@ -244,7 +356,7 @@ export class Query {
 
 	#get_promise() {
 		void untrack(() => (this.#promise ??= this.#run()));
-		return this.#promise;
+		return /** @type {Promise<T>} */ (this.#promise);
 	}
 
 	#run() {
