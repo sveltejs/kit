@@ -1,5 +1,6 @@
 /** @import { RemoteQueryFunction } from '@sveltejs/kit' */
 /** @import { RemoteFunctionResponse } from 'types' */
+/** @import { RemoteFunctionResource } from './shared.svelte.js' */
 import { app_dir, base } from '$app/paths/internal/client';
 import { app, goto, query_map, query_responses } from '../client.js';
 import { get_remote_request_headers, remote_request, safe_pre_effect } from './shared.svelte.js';
@@ -166,7 +167,7 @@ export function query_batch(id) {
 }
 
 /**
- * @template {(arg: { cache_key: string; payload: string }) => import('./shared.svelte.js').RemoteFunctionResource} Create
+ * @template {(arg: { cache_key: string; payload: string }) => RemoteFunctionResource} Create
  * @template [Arg=any]
  * @param {string} id
  * @param {Create} create
