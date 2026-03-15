@@ -34,7 +34,7 @@ test.describe('remote functions', () => {
 				// debugging
 				let data = '';
 				response.on('data', (chunk) => data += chunk);
-				response.on('end', () => console.log('data'));
+				response.on('end', () => console.log(`>>>${data}<<<`));
 
 				fulfil({
 					status: response.statusCode,
