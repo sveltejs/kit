@@ -88,10 +88,11 @@ export function query(id) {
 		return new Query(cache_key, async () => {
 			const url = `${base}/${app_dir}/remote/${id}${payload ? `?payload=${payload}` : ''}`;
 
-			return client_hydratable_transport(cache_key, app.decoders, async () => {
-				const serialized = await remote_request(url, get_remote_request_headers());
-				return devalue.parse(serialized, app.decoders);
-			});
+			const serialized = await unfriendly_hydratable(cache_key, () =>
+				remote_request(url, get_remote_request_headers())
+			);
+
+			return devalue.parse(serialized, app.decoders);
 		});
 	});
 
