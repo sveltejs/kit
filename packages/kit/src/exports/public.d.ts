@@ -513,79 +513,88 @@ export interface KitConfig {
 		 * @default false
 		 */
 		forkPreloads?: boolean;
+
+		/**
+		 * Whether to enable the experimental handling of rendering errors.
+		 * When enabled, `<svelte:boundary>` is used to wrap components at each level
+		 * where there's an `+error.svelte`, rendering the error page if the component fails.
+		 * In addition, error boundaries also work on the server and the error object goes through `handleError`.
+		 * @default false
+		 */
+		handleRenderingErrors?: boolean;
 	};
 	/**
 	 * Where to find various files within your project.
-	 * @deprecated
+	 * @deprecated this feature is still supported, but it's generally recommended to use [monorepos](https://levelup.video/tutorials/monorepos-with-pnpm) instead
 	 */
 	files?: {
 		/**
-		 * the location of your source code
-		 * @deprecated
+		 * The location of your source code.
+		 * @deprecated this feature is still supported, but it's generally recommended to use [monorepos](https://levelup.video/tutorials/monorepos-with-pnpm) instead
 		 * @default "src"
 		 * @since 2.28
 		 */
 		src?: string;
 		/**
-		 * a place to put static files that should have stable URLs and undergo no processing, such as `favicon.ico` or `manifest.json`
-		 * @deprecated
+		 * A place to put static files that should have stable URLs and undergo no processing, such as `favicon.ico` or `manifest.json`.
+		 * @deprecated this feature is still supported, but it's generally recommended to use [monorepos](https://levelup.video/tutorials/monorepos-with-pnpm) instead
 		 * @default "static"
 		 */
 		assets?: string;
 		hooks?: {
 			/**
 			 * The location of your client [hooks](https://svelte.dev/docs/kit/hooks).
-			 * @deprecated
+			 * @deprecated this feature is still supported, but it's generally recommended to use [monorepos](https://levelup.video/tutorials/monorepos-with-pnpm) instead
 			 * @default "src/hooks.client"
 			 */
 			client?: string;
 			/**
 			 * The location of your server [hooks](https://svelte.dev/docs/kit/hooks).
-			 * @deprecated
+			 * @deprecated this feature is still supported, but it's generally recommended to use [monorepos](https://levelup.video/tutorials/monorepos-with-pnpm) instead
 			 * @default "src/hooks.server"
 			 */
 			server?: string;
 			/**
 			 * The location of your universal [hooks](https://svelte.dev/docs/kit/hooks).
-			 * @deprecated
+			 * @deprecated this feature is still supported, but it's generally recommended to use [monorepos](https://levelup.video/tutorials/monorepos-with-pnpm) instead
 			 * @default "src/hooks"
 			 * @since 2.3.0
 			 */
 			universal?: string;
 		};
 		/**
-		 * your app's internal library, accessible throughout the codebase as `$lib`
-		 * @deprecated
+		 * Your app's internal library, accessible throughout the codebase as `$lib`.
+		 * @deprecated this feature is still supported, but it's generally recommended to use [monorepos](https://levelup.video/tutorials/monorepos-with-pnpm) instead
 		 * @default "src/lib"
 		 */
 		lib?: string;
 		/**
-		 * a directory containing [parameter matchers](https://svelte.dev/docs/kit/advanced-routing#Matching)
-		 * @deprecated
+		 * A directory containing [parameter matchers](https://svelte.dev/docs/kit/advanced-routing#Matching).
+		 * @deprecated this feature is still supported, but it's generally recommended to use [monorepos](https://levelup.video/tutorials/monorepos-with-pnpm) instead
 		 * @default "src/params"
 		 */
 		params?: string;
 		/**
-		 * the files that define the structure of your app (see [Routing](https://svelte.dev/docs/kit/routing))
-		 * @deprecated
+		 * The files that define the structure of your app (see [Routing](https://svelte.dev/docs/kit/routing)).
+		 * @deprecated this feature is still supported, but it's generally recommended to use [monorepos](https://levelup.video/tutorials/monorepos-with-pnpm) instead
 		 * @default "src/routes"
 		 */
 		routes?: string;
 		/**
-		 * the location of your service worker's entry point (see [Service workers](https://svelte.dev/docs/kit/service-workers))
-		 * @deprecated
+		 * The location of your service worker's entry point (see [Service workers](https://svelte.dev/docs/kit/service-workers)).
+		 * @deprecated this feature is still supported, but it's generally recommended to use [monorepos](https://levelup.video/tutorials/monorepos-with-pnpm) instead
 		 * @default "src/service-worker"
 		 */
 		serviceWorker?: string;
 		/**
-		 * the location of the template for HTML responses
-		 * @deprecated
+		 * The location of the template for HTML responses.
+		 * @deprecated this feature is still supported, but it's generally recommended to use [monorepos](https://levelup.video/tutorials/monorepos-with-pnpm) instead
 		 * @default "src/app.html"
 		 */
 		appTemplate?: string;
 		/**
-		 * the location of the template for fallback error responses
-		 * @deprecated
+		 * The location of the template for fallback error responses.
+		 * @deprecated this feature is still supported, but it's generally recommended to use [monorepos](https://levelup.video/tutorials/monorepos-with-pnpm) instead
 		 * @default "src/error.html"
 		 */
 		errorTemplate?: string;
@@ -1236,7 +1245,7 @@ export interface NavigationBase {
 	 */
 	to: NavigationTarget | null;
 	/**
-	 * Whether or not the navigation will result in the page being unloaded (i.e. not a client-side navigation)
+	 * Whether or not the navigation will result in the page being unloaded (i.e. not a client-side navigation).
 	 */
 	willUnload: boolean;
 	/**
@@ -1249,11 +1258,7 @@ export interface NavigationBase {
 export interface NavigationEnter extends NavigationBase {
 	/**
 	 * The type of navigation:
-	 * - `form`: The user submitted a `<form method="GET">`
-	 * - `leave`: The app is being left either because the tab is being closed or a navigation to a different document is occurring
-	 * - `link`: Navigation was triggered by a link click
-	 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
-	 * - `popstate`: Navigation was triggered by back/forward navigation
+	 * - `enter`: The app has hydrated/started
 	 */
 	type: 'enter';
 
@@ -1268,16 +1273,29 @@ export interface NavigationEnter extends NavigationBase {
 	event?: undefined;
 }
 
-export interface NavigationExternal extends NavigationBase {
+export type NavigationExternal = NavigationGoto | NavigationLeave;
+
+export interface NavigationGoto extends NavigationBase {
 	/**
 	 * The type of navigation:
-	 * - `form`: The user submitted a `<form method="GET">`
-	 * - `leave`: The app is being left either because the tab is being closed or a navigation to a different document is occurring
-	 * - `link`: Navigation was triggered by a link click
 	 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
-	 * - `popstate`: Navigation was triggered by back/forward navigation
 	 */
-	type: Exclude<NavigationType, 'enter' | 'popstate' | 'link' | 'form'>;
+	type: 'goto';
+
+	// TODO 3.0 remove this property, so that it only exists when type is 'popstate'
+	// (would possibly be a breaking change to do it prior to that)
+	/**
+	 * In case of a history back/forward navigation, the number of steps to go back/forward
+	 */
+	delta?: undefined;
+}
+
+export interface NavigationLeave extends NavigationBase {
+	/**
+	 * The type of navigation:
+	 * - `leave`: The app is being left either because the tab is being closed or a navigation to a different document is occurring
+	 */
+	type: 'leave';
 
 	// TODO 3.0 remove this property, so that it only exists when type is 'popstate'
 	// (would possibly be a breaking change to do it prior to that)
@@ -1291,10 +1309,6 @@ export interface NavigationFormSubmit extends NavigationBase {
 	/**
 	 * The type of navigation:
 	 * - `form`: The user submitted a `<form method="GET">`
-	 * - `leave`: The app is being left either because the tab is being closed or a navigation to a different document is occurring
-	 * - `link`: Navigation was triggered by a link click
-	 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
-	 * - `popstate`: Navigation was triggered by back/forward navigation
 	 */
 	type: 'form';
 
@@ -1314,10 +1328,6 @@ export interface NavigationFormSubmit extends NavigationBase {
 export interface NavigationPopState extends NavigationBase {
 	/**
 	 * The type of navigation:
-	 * - `form`: The user submitted a `<form method="GET">`
-	 * - `leave`: The app is being left either because the tab is being closed or a navigation to a different document is occurring
-	 * - `link`: Navigation was triggered by a link click
-	 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
 	 * - `popstate`: Navigation was triggered by back/forward navigation
 	 */
 	type: 'popstate';
@@ -1336,11 +1346,7 @@ export interface NavigationPopState extends NavigationBase {
 export interface NavigationLink extends NavigationBase {
 	/**
 	 * The type of navigation:
-	 * - `form`: The user submitted a `<form method="GET">`
-	 * - `leave`: The app is being left either because the tab is being closed or a navigation to a different document is occurring
 	 * - `link`: Navigation was triggered by a link click
-	 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
-	 * - `popstate`: Navigation was triggered by back/forward navigation
 	 */
 	type: 'link';
 
@@ -1377,13 +1383,6 @@ export type BeforeNavigate = Navigation & {
  * The argument passed to [`onNavigate`](https://svelte.dev/docs/kit/$app-navigation#onNavigate) callbacks.
  */
 export type OnNavigate = Navigation & {
-	/**
-	 * The type of navigation:
-	 * - `form`: The user submitted a `<form method="GET">`
-	 * - `link`: Navigation was triggered by a link click
-	 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
-	 * - `popstate`: Navigation was triggered by back/forward navigation
-	 */
 	type: Exclude<NavigationType, 'enter' | 'leave'>;
 	/**
 	 * Since `onNavigate` callbacks are called immediately before a client-side navigation, they will never be called with a navigation that unloads the page.
@@ -1395,14 +1394,6 @@ export type OnNavigate = Navigation & {
  * The argument passed to [`afterNavigate`](https://svelte.dev/docs/kit/$app-navigation#afterNavigate) callbacks.
  */
 export type AfterNavigate = (Navigation | NavigationEnter) & {
-	/**
-	 * The type of navigation:
-	 * - `enter`: The app has hydrated/started
-	 * - `form`: The user submitted a `<form method="GET">`
-	 * - `link`: Navigation was triggered by a link click
-	 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
-	 * - `popstate`: Navigation was triggered by back/forward navigation
-	 */
 	type: Exclude<NavigationType, 'leave'>;
 	/**
 	 * Since `afterNavigate` callbacks are called after a navigation completes, they will never be called with a navigation that unloads the page.

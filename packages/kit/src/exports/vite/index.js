@@ -367,7 +367,8 @@ async function kit({ svelte_config }) {
 				__SVELTEKIT_PATHS_RELATIVE__: s(kit.paths.relative),
 				__SVELTEKIT_CLIENT_ROUTING__: s(kit.router.resolution === 'client'),
 				__SVELTEKIT_HASH_ROUTING__: s(kit.router.type === 'hash'),
-				__SVELTEKIT_SERVER_TRACING_ENABLED__: s(kit.experimental.tracing.server)
+				__SVELTEKIT_SERVER_TRACING_ENABLED__: s(kit.experimental.tracing.server),
+				__SVELTEKIT_EXPERIMENTAL_USE_TRANSFORM_ERROR__: s(kit.experimental.handleRenderingErrors)
 			};
 
 			if (is_build) {
@@ -979,7 +980,7 @@ async function kit({ svelte_config }) {
 					build: {
 						rollupOptions: {
 							// Vite dependency crawler needs an explicit JS entry point
-							// eventhough server otherwise works without it
+							// even though server otherwise works without it
 							input: `${runtime_directory}/client/entry.js`
 						}
 					},

@@ -107,7 +107,7 @@ export function build_server_nodes(
 		let fonts = [];
 
 		/** @type {Set<string>} */
-		let eager_assets = new Set();
+		const eager_assets = new Set();
 
 		if (node.component && client_manifest) {
 			exports.push(
@@ -215,7 +215,7 @@ export function build_server_nodes(
 					const filename = basename(file);
 					const dest = `${out}/server/stylesheets/${filename}.js`;
 
-					let css = /** @type {string} */ (stylesheets_to_inline.get(file));
+					const css = /** @type {string} */ (stylesheets_to_inline.get(file));
 
 					fs.writeFileSync(
 						dest,

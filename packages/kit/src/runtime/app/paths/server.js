@@ -35,7 +35,7 @@ export async function match(url) {
 	const store = try_get_request_store();
 
 	if (typeof url === 'string') {
-		const origin = store?.event.url.origin ?? 'http://internal';
+		const origin = store?.event.url.origin ?? 'a://a';
 		url = new URL(url, origin);
 	}
 
