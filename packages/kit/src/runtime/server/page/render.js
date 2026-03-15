@@ -1,7 +1,7 @@
 import * as devalue from 'devalue';
 import { readable, writable } from 'svelte/store';
 import { DEV } from 'esm-env';
-import { text } from '@sveltejs/kit';
+import { isRedirect, text } from '@sveltejs/kit';
 import * as paths from '$app/paths/internal/server';
 import { hash } from '../../../utils/hash.js';
 import { serialize_data } from './serialize_data.js';
@@ -189,6 +189,10 @@ export async function render_response({
 			csp: csp.script_needs_nonce ? { nonce: csp.nonce } : { hash: csp.script_needs_hash },
 			transformError: error_components
 				? /** @param {unknown} e */ async (e) => {
+						if (isRedirect(e)) {
+							throw e;
+						}
+
 						const transformed = await handle_error_and_jsonify(event, event_state, options, e);
 						props.page.error = props.error = error = transformed;
 						props.page.status = status = get_status(e);
