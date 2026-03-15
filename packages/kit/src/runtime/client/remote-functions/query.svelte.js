@@ -10,8 +10,8 @@ import {
 import * as devalue from 'devalue';
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
 import { DEV } from 'esm-env';
-import { LazyPromise, with_resolvers } from '../../../utils/promise.js';
-import { tick } from 'svelte';
+import { with_resolvers } from '../../../utils/promise.js';
+import { tick, untrack } from 'svelte';
 import { client_hydratable_transport } from '../utils.js';
 
 const query_proxy_options = {
@@ -191,8 +191,8 @@ export class Query {
 	#ready = $state(false);
 	/** @type {T | undefined} */
 	#raw = $state.raw();
-	/** @type {Promise<void>} */
-	#promise;
+	/** @type {Promise<void> | null} */
+	#promise = $state.raw(null);
 	/** @type {Array<(old: T) => T>} */
 	#overrides = $state([]);
 
@@ -209,7 +209,7 @@ export class Query {
 	/** @type {Promise<T>['then']} */
 	// @ts-expect-error TS doesn't understand that the promise returns something
 	#then = $derived.by(() => {
-		const p = this.#promise;
+		const p = this.#get_promise();
 		// eagerly start the lazy promise if this is our first time seeing it -- makes sure `hydratable` is hit synchronously
 		p.then(
 			() => {},
@@ -240,7 +240,11 @@ export class Query {
 	constructor(key, fn) {
 		this._key = key;
 		this.#fn = fn;
-		this.#promise = $state.raw(new LazyPromise(this.#run.bind(this)));
+	}
+
+	#get_promise() {
+		void untrack(() => (this.#promise ??= this.#run()));
+		return this.#promise;
 	}
 
 	#run() {
