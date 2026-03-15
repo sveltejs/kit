@@ -7,7 +7,6 @@ import { prerendering } from '__sveltekit/environment';
 import { create_validator, get_cache, get_response, run_remote_function } from './shared.js';
 import { handle_error_and_jsonify } from '../../../server/utils.js';
 import { HttpError, SvelteKitError } from '@sveltejs/kit/internal';
-import { LazyPromise } from '../../../../utils/promise.js';
 
 /**
  * Creates a remote query. When called from the browser, the function will be invoked on the server via a `fetch` call.
@@ -232,26 +231,31 @@ function batch(validate_or_fn, maybe_fn) {
  * @returns {RemoteQuery<any>}
  */
 function create_query_resource(__, arg, state, fn) {
-	const promise = new LazyPromise(() => get_response(__, arg, state, fn));
+	/** @type {Promise<any> | null} */
+	let promise = null;
+
+	const get_promise = () => {
+		return (promise ??= get_response(__, arg, state, fn));
+	};
 
 	// TODO turn this into a class
 	return {
 		/** @type {Promise<any>['catch']} */
 		catch(onrejected) {
-			return promise.catch(onrejected);
+			return get_promise().catch(onrejected);
 		},
 		current: undefined, // TODO is this right?
 		error: null, // TODO is this right?
 		/** @type {Promise<any>['finally']} */
 		finally(onfinally) {
-			return promise.finally(onfinally);
+			return get_promise().finally(onfinally);
 		},
 		loading: false, // TODO is this right?
 		ready: false, // TODO is this right?
 		refresh() {
 			const refresh_context = get_refresh_context(__, 'refresh', arg);
 			const is_immediate_refresh = !refresh_context.cache[refresh_context.cache_key];
-			const value = is_immediate_refresh ? promise : fn();
+			const value = is_immediate_refresh ? get_promise() : fn();
 			return update_refresh_value(refresh_context, value, is_immediate_refresh);
 		},
 		run() {
@@ -263,7 +267,7 @@ function create_query_resource(__, arg, state, fn) {
 		},
 		/** @type {Promise<any>['then']} */
 		then(onfulfilled, onrejected) {
-			return promise.then(onfulfilled, onrejected);
+			return get_promise().then(onfulfilled, onrejected);
 		},
 		withOverride() {
 			throw new Error(`Cannot call '${__.name}.withOverride()' on the server`);
