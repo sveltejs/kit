@@ -89,9 +89,11 @@ export async function get_response(info, arg, state, get_result) {
 	if (state.is_in_render && info.id) {
 		const remote_key = create_remote_key(info.id, key);
 
-		void unfriendly_hydratable(remote_key, () =>
-			Promise.resolve(entry.data).then((value) => stringify(value, state.transport))
-		);
+		Promise.resolve(entry.data)
+			.then((value) => {
+				void unfriendly_hydratable(remote_key, () => stringify(value, state.transport));
+			})
+			.catch(() => {});
 	}
 
 	return entry.data;
