@@ -245,14 +245,14 @@ function create_query_resource(__, arg, state, fn) {
 		catch(onrejected) {
 			return get_promise().catch(onrejected);
 		},
-		current: undefined, // TODO is this right?
+		current: undefined,
 		error: undefined,
 		/** @type {Promise<any>['finally']} */
 		finally(onfinally) {
 			return get_promise().finally(onfinally);
 		},
 		loading: true,
-		ready: false, // TODO is this right?
+		ready: false,
 		refresh() {
 			const refresh_context = get_refresh_context(__, 'refresh', arg);
 			const is_immediate_refresh = !refresh_context.cache[refresh_context.cache_key];
