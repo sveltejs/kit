@@ -51,7 +51,7 @@ export function query(id) {
 		for (const [key, entry] of query_map) {
 			if (key === id || key.startsWith(id + '/')) {
 				// use optional chaining in case a prerender function was turned into a query
-				entry.resource.refresh?.();
+				void entry.resource.refresh?.();
 			}
 		}
 	}
