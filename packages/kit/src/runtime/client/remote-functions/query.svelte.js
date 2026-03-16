@@ -2,36 +2,35 @@
 /** @import { RemoteFunctionResponse } from 'types' */
 import { app_dir, base } from '$app/paths/internal/client';
 import { app, goto, query_map, query_responses } from '../client.js';
-import {
-	create_query_function,
-	get_remote_request_headers,
-	remote_request
-} from './shared.svelte.js';
+import { get_remote_request_headers, remote_request } from './shared.svelte.js';
 import * as devalue from 'devalue';
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
 import { DEV } from 'esm-env';
-import { LazyPromise, with_resolvers } from '../../../utils/promise.js';
-import { tick } from 'svelte';
-import { client_hydratable_transport } from '../utils.js';
+import { with_resolvers } from '../../../utils/promise.js';
+import { tick, untrack } from 'svelte';
+import { create_remote_key, stringify_remote_arg, unfriendly_hydratable } from '../../shared.js';
 
-const query_proxy_options = {
-	tracking_only_properties: new Set([
-		'then',
-		'catch',
-		'finally',
-		'current',
-		'error',
-		'loading',
-		'ready'
-	]),
-	limited_error:
-		// TODO same as below
-		'This query was not created in a reactive context and is limited to calling `.run`, `.refresh`, and `.set`.',
-	deactivated_error:
-		// TODO this error needs work -- ideally it's just a sentence and a link to docs
-		'This query instance is no longer active and can no longer be used for reactive state access. ' +
-		'This typically means you created the query in a tracking context and stashed it somewhere outside of a tracking context.'
-};
+/**
+ * @template T
+ * @typedef {{
+ *   count: number;
+ *   alive: boolean;
+ *   resource: Query<T>;
+ *   cleanup: () => void;
+ * }} RemoteQueryCacheEntry
+ */
+
+/**
+ * @returns {boolean} Returns `true` if we are in an effect
+ */
+function is_in_effect() {
+	try {
+		$effect.pre(() => {});
+		return true;
+	} catch {
+		return false;
+	}
+}
 
 /**
  * @param {string} id
@@ -43,27 +42,20 @@ export function query(id) {
 		for (const [key, entry] of query_map) {
 			if (key === id || key.startsWith(id + '/')) {
 				// use optional chaining in case a prerender function was turned into a query
-				entry.resource.refresh?.();
+				void entry.resource.refresh?.();
 			}
 		}
 	}
 
-	const fn = create_query_function(
-		id,
-		({ cache_key, payload }) => {
-			return new Query(cache_key, async () => {
-				const url = `${base}/${app_dir}/remote/${id}${payload ? `?payload=${payload}` : ''}`;
+	return create_query_function(id, async (key, payload) => {
+		const url = `${base}/${app_dir}/remote/${id}${payload ? `?payload=${payload}` : ''}`;
 
-				return client_hydratable_transport(cache_key, app.decoders, async () => {
-					const serialized = await remote_request(url, get_remote_request_headers());
-					return devalue.parse(serialized, app.decoders);
-				});
-			});
-		},
-		query_proxy_options
-	);
+		const serialized = await unfriendly_hydratable(key, () =>
+			remote_request(url, get_remote_request_headers())
+		);
 
-	return fn;
+		return devalue.parse(serialized, app.decoders);
+	});
 }
 
 /**
@@ -75,97 +67,140 @@ export function query_batch(id) {
 	// eslint-disable-next-line svelte/prefer-svelte-reactivity -- we don't need reactivity for this
 	let batching = new Map();
 
-	const fn = create_query_function(
-		id,
-		({ cache_key, payload }) => {
-			return new Query(cache_key, () => {
-				return client_hydratable_transport(
-					cache_key,
-					app.decoders,
-					() =>
-						/** @type {Promise<any>} */ (
-							new Promise((resolve, reject) => {
-								// create_remote_function caches identical calls, but in case a refresh to the same query is called multiple times this function
-								// is invoked multiple times with the same payload, so we need to deduplicate here
-								const entry = batching.get(payload) ?? [];
-								entry.push({ resolve, reject });
-								batching.set(payload, entry);
+	return create_query_function(id, async (key, payload) => {
+		const serialized = await unfriendly_hydratable(
+			key,
+			() =>
+				new Promise((resolve, reject) => {
+					// create_remote_function caches identical calls, but in case a refresh to the same query is called multiple times this function
+					// is invoked multiple times with the same payload, so we need to deduplicate here
+					const entry = batching.get(payload) ?? [];
+					entry.push({ resolve, reject });
+					batching.set(payload, entry);
 
-								if (batching.size > 1) return;
+					if (batching.size > 1) return;
 
-								// Do this here, after await Svelte' reactivity context is gone.
-								// TODO is it possible to have batches of the same key
-								// but in different forks/async contexts and in the same macrotask?
-								// If so this would potentially be buggy
-								const headers = {
-									'Content-Type': 'application/json',
-									...get_remote_request_headers()
-								};
+					// Do this here, after await Svelte' reactivity context is gone.
+					// TODO is it possible to have batches of the same key
+					// but in different forks/async contexts and in the same macrotask?
+					// If so this would potentially be buggy
+					const headers = {
+						'Content-Type': 'application/json',
+						...get_remote_request_headers()
+					};
 
-								// Wait for the next macrotask - don't use microtask as Svelte runtime uses these to collect changes and flush them,
-								// and flushes could reveal more queries that should be batched.
-								setTimeout(async () => {
-									const batched = batching;
-									// eslint-disable-next-line svelte/prefer-svelte-reactivity
-									batching = new Map();
+					// Wait for the next macrotask - don't use microtask as Svelte runtime uses these to collect changes and flush them,
+					// and flushes could reveal more queries that should be batched.
+					setTimeout(async () => {
+						const batched = batching;
+						// eslint-disable-next-line svelte/prefer-svelte-reactivity
+						batching = new Map();
 
-									try {
-										const response = await fetch(`${base}/${app_dir}/remote/${id}`, {
-											method: 'POST',
-											body: JSON.stringify({
-												payloads: Array.from(batched.keys())
-											}),
-											headers
-										});
+						try {
+							const response = await fetch(`${base}/${app_dir}/remote/${id}`, {
+								method: 'POST',
+								body: JSON.stringify({
+									payloads: Array.from(batched.keys())
+								}),
+								headers
+							});
 
-										if (!response.ok) {
-											throw new Error('Failed to execute batch query');
-										}
+							if (!response.ok) {
+								throw new Error('Failed to execute batch query');
+							}
 
-										const result = /** @type {RemoteFunctionResponse} */ (await response.json());
-										if (result.type === 'error') {
-											throw new HttpError(result.status ?? 500, result.error);
-										}
+							const result = /** @type {RemoteFunctionResponse} */ (await response.json());
+							if (result.type === 'error') {
+								throw new HttpError(result.status ?? 500, result.error);
+							}
 
-										if (result.type === 'redirect') {
-											await goto(result.location);
-											throw new Redirect(307, result.location);
-										}
+							if (result.type === 'redirect') {
+								await goto(result.location);
+								throw new Redirect(307, result.location);
+							}
 
-										const results = devalue.parse(result.result, app.decoders);
+							const results = devalue.parse(result.result, app.decoders);
 
-										// Resolve individual queries
-										// Maps guarantee insertion order so we can do it like this
-										let i = 0;
+							// Resolve individual queries
+							// Maps guarantee insertion order so we can do it like this
+							let i = 0;
 
-										for (const resolvers of batched.values()) {
-											for (const { resolve, reject } of resolvers) {
-												if (results[i].type === 'error') {
-													reject(new HttpError(results[i].status, results[i].error));
-												} else {
-													resolve(results[i].data);
-												}
-											}
-											i++;
-										}
-									} catch (error) {
-										// Reject all queries in the batch
-										for (const resolver of batched.values()) {
-											for (const { reject } of resolver) {
-												reject(error);
-											}
-										}
+							for (const resolvers of batched.values()) {
+								for (const { resolve, reject } of resolvers) {
+									if (results[i].type === 'error') {
+										reject(new HttpError(results[i].status, results[i].error));
+									} else {
+										resolve(results[i].data);
 									}
-								}, 0);
-							})
-						)
-				);
-			});
-		},
-		query_proxy_options
-	);
+								}
+								i++;
+							}
+						} catch (error) {
+							// Reject all queries in the batch
+							for (const resolver of batched.values()) {
+								for (const { reject } of resolver) {
+									reject(error);
+								}
+							}
+						}
+					}, 0);
+				})
+		);
 
-	return fn;
+		return devalue.parse(serialized, app.decoders);
+	});
+}
+
+/**
+ * @template Input
+ * @template Output
+ * @param {string} id
+ * @param {(key: string, payload: string) => Promise<Output>} fn
+ * @returns {(arg: Input) => Query<Output>}
+ */
+function create_query_function(id, fn) {
+	return (arg) => {
+		const payload = stringify_remote_arg(arg, app.hooks.transport);
+		const key = create_remote_key(id, payload);
+
+		if (is_in_effect()) {
+			let cached = query_map.get(key);
+
+			if (!cached) {
+				const c = (cached = {
+					count: 0,
+					alive: true,
+					resource: /** @type {Query<Output>} */ (/** @type {unknown} */ (null)),
+					cleanup: /** @type {() => void} */ (/** @type {unknown} */ (null))
+				});
+
+				c.cleanup = $effect.root(() => {
+					c.resource = new Query(key, c, () => fn(key, payload));
+				});
+
+				query_map.set(key, cached);
+			}
+
+			cached.count += 1;
+
+			$effect.pre(() => () => {
+				cached.count -= 1;
+
+				void tick().then(() => {
+					if (cached.count === 0) {
+						cached.alive = false;
+						cached.cleanup();
+
+						query_map.delete(key);
+					}
+				});
+			});
+
+			return cached.resource;
+		} else {
+			return new Query(key, null, () => fn(key, payload));
+		}
+	};
 }
 
 /**
@@ -179,6 +214,9 @@ export class Query {
 	 */
 	_key;
 
+	/** @type {RemoteQueryCacheEntry<T> | null} */
+	#cached;
+
 	/** @type {boolean} */
 	#init = false;
 	/** @type {() => Promise<T>} */
@@ -191,8 +229,8 @@ export class Query {
 	#ready = $state(false);
 	/** @type {T | undefined} */
 	#raw = $state.raw();
-	/** @type {Promise<void>} */
-	#promise;
+	/** @type {Promise<void> | null} */
+	#promise = $state.raw(null);
 	/** @type {Array<(old: T) => T>} */
 	#overrides = $state([]);
 
@@ -209,13 +247,11 @@ export class Query {
 	/** @type {Promise<T>['then']} */
 	// @ts-expect-error TS doesn't understand that the promise returns something
 	#then = $derived.by(() => {
-		const p = this.#promise;
-		// eagerly start the lazy promise if this is our first time seeing it -- makes sure `hydratable` is hit synchronously
-		p.then(
-			() => {},
-			() => {}
-		);
+		this.#check();
+
 		this.#overrides.length;
+
+		const p = this.#get_promise();
 
 		return (resolve, reject) => {
 			const result = (async () => {
@@ -235,12 +271,37 @@ export class Query {
 
 	/**
 	 * @param {string} key
+	 * @param {RemoteQueryCacheEntry<T> | null} cached
 	 * @param {() => Promise<T>} fn
 	 */
-	constructor(key, fn) {
+	constructor(key, cached, fn) {
 		this._key = key;
+		this.#cached = cached;
 		this.#fn = fn;
-		this.#promise = $state.raw(new LazyPromise(this.#run.bind(this)));
+	}
+
+	/**
+	 * Disallows certain methods/properties if the query was created in a non-reactive context, or is destroyed
+	 */
+	#check() {
+		// TODO iterate on error messages
+		if (!this.#cached) {
+			throw new Error(
+				'This query was not created in a reactive context and is limited to calling `.run`, `.refresh`, and `.set`.'
+			);
+		}
+
+		if (!this.#cached.alive) {
+			throw new Error(
+				'This query instance is no longer active and can no longer be used for reactive state access. ' +
+					'This typically means you created the query in a tracking context and stashed it somewhere outside of a tracking context.'
+			);
+		}
+	}
+
+	#get_promise() {
+		void untrack(() => (this.#promise ??= this.#run()));
+		return /** @type {Promise<T>} */ (this.#promise);
 	}
 
 	#run() {
@@ -318,10 +379,12 @@ export class Query {
 	}
 
 	get current() {
+		this.#check();
 		return this.#current;
 	}
 
 	get error() {
+		this.#check();
 		return this.#error;
 	}
 
@@ -329,6 +392,7 @@ export class Query {
 	 * Returns true if the resource is loading or reloading.
 	 */
 	get loading() {
+		this.#check();
 		return this.#loading;
 	}
 
@@ -336,6 +400,7 @@ export class Query {
 	 * Returns true once the resource has been loaded for the first time.
 	 */
 	get ready() {
+		this.#check();
 		return this.#ready;
 	}
 
@@ -343,6 +408,10 @@ export class Query {
 	 * @returns {Promise<void>}
 	 */
 	refresh() {
+		if (!this.#cached) {
+			return query_map.get(this._key)?.resource.refresh() ?? Promise.resolve();
+		}
+
 		delete query_responses[this._key];
 		return (this.#promise = this.#run());
 	}
@@ -351,6 +420,11 @@ export class Query {
 	 * @param {T} value
 	 */
 	set(value) {
+		if (!this.#cached) {
+			query_map.get(this._key)?.resource.set(value);
+			return;
+		}
+
 		this.#ready = true;
 		this.#loading = false;
 		this.#error = undefined;
@@ -360,8 +434,17 @@ export class Query {
 
 	/**
 	 * @param {(old: T) => T} fn
+	 * @returns {{ _key: string, release: () => void }}
 	 */
 	withOverride(fn) {
+		if (!this.#cached) {
+			const cached = query_map.get(this._key);
+
+			if (cached) {
+				return cached.resource.withOverride(fn);
+			}
+		}
+
 		this.#overrides.push(fn);
 
 		return {

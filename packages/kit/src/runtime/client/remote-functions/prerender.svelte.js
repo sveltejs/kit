@@ -4,11 +4,8 @@ import { version } from '__sveltekit/environment';
 import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
 import { app, prerender_responses } from '../client.js';
-import {
-	create_prerender_function,
-	get_remote_request_headers,
-	remote_request
-} from './shared.svelte.js';
+import { get_remote_request_headers, remote_request } from './shared.svelte.js';
+import { create_remote_key, stringify_remote_arg } from '../../shared.js';
 
 // Initialize Cache API for prerender functions
 const CACHE_NAME = DEV ? `sveltekit:${Date.now()}` : `sveltekit:${version}`;
@@ -58,52 +55,77 @@ function put(url, encoded) {
  * @returns {RemotePrerenderFunction<any, any>}
  */
 export function prerender(id) {
-	const fn = create_prerender_function(id, ({ cache_key, payload }) => {
-		return new Prerender(async () => {
-			await prerender_cache_ready;
+	return (arg) => {
+		const payload = stringify_remote_arg(arg, app.hooks.transport);
+		const cache_key = create_remote_key(id, payload);
 
-			const url = `${base}/${app_dir}/remote/${id}${payload ? `/${payload}` : ''}`;
+		let resource = prerender_resources.get(cache_key)?.deref();
 
-			if (Object.hasOwn(prerender_responses, cache_key)) {
-				const data = prerender_responses[cache_key];
+		if (!resource) {
+			resource = new Prerender(async () => {
+				await prerender_cache_ready;
 
-				if (prerender_cache) {
-					void put(url, devalue.stringify(data, app.encoders));
-				}
+				const url = `${base}/${app_dir}/remote/${id}${payload ? `/${payload}` : ''}`;
 
-				return data;
-			}
+				if (Object.hasOwn(prerender_responses, cache_key)) {
+					const data = prerender_responses[cache_key];
 
-			// Do this here, after await Svelte' reactivity context is gone.
-			const headers = get_remote_request_headers();
-
-			// Check the Cache API first
-			if (prerender_cache) {
-				try {
-					const cached_response = await prerender_cache.match(url);
-
-					if (cached_response) {
-						const cached_result = await cached_response.text();
-						return devalue.parse(cached_result, app.decoders);
+					if (prerender_cache) {
+						void put(url, devalue.stringify(data, app.encoders));
 					}
-				} catch {
-					// Nothing we can do here
+
+					return data;
 				}
-			}
 
-			const encoded = await remote_request(url, headers);
+				// Do this here, after await Svelte' reactivity context is gone.
+				const headers = get_remote_request_headers();
 
-			// For successful prerender requests, save to cache
-			if (prerender_cache) {
-				void put(url, encoded);
-			}
+				// Check the Cache API first
+				if (prerender_cache) {
+					try {
+						const cached_response = await prerender_cache.match(url);
 
-			return devalue.parse(encoded, app.decoders);
-		});
-	});
+						if (cached_response) {
+							const cached_result = await cached_response.text();
+							return devalue.parse(cached_result, app.decoders);
+						}
+					} catch {
+						void prerender_cache.delete(url);
+					}
+				}
 
-	return fn;
+				const encoded = await remote_request(url, headers);
+
+				// For successful prerender requests, save to cache
+				if (prerender_cache) {
+					void put(url, encoded);
+				}
+
+				return devalue.parse(encoded, app.decoders);
+			});
+
+			prerender_resources.set(cache_key, new WeakRef(resource));
+			prerender_resource_cleanup?.register(resource, cache_key);
+		}
+
+		return resource;
+	};
 }
+
+/** @type {Map<string, WeakRef<Prerender<any>>>} */
+// eslint-disable-next-line svelte/prefer-svelte-reactivity
+const prerender_resources = new Map();
+
+/** @type {FinalizationRegistry<string> | null} */
+const prerender_resource_cleanup =
+	typeof FinalizationRegistry === 'undefined'
+		? null
+		: new FinalizationRegistry((cache_key) => {
+				const ref = prerender_resources.get(cache_key);
+				if (ref && ref.deref() === undefined) {
+					prerender_resources.delete(cache_key);
+				}
+			});
 
 /**
  * @template T

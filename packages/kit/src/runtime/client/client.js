@@ -1,3 +1,4 @@
+/** @import { RemoteQueryCacheEntry } from './remote-functions/query.svelte.js' */
 import { BROWSER, DEV } from 'esm-env';
 import * as svelte from 'svelte';
 import { HttpError, Redirect, SvelteKitError } from '@sveltejs/kit/internal';
@@ -300,7 +301,7 @@ const preload_tokens = new Set();
 export let pending_invalidate;
 
 /**
- * @type {Map<string, { count: number, resource: any, cleanup: () => void }>}
+ * @type {Map<string, RemoteQueryCacheEntry<any>>}
  * A map of id -> query info with all queries that currently exist in the app.
  */
 export const query_map = new Map();
@@ -411,7 +412,7 @@ async function _invalidate(include_load_functions = true, reset_page_state = tru
 	// Rerun queries
 	if (force_invalidation) {
 		query_map.forEach(({ resource }) => {
-			resource.refresh?.();
+			void resource.refresh?.();
 		});
 	}
 
@@ -519,7 +520,7 @@ export async function _goto(url, options, redirect_count, nav_token) {
 				query_map.forEach(({ resource }, key) => {
 					// Only refresh those that already existed on the old page
 					if (query_keys?.includes(key)) {
-						resource.refresh?.();
+						void resource.refresh?.();
 					}
 				});
 			});

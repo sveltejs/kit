@@ -1,13 +1,12 @@
 /** @import { RemoteQuery, RemoteQueryFunction } from '@sveltejs/kit' */
-/** @import { RemoteInfo, MaybePromise } from 'types' */
+/** @import { RemoteInfo, MaybePromise, RequestState } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 import { get_request_store } from '@sveltejs/kit/internal/server';
-import { create_remote_key, stringify_remote_arg } from '../../../shared.js';
+import { create_remote_key, stringify, stringify_remote_arg } from '../../../shared.js';
 import { prerendering } from '__sveltekit/environment';
 import { create_validator, get_cache, get_response, run_remote_function } from './shared.js';
 import { handle_error_and_jsonify } from '../../../server/utils.js';
 import { HttpError, SvelteKitError } from '@sveltejs/kit/internal';
-import { LazyPromise } from '../../../../utils/promise.js';
 
 /**
  * Creates a remote query. When called from the browser, the function will be invoked on the server via a `fetch` call.
@@ -146,7 +145,8 @@ function batch(validate_or_fn, maybe_fn) {
 					return Promise.all(
 						input.map(async (arg, i) => {
 							try {
-								return { type: 'result', data: get_result(arg, i) };
+								const data = get_result(arg, i);
+								return { type: 'result', data: stringify(data, state.transport) };
 							} catch (error) {
 								return {
 									type: 'error',
@@ -227,59 +227,56 @@ function batch(validate_or_fn, maybe_fn) {
 /**
  * @param {RemoteInfo} __
  * @param {any} arg
- * @param {any} state
- * @param {() => Promise<any>} get_remote_function_result
+ * @param {RequestState} state
+ * @param {() => Promise<any>} fn
  * @returns {RemoteQuery<any>}
  */
-function create_query_resource(__, arg, state, get_remote_function_result) {
-	const promise = new LazyPromise(() => get_response(__, arg, state, get_remote_function_result));
+function create_query_resource(__, arg, state, fn) {
+	/** @type {Promise<any> | null} */
+	let promise = null;
 
-	return /** @type {RemoteQuery<any>} */ (
-		/** @type {unknown} */ (
-			new Proxy(promise, {
-				get(target, property, receiver) {
-					if (state.is_in_universal_load && property !== 'run') {
-						throw new Error(
-							// TODO docs
-							'This query was called in a universal `load` function and is limited to calling `.run`.'
-						);
-					}
+	const get_promise = () => {
+		return (promise ??= get_response(__, arg, state, fn));
+	};
 
-					if (property === 'run') {
-						return () => promise;
-					}
-
-					if (property === 'set') {
-						/** @param {any} value */
-						return (value) => update_refresh_value(get_refresh_context(__, 'set', arg), value);
-					}
-
-					if (property === 'refresh') {
-						return () => {
-							const refresh_context = get_refresh_context(__, 'refresh', arg);
-							const is_immediate_refresh = !refresh_context.cache[refresh_context.cache_key];
-							const value = is_immediate_refresh ? promise : get_remote_function_result();
-							return update_refresh_value(refresh_context, value, is_immediate_refresh);
-						};
-					}
-
-					if (property === 'withOverride') {
-						return () => {
-							throw new Error(`Cannot call '${__.name}.withOverride()' on the server`);
-						};
-					}
-
-					const value = Reflect.get(target, property, receiver);
-
-					if (typeof value === 'function') {
-						return value.bind(target);
-					}
-
-					return value;
-				}
-			})
-		)
-	);
+	// TODO turn this into a class
+	return {
+		/** @type {Promise<any>['catch']} */
+		catch(onrejected) {
+			return get_promise().catch(onrejected);
+		},
+		current: undefined,
+		error: undefined,
+		/** @type {Promise<any>['finally']} */
+		finally(onfinally) {
+			return get_promise().finally(onfinally);
+		},
+		loading: true,
+		ready: false,
+		refresh() {
+			const refresh_context = get_refresh_context(__, 'refresh', arg);
+			const is_immediate_refresh = !refresh_context.cache[refresh_context.cache_key];
+			const value = is_immediate_refresh ? get_promise() : fn();
+			return update_refresh_value(refresh_context, value, is_immediate_refresh);
+		},
+		run() {
+			return get_response(__, arg, state, fn);
+		},
+		/** @param {any} value */
+		set(value) {
+			return update_refresh_value(get_refresh_context(__, 'set', arg), value);
+		},
+		/** @type {Promise<any>['then']} */
+		then(onfulfilled, onrejected) {
+			return get_promise().then(onfulfilled, onrejected);
+		},
+		withOverride() {
+			throw new Error(`Cannot call '${__.name}.withOverride()' on the server`);
+		},
+		get [Symbol.toStringTag]() {
+			return 'QueryResource';
+		}
+	};
 }
 
 // Add batch as a property to the query function
