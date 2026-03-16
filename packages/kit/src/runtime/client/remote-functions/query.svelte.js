@@ -56,7 +56,7 @@ export function query(id) {
 		}
 	}
 
-	const fn = create_query_function(id, async (key, payload) => {
+	return create_query_function(id, async (key, payload) => {
 		const url = `${base}/${app_dir}/remote/${id}${payload ? `?payload=${payload}` : ''}`;
 
 		const serialized = await unfriendly_hydratable(key, () =>
@@ -65,8 +65,6 @@ export function query(id) {
 
 		return devalue.parse(serialized, app.decoders);
 	});
-
-	return fn;
 }
 
 /**
@@ -78,7 +76,7 @@ export function query_batch(id) {
 	// eslint-disable-next-line svelte/prefer-svelte-reactivity -- we don't need reactivity for this
 	let batching = new Map();
 
-	const fn = create_query_function(id, async (key, payload) => {
+	return create_query_function(id, async (key, payload) => {
 		const serialized = await unfriendly_hydratable(
 			key,
 			() =>
@@ -160,8 +158,6 @@ export function query_batch(id) {
 
 		return devalue.parse(serialized, app.decoders);
 	});
-
-	return fn;
 }
 
 /**
