@@ -1,4 +1,4 @@
-/** @import { Query, RemoteQueryCacheEntry } from './remote-functions/query.svelte.js' */
+/** @import { RemoteQueryCacheEntry } from './remote-functions/query.svelte.js' */
 import { BROWSER, DEV } from 'esm-env';
 import * as svelte from 'svelte';
 import { HttpError, Redirect, SvelteKitError } from '@sveltejs/kit/internal';
