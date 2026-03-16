@@ -14,6 +14,8 @@ export let updated;
 const is_legacy =
 	onMount.toString().includes('$$') || /function \w+\(\) \{\}/.test(onMount.toString());
 
+const placeholder_url = 'a:';
+
 if (is_legacy) {
 	page = {
 		data: {},
@@ -23,7 +25,7 @@ if (is_legacy) {
 		route: { id: null },
 		state: {},
 		status: -1,
-		url: new URL('https://example.com')
+		url: new URL(placeholder_url)
 	};
 	navigating = { current: null };
 	updated = { current: false };
@@ -36,7 +38,7 @@ if (is_legacy) {
 		route = $state.raw({ id: null });
 		state = $state.raw({});
 		status = $state.raw(-1);
-		url = $state.raw(new URL('https://example.com'));
+		url = $state.raw(new URL(placeholder_url));
 	})();
 
 	navigating = new (class Navigating {

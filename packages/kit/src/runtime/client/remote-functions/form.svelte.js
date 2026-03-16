@@ -298,6 +298,14 @@ export function form(id) {
 					return;
 				}
 
+				const target = event.submitter?.hasAttribute('formtarget')
+					? /** @type {HTMLButtonElement | HTMLInputElement} */ (event.submitter).formTarget
+					: clone(form).target;
+
+				if (target === '_blank') {
+					return;
+				}
+
 				event.preventDefault();
 
 				const form_data = new FormData(form, event.submitter);

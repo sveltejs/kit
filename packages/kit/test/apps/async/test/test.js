@@ -132,7 +132,9 @@ test.describe('remote functions', () => {
 		await page.getByText('set message').click();
 
 		await page
-			.getByText('This is your custom error page saying: "oops (500 Internal Error)"')
+			.getByText(
+				'This is your custom error page saying: "oops (500 Internal Error, on /remote/form/unexpected-error)"'
+			)
 			.waitFor();
 	});
 
@@ -152,6 +154,52 @@ test.describe('remote functions', () => {
 		await page.getByText('set message').click();
 
 		await page.waitForURL('/remote');
+	});
+
+	test('remote form redirect opens in new tab when target=_blank', async ({ page }) => {
+		await page.goto('/remote/form/redirect-target');
+
+		const popup_promise = page.waitForEvent('popup', { timeout: 5000 });
+
+		await page.locator('[data-testid="form-blank"] button').click();
+
+		const popup = await popup_promise;
+		await popup.waitForLoadState();
+
+		expect(popup.url()).toContain('/remote/form/redirect-target/destination');
+
+		expect(page.url()).toContain('/remote/form/redirect-target');
+		expect(page.url()).not.toContain('/destination');
+	});
+
+	test('remote form redirect navigates same tab without target=_blank', async ({ page }) => {
+		await page.goto('/remote/form/redirect-target');
+
+		let popup_opened = false;
+		page.on('popup', () => {
+			popup_opened = true;
+		});
+
+		await page.locator('form:not([target]) button').click();
+		await page.waitForURL('**/remote/form/redirect-target/destination');
+
+		expect(popup_opened).toBe(false);
+		expect(page.url()).toContain('/remote/form/redirect-target/destination');
+	});
+
+	test('remote form redirect opens in new tab when formtarget=_blank on input', async ({
+		page
+	}) => {
+		await page.goto('/remote/form/redirect-target');
+
+		const popup_promise = page.waitForEvent('popup', { timeout: 5000 });
+		await page.locator('[data-testid="form-input-blank"] input').click();
+		const popup = await popup_promise;
+		await popup.waitForLoadState();
+
+		expect(popup.url()).toContain('/remote/form/redirect-target/destination');
+		expect(page.url()).toContain('/remote/form/redirect-target');
+		expect(page.url()).not.toContain('/destination');
 	});
 
 	test('form multiple submit buttons work', async ({ page, javaScriptEnabled }) => {
@@ -567,5 +615,23 @@ test.describe('remote functions', () => {
 				timeout: 5000
 			});
 		}
+	});
+});
+
+test.describe('server error boundaries', () => {
+	test('catches server render error and shows root +error.svelte', async ({ page }) => {
+		await page.goto('/server-error-boundary');
+		await expect(page.locator('#message')).toContainText(
+			'render error (500 Internal Error, on /server-error-boundary)'
+		);
+	});
+
+	test('catches nested server render error and shows nested +error.svelte', async ({ page }) => {
+		await page.goto('/server-error-boundary/nested');
+		await expect(page.locator('#nested-error-message')).toContainText(
+			'nested render error (500 Internal Error, on /server-error-boundary/nested) | true | 500'
+		);
+		// The nested layout should still be visible
+		await expect(page.locator('#nested-layout')).toBeVisible();
 	});
 });
