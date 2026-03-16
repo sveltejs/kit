@@ -6,6 +6,8 @@ export interface Options {
 	output: string;
 	preserve_output: boolean;
 	types: boolean;
+	incremental?: boolean;
+	tsgo?: boolean;
 	tsconfig?: string;
 	config: {
 		extensions?: string[];
