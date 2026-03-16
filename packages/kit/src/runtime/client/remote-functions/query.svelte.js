@@ -202,18 +202,11 @@ export class Query {
 	/** @type {Promise<Awaited<T>>['then']} */
 	// @ts-expect-error TS doesn't understand that the promise returns something
 	#then = $derived.by(() => {
-		this.#overrides.length;
 		const p = this.#get_promise();
+		this.#overrides.length;
 
 		return (resolve, reject) => {
-			const result = /** @type {Promise<Awaited<T>>} */ (
-				(async () => {
-					await p;
-					// svelte-ignore await_reactivity_loss
-					await tick();
-					return /** @type {Awaited<T>} */ (this.#current);
-				})()
-			);
+			const result = p.then(tick).then(() => /** @type {Awaited<T>} */ (this.#current));
 
 			if (resolve || reject) {
 				return result.then(resolve, reject);
@@ -516,18 +509,21 @@ class QueryProxy {
 	}
 
 	/** @type {Query<T>['then']} */
-	then(resolve, reject) {
-		return this.#get_cached_query().then(resolve, reject);
+	get then() {
+		const cached = this.#get_cached_query();
+		return cached.then.bind(cached);
 	}
 
 	/** @type {Query<T>['catch']} */
-	catch(reject) {
-		return this.#get_cached_query().catch(reject);
+	get catch() {
+		const cached = this.#get_cached_query();
+		return cached.catch.bind(cached);
 	}
 
 	/** @type {Query<T>['finally']} */
-	finally(fn) {
-		return this.#get_cached_query().finally(fn);
+	get finally() {
+		const cached = this.#get_cached_query();
+		return cached.finally.bind(cached);
 	}
 
 	get [Symbol.toStringTag]() {
