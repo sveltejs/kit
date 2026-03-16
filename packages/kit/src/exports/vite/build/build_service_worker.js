@@ -137,7 +137,7 @@ export async function build_service_worker(
 	// versions throw an error about unknown config options
 	if (is_rolldown && config?.build?.rollupOptions?.output) {
 		// @ts-ignore only available in Vite 8
-		new_config.build.rollupOptions.output.codeSplitting = split;
+		config.build.rollupOptions.output.codeSplitting = split;
 	}
 
 	await vite.build(config);
