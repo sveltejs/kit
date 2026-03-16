@@ -321,13 +321,9 @@ export class Query {
 	/** @type {Promise<T>['then']} */
 	// @ts-expect-error TS doesn't understand that the promise returns something
 	#then = $derived.by(() => {
-		const p = this.#get_promise();
-		// eagerly start the lazy promise if this is our first time seeing it -- makes sure `hydratable` is hit synchronously
-		p.then(
-			() => {},
-			() => {}
-		);
 		this.#overrides.length;
+
+		const p = this.#get_promise();
 
 		return (resolve, reject) => {
 			const result = (async () => {
