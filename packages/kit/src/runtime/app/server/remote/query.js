@@ -2,7 +2,7 @@
 /** @import { RemoteInfo, MaybePromise, RequestState } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 import { get_request_store } from '@sveltejs/kit/internal/server';
-import { create_remote_key, stringify_remote_arg } from '../../../shared.js';
+import { create_remote_key, stringify, stringify_remote_arg } from '../../../shared.js';
 import { prerendering } from '__sveltekit/environment';
 import { create_validator, get_cache, get_response, run_remote_function } from './shared.js';
 import { handle_error_and_jsonify } from '../../../server/utils.js';
@@ -145,7 +145,8 @@ function batch(validate_or_fn, maybe_fn) {
 					return Promise.all(
 						input.map(async (arg, i) => {
 							try {
-								return { type: 'result', data: get_result(arg, i) };
+								const data = get_result(arg, i);
+								return { type: 'result', data: stringify(data, state.transport) };
 							} catch (error) {
 								return {
 									type: 'error',
