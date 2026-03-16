@@ -246,12 +246,12 @@ function create_query_resource(__, arg, state, fn) {
 			return get_promise().catch(onrejected);
 		},
 		current: undefined, // TODO is this right?
-		error: null, // TODO is this right?
+		error: undefined,
 		/** @type {Promise<any>['finally']} */
 		finally(onfinally) {
 			return get_promise().finally(onfinally);
 		},
-		loading: false, // TODO is this right?
+		loading: true,
 		ready: false, // TODO is this right?
 		refresh() {
 			const refresh_context = get_refresh_context(__, 'refresh', arg);
