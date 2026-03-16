@@ -56,16 +56,14 @@ export function query(id) {
 		}
 	}
 
-	const fn = create_query_function(id, ({ cache_key, payload }) => {
-		return new Query(cache_key, async () => {
-			const url = `${base}/${app_dir}/remote/${id}${payload ? `?payload=${payload}` : ''}`;
+	const fn = create_query_function(id, async (key, payload) => {
+		const url = `${base}/${app_dir}/remote/${id}${payload ? `?payload=${payload}` : ''}`;
 
-			const serialized = await unfriendly_hydratable(cache_key, () =>
-				remote_request(url, get_remote_request_headers())
-			);
+		const serialized = await unfriendly_hydratable(key, () =>
+			remote_request(url, get_remote_request_headers())
+		);
 
-			return devalue.parse(serialized, app.decoders);
-		});
+		return devalue.parse(serialized, app.decoders);
 	});
 
 	return fn;
@@ -80,102 +78,100 @@ export function query_batch(id) {
 	// eslint-disable-next-line svelte/prefer-svelte-reactivity -- we don't need reactivity for this
 	let batching = new Map();
 
-	const fn = create_query_function(id, ({ cache_key, payload }) => {
-		return new Query(cache_key, async () => {
-			const serialized = await unfriendly_hydratable(
-				cache_key,
-				() =>
-					new Promise((resolve, reject) => {
-						// create_remote_function caches identical calls, but in case a refresh to the same query is called multiple times this function
-						// is invoked multiple times with the same payload, so we need to deduplicate here
-						const entry = batching.get(payload) ?? [];
-						entry.push({ resolve, reject });
-						batching.set(payload, entry);
+	const fn = create_query_function(id, async (key, payload) => {
+		const serialized = await unfriendly_hydratable(
+			key,
+			() =>
+				new Promise((resolve, reject) => {
+					// create_remote_function caches identical calls, but in case a refresh to the same query is called multiple times this function
+					// is invoked multiple times with the same payload, so we need to deduplicate here
+					const entry = batching.get(payload) ?? [];
+					entry.push({ resolve, reject });
+					batching.set(payload, entry);
 
-						if (batching.size > 1) return;
+					if (batching.size > 1) return;
 
-						// Do this here, after await Svelte' reactivity context is gone.
-						// TODO is it possible to have batches of the same key
-						// but in different forks/async contexts and in the same macrotask?
-						// If so this would potentially be buggy
-						const headers = {
-							'Content-Type': 'application/json',
-							...get_remote_request_headers()
-						};
+					// Do this here, after await Svelte' reactivity context is gone.
+					// TODO is it possible to have batches of the same key
+					// but in different forks/async contexts and in the same macrotask?
+					// If so this would potentially be buggy
+					const headers = {
+						'Content-Type': 'application/json',
+						...get_remote_request_headers()
+					};
 
-						// Wait for the next macrotask - don't use microtask as Svelte runtime uses these to collect changes and flush them,
-						// and flushes could reveal more queries that should be batched.
-						setTimeout(async () => {
-							const batched = batching;
-							// eslint-disable-next-line svelte/prefer-svelte-reactivity
-							batching = new Map();
+					// Wait for the next macrotask - don't use microtask as Svelte runtime uses these to collect changes and flush them,
+					// and flushes could reveal more queries that should be batched.
+					setTimeout(async () => {
+						const batched = batching;
+						// eslint-disable-next-line svelte/prefer-svelte-reactivity
+						batching = new Map();
 
-							try {
-								const response = await fetch(`${base}/${app_dir}/remote/${id}`, {
-									method: 'POST',
-									body: JSON.stringify({
-										payloads: Array.from(batched.keys())
-									}),
-									headers
-								});
+						try {
+							const response = await fetch(`${base}/${app_dir}/remote/${id}`, {
+								method: 'POST',
+								body: JSON.stringify({
+									payloads: Array.from(batched.keys())
+								}),
+								headers
+							});
 
-								if (!response.ok) {
-									throw new Error('Failed to execute batch query');
-								}
+							if (!response.ok) {
+								throw new Error('Failed to execute batch query');
+							}
 
-								const result = /** @type {RemoteFunctionResponse} */ (await response.json());
-								if (result.type === 'error') {
-									throw new HttpError(result.status ?? 500, result.error);
-								}
+							const result = /** @type {RemoteFunctionResponse} */ (await response.json());
+							if (result.type === 'error') {
+								throw new HttpError(result.status ?? 500, result.error);
+							}
 
-								if (result.type === 'redirect') {
-									await goto(result.location);
-									throw new Redirect(307, result.location);
-								}
+							if (result.type === 'redirect') {
+								await goto(result.location);
+								throw new Redirect(307, result.location);
+							}
 
-								const results = devalue.parse(result.result, app.decoders);
+							const results = devalue.parse(result.result, app.decoders);
 
-								// Resolve individual queries
-								// Maps guarantee insertion order so we can do it like this
-								let i = 0;
+							// Resolve individual queries
+							// Maps guarantee insertion order so we can do it like this
+							let i = 0;
 
-								for (const resolvers of batched.values()) {
-									for (const { resolve, reject } of resolvers) {
-										if (results[i].type === 'error') {
-											reject(new HttpError(results[i].status, results[i].error));
-										} else {
-											resolve(results[i].data);
-										}
+							for (const resolvers of batched.values()) {
+								for (const { resolve, reject } of resolvers) {
+									if (results[i].type === 'error') {
+										reject(new HttpError(results[i].status, results[i].error));
+									} else {
+										resolve(results[i].data);
 									}
-									i++;
 								}
-							} catch (error) {
-								// Reject all queries in the batch
-								for (const resolver of batched.values()) {
-									for (const { reject } of resolver) {
-										reject(error);
-									}
+								i++;
+							}
+						} catch (error) {
+							// Reject all queries in the batch
+							for (const resolver of batched.values()) {
+								for (const { reject } of resolver) {
+									reject(error);
 								}
 							}
-						}, 0);
-					})
-			);
+						}
+					}, 0);
+				})
+		);
 
-			return devalue.parse(serialized, app.decoders);
-		});
+		return devalue.parse(serialized, app.decoders);
 	});
 
 	return fn;
 }
 
 /**
- * @template {(arg: { cache_key: string; payload: string }) => Query<any>} Create
- * @template [Arg=any]
+ * @template Input
+ * @template Output
  * @param {string} id
- * @param {Create} create
- * @returns {(arg: Arg) => ReturnType<Create>}
+ * @param {(key: string, payload: string) => Promise<Output>} fn
+ * @returns {(arg: Input) => Query<Output>}
  */
-function create_query_function(id, create) {
+function create_query_function(id, fn) {
 	return (arg) => {
 		const payload = stringify_remote_arg(arg, app.hooks.transport);
 		const cache_key = create_remote_key(id, payload);
@@ -191,10 +187,10 @@ function create_query_function(id, create) {
 				// this prevents the created resource from being associated with its current parent effect,
 				// which is basically just coincidentally whichever effect is active when it's created
 				cleanup = $effect.root(() => {
-					resource = create({ cache_key, payload });
+					resource = new Query(cache_key, () => fn(cache_key, payload));
 				});
 			} else {
-				resource = create({ cache_key, payload });
+				resource = new Query(cache_key, () => fn(cache_key, payload));
 			}
 		}
 
