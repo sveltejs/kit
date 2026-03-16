@@ -14,7 +14,6 @@ import { create_remote_key, stringify_remote_arg, unfriendly_hydratable } from '
  * @template T
  * @typedef {{
  *   count: number;
- *   alive: boolean;
  *   resource: Query<T>;
  *   cleanup: () => void;
  * }} RemoteQueryCacheEntry
@@ -155,57 +154,16 @@ export function query_batch(id) {
  * @template Input
  * @template Output
  * @param {string} id
- * @param {(key: string, payload: string) => Promise<Output>} fn
- * @returns {(arg: Input) => Query<Output>}
+ * @param {(key: string, payload: string) => Promise<Awaited<Output>>} fn
+ * @returns {RemoteQueryFunction<Input, Output>}
  */
 function create_query_function(id, fn) {
-	return (arg) => {
-		const payload = stringify_remote_arg(arg, app.hooks.transport);
-		const key = create_remote_key(id, payload);
-
-		if (is_in_effect()) {
-			let cached = query_map.get(key);
-
-			if (!cached) {
-				const c = (cached = {
-					count: 0,
-					alive: true,
-					resource: /** @type {Query<Output>} */ (/** @type {unknown} */ (null)),
-					cleanup: /** @type {() => void} */ (/** @type {unknown} */ (null))
-				});
-
-				c.cleanup = $effect.root(() => {
-					c.resource = new Query(key, c, () => fn(key, payload));
-				});
-
-				query_map.set(key, cached);
-			}
-
-			cached.count += 1;
-
-			$effect.pre(() => () => {
-				cached.count -= 1;
-
-				void tick().then(() => {
-					if (cached.count === 0) {
-						cached.alive = false;
-						cached.cleanup();
-
-						query_map.delete(key);
-					}
-				});
-			});
-
-			return cached.resource;
-		} else {
-			return new Query(key, null, () => fn(key, payload));
-		}
-	};
+	return (arg) => new QueryProxy(id, arg, fn);
 }
 
 /**
  * @template T
- * @implements {Promise<T>}
+ * @implements {Promise<Awaited<T>>}
  */
 export class Query {
 	/**
@@ -214,12 +172,9 @@ export class Query {
 	 */
 	_key;
 
-	/** @type {RemoteQueryCacheEntry<T> | null} */
-	#cached;
-
 	/** @type {boolean} */
 	#init = false;
-	/** @type {() => Promise<T>} */
+	/** @type {() => Promise<Awaited<T>>} */
 	#fn;
 	#loading = $state(true);
 	/** @type {Array<(value: undefined) => void>} */
@@ -227,39 +182,38 @@ export class Query {
 
 	/** @type {boolean} */
 	#ready = $state(false);
-	/** @type {T | undefined} */
+	/** @type {Awaited<T> | undefined} */
 	#raw = $state.raw();
 	/** @type {Promise<void> | null} */
 	#promise = $state.raw(null);
-	/** @type {Array<(old: T) => T>} */
+	/** @type {Array<(old: Awaited<T>) => Awaited<T>>} */
 	#overrides = $state([]);
 
-	/** @type {T | undefined} */
+	/** @type {Awaited<T> | undefined} */
 	#current = $derived.by(() => {
 		// don't reduce undefined value
 		if (!this.#ready) return undefined;
 
-		return this.#overrides.reduce((v, r) => r(v), /** @type {T} */ (this.#raw));
+		return this.#overrides.reduce((v, r) => r(v), /** @type {Awaited<T>} */ (this.#raw));
 	});
 
 	#error = $state.raw(undefined);
 
-	/** @type {Promise<T>['then']} */
+	/** @type {Promise<Awaited<T>>['then']} */
 	// @ts-expect-error TS doesn't understand that the promise returns something
 	#then = $derived.by(() => {
-		this.#check();
-
 		this.#overrides.length;
-
 		const p = this.#get_promise();
 
 		return (resolve, reject) => {
-			const result = (async () => {
-				await p;
-				// svelte-ignore await_reactivity_loss
-				await tick();
-				return /** @type {T} */ (this.#current);
-			})();
+			const result = /** @type {Promise<Awaited<T>>} */ (
+				(async () => {
+					await p;
+					// svelte-ignore await_reactivity_loss
+					await tick();
+					return /** @type {Awaited<T>} */ (this.#current);
+				})()
+			);
 
 			if (resolve || reject) {
 				return result.then(resolve, reject);
@@ -271,37 +225,16 @@ export class Query {
 
 	/**
 	 * @param {string} key
-	 * @param {RemoteQueryCacheEntry<T> | null} cached
-	 * @param {() => Promise<T>} fn
+	 * @param {() => Promise<Awaited<T>>} fn
 	 */
-	constructor(key, cached, fn) {
+	constructor(key, fn) {
 		this._key = key;
-		this.#cached = cached;
 		this.#fn = fn;
-	}
-
-	/**
-	 * Disallows certain methods/properties if the query was created in a non-reactive context, or is destroyed
-	 */
-	#check() {
-		// TODO iterate on error messages
-		if (!this.#cached) {
-			throw new Error(
-				'This query was not created in a reactive context and is limited to calling `.run`, `.refresh`, and `.set`.'
-			);
-		}
-
-		if (!this.#cached.alive) {
-			throw new Error(
-				'This query instance is no longer active and can no longer be used for reactive state access. ' +
-					'This typically means you created the query in a tracking context and stashed it somewhere outside of a tracking context.'
-			);
-		}
 	}
 
 	#get_promise() {
 		void untrack(() => (this.#promise ??= this.#run()));
-		return /** @type {Promise<T>} */ (this.#promise);
+		return /** @type {Promise<Awaited<T>>} */ (this.#promise);
 	}
 
 	#run() {
@@ -343,14 +276,6 @@ export class Query {
 		return promise;
 	}
 
-	/** @returns {Promise<T>} */
-	run() {
-		if (Object.hasOwn(query_responses, this._key)) {
-			return Promise.resolve(query_responses[this._key]);
-		}
-		return this.#fn();
-	}
-
 	get then() {
 		return this.#then;
 	}
@@ -379,12 +304,10 @@ export class Query {
 	}
 
 	get current() {
-		this.#check();
 		return this.#current;
 	}
 
 	get error() {
-		this.#check();
 		return this.#error;
 	}
 
@@ -392,7 +315,6 @@ export class Query {
 	 * Returns true if the resource is loading or reloading.
 	 */
 	get loading() {
-		this.#check();
 		return this.#loading;
 	}
 
@@ -400,7 +322,6 @@ export class Query {
 	 * Returns true once the resource has been loaded for the first time.
 	 */
 	get ready() {
-		this.#check();
 		return this.#ready;
 	}
 
@@ -408,23 +329,14 @@ export class Query {
 	 * @returns {Promise<void>}
 	 */
 	refresh() {
-		if (!this.#cached) {
-			return query_map.get(this._key)?.resource.refresh() ?? Promise.resolve();
-		}
-
 		delete query_responses[this._key];
 		return (this.#promise = this.#run());
 	}
 
 	/**
-	 * @param {T} value
+	 * @param {Awaited<T>} value
 	 */
 	set(value) {
-		if (!this.#cached) {
-			query_map.get(this._key)?.resource.set(value);
-			return;
-		}
-
 		this.#ready = true;
 		this.#loading = false;
 		this.#error = undefined;
@@ -433,18 +345,10 @@ export class Query {
 	}
 
 	/**
-	 * @param {(old: T) => T} fn
+	 * @param {(old: Awaited<T>) => Awaited<T>} fn
 	 * @returns {{ _key: string, release: () => void }}
 	 */
 	withOverride(fn) {
-		if (!this.#cached) {
-			const cached = query_map.get(this._key);
-
-			if (cached) {
-				return cached.resource.withOverride(fn);
-			}
-		}
-
 		this.#overrides.push(fn);
 
 		return {
@@ -461,5 +365,172 @@ export class Query {
 
 	get [Symbol.toStringTag]() {
 		return 'Query';
+	}
+}
+
+/**
+ * Manages the caching layer between the user and the actual {@link Query} instance.
+ *
+ * @template T
+ * @implements {Promise<Awaited<T>>}
+ */
+class QueryProxy {
+	_key;
+	#payload;
+	#fn;
+	#active = true;
+	#tracking = is_in_effect();
+
+	/**
+	 * @param {string} id
+	 * @param {any} arg
+	 * @param {(key: string, payload: string) => Promise<Awaited<T>>} fn
+	 */
+	constructor(id, arg, fn) {
+		this.#payload = stringify_remote_arg(arg, app.hooks.transport);
+		this._key = create_remote_key(id, this.#payload);
+		this.#fn = fn;
+
+		if (!this.#tracking) {
+			this.#active = false;
+			return;
+		}
+
+		this.#get_or_create_cache_entry();
+
+		$effect.pre(() => () => {
+			const die = this.#release();
+			void tick().then(die);
+		});
+	}
+
+	/** @returns {RemoteQueryCacheEntry<T>} */
+	#get_or_create_cache_entry() {
+		let cached = query_map.get(this._key);
+
+		if (!cached) {
+			const c = (cached = {
+				count: 0,
+				resource: /** @type {Query<T>} */ (/** @type {unknown} */ (null)),
+				cleanup: /** @type {() => void} */ (/** @type {unknown} */ (null))
+			});
+
+			c.cleanup = $effect.root(() => {
+				c.resource = new Query(this._key, () => this.#fn(this._key, this.#payload));
+			});
+
+			query_map.set(this._key, cached);
+		}
+
+		cached.count += 1;
+
+		return cached;
+	}
+
+	#release(deactivate = true) {
+		this.#active &&= !deactivate;
+
+		return () => {
+			const cached = query_map.get(this._key);
+			if (cached?.count === 0) {
+				cached.cleanup();
+				query_map.delete(this._key);
+			}
+		};
+	}
+
+	#get_cached_query() {
+		// TODO iterate on error messages
+		if (!this.#tracking) {
+			throw new Error(
+				'This query was not created in a reactive context and is limited to calling `.run`, `.refresh`, and `.set`.'
+			);
+		}
+
+		if (!this.#active) {
+			throw new Error(
+				'This query instance is no longer active and can no longer be used for reactive state access. ' +
+					'This typically means you created the query in a tracking context and stashed it somewhere outside of a tracking context.'
+			);
+		}
+
+		const cached = query_map.get(this._key);
+
+		if (!cached) {
+			// The only case where `this.#active` can be `true` is when we've added an entry to `query_map`, and the
+			// only way that entry can get removed is if this instance (and all others) have been deactivated.
+			// So if we get here, someone (us, check git blame and point fingers) did `entry.count -= 1` improperly.
+			throw new Error(
+				'No cached query found. This should be impossible. Please file a bug report.'
+			);
+		}
+
+		return cached.resource;
+	}
+
+	#safe_get_cached_query() {
+		return query_map.get(this._key)?.resource;
+	}
+
+	get current() {
+		return this.#get_cached_query().current;
+	}
+
+	get error() {
+		return this.#get_cached_query().error;
+	}
+
+	get loading() {
+		return this.#get_cached_query().loading;
+	}
+
+	get ready() {
+		return this.#get_cached_query().ready;
+	}
+
+	run() {
+		return this.#fn(this._key, this.#payload);
+	}
+
+	refresh() {
+		return this.#safe_get_cached_query()?.refresh() ?? Promise.resolve();
+	}
+
+	/** @type {Query<T>['set']} */
+	set(value) {
+		this.#safe_get_cached_query()?.set(value);
+	}
+
+	/** @type {Query<T>['withOverride']} */
+	withOverride(fn) {
+		const cached = this.#get_or_create_cache_entry();
+		const override = cached.resource.withOverride(fn);
+
+		return {
+			_key: override._key,
+			release: () => {
+				override.release();
+				this.#release(false)();
+			}
+		};
+	}
+
+	/** @type {Query<T>['then']} */
+	then(resolve, reject) {
+		return this.#get_cached_query().then(resolve, reject);
+	}
+
+	/** @type {Query<T>['catch']} */
+	catch(reject) {
+		return this.#get_cached_query().catch(reject);
+	}
+
+	/** @type {Query<T>['finally']} */
+	finally(fn) {
+		return this.#get_cached_query().finally(fn);
+	}
+
+	get [Symbol.toStringTag]() {
+		return 'QueryProxy';
 	}
 }
