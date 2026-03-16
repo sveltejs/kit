@@ -10,24 +10,15 @@ import { with_resolvers } from '../../../utils/promise.js';
 import { tick, untrack } from 'svelte';
 import { create_remote_key, stringify_remote_arg, unfriendly_hydratable } from '../../shared.js';
 
-const query_proxy_options = {
-	tracking_only_properties: new Set([
-		'then',
-		'catch',
-		'finally',
-		'current',
-		'error',
-		'loading',
-		'ready'
-	]),
-	limited_error:
-		// TODO same as below
-		'This query was not created in a reactive context and is limited to calling `.run`, `.refresh`, and `.set`.',
-	deactivated_error:
-		// TODO this error needs work -- ideally it's just a sentence and a link to docs
-		'This query instance is no longer active and can no longer be used for reactive state access. ' +
-		'This typically means you created the query in a tracking context and stashed it somewhere outside of a tracking context.'
-};
+/**
+ * @template T
+ * @typedef {{
+ *   count: number;
+ *   alive: boolean;
+ *   resource: Query<T>;
+ *   cleanup: () => void;
+ * }} RemoteQueryCacheEntry
+ */
 
 /**
  * @returns {boolean} Returns `true` if we are in an effect
@@ -170,105 +161,45 @@ export function query_batch(id) {
 function create_query_function(id, fn) {
 	return (arg) => {
 		const payload = stringify_remote_arg(arg, app.hooks.transport);
-		const cache_key = create_remote_key(id, payload);
+		const key = create_remote_key(id, payload);
 
-		const tracking = is_in_effect();
-		let active = true;
+		if (is_in_effect()) {
+			let cached = query_map.get(key);
 
-		let cache_entry = query_map.get(cache_key);
-		let resource = cache_entry?.resource;
-		let cleanup = cache_entry?.cleanup ?? (() => {});
-		if (!resource) {
-			if (tracking) {
-				// this prevents the created resource from being associated with its current parent effect,
-				// which is basically just coincidentally whichever effect is active when it's created
-				cleanup = $effect.root(() => {
-					resource = new Query(cache_key, () => fn(cache_key, payload));
+			if (!cached) {
+				const c = (cached = {
+					count: 0,
+					alive: true,
+					resource: /** @type {Query<Output>} */ (/** @type {unknown} */ (null)),
+					cleanup: /** @type {() => void} */ (/** @type {unknown} */ (null))
 				});
-			} else {
-				resource = new Query(cache_key, () => fn(cache_key, payload));
-			}
-		}
 
-		const get_resource = () => {
-			const cache_entry = query_map.get(cache_key);
+				c.cleanup = $effect.root(() => {
+					c.resource = new Query(key, c, () => fn(key, payload));
+				});
 
-			return {
-				cached: !!cache_entry,
-				resource: cache_entry?.resource ?? resource
-			};
-		};
-
-		const wrapper = new Proxy(resource, {
-			get(_, property) {
-				const { cached, resource } = get_resource();
-				const tracking_only = query_proxy_options.tracking_only_properties.has(
-					/** @type {string} */ (property)
-				);
-
-				if (tracking_only) {
-					if (!active) {
-						throw new Error(query_proxy_options.deactivated_error);
-					}
-
-					if (!tracking) {
-						throw new Error(query_proxy_options.limited_error);
-					}
-				}
-
-				// TODO: calling `withOverride` while `cached` is false needs to create the resource
-				// and cache it for the duration of the override. This can be a followup as it's not any buggier
-				// than it is today
-				if (property === 'refresh' || property === 'set') {
-					if (!cached) {
-						return {
-							set: () => {},
-							refresh: () => Promise.resolve()
-						}[property];
-					}
-
-					return resource[property]?.bind(resource);
-				}
-
-				const value = resource[property];
-
-				if (typeof value === 'function') {
-					return value.bind(resource);
-				}
-
-				return value;
-			}
-		});
-
-		if (tracking) {
-			if (!cache_entry) {
-				cache_entry = { count: 0, resource, cleanup };
-				// we need to set this synchronously to avoid possibly creating
-				// multiple resources for subsequent synchronous calls with the same payload
-				query_map.set(cache_key, cache_entry);
+				query_map.set(key, cached);
 			}
 
-			cache_entry.count += 1;
+			cached.count += 1;
 
 			$effect.pre(() => () => {
-				active = false;
+				cached.count -= 1;
 
-				const cache_entry = query_map.get(cache_key);
-				if (!cache_entry) return;
-				cache_entry.count -= 1;
 				void tick().then(() => {
-					const cache_entry = query_map.get(cache_key);
-					if (cache_entry?.count === 0) {
-						cache_entry.cleanup();
-						query_map.delete(cache_key);
+					if (cached.count === 0) {
+						cached.alive = false;
+						cached.cleanup();
+
+						query_map.delete(key);
 					}
 				});
 			});
 
-			return wrapper;
+			return cached.resource;
+		} else {
+			return new Query(key, null, () => fn(key, payload));
 		}
-
-		return wrapper;
 	};
 }
 
@@ -282,6 +213,9 @@ export class Query {
 	 * @type {string}
 	 */
 	_key;
+
+	/** @type {RemoteQueryCacheEntry<T> | null} */
+	#cached;
 
 	/** @type {boolean} */
 	#init = false;
@@ -313,6 +247,8 @@ export class Query {
 	/** @type {Promise<T>['then']} */
 	// @ts-expect-error TS doesn't understand that the promise returns something
 	#then = $derived.by(() => {
+		this.#check();
+
 		this.#overrides.length;
 
 		const p = this.#get_promise();
@@ -335,11 +271,32 @@ export class Query {
 
 	/**
 	 * @param {string} key
+	 * @param {RemoteQueryCacheEntry<T> | null} cached
 	 * @param {() => Promise<T>} fn
 	 */
-	constructor(key, fn) {
+	constructor(key, cached, fn) {
 		this._key = key;
+		this.#cached = cached;
 		this.#fn = fn;
+	}
+
+	/**
+	 * Disallows certain methods/properties if the query was created in a non-reactive context, or is destroyed
+	 */
+	#check() {
+		// TODO iterate on error messages
+		if (!this.#cached) {
+			throw new Error(
+				'This query was not created in a reactive context and is limited to calling `.run`, `.refresh`, and `.set`.'
+			);
+		}
+
+		if (!this.#cached.alive) {
+			throw new Error(
+				'This query instance is no longer active and can no longer be used for reactive state access. ' +
+					'This typically means you created the query in a tracking context and stashed it somewhere outside of a tracking context.'
+			);
+		}
 	}
 
 	#get_promise() {
@@ -422,10 +379,12 @@ export class Query {
 	}
 
 	get current() {
+		this.#check();
 		return this.#current;
 	}
 
 	get error() {
+		this.#check();
 		return this.#error;
 	}
 
@@ -433,6 +392,7 @@ export class Query {
 	 * Returns true if the resource is loading or reloading.
 	 */
 	get loading() {
+		this.#check();
 		return this.#loading;
 	}
 
@@ -440,6 +400,7 @@ export class Query {
 	 * Returns true once the resource has been loaded for the first time.
 	 */
 	get ready() {
+		this.#check();
 		return this.#ready;
 	}
 
@@ -447,6 +408,10 @@ export class Query {
 	 * @returns {Promise<void>}
 	 */
 	refresh() {
+		if (!this.#cached) {
+			return query_map.get(this._key)?.resource.refresh() ?? Promise.resolve();
+		}
+
 		delete query_responses[this._key];
 		return (this.#promise = this.#run());
 	}
@@ -455,6 +420,11 @@ export class Query {
 	 * @param {T} value
 	 */
 	set(value) {
+		if (!this.#cached) {
+			query_map.get(this._key)?.resource.set(value);
+			return;
+		}
+
 		this.#ready = true;
 		this.#loading = false;
 		this.#error = undefined;
@@ -464,8 +434,17 @@ export class Query {
 
 	/**
 	 * @param {(old: T) => T} fn
+	 * @returns {{ _key: string, release: () => void }}
 	 */
 	withOverride(fn) {
+		if (!this.#cached) {
+			const cached = query_map.get(this._key);
+
+			if (cached) {
+				return cached.resource.withOverride(fn);
+			}
+		}
+
 		this.#overrides.push(fn);
 
 		return {

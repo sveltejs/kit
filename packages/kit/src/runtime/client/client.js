@@ -1,4 +1,4 @@
-/** @import { Query } from './remote-functions/query.svelte.js' */
+/** @import { Query, RemoteQueryCacheEntry } from './remote-functions/query.svelte.js' */
 import { BROWSER, DEV } from 'esm-env';
 import * as svelte from 'svelte';
 import { HttpError, Redirect, SvelteKitError } from '@sveltejs/kit/internal';
@@ -301,7 +301,7 @@ const preload_tokens = new Set();
 export let pending_invalidate;
 
 /**
- * @type {Map<string, { count: number, resource: Query<any>, cleanup: () => void }>}
+ * @type {Map<string, RemoteQueryCacheEntry<any>>}
  * A map of id -> query info with all queries that currently exist in the app.
  */
 export const query_map = new Map();
