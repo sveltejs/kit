@@ -389,10 +389,10 @@ class QueryProxy {
 			return;
 		}
 
-		this.#get_or_create_cache_entry();
+		const entry = this.#get_or_create_cache_entry();
 
 		$effect.pre(() => () => {
-			const die = this.#release();
+			const die = this.#release(entry);
 			void tick().then(die);
 		});
 	}
@@ -420,10 +420,18 @@ class QueryProxy {
 		return cached;
 	}
 
-	#release(deactivate = true) {
+	/**
+	 * @param {RemoteQueryCacheEntry<T>} entry
+	 * @param {boolean} [deactivate]
+	 * @returns
+	 */
+	#release(entry, deactivate = true) {
 		this.#active &&= !deactivate;
+		entry.count -= 1;
 
 		return () => {
+			// have to get this again in case it was cleaned up by someone else, then re-added and now
+			// we're cleaning it up. this seems extremely unlikely but it literally can't hurt
 			const cached = query_map.get(this._key);
 			if (cached?.count === 0) {
 				cached.cleanup();
@@ -482,6 +490,9 @@ class QueryProxy {
 	}
 
 	run() {
+		if (Object.hasOwn(query_responses, this._key)) {
+			return Promise.resolve(query_responses[this._key]);
+		}
 		return this.#fn(this._key, this.#payload);
 	}
 
@@ -496,14 +507,14 @@ class QueryProxy {
 
 	/** @type {Query<T>['withOverride']} */
 	withOverride(fn) {
-		const cached = this.#get_or_create_cache_entry();
-		const override = cached.resource.withOverride(fn);
+		const entry = this.#get_or_create_cache_entry();
+		const override = entry.resource.withOverride(fn);
 
 		return {
 			_key: override._key,
 			release: () => {
 				override.release();
-				this.#release(false)();
+				this.#release(entry, false)();
 			}
 		};
 	}
