@@ -90,7 +90,7 @@ export function prerender(id) {
 							return devalue.parse(cached_result, app.decoders);
 						}
 					} catch {
-						// Nothing we can do here
+						void prerender_cache.delete(url);
 					}
 				}
 
