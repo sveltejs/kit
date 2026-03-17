@@ -1,0 +1,16 @@
+<script>
+	import { get_route_info } from './data.remote.ts';
+
+	let result = $state(null);
+
+	async function handleClick() {
+		result = await get_route_info();
+	}
+</script>
+
+<button onclick={handleClick}>get route info</button>
+
+{#if result}
+	<p data-id="route">route: {result.routeId}</p>
+	<p data-id="pathname">pathname: {result.pathname}</p>
+{/if}

@@ -62,6 +62,21 @@ test.describe('remote functions', () => {
 		await expect(page.locator('[data-id="pathname"]')).toHaveText('pathname: /remote/event');
 	});
 
+	test('commands on rerouted pages resolve the correct route.id', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/rerouted/original');
+		await page.locator('button').click();
+
+		await expect(page.locator('[data-id="route"]')).toHaveText('route: /remote/rerouted/actual');
+		await expect(page.locator('[data-id="pathname"]')).toHaveText(
+			'pathname: /remote/rerouted/original'
+		);
+	});
+
 	test('form works', async ({ page, javaScriptEnabled }) => {
 		await page.goto(`/remote/form/basic-${javaScriptEnabled}`);
 
