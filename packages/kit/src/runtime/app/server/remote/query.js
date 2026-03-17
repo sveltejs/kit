@@ -164,8 +164,8 @@ function batch(validate_or_fn, maybe_fn) {
 		}
 	};
 
-	/** @type {{ args: any[], resolvers: Array<{resolve: (value: any) => void, reject: (error: any) => void}> }} */
-	let batching = { args: [], resolvers: [] };
+	/** @type {Map<string, { arg: any, resolvers: Array<{resolve: (value: any) => void, reject: (error: any) => void}> }>} */
+	let batching = new Map();
 
 	/** @type {RemoteQueryFunction<Input, Output> & { __: RemoteInfo }} */
 	const wrapper = (arg) => {
@@ -181,37 +181,56 @@ function batch(validate_or_fn, maybe_fn) {
 			// Collect all the calls to the same query in the same macrotask,
 			// then execute them as one backend request.
 			return new Promise((resolve, reject) => {
-				// We don't need to deduplicate args here, because get_response already caches/reuses identical calls
-				batching.args.push(arg);
-				batching.resolvers.push({ resolve, reject });
+				const key = stringify_remote_arg(arg, state.transport);
+				const entry = batching.get(key);
 
-				if (batching.args.length > 1) return;
+				if (entry) {
+					entry.resolvers.push({ resolve, reject });
+					return;
+				}
+
+				batching.set(key, {
+					arg,
+					resolvers: [{ resolve, reject }]
+				});
+
+				if (batching.size > 1) return;
 
 				setTimeout(async () => {
 					const batched = batching;
-					batching = { args: [], resolvers: [] };
+					batching = new Map();
+					const entries = Array.from(batched.values());
+					const args = entries.map((entry) => entry.arg);
 
 					try {
 						return await run_remote_function(
 							event,
 							state,
 							false,
-							async () => Promise.all(batched.args.map(validate)),
+							async () => Promise.all(args.map(validate)),
 							async (input) => {
 								const get_result = await fn(input);
 
-								for (let i = 0; i < batched.resolvers.length; i++) {
+								for (let i = 0; i < entries.length; i++) {
 									try {
-										batched.resolvers[i].resolve(get_result(input[i], i));
+										const result = get_result(input[i], i);
+
+										for (const resolver of entries[i].resolvers) {
+											resolver.resolve(result);
+										}
 									} catch (error) {
-										batched.resolvers[i].reject(error);
+										for (const resolver of entries[i].resolvers) {
+											resolver.reject(error);
+										}
 									}
 								}
 							}
 						);
 					} catch (error) {
-						for (const resolver of batched.resolvers) {
-							resolver.reject(error);
+						for (const entry of batched.values()) {
+							for (const resolver of entry.resolvers) {
+								resolver.reject(error);
+							}
 						}
 					}
 				}, 0);
