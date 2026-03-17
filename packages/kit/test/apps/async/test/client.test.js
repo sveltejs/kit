@@ -372,6 +372,7 @@ test.describe('remote function mutations', () => {
 
 		await page.click('#increment');
 		await expect(page.locator('#count')).toHaveText('1');
+		await expect(page.locator('#first-value')).toHaveText('1');
 
 		await page.click('#drop');
 

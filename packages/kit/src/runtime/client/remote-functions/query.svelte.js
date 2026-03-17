@@ -579,12 +579,30 @@ export class LiveQuery {
 	#loading = $state(true);
 	#ready = $state(false);
 	#connected = $state(false);
+	#version = $state(0);
 	/** @type {T | undefined} */
 	#raw = $state.raw();
 	/** @type {any} */
 	#error = $state.raw(undefined);
 	/** @type {Promise<T>} */
 	#promise;
+
+	/** @type {Promise<T>['then']} */
+	// @ts-expect-error TS doesn't understand that the promise returns something
+	#then = $derived.by(() => {
+		this.#version;
+		const p = this.#promise;
+
+		return (resolve, reject) => {
+			const result = p.then(tick).then(() => /** @type {T} */ (this.#raw));
+
+			if (resolve || reject) {
+				return result.then(resolve, reject);
+			}
+
+			return result;
+		};
+	});
 	/** @type {(value: T | PromiseLike<T>) => void} */
 	#resolve_first;
 	/** @type {(reason?: any) => void} */
@@ -632,6 +650,7 @@ export class LiveQuery {
 		this.#loading = false;
 		this.#error = undefined;
 		this.#raw = value;
+		this.#version += 1;
 	}
 
 	#disconnect_current() {
@@ -750,15 +769,30 @@ export class LiveQuery {
 	}
 
 	get then() {
-		return this.#promise.then.bind(this.#promise);
+		return this.#then;
 	}
 
 	get catch() {
-		return this.#promise.catch.bind(this.#promise);
+		this.#then;
+		return (/** @type {any} */ reject) => {
+			return this.#then(undefined, reject);
+		};
 	}
 
 	get finally() {
-		return this.#promise.finally.bind(this.#promise);
+		this.#then;
+		return (/** @type {any} */ fn) => {
+			return this.#then(
+				(value) => {
+					fn();
+					return value;
+				},
+				(error) => {
+					fn();
+					throw error;
+				}
+			);
+		};
 	}
 
 	get current() {
