@@ -145,7 +145,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 
 		if (info.type === 'query_live') {
 			const live_info =
-				/** @type {RemoteInfo & { type: 'query_live'; run: (event: RequestEvent, state: RequestState, arg: any) => Promise<AsyncIterator<any>> }} */ (
+				/** @type {RemoteInfo & { type: 'query_live'; run: (event: RequestEvent, state: RequestState, arg: any) => Promise<{ iterator: AsyncIterator<any>; cancel: () => void }> }} */ (
 					info
 				);
 
@@ -161,10 +161,8 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 				new URL(event.request.url).searchParams.get('payload')
 			);
 
-			const iterator = to_async_iterator(
-				await live_info.run(event, state, parse_remote_arg(payload, transport)),
-				info.name
-			);
+			const live = await live_info.run(event, state, parse_remote_arg(payload, transport));
+			const iterator = live.iterator;
 
 			const encoder = new TextEncoder();
 			let closed = false;
@@ -172,6 +170,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 			const close = async () => {
 				if (closed) return;
 				closed = true;
+				live.cancel();
 				await iterator.return?.();
 			};
 
@@ -340,26 +339,6 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 			transport
 		);
 	}
-}
-
-/**
- * @template T
- * @param {AsyncIterator<T> | AsyncIterable<T>} source
- * @param {string} name
- * @returns {AsyncIterator<T>}
- */
-function to_async_iterator(source, name) {
-	const maybe = /** @type {any} */ (source);
-
-	if (maybe && typeof maybe[Symbol.asyncIterator] === 'function') {
-		return maybe[Symbol.asyncIterator]();
-	}
-
-	if (maybe && typeof maybe.next === 'function') {
-		return maybe;
-	}
-
-	throw new Error(`query.live '${name}' must return an AsyncIterator or AsyncIterable`);
 }
 
 /** @type {typeof handle_remote_form_post_internal} */

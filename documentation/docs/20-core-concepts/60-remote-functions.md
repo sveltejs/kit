@@ -242,6 +242,19 @@ export const getCount = query.live(async function* () {
 });
 ```
 
+The callback receives a context with an `AbortSignal` so that long-running waits can stop immediately when the client disconnects:
+
+```js
+export const getCount = query.live(async function* (_, { signal }) {
+	yield count;
+
+	while (true) {
+		await wait_for_change({ signal });
+		yield count;
+	}
+});
+```
+
 On the server, `await getCount()` reads the first yielded value and then closes the iterator. This allows SSR to serialize the initial value and reuse it during hydration.
 
 On the client, the query stays connected while it's actively used in a component. When there are no active uses left, the stream disconnects and server-side iteration is stopped.

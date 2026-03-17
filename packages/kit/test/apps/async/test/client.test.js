@@ -392,6 +392,28 @@ test.describe('remote function mutations', () => {
 		await expect(page.locator('#detached')).toHaveText('detached');
 	});
 
+	test('query.live cleans up server iterator on reload', async ({ page }) => {
+		await page.goto('/remote/live');
+		await page.click('#stats');
+		await expect(page.locator('#stats-value')).not.toHaveText('pending');
+		const before_cleanup = JSON.parse(
+			(await page.locator('#stats-value').textContent()) ?? '{}'
+		).cleanup_count;
+
+		await page.reload();
+		await expect(page.locator('#count')).toBeVisible();
+
+		await expect
+			.poll(async () => {
+				await page.click('#stats');
+				const value = (await page.locator('#stats-value').textContent()) ?? '{}';
+				if (value === 'pending') return before_cleanup;
+				const stats = JSON.parse(value);
+				return stats.cleanup_count;
+			})
+			.toBeGreaterThan(before_cleanup);
+	});
+
 	test.describe('query runtime guardrails', () => {
 		test('query created outside tracking context can run but cannot expose reactive state', async ({
 			page

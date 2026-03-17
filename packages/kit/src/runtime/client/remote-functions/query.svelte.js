@@ -740,11 +740,22 @@ export class LiveQuery {
 		void this.#connect_stream();
 	};
 
+	#on_offline = () => {
+		this.#disconnect_current();
+	};
+
+	#on_pagehide = () => {
+		this.#disconnect_current();
+	};
+
 	connect() {
 		this.#active = true;
 
 		if (typeof window !== 'undefined') {
 			window.addEventListener('online', this.#on_online);
+			window.addEventListener('offline', this.#on_offline);
+			window.addEventListener('pagehide', this.#on_pagehide);
+			window.addEventListener('beforeunload', this.#on_pagehide);
 		}
 
 		this.#clear_retry();
@@ -760,6 +771,9 @@ export class LiveQuery {
 
 		if (typeof window !== 'undefined') {
 			window.removeEventListener('online', this.#on_online);
+			window.removeEventListener('offline', this.#on_offline);
+			window.removeEventListener('pagehide', this.#on_pagehide);
+			window.removeEventListener('beforeunload', this.#on_pagehide);
 		}
 	}
 

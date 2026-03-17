@@ -2172,6 +2172,14 @@ declare module '@sveltejs/kit' {
 		reconnect(): void;
 	};
 
+	export interface RemoteLiveQueryContext {
+		/**
+		 * Abort signal for the current live connection.
+		 * Use this to stop pending work promptly when the client disconnects.
+		 */
+		readonly signal: AbortSignal;
+	}
+
 	export interface RemoteQueryOverride {
 		_key: string;
 		release(): void;
@@ -3342,6 +3350,7 @@ declare module '$app/server' {
 		RemoteForm,
 		RemoteFormInput,
 		InvalidField,
+		RemoteLiveQueryContext,
 		RemotePrerenderFunction,
 		RemoteQueryFunction,
 		RemoteLiveQueryFunction
@@ -3545,7 +3554,10 @@ declare module '$app/server' {
 		 * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query-live) for full documentation.
 		 */
 		function live<Output>(
-			fn: () => MaybePromise<AsyncIterator<Output> | AsyncIterable<Output>>
+			fn: (
+				arg: void,
+				context: RemoteLiveQueryContext
+			) => MaybePromise<AsyncIterator<Output> | AsyncIterable<Output>>
 		): RemoteLiveQueryFunction<void, Output>;
 		/**
 		 * Creates a live query function that streams updates whenever data changes.
@@ -3554,7 +3566,10 @@ declare module '$app/server' {
 		 */
 		function live<Input, Output>(
 			validate: 'unchecked',
-			fn: (arg: Input) => MaybePromise<AsyncIterator<Output> | AsyncIterable<Output>>
+			fn: (
+				arg: Input,
+				context: RemoteLiveQueryContext
+			) => MaybePromise<AsyncIterator<Output> | AsyncIterable<Output>>
 		): RemoteLiveQueryFunction<Input, Output>;
 		/**
 		 * Creates a live query function that streams updates whenever data changes.
@@ -3564,7 +3579,8 @@ declare module '$app/server' {
 		function live<Schema extends StandardSchemaV1, Output>(
 			schema: Schema,
 			fn: (
-				arg: StandardSchemaV1.InferOutput<Schema>
+				arg: StandardSchemaV1.InferOutput<Schema>,
+				context: RemoteLiveQueryContext
 			) => MaybePromise<AsyncIterator<Output> | AsyncIterable<Output>>
 		): RemoteLiveQueryFunction<StandardSchemaV1.InferInput<Schema>, Output>;
 	}

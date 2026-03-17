@@ -16,14 +16,36 @@ function notify() {
 	listeners.clear();
 }
 
-export const get_count = query.live(async function* () {
+/** @param {AbortSignal} signal */
+function wait_for_change(signal) {
+	return new Promise((resolve) => {
+		const on_change = () => {
+			signal.removeEventListener('abort', on_abort);
+			resolve('changed');
+		};
+
+		const on_abort = () => {
+			listeners.delete(on_change);
+			resolve('aborted');
+		};
+
+		listeners.add(on_change);
+		signal.addEventListener('abort', on_abort, { once: true });
+	});
+}
+
+export const get_count = query.live(async function* (_, { signal }) {
 	active_connections += 1;
 
 	try {
 		yield count;
 
 		while (true) {
-			await new Promise((resolve) => listeners.add(resolve));
+			const status = await wait_for_change(signal);
+
+			if (status === 'aborted') {
+				return;
+			}
 
 			if (drop_next) {
 				drop_next = false;
