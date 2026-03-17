@@ -136,7 +136,7 @@ export function form(validate_or_fn, maybe_fn) {
 						data = validated.value;
 					}
 
-					state.refreshes ??= {};
+					state.remote.refreshes ??= {};
 
 					const issue = create_issues();
 
@@ -248,14 +248,14 @@ export function form(validate_or_fn, maybe_fn) {
 				value: (key) => {
 					const { state } = get_request_store();
 					const cache_key = __.id + '|' + JSON.stringify(key);
-					let instance = (state.form_instances ??= new Map()).get(cache_key);
+					let instance = (state.remote.forms ??= new Map()).get(cache_key);
 
 					if (!instance) {
 						instance = create_instance(key);
 						instance.__.id = `${__.id}/${encodeURIComponent(JSON.stringify(key))}`;
 						instance.__.name = __.name;
 
-						state.form_instances.set(cache_key, instance);
+						state.remote.forms.set(cache_key, instance);
 					}
 
 					return instance;

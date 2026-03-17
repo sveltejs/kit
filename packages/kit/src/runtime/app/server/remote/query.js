@@ -290,7 +290,7 @@ Object.defineProperty(query, 'batch', { value: batch, enumerable: true });
  */
 function get_refresh_context(__, action, arg) {
 	const { state } = get_request_store();
-	const { refreshes } = state;
+	const { refreshes } = state.remote;
 
 	if (!refreshes) {
 		const name = __.type === 'query_batch' ? `query.batch '${__.name}'` : `query '${__.name}'`;

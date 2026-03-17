@@ -72,7 +72,7 @@ export function command(validate_or_fn, maybe_fn) {
 			);
 		}
 
-		state.refreshes ??= {};
+		state.remote.refreshes ??= {};
 
 		const promise = Promise.resolve(
 			run_remote_function(event, state, true, () => validate(arg), fn)

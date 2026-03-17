@@ -503,19 +503,19 @@ export async function render_response({
 			args.push(`{\n${indent}\t${hydrate.join(`,\n${indent}\t`)}\n${indent}}`);
 		}
 
-		const { remote_data: remote_cache } = event_state;
+		const { remote } = event_state;
 
 		let serialized_query_data = '';
 		let serialized_prerender_data = '';
 
-		if (remote_cache) {
+		if (remote.data) {
 			/** @type {Record<string, any>} */
 			const query = {};
 
 			/** @type {Record<string, any>} */
 			const prerender = {};
 
-			for (const [info, cache] of remote_cache) {
+			for (const [info, cache] of remote.data) {
 				// remote functions without an `id` aren't exported, and thus
 				// cannot be called from the client
 				if (!info.id) continue;
@@ -529,7 +529,7 @@ export async function render_response({
 
 					const store = info.type === 'prerender' ? prerender : query;
 
-					if (event_state.refreshes?.[remote_key] !== undefined) {
+					if (event_state.remote.refreshes?.[remote_key] !== undefined) {
 						// This entry was refreshed/set by a command or form action.
 						// Always await it so the mutation result is serialized.
 						store[remote_key] = await entry.data;

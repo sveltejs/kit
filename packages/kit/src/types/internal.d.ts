@@ -627,13 +627,15 @@ export interface RequestState {
 	tracing: {
 		record_span: RecordSpan;
 	};
+	remote: {
+		data: null | Map<RemoteInfo, Record<string, { serialize: boolean; data: MaybePromise<any> }>>;
+		forms: null | Map<any, any>;
+		refreshes: null | Record<string, Promise<any>>;
+	};
 	is_in_remote_function: boolean;
-	is_in_render?: boolean;
-	is_in_universal_load?: boolean;
-	form_instances?: Map<any, any>;
-	remote_data?: Map<RemoteInfo, Record<string, { serialize: boolean; data: MaybePromise<any> }>>;
-	refreshes?: Record<string, Promise<any>>;
-	allows_commands?: boolean;
+	is_in_render: boolean;
+	is_in_universal_load: boolean;
+	allows_commands: boolean;
 }
 
 export interface RequestStore {
