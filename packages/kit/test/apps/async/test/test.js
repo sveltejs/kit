@@ -632,6 +632,14 @@ test.describe('remote functions', () => {
 			});
 		}
 	});
+
+	test('awaiting multiple queries inside $derived does not fail mutation validation', async ({
+		page
+	}) => {
+		await page.goto('/remote/query-derived-awaits');
+
+		await expect(page.locator('#result')).toHaveText('3');
+	});
 });
 
 test.describe('server error boundaries', () => {
