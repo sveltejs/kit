@@ -222,7 +222,7 @@ export async function render_response({
 				};
 			}
 
-			const state = { ...event_state, allows_commands: false, is_in_render: true };
+			const state = { ...event_state, is_in_render: true };
 
 			rendered = await with_request_store({ event, state }, async () => {
 				// use relative paths during rendering, so that the resulting HTML is as

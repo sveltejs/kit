@@ -635,7 +635,6 @@ export interface RequestState {
 	readonly is_in_remote_function: boolean;
 	readonly is_in_render: boolean;
 	readonly is_in_universal_load: boolean;
-	readonly allows_commands: boolean;
 }
 
 export interface RequestStore {
