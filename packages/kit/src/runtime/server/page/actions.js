@@ -266,9 +266,8 @@ async function call_action(event, event_state, actions) {
 		},
 		fn: async (current) => {
 			const traced_event = merge_tracing(event, current);
-			const child_state = { ...event_state, allows_commands: true };
 
-			const result = await with_request_store({ event: traced_event, state: child_state }, () =>
+			const result = await with_request_store({ event: traced_event, state: event_state }, () =>
 				action(traced_event)
 			);
 

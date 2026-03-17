@@ -158,7 +158,7 @@ export async function internal_respond(request, options, manifest, state) {
 		is_in_remote_function: false,
 		is_in_render: false,
 		is_in_universal_load: false,
-		allows_commands: false
+		allows_commands: MUTATIVE_METHODS.includes(request.method)
 	};
 
 	/** @type {import('@sveltejs/kit').RequestEvent} */
@@ -429,12 +429,7 @@ export async function internal_respond(request, options, manifest, state) {
 					}
 				};
 
-				const child_state = {
-					...event_state,
-					allows_commands: MUTATIVE_METHODS.includes(request.method)
-				};
-
-				return await with_request_store({ event: traced_event, state: child_state }, () =>
+				return await with_request_store({ event: traced_event, state: event_state }, () =>
 					options.hooks.handle({
 						event: traced_event,
 						resolve: (event, opts) => {
