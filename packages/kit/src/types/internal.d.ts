@@ -571,7 +571,10 @@ export type BinaryFormMeta = {
 
 export type RemoteInfo =
 	| {
-			type: 'query' | 'command';
+			/**
+			 * Corresponds to the name of the client-side exports (that's why we use underscores and not dots)
+			 */
+			type: 'query' | 'query_stream' | 'command';
 			id: string;
 			name: string;
 	  }
