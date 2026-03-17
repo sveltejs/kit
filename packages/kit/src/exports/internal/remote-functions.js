@@ -1,7 +1,7 @@
 /** @import { RemoteInfo } from 'types' */
 
 /** @type {RemoteInfo['type'][]} */
-const types = ['command', 'form', 'prerender', 'query', 'query_batch'];
+const types = ['command', 'form', 'prerender', 'query', 'query_batch', 'query_live'];
 
 /**
  * @param {Record<string, any>} module

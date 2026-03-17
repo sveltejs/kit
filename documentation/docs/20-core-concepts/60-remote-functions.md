@@ -33,7 +33,7 @@ export default config;
 
 ## Overview
 
-Remote functions are exported from a `.remote.js` or `.remote.ts` file, and come in four flavours: `query`, `form`, `command` and `prerender`. On the client, the exported functions are transformed to `fetch` wrappers that invoke their counterparts on the server via a generated HTTP endpoint. Remote files can be placed anywhere in your `src` directory (except inside the `src/lib/server` directory), and third party libraries can provide them, too.
+Remote functions are exported from a `.remote.js` or `.remote.ts` file, and come in five flavours: `query`, `query.live`, `form`, `command` and `prerender`. On the client, the exported functions are transformed to `fetch` wrappers that invoke their counterparts on the server via a generated HTTP endpoint. Remote files can be placed anywhere in your `src` directory (except inside the `src/lib/server` directory), and third party libraries can provide them, too.
 
 ## query
 
@@ -224,6 +224,45 @@ export const getWeather = query.batch(v.string(), async (cityIds) => {
 	</button>
 {/if}
 ```
+
+## query.live
+
+`query.live` is for streaming updates from the server. It works like `query`, including argument validation, but the callback returns an `AsyncIterator` (typically an async generator):
+
+```js
+import { query } from '$app/server';
+
+export const getCount = query.live(async function* () {
+	yield 0;
+
+	while (true) {
+		await wait_for_count_change();
+		yield get_current_count();
+	}
+});
+```
+
+On the server, `await getCount()` reads the first yielded value and then closes the iterator. This allows SSR to serialize the initial value and reuse it during hydration.
+
+On the client, the query stays connected while it's actively used in a component. When there are no active uses left, the stream disconnects and server-side iteration is stopped.
+
+Live queries expose a `connected` property and `reconnect()` method:
+
+```svelte
+<script>
+	import { getCount } from './counter.remote.js';
+
+	const count = getCount();
+</script>
+
+<p>{count.current}</p>
+<p>connected: {String(count.connected)}</p>
+<button onclick={() => count.reconnect()}>Reconnect</button>
+```
+
+Unlike `query`, live queries do not have a `refresh()` method.
+
+As with `query` and `query.batch`, call `.run()` outside render when you need imperative access. For live queries, `run()` returns a `Promise<AsyncIterator<T>>`.
 
 ## form
 

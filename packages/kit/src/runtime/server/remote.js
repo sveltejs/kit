@@ -143,6 +143,118 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 			);
 		}
 
+		if (info.type === 'query_live') {
+			const live_info =
+				/** @type {RemoteInfo & { type: 'query_live'; run: (event: RequestEvent, state: RequestState, arg: any) => Promise<AsyncIterator<any>> }} */ (
+					info
+				);
+
+			if (event.request.method !== 'GET') {
+				throw new SvelteKitError(
+					405,
+					'Method Not Allowed',
+					`\`query.live\` functions must be invoked via GET request, not ${event.request.method}`
+				);
+			}
+
+			const payload = /** @type {string} */ (
+				new URL(event.request.url).searchParams.get('payload')
+			);
+
+			const iterator = to_async_iterator(
+				await live_info.run(event, state, parse_remote_arg(payload, transport)),
+				info.name
+			);
+
+			const encoder = new TextEncoder();
+			let closed = false;
+
+			const close = async () => {
+				if (closed) return;
+				closed = true;
+				await iterator.return?.();
+			};
+
+			event.request.signal.addEventListener(
+				'abort',
+				() => {
+					void close();
+				},
+				{ once: true }
+			);
+
+			return new Response(
+				new ReadableStream({
+					async pull(controller) {
+						if (event.request.signal.aborted) {
+							await close();
+							controller.close();
+							return;
+						}
+
+						try {
+							const { value, done } = await iterator.next();
+
+							if (done) {
+								await close();
+								controller.close();
+								return;
+							}
+
+							controller.enqueue(
+								encoder.encode(
+									JSON.stringify({
+										type: 'result',
+										result: stringify(value, transport)
+									}) + '\n'
+								)
+							);
+						} catch (error) {
+							if (!event.request.signal.aborted) {
+								if (error instanceof Redirect) {
+									controller.enqueue(
+										encoder.encode(
+											JSON.stringify({
+												type: 'redirect',
+												location: error.location
+											}) + '\n'
+										)
+									);
+								} else {
+									const status =
+										error instanceof HttpError || error instanceof SvelteKitError
+											? error.status
+											: 500;
+
+									controller.enqueue(
+										encoder.encode(
+											JSON.stringify({
+												type: 'error',
+												error: await handle_error_and_jsonify(event, state, options, error),
+												status
+											}) + '\n'
+										)
+									);
+								}
+							}
+
+							await close();
+							controller.close();
+						}
+					},
+					async cancel() {
+						await close();
+					}
+				}),
+				{
+					headers: {
+						'cache-control': 'private, no-store',
+						'content-type': 'application/x-ndjson'
+					}
+				}
+			);
+		}
+
 		const payload =
 			info.type === 'prerender'
 				? additional_args
@@ -184,7 +296,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 			{
 				// By setting a non-200 during prerendering we fail the prerender process (unless handleHttpError handles it).
 				// Errors at runtime will be passed to the client and are handled there
-				status: state.prerendering ? status : undefined,
+				status: state.prerendering || info.type === 'query_live' ? status : undefined,
 				headers: {
 					'cache-control': 'private, no-store'
 				}
@@ -228,6 +340,26 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 			transport
 		);
 	}
+}
+
+/**
+ * @template T
+ * @param {AsyncIterator<T> | AsyncIterable<T>} source
+ * @param {string} name
+ * @returns {AsyncIterator<T>}
+ */
+function to_async_iterator(source, name) {
+	const maybe = /** @type {any} */ (source);
+
+	if (maybe && typeof maybe[Symbol.asyncIterator] === 'function') {
+		return maybe[Symbol.asyncIterator]();
+	}
+
+	if (maybe && typeof maybe.next === 'function') {
+		return maybe;
+	}
+
+	throw new Error(`query.live '${name}' must return an AsyncIterator or AsyncIterable`);
 }
 
 /** @type {typeof handle_remote_form_post_internal} */

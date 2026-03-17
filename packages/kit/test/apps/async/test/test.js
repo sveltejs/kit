@@ -20,6 +20,11 @@ test.describe('remote functions', () => {
 		await expect(page.locator('body')).not.toContainText('Loading todo');
 	});
 
+	test('query.live renders the first yielded value during SSR', async ({ page }) => {
+		await page.goto('/remote/live');
+		await expect(page.locator('#first-value')).toHaveText('0');
+	});
+
 	test('run is blocked during server render', async ({ page }) => {
 		await page.goto('/remote/query-runtime-errors/run-in-render');
 		await expect(page.locator('#error')).toContainText(

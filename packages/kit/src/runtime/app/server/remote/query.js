@@ -1,4 +1,4 @@
-/** @import { RemoteQuery, RemoteQueryFunction } from '@sveltejs/kit' */
+/** @import { RemoteLiveQuery, RemoteLiveQueryFunction, RemoteQuery, RemoteQueryFunction } from '@sveltejs/kit' */
 /** @import { RemoteInfo, MaybePromise, RequestState } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 import { get_request_store } from '@sveltejs/kit/internal/server';
@@ -76,6 +76,103 @@ export function query(validate_or_fn, maybe_fn) {
 
 		return create_query_resource(__, arg, state, () =>
 			run_remote_function(event, state, false, () => validate(arg), fn)
+		);
+	};
+
+	Object.defineProperty(wrapper, '__', { value: __ });
+
+	return wrapper;
+}
+
+/**
+ * Creates a live remote query. When called from the browser, the function will be invoked on the server via a streaming `fetch` call.
+ *
+ * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query-live) for full documentation.
+ *
+ * @template Output
+ * @overload
+ * @param {() => MaybePromise<AsyncIterator<Output> | AsyncIterable<Output>>} fn
+ * @returns {RemoteLiveQueryFunction<void, Output>}
+ */
+/**
+ * @template Input
+ * @template Output
+ * @overload
+ * @param {'unchecked'} validate
+ * @param {(arg: Input) => MaybePromise<AsyncIterator<Output> | AsyncIterable<Output>>} fn
+ * @returns {RemoteLiveQueryFunction<Input, Output>}
+ */
+/**
+ * @template {StandardSchemaV1} Schema
+ * @template Output
+ * @overload
+ * @param {Schema} schema
+ * @param {(arg: StandardSchemaV1.InferOutput<Schema>) => MaybePromise<AsyncIterator<Output> | AsyncIterable<Output>>} fn
+ * @returns {RemoteLiveQueryFunction<StandardSchemaV1.InferInput<Schema>, Output>}
+ */
+/**
+ * @template Input
+ * @template Output
+ * @param {any} validate_or_fn
+ * @param {(args?: Input) => MaybePromise<AsyncIterator<Output> | AsyncIterable<Output>>} [maybe_fn]
+ * @returns {RemoteLiveQueryFunction<Input, Output>}
+ */
+/*@__NO_SIDE_EFFECTS__*/
+function live(validate_or_fn, maybe_fn) {
+	/** @type {(arg?: Input) => MaybePromise<AsyncIterator<Output> | AsyncIterable<Output>>} */
+	const fn = maybe_fn ?? validate_or_fn;
+
+	/** @type {(arg?: any) => MaybePromise<Input>} */
+	const validate = create_validator(validate_or_fn, maybe_fn);
+
+	/**
+	 * @param {any} event
+	 * @param {any} state
+	 * @param {any} arg
+	 */
+	const run = (event, state, arg) =>
+		run_remote_function(
+			event,
+			state,
+			false,
+			() => validate(arg),
+			async (input) => to_async_iterator(await fn(input), __.name)
+		);
+
+	/** @type {RemoteInfo & { type: 'query_live'; run: typeof run }} */
+	const __ = { type: 'query_live', id: '', name: '', run };
+
+	/** @type {RemoteLiveQueryFunction<Input, Output> & { __: RemoteInfo }} */
+	const wrapper = (arg) => {
+		if (prerendering) {
+			throw new Error(
+				`Cannot call query.live '${__.name}' while prerendering, as prerendered pages need static data. Use 'prerender' from $app/server instead`
+			);
+		}
+
+		const { event, state } = get_request_store();
+
+		return create_live_query_resource(
+			__,
+			arg,
+			state,
+			async () => {
+				const iterator = await run(event, state, arg);
+
+				try {
+					const { value, done } = await iterator.next();
+
+					if (done) {
+						throw new Error(`query.live '${__.name}' did not yield a value`);
+					}
+
+					return value;
+				} finally {
+					await iterator.return?.();
+				}
+			},
+			() =>
+				/** @type {Promise<AsyncIterator<any>>} */ (/** @type {unknown} */ (run(event, state, arg)))
 		);
 	};
 
@@ -305,8 +402,81 @@ function create_query_resource(__, arg, state, fn) {
 	};
 }
 
+/**
+ * @param {RemoteInfo} __
+ * @param {any} arg
+ * @param {RequestState} state
+ * @param {() => Promise<any>} get_first_value
+ * @param {() => Promise<AsyncIterator<any>>} get_iterator
+ * @returns {RemoteLiveQuery<any>}
+ */
+function create_live_query_resource(__, arg, state, get_first_value, get_iterator) {
+	/** @type {Promise<any> | null} */
+	let promise = null;
+
+	const get_promise = () => {
+		return (promise ??= get_response(__, arg, state, get_first_value));
+	};
+
+	return {
+		/** @type {Promise<any>['catch']} */
+		catch(onrejected) {
+			return get_promise().catch(onrejected);
+		},
+		current: undefined,
+		error: undefined,
+		/** @type {Promise<any>['finally']} */
+		finally(onfinally) {
+			return get_promise().finally(onfinally);
+		},
+		loading: true,
+		ready: false,
+		connected: false,
+		reconnect() {
+			throw new Error(`Cannot call '${__.name}.reconnect()' on the server`);
+		},
+		run() {
+			if (!state.is_in_universal_load) {
+				throw new Error(
+					'On the server, .run() can only be called in universal `load` functions. Anywhere else, just await the query directly'
+				);
+			}
+
+			return get_iterator();
+		},
+		/** @type {Promise<any>['then']} */
+		then(onfulfilled, onrejected) {
+			return get_promise().then(onfulfilled, onrejected);
+		},
+		get [Symbol.toStringTag]() {
+			return 'LiveQueryResource';
+		}
+	};
+}
+
 // Add batch as a property to the query function
 Object.defineProperty(query, 'batch', { value: batch, enumerable: true });
+Object.defineProperty(query, 'live', { value: live, enumerable: true });
+
+/**
+ * @template T
+ * @param {AsyncIterator<T> | AsyncIterable<T>} source
+ * @param {string} name
+ * @returns {AsyncIterator<T>}
+ */
+function to_async_iterator(source, name) {
+	const maybe = /** @type {any} */ (source);
+
+	if (maybe && typeof maybe[Symbol.asyncIterator] === 'function') {
+		return maybe[Symbol.asyncIterator]();
+	}
+
+	if (maybe && typeof maybe.next === 'function') {
+		return maybe;
+	}
+
+	throw new Error(`query.live '${name}' must return an AsyncIterator or AsyncIterable`);
+}
 
 /**
  * @param {RemoteInfo} __

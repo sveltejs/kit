@@ -571,7 +571,7 @@ export type BinaryFormMeta = {
 
 export type RemoteInfo =
 	| {
-			type: 'query' | 'command';
+			type: 'query' | 'query_live' | 'command';
 			id: string;
 			name: string;
 	  }

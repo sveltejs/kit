@@ -362,6 +362,35 @@ test.describe('remote function mutations', () => {
 		await expect(page.locator('#phrase')).toHaveText('i am your father');
 	});
 
+	test('query.live streams updates and reconnects after disconnect', async ({ page }) => {
+		await page.goto('/remote/live');
+		await page.click('#reset');
+
+		await expect(page.locator('#first-value')).toHaveText('0');
+		await expect(page.locator('#count')).toHaveText('0');
+		await expect(page.locator('#connected')).toHaveText('true');
+
+		await page.click('#increment');
+		await expect(page.locator('#count')).toHaveText('1');
+
+		await page.click('#drop');
+
+		await page.click('#increment');
+		await expect(page.locator('#count')).toHaveText('2');
+
+		await page.click('#reconnect');
+		await expect(page.locator('#connected')).toHaveText('true');
+	});
+
+	test('query.live can be detached from the page', async ({ page }) => {
+		await page.goto('/remote/live');
+		await page.click('#reset');
+		await expect(page.locator('#count')).toHaveText('0');
+
+		await page.click('#toggle-live');
+		await expect(page.locator('#detached')).toHaveText('detached');
+	});
+
 	test.describe('query runtime guardrails', () => {
 		test('query created outside tracking context can run but cannot expose reactive state', async ({
 			page

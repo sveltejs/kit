@@ -2170,6 +2170,19 @@ export type RemoteQuery<T> = RemoteResource<T> & {
 	withOverride(update: (current: T) => T): RemoteQueryOverride;
 };
 
+export type RemoteLiveQuery<T> = RemoteResource<T> & {
+	/**
+	 * Returns an async iterator with live updates.
+	 * Unlike awaiting the resource directly, this can only be used _outside_ render
+	 * (i.e. in load functions, event handlers and so on)
+	 */
+	run(): Promise<AsyncIterator<T>>;
+	/** `true` if the live stream is currently connected. */
+	readonly connected: boolean;
+	/** Reconnects the live stream immediately. */
+	reconnect(): void;
+};
+
 export interface RemoteQueryOverride {
 	_key: string;
 	release(): void;
@@ -2188,5 +2201,12 @@ export type RemotePrerenderFunction<Input, Output> = (
 export type RemoteQueryFunction<Input, Output> = (
 	arg: undefined extends Input ? Input | void : Input
 ) => RemoteQuery<Output>;
+
+/**
+ * The return value of a remote `query.live` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query-live) for full documentation.
+ */
+export type RemoteLiveQueryFunction<Input, Output> = (
+	arg: undefined extends Input ? Input | void : Input
+) => RemoteLiveQuery<Output>;
 
 export * from './index.js';
