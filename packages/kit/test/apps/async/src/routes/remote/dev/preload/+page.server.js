@@ -2,6 +2,6 @@ import { example } from './example.remote';
 
 export const load = async () => {
 	return {
-		example: await example('bar').run()
+		example: await example('bar')
 	};
 };
