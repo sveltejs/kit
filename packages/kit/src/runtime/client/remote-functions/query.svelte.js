@@ -158,7 +158,7 @@ export function query_batch(id) {
  * @returns {RemoteQueryFunction<Input, Output>}
  */
 function create_query_function(id, fn) {
-	return (arg) => /** @type {RemoteQuery<Output>} */ (new QueryProxy(id, arg, fn));
+	return (arg) => new QueryProxy(id, arg, fn);
 }
 
 /**
@@ -225,7 +225,7 @@ export class Query {
 
 	#get_promise() {
 		void untrack(() => (this.#promise ??= this.#run()));
-		return /** @type {Promise<Awaited<T>>} */ (this.#promise);
+		return /** @type {Promise<T>} */ (this.#promise);
 	}
 
 	#start() {
@@ -377,6 +377,10 @@ class QueryProxy {
 	#payload;
 	#fn;
 	#active = true;
+	/**
+	 * Whether this proxy was created in a tracking context.
+	 * @readonly
+	 */
 	#tracking = is_in_effect();
 
 	/**
@@ -495,9 +499,9 @@ class QueryProxy {
 	}
 
 	run() {
-		if (this.#tracking) {
+		if (is_in_effect()) {
 			throw new Error(
-				'.run() can only be called outside render, e.g. in `load` functions and event handlers. In render, await the query directly'
+				'On the client, .run() can only be called outside render, e.g. in universal `load` functions and event handlers. In render, await the query directly'
 			);
 		}
 
