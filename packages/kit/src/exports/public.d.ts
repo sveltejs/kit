@@ -2058,7 +2058,7 @@ export type RemoteForm<Input extends RemoteFormInput | void, Output> = {
 			form: HTMLFormElement;
 			data: Input;
 			submit: () => Promise<void> & {
-				updates: (...queries: Array<RemoteQuery<any> | RemoteQueryOverride>) => Promise<void>;
+				updates: (...overrides: Array<RemoteQueryOverride>) => Promise<void>;
 			};
 		}) => void | Promise<void>
 	): {
@@ -2103,7 +2103,7 @@ export type RemoteForm<Input extends RemoteFormInput | void, Output> = {
  */
 export type RemoteCommand<Input, Output> = {
 	(arg: undefined extends Input ? Input | void : Input): Promise<Output> & {
-		updates(...queries: Array<RemoteQuery<any> | RemoteQueryOverride>): Promise<Output>;
+		updates(...overrides: Array<RemoteQueryOverride>): Promise<Output>;
 	};
 	/** The number of pending command executions */
 	get pending(): number;

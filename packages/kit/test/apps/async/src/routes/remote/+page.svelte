@@ -6,6 +6,7 @@
 		get_count,
 		set_count,
 		set_count_server_refresh,
+		set_count_server_refresh_slow,
 		set_count_server_refresh_after_read,
 		set_count_server_set,
 		resolve_deferreds
@@ -52,7 +53,7 @@
 </button>
 <button
 	onclick={async () => {
-		command_result = await set_count({ c: 3 }).updates(count);
+		command_result = await set_count_server_refresh(3);
 	}}
 	id="multiply-refresh-btn"
 >
@@ -78,7 +79,7 @@
 	onclick={async () => {
 		// slow, else test will not be able to see the override
 		// (which we deliberately set to a wrong optimistic value to see it applied before the refresh)
-		command_result = await set_count({ c: 5, slow: true }).updates(count.withOverride(() => 6));
+		command_result = await set_count_server_refresh_slow(5).updates(count.withOverride(() => 6));
 	}}
 	id="multiply-override-refresh-btn"
 >

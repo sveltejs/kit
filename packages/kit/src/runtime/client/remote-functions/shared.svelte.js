@@ -1,6 +1,5 @@
 /** @import { RemoteQueryOverride } from '@sveltejs/kit' */
 /** @import { RemoteFunctionResponse } from 'types' */
-/** @import { Query } from './query.svelte.js' */
 import * as devalue from 'devalue';
 import { app, goto, query_map } from '../client.js';
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
@@ -55,31 +54,60 @@ export async function remote_request(url, headers) {
 }
 
 /**
- * @param {Array<Query<any> | RemoteQueryOverride>} updates
+ * @param {Map<string, RemoteQueryOverride>} updates
  */
 export function release_overrides(updates) {
+	for (const update of updates.values()) {
+		update.release();
+	}
+}
+
+/**
+ * @param {Map<string, RemoteQueryOverride>} map
+ * @param {RemoteQueryOverride[]} updates
+ */
+export function populate_updates_map(map, updates) {
+	map.clear();
+
 	for (const update of updates) {
-		if ('release' in update) {
-			update.release();
+		if (
+			typeof update !== 'object' ||
+			update === null ||
+			typeof update._key !== 'string' ||
+			typeof update.release !== 'function'
+		) {
+			release_overrides(map);
+			throw new Error(
+				'updates() expects query overrides with a string _key and a release() function'
+			);
 		}
+
+		if (map.has(update._key)) {
+			release_overrides(map);
+			update.release();
+			throw new Error(
+				'Duplicate query override keys are not allowed in a single updates() invocation'
+			);
+		}
+
+		map.set(update._key, update);
 	}
 }
 
 /**
  * @param {string} stringified_refreshes
- * @param {Array<Query<any> | RemoteQueryOverride>} updates
+ * @param {Map<string, RemoteQueryOverride>} [updates]
  */
-export function refresh_queries(stringified_refreshes, updates = []) {
+export function refresh_queries(stringified_refreshes, updates) {
 	const refreshes = Object.entries(devalue.parse(stringified_refreshes, app.decoders));
 
-	// `refreshes` is a superset of `updates`
 	for (const [key, value] of refreshes) {
-		// If there was an optimistic update, release it right before we update the query
-		const update = updates.find((u) => u._key === key);
-		if (update && 'release' in update) {
+		const update = updates && updates.get(key);
+		if (update) {
 			update.release();
+			updates.delete(key);
 		}
-		// Update the query with the new value
+
 		const entry = query_map.get(key);
 		entry?.resource.set(value);
 	}

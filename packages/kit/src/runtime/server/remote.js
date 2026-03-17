@@ -57,9 +57,6 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 		'sveltekit.remote.call.name': info.name
 	});
 
-	/** @type {string[] | undefined} */
-	let form_client_refreshes;
-
 	try {
 		if (info.type === 'query_batch') {
 			if (event.request.method !== 'POST') {
@@ -108,8 +105,6 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 
 			const { data, meta, form_data } = await deserialize_binary_form(event.request);
 
-			form_client_refreshes = meta.remote_refreshes;
-
 			// If this is a keyed form instance (created via form.for(key)), add the key to the form data (unless already set)
 			// Note that additional_args will only be set if the form is not enhanced, as enhanced forms transfer the key inside `data`.
 			if (additional_args && !('id' in data)) {
@@ -123,14 +118,14 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 				/** @type {RemoteFunctionResponse} */ ({
 					type: 'result',
 					result: stringify(result, transport),
-					refreshes: result.issues ? undefined : await serialize_refreshes(meta.remote_refreshes)
+					refreshes: result.issues ? undefined : await serialize_refreshes()
 				})
 			);
 		}
 
 		if (info.type === 'command') {
-			/** @type {{ payload: string, refreshes: string[] }} */
-			const { payload, refreshes } = await event.request.json();
+			/** @type {{ payload: string }} */
+			const { payload } = await event.request.json();
 			const arg = parse_remote_arg(payload, transport);
 			const data = await with_request_store({ event, state }, () => fn(arg));
 
@@ -138,7 +133,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 				/** @type {RemoteFunctionResponse} */ ({
 					type: 'result',
 					result: stringify(data, transport),
-					refreshes: await serialize_refreshes(refreshes)
+					refreshes: await serialize_refreshes()
 				})
 			);
 		}
@@ -167,7 +162,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 				/** @type {RemoteFunctionResponse} */ ({
 					type: 'redirect',
 					location: error.location,
-					refreshes: await serialize_refreshes(form_client_refreshes)
+					refreshes: await serialize_refreshes()
 				})
 			);
 		}
@@ -192,28 +187,8 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 		);
 	}
 
-	/**
-	 * @param {string[]=} client_refreshes
-	 */
-	async function serialize_refreshes(client_refreshes) {
+	async function serialize_refreshes() {
 		const refreshes = state.remote.refreshes ?? {};
-
-		if (client_refreshes) {
-			for (const key of client_refreshes) {
-				if (refreshes[key] !== undefined) continue;
-
-				const [hash, name, payload] = key.split('/');
-
-				const loader = manifest._.remotes[hash];
-				const fn = (await loader?.())?.default?.[name];
-
-				if (!fn) error(400, 'Bad Request');
-
-				refreshes[key] = with_request_store({ event, state }, () =>
-					fn(parse_remote_arg(payload, transport))
-				);
-			}
-		}
 
 		if (Object.keys(refreshes).length === 0) {
 			return undefined;

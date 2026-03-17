@@ -764,38 +764,22 @@ We can customize what happens when the form is submitted with the `enhance` meth
 
 The callback receives the `form` element, the `data` it contains, and a `submit` function.
 
-To enable client-driven [single-flight mutations](#form-Single-flight-mutations), use `submit().updates(...)`. For example, if the `getPosts()` query was used on this page, we could refresh it like so:
+Use `submit().updates(...)` for optimistic overrides while the submission is ongoing:
 
 ```ts
 import type { RemoteQuery, RemoteQueryOverride } from '@sveltejs/kit';
 interface Post {}
 declare function submit(): Promise<any> & {
-	updates(...queries: Array<RemoteQuery<any> | RemoteQueryOverride>): Promise<any>;
-}
-
-declare function getPosts(): RemoteQuery<Post[]>;
-// ---cut---
-await submit().updates(getPosts());
-```
-
-We can also _override_ the current data while the submission is ongoing:
-
-```ts
-import type { RemoteQuery, RemoteQueryOverride } from '@sveltejs/kit';
-interface Post {}
-declare function submit(): Promise<any> & {
-	updates(...queries: Array<RemoteQuery<any> | RemoteQueryOverride>): Promise<any>;
+	updates(...overrides: Array<RemoteQueryOverride>): Promise<any>;
 }
 
 declare function getPosts(): RemoteQuery<Post[]>;
 declare const newPost: Post;
 // ---cut---
-await submit().updates(
-	getPosts().withOverride((posts) => [newPost, ...posts])
-);
+await submit().updates(getPosts().withOverride((posts) => [newPost, ...posts]));
 ```
 
-The override will be applied immediately, and released when the submission completes (or fails).
+The override will be applied immediately, and released when the submission completes (or fails). Query refreshes for single-flight mutations must be declared in the server-side `form` handler with `query(...).refresh()` or `query(...).set(...)`.
 
 ### Multiple instances of a form
 
@@ -938,9 +922,7 @@ Now simply call `addLike`, from (for example) an event handler:
 
 ### Updating queries
 
-To update `getLikes(item.id)`, or any other query, we need to tell SvelteKit _which_ queries need to be refreshed (unlike `form`, which by default invalidates everything, to approximate the behaviour of a native form submission).
-
-We either do that inside the command itself...
+To update `getLikes(item.id)`, or any other query, declare which queries should be refreshed inside the command itself:
 
 ```js
 /// file: likes.remote.js
@@ -970,26 +952,7 @@ export const addLike = command(v.string(), async (id) => {
 });
 ```
 
-...or when we call it:
-
-```ts
-import { RemoteCommand, RemoteQueryFunction } from '@sveltejs/kit';
-
-interface Item { id: string }
-
-declare const addLike: RemoteCommand<string, void>;
-declare const getLikes: RemoteQueryFunction<string, number>;
-declare function showToast(message: string): void;
-declare const item: Item;
-// ---cut---
-try {
-	await addLike(item.id).+++updates(getLikes(item.id))+++;
-} catch (error) {
-	showToast('Something went wrong!');
-}
-```
-
-As before, we can use `withOverride` for optimistic updates:
+For optimistic UI updates while the command is pending, you can use `withOverride` at call time:
 
 ```ts
 import { RemoteCommand, RemoteQueryFunction } from '@sveltejs/kit';
@@ -1003,7 +966,7 @@ declare const item: Item;
 // ---cut---
 try {
 	await addLike(item.id).updates(
-		getLikes(item.id).+++withOverride((n) => n + 1)+++
+		getLikes(item.id).withOverride((n) => n + 1)
 	);
 } catch (error) {
 	showToast('Something went wrong!');

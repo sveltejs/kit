@@ -36,6 +36,13 @@ export const set_count_server_refresh = command('unchecked', (c) => {
 	return c;
 });
 
+export const set_count_server_refresh_slow = command('unchecked', async (c) => {
+	await new Promise((resolve) => setTimeout(resolve, 500));
+	count = c;
+	await get_count().refresh();
+	return c;
+});
+
 export const set_count_server_refresh_after_read = command('unchecked', async (c) => {
 	await get_count();
 	count = c;

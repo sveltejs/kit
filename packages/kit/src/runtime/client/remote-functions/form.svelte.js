@@ -1,14 +1,13 @@
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 /** @import { RemoteFormInput, RemoteForm, RemoteQueryOverride } from '@sveltejs/kit' */
 /** @import { InternalRemoteFormIssue, RemoteFunctionResponse } from 'types' */
-/** @import { Query } from './query.svelte.js' */
 import { app_dir, base } from '$app/paths/internal/client';
 import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
 import { HttpError } from '@sveltejs/kit/internal';
 import { app, query_responses, _goto, set_nearest_error_page, invalidateAll } from '../client.js';
 import { tick } from 'svelte';
-import { refresh_queries, release_overrides } from './shared.svelte.js';
+import { refresh_queries, release_overrides, populate_updates_map } from './shared.svelte.js';
 import { createAttachmentKey } from 'svelte/attachments';
 import {
 	convert_formdata,
@@ -53,7 +52,6 @@ function merge_with_server_issues(form_data, current_issues, client_issues) {
  */
 export function form(id) {
 	/** @type {Map<any, { count: number, instance: RemoteForm<T, U> }>} */
-	// eslint-disable-next-line svelte/prefer-svelte-reactivity -- we don't need reactivity for this
 	const instances = new Map();
 
 	/** @param {string | number | boolean} [key] */
@@ -185,17 +183,22 @@ export function form(id) {
 				entry.count++;
 			}
 
-			/** @type {Array<Query<any> | RemoteQueryOverride>} */
-			let updates = [];
+			/** @type {Map<string, RemoteQueryOverride>} */
+			const updates = new Map();
 
-			/** @type {Promise<any> & { updates: (...args: any[]) => any }} */
+			/** @type {Error | undefined} */
+			let updates_error;
+
+			/** @type {Promise<any> & { updates: (...args: RemoteQueryOverride[]) => Promise<any> }} */
 			const promise = (async () => {
 				try {
 					await Promise.resolve();
 
-					const { blob } = serialize_binary_form(convert(data), {
-						remote_refreshes: updates.map((u) => u._key)
-					});
+					if (updates_error) {
+						throw updates_error;
+					}
+
+					const { blob } = serialize_binary_form(convert(data), {});
 
 					const response = await fetch(`${base}/${app_dir}/remote/${action_id_without_key}`, {
 						method: 'POST',
@@ -222,9 +225,7 @@ export function form(id) {
 					if (form_result.type === 'result') {
 						({ issues: raw_issues = [], result } = devalue.parse(form_result.result, app.decoders));
 
-						if (issues.$) {
-							release_overrides(updates);
-						} else {
+						if (!issues.$) {
 							if (form_result.refreshes) {
 								refresh_queries(form_result.refreshes, updates);
 							} else {
@@ -233,20 +234,20 @@ export function form(id) {
 						}
 					} else if (form_result.type === 'redirect') {
 						const refreshes = form_result.refreshes ?? '';
-						const invalidateAll = !refreshes && updates.length === 0;
-						if (!invalidateAll) {
+						if (refreshes) {
 							refresh_queries(refreshes, updates);
 						}
 						// Use internal version to allow redirects to external URLs
-						void _goto(form_result.location, { invalidateAll }, 0);
+						void _goto(form_result.location, { invalidateAll: !refreshes }, 0);
 					} else {
 						throw new HttpError(form_result.status ?? 500, form_result.error);
 					}
 				} catch (e) {
 					result = undefined;
-					release_overrides(updates);
 					throw e;
 				} finally {
+					release_overrides(updates);
+
 					// Decrement pending count when submission completes
 					pending_count--;
 
@@ -261,8 +262,20 @@ export function form(id) {
 				}
 			})();
 
+			let updates_called = false;
 			promise.updates = (...args) => {
-				updates = args;
+				if (updates_called) {
+					throw new Error('The updates() method can only be called once per form submission');
+				}
+				updates_called = true;
+
+				try {
+					populate_updates_map(updates, args);
+				} catch (error) {
+					updates_error = /** @type {Error} */ (error);
+					throw updates_error;
+				}
+
 				return promise;
 			};
 
@@ -286,7 +299,6 @@ export function form(id) {
 
 				if (method !== 'post') return;
 
-				// eslint-disable-next-line svelte/prefer-svelte-reactivity
 				const action = new URL(
 					// We can't do submitter.formAction directly because that property is always set
 					event.submitter?.hasAttribute('formaction')

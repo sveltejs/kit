@@ -161,11 +161,10 @@ function command_tests() {
 		const cmd = command(() => 'Hello world');
 		const result: string = await cmd();
 		result;
-		const result2: string = await cmd().updates(
-			q(),
-			q().withOverride(() => '')
-		);
+		const result2: string = await cmd().updates(q().withOverride(() => ''));
 		result2;
+		// @ts-expect-error
+		await cmd().updates(q());
 		// @ts-expect-error
 		const wrong: number = await cmd();
 		wrong;
@@ -229,11 +228,10 @@ function form_tests() {
 	f.enhance(async ({ submit }) => {
 		const x: void = await submit();
 		x;
-		const y: void = await submit().updates(
-			q(),
-			q().withOverride(() => '')
-		);
+		const y: void = await submit().updates(q().withOverride(() => ''));
 		y;
+		// @ts-expect-error
+		await submit().updates(q());
 	});
 
 	const f2 = form(

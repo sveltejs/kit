@@ -565,7 +565,6 @@ export type ValidatedKitConfig = Omit<RecursiveRequired<KitConfig>, 'adapter'> &
 };
 
 export type BinaryFormMeta = {
-	remote_refreshes?: string[];
 	validate_only?: boolean;
 };
 

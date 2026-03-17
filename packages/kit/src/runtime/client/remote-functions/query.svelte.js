@@ -63,7 +63,6 @@ export function query(id) {
  */
 export function query_batch(id) {
 	/** @type {Map<string, Array<{resolve: (value: any) => void, reject: (error: any) => void}>>} */
-	// eslint-disable-next-line svelte/prefer-svelte-reactivity -- we don't need reactivity for this
 	let batching = new Map();
 
 	return create_query_function(id, async (key, payload) => {
@@ -92,7 +91,6 @@ export function query_batch(id) {
 					// and flushes could reveal more queries that should be batched.
 					setTimeout(async () => {
 						const batched = batching;
-						// eslint-disable-next-line svelte/prefer-svelte-reactivity
 						batching = new Map();
 
 						try {

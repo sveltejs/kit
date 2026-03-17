@@ -83,7 +83,7 @@ test.describe('remote function mutations', () => {
 		expect(request_count).toBe(1); // 1 for the command, no refreshes
 	});
 
-	test('command returns correct sum and does client-initiated single flight mutation', async ({
+	test('command returns correct sum and does server-initiated single flight mutation', async ({
 		page
 	}) => {
 		await page.goto('/remote');
@@ -141,7 +141,7 @@ test.describe('remote function mutations', () => {
 		expect(request_count).toBe(1); // no query refreshes, since that happens as part of the command response
 	});
 
-	test('command does client-initiated single flight mutation with override', async ({ page }) => {
+	test('command does server-initiated single flight mutation with override', async ({ page }) => {
 		await page.goto('/remote');
 		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
 
