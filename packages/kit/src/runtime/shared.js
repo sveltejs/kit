@@ -98,6 +98,7 @@ export function create_remote_key(id, payload) {
  * @param {string} key
  * @param {() => T} fn
  * @returns {T}
+ * @deprecated TODO remove in SvelteKit 3.0
  */
 export function unfriendly_hydratable(key, fn) {
 	if (!svelte.hydratable) {
