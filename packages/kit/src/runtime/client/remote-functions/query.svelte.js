@@ -1,4 +1,4 @@
-/** @import { RemoteQuery, RemoteQueryFunction } from '@sveltejs/kit' */
+/** @import { RemoteQueryFunction } from '@sveltejs/kit' */
 /** @import { RemoteFunctionResponse } from 'types' */
 import { app_dir, base } from '$app/paths/internal/client';
 import { app, goto, query_map, query_responses } from '../client.js';

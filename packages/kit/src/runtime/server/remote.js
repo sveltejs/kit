@@ -210,7 +210,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 				if (!fn) error(400, 'Bad Request');
 
 				refreshes[key] = with_request_store({ event, state }, () =>
-					fn(parse_remote_arg(payload, transport)).run()
+					fn(parse_remote_arg(payload, transport))
 				);
 			}
 		}

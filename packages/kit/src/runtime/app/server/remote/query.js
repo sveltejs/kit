@@ -239,7 +239,6 @@ function create_query_resource(__, arg, state, fn) {
 		return (promise ??= get_response(__, arg, state, fn));
 	};
 
-	// TODO turn this into a class
 	return {
 		/** @type {Promise<any>['catch']} */
 		catch(onrejected) {
