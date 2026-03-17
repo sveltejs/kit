@@ -621,21 +621,21 @@ export type RecordSpan = <T>(options: {
  * used for tracking things like remote function calls
  */
 export interface RequestState {
-	prerendering: PrerenderOptions | undefined;
-	transport: ServerHooks['transport'];
-	handleValidationError: ServerHooks['handleValidationError'];
-	tracing: {
+	readonly prerendering: PrerenderOptions | undefined;
+	readonly transport: ServerHooks['transport'];
+	readonly handleValidationError: ServerHooks['handleValidationError'];
+	readonly tracing: {
 		record_span: RecordSpan;
 	};
-	remote: {
+	readonly remote: {
 		data: null | Map<RemoteInfo, Record<string, { serialize: boolean; data: MaybePromise<any> }>>;
 		forms: null | Map<any, any>;
 		refreshes: null | Record<string, Promise<any>>;
 	};
-	is_in_remote_function: boolean;
-	is_in_render: boolean;
-	is_in_universal_load: boolean;
-	allows_commands: boolean;
+	readonly is_in_remote_function: boolean;
+	readonly is_in_render: boolean;
+	readonly is_in_universal_load: boolean;
+	readonly allows_commands: boolean;
 }
 
 export interface RequestStore {

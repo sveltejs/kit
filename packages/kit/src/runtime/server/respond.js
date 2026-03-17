@@ -428,8 +428,13 @@ export async function internal_respond(request, options, manifest, state) {
 						current: root_span
 					}
 				};
-				event_state.allows_commands = MUTATIVE_METHODS.includes(request.method);
-				return await with_request_store({ event: traced_event, state: event_state }, () =>
+
+				const child_state = {
+					...event_state,
+					allows_commands: MUTATIVE_METHODS.includes(request.method)
+				};
+
+				return await with_request_store({ event: traced_event, state: child_state }, () =>
 					options.hooks.handle({
 						event: traced_event,
 						resolve: (event, opts) => {
