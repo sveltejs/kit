@@ -196,7 +196,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 	 * @param {string[]=} client_refreshes
 	 */
 	async function serialize_refreshes(client_refreshes) {
-		const refreshes = state.refreshes ?? {};
+		const refreshes = state.remote.refreshes ?? {};
 
 		if (client_refreshes) {
 			for (const key of client_refreshes) {

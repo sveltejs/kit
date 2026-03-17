@@ -65,14 +65,19 @@ export function command(validate_or_fn, maybe_fn) {
 	const wrapper = (arg) => {
 		const { event, state } = get_request_store();
 
-		if (!state.allows_commands) {
-			const disallowed_method = !MUTATIVE_METHODS.includes(event.request.method);
+		if (!MUTATIVE_METHODS.includes(event.request.method)) {
 			throw new Error(
-				`Cannot call a command (\`${__.name}(${maybe_fn ? '...' : ''})\`) ${disallowed_method ? `from a ${event.request.method} handler or ` : ''}during server-side rendering`
+				`Cannot call a command (\`${__.name}(${maybe_fn ? '...' : ''})\`) from a ${event.request.method} handler`
 			);
 		}
 
-		state.refreshes ??= {};
+		if (state.is_in_render) {
+			throw new Error(
+				`Cannot call a command (\`${__.name}(${maybe_fn ? '...' : ''})\`) during server-side rendering`
+			);
+		}
+
+		state.remote.refreshes ??= {};
 
 		const promise = Promise.resolve(
 			run_remote_function(event, state, true, () => validate(arg), fn)

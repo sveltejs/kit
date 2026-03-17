@@ -3,7 +3,12 @@
 import { parse } from 'devalue';
 import { error } from '@sveltejs/kit';
 import { with_request_store, get_request_store } from '@sveltejs/kit/internal/server';
-import { stringify_remote_arg } from '../../../shared.js';
+import {
+	stringify_remote_arg,
+	create_remote_key,
+	stringify,
+	unfriendly_hydratable
+} from '../../../shared.js';
 
 /**
  * @param {any} validate_or_fn
@@ -73,8 +78,25 @@ export async function get_response(info, arg, state, get_result) {
 	await 0;
 
 	const cache = get_cache(info, state);
+	const key = stringify_remote_arg(arg, state.transport);
+	const entry = (cache[key] ??= {
+		serialize: false,
+		data: get_result()
+	});
 
-	return (cache[stringify_remote_arg(arg, state.transport)] ??= get_result());
+	entry.serialize ||= !!state.is_in_universal_load;
+
+	if (state.is_in_render && info.id) {
+		const remote_key = create_remote_key(info.id, key);
+
+		Promise.resolve(entry.data)
+			.then((value) => {
+				void unfriendly_hydratable(remote_key, () => stringify(value, state.transport));
+			})
+			.catch(() => {});
+	}
+
+	return entry.data;
 }
 
 /**
@@ -150,11 +172,11 @@ export async function run_remote_function(event, state, allow_cookies, get_input
  * @param {RequestState} state
  */
 export function get_cache(info, state = get_request_store().state) {
-	let cache = state.remote_data?.get(info);
+	let cache = state.remote.data?.get(info);
 
 	if (cache === undefined) {
 		cache = {};
-		(state.remote_data ??= new Map()).set(info, cache);
+		(state.remote.data ??= new Map()).set(info, cache);
 	}
 
 	return cache;
