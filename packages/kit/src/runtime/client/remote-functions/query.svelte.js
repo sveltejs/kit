@@ -172,8 +172,6 @@ export class Query {
 	 */
 	_key;
 
-	/** @type {boolean} */
-	#init = false;
 	/** @type {() => Promise<T>} */
 	#fn;
 	#loading = $state(true);
@@ -230,13 +228,16 @@ export class Query {
 		return /** @type {Promise<Awaited<T>>} */ (this.#promise);
 	}
 
+	#start() {
+		// there is a really weird bug with untrack and writes and initializations
+		// every time you see this comment, try removing the `tick.then` here and see
+		// if all the tests still pass with the latest svelte version
+		// if they do, congrats, you can remove tick.then
+		void tick().then(() => this.#get_promise());
+	}
+
 	#run() {
-		// Prevent state_unsafe_mutation error on first run when the resource is created within the template
-		if (this.#init) {
-			this.#loading = true;
-		} else {
-			this.#init = true;
-		}
+		this.#loading = true;
 
 		const { promise, resolve, reject } = with_resolvers();
 
@@ -297,10 +298,12 @@ export class Query {
 	}
 
 	get current() {
+		this.#start();
 		return this.#current;
 	}
 
 	get error() {
+		this.#start();
 		return this.#error;
 	}
 
@@ -308,6 +311,7 @@ export class Query {
 	 * Returns true if the resource is loading or reloading.
 	 */
 	get loading() {
+		this.#start();
 		return this.#loading;
 	}
 
@@ -315,6 +319,7 @@ export class Query {
 	 * Returns true once the resource has been loaded for the first time.
 	 */
 	get ready() {
+		this.#start();
 		return this.#ready;
 	}
 
