@@ -490,6 +490,12 @@ class QueryProxy {
 	}
 
 	run() {
+		if (this.#tracking) {
+			throw new Error(
+				'.run() can only be called outside render, e.g. in `load` functions and event handlers. In render, await the query directly'
+			);
+		}
+
 		if (Object.hasOwn(query_responses, this._key)) {
 			return Promise.resolve(query_responses[this._key]);
 		}

@@ -2130,8 +2130,8 @@ export type RemoteResource<T> = Promise<Awaited<T>> & {
 export type RemoteQuery<T> = RemoteResource<T> & {
 	/**
 	 * Returns a plain promise with the result.
-	 * Unlike awaiting the resource directly, this can be used anywhere
-	 * (load functions, event handlers, etc) without requiring a reactive context.
+	 * Unlike awaiting the resource directly, this can only be used _outside_ render
+	 * (i.e. in load functions, event handlers and so on)
 	 */
 	run(): Promise<Awaited<T>>;
 	/**
