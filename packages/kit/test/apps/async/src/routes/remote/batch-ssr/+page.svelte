@@ -1,5 +1,5 @@
 <script>
-	import { get_todo } from '../batch/batch.remote.js';
+	import { get_todo } from './batch.remote.js';
 
 	const todo_1 = get_todo('1');
 	const todo_2 = get_todo('2');
