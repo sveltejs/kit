@@ -1,4 +1,4 @@
-/** @import { RemoteQuery, RemoteQueryFunction } from '@sveltejs/kit' */
+/** @import { RemoteQuery, RemoteQueryFunction, RemoteQueryOverride } from '@sveltejs/kit' */
 /** @import { RemoteInfo, MaybePromise, RequestState } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 import { get_request_store } from '@sveltejs/kit/internal/server';
@@ -74,8 +74,10 @@ export function query(validate_or_fn, maybe_fn) {
 
 		const { event, state } = get_request_store();
 
-		return create_query_resource(__, arg, state, () =>
-			run_remote_function(event, state, false, () => validate(arg), fn)
+		return /** @type {RemoteQuery<Output>} */ (
+			new QueryResource(__, arg, state, () =>
+				run_remote_function(event, state, false, () => validate(arg), fn)
+			)
 		);
 	};
 
@@ -177,46 +179,48 @@ function batch(validate_or_fn, maybe_fn) {
 
 		const { event, state } = get_request_store();
 
-		return create_query_resource(__, arg, state, () => {
-			// Collect all the calls to the same query in the same macrotask,
-			// then execute them as one backend request.
-			return new Promise((resolve, reject) => {
-				// We don't need to deduplicate args here, because get_response already caches/reuses identical calls
-				batching.args.push(arg);
-				batching.resolvers.push({ resolve, reject });
+		return /** @type {RemoteQuery<Output>} */ (
+			new QueryResource(__, arg, state, () => {
+				// Collect all the calls to the same query in the same macrotask,
+				// then execute them as one backend request.
+				return new Promise((resolve, reject) => {
+					// We don't need to deduplicate args here, because get_response already caches/reuses identical calls
+					batching.args.push(arg);
+					batching.resolvers.push({ resolve, reject });
 
-				if (batching.args.length > 1) return;
+					if (batching.args.length > 1) return;
 
-				setTimeout(async () => {
-					const batched = batching;
-					batching = { args: [], resolvers: [] };
+					setTimeout(async () => {
+						const batched = batching;
+						batching = { args: [], resolvers: [] };
 
-					try {
-						return await run_remote_function(
-							event,
-							state,
-							false,
-							async () => Promise.all(batched.args.map(validate)),
-							async (input) => {
-								const get_result = await fn(input);
+						try {
+							return await run_remote_function(
+								event,
+								state,
+								false,
+								async () => Promise.all(batched.args.map(validate)),
+								async (input) => {
+									const get_result = await fn(input);
 
-								for (let i = 0; i < batched.resolvers.length; i++) {
-									try {
-										batched.resolvers[i].resolve(get_result(input[i], i));
-									} catch (error) {
-										batched.resolvers[i].reject(error);
+									for (let i = 0; i < batched.resolvers.length; i++) {
+										try {
+											batched.resolvers[i].resolve(get_result(input[i], i));
+										} catch (error) {
+											batched.resolvers[i].reject(error);
+										}
 									}
 								}
+							);
+						} catch (error) {
+							for (const resolver of batched.resolvers) {
+								resolver.reject(error);
 							}
-						);
-					} catch (error) {
-						for (const resolver of batched.resolvers) {
-							resolver.reject(error);
 						}
-					}
-				}, 0);
-			});
-		});
+					}, 0);
+				});
+			})
+		);
 	};
 
 	Object.defineProperty(wrapper, '__', { value: __ });
@@ -225,58 +229,87 @@ function batch(validate_or_fn, maybe_fn) {
 }
 
 /**
- * @param {RemoteInfo} __
- * @param {any} arg
- * @param {RequestState} state
- * @param {() => Promise<any>} fn
- * @returns {RemoteQuery<any>}
+ * @template T
  */
-function create_query_resource(__, arg, state, fn) {
-	/** @type {Promise<any> | null} */
-	let promise = null;
+class QueryResource {
+	/** @type {RemoteInfo} */
+	#__;
 
-	const get_promise = () => {
-		return (promise ??= get_response(__, arg, state, fn));
-	};
+	/** @type {any} */
+	#arg;
 
-	// TODO turn this into a class
-	return {
-		/** @type {Promise<any>['catch']} */
-		catch(onrejected) {
-			return get_promise().catch(onrejected);
-		},
-		current: undefined,
-		error: undefined,
-		/** @type {Promise<any>['finally']} */
-		finally(onfinally) {
-			return get_promise().finally(onfinally);
-		},
-		loading: true,
-		ready: false,
-		refresh() {
-			const refresh_context = get_refresh_context(__, 'refresh', arg);
-			const is_immediate_refresh = !refresh_context.cache[refresh_context.cache_key];
-			const value = is_immediate_refresh ? get_promise() : fn();
-			return update_refresh_value(refresh_context, value, is_immediate_refresh);
-		},
-		run() {
-			return get_response(__, arg, state, fn);
-		},
-		/** @param {any} value */
-		set(value) {
-			return update_refresh_value(get_refresh_context(__, 'set', arg), value);
-		},
-		/** @type {Promise<any>['then']} */
-		then(onfulfilled, onrejected) {
-			return get_promise().then(onfulfilled, onrejected);
-		},
-		withOverride() {
-			throw new Error(`Cannot call '${__.name}.withOverride()' on the server`);
-		},
-		get [Symbol.toStringTag]() {
-			return 'QueryResource';
-		}
-	};
+	/** @type {RequestState} */
+	#state;
+
+	/** @type {() => Promise<T>} */
+	#fn;
+
+	/** @type {Promise<T> | null} */
+	#promise = null;
+
+	#get_promise() {
+		return (this.#promise ??= get_response(this.#__, this.#arg, this.#state, this.#fn));
+	}
+
+	current = undefined;
+	error = undefined;
+	loading = true;
+	ready = false;
+
+	/**
+	 * @param {RemoteInfo} __
+	 * @param {any} arg
+	 * @param {RequestState} state
+	 * @param {() => Promise<any>} fn
+	 */
+	constructor(__, arg, state, fn) {
+		this.#__ = __;
+		this.#arg = arg;
+		this.#state = state;
+		this.#fn = fn;
+	}
+
+	/** @type {Promise<any>['catch']} */
+	catch(onrejected) {
+		return this.#get_promise().catch(onrejected);
+	}
+
+	/** @type {Promise<any>['finally']} */
+	finally(onfinally) {
+		return this.#get_promise().finally(onfinally);
+	}
+
+	refresh() {
+		const refresh_context = get_refresh_context(this.#__, 'refresh', this.#arg);
+		const is_immediate_refresh = !refresh_context.cache[refresh_context.cache_key];
+		const value = is_immediate_refresh ? this.#get_promise() : this.#fn();
+		return update_refresh_value(refresh_context, value, is_immediate_refresh);
+	}
+
+	run() {
+		return get_response(this.#__, this.#arg, this.#state, this.#fn);
+	}
+
+	/** @param {any} value */
+	set(value) {
+		return update_refresh_value(get_refresh_context(this.#__, 'set', this.#arg), value);
+	}
+
+	/** @type {Promise<any>['then']} */
+	then(onfulfilled, onrejected) {
+		return this.#get_promise().then(onfulfilled, onrejected);
+	}
+
+	/**
+	 * @returns {RemoteQueryOverride}
+	 */
+	withOverride() {
+		throw new Error(`Cannot call '${this.#__.name}.withOverride()' on the server`);
+	}
+
+	get [Symbol.toStringTag]() {
+		return 'QueryResource';
+	}
 }
 
 // Add batch as a property to the query function
