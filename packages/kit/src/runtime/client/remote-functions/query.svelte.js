@@ -1,4 +1,4 @@
-/** @import { RemoteQueryFunction } from '@sveltejs/kit' */
+/** @import { RemoteQuery, RemoteQueryFunction } from '@sveltejs/kit' */
 /** @import { RemoteFunctionResponse } from 'types' */
 import { app_dir, base } from '$app/paths/internal/client';
 import { app, goto, query_map, query_responses } from '../client.js';
@@ -154,16 +154,16 @@ export function query_batch(id) {
  * @template Input
  * @template Output
  * @param {string} id
- * @param {(key: string, payload: string) => Promise<Awaited<Output>>} fn
+ * @param {(key: string, payload: string) => Promise<Output>} fn
  * @returns {RemoteQueryFunction<Input, Output>}
  */
 function create_query_function(id, fn) {
-	return (arg) => new QueryProxy(id, arg, fn);
+	return (arg) => /** @type {RemoteQuery<Output>} */ (new QueryProxy(id, arg, fn));
 }
 
 /**
  * @template T
- * @implements {Promise<Awaited<T>>}
+ * @implements {Promise<T>}
  */
 export class Query {
 	/**
@@ -174,7 +174,7 @@ export class Query {
 
 	/** @type {boolean} */
 	#init = false;
-	/** @type {() => Promise<Awaited<T>>} */
+	/** @type {() => Promise<T>} */
 	#fn;
 	#loading = $state(true);
 	/** @type {Array<(value: undefined) => void>} */
@@ -182,31 +182,31 @@ export class Query {
 
 	/** @type {boolean} */
 	#ready = $state(false);
-	/** @type {Awaited<T> | undefined} */
+	/** @type {T | undefined} */
 	#raw = $state.raw();
 	/** @type {Promise<void> | null} */
 	#promise = $state.raw(null);
-	/** @type {Array<(old: Awaited<T>) => Awaited<T>>} */
+	/** @type {Array<(old: T) => T>} */
 	#overrides = $state([]);
 
-	/** @type {Awaited<T> | undefined} */
+	/** @type {T | undefined} */
 	#current = $derived.by(() => {
 		// don't reduce undefined value
 		if (!this.#ready) return undefined;
 
-		return this.#overrides.reduce((v, r) => r(v), /** @type {Awaited<T>} */ (this.#raw));
+		return this.#overrides.reduce((v, r) => r(v), /** @type {T} */ (this.#raw));
 	});
 
 	#error = $state.raw(undefined);
 
-	/** @type {Promise<Awaited<T>>['then']} */
+	/** @type {Promise<T>['then']} */
 	// @ts-expect-error TS doesn't understand that the promise returns something
 	#then = $derived.by(() => {
 		const p = this.#get_promise();
 		this.#overrides.length;
 
 		return (resolve, reject) => {
-			const result = p.then(tick).then(() => /** @type {Awaited<T>} */ (this.#current));
+			const result = p.then(tick).then(() => /** @type {T} */ (this.#current));
 
 			if (resolve || reject) {
 				return result.then(resolve, reject);
@@ -218,7 +218,7 @@ export class Query {
 
 	/**
 	 * @param {string} key
-	 * @param {() => Promise<Awaited<T>>} fn
+	 * @param {() => Promise<T>} fn
 	 */
 	constructor(key, fn) {
 		this._key = key;
@@ -327,7 +327,7 @@ export class Query {
 	}
 
 	/**
-	 * @param {Awaited<T>} value
+	 * @param {T} value
 	 */
 	set(value) {
 		this.#ready = true;
@@ -338,7 +338,7 @@ export class Query {
 	}
 
 	/**
-	 * @param {(old: Awaited<T>) => Awaited<T>} fn
+	 * @param {(old: T) => T} fn
 	 * @returns {{ _key: string, release: () => void }}
 	 */
 	withOverride(fn) {
@@ -365,7 +365,7 @@ export class Query {
  * Manages the caching layer between the user and the actual {@link Query} instance.
  *
  * @template T
- * @implements {Promise<Awaited<T>>}
+ * @implements {Promise<T>}
  */
 class QueryProxy {
 	_key;
@@ -377,7 +377,7 @@ class QueryProxy {
 	/**
 	 * @param {string} id
 	 * @param {any} arg
-	 * @param {(key: string, payload: string) => Promise<Awaited<T>>} fn
+	 * @param {(key: string, payload: string) => Promise<T>} fn
 	 */
 	constructor(id, arg, fn) {
 		this.#payload = stringify_remote_arg(arg, app.hooks.transport);
