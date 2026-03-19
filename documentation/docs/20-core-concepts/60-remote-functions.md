@@ -258,6 +258,8 @@ Live queries expose a `connected` property and `reconnect()` method:
 <button onclick={() => time.reconnect()}>Reconnect</button>
 ```
 
+If the connection drops, `connected` becomes `false`. SvelteKit will attempt to reconnect passively, with exponential backoff, and actively if `navigator.onLine` goes from `false` to `true`.
+
 Unlike `query`, live queries do not have a `refresh()` method, as they are self-updating.
 
 As with `query` and `query.batch`, call `.run()` outside render when you need imperative access. For live queries, `run()` returns a `Promise<AsyncIterator<T>>`.
