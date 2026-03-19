@@ -2157,14 +2157,6 @@ declare module '@sveltejs/kit' {
 		reconnect(): void;
 	};
 
-	export interface RemoteLiveQueryContext {
-		/**
-		 * Abort signal for the current live connection.
-		 * Use this to stop pending work promptly when the client disconnects.
-		 */
-		readonly signal: AbortSignal;
-	}
-
 	export interface RemoteQueryOverride {
 		_key: string;
 		release(): void;
@@ -3406,17 +3398,11 @@ declare module '$app/server' {
 		 * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query-live) for full documentation.
 		 *
 		 * */
-		function live<Output>(fn: (arg: void, context: {
-			signal: AbortSignal;
-		}) => MaybePromise<Generator<Output> | AsyncIterator<Output> | AsyncIterable<Output>>): RemoteLiveQueryFunction<void, Output>;
+		function live<Output>(fn: (arg: void) => MaybePromise<Generator<Output> | AsyncIterator<Output> | AsyncIterable<Output>>): RemoteLiveQueryFunction<void, Output>;
 		
-		function live<Input, Output>(validate: "unchecked", fn: (arg: Input, context: {
-			signal: AbortSignal;
-		}) => MaybePromise<Generator<Output> | AsyncIterator<Output> | AsyncIterable<Output>>): RemoteLiveQueryFunction<Input, Output>;
+		function live<Input, Output>(validate: "unchecked", fn: (arg: Input) => MaybePromise<Generator<Output> | AsyncIterator<Output> | AsyncIterable<Output>>): RemoteLiveQueryFunction<Input, Output>;
 		
-		function live<Schema extends StandardSchemaV1, Output>(schema: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>, context: {
-			signal: AbortSignal;
-		}) => MaybePromise<Generator<Output> | AsyncIterator<Output> | AsyncIterable<Output>>): RemoteLiveQueryFunction<StandardSchemaV1.InferInput<Schema>, Output>;
+		function live<Schema extends StandardSchemaV1, Output>(schema: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => MaybePromise<Generator<Output> | AsyncIterator<Output> | AsyncIterable<Output>>): RemoteLiveQueryFunction<StandardSchemaV1.InferInput<Schema>, Output>;
 	}
 	type RemotePrerenderInputsGenerator<Input = any> = () => MaybePromise<Input[]>;
 	type MaybePromise<T> = T | Promise<T>;

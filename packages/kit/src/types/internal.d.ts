@@ -580,11 +580,7 @@ export interface RemoteQueryInternals extends BaseRemoteInternals {
 }
 export interface RemoteQueryLiveInternals extends BaseRemoteInternals {
 	type: 'query_live';
-	run(
-		event: RequestEvent,
-		state: RequestState,
-		arg: any
-	): Promise<{ iterator: AsyncIterator<any>; cancel: () => void }>;
+	run(event: RequestEvent, state: RequestState, arg: any): Promise<AsyncIterator<any>>;
 }
 
 export interface RemoteQueryBatchInternals extends BaseRemoteInternals {

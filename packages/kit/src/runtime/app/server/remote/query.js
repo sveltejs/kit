@@ -91,7 +91,7 @@ export function query(validate_or_fn, maybe_fn) {
  *
  * @template Output
  * @overload
- * @param {(arg: void, context: { signal: AbortSignal }) => MaybePromise<Generator<Output> | AsyncIterator<Output> | AsyncIterable<Output>>} fn
+ * @param {(arg: void) => MaybePromise<Generator<Output> | AsyncIterator<Output> | AsyncIterable<Output>>} fn
  * @returns {RemoteLiveQueryFunction<void, Output>}
  */
 /**
@@ -99,7 +99,7 @@ export function query(validate_or_fn, maybe_fn) {
  * @template Output
  * @overload
  * @param {'unchecked'} validate
- * @param {(arg: Input, context: { signal: AbortSignal }) => MaybePromise<Generator<Output> | AsyncIterator<Output> | AsyncIterable<Output>>} fn
+ * @param {(arg: Input) => MaybePromise<Generator<Output> | AsyncIterator<Output> | AsyncIterable<Output>>} fn
  * @returns {RemoteLiveQueryFunction<Input, Output>}
  */
 /**
@@ -107,19 +107,19 @@ export function query(validate_or_fn, maybe_fn) {
  * @template Output
  * @overload
  * @param {Schema} schema
- * @param {(arg: StandardSchemaV1.InferOutput<Schema>, context: { signal: AbortSignal }) => MaybePromise<Generator<Output> | AsyncIterator<Output> | AsyncIterable<Output>>} fn
+ * @param {(arg: StandardSchemaV1.InferOutput<Schema>) => MaybePromise<Generator<Output> | AsyncIterator<Output> | AsyncIterable<Output>>} fn
  * @returns {RemoteLiveQueryFunction<StandardSchemaV1.InferInput<Schema>, Output>}
  */
 /**
  * @template Input
  * @template Output
  * @param {any} validate_or_fn
- * @param {(args: Input, context: { signal: AbortSignal }) => MaybePromise<Generator<Output> | AsyncIterator<Output> | AsyncIterable<Output>>} [maybe_fn]
+ * @param {(args: Input) => MaybePromise<Generator<Output> | AsyncIterator<Output> | AsyncIterable<Output>>} [maybe_fn]
  * @returns {RemoteLiveQueryFunction<Input, Output>}
  */
 /*@__NO_SIDE_EFFECTS__*/
 function live(validate_or_fn, maybe_fn) {
-	/** @type {(arg: Input, context: { signal: AbortSignal }) => MaybePromise<Generator<Output> | AsyncIterator<Output> | AsyncIterable<Output>>} */
+	/** @type {(arg: Input) => MaybePromise<Generator<Output> | AsyncIterator<Output> | AsyncIterable<Output>>} */
 	const fn = maybe_fn ?? validate_or_fn;
 
 	/** @type {(arg?: any) => MaybePromise<Input>} */
@@ -136,14 +136,7 @@ function live(validate_or_fn, maybe_fn) {
 			state,
 			false,
 			() => validate(arg),
-			async (input) => {
-				const controller = new AbortController();
-
-				return {
-					iterator: to_async_iterator(await fn(input, { signal: controller.signal }), __.name),
-					cancel: () => controller.abort()
-				};
-			}
+			async (input) => to_async_iterator(await fn(input), __.name)
 		);
 	};
 
@@ -165,8 +158,7 @@ function live(validate_or_fn, maybe_fn) {
 			arg,
 			state,
 			async () => {
-				const live = await run(event, state, arg);
-				const iterator = with_live_cancel(live);
+				const iterator = await run(event, state, arg);
 
 				try {
 					const { value, done } = await iterator.next();
@@ -177,11 +169,10 @@ function live(validate_or_fn, maybe_fn) {
 
 					return value;
 				} finally {
-					live.cancel();
 					await iterator.return?.();
 				}
 			},
-			async () => with_live_cancel(await run(event, state, arg))
+			async () => run(event, state, arg)
 		);
 	};
 
@@ -485,34 +476,6 @@ function to_async_iterator(source, name) {
 	}
 
 	throw new Error(`query.live '${name}' must return an AsyncIterator or AsyncIterable`);
-}
-
-/**
- * @template T
- * @param {{ iterator: AsyncIterator<T>; cancel: () => void }} live
- * @returns {AsyncIterableIterator<T>}
- */
-function with_live_cancel(live) {
-	const iterator = live.iterator;
-
-	/** @type {AsyncIterableIterator<T>} */
-	const wrapped = {
-		next(value) {
-			return iterator.next(value);
-		},
-		return(value) {
-			live.cancel();
-			return iterator.return ? iterator.return(value) : Promise.resolve({ value, done: true });
-		},
-		throw(error) {
-			return iterator.throw ? iterator.throw(error) : Promise.reject(error);
-		},
-		[Symbol.asyncIterator]() {
-			return wrapped;
-		}
-	};
-
-	return wrapped;
 }
 
 /**

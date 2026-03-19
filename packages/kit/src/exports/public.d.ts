@@ -2183,14 +2183,6 @@ export type RemoteLiveQuery<T> = RemoteResource<T> & {
 	reconnect(): void;
 };
 
-export interface RemoteLiveQueryContext {
-	/**
-	 * Abort signal for the current live connection.
-	 * Use this to stop pending work promptly when the client disconnects.
-	 */
-	readonly signal: AbortSignal;
-}
-
 export interface RemoteQueryOverride {
 	_key: string;
 	release(): void;

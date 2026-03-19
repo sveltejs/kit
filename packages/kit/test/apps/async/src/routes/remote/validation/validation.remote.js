@@ -16,10 +16,10 @@ export const validated_query_no_args = query((arg) => (arg === undefined ? 'succ
 export const validated_query_with_arg = query(schema, (...arg) =>
 	typeof arg[0] === 'string' && arg.length === 1 ? 'success' : 'failure'
 );
-export const validated_live_query_no_args = query.live(function* (arg, _context) {
+export const validated_live_query_no_args = query.live(function* (arg) {
 	yield arg === undefined ? 'success' : 'failure';
 });
-export const validated_live_query_with_arg = query.live(schema, function* (arg, _context) {
+export const validated_live_query_with_arg = query.live(schema, function* (arg) {
 	yield typeof arg === 'string' ? 'success' : 'failure';
 });
 

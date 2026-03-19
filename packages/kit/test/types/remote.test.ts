@@ -125,13 +125,9 @@ function live_query_tests() {
 	void live_without_args();
 
 	async function live_with_schema() {
-		const q: RemoteLiveQueryFunction<string, string> = query.live(
-			schema,
-			async function* (a, { signal }) {
-				signal.aborted;
-				yield a;
-			}
-		);
+		const q: RemoteLiveQueryFunction<string, string> = query.live(schema, async function* (a) {
+			yield a;
+		});
 
 		const result: string = await q('x');
 		result;

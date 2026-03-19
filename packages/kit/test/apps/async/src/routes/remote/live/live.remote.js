@@ -1,4 +1,4 @@
-import { command, query } from '$app/server';
+import { command, getRequestEvent, query } from '$app/server';
 
 let count = 0;
 let drop_next = false;
@@ -34,7 +34,9 @@ function wait_for_change(signal) {
 	});
 }
 
-export const get_count = query.live(async function* (_, { signal }) {
+export const get_count = query.live(async function* () {
+	const signal = getRequestEvent().request.signal;
+
 	active_connections += 1;
 
 	try {

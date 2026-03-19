@@ -158,8 +158,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 				new URL(event.request.url).searchParams.get('payload')
 			);
 
-			const live = await internals.run(event, state, parse_remote_arg(payload, transport));
-			const iterator = live.iterator;
+			const iterator = await internals.run(event, state, parse_remote_arg(payload, transport));
 
 			const encoder = new TextEncoder();
 			let closed = false;
@@ -167,7 +166,6 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 			const close = async () => {
 				if (closed) return;
 				closed = true;
-				live.cancel();
 				await iterator.return?.();
 			};
 
