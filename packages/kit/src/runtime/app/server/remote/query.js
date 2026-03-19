@@ -59,7 +59,7 @@ export function query(validate_or_fn, maybe_fn) {
 	const fn = maybe_fn ?? validate_or_fn;
 
 	/** @type {(arg?: any) => MaybePromise<Input>} */
-	const validate = create_validator(validate_or_fn, /** @type {any} */ (maybe_fn));
+	const validate = create_validator(validate_or_fn, maybe_fn);
 
 	/** @type {RemoteQueryInternals} */
 	const __ = { type: 'query', id: '', name: '' };
