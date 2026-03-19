@@ -130,8 +130,8 @@ function live(validate_or_fn, maybe_fn) {
 	 * @param {any} state
 	 * @param {any} arg
 	 */
-	const run = (event, state, arg) =>
-		run_remote_function(
+	const run = async (event, state, arg) => {
+		return await run_remote_function(
 			event,
 			state,
 			false,
@@ -145,6 +145,7 @@ function live(validate_or_fn, maybe_fn) {
 				};
 			}
 		);
+	};
 
 	/** @type {RemoteQueryLiveInfo} */
 	const __ = { type: 'query_live', id: '', name: '', run };
