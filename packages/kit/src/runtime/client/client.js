@@ -418,7 +418,7 @@ async function _invalidate(include_load_functions = true, reset_page_state = tru
 	// Rerun queries
 	if (force_invalidation) {
 		query_map.forEach(({ resource }) => {
-			void (/** @type {any} */ (resource).refresh?.());
+			void resource.refresh();
 		});
 	}
 
@@ -526,7 +526,7 @@ export async function _goto(url, options, redirect_count, nav_token) {
 				query_map.forEach(({ resource }, key) => {
 					// Only refresh those that already existed on the old page
 					if (query_keys?.includes(key)) {
-						void (/** @type {any} */ (resource).refresh?.());
+						void resource.refresh();
 					}
 				});
 			});
