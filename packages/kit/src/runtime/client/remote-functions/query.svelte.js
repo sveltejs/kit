@@ -49,7 +49,8 @@ export function query(id) {
 		// If this reruns as part of HMR, refresh the query
 		for (const [key, entry] of query_map) {
 			if (key === id || key.startsWith(id + '/')) {
-				void entry.resource.refresh();
+				// use optional chaining in case a prerender function was turned into a query
+				void entry.resource.refresh?.();
 			}
 		}
 	}
