@@ -53,6 +53,7 @@ test.describe('remote function mutations', () => {
 		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
 
 		await page.goto('/remote');
+		await expect(page.locator('#echo-argument')).toHaveText('Hello world');
 		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
 		// only the calls in the template are done, not the one in the load function
 		expect(request_count).toBe(0);

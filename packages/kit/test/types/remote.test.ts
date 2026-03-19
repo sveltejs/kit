@@ -80,6 +80,20 @@ function query_tests() {
 		result;
 	}
 	void query_schema_input_and_output();
+
+	function query_argument() {
+		const no_arg = query(() => 'ok')();
+		const no_arg_value: void = no_arg.argument;
+		no_arg_value;
+
+		const with_arg = query('unchecked', (arg: { value: number }) => arg.value)({ value: 1 });
+		const arg: { value: number } = with_arg.argument;
+		arg;
+		// @ts-expect-error
+		const wrong: string = with_arg.argument;
+		wrong;
+	}
+	query_argument();
 }
 query_tests();
 

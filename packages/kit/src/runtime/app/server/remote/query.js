@@ -259,6 +259,7 @@ function create_query_resource(__, arg, state, fn) {
 	};
 
 	return {
+		argument: arg,
 		/** @type {Promise<any>['catch']} */
 		catch(onrejected) {
 			return get_promise().catch(onrejected);

@@ -25,6 +25,7 @@
 </script>
 
 <p id="echo-result">{data.echo_result}</p>
+<p id="echo-argument">{data.echo_argument}</p>
 <p id="count-result">
 	{await count} / {count.current} ({count.loading})
 </p>

@@ -363,6 +363,7 @@ export class Query {
  */
 class QueryProxy {
 	_key;
+	#arg;
 	#payload;
 	#fn;
 	#active = true;
@@ -378,6 +379,7 @@ class QueryProxy {
 	 * @param {(key: string, payload: string) => Promise<T>} fn
 	 */
 	constructor(id, arg, fn) {
+		this.#arg = arg;
 		this.#payload = stringify_remote_arg(arg, app.hooks.transport);
 		this._key = create_remote_key(id, this.#payload);
 		this.#fn = fn;
@@ -485,6 +487,10 @@ class QueryProxy {
 
 	get ready() {
 		return this.#get_cached_query().ready;
+	}
+
+	get argument() {
+		return this.#arg;
 	}
 
 	run() {

@@ -2127,7 +2127,9 @@ export type RemoteResource<T> = Promise<T> & {
 		  }
 	);
 
-export type RemoteQuery<T> = RemoteResource<T> & {
+export type RemoteQuery<T, Input = unknown> = RemoteResource<T> & {
+	/** The original argument that was passed to the query before serialization. */
+	readonly argument: Input;
 	/**
 	 * Returns a plain promise with the result.
 	 * Unlike awaiting the resource directly, this can only be used _outside_ render
@@ -2187,6 +2189,6 @@ export type RemotePrerenderFunction<Input, Output> = (
  */
 export type RemoteQueryFunction<Input, Output> = (
 	arg: undefined extends Input ? Input | void : Input
-) => RemoteQuery<Output>;
+) => RemoteQuery<Output, Input>;
 
 export * from './index.js';
