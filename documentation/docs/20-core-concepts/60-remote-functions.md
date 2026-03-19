@@ -227,53 +227,38 @@ export const getWeather = query.batch(v.string(), async (cityIds) => {
 
 ## query.live
 
-`query.live` is for streaming updates from the server. It works like `query`, including argument validation, but the callback returns an `AsyncIterator` (typically an async generator):
+`query.live` is for accessing real-time data from the server. It behaves similarly to `query`, but the callback — typically an async [generator function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/function*) — returns an `AsyncIterable`:
 
 ```js
 import { query } from '$app/server';
 
-export const getCount = query.live(async function* () {
-	yield 0;
-
+export const getTime = query.live(async function* () {
 	while (true) {
-		await wait_for_count_change();
-		yield get_current_count();
+		yield new Date();
+		await new Promise((f) => setTimeout(f, 1000));
 	}
 });
 ```
 
-The callback receives a context with an `AbortSignal` so that long-running waits can stop immediately when the client disconnects:
+During server-side rendering, `await getTime()` returns the first yielded value then closes the iterator. This initial value is serialized and reused during hydration.
 
-```js
-export const getCount = query.live(async function* (_, { signal }) {
-	yield count;
-
-	while (true) {
-		await wait_for_change({ signal });
-		yield count;
-	}
-});
-```
-
-On the server, `await getCount()` reads the first yielded value and then closes the iterator. This allows SSR to serialize the initial value and reuse it during hydration.
-
-On the client, the query stays connected while it's actively used in a component. When there are no active uses left, the stream disconnects and server-side iteration is stopped.
+On the client, the query stays connected while it's actively used in a component. Multiple instances share a connection. When there are no active uses left, the stream disconnects and server-side iteration is stopped.
 
 Live queries expose a `connected` property and `reconnect()` method:
 
 ```svelte
 <script>
-	import { getCount } from './counter.remote.js';
+	import { getTime } from './time.remote.js';
 
-	const count = getCount();
+	const time = getTime();
 </script>
 
-<p>{count.current}</p>
-<p>connected: {String(count.connected)}</p>
-<button onclick={() => count.reconnect()}>Reconnect</button>
+<p>{await time}</p>
+<p>connected: {time.connected}</p>
+<button onclick={() => time.reconnect()}>Reconnect</button>
 ```
 
-Unlike `query`, live queries do not have a `refresh()` method.
+Unlike `query`, live queries do not have a `refresh()` method, as they are self-updating.
 
 As with `query` and `query.batch`, call `.run()` outside render when you need imperative access. For live queries, `run()` returns a `Promise<AsyncIterator<T>>`.
 
