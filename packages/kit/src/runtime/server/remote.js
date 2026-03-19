@@ -161,21 +161,30 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 			const iterator = await internals.run(event, state, parse_remote_arg(payload, transport));
 
 			const encoder = new TextEncoder();
+
+			/**
+			 * @param {ReadableStreamDefaultController} controller
+			 * @param {any} payload
+			 */
+			function send(controller, payload) {
+				controller.enqueue(encoder.encode(JSON.stringify(payload) + '\n'));
+			}
+
 			let closed = false;
 
-			const close = async () => {
+			async function cancel() {
 				if (closed) return;
 				closed = true;
 				await iterator.return?.();
-			};
+			}
 
-			event.request.signal.addEventListener('abort', close, { once: true });
+			event.request.signal.addEventListener('abort', cancel, { once: true });
 
 			return new Response(
 				new ReadableStream({
 					async pull(controller) {
 						if (event.request.signal.aborted) {
-							await close();
+							await cancel();
 							controller.close();
 							return;
 						}
@@ -184,55 +193,41 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 							const { value, done } = await iterator.next();
 
 							if (done) {
-								await close();
+								await cancel();
 								controller.close();
 								return;
 							}
 
-							controller.enqueue(
-								encoder.encode(
-									JSON.stringify({
-										type: 'result',
-										result: stringify(value, transport)
-									}) + '\n'
-								)
-							);
+							send(controller, {
+								type: 'result',
+								result: stringify(value, transport)
+							});
 						} catch (error) {
 							if (!event.request.signal.aborted) {
 								if (error instanceof Redirect) {
-									controller.enqueue(
-										encoder.encode(
-											JSON.stringify({
-												type: 'redirect',
-												location: error.location
-											}) + '\n'
-										)
-									);
+									send(controller, {
+										type: 'redirect',
+										location: error.location
+									});
 								} else {
 									const status =
 										error instanceof HttpError || error instanceof SvelteKitError
 											? error.status
 											: 500;
 
-									controller.enqueue(
-										encoder.encode(
-											JSON.stringify({
-												type: 'error',
-												error: await handle_error_and_jsonify(event, state, options, error),
-												status
-											}) + '\n'
-										)
-									);
+									send(controller, {
+										type: 'error',
+										error: await handle_error_and_jsonify(event, state, options, error),
+										status
+									});
 								}
 							}
 
-							await close();
+							await cancel();
 							controller.close();
 						}
 					},
-					async cancel() {
-						await close();
-					}
+					cancel
 				}),
 				{
 					headers: {
