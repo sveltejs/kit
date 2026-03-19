@@ -569,16 +569,16 @@ export type BinaryFormMeta = {
 	validate_only?: boolean;
 };
 
-interface BaseRemoteInfo {
+interface BaseRemoteInternals {
 	type: string;
 	id: string;
 	name: string;
 }
 
-export interface RemoteQueryInternals extends BaseRemoteInfo {
+export interface RemoteQueryInternals extends BaseRemoteInternals {
 	type: 'query';
 }
-export interface RemoteQueryLiveInternals extends BaseRemoteInfo {
+export interface RemoteQueryLiveInternals extends BaseRemoteInternals {
 	type: 'query_live';
 	run(
 		event: RequestEvent,
@@ -587,21 +587,21 @@ export interface RemoteQueryLiveInternals extends BaseRemoteInfo {
 	): Promise<{ iterator: AsyncIterator<any>; cancel: () => void }>;
 }
 
-export interface RemoteQueryBatchInternals extends BaseRemoteInfo {
+export interface RemoteQueryBatchInternals extends BaseRemoteInternals {
 	type: 'query_batch';
 	run: (args: any[], options: SSROptions) => Promise<any[]>;
 }
 
-export interface RemoteCommandInternals extends BaseRemoteInfo {
+export interface RemoteCommandInternals extends BaseRemoteInternals {
 	type: 'command';
 }
 
-export interface RemoteFormInternals extends BaseRemoteInfo {
+export interface RemoteFormInternals extends BaseRemoteInternals {
 	type: 'form';
 	fn(body: Record<string, any>, meta: BinaryFormMeta, form_data: FormData | null): Promise<any>;
 }
 
-export interface RemotePrerenderInternals extends BaseRemoteInfo {
+export interface RemotePrerenderInternals extends BaseRemoteInternals {
 	type: 'prerender';
 	has_arg: boolean;
 	dynamic?: boolean;

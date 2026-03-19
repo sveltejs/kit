@@ -1,5 +1,5 @@
 /** @import { RemoteResource, RemotePrerenderFunction } from '@sveltejs/kit' */
-/** @import { RemotePrerenderInputsGenerator, MaybePromise, RemotePrerenderInternals } from 'types' */
+/** @import { RemotePrerenderInputsGenerator, RemotePrerenderInternals, MaybePromise } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 import { error, json } from '@sveltejs/kit';
 import { DEV } from 'esm-env';
