@@ -1,5 +1,5 @@
 /** @import { ActionResult, RemoteForm, RequestEvent, SSRManifest } from '@sveltejs/kit' */
-/** @import { RemoteFormInfo, RemoteFunctionResponse, RemoteInfo, RequestState, SSROptions } from 'types' */
+/** @import { RemoteFormInternals, RemoteFunctionResponse, RemoteInternals, RequestState, SSROptions } from 'types' */
 
 import { json, error } from '@sveltejs/kit';
 import { HttpError, Redirect, SvelteKitError } from '@sveltejs/kit/internal';
@@ -48,20 +48,20 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 
 	if (!fn) error(404);
 
-	/** @type {RemoteInfo} */
-	const info = fn.__;
+	/** @type {RemoteInternals} */
+	const internals = fn.__;
 	const transport = options.hooks.transport;
 
 	event.tracing.current.setAttributes({
-		'sveltekit.remote.call.type': info.type,
-		'sveltekit.remote.call.name': info.name
+		'sveltekit.remote.call.type': internals.type,
+		'sveltekit.remote.call.name': internals.name
 	});
 
 	/** @type {string[] | undefined} */
 	let form_client_refreshes;
 
 	try {
-		if (info.type === 'query_batch') {
+		if (internals.type === 'query_batch') {
 			if (event.request.method !== 'POST') {
 				throw new SvelteKitError(
 					405,
@@ -77,7 +77,9 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 				payloads.map((payload) => parse_remote_arg(payload, transport))
 			);
 
-			const results = await with_request_store({ event, state }, () => info.run(args, options));
+			const results = await with_request_store({ event, state }, () =>
+				internals.run(args, options)
+			);
 
 			return json(
 				/** @type {RemoteFunctionResponse} */ ({
@@ -87,7 +89,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 			);
 		}
 
-		if (info.type === 'form') {
+		if (internals.type === 'form') {
 			if (event.request.method !== 'POST') {
 				throw new SvelteKitError(
 					405,
@@ -116,7 +118,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 				data.id = JSON.parse(decodeURIComponent(additional_args));
 			}
 
-			const fn = info.fn;
+			const fn = internals.fn;
 			const result = await with_request_store({ event, state }, () => fn(data, meta, form_data));
 
 			return json(
@@ -128,7 +130,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 			);
 		}
 
-		if (info.type === 'command') {
+		if (internals.type === 'command') {
 			/** @type {{ payload: string, refreshes: string[] }} */
 			const { payload, refreshes } = await event.request.json();
 			const arg = parse_remote_arg(payload, transport);
@@ -143,7 +145,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 			);
 		}
 
-		if (info.type === 'query_live') {
+		if (internals.type === 'query_live') {
 			if (event.request.method !== 'GET') {
 				throw new SvelteKitError(
 					405,
@@ -156,7 +158,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 				new URL(event.request.url).searchParams.get('payload')
 			);
 
-			const live = await info.run(event, state, parse_remote_arg(payload, transport));
+			const live = await internals.run(event, state, parse_remote_arg(payload, transport));
 			const iterator = live.iterator;
 
 			const encoder = new TextEncoder();
@@ -244,7 +246,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 		}
 
 		const payload =
-			info.type === 'prerender'
+			internals.type === 'prerender'
 				? additional_args
 				: /** @type {string} */ (
 						// new URL(...) necessary because we're hiding the URL from the user in the event object
@@ -284,7 +286,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 			{
 				// By setting a non-200 during prerendering we fail the prerender process (unless handleHttpError handles it).
 				// Errors at runtime will be passed to the client and are handled there
-				status: state.prerendering || info.type === 'query_live' ? status : undefined,
+				status: state.prerendering || internals.type === 'query_live' ? status : undefined,
 				headers: {
 					'cache-control': 'private, no-store'
 				}
@@ -382,7 +384,7 @@ async function handle_remote_form_post_internal(event, state, manifest, id) {
 	}
 
 	try {
-		const fn = /** @type {RemoteFormInfo} */ (/** @type {any} */ (form).__).fn;
+		const fn = /** @type {RemoteFormInternals} */ (/** @type {any} */ (form).__).fn;
 
 		const { data, meta, form_data } = await deserialize_binary_form(event.request);
 

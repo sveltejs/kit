@@ -1,5 +1,5 @@
 /** @import { RemoteCommand } from '@sveltejs/kit' */
-/** @import { MaybePromise, RemoteCommandInfo } from 'types' */
+/** @import { MaybePromise, RemoteCommandInternals } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 import { get_request_store } from '@sveltejs/kit/internal/server';
 import { create_validator, run_remote_function } from './shared.js';
@@ -58,10 +58,10 @@ export function command(validate_or_fn, maybe_fn) {
 	/** @type {(arg?: any) => MaybePromise<Input>} */
 	const validate = create_validator(validate_or_fn, maybe_fn);
 
-	/** @type {RemoteCommandInfo} */
+	/** @type {RemoteCommandInternals} */
 	const __ = { type: 'command', id: '', name: '' };
 
-	/** @type {RemoteCommand<Input, Output> & { __: RemoteCommandInfo }} */
+	/** @type {RemoteCommand<Input, Output> & { __: RemoteCommandInternals }} */
 	const wrapper = (arg) => {
 		const { event, state } = get_request_store();
 

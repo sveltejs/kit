@@ -379,7 +379,7 @@ export interface ServerMetadata {
 	}>;
 	routes: Map<string, ServerMetadataRoute>;
 	/** For each hashed remote file, a map of export name -> { type, dynamic }, where `dynamic` is `false` for non-dynamic prerender functions */
-	remotes: Map<string, Map<string, { type: RemoteInfo['type']; dynamic: boolean }>>;
+	remotes: Map<string, Map<string, { type: RemoteInternals['type']; dynamic: boolean }>>;
 }
 
 export interface SSRComponent {
@@ -575,10 +575,10 @@ interface BaseRemoteInfo {
 	name: string;
 }
 
-export interface RemoteQueryInfo extends BaseRemoteInfo {
+export interface RemoteQueryInternals extends BaseRemoteInfo {
 	type: 'query';
 }
-export interface RemoteQueryLiveInfo extends BaseRemoteInfo {
+export interface RemoteQueryLiveInternals extends BaseRemoteInfo {
 	type: 'query_live';
 	run(
 		event: RequestEvent,
@@ -587,34 +587,34 @@ export interface RemoteQueryLiveInfo extends BaseRemoteInfo {
 	): Promise<{ iterator: AsyncIterator<any>; cancel: () => void }>;
 }
 
-export interface RemoteQueryBatchInfo extends BaseRemoteInfo {
+export interface RemoteQueryBatchInternals extends BaseRemoteInfo {
 	type: 'query_batch';
 	run: (args: any[], options: SSROptions) => Promise<any[]>;
 }
 
-export interface RemoteCommandInfo extends BaseRemoteInfo {
+export interface RemoteCommandInternals extends BaseRemoteInfo {
 	type: 'command';
 }
 
-export interface RemoteFormInfo extends BaseRemoteInfo {
+export interface RemoteFormInternals extends BaseRemoteInfo {
 	type: 'form';
 	fn(body: Record<string, any>, meta: BinaryFormMeta, form_data: FormData | null): Promise<any>;
 }
 
-export interface RemotePrerenderInfo extends BaseRemoteInfo {
+export interface RemotePrerenderInternals extends BaseRemoteInfo {
 	type: 'prerender';
 	has_arg: boolean;
 	dynamic?: boolean;
 	inputs?: RemotePrerenderInputsGenerator;
 }
 
-export type RemoteInfo =
-	| RemoteQueryInfo
-	| RemoteQueryLiveInfo
-	| RemoteQueryBatchInfo
-	| RemoteCommandInfo
-	| RemoteFormInfo
-	| RemotePrerenderInfo;
+export type RemoteInternals =
+	| RemoteQueryInternals
+	| RemoteQueryLiveInternals
+	| RemoteQueryBatchInternals
+	| RemoteCommandInternals
+	| RemoteFormInternals
+	| RemotePrerenderInternals;
 
 export interface InternalRemoteFormIssue extends RemoteFormIssue {
 	name: string;
@@ -640,7 +640,10 @@ export interface RequestState {
 		record_span: RecordSpan;
 	};
 	readonly remote: {
-		data: null | Map<RemoteInfo, Record<string, { serialize: boolean; data: MaybePromise<any> }>>;
+		data: null | Map<
+			RemoteInternals,
+			Record<string, { serialize: boolean; data: MaybePromise<any> }>
+		>;
 		forms: null | Map<any, any>;
 		refreshes: null | Record<string, Promise<any>>;
 	};

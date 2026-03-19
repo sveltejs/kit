@@ -1,5 +1,5 @@
 /** @import { RemoteLiveQuery, RemoteLiveQueryFunction, RemoteQuery, RemoteQueryFunction } from '@sveltejs/kit' */
-/** @import { RemoteInfo, MaybePromise, RequestState, RemoteQueryLiveInfo, RemoteQueryBatchInfo, RemoteQueryInfo } from 'types' */
+/** @import { RemoteInternals, MaybePromise, RequestState, RemoteQueryLiveInternals, RemoteQueryBatchInternals, RemoteQueryInternals } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 import { get_request_store } from '@sveltejs/kit/internal/server';
 import { create_remote_key, stringify, stringify_remote_arg } from '../../../shared.js';
@@ -61,10 +61,10 @@ export function query(validate_or_fn, maybe_fn) {
 	/** @type {(arg?: any) => MaybePromise<Input>} */
 	const validate = create_validator(validate_or_fn, /** @type {any} */ (maybe_fn));
 
-	/** @type {RemoteQueryInfo} */
+	/** @type {RemoteQueryInternals} */
 	const __ = { type: 'query', id: '', name: '' };
 
-	/** @type {RemoteQueryFunction<Input, Output> & { __: RemoteQueryInfo }} */
+	/** @type {RemoteQueryFunction<Input, Output> & { __: RemoteQueryInternals }} */
 	const wrapper = (arg) => {
 		if (prerendering) {
 			throw new Error(
@@ -147,10 +147,10 @@ function live(validate_or_fn, maybe_fn) {
 		);
 	};
 
-	/** @type {RemoteQueryLiveInfo} */
+	/** @type {RemoteQueryLiveInternals} */
 	const __ = { type: 'query_live', id: '', name: '', run };
 
-	/** @type {RemoteLiveQueryFunction<Input, Output> & { __: RemoteQueryLiveInfo }} */
+	/** @type {RemoteLiveQueryFunction<Input, Output> & { __: RemoteQueryLiveInternals }} */
 	const wrapper = (arg) => {
 		if (prerendering) {
 			throw new Error(
@@ -232,7 +232,7 @@ function batch(validate_or_fn, maybe_fn) {
 	/** @type {(arg?: any) => MaybePromise<Input>} */
 	const validate = create_validator(validate_or_fn, maybe_fn);
 
-	/** @type {RemoteQueryBatchInfo} */
+	/** @type {RemoteQueryBatchInternals} */
 	const __ = {
 		type: 'query_batch',
 		id: '',
@@ -273,7 +273,7 @@ function batch(validate_or_fn, maybe_fn) {
 	/** @type {Map<string, { arg: any, resolvers: Array<{resolve: (value: any) => void, reject: (error: any) => void}> }>} */
 	let batching = new Map();
 
-	/** @type {RemoteQueryFunction<Input, Output> & { __: RemoteQueryBatchInfo }} */
+	/** @type {RemoteQueryFunction<Input, Output> & { __: RemoteQueryBatchInternals }} */
 	const wrapper = (arg) => {
 		if (prerendering) {
 			throw new Error(
@@ -350,7 +350,7 @@ function batch(validate_or_fn, maybe_fn) {
 }
 
 /**
- * @param {RemoteInfo} __
+ * @param {RemoteInternals} __
  * @param {any} arg
  * @param {RequestState} state
  * @param {() => Promise<any>} fn
@@ -412,7 +412,7 @@ function create_query_resource(__, arg, state, fn) {
 }
 
 /**
- * @param {RemoteQueryLiveInfo} __
+ * @param {RemoteQueryLiveInternals} __
  * @param {any} arg
  * @param {RequestState} state
  * @param {() => Promise<any>} get_first_value
@@ -516,10 +516,10 @@ function with_live_cancel(live) {
 }
 
 /**
- * @param {RemoteInfo} __
+ * @param {RemoteInternals} __
  * @param {'set' | 'refresh'} action
  * @param {any} [arg]
- * @returns {{ __: RemoteInfo; state: any; refreshes: Record<string, Promise<any>>; cache: Record<string, { serialize: boolean; data: any }>; refreshes_key: string; cache_key: string }}
+ * @returns {{ __: RemoteInternals; state: any; refreshes: Record<string, Promise<any>>; cache: Record<string, { serialize: boolean; data: any }>; refreshes_key: string; cache_key: string }}
  */
 function get_refresh_context(__, action, arg) {
 	const { state } = get_request_store();
@@ -540,7 +540,7 @@ function get_refresh_context(__, action, arg) {
 }
 
 /**
- * @param {{ __: RemoteInfo; refreshes: Record<string, Promise<any>>; cache: Record<string, { serialize: boolean; data: any }>; refreshes_key: string; cache_key: string }} context
+ * @param {{ __: RemoteInternals; refreshes: Record<string, Promise<any>>; cache: Record<string, { serialize: boolean; data: any }>; refreshes_key: string; cache_key: string }} context
  * @param {any} value
  * @param {boolean} [is_immediate_refresh=false]
  * @returns {Promise<void>}
