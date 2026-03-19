@@ -333,19 +333,16 @@ export class Query {
 
 	/**
 	 * @param {(old: T) => T} fn
-	 * @returns {{ _key: string, release: () => void }}
+	 * @returns {() => void}
 	 */
-	withOverride(fn) {
+	override(fn) {
 		this.#overrides.push(fn);
 
-		return {
-			_key: this._key,
-			release: () => {
-				const i = this.#overrides.indexOf(fn);
+		return () => {
+			const i = this.#overrides.indexOf(fn);
 
-				if (i !== -1) {
-					this.#overrides.splice(i, 1);
-				}
+			if (i !== -1) {
+				this.#overrides.splice(i, 1);
 			}
 		};
 	}
@@ -509,17 +506,14 @@ class QueryProxy {
 		this.#safe_get_cached_query()?.set(value);
 	}
 
-	/** @type {Query<T>['withOverride']} */
-	withOverride(fn) {
+	/** @type {Query<T>['override']} */
+	override(fn) {
 		const entry = this.#get_or_create_cache_entry();
-		const override = entry.resource.withOverride(fn);
+		const release = entry.resource.override(fn);
 
-		return {
-			_key: override._key,
-			release: () => {
-				override.release();
-				this.#release(entry, false)();
-			}
+		return () => {
+			release();
+			this.#release(entry, false)();
 		};
 	}
 

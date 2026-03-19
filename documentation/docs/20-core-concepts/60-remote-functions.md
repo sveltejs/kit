@@ -764,19 +764,19 @@ We can customize what happens when the form is submitted with the `enhance` meth
 
 The callback receives the `form` element, the `data` it contains, and a `submit` function.
 
-Use `submit().updates(...)` for optimistic overrides while the submission is ongoing:
+Use `submit().with(...)` for optimistic overrides while the submission is ongoing:
 
 ```ts
-import type { RemoteQuery, RemoteQueryOverride } from '@sveltejs/kit';
+import type { RemoteQuery } from '@sveltejs/kit';
 interface Post {}
 declare function submit(): Promise<any> & {
-	updates(...overrides: Array<RemoteQueryOverride>): Promise<any>;
+	with(...callbacks: Array<() => void>): Promise<any>;
 }
 
 declare function getPosts(): RemoteQuery<Post[]>;
 declare const newPost: Post;
 // ---cut---
-await submit().updates(getPosts().withOverride((posts) => [newPost, ...posts]));
+await submit().with(getPosts().override((posts) => [newPost, ...posts]));
 ```
 
 The override will be applied immediately, and released when the submission completes (or fails). Query refreshes for single-flight mutations must be declared in the server-side `form` handler with `query(...).refresh()` or `query(...).set(...)`.
@@ -952,7 +952,7 @@ export const addLike = command(v.string(), async (id) => {
 });
 ```
 
-For optimistic UI updates while the command is pending, you can use `withOverride` at call time:
+For optimistic UI updates while the command is pending, you can use `override` at call time:
 
 ```ts
 import { RemoteCommand, RemoteQueryFunction } from '@sveltejs/kit';
@@ -965,8 +965,8 @@ declare function showToast(message: string): void;
 declare const item: Item;
 // ---cut---
 try {
-	await addLike(item.id).updates(
-		getLikes(item.id).withOverride((n) => n + 1)
+	await addLike(item.id).with(
+		getLikes(item.id).override((n) => n + 1)
 	);
 } catch (error) {
 	showToast('Something went wrong!');

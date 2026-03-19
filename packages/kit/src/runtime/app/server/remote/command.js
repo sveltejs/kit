@@ -84,8 +84,8 @@ export function command(validate_or_fn, maybe_fn) {
 		);
 
 		// @ts-expect-error
-		promise.updates = () => {
-			throw new Error(`Cannot call '${__.name}(...).updates(...)' on the server`);
+		promise.with = () => {
+			throw new Error(`Cannot call '${__.name}(...).with(...)' on the server`);
 		};
 
 		return /** @type {ReturnType<RemoteCommand<Input, Output>>} */ (promise);

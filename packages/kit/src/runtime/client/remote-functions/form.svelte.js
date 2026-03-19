@@ -1,5 +1,5 @@
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
-/** @import { RemoteFormInput, RemoteForm, RemoteQueryOverride } from '@sveltejs/kit' */
+/** @import { RemoteFormInput, RemoteForm } from '@sveltejs/kit' */
 /** @import { InternalRemoteFormIssue, RemoteFunctionResponse } from 'types' */
 import { app_dir, base } from '$app/paths/internal/client';
 import * as devalue from 'devalue';
@@ -7,7 +7,7 @@ import { DEV } from 'esm-env';
 import { HttpError } from '@sveltejs/kit/internal';
 import { app, query_responses, _goto, set_nearest_error_page, invalidateAll } from '../client.js';
 import { tick } from 'svelte';
-import { refresh_queries, release_overrides, populate_updates_map } from './shared.svelte.js';
+import { refresh_queries, release_callbacks } from './shared.svelte.js';
 import { createAttachmentKey } from 'svelte/attachments';
 import {
 	convert_formdata,
@@ -170,7 +170,7 @@ export function form(id) {
 
 		/**
 		 * @param {FormData} data
-		 * @returns {Promise<any> & { updates: (...args: any[]) => any }}
+		 * @returns {Promise<any> & { with: (...args: Array<() => void>) => any }}
 		 */
 		function submit(data) {
 			// Store a reference to the current instance and increment the usage count for the duration
@@ -183,20 +183,13 @@ export function form(id) {
 				entry.count++;
 			}
 
-			/** @type {Map<string, RemoteQueryOverride>} */
-			const updates = new Map();
+			/** @type {Array<() => void>} */
+			const callbacks = [];
 
-			/** @type {Error | undefined} */
-			let updates_error;
-
-			/** @type {Promise<any> & { updates: (...args: RemoteQueryOverride[]) => Promise<any> }} */
+			/** @type {Promise<any> & { with: (...args: Array<() => void>) => Promise<any> }} */
 			const promise = (async () => {
 				try {
 					await Promise.resolve();
-
-					if (updates_error) {
-						throw updates_error;
-					}
 
 					const { blob } = serialize_binary_form(convert(data), {});
 
@@ -227,7 +220,7 @@ export function form(id) {
 
 						if (!issues.$) {
 							if (form_result.refreshes) {
-								refresh_queries(form_result.refreshes, updates);
+								refresh_queries(form_result.refreshes);
 							} else {
 								void invalidateAll();
 							}
@@ -235,7 +228,7 @@ export function form(id) {
 					} else if (form_result.type === 'redirect') {
 						const refreshes = form_result.refreshes ?? '';
 						if (refreshes) {
-							refresh_queries(refreshes, updates);
+							refresh_queries(refreshes);
 						}
 						// Use internal version to allow redirects to external URLs
 						void _goto(form_result.location, { invalidateAll: !refreshes }, 0);
@@ -246,7 +239,7 @@ export function form(id) {
 					result = undefined;
 					throw e;
 				} finally {
-					release_overrides(updates);
+					release_callbacks(callbacks);
 
 					// Decrement pending count when submission completes
 					pending_count--;
@@ -262,19 +255,15 @@ export function form(id) {
 				}
 			})();
 
-			let updates_called = false;
-			promise.updates = (...args) => {
-				if (updates_called) {
-					throw new Error('The updates() method can only be called once per form submission');
+			let with_called = false;
+			promise.with = (...args) => {
+				if (with_called) {
+					throw new Error('The with() method can only be called once per form submission');
 				}
-				updates_called = true;
+				with_called = true;
 
-				try {
-					populate_updates_map(updates, args);
-				} catch (error) {
-					updates_error = /** @type {Error} */ (error);
-					throw updates_error;
-				}
+				callbacks.length = 0;
+				callbacks.push(...args);
 
 				return promise;
 			};

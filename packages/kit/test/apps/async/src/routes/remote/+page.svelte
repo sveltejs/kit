@@ -18,8 +18,7 @@
 	let command_result = $state(null);
 
 	// we just want it not to be treeshaken away
-	// eslint-disable-next-line @typescript-eslint/no-unused-expressions
-	q;
+	void q;
 
 	const count = get_count();
 </script>
@@ -79,7 +78,7 @@
 	onclick={async () => {
 		// slow, else test will not be able to see the override
 		// (which we deliberately set to a wrong optimistic value to see it applied before the refresh)
-		command_result = await set_count_server_refresh_slow(5).updates(count.withOverride(() => 6));
+		command_result = await set_count_server_refresh_slow(5).with(count.override(() => 6));
 	}}
 	id="multiply-override-refresh-btn"
 >

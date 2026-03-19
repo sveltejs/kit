@@ -1,4 +1,3 @@
-/** @import { RemoteQueryOverride } from '@sveltejs/kit' */
 /** @import { RemoteFunctionResponse } from 'types' */
 import * as devalue from 'devalue';
 import { app, goto, query_map } from '../client.js';
@@ -54,60 +53,23 @@ export async function remote_request(url, headers) {
 }
 
 /**
- * @param {Map<string, RemoteQueryOverride>} updates
+ * @param {Array<() => void>} callbacks
  */
-export function release_overrides(updates) {
-	for (const update of updates.values()) {
-		update.release();
+export function release_callbacks(callbacks) {
+	for (const callback of callbacks) {
+		callback();
 	}
-}
 
-/**
- * @param {Map<string, RemoteQueryOverride>} map
- * @param {RemoteQueryOverride[]} updates
- */
-export function populate_updates_map(map, updates) {
-	map.clear();
-
-	for (const update of updates) {
-		if (
-			typeof update !== 'object' ||
-			update === null ||
-			typeof update._key !== 'string' ||
-			typeof update.release !== 'function'
-		) {
-			release_overrides(map);
-			throw new Error(
-				'updates() expects query overrides with a string _key and a release() function'
-			);
-		}
-
-		if (map.has(update._key)) {
-			release_overrides(map);
-			update.release();
-			throw new Error(
-				'Duplicate query override keys are not allowed in a single updates() invocation'
-			);
-		}
-
-		map.set(update._key, update);
-	}
+	callbacks.length = 0;
 }
 
 /**
  * @param {string} stringified_refreshes
- * @param {Map<string, RemoteQueryOverride>} [updates]
  */
-export function refresh_queries(stringified_refreshes, updates) {
+export function refresh_queries(stringified_refreshes) {
 	const refreshes = Object.entries(devalue.parse(stringified_refreshes, app.decoders));
 
 	for (const [key, value] of refreshes) {
-		const update = updates && updates.get(key);
-		if (update) {
-			update.release();
-			updates.delete(key);
-		}
-
 		const entry = query_map.get(key);
 		entry?.resource.set(value);
 	}

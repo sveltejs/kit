@@ -1,16 +1,11 @@
-/** @import { RemoteCommand, RemoteQueryOverride } from '@sveltejs/kit' */
+/** @import { RemoteCommand } from '@sveltejs/kit' */
 /** @import { RemoteFunctionResponse } from 'types' */
 import { app_dir, base } from '$app/paths/internal/client';
 import * as devalue from 'devalue';
 import { HttpError } from '@sveltejs/kit/internal';
 import { app } from '../client.js';
 import { stringify_remote_arg } from '../../shared.js';
-import {
-	get_remote_request_headers,
-	refresh_queries,
-	release_overrides,
-	populate_updates_map
-} from './shared.svelte.js';
+import { get_remote_request_headers, refresh_queries, release_callbacks } from './shared.svelte.js';
 
 /**
  * Client-version of the `command` function from `$app/server`.
@@ -21,15 +16,12 @@ export function command(id) {
 	/** @type {number} */
 	let pending_count = $state(0);
 
-	// Careful: This function MUST be synchronous (can't use the async keyword) because the return type has to be a promise with an updates() method.
-	// If we make it async, the return type will be a promise that resolves to a promise with an updates() method, which is not what we want.
+	// Careful: This function MUST be synchronous (can't use the async keyword) because the return type has to be a promise with a with() method.
+	// If we make it async, the return type will be a promise that resolves to a promise with a with() method, which is not what we want.
 	/** @type {RemoteCommand<any, any>} */
 	const command_function = (arg) => {
-		/** @type {Map<string, RemoteQueryOverride>} */
-		const updates = new Map();
-
-		/** @type {Error | undefined} */
-		let updates_error;
+		/** @type {Array<() => void>} */
+		const callbacks = [];
 
 		// Increment pending count when command starts
 		pending_count++;
@@ -41,15 +33,11 @@ export function command(id) {
 			...get_remote_request_headers()
 		};
 
-		/** @type {Promise<any> & { updates: (...args: RemoteQueryOverride[]) => Promise<any> }} */
+		/** @type {Promise<any> & { with: (...args: Array<() => void>) => Promise<any> }} */
 		const promise = (async () => {
 			try {
-				// Wait a tick to give room for the `updates` method to be called
+				// Wait a tick to give room for the `with` method to be called
 				await Promise.resolve();
-
-				if (updates_error) {
-					throw updates_error;
-				}
 
 				const response = await fetch(`${base}/${app_dir}/remote/${id}`, {
 					method: 'POST',
@@ -74,31 +62,27 @@ export function command(id) {
 					throw new HttpError(result.status ?? 500, result.error);
 				} else {
 					if (result.refreshes) {
-						refresh_queries(result.refreshes, updates);
+						refresh_queries(result.refreshes);
 					}
 
 					return devalue.parse(result.result, app.decoders);
 				}
 			} finally {
-				release_overrides(updates);
+				release_callbacks(callbacks);
 				// Decrement pending count when command completes
 				pending_count--;
 			}
 		})();
 
-		let updates_called = false;
-		promise.updates = (...args) => {
-			if (updates_called) {
-				throw new Error('The updates() method can only be called once per command invocation');
+		let with_called = false;
+		promise.with = (...args) => {
+			if (with_called) {
+				throw new Error('The with() method can only be called once per command invocation');
 			}
-			updates_called = true;
+			with_called = true;
 
-			try {
-				populate_updates_map(updates, args);
-			} catch (error) {
-				updates_error = /** @type {Error} */ (error);
-				throw updates_error;
-			}
+			callbacks.length = 0;
+			callbacks.push(...args);
 
 			return promise;
 		};

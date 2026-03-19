@@ -2058,7 +2058,7 @@ export type RemoteForm<Input extends RemoteFormInput | void, Output> = {
 			form: HTMLFormElement;
 			data: Input;
 			submit: () => Promise<void> & {
-				updates: (...overrides: Array<RemoteQueryOverride>) => Promise<void>;
+				with: (...callbacks: Array<() => void>) => Promise<void>;
 			};
 		}) => void | Promise<void>
 	): {
@@ -2103,7 +2103,7 @@ export type RemoteForm<Input extends RemoteFormInput | void, Output> = {
  */
 export type RemoteCommand<Input, Output> = {
 	(arg: undefined extends Input ? Input | void : Input): Promise<Output> & {
-		updates(...overrides: Array<RemoteQueryOverride>): Promise<Output>;
+		with(...callbacks: Array<() => void>): Promise<Output>;
 	};
 	/** The number of pending command executions */
 	get pending(): number;
@@ -2149,7 +2149,7 @@ export type RemoteQuery<T> = RemoteResource<T> & {
 	 */
 	refresh(): Promise<void>;
 	/**
-	 * Temporarily override the value of a query. This is used with the `updates` method of a [command](https://svelte.dev/docs/kit/remote-functions#command-Updating-queries) or [enhanced form submission](https://svelte.dev/docs/kit/remote-functions#form-enhance) to provide optimistic updates.
+	 * Temporarily override the value of a query. This is used with the `with` method of a [command](https://svelte.dev/docs/kit/remote-functions#command-Updating-queries) or [enhanced form submission](https://svelte.dev/docs/kit/remote-functions#form-enhance) to provide optimistic updates.
 	 *
 	 * ```svelte
 	 * <script>
@@ -2158,8 +2158,8 @@ export type RemoteQuery<T> = RemoteResource<T> & {
 	 * </script>
 	 *
 	 * <form {...addTodo.enhance(async ({ data, submit }) => {
-	 *   await submit().updates(
-	 *     todos.withOverride((todos) => [...todos, { text: data.get('text') }])
+	 *   await submit().with(
+	 *     todos.override((todos) => [...todos, { text: data.get('text') }])
 	 *   );
 	 * })}>
 	 *   <input type="text" name="text" />
@@ -2167,13 +2167,8 @@ export type RemoteQuery<T> = RemoteResource<T> & {
 	 * </form>
 	 * ```
 	 */
-	withOverride(update: (current: T) => T): RemoteQueryOverride;
+	override(update: (current: T) => T): () => void;
 };
-
-export interface RemoteQueryOverride {
-	_key: string;
-	release(): void;
-}
 
 /**
  * The return value of a remote `prerender` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#prerender) for full documentation.

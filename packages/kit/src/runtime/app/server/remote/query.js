@@ -296,8 +296,8 @@ function create_query_resource(__, arg, state, fn) {
 		then(onfulfilled, onrejected) {
 			return get_promise().then(onfulfilled, onrejected);
 		},
-		withOverride() {
-			throw new Error(`Cannot call '${__.name}.withOverride()' on the server`);
+		override() {
+			throw new Error(`Cannot call '${__.name}.override()' on the server`);
 		},
 		get [Symbol.toStringTag]() {
 			return 'QueryResource';

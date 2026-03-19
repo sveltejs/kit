@@ -3,10 +3,10 @@
 
 	const { params } = $props();
 
-	const message = get_message(params.test_name);
+	const message = $derived(get_message(params.test_name));
 
-	const scoped = set_message.for(`scoped:${params.test_name}`);
-	const enhanced = set_message.for(`enhanced:${params.test_name}`);
+	const scoped = $derived(set_message.for(`scoped:${params.test_name}`));
+	const enhanced = $derived(set_message.for(`enhanced:${params.test_name}`));
 </script>
 
 <p>message.current: {message.current}</p>
@@ -52,7 +52,7 @@
 <form
 	data-enhanced
 	{...enhanced.enhance(async ({ data, submit }) => {
-		await submit().updates(message.withOverride(() => data.message + ' (override)'));
+		await submit().with(message.override(() => data.message + ' (override)'));
 	})}
 >
 	{#if enhanced.fields.message.issues()}
