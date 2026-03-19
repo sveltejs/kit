@@ -174,13 +174,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 				await iterator.return?.();
 			};
 
-			event.request.signal.addEventListener(
-				'abort',
-				() => {
-					void close();
-				},
-				{ once: true }
-			);
+			event.request.signal.addEventListener('abort', close, { once: true });
 
 			return new Response(
 				new ReadableStream({
