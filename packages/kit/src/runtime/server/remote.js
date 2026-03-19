@@ -279,7 +279,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 			{
 				// By setting a non-200 during prerendering we fail the prerender process (unless handleHttpError handles it).
 				// Errors at runtime will be passed to the client and are handled there
-				status: state.prerendering || internals.type === 'query_live' ? status : undefined,
+				status: state.prerendering ? status : undefined,
 				headers: {
 					'cache-control': 'private, no-store'
 				}
