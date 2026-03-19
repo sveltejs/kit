@@ -181,7 +181,7 @@ function batch(validate_or_fn, maybe_fn) {
 			// Collect all the calls to the same query in the same macrotask,
 			// then execute them as one backend request.
 			return new Promise((resolve, reject) => {
-				const key = stringify_remote_arg(arg, state.transport);
+				const key = stringify_remote_arg(arg);
 				const entry = batching.get(key);
 
 				if (entry) {
@@ -326,7 +326,7 @@ function get_refresh_context(__, action, arg) {
 	}
 
 	const cache = get_cache(__, state);
-	const cache_key = stringify_remote_arg(arg, state.transport);
+	const cache_key = stringify_remote_arg(arg);
 	const refreshes_key = create_remote_key(__.id, cache_key);
 
 	return { __, state, refreshes, refreshes_key, cache, cache_key };

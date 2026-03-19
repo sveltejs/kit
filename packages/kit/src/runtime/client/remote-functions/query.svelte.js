@@ -386,7 +386,7 @@ class QueryProxy {
 	 * @param {(key: string, payload: string) => Promise<T>} fn
 	 */
 	constructor(id, arg, fn) {
-		this.#payload = stringify_remote_arg(arg, app.hooks.transport);
+		this.#payload = stringify_remote_arg(arg);
 		this._key = create_remote_key(id, this.#payload);
 		this.#fn = fn;
 

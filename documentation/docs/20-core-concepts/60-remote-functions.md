@@ -158,7 +158,7 @@ export const getPost = query(v.string(), async (slug) => {
 });
 ```
 
-Both the argument and the return value are serialized with [devalue](https://github.com/sveltejs/devalue), which handles types like `Date` and `Map` (and custom types defined in your [transport hook](hooks#Universal-hooks-transport)) in addition to JSON.
+Both the argument and the return value are serialized with [devalue](https://github.com/sveltejs/devalue). Remote function arguments can contain JSON-compatible data plus devalue-native types like `Date`, `URL`, `ArrayBuffer`, typed arrays and Temporal values, but cannot contain `Map`, `Set`, `RegExp`, or custom class instances. Return values can use any devalue-supported types (and custom types defined in your [transport hook](hooks#Universal-hooks-transport)).
 
 ### Refreshing queries
 
