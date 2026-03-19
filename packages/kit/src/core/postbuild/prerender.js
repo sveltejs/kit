@@ -496,7 +496,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 	internal.set_manifest(manifest);
 	internal.set_read_implementation((file) => createReadableStream(`${out}/server/${file}`));
 
-	/** @type {Array<import('types').RemoteInfo & { type: 'prerender'}>} */
+	/** @type {Array<import('types').RemotePrerenderInfo>} */
 	const prerender_functions = [];
 
 	for (const loader of Object.values(manifest._.remotes)) {

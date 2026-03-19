@@ -1,5 +1,5 @@
 /** @import { RemoteResource, RemotePrerenderFunction } from '@sveltejs/kit' */
-/** @import { RemotePrerenderInputsGenerator, RemoteInfo, MaybePromise } from 'types' */
+/** @import { RemotePrerenderInputsGenerator, MaybePromise, RemotePrerenderInfo } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 import { error, json } from '@sveltejs/kit';
 import { DEV } from 'esm-env';
@@ -76,7 +76,7 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 	/** @type {(arg?: any) => MaybePromise<Input>} */
 	const validate = create_validator(validate_or_fn, maybe_fn);
 
-	/** @type {RemoteInfo} */
+	/** @type {RemotePrerenderInfo} */
 	const __ = {
 		type: 'prerender',
 		id: '',
@@ -86,7 +86,7 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 		dynamic: options?.dynamic
 	};
 
-	/** @type {RemotePrerenderFunction<Input, Output> & { __: RemoteInfo }} */
+	/** @type {RemotePrerenderFunction<Input, Output> & { __: RemotePrerenderInfo }} */
 	const wrapper = (arg) => {
 		/** @type {Promise<Output> & Partial<RemoteResource<Output>>} */
 		const promise = (async () => {

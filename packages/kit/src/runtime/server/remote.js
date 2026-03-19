@@ -1,5 +1,5 @@
 /** @import { ActionResult, RemoteForm, RequestEvent, SSRManifest } from '@sveltejs/kit' */
-/** @import { RemoteFunctionResponse, RemoteInfo, RequestState, SSROptions } from 'types' */
+/** @import { RemoteFormInfo, RemoteFunctionResponse, RemoteInfo, RequestState, SSROptions } from 'types' */
 
 import { json, error } from '@sveltejs/kit';
 import { HttpError, Redirect, SvelteKitError } from '@sveltejs/kit/internal';
@@ -144,11 +144,6 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 		}
 
 		if (info.type === 'query_live') {
-			const live_info =
-				/** @type {RemoteInfo & { type: 'query_live'; run: (event: RequestEvent, state: RequestState, arg: any) => Promise<{ iterator: AsyncIterator<any>; cancel: () => void }> }} */ (
-					info
-				);
-
 			if (event.request.method !== 'GET') {
 				throw new SvelteKitError(
 					405,
@@ -161,7 +156,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 				new URL(event.request.url).searchParams.get('payload')
 			);
 
-			const live = await live_info.run(event, state, parse_remote_arg(payload, transport));
+			const live = await info.run(event, state, parse_remote_arg(payload, transport));
 			const iterator = live.iterator;
 
 			const encoder = new TextEncoder();
@@ -387,7 +382,7 @@ async function handle_remote_form_post_internal(event, state, manifest, id) {
 	}
 
 	try {
-		const fn = /** @type {RemoteInfo & { type: 'form' }} */ (/** @type {any} */ (form).__).fn;
+		const fn = /** @type {RemoteFormInfo} */ (/** @type {any} */ (form).__).fn;
 
 		const { data, meta, form_data } = await deserialize_binary_form(event.request);
 

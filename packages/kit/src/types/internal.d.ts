@@ -569,40 +569,52 @@ export type BinaryFormMeta = {
 	validate_only?: boolean;
 };
 
+interface BaseRemoteInfo {
+	type: string;
+	id: string;
+	name: string;
+}
+
+export interface RemoteQueryInfo extends BaseRemoteInfo {
+	type: 'query';
+}
+export interface RemoteQueryLiveInfo extends BaseRemoteInfo {
+	type: 'query_live';
+	run(
+		event: RequestEvent,
+		state: RequestState,
+		arg: any
+	): Promise<{ iterator: AsyncIterator<any>; cancel: () => void }>;
+}
+
+export interface RemoteQueryBatchInfo extends BaseRemoteInfo {
+	type: 'query_batch';
+	run: (args: any[], options: SSROptions) => Promise<any[]>;
+}
+
+export interface RemoteCommandInfo extends BaseRemoteInfo {
+	type: 'command';
+}
+
+export interface RemoteFormInfo extends BaseRemoteInfo {
+	type: 'form';
+	fn(body: Record<string, any>, meta: BinaryFormMeta, form_data: FormData | null): Promise<any>;
+}
+
+export interface RemotePrerenderInfo extends BaseRemoteInfo {
+	type: 'prerender';
+	has_arg: boolean;
+	dynamic?: boolean;
+	inputs?: RemotePrerenderInputsGenerator;
+}
+
 export type RemoteInfo =
-	| {
-			type: 'query' | 'query_live' | 'command';
-			id: string;
-			name: string;
-	  }
-	| {
-			/**
-			 * Corresponds to the name of the client-side exports (that's why we use underscores and not dots)
-			 */
-			type: 'query_batch';
-			id: string;
-			name: string;
-			/** Direct access to the function, for remote functions called from the client */
-			run: (args: any[], options: SSROptions) => Promise<any[]>;
-	  }
-	| {
-			type: 'form';
-			id: string;
-			name: string;
-			fn: (
-				body: Record<string, any>,
-				meta: BinaryFormMeta,
-				form_data: FormData | null
-			) => Promise<any>;
-	  }
-	| {
-			type: 'prerender';
-			id: string;
-			name: string;
-			has_arg: boolean;
-			dynamic?: boolean;
-			inputs?: RemotePrerenderInputsGenerator;
-	  };
+	| RemoteQueryInfo
+	| RemoteQueryLiveInfo
+	| RemoteQueryBatchInfo
+	| RemoteCommandInfo
+	| RemoteFormInfo
+	| RemotePrerenderInfo;
 
 export interface InternalRemoteFormIssue extends RemoteFormIssue {
 	name: string;

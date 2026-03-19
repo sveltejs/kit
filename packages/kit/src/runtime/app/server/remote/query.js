@@ -1,5 +1,5 @@
 /** @import { RemoteLiveQuery, RemoteLiveQueryFunction, RemoteQuery, RemoteQueryFunction } from '@sveltejs/kit' */
-/** @import { RemoteInfo, MaybePromise, RequestState } from 'types' */
+/** @import { RemoteInfo, MaybePromise, RequestState, RemoteQueryLiveInfo, RemoteQueryBatchInfo, RemoteQueryInfo } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 import { get_request_store } from '@sveltejs/kit/internal/server';
 import { create_remote_key, stringify, stringify_remote_arg } from '../../../shared.js';
@@ -61,10 +61,10 @@ export function query(validate_or_fn, maybe_fn) {
 	/** @type {(arg?: any) => MaybePromise<Input>} */
 	const validate = create_validator(validate_or_fn, /** @type {any} */ (maybe_fn));
 
-	/** @type {RemoteInfo} */
+	/** @type {RemoteQueryInfo} */
 	const __ = { type: 'query', id: '', name: '' };
 
-	/** @type {RemoteQueryFunction<Input, Output> & { __: RemoteInfo }} */
+	/** @type {RemoteQueryFunction<Input, Output> & { __: RemoteQueryInfo }} */
 	const wrapper = (arg) => {
 		if (prerendering) {
 			throw new Error(
@@ -146,10 +146,10 @@ function live(validate_or_fn, maybe_fn) {
 			}
 		);
 
-	/** @type {RemoteInfo & { type: 'query_live'; run: typeof run }} */
+	/** @type {RemoteQueryLiveInfo} */
 	const __ = { type: 'query_live', id: '', name: '', run };
 
-	/** @type {RemoteLiveQueryFunction<Input, Output> & { __: RemoteInfo }} */
+	/** @type {RemoteLiveQueryFunction<Input, Output> & { __: RemoteQueryLiveInfo }} */
 	const wrapper = (arg) => {
 		if (prerendering) {
 			throw new Error(
@@ -231,7 +231,7 @@ function batch(validate_or_fn, maybe_fn) {
 	/** @type {(arg?: any) => MaybePromise<Input>} */
 	const validate = create_validator(validate_or_fn, maybe_fn);
 
-	/** @type {RemoteInfo & { type: 'query_batch' }} */
+	/** @type {RemoteQueryBatchInfo} */
 	const __ = {
 		type: 'query_batch',
 		id: '',
@@ -272,7 +272,7 @@ function batch(validate_or_fn, maybe_fn) {
 	/** @type {Map<string, { arg: any, resolvers: Array<{resolve: (value: any) => void, reject: (error: any) => void}> }>} */
 	let batching = new Map();
 
-	/** @type {RemoteQueryFunction<Input, Output> & { __: RemoteInfo }} */
+	/** @type {RemoteQueryFunction<Input, Output> & { __: RemoteQueryBatchInfo }} */
 	const wrapper = (arg) => {
 		if (prerendering) {
 			throw new Error(
@@ -411,7 +411,7 @@ function create_query_resource(__, arg, state, fn) {
 }
 
 /**
- * @param {RemoteInfo} __
+ * @param {RemoteQueryLiveInfo} __
  * @param {any} arg
  * @param {RequestState} state
  * @param {() => Promise<any>} get_first_value
