@@ -91,7 +91,7 @@ export function query(validate_or_fn, maybe_fn) {
  *
  * @template Output
  * @overload
- * @param {(arg: void, context: { signal: AbortSignal }) => MaybePromise<AsyncIterator<Output> | AsyncIterable<Output>>} fn
+ * @param {(arg: void, context: { signal: AbortSignal }) => MaybePromise<Generator<Output> | AsyncIterator<Output> | AsyncIterable<Output>>} fn
  * @returns {RemoteLiveQueryFunction<void, Output>}
  */
 /**
@@ -99,7 +99,7 @@ export function query(validate_or_fn, maybe_fn) {
  * @template Output
  * @overload
  * @param {'unchecked'} validate
- * @param {(arg: Input, context: { signal: AbortSignal }) => MaybePromise<AsyncIterator<Output> | AsyncIterable<Output>>} fn
+ * @param {(arg: Input, context: { signal: AbortSignal }) => MaybePromise<Generator<Output> | AsyncIterator<Output> | AsyncIterable<Output>>} fn
  * @returns {RemoteLiveQueryFunction<Input, Output>}
  */
 /**
@@ -107,19 +107,19 @@ export function query(validate_or_fn, maybe_fn) {
  * @template Output
  * @overload
  * @param {Schema} schema
- * @param {(arg: StandardSchemaV1.InferOutput<Schema>, context: { signal: AbortSignal }) => MaybePromise<AsyncIterator<Output> | AsyncIterable<Output>>} fn
+ * @param {(arg: StandardSchemaV1.InferOutput<Schema>, context: { signal: AbortSignal }) => MaybePromise<Generator<Output> | AsyncIterator<Output> | AsyncIterable<Output>>} fn
  * @returns {RemoteLiveQueryFunction<StandardSchemaV1.InferInput<Schema>, Output>}
  */
 /**
  * @template Input
  * @template Output
  * @param {any} validate_or_fn
- * @param {(args: Input, context: { signal: AbortSignal }) => MaybePromise<AsyncIterator<Output> | AsyncIterable<Output>>} [maybe_fn]
+ * @param {(args: Input, context: { signal: AbortSignal }) => MaybePromise<Generator<Output> | AsyncIterator<Output> | AsyncIterable<Output>>} [maybe_fn]
  * @returns {RemoteLiveQueryFunction<Input, Output>}
  */
 /*@__NO_SIDE_EFFECTS__*/
 function live(validate_or_fn, maybe_fn) {
-	/** @type {(arg: Input, context: { signal: AbortSignal }) => MaybePromise<AsyncIterator<Output> | AsyncIterable<Output>>} */
+	/** @type {(arg: Input, context: { signal: AbortSignal }) => MaybePromise<Generator<Output> | AsyncIterator<Output> | AsyncIterable<Output>>} */
 	const fn = maybe_fn ?? validate_or_fn;
 
 	/** @type {(arg?: any) => MaybePromise<Input>} */
@@ -415,7 +415,7 @@ function create_query_resource(__, arg, state, fn) {
  * @param {any} arg
  * @param {RequestState} state
  * @param {() => Promise<any>} get_first_value
- * @param {() => Promise<AsyncIterator<any>>} get_iterator
+ * @param {() => MaybePromise<AsyncIterator<any>>} get_iterator
  * @returns {RemoteLiveQuery<any>}
  */
 function create_live_query_resource(__, arg, state, get_first_value, get_iterator) {
@@ -443,7 +443,7 @@ function create_live_query_resource(__, arg, state, get_first_value, get_iterato
 		reconnect() {
 			throw new Error(`Cannot call '${__.name}.reconnect()' on the server`);
 		},
-		run() {
+		async run() {
 			if (!state.is_in_universal_load) {
 				throw new Error(
 					'On the server, .run() can only be called in universal `load` functions. Anywhere else, just await the query directly'
@@ -468,7 +468,7 @@ Object.defineProperty(query, 'live', { value: live, enumerable: true });
 
 /**
  * @template T
- * @param {AsyncIterator<T> | AsyncIterable<T>} source
+ * @param {Generator<T> | AsyncIterator<T> | AsyncIterable<T>} source
  * @param {string} name
  * @returns {AsyncIterator<T>}
  */

@@ -3408,15 +3408,15 @@ declare module '$app/server' {
 		 * */
 		function live<Output>(fn: (arg: void, context: {
 			signal: AbortSignal;
-		}) => MaybePromise<AsyncIterator<Output> | AsyncIterable<Output>>): RemoteLiveQueryFunction<void, Output>;
+		}) => MaybePromise<Generator<Output> | AsyncIterator<Output> | AsyncIterable<Output>>): RemoteLiveQueryFunction<void, Output>;
 		
 		function live<Input, Output>(validate: "unchecked", fn: (arg: Input, context: {
 			signal: AbortSignal;
-		}) => MaybePromise<AsyncIterator<Output> | AsyncIterable<Output>>): RemoteLiveQueryFunction<Input, Output>;
+		}) => MaybePromise<Generator<Output> | AsyncIterator<Output> | AsyncIterable<Output>>): RemoteLiveQueryFunction<Input, Output>;
 		
 		function live<Schema extends StandardSchemaV1, Output>(schema: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>, context: {
 			signal: AbortSignal;
-		}) => MaybePromise<AsyncIterator<Output> | AsyncIterable<Output>>): RemoteLiveQueryFunction<StandardSchemaV1.InferInput<Schema>, Output>;
+		}) => MaybePromise<Generator<Output> | AsyncIterator<Output> | AsyncIterable<Output>>): RemoteLiveQueryFunction<StandardSchemaV1.InferInput<Schema>, Output>;
 	}
 	type RemotePrerenderInputsGenerator<Input = any> = () => MaybePromise<Input[]>;
 	type MaybePromise<T> = T | Promise<T>;
