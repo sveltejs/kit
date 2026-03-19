@@ -2327,6 +2327,10 @@ export async function preloadCode(pathname) {
 		throw new Error('Cannot call preloadCode(...) on the server');
 	}
 
+
+	if (!pathname) {
+		return;
+	}
 	const url = new URL(pathname, current.url);
 
 	if (DEV) {
