@@ -515,19 +515,19 @@ export async function render_response({
 			/** @type {Record<string, any>} */
 			const prerender = {};
 
-			for (const [info, cache] of remote.data) {
+			for (const [internals, cache] of remote.data) {
 				// remote functions without an `id` aren't exported, and thus
 				// cannot be called from the client
-				if (!info.id) continue;
+				if (!internals.id) continue;
 
 				for (const key in cache) {
 					const entry = cache[key];
 
 					if (!entry.serialize) continue;
 
-					const remote_key = create_remote_key(info.id, key);
+					const remote_key = create_remote_key(internals.id, key);
 
-					const store = info.type === 'prerender' ? prerender : query;
+					const store = internals.type === 'prerender' ? prerender : query;
 
 					if (event_state.remote.refreshes?.[remote_key] !== undefined) {
 						// This entry was refreshed/set by a command or form action.

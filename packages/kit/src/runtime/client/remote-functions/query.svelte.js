@@ -46,15 +46,17 @@ export function query(id) {
 		}
 	}
 
-	return create_query_function(id, async (key, payload) => {
-		const url = `${base}/${app_dir}/remote/${id}${payload ? `?payload=${payload}` : ''}`;
+	return (arg) => {
+		return new QueryProxy(id, arg, async (key, payload) => {
+			const url = `${base}/${app_dir}/remote/${id}${payload ? `?payload=${payload}` : ''}`;
 
-		const serialized = await unfriendly_hydratable(key, () =>
-			remote_request(url, get_remote_request_headers())
-		);
+			const serialized = await unfriendly_hydratable(key, () =>
+				remote_request(url, get_remote_request_headers())
+			);
 
-		return devalue.parse(serialized, app.decoders);
-	});
+			return devalue.parse(serialized, app.decoders);
+		});
+	};
 }
 
 /**
@@ -65,11 +67,10 @@ export function query_batch(id) {
 	/** @type {Map<string, Array<{resolve: (value: any) => void, reject: (error: any) => void}>>} */
 	let batching = new Map();
 
-	return create_query_function(id, async (key, payload) => {
-		const serialized = await unfriendly_hydratable(
-			key,
-			() =>
-				new Promise((resolve, reject) => {
+	return (arg) => {
+		return new QueryProxy(id, arg, async (key, payload) => {
+			const serialized = await unfriendly_hydratable(key, () => {
+				return new Promise((resolve, reject) => {
 					// create_remote_function caches identical calls, but in case a refresh to the same query is called multiple times this function
 					// is invoked multiple times with the same payload, so we need to deduplicate here
 					const entry = batching.get(payload) ?? [];
@@ -141,22 +142,12 @@ export function query_batch(id) {
 							}
 						}
 					}, 0);
-				})
-		);
+				});
+			});
 
-		return devalue.parse(serialized, app.decoders);
-	});
-}
-
-/**
- * @template Input
- * @template Output
- * @param {string} id
- * @param {(key: string, payload: string) => Promise<Output>} fn
- * @returns {RemoteQueryFunction<Input, Output>}
- */
-function create_query_function(id, fn) {
-	return (arg) => new QueryProxy(id, arg, fn);
+			return devalue.parse(serialized, app.decoders);
+		});
+	};
 }
 
 /**
