@@ -81,6 +81,6 @@ export function refresh_queries(stringified_refreshes, updates = []) {
 		}
 		// Update the query with the new value
 		const entry = query_map.get(key);
-		/** @type {any} */ (entry?.resource)?.set?.(value);
+		entry?.resource.set(value);
 	}
 }
