@@ -70,9 +70,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 			/** @type {{ payloads: string[] }} */
 			const { payloads } = await event.request.json();
 
-			const args = await Promise.all(
-				payloads.map((payload) => parse_remote_arg(payload, transport))
-			);
+			const args = await Promise.all(payloads.map((payload) => parse_remote_arg(payload)));
 
 			const results = await with_request_store({ event, state }, () =>
 				internals.run(args, options)
@@ -128,7 +126,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 		if (internals.type === 'command') {
 			/** @type {{ payload: string }} */
 			const { payload } = await event.request.json();
-			const arg = parse_remote_arg(payload, transport);
+			const arg = parse_remote_arg(payload);
 			const data = await with_request_store({ event, state }, () => fn(arg));
 
 			return json(
@@ -148,9 +146,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 						new URL(event.request.url).searchParams.get('payload')
 					);
 
-		const data = await with_request_store({ event, state }, () =>
-			fn(parse_remote_arg(payload, transport))
-		);
+		const data = await with_request_store({ event, state }, () => fn(parse_remote_arg(payload)));
 
 		return json(
 			/** @type {RemoteFunctionResponse} */ ({
