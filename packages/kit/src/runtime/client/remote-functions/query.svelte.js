@@ -78,7 +78,7 @@ export function query_live(id) {
 		}
 	}
 
-	return create_live_query_function(id);
+	return (arg) => new LiveQueryProxy(id, arg);
 }
 
 /**
@@ -183,16 +183,6 @@ export function query_batch(id) {
  */
 function create_query_function(id, fn) {
 	return (arg) => /** @type {any} */ (new QueryProxy(id, arg, fn));
-}
-
-/**
- * @template Input
- * @template Output
- * @param {string} id
- * @returns {RemoteLiveQueryFunction<Input, Output>}
- */
-function create_live_query_function(id) {
-	return (arg) => /** @type {any} */ (new LiveQueryProxy(id, arg));
 }
 
 /**
