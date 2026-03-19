@@ -302,7 +302,7 @@ export let pending_invalidate;
 
 /**
  * @type {Map<string, RemoteQueryCacheEntry<any>>}
- * A map of id -> query info with all queries that currently exist in the app.
+ * A map of id -> query internals with all queries that currently exist in the app.
  */
 export const query_map = new Map();
 

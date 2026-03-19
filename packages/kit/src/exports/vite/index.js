@@ -759,7 +759,7 @@ async function kit({ svelte_config }) {
 
 			// For the client, read the exports and create a new module that only contains fetch functions with the correct metadata
 
-			/** @type {Map<string, import('types').RemoteInfo['type']>} */
+			/** @type {Map<string, import('types').RemoteInternals['type']>} */
 			const map = new Map();
 
 			// in dev, load the server module here (which will result in this hook

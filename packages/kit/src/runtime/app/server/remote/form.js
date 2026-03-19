@@ -1,5 +1,5 @@
 /** @import { RemoteFormInput, RemoteForm, InvalidField } from '@sveltejs/kit' */
-/** @import { InternalRemoteFormIssue, MaybePromise, RemoteInfo } from 'types' */
+/** @import { InternalRemoteFormIssue, MaybePromise, RemoteFormInternals } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 import { get_request_store } from '@sveltejs/kit/internal/server';
 import { DEV } from 'esm-env';
@@ -84,7 +84,7 @@ export function form(validate_or_fn, maybe_fn) {
 			}
 		});
 
-		/** @type {RemoteInfo} */
+		/** @type {RemoteFormInternals} */
 		const __ = {
 			type: 'form',
 			name: '',
