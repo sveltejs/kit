@@ -301,10 +301,16 @@ const preload_tokens = new Set();
 export let pending_invalidate;
 
 /**
- * @type {Map<string, RemoteQueryCacheEntry<any> | RemoteLiveQueryCacheEntry<any>>}
+ * @type {Map<string, RemoteQueryCacheEntry<any>>}
  * A map of id -> query info with all queries that currently exist in the app.
  */
 export const query_map = new Map();
+
+/**
+ * @type {Map<string, RemoteLiveQueryCacheEntry<any>>}
+ * A map of id -> live query info with all live queries that currently exist in the app.
+ */
+export const live_query_map = new Map();
 
 /**
  * @param {import('./types.js').SvelteKitApp} _app
