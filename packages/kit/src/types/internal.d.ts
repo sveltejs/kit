@@ -178,7 +178,12 @@ export class InternalServer extends Server {
 			prerendering?: PrerenderOptions;
 			read: (file: string) => NonSharedBuffer;
 			/** A hook called before `handle` during dev, so that `AsyncLocalStorage` can be populated. */
-			before_handle?: (event: RequestEvent, config: any, prerender: PrerenderOption) => void;
+			before_handle?: (
+				event: RequestEvent,
+				config: any,
+				prerender: PrerenderOption,
+				handle: () => Promise<Response>
+			) => Promise<Response>;
 		}
 	): Promise<Response>;
 }

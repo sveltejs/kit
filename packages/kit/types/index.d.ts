@@ -3040,40 +3040,52 @@ declare module '@sveltejs/kit/internal/server' {
 		validate_only?: boolean;
 	};
 
-	type RemoteInfo =
-		| {
-				type: 'query' | 'command';
-				id: string;
-				name: string;
-		  }
-		| {
-				/**
-				 * Corresponds to the name of the client-side exports (that's why we use underscores and not dots)
-				 */
-				type: 'query_batch';
-				id: string;
-				name: string;
-				/** Direct access to the function, for remote functions called from the client */
-				run: (args: any[], options: SSROptions) => Promise<any[]>;
-		  }
-		| {
-				type: 'form';
-				id: string;
-				name: string;
-				fn: (
-					body: Record<string, any>,
-					meta: BinaryFormMeta,
-					form_data: FormData | null
-				) => Promise<any>;
-		  }
-		| {
-				type: 'prerender';
-				id: string;
-				name: string;
-				has_arg: boolean;
-				dynamic?: boolean;
-				inputs?: RemotePrerenderInputsGenerator;
-		  };
+	interface BaseRemoteInternals {
+		type: string;
+		id: string;
+		name: string;
+	}
+
+	interface RemoteQueryInternals extends BaseRemoteInternals {
+		type: 'query';
+	}
+	interface RemoteQueryLiveInternals extends BaseRemoteInternals {
+		type: 'query_live';
+		run(
+			event: RequestEvent,
+			state: RequestState,
+			arg: any
+		): Promise<{ iterator: AsyncIterator<any>; cancel: () => void }>;
+	}
+
+	interface RemoteQueryBatchInternals extends BaseRemoteInternals {
+		type: 'query_batch';
+		run: (args: any[], options: SSROptions) => Promise<any[]>;
+	}
+
+	interface RemoteCommandInternals extends BaseRemoteInternals {
+		type: 'command';
+	}
+
+	interface RemoteFormInternals extends BaseRemoteInternals {
+		type: 'form';
+		fn(body: Record<string, any>, meta: BinaryFormMeta, form_data: FormData | null): Promise<any>;
+	}
+
+	interface RemotePrerenderInternals extends BaseRemoteInternals {
+		type: 'prerender';
+		has_arg: boolean;
+		dynamic?: boolean;
+		inputs?: RemotePrerenderInputsGenerator;
+	}
+
+	type RemoteInternals =
+		| RemoteQueryInternals
+		| RemoteQueryLiveInternals
+		| RemoteQueryBatchInternals
+		| RemoteCommandInternals
+		| RemoteFormInternals
+		| RemotePrerenderInternals;
 
 	type RecordSpan = <T>(options: {
 		name: string;
@@ -3086,17 +3098,23 @@ declare module '@sveltejs/kit/internal/server' {
 	 * used for tracking things like remote function calls
 	 */
 	interface RequestState {
-		prerendering: PrerenderOptions | undefined;
-		transport: ServerHooks['transport'];
-		handleValidationError: ServerHooks['handleValidationError'];
-		tracing: {
+		readonly prerendering: PrerenderOptions | undefined;
+		readonly transport: ServerHooks['transport'];
+		readonly handleValidationError: ServerHooks['handleValidationError'];
+		readonly tracing: {
 			record_span: RecordSpan;
 		};
-		is_in_remote_function: boolean;
-		form_instances?: Map<any, any>;
-		remote_data?: Map<RemoteInfo, Record<string, MaybePromise<any>>>;
-		refreshes?: Record<string, Promise<any>>;
-		allows_commands?: boolean;
+		readonly remote: {
+			data: null | Map<
+				RemoteInternals,
+				Record<string, { serialize: boolean; data: MaybePromise<any> }>
+			>;
+			forms: null | Map<any, any>;
+			refreshes: null | Record<string, Promise<any>>;
+		};
+		readonly is_in_remote_function: boolean;
+		readonly is_in_render: boolean;
+		readonly is_in_universal_load: boolean;
 	}
 
 	interface RequestStore {
