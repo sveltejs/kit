@@ -1,7 +1,10 @@
 export let base = typeof __SVELTEKIT_PATHS_BASE__ !== 'undefined' ? __SVELTEKIT_PATHS_BASE__ : '';
-export let assets = typeof __SVELTEKIT_PATHS_ASSETS__ !== 'undefined' ? __SVELTEKIT_PATHS_ASSETS__ : base;
-export const app_dir = typeof __SVELTEKIT_APP_DIR__ !== 'undefined' ? __SVELTEKIT_APP_DIR__ : '_app';
-export const relative = typeof __SVELTEKIT_PATHS_RELATIVE__ !== 'undefined' ? __SVELTEKIT_PATHS_RELATIVE__ : true;
+export let assets =
+	typeof __SVELTEKIT_PATHS_ASSETS__ !== 'undefined' ? __SVELTEKIT_PATHS_ASSETS__ : base;
+export const app_dir =
+	typeof __SVELTEKIT_APP_DIR__ !== 'undefined' ? __SVELTEKIT_APP_DIR__ : '_app';
+export const relative =
+	typeof __SVELTEKIT_PATHS_RELATIVE__ !== 'undefined' ? __SVELTEKIT_PATHS_RELATIVE__ : true;
 
 const initial = { base, assets };
 

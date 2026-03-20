@@ -1,4 +1,5 @@
-export const version = typeof __SVELTEKIT_APP_VERSION__ === 'string' ? __SVELTEKIT_APP_VERSION__ : 'unknown';
+export const version =
+	typeof __SVELTEKIT_APP_VERSION__ === 'string' ? __SVELTEKIT_APP_VERSION__ : 'unknown';
 export let building = false;
 export let prerendering = false;
 

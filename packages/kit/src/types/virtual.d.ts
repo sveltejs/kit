@@ -10,5 +10,5 @@ declare module '__sveltekit/ssr-manifest' {
 }
 
 declare module '__sveltekit/dev' {
-  export { Server } from '@sveltejs/kit';
+	export { Server } from '@sveltejs/kit';
 }
