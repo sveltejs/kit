@@ -390,6 +390,7 @@ async function get_stream_reader(response) {
 	const content_type = response.headers.get('content-type') ?? '';
 
 	if (response.ok && content_type.includes('application/json')) {
+		// we can end up here if we e.g. redirect in `handle`
 		const result = await response.json();
 
 		if (result.type === 'redirect') {
@@ -397,32 +398,19 @@ async function get_stream_reader(response) {
 			throw new Redirect(307, result.location);
 		}
 
-		if (result.type === 'error') {
-			throw new HttpError(result.status ?? 500, result.error);
-		}
-
 		throw new Error('Invalid query.live response');
 	}
 
 	if (!response.ok) {
-		let result;
-
 		try {
-			result = await response.json();
+			const result = await response.json();
+
+			if (result.type === 'error') {
+				throw new HttpError(result.status ?? response.status ?? 500, result.error);
+			}
 		} catch {
 			throw new HttpError(response.status, response.statusText);
 		}
-
-		if (result.type === 'redirect') {
-			await goto(result.location);
-			throw new Redirect(307, result.location);
-		}
-
-		if (result.type === 'error') {
-			throw new HttpError(result.status ?? response.status ?? 500, result.error);
-		}
-
-		throw new HttpError(response.status, response.statusText);
 	}
 
 	if (!response.body) {
