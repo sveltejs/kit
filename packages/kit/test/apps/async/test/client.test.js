@@ -419,6 +419,25 @@ test.describe('remote function mutations', () => {
 			await expect(page.locator('#count')).toHaveText(String(i));
 		}
 	});
+
+	test('.as(type, value) updates when data changes after submission', async ({ page }) => {
+		await page.goto('/remote/form/as-value');
+
+		const form1 = page.locator('form').nth(0);
+
+		// initial values rendered correctly
+		await expect(form1.locator('input[name="text_field"]')).toHaveValue('Example text');
+
+		// change the text field and submit
+		await form1.locator('input[name="text_field"]').fill('Updated text');
+		await form1.locator('button').click();
+
+		// after submission, the query refreshes and the display should update
+		await expect(page.locator('div').first()).toContainText('Updated text');
+
+		// the input value should reflect the updated data
+		await expect(form1.locator('input[name="text_field"]')).toHaveValue('Updated text');
+	});
 });
 
 test.describe('client error boundaries', () => {
