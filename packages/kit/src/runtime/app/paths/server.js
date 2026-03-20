@@ -1,9 +1,9 @@
+import { try_get_request_store } from '@sveltejs/kit/internal/server';
 import { base, assets, relative, initial_base } from './internal/server.js';
 import { resolve_route, find_route } from '../../../utils/routing.js';
 import { decode_pathname } from '../../../utils/url.js';
-import { try_get_request_store } from '@sveltejs/kit/internal/server';
-import { manifest } from '__sveltekit/server';
-import { get_hooks } from '__SERVER__/internal.js';
+import { manifest } from '../../server/external.js';
+import { get_hooks } from '../../server/generated.js';
 
 /** @type {import('./client.js').asset} */
 export function asset(file) {

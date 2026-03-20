@@ -1,4 +1,4 @@
-import { base, assets, relative } from '$app/paths/internal/server';
+import { base, assets, relative } from '../../app/paths/internal/server.js';
 import { text } from '@sveltejs/kit';
 import { s } from '../../../utils/misc.js';
 import { find_route } from '../../../utils/routing.js';

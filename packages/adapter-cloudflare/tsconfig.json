@@ -13,16 +13,17 @@
 		// taken from the Cloudflare Workers TypeScript template https://github.com/cloudflare/workers-sdk/blob/main/packages/create-cloudflare/templates/hello-world/ts/tsconfig.json
 		"target": "es2024",
 		"lib": ["es2024"],
-		"types": ["@cloudflare/workers-types"]
+		"types": ["@cloudflare/workers-types", "../kit/src/types/virtual.d.ts"]
 	},
 	"include": [
 		"index.js",
+		"fallback-worker.js",
 		"utils.js",
 		"utils.spec.js",
 		"rolldown.config.js",
 		"vitest.config.js",
-		"test/utils.js",
 		"internal.d.ts",
+		"test/utils.js",
 		"src/worker.js"
 	]
 }

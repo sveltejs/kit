@@ -8,8 +8,11 @@ export const env_dynamic_public = '\0virtual:env/dynamic/public';
 
 export const service_worker = '\0virtual:service-worker';
 
-export const sveltekit_environment = '\0virtual:__sveltekit/environment';
-export const sveltekit_server = '\0virtual:__sveltekit/server';
+export const sveltekit_dev = '\0virtual:__sveltekit/dev';
+
+export const sveltekit_ssr_manifest = '\0virtual:__sveltekit/ssr-manifest';
+
+export const sveltekit_server_assets = '\0virtual:__sveltekit/server-assets';
 
 export const app_server = posixify(
 	fileURLToPath(new URL('../../runtime/app/server/index.js', import.meta.url))

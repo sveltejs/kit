@@ -1,13 +1,13 @@
-import { app_dir, base } from '$app/paths/internal/client';
-import { version } from '__sveltekit/environment';
 import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
-import { app, remote_responses } from '../client.js';
 import {
 	create_remote_function,
 	get_remote_request_headers,
 	remote_request
 } from './shared.svelte.js';
+import { app, remote_responses } from '../client.js';
+import { version } from '../../app/environment/index.js';
+import { app_dir, base } from '../../app/paths/internal/client.js';
 
 // Initialize Cache API for prerender functions
 const CACHE_NAME = DEV ? `sveltekit:${Date.now()}` : `sveltekit:${version}`;

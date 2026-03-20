@@ -1,8 +1,8 @@
 import { parseSetCookie } from 'cookie';
 import { respond } from './respond.js';
-import * as paths from '$app/paths/internal/server';
-import { read_implementation } from '__sveltekit/server';
+import { read_implementation } from './external.js';
 import { has_prerendered_path } from './utils.js';
+import * as paths from '../app/paths/internal/server.js';
 
 /**
  * @param {{

@@ -53,8 +53,6 @@ export async function preview(vite, vite_config, svelte_config) {
 		read: (file) => createReadableStream(`${dir}/${file}`)
 	});
 
-	const emulator = await svelte_config.kit.adapter?.emulate?.();
-
 	return () => {
 		// Remove the base middleware. It screws with the URL.
 		// It also only lets through requests beginning with the base path, so that requests beginning
@@ -210,8 +208,7 @@ export async function preview(vite, vite_config, svelte_config) {
 						}
 
 						return fs.readFileSync(join(svelte_config.kit.files.assets, file));
-					},
-					emulator
+					}
 				})
 			);
 		});

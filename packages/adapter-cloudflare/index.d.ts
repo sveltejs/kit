@@ -1,3 +1,4 @@
+import { PluginConfig } from '@cloudflare/vite-plugin';
 import { Adapter } from '@sveltejs/kit';
 import './ambient.js';
 import { GetPlatformProxyOptions } from 'wrangler';
@@ -63,8 +64,11 @@ export interface AdapterOptions {
 	/**
 	 * Config object passed to [`getPlatformProxy`](https://developers.cloudflare.com/workers/wrangler/api/#getplatformproxy)
 	 * during development and preview.
+	 * @deprecated removed in 8.0.0
 	 */
 	platformProxy?: GetPlatformProxyOptions;
+
+	vitePluginOptions?: PluginConfig;
 }
 
 /**

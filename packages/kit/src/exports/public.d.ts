@@ -2,6 +2,10 @@ import 'svelte'; // pick up `declare module "*.svelte"`
 import 'vite/client'; // pick up `declare module "*.jpg"`, etc.
 import '../types/ambient.js';
 
+import { SvelteConfig } from '@sveltejs/vite-plugin-svelte';
+import { StandardSchemaV1 } from '@standard-schema/spec';
+import { PluginOption } from 'vite';
+
 import {
 	AdapterEntry,
 	CspDirectives,
@@ -20,8 +24,6 @@ import {
 	IsAny
 } from '../types/private.js';
 import { BuildData, SSRNodeLoader, SSRRoute, ValidatedConfig } from 'types';
-import { SvelteConfig } from '@sveltejs/vite-plugin-svelte';
-import { StandardSchemaV1 } from '@standard-schema/spec';
 import {
 	RouteId as AppRouteId,
 	LayoutParams as AppLayoutParams,
@@ -65,8 +67,13 @@ export interface Adapter {
 	/**
 	 * Creates an `Emulator`, which allows the adapter to influence the environment
 	 * during dev, build and prerendering.
+	 * @deprecated removed in 3.0.0
 	 */
 	emulate?: () => MaybePromise<Emulator>;
+	/**
+	 * @since 3.0.0
+	 */
+	vitePlugins?: PluginOption;
 }
 
 export type LoadProperties<input extends Record<string, any> | void> = input extends void
@@ -1584,6 +1591,9 @@ export interface ServerInitOptions {
 	read?: (file: string) => MaybePromise<ReadableStream | null>;
 }
 
+/**
+ * Powers the server
+ */
 export interface SSRManifest {
 	appDir: string;
 	appPath: string;

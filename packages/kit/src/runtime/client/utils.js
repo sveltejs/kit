@@ -1,10 +1,8 @@
 import { BROWSER, DEV } from 'esm-env';
 import { writable } from 'svelte/store';
 import { assets } from '$app/paths';
-import { version } from '__sveltekit/environment';
+import { version } from '../app/environment/internal.js';
 import { PRELOAD_PRIORITIES } from './constants.js';
-
-/* global __SVELTEKIT_APP_VERSION_FILE__, __SVELTEKIT_APP_VERSION_POLL_INTERVAL__ */
 
 export const origin = BROWSER ? location.origin : '';
 

@@ -1,8 +1,10 @@
+/** @import { Adapter } from '@sveltejs/kit'; */
+
 /**
  * @param {string} route_id
- * @param {any} config
+ * @param {unknown} config
  * @param {string} feature
- * @param {import('@sveltejs/kit').Adapter | undefined} adapter
+ * @param {Pick<Adapter, 'name' | 'supports'> | undefined} adapter
  */
 export function check_feature(route_id, config, feature, adapter) {
 	if (!adapter) return;

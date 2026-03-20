@@ -8,6 +8,8 @@ await createBundle({
 		'@sveltejs/kit/hooks': 'src/exports/hooks/index.js',
 		'@sveltejs/kit/node': 'src/exports/node/index.js',
 		'@sveltejs/kit/vite': 'src/exports/vite/index.js',
+		'@sveltejs/kit/internal': 'src/exports/internal/index.js',
+		'@sveltejs/kit/internal/server': 'src/exports/internal/server.js',
 		'$app/environment': 'src/runtime/app/environment/types.d.ts',
 		'$app/forms': 'src/runtime/app/forms.js',
 		'$app/navigation': 'src/runtime/app/navigation.js',
@@ -23,7 +25,7 @@ await createBundle({
 const types = readFileSync('./types/index.d.ts', 'utf-8');
 if (types.includes('__sveltekit/')) {
 	throw new Error(
-		'Found __sveltekit/ in types/index.d.ts - make sure to hide internal modules by not just reexporting them. Contents:\n\n' +
+		'Found __sveltekit/ in types/index.d.ts - make sure to hide internal modules by not just re-exporting them. Contents:\n\n' +
 			types
 	);
 }

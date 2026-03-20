@@ -3,7 +3,7 @@ import { DEV } from 'esm-env';
 import { json, text } from '@sveltejs/kit';
 import { Redirect, SvelteKitError } from '@sveltejs/kit/internal';
 import { merge_tracing, with_request_store } from '@sveltejs/kit/internal/server';
-import { base, app_dir } from '$app/paths/internal/server';
+import { base, app_dir } from '../../runtime/app/paths/internal/server.js';
 import { is_endpoint_request, render_endpoint } from './endpoint.js';
 import { render_page } from './page/index.js';
 import { render_response } from './page/render.js';
@@ -40,8 +40,6 @@ import { get_remote_id, handle_remote_call } from './remote.js';
 import { record_span } from '../telemetry/record_span.js';
 import { otel } from '../telemetry/otel.js';
 import { MUTATIVE_METHODS } from '../../constants.js';
-
-/* global __SVELTEKIT_ADAPTER_NAME__ */
 
 /** @type {import('types').RequiredResolveOptions['transformPageChunk']} */
 const default_transform = ({ html }) => html;
@@ -214,13 +212,6 @@ export async function internal_respond(request, options, manifest, state) {
 		set_internal
 	});
 
-	if (state.emulator?.platform) {
-		event.platform = await state.emulator.platform({
-			config: {},
-			prerender: !!state.prerendering?.fallback
-		});
-	}
-
 	let resolved_path = url.pathname;
 
 	if (!remote_id) {
@@ -371,7 +362,7 @@ export async function internal_respond(request, options, manifest, state) {
 				}
 			}
 
-			if (state.before_handle || state.emulator?.platform) {
+			if (state.before_handle) {
 				let config = {};
 
 				/** @type {import('types').PrerenderOption} */
@@ -387,130 +378,136 @@ export async function internal_respond(request, options, manifest, state) {
 				}
 
 				if (state.before_handle) {
-					state.before_handle(event, config, prerender);
-				}
-
-				if (state.emulator?.platform) {
-					event.platform = await state.emulator.platform({ config, prerender });
+					return await state.before_handle(event, config, prerender, handle);
 				}
 			}
 		}
 
-		set_trailing_slash(trailing_slash);
+		async function handle() {
+			set_trailing_slash(trailing_slash);
 
-		if (state.prerendering && !state.prerendering.fallback && !state.prerendering.inside_reroute) {
-			disable_search(url);
-		}
+			if (
+				state.prerendering &&
+				!state.prerendering.fallback &&
+				!state.prerendering.inside_reroute
+			) {
+				disable_search(url);
+			}
 
-		const response = await record_span({
-			name: 'sveltekit.handle.root',
-			attributes: {
-				'http.route': event.route.id || 'unknown',
-				'http.method': event.request.method,
-				'http.url': event.url.href,
-				'sveltekit.is_data_request': is_data_request,
-				'sveltekit.is_sub_request': event.isSubRequest
-			},
-			fn: async (root_span) => {
-				const traced_event = {
-					...event,
-					tracing: {
-						enabled: __SVELTEKIT_SERVER_TRACING_ENABLED__,
-						root: root_span,
-						current: root_span
-					}
-				};
-				event_state.allows_commands = MUTATIVE_METHODS.includes(request.method);
-				return await with_request_store({ event: traced_event, state: event_state }, () =>
-					options.hooks.handle({
-						event: traced_event,
-						resolve: (event, opts) => {
-							return record_span({
-								name: 'sveltekit.resolve',
-								attributes: {
-									'http.route': event.route.id || 'unknown'
-								},
-								fn: (resolve_span) => {
-									// counter-intuitively, we need to clear the event, so that it's not
-									// e.g. accessible when loading modules needed to handle the request
-									return with_request_store(null, () =>
-										resolve(merge_tracing(event, resolve_span), page_nodes, opts).then(
-											(response) => {
-												// add headers/cookies here, rather than inside `resolve`, so that we
-												// can do it once for all responses instead of once per `return`
-												for (const key in headers) {
-													const value = headers[key];
-													response.headers.set(key, /** @type {string} */ (value));
-												}
-
-												add_cookies_to_headers(response.headers, new_cookies.values());
-
-												if (state.prerendering && event.route.id !== null) {
-													response.headers.set('x-sveltekit-routeid', encodeURI(event.route.id));
-												}
-
-												resolve_span.setAttributes({
-													'http.response.status_code': response.status,
-													'http.response.body.size':
-														response.headers.get('content-length') || 'unknown'
-												});
-
-												return response;
-											}
-										)
-									);
-								}
-							});
+			const response = await record_span({
+				name: 'sveltekit.handle.root',
+				attributes: {
+					'http.route': event.route.id || 'unknown',
+					'http.method': event.request.method,
+					'http.url': event.url.href,
+					'sveltekit.is_data_request': is_data_request,
+					'sveltekit.is_sub_request': event.isSubRequest
+				},
+				fn: async (root_span) => {
+					const traced_event = {
+						...event,
+						tracing: {
+							enabled: __SVELTEKIT_SERVER_TRACING_ENABLED__,
+							root: root_span,
+							current: root_span
 						}
-					})
-				);
-			}
-		});
+					};
+					event_state.allows_commands = MUTATIVE_METHODS.includes(request.method);
+					return await with_request_store({ event: traced_event, state: event_state }, () =>
+						options.hooks.handle({
+							event: traced_event,
+							resolve: (event, opts) => {
+								return record_span({
+									name: 'sveltekit.resolve',
+									attributes: {
+										'http.route': event.route.id || 'unknown'
+									},
+									fn: (resolve_span) => {
+										// counter-intuitively, we need to clear the event, so that it's not
+										// e.g. accessible when loading modules needed to handle the request
+										return with_request_store(null, () =>
+											resolve(merge_tracing(event, resolve_span), page_nodes, opts).then(
+												(response) => {
+													// add headers/cookies here, rather than inside `resolve`, so that we
+													// can do it once for all responses instead of once per `return`
+													for (const key in headers) {
+														const value = headers[key];
+														response.headers.set(key, /** @type {string} */ (value));
+													}
 
-		// respond with 304 if etag matches
-		if (response.status === 200 && response.headers.has('etag')) {
-			let if_none_match_value = request.headers.get('if-none-match');
+													add_cookies_to_headers(response.headers, new_cookies.values());
 
-			// ignore W/ prefix https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/If-None-Match#directives
-			if (if_none_match_value?.startsWith('W/"')) {
-				if_none_match_value = if_none_match_value.substring(2);
-			}
+													if (state.prerendering && event.route.id !== null) {
+														response.headers.set('x-sveltekit-routeid', encodeURI(event.route.id));
+													}
 
-			const etag = /** @type {string} */ (response.headers.get('etag'));
+													resolve_span.setAttributes({
+														'http.response.status_code': response.status,
+														'http.response.body.size':
+															response.headers.get('content-length') || 'unknown'
+													});
 
-			if (if_none_match_value === etag) {
-				const headers = new Headers({ etag });
+													return response;
+												}
+											)
+										);
+									}
+								});
+							}
+						})
+					);
+				}
+			});
 
-				// https://datatracker.ietf.org/doc/html/rfc7232#section-4.1 + set-cookie
-				for (const key of [
-					'cache-control',
-					'content-location',
-					'date',
-					'expires',
-					'vary',
-					'set-cookie'
-				]) {
-					const value = response.headers.get(key);
-					if (value) headers.set(key, value);
+			// respond with 304 if etag matches
+			if (response.status === 200 && response.headers.has('etag')) {
+				let if_none_match_value = request.headers.get('if-none-match');
+
+				// ignore W/ prefix https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/If-None-Match#directives
+				if (if_none_match_value?.startsWith('W/"')) {
+					if_none_match_value = if_none_match_value.substring(2);
 				}
 
-				return new Response(undefined, {
-					status: 304,
-					headers
-				});
+				const etag = /** @type {string} */ (response.headers.get('etag'));
+
+				if (if_none_match_value === etag) {
+					const headers = new Headers({ etag });
+
+					// https://datatracker.ietf.org/doc/html/rfc7232#section-4.1 + set-cookie
+					for (const key of [
+						'cache-control',
+						'content-location',
+						'date',
+						'expires',
+						'vary',
+						'set-cookie'
+					]) {
+						const value = response.headers.get(key);
+						if (value) headers.set(key, value);
+					}
+
+					return new Response(undefined, {
+						status: 304,
+						headers
+					});
+				}
 			}
+
+			// Edge case: If user does `return Response(30x)` in handle hook while processing a data request,
+			// we need to transform the redirect response to a corresponding JSON response.
+			if (is_data_request && response.status >= 300 && response.status <= 308) {
+				const location = response.headers.get('location');
+				if (location) {
+					return redirect_json_response(
+						new Redirect(/** @type {any} */ (response.status), location)
+					);
+				}
+			}
+
+			return response;
 		}
 
-		// Edge case: If user does `return Response(30x)` in handle hook while processing a data request,
-		// we need to transform the redirect response to a corresponding JSON response.
-		if (is_data_request && response.status >= 300 && response.status <= 308) {
-			const location = response.headers.get('location');
-			if (location) {
-				return redirect_json_response(new Redirect(/** @type {any} */ (response.status), location));
-			}
-		}
-
-		return response;
+		return await handle();
 	} catch (e) {
 		if (e instanceof Redirect) {
 			const response =

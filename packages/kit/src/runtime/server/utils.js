@@ -4,7 +4,6 @@ import { HttpError } from '@sveltejs/kit/internal';
 import { with_request_store } from '@sveltejs/kit/internal/server';
 import { coalesce_to_error, get_message, get_status } from '../../utils/error.js';
 import { negotiate } from '../../utils/http.js';
-import { fix_stack_trace } from '../shared-server.js';
 import { ENDPOINT_METHODS } from '../../constants.js';
 import { escape_html } from '../../utils/escape.js';
 
@@ -115,10 +114,6 @@ export async function handle_error_and_jsonify(event, state, options, error) {
 		return { message: 'Unknown Error', ...error.body };
 	}
 
-	if (DEV && typeof error == 'object') {
-		fix_stack_trace(error);
-	}
-
 	const status = get_status(error);
 	const message = get_message(error);
 
@@ -220,15 +215,16 @@ export function format_server_error(status, error, event) {
  */
 let relative = (file) => file;
 
-if (DEV) {
-	try {
-		const path = await import('node:path');
+// if (DEV) {
+// 	try {
+// 		// TODO: node:path not available in workerd
+// 		const path = await import('node:path');
 
-		relative = (file) => path.relative('.', file);
-	} catch {
-		// do nothing
-	}
-}
+// 		relative = (file) => path.relative('.', file);
+// 	} catch {
+// 		// do nothing
+// 	}
+// }
 
 /**
  * Provides a refined stack trace by excluding lines following the last occurrence of a line containing +page. +layout. or +server.
