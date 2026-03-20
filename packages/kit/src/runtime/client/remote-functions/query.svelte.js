@@ -398,6 +398,10 @@ async function get_stream_reader(response) {
 			throw new Redirect(307, result.location);
 		}
 
+		if (result.type === 'error') {
+			throw new HttpError(result.status ?? 500, result.error);
+		}
+
 		throw new Error('Invalid query.live response');
 	}
 
