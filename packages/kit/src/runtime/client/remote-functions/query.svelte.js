@@ -552,6 +552,7 @@ export class LiveQuery {
 	#loading = $state(true);
 	#ready = $state(false);
 	#connected = $state(false);
+	#finished = $state(false);
 	#version = $state(0);
 	/** @type {T | undefined} */
 	#raw = $state.raw();
@@ -633,7 +634,7 @@ export class LiveQuery {
 	}
 
 	#schedule_reconnect() {
-		if (!this.#active || this.#destroyed || this.#retry_timer) return;
+		if (!this.#active || this.#destroyed || this.#finished || this.#retry_timer) return;
 
 		if (typeof navigator !== 'undefined' && navigator.onLine === false) {
 			return;
@@ -651,7 +652,7 @@ export class LiveQuery {
 	}
 
 	async #connect_stream() {
-		if (!this.#active || this.#destroyed) return;
+		if (!this.#active || this.#destroyed || this.#finished) return;
 
 		const connection = ++this.#connection;
 		const controller = new AbortController();
@@ -671,18 +672,26 @@ export class LiveQuery {
 
 			const reader = await get_stream_reader(response);
 			const next_value = create_stream_reader(reader);
+			let finished = false;
 			this.#connected = true;
 			this.#attempt = 0;
 
 			while (this.#active && !this.#destroyed && connection === this.#connection) {
 				const value = await next_value();
-				if (value === undefined) break;
+				if (value === undefined) {
+					finished = true;
+					break;
+				}
 
 				if (!this.#ready) {
 					this.#resolve_first(value);
 				}
 
 				this.#set_value(value);
+			}
+
+			if (finished && this.#active && !this.#destroyed && connection === this.#connection) {
+				this.#finished = true;
 			}
 		} catch (error) {
 			if (controller.signal.aborted || connection !== this.#connection) {
@@ -700,7 +709,7 @@ export class LiveQuery {
 				this.#connected = false;
 				this.#controller = null;
 
-				if (this.#active && !this.#destroyed) {
+				if (this.#active && !this.#destroyed && !this.#finished) {
 					this.#schedule_reconnect();
 				}
 			}
@@ -708,7 +717,7 @@ export class LiveQuery {
 	}
 
 	#on_online = () => {
-		if (!this.#active || this.#destroyed) return;
+		if (!this.#active || this.#destroyed || this.#finished) return;
 		this.#clear_retry();
 		void this.#connect_stream();
 	};
@@ -732,7 +741,7 @@ export class LiveQuery {
 		}
 
 		this.#clear_retry();
-		if (!this.#controller) {
+		if (!this.#controller && !this.#finished) {
 			void this.#connect_stream();
 		}
 	}
@@ -802,8 +811,12 @@ export class LiveQuery {
 		return this.#connected;
 	}
 
+	get finished() {
+		return this.#finished;
+	}
+
 	reconnect() {
-		if (!this.#active || this.#destroyed) return;
+		if (!this.#active || this.#destroyed || this.#finished) return;
 		this.#attempt = 0;
 		this.#clear_retry();
 		this.#disconnect_current();
@@ -1129,6 +1142,10 @@ class LiveQueryProxy {
 
 	get connected() {
 		return this.#get_cached_query().connected;
+	}
+
+	get finished() {
+		return this.#get_cached_query().finished;
 	}
 
 	run() {

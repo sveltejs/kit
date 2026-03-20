@@ -2179,6 +2179,8 @@ export type RemoteLiveQuery<T> = RemoteResource<T> & {
 	run(): Promise<AsyncIterator<T>>;
 	/** `true` if the live stream is currently connected. */
 	readonly connected: boolean;
+	/** `true` once the live stream iterator has completed. */
+	readonly finished: boolean;
 	/** Reconnects the live stream immediately. */
 	reconnect(): void;
 };

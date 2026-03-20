@@ -383,6 +383,33 @@ test.describe('remote function mutations', () => {
 		await expect(page.locator('#connected')).toHaveText('true');
 	});
 
+	test('query.live marks finite iterators as finished and does not reconnect', async ({ page }) => {
+		await page.goto('/remote/live');
+		await page.click('#reset');
+
+		await expect(page.locator('#finite-finished')).toHaveText('true');
+		await expect(page.locator('#finite-connected')).toHaveText('false');
+
+		await page.waitForTimeout(200);
+		await page.click('#stats');
+		await expect(page.locator('#stats-value')).not.toHaveText('pending');
+		const stats = JSON.parse((await page.locator('#stats-value').textContent()) ?? '{}');
+		const before = stats.finite_connection_count;
+
+		await page.waitForTimeout(200);
+		await page.click('#stats');
+		await expect(page.locator('#stats-value')).not.toHaveText('pending');
+		const after_wait = JSON.parse((await page.locator('#stats-value').textContent()) ?? '{}');
+		expect(after_wait.finite_connection_count).toBe(before);
+
+		await page.click('#finite-reconnect');
+		await page.waitForTimeout(100);
+		await page.click('#stats');
+		await expect(page.locator('#stats-value')).not.toHaveText('pending');
+		const after_reconnect = JSON.parse((await page.locator('#stats-value').textContent()) ?? '{}');
+		expect(after_reconnect.finite_connection_count).toBe(before);
+	});
+
 	test('query.live can be detached from the page', async ({ page }) => {
 		await page.goto('/remote/live');
 		await page.click('#reset');

@@ -4,6 +4,7 @@ let count = 0;
 let drop_next = false;
 let active_connections = 0;
 let cleanup_count = 0;
+let finite_connection_count = 0;
 
 /** @type {Set<() => void>} */
 const listeners = new Set();
@@ -51,7 +52,7 @@ export const get_count = query.live(async function* () {
 
 			if (drop_next) {
 				drop_next = false;
-				return;
+				throw new Error('stream dropped');
 			}
 
 			yield count;
@@ -60,6 +61,11 @@ export const get_count = query.live(async function* () {
 		active_connections -= 1;
 		cleanup_count += 1;
 	}
+});
+
+export const get_finite_count = query.live(async function* () {
+	finite_connection_count += 1;
+	yield count;
 });
 
 export const increment = command(() => {
@@ -81,6 +87,7 @@ export const get_stats = query(() => {
 	return {
 		active_connections,
 		cleanup_count,
+		finite_connection_count,
 		count
 	};
 });
