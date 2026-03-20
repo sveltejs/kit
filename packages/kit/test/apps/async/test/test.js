@@ -11,6 +11,22 @@ test.describe('remote functions', () => {
 		}
 	});
 
+	test('query.batch renders final values and errors on first load', async ({ page }) => {
+		await page.goto('/remote/batch-ssr');
+
+		await expect(page.locator('#ssr-batch-result-1')).toHaveText('Buy groceries');
+		await expect(page.locator('#ssr-batch-result-2')).toHaveText('Walk the dog');
+		await expect(page.locator('#ssr-batch-result-3')).toHaveText('Not found');
+		await expect(page.locator('body')).not.toContainText('Loading todo');
+	});
+
+	test('run is blocked during server render', async ({ page }) => {
+		await page.goto('/remote/query-runtime-errors/run-in-render');
+		await expect(page.locator('#error')).toContainText(
+			'On the server, .run() can only be called in universal `load` functions'
+		);
+	});
+
 	test('query redirects on page load (query in common layout)', async ({ page }) => {
 		await page.goto('/remote/query-redirect');
 		await page.click('a[href="/remote/query-redirect/from-common-layout"]');
