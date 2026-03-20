@@ -1,7 +1,7 @@
 import * as devalue from 'devalue';
 import { readable, writable } from 'svelte/store';
 import { DEV } from 'esm-env';
-import { text } from '@sveltejs/kit';
+import { isRedirect, text } from '@sveltejs/kit';
 import * as paths from '$app/paths/internal/server';
 import { hash } from '../../../utils/hash.js';
 import { serialize_data } from './serialize_data.js';
@@ -189,6 +189,10 @@ export async function render_response({
 			csp: csp.script_needs_nonce ? { nonce: csp.nonce } : { hash: csp.script_needs_hash },
 			transformError: error_components
 				? /** @param {unknown} e */ async (e) => {
+						if (isRedirect(e)) {
+							throw e;
+						}
+
 						const transformed = await handle_error_and_jsonify(event, event_state, options, e);
 						props.page.error = props.error = error = transformed;
 						props.page.status = status = get_status(e);
@@ -218,8 +222,9 @@ export async function render_response({
 				};
 			}
 
-			event_state.allows_commands = false;
-			rendered = await with_request_store({ event, state: event_state }, async () => {
+			const state = { ...event_state, is_in_render: true };
+
+			rendered = await with_request_store({ event, state }, async () => {
 				// use relative paths during rendering, so that the resulting HTML is as
 				// portable as possible, but reset afterwards
 				if (paths.relative) paths.override({ base, assets });
@@ -492,31 +497,41 @@ export async function render_response({
 			args.push(`{\n${indent}\t${hydrate.join(`,\n${indent}\t`)}\n${indent}}`);
 		}
 
-		const { remote_data: remote_cache } = event_state;
+		const { remote } = event_state;
 
-		let serialized_remote_data = '';
+		let serialized_query_data = '';
+		let serialized_prerender_data = '';
 
-		if (remote_cache) {
+		if (remote.data) {
 			/** @type {Record<string, any>} */
-			const remote = {};
+			const query = {};
 
-			for (const [info, cache] of remote_cache) {
+			/** @type {Record<string, any>} */
+			const prerender = {};
+
+			for (const [internals, cache] of remote.data) {
 				// remote functions without an `id` aren't exported, and thus
 				// cannot be called from the client
-				if (!info.id) continue;
+				if (!internals.id) continue;
 
 				for (const key in cache) {
-					const remote_key = create_remote_key(info.id, key);
+					const entry = cache[key];
 
-					if (event_state.refreshes?.[remote_key] !== undefined) {
+					if (!entry.serialize) continue;
+
+					const remote_key = create_remote_key(internals.id, key);
+
+					const store = internals.type === 'prerender' ? prerender : query;
+
+					if (event_state.remote.refreshes?.[remote_key] !== undefined) {
 						// This entry was refreshed/set by a command or form action.
 						// Always await it so the mutation result is serialized.
-						remote[remote_key] = await cache[key];
+						store[remote_key] = await entry.data;
 					} else {
 						// Don't block the response on pending remote data - if a query
 						// hasn't settled yet, it wasn't awaited in the template (or is behind a pending boundary).
 						const result = await Promise.race([
-							Promise.resolve(cache[key]).then(
+							Promise.resolve(entry.data).then(
 								(v) => /** @type {const} */ ({ settled: true, value: v }),
 								(e) => /** @type {const} */ ({ settled: true, error: e })
 							),
@@ -527,7 +542,7 @@ export async function render_response({
 
 						if (result.settled) {
 							if ('error' in result) throw result.error;
-							remote[remote_key] = result.value;
+							store[remote_key] = result.value;
 						}
 					}
 				}
@@ -543,8 +558,16 @@ export async function render_response({
 				}
 			};
 
-			serialized_remote_data = `${global}.data = ${devalue.uneval(remote, replacer)};\n\n\t\t\t\t\t\t`;
+			if (Object.keys(query).length > 0) {
+				serialized_query_data = `${global}.query = ${devalue.uneval(query, replacer)};\n\n\t\t\t\t\t\t`;
+			}
+
+			if (Object.keys(prerender).length > 0) {
+				serialized_prerender_data = `${global}.prerender = ${devalue.uneval(prerender, replacer)};\n\n\t\t\t\t\t\t`;
+			}
 		}
+
+		const serialized_remote_data = `${serialized_query_data}${serialized_prerender_data}`;
 
 		// `client.app` is a proxy for `bundleStrategy === 'split'`
 		const boot = client.inline

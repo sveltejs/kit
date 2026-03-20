@@ -495,7 +495,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, roo
 	internal.set_manifest(manifest);
 	internal.set_read_implementation((file) => createReadableStream(`${out}/server/${file}`));
 
-	/** @type {Array<import('types').RemoteInfo & { type: 'prerender'}>} */
+	/** @type {Array<import('types').RemotePrerenderInternals>} */
 	const prerender_functions = [];
 
 	for (const loader of Object.values(manifest._.remotes)) {
@@ -548,13 +548,16 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, roo
 	}
 
 	const transport = (await internal.get_hooks()).transport ?? {};
-	for (const info of prerender_functions) {
-		if (info.has_arg) {
-			for (const arg of (await info.inputs?.()) ?? []) {
-				void enqueue(null, remote_prefix + info.id + '/' + stringify_remote_arg(arg, transport));
+	for (const internals of prerender_functions) {
+		if (internals.has_arg) {
+			for (const arg of (await internals.inputs?.()) ?? []) {
+				void enqueue(
+					null,
+					remote_prefix + internals.id + '/' + stringify_remote_arg(arg, transport)
+				);
 			}
 		} else {
-			void enqueue(null, remote_prefix + info.id);
+			void enqueue(null, remote_prefix + internals.id);
 		}
 	}
 

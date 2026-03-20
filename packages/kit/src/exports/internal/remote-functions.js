@@ -1,6 +1,6 @@
-/** @import { RemoteInfo } from 'types' */
+/** @import { RemoteInternals } from 'types' */
 
-/** @type {RemoteInfo['type'][]} */
+/** @type {RemoteInternals['type'][]} */
 const types = ['command', 'form', 'prerender', 'query', 'query_batch'];
 
 /**
