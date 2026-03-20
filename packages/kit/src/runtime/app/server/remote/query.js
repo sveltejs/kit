@@ -244,14 +244,16 @@ function batch(validate_or_fn, maybe_fn) {
 }
 
 /**
+ * @template Input
+ * @template Output
  * @param {RemoteInternals} __
- * @param {any} arg
+ * @param {Input} arg
  * @param {RequestState} state
- * @param {() => Promise<any>} fn
- * @returns {RemoteQuery<any>}
+ * @param {() => Promise<Output>} fn
+ * @returns {RemoteQuery<Output, Input>}
  */
 function create_query_resource(__, arg, state, fn) {
-	/** @type {Promise<any> | null} */
+	/** @type {Promise<Output> | null} */
 	let promise = null;
 
 	const get_promise = () => {
@@ -260,13 +262,13 @@ function create_query_resource(__, arg, state, fn) {
 
 	return {
 		argument: arg,
-		/** @type {Promise<any>['catch']} */
+		/** @type {Promise<Output>['catch']} */
 		catch(onrejected) {
 			return get_promise().catch(onrejected);
 		},
 		current: undefined,
 		error: undefined,
-		/** @type {Promise<any>['finally']} */
+		/** @type {Promise<Output>['finally']} */
 		finally(onfinally) {
 			return get_promise().finally(onfinally);
 		},
@@ -293,7 +295,7 @@ function create_query_resource(__, arg, state, fn) {
 		set(value) {
 			return update_refresh_value(get_refresh_context(__, 'set', arg), value);
 		},
-		/** @type {Promise<any>['then']} */
+		/** @type {Promise<Output>['then']} */
 		then(onfulfilled, onrejected) {
 			return get_promise().then(onfulfilled, onrejected);
 		},

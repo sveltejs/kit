@@ -2163,7 +2163,7 @@ declare module '@sveltejs/kit' {
 	 */
 	export type RemoteQueryFunction<Input, Output> = (
 		arg: undefined extends Input ? Input | void : Input
-	) => RemoteQuery<Output, Input>;
+	) => RemoteQuery<Output, undefined extends Input ? Input | void : Input>;
 	interface AdapterEntry {
 		/**
 		 * A string that uniquely identifies an HTTP service (e.g. serverless function) and is used for deduplication.

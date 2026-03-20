@@ -2189,6 +2189,6 @@ export type RemotePrerenderFunction<Input, Output> = (
  */
 export type RemoteQueryFunction<Input, Output> = (
 	arg: undefined extends Input ? Input | void : Input
-) => RemoteQuery<Output, Input>;
+) => RemoteQuery<Output, undefined extends Input ? Input | void : Input>;
 
 export * from './index.js';
