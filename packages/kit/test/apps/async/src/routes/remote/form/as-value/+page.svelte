@@ -1,5 +1,5 @@
 <script>
-	import { as_value_form, get_values } from './form.remote.ts';
+	import { as_value_form, get_values, reset_values } from './form.remote.ts';
 
 	const values = $derived(await get_values());
 </script>
@@ -34,3 +34,7 @@
 		<button {...as_value_form.fields.id.as('submit', value.id)}>submit</button>
 	</form>
 {/each}
+
+<form {...reset_values}>
+	<button id="reset-values" type="submit">reset</button>
+</form>

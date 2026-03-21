@@ -437,6 +437,9 @@ test.describe('remote function mutations', () => {
 
 		// the input value should reflect the updated data
 		await expect(form1.locator('input[name="text_field"]')).toHaveValue('Updated text');
+
+		// reset the values for the client tests
+		await page.click('#reset-values');
 	});
 });
 
