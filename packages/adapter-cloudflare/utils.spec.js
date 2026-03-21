@@ -1,7 +1,5 @@
 import { describe, test, expect } from 'vitest';
-import {
-	validate_worker_settings,
-} from './utils.js';
+import { validate_worker_settings } from './utils.js';
 
 describe('validates Wrangler config', () => {
 	test('Worker and static assets', () => {

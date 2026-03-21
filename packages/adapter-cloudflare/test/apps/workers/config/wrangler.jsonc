@@ -1,5 +1,5 @@
 // we've moved the wrangler config away from the root of the project
 // to test that the adapter still resolves the paths correctly
 {
-	"$schema": "../../../../node_modules/wrangler/config-schema.json",
+	"$schema": "../../../../node_modules/wrangler/config-schema.json"
 }
