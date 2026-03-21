@@ -1403,6 +1403,16 @@ export type AfterNavigate = (Navigation | NavigationEnter) & {
 
 /**
  * The shape of the [`page`](https://svelte.dev/docs/kit/$app-state#page) reactive object and the [`$page`](https://svelte.dev/docs/kit/$app-stores) store.
+ *
+ * Key properties include:
+ * - `url`: the current URL
+ * - `params`: the current route parameters
+ * - `route.id`: the current route ID, or `null` if no route matched
+ * - `status`: the current page status code
+ * - `error`: the current error, if any
+ * - `data`: the merged data from all `load` functions on the page
+ * - `state`: the current page state from shallow routing
+ * - `form`: the current form data, if the page was reached through a form submission
  */
 export interface Page<
 	Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
