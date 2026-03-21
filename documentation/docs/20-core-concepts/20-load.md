@@ -283,6 +283,8 @@ To get data from an external API or a `+server.js` handler, you can use the prov
 - During server-side rendering, the response will be captured and inlined into the rendered HTML by hooking into the `text`, `json` and `arrayBuffer` methods of the `Response` object. Note that headers will _not_ be serialized, unless explicitly included via [`filterSerializedResponseHeaders`](hooks#Server-hooks-handle).
 - During hydration, the response will be read from the HTML, guaranteeing consistency and preventing an additional network request - if you received a warning in your browser console when using the browser `fetch` instead of the `load` `fetch`, this is why.
 
+In universal `load` functions, `fetch(url)` also registers `url` as a dependency for [`invalidate(url)`]($app-navigation#invalidate). Server `load` functions do not do this, to avoid leaking fetched URLs to the client; if you need explicit invalidation, use [`depends`](@sveltejs-kit#LoadEvent).
+
 ```js
 /// file: src/routes/items/[id]/+page.js
 /** @type {import('./$types').PageLoad} */
