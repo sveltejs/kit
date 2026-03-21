@@ -22,6 +22,8 @@ If the number of route segments is unknown, you can use rest syntax — for exam
 }
 ```
 
+In `load` functions, `+server.js` handlers, and hooks that receive a `RequestEvent`, you can read these values from `event.params`. As of SvelteKit 2.24, pages also receive them as a `params` prop; for a broader introduction, see [Routing](routing).
+
 > [!NOTE] `src/routes/a/[...rest]/z/+page.svelte` will match `/a/z` (i.e. there's no parameter at all) as well as `/a/b/z` and `/a/b/c/z` and so on. Make sure you check that the value of the rest parameter is valid, for example using a [matcher](#Matching).
 
 ### 404 pages
