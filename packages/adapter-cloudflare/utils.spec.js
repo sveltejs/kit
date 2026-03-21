@@ -29,5 +29,4 @@ describe('validates Wrangler config', () => {
 			)
 		).not.toThrow();
 	});
-
 });
