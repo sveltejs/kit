@@ -818,7 +818,7 @@ export interface KitConfig {
 		 * This has several advantages:
 		 * - The client does not need to load the routing manifest upfront, which can lead to faster initial page loads
 		 * - The list of routes is hidden from public view
-		 * - The server has an opportunity to intercept each navigation (for example through a middleware), enabling (for example) A/B testing opaque to SvelteKit
+		 * - The server has an opportunity to intercept each navigation before it reaches SvelteKit (for example through a reverse proxy, CDN, or custom server middleware), enabling (for example) A/B testing opaque to SvelteKit. This does not run [`handle`](https://svelte.dev/docs/kit/hooks#Server-hooks-handle) during route resolution itself.
 
 		 * The drawback is that for unvisited paths, resolution will take slightly longer (though this is mitigated by [preloading](https://svelte.dev/docs/kit/link-options#data-sveltekit-preload-data)).
 		 *
