@@ -209,11 +209,12 @@ export function format_server_error(status, error, event) {
 	return `${formatted_text}\n${DEV ? clean_up_stack_trace(error) : error.stack}`;
 }
 
+// TODO: do we still need to clean up stack traces when using the environment API?
 /**
  * In dev, tidy up stack traces by making paths relative to the current project directory
  * @param {string} file
  */
-let relative = (file) => file;
+const relative = (file) => file;
 
 // if (DEV) {
 // 	try {
