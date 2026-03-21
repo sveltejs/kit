@@ -25,14 +25,18 @@ Any time you have public-facing code that imports server-only code (whether dire
 
 ```js
 // @errors: 7005
-/// file: $lib/server/secrets.js
-export const atlantisCoordinates = [/* redacted */];
+/// file: $lib/server/database.js
+export const db = {
+	query(sql) {
+		/* implementation omitted */
+	}
+};
 ```
 
 ```js
 // @errors: 2307 7006 7005
 /// file: src/routes/utils.js
-export { atlantisCoordinates } from '$lib/server/secrets.js';
+export { db } from '$lib/server/database.js';
 
 export const add = (a, b) => a + b;
 ```
@@ -47,16 +51,16 @@ export const add = (a, b) => a + b;
 ...SvelteKit will error:
 
 ```
-Cannot import $lib/server/secrets.ts into code that runs in the browser, as this could leak sensitive information.
+Cannot import $lib/server/database.ts into code that runs in the browser, as this could leak sensitive information.
 
  src/routes/+page.svelte imports
   src/routes/utils.js imports
-   $lib/server/secrets.ts
+   $lib/server/database.ts
 
 If you're only using the import as a type, change it to `import type`.
 ```
 
-Even though the public-facing code — `src/routes/+page.svelte` — only uses the `add` export and not the secret `atlantisCoordinates` export, the secret code could end up in JavaScript that the browser downloads, and so the import chain is considered unsafe.
+Even though the public-facing code — `src/routes/+page.svelte` — only uses the `add` export and not the server-only `db` export, the database code could end up in JavaScript that the browser downloads, and so the import chain is considered unsafe.
 
 This feature also works with dynamic imports, even interpolated ones like ``await import(`./${foo}.js`)``.
 
