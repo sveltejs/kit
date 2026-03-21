@@ -150,7 +150,7 @@ Data returned from layout `load` functions is available to child `+layout.svelte
 {/if}+++
 ```
 
-> [!NOTE] If multiple `load` functions return data with the same key, the last one 'wins' — the result of a layout `load` returning `{ a: 1, b: 2 }` and a page `load` returning `{ b: 3, c: 4 }` would be `{ a: 1, b: 3, c: 4 }`.
+> [!NOTE] If multiple `load` functions return data with the same key, the value closest to the page wins. In other words, data is merged by route hierarchy, not by whichever `load` function resolves last. For example, if a layout `load` returns `{ a: 1, b: 2 }` and the page `load` returns `{ b: 3, c: 4 }`, the final result is `{ a: 1, b: 3, c: 4 }`.
 
 ## page.data
 
