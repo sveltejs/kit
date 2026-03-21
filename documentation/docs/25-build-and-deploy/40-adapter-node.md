@@ -98,6 +98,8 @@ PROTOCOL_HEADER=x-forwarded-proto HOST_HEADER=x-forwarded-host node build
 >
 > If you're hosting your proxy on a non-standard port and your reverse proxy supports `x-forwarded-port`, you can also set `PORT_HEADER=x-forwarded-port`.
 
+This configuration also affects server-side relative `fetch` calls, including the `fetch` passed to `load` functions. If `adapter-node` cannot determine the correct origin, requests like `fetch('/robots.txt')` may fail or use the wrong protocol or host until `ORIGIN` or the forwarded headers are configured.
+
 If `adapter-node` can't correctly determine the URL of your deployment, you may experience this error when using [form actions](form-actions):
 
 > [!NOTE] Cross-site POST form submissions are forbidden
