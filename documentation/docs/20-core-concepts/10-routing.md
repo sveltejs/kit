@@ -164,7 +164,7 @@ SvelteKit will 'walk up the tree' looking for the closest error boundary — if 
 
 If the error occurs inside a `load` function in `+layout(.server).js`, the closest error boundary in the tree is an `+error.svelte` file _above_ that layout (not next to it).
 
-If no route can be found (404), `src/routes/+error.svelte` (or the default error page, if that file does not exist) will be used.
+If no route can be found (404), `src/routes/+error.svelte` (or the default error page, if that file does not exist) will be used. If you need different 404 pages for different unknown routes, see [404 pages](advanced-routing#404-pages).
 
 > [!NOTE] `+error.svelte` is _not_ used when an error occurs inside [`handle`](hooks#Server-hooks-handle) or a [+server.js](#server) request handler.
 
