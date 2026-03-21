@@ -4,8 +4,8 @@ title: @sveltejs/kit
 
 > MODULE: @sveltejs/kit
 
-## Private types
+## Additional types
 
-The following are referenced by the public types documented above, but cannot be imported directly:
+The following support types are grouped separately to keep the main API list shorter. They commonly appear in other APIs, such as hook and `load` signatures.
 
-> TYPES: Private types
+> TYPES: Additional types
