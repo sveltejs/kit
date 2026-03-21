@@ -51,7 +51,8 @@ const cwd = process.cwd();
 /** @type {string} */
 let root;
 
-const dev_environment = /** @type {import('types').DevEnvironment} */ ({});
+/** @type {import('types').DevEnvironment | null} */
+let dev_environment = null;
 
 /** @type {import('./types.js').EnforcedConfig} */
 const enforced_config = {
@@ -600,6 +601,8 @@ function kit({ svelte_config, vite_adapter }) {
 						return create_service_worker_module(svelte_config);
 
 					case sveltekit_server_assets: {
+						if (vite_config_env.command === 'build') return;
+
 						return dedent`
 							export const server_assets = {
 								${Object.entries(server_assets)
@@ -616,6 +619,8 @@ function kit({ svelte_config, vite_adapter }) {
 					}
 
 					case sveltekit_ssr_manifest: {
+						if (!dev_environment) return;
+
 						const { manifest, manifest_data, env } = dev_environment;
 
 						return dedent`
@@ -742,6 +747,8 @@ function kit({ svelte_config, vite_adapter }) {
 					}
 
 					case sveltekit_dev: {
+						if (vite_config_env.command === 'build') return;
+
 						const runtime_base = get_runtime_base(root);
 						const adapter = svelte_config.kit.adapter;
 
@@ -1466,7 +1473,10 @@ function kit({ svelte_config, vite_adapter }) {
 		 * @see https://vitejs.dev/guide/api-plugin.html#configureserver
 		 */
 		configureServer(vite) {
-			dev_environment.vite = vite;
+			// the other properties will be populated in the `dev` function
+			dev_environment = /** @type {import('types').DevEnvironment} */ ({
+				vite
+			});
 			return dev(vite, vite_config, svelte_config, () => remotes, root, dev_environment);
 		},
 
@@ -1820,6 +1830,7 @@ function kit({ svelte_config, vite_adapter }) {
 	/** @type {import('vite').Plugin} */
 	const plugin_server_filesystem = {
 		name: 'vite-plugin-sveltekit-server-filesystem',
+		apply: 'serve',
 		applyToEnvironment(environment) {
 			return environment.name !== 'client' && environment.name !== 'serviceWorker';
 		},
@@ -1829,6 +1840,8 @@ function kit({ svelte_config, vite_adapter }) {
 		load: {
 			order: 'pre',
 			handler(id) {
+				if (!dev_environment) return;
+
 				const { pathname, searchParams } = new URL(id, 'file://');
 				if (
 					(searchParams.has('url') || vite_config.assetsInclude(pathname)) &&
