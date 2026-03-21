@@ -150,16 +150,16 @@ See [integrations](./integrations) for detailed information about integrations.
 
 ### HTML minifier
 
-Sapper includes `html-minifier` by default. SvelteKit does not include this, but you can add it as a prod dependency and then use it through a [hook](hooks#Server-hooks-handle):
+Sapper includes `html-minifier` by default. SvelteKit does not include this, but you can add [`html-minifier-terser`](https://www.npmjs.com/package/html-minifier-terser) as a prod dependency and then use it through a [hook](hooks#Server-hooks-handle):
 
 ```js
 // @filename: ambient.d.ts
 /// <reference types="@sveltejs/kit" />
-declare module 'html-minifier';
+declare module 'html-minifier-terser';
 
 // @filename: index.js
 // ---cut---
-import { minify } from 'html-minifier';
+import { minify } from 'html-minifier-terser';
 import { building } from '$app/environment';
 
 const minification_options = {
