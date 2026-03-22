@@ -6,7 +6,6 @@ import { get_remote_request_headers, remote_request } from './shared.svelte.js';
 import * as devalue from 'devalue';
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
 import { DEV } from 'esm-env';
-import { with_resolvers } from '../../../utils/promise.js';
 import { tick, untrack } from 'svelte';
 import { create_remote_key, stringify_remote_arg, unfriendly_hydratable } from '../../shared.js';
 
@@ -230,7 +229,7 @@ export class Query {
 	#run() {
 		this.#loading = true;
 
-		const { promise, resolve, reject } = with_resolvers();
+		const { promise, resolve, reject } = Promise.withResolvers();
 
 		this.#latest.push(resolve);
 
