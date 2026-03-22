@@ -74,6 +74,7 @@
 			status = 'error';
 		} catch {
 			try {
+				// @ts-expect-error
 				await validated_live_query_no_args('invalid').run();
 				status = 'error';
 			} catch {
@@ -111,6 +112,7 @@
 			}
 
 			try {
+				// @ts-expect-error
 				await validated_live_query_with_arg(1).run();
 				status = 'error';
 			} catch (e) {
@@ -166,6 +168,7 @@
 		try {
 			// @ts-expect-error
 			validate_result(await validated_query_with_arg('valid', 'ignored').run());
+			// @ts-expect-error
 			validate_result(await read_live(validated_live_query_with_arg('valid', 'ignored')));
 			// @ts-expect-error
 			validate_result(await validated_prerendered_query_with_arg('valid', 'ignored'));
