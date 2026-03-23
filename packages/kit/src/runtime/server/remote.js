@@ -173,8 +173,9 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 			}
 
 			let closed = false;
-			let has_previous_result = false;
-			let previous_result = '';
+
+			/** @type {string | undefined} */
+			let result = undefined;
 
 			async function cancel() {
 				if (closed) return;
@@ -203,21 +204,15 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 									return;
 								}
 
-								const result = stringify(value, transport);
+								// only send changed data
+								if (result !== (result = stringify(value, transport))) {
+									send(controller, {
+										type: 'result',
+										result
+									});
 
-								if (has_previous_result && result === previous_result) {
-									continue;
+									return;
 								}
-
-								has_previous_result = true;
-								previous_result = result;
-
-								send(controller, {
-									type: 'result',
-									result
-								});
-
-								return;
 							}
 						} catch (error) {
 							if (!event.request.signal.aborted) {
