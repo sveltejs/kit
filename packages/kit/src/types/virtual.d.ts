@@ -10,5 +10,7 @@ declare module '__sveltekit/ssr-manifest' {
 }
 
 declare module '__sveltekit/dev' {
-	export { Server } from '@sveltejs/kit';
+	import { InternalServer } from 'types';
+
+	export { InternalServer as Server };
 }

@@ -120,6 +120,4 @@ export default {
 };
 
 // Without this, server file changes will invalidate the entire server module graph
-if (import.meta.hot) {
-	import.meta.hot.accept();
-}
+import.meta.hot?.accept();

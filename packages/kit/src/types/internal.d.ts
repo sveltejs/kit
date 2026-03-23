@@ -669,8 +669,9 @@ export interface RequestStore {
 export interface DevEnvironment {
 	vite: ViteDevServer;
 	manifest_data: ManifestData;
-	manifest: SSRManifest;
 	env: Record<string, string>;
+	assets: string;
+	remote_address: string | undefined;
 }
 
 export * from '../exports/index.js';

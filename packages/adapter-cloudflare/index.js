@@ -138,46 +138,48 @@ export default function (options = {}) {
 			read: () => true,
 			instrumentation: () => true
 		},
-		vitePlugins: [
-			cloudflare({
-				...options.vitePluginOptions,
-				configPath: options.vitePluginOptions?.configPath ?? options.config,
-				viteEnvironment: {
-					name: options.vitePluginOptions?.viteEnvironment?.name ?? 'ssr',
-					childEnvironments: options.vitePluginOptions?.viteEnvironment?.childEnvironments
-				},
-				config: (user_config) => {
-					// user programmatic config
-					if (typeof options.vitePluginOptions?.config === 'function') {
-						options.vitePluginOptions?.config(user_config);
-					} else {
-						Object.assign(user_config, options.vitePluginOptions?.config);
-					}
-
-					if (DEV) {
-						if (!user_config.assets?.binding) {
-							user_config.assets = {
-								binding: 'ASSETS'
-							};
+		vite: {
+			plugins: [
+				cloudflare({
+					...options.vitePluginOptions,
+					configPath: options.vitePluginOptions?.configPath ?? options.config,
+					viteEnvironment: {
+						name: options.vitePluginOptions?.viteEnvironment?.name ?? 'ssr',
+						childEnvironments: options.vitePluginOptions?.viteEnvironment?.childEnvironments
+					},
+					config: (user_config) => {
+						// user programmatic config
+						if (typeof options.vitePluginOptions?.config === 'function') {
+							options.vitePluginOptions?.config(user_config);
+						} else {
+							Object.assign(user_config, options.vitePluginOptions?.config);
 						}
 
-						if (!user_config.main) {
-							user_config.main = path.resolve(import.meta.dirname, 'fallback-worker.js');
-						}
-					} else {
-						// TODO: if `main` or `assets.binding` is configured, ensure `main`, `assets.directory` and `assets.binding` are populated
-					}
+						if (DEV) {
+							if (!user_config.assets?.binding) {
+								user_config.assets = {
+									binding: 'ASSETS'
+								};
+							}
 
-					if (
-						!user_config.compatibility_flags.find(
-							(flag) => flag === 'nodejs_als' || flag === 'nodejs_compat'
-						)
-					) {
-						user_config.compatibility_flags.push('nodejs_als');
+							if (!user_config.main) {
+								user_config.main = path.resolve(import.meta.dirname, 'fallback-worker.js');
+							}
+						} else {
+							// TODO: if `main` or `assets.binding` is configured, ensure `main`, `assets.directory` and `assets.binding` are populated
+						}
+
+						if (
+							!user_config.compatibility_flags.find(
+								(flag) => flag === 'nodejs_als' || flag === 'nodejs_compat'
+							)
+						) {
+							user_config.compatibility_flags.push('nodejs_als');
+						}
 					}
-				}
-			})
-		]
+				})
+			]
+		}
 	};
 }
 

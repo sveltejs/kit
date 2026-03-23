@@ -44,10 +44,12 @@ declare module '@sveltejs/kit' {
 		 * @deprecated removed in 3.0.0
 		 */
 		emulate?: () => MaybePromise<Emulator>;
-		/**
-		 * @since 3.0.0
-		 */
-		vitePlugins?: PluginOption;
+		vite?: {
+			/**
+			 * @since 3.0.0
+			 */
+			plugins?: PluginOption;
+		};
 	}
 
 	export type LoadProperties<input extends Record<string, any> | void> = input extends void

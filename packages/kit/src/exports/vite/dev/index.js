@@ -4,16 +4,14 @@ import { URL } from 'node:url';
 import { styleText } from 'node:util';
 
 import sirv from 'sirv';
-import { isCSSRequest, loadEnv, buildErrorMessage } from 'vite';
+import { isCSSRequest, isFetchableDevEnvironment } from 'vite';
 
-import { createReadableStream, getRequest, setResponse } from '../../../exports/node/index.js';
+import { getRequest, setResponse } from '@sveltejs/kit/node';
 import { coalesce_to_error } from '../../../utils/error.js';
-import { from_fs, posixify, resolve_entry, to_fs } from '../../../utils/filesystem.js';
+import { posixify, resolve_entry, to_fs } from '../../../utils/filesystem.js';
 import { load_error_page } from '../../../core/config/index.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import * as sync from '../../../core/sync/sync.js';
-import { get_mime_lookup, get_runtime_base } from '../../../core/utils.js';
-import { compact } from '../../../utils/array.js';
 import { not_found } from '../utils.js';
 import { escape_html } from '../../../utils/escape.js';
 import { sveltekit_ssr_manifest } from '../module_ids.js';
@@ -25,61 +23,18 @@ const vite_css_query_regex = /(?:\?|&)(?:raw|url|inline)(?:&|$)/;
  * @param {import('vite').ViteDevServer} vite
  * @param {import('vite').ResolvedConfig} vite_config
  * @param {import('types').ValidatedConfig} svelte_config
- * @param {() => Array<{ hash: string, file: string }>} get_remotes
  * @param {string} root The project root directory
  * @param {import('types').DevEnvironment} dev_environment
  * @return {() => void}
  */
-export function dev(vite, vite_config, svelte_config, get_remotes, root, dev_environment) {
+export function dev(vite, vite_config, svelte_config, root, dev_environment) {
 	sync.init(svelte_config, vite_config.mode, root);
 
 	/** @type {import('types').ManifestData} */
 	let manifest_data;
-	/** @type {import('@sveltejs/kit').SSRManifest} */
-	let manifest;
 
 	/** @type {Error | null} */
 	let manifest_error = null;
-
-	/** @param {string} url */
-	async function loud_ssr_load_module(url) {
-		try {
-			return await vite.ssrLoadModule(url, { fixStacktrace: true });
-		} catch (/** @type {any} */ err) {
-			const msg = buildErrorMessage(err, [
-				styleText('red', `Internal server error: ${err.message}`)
-			]);
-
-			if (!vite.config.logger.hasErrorLogged(err)) {
-				vite.config.logger.error(msg, { error: err });
-			}
-
-			vite.ws.send({
-				type: 'error',
-				err: {
-					...err,
-					// these properties are non-enumerable and will
-					// not be serialized unless we explicitly include them
-					message: err.message,
-					stack: err.stack
-				}
-			});
-
-			throw err;
-		}
-	}
-
-	/** @param {string} id */
-	async function resolve(id) {
-		const url = id.startsWith('..') ? to_fs(path.posix.resolve(id)) : `/${id}`;
-
-		const module = await loud_ssr_load_module(url);
-
-		const module_node = await vite.environments.ssr.moduleGraph.getModuleByUrl(url);
-		if (!module_node) throw new Error(`Could not find node for ${url}`);
-
-		return { module, module_node, url };
-	}
 
 	function update_manifest() {
 		try {
@@ -105,185 +60,6 @@ export function dev(vite, vite_config, svelte_config, get_remotes, root, dev_env
 			return;
 		}
 
-		manifest = {
-			appDir: svelte_config.kit.appDir,
-			appPath: svelte_config.kit.appDir,
-			assets: new Set(manifest_data.assets.map((asset) => asset.file)),
-			mimeTypes: get_mime_lookup(manifest_data),
-			_: {
-				client: {
-					start: `${get_runtime_base(root)}/client/entry.js`,
-					app: `${to_fs(svelte_config.kit.outDir)}/generated/client/app.js`,
-					imports: [],
-					stylesheets: [],
-					fonts: [],
-					uses_env_dynamic_public: true,
-					nodes:
-						svelte_config.kit.router.resolution === 'client'
-							? undefined
-							: manifest_data.nodes.map((node, i) => {
-									if (node.component || node.universal) {
-										return `${svelte_config.kit.paths.base}${to_fs(svelte_config.kit.outDir)}/generated/client/nodes/${i}.js`;
-									}
-								}),
-					// `css` is not necessary in dev, as the JS file from `nodes` will reference the CSS file
-					routes:
-						svelte_config.kit.router.resolution === 'client'
-							? undefined
-							: compact(
-									manifest_data.routes.map((route) => {
-										if (!route.page) return;
-
-										return {
-											id: route.id,
-											pattern: route.pattern,
-											params: route.params,
-											layouts: route.page.layouts.map((l) =>
-												l !== undefined ? [!!manifest_data.nodes[l].server, l] : undefined
-											),
-											errors: route.page.errors,
-											leaf: [!!manifest_data.nodes[route.page.leaf].server, route.page.leaf]
-										};
-									})
-								)
-				},
-				server_assets: new Proxy(
-					{},
-					{
-						has: (_, /** @type {string} */ file) => fs.existsSync(from_fs(file)),
-						get: (_, /** @type {string} */ file) => fs.statSync(from_fs(file)).size
-					}
-				),
-				nodes: manifest_data.nodes.map((node, index) => {
-					return async () => {
-						/** @type {import('types').SSRNode} */
-						const result = {};
-						result.index = index;
-						result.universal_id = node.universal;
-						result.server_id = node.server;
-
-						// these are unused in dev, but it's easier to include them
-						result.imports = [];
-						result.stylesheets = [];
-						result.fonts = [];
-
-						/** @type {import('vite').EnvironmentModuleNode[]} */
-						const module_nodes = [];
-
-						if (node.component) {
-							result.component = async () => {
-								const { module_node, module } = await resolve(
-									/** @type {string} */ (node.component)
-								);
-
-								module_nodes.push(module_node);
-
-								return module.default;
-							};
-						}
-
-						if (node.universal) {
-							if (node.page_options?.ssr === false) {
-								result.universal = node.page_options;
-							} else {
-								// TODO: explain why the file was loaded on the server if we fail to load it
-								const { module, module_node } = await resolve(node.universal);
-								module_nodes.push(module_node);
-								result.universal = module;
-							}
-						}
-
-						if (node.server) {
-							const { module } = await resolve(node.server);
-							result.server = module;
-						}
-
-						// in dev we inline all styles to avoid FOUC. this gets populated lazily so that
-						// components/stylesheets loaded via import() during `load` are included
-						result.inline_styles = async () => {
-							/** @type {Set<import('vite').ModuleNode | import('vite').EnvironmentModuleNode>} */
-							const deps = new Set();
-
-							for (const module_node of module_nodes) {
-								await find_deps(vite, module_node, deps);
-							}
-
-							/** @type {Record<string, string>} */
-							const styles = {};
-
-							for (const dep of deps) {
-								if (isCSSRequest(dep.url) && !vite_css_query_regex.test(dep.url)) {
-									const inlineCssUrl = dep.url.includes('?')
-										? dep.url.replace('?', '?inline&')
-										: dep.url + '?inline';
-									try {
-										const mod = await vite.ssrLoadModule(inlineCssUrl);
-										styles[dep.url] = mod.default;
-									} catch {
-										// this can happen with dynamically imported modules, I think
-										// because the Vite module graph doesn't distinguish between
-										// static and dynamic imports? TODO investigate, submit fix
-									}
-								}
-							}
-
-							return styles;
-						};
-
-						return result;
-					};
-				}),
-				prerendered_routes: new Set(),
-				get remotes() {
-					return Object.fromEntries(
-						get_remotes().map((remote) => [
-							remote.hash,
-							() => vite.ssrLoadModule(remote.file).then((module) => ({ default: module }))
-						])
-					);
-				},
-				routes: compact(
-					manifest_data.routes.map((route) => {
-						if (!route.page && !route.endpoint) return null;
-
-						const endpoint = route.endpoint;
-
-						return {
-							id: route.id,
-							pattern: route.pattern,
-							params: route.params,
-							page: route.page,
-							endpoint: endpoint
-								? async () => {
-										const url = path.resolve(root, endpoint.file);
-										return await loud_ssr_load_module(url);
-									}
-								: null,
-							endpoint_id: endpoint?.file
-						};
-					})
-				),
-				matchers: async () => {
-					/** @type {Record<string, import('@sveltejs/kit').ParamMatcher>} */
-					const matchers = {};
-
-					for (const key in manifest_data.matchers) {
-						const file = manifest_data.matchers[key];
-						const url = path.resolve(root, file);
-						const module = await vite.ssrLoadModule(url, { fixStacktrace: true });
-
-						if (module.match) {
-							matchers[key] = module.match;
-						} else {
-							throw new Error(`${file} does not export a \`match\` function`);
-						}
-					}
-
-					return matchers;
-				}
-			}
-		};
-		dev_environment.manifest = manifest;
 		invalidate_module(vite, sveltekit_ssr_manifest);
 	}
 
@@ -369,6 +145,8 @@ export function dev(vite, vite_config, svelte_config, get_remotes, root, dev_env
 	});
 
 	const assets = svelte_config.kit.paths.assets ? SVELTE_KIT_ASSETS : svelte_config.kit.paths.base;
+	dev_environment.assets = assets;
+
 	const asset_server = sirv(svelte_config.kit.files.assets, {
 		dev: true,
 		etag: true,
@@ -378,6 +156,8 @@ export function dev(vite, vite_config, svelte_config, get_remotes, root, dev_env
 			res.setHeader('access-control-allow-origin', '*');
 		}
 	});
+
+	requests = new Map();
 
 	vite.middlewares.use((req, res, next) => {
 		const base = `${vite.config.server.https ? 'https' : 'http'}://${
@@ -402,9 +182,6 @@ export function dev(vite, vite_config, svelte_config, get_remotes, root, dev_env
 		next();
 	});
 
-	const env = loadEnv(vite_config.mode, svelte_config.kit.env.dir, '');
-	dev_environment.env = env;
-
 	return () => {
 		const serve_static_middleware = vite.middlewares.stack.find(
 			(middleware) =>
@@ -415,180 +192,142 @@ export function dev(vite, vite_config, svelte_config, get_remotes, root, dev_env
 		// serving routes with those names. See https://github.com/vitejs/vite/issues/7363
 		remove_static_middlewares(vite.middlewares);
 
-		if (svelte_config.kit.adapter?.vitePlugins) {
-			vite.middlewares.use((req, res, next) => {
-				// Vite's base middleware strips out the base path. Restore it
-				let original_url = req.url;
-				req.url = req.originalUrl;
-				try {
-					const base = `${vite.config.server.https ? 'https' : 'http'}://${
-						req.headers[':authority'] || req.headers.host
-					}`;
+		vite.middlewares.use(async (req, res, next) => {
+			dev_environment.remote_address = req.socket.remoteAddress;
 
-					let decoded = decodeURI(new URL(base + req.url).pathname);
+			// Vite's base middleware strips out the base path. Restore it
+			let original_url = req.url;
+			req.url = req.originalUrl;
+			try {
+				const base = `${vite.config.server.https ? 'https' : 'http'}://${
+					req.headers[':authority'] || req.headers.host
+				}`;
 
-					// requests to _app/immutable during development are fetchable dev
-					// environments trying to read the filesystem
-					const immutable = `/${manifest.appPath}/immutable`;
-					if (decoded.startsWith(immutable)) {
-						decoded = decoded.slice(immutable.length);
-						original_url = original_url?.slice(immutable.length);
-					}
+				let decoded = decodeURI(new URL(base + req.url).pathname);
 
-					const file = posixify(
-						path.resolve(root, decoded.slice(svelte_config.kit.paths.base.length + 1))
-					);
-					const is_file = fs.existsSync(file) && !fs.statSync(file).isDirectory();
-					const allowed =
-						!vite_config.server.fs.strict ||
-						vite_config.server.fs.allow.some((dir) => file.startsWith(dir));
-
-					if (is_file && allowed) {
-						req.url = original_url;
-						// @ts-expect-error
-						serve_static_middleware.handle(req, res);
-						return;
-					}
-
-					if (!decoded.startsWith(svelte_config.kit.paths.base)) {
-						return not_found(req, res, svelte_config.kit.paths.base);
-					}
-
-					next();
-				} catch (e) {
-					const error = coalesce_to_error(e);
-					res.statusCode = 500;
-					res.end(error);
+				// requests to _app/immutable during development are fetchable dev
+				// environments trying to read the filesystem
+				const immutable = `/${svelte_config.kit.appDir}/immutable`;
+				if (decoded.startsWith(immutable)) {
+					decoded = decoded.slice(immutable.length);
+					original_url = original_url?.slice(immutable.length);
 				}
-			});
-		} else {
-			vite.middlewares.use(async (req, res) => {
-				// Vite's base middleware strips out the base path. Restore it
-				const original_url = req.url;
-				req.url = req.originalUrl;
-				try {
-					const base = `${vite.config.server.https ? 'https' : 'http'}://${
-						req.headers[':authority'] || req.headers.host
-					}`;
 
-					const decoded = decodeURI(new URL(base + req.url).pathname);
-					const file = posixify(
-						path.resolve(root, decoded.slice(svelte_config.kit.paths.base.length + 1))
-					);
-					const is_file = fs.existsSync(file) && !fs.statSync(file).isDirectory();
-					const allowed =
-						!vite_config.server.fs.strict ||
-						vite_config.server.fs.allow.some((dir) => file.startsWith(dir));
-
-					if (is_file && allowed) {
-						req.url = original_url;
-						// @ts-expect-error
-						serve_static_middleware.handle(req, res);
-						return;
-					}
-
-					if (!decoded.startsWith(svelte_config.kit.paths.base)) {
-						return not_found(req, res, svelte_config.kit.paths.base);
-					}
-
-					if (decoded === svelte_config.kit.paths.base + '/service-worker.js') {
-						const resolved = resolve_entry(svelte_config.kit.files.serviceWorker);
-
-						if (resolved) {
-							res.writeHead(200, {
-								'content-type': 'application/javascript'
-							});
-							res.end(`import '${svelte_config.kit.paths.base}${to_fs(resolved)}';`);
-						} else {
-							res.writeHead(404);
-							res.end('not found');
-						}
-
-						return;
-					}
-
-					const resolved_instrumentation = resolve_entry(
-						path.join(svelte_config.kit.files.src, 'instrumentation.server')
-					);
-
-					if (resolved_instrumentation) {
-						await vite.ssrLoadModule(resolved_instrumentation);
-					}
-
-					// we have to import `Server` before calling `set_assets`
-					const { Server } = /** @type {import('types').ServerModule} */ (
-						await vite.ssrLoadModule(`${get_runtime_base(root)}/server/index.js`, {
-							fixStacktrace: true
-						})
-					);
-
-					const { set_assets } = await vite.ssrLoadModule('$app/paths/internal/server');
-					set_assets(assets);
-
-					const server = new Server(manifest);
-
-					await server.init({
-						env,
-						read: (file) => createReadableStream(from_fs(file))
-					});
-
+				// TODO: come up with a better name than ipc
+				const prefix = `/${svelte_config.kit.appDir}/ipc/`;
+				if (decoded.startsWith(prefix)) {
+					const id = decoded.slice(prefix.length);
 					const request = await getRequest({
 						base,
 						request: req
 					});
 
-					if (manifest_error) {
-						console.error(styleText(['bold', 'red'], manifest_error.message));
-
-						const error_page = load_error_page(svelte_config);
-
-						/** @param {{ status: number; message: string }} opts */
-						const error_template = ({ status, message }) => {
-							return error_page
-								.replace(/%sveltekit\.status%/g, String(status))
-								.replace(/%sveltekit\.error\.message%/g, escape_html(message));
-						};
-
-						res.writeHead(500, {
-							'Content-Type': 'text/html; charset=utf-8'
-						});
-						res.end(
-							error_template({ status: 500, message: manifest_error.message ?? 'Invalid routes' })
-						);
-
+					if (!requests.has(id)) {
+						res.writeHead(400);
+						res.end(`ipc call id does not exist: ${id}`);
 						return;
 					}
 
-					const rendered = await server.respond(request, {
-						getClientAddress: () => {
-							const { remoteAddress } = req.socket;
-							if (remoteAddress) return remoteAddress;
-							throw new Error('Could not determine clientAddress');
-						},
-						read: (file) => {
-							if (file in manifest._.server_assets) {
-								return fs.readFileSync(from_fs(file));
-							}
+					const requested = requests.get(id);
+					try {
+						const data = await request.json();
+						requested?.resolve(data);
+					} catch (e) {
+						requested?.reject(e);
+					}
+					requests.delete(id);
 
-							return fs.readFileSync(path.join(svelte_config.kit.files.assets, file));
-						}
+					res.writeHead(200);
+					res.end();
+					return;
+				}
+
+				const file = posixify(
+					path.resolve(root, decoded.slice(svelte_config.kit.paths.base.length + 1))
+				);
+				const is_file = fs.existsSync(file) && !fs.statSync(file).isDirectory();
+				const allowed =
+					!vite_config.server.fs.strict ||
+					vite_config.server.fs.allow.some((dir) => file.startsWith(dir));
+
+				if (is_file && allowed) {
+					req.url = original_url;
+					// @ts-expect-error
+					serve_static_middleware.handle(req, res);
+					return;
+				}
+
+				if (!decoded.startsWith(svelte_config.kit.paths.base)) {
+					return not_found(req, res, svelte_config.kit.paths.base);
+				}
+
+				if (decoded === svelte_config.kit.paths.base + '/service-worker.js') {
+					const resolved = resolve_entry(svelte_config.kit.files.serviceWorker);
+
+					if (resolved) {
+						res.writeHead(200, {
+							'content-type': 'application/javascript'
+						});
+						res.end(`import '${svelte_config.kit.paths.base}${to_fs(resolved)}';`);
+					} else {
+						res.writeHead(404);
+						res.end('not found');
+					}
+
+					return;
+				}
+
+				if (manifest_error) {
+					console.error(styleText(['bold', 'red'], manifest_error.message));
+
+					const error_page = load_error_page(svelte_config);
+
+					/** @param {{ status: number; message: string }} opts */
+					const error_template = ({ status, message }) => {
+						return error_page
+							.replace(/%sveltekit\.status%/g, String(status))
+							.replace(/%sveltekit\.error\.message%/g, escape_html(message));
+					};
+
+					res.writeHead(500, {
+						'Content-Type': 'text/html; charset=utf-8'
 					});
+					res.end(
+						error_template({ status: 500, message: manifest_error.message ?? 'Invalid routes' })
+					);
 
-					if (rendered.status === 404) {
+					return;
+				}
+
+				// fallback to our own fetch handler if the adapter doesn't provide one
+				if (
+					!svelte_config.kit.adapter?.vite?.plugins &&
+					isFetchableDevEnvironment(vite.environments.ssr)
+				) {
+					const request = await getRequest({
+						base,
+						request: req
+					});
+					const response = await vite.environments.ssr.dispatchFetch(request);
+
+					if (response.status === 404) {
 						// @ts-expect-error
 						serve_static_middleware.handle(req, res, () => {
-							void setResponse(res, rendered);
+							void setResponse(res, response);
 						});
 					} else {
-						void setResponse(res, rendered);
+						void setResponse(res, response);
 					}
-				} catch (e) {
-					const error = coalesce_to_error(e);
-					res.statusCode = 500;
-					res.end(error);
+					return;
 				}
-			});
-		}
+
+				next();
+			} catch (e) {
+				const error = coalesce_to_error(e);
+				res.statusCode = 500;
+				res.end(error.stack);
+			}
+		});
 	};
 }
 
@@ -626,39 +365,26 @@ async function find_deps(vite, node, deps) {
 
 	/** @param {string} url */
 	async function add_by_url(url) {
-		const node = await get_server_module_by_url(vite, url);
+		const node = await vite.environments.ssr.moduleGraph.getModuleByUrl(url);
 
 		if (node) {
 			await add(node);
 		}
 	}
 
-	const transform_result =
-		/** @type {import('vite').ModuleNode} */ (node).ssrTransformResult || node.transformResult;
-
-	if (transform_result) {
-		if (transform_result.deps) {
-			transform_result.deps.forEach((url) => branches.push(add_by_url(url)));
+	if (node.transformResult) {
+		if (node.transformResult.deps) {
+			node.transformResult.deps.forEach((url) => branches.push(add_by_url(url)));
 		}
 
-		if (transform_result.dynamicDeps) {
-			transform_result.dynamicDeps.forEach((url) => branches.push(add_by_url(url)));
+		if (node.transformResult.dynamicDeps) {
+			node.transformResult.dynamicDeps.forEach((url) => branches.push(add_by_url(url)));
 		}
 	} else {
 		node.importedModules.forEach((node) => branches.push(add(node)));
 	}
 
 	await Promise.all(branches);
-}
-
-/**
- * @param {import('vite').ViteDevServer} vite
- * @param {string} url
- */
-function get_server_module_by_url(vite, url) {
-	return vite.environments
-		? vite.environments.ssr.moduleGraph.getModuleByUrl(url)
-		: vite.moduleGraph.getModuleByUrl(url, true);
 }
 
 /**
@@ -693,4 +419,25 @@ export function invalidate_module(vite, id) {
 			vite.environments[environment].moduleGraph.invalidateModule(module);
 		}
 	}
+}
+
+/** @type {Map<string, { resolve: (value: any) => void, reject: (error: any) => void }>} */
+let requests;
+
+/**
+ * @overload
+ * @param {import('vite').ViteDevServer} dev
+ * @param {`remote-${string}`} id
+ * @returns {Promise<Record<string, { type: import('types').RemoteInternals['type'] }>>}
+ */
+/**
+ * @param {import('vite').ViteDevServer} dev
+ * @param {string} id
+ * @returns {Promise<unknown>}
+ */
+export function request(dev, id) {
+	dev.environments.ssr.hot.send(`sveltekit:ipc/${id}`);
+	return new Promise((resolve, reject) => {
+		requests.set(id, { resolve, reject });
+	});
 }

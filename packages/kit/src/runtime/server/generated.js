@@ -1,4 +1,4 @@
-// This module is a stub and will be overridden once Vite takes over module loading
+// This module is a stub and will not be used once Vite takes over module loading
 
 import { set_building, set_prerendering } from '../app/environment/internal.js';
 import { set_assets } from '../app/paths/internal/server.js';
