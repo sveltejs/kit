@@ -8,7 +8,7 @@ import { DEV } from 'esm-env';
 import { HttpError } from '@sveltejs/kit/internal';
 import { app, query_responses, _goto, set_nearest_error_page, invalidateAll } from '../client.js';
 import { tick } from 'svelte';
-import { refresh_queries, release_overrides } from './shared.svelte.js';
+import { refresh_queries, reconnect_live_queries, release_overrides } from './shared.svelte.js';
 import { createAttachmentKey } from 'svelte/attachments';
 import {
 	convert_formdata,
@@ -230,6 +230,10 @@ export function form(id) {
 							} else {
 								void invalidateAll();
 							}
+
+							if (form_result.reconnects) {
+								reconnect_live_queries(form_result.reconnects);
+							}
 						}
 					} else if (form_result.type === 'redirect') {
 						const refreshes = form_result.refreshes ?? '';
@@ -237,6 +241,11 @@ export function form(id) {
 						if (!invalidateAll) {
 							refresh_queries(refreshes, updates);
 						}
+
+						if (form_result.reconnects) {
+							reconnect_live_queries(form_result.reconnects);
+						}
+
 						// Use internal version to allow redirects to external URLs
 						void _goto(form_result.location, { invalidateAll }, 0);
 					} else {

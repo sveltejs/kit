@@ -2,7 +2,7 @@
 /** @import { RemoteFunctionResponse } from 'types' */
 /** @import { Query } from './query.svelte.js' */
 import * as devalue from 'devalue';
-import { app, goto, query_map } from '../client.js';
+import { app, goto, live_query_map, query_map } from '../client.js';
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
 import { untrack } from 'svelte';
 import { navigating, page } from '../state.svelte.js';
@@ -82,5 +82,12 @@ export function refresh_queries(stringified_refreshes, updates = []) {
 		// Update the query with the new value
 		const entry = query_map.get(key);
 		entry?.resource.set(value);
+	}
+}
+
+/** @param {string[]} reconnects */
+export function reconnect_live_queries(reconnects) {
+	for (const key of reconnects) {
+		live_query_map.get(key)?.resource.reconnect();
 	}
 }

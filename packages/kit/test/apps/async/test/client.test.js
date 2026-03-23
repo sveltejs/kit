@@ -410,6 +410,28 @@ test.describe('remote function mutations', () => {
 		expect(after_reconnect.finite_connection_count).toBe(before);
 	});
 
+	test('query.live can be reconnected from server command handlers', async ({ page }) => {
+		await page.goto('/remote/live');
+		await page.click('#reset');
+
+		await page.click('#stats');
+		await expect(page.locator('#stats-value')).not.toHaveText('pending');
+		const before = JSON.parse((await page.locator('#stats-value').textContent()) ?? '{}');
+
+		await page.click('#reconnect-live');
+
+		await expect
+			.poll(async () => {
+				await page.click('#stats');
+				const value = (await page.locator('#stats-value').textContent()) ?? '{}';
+				if (value === 'pending') return before.cleanup_count;
+				return JSON.parse(value).cleanup_count;
+			})
+			.toBeGreaterThan(before.cleanup_count);
+
+		await expect(page.locator('#connected')).toHaveText('true');
+	});
+
 	test('query.live can be detached from the page', async ({ page }) => {
 		await page.goto('/remote/live');
 		await page.click('#reset');

@@ -434,7 +434,15 @@ function create_live_query_resource(__, arg, state, get_first_value, get_iterato
 		ready: false,
 		connected: false,
 		reconnect() {
-			throw new Error(`Cannot call '${__.name}.reconnect()' on the server`);
+			const reconnects = state.remote.reconnects;
+
+			if (!reconnects) {
+				throw new Error(
+					`Cannot call reconnect on query.live '${__.name}' because it is not executed in the context of a command/form remote function`
+				);
+			}
+
+			reconnects.add(create_remote_key(__.id, stringify_remote_arg(arg, state.transport)));
 		},
 		async run() {
 			if (!state.is_in_universal_load) {

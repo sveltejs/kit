@@ -303,6 +303,7 @@ export type RemoteFunctionResponse =
 	| (ServerRedirectNode & {
 			/** devalue'd Record<string, any> */
 			refreshes?: string;
+			reconnects?: string[];
 	  })
 	| ServerErrorNode
 	| {
@@ -310,6 +311,7 @@ export type RemoteFunctionResponse =
 			result: string;
 			/** devalue'd Record<string, any> */
 			refreshes: string | undefined;
+			reconnects?: string[];
 	  };
 
 /**
@@ -642,6 +644,7 @@ export interface RequestState {
 		>;
 		forms: null | Map<any, any>;
 		refreshes: null | Record<string, Promise<any>>;
+		reconnects: null | Set<string>;
 	};
 	readonly is_in_remote_function: boolean;
 	readonly is_in_render: boolean;

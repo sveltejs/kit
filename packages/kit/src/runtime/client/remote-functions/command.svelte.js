@@ -6,7 +6,12 @@ import * as devalue from 'devalue';
 import { HttpError } from '@sveltejs/kit/internal';
 import { app } from '../client.js';
 import { stringify_remote_arg } from '../../shared.js';
-import { get_remote_request_headers, refresh_queries, release_overrides } from './shared.svelte.js';
+import {
+	get_remote_request_headers,
+	refresh_queries,
+	reconnect_live_queries,
+	release_overrides
+} from './shared.svelte.js';
 
 /**
  * Client-version of the `command` function from `$app/server`.
@@ -68,6 +73,10 @@ export function command(id) {
 				} else {
 					if (result.refreshes) {
 						refresh_queries(result.refreshes, updates);
+					}
+
+					if (result.reconnects) {
+						reconnect_live_queries(result.reconnects);
 					}
 
 					return devalue.parse(result.result, app.decoders);

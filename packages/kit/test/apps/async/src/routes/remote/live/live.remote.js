@@ -83,6 +83,10 @@ export const drop = command(() => {
 	notify();
 });
 
+export const reconnect_live = command(() => {
+	get_count().reconnect();
+});
+
 export const get_stats = query(() => {
 	return {
 		active_connections,

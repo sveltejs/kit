@@ -125,7 +125,8 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 				/** @type {RemoteFunctionResponse} */ ({
 					type: 'result',
 					result: stringify(result, transport),
-					refreshes: result.issues ? undefined : await serialize_refreshes(meta.remote_refreshes)
+					refreshes: result.issues ? undefined : await serialize_refreshes(meta.remote_refreshes),
+					reconnects: serialize_reconnects()
 				})
 			);
 		}
@@ -140,7 +141,8 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 				/** @type {RemoteFunctionResponse} */ ({
 					type: 'result',
 					result: stringify(data, transport),
-					refreshes: await serialize_refreshes(refreshes)
+					refreshes: await serialize_refreshes(refreshes),
+					reconnects: serialize_reconnects()
 				})
 			);
 		}
@@ -262,7 +264,8 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 				/** @type {RemoteFunctionResponse} */ ({
 					type: 'redirect',
 					location: error.location,
-					refreshes: await serialize_refreshes(form_client_refreshes)
+					refreshes: await serialize_refreshes(form_client_refreshes),
+					reconnects: serialize_reconnects()
 				})
 			);
 		}
@@ -322,6 +325,15 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 			),
 			transport
 		);
+	}
+
+	function serialize_reconnects() {
+		const reconnects = state.remote.reconnects;
+		if (!reconnects || reconnects.size === 0) {
+			return undefined;
+		}
+
+		return Array.from(reconnects);
 	}
 }
 

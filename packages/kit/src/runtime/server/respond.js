@@ -152,7 +152,8 @@ export async function internal_respond(request, options, manifest, state) {
 		remote: {
 			data: null,
 			forms: null,
-			refreshes: null
+			refreshes: null,
+			reconnects: null
 		},
 		is_in_remote_function: false,
 		is_in_render: false,
