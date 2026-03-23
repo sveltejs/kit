@@ -640,7 +640,7 @@ test.describe('remote functions', () => {
 
 		await expect(page.locator('#result')).toHaveText('3');
 	});
- 
+
 	test('.as(type, value) renders correct values', async ({ page }) => {
 		await page.goto('/remote/form/as-value');
 
