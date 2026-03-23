@@ -2,4 +2,4 @@
 '@sveltejs/kit': minor
 ---
 
-feat: allow second value for all types of fields
+feat: allow `form` fields to specify a default value (`field.as(type, value)`)
