@@ -2179,7 +2179,7 @@ declare module '@sveltejs/kit' {
 	) => RemoteQuery<Output>;
 
 	/**
-	 * The return value of a remote `query.live` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query-live) for full documentation.
+	 * The return value of a remote `query.live` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query.live) for full documentation.
 	 */
 	export type RemoteLiveQueryFunction<Input, Output> = (
 		arg: undefined extends Input ? Input | void : Input
@@ -3397,7 +3397,7 @@ declare module '$app/server' {
 		/**
 		 * Creates a live remote query. When called from the browser, the function will be invoked on the server via a streaming `fetch` call.
 		 *
-		 * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query-live) for full documentation.
+		 * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query.live) for full documentation.
 		 *
 		 * */
 		function live<Output>(fn: (arg: void) => MaybePromise<Generator<Output> | AsyncIterator<Output> | AsyncIterable<Output>>): RemoteLiveQueryFunction<void, Output>;

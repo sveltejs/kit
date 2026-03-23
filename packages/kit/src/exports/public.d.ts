@@ -2205,7 +2205,7 @@ export type RemoteQueryFunction<Input, Output> = (
 ) => RemoteQuery<Output>;
 
 /**
- * The return value of a remote `query.live` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query-live) for full documentation.
+ * The return value of a remote `query.live` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query.live) for full documentation.
  */
 export type RemoteLiveQueryFunction<Input, Output> = (
 	arg: undefined extends Input ? Input | void : Input

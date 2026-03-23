@@ -87,7 +87,7 @@ export function query(validate_or_fn, maybe_fn) {
 /**
  * Creates a live remote query. When called from the browser, the function will be invoked on the server via a streaming `fetch` call.
  *
- * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query-live) for full documentation.
+ * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query.live) for full documentation.
  *
  * @template Output
  * @overload
