@@ -51,22 +51,6 @@ export function stringify(data, transport) {
 	return devalue.stringify(data, encoders);
 }
 
-const object_proto_names = /* @__PURE__ */ Object.getOwnPropertyNames(Object.prototype)
-	.sort()
-	.join('\0');
-
-/** @param {any} thing */
-function is_plain_object(thing) {
-	const proto = Object.getPrototypeOf(thing);
-
-	return (
-		proto === Object.prototype ||
-		proto === null ||
-		Object.getPrototypeOf(proto) === null ||
-		Object.getOwnPropertyNames(proto).sort().join('\0') === object_proto_names
-	);
-}
-
 /**
  * @param {Record<string, any>} value
  * @param {Map<object, any>} cache
@@ -91,25 +75,24 @@ function to_sorted(value, cache) {
 			throw new Error('Regular expressions are not valid remote function arguments');
 		}
 
-		if (Array.isArray(value)) {
-			cached = [];
-			cache.set(value, cached);
+		const prototype = Object.getPrototypeOf(value);
+
+		if (prototype === Array.prototype) {
+			cache.set(value, (cached = []));
 
 			for (let i = 0; i < value.length; i += 1) {
 				if (i in value) {
 					cached[i] = to_sorted(value[i], cache);
 				}
 			}
-		} else if (is_plain_object(value)) {
-			cached = Object.getPrototypeOf(value) === null ? Object.create(null) : {};
-			cache.set(value, cached);
+		} else if (prototype === null || prototype === Object.prototype) {
+			cache.set(value, (cached = Object.create(prototype)));
 
 			for (const key of Object.keys(value).sort()) {
 				cached[key] = to_sorted(value[key], cache);
 			}
 		} else {
-			cached = value;
-			cache.set(value, cached);
+			cache.set(value, (cached = value));
 		}
 	}
 
