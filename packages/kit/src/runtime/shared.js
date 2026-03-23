@@ -69,61 +69,52 @@ function is_plain_object(thing) {
 
 /**
  * @param {Record<string, any>} value
- * @param {Map<object, any>} clones
+ * @param {Map<object, any>} cache
  */
-function to_sorted(value, clones) {
-	const clone = Object.getPrototypeOf(value) === null ? Object.create(null) : {};
-	clones.set(value, clone);
-	Object.defineProperty(clone, remote_arg_marker, { value: true });
-
-	for (const key of Object.keys(value).sort()) {
-		const property = value[key];
-		Object.defineProperty(clone, key, {
-			value: clones.get(property) ?? property,
-			enumerable: true,
-			configurable: true,
-			writable: true
-		});
+function to_sorted(value, cache) {
+	if (typeof value !== 'object' || value === null) {
+		return value;
 	}
 
-	return clone;
-}
+	let cached = cache.get(value);
 
-const remote_arg_clones = new Map();
-
-// "sveltekit remote arg"
-const remote_arg_reducer = '__skra';
-const remote_arg_marker = Symbol(remote_arg_reducer);
-
-const remote_arg_reducers = {
-	[remote_arg_reducer]:
-		/** @type {(value: unknown) => unknown} */
-		(value) => {
-			if (typeof value !== 'object' || value === null) {
-				return;
-			}
-
-			if (Object.hasOwn(value, remote_arg_marker)) {
-				return;
-			}
-
-			if (value instanceof Map) {
-				throw new Error('Maps are not valid remote function arguments');
-			}
-
-			if (value instanceof Set) {
-				throw new Error('Sets are not valid remote function arguments');
-			}
-
-			if (value instanceof RegExp) {
-				throw new Error('Regular expressions are not valid remote function arguments');
-			}
-
-			if (is_plain_object(value)) {
-				return remote_arg_clones.get(value) ?? to_sorted(value, remote_arg_clones);
-			}
+	if (cached === undefined) {
+		if (value instanceof Map) {
+			throw new Error('Maps are not valid remote function arguments');
 		}
-};
+
+		if (value instanceof Set) {
+			throw new Error('Sets are not valid remote function arguments');
+		}
+
+		if (value instanceof RegExp) {
+			throw new Error('Regular expressions are not valid remote function arguments');
+		}
+
+		if (Array.isArray(value)) {
+			cached = [];
+			cache.set(value, cached);
+
+			for (let i = 0; i < value.length; i += 1) {
+				if (i in value) {
+					cached[i] = to_sorted(value[i], cache);
+				}
+			}
+		} else if (is_plain_object(value)) {
+			cached = Object.getPrototypeOf(value) === null ? Object.create(null) : {};
+			cache.set(value, cached);
+
+			for (const key of Object.keys(value).sort()) {
+				cached[key] = to_sorted(value[key], cache);
+			}
+		} else {
+			cached = value;
+			cache.set(value, cached);
+		}
+	}
+
+	return cached;
+}
 
 /**
  * Stringifies the argument (if any) for a remote function in such a way that
@@ -134,8 +125,7 @@ export function stringify_remote_arg(value) {
 	if (value === undefined) return '';
 
 	// If people hit file/url size limits, we can look into using something like compress_and_encode_text from svelte.dev beyond a certain size
-	const json_string = devalue.stringify(value, remote_arg_reducers);
-	remote_arg_clones.clear();
+	const json_string = devalue.stringify(to_sorted(value, new Map()));
 
 	const bytes = new TextEncoder().encode(json_string);
 	return base64_encode(bytes).replaceAll('=', '').replaceAll('+', '-').replaceAll('/', '_');
@@ -153,9 +143,7 @@ export function parse_remote_arg(string) {
 		base64_decode(string.replaceAll('-', '+').replaceAll('_', '/'))
 	);
 
-	return devalue.parse(json_string, {
-		[remote_arg_reducer]: (value) => value
-	});
+	return devalue.parse(json_string);
 }
 
 /**

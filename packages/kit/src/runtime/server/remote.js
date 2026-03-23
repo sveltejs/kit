@@ -70,7 +70,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 			/** @type {{ payloads: string[] }} */
 			const { payloads } = await event.request.json();
 
-			const args = await Promise.all(payloads.map((payload) => parse_remote_arg(payload)));
+			const args = await Promise.all(payloads.map(parse_remote_arg));
 
 			const results = await with_request_store({ event, state }, () =>
 				internals.run(args, options)
