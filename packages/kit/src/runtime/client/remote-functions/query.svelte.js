@@ -402,19 +402,17 @@ async function get_stream_reader(response) {
 			throw new HttpError(result.status ?? 500, result.error);
 		}
 
-		throw new Error('Invalid query.live response');
+		throw new HttpError(500, 'Invalid query.live response');
 	}
 
 	if (!response.ok) {
-		try {
-			const result = await response.json();
+		const result = await response.json().catch(() => ({
+			type: 'error',
+			status: response.status,
+			error: response.statusText
+		}));
 
-			if (result.type === 'error') {
-				throw new HttpError(result.status ?? response.status ?? 500, result.error);
-			}
-		} catch {
-			throw new HttpError(response.status, response.statusText);
-		}
+		throw new HttpError(result.status ?? response.status ?? 500, result.error);
 	}
 
 	if (!response.body) {
