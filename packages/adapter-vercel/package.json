@@ -47,7 +47,7 @@
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "catalog:",
 		"@types/node": "catalog:",
-		"typescript": "^5.3.3",
+		"typescript": "catalog:",
 		"vitest": "catalog:"
 	},
 	"peerDependencies": {

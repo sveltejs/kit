@@ -33,7 +33,7 @@
 		"prettier": "catalog:",
 		"svelte": "catalog:",
 		"svelte-preprocess": "catalog:",
-		"typescript": "^5.3.3",
+		"typescript": "catalog:",
 		"vitest": "catalog:"
 	},
 	"peerDependencies": {

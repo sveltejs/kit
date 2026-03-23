@@ -72,9 +72,6 @@ catalogs:
     dropcss:
       specifier: ^1.0.16
       version: 1.0.16
-    dts-buddy:
-      specifier: ^0.7.0
-      version: 0.7.0
     esbuild:
       specifier: ^0.25.4
       version: 0.25.12
@@ -105,6 +102,9 @@ catalogs:
     svelte-preprocess:
       specifier: ^6.0.0
       version: 6.0.0
+    typescript:
+      specifier: ^6.0.0
+      version: 6.0.2
     valibot:
       specifier: ^1.1.0
       version: 1.2.0
@@ -130,7 +130,7 @@ importers:
         version: 1.58.2
       '@sveltejs/eslint-config':
         specifier: 'catalog:'
-        version: 9.0.0(@eslint/js@10.0.1(eslint@10.0.0(jiti@2.4.2)))(@stylistic/eslint-plugin-js@2.1.0(eslint@10.0.0(jiti@2.4.2)))(eslint-config-prettier@9.1.0(eslint@10.0.0(jiti@2.4.2)))(eslint-plugin-n@17.24.0(eslint@10.0.0(jiti@2.4.2))(typescript@5.8.3))(eslint-plugin-svelte@3.15.0(eslint@10.0.0(jiti@2.4.2))(svelte@5.53.12)(ts-node@10.9.2(@types/node@18.19.119)(typescript@5.8.3)))(eslint@10.0.0(jiti@2.4.2))(typescript-eslint@8.56.1(eslint@10.0.0(jiti@2.4.2))(typescript@5.8.3))(typescript@5.8.3)
+        version: 9.0.0(@eslint/js@10.0.1(eslint@10.0.0(jiti@2.4.2)))(@stylistic/eslint-plugin-js@2.1.0(eslint@10.0.0(jiti@2.4.2)))(eslint-config-prettier@9.1.0(eslint@10.0.0(jiti@2.4.2)))(eslint-plugin-n@17.24.0(eslint@10.0.0(jiti@2.4.2))(typescript@6.0.2))(eslint-plugin-svelte@3.15.0(eslint@10.0.0(jiti@2.4.2))(svelte@5.53.12)(ts-node@10.9.2(@types/node@18.19.119)(typescript@6.0.2)))(eslint@10.0.0(jiti@2.4.2))(typescript-eslint@8.56.1(eslint@10.0.0(jiti@2.4.2))(typescript@6.0.2))(typescript@6.0.2)
       '@svitejs/changesets-changelog-github-compact':
         specifier: 'catalog:'
         version: 1.2.0
@@ -156,8 +156,8 @@ importers:
         specifier: 'catalog:'
         version: 18.19.119
       typescript:
-        specifier: ^5.3.3
-        version: 5.8.3
+        specifier: 'catalog:'
+        version: 6.0.2
       vitest:
         specifier: 'catalog:'
         version: 4.0.16(@opentelemetry/api@1.9.0)(@types/node@18.19.119)(@vitest/browser-playwright@4.0.16)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0)
@@ -187,8 +187,8 @@ importers:
         specifier: 'catalog:'
         version: 0.25.12
       typescript:
-        specifier: ^5.3.3
-        version: 5.8.3
+        specifier: 'catalog:'
+        version: 6.0.2
       vitest:
         specifier: 'catalog:'
         version: 4.0.16(@opentelemetry/api@1.9.0)(@types/node@18.19.119)(@vitest/browser-playwright@4.0.16)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0)
@@ -281,8 +281,8 @@ importers:
         specifier: ^4.59.0
         version: 4.59.0
       typescript:
-        specifier: ^5.3.3
-        version: 5.8.3
+        specifier: 'catalog:'
+        version: 6.0.2
       vitest:
         specifier: 'catalog:'
         version: 4.0.16(@opentelemetry/api@1.9.0)(@types/node@18.19.119)(@vitest/browser-playwright@4.0.16)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0)
@@ -366,8 +366,8 @@ importers:
         specifier: ^3.0.2
         version: 3.0.2
       typescript:
-        specifier: ^5.3.3
-        version: 5.8.3
+        specifier: 'catalog:'
+        version: 6.0.2
       vitest:
         specifier: 'catalog:'
         version: 4.0.16(@opentelemetry/api@1.9.0)(@types/node@18.19.119)(@vitest/browser-playwright@4.0.16)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0)
@@ -393,8 +393,8 @@ importers:
         specifier: 'catalog:'
         version: 5.53.12
       typescript:
-        specifier: ^5.3.3
-        version: 5.8.3
+        specifier: 'catalog:'
+        version: 6.0.2
       vite:
         specifier: 'catalog:'
         version: 6.4.1(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0)
@@ -454,8 +454,8 @@ importers:
         specifier: 'catalog:'
         version: 18.19.119
       typescript:
-        specifier: ^5.3.3
-        version: 5.8.3
+        specifier: 'catalog:'
+        version: 6.0.2
       vitest:
         specifier: 'catalog:'
         version: 4.0.16(@opentelemetry/api@1.9.0)(@types/node@18.19.119)(@vitest/browser-playwright@4.0.16)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0)
@@ -472,8 +472,8 @@ importers:
         specifier: 'catalog:'
         version: 5.53.12
       typescript:
-        specifier: ^5.3.3
-        version: 5.8.3
+        specifier: 'catalog:'
+        version: 6.0.2
       vite:
         specifier: 'catalog:'
         version: 6.4.1(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0)
@@ -484,8 +484,8 @@ importers:
         specifier: workspace:^
         version: link:../kit
       typescript:
-        specifier: ^5.3.3
-        version: 5.8.3
+        specifier: 'catalog:'
+        version: 6.0.2
 
   packages/enhanced-img:
     dependencies:
@@ -521,8 +521,8 @@ importers:
         specifier: 'catalog:'
         version: 5.53.12
       typescript:
-        specifier: ^5.6.3
-        version: 5.8.3
+        specifier: 'catalog:'
+        version: 6.0.2
       vite:
         specifier: 'catalog:'
         version: 6.4.1(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0)
@@ -606,7 +606,7 @@ importers:
         specifier: 'catalog:'
         version: 2.4.7
       dts-buddy:
-        specifier: 'catalog:'
+        specifier: ^0.7.0
         version: 0.7.0(typescript@5.8.3)
       rollup:
         specifier: ^4.59.0
@@ -646,10 +646,10 @@ importers:
         version: 5.53.12
       svelte-check:
         specifier: 'catalog:'
-        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@5.8.3)
+        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
       typescript:
-        specifier: ^5.5.4
-        version: 5.8.3
+        specifier: 'catalog:'
+        version: 6.0.2
       vite:
         specifier: 'catalog:'
         version: 6.4.1(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0)
@@ -667,13 +667,13 @@ importers:
         version: 5.53.12
       svelte-check:
         specifier: 'catalog:'
-        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@5.8.3)
+        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
       typescript:
-        specifier: ^5.5.4
-        version: 5.8.3
+        specifier: 'catalog:'
+        version: 6.0.2
       valibot:
         specifier: 'catalog:'
-        version: 1.2.0(typescript@5.8.3)
+        version: 1.2.0(typescript@6.0.2)
       vite:
         specifier: 'catalog:'
         version: 6.4.1(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0)
@@ -703,16 +703,16 @@ importers:
         version: 5.53.12
       svelte-check:
         specifier: 'catalog:'
-        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@5.8.3)
+        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
       test-redirect-importer:
         specifier: workspace:*
         version: link:../../../../test-redirect-importer
       typescript:
-        specifier: ^5.5.4
-        version: 5.8.3
+        specifier: 'catalog:'
+        version: 6.0.2
       valibot:
         specifier: 'catalog:'
-        version: 1.2.0(typescript@5.8.3)
+        version: 1.2.0(typescript@6.0.2)
       vite:
         specifier: 'catalog:'
         version: 6.4.1(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0)
@@ -763,10 +763,10 @@ importers:
         version: 5.53.12
       svelte-check:
         specifier: 'catalog:'
-        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@5.8.3)
+        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
       typescript:
-        specifier: ^5.5.4
-        version: 5.8.3
+        specifier: 'catalog:'
+        version: 6.0.2
       vite:
         specifier: 'catalog:'
         version: 6.4.1(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0)
@@ -784,10 +784,10 @@ importers:
         version: 5.53.12
       svelte-check:
         specifier: 'catalog:'
-        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@5.8.3)
+        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
       typescript:
-        specifier: ^5.5.4
-        version: 5.8.3
+        specifier: 'catalog:'
+        version: 6.0.2
       vite:
         specifier: 'catalog:'
         version: 6.4.1(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0)
@@ -805,10 +805,10 @@ importers:
         version: 5.53.12
       svelte-check:
         specifier: 'catalog:'
-        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@5.8.3)
+        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
       typescript:
-        specifier: ^5.5.4
-        version: 5.8.3
+        specifier: 'catalog:'
+        version: 6.0.2
       vite:
         specifier: 'catalog:'
         version: 6.4.1(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0)
@@ -826,10 +826,10 @@ importers:
         version: 5.53.12
       svelte-check:
         specifier: 'catalog:'
-        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@5.8.3)
+        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
       typescript:
-        specifier: ^5.5.4
-        version: 5.8.3
+        specifier: 'catalog:'
+        version: 6.0.2
       vite:
         specifier: 'catalog:'
         version: 6.4.1(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0)
@@ -850,10 +850,10 @@ importers:
         version: 5.53.12
       svelte-check:
         specifier: 'catalog:'
-        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@5.8.3)
+        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
       typescript:
-        specifier: ^5.5.4
-        version: 5.8.3
+        specifier: 'catalog:'
+        version: 6.0.2
       vite:
         specifier: 'catalog:'
         version: 6.4.1(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0)
@@ -874,13 +874,13 @@ importers:
         version: 5.53.12
       svelte-check:
         specifier: 'catalog:'
-        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@5.8.3)
+        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
       typescript:
-        specifier: ^5.5.4
-        version: 5.8.3
+        specifier: 'catalog:'
+        version: 6.0.2
       valibot:
         specifier: 'catalog:'
-        version: 1.2.0(typescript@5.8.3)
+        version: 1.2.0(typescript@6.0.2)
       vite:
         specifier: 'catalog:'
         version: 6.4.1(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0)
@@ -901,10 +901,10 @@ importers:
         version: 5.53.12
       svelte-check:
         specifier: 'catalog:'
-        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@5.8.3)
+        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
       typescript:
-        specifier: ^5.5.4
-        version: 5.8.3
+        specifier: 'catalog:'
+        version: 6.0.2
       vite:
         specifier: 'catalog:'
         version: 6.4.1(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0)
@@ -922,10 +922,10 @@ importers:
         version: 5.53.12
       svelte-check:
         specifier: 'catalog:'
-        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@5.8.3)
+        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
       typescript:
-        specifier: ^5.5.4
-        version: 5.8.3
+        specifier: 'catalog:'
+        version: 6.0.2
       vite:
         specifier: 'catalog:'
         version: 6.4.1(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0)
@@ -943,10 +943,10 @@ importers:
         version: 5.53.12
       svelte-check:
         specifier: 'catalog:'
-        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@5.8.3)
+        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
       typescript:
-        specifier: ^5.5.4
-        version: 5.8.3
+        specifier: ^6.0.0
+        version: 6.0.2
       vite:
         specifier: 'catalog:'
         version: 6.4.1(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0)
@@ -973,10 +973,10 @@ importers:
         version: 5.53.12
       svelte-check:
         specifier: 'catalog:'
-        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@5.8.3)
+        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
       typescript:
-        specifier: ^5.5.4
-        version: 5.8.3
+        specifier: ^6.0.0
+        version: 6.0.2
       vite:
         specifier: 'catalog:'
         version: 6.4.1(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0)
@@ -997,10 +997,10 @@ importers:
         version: 5.53.12
       svelte-check:
         specifier: 'catalog:'
-        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@5.8.3)
+        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
       typescript:
-        specifier: ^5.5.4
-        version: 5.8.3
+        specifier: ^6.0.0
+        version: 6.0.2
       vite:
         specifier: 'catalog:'
         version: 6.4.1(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0)
@@ -1021,10 +1021,10 @@ importers:
         version: 5.53.12
       svelte-check:
         specifier: 'catalog:'
-        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@5.8.3)
+        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
       typescript:
-        specifier: ^5.5.4
-        version: 5.8.3
+        specifier: ^6.0.0
+        version: 6.0.2
       vite:
         specifier: 'catalog:'
         version: 6.4.1(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0)
@@ -1045,10 +1045,10 @@ importers:
         version: 5.53.12
       svelte-check:
         specifier: 'catalog:'
-        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@5.8.3)
+        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
       typescript:
-        specifier: ^5.5.4
-        version: 5.8.3
+        specifier: ^6.0.0
+        version: 6.0.2
       vite:
         specifier: 'catalog:'
         version: 6.4.1(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0)
@@ -1066,10 +1066,10 @@ importers:
         version: 5.53.12
       svelte-check:
         specifier: 'catalog:'
-        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@5.8.3)
+        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
       typescript:
-        specifier: ^5.5.4
-        version: 5.8.3
+        specifier: ^6.0.0
+        version: 6.0.2
       vite:
         specifier: 'catalog:'
         version: 6.4.1(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0)
@@ -1087,10 +1087,10 @@ importers:
         version: 5.53.12
       svelte-check:
         specifier: 'catalog:'
-        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@5.8.3)
+        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
       typescript:
-        specifier: ^5.5.4
-        version: 5.8.3
+        specifier: ^6.0.0
+        version: 6.0.2
       vite:
         specifier: 'catalog:'
         version: 6.4.1(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0)
@@ -1108,10 +1108,10 @@ importers:
         version: 5.53.12
       svelte-check:
         specifier: 'catalog:'
-        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@5.8.3)
+        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
       typescript:
-        specifier: ^5.5.4
-        version: 5.8.3
+        specifier: ^6.0.0
+        version: 6.0.2
       vite:
         specifier: 'catalog:'
         version: 6.4.1(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0)
@@ -1129,10 +1129,10 @@ importers:
         version: 5.53.12
       svelte-check:
         specifier: 'catalog:'
-        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@5.8.3)
+        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
       typescript:
-        specifier: ^5.5.4
-        version: 5.8.3
+        specifier: ^6.0.0
+        version: 6.0.2
       vite:
         specifier: 'catalog:'
         version: 6.4.1(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0)
@@ -1150,10 +1150,10 @@ importers:
         version: 5.53.12
       svelte-check:
         specifier: 'catalog:'
-        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@5.8.3)
+        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
       typescript:
-        specifier: ^5.5.4
-        version: 5.8.3
+        specifier: ^6.0.0
+        version: 6.0.2
       vite:
         specifier: 'catalog:'
         version: 6.4.1(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0)
@@ -1171,10 +1171,10 @@ importers:
         version: 5.53.12
       svelte-check:
         specifier: 'catalog:'
-        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@5.8.3)
+        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
       typescript:
-        specifier: ^5.5.4
-        version: 5.8.3
+        specifier: ^6.0.0
+        version: 6.0.2
       vite:
         specifier: 'catalog:'
         version: 6.4.1(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0)
@@ -1192,10 +1192,10 @@ importers:
         version: 5.53.12
       svelte-check:
         specifier: 'catalog:'
-        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@5.8.3)
+        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
       typescript:
-        specifier: ^5.5.4
-        version: 5.8.3
+        specifier: ^6.0.0
+        version: 6.0.2
       vite:
         specifier: 'catalog:'
         version: 6.4.1(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0)
@@ -1213,10 +1213,10 @@ importers:
         version: 5.53.12
       svelte-check:
         specifier: 'catalog:'
-        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@5.8.3)
+        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
       typescript:
-        specifier: ^5.5.4
-        version: 5.8.3
+        specifier: ^6.0.0
+        version: 6.0.2
       vite:
         specifier: 'catalog:'
         version: 6.4.1(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0)
@@ -1234,10 +1234,10 @@ importers:
         version: 5.53.12
       svelte-check:
         specifier: 'catalog:'
-        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@5.8.3)
+        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
       typescript:
-        specifier: ^5.5.4
-        version: 5.8.3
+        specifier: ^6.0.0
+        version: 6.0.2
       vite:
         specifier: 'catalog:'
         version: 6.4.1(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0)
@@ -1255,10 +1255,10 @@ importers:
         version: 5.53.12
       svelte-check:
         specifier: 'catalog:'
-        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@5.8.3)
+        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
       typescript:
-        specifier: ^5.5.4
-        version: 5.8.3
+        specifier: ^6.0.0
+        version: 6.0.2
       vite:
         specifier: 'catalog:'
         version: 6.4.1(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0)
@@ -1276,10 +1276,10 @@ importers:
         version: 5.53.12
       svelte-check:
         specifier: 'catalog:'
-        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@5.8.3)
+        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
       typescript:
-        specifier: ^5.5.4
-        version: 5.8.3
+        specifier: ^6.0.0
+        version: 6.0.2
       vite:
         specifier: 'catalog:'
         version: 6.4.1(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0)
@@ -1297,10 +1297,10 @@ importers:
         version: 5.53.12
       svelte-check:
         specifier: 'catalog:'
-        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@5.8.3)
+        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
       typescript:
-        specifier: ^5.5.4
-        version: 5.8.3
+        specifier: ^6.0.0
+        version: 6.0.2
       vite:
         specifier: 'catalog:'
         version: 6.4.1(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0)
@@ -1321,10 +1321,10 @@ importers:
         version: 5.53.12
       svelte-check:
         specifier: 'catalog:'
-        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@5.8.3)
+        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
       typescript:
-        specifier: ^5.5.4
-        version: 5.8.3
+        specifier: ^6.0.0
+        version: 6.0.2
       vite:
         specifier: 'catalog:'
         version: 6.4.1(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0)
@@ -1345,10 +1345,10 @@ importers:
         version: 5.53.12
       svelte-check:
         specifier: 'catalog:'
-        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@5.8.3)
+        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
       typescript:
-        specifier: ^5.5.4
-        version: 5.8.3
+        specifier: ^6.0.0
+        version: 6.0.2
       vite:
         specifier: 'catalog:'
         version: 6.4.1(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0)
@@ -1372,7 +1372,7 @@ importers:
         version: 7.7.4
       svelte2tsx:
         specifier: ~0.7.33
-        version: 0.7.33(svelte@5.53.12)(typescript@5.8.3)
+        version: 0.7.33(svelte@5.53.12)(typescript@6.0.2)
     devDependencies:
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
@@ -1391,10 +1391,10 @@ importers:
         version: 5.53.12
       svelte-preprocess:
         specifier: 'catalog:'
-        version: 6.0.0(postcss-load-config@3.1.4(postcss@8.5.6)(ts-node@10.9.2(@types/node@18.19.119)(typescript@5.8.3)))(postcss@8.5.6)(svelte@5.53.12)(typescript@5.8.3)
+        version: 6.0.0(postcss-load-config@3.1.4(postcss@8.5.6)(ts-node@10.9.2(@types/node@18.19.119)(typescript@6.0.2)))(postcss@8.5.6)(svelte@5.53.12)(typescript@6.0.2)
       typescript:
-        specifier: ^5.3.3
-        version: 5.8.3
+        specifier: 'catalog:'
+        version: 6.0.2
       vitest:
         specifier: 'catalog:'
         version: 4.0.16(@opentelemetry/api@1.9.0)(@types/node@18.19.119)(@vitest/browser-playwright@4.0.16)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0)
@@ -1454,13 +1454,13 @@ importers:
         version: 5.53.12
       svelte-check:
         specifier: 'catalog:'
-        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@5.8.3)
+        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
       typescript:
-        specifier: ^5.5.0
-        version: 5.8.3
+        specifier: 'catalog:'
+        version: 6.0.2
       valibot:
         specifier: 'catalog:'
-        version: 1.2.0(typescript@5.8.3)
+        version: 1.2.0(typescript@6.0.2)
       vite:
         specifier: 'catalog:'
         version: 6.4.1(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0)
@@ -5705,6 +5705,11 @@ packages:
     engines: {node: '>=14.17'}
     hasBin: true
 
+  typescript@6.0.2:
+    resolution: {integrity: sha512-bGdAIrZ0wiGDo5l8c++HWtbaNCWTS4UTv7RaTH/ThVIgjkveJt83m74bBHMJkuCbslY8ixgLBVZJIOiQlQTjfQ==}
+    engines: {node: '>=14.17'}
+    hasBin: true
+
   ufo@1.6.3:
     resolution: {integrity: sha512-yDJTmhydvl5lJzBmy/hyOAA0d+aqCBuwl818haVdYCRrWV84o7YyeVm4QlVHStqNrrJSTb6jKuFAVqAFsr+K3Q==}
 
@@ -7684,17 +7689,17 @@ snapshots:
     dependencies:
       acorn: 8.16.0
 
-  '@sveltejs/eslint-config@9.0.0(@eslint/js@10.0.1(eslint@10.0.0(jiti@2.4.2)))(@stylistic/eslint-plugin-js@2.1.0(eslint@10.0.0(jiti@2.4.2)))(eslint-config-prettier@9.1.0(eslint@10.0.0(jiti@2.4.2)))(eslint-plugin-n@17.24.0(eslint@10.0.0(jiti@2.4.2))(typescript@5.8.3))(eslint-plugin-svelte@3.15.0(eslint@10.0.0(jiti@2.4.2))(svelte@5.53.12)(ts-node@10.9.2(@types/node@18.19.119)(typescript@5.8.3)))(eslint@10.0.0(jiti@2.4.2))(typescript-eslint@8.56.1(eslint@10.0.0(jiti@2.4.2))(typescript@5.8.3))(typescript@5.8.3)':
+  '@sveltejs/eslint-config@9.0.0(@eslint/js@10.0.1(eslint@10.0.0(jiti@2.4.2)))(@stylistic/eslint-plugin-js@2.1.0(eslint@10.0.0(jiti@2.4.2)))(eslint-config-prettier@9.1.0(eslint@10.0.0(jiti@2.4.2)))(eslint-plugin-n@17.24.0(eslint@10.0.0(jiti@2.4.2))(typescript@6.0.2))(eslint-plugin-svelte@3.15.0(eslint@10.0.0(jiti@2.4.2))(svelte@5.53.12)(ts-node@10.9.2(@types/node@18.19.119)(typescript@6.0.2)))(eslint@10.0.0(jiti@2.4.2))(typescript-eslint@8.56.1(eslint@10.0.0(jiti@2.4.2))(typescript@6.0.2))(typescript@6.0.2)':
     dependencies:
       '@eslint/js': 10.0.1(eslint@10.0.0(jiti@2.4.2))
       '@stylistic/eslint-plugin-js': 2.1.0(eslint@10.0.0(jiti@2.4.2))
       eslint: 10.0.0(jiti@2.4.2)
       eslint-config-prettier: 9.1.0(eslint@10.0.0(jiti@2.4.2))
-      eslint-plugin-n: 17.24.0(eslint@10.0.0(jiti@2.4.2))(typescript@5.8.3)
-      eslint-plugin-svelte: 3.15.0(eslint@10.0.0(jiti@2.4.2))(svelte@5.53.12)(ts-node@10.9.2(@types/node@18.19.119)(typescript@5.8.3))
+      eslint-plugin-n: 17.24.0(eslint@10.0.0(jiti@2.4.2))(typescript@6.0.2)
+      eslint-plugin-svelte: 3.15.0(eslint@10.0.0(jiti@2.4.2))(svelte@5.53.12)(ts-node@10.9.2(@types/node@18.19.119)(typescript@6.0.2))
       globals: 17.3.0
-      typescript: 5.8.3
-      typescript-eslint: 8.56.1(eslint@10.0.0(jiti@2.4.2))(typescript@5.8.3)
+      typescript: 6.0.2
+      typescript-eslint: 8.56.1(eslint@10.0.0(jiti@2.4.2))(typescript@6.0.2)
 
   '@sveltejs/vite-plugin-svelte-inspector@5.0.2(@sveltejs/vite-plugin-svelte@6.2.4(svelte@5.53.12)(vite@6.4.1(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0)))(svelte@5.53.12)(vite@6.4.1(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))':
     dependencies:
@@ -7782,31 +7787,31 @@ snapshots:
       '@types/node': 18.19.119
     optional: true
 
-  '@typescript-eslint/eslint-plugin@8.56.1(@typescript-eslint/parser@8.56.1(eslint@10.0.0(jiti@2.4.2))(typescript@5.8.3))(eslint@10.0.0(jiti@2.4.2))(typescript@5.8.3)':
+  '@typescript-eslint/eslint-plugin@8.56.1(@typescript-eslint/parser@8.56.1(eslint@10.0.0(jiti@2.4.2))(typescript@6.0.2))(eslint@10.0.0(jiti@2.4.2))(typescript@6.0.2)':
     dependencies:
       '@eslint-community/regexpp': 4.12.2
-      '@typescript-eslint/parser': 8.56.1(eslint@10.0.0(jiti@2.4.2))(typescript@5.8.3)
+      '@typescript-eslint/parser': 8.56.1(eslint@10.0.0(jiti@2.4.2))(typescript@6.0.2)
       '@typescript-eslint/scope-manager': 8.56.1
-      '@typescript-eslint/type-utils': 8.56.1(eslint@10.0.0(jiti@2.4.2))(typescript@5.8.3)
-      '@typescript-eslint/utils': 8.56.1(eslint@10.0.0(jiti@2.4.2))(typescript@5.8.3)
+      '@typescript-eslint/type-utils': 8.56.1(eslint@10.0.0(jiti@2.4.2))(typescript@6.0.2)
+      '@typescript-eslint/utils': 8.56.1(eslint@10.0.0(jiti@2.4.2))(typescript@6.0.2)
       '@typescript-eslint/visitor-keys': 8.56.1
       eslint: 10.0.0(jiti@2.4.2)
       ignore: 7.0.5
       natural-compare: 1.4.0
-      ts-api-utils: 2.4.0(typescript@5.8.3)
-      typescript: 5.8.3
+      ts-api-utils: 2.4.0(typescript@6.0.2)
+      typescript: 6.0.2
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/parser@8.56.1(eslint@10.0.0(jiti@2.4.2))(typescript@5.8.3)':
+  '@typescript-eslint/parser@8.56.1(eslint@10.0.0(jiti@2.4.2))(typescript@6.0.2)':
     dependencies:
       '@typescript-eslint/scope-manager': 8.56.1
       '@typescript-eslint/types': 8.56.1
-      '@typescript-eslint/typescript-estree': 8.56.1(typescript@5.8.3)
+      '@typescript-eslint/typescript-estree': 8.56.1(typescript@6.0.2)
       '@typescript-eslint/visitor-keys': 8.56.1
       debug: 4.4.3
       eslint: 10.0.0(jiti@2.4.2)
-      typescript: 5.8.3
+      typescript: 6.0.2
     transitivePeerDependencies:
       - supports-color
 
@@ -7819,6 +7824,15 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  '@typescript-eslint/project-service@8.56.1(typescript@6.0.2)':
+    dependencies:
+      '@typescript-eslint/tsconfig-utils': 8.56.1(typescript@6.0.2)
+      '@typescript-eslint/types': 8.56.1
+      debug: 4.4.3
+      typescript: 6.0.2
+    transitivePeerDependencies:
+      - supports-color
+
   '@typescript-eslint/scope-manager@8.56.1':
     dependencies:
       '@typescript-eslint/types': 8.56.1
@@ -7828,15 +7842,19 @@ snapshots:
     dependencies:
       typescript: 5.8.3
 
-  '@typescript-eslint/type-utils@8.56.1(eslint@10.0.0(jiti@2.4.2))(typescript@5.8.3)':
+  '@typescript-eslint/tsconfig-utils@8.56.1(typescript@6.0.2)':
+    dependencies:
+      typescript: 6.0.2
+
+  '@typescript-eslint/type-utils@8.56.1(eslint@10.0.0(jiti@2.4.2))(typescript@6.0.2)':
     dependencies:
       '@typescript-eslint/types': 8.56.1
-      '@typescript-eslint/typescript-estree': 8.56.1(typescript@5.8.3)
-      '@typescript-eslint/utils': 8.56.1(eslint@10.0.0(jiti@2.4.2))(typescript@5.8.3)
+      '@typescript-eslint/typescript-estree': 8.56.1(typescript@6.0.2)
+      '@typescript-eslint/utils': 8.56.1(eslint@10.0.0(jiti@2.4.2))(typescript@6.0.2)
       debug: 4.4.3
       eslint: 10.0.0(jiti@2.4.2)
-      ts-api-utils: 2.4.0(typescript@5.8.3)
-      typescript: 5.8.3
+      ts-api-utils: 2.4.0(typescript@6.0.2)
+      typescript: 6.0.2
     transitivePeerDependencies:
       - supports-color
 
@@ -7857,14 +7875,29 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/utils@8.56.1(eslint@10.0.0(jiti@2.4.2))(typescript@5.8.3)':
+  '@typescript-eslint/typescript-estree@8.56.1(typescript@6.0.2)':
+    dependencies:
+      '@typescript-eslint/project-service': 8.56.1(typescript@6.0.2)
+      '@typescript-eslint/tsconfig-utils': 8.56.1(typescript@6.0.2)
+      '@typescript-eslint/types': 8.56.1
+      '@typescript-eslint/visitor-keys': 8.56.1
+      debug: 4.4.3
+      minimatch: 10.2.2
+      semver: 7.7.4
+      tinyglobby: 0.2.15
+      ts-api-utils: 2.4.0(typescript@6.0.2)
+      typescript: 6.0.2
+    transitivePeerDependencies:
+      - supports-color
+
+  '@typescript-eslint/utils@8.56.1(eslint@10.0.0(jiti@2.4.2))(typescript@6.0.2)':
     dependencies:
       '@eslint-community/eslint-utils': 4.9.1(eslint@10.0.0(jiti@2.4.2))
       '@typescript-eslint/scope-manager': 8.56.1
       '@typescript-eslint/types': 8.56.1
-      '@typescript-eslint/typescript-estree': 8.56.1(typescript@5.8.3)
+      '@typescript-eslint/typescript-estree': 8.56.1(typescript@6.0.2)
       eslint: 10.0.0(jiti@2.4.2)
-      typescript: 5.8.3
+      typescript: 6.0.2
     transitivePeerDependencies:
       - supports-color
 
@@ -8664,7 +8697,7 @@ snapshots:
       eslint: 10.0.0(jiti@2.4.2)
       eslint-compat-utils: 0.5.1(eslint@10.0.0(jiti@2.4.2))
 
-  eslint-plugin-n@17.24.0(eslint@10.0.0(jiti@2.4.2))(typescript@5.8.3):
+  eslint-plugin-n@17.24.0(eslint@10.0.0(jiti@2.4.2))(typescript@6.0.2):
     dependencies:
       '@eslint-community/eslint-utils': 4.9.1(eslint@10.0.0(jiti@2.4.2))
       enhanced-resolve: 5.19.0
@@ -8675,11 +8708,11 @@ snapshots:
       globrex: 0.1.2
       ignore: 5.3.2
       semver: 7.7.4
-      ts-declaration-location: 1.0.7(typescript@5.8.3)
+      ts-declaration-location: 1.0.7(typescript@6.0.2)
     transitivePeerDependencies:
       - typescript
 
-  eslint-plugin-svelte@3.15.0(eslint@10.0.0(jiti@2.4.2))(svelte@5.53.12)(ts-node@10.9.2(@types/node@18.19.119)(typescript@5.8.3)):
+  eslint-plugin-svelte@3.15.0(eslint@10.0.0(jiti@2.4.2))(svelte@5.53.12)(ts-node@10.9.2(@types/node@18.19.119)(typescript@6.0.2)):
     dependencies:
       '@eslint-community/eslint-utils': 4.9.1(eslint@10.0.0(jiti@2.4.2))
       '@jridgewell/sourcemap-codec': 1.5.5
@@ -8688,7 +8721,7 @@ snapshots:
       globals: 16.5.0
       known-css-properties: 0.37.0
       postcss: 8.5.6
-      postcss-load-config: 3.1.4(postcss@8.5.6)(ts-node@10.9.2(@types/node@18.19.119)(typescript@5.8.3))
+      postcss-load-config: 3.1.4(postcss@8.5.6)(ts-node@10.9.2(@types/node@18.19.119)(typescript@6.0.2))
       postcss-safe-parser: 7.0.1(postcss@8.5.6)
       semver: 7.7.4
       svelte-eslint-parser: 1.5.1(svelte@5.53.12)
@@ -9753,6 +9786,15 @@ snapshots:
     optionalDependencies:
       postcss: 8.5.6
       ts-node: 10.9.2(@types/node@18.19.119)(typescript@5.8.3)
+    optional: true
+
+  postcss-load-config@3.1.4(postcss@8.5.6)(ts-node@10.9.2(@types/node@18.19.119)(typescript@6.0.2)):
+    dependencies:
+      lilconfig: 2.1.0
+      yaml: 1.10.2
+    optionalDependencies:
+      postcss: 8.5.6
+      ts-node: 10.9.2(@types/node@18.19.119)(typescript@6.0.2)
 
   postcss-safe-parser@7.0.1(postcss@8.5.6):
     dependencies:
@@ -10194,7 +10236,7 @@ snapshots:
 
   supports-preserve-symlinks-flag@1.0.0: {}
 
-  svelte-check@4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@5.8.3):
+  svelte-check@4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2):
     dependencies:
       '@jridgewell/trace-mapping': 0.3.25
       chokidar: 4.0.3
@@ -10202,7 +10244,7 @@ snapshots:
       picocolors: 1.1.1
       sade: 1.8.1
       svelte: 5.53.12
-      typescript: 5.8.3
+      typescript: 6.0.2
     transitivePeerDependencies:
       - picomatch
 
@@ -10232,12 +10274,22 @@ snapshots:
       postcss-load-config: 3.1.4(postcss@8.5.6)(ts-node@10.9.2(@types/node@18.19.119)(typescript@5.8.3))
       typescript: 5.8.3
 
-  svelte2tsx@0.7.33(svelte@5.53.12)(typescript@5.8.3):
+  svelte-preprocess@6.0.0(postcss-load-config@3.1.4(postcss@8.5.6)(ts-node@10.9.2(@types/node@18.19.119)(typescript@6.0.2)))(postcss@8.5.6)(svelte@5.53.12)(typescript@6.0.2):
+    dependencies:
+      detect-indent: 6.1.0
+      strip-indent: 3.0.0
+      svelte: 5.53.12
+    optionalDependencies:
+      postcss: 8.5.6
+      postcss-load-config: 3.1.4(postcss@8.5.6)(ts-node@10.9.2(@types/node@18.19.119)(typescript@6.0.2))
+      typescript: 6.0.2
+
+  svelte2tsx@0.7.33(svelte@5.53.12)(typescript@6.0.2):
     dependencies:
       dedent-js: 1.0.1
       pascal-case: 3.1.2
       svelte: 5.53.12
-      typescript: 5.8.3
+      typescript: 6.0.2
 
   svelte@5.53.12:
     dependencies:
@@ -10339,10 +10391,14 @@ snapshots:
     dependencies:
       typescript: 5.8.3
 
-  ts-declaration-location@1.0.7(typescript@5.8.3):
+  ts-api-utils@2.4.0(typescript@6.0.2):
+    dependencies:
+      typescript: 6.0.2
+
+  ts-declaration-location@1.0.7(typescript@6.0.2):
     dependencies:
       picomatch: 4.0.3
-      typescript: 5.8.3
+      typescript: 6.0.2
 
   ts-node@10.9.2(@types/node@18.19.119)(typescript@5.8.3):
     dependencies:
@@ -10363,6 +10419,25 @@ snapshots:
       yn: 3.1.1
     optional: true
 
+  ts-node@10.9.2(@types/node@18.19.119)(typescript@6.0.2):
+    dependencies:
+      '@cspotcode/source-map-support': 0.8.1
+      '@tsconfig/node10': 1.0.12
+      '@tsconfig/node12': 1.0.11
+      '@tsconfig/node14': 1.0.3
+      '@tsconfig/node16': 1.0.4
+      '@types/node': 18.19.119
+      acorn: 8.16.0
+      acorn-walk: 8.3.5
+      arg: 4.1.3
+      create-require: 1.1.1
+      diff: 4.0.4
+      make-error: 1.3.6
+      typescript: 6.0.2
+      v8-compile-cache-lib: 3.0.1
+      yn: 3.1.1
+    optional: true
+
   tslib@2.8.1: {}
 
   type-check@0.4.0:
@@ -10371,18 +10446,20 @@ snapshots:
 
   type-fest@4.41.0: {}
 
-  typescript-eslint@8.56.1(eslint@10.0.0(jiti@2.4.2))(typescript@5.8.3):
+  typescript-eslint@8.56.1(eslint@10.0.0(jiti@2.4.2))(typescript@6.0.2):
     dependencies:
-      '@typescript-eslint/eslint-plugin': 8.56.1(@typescript-eslint/parser@8.56.1(eslint@10.0.0(jiti@2.4.2))(typescript@5.8.3))(eslint@10.0.0(jiti@2.4.2))(typescript@5.8.3)
-      '@typescript-eslint/parser': 8.56.1(eslint@10.0.0(jiti@2.4.2))(typescript@5.8.3)
-      '@typescript-eslint/typescript-estree': 8.56.1(typescript@5.8.3)
-      '@typescript-eslint/utils': 8.56.1(eslint@10.0.0(jiti@2.4.2))(typescript@5.8.3)
+      '@typescript-eslint/eslint-plugin': 8.56.1(@typescript-eslint/parser@8.56.1(eslint@10.0.0(jiti@2.4.2))(typescript@6.0.2))(eslint@10.0.0(jiti@2.4.2))(typescript@6.0.2)
+      '@typescript-eslint/parser': 8.56.1(eslint@10.0.0(jiti@2.4.2))(typescript@6.0.2)
+      '@typescript-eslint/typescript-estree': 8.56.1(typescript@6.0.2)
+      '@typescript-eslint/utils': 8.56.1(eslint@10.0.0(jiti@2.4.2))(typescript@6.0.2)
       eslint: 10.0.0(jiti@2.4.2)
-      typescript: 5.8.3
+      typescript: 6.0.2
     transitivePeerDependencies:
       - supports-color
 
   typescript@5.8.3: {}
+
+  typescript@6.0.2: {}
 
   ufo@1.6.3: {}
 
@@ -10450,9 +10527,9 @@ snapshots:
   v8-compile-cache-lib@3.0.1:
     optional: true
 
-  valibot@1.2.0(typescript@5.8.3):
+  valibot@1.2.0(typescript@6.0.2):
     optionalDependencies:
-      typescript: 5.8.3
+      typescript: 6.0.2
 
   validate-npm-package-license@3.0.4:
     dependencies:

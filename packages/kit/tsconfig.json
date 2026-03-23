@@ -8,6 +8,7 @@
 		"module": "node16",
 		"moduleResolution": "node16",
 		"allowSyntheticDefaultImports": true,
+		"rootDir": "./",
 		"paths": {
 			"@sveltejs/kit": ["./src/exports/public.d.ts"],
 			"@sveltejs/kit/node": ["./src/exports/node/index.js"],
@@ -22,7 +23,8 @@
 			"types": ["./src/types/internal.d.ts"]
 		},
 		"noUnusedLocals": true,
-		"noUnusedParameters": true
+		"noUnusedParameters": true,
+		"types": ["node"]
 	},
 	"include": ["*.js", "scripts/**/*", "src/**/*"],
 	"exclude": ["./**/write_types/test/**"]
