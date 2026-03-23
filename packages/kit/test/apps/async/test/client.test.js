@@ -447,6 +447,19 @@ test.describe('remote function mutations', () => {
 		await expect(page.locator('#detached')).toHaveText('detached');
 	});
 
+	test('query.live does not resend unchanged devalue payloads', async ({ page }) => {
+		await page.goto('/remote/live');
+		await page.click('#reset');
+
+		await expect(page.locator('#duplicate-payload-count')).toHaveText('0');
+		const before = Number(await page.locator('#duplicate-updates').textContent());
+
+		await page.click('#notify-only');
+		await page.waitForTimeout(100);
+		await expect(page.locator('#duplicate-payload-count')).toHaveText('0');
+		await expect(page.locator('#duplicate-updates')).toHaveText(String(before));
+	});
+
 	test('query.live cleans up server iterator on reload', async ({ page }) => {
 		await page.goto('/remote/live');
 		await page.click('#stats');

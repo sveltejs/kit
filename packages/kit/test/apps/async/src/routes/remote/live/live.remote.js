@@ -68,6 +68,22 @@ export const get_finite_count = query.live(async function* () {
 	yield count;
 });
 
+export const get_duplicate_payload = query.live(async function* () {
+	const signal = getRequestEvent().request.signal;
+
+	yield { count };
+
+	while (true) {
+		const status = await wait_for_change(signal);
+
+		if (status === 'aborted') {
+			return;
+		}
+
+		yield { count };
+	}
+});
+
 export const increment = command(() => {
 	count += 1;
 	notify();
@@ -75,6 +91,10 @@ export const increment = command(() => {
 
 export const reset = command(() => {
 	count = 0;
+	notify();
+});
+
+export const notify_only = command(() => {
 	notify();
 });
 

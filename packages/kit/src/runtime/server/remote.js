@@ -173,6 +173,8 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 			}
 
 			let closed = false;
+			let has_previous_result = false;
+			let previous_result = '';
 
 			async function cancel() {
 				if (closed) return;
@@ -192,18 +194,31 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 						}
 
 						try {
-							const { value, done } = await iterator.next();
+							while (true) {
+								const { value, done } = await iterator.next();
 
-							if (done) {
-								await cancel();
-								controller.close();
+								if (done) {
+									await cancel();
+									controller.close();
+									return;
+								}
+
+								const result = stringify(value, transport);
+
+								if (has_previous_result && result === previous_result) {
+									continue;
+								}
+
+								has_previous_result = true;
+								previous_result = result;
+
+								send(controller, {
+									type: 'result',
+									result
+								});
+
 								return;
 							}
-
-							send(controller, {
-								type: 'result',
-								result: stringify(value, transport)
-							});
 						} catch (error) {
 							if (!event.request.signal.aborted) {
 								if (error instanceof Redirect) {
