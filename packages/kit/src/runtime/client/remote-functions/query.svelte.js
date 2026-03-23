@@ -816,7 +816,8 @@ export class LiveQuery {
 	}
 
 	reconnect() {
-		if (!this.#active || this.#destroyed || this.#finished) return;
+		if (!this.#active || this.#destroyed) return;
+		this.#finished = false;
 		this.#attempt = 0;
 		this.#clear_retry();
 		this.#disconnect_current();
