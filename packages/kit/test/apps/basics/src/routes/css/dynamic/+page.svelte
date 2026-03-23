@@ -2,10 +2,10 @@
 	let Dynamic;
 </script>
 
-<button
-	on:click={async () => {
+<button on:click={async () => {
 		Dynamic = (await import('./Dynamic.svelte')).default;
-	}}>load component</button
+	}}
+	>load component</button
 >
 
 <svelte:component this={Dynamic}></svelte:component>
