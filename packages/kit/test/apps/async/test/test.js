@@ -632,6 +632,27 @@ test.describe('remote functions', () => {
 			});
 		}
 	});
+
+	test('.as(type, value) renders correct values', async ({ page }) => {
+		await page.goto('/remote/form/as-value');
+
+		const form1 = page.locator('form').nth(0);
+		const form2 = page.locator('form').nth(1);
+
+		// first record values
+		await expect(form1.locator('input[name="text_field"]')).toHaveValue('Example text');
+		await expect(form1.locator('input[name="n:number_field"]')).toHaveValue('42');
+		await expect(form1.locator('select[name="select_field"]')).toHaveValue('apple');
+		await expect(form1.locator('input[name="color_field"]')).toHaveValue('#ff0000');
+		await expect(form1.locator('input[name="n:range_field"]')).toHaveValue('5');
+
+		// second record values
+		await expect(form2.locator('input[name="text_field"]')).toHaveValue('Another example');
+		await expect(form2.locator('input[name="n:number_field"]')).toHaveValue('100');
+		await expect(form2.locator('select[name="select_field"]')).toHaveValue('banana');
+		await expect(form2.locator('input[name="color_field"]')).toHaveValue('#00ff00');
+		await expect(form2.locator('input[name="n:range_field"]')).toHaveValue('8');
+	});
 });
 
 test.describe('server error boundaries', () => {
