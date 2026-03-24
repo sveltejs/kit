@@ -522,12 +522,21 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 										transport: createServerHotChannel(),
 										async handleRequest(request) {
 											try {
+												const module_runner = get_module_runner();
+
+												const resolved_instrumentation = resolve_entry(
+													path.join(svelte_config.kit.files.src, 'instrumentation.server')
+												);
+												if (resolved_instrumentation) {
+													await module_runner.import(resolved_instrumentation);
+												}
+
 												/**
 												 * @type {{
 												 *   respond: (request: Request, remote_address: string | undefined, kit: import('types').ValidatedKitConfig) => Promise<Response>
 												 * }}
 												 */
-												const { respond } = await get_module_runner().import(
+												const { respond } = await module_runner.import(
 													import.meta.resolve('./dev/server.js')
 												);
 												return await respond(request, dev_environment?.remote_address, kit);
@@ -947,12 +956,6 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 
 						const runtime_base = get_runtime_base(root);
 						const adapter = svelte_config.kit.adapter;
-
-						const resolved_instrumentation = resolve_entry(
-							path.join(svelte_config.kit.files.src, 'instrumentation.server')
-						);
-
-						// TODO: if instrumentation exists, import it first
 
 						return dedent`
 							import { AsyncLocalStorage } from 'node:async_hooks';
