@@ -16,7 +16,7 @@ import * as sync from '../../../core/sync/sync.js';
 import { not_found } from '../utils.js';
 import { escape_html } from '../../../utils/escape.js';
 import { sveltekit_ssr_manifest } from '../module_ids.js';
-import { to_fs } from '../fetchable.js';
+import { to_fs } from '../filesystem.js';
 
 // vite-specifc queries that we should skip handling for css urls
 const vite_css_query_regex = /(?:\?|&)(?:raw|url|inline)(?:&|$)/;
@@ -410,9 +410,74 @@ export function get_module_data(dev, event_id) {
 
 	return new Promise((resolve) => {
 		/** @param {unknown} data */
-		const listener = (data) => resolve(data);
+		const listener = (data) => {
+			dev.environments.ssr.hot.off(event, listener);
+			resolve(data);
+		};
 		dev.environments.ssr.hot.on(event, listener);
 		dev.environments.ssr.hot.send(event);
-		dev.environments.ssr.hot.off(event, listener);
 	});
+}
+
+/**
+ * @param {import('types').ManifestData} manifest_data
+ * @param {import('vite/module-runner').ModuleRunner} runner
+ * @param {string} root
+ * @returns {Promise<Record<string, import('@sveltejs/kit').ParamMatcher>>}
+ */
+export async function get_matchers(manifest_data, runner, root) {
+	/** @type {Record<string, import('@sveltejs/kit').ParamMatcher>} */
+	const matchers = {};
+
+	for (const key in manifest_data.matchers) {
+		const file = manifest_data.matchers[key];
+		const url = path.resolve(root, file);
+		const module = await runner.import(url);
+
+		if (module.match) {
+			matchers[key] = module.match;
+		} else {
+			throw new Error(`${file} does not export a \`match\` function`);
+		}
+	}
+
+	return matchers;
+}
+
+/**
+ *
+ * @param {import('vite').ViteDevServer} vite
+ * @param {import('vite/module-runner').ModuleRunner} runner
+ * @param {string[]} urls
+ */
+export async function get_inline_css(vite, runner, urls) {
+	/** @type {Set<import('vite').EnvironmentModuleNode>} */
+	const deps = new Set();
+
+	for (const url of urls) {
+		const module_node = await vite.environments.ssr.moduleGraph.getModuleByUrl(url);
+		if (!module_node) throw new Error(`Could not find node for ${url}`);
+		await find_deps(vite, module_node, deps);
+	}
+
+	/** @type {Map<string, string>} */
+	const styles = new Map();
+
+	for (const dep of deps) {
+		if (isCSSRequest(dep.url) && !vite_css_query_regex.test(dep.url)) {
+			const inlineCssUrl = dep.url.includes('?')
+				? dep.url.replace('?', '?inline&')
+				: dep.url + '?inline';
+			try {
+				const mod = await runner.import(inlineCssUrl);
+				styles.set(dep.url, mod.default);
+			} catch {
+				// this can happen with dynamically imported modules, I think
+				// because the Vite module graph doesn't distinguish between
+				// static and dynamic imports? TODO investigate, submit fix
+			}
+		}
+	}
+
+	return Object.fromEntries(styles);
 }
