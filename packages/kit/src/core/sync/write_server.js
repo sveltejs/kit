@@ -1,12 +1,13 @@
 import path from 'node:path';
 import { styleText } from 'node:util';
 import { hash } from '../../utils/hash.js';
-import { posixify, resolve_entry } from '../../utils/filesystem.js';
+import { resolve_entry } from '../../utils/filesystem.js';
 import { s } from '../../utils/misc.js';
 import { load_error_page, load_template } from '../config/index.js';
 import { runtime_directory } from '../utils.js';
 import { write_if_changed } from './utils.js';
 import { escape_html } from '../../utils/escape.js';
+import { posixify } from '../../utils/os.js';
 
 /**
  * @param {{

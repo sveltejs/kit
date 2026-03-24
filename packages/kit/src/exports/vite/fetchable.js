@@ -1,16 +1,13 @@
-// `posixify` and `to_fs` are duplicated from utils/filesystem.js to avoid
-// imports from `node:*` which aren't available in Cloudflare's workerd runtime
+// this file needs to be runtime agnostic and avoid importing from `node:*` since
+// it may not be available in edge environments
 
-/** @param {string} str */
-function posixify(str) {
-	return str.replace(/\\/g, '/');
-}
+import { posixify } from '../../utils/os.js';
 
 /**
  * Prepend given path with `/@fs` prefix
  * @param {string} str
  */
-function to_fs(str) {
+export function to_fs(str) {
 	str = posixify(str);
 	return `/@fs${
 		// Windows/Linux separation - Windows starts with a drive letter, we need a / in front there

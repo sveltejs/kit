@@ -4,7 +4,7 @@ import path from 'node:path';
 import { Server } from '__sveltekit/dev';
 import { env, manifest } from '__sveltekit/ssr-manifest';
 import { createReadableStream } from '@sveltejs/kit/node';
-import { from_fs } from './fetchable.js';
+import { from_fs } from '../fetchable.js';
 
 const server = new Server(manifest);
 

@@ -12,15 +12,7 @@ import {
 	loadEnv
 } from 'vite';
 
-import {
-	copy,
-	mkdirp,
-	posixify,
-	read,
-	resolve_entry,
-	rimraf,
-	to_fs
-} from '../../utils/filesystem.js';
+import { copy, mkdirp, read, resolve_entry, rimraf } from '../../utils/filesystem.js';
 import { create_static_module, create_dynamic_module } from '../../core/env.js';
 import * as sync from '../../core/sync/sync.js';
 import { create_assets } from '../../core/sync/create_manifest_data/index.js';
@@ -61,6 +53,8 @@ import { import_peer } from '../../utils/import.js';
 import { compact } from '../../utils/array.js';
 import { should_ignore, has_children } from './static_analysis/utils.js';
 import { load_config } from '../../core/config/index.js';
+import { to_fs } from './fetchable.js';
+import { posixify } from '../../utils/os.js';
 
 const cwd = process.cwd();
 
@@ -694,7 +688,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 						return dedent`
 							import { server_assets } from '__sveltekit/server-assets';
 							import { remotes } from '__sveltekit/remotes';
-							import { resolve, loud_ssr_load_module } from '${get_runtime_base(root)}/../exports/vite/dev/fetchable.js';
+							import { resolve, loud_ssr_load_module } from '${get_runtime_base(root)}/../exports/vite/fetchable.js';
 
 							export const base_path = ${s(kit.paths.base)};
 							export const prerendered = new Set();

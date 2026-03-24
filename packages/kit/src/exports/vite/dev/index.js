@@ -8,13 +8,15 @@ import { isCSSRequest, isFetchableDevEnvironment } from 'vite';
 
 import { getRequest, setResponse } from '@sveltejs/kit/node';
 import { coalesce_to_error } from '../../../utils/error.js';
-import { posixify, resolve_entry, to_fs } from '../../../utils/filesystem.js';
+import { resolve_entry } from '../../../utils/filesystem.js';
+import { posixify } from '../../../utils/os.js';
 import { load_error_page } from '../../../core/config/index.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import * as sync from '../../../core/sync/sync.js';
 import { not_found } from '../utils.js';
 import { escape_html } from '../../../utils/escape.js';
 import { sveltekit_ssr_manifest } from '../module_ids.js';
+import { to_fs } from '../fetchable.js';
 
 // vite-specifc queries that we should skip handling for css urls
 const vite_css_query_regex = /(?:\?|&)(?:raw|url|inline)(?:&|$)/;
