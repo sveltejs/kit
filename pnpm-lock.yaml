@@ -105,6 +105,9 @@ catalogs:
     vitest:
       specifier: ^4.1.1
       version: 4.1.1
+    wrangler:
+      specifier: ^4.67.0
+      version: 4.74.0
 
 importers:
 
@@ -158,20 +161,14 @@ importers:
 
   packages/adapter-cloudflare:
     dependencies:
-      '@cloudflare/vite-plugin':
-        specifier: ^1.29.0
-        version: 1.29.0(vite@8.0.2(@types/node@24.10.13)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.0))(workerd@1.20260312.1)(wrangler@4.74.0(@cloudflare/workers-types@4.20260317.1))
       '@cloudflare/workers-types':
-        specifier: ^4.20260312.0
+        specifier: ^4.20260219.0
         version: 4.20260317.1
-      esm-env:
-        specifier: ^1.2.2
-        version: 1.2.2
       worktop:
         specifier: 0.8.0-next.18
         version: 0.8.0-next.18
       wrangler:
-        specifier: ^4.74.0
+        specifier: ^4.67.0
         version: 4.74.0(@cloudflare/workers-types@4.20260317.1)
     devDependencies:
       '@playwright/test':
@@ -196,6 +193,27 @@ importers:
         specifier: 'catalog:'
         version: 4.1.1(@opentelemetry/api@1.9.0)(@types/node@24.10.13)(@vitest/browser-playwright@4.1.1)(vite@8.0.2(@types/node@24.10.13)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.0))
 
+  packages/adapter-cloudflare/test/apps/pages:
+    devDependencies:
+      '@sveltejs/kit':
+        specifier: workspace:^
+        version: link:../../../../kit
+      '@sveltejs/vite-plugin-svelte':
+        specifier: 'catalog:'
+        version: 7.0.0(svelte@5.53.12)(vite@8.0.2(@types/node@24.10.13)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.0))
+      server-side-dep:
+        specifier: file:server-side-dep
+        version: file:packages/adapter-cloudflare/test/apps/pages/server-side-dep
+      svelte:
+        specifier: 'catalog:'
+        version: 5.53.12
+      vite:
+        specifier: 'catalog:'
+        version: 8.0.2(@types/node@24.10.13)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.0)
+      wrangler:
+        specifier: 'catalog:'
+        version: 4.74.0(@cloudflare/workers-types@4.20260317.1)
+
   packages/adapter-cloudflare/test/apps/workers:
     devDependencies:
       '@sveltejs/kit':
@@ -213,6 +231,9 @@ importers:
       vite:
         specifier: 'catalog:'
         version: 8.0.2(@types/node@24.10.13)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.0)
+      wrangler:
+        specifier: 'catalog:'
+        version: 4.74.0(@cloudflare/workers-types@4.20260317.1)
 
   packages/adapter-netlify:
     dependencies:
@@ -1539,12 +1560,6 @@ packages:
     peerDependenciesMeta:
       workerd:
         optional: true
-
-  '@cloudflare/vite-plugin@1.29.0':
-    resolution: {integrity: sha512-pWaL3vdZadOKTEB15g72YTczq1LT/Pccz3o4k9zGii7eG0yfnRfwVKSBZj7hEuouQz4Cj9JFZK01yydLu56T4A==}
-    peerDependencies:
-      vite: ^6.1.0 || ^7.0.0 || ^8.0.0
-      wrangler: ^4.74.0
 
   '@cloudflare/workerd-darwin-64@1.20260312.1':
     resolution: {integrity: sha512-HUAtDWaqUduS6yasV6+NgsK7qBpP1qGU49ow/Wb117IHjYp+PZPUGReDYocpB4GOMRoQlvdd4L487iFxzdARpw==}
@@ -5112,6 +5127,9 @@ packages:
     engines: {node: '>=10'}
     hasBin: true
 
+  server-side-dep@file:packages/adapter-cloudflare/test/apps/pages/server-side-dep:
+    resolution: {directory: packages/adapter-cloudflare/test/apps/pages/server-side-dep, type: directory}
+
   server-side-dep@file:packages/adapter-cloudflare/test/apps/workers/server-side-dep:
     resolution: {directory: packages/adapter-cloudflare/test/apps/workers/server-side-dep, type: directory}
 
@@ -6012,19 +6030,6 @@ snapshots:
       unenv: 2.0.0-rc.24
     optionalDependencies:
       workerd: 1.20260312.1
-
-  '@cloudflare/vite-plugin@1.29.0(vite@8.0.2(@types/node@24.10.13)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.0))(workerd@1.20260312.1)(wrangler@4.74.0(@cloudflare/workers-types@4.20260317.1))':
-    dependencies:
-      '@cloudflare/unenv-preset': 2.15.0(unenv@2.0.0-rc.24)(workerd@1.20260312.1)
-      miniflare: 4.20260312.1
-      unenv: 2.0.0-rc.24
-      vite: 8.0.2(@types/node@24.10.13)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.0)
-      wrangler: 4.74.0(@cloudflare/workers-types@4.20260317.1)
-      ws: 8.18.0
-    transitivePeerDependencies:
-      - bufferutil
-      - utf-8-validate
-      - workerd
 
   '@cloudflare/workerd-darwin-64@1.20260312.1':
     optional: true
@@ -9616,6 +9621,8 @@ snapshots:
   semiver@1.1.0: {}
 
   semver@7.7.4: {}
+
+  server-side-dep@file:packages/adapter-cloudflare/test/apps/pages/server-side-dep: {}
 
   server-side-dep@file:packages/adapter-cloudflare/test/apps/workers/server-side-dep: {}
 
