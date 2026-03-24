@@ -183,7 +183,7 @@ function create_remote_arg_reducers(transport, sort) {
 	const user_reducers = Object.fromEntries(
 		Object.entries(transport).map(([k, v]) => [k, v.encode])
 	);
-	const all_reducers = { ...remote_fns_reducers, ...user_reducers };
+	const all_reducers = { ...user_reducers, ...remote_fns_reducers };
 
 	/** @type {(value: unknown) => string} */
 	const stringify = (value) => devalue.stringify(value, all_reducers);
@@ -244,7 +244,7 @@ function create_remote_arg_revivers(transport) {
 	const user_revivers = Object.fromEntries(
 		Object.entries(transport).map(([k, v]) => [k, v.decode])
 	);
-	const all_revivers = { ...remote_fns_revivers, ...user_revivers };
+	const all_revivers = { ...user_revivers, ...remote_fns_revivers };
 
 	/** @type {(data: string) => unknown} */
 	const parse = (data) => devalue.parse(data, all_revivers);
