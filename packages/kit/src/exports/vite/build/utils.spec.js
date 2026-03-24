@@ -1,5 +1,5 @@
 import { assert, describe, test } from 'vitest';
-import { create_function_as_string } from './utils.js';
+import { create_function_as_string, generate_placeholder } from './utils.js';
 import { fix_css_urls } from '../../../utils/css.js';
 import { escape_for_interpolation } from '../../../utils/escape.js';
 
@@ -31,27 +31,40 @@ describe('dynamic URL paths in CSS', () => {
 			input: '.prose code::before { content: "`"; } .bg { background: url(./image.png); }',
 			expected:
 				'.prose code::before { content: "`"; } .bg { background: url(./_app/immutable/assets/image.png); }'
+		},
+		{
+			name: 'does not modify user content',
+			input:
+				'.prose code::before { content: "__SVELTEKIT_ASSETS_r76awaqeqbk0__"; } .bg { background: url(./image.png); }',
+			expected:
+				'.prose code::before { content: "__SVELTEKIT_ASSETS_r76awaqeqbk0__"; } .bg { background: url(./_app/immutable/assets/image.png); }'
 		}
 	])('$name', ({ input, expected }) => {
+		const assets_placeholder = generate_placeholder(input, 'ASSETS');
+		const base_placeholder = generate_placeholder(input, 'BASE');
+
 		const transformed_css = fix_css_urls({
 			css: input,
 			vite_assets: new Set(['image.png']),
 			static_assets: new Set(['image_2.png']),
-			paths_assets: '__SVELTEKIT_ASSETS__',
-			base: '__SVELTEKIT_BASE__',
+			paths_assets: assets_placeholder,
+			base: base_placeholder,
 			static_asset_prefix: '../../../'
 		});
+
 		const escaped = escape_for_interpolation(transformed_css, [
 			{
-				placeholder: '__SVELTEKIT_ASSETS__',
+				placeholder: assets_placeholder,
 				replacement: '${assets}'
 			},
 			{
-				placeholder: '__SVELTEKIT_BASE__',
+				placeholder: base_placeholder,
 				replacement: '${base}'
 			}
 		]);
+
 		const code = create_function_as_string('css', ['assets', 'base'], escaped);
+
 		const output = eval(`(${code})('${assets_path}', '${base_path}')`);
 		assert.equal(output, expected);
 	});

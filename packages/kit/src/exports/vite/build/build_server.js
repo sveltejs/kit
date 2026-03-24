@@ -1,6 +1,12 @@
 import fs from 'node:fs';
 import { mkdirp } from '../../../utils/filesystem.js';
-import { create_function_as_string, filter_fonts, find_deps, resolve_symlinks } from './utils.js';
+import {
+	create_function_as_string,
+	filter_fonts,
+	find_deps,
+	generate_placeholder,
+	resolve_symlinks
+} from './utils.js';
 import { s } from '../../../utils/misc.js';
 import { normalizePath } from 'vite';
 import { basename } from 'node:path';
@@ -68,8 +74,8 @@ export function build_server_nodes(
 			const static_asset_prefix = segments.map(() => '..').join('/') + '/';
 
 			prepare_css_for_inlining = (css, eager_assets) => {
-				const assets_placeholder = '__SVELTEKIT_ASSETS__';
-				const base_placeholder = '__SVELTEKIT_BASE__';
+				const assets_placeholder = generate_placeholder(css, 'ASSETS');
+				const base_placeholder = generate_placeholder(css, 'BASE');
 
 				const transformed_css = fix_css_urls({
 					css,

@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { normalizePath } from 'vite';
+import { random } from '../../../utils/id.js';
 
 /**
  * Adds transitive JS and CSS dependencies to the js and css inputs.
@@ -142,4 +143,19 @@ export function assets_base(config) {
 export function create_function_as_string(name, placeholder_names, str) {
 	const args = placeholder_names ? placeholder_names.join(', ') : '';
 	return `function ${name}(${args}) { return \`${str}\`; }`;
+}
+
+let id = random();
+
+/**
+ * Guarantees that the generated placeholder is not already present in the content.
+ * @param {string} content
+ * @param {string} placeholder
+ * @returns {string}
+ */
+export function generate_placeholder(content, placeholder) {
+	while (content.includes(id)) {
+		id = random();
+	}
+	return `__SVELTEKIT_${placeholder}_${id}__`;
 }
