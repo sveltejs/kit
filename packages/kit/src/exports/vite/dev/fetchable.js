@@ -1,5 +1,3 @@
-import { buildErrorMessage } from 'vite';
-
 // `posixify` and `to_fs` are duplicated from utils/filesystem.js to avoid
 // imports from `node:*` which aren't available in Cloudflare's workerd runtime
 
@@ -56,7 +54,7 @@ export async function loud_ssr_load_module(url) {
 		return await import(/* @vite-ignore */ url);
 	} catch (/** @type {any} */ err) {
 		// const msg = buildErrorMessage(err, [styleText('red', `Internal server error: ${err.message}`)]);
-		const msg = buildErrorMessage(err, [`Internal server error: ${err.message}`]);
+		const msg = `Internal server error: ${err.message}`;
 
 		// if (!server.config.logger.hasErrorLogged(err)) {
 		// 	server.config.logger.error(msg, { error: err });

@@ -424,6 +424,8 @@ export function invalidate_module(vite, id) {
 /** @type {Map<string, { resolve: (value: any) => void, reject: (error: any) => void }>} */
 let requests;
 
+// TODO: try using import.meta.hot.send from the module instead of fetch
+
 /**
  * @overload
  * @param {import('vite').ViteDevServer} dev
