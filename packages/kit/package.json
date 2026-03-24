@@ -123,6 +123,6 @@
 	},
 	"types": "types/index.d.ts",
 	"engines": {
-		"node": ">=22.17"
+		"node": ">=22"
 	}
 }

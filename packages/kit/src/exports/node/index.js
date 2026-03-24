@@ -115,8 +115,14 @@ export async function getRequest({ request, base, bodySizeLimit }) {
 	}
 
 	const controller = new AbortController();
+	// TODO: Whenever Node >=22.17 is the minimum supported version, we can do `if (request.readableAborted) controller.abort()` instead
+	// see https://github.com/nodejs/node/blob/5cf3c3e24c7257a0c6192ed8ef71efec8ddac22b/lib/internal/streams/readable.js#L1443-L1453
+	let errored = false;
+	let end_emitted = false;
+	request.once('error', () => (errored = true));
+	request.once('end', () => (end_emitted = true));
 	request.once('close', () => {
-		if (request.readableAborted) {
+		if ((errored || request.destroyed) && !end_emitted) {
 			controller.abort();
 		}
 	});
