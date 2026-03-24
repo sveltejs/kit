@@ -20,7 +20,7 @@ import { runtime_directory, logger, get_runtime_base, get_mime_lookup } from '..
 import { generate_manifest } from '../../core/generate_manifest/index.js';
 import { build_server_nodes } from './build/build_server.js';
 import { assets_base, find_deps, resolve_symlinks } from './build/utils.js';
-import { dev, invalidate_module, request } from './dev/index.js';
+import { dev, invalidate_module, get_module_data } from './dev/index.js';
 import { preview } from './preview/index.js';
 import {
 	error_for_missing_config,
@@ -963,16 +963,16 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 						if (!dev_environment) return;
 
 						return dedent`
-							export function handle(id, data) {
-								if (import.meta.hot) {
-									import.meta.hot.on('sveltekit:ipc/' + id, () => {
-										fetch('${dev_environment.vite.resolvedUrls?.local[0]}_app/ipc/' + id, {
-											method: 'PUT',
-											headers: { 'content-type': 'application/json' },
-											body: JSON.stringify(data)
-										});
-									});
-								}
+							export function send(event_id, data) {
+								if (!import.meta.hot) return;
+
+								const event = 'sveltekit:' + event_id;
+								const listener = () => {
+									import.meta.hot.send(event, data);
+									import.meta.hot.off(event, listener);
+								};
+
+								import.meta.hot.on(event, listener);
 							}
 						`;
 					}
@@ -1213,9 +1213,9 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 					${
 						dev_environment?.vite
 							? dedent`
-									import { handle } from '__sveltekit/ipc';
+									import { send } from '__sveltekit/ipc';
 
-									handle('remote-${remote.hash}', (() => {
+									send('remote-${remote.hash}', (() => {
 										const exports = new Map();
 										for (const name in $$_self_$$) {
 											exports.set(name, { type: $$_self_$$[name].__.type });
@@ -1258,7 +1258,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 
 				await dev_environment.vite.environments.ssr.transformRequest(id);
 
-				const exports = await request(dev_environment.vite, `remote-${remote.hash}`);
+				const exports = await get_module_data(dev_environment.vite, `remote-${remote.hash}`);
 
 				for (const [name, value] of Object.entries(exports)) {
 					const type = value.type;

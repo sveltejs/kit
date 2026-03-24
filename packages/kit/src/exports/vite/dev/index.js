@@ -159,8 +159,6 @@ export function dev(vite, vite_config, svelte_config, root, dev_environment) {
 		}
 	});
 
-	requests = new Map();
-
 	vite.middlewares.use((req, res, next) => {
 		const base = `${vite.config.server.https ? 'https' : 'http'}://${
 			req.headers[':authority'] || req.headers.host
@@ -213,35 +211,6 @@ export function dev(vite, vite_config, svelte_config, root, dev_environment) {
 				if (decoded.startsWith(immutable)) {
 					decoded = decoded.slice(immutable.length);
 					original_url = original_url?.slice(immutable.length);
-				}
-
-				// TODO: come up with a better name than ipc
-				const prefix = `/${svelte_config.kit.appDir}/ipc/`;
-				if (decoded.startsWith(prefix)) {
-					const id = decoded.slice(prefix.length);
-					const request = await getRequest({
-						base,
-						request: req
-					});
-
-					if (!requests.has(id)) {
-						res.writeHead(400);
-						res.end(`ipc call id does not exist: ${id}`);
-						return;
-					}
-
-					const requested = requests.get(id);
-					try {
-						const data = await request.json();
-						requested?.resolve(data);
-					} catch (e) {
-						requested?.reject(e);
-					}
-					requests.delete(id);
-
-					res.writeHead(200);
-					res.end();
-					return;
 				}
 
 				const file = posixify(
@@ -423,11 +392,6 @@ export function invalidate_module(vite, id) {
 	}
 }
 
-/** @type {Map<string, { resolve: (value: any) => void, reject: (error: any) => void }>} */
-let requests;
-
-// TODO: try using import.meta.hot.send from the module instead of fetch
-
 /**
  * @overload
  * @param {import('vite').ViteDevServer} dev
@@ -435,13 +399,20 @@ let requests;
  * @returns {Promise<Record<string, { type: import('types').RemoteInternals['type'] }>>}
  */
 /**
+ * Retrieves data from a module that's been loaded into an environment. The module
+ * must import and call `send` from `__sveltekit/ipc` for this function to receive it
  * @param {import('vite').ViteDevServer} dev
- * @param {string} id
+ * @param {string} event_id
  * @returns {Promise<unknown>}
  */
-export function request(dev, id) {
-	dev.environments.ssr.hot.send(`sveltekit:ipc/${id}`);
-	return new Promise((resolve, reject) => {
-		requests.set(id, { resolve, reject });
+export function get_module_data(dev, event_id) {
+	const event = `sveltekit:${event_id}`;
+
+	return new Promise((resolve) => {
+		/** @param {unknown} data */
+		const listener = (data) => resolve(data);
+		dev.environments.ssr.hot.on(event, listener);
+		dev.environments.ssr.hot.send(event);
+		dev.environments.ssr.hot.off(event, listener);
 	});
 }
