@@ -103,7 +103,7 @@ catalogs:
       specifier: ^6.0.0
       version: 6.0.0
     typescript:
-      specifier: ^6.0.0
+      specifier: ^6.0.2
       version: 6.0.2
     valibot:
       specifier: ^1.1.0
