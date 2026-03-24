@@ -718,7 +718,7 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 							value: {
 								enumerable: true,
 								get() {
-									return get_value();
+									return input_value !== undefined ? input_value : get_value();
 								}
 							}
 						});
@@ -804,7 +804,7 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 						value: {
 							enumerable: true,
 							get() {
-								const value = get_value();
+								const value = input_value !== undefined ? input_value : get_value();
 								return value != null ? String(value) : '';
 							}
 						}

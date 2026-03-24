@@ -240,11 +240,14 @@ export class Query {
 				const idx = this.#latest.indexOf(resolve);
 				if (idx === -1) return;
 
-				this.#latest.splice(0, idx).forEach((r) => r(undefined));
-				this.#ready = true;
-				this.#loading = false;
-				this.#raw = value;
-				this.#error = undefined;
+				// Untrack this to not trigger mutation validation errors which can occur if you do e.g. $derived({ a: await queryA(), b: await queryB() })
+				untrack(() => {
+					this.#latest.splice(0, idx).forEach((r) => r(undefined));
+					this.#ready = true;
+					this.#loading = false;
+					this.#raw = value;
+					this.#error = undefined;
+				});
 
 				resolve(undefined);
 			})
@@ -252,9 +255,12 @@ export class Query {
 				const idx = this.#latest.indexOf(resolve);
 				if (idx === -1) return;
 
-				this.#latest.splice(0, idx).forEach((r) => r(undefined));
-				this.#error = e;
-				this.#loading = false;
+				untrack(() => {
+					this.#latest.splice(0, idx).forEach((r) => r(undefined));
+					this.#error = e;
+					this.#loading = false;
+				});
+
 				reject(e);
 			});
 
