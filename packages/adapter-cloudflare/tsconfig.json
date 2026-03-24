@@ -8,7 +8,8 @@
 		"module": "nodenext",
 		"baseUrl": ".",
 		"paths": {
-			"@sveltejs/kit": ["../kit/types/index"]
+			"@sveltejs/kit": ["../kit/types/index"],
+			"types": ["../kit/src/types/internal.d.ts"]
 		},
 		// taken from the Cloudflare Workers TypeScript template https://github.com/cloudflare/workers-sdk/blob/main/packages/create-cloudflare/templates/hello-world/ts/tsconfig.json
 		"target": "es2024",

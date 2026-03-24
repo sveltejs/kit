@@ -1,5 +1,4 @@
 declare module '__sveltekit/ssr-manifest' {
-	// eslint-disable-next-line no-duplicate-imports
 	import { SSRManifest } from '@sveltejs/kit';
 
 	export const manifest: SSRManifest;
