@@ -2877,261 +2877,6 @@ declare module '@sveltejs/kit/vite' {
 	export {};
 }
 
-declare module '@sveltejs/kit/internal' {
-	import type { StandardSchemaV1 } from '@standard-schema/spec';
-	export class HttpError {
-		
-		constructor(status: number, body: {
-			message: string;
-		} extends App.Error ? (App.Error | string | undefined) : App.Error);
-		status: number;
-		body: App.Error;
-		toString(): string;
-	}
-	export class Redirect {
-		
-		constructor(status: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308, location: string);
-		status: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308;
-		location: string;
-	}
-	/**
-	 * An error that was thrown from within the SvelteKit runtime that is not fatal and doesn't result in a 500, such as a 404.
-	 * `SvelteKitError` goes through `handleError`.
-	 * */
-	export class SvelteKitError extends Error {
-		
-		constructor(status: number, text: string, message: string);
-		status: number;
-		text: string;
-	}
-
-	export class ActionFailure<T = undefined> {
-		
-		constructor(status: number, data: T);
-		status: number;
-		data: T;
-	}
-	/**
-	 * Error thrown when form validation fails imperatively
-	 */
-	export class ValidationError extends Error {
-		
-		constructor(issues: StandardSchemaV1.Issue[]);
-		issues: StandardSchemaV1.Issue[];
-	}
-	export function init_remote_functions(module: Record<string, any>, file: string, hash: string): void;
-
-	export {};
-}
-
-declare module '@sveltejs/kit/internal/server' {
-	import type { RequestEvent, Config, Handle, HandleServerError, KitConfig, HandleFetch, Reroute, Adapter, ServerInit, Transport, HandleValidationError } from '@sveltejs/kit';
-	import type { Span } from '@opentelemetry/api';
-	export function merge_tracing<T extends {
-		tracing: {
-			enabled: boolean;
-			root: import("@opentelemetry/api").Span;
-			current: import("@opentelemetry/api").Span;
-		};
-	}>(event_like: T, current: import("@opentelemetry/api").Span): T;
-	/**
-	 * Returns the current `RequestEvent`. Can be used inside server hooks, server `load` functions, actions, and endpoints (and functions called by them).
-	 *
-	 * In environments without [`AsyncLocalStorage`](https://nodejs.org/api/async_context.html#class-asynclocalstorage), this must be called synchronously (i.e. not after an `await`).
-	 * @since 2.20.0
-	 *
-	 * */
-	export function getRequestEvent(): RequestEvent;
-	export function get_request_store(): RequestStore;
-	export function try_get_request_store(): RequestStore | null;
-
-	export function with_request_store<T>(store: RequestStore | null, fn: () => T): T;
-	interface ServerHooks {
-		handleFetch: HandleFetch;
-		handle: Handle;
-		handleError: HandleServerError;
-		handleValidationError: HandleValidationError;
-		reroute: Reroute;
-		transport: Transport;
-		init?: ServerInit;
-	}
-
-	interface PrerenderDependency {
-		response: Response;
-		body: null | string | Uint8Array;
-	}
-
-	interface PrerenderOptions {
-		cache?: string; // including this here is a bit of a hack, but it makes it easy to add <meta http-equiv>
-		fallback?: boolean;
-		dependencies: Map<string, PrerenderDependency>;
-		/**
-		 * For each key the (possibly still pending) result of a prerendered remote function.
-		 * Used to deduplicate requests to the same remote function with the same arguments.
-		 */
-		remote_responses: Map<string, Promise<any>>;
-		/** True for the duration of a call to the `reroute` hook */
-		inside_reroute?: boolean;
-	}
-
-	type RecursiveRequired<T> = {
-		// Recursive implementation of TypeScript's Required utility type.
-		// Will recursively continue until it reaches a primitive or Function
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
-		[K in keyof T]-?: Extract<T[K], Function> extends never // If it does not have a Function type
-			? RecursiveRequired<T[K]> // recursively continue through.
-			: T[K]; // Use the exact type for everything else
-	};
-
-	interface SSRComponent {
-		default: {
-			render(
-				props: Record<string, any>,
-				opts: { context: Map<any, any>; csp?: { nonce?: string; hash?: boolean } }
-			): {
-				html: string;
-				head: string;
-				css: {
-					code: string;
-					map: any; // TODO
-				};
-				/** Until we require all Svelte versions that support hashes, this might not be defined */
-				hashes?: {
-					script: Array<`sha256-${string}`>;
-				};
-			};
-		};
-	}
-
-	interface SSROptions {
-		app_template_contains_nonce: boolean;
-		async: boolean;
-		csp: ValidatedConfig['kit']['csp'];
-		csrf_check_origin: boolean;
-		csrf_trusted_origins: string[];
-		embedded: boolean;
-		env_public_prefix: string;
-		env_private_prefix: string;
-		hash_routing: boolean;
-		hooks: ServerHooks;
-		root: SSRComponent['default'];
-		service_worker: boolean;
-		service_worker_options: RegistrationOptions;
-		server_error_boundaries: boolean;
-		templates: {
-			app(values: {
-				head: string;
-				body: string;
-				assets: string;
-				nonce: string;
-				env: Record<string, string>;
-			}): string;
-			error(values: { message: string; status: number }): string;
-		};
-		version_hash: string;
-	}
-	type RemotePrerenderInputsGenerator<Input = any> = () => MaybePromise<Input[]>;
-
-	type ValidatedConfig = Config & {
-		kit: ValidatedKitConfig;
-		extensions: string[];
-	};
-
-	type ValidatedKitConfig = Omit<RecursiveRequired<KitConfig>, 'adapter'> & {
-		adapter?: Adapter;
-	};
-
-	type BinaryFormMeta = {
-		remote_refreshes?: string[];
-		validate_only?: boolean;
-	};
-
-	interface BaseRemoteInternals {
-		type: string;
-		id: string;
-		name: string;
-	}
-
-	interface RemoteQueryInternals extends BaseRemoteInternals {
-		type: 'query';
-	}
-	interface RemoteQueryLiveInternals extends BaseRemoteInternals {
-		type: 'query_live';
-		run(
-			event: RequestEvent,
-			state: RequestState,
-			arg: any
-		): Promise<{ iterator: AsyncIterator<any>; cancel: () => void }>;
-	}
-
-	interface RemoteQueryBatchInternals extends BaseRemoteInternals {
-		type: 'query_batch';
-		run: (args: any[], options: SSROptions) => Promise<any[]>;
-	}
-
-	interface RemoteCommandInternals extends BaseRemoteInternals {
-		type: 'command';
-	}
-
-	interface RemoteFormInternals extends BaseRemoteInternals {
-		type: 'form';
-		fn(body: Record<string, any>, meta: BinaryFormMeta, form_data: FormData | null): Promise<any>;
-	}
-
-	interface RemotePrerenderInternals extends BaseRemoteInternals {
-		type: 'prerender';
-		has_arg: boolean;
-		dynamic?: boolean;
-		inputs?: RemotePrerenderInputsGenerator;
-	}
-
-	type RemoteInternals =
-		| RemoteQueryInternals
-		| RemoteQueryLiveInternals
-		| RemoteQueryBatchInternals
-		| RemoteCommandInternals
-		| RemoteFormInternals
-		| RemotePrerenderInternals;
-
-	type RecordSpan = <T>(options: {
-		name: string;
-		attributes: Record<string, any>;
-		fn: (current: Span) => Promise<T>;
-	}) => Promise<T>;
-
-	/**
-	 * Internal state associated with the current `RequestEvent`,
-	 * used for tracking things like remote function calls
-	 */
-	interface RequestState {
-		readonly prerendering: PrerenderOptions | undefined;
-		readonly transport: ServerHooks['transport'];
-		readonly handleValidationError: ServerHooks['handleValidationError'];
-		readonly tracing: {
-			record_span: RecordSpan;
-		};
-		readonly remote: {
-			data: null | Map<
-				RemoteInternals,
-				Record<string, { serialize: boolean; data: MaybePromise<any> }>
-			>;
-			forms: null | Map<any, any>;
-			refreshes: null | Record<string, Promise<any>>;
-		};
-		readonly is_in_remote_function: boolean;
-		readonly is_in_render: boolean;
-		readonly is_in_universal_load: boolean;
-	}
-
-	interface RequestStore {
-		event: RequestEvent;
-		state: RequestState;
-	}
-	type MaybePromise<T> = T | Promise<T>;
-
-	export {};
-}
-
 declare module '$app/environment' {
 	/**
 	 * `true` if the app is running in the browser.
@@ -3443,9 +3188,8 @@ declare module '$app/paths' {
 }
 
 declare module '$app/server' {
-	import type { RemoteCommand, RemoteForm, RemoteFormInput, InvalidField, RemotePrerenderFunction, RemoteQueryFunction } from '@sveltejs/kit';
+	import type { RequestEvent, RemoteCommand, RemoteForm, RemoteFormInput, InvalidField, RemotePrerenderFunction, RemoteQueryFunction } from '@sveltejs/kit';
 	import type { StandardSchemaV1 } from '@standard-schema/spec';
-	export { getRequestEvent } from '@sveltejs/kit/internal/server';
 	/**
 	 * Read the contents of an imported asset from the filesystem
 	 * @example
@@ -3459,6 +3203,14 @@ declare module '$app/server' {
 	 * @since 2.4.0
 	 */
 	export function read(asset: string): Response;
+	/**
+	 * Returns the current `RequestEvent`. Can be used inside server hooks, server `load` functions, actions, and endpoints (and functions called by them).
+	 *
+	 * In environments without [`AsyncLocalStorage`](https://nodejs.org/api/async_context.html#class-asynclocalstorage), this must be called synchronously (i.e. not after an `await`).
+	 * @since 2.20.0
+	 *
+	 * */
+	export function getRequestEvent(): RequestEvent;
 	/**
 	 * Creates a remote command. When called from the browser, the function will be invoked on the server via a `fetch` call.
 	 *
