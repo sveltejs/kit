@@ -1,15 +1,13 @@
 {
-	"name": "test-cloudflare-workers",
+	"name": "test-cloudflare-pages",
 	"version": "0.0.1",
 	"private": true,
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
-		"preview": "wrangler dev dist/index.js",
+		"preview": "wrangler pages dev .svelte-kit/cloudflare --port 8787",
 		"prepare": "svelte-kit sync || echo ''",
-		"test:dev": "DEV=true playwright test",
-		"test:build": "playwright test",
-		"test": "pnpm test:dev && pnpm test:build"
+		"test": "playwright test"
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:^",

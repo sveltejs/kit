@@ -44,8 +44,7 @@
 		"prepublishOnly": "pnpm build"
 	},
 	"dependencies": {
-		"@cloudflare/workers-types": "^4.20260312.0",
-		"esm-env": "^1.2.2",
+		"@cloudflare/workers-types": "^4.20260219.0",
 		"worktop": "0.8.0-next.18"
 	},
 	"devDependencies": {
@@ -59,7 +58,6 @@
 	},
 	"peerDependencies": {
 		"@sveltejs/kit": "^3.0.0",
-		"wrangler": "^4.74.0",
-		"@cloudflare/vite-plugin": "^1.29.0"
+		"wrangler": "^4.67.0"
 	}
 }
