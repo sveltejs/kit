@@ -412,7 +412,6 @@ function kit({ svelte_config }) {
 			const define = {
 				__SVELTEKIT_APP_DIR__: s(kit.appDir),
 				__SVELTEKIT_EMBEDDED__: s(kit.embedded),
-				__SVELTEKIT_EXPERIMENTAL__REMOTE_FUNCTIONS__: s(kit.experimental.remoteFunctions),
 				__SVELTEKIT_FORK_PRELOADS__: s(kit.experimental.forkPreloads),
 				__SVELTEKIT_PATHS_ASSETS__: s(kit.paths.assets),
 				__SVELTEKIT_PATHS_BASE__: s(kit.paths.base),
