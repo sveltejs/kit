@@ -6,6 +6,7 @@ import { coalesce_to_error, get_message, get_status } from '../../utils/error.js
 import { negotiate } from '../../utils/http.js';
 import { ENDPOINT_METHODS } from '../../constants.js';
 import { escape_html } from '../../utils/escape.js';
+import * as path from '../../utils/path.js';
 
 /** @param {any} body */
 export function is_pojo(body) {
@@ -209,23 +210,20 @@ export function format_server_error(status, error, event) {
 	return `${formatted_text}\n${DEV ? clean_up_stack_trace(error) : error.stack}`;
 }
 
-// TODO: do we still need to clean up stack traces when using the environment API?
 /**
  * In dev, tidy up stack traces by making paths relative to the current project directory
  * @param {string} file
  */
-const relative = (file) => file;
+let relative = (file) => file;
 
-// if (DEV) {
-// 	try {
-// 		// TODO: node:path not available in workerd
-// 		const path = await import('node:path');
-
-// 		relative = (file) => path.relative('.', file);
-// 	} catch {
-// 		// do nothing
-// 	}
-// }
+if (DEV) {
+	try {
+		const { root } = await import('__sveltekit/ssr-manifest');
+		relative = (file) => path.relative(root, file);
+	} catch {
+		// do nothing
+	}
+}
 
 /**
  * Provides a refined stack trace by excluding lines following the last occurrence of a line containing +page. +layout. or +server.

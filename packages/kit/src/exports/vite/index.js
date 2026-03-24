@@ -49,7 +49,7 @@ import {
 	env_static_private,
 	env_static_public,
 	service_worker,
-	sveltekit_dev,
+	sveltekit_server,
 	sveltekit_ipc,
 	sveltekit_remotes,
 	sveltekit_server_assets,
@@ -624,7 +624,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 					exactRegex(env_dynamic_private),
 					exactRegex(env_dynamic_public),
 					exactRegex(service_worker),
-					exactRegex(sveltekit_dev),
+					exactRegex(sveltekit_server),
 					exactRegex(sveltekit_ssr_manifest),
 					exactRegex(sveltekit_server_assets),
 					exactRegex(sveltekit_remotes),
@@ -710,6 +710,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 							export const base_path = ${s(kit.paths.base)};
 							export const prerendered = new Set();
 							export const env = ${s(env)};
+							export const root = ${s(root)};
 
 							const nodes = ${s(devalue.uneval(manifest_data.nodes, revive_functions))}
 
@@ -948,7 +949,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 						`;
 					}
 
-					case sveltekit_dev: {
+					case sveltekit_server: {
 						if (!dev_environment) return;
 
 						const runtime_base = get_runtime_base(root);
@@ -964,7 +965,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 
 							const async_local_storage = new AsyncLocalStorage();
 
-							const adapter = ${adapter ? devalue.uneval({ name: adapter.name, supports: adapter.supports }, revive_functions) : null};
+							const adapter = ${adapter ? s(devalue.uneval({ name: adapter.name, supports: adapter.supports }, revive_functions)) : null};
 
 							globalThis.__SVELTEKIT_TRACK__ = (label) => {
 								const context = async_local_storage.getStore();
