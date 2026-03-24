@@ -11,7 +11,7 @@ const name = '@sveltejs/adapter-cloudflare';
 
 /** @type {import('./index.js').default} */
 export default function (options = {}) {
-	const { wrangler_config } = validate_wrangler_config(options.config);
+	const { wrangler_config } = validate_wrangler_config(options.vitePluginOptions?.configPath);
 
 	return {
 		name,
@@ -142,7 +142,7 @@ export default function (options = {}) {
 			plugins: [
 				cloudflare({
 					...options.vitePluginOptions,
-					configPath: options.vitePluginOptions?.configPath ?? options.config,
+					configPath: options.vitePluginOptions?.configPath,
 					viteEnvironment: {
 						name: options.vitePluginOptions?.viteEnvironment?.name ?? 'ssr',
 						childEnvironments: options.vitePluginOptions?.viteEnvironment?.childEnvironments

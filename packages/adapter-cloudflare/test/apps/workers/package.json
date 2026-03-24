@@ -5,7 +5,7 @@
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
-		"preview": "vite preview -p 8787",
+		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",
 		"test:dev": "DEV=true playwright test",
 		"test:build": "playwright test",
