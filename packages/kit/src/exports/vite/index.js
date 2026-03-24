@@ -713,6 +713,8 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 							export const prerendered = new Set();
 							export const env = ${s(env)};
 
+							const nodes = ${s(devalue.uneval(manifest_data.nodes, revive_functions))}
+
 							export const manifest = {
 								appDir: ${s(kit.appDir)},
 								appPath: ${s(kit.appDir)},
@@ -771,7 +773,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 										.map((node, index) => {
 											return dedent`
 												async () => {
-													const node = ${devalue.uneval(node, revive_functions)};
+													const node = nodes[${index}];
 
 													const result = {};
 													result.index = ${index};
@@ -789,8 +791,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 														node.component
 															? dedent`
 																	result.component = async () => {
-																		const filepath = ${s(path.resolve(root, node.component))};
-																		const { module, url } = await resolve(filepath);
+																		const { module, url } = await resolve(${s(path.resolve(root, node.component))});
 																		urls.push(url);
 																		return module.default;
 																	}
@@ -805,8 +806,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 																		result.universal = node.page_options;
 																	} else {
 																		// TODO: explain why the file was loaded on the server if we fail to load it
-																		const filepath = ${s(path.resolve(root, node.universal))};
-																		const { module, url } = await resolve(filepath);
+																		const { module, url } = await resolve(${s(path.resolve(root, node.universal))});
 																		urls.push(url);
 																		result.universal = module;
 																	}
@@ -817,8 +817,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 													${
 														node.server
 															? dedent`
-																	const filepath = ${s(path.resolve(root, node.server))};
-																	const { module } = await resolve(filepath);
+																	const { module } = await resolve(${s(path.resolve(root, node.server))});
 																	result.server = module;
 																`
 															: ''
@@ -1003,8 +1002,6 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 					}
 
 					case sveltekit_ipc: {
-						if (!dev_environment) return;
-
 						return dedent`
 							export function send(event_id, data) {
 								if (!import.meta.hot) return;
@@ -1743,6 +1740,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 		 * @see https://vitejs.dev/guide/api-plugin.html#configurepreviewserver
 		 */
 		configurePreviewServer(vite) {
+			// TODO: run the build output through the environment
 			return preview(vite, vite_config, svelte_config);
 		},
 
@@ -2085,7 +2083,10 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 		}
 	};
 
-	/** @type {import('vite').Plugin} */
+	/**
+	 * Allows us to access the filesystem from an environment that doesn't have `node:fs`
+	 * @type {import('vite').Plugin}
+	 */
 	const plugin_server_filesystem = {
 		name: 'vite-plugin-sveltekit-server-filesystem',
 		apply: 'serve',

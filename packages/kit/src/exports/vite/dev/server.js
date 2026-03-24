@@ -1,6 +1,5 @@
 import fs from 'node:fs';
 import path from 'node:path';
-
 import { Server } from '__sveltekit/dev';
 import { env, manifest } from '__sveltekit/ssr-manifest';
 import { createReadableStream } from '@sveltejs/kit/node';
