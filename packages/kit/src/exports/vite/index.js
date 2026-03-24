@@ -512,45 +512,43 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 				// @ts-ignore this prevents a reference error if `client.js` is imported on the server
 				globalThis.__sveltekit_dev = {};
 
-				if (!kit.adapter?.vite?.plugins) {
-					new_config.environments = {
-						ssr: {
-							dev: {
-								createEnvironment(name, config) {
-									return createFetchableDevEnvironment(name, config, {
-										hot: true,
-										transport: createServerHotChannel(),
-										async handleRequest(request) {
-											try {
-												const module_runner = get_module_runner();
+				new_config.environments = {
+					ssr: {
+						dev: {
+							createEnvironment(name, config) {
+								return createFetchableDevEnvironment(name, config, {
+									hot: true,
+									transport: createServerHotChannel(),
+									async handleRequest(request) {
+										try {
+											const module_runner = get_module_runner();
 
-												const resolved_instrumentation = resolve_entry(
-													path.join(svelte_config.kit.files.src, 'instrumentation.server')
-												);
-												if (resolved_instrumentation) {
-													await module_runner.import(resolved_instrumentation);
-												}
-
-												/**
-												 * @type {{
-												 *   respond: (request: Request, remote_address: string | undefined, kit: import('types').ValidatedKitConfig) => Promise<Response>
-												 * }}
-												 */
-												const { respond } = await module_runner.import(
-													import.meta.resolve('./dev/server.js')
-												);
-												return await respond(request, dev_environment?.remote_address, kit);
-											} catch (error) {
-												console.error(error);
-												throw error;
+											const resolved_instrumentation = resolve_entry(
+												path.join(svelte_config.kit.files.src, 'instrumentation.server')
+											);
+											if (resolved_instrumentation) {
+												await module_runner.import(resolved_instrumentation);
 											}
+
+											/**
+											 * @type {{
+											 *   respond: (request: Request, remote_address: string | undefined, kit: import('types').ValidatedKitConfig) => Promise<Response>
+											 * }}
+											 */
+											const { respond } = await module_runner.import(
+												import.meta.resolve('./dev/server.js')
+											);
+											return await respond(request, dev_environment?.remote_address, kit);
+										} catch (error) {
+											console.error(error);
+											throw error;
 										}
-									});
-								}
+									}
+								});
 							}
 						}
-					};
-				}
+					}
+				};
 			}
 
 			warn_overridden_config(config, new_config);

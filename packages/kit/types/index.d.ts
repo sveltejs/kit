@@ -46,6 +46,8 @@ declare module '@sveltejs/kit' {
 		emulate?: () => MaybePromise<Emulator>;
 		vite?: {
 			/**
+			 * Add a Vite plugin here to replace the default Node SSR environment.
+			 * The provided Vite plugins should configure the dev and preview servers
 			 * @since 3.0.0
 			 */
 			plugins?: PluginOption;
