@@ -1,19 +1,18 @@
-import { copyFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
-import { getPlatformProxy, unstable_readConfig } from 'wrangler';
-import {
-	is_building_for_cloudflare_pages,
-	validate_worker_settings,
-	get_routes_json,
-	parse_redirects
-} from './utils.js';
+import { unstable_readConfig } from 'wrangler';
+import { cloudflare } from '@cloudflare/vite-plugin';
+import { validate_worker_settings } from './utils.js';
+import { DEV } from 'esm-env';
 
 const name = '@sveltejs/adapter-cloudflare';
 
 /** @type {import('./index.js').default} */
 export default function (options = {}) {
+	const { wrangler_config } = validate_wrangler_config(options.vitePluginOptions?.configPath);
+
 	return {
 		name,
 		async adapt(builder) {
@@ -38,34 +37,23 @@ export default function (options = {}) {
 				);
 			}
 
-			const { wrangler_config, building_for_cloudflare_pages } = validate_wrangler_config(
-				options.config
-			);
-
 			let dest = builder.getBuildDirectory('cloudflare');
 			let worker_dest = `${dest}/_worker.js`;
 			let assets_binding = 'ASSETS';
 
-			if (building_for_cloudflare_pages) {
-				if (wrangler_config.pages_build_output_dir) {
-					dest = wrangler_config.pages_build_output_dir;
-					worker_dest = `${dest}/_worker.js`;
-				}
-			} else {
-				if (wrangler_config.main) {
-					worker_dest = wrangler_config.main;
-				}
-				if (wrangler_config.assets?.directory) {
-					// wrangler doesn't resolve `assets.directory` to an absolute path unlike
-					// `main` and `pages_build_output_dir` so we need to do it ourselves here
-					const parent_dir = wrangler_config.configPath
-						? path.dirname(path.resolve(wrangler_config.configPath))
-						: process.cwd();
-					dest = path.resolve(parent_dir, wrangler_config.assets.directory);
-				}
-				if (wrangler_config.assets?.binding) {
-					assets_binding = wrangler_config.assets.binding;
-				}
+			if (wrangler_config.main) {
+				worker_dest = wrangler_config.main;
+			}
+			if (wrangler_config.assets?.directory) {
+				// wrangler doesn't resolve `assets.directory` to an absolute path unlike
+				// `main` and `pages_build_output_dir` so we need to do it ourselves here
+				const parent_dir = wrangler_config.configPath
+					? path.dirname(path.resolve(wrangler_config.configPath))
+					: process.cwd();
+				dest = path.resolve(parent_dir, wrangler_config.assets.directory);
+			}
+			if (wrangler_config.assets?.binding) {
+				assets_binding = wrangler_config.assets.binding;
 			}
 
 			const files = fileURLToPath(new URL('./files', import.meta.url).href);
@@ -80,10 +68,7 @@ export default function (options = {}) {
 			// client assets and prerendered pages
 			const assets_dest = `${dest}${builder.config.kit.paths.base}`;
 			builder.mkdirp(assets_dest);
-			if (
-				building_for_cloudflare_pages ||
-				wrangler_config.assets?.not_found_handling === '404-page'
-			) {
+			if (wrangler_config.assets?.not_found_handling === '404-page') {
 				// generate plaintext 404.html first which can then be overridden by prerendering, if the user defined such a page.
 				// This file is served when a request fails to match an asset.
 				// If we're building for Cloudflare Pages, it's only served when a request matches an entry in `routes.exclude`
@@ -94,12 +79,9 @@ export default function (options = {}) {
 					writeFileSync(fallback, 'Not Found');
 				}
 			}
-			const client_assets = builder.writeClient(assets_dest);
+			builder.writeClient(assets_dest);
 			builder.writePrerendered(assets_dest);
-			if (
-				!building_for_cloudflare_pages &&
-				wrangler_config.assets?.not_found_handling === 'single-page-application'
-			) {
+			if (wrangler_config.assets?.not_found_handling === 'single-page-application') {
 				await builder.generateFallback(path.join(assets_dest, 'index.html'));
 			}
 
@@ -150,69 +132,53 @@ export default function (options = {}) {
 				});
 			}
 
-			if (building_for_cloudflare_pages) {
-				// _routes.json
-
-				// we need to add the source paths found in the `_redirects` file to the
-				// `_routes.json` file so that Cloudflare knows it shouldn't invoke the
-				// Worker but instead let the rules in the `_redirects` file take over.
-				/** @type {string[]} */
-				let redirects = [];
-				if (existsSync(redirects_dest)) {
-					const redirect_rules = readFileSync(redirects_dest, 'utf8');
-					redirects = parse_redirects(redirect_rules);
-				}
-
-				writeFileSync(
-					`${dest}/_routes.json`,
-					JSON.stringify(
-						get_routes_json(builder, client_assets, redirects, options.routes ?? {}),
-						null,
-						'\t'
-					)
-				);
-			} else {
-				writeFileSync(`${dest}/.assetsignore`, generate_assetsignore(), { flag: 'a' });
-			}
-		},
-		emulate() {
-			// we want to invoke `getPlatformProxy` only once, but await it only when it is accessed.
-			// If we would await it here, it would hang indefinitely because the platform proxy only resolves once a request happens
-			const get_emulated = async () => {
-				const proxy = await getPlatformProxy(options.platformProxy);
-				const platform = /** @type {App.Platform} */ ({
-					env: proxy.env,
-					ctx: proxy.ctx,
-					context: proxy.ctx, // deprecated in favor of ctx
-					caches: proxy.caches,
-					cf: proxy.cf
-				});
-				/** @type {Record<string, any>} */
-				const env = {};
-				const prerender_platform = /** @type {App.Platform} */ (/** @type {unknown} */ ({ env }));
-				for (const key in proxy.env) {
-					Object.defineProperty(env, key, {
-						get: () => {
-							throw new Error(`Cannot access platform.env.${key} in a prerenderable route`);
-						}
-					});
-				}
-				return { platform, prerender_platform };
-			};
-
-			/** @type {{ platform: App.Platform, prerender_platform: App.Platform }} */
-			let emulated;
-
-			return {
-				platform: async ({ prerender }) => {
-					emulated ??= await get_emulated();
-					return prerender ? emulated.prerender_platform : emulated.platform;
-				}
-			};
+			writeFileSync(`${dest}/.assetsignore`, generate_assetsignore(), { flag: 'a' });
 		},
 		supports: {
 			read: () => true,
 			instrumentation: () => true
+		},
+		vite: {
+			plugins: [
+				cloudflare({
+					...options.vitePluginOptions,
+					configPath: options.vitePluginOptions?.configPath,
+					viteEnvironment: {
+						name: options.vitePluginOptions?.viteEnvironment?.name ?? 'ssr',
+						childEnvironments: options.vitePluginOptions?.viteEnvironment?.childEnvironments
+					},
+					config: (user_config) => {
+						// user programmatic config
+						if (typeof options.vitePluginOptions?.config === 'function') {
+							options.vitePluginOptions?.config(user_config);
+						} else {
+							Object.assign(user_config, options.vitePluginOptions?.config);
+						}
+
+						if (DEV) {
+							if (!user_config.assets?.binding) {
+								user_config.assets = {
+									binding: 'ASSETS'
+								};
+							}
+
+							if (!user_config.main) {
+								user_config.main = path.resolve(import.meta.dirname, 'fallback-worker.js');
+							}
+						} else {
+							// TODO: if `main` or `assets.binding` is configured, ensure `main`, `assets.directory` and `assets.binding` are populated
+						}
+
+						if (
+							!user_config.compatibility_flags.find(
+								(flag) => flag === 'nodejs_als' || flag === 'nodejs_compat'
+							)
+						) {
+							user_config.compatibility_flags.push('nodejs_als');
+						}
+					}
+				})
+			]
 		}
 	};
 }
@@ -267,24 +233,16 @@ _redirects
 /**
  * @param {string | undefined} config_file
  * @returns {{
- * 	wrangler_config: import('wrangler').Unstable_Config,
- * 	building_for_cloudflare_pages: boolean
+ * 	wrangler_config: import('wrangler').Unstable_Config
  * }}
  */
 function validate_wrangler_config(config_file = undefined) {
 	const wrangler_config = unstable_readConfig({ config: config_file });
 
-	const building_for_cloudflare_pages = is_building_for_cloudflare_pages(wrangler_config);
-
-	// we don't need to validate the config if we're building for Cloudflare Pages
-	// because the `main` and `assets` values cannot be changed there
-	if (!building_for_cloudflare_pages) {
-		validate_worker_settings(wrangler_config);
-	}
+	validate_worker_settings(wrangler_config);
 
 	return {
-		wrangler_config,
-		building_for_cloudflare_pages
+		wrangler_config
 	};
 }
 
