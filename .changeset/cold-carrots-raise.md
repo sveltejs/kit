@@ -4,4 +4,4 @@
 '@sveltejs/enhanced-img': major
 ---
 
-breaking: require Node 22.17.0 or newer
+breaking: require Node 22 or newer

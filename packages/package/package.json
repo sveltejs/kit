@@ -56,6 +56,6 @@
 		"./package.json": "./package.json"
 	},
 	"engines": {
-		"node": ">=22.17"
+		"node": ">=22"
 	}
 }
