@@ -55,7 +55,6 @@ import {
 	sveltekit_ipc,
 	sveltekit_remotes,
 	sveltekit_server_assets,
-	sveltekit_server_entry,
 	sveltekit_ssr_manifest
 } from './module_ids.js';
 import { import_peer } from '../../utils/import.js';
@@ -524,7 +523,9 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 												 *   respond: (request: Request, remote_address: string | undefined, kit: import('types').ValidatedKitConfig) => Promise<Response>
 												 * }}
 												 */
-												const { respond } = await runner.import('__sveltekit/server-entry');
+												const { respond } = await runner.import(
+													import.meta.resolve('./dev/server.js')
+												);
 												return await respond(request, dev_environment?.remote_address, kit);
 											} catch (error) {
 												console.error(error);
@@ -612,7 +613,6 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 					exactRegex(env_dynamic_private),
 					exactRegex(env_dynamic_public),
 					exactRegex(service_worker),
-					exactRegex(sveltekit_server_entry),
 					exactRegex(sveltekit_dev),
 					exactRegex(sveltekit_ssr_manifest),
 					exactRegex(sveltekit_server_assets),
@@ -962,50 +962,6 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 									return super.respond(request, options);
 								}
 							}
-						`;
-					}
-
-					case sveltekit_server_entry: {
-						return dedent`
-							import fs from 'node:fs';
-							import path from 'node:path';
-
-							import { Server } from '__sveltekit/dev';
-							import { env, manifest } from '__sveltekit/ssr-manifest';
-							import { createReadableStream } from '@sveltejs/kit/node';
-							import { from_fs } from '${get_runtime_base(root)}/../exports/vite/dev/fetchable.js';
-
-							const server = new Server(manifest);
-
-							await server.init({
-								env,
-								read: (file) => createReadableStream(from_fs(file))
-							});
-
-							/**
-							 *
-							 * @param {Request} request
-							 * @param {string | undefined} remote_address
-							 * @param {import('types').ValidatedKitConfig} kit
-							 * @returns
-							 */
-							export async function respond(request, remote_address, kit) {
-								return await server.respond(request, {
-									getClientAddress: () => {
-										if (remote_address) return remote_address;
-										throw new Error('Could not determine clientAddress');
-									},
-									read: (file) => {
-										if (file in manifest._.server_assets) {
-											return fs.readFileSync(from_fs(file));
-										}
-
-										return fs.readFileSync(path.join(kit.files.assets, file));
-									}
-								});
-							}
-
-							import.meta.hot?.accept();
 						`;
 					}
 
