@@ -78,7 +78,7 @@ export async function get_response(internals, arg, state, get_result) {
 	await 0;
 
 	const cache = get_cache(internals, state);
-	const key = stringify_remote_arg(arg);
+	const key = stringify_remote_arg(arg, state.transport);
 	const entry = (cache[key] ??= {
 		serialize: false,
 		data: get_result()

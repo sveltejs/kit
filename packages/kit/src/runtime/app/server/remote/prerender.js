@@ -91,14 +91,14 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 		/** @type {Promise<Output> & Partial<RemoteResource<Output>>} */
 		const promise = (async () => {
 			const { event, state } = get_request_store();
-			const payload = stringify_remote_arg(arg);
+			const payload = stringify_remote_arg(arg, state.transport);
 			const id = __.id;
 			const url = `${base}/${app_dir}/remote/${id}${payload ? `/${payload}` : ''}`;
 
 			if (!state.prerendering && !DEV && !event.isRemoteRequest) {
 				try {
 					return await get_response(__, arg, state, async () => {
-						const key = stringify_remote_arg(arg);
+						const key = stringify_remote_arg(arg, state.transport);
 						const cache = get_cache(__, state);
 
 						// TODO adapters can provide prerendered data more efficiently than

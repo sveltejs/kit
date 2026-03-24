@@ -102,137 +102,171 @@ const remote_set = '__skras';
 const remote_regex_guard = '__skrag';
 const remote_arg_marker = Symbol(remote_object);
 
-const remote_arg_reducers = {
-	[remote_regex_guard]:
-		/** @type {(value: unknown) => void} */
-		(value) => {
-			if (value instanceof RegExp) {
-				throw new Error('Regular expressions are not valid remote function arguments');
+/**
+ * @param {Transport} transport
+ * @param {boolean} sort
+ */
+function create_remote_arg_reducers(transport, sort) {
+	/** @type {Record<string, (value: unknown) => unknown>} */
+	const remote_fns_reducers = {
+		[remote_regex_guard]:
+			/** @type {(value: unknown) => void} */
+			(value) => {
+				if (value instanceof RegExp) {
+					throw new Error('Regular expressions are not valid remote function arguments');
+				}
 			}
-		},
-	[remote_map]:
-		/** @type {(value: unknown) => Array<[unknown, unknown]> | undefined} */
-		(value) => {
-			if (!(value instanceof Map)) {
-				return;
-			}
+	};
 
-			/** @type {Array<[string, string]>} */
-			const entries = [];
+	if (sort) {
+		remote_fns_reducers[remote_map] =
+			/** @type {(value: unknown) => Array<[unknown, unknown]> | undefined} */
+			(value) => {
+				if (!(value instanceof Map)) {
+					return;
+				}
 
-			for (const [key, val] of value) {
-				entries.push([
-					devalue.stringify(key, remote_arg_reducers),
-					devalue.stringify(val, remote_arg_reducers)
-				]);
-			}
+				/** @type {Array<[string, string]>} */
+				const entries = [];
 
-			entries.sort(([a1, a2], [b1, b2]) => {
-				if (a1 < b1) return -1;
-				if (a1 > b1) return 1;
-				if (a2 < b2) return -1;
-				if (a2 > b2) return 1;
-				return 0;
-			});
-			return entries;
-		},
-	[remote_set]:
-		/** @type {(value: unknown) => unknown[] | undefined} */
-		(value) => {
-			if (!(value instanceof Set)) {
-				return;
-			}
+				for (const [key, val] of value) {
+					entries.push([stringify(key), stringify(val)]);
+				}
 
-			/** @type {string[]} */
-			const items = [];
+				entries.sort(([a1, a2], [b1, b2]) => {
+					if (a1 < b1) return -1;
+					if (a1 > b1) return 1;
+					if (a2 < b2) return -1;
+					if (a2 > b2) return 1;
+					return 0;
+				});
+				return entries;
+			};
 
-			for (const item of value) {
-				items.push(devalue.stringify(item, remote_arg_reducers));
-			}
+		remote_fns_reducers[remote_set] =
+			/** @type {(value: unknown) => unknown[] | undefined} */
+			(value) => {
+				if (!(value instanceof Set)) {
+					return;
+				}
 
-			items.sort();
-			return items;
-		},
-	[remote_object]:
-		/** @type {(value: unknown) => Record<PropertyKey, unknown> | undefined} */
-		(value) => {
-			if (!is_plain_object(value)) {
-				return;
-			}
+				/** @type {string[]} */
+				const items = [];
 
-			if (Object.hasOwn(value, remote_arg_marker)) {
-				return;
-			}
+				for (const item of value) {
+					items.push(stringify(item));
+				}
 
-			if (remote_arg_clones.has(value)) {
-				return remote_arg_clones.get(value);
-			}
+				items.sort();
+				return items;
+			};
 
-			return to_sorted(value, remote_arg_clones);
-		}
-};
+		remote_fns_reducers[remote_object] =
+			/** @type {(value: unknown) => Record<PropertyKey, unknown> | undefined} */
+			(value) => {
+				if (!is_plain_object(value)) {
+					return;
+				}
 
-const remote_arg_revivers = {
-	[remote_object]:
-		/** @type {(value: unknown) => unknown} */
-		(value) => value,
-	[remote_map]:
-		/** @type {(value: unknown) => Map<unknown, unknown>} */
-		(value) => {
-			if (!Array.isArray(value)) {
-				throw new Error('Invalid data for Map reviver');
-			}
+				if (Object.hasOwn(value, remote_arg_marker)) {
+					return;
+				}
 
-			const map = new Map();
+				if (remote_arg_clones.has(value)) {
+					return remote_arg_clones.get(value);
+				}
 
-			for (const item of value) {
-				if (
-					!Array.isArray(item) ||
-					item.length !== 2 ||
-					typeof item[0] !== 'string' ||
-					typeof item[1] !== 'string'
-				) {
+				return to_sorted(value, remote_arg_clones);
+			};
+	}
+
+	const user_reducers = Object.fromEntries(
+		Object.entries(transport).map(([k, v]) => [k, v.encode])
+	);
+	const all_reducers = { ...remote_fns_reducers, ...user_reducers };
+
+	/** @type {(value: unknown) => string} */
+	const stringify = (value) => devalue.stringify(value, all_reducers);
+
+	return all_reducers;
+}
+
+/** @param {Transport} transport */
+function create_remote_arg_revivers(transport) {
+	const remote_fns_revivers = {
+		[remote_object]:
+			/** @type {(value: unknown) => unknown} */
+			(value) => value,
+		[remote_map]:
+			/** @type {(value: unknown) => Map<unknown, unknown>} */
+			(value) => {
+				if (!Array.isArray(value)) {
 					throw new Error('Invalid data for Map reviver');
 				}
-				const [key, val] = item;
-				map.set(devalue.parse(key, remote_arg_revivers), devalue.parse(val, remote_arg_revivers));
-			}
 
-			return map;
-		},
-	[remote_set]:
-		/** @type {(value: unknown) => Set<unknown>} */
-		(value) => {
-			if (!Array.isArray(value)) {
-				throw new Error('Invalid data for Set reviver');
-			}
+				const map = new Map();
 
-			const set = new Set();
+				for (const item of value) {
+					if (
+						!Array.isArray(item) ||
+						item.length !== 2 ||
+						typeof item[0] !== 'string' ||
+						typeof item[1] !== 'string'
+					) {
+						throw new Error('Invalid data for Map reviver');
+					}
+					const [key, val] = item;
+					map.set(parse(key), parse(val));
+				}
 
-			for (const item of value) {
-				if (typeof item !== 'string') {
+				return map;
+			},
+		[remote_set]:
+			/** @type {(value: unknown) => Set<unknown>} */
+			(value) => {
+				if (!Array.isArray(value)) {
 					throw new Error('Invalid data for Set reviver');
 				}
-				set.add(devalue.parse(item, remote_arg_revivers));
-			}
 
-			return set;
-		}
-};
+				const set = new Set();
+
+				for (const item of value) {
+					if (typeof item !== 'string') {
+						throw new Error('Invalid data for Set reviver');
+					}
+					set.add(parse(item));
+				}
+
+				return set;
+			}
+	};
+
+	const user_revivers = Object.fromEntries(
+		Object.entries(transport).map(([k, v]) => [k, v.decode])
+	);
+	const all_revivers = { ...remote_fns_revivers, ...user_revivers };
+
+	/** @type {(data: string) => unknown} */
+	const parse = (data) => devalue.parse(data, all_revivers);
+
+	return all_revivers;
+}
 
 /**
  * Stringifies the argument (if any) for a remote function in such a way that
  * it is both a valid URL and a valid file name (necessary for prerendering).
  * @param {any} value
+ * @param {Transport} transport
+ * @param {boolean} [sort]
  */
-export function stringify_remote_arg(value) {
+export function stringify_remote_arg(value, transport, sort = true) {
 	if (value === undefined) return '';
 
 	let json_string;
 
 	try {
 		// If people hit file/url size limits, we can look into using something like compress_and_encode_text from svelte.dev beyond a certain size
-		json_string = devalue.stringify(value, remote_arg_reducers);
+		json_string = devalue.stringify(value, create_remote_arg_reducers(transport, sort));
 	} finally {
 		remote_arg_clones.clear();
 	}
@@ -244,8 +278,9 @@ export function stringify_remote_arg(value) {
 /**
  * Parses the argument (if any) for a remote function
  * @param {string} string
+ * @param {Transport} transport
  */
-export function parse_remote_arg(string) {
+export function parse_remote_arg(string, transport) {
 	if (!string) return undefined;
 
 	const json_string = text_decoder.decode(
@@ -253,7 +288,7 @@ export function parse_remote_arg(string) {
 		base64_decode(string.replaceAll('-', '+').replaceAll('_', '/'))
 	);
 
-	return devalue.parse(json_string, remote_arg_revivers);
+	return devalue.parse(json_string, create_remote_arg_revivers(transport));
 }
 
 /**
