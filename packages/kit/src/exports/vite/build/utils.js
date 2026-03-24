@@ -156,8 +156,8 @@ export function generate_placeholder(content, key) {
 	let placeholder = `__SVELTEKIT_${key}_${id}__`;
 
 	while (content.includes(placeholder)) {
-		id++;
-		placeholder = `__SVELTEKIT_${key}_${id}__`;
+		placeholder = `__SVELTEKIT_${key}_${++id}__`;
 	}
+
 	return placeholder;
 }
