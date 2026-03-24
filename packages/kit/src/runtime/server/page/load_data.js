@@ -233,7 +233,9 @@ export async function load_data({
 		},
 		fn: async (current) => {
 			const traced_event = merge_tracing(event, current);
-			return await with_request_store({ event: traced_event, state: event_state }, () =>
+			const child_state = { ...event_state, is_in_universal_load: true };
+
+			return await with_request_store({ event: traced_event, state: child_state }, () =>
 				load.call(null, {
 					url: event.url,
 					params: event.params,

@@ -1,5 +1,5 @@
 /** @import { RemoteFormInput, RemoteForm, InvalidField } from '@sveltejs/kit' */
-/** @import { InternalRemoteFormIssue, MaybePromise, RemoteInfo } from 'types' */
+/** @import { InternalRemoteFormIssue, MaybePromise, RemoteFormInternals } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 import { get_request_store } from '@sveltejs/kit/internal/server';
 import { DEV } from 'esm-env';
@@ -84,7 +84,7 @@ export function form(validate_or_fn, maybe_fn) {
 			}
 		});
 
-		/** @type {RemoteInfo} */
+		/** @type {RemoteFormInternals} */
 		const __ = {
 			type: 'form',
 			name: '',
@@ -136,7 +136,7 @@ export function form(validate_or_fn, maybe_fn) {
 						data = validated.value;
 					}
 
-					state.refreshes ??= {};
+					state.remote.refreshes ??= {};
 
 					const issue = create_issues();
 
@@ -160,7 +160,7 @@ export function form(validate_or_fn, maybe_fn) {
 				// We don't need to care about args or deduplicating calls, because uneval results are only relevant in full page reloads
 				// where only one form submission is active at the same time
 				if (!event.isRemoteRequest) {
-					get_cache(__, state)[''] ??= output;
+					get_cache(__, state)[''] ??= { serialize: true, data: output };
 				}
 
 				return output;
@@ -178,26 +178,26 @@ export function form(validate_or_fn, maybe_fn) {
 			get() {
 				return create_field_proxy(
 					{},
-					() => get_cache(__)?.['']?.input ?? {},
+					() => get_cache(__)?.['']?.data?.input ?? {},
 					(path, value) => {
 						const cache = get_cache(__);
-						const data = cache[''];
+						const entry = cache[''];
 
-						if (data?.submission) {
+						if (entry?.data?.submission) {
 							// don't override a submission
 							return;
 						}
 
 						if (path.length === 0) {
-							(cache[''] ??= {}).input = value;
+							(cache[''] ??= { serialize: true, data: {} }).data.input = value;
 							return;
 						}
 
-						const input = data?.input ?? {};
+						const input = entry?.data?.input ?? {};
 						deep_set(input, path.map(String), value);
-						(cache[''] ??= {}).input = input;
+						(cache[''] ??= { serialize: true, data: {} }).data.input = input;
 					},
-					() => flatten_issues(get_cache(__)?.['']?.issues ?? [])
+					() => flatten_issues(get_cache(__)?.['']?.data?.issues ?? [])
 				);
 			}
 		});
@@ -219,7 +219,7 @@ export function form(validate_or_fn, maybe_fn) {
 		Object.defineProperty(instance, 'result', {
 			get() {
 				try {
-					return get_cache(__)?.['']?.result;
+					return get_cache(__)?.['']?.data?.result;
 				} catch {
 					return undefined;
 				}
@@ -248,14 +248,14 @@ export function form(validate_or_fn, maybe_fn) {
 				value: (key) => {
 					const { state } = get_request_store();
 					const cache_key = __.id + '|' + JSON.stringify(key);
-					let instance = (state.form_instances ??= new Map()).get(cache_key);
+					let instance = (state.remote.forms ??= new Map()).get(cache_key);
 
 					if (!instance) {
 						instance = create_instance(key);
 						instance.__.id = `${__.id}/${encodeURIComponent(JSON.stringify(key))}`;
 						instance.__.name = __.name;
 
-						state.form_instances.set(cache_key, instance);
+						state.remote.forms.set(cache_key, instance);
 					}
 
 					return instance;

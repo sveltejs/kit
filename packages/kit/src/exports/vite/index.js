@@ -360,14 +360,14 @@ async function kit({ svelte_config }) {
 			const define = {
 				__SVELTEKIT_APP_DIR__: s(kit.appDir),
 				__SVELTEKIT_EMBEDDED__: s(kit.embedded),
-				__SVELTEKIT_EXPERIMENTAL__REMOTE_FUNCTIONS__: s(kit.experimental.remoteFunctions),
 				__SVELTEKIT_FORK_PRELOADS__: s(kit.experimental.forkPreloads),
 				__SVELTEKIT_PATHS_ASSETS__: s(kit.paths.assets),
 				__SVELTEKIT_PATHS_BASE__: s(kit.paths.base),
 				__SVELTEKIT_PATHS_RELATIVE__: s(kit.paths.relative),
 				__SVELTEKIT_CLIENT_ROUTING__: s(kit.router.resolution === 'client'),
 				__SVELTEKIT_HASH_ROUTING__: s(kit.router.type === 'hash'),
-				__SVELTEKIT_SERVER_TRACING_ENABLED__: s(kit.experimental.tracing.server)
+				__SVELTEKIT_SERVER_TRACING_ENABLED__: s(kit.experimental.tracing.server),
+				__SVELTEKIT_EXPERIMENTAL_USE_TRANSFORM_ERROR__: s(kit.experimental.handleRenderingErrors)
 			};
 
 			if (is_build) {
@@ -758,7 +758,7 @@ async function kit({ svelte_config }) {
 
 			// For the client, read the exports and create a new module that only contains fetch functions with the correct metadata
 
-			/** @type {Map<string, import('types').RemoteInfo['type']>} */
+			/** @type {Map<string, import('types').RemoteInternals['type']>} */
 			const map = new Map();
 
 			// in dev, load the server module here (which will result in this hook
@@ -979,7 +979,7 @@ async function kit({ svelte_config }) {
 					build: {
 						rollupOptions: {
 							// Vite dependency crawler needs an explicit JS entry point
-							// eventhough server otherwise works without it
+							// even though server otherwise works without it
 							input: `${runtime_directory}/client/entry.js`
 						}
 					},

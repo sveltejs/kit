@@ -23,6 +23,8 @@ test.describe('remote functions', () => {
 		]);
 		await clicknav('a[href="/remote/dev/preload"]', { waitForURL: '/remote/dev/preload' });
 		await expect(page.locator('p')).toHaveText('foobar');
+		await page.getByRole('button', { name: 'Refresh' }).click();
+		await expect(page.locator('p')).toHaveText('foobaz');
 	});
 });
 
@@ -31,6 +33,7 @@ test.describe('remote function mutations', () => {
 	test.afterEach(async ({ page }) => {
 		if (page.url().endsWith('/remote')) {
 			await page.click('#reset-btn');
+			await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
 		}
 	});
 
@@ -52,7 +55,18 @@ test.describe('remote function mutations', () => {
 		await page.goto('/remote');
 		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
 		// only the calls in the template are done, not the one in the load function
-		expect(request_count).toBe(2);
+		expect(request_count).toBe(0);
+	});
+
+	test('hydrated batch data is reused', async ({ page }) => {
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		await page.goto('/remote/batch-ssr');
+		await expect(page.locator('#ssr-batch-result-1')).toHaveText('Buy groceries');
+		await expect(page.locator('#ssr-batch-result-2')).toHaveText('Walk the dog');
+		await expect(page.locator('#ssr-batch-result-3')).toHaveText('Not found');
+		expect(request_count).toBe(0);
 	});
 
 	test('command returns correct sum but does not refresh data by default', async ({ page }) => {
@@ -134,7 +148,7 @@ test.describe('remote function mutations', () => {
 		let request_count = 0;
 		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
 
-		page.click('#multiply-override-refresh-btn');
+		await page.click('#multiply-override-refresh-btn');
 		await expect(page.locator('#count-result')).toHaveText('6 / 6 (false)');
 		await expect(page.locator('#command-result')).toHaveText('5');
 		await expect(page.locator('#count-result')).toHaveText('5 / 5 (false)');
@@ -179,16 +193,22 @@ test.describe('remote function mutations', () => {
 		expect(data.error).toContain('Cannot call a command');
 	});
 
-	test('prerendered entries not called in prod', async ({ page }) => {
+	test('prerendered entries use prerender cache while live entries refetch', async ({ page }) => {
 		let request_count = 0;
 		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
 		await page.goto('/remote/prerender');
 
 		await page.click('#fetch-prerendered');
 		await expect(page.locator('#fetch-prerendered')).toHaveText('yes');
+		expect(request_count).toBe(1);
+
+		await page.click('#fetch-prerendered');
+		await expect(page.locator('#fetch-prerendered')).toHaveText('yes');
+		expect(request_count).toBe(1);
 
 		await page.click('#fetch-not-prerendered');
 		await expect(page.locator('#fetch-not-prerendered')).toHaveText('d');
+		expect(request_count).toBe(2);
 	});
 
 	test('refreshAll reloads remote functions and load functions', async ({ page }) => {
@@ -342,6 +362,48 @@ test.describe('remote function mutations', () => {
 		await expect(page.locator('#phrase')).toHaveText('i am your father');
 	});
 
+	test.describe('query runtime guardrails', () => {
+		test('query created outside tracking context can run but cannot expose reactive state', async ({
+			page
+		}) => {
+			await page.goto('/remote/query-runtime-errors/not-tracked');
+
+			await page.click('#create');
+			await expect(page.locator('#status')).toHaveText('query created');
+
+			await page.click('#run');
+			await expect(page.locator('#result')).toHaveText('0');
+
+			await page.click('#read-current');
+			await expect(page.locator('#result')).toContainText(
+				'This query was not created in a reactive context'
+			);
+		});
+
+		test('query becomes inactive after its tracking context is destroyed', async ({ page }) => {
+			await page.goto('/remote/query-runtime-errors/inactive');
+
+			await expect(page.locator('#tracked-child')).toHaveText('tracked query ready');
+			await page.click('#unmount');
+			await expect(page.locator('#status')).toHaveText('child unmounted');
+			await expect(page.locator('#tracked-child')).toHaveCount(0);
+
+			await page.click('#read-current');
+			await expect(page.locator('#result')).toContainText(
+				'This query instance is no longer active'
+			);
+		});
+
+		test('run is blocked during client render', async ({ page, app }) => {
+			await page.goto('/remote');
+			await app.goto('/remote/query-runtime-errors/run-in-render');
+
+			await expect(page.locator('#error')).toContainText(
+				'On the client, .run() can only be called outside render'
+			);
+		});
+	});
+
 	// TODO ditto
 	test('query works with transport', async ({ page }) => {
 		await page.goto('/remote/transport');
@@ -356,5 +418,50 @@ test.describe('remote function mutations', () => {
 			await page.click('#submit');
 			await expect(page.locator('#count')).toHaveText(String(i));
 		}
+	});
+
+	test('.as(type, value) updates when data changes after submission', async ({ page }) => {
+		await page.goto('/remote/form/as-value');
+
+		const form1 = page.locator('form').nth(0);
+
+		// initial values rendered correctly
+		await expect(form1.locator('input[name="text_field"]')).toHaveValue('Example text');
+
+		// change the text field and submit
+		await form1.locator('input[name="text_field"]').fill('Updated text');
+		await form1.locator('button').click();
+
+		// after submission, the query refreshes and the display should update
+		await expect(page.locator('div').first()).toContainText('Updated text');
+
+		// the input value should reflect the updated data
+		await expect(form1.locator('input[name="text_field"]')).toHaveValue('Updated text');
+
+		// reset the values for the client tests
+		await page.click('#reset-values');
+	});
+});
+
+test.describe('client error boundaries', () => {
+	test('catches client render error and shows root +error.svelte', async ({ page, app }) => {
+		await page.goto('/');
+		await app.goto('/server-error-boundary');
+		await expect(page.locator('#message')).toContainText(
+			'render error (500 Internal Error, on /server-error-boundary)'
+		);
+	});
+
+	test('catches nested server render error and shows nested +error.svelte', async ({
+		page,
+		app
+	}) => {
+		await page.goto('/');
+		await app.goto('/server-error-boundary/nested');
+		await expect(page.locator('#nested-error-message')).toContainText(
+			'nested render error (500 Internal Error, on /server-error-boundary/nested) | true | 500'
+		);
+		// The nested layout should still be visible
+		await expect(page.locator('#nested-layout')).toBeVisible();
 	});
 });

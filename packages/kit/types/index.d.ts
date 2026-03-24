@@ -487,6 +487,15 @@ declare module '@sveltejs/kit' {
 			 * @default false
 			 */
 			forkPreloads?: boolean;
+
+			/**
+			 * Whether to enable the experimental handling of rendering errors.
+			 * When enabled, `<svelte:boundary>` is used to wrap components at each level
+			 * where there's an `+error.svelte`, rendering the error page if the component fails.
+			 * In addition, error boundaries also work on the server and the error object goes through `handleError`.
+			 * @default false
+			 */
+			handleRenderingErrors?: boolean;
 		};
 		/**
 		 * Where to find various files within your project.
@@ -1879,10 +1888,12 @@ declare module '@sveltejs/kit' {
 	type AsArgs<Type extends keyof InputTypeMap, Value> = Type extends 'checkbox'
 		? Value extends string[]
 			? [type: Type, value: Value[number] | (string & {})]
-			: [type: Type]
+			: [type: Type] | [type: Type, value: Value | (string & {})]
 		: Type extends 'radio' | 'submit' | 'hidden'
 			? [type: Type, value: Value | (string & {})]
-			: [type: Type];
+			: Type extends 'file' | 'file multiple'
+				? [type: Type]
+				: [type: Type] | [type: Type, value: Value | (string & {})];
 
 	/**
 	 * Form field accessor type that provides name(), value(), and issues() methods
@@ -2067,14 +2078,14 @@ declare module '@sveltejs/kit' {
 	 * The return value of a remote `command` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#command) for full documentation.
 	 */
 	export type RemoteCommand<Input, Output> = {
-		(arg: undefined extends Input ? Input | void : Input): Promise<Awaited<Output>> & {
-			updates(...queries: Array<RemoteQuery<any> | RemoteQueryOverride>): Promise<Awaited<Output>>;
+		(arg: undefined extends Input ? Input | void : Input): Promise<Output> & {
+			updates(...queries: Array<RemoteQuery<any> | RemoteQueryOverride>): Promise<Output>;
 		};
 		/** The number of pending command executions */
 		get pending(): number;
 	};
 
-	export type RemoteResource<T> = Promise<Awaited<T>> & {
+	export type RemoteResource<T> = Promise<T> & {
 		/** The error in case the query fails. Most often this is a [`HttpError`](https://svelte.dev/docs/kit/@sveltejs-kit#HttpError) but it isn't guaranteed to be. */
 		get error(): any;
 		/** `true` before the first result is available and during refreshes */
@@ -2087,12 +2098,18 @@ declare module '@sveltejs/kit' {
 			  }
 			| {
 					/** The current value of the query. Undefined until `ready` is `true` */
-					get current(): Awaited<T>;
+					get current(): T;
 					ready: true;
 			  }
 		);
 
 	export type RemoteQuery<T> = RemoteResource<T> & {
+		/**
+		 * Returns a plain promise with the result.
+		 * Unlike awaiting the resource directly, this can only be used _outside_ render
+		 * (i.e. in load functions, event handlers and so on)
+		 */
+		run(): Promise<T>;
 		/**
 		 * On the client, this function will update the value of the query without re-fetching it.
 		 *
@@ -2126,7 +2143,7 @@ declare module '@sveltejs/kit' {
 		 * </form>
 		 * ```
 		 */
-		withOverride(update: (current: Awaited<T>) => Awaited<T>): RemoteQueryOverride;
+		withOverride(update: (current: T) => T): RemoteQueryOverride;
 	};
 
 	export interface RemoteQueryOverride {
