@@ -6,8 +6,8 @@ import { get_remote_request_headers, remote_request } from './shared.svelte.js';
 import * as devalue from 'devalue';
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
 import { DEV } from 'esm-env';
-import { tick, untrack } from 'svelte';
-import { create_remote_key, stringify_remote_arg, unfriendly_hydratable } from '../../shared.js';
+import { tick, untrack, hydratable } from 'svelte';
+import { create_remote_key, stringify_remote_arg } from '../../shared.js';
 
 /**
  * @template T
@@ -49,7 +49,7 @@ export function query(id) {
 		return new QueryProxy(id, arg, async (key, payload) => {
 			const url = `${base}/${app_dir}/remote/${id}${payload ? `?payload=${payload}` : ''}`;
 
-			const serialized = await unfriendly_hydratable(key, () =>
+			const serialized = await hydratable(key, () =>
 				remote_request(url, get_remote_request_headers())
 			);
 
@@ -69,7 +69,7 @@ export function query_batch(id) {
 
 	return (arg) => {
 		return new QueryProxy(id, arg, async (key, payload) => {
-			const serialized = await unfriendly_hydratable(key, () => {
+			const serialized = await hydratable(key, () => {
 				return new Promise((resolve, reject) => {
 					// create_remote_function caches identical calls, but in case a refresh to the same query is called multiple times this function
 					// is invoked multiple times with the same payload, so we need to deduplicate here
