@@ -55,8 +55,12 @@ const object_proto_names = /* @__PURE__ */ Object.getOwnPropertyNames(Object.pro
 	.sort()
 	.join('\0');
 
-/** @param {any} thing */
+/**
+ * @param {unknown} thing
+ * @returns {thing is Record<PropertyKey, unknown>}
+ */
 function is_plain_object(thing) {
+	if (typeof thing !== 'object' || thing === null) return false;
 	const proto = Object.getPrototypeOf(thing);
 
 	return (
@@ -92,14 +96,67 @@ function to_sorted(value, clones) {
 const remote_arg_clones = new Map();
 
 // "sveltekit remote arg"
-const remote_arg_reducer = '__skra';
-const remote_arg_marker = Symbol(remote_arg_reducer);
+const remote_object = '__skrao';
+const remote_map = '__skram';
+const remote_set = '__skras';
+const remote_regex_guard = '__skrag';
+const remote_arg_marker = Symbol(remote_object);
 
 const remote_arg_reducers = {
-	[remote_arg_reducer]:
-		/** @type {(value: unknown) => unknown} */
+	[remote_regex_guard]:
+		/** @type {(value: unknown) => void} */
 		(value) => {
-			if (typeof value !== 'object' || value === null) {
+			if (value instanceof RegExp) {
+				throw new Error('Regular expressions are not valid remote function arguments');
+			}
+		},
+	[remote_map]:
+		/** @type {(value: unknown) => Array<[unknown, unknown]> | undefined} */
+		(value) => {
+			if (!(value instanceof Map)) {
+				return;
+			}
+
+			/** @type {Array<[string, string]>} */
+			const entries = [];
+
+			for (const [key, val] of value) {
+				entries.push([
+					devalue.stringify(key, remote_arg_reducers),
+					devalue.stringify(val, remote_arg_reducers)
+				]);
+			}
+
+			entries.sort(([a1, a2], [b1, b2]) => {
+				if (a1 < b1) return -1;
+				if (a1 > b1) return 1;
+				if (a2 < b2) return -1;
+				if (a2 > b2) return 1;
+				return 0;
+			});
+			return entries;
+		},
+	[remote_set]:
+		/** @type {(value: unknown) => unknown[] | undefined} */
+		(value) => {
+			if (!(value instanceof Set)) {
+				return;
+			}
+
+			/** @type {string[]} */
+			const items = [];
+
+			for (const item of value) {
+				items.push(devalue.stringify(item, remote_arg_reducers));
+			}
+
+			items.sort();
+			return items;
+		},
+	[remote_object]:
+		/** @type {(value: unknown) => Record<PropertyKey, unknown> | undefined} */
+		(value) => {
+			if (!is_plain_object(value)) {
 				return;
 			}
 
@@ -107,21 +164,59 @@ const remote_arg_reducers = {
 				return;
 			}
 
-			if (value instanceof Map) {
-				throw new Error('Maps are not valid remote function arguments');
+			if (remote_arg_clones.has(value)) {
+				return remote_arg_clones.get(value);
 			}
 
-			if (value instanceof Set) {
-				throw new Error('Sets are not valid remote function arguments');
+			return to_sorted(value, remote_arg_clones);
+		}
+};
+
+const remote_arg_revivers = {
+	[remote_object]:
+		/** @type {(value: unknown) => unknown} */
+		(value) => value,
+	[remote_map]:
+		/** @type {(value: unknown) => Map<unknown, unknown>} */
+		(value) => {
+			if (!Array.isArray(value)) {
+				throw new Error('Invalid data for Map reviver');
 			}
 
-			if (value instanceof RegExp) {
-				throw new Error('Regular expressions are not valid remote function arguments');
+			const map = new Map();
+
+			for (const item of value) {
+				if (
+					!Array.isArray(item) ||
+					item.length !== 2 ||
+					typeof item[0] !== 'string' ||
+					typeof item[1] !== 'string'
+				) {
+					throw new Error('Invalid data for Map reviver');
+				}
+				const [key, val] = item;
+				map.set(devalue.parse(key, remote_arg_revivers), devalue.parse(val, remote_arg_revivers));
 			}
 
-			if (is_plain_object(value)) {
-				return remote_arg_clones.get(value) ?? to_sorted(value, remote_arg_clones);
+			return map;
+		},
+	[remote_set]:
+		/** @type {(value: unknown) => Set<unknown>} */
+		(value) => {
+			if (!Array.isArray(value)) {
+				throw new Error('Invalid data for Set reviver');
 			}
+
+			const set = new Set();
+
+			for (const item of value) {
+				if (typeof item !== 'string') {
+					throw new Error('Invalid data for Set reviver');
+				}
+				set.add(devalue.parse(item, remote_arg_revivers));
+			}
+
+			return set;
 		}
 };
 
@@ -133,9 +228,14 @@ const remote_arg_reducers = {
 export function stringify_remote_arg(value) {
 	if (value === undefined) return '';
 
-	// If people hit file/url size limits, we can look into using something like compress_and_encode_text from svelte.dev beyond a certain size
-	const json_string = devalue.stringify(value, remote_arg_reducers);
-	remote_arg_clones.clear();
+	let json_string;
+
+	try {
+		// If people hit file/url size limits, we can look into using something like compress_and_encode_text from svelte.dev beyond a certain size
+		json_string = devalue.stringify(value, remote_arg_reducers);
+	} finally {
+		remote_arg_clones.clear();
+	}
 
 	const bytes = new TextEncoder().encode(json_string);
 	return base64_encode(bytes).replaceAll('=', '').replaceAll('+', '-').replaceAll('/', '_');
@@ -153,9 +253,7 @@ export function parse_remote_arg(string) {
 		base64_decode(string.replaceAll('-', '+').replaceAll('_', '/'))
 	);
 
-	return devalue.parse(json_string, {
-		[remote_arg_reducer]: (value) => value
-	});
+	return devalue.parse(json_string, remote_arg_revivers);
 }
 
 /**

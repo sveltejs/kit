@@ -34,6 +34,78 @@ describe('stringify_remote_arg', () => {
 		expect(stringify_remote_arg(a)).toBe(stringify_remote_arg(b));
 	});
 
+	test('produces the same key for reordered Map entries', () => {
+		const a = stringify_remote_arg(
+			new Map([
+				[
+					'second',
+					new Map([
+						['y', { d: 4, c: 3 }],
+						['x', { b: 2, a: 1 }]
+					])
+				],
+				['first', { nested: { z: 1, a: 2 } }]
+			])
+		);
+
+		const b = stringify_remote_arg(
+			new Map([
+				['first', { nested: { a: 2, z: 1 } }],
+				[
+					'second',
+					new Map([
+						['x', { a: 1, b: 2 }],
+						['y', { c: 3, d: 4 }]
+					])
+				]
+			])
+		);
+
+		expect(a).toBe(b);
+	});
+
+	test('produces the same key for reordered Set items', () => {
+		const a = stringify_remote_arg(
+			new Set([
+				new Map([
+					['b', { y: 2, x: 1 }],
+					['a', { b: 2, a: 1 }]
+				]),
+				new Map([
+					[
+						'd',
+						new Set([
+							{ d: 4, c: 3 },
+							{ b: 2, a: 1 }
+						])
+					],
+					['c', { z: 1, y: 2 }]
+				])
+			])
+		);
+
+		const b = stringify_remote_arg(
+			new Set([
+				new Map([
+					['c', { y: 2, z: 1 }],
+					[
+						'd',
+						new Set([
+							{ a: 1, b: 2 },
+							{ c: 3, d: 4 }
+						])
+					]
+				]),
+				new Map([
+					['a', { a: 1, b: 2 }],
+					['b', { x: 1, y: 2 }]
+				])
+			])
+		);
+
+		expect(a).toBe(b);
+	});
+
 	test('does not mutate input objects while canonicalizing keys', () => {
 		const value = {
 			z: 1,
@@ -78,21 +150,9 @@ describe('stringify_remote_arg', () => {
 		expect(parsed.url.toString()).toBe('https://example.com/?a=1');
 	});
 
-	test('rejects Map arguments', () => {
-		expect(() => stringify_remote_arg(new Map())).toThrow(
-			'Maps are not valid remote function arguments'
-		);
-	});
-
 	test('rejects RegExp arguments', () => {
 		expect(() => stringify_remote_arg(/a/)).toThrow(
 			'Regular expressions are not valid remote function arguments'
-		);
-	});
-
-	test('rejects Set arguments', () => {
-		expect(() => stringify_remote_arg(new Set())).toThrow(
-			'Sets are not valid remote function arguments'
 		);
 	});
 
@@ -134,6 +194,78 @@ describe('parse_remote_arg', () => {
 
 		expect(parsed.self).toBe(parsed);
 		expect(Object.keys(parsed)).toEqual(['a', 'self', 'z']);
+	});
+
+	test('round-trips Maps with stable ordering and nested data structures', () => {
+		const value = new Map([
+			[
+				'second',
+				new Map([
+					['y', { d: 4, c: 3 }],
+					[
+						'x',
+						new Set([
+							{ d: 4, c: 3 },
+							{ b: 2, a: 1 }
+						])
+					]
+				])
+			],
+			['first', { nested: { z: 1, a: 2 } }]
+		]);
+
+		const parsed = parse_remote_arg(stringify_remote_arg(value));
+
+		expect(parsed).toBeInstanceOf(Map);
+		expect(Array.from(parsed.keys())).toEqual(['first', 'second']);
+		expect(Object.keys(parsed.get('first'))).toEqual(['nested']);
+		expect(Object.keys(parsed.get('first').nested)).toEqual(['a', 'z']);
+
+		const nested_map = parsed.get('second');
+		expect(nested_map).toBeInstanceOf(Map);
+		expect(Array.from(nested_map.keys())).toEqual(['x', 'y']);
+		expect(Array.from(nested_map.get('x'))).toEqual([
+			{ a: 1, b: 2 },
+			{ c: 3, d: 4 }
+		]);
+		expect(nested_map.get('y')).toEqual({ c: 3, d: 4 });
+	});
+
+	test('round-trips Sets with stable ordering and nested data structures', () => {
+		const value = new Set([
+			new Map([
+				['b', { y: 2, x: 1 }],
+				['a', { b: 2, a: 1 }]
+			]),
+			new Map([
+				[
+					'd',
+					new Set([
+						{ d: 4, c: 3 },
+						{ b: 2, a: 1 }
+					])
+				],
+				['c', { z: 1, y: 2 }]
+			])
+		]);
+
+		const parsed = parse_remote_arg(stringify_remote_arg(value));
+
+		expect(parsed).toBeInstanceOf(Set);
+
+		const [first, second] = Array.from(parsed);
+		expect(first).toBeInstanceOf(Map);
+		expect(Array.from(first.keys())).toEqual(['a', 'b']);
+		expect(first.get('a')).toEqual({ a: 1, b: 2 });
+		expect(first.get('b')).toEqual({ x: 1, y: 2 });
+
+		expect(second).toBeInstanceOf(Map);
+		expect(Array.from(second.keys())).toEqual(['c', 'd']);
+		expect(second.get('c')).toEqual({ y: 2, z: 1 });
+		expect(Array.from(second.get('d'))).toEqual([
+			{ a: 1, b: 2 },
+			{ c: 3, d: 4 }
+		]);
 	});
 
 	test('restores null-prototype objects', () => {
