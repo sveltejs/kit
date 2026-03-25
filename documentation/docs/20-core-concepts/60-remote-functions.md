@@ -1191,9 +1191,9 @@ This example sets an `authenticated` cookie, but in a real app you'd have proper
 
 ```ts
 /// file: src/routes/auth/auth.remote.ts
-import { form, getRequestEvent, query } from '$app/server'
-import { redirect } from '@sveltejs/kit'
 import * as v from 'valibot'
+import { redirect } from '@sveltejs/kit'
+import { form, getRequestEvent, query } from '$app/server'
 
 const loginSchema = v.object({ secret: v.string() })
 
@@ -1232,6 +1232,7 @@ There are several ways to implement authentication guards with remote functions:
 
 ```ts
 /// file: src/routes/auth/auth.remote.ts
+import { redirect } from '@sveltejs/kit'
 import { getRequestEvent, query } from '$app/server'
 
 // 1. inline check
