@@ -46,15 +46,17 @@ export function query(id) {
 		}
 	}
 
-	return create_query_function(id, async (key, payload) => {
-		const url = `${base}/${app_dir}/remote/${id}${payload ? `?payload=${payload}` : ''}`;
+	return (arg) => {
+		return new QueryProxy(id, arg, async (key, payload) => {
+			const url = `${base}/${app_dir}/remote/${id}${payload ? `?payload=${payload}` : ''}`;
 
-		const serialized = await unfriendly_hydratable(key, () =>
-			remote_request(url, get_remote_request_headers())
-		);
+			const serialized = await unfriendly_hydratable(key, () =>
+				remote_request(url, get_remote_request_headers())
+			);
 
-		return devalue.parse(serialized, app.decoders);
-	});
+			return devalue.parse(serialized, app.decoders);
+		});
+	};
 }
 
 /**
@@ -66,11 +68,10 @@ export function query_batch(id) {
 	// eslint-disable-next-line svelte/prefer-svelte-reactivity -- we don't need reactivity for this
 	let batching = new Map();
 
-	return create_query_function(id, async (key, payload) => {
-		const serialized = await unfriendly_hydratable(
-			key,
-			() =>
-				new Promise((resolve, reject) => {
+	return (arg) => {
+		return new QueryProxy(id, arg, async (key, payload) => {
+			const serialized = await unfriendly_hydratable(key, () => {
+				return new Promise((resolve, reject) => {
 					// create_remote_function caches identical calls, but in case a refresh to the same query is called multiple times this function
 					// is invoked multiple times with the same payload, so we need to deduplicate here
 					const entry = batching.get(payload) ?? [];
@@ -143,22 +144,12 @@ export function query_batch(id) {
 							}
 						}
 					}, 0);
-				})
-		);
+				});
+			});
 
-		return devalue.parse(serialized, app.decoders);
-	});
-}
-
-/**
- * @template Input
- * @template Output
- * @param {string} id
- * @param {(key: string, payload: string) => Promise<Output>} fn
- * @returns {RemoteQueryFunction<Input, Output>}
- */
-function create_query_function(id, fn) {
-	return (arg) => new QueryProxy(id, arg, fn);
+			return devalue.parse(serialized, app.decoders);
+		});
+	};
 }
 
 /**
@@ -249,11 +240,14 @@ export class Query {
 				const idx = this.#latest.indexOf(resolve);
 				if (idx === -1) return;
 
-				this.#latest.splice(0, idx).forEach((r) => r(undefined));
-				this.#ready = true;
-				this.#loading = false;
-				this.#raw = value;
-				this.#error = undefined;
+				// Untrack this to not trigger mutation validation errors which can occur if you do e.g. $derived({ a: await queryA(), b: await queryB() })
+				untrack(() => {
+					this.#latest.splice(0, idx).forEach((r) => r(undefined));
+					this.#ready = true;
+					this.#loading = false;
+					this.#raw = value;
+					this.#error = undefined;
+				});
 
 				resolve(undefined);
 			})
@@ -261,9 +255,12 @@ export class Query {
 				const idx = this.#latest.indexOf(resolve);
 				if (idx === -1) return;
 
-				this.#latest.splice(0, idx).forEach((r) => r(undefined));
-				this.#error = e;
-				this.#loading = false;
+				untrack(() => {
+					this.#latest.splice(0, idx).forEach((r) => r(undefined));
+					this.#error = e;
+					this.#loading = false;
+				});
+
 				reject(e);
 			});
 
