@@ -141,6 +141,8 @@ export function form(id) {
 				const error = e instanceof HttpError ? e.body : { message: /** @type {any} */ (e).message };
 				const status = e instanceof HttpError ? e.status : 500;
 				void set_nearest_error_page(error, status);
+			} finally {
+				pending_count--;
 			}
 		}
 
@@ -221,9 +223,6 @@ export function form(id) {
 					release_overrides(updates);
 					throw e;
 				} finally {
-					// Decrement pending count when submission completes
-					pending_count--;
-
 					void tick().then(() => {
 						if (entry) {
 							entry.count--;
