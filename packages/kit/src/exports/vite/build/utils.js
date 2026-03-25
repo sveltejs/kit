@@ -144,8 +144,6 @@ export function create_function_as_string(name, placeholder_names, str) {
 	return `function ${name}(${args}) { return \`${str}\`; }`;
 }
 
-let id = 1;
-
 /**
  * Guarantees that the generated placeholder is not already present in the content.
  * @param {string} content
@@ -153,6 +151,7 @@ let id = 1;
  * @returns {string}
  */
 export function generate_placeholder(content, key) {
+	let id = 1;
 	let placeholder = `__SVELTEKIT_${key}_${id}__`;
 
 	while (content.includes(placeholder)) {
