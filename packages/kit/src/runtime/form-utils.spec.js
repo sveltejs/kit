@@ -425,4 +425,20 @@ describe('deep_set', () => {
 		// @ts-ignore
 		expect(Object.prototype.toString.property).toBeUndefined();
 	});
+
+	test('creates nested object when intermediate value is undefined', () => {
+		const target = { nested: undefined };
+
+		deep_set(target, ['nested', 'name'], 'hello');
+
+		expect(target).toEqual({ nested: { name: 'hello' } });
+	});
+
+	test('creates nested object when intermediate value is null', () => {
+		const target = { nested: null };
+
+		deep_set(target, ['nested', 'name'], 'hello');
+
+		expect(target).toEqual({ nested: { name: 'hello' } });
+	});
 });

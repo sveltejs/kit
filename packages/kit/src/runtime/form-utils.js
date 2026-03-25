@@ -469,11 +469,11 @@ export function deep_set(object, keys, value) {
 		const exists = Object.hasOwn(current, key);
 		const inner = current[key];
 
-		if (exists && is_array !== Array.isArray(inner)) {
+		if (exists && inner != null && is_array !== Array.isArray(inner)) {
 			throw new Error(`Invalid array key ${keys[i + 1]}`);
 		}
 
-		if (!exists) {
+		if (!exists || inner == null) {
 			current[key] = is_array ? [] : {};
 		}
 
