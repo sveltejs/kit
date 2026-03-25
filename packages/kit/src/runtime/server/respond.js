@@ -152,7 +152,15 @@ export async function internal_respond(request, options, manifest, state) {
 		remote: {
 			data: null,
 			forms: null,
-			refreshes: null
+			/** A map of remote function key to corresponding single-flight-mutation promise */
+			refreshes: null,
+			/** A map of remote function ID to payloads requested for refreshing by the client */
+			requested: null,
+			/**
+			 * A map of remote function ID to objects that have passed validation;
+			 * used to prevent revalidating parameters returned from `requested`
+			 */
+			validated: null
 		},
 		is_in_remote_function: false,
 		is_in_render: false,

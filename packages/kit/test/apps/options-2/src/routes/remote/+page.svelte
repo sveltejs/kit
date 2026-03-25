@@ -13,7 +13,7 @@
 
 <form
 	{...set_count_form.enhance(async ({ submit }) => {
-		await submit().updates(get_count());
+		await submit();
 		count = await get_count().run();
 	})}
 >

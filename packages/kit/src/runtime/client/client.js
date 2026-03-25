@@ -301,8 +301,8 @@ const preload_tokens = new Set();
 export let pending_invalidate;
 
 /**
- * @type {Map<string, RemoteQueryCacheEntry<any>>}
- * A map of id -> query internals with all queries that currently exist in the app.
+ * @type {Map<string, Map<string, RemoteQueryCacheEntry<any>>>}
+ * A map of query id -> payload -> query internals for all active queries.
  */
 export const query_map = new Map();
 
@@ -411,8 +411,10 @@ async function _invalidate(include_load_functions = true, reset_page_state = tru
 
 	// Rerun queries
 	if (force_invalidation) {
-		query_map.forEach(({ resource }) => {
-			void resource.refresh?.();
+		query_map.forEach((entries) => {
+			entries.forEach(({ resource }) => {
+				void resource.refresh?.();
+			});
 		});
 	}
 
@@ -443,7 +445,11 @@ async function _invalidate(include_load_functions = true, reset_page_state = tru
 	}
 
 	// Don't use allSettled yet because it's too new
-	await Promise.all([...query_map.values()].map(({ resource }) => resource)).catch(noop);
+	await Promise.all(
+		[...query_map.values()].flatMap((entries) =>
+			[...entries.values()].map(({ resource }) => resource)
+		)
+	).catch(noop);
 }
 
 function reset_invalidation() {
@@ -501,7 +507,12 @@ export async function _goto(url, options, redirect_count, nav_token) {
 		accept: () => {
 			if (options.invalidateAll) {
 				force_invalidation = true;
-				query_keys = [...query_map.keys()];
+				query_keys = [];
+				query_map.forEach((entries, id) => {
+					for (const payload of entries.keys()) {
+						query_keys.push(id + '/' + payload);
+					}
+				});
 			}
 
 			if (options.invalidate) {
@@ -517,11 +528,12 @@ export async function _goto(url, options, redirect_count, nav_token) {
 			.tick()
 			.then(svelte.tick)
 			.then(() => {
-				query_map.forEach(({ resource }, key) => {
-					// Only refresh those that already existed on the old page
-					if (query_keys?.includes(key)) {
-						void resource.refresh?.();
-					}
+				query_map.forEach((entries, id) => {
+					entries.forEach(({ resource }, payload) => {
+						if (query_keys?.includes(id + '/' + payload)) {
+							void resource.refresh?.();
+						}
+					});
 				});
 			});
 	}

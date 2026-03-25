@@ -2032,7 +2032,7 @@ declare module '@sveltejs/kit' {
 				form: HTMLFormElement;
 				data: Input;
 				submit: () => Promise<void> & {
-					updates: (...queries: Array<RemoteQuery<any> | RemoteQueryOverride>) => Promise<void>;
+					updates: (...updates: RemoteQueryUpdate[]) => Promise<void>;
 				};
 			}) => void | Promise<void>
 		): {
@@ -2077,11 +2077,16 @@ declare module '@sveltejs/kit' {
 	 */
 	export type RemoteCommand<Input, Output> = {
 		(arg: undefined extends Input ? Input | void : Input): Promise<Output> & {
-			updates(...queries: Array<RemoteQuery<any> | RemoteQueryOverride>): Promise<Output>;
+			updates(...updates: RemoteQueryUpdate[]): Promise<Output>;
 		};
 		/** The number of pending command executions */
 		get pending(): number;
 	};
+
+	export type RemoteQueryUpdate =
+		| RemoteQuery<any>
+		| RemoteQueryFunction<any, any>
+		| RemoteQueryOverride;
 
 	export type RemoteResource<T> = Promise<T> & {
 		/** The error in case the query fails. Most often this is a [`HttpError`](https://svelte.dev/docs/kit/@sveltejs-kit#HttpError) but it isn't guaranteed to be. */
@@ -2144,10 +2149,7 @@ declare module '@sveltejs/kit' {
 		withOverride(update: (current: T) => T): RemoteQueryOverride;
 	};
 
-	export interface RemoteQueryOverride {
-		_key: string;
-		release(): void;
-	}
+	export type RemoteQueryOverride = () => void;
 
 	/**
 	 * The return value of a remote `prerender` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#prerender) for full documentation.
@@ -3373,6 +3375,11 @@ declare module '$app/server' {
 		 */
 		function batch<Schema extends StandardSchemaV1, Output>(schema: Schema, fn: (args: StandardSchemaV1.InferOutput<Schema>[]) => MaybePromise<(arg: StandardSchemaV1.InferOutput<Schema>, idx: number) => Output>): RemoteQueryFunction<StandardSchemaV1.InferInput<Schema>, Output>;
 	}
+	/**
+	 * Returns the set of query arguments requested by the client for a given query function.
+	 *
+	 * */
+	export function requested<Input, Output>(query: RemoteQueryFunction<Input, Output>, limit?: number): Iterable<Input> & AsyncIterable<Input>;
 	type RemotePrerenderInputsGenerator<Input = any> = () => MaybePromise<Input[]>;
 	type MaybePromise<T> = T | Promise<T>;
 
