@@ -3,7 +3,11 @@
 
 	let should_submit = $state(false);
 
-	const enhanced = set_message.for('enhanced');
+	const pendings_arr = [];
+	const pendings = $derived.by(() => {
+		pendings_arr.push(set_message.pending);
+		return pendings_arr.join(', ');
+	});
 </script>
 
 <label>
@@ -12,7 +16,7 @@
 </label>
 
 <form
-	{...enhanced.enhance(async ({ submit }) => {
+	{...set_message.enhance(async ({ submit }) => {
 		if (!should_submit) return;
 		await submit();
 	})}
@@ -20,4 +24,4 @@
 	<button>submit</button>
 </form>
 
-<p data-pending>{enhanced.pending}</p>
+<p data-pending>{pendings}</p>
