@@ -827,17 +827,19 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 
 													const event = 'sveltekit:inline-styles-node-${index}';
 													result.inline_styles = async () => {
-														return new Promise((resolve) => {
-															if (!import.meta.hot) return;
+														if (!import.meta.hot) return;
 
-															const listener = (data) => {
-																import.meta.hot.off(event, listener);
-																resolve(data);
-															};
+														const { promise, resolve } = Promise.withResolvers();
 
-															import.meta.hot.on(event, listener);
-															import.meta.hot.send('sveltekit:inline-styles', { urls, node: result.index });
-														});
+														const listener = (data) => {
+															import.meta.hot.off(event, listener);
+															resolve(data);
+														};
+
+														import.meta.hot.on(event, listener);
+														import.meta.hot.send('sveltekit:inline-styles', { urls, node: result.index });
+
+														return promise;
 													}
 
 													return result;
@@ -882,18 +884,20 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 										})
 									).join(',\n')}],
 									matchers: async () => {
+										if (!import.meta.hot) return;
+
 										const event = 'sveltekit:matchers-response';
-										return new Promise((resolve) => {
-											if (!import.meta.hot) return;
+										const { promise, resolve } = Promise.withResolvers();
 
-											const listener = (data) => {
-												import.meta.hot.off(event, listener);
-												resolve(data);
-											};
+										const listener = (data) => {
+											import.meta.hot.off(event, listener);
+											resolve(data);
+										};
 
-											import.meta.hot.on(event, listener);
-											import.meta.hot.send('sveltekit:matchers-request');
-										});
+										import.meta.hot.on(event, listener);
+										import.meta.hot.send('sveltekit:matchers-request');
+
+										return promise;
 									}
 								}
 							};
