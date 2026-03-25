@@ -157,16 +157,25 @@ export function form(id) {
 				}
 			}
 
+			let submitted_form = false;
+
 			try {
 				await callback({
 					form,
 					data,
-					submit: () => submit(form_data)
+					submit: () => {
+						submitted_form = true;
+						return submit(form_data);
+					}
 				});
 			} catch (e) {
 				const error = e instanceof HttpError ? e.body : { message: /** @type {any} */ (e).message };
 				const status = e instanceof HttpError ? e.status : 500;
 				void set_nearest_error_page(error, status);
+			} finally {
+				if (!submitted_form) {
+					pending_count--;
+				}
 			}
 		}
 
