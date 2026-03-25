@@ -43,6 +43,8 @@ declare global {
 		/** Resolve a placeholder promise */
 		resolve?: (data: { id: number; data: any; error: any }) => void;
 	};
+	/** Allows us to resolve paths relative to the Vite root setting during development */
+	const __SVELTEKIT_ROOT__: string;
 	/**
 	 * This makes the use of specific features visible at both dev and build time, in such a
 	 * way that we can error when they are not supported by the target platform.

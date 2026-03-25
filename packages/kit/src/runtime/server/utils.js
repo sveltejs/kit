@@ -218,7 +218,7 @@ let relative = (file) => file;
 
 if (DEV) {
 	try {
-		const { root } = await import('__sveltekit/ssr-manifest');
+		const root = typeof __SVELTEKIT_ROOT__ === 'string' ? __SVELTEKIT_ROOT__ : '';
 		relative = (file) => path.relative(root, file);
 	} catch {
 		// do nothing

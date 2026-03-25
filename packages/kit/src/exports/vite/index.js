@@ -506,7 +506,8 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 					__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: '0',
 					__SVELTEKIT_PAYLOAD__: 'globalThis.__sveltekit_dev',
 					__SVELTEKIT_HAS_SERVER_LOAD__: 'true',
-					__SVELTEKIT_HAS_UNIVERSAL_LOAD__: 'true'
+					__SVELTEKIT_HAS_UNIVERSAL_LOAD__: 'true',
+					__SVELTEKIT_ROOT__: s(root)
 				};
 
 				// @ts-ignore this prevents a reference error if `client.js` is imported on the server
@@ -710,7 +711,6 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 							export const base_path = ${s(kit.paths.base)};
 							export const prerendered = new Set();
 							export const env = ${s(env)};
-							export const root = ${s(root)};
 
 							const nodes = ${s(devalue.uneval(manifest_data.nodes, revive_functions))}
 
