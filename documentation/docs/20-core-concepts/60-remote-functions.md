@@ -1182,3 +1182,105 @@ Note that some properties of `RequestEvent` are different inside remote function
 ## Redirects
 
 Inside `query`, `form` and `prerender` functions it is possible to use the [`redirect(...)`](@sveltejs-kit#redirect) function. It is *not* possible inside `command` functions, as you should avoid redirecting here. (If you absolutely have to, you can return a `{ redirect: location }` object and deal with it in the client.)
+
+## Using Auth Guards
+
+You can protect routes by creating reusable authentication guard queries — when these queries are used in a component, the route becomes protected.
+
+This example sets an `authenticated` cookie, but in a real app you'd have proper checks and session management:
+
+```ts
+/// file: src/routes/auth/auth.remote.ts
+import { form, getRequestEvent, query } from '$app/server'
+import { redirect } from '@sveltejs/kit'
+import * as v from 'valibot'
+
+const loginSchema = v.object({ secret: v.string() })
+
+export const login = form(loginSchema, ({ secret }) => {
+	const event = getRequestEvent()
+
+	if (secret === 'svelte') {
+		event.cookies.set('authenticated', 'true', { path: '/' })
+		redirect(303, '/auth/guarded')
+	} else {
+		return { error: 'You shall not pass!' }
+	}
+})
+```
+
+```svelte
+/// file: src/routes/auth/+page.svelte
+<script>
+	import { login } from './auth.remote'
+</script>
+
+<form {...login}>
+	<label>
+		<input {...login.fields.secret.as('text')} placeholder="Enter secret" />
+	</label>
+
+	<button>Enter</button>
+
+	{#if login.result?.error}
+		<p style="color: red;">{login.result.error}</p>
+	{/if}
+</form>
+```
+
+There are several ways to implement authentication guards with remote functions:
+
+```ts
+/// file: src/routes/auth/auth.remote.ts
+import { getRequestEvent, query } from '$app/server'
+
+// 1. inline check
+export const getSecretA = query(() => {
+	const event = getRequestEvent()
+	if (event.cookies.get('authenticated') !== 'true') {
+		redirect(307, '/auth')
+	}
+	return 'Secret text A'
+})
+
+// 2. reusable helper function
+const requireAuth = query(() => {
+	const event = getRequestEvent()
+	if (event.cookies.get('authenticated') !== 'true') {
+		redirect(307, '/auth')
+	}
+})
+
+export const getSecretB = query(async () => {
+	await requireAuth()
+	return 'Secret text B'
+})
+
+// 3. higher-order function
+const authQuery = <T>(fn: () => T) => {
+	return query(() => {
+		const event = getRequestEvent()
+		if (event.cookies.get('authenticated') !== 'true') {
+			redirect(307, '/auth')
+		}
+		return fn()
+	})
+}
+
+export const getSecretC = authQuery(() => {
+	return 'Secret text C'
+})
+```
+
+Now you can use the guarded query anywhere in your app where you have a protected route:
+
+```svelte
+<!--- file: src/routes/auth/guarded/+page.svelte --->
+<script lang="ts">
+	import { getSecretA, getSecretB, getSecretC } from '../auth.remote'
+</script>
+
+<p>{await getSecretA()}</p>
+<p>{await getSecretB()}</p>
+<p>{await getSecretC()}</p>
+```
