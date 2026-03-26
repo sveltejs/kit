@@ -852,7 +852,9 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 										return Object.fromEntries(
 											remotes.map((remote) => [
 												remote.hash,
-												() => import(/* @vite-ignore */(\`${root}/\${remote.file}\`)).then((module) => ({ default: module }))
+												() => import(/* @vite-ignore */(\`${root}/\${remote.file}\`)).then(
+													(module) => ({ default: module })
+												)
 											])
 										);
 									},
@@ -1229,6 +1231,10 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 			};
 
 			remotes.push(remote);
+			if (dev_environment) {
+				dev_environment.vite.environments.ssr.hot.send(`sveltekit:remotes`, remote);
+				invalidate_module(dev_environment.vite, sveltekit_remotes);
+			}
 
 			if (this.environment.config.consumer !== 'client') {
 				// we need to add an `await Promise.resolve()` because if the user imports this function
@@ -1294,9 +1300,6 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 			// being called again with `opts.ssr === true` if the module isn't
 			// already loaded) so we can determine what it exports
 			if (dev_environment?.vite) {
-				dev_environment.vite.environments.ssr.hot.send(`sveltekit:remotes`, remote);
-				invalidate_module(dev_environment.vite, sveltekit_remotes);
-
 				await dev_environment.vite.environments.ssr.transformRequest(id);
 
 				const exports = await get_module_data(dev_environment.vite, `remote-${remote.hash}`);
