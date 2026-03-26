@@ -13,7 +13,8 @@
 			"@sveltejs/kit": ["../../../../../exports/public"],
 			"types": ["../../../../../types/internal"],
 			"$app/types": ["../../../../../types/ambient.d.ts"]
-		}
+		},
+		"types": ["../../../../../types/global-private.d.ts"]
 	},
 	"include": ["./**/*.js", "./**/*.ts", ".svelte-kit/non-ambient.d.ts"],
 	"exclude": ["..svelte-kit/**"]
