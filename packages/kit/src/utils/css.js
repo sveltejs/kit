@@ -1,6 +1,5 @@
 import MagicString from 'magic-string';
 import { parseCss } from 'svelte/compiler';
-import { escape_for_interpolation } from './escape.js';
 
 /** @typedef {ReturnType<typeof parseCss>['children']} StyleSheetChildren */
 
@@ -48,8 +47,6 @@ export function fix_css_urls({
 	if (!SKIP_PARSING_REGEX.test(css)) {
 		return css;
 	}
-
-	css = escape_for_interpolation(css);
 
 	// safe guard in case of trailing slashes (but this should never happen)
 	if (paths_assets.endsWith('/')) {
