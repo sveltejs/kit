@@ -712,7 +712,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 							export const prerendered = new Set();
 							export const env = ${s(env)};
 
-							const nodes = ${s(devalue.uneval(manifest_data.nodes, revive_functions))}
+							const nodes = ${devalue.uneval(manifest_data.nodes, revive_functions)}
 
 							export const manifest = {
 								appDir: ${s(kit.appDir)},
@@ -969,7 +969,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 
 							const async_local_storage = new AsyncLocalStorage();
 
-							const adapter = ${adapter ? s(devalue.uneval({ name: adapter.name, supports: adapter.supports }, revive_functions)) : null};
+							const adapter = ${adapter ? devalue.uneval({ name: adapter.name, supports: adapter.supports }, revive_functions) : null};
 
 							globalThis.__SVELTEKIT_TRACK__ = (label) => {
 								const context = async_local_storage.getStore();
@@ -1228,6 +1228,8 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 				file
 			};
 
+			if (this.environment.name === 'ssr') remotes.push(remote);
+
 			if (this.environment.config.consumer !== 'client') {
 				// we need to add an `await Promise.resolve()` because if the user imports this function
 				// on the client AND in a load function when loading the client module we will trigger
@@ -1292,7 +1294,6 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 			// being called again with `opts.ssr === true` if the module isn't
 			// already loaded) so we can determine what it exports
 			if (dev_environment?.vite) {
-				remotes.push(remote);
 				dev_environment.vite.environments.ssr.hot.send(`sveltekit:remotes`, remote);
 				invalidate_module(dev_environment.vite, sveltekit_remotes);
 
