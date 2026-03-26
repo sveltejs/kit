@@ -396,13 +396,6 @@ function kit({ svelte_config }) {
 						// uses basic concatenation)
 						'@sveltejs/kit/src/runtime'
 					]
-				},
-				environments: {
-					client: {
-						define: {
-							__SVELTEKIT_BROWSER__: 'true'
-						}
-					}
 				}
 			};
 
@@ -417,7 +410,6 @@ function kit({ svelte_config }) {
 				__SVELTEKIT_HASH_ROUTING__: s(kit.router.type === 'hash'),
 				__SVELTEKIT_SERVER_TRACING_ENABLED__: s(kit.experimental.tracing.server),
 				__SVELTEKIT_EXPERIMENTAL_USE_TRANSFORM_ERROR__: s(kit.experimental.handleRenderingErrors),
-				__SVELTEKIT_BROWSER__: 'false',
 				__SVELTEKIT_DEV__: s(!env.private.NODE_ENV.toLowerCase().startsWith('prod'))
 			};
 
@@ -454,6 +446,14 @@ function kit({ svelte_config }) {
 			warn_overridden_config(config, new_config);
 
 			return new_config;
+		},
+
+		configEnvironment(_, config) {
+			return {
+				define: {
+					__SVELTEKIT_BROWSER__: s(config.consumer === 'client')
+				}
+			};
 		},
 
 		/**
