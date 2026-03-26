@@ -1,8 +1,8 @@
 import * as devalue from 'devalue';
 import { readable, writable } from 'svelte/store';
-import { DEV } from 'esm-env';
 import { isRedirect, text } from '@sveltejs/kit';
 import * as paths from '$app/paths/internal/server';
+import { DEV } from '../../app/environment/internal.js';
 import { hash } from '../../../utils/hash.js';
 import { serialize_data } from './serialize_data.js';
 import { s } from '../../../utils/misc.js';

@@ -1,4 +1,4 @@
-import { BROWSER } from 'esm-env';
+import { BROWSER } from './app/environment/internal.js';
 
 export const text_encoder = new TextEncoder();
 export const text_decoder = new TextDecoder();

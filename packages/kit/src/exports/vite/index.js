@@ -285,10 +285,6 @@ function kit({ svelte_config }) {
 	const plugin_setup = {
 		name: 'vite-plugin-sveltekit-setup',
 
-		applyToEnvironment(environment) {
-			return environment.name !== 'serviceWorker';
-		},
-
 		// TODO: add `order: pre` to avoid false-positive warnings of overridden config options set by Vitest
 		/**
 		 * Build the SvelteKit-provided Vite config to be merged with the user's vite.config.js file.
@@ -394,18 +390,19 @@ function kit({ svelte_config }) {
 				},
 				ssr: {
 					noExternal: [
-						// This ensures that esm-env is inlined into the server output with the
-						// export conditions resolved correctly through Vite. This prevents adapters
-						// that bundle later on from resolving the export conditions incorrectly
-						// and for example include browser-only code in the server output
-						// because they for example use rolldown.build with `platform: 'browser'`
-						'esm-env',
 						// This forces `$app/*` modules to be bundled, since they depend on
 						// virtual modules like `__sveltekit/environment` (this isn't a valid bare
 						// import, but it works with vite-node's externalization logic, which
 						// uses basic concatenation)
 						'@sveltejs/kit/src/runtime'
 					]
+				},
+				environments: {
+					client: {
+						define: {
+							__SVELTEKIT_BROWSER__: 'true'
+						}
+					}
 				}
 			};
 
@@ -419,7 +416,9 @@ function kit({ svelte_config }) {
 				__SVELTEKIT_CLIENT_ROUTING__: s(kit.router.resolution === 'client'),
 				__SVELTEKIT_HASH_ROUTING__: s(kit.router.type === 'hash'),
 				__SVELTEKIT_SERVER_TRACING_ENABLED__: s(kit.experimental.tracing.server),
-				__SVELTEKIT_EXPERIMENTAL_USE_TRANSFORM_ERROR__: s(kit.experimental.handleRenderingErrors)
+				__SVELTEKIT_EXPERIMENTAL_USE_TRANSFORM_ERROR__: s(kit.experimental.handleRenderingErrors),
+				__SVELTEKIT_BROWSER__: 'false',
+				__SVELTEKIT_DEV__: s(!env.private.NODE_ENV.toLowerCase().startsWith('prod'))
 			};
 
 			if (is_build) {
@@ -992,10 +991,6 @@ function kit({ svelte_config }) {
 	/** @type {import('vite').Plugin} */
 	const plugin_compile = {
 		name: 'vite-plugin-sveltekit-compile',
-
-		applyToEnvironment(environment) {
-			return environment.name !== 'serviceWorker';
-		},
 
 		// TODO: add `order: pre` to avoid false-positive warnings of overridden config options set by Vitest
 		/**

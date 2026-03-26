@@ -1,5 +1,5 @@
 import { getContext } from 'svelte';
-import { BROWSER, DEV } from 'esm-env';
+import { BROWSER, DEV } from './environment/internal.js';
 import { stores as browser_stores } from '../client/client.js';
 
 /**

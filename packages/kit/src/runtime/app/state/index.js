@@ -8,7 +8,7 @@ import {
 	navigating as server_navigating,
 	updated as server_updated
 } from './server.js';
-import { BROWSER } from 'esm-env';
+import { BROWSER } from '../environment/internal.js';
 
 /**
  * A read-only reactive object with information about the current page, serving several use cases:

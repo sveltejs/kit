@@ -1,5 +1,5 @@
 import * as devalue from 'devalue';
-import { BROWSER, DEV } from 'esm-env';
+import { BROWSER, DEV } from './environment/internal.js';
 import { invalidateAll } from './navigation.js';
 import { app as client_app, applyAction } from '../client/client.js';
 import { app as server_app } from '../server/app.js';

@@ -1,4 +1,4 @@
-import { DEV } from 'esm-env';
+import { DEV } from '../../app/environment/internal.js';
 import { escape_html } from '../../../utils/escape.js';
 import { sha256 } from './crypto.js';
 

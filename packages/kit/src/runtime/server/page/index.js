@@ -14,7 +14,7 @@ import { server_data_serializer, server_data_serializer_json } from './data_seri
 import { load_data, load_server_data } from './load_data.js';
 import { render_response } from './render.js';
 import { respond_with_error } from './respond_with_error.js';
-import { DEV } from 'esm-env';
+import { DEV } from '../../app/environment/internal.js';
 import { get_remote_action, handle_remote_form_post } from '../remote.js';
 import { PageNodes } from '../../../utils/page_nodes.js';
 

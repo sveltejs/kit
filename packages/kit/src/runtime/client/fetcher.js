@@ -1,4 +1,4 @@
-import { BROWSER, DEV } from 'esm-env';
+import { BROWSER, DEV } from '../app/environment/internal.js';
 import { hash } from '../../utils/hash.js';
 import { base64_decode } from '../utils.js';
 

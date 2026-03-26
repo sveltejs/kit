@@ -1,4 +1,4 @@
-import { DEV } from 'esm-env';
+import { DEV } from '../../app/environment/internal.js';
 import { disable_search, make_trackable } from '../../../utils/url.js';
 import { validate_depends, validate_load_response } from '../../shared.js';
 import { with_request_store, merge_tracing } from '@sveltejs/kit/internal/server';

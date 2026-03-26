@@ -2,7 +2,7 @@
 /** @import { RemotePrerenderInputsGenerator, RemotePrerenderInternals, MaybePromise } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 import { error, json } from '@sveltejs/kit';
-import { DEV } from 'esm-env';
+import { DEV } from '../../environment/internal.js';
 import { get_request_store } from '@sveltejs/kit/internal/server';
 import { stringify, stringify_remote_arg } from '../../../shared.js';
 import { app_dir, base } from '$app/paths/internal/server';

@@ -1,7 +1,7 @@
 /** @import { BinaryFormMeta, InternalRemoteFormIssue } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 
-import { DEV } from 'esm-env';
+import { DEV } from './app/environment/internal.js';
 import * as devalue from 'devalue';
 import { text_decoder, text_encoder } from './utils.js';
 import { SvelteKitError } from '@sveltejs/kit/internal';

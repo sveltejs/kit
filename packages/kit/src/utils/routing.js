@@ -1,4 +1,4 @@
-import { BROWSER } from 'esm-env';
+import { BROWSER } from '../runtime/app/environment/internal.js';
 import { decode_params } from './url.js';
 
 const param_pattern = /^(\[)?(\.\.\.)?(\w+)(?:=(\w+))?(\])?$/;

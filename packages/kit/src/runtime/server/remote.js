@@ -10,7 +10,7 @@ import { parse_remote_arg, stringify } from '../shared.js';
 import { handle_error_and_jsonify } from './utils.js';
 import { normalize_error } from '../../utils/error.js';
 import { check_incorrect_fail_use } from './page/actions.js';
-import { DEV } from 'esm-env';
+import { DEV } from '../app/environment/internal.js';
 import { record_span } from '../telemetry/record_span.js';
 import { deserialize_binary_form } from '../form-utils.js';
 

@@ -1,5 +1,5 @@
 /** @import { RemoteQueryCacheEntry } from './remote-functions/query.svelte.js' */
-import { BROWSER, DEV } from 'esm-env';
+import { BROWSER, DEV } from '../app/environment/internal.js';
 import * as svelte from 'svelte';
 import { HttpError, Redirect, SvelteKitError } from '@sveltejs/kit/internal';
 const { onMount, tick } = svelte;

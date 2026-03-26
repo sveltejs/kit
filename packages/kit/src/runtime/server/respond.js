@@ -1,5 +1,4 @@
 /** @import { RequestState } from 'types' */
-import { DEV } from 'esm-env';
 import { json, text } from '@sveltejs/kit';
 import { Redirect, SvelteKitError } from '@sveltejs/kit/internal';
 import { merge_tracing, with_request_store } from '@sveltejs/kit/internal/server';
@@ -8,6 +7,7 @@ import { is_endpoint_request, render_endpoint } from './endpoint.js';
 import { render_page } from './page/index.js';
 import { render_response } from './page/render.js';
 import { respond_with_error } from './page/respond_with_error.js';
+import { DEV } from '../app/environment/internal.js';
 import { is_form_content_type } from '../../utils/http.js';
 import {
 	handle_fatal_error,

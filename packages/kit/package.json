@@ -23,7 +23,6 @@
 		"acorn": "^8.14.1",
 		"cookie": "^1.1.1",
 		"devalue": "^5.6.4",
-		"esm-env": "^1.2.2",
 		"magic-string": "^0.30.5",
 		"mrmime": "^2.0.0",
 		"sirv": "^3.0.0"

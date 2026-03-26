@@ -1,4 +1,4 @@
-import { DEV } from 'esm-env';
+import { DEV } from '../environment/internal.js';
 import { getContext } from 'svelte';
 
 function context() {

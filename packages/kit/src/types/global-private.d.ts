@@ -42,6 +42,10 @@ declare global {
 		/** Resolve a placeholder promise */
 		resolve?: (data: { id: number; data: any; error: any }) => void;
 	};
+	/** True if the current environment is a browser */
+	const __SVELTEKIT_BROWSER__: boolean;
+	/** True if the app is running in development mode */
+	const __SVELTEKIT_DEV__: boolean;
 	/**
 	 * This makes the use of specific features visible at both dev and build time, in such a
 	 * way that we can error when they are not supported by the target platform.

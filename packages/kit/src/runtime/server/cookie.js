@@ -1,5 +1,5 @@
 import { parse, serialize } from 'cookie';
-import { DEV } from 'esm-env';
+import { DEV } from '../app/environment/internal.js';
 import { normalize_path, resolve } from '../../utils/url.js';
 import { add_data_suffix } from '../pathname.js';
 import { text_encoder } from '../utils.js';

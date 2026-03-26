@@ -1,7 +1,7 @@
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 
 import { HttpError, Redirect, ActionFailure, ValidationError } from './internal/index.js';
-import { BROWSER, DEV } from 'esm-env';
+import { BROWSER, DEV } from '../runtime/app/environment/internal.js';
 import {
 	add_data_suffix,
 	add_resolution_suffix,

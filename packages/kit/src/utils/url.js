@@ -1,4 +1,4 @@
-import { BROWSER, DEV } from 'esm-env';
+import { BROWSER, DEV } from '../runtime/app/environment/internal.js';
 
 /**
  * Matches a URI scheme. See https://www.rfc-editor.org/rfc/rfc3986#section-3.1
