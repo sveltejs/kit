@@ -698,6 +698,22 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 						`;
 					}
 
+					case sveltekit_ipc: {
+						return dedent`
+							export function send(event_id, data) {
+								if (!import.meta.hot) return;
+
+								const event = 'sveltekit:' + event_id;
+								const listener = () => {
+									import.meta.hot.send(event, data);
+									import.meta.hot.off(event, listener);
+								};
+
+								import.meta.hot.on(event, listener);
+							}
+						`;
+					}
+
 					case sveltekit_ssr_manifest: {
 						if (!dev_environment) return;
 
@@ -1002,22 +1018,6 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 									};
 									return super.respond(request, options);
 								}
-							}
-						`;
-					}
-
-					case sveltekit_ipc: {
-						return dedent`
-							export function send(event_id, data) {
-								if (!import.meta.hot) return;
-
-								const event = 'sveltekit:' + event_id;
-								const listener = () => {
-									import.meta.hot.send(event, data);
-									import.meta.hot.off(event, listener);
-								};
-
-								import.meta.hot.on(event, listener);
 							}
 						`;
 					}
@@ -2116,7 +2116,9 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 					(searchParams.has('url') || vite_config.assetsInclude(pathname)) &&
 					fs.existsSync(pathname)
 				) {
-					const filepath = path.relative(root, pathname);
+					const filepath = pathname.startsWith(root)
+						? path.relative(root, pathname)
+						: to_fs(pathname);
 					const size = fs.statSync(pathname).size;
 
 					// update it immediately
