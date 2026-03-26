@@ -1166,7 +1166,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 	};
 
 	/** @type {Array<{ hash: string, file: string }>} */
-	const remotes = [];
+	let remotes = [];
 
 	/** @type {Map<string, string>} Maps remote hash -> original module id */
 	const remote_original_by_hash = new Map();
@@ -1228,7 +1228,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 				file
 			};
 
-			if (this.environment.name === 'ssr') remotes.push(remote);
+			remotes.push(remote);
 
 			if (this.environment.config.consumer !== 'client') {
 				// we need to add an `await Promise.resolve()` because if the user imports this function
@@ -1985,6 +1985,9 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 					};
 				}
 			}
+
+			// deduplicate remotes because the same hash may be pushed from both the client and server builds
+			remotes = Array.from(new Set(remotes));
 
 			// regenerate manifest now that we have client entry...
 			fs.writeFileSync(
