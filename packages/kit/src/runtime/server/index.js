@@ -1,12 +1,12 @@
-import { IN_WEBCONTAINER } from './constants.js';
-import { respond } from './respond.js';
-import { set_private_env, set_public_env } from '../shared-server.js';
-import { options, get_hooks } from '__SERVER__/internal.js';
 import { DEV } from '../app/environment/internal.js';
-import { filter_env } from '../../utils/env.js';
-import { format_server_error } from './utils.js';
-import { set_read_implementation, set_manifest } from '__sveltekit/server';
 import { set_app } from './app.js';
+import { IN_WEBCONTAINER } from './constants.js';
+import { set_read_implementation, set_manifest } from './external.js';
+import { options, get_hooks } from './generated.js';
+import { respond } from './respond.js';
+import { format_server_error } from './utils.js';
+import { set_private_env, set_public_env } from '../shared-server.js';
+import { filter_env } from '../../utils/env.js';
 
 /** @type {Promise<any>} */
 let init_promise;
@@ -91,6 +91,7 @@ export class Server {
 
 								controller.close();
 							} catch (error) {
+								// TODO: it only throws if the user tries to read the body. Otherwise, the response is a 200
 								controller.error(error);
 							}
 						}

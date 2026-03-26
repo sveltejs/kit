@@ -1,4 +1,3 @@
-import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vitest/config';
 
 // this file needs a custom name so that the numerous test subprojects don't all pick it up
@@ -12,9 +11,6 @@ export default defineConfig({
 		}
 	},
 	test: {
-		alias: {
-			'__sveltekit/paths': fileURLToPath(new URL('./test/mocks/path.js', import.meta.url))
-		},
 		pool: 'threads',
 		maxWorkers: 1,
 		include: ['src/**/*.spec.js'],

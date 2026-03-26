@@ -4,9 +4,9 @@ import { with_request_store } from '@sveltejs/kit/internal/server';
 import { DEV } from '../app/environment/internal.js';
 import { coalesce_to_error, get_message, get_status } from '../../utils/error.js';
 import { negotiate } from '../../utils/http.js';
-import { fix_stack_trace } from '../shared-server.js';
 import { ENDPOINT_METHODS } from '../../constants.js';
 import { escape_html } from '../../utils/escape.js';
+import * as path from '../../utils/path.js';
 
 /** @param {any} body */
 export function is_pojo(body) {
@@ -115,10 +115,6 @@ export async function handle_error_and_jsonify(event, state, options, error) {
 		return { message: 'Unknown Error', ...error.body };
 	}
 
-	if (DEV && typeof error == 'object') {
-		fix_stack_trace(error);
-	}
-
 	const status = get_status(error);
 	const message = get_message(error);
 
@@ -222,9 +218,8 @@ let relative = (file) => file;
 
 if (DEV) {
 	try {
-		const path = await import('node:path');
-
-		relative = (file) => path.relative('.', file);
+		const root = typeof __SVELTEKIT_ROOT__ === 'string' ? __SVELTEKIT_ROOT__ : '';
+		relative = (file) => path.relative(root, file);
 	} catch {
 		// do nothing
 	}

@@ -16,7 +16,6 @@ import {
 	Reroute,
 	RequestEvent,
 	SSRManifest,
-	Emulator,
 	Adapter,
 	ServerInit,
 	ClientInit,
@@ -33,6 +32,7 @@ import {
 } from './private.js';
 import { Span } from '@opentelemetry/api';
 import type { PageOptions } from '../exports/vite/static_analysis/index.js';
+import type { ViteDevServer } from 'vite';
 
 export interface ServerModule {
 	Server: typeof InternalServer;
@@ -47,7 +47,6 @@ export interface ServerInternalModule {
 	set_public_env(environment: Record<string, string>): void;
 	set_read_implementation(implementation: (path: string) => ReadableStream): void;
 	set_version(version: string): void;
-	set_fix_stack_trace(fix_stack_trace: (error: unknown) => string): void;
 	get_hooks: () => Promise<Record<string, any>>;
 }
 
@@ -179,12 +178,19 @@ export class InternalServer extends Server {
 			prerendering?: PrerenderOptions;
 			read: (file: string) => NonSharedBuffer;
 			/** A hook called before `handle` during dev, so that `AsyncLocalStorage` can be populated. */
-			before_handle?: (event: RequestEvent, config: any, prerender: PrerenderOption) => void;
-			emulator?: Emulator;
+			before_handle?: (
+				event: RequestEvent,
+				config: any,
+				prerender: PrerenderOption,
+				handle: () => Promise<Response>
+			) => Promise<Response>;
 		}
 	): Promise<Response>;
 }
 
+/**
+ * Used to construct the SSR manifest
+ */
 export interface ManifestData {
 	/** Static files from `kit.config.files.assets`. */
 	assets: Asset[];
@@ -539,8 +545,12 @@ export interface SSRState {
 	 * Used to set up `__SVELTEKIT_TRACK__` which checks if a used feature is supported.
 	 * E.g. if `read` from `$app/server` is used, it checks whether the route's config is compatible.
 	 */
-	before_handle?: (event: RequestEvent, config: any, prerender: PrerenderOption) => void;
-	emulator?: Emulator;
+	before_handle?: (
+		event: RequestEvent,
+		config: any,
+		prerender: PrerenderOption,
+		handle: () => Promise<Response>
+	) => Promise<Response>;
 }
 
 export type StrictBody = string | ArrayBufferView;
@@ -654,6 +664,14 @@ export interface RequestState {
 export interface RequestStore {
 	event: RequestEvent;
 	state: RequestState;
+}
+
+export interface DevEnvironment {
+	vite: ViteDevServer;
+	manifest_data: ManifestData;
+	env: Record<string, string>;
+	assets: string;
+	remote_address: string | undefined;
 }
 
 export * from '../exports/index.js';

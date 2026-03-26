@@ -23,7 +23,7 @@ await createBundle({
 const types = readFileSync('./types/index.d.ts', 'utf-8');
 if (types.includes('__sveltekit/')) {
 	throw new Error(
-		'Found __sveltekit/ in types/index.d.ts - make sure to hide internal modules by not just reexporting them. Contents:\n\n' +
+		'Found __sveltekit/ in types/index.d.ts - make sure to hide internal modules by not just re-exporting them. Contents:\n\n' +
 			types
 	);
 }

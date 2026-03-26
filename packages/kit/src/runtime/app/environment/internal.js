@@ -1,5 +1,4 @@
 // taken from https://github.com/benmccann/esm-env/blob/main/packages/esm-env/dev-fallback.js
-
 export const BROWSER =
 	typeof __SVELTEKIT_BROWSER__ === 'boolean'
 		? __SVELTEKIT_BROWSER__
@@ -14,3 +13,16 @@ export const DEV =
 			globalThis.process?.env?.NODE_ENV &&
 			// eslint-disable-next-line n/prefer-global/process
 			!globalThis.process?.env?.NODE_ENV.toLowerCase().startsWith('prod');
+
+export const version =
+	typeof __SVELTEKIT_APP_VERSION__ === 'string' ? __SVELTEKIT_APP_VERSION__ : 'unknown';
+export let building = false;
+export let prerendering = false;
+
+export function set_building() {
+	building = true;
+}
+
+export function set_prerendering() {
+	prerendering = true;
+}

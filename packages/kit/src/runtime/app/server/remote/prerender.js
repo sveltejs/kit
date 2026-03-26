@@ -5,7 +5,7 @@ import { error, json } from '@sveltejs/kit';
 import { DEV } from '../../environment/internal.js';
 import { get_request_store } from '@sveltejs/kit/internal/server';
 import { stringify, stringify_remote_arg } from '../../../shared.js';
-import { app_dir, base } from '$app/paths/internal/server';
+import { app_dir, base } from '../../paths/internal/server.js';
 import {
 	create_validator,
 	get_cache,

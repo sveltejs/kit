@@ -1,6 +1,6 @@
-import { read_implementation, manifest } from '__sveltekit/server';
-import { assets } from '$app/paths/internal/server';
 import { DEV } from '../environment/internal.js';
+import { assets } from '../paths/internal/server.js';
+import { read_implementation, manifest } from '../../server/external.js';
 import { base64_decode } from '../../utils.js';
 
 /**

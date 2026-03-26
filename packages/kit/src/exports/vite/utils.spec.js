@@ -1,7 +1,7 @@
 import path from 'node:path';
 import { expect, test } from 'vitest';
 import { validate_config } from '../../core/config/index.js';
-import { posixify } from '../../utils/filesystem.js';
+import { posixify } from '../../utils/os.js';
 import { dedent } from '../../core/sync/utils.js';
 import { get_config_aliases, error_for_missing_config } from './utils.js';
 

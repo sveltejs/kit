@@ -1,12 +1,12 @@
 /** @import { RemoteCommand, RemoteQueryOverride } from '@sveltejs/kit' */
 /** @import { RemoteFunctionResponse } from 'types' */
 /** @import { Query } from './query.svelte.js' */
-import { app_dir, base } from '$app/paths/internal/client';
 import * as devalue from 'devalue';
 import { HttpError } from '@sveltejs/kit/internal';
-import { app } from '../client.js';
-import { stringify_remote_arg } from '../../shared.js';
 import { get_remote_request_headers, refresh_queries, release_overrides } from './shared.svelte.js';
+import { app } from '../client.js';
+import { app_dir, base } from '../../app/paths/internal/client.js';
+import { stringify_remote_arg } from '../../shared.js';
 
 /**
  * Client-version of the `command` function from `$app/server`.

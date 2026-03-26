@@ -1,6 +1,6 @@
 import path from 'node:path';
 import { loadEnv } from 'vite';
-import { posixify } from '../../utils/filesystem.js';
+import { posixify } from '../../utils/os.js';
 import { negotiate } from '../../utils/http.js';
 import { filter_env } from '../../utils/env.js';
 import { escape_html } from '../../utils/escape.js';

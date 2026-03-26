@@ -4,6 +4,7 @@
 declare module '@sveltejs/kit' {
 	import type { SvelteConfig } from '@sveltejs/vite-plugin-svelte';
 	import type { StandardSchemaV1 } from '@standard-schema/spec';
+	import type { PluginOption } from 'vite';
 	import type { RouteId as AppRouteId, LayoutParams as AppLayoutParams, ResolvedPathname } from '$app/types';
 	// @ts-ignore this is an optional peer dependency so could be missing. Written like this so dts-buddy preserves the ts-ignore
 	type Span = import('@opentelemetry/api').Span;
@@ -40,8 +41,17 @@ declare module '@sveltejs/kit' {
 		/**
 		 * Creates an `Emulator`, which allows the adapter to influence the environment
 		 * during dev, build and prerendering.
+		 * @deprecated removed in 3.0.0
 		 */
 		emulate?: () => MaybePromise<Emulator>;
+		vite?: {
+			/**
+			 * Add a Vite plugin here to replace the default Node SSR environment.
+			 * The provided Vite plugins should configure the dev and preview servers
+			 * @since 3.0.0
+			 */
+			plugins?: PluginOption;
+		};
 	}
 
 	export type LoadProperties<input extends Record<string, any> | void> = input extends void
@@ -1558,6 +1568,9 @@ declare module '@sveltejs/kit' {
 		read?: (file: string) => MaybePromise<ReadableStream | null>;
 	}
 
+	/**
+	 * Powers the server
+	 */
 	export interface SSRManifest {
 		appDir: string;
 		appPath: string;
@@ -2424,6 +2437,9 @@ declare module '@sveltejs/kit' {
 		server_manifest: import('vite').Manifest;
 	}
 
+	/**
+	 * Used to construct the SSR manifest
+	 */
 	interface ManifestData {
 		/** Static files from `kit.config.files.assets`. */
 		assets: Asset[];
@@ -2854,7 +2870,9 @@ declare module '@sveltejs/kit/vite' {
 	/**
 	 * Returns the SvelteKit Vite plugins.
 	 * */
-	export function sveltekit(): Promise<import("vite").Plugin[]>;
+	export function sveltekit(options?: {
+		adapter?: import("@sveltejs/kit").Adapter;
+	} | undefined): Promise<import("vite").PluginOption[]>;
 
 	export {};
 }

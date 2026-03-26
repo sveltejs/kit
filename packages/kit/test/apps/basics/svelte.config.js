@@ -14,13 +14,6 @@ const config = {
 					}
 				});
 			},
-			emulate() {
-				return {
-					platform({ config, prerender }) {
-						return { config, prerender };
-					}
-				};
-			},
 			supports: {
 				read: () => true,
 				instrumentation: () => true
