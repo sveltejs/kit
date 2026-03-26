@@ -568,6 +568,47 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 	/** @type {Record<string, number>} */
 	let server_assets = {};
 
+	/**
+	 * Allows us to access the filesystem from an environment that doesn't have `node:fs`
+	 * @type {import('vite').Plugin}
+	 */
+	const plugin_server_filesystem = {
+		name: 'vite-plugin-sveltekit-server-filesystem',
+		apply: 'serve',
+		applyToEnvironment(environment) {
+			return environment.name !== 'client' && environment.name !== 'serviceWorker';
+		},
+		configureServer() {
+			server_assets = {};
+		},
+		load: {
+			order: 'pre',
+			handler(id) {
+				if (!dev_environment) return;
+
+				const { pathname, searchParams } = new URL(id, 'file://');
+				if (
+					(searchParams.has('url') || vite_config.assetsInclude(pathname)) &&
+					fs.existsSync(pathname)
+				) {
+					const filepath = pathname.startsWith(root)
+						? path.relative(root, pathname)
+						: to_fs(pathname);
+					const size = fs.statSync(pathname).size;
+
+					// update it immediately
+					dev_environment.vite.environments.ssr.hot.send(`sveltekit:server-assets`, {
+						[filepath]: size
+					});
+
+					// persist changes in case of server reload
+					server_assets[filepath] = size;
+					invalidate_module(dev_environment.vite, sveltekit_server_assets);
+				}
+			}
+		}
+	};
+
 	/** @type {import('vite').Plugin} */
 	const plugin_virtual_modules = {
 		name: 'vite-plugin-sveltekit-virtual-modules',
@@ -2089,47 +2130,6 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 				console.log(
 					`See ${link} to learn how to configure your app to run on the platform of your choosing`
 				);
-			}
-		}
-	};
-
-	/**
-	 * Allows us to access the filesystem from an environment that doesn't have `node:fs`
-	 * @type {import('vite').Plugin}
-	 */
-	const plugin_server_filesystem = {
-		name: 'vite-plugin-sveltekit-server-filesystem',
-		apply: 'serve',
-		applyToEnvironment(environment) {
-			return environment.name !== 'client' && environment.name !== 'serviceWorker';
-		},
-		configureServer() {
-			server_assets = {};
-		},
-		load: {
-			order: 'pre',
-			handler(id) {
-				if (!dev_environment) return;
-
-				const { pathname, searchParams } = new URL(id, 'file://');
-				if (
-					(searchParams.has('url') || vite_config.assetsInclude(pathname)) &&
-					fs.existsSync(pathname)
-				) {
-					const filepath = pathname.startsWith(root)
-						? path.relative(root, pathname)
-						: to_fs(pathname);
-					const size = fs.statSync(pathname).size;
-
-					// update it immediately
-					dev_environment.vite.environments.ssr.hot.send(`sveltekit:server-assets`, {
-						[filepath]: size
-					});
-
-					// persist changes in case of server reload
-					server_assets[filepath] = size;
-					invalidate_module(dev_environment.vite, sveltekit_server_assets);
-				}
 			}
 		}
 	};

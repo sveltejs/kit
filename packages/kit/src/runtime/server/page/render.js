@@ -614,8 +614,11 @@ export async function render_response({
 					}`);
 		}
 
+		// we need to eagerly import the Vite client module in development to ensure
+		// that Vite global constant replacements are initialised before our code runs
 		const init_app = `
 				{
+					${DEV ? `import('/@vite/client')` : ''}
 					${blocks.join('\n\n\t\t\t\t\t')}
 				}
 			`;
