@@ -1,7 +1,6 @@
 /** @import { Transport } from '@sveltejs/kit' */
 import * as devalue from 'devalue';
 import { base64_decode, base64_encode, text_decoder } from './utils.js';
-import * as svelte from 'svelte';
 
 /**
  * @param {string} route_id
@@ -91,18 +90,4 @@ export function parse_remote_arg(string, transport) {
  */
 export function create_remote_key(id, payload) {
 	return id + '/' + payload;
-}
-
-/**
- * @template T
- * @param {string} key
- * @param {() => T} fn
- * @returns {T}
- * @deprecated TODO remove in SvelteKit 3.0
- */
-export function unfriendly_hydratable(key, fn) {
-	if (!svelte.hydratable) {
-		throw new Error('Remote functions require Svelte 5.44.0 or later');
-	}
-	return svelte.hydratable(key, fn);
 }

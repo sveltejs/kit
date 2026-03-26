@@ -2,13 +2,9 @@
 /** @import { ServerHooks, MaybePromise, RequestState, RemoteInternals, RequestStore } from 'types' */
 import { parse } from 'devalue';
 import { error } from '@sveltejs/kit';
+import { hydratable } from 'svelte';
 import { with_request_store, get_request_store } from '@sveltejs/kit/internal/server';
-import {
-	stringify_remote_arg,
-	create_remote_key,
-	stringify,
-	unfriendly_hydratable
-} from '../../../shared.js';
+import { stringify_remote_arg, create_remote_key, stringify } from '../../../shared.js';
 
 /**
  * @param {any} validate_or_fn
@@ -91,7 +87,7 @@ export async function get_response(internals, arg, state, get_result) {
 
 		Promise.resolve(entry.data)
 			.then((value) => {
-				void unfriendly_hydratable(remote_key, () => stringify(value, state.transport));
+				void hydratable(remote_key, () => stringify(value, state.transport));
 			})
 			.catch(() => {});
 	}
