@@ -10,7 +10,7 @@ import { Csp } from './csp.js';
 import { uneval_action_response } from './actions.js';
 import { public_env } from '../../shared-server.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
-import { SCHEME } from '../../../utils/url.js';
+import { normalize_named_action_attributes, SCHEME } from '../../../utils/url.js';
 import { create_server_routing_response, generate_route_object } from './server_routing.js';
 import { add_resolution_suffix } from '../../pathname.js';
 import { try_get_request_store, with_request_store } from '@sveltejs/kit/internal/server';
@@ -673,11 +673,12 @@ export async function render_response({
 	});
 
 	// TODO flush chunks as early as we can
-	const transformed =
+	const transformed = normalize_named_action_attributes(
 		(await resolve_opts.transformPageChunk({
 			html,
 			done: true
-		})) || '';
+		})) || ''
+	);
 
 	if (!chunks) {
 		headers.set('etag', `"${hash(transformed)}"`);

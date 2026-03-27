@@ -10,7 +10,9 @@ import {
 	decode_pathname,
 	strip_hash,
 	make_trackable,
-	normalize_path
+	normalize_path,
+	normalize_named_action_elements,
+	normalize_named_action_url
 } from '../../utils/url.js';
 import { dev_fetch, initial_fetch, lock_fetch, subsequent_fetch, unlock_fetch } from './fetcher.js';
 import { parse, parse_server_route } from './parse.js';
@@ -2048,6 +2050,7 @@ function setup_preload() {
 
 	function after_navigate() {
 		observer.disconnect();
+		normalize_named_action_elements(container);
 
 		for (const a of container.querySelectorAll('a')) {
 			const { url, external, download } = get_link_info(a, base, app.hash);
@@ -2698,7 +2701,9 @@ function _start_router() {
 
 		// It is impossible to use form actions with hash router, so we just ignore handling them here
 		const url = new URL(
-			(submitter?.hasAttribute('formaction') && submitter?.formAction) || form.action
+			normalize_named_action_url(
+				(submitter?.hasAttribute('formaction') && submitter?.formAction) || form.action
+			)
 		);
 
 		if (is_external_url(url, base, false)) return;

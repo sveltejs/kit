@@ -684,6 +684,15 @@ test.describe('Load', () => {
 
 		expect(await page.textContent('p')).toBe('hello world');
 	});
+
+	test('encodes named form action attributes in rendered HTML', async ({ request }) => {
+		const response = await request.get('/actions/enhance');
+		const html = await response.text();
+
+		expect(html).toContain('action="?%2Flogin"');
+		expect(html).toContain('formaction="?%2Fregister"');
+		expect(html).toContain('formaction="?%2Fsubmitter"');
+	});
 });
 
 test.describe('Routing', () => {

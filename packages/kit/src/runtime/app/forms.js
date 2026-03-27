@@ -3,6 +3,7 @@ import { BROWSER, DEV } from 'esm-env';
 import { invalidateAll } from './navigation.js';
 import { app as client_app, applyAction } from '../client/client.js';
 import { app as server_app } from '../server/app.js';
+import { normalize_named_action_url } from '../../utils/url.js';
 
 export { applyAction };
 
@@ -126,10 +127,12 @@ export function enhance(form_element, submit = () => {}) {
 		event.preventDefault();
 
 		const action = new URL(
-			// We can't do submitter.formAction directly because that property is always set
-			event.submitter?.hasAttribute('formaction')
-				? /** @type {HTMLButtonElement | HTMLInputElement} */ (event.submitter).formAction
-				: clone(form_element).action
+			normalize_named_action_url(
+				// We can't do submitter.formAction directly because that property is always set
+				event.submitter?.hasAttribute('formaction')
+					? /** @type {HTMLButtonElement | HTMLInputElement} */ (event.submitter).formAction
+					: clone(form_element).action
+			)
 		);
 
 		const enctype = event.submitter?.hasAttribute('formenctype')

@@ -10,6 +10,7 @@ import { app, query_responses, _goto, set_nearest_error_page, invalidateAll } fr
 import { tick } from 'svelte';
 import { refresh_queries, release_overrides } from './shared.svelte.js';
 import { createAttachmentKey } from 'svelte/attachments';
+import { normalize_named_action_url } from '../../../utils/url.js';
 import {
 	convert_formdata,
 	flatten_issues,
@@ -287,10 +288,12 @@ export function form(id) {
 
 				// eslint-disable-next-line svelte/prefer-svelte-reactivity
 				const action = new URL(
-					// We can't do submitter.formAction directly because that property is always set
-					event.submitter?.hasAttribute('formaction')
-						? /** @type {HTMLButtonElement | HTMLInputElement} */ (event.submitter).formAction
-						: clone(form).action
+					normalize_named_action_url(
+						// We can't do submitter.formAction directly because that property is always set
+						event.submitter?.hasAttribute('formaction')
+							? /** @type {HTMLButtonElement | HTMLInputElement} */ (event.submitter).formAction
+							: clone(form).action
+					)
 				);
 
 				if (action.searchParams.get('/remote') !== action_id) {

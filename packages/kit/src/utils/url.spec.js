@@ -1,5 +1,12 @@
 import { assert, describe } from 'vitest';
-import { resolve, normalize_path, make_trackable, disable_search } from './url.js';
+import {
+	resolve,
+	normalize_path,
+	make_trackable,
+	disable_search,
+	normalize_named_action_url,
+	normalize_named_action_attributes
+} from './url.js';
 
 describe('resolve', (test) => {
 	test('resolves a root-relative path', () => {
@@ -95,6 +102,47 @@ describe('normalize_path', (test) => {
 			assert.equal(normalize_path(path, 'always'), always);
 			assert.equal(normalize_path(path, 'never'), never);
 		}
+	});
+});
+
+describe('normalize_named_action_url', (test) => {
+	test('encodes named action query parameters', () => {
+		assert.equal(normalize_named_action_url('?/login'), '?%2Flogin');
+		assert.equal(
+			normalize_named_action_url('/actions/enhance?/login&foo=bar'),
+			'/actions/enhance?%2Flogin&foo=bar'
+		);
+	});
+
+	test('preserves already encoded named action query parameters', () => {
+		assert.equal(normalize_named_action_url('?%2Flogin'), '?%2Flogin');
+	});
+
+	test('preserves html-escaped query separators', () => {
+		assert.equal(
+			normalize_named_action_url('/actions/enhance?/login&amp;foo=bar'),
+			'/actions/enhance?%2Flogin&amp;foo=bar'
+		);
+	});
+});
+
+describe('normalize_named_action_attributes', (test) => {
+	test('encodes named action attributes in form markup', () => {
+		assert.equal(
+			normalize_named_action_attributes(
+				'<form action="?/login"><button formaction="?/register"></button></form>'
+			),
+			'<form action="?%2Flogin"><button formaction="?%2Fregister"></button></form>'
+		);
+	});
+
+	test('does not rewrite raw script contents', () => {
+		assert.equal(
+			normalize_named_action_attributes(
+				'<script>const markup = `<form action="?/login">`;</script><form action="?/login"></form>'
+			),
+			'<script>const markup = `<form action="?/login">`;</script><form action="?%2Flogin"></form>'
+		);
 	});
 });
 
