@@ -307,6 +307,22 @@ test.describe('remote function mutations', () => {
 		await expect(page.locator('#command-pending')).toHaveText('Command pending: 0');
 	});
 
+	test('form pending resets when enhance callback skips submit', async ({ page }) => {
+		await page.goto('/remote/form/skip-submit');
+
+		await expect(page.locator('[data-pending]')).toHaveText('0');
+		await page.click('button');
+
+		// pending goes to 1 but then back to 0 once enhance finish runs without invoking submit()
+		await expect(page.locator('[data-pending]')).toHaveText('0, 1, 0');
+
+		await page.locator('[data-should-submit]').check();
+
+		await page.click('button');
+
+		await expect(page.locator('[data-pending]')).toHaveText('0, 1, 0, 1, 0');
+	});
+
 	// TODO once we have async SSR adjust the test and move this into test.js
 	test('query.batch works', async ({ page }) => {
 		await page.goto('/remote/batch');
