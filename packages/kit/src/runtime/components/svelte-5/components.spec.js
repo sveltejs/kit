@@ -13,7 +13,7 @@ test.each(['layout.svelte', 'error.svelte'])('%s compiles in runes mode', (compo
 	const { metadata } = compile(source, { generate: false });
 
 	assert.ok(
-		metadata.runes === true,
+		metadata.runes,
 		`${component} should not include the legacy flag — add <svelte:options runes={true} />`
 	);
 });
