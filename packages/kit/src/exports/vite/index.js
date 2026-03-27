@@ -1276,16 +1276,18 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 					${
 						dev_environment?.vite
 							? dedent`
-									const exports = new Map();
-									for (const name in $$_self_$$) {
-										exports.set(name, { type: $$_self_$$[name].__.type });
-									}
-									const data = Object.fromEntries(exports);
-									const event = 'sveltekit:remote-${remote.hash}-response';
-									import.meta.hot.send(event, data);
-									import.meta.hot.on('sveltekit:remote-${remote.hash}-request', async () => {
+									if (import.meta.hot) {
+										const exports = new Map();
+										for (const name in $$_self_$$) {
+											exports.set(name, { type: $$_self_$$[name].__.type });
+										}
+										const data = Object.fromEntries(exports);
+										const event = 'sveltekit:remote-${remote.hash}-response';
 										import.meta.hot.send(event, data);
-									});
+										import.meta.hot.on('sveltekit:remote-${remote.hash}-request', async () => {
+											import.meta.hot.send(event, data);
+										});
+									}
 								`
 							: ''
 					}
