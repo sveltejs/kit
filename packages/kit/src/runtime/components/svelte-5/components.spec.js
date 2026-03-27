@@ -8,15 +8,13 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const components = readdirSync(__dirname).filter((f) => f.endsWith('.svelte'));
 
-test.each(components)('%s compiles in runes mode without legacy flags', (component) => {
+test.each(components)('%s compiles in runes mode', (component) => {
 	const source = readFileSync(join(__dirname, component), 'utf-8');
 
-	// Compile without passing `runes` option — each component must opt in
-	// via <svelte:options runes={true} /> or by using runes so that projects don't ship legacy code
-	const { js } = compile(source, { generate: 'client' });
+	const { metadata } = compile(source, { generate: false });
 
 	assert.ok(
-		!js.code.includes('svelte/internal/flags/legacy'),
+		metadata.runes === true,
 		`${component} should not include the legacy flag — add <svelte:options runes={true} />`
 	);
 });
