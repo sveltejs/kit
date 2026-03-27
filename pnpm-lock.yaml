@@ -97,8 +97,8 @@ catalogs:
       specifier: ^5.53.12
       version: 5.53.12
     svelte-check:
-      specifier: ^4.4.1
-      version: 4.4.3
+      specifier: ^4.4.5
+      version: 4.4.5
     svelte-preprocess:
       specifier: ^6.0.0
       version: 6.0.0
@@ -646,7 +646,7 @@ importers:
         version: 5.53.12
       svelte-check:
         specifier: 'catalog:'
-        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
+        version: 4.4.5(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
       typescript:
         specifier: 'catalog:'
         version: 6.0.2
@@ -667,7 +667,7 @@ importers:
         version: 5.53.12
       svelte-check:
         specifier: 'catalog:'
-        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
+        version: 4.4.5(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
       typescript:
         specifier: 'catalog:'
         version: 6.0.2
@@ -703,7 +703,7 @@ importers:
         version: 5.53.12
       svelte-check:
         specifier: 'catalog:'
-        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
+        version: 4.4.5(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
       test-redirect-importer:
         specifier: workspace:*
         version: link:../../../../test-redirect-importer
@@ -763,7 +763,7 @@ importers:
         version: 5.53.12
       svelte-check:
         specifier: 'catalog:'
-        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
+        version: 4.4.5(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
       typescript:
         specifier: 'catalog:'
         version: 6.0.2
@@ -784,7 +784,7 @@ importers:
         version: 5.53.12
       svelte-check:
         specifier: 'catalog:'
-        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
+        version: 4.4.5(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
       typescript:
         specifier: 'catalog:'
         version: 6.0.2
@@ -805,7 +805,7 @@ importers:
         version: 5.53.12
       svelte-check:
         specifier: 'catalog:'
-        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
+        version: 4.4.5(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
       typescript:
         specifier: 'catalog:'
         version: 6.0.2
@@ -826,7 +826,7 @@ importers:
         version: 5.53.12
       svelte-check:
         specifier: 'catalog:'
-        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
+        version: 4.4.5(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
       typescript:
         specifier: 'catalog:'
         version: 6.0.2
@@ -850,7 +850,7 @@ importers:
         version: 5.53.12
       svelte-check:
         specifier: 'catalog:'
-        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
+        version: 4.4.5(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
       typescript:
         specifier: 'catalog:'
         version: 6.0.2
@@ -874,7 +874,7 @@ importers:
         version: 5.53.12
       svelte-check:
         specifier: 'catalog:'
-        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
+        version: 4.4.5(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
       typescript:
         specifier: 'catalog:'
         version: 6.0.2
@@ -901,7 +901,7 @@ importers:
         version: 5.53.12
       svelte-check:
         specifier: 'catalog:'
-        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
+        version: 4.4.5(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
       typescript:
         specifier: 'catalog:'
         version: 6.0.2
@@ -922,7 +922,7 @@ importers:
         version: 5.53.12
       svelte-check:
         specifier: 'catalog:'
-        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
+        version: 4.4.5(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
       typescript:
         specifier: 'catalog:'
         version: 6.0.2
@@ -943,7 +943,7 @@ importers:
         version: 5.53.12
       svelte-check:
         specifier: 'catalog:'
-        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
+        version: 4.4.5(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
       typescript:
         specifier: ^6.0.0
         version: 6.0.2
@@ -973,7 +973,7 @@ importers:
         version: 5.53.12
       svelte-check:
         specifier: 'catalog:'
-        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
+        version: 4.4.5(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
       typescript:
         specifier: ^6.0.0
         version: 6.0.2
@@ -997,7 +997,7 @@ importers:
         version: 5.53.12
       svelte-check:
         specifier: 'catalog:'
-        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
+        version: 4.4.5(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
       typescript:
         specifier: ^6.0.0
         version: 6.0.2
@@ -1021,7 +1021,7 @@ importers:
         version: 5.53.12
       svelte-check:
         specifier: 'catalog:'
-        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
+        version: 4.4.5(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
       typescript:
         specifier: ^6.0.0
         version: 6.0.2
@@ -1045,7 +1045,7 @@ importers:
         version: 5.53.12
       svelte-check:
         specifier: 'catalog:'
-        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
+        version: 4.4.5(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
       typescript:
         specifier: ^6.0.0
         version: 6.0.2
@@ -1066,7 +1066,7 @@ importers:
         version: 5.53.12
       svelte-check:
         specifier: 'catalog:'
-        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
+        version: 4.4.5(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
       typescript:
         specifier: ^6.0.0
         version: 6.0.2
@@ -1087,7 +1087,7 @@ importers:
         version: 5.53.12
       svelte-check:
         specifier: 'catalog:'
-        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
+        version: 4.4.5(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
       typescript:
         specifier: ^6.0.0
         version: 6.0.2
@@ -1108,7 +1108,7 @@ importers:
         version: 5.53.12
       svelte-check:
         specifier: 'catalog:'
-        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
+        version: 4.4.5(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
       typescript:
         specifier: ^6.0.0
         version: 6.0.2
@@ -1129,7 +1129,7 @@ importers:
         version: 5.53.12
       svelte-check:
         specifier: 'catalog:'
-        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
+        version: 4.4.5(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
       typescript:
         specifier: ^6.0.0
         version: 6.0.2
@@ -1150,7 +1150,7 @@ importers:
         version: 5.53.12
       svelte-check:
         specifier: 'catalog:'
-        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
+        version: 4.4.5(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
       typescript:
         specifier: ^6.0.0
         version: 6.0.2
@@ -1171,7 +1171,7 @@ importers:
         version: 5.53.12
       svelte-check:
         specifier: 'catalog:'
-        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
+        version: 4.4.5(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
       typescript:
         specifier: ^6.0.0
         version: 6.0.2
@@ -1192,7 +1192,7 @@ importers:
         version: 5.53.12
       svelte-check:
         specifier: 'catalog:'
-        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
+        version: 4.4.5(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
       typescript:
         specifier: ^6.0.0
         version: 6.0.2
@@ -1213,7 +1213,7 @@ importers:
         version: 5.53.12
       svelte-check:
         specifier: 'catalog:'
-        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
+        version: 4.4.5(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
       typescript:
         specifier: ^6.0.0
         version: 6.0.2
@@ -1234,7 +1234,7 @@ importers:
         version: 5.53.12
       svelte-check:
         specifier: 'catalog:'
-        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
+        version: 4.4.5(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
       typescript:
         specifier: ^6.0.0
         version: 6.0.2
@@ -1255,7 +1255,7 @@ importers:
         version: 5.53.12
       svelte-check:
         specifier: 'catalog:'
-        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
+        version: 4.4.5(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
       typescript:
         specifier: ^6.0.0
         version: 6.0.2
@@ -1276,7 +1276,7 @@ importers:
         version: 5.53.12
       svelte-check:
         specifier: 'catalog:'
-        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
+        version: 4.4.5(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
       typescript:
         specifier: ^6.0.0
         version: 6.0.2
@@ -1297,7 +1297,7 @@ importers:
         version: 5.53.12
       svelte-check:
         specifier: 'catalog:'
-        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
+        version: 4.4.5(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
       typescript:
         specifier: ^6.0.0
         version: 6.0.2
@@ -1321,7 +1321,7 @@ importers:
         version: 5.53.12
       svelte-check:
         specifier: 'catalog:'
-        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
+        version: 4.4.5(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
       typescript:
         specifier: ^6.0.0
         version: 6.0.2
@@ -1345,7 +1345,7 @@ importers:
         version: 5.53.12
       svelte-check:
         specifier: 'catalog:'
-        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
+        version: 4.4.5(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
       typescript:
         specifier: ^6.0.0
         version: 6.0.2
@@ -1454,7 +1454,7 @@ importers:
         version: 5.53.12
       svelte-check:
         specifier: 'catalog:'
-        version: 4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
+        version: 4.4.5(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2)
       typescript:
         specifier: 'catalog:'
         version: 6.0.2
@@ -5500,8 +5500,8 @@ packages:
     resolution: {integrity: sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w==}
     engines: {node: '>= 0.4'}
 
-  svelte-check@4.4.3:
-    resolution: {integrity: sha512-4HtdEv2hOoLCEsSXI+RDELk9okP/4sImWa7X02OjMFFOWeSdFF3NFy3vqpw0z+eH9C88J9vxZfUXz/Uv2A1ANw==}
+  svelte-check@4.4.5:
+    resolution: {integrity: sha512-1bSwIRCvvmSHrlK52fOlZmVtUZgil43jNL/2H18pRpa+eQjzGt6e3zayxhp1S7GajPFKNM/2PMCG+DZFHlG9fw==}
     engines: {node: '>= 18.0.0'}
     hasBin: true
     peerDependencies:
@@ -10236,7 +10236,7 @@ snapshots:
 
   supports-preserve-symlinks-flag@1.0.0: {}
 
-  svelte-check@4.4.3(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2):
+  svelte-check@4.4.5(picomatch@4.0.3)(svelte@5.53.12)(typescript@6.0.2):
     dependencies:
       '@jridgewell/trace-mapping': 0.3.25
       chokidar: 4.0.3
