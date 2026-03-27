@@ -788,11 +788,13 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 											${
 												kit.router.resolution === 'client'
 													? undefined
-													: manifest_data.nodes.map((node, i) => {
-															if (node.component || node.universal) {
-																return `${kit.paths.base}${to_fs(kit.outDir)}/generated/client/nodes/${i}.js`;
-															}
-														})
+													: s(
+															manifest_data.nodes.map((node, i) => {
+																if (node.component || node.universal) {
+																	return `${kit.paths.base}${to_fs(kit.outDir)}/generated/client/nodes/${i}.js`;
+																}
+															})
+														)
 											},
 										// \`css\` is not necessary in dev, as the JS file from \`nodes\` will reference the CSS file
 										routes:
