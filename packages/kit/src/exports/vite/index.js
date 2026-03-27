@@ -709,11 +709,9 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 									.join(',\n')}
 							};
 
-							if (import.meta.hot) {
-								import.meta.hot.on('sveltekit:server-assets', (data) => {
-									Object.assign(server_assets, data);
-								});
-							}
+							import.meta.hot?.on('sveltekit:server-assets', (data) => {
+								Object.assign(server_assets, data);
+							});
 						`;
 					}
 
@@ -723,11 +721,9 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 						return dedent`
 							export const remotes = ${s(remotes)};
 
-							if (import.meta.hot) {
-								import.meta.hot.on('sveltekit:remotes', (data) => {
-									remotes.push(data);
-								});
-							}
+							import.meta.hot?.on('sveltekit:remotes', (data) => {
+								remotes.push(data);
+							});
 						`;
 					}
 
@@ -1284,7 +1280,12 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 									for (const name in $$_self_$$) {
 										exports.set(name, { type: $$_self_$$[name].__.type });
 									}
-									import.meta.hot.send('sveltekit:' + 'remote-${remote.hash}', Object.fromEntries(exports));
+									const data = Object.fromEntries(exports);
+									const event = 'sveltekit:remote-${remote.hash}-response';
+									import.meta.hot.send(event, data);
+									import.meta.hot.on('sveltekit:remote-${remote.hash}-request', async () => {
+										import.meta.hot.send(event, data);
+									});
 								`
 							: ''
 					}
@@ -1317,11 +1318,12 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 			if (dev_environment?.vite) {
 				const { promise, resolve } = Promise.withResolvers();
 
-				const event = `sveltekit:remote-${remote.hash}`;
+				const event = `sveltekit:remote-${remote.hash}-response`;
 				dev_environment.vite.environments.ssr.hot.on(event, resolve);
 
 				await dev_environment.vite.environments.ssr.transformRequest(id);
 
+				dev_environment.vite.environments.ssr.hot.send(`sveltekit:remote-${remote.hash}-request`);
 				const exports = await promise;
 				dev_environment.vite.environments.ssr.hot.off(event, resolve);
 
