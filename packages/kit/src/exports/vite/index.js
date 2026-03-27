@@ -20,13 +20,7 @@ import { runtime_directory, logger, get_runtime_base, get_mime_lookup } from '..
 import { generate_manifest } from '../../core/generate_manifest/index.js';
 import { build_server_nodes } from './build/build_server.js';
 import { assets_base, find_deps, resolve_symlinks } from './build/utils.js';
-import {
-	dev,
-	invalidate_module,
-	get_module_data,
-	get_matchers,
-	get_inline_css
-} from './dev/index.js';
+import { dev, invalidate_module, get_matchers, get_inline_css } from './dev/index.js';
 import { preview } from './preview/index.js';
 import {
 	error_for_missing_config,
@@ -50,7 +44,6 @@ import {
 	env_static_public,
 	service_worker,
 	sveltekit_server,
-	sveltekit_ipc,
 	sveltekit_remotes,
 	sveltekit_server_assets,
 	sveltekit_ssr_manifest
@@ -669,8 +662,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 					exactRegex(sveltekit_server),
 					exactRegex(sveltekit_ssr_manifest),
 					exactRegex(sveltekit_server_assets),
-					exactRegex(sveltekit_remotes),
-					exactRegex(sveltekit_ipc)
+					exactRegex(sveltekit_remotes)
 				]
 			},
 			handler(id) {
@@ -735,22 +727,6 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 								import.meta.hot.on('sveltekit:remotes', (data) => {
 									remotes.push(data);
 								});
-							}
-						`;
-					}
-
-					case sveltekit_ipc: {
-						return dedent`
-							export function send(event_id, data) {
-								if (!import.meta.hot) return;
-
-								const event = 'sveltekit:' + event_id;
-								const listener = () => {
-									import.meta.hot.send(event, data);
-									import.meta.hot.off(event, listener);
-								};
-
-								import.meta.hot.on(event, listener);
 							}
 						`;
 					}
@@ -884,7 +860,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 													// in dev we inline all styles to avoid FOUC. this gets populated lazily so that
 													// components/stylesheets loaded via import() during \`load\` are included
 
-													const event = 'sveltekit:inline-styles-node-${index}';
+													const event = 'sveltekit:inline-styles-node-${index}-response';
 													result.inline_styles = async () => {
 														if (!import.meta.hot) return;
 
@@ -896,7 +872,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 														};
 
 														import.meta.hot.on(event, listener);
-														import.meta.hot.send('sveltekit:inline-styles', { urls, node: result.index });
+														import.meta.hot.send('sveltekit:inline-styles-request', { urls, node: result.index });
 
 														return promise;
 													}
@@ -1007,7 +983,6 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 
 							/** @param {string} id */
 							async function resolve(id) {
-								// TODO: doesn't work for files symlinked to kit package workspace?
 								const url = id.startsWith('..') ? to_fs(id) : \`file:///\${id}\`;
 								const module = await loud_ssr_load_module(url);
 								return { module, url };
@@ -1305,15 +1280,11 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 					${
 						dev_environment?.vite
 							? dedent`
-									import { send } from '__sveltekit/ipc';
-
-									send('remote-${remote.hash}', (() => {
-										const exports = new Map();
-										for (const name in $$_self_$$) {
-											exports.set(name, { type: $$_self_$$[name].__.type });
-										}
-										return Object.fromEntries(exports);
-									})());
+									const exports = new Map();
+									for (const name in $$_self_$$) {
+										exports.set(name, { type: $$_self_$$[name].__.type });
+									}
+									import.meta.hot.send('sveltekit:' + 'remote-${remote.hash}', Object.fromEntries(exports));
 								`
 							: ''
 					}
@@ -1344,9 +1315,15 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 			// being called again with `opts.ssr === true` if the module isn't
 			// already loaded) so we can determine what it exports
 			if (dev_environment?.vite) {
+				const { promise, resolve } = Promise.withResolvers();
+
+				const event = `sveltekit:remote-${remote.hash}`;
+				dev_environment.vite.environments.ssr.hot.on(event, resolve);
+
 				await dev_environment.vite.environments.ssr.transformRequest(id);
 
-				const exports = await get_module_data(dev_environment.vite, `remote-${remote.hash}`);
+				const exports = await promise;
+				dev_environment.vite.environments.ssr.hot.off(event, resolve);
 
 				for (const [name, value] of Object.entries(exports)) {
 					const type = value.type;
@@ -1776,9 +1753,9 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 				);
 			});
 
-			vite.environments.ssr.hot.on('sveltekit:inline-styles', async ({ urls, node }) => {
+			vite.environments.ssr.hot.on('sveltekit:inline-styles-request', async ({ urls, node }) => {
 				vite.environments.ssr.hot.send(
-					`sveltekit:inline-styles-node-${node}`,
+					`sveltekit:inline-styles-node-${node}-response`,
 					await get_inline_css(vite, module_runner, urls)
 				);
 			});

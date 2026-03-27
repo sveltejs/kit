@@ -393,33 +393,6 @@ export function invalidate_module(vite, id) {
 }
 
 /**
- * @overload
- * @param {import('vite').ViteDevServer} dev
- * @param {`remote-${string}`} id
- * @returns {Promise<Record<string, { type: import('types').RemoteInternals['type'] }>>}
- */
-/**
- * Retrieves data from a module that's been loaded into an environment. The module
- * must import and call `send` from `__sveltekit/ipc` for this function to receive it
- * @param {import('vite').ViteDevServer} dev
- * @param {string} event_id
- * @returns {Promise<unknown>}
- */
-export function get_module_data(dev, event_id) {
-	const event = `sveltekit:${event_id}`;
-
-	return new Promise((resolve) => {
-		/** @param {unknown} data */
-		const listener = (data) => {
-			dev.environments.ssr.hot.off(event, listener);
-			resolve(data);
-		};
-		dev.environments.ssr.hot.on(event, listener);
-		dev.environments.ssr.hot.send(event);
-	});
-}
-
-/**
  * @param {import('types').ManifestData} manifest_data
  * @param {import('vite/module-runner').ModuleRunner} runner
  * @param {string} root
