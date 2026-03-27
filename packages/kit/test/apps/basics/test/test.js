@@ -1373,7 +1373,7 @@ test.describe('Actions', () => {
 		await page.locator('input[name="username"]').fill('foo');
 
 		const [request] = await Promise.all([
-			page.waitForRequest('/actions/enhance?/login'),
+			page.waitForRequest('/actions/enhance?%2Flogin'),
 			page.locator('button.form1').click()
 		]);
 

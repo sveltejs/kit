@@ -22,6 +22,179 @@ export function resolve(base, path) {
 	return url.protocol === internal.protocol ? url.pathname + url.search + url.hash : url.href;
 }
 
+/**
+ * Encodes named form action query parameter keys such as `?/login` to `?%2Flogin`.
+ * This keeps the URL semantically identical while avoiding raw `/` characters in the query string.
+ * @param {string} query
+ */
+function encode_named_action_query(query) {
+	const parts = query.split(/(&amp;|&)/);
+	let changed = false;
+
+	for (let i = 0; i < parts.length; i += 2) {
+		const segment = parts[i];
+		const equals = segment.indexOf('=');
+		const key = equals === -1 ? segment : segment.slice(0, equals);
+
+		if (key.startsWith('/')) {
+			parts[i] = encodeURIComponent(key) + segment.slice(key.length);
+			changed = true;
+		}
+	}
+
+	return changed ? parts.join('') : query;
+}
+
+/**
+ * @param {string} url
+ */
+export function normalize_named_action_url(url) {
+	const query_start = url.indexOf('?');
+	if (query_start === -1) return url;
+
+	const hash_start = url.indexOf('#', query_start);
+	const query_end = hash_start === -1 ? url.length : hash_start;
+	const query = url.slice(query_start + 1, query_end);
+	const normalized = encode_named_action_query(query);
+
+	return normalized === query
+		? url
+		: url.slice(0, query_start + 1) + normalized + url.slice(query_end);
+}
+
+/**
+ * @param {ParentNode} root
+ */
+export function normalize_named_action_elements(root) {
+	for (const form of root.querySelectorAll('form[action]')) {
+		const action = form.getAttribute('action');
+		if (!action) continue;
+
+		const normalized = normalize_named_action_url(action);
+		if (normalized !== action) {
+			form.setAttribute('action', normalized);
+		}
+	}
+
+	for (const element of root.querySelectorAll('button[formaction], input[formaction]')) {
+		const action = element.getAttribute('formaction');
+		if (!action) continue;
+
+		const normalized = normalize_named_action_url(action);
+		if (normalized !== action) {
+			element.setAttribute('formaction', normalized);
+		}
+	}
+}
+
+/**
+ * @param {string} tag
+ */
+function normalize_named_action_tag(tag) {
+	if (/^<\s*\//.test(tag) || !/^<\s*(form|button|input)\b/i.test(tag)) {
+		return tag;
+	}
+
+	return tag.replace(
+		/(\s)(action|formaction)=(["'])(.*?)\3/gi,
+		(match, space, name, quote, value) => {
+			const normalized = normalize_named_action_url(value);
+			return normalized === value ? match : `${space}${name}=${quote}${normalized}${quote}`;
+		}
+	);
+}
+
+/**
+ * @param {string} html
+ */
+export function normalize_named_action_attributes(html) {
+	let normalized = '';
+	let index = 0;
+	let raw_tag = '';
+	const lower = html.toLowerCase();
+
+	while (index < html.length) {
+		if (raw_tag) {
+			const closing = `</${raw_tag}`;
+			const raw_end = lower.indexOf(closing, index);
+
+			if (raw_end === -1) {
+				return normalized + html.slice(index);
+			}
+
+			normalized += html.slice(index, raw_end);
+			index = raw_end;
+			raw_tag = '';
+			continue;
+		}
+
+		const tag_start = html.indexOf('<', index);
+
+		if (tag_start === -1) {
+			return normalized + html.slice(index);
+		}
+
+		normalized += html.slice(index, tag_start);
+
+		if (html.startsWith('<!--', tag_start)) {
+			const comment_end = html.indexOf('-->', tag_start + 4);
+
+			if (comment_end === -1) {
+				return normalized + html.slice(tag_start);
+			}
+
+			normalized += html.slice(tag_start, comment_end + 3);
+			index = comment_end + 3;
+			continue;
+		}
+
+		let tag_end = -1;
+		let quote = '';
+
+		for (let i = tag_start + 1; i < html.length; i++) {
+			const char = html[i];
+
+			if (quote) {
+				if (char === quote) quote = '';
+				continue;
+			}
+
+			if (char === '"' || char === "'") {
+				quote = char;
+				continue;
+			}
+
+			if (char === '>') {
+				tag_end = i;
+				break;
+			}
+		}
+
+		if (tag_end === -1) {
+			return normalized + html.slice(tag_start);
+		}
+
+		const tag = html.slice(tag_start, tag_end + 1);
+		normalized += normalize_named_action_tag(tag);
+
+		const tag_name = /^<\s*([a-zA-Z][^\s/>]*)/.exec(tag)?.[1]?.toLowerCase();
+		const self_closing = /\/\s*>$/.test(tag);
+		if (
+			(tag_name === 'script' ||
+				tag_name === 'style' ||
+				tag_name === 'textarea' ||
+				tag_name === 'title') &&
+			!self_closing
+		) {
+			raw_tag = tag_name;
+		}
+
+		index = tag_end + 1;
+	}
+
+	return normalized;
+}
+
 /** @param {string} path */
 export function is_root_relative(path) {
 	return path[0] === '/' && path[1] !== '/';
