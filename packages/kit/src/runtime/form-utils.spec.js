@@ -765,4 +765,20 @@ describe('deep_set', () => {
 		// @ts-ignore
 		expect(Object.prototype.toString.property).toBeUndefined();
 	});
+
+	test.each([undefined, null])('rehydrates nullish object containers (%s)', (initial) => {
+		const target = { nested: initial };
+
+		deep_set(target, ['nested', 'name'], 'hello');
+
+		expect(target).toEqual({ nested: { name: 'hello' } });
+	});
+
+	test.each([undefined, null])('rehydrates nullish array containers (%s)', (initial) => {
+		const target = { nested: initial };
+
+		deep_set(target, ['nested', '0'], 'hello');
+
+		expect(target).toEqual({ nested: ['hello'] });
+	});
 });
