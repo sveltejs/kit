@@ -932,7 +932,8 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 															? dedent`
 																async () => {
 																	const url = ${s(path.resolve(root, endpoint.file))};
-																	return await loud_ssr_load_module(url);
+																	const { module } = await resolve(url);
+																	return module;
 																}
 															`
 															: null
