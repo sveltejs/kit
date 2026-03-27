@@ -12,7 +12,7 @@ test.each(components)('%s compiles in runes mode without legacy flags', (compone
 	const source = readFileSync(join(__dirname, component), 'utf-8');
 
 	// Compile without passing `runes` option — each component must opt in
-	// via <svelte:options runes={true} /> so that projects don't ship legacy code
+	// via <svelte:options runes={true} /> or by using runes so that projects don't ship legacy code
 	const { js } = compile(source, { generate: 'client' });
 
 	assert.ok(
