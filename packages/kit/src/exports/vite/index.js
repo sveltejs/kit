@@ -579,13 +579,15 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 			handler(id) {
 				if (!dev_environment) return;
 
-				const { pathname, searchParams } = new URL(id, 'file://');
+				const { searchParams, search } = new URL(id, `file://`);
+				const pathname = id.replace(search, '');
+
 				if (
 					(searchParams.has('url') || vite_config.assetsInclude(pathname)) &&
 					fs.existsSync(pathname)
 				) {
 					const filepath = pathname.startsWith(root)
-						? path.relative(root, pathname)
+						? posixify(path.relative(root, pathname))
 						: to_fs(pathname);
 					const size = fs.statSync(pathname).size;
 
