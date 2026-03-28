@@ -473,45 +473,28 @@ function kit({ svelte_config }) {
 			return environment.name !== 'serviceWorker';
 		},
 
-		resolveId(id, importer) {
-			if (id === '__sveltekit/manifest') {
-				return `${kit.outDir}/generated/client-optimized/app.js`;
-			}
-
-			// If importing from a service-worker, only allow $service-worker & $env/static/public, but none of the other virtual modules.
-			// This check won't catch transitive imports, but it will warn when the import comes from a service-worker directly.
-			// Transitive imports will be caught during the build.
-			// TODO move this logic to plugin_guard. add a filter to this resolveId when doing so
-			if (importer) {
-				const parsed_importer = path.parse(importer);
-
-				const importer_is_service_worker =
-					parsed_importer.dir === parsed_service_worker.dir &&
-					parsed_importer.name === parsed_service_worker.name;
-
-				if (importer_is_service_worker && id !== '$service-worker' && id !== '$env/static/public') {
-					throw new Error(
-						`Cannot import ${normalize_id(
-							id,
-							normalized_lib,
-							normalized_cwd
-						)} into service-worker code. Only the modules $service-worker and $env/static/public are available in service workers.`
-					);
+		resolveId: {
+			filter: {
+				id: [prefixRegex('$env/'), exactRegex('$service-worker'), prefixRegex('__sveltekit/')]
+			},
+			handler(id) {
+				if (id === '__sveltekit/manifest') {
+					return `${kit.outDir}/generated/client-optimized/app.js`;
 				}
-			}
 
-			// treat $env/static/[public|private] as virtual
-			if (id.startsWith('$env/') || id === '$service-worker') {
-				// ids with :$ don't work with reverse proxies like nginx
-				return `\0virtual:${id.substring(1)}`;
-			}
+				// treat $env/static/[public|private] as virtual
+				if (id.startsWith('$env/') || id === '$service-worker') {
+					// ids with :$ don't work with reverse proxies like nginx
+					return `\0virtual:${id.substring(1)}`;
+				}
 
-			if (id === '__sveltekit/remote') {
-				return `${runtime_directory}/client/remote-functions/index.js`;
-			}
+				if (id === '__sveltekit/remote') {
+					return `${runtime_directory}/client/remote-functions/index.js`;
+				}
 
-			if (id.startsWith('__sveltekit/')) {
-				return `\0virtual:${id}`;
+				if (id.startsWith('__sveltekit/')) {
+					return `\0virtual:${id}`;
+				}
 			}
 		},
 		load: {
@@ -626,7 +609,9 @@ function kit({ svelte_config }) {
 			// 	include(importerId(/.+/))
 			// ]),
 			async handler(id, importer, options) {
-				if (importer && !importer.endsWith('index.html')) {
+				if (!importer) return;
+
+				if (!importer.endsWith('index.html')) {
 					const resolved = await this.resolve(id, importer, { ...options, skipSelf: true });
 
 					if (resolved) {
@@ -641,6 +626,26 @@ function kit({ svelte_config }) {
 
 						importers.add(normalize_id(importer, normalized_lib, normalized_cwd));
 					}
+				}
+
+				// If importing from a service-worker, only allow $service-worker & $env/static/public, but none of the other virtual modules.
+				// This check won't catch transitive imports, but it will warn when the import comes from a service-worker directly.
+				// Transitive imports will be caught during the build.
+
+				const parsed_importer = path.parse(importer);
+
+				const importer_is_service_worker =
+					parsed_importer.dir === parsed_service_worker.dir &&
+					parsed_importer.name === parsed_service_worker.name;
+
+				if (importer_is_service_worker && id !== '$service-worker' && id !== '$env/static/public') {
+					throw new Error(
+						`Cannot import ${normalize_id(
+							id,
+							normalized_lib,
+							normalized_cwd
+						)} into service-worker code. Only the modules $service-worker and $env/static/public are available in service workers.`
+					);
 				}
 			}
 		},
