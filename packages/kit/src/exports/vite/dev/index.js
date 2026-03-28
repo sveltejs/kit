@@ -62,6 +62,7 @@ export function dev(vite, vite_config, svelte_config, root, dev_environment) {
 			return;
 		}
 
+		// TODO: update manifest through hot channel?
 		invalidate_module(vite, sveltekit_ssr_manifest);
 	}
 

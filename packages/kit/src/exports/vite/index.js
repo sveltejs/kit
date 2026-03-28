@@ -743,7 +743,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 							export const prerendered = new Set();
 							export const env = ${s(env)};
 
-							const nodes = ${devalue.uneval(manifest_data.nodes, revive_functions)}
+							const nodes = ${devalue.uneval(manifest_data.nodes, revive_functions)};
 
 							export const manifest = {
 								appDir: ${s(kit.appDir)},
@@ -1285,7 +1285,11 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 										}
 										const data = Object.fromEntries(exports);
 										const event = 'sveltekit:remote-${remote.hash}-response';
+
+										// we need to send the data immediately in case of preloads
 										import.meta.hot.send(event, data);
+
+										// otherwise, we send it when requested
 										import.meta.hot.on('sveltekit:remote-${remote.hash}-request', async () => {
 											import.meta.hot.send(event, data);
 										});
