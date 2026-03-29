@@ -475,10 +475,11 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root) {
 					const resolved = resolve_entry(svelte_config.kit.files.serviceWorker);
 
 					if (resolved) {
+						const transformed = await vite.environments.serviceWorker.transformRequest(resolved);
 						res.writeHead(200, {
 							'content-type': 'application/javascript'
 						});
-						res.end(`import '${svelte_config.kit.paths.base}${to_fs(resolved)}';`);
+						res.end(transformed?.code);
 					} else {
 						res.writeHead(404);
 						res.end('not found');

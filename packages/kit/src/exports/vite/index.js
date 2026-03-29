@@ -4,6 +4,7 @@ import process from 'node:process';
 import { styleText } from 'node:util';
 
 import { exactRegex, prefixRegex } from 'rolldown/filter';
+import { createFetchableDevEnvironment, normalizePath } from 'vite';
 
 import { copy, mkdirp, posixify, read, resolve_entry, rimraf } from '../../utils/filesystem.js';
 import { create_static_module, create_dynamic_module } from '../../core/env.js';
@@ -260,11 +261,6 @@ function kit({ svelte_config }) {
 	/** @type {import('vite').UserConfig} */
 	let initial_config;
 
-	/** @type {string | null} */
-	let service_worker_entry_file;
-	/** @type {import('node:path').ParsedPath} */
-	let parsed_service_worker;
-
 	/** @type {string} */
 	let normalized_cwd;
 	/** @type {string} */
@@ -285,10 +281,6 @@ function kit({ svelte_config }) {
 	const plugin_setup = {
 		name: 'vite-plugin-sveltekit-setup',
 
-		applyToEnvironment(environment) {
-			return environment.name !== 'serviceWorker';
-		},
-
 		// TODO: add `order: pre` to avoid false-positive warnings of overridden config options set by Vitest
 		/**
 		 * Build the SvelteKit-provided Vite config to be merged with the user's vite.config.js file.
@@ -305,9 +297,6 @@ function kit({ svelte_config }) {
 			version_hash = hash(kit.version.name);
 
 			env = get_env(kit.env, vite_config_env.mode);
-
-			service_worker_entry_file = resolve_entry(kit.files.serviceWorker);
-			parsed_service_worker = path.parse(kit.files.serviceWorker);
 
 			vite = await import_peer('vite', root);
 
@@ -473,44 +462,25 @@ function kit({ svelte_config }) {
 			return environment.name !== 'serviceWorker';
 		},
 
-		resolveId(id, importer) {
-			if (id === '__sveltekit/manifest') {
-				return `${kit.outDir}/generated/client-optimized/app.js`;
-			}
-
-			// If importing from a service-worker, only allow $service-worker & $env/static/public, but none of the other virtual modules.
-			// This check won't catch transitive imports, but it will warn when the import comes from a service-worker directly.
-			// Transitive imports will be caught during the build.
-			// TODO move this logic to plugin_guard. add a filter to this resolveId when doing so
-			if (importer) {
-				const parsed_importer = path.parse(importer);
-
-				const importer_is_service_worker =
-					parsed_importer.dir === parsed_service_worker.dir &&
-					parsed_importer.name === parsed_service_worker.name;
-
-				if (importer_is_service_worker && id !== '$service-worker' && id !== '$env/static/public') {
-					throw new Error(
-						`Cannot import ${normalize_id(
-							id,
-							normalized_lib,
-							normalized_cwd
-						)} into service-worker code. Only the modules $service-worker and $env/static/public are available in service workers.`
-					);
+		resolveId: {
+			filter: {
+				id: [prefixRegex('$env/'), exactRegex('$service-worker'), prefixRegex('__sveltekit/')]
+			},
+			handler(id) {
+				// treat $env/static/[public|private] as virtual
+				if (id.startsWith('$env/') || id === '$service-worker') {
+					// ids with :$ don't work with reverse proxies like nginx
+					return `\0virtual:${id.substring(1)}`;
 				}
-			}
 
-			// treat $env/static/[public|private] as virtual
-			if (id.startsWith('$env/') || id === '$service-worker') {
-				// ids with :$ don't work with reverse proxies like nginx
-				return `\0virtual:${id.substring(1)}`;
-			}
+				if (id === '__sveltekit/manifest') {
+					return `${kit.outDir}/generated/client-optimized/app.js`;
+				}
 
-			if (id === '__sveltekit/remote') {
-				return `${runtime_directory}/client/remote-functions/index.js`;
-			}
+				if (id === '__sveltekit/remote') {
+					return `${runtime_directory}/client/remote-functions/index.js`;
+				}
 
-			if (id.startsWith('__sveltekit/')) {
 				return `\0virtual:${id}`;
 			}
 		},
@@ -907,11 +877,8 @@ function kit({ svelte_config }) {
 	let client_manifest;
 	/** @type {import('types').Prerendered} */
 	let prerendered;
-
-	/** @type {Set<string>} */
-	let build;
-	/** @type {string} */
-	let service_worker_code;
+	/** @type {string | null} */
+	let service_worker_entry_file;
 
 	/**
 	 * Creates the service worker virtual modules
@@ -920,72 +887,152 @@ function kit({ svelte_config }) {
 	const plugin_service_worker = {
 		name: 'vite-plugin-sveltekit-service-worker',
 
+		config(config) {
+			service_worker_entry_file = resolve_entry(kit.files.serviceWorker);
+
+			if (!service_worker_entry_file) return;
+
+			if (kit.paths.assets) {
+				throw new Error('Cannot use service worker alongside config.kit.paths.assets');
+			}
+
+			// TODO: in the future we can use unbundled service workers as the default
+			// it became baseline in January 2026 https://caniuse.com/wf-js-modules-service-workers
+
+			const conditions = ['worker', 'browser', 'production|development'];
+
+			/** @type {import('vite').UserConfig} */
+			const new_config = {
+				environments: {
+					serviceWorker: {
+						consumer: 'client',
+						resolve: {
+							conditions
+							// TODO: bundle the worker in development once noExternal is supported for client environments
+							// noExternal: kit.serviceWorker.type === 'module' ? undefined : true
+						},
+						optimizeDeps: {
+							// Note: ssr pre-bundling is opt-in and we need to enable it by setting `noDiscovery` to false
+							// noDiscovery: false,
+							// Workaround for https://github.com/vitejs/vite/issues/20867
+							// Longer term solution is to use full-bundle mode rather than `optimizeDeps`
+							// ignoreOutdatedRequests: true,
+							entries: normalizePath(kit.files.serviceWorker),
+							rolldownOptions: {
+								platform: 'neutral',
+								resolve: {
+									conditionNames: conditions
+								}
+							}
+						},
+						dev: {
+							createEnvironment(name, config) {
+								return createFetchableDevEnvironment(name, config, {
+									hot: false,
+									handleRequest() {
+										throw new Error(
+											'This should never happen. The service worker environment does not handle requests directly'
+										);
+									}
+								});
+							}
+						},
+						build: {
+							modulePreload: false,
+							rolldownOptions: {
+								input: {
+									'service-worker': service_worker_entry_file
+								},
+								output: {
+									entryFileNames: 'service-worker.js',
+									assetFileNames: `${kit.appDir}/immutable/assets/[name].[hash][extname]`,
+									codeSplitting: false
+								}
+							},
+							outDir: `${out}/client`,
+							minify: initial_config.build?.minify
+						}
+					}
+				}
+			};
+
+			warn_overridden_config(config, new_config);
+
+			return new_config;
+		},
+
 		applyToEnvironment(environment) {
 			return environment.name === 'serviceWorker';
 		},
 
-		resolveId(id) {
-			if (id.startsWith('$env/') || id.startsWith('$app/') || id === '$service-worker') {
+		resolveId: {
+			order: 'pre',
+			filter: {
+				id: [prefixRegex('$env/'), prefixRegex('$app/'), exactRegex('$service-worker')]
+			},
+			handler(id) {
 				// ids with :$ don't work with reverse proxies like nginx
 				return `\0virtual:${id.substring(1)}`;
 			}
 		},
 
-		load(id) {
-			if (!build) {
-				build = new Set();
-				for (const key in client_manifest) {
-					const { file, css = [], assets = [] } = client_manifest[key];
-					build.add(file);
-					css.forEach((file) => build.add(file));
-					assets.forEach((file) => build.add(file));
+		load: {
+			filter: {
+				id: [/^(?!\\0virtual:).*/, exactRegex(env_static_public), exactRegex(service_worker)]
+			},
+			handler(id) {
+				if (id === service_worker_entry_file) return;
+
+				if (id === service_worker) {
+					const build = new Set();
+					for (const key in client_manifest) {
+						const { file, css = [], assets = [] } = client_manifest[key];
+						build.add(file);
+						css.forEach((file) => build.add(file));
+						assets.forEach((file) => build.add(file));
+					}
+
+					// in a service worker, `location` is the location of the service worker itself,
+					// which is guaranteed to be `<base>/service-worker.js`
+					const base = "location.pathname.split('/').slice(0, -1).join('/')";
+
+					// in dev, this doesn't exist, so we need to create it
+					manifest_data ??= sync.all(svelte_config, vite_config_env.mode, root).manifest_data;
+
+					return dedent`
+						export const base = /*@__PURE__*/ ${base};
+
+						export const build = [
+							${Array.from(build)
+								.map((file) => `base + ${s(`/${file}`)}`)
+								.join(',\n')}
+						];
+
+						export const files = [
+							${manifest_data.assets
+								.filter((asset) => kit.serviceWorker.files(asset.file))
+								.map((asset) => `base + ${s(`/${asset.file}`)}`)
+								.join(',\n')}
+						];
+
+						export const prerendered = [
+							${prerendered?.paths.map((path) => `base + ${s(path.replace(kit.paths.base, ''))}`).join(',\n')}
+						];
+
+						export const version = ${s(kit.version.name)};
+					`;
 				}
 
-				// in a service worker, `location` is the location of the service worker itself,
-				// which is guaranteed to be `<base>/service-worker.js`
-				const base = "location.pathname.split('/').slice(0, -1).join('/')";
+				if (id === env_static_public) {
+					return create_static_module('$env/static/public', env.public);
+				}
 
-				service_worker_code = dedent`
-					export const base = /*@__PURE__*/ ${base};
-
-					export const build = [
-						${Array.from(build)
-							.map((file) => `base + ${s(`/${file}`)}`)
-							.join(',\n')}
-					];
-
-					export const files = [
-						${manifest_data.assets
-							.filter((asset) => kit.serviceWorker.files(asset.file))
-							.map((asset) => `base + ${s(`/${asset.file}`)}`)
-							.join(',\n')}
-					];
-
-					export const prerendered = [
-						${prerendered.paths.map((path) => `base + ${s(path.replace(kit.paths.base, ''))}`).join(',\n')}
-					];
-
-					export const version = ${s(kit.version.name)};
-				`;
+				const relative = normalize_id(id, normalized_lib, normalized_cwd);
+				const stripped = strip_virtual_prefix(relative);
+				throw new Error(
+					`Cannot import ${stripped} into service-worker code. Only the modules $service-worker and $env/static/public are available in service workers.`
+				);
 			}
-
-			if (!id.startsWith('\0virtual:')) return;
-
-			if (id === service_worker) {
-				return service_worker_code;
-			}
-
-			if (id === env_static_public) {
-				return create_static_module('$env/static/public', env.public);
-			}
-
-			const normalized_cwd = vite.normalizePath(vite_config.root);
-			const normalized_lib = vite.normalizePath(kit.files.lib);
-			const relative = normalize_id(id, normalized_lib, normalized_cwd);
-			const stripped = strip_virtual_prefix(relative);
-			throw new Error(
-				`Cannot import ${stripped} into service-worker code. Only the modules $service-worker and $env/static/public are available in service workers.`
-			);
 		}
 	};
 
@@ -1224,29 +1271,6 @@ function kit({ svelte_config }) {
 					},
 					publicDir: kit.files.assets
 				};
-
-				if (service_worker_entry_file) {
-					/** @type {Record<string, import('vite').EnvironmentOptions>} */ (
-						new_config.environments
-					).serviceWorker = {
-						build: {
-							modulePreload: false,
-							rolldownOptions: {
-								input: {
-									'service-worker': service_worker_entry_file
-								},
-								output: {
-									entryFileNames: 'service-worker.js',
-									assetFileNames: `${kit.appDir}/immutable/assets/[name].[hash][extname]`,
-									codeSplitting: false
-								}
-							},
-							outDir: `${out}/client`,
-							minify: initial_config.build?.minify
-						},
-						consumer: 'client'
-					};
-				}
 			} else {
 				new_config = {
 					appType: 'custom',
@@ -1577,12 +1601,7 @@ function kit({ svelte_config }) {
 			);
 
 			if (service_worker_entry_file) {
-				if (kit.paths.assets) {
-					throw new Error('Cannot use service worker alongside config.kit.paths.assets');
-				}
-
-				log.info('Building service worker');
-
+				// mirror client settings that we can't set in the environment config earlier
 				builder.environments.serviceWorker.config.define =
 					builder.environments.client.config.define;
 				builder.environments.serviceWorker.config.resolve.alias = [

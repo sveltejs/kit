@@ -1,4 +1,3 @@
-import path from 'node:path';
 import process from 'node:process';
 import { expect } from '@playwright/test';
 import { test } from '../../../utils.js';
@@ -123,18 +122,6 @@ test.describe('trailing slash', () => {
 });
 
 test.describe('Service worker', () => {
-	if (process.env.DEV) {
-		test('import proxy /basepath/service-worker.js', async ({ request }) => {
-			const response = await request.get('/basepath/service-worker.js');
-			const content = await response.text();
-			expect(content).toEqual(
-				`import '${path.join('/basepath', '/@fs', import.meta.dirname, '../src/service-worker.js')}';`
-			);
-		});
-
-		return;
-	}
-
 	test('build /basepath/service-worker.js', async ({ baseURL, request }) => {
 		const response = await request.get('/basepath/service-worker.js');
 		const content = await response.text();
