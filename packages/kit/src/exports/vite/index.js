@@ -584,10 +584,6 @@ function kit({ svelte_config }) {
 		// are added to the module graph
 		enforce: 'pre',
 
-		applyToEnvironment(environment) {
-			return environment.name !== 'serviceWorker';
-		},
-
 		resolveId: {
 			// TODO: use composable filter API here when supported:
 			// https://github.com/vitejs/rolldown-vite/issues/605
