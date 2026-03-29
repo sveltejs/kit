@@ -975,7 +975,7 @@ function kit({ svelte_config }) {
 
 		load: {
 			filter: {
-				id: [/^(?!\\0virtual:).*/, exactRegex(env_static_public), exactRegex(service_worker)]
+				id: [/^\\0virtual:/, exactRegex(env_static_public), exactRegex(service_worker)]
 			},
 			handler(id) {
 				if (id === kit.files.serviceWorker || id === service_worker_entry_file) return;
