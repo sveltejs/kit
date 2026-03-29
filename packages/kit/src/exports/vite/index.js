@@ -943,7 +943,9 @@ function kit({ svelte_config }) {
 								}
 							},
 							outDir: `${out}/client`,
-							minify: initial_config.build?.minify
+							minify: initial_config.build?.minify,
+							// avoid overwriting the client build Vite manifest
+							manifest: '.vite/service-worker-manifest.json'
 						}
 					}
 				}
@@ -959,7 +961,6 @@ function kit({ svelte_config }) {
 		},
 
 		resolveId: {
-			order: 'pre',
 			filter: {
 				id: [prefixRegex('$env/'), prefixRegex('$app/'), exactRegex('$service-worker')]
 			},
