@@ -596,6 +596,8 @@ export async function render_response({
 		}
 
 		if (options.service_worker) {
+			// TODO: in the future we could register service workers as a module by default
+			// it became baseline in January 2026 https://caniuse.com/wf-js-modules-service-workers
 			let opts = DEV ? ", { type: 'module' }" : '';
 			if (options.service_worker_options != null) {
 				const service_worker_options = { ...options.service_worker_options };

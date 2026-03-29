@@ -896,9 +896,6 @@ function kit({ svelte_config }) {
 				throw new Error('Cannot use service worker alongside config.kit.paths.assets');
 			}
 
-			// TODO: in the future we can use unbundled service workers as the default
-			// it became baseline in January 2026 https://caniuse.com/wf-js-modules-service-workers
-
 			const conditions = ['worker', 'browser', 'production|development'];
 
 			/** @type {import('vite').UserConfig} */
