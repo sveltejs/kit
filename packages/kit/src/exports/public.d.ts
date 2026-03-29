@@ -834,9 +834,9 @@ export interface KitConfig {
 				 * Whether to automatically register the service worker, if it exists.
 				 * @default true
 				 */
-				register: true;
+				register?: true;
 				/**
-				 * Options for serviceWorker.register("...", options);
+				 * Options passed to the automatic service worker registration `serviceWorker.register("...", options);`
 				 */
 				options?: RegistrationOptions;
 		  }
