@@ -149,9 +149,6 @@ importers:
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../kit
-      '@sveltejs/vite-plugin-svelte':
-        specifier: 'catalog:'
-        version: 6.2.4(svelte@5.53.12)(vite@6.4.1(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
       '@types/node':
         specifier: 'catalog:'
         version: 18.19.119
@@ -271,9 +268,6 @@ importers:
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../kit
-      '@sveltejs/vite-plugin-svelte':
-        specifier: 'catalog:'
-        version: 6.2.4(svelte@5.53.12)(vite@6.4.1(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
       '@types/node':
         specifier: 'catalog:'
         version: 18.19.119
@@ -353,9 +347,6 @@ importers:
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../kit
-      '@sveltejs/vite-plugin-svelte':
-        specifier: 'catalog:'
-        version: 6.2.4(svelte@5.53.12)(vite@6.4.1(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
       '@types/node':
         specifier: 'catalog:'
         version: 18.19.119
@@ -380,9 +371,6 @@ importers:
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../kit
-      '@sveltejs/vite-plugin-svelte':
-        specifier: 'catalog:'
-        version: 6.2.4(svelte@5.53.12)(vite@6.4.1(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
       '@types/node':
         specifier: 'catalog:'
         version: 18.19.119
@@ -447,9 +435,6 @@ importers:
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../kit
-      '@sveltejs/vite-plugin-svelte':
-        specifier: 'catalog:'
-        version: 6.2.4(svelte@5.53.12)(vite@6.4.1(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
       '@types/node':
         specifier: 'catalog:'
         version: 18.19.119
@@ -489,6 +474,9 @@ importers:
 
   packages/enhanced-img:
     dependencies:
+      '@sveltejs/vite-plugin-svelte':
+        specifier: ^6.0.0 || ^7.0.0
+        version: 6.2.4(svelte@5.53.12)(vite@6.4.1(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
       magic-string:
         specifier: ^0.30.5
         version: 0.30.21
@@ -505,9 +493,6 @@ importers:
         specifier: ^1.1.2
         version: 1.1.2
     devDependencies:
-      '@sveltejs/vite-plugin-svelte':
-        specifier: 'catalog:'
-        version: 6.2.4(svelte@5.53.12)(vite@6.4.1(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
       '@types/estree':
         specifier: 'catalog:'
         version: 1.0.8
