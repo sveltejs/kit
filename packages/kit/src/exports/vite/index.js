@@ -464,11 +464,11 @@ function kit({ svelte_config }) {
 
 		resolveId: {
 			filter: {
-				id: [prefixRegex('$env/'), exactRegex('$service-worker'), prefixRegex('__sveltekit/')]
+				id: [prefixRegex('$env/'), prefixRegex('__sveltekit/')]
 			},
 			handler(id) {
 				// treat $env/static/[public|private] as virtual
-				if (id.startsWith('$env/') || id === '$service-worker') {
+				if (id.startsWith('$env/')) {
 					// ids with :$ don't work with reverse proxies like nginx
 					return `\0virtual:${id.substring(1)}`;
 				}
@@ -622,7 +622,12 @@ function kit({ svelte_config }) {
 				]
 			},
 			handler(id) {
-				if (this.environment.config.consumer !== 'client') return;
+				if (
+					this.environment.config.consumer !== 'client' ||
+					(this.environment.name === 'serviceWorker' && id === env_dynamic_private)
+				) {
+					return;
+				}
 
 				// skip .server.js files outside the cwd or in node_modules, as the filename might not mean 'server-only module' in this context
 				const is_internal =
@@ -972,7 +977,7 @@ function kit({ svelte_config }) {
 
 		load: {
 			filter: {
-				id: [/^\\0virtual:/, exactRegex(env_static_public), exactRegex(service_worker)]
+				id: [/^\0virtual:/, exactRegex(env_static_public), exactRegex(service_worker)]
 			},
 			handler(id) {
 				if (id === kit.files.serviceWorker || id === service_worker_entry_file) return;
