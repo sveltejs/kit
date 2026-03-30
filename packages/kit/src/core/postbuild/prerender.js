@@ -213,15 +213,17 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 	 * @param {string} decoded
 	 * @param {string} [encoded]
 	 * @param {string} [generated_from_id]
+	 * @param {boolean} [expect_html]
 	 */
-	function enqueue(referrer, decoded, encoded, generated_from_id) {
-		if (seen.has(decoded)) return;
-		seen.add(decoded);
+	function enqueue(referrer, decoded, encoded, generated_from_id, expect_html) {
+		const key = expect_html ? decoded +  '\x00page' : decoded
+		if (seen.has(key)) return;
+		seen.add(key);
 
 		const file = decoded.slice(config.paths.base.length + 1);
 		if (files.has(file)) return;
 
-		return q.add(() => visit(decoded, encoded || encodeURI(decoded), referrer, generated_from_id));
+		return q.add(() => visit(decoded, encoded || encodeURI(decoded), referrer, generated_from_id, expect_html));
 	}
 
 	/**
@@ -229,17 +231,20 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 	 * @param {string} encoded
 	 * @param {string?} referrer
 	 * @param {string} [generated_from_id]
+	 * @param {boolean} [expect_html]
 	 */
-	async function visit(decoded, encoded, referrer, generated_from_id) {
+	async function visit(decoded, encoded, referrer, generated_from_id, expect_html) {
 		if (!decoded.startsWith(config.paths.base)) {
 			handle_http_error({ status: 404, path: decoded, referrer, referenceType: 'linked' });
 			return;
 		}
+		
+		const requestHeaders = expect_html ? { Accept: 'text/html' } : {};
 
 		/** @type {Map<string, import('types').PrerenderDependency>} */
 		const dependencies = new Map();
 
-		const response = await server.respond(new Request(config.prerender.origin + encoded), {
+		const response = await server.respond(new Request(config.prerender.origin + encoded, { headers: requestHeaders }), {
 			getClientAddress() {
 				throw new Error('Cannot read clientAddress during prerendering');
 			},
@@ -260,7 +265,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 				// stuff in `static`
 				return readFileSync(join(config.files.assets, file));
 			},
-			emulator
+			emulator,
 		});
 
 		const encoded_id = response.headers.get('x-sveltekit-routeid');
@@ -355,7 +360,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 					/** @type {Set<string>} */ (expected_hashlinks.get(key)).add(decoded);
 				}
 
-				void enqueue(decoded, decode_uri(pathname), pathname);
+				void enqueue(decoded, decode_uri(pathname), pathname, undefined, true);
 			}
 		}
 	}
@@ -534,7 +539,10 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 
 					if (processed_id.includes('[')) continue;
 					const path = `/${get_route_segments(processed_id).join('/')}`;
-					void enqueue(null, config.paths.base + path);
+					
+					const route_data = metadata.routes.get(id);					
+					if (route_data?.page.prerender === true) void enqueue(null, config.paths.base + path, undefined, undefined, true)
+					if (route_data?.api.prerender === true) void enqueue(null, config.paths.base + path, undefined, undefined, false)
 				}
 			}
 		} else {
@@ -543,8 +551,11 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 	}
 
 	for (const { id, entries } of route_level_entries) {
+		const route_data = metadata.routes.get(id);
+
 		for (const entry of entries) {
-			void enqueue(null, config.paths.base + entry, undefined, id);
+			if (route_data?.page.prerender === true) void enqueue(null, config.paths.base + entry, undefined, id, true);
+			if (route_data?.api.prerender === true) void enqueue(null, config.paths.base + entry, undefined, id, false);
 		}
 	}
 

@@ -124,7 +124,6 @@ async function analyse({
 
 		const route_config = page?.config ?? endpoint?.config ?? {};
 		const prerender = page?.prerender ?? endpoint?.prerender;
-
 		if (prerender !== true) {
 			for (const feature of list_features(
 				route,
@@ -144,10 +143,12 @@ async function analyse({
 			config: route_config,
 			methods: Array.from(new Set([...page_methods, ...api_methods])),
 			page: {
-				methods: page_methods
+				methods: page_methods,
+				prerender: page?.prerender
 			},
 			api: {
-				methods: api_methods
+				methods: api_methods,
+				prerender: endpoint?.prerender
 			},
 			prerender,
 			entries:
