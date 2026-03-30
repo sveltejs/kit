@@ -216,14 +216,16 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 	 * @param {boolean} [expect_html]
 	 */
 	function enqueue(referrer, decoded, encoded, generated_from_id, expect_html) {
-		const key = expect_html ? decoded +  '\x00page' : decoded
+		const key = expect_html ? decoded + '\x00page' : decoded;
 		if (seen.has(key)) return;
 		seen.add(key);
 
 		const file = decoded.slice(config.paths.base.length + 1);
 		if (files.has(file)) return;
 
-		return q.add(() => visit(decoded, encoded || encodeURI(decoded), referrer, generated_from_id, expect_html));
+		return q.add(() =>
+			visit(decoded, encoded || encodeURI(decoded), referrer, generated_from_id, expect_html)
+		);
 	}
 
 	/**
@@ -238,35 +240,38 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 			handle_http_error({ status: 404, path: decoded, referrer, referenceType: 'linked' });
 			return;
 		}
-		
+
 		const requestHeaders = expect_html ? { Accept: 'text/html' } : {};
 
 		/** @type {Map<string, import('types').PrerenderDependency>} */
 		const dependencies = new Map();
 
-		const response = await server.respond(new Request(config.prerender.origin + encoded, { headers: requestHeaders }), {
-			getClientAddress() {
-				throw new Error('Cannot read clientAddress during prerendering');
-			},
-			prerendering: {
-				dependencies,
-				remote_responses
-			},
-			read: (file) => {
-				// stuff we just wrote
-				const filepath = saved.get(file);
-				if (filepath) return readFileSync(filepath);
+		const response = await server.respond(
+			new Request(config.prerender.origin + encoded, { headers: requestHeaders }),
+			{
+				getClientAddress() {
+					throw new Error('Cannot read clientAddress during prerendering');
+				},
+				prerendering: {
+					dependencies,
+					remote_responses
+				},
+				read: (file) => {
+					// stuff we just wrote
+					const filepath = saved.get(file);
+					if (filepath) return readFileSync(filepath);
 
-				// Static assets emitted during build
-				if (file.startsWith(config.appDir)) {
-					return readFileSync(`${out}/server/${file}`);
-				}
+					// Static assets emitted during build
+					if (file.startsWith(config.appDir)) {
+						return readFileSync(`${out}/server/${file}`);
+					}
 
-				// stuff in `static`
-				return readFileSync(join(config.files.assets, file));
-			},
-			emulator,
-		});
+					// stuff in `static`
+					return readFileSync(join(config.files.assets, file));
+				},
+				emulator
+			}
+		);
 
 		const encoded_id = response.headers.get('x-sveltekit-routeid');
 		const decoded_id = encoded_id && decode_uri(encoded_id);
@@ -539,10 +544,12 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 
 					if (processed_id.includes('[')) continue;
 					const path = `/${get_route_segments(processed_id).join('/')}`;
-					
-					const route_data = metadata.routes.get(id);					
-					if (route_data?.page.prerender === true) void enqueue(null, config.paths.base + path, undefined, undefined, true)
-					if (route_data?.api.prerender === true) void enqueue(null, config.paths.base + path, undefined, undefined, false)
+
+					const route_data = metadata.routes.get(id);
+					if (route_data?.page.prerender === true)
+						void enqueue(null, config.paths.base + path, undefined, undefined, true);
+					if (route_data?.api.prerender === true)
+						void enqueue(null, config.paths.base + path, undefined, undefined, false);
 				}
 			}
 		} else {
@@ -554,8 +561,10 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 		const route_data = metadata.routes.get(id);
 
 		for (const entry of entries) {
-			if (route_data?.page.prerender === true) void enqueue(null, config.paths.base + entry, undefined, id, true);
-			if (route_data?.api.prerender === true) void enqueue(null, config.paths.base + entry, undefined, id, false);
+			if (route_data?.page.prerender === true)
+				void enqueue(null, config.paths.base + entry, undefined, id, true);
+			if (route_data?.api.prerender === true)
+				void enqueue(null, config.paths.base + entry, undefined, id, false);
 		}
 	}
 
