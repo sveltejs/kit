@@ -158,6 +158,16 @@ test('does not prerender page with shadow endpoint with non-load handler', () =>
 	assert.isFalse(fs.existsSync(`${build}/shadowed-post/__data.json`));
 });
 
+test('prerenders page that coexists with a GET server endpoint', () => {
+  assert.isTrue(fs.existsSync(`${build}/prerender-with-server-endpoint.html`));
+});
+
+test('prerendering a page with a linked GET server endpoint processes properly', () => {
+	assert.isTrue(fs.existsSync(`${build}/linked-api.html`));
+  assert.isTrue(fs.existsSync(`${build}/linked-api/my-awesome-endpoint.json`));
+  assert.isFalse(fs.existsSync(`${build}/linked-api/my-awesome-endpoint.html`));
+});
+
 test('decodes paths when writing files', () => {
 	let content = read('encoding/path with spaces.html');
 	expect(content).toMatch('<p id="a">path with spaces</p>');
