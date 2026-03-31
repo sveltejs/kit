@@ -1464,10 +1464,6 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 	const plugin_compile = {
 		name: 'vite-plugin-sveltekit-compile',
 
-		applyToEnvironment(environment) {
-			return environment.name !== 'serviceWorker';
-		},
-
 		// TODO: add `order: pre` to avoid false-positive warnings of overridden config options set by Vitest
 		/**
 		 * Build the SvelteKit-provided Vite config to be merged with the user's vite.config.js file.
@@ -1780,6 +1776,10 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 		configurePreviewServer(vite) {
 			// TODO: run the build output through the environment
 			return preview(vite, vite_config, svelte_config);
+		},
+
+		applyToEnvironment(environment) {
+			return environment.name !== 'serviceWorker';
 		},
 
 		renderChunk(code, chunk) {
