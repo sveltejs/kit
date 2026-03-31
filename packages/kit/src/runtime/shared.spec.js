@@ -253,6 +253,7 @@ describe('parse_remote_arg', () => {
 
 	test('round-trips self-referential objects', () => {
 		const value = { z: 1, a: 2 };
+		// @ts-expect-error
 		value.self = value;
 
 		const parsed = parse_remote_arg(stringify_remote_arg(value, {}), {});
