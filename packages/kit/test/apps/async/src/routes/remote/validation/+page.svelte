@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
 	import { isHttpError } from '@sveltejs/kit';
 	import {
 		validated_query_no_args,
@@ -11,7 +11,7 @@
 		validated_batch_query_with_validation
 	} from './validation.remote.js';
 
-	function validate_result(result) {
+	function validate_result(result: 'success' | 'failure') {
 		if (result !== 'success') {
 			throw new Error('Remote function called with invalid arguments');
 		}
@@ -38,7 +38,7 @@
 			validate_result(await validated_batch_query_with_validation('valid').run());
 
 			status = 'success';
-		} catch (e) {
+		} catch {
 			status = 'error';
 		}
 	}}
@@ -137,7 +137,7 @@
 			validate_result(await validated_batch_query_no_validation('valid', 'ignored').run());
 
 			status = 'success';
-		} catch (e) {
+		} catch {
 			status = 'error';
 		}
 	}}
