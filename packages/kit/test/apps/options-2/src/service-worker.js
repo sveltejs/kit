@@ -1,3 +1,9 @@
+/// <reference no-default-lib="true"/>
+/// <reference lib="esnext" />
+/// <reference lib="webworker" />
+
+/// <reference types="@sveltejs/kit" />
+
 import { base, build, version } from '$service-worker';
 import src from './image.jpg?url';
 

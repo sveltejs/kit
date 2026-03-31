@@ -1,3 +1,10 @@
+/// <reference no-default-lib="true"/>
+/// <reference lib="esnext" />
+/// <reference lib="webworker" />
+
+/// <reference types="@sveltejs/kit" />
+/// <reference types="../.svelte-kit/ambient.d.ts" />
+
 import { build, version } from '$service-worker';
 import { PUBLIC_STATIC } from '$env/static/public';
 
