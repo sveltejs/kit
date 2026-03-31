@@ -12,5 +12,5 @@ const data = /** @type {any} */ ({
 	foo: 'bar'
 }); // the any cast prevents TypeScript from narrowing this to foo being defined
 data.foo;
-// @ts-ignore this only errors with TypeScript 6
+// @ts-ignore this doesn't error with TypeScript 6
 data.foo.charAt(0);
