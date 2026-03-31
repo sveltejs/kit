@@ -6,6 +6,7 @@ import { styleText } from 'node:util';
 import * as devalue from 'devalue';
 import { exactRegex, prefixRegex } from 'rolldown/filter';
 import {
+	buildErrorMessage,
 	createFetchableDevEnvironment,
 	createServerHotChannel,
 	createServerModuleRunner,
@@ -938,42 +939,20 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 								}
 							};
 
-							// TODO: do we even need this or will Vite handle import errors for us?
 							/**
 							 * @param {string} url
 							 */
 							async function loud_ssr_load_module(url) {
 								try {
 									return await import(/* @vite-ignore */ url);
-								} catch (/** @type {any} */ err) {
-									// TODO: move this to the vite process by calling import.meta.hot?
-
-									// const msg = buildErrorMessage(err, [styleText('red', \`Internal server error: \${err.message}\`)]);
-									const msg = \`Internal server error: \${err.message}\`;
-
-									// if (!server.config.logger.hasErrorLogged(err)) {
-									// 	server.config.logger.error(msg, { error: err });
-									// }
-									console.error(msg);
-
-									// server.ws.send({
-									// 	type: 'error',
-									// 	err: {
-									// 		...err,
-									// 		// these properties are non-enumerable and will
-									// 		// not be serialized unless we explicitly include them
-									// 		message: err.message,
-									// 		stack: err.stack
-									// 	}
-									// });
-
-									// import.meta.hot?.send('vite:error', {
-									// 	...err,
-									// 	// these properties are non-enumerable and will
-									// 	// not be serialized unless we explicitly include them
-									// 	message: err.message,
-									// 	stack: err.stack
-									// });
+								} catch (err) {
+									import.meta.hot?.send('sveltekit:ssr-load-module', {
+										...err,
+										// these properties are non-enumerable and will not be
+										// serialized unless we explicitly include them
+										message: err.message,
+										stack: err.stack
+									});
 
 									throw err;
 								}
@@ -1460,6 +1439,13 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 		}
 	};
 
+	/** @type {() => Promise<void>} */
+	let handle_matchers;
+	/** @type {(payload: { urls: string[]; node: number; }) => Promise<void>} */
+	let handle_inline_styles;
+	/** @type {(error: Error) => void} */
+	let handle_ssr_load_module;
+
 	/** @type {import('vite').Plugin} */
 	const plugin_compile = {
 		name: 'vite-plugin-sveltekit-compile',
@@ -1740,7 +1726,12 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 		 * Adds the SvelteKit middleware to do SSR in dev mode.
 		 * @see https://vitejs.dev/guide/api-plugin.html#configureserver
 		 */
-		configureServer(vite) {
+		async configureServer(vite) {
+			await runner?.close();
+			vite.environments.ssr.hot.off('sveltekit:matchers-request', handle_matchers);
+			vite.environments.ssr.hot.off('sveltekit:inline-styles-request', handle_inline_styles);
+			vite.environments.ssr.hot.off('sveltekit:ssr-load-module', handle_ssr_load_module);
+
 			manifest_data = sync.all(svelte_config, vite_config_env.mode, root).manifest_data;
 
 			// other properties will be populated during the `dev` function
@@ -1752,19 +1743,43 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 
 			const module_runner = (runner = createServerModuleRunner(vite.environments.ssr));
 
-			vite.environments.ssr.hot.on('sveltekit:matchers-request', async () => {
+			handle_matchers ??= async () => {
 				vite.environments.ssr.hot.send(
 					'sveltekit:matchers-response',
 					await get_matchers(info.manifest_data, module_runner, root)
 				);
-			});
+			};
+			vite.environments.ssr.hot.on('sveltekit:matchers-request', handle_matchers);
 
-			vite.environments.ssr.hot.on('sveltekit:inline-styles-request', async ({ urls, node }) => {
+			handle_inline_styles ??= async ({ urls, node }) => {
 				vite.environments.ssr.hot.send(
 					`sveltekit:inline-styles-node-${node}-response`,
 					await get_inline_css(vite, module_runner, urls)
 				);
-			});
+			};
+			vite.environments.ssr.hot.on('sveltekit:inline-styles-request', handle_inline_styles);
+
+			handle_ssr_load_module ??= (err) => {
+				const msg = buildErrorMessage(err, [
+					styleText('red', `Internal server error: ${err.message}`)
+				]);
+
+				if (!vite.config.logger.hasErrorLogged(err)) {
+					vite.config.logger.error(msg, { error: err });
+				}
+
+				vite.ws.send({
+					type: 'error',
+					err: {
+						...err,
+						// these properties are non-enumerable and will
+						// not be serialized unless we explicitly include them
+						message: err.message,
+						stack: err.stack ?? ''
+					}
+				});
+			};
+			vite.environments.ssr.hot.on('sveltekit:ssr-load-module', handle_ssr_load_module);
 
 			return dev(vite, vite_config, svelte_config, root, dev_environment);
 		},
