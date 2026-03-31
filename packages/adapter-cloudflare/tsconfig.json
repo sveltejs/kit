@@ -8,23 +8,21 @@
 		"module": "nodenext",
 		"baseUrl": ".",
 		"paths": {
-			"@sveltejs/kit": ["../kit/types/index"],
-			"types": ["../kit/src/types/internal.d.ts"]
+			"@sveltejs/kit": ["../kit/types/index"]
 		},
 		// taken from the Cloudflare Workers TypeScript template https://github.com/cloudflare/workers-sdk/blob/main/packages/create-cloudflare/templates/hello-world/ts/tsconfig.json
 		"target": "es2024",
 		"lib": ["es2024"],
-		"types": ["@cloudflare/workers-types", "../kit/src/types/virtual.d.ts"]
+		"types": ["@cloudflare/workers-types"]
 	},
 	"include": [
 		"index.js",
-		"fallback-worker.js",
 		"utils.js",
 		"utils.spec.js",
 		"rolldown.config.js",
 		"vitest.config.js",
-		"internal.d.ts",
 		"test/utils.js",
+		"internal.d.ts",
 		"src/worker.js"
 	]
 }

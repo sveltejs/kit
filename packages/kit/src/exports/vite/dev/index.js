@@ -45,13 +45,13 @@ export function dev(vite, vite_config, svelte_config, root, dev_environment) {
 
 			if (manifest_error) {
 				manifest_error = null;
-				vite.ws.send({ type: 'full-reload' });
+				vite.hot.send({ type: 'full-reload' });
 			}
 		} catch (error) {
 			manifest_error = /** @type {Error} */ (error);
 
 			console.error(styleText(['bold', 'red'], manifest_error.message));
-			vite.ws.send({
+			vite.hot.send({
 				type: 'error',
 				err: {
 					message: manifest_error.message ?? 'Invalid routes',
@@ -62,7 +62,7 @@ export function dev(vite, vite_config, svelte_config, root, dev_environment) {
 			return;
 		}
 
-		invalidate_module(vite, sveltekit_ssr_manifest);
+		void invalidate_module(vite, sveltekit_ssr_manifest);
 	}
 
 	update_manifest();
@@ -109,6 +109,8 @@ export function dev(vite, vite_config, svelte_config, root, dev_environment) {
 		// Unless it's a file where the trailing slash page option might have changed
 		if (timeout || restarting || !/\+(page|layout|server).*$/.test(file)) return;
 		sync.update(svelte_config, manifest_data, file, root);
+		// TODO: perform a partial update instead of invalidating the whole virtual module?
+		void invalidate_module(vite, sveltekit_ssr_manifest);
 	});
 
 	const { appTemplate, errorTemplate, serviceWorker, hooks } = svelte_config.kit.files;
@@ -390,33 +392,6 @@ export function invalidate_module(vite, id) {
 			vite.environments[environment].moduleGraph.invalidateModule(module);
 		}
 	}
-}
-
-/**
- * @overload
- * @param {import('vite').ViteDevServer} dev
- * @param {`remote-${string}`} id
- * @returns {Promise<Record<string, { type: import('types').RemoteInternals['type'] }>>}
- */
-/**
- * Retrieves data from a module that's been loaded into an environment. The module
- * must import and call `send` from `__sveltekit/ipc` for this function to receive it
- * @param {import('vite').ViteDevServer} dev
- * @param {string} event_id
- * @returns {Promise<unknown>}
- */
-export function get_module_data(dev, event_id) {
-	const event = `sveltekit:${event_id}`;
-
-	return new Promise((resolve) => {
-		/** @param {unknown} data */
-		const listener = (data) => {
-			dev.environments.ssr.hot.off(event, listener);
-			resolve(data);
-		};
-		dev.environments.ssr.hot.on(event, listener);
-		dev.environments.ssr.hot.send(event);
-	});
 }
 
 /**

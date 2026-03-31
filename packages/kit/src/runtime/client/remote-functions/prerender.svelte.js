@@ -3,7 +3,7 @@ import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
 import { get_remote_request_headers, remote_request } from './shared.svelte.js';
 import { app, prerender_responses } from '../client.js';
-import { version } from '../../app/environment/index.js';
+import { version } from '../../app/environment/internal.js';
 import { app_dir, base } from '../../app/paths/internal/client.js';
 import { create_remote_key, stringify_remote_arg } from '../../shared.js';
 

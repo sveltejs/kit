@@ -45,7 +45,7 @@
 	"peerDependencies": {
 		"@sveltejs/vite-plugin-svelte": "^7.0.0",
 		"@opentelemetry/api": "^1.0.0",
-		"svelte": "^5.0.0",
+		"svelte": "^5.48.0",
 		"typescript": "^5.3.3",
 		"vite": "^8.0.0"
 	},

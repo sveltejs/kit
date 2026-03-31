@@ -20,7 +20,7 @@ catalog:
   '@netlify/dev': ^4.11.2
   '@netlify/edge-functions': ^3.0.0
   '@netlify/functions': ^5.0.0
-  '@opentelemetry/sdk-node': ^0.213.0
+  '@opentelemetry/sdk-node': ^0.214.0
   '@opentelemetry/sdk-trace-node': ^2.0.1
   '@playwright/test': 1.58.2
   '@polka/url': ^1.0.0-next.28
@@ -49,7 +49,7 @@ catalog:
   valibot: ^1.1.0
   vite: ^8.0.2
   vitest: ^4.1.1
-  wrangler: ^4.74.0
+  wrangler: ^4.67.0
 catalogs:
   # these show up in the ci.yml like `vite: 'beta'`, etc.
   vite-baseline:
