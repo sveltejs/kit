@@ -1653,10 +1653,10 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 									}
 								: // but if the Vite base is absolute, we just need to ensure
 									// client paths are relative rather than absolute
-									(filename, { ssr, hostType }) => {
+									(filename, { ssr, type }) => {
 										if (ssr) return;
 
-										if (hostType === 'js') {
+										if (type === 'asset' && filename.endsWith('.js')) {
 											// We could always use a relative asset base path here, but it's better for performance not to.
 											// E.g. Vite generates `new URL('/asset.png', import.meta).href` for a relative path vs just '/asset.png'.
 											// That's larger and takes longer to run and also causes an HTML diff between SSR and client
