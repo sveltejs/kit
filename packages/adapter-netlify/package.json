@@ -54,7 +54,6 @@
 		"@netlify/node-cookies": "^0.1.0",
 		"@netlify/types": "^2.1.0",
 		"@sveltejs/kit": "workspace:^",
-		"@sveltejs/vite-plugin-svelte": "catalog:",
 		"@types/node": "catalog:",
 		"typescript": "catalog:",
 		"vite": "catalog:",
