@@ -93,8 +93,6 @@ function to_sorted(value, clones) {
 	return clone;
 }
 
-const remote_arg_clones = new Map();
-
 // "sveltekit remote arg"
 const remote_object = '__skrao';
 const remote_map = '__skram';
@@ -105,8 +103,9 @@ const remote_arg_marker = Symbol(remote_object);
 /**
  * @param {Transport} transport
  * @param {boolean} sort
+ * @param {Map<any, any>} remote_arg_clones
  */
-function create_remote_arg_reducers(transport, sort) {
+function create_remote_arg_reducers(transport, sort, remote_arg_clones) {
 	/** @type {Record<string, (value: unknown) => unknown>} */
 	const remote_fns_reducers = {
 		[remote_regex_guard]:
@@ -256,14 +255,11 @@ function create_remote_arg_revivers(transport) {
 export function stringify_remote_arg(value, transport, sort = true) {
 	if (value === undefined) return '';
 
-	let json_string;
-
-	try {
-		// If people hit file/url size limits, we can look into using something like compress_and_encode_text from svelte.dev beyond a certain size
-		json_string = devalue.stringify(value, create_remote_arg_reducers(transport, sort));
-	} finally {
-		remote_arg_clones.clear();
-	}
+	// If people hit file/url size limits, we can look into using something like compress_and_encode_text from svelte.dev beyond a certain size
+	const json_string = devalue.stringify(
+		value,
+		create_remote_arg_reducers(transport, sort, new Map())
+	);
 
 	const bytes = new TextEncoder().encode(json_string);
 	return base64_encode(bytes).replaceAll('=', '').replaceAll('+', '-').replaceAll('/', '_');
