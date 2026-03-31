@@ -254,9 +254,6 @@ export function form(id) {
 				} finally {
 					overrides?.forEach((fn) => fn());
 
-					// Decrement pending count when submission completes
-					pending_count--;
-
 					void tick().then(() => {
 						if (entry) {
 							entry.count--;

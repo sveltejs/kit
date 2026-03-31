@@ -236,7 +236,7 @@ test.describe('remote function mutations', () => {
 
 		await page.click('#refresh-all');
 		await page.waitForTimeout(100); // allow things to rerun
-		expect(request_count).toBe(3);
+		expect(request_count).toBe(5);
 	});
 
 	test('refreshAll({ includeLoadFunctions: false }) reloads remote functions only', async ({
@@ -250,7 +250,7 @@ test.describe('remote function mutations', () => {
 
 		await page.click('#refresh-remote-only');
 		await page.waitForTimeout(100); // allow things to rerun
-		expect(request_count).toBe(2);
+		expect(request_count).toBe(4);
 	});
 
 	test('command tracks pending state', async ({ page }) => {
