@@ -323,7 +323,7 @@ export async function deserialize_binary_form(request) {
 		}
 	}
 
-	// Read the request body asyncronously so it doesn't stall
+	// Read the request body asynchronously so it doesn't stall
 	void (async () => {
 		let has_more = true;
 		while (has_more) {
