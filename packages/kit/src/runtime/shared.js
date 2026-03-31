@@ -184,56 +184,54 @@ function create_remote_arg_reducers(transport, sort) {
 /** @param {Transport} transport */
 function create_remote_arg_revivers(transport) {
 	const remote_fns_revivers = {
-		[remote_object]:
-			/** @type {(value: unknown) => unknown} */
-			(value) => value,
-		[remote_map]:
-			/** @type {(value: unknown) => Map<unknown, unknown>} */
-			(value) => {
-				if (!Array.isArray(value)) {
+		/** @type {(value: unknown) => unknown} */
+		[remote_object]: (value) => value,
+		/** @type {(value: unknown) => Map<unknown, unknown>} */
+		[remote_map]: (value) => {
+			if (!Array.isArray(value)) {
+				throw new Error('Invalid data for Map reviver');
+			}
+
+			const map = new Map();
+
+			for (const item of value) {
+				if (
+					!Array.isArray(item) ||
+					item.length !== 2 ||
+					typeof item[0] !== 'string' ||
+					typeof item[1] !== 'string'
+				) {
 					throw new Error('Invalid data for Map reviver');
 				}
+				const [key, val] = item;
+				map.set(parse(key), parse(val));
+			}
 
-				const map = new Map();
+			return map;
+		},
+		/** @type {(value: unknown) => Set<unknown>} */
+		[remote_set]: (value) => {
+			if (!Array.isArray(value)) {
+				throw new Error('Invalid data for Set reviver');
+			}
 
-				for (const item of value) {
-					if (
-						!Array.isArray(item) ||
-						item.length !== 2 ||
-						typeof item[0] !== 'string' ||
-						typeof item[1] !== 'string'
-					) {
-						throw new Error('Invalid data for Map reviver');
-					}
-					const [key, val] = item;
-					map.set(parse(key), parse(val));
-				}
+			const set = new Set();
 
-				return map;
-			},
-		[remote_set]:
-			/** @type {(value: unknown) => Set<unknown>} */
-			(value) => {
-				if (!Array.isArray(value)) {
+			for (const item of value) {
+				if (typeof item !== 'string') {
 					throw new Error('Invalid data for Set reviver');
 				}
-
-				const set = new Set();
-
-				for (const item of value) {
-					if (typeof item !== 'string') {
-						throw new Error('Invalid data for Set reviver');
-					}
-					set.add(parse(item));
-				}
-
-				return set;
+				set.add(parse(item));
 			}
+
+			return set;
+		}
 	};
 
 	const user_revivers = Object.fromEntries(
 		Object.entries(transport).map(([k, v]) => [k, v.decode])
 	);
+
 	const all_revivers = { ...user_revivers, ...remote_fns_revivers };
 
 	/** @type {(data: string) => unknown} */
