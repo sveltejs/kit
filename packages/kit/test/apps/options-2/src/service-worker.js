@@ -7,9 +7,6 @@
 import { base, build, version } from '$service-worker';
 import src from './image.jpg?url';
 
-// This gives `self` the correct types
-const self = /** @type {ServiceWorkerGlobalScope} */ (/** @type {unknown} */ (globalThis.self));
-
 //@ts-ignore
 self.base = base;
 //@ts-ignore
@@ -20,10 +17,12 @@ self.image_src = src;
 const name = `cache-${version}`;
 
 self.addEventListener('install', (event) => {
+	// @ts-expect-error
 	event.waitUntil(caches.open(name).then((cache) => cache.addAll(build)));
 });
 
 self.addEventListener('activate', (event) => {
+	// @ts-expect-error
 	event.waitUntil(
 		caches.keys().then(async (keys) => {
 			for (const key of keys) {
@@ -34,6 +33,7 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+	// @ts-expect-error
 	const { request } = event;
 
 	if (request.method !== 'GET' || request.headers.has('range')) return;

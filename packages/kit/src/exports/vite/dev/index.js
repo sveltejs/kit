@@ -4,7 +4,7 @@ import { URL } from 'node:url';
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { styleText } from 'node:util';
 import sirv from 'sirv';
-import { isCSSRequest, loadEnv, buildErrorMessage } from 'vite';
+import { isCSSRequest, loadEnv, buildErrorMessage, createBuilder } from 'vite';
 import { createReadableStream, getRequest, setResponse } from '../../../exports/node/index.js';
 import { coalesce_to_error } from '../../../utils/error.js';
 import { from_fs, posixify, resolve_entry, to_fs } from '../../../utils/filesystem.js';
@@ -17,6 +17,7 @@ import { not_found } from '../utils.js';
 import { SCHEME } from '../../../utils/url.js';
 import { check_feature } from '../../../utils/features.js';
 import { escape_html } from '../../../utils/escape.js';
+import { build_service_worker } from '../build/service_worker.js';
 
 // vite-specifc queries that we should skip handling for css urls
 const vite_css_query_regex = /(?:\?|&)(?:raw|url|inline)(?:&|$)/;
@@ -27,9 +28,10 @@ const vite_css_query_regex = /(?:\?|&)(?:raw|url|inline)(?:&|$)/;
  * @param {import('types').ValidatedConfig} svelte_config
  * @param {() => Array<{ hash: string, file: string }>} get_remotes
  * @param {string} root The project root directory
+ * @param {import('vite').Alias[]} config_aliases
  * @return {Promise<Promise<() => void>>}
  */
-export async function dev(vite, vite_config, svelte_config, get_remotes, root) {
+export async function dev(vite, vite_config, svelte_config, get_remotes, root, config_aliases) {
 	const async_local_storage = new AsyncLocalStorage();
 
 	globalThis.__SVELTEKIT_TRACK__ = (label) => {
@@ -432,6 +434,13 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root) {
 	const env = loadEnv(vite_config.mode, svelte_config.kit.env.dir, '');
 	const emulator = await svelte_config.kit.adapter?.emulate?.();
 
+	const builder = await createBuilder({
+		build: {
+			write: false,
+			watch: {}
+		}
+	});
+
 	return () => {
 		const serve_static_middleware = vite.middlewares.stack.find(
 			(middleware) =>
@@ -475,11 +484,11 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root) {
 					const resolved = resolve_entry(svelte_config.kit.files.serviceWorker);
 
 					if (resolved) {
-						const transformed = await vite.environments.serviceWorker.transformRequest(resolved);
+						const service_worker_code = await build_service_worker(builder, config_aliases);
 						res.writeHead(200, {
 							'content-type': 'application/javascript'
 						});
-						res.end(transformed?.code);
+						res.end(service_worker_code);
 					} else {
 						res.writeHead(404);
 						res.end('not found');

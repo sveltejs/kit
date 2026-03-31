@@ -4,12 +4,10 @@ import process from 'node:process';
 import { styleText } from 'node:util';
 
 import { exactRegex, prefixRegex } from 'rolldown/filter';
-import { createFetchableDevEnvironment, normalizePath } from 'vite';
 
 import { copy, mkdirp, posixify, read, resolve_entry, rimraf } from '../../utils/filesystem.js';
 import { create_static_module, create_dynamic_module } from '../../core/env.js';
 import * as sync from '../../core/sync/sync.js';
-import { create_assets } from '../../core/sync/create_manifest_data/index.js';
 import { runtime_directory, logger } from '../../core/utils.js';
 import { generate_manifest } from '../../core/generate_manifest/index.js';
 import { build_server_nodes } from './build/build_server.js';
@@ -44,6 +42,7 @@ import { import_peer } from '../../utils/import.js';
 import { compact } from '../../utils/array.js';
 import { should_ignore, has_children } from './static_analysis/utils.js';
 import { load_config } from '../../core/config/index.js';
+import { build_service_worker } from './build/service_worker.js';
 
 const cwd = process.cwd();
 
@@ -277,6 +276,9 @@ function kit({ svelte_config }) {
 	const sourcemapIgnoreList = /** @param {string} relative_path */ (relative_path) =>
 		relative_path.includes('node_modules') || relative_path.includes(kit.outDir);
 
+	/** @type {import('vite').Alias[]} The user's aliases set in svelte.config.js */
+	let config_aliases;
+
 	/** @type {import('vite').Plugin} */
 	const plugin_setup = {
 		name: 'vite-plugin-sveltekit-setup',
@@ -320,6 +322,8 @@ function kit({ svelte_config }) {
 
 			const generated = path.posix.join(kit.outDir, 'generated');
 
+			config_aliases = get_config_aliases(kit, root);
+
 			// dev and preview config can be shared
 			/** @type {import('vite').UserConfig} */
 			const new_config = {
@@ -327,7 +331,7 @@ function kit({ svelte_config }) {
 					alias: [
 						{ find: '__SERVER__', replacement: `${generated}/server` },
 						{ find: '$app', replacement: `${runtime_directory}/app` },
-						...get_config_aliases(kit, root)
+						...config_aliases
 					]
 				},
 				server: {
@@ -464,11 +468,11 @@ function kit({ svelte_config }) {
 
 		resolveId: {
 			filter: {
-				id: [prefixRegex('$env/'), prefixRegex('__sveltekit/')]
+				id: [prefixRegex('$env/'), prefixRegex('__sveltekit/'), exactRegex(service_worker)]
 			},
 			handler(id) {
 				// treat $env/static/[public|private] as virtual
-				if (id.startsWith('$env/')) {
+				if (id.startsWith('$env/') || id === service_worker) {
 					// ids with :$ don't work with reverse proxies like nginx
 					return `\0virtual:${id.substring(1)}`;
 				}
@@ -528,7 +532,7 @@ function kit({ svelte_config }) {
 					}
 
 					case service_worker:
-						return create_service_worker_module(svelte_config);
+						throw new Error('$service-worker can only be imported inside a service worker');
 
 					case sveltekit_environment: {
 						const { version } = svelte_config.kit;
@@ -874,8 +878,8 @@ function kit({ svelte_config }) {
 		}
 	};
 
-	/** @type {import('vite').Manifest} */
-	let client_manifest;
+	/** @type {import('vite').Manifest} Only available when the client build begins */
+	let vite_client_manifest;
 	/** @type {import('types').Prerendered} */
 	let prerendered;
 	/** @type {string | null} */
@@ -904,40 +908,13 @@ function kit({ svelte_config }) {
 				environments: {
 					serviceWorker: {
 						consumer: 'client',
-						resolve: {
-							conditions
-							// TODO: bundle the worker in development once noExternal is supported for client environments
-							// noExternal: kit.serviceWorker.type === 'module' ? undefined : true
-						},
-						optimizeDeps: {
-							// Note: ssr pre-bundling is opt-in and we need to enable it by setting `noDiscovery` to false
-							// noDiscovery: false,
-							// Workaround for https://github.com/vitejs/vite/issues/20867
-							// Longer term solution is to use full-bundle mode rather than `optimizeDeps`
-							// ignoreOutdatedRequests: true,
-							entries: normalizePath(kit.files.serviceWorker),
-							rolldownOptions: {
-								platform: 'neutral',
-								resolve: {
-									conditionNames: conditions
-								}
-							}
-						},
-						dev: {
-							createEnvironment(name, config) {
-								return createFetchableDevEnvironment(name, config, {
-									hot: false,
-									handleRequest() {
-										throw new Error(
-											'This should never happen. The service worker environment does not handle requests directly'
-										);
-									}
-								});
-							}
-						},
 						build: {
 							modulePreload: false,
 							rolldownOptions: {
+								platform: 'browser',
+								resolve: {
+									conditionNames: conditions
+								},
 								input: {
 									'service-worker': service_worker_entry_file
 								},
@@ -977,15 +954,15 @@ function kit({ svelte_config }) {
 
 		load: {
 			filter: {
-				id: [/^\0virtual:/, exactRegex(env_static_public), exactRegex(service_worker)]
+				id: [/^\0virtual:/, exactRegex(env_static_public)]
 			},
 			handler(id) {
 				if (id === kit.files.serviceWorker || id === service_worker_entry_file) return;
 
 				if (id === service_worker) {
 					const build = new Set();
-					for (const key in client_manifest) {
-						const { file, css = [], assets = [] } = client_manifest[key];
+					for (const key in vite_client_manifest) {
+						const { file, css = [], assets = [] } = vite_client_manifest[key];
 						build.add(file);
 						css.forEach((file) => build.add(file));
 						assets.forEach((file) => build.add(file));
@@ -1297,7 +1274,7 @@ function kit({ svelte_config }) {
 		 * @see https://vitejs.dev/guide/api-plugin.html#configureserver
 		 */
 		async configureServer(vite) {
-			return await dev(vite, vite_config, svelte_config, () => remotes, root);
+			return await dev(vite, vite_config, svelte_config, () => remotes, root, config_aliases);
 		},
 
 		/**
@@ -1457,14 +1434,19 @@ function kit({ svelte_config }) {
 			}
 
 			/** @type {import('vite').Manifest} */
-			client_manifest = JSON.parse(read(`${out}/client/.vite/manifest.json`));
+			vite_client_manifest = JSON.parse(read(`${out}/client/.vite/manifest.json`));
 
 			/**
 			 * @param {string} entry
 			 * @param {boolean} [add_dynamic_css]
 			 */
 			const deps_of = (entry, add_dynamic_css = false) =>
-				find_deps(client_manifest, posixify(path.relative(root, entry)), add_dynamic_css, root);
+				find_deps(
+					vite_client_manifest,
+					posixify(path.relative(root, entry)),
+					add_dynamic_css,
+					root
+				);
 
 			if (svelte_config.kit.output.bundleStrategy === 'split') {
 				const start = deps_of(`${runtime_directory}/client/entry.js`);
@@ -1490,7 +1472,7 @@ function kit({ svelte_config }) {
 							const entry = `${kit.outDir}/generated/client-optimized/nodes/${i}.js`;
 							const deps = deps_of(entry, true);
 							const file = resolve_symlinks(
-								client_manifest,
+								vite_client_manifest,
 								`${kit.outDir}/generated/client-optimized/nodes/${i}.js`,
 								root
 							).chunk.file;
@@ -1565,7 +1547,7 @@ function kit({ svelte_config }) {
 				kit,
 				manifest_data,
 				server_manifest,
-				client_manifest,
+				vite_client_manifest,
 				assets_path,
 				client_chunks,
 				svelte_config.kit.output,
@@ -1600,19 +1582,7 @@ function kit({ svelte_config }) {
 			);
 
 			if (service_worker_entry_file) {
-				// mirror client settings that we can't set in the environment config earlier
-				builder.environments.serviceWorker.config.define =
-					builder.environments.client.config.define;
-				builder.environments.serviceWorker.config.resolve.alias = [
-					...get_config_aliases(kit, vite_config.root)
-				];
-				builder.environments.serviceWorker.config.experimental.renderBuiltUrl = (filename) => {
-					return {
-						runtime: `new URL(${JSON.stringify(filename)}, location.href).pathname`
-					};
-				};
-
-				await builder.build(builder.environments.serviceWorker);
+				await build_service_worker(builder, config_aliases);
 			}
 
 			console.log(
@@ -1696,22 +1666,3 @@ function find_overridden_config(config, resolved_config, enforced_config, path, 
 	}
 	return out;
 }
-
-/**
- * @param {import('types').ValidatedConfig} config
- */
-const create_service_worker_module = (config) => dedent`
-	if (typeof self === 'undefined' || self instanceof ServiceWorkerGlobalScope === false) {
-		throw new Error('This module can only be imported inside a service worker');
-	}
-
-	export const build = [];
-	export const files = [
-		${create_assets(config)
-			.filter((asset) => config.kit.serviceWorker.files(asset.file))
-			.map((asset) => `${s(`${config.kit.paths.base}/${asset.file}`)}`)
-			.join(',\n')}
-	];
-	export const prerendered = [];
-	export const version = ${s(config.kit.version.name)};
-`;

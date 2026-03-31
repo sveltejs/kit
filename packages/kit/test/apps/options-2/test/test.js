@@ -1,4 +1,6 @@
 import process from 'node:process';
+import fs from 'node:fs';
+import path from 'node:path';
 import { expect } from '@playwright/test';
 import { test } from '../../../utils.js';
 
@@ -126,24 +128,36 @@ test.describe('Service worker', () => {
 		const response = await request.get('/basepath/service-worker.js');
 		const content = await response.text();
 
-		const fn = new Function('self', 'location', content);
-
-		const self = {
-			addEventListener: () => {},
-			base: null,
-			build: null
-		};
-
 		const pathname = '/basepath/service-worker.js';
 
-		fn(self, {
-			href: baseURL + pathname,
-			pathname
-		});
+		const temp = path.join(import.meta.dirname, 'temp-service-worker.js');
+		fs.writeFileSync(
+			temp,
+			`
+const location = {
+	href: ${JSON.stringify(baseURL + pathname)},
+	pathname: ${JSON.stringify(pathname)}
+};
 
-		expect(self.base).toBe('/basepath');
-		expect(self.build?.[0]).toMatch(/\/basepath\/_app\/immutable\/bundle\.[\w-]+\.js/);
-		expect(self.image_src).toMatch(/\/basepath\/_app\/immutable\/assets\/image\.[\w-]+\.jpg/);
+export const self = {
+	addEventListener: () => {},
+	base: null,
+	build: null
+};
+
+${content}
+`
+		);
+
+		const service_worker = await import(temp);
+
+		expect(service_worker.self.base).toBe('/basepath');
+		expect(service_worker.self.build?.[0]).toMatch(
+			/\/basepath\/_app\/immutable\/bundle\.[\w-]+\.js/
+		);
+		expect(service_worker.self.image_src).toMatch(
+			/\/basepath\/_app\/immutable\/assets\/image\.[\w-]+\.jpg/
+		);
 	});
 
 	test('does not register /basepath/service-worker.js', async ({ page }) => {
