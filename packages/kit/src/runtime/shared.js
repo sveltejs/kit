@@ -132,7 +132,13 @@ function create_remote_arg_reducers(transport, sort) {
 				entries.push([stringify(key), stringify(val)]);
 			}
 
-			return entries.sort(([a], [b]) => (a < b ? -1 : 1));
+			return entries.sort(([a1, a2], [b1, b2]) => {
+				if (a1 < b1) return -1;
+				if (a1 > b1) return 1;
+				if (a2 < b2) return -1;
+				if (a2 > b2) return 1;
+				return 0;
+			});
 		};
 
 		/** @type {(value: unknown) => unknown[] | undefined} */
