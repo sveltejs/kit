@@ -55,7 +55,7 @@ export function command(id) {
 				const response = await fetch(`${base}/${app_dir}/remote/${id}`, {
 					method: 'POST',
 					body: JSON.stringify({
-						payload: stringify_remote_arg(arg, app.hooks.transport),
+						payload: stringify_remote_arg(arg, app.hooks.transport, false),
 						refreshes: Array.from(refreshes ?? [])
 					}),
 					headers
