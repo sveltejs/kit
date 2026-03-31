@@ -161,6 +161,35 @@ export function normalize_id(id, lib, cwd) {
 }
 
 /**
+ * Compute the Rollup entry name for a route component or endpoint file.
+ *
+ * On Windows, `path.resolve` may return a path with forward slashes when the
+ * input already contained a drive-letter with a forward slash (e.g. from a
+ * posix-style kit-internal path). `kit.files.routes` uses native backslashes.
+ * Calling `path.normalize` on both arguments before `path.relative` ensures
+ * consistent separators so the `..` sentinel is detected correctly.
+ *
+ * @param {string} routes_dir - `kit.files.routes` (absolute, native separators)
+ * @param {string} file - the source file (may be posix-style on Windows)
+ * @param {'endpoint' | 'page'} kind
+ * @returns {string} entry name suitable for use as a Rollup input key
+ */
+export function get_entry_name(routes_dir, file, kind) {
+	const resolved = path.resolve(file);
+	const relative = decodeURIComponent(
+		path.relative(path.normalize(routes_dir), path.normalize(resolved))
+	);
+
+	if (kind === 'endpoint') {
+		return posixify(path.join('entries/endpoints', relative.replace(/\.js$/, '')));
+	}
+
+	return relative.startsWith('..')
+		? posixify(path.join('entries/fallbacks', path.basename(file)))
+		: posixify(path.join('entries/pages', relative.replace(/\.js$/, '')));
+}
+
+/**
  * For times when you need to throw an error, but without
  * displaying a useless stack trace (since the developer
  * can't do anything useful with it)
