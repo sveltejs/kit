@@ -119,58 +119,55 @@ function create_remote_arg_reducers(transport, sort) {
 	};
 
 	if (sort) {
-		remote_fns_reducers[remote_map] =
-			/** @type {(value: unknown) => Array<[unknown, unknown]> | undefined} */
-			(value) => {
-				if (!(value instanceof Map)) {
-					return;
-				}
+		/** @type {(value: unknown) => Array<[unknown, unknown]> | undefined} */
+		remote_fns_reducers[remote_map] = (value) => {
+			if (!(value instanceof Map)) {
+				return;
+			}
 
-				/** @type {Array<[string, string]>} */
-				const entries = [];
+			/** @type {Array<[string, string]>} */
+			const entries = [];
 
-				for (const [key, val] of value) {
-					entries.push([stringify(key), stringify(val)]);
-				}
+			for (const [key, val] of value) {
+				entries.push([stringify(key), stringify(val)]);
+			}
 
-				return entries.sort(([a], [b]) => (a < b ? -1 : 1));
-			};
+			return entries.sort(([a], [b]) => (a < b ? -1 : 1));
+		};
 
-		remote_fns_reducers[remote_set] =
-			/** @type {(value: unknown) => unknown[] | undefined} */
-			(value) => {
-				if (!(value instanceof Set)) {
-					return;
-				}
+		/** @type {(value: unknown) => unknown[] | undefined} */
+		remote_fns_reducers[remote_set] = (value) => {
+			if (!(value instanceof Set)) {
+				return;
+			}
 
-				/** @type {string[]} */
-				const items = [];
+			/** @type {string[]} */
+			const items = [];
 
-				for (const item of value) {
-					items.push(stringify(item));
-				}
+			for (const item of value) {
+				items.push(stringify(item));
+			}
 
-				items.sort();
-				return items;
-			};
+			items.sort();
+			return items;
+		};
 
-		remote_fns_reducers[remote_object] =
-			/** @type {(value: unknown) => Record<PropertyKey, unknown> | undefined} */
-			(value) => {
-				if (!is_plain_object(value)) {
-					return;
-				}
+		/** @type {(value: unknown) => Record<PropertyKey, unknown> | undefined} */
+		remote_fns_reducers[remote_object] = (value) => {
+			if (!is_plain_object(value)) {
+				return;
+			}
 
-				if (Object.hasOwn(value, remote_arg_marker)) {
-					return;
-				}
+			if (Object.hasOwn(value, remote_arg_marker)) {
+				return;
+			}
 
-				if (remote_arg_clones.has(value)) {
-					return remote_arg_clones.get(value);
-				}
+			if (remote_arg_clones.has(value)) {
+				return remote_arg_clones.get(value);
+			}
 
-				return to_sorted(value, remote_arg_clones);
-			};
+			return to_sorted(value, remote_arg_clones);
+		};
 	}
 
 	const user_reducers = Object.fromEntries(
