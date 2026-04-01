@@ -23,7 +23,7 @@
 		"svelte-check": "catalog:",
 		"typescript": "catalog:",
 		"vite": "catalog:",
-    "vitest": "catalog:"
+		"vitest": "catalog:"
 	},
 	"type": "module"
 }
