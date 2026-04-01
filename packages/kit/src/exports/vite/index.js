@@ -390,12 +390,14 @@ function kit({ svelte_config }) {
 					}
 				};
 
-				if (kit.experimental.remoteFunctions && new_config.optimizeDeps) {
+				if (kit.experimental.remoteFunctions) {
 					// treat .remote.js files as empty for the purposes of prebundling
 					const remote_id_filter = new RegExp(
 						`.remote(${kit.moduleExtensions.join('|')})$`.replaceAll('.', '\\.')
 					);
+					// @ts-expect-error optimizeDeps is already set above
 					new_config.optimizeDeps.rolldownOptions ??= {};
+					// @ts-expect-error
 					new_config.optimizeDeps.rolldownOptions.plugins ??= [];
 					// @ts-expect-error
 					new_config.optimizeDeps.rolldownOptions.plugins.push({
