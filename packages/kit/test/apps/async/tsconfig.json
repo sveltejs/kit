@@ -3,7 +3,6 @@
 		"allowJs": true,
 		"checkJs": true,
 		"esModuleInterop": true,
-		"noEmit": true,
 		"resolveJsonModule": true,
 		"rewriteRelativeImportExtensions": true
 	},

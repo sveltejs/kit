@@ -124,7 +124,8 @@ export function get_tsconfig(kit, cwd) {
 			moduleResolution: 'bundler',
 			module: 'esnext',
 			noEmit: true, // prevent tsconfig error "overwriting input files" - Vite handles the build and ignores this
-			target: 'esnext'
+			target: 'esnext',
+			types: ['node']
 		},
 		include: [...include],
 		exclude
@@ -168,6 +169,7 @@ function validate_user_config(cwd, out, config) {
 	if (extends_framework_config) {
 		const { paths, baseUrl } = options;
 
+		// TODO: baseUrl will be removed in TypeScript 7.0
 		if (baseUrl || paths) {
 			console.warn(
 				styleText(
