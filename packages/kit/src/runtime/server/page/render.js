@@ -726,8 +726,6 @@ class Head {
 	/** @type {string[]} */
 	#link_tags = [];
 	/** @type {string[]} */
-	#script_preloads = [];
-	/** @type {string[]} */
 	#style_tags = [];
 	/** @type {string[]} */
 	#stylesheet_links = [];
@@ -745,7 +743,6 @@ class Head {
 		return [
 			...this.#http_equiv,
 			...this.#link_tags,
-			...this.#script_preloads,
 			this.#rendered,
 			...this.#style_tags,
 			...this.#stylesheet_links
