@@ -390,7 +390,7 @@ function kit({ svelte_config }) {
 					}
 				};
 
-				if (kit.experimental.remoteFunctions) {
+				if (kit.experimental.remoteFunctions && new_config.optimizeDeps) {
 					// treat .remote.js files as empty for the purposes of prebundling
 					const remote_id_filter = new RegExp(
 						`.remote(${kit.moduleExtensions.join('|')})$`.replaceAll('.', '\\.')
