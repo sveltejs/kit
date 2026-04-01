@@ -1,9 +1,9 @@
-<script>
+<script lang="ts">
 	import { set_message } from './form.remote.ts';
 
 	let should_submit = $state(false);
 
-	const pendings_arr = [];
+	const pendings_arr: number[] = [];
 	const pendings = $derived.by(() => {
 		pendings_arr.push(set_message.pending);
 		return pendings_arr.join(', ');

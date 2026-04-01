@@ -146,7 +146,8 @@ test.describe('Service worker', () => {
 		const self = {
 			addEventListener: () => {},
 			base: null,
-			build: null
+			build: null,
+			image_src: undefined
 		};
 
 		const pathname = '/basepath/service-worker.js';
