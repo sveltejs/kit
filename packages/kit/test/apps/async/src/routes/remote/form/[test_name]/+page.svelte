@@ -17,7 +17,7 @@
 
 <form data-unscoped {...set_message}>
 	{#if set_message.fields.message.issues()}
-		<p>{set_message.fields.message.issues()[0].message}</p>
+		<p>{set_message.fields.message.issues()?.[0].message}</p>
 	{/if}
 
 	<input {...set_message.fields.message.as('text')} />
@@ -35,7 +35,7 @@
 
 <form data-scoped {...scoped}>
 	{#if scoped.fields.message.issues()}
-		<p>{scoped.fields.message.issues()[0].message}</p>
+		<p>{scoped.fields.message.issues()?.[0].message}</p>
 	{/if}
 
 	<input {...scoped.fields.message.as('text')} />
@@ -58,7 +58,7 @@
 	})}
 >
 	{#if enhanced.fields.message.issues()}
-		<p>{enhanced.fields.message.issues()[0].message}</p>
+		<p>{enhanced.fields.message.issues()?.[0].message}</p>
 	{/if}
 
 	<input {...enhanced.fields.message.as('text')} />

@@ -21,9 +21,9 @@
 		"@sveltejs/vite-plugin-svelte": "catalog:",
 		"svelte": "catalog:",
 		"svelte-check": "catalog:",
-		"typescript": "^5.5.4",
+		"typescript": "catalog:",
 		"vite": "catalog:",
-		"vitest": "catalog:"
+    "vitest": "catalog:"
 	},
 	"type": "module"
 }
