@@ -1,4 +1,4 @@
-import { CookieSerializeOptions } from 'cookie';
+import type { SerializeOptions as CookieSerializeOptions } from 'cookie';
 import {
 	CspDirectives,
 	ServerDataNode,

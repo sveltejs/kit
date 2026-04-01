@@ -1,4 +1,4 @@
-import { parse, serialize } from 'cookie';
+import { parseCookie as parse, stringifySetCookie as serialize } from 'cookie';
 import { DEV } from 'esm-env';
 import { normalize_path, resolve } from '../../utils/url.js';
 import { add_data_suffix } from '../pathname.js';
@@ -57,7 +57,7 @@ export function get_cookies(request, url) {
 	/** @type {Map<string, import('./page/types.js').Cookie>} */
 	const new_cookies = new Map();
 
-	/** @type {import('cookie').CookieSerializeOptions} */
+	/** @type {import('cookie').SerializeOptions} */
 	const defaults = {
 		httpOnly: true,
 		sameSite: 'lax',
@@ -73,7 +73,7 @@ export function get_cookies(request, url) {
 
 		/**
 		 * @param {string} name
-		 * @param {import('cookie').CookieParseOptions} [opts]
+		 * @param {import('cookie').ParseOptions} [opts]
 		 */
 		get(name, opts) {
 			// Look for the most specific matching cookie from new_cookies
@@ -115,7 +115,7 @@ export function get_cookies(request, url) {
 		},
 
 		/**
-		 * @param {import('cookie').CookieParseOptions} [opts]
+		 * @param {import('cookie').ParseOptions} [opts]
 		 */
 		getAll(opts) {
 			const cookies = parse(header, { decode: opts?.decode });
@@ -142,7 +142,9 @@ export function get_cookies(request, url) {
 				cookies[c.name] = c.value;
 			}
 
-			return Object.entries(cookies).map(([name, value]) => ({ name, value }));
+			return Object.entries(cookies).flatMap(([name, value]) =>
+				value === undefined ? [] : [{ name, value }]
+			);
 		},
 
 		/**
@@ -201,10 +203,14 @@ export function get_cookies(request, url) {
 	 */
 	function get_cookie_header(destination, header) {
 		/** @type {Record<string, string>} */
-		const combined_cookies = {
-			// cookies sent by the user agent have lowest precedence
-			...initial_cookies
-		};
+		const combined_cookies = {};
+
+		// cookies sent by the user agent have lowest precedence
+		for (const [name, value] of Object.entries(initial_cookies)) {
+			if (value !== undefined) {
+				combined_cookies[name] = value;
+			}
+		}
 
 		// cookies previous set during this event with cookies.set have higher precedence
 		for (const cookie of new_cookies.values()) {
@@ -219,7 +225,10 @@ export function get_cookies(request, url) {
 		if (header) {
 			const parsed = parse(header, { decode: (value) => value });
 			for (const name in parsed) {
-				combined_cookies[name] = parsed[name];
+				const value = parsed[name];
+				if (value !== undefined) {
+					combined_cookies[name] = value;
+				}
 			}
 		}
 

@@ -234,19 +234,22 @@ declare module '@sveltejs/kit' {
 		[key: string]: any;
 	}
 
+	export type CookieParseOptions = import('cookie').ParseOptions;
+	export type CookieSerializeOptions = import('cookie').SerializeOptions;
+
 	export interface Cookies {
 		/**
 		 * Gets a cookie that was previously set with `cookies.set`, or from the request headers.
 		 * @param name the name of the cookie
 		 * @param opts the options, passed directly to `cookie.parse`. See documentation [here](https://github.com/jshttp/cookie#cookieparsestr-options)
 		 */
-		get: (name: string, opts?: import('cookie').CookieParseOptions) => string | undefined;
+		get: (name: string, opts?: CookieParseOptions) => string | undefined;
 
 		/**
 		 * Gets all cookies that were previously set with `cookies.set`, or from the request headers.
 		 * @param opts the options, passed directly to `cookie.parse`. See documentation [here](https://github.com/jshttp/cookie#cookieparsestr-options)
 		 */
-		getAll: (opts?: import('cookie').CookieParseOptions) => Array<{ name: string; value: string }>;
+		getAll: (opts?: CookieParseOptions) => Array<{ name: string; value: string }>;
 
 		/**
 		 * Sets a cookie. This will add a `set-cookie` header to the response, but also make the cookie available via `cookies.get` or `cookies.getAll` during the current request.
@@ -258,11 +261,7 @@ declare module '@sveltejs/kit' {
 		 * @param value the cookie value
 		 * @param opts the options, passed directly to `cookie.serialize`. See documentation [here](https://github.com/jshttp/cookie#cookieserializename-value-options)
 		 */
-		set: (
-			name: string,
-			value: string,
-			opts: import('cookie').CookieSerializeOptions & { path: string }
-		) => void;
+		set: (name: string, value: string, opts: CookieSerializeOptions & { path: string }) => void;
 
 		/**
 		 * Deletes a cookie by setting its value to an empty string and setting the expiry date in the past.
@@ -271,7 +270,7 @@ declare module '@sveltejs/kit' {
 		 * @param name the name of the cookie
 		 * @param opts the options, passed directly to `cookie.serialize`. The `path` must match the path of the cookie you want to delete. See documentation [here](https://github.com/jshttp/cookie#cookieserializename-value-options)
 		 */
-		delete: (name: string, opts: import('cookie').CookieSerializeOptions & { path: string }) => void;
+		delete: (name: string, opts: CookieSerializeOptions & { path: string }) => void;
 
 		/**
 		 * Serialize a cookie name-value pair into a `Set-Cookie` header string, but don't apply it to the response.
@@ -287,7 +286,7 @@ declare module '@sveltejs/kit' {
 		serialize: (
 			name: string,
 			value: string,
-			opts: import('cookie').CookieSerializeOptions & { path: string }
+			opts: CookieSerializeOptions & { path: string }
 		) => string;
 	}
 
