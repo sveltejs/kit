@@ -8,7 +8,7 @@
 	let result = $state('');
 	let stored: RemoteQuery<number>;
 
-	function get_message(error) {
+	function get_message(error: unknown) {
 		return error instanceof Error ? error.message : String(error);
 	}
 </script>

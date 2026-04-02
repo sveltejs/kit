@@ -341,6 +341,7 @@ test.describe('remote function mutations', () => {
 		await expect(page.locator('#batch-result-1')).toHaveText('Buy groceries');
 
 		let request_count = 0;
+		/** @param {import('@playwright/test').Request} r */
 		const handler = (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0);
 		page.on('request', handler);
 
@@ -356,6 +357,7 @@ test.describe('remote function mutations', () => {
 		await expect(page.locator('#batch-result-2')).toHaveText('Walk the dog');
 
 		let request_count = 0;
+		/** @param {import('@playwright/test').Request} r */
 		const handler = (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0);
 		page.on('request', handler);
 

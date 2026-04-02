@@ -217,7 +217,10 @@ function get_netlify_config() {
 	try {
 		return toml.parse(readFileSync('netlify.toml', 'utf-8'));
 	} catch (err) {
-		throw new Error(`Failed to parse netlify.toml: ${err.message}`, { cause: err });
+		if (err instanceof Error) {
+			throw new Error(`Failed to parse netlify.toml: ${err.message}`, { cause: err });
+		}
+		throw err;
 	}
 }
 

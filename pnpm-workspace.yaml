@@ -24,7 +24,7 @@ catalog:
   '@opentelemetry/sdk-trace-node': ^2.0.1
   '@playwright/test': 1.58.2
   '@polka/url': ^1.0.0-next.28
-  '@sveltejs/eslint-config': ^9.0.0
+  '@sveltejs/eslint-config': ^10.0.0
   '@sveltejs/vite-plugin-svelte': ^7.0.0
   '@svitejs/changesets-changelog-github-compact': ^1.2.0
   '@types/connect': ^3.4.38
@@ -43,9 +43,12 @@ catalog:
   semver: ^7.5.4
   sirv-cli: ^3.0.0
   svelte: ^5.53.12
-  svelte-check: ^4.4.1
+  svelte-check: ^4.4.6
   svelte-preprocess: ^6.0.0
-  typescript: 5.9.3
+  # This version of TypeScript is for apps using it just for type checking.
+  # `kit` and `package` cannot follow the catalog version because they require it
+  # for generating types and TypeScript can have breaking changes in minors
+  typescript: ^6.0.2
   valibot: ^1.1.0
   vite: ^8.0.2
   vitest: ^4.1.1

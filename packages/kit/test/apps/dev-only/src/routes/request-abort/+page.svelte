@@ -1,7 +1,7 @@
-<script>
+<script lang="ts">
 	import { onMount } from 'svelte';
 
-	let result;
+	let result: { ok: true } | { aborted: boolean };
 
 	function test_abort() {
 		const controller = new AbortController();
