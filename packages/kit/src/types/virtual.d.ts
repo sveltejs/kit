@@ -10,7 +10,7 @@ declare module '__sveltekit/ssr-manifest' {
 	export const root: string;
 }
 
-declare module '__sveltekit/server' {
+declare module '__sveltekit/dev-server' {
 	import { InternalServer } from 'types';
 
 	export { InternalServer as Server };

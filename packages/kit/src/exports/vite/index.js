@@ -47,7 +47,9 @@ import {
 	sveltekit_server,
 	sveltekit_remotes,
 	sveltekit_server_assets,
-	sveltekit_ssr_manifest
+	sveltekit_ssr_manifest,
+	sveltekit_environment,
+	sveltekit_dev_server
 } from './module_ids.js';
 import { to_fs } from './filesystem.js';
 import { import_peer } from '../../utils/import.js';
@@ -382,11 +384,14 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 				const client_hooks = resolve_entry(kit.files.hooks.client);
 				if (client_hooks) allow.add(path.dirname(client_hooks));
 
+				const generated = path.posix.join(kit.outDir, 'generated');
+
 				// dev and preview config can be shared
 				/** @type {import('vite').UserConfig} */
 				const new_config = {
 					resolve: {
 						alias: [
+							{ find: '__SERVER__', replacement: `${generated}/server` },
 							{ find: '$app', replacement: `${runtime_directory}/app` },
 							...get_config_aliases(kit, root)
 						]
@@ -661,10 +666,12 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 					exactRegex(env_dynamic_private),
 					exactRegex(env_dynamic_public),
 					exactRegex(service_worker),
+					exactRegex(sveltekit_environment),
 					exactRegex(sveltekit_server),
 					exactRegex(sveltekit_ssr_manifest),
 					exactRegex(sveltekit_server_assets),
-					exactRegex(sveltekit_remotes)
+					exactRegex(sveltekit_remotes),
+					exactRegex(sveltekit_dev_server)
 				]
 			},
 			handler(id) {
@@ -701,8 +708,42 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 					case service_worker:
 						return create_service_worker_module(svelte_config);
 
+					case sveltekit_environment: {
+						const { version } = svelte_config.kit;
+
+						return dedent`
+						export const version = ${s(version.name)};
+						export let building = false;
+						export let prerendering = false;
+
+						export function set_building() {
+							building = true;
+						}
+
+						export function set_prerendering() {
+							prerendering = true;
+						}
+					`;
+					}
+
+					case sveltekit_server: {
+						return dedent`
+						export let read_implementation = null;
+
+						export let manifest = null;
+
+						export function set_read_implementation(fn) {
+							read_implementation = fn;
+						}
+
+						export function set_manifest(_) {
+							manifest = _;
+						}
+					`;
+					}
+
 					case sveltekit_server_assets: {
-						if (vite_config_env.command === 'build') return;
+						if (!dev_environment) return;
 
 						return dedent`
 							export const server_assets = {
@@ -966,7 +1007,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 						`;
 					}
 
-					case sveltekit_server: {
+					case sveltekit_dev_server: {
 						if (!dev_environment) return;
 
 						const runtime_base = get_runtime_base(root);
@@ -2143,26 +2184,8 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 		}
 	};
 
-	/** @type {import('vite').Plugin} */
-	const plugin_generated = {
-		name: 'vite-plugin-sveltekit-resolve-generated',
-		resolveId: {
-			order: 'pre',
-			filter: {
-				id: /\/generated\.js$/
-			},
-			handler(_, importer) {
-				const generated = path.posix.join(kit.outDir, 'generated');
-				if (importer?.startsWith(runtime_directory)) {
-					return `${generated}/server/internal.js`;
-				}
-			}
-		}
-	};
-
 	return [
 		plugin_setup,
-		plugin_generated,
 		plugin_remote,
 		plugin_server_filesystem,
 		plugin_virtual_modules,

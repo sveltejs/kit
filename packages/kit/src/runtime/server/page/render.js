@@ -365,10 +365,9 @@ export async function render_response({
 		}
 
 		if (!client.inline) {
-			// client import paths have no leading slash `_app/immutable/*` so we need to add one
-			const included_modulepreloads = Array.from(modulepreloads, (dep) =>
-				prefixed('/' + dep)
-			).filter((path) => resolve_opts.preload({ type: 'js', path }));
+			const included_modulepreloads = Array.from(modulepreloads, (dep) => prefixed(dep)).filter(
+				(path) => resolve_opts.preload({ type: 'js', path })
+			);
 
 			for (const path of included_modulepreloads) {
 				link_headers.add(`<${encodeURI(path)}>; rel="modulepreload"; nopush`);
