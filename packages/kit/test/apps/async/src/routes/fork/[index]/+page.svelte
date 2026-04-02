@@ -1,9 +1,9 @@
-<script>
+<script lang="ts">
 	let { params } = $props();
 
-	async function load(index) {
+	function load(index: string) {
 		if (!index) throw new Error('missing index');
-		return index;
+		return Promise.resolve(index);
 	}
 
 	const query_output = $derived(await load(params.index));
