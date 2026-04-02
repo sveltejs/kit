@@ -30,13 +30,13 @@ test.describe('paths', () => {
 	test('uses relative paths during SSR', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/basepath');
 
-		let base = javaScriptEnabled ? '/basepath' : '.';
+		let base = javaScriptEnabled ? '/basepath/' : './';
 		expect(await page.textContent('[data-testid="base"]')).toBe(`base: ${base}`);
 		expect(await page.textContent('[data-testid="assets"]')).toBe(`assets: ${base}`);
 
 		await page.goto('/basepath/deeply/nested/page');
 
-		base = javaScriptEnabled ? '/basepath' : '../..';
+		base = javaScriptEnabled ? '/basepath/' : '../../';
 		expect(await page.textContent('[data-testid="base"]')).toBe(`base: ${base}`);
 		expect(await page.textContent('[data-testid="assets"]')).toBe(`assets: ${base}`);
 	});
@@ -146,7 +146,8 @@ test.describe('Service worker', () => {
 		const self = {
 			addEventListener: () => {},
 			base: null,
-			build: null
+			build: null,
+			image_src: undefined
 		};
 
 		const pathname = '/basepath/service-worker.js';

@@ -6,7 +6,7 @@ import { app_dir, base } from '$app/paths/internal/client';
 import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
 import { HttpError } from '@sveltejs/kit/internal';
-import { app, remote_responses, _goto, set_nearest_error_page, invalidateAll } from '../client.js';
+import { app, query_responses, _goto, set_nearest_error_page, invalidateAll } from '../client.js';
 import { tick } from 'svelte';
 import { refresh_queries, release_overrides } from './shared.svelte.js';
 import { createAttachmentKey } from 'svelte/attachments';
@@ -73,7 +73,7 @@ export function form(id) {
 		const issues = $derived(flatten_issues(raw_issues));
 
 		/** @type {any} */
-		let result = $state.raw(remote_responses[action_id]);
+		let result = $state.raw(query_responses[action_id]);
 
 		/** @type {number} */
 		let pending_count = $state(0);
@@ -167,6 +167,8 @@ export function form(id) {
 				const error = e instanceof HttpError ? e.body : { message: /** @type {any} */ (e).message };
 				const status = e instanceof HttpError ? e.status : 500;
 				void set_nearest_error_page(error, status);
+			} finally {
+				pending_count--;
 			}
 		}
 
@@ -247,9 +249,6 @@ export function form(id) {
 					release_overrides(updates);
 					throw e;
 				} finally {
-					// Decrement pending count when submission completes
-					pending_count--;
-
 					void tick().then(() => {
 						if (entry) {
 							entry.count--;
@@ -295,6 +294,14 @@ export function form(id) {
 				);
 
 				if (action.searchParams.get('/remote') !== action_id) {
+					return;
+				}
+
+				const target = event.submitter?.hasAttribute('formtarget')
+					? /** @type {HTMLButtonElement | HTMLInputElement} */ (event.submitter).formTarget
+					: clone(form).target;
+
+				if (target === '_blank') {
 					return;
 				}
 

@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
 	import { isHttpError } from '@sveltejs/kit';
 	import {
 		validated_query_no_args,
@@ -11,7 +11,7 @@
 		validated_batch_query_with_validation
 	} from './validation.remote.js';
 
-	function validate_result(result) {
+	function validate_result(result: 'success' | 'failure') {
 		if (result !== 'success') {
 			throw new Error('Remote function called with invalid arguments');
 		}
@@ -26,19 +26,19 @@
 	onclick={async () => {
 		status = 'pending';
 		try {
-			validate_result(await validated_query_no_args());
+			validate_result(await validated_query_no_args().run());
 			validate_result(await validated_prerendered_query_no_args());
 			validate_result(await validated_command_no_args());
 
-			validate_result(await validated_query_with_arg('valid'));
+			validate_result(await validated_query_with_arg('valid').run());
 			validate_result(await validated_prerendered_query_with_arg('valid'));
 			validate_result(await validated_command_with_arg('valid'));
 
-			validate_result(await validated_batch_query_no_validation('valid'));
-			validate_result(await validated_batch_query_with_validation('valid'));
+			validate_result(await validated_batch_query_no_validation('valid').run());
+			validate_result(await validated_batch_query_with_validation('valid').run());
 
 			status = 'success';
-		} catch (e) {
+		} catch {
 			status = 'error';
 		}
 	}}
@@ -51,7 +51,7 @@
 		status = 'pending';
 		try {
 			// @ts-expect-error
-			await validated_query_no_args('invalid');
+			await validated_query_no_args('invalid').run();
 			status = 'error';
 		} catch {
 			try {
@@ -78,7 +78,7 @@
 		status = 'pending';
 		try {
 			// @ts-expect-error
-			await validated_query_with_arg(1);
+			await validated_query_with_arg(1).run();
 			status = 'error';
 		} catch (e) {
 			if (!isHttpError(e) || e.body.message !== 'Input must be a string') {
@@ -106,7 +106,7 @@
 
 					try {
 						// @ts-expect-error
-						await validated_batch_query_with_validation(123);
+						await validated_batch_query_with_validation(123).run();
 						status = 'error';
 					} catch (e) {
 						if (!isHttpError(e) || e.body.message !== 'Input must be a string') {
@@ -128,16 +128,16 @@
 		status = 'pending';
 		try {
 			// @ts-expect-error
-			validate_result(await validated_query_with_arg('valid', 'ignored'));
+			validate_result(await validated_query_with_arg('valid', 'ignored').run());
 			// @ts-expect-error
 			validate_result(await validated_prerendered_query_with_arg('valid', 'ignored'));
 			// @ts-expect-error
 			validate_result(await validated_command_with_arg('valid', 'ignored'));
 			// @ts-expect-error
-			validate_result(await validated_batch_query_no_validation('valid', 'ignored'));
+			validate_result(await validated_batch_query_no_validation('valid', 'ignored').run());
 
 			status = 'success';
-		} catch (e) {
+		} catch {
 			status = 'error';
 		}
 	}}

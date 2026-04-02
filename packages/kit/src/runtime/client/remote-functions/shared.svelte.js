@@ -2,11 +2,10 @@
 /** @import { RemoteFunctionResponse } from 'types' */
 /** @import { Query } from './query.svelte.js' */
 import * as devalue from 'devalue';
-import { app, goto, query_map, remote_responses } from '../client.js';
+import { app, goto, query_map } from '../client.js';
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
-import { tick, untrack } from 'svelte';
-import { create_remote_key, stringify_remote_arg } from '../../shared.js';
-import { page } from '../state.svelte.js';
+import { untrack } from 'svelte';
+import { navigating, page } from '../state.svelte.js';
 
 /**
  * @returns {{ 'x-sveltekit-pathname': string, 'x-sveltekit-search': string }}
@@ -15,10 +14,14 @@ export function get_remote_request_headers() {
 	// This will be the correct value of the current or soon-current url,
 	// even in forks because it's state-based - therefore not using window.location.
 	// Use untrack(...) to Avoid accidental reactive dependency on pathname/search
-	return untrack(() => ({
-		'x-sveltekit-pathname': page.url.pathname,
-		'x-sveltekit-search': page.url.search
-	}));
+	return untrack(() => {
+		const url = navigating.current?.to?.url ?? page.url;
+
+		return {
+			'x-sveltekit-pathname': url.pathname,
+			'x-sveltekit-search': url.search
+		};
+	});
 }
 
 /**
@@ -49,77 +52,6 @@ export async function remote_request(url, headers) {
 	}
 
 	return result.result;
-}
-
-/**
- * Client-version of the `query`/`prerender`/`cache` function from `$app/server`.
- * @param {string} id
- * @param {(key: string, args: string) => any} create
- */
-export function create_remote_function(id, create) {
-	return (/** @type {any} */ arg) => {
-		const payload = stringify_remote_arg(arg, app.hooks.transport);
-		const cache_key = create_remote_key(id, payload);
-		let entry = query_map.get(cache_key);
-
-		let tracking = true;
-		try {
-			$effect.pre(() => {
-				if (entry) entry.count++;
-				return () => {
-					const entry = query_map.get(cache_key);
-					if (entry) {
-						entry.count--;
-						void tick().then(() => {
-							if (!entry.count && entry === query_map.get(cache_key)) {
-								query_map.delete(cache_key);
-								delete remote_responses[cache_key];
-							}
-						});
-					}
-				};
-			});
-		} catch {
-			tracking = false;
-		}
-
-		let resource = entry?.resource;
-		if (!resource) {
-			resource = create(cache_key, payload);
-
-			Object.defineProperty(resource, '_key', {
-				value: cache_key
-			});
-
-			query_map.set(
-				cache_key,
-				(entry = {
-					count: tracking ? 1 : 0,
-					resource
-				})
-			);
-
-			resource
-				.then(() => {
-					void tick().then(() => {
-						if (
-							!(/** @type {NonNullable<typeof entry>} */ (entry).count) &&
-							entry === query_map.get(cache_key)
-						) {
-							// If no one is tracking this resource anymore, we can delete it from the cache
-							query_map.delete(cache_key);
-						}
-					});
-				})
-				.catch(() => {
-					// error delete the resource from the cache
-					// TODO is that correct?
-					query_map.delete(cache_key);
-				});
-		}
-
-		return resource;
-	};
 }
 
 /**

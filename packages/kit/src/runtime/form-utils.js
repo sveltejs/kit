@@ -324,7 +324,7 @@ export async function deserialize_binary_form(request) {
 		}
 	}
 
-	// Read the request body asyncronously so it doesn't stall
+	// Read the request body asynchronously so it doesn't stall
 	void (async () => {
 		let has_more = true;
 		while (has_more) {
@@ -718,7 +718,7 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 							value: {
 								enumerable: true,
 								get() {
-									return get_value();
+									return input_value !== undefined ? input_value : get_value();
 								}
 							}
 						});
@@ -804,7 +804,7 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 						value: {
 							enumerable: true,
 							get() {
-								const value = get_value();
+								const value = input_value !== undefined ? input_value : get_value();
 								return value != null ? String(value) : '';
 							}
 						}
