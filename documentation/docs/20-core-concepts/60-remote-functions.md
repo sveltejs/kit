@@ -859,9 +859,9 @@ Now simply call `addLike`, from (for example) an event handler:
 
 ## Single-flight mutations
 
-The purpose of both [`form`](#form) and [`command`](#command) is *mutating data*. In many cases, mutating data invalidates other data. By default, `form` deals with this by automatically invalidating all queries and load functions following a successful submission. `command`, on the other hand, does nothing. Typically, neither of these options is going to be the ideal solution -- invalidating everything is likely wasteful, as it's unlikely a form submission changed *everything* being displayed on your webpage. In the case of `command`, doing nothing likely *under*-invalidates your app, leaving stale data displayed. In both cases, it's common to have to perform two round-trips to the server: One to run the mutation, and another after that completes to re-request the data from any queries you need to refresh.
+The purpose of both [`form`](#form) and [`command`](#command) is *mutating data*. In many cases, mutating data invalidates other data. By default, `form` deals with this by automatically invalidating all queries and load functions following a successful submission, to emulate what would happen with a traditional full-page reload. `command`, on the other hand, does nothing. Typically, neither of these options is going to be the ideal solution — invalidating everything is likely wasteful, as it's unlikely a form submission changed *everything* being displayed on your webpage. In the case of `command`, doing nothing likely *under*-invalidates your app, leaving stale data displayed. In both cases, it's common to have to perform two round-trips to the server: One to run the mutation, and another after that completes to re-request the data from any queries you need to refresh.
 
-SvelteKit solves both of these problems with *single-flight mutations*: Your `form` submission or `command` invocation can refresh queries and pass their results back to the client in a single request!
+SvelteKit solves both of these problems with *single-flight mutations*: Your `form` submission or `command` invocation can refresh queries and pass their results back to the client in a single request.
 
 ### Server-driven refreshes
 
@@ -887,7 +887,9 @@ export const createPost = form(
 
 		// Refresh `getPosts()` on the server, and send
 		// the data back with the result of `createPost`
-		+++await getPosts().refresh();+++
+		// it's safe to throw away the promise from `refresh`,
+		// as the framework awaits it for us before serving the response
+		+++void getPosts().refresh();+++
 
 		// Redirect to the newly created page
 		redirect(303, `/blog/${slug}`);
@@ -896,22 +898,24 @@ export const createPost = form(
 
 export const updatePost = form(
 	v.object({/* ... */}),
-	async (data) => {
+	async (post) => {
 		// form logic goes here...
 		const result = externalApi.update(post);
 
 		// The API already gives us the updated post,
 		// no need to refresh it, we can set it directly
-		+++await getPost(post.id).set(result);+++
+		+++getPost(post.id).set(result);+++
 	}
 );
 ```
 
-Because queries are keyed based on their arguments, `await getPost(post.id).set(result)` on the server knows to look up the matching `getPost({id})` on the client to update it. The same goes for `getPosts().refresh()` -- it knows to look up `getPosts()` with no argument on the client.
+Because queries are keyed based on their arguments, `await getPost(post.id).set(result)` on the server knows to look up the matching `getPost(id)` on the client to update it. The same goes for `getPosts().refresh()` -- it knows to look up `getPosts()` with no argument on the client.
 
 ### Client-requested refreshes
 
-Unfortunately, life isn't always as simple as the preceding example. The server always knows _which remote functions_ to update, but it may not know which _specific remote function instances_ to update. For example, if `getPosts({ filter: 'author:santa' })` is rendered on the client, calling `getPosts().refresh()` in the server handler won't update it. You'd need to call `getPosts({ filter: 'author:santa' }).refresh()` instead -- but how could you know which specific combinations of filters are currently rendered on the client, especially if your query argument is more complicated than an object with just one key? SvelteKit makes this easy by allowing the client to *request* that the server updates specific data using `submit().updates` (for `form`) or `myCommand().updates` (for `command`):
+Unfortunately, life isn't always as simple as the preceding example. The server always knows which query _functions_ to update, but it may not know which specific query _instances_ to update. For example, if `getPosts({ filter: 'author:santa' })` is rendered on the client, calling `getPosts().refresh()` in the server handler won't update it. You'd need to call `getPosts({ filter: 'author:santa' }).refresh()` instead — but how could you know which specific combinations of filters are currently rendered on the client, especially if your query argument is more complicated than an object with just one key?
+
+SvelteKit makes this easy by allowing the client to _request_ that the server updates specific data using `submit().updates` (for `form`) or `myCommand().updates` (for `command`):
 
 ```js
 import type { RemoteQueryUpdate, RemoteQuery } from '@sveltejs/kit';
