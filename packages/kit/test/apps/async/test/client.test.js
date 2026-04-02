@@ -483,3 +483,14 @@ test.describe('client error boundaries', () => {
 		await expect(page.locator('#nested-layout')).toBeVisible();
 	});
 });
+
+test.describe('fork', () => {
+	test('preloading one route must not throw errors when navigating elsewhere', async ({ page }) => {
+		await page.goto('/fork');
+		await page.locator('a[href="/fork/1"]').hover();
+		await page.getByRole('button', { name: 'Go to /fork?key=value' }).click();
+
+		await expect(page).toHaveURL('/fork?key=value');
+		await expect(page.locator('a[href="/fork/1"]')).toBeVisible();
+	});
+});
