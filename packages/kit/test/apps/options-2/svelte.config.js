@@ -2,6 +2,11 @@ import process from 'node:process';
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
+	compilerOptions: {
+		experimental: {
+			async: true
+		}
+	},
 	kit: {
 		csp: {
 			directives: {

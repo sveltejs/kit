@@ -4,6 +4,9 @@ export const echo = query('unchecked', (value) => value);
 export const add = query('unchecked', ({ a, b }) => a + b);
 
 let count = 0;
+/**
+ * @type {PromiseWithResolvers<any>[]}
+ */
 const deferreds = [];
 
 let get_count_called = false;
@@ -25,7 +28,7 @@ export const set_count = command('unchecked', async ({ c, slow = false, deferred
 
 export const resolve_deferreds = command(() => {
 	for (const deferred of deferreds) {
-		deferred.resolve();
+		deferred.resolve(null);
 	}
 	deferreds.length = 0;
 });

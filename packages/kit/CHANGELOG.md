@@ -1,5 +1,41 @@
 # @sveltejs/kit
 
+## 2.55.0
+### Minor Changes
+
+
+- feat: page and layout params with matchers are now type narrowed in `$app/types`, leading to better type safety when working with params in `$app/types`, `$app/state`, and hooks. ([#15502](https://github.com/sveltejs/kit/pull/15502))
+
+## 2.54.0
+### Minor Changes
+
+
+- feat: allow error boundaries to catch errors on the server ([#15308](https://github.com/sveltejs/kit/pull/15308))
+
+
+### Patch Changes
+
+
+- chore: upgrade `devalue` ([#15535](https://github.com/sveltejs/kit/pull/15535))
+
+
+- fix: don't wait for remote functions that are not awaited in the template ([#15280](https://github.com/sveltejs/kit/pull/15280))
+
+
+- feat: allow `resolve()` to accept pathnames with a search string and/or hash ([#15458](https://github.com/sveltejs/kit/pull/15458))
+
+
+- chore: remove deprecation warnings for `config.kit.files.*` options when validating the Svelte config file ([#15482](https://github.com/sveltejs/kit/pull/15482))
+
+
+- fix: handles form target attribute in remote form redirects ([#15457](https://github.com/sveltejs/kit/pull/15457))
+
+## 2.53.4
+### Patch Changes
+
+
+- fix: avoid Vite warning about unknown `codeSplitting` option ([#15451](https://github.com/sveltejs/kit/pull/15451))
+
 ## 2.53.3
 ### Patch Changes
 

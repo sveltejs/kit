@@ -379,7 +379,7 @@ export interface ServerMetadata {
 	}>;
 	routes: Map<string, ServerMetadataRoute>;
 	/** For each hashed remote file, a map of export name -> { type, dynamic }, where `dynamic` is `false` for non-dynamic prerender functions */
-	remotes: Map<string, Map<string, { type: RemoteInfo['type']; dynamic: boolean }>>;
+	remotes: Map<string, Map<string, { type: RemoteInternals['type']; dynamic: boolean }>>;
 }
 
 export interface SSRComponent {
@@ -468,6 +468,7 @@ export interface SSROptions {
 	root: SSRComponent['default'];
 	service_worker: boolean;
 	service_worker_options: RegistrationOptions;
+	server_error_boundaries: boolean;
 	templates: {
 		app(values: {
 			head: string;
@@ -568,40 +569,52 @@ export type BinaryFormMeta = {
 	validate_only?: boolean;
 };
 
-export type RemoteInfo =
-	| {
-			type: 'query' | 'command';
-			id: string;
-			name: string;
-	  }
-	| {
-			/**
-			 * Corresponds to the name of the client-side exports (that's why we use underscores and not dots)
-			 */
-			type: 'query_batch';
-			id: string;
-			name: string;
-			/** Direct access to the function, for remote functions called from the client */
-			run: (args: any[], options: SSROptions) => Promise<any[]>;
-	  }
-	| {
-			type: 'form';
-			id: string;
-			name: string;
-			fn: (
-				body: Record<string, any>,
-				meta: BinaryFormMeta,
-				form_data: FormData | null
-			) => Promise<any>;
-	  }
-	| {
-			type: 'prerender';
-			id: string;
-			name: string;
-			has_arg: boolean;
-			dynamic?: boolean;
-			inputs?: RemotePrerenderInputsGenerator;
-	  };
+interface BaseRemoteInternals {
+	type: string;
+	id: string;
+	name: string;
+}
+
+export interface RemoteQueryInternals extends BaseRemoteInternals {
+	type: 'query';
+}
+export interface RemoteQueryLiveInternals extends BaseRemoteInternals {
+	type: 'query_live';
+	run(
+		event: RequestEvent,
+		state: RequestState,
+		arg: any
+	): Promise<{ iterator: AsyncIterator<any>; cancel: () => void }>;
+}
+
+export interface RemoteQueryBatchInternals extends BaseRemoteInternals {
+	type: 'query_batch';
+	run: (args: any[], options: SSROptions) => Promise<any[]>;
+}
+
+export interface RemoteCommandInternals extends BaseRemoteInternals {
+	type: 'command';
+}
+
+export interface RemoteFormInternals extends BaseRemoteInternals {
+	type: 'form';
+	fn(body: Record<string, any>, meta: BinaryFormMeta, form_data: FormData | null): Promise<any>;
+}
+
+export interface RemotePrerenderInternals extends BaseRemoteInternals {
+	type: 'prerender';
+	has_arg: boolean;
+	dynamic?: boolean;
+	inputs?: RemotePrerenderInputsGenerator;
+}
+
+export type RemoteInternals =
+	| RemoteQueryInternals
+	| RemoteQueryLiveInternals
+	| RemoteQueryBatchInternals
+	| RemoteCommandInternals
+	| RemoteFormInternals
+	| RemotePrerenderInternals;
 
 export interface InternalRemoteFormIssue extends RemoteFormIssue {
 	name: string;
@@ -620,17 +633,23 @@ export type RecordSpan = <T>(options: {
  * used for tracking things like remote function calls
  */
 export interface RequestState {
-	prerendering: PrerenderOptions | undefined;
-	transport: ServerHooks['transport'];
-	handleValidationError: ServerHooks['handleValidationError'];
-	tracing: {
+	readonly prerendering: PrerenderOptions | undefined;
+	readonly transport: ServerHooks['transport'];
+	readonly handleValidationError: ServerHooks['handleValidationError'];
+	readonly tracing: {
 		record_span: RecordSpan;
 	};
-	is_in_remote_function: boolean;
-	form_instances?: Map<any, any>;
-	remote_data?: Map<RemoteInfo, Record<string, MaybePromise<any>>>;
-	refreshes?: Record<string, Promise<any>>;
-	allows_commands?: boolean;
+	readonly remote: {
+		data: null | Map<
+			RemoteInternals,
+			Record<string, { serialize: boolean; data: MaybePromise<any> }>
+		>;
+		forms: null | Map<any, any>;
+		refreshes: null | Record<string, Promise<any>>;
+	};
+	readonly is_in_remote_function: boolean;
+	readonly is_in_render: boolean;
+	readonly is_in_universal_load: boolean;
 }
 
 export interface RequestStore {

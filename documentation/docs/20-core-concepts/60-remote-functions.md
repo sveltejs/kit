@@ -160,6 +160,8 @@ export const getPost = query(v.string(), async (slug) => {
 
 Both the argument and the return value are serialized with [devalue](https://github.com/sveltejs/devalue), which handles types like `Date` and `Map` (and custom types defined in your [transport hook](hooks#Universal-hooks-transport)) in addition to JSON.
 
+> [!NOTE] For `query` and `prerender` arguments (but not return values), objects, maps, and sets are sorted so that instances with the same members result in the same cache key. For example, `getPosts({ limit: 10, offset: 10 })` and `getPosts({ offset: 10, limit: 10 })` will result in the same cache key. If order is important to you, you'll have to use an array.
+
 ### Refreshing queries
 
 Any query can be re-fetched via its `refresh` method, which retrieves the latest value from the server:
@@ -305,7 +307,7 @@ As with `query`, if the callback uses the submitted `data`, it should be [valida
 
 ### Fields
 
-A form is composed of a set of _fields_, which are defined by the schema. In the case of `createPost`, we have two fields, `title` and `content`, which are both strings. To get the attributes for a field, call its `.as(...)` method, specifying which [input type](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/input#input_types) to use:
+A form is composed of a set of _fields_, which are defined by the schema. In the case of `createPost`, we have two fields, `title` and `content`, which are both strings. To get the attributes for a field, call its `.as(...)` method, specifying which [input type](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/input#input_types) to use. For most input types, you can also pass a second argument — `.as(type, value)` — to control the rendered value:
 
 ```svelte
 <form {...createPost}>
@@ -324,6 +326,8 @@ A form is composed of a set of _fields_, which are defined by the schema. In the
 ```
 
 These attributes allow SvelteKit to set the correct input type, set a `name` that is used to construct the `data` passed to the handler, populate the `value` of the form (for example following a failed submission, to save the user having to re-enter everything), and set the [`aria-invalid`](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Attributes/aria-invalid) state.
+
+Passing a second argument to `.as(...)` is useful when rendering a form from existing data, such as an edit form or multiple instances created with [`for(...)`](#form-Multiple-instances-of-a-form). `radio`, `submit` and `hidden` inputs always need this value, and `checkbox` inputs need it when they represent one option in an array field. `file` inputs cannot be populated this way.
 
 > [!NOTE] The generated `name` attribute uses JS object notation (e.g. `nested.array[0].value`). String keys that require quotes such as `object['nested-array'][0].value` are not supported. Under the hood, boolean checkbox and number field names are prefixed with `b:` and `n:`, respectively, to signal SvelteKit to coerce the values from strings prior to validation.
 
@@ -801,6 +805,8 @@ The override will be applied immediately, and released when the submission compl
 
 Some forms may be repeated as part of a list. In this case you can create separate instances of a form function via `for(id)` to achieve isolation.
 
+When each instance should render different values, pass them as the second argument to `.as(...)`:
+
 ```svelte
 <!--- file: src/routes/todos/+page.svelte --->
 <script>
@@ -812,7 +818,7 @@ Some forms may be repeated as part of a list. In this case you can create separa
 {#each await getTodos() as todo}
 	{@const modify = modifyTodo.for(todo.id)}
 	<form {...modify}>
-		<!-- -->
+		<input {...modify.fields.description.as('text', todo.description)} />
 		<button disabled={!!modify.pending}>save changes</button>
 	</form>
 {/each}

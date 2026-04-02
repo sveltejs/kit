@@ -1,3 +1,5 @@
+import { s } from './misc.js';
+
 /**
  * When inside a double-quoted attribute value, only `&` and `"` hold special meaning.
  * @see https://html.spec.whatwg.org/multipage/parsing.html#attribute-value-(double-quoted)-state
@@ -61,11 +63,21 @@ export function escape_html(str, is_attr) {
 	return escaped_str;
 }
 
+/** @typedef {{ placeholder: string, replacement: string }} Replacement */
+
 /**
- * Escapes backticks and dollar signs so that they can be safely used in template literals.
+ * Escapes backslashes, backticks, and dollar signs so that the string can be
+ * safely used as part of a template literal.
  * @param {string} str
+ * @param {Replacement[]} replacements Placeholders to replace after escaping.
+ * 																		 This is necessary when the string contains
+ * 																		 placeholders that we want to preserve, such as `${assets}`
  * @returns {string} escaped string
  */
-export function escape_for_interpolation(str) {
-	return str.replaceAll('`', '\\`').replaceAll('$', '\\$');
+export function escape_for_interpolation(str, replacements) {
+	let escaped = s(str).slice(1, -1).replaceAll('`', '\\`').replaceAll('$', '\\$');
+	for (const { placeholder, replacement } of replacements) {
+		escaped = escaped.replaceAll(placeholder, replacement);
+	}
+	return escaped;
 }
