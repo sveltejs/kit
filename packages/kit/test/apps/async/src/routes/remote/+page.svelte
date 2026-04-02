@@ -18,16 +18,16 @@
 
 	const { data } = $props();
 
-	let command_result = $state(null);
+	let command_result = $state(/** @type {number | null} */ (null));
 
 	// we just want it not to be treeshaken away
-	// eslint-disable-next-line @typescript-eslint/no-unused-expressions
-	q;
+	void q;
 
 	const count = get_count();
 	const flaky_ok = get_flaky_count('ok');
 	const flaky_fail = get_flaky_count('fail');
 
+	/** @param {unknown} error */
 	function get_message(error) {
 		if (error instanceof Error) return error.message;
 
