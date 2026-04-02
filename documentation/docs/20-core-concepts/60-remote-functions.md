@@ -969,7 +969,14 @@ export const createPost = form(
 
 `requested` gives you access to the requested query arguments for the supplied query. It returns the *parsed* arguments for the query -- when these arguments are passed back into the query in `getPosts(arg).refresh()`, they will not be parsed again. If parsing an argument fails, that query will error, but the entire command will not fail. `requested`'s second parameter, `limit`, is the maximum number of items it will return. Any refresh requests beyond this limit will fail.
 
+Additionally, `requested` allows a simple shorthand when all you want to do is refresh the requested query instances:
 
+```ts
+import { requested } from '$app/server';
+// ---cut---
+// this is the same as looping over the result and calling `void getPosts(arg).refresh()`.
+await requested(getPosts, 1).refreshAll();
+```
 
 ## prerender
 
