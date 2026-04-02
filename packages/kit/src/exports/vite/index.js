@@ -44,11 +44,11 @@ import {
 	env_static_private,
 	env_static_public,
 	service_worker,
-	sveltekit_server,
 	sveltekit_remotes,
 	sveltekit_server_assets,
 	sveltekit_ssr_manifest,
 	sveltekit_environment,
+	sveltekit_server,
 	sveltekit_dev_server
 } from './module_ids.js';
 import { to_fs } from './filesystem.js';
