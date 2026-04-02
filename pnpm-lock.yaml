@@ -463,8 +463,8 @@ importers:
   packages/enhanced-img:
     dependencies:
       '@sveltejs/vite-plugin-svelte':
-        specifier: ^6.0.0 || ^7.0.0
-        version: 6.2.4(svelte@5.53.12)(vite@8.0.3(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@24.12.0)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
+        specifier: ^7.0.0
+        version: 7.0.0(svelte@5.53.12)(vite@8.0.3(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@24.12.0)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
       magic-string:
         specifier: ^0.30.5
         version: 0.30.21
@@ -568,7 +568,7 @@ importers:
         version: 24.12.0
       dts-buddy:
         specifier: 'catalog:'
-        version: 0.7.0(typescript@6.0.2)
+        version: 0.7.0(typescript@5.8.3)
       rolldown:
         specifier: 'catalog:'
         version: 1.0.0-rc.13
@@ -577,10 +577,10 @@ importers:
         version: 5.53.12
       svelte-preprocess:
         specifier: 'catalog:'
-        version: 6.0.0(postcss-load-config@3.1.4(postcss@8.5.8)(ts-node@10.9.2(@types/node@24.12.0)(typescript@6.0.2)))(postcss@8.5.8)(svelte@5.53.12)(typescript@6.0.2)
+        version: 6.0.0(postcss-load-config@3.1.4(postcss@8.5.8)(ts-node@10.9.2(@types/node@24.12.0)(typescript@5.8.3)))(postcss@8.5.8)(svelte@5.53.12)(typescript@5.8.3)
       typescript:
-        specifier: 'catalog:'
-        version: 6.0.2
+        specifier: ^5.3.3
+        version: 5.8.3
       vite:
         specifier: 'catalog:'
         version: 8.0.3(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@24.12.0)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3)
@@ -1333,7 +1333,7 @@ importers:
         version: 7.7.4
       svelte2tsx:
         specifier: ~0.7.33
-        version: 0.7.33(svelte@5.53.12)(typescript@6.0.2)
+        version: 0.7.33(svelte@5.53.12)(typescript@5.8.3)
     devDependencies:
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
@@ -1352,10 +1352,10 @@ importers:
         version: 5.53.12
       svelte-preprocess:
         specifier: 'catalog:'
-        version: 6.0.0(postcss-load-config@3.1.4(postcss@8.5.8)(ts-node@10.9.2(@types/node@24.12.0)(typescript@6.0.2)))(postcss@8.5.8)(svelte@5.53.12)(typescript@6.0.2)
+        version: 6.0.0(postcss-load-config@3.1.4(postcss@8.5.8)(ts-node@10.9.2(@types/node@24.12.0)(typescript@5.8.3)))(postcss@8.5.8)(svelte@5.53.12)(typescript@5.8.3)
       typescript:
-        specifier: 'catalog:'
-        version: 6.0.2
+        specifier: ^5.3.3
+        version: 5.8.3
       vite:
         specifier: 'catalog:'
         version: 8.0.3(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@24.12.0)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3)
@@ -3236,21 +3236,6 @@ packages:
       eslint-plugin-svelte: '>= 3'
       typescript: '>= 5 < 7'
       typescript-eslint: '>= 8'
-
-  '@sveltejs/vite-plugin-svelte-inspector@5.0.2':
-    resolution: {integrity: sha512-TZzRTcEtZffICSAoZGkPSl6Etsj2torOVrx6Uw0KpXxrec9Gg6jFWQ60Q3+LmNGfZSxHRCZL7vXVZIWmuV50Ig==}
-    engines: {node: ^20.19 || ^22.12 || >=24}
-    peerDependencies:
-      '@sveltejs/vite-plugin-svelte': ^6.0.0-next.0
-      svelte: ^5.0.0
-      vite: ^6.3.0 || ^7.0.0
-
-  '@sveltejs/vite-plugin-svelte@6.2.4':
-    resolution: {integrity: sha512-ou/d51QSdTyN26D7h6dSpusAKaZkAiGM55/AKYi+9AGZw7q85hElbjK3kEyzXHhLSnRISHOYzVge6x0jRZ7DXA==}
-    engines: {node: ^20.19 || ^22.12 || >=24}
-    peerDependencies:
-      svelte: ^5.0.0
-      vite: ^6.3.0 || ^7.0.0
 
   '@sveltejs/vite-plugin-svelte@7.0.0':
     resolution: {integrity: sha512-ILXmxC7HAsnkK2eslgPetrqqW1BKSL7LktsFgqzNj83MaivMGZzluWq32m25j2mDOjmSKX7GGWahePhuEs7P/g==}
@@ -5896,14 +5881,6 @@ packages:
       yaml:
         optional: true
 
-  vitefu@1.1.1:
-    resolution: {integrity: sha512-B/Fegf3i8zh0yFbpzZ21amWzHmuNlLlmJT6n7bu5e+pCHUKQIfXSYokrqOBGEMMe9UG2sostKQF9mml/vYaWJQ==}
-    peerDependencies:
-      vite: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0-beta.0
-    peerDependenciesMeta:
-      vite:
-        optional: true
-
   vitefu@1.1.3:
     resolution: {integrity: sha512-ub4okH7Z5KLjb6hDyjqrGXqWtWvoYdU3IGm/NorpgHncKoLTCfRIbvlhBm7r0YstIaQRYlp4yEbFqDcKSzXSSg==}
     peerDependencies:
@@ -7781,23 +7758,6 @@ snapshots:
       typescript: 6.0.2
       typescript-eslint: 8.58.0(eslint@10.0.0(jiti@2.4.2))(typescript@6.0.2)
 
-  '@sveltejs/vite-plugin-svelte-inspector@5.0.2(@sveltejs/vite-plugin-svelte@6.2.4(svelte@5.53.12)(vite@8.0.3(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@24.12.0)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3)))(svelte@5.53.12)(vite@8.0.3(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@24.12.0)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))':
-    dependencies:
-      '@sveltejs/vite-plugin-svelte': 6.2.4(svelte@5.53.12)(vite@8.0.3(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@24.12.0)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
-      obug: 2.1.1
-      svelte: 5.53.12
-      vite: 8.0.3(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@24.12.0)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3)
-
-  '@sveltejs/vite-plugin-svelte@6.2.4(svelte@5.53.12)(vite@8.0.3(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@24.12.0)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))':
-    dependencies:
-      '@sveltejs/vite-plugin-svelte-inspector': 5.0.2(@sveltejs/vite-plugin-svelte@6.2.4(svelte@5.53.12)(vite@8.0.3(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@24.12.0)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3)))(svelte@5.53.12)(vite@8.0.3(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@24.12.0)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
-      deepmerge: 4.3.1
-      magic-string: 0.30.21
-      obug: 2.1.1
-      svelte: 5.53.12
-      vite: 8.0.3(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@24.12.0)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3)
-      vitefu: 1.1.1(vite@8.0.3(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@24.12.0)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
-
   '@sveltejs/vite-plugin-svelte@7.0.0(svelte@5.53.12)(vite@8.0.3(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@24.12.0)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))':
     dependencies:
       deepmerge: 4.3.1
@@ -8596,7 +8556,7 @@ snapshots:
 
   dropcss@1.0.16: {}
 
-  dts-buddy@0.7.0(typescript@6.0.2):
+  dts-buddy@0.7.0(typescript@5.8.3):
     dependencies:
       '@jridgewell/source-map': 0.3.6
       '@jridgewell/sourcemap-codec': 1.5.5
@@ -8605,8 +8565,8 @@ snapshots:
       magic-string: 0.30.21
       sade: 1.8.1
       tinyglobby: 0.2.15
-      ts-api-utils: 1.3.0(typescript@6.0.2)
-      typescript: 6.0.2
+      ts-api-utils: 1.3.0(typescript@5.8.3)
+      typescript: 5.8.3
 
   e2e-test-dep-cjs-only@file:packages/kit/test/apps/dev-only/_test_dependencies/cjs-only: {}
 
@@ -9789,6 +9749,15 @@ snapshots:
       '@polka/url': 1.0.0-next.28
       trouter: 4.0.0
 
+  postcss-load-config@3.1.4(postcss@8.5.8)(ts-node@10.9.2(@types/node@24.12.0)(typescript@5.8.3)):
+    dependencies:
+      lilconfig: 2.1.0
+      yaml: 1.10.3
+    optionalDependencies:
+      postcss: 8.5.8
+      ts-node: 10.9.2(@types/node@24.12.0)(typescript@5.8.3)
+    optional: true
+
   postcss-load-config@3.1.4(postcss@8.5.8)(ts-node@10.9.2(@types/node@24.12.0)(typescript@6.0.2)):
     dependencies:
       lilconfig: 2.1.0
@@ -10308,22 +10277,22 @@ snapshots:
     dependencies:
       svelte: 5.53.12
 
-  svelte-preprocess@6.0.0(postcss-load-config@3.1.4(postcss@8.5.8)(ts-node@10.9.2(@types/node@24.12.0)(typescript@6.0.2)))(postcss@8.5.8)(svelte@5.53.12)(typescript@6.0.2):
+  svelte-preprocess@6.0.0(postcss-load-config@3.1.4(postcss@8.5.8)(ts-node@10.9.2(@types/node@24.12.0)(typescript@5.8.3)))(postcss@8.5.8)(svelte@5.53.12)(typescript@5.8.3):
     dependencies:
       detect-indent: 6.1.0
       strip-indent: 3.0.0
       svelte: 5.53.12
     optionalDependencies:
       postcss: 8.5.8
-      postcss-load-config: 3.1.4(postcss@8.5.8)(ts-node@10.9.2(@types/node@24.12.0)(typescript@6.0.2))
-      typescript: 6.0.2
+      postcss-load-config: 3.1.4(postcss@8.5.8)(ts-node@10.9.2(@types/node@24.12.0)(typescript@5.8.3))
+      typescript: 5.8.3
 
-  svelte2tsx@0.7.33(svelte@5.53.12)(typescript@6.0.2):
+  svelte2tsx@0.7.33(svelte@5.53.12)(typescript@5.8.3):
     dependencies:
       dedent-js: 1.0.1
       pascal-case: 3.1.2
       svelte: 5.53.12
-      typescript: 6.0.2
+      typescript: 5.8.3
 
   svelte@5.53.12:
     dependencies:
@@ -10417,9 +10386,9 @@ snapshots:
     dependencies:
       regexparam: 3.0.0
 
-  ts-api-utils@1.3.0(typescript@6.0.2):
+  ts-api-utils@1.3.0(typescript@5.8.3):
     dependencies:
-      typescript: 6.0.2
+      typescript: 5.8.3
 
   ts-api-utils@2.5.0(typescript@5.8.3):
     dependencies:
@@ -10433,6 +10402,25 @@ snapshots:
     dependencies:
       picomatch: 4.0.4
       typescript: 6.0.2
+
+  ts-node@10.9.2(@types/node@24.12.0)(typescript@5.8.3):
+    dependencies:
+      '@cspotcode/source-map-support': 0.8.1
+      '@tsconfig/node10': 1.0.12
+      '@tsconfig/node12': 1.0.11
+      '@tsconfig/node14': 1.0.3
+      '@tsconfig/node16': 1.0.4
+      '@types/node': 24.12.0
+      acorn: 8.16.0
+      acorn-walk: 8.3.5
+      arg: 4.1.3
+      create-require: 1.1.1
+      diff: 4.0.4
+      make-error: 1.3.6
+      typescript: 5.8.3
+      v8-compile-cache-lib: 3.0.1
+      yn: 3.1.1
+    optional: true
 
   ts-node@10.9.2(@types/node@24.12.0)(typescript@6.0.2):
     dependencies:
@@ -10572,10 +10560,6 @@ snapshots:
     transitivePeerDependencies:
       - '@emnapi/core'
       - '@emnapi/runtime'
-
-  vitefu@1.1.1(vite@8.0.3(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@24.12.0)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3)):
-    optionalDependencies:
-      vite: 8.0.3(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@24.12.0)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3)
 
   vitefu@1.1.3(vite@8.0.3(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@24.12.0)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3)):
     optionalDependencies:
