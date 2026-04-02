@@ -897,7 +897,7 @@ export const createPost = form(
 );
 
 export const updatePost = form(
-	v.object({/* ... */}),
+	v.object({ id: v.string() }),
 	async (post) => {
 		// form logic goes here...
 		const result = externalApi.update(post);
