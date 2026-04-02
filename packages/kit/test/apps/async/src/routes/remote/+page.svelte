@@ -6,7 +6,9 @@
 		get_count,
 		get_flaky_count,
 		set_count,
+		set_count_refresh_all,
 		set_count_partial_refresh,
+		set_count_partial_refresh_all,
 		set_count_server_refresh,
 		set_count_server_refresh_after_read,
 		set_count_server_set,
@@ -116,6 +118,22 @@
 	id="multiply-partial-refresh-btn"
 >
 	command (partial refresh failure)
+</button>
+<button
+	onclick={async () => {
+		command_result = await set_count_refresh_all(10).updates(get_count);
+	}}
+	id="multiply-refresh-all-btn"
+>
+	command (requested refreshAll)
+</button>
+<button
+	onclick={async () => {
+		command_result = await set_count_partial_refresh_all(11).updates(get_flaky_count);
+	}}
+	id="multiply-partial-refresh-all-btn"
+>
+	command (requested refreshAll partial failure)
 </button>
 <button
 	onclick={async () => {

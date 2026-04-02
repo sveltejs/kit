@@ -29,6 +29,12 @@ export const set_count = command('unchecked', async ({ c, slow = false, deferred
 	return count;
 });
 
+export const set_count_refresh_all = command('unchecked', async (c) => {
+	count = c;
+	await requested(get_count).refreshAll();
+	return c;
+});
+
 let should_fail_flaky = false;
 
 export const get_flaky_count = query('unchecked', (key) => {
@@ -48,6 +54,13 @@ export const set_count_partial_refresh = command('unchecked', async (c) => {
 		await get_flaky_count(key).refresh();
 	}
 
+	return c;
+});
+
+export const set_count_partial_refresh_all = command('unchecked', async (c) => {
+	count = c;
+	should_fail_flaky = true;
+	await requested(get_flaky_count).refreshAll();
 	return c;
 });
 

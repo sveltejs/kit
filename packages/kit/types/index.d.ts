@@ -3381,7 +3381,9 @@ declare module '$app/server' {
 	 * Returns the set of query arguments requested by the client for a given query function.
 	 *
 	 * */
-	export function requested<Input, Output>(query: RemoteQueryFunction<Input, Output>, limit?: number): Iterable<Input> & AsyncIterable<Input>;
+	export function requested<Input, Output>(query: RemoteQueryFunction<Input, Output>, limit?: number): Iterable<Input> & AsyncIterable<Input> & {
+		refreshAll: () => Promise<void>;
+	};
 	type RemotePrerenderInputsGenerator<Input = any> = () => MaybePromise<Input[]>;
 	type MaybePromise<T> = T | Promise<T>;
 

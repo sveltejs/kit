@@ -11,7 +11,7 @@ import { mark_argument_validated } from './query.js';
  * @template Output
  * @param {RemoteQueryFunction<Input, Output>} query
  * @param {number} [limit=Infinity]
- * @returns {Iterable<Input> & AsyncIterable<Input>}
+ * @returns {Iterable<Input> & AsyncIterable<Input> & { refreshAll: () => Promise<void> }}
  */
 export function requested(query, limit = Infinity) {
 	const { state } = get_request_store();
@@ -79,6 +79,11 @@ export function requested(query, limit = Infinity) {
 					throw new Error(`Skipping ${internals.name}(${payload})`, { cause: error });
 				}
 			});
+		},
+		async refreshAll() {
+			for await (const arg of this) {
+				void query(arg).refresh();
+			}
 		}
 	};
 }

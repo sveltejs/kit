@@ -185,6 +185,10 @@ function command_tests() {
 			const output: void = value;
 			output;
 		}
+
+		const refreshes = requested(q);
+		const refreshed: Promise<void> = refreshes.refreshAll();
+		refreshed;
 	}
 	void command_without_args();
 
