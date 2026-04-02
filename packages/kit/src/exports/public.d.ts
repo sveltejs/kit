@@ -1452,6 +1452,20 @@ export interface Page<
  */
 export type ParamMatcher = (param: string) => boolean;
 
+export type RequestedResult<T> = Iterable<T> &
+	AsyncIterable<T> & {
+		/**
+		 * Call `refresh` on all queries selected by this `requested` invocation.
+		 * This is identical to:
+		 * ```ts
+		 * for await (const arg of requested(query, ...) {
+		 *   void query(arg).refresh();
+		 * }
+		 * ```
+		 */
+		refreshAll: () => Promise<void>;
+	};
+
 export interface RequestEvent<
 	Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
 	RouteId extends AppRouteId | null = AppRouteId | null

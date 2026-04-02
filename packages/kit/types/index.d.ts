@@ -1426,6 +1426,20 @@ declare module '@sveltejs/kit' {
 	 */
 	export type ParamMatcher = (param: string) => boolean;
 
+	export type RequestedResult<T> = Iterable<T> &
+		AsyncIterable<T> & {
+			/**
+			 * Call `refresh` on all queries selected by this `requested` invocation.
+			 * This is identical to:
+			 * ```ts
+			 * for await (const arg of requested(query, ...) {
+			 *   void query(arg).refresh();
+			 * }
+			 * ```
+			 */
+			refreshAll: () => Promise<void>;
+		};
+
 	export interface RequestEvent<
 		Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
 		RouteId extends AppRouteId | null = AppRouteId | null
@@ -3231,7 +3245,7 @@ declare module '$app/paths' {
 }
 
 declare module '$app/server' {
-	import type { RequestEvent, RemoteCommand, RemoteForm, RemoteFormInput, InvalidField, RemotePrerenderFunction, RemoteQueryFunction } from '@sveltejs/kit';
+	import type { RequestEvent, RemoteCommand, RemoteForm, RemoteFormInput, InvalidField, RemotePrerenderFunction, RemoteQueryFunction, RequestedResult } from '@sveltejs/kit';
 	import type { StandardSchemaV1 } from '@standard-schema/spec';
 	/**
 	 * Read the contents of an imported asset from the filesystem
@@ -3378,12 +3392,29 @@ declare module '$app/server' {
 		function batch<Schema extends StandardSchemaV1, Output>(schema: Schema, fn: (args: StandardSchemaV1.InferOutput<Schema>[]) => MaybePromise<(arg: StandardSchemaV1.InferOutput<Schema>, idx: number) => Output>): RemoteQueryFunction<StandardSchemaV1.InferInput<Schema>, Output>;
 	}
 	/**
-	 * Returns the set of query arguments requested by the client for a given query function.
+	 * In the context of a remote `command` or `form` request, returns an iterable
+	 * of the client-requested refreshes' validated arguments up to the supplied limit.
+	 * Arguments that fail validation or exceed the limit are recorded as failures in
+	 * the response to the client.
+	 *
+	 * @example
+	 * ```ts
+	 * for (const arg of requested(getPost, 5)) {
+	 * 	// it's safe to throw away this promise -- SvelteKit
+	 * 	// will await it for us and handle any errors by sending
+	 * 	// them to the client.
+	 * 	void getPost(arg).refresh();
+	 * }
+	 * ```
+	 *
+	 * As a shorthand for the above, you can also call `refreshAll` on the result:
+	 *
+	 * ```ts
+	 * await requested(getPost, 5).refreshAll();
+	 * ```
 	 *
 	 * */
-	export function requested<Input, Output>(query: RemoteQueryFunction<Input, Output>, limit?: number): Iterable<Input> & AsyncIterable<Input> & {
-		refreshAll: () => Promise<void>;
-	};
+	export function requested<Input, Output>(query: RemoteQueryFunction<Input, Output>, limit?: number): RequestedResult<Input>;
 	type RemotePrerenderInputsGenerator<Input = any> = () => MaybePromise<Input[]>;
 	type MaybePromise<T> = T | Promise<T>;
 

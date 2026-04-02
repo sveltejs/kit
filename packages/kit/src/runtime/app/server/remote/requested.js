@@ -1,17 +1,36 @@
-/** @import { RemoteQueryFunction } from '@sveltejs/kit' */
+/** @import { RemoteQueryFunction, RequestedResult } from '@sveltejs/kit' */
 /** @import { MaybePromise, RemoteQueryInternals } from 'types' */
 import { get_request_store } from '@sveltejs/kit/internal/server';
 import { create_remote_key, parse_remote_arg } from '../../../shared.js';
 import { mark_argument_validated } from './query.js';
 
 /**
- * Returns the set of query arguments requested by the client for a given query function.
+ * In the context of a remote `command` or `form` request, returns an iterable
+ * of the client-requested refreshes' validated arguments up to the supplied limit.
+ * Arguments that fail validation or exceed the limit are recorded as failures in
+ * the response to the client.
+ *
+ * @example
+ * ```ts
+ * for (const arg of requested(getPost, 5)) {
+ * 	// it's safe to throw away this promise -- SvelteKit
+ * 	// will await it for us and handle any errors by sending
+ * 	// them to the client.
+ * 	void getPost(arg).refresh();
+ * }
+ * ```
+ *
+ * As a shorthand for the above, you can also call `refreshAll` on the result:
+ *
+ * ```ts
+ * await requested(getPost, 5).refreshAll();
+ * ```
  *
  * @template Input
  * @template Output
  * @param {RemoteQueryFunction<Input, Output>} query
  * @param {number} [limit=Infinity]
- * @returns {Iterable<Input> & AsyncIterable<Input> & { refreshAll: () => Promise<void> }}
+ * @returns {RequestedResult<Input>}
  */
 export function requested(query, limit = Infinity) {
 	const { state } = get_request_store();
