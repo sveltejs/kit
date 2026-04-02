@@ -94,7 +94,7 @@ export function all_types(config, mode) {
 }
 
 /**
- * Regenerate `${output}/server/internal.js` in response to `src/{app.html,error.html,service-worker.js}` changing
+ * Regenerate __SERVER__/internal.js in response to src/{app.html,error.html,service-worker.js} changing
  * @param {import('types').ValidatedConfig} config
  * @param {string} root The project root directory
  */

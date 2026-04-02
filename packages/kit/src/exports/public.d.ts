@@ -2,10 +2,6 @@ import 'svelte'; // pick up `declare module "*.svelte"`
 import 'vite/client'; // pick up `declare module "*.jpg"`, etc.
 import '../types/ambient.js';
 
-import { SvelteConfig } from '@sveltejs/vite-plugin-svelte';
-import { StandardSchemaV1 } from '@standard-schema/spec';
-import { PluginOption } from 'vite';
-
 import {
 	AdapterEntry,
 	CspDirectives,
@@ -24,6 +20,9 @@ import {
 	IsAny
 } from '../types/private.js';
 import { BuildData, SSRNodeLoader, SSRRoute, ValidatedConfig } from 'types';
+import { SvelteConfig } from '@sveltejs/vite-plugin-svelte';
+import { StandardSchemaV1 } from '@standard-schema/spec';
+import { PluginOption } from 'vite';
 import {
 	RouteId as AppRouteId,
 	LayoutParams as AppLayoutParams,
@@ -1596,7 +1595,7 @@ export interface ServerInitOptions {
 }
 
 /**
- * Powers the server
+ * Required to instantiate `Server` with project specific information
  */
 export interface SSRManifest {
 	appDir: string;

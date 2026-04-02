@@ -8,10 +8,6 @@ test.skip(() => process.env.KIT_E2E_BROWSER === 'webkit');
 
 test.describe.configure({ mode: 'parallel' });
 
-test.describe('adapter', () => {
-	// TODO: adapter vite environment api tests?
-});
-
 test.describe('Imports', () => {
 	// https://github.com/sveltejs/kit/issues/461
 	test('handles static asset imports', async ({ baseURL, page }) => {

@@ -49,12 +49,12 @@ import {
 	sveltekit_server_assets,
 	sveltekit_ssr_manifest
 } from './module_ids.js';
+import { to_fs } from './filesystem.js';
 import { import_peer } from '../../utils/import.js';
 import { compact } from '../../utils/array.js';
+import { posixify } from '../../utils/os.js';
 import { should_ignore, has_children } from './static_analysis/utils.js';
 import { load_config } from '../../core/config/index.js';
-import { to_fs } from './filesystem.js';
-import { posixify } from '../../utils/os.js';
 
 const cwd = process.cwd();
 
@@ -473,7 +473,6 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 
 				const define = {
 					__SVELTEKIT_APP_DIR__: s(kit.appDir),
-					__SVELTEKIT_APP_VERSION__: s(kit.version.name),
 					__SVELTEKIT_EMBEDDED__: s(kit.embedded),
 					__SVELTEKIT_FORK_PRELOADS__: s(kit.experimental.forkPreloads),
 					__SVELTEKIT_PATHS_ASSETS__: s(kit.paths.assets),

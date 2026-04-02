@@ -2,11 +2,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { URL } from 'node:url';
 import { styleText } from 'node:util';
-
 import sirv from 'sirv';
 import { isCSSRequest, isFetchableDevEnvironment } from 'vite';
-
-import { getRequest, setResponse } from '@sveltejs/kit/node';
+import { getRequest, setResponse } from '../../../exports/node/index.js';
 import { coalesce_to_error } from '../../../utils/error.js';
 import { resolve_entry } from '../../../utils/filesystem.js';
 import { posixify } from '../../../utils/os.js';

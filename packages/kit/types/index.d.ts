@@ -1569,7 +1569,7 @@ declare module '@sveltejs/kit' {
 	}
 
 	/**
-	 * Powers the server
+	 * Required to instantiate `Server` with project specific information
 	 */
 	export interface SSRManifest {
 		appDir: string;

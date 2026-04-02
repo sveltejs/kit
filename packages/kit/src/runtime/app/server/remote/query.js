@@ -1,12 +1,12 @@
 /** @import { RemoteQuery, RemoteQueryFunction } from '@sveltejs/kit' */
 /** @import { RemoteInternals, MaybePromise, RequestState, RemoteQueryBatchInternals, RemoteQueryInternals } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
-import { HttpError, SvelteKitError } from '@sveltejs/kit/internal';
 import { get_request_store } from '@sveltejs/kit/internal/server';
-import { create_validator, get_cache, get_response, run_remote_function } from './shared.js';
 import { create_remote_key, stringify, stringify_remote_arg } from '../../../shared.js';
-import { prerendering } from '../../environment/internal.js';
+import { prerendering } from '__sveltekit/environment';
+import { create_validator, get_cache, get_response, run_remote_function } from './shared.js';
 import { handle_error_and_jsonify } from '../../../server/utils.js';
+import { HttpError, SvelteKitError } from '@sveltejs/kit/internal';
 
 /**
  * Creates a remote query. When called from the browser, the function will be invoked on the server via a `fetch` call.
