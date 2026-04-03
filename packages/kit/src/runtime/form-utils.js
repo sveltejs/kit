@@ -147,7 +147,10 @@ export async function deserialize_binary_form(request) {
 		throw deserialize_error('invalid Content-Length header');
 	}
 
-	const reader = request.body.getReader();
+	// TODO: remove this workaround once we upgrade to TS 6.0
+	const reader = /** @type {ReadableStreamDefaultReader<Uint8Array<ArrayBuffer>>} */ (
+		request.body.getReader()
+	);
 
 	/** @type {Array<Promise<Uint8Array<ArrayBuffer> | undefined>>} */
 	const chunks = [];
