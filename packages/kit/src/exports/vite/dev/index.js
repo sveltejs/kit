@@ -382,6 +382,7 @@ function has_correct_case(file, assets) {
 /**
  * @param {import('vite').ViteDevServer} vite
  * @param {string} id
+ * @returns {void}
  */
 export function invalidate_module(vite, id) {
 	for (const environment in vite.environments) {
@@ -393,37 +394,11 @@ export function invalidate_module(vite, id) {
 }
 
 /**
- * @param {import('types').ManifestData} manifest_data
- * @param {import('vite/module-runner').ModuleRunner} runner
- * @param {string} root
- * @returns {Promise<Record<string, import('@sveltejs/kit').ParamMatcher>>}
- */
-export async function get_matchers(manifest_data, runner, root) {
-	/** @type {Record<string, import('@sveltejs/kit').ParamMatcher>} */
-	const matchers = {};
-
-	for (const key in manifest_data.matchers) {
-		const file = manifest_data.matchers[key];
-		const url = path.resolve(root, file);
-		const module = await runner.import(url);
-
-		if (module.match) {
-			matchers[key] = module.match;
-		} else {
-			throw new Error(`${file} does not export a \`match\` function`);
-		}
-	}
-
-	return matchers;
-}
-
-/**
- *
  * @param {import('vite').ViteDevServer} vite
- * @param {import('vite/module-runner').ModuleRunner} runner
  * @param {string[]} urls
+ * @returns {Promise<Record<string, string>>}
  */
-export async function get_inline_css(vite, runner, urls) {
+export async function get_inline_css(vite, urls) {
 	/** @type {Set<import('vite').EnvironmentModuleNode>} */
 	const deps = new Set();
 
@@ -438,17 +413,10 @@ export async function get_inline_css(vite, runner, urls) {
 
 	for (const dep of deps) {
 		if (isCSSRequest(dep.url) && !vite_css_query_regex.test(dep.url)) {
-			const inlineCssUrl = dep.url.includes('?')
+			const inline_css_url = dep.url.includes('?')
 				? dep.url.replace('?', '?inline&')
 				: dep.url + '?inline';
-			try {
-				const mod = await runner.import(inlineCssUrl);
-				styles.set(dep.url, mod.default);
-			} catch {
-				// this can happen with dynamically imported modules, I think
-				// because the Vite module graph doesn't distinguish between
-				// static and dynamic imports? TODO investigate, submit fix
-			}
+			styles.set(dep.url, inline_css_url);
 		}
 	}
 

@@ -13,11 +13,10 @@ await server.init({
 });
 
 /**
- *
  * @param {Request} request
  * @param {string | undefined} remote_address
  * @param {import('types').ValidatedKitConfig} kit
- * @returns
+ * @returns {Promise<Response>}
  */
 export async function respond(request, remote_address, kit) {
 	return await server.respond(request, {

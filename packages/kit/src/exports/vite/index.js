@@ -21,7 +21,7 @@ import { runtime_directory, logger, get_runtime_base, get_mime_lookup } from '..
 import { generate_manifest } from '../../core/generate_manifest/index.js';
 import { build_server_nodes } from './build/build_server.js';
 import { assets_base, find_deps, resolve_symlinks } from './build/utils.js';
-import { dev, invalidate_module, get_matchers, get_inline_css } from './dev/index.js';
+import { dev, invalidate_module, get_inline_css } from './dev/index.js';
 import { preview } from './preview/index.js';
 import {
 	error_for_missing_config,
@@ -49,7 +49,8 @@ import {
 	sveltekit_ssr_manifest,
 	sveltekit_environment,
 	sveltekit_server,
-	sveltekit_dev_server
+	sveltekit_dev_server,
+	sveltekit_traced
 } from './module_ids.js';
 import { to_fs } from './filesystem.js';
 import { import_peer } from '../../utils/import.js';
@@ -315,19 +316,6 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 	const sourcemapIgnoreList = /** @param {string} relative_path */ (relative_path) =>
 		relative_path.includes('node_modules') || relative_path.includes(kit.outDir);
 
-	/**
-	 * Only available if the adapter didn't provide its own environment
-	 * @type {import('vite/module-runner').ModuleRunner | null}
-	 */
-	let runner = null;
-
-	function get_module_runner() {
-		if (!runner) {
-			throw new Error('The module runner should have been created during the configureServer hook');
-		}
-		return runner;
-	}
-
 	/** @type {import('vite').Plugin} */
 	const plugin_setup = {
 		name: 'vite-plugin-sveltekit-setup',
@@ -512,32 +500,28 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 
 					new_config.environments = {
 						ssr: {
+							// this node environment is the fallback if the adapter doesn't
+							// specify its own dev environment
 							dev: {
 								createEnvironment(name, config) {
+									if (!dev_environment) throw new Error('This should never happen');
+
+									const module_runner = createServerModuleRunner(
+										dev_environment.vite.environments.ssr
+									);
+
 									return createFetchableDevEnvironment(name, config, {
 										hot: true,
 										transport: createServerHotChannel(),
 										async handleRequest(request) {
 											try {
-												const module_runner = get_module_runner();
-
-												const resolved_instrumentation = resolve_entry(
-													path.join(svelte_config.kit.files.src, 'instrumentation.server')
-												);
-												if (resolved_instrumentation) {
-													await module_runner.import(resolved_instrumentation);
-												}
-
-												/**
-												 * @type {{
-												 *   respond: (request: Request, remote_address: string | undefined, kit: import('types').ValidatedKitConfig) => Promise<Response>
-												 * }}
-												 */
+												/** @type {import('./dev/server.js')} */
 												const { respond } = await module_runner.import(
-													import.meta.resolve('./dev/server.js')
+													'__sveltekit/dev-server-entry'
 												);
 												return await respond(request, dev_environment?.remote_address, kit);
 											} catch (error) {
+												// Vite doesn't log the thrown error so we have to do it ourselves
 												console.error(error);
 												throw error;
 											}
@@ -652,6 +636,13 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 
 			if (id === '__sveltekit/remote') {
 				return `${runtime_directory}/client/remote-functions/index.js`;
+			}
+
+			if (id === '__sveltekit/dev-server-entry') {
+				const resolved_instrumentation = resolve_entry(
+					path.join(svelte_config.kit.files.src, 'instrumentation.server')
+				);
+				return resolved_instrumentation ? sveltekit_traced : import.meta.resolve('./dev/server.js');
 			}
 
 			if (id.startsWith('__sveltekit/')) {
@@ -775,16 +766,20 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 
 						const { manifest_data, env } = dev_environment;
 
+						const runtime_base = get_runtime_base(root);
+
 						return dedent`
 							import { server_assets } from '__sveltekit/server-assets';
 							import { remotes } from '__sveltekit/remotes';
-							import { to_fs } from '${get_runtime_base(root)}/../exports/vite/filesystem.js';
+							import { to_fs } from '${runtime_base}/../exports/vite/filesystem.js';
+							import * as path from '${runtime_base}/../utils/path.js';
 
 							export const base_path = ${s(kit.paths.base)};
 							export const prerendered = new Set();
 							export const env = ${s(env)};
 
 							const nodes = ${devalue.uneval(manifest_data.nodes, revive_functions)};
+							const matchers = ${s(Object.entries(manifest_data.matchers))};
 
 							export const manifest = {
 								appDir: ${s(kit.appDir)},
@@ -793,24 +788,23 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 								mimeTypes: ${s(get_mime_lookup(manifest_data))},
 								_: {
 									client: {
-										start: '${get_runtime_base(root)}/client/entry.js',
+										start: '${runtime_base}/client/entry.js',
 										app: '${to_fs(kit.outDir)}/generated/client/app.js',
 										imports: [],
 										stylesheets: [],
 										fonts: [],
 										uses_env_dynamic_public: true,
-										nodes:
-											${
-												kit.router.resolution === 'client'
-													? undefined
-													: s(
-															manifest_data.nodes.map((node, i) => {
-																if (node.component || node.universal) {
-																	return `${kit.paths.base}${to_fs(kit.outDir)}/generated/client/nodes/${i}.js`;
-																}
-															})
-														)
-											},
+										nodes: ${
+											kit.router.resolution === 'client'
+												? undefined
+												: dedent`
+														nodes.map((node, i) => {
+															if (node.component || node.universal) {
+																return \`${kit.paths.base}\${to_fs(${kit.outDir})}/generated/client/nodes/\${i}.js\`;
+															}
+														})
+													`
+										},
 										// \`css\` is not necessary in dev, as the JS file from \`nodes\` will reference the CSS file
 										routes:
 											${
@@ -842,91 +836,83 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 											}
 									},
 									server_assets,
-									nodes: [${manifest_data.nodes
-										.map((node, index) => {
-											return dedent`
-												async () => {
-													const node = nodes[${index}];
+									nodes: nodes.map(async (node, i) => {
+										const result = {};
+										result.index = i;
+										result.universal_id = node.universal;
+										result.server_id = node.server;
 
-													const result = {};
-													result.index = ${index};
-													result.universal_id = node.universal;
-													result.server_id = node.server;
+										// these are unused in dev, but it's easier to include them
+										result.imports = [];
+										result.stylesheets = [];
+										result.fonts = [];
 
-													// these are unused in dev, but it's easier to include them
-													result.imports = [];
-													result.stylesheets = [];
-													result.fonts = [];
+										const urls = [];
 
-													const urls = [];
+										if (node.component) {
+											result.component = async () => {
+												const { module, url } = await resolve(
+													path.resolve(__SVELTEKIT_ROOT__, node.component)
+												);
+												urls.push(url);
+												return module.default;
+											};
+										}
 
-													${
-														node.component
-															? dedent`
-																	result.component = async () => {
-																		const { module, url } = await resolve(${s(path.resolve(root, node.component))});
-																		urls.push(url);
-																		return module.default;
-																	}
-																`
-															: ''
-													}
+										if (node.universal) {
+											if (node.page_options?.ssr === false) {
+												result.universal = node.page_options;
+											} else {
+												// TODO: explain why the file was loaded on the server if we fail to load it
+												const { module, url } = await resolve(
+													path.resolve(__SVELTEKIT_ROOT__, node.universal)
+												);
+												urls.push(url);
+												result.universal = module;
+											}
+										}
 
-													${
-														node.universal
-															? dedent`
-																	if (node.page_options?.ssr === false) {
-																		result.universal = node.page_options;
-																	} else {
-																		// TODO: explain why the file was loaded on the server if we fail to load it
-																		const { module, url } = await resolve(${s(path.resolve(root, node.universal))});
-																		urls.push(url);
-																		result.universal = module;
-																	}
-																`
-															: ''
-													}
+										if (node.server) {
+											const { module } = await resolve(
+												path.resolve(__SVELTEKIT_ROOT__, node.server)
+											);
+											result.server = module;
+										}
 
-													${
-														node.server
-															? dedent`
-																	const { module } = await resolve(${s(path.resolve(root, node.server))});
-																	result.server = module;
-																`
-															: ''
-													}
+										// in dev we inline all styles to avoid FOUC. this gets populated lazily so that
+										// components/stylesheets loaded via import() during \`load\` are included
 
-													// in dev we inline all styles to avoid FOUC. this gets populated lazily so that
-													// components/stylesheets loaded via import() during \`load\` are included
+										const event = \`sveltekit:inline-styles-node-\${i}-response\`;
+										result.inline_styles = async () => {
+											if (!import.meta.hot) throw new Error('hmr must be enabled in the dev environment');
 
-													const event = 'sveltekit:inline-styles-node-${index}-response';
-													result.inline_styles = async () => {
-														if (!import.meta.hot) return;
+											const { promise, resolve } = Promise.withResolvers();
 
-														const { promise, resolve } = Promise.withResolvers();
+											const listener = async (styles) => {
+												import.meta.hot.off(event, listener);
+												const importing_styles = Object.entries(styles).map(async ([dep_url, inline_css_url]) => {
+													return [dep_url, await import(/* @vite-ignore */ inline_css_url).then((mod) => mod.default)];
+												});
+												resolve(Object.fromEntries(await Promise.all(importing_styles)));
+											};
 
-														const listener = (data) => {
-															import.meta.hot.off(event, listener);
-															resolve(data);
-														};
+											import.meta.hot.on(event, listener);
+											import.meta.hot.send('sveltekit:inline-styles-request', {
+												urls,
+												node: result.index
+											});
 
-														import.meta.hot.on(event, listener);
-														import.meta.hot.send('sveltekit:inline-styles-request', { urls, node: result.index });
+											return promise;
+										};
 
-														return promise;
-													}
-
-													return result;
-												}
-											`;
-										})
-										.join(',\n')}],
+										return result;
+									}),
 									prerendered_routes: new Set(),
 									get remotes() {
 										return Object.fromEntries(
 											remotes.map((remote) => [
 												remote.hash,
-												() => import(/* @vite-ignore */(\`${root}/\${remote.file}\`)).then(
+												() => import(/* @vite-ignore */(\`\${__SVELTEKIT_ROOT__}/\${remote.file}\`)).then(
 													(module) => ({ default: module })
 												)
 											])
@@ -948,7 +934,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 														endpoint
 															? dedent`
 																async () => {
-																	const url = ${s(path.resolve(root, endpoint.file))};
+																	const url = path.resolve(__SVELTEKIT_ROOT__, ${s(endpoint.file)});
 																	const { module } = await resolve(url);
 																	return module;
 																}
@@ -961,27 +947,20 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 										})
 									).join(',\n')}],
 									matchers: async () => {
-										if (!import.meta.hot) return;
-
-										const event = 'sveltekit:matchers-response';
-										const { promise, resolve } = Promise.withResolvers();
-
-										const listener = (data) => {
-											import.meta.hot.off(event, listener);
-											resolve(data);
-										};
-
-										import.meta.hot.on(event, listener);
-										import.meta.hot.send('sveltekit:matchers-request');
-
-										return promise;
+										const importing_matchers = matchers.map(async ([name, file]) => {
+											const url = path.resolve(__SVELTEKIT_ROOT__, file);
+											const { module } = await resolve(url);
+											if (!module.match) {
+												throw new Error(\`\${file} does not export a \\\`match\\\` function\`);
+											}
+											return [name, module.match];
+										});
+										return Object.fromEntries(await Promise.all(importing_matchers));
 									}
 								}
 							};
 
-							/**
-							 * @param {string} url
-							 */
+							/** @param {string} url */
 							async function loud_ssr_load_module(url) {
 								try {
 									return await import(/* @vite-ignore */ url);
@@ -1055,6 +1034,17 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 									return super.respond(request, options);
 								}
 							}
+						`;
+					}
+
+					case sveltekit_traced: {
+						return dedent`
+							import '${resolve_entry(path.join(svelte_config.kit.files.src, 'instrumentation.server'))}';
+
+							const { default: _0 } = await import('${import.meta.resolve('./dev/server.js')}');
+							export { _0 as default };
+
+							import.meta.hot?.accept();
 						`;
 					}
 				}
@@ -1479,8 +1469,6 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 		}
 	};
 
-	/** @type {() => Promise<void>} */
-	let handle_matchers;
 	/** @type {(payload: { urls: string[]; node: number; }) => Promise<void>} */
 	let handle_inline_styles;
 	/** @type {(error: Error) => void} */
@@ -1772,35 +1760,23 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 		 * Adds the SvelteKit middleware to do SSR in dev mode.
 		 * @see https://vitejs.dev/guide/api-plugin.html#configureserver
 		 */
-		async configureServer(vite) {
-			await runner?.close();
-			vite.environments.ssr.hot.off('sveltekit:matchers-request', handle_matchers);
+		configureServer(vite) {
 			vite.environments.ssr.hot.off('sveltekit:inline-styles-request', handle_inline_styles);
 			vite.environments.ssr.hot.off('sveltekit:ssr-load-module', handle_ssr_load_module);
 
 			manifest_data = sync.all(svelte_config, vite_config_env.mode, root).manifest_data;
 
 			// other properties will be populated during the `dev` function
-			const info = (dev_environment = /** @type {import('types').DevEnvironment} */ ({
+			dev_environment = /** @type {import('types').DevEnvironment} */ ({
 				vite,
 				env: loadEnv(vite_config.mode, svelte_config.kit.env.dir, ''),
 				manifest_data
-			}));
-
-			const module_runner = (runner = createServerModuleRunner(vite.environments.ssr));
-
-			handle_matchers ??= async () => {
-				vite.environments.ssr.hot.send(
-					'sveltekit:matchers-response',
-					await get_matchers(info.manifest_data, module_runner, root)
-				);
-			};
-			vite.environments.ssr.hot.on('sveltekit:matchers-request', handle_matchers);
+			});
 
 			handle_inline_styles ??= async ({ urls, node }) => {
 				vite.environments.ssr.hot.send(
 					`sveltekit:inline-styles-node-${node}-response`,
-					await get_inline_css(vite, module_runner, urls)
+					await get_inline_css(vite, urls)
 				);
 			};
 			vite.environments.ssr.hot.on('sveltekit:inline-styles-request', handle_inline_styles);
