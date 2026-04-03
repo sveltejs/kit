@@ -1417,6 +1417,22 @@ export interface Page<
  */
 export type ParamMatcher = (param: string) => boolean;
 
+export type RequestedResult<T> = Iterable<T> &
+	AsyncIterable<T> & {
+		/**
+		 * Call `refresh` on all queries selected by this `requested` invocation.
+		 * This is identical to:
+		 * ```ts
+		 * import { requested } from '$app/server';
+		 *
+		 * for await (const arg of requested(query, ...) {
+		 *   void query(arg).refresh();
+		 * }
+		 * ```
+		 */
+		refreshAll: () => Promise<void>;
+	};
+
 export interface RequestEvent<
 	Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
 	RouteId extends AppRouteId | null = AppRouteId | null
@@ -2025,7 +2041,7 @@ export type RemoteForm<Input extends RemoteFormInput | void, Output> = {
 			form: HTMLFormElement;
 			data: Input;
 			submit: () => Promise<void> & {
-				updates: (...queries: Array<RemoteQuery<any> | RemoteQueryOverride>) => Promise<void>;
+				updates: (...updates: RemoteQueryUpdate[]) => Promise<void>;
 			};
 		}) => void | Promise<void>
 	): {
@@ -2070,11 +2086,16 @@ export type RemoteForm<Input extends RemoteFormInput | void, Output> = {
  */
 export type RemoteCommand<Input, Output> = {
 	(arg: undefined extends Input ? Input | void : Input): Promise<Output> & {
-		updates(...queries: Array<RemoteQuery<any> | RemoteQueryOverride>): Promise<Output>;
+		updates(...updates: RemoteQueryUpdate[]): Promise<Output>;
 	};
 	/** The number of pending command executions */
 	get pending(): number;
 };
+
+export type RemoteQueryUpdate =
+	| RemoteQuery<any>
+	| RemoteQueryFunction<any, any>
+	| RemoteQueryOverride;
 
 export type RemoteResource<T> = Promise<T> & {
 	/** The error in case the query fails. Most often this is a [`HttpError`](https://svelte.dev/docs/kit/@sveltejs-kit#HttpError) but it isn't guaranteed to be. */
@@ -2137,10 +2158,7 @@ export type RemoteQuery<T> = RemoteResource<T> & {
 	withOverride(update: (current: T) => T): RemoteQueryOverride;
 };
 
-export interface RemoteQueryOverride {
-	_key: string;
-	release(): void;
-}
+export type RemoteQueryOverride = () => void;
 
 /**
  * The return value of a remote `prerender` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#prerender) for full documentation.
