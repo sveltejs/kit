@@ -946,13 +946,12 @@ It's not enough to just request the updates from the client -- you need to accep
 ```js
 import * as v from 'valibot';
 import { error, redirect } from '@sveltejs/kit';
-import { query, form } from '$app/server';
 const slug = '';
 const post = { id: '' };
 /** @type {any} */
 const externalApi = '';
 // ---cut---
-import { requested } from '$app/server';
+import { query, form, requested } from '$app/server';
 
 export const getPosts = query(v.object({ filter: v.string() }), async ({ filter }) => { /* ... */ });
 
