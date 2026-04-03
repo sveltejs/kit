@@ -5,7 +5,6 @@ import { app, goto, query_map, redirect_fork } from '../client.js';
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
 import { getContext, untrack } from 'svelte';
 import { navigating, page } from '../state.svelte.js';
-import { untrack } from 'svelte';
 import { create_remote_key, split_remote_key } from '../../shared.js';
 
 /** Indicates a query function, as opposed to a query instance */
