@@ -577,7 +577,7 @@ async function _preload_data(intent) {
 						let committed = false;
 						let discarded = false;
 						/** @type {any} */
-						let fork = {
+						const fork = {
 							// TODO have this in fork API?
 							get committed() {
 								return committed;
@@ -586,7 +586,7 @@ async function _preload_data(intent) {
 								return discarded;
 							}
 						};
-						let f = svelte.fork(() => {
+						const f = svelte.fork(() => {
 							root.$set({ ...result.props, fork });
 							update(result.props.page);
 						});
@@ -663,7 +663,6 @@ async function initialize(result, target, hydrate) {
 		// @ts-ignore Svelte 5 specific: transformError allows to transform errors before they are passed to boundaries
 		transformError: __SVELTEKIT_EXPERIMENTAL_USE_TRANSFORM_ERROR__
 			? /** @param {unknown} e */ async (e) => {
-					debugger;
 					const error = await handle_error(e, current.nav);
 					rendering_error = { error, status: get_status(e) };
 					page.error = error;
