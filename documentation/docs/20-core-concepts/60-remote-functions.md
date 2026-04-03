@@ -928,7 +928,7 @@ declare function submit(): Promise<any> & {
 	updates(...updates: RemoteQueryUpdate[]): Promise<any>;
 }
 
-declare function getPosts({ filter: string }): RemoteQuery<Post[]>;
+declare function getPosts(args: { filter: string }): RemoteQuery<Post[]>;
 declare const newPost: Post;
 // ---cut---
 await submit().updates(
@@ -976,8 +976,10 @@ export const createPost = form(
 Additionally, `requested` allows a simple shorthand when all you want to do is refresh the requested query instances:
 
 ```ts
-import { requested } from '$app/server';
+import type { RemoteQueryFunction } from '@sveltejs/kit';
+declare const getPosts: RemoteQueryFunction<any, any>;
 // ---cut---
+import { requested } from '$app/server';
 // this is the same as looping over the result and calling `void getPosts(arg).refresh()`.
 await requested(getPosts, 1).refreshAll();
 ```
