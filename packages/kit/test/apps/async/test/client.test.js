@@ -26,6 +26,38 @@ test.describe('remote functions', () => {
 		await page.getByRole('button', { name: 'Refresh' }).click();
 		await expect(page.locator('p')).toHaveText('foobaz');
 	});
+
+	test('prerender preload does not eagerly navigate redirects', async ({ page }) => {
+		await page.goto('/remote/prerender');
+		await page.locator('a[href="/remote/prerender/redirect"]').hover();
+		await Promise.all([page.waitForTimeout(100), page.waitForLoadState('networkidle')]);
+
+		await expect(page).toHaveURL('/remote/prerender');
+
+		await page.click('a[href="/remote/prerender/redirect"]');
+		await expect(page.locator('#redirected')).toHaveText('redirected');
+		await expect(page.locator('#layout-prerender-query')).toHaveText(
+			'on page /remote/prerender/redirect/redirected (== /remote/prerender/redirect/redirected)'
+		);
+	});
+
+	test('query preload does not eagerly navigate redirects', async ({ page }) => {
+		await page.goto('/remote/query-redirect');
+
+		await page.locator('a[href="/remote/query-redirect/from-page"]').hover();
+		await Promise.all([page.waitForTimeout(100), page.waitForLoadState('networkidle')]);
+		await expect(page).toHaveURL('/remote/query-redirect');
+
+		await page.locator('a[href="/remote/query-redirect/from-common-layout"]').hover();
+		await Promise.all([page.waitForTimeout(100), page.waitForLoadState('networkidle')]);
+		await expect(page).toHaveURL('/remote/query-redirect');
+
+		await page.click('a[href="/remote/query-redirect/from-common-layout"]');
+		await expect(page.locator('#redirected')).toHaveText('redirected');
+		await expect(page.locator('#layout-query')).toHaveText(
+			'on page /remote/query-redirect/from-common-layout/redirected (== /remote/query-redirect/from-common-layout/redirected)'
+		);
+	});
 });
 
 // have to run in serial because commands mutate in-memory data on the server (should fix this at some point)

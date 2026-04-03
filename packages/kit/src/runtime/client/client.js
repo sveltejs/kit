@@ -560,10 +560,34 @@ async function _preload_data(intent) {
 				// resolve, bail rather than creating an orphan fork
 				if (lc === load_cache && result.type === 'loaded') {
 					try {
-						return svelte.fork(() => {
-							root.$set(result.props);
+						// We gotta create a fork facade so that we can put something into the props
+						// the moment the fork callback is run, before the fork object is created.
+						let committed = false;
+						let discarded = false;
+						/** @type {any} */
+						let fork = {
+							// TODO have this in fork API?
+							get committed() {
+								return committed;
+							},
+							get discarded() {
+								return discarded;
+							}
+						};
+						let f = svelte.fork(() => {
+							root.$set({ ...result.props, fork });
 							update(result.props.page);
 						});
+						fork.commit = () => {
+							committed = true;
+							return f.commit();
+						};
+						fork.discard = () => {
+							discarded = true;
+							return f.discard();
+						};
+						fork.id = lc.id;
+						return fork;
 					} catch {
 						// if it errors, it's because the experimental flag isn't enabled in Svelte
 					}
@@ -627,6 +651,7 @@ async function initialize(result, target, hydrate) {
 		// @ts-ignore Svelte 5 specific: transformError allows to transform errors before they are passed to boundaries
 		transformError: __SVELTEKIT_EXPERIMENTAL_USE_TRANSFORM_ERROR__
 			? /** @param {unknown} e */ async (e) => {
+					debugger;
 					const error = await handle_error(e, current.nav);
 					rendering_error = { error, status: get_status(e) };
 					page.error = error;
@@ -1954,6 +1979,16 @@ if (import.meta.hot) {
 	import.meta.hot.on('vite:beforeUpdate', () => {
 		if (current.error) location.reload();
 	});
+}
+
+/**
+ * @param {import('svelte').Fork} fork
+ * @param {string} location
+ */
+export async function redirect_fork(fork, location) {
+	if ((await load_cache?.fork) === fork && load_cache) {
+		load_cache.promise = Promise.resolve({ type: 'redirect', location });
+	}
 }
 
 /** @typedef {(typeof PRELOAD_PRIORITIES)['hover'] | (typeof PRELOAD_PRIORITIES)['tap']} PreloadDataPriority */

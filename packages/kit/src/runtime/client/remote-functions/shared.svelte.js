@@ -2,10 +2,85 @@
 /** @import { RemoteFunctionResponse } from 'types' */
 /** @import { Query } from './query.svelte.js' */
 import * as devalue from 'devalue';
-import { app, goto, query_map } from '../client.js';
+import { app, goto, query_map, redirect_fork } from '../client.js';
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
-import { untrack } from 'svelte';
+import { getContext, untrack } from 'svelte';
 import { navigating, page } from '../state.svelte.js';
+
+/** @typedef {import('svelte').Fork & { discarded: boolean; committed: boolean }} SvelteKitFork */
+
+/** @type {Map<string, Map<SvelteKitFork | null, number>>} */
+const forks_by_key = new Map();
+
+/**
+ * @returns {() => SvelteKitFork | null}
+ */
+function get_fork_context() {
+	try {
+		return getContext('__sveltekit_fork');
+	} catch {
+		return () => null;
+	}
+}
+
+/**
+ * @param {string} key
+ * @returns {() => void}
+ */
+export function register_fork(key) {
+	const get_fork = get_fork_context()();
+	const instances = forks_by_key.get(key) ?? new Map();
+
+	instances.set(get_fork, (instances.get(get_fork) ?? 0) + 1);
+	forks_by_key.set(key, instances);
+
+	return () => {
+		const current = forks_by_key.get(key);
+		if (!current) return;
+
+		const count = current.get(get_fork);
+		if (count === undefined) return;
+
+		if (count > 1) {
+			current.set(get_fork, count - 1);
+		} else {
+			current.delete(get_fork);
+		}
+
+		if (current.size === 0) {
+			forks_by_key.delete(key);
+		}
+	};
+}
+
+/**
+ * @param {string} key
+ * @param {string} location
+ */
+export async function handle_remote_redirect(key, location) {
+	const forks = forks_by_key.get(key) ?? new Map();
+	let target;
+
+	for (const fork of forks.keys()) {
+		if (!fork || fork.committed) {
+			await goto(location);
+			throw new Redirect(307, location);
+		} else if (!fork.discarded) {
+			target = fork;
+		}
+	}
+
+	if (target) {
+		await redirect_fork(target, location);
+		// This request happened in a speculative fork and has been routed through the fork loader.
+		// Keep the promise pending to avoid turning the redirect into a render error in the current world.
+		// TODO this is a Svelte bug we need to fix that
+		return new Promise(() => {});
+	}
+
+	await goto(location);
+	throw new Redirect(307, location);
+}
 
 /**
  * @returns {{ 'x-sveltekit-pathname': string, 'x-sveltekit-search': string }}
@@ -27,8 +102,9 @@ export function get_remote_request_headers() {
 /**
  * @param {string} url
  * @param {HeadersInit} headers
+ * @param {string} key
  */
-export async function remote_request(url, headers) {
+export async function remote_request(url, headers, key) {
 	const response = await fetch(url, {
 		headers: {
 			'Content-Type': 'application/json',
@@ -43,8 +119,7 @@ export async function remote_request(url, headers) {
 	const result = /** @type {RemoteFunctionResponse} */ (await response.json());
 
 	if (result.type === 'redirect') {
-		await goto(result.location);
-		throw new Redirect(307, result.location);
+		return handle_remote_redirect(key, result.location);
 	}
 
 	if (result.type === 'error') {
@@ -82,5 +157,17 @@ export function refresh_queries(stringified_refreshes, updates = []) {
 		// Update the query with the new value
 		const entry = query_map.get(key);
 		entry?.resource.set(value);
+	}
+}
+
+/**
+ * @returns {boolean} Returns `true` if we are in an effect
+ */
+export function is_in_effect() {
+	try {
+		$effect.pre(() => {});
+		return true;
+	} catch {
+		return false;
 	}
 }
