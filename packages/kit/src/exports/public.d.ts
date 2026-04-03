@@ -1458,6 +1458,8 @@ export type RequestedResult<T> = Iterable<T> &
 		 * Call `refresh` on all queries selected by this `requested` invocation.
 		 * This is identical to:
 		 * ```ts
+		 * import { requested } from '$app/server';
+		 *
 		 * for await (const arg of requested(query, ...) {
 		 *   void query(arg).refresh();
 		 * }
