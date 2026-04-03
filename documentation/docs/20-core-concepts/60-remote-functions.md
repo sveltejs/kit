@@ -928,7 +928,7 @@ declare function submit(): Promise<any> & {
 	updates(...updates: RemoteQueryUpdate[]): Promise<any>;
 }
 
-declare function getPosts({ filter: string }): RemoteQuery<Post[]>;
+declare function getPosts(arg: { filter: string }): RemoteQuery<Post[]>;
 declare const newPost: Post;
 // ---cut---
 await submit().updates(
