@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.56.1
+### Patch Changes
+
+
+- chore: update JSDoc ([#15640](https://github.com/sveltejs/kit/pull/15640))
+
 ## 2.56.0
 ### Minor Changes
 
