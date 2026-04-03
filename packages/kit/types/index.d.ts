@@ -1432,6 +1432,8 @@ declare module '@sveltejs/kit' {
 			 * Call `refresh` on all queries selected by this `requested` invocation.
 			 * This is identical to:
 			 * ```ts
+			 * import { requested } from '$app/server';
+			 *
 			 * for await (const arg of requested(query, ...) {
 			 *   void query(arg).refresh();
 			 * }
@@ -3399,6 +3401,8 @@ declare module '$app/server' {
 	 *
 	 * @example
 	 * ```ts
+	 * import { requested } from '$app/server';
+	 *
 	 * for (const arg of requested(getPost, 5)) {
 	 * 	// it's safe to throw away this promise -- SvelteKit
 	 * 	// will await it for us and handle any errors by sending
@@ -3410,6 +3414,8 @@ declare module '$app/server' {
 	 * As a shorthand for the above, you can also call `refreshAll` on the result:
 	 *
 	 * ```ts
+	 * import { requested } from '$app/server';
+	 *
 	 * await requested(getPost, 5).refreshAll();
 	 * ```
 	 *

@@ -12,6 +12,8 @@ import { mark_argument_validated } from './query.js';
  *
  * @example
  * ```ts
+ * import { requested } from '$app/server';
+ *
  * for (const arg of requested(getPost, 5)) {
  * 	// it's safe to throw away this promise -- SvelteKit
  * 	// will await it for us and handle any errors by sending
@@ -23,6 +25,8 @@ import { mark_argument_validated } from './query.js';
  * As a shorthand for the above, you can also call `refreshAll` on the result:
  *
  * ```ts
+ * import { requested } from '$app/server';
+ *
  * await requested(getPost, 5).refreshAll();
  * ```
  *
