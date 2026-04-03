@@ -434,7 +434,7 @@ class QueryProxy {
 
 		// A bit duplicative with #get_or_create_cache_entry but this way we can reuse
 		// register_fork in the remote prerender function, too.
-		this.#release_fork = register_fork(this._key);
+		this.#release_fork = register_fork(this.#key);
 
 		const entry = this.#get_or_create_cache_entry();
 
