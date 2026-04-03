@@ -290,6 +290,23 @@ export function create_remote_key(id, payload) {
 }
 
 /**
+ * @param {string} key
+ * @returns {{ id: string; payload: string }}
+ */
+export function split_remote_key(key) {
+	const i = key.lastIndexOf('/');
+
+	if (i === -1) {
+		throw new Error(`Invalid remote key: ${key}`);
+	}
+
+	return {
+		id: key.slice(0, i),
+		payload: key.slice(i + 1)
+	};
+}
+
+/**
  * @template T
  * @param {string} key
  * @param {() => T} fn

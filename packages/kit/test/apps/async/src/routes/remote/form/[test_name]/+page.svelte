@@ -52,9 +52,7 @@
 <form
 	data-enhanced
 	{...enhanced.enhance(async ({ data, submit }) => {
-		await submit().updates(
-			get_message(params.test_name).withOverride(() => data.message + ' (override)')
-		);
+		await submit().updates(message.withOverride(() => data.message + ' (override)'));
 	})}
 >
 	{#if enhanced.fields.message.issues()}

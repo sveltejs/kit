@@ -83,7 +83,7 @@ test.describe('remote function mutations', () => {
 		expect(request_count).toBe(1); // 1 for the command, no refreshes
 	});
 
-	test('command returns correct sum and does client-initiated single flight mutation', async ({
+	test('command returns correct sum and does requested single flight mutation', async ({
 		page
 	}) => {
 		await page.goto('/remote');
@@ -141,7 +141,7 @@ test.describe('remote function mutations', () => {
 		expect(request_count).toBe(1); // no query refreshes, since that happens as part of the command response
 	});
 
-	test('command does client-initiated single flight mutation with override', async ({ page }) => {
+	test('command does requested single flight mutation with override', async ({ page }) => {
 		await page.goto('/remote');
 		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
 
@@ -154,6 +154,52 @@ test.describe('remote function mutations', () => {
 		await expect(page.locator('#count-result')).toHaveText('5 / 5 (false)');
 		await page.waitForTimeout(100); // allow all requests to finish (in case there are query refreshes which shouldn't happen)
 		expect(request_count).toBe(1); // no query refreshes, since that happens as part of the command response
+	});
+
+	test('query refresh errors are isolated to the failing query', async ({ page }) => {
+		await page.goto('/remote');
+		await expect(page.locator('#flaky-ok-result')).toHaveText('ok:0');
+		await expect(page.locator('#flaky-fail-result')).toHaveText('fail:0');
+
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		await page.click('#multiply-partial-refresh-btn');
+		await expect(page.locator('#command-result')).toHaveText('9');
+		await expect(page.locator('#flaky-ok-result')).toHaveText('ok:9');
+		await expect(page.locator('#flaky-fail-result')).toContainText('flaky refresh failed');
+		await page.waitForTimeout(100);
+		expect(request_count).toBe(1);
+	});
+
+	test('requested(...).refreshAll refreshes tracked query instances', async ({ page }) => {
+		await page.goto('/remote');
+		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
+
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		await page.click('#multiply-refresh-all-btn');
+		await expect(page.locator('#command-result')).toHaveText('10');
+		await expect(page.locator('#count-result')).toHaveText('10 / 10 (false)');
+		await page.waitForTimeout(100);
+		expect(request_count).toBe(1);
+	});
+
+	test('requested(...).refreshAll isolates failures to failing query', async ({ page }) => {
+		await page.goto('/remote');
+		await expect(page.locator('#flaky-ok-result')).toHaveText('ok:0');
+		await expect(page.locator('#flaky-fail-result')).toHaveText('fail:0');
+
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		await page.click('#multiply-partial-refresh-all-btn');
+		await expect(page.locator('#command-result')).toHaveText('11');
+		await expect(page.locator('#flaky-ok-result')).toHaveText('ok:11');
+		await expect(page.locator('#flaky-fail-result')).toContainText('flaky refresh failed');
+		await page.waitForTimeout(100);
+		expect(request_count).toBe(1);
 	});
 
 	test('query/command inside endpoint works', async ({ page }) => {
@@ -220,7 +266,7 @@ test.describe('remote function mutations', () => {
 
 		await page.click('#refresh-all');
 		await page.waitForTimeout(100); // allow things to rerun
-		expect(request_count).toBe(3);
+		expect(request_count).toBe(5);
 	});
 
 	test('refreshAll({ includeLoadFunctions: false }) reloads remote functions only', async ({
@@ -234,7 +280,7 @@ test.describe('remote function mutations', () => {
 
 		await page.click('#refresh-remote-only');
 		await page.waitForTimeout(100); // allow things to rerun
-		expect(request_count).toBe(2);
+		expect(request_count).toBe(4);
 	});
 
 	test('command tracks pending state', async ({ page }) => {
