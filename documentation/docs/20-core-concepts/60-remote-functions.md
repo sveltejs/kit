@@ -921,7 +921,7 @@ Unfortunately, life isn't always as simple as the preceding example. The server 
 
 SvelteKit makes this easy by allowing the client to _request_ that the server updates specific data using `submit().updates` (for `form`) or `myCommand().updates` (for `command`):
 
-```js
+```ts
 import type { RemoteQueryUpdate, RemoteQuery } from '@sveltejs/kit';
 interface Post {}
 declare function submit(): Promise<any> & {
