@@ -623,54 +623,6 @@ You can prevent sensitive data (such as passwords and credit card numbers) from 
 
 In this example, if the data does not validate, only the first `<input>` will be populated when the page reloads.
 
-### Single-flight mutations
-
-By default, all queries used on the page (along with any `load` functions) are automatically refreshed following a successful form submission. This ensures that everything is up-to-date, but it's also inefficient: many queries will be unchanged, and it requires a second trip to the server to get the updated data.
-
-Instead, we can specify which queries should be refreshed in response to a particular form submission. This is called a _single-flight mutation_, and there are two ways to achieve it. The first is to refresh the query on the server, inside the form handler:
-
-```js
-import * as v from 'valibot';
-import { error, redirect } from '@sveltejs/kit';
-import { query, form } from '$app/server';
-const slug = '';
-const post = { id: '' };
-/** @type {any} */
-const externalApi = '';
-// ---cut---
-export const getPosts = query(async () => { /* ... */ });
-
-export const getPost = query(v.string(), async (slug) => { /* ... */ });
-
-export const createPost = form(
-	v.object({/* ... */}),
-	async (data) => {
-		// form logic goes here...
-
-		// Refresh `getPosts()` on the server, and send
-		// the data back with the result of `createPost`
-		+++await getPosts().refresh();+++
-
-		// Redirect to the newly created page
-		redirect(303, `/blog/${slug}`);
-	}
-);
-
-export const updatePost = form(
-	v.object({/* ... */}),
-	async (data) => {
-		// form logic goes here...
-		const result = externalApi.update(post);
-
-		// The API already gives us the updated post,
-		// no need to refresh it, we can set it directly
-		+++await getPost(post.id).set(result);+++
-	}
-);
-```
-
-The second is to drive the single-flight mutation from the client, which we'll see in the section on [`enhance`](#form-enhance).
-
 ### Returns and redirects
 
 The example above uses [`redirect(...)`](@sveltejs-kit#redirect), which sends the user to the newly created page. Alternatively, the callback could return data, in which case it would be available as `createPost.result`:
@@ -767,39 +719,6 @@ We can customize what happens when the form is submitted with the `enhance` meth
 > When using `enhance`, the `<form>` is not automatically reset — you must call `form.reset()` if you want to clear the inputs.
 
 The callback receives the `form` element, the `data` it contains, and a `submit` function.
-
-To enable client-driven [single-flight mutations](#form-Single-flight-mutations), use `submit().updates(...)`. For example, if the `getPosts()` query was used on this page, we could refresh it like so:
-
-```ts
-import type { RemoteQuery, RemoteQueryOverride } from '@sveltejs/kit';
-interface Post {}
-declare function submit(): Promise<any> & {
-	updates(...queries: Array<RemoteQuery<any> | RemoteQueryOverride>): Promise<any>;
-}
-
-declare function getPosts(): RemoteQuery<Post[]>;
-// ---cut---
-await submit().updates(getPosts());
-```
-
-We can also _override_ the current data while the submission is ongoing:
-
-```ts
-import type { RemoteQuery, RemoteQueryOverride } from '@sveltejs/kit';
-interface Post {}
-declare function submit(): Promise<any> & {
-	updates(...queries: Array<RemoteQuery<any> | RemoteQueryOverride>): Promise<any>;
-}
-
-declare function getPosts(): RemoteQuery<Post[]>;
-declare const newPost: Post;
-// ---cut---
-await submit().updates(
-	getPosts().withOverride((posts) => [newPost, ...posts])
-);
-```
-
-The override will be applied immediately, and released when the submission completes (or fails).
 
 ### Multiple instances of a form
 
@@ -942,78 +861,125 @@ Now simply call `addLike`, from (for example) an event handler:
 
 > [!NOTE] Commands cannot be called during render.
 
-### Updating queries
+## Single-flight mutations
 
-To update `getLikes(item.id)`, or any other query, we need to tell SvelteKit _which_ queries need to be refreshed (unlike `form`, which by default invalidates everything, to approximate the behaviour of a native form submission).
+The purpose of both [`form`](#form) and [`command`](#command) is *mutating data*. In many cases, mutating data invalidates other data. By default, `form` deals with this by automatically invalidating all queries and load functions following a successful submission, to emulate what would happen with a traditional full-page reload. `command`, on the other hand, does nothing. Typically, neither of these options is going to be the ideal solution — invalidating everything is likely wasteful, as it's unlikely a form submission changed *everything* being displayed on your webpage. In the case of `command`, doing nothing likely *under*-invalidates your app, leaving stale data displayed. In both cases, it's common to have to perform two round-trips to the server: One to run the mutation, and another after that completes to re-request the data from any queries you need to refresh.
 
-We either do that inside the command itself...
+SvelteKit solves both of these problems with *single-flight mutations*: Your `form` submission or `command` invocation can refresh queries and pass their results back to the client in a single request.
+
+### Server-driven refreshes
+
+In most circumstances, the server handler knows what client data needs to be updated based on its arguments:
 
 ```js
-/// file: likes.remote.js
-// @filename: ambient.d.ts
-declare module '$lib/server/database' {
-	export function sql(strings: TemplateStringsArray, ...values: any[]): Promise<any[]>;
-}
-// @filename: index.js
-// ---cut---
 import * as v from 'valibot';
-import { query, command } from '$app/server';
-import * as db from '$lib/server/database';
+import { error, redirect } from '@sveltejs/kit';
+import { query, form } from '$app/server';
+const slug = '';
+const post = { id: '' };
+/** @type {any} */
+const externalApi = '';
 // ---cut---
-export const getLikes = query(v.string(), async (id) => { /* ... */ });
+export const getPosts = query(async () => { /* ... */ });
 
-export const addLike = command(v.string(), async (id) => {
-	await db.sql`
-		UPDATE item
-		SET likes = likes + 1
-		WHERE id = ${id}
-	`;
+export const getPost = query(v.string(), async (slug) => { /* ... */ });
 
-	+++getLikes(id).refresh();+++
-	// Just like within form functions you can also do
-	// getLikes(id).set(...)
-	// in case you have the result already
-});
+export const createPost = form(
+	v.object({/* ... */}),
+	async (data) => {
+		// form logic goes here...
+
+		// Refresh `getPosts()` on the server, and send
+		// the data back with the result of `createPost`
+		// it's safe to throw away the promise from `refresh`,
+		// as the framework awaits it for us before serving the response
+		+++void getPosts().refresh();+++
+
+		// Redirect to the newly created page
+		redirect(303, `/blog/${slug}`);
+	}
+);
+
+export const updatePost = form(
+	v.object({ id: v.string() }),
+	async (post) => {
+		// form logic goes here...
+		const result = externalApi.update(post);
+
+		// The API already gives us the updated post,
+		// no need to refresh it, we can set it directly
+		+++getPost(post.id).set(result);+++
+	}
+);
 ```
 
-...or when we call it:
+Because queries are keyed based on their arguments, `await getPost(post.id).set(result)` on the server knows to look up the matching `getPost(id)` on the client to update it. The same goes for `getPosts().refresh()` -- it knows to look up `getPosts()` with no argument on the client.
+
+### Client-requested refreshes
+
+Unfortunately, life isn't always as simple as the preceding example. The server always knows which query _functions_ to update, but it may not know which specific query _instances_ to update. For example, if `getPosts({ filter: 'author:santa' })` is rendered on the client, calling `getPosts().refresh()` in the server handler won't update it. You'd need to call `getPosts({ filter: 'author:santa' }).refresh()` instead — but how could you know which specific combinations of filters are currently rendered on the client, especially if your query argument is more complicated than an object with just one key?
+
+SvelteKit makes this easy by allowing the client to _request_ that the server updates specific data using `submit().updates` (for `form`) or `myCommand().updates` (for `command`):
 
 ```ts
-import { RemoteCommand, RemoteQueryFunction } from '@sveltejs/kit';
-
-interface Item { id: string }
-
-declare const addLike: RemoteCommand<string, void>;
-declare const getLikes: RemoteQueryFunction<string, number>;
-declare function showToast(message: string): void;
-declare const item: Item;
-// ---cut---
-try {
-	await addLike(item.id).+++updates(getLikes(item.id))+++;
-} catch (error) {
-	showToast('Something went wrong!');
+import type { RemoteQueryUpdate, RemoteQuery } from '@sveltejs/kit';
+interface Post {}
+declare function submit(): Promise<any> & {
+	updates(...updates: RemoteQueryUpdate[]): Promise<any>;
 }
+
+declare function getPosts({ filter: string }): RemoteQuery<Post[]>;
+declare const newPost: Post;
+// ---cut---
+await submit().updates(
+	// to request all active instances of getPosts
+	getPosts,
+	// to request a specific instance
+	getPosts({ filter: 'author:santa' }),
+	// to request a specific instance with an optimistic override
+	getPosts({ filter: 'author:santa' }).withOverride((posts) => [newPost, ...posts])
+);
 ```
 
-As before, we can use `withOverride` for optimistic updates:
+It's not enough to just request the updates from the client -- you need to accept them from the server as well:
+
+```js
+import * as v from 'valibot';
+import { error, redirect } from '@sveltejs/kit';
+import { query, form } from '$app/server';
+const slug = '';
+const post = { id: '' };
+/** @type {any} */
+const externalApi = '';
+// ---cut---
+import { requested } from '$app/server';
+
+export const getPosts = query(v.object({ filter: v.string() }), async ({ filter }) => { /* ... */ });
+
+export const createPost = form(
+	v.object({/* ... */}),
+	async (data) => {
+		// form logic goes here...
+
+		+++for (const arg of requested(getPosts, 1)) {+++
+		+++	void getPosts(arg).refresh();+++
+		+++}+++
+
+		// Redirect to the newly created page
+		redirect(303, `/blog/${slug}`);
+	}
+);
+```
+
+`requested` gives you access to the requested query arguments for the supplied query. It returns the *parsed* arguments for the query -- when these arguments are passed back into the query in `getPosts(arg).refresh()`, they will not be parsed again. If parsing an argument fails, that query will error, but the entire command will not fail. `requested`'s second parameter, `limit`, is the maximum number of items it will return. Any refresh requests beyond this limit will fail.
+
+Additionally, `requested` allows a simple shorthand when all you want to do is refresh the requested query instances:
 
 ```ts
-import { RemoteCommand, RemoteQueryFunction } from '@sveltejs/kit';
-
-interface Item { id: string }
-
-declare const addLike: RemoteCommand<string, void>;
-declare const getLikes: RemoteQueryFunction<string, number>;
-declare function showToast(message: string): void;
-declare const item: Item;
+import { requested } from '$app/server';
 // ---cut---
-try {
-	await addLike(item.id).updates(
-		getLikes(item.id).+++withOverride((n) => n + 1)+++
-	);
-} catch (error) {
-	showToast('Something went wrong!');
-}
+// this is the same as looping over the result and calling `void getPosts(arg).refresh()`.
+await requested(getPosts, 1).refreshAll();
 ```
 
 ## prerender
