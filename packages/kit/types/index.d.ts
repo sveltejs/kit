@@ -3000,12 +3000,12 @@ declare module '$app/navigation' {
 	 * @param {Object} opts Options related to the navigation
 	 * */
 	export function goto(url: string | URL, opts?: {
-		replaceState?: boolean;
-		noScroll?: boolean;
-		keepFocus?: boolean;
-		invalidateAll?: boolean;
-		invalidate?: Array<string | URL | ((url: URL) => boolean)>;
-		state?: App.PageState;
+		replaceState?: boolean | undefined;
+		noScroll?: boolean | undefined;
+		keepFocus?: boolean | undefined;
+		invalidateAll?: boolean | undefined;
+		invalidate?: (string | URL | ((url: URL) => boolean))[] | undefined;
+		state?: App.PageState | undefined;
 	}): Promise<void>;
 	/**
 	 * Causes any `load` functions belonging to the currently active page to re-run if they depend on the `url` in question, via `fetch` or `depends`. Returns a `Promise` that resolves when the page is subsequently updated.
@@ -3269,7 +3269,7 @@ declare module '$app/server' {
 	export function prerender<Output>(fn: () => MaybePromise<Output>, options?: {
 		inputs?: RemotePrerenderInputsGenerator<void>;
 		dynamic?: boolean;
-	}): RemotePrerenderFunction<void, Output>;
+	} | undefined): RemotePrerenderFunction<void, Output>;
 	/**
 	 * Creates a remote prerender function. When called from the browser, the function will be invoked on the server via a `fetch` call.
 	 *
@@ -3280,7 +3280,7 @@ declare module '$app/server' {
 	export function prerender<Input, Output>(validate: "unchecked", fn: (arg: Input) => MaybePromise<Output>, options?: {
 		inputs?: RemotePrerenderInputsGenerator<Input>;
 		dynamic?: boolean;
-	}): RemotePrerenderFunction<Input, Output>;
+	} | undefined): RemotePrerenderFunction<Input, Output>;
 	/**
 	 * Creates a remote prerender function. When called from the browser, the function will be invoked on the server via a `fetch` call.
 	 *
@@ -3291,7 +3291,7 @@ declare module '$app/server' {
 	export function prerender<Schema extends StandardSchemaV1, Output>(schema: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => MaybePromise<Output>, options?: {
 		inputs?: RemotePrerenderInputsGenerator<StandardSchemaV1.InferInput<Schema>>;
 		dynamic?: boolean;
-	}): RemotePrerenderFunction<StandardSchemaV1.InferInput<Schema>, Output>;
+	} | undefined): RemotePrerenderFunction<StandardSchemaV1.InferInput<Schema>, Output>;
 	/**
 	 * Creates a remote query. When called from the browser, the function will be invoked on the server via a `fetch` call.
 	 *

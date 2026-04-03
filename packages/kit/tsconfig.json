@@ -3,9 +3,13 @@
 		"allowJs": true,
 		"checkJs": true,
 		"noEmit": true,
+		// TODO: remove when we switch to TS 6.0
+		"strict": true,
 		"target": "esnext",
 		"module": "nodenext",
 		"moduleResolution": "nodenext",
+		// TODO: remove when we switch to TS 6.0
+		"allowSyntheticDefaultImports": true,
 		"paths": {
 			"@sveltejs/kit": ["./src/exports/public.d.ts"],
 			"@sveltejs/kit/node": ["./src/exports/node/index.js"],
