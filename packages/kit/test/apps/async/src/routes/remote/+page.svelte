@@ -4,7 +4,11 @@
 	import {
 		add,
 		get_count,
+		get_flaky_count,
 		set_count,
+		set_count_refresh_all,
+		set_count_partial_refresh,
+		set_count_partial_refresh_all,
 		set_count_server_refresh,
 		set_count_server_refresh_after_read,
 		set_count_server_set,
@@ -14,13 +18,25 @@
 
 	const { data } = $props();
 
-	let command_result = $state(null);
+	let command_result = $state(/** @type {number | null} */ (null));
 
 	// we just want it not to be treeshaken away
-	// eslint-disable-next-line @typescript-eslint/no-unused-expressions
-	q;
+	void q;
 
 	const count = get_count();
+	const flaky_ok = get_flaky_count('ok');
+	const flaky_fail = get_flaky_count('fail');
+
+	/** @param {unknown} error */
+	function get_message(error) {
+		if (error instanceof Error) return error.message;
+
+		if (typeof error === 'object' && error && 'message' in error) {
+			return String(error.message);
+		}
+
+		return String(error);
+	}
 </script>
 
 <p id="echo-result">{data.echo_result}</p>
@@ -30,6 +46,14 @@
 <!-- this is just here to check that it is re-requested after the command -->
 {await add({ a: 2, b: 2 })}
 <p id="command-result">{command_result}</p>
+<p id="flaky-ok-result">{await flaky_ok}</p>
+<svelte:boundary>
+	<p id="flaky-fail-result">{await flaky_fail}</p>
+
+	{#snippet failed(error)}
+		<p id="flaky-fail-result">{get_message(error)}</p>
+	{/snippet}
+</svelte:boundary>
 
 <!-- Test pending state for commands -->
 {#if browser}
@@ -52,7 +76,7 @@
 </button>
 <button
 	onclick={async () => {
-		command_result = await set_count({ c: 3 }).updates(count);
+		command_result = await set_count({ c: 3 }).updates(get_count);
 	}}
 	id="multiply-refresh-btn"
 >
@@ -78,11 +102,38 @@
 	onclick={async () => {
 		// slow, else test will not be able to see the override
 		// (which we deliberately set to a wrong optimistic value to see it applied before the refresh)
-		command_result = await set_count({ c: 5, slow: true }).updates(count.withOverride(() => 6));
+		command_result = await set_count({ c: 5, slow: true }).updates(
+			get_count,
+			count.withOverride(() => 6)
+		);
 	}}
 	id="multiply-override-refresh-btn"
 >
 	command (override + refresh)
+</button>
+<button
+	onclick={async () => {
+		command_result = await set_count_partial_refresh(9).updates(get_flaky_count);
+	}}
+	id="multiply-partial-refresh-btn"
+>
+	command (partial refresh failure)
+</button>
+<button
+	onclick={async () => {
+		command_result = await set_count_refresh_all(10).updates(get_count);
+	}}
+	id="multiply-refresh-all-btn"
+>
+	command (requested refreshAll)
+</button>
+<button
+	onclick={async () => {
+		command_result = await set_count_partial_refresh_all(11).updates(get_flaky_count);
+	}}
+	id="multiply-partial-refresh-all-btn"
+>
+	command (requested refreshAll partial failure)
 </button>
 <button
 	onclick={async () => {
