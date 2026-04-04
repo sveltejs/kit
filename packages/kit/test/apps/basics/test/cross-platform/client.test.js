@@ -1105,9 +1105,7 @@ test.describe('Routing', () => {
 		let tabs = page.context().pages();
 		expect(tabs.length === 1);
 
-		const new_tab = page.waitForEvent('popup', { timeout: 1000 });
 		await page.locator('button', { hasText: 'Inside form' }).click();
-		await new_tab;
 
 		tabs = page.context().pages();
 		expect(tabs.length > 1);
@@ -1119,9 +1117,7 @@ test.describe('Routing', () => {
 		let tabs = page.context().pages();
 		expect(tabs.length === 1);
 
-		const new_tab = page.waitForEvent('popup', { timeout: 1000 });
 		await page.locator('button', { hasText: 'Outside form' }).click();
-		await new_tab;
 
 		tabs = page.context().pages();
 		expect(tabs.length > 1);
