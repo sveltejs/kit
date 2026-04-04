@@ -167,7 +167,8 @@ export const manifest = {
 		),
 		matchers: async () => {
 			const importing_matchers = manifest_data.matchers.map(async ([name, file]) => {
-				const { module } = await resolve(file);
+				const url = join(__SVELTEKIT_ROOT__, file);
+				const { module } = await resolve(url);
 				if (!module.match) {
 					throw new Error(`${file} does not export a \`match\` function`);
 				}
