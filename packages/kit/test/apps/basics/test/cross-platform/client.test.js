@@ -1105,12 +1105,7 @@ test.describe('Routing', () => {
 		let tabs = page.context().pages();
 		expect(tabs.length === 1);
 
-		await page.waitForEvent('popup', {
-			async predicate(page) {
-				await page.locator('button', { hasText: 'Inside form' }).click();
-				return true;
-			}
-		});
+		await page.locator('button', { hasText: 'Inside form' }).click();
 
 		tabs = page.context().pages();
 		expect(tabs.length > 1);
@@ -1122,12 +1117,7 @@ test.describe('Routing', () => {
 		let tabs = page.context().pages();
 		expect(tabs.length === 1);
 
-		await page.waitForEvent('popup', {
-			async predicate(page) {
-				await page.locator('button', { hasText: 'Outside form' }).click();
-				return true;
-			}
-		});
+		await page.locator('button', { hasText: 'Outside form' }).click();
 
 		tabs = page.context().pages();
 		expect(tabs.length > 1);
