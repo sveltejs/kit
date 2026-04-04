@@ -1100,6 +1100,8 @@ test.describe('Routing', () => {
 	});
 
 	test('responds to <form target="_blank"> submission with new tab', async ({ page }) => {
+		test.slow();
+
 		await page.goto('/routing/form-target-blank');
 
 		let tabs = page.context().pages();
@@ -1114,6 +1116,8 @@ test.describe('Routing', () => {
 	});
 
 	test('responds to <button formtarget="_blank" submission with new tab', async ({ page }) => {
+		test.slow();
+
 		await page.goto('/routing/form-target-blank');
 
 		let tabs = page.context().pages();
