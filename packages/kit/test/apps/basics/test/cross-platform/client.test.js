@@ -1099,13 +1099,13 @@ test.describe('Routing', () => {
 		expect(requests.filter((r) => !r.includes('__route.js'))).toEqual([]);
 	});
 
-	test('responds to <form target="_blank"> submission with new tab', async ({ page, context }) => {
+	test('responds to <form target="_blank"> submission with new tab', async ({ page }) => {
 		await page.goto('/routing/form-target-blank');
 
 		let tabs = page.context().pages();
 		expect(tabs.length === 1);
 
-		const new_tab = context.waitForEvent('page');
+		const new_tab = page.waitForEvent('popup');
 		await page.locator('button', { hasText: 'Inside form' }).click();
 		await new_tab;
 
@@ -1113,16 +1113,13 @@ test.describe('Routing', () => {
 		expect(tabs.length > 1);
 	});
 
-	test('responds to <button formtarget="_blank" submission with new tab', async ({
-		page,
-		context
-	}) => {
+	test('responds to <button formtarget="_blank" submission with new tab', async ({ page }) => {
 		await page.goto('/routing/form-target-blank');
 
 		let tabs = page.context().pages();
 		expect(tabs.length === 1);
 
-		const new_tab = context.waitForEvent('page');
+		const new_tab = page.waitForEvent('popup');
 		await page.locator('button', { hasText: 'Outside form' }).click();
 		await new_tab;
 

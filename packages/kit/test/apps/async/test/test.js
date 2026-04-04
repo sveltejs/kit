@@ -172,10 +172,10 @@ test.describe('remote functions', () => {
 		await page.waitForURL('/remote');
 	});
 
-	test('remote form redirect opens in new tab when target=_blank', async ({ page, context }) => {
+	test('remote form redirect opens in new tab when target=_blank', async ({ page }) => {
 		await page.goto('/remote/form/redirect-target');
 
-		const popup_promise = context.waitForEvent('page');
+		const popup_promise = page.waitForEvent('popup', { timeout: 5000 });
 
 		await page.locator('[data-testid="form-blank"] button').click();
 
@@ -188,15 +188,11 @@ test.describe('remote functions', () => {
 		expect(page.url()).not.toContain('/destination');
 	});
 
-	test('remote form redirect navigates same tab without target=_blank', async ({
-		page,
-		context
-	}) => {
+	test('remote form redirect navigates same tab without target=_blank', async ({ page }) => {
 		await page.goto('/remote/form/redirect-target');
 
 		let popup_opened = false;
-		context.on('page', async (page) => {
-			await page.waitForLoadState();
+		page.on('popup', () => {
 			popup_opened = true;
 		});
 
@@ -208,12 +204,11 @@ test.describe('remote functions', () => {
 	});
 
 	test('remote form redirect opens in new tab when formtarget=_blank on input', async ({
-		page,
-		context
+		page
 	}) => {
 		await page.goto('/remote/form/redirect-target');
 
-		const popup_promise = context.waitForEvent('page');
+		const popup_promise = page.waitForEvent('popup', { timeout: 5000 });
 		await page.locator('[data-testid="form-input-blank"] input').click();
 		const popup = await popup_promise;
 		await popup.waitForLoadState();
