@@ -863,8 +863,8 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 						return dedent`
 							import '${resolve_entry(path.join(svelte_config.kit.files.src, 'instrumentation.server'))}';
 
-							const { default: _0 } = await import('${import.meta.resolve('./dev/server.js')}');
-							export { _0 as default };
+							const { respond } = await import('${import.meta.resolve('./dev/server.js')}');
+							export { respond };
 
 							import.meta.hot?.accept();
 						`;
