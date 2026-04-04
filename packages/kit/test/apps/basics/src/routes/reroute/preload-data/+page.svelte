@@ -1,5 +1,7 @@
 <script>
 	import { preloadData } from '$app/navigation';
+
+	/** @type {Record<string, any> | null} */
 	let data = null;
 
 	async function onClick() {

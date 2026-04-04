@@ -52,7 +52,7 @@
 		"@sveltejs/kit": "workspace:^",
 		"@types/node": "catalog:",
 		"esbuild": "catalog:",
-		"typescript": "^5.3.3",
+		"typescript": "catalog:",
 		"vitest": "catalog:"
 	},
 	"peerDependencies": {

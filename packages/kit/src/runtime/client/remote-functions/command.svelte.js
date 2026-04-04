@@ -1,12 +1,15 @@
-/** @import { RemoteCommand, RemoteQueryOverride } from '@sveltejs/kit' */
+/** @import { RemoteCommand, RemoteQueryUpdate } from '@sveltejs/kit' */
 /** @import { RemoteFunctionResponse } from 'types' */
-/** @import { Query } from './query.svelte.js' */
 import { app_dir, base } from '$app/paths/internal/client';
 import * as devalue from 'devalue';
 import { HttpError } from '@sveltejs/kit/internal';
 import { app } from '../client.js';
 import { stringify_remote_arg } from '../../shared.js';
-import { get_remote_request_headers, refresh_queries, release_overrides } from './shared.svelte.js';
+import {
+	get_remote_request_headers,
+	apply_refreshes,
+	categorize_updates
+} from './shared.svelte.js';
 
 /**
  * Client-version of the `command` function from `$app/server`.
@@ -21,8 +24,13 @@ export function command(id) {
 	// If we make it async, the return type will be a promise that resolves to a promise with an updates() method, which is not what we want.
 	/** @type {RemoteCommand<any, any>} */
 	const command_function = (arg) => {
-		/** @type {Array<Query<any> | RemoteQueryOverride>} */
-		let updates = [];
+		let overrides = /** @type {Array<() => void> | null} */ (null);
+
+		/** @type {Set<string> | null} */
+		let refreshes = null;
+
+		/** @type {Error | undefined} */
+		let updates_error;
 
 		// Increment pending count when command starts
 		pending_count++;
@@ -34,23 +42,26 @@ export function command(id) {
 			...get_remote_request_headers()
 		};
 
-		/** @type {Promise<any> & { updates: (...args: any[]) => any }} */
+		/** @type {Promise<any> & { updates: (...args: RemoteQueryUpdate[]) => Promise<any> }} */
 		const promise = (async () => {
 			try {
 				// Wait a tick to give room for the `updates` method to be called
 				await Promise.resolve();
 
+				if (updates_error) {
+					throw updates_error;
+				}
+
 				const response = await fetch(`${base}/${app_dir}/remote/${id}`, {
 					method: 'POST',
 					body: JSON.stringify({
-						payload: stringify_remote_arg(arg, app.hooks.transport),
-						refreshes: updates.map((u) => u._key)
+						payload: stringify_remote_arg(arg, app.hooks.transport, false),
+						refreshes: Array.from(refreshes ?? [])
 					}),
 					headers
 				});
 
 				if (!response.ok) {
-					release_overrides(updates);
 					// We only end up here in case of a network error or if the server has an internal error
 					// (which shouldn't happen because we handle errors on the server and always send a 200 response)
 					throw new Error('Failed to execute remote function');
@@ -58,30 +69,42 @@ export function command(id) {
 
 				const result = /** @type {RemoteFunctionResponse} */ (await response.json());
 				if (result.type === 'redirect') {
-					release_overrides(updates);
 					throw new Error(
 						'Redirects are not allowed in commands. Return a result instead and use goto on the client'
 					);
 				} else if (result.type === 'error') {
-					release_overrides(updates);
 					throw new HttpError(result.status ?? 500, result.error);
 				} else {
 					if (result.refreshes) {
-						refresh_queries(result.refreshes, updates);
+						apply_refreshes(result.refreshes);
 					}
 
 					return devalue.parse(result.result, app.decoders);
 				}
 			} finally {
+				overrides?.forEach((fn) => fn());
+
 				// Decrement pending count when command completes
 				pending_count--;
 			}
 		})();
 
-		promise.updates = (/** @type {any} */ ...args) => {
-			updates = args;
-			// @ts-expect-error Don't allow updates to be called multiple times
-			delete promise.updates;
+		let updates_called = false;
+		promise.updates = (...args) => {
+			if (updates_called) {
+				console.warn(
+					'Updates can only be sent once per command invocation. Ignoring additional updates.'
+				);
+				return promise;
+			}
+			updates_called = true;
+
+			try {
+				({ refreshes, overrides } = categorize_updates(args));
+			} catch (error) {
+				updates_error = /** @type {Error} */ (error);
+			}
+
 			return promise;
 		};
 
