@@ -928,7 +928,7 @@ declare function submit(): Promise<any> & {
 	updates(...updates: RemoteQueryUpdate[]): Promise<any>;
 }
 
-declare function getPosts({ filter: string }): RemoteQuery<Post[]>;
+declare function getPosts(args: { filter: string }): RemoteQuery<Post[]>;
 declare const newPost: Post;
 // ---cut---
 await submit().updates(
@@ -946,13 +946,12 @@ It's not enough to just request the updates from the client -- you need to accep
 ```js
 import * as v from 'valibot';
 import { error, redirect } from '@sveltejs/kit';
-import { query, form } from '$app/server';
 const slug = '';
 const post = { id: '' };
 /** @type {any} */
 const externalApi = '';
 // ---cut---
-import { requested } from '$app/server';
+import { query, form, requested } from '$app/server';
 
 export const getPosts = query(v.object({ filter: v.string() }), async ({ filter }) => { /* ... */ });
 
@@ -976,7 +975,9 @@ export const createPost = form(
 Additionally, `requested` allows a simple shorthand when all you want to do is refresh the requested query instances:
 
 ```ts
+import type { RemoteQueryFunction } from '@sveltejs/kit';
 import { requested } from '$app/server';
+declare const getPosts: RemoteQueryFunction<any, any>;
 // ---cut---
 // this is the same as looping over the result and calling `void getPosts(arg).refresh()`.
 await requested(getPosts, 1).refreshAll();
