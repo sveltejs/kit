@@ -1100,32 +1100,34 @@ test.describe('Routing', () => {
 	});
 
 	test('responds to <form target="_blank"> submission with new tab', async ({ page }) => {
-		test.slow();
-
 		await page.goto('/routing/form-target-blank');
 
 		let tabs = page.context().pages();
 		expect(tabs.length === 1);
 
-		const new_tab = page.waitForEvent('popup');
-		await page.locator('button', { hasText: 'Inside form' }).click();
-		await new_tab;
+		await page.waitForEvent('popup', {
+			async predicate(page) {
+				await page.locator('button', { hasText: 'Inside form' }).click();
+				return true;
+			}
+		});
 
 		tabs = page.context().pages();
 		expect(tabs.length > 1);
 	});
 
 	test('responds to <button formtarget="_blank" submission with new tab', async ({ page }) => {
-		test.slow();
-
 		await page.goto('/routing/form-target-blank');
 
 		let tabs = page.context().pages();
 		expect(tabs.length === 1);
 
-		const new_tab = page.waitForEvent('popup');
-		await page.locator('button', { hasText: 'Outside form' }).click();
-		await new_tab;
+		await page.waitForEvent('popup', {
+			async predicate(page) {
+				await page.locator('button', { hasText: 'Outside form' }).click();
+				return true;
+			}
+		});
 
 		tabs = page.context().pages();
 		expect(tabs.length > 1);
