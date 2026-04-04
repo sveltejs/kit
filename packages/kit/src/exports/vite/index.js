@@ -680,6 +680,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 					exactRegex(sveltekit_manifest_data),
 					exactRegex(sveltekit_server_assets),
 					exactRegex(sveltekit_remotes),
+					exactRegex(sveltekit_traced),
 					exactRegex(sveltekit_dev_server)
 				]
 			},
