@@ -110,7 +110,10 @@ export const manifest = {
 						import.meta.hot?.off(event, listener);
 						const importing_styles = Object.entries(styles).map(
 							async ([dep_url, inline_css_url]) => {
-								return [dep_url, await import(/* @vite-ignore */ inline_css_url).then((mod) => mod.default)];
+								return [
+									dep_url,
+									await import(/* @vite-ignore */ inline_css_url).then((mod) => mod.default)
+								];
 							}
 						);
 						resolve(Object.fromEntries(await Promise.all(importing_styles)));
