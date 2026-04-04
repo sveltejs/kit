@@ -1,5 +1,6 @@
 // This file contains Node-agnostic path utilities so that it can be used in
 // environments that do not have access to `node:path` (e.g. Cloudflare Workers).
+import { posixify } from './os.js';
 
 /**
  * @param {string} from
@@ -12,4 +13,12 @@ export function relative(from, to) {
 	let i = 0;
 	while (i < from_parts.length && i < to_parts.length && from_parts[i] === to_parts[i]) i++;
 	return [...Array(from_parts.length - i).fill('..'), ...to_parts.slice(i)].join('/') || '.';
+}
+
+/**
+ * @param  {...string} parts
+ * @returns {string}
+ */
+export function join(...parts) {
+	return parts.map(posixify).join('/');
 }
