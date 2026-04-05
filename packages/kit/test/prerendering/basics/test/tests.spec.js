@@ -158,8 +158,12 @@ test('does not prerender page with shadow endpoint with non-load handler', () =>
 	assert.isFalse(fs.existsSync(`${build}/shadowed-post/__data.json`));
 });
 
-test('prerenders page that coexists with a GET server endpoint', () => {
-	assert.isTrue(fs.existsSync(`${build}/prerender-with-server-endpoint.html`));
+test('prerendering a page that coexists with a GET server endpoint', () => {
+	assert.isTrue(fs.existsSync(`${build}/duplicate-get.html`));
+});
+
+test('prerendering a page that coexists with a POST server endpoint', () => {
+	assert.isTrue(fs.existsSync(`${build}/get-and-post.html`));
 });
 
 test('prerendering a page with a linked GET server endpoint processes properly', () => {
