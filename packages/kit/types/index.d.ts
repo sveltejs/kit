@@ -1871,16 +1871,16 @@ declare module '@sveltejs/kit' {
 				? {
 						name: string;
 						'aria-invalid': boolean | 'false' | 'true' | undefined;
-						get value(): string | number;
-						set value(v: string | number);
+						get value(): string;
+						set value(v: string);
 					}
 				: T extends 'select multiple'
 					? {
 							name: string;
 							multiple: true;
 							'aria-invalid': boolean | 'false' | 'true' | undefined;
-							get value(): string[] | number[];
-							set value(v: string[] | number[]);
+							get value(): string[];
+							set value(v: string[]);
 						}
 					: T extends 'text'
 						? {
@@ -2822,7 +2822,7 @@ declare module '@sveltejs/kit' {
 	class Redirect_1 {
 		
 		constructor(status: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308, location: string);
-		status: 301 | 302 | 303 | 307 | 308 | 300 | 304 | 305 | 306;
+		status: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308;
 		location: string;
 	}
 
