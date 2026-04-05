@@ -13,7 +13,7 @@ import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import * as sync from '../../../core/sync/sync.js';
 import { not_found } from '../utils.js';
 import { escape_html } from '../../../utils/escape.js';
-import { sveltekit_ssr_manifest } from '../module_ids.js';
+import { sveltekit_manifest_data } from '../module_ids.js';
 import { to_fs } from '../filesystem.js';
 
 // vite-specifc queries that we should skip handling for css urls
@@ -60,7 +60,7 @@ export function dev(vite, vite_config, svelte_config, root, dev_environment) {
 			return;
 		}
 
-		void invalidate_module(vite, sveltekit_ssr_manifest);
+		void invalidate_module(vite, sveltekit_manifest_data);
 	}
 
 	update_manifest();
@@ -108,7 +108,7 @@ export function dev(vite, vite_config, svelte_config, root, dev_environment) {
 		if (timeout || restarting || !/\+(page|layout|server).*$/.test(file)) return;
 		sync.update(svelte_config, manifest_data, file, root);
 		// TODO: perform a partial update instead of invalidating the whole virtual module?
-		void invalidate_module(vite, sveltekit_ssr_manifest);
+		void invalidate_module(vite, sveltekit_manifest_data);
 	});
 
 	const { appTemplate, errorTemplate, serviceWorker, hooks } = svelte_config.kit.files;
