@@ -243,6 +243,22 @@ export function form(id) {
 					{},
 					{
 						...descriptors,
+						data: {
+							get() {
+								// TODO 3.0 remove
+								throw new Error(
+									`The \`data\` property has been removed from the \`enhance\` callback argument. Use \`instance.fields.value()\` instead.`
+								);
+							}
+						},
+						form: {
+							get() {
+								// TODO 3.0 remove
+								throw new Error(
+									`The \`form\` property has been removed from the \`enhance\` callback argument. To get the current \`<form>\` element, use \`instance.element\` instead.`
+								);
+							}
+						},
 						element: {
 							value: form
 						},
@@ -334,31 +350,6 @@ export function form(id) {
 				// Preflight passed - clear stale client-side preflight issues
 				if (preflight_schema) {
 					raw_issues = raw_issues.filter((issue) => issue.server);
-				}
-
-				// TODO 3.0 remove this warning
-				if (DEV) {
-					const error = () => {
-						throw new Error(
-							'Remote form functions no longer get passed a FormData object. The payload is now a POJO. See https://kit.svelte.dev/docs/remote-functions#form for details.'
-						);
-					};
-					for (const key of [
-						'append',
-						'delete',
-						'entries',
-						'forEach',
-						'get',
-						'getAll',
-						'has',
-						'keys',
-						'set',
-						'values'
-					]) {
-						if (!(key in data)) {
-							Object.defineProperty(data, key, { get: error });
-						}
-					}
 				}
 
 				try {
