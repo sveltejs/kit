@@ -1897,8 +1897,8 @@ type InputElementProps<T extends keyof InputTypeMap> = T extends 'checkbox' | 'r
 			? {
 					name: string;
 					'aria-invalid': boolean | 'false' | 'true' | undefined;
-get value(): string;
-set value(v: string);
+					get value(): string;
+					set value(v: string);
 				}
 			: T extends 'select multiple'
 				? {
