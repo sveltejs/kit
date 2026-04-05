@@ -221,44 +221,6 @@ export function form(id) {
 		}
 
 		/**
-		 * @returns {Promise<boolean> & { updates: (...args: RemoteQueryUpdate[]) => Promise<boolean> }}
-		 */
-		function submit_from_element() {
-			if (!element) {
-				throw new Error('Cannot call submit() before the form is attached');
-			}
-
-			const default_submitter = /** @type {HTMLElement | undefined} */ (
-				element.querySelector('button:not([type]), [type="submit"]')
-			);
-
-			const form_data = new FormData(element, default_submitter);
-
-			if (DEV) {
-				validate_form_data(form_data, clone(element).enctype);
-			}
-
-			submitted = true;
-			pending_count++;
-
-			const submission = submit(form_data);
-
-			/** @type {Promise<boolean> & { updates: (...args: RemoteQueryUpdate[]) => Promise<boolean> }} */
-			const wrapped = /** @type {any} */ (
-				submission.finally(() => {
-					pending_count--;
-				})
-			);
-
-			wrapped.updates = (...args) => {
-				submission.updates(...args);
-				return wrapped;
-			};
-
-			return wrapped;
-		}
-
-		/**
 		 * @param {HTMLFormElement} form
 		 * @param {FormData} form_data
 		 * @returns {Omit<RemoteForm<T, U>, 'enhance' | 'element'> & { readonly element: HTMLFormElement }}
@@ -540,7 +502,40 @@ export function form(id) {
 				get: () => element
 			},
 			submit: {
-				value: () => submit_from_element()
+				value: () => {
+					if (!element) {
+						throw new Error('Cannot call submit() before the form is attached');
+					}
+
+					const default_submitter = /** @type {HTMLElement | undefined} */ (
+						element.querySelector('button:not([type]), [type="submit"]')
+					);
+
+					const form_data = new FormData(element, default_submitter);
+
+					if (DEV) {
+						validate_form_data(form_data, clone(element).enctype);
+					}
+
+					submitted = true;
+					pending_count++;
+
+					const submission = submit(form_data);
+
+					/** @type {Promise<boolean> & { updates: (...args: RemoteQueryUpdate[]) => Promise<boolean> }} */
+					const wrapped = /** @type {any} */ (
+						submission.finally(() => {
+							pending_count--;
+						})
+					);
+
+					wrapped.updates = (...args) => {
+						submission.updates(...args);
+						return wrapped;
+					};
+
+					return wrapped;
+				}
 			},
 			fields: {
 				get: () =>
