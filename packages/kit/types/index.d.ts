@@ -2027,10 +2027,10 @@ declare module '@sveltejs/kit' {
 			callback: (opts: {
 				form: HTMLFormElement;
 				data: Input;
-				submit: () => Promise<void> & {
-					updates: (...updates: RemoteQueryUpdate[]) => Promise<void>;
+				submit: () => Promise<boolean> & {
+					updates: (...updates: RemoteQueryUpdate[]) => Promise<boolean>;
 				};
-			}) => void | Promise<void>
+			}) => void
 		): {
 			method: 'POST';
 			action: string;

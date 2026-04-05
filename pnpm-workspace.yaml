@@ -22,7 +22,7 @@ catalog:
   '@netlify/functions': ^5.0.0
   '@opentelemetry/sdk-node': ^0.214.0
   '@opentelemetry/sdk-trace-node': ^2.0.1
-  '@playwright/test': 1.58.2
+  '@playwright/test': ^1.59.1
   '@polka/url': ^1.0.0-next.28
   '@sveltejs/eslint-config': ^10.0.0
   '@sveltejs/vite-plugin-svelte': ^7.0.0

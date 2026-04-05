@@ -1,6 +1,6 @@
-import process from 'node:process';
+/** @import { Validator } from './types.js' */
 
-/** @typedef {import('./types.js').Validator} Validator */
+import process from 'node:process';
 
 const directives = object({
 	'child-src': string_array(),

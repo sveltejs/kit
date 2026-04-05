@@ -1,7 +1,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import process from 'node:process';
 import * as url from 'node:url';
 import options from './options.js';
+import { resolve_entry } from '../../utils/filesystem.js';
 
 /**
  * Loads the template (src/app.html by default) and validates that it has the
@@ -96,7 +98,7 @@ export async function load_config({ cwd }) {
  * @returns {import('types').ValidatedConfig}
  */
 export function process_config(config, { cwd }) {
-	const validated = validate_config(config);
+	const validated = validate_config(config, cwd);
 
 	validated.kit.env.dir = path.resolve(cwd, validated.kit.env.dir);
 	validated.kit.outDir = path.resolve(cwd, validated.kit.outDir);
@@ -117,15 +119,17 @@ export function process_config(config, { cwd }) {
 
 /**
  * @param {import('@sveltejs/kit').Config} config
+ * @param {string} [cwd]
  * @returns {import('types').ValidatedConfig}
  */
-export function validate_config(config) {
+export function validate_config(config, cwd = process.cwd()) {
 	if (typeof config !== 'object') {
 		throw new Error(
 			'The Svelte config file must have a configuration object as its default export. See https://svelte.dev/docs/kit/configuration'
 		);
 	}
 
+	/** @type {import('types').ValidatedConfig} */
 	const validated = options(config, 'config');
 	const files = validated.kit.files;
 
@@ -148,6 +152,23 @@ export function validate_config(config) {
 		if (validated.kit.output.bundleStrategy !== 'split') {
 			throw new Error(
 				"The `router.resolution` option cannot be 'server' if `output.bundleStrategy` is 'inline' or 'single'"
+			);
+		}
+	}
+
+	if (validated.kit.csp?.directives?.['require-trusted-types-for']?.includes('script')) {
+		if (!validated.kit.csp?.directives?.['trusted-types']?.includes('svelte-trusted-html')) {
+			throw new Error(
+				"The `csp.directives['trusted-types']` option must include 'svelte-trusted-html'"
+			);
+		}
+		if (
+			validated.kit.serviceWorker?.register &&
+			resolve_entry(path.resolve(cwd, validated.kit.files.serviceWorker)) &&
+			!validated.kit.csp?.directives?.['trusted-types']?.includes('sveltekit-trusted-url')
+		) {
+			throw new Error(
+				"The `csp.directives['trusted-types']` option must include 'sveltekit-trusted-url' when `serviceWorker.register` is true"
 			);
 		}
 	}
