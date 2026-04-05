@@ -100,74 +100,6 @@ export function form(id) {
 		}
 
 		/**
-		 * @param {HTMLFormElement} form
-		 * @param {FormData} form_data
-		 * @param {Parameters<RemoteForm<any, any>['enhance']>[0]} callback
-		 */
-		async function handle_submit(form, form_data, callback) {
-			const data = convert(form_data);
-
-			submitted = true;
-
-			// Increment pending count immediately so that `pending` reflects
-			// the in-progress state during async preflight validation
-			pending_count++;
-
-			const validated = await preflight_schema?.['~standard'].validate(data);
-
-			if (validated?.issues) {
-				raw_issues = merge_with_server_issues(
-					form_data,
-					raw_issues,
-					validated.issues.map((issue) => normalize_issue(issue, false))
-				);
-				pending_count--;
-				return;
-			}
-
-			// Preflight passed - clear stale client-side preflight issues
-			if (preflight_schema) {
-				raw_issues = raw_issues.filter((issue) => issue.server);
-			}
-
-			// TODO 3.0 remove this warning
-			if (DEV) {
-				const error = () => {
-					throw new Error(
-						'Remote form functions no longer get passed a FormData object. The payload is now a POJO. See https://kit.svelte.dev/docs/remote-functions#form for details.'
-					);
-				};
-				for (const key of [
-					'append',
-					'delete',
-					'entries',
-					'forEach',
-					'get',
-					'getAll',
-					'has',
-					'keys',
-					'set',
-					'values'
-				]) {
-					if (!(key in data)) {
-						Object.defineProperty(data, key, { get: error });
-					}
-				}
-			}
-
-			try {
-				// eslint-disable-next-line @typescript-eslint/await-thenable -- `callback` is typed as returning `void` to allow returning e.g. `Promise<boolean>`
-				await callback(create_enhance_callback_instance(form, form_data));
-			} catch (e) {
-				const error = e instanceof HttpError ? e.body : { message: /** @type {any} */ (e).message };
-				const status = e instanceof HttpError ? e.status : 500;
-				void set_nearest_error_page(error, status);
-			} finally {
-				pending_count--;
-			}
-		}
-
-		/**
 		 * @param {FormData} data
 		 * @returns {Promise<boolean> & { updates: (...args: any[]) => Promise<boolean> }}
 		 */
@@ -358,9 +290,9 @@ export function form(id) {
 		instance.action = action;
 
 		/** @param {Parameters<RemoteForm<any, any>['enhance']>[0]} callback */
-		const form_onsubmit = (callback) => {
+		function create_attachment(callback) {
 			/** @param {SubmitEvent} event */
-			return async (event) => {
+			const onsubmit = async (event) => {
 				const form = /** @type {HTMLFormElement} */ (event.target);
 				const method = event.submitter?.hasAttribute('formmethod')
 					? /** @type {HTMLButtonElement | HTMLInputElement} */ (event.submitter).formMethod
@@ -395,12 +327,69 @@ export function form(id) {
 					validate_form_data(form_data, clone(form).enctype);
 				}
 
-				await handle_submit(form, form_data, callback);
-			};
-		};
+				const data = convert(form_data);
 
-		/** @param {(event: SubmitEvent) => void} onsubmit */
-		function create_attachment(onsubmit) {
+				submitted = true;
+
+				// Increment pending count immediately so that `pending` reflects
+				// the in-progress state during async preflight validation
+				pending_count++;
+
+				const validated = await preflight_schema?.['~standard'].validate(data);
+
+				if (validated?.issues) {
+					raw_issues = merge_with_server_issues(
+						form_data,
+						raw_issues,
+						validated.issues.map((issue) => normalize_issue(issue, false))
+					);
+					pending_count--;
+					return;
+				}
+
+				// Preflight passed - clear stale client-side preflight issues
+				if (preflight_schema) {
+					raw_issues = raw_issues.filter((issue) => issue.server);
+				}
+
+				// TODO 3.0 remove this warning
+				if (DEV) {
+					const error = () => {
+						throw new Error(
+							'Remote form functions no longer get passed a FormData object. The payload is now a POJO. See https://kit.svelte.dev/docs/remote-functions#form for details.'
+						);
+					};
+					for (const key of [
+						'append',
+						'delete',
+						'entries',
+						'forEach',
+						'get',
+						'getAll',
+						'has',
+						'keys',
+						'set',
+						'values'
+					]) {
+						if (!(key in data)) {
+							Object.defineProperty(data, key, { get: error });
+						}
+					}
+				}
+
+				try {
+					// eslint-disable-next-line @typescript-eslint/await-thenable -- `callback` is typed as returning `void` to allow returning e.g. `Promise<boolean>`
+					await callback(create_enhance_callback_instance(form, form_data));
+				} catch (e) {
+					const error =
+						e instanceof HttpError ? e.body : { message: /** @type {any} */ (e).message };
+					const status = e instanceof HttpError ? e.status : 500;
+					void set_nearest_error_page(error, status);
+				} finally {
+					pending_count--;
+				}
+			};
+
 			return (/** @type {HTMLFormElement} */ form) => {
 				if (element) {
 					let message = `A form object can only be attached to a single \`<form>\` element`;
@@ -522,14 +511,12 @@ export function form(id) {
 			};
 		}
 
-		instance[createAttachmentKey()] = create_attachment(
-			form_onsubmit((form) =>
-				form.submit().then((succeeded) => {
-					if (succeeded) {
-						form.element.reset();
-					}
-				})
-			)
+		instance[createAttachmentKey()] = create_attachment((form) =>
+			form.submit().then((succeeded) => {
+				if (succeeded) {
+					form.element.reset();
+				}
+			})
 		);
 
 		let validate_id = 0;
@@ -659,7 +646,7 @@ export function form(id) {
 					return {
 						method: 'POST',
 						action,
-						[createAttachmentKey()]: create_attachment(form_onsubmit(callback))
+						[createAttachmentKey()]: create_attachment(callback)
 					};
 				}
 			}
