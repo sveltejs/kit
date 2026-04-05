@@ -110,9 +110,10 @@ export function form(id) {
 
 		/**
 		 * @param {FormData} form_data
+		 * @param {boolean} should_preflight
 		 * @returns {Promise<boolean> & { updates: (...args: any[]) => Promise<boolean> }}
 		 */
-		function submit(form_data) {
+		function submit(form_data, should_preflight) {
 			// Store a reference to the current instance and increment the usage count for the duration
 			// of the request. This ensures that the instance is not deleted in case of an optimistic update
 			// (e.g. when deleting an item in a list) that fails and wants to surface an error to the user afterwards.
@@ -138,6 +139,11 @@ export function form(id) {
 
 					if (updates_error) {
 						throw updates_error;
+					}
+
+					if (should_preflight) {
+						const valid = await preflight(form_data);
+						if (!valid) return false;
 					}
 
 					const { blob } = serialize_binary_form(convert(form_data), {
@@ -263,11 +269,36 @@ export function form(id) {
 							value: form
 						},
 						submit: {
-							value: () => submit(form_data)
+							value: () => submit(form_data, false)
 						}
 					}
 				)
 			);
+		}
+
+		/**
+		 * @param {FormData} form_data
+		 */
+		async function preflight(form_data) {
+			const data = convert(form_data);
+			const validated = await preflight_schema?.['~standard'].validate(data);
+
+			if (validated?.issues) {
+				raw_issues = merge_with_server_issues(
+					form_data,
+					raw_issues,
+					validated.issues.map((issue) => normalize_issue(issue, false))
+				);
+				pending_count--;
+				return false;
+			}
+
+			// Preflight passed - clear stale client-side preflight issues
+			if (preflight_schema) {
+				raw_issues = raw_issues.filter((issue) => issue.server);
+			}
+
+			return true;
 		}
 
 		/** @type {RemoteForm<T, U>} */
@@ -327,32 +358,16 @@ export function form(id) {
 					validate_form_data(form_data, clone(form).enctype);
 				}
 
-				const data = convert(form_data);
-
 				submitted = true;
 
-				// Increment pending count immediately so that `pending` reflects
-				// the in-progress state during async preflight validation
-				pending_count++;
-
-				const validated = await preflight_schema?.['~standard'].validate(data);
-
-				if (validated?.issues) {
-					raw_issues = merge_with_server_issues(
-						form_data,
-						raw_issues,
-						validated.issues.map((issue) => normalize_issue(issue, false))
-					);
-					pending_count--;
-					return;
-				}
-
-				// Preflight passed - clear stale client-side preflight issues
-				if (preflight_schema) {
-					raw_issues = raw_issues.filter((issue) => issue.server);
-				}
-
 				try {
+					// Increment pending count immediately so that `pending` reflects
+					// the in-progress state during async preflight validation
+					pending_count++;
+
+					const valid = await preflight(form_data);
+					if (!valid) return;
+
 					// eslint-disable-next-line @typescript-eslint/await-thenable -- `callback` is typed as returning `void` to allow returning e.g. `Promise<boolean>`
 					await enhance_callback(create_enhance_callback_instance(form, form_data));
 				} catch (e) {
@@ -507,7 +522,7 @@ export function form(id) {
 					submitted = true;
 					pending_count++;
 
-					const submission = submit(form_data);
+					const submission = submit(form_data, true);
 
 					void submission.finally(() => {
 						pending_count--;
