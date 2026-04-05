@@ -100,10 +100,10 @@ export function form(id) {
 		}
 
 		/**
-		 * @param {FormData} data
+		 * @param {FormData} form_data
 		 * @returns {Promise<boolean> & { updates: (...args: any[]) => Promise<boolean> }}
 		 */
-		function submit(data) {
+		function submit(form_data) {
 			// Store a reference to the current instance and increment the usage count for the duration
 			// of the request. This ensures that the instance is not deleted in case of an optimistic update
 			// (e.g. when deleting an item in a list) that fails and wants to surface an error to the user afterwards.
@@ -131,7 +131,7 @@ export function form(id) {
 						throw updates_error;
 					}
 
-					const { blob } = serialize_binary_form(convert(data), {
+					const { blob } = serialize_binary_form(convert(form_data), {
 						remote_refreshes: Array.from(refreshes ?? [])
 					});
 
@@ -522,19 +522,11 @@ export function form(id) {
 
 					const submission = submit(form_data);
 
-					/** @type {Promise<boolean> & { updates: (...args: RemoteQueryUpdate[]) => Promise<boolean> }} */
-					const wrapped = /** @type {any} */ (
-						submission.finally(() => {
-							pending_count--;
-						})
-					);
+					void submission.finally(() => {
+						pending_count--;
+					});
 
-					wrapped.updates = (...args) => {
-						submission.updates(...args);
-						return wrapped;
-					};
-
-					return wrapped;
+					return submission;
 				}
 			},
 			fields: {
