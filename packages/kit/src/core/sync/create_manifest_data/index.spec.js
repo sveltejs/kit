@@ -111,7 +111,7 @@ test('creates routes', () => {
 });
 
 const symlink_survived_git = fs
-	.statSync(path.join(cwd, 'samples/symlinks/routes/foo'))
+	.lstatSync(path.join(cwd, 'samples/symlinks/routes/foo'))
 	.isSymbolicLink();
 
 const test_symlinks = symlink_survived_git ? test : test.skip;
@@ -122,21 +122,21 @@ test_symlinks('creates symlinked routes', () => {
 	expect(nodes.map(simplify_node)).toEqual([
 		default_layout,
 		default_error,
-		{ component: 'samples/symlinks/routes/foo/index.svelte' },
-		{ component: 'samples/symlinks/routes/index.svelte' }
+		{ component: 'samples/symlinks/routes/+page.svelte' },
+		{ component: 'samples/symlinks/routes/foo/+page.svelte' }
 	]);
 
-	expect(routes).toEqual([
+	expect(routes.map(simplify_route)).toEqual([
 		{
 			id: '/',
 			pattern: '/^/$/',
-			page: { layouts: [0], errors: [1], leaf: 1 }
+			page: { layouts: [0], errors: [1], leaf: 2 }
 		},
 
 		{
 			id: '/foo',
 			pattern: '/^/foo/?$/',
-			page: { layouts: [0], errors: [1], leaf: 2 }
+			page: { layouts: [0], errors: [1], leaf: 3 }
 		}
 	]);
 });

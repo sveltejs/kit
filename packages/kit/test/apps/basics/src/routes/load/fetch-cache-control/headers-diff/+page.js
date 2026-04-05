@@ -1,3 +1,4 @@
+/** @type {import("./$types").PageLoad} */
 export async function load({ fetch, url }) {
 	const r1 = await fetch(url.pathname, {
 		headers: {

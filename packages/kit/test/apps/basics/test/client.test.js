@@ -265,6 +265,7 @@ test.describe('Load', () => {
 	});
 
 	test('permits 3rd party patching of server load fetch requests', async ({ page }) => {
+		/** @type {string[]} */
 		const logs = [];
 		page.on('console', (msg) => {
 			if (msg.type() === 'log') {
@@ -282,6 +283,7 @@ test.describe('Load', () => {
 	});
 
 	test('does not repeat fetch on hydration when using Request object', async ({ page }) => {
+		/** @type {import('@playwright/test').Request[]} */
 		const requests = [];
 		page.on('request', (request) => {
 			if (request.url().includes('/load/fetch-request.json')) {
@@ -1792,11 +1794,15 @@ test.describe('init', () => {
 test.describe('INP', () => {
 	test('does not block next paint', async ({ page }) => {
 		// Thanks to https://publishing-project.rivendellweb.net/measuring-performance-tasks-with-playwright/#interaction-to-next-paint-inp
+		/** @param {string} selector */
 		async function measureInteractionToPaint(selector) {
 			return page.evaluate(async (selector) => {
 				return new Promise((resolve) => {
 					const startTime = performance.now();
-					document.querySelector(selector).click();
+					const element = document.querySelector(selector);
+					if (element instanceof HTMLAnchorElement) {
+						element.click();
+					}
 					requestAnimationFrame(() => {
 						const endTime = performance.now();
 						resolve(endTime - startTime);

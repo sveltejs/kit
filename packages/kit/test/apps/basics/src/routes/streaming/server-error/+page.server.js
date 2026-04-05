@@ -1,4 +1,6 @@
 // Tests the case where a lazy promise is rejected before the rendering started
+
+/** @type {import('./$types').PageServerLoad} */
 export async function load({ fetch }) {
 	const eager = new Promise((resolve) => {
 		setTimeout(() => {

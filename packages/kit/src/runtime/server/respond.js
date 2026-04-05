@@ -149,7 +149,22 @@ export async function internal_respond(request, options, manifest, state) {
 		tracing: {
 			record_span
 		},
-		is_in_remote_function: false
+		remote: {
+			data: null,
+			forms: null,
+			/** A map of remote function key to corresponding single-flight-mutation promise */
+			refreshes: null,
+			/** A map of remote function ID to payloads requested for refreshing by the client */
+			requested: null,
+			/**
+			 * A map of remote function ID to objects that have passed validation;
+			 * used to prevent revalidating parameters returned from `requested`
+			 */
+			validated: null
+		},
+		is_in_remote_function: false,
+		is_in_render: false,
+		is_in_universal_load: false
 	};
 
 	/** @type {import('@sveltejs/kit').RequestEvent} */
@@ -419,6 +434,7 @@ export async function internal_respond(request, options, manifest, state) {
 						current: root_span
 					}
 				};
+
 				return await with_request_store({ event: traced_event, state: event_state }, () =>
 					options.hooks.handle({
 						event: traced_event,

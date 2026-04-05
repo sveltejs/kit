@@ -1,4 +1,4 @@
-import { query, prerender, command, form } from '$app/server';
+import { query, prerender, command, form, requested } from '$app/server';
 import { StandardSchemaV1 } from '@standard-schema/spec';
 import {
 	RemoteForm,
@@ -10,6 +10,7 @@ import {
 
 const schema: StandardSchemaV1<string> = null as any;
 const schema2: StandardSchemaV1<string, number> = null as any;
+const schema3: StandardSchemaV1<string | undefined, number> = null as any;
 
 function query_tests() {
 	const no_args: RemoteQueryFunction<void, string> = query(() => 'Hello world');
@@ -39,6 +40,21 @@ function query_tests() {
 		query((_: string) => 'hi');
 	}
 	void query_without_args();
+
+	async function query_with_optional_arg() {
+		const q = query(schema3, () => 'Hello world');
+		void q();
+		void q('hi');
+		// @ts-expect-error
+		void q(1);
+
+		const q2 = query('unchecked', (a?: string) => a);
+		void q2();
+		void q2('hi');
+		// @ts-expect-error
+		void q2(1);
+	}
+	void query_with_optional_arg();
 
 	async function query_unsafe() {
 		const q = query('unchecked', (a: number) => a);
@@ -106,6 +122,21 @@ function prerender_tests() {
 	}
 	void prerender_unsafe();
 
+	async function prerender_with_optional_arg() {
+		const q = prerender(schema3, () => 'Hello world');
+		void q();
+		void q('hi');
+		// @ts-expect-error
+		void q(1);
+
+		const q2 = prerender('unchecked', (a?: string) => a);
+		void q2();
+		void q2('hi');
+		// @ts-expect-error
+		void q2(1);
+	}
+	void prerender_with_optional_arg();
+
 	async function prerender_schema() {
 		const q = prerender(schema, (a) => a);
 		const result: string = await q('1');
@@ -131,6 +162,7 @@ function command_tests() {
 		const result: string = await cmd();
 		result;
 		const result2: string = await cmd().updates(
+			q,
 			q(),
 			q().withOverride(() => '')
 		);
@@ -138,8 +170,42 @@ function command_tests() {
 		// @ts-expect-error
 		const wrong: number = await cmd();
 		wrong;
+
+		for (const value of requested(q)) {
+			const output: void = value;
+			output;
+		}
+
+		for await (const value of requested(q)) {
+			const output: void = value;
+			output;
+		}
+
+		for (const value of requested(q, 1)) {
+			const output: void = value;
+			output;
+		}
+
+		const refreshes = requested(q);
+		const refreshed: Promise<void> = refreshes.refreshAll();
+		refreshed;
 	}
 	void command_without_args();
+
+	async function command_with_optional_arg() {
+		const q = command(schema3, () => 'Hello world');
+		void q();
+		void q('hi');
+		// @ts-expect-error
+		void q(1);
+
+		const q2 = command('unchecked', (a?: string) => a);
+		void q2();
+		void q2('hi');
+		// @ts-expect-error
+		void q2(1);
+	}
+	void command_with_optional_arg();
 
 	async function command_unsafe() {
 		const cmd = command('unchecked', (a: string) => a);
@@ -184,6 +250,7 @@ function form_tests() {
 		const x: void = await submit();
 		x;
 		const y: void = await submit().updates(
+			q,
 			q(),
 			q().withOverride(() => '')
 		);
