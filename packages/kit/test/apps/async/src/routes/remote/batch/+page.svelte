@@ -18,7 +18,7 @@
 	{#each todos as { id, promise }, idx (idx)}
 		<li>
 			<svelte:boundary>
-				<span id="batch-result-{idx + 1}">{(await promise).title}</span>
+				<span id="batch-result-{idx + 1}">{(await promise)?.title}</span>
 
 				{#snippet failed(error)}
 					<span id="batch-result-{idx + 1}"

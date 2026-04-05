@@ -113,7 +113,6 @@ export function prerender(id) {
 }
 
 /** @type {Map<string, WeakRef<Prerender<any>>>} */
-// eslint-disable-next-line svelte/prefer-svelte-reactivity
 const prerender_resources = new Map();
 
 /** @type {FinalizationRegistry<string> | null} */

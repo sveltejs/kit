@@ -1,8 +1,8 @@
-<script>
+<script lang="ts">
 	import { prerendered, get_count, set_count, set_count_form } from './count.remote.js';
 
-	let count = $state(null);
-	let prerendered_result = $state(null);
+	let count = $state<number | null>(null);
+	let prerendered_result = $state<string | null>(null);
 </script>
 
 <p id="count">{count}</p>
@@ -13,7 +13,7 @@
 
 <form
 	{...set_count_form.enhance(async ({ submit }) => {
-		await submit().updates(get_count());
+		await submit();
 		count = await get_count().run();
 	})}
 >

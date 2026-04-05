@@ -44,11 +44,10 @@
 	"devDependencies": {
 		"@polka/url": "catalog:",
 		"@sveltejs/kit": "workspace:^",
-		"@sveltejs/vite-plugin-svelte": "catalog:",
 		"@types/node": "catalog:",
 		"polka": "catalog:",
 		"sirv": "^3.0.2",
-		"typescript": "^5.3.3",
+		"typescript": "catalog:",
 		"vitest": "catalog:"
 	},
 	"dependencies": {

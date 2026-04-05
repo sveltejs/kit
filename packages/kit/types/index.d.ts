@@ -1426,6 +1426,22 @@ declare module '@sveltejs/kit' {
 	 */
 	export type ParamMatcher = (param: string) => boolean;
 
+	export type RequestedResult<T> = Iterable<T> &
+		AsyncIterable<T> & {
+			/**
+			 * Call `refresh` on all queries selected by this `requested` invocation.
+			 * This is identical to:
+			 * ```ts
+			 * import { requested } from '$app/server';
+			 *
+			 * for await (const arg of requested(query, ...) {
+			 *   void query(arg).refresh();
+			 * }
+			 * ```
+			 */
+			refreshAll: () => Promise<void>;
+		};
+
 	export interface RequestEvent<
 		Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
 		RouteId extends AppRouteId | null = AppRouteId | null
@@ -2034,7 +2050,7 @@ declare module '@sveltejs/kit' {
 				form: HTMLFormElement;
 				data: Input;
 				submit: () => Promise<void> & {
-					updates: (...queries: Array<RemoteQuery<any> | RemoteQueryOverride>) => Promise<void>;
+					updates: (...updates: RemoteQueryUpdate[]) => Promise<void>;
 				};
 			}) => void | Promise<void>
 		): {
@@ -2079,11 +2095,16 @@ declare module '@sveltejs/kit' {
 	 */
 	export type RemoteCommand<Input, Output> = {
 		(arg: undefined extends Input ? Input | void : Input): Promise<Output> & {
-			updates(...queries: Array<RemoteQuery<any> | RemoteQueryOverride>): Promise<Output>;
+			updates(...updates: RemoteQueryUpdate[]): Promise<Output>;
 		};
 		/** The number of pending command executions */
 		get pending(): number;
 	};
+
+	export type RemoteQueryUpdate =
+		| RemoteQuery<any>
+		| RemoteQueryFunction<any, any>
+		| RemoteQueryOverride;
 
 	export type RemoteResource<T> = Promise<T> & {
 		/** The error in case the query fails. Most often this is a [`HttpError`](https://svelte.dev/docs/kit/@sveltejs-kit#HttpError) but it isn't guaranteed to be. */
@@ -2125,7 +2146,7 @@ declare module '@sveltejs/kit' {
 		 */
 		refresh(): Promise<void>;
 		/**
-		 * Temporarily override the value of a query. This is used with the `updates` method of a [command](https://svelte.dev/docs/kit/remote-functions#command-Updating-queries) or [enhanced form submission](https://svelte.dev/docs/kit/remote-functions#form-enhance) to provide optimistic updates.
+		 * Temporarily override a query's value during a [single-flight mutation](https://svelte.dev/docs/kit/remote-functions#Single-flight-mutations) to provide optimistic updates.
 		 *
 		 * ```svelte
 		 * <script>
@@ -2146,10 +2167,7 @@ declare module '@sveltejs/kit' {
 		withOverride(update: (current: T) => T): RemoteQueryOverride;
 	};
 
-	export interface RemoteQueryOverride {
-		_key: string;
-		release(): void;
-	}
+	export type RemoteQueryOverride = () => void;
 
 	/**
 	 * The return value of a remote `prerender` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#prerender) for full documentation.
@@ -3229,7 +3247,7 @@ declare module '$app/paths' {
 }
 
 declare module '$app/server' {
-	import type { RequestEvent, RemoteCommand, RemoteForm, RemoteFormInput, InvalidField, RemotePrerenderFunction, RemoteQueryFunction } from '@sveltejs/kit';
+	import type { RequestEvent, RemoteCommand, RemoteForm, RemoteFormInput, InvalidField, RemotePrerenderFunction, RemoteQueryFunction, RequestedResult } from '@sveltejs/kit';
 	import type { StandardSchemaV1 } from '@standard-schema/spec';
 	/**
 	 * Read the contents of an imported asset from the filesystem
@@ -3375,6 +3393,34 @@ declare module '$app/server' {
 		 */
 		function batch<Schema extends StandardSchemaV1, Output>(schema: Schema, fn: (args: StandardSchemaV1.InferOutput<Schema>[]) => MaybePromise<(arg: StandardSchemaV1.InferOutput<Schema>, idx: number) => Output>): RemoteQueryFunction<StandardSchemaV1.InferInput<Schema>, Output>;
 	}
+	/**
+	 * In the context of a remote `command` or `form` request, returns an iterable
+	 * of the client-requested refreshes' validated arguments up to the supplied limit.
+	 * Arguments that fail validation or exceed the limit are recorded as failures in
+	 * the response to the client.
+	 *
+	 * @example
+	 * ```ts
+	 * import { requested } from '$app/server';
+	 *
+	 * for (const arg of requested(getPost, 5)) {
+	 * 	// it's safe to throw away this promise -- SvelteKit
+	 * 	// will await it for us and handle any errors by sending
+	 * 	// them to the client.
+	 * 	void getPost(arg).refresh();
+	 * }
+	 * ```
+	 *
+	 * As a shorthand for the above, you can also call `refreshAll` on the result:
+	 *
+	 * ```ts
+	 * import { requested } from '$app/server';
+	 *
+	 * await requested(getPost, 5).refreshAll();
+	 * ```
+	 *
+	 * */
+	export function requested<Input, Output>(query: RemoteQueryFunction<Input, Output>, limit?: number): RequestedResult<Input>;
 	type RemotePrerenderInputsGenerator<Input = any> = () => MaybePromise<Input[]>;
 	type MaybePromise<T> = T | Promise<T>;
 
