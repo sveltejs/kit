@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-Use array type for value of multiple select fields
+fix: use array type for select fields that accept multiple values
