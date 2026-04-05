@@ -198,7 +198,7 @@ export function form(validate_or_fn, maybe_fn) {
 							deep_set(input, path.map(String), value);
 							(cache[''] ??= { serialize: true, data: {} }).data.input = input;
 						},
-						get_issues: flatten_issues(get_cache(__)?.['']?.data?.issues ?? []),
+						get_issues: () => flatten_issues(get_cache(__)?.['']?.data?.issues ?? []),
 						get_progress: () => ({
 							uploaded: 0,
 							total: 0,
