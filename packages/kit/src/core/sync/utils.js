@@ -79,6 +79,7 @@ export function isSvelte5Plus() {
 	return MAJOR >= 5;
 }
 
+// TODO 3.0 remove this once we can bump the peerDep range
 export function supportsTrustedTypes() {
 	return (MAJOR === 5 && MINOR >= 51) || MAJOR > 5;
 }
