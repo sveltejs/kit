@@ -4,6 +4,7 @@
 
 	let { data } = $props();
 
+	/** @type {Record<string, { title: string }>} */
 	const modal_contents = {
 		'please-dont-show-me': {
 			title: 'Oopsie'
@@ -13,6 +14,7 @@
 		}
 	};
 
+	/** @type {{ title: string } | undefined} */
 	let modal = undefined;
 
 	const show_modal = () => {

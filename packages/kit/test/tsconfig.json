@@ -3,11 +3,8 @@
 		"allowJs": true,
 		"checkJs": true,
 		"noEmit": true,
-		"strict": true,
 		"target": "esnext",
-		"module": "esnext",
-		"moduleResolution": "node",
-		"allowSyntheticDefaultImports": true
+		"moduleResolution": "node"
 	},
 	"include": ["./*", "./mocks/**/*", "./prerendering/*"]
 }

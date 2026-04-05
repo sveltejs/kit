@@ -1,5 +1,101 @@
 # @sveltejs/kit
 
+## 2.56.1
+### Patch Changes
+
+
+- chore: update JSDoc ([#15640](https://github.com/sveltejs/kit/pull/15640))
+
+## 2.56.0
+### Minor Changes
+
+
+- breaking: rework client-driven refreshes ([#15562](https://github.com/sveltejs/kit/pull/15562))
+
+
+- breaking: stabilize remote function caching by sorting object keys ([#15570](https://github.com/sveltejs/kit/pull/15570))
+
+
+- breaking: add `run()` method to queries, disallow awaiting queries outside render ([#15533](https://github.com/sveltejs/kit/pull/15533))
+
+
+- feat: support TypeScript 6.0 ([#15595](https://github.com/sveltejs/kit/pull/15595))
+
+
+- breaking: isolate command-triggered query refresh failures per-query ([#15562](https://github.com/sveltejs/kit/pull/15562))
+
+
+- feat: use `hydratable` for remote function transport ([#15533](https://github.com/sveltejs/kit/pull/15533))
+
+
+- feat: allow `form` fields to specify a default value (`field.as(type, value)`) ([#15577](https://github.com/sveltejs/kit/pull/15577))
+
+
+### Patch Changes
+
+
+- fix: don't request new data when `.refresh` is called on a query with no cache entry ([#15533](https://github.com/sveltejs/kit/pull/15533))
+
+
+- fix: allow using multiple remote functions within one async derived ([#15561](https://github.com/sveltejs/kit/pull/15561))
+
+
+- fix: avoid false-positive overridden Vite `base` setting warning when setting a `paths.base` in `svelte.config.js` ([#15623](https://github.com/sveltejs/kit/pull/15623))
+
+
+- fix: manage queries in their own `$effect.root` ([#15533](https://github.com/sveltejs/kit/pull/15533))
+
+
+- fix: avoid `inlineDynamicImports` deprecation warning when building the service worker with Vite 8 ([#15550](https://github.com/sveltejs/kit/pull/15550))
+
+
+- fix: correctly escape backticks when precomputing CSS ([#15593](https://github.com/sveltejs/kit/pull/15593))
+
+
+- fix: discard obsolete forks before finishing navigation ([#15634](https://github.com/sveltejs/kit/pull/15634))
+
+
+- chore: tighten up override implementation ([#15562](https://github.com/sveltejs/kit/pull/15562))
+
+
+- fix: ensure the default Svelte 5 `error.svelte` file uses runes mode ([#15609](https://github.com/sveltejs/kit/pull/15609))
+
+
+- fix: deduplicate same-cache-key `batch` calls during SSR ([#15533](https://github.com/sveltejs/kit/pull/15533))
+
+
+- fix: decrement pending_count when form callback doesn't call submit() ([#15520](https://github.com/sveltejs/kit/pull/15520))
+
+## 2.55.0
+### Minor Changes
+
+
+- feat: page and layout params with matchers are now type narrowed in `$app/types`, leading to better type safety when working with params in `$app/types`, `$app/state`, and hooks. ([#15502](https://github.com/sveltejs/kit/pull/15502))
+
+## 2.54.0
+### Minor Changes
+
+
+- feat: allow error boundaries to catch errors on the server ([#15308](https://github.com/sveltejs/kit/pull/15308))
+
+
+### Patch Changes
+
+
+- chore: upgrade `devalue` ([#15535](https://github.com/sveltejs/kit/pull/15535))
+
+
+- fix: don't wait for remote functions that are not awaited in the template ([#15280](https://github.com/sveltejs/kit/pull/15280))
+
+
+- feat: allow `resolve()` to accept pathnames with a search string and/or hash ([#15458](https://github.com/sveltejs/kit/pull/15458))
+
+
+- chore: remove deprecation warnings for `config.kit.files.*` options when validating the Svelte config file ([#15482](https://github.com/sveltejs/kit/pull/15482))
+
+
+- fix: handles form target attribute in remote form redirects ([#15457](https://github.com/sveltejs/kit/pull/15457))
+
 ## 2.53.4
 ### Patch Changes
 
