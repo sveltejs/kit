@@ -79,6 +79,15 @@ export function form(id) {
 		/** @type {StandardSchemaV1 | undefined} */
 		let preflight_schema = undefined;
 
+		/**
+		 * @param {Omit<RemoteForm<T, U>, 'enhance' | 'element'> & { readonly element: HTMLFormElement }} instance
+		 */
+		let enhance_callback = async (instance) => {
+			if (await instance.submit()) {
+				instance.element.reset();
+			}
+		};
+
 		/** @type {HTMLFormElement | null} */
 		let element = null;
 
@@ -251,8 +260,7 @@ export function form(id) {
 		instance.method = 'POST';
 		instance.action = action;
 
-		/** @param {Parameters<RemoteForm<any, any>['enhance']>[0]} callback */
-		function create_attachment(callback) {
+		function create_attachment() {
 			/** @param {SubmitEvent} event */
 			const onsubmit = async (event) => {
 				const form = /** @type {HTMLFormElement} */ (event.target);
@@ -341,7 +349,7 @@ export function form(id) {
 
 				try {
 					// eslint-disable-next-line @typescript-eslint/await-thenable -- `callback` is typed as returning `void` to allow returning e.g. `Promise<boolean>`
-					await callback(create_enhance_callback_instance(form, form_data));
+					await enhance_callback(create_enhance_callback_instance(form, form_data));
 				} catch (e) {
 					const error =
 						e instanceof HttpError ? e.body : { message: /** @type {any} */ (e).message };
@@ -473,13 +481,7 @@ export function form(id) {
 			};
 		}
 
-		instance[createAttachmentKey()] = create_attachment((form) =>
-			form.submit().then((succeeded) => {
-				if (succeeded) {
-					form.element.reset();
-				}
-			})
-		);
+		instance[createAttachmentKey()] = create_attachment();
 
 		let validate_id = 0;
 
@@ -551,7 +553,10 @@ export function form(id) {
 				get: () => result
 			},
 			pending: {
-				get: () => pending_count
+				get: () => {
+					console.log('???', pending_count);
+					return pending_count;
+				}
 			},
 			preflight: {
 				/** @type {RemoteForm<T, U>['preflight']} */
@@ -628,13 +633,12 @@ export function form(id) {
 				}
 			},
 			enhance: {
-				/** @type {RemoteForm<any, any>['enhance']} */
+				/**
+				 * @param {(instance: Omit<RemoteForm<T, U>, 'enhance' | 'element'> & { readonly element: HTMLFormElement }) => any} callback
+				 */
 				value: (callback) => {
-					return {
-						method: 'POST',
-						action,
-						[createAttachmentKey()]: create_attachment(callback)
-					};
+					enhance_callback = callback;
+					return instance;
 				}
 			}
 		});
