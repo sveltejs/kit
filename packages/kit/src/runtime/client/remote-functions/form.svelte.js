@@ -156,6 +156,7 @@ export function form(id) {
 			}
 
 			try {
+				// eslint-disable-next-line @typescript-eslint/await-thenable -- `callback` is typed as returning `void` to allow returning e.g. `Promise<boolean>`
 				await callback({
 					form,
 					data,
