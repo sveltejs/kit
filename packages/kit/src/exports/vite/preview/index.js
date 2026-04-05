@@ -102,7 +102,7 @@ export async function preview(vite, vite_config, svelte_config) {
 				return;
 			}
 
-			if (is_chrome_devtools_request(pathname, base, res)) {
+			if (is_chrome_devtools_request(pathname, res)) {
 				return;
 			}
 

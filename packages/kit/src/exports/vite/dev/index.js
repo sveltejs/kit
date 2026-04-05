@@ -467,6 +467,10 @@ export async function dev(vite, vite_config, svelte_config, get_remotes) {
 					return;
 				}
 
+				if (is_chrome_devtools_request(decoded, res)) {
+					return;
+				}
+
 				if (!decoded.startsWith(svelte_config.kit.paths.base)) {
 					return not_found(req, res, svelte_config.kit.paths.base);
 				}
@@ -484,10 +488,6 @@ export async function dev(vite, vite_config, svelte_config, get_remotes) {
 						res.end('not found');
 					}
 
-					return;
-				}
-
-				if (is_chrome_devtools_request(decoded, svelte_config.kit.paths.base, res)) {
 					return;
 				}
 
