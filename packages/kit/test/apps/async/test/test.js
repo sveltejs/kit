@@ -266,6 +266,7 @@ test.describe('remote functions', () => {
 
 		if (javaScriptEnabled) {
 			await expect(page.getByText('enhanced.pending:')).toHaveText('enhanced.pending: 1');
+			await expect(page.getByText('enhanced.element:')).toHaveText('enhanced.element: attached');
 
 			await page.getByText('message.current: hello (override)').waitFor();
 
@@ -275,6 +276,12 @@ test.describe('remote functions', () => {
 
 			// enhanced submission should not clear the input; the developer must do that at the appropriate time
 			await expect(page.locator('[data-enhanced] input[name="message"]')).toHaveValue('hello');
+			await expect(page.getByText('enhanced.callback_element_matches:')).toHaveText(
+				'enhanced.callback_element_matches: true'
+			);
+			await expect(page.getByText('enhanced.callback_has_enhance:')).toHaveText(
+				'enhanced.callback_has_enhance: false'
+			);
 		} else {
 			await expect(page.locator('[data-enhanced] input[name="message"]')).toHaveValue('');
 		}
@@ -304,6 +311,29 @@ test.describe('remote functions', () => {
 		await page.locator('[data-enhanced] span').click();
 		await expect(page.getByText('enhanced.submit_result:')).toHaveText(
 			'enhanced.submit_result: false'
+		);
+	});
+
+	test('form submit() enables programmatic submission', async ({ page, javaScriptEnabled }) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/form/enhanced');
+
+		await expect(page.getByText('enhanced.imperative_submit_result:')).toHaveText(
+			'enhanced.imperative_submit_result: none'
+		);
+
+		await page.fill('[data-enhanced] input', 'hello');
+		await page.getByText('submit enhanced programmatically').click();
+
+		await expect(page.getByText('enhanced.pending:')).toHaveText('enhanced.pending: 1');
+
+		await page.getByText('resolve deferreds').click();
+		await expect(page.getByText('enhanced.imperative_submit_result:')).toHaveText(
+			'enhanced.imperative_submit_result: true'
+		);
+		await expect(page.getByText('enhanced.result:')).toHaveText(
+			'enhanced.result: hello (from: enhanced:enhanced)'
 		);
 	});
 

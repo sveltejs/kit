@@ -711,10 +711,10 @@ We can customize what happens when the form is submitted with the `enhance` meth
 
 <h1>Create a new post</h1>
 
-<form {...createPost.enhance(async ({ form, data, submit }) => {
+<form {...createPost.enhance(async (form) => {
 	try {
-		if (await submit()) {
-			form.reset();
+		if (await form.submit()) {
+			form.element.reset();
 
 			showToast('Successfully published!');
 		} else {
@@ -728,9 +728,9 @@ We can customize what happens when the form is submitted with the `enhance` meth
 </form>
 ```
 
-> When using `enhance`, the `<form>` is not automatically reset — you must call `form.reset()` if you want to clear the inputs.
+> When using `enhance`, the `<form>` is not automatically reset — you must call `form.element.reset()` if you want to clear the inputs.
 
-The callback receives the `form` element, the `data` it contains, and a `submit` function.
+The callback receives a copy of the form instance. It has all the same properties and methods except `enhance`, and `form.submit()` performs the submission directly without re-running the enhance callback. Inside the callback, `form.element` is always defined.
 
 ### Multiple instances of a form
 

@@ -157,11 +157,7 @@ export function form(id) {
 
 			try {
 				// eslint-disable-next-line @typescript-eslint/await-thenable -- `callback` is typed as returning `void` to allow returning e.g. `Promise<boolean>`
-				await callback({
-					form,
-					data,
-					submit: () => submit(form_data)
-				});
+				await callback(create_enhance_callback_instance(form, form_data));
 			} catch (e) {
 				const error = e instanceof HttpError ? e.body : { message: /** @type {any} */ (e).message };
 				const status = e instanceof HttpError ? e.status : 500;
@@ -290,6 +286,52 @@ export function form(id) {
 			};
 
 			return promise;
+		}
+
+		/**
+		 * @returns {Promise<boolean> & { updates: (...args: RemoteQueryUpdate[]) => Promise<boolean> }}
+		 */
+		function submit_from_element() {
+			if (!element) {
+				throw new Error('Cannot call submit() before the form is attached');
+			}
+
+			const default_submitter = /** @type {HTMLElement | undefined} */ (
+				element.querySelector('button:not([type]), [type="submit"]')
+			);
+
+			const form_data = new FormData(element, default_submitter);
+
+			if (DEV) {
+				validate_form_data(form_data, clone(element).enctype);
+			}
+
+			return submit(form_data);
+		}
+
+		/**
+		 * @param {HTMLFormElement} form
+		 * @param {FormData} form_data
+		 * @returns {Omit<RemoteForm<T, U>, 'enhance' | 'element'> & { readonly element: HTMLFormElement }}
+		 */
+		function create_enhance_callback_instance(form, form_data) {
+			const { enhance: _enhance, ...descriptors } = Object.getOwnPropertyDescriptors(instance);
+			void _enhance;
+
+			return /** @type {Omit<RemoteForm<T, U>, 'enhance' | 'element'> & { readonly element: HTMLFormElement }} */ (
+				Object.defineProperties(
+					{},
+					{
+						...descriptors,
+						element: {
+							value: form
+						},
+						submit: {
+							value: () => submit(form_data)
+						}
+					}
+				)
+			);
 		}
 
 		/** @type {RemoteForm<T, U>} */
@@ -464,10 +506,10 @@ export function form(id) {
 		}
 
 		instance[createAttachmentKey()] = create_attachment(
-			form_onsubmit(({ submit, form }) =>
-				submit().then((succeeded) => {
+			form_onsubmit((form) =>
+				form.submit().then((succeeded) => {
 					if (succeeded) {
-						form.reset();
+						form.element.reset();
 					}
 				})
 			)
@@ -490,6 +532,12 @@ export function form(id) {
 		}
 
 		Object.defineProperties(instance, {
+			element: {
+				get: () => element
+			},
+			submit: {
+				value: () => submit_from_element()
+			},
 			fields: {
 				get: () =>
 					create_field_proxy(
