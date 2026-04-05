@@ -11,6 +11,22 @@ test.describe('remote functions', () => {
 		}
 	});
 
+	test('query.batch renders final values and errors on first load', async ({ page }) => {
+		await page.goto('/remote/batch-ssr');
+
+		await expect(page.locator('#ssr-batch-result-1')).toHaveText('Buy groceries');
+		await expect(page.locator('#ssr-batch-result-2')).toHaveText('Walk the dog');
+		await expect(page.locator('#ssr-batch-result-3')).toHaveText('Not found');
+		await expect(page.locator('body')).not.toContainText('Loading todo');
+	});
+
+	test('run is blocked during server render', async ({ page }) => {
+		await page.goto('/remote/query-runtime-errors/run-in-render');
+		await expect(page.locator('#error')).toContainText(
+			'On the server, .run() can only be called in universal `load` functions'
+		);
+	});
+
 	test('query redirects on page load (query in common layout)', async ({ page }) => {
 		await page.goto('/remote/query-redirect');
 		await page.click('a[href="/remote/query-redirect/from-common-layout"]');
@@ -132,7 +148,9 @@ test.describe('remote functions', () => {
 		await page.getByText('set message').click();
 
 		await page
-			.getByText('This is your custom error page saying: "oops (500 Internal Error)"')
+			.getByText(
+				'This is your custom error page saying: "oops (500 Internal Error, on /remote/form/unexpected-error)"'
+			)
 			.waitFor();
 	});
 
@@ -152,6 +170,52 @@ test.describe('remote functions', () => {
 		await page.getByText('set message').click();
 
 		await page.waitForURL('/remote');
+	});
+
+	test('remote form redirect opens in new tab when target=_blank', async ({ page }) => {
+		await page.goto('/remote/form/redirect-target');
+
+		const popup_promise = page.waitForEvent('popup', { timeout: 5000 });
+
+		await page.locator('[data-testid="form-blank"] button').click();
+
+		const popup = await popup_promise;
+		await popup.waitForLoadState();
+
+		expect(popup.url()).toContain('/remote/form/redirect-target/destination');
+
+		expect(page.url()).toContain('/remote/form/redirect-target');
+		expect(page.url()).not.toContain('/destination');
+	});
+
+	test('remote form redirect navigates same tab without target=_blank', async ({ page }) => {
+		await page.goto('/remote/form/redirect-target');
+
+		let popup_opened = false;
+		page.on('popup', () => {
+			popup_opened = true;
+		});
+
+		await page.locator('form:not([target]) button').click();
+		await page.waitForURL('**/remote/form/redirect-target/destination');
+
+		expect(popup_opened).toBe(false);
+		expect(page.url()).toContain('/remote/form/redirect-target/destination');
+	});
+
+	test('remote form redirect opens in new tab when formtarget=_blank on input', async ({
+		page
+	}) => {
+		await page.goto('/remote/form/redirect-target');
+
+		const popup_promise = page.waitForEvent('popup', { timeout: 5000 });
+		await page.locator('[data-testid="form-input-blank"] input').click();
+		const popup = await popup_promise;
+		await popup.waitForLoadState();
+
+		expect(popup.url()).toContain('/remote/form/redirect-target/destination');
+		expect(page.url()).toContain('/remote/form/redirect-target');
+		expect(page.url()).not.toContain('/destination');
 	});
 
 	test('form multiple submit buttons work', async ({ page, javaScriptEnabled }) => {
@@ -414,19 +478,19 @@ test.describe('remote functions', () => {
 
 		// Initially should be empty object or undefined values
 		const initialValue = await page.locator('#full-value').textContent();
-		expect(JSON.parse(initialValue)).toEqual({});
+		expect(initialValue ? JSON.parse(initialValue) : null).toEqual({});
 
 		// Fill leaf field
 		await page.fill('input[name="leaf"]', 'leaf-value');
 		const afterLeaf = await page.locator('#full-value').textContent();
-		expect(JSON.parse(afterLeaf)).toEqual({
+		expect(afterLeaf ? JSON.parse(afterLeaf) : null).toEqual({
 			leaf: 'leaf-value'
 		});
 
 		// Fill object.leaf field
 		await page.fill('input[name="object.leaf"]', 'object-leaf-value');
 		const afterObjectLeaf = await page.locator('#full-value').textContent();
-		expect(JSON.parse(afterObjectLeaf)).toEqual({
+		expect(afterObjectLeaf ? JSON.parse(afterObjectLeaf) : null).toEqual({
 			leaf: 'leaf-value',
 			object: {
 				leaf: 'object-leaf-value'
@@ -436,7 +500,7 @@ test.describe('remote functions', () => {
 		// Fill object.array fields
 		await page.fill('input[name="object.array[0]"]', 'array-item-1');
 		const afterArrayItem1 = await page.locator('#full-value').textContent();
-		expect(JSON.parse(afterArrayItem1)).toEqual({
+		expect(afterArrayItem1 ? JSON.parse(afterArrayItem1) : null).toEqual({
 			leaf: 'leaf-value',
 			object: {
 				leaf: 'object-leaf-value',
@@ -446,7 +510,7 @@ test.describe('remote functions', () => {
 
 		await page.fill('input[name="object.array[1]"]', 'array-item-2');
 		const afterArrayItem2 = await page.locator('#full-value').textContent();
-		expect(JSON.parse(afterArrayItem2)).toEqual({
+		expect(afterArrayItem2 ? JSON.parse(afterArrayItem2) : null).toEqual({
 			leaf: 'leaf-value',
 			object: {
 				leaf: 'object-leaf-value',
@@ -457,7 +521,7 @@ test.describe('remote functions', () => {
 		// Fill array[0].leaf field
 		await page.fill('input[name="array[0].leaf"]', 'array-0-leaf');
 		const afterArray0 = await page.locator('#full-value').textContent();
-		expect(JSON.parse(afterArray0)).toEqual({
+		expect(afterArray0 ? JSON.parse(afterArray0) : null).toEqual({
 			leaf: 'leaf-value',
 			object: {
 				leaf: 'object-leaf-value',
@@ -469,7 +533,7 @@ test.describe('remote functions', () => {
 		// Fill array[1].leaf field
 		await page.fill('input[name="array[1].leaf"]', 'array-1-leaf');
 		const afterArray1 = await page.locator('#full-value').textContent();
-		expect(JSON.parse(afterArray1)).toEqual({
+		expect(afterArray1 ? JSON.parse(afterArray1) : null).toEqual({
 			leaf: 'leaf-value',
 			object: {
 				leaf: 'object-leaf-value',
@@ -480,14 +544,17 @@ test.describe('remote functions', () => {
 
 		// Test nested object value access
 		const objectValue = await page.locator('#object-value').textContent();
-		expect(JSON.parse(objectValue)).toEqual({
+		expect(objectValue ? JSON.parse(objectValue) : null).toEqual({
 			leaf: 'object-leaf-value',
 			array: ['array-item-1', 'array-item-2']
 		});
 
 		// Test array value access
 		const arrayValue = await page.locator('#array-value').textContent();
-		expect(JSON.parse(arrayValue)).toEqual([{ leaf: 'array-0-leaf' }, { leaf: 'array-1-leaf' }]);
+		expect(arrayValue ? JSON.parse(arrayValue) : null).toEqual([
+			{ leaf: 'array-0-leaf' },
+			{ leaf: 'array-1-leaf' }
+		]);
 	});
 
 	test('nested field set is SSR rendered', async ({ page }) => {
@@ -553,6 +620,7 @@ test.describe('remote functions', () => {
 			})
 		);
 	});
+
 	test('form resets programmatically', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/remote/form/reset');
 
@@ -591,5 +659,67 @@ test.describe('remote functions', () => {
 
 		await page.locator('#full-reset').click();
 		await expect(page.locator('#result')).toHaveText('');
+	});
+
+	test('query stored as variable does not block SSR inside boundary', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		await page.goto('/remote/query-boundary');
+
+		await expect(page.locator('#delayed-pending')).toHaveText('loading delayed');
+
+		if (javaScriptEnabled) {
+			await expect(page.locator('#delayed-result')).toHaveText('delayed data', {
+				timeout: 5000
+			});
+		}
+	});
+
+	test('awaiting multiple queries inside $derived does not fail mutation validation', async ({
+		page
+	}) => {
+		await page.goto('/remote/query-derived-awaits');
+
+		await expect(page.locator('#result')).toHaveText('3');
+	});
+
+	test('.as(type, value) renders correct values', async ({ page }) => {
+		await page.goto('/remote/form/as-value');
+
+		const form1 = page.locator('form').nth(0);
+		const form2 = page.locator('form').nth(1);
+
+		// first record values
+		await expect(form1.locator('input[name="text_field"]')).toHaveValue('Example text');
+		await expect(form1.locator('input[name="n:number_field"]')).toHaveValue('42');
+		await expect(form1.locator('select[name="select_field"]')).toHaveValue('apple');
+		await expect(form1.locator('input[name="color_field"]')).toHaveValue('#ff0000');
+		await expect(form1.locator('input[name="n:range_field"]')).toHaveValue('5');
+
+		// second record values
+		await expect(form2.locator('input[name="text_field"]')).toHaveValue('Another example');
+		await expect(form2.locator('input[name="n:number_field"]')).toHaveValue('100');
+		await expect(form2.locator('select[name="select_field"]')).toHaveValue('banana');
+		await expect(form2.locator('input[name="color_field"]')).toHaveValue('#00ff00');
+		await expect(form2.locator('input[name="n:range_field"]')).toHaveValue('8');
+	});
+});
+
+test.describe('server error boundaries', () => {
+	test('catches server render error and shows root +error.svelte', async ({ page }) => {
+		await page.goto('/server-error-boundary');
+		await expect(page.locator('#message')).toContainText(
+			'render error (500 Internal Error, on /server-error-boundary)'
+		);
+	});
+
+	test('catches nested server render error and shows nested +error.svelte', async ({ page }) => {
+		await page.goto('/server-error-boundary/nested');
+		await expect(page.locator('#nested-error-message')).toContainText(
+			'nested render error (500 Internal Error, on /server-error-boundary/nested) | true | 500'
+		);
+		// The nested layout should still be visible
+		await expect(page.locator('#nested-layout')).toBeVisible();
 	});
 });

@@ -1,3 +1,4 @@
+/** @type {import('./$types').PageServerLoad} */
 export async function load({ fetch }) {
 	// fetch to root with trailing slash
 	const response1 = await fetch('/', { redirect: 'manual' });

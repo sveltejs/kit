@@ -1,5 +1,5 @@
 /** @import { RemoteResource, RemotePrerenderFunction } from '@sveltejs/kit' */
-/** @import { RemotePrerenderInputsGenerator, RemoteInfo, MaybePromise } from 'types' */
+/** @import { RemotePrerenderInputsGenerator, RemotePrerenderInternals, MaybePromise } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 import { error, json } from '@sveltejs/kit';
 import { DEV } from 'esm-env';
@@ -76,7 +76,7 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 	/** @type {(arg?: any) => MaybePromise<Input>} */
 	const validate = create_validator(validate_or_fn, maybe_fn);
 
-	/** @type {RemoteInfo} */
+	/** @type {RemotePrerenderInternals} */
 	const __ = {
 		type: 'prerender',
 		id: '',
@@ -86,7 +86,7 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 		dynamic: options?.dynamic
 	};
 
-	/** @type {RemotePrerenderFunction<Input, Output> & { __: RemoteInfo }} */
+	/** @type {RemotePrerenderFunction<Input, Output> & { __: RemotePrerenderInternals }} */
 	const wrapper = (arg) => {
 		/** @type {Promise<Output> & Partial<RemoteResource<Output>>} */
 		const promise = (async () => {
@@ -103,8 +103,9 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 
 						// TODO adapters can provide prerendered data more efficiently than
 						// fetching from the public internet
-						const promise = (cache[key] ??= fetch(new URL(url, event.url.origin).href).then(
-							async (response) => {
+						const promise = (cache[key] ??= {
+							serialize: true,
+							data: fetch(new URL(url, event.url.origin).href).then(async (response) => {
 								if (!response.ok) {
 									throw new Error('Prerendered response not found');
 								}
@@ -116,8 +117,8 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 								}
 
 								return prerendered.result;
-							}
-						));
+							})
+						}).data;
 
 						return parse_remote_response(await promise, state.transport);
 					});

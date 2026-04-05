@@ -29,10 +29,10 @@
 		"@sveltejs/eslint-config": "catalog:",
 		"@svitejs/changesets-changelog-github-compact": "catalog:",
 		"eslint": "catalog:",
-		"prettier": "^3.6.0",
-		"prettier-plugin-svelte": "^3.4.0"
+		"prettier": "catalog:",
+		"prettier-plugin-svelte": "catalog:"
 	},
-	"packageManager": "pnpm@10.30.0+sha512.2b5753de015d480eeb88f5b5b61e0051f05b4301808a82ec8b840c9d2adf7748eb352c83f5c1593ca703ff1017295bc3fdd3119abb9686efc96b9fcb18200937",
+	"packageManager": "pnpm@10.33.0+sha512.10568bb4a6afb58c9eb3630da90cc9516417abebd3fabbe6739f0ae795728da1491e9db5a544c76ad8eb7570f5c4bb3d6c637b2cb41bfdcdb47fa823c8649319",
 	"engines": {
 		"pnpm": ">=9.0.0"
 	},

@@ -163,12 +163,12 @@ async function analyse({
 		const exports = new Map();
 
 		for (const name in functions) {
-			const info = /** @type {import('types').RemoteInfo} */ (functions[name].__);
-			const type = info.type;
+			const internals = /** @type {import('types').RemoteInternals} */ (functions[name].__);
+			const type = internals.type;
 
 			exports.set(name, {
 				type,
-				dynamic: type !== 'prerender' || info.dynamic
+				dynamic: type !== 'prerender' || internals.dynamic
 			});
 		}
 
