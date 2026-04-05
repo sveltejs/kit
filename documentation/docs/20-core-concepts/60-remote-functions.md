@@ -723,39 +723,6 @@ We can customize what happens when the form is submitted with the `enhance` meth
 
 The callback receives the `form` element, the `data` it contains, and a `submit` function.
 
-To enable client-driven [single-flight mutations](#form-Single-flight-mutations), use `submit().updates(...)`. For example, if the `getPosts()` query was used on this page, we could refresh it like so:
-
-```ts
-import type { RemoteQuery, RemoteQueryOverride } from '@sveltejs/kit';
-interface Post {}
-declare function submit(): Promise<boolean> & {
-	updates(...queries: Array<RemoteQuery<any> | RemoteQueryOverride>): Promise<boolean>;
-}
-
-declare function getPosts(): RemoteQuery<Post[]>;
-// ---cut---
-await submit().updates(getPosts());
-```
-
-We can also _override_ the current data while the submission is ongoing:
-
-```ts
-import type { RemoteQuery, RemoteQueryOverride } from '@sveltejs/kit';
-interface Post {}
-declare function submit(): Promise<boolean> & {
-	updates(...queries: Array<RemoteQuery<any> | RemoteQueryOverride>): Promise<boolean>;
-}
-
-declare function getPosts(): RemoteQuery<Post[]>;
-declare const newPost: Post;
-// ---cut---
-await submit().updates(
-	getPosts().withOverride((posts) => [newPost, ...posts])
-);
-```
-
-The override will be applied immediately, and released when the submission completes (or fails).
-
 ### Multiple instances of a form
 
 Some forms may be repeated as part of a list. In this case you can create separate instances of a form function via `for(id)` to achieve isolation.
