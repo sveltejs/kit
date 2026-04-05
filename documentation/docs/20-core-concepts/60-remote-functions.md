@@ -393,12 +393,21 @@ Because our form contains a `file` input, we've added an `enctype="multipart/for
 In the case of `radio` and `checkbox` inputs that all belong to the same field, the `value` must be specified as a second argument to `.as(...)`:
 
 ```js
+/// file: constants.js
+export const operatingSystems = /** @type {const} */ (['windows', 'mac', 'linux']);
+export const languages = /** @type {const} */ (['html', 'css', 'js']);
+```
+
+```js
 /// file: data.remote.js
+// @filename: constants.js
+export const operatingSystems = /** @type {const} */ (['windows', 'mac', 'linux']);
+export const languages = /** @type {const} */ (['html', 'css', 'js']);
+// @filename: index.js
 import * as v from 'valibot';
 import { form } from '$app/server';
 // ---cut---
-export const operatingSystems = /** @type {const} */ (['windows', 'mac', 'linux']);
-export const languages = /** @type {const} */ (['html', 'css', 'js']);
+import { operatingSystems, languages } from './constants';
 
 export const survey = form(
 	v.object({
@@ -704,10 +713,13 @@ We can customize what happens when the form is submitted with the `enhance` meth
 
 <form {...createPost.enhance(async ({ form, data, submit }) => {
 	try {
-		await submit();
-		form.reset();
+		if (await submit()) {
+			form.reset();
 
-		showToast('Successfully published!');
+			showToast('Successfully published!');
+		} else {
+			showToast('Invalid data!');
+		}
 	} catch (error) {
 		showToast('Oh no! Something went wrong');
 	}
