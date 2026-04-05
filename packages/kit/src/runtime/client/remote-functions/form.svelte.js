@@ -306,7 +306,24 @@ export function form(id) {
 				validate_form_data(form_data, clone(element).enctype);
 			}
 
-			return submit(form_data);
+			submitted = true;
+			pending_count++;
+
+			const submission = submit(form_data);
+
+			/** @type {Promise<boolean> & { updates: (...args: RemoteQueryUpdate[]) => Promise<boolean> }} */
+			const wrapped = /** @type {any} */ (
+				submission.finally(() => {
+					pending_count--;
+				})
+			);
+
+			wrapped.updates = (...args) => {
+				submission.updates(...args);
+				return wrapped;
+			};
+
+			return wrapped;
 		}
 
 		/**
