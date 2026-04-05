@@ -362,9 +362,11 @@ export interface ServerMetadataRoute {
 	config: any;
 	api: {
 		methods: Array<HttpMethod | '*'>;
+		prerender?: boolean | 'auto';
 	};
 	page: {
 		methods: Array<'GET' | 'POST'>;
+		prerender?: boolean | 'auto';
 	};
 	methods: Array<HttpMethod | '*'>;
 	prerender: PrerenderOption | undefined;
