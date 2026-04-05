@@ -110,7 +110,7 @@ test.describe('trailing slash', () => {
 		clicknav,
 		javaScriptEnabled
 	}) => {
-		test.skip(!javaScriptEnabled || !process.env.DEV);
+		test.skip(!javaScriptEnabled || !!process.env.DEV);
 
 		await page.goto('/basepath/trailing-slash-server');
 
