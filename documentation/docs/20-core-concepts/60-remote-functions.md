@@ -713,10 +713,13 @@ We can customize what happens when the form is submitted with the `enhance` meth
 
 <form {...createPost.enhance(async ({ form, data, submit }) => {
 	try {
-		await submit();
-		form.reset();
+		if (await submit()) {
+			form.reset();
 
-		showToast('Successfully published!');
+			showToast('Successfully published!');
+		} else {
+			showToast('Invalid data!');
+		}
 	} catch (error) {
 		showToast('Oh no! Something went wrong');
 	}
