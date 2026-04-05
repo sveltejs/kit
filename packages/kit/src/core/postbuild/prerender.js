@@ -241,7 +241,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 			return;
 		}
 
-		const requestHeaders = expect_html ? { Accept: 'text/html' } : {};
+		const requestHeaders = expect_html ? { Accept: 'text/html' } : undefined;
 
 		/** @type {Map<string, import('types').PrerenderDependency>} */
 		const dependencies = new Map();
@@ -546,9 +546,9 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 					const path = `/${get_route_segments(processed_id).join('/')}`;
 
 					const route_data = metadata.routes.get(id);
-					if (route_data?.page.prerender === true)
+					if (route_data?.page.prerender === true && route_data?.page.methods.includes('GET'))
 						void enqueue(null, config.paths.base + path, undefined, undefined, true);
-					if (route_data?.api.prerender === true)
+					if (route_data?.api.prerender === true && route_data?.api.methods.includes('GET') || route_data?.api.methods.includes('*'))
 						void enqueue(null, config.paths.base + path, undefined, undefined, false);
 				}
 			}
@@ -561,9 +561,9 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 		const route_data = metadata.routes.get(id);
 
 		for (const entry of entries) {
-			if (route_data?.page.prerender === true)
+			if (route_data?.page.prerender === true && route_data?.page.methods.includes('GET'))
 				void enqueue(null, config.paths.base + entry, undefined, id, true);
-			if (route_data?.api.prerender === true)
+			if (route_data?.api.prerender === true && route_data?.api.methods.includes('GET') || route_data?.api.methods.includes('*'))
 				void enqueue(null, config.paths.base + entry, undefined, id, false);
 		}
 	}
