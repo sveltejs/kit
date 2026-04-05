@@ -2078,7 +2078,7 @@ export type RemoteForm<Input extends RemoteFormInput | void, Output> = {
 			submit: () => Promise<boolean> & {
 				updates: (...updates: RemoteQueryUpdate[]) => Promise<boolean>;
 			};
-		}) => void | Promise<void>
+		}) => void
 	): {
 		method: 'POST';
 		action: string;

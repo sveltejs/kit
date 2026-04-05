@@ -2052,7 +2052,7 @@ declare module '@sveltejs/kit' {
 				submit: () => Promise<boolean> & {
 					updates: (...updates: RemoteQueryUpdate[]) => Promise<boolean>;
 				};
-			}) => void | Promise<void>
+			}) => void
 		): {
 			method: 'POST';
 			action: string;
