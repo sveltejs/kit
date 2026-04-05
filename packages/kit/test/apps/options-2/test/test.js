@@ -115,7 +115,7 @@ test.describe('trailing slash', () => {
 		await page.goto('/basepath/trailing-slash-server');
 
 		await clicknav('a[href="/basepath/trailing-slash-server/prerender"]');
-		expect(await page.textContent('h2')).toBe('/basepath/trailing-slash-server/prerender/');
+		await expect(page.locator('h2')).toHaveText('/basepath/trailing-slash-server/prerender/');
 	});
 });
 
