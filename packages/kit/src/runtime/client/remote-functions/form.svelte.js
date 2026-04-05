@@ -260,9 +260,23 @@ export function form(id) {
 		instance.method = 'POST';
 		instance.action = action;
 
-		function create_attachment() {
+		instance[createAttachmentKey()] = (/** @type {HTMLFormElement} */ form) => {
+			if (element) {
+				let message = `A form object can only be attached to a single \`<form>\` element`;
+				if (DEV && !key) {
+					const name = id.split('/').pop();
+					message += `. To create multiple instances, use \`${name}.for(key)\``;
+				}
+
+				throw new Error(message);
+			}
+
+			element = form;
+
+			touched = {};
+
 			/** @param {SubmitEvent} event */
-			const onsubmit = async (event) => {
+			const handle_submit = async (event) => {
 				const form = /** @type {HTMLFormElement} */ (event.target);
 				const method = event.submitter?.hasAttribute('formmethod')
 					? /** @type {HTMLButtonElement | HTMLInputElement} */ (event.submitter).formMethod
@@ -360,128 +374,108 @@ export function form(id) {
 				}
 			};
 
-			return (/** @type {HTMLFormElement} */ form) => {
-				if (element) {
-					let message = `A form object can only be attached to a single \`<form>\` element`;
-					if (DEV && !key) {
-						const name = id.split('/').pop();
-						message += `. To create multiple instances, use \`${name}.for(key)\``;
-					}
+			/** @param {Event} e */
+			const handle_input = (e) => {
+				// strictly speaking it can be an HTMLTextAreaElement or HTMLSelectElement
+				// but that makes the types unnecessarily awkward
+				const element = /** @type {HTMLInputElement} */ (e.target);
 
-					throw new Error(message);
-				}
+				let name = element.name;
+				if (!name) return;
 
-				element = form;
+				const is_array = name.endsWith('[]');
+				if (is_array) name = name.slice(0, -2);
 
-				touched = {};
+				const is_file = element.type === 'file';
 
-				form.addEventListener('submit', onsubmit);
+				touched[name] = true;
 
-				/** @param {Event} e */
-				const handle_input = (e) => {
-					// strictly speaking it can be an HTMLTextAreaElement or HTMLSelectElement
-					// but that makes the types unnecessarily awkward
-					const element = /** @type {HTMLInputElement} */ (e.target);
+				if (is_array) {
+					let value;
 
-					let name = element.name;
-					if (!name) return;
+					if (element.tagName === 'SELECT') {
+						value = Array.from(
+							element.querySelectorAll('option:checked'),
+							(e) => /** @type {HTMLOptionElement} */ (e).value
+						);
+					} else {
+						const elements = /** @type {HTMLInputElement[]} */ (
+							Array.from(form.querySelectorAll(`[name="${name}[]"]`))
+						);
 
-					const is_array = name.endsWith('[]');
-					if (is_array) name = name.slice(0, -2);
-
-					const is_file = element.type === 'file';
-
-					touched[name] = true;
-
-					if (is_array) {
-						let value;
-
-						if (element.tagName === 'SELECT') {
-							value = Array.from(
-								element.querySelectorAll('option:checked'),
-								(e) => /** @type {HTMLOptionElement} */ (e).value
-							);
-						} else {
-							const elements = /** @type {HTMLInputElement[]} */ (
-								Array.from(form.querySelectorAll(`[name="${name}[]"]`))
-							);
-
-							if (DEV) {
-								for (const e of elements) {
-									if ((e.type === 'file') !== is_file) {
-										throw new Error(
-											`Cannot mix and match file and non-file inputs under the same name ("${element.name}")`
-										);
-									}
+						if (DEV) {
+							for (const e of elements) {
+								if ((e.type === 'file') !== is_file) {
+									throw new Error(
+										`Cannot mix and match file and non-file inputs under the same name ("${element.name}")`
+									);
 								}
 							}
-
-							value = is_file
-								? elements.map((input) => Array.from(input.files ?? [])).flat()
-								: elements.map((element) => element.value);
-							if (element.type === 'checkbox') {
-								value = /** @type {string[]} */ (value.filter((_, i) => elements[i].checked));
-							}
 						}
 
-						set_nested_value(input, name, value);
-					} else if (is_file) {
-						if (DEV && element.multiple) {
-							throw new Error(
-								`Can only use the \`multiple\` attribute when \`name\` includes a \`[]\` suffix — consider changing "${name}" to "${name}[]"`
-							);
+						value = is_file
+							? elements.map((input) => Array.from(input.files ?? [])).flat()
+							: elements.map((element) => element.value);
+						if (element.type === 'checkbox') {
+							value = /** @type {string[]} */ (value.filter((_, i) => elements[i].checked));
 						}
+					}
 
-						const file = /** @type {HTMLInputElement & { files: FileList }} */ (element).files[0];
-
-						if (file) {
-							set_nested_value(input, name, file);
-						} else {
-							// Remove the property by setting to undefined and clean up
-							const path_parts = name.split(/\.|\[|\]/).filter(Boolean);
-							let current = /** @type {any} */ (input);
-							for (let i = 0; i < path_parts.length - 1; i++) {
-								if (current[path_parts[i]] == null) return;
-								current = current[path_parts[i]];
-							}
-							delete current[path_parts[path_parts.length - 1]];
-						}
-					} else {
-						set_nested_value(
-							input,
-							name,
-							element.type === 'checkbox' && !element.checked ? null : element.value
+					set_nested_value(input, name, value);
+				} else if (is_file) {
+					if (DEV && element.multiple) {
+						throw new Error(
+							`Can only use the \`multiple\` attribute when \`name\` includes a \`[]\` suffix — consider changing "${name}" to "${name}[]"`
 						);
 					}
 
-					name = name.replace(/^[nb]:/, '');
+					const file = /** @type {HTMLInputElement & { files: FileList }} */ (element).files[0];
 
-					touched[name] = true;
-				};
+					if (file) {
+						set_nested_value(input, name, file);
+					} else {
+						// Remove the property by setting to undefined and clean up
+						const path_parts = name.split(/\.|\[|\]/).filter(Boolean);
+						let current = /** @type {any} */ (input);
+						for (let i = 0; i < path_parts.length - 1; i++) {
+							if (current[path_parts[i]] == null) return;
+							current = current[path_parts[i]];
+						}
+						delete current[path_parts[path_parts.length - 1]];
+					}
+				} else {
+					set_nested_value(
+						input,
+						name,
+						element.type === 'checkbox' && !element.checked ? null : element.value
+					);
+				}
 
-				form.addEventListener('input', handle_input);
+				name = name.replace(/^[nb]:/, '');
 
-				const handle_reset = async () => {
-					// need to wait a moment, because the `reset` event occurs before
-					// the inputs are actually updated (so that it can be cancelled)
-					await tick();
-
-					input = convert_formdata(new FormData(form));
-				};
-
-				form.addEventListener('reset', handle_reset);
-
-				return () => {
-					form.removeEventListener('submit', onsubmit);
-					form.removeEventListener('input', handle_input);
-					form.removeEventListener('reset', handle_reset);
-					element = null;
-					preflight_schema = undefined;
-				};
+				touched[name] = true;
 			};
-		}
 
-		instance[createAttachmentKey()] = create_attachment();
+			const handle_reset = async () => {
+				// need to wait a moment, because the `reset` event occurs before
+				// the inputs are actually updated (so that it can be cancelled)
+				await tick();
+
+				input = convert_formdata(new FormData(form));
+			};
+
+			form.addEventListener('submit', handle_submit);
+			form.addEventListener('input', handle_input);
+			form.addEventListener('reset', handle_reset);
+
+			return () => {
+				form.removeEventListener('submit', handle_submit);
+				form.removeEventListener('input', handle_input);
+				form.removeEventListener('reset', handle_reset);
+				element = null;
+				preflight_schema = undefined;
+			};
+		};
 
 		let validate_id = 0;
 
