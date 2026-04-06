@@ -1321,7 +1321,7 @@ function kit({ svelte_config }) {
 			}
 			mkdirp(out);
 
-			const server_bundle = /** @type {import('rolldown').RolldownOutput} */ (
+			const server_bundle = /** @type {import('vite').Rolldown.RolldownOutput} */ (
 				await builder.build(builder.environments.ssr)
 			);
 
@@ -1569,6 +1569,7 @@ function kit({ svelte_config }) {
 			prerendered = prerender_results.prerendered;
 
 			await treeshake_prerendered_remotes(
+				vite,
 				out,
 				remotes,
 				metadata,

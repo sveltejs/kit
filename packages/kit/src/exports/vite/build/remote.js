@@ -1,22 +1,23 @@
 /** @import { ServerMetadata } from 'types' */
-/** @import { OutputBundle } from 'rollup' */
+/** @import { Rolldown } from 'vite' */
 
 import fs from 'node:fs';
 import path from 'node:path';
 import { Parser } from 'acorn';
 import MagicString from 'magic-string';
 import { posixify } from '../../../utils/filesystem.js';
-import { import_peer } from '../../../utils/import.js';
 
 /**
+ * @param {typeof import('vite')} vite
  * @param {string} out
  * @param {Array<{ hash: string, file: string }>} remotes
  * @param {ServerMetadata} metadata
  * @param {string} cwd
- * @param {OutputBundle} server_bundle
+ * @param {Rolldown.RolldownOutput} server_bundle
  * @param {NonNullable<import('vitest/config').ViteUserConfig['build']>['sourcemap']} sourcemap
  */
 export async function treeshake_prerendered_remotes(
+	vite,
 	out,
 	remotes,
 	metadata,
@@ -25,8 +26,6 @@ export async function treeshake_prerendered_remotes(
 	sourcemap
 ) {
 	if (remotes.length === 0) return;
-
-	const vite = /** @type {typeof import('vite')} */ (await import_peer('vite'));
 
 	for (const remote of remotes) {
 		const exports_map = metadata.remotes.get(remote.hash);
@@ -90,7 +89,7 @@ export async function treeshake_prerendered_remotes(
 		const stubbed = modified_code.toString();
 		fs.writeFileSync(chunk_path, stubbed);
 
-		const bundle = /** @type {import('vite').Rollup.RollupOutput} */ (
+		const bundle = /** @type {import('vite').Rolldown.RolldownOutput} */ (
 			await vite.build({
 				configFile: false,
 				build: {
