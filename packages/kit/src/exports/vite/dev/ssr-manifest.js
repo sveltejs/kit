@@ -4,7 +4,7 @@ import { env, kit, manifest_data, mime_types } from '__sveltekit/manifest-data';
 import { to_fs } from '../filesystem.js';
 import { compact } from '../../../utils/array.js';
 import { join } from '../../../utils/path.js';
-import { runtime_directory } from '../../../core/utils.js';
+import { posixify } from '../../../utils/os.js';
 
 export { env };
 export const base_path = kit.paths.base;
@@ -17,7 +17,7 @@ export const manifest = {
 	mimeTypes: mime_types,
 	_: {
 		client: {
-			start: `${runtime_directory}/client/entry.js`,
+			start: posixify(join(import.meta.dirname, '../../../runtime/client/entry.js')),
 			app: `${to_fs(kit.outDir)}/generated/client/app.js`,
 			imports: [],
 			stylesheets: [],

@@ -2,7 +2,7 @@ import { copyFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
-import { getPlatformProxy, unstable_readConfig } from 'wrangler';
+import { unstable_readConfig } from 'wrangler';
 import {
 	is_building_for_cloudflare_pages,
 	validate_worker_settings,
