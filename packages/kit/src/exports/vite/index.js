@@ -43,6 +43,7 @@ import { import_peer } from '../../utils/import.js';
 import { compact } from '../../utils/array.js';
 import { should_ignore, has_children } from './static_analysis/utils.js';
 import { load_config } from '../../core/config/index.js';
+import { treeshake_prerendered_remotes } from './build/remote.js';
 
 const cwd = process.cwd();
 
@@ -1320,7 +1321,9 @@ function kit({ svelte_config }) {
 			}
 			mkdirp(out);
 
-			await builder.build(builder.environments.ssr);
+			const server_bundle = /** @type {import('rolldown').RolldownOutput} */ (
+				await builder.build(builder.environments.ssr)
+			);
 
 			const verbose = vite_config.logLevel === 'info';
 			const log = logger({ verbose });
@@ -1564,6 +1567,15 @@ function kit({ svelte_config }) {
 				root
 			});
 			prerendered = prerender_results.prerendered;
+
+			await treeshake_prerendered_remotes(
+				out,
+				remotes,
+				metadata,
+				cwd,
+				server_bundle,
+				vite_config.build.sourcemap
+			);
 
 			// generate a new manifest that doesn't include prerendered pages
 			fs.writeFileSync(

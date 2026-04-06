@@ -6,7 +6,7 @@ import sirv from 'sirv';
 import { loadEnv, normalizePath } from 'vite';
 import { createReadableStream, getRequest, setResponse } from '../../../exports/node/index.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
-import { not_found } from '../utils.js';
+import { is_chrome_devtools_request, not_found } from '../utils.js';
 
 /** @typedef {import('http').IncomingMessage} Req */
 /** @typedef {import('http').ServerResponse} Res */
@@ -96,6 +96,10 @@ export async function preview(vite, vite_config, svelte_config) {
 					location
 				});
 				res.end();
+				return;
+			}
+
+			if (is_chrome_devtools_request(pathname, res)) {
 				return;
 			}
 
