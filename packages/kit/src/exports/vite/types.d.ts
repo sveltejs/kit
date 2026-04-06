@@ -3,5 +3,5 @@ export interface EnforcedConfig {
 }
 
 export interface IndexableConfig {
-	[key: string]: IndexableConfig | undefined
+	[key: string]: IndexableConfig | undefined;
 }
