@@ -2,10 +2,6 @@ import 'svelte'; // pick up `declare module "*.svelte"`
 import 'vite/client'; // pick up `declare module "*.jpg"`, etc.
 import '../types/ambient.js';
 
-import { SvelteConfig } from '@sveltejs/vite-plugin-svelte';
-import { StandardSchemaV1 } from '@standard-schema/spec';
-import { PluginOption } from 'vite';
-
 import {
 	AdapterEntry,
 	CspDirectives,
@@ -24,6 +20,9 @@ import {
 	IsAny
 } from '../types/private.js';
 import { BuildData, SSRNodeLoader, SSRRoute, ValidatedConfig } from 'types';
+import { SvelteConfig } from '@sveltejs/vite-plugin-svelte';
+import { StandardSchemaV1 } from '@standard-schema/spec';
+import { PluginOption } from 'vite';
 import {
 	RouteId as AppRouteId,
 	LayoutParams as AppLayoutParams,
@@ -64,12 +63,6 @@ export interface Adapter {
 		 */
 		instrumentation?: () => boolean;
 	};
-	/**
-	 * Creates an `Emulator`, which allows the adapter to influence the environment
-	 * during dev, build and prerendering.
-	 * @deprecated removed in 3.0.0
-	 */
-	emulate?: () => MaybePromise<Emulator>;
 	vite?: {
 		/**
 		 * Add a Vite plugin here to replace the default Node SSR environment.
@@ -1428,6 +1421,22 @@ export interface Page<
  */
 export type ParamMatcher = (param: string) => boolean;
 
+export type RequestedResult<T> = Iterable<T> &
+	AsyncIterable<T> & {
+		/**
+		 * Call `refresh` on all queries selected by this `requested` invocation.
+		 * This is identical to:
+		 * ```ts
+		 * import { requested } from '$app/server';
+		 *
+		 * for await (const arg of requested(query, ...) {
+		 *   void query(arg).refresh();
+		 * }
+		 * ```
+		 */
+		refreshAll: () => Promise<void>;
+	};
+
 export interface RequestEvent<
 	Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
 	RouteId extends AppRouteId | null = AppRouteId | null
@@ -1596,7 +1605,7 @@ export interface ServerInitOptions {
 }
 
 /**
- * Powers the server
+ * Required to instantiate `Server` with project specific information
  */
 export interface SSRManifest {
 	appDir: string;
@@ -1856,28 +1865,35 @@ type InputElementProps<T extends keyof InputTypeMap> = T extends 'checkbox' | 'r
 				get files(): FileList | null;
 				set files(v: FileList | null);
 			}
-		: T extends 'select' | 'select multiple'
+		: T extends 'select'
 			? {
 					name: string;
-					multiple: T extends 'select' ? false : true;
 					'aria-invalid': boolean | 'false' | 'true' | undefined;
-					get value(): string | number;
-					set value(v: string | number);
+					get value(): string;
+					set value(v: string);
 				}
-			: T extends 'text'
+			: T extends 'select multiple'
 				? {
 						name: string;
+						multiple: true;
 						'aria-invalid': boolean | 'false' | 'true' | undefined;
-						get value(): string | number;
-						set value(v: string | number);
+						get value(): string[];
+						set value(v: string[]);
 					}
-				: {
-						name: string;
-						type: T;
-						'aria-invalid': boolean | 'false' | 'true' | undefined;
-						get value(): string | number;
-						set value(v: string | number);
-					};
+				: T extends 'text'
+					? {
+							name: string;
+							'aria-invalid': boolean | 'false' | 'true' | undefined;
+							get value(): string | number;
+							set value(v: string | number);
+						}
+					: {
+							name: string;
+							type: T;
+							'aria-invalid': boolean | 'false' | 'true' | undefined;
+							get value(): string | number;
+							set value(v: string | number);
+						};
 
 type RemoteFormFieldMethods<T> = {
 	/** The values that will be submitted */
@@ -2038,10 +2054,10 @@ export type RemoteForm<Input extends RemoteFormInput | void, Output> = {
 		callback: (opts: {
 			form: HTMLFormElement;
 			data: Input;
-			submit: () => Promise<void> & {
-				updates: (...queries: Array<RemoteQuery<any> | RemoteQueryOverride>) => Promise<void>;
+			submit: () => Promise<boolean> & {
+				updates: (...updates: RemoteQueryUpdate[]) => Promise<boolean>;
 			};
-		}) => void | Promise<void>
+		}) => void
 	): {
 		method: 'POST';
 		action: string;
@@ -2084,11 +2100,16 @@ export type RemoteForm<Input extends RemoteFormInput | void, Output> = {
  */
 export type RemoteCommand<Input, Output> = {
 	(arg: undefined extends Input ? Input | void : Input): Promise<Output> & {
-		updates(...queries: Array<RemoteQuery<any> | RemoteQueryOverride>): Promise<Output>;
+		updates(...updates: RemoteQueryUpdate[]): Promise<Output>;
 	};
 	/** The number of pending command executions */
 	get pending(): number;
 };
+
+export type RemoteQueryUpdate =
+	| RemoteQuery<any>
+	| RemoteQueryFunction<any, any>
+	| RemoteQueryOverride;
 
 export type RemoteResource<T> = Promise<T> & {
 	/** The error in case the query fails. Most often this is a [`HttpError`](https://svelte.dev/docs/kit/@sveltejs-kit#HttpError) but it isn't guaranteed to be. */
@@ -2130,7 +2151,7 @@ export type RemoteQuery<T> = RemoteResource<T> & {
 	 */
 	refresh(): Promise<void>;
 	/**
-	 * Temporarily override the value of a query. This is used with the `updates` method of a [command](https://svelte.dev/docs/kit/remote-functions#command-Updating-queries) or [enhanced form submission](https://svelte.dev/docs/kit/remote-functions#form-enhance) to provide optimistic updates.
+	 * Temporarily override a query's value during a [single-flight mutation](https://svelte.dev/docs/kit/remote-functions#Single-flight-mutations) to provide optimistic updates.
 	 *
 	 * ```svelte
 	 * <script>
@@ -2151,10 +2172,7 @@ export type RemoteQuery<T> = RemoteResource<T> & {
 	withOverride(update: (current: T) => T): RemoteQueryOverride;
 };
 
-export interface RemoteQueryOverride {
-	_key: string;
-	release(): void;
-}
+export type RemoteQueryOverride = () => void;
 
 /**
  * The return value of a remote `prerender` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#prerender) for full documentation.

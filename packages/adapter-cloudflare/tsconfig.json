@@ -3,10 +3,8 @@
 		"allowJs": true,
 		"checkJs": true,
 		"noEmit": true,
-		"noImplicitAny": true,
-		"strictNullChecks": true,
 		"module": "nodenext",
-		"baseUrl": ".",
+		"moduleResolution": "nodenext",
 		"paths": {
 			"@sveltejs/kit": ["../kit/types/index"],
 			"types": ["../kit/src/types/internal.d.ts"]
@@ -14,7 +12,7 @@
 		// taken from the Cloudflare Workers TypeScript template https://github.com/cloudflare/workers-sdk/blob/main/packages/create-cloudflare/templates/hello-world/ts/tsconfig.json
 		"target": "es2024",
 		"lib": ["es2024"],
-		"types": ["@cloudflare/workers-types", "../kit/src/types/virtual.d.ts"]
+		"types": ["node", "@cloudflare/workers-types"]
 	},
 	"include": [
 		"index.js",

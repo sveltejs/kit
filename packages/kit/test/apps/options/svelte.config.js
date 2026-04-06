@@ -8,7 +8,8 @@ const config = {
 		csp: {
 			directives: {
 				'script-src': ['self'],
-				'require-trusted-types-for': ['script']
+				'require-trusted-types-for': ['script'],
+				'trusted-types': ['svelte-trusted-html']
 			}
 		},
 		files: {

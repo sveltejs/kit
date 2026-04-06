@@ -2,18 +2,14 @@
 	"compilerOptions": {
 		"allowJs": true,
 		"checkJs": true,
-		"strict": true,
 		"noEmit": true,
-		"noImplicitAny": true,
-		"strictNullChecks": true,
 		"target": "es2022",
 		"module": "node16",
 		"moduleResolution": "node16",
-		"allowSyntheticDefaultImports": true,
-		"baseUrl": ".",
 		"paths": {
 			"@sveltejs/kit": ["../kit/types/index"]
-		}
+		},
+		"types": ["node"]
 	},
 	"include": ["*.js", "files/**/*.js", "internal.d.ts", "test/**/*.js"]
 }

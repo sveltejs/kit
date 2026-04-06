@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { Server } from '__sveltekit/server';
+import { Server } from '__sveltekit/dev-server';
 import { env, manifest } from '__sveltekit/ssr-manifest';
 import { createReadableStream } from '@sveltejs/kit/node';
 import { from_fs } from '../filesystem.js';
@@ -13,11 +13,10 @@ await server.init({
 });
 
 /**
- *
  * @param {Request} request
  * @param {string | undefined} remote_address
  * @param {import('types').ValidatedKitConfig} kit
- * @returns
+ * @returns {Promise<Response>}
  */
 export async function respond(request, remote_address, kit) {
 	return await server.respond(request, {

@@ -2,20 +2,18 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { URL } from 'node:url';
 import { styleText } from 'node:util';
-
 import sirv from 'sirv';
 import { isCSSRequest, isFetchableDevEnvironment } from 'vite';
-
-import { getRequest, setResponse } from '@sveltejs/kit/node';
+import { getRequest, setResponse } from '../../../exports/node/index.js';
 import { coalesce_to_error } from '../../../utils/error.js';
 import { resolve_entry } from '../../../utils/filesystem.js';
 import { posixify } from '../../../utils/os.js';
 import { load_error_page } from '../../../core/config/index.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import * as sync from '../../../core/sync/sync.js';
-import { not_found } from '../utils.js';
+import { is_chrome_devtools_request, not_found } from '../utils.js';
 import { escape_html } from '../../../utils/escape.js';
-import { sveltekit_ssr_manifest } from '../module_ids.js';
+import { sveltekit_manifest_data } from '../module_ids.js';
 import { to_fs } from '../filesystem.js';
 
 // vite-specifc queries that we should skip handling for css urls
@@ -62,7 +60,7 @@ export function dev(vite, vite_config, svelte_config, root, dev_environment) {
 			return;
 		}
 
-		void invalidate_module(vite, sveltekit_ssr_manifest);
+		void invalidate_module(vite, sveltekit_manifest_data);
 	}
 
 	update_manifest();
@@ -110,7 +108,7 @@ export function dev(vite, vite_config, svelte_config, root, dev_environment) {
 		if (timeout || restarting || !/\+(page|layout|server).*$/.test(file)) return;
 		sync.update(svelte_config, manifest_data, file, root);
 		// TODO: perform a partial update instead of invalidating the whole virtual module?
-		void invalidate_module(vite, sveltekit_ssr_manifest);
+		void invalidate_module(vite, sveltekit_manifest_data);
 	});
 
 	const { appTemplate, errorTemplate, serviceWorker, hooks } = svelte_config.kit.files;
@@ -227,6 +225,10 @@ export function dev(vite, vite_config, svelte_config, root, dev_environment) {
 					req.url = original_url;
 					// @ts-expect-error
 					serve_static_middleware.handle(req, res);
+					return;
+				}
+
+				if (is_chrome_devtools_request(decoded, res)) {
 					return;
 				}
 
@@ -384,6 +386,7 @@ function has_correct_case(file, assets) {
 /**
  * @param {import('vite').ViteDevServer} vite
  * @param {string} id
+ * @returns {void}
  */
 export function invalidate_module(vite, id) {
 	for (const environment in vite.environments) {
@@ -395,37 +398,11 @@ export function invalidate_module(vite, id) {
 }
 
 /**
- * @param {import('types').ManifestData} manifest_data
- * @param {import('vite/module-runner').ModuleRunner} runner
- * @param {string} root
- * @returns {Promise<Record<string, import('@sveltejs/kit').ParamMatcher>>}
- */
-export async function get_matchers(manifest_data, runner, root) {
-	/** @type {Record<string, import('@sveltejs/kit').ParamMatcher>} */
-	const matchers = {};
-
-	for (const key in manifest_data.matchers) {
-		const file = manifest_data.matchers[key];
-		const url = path.resolve(root, file);
-		const module = await runner.import(url);
-
-		if (module.match) {
-			matchers[key] = module.match;
-		} else {
-			throw new Error(`${file} does not export a \`match\` function`);
-		}
-	}
-
-	return matchers;
-}
-
-/**
- *
  * @param {import('vite').ViteDevServer} vite
- * @param {import('vite/module-runner').ModuleRunner} runner
  * @param {string[]} urls
+ * @returns {Promise<Record<string, string>>}
  */
-export async function get_inline_css(vite, runner, urls) {
+export async function get_inline_css(vite, urls) {
 	/** @type {Set<import('vite').EnvironmentModuleNode>} */
 	const deps = new Set();
 
@@ -440,17 +417,10 @@ export async function get_inline_css(vite, runner, urls) {
 
 	for (const dep of deps) {
 		if (isCSSRequest(dep.url) && !vite_css_query_regex.test(dep.url)) {
-			const inlineCssUrl = dep.url.includes('?')
+			const inline_css_url = dep.url.includes('?')
 				? dep.url.replace('?', '?inline&')
 				: dep.url + '?inline';
-			try {
-				const mod = await runner.import(inlineCssUrl);
-				styles.set(dep.url, mod.default);
-			} catch {
-				// this can happen with dynamically imported modules, I think
-				// because the Vite module graph doesn't distinguish between
-				// static and dynamic imports? TODO investigate, submit fix
-			}
+			styles.set(dep.url, inline_css_url);
 		}
 	}
 

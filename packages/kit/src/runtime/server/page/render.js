@@ -1,23 +1,23 @@
-import { isRedirect, text } from '@sveltejs/kit';
 import * as devalue from 'devalue';
-import { DEV } from 'esm-env';
 import { readable, writable } from 'svelte/store';
-import { try_get_request_store, with_request_store } from '@sveltejs/kit/internal/server';
-import { uneval_action_response } from './actions.js';
-import { Csp } from './csp.js';
-import { serialize_data } from './serialize_data.js';
-import { create_server_routing_response, generate_route_object } from './server_routing.js';
-import { get_global_name, handle_error_and_jsonify } from '../utils.js';
-import * as paths from '../../app/paths/internal/server.js';
-import { add_resolution_suffix } from '../../pathname.js';
-import { create_remote_key } from '../../shared.js';
-import { text_encoder } from '../../utils.js';
-import { SVELTE_KIT_ASSETS } from '../../../constants.js';
-import { public_env } from '../../shared-server.js';
-import { get_status } from '../../../utils/error.js';
+import { DEV } from 'esm-env';
+import { isRedirect, text } from '@sveltejs/kit';
+import * as paths from '$app/paths/internal/server';
 import { hash } from '../../../utils/hash.js';
+import { serialize_data } from './serialize_data.js';
 import { s } from '../../../utils/misc.js';
+import { Csp } from './csp.js';
+import { uneval_action_response } from './actions.js';
+import { public_env } from '../../shared-server.js';
+import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import { SCHEME } from '../../../utils/url.js';
+import { create_server_routing_response, generate_route_object } from './server_routing.js';
+import { add_resolution_suffix } from '../../pathname.js';
+import { try_get_request_store, with_request_store } from '@sveltejs/kit/internal/server';
+import { text_encoder } from '../../utils.js';
+import { get_global_name, handle_error_and_jsonify } from '../utils.js';
+import { create_remote_key } from '../../shared.js';
+import { get_status } from '../../../utils/error.js';
 
 // TODO rename this function/module
 
@@ -365,10 +365,9 @@ export async function render_response({
 		}
 
 		if (!client.inline) {
-			// client import paths have no leading slash `_app/immutable/*` so we need to add one
-			const included_modulepreloads = Array.from(modulepreloads, (dep) =>
-				prefixed('/' + dep)
-			).filter((path) => resolve_opts.preload({ type: 'js', path }));
+			const included_modulepreloads = Array.from(modulepreloads, (dep) => prefixed(dep)).filter(
+				(path) => resolve_opts.preload({ type: 'js', path })
+			);
 
 			for (const path of included_modulepreloads) {
 				link_headers.add(`<${encodeURI(path)}>; rel="modulepreload"; nopush`);
@@ -609,8 +608,14 @@ export async function render_response({
 			// we use an anonymous function instead of an arrow function to support
 			// older browsers (https://github.com/sveltejs/kit/pull/5417)
 			blocks.push(`if ('serviceWorker' in navigator) {
+						const script_url = '${prefixed('service-worker.js')}';
+						const policy = globalThis?.window?.trustedTypes?.createPolicy(
+							'sveltekit-trusted-url',
+							{ createScriptURL(url) { return url; } }
+						);
+						const sanitised = policy?.createScriptURL(script_url) ?? script_url;
 						addEventListener('load', function () {
-							navigator.serviceWorker.register('${prefixed('service-worker.js')}'${opts});
+							navigator.serviceWorker.register(sanitised${opts});
 						});
 					}`);
 		}
@@ -619,7 +624,7 @@ export async function render_response({
 		// that Vite global constant replacements are initialised before our code runs
 		const init_app = `
 				{
-					${DEV ? `import('/@vite/client')` : ''}
+					${DEV ? `import('${paths.base}/@vite/client')` : ''}
 					${blocks.join('\n\n\t\t\t\t\t')}
 				}
 			`;
@@ -730,8 +735,6 @@ class Head {
 	/** @type {string[]} */
 	#link_tags = [];
 	/** @type {string[]} */
-	#script_preloads = [];
-	/** @type {string[]} */
 	#style_tags = [];
 	/** @type {string[]} */
 	#stylesheet_links = [];
@@ -749,7 +752,6 @@ class Head {
 		return [
 			...this.#http_equiv,
 			...this.#link_tags,
-			...this.#script_preloads,
 			this.#rendered,
 			...this.#style_tags,
 			...this.#stylesheet_links

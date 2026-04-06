@@ -1,6 +1,6 @@
+import { read_implementation, manifest } from '__sveltekit/server';
+import { assets } from '$app/paths/internal/server';
 import { DEV } from 'esm-env';
-import { assets } from '../paths/internal/server.js';
-import { read_implementation, manifest } from '../../server/external.js';
 import { base64_decode } from '../../utils.js';
 
 /**
@@ -77,4 +77,4 @@ export function read(asset) {
 
 export { getRequestEvent } from '@sveltejs/kit/internal/server';
 
-export { query, prerender, command, form } from './remote/index.js';
+export { query, prerender, command, form, requested } from './remote/index.js';
