@@ -1,4 +1,4 @@
-import { query, prerender, command, form } from '$app/server';
+import { query, prerender, command, form, requested } from '$app/server';
 import { StandardSchemaV1 } from '@standard-schema/spec';
 import {
 	RemoteForm,
@@ -218,6 +218,7 @@ function command_tests() {
 		const result: string = await cmd();
 		result;
 		const result2: string = await cmd().updates(
+			q,
 			q(),
 			q().withOverride(() => '')
 		);
@@ -225,6 +226,25 @@ function command_tests() {
 		// @ts-expect-error
 		const wrong: number = await cmd();
 		wrong;
+
+		for (const value of requested(q)) {
+			const output: void = value;
+			output;
+		}
+
+		for await (const value of requested(q)) {
+			const output: void = value;
+			output;
+		}
+
+		for (const value of requested(q, 1)) {
+			const output: void = value;
+			output;
+		}
+
+		const refreshes = requested(q);
+		const refreshed: Promise<void> = refreshes.refreshAll();
+		refreshed;
 	}
 	void command_without_args();
 
@@ -283,9 +303,10 @@ function form_tests() {
 	f.result?.success === true;
 
 	f.enhance(async ({ submit }) => {
-		const x: void = await submit();
+		const x: boolean = await submit();
 		x;
-		const y: void = await submit().updates(
+		const y: boolean = await submit().updates(
+			q,
 			q(),
 			q().withOverride(() => '')
 		);

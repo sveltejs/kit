@@ -314,6 +314,21 @@ export type RemoteFunctionResponse =
 			reconnects?: string[];
 	  };
 
+export type RemoteRefreshResult = {
+	type: 'result';
+	data: any;
+};
+
+export type RemoteRefreshError = {
+	type: 'error';
+	status?: number;
+	error: App.Error;
+};
+
+export type RemoteRefreshEntry = RemoteRefreshResult | RemoteRefreshError;
+
+export type RemoteRefreshMap = Record<string, RemoteRefreshEntry>;
+
 /**
  * Signals a successful response of the server `load` function.
  * The `uses` property tells the client when it's possible to reuse this data
@@ -579,6 +594,7 @@ interface BaseRemoteInternals {
 
 export interface RemoteQueryInternals extends BaseRemoteInternals {
 	type: 'query';
+	validate: (arg?: any) => MaybePromise<any>;
 }
 export interface RemoteQueryLiveInternals extends BaseRemoteInternals {
 	type: 'query_live';
@@ -645,6 +661,8 @@ export interface RequestState {
 		forms: null | Map<any, any>;
 		refreshes: null | Record<string, Promise<any>>;
 		reconnects: null | Set<string>;
+		requested: null | Map<string, string[]>;
+		validated: null | Map<string, Set<any>>;
 	};
 	readonly is_in_remote_function: boolean;
 	readonly is_in_render: boolean;

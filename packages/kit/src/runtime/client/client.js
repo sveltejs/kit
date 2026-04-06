@@ -301,8 +301,8 @@ const preload_tokens = new Set();
 export let pending_invalidate;
 
 /**
- * @type {Map<string, RemoteQueryCacheEntry<any>>}
- * A map of id -> query internals with all queries that currently exist in the app.
+ * @type {Map<string, Map<string, RemoteQueryCacheEntry<any>>>}
+ * A map of query id -> payload -> query internals for all active queries.
  */
 export const query_map = new Map();
 
@@ -417,8 +417,10 @@ async function _invalidate(include_load_functions = true, reset_page_state = tru
 
 	// Rerun queries
 	if (force_invalidation) {
-		query_map.forEach(({ resource }) => {
-			void resource.refresh();
+		query_map.forEach((entries) => {
+			entries.forEach(({ resource }) => {
+				void resource.refresh?.();
+			});
 		});
 	}
 
@@ -449,7 +451,11 @@ async function _invalidate(include_load_functions = true, reset_page_state = tru
 	}
 
 	// Don't use allSettled yet because it's too new
-	await Promise.all([...query_map.values()].map(({ resource }) => resource)).catch(noop);
+	await Promise.all(
+		[...query_map.values()].flatMap((entries) =>
+			[...entries.values()].map(({ resource }) => resource)
+		)
+	).catch(noop);
 }
 
 function reset_invalidation() {
@@ -507,7 +513,12 @@ export async function _goto(url, options, redirect_count, nav_token) {
 		accept: () => {
 			if (options.invalidateAll) {
 				force_invalidation = true;
-				query_keys = [...query_map.keys()];
+				query_keys = [];
+				query_map.forEach((entries, id) => {
+					for (const payload of entries.keys()) {
+						query_keys.push(id + '/' + payload);
+					}
+				});
 			}
 
 			if (options.invalidate) {
@@ -523,11 +534,12 @@ export async function _goto(url, options, redirect_count, nav_token) {
 			.tick()
 			.then(svelte.tick)
 			.then(() => {
-				query_map.forEach(({ resource }, key) => {
-					// Only refresh those that already existed on the old page
-					if (query_keys?.includes(key)) {
-						void resource.refresh();
-					}
+				query_map.forEach((entries, id) => {
+					entries.forEach(({ resource }, payload) => {
+						if (query_keys?.includes(id + '/' + payload)) {
+							void resource.refresh?.();
+						}
+					});
 				});
 			});
 	}
@@ -1781,6 +1793,10 @@ async function navigate({
 	// also compare ids to avoid using wrong fork (e.g. a new one could've been added while navigating)
 	const load_cache_fork = intent && load_cache?.id === intent.id ? load_cache.fork : null;
 	// reset preload synchronously after the history state has been set to avoid race conditions
+	if (load_cache?.fork && !load_cache_fork) {
+		// discard fork of different route
+		discard_load_cache();
+	}
 	load_cache = null;
 
 	navigation_result.props.page.state = state;
@@ -3144,7 +3160,8 @@ function reset_focus(url, scroll = true) {
 			const tabindex = root.getAttribute('tabindex');
 
 			root.tabIndex = -1;
-			// @ts-expect-error options.focusVisible is only supported in Firefox
+			// TODO: remove this when we switch to TypeScript 6
+			// @ts-ignore options.focusVisible is only typed in TypeScript 6
 			// See https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/focus#browser_compatibility
 			root.focus({ preventScroll: true, focusVisible: false });
 

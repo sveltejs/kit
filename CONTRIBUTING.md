@@ -84,8 +84,20 @@ If there are tests that fail on the CI, you can retrieve the failed screenshots 
 
 It is very easy to introduce flakiness in a browser test. If you try to fix the flakiness in a test, you can run it until failure to gain some confidence you've fixed the test with a command like:
 
+```sh
+pnpx playwright test --workers=1 --repeat-each 1000 --max-failures 1 -g "accepts a Request object"
 ```
-npx playwright test --workers=1 --repeat-each 1000 --max-failures 1 -g "accepts a Request object"
+
+The Playwright tests can also be run with the following environment variables to augment how the tests run locally:
+
+```sh
+# Default values
+KIT_E2E_BROWSER=chromium
+KIT_E2E_RETRIES=0
+KIT_E2E_WORKERS=undefined
+
+# Append the modified environment variable before the test command
+KIT_E2E_RETRIES=2 pnpm test:kit
 ```
 
 ## Working on Vite and other dependencies

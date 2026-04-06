@@ -6,7 +6,9 @@ export default [
 	...svelte_config,
 	{
 		rules: {
-			'no-undef': 'off'
+			'no-undef': 'off',
+			// we have some non-reactive state in our runtime modules, and we don't want to be nagged about it
+			'svelte/prefer-svelte-reactivity': 'off'
 		}
 	},
 	{
