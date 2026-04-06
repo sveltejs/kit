@@ -6,7 +6,7 @@ const config = {
 	build: {
 		minify: false
 	},
-	plugins: [sveltekit({ adapter: adapter() })],
+	plugins: [sveltekit({ adapter: adapter({ vitePluginOptions: {} }) })],
 	server: {
 		fs: {
 			allow: ['../../../../kit']
