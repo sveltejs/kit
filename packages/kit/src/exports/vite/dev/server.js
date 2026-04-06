@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { Server } from '@sveltejs/kit/vite/environment/server';
-import { env, manifest } from '@sveltejs/kit/vite/environment';
+import { Server } from 'virtual:@sveltejs/kit/vite/environment/server';
+import { env, manifest } from 'virtual:@sveltejs/kit/vite/environment';
 import { createReadableStream } from '@sveltejs/kit/node';
 import { from_fs } from '../filesystem.js';
 

@@ -657,7 +657,10 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 				return `${runtime_directory}/client/remote-functions/index.js`;
 			}
 
-			if (id === '__sveltekit/ssr-manifest') {
+			// these virtual modules which are public paths should have the virtual prefix
+			// otherwise the bundler complains about not being able to find them based
+			// on the fact that we have @sveltejs/kit/vite in our package.json exports list
+			if (id === 'virtual:@sveltejs/kit/vite/environment') {
 				return path.join(import.meta.dirname, 'dev/ssr-manifest.js');
 			}
 
@@ -665,6 +668,10 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 				return server_instrumentation_file
 					? sveltekit_traced
 					: path.join(import.meta.dirname, 'dev/server.js');
+			}
+
+			if (id === 'virtual:@sveltejs/kit/vite/environment/server') {
+				return `\0${id}`;
 			}
 
 			if (id.startsWith('__sveltekit/') && id !== '__sveltekit/dev-server-entry') {
