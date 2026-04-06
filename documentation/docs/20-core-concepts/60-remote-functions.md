@@ -966,6 +966,29 @@ export const updatePost = form(
 
 Because queries are keyed based on their arguments, `await getPost(post.id).set(result)` on the server knows to look up the matching `getPost(id)` on the client to update it. The same goes for `getPosts().refresh()` -- it knows to look up `getPosts()` with no argument on the client.
 
+### Reconnecting live queries in mutations
+
+Single-flight mutations can also reconnect `query.live` instances. In a `form`/`command` handler, call `.reconnect()` on the live query resource you want to reconnect:
+
+```js
+import * as v from 'valibot';
+import { form, query } from '$app/server';
+
+export const getNotifications = query.live(v.string(), async function* (userId) {
+	while (true) {
+		yield await db.notifications(userId);
+		await wait(1000);
+	}
+});
+
+export const markAllRead = form(v.object({ userId: v.string() }), async ({ userId }) => {
+	// mutation logic...
+	+++getNotifications(userId).reconnect();+++
+});
+```
+
+This schedules a reconnect for the matching active client instances and applies it as part of the mutation response (i.e. in the same flight as the form/command result).
+
 ### Client-requested refreshes
 
 Unfortunately, life isn't always as simple as the preceding example. The server always knows which query _functions_ to update, but it may not know which specific query _instances_ to update. For example, if `getPosts({ filter: 'author:santa' })` is rendered on the client, calling `getPosts().refresh()` in the server handler won't update it. You'd need to call `getPosts({ filter: 'author:santa' }).refresh()` instead — but how could you know which specific combinations of filters are currently rendered on the client, especially if your query argument is more complicated than an object with just one key?
