@@ -106,10 +106,13 @@ export function write_root(manifest_data, config, output) {
 				${
 					isSvelte5Plus()
 						? dedent`
-							let { stores, page, constructors, components = [], form, ${use_boundaries ? 'errors = [], error, ' : ''}${levels
+							let { stores, page, constructors, components = [], form, fork, ${use_boundaries ? 'errors = [], error, ' : ''}${levels
 								.map((l) => `data_${l} = null`)
 								.join(', ')} } = $props();
 							${use_boundaries ? `let data = $derived({${levels.map((l) => `'${l}': data_${l}`).join(', ')}})` : ''}
+							if (browser) {
+								setContext('__sveltekit_fork', () => fork);
+							}
 						`
 						: dedent`
 							export let stores;

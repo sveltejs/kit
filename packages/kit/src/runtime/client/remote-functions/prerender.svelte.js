@@ -4,7 +4,12 @@ import { version } from '__sveltekit/environment';
 import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
 import { app, prerender_responses } from '../client.js';
-import { get_remote_request_headers, remote_request } from './shared.svelte.js';
+import {
+	get_remote_request_headers,
+	is_in_effect,
+	register_fork,
+	remote_request
+} from './shared.svelte.js';
 import { create_remote_key, stringify_remote_arg } from '../../shared.js';
 
 // Initialize Cache API for prerender functions
@@ -59,6 +64,14 @@ export function prerender(id) {
 		const payload = stringify_remote_arg(arg, app.hooks.transport);
 		const cache_key = create_remote_key(id, payload);
 
+		if (is_in_effect()) {
+			const release = register_fork(cache_key);
+
+			$effect.pre(() => () => {
+				release();
+			});
+		}
+
 		let resource = prerender_resources.get(cache_key)?.deref();
 
 		if (!resource) {
@@ -94,7 +107,7 @@ export function prerender(id) {
 					}
 				}
 
-				const encoded = await remote_request(url, headers);
+				const encoded = await remote_request(url, headers, cache_key);
 
 				// For successful prerender requests, save to cache
 				if (prerender_cache) {

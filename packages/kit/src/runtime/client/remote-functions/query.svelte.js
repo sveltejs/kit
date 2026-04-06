@@ -1,9 +1,12 @@
 /** @import { RemoteQueryFunction } from '@sveltejs/kit' */
 /** @import { RemoteFunctionResponse } from 'types' */
 import { app_dir, base } from '$app/paths/internal/client';
-import { app, goto, query_map, query_responses } from '../client.js';
+import { app, query_map, query_responses } from '../client.js';
 import {
 	get_remote_request_headers,
+	handle_remote_redirect,
+	is_in_effect,
+	register_fork,
 	QUERY_FUNCTION_ID,
 	QUERY_OVERRIDE_KEY,
 	QUERY_RESOURCE_KEY,
@@ -24,18 +27,6 @@ import { create_remote_key, stringify_remote_arg, unfriendly_hydratable } from '
  *   cleanup: () => void;
  * }} RemoteQueryCacheEntry
  */
-
-/**
- * @returns {boolean} Returns `true` if we are in an effect
- */
-function is_in_effect() {
-	try {
-		$effect.pre(() => {});
-		return true;
-	} catch {
-		return false;
-	}
-}
 
 /**
  * @param {string} id
@@ -60,7 +51,7 @@ export function query(id) {
 			const url = `${base}/${app_dir}/remote/${id}${payload ? `?payload=${payload}` : ''}`;
 
 			const serialized = await unfriendly_hydratable(key, () =>
-				remote_request(url, get_remote_request_headers())
+				remote_request(url, get_remote_request_headers(), key)
 			);
 
 			return devalue.parse(serialized, app.decoders);
@@ -127,8 +118,7 @@ export function query_batch(id) {
 							}
 
 							if (result.type === 'redirect') {
-								await goto(result.location);
-								throw new Redirect(307, result.location);
+								return handle_remote_redirect(key, result.location);
 							}
 
 							const results = devalue.parse(result.result, app.decoders);
@@ -282,6 +272,8 @@ export class Query {
 					this.#loading = false;
 				});
 
+				if (e instanceof Redirect) this.#promise = null; // allow retries after redirects
+
 				reject(e);
 			});
 
@@ -415,6 +407,8 @@ class QueryProxy {
 	#payload;
 	#fn;
 	#active = true;
+	/** @type {(() => void) | null} */
+	#release_fork = null;
 	/**
 	 * Whether this proxy was created in a tracking context.
 	 * @readonly
@@ -438,9 +432,15 @@ class QueryProxy {
 			return;
 		}
 
+		// A bit duplicative with #get_or_create_cache_entry but this way we can reuse
+		// register_fork in the remote prerender function, too.
+		this.#release_fork = register_fork(this.#key);
+
 		const entry = this.#get_or_create_cache_entry();
 
 		$effect.pre(() => () => {
+			/** @type {() => void} */ (this.#release_fork)();
+
 			const die = this.#release(entry);
 			void tick().then(die);
 		});
