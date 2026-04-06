@@ -155,8 +155,5 @@ declare module 'virtual:@sveltejs/kit/vite/environment' {
 }
 
 declare module 'virtual:@sveltejs/kit/vite/environment/server' {
-	// eslint-disable-next-line no-duplicate-imports
-	import { Server } from '@sveltejs/kit';
-
-	export { Server };
+	export { Server } from '@sveltejs/kit';
 }

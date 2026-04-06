@@ -1,8 +1,13 @@
+/** @import { InternalServer, ValidatedKitConfig } from 'types' */
+
+import fs from 'node:fs';
+import path from 'node:path';
 import { Server } from 'virtual:@sveltejs/kit/vite/environment/server';
 import { env, manifest } from 'virtual:@sveltejs/kit/vite/environment';
 import { createReadableStream } from '@sveltejs/kit/node';
 import { from_fs } from '../filesystem.js';
 
+/** @type {InternalServer} */
 const server = new Server(manifest);
 
 await server.init({
@@ -13,13 +18,21 @@ await server.init({
 /**
  * @param {Request} request
  * @param {string | undefined} remote_address
+ * @param {ValidatedKitConfig} kit
  * @returns {Promise<Response>}
  */
-export async function respond(request, remote_address) {
+export async function respond(request, remote_address, kit) {
 	return await server.respond(request, {
 		getClientAddress: () => {
 			if (remote_address) return remote_address;
 			throw new Error('Could not determine clientAddress');
+		},
+		read: (file) => {
+			if (file in manifest._.server_assets) {
+				return fs.readFileSync(from_fs(file));
+			}
+
+			return fs.readFileSync(path.join(kit.files.assets, file));
 		}
 	});
 }

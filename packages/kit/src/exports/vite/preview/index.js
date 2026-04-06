@@ -205,6 +205,13 @@ export async function preview(vite, vite_config, svelte_config) {
 						const { remoteAddress } = req.socket;
 						if (remoteAddress) return remoteAddress;
 						throw new Error('Could not determine clientAddress');
+					},
+					read: (file) => {
+						if (file in manifest._.server_assets) {
+							return fs.readFileSync(join(dir, file));
+						}
+
+						return fs.readFileSync(join(svelte_config.kit.files.assets, file));
 					}
 				})
 			);

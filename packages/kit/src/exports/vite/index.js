@@ -538,7 +538,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 												const { respond } = await module_runner.import(
 													'__sveltekit/dev-server-entry'
 												);
-												return await respond(request, dev_environment?.remote_address);
+												return await respond(request, dev_environment?.remote_address, kit);
 											} catch (error) {
 												// Vite doesn't log the thrown error so we have to do it ourselves
 												console.error(error);

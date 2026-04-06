@@ -176,6 +176,10 @@ export class InternalServer extends Server {
 		request: Request,
 		options: RequestOptions & {
 			prerendering?: PrerenderOptions;
+			/**
+			 * Used internally for saving dependencies during prerendering and generating fallback pages.
+			 */
+			read: (file: string) => NonSharedBuffer;
 			/** A hook called before `handle` during dev, so that `AsyncLocalStorage` can be populated. */
 			before_handle?: (
 				event: RequestEvent,
@@ -554,6 +558,10 @@ export interface SSRState {
 	 * prerender option is inherited by the endpoint, unless overridden.
 	 */
 	prerender_default?: PrerenderOption;
+	/**
+	 * Used internally for saving dependencies during prerendering and generating fallback pages.
+	 */
+	read?: (file: string) => NonSharedBuffer;
 	/**
 	 * Used to set up `__SVELTEKIT_TRACK__` which checks if a used feature is supported.
 	 * E.g. if `read` from `$app/server` is used, it checks whether the route's config is compatible.
