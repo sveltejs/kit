@@ -1,4 +1,4 @@
-import { Server } from '__sveltekit/server';
+import { Server } from '__sveltekit/dev-server';
 import { manifest, prerendered, base_path } from '__sveltekit/ssr-manifest';
 import { env } from 'cloudflare:workers';
 import * as Cache from 'worktop/cfw.cache';
