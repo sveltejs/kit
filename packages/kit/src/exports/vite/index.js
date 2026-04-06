@@ -1156,7 +1156,11 @@ async function kit({ svelte_config }) {
 					const error =
 						e instanceof Error
 							? e
-							: new Error(/** @type {{ message?: string }} */ (e).message ?? '<unknown>');
+							: new Error(
+									/** @type {{ message?: string }} */ (e).message ??
+										/** @type {{ name?: string }} */ (e).name ??
+										'<unknown>'
+								);
 
 					// without this, errors that occur during the secondary build
 					// will be logged twice
