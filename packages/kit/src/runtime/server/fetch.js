@@ -93,15 +93,7 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 				if (is_asset || is_asset_html) {
 					const file = is_asset ? filename : filename_html;
 
-					if (state.read) {
-						const type = is_asset
-							? manifest.mimeTypes[filename.slice(filename.lastIndexOf('.'))]
-							: 'text/html';
-
-						return new Response(state.read(file), {
-							headers: type ? { 'content-type': type } : {}
-						});
-					} else if (read_implementation && file in manifest._.server_assets) {
+					if (read_implementation && file in manifest._.server_assets) {
 						const length = manifest._.server_assets[file];
 						const type = manifest.mimeTypes[file.slice(file.lastIndexOf('.'))];
 

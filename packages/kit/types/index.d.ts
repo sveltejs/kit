@@ -3644,9 +3644,10 @@ declare module 'virtual:@sveltejs/kit/vite/environment' {
 }
 
 declare module 'virtual:@sveltejs/kit/vite/environment/server' {
-	import { InternalServer } from 'types';
+	// eslint-disable-next-line no-duplicate-imports
+	import { Server } from '@sveltejs/kit';
 
-	export { InternalServer as Server };
+	export { Server };
 }
 
 //# sourceMappingURL=index.d.ts.map
