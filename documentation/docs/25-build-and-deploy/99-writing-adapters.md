@@ -66,6 +66,7 @@ By default, SvelteKit runs your server code through a Node.js runtime during dev
 The default Vite environment SvelteKit uses is named `ssr`. You can customise it by referencing it in the `config` hook of your Vite plugin.
 
 ```js
+// @errors: 2304 1005 1109
 config(userConfig) {
 	userConfig.environments.ssr = { ... }
 }
