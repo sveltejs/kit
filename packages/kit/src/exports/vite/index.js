@@ -1430,8 +1430,8 @@ async function kit({ svelte_config }) {
  */
 function warn_overridden_config(config, resolved_config) {
 	const overridden = find_overridden_config(
-		/** @type {Record<string, unknown>} */ (config),
-		/** @type {Record<string, unknown>} */ (resolved_config),
+		/** @type {IndexableConfig} */ (config),
+		/** @type {IndexableConfig} */ (resolved_config),
 		enforced_config,
 		'',
 		[]
@@ -1446,8 +1446,9 @@ function warn_overridden_config(config, resolved_config) {
 }
 
 /**
- * @param {Record<string, unknown>} config
- * @param {Record<string, unknown>} resolved_config
+ * @typedef {{ [key: string]: IndexableConfig | undefined }} IndexableConfig
+ * @param {IndexableConfig | undefined} config
+ * @param {IndexableConfig | undefined} resolved_config
  * @param {import('./types.js').EnforcedConfig} enforced_config
  * @param {string} path
  * @param {string[]} out used locally to compute the return value
@@ -1466,13 +1467,7 @@ function find_overridden_config(config, resolved_config, enforced_config, path, 
 					out.push(path + key);
 				}
 			} else {
-				find_overridden_config(
-					/** @type {Record<string, unknown>} */ (config[key]),
-					/** @type {Record<string, unknown>} */ (resolved_config[key]),
-					enforced,
-					path + key + '.',
-					out
-				);
+				find_overridden_config(config[key], resolved_config[key], enforced, path + key + '.', out);
 			}
 		}
 	}
