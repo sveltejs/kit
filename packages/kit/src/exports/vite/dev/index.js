@@ -11,7 +11,7 @@ import { posixify } from '../../../utils/os.js';
 import { load_error_page } from '../../../core/config/index.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import * as sync from '../../../core/sync/sync.js';
-import { not_found } from '../utils.js';
+import { is_chrome_devtools_request, not_found } from '../utils.js';
 import { escape_html } from '../../../utils/escape.js';
 import { sveltekit_manifest_data } from '../module_ids.js';
 import { to_fs } from '../filesystem.js';
@@ -225,6 +225,10 @@ export function dev(vite, vite_config, svelte_config, root, dev_environment) {
 					req.url = original_url;
 					// @ts-expect-error
 					serve_static_middleware.handle(req, res);
+					return;
+				}
+
+				if (is_chrome_devtools_request(decoded, res)) {
 					return;
 				}
 
