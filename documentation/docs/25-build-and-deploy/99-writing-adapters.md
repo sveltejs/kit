@@ -71,8 +71,30 @@ config(userConfig) {
 }
 ```
 
-If your development environment implements the `FetchableDevEnvironment` interface, you can import the `respond` method from `@sveltejs/kit/vite/environment` to have SvelteKit handle the request in your custom runtime.
+You can also create your own server entry file by importing `Server` from `@sveltejs/kit/vite/environment/server` and `env` and `manifest` from `@sveltejs/kit/vite/environment`.
 
 ```js
-import { respond } from '@sveltejs/kit/vite/environment';
+import { Server } from '@sveltejs/kit/vite/environment/server';
+import { env, manifest } from '@sveltejs/kit/vite/environment';
+
+const server = new Server(manifest);
+
+await server.init({ env });
+
+/**
+ * @param {Request} request
+ * @returns {Promise<Response>}
+ */
+export async function respond(request) {
+	return await server.respond(request, {
+		getClientAddress: () => {
+			throw new Error('Could not determine clientAddress');
+		},
+		read: (file) => {
+			throw new Error('read is not supported in this environment');
+		}
+	});
+}
+
+import.meta.hot?.accept();
 ```
