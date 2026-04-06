@@ -2043,7 +2043,7 @@ declare module '@sveltejs/kit' {
 	}
 
 	/**
-	 * The return value of a remote `form` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
+	 * The type of a remote `form` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
 	 */
 	export type RemoteForm<Input extends RemoteFormInput | void, Output> = {
 		/** Attachment that sets up an event handler that intercepts the form submission on the client to prevent a full page reload */
@@ -2098,7 +2098,7 @@ declare module '@sveltejs/kit' {
 	};
 
 	/**
-	 * The return value of a remote `command` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#command) for full documentation.
+	 * The type of a remote `command` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#command) for full documentation.
 	 */
 	export type RemoteCommand<Input, Output> = {
 		(arg: undefined extends Input ? Input | void : Input): Promise<Output> & {
@@ -2192,21 +2192,21 @@ declare module '@sveltejs/kit' {
 	export type RemoteQueryOverride = () => void;
 
 	/**
-	 * The return value of a remote `prerender` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#prerender) for full documentation.
+	 * The type of a remote `prerender` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#prerender) for full documentation.
 	 */
 	export type RemotePrerenderFunction<Input, Output> = (
 		arg: undefined extends Input ? Input | void : Input
 	) => RemoteResource<Output>;
 
 	/**
-	 * The return value of a remote `query` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query) for full documentation.
+	 * The type of a remote `query` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query) for full documentation.
 	 */
 	export type RemoteQueryFunction<Input, Output> = (
 		arg: undefined extends Input ? Input | void : Input
 	) => RemoteQuery<Output>;
 
 	/**
-	 * The return value of a remote `query.live` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query.live) for full documentation.
+	 * The type of a remote `query.live` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query.live) for full documentation.
 	 */
 	export type RemoteLiveQueryFunction<Input, Output> = (
 		arg: undefined extends Input ? Input | void : Input
