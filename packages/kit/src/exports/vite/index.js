@@ -424,7 +424,10 @@ async function kit({ svelte_config }) {
 					];
 				}
 
-				warn_overridden_config(config, new_config);
+				warn_overridden_config(
+					/** @type {Record<string, unknown>} */ (config),
+					/** @type {Record<string, unknown>} */ (new_config)
+				);
 
 				return new_config;
 			}
@@ -997,7 +1000,10 @@ async function kit({ svelte_config }) {
 					};
 				}
 
-				warn_overridden_config(config, new_config);
+				warn_overridden_config(
+					/** @type {Record<string, unknown>} */ (config),
+					/** @type {Record<string, unknown>} */ (new_config)
+				);
 
 				return new_config;
 			}
@@ -1148,7 +1154,11 @@ async function kit({ svelte_config }) {
 					client_chunks = bundle.output;
 				} catch (e) {
 					const error =
-						e instanceof Error ? e : new Error(/** @type {any} */ (e).message ?? e ?? '<unknown>');
+						e instanceof Error
+							? e
+							: new Error(
+									/** @type {{ message?: string }} */ (e).message ?? String(e) ?? '<unknown>'
+								);
 
 					// without this, errors that occur during the secondary build
 					// will be logged twice
@@ -1421,8 +1431,8 @@ async function kit({ svelte_config }) {
 }
 
 /**
- * @param {Record<string, any>} config
- * @param {Record<string, any>} resolved_config
+ * @param {Record<string, unknown>} config
+ * @param {Record<string, unknown>} resolved_config
  */
 function warn_overridden_config(config, resolved_config) {
 	const overridden = find_overridden_config(config, resolved_config, enforced_config, '', []);
@@ -1436,8 +1446,8 @@ function warn_overridden_config(config, resolved_config) {
 }
 
 /**
- * @param {Record<string, any>} config
- * @param {Record<string, any>} resolved_config
+ * @param {Record<string, unknown>} config
+ * @param {Record<string, unknown>} resolved_config
  * @param {import('./types.js').EnforcedConfig} enforced_config
  * @param {string} path
  * @param {string[]} out used locally to compute the return value
@@ -1456,7 +1466,13 @@ function find_overridden_config(config, resolved_config, enforced_config, path, 
 					out.push(path + key);
 				}
 			} else {
-				find_overridden_config(config[key], resolved_config[key], enforced, path + key + '.', out);
+				find_overridden_config(
+					/** @type {Record<string, unknown>} */ (config[key]),
+					/** @type {Record<string, unknown>} */ (resolved_config[key]),
+					enforced,
+					path + key + '.',
+					out
+				);
 			}
 		}
 	}

@@ -68,7 +68,8 @@ export async function dev(vite, vite_config, svelte_config, get_remotes) {
 	async function loud_ssr_load_module(url) {
 		try {
 			return await vite.ssrLoadModule(url, { fixStacktrace: true });
-		} catch (/** @type {any} */ err) {
+		} catch (/** @type {unknown} */ e) {
+			const err = /** @type {import('rollup').RollupError} */ (e);
 			const msg = buildErrorMessage(err, [colors.red(`Internal server error: ${err.message}`)]);
 
 			if (!vite.config.logger.hasErrorLogged(err)) {
@@ -77,13 +78,13 @@ export async function dev(vite, vite_config, svelte_config, get_remotes) {
 
 			vite.ws.send({
 				type: 'error',
-				err: {
+				err: /** @type {import('vite').ErrorPayload['err']} */ ({
 					...err,
 					// these properties are non-enumerable and will
 					// not be serialized unless we explicitly include them
 					message: err.message,
-					stack: err.stack
-				}
+					stack: err.stack ?? ''
+				})
 			});
 
 			throw err;
@@ -204,7 +205,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes) {
 
 						if (node.universal) {
 							if (node.page_options?.ssr === false) {
-								result.universal = node.page_options;
+								result.universal = /** @type {import('types').UniversalNode} */ (node.page_options);
 							} else {
 								// TODO: explain why the file was loaded on the server if we fail to load it
 								const { module, module_node } = await resolve(node.universal);
