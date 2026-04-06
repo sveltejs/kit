@@ -1430,8 +1430,8 @@ async function kit({ svelte_config }) {
  */
 function warn_overridden_config(config, resolved_config) {
 	const overridden = find_overridden_config(
-		/** @type {IndexableConfig} */ (config),
-		/** @type {IndexableConfig} */ (resolved_config),
+		/** @type {import('./types.js').IndexableConfig } */ (config),
+		/** @type {import('./types.js').IndexableConfig } */ (resolved_config),
 		enforced_config,
 		'',
 		[]
@@ -1446,9 +1446,8 @@ function warn_overridden_config(config, resolved_config) {
 }
 
 /**
- * @typedef {{ [key: string]: IndexableConfig | undefined }} IndexableConfig
- * @param {IndexableConfig | undefined} config
- * @param {IndexableConfig | undefined} resolved_config
+ * @param {import('./types.js').IndexableConfig | undefined} config
+ * @param {import('./types.js').IndexableConfig  | undefined} resolved_config
  * @param {import('./types.js').EnforcedConfig} enforced_config
  * @param {string} path
  * @param {string[]} out used locally to compute the return value
