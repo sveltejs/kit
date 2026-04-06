@@ -21,14 +21,6 @@ export default function (options) {
 		async adapt(builder) {
 			// adapter implementation
 		},
-		async emulate() {
-			return {
-				async platform({ config, prerender }) {
-					// the returned object becomes `event.platform` during dev, build and
-					// preview. Its shape is that of `App.Platform`
-				}
-			}
-		},
 		supports: {
 			read: ({ config, route }) => {
 				// Return `true` if the route with the given `config` can use `read`
@@ -39,6 +31,11 @@ export default function (options) {
 				// Return `true` if this adapter supports loading `instrumentation.server.js`.
 				// Return `false if it can't, or throw a descriptive error.
 			}
+		},
+		vite: {
+			plugins: [
+				// add plugins here to integrate with Vite
+			]
 		}
 	};
 
@@ -46,7 +43,7 @@ export default function (options) {
 }
 ```
 
-Of these, `name` and `adapt` are required. `emulate` and `supports` are optional.
+Of these, `name` and `adapt` are required. `vite.plugins` and `supports` are optional.
 
 Within the `adapt` method, there are a number of things that an adapter should do:
 
@@ -61,3 +58,21 @@ Within the `adapt` method, there are a number of things that an adapter should d
 - Put the user's static files and the generated JS/CSS in the correct location for the target platform
 
 Where possible, we recommend putting the adapter output under the `build/` directory with any intermediate output placed under `.svelte-kit/[adapter-name]`.
+
+## Configuring the development server
+
+By default, SvelteKit runs your server code through a Node.js runtime during development and preview. You can change this by adding a Vite plugin to run code and respond to requests from [a different SSR environment](https://vite.dev/guide/api-environment-runtimes).
+
+The default Vite environment SvelteKit uses is named `ssr`. You can customise it by referencing it in the `config` hook of your Vite plugin.
+
+```js
+config(userConfig) {
+	userConfig.environments.ssr = { ... }
+}
+```
+
+If your development environment implements the `FetchableDevEnvironment` interface, you can import the `respond` method from `@sveltejs/kit/vite/environment` to have SvelteKit handle the request in your custom runtime.
+
+```js
+import { respond } from '@sveltejs/kit/vite/environment';
+```
