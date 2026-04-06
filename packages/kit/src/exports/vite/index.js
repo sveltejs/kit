@@ -43,6 +43,8 @@ import { compact } from '../../utils/array.js';
 import { should_ignore, has_children } from './static_analysis/utils.js';
 import { treeshake_prerendered_remotes } from './build/remote.js';
 
+/** @import { UserConfig } from 'vite' */
+
 const cwd = posixify(process.cwd());
 
 /** @type {import('./types.js').EnforcedConfig} */
@@ -424,10 +426,7 @@ async function kit({ svelte_config }) {
 					];
 				}
 
-				warn_overridden_config(
-					/** @type {Record<string, unknown>} */ (config),
-					/** @type {Record<string, unknown>} */ (new_config)
-				);
+				warn_overridden_config(config, new_config);
 
 				return new_config;
 			}
@@ -1000,10 +999,7 @@ async function kit({ svelte_config }) {
 					};
 				}
 
-				warn_overridden_config(
-					/** @type {Record<string, unknown>} */ (config),
-					/** @type {Record<string, unknown>} */ (new_config)
-				);
+				warn_overridden_config(config, new_config);
 
 				return new_config;
 			}
@@ -1156,9 +1152,7 @@ async function kit({ svelte_config }) {
 					const error =
 						e instanceof Error
 							? e
-							: new Error(
-									/** @type {{ message?: string }} */ (e).message ?? String(e) ?? '<unknown>'
-								);
+							: new Error(/** @type {{ message?: string }} */ (e).message ?? '<unknown>');
 
 					// without this, errors that occur during the secondary build
 					// will be logged twice
@@ -1431,11 +1425,17 @@ async function kit({ svelte_config }) {
 }
 
 /**
- * @param {Record<string, unknown>} config
- * @param {Record<string, unknown>} resolved_config
+ * @param {UserConfig} config
+ * @param {UserConfig} resolved_config
  */
 function warn_overridden_config(config, resolved_config) {
-	const overridden = find_overridden_config(config, resolved_config, enforced_config, '', []);
+	const overridden = find_overridden_config(
+		/** @type {Record<string, unknown>} */ (config),
+		/** @type {Record<string, unknown>} */ (resolved_config),
+		enforced_config,
+		'',
+		[]
+	);
 
 	if (overridden.length > 0) {
 		console.error(
