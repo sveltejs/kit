@@ -71,29 +71,28 @@ config(userConfig) {
 }
 ```
 
-You can also create your own server entry file by importing `Server` from `@sveltejs/kit/vite/environment/server` and `env` and `manifest` from `@sveltejs/kit/vite/environment`.
+You can also create your own server entry file by importing `Server` from `virtual:@sveltejs/kit/vite/environment/server` and `env` and `manifest` from `virtual:@sveltejs/kit/vite/environment`.
 
 ```js
-import { Server } from '@sveltejs/kit/vite/environment/server';
-import { env, manifest } from '@sveltejs/kit/vite/environment';
+import { Server } from 'virtual:@sveltejs/kit/vite/environment/server';
+import { env, manifest } from 'virtual:@sveltejs/kit/vite/environment';
 
 const server = new Server(manifest);
 
 await server.init({ env });
 
-/**
- * @param {Request} request
- * @returns {Promise<Response>}
- */
-export async function respond(request) {
-	return await server.respond(request, {
-		getClientAddress: () => {
-			throw new Error('Could not determine clientAddress');
-		},
-		read: (file) => {
-			throw new Error('read is not supported in this environment');
-		}
-	});
+export default {
+	/**
+	 * @param {Request} request
+	 * @returns {Promise<Response>}
+	 */
+	async fetch(request) {
+		return await server.respond(request, {
+			getClientAddress: () => {
+				return request.headers.get('your-platform-exposes-the-remote-address')
+			}
+		});
+	}
 }
 
 import.meta.hot?.accept();
