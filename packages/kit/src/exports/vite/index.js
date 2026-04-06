@@ -530,7 +530,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 											try {
 												/** @type {import('./dev/server.js')} */
 												const { respond } = await module_runner.import(
-													'__sveltekit/dev-server-entry'
+													'@sveltekit/vite/environment'
 												);
 												return await respond(request, dev_environment?.remote_address, kit);
 											} catch (error) {
@@ -655,7 +655,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 				return path.join(import.meta.dirname, 'dev/ssr-manifest.js');
 			}
 
-			if (id === '__sveltekit/dev-server-entry') {
+			if (id === '@sveltekit/vite/environment') {
 				const resolved_instrumentation = resolve_entry(
 					path.join(svelte_config.kit.files.src, 'instrumentation.server')
 				);
