@@ -162,7 +162,7 @@ Both the argument and the return value are serialized with [devalue](https://git
 
 > [!NOTE] For `query` and `prerender` arguments (but not return values), objects, maps, and sets are sorted so that instances with the same members result in the same cache key. For example, `getPosts({ limit: 10, offset: 10 })` and `getPosts({ offset: 10, limit: 10 })` will result in the same cache key. If order is important to you, you'll have to use an array.
 
-### Dedpulication
+### Deduplication
 
 When you call a query function, SvelteKit serializes the arguments you call it with and uses them as a cache key. On the server, this is used to create a request-scoped cache so that multiple identical invocations of the same query only result in a single actual call for that query. On the client, SvelteKit does something similar: Multiple identical invocations of a query all result in the same instance. This client-side deduplication requires access to Svelte's reactivity system, meaning it can only work in a reactive context. In practice, you're most likely to run into this limitation in universal `load` functions, event handlers, or when trying to access a query's data during module initialization.
 
