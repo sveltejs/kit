@@ -3636,4 +3636,15 @@ declare module '$app/types' {
 	export type Asset = ReturnType<AppTypes['Asset']>;
 }
 
+declare module 'virtual:@sveltejs/kit/vite/environment' {
+	import { SSRManifest } from '@sveltejs/kit';
+
+	export const manifest: SSRManifest;
+	export const env: Record<string, string>;
+}
+
+declare module 'virtual:@sveltejs/kit/vite/environment/server' {
+	export { Server } from '@sveltejs/kit';
+}
+
 //# sourceMappingURL=index.d.ts.map

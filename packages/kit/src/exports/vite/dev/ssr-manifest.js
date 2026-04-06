@@ -4,11 +4,10 @@ import { env, kit, manifest_data, mime_types } from '__sveltekit/manifest-data';
 import { to_fs } from '../filesystem.js';
 import { compact } from '../../../utils/array.js';
 import { join } from '../../../utils/path.js';
-import { posixify } from '../../../utils/os.js';
 
 export { env };
-export const base_path = kit.paths.base;
-export const prerendered = new Set();
+
+export const basePath = kit.paths.base;
 
 export const manifest = {
 	appDir: kit.appDir,
@@ -17,7 +16,11 @@ export const manifest = {
 	mimeTypes: mime_types,
 	_: {
 		client: {
-			start: posixify(join(import.meta.dirname, '../../../runtime/client/entry.js')),
+			// we can't use `runtime_directory` here because that module has imports to node:* modules
+			// and that doesn't work in non-Node environments
+			start: to_fs(
+				join(__SVELTEKIT_ROOT__, 'node_modules/@sveltejs/kit/src/runtime/client/entry.js')
+			),
 			app: `${to_fs(kit.outDir)}/generated/client/app.js`,
 			imports: [],
 			stylesheets: [],

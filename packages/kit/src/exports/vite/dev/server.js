@@ -1,10 +1,13 @@
+/** @import { InternalServer, ValidatedKitConfig } from 'types' */
+
 import fs from 'node:fs';
 import path from 'node:path';
-import { Server } from '@sveltejs/kit/vite/environment/server';
-import { env, manifest } from '@sveltejs/kit/vite/environment';
+import { Server } from 'virtual:@sveltejs/kit/vite/environment/server';
+import { env, manifest } from 'virtual:@sveltejs/kit/vite/environment';
 import { createReadableStream } from '@sveltejs/kit/node';
 import { from_fs } from '../filesystem.js';
 
+/** @type {InternalServer} */
 const server = new Server(manifest);
 
 await server.init({
@@ -15,7 +18,7 @@ await server.init({
 /**
  * @param {Request} request
  * @param {string | undefined} remote_address
- * @param {import('types').ValidatedKitConfig} kit
+ * @param {ValidatedKitConfig} kit
  * @returns {Promise<Response>}
  */
 export async function respond(request, remote_address, kit) {
