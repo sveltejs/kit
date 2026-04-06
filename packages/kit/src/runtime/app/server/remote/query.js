@@ -458,7 +458,7 @@ function create_live_query_resource(__, arg, state, get_first_value, get_iterato
 		finally(onfinally) {
 			return get_promise().finally(onfinally);
 		},
-		finished: false,
+		completed: false,
 		loading: true,
 		ready: false,
 		connected: false,
