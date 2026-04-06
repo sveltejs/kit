@@ -624,7 +624,7 @@ export async function render_response({
 		// that Vite global constant replacements are initialised before our code runs
 		const init_app = `
 				{
-					${DEV ? `import('/@vite/client')` : ''}
+					${DEV ? `import('${paths.base}/@vite/client')` : ''}
 					${blocks.join('\n\n\t\t\t\t\t')}
 				}
 			`;
