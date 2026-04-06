@@ -301,6 +301,9 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 	/** @type {import('node:path').ParsedPath} */
 	let parsed_service_worker;
 
+	/** @type {string | null} */
+	let server_instrumentation_file;
+
 	/** @type {string} */
 	let normalized_cwd;
 	/** @type {string} */
@@ -355,6 +358,9 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 
 				service_worker_entry_file = resolve_entry(kit.files.serviceWorker);
 				parsed_service_worker = path.parse(kit.files.serviceWorker);
+				server_instrumentation_file = resolve_entry(
+					path.join(kit.files.src, 'instrumentation.server')
+				);
 
 				vite = await import_peer('vite', root);
 
@@ -656,10 +662,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 			}
 
 			if (id === '@sveltekit/vite/environment') {
-				const resolved_instrumentation = resolve_entry(
-					path.join(svelte_config.kit.files.src, 'instrumentation.server')
-				);
-				return resolved_instrumentation
+				return server_instrumentation_file
 					? sveltekit_traced
 					: path.join(import.meta.dirname, 'dev/server.js');
 			}
@@ -861,8 +864,11 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 					}
 
 					case sveltekit_traced: {
+						if (!server_instrumentation_file)
+							throw new Error('Server instrumentation file not found. This should never happen');
+
 						return dedent`
-							import '${resolve_entry(path.join(svelte_config.kit.files.src, 'instrumentation.server'))}';
+							import '${posixify(server_instrumentation_file)}';
 
 							const { respond } = await import('${import.meta.resolve('./dev/server.js')}');
 							export { respond };
@@ -1366,13 +1372,10 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 					}
 
 					// ...and the server instrumentation file
-					const server_instrumentation = resolve_entry(
-						path.join(kit.files.src, 'instrumentation.server')
-					);
-					if (server_instrumentation) {
+					if (server_instrumentation_file) {
 						const { adapter } = kit;
 						if (adapter && !adapter.supports?.instrumentation?.()) {
-							throw new Error(`${server_instrumentation} is unsupported in ${adapter.name}.`);
+							throw new Error(`${server_instrumentation_file} is unsupported in ${adapter.name}.`);
 						}
 						if (!kit.experimental.instrumentation.server) {
 							error_for_missing_config(
@@ -1381,7 +1384,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 								'true'
 							);
 						}
-						server_input['instrumentation.server'] = server_instrumentation;
+						server_input['instrumentation.server'] = server_instrumentation_file;
 					}
 
 					/** @type {Record<string, string>} */

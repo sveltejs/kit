@@ -63,12 +63,6 @@ export interface Adapter {
 		 */
 		instrumentation?: () => boolean;
 	};
-	/**
-	 * Creates an `Emulator`, which allows the adapter to influence the environment
-	 * during dev, build and prerendering.
-	 * @deprecated removed in 3.0.0
-	 */
-	emulate?: () => MaybePromise<Emulator>;
 	vite?: {
 		/**
 		 * Add a Vite plugin here to replace the default Node SSR environment.

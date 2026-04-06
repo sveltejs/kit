@@ -175,41 +175,6 @@ export default function (options = {}) {
 				writeFileSync(`${dest}/.assetsignore`, generate_assetsignore(), { flag: 'a' });
 			}
 		},
-		emulate() {
-			// we want to invoke `getPlatformProxy` only once, but await it only when it is accessed.
-			// If we would await it here, it would hang indefinitely because the platform proxy only resolves once a request happens
-			const get_emulated = async () => {
-				const proxy = await getPlatformProxy(options.platformProxy);
-				const platform = /** @type {App.Platform} */ ({
-					env: proxy.env,
-					ctx: proxy.ctx,
-					context: proxy.ctx, // deprecated in favor of ctx
-					caches: proxy.caches,
-					cf: proxy.cf
-				});
-				/** @type {Record<string, any>} */
-				const env = {};
-				const prerender_platform = /** @type {App.Platform} */ (/** @type {unknown} */ ({ env }));
-				for (const key in proxy.env) {
-					Object.defineProperty(env, key, {
-						get: () => {
-							throw new Error(`Cannot access platform.env.${key} in a prerenderable route`);
-						}
-					});
-				}
-				return { platform, prerender_platform };
-			};
-
-			/** @type {{ platform: App.Platform, prerender_platform: App.Platform }} */
-			let emulated;
-
-			return {
-				platform: async ({ prerender }) => {
-					emulated ??= await get_emulated();
-					return prerender ? emulated.prerender_platform : emulated.platform;
-				}
-			};
-		},
 		supports: {
 			read: () => true,
 			instrumentation: () => true
