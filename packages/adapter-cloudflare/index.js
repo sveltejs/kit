@@ -169,6 +169,15 @@ export default function (options = {}) {
 							// TODO: if `main` or `assets.binding` is configured, ensure `main`, `assets.directory` and `assets.binding` are populated
 						}
 
+						// if (
+						// 	DEV &&
+						// 	!user_config.compatibility_flags?.find(
+						// 		(flag) => flag === 'no_handle_cross_request_promise_resolution'
+						// 	)
+						// ) {
+						// 	user_config.compatibility_flags.push('no_handle_cross_request_promise_resolution');
+						// }
+
 						if (
 							!user_config.compatibility_flags.find(
 								(flag) => flag === 'nodejs_als' || flag === 'nodejs_compat'
