@@ -289,7 +289,6 @@ export function form(id) {
 					raw_issues,
 					validated.issues.map((issue) => normalize_issue(issue, false))
 				);
-				pending_count--;
 				return false;
 			}
 
@@ -553,10 +552,7 @@ export function form(id) {
 				get: () => result
 			},
 			pending: {
-				get: () => {
-					console.log('???', pending_count);
-					return pending_count;
-				}
+				get: () => pending_count
 			},
 			preflight: {
 				/** @type {RemoteForm<T, U>['preflight']} */
