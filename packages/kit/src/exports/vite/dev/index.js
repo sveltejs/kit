@@ -1,5 +1,5 @@
 /** @import { RequestEvent } from '@sveltejs/kit' */
-/** @import { PrerenderOption } from 'types' */
+/** @import { PrerenderOption, UniversalNode } from 'types' */
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
@@ -213,7 +213,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes) {
 
 						if (node.universal) {
 							if (node.page_options?.ssr === false) {
-								result.universal = /** @type {import('types').UniversalNode} */ (node.page_options);
+								result.universal = /** @type {UniversalNode} */ (node.page_options);
 							} else {
 								// TODO: explain why the file was loaded on the server if we fail to load it
 								const { module, module_node } = await resolve(node.universal);
