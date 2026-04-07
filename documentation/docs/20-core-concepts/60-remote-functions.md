@@ -200,7 +200,7 @@ This limitation only applies to accessing the _data_ of a query by `await`ing it
 </script>
 
 <!-- This bypasses the cache and runs the query directly, returning a plain old Promise<T> -->
-<button onclick={() => console.log(await getData().run())}>
+<button onclick={async () => console.log(await getData().run())}>
 	click me!
 </button>
 ```
