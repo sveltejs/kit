@@ -2,6 +2,7 @@ import { createReadStream } from 'node:fs';
 import { Readable } from 'node:stream';
 import * as set_cookie_parser from 'set-cookie-parser';
 import { SvelteKitError } from '../internal/index.js';
+import { noop } from '../../utils/functions.js';
 
 /**
  * @param {import('http').IncomingMessage} req
@@ -200,7 +201,7 @@ export async function setResponse(res, response) {
 
 		// If the reader has already been interrupted with an error earlier,
 		// then it will appear here, it is useless, but it needs to be catch.
-		reader.cancel(error).catch(() => {});
+		reader.cancel(error).catch(noop);
 		if (error) res.destroy(error);
 	};
 
