@@ -1428,13 +1428,7 @@ async function kit({ svelte_config }) {
  * @param {UserConfig} resolved_config
  */
 function warn_overridden_config(config, resolved_config) {
-	const overridden = find_overridden_config(
-		/** @type {import('./types.js').IndexableConfig } */ (config),
-		/** @type {import('./types.js').IndexableConfig } */ (resolved_config),
-		enforced_config,
-		'',
-		[]
-	);
+	const overridden = find_overridden_config(config, resolved_config, enforced_config, '', []);
 
 	if (overridden.length > 0) {
 		console.error(
@@ -1445,8 +1439,8 @@ function warn_overridden_config(config, resolved_config) {
 }
 
 /**
- * @param {import('./types.js').IndexableConfig | undefined} config
- * @param {import('./types.js').IndexableConfig  | undefined} resolved_config
+ * @param {Record<string, any>} config
+ * @param {Record<string, any>} resolved_config
  * @param {import('./types.js').EnforcedConfig} enforced_config
  * @param {string} path
  * @param {string[]} out used locally to compute the return value
