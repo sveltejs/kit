@@ -2943,6 +2943,412 @@ declare module '@sveltejs/kit/vite' {
 	export {};
 }
 
+declare module '@sveltejs/kit/test' {
+	import type { Cookies, RequestEvent, RemoteQueryFunction, RemoteCommand, RemoteForm, RemoteFormInput, Config, Handle, HandleServerError, KitConfig, HandleFetch, Reroute, Adapter, ServerInit, Transport, HandleValidationError } from '@sveltejs/kit';
+	import type { StandardSchemaV1 } from '@standard-schema/spec';
+	import type { Span } from '@opentelemetry/api';
+	/**
+	 * Creates a mock `RequestEvent` for use in test environments.
+	 *
+	 * @example
+	 * ```js
+	 * import { createTestEvent } from '@sveltejs/kit/test';
+	 *
+	 * const event = createTestEvent({
+	 *   url: 'http://localhost/blog/hello',
+	 *   method: 'POST',
+	 *   locals: { user: { id: '123' } }
+	 * });
+	 * ```
+	 *
+	 * */
+	export function createTestEvent(options?: {
+		url?: string | undefined;
+		method?: string | undefined;
+		headers?: Record<string, string> | undefined;
+		locals?: App.Locals | undefined;
+		params?: Record<string, string> | undefined;
+		cookies?: Record<string, string> | undefined;
+		cookiesObject?: Cookies | undefined;
+		routeId?: string | null | undefined;
+		fetch?: typeof fetch | undefined;
+		getClientAddress?: (() => string) | undefined;
+		platform?: Readonly<App.Platform> | undefined;
+		body?: BodyInit | null | undefined;
+	}): RequestEvent;
+	/**
+	 * Creates a default `RequestState` suitable for test environments.
+	 *
+	 * The `handleValidationError` hook throws `HttpValidationError` directly,
+	 * short-circuiting the framework's `error(400, ...)` call. Since
+	 * `HttpValidationError` extends `HttpError`, existing `instanceof HttpError`
+	 * checks still pass — the only difference is the `.issues` property is
+	 * available for test assertions. This works identically regardless of whether
+	 * context was established via `withRequestContext` or auto-context.
+	 *
+	 * */
+	export function createTestState(options?: {
+		transport?: Record<string, {
+			encode: (value: any) => any;
+			decode: (value: any) => any;
+		}> | undefined;
+	}): RequestState;
+	/**
+	 * Wraps a function call in a SvelteKit request context, making `getRequestEvent()`
+	 * and remote functions (`query`, `command`, `form`) work inside the callback.
+	 *
+	 * @example
+	 * ```js
+	 * import { createTestEvent, withRequestContext } from '@sveltejs/kit/test';
+	 * import { getRequestEvent } from '$app/server';
+	 *
+	 * const event = createTestEvent({ locals: { user: { id: '123' } } });
+	 * const locals = withRequestContext(event, () => getRequestEvent().locals);
+	 * // locals === { user: { id: '123' } }
+	 * ```
+	 *
+	 * @param event The mock request event (use `createTestEvent` to create one)
+	 * @param fn The function to execute within the request context
+	 * */
+	export function withRequestContext<T>(event: RequestEvent, fn: () => T, options?: {
+		transport?: Record<string, {
+			encode: (value: any) => any;
+			decode: (value: any) => any;
+		}> | undefined;
+	}): T;
+	/**
+	 * Calls a RemoteQueryFunction with a test request context.
+	 *
+	 * If a remote function's schema validation fails, the resulting `HttpError` is caught
+	 * and rethrown as an `HttpValidationError` with the Standard Schema `.issues` attached.
+	 *
+	 * */
+	export function callRemote<QueryOutput>(fn: RemoteQueryFunction<void, QueryOutput>, arg?: void | undefined, options?: CallRemoteOptions | undefined): Promise<QueryOutput>;
+
+	export function callRemote<QueryInput, QueryOutput>(fn: RemoteQueryFunction<QueryInput, QueryOutput>, arg: QueryInput, options?: CallRemoteOptions | undefined): Promise<QueryOutput>;
+	/**
+	 * Calls a RemoteCommand with a test request context.
+	 *
+	 * If a remote function's schema validation fails, the resulting `HttpError` is caught
+	 * and rethrown as an `HttpValidationError` with the Standard Schema `.issues` attached.
+	 *
+	 * */
+	export function callRemote<CommandOutput>(fn: RemoteCommand<void, CommandOutput>, arg?: void | undefined, options?: CallRemoteOptions | undefined): Promise<CommandOutput>;
+
+	export function callRemote<CommandInput, CommandOutput>(fn: RemoteCommand<CommandInput, CommandOutput>, arg: CommandInput, options?: CallRemoteOptions | undefined): Promise<CommandOutput>;
+	/**
+	 * Calls a RemoteForm's handler with a test request context.
+	 *
+	 * If a remote function's schema validation fails, issues are
+	 * returned in output object (not thrown).
+	 *
+	 * */
+	export function callRemote<FormOutput>(fn: RemoteForm<void, FormOutput>, arg?: void | undefined, options?: CallRemoteOptions | undefined): Promise<{
+		submission: true;
+		result?: FormOutput;
+		issues?: import("@sveltejs/kit").RemoteFormIssue[];
+	}>;
+
+	export function callRemote<FormInput extends RemoteFormInput, FormOutput>(fn: RemoteForm<FormInput, FormOutput>, arg: Record<string, any>, options?: CallRemoteOptions | undefined): Promise<{
+		submission: true;
+		result?: FormOutput;
+		issues?: import("@sveltejs/kit").RemoteFormIssue[];
+	}>;
+	/**
+	 * Sets `event.locals` on the current test's request context.
+	 * Can be called inside `withRequestContext`, or inside a test when
+	 * auto-context is active via the svelteKitTest Vitest plugin.
+	 *
+	 * @example
+	 * ```js
+	 * import { setLocals } from '@sveltejs/kit/test';
+	 * import { getRequestEvent } from '$app/server';
+	 *
+	 * setLocals({ user: { id: '123' } });
+	 * const { locals } = getRequestEvent();
+	 * // locals.user.id === '123'
+	 * ```
+	 *
+	 * */
+	export function setLocals(locals: App.Locals): void;
+	/**
+	 * An `HttpError` subclass thrown when a remote function's schema validation fails
+	 * during testing. Extends `HttpError` so `instanceof HttpError` checks still pass,
+	 * but also exposes the Standard Schema `.issues` for test assertions.
+	 *
+	 * @example
+	 * ```js
+	 * import { HttpValidationError } from '@sveltejs/kit/test';
+	 *
+	 * try {
+	 *   await myQuery(invalidArg);
+	 * } catch (e) {
+	 *   if (e instanceof HttpValidationError) {
+	 *     console.log(e.status);  // 400
+	 *     console.log(e.issues);  // [{ message: 'Expected a string' }]
+	 *   }
+	 * }
+	 * ```
+	 */
+	export class HttpValidationError extends HttpError {
+		
+		constructor(status: number, body: App.Error, issues: StandardSchemaV1.Issue[]);
+		
+		issues: StandardSchemaV1.Issue[];
+	}
+	export type CallRemoteOptions = {
+		/**
+		 * The URL of the request
+		 */
+		url?: string | undefined;
+		/**
+		 * Override the auto-detected HTTP method
+		 */
+		method?: string | undefined;
+		/**
+		 * Request headers
+		 */
+		headers?: Record<string, string> | undefined;
+		/**
+		 * Custom data for `event.locals`
+		 */
+		locals?: App.Locals | undefined;
+		/**
+		 * Route parameters
+		 */
+		params?: Record<string, string> | undefined;
+		/**
+		 * Initial cookies
+		 */
+		cookies?: Record<string, string> | undefined;
+		/**
+		 * The route ID
+		 */
+		routeId?: string | null | undefined;
+		/**
+		 * Custom transport
+		 */
+		transport?: Record<string, {
+			encode: (value: any) => any;
+			decode: (value: any) => any;
+		}> | undefined;
+	};
+	interface ServerHooks {
+		handleFetch: HandleFetch;
+		handle: Handle;
+		handleError: HandleServerError;
+		handleValidationError: HandleValidationError;
+		reroute: Reroute;
+		transport: Transport;
+		init?: ServerInit;
+	}
+
+	interface PrerenderDependency {
+		response: Response;
+		body: null | string | Uint8Array;
+	}
+
+	interface PrerenderOptions {
+		cache?: string; // including this here is a bit of a hack, but it makes it easy to add <meta http-equiv>
+		fallback?: boolean;
+		dependencies: Map<string, PrerenderDependency>;
+		/**
+		 * For each key the (possibly still pending) result of a prerendered remote function.
+		 * Used to deduplicate requests to the same remote function with the same arguments.
+		 */
+		remote_responses: Map<string, Promise<any>>;
+		/** True for the duration of a call to the `reroute` hook */
+		inside_reroute?: boolean;
+	}
+
+	type RecursiveRequired<T> = {
+		// Recursive implementation of TypeScript's Required utility type.
+		// Will recursively continue until it reaches a primitive or Function
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
+		[K in keyof T]-?: Extract<T[K], Function> extends never // If it does not have a Function type
+			? RecursiveRequired<T[K]> // recursively continue through.
+			: T[K]; // Use the exact type for everything else
+	};
+
+	interface SSRComponent {
+		default: {
+			render(
+				props: Record<string, any>,
+				opts: { context: Map<any, any>; csp?: { nonce?: string; hash?: boolean } }
+			): {
+				html: string;
+				head: string;
+				css: {
+					code: string;
+					map: any; // TODO
+				};
+				/** Until we require all Svelte versions that support hashes, this might not be defined */
+				hashes?: {
+					script: Array<`sha256-${string}`>;
+				};
+			};
+		};
+	}
+
+	interface SSROptions {
+		app_template_contains_nonce: boolean;
+		async: boolean;
+		csp: ValidatedConfig['kit']['csp'];
+		csrf_check_origin: boolean;
+		csrf_trusted_origins: string[];
+		embedded: boolean;
+		env_public_prefix: string;
+		env_private_prefix: string;
+		hash_routing: boolean;
+		hooks: ServerHooks;
+		preload_strategy: ValidatedConfig['kit']['output']['preloadStrategy'];
+		root: SSRComponent['default'];
+		service_worker: boolean;
+		service_worker_options: RegistrationOptions;
+		server_error_boundaries: boolean;
+		templates: {
+			app(values: {
+				head: string;
+				body: string;
+				assets: string;
+				nonce: string;
+				env: Record<string, string>;
+			}): string;
+			error(values: { message: string; status: number }): string;
+		};
+		version_hash: string;
+	}
+	type RemotePrerenderInputsGenerator<Input = any> = () => MaybePromise<Input[]>;
+
+	type ValidatedConfig = Config & {
+		kit: ValidatedKitConfig;
+		extensions: string[];
+	};
+
+	type ValidatedKitConfig = Omit<RecursiveRequired<KitConfig>, 'adapter'> & {
+		adapter?: Adapter;
+	};
+
+	type BinaryFormMeta = {
+		remote_refreshes?: string[];
+		validate_only?: boolean;
+	};
+
+	interface BaseRemoteInternals {
+		type: string;
+		id: string;
+		name: string;
+	}
+
+	interface RemoteQueryInternals extends BaseRemoteInternals {
+		type: 'query';
+		validate: (arg?: any) => MaybePromise<any>;
+	}
+	interface RemoteQueryLiveInternals extends BaseRemoteInternals {
+		type: 'query_live';
+		run(
+			event: RequestEvent,
+			state: RequestState,
+			arg: any
+		): Promise<{ iterator: AsyncIterator<any>; cancel: () => void }>;
+	}
+
+	interface RemoteQueryBatchInternals extends BaseRemoteInternals {
+		type: 'query_batch';
+		run: (args: any[], options: SSROptions) => Promise<any[]>;
+	}
+
+	interface RemoteCommandInternals extends BaseRemoteInternals {
+		type: 'command';
+	}
+
+	interface RemoteFormInternals extends BaseRemoteInternals {
+		type: 'form';
+		fn(body: Record<string, any>, meta: BinaryFormMeta, form_data: FormData | null): Promise<any>;
+	}
+
+	interface RemotePrerenderInternals extends BaseRemoteInternals {
+		type: 'prerender';
+		has_arg: boolean;
+		dynamic?: boolean;
+		inputs?: RemotePrerenderInputsGenerator;
+	}
+
+	type RemoteInternals =
+		| RemoteQueryInternals
+		| RemoteQueryLiveInternals
+		| RemoteQueryBatchInternals
+		| RemoteCommandInternals
+		| RemoteFormInternals
+		| RemotePrerenderInternals;
+
+	type RecordSpan = <T>(options: {
+		name: string;
+		attributes: Record<string, any>;
+		fn: (current: Span) => Promise<T>;
+	}) => Promise<T>;
+
+	/**
+	 * Internal state associated with the current `RequestEvent`,
+	 * used for tracking things like remote function calls
+	 */
+	interface RequestState {
+		readonly prerendering: PrerenderOptions | undefined;
+		readonly transport: ServerHooks['transport'];
+		readonly handleValidationError: ServerHooks['handleValidationError'];
+		readonly tracing: {
+			record_span: RecordSpan;
+		};
+		readonly remote: {
+			data: null | Map<
+				RemoteInternals,
+				Record<string, { serialize: boolean; data: MaybePromise<any> }>
+			>;
+			forms: null | Map<any, any>;
+			refreshes: null | Record<string, Promise<any>>;
+			requested: null | Map<string, string[]>;
+			validated: null | Map<string, Set<any>>;
+		};
+		readonly is_in_remote_function: boolean;
+		readonly is_in_render: boolean;
+		readonly is_in_universal_load: boolean;
+	}
+	class HttpError {
+		
+		constructor(status: number, body: {
+			message: string;
+		} extends App.Error ? (App.Error | string | undefined) : App.Error);
+		status: number;
+		body: App.Error;
+		toString(): string;
+	}
+	type MaybePromise<T> = T | Promise<T>;
+
+	export {};
+}
+
+declare module '@sveltejs/kit/test/vitest' {
+	/**
+	 * Vitest plugin for testing SvelteKit remote functions.
+	 *
+	 * - Resolves virtual modules (`$app/server` and its internal dependencies)
+	 * - Transforms `.remote.ts/.remote.js` files to append `init_remote_functions()`
+	 * - Injects a setup file that establishes a request context per test,
+	 *   so remote functions work without `withRequestContext` wrappers
+	 *
+	 * @example
+	 * ```js
+	 * // vitest.config.ts
+	 * import { svelteKitTest } from '@sveltejs/kit/test/vitest';
+	 * export default defineConfig({ plugins: [svelteKitTest()] });
+	 * ```
+	 *
+	 * */
+	export function svelteKitTest(): import("vite").Plugin;
+
+	export {};
+}
+
 declare module '$app/environment' {
 	/**
 	 * `true` if the app is running in the browser.

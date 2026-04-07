@@ -18,5 +18,7 @@ export {
 	with_request_store,
 	getRequestEvent,
 	get_request_store,
-	try_get_request_store
+	try_get_request_store,
+	__test_set_request_store,
+	__test_clear_request_store
 } from './event.js';

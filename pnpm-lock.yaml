@@ -66,6 +66,9 @@ catalogs:
     '@types/set-cookie-parser':
       specifier: ^2.4.7
       version: 2.4.7
+    '@vitest/browser':
+      specifier: ^4.0.0
+      version: 4.0.16
     '@vitest/browser-playwright':
       specifier: ^4.0.0
       version: 4.0.16
@@ -114,6 +117,9 @@ catalogs:
     vitest:
       specifier: ^4.0.0
       version: 4.0.16
+    vitest-browser-svelte:
+      specifier: ^2.0.0
+      version: 2.1.0
     wrangler:
       specifier: ^4.14.3
       version: 4.14.4
@@ -644,6 +650,12 @@ importers:
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
         version: 6.2.4(svelte@5.53.12)(vite@6.4.1(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.3))
+      '@vitest/browser':
+        specifier: 'catalog:'
+        version: 4.0.16(vite@6.4.1(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.3))(vitest@4.0.16)
+      '@vitest/browser-playwright':
+        specifier: 'catalog:'
+        version: 4.0.16(playwright@1.59.1)(vite@6.4.1(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.3))(vitest@4.0.16)
       svelte:
         specifier: 'catalog:'
         version: 5.53.12
@@ -659,6 +671,12 @@ importers:
       vite:
         specifier: 'catalog:'
         version: 6.4.1(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.3)
+      vitest:
+        specifier: 'catalog:'
+        version: 4.0.16(@opentelemetry/api@1.9.0)(@types/node@18.19.119)(@vitest/browser-playwright@4.0.16)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.3)
+      vitest-browser-svelte:
+        specifier: 'catalog:'
+        version: 2.1.0(svelte@5.53.12)(vitest@4.0.16)
 
   packages/kit/test/apps/basics:
     devDependencies:
@@ -3186,6 +3204,12 @@ packages:
   '@svitejs/changesets-changelog-github-compact@1.2.0':
     resolution: {integrity: sha512-08eKiDAjj4zLug1taXSIJ0kGL5cawjVCyJkBb6EWSg5fEPX6L+Wtr0CH2If4j5KYylz85iaZiFlUItvgJvll5g==}
     engines: {node: ^14.13.1 || ^16.0.0 || >=18}
+
+  '@testing-library/svelte-core@1.0.0':
+    resolution: {integrity: sha512-VkUePoLV6oOYwSUvX6ShA8KLnJqZiYMIbP2JW2t0GLWLkJxKGvuH5qrrZBV/X7cXFnLGuFQEC7RheYiZOW68KQ==}
+    engines: {node: '>=16'}
+    peerDependencies:
+      svelte: ^3 || ^4 || ^5 || ^5.0.0-next.0
 
   '@tsconfig/node10@1.0.12':
     resolution: {integrity: sha512-UCYBaeFvM11aU2y3YPZ//O5Rhj+xKyzy7mvcIoAjASbigy8mHMryP5cK7dgjlz2hWxh1g5pLw084E0a/wlUSFQ==}
@@ -5880,6 +5904,12 @@ packages:
       vite:
         optional: true
 
+  vitest-browser-svelte@2.1.0:
+    resolution: {integrity: sha512-Uqcqn9gKhYoNOn5uGOQHSPIEGHgIz25zPP6R63LQ5+yEVHfDXdOKBMba9pBlPIgp31AxYbV9h43j9+W+5M5y+A==}
+    peerDependencies:
+      svelte: ^3 || ^4 || ^5 || ^5.0.0-next.0
+      vitest: ^4.0.0
+
   vitest@4.0.16:
     resolution: {integrity: sha512-E4t7DJ9pESL6E3I8nFjPa4xGUd3PmiWDLsDztS2qXSJWfHtbQnwAWylaBvSNY48I3vr8PTqIZlyK8TE3V3CA4Q==}
     engines: {node: ^20.0.0 || ^22.0.0 || >=24.0.0}
@@ -7709,6 +7739,10 @@ snapshots:
       dotenv: 16.6.1
     transitivePeerDependencies:
       - encoding
+
+  '@testing-library/svelte-core@1.0.0(svelte@5.53.12)':
+    dependencies:
+      svelte: 5.53.12
 
   '@tsconfig/node10@1.0.12':
     optional: true
@@ -10534,6 +10568,13 @@ snapshots:
   vitefu@1.1.1(vite@6.4.1(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.3)):
     optionalDependencies:
       vite: 6.4.1(@types/node@18.19.119)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.3)
+
+  vitest-browser-svelte@2.1.0(svelte@5.53.12)(vitest@4.0.16):
+    dependencies:
+      '@playwright/test': 1.59.1
+      '@testing-library/svelte-core': 1.0.0(svelte@5.53.12)
+      svelte: 5.53.12
+      vitest: 4.0.16(@opentelemetry/api@1.9.0)(@types/node@18.19.119)(@vitest/browser-playwright@4.0.16)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.3)
 
   vitest@4.0.16(@opentelemetry/api@1.9.0)(@types/node@18.19.119)(@vitest/browser-playwright@4.0.16)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.3):
     dependencies:
