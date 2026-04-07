@@ -1893,28 +1893,35 @@ type InputElementProps<T extends keyof InputTypeMap> = T extends 'checkbox' | 'r
 				get files(): FileList | null;
 				set files(v: FileList | null);
 			}
-		: T extends 'select' | 'select multiple'
+		: T extends 'select'
 			? {
 					name: string;
-					multiple: T extends 'select' ? false : true;
 					'aria-invalid': boolean | 'false' | 'true' | undefined;
-					get value(): string | number;
-					set value(v: string | number);
+					get value(): string;
+					set value(v: string);
 				}
-			: T extends 'text'
+			: T extends 'select multiple'
 				? {
 						name: string;
+						multiple: true;
 						'aria-invalid': boolean | 'false' | 'true' | undefined;
-						get value(): string | number;
-						set value(v: string | number);
+						get value(): string[];
+						set value(v: string[]);
 					}
-				: {
-						name: string;
-						type: T;
-						'aria-invalid': boolean | 'false' | 'true' | undefined;
-						get value(): string | number;
-						set value(v: string | number);
-					};
+				: T extends 'text'
+					? {
+							name: string;
+							'aria-invalid': boolean | 'false' | 'true' | undefined;
+							get value(): string | number;
+							set value(v: string | number);
+						}
+					: {
+							name: string;
+							type: T;
+							'aria-invalid': boolean | 'false' | 'true' | undefined;
+							get value(): string | number;
+							set value(v: string | number);
+						};
 
 type RemoteFormFieldMethods<T> = {
 	/** The values that will be submitted */
@@ -2087,10 +2094,10 @@ export type RemoteForm<Input extends RemoteFormInput | void, Output> = {
 		callback: (opts: {
 			form: HTMLFormElement;
 			data: Input;
-			submit: () => Promise<void> & {
-				updates: (...updates: RemoteQueryUpdate[]) => Promise<void>;
+			submit: () => Promise<boolean> & {
+				updates: (...updates: RemoteQueryUpdate[]) => Promise<boolean>;
 			};
-		}) => void | Promise<void>
+		}) => void
 	): {
 		method: 'POST';
 		action: string;

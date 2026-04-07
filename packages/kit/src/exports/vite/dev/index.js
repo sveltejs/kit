@@ -15,7 +15,7 @@ import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import * as sync from '../../../core/sync/sync.js';
 import { get_mime_lookup, runtime_base } from '../../../core/utils.js';
 import { compact } from '../../../utils/array.js';
-import { not_found } from '../utils.js';
+import { is_chrome_devtools_request, not_found } from '../utils.js';
 import { SCHEME } from '../../../utils/url.js';
 import { check_feature } from '../../../utils/features.js';
 import { escape_html } from '../../../utils/escape.js';
@@ -464,6 +464,10 @@ export async function dev(vite, vite_config, svelte_config, get_remotes) {
 					req.url = original_url;
 					// @ts-expect-error
 					serve_static_middleware.handle(req, res);
+					return;
+				}
+
+				if (is_chrome_devtools_request(decoded, res)) {
 					return;
 				}
 

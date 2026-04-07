@@ -284,6 +284,29 @@ test.describe('remote functions', () => {
 		);
 	});
 
+	test('form enhance submit returns boolean', async ({ page, javaScriptEnabled }) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/form/enhanced');
+
+		await expect(page.getByText('enhanced.submit_result:')).toHaveText(
+			'enhanced.submit_result: none'
+		);
+
+		await page.fill('[data-enhanced] input', 'hello');
+		await page.locator('[data-enhanced] span').click();
+		await page.getByText('resolve deferreds').click();
+		await expect(page.getByText('enhanced.submit_result:')).toHaveText(
+			'enhanced.submit_result: true'
+		);
+
+		await page.fill('[data-enhanced] input', 'invalid');
+		await page.locator('[data-enhanced] span').click();
+		await expect(page.getByText('enhanced.submit_result:')).toHaveText(
+			'enhanced.submit_result: false'
+		);
+	});
+
 	test('form preflight works', async ({ page, javaScriptEnabled }) => {
 		if (!javaScriptEnabled) return;
 

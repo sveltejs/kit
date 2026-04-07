@@ -163,6 +163,7 @@ export function form(id) {
 			}
 
 			try {
+				// eslint-disable-next-line @typescript-eslint/await-thenable -- `callback` is typed as returning `void` to allow returning e.g. `Promise<boolean>`
 				await callback({
 					form,
 					data,
@@ -179,7 +180,7 @@ export function form(id) {
 
 		/**
 		 * @param {FormData} form_data
-		 * @returns {Promise<any> & { updates: (...args: any[]) => any }}
+		 * @returns {Promise<boolean> & { updates: (...args: any[]) => Promise<boolean> }}
 		 */
 		function submit(form_data) {
 			// Store a reference to the current instance and increment the usage count for the duration
@@ -200,7 +201,7 @@ export function form(id) {
 			/** @type {Error | undefined} */
 			let updates_error;
 
-			/** @type {Promise<any> & { updates: (...args: RemoteQueryUpdate[]) => Promise<any> }} */
+			/** @type {Promise<boolean> & { updates: (...args: RemoteQueryUpdate[]) => Promise<boolean> }} */
 			const promise = (async () => {
 				try {
 					await Promise.resolve();
@@ -275,14 +276,17 @@ export function form(id) {
 
 					if (form_result.type === 'result') {
 						({ issues: raw_issues = [], result } = devalue.parse(form_result.result, app.decoders));
+						const succeeded = raw_issues.length === 0;
 
-						if (!issues.$) {
+						if (succeeded) {
 							if (form_result.refreshes) {
 								apply_refreshes(form_result.refreshes);
 							} else {
 								void invalidateAll();
 							}
 						}
+
+						return succeeded;
 					} else if (form_result.type === 'redirect') {
 						const stringified_refreshes = form_result.refreshes ?? '';
 						if (stringified_refreshes) {
@@ -290,6 +294,7 @@ export function form(id) {
 						}
 						// Use internal version to allow redirects to external URLs
 						void _goto(form_result.location, { invalidateAll: !stringified_refreshes }, 0);
+						return true;
 					} else {
 						throw new HttpError(form_result.status ?? 500, form_result.error);
 					}
@@ -514,8 +519,8 @@ export function form(id) {
 
 		instance[createAttachmentKey()] = create_attachment(
 			form_onsubmit(({ submit, form }) =>
-				submit().then(() => {
-					if (!issues.$) {
+				submit().then((succeeded) => {
+					if (succeeded) {
 						form.reset();
 					}
 				})
