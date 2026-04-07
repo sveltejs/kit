@@ -6,8 +6,8 @@ import { compact } from '../../../utils/array.js';
 import { join } from '../../../utils/path.js';
 
 export { env };
-
-export const basePath = kit.paths.base;
+export const base_path = kit.paths.base;
+export const prerendered = new Set();
 
 export const manifest = {
 	appDir: kit.appDir,
@@ -127,6 +127,10 @@ export const manifest = {
 						urls,
 						node: result.index
 					});
+
+					// a hack to ensure that the Vite Cloudflare plugin's workerd stays
+					// alive long enough for the `import.meta.hot` event listener to resolve
+					setTimeout(() => {}, 10);
 
 					return promise;
 				};

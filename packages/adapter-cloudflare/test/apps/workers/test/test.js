@@ -7,8 +7,7 @@ test('worker', async ({ page }) => {
 	await expect(page.locator('h1')).toContainText('Sum: 3');
 });
 
-// TODO: re-enable once we add the vite cloudflare plugin
-test.skip('ctx', async ({ request }) => {
+test('ctx', async ({ request }) => {
 	const res = await request.get('/ctx');
 	expect(await res.text()).toBe('ctx works');
 });
@@ -21,3 +20,9 @@ test('read from $app/server works', async ({ request }) => {
 	const response = await request.get('/read');
 	expect(await response.text()).toBe(content);
 });
+
+// TODO: test param matchers in dev-only
+
+// TODO: test prerendering a page that imports from cloudflare:workers works after build
+
+// TODO: test when paths.assets is configured after build

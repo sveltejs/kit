@@ -1,27 +1,34 @@
 import { copyFileSync, existsSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
-import process from 'node:process';
-import { fileURLToPath } from 'node:url';
-import { unstable_readConfig } from 'wrangler';
 import { cloudflare } from '@cloudflare/vite-plugin';
-import { validate_worker_settings } from './utils.js';
 import { DEV } from 'esm-env';
 
 const name = '@sveltejs/adapter-cloudflare';
 
+const default_worker = path.join(import.meta.dirname, 'files/worker.js');
+
+/**
+ * Resolved after the Cloudflare Vite plugin `config` hook runs
+ * @type {import('@cloudflare/vite-plugin').WorkerConfig}
+ */
+let wrangler_config;
+
+/** @type {boolean} */
+let building;
+
 /** @type {import('./index.js').default} */
 export default function (options = {}) {
-	const { wrangler_config } = validate_wrangler_config(options.vitePluginOptions?.configPath);
-
 	return {
 		name,
 		async adapt(builder) {
+			// TODO: remove in a future major when users have had time to migrate to Cloudflare Workers
+			let routes_json_path = '_routes.json';
 			if (
-				existsSync('_routes.json') ||
-				existsSync(`${builder.config.kit.files.assets}/_routes.json`)
+				existsSync(routes_json_path) ||
+				existsSync((routes_json_path = `${builder.config.kit.files.assets}/_routes.json`))
 			) {
 				throw new Error(
-					"Cloudflare Pages' _routes.json should be configured in svelte.config.js. See https://svelte.dev/docs/kit/adapter-cloudflare#Options-routes"
+					`The ${routes_json_path} file is only used when deploying to Cloudflare Pages. However, this adapter no longer supports it. If you're migrating to Cloudflare Workers, you should remove this file`
 				);
 			}
 
@@ -37,84 +44,40 @@ export default function (options = {}) {
 				);
 			}
 
-			let dest = builder.getBuildDirectory('cloudflare');
-			let worker_dest = `${dest}/_worker.js`;
-			let assets_binding = 'ASSETS';
-
-			if (wrangler_config.main) {
-				worker_dest = wrangler_config.main;
-			}
-			if (wrangler_config.assets?.directory) {
-				// wrangler doesn't resolve `assets.directory` to an absolute path unlike
-				// `main` and `pages_build_output_dir` so we need to do it ourselves here
-				const parent_dir = wrangler_config.configPath
-					? path.dirname(path.resolve(wrangler_config.configPath))
-					: process.cwd();
-				dest = path.resolve(parent_dir, wrangler_config.assets.directory);
-			}
-			if (wrangler_config.assets?.binding) {
-				assets_binding = wrangler_config.assets.binding;
-			}
-
-			const files = fileURLToPath(new URL('./files', import.meta.url).href);
-			const tmp = builder.getBuildDirectory('cloudflare-tmp');
-
-			builder.rimraf(dest);
-			builder.rimraf(worker_dest);
-
-			builder.mkdirp(dest);
-			builder.mkdirp(tmp);
-
 			// client assets and prerendered pages
-			const assets_dest = `${dest}${builder.config.kit.paths.base}`;
-			builder.mkdirp(assets_dest);
+			const client_dest = builder.getClientDirectory();
+
+			// generate plaintext 404.html first which can then be overridden by
+			// prerendering, if the user defined such a page.
 			if (wrangler_config.assets?.not_found_handling === '404-page') {
-				// generate plaintext 404.html first which can then be overridden by prerendering, if the user defined such a page.
-				// This file is served when a request fails to match an asset.
-				// If we're building for Cloudflare Pages, it's only served when a request matches an entry in `routes.exclude`
-				const fallback = path.join(assets_dest, '404.html');
-				if (options.fallback === 'spa') {
-					await builder.generateFallback(fallback);
-				} else {
-					writeFileSync(fallback, 'Not Found');
-				}
+				await builder.generateFallback(path.join(client_dest, '404.html'));
 			}
-			builder.writeClient(assets_dest);
-			builder.writePrerendered(assets_dest);
+
+			builder.writePrerendered(client_dest);
+
 			if (wrangler_config.assets?.not_found_handling === 'single-page-application') {
-				await builder.generateFallback(path.join(assets_dest, 'index.html'));
+				await builder.generateFallback(path.join(client_dest, 'index.html'));
 			}
 
 			// worker
-			const worker_dest_dir = path.dirname(worker_dest);
+			const server_dest = builder.getServerDirectory();
 			writeFileSync(
-				`${tmp}/manifest.js`,
-				`export const manifest = ${builder.generateManifest({ relativePath: path.posix.relative(tmp, builder.getServerDirectory()) })};\n\n` +
+				`${server_dest}/manifest.js`,
+				`export const manifest = ${builder.generateManifest({ relativePath: '.' })};\n\n` +
 					`export const prerendered = new Set(${JSON.stringify(builder.prerendered.paths)});\n\n` +
 					`export const base_path = ${JSON.stringify(builder.config.kit.paths.base)};\n`
 			);
-			builder.copy(`${files}/worker.js`, worker_dest, {
-				replace: {
-					// the paths returned by the Wrangler config might be Windows paths,
-					// so we need to convert them to POSIX paths or else the backslashes
-					// will be interpreted as escape characters and create an incorrect import path.
-					// We also need to ensure the relative imports start with ./ since Wrangler
-					// errors if a relative import looks like a package import
-					SERVER: `./${posixify(path.relative(worker_dest_dir, builder.getServerDirectory()))}/index.js`,
-					MANIFEST: `./${posixify(path.relative(worker_dest_dir, tmp))}/manifest.js`,
-					ASSETS: assets_binding
-				}
-			});
+
 			if (builder.hasServerInstrumentationFile()) {
 				builder.instrument({
-					entrypoint: worker_dest,
-					instrumentation: `${builder.getServerDirectory()}/instrumentation.server.js`
+					entrypoint: `${server_dest}/index.js`,
+					instrumentation: `${server_dest}/instrumentation.server.js`
 				});
 			}
 
 			// _headers
 			const headers_src = '_headers';
-			const headers_dest = `${dest}/_headers`;
+			const headers_dest = `${client_dest}/_headers`;
 			if (existsSync(headers_src)) {
 				copyFileSync(headers_src, headers_dest);
 			}
@@ -122,7 +85,7 @@ export default function (options = {}) {
 
 			// _redirects
 			const redirects_src = '_redirects';
-			const redirects_dest = `${dest}/_redirects`;
+			const redirects_dest = `${client_dest}/_redirects`;
 			if (existsSync(redirects_src)) {
 				copyFileSync(redirects_src, redirects_dest);
 			}
@@ -132,7 +95,7 @@ export default function (options = {}) {
 				});
 			}
 
-			writeFileSync(`${dest}/.assetsignore`, generate_assetsignore(), { flag: 'a' });
+			writeFileSync(`${client_dest}/.assetsignore`, '\n.vite', { flag: 'a' });
 		},
 		supports: {
 			read: () => true,
@@ -140,6 +103,57 @@ export default function (options = {}) {
 		},
 		vite: {
 			plugins: [
+				// TODO: remove browser condition from resolve so that optimizeDeps works correctly with esm-env
+				{
+					name: 'vite-plugin-sveltekit-cloudflare-pre',
+					config(user_config, env) {
+						building = env.command === 'build';
+
+						user_config.environments ??= {};
+						user_config.environments.ssr ??= {};
+						user_config.environments.ssr.build ??= {};
+						user_config.environments.ssr.build.rolldownOptions ??= {};
+
+						// prevents our server entry from clashing with Cloudflare's worker entry
+						if (
+							typeof user_config.environments.ssr.build.rolldownOptions.input === 'object' &&
+							'index' in user_config.environments.ssr.build.rolldownOptions.input
+						) {
+							user_config.environments.ssr.build.rolldownOptions.input.server =
+								user_config.environments.ssr.build.rolldownOptions.input.index;
+							delete user_config.environments.ssr.build.rolldownOptions.input.index;
+						}
+					},
+					applyToEnvironment(environment) {
+						return environment.name === 'ssr';
+					},
+					resolveId: {
+						filter: {
+							id: [/^SERVER$/, /^MANIFEST$/]
+						},
+						async handler(id, importer, options) {
+							if (importer !== default_worker || (id !== 'SERVER' && id !== 'MANIFEST')) return;
+
+							if (!building) {
+								switch (id) {
+									case 'SERVER':
+										return '\0virtual:@sveltejs/kit/vite/environment/server';
+									case 'MANIFEST':
+										return this.resolve(
+											'virtual:@sveltejs/kit/vite/environment',
+											importer,
+											options
+										);
+								}
+							}
+
+							return {
+								id: `./${id.toLowerCase()}.js`,
+								external: true
+							};
+						}
+					}
+				},
 				cloudflare({
 					...options.vitePluginOptions,
 					configPath: options.vitePluginOptions?.configPath,
@@ -147,8 +161,8 @@ export default function (options = {}) {
 						name: options.vitePluginOptions?.viteEnvironment?.name ?? 'ssr',
 						childEnvironments: options.vitePluginOptions?.viteEnvironment?.childEnvironments
 					},
-					config: (user_config) => {
-						// user programmatic config
+					config(user_config) {
+						// merge with the user's programmatic config
 						if (typeof options.vitePluginOptions?.config === 'function') {
 							options.vitePluginOptions?.config(user_config);
 						} else {
@@ -163,20 +177,17 @@ export default function (options = {}) {
 							}
 
 							if (!user_config.main) {
-								user_config.main = path.resolve(import.meta.dirname, 'fallback-worker.js');
+								user_config.main = default_worker;
 							}
 						} else {
-							// TODO: if `main` or `assets.binding` is configured, ensure `main`, `assets.directory` and `assets.binding` are populated
+							// TODO: only configure these if the user does not intend to deploy an assets-only worker
+							user_config.main = default_worker;
+							user_config.assets = {
+								binding: user_config.assets?.binding ?? 'ASSETS'
+								// no need to populate `directory` as the Cloudflare Vite plugin
+								// does that based on the client build input entry
+							};
 						}
-
-						// if (
-						// 	DEV &&
-						// 	!user_config.compatibility_flags?.find(
-						// 		(flag) => flag === 'no_handle_cross_request_promise_resolution'
-						// 	)
-						// ) {
-						// 	user_config.compatibility_flags.push('no_handle_cross_request_promise_resolution');
-						// }
 
 						if (
 							!user_config.compatibility_flags.find(
@@ -185,8 +196,35 @@ export default function (options = {}) {
 						) {
 							user_config.compatibility_flags.push('nodejs_als');
 						}
+
+						// TODO: warn on overridden config options?
+
+						wrangler_config = user_config;
 					}
-				})
+				}),
+				{
+					name: 'vite-plugin-sveltekit-cloudflare-post',
+					config(user_config) {
+						// noop to prevent Cloudflare's fallback `buildApp` hook from
+						// running so that it doesn't build the client and server again
+						if (user_config.builder?.buildApp) {
+							user_config.builder.buildApp = async () => {};
+						}
+
+						user_config.environments ??= {};
+						user_config.environments.ssr ??= {};
+						user_config.environments.ssr.define ??= {};
+						user_config.environments.ssr.define.__SVELTEKIT_CLOUDFLARE_ASSETS_BINDING__ =
+							JSON.stringify(wrangler_config.assets?.binding);
+
+						// prevent Vite from resolving client svelte exports
+						const browser_condition =
+							user_config.environments.ssr.resolve?.conditions?.indexOf('browser');
+						if (browser_condition && browser_condition >= 0) {
+							user_config.environments.ssr.resolve?.conditions?.splice(browser_condition, 1);
+						}
+					}
+				}
 			]
 		}
 	};
@@ -224,38 +262,4 @@ function generate_redirects(redirects) {
 ${rules}
 # === END AUTOGENERATED SVELTE PRERENDERED REDIRECTS ===
 `.trimEnd();
-}
-
-/**
- * @returns {string}
- */
-function generate_assetsignore() {
-	// this comes from https://github.com/cloudflare/workers-sdk/blob/main/packages/create-cloudflare/templates-experimental/svelte/templates/static/.assetsignore
-	return `
-_worker.js
-_routes.json
-_headers
-_redirects
-`.trimEnd();
-}
-
-/**
- * @param {string | undefined} config_file
- * @returns {{
- * 	wrangler_config: import('wrangler').Unstable_Config
- * }}
- */
-function validate_wrangler_config(config_file = undefined) {
-	const wrangler_config = unstable_readConfig({ config: config_file });
-
-	validate_worker_settings(wrangler_config);
-
-	return {
-		wrangler_config
-	};
-}
-
-/** @param {string} str */
-function posixify(str) {
-	return str.replace(/\\/g, '/');
 }

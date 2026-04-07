@@ -10,7 +10,7 @@ declare global {
 			env: unknown;
 			ctx: ExecutionContext;
 			caches: CacheStorage;
-			cf?: IncomingRequestCfProperties;
+			cf: IncomingRequestCfProperties;
 		}
 	}
 }

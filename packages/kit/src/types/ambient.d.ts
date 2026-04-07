@@ -152,6 +152,8 @@ declare module 'virtual:@sveltejs/kit/vite/environment' {
 
 	export const manifest: SSRManifest;
 	export const env: Record<string, string>;
+	export const base_path: string;
+	export const prerendered: Set<string>;
 }
 
 declare module 'virtual:@sveltejs/kit/vite/environment/server' {

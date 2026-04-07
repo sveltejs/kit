@@ -1,3 +1,5 @@
+/// <reference types="@cloudflare/workers-types" />
+
 import { Server } from 'SERVER';
 import { manifest, prerendered, base_path } from 'MANIFEST';
 import { env } from 'cloudflare:workers';
@@ -22,9 +24,9 @@ const initialized = server.init({
 	env,
 	read: async (file) => {
 		const url = `${origin}/${file}`;
-		const response = await /** @type {{ ASSETS: { fetch: typeof fetch } }} */ (env).ASSETS.fetch(
-			url
-		);
+		const response = await /** @type {{ [key: string]: { fetch: typeof fetch } }} */ (env)[
+			__SVELTEKIT_CLOUDFLARE_ASSETS_BINDING__
+		].fetch(url);
 
 		if (!response.ok) {
 			throw new Error(
@@ -39,7 +41,7 @@ const initialized = server.init({
 export default {
 	/**
 	 * @param {Request} req
-	 * @param {{ ASSETS: { fetch: typeof fetch } }} env
+	 * @param {{ [key: string]: { fetch: typeof fetch } }} env
 	 * @param {ExecutionContext} ctx
 	 * @returns {Promise<Response>}
 	 */
@@ -84,7 +86,7 @@ export default {
 			pathname === version_file ||
 			pathname.startsWith(immutable)
 		) {
-			res = await env.ASSETS.fetch(req);
+			res = await env[__SVELTEKIT_CLOUDFLARE_ASSETS_BINDING__].fetch(req);
 		} else if (location && prerendered.has(location)) {
 			// trailing slash redirect for prerendered pages
 			if (search) location += search;

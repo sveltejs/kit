@@ -1310,6 +1310,9 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 	/** @type {(error: Error) => void} */
 	let handle_ssr_load_module;
 
+	/** @type {() => Promise<void>} */
+	let finalise;
+
 	/** @type {import('vite').Plugin} */
 	const plugin_compile = {
 		name: 'vite-plugin-sveltekit-compile',
@@ -1644,6 +1647,10 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 		 * @see https://vitejs.dev/guide/api-plugin.html#configurepreviewserver
 		 */
 		configurePreviewServer(vite) {
+			// TODO: ensure `paths.assets` is correctly proxied
+
+			if (svelte_config.kit.adapter?.vite?.plugins) return;
+
 			return preview(vite, vite_config, svelte_config);
 		},
 
@@ -1957,50 +1964,69 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 				})};\n`
 			);
 
-			if (service_worker_entry_file) {
-				if (kit.paths.assets) {
-					throw new Error('Cannot use service worker alongside config.kit.paths.assets');
+			// defer the adapt step to run after any buildApp hooks the adapter might have
+			finalise = async () => {
+				// defer creating the service worker too because other plugins might build
+				// the client environment again and overwrite our service worker which
+				// outputs to the same directory
+				if (service_worker_entry_file) {
+					if (kit.paths.assets) {
+						throw new Error('Cannot use service worker alongside config.kit.paths.assets');
+					}
+
+					log.info('Building service worker');
+
+					builder.environments.serviceWorker.config.define =
+						builder.environments.client.config.define;
+					builder.environments.serviceWorker.config.resolve.alias = [
+						...get_config_aliases(kit, vite_config.root)
+					];
+					builder.environments.serviceWorker.config.experimental.renderBuiltUrl = (filename) => {
+						return {
+							runtime: `new URL(${JSON.stringify(filename)}, location.href).pathname`
+						};
+					};
+
+					await builder.build(builder.environments.serviceWorker);
 				}
 
-				log.info('Building service worker');
-
-				builder.environments.serviceWorker.config.define =
-					builder.environments.client.config.define;
-				builder.environments.serviceWorker.config.resolve.alias = [
-					...get_config_aliases(kit, vite_config.root)
-				];
-				builder.environments.serviceWorker.config.experimental.renderBuiltUrl = (filename) => {
-					return {
-						runtime: `new URL(${JSON.stringify(filename)}, location.href).pathname`
-					};
-				};
-
-				await builder.build(builder.environments.serviceWorker);
-			}
-
-			console.log(
-				`\nRun ${styleText(['bold', 'cyan'], 'npm run preview')} to preview your production build locally.`
-			);
-
-			if (kit.adapter) {
-				const { adapt } = await import('../../core/adapt/index.js');
-				await adapt(
-					svelte_config,
-					build_data,
-					metadata,
-					prerendered,
-					prerender_results.prerender_map,
-					log,
-					remotes,
-					vite_config
-				);
-			} else {
-				console.log(styleText(['bold', 'yellow'], '\nNo adapter specified'));
-
-				const link = styleText(['bold', 'cyan'], 'https://svelte.dev/docs/kit/adapters');
 				console.log(
-					`See ${link} to learn how to configure your app to run on the platform of your choosing`
+					`\nRun ${styleText(['bold', 'cyan'], 'npm run preview')} to preview your production build locally.`
 				);
+
+				if (kit.adapter) {
+					const { adapt } = await import('../../core/adapt/index.js');
+					await adapt(
+						svelte_config,
+						build_data,
+						metadata,
+						prerendered,
+						prerender_results.prerender_map,
+						log,
+						remotes,
+						vite_config
+					);
+				} else {
+					console.log(styleText(['bold', 'yellow'], '\nNo adapter specified'));
+
+					const link = styleText(['bold', 'cyan'], 'https://svelte.dev/docs/kit/adapters');
+					console.log(
+						`See ${link} to learn how to configure your app to run on the platform of your choosing`
+					);
+				}
+			};
+		}
+	};
+
+	/** @type {import('vite').Plugin} */
+	const plugin_adapter = {
+		name: 'vite-plugin-sveltekit-adapter',
+		buildApp: {
+			// this will run after any buildApp hooks provided by other Vite plugins
+			// see https://vite.dev/guide/api-environment-frameworks#environments-during-build
+			order: 'post',
+			async handler() {
+				await finalise();
 			}
 		}
 	};
@@ -2012,7 +2038,8 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 		plugin_virtual_modules,
 		process.env.TEST !== 'true' ? plugin_guard : undefined,
 		plugin_service_worker,
-		plugin_compile
+		plugin_compile,
+		plugin_adapter
 	].filter((p) => !!p);
 }
 

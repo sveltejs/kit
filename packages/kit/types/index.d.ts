@@ -82,6 +82,12 @@ declare module '@sveltejs/kit' {
 				? undefined // needs to be undefined, because void will corrupt union type
 				: T;
 
+	export interface ManifestGenerationOptions {
+		/** A relative path to the base directory of the server build output */
+		relativePath: string;
+		routes?: RouteDefinition[];
+	}
+
 	/**
 	 * This object is passed to the `adapt` function of adapters.
 	 * It contains various methods and properties that are useful for adapting the app.
@@ -125,9 +131,8 @@ declare module '@sveltejs/kit' {
 
 		/**
 		 * Generate a server-side manifest to initialise the SvelteKit [server](https://svelte.dev/docs/kit/@sveltejs-kit#Server) with.
-		 * @param opts a relative path to the base directory of the app and optionally in which format (esm or cjs) the manifest should be generated
 		 */
-		generateManifest: (opts: { relativePath: string; routes?: RouteDefinition[] }) => string;
+		generateManifest: (opts: ManifestGenerationOptions) => string;
 
 		/**
 		 * Resolve a path to the `name` directory inside `outDir`, e.g. `/path/to/.svelte-kit/my-adapter`.
@@ -285,17 +290,6 @@ declare module '@sveltejs/kit' {
 		 * @param opts the options passed to `cookie.serialize` with the SvelteKit defaults described above. See documentation [here](https://github.com/jshttp/cookie?tab=readme-ov-file#cookiestringifysetcookiesetcookieobj-options)
 		 */
 		serialize: (name: string, value: string, opts: import('cookie').SerializeOptions) => string;
-	}
-
-	/**
-	 * A collection of functions that influence the environment during dev, build and prerendering
-	 */
-	export interface Emulator {
-		/**
-		 * A function that is called with the current route `config` and `prerender` option
-		 * and returns an `App.Platform` object
-		 */
-		platform?(details: { config: any; prerender: PrerenderOption }): MaybePromise<App.Platform>;
 	}
 
 	export interface KitConfig {
@@ -3641,6 +3635,8 @@ declare module 'virtual:@sveltejs/kit/vite/environment' {
 
 	export const manifest: SSRManifest;
 	export const env: Record<string, string>;
+	export const base_path: string;
+	export const prerendered: Set<string>;
 }
 
 declare module 'virtual:@sveltejs/kit/vite/environment/server' {

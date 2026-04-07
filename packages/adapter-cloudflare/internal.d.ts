@@ -10,3 +10,5 @@ declare module 'MANIFEST' {
 	export const app_path: string;
 	export const base_path: string;
 }
+
+declare const __SVELTEKIT_CLOUDFLARE_ASSETS_BINDING__: string;

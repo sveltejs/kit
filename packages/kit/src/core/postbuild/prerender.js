@@ -43,6 +43,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, roo
 	/** @type {import('types').ServerInternalModule} */
 	const internal = await import(pathToFileURL(`${out}/server/internal.js`).href);
 
+	// TODO: the cloudflare vite plugin reserves the index.js filename for the worker so we need to make this adaptable or refactor prerenderering to use the correct environment
 	/** @type {import('types').ServerModule} */
 	const { Server } = await import(pathToFileURL(`${out}/server/index.js`).href);
 

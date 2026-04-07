@@ -1,6 +1,5 @@
 import { PluginConfig } from '@cloudflare/vite-plugin';
 import { Adapter } from '@sveltejs/kit';
-import { GetPlatformProxyOptions } from 'wrangler';
 import './ambient.js';
 
 export default function plugin(options?: AdapterOptions): Adapter;
@@ -23,6 +22,7 @@ export interface AdapterOptions {
 	 * is set to `"single-page-application"`, the adapter will render a SPA fallback
 	 * `index.html` page regardless of the `fallback` option specified.
 	 * @default 'plaintext'
+	 * @deprecated removed in 8.0.0. Configure `assets.not_found_handling` in your Wrangler configuration file instead
 	 */
 	fallback?: 'plaintext' | 'spa';
 	/**
@@ -30,7 +30,7 @@ export interface AdapterOptions {
 	 * during development and preview.
 	 * @deprecated removed in 8.0.0. Use `vitePluginOptions` instead
 	 */
-	platformProxy?: GetPlatformProxyOptions;
+	platformProxy?: Record<string, any>;
 	/**
 	 * Path to your [Wrangler configuration file](https://developers.cloudflare.com/workers/wrangler/configuration/).
 	 * @deprecated removed in 8.0.0. Use `vitePluginOptions.configPath` instead
