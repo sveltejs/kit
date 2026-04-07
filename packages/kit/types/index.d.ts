@@ -3133,6 +3133,65 @@ declare module '@sveltejs/kit/test' {
 			decode: (value: any) => any;
 		}> | undefined;
 	};
+	/**
+	 * Registers mock data for a remote function in component tests.
+	 * The mock is keyed by the function's ID and read by the mock
+	 * remote runtime during component rendering.
+	 *
+	 * Methods are chainable — call multiple to build up the mock state:
+	 *
+	 * @example
+	 * ```js
+	 * import { mockRemote } from '@sveltejs/kit/test';
+	 * import { getUser } from './data.remote.ts';
+	 * import { myForm } from './form.remote.ts';
+	 *
+	 * // Query/command — set return data
+	 * mockRemote(getUser).returns({ name: 'Alice' });
+	 *
+	 * // Form — set result, field values, and validation issues
+	 * mockRemote(myForm)
+	 *   .returns({ success: true })
+	 *   .withFieldValues({ email: 'alice@example.com' })
+	 *   .withFieldIssues({ name: [{ message: 'Required' }] });
+	 * ```
+	 *
+	 * @param fn The remote function to mock (imported from a .remote.ts file)
+	 */
+	export function mockRemote(fn: any): {
+		/**
+		 * Mock the function to return this data when called (or set form result)
+		 * 
+		 */
+		returns(data: any, options?: {
+			delay?: number;
+		}): /*elided*/ any;
+		/**
+		 * Mock the function to throw an HttpError with this status and body
+		 * 
+		 */
+		throws(status: number, body: any, options?: {
+			delay?: number;
+		}): /*elided*/ any;
+		/**
+		 * Mock the function to call this resolver with the argument
+		 * 
+		 */
+		resolves(fn: (arg: any) => any, options?: {
+			delay?: number;
+		}): /*elided*/ any;
+		/**
+		 * Set form field values (for pre-populated forms or edit scenarios)
+		 * */
+		withFieldValues(values: Record<string, any>): /*elided*/ any;
+		/**
+		 * Set form field validation issues
+		 * */
+		withFieldIssues(issues: Record<string, Array<{
+			message: string;
+			path?: Array<string | number>;
+		}>>): /*elided*/ any;
+	};
 	interface ServerHooks {
 		handleFetch: HandleFetch;
 		handle: Handle;
@@ -3331,20 +3390,35 @@ declare module '@sveltejs/kit/test/vitest' {
 	/**
 	 * Vitest plugin for testing SvelteKit remote functions.
 	 *
+	 * **Server mode** (default):
 	 * - Resolves virtual modules (`$app/server` and its internal dependencies)
 	 * - Transforms `.remote.ts/.remote.js` files to append `init_remote_functions()`
 	 * - Injects a setup file that establishes a request context per test,
 	 *   so remote functions work without `withRequestContext` wrappers
 	 *
+	 * **Component mode** (`{ mode: 'component' }`):
+	 * - Redirects `.remote.ts/.remote.js` imports to virtual modules that bypass
+	 *   the production sveltekit() plugin's transform
+	 * - Resolves the internal remote module to a mock runtime with reactive objects
+	 * - Use `mockRemote(fn).returns(data)` to control what data components receive
+	 *
 	 * @example
 	 * ```js
-	 * // vitest.config.ts
+	 * // Server mode (test remote function logic directly)
 	 * import { svelteKitTest } from '@sveltejs/kit/test/vitest';
 	 * export default defineConfig({ plugins: [svelteKitTest()] });
+	 *
+	 * // Component mode (test components that use remote functions)
+	 * import { sveltekit } from '@sveltejs/kit/vite';
+	 * export default defineConfig({
+	 *   plugins: [sveltekit(), svelteKitTest({ mode: 'component' })]
+	 * });
 	 * ```
 	 *
 	 * */
-	export function svelteKitTest(): import("vite").Plugin;
+	export function svelteKitTest(options?: {
+		mode?: "server" | "component";
+	}): import("vite").Plugin;
 
 	export {};
 }

@@ -4,6 +4,7 @@ import {
 	withRequestContext,
 	callRemote,
 	setLocals,
+	mockRemote,
 	HttpValidationError
 } from './index.js';
 import { getRequestEvent } from '@sveltejs/kit/internal/server';
@@ -143,5 +144,12 @@ describe('setLocals', () => {
 			setLocals({ custom_value: 'from setLocals' });
 			expect(getRequestEvent().locals).toEqual({ custom_value: 'from setLocals' });
 		});
+	});
+});
+
+describe('mockRemote', () => {
+	test('throws with a clear error if function has no ID', () => {
+		assert.throws(() => mockRemote({}), /not a remote function/);
+		assert.throws(() => mockRemote(null), /not a remote function/);
 	});
 });

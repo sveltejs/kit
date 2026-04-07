@@ -334,3 +334,5 @@ export function setLocals(locals) {
 	}
 	Object.assign(store.event.locals, locals);
 }
+
+export { mockRemote } from './mock-remote.js';
