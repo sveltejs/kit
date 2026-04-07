@@ -1154,13 +1154,7 @@ async function kit({ svelte_config }) {
 					client_chunks = bundle.output;
 				} catch (e) {
 					const error =
-						e instanceof Error
-							? e
-							: new Error(
-									/** @type {{ message?: string }} */ (e).message ??
-										/** @type {{ name?: string }} */ (e).name ??
-										'<unknown>'
-								);
+						e instanceof Error ? e : new Error(/** @type {any} */ (e).message ?? e ?? '<unknown>');
 
 					// without this, errors that occur during the secondary build
 					// will be logged twice
