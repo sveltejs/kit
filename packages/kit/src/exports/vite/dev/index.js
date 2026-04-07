@@ -1,3 +1,5 @@
+/** @import { RequestEvent } from '@sveltejs/kit' */
+/** @import { PrerenderOption } from 'types' */
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
@@ -34,13 +36,19 @@ const vite_css_query_regex = /(?:\?|&)(?:raw|url|inline)(?:&|$)/;
 export async function dev(vite, vite_config, svelte_config, get_remotes) {
 	installPolyfills();
 
+	/** @type {AsyncLocalStorage<{ event: RequestEvent, config: any, prerender: PrerenderOption }>} */
 	const async_local_storage = new AsyncLocalStorage();
 
 	globalThis.__SVELTEKIT_TRACK__ = (label) => {
 		const context = async_local_storage.getStore();
 		if (!context || context.prerender === true) return;
 
-		check_feature(context.event.route.id, context.config, label, svelte_config.kit.adapter);
+		check_feature(
+			/** @type {string} */ (context.event.route.id),
+			context.config,
+			label,
+			svelte_config.kit.adapter
+		);
 	};
 
 	const fetch = globalThis.fetch;
@@ -438,7 +446,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes) {
 	return () => {
 		const serve_static_middleware = vite.middlewares.stack.find(
 			(middleware) =>
-				/** @type {function} */ (middleware.handle).name === 'viteServeStaticMiddleware'
+				/** @type {Function} */ (middleware.handle).name === 'viteServeStaticMiddleware'
 		);
 
 		// Vite will give a 403 on URLs like /test, /static, and /package.json preventing us from
