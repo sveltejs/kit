@@ -234,30 +234,36 @@ export function form(id) {
 						const succeeded = raw_issues.length === 0;
 
 						if (succeeded) {
-							if (form_result.refreshes) {
-								apply_refreshes(form_result.refreshes);
-							} else {
+							if (!form_result.refreshes && !form_result.reconnects) {
 								void invalidateAll();
-							}
-
-							if (form_result.reconnects) {
-								reconnect_live_queries(form_result.reconnects);
+							} else {
+								if (form_result.refreshes) {
+									apply_refreshes(form_result.refreshes);
+								}
+								if (form_result.reconnects) {
+									reconnect_live_queries(form_result.reconnects);
+								}
 							}
 						}
 
 						return succeeded;
 					} else if (form_result.type === 'redirect') {
 						const stringified_refreshes = form_result.refreshes ?? '';
+						const reconnects = form_result.reconnects;
 						if (stringified_refreshes) {
 							apply_refreshes(stringified_refreshes);
 						}
 
-						if (form_result.reconnects) {
-							reconnect_live_queries(form_result.reconnects);
+						if (reconnects) {
+							reconnect_live_queries(reconnects);
 						}
 
 						// Use internal version to allow redirects to external URLs
-						void _goto(form_result.location, { invalidateAll: !stringified_refreshes }, 0);
+						void _goto(
+							form_result.location,
+							{ invalidateAll: !stringified_refreshes && !reconnects },
+							0
+						);
 						return true;
 					} else {
 						throw new HttpError(form_result.status ?? 500, form_result.error);

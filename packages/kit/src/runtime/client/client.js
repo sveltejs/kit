@@ -422,6 +422,10 @@ async function _invalidate(include_load_functions = true, reset_page_state = tru
 				void resource.refresh?.();
 			});
 		});
+
+		live_query_map.forEach(({ resource }) => {
+			resource.reconnect();
+		});
 	}
 
 	if (include_load_functions) {

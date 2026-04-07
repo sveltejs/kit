@@ -1,4 +1,4 @@
-import { command, getRequestEvent, query } from '$app/server';
+import { command, form, getRequestEvent, query } from '$app/server';
 
 let count = 0;
 let drop_next = false;
@@ -104,6 +104,10 @@ export const drop = command(() => {
 });
 
 export const reconnect_live = command(() => {
+	get_count().reconnect();
+});
+
+export const reconnect_live_form = form('unchecked', async () => {
 	get_count().reconnect();
 });
 

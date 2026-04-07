@@ -1,6 +1,14 @@
 <script lang="ts">
 	import LiveView from './LiveView.svelte';
-	import { increment, reset, drop, reconnect_live, notify_only, get_stats } from './live.remote.js';
+	import {
+		increment,
+		reset,
+		drop,
+		reconnect_live,
+		reconnect_live_form,
+		notify_only,
+		get_stats
+	} from './live.remote.js';
 
 	let show_live = $state(true);
 	let stats = $state('pending');
@@ -16,6 +24,9 @@
 <button id="notify-only" onclick={() => notify_only()}>notify only</button>
 <button id="drop" onclick={() => drop()}>drop connection</button>
 <button id="reconnect-live" onclick={() => reconnect_live()}>reconnect live query</button>
+<form {...reconnect_live_form.enhance(async ({ submit }) => await submit())}>
+	<button id="reconnect-live-form" type="submit">reconnect live query (form)</button>
+</form>
 <button id="toggle-live" onclick={() => (show_live = !show_live)}>toggle live query</button>
 <button id="stats" onclick={refresh_stats}>refresh stats</button>
 
