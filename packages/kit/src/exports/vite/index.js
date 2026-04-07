@@ -1,3 +1,6 @@
+/** @import { Options } from '@sveltejs/vite-plugin-svelte' */
+/** @import { PreprocessorGroup } from 'svelte/compiler' */
+/** @import { ConfigEnv, Manifest, Plugin, ResolvedConfig, UserConfig, ViteDevServer } from 'vite' */
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
@@ -42,12 +45,6 @@ import { import_peer } from '../../utils/import.js';
 import { compact } from '../../utils/array.js';
 import { should_ignore, has_children } from './static_analysis/utils.js';
 import { treeshake_prerendered_remotes } from './build/remote.js';
-
-/**
- * @import { Options } from '@sveltejs/vite-plugin-svelte'
- * @import { PreprocessorGroup } from 'svelte/compiler'
- * @import { ConfigEnv, Manifest, Plugin, ResolvedConfig, UserConfig, ViteDevServer } from 'vite'
- */
 
 const cwd = posixify(process.cwd());
 
@@ -194,7 +191,7 @@ let build_metadata = undefined;
  * @return {Promise<Plugin[]>}
  */
 async function kit({ svelte_config }) {
-	/** @type {import('vite')} */
+	/** @type {typeof import('vite')} */
 	const vite = await import_peer('vite');
 
 	// @ts-ignore `vite.rolldownVersion` only exists in `vite 8`
