@@ -189,7 +189,7 @@ To illustrate:
 <!--
 	This, however, will throw, because `getData` isn't anchored to any reactive context.
 -->
-<button onclick={() => console.log(await getData())}>
+<button onclick={async () => console.log(await getData())}>
 	don't click me!
 </button>
 ```
