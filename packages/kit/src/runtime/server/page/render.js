@@ -72,6 +72,7 @@ export async function render_response({
 	}
 
 	const { client } = manifest._;
+	const integrity_map = client.integrity;
 
 	const modulepreloads = new Set(client.imports);
 	const stylesheets = new Set(client.stylesheets);
@@ -324,6 +325,10 @@ export async function render_response({
 			// include them in disabled state so that Vite can detect them and doesn't try to add them
 			attributes.push('disabled', 'media="(max-width: 0)"');
 		} else {
+			const integrity = integrity_map?.[dep];
+			if (integrity) {
+				attributes.push(`integrity="${integrity}"`, 'crossorigin="anonymous"');
+			}
 			if (resolve_opts.preload({ type: 'css', path })) {
 				link_headers.add(`<${encodeURI(path)}>; rel="preload"; as="style"; nopush`);
 			}
@@ -365,18 +370,30 @@ export async function render_response({
 		}
 
 		if (!client.inline) {
-			const included_modulepreloads = Array.from(modulepreloads, (dep) => prefixed(dep)).filter(
-				(path) => resolve_opts.preload({ type: 'js', path })
-			);
+			for (const dep of modulepreloads) {
+				const path = prefixed(dep);
+				if (!resolve_opts.preload({ type: 'js', path })) continue;
 
-			for (const path of included_modulepreloads) {
+				const integrity = integrity_map?.[dep];
+
 				// see the kit.output.preloadStrategy option for details on why we have multiple options here
 				link_headers.add(`<${encodeURI(path)}>; rel="modulepreload"; nopush`);
 
 				if (options.preload_strategy !== 'modulepreload') {
-					head.add_script_preload(path);
+					const attrs = ['rel="preload"', 'as="script"', 'crossorigin="anonymous"'];
+					if (integrity) {
+						attrs.push(`integrity="${integrity}"`);
+					}
+					head.add_script_preload(path, attrs);
 				} else {
-					head.add_link_tag(path, ['rel="modulepreload"']);
+					const attrs = ['rel="modulepreload"'];
+					if (integrity) {
+						// Must emit HTML tag (not just Link header) for SRI to work
+						attrs.push(`integrity="${integrity}"`, 'crossorigin="anonymous"');
+						head.add_script_preload(path, attrs);
+					} else {
+						head.add_link_tag(path, attrs);
+					}
 				}
 			}
 		}
@@ -782,11 +799,12 @@ class Head {
 		this.#stylesheet_links.push(`<link href="${href}" ${attributes.join(' ')}>`);
 	}
 
-	/** @param {string} href */
-	add_script_preload(href) {
-		this.#script_preloads.push(
-			`<link rel="preload" as="script" crossorigin="anonymous" href="${href}">`
-		);
+	/**
+	 * @param {string} href
+	 * @param {string[]} attributes
+	 */
+	add_script_preload(href, attributes) {
+		this.#script_preloads.push(`<link href="${href}" ${attributes.join(' ')}>`);
 	}
 
 	/**

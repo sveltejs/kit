@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import * as http from 'node:http';
 import process from 'node:process';
 import { expect } from '@playwright/test';
@@ -71,6 +72,117 @@ test.describe('CSP', () => {
 
 		await page.goto('/path-base/csp-trusted-types');
 		expect(errors.length).toEqual(0);
+	});
+});
+
+test.describe('subresourceIntegrity', () => {
+	test.skip(() => !!process.env.DEV);
+
+	test('adds integrity attribute to script preloads', async ({ request }) => {
+		const response = await request.get('/path-base/inline-style');
+		const html = await response.text();
+
+		const link_tags = html.match(/<link[^>]+>/g) ?? [];
+		const script_links = link_tags.filter((tag) => tag.includes('as="script"'));
+
+		expect(script_links.length).toBeGreaterThan(0);
+
+		for (const tag of script_links) {
+			expect(tag).toMatch(/integrity="sha384-[A-Za-z0-9+/=]+"/);
+			expect(tag).toContain('crossorigin="anonymous"');
+		}
+	});
+
+	test('adds integrity attribute to stylesheet links', async ({ request }) => {
+		// /base has a CSS file (SvelteLogo) that exceeds inlineStyleThreshold,
+		// so it renders as a <link rel="stylesheet"> rather than being inlined
+		const response = await request.get('/path-base/base');
+		const html = await response.text();
+
+		const link_tags = html.match(/<link[^>]+>/g) ?? [];
+		const style_links = link_tags.filter(
+			(tag) => tag.includes('rel="stylesheet"') && !tag.includes('disabled')
+		);
+
+		expect(style_links.length).toBeGreaterThan(0);
+
+		for (const tag of style_links) {
+			expect(tag).toMatch(/integrity="sha384-[A-Za-z0-9+/=]+"/);
+			expect(tag).toContain('crossorigin="anonymous"');
+		}
+	});
+
+	test('entry script imports are covered by integrity preloads', async ({ request }) => {
+		const response = await request.get('/path-base/inline-style');
+		const html = await response.text();
+
+		// Extract URLs from integrity-protected preload links
+		const link_tags = html.match(/<link[^>]+>/g) ?? [];
+		const preloaded_urls = new Set(
+			link_tags
+				.filter((tag) => tag.includes('integrity='))
+				.map((tag) => tag.match(/href="([^"]+)"/)?.[1])
+				.filter(Boolean)
+		);
+
+		// Extract URLs from the inline boot script's import() calls
+		const script_match = html.match(/<script[^>]*>([\s\S]*?)<\/script>/);
+		expect(script_match).not.toBeNull();
+		const import_urls = [...script_match[1].matchAll(/import\("([^"]+)"\)/g)].map((m) => m[1]);
+		expect(import_urls.length).toBeGreaterThan(0);
+
+		// Every import() URL should have a corresponding integrity preload
+		for (const url of import_urls) {
+			expect(preloaded_urls).toContain(url);
+		}
+	});
+
+	test('integrity hashes match actual file content', async ({ request }) => {
+		const response = await request.get('/path-base/inline-style');
+		const html = await response.text();
+
+		const link_tags = html.match(/<link[^>]+>/g) ?? [];
+		const links_with_integrity = link_tags
+			.filter((tag) => tag.includes('integrity='))
+			.map((tag) => {
+				const href = tag.match(/href="([^"]+)"/)?.[1];
+				const integrity = tag.match(/integrity="([^"]+)"/)?.[1];
+				return { href, integrity };
+			})
+			.filter((l) => l.href && l.integrity);
+
+		expect(links_with_integrity.length).toBeGreaterThan(0);
+
+		for (const { href, integrity } of links_with_integrity) {
+			// Resolve the relative href against the response URL to get a correct absolute path
+			const resolved = new URL(href, response.url()).pathname;
+			const res = await request.get(resolved);
+			expect(res.status(), `failed to fetch ${resolved}`).toBe(200);
+			const body = Buffer.from(await res.body());
+			const [algo, expected_hash] = integrity.split('-', 2);
+			const actual_hash = createHash(algo).update(body).digest('base64');
+
+			expect(actual_hash, `integrity mismatch for ${resolved}`).toBe(expected_hash);
+		}
+	});
+
+	test('$app/integrity returns hash for ?url imports', async ({ request }) => {
+		const response = await request.get('/path-base/integrity');
+		const html = await response.text();
+
+		// The page renders the hash from $app/integrity into #hash
+		const hash_match = html.match(/<p id="hash">([^<]+)<\/p>/);
+		expect(hash_match).not.toBeNull();
+		expect(hash_match[1]).toMatch(/^sha384-[A-Za-z0-9+/=]+$/);
+
+		// The page renders a <script> tag with integrity attribute
+		const script_match = html.match(/<script[^>]*src="([^"]+)"[^>]*integrity="([^"]+)"[^>]*>/);
+		expect(script_match).not.toBeNull();
+		expect(script_match[1]).toContain('bootstrap');
+		expect(script_match[2]).toMatch(/^sha384-[A-Za-z0-9+/=]+$/);
+
+		// The hash in the page text and the script tag should match
+		expect(script_match[2]).toBe(hash_match[1]);
 	});
 });
 
