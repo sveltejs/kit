@@ -182,7 +182,7 @@ To illustrate:
 	Awaiting `data` in a non-reactive context is valid, because it's anchored 
 	and will be cleaned up when this component is cleaned up.
 -->
-<button onclick={() => console.log(await data)}>
+<button onclick={async () => console.log(await data)}>
 	click me!
 </button>
 
