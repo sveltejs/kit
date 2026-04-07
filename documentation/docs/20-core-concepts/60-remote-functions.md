@@ -164,7 +164,9 @@ Both the argument and the return value are serialized with [devalue](https://git
 
 ### Deduplication
 
-When you call a query function, SvelteKit serializes the arguments you call it with and uses them as a cache key. On the server, this is used to create a request-scoped cache so that multiple identical invocations of the same query only result in a single actual call for that query. On the client, SvelteKit does something similar: Multiple identical invocations of a query all result in the same instance. This client-side deduplication requires access to Svelte's reactivity system, meaning it can only work in a reactive context. In practice, you're most likely to run into this limitation in universal `load` functions, event handlers, or when trying to access a query's data during module initialization.
+When you call a query function, SvelteKit serializes the argument you call it with and uses it as a cache key. On the server, this is used to create a request-scoped cache so that multiple invocations of the same query only result in the work happening once. On the client, SvelteKit does something similar: Multiple identical invocations of a query all point to the same instance.
+
+To prevent memory leaks, this instance is kept cached only as long as it is actively used on the page in a _reactive context_, which means it must be created in a [derived](../svelte/$derived), [effect](../svelte/$effect) or component template. In practice, you're most likely to run into this limitation in universal `load` functions, event handlers, or when trying to access a query's data during module initialization.
 
 To illustrate:
 
