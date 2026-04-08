@@ -81,6 +81,14 @@ const options = object(
 				return input;
 			}),
 
+			cache: validate(undefined, (input, keypath) => {
+				if (input === undefined) return undefined;
+				return object({
+					path: string(null),
+					options: validate({}, object({}, true))
+				})(input, keypath);
+			}),
+
 			alias: validate({}, (input, keypath) => {
 				if (typeof input !== 'object') {
 					throw new Error(`${keypath} should be an object`);

@@ -8,7 +8,7 @@ import { get_remote_request_headers, remote_request } from './shared.svelte.js';
 import { create_remote_key, stringify_remote_arg } from '../../shared.js';
 
 // Initialize Cache API for prerender functions
-const CACHE_NAME = DEV ? `sveltekit:${Date.now()}` : `sveltekit:${version}`;
+const CACHE_NAME = DEV ? `sveltekit:prerender:${Date.now()}` : `sveltekit:prerender:${version}`;
 /** @type {Cache | undefined} */
 let prerender_cache;
 
@@ -20,12 +20,12 @@ const prerender_cache_ready = (async () => {
 			// Clean up old cache versions
 			const cache_names = await caches.keys();
 			for (const cache_name of cache_names) {
-				if (cache_name.startsWith('sveltekit:') && cache_name !== CACHE_NAME) {
+				if (cache_name.startsWith('sveltekit:prerender:') && cache_name !== CACHE_NAME) {
 					await caches.delete(cache_name);
 				}
 			}
 		} catch (error) {
-			console.warn('Failed to initialize SvelteKit cache:', error);
+			console.warn('Failed to initialize SvelteKit prerender cache:', error);
 		}
 	}
 })();

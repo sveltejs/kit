@@ -46,6 +46,11 @@ export const options = {
 	env_private_prefix: '${config.kit.env.privatePrefix}',
 	hash_routing: ${s(config.kit.router.type === 'hash')},
 	hooks: null, // added lazily, via \`get_hooks\`
+	kit_cache_config: ${s({
+		path: config.kit.cache?.path,
+		options: config.kit.cache?.options ?? {}
+	})},
+	kit_cache_handler: null,
 	preload_strategy: ${s(config.kit.output.preloadStrategy)},
 	root,
 	service_worker: ${has_service_worker},

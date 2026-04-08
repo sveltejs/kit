@@ -5,6 +5,7 @@ import { lookup } from 'mrmime';
 import sirv from 'sirv';
 import { loadEnv, normalizePath } from 'vite';
 import { createReadableStream, getRequest, setResponse } from '../../../exports/node/index.js';
+import { with_runtime_cache } from '../../../runtime/server/runtime-cache.js';
 import { installPolyfills } from '../../../exports/node/polyfills.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import { is_chrome_devtools_request, not_found } from '../utils.js';
@@ -203,9 +204,9 @@ export async function preview(vite, vite_config, svelte_config) {
 				request: req
 			});
 
-			await setResponse(
-				res,
-				await server.respond(request, {
+			const rendered = await with_runtime_cache(
+				request,
+				{
 					getClientAddress: () => {
 						const { remoteAddress } = req.socket;
 						if (remoteAddress) return remoteAddress;
@@ -219,8 +220,10 @@ export async function preview(vite, vite_config, svelte_config) {
 						return fs.readFileSync(join(svelte_config.kit.files.assets, file));
 					},
 					emulator
-				})
+				},
+				server
 			);
+			await setResponse(res, rendered);
 		});
 	};
 }

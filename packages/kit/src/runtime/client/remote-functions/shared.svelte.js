@@ -4,8 +4,17 @@ import * as devalue from 'devalue';
 import { app, goto, query_map } from '../client.js';
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
 import { untrack } from 'svelte';
-import { create_remote_key, split_remote_key } from '../../shared.js';
+import {
+	create_remote_key,
+	evict_cache_entries_matching_tags,
+	split_remote_key,
+	SVELTEKIT_CACHE_CONTROL_INVALIDATE_HEADER,
+	SVELTEKIT_CACHE_CONTROL_TAGS_HEADER,
+	SVELTEKIT_RUNTIME_CACHE_CONTROL_HEADER
+} from '../../shared.js';
+import { DEV } from 'esm-env';
 import { navigating, page } from '../state.svelte.js';
+import { version } from '__sveltekit/environment';
 
 /** Indicates a query function, as opposed to a query instance */
 export const QUERY_FUNCTION_ID = Symbol('sveltekit.query_function_id');
@@ -13,6 +22,75 @@ export const QUERY_FUNCTION_ID = Symbol('sveltekit.query_function_id');
 export const QUERY_OVERRIDE_KEY = Symbol('sveltekit.query_override_key');
 /** Indicates a query instance */
 export const QUERY_RESOURCE_KEY = Symbol('sveltekit.query_resource_key');
+
+/** Cache name for remote query private directive; in DEV includes a unique suffix so each load gets a fresh cache. */
+const REMOTE_PRIVATE_CACHE_NAME = DEV
+	? `sveltekit:private-cache:${Date.now()}`
+	: `sveltekit:private-cache:${version}`;
+
+/** @type {Cache | undefined} */
+let private_remote_cache;
+
+const private_remote_cache_ready = (async () => {
+	if (typeof caches === 'undefined') return;
+
+	try {
+		private_remote_cache = await caches.open(REMOTE_PRIVATE_CACHE_NAME);
+
+		const cache_names = await caches.keys();
+		for (const cache_name of cache_names) {
+			if (
+				cache_name.startsWith('sveltekit:private-cache:') &&
+				cache_name !== REMOTE_PRIVATE_CACHE_NAME
+			) {
+				await caches.delete(cache_name);
+			}
+		}
+	} catch (error) {
+		console.warn('Failed to initialize SvelteKit remote private cache:', error);
+	}
+})();
+
+/**
+ * Seconds elapsed since the cached response was generated.
+ * Falls back to 0 if there is no `Date` header.
+ * @param {Response} res
+ * @returns {number}
+ */
+function private_cache_age(res) {
+	const date = res.headers.get('date');
+	if (!date) return 0;
+	return Math.max(0, (Date.now() - new Date(date).getTime()) / 1000);
+}
+
+/**
+ * Parse `max-age` from {@link SVELTEKIT_RUNTIME_CACHE_CONTROL_HEADER} on the cached response.
+ * @param {Response} res
+ * @returns {number}
+ */
+function private_cache_max_age(res) {
+	const cc = res.headers.get(SVELTEKIT_RUNTIME_CACHE_CONTROL_HEADER) ?? '';
+	const m = /max-age=(\d+)/i.exec(cc);
+	return m ? parseInt(m[1], 10) : 0;
+}
+
+/**
+ * Shared unwrap logic for remote function responses (redirect / error / result).
+ * @param {RemoteFunctionResponse} result
+ * @returns {Promise<any>}
+ */
+async function unwrap_remote_result(result) {
+	if (result.type === 'redirect') {
+		await goto(result.location);
+		throw new Redirect(307, result.location);
+	}
+
+	if (result.type === 'error') {
+		throw new HttpError(result.status ?? 500, result.error);
+	}
+
+	return result.result;
+}
 
 /**
  * @returns {{ 'x-sveltekit-pathname': string, 'x-sveltekit-search': string }}
@@ -32,33 +110,99 @@ export function get_remote_request_headers() {
 }
 
 /**
+ * @param {Response} response
+ */
+export async function apply_private_cache_invalidate_headers(response) {
+	const raw = response.headers.get(SVELTEKIT_CACHE_CONTROL_INVALIDATE_HEADER);
+	if (!raw) return;
+
+	const tags = raw
+		.split(',')
+		.map((t) => t.trim())
+		.filter(Boolean);
+
+	await private_remote_cache_ready;
+	const cache = private_remote_cache;
+	if (!cache || !tags.length) return;
+
+	try {
+		await evict_cache_entries_matching_tags(cache, tags);
+	} catch {
+		// ignore
+	}
+}
+
+/**
  * @param {string} url
  * @param {HeadersInit} headers
  */
 export async function remote_request(url, headers) {
-	const response = await fetch(url, {
+	const init = {
 		headers: {
 			'Content-Type': 'application/json',
 			...headers
 		}
-	});
+	};
+
+	await private_remote_cache_ready;
+	const cache = private_remote_cache;
+	if (cache) {
+		try {
+			const hit = await cache.match(url);
+
+			if (hit) {
+				const age = private_cache_age(hit);
+				const max_age = private_cache_max_age(hit);
+
+				if (max_age > 0 && age <= max_age) {
+					const result = /** @type {RemoteFunctionResponse} */ (await hit.json());
+					return unwrap_remote_result(result);
+				}
+
+				// stale — evict
+				await cache.delete(url);
+			}
+		} catch (_) {
+			// ignore
+		}
+	}
+
+	const response = await fetch(url, init);
 
 	if (!response.ok) {
 		throw new HttpError(500, 'Failed to execute remote function');
 	}
 
+	await apply_private_cache_invalidate_headers(response);
+
 	const result = /** @type {RemoteFunctionResponse} */ (await response.json());
+	const unwrapped = unwrap_remote_result(result);
 
-	if (result.type === 'redirect') {
-		await goto(result.location);
-		throw new Redirect(307, result.location);
+	if (cache) {
+		const cache_control = response.headers.get(SVELTEKIT_RUNTIME_CACHE_CONTROL_HEADER) ?? '';
+		if (cache_control.includes('private') && cache_control.includes('max-age')) {
+			const cache_tags = response.headers.get(SVELTEKIT_CACHE_CONTROL_TAGS_HEADER);
+			await cache
+				.put(
+					url,
+					// We need to create a new response because the original response is already consumed
+					new Response(JSON.stringify(result), {
+						headers: {
+							'Content-Type': 'application/json',
+							date: response.headers.get('date') ?? new Date().toISOString(),
+							[SVELTEKIT_RUNTIME_CACHE_CONTROL_HEADER]: cache_control,
+							...(cache_tags ? { [SVELTEKIT_CACHE_CONTROL_TAGS_HEADER]: cache_tags } : {})
+						}
+					})
+				)
+				.catch((e) => {
+					console.error('Failed to put into cache:', e);
+					// Nothing we can do here
+				});
+		}
 	}
 
-	if (result.type === 'error') {
-		throw new HttpError(result.status ?? 500, result.error);
-	}
-
-	return result.result;
+	return unwrapped;
 }
 
 /**

@@ -69,6 +69,11 @@ export function query(id) {
 	};
 
 	Object.defineProperty(wrapper, QUERY_FUNCTION_ID, { value: id });
+	Object.defineProperty(wrapper, 'invalidate', {
+		value() {
+			throw new Error('Cannot call query().invalidate() on the client');
+		}
+	});
 
 	return wrapper;
 }
@@ -165,6 +170,11 @@ export function query_batch(id) {
 	};
 
 	Object.defineProperty(wrapper, QUERY_FUNCTION_ID, { value: id });
+	Object.defineProperty(wrapper, 'invalidate', {
+		value() {
+			throw new Error('Cannot call query().invalidate() on the client');
+		}
+	});
 
 	return wrapper;
 }
@@ -608,5 +618,9 @@ class QueryProxy {
 
 	get [Symbol.toStringTag]() {
 		return 'QueryProxy';
+	}
+
+	invalidate() {
+		throw new Error('invalidate() can only be called on the server');
 	}
 }

@@ -120,14 +120,16 @@ export function parse_remote_response(data, transport) {
  * @param {RequestEvent} event
  * @param {RequestState} state
  * @param {boolean} allow_cookies
+ * @param {import('@sveltejs/kit').RequestCache} cache
  * @param {() => any} get_input
  * @param {(arg?: any) => T} fn
  */
-export async function run_remote_function(event, state, allow_cookies, get_input, fn) {
+export async function run_remote_function(event, state, allow_cookies, cache, get_input, fn) {
 	/** @type {RequestStore} */
 	const store = {
 		event: {
 			...event,
+			cache,
 			setHeaders: () => {
 				throw new Error('setHeaders is not allowed in remote functions');
 			},

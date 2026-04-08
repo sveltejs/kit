@@ -8,6 +8,7 @@ import { noop } from '../../../../utils/functions.js';
 import { create_validator, get_cache, get_response, run_remote_function } from './shared.js';
 import { handle_error_and_jsonify } from '../../../server/utils.js';
 import { HttpError, SvelteKitError } from '@sveltejs/kit/internal';
+import { create_request_cache } from '../../../server/cache.js';
 
 /**
  * Creates a remote query. When called from the browser, the function will be invoked on the server via a `fetch` call.
@@ -78,7 +79,14 @@ export function query(validate_or_fn, maybe_fn) {
 		const is_validated = is_validated_argument(__, state, arg);
 
 		return create_query_resource(__, arg, state, () =>
-			run_remote_function(event, state, false, () => (is_validated ? arg : validate(arg)), fn)
+			run_remote_function(
+				event,
+				state,
+				false,
+				create_request_cache(state, __.id, arg),
+				() => (is_validated ? arg : validate(arg)),
+				fn
+			)
 		);
 	};
 
@@ -168,6 +176,7 @@ function batch(validate_or_fn, maybe_fn) {
 				event,
 				state,
 				false,
+				create_request_cache(state, __.id, args),
 				async () => Promise.all(args.map(validate)),
 				async (/** @type {any[]} */ input) => {
 					const get_result = await fn(input);
@@ -237,6 +246,7 @@ function batch(validate_or_fn, maybe_fn) {
 							event,
 							state,
 							false,
+							create_request_cache(state, __.id, arg),
 							async () => Promise.all(args.map(validate)),
 							async (input) => {
 								const get_result = await fn(input);
@@ -306,6 +316,15 @@ function create_query_resource(__, arg, state, fn) {
 			const is_immediate_refresh = !refresh_context.cache[refresh_context.cache_key];
 			const value = is_immediate_refresh ? get_promise() : fn();
 			return update_refresh_value(refresh_context, value, is_immediate_refresh);
+		},
+		invalidate() {
+			const { state, event } = get_request_store();
+			// align with how url is constructed on the client, which is used for the cache key
+			const invalidate_key =
+				arg !== undefined
+					? create_remote_key(__.id, stringify_remote_arg(arg, state.transport))
+					: __.id;
+			event.cache.invalidate([invalidate_key]);
 		},
 		run() {
 			// potential TODO: if we want to be able to run queries at the top level of modules / outside of the request context, we could technically remove

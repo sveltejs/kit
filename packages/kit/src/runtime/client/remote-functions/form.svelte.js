@@ -7,7 +7,11 @@ import { DEV } from 'esm-env';
 import { HttpError } from '@sveltejs/kit/internal';
 import { app, query_responses, _goto, set_nearest_error_page, invalidateAll } from '../client.js';
 import { tick } from 'svelte';
-import { apply_refreshes, categorize_updates } from './shared.svelte.js';
+import {
+	apply_private_cache_invalidate_headers,
+	apply_refreshes,
+	categorize_updates
+} from './shared.svelte.js';
 import { createAttachmentKey } from 'svelte/attachments';
 import {
 	convert_formdata,
@@ -223,6 +227,8 @@ export function form(id) {
 						// (which shouldn't happen because we handle errors on the server and always send a 200 response)
 						throw new Error('Failed to execute remote function');
 					}
+
+					apply_private_cache_invalidate_headers(response);
 
 					const form_result = /** @type { RemoteFunctionResponse} */ (await response.json());
 

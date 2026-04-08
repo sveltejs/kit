@@ -1,5 +1,10 @@
 import { describe, expect, test } from 'vitest';
-import { parse_remote_arg, stringify_remote_arg } from './shared.js';
+import {
+	evict_cache_entries_matching_tags,
+	parse_remote_arg,
+	stringify_remote_arg,
+	SVELTEKIT_CACHE_CONTROL_TAGS_HEADER
+} from './shared.js';
 
 class Thing {
 	/** @param {number} a @param {number} z */
@@ -27,6 +32,64 @@ function map(entries) {
 function set(items) {
 	return /** @type {Set<any>} */ (new Set(items));
 }
+
+describe('evict_cache_entries_matching_tags', () => {
+	test('deletes entries whose tag header overlaps', async () => {
+		/** @type {Map<string, Response>} */
+		const entries = new Map();
+
+		const cache = {
+			/** @returns {Promise<Request[]>} */
+			keys: async () => Array.from(entries.keys(), (u) => new Request(u)),
+			/** @param {Request} req */
+			match: async (req) => entries.get(req.url) ?? null,
+			/** @param {Request} req */
+			delete: async (req) => {
+				entries.delete(req.url);
+			}
+		};
+
+		const url = 'https://example/remote/r1?payload=x';
+		entries.set(
+			url,
+			new Response('{}', {
+				headers: { [SVELTEKIT_CACHE_CONTROL_TAGS_HEADER]: 'alpha,beta' }
+			})
+		);
+
+		await evict_cache_entries_matching_tags(/** @type {any} */ (cache), ['alpha']);
+
+		expect(entries.size).toBe(0);
+	});
+
+	test('ignores entries with no overlap', async () => {
+		/** @type {Map<string, Response>} */
+		const entries = new Map();
+
+		const cache = {
+			/** @returns {Promise<Request[]>} */
+			keys: async () => Array.from(entries.keys(), (u) => new Request(u)),
+			/** @param {Request} req */
+			match: async (req) => entries.get(req.url) ?? null,
+			/** @param {Request} req */
+			delete: async (req) => {
+				entries.delete(req.url);
+			}
+		};
+
+		const url = 'https://example/remote/r1';
+		entries.set(
+			url,
+			new Response('{}', {
+				headers: { [SVELTEKIT_CACHE_CONTROL_TAGS_HEADER]: 'beta' }
+			})
+		);
+
+		await evict_cache_entries_matching_tags(/** @type {any} */ (cache), ['alpha']);
+
+		expect(entries.size).toBe(1);
+	});
+});
 
 describe('stringify_remote_arg', () => {
 	test('produces the same key for reordered plain object properties', () => {

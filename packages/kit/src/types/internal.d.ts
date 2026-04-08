@@ -479,6 +479,12 @@ export interface SSROptions {
 	env_private_prefix: string;
 	hash_routing: boolean;
 	hooks: ServerHooks;
+	kit_cache_config: {
+		path: string | undefined;
+		options: Record<string, unknown>;
+	};
+	/** Filled during `Server.init` when `kit.cache.path` is set */
+	kit_cache_handler: KitCacheHandler | null;
 	preload_strategy: ValidatedConfig['kit']['output']['preloadStrategy'];
 	root: SSRComponent['default'];
 	service_worker: boolean;
@@ -648,6 +654,28 @@ export type RecordSpan = <T>(options: {
  * Internal state associated with the current `RequestEvent`,
  * used for tracking things like remote function calls
  */
+export interface KitCacheDirective {
+	scope: 'public' | 'private';
+	maxAgeSeconds: number;
+	staleSeconds?: number;
+	tags: string[];
+	refresh: boolean;
+}
+
+export interface KitCacheState {
+	directive: KitCacheDirective | null;
+	invalidations: string[];
+}
+
+export interface KitCacheHandler {
+	setHeaders?(
+		headers: Headers,
+		directive: KitCacheDirective,
+		ctx: { remote_id?: string | null }
+	): MaybePromise<void>;
+	invalidate?(tags: string[]): MaybePromise<void>;
+}
+
 export interface RequestState {
 	readonly prerendering: PrerenderOptions | undefined;
 	readonly transport: ServerHooks['transport'];
@@ -664,6 +692,7 @@ export interface RequestState {
 		refreshes: null | Record<string, Promise<any>>;
 		requested: null | Map<string, string[]>;
 		validated: null | Map<string, Set<any>>;
+		kit_cache?: KitCacheState;
 	};
 	readonly is_in_remote_function: boolean;
 	readonly is_in_render: boolean;

@@ -302,12 +302,61 @@ declare module '@sveltejs/kit' {
 		platform?(details: { config: any; prerender: PrerenderOption }): MaybePromise<App.Platform>;
 	}
 
+	/**
+	 * Options for [`event.cache`](https://svelte.dev/docs/kit/@sveltejs-kit#RequestEvent)
+	 */
+	export interface CacheOptions {
+		ttl: string | number;
+		stale?: string | number;
+		/** @default 'private' */
+		scope?: 'public' | 'private';
+		tags?: string[];
+		/** @default false */
+		refresh?: boolean;
+	}
+
+	/**
+	 * Normalized cache directive passed to custom `kit.cache` handlers.
+	 */
+	export interface KitCacheDirective {
+		scope: 'public' | 'private';
+		maxAgeSeconds: number;
+		staleSeconds?: number;
+		tags: string[];
+		refresh: boolean;
+	}
+
+	/**
+	 * Custom cache integration (e.g. platform purge hooks). Export `create` or `default` from `kit.cache.path`.
+	 */
+	export interface KitCacheHandler {
+		setHeaders?(
+			headers: Headers,
+			directive: KitCacheDirective,
+			ctx: { remote_id?: string | null }
+		): MaybePromise<void>;
+		invalidate?(tags: string[]): MaybePromise<void>;
+	}
+
+	export interface RequestCache {
+		(arg: CacheOptions | string): void;
+		invalidate(tags: string[]): void;
+	}
+
 	export interface KitConfig {
 		/**
 		 * Your [adapter](https://svelte.dev/docs/kit/adapters) is run when executing `vite build`. It determines how the output is converted for different platforms.
 		 * @default undefined
 		 */
 		adapter?: Adapter;
+		/**
+		 * Optional module that implements [`KitCacheHandler`](https://svelte.dev/docs/kit/@sveltejs-kit#KitCacheHandler) via a `create` or default export function.
+		 */
+		cache?: {
+			/** Absolute or project-relative path resolved from your app root */
+			path?: string;
+			options?: Record<string, unknown>;
+		};
 		/**
 		 * An object containing zero or more aliases used to replace values in `import` statements. These aliases are automatically passed to Vite and TypeScript.
 		 *
@@ -1529,6 +1578,12 @@ declare module '@sveltejs/kit' {
 		isSubRequest: boolean;
 
 		/**
+		 * Configure HTTP caching for this response. `public` uses shared caches (CDN / `Cache-Control`);
+		 * `private` applies only to remote query responses stored via the browser Cache API.
+		 */
+		cache: RequestCache;
+
+		/**
 		 * Access to spans for tracing. If tracing is not enabled, these spans will do nothing.
 		 * @since 2.31.0
 		 */
@@ -2153,6 +2208,10 @@ declare module '@sveltejs/kit' {
 		 */
 		refresh(): Promise<void>;
 		/**
+		 * Queue cache invalidation for this query (public or private, depending on how it was cached).
+		 */
+		invalidate(): void;
+		/**
 		 * Temporarily override a query's value during a [single-flight mutation](https://svelte.dev/docs/kit/remote-functions#Single-flight-mutations) to provide optimistic updates.
 		 *
 		 * ```svelte
@@ -2184,7 +2243,7 @@ declare module '@sveltejs/kit' {
 	) => RemoteResource<Output>;
 
 	/**
-	 * The return value of a remote `query` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query) for full documentation.
+	 * The return value of a remote `query` function (client stub or shared typing). See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query) for full documentation.
 	 */
 	export type RemoteQueryFunction<Input, Output> = (
 		arg: undefined extends Input ? Input | void : Input

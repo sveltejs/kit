@@ -20,6 +20,42 @@ export const INVALIDATED_PARAM = 'x-sveltekit-invalidated';
 
 export const TRAILING_SLASH_PARAM = 'x-sveltekit-trailing-slash';
 
+/** Private runtime cache TTL for remote `query` */
+export const SVELTEKIT_RUNTIME_CACHE_CONTROL_HEADER = 'x-sveltekit-cache-control';
+
+/** Comma-separated tags describing a private remote cache entry (browser Cache API). */
+export const SVELTEKIT_CACHE_CONTROL_TAGS_HEADER = 'x-sveltekit-cache-control-tags';
+
+/** Tags to evict from the remote cache; set when `invalidate()` runs on the server. */
+export const SVELTEKIT_CACHE_CONTROL_INVALIDATE_HEADER = 'x-sveltekit-cache-control-invalidate';
+
+/**
+ * Delete cache entries whose `SVELTEKIT_CACHE_CONTROL_TAGS_HEADER` value contains any of the given tags.
+ * @param {Cache} cache
+ * @param {Iterable<string>} invalidate_tags
+ */
+export async function evict_cache_entries_matching_tags(cache, invalidate_tags) {
+	const tag_set = new Set([...invalidate_tags].map((t) => String(t).trim()).filter(Boolean));
+	if (!tag_set.size) return;
+
+	const keys = await cache.keys();
+
+	for (const req of keys) {
+		const res = await cache.match(req);
+		if (!res) continue;
+
+		const raw = res.headers.get(SVELTEKIT_CACHE_CONTROL_TAGS_HEADER) ?? '';
+		const entry_tags = raw
+			.split(',')
+			.map((t) => t.trim())
+			.filter(Boolean);
+
+		if (entry_tags.some((t) => tag_set.has(t))) {
+			await cache.delete(req);
+		}
+	}
+}
+
 /**
  * @param {any} data
  * @param {string} [location_description]

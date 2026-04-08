@@ -10,6 +10,7 @@ import { filter_env } from '../../utils/env.js';
 import { format_server_error } from './utils.js';
 import { set_read_implementation, set_manifest } from '__sveltekit/server';
 import { set_app } from './app.js';
+import { pathToFileURL } from 'node:url';
 
 /** @type {Promise<any>} */
 let init_promise;
@@ -139,6 +140,19 @@ export class Server {
 
 				if (module.init) {
 					await module.init();
+				}
+
+				const cache_path = this.#options.kit_cache_config?.path;
+				if (cache_path) {
+					const { href } = pathToFileURL(cache_path);
+					const mod = await import(href);
+					const factory = mod.create ?? mod.default;
+					if (typeof factory !== 'function') {
+						throw new Error(
+							`kit.cache module at ${cache_path} must export a default or \`create\` function`
+						);
+					}
+					this.#options.kit_cache_handler = factory(this.#options.kit_cache_config.options ?? {});
 				}
 			} catch (e) {
 				if (DEV) {

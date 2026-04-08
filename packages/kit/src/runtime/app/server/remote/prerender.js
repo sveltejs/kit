@@ -14,6 +14,7 @@ import {
 	parse_remote_response,
 	run_remote_function
 } from './shared.js';
+import { create_request_cache } from '../../../server/cache.js';
 
 /**
  * Creates a remote prerender function. When called from the browser, the function will be invoked on the server via a `fetch` call.
@@ -133,7 +134,14 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 			}
 
 			const promise = get_response(__, arg, state, () =>
-				run_remote_function(event, state, false, () => validate(arg), fn)
+				run_remote_function(
+					event,
+					state,
+					false,
+					create_request_cache(state, __.id, arg),
+					() => validate(arg),
+					fn
+				)
 			);
 
 			if (state.prerendering) {

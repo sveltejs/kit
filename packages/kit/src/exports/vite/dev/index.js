@@ -19,6 +19,7 @@ import { is_chrome_devtools_request, not_found } from '../utils.js';
 import { SCHEME } from '../../../utils/url.js';
 import { check_feature } from '../../../utils/features.js';
 import { escape_html } from '../../../utils/escape.js';
+import { with_runtime_cache } from '../../../runtime/server/runtime-cache.js';
 
 const cwd = process.cwd();
 // vite-specifc queries that we should skip handling for css urls
@@ -546,24 +547,28 @@ export async function dev(vite, vite_config, svelte_config, get_remotes) {
 					return;
 				}
 
-				const rendered = await server.respond(request, {
-					getClientAddress: () => {
-						const { remoteAddress } = req.socket;
-						if (remoteAddress) return remoteAddress;
-						throw new Error('Could not determine clientAddress');
-					},
-					read: (file) => {
-						if (file in manifest._.server_assets) {
-							return fs.readFileSync(from_fs(file));
-						}
+				const rendered = await with_runtime_cache(
+					request,
+					{
+						getClientAddress: () => {
+							const { remoteAddress } = req.socket;
+							if (remoteAddress) return remoteAddress;
+							throw new Error('Could not determine clientAddress');
+						},
+						read: (file) => {
+							if (file in manifest._.server_assets) {
+								return fs.readFileSync(from_fs(file));
+							}
 
-						return fs.readFileSync(path.join(svelte_config.kit.files.assets, file));
+							return fs.readFileSync(path.join(svelte_config.kit.files.assets, file));
+						},
+						before_handle: (event, config, prerender) => {
+							async_local_storage.enterWith({ event, config, prerender });
+						},
+						emulator
 					},
-					before_handle: (event, config, prerender) => {
-						async_local_storage.enterWith({ event, config, prerender });
-					},
-					emulator
-				});
+					server
+				);
 
 				if (rendered.status === 404) {
 					// @ts-expect-error

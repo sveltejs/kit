@@ -20,3 +20,6 @@ export {
 	get_request_store,
 	try_get_request_store
 } from './event.js';
+
+export { SVELTEKIT_CACHE_CONTROL_INVALIDATE_HEADER } from '../../runtime/shared.js';
+export { with_runtime_cache, RuntimeCacheStore } from '../../runtime/server/runtime-cache.js';
