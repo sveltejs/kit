@@ -105,7 +105,10 @@ export const manifest = {
 				result.inline_styles = async () => {
 					// we can't use import.meta.hot here because workerd doesn't like that
 					// it would resolve from a different request context
-					const inline_styles_endpoint = new URL(`/${kit.appDir}/inline-styles/${result.index}`, origin);
+					const inline_styles_endpoint = new URL(
+						`/${kit.appDir}/inline-styles/${result.index}`,
+						origin
+					);
 					for (const url of urls) {
 						inline_styles_endpoint.searchParams.append('urls', url);
 					}
