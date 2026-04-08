@@ -1426,7 +1426,9 @@ declare module '@sveltejs/kit' {
 	 */
 	export type ParamMatcher = (param: string) => boolean;
 
-	export type RequestedResult<T> = Iterable<T> &
+	export type RequestedResult<T> = QueryRequestedResult<T> | LiveQueryRequestedResult<T>;
+
+	export type QueryRequestedResult<T> = Iterable<T> &
 		AsyncIterable<T> & {
 			/**
 			 * Call `refresh` on all queries selected by this `requested` invocation.
@@ -1440,6 +1442,22 @@ declare module '@sveltejs/kit' {
 			 * ```
 			 */
 			refreshAll: () => Promise<void>;
+		};
+
+	export type LiveQueryRequestedResult<T> = Iterable<T> &
+		AsyncIterable<T> & {
+			/**
+			 * Call `reconnect` on all live queries selected by this `requested` invocation.
+			 * This is identical to:
+			 * ```ts
+			 * import { requested } from '$app/server';
+			 *
+			 * for await (const arg of requested(query, ...)) {
+			 *   query(arg).reconnect();
+			 * }
+			 * ```
+			 */
+			reconnectAll: () => Promise<void>;
 		};
 
 	export interface RequestEvent<
@@ -2110,7 +2128,9 @@ declare module '@sveltejs/kit' {
 
 	export type RemoteQueryUpdate =
 		| RemoteQuery<any>
+		| RemoteLiveQuery<any>
 		| RemoteQueryFunction<any, any>
+		| RemoteLiveQueryFunction<any, any>
 		| RemoteQueryOverride;
 
 	export type RemoteResource<T> = Promise<T> & {
@@ -3276,7 +3296,7 @@ declare module '$app/paths' {
 }
 
 declare module '$app/server' {
-	import type { RequestEvent, RemoteCommand, RemoteForm, RemoteFormInput, InvalidField, RemotePrerenderFunction, RemoteQueryFunction, RemoteLiveQueryFunction, RequestedResult } from '@sveltejs/kit';
+	import type { RequestEvent, RemoteCommand, RemoteForm, RemoteFormInput, InvalidField, RemotePrerenderFunction, RemoteQueryFunction, RemoteLiveQueryFunction, QueryRequestedResult, LiveQueryRequestedResult } from '@sveltejs/kit';
 	import type { StandardSchemaV1 } from '@standard-schema/spec';
 	/**
 	 * Read the contents of an imported asset from the filesystem
@@ -3453,14 +3473,48 @@ declare module '$app/server' {
 	 *
 	 * As a shorthand for the above, you can also call `refreshAll` on the result:
 	 *
+	 * @example
 	 * ```ts
 	 * import { requested } from '$app/server';
 	 *
 	 * await requested(getPost, 5).refreshAll();
 	 * ```
 	 *
+	 * For live queries, the same applies, but with `reconnect` and `reconnectAll`.
+	 *
 	 * */
-	export function requested<Input, Output>(query: RemoteQueryFunction<Input, Output>, limit?: number): RequestedResult<Input>;
+	export function requested<Input, Output>(query: RemoteQueryFunction<Input, Output>, limit?: number | undefined): QueryRequestedResult<Input>;
+	/**
+	 * In the context of a remote `command` or `form` request, returns an iterable
+	 * of the client-requested refreshes' validated arguments up to the supplied limit.
+	 * Arguments that fail validation or exceed the limit are recorded as failures in
+	 * the response to the client.
+	 *
+	 * @example
+	 * ```ts
+	 * import { requested } from '$app/server';
+	 *
+	 * for (const arg of requested(getPost, 5)) {
+	 * 	// it's safe to throw away this promise -- SvelteKit
+	 * 	// will await it for us and handle any errors by sending
+	 * 	// them to the client.
+	 * 	void getPost(arg).refresh();
+	 * }
+	 * ```
+	 *
+	 * As a shorthand for the above, you can also call `refreshAll` on the result:
+	 *
+	 * @example
+	 * ```ts
+	 * import { requested } from '$app/server';
+	 *
+	 * await requested(getPost, 5).refreshAll();
+	 * ```
+	 *
+	 * For live queries, the same applies, but with `reconnect` and `reconnectAll`.
+	 *
+	 * */
+	export function requested<Input, Output>(query: RemoteLiveQueryFunction<Input, Output>, limit?: number | undefined): LiveQueryRequestedResult<Input>;
 	type RemotePrerenderInputsGenerator<Input = any> = () => MaybePromise<Input[]>;
 	type MaybePromise<T> = T | Promise<T>;
 

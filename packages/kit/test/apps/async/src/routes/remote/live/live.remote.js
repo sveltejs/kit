@@ -1,10 +1,11 @@
-import { command, form, getRequestEvent, query } from '$app/server';
+import { command, form, getRequestEvent, query, requested } from '$app/server';
 
 let count = 0;
 let drop_next = false;
 let active_connections = 0;
 let cleanup_count = 0;
 let finite_connection_count = 0;
+let requested_reconnect_count = 0;
 
 /** @type {Set<() => void>} */
 const listeners = new Set();
@@ -107,6 +108,11 @@ export const reconnect_live = command(() => {
 	get_count().reconnect();
 });
 
+export const reconnect_requested_live = command(async () => {
+	await requested(get_count).reconnectAll();
+	requested_reconnect_count += 1;
+});
+
 export const reconnect_live_form = form('unchecked', async () => {
 	get_count().reconnect();
 });
@@ -116,6 +122,7 @@ export const get_stats = query(() => {
 		active_connections,
 		cleanup_count,
 		finite_connection_count,
+		requested_reconnect_count,
 		count
 	};
 });

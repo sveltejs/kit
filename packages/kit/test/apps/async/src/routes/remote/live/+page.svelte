@@ -4,7 +4,9 @@
 		increment,
 		reset,
 		drop,
+		get_count,
 		reconnect_live,
+		reconnect_requested_live,
 		reconnect_live_form,
 		notify_only,
 		get_stats
@@ -24,6 +26,9 @@
 <button id="notify-only" onclick={() => notify_only()}>notify only</button>
 <button id="drop" onclick={() => drop()}>drop connection</button>
 <button id="reconnect-live" onclick={() => reconnect_live()}>reconnect live query</button>
+<button id="reconnect-live-requested" onclick={() => reconnect_requested_live().updates(get_count)}>
+	reconnect requested live queries
+</button>
 <form {...reconnect_live_form.enhance(async ({ submit }) => await submit())}>
 	<button id="reconnect-live-form" type="submit">reconnect live query (form)</button>
 </form>

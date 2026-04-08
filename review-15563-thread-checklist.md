@@ -102,7 +102,7 @@ Use this section to rehydrate context when starting a fresh session for any indi
     - Result: drafted new subsection under single-flight mutations with a `form` example calling `getNotifications(user_id).reconnect()` and explanatory text.
     - User approval: approved.
 
-- [ ] `3034720898` (`PRRT_kwDOEiPr8c54zWt5`) — `packages/kit/src/runtime/client/remote-functions/form.svelte.js:243`
+- [x] `3034720898` (`PRRT_kwDOEiPr8c54zWt5`) — `packages/kit/src/runtime/client/remote-functions/form.svelte.js:243`
   - Align reconnect behavior with `invalidateAll`.
   - Expected direction from thread: yes to reconnecting live queries when invalidating, and yes to suppressing default invalidate-all when explicit reconnect handling is present.
   - **Thread Session Template**
@@ -111,18 +111,18 @@ Use this section to rehydrate context when starting a fresh session for any indi
   - Touched files: `packages/kit/src/runtime/client/remote-functions/form.svelte.js`, `packages/kit/src/runtime/client/client.js`, `packages/kit/test/apps/async/src/routes/remote/live/live.remote.js`, `packages/kit/test/apps/async/src/routes/remote/live/+page.svelte`, `packages/kit/test/apps/async/test/client.test.js`.
   - Tests run: `npx playwright test --grep "form reconnect updates targeted live query"` in `packages/kit/test/apps/async` (passed in build mode; no-js variant skipped as expected for this client behavior test).
   - Result: drafted runtime changes plus a regression test proving form-driven reconnect targets only requested live queries and does not trigger global live-query reconnects via fallback invalidation.
-  - User approval: pending.
+  - User approval: approved.
 
 - [ ] `3034727047` (`PRRT_kwDOEiPr8c54zX6V`) — `packages/kit/src/runtime/client/remote-functions/query.svelte.js:95`
   - Ensure single-flight updates support `updates(live_query_function)` and integration path for `requested(live_query, ...)`.
   - Depends heavily on `31c750460` architecture (two-tier cache + symbol metadata).
   - **Thread Session Template**
-    - Goal:
-    - Scope guardrails:
-    - Touched files:
-    - Tests run:
-    - Result:
-    - User approval:
+    - Goal: support `updates(live_query_function)` in command/form single-flight updates and ensure server-side `requested(live_query, ...)` can consume those requested keys.
+    - Scope guardrails: keep changes within update categorization, live-query metadata wiring, and focused async app regression coverage.
+    - Touched files: `packages/kit/src/runtime/client/remote-functions/query.svelte.js`, `packages/kit/src/runtime/client/remote-functions/shared.svelte.js`, `packages/kit/test/apps/async/src/routes/remote/live/live.remote.js`, `packages/kit/test/apps/async/src/routes/remote/live/+page.svelte`, `packages/kit/test/apps/async/test/client.test.js`.
+    - Tests run: `npx playwright test --grep "command updates(live_query_function) can request reconnect via requested(...).reconnectAll"` in `packages/kit/test/apps/async` (build mode passed; no-js variant skipped).
+    - Result: in progress — live query functions now carry function-id metadata, update categorization resolves both query/live active instances by id, and async app fixture adds command+UI path for `requested(get_count).reconnectAll()` driven by `updates(get_count)`.
+    - User approval: pending.
 
 - [ ] `3034730253` (`PRRT_kwDOEiPr8c54zYhn`) — `packages/kit/src/runtime/client/remote-functions/query.svelte.js:443`
   - Validate correctness of current control flow (edge case around early redirect/auth guard patterns in live query generators).
