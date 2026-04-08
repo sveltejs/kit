@@ -1452,7 +1452,9 @@ export interface Page<
  */
 export type ParamMatcher = (param: string) => boolean;
 
-export type RequestedResult<T> = Iterable<T> &
+export type RequestedResult<T> = QueryRequestedResult<T> | LiveQueryRequestedResult<T>;
+
+export type QueryRequestedResult<T> = Iterable<T> &
 	AsyncIterable<T> & {
 		/**
 		 * Call `refresh` on all queries selected by this `requested` invocation.
@@ -1466,6 +1468,22 @@ export type RequestedResult<T> = Iterable<T> &
 		 * ```
 		 */
 		refreshAll: () => Promise<void>;
+	};
+
+export type LiveQueryRequestedResult<T> = Iterable<T> &
+	AsyncIterable<T> & {
+		/**
+		 * Call `reconnect` on all live queries selected by this `requested` invocation.
+		 * This is identical to:
+		 * ```ts
+		 * import { requested } from '$app/server';
+		 *
+		 * for await (const arg of requested(query, ...)) {
+		 *   query(arg).reconnect();
+		 * }
+		 * ```
+		 */
+		reconnectAll: () => Promise<void>;
 	};
 
 export interface RequestEvent<
@@ -2136,7 +2154,9 @@ export type RemoteCommand<Input, Output> = {
 
 export type RemoteQueryUpdate =
 	| RemoteQuery<any>
+	| RemoteLiveQuery<any>
 	| RemoteQueryFunction<any, any>
+	| RemoteLiveQueryFunction<any, any>
 	| RemoteQueryOverride;
 
 export type RemoteResource<T> = Promise<T> & {

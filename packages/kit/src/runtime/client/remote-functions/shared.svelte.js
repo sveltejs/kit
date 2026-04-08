@@ -81,10 +81,10 @@ export function categorize_updates(updates) {
 		if (typeof update === 'function') {
 			if (Object.hasOwn(update, QUERY_FUNCTION_ID)) {
 				// this is a query function (not instance), so we need to find all active instances
-				// of this functionand request that they be refreshed by the command handler
+				// of this function and request that they be refreshed/reconnected by the command handler
 				// @ts-expect-error
 				const id = /** @type {string} */ (update[QUERY_FUNCTION_ID]);
-				const entries = query_map.get(id);
+				const entries = query_map.get(id) ?? live_query_map.get(id);
 
 				if (entries) {
 					for (const payload of entries.keys()) {
@@ -112,6 +112,10 @@ export function categorize_updates(updates) {
 				overrides.push(/** @type {() => void} */ (update));
 				continue;
 			}
+
+			// this is just a regular function provided by some user integration, so we can just stash it in the overrides array
+			overrides.push(/** @type {() => void} */ (update));
+			continue;
 		}
 
 		if (
@@ -125,7 +129,9 @@ export function categorize_updates(updates) {
 			continue;
 		}
 
-		throw new Error('updates() expects a query function, query resource, or query override');
+		throw new Error(
+			'updates() expects a query orlive query function, query resource, or query override'
+		);
 	}
 
 	return { overrides, refreshes };
@@ -157,6 +163,7 @@ export function apply_refreshes(stringified_refreshes) {
 /** @param {string[]} reconnects */
 export function reconnect_live_queries(reconnects) {
 	for (const key of reconnects) {
-		live_query_map.get(key)?.resource.reconnect();
+		const parts = split_remote_key(key);
+		live_query_map.get(parts.id)?.get(parts.payload)?.resource.reconnect();
 	}
 }

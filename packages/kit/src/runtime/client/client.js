@@ -307,8 +307,8 @@ export let pending_invalidate;
 export const query_map = new Map();
 
 /**
- * @type {Map<string, RemoteLiveQueryCacheEntry<any>>}
- * A map of id -> live query info with all live queries that currently exist in the app.
+ * @type {Map<string, Map<string, RemoteLiveQueryCacheEntry<any>>>}
+ * A map of id -> payload -> live query internals for all active queries.
  */
 export const live_query_map = new Map();
 
@@ -419,12 +419,14 @@ async function _invalidate(include_load_functions = true, reset_page_state = tru
 	if (force_invalidation) {
 		query_map.forEach((entries) => {
 			entries.forEach(({ resource }) => {
-				void resource.refresh?.();
+				void resource.refresh();
 			});
 		});
 
-		live_query_map.forEach(({ resource }) => {
-			resource.reconnect();
+		live_query_map.forEach((entries) => {
+			entries.forEach(({ resource }) => {
+				void resource.reconnect();
+			});
 		});
 	}
 
@@ -460,6 +462,8 @@ async function _invalidate(include_load_functions = true, reset_page_state = tru
 			[...entries.values()].map(({ resource }) => resource)
 		)
 	).catch(noop);
+
+	// TODO how do we do this with live query reconnects
 }
 
 function reset_invalidation() {
@@ -496,8 +500,10 @@ function persist_state() {
  * @param {{}} [nav_token]
  */
 export async function _goto(url, options, redirect_count, nav_token) {
-	/** @type {string[]} */
+	/** @type {Set<string>} */
 	let query_keys;
+	/** @type {Set<string>} */
+	let live_query_keys;
 
 	// Clear preload cache when invalidateAll is true to ensure fresh data
 	// after form submissions or explicit invalidations
@@ -517,10 +523,16 @@ export async function _goto(url, options, redirect_count, nav_token) {
 		accept: () => {
 			if (options.invalidateAll) {
 				force_invalidation = true;
-				query_keys = [];
+				query_keys = new Set();
 				query_map.forEach((entries, id) => {
 					for (const payload of entries.keys()) {
-						query_keys.push(id + '/' + payload);
+						query_keys.add(id + '/' + payload);
+					}
+				});
+				live_query_keys = new Set();
+				live_query_map.forEach((entries, id) => {
+					for (const payload of entries.keys()) {
+						live_query_keys.add(id + '/' + payload);
 					}
 				});
 			}
@@ -540,8 +552,15 @@ export async function _goto(url, options, redirect_count, nav_token) {
 			.then(() => {
 				query_map.forEach((entries, id) => {
 					entries.forEach(({ resource }, payload) => {
-						if (query_keys?.includes(id + '/' + payload)) {
+						if (query_keys?.has(id + '/' + payload)) {
 							void resource.refresh?.();
+						}
+					});
+				});
+				live_query_map.forEach((entries, id) => {
+					entries.forEach(({ resource }, payload) => {
+						if (live_query_keys?.has(id + '/' + payload)) {
+							void resource.reconnect?.();
 						}
 					});
 				});

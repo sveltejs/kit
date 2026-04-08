@@ -502,6 +502,69 @@ test.describe('remote function mutations', () => {
 		await expect(page.locator('#connected')).toHaveText('true');
 	});
 
+	test('command updates(live_query_function) can request reconnect via requested(...).reconnectAll', async ({
+		page
+	}) => {
+		await page.goto('/remote/live');
+		await page.click('#reset');
+		await expect(page.locator('#connected')).toHaveText('true');
+
+		await page.click('#stats');
+		await expect(page.locator('#stats-value')).not.toHaveText('pending');
+		const before = JSON.parse((await page.locator('#stats-value').textContent()) ?? '{}');
+
+		let sent_refreshes = 0;
+		/** @type {string | null} */
+		let first_refresh = null;
+		let reconnect_command_requests = 0;
+		/** @type {string[]} */
+		const page_errors = [];
+		page.on('pageerror', (error) => {
+			page_errors.push(String(error));
+		});
+		page.on('request', (request) => {
+			if (!request.url().includes('/_app/remote/')) return;
+			if (request.method() !== 'POST') return;
+			if (request.url().includes('reconnect_requested_live')) {
+				reconnect_command_requests += 1;
+			}
+
+			const body = request.postDataJSON();
+			if (Array.isArray(body?.refreshes)) {
+				sent_refreshes += body.refreshes.length;
+				if (!first_refresh && body.refreshes[0]) first_refresh = body.refreshes[0];
+			}
+		});
+		const [response] = await Promise.all([
+			page.waitForResponse((response) => response.url().includes('reconnect_requested_live')),
+			page.click('#reconnect-live-requested')
+		]);
+		const reconnect_response = await response.text();
+		expect(page_errors).toEqual([]);
+		expect(reconnect_command_requests).toBeGreaterThan(0);
+		expect(reconnect_response).toContain('"type":"result"');
+		expect(sent_refreshes).toBeGreaterThan(0);
+		expect(first_refresh?.includes('/')).toBe(true);
+
+		await expect
+			.poll(async () => {
+				await page.click('#stats');
+				const value = (await page.locator('#stats-value').textContent()) ?? '{}';
+				if (value === 'pending') return 0;
+				return JSON.parse(value).requested_reconnect_count;
+			})
+			.toBeGreaterThan(0);
+
+		await expect
+			.poll(async () => {
+				await page.click('#stats');
+				const value = (await page.locator('#stats-value').textContent()) ?? '{}';
+				if (value === 'pending') return before.cleanup_count;
+				return JSON.parse(value).cleanup_count;
+			})
+			.toBeGreaterThan(before.cleanup_count);
+	});
+
 	test('form reconnect updates targeted live query without reconnecting all live queries', async ({
 		page
 	}) => {

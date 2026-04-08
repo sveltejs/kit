@@ -1,5 +1,5 @@
-/** @import { RemoteQueryFunction, RequestedResult } from '@sveltejs/kit' */
-/** @import { MaybePromise, RemoteQueryInternals } from 'types' */
+/** @import { RemoteLiveQueryFunction, RemoteQueryFunction, RequestedResult, QueryRequestedResult, LiveQueryRequestedResult, RemoteLiveQuery, RemoteQuery } from '@sveltejs/kit' */
+/** @import { MaybePromise, RemoteQueryInternals, RemoteQueryLiveInternals, RequestState } from 'types' */
 import { get_request_store } from '@sveltejs/kit/internal/server';
 import { create_remote_key, parse_remote_arg } from '../../../shared.js';
 import { mark_argument_validated } from './query.js';
@@ -24,29 +24,109 @@ import { mark_argument_validated } from './query.js';
  *
  * As a shorthand for the above, you can also call `refreshAll` on the result:
  *
+ * @example
  * ```ts
  * import { requested } from '$app/server';
  *
  * await requested(getPost, 5).refreshAll();
  * ```
  *
+ * For live queries, the same applies, but with `reconnect` and `reconnectAll`.
+ *
  * @template Input
  * @template Output
+ * @overload
  * @param {RemoteQueryFunction<Input, Output>} query
+ * @param {number} [limit=Infinity]
+ * @returns {QueryRequestedResult<Input>}
+ */
+/**
+ * In the context of a remote `command` or `form` request, returns an iterable
+ * of the client-requested refreshes' validated arguments up to the supplied limit.
+ * Arguments that fail validation or exceed the limit are recorded as failures in
+ * the response to the client.
+ *
+ * @example
+ * ```ts
+ * import { requested } from '$app/server';
+ *
+ * for (const arg of requested(getPost, 5)) {
+ * 	// it's safe to throw away this promise -- SvelteKit
+ * 	// will await it for us and handle any errors by sending
+ * 	// them to the client.
+ * 	void getPost(arg).refresh();
+ * }
+ * ```
+ *
+ * As a shorthand for the above, you can also call `refreshAll` on the result:
+ *
+ * @example
+ * ```ts
+ * import { requested } from '$app/server';
+ *
+ * await requested(getPost, 5).refreshAll();
+ * ```
+ *
+ * For live queries, the same applies, but with `reconnect` and `reconnectAll`.
+ *
+ * @template Input
+ * @template Output
+ * @overload
+ * @param {RemoteLiveQueryFunction<Input, Output>} query
+ * @param {number} [limit=Infinity]
+ * @returns {LiveQueryRequestedResult<Input>}
+ */
+/**
+ * In the context of a remote `command` or `form` request, returns an iterable
+ * of the client-requested refreshes' validated arguments up to the supplied limit.
+ * Arguments that fail validation or exceed the limit are recorded as failures in
+ * the response to the client.
+ *
+ * @example
+ * ```ts
+ * import { requested } from '$app/server';
+ *
+ * for (const arg of requested(getPost, 5)) {
+ * 	// it's safe to throw away this promise -- SvelteKit
+ * 	// will await it for us and handle any errors by sending
+ * 	// them to the client.
+ * 	void getPost(arg).refresh();
+ * }
+ * ```
+ *
+ * As a shorthand for the above, you can also call `refreshAll` on the result:
+ *
+ * @example
+ * ```ts
+ * import { requested } from '$app/server';
+ *
+ * await requested(getPost, 5).refreshAll();
+ * ```
+ *
+ * For live queries, the same applies, but with `reconnect` and `reconnectAll`.
+ *
+ * @template Input
+ * @template Output
+ * @param {RemoteQueryFunction<Input, Output> | RemoteLiveQueryFunction<Input, Output>} query
  * @param {number} [limit=Infinity]
  * @returns {RequestedResult<Input>}
  */
 export function requested(query, limit = Infinity) {
 	const { state } = get_request_store();
-	const internals = /** @type {RemoteQueryInternals | undefined} */ (/** @type {any} */ (query).__);
+	const internals = /** @type {RemoteQueryInternals | RemoteQueryLiveInternals | undefined} */ (
+		/** @type {any} */ (query).__
+	);
 
-	if (!internals || internals.type !== 'query') {
-		throw new Error('requested(...) expects a query function created with query(...)');
+	if (!internals || (internals.type !== 'query' && internals.type !== 'query_live')) {
+		throw new Error(
+			'requested(...) expects a query function created with query(...) or query.live(...)'
+		);
 	}
 
 	const requested = state.remote.requested;
 	const payloads = requested?.get(internals.id) ?? [];
-	const refreshes = (state.remote.refreshes ??= {});
+	const refreshes = (state.remote.refreshes ??= new Map());
+	const reconnects = (state.remote.reconnects ??= new Set());
 	const [selected, skipped] = split_limit(payloads, limit);
 
 	/**
@@ -58,7 +138,11 @@ export function requested(query, limit = Infinity) {
 		promise.catch(() => {});
 
 		const key = create_remote_key(internals.id, payload);
-		refreshes[key] = promise;
+		if (internals.type === 'query') {
+			refreshes.set(key, promise);
+		} else {
+			reconnects.add(key);
+		}
 	};
 
 	for (const payload of skipped) {
@@ -104,8 +188,21 @@ export function requested(query, limit = Infinity) {
 			});
 		},
 		async refreshAll() {
+			if (internals.type !== 'query') {
+				throw new Error('refreshAll() is invalid for live queries. Use reconnectAll() instead.');
+			}
+
 			for await (const arg of this) {
-				void query(arg).refresh();
+				void (/** @type {RemoteQuery<Output>} */ (query(arg)).refresh());
+			}
+		},
+		async reconnectAll() {
+			if (internals.type !== 'query_live') {
+				throw new Error('reconnectAll() is invalid for regular queries. Use refreshAll() instead.');
+			}
+
+			for await (const arg of this) {
+				/** @type {RemoteLiveQuery<Output>} */ (query(arg)).reconnect();
 			}
 		}
 	};

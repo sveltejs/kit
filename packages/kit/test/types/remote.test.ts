@@ -214,12 +214,17 @@ prerender_tests();
 function command_tests() {
 	async function command_without_args() {
 		const q = query(() => '');
+		const lq = query.live(async function* () {
+			yield '';
+		});
 		const cmd = command(() => 'Hello world');
 		const result: string = await cmd();
 		result;
 		const result2: string = await cmd().updates(
 			q,
+			lq,
 			q(),
+			lq(),
 			q().withOverride(() => '')
 		);
 		result2;
@@ -245,6 +250,10 @@ function command_tests() {
 		const refreshes = requested(q);
 		const refreshed: Promise<void> = refreshes.refreshAll();
 		refreshed;
+
+		const reconnects = requested(lq);
+		const reconnected: Promise<void> = reconnects.reconnectAll();
+		reconnected;
 	}
 	void command_without_args();
 

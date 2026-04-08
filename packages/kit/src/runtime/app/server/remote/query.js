@@ -96,7 +96,7 @@ function is_validated_argument(__, state, arg) {
 }
 
 /**
- * @param {RemoteQueryInternals} __
+ * @param {RemoteQueryInternals | RemoteQueryLiveInternals} __
  * @param {RequestState} state
  * @param {any} arg
  */
@@ -170,7 +170,7 @@ function live(validate_or_fn, maybe_fn) {
 	};
 
 	/** @type {RemoteQueryLiveInternals} */
-	const __ = { type: 'query_live', id: '', name: '', run };
+	const __ = { type: 'query_live', id: '', name: '', run, validate };
 
 	/** @type {RemoteLiveQueryFunction<Input, Output> & { __: RemoteQueryLiveInternals }} */
 	const wrapper = (arg) => {
@@ -520,7 +520,7 @@ function to_async_iterator(source, name) {
  * @param {RemoteInternals} __
  * @param {'set' | 'refresh'} action
  * @param {any} [arg]
- * @returns {{ __: RemoteInternals; state: any; refreshes: Record<string, Promise<any>>; cache: Record<string, { serialize: boolean; data: any }>; refreshes_key: string; cache_key: string }}
+ * @returns {{ __: RemoteInternals; state: any; refreshes: Map<string, Promise<any>>; cache: Record<string, { serialize: boolean; data: any }>; refreshes_key: string; cache_key: string }}
  */
 function get_refresh_context(__, action, arg) {
 	const { state } = get_request_store();
@@ -541,7 +541,7 @@ function get_refresh_context(__, action, arg) {
 }
 
 /**
- * @param {{ __: RemoteInternals; refreshes: Record<string, Promise<any>>; cache: Record<string, { serialize: boolean; data: any }>; refreshes_key: string; cache_key: string }} context
+ * @param {{ __: RemoteInternals; refreshes: Map<string, Promise<any>>; cache: Record<string, { serialize: boolean; data: any }>; refreshes_key: string; cache_key: string }} context
  * @param {any} value
  * @param {boolean} [is_immediate_refresh=false]
  * @returns {Promise<void>}
@@ -558,7 +558,7 @@ function update_refresh_value(
 	}
 
 	if (__.id) {
-		refreshes[refreshes_key] = promise;
+		refreshes.set(refreshes_key, promise);
 	}
 
 	return promise.then(

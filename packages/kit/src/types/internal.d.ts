@@ -598,6 +598,7 @@ export interface RemoteQueryInternals extends BaseRemoteInternals {
 }
 export interface RemoteQueryLiveInternals extends BaseRemoteInternals {
 	type: 'query_live';
+	validate: (arg?: any) => MaybePromise<any>;
 	run(event: RequestEvent, state: RequestState, arg: any): Promise<AsyncIterator<any>>;
 }
 
@@ -659,7 +660,7 @@ export interface RequestState {
 			Record<string, { serialize: boolean; data: MaybePromise<any> }>
 		>;
 		forms: null | Map<any, any>;
-		refreshes: null | Record<string, Promise<any>>;
+		refreshes: null | Map<string, Promise<any>>;
 		reconnects: null | Set<string>;
 		requested: null | Map<string, string[]>;
 		validated: null | Map<string, Set<any>>;

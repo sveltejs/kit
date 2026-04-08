@@ -57,8 +57,7 @@ export function query(id) {
 
 		if (entries) {
 			for (const entry of entries.values()) {
-				// use optional chaining in case a prerender function was turned into a query
-				void entry.resource.refresh?.();
+				void entry.resource.refresh();
 			}
 		}
 	}
@@ -87,14 +86,23 @@ export function query(id) {
  */
 export function query_live(id) {
 	if (DEV) {
-		for (const [key, entry] of live_query_map) {
-			if (key === id || key.startsWith(id + '/')) {
+		// If this reruns as part of HMR, refresh the query
+		const entries = live_query_map.get(id);
+
+		if (entries) {
+			for (const entry of entries.values()) {
+				// use optional chaining in case a prerender function was turned into a query
 				void entry.resource.reconnect();
 			}
 		}
 	}
 
-	return (arg) => new LiveQueryProxy(id, arg);
+	/** @type {RemoteLiveQueryFunction<any, any>} */
+	const wrapper = (arg) => new LiveQueryProxy(id, arg);
+
+	Object.defineProperty(wrapper, QUERY_FUNCTION_ID, { value: id });
+
+	return wrapper;
 }
 
 /**
@@ -1085,7 +1093,7 @@ class QueryProxy {
  * @implements {Promise<T>}
  */
 class LiveQueryProxy {
-	_key;
+	#key;
 	#id;
 	#payload;
 	#active = true;
@@ -1098,7 +1106,8 @@ class LiveQueryProxy {
 	constructor(id, arg) {
 		this.#id = id;
 		this.#payload = stringify_remote_arg(arg, app.hooks.transport);
-		this._key = create_remote_key(id, this.#payload);
+		this.#key = create_remote_key(id, this.#payload);
+		Object.defineProperty(this, QUERY_RESOURCE_KEY, { value: this.#key });
 
 		if (!this.#tracking) {
 			this.#active = false;
@@ -1116,25 +1125,32 @@ class LiveQueryProxy {
 
 	/** @returns {RemoteLiveQueryCacheEntry<T>} */
 	#get_or_create_cache_entry() {
-		let cached = live_query_map.get(this._key);
+		let query_instances = live_query_map.get(this.#id);
 
-		if (!cached) {
-			const c = (cached = {
+		if (!query_instances) {
+			query_instances = new Map();
+			live_query_map.set(this.#id, query_instances);
+		}
+
+		let this_instance = query_instances.get(this.#payload);
+
+		if (!this_instance) {
+			const c = (this_instance = {
 				count: 0,
 				resource: /** @type {LiveQuery<T>} */ (/** @type {unknown} */ (null)),
 				cleanup: /** @type {() => void} */ (/** @type {unknown} */ (null))
 			});
 
 			c.cleanup = $effect.root(() => {
-				c.resource = new LiveQuery(this.#id, this._key, this.#payload);
+				c.resource = new LiveQuery(this.#id, this.#key, this.#payload);
 			});
 
-			live_query_map.set(this._key, cached);
+			query_instances.set(this.#payload, this_instance);
 		}
 
-		cached.count += 1;
+		this_instance.count += 1;
 
-		return /** @type {RemoteLiveQueryCacheEntry<T>} */ (cached);
+		return this_instance;
 	}
 
 	/**
@@ -1146,12 +1162,18 @@ class LiveQueryProxy {
 		entry.count -= 1;
 
 		return () => {
-			const cached = live_query_map.get(this._key);
-			if (cached?.count === 0) {
-				cached.resource.disconnect();
-				cached.resource.destroy();
-				cached.cleanup();
-				live_query_map.delete(this._key);
+			const query_instances = live_query_map.get(this.#id);
+			const this_instance = query_instances?.get(this.#payload);
+
+			if (this_instance?.count === 0) {
+				this_instance.resource.disconnect();
+				this_instance.resource.destroy();
+				this_instance.cleanup();
+				query_instances?.delete(this.#payload);
+			}
+
+			if (query_instances?.size === 0) {
+				live_query_map.delete(this.#id);
 			}
 		};
 	}
@@ -1170,7 +1192,7 @@ class LiveQueryProxy {
 			);
 		}
 
-		const cached = live_query_map.get(this._key);
+		const cached = live_query_map.get(this.#id)?.get(this.#payload);
 
 		if (!cached) {
 			throw new Error(
@@ -1182,7 +1204,7 @@ class LiveQueryProxy {
 	}
 
 	#safe_get_cached_query() {
-		return live_query_map.get(this._key)?.resource;
+		return live_query_map.get(this.#id)?.get(this.#payload)?.resource;
 	}
 
 	get current() {
