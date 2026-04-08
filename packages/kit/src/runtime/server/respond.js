@@ -55,8 +55,6 @@ const page_methods = new Set(['GET', 'HEAD', 'POST']);
 
 const allowed_page_methods = new Set(['GET', 'HEAD', 'OPTIONS']);
 
-let warned_on_devtools_json_request = false;
-
 export const respond = propagate_context(internal_respond);
 
 /**
@@ -149,7 +147,22 @@ export async function internal_respond(request, options, manifest, state) {
 		tracing: {
 			record_span
 		},
-		is_in_remote_function: false
+		remote: {
+			data: null,
+			forms: null,
+			/** A map of remote function key to corresponding single-flight-mutation promise */
+			refreshes: null,
+			/** A map of remote function ID to payloads requested for refreshing by the client */
+			requested: null,
+			/**
+			 * A map of remote function ID to objects that have passed validation;
+			 * used to prevent revalidating parameters returned from `requested`
+			 */
+			validated: null
+		},
+		is_in_remote_function: false,
+		is_in_render: false,
+		is_in_universal_load: false
 	};
 
 	/** @type {import('@sveltejs/kit').RequestEvent} */
@@ -419,6 +432,7 @@ export async function internal_respond(request, options, manifest, state) {
 						current: root_span
 					}
 				};
+
 				return await with_request_store({ event: traced_event, state: event_state }, () =>
 					options.hooks.handle({
 						event: traced_event,
@@ -660,21 +674,6 @@ export async function internal_respond(request, options, manifest, state) {
 			// if this request came direct from the user, rather than
 			// via our own `fetch`, render a 404 page
 			if (state.depth === 0) {
-				// In local development, Chrome requests this file for its 'automatic workspace folders' feature,
-				// causing console spam. If users want to serve this file they can install
-				// https://svelte.dev/docs/cli/devtools-json
-				if (DEV && event.url.pathname === '/.well-known/appspecific/com.chrome.devtools.json') {
-					if (!warned_on_devtools_json_request) {
-						console.log(
-							`\nGoogle Chrome is requesting ${event.url.pathname} to automatically configure devtools project settings. To learn why, and how to prevent this message, see https://svelte.dev/docs/cli/devtools-json\n`
-						);
-
-						warned_on_devtools_json_request = true;
-					}
-
-					return new Response(undefined, { status: 404 });
-				}
-
 				return await respond_with_error({
 					event,
 					event_state,

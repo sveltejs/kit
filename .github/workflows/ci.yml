@@ -4,7 +4,24 @@ on:
   push:
     branches:
       - main
+    paths-ignore: &paths_ignore
+      - '.changeset/**'
+      - '.githooks/**'
+      - '.github/ISSUE_TEMPLATE/**'
+      - '.github/copilot-instructions.md'
+      - '.github/FUNDING.yml'
+      - '.github/PULL_REQUEST_TEMPLATE.md'
+      - 'documentation/**'
+      - 'packages/*/CHANGELOG*.md'
+      - 'packages/kit/src/types/synthetic/**'
+      - 'AGENTS.md'
+      - 'CLAUDE.md'
+      - 'CONTRIBUTING.md'
+      - 'FUNDING.json'
+      - 'LICENSE'
+      - 'README.md'
   pull_request:
+    paths-ignore: *paths_ignore
 
 env:
   # we call `pnpm playwright install` instead
@@ -23,7 +40,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - uses: pnpm/action-setup@v4.2.0
+      - uses: pnpm/action-setup@v5.0.0
       - uses: actions/setup-node@v6
         with:
           node-version: 24
@@ -35,7 +52,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - uses: pnpm/action-setup@v4.2.0
+      - uses: pnpm/action-setup@v5.0.0
       - uses: actions/setup-node@v6
         with:
           node-version: 24
@@ -77,7 +94,7 @@ jobs:
     steps:
       - run: git config --global core.autocrlf false
       - uses: actions/checkout@v6
-      - uses: pnpm/action-setup@v4.2.0
+      - uses: pnpm/action-setup@v5.0.0
       - uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node-version }}
@@ -85,7 +102,8 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - name: setup overrides for matrix.vite
         if: matrix.vite != 'current'
-        run: | # copies catalogs.vite-xxx to overrides in pnpm-workspace.yaml so the subsequent `pnpm install` enforces them
+        run:
+          | # copies catalogs.vite-xxx to overrides in pnpm-workspace.yaml so the subsequent `pnpm install` enforces them
           yq -i '.overrides =.catalogs."vite-${{matrix.vite}}"' pnpm-workspace.yaml
           pnpm install --no-frozen-lockfile
           git checkout pnpm-lock.yaml pnpm-workspace.yaml # revert changes to pnpm files to avoid cache key changes
@@ -103,7 +121,7 @@ jobs:
         run: find packages -type d -name test-results -not -empty | tar -czf test-results.tar.gz --files-from=-
       - name: Upload test results
         if: failure()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           retention-days: 3
           name: test-failure-${{ github.run_id }}-${{ matrix.os }}-${{ matrix.node-version }}-${{ matrix.e2e-browser }}-vite-${{matrix.vite}}
@@ -144,7 +162,7 @@ jobs:
     steps:
       - run: git config --global core.autocrlf false
       - uses: actions/checkout@v6
-      - uses: pnpm/action-setup@v4.2.0
+      - uses: pnpm/action-setup@v5.0.0
       - uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node-version }}
@@ -161,7 +179,7 @@ jobs:
         run: find packages -type d -name test-results -not -empty | tar -czf test-results-cross-platform-${{ matrix.mode }}.tar.gz --files-from=-
       - name: Upload test results
         if: failure()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           retention-days: 3
           name: test-failure-cross-platform-${{ matrix.mode }}-${{ github.run_id }}-${{ matrix.os }}-${{ matrix.node-version }}-${{ matrix.e2e-browser }}
@@ -178,7 +196,7 @@ jobs:
     steps:
       - run: git config --global core.autocrlf false
       - uses: actions/checkout@v6
-      - uses: pnpm/action-setup@v4.2.0
+      - uses: pnpm/action-setup@v5.0.0
       - uses: actions/setup-node@v6
         with:
           node-version: 24
@@ -195,7 +213,7 @@ jobs:
         run: find packages -type d -name test-results -not -empty | tar -czf test-results-server-side-route-resolution-${{ matrix.mode }}.tar.gz --files-from=-
       - name: Upload test results
         if: failure()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           retention-days: 3
           name: test-failure-server-side-route-resolution-${{ matrix.mode }}-${{ github.run_id }}
@@ -212,7 +230,7 @@ jobs:
     steps:
       - run: git config --global core.autocrlf false
       - uses: actions/checkout@v6
-      - uses: pnpm/action-setup@v4.2.0
+      - uses: pnpm/action-setup@v5.0.0
       - uses: actions/setup-node@v6
         with:
           node-version: 24
@@ -229,7 +247,7 @@ jobs:
         run: find packages -type d -name test-results -not -empty | tar -czf test-results-svelte-async-${{ matrix.mode }}.tar.gz --files-from=-
       - name: Upload test results
         if: failure()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           retention-days: 3
           name: test-failure-svelte-async-${{ matrix.mode }}-${{ github.run_id }}
@@ -241,7 +259,7 @@ jobs:
         node-version: [18, 20, 22, 24]
     steps:
       - uses: actions/checkout@v6
-      - uses: pnpm/action-setup@v4.2.0
+      - uses: pnpm/action-setup@v5.0.0
       - uses: actions/setup-node@v6
         with:
           node-version: ${{matrix.node-version}}
@@ -253,7 +271,8 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - name: setup overrides for matrix.node
         if: matrix.node-version == 18
-        run: | # copies catalogs.node-xx to overrides in pnpm-workspace.yaml so the subsequent `pnpm install` enforces them
+        run:
+          | # copies catalogs.node-xx to overrides in pnpm-workspace.yaml so the subsequent `pnpm install` enforces them
           yq -i '.overrides =.catalogs."node-18"' pnpm-workspace.yaml
           pnpm install --no-frozen-lockfile
           git checkout pnpm-lock.yaml pnpm-workspace.yaml # revert changes to pnpm files to avoid cache key changes

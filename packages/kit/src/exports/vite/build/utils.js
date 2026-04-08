@@ -129,3 +129,34 @@ export function filter_fonts(assets) {
 export function assets_base(config) {
 	return (config.paths.assets || config.paths.base || '.') + '/';
 }
+
+/**
+ * Writes a function with arguments used by a template literal.
+ * This helps us store strings in a module and inject values at runtime.
+ * @param {string} name The name of the function
+ * @param {string[]} placeholder_names The names of the placeholders in the string
+ * @param {string} str A string with placeholders such as "Hello ${arg0}".
+ * 										 It must have backslashes, backticks and dollar signs already escaped.
+ * @returns {string} The function written as a string
+ */
+export function create_function_as_string(name, placeholder_names, str) {
+	const args = placeholder_names ? placeholder_names.join(', ') : '';
+	return `function ${name}(${args}) { return \`${str}\`; }`;
+}
+
+/**
+ * Guarantees that the generated placeholder is not already present in the content.
+ * @param {string} content
+ * @param {string} key
+ * @returns {string}
+ */
+export function generate_placeholder(content, key) {
+	let id = 1;
+	let placeholder = `__SVELTEKIT_${key}_${id}__`;
+
+	while (content.includes(placeholder)) {
+		placeholder = `__SVELTEKIT_${key}_${++id}__`;
+	}
+
+	return placeholder;
+}

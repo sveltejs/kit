@@ -3,7 +3,7 @@ declare global {
 		interface Locals {
 			answer: number;
 			name?: string;
-			key: string;
+			key: string | null;
 			params: Record<string, string>;
 			url?: URL;
 			message?: string;

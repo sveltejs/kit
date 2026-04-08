@@ -16,8 +16,10 @@ In contrast, JWT generally are not checked against a datastore, which means they
 
 Auth [cookies](@sveltejs-kit#Cookies) can be checked inside [server hooks](hooks#Server-hooks). If a user is found matching the provided credentials, the user information can be stored in [`locals`](hooks#Server-hooks-locals).
 
+## Libraries
+
+The [Svelte CLI](/docs/cli) gives the option to [set up Better Auth](https://svelte.dev/docs/cli/better-auth) with a new project or add it to an existing project.
+
 ## Guides
 
-[Lucia](https://lucia-auth.com/) is a good reference for session-based web app auth. It contains example code snippets and projects for implementing session-based auth within SvelteKit and other JS projects. You can add code which follows the Lucia guide to your project with `npx sv create` when creating a new project or `npx sv add lucia` for an existing project.
-
-An auth system is tightly coupled to a web framework because most of the code lies in validating user input, handling errors, and directing users to the appropriate next page. As a result, many of the generic JS auth libraries include one or more web frameworks within them. For this reason, many users will find it preferrable to follow a SvelteKit-specific guide such as the examples found in [Lucia](https://lucia-auth.com/) rather than having multiple web frameworks inside their project.
+If you'd like to implement your own auth system, [the Lucia auth guide](https://lucia-auth.com/) provides a reference for session-based web app auth with SvelteKit examples.

@@ -1,9 +1,15 @@
 /** @import { RequestEvent } from '@sveltejs/kit' */
-/** @import { ServerHooks, MaybePromise, RequestState, RemoteInfo, RequestStore } from 'types' */
+/** @import { ServerHooks, MaybePromise, RequestState, RemoteInternals, RequestStore } from 'types' */
 import { parse } from 'devalue';
 import { error } from '@sveltejs/kit';
 import { with_request_store, get_request_store } from '@sveltejs/kit/internal/server';
-import { stringify_remote_arg } from '../../../shared.js';
+import { noop } from '../../../../utils/functions.js';
+import {
+	stringify_remote_arg,
+	create_remote_key,
+	stringify,
+	unfriendly_hydratable
+} from '../../../shared.js';
 
 /**
  * @param {any} validate_or_fn
@@ -61,20 +67,37 @@ export function create_validator(validate_or_fn, maybe_fn) {
  * Also saves an uneval'ed version of the result for later HTML inlining for hydration.
  *
  * @template {MaybePromise<any>} T
- * @param {RemoteInfo} info
+ * @param {RemoteInternals} internals
  * @param {any} arg
  * @param {RequestState} state
  * @param {() => Promise<T>} get_result
  * @returns {Promise<T>}
  */
-export async function get_response(info, arg, state, get_result) {
+export async function get_response(internals, arg, state, get_result) {
 	// wait a beat, in case `myQuery().set(...)` or `myQuery().refresh()` is immediately called
 	// eslint-disable-next-line @typescript-eslint/await-thenable
 	await 0;
 
-	const cache = get_cache(info, state);
+	const cache = get_cache(internals, state);
+	const key = stringify_remote_arg(arg, state.transport);
+	const entry = (cache[key] ??= {
+		serialize: false,
+		data: get_result()
+	});
 
-	return (cache[stringify_remote_arg(arg, state.transport)] ??= get_result());
+	entry.serialize ||= !!state.is_in_universal_load;
+
+	if (state.is_in_render && internals.id) {
+		const remote_key = create_remote_key(internals.id, key);
+
+		Promise.resolve(entry.data)
+			.then((value) => {
+				void unfriendly_hydratable(remote_key, () => stringify(value, state.transport));
+			})
+			.catch(noop);
+	}
+
+	return entry.data;
 }
 
 /**
@@ -146,15 +169,15 @@ export async function run_remote_function(event, state, allow_cookies, get_input
 }
 
 /**
- * @param {RemoteInfo} info
+ * @param {RemoteInternals} internals
  * @param {RequestState} state
  */
-export function get_cache(info, state = get_request_store().state) {
-	let cache = state.remote_data?.get(info);
+export function get_cache(internals, state = get_request_store().state) {
+	let cache = state.remote.data?.get(internals);
 
 	if (cache === undefined) {
 		cache = {};
-		(state.remote_data ??= new Map()).set(info, cache);
+		(state.remote.data ??= new Map()).set(internals, cache);
 	}
 
 	return cache;

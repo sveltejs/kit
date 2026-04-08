@@ -1,4 +1,4 @@
-import './shims';
+import './shims.js';
 import { Server } from '0SERVER';
 import { createReadableStream } from '@sveltejs/kit/node';
 import process from 'node:process';

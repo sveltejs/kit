@@ -1,4 +1,5 @@
 import { DEV } from 'esm-env';
+import { noop } from '../../../utils/functions.js';
 import { disable_search, make_trackable } from '../../../utils/url.js';
 import { validate_depends, validate_load_response } from '../../shared.js';
 import { with_request_store, merge_tracing } from '@sveltejs/kit/internal/server';
@@ -233,7 +234,9 @@ export async function load_data({
 		},
 		fn: async (current) => {
 			const traced_event = merge_tracing(event, current);
-			return await with_request_store({ event: traced_event, state: event_state }, () =>
+			const child_state = { ...event_state, is_in_universal_load: true };
+
+			return await with_request_store({ event: traced_event, state: child_state }, () =>
 				load.call(null, {
 					url: event.url,
 					params: event.params,
@@ -241,7 +244,7 @@ export async function load_data({
 					route: event.route,
 					fetch: create_universal_fetch(event, state, fetched, csr, resolve_opts),
 					setHeaders: event.setHeaders,
-					depends: () => {},
+					depends: noop,
 					parent,
 					untrack: (fn) => fn(),
 					tracing: traced_event.tracing
@@ -475,11 +478,11 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 	};
 
 	// Don't make this function `async`! Otherwise, the user has to `catch` promises they use for streaming responses or else
-	// it will be an unhandled rejection. Instead, we add a `.catch(() => {})` ourselves below to this from happening.
+	// it will be an unhandled rejection. Instead, we add a `.catch(noop)` ourselves below to this from happening.
 	return (input, init) => {
 		// See docs in fetch.js for why we need to do this
 		const response = universal_fetch(input, init);
-		response.catch(() => {});
+		response.catch(noop);
 		return response;
 	};
 }
