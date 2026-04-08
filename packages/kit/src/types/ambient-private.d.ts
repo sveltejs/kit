@@ -29,7 +29,6 @@ declare module '__sveltekit/server' {
 }
 
 declare module '__sveltekit/manifest-data' {
-	// eslint-disable-next-line no-duplicate-imports
 	import { Asset, PageNode, RouteData } from 'types';
 
 	export const env: Record<string, string>;
@@ -52,6 +51,7 @@ declare module '__sveltekit/manifest-data' {
 		matchers: string[][];
 		assets: Asset[];
 	};
+	export const origin: string;
 }
 
 declare module '__sveltekit/server-assets' {

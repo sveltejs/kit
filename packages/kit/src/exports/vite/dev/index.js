@@ -13,7 +13,7 @@ import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import * as sync from '../../../core/sync/sync.js';
 import { is_chrome_devtools_request, not_found } from '../utils.js';
 import { escape_html } from '../../../utils/escape.js';
-import { sveltekit_manifest_data } from '../module_ids.js';
+import { sveltekit_dev_server, sveltekit_manifest_data } from '../module_ids.js';
 import { to_fs } from '../filesystem.js';
 
 // vite-specifc queries that we should skip handling for css urls
@@ -60,7 +60,7 @@ export function dev(vite, vite_config, svelte_config, root, dev_environment) {
 			return;
 		}
 
-		void invalidate_module(vite, sveltekit_manifest_data);
+		invalidate_module(vite, sveltekit_manifest_data);
 	}
 
 	update_manifest();
@@ -148,6 +148,7 @@ export function dev(vite, vite_config, svelte_config, root, dev_environment) {
 
 	const assets = svelte_config.kit.paths.assets ? SVELTE_KIT_ASSETS : svelte_config.kit.paths.base;
 	dev_environment.assets = assets;
+	invalidate_module(vite, sveltekit_dev_server);
 
 	const asset_server = sirv(svelte_config.kit.files.assets, {
 		dev: true,
@@ -182,6 +183,10 @@ export function dev(vite, vite_config, svelte_config, root, dev_environment) {
 		next();
 	});
 
+	const inline_styles_pathname = new RegExp(
+		`\\/${svelte_config.kit.appDir.replaceAll('/', '\\\\/')}\\/inline-styles\\/\\d+`
+	);
+
 	return () => {
 		const serve_static_middleware = vite.middlewares.stack.find(
 			(middleware) =>
@@ -196,22 +201,16 @@ export function dev(vite, vite_config, svelte_config, root, dev_environment) {
 			dev_environment.remote_address = req.socket.remoteAddress;
 
 			// Vite's base middleware strips out the base path. Restore it
-			let original_url = req.url;
+			const original_url = req.url;
 			req.url = req.originalUrl;
 			try {
 				const base = `${vite.config.server.https ? 'https' : 'http'}://${
 					req.headers[':authority'] || req.headers.host
 				}`;
+				dev_environment.origin = base;
+				invalidate_module(vite, sveltekit_manifest_data);
 
-				let decoded = decodeURI(new URL(base + req.url).pathname);
-
-				// requests to _app/immutable during development are fetchable dev
-				// environments trying to read the filesystem
-				const immutable = `/${svelte_config.kit.appDir}/immutable`;
-				if (decoded.startsWith(immutable)) {
-					decoded = decoded.slice(immutable.length);
-					original_url = original_url?.slice(immutable.length);
-				}
+				const decoded = decodeURI(new URL(base + req.url).pathname);
 
 				const file = posixify(
 					path.resolve(root, decoded.slice(svelte_config.kit.paths.base.length + 1))
@@ -234,6 +233,16 @@ export function dev(vite, vite_config, svelte_config, root, dev_environment) {
 
 				if (!decoded.startsWith(svelte_config.kit.paths.base)) {
 					return not_found(req, res, svelte_config.kit.paths.base);
+				}
+
+				if (decoded.match(inline_styles_pathname)) {
+					const urls = new URL(base + req.url).searchParams.getAll('urls');
+					const styles = await get_inline_css(vite, urls);
+					res.writeHead(200, {
+						'content-type': 'application/json'
+					});
+					res.end(JSON.stringify(styles));
+					return;
 				}
 
 				if (decoded === svelte_config.kit.paths.base + '/service-worker.js') {
@@ -396,6 +405,8 @@ export function invalidate_module(vite, id) {
 		}
 	}
 }
+
+// TODO: move this to an endpoint
 
 /**
  * @param {import('vite').ViteDevServer} vite

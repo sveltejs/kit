@@ -692,10 +692,16 @@ export interface RequestStore {
 
 export interface DevEnvironment {
 	vite: ViteDevServer;
+	/** used to construct the SSR manifest */
 	manifest_data: ManifestData;
+	/** environment variables loaded according to Vite's mode, etc. */
 	env: Record<string, string>;
+	/** where app assets are served from */
 	assets: string;
+	/** used to populate `event.getClientAddress()` */
 	remote_address: string | undefined;
+	/** address of the development server */
+	origin: string;
 }
 
 export * from '../exports/index.js';

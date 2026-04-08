@@ -21,7 +21,7 @@ import { runtime_directory, logger, get_runtime_base, get_mime_lookup } from '..
 import { generate_manifest } from '../../core/generate_manifest/index.js';
 import { build_server_nodes } from './build/build_server.js';
 import { assets_base, find_deps, resolve_symlinks } from './build/utils.js';
-import { dev, invalidate_module, get_inline_css } from './dev/index.js';
+import { dev, invalidate_module } from './dev/index.js';
 import { preview } from './preview/index.js';
 import {
 	error_for_missing_config,
@@ -567,7 +567,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 	};
 
 	/** @type {Record<string, number>} */
-	let server_assets = {};
+	let server_assets;
 
 	/**
 	 * Allows us to access the filesystem from an environment that doesn't have `node:fs`
@@ -577,7 +577,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 		name: 'vite-plugin-sveltekit-server-filesystem',
 		apply: 'serve',
 		applyToEnvironment(environment) {
-			return environment.name !== 'client' && environment.name !== 'serviceWorker';
+			return environment.config.consumer === 'server';
 		},
 		configureServer() {
 			server_assets = {};
@@ -612,160 +612,56 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 		}
 	};
 
+	const dev_ssr_manifest = path.join(import.meta.dirname, 'dev/ssr-manifest.js');
+	const dev_server_entry = path.join(import.meta.dirname, 'dev/server.js');
+
 	/** @type {import('vite').Plugin} */
-	const plugin_virtual_modules = {
-		name: 'vite-plugin-sveltekit-virtual-modules',
-
+	const plugin_dev_ssr = {
+		name: 'vite-plugin-sveltekit-dev-ssr',
+		apply: 'serve',
 		applyToEnvironment(environment) {
-			return environment.name !== 'serviceWorker';
+			return environment.config.consumer === 'server';
 		},
-
-		resolveId(id, importer) {
-			if (id === '__sveltekit/manifest') {
-				return `${kit.outDir}/generated/client-optimized/app.js`;
-			}
-
-			// If importing from a service-worker, only allow $service-worker & $env/static/public, but none of the other virtual modules.
-			// This check won't catch transitive imports, but it will warn when the import comes from a service-worker directly.
-			// Transitive imports will be caught during the build.
-			// TODO move this logic to plugin_guard. add a filter to this resolveId when doing so
-			if (importer) {
-				const parsed_importer = path.parse(importer);
-
-				const importer_is_service_worker =
-					parsed_importer.dir === parsed_service_worker.dir &&
-					parsed_importer.name === parsed_service_worker.name;
-
-				if (importer_is_service_worker && id !== '$service-worker' && id !== '$env/static/public') {
-					throw new Error(
-						`Cannot import ${normalize_id(
-							id,
-							normalized_lib,
-							normalized_cwd
-						)} into service-worker code. Only the modules $service-worker and $env/static/public are available in service workers.`
-					);
+		resolveId: {
+			filter: {
+				id: [prefixRegex('virtual:@sveltejs/kit'), prefixRegex('__sveltekit/')]
+			},
+			handler(id) {
+				// these virtual modules which are public paths must have the virtual prefix
+				// otherwise the bundler complains about not being able to find them in our
+				// package.json exports because we already have @sveltejs/kit/vite exported
+				if (id === 'virtual:@sveltejs/kit/vite/environment') {
+					return dev_ssr_manifest;
 				}
-			}
 
-			// treat $env/static/[public|private] as virtual
-			if (id.startsWith('$env/') || id === '$service-worker') {
-				// ids with :$ don't work with reverse proxies like nginx
-				return `\0virtual:${id.substring(1)}`;
-			}
+				if (id === 'virtual:@sveltejs/kit/vite/environment/server') {
+					return `\0${id}`;
+				}
 
-			if (id === '__sveltekit/remote') {
-				return `${runtime_directory}/client/remote-functions/index.js`;
-			}
+				if (id === '__sveltekit/dev-server-entry') {
+					return server_instrumentation_file ? sveltekit_traced : dev_server_entry;
+				}
 
-			// these virtual modules which are public paths should have the virtual prefix
-			// otherwise the bundler complains about not being able to find them based
-			// on the fact that we have @sveltejs/kit/vite in our package.json exports list
-			if (id === 'virtual:@sveltejs/kit/vite/environment') {
-				return path.join(import.meta.dirname, 'dev/ssr-manifest.js');
-			}
-
-			if (id === '__sveltekit/dev-server-entry') {
-				return server_instrumentation_file
-					? sveltekit_traced
-					: path.join(import.meta.dirname, 'dev/server.js');
-			}
-
-			if (id === 'virtual:@sveltejs/kit/vite/environment/server') {
-				return `\0${id}`;
-			}
-
-			if (id.startsWith('__sveltekit/') && id !== '__sveltekit/dev-server-entry') {
-				return `\0virtual:${id}`;
+				if (id.startsWith('__sveltekit/')) {
+					return `\0virtual:${id}`;
+				}
 			}
 		},
 		load: {
 			filter: {
 				id: [
-					exactRegex(env_static_private),
-					exactRegex(env_static_public),
-					exactRegex(env_dynamic_private),
-					exactRegex(env_dynamic_public),
-					exactRegex(service_worker),
-					exactRegex(sveltekit_environment),
-					exactRegex(sveltekit_server),
-					exactRegex(sveltekit_manifest_data),
 					exactRegex(sveltekit_server_assets),
 					exactRegex(sveltekit_remotes),
-					exactRegex(sveltekit_traced),
-					exactRegex(sveltekit_dev_server)
+					exactRegex(sveltekit_manifest_data),
+					exactRegex(sveltekit_dev_server),
+					exactRegex(sveltekit_traced)
 				]
 			},
 			handler(id) {
+				if (!dev_environment) return;
+
 				switch (id) {
-					case env_static_private:
-						return create_static_module('$env/static/private', env.private);
-
-					case env_static_public:
-						return create_static_module('$env/static/public', env.public);
-
-					case env_dynamic_private:
-						return create_dynamic_module(
-							'private',
-							vite_config_env.command === 'serve' ? env.private : undefined,
-							root
-						);
-
-					case env_dynamic_public: {
-						// populate `$env/dynamic/public` from `window`
-						if (this.environment.config.consumer === 'client') {
-							const global = is_build
-								? `globalThis.__sveltekit_${version_hash}`
-								: 'globalThis.__sveltekit_dev';
-							return `export const env = ${global}.env;`;
-						}
-
-						return create_dynamic_module(
-							'public',
-							vite_config_env.command === 'serve' ? env.public : undefined,
-							root
-						);
-					}
-
-					case service_worker:
-						return create_service_worker_module(svelte_config);
-
-					case sveltekit_environment: {
-						const { version } = svelte_config.kit;
-
-						return dedent`
-						export const version = ${s(version.name)};
-						export let building = false;
-						export let prerendering = false;
-
-						export function set_building() {
-							building = true;
-						}
-
-						export function set_prerendering() {
-							prerendering = true;
-						}
-					`;
-					}
-
-					case sveltekit_server: {
-						return dedent`
-						export let read_implementation = null;
-
-						export let manifest = null;
-
-						export function set_read_implementation(fn) {
-							read_implementation = fn;
-						}
-
-						export function set_manifest(_) {
-							manifest = _;
-						}
-					`;
-					}
-
 					case sveltekit_server_assets: {
-						if (!dev_environment) return;
-
 						return dedent`
 							export const server_assets = {
 								${Object.entries(server_assets)
@@ -780,8 +676,6 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 					}
 
 					case sveltekit_remotes: {
-						if (!dev_environment) return;
-
 						return dedent`
 							export const remotes = ${s(remotes)};
 
@@ -792,8 +686,6 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 					}
 
 					case sveltekit_manifest_data: {
-						if (!dev_environment) return;
-
 						const { manifest_data, env } = dev_environment;
 
 						return dedent`
@@ -816,12 +708,12 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 								},
 								paths: ${s(kit.paths)}
 							}
+
+							export const origin = ${s(dev_environment.origin)}
 						`;
 					}
 
 					case sveltekit_dev_server: {
-						if (!dev_environment) return;
-
 						const runtime_base = get_runtime_base(root);
 						const adapter = svelte_config.kit.adapter;
 
@@ -881,6 +773,139 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 							export { respond };
 
 							import.meta.hot?.accept();
+						`;
+					}
+				}
+			}
+		}
+	};
+
+	/** @type {import('vite').Plugin} */
+	const plugin_virtual_modules = {
+		name: 'vite-plugin-sveltekit-virtual-modules',
+
+		applyToEnvironment(environment) {
+			return environment.name !== 'serviceWorker';
+		},
+
+		resolveId(id, importer) {
+			if (id === '__sveltekit/manifest') {
+				return `${kit.outDir}/generated/client-optimized/app.js`;
+			}
+
+			// If importing from a service-worker, only allow $service-worker & $env/static/public, but none of the other virtual modules.
+			// This check won't catch transitive imports, but it will warn when the import comes from a service-worker directly.
+			// Transitive imports will be caught during the build.
+			// TODO move this logic to plugin_guard. add a filter to this resolveId when doing so
+			if (importer) {
+				const parsed_importer = path.parse(importer);
+
+				const importer_is_service_worker =
+					parsed_importer.dir === parsed_service_worker.dir &&
+					parsed_importer.name === parsed_service_worker.name;
+
+				if (importer_is_service_worker && id !== '$service-worker' && id !== '$env/static/public') {
+					throw new Error(
+						`Cannot import ${normalize_id(
+							id,
+							normalized_lib,
+							normalized_cwd
+						)} into service-worker code. Only the modules $service-worker and $env/static/public are available in service workers.`
+					);
+				}
+			}
+
+			// treat $env/static/[public|private] as virtual
+			if (id.startsWith('$env/') || id === '$service-worker') {
+				// ids with :$ don't work with reverse proxies like nginx
+				return `\0virtual:${id.substring(1)}`;
+			}
+
+			if (id === '__sveltekit/remote') {
+				return `${runtime_directory}/client/remote-functions/index.js`;
+			}
+
+			if (id.startsWith('__sveltekit/')) {
+				return `\0virtual:${id}`;
+			}
+		},
+		load: {
+			filter: {
+				id: [
+					exactRegex(env_static_private),
+					exactRegex(env_static_public),
+					exactRegex(env_dynamic_private),
+					exactRegex(env_dynamic_public),
+					exactRegex(service_worker),
+					exactRegex(sveltekit_environment),
+					exactRegex(sveltekit_server)
+				]
+			},
+			handler(id) {
+				switch (id) {
+					case env_static_private:
+						return create_static_module('$env/static/private', env.private);
+
+					case env_static_public:
+						return create_static_module('$env/static/public', env.public);
+
+					case env_dynamic_private:
+						return create_dynamic_module(
+							'private',
+							vite_config_env.command === 'serve' ? env.private : undefined,
+							root
+						);
+
+					case env_dynamic_public: {
+						// populate `$env/dynamic/public` from `window`
+						if (this.environment.config.consumer === 'client') {
+							const global = is_build
+								? `globalThis.__sveltekit_${version_hash}`
+								: 'globalThis.__sveltekit_dev';
+							return `export const env = ${global}.env;`;
+						}
+
+						return create_dynamic_module(
+							'public',
+							vite_config_env.command === 'serve' ? env.public : undefined,
+							root
+						);
+					}
+
+					case service_worker:
+						return create_service_worker_module(svelte_config);
+
+					case sveltekit_environment: {
+						const { version } = svelte_config.kit;
+
+						return dedent`
+							export const version = ${s(version.name)};
+							export let building = false;
+							export let prerendering = false;
+
+							export function set_building() {
+								building = true;
+							}
+
+							export function set_prerendering() {
+								prerendering = true;
+							}
+						`;
+					}
+
+					case sveltekit_server: {
+						return dedent`
+							export let read_implementation = null;
+
+							export let manifest = null;
+
+							export function set_read_implementation(fn) {
+								read_implementation = fn;
+							}
+
+							export function set_manifest(_) {
+								manifest = _;
+							}
 						`;
 					}
 				}
@@ -1305,11 +1330,6 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 		}
 	};
 
-	/** @type {(payload: { urls: string[]; node: number; }) => Promise<void>} */
-	let handle_inline_styles;
-	/** @type {(error: Error) => void} */
-	let handle_ssr_load_module;
-
 	/** @type {() => Promise<void>} */
 	let finalise;
 
@@ -1597,47 +1617,18 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 		 * @see https://vitejs.dev/guide/api-plugin.html#configureserver
 		 */
 		configureServer(vite) {
-			vite.environments.ssr.hot.off('sveltekit:inline-styles-request', handle_inline_styles);
-			vite.environments.ssr.hot.off('sveltekit:ssr-load-module', handle_ssr_load_module);
+			vite.environments.ssr.hot.off('sveltekit:ssr-load-module', display_ssr_error_on_client);
 
 			manifest_data = sync.all(svelte_config, vite_config_env.mode, root).manifest_data;
 
-			// other properties will be populated during the `dev` function
+			// other properties will be populated after running the `dev` function below
 			dev_environment = /** @type {import('types').DevEnvironment} */ ({
 				vite,
 				env: loadEnv(vite_config.mode, svelte_config.kit.env.dir, ''),
 				manifest_data
 			});
 
-			handle_inline_styles ??= async ({ urls, node }) => {
-				vite.environments.ssr.hot.send(
-					`sveltekit:inline-styles-node-${node}-response`,
-					await get_inline_css(vite, urls)
-				);
-			};
-			vite.environments.ssr.hot.on('sveltekit:inline-styles-request', handle_inline_styles);
-
-			handle_ssr_load_module ??= (err) => {
-				const msg = buildErrorMessage(err, [
-					styleText('red', `Internal server error: ${err.message}`)
-				]);
-
-				if (!vite.config.logger.hasErrorLogged(err)) {
-					vite.config.logger.error(msg, { error: err });
-				}
-
-				vite.ws.send({
-					type: 'error',
-					err: {
-						...err,
-						// these properties are non-enumerable and will
-						// not be serialized unless we explicitly include them
-						message: err.message,
-						stack: err.stack ?? ''
-					}
-				});
-			};
-			vite.environments.ssr.hot.on('sveltekit:ssr-load-module', handle_ssr_load_module);
+			vite.environments.ssr.hot.on('sveltekit:ssr-load-module', display_ssr_error_on_client);
 
 			return dev(vite, vite_config, svelte_config, root, dev_environment);
 		},
@@ -2035,6 +2026,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 		plugin_setup,
 		plugin_remote,
 		plugin_server_filesystem,
+		plugin_dev_ssr,
 		plugin_virtual_modules,
 		process.env.TEST !== 'true' ? plugin_guard : undefined,
 		plugin_service_worker,
@@ -2108,4 +2100,27 @@ function create_service_worker_module(config) {
 		export const prerendered = [];
 		export const version = ${s(config.kit.version.name)};
 	`;
+}
+
+/** @type {(error: Error) => void} */
+function display_ssr_error_on_client(err) {
+	const vite = dev_environment?.vite;
+	if (!vite) return;
+
+	const msg = buildErrorMessage(err, [styleText('red', `Internal server error: ${err.message}`)]);
+
+	if (!vite.config.logger.hasErrorLogged(err)) {
+		vite.config.logger.error(msg, { error: err });
+	}
+
+	vite.ws.send({
+		type: 'error',
+		err: {
+			...err,
+			// these properties are non-enumerable and will
+			// not be serialized unless we explicitly include them
+			message: err.message,
+			stack: err.stack ?? ''
+		}
+	});
 }

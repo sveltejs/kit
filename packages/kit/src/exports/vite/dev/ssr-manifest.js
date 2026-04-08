@@ -1,6 +1,6 @@
 import { server_assets } from '__sveltekit/server-assets';
 import { remotes } from '__sveltekit/remotes';
-import { env, kit, manifest_data, mime_types } from '__sveltekit/manifest-data';
+import { env, kit, manifest_data, mime_types, origin } from '__sveltekit/manifest-data';
 import { to_fs } from '../filesystem.js';
 import { compact } from '../../../utils/array.js';
 import { join } from '../../../utils/path.js';
@@ -102,37 +102,32 @@ export const manifest = {
 				// in dev we inline all styles to avoid FOUC. this gets populated lazily so that
 				// components/stylesheets loaded via import() during `load` are included
 
-				const event = `sveltekit:inline-styles-node-${i}-response`;
 				result.inline_styles = async () => {
-					if (!import.meta.hot) throw new Error('hmr must be enabled in the dev environment');
+					// we can't use import.meta.hot here because workerd doesn't like that
+					// it would resolve from a different request context
+					const inline_styles_endpoint = new URL(`/${kit.appDir}/inline-styles/${result.index}`, origin);
+					for (const url of urls) {
+						inline_styles_endpoint.searchParams.append('urls', url);
+					}
 
-					const { promise, resolve } = Promise.withResolvers();
-
-					/** @param {Record<string, string>} styles */
-					const listener = async (styles) => {
-						import.meta.hot?.off(event, listener);
-						const importing_styles = Object.entries(styles).map(
-							async ([dep_url, inline_css_url]) => {
-								return [
-									dep_url,
-									await import(/* @vite-ignore */ inline_css_url).then((mod) => mod.default)
-								];
-							}
+					const response = await fetch(inline_styles_endpoint);
+					if (!response.ok) {
+						throw new Error(
+							`Failed to fetch inline styles for node ${i}: ${response.status} ${response.statusText}. This should never happen`
 						);
-						resolve(Object.fromEntries(await Promise.all(importing_styles)));
-					};
+					}
 
-					import.meta.hot.on(event, listener);
-					import.meta.hot.send('sveltekit:inline-styles-request', {
-						urls,
-						node: result.index
+					/** @type {Record<string, string>} */
+					const styles = await response.json();
+
+					const importing_styles = Object.entries(styles).map(async ([dep_url, inline_css_url]) => {
+						return [
+							dep_url,
+							await import(/* @vite-ignore */ inline_css_url).then((mod) => mod.default)
+						];
 					});
 
-					// a hack to ensure that the Vite Cloudflare plugin's workerd stays
-					// alive long enough for the `import.meta.hot` event listener to resolve
-					setTimeout(() => {}, 10);
-
-					return promise;
+					return Object.fromEntries(await Promise.all(importing_styles));
 				};
 
 				return result;
