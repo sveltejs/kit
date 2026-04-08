@@ -49,7 +49,7 @@
 		"prepublishOnly": "pnpm build"
 	},
 	"dependencies": {
-		"@cloudflare/workers-types": "^4.20260405.1",
+		"@cloudflare/workers-types": "^4.20260408.1",
 		"esm-env": "^1.2.2",
 		"worktop": "0.8.0-next.18"
 	},
@@ -63,6 +63,6 @@
 	},
 	"peerDependencies": {
 		"@sveltejs/kit": "^3.0.0",
-		"@cloudflare/vite-plugin": "^1.31.0"
+		"@cloudflare/vite-plugin": "^1.31.1"
 	}
 }
