@@ -18,7 +18,7 @@ describe('svelteKitTest plugin', () => {
 		// commands require a mutative method (POST/PUT/PATCH/DELETE) — calling with
 		// GET throws an error that includes the function name
 		try {
-			withRequestContext(event, () => say_ok());
+			void withRequestContext(event, () => say_ok());
 			assert.fail('should have thrown');
 		} catch (e) {
 			assert.ok(e instanceof Error);
@@ -80,7 +80,7 @@ describe('component mode transform', () => {
 		// Simulate the resolveId → load pipeline:
 		// resolveId intercepts the .remote.js import and returns a virtual ID
 		const resolved = await plugin.resolveId.call(
-			{ resolve: async () => ({ id: fixture_path }) },
+			{ resolve: () => Promise.resolve({ id: fixture_path }) },
 			'./sample.remote.js',
 			'/some/importer.js',
 			{}
@@ -108,7 +108,7 @@ describe('component mode transform', () => {
 	test('resolveId ignores non-remote files', async () => {
 		const plugin = /** @type {any} */ (svelteKitTest({ mode: 'component' }));
 		const result = await plugin.resolveId.call(
-			{ resolve: async () => ({ id: '/project/src/lib/utils.js' }) },
+			{ resolve: () => Promise.resolve({ id: '/project/src/lib/utils.js' }) },
 			'./utils.js',
 			'/some/importer.js',
 			{}

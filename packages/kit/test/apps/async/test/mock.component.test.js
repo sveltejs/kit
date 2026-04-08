@@ -40,7 +40,7 @@ describe('mockRemote end-to-end', () => {
 		try {
 			await result;
 			assert.fail('should have thrown');
-		} catch (e) {
+		} catch {
 			assert.equal(result.error?.status, 404);
 			assert.equal(result.loading, false);
 		}

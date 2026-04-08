@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import process from 'node:process';
 import path from 'node:path';
 import { hash } from '../../utils/hash.js';
 import { posixify } from '../../utils/filesystem.js';

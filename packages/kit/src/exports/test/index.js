@@ -293,7 +293,7 @@ const MUTATIVE_TYPES = ['command', 'form'];
  * @param {CallRemoteOptions} [options]
  * @returns {Promise<any>}
  */
-export async function callRemote(fn, arg, options = {}) {
+export function callRemote(fn, arg, options = {}) {
 	const type = fn.__?.type;
 	const method = options.method ?? (MUTATIVE_TYPES.includes(type) ? 'POST' : 'GET');
 	const event = createTestEvent({ ...options, method });

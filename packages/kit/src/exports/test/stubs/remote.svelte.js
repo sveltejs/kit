@@ -202,7 +202,7 @@ function set_nested(obj, path, value) {
  * @param {string} id
  */
 export function form(id) {
-	let pending_count = $state(0);
+	const pending_count = $state(0);
 
 	// Only method and action should be enumerable — these are what
 	// {...form} spreads onto the <form> element. All other properties
