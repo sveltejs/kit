@@ -2935,10 +2935,11 @@ declare module '@sveltejs/kit/node/polyfills' {
 }
 
 declare module '@sveltejs/kit/vite' {
+	import type { Plugin } from 'vite';
 	/**
 	 * Returns the SvelteKit Vite plugins.
 	 * */
-	export function sveltekit(): Promise<import("vite").Plugin[]>;
+	export function sveltekit(): Promise<Plugin[]>;
 
 	export {};
 }

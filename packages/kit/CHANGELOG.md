@@ -1,5 +1,29 @@
 # @sveltejs/kit
 
+## 2.57.0
+### Minor Changes
+
+
+- feat: return boolean from `submit` to indicate submission validity for enhanced `form` remote functions ([#15530](https://github.com/sveltejs/kit/pull/15530))
+
+
+### Patch Changes
+
+
+- fix: use array type for select fields that accept multiple values ([#15591](https://github.com/sveltejs/kit/pull/15591))
+
+
+- fix: silently 404 Chrome DevTools workspaces request in dev and preview ([#15656](https://github.com/sveltejs/kit/pull/15656))
+
+
+- fix: `config.kit.csp.directives['trusted-types']` requires `'svelte-trusted-html'` (and `'sveltekit-trusted-url'` when a service worker is automatically registered) if it is configured ([#15323](https://github.com/sveltejs/kit/pull/15323))
+
+
+- fix: avoid inlineDynamicImports ignored with codeSplitting warning when using Vite 8 ([#15647](https://github.com/sveltejs/kit/pull/15647))
+
+
+- fix: reimplement treeshaking non-dynamic prerendered remote functions ([#15447](https://github.com/sveltejs/kit/pull/15447))
+
 ## 2.56.1
 ### Patch Changes
 
