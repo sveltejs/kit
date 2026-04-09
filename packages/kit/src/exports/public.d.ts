@@ -1932,6 +1932,15 @@ type RemoteFormFieldMethods<T> = {
 	issues(): RemoteFormIssue[] | undefined;
 };
 
+// These two types use "T extends unknown ? .. : .." to distribute over unions.
+// Example: if "type T = A | b" then "keyof T" only contains keys that both A and B have, with "KeysOfUnion<T>" we get the keys of both A and B
+type KeysOfUnion<T> = T extends unknown ? keyof T : never;
+type ValueOfUnionKey<T, K extends PropertyKey> = T extends unknown
+	? K extends keyof T
+		? T[K]
+		: never
+	: never;
+
 export type RemoteFormFieldValue = string | string[] | number | boolean | File | File[];
 
 type AsArgs<Type extends keyof InputTypeMap, Value> = Type extends 'checkbox'
@@ -2004,14 +2013,15 @@ export type RemoteFormFields<T> =
 		? RecursiveFormFields
 		: NonNullable<T> extends string | number | boolean | File
 			? RemoteFormField<NonNullable<T>>
-			: T extends string[] | File[]
+			: // [T] is used to prevent distributing over union, only the last condition should distribute over unions
+				[T] extends [string[] | File[]]
 				? RemoteFormField<T> & { [K in number]: RemoteFormField<T[number]> }
-				: T extends Array<infer U>
+				: [T] extends [Array<infer U>]
 					? RemoteFormFieldContainer<T> & {
 							[K in number]: RemoteFormFields<U>;
 						}
 					: RemoteFormFieldContainer<T> & {
-							[K in keyof T]-?: RemoteFormFields<T[K]>;
+							[K in KeysOfUnion<T>]-?: RemoteFormFields<ValueOfUnionKey<T, K>>;
 						};
 
 // By breaking this out into its own type, we avoid the TS recursion depth limit
