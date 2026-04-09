@@ -178,26 +178,33 @@ export function form(validate_or_fn, maybe_fn) {
 			get() {
 				return create_field_proxy(
 					{},
-					() => get_cache(__)?.['']?.data?.input ?? {},
-					(path, value) => {
-						const cache = get_cache(__);
-						const entry = cache[''];
+					{
+						get_input: () => get_cache(__)?.['']?.data?.input ?? {},
+						set_input: (path, value) => {
+							const cache = get_cache(__);
+							const entry = cache[''];
 
-						if (entry?.data?.submission) {
-							// don't override a submission
-							return;
-						}
+							if (entry?.data?.submission) {
+								// don't override a submission
+								return;
+							}
 
-						if (path.length === 0) {
-							(cache[''] ??= { serialize: true, data: {} }).data.input = value;
-							return;
-						}
+							if (path.length === 0) {
+								(cache[''] ??= { serialize: true, data: {} }).data.input = value;
+								return;
+							}
 
-						const input = entry?.data?.input ?? {};
-						deep_set(input, path.map(String), value);
-						(cache[''] ??= { serialize: true, data: {} }).data.input = input;
-					},
-					() => flatten_issues(get_cache(__)?.['']?.data?.issues ?? [])
+							const input = entry?.data?.input ?? {};
+							deep_set(input, path.map(String), value);
+							(cache[''] ??= { serialize: true, data: {} }).data.input = input;
+						},
+						get_issues: () => flatten_issues(get_cache(__)?.['']?.data?.issues ?? []),
+						get_progress: () => ({
+							uploaded: 0,
+							total: 0,
+							percent: 0 /* upload progress is always 0 on the server */
+						})
+					}
 				);
 			}
 		});
