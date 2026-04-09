@@ -1188,7 +1188,7 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 
 		const server_data_node = server_data_nodes?.[i];
 
-		// re-use data from previous load if it's still valid
+			// reuse data from previous load if it's still valid
 		const valid =
 			(!server_data_node || server_data_node.type === 'skip') &&
 			loader[1] === previous?.loader &&
