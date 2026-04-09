@@ -24,7 +24,7 @@
 
 <p id="finite-value">{finite.current}</p>
 <p id="finite-connected">{String(finite.connected)}</p>
-<p id="finite-completed">{String(finite.completed)}</p>
+<p id="finite-done">{String(finite.done)}</p>
 <button id="finite-reconnect" onclick={() => finite.reconnect()}>reconnect finite</button>
 
 <p id="duplicate-payload-count">{duplicate_payload.current?.count}</p>

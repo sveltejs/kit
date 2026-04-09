@@ -116,7 +116,7 @@ function live_query_tests() {
 		iterator;
 
 		q().connected === true;
-		q().completed === false;
+		q().done === false;
 		q().reconnect();
 		// @ts-expect-error
 		q().refresh();

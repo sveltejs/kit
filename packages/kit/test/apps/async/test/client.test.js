@@ -447,13 +447,13 @@ test.describe('remote function mutations', () => {
 		await expect(page.locator('#connected')).toHaveText('true');
 	});
 
-	test('query.live marks finite iterators as completed and only reconnects explicitly', async ({
+	test('query.live marks finite iterators as done and only reconnects explicitly', async ({
 		page
 	}) => {
 		await page.goto('/remote/live');
 		await page.click('#reset');
 
-		await expect(page.locator('#finite-completed')).toHaveText('true');
+		await expect(page.locator('#finite-done')).toHaveText('true');
 		await expect(page.locator('#finite-connected')).toHaveText('false');
 
 		await page.waitForTimeout(200);
@@ -477,7 +477,7 @@ test.describe('remote function mutations', () => {
 					.finite_connection_count;
 			})
 			.toBeGreaterThan(before);
-		await expect(page.locator('#finite-completed')).toHaveText('true');
+		await expect(page.locator('#finite-done')).toHaveText('true');
 	});
 
 	test('query.live can be reconnected from server command handlers', async ({ page }) => {

@@ -862,7 +862,7 @@ export class LiveQuery {
 		return this.#connected;
 	}
 
-	get completed() {
+	get done() {
 		return this.#completed;
 	}
 
@@ -1248,8 +1248,8 @@ class LiveQueryProxy {
 		return this.#get_cached_query().connected;
 	}
 
-	get completed() {
-		return this.#get_cached_query().completed;
+	get done() {
+		return this.#get_cached_query().done;
 	}
 
 	run() {

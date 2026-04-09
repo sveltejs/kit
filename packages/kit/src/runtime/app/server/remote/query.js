@@ -458,7 +458,7 @@ function create_live_query_resource(__, arg, state, get_first_value, get_iterato
 		finally(onfinally) {
 			return get_promise().finally(onfinally);
 		},
-		completed: false,
+		done: false,
 		loading: true,
 		ready: false,
 		connected: false,
@@ -471,7 +471,11 @@ function create_live_query_resource(__, arg, state, get_first_value, get_iterato
 				);
 			}
 
-			reconnects.add(create_remote_key(__.id, stringify_remote_arg(arg, state.transport)));
+			reconnects.set(
+				create_remote_key(__.id, stringify_remote_arg(arg, state.transport)),
+				get_promise()
+			);
+			return Promise.resolve();
 		},
 		async run() {
 			if (!state.is_in_universal_load) {
@@ -561,8 +565,9 @@ function update_refresh_value(
 		refreshes.set(refreshes_key, promise);
 	}
 
-	return promise.then(
+	promise.then(
 		() => {},
 		() => {}
 	);
+	return Promise.resolve();
 }
