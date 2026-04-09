@@ -112,12 +112,21 @@ export async function POST({ request, platform }) {
 
 > [!NOTE] SvelteKit's built-in [`$env` module]($env-static-private) should be preferred for environment variables.
 
-After configuring the bindings in your Wrangler configuration file, you can make the types available by running [`npx wrangler types`](https://developers.cloudflare.com/workers/languages/typescript/) and referencing the `Env` type in your `src/app.d.ts`:
+After configuring the bindings in your Wrangler configuration file, you can add type-safety by running [`npx wrangler types`](https://developers.cloudflare.com/workers/languages/typescript/) and adding the generated types to your `tsconfig.json`.
+
+```json
+/// file: tsconfig.json
+{
+	"compilerOptions": {
+		+++"types": ["worker-configuration.d.ts"]+++
+	}
+}
+```
+
+Finally, add `Env` to the `platform.env` property in `src/app.d.ts`:
 
 ```ts
 /// file: src/app.d.ts
-+++import { Env } from '../worker-configuration.d.ts';+++
-
 declare global {
 	namespace App {
 		interface Platform {
@@ -166,7 +175,7 @@ Alternatively, you can [prerender](page-options#prerender) the routes in questio
 
 ## Migrating from Pages
 
-TODO:
+Cloudflare Workers is now preferred over Pages because of its broader feature set. You should follow the [official migration guide](https://developers.cloudflare.com/workers/static-assets/migration-guides/migrate-from-pages/) to redeploy your project to Workers before deleting your Pages project.
 
 ## Migrating from Workers Sites
 
