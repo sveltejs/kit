@@ -183,3 +183,78 @@ jobs:
 ```
 
 If you're not using GitHub actions to deploy your site (for example, you're pushing the built site to its own repo), add an empty `.nojekyll` file in your `static` directory to prevent Jekyll from interfering.
+
+## Apache and Nginx
+
+When deploying to a traditional web server via FTP or SSH, you need to configure URL rewriting so that direct navigation to subpages works correctly. Without this, visiting a URL like `/about` directly will return a 404 even though the file exists at `/about/index.html` (or `/about.html`).
+
+### Apache
+
+Create an `.htaccess` file in your `static` directory (so it gets copied to the build output):
+
+```apacheconf
+### file: static/.htaccess
+RewriteEngine On
+
+# If the request is for an existing file or directory, serve it directly
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Try appending /index.html (works with trailingSlash: 'always')
+RewriteCond %{REQUEST_FILENAME}/index.html -f
+RewriteRule ^(.*)$ $1/index.html [L]
+
+# Try appending .html (works with trailingSlash: 'never')
+RewriteCond %{REQUEST_FILENAME}.html -f
+RewriteRule ^(.*)$ $1.html [L]
+
+# Optional: serve a custom 404 page
+# ErrorDocument 404 /404.html
+```
+
+If you're using precompressed files (`precompress: true`), add content negotiation for `.br` and `.gz` files:
+
+```apacheconf
+### file: static/.htaccess (additional)
+# Serve precompressed files if available
+<IfModule mod_headers.c>
+  RewriteCond %{HTTP:Accept-Encoding} br
+  RewriteCond %{REQUEST_FILENAME}.br -f
+  RewriteRule ^(.*)$ $1.br [L]
+  Header set Content-Encoding br
+
+  RewriteCond %{HTTP:Accept-Encoding} gzip
+  RewriteCond %{REQUEST_FILENAME}.gz -f
+  RewriteRule ^(.*)$ $1.gz [L]
+  Header set Content-Encoding gzip
+</IfModule>
+```
+
+### Nginx
+
+Add a `location` block to your Nginx site configuration:
+
+```nginx
+server {
+    listen 80;
+    server_name example.com;
+    root /var/www/your-site/build;
+
+    location / {
+        # Try the exact file, then with /index.html, then .html, then 404
+        try_files $uri $uri/index.html $uri.html =404;
+    }
+
+    # Cache static assets
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff2?)$ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+
+    # Serve precompressed files if available
+    gzip_static on;
+    brotli_static on; # requires ngx_brotli module
+}
+```
+
+> [!NOTE] Make sure your [`trailingSlash`](page-options#trailingSlash) setting matches your server configuration. With `trailingSlash: 'always'`, SvelteKit generates `/about/index.html`. With `trailingSlash: 'never'`, it generates `/about.html`. The `try_files` directive above handles both cases.
