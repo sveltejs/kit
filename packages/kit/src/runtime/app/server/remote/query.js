@@ -4,6 +4,7 @@
 import { get_request_store } from '@sveltejs/kit/internal/server';
 import { create_remote_key, stringify, stringify_remote_arg } from '../../../shared.js';
 import { prerendering } from '__sveltekit/environment';
+import { noop } from '../../../../utils/functions.js';
 import { create_validator, get_cache, get_response, run_remote_function } from './shared.js';
 import { handle_error_and_jsonify } from '../../../server/utils.js';
 import { HttpError, SvelteKitError } from '@sveltejs/kit/internal';
@@ -382,8 +383,5 @@ function update_refresh_value(
 		refreshes[refreshes_key] = promise;
 	}
 
-	return promise.then(
-		() => {},
-		() => {}
-	);
+	return promise.then(noop, noop);
 }

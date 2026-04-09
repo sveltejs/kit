@@ -14,6 +14,7 @@ import { HttpError, Redirect } from '@sveltejs/kit/internal';
 import { DEV } from 'esm-env';
 import { tick, untrack, hydratable } from 'svelte';
 import { create_remote_key, stringify_remote_arg } from '../../shared.js';
+import { noop } from '../../../utils/functions.js';
 
 /**
  * @template T
@@ -29,7 +30,7 @@ import { create_remote_key, stringify_remote_arg } from '../../shared.js';
  */
 function is_in_effect() {
 	try {
-		$effect.pre(() => {});
+		$effect.pre(noop);
 		return true;
 	} catch {
 		return false;
@@ -370,7 +371,7 @@ export class Query {
 
 		const promise = Promise.reject(error);
 
-		promise.catch(() => {});
+		promise.catch(noop);
 		this.#promise = promise;
 	}
 

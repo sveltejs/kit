@@ -5,6 +5,7 @@ import { error } from '@sveltejs/kit';
 import { hydratable } from 'svelte';
 import { with_request_store, get_request_store } from '@sveltejs/kit/internal/server';
 import { stringify_remote_arg, create_remote_key, stringify } from '../../../shared.js';
+import { noop } from '../../../../utils/functions.js';
 
 /**
  * @param {any} validate_or_fn
@@ -85,11 +86,11 @@ export async function get_response(internals, arg, state, get_result) {
 	if (state.is_in_render && internals.id) {
 		const remote_key = create_remote_key(internals.id, key);
 
-		Promise.resolve(entry.data)
+		void Promise.resolve(entry.data)
 			.then((value) => {
 				void hydratable(remote_key, () => stringify(value, state.transport));
 			})
-			.catch(() => {});
+			.catch(noop);
 	}
 
 	return entry.data;

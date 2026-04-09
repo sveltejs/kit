@@ -1,3 +1,6 @@
+/** @import { Options } from '@sveltejs/vite-plugin-svelte' */
+/** @import { PreprocessorGroup } from 'svelte/compiler' */
+/** @import { ConfigEnv, Manifest, Plugin, ResolvedConfig, UserConfig, ViteDevServer } from 'vite' */
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
@@ -91,7 +94,7 @@ const options_regex = /(export\s+const\s+(prerender|csr|ssr|trailingSlash))\s*=/
 /** @type {Set<string>} */
 const warned = new Set();
 
-/** @type {import('svelte/compiler').PreprocessorGroup} */
+/** @type {PreprocessorGroup} */
 const warning_preprocessor = {
 	script: ({ content, filename }) => {
 		if (!filename) return;
@@ -137,14 +140,14 @@ let vite_plugin_svelte;
 
 /**
  * Returns the SvelteKit Vite plugins.
- * @returns {Promise<import('vite').Plugin[]>}
+ * @returns {Promise<Plugin[]>}
  */
 export async function sveltekit() {
 	// the config options will be set only after the Vite `config` hook runs
 	// because we need to find `svelte.config.js` relative to `vite.config.root`
 	const svelte_config = /** @type {import('types').ValidatedConfig} */ ({});
 
-	/** @type {import('@sveltejs/vite-plugin-svelte').Options} */
+	/** @type {Options} */
 	const vite_plugin_svelte_options = {
 		// we don't want vite-plugin-svelte to load the config file itself because
 		// it will try to validate it without knowing that kit options are valid
@@ -240,10 +243,10 @@ function kit({ svelte_config }) {
 	/** @type {string} */
 	let version_hash;
 
-	/** @type {import('vite').ResolvedConfig} */
+	/** @type {ResolvedConfig} */
 	let vite_config;
 
-	/** @type {import('vite').ConfigEnv} */
+	/** @type {ConfigEnv} */
 	let vite_config_env;
 
 	/** @type {boolean} */
@@ -258,7 +261,7 @@ function kit({ svelte_config }) {
 	/** @type {import('types').ServerMetadata | undefined} only set at build time once analysis is finished */
 	let build_metadata = undefined;
 
-	/** @type {import('vite').UserConfig} */
+	/** @type {UserConfig} */
 	let initial_config;
 
 	/** @type {string | null} */
@@ -282,7 +285,7 @@ function kit({ svelte_config }) {
 	const sourcemapIgnoreList = /** @param {string} relative_path */ (relative_path) =>
 		relative_path.includes('node_modules') || relative_path.includes(kit.outDir);
 
-	/** @type {import('vite').Plugin} */
+	/** @type {Plugin} */
 	const plugin_setup = {
 		name: 'vite-plugin-sveltekit-setup',
 
@@ -334,7 +337,7 @@ function kit({ svelte_config }) {
 				const generated = path.posix.join(kit.outDir, 'generated');
 
 				// dev and preview config can be shared
-				/** @type {import('vite').UserConfig} */
+				/** @type {UserConfig} */
 				const new_config = {
 					resolve: {
 						alias: [
@@ -464,7 +467,7 @@ function kit({ svelte_config }) {
 		}
 	};
 
-	/** @type {import('vite').Plugin} */
+	/** @type {Plugin} */
 	const plugin_virtual_modules = {
 		name: 'vite-plugin-sveltekit-virtual-modules',
 
@@ -604,7 +607,7 @@ function kit({ svelte_config }) {
 	/**
 	 * Ensures that client-side code can't accidentally import server-side code,
 	 * whether in `*.server.js` files, `$app/server`, `$lib/server`, or `$env/[static|dynamic]/private`
-	 * @type {import('vite').Plugin}
+	 * @type {Plugin}
 	 */
 	const plugin_guard = {
 		name: 'vite-plugin-sveltekit-guard',
@@ -736,7 +739,7 @@ function kit({ svelte_config }) {
 		}
 	};
 
-	/** @type {import('vite').ViteDevServer} */
+	/** @type {ViteDevServer} */
 	let dev_server;
 
 	/** @type {Array<{ hash: string, file: string }>} */
@@ -748,7 +751,7 @@ function kit({ svelte_config }) {
 	/** @type {Set<string>} Track which remote hashes have already been emitted */
 	const emitted_remote_hashes = new Set();
 
-	/** @type {import('vite').Plugin} */
+	/** @type {Plugin} */
 	const plugin_remote = {
 		name: 'vite-plugin-sveltekit-remote',
 
@@ -1005,7 +1008,7 @@ function kit({ svelte_config }) {
 			// avoids overwriting the base setting that's also set by Vitest
 			order: 'pre',
 			handler(config) {
-				/** @type {import('vite').UserConfig} */
+				/** @type {UserConfig} */
 				let new_config;
 
 				if (is_build) {
@@ -1652,8 +1655,8 @@ function kit({ svelte_config }) {
 }
 
 /**
- * @param {Record<string, any>} config
- * @param {Record<string, any>} resolved_config
+ * @param {UserConfig} config
+ * @param {UserConfig} resolved_config
  */
 function warn_overridden_config(config, resolved_config) {
 	const overridden = find_overridden_config(config, resolved_config, enforced_config, '', []);

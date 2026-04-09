@@ -39,6 +39,7 @@ import {
 	PAGE_URL_KEY
 } from './constants.js';
 import { validate_page_exports } from '../../utils/exports.js';
+import { noop } from '../../utils/functions.js';
 import { compact } from '../../utils/array.js';
 import {
 	INVALIDATED_PARAM,
@@ -166,7 +167,7 @@ function native_navigation(url, replace = false) {
 	} else {
 		location.href = url.href;
 	}
-	return new Promise(() => {});
+	return new Promise(noop);
 }
 
 /**
@@ -181,8 +182,6 @@ async function update_service_worker() {
 		}
 	}
 }
-
-function noop() {}
 
 /** @type {import('types').CSRRoute[]} All routes of the app. Only available when kit.router.resolution=client */
 let routes;
@@ -940,7 +939,7 @@ async function load_node({ loader, parent, url, params, route, server_data_node 
 
 				return promise;
 			},
-			setHeaders: () => {}, // noop
+			setHeaders: noop,
 			depends,
 			parent() {
 				if (is_tracking) {
@@ -1118,8 +1117,8 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 	// preload modules to avoid waterfall, but handle rejections
 	// so they don't get reported to Sentry et al (we don't need
 	// to act on the failures at this point)
-	errors.forEach((loader) => loader?.().catch(() => {}));
-	loaders.forEach((loader) => loader?.[1]().catch(() => {}));
+	errors.forEach((loader) => loader?.().catch(noop));
+	loaders.forEach((loader) => loader?.[1]().catch(noop));
 
 	/** @type {import('types').ServerNodesResponse | import('types').ServerRedirectNode | null} */
 	let server_data = null;
@@ -1189,7 +1188,7 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 
 		const server_data_node = server_data_nodes?.[i];
 
-		// re-use data from previous load if it's still valid
+		// reuse data from previous load if it's still valid
 		const valid =
 			(!server_data_node || server_data_node.type === 'skip') &&
 			loader[1] === previous?.loader &&
@@ -1232,7 +1231,7 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 	});
 
 	// if we don't do this, rejections will be unhandled
-	for (const p of branch_promises) p.catch(() => {});
+	for (const p of branch_promises) p.catch(noop);
 
 	/** @type {Array<import('./types.js').BranchNode | undefined>} */
 	const branch = [];
@@ -3229,7 +3228,7 @@ function create_navigation(current, intent, url, type, target_scroll = null) {
 	});
 
 	// Handle any errors off-chain so that it doesn't show up as an unhandled rejection
-	complete.catch(() => {});
+	complete.catch(noop);
 
 	/** @type {(import('@sveltejs/kit').Navigation | import('@sveltejs/kit').AfterNavigate) & { type: T }} */
 	const navigation = /** @type {any} */ ({
