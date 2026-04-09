@@ -15,6 +15,7 @@ import { DEV } from 'esm-env';
 import { with_resolvers } from '../../../utils/promise.js';
 import { tick, untrack } from 'svelte';
 import { create_remote_key, stringify_remote_arg, unfriendly_hydratable } from '../../shared.js';
+import { text_decoder } from '../../utils.js';
 
 /**
  * @template T
@@ -481,7 +482,6 @@ async function get_stream_reader(response) {
 function create_stream_reader(reader) {
 	let done = false;
 	let buffer = '';
-	const text_decoder = new TextDecoder();
 
 	return async () => {
 		while (true) {
@@ -633,7 +633,6 @@ export class LiveQuery {
 	/** @type {(reason?: any) => void} */
 	#reject_first;
 	#active = false;
-	#destroyed = false;
 	#attempt = 0;
 	/** @type {ReturnType<typeof setTimeout> | null} */
 	#retry_timer = null;
@@ -685,7 +684,7 @@ export class LiveQuery {
 	}
 
 	#schedule_reconnect() {
-		if (!this.#active || this.#destroyed || this.#completed || this.#retry_timer) return;
+		if (!this.#active || this.#completed || this.#retry_timer) return;
 
 		if (typeof navigator !== 'undefined' && navigator.onLine === false) {
 			return;
@@ -703,7 +702,7 @@ export class LiveQuery {
 	}
 
 	async #connect_stream() {
-		if (!this.#active || this.#destroyed || this.#completed) return;
+		if (!this.#active || this.#completed) return;
 
 		const connection = ++this.#connection;
 		const controller = new AbortController();
@@ -717,7 +716,7 @@ export class LiveQuery {
 				signal: controller.signal
 			});
 
-			if (connection !== this.#connection || !this.#active || this.#destroyed) {
+			if (connection !== this.#connection || !this.#active) {
 				return;
 			}
 
@@ -727,7 +726,7 @@ export class LiveQuery {
 			this.#connected = true;
 			this.#attempt = 0;
 
-			while (this.#active && !this.#destroyed && connection === this.#connection) {
+			while (this.#active && connection === this.#connection) {
 				const value = await next_value();
 				if (value === undefined) {
 					finished = true;
@@ -741,7 +740,7 @@ export class LiveQuery {
 				this.#set_value(value);
 			}
 
-			if (finished && this.#active && !this.#destroyed && connection === this.#connection) {
+			if (finished && this.#active && connection === this.#connection) {
 				this.#completed = true;
 			}
 		} catch (error) {
@@ -760,7 +759,7 @@ export class LiveQuery {
 				this.#connected = false;
 				this.#controller = null;
 
-				if (this.#active && !this.#destroyed && !this.#completed) {
+				if (this.#active && !this.#completed) {
 					this.#schedule_reconnect();
 				}
 			}
@@ -768,7 +767,7 @@ export class LiveQuery {
 	}
 
 	#on_online = () => {
-		if (!this.#active || this.#destroyed || this.#completed) return;
+		if (!this.#active || this.#completed) return;
 		this.#clear_retry();
 		void this.#connect_stream();
 	};
@@ -808,11 +807,6 @@ export class LiveQuery {
 			window.removeEventListener('pagehide', this.#on_pagehide);
 			window.removeEventListener('beforeunload', this.#on_pagehide);
 		}
-	}
-
-	destroy() {
-		this.#destroyed = true;
-		this.disconnect();
 	}
 
 	get then() {
@@ -867,7 +861,7 @@ export class LiveQuery {
 	}
 
 	reconnect() {
-		if (!this.#active || this.#destroyed) {
+		if (!this.#active) {
 			return Promise.resolve();
 		}
 		this.#completed = false;
@@ -1188,7 +1182,6 @@ class LiveQueryProxy {
 
 			if (this_instance?.count === 0) {
 				this_instance.resource.disconnect();
-				this_instance.resource.destroy();
 				this_instance.cleanup();
 				query_instances?.delete(this.#payload);
 			}

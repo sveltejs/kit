@@ -1,5 +1,5 @@
 /** @import { RemoteLiveQueryFunction, RemoteQueryFunction, RequestedResult, QueryRequestedResult, LiveQueryRequestedResult, RemoteLiveQuery, RemoteQuery } from '@sveltejs/kit' */
-/** @import { MaybePromise, RemoteQueryInternals, RemoteQueryLiveInternals, RequestState } from 'types' */
+/** @import { MaybePromise, RemoteQueryInternals, RemoteQueryLiveInternals } from 'types' */
 import { get_request_store } from '@sveltejs/kit/internal/server';
 import { create_remote_key, parse_remote_arg } from '../../../shared.js';
 import { mark_argument_validated } from './query.js';
