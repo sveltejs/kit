@@ -606,11 +606,22 @@ export function deep_get(object, path) {
  * @param {(path: (string | number)[], value: any) => void} set_input - Function to set input data
  * @param {() => Record<string, InternalRemoteFormIssue[]>} get_issues - Function to get current issues
  * @param {(string | number)[]} path - Current access path
+ * @param {Record<string, any>} defaults - Default values for fields
  * @returns {any} Proxy object with name(), value(), and issues() methods
  */
-export function create_field_proxy(target, get_input, set_input, get_issues, path = []) {
+export function create_field_proxy(
+	target,
+	get_input,
+	set_input,
+	get_issues,
+	path = [],
+	defaults = {}
+) {
 	const get_value = () => {
-		return deep_get(get_input(), path);
+		const from_state = deep_get(get_input(), path);
+		if (from_state !== undefined) return from_state;
+		const key = build_path_string(path);
+		return key in defaults ? defaults[key] : undefined;
 	};
 
 	return new Proxy(target, {
@@ -619,10 +630,14 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 
 			// Handle array access like jobs[0]
 			if (/^\d+$/.test(prop)) {
-				return create_field_proxy({}, get_input, set_input, get_issues, [
-					...path,
-					parseInt(prop, 10)
-				]);
+				return create_field_proxy(
+					{},
+					get_input,
+					set_input,
+					get_issues,
+					[...path, parseInt(prop, 10)],
+					defaults
+				);
 			}
 
 			const key = build_path_string(path);
@@ -632,11 +647,25 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 					set_input(path, newValue);
 					return newValue;
 				};
-				return create_field_proxy(set_func, get_input, set_input, get_issues, [...path, prop]);
+				return create_field_proxy(
+					set_func,
+					get_input,
+					set_input,
+					get_issues,
+					[...path, prop],
+					defaults
+				);
 			}
 
 			if (prop === 'value') {
-				return create_field_proxy(get_value, get_input, set_input, get_issues, [...path, prop]);
+				return create_field_proxy(
+					get_value,
+					get_input,
+					set_input,
+					get_issues,
+					[...path, prop],
+					defaults
+				);
 			}
 
 			if (prop === 'issues' || prop === 'allIssues') {
@@ -658,7 +687,14 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 						}));
 				};
 
-				return create_field_proxy(issues_func, get_input, set_input, get_issues, [...path, prop]);
+				return create_field_proxy(
+					issues_func,
+					get_input,
+					set_input,
+					get_issues,
+					[...path, prop],
+					defaults
+				);
 			}
 
 			if (prop === 'as') {
@@ -678,6 +714,10 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 							: type === 'checkbox' && !is_array
 								? 'b:'
 								: '';
+
+					if (input_value !== undefined) {
+						defaults[key] = input_value;
+					}
 
 					// Base properties for all input types
 					/** @type {Record<string, any>} */
@@ -807,11 +847,18 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 					});
 				};
 
-				return create_field_proxy(as_func, get_input, set_input, get_issues, [...path, 'as']);
+				return create_field_proxy(
+					as_func,
+					get_input,
+					set_input,
+					get_issues,
+					[...path, 'as'],
+					defaults
+				);
 			}
 
 			// Handle property access (nested fields)
-			return create_field_proxy({}, get_input, set_input, get_issues, [...path, prop]);
+			return create_field_proxy({}, get_input, set_input, get_issues, [...path, prop], defaults);
 		}
 	});
 }
