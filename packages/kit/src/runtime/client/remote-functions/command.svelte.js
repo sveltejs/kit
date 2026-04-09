@@ -9,7 +9,7 @@ import {
 	get_remote_request_headers,
 	apply_refreshes,
 	categorize_updates,
-	reconnect_live_queries,
+	apply_reconnections
 } from './shared.svelte.js';
 
 /**
@@ -81,7 +81,7 @@ export function command(id) {
 					}
 
 					if (result.reconnects) {
-						reconnect_live_queries(result.reconnects);
+						apply_reconnections(result.reconnects);
 					}
 
 					return devalue.parse(result.result, app.decoders);

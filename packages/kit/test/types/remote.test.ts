@@ -122,6 +122,8 @@ function live_query_tests() {
 		q().refresh();
 		// @ts-expect-error
 		q().set('x');
+		// @ts-expect-error
+		q().fail(new Error('x'));
 	}
 	void live_without_args();
 

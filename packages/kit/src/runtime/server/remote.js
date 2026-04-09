@@ -121,8 +121,12 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 				/** @type {RemoteFunctionResponse} */ ({
 					type: 'result',
 					result: stringify(result, transport),
-					refreshes: result.issues ? undefined : await serialize_refreshes(),
-					reconnects: serialize_reconnects()
+					refreshes: result.issues
+						? undefined
+						: await serialize_singleflight(state.remote.refreshes),
+					reconnects: result.issues
+						? undefined
+						: await serialize_singleflight(state.remote.reconnects)
 				})
 			);
 		}
@@ -138,8 +142,8 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 				/** @type {RemoteFunctionResponse} */ ({
 					type: 'result',
 					result: stringify(data, transport),
-					refreshes: await serialize_refreshes(),
-					reconnects: serialize_reconnects()
+					refreshes: await serialize_singleflight(state.remote.refreshes),
+					reconnects: await serialize_singleflight(state.remote.reconnects)
 				})
 			);
 		}
@@ -271,8 +275,8 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 				/** @type {RemoteFunctionResponse} */ ({
 					type: 'redirect',
 					location: error.location,
-					refreshes: await serialize_refreshes(),
-					reconnects: serialize_reconnects()
+					refreshes: await serialize_singleflight(state.remote.refreshes),
+					reconnects: await serialize_singleflight(state.remote.reconnects)
 				})
 			);
 		}
@@ -297,16 +301,14 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 		);
 	}
 
-	async function serialize_refreshes() {
-		const refreshes = state.remote.refreshes ?? {};
-
-		const entries = Object.entries(refreshes);
-		if (entries.length === 0) {
+	/** @param {Map<string, Promise<any>> | null} map */
+	async function serialize_singleflight(map) {
+		if (!map || map.size === 0) {
 			return undefined;
 		}
 
 		const results = await Promise.all(
-			entries.map(async ([key, promise]) => {
+			Object.entries(map).map(async ([key, promise]) => {
 				try {
 					return [key, { type: 'result', data: await promise }];
 				} catch (error) {
@@ -326,15 +328,6 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 		);
 
 		return stringify(Object.fromEntries(results), transport);
-	}
-
-	function serialize_reconnects() {
-		const reconnects = state.remote.reconnects;
-		if (!reconnects || reconnects.size === 0) {
-			return undefined;
-		}
-
-		return Array.from(reconnects);
 	}
 }
 

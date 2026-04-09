@@ -303,7 +303,8 @@ export type RemoteFunctionResponse =
 	| (ServerRedirectNode & {
 			/** devalue'd Record<string, any> */
 			refreshes?: string;
-			reconnects?: string[];
+			/** devalue'd Record<string, any> */
+			reconnects?: string;
 	  })
 	| ServerErrorNode
 	| {
@@ -311,23 +312,24 @@ export type RemoteFunctionResponse =
 			result: string;
 			/** devalue'd Record<string, any> */
 			refreshes: string | undefined;
-			reconnects?: string[];
+			/** devalue'd Record<string, any> */
+			reconnects: string | undefined;
 	  };
 
-export type RemoteRefreshResult = {
+export type RemoteSingleflightResult = {
 	type: 'result';
 	data: any;
 };
 
-export type RemoteRefreshError = {
+export type RemoteSingleflightError = {
 	type: 'error';
 	status?: number;
 	error: App.Error;
 };
 
-export type RemoteRefreshEntry = RemoteRefreshResult | RemoteRefreshError;
+export type RemoteSingleflightEntry = RemoteSingleflightResult | RemoteSingleflightError;
 
-export type RemoteRefreshMap = Record<string, RemoteRefreshEntry>;
+export type RemoteSingleflightMap = Record<string, RemoteSingleflightEntry>;
 
 /**
  * Signals a successful response of the server `load` function.
@@ -661,7 +663,7 @@ export interface RequestState {
 		>;
 		forms: null | Map<any, any>;
 		refreshes: null | Map<string, Promise<any>>;
-		reconnects: null | Set<string>;
+		reconnects: null | Map<string, Promise<any>>;
 		requested: null | Map<string, string[]>;
 		validated: null | Map<string, Set<any>>;
 	};

@@ -126,7 +126,8 @@ export function requested(query, limit = Infinity) {
 	const requested = state.remote.requested;
 	const payloads = requested?.get(internals.id) ?? [];
 	const refreshes = (state.remote.refreshes ??= new Map());
-	const reconnects = (state.remote.reconnects ??= new Set());
+	const reconnects = (state.remote.reconnects ??= new Map());
+	const store = internals.type === 'query' ? refreshes : reconnects;
 	const [selected, skipped] = split_limit(payloads, limit);
 
 	/**
@@ -138,11 +139,7 @@ export function requested(query, limit = Infinity) {
 		promise.catch(() => {});
 
 		const key = create_remote_key(internals.id, payload);
-		if (internals.type === 'query') {
-			refreshes.set(key, promise);
-		} else {
-			reconnects.add(key);
-		}
+		store.set(key, promise);
 	};
 
 	for (const payload of skipped) {
@@ -202,7 +199,7 @@ export function requested(query, limit = Infinity) {
 			}
 
 			for await (const arg of this) {
-				/** @type {RemoteLiveQuery<Output>} */ (query(arg)).reconnect();
+				void (/** @type {RemoteLiveQuery<Output>} */ (query(arg)).reconnect());
 			}
 		}
 	};

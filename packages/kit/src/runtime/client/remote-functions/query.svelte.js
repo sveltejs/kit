@@ -867,12 +867,33 @@ export class LiveQuery {
 	}
 
 	reconnect() {
-		if (!this.#active || this.#destroyed) return;
+		if (!this.#active || this.#destroyed) {
+			return Promise.resolve();
+		}
 		this.#completed = false;
 		this.#attempt = 0;
 		this.#clear_retry();
 		this.#disconnect_current();
-		void this.#connect_stream();
+		return this.#connect_stream();
+	}
+
+	/** @param {T} value */
+	set(value) {
+		if (!this.#ready) {
+			this.#resolve_first(value);
+		}
+
+		this.#set_value(value);
+	}
+
+	/** @param {unknown} error */
+	fail(error) {
+		this.#error = error;
+
+		if (!this.#ready) {
+			this.#loading = false;
+			this.#reject_first(error);
+		}
 	}
 
 	get [Symbol.toStringTag]() {
@@ -1242,7 +1263,7 @@ class LiveQueryProxy {
 	}
 
 	reconnect() {
-		this.#safe_get_cached_query()?.reconnect();
+		return this.#safe_get_cached_query()?.reconnect() ?? Promise.resolve();
 	}
 
 	get then() {

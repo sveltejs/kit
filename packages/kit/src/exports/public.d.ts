@@ -2232,7 +2232,7 @@ export type RemoteLiveQuery<T> = RemoteResource<T> & {
 	/** `true` once the current live stream iterator has completed. */
 	readonly completed: boolean;
 	/** Reconnects the live stream immediately. */
-	reconnect(): void;
+	reconnect(): Promise<void>;
 };
 
 export type RemoteQueryOverride = () => void;
