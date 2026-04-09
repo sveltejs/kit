@@ -35,6 +35,17 @@
 	</form>
 {/each}
 
+<div>
+	<p id="set-value-display">{as_value_form.fields.text_field.value()}</p>
+	<button id="set-text-field" onclick={() => as_value_form.fields.text_field.set('Set via method')}
+		>set text field</button
+	>
+	<input
+		data-testid="as-value-set-input"
+		{...as_value_form.fields.text_field.as('text', 'default text')}
+	/>
+</div>
+
 <form {...reset_values}>
 	<button id="reset-values" type="submit">reset</button>
 </form>

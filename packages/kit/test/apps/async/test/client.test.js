@@ -505,6 +505,24 @@ test.describe('remote function mutations', () => {
 		// reset the values for the client tests
 		await page.click('#reset-values');
 	});
+
+	test('.as(type, value) updates when field.set() is called', async ({ page }) => {
+		await page.goto('/remote/form/as-value');
+
+		const input = page.locator('[data-testid="as-value-set-input"]');
+
+		// initial default value should be rendered
+		await expect(input).toHaveValue('default text');
+
+		// click button to call field.set()
+		await page.click('#set-text-field');
+
+		// the input with a default value should reflect the updated state
+		await expect(input).toHaveValue('Set via method');
+
+		// the value display should also show the updated value
+		await expect(page.locator('#set-value-display')).toHaveText('Set via method');
+	});
 });
 
 test.describe('client error boundaries', () => {
