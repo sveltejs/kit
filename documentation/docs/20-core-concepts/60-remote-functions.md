@@ -162,6 +162,53 @@ Both the argument and the return value are serialized with [devalue](https://git
 
 > [!NOTE] For `query` and `prerender` arguments (but not return values), objects, maps, and sets are sorted so that instances with the same members result in the same cache key. For example, `getPosts({ limit: 10, offset: 10 })` and `getPosts({ offset: 10, limit: 10 })` will result in the same cache key. If order is important to you, you'll have to use an array.
 
+### Deduplication
+
+When you call a query function, SvelteKit serializes the argument you call it with and uses it as a cache key. On the server, this is used to create a request-scoped cache so that multiple invocations of the same query only result in the work happening once. On the client, SvelteKit does something similar: Multiple identical invocations of a query all point to the same instance.
+
+To prevent memory leaks, this instance is kept cached only as long as it is actively used on the page in a _reactive context_, which means it must be created in a [derived](../svelte/$derived), [effect](../svelte/$effect) or component template. In practice, you're most likely to run into this limitation in universal `load` functions, event handlers, or when trying to access a query's data during module initialization.
+
+To illustrate:
+
+```svelte
+<script>
+  import { getData } from './data.remote.js';
+
+	// this instance is "anchored" to the reactive context of this component
+	const data = getData();
+</script>
+
+<!--
+	Awaiting `data` in a non-reactive context is valid, because it's anchored
+	and will be cleaned up when this component is cleaned up.
+-->
+<button onclick={async () => console.log(await data)}>
+	click me!
+</button>
+
+<!--
+	This, however, will throw, because `getData` isn't anchored to any reactive context.
+-->
+<button onclick={async () => console.log(await getData())}>
+	don't click me!
+</button>
+```
+
+This limitation only applies to accessing the _data_ of a query by `await`ing it or trying to access its properties. If all you need is one-off access to the query's data, you can call `query.run`:
+
+```svelte
+<script>
+  import { getData } from './data.remote.js';
+</script>
+
+<!-- This bypasses the cache and runs the query directly, returning a plain old Promise<T> -->
+<button onclick={async () => console.log(await getData().run())}>
+	click me!
+</button>
+```
+
+You can also still call [`refresh`](#query-Refreshing-queries) and `set` in non-reactive contexts. If there are no active listeners to the query, they both result in no-ops.
+
 ### Refreshing queries
 
 Any query can be re-fetched via its `refresh` method, which retrieves the latest value from the server:
