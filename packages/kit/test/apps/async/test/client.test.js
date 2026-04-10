@@ -443,9 +443,7 @@ test.describe('remote function mutations', () => {
 				'This query was not created in a reactive context'
 			);
 			await page.click('#read-current');
-			await expect(page.locator('#result')).toContainText(
-				'success! :)'
-			);
+			await expect(page.locator('#result')).toContainText('success! :)');
 		});
 
 		test('query becomes inactive after its tracking context is destroyed', async ({ page }) => {
