@@ -178,8 +178,8 @@ To illustrate:
 	const data = getData();
 </script>
 
-<!-- 
-	Awaiting `data` in a non-reactive context is valid, because it's anchored 
+<!--
+	Awaiting `data` in a non-reactive context is valid, because it's anchored
 	and will be cleaned up when this component is cleaned up.
 -->
 <button onclick={async () => console.log(await data)}>
@@ -207,7 +207,7 @@ This limitation only applies to accessing the _data_ of a query by `await`ing it
 </button>
 ```
 
-You can also still call [`refresh`](#Refreshing-queries) and `set` in non-reactive contexts. If there are no active listeners to the query, they both result in no-ops.
+You can also still call [`refresh`](#query-Refreshing-queries) and `set` in non-reactive contexts. If there are no active listeners to the query, they both result in no-ops.
 
 ### Refreshing queries
 
