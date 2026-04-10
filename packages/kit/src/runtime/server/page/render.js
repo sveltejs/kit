@@ -691,7 +691,9 @@ export async function render_response({
 
 	if (DEV) {
 		if (page_config.csr) {
-			if (transformed.split('<!--').length < html.split('<!--').length) {
+			/** @param {string} str */
+			const count_non_ssi_comments = (str) => (str.match(/<!--(?!#)/g) ?? []).length;
+			if (count_non_ssi_comments(transformed) < count_non_ssi_comments(html)) {
 				// the \u001B stuff is ANSI codes, so that we don't need to add a library to the runtime
 				// https://svelte.dev/playground/1b3f49696f0c44c881c34587f2537aa2?version=4.2.19
 				console.warn(
