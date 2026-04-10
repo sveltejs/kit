@@ -13,6 +13,7 @@ import {
 } from './shared.js';
 import { handle_error_and_jsonify } from '../../../server/utils.js';
 import { HttpError, SvelteKitError } from '@sveltejs/kit/internal';
+import { noop } from '../../../../utils/functions.js';
 
 /**
  * Creates a remote query. When called from the browser, the function will be invoked on the server via a `fetch` call.
@@ -515,9 +516,6 @@ function update_refresh_value(
 		refreshes.set(refreshes_key, promise);
 	}
 
-	promise.then(
-		() => {},
-		() => {}
-	);
+	promise.then(noop, noop);
 	return Promise.resolve();
 }
