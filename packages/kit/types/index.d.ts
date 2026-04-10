@@ -2200,7 +2200,7 @@ declare module '@sveltejs/kit' {
 		 * Unlike awaiting the resource directly, this can only be used _outside_ render
 		 * (i.e. in load functions, event handlers and so on)
 		 */
-		run(): Promise<AsyncIterator<T>>;
+		run(): AsyncGenerator<T>;
 		/** `true` if the live stream is currently connected. */
 		readonly connected: boolean;
 		/** `true` once the current live stream iterator is done. */
@@ -3447,11 +3447,11 @@ declare module '$app/server' {
 		 * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query.live) for full documentation.
 		 *
 		 * */
-		function live<Output>(fn: (arg: void) => MaybePromise<Generator<Output> | AsyncIterator<Output> | AsyncIterable<Output>>): RemoteLiveQueryFunction<void, Output>;
+		function live<Output>(fn: (arg: void) => RemoteLiveQueryUserFunctionReturnType<Output>): RemoteLiveQueryFunction<void, Output>;
 		
-		function live<Input, Output>(validate: "unchecked", fn: (arg: Input) => MaybePromise<Generator<Output> | AsyncIterator<Output> | AsyncIterable<Output>>): RemoteLiveQueryFunction<Input, Output>;
+		function live<Input, Output>(validate: "unchecked", fn: (arg: Input) => RemoteLiveQueryUserFunctionReturnType<Output>): RemoteLiveQueryFunction<Input, Output>;
 		
-		function live<Schema extends StandardSchemaV1, Output>(schema: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => MaybePromise<Generator<Output> | AsyncIterator<Output> | AsyncIterable<Output>>): RemoteLiveQueryFunction<StandardSchemaV1.InferInput<Schema>, Output>;
+		function live<Schema extends StandardSchemaV1, Output>(schema: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => RemoteLiveQueryUserFunctionReturnType<Output>): RemoteLiveQueryFunction<StandardSchemaV1.InferInput<Schema>, Output>;
 	}
 	/**
 	 * In the context of a remote `command` or `form` request, returns an iterable
@@ -3515,6 +3515,14 @@ declare module '$app/server' {
 	 *
 	 * */
 	export function requested<Input, Output>(query: RemoteLiveQueryFunction<Input, Output>, limit?: number | undefined): LiveQueryRequestedResult<Input>;
+	type RemoteLiveQueryUserFunctionReturnType<Output> = MaybePromise<
+		| AsyncGenerator<Output>
+		| AsyncIterator<Output>
+		| AsyncIterable<Output>
+		| Generator<Output>
+		| Iterator<Output>
+		| Iterable<Output>
+	>;
 	type RemotePrerenderInputsGenerator<Input = any> = () => MaybePromise<Input[]>;
 	type MaybePromise<T> = T | Promise<T>;
 

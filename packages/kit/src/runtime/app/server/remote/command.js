@@ -56,7 +56,7 @@ export function command(validate_or_fn, maybe_fn) {
 	const fn = maybe_fn ?? validate_or_fn;
 
 	/** @type {(arg?: any) => MaybePromise<Input>} */
-	const validate = create_validator(validate_or_fn, maybe_fn);
+	const validate = create_validator(() => __, validate_or_fn, maybe_fn);
 
 	/** @type {RemoteCommandInternals} */
 	const __ = { type: 'command', id: '', name: '' };
@@ -77,8 +77,8 @@ export function command(validate_or_fn, maybe_fn) {
 			);
 		}
 
-		state.remote.refreshes ??= {};
-		state.remote.reconnects ??= new Set();
+		state.remote.refreshes ??= new Map();
+		state.remote.reconnects ??= new Map();
 
 		const promise = Promise.resolve(
 			run_remote_function(event, state, true, () => validate(arg), fn)

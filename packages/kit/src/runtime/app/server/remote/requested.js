@@ -2,7 +2,7 @@
 /** @import { MaybePromise, RemoteQueryInternals, RemoteQueryLiveInternals } from 'types' */
 import { get_request_store } from '@sveltejs/kit/internal/server';
 import { create_remote_key, parse_remote_arg } from '../../../shared.js';
-import { mark_argument_validated } from './query.js';
+import { mark_argument_validated } from './shared.js';
 
 /**
  * In the context of a remote `command` or `form` request, returns an iterable

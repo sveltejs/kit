@@ -74,7 +74,7 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 	const fn = maybe_fn ?? validate_or_fn;
 
 	/** @type {(arg?: any) => MaybePromise<Input>} */
-	const validate = create_validator(validate_or_fn, maybe_fn);
+	const validate = create_validator(() => __, validate_or_fn, maybe_fn);
 
 	/** @type {RemotePrerenderInternals} */
 	const __ = {

@@ -2226,7 +2226,7 @@ export type RemoteLiveQuery<T> = RemoteResource<T> & {
 	 * Unlike awaiting the resource directly, this can only be used _outside_ render
 	 * (i.e. in load functions, event handlers and so on)
 	 */
-	run(): Promise<AsyncIterator<T>>;
+	run(): AsyncGenerator<T>;
 	/** `true` if the live stream is currently connected. */
 	readonly connected: boolean;
 	/** `true` once the current live stream iterator is done. */
