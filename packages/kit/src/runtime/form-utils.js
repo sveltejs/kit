@@ -4,8 +4,10 @@
 
 import { DEV } from 'esm-env';
 import * as devalue from 'devalue';
-import { text_decoder, text_encoder } from './utils.js';
+import { text_encoder } from './utils.js';
 import { SvelteKitError } from '@sveltejs/kit/internal';
+
+const decoder = new TextDecoder();
 
 /**
  * Sets a value in a nested object using a path string, mutating the original object
@@ -250,7 +252,7 @@ export async function deserialize_binary_form(request) {
 		const file_offsets_buffer = await get_buffer(HEADER_BYTES + data_length, file_offsets_length);
 		if (!file_offsets_buffer) throw deserialize_error('file offset table too short');
 
-		const parsed_offsets = JSON.parse(text_decoder.decode(file_offsets_buffer));
+		const parsed_offsets = JSON.parse(decoder.decode(file_offsets_buffer));
 
 		if (
 			!Array.isArray(parsed_offsets) ||
@@ -265,7 +267,7 @@ export async function deserialize_binary_form(request) {
 
 	/** @type {Array<{ offset: number, size: number }>} */
 	const file_spans = [];
-	const [data, meta] = devalue.parse(text_decoder.decode(data_buffer), {
+	const [data, meta] = devalue.parse(decoder.decode(data_buffer), {
 		File: ([name, type, size, last_modified, index]) => {
 			if (
 				typeof name !== 'string' ||
@@ -458,7 +460,7 @@ class LazyFile {
 		});
 	}
 	async text() {
-		return text_decoder.decode(await this.arrayBuffer());
+		return decoder.decode(await this.arrayBuffer());
 	}
 }
 

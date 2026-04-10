@@ -51,7 +51,6 @@ import { writable } from 'svelte/store';
 import { page, update, navigating } from './state.svelte.js';
 import { add_data_suffix, add_resolution_suffix } from '../pathname.js';
 import { noop_span } from '../telemetry/noop.js';
-import { text_decoder } from '../utils.js';
 
 export { load_css };
 const ICON_REL_ATTRIBUTES = new Set(['icon', 'shortcut icon', 'apple-touch-icon']);
@@ -3066,13 +3065,19 @@ async function load_data(url, invalid) {
 		}
 
 		let text = '';
+		const decoder = new TextDecoder();
 
 		while (true) {
 			// Format follows ndjson (each line is a JSON object) or regular JSON spec
 			const { done, value } = await reader.read();
-			if (done && !text) break;
 
-			text += !value && text ? '\n' : text_decoder.decode(value, { stream: true }); // no value -> final chunk -> add a new line to trigger the last parse
+			if (done) {
+				text += decoder.decode();
+				if (!text) break;
+				text += '\n';
+			} else {
+				text += decoder.decode(value, { stream: true });
+			}
 
 			while (true) {
 				const split = text.indexOf('\n');
