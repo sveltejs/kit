@@ -331,6 +331,15 @@ export type RemoteSingleflightEntry = RemoteSingleflightResult | RemoteSinglefli
 
 export type RemoteSingleflightMap = Record<string, RemoteSingleflightEntry>;
 
+export type RemoteLiveQueryUserFunctionReturnType<Output> = MaybePromise<
+	| AsyncGenerator<Output>
+	| AsyncIterator<Output>
+	| AsyncIterable<Output>
+	| Generator<Output>
+	| Iterator<Output>
+	| Iterable<Output>
+>;
+
 /**
  * Signals a successful response of the server `load` function.
  * The `uses` property tells the client when it's possible to reuse this data
@@ -601,7 +610,7 @@ export interface RemoteQueryInternals extends BaseRemoteInternals {
 export interface RemoteQueryLiveInternals extends BaseRemoteInternals {
 	type: 'query_live';
 	validate: (arg?: any) => MaybePromise<any>;
-	run(event: RequestEvent, state: RequestState, arg: any): Promise<AsyncIterator<any>>;
+	run(event: RequestEvent, state: RequestState, arg: any): AsyncGenerator<any>;
 }
 
 export interface RemoteQueryBatchInternals extends BaseRemoteInternals {
