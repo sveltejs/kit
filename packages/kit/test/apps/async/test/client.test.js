@@ -438,9 +438,13 @@ test.describe('remote function mutations', () => {
 			await page.click('#run');
 			await expect(page.locator('#result')).toHaveText('0');
 
-			await page.click('#read-current');
+			await page.click('#read-await');
 			await expect(page.locator('#result')).toContainText(
 				'This query was not created in a reactive context'
+			);
+			await page.click('#read-current');
+			await expect(page.locator('#result')).toContainText(
+				'success! :)'
 			);
 		});
 

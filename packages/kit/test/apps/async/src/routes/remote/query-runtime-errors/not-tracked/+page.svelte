@@ -35,7 +35,7 @@
 </button>
 
 <button
-	id="read-current"
+	id="read-await"
 	onclick={async () => {
 		try {
 			await stored;
@@ -45,5 +45,19 @@
 		}
 	}}
 >
-	read current
+	read via await
+</button>
+
+<button
+	id="read-current"
+	onclick={async () => {
+		try {
+			stored.current;
+			result = 'success! :)';
+		} catch (error) {
+			result = get_message(error);
+		}
+	}}
+>
+	read via .current
 </button>

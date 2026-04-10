@@ -504,7 +504,7 @@ class QueryProxy {
 		// TODO iterate on error messages
 		if (!this.#tracking) {
 			throw new Error(
-				'This query was not created in a reactive context and is limited to calling `.run`, `.refresh`, and `.set`.'
+				'This query was not created in a reactive context and is limited to calling `.current`, `.run`, `.refresh`, and `.set`.'
 			);
 		}
 
@@ -534,7 +534,7 @@ class QueryProxy {
 	}
 
 	get current() {
-		return this.#get_cached_query().current;
+		return this.#safe_get_cached_query()?.current;
 	}
 
 	get error() {
