@@ -2,6 +2,7 @@ import { query, prerender, command, form, requested } from '$app/server';
 import { StandardSchemaV1 } from '@standard-schema/spec';
 import {
 	RemoteForm,
+	RemoteFormFields,
 	RemoteFormInput,
 	RemotePrerenderFunction,
 	RemoteQueryFunction,
@@ -442,6 +443,49 @@ function form_tests() {
 		form.fields.allIssues();
 	}
 	void f10;
+
+	const f11 = form(
+		null as any as StandardSchemaV1<{
+			differing: { type: 'a'; propA: string } | { type: 'b'; propB?: string };
+		}>,
+		(data) => {
+			data.differing.type === 'a' || data.differing.type === 'b';
+			if (data.differing.type === 'a') {
+				data.differing.propA === '';
+				// @ts-expect-error
+				data.differing.propB;
+			} else {
+				data.differing.propB === '';
+				// @ts-expect-error
+				data.differing.propA;
+			}
+			return { success: true };
+		}
+	);
+	f11.fields.differing.issues();
+	f11.fields.differing.value().type === 'a' || f11.fields.differing.value().type === 'b';
+	const f11_field = f11.fields.differing.value();
+	if (f11_field.type === 'a') {
+		f11_field.propA === '';
+		// @ts-expect-error
+		f11_field.propB;
+	}
+	f11.fields.differing.propA.value();
+	f11.fields.differing.propB.issues();
+	// @ts-expect-error
+	f11.fields.differing.propC.value();
+	f11.fields.differing.set({ type: 'a', propA: 'test' });
+	f11.fields.differing.set({ type: 'b', propB: 'test' });
+	f11.fields.differing.set({ type: 'b' });
+	// @ts-expect-error
+	f11.fields.differing.set({ type: 'b', propA: 'test' });
+	// @ts-expect-error
+	f11.fields.differing.set({ type: 'a', propB: 'test' });
+	// test that you can narrow yourself if you want to
+	const f11_field2 = f11.fields.differing as RemoteFormFields<{ type: 'a'; propA: string }>;
+	f11_field2.propA;
+	// @ts-expect-error
+	f11_field2.propB;
 }
 form_tests();
 

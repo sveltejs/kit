@@ -28,7 +28,7 @@ jobs:
       - name: Get PR ref
         if: github.event_name != 'workflow_dispatch'
         id: pr
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const { data: pull } = await github.rest.pulls.get({

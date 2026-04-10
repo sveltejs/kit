@@ -1,5 +1,5 @@
 /** @import { ServerMetadata } from 'types' */
-/** @import { OutputBundle } from 'rollup' */
+/** @import { Rollup } from 'vite' */
 
 import fs from 'node:fs';
 import path from 'node:path';
@@ -13,7 +13,7 @@ import { import_peer } from '../../../utils/import.js';
  * @param {Array<{ hash: string, file: string }>} remotes
  * @param {ServerMetadata} metadata
  * @param {string} cwd
- * @param {OutputBundle} server_bundle
+ * @param {Rollup.OutputBundle} server_bundle
  * @param {NonNullable<import('vitest/config').ViteUserConfig['build']>['sourcemap']} sourcemap
  */
 export async function treeshake_prerendered_remotes(
