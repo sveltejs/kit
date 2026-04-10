@@ -129,7 +129,6 @@ export async function run_remote_function(event, state, allow_cookies, cache, ge
 	const store = {
 		event: {
 			...event,
-			cache,
 			setHeaders: () => {
 				throw new Error('setHeaders is not allowed in remote functions');
 			},
@@ -161,6 +160,7 @@ export async function run_remote_function(event, state, allow_cookies, cache, ge
 		},
 		state: {
 			...state,
+			cache,
 			is_in_remote_function: true
 		}
 	};

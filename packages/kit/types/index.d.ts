@@ -303,7 +303,7 @@ declare module '@sveltejs/kit' {
 	}
 
 	/**
-	 * Options for [`event.cache`](https://svelte.dev/docs/kit/@sveltejs-kit#RequestEvent)
+	 * Options for [`query.cache`](https://svelte.dev/docs/kit/remote-functions#Caching)
 	 */
 	export interface CacheOptions {
 		ttl: string | number;
@@ -1576,12 +1576,6 @@ declare module '@sveltejs/kit' {
 		 * `true` for `+server.js` calls coming from SvelteKit without the overhead of actually making an HTTP request. This happens when you make same-origin `fetch` requests on the server.
 		 */
 		isSubRequest: boolean;
-
-		/**
-		 * Configure HTTP caching for this response. `public` uses shared caches (CDN / `Cache-Control`);
-		 * `private` applies only to remote query responses stored via the browser Cache API.
-		 */
-		cache: RequestCache;
 
 		/**
 		 * Access to spans for tracing. If tracing is not enabled, these spans will do nothing.
@@ -3458,6 +3452,12 @@ declare module '$app/server' {
 		 * @since 2.35
 		 */
 		function batch<Schema extends StandardSchemaV1, Output>(schema: Schema, fn: (args: StandardSchemaV1.InferOutput<Schema>[]) => MaybePromise<(arg: StandardSchemaV1.InferOutput<Schema>, idx: number) => Output>): RemoteQueryFunction<StandardSchemaV1.InferInput<Schema>, Output>;
+		
+		function cache(input: string | import("@sveltejs/kit").CacheOptions): void;
+		namespace cache {
+			
+			function invalidate(tags: string[]): void;
+		}
 	}
 	/**
 	 * In the context of a remote `command` or `form` request, returns an iterable

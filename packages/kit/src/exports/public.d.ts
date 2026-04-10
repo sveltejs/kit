@@ -329,7 +329,7 @@ export interface Emulator {
 }
 
 /**
- * Options for [`event.cache`](https://svelte.dev/docs/kit/@sveltejs-kit#RequestEvent)
+ * Options for [`query.cache`](https://svelte.dev/docs/kit/remote-functions#Caching)
  */
 export interface CacheOptions {
 	ttl: string | number;
@@ -1602,12 +1602,6 @@ export interface RequestEvent<
 	 * `true` for `+server.js` calls coming from SvelteKit without the overhead of actually making an HTTP request. This happens when you make same-origin `fetch` requests on the server.
 	 */
 	isSubRequest: boolean;
-
-	/**
-	 * Configure HTTP caching for this response. `public` uses shared caches (CDN / `Cache-Control`);
-	 * `private` applies only to remote query responses stored via the browser Cache API.
-	 */
-	cache: RequestCache;
 
 	/**
 	 * Access to spans for tracing. If tracing is not enabled, these spans will do nothing.

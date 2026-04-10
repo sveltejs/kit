@@ -17,7 +17,7 @@ describe('parse_cache_duration', () => {
 
 test('private scope uses x-sveltekit-cache-control', () => {
 	const h = new Headers();
-	apply_cache_headers(h, { scope: 'private', maxAgeSeconds: 42, tags: ['t'], refresh: true }, {});
+	apply_cache_headers(h, { scope: 'private', maxAgeSeconds: 42, tags: ['t'], refresh: true });
 	expect(h.get(SVELTEKIT_RUNTIME_CACHE_CONTROL_HEADER)).toBe('private, max-age=42');
 	expect(h.get(SVELTEKIT_CACHE_CONTROL_TAGS_HEADER)).toBe('t');
 	expect(h.get('cache-control')).toBeNull();

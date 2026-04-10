@@ -1170,18 +1170,16 @@ Inside `query`, `form` and `prerender` functions it is possible to use the [`red
 
 ## Caching
 
-By default, remote functions do not cache their results. You can change this by using the `cache` function from `getRequestEvent`, which allows you to store the result of a remote function for a certain amount of time.
+By default, remote functions do not cache their results. You can change this by using `query.cache(...)`, which allows you to store the result of a remote function for a certain amount of time.
 
 ```ts
 /// file: src/routes/data.remote.js
 // ---cut---
-import { query, getRequestEvent } from '$app/server';
+import { query } from '$app/server';
 
 export const getFastData = query(async () => {
-	const { cache } = getRequestEvent();
-
 	// cache for 100 seconds
-	cache('100s');
+	query.cache('100s');
 
 	return { data: '...' };
 });
@@ -1191,12 +1189,10 @@ The `cache` function accepts either a string representing the time-to-live (TTL)
 
 ```ts
 /// file: src/routes/data.remote.js
-import { query, getRequestEvent } from '$app/server';
+import { query } from '$app/server';
 // ---cut---
 export const getFastData = query(async () => {
-	const { cache } = getRequestEvent();
-
-	cache({
+	query.cache({
 		// fresh for 1 minute
 		ttl: '1m',
 		// can serve stale up to 5 minutes
@@ -1225,8 +1221,7 @@ To invalidate the cache for a specific query, you can call its `invalidate` meth
 import { query, command } from '$app/server';
 
 export const getFastData = query(async () => {
-	const { cache } = getRequestEvent();
-	cache('100s');
+	query.cache('100s');
 	return { data: '...' };
 });
 
@@ -1237,23 +1232,21 @@ export const updateData = command(async () => {
 });
 ```
 
-Alternatively, if you used tags when setting up the cache, you can invalidate by tag using `cache.invalidate(...)`:
+Alternatively, if you used tags when setting up the cache, you can invalidate by tag using `query.cache.invalidate(...)`:
 
 ```ts
 /// file: src/routes/data.remote.js
-import { query, command, getRequestEvent } from '$app/server';
+import { query, command } from '$app/server';
 
 export const getFastData = query(async () => {
-	const { cache } = getRequestEvent();
-	cache({ ttl: '100s', tags: ['my-data'] });
+	query.cache({ ttl: '100s', tags: ['my-data'] });
 	return { data: '...' };
 });
 
 export const updateData = command(async () => {
-	const { cache } = getRequestEvent();
 	// invalidate all queries using the my-data tag;
 	// the next time someone requests a query which had that tag, it will be called again
-	cache.invalidate(['my-data']);
+	query.cache.invalidate(['my-data']);
 });
 ```
 

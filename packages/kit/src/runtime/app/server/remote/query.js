@@ -96,6 +96,20 @@ export function query(validate_or_fn, maybe_fn) {
 }
 
 /**
+ * @param {string | import('@sveltejs/kit').CacheOptions} input
+ */
+function query_cache(input) {
+	get_request_store().state.cache(input);
+}
+
+/**
+ * @param {string[]} tags
+ */
+function invalidate_query_cache(tags) {
+	get_request_store().state.cache.invalidate(tags);
+}
+
+/**
  * @param {RemoteQueryInternals} __
  * @param {RequestState} state
  * @param {any} arg
@@ -318,13 +332,13 @@ function create_query_resource(__, arg, state, fn) {
 			return update_refresh_value(refresh_context, value, is_immediate_refresh);
 		},
 		invalidate() {
-			const { state, event } = get_request_store();
+			const { state } = get_request_store();
 			// align with how url is constructed on the client, which is used for the cache key
 			const invalidate_key =
 				arg !== undefined
 					? create_remote_key(__.id, stringify_remote_arg(arg, state.transport))
 					: __.id;
-			event.cache.invalidate([invalidate_key]);
+			invalidate_query_cache([invalidate_key]);
 		},
 		run() {
 			// potential TODO: if we want to be able to run queries at the top level of modules / outside of the request context, we could technically remove
@@ -356,6 +370,8 @@ function create_query_resource(__, arg, state, fn) {
 
 // Add batch as a property to the query function
 Object.defineProperty(query, 'batch', { value: batch, enumerable: true });
+Object.defineProperty(query, 'cache', { value: query_cache, enumerable: true });
+Object.defineProperty(query_cache, 'invalidate', { value: invalidate_query_cache, enumerable: true });
 
 /**
  * @param {RemoteInternals} __

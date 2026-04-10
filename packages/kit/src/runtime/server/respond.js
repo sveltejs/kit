@@ -165,6 +165,7 @@ export async function internal_respond(request, options, manifest, state) {
 			 */
 			validated: null
 		},
+		cache: create_erroring_cache(),
 		is_in_remote_function: false,
 		is_in_render: false,
 		is_in_universal_load: false
@@ -219,8 +220,7 @@ export async function internal_respond(request, options, manifest, state) {
 		url,
 		isDataRequest: is_data_request,
 		isSubRequest: state.depth > 0,
-		isRemoteRequest: !!remote_id,
-		cache: create_erroring_cache()
+		isRemoteRequest: !!remote_id
 	};
 
 	event.fetch = create_fetch({

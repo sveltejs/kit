@@ -22,7 +22,8 @@ import {
 	ClientInit,
 	Transport,
 	HandleValidationError,
-	RemoteFormIssue
+	RemoteFormIssue,
+	RequestCache
 } from '@sveltejs/kit';
 import {
 	HttpMethod,
@@ -694,6 +695,7 @@ export interface RequestState {
 		validated: null | Map<string, Set<any>>;
 		kit_cache?: KitCacheState;
 	};
+	readonly cache: RequestCache;
 	readonly is_in_remote_function: boolean;
 	readonly is_in_render: boolean;
 	readonly is_in_universal_load: boolean;

@@ -73,7 +73,7 @@ export function parse_cache_duration(value) {
  * @param {string | import('@sveltejs/kit').CacheOptions} input
  * @returns {NormalizedCacheInput}
  */
-export function normalize_cache_input(input) {
+function normalize_cache_input(input) {
 	if (typeof input === 'string') {
 		return { ttl: parse_cache_duration(input), scope: 'public', refresh: true };
 	}
@@ -102,11 +102,11 @@ export function merge_remote_cache_tags(tags, remote_id) {
 export function create_erroring_cache() {
 	function cache() {
 		throw new Error(
-			'event.cache() can only be used inside remote functions (`query`, `query.batch`, `prerender`)'
+			'query.cache() can only be used inside remote functions (`query`, `query.batch`, `prerender`)'
 		);
 	}
 	cache.invalidate = () => {
-		throw new Error('event.cache.invalidate() can only be used inside remote functions');
+		throw new Error('query.cache.invalidate() can only be used inside remote functions');
 	};
 	return cache;
 }
@@ -150,7 +150,7 @@ export function create_request_cache(state, remote_id, arg) {
 	cache.invalidate = () => {
 		// TODO should we allow invalidate instead?
 		throw new Error(
-			'event.cache.invalidate() can only be used inside mutating remote functions (`command`, `form`)'
+			'query.cache.invalidate() can only be used inside mutating remote functions (`command`, `form`)'
 		);
 	};
 
@@ -164,7 +164,7 @@ export function create_request_cache(state, remote_id, arg) {
 export function create_invalidate_cache(state) {
 	function cache() {
 		throw new Error(
-			'event.cache() can only be used inside querying remote functions (`query`, `query.batch`, `prerender`)'
+			'query.cache() can only be used inside querying remote functions (`query`, `query.batch`, `prerender`)'
 		);
 	}
 
@@ -208,9 +208,8 @@ function unique_merge(a, b) {
 /**
  * @param {Headers} headers
  * @param {KitCacheDirective} directive
- * @param {{ remote_id?: string | null }} [ctx]
  */
-export function apply_cache_headers(headers, directive, ctx = {}) {
+export function apply_cache_headers(headers, directive) {
 	const tags = directive.tags;
 
 	if (directive.scope === 'private') {
@@ -249,7 +248,7 @@ export async function finalize_kit_cache(response, state, remote_id, handler) {
 		// if (handler?.setHeaders) {
 		// 	await handler.setHeaders(response.headers, directive, { remote_id });
 		// } else {
-		apply_cache_headers(response.headers, directive, { remote_id });
+		apply_cache_headers(response.headers, directive);
 		// }
 	}
 
