@@ -251,7 +251,7 @@ async function* race_all(array, fn) {
 			value: result
 		}));
 
-		promise.catch(noop);
+		promise.catch(() => pending.delete(promise));
 		pending.add(promise);
 	}
 

@@ -651,6 +651,12 @@ export class LiveQuery {
 		this.#disconnect_current();
 	};
 
+	#on_pageshow = (/** @type {PageTransitionEvent} */ e) => {
+		if (e.persisted) {
+			this.#on_online();
+		}
+	};
+
 	#start() {
 		if (this.#destroyed) return;
 
@@ -659,6 +665,7 @@ export class LiveQuery {
 			window.addEventListener('offline', this.#on_offline);
 			window.addEventListener('pagehide', this.#on_pagehide);
 			window.addEventListener('beforeunload', this.#on_pagehide);
+			window.addEventListener('pageshow', this.#on_pageshow);
 		}
 
 		this.#clear_retry();
@@ -677,6 +684,7 @@ export class LiveQuery {
 			window.removeEventListener('offline', this.#on_offline);
 			window.removeEventListener('pagehide', this.#on_pagehide);
 			window.removeEventListener('beforeunload', this.#on_pagehide);
+			window.removeEventListener('pageshow', this.#on_pageshow);
 		}
 	}
 

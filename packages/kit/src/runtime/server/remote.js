@@ -161,7 +161,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 				new URL(event.request.url).searchParams.get('payload')
 			);
 
-			const iterator = await internals.run(event, state, parse_remote_arg(payload, transport));
+			const generator = internals.run(event, state, parse_remote_arg(payload, transport));
 
 			const encoder = new TextEncoder();
 
@@ -181,7 +181,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 			async function cancel() {
 				if (closed) return;
 				closed = true;
-				await iterator.return?.();
+				await generator.return(undefined);
 			}
 
 			event.request.signal.addEventListener('abort', cancel, { once: true });
@@ -197,7 +197,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 
 						try {
 							while (true) {
-								const { value, done } = await iterator.next();
+								const { value, done } = await generator.next();
 
 								if (done) {
 									await cancel();
@@ -308,7 +308,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 		}
 
 		const results = await Promise.all(
-			Object.entries(map).map(async ([key, promise]) => {
+			Array.from(map, async ([key, promise]) => {
 				try {
 					return [key, { type: 'result', data: await promise }];
 				} catch (error) {
