@@ -19,7 +19,6 @@ import { is_chrome_devtools_request, not_found } from '../utils.js';
 import { SCHEME } from '../../../utils/url.js';
 import { check_feature } from '../../../utils/features.js';
 import { escape_html } from '../../../utils/escape.js';
-import { with_runtime_cache } from '../../../runtime/server/runtime-cache.js';
 
 const cwd = process.cwd();
 // vite-specifc queries that we should skip handling for css urls
@@ -513,11 +512,16 @@ export async function dev(vite, vite_config, svelte_config, get_remotes) {
 				const { set_assets } = await vite.ssrLoadModule('$app/paths/internal/server');
 				set_assets(assets);
 
+				const memory_cache = await vite.ssrLoadModule(
+					`${runtime_base}/server/in-memory-query-cache.js`
+				);
+
 				const server = new Server(manifest);
 
 				await server.init({
 					env,
-					read: (file) => createReadableStream(from_fs(file))
+					read: (file) => createReadableStream(from_fs(file)),
+					memory_cache: memory_cache.default()
 				});
 
 				const request = await getRequest({
@@ -547,28 +551,24 @@ export async function dev(vite, vite_config, svelte_config, get_remotes) {
 					return;
 				}
 
-				const rendered = await with_runtime_cache(
-					request,
-					{
-						getClientAddress: () => {
-							const { remoteAddress } = req.socket;
-							if (remoteAddress) return remoteAddress;
-							throw new Error('Could not determine clientAddress');
-						},
-						read: (file) => {
-							if (file in manifest._.server_assets) {
-								return fs.readFileSync(from_fs(file));
-							}
-
-							return fs.readFileSync(path.join(svelte_config.kit.files.assets, file));
-						},
-						before_handle: (event, config, prerender) => {
-							async_local_storage.enterWith({ event, config, prerender });
-						},
-						emulator
+				const rendered = await server.respond(request, {
+					getClientAddress: () => {
+						const { remoteAddress } = req.socket;
+						if (remoteAddress) return remoteAddress;
+						throw new Error('Could not determine clientAddress');
 					},
-					server
-				);
+					read: (file) => {
+						if (file in manifest._.server_assets) {
+							return fs.readFileSync(from_fs(file));
+						}
+
+						return fs.readFileSync(path.join(svelte_config.kit.files.assets, file));
+					},
+					before_handle: (event, config, prerender) => {
+						async_local_storage.enterWith({ event, config, prerender });
+					},
+					emulator
+				});
 
 				if (rendered.status === 404) {
 					// @ts-expect-error

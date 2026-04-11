@@ -306,40 +306,29 @@ declare module '@sveltejs/kit' {
 	 * Options for [`query.cache`](https://svelte.dev/docs/kit/remote-functions#Caching)
 	 */
 	export interface CacheOptions {
-		ttl: string | number;
-		stale?: string | number;
-		/** @default 'private' */
-		scope?: 'public' | 'private';
+		maxAge: string | number;
+		staleWhileRevalidate?: string | number;
 		tags?: string[];
-		/** @default false */
-		refresh?: boolean;
 	}
 
-	/**
-	 * Normalized cache directive passed to custom `kit.cache` handlers.
-	 */
-	export interface KitCacheDirective {
-		scope: 'public' | 'private';
-		maxAgeSeconds: number;
-		staleSeconds?: number;
+	export interface KitCacheMetadata {
+		maxAge: number;
+		staleWhileRevalidate?: number;
 		tags: string[];
-		refresh: boolean;
 	}
 
 	/**
-	 * Custom cache integration (e.g. platform purge hooks). Export `create` or `default` from `kit.cache.path`.
+	 * Custom query cache integration. Export `get`, `set`, and `invalidate` from `kit.cache.path`.
 	 */
 	export interface KitCacheHandler {
-		setHeaders?(
-			headers: Headers,
-			directive: KitCacheDirective,
-			ctx: { remote_id?: string | null }
-		): MaybePromise<void>;
-		invalidate?(tags: string[]): MaybePromise<void>;
+		get(queryId: string): MaybePromise<string | undefined>;
+		set(stringifiedResponse: string, cache: KitCacheMetadata): MaybePromise<void>;
+		setHeaders?(headers: Headers, cache: KitCacheMetadata): MaybePromise<void>;
+		invalidate(tags: string[]): MaybePromise<void>;
 	}
 
 	export interface RequestCache {
-		(arg: CacheOptions | string): void;
+		(arg: CacheOptions): void;
 		invalidate(tags: string[]): void;
 	}
 
@@ -350,7 +339,7 @@ declare module '@sveltejs/kit' {
 		 */
 		adapter?: Adapter;
 		/**
-		 * Optional module that implements [`KitCacheHandler`](https://svelte.dev/docs/kit/@sveltejs-kit#KitCacheHandler) via a `create` or default export function.
+		 * Optional module that implements [`KitCacheHandler`](https://svelte.dev/docs/kit/@sveltejs-kit#KitCacheHandler).
 		 */
 		cache?: {
 			/** Absolute or project-relative path resolved from your app root */
@@ -3453,7 +3442,7 @@ declare module '$app/server' {
 		 */
 		function batch<Schema extends StandardSchemaV1, Output>(schema: Schema, fn: (args: StandardSchemaV1.InferOutput<Schema>[]) => MaybePromise<(arg: StandardSchemaV1.InferOutput<Schema>, idx: number) => Output>): RemoteQueryFunction<StandardSchemaV1.InferInput<Schema>, Output>;
 		
-		function cache(input: string | import("@sveltejs/kit").CacheOptions): void;
+		function cache(input: import("@sveltejs/kit").CacheOptions): void;
 		namespace cache {
 			
 			function invalidate(tags: string[]): void;

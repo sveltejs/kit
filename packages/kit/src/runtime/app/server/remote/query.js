@@ -3,12 +3,24 @@
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 import { get_request_store } from '@sveltejs/kit/internal/server';
 import { create_remote_key, stringify, stringify_remote_arg } from '../../../shared.js';
+import { app_dir, base } from '$app/paths/internal/server';
 import { prerendering } from '__sveltekit/environment';
 import { noop } from '../../../../utils/functions.js';
-import { create_validator, get_cache, get_response, run_remote_function } from './shared.js';
+import {
+	create_validator,
+	get_cache,
+	get_response,
+	parse_remote_response,
+	run_remote_function
+} from './shared.js';
 import { handle_error_and_jsonify } from '../../../server/utils.js';
 import { HttpError, SvelteKitError } from '@sveltejs/kit/internal';
-import { create_request_cache } from '../../../server/cache.js';
+import {
+	apply_cache_headers,
+	create_erroring_cache,
+	create_request_cache,
+	get_request_cache_options
+} from '../../../server/cache.js';
 
 /**
  * Creates a remote query. When called from the browser, the function will be invoked on the server via a `fetch` call.
@@ -77,16 +89,51 @@ export function query(validate_or_fn, maybe_fn) {
 		const { event, state } = get_request_store();
 		// if the user got this argument from `requested(query)`, it will have already passed validation
 		const is_validated = is_validated_argument(__, state, arg);
+		const query_id =
+			arg !== undefined
+				? create_remote_key(__.id, stringify_remote_arg(arg, state.transport))
+				: __.id;
 
 		return create_query_resource(__, arg, state, () =>
-			run_remote_function(
-				event,
-				state,
-				false,
-				create_request_cache(state, __.id, arg),
-				() => (is_validated ? arg : validate(arg)),
-				fn
-			)
+			(async () => {
+				const cached = await state.remote.cache?.get(query_id);
+				if (cached !== undefined) {
+					return parse_remote_response(cached, state.transport);
+				}
+
+				const cache = create_request_cache(state, query_id);
+				const result = await run_remote_function(
+					event,
+					state,
+					false,
+					cache,
+					() => (is_validated ? arg : validate(arg)),
+					fn
+				);
+
+				const options = get_request_cache_options(cache);
+				if (!options || !state.remote.cache) return result;
+
+				const stringified = stringify(result, state.transport);
+				await state.remote.cache.set(query_id, stringified, options);
+
+				if (is_remote_query_endpoint_request(event, __.id)) {
+					const headers = new Headers();
+
+					if (state.remote.cache.setHeaders) {
+						await state.remote.cache.setHeaders(headers, options);
+					} else {
+						apply_cache_headers(headers, options);
+					}
+
+					const values = Object.fromEntries(headers.entries());
+					if (Object.keys(values).length > 0) {
+						event.setHeaders(values);
+					}
+				}
+
+				return result;
+			})()
 		);
 	};
 
@@ -96,7 +143,7 @@ export function query(validate_or_fn, maybe_fn) {
 }
 
 /**
- * @param {string | import('@sveltejs/kit').CacheOptions} input
+ * @param {import('@sveltejs/kit').CacheOptions} input
  */
 function query_cache(input) {
 	get_request_store().state.cache(input);
@@ -190,7 +237,7 @@ function batch(validate_or_fn, maybe_fn) {
 				event,
 				state,
 				false,
-				create_request_cache(state, __.id, args),
+				create_erroring_cache(),
 				async () => Promise.all(args.map(validate)),
 				async (/** @type {any[]} */ input) => {
 					const get_result = await fn(input);
@@ -260,7 +307,7 @@ function batch(validate_or_fn, maybe_fn) {
 							event,
 							state,
 							false,
-							create_request_cache(state, __.id, arg),
+							create_erroring_cache(),
 							async () => Promise.all(args.map(validate)),
 							async (input) => {
 								const get_result = await fn(input);
@@ -371,7 +418,10 @@ function create_query_resource(__, arg, state, fn) {
 // Add batch as a property to the query function
 Object.defineProperty(query, 'batch', { value: batch, enumerable: true });
 Object.defineProperty(query, 'cache', { value: query_cache, enumerable: true });
-Object.defineProperty(query_cache, 'invalidate', { value: invalidate_query_cache, enumerable: true });
+Object.defineProperty(query_cache, 'invalidate', {
+	value: invalidate_query_cache,
+	enumerable: true
+});
 
 /**
  * @param {RemoteInternals} __
@@ -419,4 +469,17 @@ function update_refresh_value(
 	}
 
 	return promise.then(noop, noop);
+}
+
+/**
+ * @param {import('@sveltejs/kit').RequestEvent} event
+ * @param {string} query_id
+ */
+function is_remote_query_endpoint_request(event, query_id) {
+	if (!event.isRemoteRequest || event.isSubRequest) return false;
+
+	const pathname = new URL(event.request.url).pathname;
+	const prefix = `${base}/${app_dir}/remote/${query_id}`;
+
+	return pathname === prefix || pathname.startsWith(`${prefix}/`);
 }

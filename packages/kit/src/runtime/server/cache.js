@@ -1,158 +1,127 @@
 /** @import { RequestState } from 'types' */
-import {
-	SVELTEKIT_RUNTIME_CACHE_CONTROL_HEADER,
-	SVELTEKIT_CACHE_CONTROL_TAGS_HEADER,
-	stringify_remote_arg,
-	create_remote_key,
-	SVELTEKIT_CACHE_CONTROL_INVALIDATE_HEADER
-} from '../shared.js';
+import { stringify_remote_arg, create_remote_key } from '../shared.js';
 
 /**
- * @typedef {object} KitCacheDirective
- * @property {'public' | 'private'} scope
- * @property {number} maxAgeSeconds
- * @property {number} [staleSeconds]
- * @property {string[]} tags
- * @property {boolean} refresh
+ * @typedef {{ maxAge: number; tags: string[]; staleWhileRevalidate?: number }} RequestCacheOptions
  */
 
 /**
- * Numeric duration in seconds from strings like `30s`, `100s`, `5m`, `1h`, `1d`, or plain `0`.
- * `ms` values are rounded up to at least 1 second when non-zero.
+ * Numeric duration in seconds from strings like `30s`, `100s`, `5m`, `1h`, or plain `0`.
  * @param {string | number} value
  * @returns {number}
  */
 export function parse_cache_duration(value) {
 	if (typeof value === 'number') {
 		if (!Number.isFinite(value) || value < 0) {
-			throw new Error('cache ttl must be a non-negative finite number');
+			throw new Error('cache duration must be a non-negative finite number');
 		}
 		return Math.floor(value);
 	}
-	const m = String(value)
+
+	const match = String(value)
 		.trim()
 		.match(/^(\d+(?:\.\d+)?)\s*(s|m|h)?$/i);
-	if (!m) {
+
+	if (!match) {
 		throw new Error(
 			`Invalid cache duration "${value}" — expected a string like "30s", "5m", or "1h"`
 		);
 	}
-	const n = Number(m[1]);
-	const unit = (m[2] ?? 's').toLowerCase();
-	if (!Number.isFinite(n) || n < 0) {
-		throw new Error('cache ttl must be a non-negative number');
+
+	const count = Number(match[1]);
+	const unit = (match[2] ?? 's').toLowerCase();
+
+	if (!Number.isFinite(count) || count < 0) {
+		throw new Error('cache duration must be a non-negative number');
 	}
-	/** @type {number} */
-	let seconds;
+
 	switch (unit) {
-		case 's':
-			seconds = Math.floor(n);
-			break;
 		case 'm':
-			seconds = Math.floor(n * 60);
-			break;
+			return Math.floor(count * 60);
 		case 'h':
-			seconds = Math.floor(n * 3600);
-			break;
+			return Math.floor(count * 3600);
 		default:
-			seconds = Math.floor(n);
+			return Math.floor(count);
 	}
-	return seconds;
 }
 
 /**
- * @typedef {object} NormalizedCacheInput
- * @property {number} ttl
- * @property {number} [stale]
- * @property {'public' | 'private'} scope
- * @property {string[]} [tags]
- * @property {boolean} refresh
- */
-
-/**
- * @param {string | import('@sveltejs/kit').CacheOptions} input
- * @returns {NormalizedCacheInput}
+ * @param {import('@sveltejs/kit').CacheOptions} input
+ * @returns {RequestCacheOptions}
  */
 function normalize_cache_input(input) {
-	if (typeof input === 'string') {
-		return { ttl: parse_cache_duration(input), scope: 'public', refresh: true };
-	}
-	const ttl = parse_cache_duration(input.ttl);
-	const stale = input.stale !== undefined ? parse_cache_duration(input.stale) : undefined;
-	return {
-		ttl,
-		stale,
-		scope: input.scope ?? 'private',
-		tags: input.tags ? [...input.tags] : undefined,
-		refresh: input.refresh !== true
-	};
-}
+	const maxAge = parse_cache_duration(input.maxAge);
+	const staleWhileRevalidate =
+		input.staleWhileRevalidate !== undefined
+			? parse_cache_duration(input.staleWhileRevalidate)
+			: undefined;
 
-/**
- * @param {string[]} tags
- * @param {string | null | undefined} remote_id
- */
-export function merge_remote_cache_tags(tags, remote_id) {
-	if (!remote_id) return tags;
-	const t = `sveltekit-remote:${remote_id.replace(/\//g, ':')}`;
-	if (tags.includes(t)) return tags;
-	return [...tags, t];
+	return {
+		maxAge,
+		staleWhileRevalidate:
+			staleWhileRevalidate && staleWhileRevalidate > 0 ? staleWhileRevalidate : undefined,
+		tags: input.tags ? [...input.tags] : []
+	};
 }
 
 export function create_erroring_cache() {
 	function cache() {
 		throw new Error(
-			'query.cache() can only be used inside remote functions (`query`, `query.batch`, `prerender`)'
+			'query.cache() can only be used inside remote functions `query` and `prerender`'
 		);
 	}
+
 	cache.invalidate = () => {
 		throw new Error('query.cache.invalidate() can only be used inside remote functions');
 	};
+
 	return cache;
 }
 
+const cache_state_symbol = Symbol('sveltekit.request_cache_state');
+
 /**
  * @param {RequestState} state
- * @param {string} remote_id
- * @param {any} arg
+ * @param {string} query_key
  * @returns {import('@sveltejs/kit').RequestCache}
  */
-export function create_request_cache(state, remote_id, arg) {
-	/**
-	 * @param {string | import('@sveltejs/kit').CacheOptions} input
-	 */
+export function create_request_cache(state, query_key) {
+	/** @type {{ options: RequestCacheOptions | null }} */
+	const cache_state = {
+		options: null
+	};
+
+	/** @param {import('@sveltejs/kit').CacheOptions} input */
 	function cache(input) {
-		const opts = normalize_cache_input(input);
-		const bag = get_bag(state);
-		const prev = bag.directive;
-		let tags = opts.tags;
-		if (!tags?.length) {
-			// align with how url is constructed on the client, which is used for the cache key
-			const invalidate_key =
-				arg !== undefined
-					? create_remote_key(remote_id, stringify_remote_arg(arg, state.transport))
-					: remote_id;
-			tags = [invalidate_key];
+		if (!state.remote.cache) {
+			console.error('No cache implementation provided, cannot cache remote function response');
+			return;
 		}
 
-		const staleSeconds =
-			opts.refresh && opts.stale !== undefined && opts.stale > 0 ? opts.stale : undefined;
+		if (cache_state.options) {
+			console.error('Cache options already set, cannot set cache options again');
+			return;
+		}
 
-		bag.directive = {
-			scope: opts.scope,
-			maxAgeSeconds: opts.ttl,
-			staleSeconds,
-			tags: unique_merge(prev?.tags, tags),
-			refresh: opts.refresh
+		const normalized = normalize_cache_input(input);
+		normalized.tags.push(query_key);
+
+		cache_state.options = {
+			maxAge: normalized.maxAge,
+			staleWhileRevalidate: normalized.staleWhileRevalidate,
+			tags: normalized.tags
 		};
 	}
 
 	cache.invalidate = () => {
-		// TODO should we allow invalidate instead?
 		throw new Error(
 			'query.cache.invalidate() can only be used inside mutating remote functions (`command`, `form`)'
 		);
 	};
+
+	Object.defineProperty(cache, cache_state_symbol, {
+		value: cache_state
+	});
 
 	return cache;
 }
@@ -164,99 +133,48 @@ export function create_request_cache(state, remote_id, arg) {
 export function create_invalidate_cache(state) {
 	function cache() {
 		throw new Error(
-			'query.cache() can only be used inside querying remote functions (`query`, `query.batch`, `prerender`)'
+			'query.cache() can only be used inside querying remote functions `query` and `prerender`)'
 		);
 	}
 
 	/** @param {string[]} tags */
-	function invalidate(tags) {
-		const bag = get_bag(state);
-		for (const t of tags) {
-			if (!bag.invalidations.includes(t)) {
-				bag.invalidations.push(t);
-			}
+	cache.invalidate = (tags) => {
+		if (!state.remote.cache) {
+			console.error('No cache implementation provided, cannot invalidate remote function cache');
+		} else {
+			state.remote.cache.invalidate(tags);
 		}
-	}
-
-	cache.invalidate = invalidate;
+	};
 
 	return cache;
 }
 
-/** @param {RequestState} state */
-function get_bag(state) {
-	state.remote.kit_cache ??= { directive: null, invalidations: [] };
-	return state.remote.kit_cache;
-}
-
 /**
- * @param {string[] | undefined} a
- * @param {string[]} b
+ * @param {import('@sveltejs/kit').RequestCache} cache
+ * @returns {RequestCacheOptions | null}
  */
-function unique_merge(a, b) {
-	const out = [];
-	const seen = new Set();
-	for (const x of [...(a ?? []), ...b]) {
-		if (!seen.has(x)) {
-			seen.add(x);
-			out.push(x);
-		}
-	}
-	return out;
+export function get_request_cache_options(cache) {
+	const cache_state = /** @type {{ options: RequestCacheOptions | null } | undefined} */ (
+		/** @type {any} */ (cache)[cache_state_symbol]
+	);
+
+	return cache_state?.options ?? null;
 }
 
 /**
  * @param {Headers} headers
- * @param {KitCacheDirective} directive
+ * @param {RequestCacheOptions} options
  */
-export function apply_cache_headers(headers, directive) {
-	const tags = directive.tags;
+export function apply_cache_headers(headers, options) {
+	const content = ['public', `max-age=${options.maxAge}`];
 
-	if (directive.scope === 'private') {
-		const parts = ['private', `max-age=${directive.maxAgeSeconds}`];
-		if (directive.staleSeconds && directive.refresh) {
-			parts.push(`stale-while-revalidate=${directive.staleSeconds}`);
-		}
-		headers.set(SVELTEKIT_RUNTIME_CACHE_CONTROL_HEADER, parts.join(', '));
-		if (tags.length) {
-			headers.set(SVELTEKIT_CACHE_CONTROL_TAGS_HEADER, tags.join(','));
-		}
-		return;
+	if (options.staleWhileRevalidate) {
+		content.push(`stale-while-revalidate=${options.staleWhileRevalidate}`);
 	}
 
-	const cdn = ['public', `max-age=${directive.maxAgeSeconds}`];
-	if (directive.staleSeconds && directive.refresh) {
-		cdn.push(`stale-while-revalidate=${directive.staleSeconds}`);
-	}
-	headers.set('CDN-Cache-Control', cdn.join(', '));
-	if (tags.length) {
-		headers.set('Cache-Tag', tags.join(','));
-	}
-}
+	headers.set('CDN-Cache-Control', content.join(', '));
 
-/**
- * @param {Response} response
- * @param {RequestState} state
- * @param {string | null | undefined} remote_id
- * @param {import('types').KitCacheHandler | null | undefined} handler
- */
-export async function finalize_kit_cache(response, state, remote_id, handler) {
-	const bag = state.remote.kit_cache;
-	const directive = bag?.directive;
-
-	if (response.ok && directive) {
-		// if (handler?.setHeaders) {
-		// 	await handler.setHeaders(response.headers, directive, { remote_id });
-		// } else {
-		apply_cache_headers(response.headers, directive);
-		// }
-	}
-
-	if (handler?.invalidate && bag?.invalidations?.length) {
-		await handler.invalidate(bag.invalidations);
-	}
-
-	for (const tag of bag?.invalidations ?? []) {
-		response.headers.append(SVELTEKIT_CACHE_CONTROL_INVALIDATE_HEADER, tag);
+	if (options.tags.length > 0) {
+		headers.set('Cache-Tag', options.tags.join(','));
 	}
 }

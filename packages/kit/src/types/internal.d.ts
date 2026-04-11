@@ -173,7 +173,9 @@ export interface Env {
 }
 
 export class InternalServer extends Server {
-	init(options: ServerInitOptions): Promise<void>;
+	init(
+		options: ServerInitOptions & { memory_cache?: import('types').KitCacheHandler }
+	): Promise<void>;
 	respond(
 		request: Request,
 		options: RequestOptions & {
@@ -651,30 +653,17 @@ export type RecordSpan = <T>(options: {
 	fn: (current: Span) => Promise<T>;
 }) => Promise<T>;
 
-/**
- * Internal state associated with the current `RequestEvent`,
- * used for tracking things like remote function calls
- */
-export interface KitCacheDirective {
-	scope: 'public' | 'private';
-	maxAgeSeconds: number;
-	staleSeconds?: number;
+export interface KitCacheOptions {
+	maxAge: number;
+	staleWhileRevalidate?: number;
 	tags: string[];
-	refresh: boolean;
-}
-
-export interface KitCacheState {
-	directive: KitCacheDirective | null;
-	invalidations: string[];
 }
 
 export interface KitCacheHandler {
-	setHeaders?(
-		headers: Headers,
-		directive: KitCacheDirective,
-		ctx: { remote_id?: string | null }
-	): MaybePromise<void>;
-	invalidate?(tags: string[]): MaybePromise<void>;
+	get(queryId: string): MaybePromise<string | undefined>;
+	set(queryId: string, stringifiedResponse: string, cache: KitCacheOptions): MaybePromise<void>;
+	setHeaders?(headers: Headers, cache: KitCacheOptions): MaybePromise<void>;
+	invalidate(tags: string[]): MaybePromise<void>;
 }
 
 export interface RequestState {
@@ -693,7 +682,7 @@ export interface RequestState {
 		refreshes: null | Record<string, Promise<any>>;
 		requested: null | Map<string, string[]>;
 		validated: null | Map<string, Set<any>>;
-		kit_cache?: KitCacheState;
+		cache: null | KitCacheHandler;
 	};
 	readonly cache: RequestCache;
 	readonly is_in_remote_function: boolean;

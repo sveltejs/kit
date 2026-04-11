@@ -8,8 +8,7 @@ import { stringify_remote_arg } from '../../shared.js';
 import {
 	get_remote_request_headers,
 	apply_refreshes,
-	categorize_updates,
-	apply_private_cache_invalidate_headers
+	categorize_updates
 } from './shared.svelte.js';
 
 /**
@@ -67,8 +66,6 @@ export function command(id) {
 					// (which shouldn't happen because we handle errors on the server and always send a 200 response)
 					throw new Error('Failed to execute remote function');
 				}
-
-				apply_private_cache_invalidate_headers(response);
 
 				const result = /** @type {RemoteFunctionResponse} */ (await response.json());
 				if (result.type === 'redirect') {

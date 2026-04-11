@@ -1,10 +1,12 @@
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
+import { create_remote_key, stringify_remote_arg } from '../shared.js';
 import {
-	SVELTEKIT_CACHE_CONTROL_INVALIDATE_HEADER,
-	SVELTEKIT_CACHE_CONTROL_TAGS_HEADER,
-	SVELTEKIT_RUNTIME_CACHE_CONTROL_HEADER
-} from '../shared.js';
-import { apply_cache_headers, finalize_kit_cache, parse_cache_duration } from './cache.js';
+	apply_cache_headers,
+	create_invalidate_cache,
+	create_request_cache,
+	get_request_cache_options,
+	parse_cache_duration
+} from './cache.js';
 
 describe('parse_cache_duration', () => {
 	test('parses units', () => {
@@ -15,27 +17,49 @@ describe('parse_cache_duration', () => {
 	});
 });
 
-test('private scope uses x-sveltekit-cache-control', () => {
+test('apply_cache_headers writes public cache headers', () => {
 	const h = new Headers();
-	apply_cache_headers(h, { scope: 'private', maxAgeSeconds: 42, tags: ['t'], refresh: true });
-	expect(h.get(SVELTEKIT_RUNTIME_CACHE_CONTROL_HEADER)).toBe('private, max-age=42');
-	expect(h.get(SVELTEKIT_CACHE_CONTROL_TAGS_HEADER)).toBe('t');
-	expect(h.get('cache-control')).toBeNull();
+	apply_cache_headers(h, { maxAge: 42, tags: ['t'] });
+	expect(h.get('CDN-Cache-Control')).toBe('public, max-age=42');
+	expect(h.get('Cache-Tag')).toBe('t');
 });
 
-test('finalize_kit_cache emits header for query invalidations', async () => {
-	const response = new Response('{}', { status: 200 });
+test('apply_cache_headers includes stale-while-revalidate when configured', () => {
+	const h = new Headers();
+	apply_cache_headers(h, { maxAge: 42, staleWhileRevalidate: 300, tags: ['t'] });
+	expect(h.get('CDN-Cache-Control')).toBe('public, max-age=42, stale-while-revalidate=300');
+});
+
+test('create_request_cache stores normalized options internally', () => {
+	const state = {
+		transport: {}
+	};
+	const expected_tag = create_remote_key('r/one', stringify_remote_arg({ a: 1 }, {}));
+	const cache = create_request_cache(/** @type {any} */ (state), expected_tag);
+
+	cache({ maxAge: '10s' });
+
+	expect(get_request_cache_options(cache)).toEqual({
+		maxAge: 10,
+		staleWhileRevalidate: undefined,
+		tags: [expected_tag]
+	});
+});
+
+test('create_invalidate_cache forwards tags to request cache implementation', async () => {
+	const invalidate = vi.fn();
 	const state = {
 		remote: {
-			kit_cache: {
-				directive: null,
-				invalidations: ['sveltekit-remote:h:q']
+			cache: {
+				get: async () => undefined,
+				set: async () => {},
+				invalidate
 			}
 		}
 	};
 
-	await finalize_kit_cache(response, /** @type {any} */ (state), null, null);
-	expect(response.headers.get(SVELTEKIT_CACHE_CONTROL_INVALIDATE_HEADER)).toBe(
-		'sveltekit-remote:h:q'
-	);
+	const cache = create_invalidate_cache(/** @type {any} */ (state));
+
+	await cache.invalidate(['tag:a', 'tag:b']);
+	expect(invalidate).toHaveBeenCalledWith(['tag:a', 'tag:b']);
 });

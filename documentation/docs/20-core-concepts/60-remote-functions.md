@@ -1185,7 +1185,7 @@ export const getFastData = query(async () => {
 });
 ```
 
-The `cache` function accepts either a string representing the time-to-live (TTL), or an object with more detailed configuration:
+The `cache` function accepts an object with the following configuration:
 
 ```ts
 /// file: src/routes/data.remote.js
@@ -1194,11 +1194,9 @@ import { query } from '$app/server';
 export const getFastData = query(async () => {
 	query.cache({
 		// fresh for 1 minute
-		ttl: '1m',
+		maxAge: '1m',
 		// can serve stale up to 5 minutes
-		stale: '5m',
-		// shareable across users (CDN caching) or private to user (browser caching); default private
-		scope: 'private',
+		staleWhileRevalidate: '5m',
 		// used for invalidation, when not given is the URL
 		tags: ['my-data'],
 	});
@@ -1207,10 +1205,9 @@ export const getFastData = query(async () => {
 });
 ```
 
-There are two variants of the cache:
-
-- **Private cache** (`scope: 'private'`): Per-user cache implemented using the browser's Cache API.
-- **Public cache** (`scope: 'public'`): Shareable across users. The implementation is platform-specific (e.g., using `CDN-Cache-Control` and `Cache-Tag` headers on Vercel/Netlify, or a runtime cache on Node).
+The cache is public, i.e. not per-user but shared. The cache implementation is platform-specific (for example, on Vercel remote function endpoints emit `CDN-Cache-Control` and `Cache-Tag`
+headers as well as using the runtime cache API, while the Node runtime uses a runtime
+cache implementation).
 
 ### Invalidating the cache
 
@@ -1239,7 +1236,7 @@ Alternatively, if you used tags when setting up the cache, you can invalidate by
 import { query, command } from '$app/server';
 
 export const getFastData = query(async () => {
-	query.cache({ ttl: '100s', tags: ['my-data'] });
+	query.cache({ maxAge: '100s', tags: ['my-data'] });
 	return { data: '...' };
 });
 
@@ -1250,4 +1247,4 @@ export const updateData = command(async () => {
 });
 ```
 
-> [!NOTE] tags are public since they could invalidate the private cache in the browser
+> [!NOTE] Cache tags are public metadata. Do not put secrets or user-specific private data in tags.

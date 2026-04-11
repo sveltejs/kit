@@ -5,7 +5,6 @@ import { lookup } from 'mrmime';
 import sirv from 'sirv';
 import { loadEnv, normalizePath } from 'vite';
 import { createReadableStream, getRequest, setResponse } from '../../../exports/node/index.js';
-import { with_runtime_cache } from '../../../runtime/server/runtime-cache.js';
 import { installPolyfills } from '../../../exports/node/polyfills.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import { is_chrome_devtools_request, not_found } from '../utils.js';
@@ -204,25 +203,21 @@ export async function preview(vite, vite_config, svelte_config) {
 				request: req
 			});
 
-			const rendered = await with_runtime_cache(
-				request,
-				{
-					getClientAddress: () => {
-						const { remoteAddress } = req.socket;
-						if (remoteAddress) return remoteAddress;
-						throw new Error('Could not determine clientAddress');
-					},
-					read: (file) => {
-						if (file in manifest._.server_assets) {
-							return fs.readFileSync(join(dir, file));
-						}
-
-						return fs.readFileSync(join(svelte_config.kit.files.assets, file));
-					},
-					emulator
+			const rendered = await server.respond(request, {
+				getClientAddress: () => {
+					const { remoteAddress } = req.socket;
+					if (remoteAddress) return remoteAddress;
+					throw new Error('Could not determine clientAddress');
 				},
-				server
-			);
+				read: (file) => {
+					if (file in manifest._.server_assets) {
+						return fs.readFileSync(join(dir, file));
+					}
+
+					return fs.readFileSync(join(svelte_config.kit.files.assets, file));
+				},
+				emulator
+			});
 			await setResponse(res, rendered);
 		});
 	};

@@ -84,7 +84,7 @@ const options = object(
 			cache: validate(undefined, (input, keypath) => {
 				if (input === undefined) return undefined;
 				return object({
-					path: string(null),
+					path: string('', false),
 					options: validate({}, object({}, true))
 				})(input, keypath);
 			}),

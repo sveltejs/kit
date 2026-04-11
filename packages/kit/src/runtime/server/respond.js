@@ -23,11 +23,7 @@ import { create_fetch } from './fetch.js';
 import { PageNodes } from '../../utils/page_nodes.js';
 import { validate_server_exports } from '../../utils/exports.js';
 import { action_json_redirect, is_action_json_request } from './page/actions.js';
-import {
-	INVALIDATED_PARAM,
-	SVELTEKIT_RUNTIME_CACHE_CONTROL_HEADER,
-	TRAILING_SLASH_PARAM
-} from '../shared.js';
+import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM } from '../shared.js';
 import { get_public_env } from './env_module.js';
 import { resolve_route } from './page/server_routing.js';
 import { validateHeaders } from './validate-headers.js';
@@ -43,7 +39,7 @@ import { server_data_serializer } from './page/data_serializer.js';
 import { get_remote_id, handle_remote_call } from './remote.js';
 import { record_span } from '../telemetry/record_span.js';
 import { otel } from '../telemetry/otel.js';
-import { create_erroring_cache, finalize_kit_cache } from './cache.js';
+import { create_erroring_cache } from './cache.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
 
@@ -163,7 +159,8 @@ export async function internal_respond(request, options, manifest, state) {
 			 * A map of remote function ID to objects that have passed validation;
 			 * used to prevent revalidating parameters returned from `requested`
 			 */
-			validated: null
+			validated: null,
+			cache: options.kit_cache_handler
 		},
 		cache: create_erroring_cache(),
 		is_in_remote_function: false,
@@ -467,14 +464,6 @@ export async function internal_respond(request, options, manifest, state) {
 													response.headers.set('x-sveltekit-routeid', encodeURI(event.route.id));
 												}
 
-												const remote_id_string = remote_id ? String(remote_id) : null;
-												await finalize_kit_cache(
-													response,
-													event_state,
-													remote_id_string,
-													options.kit_cache_handler
-												);
-
 												resolve_span.setAttributes({
 													'http.response.status_code': response.status,
 													'http.response.body.size':
@@ -510,7 +499,8 @@ export async function internal_respond(request, options, manifest, state) {
 				// https://datatracker.ietf.org/doc/html/rfc7232#section-4.1 + set-cookie
 				for (const key of [
 					'cache-control',
-					SVELTEKIT_RUNTIME_CACHE_CONTROL_HEADER,
+					'cdn-cache-control',
+					'cache-tag',
 					'content-location',
 					'date',
 					'expires',

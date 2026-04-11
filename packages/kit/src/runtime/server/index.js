@@ -52,9 +52,9 @@ export class Server {
 	}
 
 	/**
-	 * @param {import('@sveltejs/kit').ServerInitOptions} opts
+	 * @param {import('@sveltejs/kit').ServerInitOptions & { memory_cache?: import('types').KitCacheHandler }} opts
 	 */
-	async init({ env, read }) {
+	async init({ env, read, memory_cache }) {
 		// Take care: Some adapters may have to call `Server.init` per-request to set env vars,
 		// so anything that shouldn't be rerun should be wrapped in an `if` block to make sure it hasn't
 		// been done already.
@@ -145,14 +145,33 @@ export class Server {
 				const cache_path = this.#options.kit_cache_config?.path;
 				if (cache_path) {
 					const { href } = pathToFileURL(cache_path);
-					const mod = await import(href);
-					const factory = mod.create ?? mod.default;
-					if (typeof factory !== 'function') {
-						throw new Error(
-							`kit.cache module at ${cache_path} must export a default or \`create\` function`
+					const mod = await import(/* @vite-ignore */ href);
+					const handler = {
+						get: mod.get,
+						set: mod.set,
+						setHeaders: mod.setHeaders,
+						invalidate: mod.invalidate
+					};
+
+					if (typeof handler.get !== 'function' || typeof handler.set !== 'function') {
+						const factory = mod.create ?? mod.default;
+
+						if (typeof factory === 'function') {
+							this.#options.kit_cache_handler = factory(
+								this.#options.kit_cache_config.options ?? {}
+							);
+						} else {
+							throw new Error(
+								`kit.cache module at ${cache_path} must export \`get\` and \`set\` functions`
+							);
+						}
+					} else {
+						this.#options.kit_cache_handler = /** @type {import('types').KitCacheHandler} */ (
+							handler
 						);
 					}
-					this.#options.kit_cache_handler = factory(this.#options.kit_cache_config.options ?? {});
+				} else if (memory_cache) {
+					this.#options.kit_cache_handler = memory_cache;
 				}
 			} catch (e) {
 				if (DEV) {

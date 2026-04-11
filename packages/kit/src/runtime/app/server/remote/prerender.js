@@ -4,7 +4,7 @@
 import { error, json } from '@sveltejs/kit';
 import { DEV } from 'esm-env';
 import { get_request_store } from '@sveltejs/kit/internal/server';
-import { stringify, stringify_remote_arg } from '../../../shared.js';
+import { create_remote_key, stringify, stringify_remote_arg } from '../../../shared.js';
 import { noop } from '../../../../utils/functions.js';
 import { app_dir, base } from '$app/paths/internal/server';
 import {
@@ -133,12 +133,16 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 				return /** @type {Promise<any>} */ (state.prerendering.remote_responses.get(url));
 			}
 
+			const query_id =
+				arg !== undefined
+					? create_remote_key(__.id, stringify_remote_arg(arg, state.transport))
+					: __.id;
 			const promise = get_response(__, arg, state, () =>
 				run_remote_function(
 					event,
 					state,
 					false,
-					create_request_cache(state, __.id, arg),
+					create_request_cache(state, query_id),
 					() => validate(arg),
 					fn
 				)

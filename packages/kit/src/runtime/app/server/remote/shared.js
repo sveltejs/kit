@@ -167,7 +167,7 @@ export async function run_remote_function(event, state, allow_cookies, cache, ge
 
 	// In two parts, each with_event, so that runtimes without async local storage can still get the event at the start of the function
 	const input = await with_request_store(store, get_input);
-	return with_request_store(store, () => fn(input));
+	return await with_request_store(store, () => fn(input));
 }
 
 /**
