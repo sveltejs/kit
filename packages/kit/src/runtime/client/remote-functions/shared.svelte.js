@@ -1,12 +1,14 @@
-/** @import { RemoteFunctionResponse, RemoteSingleflightMap, RemoteSingleflightEntry } from 'types' */
+/** @import { RemoteFunctionResponse, RemoteSingleflightMap, RemoteSingleflightEntry, ServerRedirectNode, ServerErrorNode } from 'types' */
 /** @import { RemoteQueryUpdate } from '@sveltejs/kit' */
 /** @import { RemoteQueryCacheEntry, RemoteLiveQueryCacheEntry } from './query.svelte.js' */
+import { app_dir, base } from '$app/paths/internal/client';
 import * as devalue from 'devalue';
 import { app, goto, live_query_map, query_map } from '../client.js';
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
 import { untrack } from 'svelte';
 import { create_remote_key, split_remote_key } from '../../shared.js';
 import { navigating, page } from '../state.svelte.js';
+import { noop } from '../../../utils/functions.js';
 
 /** Indicates a query function, as opposed to a query instance */
 export const QUERY_FUNCTION_ID = Symbol('sveltekit.query_function_id');
@@ -50,16 +52,26 @@ export async function remote_request(url, headers) {
 
 	const result = /** @type {RemoteFunctionResponse} */ (await response.json());
 
-	if (result.type === 'redirect') {
-		await goto(result.location);
-		throw new Redirect(307, result.location);
+	const resolved = await handle_side_channel_response(result);
+
+	return resolved.result;
+}
+
+/**
+ * @param {RemoteFunctionResponse} response
+ * @returns {Promise<Extract<RemoteFunctionResponse, { type: 'result' }>>}
+ */
+async function handle_side_channel_response(response) {
+	if (response.type === 'redirect') {
+		await goto(response.location);
+		throw new Redirect(307, response.location);
 	}
 
-	if (result.type === 'error') {
-		throw new HttpError(result.status ?? 500, result.error);
+	if (response.type === 'error') {
+		throw new HttpError(response.status ?? 500, response.error);
 	}
 
-	return result.result;
+	return response;
 }
 
 /**
@@ -131,7 +143,7 @@ export function categorize_updates(updates) {
 		}
 
 		throw new Error(
-			'updates() expects a query orlive query function, query resource, or query override'
+			'updates() expects a query or live query function, query resource, or query override'
 		);
 	}
 
@@ -184,3 +196,131 @@ export const apply_reconnections = (stringified_reconnects) => {
 		}
 	});
 };
+
+/**
+ * @param {Response} response
+ * @returns {Promise<ReadableStreamDefaultReader<Uint8Array>>}
+ */
+async function get_stream_reader(response) {
+	const content_type = response.headers.get('content-type') ?? '';
+
+	if (response.ok && content_type.includes('application/json')) {
+		// we can end up here if we e.g. redirect in `handle`
+		const result = await response.json();
+		await handle_side_channel_response(result);
+		throw new HttpError(500, 'Invalid query.live response');
+	}
+
+	if (!response.ok) {
+		const result = await response.json().catch(() => ({
+			type: 'error',
+			status: response.status,
+			error: response.statusText
+		}));
+
+		throw new HttpError(result.status ?? response.status ?? 500, result.error);
+	}
+
+	if (!response.body) {
+		throw new Error('Expected query.live response body to be a ReadableStream');
+	}
+
+	return response.body.getReader();
+}
+
+/**
+ * @param {string} line
+ */
+async function parse_stream_line(line) {
+	const node = JSON.parse(line);
+
+	if (node.type === 'result') {
+		return devalue.parse(node.result, app.decoders);
+	}
+
+	await handle_side_channel_response(node);
+	throw new HttpError(500, 'Invalid query.live response');
+}
+
+/**
+ * Yields parsed JSON objects from a ReadableStream of newline-delimited JSON
+ * @param {ReadableStreamDefaultReader<Uint8Array>} reader
+ */
+async function* read_ndjson(reader) {
+	let done = false;
+	let buffer = '';
+	const decoder = new TextDecoder();
+
+	while (true) {
+		let split = buffer.indexOf('\n');
+		while (split !== -1) {
+			const line = buffer.slice(0, split).trim();
+			buffer = buffer.slice(split + 1);
+
+			if (line) {
+				yield await parse_stream_line(line);
+			}
+
+			split = buffer.indexOf('\n');
+		}
+
+		if (done) {
+			const line = buffer.trim();
+			if (line) {
+				yield await parse_stream_line(line);
+			}
+			return;
+		}
+
+		const chunk = await reader.read();
+		done = chunk.done;
+		if (chunk.value) {
+			buffer += decoder.decode(chunk.value, { stream: true });
+		}
+
+		if (done) {
+			buffer += decoder.decode();
+		}
+	}
+}
+
+/**
+ * @template T
+ * @param {string} id
+ * @param {string} payload
+ * @param {AbortController} [controller]
+ * @param {() => void} [on_connect]
+ * @returns {AsyncIterableIterator<T>}
+ */
+export async function* create_live_iterator(
+	id,
+	payload,
+	controller = new AbortController(),
+	on_connect = noop
+) {
+	const url = `${base}/${app_dir}/remote/${id}${payload ? `?payload=${payload}` : ''}`;
+	/** @type {ReadableStreamDefaultReader<Uint8Array> | null} */
+	let reader = null;
+
+	try {
+		const response = await fetch(url, {
+			headers: get_remote_request_headers(),
+			signal: controller.signal
+		});
+		reader = await get_stream_reader(response);
+
+		on_connect();
+
+		yield* read_ndjson(reader);
+	} finally {
+		controller.abort();
+
+		if (reader) {
+			try {
+				await reader.cancel();
+			} catch {
+				// already closed
+			}
+		}
+	}
+}

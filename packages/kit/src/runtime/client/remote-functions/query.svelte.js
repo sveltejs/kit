@@ -1,8 +1,9 @@
-/** @import { RemoteLiveQueryFunction, RemoteQueryFunction } from '@sveltejs/kit' */
+/** @import { RemoteLiveQuery, RemoteLiveQueryFunction, RemoteQueryFunction } from '@sveltejs/kit' */
 /** @import { RemoteFunctionResponse } from 'types' */
 import { app_dir, base } from '$app/paths/internal/client';
 import { app, goto, live_query_map, query_map, query_responses } from '../client.js';
 import {
+	create_live_iterator,
 	get_remote_request_headers,
 	QUERY_FUNCTION_ID,
 	QUERY_OVERRIDE_KEY,
@@ -16,7 +17,6 @@ import { noop } from '../../../utils/functions.js';
 import { with_resolvers } from '../../../utils/promise.js';
 import { tick, untrack } from 'svelte';
 import { create_remote_key, stringify_remote_arg, unfriendly_hydratable } from '../../shared.js';
-import { text_decoder } from '../../utils.js';
 
 /**
  * @template T
@@ -100,7 +100,7 @@ export function query_live(id) {
 	}
 
 	/** @type {RemoteLiveQueryFunction<any, any>} */
-	const wrapper = (arg) => new LiveQueryProxy(id, arg);
+	const wrapper = (arg) => /** @type {RemoteLiveQuery<any>} */ (new LiveQueryProxy(id, arg));
 
 	Object.defineProperty(wrapper, QUERY_FUNCTION_ID, { value: id });
 
@@ -328,6 +328,7 @@ export class Query {
 	}
 
 	get catch() {
+		this.#start();
 		this.#then;
 		return (/** @type {any} */ reject) => {
 			return this.#then(undefined, reject);
@@ -335,6 +336,7 @@ export class Query {
 	}
 
 	get finally() {
+		this.#start();
 		this.#then;
 		return (/** @type {any} */ fn) => {
 			return this.#then(
@@ -438,186 +440,31 @@ export class Query {
 }
 
 /**
- * @param {Response} response
- * @returns {Promise<ReadableStreamDefaultReader<Uint8Array>>}
- */
-async function get_stream_reader(response) {
-	const content_type = response.headers.get('content-type') ?? '';
-
-	if (response.ok && content_type.includes('application/json')) {
-		// we can end up here if we e.g. redirect in `handle`
-		const result = await response.json();
-
-		if (result.type === 'redirect') {
-			await goto(result.location);
-			throw new Redirect(307, result.location);
-		}
-
-		if (result.type === 'error') {
-			throw new HttpError(result.status ?? 500, result.error);
-		}
-
-		throw new HttpError(500, 'Invalid query.live response');
-	}
-
-	if (!response.ok) {
-		const result = await response.json().catch(() => ({
-			type: 'error',
-			status: response.status,
-			error: response.statusText
-		}));
-
-		throw new HttpError(result.status ?? response.status ?? 500, result.error);
-	}
-
-	if (!response.body) {
-		throw new Error('Expected query.live response body to be a ReadableStream');
-	}
-
-	return response.body.getReader();
-}
-
-/**
- * @param {ReadableStreamDefaultReader<Uint8Array>} reader
- */
-function create_stream_reader(reader) {
-	let done = false;
-	let buffer = '';
-
-	return async () => {
-		while (true) {
-			const split = buffer.indexOf('\n');
-			if (split !== -1) {
-				const line = buffer.slice(0, split).trim();
-				buffer = buffer.slice(split + 1);
-
-				if (!line) continue;
-
-				const node = JSON.parse(line);
-
-				if (node.type === 'result') {
-					return devalue.parse(node.result, app.decoders);
-				}
-
-				if (node.type === 'redirect') {
-					await goto(node.location);
-					throw new Redirect(307, node.location);
-				}
-
-				if (node.type === 'error') {
-					throw new HttpError(node.status ?? 500, node.error);
-				}
-
-				throw new Error('Invalid query.live response');
-			}
-
-			if (done) {
-				if (buffer.trim()) {
-					const node = JSON.parse(buffer.trim());
-					buffer = '';
-
-					if (node.type === 'result') {
-						return devalue.parse(node.result, app.decoders);
-					}
-
-					if (node.type === 'redirect') {
-						await goto(node.location);
-						throw new Redirect(307, node.location);
-					}
-
-					if (node.type === 'error') {
-						throw new HttpError(node.status ?? 500, node.error);
-					}
-				}
-
-				return undefined;
-			}
-
-			const chunk = await reader.read();
-			done = chunk.done;
-			if (chunk.value) {
-				buffer += text_decoder.decode(chunk.value, { stream: true });
-			}
-		}
-	};
-}
-
-/**
- * @template T
- * @param {string} id
- * @param {string} payload
- * @returns {Promise<AsyncIterableIterator<T>>}
- */
-async function create_live_iterator(id, payload) {
-	const controller = new AbortController();
-	const url = `${base}/${app_dir}/remote/${id}${payload ? `?payload=${payload}` : ''}`;
-	const response = await fetch(url, {
-		headers: get_remote_request_headers(),
-		signal: controller.signal
-	});
-	const reader = await get_stream_reader(response);
-	const next_value = create_stream_reader(reader);
-
-	let closed = false;
-
-	/** @type {AsyncIterableIterator<T>} */
-	const iterator = {
-		[Symbol.asyncIterator]() {
-			return iterator;
-		},
-		async next() {
-			if (closed) {
-				return { value: undefined, done: true };
-			}
-
-			const value = await next_value();
-			if (value === undefined) {
-				closed = true;
-				return { value: undefined, done: true };
-			}
-
-			return { value, done: false };
-		},
-		async return(value) {
-			closed = true;
-			controller.abort();
-			try {
-				await reader.cancel();
-			} catch {
-				// already closed
-			}
-			return { value, done: true };
-		}
-	};
-
-	return iterator;
-}
-
-/**
  * @template T
  * @implements {Promise<T>}
  */
 export class LiveQuery {
-	_key;
 	#id;
 	#payload;
 	#loading = $state(true);
 	#ready = $state(false);
 	#connected = $state(false);
 	#completed = $state(false);
-	#version = $state(0);
 	/** @type {T | undefined} */
 	#raw = $state.raw();
 	/** @type {any} */
 	#error = $state.raw(undefined);
 	/** @type {Promise<T>} */
 	#promise;
+	/** @type {((value: T | PromiseLike<T>) => void) | null} */
+	#resolve_first = null;
+	/** @type {((reason?: any) => void) | null} */
+	#reject_first = null;
 
 	/** @type {Promise<T>['then']} */
 	// @ts-expect-error TS doesn't understand that the promise returns something
 	#then = $derived.by(() => {
-		this.#version;
-		const p = this.#promise;
+		const p = /** @type {Promise<T>} */ (this.#promise);
 
 		return (resolve, reject) => {
 			const result = p.then(tick).then(() => /** @type {T} */ (this.#raw));
@@ -629,11 +476,7 @@ export class LiveQuery {
 			return result;
 		};
 	});
-	/** @type {(value: T | PromiseLike<T>) => void} */
-	#resolve_first;
-	/** @type {(reason?: any) => void} */
-	#reject_first;
-	#active = false;
+	#destroyed = false;
 	#attempt = 0;
 	/** @type {ReturnType<typeof setTimeout> | null} */
 	#retry_timer = null;
@@ -648,17 +491,15 @@ export class LiveQuery {
 	 */
 	constructor(id, key, payload) {
 		this.#id = id;
-		this._key = key;
 		this.#payload = payload;
 
 		const { promise, resolve, reject } = with_resolvers();
-		this.#promise = promise;
+		this.#promise = $state.raw(promise);
 		this.#resolve_first = resolve;
 		this.#reject_first = reject;
 
 		if (Object.hasOwn(query_responses, key)) {
 			this.#set_value(query_responses[key]);
-			this.#resolve_first(query_responses[key]);
 		}
 	}
 
@@ -675,7 +516,30 @@ export class LiveQuery {
 		this.#loading = false;
 		this.#error = undefined;
 		this.#raw = value;
-		this.#version += 1;
+
+		if (this.#resolve_first) {
+			this.#resolve_first(value);
+			this.#resolve_first = null;
+			this.#reject_first = null;
+		} else {
+			this.#promise = Promise.resolve(value);
+		}
+	}
+
+	/** @param {unknown} error */
+	#set_error(error) {
+		this.#loading = false;
+		this.#error = error;
+
+		if (this.#reject_first) {
+			this.#reject_first(error);
+			this.#resolve_first = null;
+			this.#reject_first = null;
+		} else {
+			const promise = Promise.reject(error);
+			promise.catch(noop);
+			this.#promise = promise;
+		}
 	}
 
 	#disconnect_current() {
@@ -685,7 +549,7 @@ export class LiveQuery {
 	}
 
 	#schedule_reconnect() {
-		if (!this.#active || this.#completed || this.#retry_timer) return;
+		if (this.#destroyed || this.#completed || this.#retry_timer) return;
 
 		if (typeof navigator !== 'undefined' && navigator.onLine === false) {
 			return;
@@ -702,73 +566,79 @@ export class LiveQuery {
 		}, delay);
 	}
 
-	async #connect_stream() {
-		if (!this.#active || this.#completed) return;
+	#connect_stream() {
+		if (this.#destroyed || this.#completed) {
+			return Promise.resolve(/** @type {T} */ (this.#raw));
+		}
 
 		const connection = ++this.#connection;
 		const controller = new AbortController();
 		this.#controller = controller;
 
-		const url = `${base}/${app_dir}/remote/${this.#id}${this.#payload ? `?payload=${this.#payload}` : ''}`;
-
-		try {
-			const response = await fetch(url, {
-				headers: get_remote_request_headers(),
-				signal: controller.signal
-			});
-
-			if (connection !== this.#connection || !this.#active) {
-				return;
-			}
-
-			const reader = await get_stream_reader(response);
-			const next_value = create_stream_reader(reader);
-			let finished = false;
+		const stream = create_live_iterator(this.#id, this.#payload, controller, () => {
 			this.#connected = true;
 			this.#attempt = 0;
+		});
 
-			while (this.#active && connection === this.#connection) {
-				const value = await next_value();
-				if (value === undefined) {
-					finished = true;
-					break;
-				}
+		const first = stream.next().then((result) => {
+			if (result.done) {
+				const error = new Error('Live query completed before yielding a value');
 
 				if (!this.#ready) {
-					this.#resolve_first(value);
+					// TODO should this be an actual error only if we haven't received any value yet,
+					// or should it always be an error if we connect and don't get a value?
+					this.#set_error(error);
 				}
 
-				this.#set_value(value);
+				throw error;
 			}
 
-			if (finished && this.#active && connection === this.#connection) {
-				this.#completed = true;
-			}
-		} catch (error) {
-			if (controller.signal.aborted || connection !== this.#connection) {
-				return;
+			if (this.#destroyed || connection !== this.#connection) {
+				throw new Error('Live query connection superseded');
 			}
 
-			this.#connected = false;
-			this.#error = /** @type {any} */ (error);
-			if (!this.#ready) {
-				this.#loading = false;
-				this.#reject_first(error);
-			}
-		} finally {
-			if (connection === this.#connection) {
-				this.#connected = false;
-				this.#controller = null;
+			this.#set_value(result.value);
+			return result.value;
+		});
 
-				if (this.#active && !this.#completed) {
+		void (async () => {
+			try {
+				await first;
+
+				for await (const value of stream) {
+					if (this.#destroyed || connection !== this.#connection) {
+						break;
+					}
+
+					this.#set_value(value);
+				}
+
+				if (!this.#destroyed && connection === this.#connection) {
+					this.#completed = true;
+				}
+			} catch (error) {
+				if (controller.signal.aborted || connection !== this.#connection) {
+					return;
+				}
+
+				this.#set_error(error);
+
+				if (!this.#destroyed && !this.#completed) {
 					this.#schedule_reconnect();
 				}
+			} finally {
+				if (connection === this.#connection) {
+					this.#connected = false;
+					this.#controller = null;
+				}
 			}
-		}
+		})();
+
+		return first;
 	}
 
 	#on_online = () => {
-		if (!this.#active || this.#completed) return;
+		if (this.#destroyed || this.#completed) return;
 		this.#clear_retry();
 		void this.#connect_stream();
 	};
@@ -781,8 +651,8 @@ export class LiveQuery {
 		this.#disconnect_current();
 	};
 
-	connect() {
-		this.#active = true;
+	#start() {
+		if (this.#destroyed) return;
 
 		if (typeof window !== 'undefined') {
 			window.addEventListener('online', this.#on_online);
@@ -797,8 +667,8 @@ export class LiveQuery {
 		}
 	}
 
-	disconnect() {
-		this.#active = false;
+	destroy() {
+		this.#destroyed = true;
 		this.#clear_retry();
 		this.#disconnect_current();
 
@@ -811,6 +681,7 @@ export class LiveQuery {
 	}
 
 	get then() {
+		this.#start();
 		return this.#then;
 	}
 
@@ -838,57 +709,58 @@ export class LiveQuery {
 	}
 
 	get current() {
+		this.#start();
 		return this.#raw;
 	}
 
 	get error() {
+		this.#start();
 		return this.#error;
 	}
 
 	get loading() {
+		this.#start();
 		return this.#loading;
 	}
 
 	get ready() {
+		this.#start();
 		return this.#ready;
 	}
 
 	get connected() {
+		this.#start();
 		return this.#connected;
 	}
 
 	get done() {
+		this.#start();
 		return this.#completed;
 	}
 
 	reconnect() {
-		if (!this.#active) {
+		if (this.#destroyed) {
 			return Promise.resolve();
 		}
+
+		this.#start();
+
 		this.#completed = false;
 		this.#attempt = 0;
 		this.#clear_retry();
 		this.#disconnect_current();
-		return this.#connect_stream();
+
+		return this.#connect_stream().then(() => undefined);
 	}
 
 	/** @param {T} value */
 	set(value) {
-		if (!this.#ready) {
-			this.#resolve_first(value);
-		}
-
 		this.#set_value(value);
 	}
 
 	/** @param {unknown} error */
 	fail(error) {
-		this.#error = error;
-
-		if (!this.#ready) {
-			this.#loading = false;
-			this.#reject_first(error);
-		}
+		this.#set_error(error);
 	}
 
 	get [Symbol.toStringTag]() {
@@ -1131,7 +1003,6 @@ class LiveQueryProxy {
 		}
 
 		const entry = this.#get_or_create_cache_entry();
-		entry.resource.connect();
 
 		$effect.pre(() => () => {
 			const die = this.#release(entry);
@@ -1182,7 +1053,7 @@ class LiveQueryProxy {
 			const this_instance = query_instances?.get(this.#payload);
 
 			if (this_instance?.count === 0) {
-				this_instance.resource.disconnect();
+				this_instance.resource.destroy();
 				this_instance.cleanup();
 				query_instances?.delete(this.#payload);
 			}
@@ -1215,7 +1086,7 @@ class LiveQueryProxy {
 			);
 		}
 
-		return /** @type {LiveQuery<T>} */ (cached.resource);
+		return cached.resource;
 	}
 
 	#safe_get_cached_query() {
