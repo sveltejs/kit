@@ -4,6 +4,7 @@
 import { get_request_store } from '@sveltejs/kit/internal/server';
 import { create_remote_key, stringify, stringify_remote_arg } from '../../../shared.js';
 import { prerendering } from '__sveltekit/environment';
+import { noop } from '../../../../utils/functions.js';
 import { create_validator, get_cache, get_response, run_remote_function } from './shared.js';
 import { handle_error_and_jsonify } from '../../../server/utils.js';
 import { HttpError, SvelteKitError } from '@sveltejs/kit/internal';
@@ -62,7 +63,7 @@ export function query(validate_or_fn, maybe_fn) {
 	const validate = create_validator(validate_or_fn, maybe_fn);
 
 	/** @type {RemoteQueryInternals} */
-	const __ = { type: 'query', id: '', name: '' };
+	const __ = { type: 'query', id: '', name: '', validate };
 
 	/** @type {RemoteQueryFunction<Input, Output> & { __: RemoteQueryInternals }} */
 	const wrapper = (arg) => {
@@ -73,15 +74,44 @@ export function query(validate_or_fn, maybe_fn) {
 		}
 
 		const { event, state } = get_request_store();
+		// if the user got this argument from `requested(query)`, it will have already passed validation
+		const is_validated = is_validated_argument(__, state, arg);
 
 		return create_query_resource(__, arg, state, () =>
-			run_remote_function(event, state, false, () => validate(arg), fn)
+			run_remote_function(event, state, false, () => (is_validated ? arg : validate(arg)), fn)
 		);
 	};
 
 	Object.defineProperty(wrapper, '__', { value: __ });
 
 	return wrapper;
+}
+
+/**
+ * @param {RemoteQueryInternals} __
+ * @param {RequestState} state
+ * @param {any} arg
+ */
+function is_validated_argument(__, state, arg) {
+	return state.remote.validated?.get(__.id)?.has(arg) ?? false;
+}
+
+/**
+ * @param {RemoteQueryInternals} __
+ * @param {RequestState} state
+ * @param {any} arg
+ */
+export function mark_argument_validated(__, state, arg) {
+	const validated = (state.remote.validated ??= new Map());
+	let validated_args = validated.get(__.id);
+
+	if (!validated_args) {
+		validated_args = new Set();
+		validated.set(__.id, validated_args);
+	}
+
+	validated_args.add(arg);
+	return arg;
 }
 
 /**
@@ -353,5 +383,5 @@ function update_refresh_value(
 		refreshes[refreshes_key] = promise;
 	}
 
-	return promise.then(() => {});
+	return promise.then(noop, noop);
 }

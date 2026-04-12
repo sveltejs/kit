@@ -9,7 +9,7 @@
 		try {
 			await goto('https://example.com');
 		} catch (e) {
-			message = e.message;
+			message = e instanceof Error ? e.message : 'unknown error message';
 		}
 	}}>goto</button
 >

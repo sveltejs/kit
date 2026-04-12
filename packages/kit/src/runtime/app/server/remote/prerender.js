@@ -5,6 +5,7 @@ import { error, json } from '@sveltejs/kit';
 import { DEV } from 'esm-env';
 import { get_request_store } from '@sveltejs/kit/internal/server';
 import { stringify, stringify_remote_arg } from '../../../shared.js';
+import { noop } from '../../../../utils/functions.js';
 import { app_dir, base } from '$app/paths/internal/server';
 import {
 	create_validator,
@@ -153,7 +154,7 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 			return result;
 		})();
 
-		promise.catch(() => {});
+		promise.catch(noop);
 
 		return /** @type {RemoteResource<Output>} */ (promise);
 	};

@@ -284,6 +284,29 @@ test.describe('remote functions', () => {
 		);
 	});
 
+	test('form enhance submit returns boolean', async ({ page, javaScriptEnabled }) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/form/enhanced');
+
+		await expect(page.getByText('enhanced.submit_result:')).toHaveText(
+			'enhanced.submit_result: none'
+		);
+
+		await page.fill('[data-enhanced] input', 'hello');
+		await page.locator('[data-enhanced] span').click();
+		await page.getByText('resolve deferreds').click();
+		await expect(page.getByText('enhanced.submit_result:')).toHaveText(
+			'enhanced.submit_result: true'
+		);
+
+		await page.fill('[data-enhanced] input', 'invalid');
+		await page.locator('[data-enhanced] span').click();
+		await expect(page.getByText('enhanced.submit_result:')).toHaveText(
+			'enhanced.submit_result: false'
+		);
+	});
+
 	test('form preflight works', async ({ page, javaScriptEnabled }) => {
 		if (!javaScriptEnabled) return;
 
@@ -478,19 +501,19 @@ test.describe('remote functions', () => {
 
 		// Initially should be empty object or undefined values
 		const initialValue = await page.locator('#full-value').textContent();
-		expect(JSON.parse(initialValue)).toEqual({});
+		expect(initialValue ? JSON.parse(initialValue) : null).toEqual({});
 
 		// Fill leaf field
 		await page.fill('input[name="leaf"]', 'leaf-value');
 		const afterLeaf = await page.locator('#full-value').textContent();
-		expect(JSON.parse(afterLeaf)).toEqual({
+		expect(afterLeaf ? JSON.parse(afterLeaf) : null).toEqual({
 			leaf: 'leaf-value'
 		});
 
 		// Fill object.leaf field
 		await page.fill('input[name="object.leaf"]', 'object-leaf-value');
 		const afterObjectLeaf = await page.locator('#full-value').textContent();
-		expect(JSON.parse(afterObjectLeaf)).toEqual({
+		expect(afterObjectLeaf ? JSON.parse(afterObjectLeaf) : null).toEqual({
 			leaf: 'leaf-value',
 			object: {
 				leaf: 'object-leaf-value'
@@ -500,7 +523,7 @@ test.describe('remote functions', () => {
 		// Fill object.array fields
 		await page.fill('input[name="object.array[0]"]', 'array-item-1');
 		const afterArrayItem1 = await page.locator('#full-value').textContent();
-		expect(JSON.parse(afterArrayItem1)).toEqual({
+		expect(afterArrayItem1 ? JSON.parse(afterArrayItem1) : null).toEqual({
 			leaf: 'leaf-value',
 			object: {
 				leaf: 'object-leaf-value',
@@ -510,7 +533,7 @@ test.describe('remote functions', () => {
 
 		await page.fill('input[name="object.array[1]"]', 'array-item-2');
 		const afterArrayItem2 = await page.locator('#full-value').textContent();
-		expect(JSON.parse(afterArrayItem2)).toEqual({
+		expect(afterArrayItem2 ? JSON.parse(afterArrayItem2) : null).toEqual({
 			leaf: 'leaf-value',
 			object: {
 				leaf: 'object-leaf-value',
@@ -521,7 +544,7 @@ test.describe('remote functions', () => {
 		// Fill array[0].leaf field
 		await page.fill('input[name="array[0].leaf"]', 'array-0-leaf');
 		const afterArray0 = await page.locator('#full-value').textContent();
-		expect(JSON.parse(afterArray0)).toEqual({
+		expect(afterArray0 ? JSON.parse(afterArray0) : null).toEqual({
 			leaf: 'leaf-value',
 			object: {
 				leaf: 'object-leaf-value',
@@ -533,7 +556,7 @@ test.describe('remote functions', () => {
 		// Fill array[1].leaf field
 		await page.fill('input[name="array[1].leaf"]', 'array-1-leaf');
 		const afterArray1 = await page.locator('#full-value').textContent();
-		expect(JSON.parse(afterArray1)).toEqual({
+		expect(afterArray1 ? JSON.parse(afterArray1) : null).toEqual({
 			leaf: 'leaf-value',
 			object: {
 				leaf: 'object-leaf-value',
@@ -544,14 +567,17 @@ test.describe('remote functions', () => {
 
 		// Test nested object value access
 		const objectValue = await page.locator('#object-value').textContent();
-		expect(JSON.parse(objectValue)).toEqual({
+		expect(objectValue ? JSON.parse(objectValue) : null).toEqual({
 			leaf: 'object-leaf-value',
 			array: ['array-item-1', 'array-item-2']
 		});
 
 		// Test array value access
 		const arrayValue = await page.locator('#array-value').textContent();
-		expect(JSON.parse(arrayValue)).toEqual([{ leaf: 'array-0-leaf' }, { leaf: 'array-1-leaf' }]);
+		expect(arrayValue ? JSON.parse(arrayValue) : null).toEqual([
+			{ leaf: 'array-0-leaf' },
+			{ leaf: 'array-1-leaf' }
+		]);
 	});
 
 	test('nested field set is SSR rendered', async ({ page }) => {

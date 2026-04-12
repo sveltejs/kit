@@ -1,4 +1,5 @@
 import * as set_cookie_parser from 'set-cookie-parser';
+import { noop } from '../../utils/functions.js';
 import { respond } from './respond.js';
 import * as paths from '$app/paths/internal/server';
 import { read_implementation } from '__sveltekit/server';
@@ -175,11 +176,11 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 	};
 
 	// Don't make this function `async`! Otherwise, the user has to `catch` promises they use for streaming responses or else
-	// it will be an unhandled rejection. Instead, we add a `.catch(() => {})` ourselves below to prevent this from happening.
+	// it will be an unhandled rejection. Instead, we add a `.catch(noop)` ourselves below to prevent this from happening.
 	return (input, init) => {
 		// See docs in fetch.js for why we need to do this
 		const response = server_fetch(input, init);
-		response.catch(() => {});
+		response.catch(noop);
 		return response;
 	};
 }
@@ -210,7 +211,7 @@ async function internal_fetch(request, options, manifest, state) {
 			throw new DOMException('The operation was aborted.', 'AbortError');
 		}
 
-		let remove_abort_listener = () => {};
+		let remove_abort_listener = noop;
 		/** @type {Promise<never>} */
 		const abort_promise = new Promise((_, reject) => {
 			const on_abort = () => {

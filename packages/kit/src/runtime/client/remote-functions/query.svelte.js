@@ -2,10 +2,17 @@
 /** @import { RemoteFunctionResponse } from 'types' */
 import { app_dir, base } from '$app/paths/internal/client';
 import { app, goto, query_map, query_responses } from '../client.js';
-import { get_remote_request_headers, remote_request } from './shared.svelte.js';
+import {
+	get_remote_request_headers,
+	QUERY_FUNCTION_ID,
+	QUERY_OVERRIDE_KEY,
+	QUERY_RESOURCE_KEY,
+	remote_request
+} from './shared.svelte.js';
 import * as devalue from 'devalue';
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
 import { DEV } from 'esm-env';
+import { noop } from '../../../utils/functions.js';
 import { with_resolvers } from '../../../utils/promise.js';
 import { tick, untrack } from 'svelte';
 import { create_remote_key, stringify_remote_arg, unfriendly_hydratable } from '../../shared.js';
@@ -24,7 +31,7 @@ import { create_remote_key, stringify_remote_arg, unfriendly_hydratable } from '
  */
 function is_in_effect() {
 	try {
-		$effect.pre(() => {});
+		$effect.pre(noop);
 		return true;
 	} catch {
 		return false;
@@ -38,15 +45,18 @@ function is_in_effect() {
 export function query(id) {
 	if (DEV) {
 		// If this reruns as part of HMR, refresh the query
-		for (const [key, entry] of query_map) {
-			if (key === id || key.startsWith(id + '/')) {
+		const entries = query_map.get(id);
+
+		if (entries) {
+			for (const entry of entries.values()) {
 				// use optional chaining in case a prerender function was turned into a query
 				void entry.resource.refresh?.();
 			}
 		}
 	}
 
-	return (arg) => {
+	/** @type {RemoteQueryFunction<any, any>} */
+	const wrapper = (arg) => {
 		return new QueryProxy(id, arg, async (key, payload) => {
 			const url = `${base}/${app_dir}/remote/${id}${payload ? `?payload=${payload}` : ''}`;
 
@@ -57,6 +67,10 @@ export function query(id) {
 			return devalue.parse(serialized, app.decoders);
 		});
 	};
+
+	Object.defineProperty(wrapper, QUERY_FUNCTION_ID, { value: id });
+
+	return wrapper;
 }
 
 /**
@@ -65,10 +79,10 @@ export function query(id) {
  */
 export function query_batch(id) {
 	/** @type {Map<string, Array<{resolve: (value: any) => void, reject: (error: any) => void}>>} */
-	// eslint-disable-next-line svelte/prefer-svelte-reactivity -- we don't need reactivity for this
 	let batching = new Map();
 
-	return (arg) => {
+	/** @type {RemoteQueryFunction<any, any>} */
+	const wrapper = (arg) => {
 		return new QueryProxy(id, arg, async (key, payload) => {
 			const serialized = await unfriendly_hydratable(key, () => {
 				return new Promise((resolve, reject) => {
@@ -93,7 +107,6 @@ export function query_batch(id) {
 					// and flushes could reveal more queries that should be batched.
 					setTimeout(async () => {
 						const batched = batching;
-						// eslint-disable-next-line svelte/prefer-svelte-reactivity
 						batching = new Map();
 
 						try {
@@ -150,18 +163,21 @@ export function query_batch(id) {
 			return devalue.parse(serialized, app.decoders);
 		});
 	};
+
+	Object.defineProperty(wrapper, QUERY_FUNCTION_ID, { value: id });
+
+	return wrapper;
 }
 
 /**
+ * The actual query instance. There should only ever be one active query instance per key.
+ *
  * @template T
  * @implements {Promise<T>}
  */
 export class Query {
-	/**
-	 * @readonly
-	 * @type {string}
-	 */
-	_key;
+	/** @type {string} */
+	#key;
 
 	/** @type {() => Promise<T>} */
 	#fn;
@@ -186,6 +202,7 @@ export class Query {
 		return this.#overrides.reduce((v, r) => r(v), /** @type {T} */ (this.#raw));
 	});
 
+	/** @type {any} */
 	#error = $state.raw(undefined);
 
 	/** @type {Promise<T>['then']} */
@@ -210,7 +227,7 @@ export class Query {
 	 * @param {() => Promise<T>} fn
 	 */
 	constructor(key, fn) {
-		this._key = key;
+		this.#key = key;
 		this.#fn = fn;
 	}
 
@@ -225,6 +242,11 @@ export class Query {
 		// if all the tests still pass with the latest svelte version
 		// if they do, congrats, you can remove tick.then
 		void tick().then(() => this.#get_promise());
+	}
+
+	#clear_pending() {
+		this.#latest.forEach((r) => r(undefined));
+		this.#latest.length = 0;
 	}
 
 	#run() {
@@ -324,7 +346,7 @@ export class Query {
 	 * @returns {Promise<void>}
 	 */
 	refresh() {
-		delete query_responses[this._key];
+		delete query_responses[this.#key];
 		return (this.#promise = this.#run());
 	}
 
@@ -332,6 +354,7 @@ export class Query {
 	 * @param {T} value
 	 */
 	set(value) {
+		this.#clear_pending();
 		this.#ready = true;
 		this.#loading = false;
 		this.#error = undefined;
@@ -340,22 +363,39 @@ export class Query {
 	}
 
 	/**
+	 * @param {unknown} error
+	 */
+	fail(error) {
+		this.#clear_pending();
+		this.#loading = false;
+		this.#error = error;
+
+		const promise = Promise.reject(error);
+
+		promise.catch(noop);
+		this.#promise = promise;
+	}
+
+	/**
 	 * @param {(old: T) => T} fn
-	 * @returns {{ _key: string, release: () => void }}
+	 * @returns {(() => void) & { [QUERY_OVERRIDE_KEY]: string }}
 	 */
 	withOverride(fn) {
 		this.#overrides.push(fn);
 
-		return {
-			_key: this._key,
-			release: () => {
+		const release = /** @type {(() => void) & { [QUERY_OVERRIDE_KEY]: string }} */ (
+			() => {
 				const i = this.#overrides.indexOf(fn);
 
 				if (i !== -1) {
 					this.#overrides.splice(i, 1);
 				}
 			}
-		};
+		);
+
+		Object.defineProperty(release, QUERY_OVERRIDE_KEY, { value: this.#key });
+
+		return release;
 	}
 
 	get [Symbol.toStringTag]() {
@@ -364,13 +404,15 @@ export class Query {
 }
 
 /**
- * Manages the caching layer between the user and the actual {@link Query} instance.
+ * Manages the caching layer between the user and the actual {@link Query} instance. This is the thing
+ * the developer actually gets to interact with in their application code.
  *
  * @template T
  * @implements {Promise<T>}
  */
 class QueryProxy {
-	_key;
+	#id;
+	#key;
 	#payload;
 	#fn;
 	#active = true;
@@ -386,8 +428,10 @@ class QueryProxy {
 	 * @param {(key: string, payload: string) => Promise<T>} fn
 	 */
 	constructor(id, arg, fn) {
+		this.#id = id;
 		this.#payload = stringify_remote_arg(arg, app.hooks.transport);
-		this._key = create_remote_key(id, this.#payload);
+		this.#key = create_remote_key(id, this.#payload);
+		Object.defineProperty(this, QUERY_RESOURCE_KEY, { value: this.#key });
 		this.#fn = fn;
 
 		if (!this.#tracking) {
@@ -405,25 +449,32 @@ class QueryProxy {
 
 	/** @returns {RemoteQueryCacheEntry<T>} */
 	#get_or_create_cache_entry() {
-		let cached = query_map.get(this._key);
+		let query_instances = query_map.get(this.#id);
 
-		if (!cached) {
-			const c = (cached = {
+		if (!query_instances) {
+			query_instances = new Map();
+			query_map.set(this.#id, query_instances);
+		}
+
+		let this_instance = query_instances.get(this.#payload);
+
+		if (!this_instance) {
+			const c = (this_instance = {
 				count: 0,
 				resource: /** @type {Query<T>} */ (/** @type {unknown} */ (null)),
 				cleanup: /** @type {() => void} */ (/** @type {unknown} */ (null))
 			});
 
 			c.cleanup = $effect.root(() => {
-				c.resource = new Query(this._key, () => this.#fn(this._key, this.#payload));
+				c.resource = new Query(this.#key, () => this.#fn(this.#key, this.#payload));
 			});
 
-			query_map.set(this._key, cached);
+			query_instances.set(this.#payload, this_instance);
 		}
 
-		cached.count += 1;
+		this_instance.count += 1;
 
-		return cached;
+		return this_instance;
 	}
 
 	/**
@@ -436,12 +487,15 @@ class QueryProxy {
 		entry.count -= 1;
 
 		return () => {
-			// have to get this again in case it was cleaned up by someone else, then re-added and now
-			// we're cleaning it up. this seems extremely unlikely but it literally can't hurt
-			const cached = query_map.get(this._key);
-			if (cached?.count === 0) {
-				cached.cleanup();
-				query_map.delete(this._key);
+			const query_instances = query_map.get(this.#id);
+			const this_instance = query_instances?.get(this.#payload);
+
+			if (this_instance?.count === 0) {
+				this_instance.cleanup();
+				query_instances?.delete(this.#payload);
+			}
+			if (query_instances?.size === 0) {
+				query_map.delete(this.#id);
 			}
 		};
 	}
@@ -461,7 +515,7 @@ class QueryProxy {
 			);
 		}
 
-		const cached = query_map.get(this._key);
+		const cached = query_map.get(this.#id)?.get(this.#payload);
 
 		if (!cached) {
 			// The only case where `this.#active` can be `true` is when we've added an entry to `query_map`, and the
@@ -476,7 +530,7 @@ class QueryProxy {
 	}
 
 	#safe_get_cached_query() {
-		return query_map.get(this._key)?.resource;
+		return query_map.get(this.#id)?.get(this.#payload)?.resource;
 	}
 
 	get current() {
@@ -502,10 +556,10 @@ class QueryProxy {
 			);
 		}
 
-		if (Object.hasOwn(query_responses, this._key)) {
-			return Promise.resolve(query_responses[this._key]);
+		if (Object.hasOwn(query_responses, this.#key)) {
+			return Promise.resolve(query_responses[this.#key]);
 		}
-		return this.#fn(this._key, this.#payload);
+		return this.#fn(this.#key, this.#payload);
 	}
 
 	refresh() {
@@ -522,13 +576,16 @@ class QueryProxy {
 		const entry = this.#get_or_create_cache_entry();
 		const override = entry.resource.withOverride(fn);
 
-		return {
-			_key: override._key,
-			release: () => {
-				override.release();
+		const release = /** @type {(() => void) & { [QUERY_OVERRIDE_KEY]: string }} */ (
+			() => {
+				override();
 				this.#release(entry, false)();
 			}
-		};
+		);
+
+		Object.defineProperty(release, QUERY_OVERRIDE_KEY, { value: override[QUERY_OVERRIDE_KEY] });
+
+		return release;
 	}
 
 	/** @type {Query<T>['then']} */

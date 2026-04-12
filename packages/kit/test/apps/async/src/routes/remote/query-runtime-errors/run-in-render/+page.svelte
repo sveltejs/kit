@@ -1,7 +1,7 @@
-<script>
+<script lang="ts">
 	import { get_count } from '../../query-command.remote.js';
 
-	function get_message(error) {
+	function get_message(error: unknown) {
 		if (error instanceof Error) return error.message;
 
 		if (typeof error === 'object' && error && 'message' in error) {

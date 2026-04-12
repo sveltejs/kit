@@ -55,8 +55,6 @@ const page_methods = new Set(['GET', 'HEAD', 'POST']);
 
 const allowed_page_methods = new Set(['GET', 'HEAD', 'OPTIONS']);
 
-let warned_on_devtools_json_request = false;
-
 export const respond = propagate_context(internal_respond);
 
 /**
@@ -152,7 +150,15 @@ export async function internal_respond(request, options, manifest, state) {
 		remote: {
 			data: null,
 			forms: null,
-			refreshes: null
+			/** A map of remote function key to corresponding single-flight-mutation promise */
+			refreshes: null,
+			/** A map of remote function ID to payloads requested for refreshing by the client */
+			requested: null,
+			/**
+			 * A map of remote function ID to objects that have passed validation;
+			 * used to prevent revalidating parameters returned from `requested`
+			 */
+			validated: null
 		},
 		is_in_remote_function: false,
 		is_in_render: false,
@@ -519,14 +525,18 @@ export async function internal_respond(request, options, manifest, state) {
 		return response;
 	} catch (e) {
 		if (e instanceof Redirect) {
-			const response =
-				is_data_request || remote_id
-					? redirect_json_response(e)
-					: route?.page && is_action_json_request(event)
-						? action_json_redirect(e)
-						: redirect_response(e.status, e.location);
-			add_cookies_to_headers(response.headers, new_cookies.values());
-			return response;
+			try {
+				const response =
+					is_data_request || remote_id
+						? redirect_json_response(e)
+						: route?.page && is_action_json_request(event)
+							? action_json_redirect(e)
+							: redirect_response(e.status, e.location);
+				add_cookies_to_headers(response.headers, new_cookies.values());
+				return response;
+			} catch (err) {
+				return await handle_fatal_error(event, event_state, options, err);
+			}
 		}
 		return await handle_fatal_error(event, event_state, options, e);
 	}
@@ -668,21 +678,6 @@ export async function internal_respond(request, options, manifest, state) {
 			// if this request came direct from the user, rather than
 			// via our own `fetch`, render a 404 page
 			if (state.depth === 0) {
-				// In local development, Chrome requests this file for its 'automatic workspace folders' feature,
-				// causing console spam. If users want to serve this file they can install
-				// https://svelte.dev/docs/cli/devtools-json
-				if (DEV && event.url.pathname === '/.well-known/appspecific/com.chrome.devtools.json') {
-					if (!warned_on_devtools_json_request) {
-						console.log(
-							`\nGoogle Chrome is requesting ${event.url.pathname} to automatically configure devtools project settings. To learn why, and how to prevent this message, see https://svelte.dev/docs/cli/devtools-json\n`
-						);
-
-						warned_on_devtools_json_request = true;
-					}
-
-					return new Response(undefined, { status: 404 });
-				}
-
 				return await respond_with_error({
 					event,
 					event_state,

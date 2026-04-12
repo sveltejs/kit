@@ -45,12 +45,11 @@
 		"zimmerframe": "^1.1.2"
 	},
 	"devDependencies": {
-		"@sveltejs/vite-plugin-svelte": "catalog:",
 		"@types/estree": "catalog:",
 		"@types/node": "catalog:",
 		"rollup": "^4.59.0",
 		"svelte": "catalog:",
-		"typescript": "^5.6.3",
+		"typescript": "catalog:",
 		"vite": "catalog:",
 		"vitest": "catalog:"
 	},

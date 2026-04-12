@@ -3,6 +3,7 @@
 import { parse } from 'devalue';
 import { error } from '@sveltejs/kit';
 import { with_request_store, get_request_store } from '@sveltejs/kit/internal/server';
+import { noop } from '../../../../utils/functions.js';
 import {
 	stringify_remote_arg,
 	create_remote_key,
@@ -93,7 +94,7 @@ export async function get_response(internals, arg, state, get_result) {
 			.then((value) => {
 				void unfriendly_hydratable(remote_key, () => stringify(value, state.transport));
 			})
-			.catch(() => {});
+			.catch(noop);
 	}
 
 	return entry.data;
