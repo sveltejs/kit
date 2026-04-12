@@ -609,14 +609,7 @@ export function deep_get(object, path) {
  * @param {Record<string, any>} defaults - Default values for fields
  * @returns {any} Proxy object with name(), value(), and issues() methods
  */
-export function create_field_proxy(
-	target,
-	get_input,
-	set_input,
-	get_issues,
-	path = [],
-	defaults,
-) {
+export function create_field_proxy(target, get_input, set_input, get_issues, path = [], defaults) {
 	const get_value = () => {
 		const from_state = deep_get(get_input(), path);
 		if (from_state !== undefined) return from_state;
