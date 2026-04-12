@@ -490,10 +490,10 @@ test.describe('remote function mutations', () => {
 		const input = page.locator('[data-testid="as-value-default-input"]');
 		const display = page.locator('#default-value-display');
 
-		// l'input doit afficher la valeur par défaut
+		// input has to output the default value provided
 		await expect(input).toHaveValue('default text');
 
-		// value() doit aussi retourner la valeur par défaut SANS interaction préalable
+		// value() also needs to output the default value provided WITHOUT any user interaction
 		await expect(display).toHaveText('default text');
 	});
 

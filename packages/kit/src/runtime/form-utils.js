@@ -615,7 +615,7 @@ export function create_field_proxy(
 	set_input,
 	get_issues,
 	path = [],
-	defaults = {}
+	defaults,
 ) {
 	const get_value = () => {
 		const from_state = deep_get(get_input(), path);
