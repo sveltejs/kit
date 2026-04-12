@@ -6,6 +6,7 @@ import { DEV } from 'esm-env';
 import * as devalue from 'devalue';
 import { text_decoder, text_encoder } from './utils.js';
 import { SvelteKitError } from '@sveltejs/kit/internal';
+import { untrack } from 'svelte';
 
 /**
  * Sets a value in a nested object using a path string, mutating the original object
@@ -606,15 +607,11 @@ export function deep_get(object, path) {
  * @param {(path: (string | number)[], value: any) => void} set_input - Function to set input data
  * @param {() => Record<string, InternalRemoteFormIssue[]>} get_issues - Function to get current issues
  * @param {(string | number)[]} path - Current access path
- * @param {Record<string, any>} defaults - Default values for fields
  * @returns {any} Proxy object with name(), value(), and issues() methods
  */
-export function create_field_proxy(target, get_input, set_input, get_issues, path = [], defaults) {
+export function create_field_proxy(target, get_input, set_input, get_issues, path = []) {
 	const get_value = () => {
-		const from_state = deep_get(get_input(), path);
-		if (from_state !== undefined) return from_state;
-		const key = build_path_string(path);
-		return key in defaults ? defaults[key] : undefined;
+		return deep_get(get_input(), path);
 	};
 
 	return new Proxy(target, {
@@ -623,14 +620,10 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 
 			// Handle array access like jobs[0]
 			if (/^\d+$/.test(prop)) {
-				return create_field_proxy(
-					{},
-					get_input,
-					set_input,
-					get_issues,
-					[...path, parseInt(prop, 10)],
-					defaults
-				);
+				return create_field_proxy({}, get_input, set_input, get_issues, [
+					...path,
+					parseInt(prop, 10)
+				]);
 			}
 
 			const key = build_path_string(path);
@@ -640,25 +633,11 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 					set_input(path, newValue);
 					return newValue;
 				};
-				return create_field_proxy(
-					set_func,
-					get_input,
-					set_input,
-					get_issues,
-					[...path, prop],
-					defaults
-				);
+				return create_field_proxy(set_func, get_input, set_input, get_issues, [...path, prop]);
 			}
 
 			if (prop === 'value') {
-				return create_field_proxy(
-					get_value,
-					get_input,
-					set_input,
-					get_issues,
-					[...path, prop],
-					defaults
-				);
+				return create_field_proxy(get_value, get_input, set_input, get_issues, [...path, prop]);
 			}
 
 			if (prop === 'issues' || prop === 'allIssues') {
@@ -680,14 +659,7 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 						}));
 				};
 
-				return create_field_proxy(
-					issues_func,
-					get_input,
-					set_input,
-					get_issues,
-					[...path, prop],
-					defaults
-				);
+				return create_field_proxy(issues_func, get_input, set_input, get_issues, [...path, prop]);
 			}
 
 			if (prop === 'as') {
@@ -708,8 +680,12 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 								? 'b:'
 								: '';
 
-					if (input_value !== undefined) {
-						defaults[key] = input_value;
+					// if (input_value !== undefined) {
+					// 	defaults[key] = input_value;
+					// }
+
+					if (input_value !== undefined && get_value() == null) {
+						untrack(() => set_input(path, input_value));
 					}
 
 					// Base properties for all input types
@@ -840,18 +816,11 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 					});
 				};
 
-				return create_field_proxy(
-					as_func,
-					get_input,
-					set_input,
-					get_issues,
-					[...path, 'as'],
-					defaults
-				);
+				return create_field_proxy(as_func, get_input, set_input, get_issues, [...path, 'as']);
 			}
 
 			// Handle property access (nested fields)
-			return create_field_proxy({}, get_input, set_input, get_issues, [...path, prop], defaults);
+			return create_field_proxy({}, get_input, set_input, get_issues, [...path, prop]);
 		}
 	});
 }

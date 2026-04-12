@@ -174,8 +174,6 @@ export function form(validate_or_fn, maybe_fn) {
 			enumerable: true
 		});
 
-		const field_defaults = {};
-
 		Object.defineProperty(instance, 'fields', {
 			get() {
 				return create_field_proxy(
@@ -199,9 +197,7 @@ export function form(validate_or_fn, maybe_fn) {
 						deep_set(input, path.map(String), value);
 						(cache[''] ??= { serialize: true, data: {} }).data.input = input;
 					},
-					() => flatten_issues(get_cache(__)?.['']?.data?.issues ?? []),
-					[],
-					field_defaults
+					() => flatten_issues(get_cache(__)?.['']?.data?.issues ?? [])
 				);
 			}
 		});

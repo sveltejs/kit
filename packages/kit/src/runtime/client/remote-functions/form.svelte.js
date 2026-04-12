@@ -489,8 +489,6 @@ export function form(id) {
 			});
 		}
 
-		const field_defaults = {};
-
 		Object.defineProperties(instance, {
 			fields: {
 				get: () =>
@@ -507,9 +505,7 @@ export function form(id) {
 								touched[key] = true;
 							}
 						},
-						() => issues,
-						[],
-						field_defaults
+						() => issues
 					)
 			},
 			result: {

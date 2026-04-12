@@ -11,27 +11,28 @@
 {/each}
 
 {#each values as value (value.id)}
+	{@const form = as_value_form.for(value.id)}
 	<form
-		{...as_value_form.for(value.id).enhance(({ submit }) => {
+		{...form.enhance(({ submit }) => {
 			// TODO: needed to keep the values when JS is enabled, remove when reset is implemented
 			submit();
 		})}
 	>
-		<input {...as_value_form.fields.text_field.as('text', value.text_field)} />
+		<input {...form.fields.text_field.as('text', value.text_field)} />
 
-		<input {...as_value_form.fields.number_field.as('number', value.number_field)} />
+		<input {...form.fields.number_field.as('number', value.number_field)} />
 
-		<select {...as_value_form.fields.select_field.as('select', value.select_field)}>
+		<select {...form.fields.select_field.as('select', value.select_field)}>
 			<option>apple</option>
 			<option>banana</option>
 			<option>cherry</option>
 		</select>
 
-		<input {...as_value_form.fields.color_field.as('color', value.color_field)} />
+		<input {...form.fields.color_field.as('color', value.color_field)} />
 
-		<input {...as_value_form.fields.range_field.as('range', value.range_field)} />
+		<input {...form.fields.range_field.as('range', value.range_field)} />
 
-		<button {...as_value_form.fields.id.as('submit', value.id)}>submit</button>
+		<button {...form.fields.id.as('submit', value.id)}>submit</button>
 	</form>
 {/each}
 
