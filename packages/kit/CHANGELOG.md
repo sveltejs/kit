@@ -1,5 +1,20 @@
 # @sveltejs/kit
 
+## 2.57.1
+### Patch Changes
+
+
+- fix: better validation for `redirect` inputs ([`10d7b44`](https://github.com/sveltejs/kit/commit/10d7b44425c3d9da642eecce373d0c6ef83b4fcd))
+
+
+- fix: enforce `BODY_SIZE_LIMIT` on chunked requests ([`3202ed6`](https://github.com/sveltejs/kit/commit/3202ed6c98f9e8d86bf0c4c7ad0f2e273e5e3b95))
+
+
+- fix: use default values as fallbacks ([#15680](https://github.com/sveltejs/kit/pull/15680))
+
+
+- fix: relax form typings for union types ([#15687](https://github.com/sveltejs/kit/pull/15687))
+
 ## 2.57.0
 ### Minor Changes
 

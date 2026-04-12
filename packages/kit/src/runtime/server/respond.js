@@ -525,14 +525,18 @@ export async function internal_respond(request, options, manifest, state) {
 		return response;
 	} catch (e) {
 		if (e instanceof Redirect) {
-			const response =
-				is_data_request || remote_id
-					? redirect_json_response(e)
-					: route?.page && is_action_json_request(event)
-						? action_json_redirect(e)
-						: redirect_response(e.status, e.location);
-			add_cookies_to_headers(response.headers, new_cookies.values());
-			return response;
+			try {
+				const response =
+					is_data_request || remote_id
+						? redirect_json_response(e)
+						: route?.page && is_action_json_request(event)
+							? action_json_redirect(e)
+							: redirect_response(e.status, e.location);
+				add_cookies_to_headers(response.headers, new_cookies.values());
+				return response;
+			} catch (err) {
+				return await handle_fatal_error(event, event_state, options, err);
+			}
 		}
 		return await handle_fatal_error(event, event_state, options, e);
 	}
