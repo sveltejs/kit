@@ -680,10 +680,7 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 								? 'b:'
 								: '';
 
-					// if (input_value !== undefined) {
-					// 	defaults[key] = input_value;
-					// }
-
+					// If the input has a default value and there is no current value, set it to the default value
 					if (input_value !== undefined && get_value() == null) {
 						untrack(() => set_input(path, input_value));
 					}
