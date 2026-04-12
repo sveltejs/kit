@@ -898,6 +898,12 @@ async function kit({ svelte_config }) {
 							}
 							input['instrumentation.server'] = server_instrumentation;
 						}
+
+						// Give cache implementation a stable entry point
+						const cache_path = kit.adapter?.cache?.path ?? kit.cache?.path;
+						if (cache_path) {
+							input['entries/cache'] = cache_path;
+						}
 					} else if (svelte_config.kit.output.bundleStrategy !== 'split') {
 						input['bundle'] = `${runtime_directory}/client/bundle.js`;
 					} else {

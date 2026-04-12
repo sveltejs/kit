@@ -18,6 +18,7 @@ import { escape_html } from '../../utils/escape.js';
  *   runtime_directory: string;
  *   template: string;
  *   error_page: string;
+ *   cache_config: string;
  * }} opts
  */
 const server_template = ({
@@ -27,7 +28,8 @@ const server_template = ({
 	has_service_worker,
 	runtime_directory,
 	template,
-	error_page
+	error_page,
+	cache_config
 }) => `
 import root from '../root.${isSvelte5Plus() ? 'js' : 'svelte'}';
 import { set_building, set_prerendering } from '__sveltekit/environment';
@@ -46,10 +48,7 @@ export const options = {
 	env_private_prefix: '${config.kit.env.privatePrefix}',
 	hash_routing: ${s(config.kit.router.type === 'hash')},
 	hooks: null, // added lazily, via \`get_hooks\`
-	kit_cache_config: ${s({
-		path: config.kit.cache?.path,
-		options: config.kit.cache?.options ?? {}
-	})},
+	kit_cache_config: ${cache_config},
 	kit_cache_handler: null,
 	preload_strategy: ${s(config.kit.output.preloadStrategy)},
 	root,
@@ -130,6 +129,12 @@ export function write_server(config, output) {
 		return posixify(path.relative(`${output}/server`, file));
 	}
 
+	const cache_path = config.kit.adapter?.cache?.path ?? config.kit.cache?.path;
+	const cache_options = s(config.kit.adapter?.cache?.options ?? config.kit.cache?.options ?? {});
+	const cache_config = cache_path
+		? `() => import(${s(cache_path)}).then(mod => mod.default(${cache_options}))`
+		: 'null';
+
 	// Contains the stringified version of
 	/** @type {import('types').SSROptions} */
 	write_if_changed(
@@ -142,7 +147,8 @@ export function write_server(config, output) {
 				config.kit.serviceWorker.register && !!resolve_entry(config.kit.files.serviceWorker),
 			runtime_directory: relative(runtime_directory),
 			template: load_template(process.cwd(), config),
-			error_page: load_error_page(config)
+			error_page: load_error_page(config),
+			cache_config
 		})
 	);
 }

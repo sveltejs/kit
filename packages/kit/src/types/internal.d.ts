@@ -482,11 +482,8 @@ export interface SSROptions {
 	env_private_prefix: string;
 	hash_routing: boolean;
 	hooks: ServerHooks;
-	kit_cache_config: {
-		path: string | undefined;
-		options: Record<string, unknown>;
-	};
-	/** Filled during `Server.init` when `kit.cache.path` is set */
+	kit_cache_config: () => Promise<KitCacheHandler>;
+	/** Filled during `Server.init` when `kit.cache.path` is set, or during dev/preview when `memory_cache` is provided */
 	kit_cache_handler: KitCacheHandler | null;
 	preload_strategy: ValidatedConfig['kit']['output']['preloadStrategy'];
 	root: SSRComponent['default'];

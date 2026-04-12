@@ -142,36 +142,11 @@ export class Server {
 					await module.init();
 				}
 
-				const cache_path = this.#options.kit_cache_config?.path;
-				if (cache_path) {
-					const { href } = pathToFileURL(cache_path);
-					const mod = await import(/* @vite-ignore */ href);
-					const handler = {
-						get: mod.get,
-						set: mod.set,
-						setHeaders: mod.setHeaders,
-						invalidate: mod.invalidate
-					};
-
-					if (typeof handler.get !== 'function' || typeof handler.set !== 'function') {
-						const factory = mod.create ?? mod.default;
-
-						if (typeof factory === 'function') {
-							this.#options.kit_cache_handler = factory(
-								this.#options.kit_cache_config.options ?? {}
-							);
-						} else {
-							throw new Error(
-								`kit.cache module at ${cache_path} must export \`get\` and \`set\` functions`
-							);
-						}
-					} else {
-						this.#options.kit_cache_handler = /** @type {import('types').KitCacheHandler} */ (
-							handler
-						);
-					}
-				} else if (memory_cache) {
+				const load_cache = this.#options.kit_cache_config;
+				if (memory_cache) {
 					this.#options.kit_cache_handler = memory_cache;
+				} else if (load_cache) {
+					this.#options.kit_cache_handler = await load_cache();
 				}
 			} catch (e) {
 				if (DEV) {

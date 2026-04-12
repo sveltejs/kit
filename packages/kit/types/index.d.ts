@@ -42,6 +42,15 @@ declare module '@sveltejs/kit' {
 		 * during dev, build and prerendering.
 		 */
 		emulate?: () => MaybePromise<Emulator>;
+		/**
+		 * Provides a cache implementation.
+		 */
+		cache?: {
+			/** A path that can be imported as a module */
+			path?: string;
+			/** Options to pass to the cache implementation. Must be JSON-serializeable. */
+			options?: Record<string, unknown>;
+		};
 	}
 
 	export type LoadProperties<input extends Record<string, any> | void> = input extends void
@@ -339,11 +348,12 @@ declare module '@sveltejs/kit' {
 		 */
 		adapter?: Adapter;
 		/**
-		 * Optional module that implements [`KitCacheHandler`](https://svelte.dev/docs/kit/@sveltejs-kit#KitCacheHandler).
+		 * Provides a cache implementation. If set, overrides the cache handler provided by the adapter.
 		 */
 		cache?: {
-			/** Absolute or project-relative path resolved from your app root */
+			/** A path that can be imported as a module */
 			path?: string;
+			/** Options to pass to the cache implementation. Must be JSON-serializeable. */
 			options?: Record<string, unknown>;
 		};
 		/**

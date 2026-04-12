@@ -23,6 +23,10 @@
 			"types": "./index.d.ts",
 			"import": "./index.js"
 		},
+		"./cache": {
+			"types": "./cache.d.ts",
+			"import": "./cache.js"
+		},
 		"./package.json": "./package.json"
 	},
 	"types": "index.d.ts",
@@ -31,6 +35,8 @@
 		"index.js",
 		"utils.js",
 		"index.d.ts",
+		"cache.js",
+		"cache.d.ts",
 		"ambient.d.ts"
 	],
 	"scripts": {
@@ -40,6 +46,7 @@
 		"test": "vitest run"
 	},
 	"dependencies": {
+		"@vercel/functions": "^3.4.3",
 		"@vercel/nft": "^1.3.2",
 		"esbuild": "^0.25.4"
 	},
