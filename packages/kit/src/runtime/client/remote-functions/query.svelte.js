@@ -94,7 +94,6 @@ export function query_live(id) {
 
 		if (entries) {
 			for (const entry of entries.values()) {
-				// use optional chaining in case a prerender function was turned into a query
 				void entry.resource.reconnect();
 			}
 		}
@@ -325,6 +324,9 @@ export class Query {
 	}
 
 	get then() {
+		// TODO this should be unnecessary but due to the bug described
+		// in #start, we need to do this in some circumstances
+		this.#start();
 		return this.#then;
 	}
 
@@ -473,6 +475,7 @@ export class LiveQuery {
 	 * @type {(() => Promise<void>) | null}
 	 */
 	#interrupt = null;
+	#attempt = 0;
 
 	/** @type {Promise<T>['then']} */
 	// @ts-expect-error TS doesn't understand that the promise returns something
@@ -489,7 +492,6 @@ export class LiveQuery {
 			return result;
 		};
 	});
-	#attempt = 0;
 
 	/**
 	 * @param {string} id
@@ -510,7 +512,7 @@ export class LiveQuery {
 
 		const serialized = unfriendly_hydratable(key, () => undefined);
 		if (serialized !== undefined) {
-			this.#set_value(devalue.parse(serialized, app.decoders));
+			this.set(devalue.parse(serialized, app.decoders));
 		}
 	}
 
@@ -518,7 +520,7 @@ export class LiveQuery {
 	 * @param {number} attempt
 	 * @returns {number}
 	 */
-	static #calculate_delay(attempt) {
+	static #calculate_retry_delay(attempt) {
 		const base_delay = Math.min(250 * 2 ** attempt, 10_000);
 		const jitter = base_delay * (Math.random() * 0.4 - 0.2);
 		return Math.max(0, Math.round(base_delay + jitter));
@@ -555,21 +557,21 @@ export class LiveQuery {
 					throw new Error('Live query completed before yielding a value');
 				}
 
-				this.#set_value(value);
+				this.set(value);
 
 				for await (const value of generator) {
-					this.#set_value(value);
+					this.set(value);
 				}
 
 				this.#done = true;
 			} catch (error) {
 				if (controller.signal.aborted) break;
 
-				this.#set_error(error);
+				this.fail(error);
 
 				if (typeof navigator !== 'undefined' && !navigator.onLine) break;
 
-				const delay = LiveQuery.#calculate_delay(this.#attempt++);
+				const delay = LiveQuery.#calculate_retry_delay(this.#attempt++);
 				/** @type {boolean} */
 				const interrupted = await new Promise((resolve) => {
 					this.#interrupt = () => {
@@ -586,38 +588,6 @@ export class LiveQuery {
 
 		this.#interrupt = null;
 		on_stop();
-	}
-
-	/** @param {T} value */
-	#set_value(value) {
-		this.#ready = true;
-		this.#loading = false;
-		this.#error = undefined;
-		this.#raw = value;
-
-		if (this.#resolve_first) {
-			this.#resolve_first();
-			this.#resolve_first = null;
-			this.#reject_first = null;
-		} else {
-			this.#promise = Promise.resolve();
-		}
-	}
-
-	/** @param {unknown} error */
-	#set_error(error) {
-		this.#loading = false;
-		this.#error = error;
-
-		if (this.#reject_first) {
-			this.#reject_first(error);
-			this.#resolve_first = null;
-			this.#reject_first = null;
-		} else {
-			const promise = Promise.reject(error);
-			promise.catch(noop);
-			this.#promise = promise;
-		}
 	}
 
 	#on_online = () => {
@@ -670,6 +640,7 @@ export class LiveQuery {
 	}
 
 	get catch() {
+		this.#start();
 		this.#then;
 		return (/** @type {any} */ reject) => {
 			return this.#then(undefined, reject);
@@ -677,6 +648,7 @@ export class LiveQuery {
 	}
 
 	get finally() {
+		this.#start();
 		this.#then;
 		return (/** @type {any} */ fn) => {
 			return this.#then(
@@ -734,12 +706,34 @@ export class LiveQuery {
 
 	/** @param {T} value */
 	set(value) {
-		this.#set_value(value);
+		this.#ready = true;
+		this.#loading = false;
+		this.#error = undefined;
+		this.#raw = value;
+
+		if (this.#resolve_first) {
+			this.#resolve_first();
+			this.#resolve_first = null;
+			this.#reject_first = null;
+		} else {
+			this.#promise = Promise.resolve();
+		}
 	}
 
 	/** @param {unknown} error */
 	fail(error) {
-		this.#set_error(error);
+		this.#loading = false;
+		this.#error = error;
+
+		if (this.#reject_first) {
+			this.#reject_first(error);
+			this.#resolve_first = null;
+			this.#reject_first = null;
+		} else {
+			const promise = Promise.reject(error);
+			promise.catch(noop);
+			this.#promise = promise;
+		}
 	}
 
 	get [Symbol.toStringTag]() {

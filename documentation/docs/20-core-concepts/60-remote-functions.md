@@ -311,7 +311,7 @@ If the connection drops, `connected` becomes `false`. SvelteKit will attempt to 
 
 Unlike `query`, live queries do not have a `refresh()` method, as they are self-updating.
 
-As with `query` and `query.batch`, call `.run()` outside render when you need imperative access. For live queries, `run()` returns a `Promise<AsyncIterator<T>>`.
+As with `query` and `query.batch`, call `.run()` outside render when you need imperative access. For live queries, `run()` returns a `Promise<AsyncGenerator<T>>`.
 
 ## form
 

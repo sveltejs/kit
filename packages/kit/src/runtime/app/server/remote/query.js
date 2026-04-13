@@ -153,27 +153,21 @@ function live(validate_or_fn, maybe_fn) {
 
 		const { event, state } = get_request_store();
 
-		return create_live_query_resource(
-			__,
-			arg,
-			state,
-			async () => {
-				const generator = run(event, state, arg);
+		return create_live_query_resource(__, arg, state, async () => {
+			const generator = run(event, state, arg);
 
-				try {
-					const { value, done } = await generator.next();
+			try {
+				const { value, done } = await generator.next();
 
-					if (done) {
-						throw new Error(`query.live '${__.name}' did not yield a value`);
-					}
-
-					return value;
-				} finally {
-					await generator.return(undefined);
+				if (done) {
+					throw new Error(`query.live '${__.name}' did not yield a value`);
 				}
-			},
-			() => run(event, state, arg)
-		);
+
+				return value;
+			} finally {
+				await generator.return(undefined);
+			}
+		});
 	};
 
 	Object.defineProperty(wrapper, '__', { value: __ });
@@ -407,10 +401,9 @@ function create_query_resource(__, arg, state, fn) {
  * @param {any} arg
  * @param {RequestState} state
  * @param {() => Promise<any>} get_first_value
- * @param {() => AsyncGenerator<any>} run
  * @returns {RemoteLiveQuery<any>}
  */
-function create_live_query_resource(__, arg, state, get_first_value, run) {
+function create_live_query_resource(__, arg, state, get_first_value) {
 	/** @type {Promise<any> | null} */
 	let promise = null;
 
@@ -449,13 +442,7 @@ function create_live_query_resource(__, arg, state, get_first_value, run) {
 			return Promise.resolve();
 		},
 		run() {
-			if (!state.is_in_universal_load) {
-				throw new Error(
-					'On the server, .run() can only be called in universal `load` functions. Anywhere else, just await the query directly'
-				);
-			}
-
-			return run();
+			throw new Error('Cannot call .run() on a live query on the server');
 		},
 		/** @type {Promise<any>['then']} */
 		then(onfulfilled, onrejected) {
@@ -516,6 +503,6 @@ function update_refresh_value(
 		refreshes.set(refreshes_key, promise);
 	}
 
-	promise.then(noop, noop);
+	promise.catch(noop);
 	return Promise.resolve();
 }

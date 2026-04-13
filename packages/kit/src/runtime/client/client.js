@@ -44,6 +44,7 @@ import { compact } from '../../utils/array.js';
 import {
 	INVALIDATED_PARAM,
 	TRAILING_SLASH_PARAM,
+	create_remote_key,
 	validate_depends,
 	validate_load_response
 } from '../shared.js';
@@ -454,14 +455,22 @@ async function _invalidate(include_load_functions = true, reset_page_state = tru
 		reset_invalidation();
 	}
 
-	// Don't use allSettled yet because it's too new
-	await Promise.all(
-		[...query_map.values()].flatMap((entries) =>
-			[...entries.values()].map(({ resource }) => resource)
-		)
-	).catch(noop);
+	/** @type {Promise<any>[]} */
+	const promises = [];
+	query_map.forEach((entries) => {
+		entries.forEach(({ resource }) => {
+			promises.push(resource);
+		});
+	});
+	live_query_map.forEach((entries) => {
+		entries.forEach(({ resource }) => {
+			// TODO I feel weird about this behavior but I can't put my finger on it
+			promises.push(resource);
+		});
+	});
 
-	// TODO how do we do this with live query reconnects
+	// Don't use allSettled yet because it's too new
+	await Promise.all(promises).catch(noop);
 }
 
 function reset_invalidation() {
@@ -524,13 +533,13 @@ export async function _goto(url, options, redirect_count, nav_token) {
 				query_keys = new Set();
 				query_map.forEach((entries, id) => {
 					for (const payload of entries.keys()) {
-						query_keys.add(id + '/' + payload);
+						query_keys.add(create_remote_key(id, payload));
 					}
 				});
 				live_query_keys = new Set();
 				live_query_map.forEach((entries, id) => {
 					for (const payload of entries.keys()) {
-						live_query_keys.add(id + '/' + payload);
+						live_query_keys.add(create_remote_key(id, payload));
 					}
 				});
 			}
@@ -550,15 +559,15 @@ export async function _goto(url, options, redirect_count, nav_token) {
 			.then(() => {
 				query_map.forEach((entries, id) => {
 					entries.forEach(({ resource }, payload) => {
-						if (query_keys?.has(id + '/' + payload)) {
-							void resource.refresh?.();
+						if (query_keys?.has(create_remote_key(id, payload))) {
+							void resource.refresh();
 						}
 					});
 				});
 				live_query_map.forEach((entries, id) => {
 					entries.forEach(({ resource }, payload) => {
-						if (live_query_keys?.has(id + '/' + payload)) {
-							void resource.reconnect?.();
+						if (live_query_keys?.has(create_remote_key(id, payload))) {
+							void resource.reconnect();
 						}
 					});
 				});

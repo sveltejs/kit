@@ -234,7 +234,6 @@ export function form(id) {
 						const succeeded = raw_issues.length === 0;
 
 						if (succeeded) {
-							console.log(refreshes);
 							if (refreshes === null && !form_result.refreshes && !form_result.reconnects) {
 								void invalidateAll();
 							} else {
