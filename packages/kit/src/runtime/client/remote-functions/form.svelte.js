@@ -234,7 +234,8 @@ export function form(id) {
 						const succeeded = raw_issues.length === 0;
 
 						if (succeeded) {
-							if (!form_result.refreshes && !form_result.reconnects) {
+							console.log(refreshes);
+							if (refreshes === null && !form_result.refreshes && !form_result.reconnects) {
 								void invalidateAll();
 							} else {
 								if (form_result.refreshes) {
@@ -261,7 +262,10 @@ export function form(id) {
 						// Use internal version to allow redirects to external URLs
 						void _goto(
 							form_result.location,
-							{ invalidateAll: !stringified_refreshes && !stringified_reconnects },
+							{
+								invalidateAll:
+									refreshes === null && !stringified_refreshes && !stringified_reconnects
+							},
 							0
 						);
 						return true;

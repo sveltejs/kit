@@ -14,7 +14,7 @@ import {
 import * as devalue from 'devalue';
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
 import { DEV } from 'esm-env';
-import { noop } from '../../../utils/functions.js';
+import { noop, once } from '../../../utils/functions.js';
 import { with_resolvers } from '../../../utils/promise.js';
 import { tick, untrack } from 'svelte';
 import { create_remote_key, stringify_remote_arg, unfriendly_hydratable } from '../../shared.js';
@@ -449,7 +449,12 @@ export class LiveQuery {
 	#payload;
 	#loading = $state(true);
 	#ready = $state(false);
+	/** Is there a current connection to the server? */
 	#connected = $state(false);
+	/**
+	 * Have we been told by the server that we have completed iteration and are done?
+	 * When this is `true`, the only way to start live-updating again is to call `.reconnect()`.
+	 */
 	#done = $state(false);
 	/** @type {T | undefined} */
 	#raw = $state.raw();
@@ -461,6 +466,13 @@ export class LiveQuery {
 	#resolve_first = null;
 	/** @type {((reason?: any) => void) | null} */
 	#reject_first = null;
+	/**
+	 * Interrupt the main loop, causing the current connection (if active) to be closed
+	 * and unscheduling any future automatic reconnection attempts. Returns a promise that
+	 * resolves when the main loop has fully stopped.
+	 * @type {(() => Promise<void>) | null}
+	 */
+	#interrupt = null;
 
 	/** @type {Promise<T>['then']} */
 	// @ts-expect-error TS doesn't understand that the promise returns something
@@ -488,13 +500,17 @@ export class LiveQuery {
 		this.#id = id;
 		this.#payload = payload;
 
+		// the semantics of awaiting a live query are a bit weird, but it's basically:
+		// - It's a promise that resolves to the first value from the server
+		// - Thereafter, it's a promise that immediately resolves to the current value
 		const { promise, resolve, reject } = with_resolvers();
 		this.#promise = $state.raw(promise);
 		this.#resolve_first = resolve;
 		this.#reject_first = reject;
 
-		if (Object.hasOwn(query_responses, key)) {
-			this.#set_value(query_responses[key]);
+		const serialized = unfriendly_hydratable(key, () => undefined);
+		if (serialized !== undefined) {
+			this.#set_value(devalue.parse(serialized, app.decoders));
 		}
 	}
 
@@ -507,9 +523,6 @@ export class LiveQuery {
 		const jitter = base_delay * (Math.random() * 0.4 - 0.2);
 		return Math.max(0, Math.round(base_delay + jitter));
 	}
-
-	/** @type {(() => Promise<void>) | null} */
-	#interrupt = null;
 
 	/** @param {(() => void)} [on_connect] */
 	async #main(on_connect) {
@@ -627,7 +640,7 @@ export class LiveQuery {
 		}
 	};
 
-	#start() {
+	#start = once(() => {
 		if (typeof window !== 'undefined') {
 			window.addEventListener('online', this.#on_online);
 			window.addEventListener('offline', this.#on_offline);
@@ -637,7 +650,7 @@ export class LiveQuery {
 		}
 
 		this.#main().catch(noop);
-	}
+	});
 
 	destroy() {
 		if (typeof window !== 'undefined') {
