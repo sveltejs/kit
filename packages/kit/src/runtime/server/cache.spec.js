@@ -1,7 +1,6 @@
 import { describe, expect, test, vi } from 'vitest';
 import { create_remote_key, stringify_remote_arg } from '../shared.js';
 import {
-	apply_cache_headers,
 	create_invalidate_cache,
 	create_request_cache,
 	get_request_cache_options,
@@ -15,19 +14,6 @@ describe('parse_cache_duration', () => {
 		expect(parse_cache_duration('2h')).toBe(7200);
 		expect(parse_cache_duration(12)).toBe(12);
 	});
-});
-
-test('apply_cache_headers writes public cache headers', () => {
-	const h = new Headers();
-	apply_cache_headers(h, { maxAge: 42, tags: ['t'] });
-	expect(h.get('CDN-Cache-Control')).toBe('public, max-age=42');
-	expect(h.get('Cache-Tag')).toBe('t');
-});
-
-test('apply_cache_headers includes stale-while-revalidate when configured', () => {
-	const h = new Headers();
-	apply_cache_headers(h, { maxAge: 42, staleWhileRevalidate: 300, tags: ['t'] });
-	expect(h.get('CDN-Cache-Control')).toBe('public, max-age=42, stale-while-revalidate=300');
 });
 
 test('create_request_cache stores normalized options internally', () => {

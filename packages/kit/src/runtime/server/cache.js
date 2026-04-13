@@ -1,9 +1,5 @@
-/** @import { RequestState } from 'types' */
-import { stringify_remote_arg, create_remote_key } from '../shared.js';
-
-/**
- * @typedef {{ maxAge: number; tags: string[]; staleWhileRevalidate?: number }} RequestCacheOptions
- */
+/** @import { KitCacheOptions, RequestState } from 'types' */
+/** @import { CacheOptions, RequestCache } from '@sveltejs/kit' */
 
 /**
  * Numeric duration in seconds from strings like `30s`, `100s`, `5m`, `1h`, or plain `0`.
@@ -46,8 +42,8 @@ export function parse_cache_duration(value) {
 }
 
 /**
- * @param {import('@sveltejs/kit').CacheOptions} input
- * @returns {RequestCacheOptions}
+ * @param {CacheOptions} input
+ * @returns {KitCacheOptions}
  */
 function normalize_cache_input(input) {
 	const maxAge = parse_cache_duration(input.maxAge);
@@ -83,15 +79,15 @@ const cache_state_symbol = Symbol('sveltekit.request_cache_state');
 /**
  * @param {RequestState} state
  * @param {string} query_key
- * @returns {import('@sveltejs/kit').RequestCache}
+ * @returns {RequestCache}
  */
 export function create_request_cache(state, query_key) {
-	/** @type {{ options: RequestCacheOptions | null }} */
+	/** @type {{ options: CacheOptions | null }} */
 	const cache_state = {
 		options: null
 	};
 
-	/** @param {import('@sveltejs/kit').CacheOptions} input */
+	/** @param {CacheOptions} input */
 	function cache(input) {
 		if (!state.remote.cache) {
 			console.error('No cache implementation provided, cannot cache remote function response');
@@ -128,7 +124,7 @@ export function create_request_cache(state, query_key) {
 
 /**
  * @param {RequestState} state
- * @returns {import('@sveltejs/kit').RequestCache}
+ * @returns {RequestCache}
  */
 export function create_invalidate_cache(state) {
 	function cache() {
@@ -150,31 +146,13 @@ export function create_invalidate_cache(state) {
 }
 
 /**
- * @param {import('@sveltejs/kit').RequestCache} cache
- * @returns {RequestCacheOptions | null}
+ * @param {RequestCache} cache
+ * @returns {KitCacheOptions | null}
  */
 export function get_request_cache_options(cache) {
-	const cache_state = /** @type {{ options: RequestCacheOptions | null } | undefined} */ (
+	const cache_state = /** @type {{ options: KitCacheOptions | null } | undefined} */ (
 		/** @type {any} */ (cache)[cache_state_symbol]
 	);
 
 	return cache_state?.options ?? null;
-}
-
-/**
- * @param {Headers} headers
- * @param {RequestCacheOptions} options
- */
-export function apply_cache_headers(headers, options) {
-	const content = ['public', `max-age=${options.maxAge}`];
-
-	if (options.staleWhileRevalidate) {
-		content.push(`stale-while-revalidate=${options.staleWhileRevalidate}`);
-	}
-
-	headers.set('CDN-Cache-Control', content.join(', '));
-
-	if (options.tags.length > 0) {
-		headers.set('Cache-Tag', options.tags.join(','));
-	}
 }

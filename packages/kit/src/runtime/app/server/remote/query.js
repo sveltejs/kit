@@ -16,7 +16,6 @@ import {
 import { handle_error_and_jsonify } from '../../../server/utils.js';
 import { HttpError, SvelteKitError } from '@sveltejs/kit/internal';
 import {
-	apply_cache_headers,
 	create_erroring_cache,
 	create_request_cache,
 	get_request_cache_options
@@ -122,8 +121,6 @@ export function query(validate_or_fn, maybe_fn) {
 
 					if (state.remote.cache.setHeaders) {
 						await state.remote.cache.setHeaders(headers, options);
-					} else {
-						apply_cache_headers(headers, options);
 					}
 
 					const values = Object.fromEntries(headers.entries());
