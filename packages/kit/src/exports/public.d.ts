@@ -364,7 +364,7 @@ export interface KitCacheHandler {
 
 export interface RequestCache {
 	(arg: CacheOptions): void;
-	invalidate(tags: string[]): void;
+	invalidate(tags: string[]): Promise<void>;
 }
 
 export interface KitConfig {
@@ -2229,7 +2229,7 @@ export type RemoteQuery<T> = RemoteResource<T> & {
 	/**
 	 * Queue cache invalidation for this query (public or private, depending on how it was cached).
 	 */
-	invalidate(): void;
+	invalidate(): Promise<void>;
 	/**
 	 * Temporarily override a query's value during a [single-flight mutation](https://svelte.dev/docs/kit/remote-functions#Single-flight-mutations) to provide optimistic updates.
 	 *

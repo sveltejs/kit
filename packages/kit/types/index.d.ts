@@ -338,7 +338,7 @@ declare module '@sveltejs/kit' {
 
 	export interface RequestCache {
 		(arg: CacheOptions): void;
-		invalidate(tags: string[]): void;
+		invalidate(tags: string[]): Promise<void>;
 	}
 
 	export interface KitConfig {
@@ -2203,7 +2203,7 @@ declare module '@sveltejs/kit' {
 		/**
 		 * Queue cache invalidation for this query (public or private, depending on how it was cached).
 		 */
-		invalidate(): void;
+		invalidate(): Promise<void>;
 		/**
 		 * Temporarily override a query's value during a [single-flight mutation](https://svelte.dev/docs/kit/remote-functions#Single-flight-mutations) to provide optimistic updates.
 		 *
@@ -3455,7 +3455,7 @@ declare module '$app/server' {
 		function cache(input: import("@sveltejs/kit").CacheOptions): void;
 		namespace cache {
 			
-			function invalidate(tags: string[]): void;
+			function invalidate(tags: string[]): Promise<void>;
 		}
 	}
 	/**

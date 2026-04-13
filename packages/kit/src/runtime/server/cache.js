@@ -134,7 +134,7 @@ export function create_invalidate_cache(state) {
 	}
 
 	/** @param {string[]} tags */
-	cache.invalidate = (tags) => {
+	cache.invalidate = async (tags) => {
 		if (!state.remote.cache) {
 			console.error('No cache implementation provided, cannot invalidate remote function cache');
 		} else {

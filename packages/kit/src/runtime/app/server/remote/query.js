@@ -97,6 +97,17 @@ export function query(validate_or_fn, maybe_fn) {
 			(async () => {
 				const cached = await state.remote.cache?.get(query_id);
 				if (cached !== undefined) {
+					const cache_entry = deserialize_query_cache_entry(cached);
+					if (cache_entry) {
+						await set_remote_query_cache_headers(
+							event,
+							state,
+							__.id,
+							get_remaining_cache_options(cache_entry)
+						);
+						return parse_remote_response(cache_entry.response, state.transport);
+					}
+
 					return parse_remote_response(cached, state.transport);
 				}
 
@@ -114,20 +125,12 @@ export function query(validate_or_fn, maybe_fn) {
 				if (!options || !state.remote.cache) return result;
 
 				const stringified = stringify(result, state.transport);
-				await state.remote.cache.set(query_id, stringified, options);
-
-				if (is_remote_query_endpoint_request(event, __.id)) {
-					const headers = new Headers();
-
-					if (state.remote.cache.setHeaders) {
-						await state.remote.cache.setHeaders(headers, options);
-					}
-
-					const values = Object.fromEntries(headers.entries());
-					if (Object.keys(values).length > 0) {
-						event.setHeaders(values);
-					}
-				}
+				await state.remote.cache.set(
+					query_id,
+					serialize_query_cache_entry(stringified, options),
+					options
+				);
+				await set_remote_query_cache_headers(event, state, __.id, options);
 
 				return result;
 			})()
@@ -149,8 +152,8 @@ function query_cache(input) {
 /**
  * @param {string[]} tags
  */
-function invalidate_query_cache(tags) {
-	get_request_store().state.cache.invalidate(tags);
+async function invalidate_query_cache(tags) {
+	await get_request_store().state.cache.invalidate(tags);
 }
 
 /**
@@ -375,14 +378,13 @@ function create_query_resource(__, arg, state, fn) {
 			const value = is_immediate_refresh ? get_promise() : fn();
 			return update_refresh_value(refresh_context, value, is_immediate_refresh);
 		},
-		invalidate() {
+		async invalidate() {
 			const { state } = get_request_store();
-			// align with how url is constructed on the client, which is used for the cache key
 			const invalidate_key =
 				arg !== undefined
 					? create_remote_key(__.id, stringify_remote_arg(arg, state.transport))
 					: __.id;
-			invalidate_query_cache([invalidate_key]);
+			await invalidate_query_cache([invalidate_key]);
 		},
 		run() {
 			// potential TODO: if we want to be able to run queries at the top level of modules / outside of the request context, we could technically remove
@@ -479,4 +481,98 @@ function is_remote_query_endpoint_request(event, query_id) {
 	const prefix = `${base}/${app_dir}/remote/${query_id}`;
 
 	return pathname === prefix || pathname.startsWith(`${prefix}/`);
+}
+
+/**
+ * @typedef {{
+ * 	response: string;
+ * 	maxAge: number;
+ * 	staleWhileRevalidate?: number;
+ * 	tags: string[];
+ * 	age: number;
+ * }} QueryCacheEntry
+ */
+
+/**
+ * @param {string} stringified_response
+ * @param {import('types').KitCacheOptions} cache
+ */
+function serialize_query_cache_entry(stringified_response, cache) {
+	return JSON.stringify({
+		response: stringified_response,
+		maxAge: cache.maxAge,
+		staleWhileRevalidate: cache.staleWhileRevalidate,
+		tags: cache.tags,
+		// not great that we have to trust the node process to have the correct time,
+		// but cross-provider this is the best we can do.
+		age: Date.now()
+	});
+}
+
+/**
+ * Better safe than sorry: deserialize the cache entry and validate the fields
+ * @param {string} value
+ * @returns {QueryCacheEntry | null}
+ */
+function deserialize_query_cache_entry(value) {
+	try {
+		const entry = JSON.parse(value);
+		if (typeof entry !== 'object' || !entry) return null;
+		if (typeof entry.response !== 'string') return null;
+		if (typeof entry.maxAge !== 'number' || !Number.isFinite(entry.maxAge)) return null;
+		if (typeof entry.age !== 'number' || !Number.isFinite(entry.age)) return null;
+		if (!Array.isArray(entry.tags)) return null;
+		for (const tag of entry.tags) {
+			if (typeof tag !== 'string') return null;
+		}
+		if (
+			entry.staleWhileRevalidate !== undefined &&
+			(typeof entry.staleWhileRevalidate !== 'number' ||
+				!Number.isFinite(entry.staleWhileRevalidate))
+		) {
+			return null;
+		}
+
+		return entry;
+	} catch {
+		return null;
+	}
+}
+
+/**
+ * @param {QueryCacheEntry} entry
+ * @returns {import('types').KitCacheOptions}
+ */
+function get_remaining_cache_options(entry) {
+	const elapsed = Math.max(0, (Date.now() - entry.age) / 1000);
+	const max_age = Math.max(0, entry.maxAge - elapsed);
+	const stale_window = Math.max(
+		0,
+		entry.maxAge + (entry.staleWhileRevalidate ?? 0) - elapsed - max_age
+	);
+
+	return {
+		maxAge: max_age,
+		staleWhileRevalidate: stale_window > 0 ? stale_window : undefined,
+		tags: entry.tags
+	};
+}
+
+/**
+ * @param {import('@sveltejs/kit').RequestEvent} event
+ * @param {RequestState} state
+ * @param {string} query_id
+ * @param {import('types').KitCacheOptions} cache
+ */
+async function set_remote_query_cache_headers(event, state, query_id, cache) {
+	if (!state.remote.cache?.setHeaders) return;
+	if (!is_remote_query_endpoint_request(event, query_id)) return;
+
+	const headers = new Headers();
+	await state.remote.cache.setHeaders(headers, cache);
+
+	const values = Object.fromEntries(headers.entries());
+	if (Object.keys(values).length > 0) {
+		event.setHeaders(values);
+	}
 }
