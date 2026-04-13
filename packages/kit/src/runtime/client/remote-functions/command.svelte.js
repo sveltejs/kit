@@ -35,8 +35,8 @@ export function command(id) {
 		// Increment pending count when command starts
 		pending_count++;
 
-		// Noone should call commands during rendering but belts and braces.
-		// Do this here, after await Svelte' reactivity context is gone.
+		// No one should call commands during rendering, but this is belt and braces.
+		// Do this here, after Svelte's reactivity context is gone.
 		const headers = {
 			'Content-Type': 'application/json',
 			...get_remote_request_headers()
