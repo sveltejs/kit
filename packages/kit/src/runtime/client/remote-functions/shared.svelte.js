@@ -1,4 +1,4 @@
-/** @import { RemoteFunctionResponse, RemoteSingleflightMap, RemoteSingleflightEntry, ServerRedirectNode, ServerErrorNode } from 'types' */
+/** @import { RemoteFunctionResponse, RemoteSingleflightMap, RemoteSingleflightEntry } from 'types' */
 /** @import { RemoteQueryUpdate } from '@sveltejs/kit' */
 /** @import { RemoteQueryCacheEntry, RemoteLiveQueryCacheEntry } from './query.svelte.js' */
 import { app_dir, base } from '$app/paths/internal/client';
@@ -290,7 +290,7 @@ async function* read_ndjson(reader) {
  * @param {string} payload
  * @param {AbortController} [controller]
  * @param {() => void} [on_connect]
- * @returns {AsyncIterableIterator<T>}
+ * @returns {AsyncGenerator<T>}
  */
 export async function* create_live_iterator(
 	id,

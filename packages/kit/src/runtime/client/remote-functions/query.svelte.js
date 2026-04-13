@@ -1,5 +1,6 @@
 /** @import { RemoteLiveQuery, RemoteLiveQueryFunction, RemoteQueryFunction } from '@sveltejs/kit' */
 /** @import { RemoteFunctionResponse } from 'types' */
+/** @import { PromiseWithResolvers } from '../../../utils/promise.js' */
 import { app_dir, base } from '$app/paths/internal/client';
 import { app, goto, live_query_map, query_map, query_responses } from '../client.js';
 import {
@@ -449,14 +450,14 @@ export class LiveQuery {
 	#loading = $state(true);
 	#ready = $state(false);
 	#connected = $state(false);
-	#completed = $state(false);
+	#done = $state(false);
 	/** @type {T | undefined} */
 	#raw = $state.raw();
 	/** @type {any} */
 	#error = $state.raw(undefined);
-	/** @type {Promise<T>} */
+	/** @type {Promise<void>} */
 	#promise;
-	/** @type {((value: T | PromiseLike<T>) => void) | null} */
+	/** @type {((value: void) => void) | null} */
 	#resolve_first = null;
 	/** @type {((reason?: any) => void) | null} */
 	#reject_first = null;
@@ -476,13 +477,7 @@ export class LiveQuery {
 			return result;
 		};
 	});
-	#destroyed = false;
 	#attempt = 0;
-	/** @type {ReturnType<typeof setTimeout> | null} */
-	#retry_timer = null;
-	/** @type {AbortController | null} */
-	#controller = null;
-	#connection = 0;
 
 	/**
 	 * @param {string} id
@@ -503,11 +498,81 @@ export class LiveQuery {
 		}
 	}
 
-	#clear_retry() {
-		if (this.#retry_timer) {
-			clearTimeout(this.#retry_timer);
-			this.#retry_timer = null;
+	/**
+	 * @param {number} attempt
+	 * @returns {number}
+	 */
+	static #calculate_delay(attempt) {
+		const base_delay = Math.min(250 * 2 ** attempt, 10_000);
+		const jitter = base_delay * (Math.random() * 0.4 - 0.2);
+		return Math.max(0, Math.round(base_delay + jitter));
+	}
+
+	/** @type {(() => Promise<void>) | null} */
+	#interrupt = null;
+
+	/** @param {(() => void)} [on_connect] */
+	async #main(on_connect) {
+		// this means we're already running the main loop
+		if (this.#interrupt) return;
+
+		/** @type {PromiseWithResolvers<void>} */
+		const { promise: stopped, resolve: on_stop } = with_resolvers();
+
+		while (!this.#done) {
+			const controller = new AbortController();
+
+			this.#interrupt = () => {
+				controller.abort();
+				return stopped;
+			};
+
+			const generator = create_live_iterator(this.#id, this.#payload, controller, () => {
+				this.#connected = true;
+				this.#attempt = 0;
+				on_connect?.();
+			});
+
+			try {
+				const { done, value } = await generator.next();
+
+				// TODO how much special handling does this need?
+				// should we even try to reconnect if this is the case?
+				if (done && !this.#ready) {
+					throw new Error('Live query completed before yielding a value');
+				}
+
+				this.#set_value(value);
+
+				for await (const value of generator) {
+					this.#set_value(value);
+				}
+
+				this.#done = true;
+			} catch (error) {
+				if (controller.signal.aborted) break;
+
+				this.#set_error(error);
+
+				if (typeof navigator !== 'undefined' && !navigator.onLine) break;
+
+				const delay = LiveQuery.#calculate_delay(this.#attempt++);
+				/** @type {boolean} */
+				const interrupted = await new Promise((resolve) => {
+					this.#interrupt = () => {
+						resolve(true);
+						return stopped;
+					};
+					setTimeout(() => resolve(false), delay);
+				});
+				if (interrupted) break;
+			} finally {
+				this.#connected = false;
+			}
 		}
+
+		this.#interrupt = null;
+		on_stop();
 	}
 
 	/** @param {T} value */
@@ -518,11 +583,11 @@ export class LiveQuery {
 		this.#raw = value;
 
 		if (this.#resolve_first) {
-			this.#resolve_first(value);
+			this.#resolve_first();
 			this.#resolve_first = null;
 			this.#reject_first = null;
 		} else {
-			this.#promise = Promise.resolve(value);
+			this.#promise = Promise.resolve();
 		}
 	}
 
@@ -542,113 +607,18 @@ export class LiveQuery {
 		}
 	}
 
-	#disconnect_current() {
-		this.#controller?.abort();
-		this.#controller = null;
-		this.#connected = false;
-	}
-
-	#schedule_reconnect() {
-		if (this.#destroyed || this.#completed || this.#retry_timer) return;
-
-		if (typeof navigator !== 'undefined' && navigator.onLine === false) {
-			return;
-		}
-
-		const base_delay = Math.min(250 * 2 ** this.#attempt, 10_000);
-		const jitter = base_delay * (Math.random() * 0.4 - 0.2);
-		const delay = Math.max(0, Math.round(base_delay + jitter));
-		this.#attempt += 1;
-
-		this.#retry_timer = setTimeout(() => {
-			this.#retry_timer = null;
-			void this.#connect_stream();
-		}, delay);
-	}
-
-	#connect_stream() {
-		if (this.#destroyed || this.#completed) {
-			return Promise.resolve(/** @type {T} */ (this.#raw));
-		}
-
-		const connection = ++this.#connection;
-		const controller = new AbortController();
-		this.#controller = controller;
-
-		const stream = create_live_iterator(this.#id, this.#payload, controller, () => {
-			this.#connected = true;
-			this.#attempt = 0;
-		});
-
-		const first = stream.next().then((result) => {
-			if (result.done) {
-				const error = new Error('Live query completed before yielding a value');
-
-				if (!this.#ready) {
-					// TODO should this be an actual error only if we haven't received any value yet,
-					// or should it always be an error if we connect and don't get a value?
-					this.#set_error(error);
-				}
-
-				throw error;
-			}
-
-			if (this.#destroyed || connection !== this.#connection) {
-				throw new Error('Live query connection superseded');
-			}
-
-			this.#set_value(result.value);
-			return result.value;
-		});
-
-		void (async () => {
-			try {
-				await first;
-
-				for await (const value of stream) {
-					if (this.#destroyed || connection !== this.#connection) {
-						break;
-					}
-
-					this.#set_value(value);
-				}
-
-				if (!this.#destroyed && connection === this.#connection) {
-					this.#completed = true;
-				}
-			} catch (error) {
-				if (controller.signal.aborted || connection !== this.#connection) {
-					return;
-				}
-
-				this.#set_error(error);
-
-				if (!this.#destroyed && !this.#completed) {
-					this.#schedule_reconnect();
-				}
-			} finally {
-				if (connection === this.#connection) {
-					this.#connected = false;
-					this.#controller = null;
-				}
-			}
-		})();
-
-		return first;
-	}
-
 	#on_online = () => {
-		if (this.#destroyed || this.#completed) return;
-		this.#clear_retry();
-		void this.#connect_stream();
+		if (this.#done) return;
+		if (this.#interrupt) return;
+		this.#main().catch(noop);
 	};
 
 	#on_offline = () => {
-		this.#disconnect_current();
+		void this.#interrupt?.();
 	};
 
 	#on_pagehide = () => {
-		this.#disconnect_current();
+		void this.#interrupt?.();
 	};
 
 	#on_pageshow = (/** @type {PageTransitionEvent} */ e) => {
@@ -658,8 +628,6 @@ export class LiveQuery {
 	};
 
 	#start() {
-		if (this.#destroyed) return;
-
 		if (typeof window !== 'undefined') {
 			window.addEventListener('online', this.#on_online);
 			window.addEventListener('offline', this.#on_offline);
@@ -668,17 +636,10 @@ export class LiveQuery {
 			window.addEventListener('pageshow', this.#on_pageshow);
 		}
 
-		this.#clear_retry();
-		if (!this.#controller && !this.#completed) {
-			void this.#connect_stream();
-		}
+		this.#main().catch(noop);
 	}
 
 	destroy() {
-		this.#destroyed = true;
-		this.#clear_retry();
-		this.#disconnect_current();
-
 		if (typeof window !== 'undefined') {
 			window.removeEventListener('online', this.#on_online);
 			window.removeEventListener('offline', this.#on_offline);
@@ -686,6 +647,8 @@ export class LiveQuery {
 			window.removeEventListener('beforeunload', this.#on_pagehide);
 			window.removeEventListener('pageshow', this.#on_pageshow);
 		}
+
+		void this.#interrupt?.();
 	}
 
 	get then() {
@@ -743,22 +706,17 @@ export class LiveQuery {
 
 	get done() {
 		this.#start();
-		return this.#completed;
+		return this.#done;
 	}
 
-	reconnect() {
-		if (this.#destroyed) {
-			return Promise.resolve();
-		}
-
-		this.#start();
-
-		this.#completed = false;
+	async reconnect() {
+		await this.#interrupt?.();
+		/** @type {PromiseWithResolvers<void>} */
+		const { promise, resolve } = with_resolvers();
+		this.#done = false;
 		this.#attempt = 0;
-		this.#clear_retry();
-		this.#disconnect_current();
-
-		return this.#connect_stream().then(() => undefined);
+		this.#main(resolve).catch(noop);
+		await promise;
 	}
 
 	/** @param {T} value */
