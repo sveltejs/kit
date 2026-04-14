@@ -988,7 +988,12 @@ async function kit({ svelte_config }) {
 				} else {
 					new_config = {
 						appType: 'custom',
-						base: kit_paths_base,
+						// When running under Vitest, don't apply kit.paths.base — vite-node
+						// serves filesystem modules over HTTP and Vite will strip the base
+						// prefix from those URLs, breaking module resolution when the base
+						// happens to match the start of the project path (e.g. "/Users").
+						// See https://github.com/sveltejs/kit/issues/13737
+						base: process.env.VITEST ? '/' : kit_paths_base,
 						build: {
 							rollupOptions: {
 								// Vite dependency crawler needs an explicit JS entry point
