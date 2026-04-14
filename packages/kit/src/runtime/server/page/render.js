@@ -529,7 +529,10 @@ export async function render_response({
 
 					const store = internals.type === 'prerender' ? prerender : query;
 
-					if (event_state.remote.refreshes?.[remote_key] !== undefined) {
+					if (
+						event_state.remote.refreshes?.has(remote_key) ||
+						event_state.remote.reconnects?.has(remote_key)
+					) {
 						// This entry was refreshed/set by a command or form action.
 						// Always await it so the mutation result is serialized.
 						store[remote_key] = await entry.data;
