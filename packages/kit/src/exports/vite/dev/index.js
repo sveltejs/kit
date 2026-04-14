@@ -12,8 +12,8 @@ import { load_error_page } from '../../../core/config/index.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import * as sync from '../../../core/sync/sync.js';
 import { is_chrome_devtools_request, not_found } from '../utils.js';
-import { escape_html } from '../../../utils/escape.js';
-import { sveltekit_dev_server, sveltekit_manifest_data } from '../module_ids.js';
+import { escape_for_regexp, escape_html } from '../../../utils/escape.js';
+import { sveltekit_manifest_data } from '../module_ids.js';
 import { to_fs } from '../filesystem.js';
 
 // vite-specifc queries that we should skip handling for css urls
@@ -148,7 +148,7 @@ export function dev(vite, vite_config, svelte_config, root, dev_environment) {
 
 	const assets = svelte_config.kit.paths.assets ? SVELTE_KIT_ASSETS : svelte_config.kit.paths.base;
 	dev_environment.assets = assets;
-	invalidate_module(vite, sveltekit_dev_server);
+	invalidate_module(vite, sveltekit_manifest_data);
 
 	const asset_server = sirv(svelte_config.kit.files.assets, {
 		dev: true,
@@ -183,8 +183,15 @@ export function dev(vite, vite_config, svelte_config, root, dev_environment) {
 		next();
 	});
 
-	const inline_styles_pathname = new RegExp(
-		`\\/${svelte_config.kit.appDir.replaceAll('/', '\\\\/')}\\/inline-styles\\/\\d+`
+	const inline_styles_pathname = create_app_dir_matcher(
+		svelte_config.kit.paths.base,
+		svelte_config.kit.appDir,
+		'/inline-styles'
+	);
+	const check_feature_pathname = create_app_dir_matcher(
+		svelte_config.kit.paths.base,
+		svelte_config.kit.appDir,
+		'/check-feature'
 	);
 
 	return () => {
@@ -207,8 +214,11 @@ export function dev(vite, vite_config, svelte_config, root, dev_environment) {
 				const base = `${vite.config.server.https ? 'https' : 'http'}://${
 					req.headers[':authority'] || req.headers.host
 				}`;
-				dev_environment.origin = base;
-				invalidate_module(vite, sveltekit_manifest_data);
+
+				if (!dev_environment.origin) {
+					dev_environment.origin = base;
+					invalidate_module(vite, sveltekit_manifest_data);
+				}
 
 				const decoded = decodeURI(new URL(base + req.url).pathname);
 
@@ -242,6 +252,19 @@ export function dev(vite, vite_config, svelte_config, root, dev_environment) {
 						'content-type': 'application/json'
 					});
 					res.end(JSON.stringify(styles));
+					return;
+				}
+
+				if (decoded.match(check_feature_pathname)) {
+					const url = new URL(base + req.url);
+					const route_id = url.searchParams.get('route_id') || 'undefined';
+					const config = url.searchParams.get('config') || 'undefined';
+					const feature = url.searchParams.get('feature') || 'undefined';
+
+					const result = check_feature(route_id, config, feature, svelte_config.kit.adapter);
+
+					res.writeHead(200);
+					res.end(result?.message);
 					return;
 				}
 
@@ -406,14 +429,22 @@ export function invalidate_module(vite, id) {
 	}
 }
 
-// TODO: move this to an endpoint
+/**
+ * @param {string} base
+ * @param {string} appDir
+ * @param {string} pattern
+ * @returns {RegExp}
+ */
+export function create_app_dir_matcher(base, appDir, pattern) {
+	return new RegExp(`^${escape_for_regexp(`${base}/${appDir}${pattern}`)}$`);
+}
 
 /**
  * @param {import('vite').ViteDevServer} vite
  * @param {string[]} urls
  * @returns {Promise<Record<string, string>>}
  */
-export async function get_inline_css(vite, urls) {
+async function get_inline_css(vite, urls) {
 	/** @type {Set<import('vite').EnvironmentModuleNode>} */
 	const deps = new Set();
 
@@ -436,4 +467,31 @@ export async function get_inline_css(vite, urls) {
 	}
 
 	return Object.fromEntries(styles);
+}
+
+/**
+ *
+ * @param {string} route_id
+ * @param {unknown} config
+ * @param {string} feature
+ * @param {import('@sveltejs/kit').Adapter | undefined} adapter
+ * @returns { { message: string } | void }
+ */
+function check_feature(route_id, config, feature, adapter) {
+	if (!adapter) return;
+
+	switch (feature) {
+		case '$app/server:read': {
+			const supported = adapter.supports?.read?.({
+				route: { id: route_id },
+				config
+			});
+
+			if (!supported) {
+				return {
+					message: `Cannot use \`read\` from \`$app/server\` in ${route_id} when using ${adapter.name}. Please ensure that your adapter is up to date and supports this feature.`
+				};
+			}
+		}
+	}
 }

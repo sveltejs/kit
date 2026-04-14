@@ -31,6 +31,7 @@ declare namespace App {
 	/**
 	 * The interface that defines `event.locals`, which can be accessed in server [hooks](https://svelte.dev/docs/kit/hooks) (`handle`, and `handleError`), server-only `load` functions, and `+server.js` files.
 	 */
+	// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 	export interface Locals {}
 
 	/**
@@ -38,16 +39,19 @@ declare namespace App {
 	 * The `Load` and `ServerLoad` functions in `./$types` will be narrowed accordingly.
 	 * Use optional properties for data that is only present on specific pages. Do not add an index signature (`[key: string]: any`).
 	 */
+	// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 	export interface PageData {}
 
 	/**
 	 * The shape of the `page.state` object, which can be manipulated using the [`pushState`](https://svelte.dev/docs/kit/$app-navigation#pushState) and [`replaceState`](https://svelte.dev/docs/kit/$app-navigation#replaceState) functions from `$app/navigation`.
 	 */
+	// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 	export interface PageState {}
 
 	/**
 	 * If your adapter provides [platform-specific context](https://svelte.dev/docs/kit/adapters#Platform-specific-context) via `event.platform`, you can specify it here.
 	 */
+	// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 	export interface Platform {}
 }
 
@@ -147,15 +151,40 @@ declare module '$app/types' {
 	export type Asset = ReturnType<AppTypes['Asset']>;
 }
 
-declare module 'virtual:@sveltejs/kit/vite/environment' {
+/**
+ * Exports the SSR manifest and other useful app information used to
+ * initialise a new `Server` instance and handle requests.
+ * @example
+ * ```js
+ * import { manifest, env } from 'sveltekit:server-manifest';
+ * import { Server } from 'sveltekit:server';
+ *
+ * const server = new Server(manifest);
+ *
+ * await server.init({ env });
+ * ```
+ */
+declare module 'sveltekit:server-manifest' {
 	import { SSRManifest } from '@sveltejs/kit';
 
 	export const manifest: SSRManifest;
 	export const env: Record<string, string>;
-	export const base_path: string;
+	export const basePath: string;
 	export const prerendered: Set<string>;
 }
 
-declare module 'virtual:@sveltejs/kit/vite/environment/server' {
+/**
+ * Exports the `Server` class for creating custom server entry points.
+ * @example
+ * ```js
+ * import { manifest, env } from 'sveltekit:server-manifest';
+ * import { Server } from 'sveltekit:server';
+ *
+ * const server = new Server(manifest);
+ *
+ * await server.init({ env });
+ * ```
+ */
+declare module 'sveltekit:server' {
 	export { Server } from '@sveltejs/kit';
 }

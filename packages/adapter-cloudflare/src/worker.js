@@ -1,7 +1,7 @@
 /// <reference types="@cloudflare/workers-types" />
 
 import { Server } from 'SERVER';
-import { manifest, prerendered, base_path } from 'MANIFEST';
+import { manifest, prerendered, basePath } from 'MANIFEST';
 import { env } from 'cloudflare:workers';
 import * as Cache from 'worktop/cfw.cache';
 
@@ -38,13 +38,7 @@ const initialized = server.init({
 	}
 });
 
-export default {
-	/**
-	 * @param {Request} req
-	 * @param {{ [key: string]: { fetch: typeof fetch } }} env
-	 * @param {ExecutionContext} ctx
-	 * @returns {Promise<Response>}
-	 */
+export default /** @satisfies {ExportedHandler} */ ({
 	async fetch(req, env, ctx) {
 		if (!origin) {
 			origin = new URL(req.url).origin;
@@ -69,7 +63,7 @@ export default {
 
 		// files in /static, the service worker, and Vite imported server assets
 		let is_static_asset = false;
-		const filename = stripped_pathname.slice(base_path.length + 1);
+		const filename = stripped_pathname.slice(basePath.length + 1);
 		if (filename) {
 			is_static_asset =
 				manifest.assets.has(filename) ||
@@ -86,7 +80,7 @@ export default {
 			pathname === version_file ||
 			pathname.startsWith(immutable)
 		) {
-			res = await env[__SVELTEKIT_CLOUDFLARE_ASSETS_BINDING__].fetch(req);
+			res = /** @type {Response} */ (await env[__SVELTEKIT_CLOUDFLARE_ASSETS_BINDING__].fetch(req));
 		} else if (location && prerendered.has(location)) {
 			// trailing slash redirect for prerendered pages
 			if (search) location += search;
@@ -118,4 +112,4 @@ export default {
 		pragma = res.headers.get('cache-control') || '';
 		return pragma && res.status < 400 ? Cache.save(req, res, ctx) : res;
 	}
-};
+});

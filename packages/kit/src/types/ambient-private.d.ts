@@ -3,8 +3,6 @@ declare module '__sveltekit/environment' {
 	export const building: boolean;
 	export const prerendering: boolean;
 	export const version: string;
-	export function set_building(): void;
-	export function set_prerendering(): void;
 }
 
 /** Internal version of $app/paths */
@@ -28,36 +26,23 @@ declare module '__sveltekit/server' {
 	export function set_read_implementation(fn: (path: string) => ReadableStream): void;
 }
 
+/** Used to construct the SSR manifest in development from a Node-agnostic environment */
 declare module '__sveltekit/manifest-data' {
-	import { Asset, PageNode, RouteData } from 'types';
+	import { ManifestData } from 'types';
 
 	export const env: Record<string, string>;
-	export const kit: {
-		appDir: string;
-		outDir: string;
-		router: {
-			resolution: 'client' | 'server';
-		};
-		paths: {
-			assets: string;
-			base: string;
-			relative: boolean;
-		};
-	};
 	export const mime_types: string[];
-	export const manifest_data: {
-		routes: RouteData[];
-		nodes: PageNode[];
-		matchers: string[][];
-		assets: Asset[];
-	};
-	export const origin: string;
+	export const manifest_data: ManifestData;
+	export function get(pathname: string): Promise<Response>;
 }
 
+/** Used to read the filesystem during development from an environment without `node:fs` */
 declare module '__sveltekit/server-assets' {
 	export const server_assets: Record<string, number>;
+	export const server_assets_content: Record<string, Buffer<ArrayBuffer>>;
 }
 
+/** Used to identify remote functions processed by Vite from any environment */
 declare module '__sveltekit/remotes' {
 	export const remotes: Array<{ hash: string; file: string }>;
 }

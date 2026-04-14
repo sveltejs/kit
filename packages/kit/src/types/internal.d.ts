@@ -40,9 +40,7 @@ export interface ServerModule {
 
 export interface ServerInternalModule {
 	set_assets(path: string): void;
-	set_building(): void;
 	set_manifest(manifest: SSRManifest): void;
-	set_prerendering(): void;
 	set_private_env(environment: Record<string, string>): void;
 	set_public_env(environment: Record<string, string>): void;
 	set_read_implementation(implementation: (path: string) => ReadableStream): void;
@@ -176,11 +174,9 @@ export class InternalServer extends Server {
 		request: Request,
 		options: RequestOptions & {
 			prerendering?: PrerenderOptions;
-			/**
-			 * Used internally for saving dependencies during prerendering and generating fallback pages.
-			 */
-			read: (file: string) => NonSharedBuffer;
-			/** A hook called before `handle` during dev, so that `AsyncLocalStorage` can be populated. */
+			/** @internal for saving dependencies during prerendering and generating fallback pages */
+			read: (file: string) => MaybePromise<Buffer<ArrayBuffer>>;
+			/** @internal a hook called before `handle` during dev, so that `AsyncLocalStorage` can be populated */
 			before_handle?: (
 				event: RequestEvent,
 				config: any,
@@ -559,9 +555,9 @@ export interface SSRState {
 	 */
 	prerender_default?: PrerenderOption;
 	/**
-	 * Used internally for saving dependencies during prerendering and generating fallback pages.
+	 * @internal reads from the filesystem when user code tries to fetch a static asset
 	 */
-	read?: (file: string) => NonSharedBuffer;
+	read?: (file: string) => MaybePromise<Buffer<ArrayBuffer>>;
 	/**
 	 * Used to set up `__SVELTEKIT_TRACK__` which checks if a used feature is supported.
 	 * E.g. if `read` from `$app/server` is used, it checks whether the route's config is compatible.
@@ -694,13 +690,16 @@ export interface DevEnvironment {
 	vite: ViteDevServer;
 	/** used to construct the SSR manifest */
 	manifest_data: ManifestData;
-	/** environment variables loaded according to Vite's mode, etc. */
+	/** environment variables loaded according to Vite's mode */
 	env: Record<string, string>;
 	/** where app assets are served from */
 	assets: string;
 	/** used to populate `event.getClientAddress()` */
 	remote_address: string | undefined;
-	/** address of the development server */
+	/**
+	 * used to communicate from the environment to the host process by making
+	 * requests against the Vite middleware
+	 */
 	origin: string;
 }
 

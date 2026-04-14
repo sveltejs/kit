@@ -5,7 +5,7 @@ import { DEV } from 'esm-env';
 
 const name = '@sveltejs/adapter-cloudflare';
 
-const default_worker = path.join(import.meta.dirname, 'files/worker.js');
+const default_worker = path.join(import.meta.dirname, 'src/worker.js');
 
 /**
  * Resolved after the Cloudflare Vite plugin `config` hook runs
@@ -18,6 +18,25 @@ let building;
 
 /** @type {import('./index.js').default} */
 export default function (options = {}) {
+	// TODO: remove in a future major after users have had time to migrate
+	if (options.config) {
+		throw new Error(
+			'Remove the `adapter.config` option and configure the `adapter.vitePluginOptions.config` option in your `vite.config.js` file instead'
+		);
+	}
+
+	if (options.fallback) {
+		throw new Error(
+			'Remove the `adapter.fallback` option and configure `assets.not_found_handling` in your Wrangler configuration file instead'
+		);
+	}
+
+	if (options.platformProxy) {
+		throw new Error(
+			'Remove the `adapter.platformProxy` option and configure the `adapter.vitePluginOptions` option in your `vite.config.js` file or the options in your Wrangler configuration file instead'
+		);
+	}
+
 	return {
 		name,
 		async adapt(builder) {
@@ -65,7 +84,7 @@ export default function (options = {}) {
 				`${server_dest}/manifest.js`,
 				`export const manifest = ${builder.generateManifest({ relativePath: '.' })};\n\n` +
 					`export const prerendered = new Set(${JSON.stringify(builder.prerendered.paths)});\n\n` +
-					`export const base_path = ${JSON.stringify(builder.config.kit.paths.base)};\n`
+					`export const basePath = ${JSON.stringify(builder.config.kit.paths.base)};\n`
 			);
 
 			if (builder.hasServerInstrumentationFile()) {
@@ -114,7 +133,8 @@ export default function (options = {}) {
 						user_config.environments.ssr.build ??= {};
 						user_config.environments.ssr.build.rolldownOptions ??= {};
 
-						// prevents our server entry from clashing with Cloudflare's worker entry
+						// The Cloudflare Vite plugin hardcodes the worker entry input as `index`
+						// and it can't be configured so we need to rename the SvelteKit one
 						if (
 							typeof user_config.environments.ssr.build.rolldownOptions.input === 'object' &&
 							'index' in user_config.environments.ssr.build.rolldownOptions.input
@@ -135,16 +155,8 @@ export default function (options = {}) {
 							if (importer !== default_worker || (id !== 'SERVER' && id !== 'MANIFEST')) return;
 
 							if (!building) {
-								switch (id) {
-									case 'SERVER':
-										return '\0virtual:@sveltejs/kit/vite/environment/server';
-									case 'MANIFEST':
-										return this.resolve(
-											'virtual:@sveltejs/kit/vite/environment',
-											importer,
-											options
-										);
-								}
+								const source = `sveltekit:${id === 'SERVER' ? 'server' : 'server-manifest'}`;
+								return this.resolve(source, importer, options);
 							}
 
 							return {
@@ -158,7 +170,7 @@ export default function (options = {}) {
 					...options.vitePluginOptions,
 					configPath: options.vitePluginOptions?.configPath,
 					viteEnvironment: {
-						name: options.vitePluginOptions?.viteEnvironment?.name ?? 'ssr',
+						name: 'ssr',
 						childEnvironments: options.vitePluginOptions?.viteEnvironment?.childEnvironments
 					},
 					config(user_config) {
@@ -200,6 +212,21 @@ export default function (options = {}) {
 						// TODO: warn on overridden config options?
 
 						wrangler_config = user_config;
+					},
+					experimental: {
+						...options.vitePluginOptions?.experimental,
+						prerenderWorker: {
+							configPath: options.vitePluginOptions?.experimental?.prerenderWorker?.configPath,
+							viteEnvironment: {
+								name: 'prerender',
+								childEnvironments:
+									options.vitePluginOptions?.experimental?.prerenderWorker?.viteEnvironment
+										?.childEnvironments
+							},
+							config() {
+								return wrangler_config;
+							}
+						}
 					}
 				}),
 				{

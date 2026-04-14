@@ -1,60 +1,55 @@
 import { server_assets } from '__sveltekit/server-assets';
 import { remotes } from '__sveltekit/remotes';
-import { env, kit, manifest_data, mime_types, origin } from '__sveltekit/manifest-data';
+import { env, manifest_data, mime_types, get } from '__sveltekit/manifest-data';
 import { to_fs } from '../filesystem.js';
 import { compact } from '../../../utils/array.js';
 import { join } from '../../../utils/path.js';
+import { runtime_directory } from '../../../runtime/utils.js';
 
 export { env };
-export const base_path = kit.paths.base;
+export const basePath = __SVELTEKIT_PATHS_BASE__;
 export const prerendered = new Set();
 
 export const manifest = {
-	appDir: kit.appDir,
-	appPath: kit.appDir,
+	appDir: __SVELTEKIT_APP_DIR__,
+	appPath: __SVELTEKIT_APP_DIR__,
 	assets: new Set(manifest_data.assets.map((asset) => asset.file)),
 	mimeTypes: mime_types,
 	_: {
 		client: {
-			// we can't use `runtime_directory` here because that module has imports to node:* modules
-			// and that doesn't work in non-Node environments
-			start: to_fs(
-				join(__SVELTEKIT_ROOT__, 'node_modules/@sveltejs/kit/src/runtime/client/entry.js')
-			),
-			app: `${to_fs(kit.outDir)}/generated/client/app.js`,
+			start: to_fs(`${runtime_directory}/client/entry.js`),
+			app: `${to_fs(__SVELTEKIT_OUT_DIR__)}/generated/client/app.js`,
 			imports: [],
 			stylesheets: [],
 			fonts: [],
 			uses_env_dynamic_public: true,
-			nodes:
-				kit.router.resolution === 'client'
-					? undefined
-					: manifest_data.nodes.map((node, i) => {
-							if (node.component || node.universal) {
-								return `${kit.paths.base}${to_fs(kit.outDir)}/generated/client/nodes/${i}.js`;
-							}
-						}),
+			nodes: __SVELTEKIT_CLIENT_ROUTING__
+				? undefined
+				: manifest_data.nodes.map((node, i) => {
+						if (node.component || node.universal) {
+							return `${__SVELTEKIT_PATHS_BASE__}${to_fs(__SVELTEKIT_OUT_DIR__)}/generated/client/nodes/${i}.js`;
+						}
+					}),
 
 			// \`css\` is not necessary in dev, as the JS file from \`nodes\` will reference the CSS file
-			routes:
-				kit.router.resolution === 'client'
-					? undefined
-					: compact(
-							manifest_data.routes.map((route) => {
-								if (!route.page) return;
+			routes: __SVELTEKIT_CLIENT_ROUTING__
+				? undefined
+				: compact(
+						manifest_data.routes.map((route) => {
+							if (!route.page) return;
 
-								return {
-									id: route.id,
-									pattern: route.pattern,
-									params: route.params,
-									layouts: route.page.layouts.map((l) =>
-										l !== undefined ? [!!manifest_data.nodes[l].server, l] : undefined
-									),
-									errors: route.page.errors,
-									leaf: [!!manifest_data.nodes[route.page.leaf].server, route.page.leaf]
-								};
-							})
-						)
+							return {
+								id: route.id,
+								pattern: route.pattern,
+								params: route.params,
+								layouts: route.page.layouts.map((l) =>
+									l !== undefined ? [!!manifest_data.nodes[l].server, l] : undefined
+								),
+								errors: route.page.errors,
+								leaf: [!!manifest_data.nodes[route.page.leaf].server, route.page.leaf]
+							};
+						})
+					)
 		},
 		server_assets,
 		nodes: manifest_data.nodes.map((node, i) => {
@@ -103,17 +98,12 @@ export const manifest = {
 				// components/stylesheets loaded via import() during `load` are included
 
 				result.inline_styles = async () => {
-					// we can't use import.meta.hot here because workerd doesn't like that
-					// it would resolve from a different request context
-					const inline_styles_endpoint = new URL(
-						`/${kit.appDir}/inline-styles/${result.index}`,
-						origin
-					);
+					const search_params = new URLSearchParams();
 					for (const url of urls) {
-						inline_styles_endpoint.searchParams.append('urls', url);
+						search_params.append('urls', url);
 					}
 
-					const response = await fetch(inline_styles_endpoint);
+					const response = await get(`/inline-styles?${search_params.toString()}`);
 					if (!response.ok) {
 						throw new Error(
 							`Failed to fetch inline styles for node ${i}: ${response.status} ${response.statusText}. This should never happen`

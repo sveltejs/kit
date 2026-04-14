@@ -105,6 +105,9 @@ catalogs:
     vitest:
       specifier: ^4.1.1
       version: 4.1.2
+    wrangler:
+      specifier: ^4.81.0
+      version: 4.81.0
 
 importers:
 
@@ -174,9 +177,6 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 24.12.0
-      rolldown:
-        specifier: 'catalog:'
-        version: 1.0.0-rc.13
       typescript:
         specifier: 'catalog:'
         version: 6.0.2
@@ -184,7 +184,7 @@ importers:
         specifier: 'catalog:'
         version: 4.1.2(@opentelemetry/api@1.9.0)(@types/node@24.12.0)(@vitest/browser-playwright@4.1.2)(vite@8.0.3(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@24.12.0)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
 
-  packages/adapter-cloudflare/test/apps/workers:
+  packages/adapter-cloudflare/test/apps/basic:
     devDependencies:
       '@sveltejs/kit':
         specifier: workspace:^
@@ -194,13 +194,31 @@ importers:
         version: 7.0.0(svelte@5.53.12)(vite@8.0.3(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@24.12.0)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
       server-side-dep:
         specifier: file:server-side-dep
-        version: file:packages/adapter-cloudflare/test/apps/workers/server-side-dep
+        version: file:packages/adapter-cloudflare/test/apps/basic/server-side-dep
       svelte:
         specifier: 'catalog:'
         version: 5.53.12
       vite:
         specifier: 'catalog:'
         version: 8.0.3(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@24.12.0)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3)
+
+  packages/adapter-cloudflare/test/apps/custom-worker:
+    devDependencies:
+      '@sveltejs/kit':
+        specifier: workspace:^
+        version: link:../../../../kit
+      '@sveltejs/vite-plugin-svelte':
+        specifier: 'catalog:'
+        version: 7.0.0(svelte@5.53.12)(vite@8.0.3(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@24.12.0)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
+      svelte:
+        specifier: 'catalog:'
+        version: 5.53.12
+      vite:
+        specifier: 'catalog:'
+        version: 8.0.3(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@24.12.0)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3)
+      wrangler:
+        specifier: 'catalog:'
+        version: 4.81.0(@cloudflare/workers-types@4.20260408.1)
 
   packages/adapter-netlify:
     dependencies:
@@ -5189,8 +5207,8 @@ packages:
     engines: {node: '>=10'}
     hasBin: true
 
-  server-side-dep@file:packages/adapter-cloudflare/test/apps/workers/server-side-dep:
-    resolution: {directory: packages/adapter-cloudflare/test/apps/workers/server-side-dep, type: directory}
+  server-side-dep@file:packages/adapter-cloudflare/test/apps/basic/server-side-dep:
+    resolution: {directory: packages/adapter-cloudflare/test/apps/basic/server-side-dep, type: directory}
 
   sharp@0.34.5:
     resolution: {integrity: sha512-Ou9I5Ft9WNcCbXrU9cMgPBcCK8LiwLqcbywW3t4oDV37n1pzpuNLsYiAV8eODnjbtQlSDwZ2cUEeQz4E54Hltg==}
@@ -9814,7 +9832,7 @@ snapshots:
 
   semver@7.7.4: {}
 
-  server-side-dep@file:packages/adapter-cloudflare/test/apps/workers/server-side-dep: {}
+  server-side-dep@file:packages/adapter-cloudflare/test/apps/basic/server-side-dep: {}
 
   sharp@0.34.5:
     dependencies:

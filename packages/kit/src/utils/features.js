@@ -1,26 +1,22 @@
-/** @import { Adapter } from '@sveltejs/kit'; */
+import { get } from '__sveltekit/manifest-data';
 
 /**
  * @param {string} route_id
  * @param {unknown} config
  * @param {string} feature
- * @param {Pick<Adapter, 'name' | 'supports'> | undefined} adapter
  */
-export function check_feature(route_id, config, feature, adapter) {
-	if (!adapter) return;
+export async function check_feature(route_id, config, feature) {
+	const response = await get(
+		`/check-feature/?${new URLSearchParams({ route_id, config: JSON.stringify(config), feature })}`
+	);
+	if (!response.ok) {
+		throw new Error(
+			`Failed to check feature ${feature} for route ${route_id}: ${response.status} ${response.statusText}. This should never happen`
+		);
+	}
 
-	switch (feature) {
-		case '$app/server:read': {
-			const supported = adapter.supports?.read?.({
-				route: { id: route_id },
-				config
-			});
-
-			if (!supported) {
-				throw new Error(
-					`Cannot use \`read\` from \`$app/server\` in ${route_id} when using ${adapter.name}. Please ensure that your adapter is up to date and supports this feature.`
-				);
-			}
-		}
+	const error_message = await response.text();
+	if (error_message) {
+		throw new Error(error_message);
 	}
 }

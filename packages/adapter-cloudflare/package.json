@@ -31,18 +31,15 @@
 	},
 	"types": "index.d.ts",
 	"files": [
-		"files",
-		"src/exports.js",
-		"src/exports.d.ts",
+		"src",
 		"index.js",
 		"index.d.ts",
 		"ambient.d.ts"
 	],
 	"scripts": {
-		"build": "rolldown -c",
 		"lint": "prettier --check .",
 		"format": "pnpm lint --write",
-		"check": "tsc --skipLibCheck",
+		"check": "tsc",
 		"test:unit": "vitest run",
 		"test:e2e": "pnpm build && pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test",
 		"test": "pnpm test:unit && pnpm test:e2e",
@@ -57,7 +54,6 @@
 		"@playwright/test": "catalog:",
 		"@sveltejs/kit": "workspace:^",
 		"@types/node": "catalog:",
-		"rolldown": "catalog:",
 		"typescript": "catalog:",
 		"vitest": "catalog:"
 	},

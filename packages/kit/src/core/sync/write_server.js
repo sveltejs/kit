@@ -5,7 +5,7 @@ import { resolve_entry } from '../../utils/filesystem.js';
 import { posixify } from '../../utils/os.js';
 import { s } from '../../utils/misc.js';
 import { load_error_page, load_template } from '../config/index.js';
-import { runtime_directory } from '../utils.js';
+import { runtime_directory } from '../../runtime/utils.js';
 import { write_if_changed } from './utils.js';
 import { escape_html } from '../../utils/escape.js';
 
@@ -30,7 +30,6 @@ const server_template = ({
 	error_page
 }) => `
 import root from '../root.js';
-import { set_building, set_prerendering } from '__sveltekit/environment';
 import { set_assets } from '$app/paths/internal/server';
 import { set_manifest, set_read_implementation } from '__sveltekit/server';
 import { set_private_env, set_public_env } from '${runtime_directory}/shared-server.js';
@@ -91,7 +90,7 @@ export async function get_hooks() {
 	};
 }
 
-export { set_assets, set_building, set_manifest, set_prerendering, set_private_env, set_public_env, set_read_implementation };
+export { set_assets, set_manifest, set_private_env, set_public_env, set_read_implementation };
 `;
 
 // TODO need to re-run this whenever src/app.html or src/error.html are

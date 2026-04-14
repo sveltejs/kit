@@ -5,12 +5,13 @@ import { styleText } from 'node:util';
 import { resolve_entry } from '../../../utils/filesystem.js';
 import { posixify } from '../../../utils/os.js';
 import { parse_route_id } from '../../../utils/routing.js';
-import { list_files, runtime_directory } from '../../utils.js';
+import { list_files } from '../../utils.js';
 import { sort_routes } from './sort.js';
 import {
 	create_node_analyser,
 	get_page_options
 } from '../../../exports/vite/static_analysis/index.js';
+import { runtime_directory } from '../../../runtime/utils.js';
 
 /**
  * Generates the manifest data used for the client-side manifest and types generation.

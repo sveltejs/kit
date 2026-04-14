@@ -72,11 +72,11 @@ config(userConfig) {
 }
 ```
 
-You can also create your own server entry file by importing `Server` from `virtual:@sveltejs/kit/vite/environment/server` and `env` and `manifest` from `virtual:@sveltejs/kit/vite/environment`.
+You can also create your own server entry file by importing `Server` from `sveltekit:server` and `env` and `manifest` from `sveltekit:server-manifest`.
 
 ```js
-import { Server } from 'virtual:@sveltejs/kit/vite/environment/server';
-import { env, manifest } from 'virtual:@sveltejs/kit/vite/environment';
+import { Server } from 'sveltekit:server';
+import { env, manifest } from 'sveltekit:server-manifest';
 
 const server = new Server(manifest);
 

@@ -1,4 +1,15 @@
 import { BROWSER } from 'esm-env';
+import { posixify } from '../utils/os.js';
+
+/**
+ * Resolved path of the `runtime` directory
+ *
+ * TODO Windows issue:
+ * Vite or sth else somehow sets the driver letter inconsistently to lower or upper case depending on the run environment.
+ * In playwright debug mode run through VS Code this a root-to-lowercase conversion is needed in order for the tests to run.
+ * If we do this conversion in other cases it has the opposite effect though and fails.
+ */
+export const runtime_directory = posixify(import.meta.dirname);
 
 export const text_encoder = new TextEncoder();
 export const text_decoder = new TextDecoder();

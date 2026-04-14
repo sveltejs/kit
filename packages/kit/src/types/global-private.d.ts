@@ -44,6 +44,10 @@ declare global {
 	};
 	/** Allows us to resolve paths relative to the Vite root setting during development */
 	const __SVELTEKIT_ROOT__: string;
+	const __SVELTEKIT_BUILDING__: boolean;
+	const __SVELTEKIT_PRERENDERING__: boolean;
+	const __SVELTEKIT_GENERATING_FALLBACK__: boolean;
+	const __SVELTEKIT_OUT_DIR__: string;
 	/**
 	 * This makes the use of specific features visible at both dev and build time, in such a
 	 * way that we can error when they are not supported by the target platform.

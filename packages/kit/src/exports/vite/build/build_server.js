@@ -131,6 +131,8 @@ export function build_server_nodes(
 		/** @type {Set<string>} */
 		const eager_assets = new Set();
 
+		// TODO: if building without client_manifest, add import.meta.hot to help us analyse
+
 		if (node.component && client_manifest) {
 			exports.push(
 				'let component_cache;',

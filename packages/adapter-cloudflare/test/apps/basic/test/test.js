@@ -25,4 +25,6 @@ test('read from $app/server works', async ({ request }) => {
 
 // TODO: test prerendering a page that imports from cloudflare:workers works after build
 
-// TODO: test when paths.assets is configured after build
+// TODO: test paths.assets works after build in preview
+
+// TODO: test service worker still works after build

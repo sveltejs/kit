@@ -4,7 +4,7 @@ import { set_private_env, set_public_env } from '../shared-server.js';
 import { options, get_hooks } from '__SERVER__/internal.js';
 import { DEV } from 'esm-env';
 import { filter_env } from '../../utils/env.js';
-import { format_server_error } from './utils.js';
+import { format_server_error, create_synchronous_read } from './utils.js';
 import { set_read_implementation, set_manifest } from '__sveltekit/server';
 import { set_app } from './app.js';
 
@@ -64,42 +64,7 @@ export class Server {
 		set_public_env(filter_env(env, env_public_prefix, env_private_prefix));
 
 		if (read) {
-			// Wrap the read function to handle MaybePromise<ReadableStream>
-			// and ensure the public API stays synchronous
-			/** @param {string} file */
-			const wrapped_read = (file) => {
-				const result = read(file);
-				if (result instanceof ReadableStream) {
-					return result;
-				} else {
-					return new ReadableStream({
-						async start(controller) {
-							try {
-								const stream = await Promise.resolve(result);
-								if (!stream) {
-									controller.close();
-									return;
-								}
-
-								const reader = stream.getReader();
-
-								while (true) {
-									const { done, value } = await reader.read();
-									if (done) break;
-									controller.enqueue(value);
-								}
-
-								controller.close();
-							} catch (error) {
-								// TODO: it only throws if the user tries to read the body. Otherwise, the response is a 200
-								controller.error(error);
-							}
-						}
-					});
-				}
-			};
-
-			set_read_implementation(wrapped_read);
+			set_read_implementation(create_synchronous_read(read));
 		}
 
 		// During DEV and for some adapters this function might be called in quick succession,

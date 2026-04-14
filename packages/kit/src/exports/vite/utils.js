@@ -3,7 +3,7 @@ import { loadEnv } from 'vite';
 import { posixify } from '../../utils/os.js';
 import { negotiate } from '../../utils/http.js';
 import { filter_env } from '../../utils/env.js';
-import { escape_html } from '../../utils/escape.js';
+import { escape_for_regexp, escape_html } from '../../utils/escape.js';
 import { dedent } from '../../core/sync/utils.js';
 import {
 	app_server,
@@ -53,13 +53,6 @@ export function get_config_aliases(config, root) {
 	}
 
 	return alias;
-}
-
-/**
- * @param {string} str
- */
-function escape_for_regexp(str) {
-	return str.replace(/[.*+?^${}()|[\]\\]/g, (match) => '\\' + match);
 }
 
 /**
