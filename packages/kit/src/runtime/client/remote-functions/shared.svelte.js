@@ -313,14 +313,10 @@ export async function* create_live_iterator(
 
 		yield* read_ndjson(reader);
 	} finally {
-		controller.abort();
-
-		if (reader) {
-			try {
-				await reader.cancel();
-			} catch {
-				// already closed
-			}
+		try {
+			await reader?.cancel();
+		} catch {
+			// already closed
 		}
 	}
 }

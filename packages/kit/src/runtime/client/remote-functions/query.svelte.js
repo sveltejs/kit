@@ -567,7 +567,22 @@ export class LiveQuery {
 			} catch (error) {
 				if (controller.signal.aborted) break;
 
-				this.fail(error);
+				if (error instanceof Redirect) {
+					// goto() was already called by handle_side_channel_response.
+					// Reconnect promptly
+					this.#attempt = 0;
+					continue;
+				}
+
+				if (error instanceof HttpError) {
+					// Server intentionally sent an error. Surface it and stop.
+					this.fail(error);
+					this.#done = true;
+					break;
+				}
+
+				// Network/transport error — transient.
+				// Preserve last good value (or keep initial promise pending).
 
 				if (typeof navigator !== 'undefined' && !navigator.onLine) break;
 

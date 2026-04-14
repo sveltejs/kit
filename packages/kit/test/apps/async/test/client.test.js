@@ -426,7 +426,7 @@ test.describe('remote function mutations', () => {
 		await expect(page.locator('#phrase')).toHaveText('i am your father');
 	});
 
-	test('query.live streams updates and reconnects after disconnect', async ({ page }) => {
+	test('query.live streams updates and reconnects after disconnect', async ({ page, context }) => {
 		await page.goto('/remote/live');
 		await page.click('#reset');
 
@@ -438,12 +438,14 @@ test.describe('remote function mutations', () => {
 		await expect(page.locator('#count')).toHaveText('1');
 		await expect(page.locator('#first-value')).toHaveText('1');
 
-		await page.click('#drop');
+		await context.setOffline(true);
+		await expect(page.locator('#count')).toHaveText('1');
+		await expect(page.locator('#first-value')).toHaveText('1');
 
+		await context.setOffline(false);
 		await page.click('#increment');
 		await expect(page.locator('#count')).toHaveText('2');
-
-		await page.click('#reconnect');
+		await expect(page.locator('#first-value')).toHaveText('2');
 		await expect(page.locator('#connected')).toHaveText('true');
 	});
 

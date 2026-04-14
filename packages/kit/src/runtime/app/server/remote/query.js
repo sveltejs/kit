@@ -349,19 +349,38 @@ function create_query_resource(__, arg, state, fn) {
 		return (promise ??= get_response(__, arg, state, fn));
 	};
 
+	const populate_hydratable = () => {
+		// accessing data properties needs to kick off the work
+		// so that it gets seeded in the hydration cache
+		// and becomes available on the client
+		void (__.id && state.is_in_render && get_promise());
+	};
+
 	return {
 		/** @type {Promise<any>['catch']} */
 		catch(onrejected) {
 			return get_promise().catch(onrejected);
 		},
-		current: undefined,
-		error: undefined,
+		get current() {
+			populate_hydratable();
+			return undefined;
+		},
+		get error() {
+			populate_hydratable();
+			return undefined;
+		},
 		/** @type {Promise<any>['finally']} */
 		finally(onfinally) {
 			return get_promise().finally(onfinally);
 		},
-		loading: true,
-		ready: false,
+		get loading() {
+			populate_hydratable();
+			return true;
+		},
+		get ready() {
+			populate_hydratable();
+			return false;
+		},
 		refresh() {
 			const refresh_context = get_refresh_context(__, 'refresh', arg);
 			const is_immediate_refresh = !refresh_context.cache[refresh_context.cache_key];
@@ -411,21 +430,43 @@ function create_live_query_resource(__, arg, state, get_first_value) {
 		return (promise ??= get_response(__, arg, state, get_first_value));
 	};
 
+	const populate_hydratable = () => {
+		void (__.id && state.is_in_render && get_promise());
+	};
+
 	return {
 		/** @type {Promise<any>['catch']} */
 		catch(onrejected) {
 			return get_promise().catch(onrejected);
 		},
-		current: undefined,
-		error: undefined,
+		get current() {
+			populate_hydratable();
+			return undefined;
+		},
+		get error() {
+			populate_hydratable();
+			return undefined;
+		},
 		/** @type {Promise<any>['finally']} */
 		finally(onfinally) {
 			return get_promise().finally(onfinally);
 		},
-		done: false,
-		loading: true,
-		ready: false,
-		connected: false,
+		get done() {
+			populate_hydratable();
+			return false;
+		},
+		get loading() {
+			populate_hydratable();
+			return true;
+		},
+		get ready() {
+			populate_hydratable();
+			return false;
+		},
+		get connected() {
+			populate_hydratable();
+			return false;
+		},
 		reconnect() {
 			const reconnects = state.remote.reconnects;
 

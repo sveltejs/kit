@@ -20,7 +20,7 @@
 	}
 
 	async function read_live(resource) {
-		const iterator = await resource.run();
+		const iterator = resource.run();
 
 		try {
 			const result = await iterator.next();
@@ -75,7 +75,7 @@
 		} catch {
 			try {
 				// @ts-expect-error
-				await validated_live_query_no_args('invalid').run();
+				await validated_live_query_no_args('invalid').run().next();
 				status = 'error';
 			} catch {
 				try {
@@ -113,7 +113,7 @@
 
 			try {
 				// @ts-expect-error
-				await validated_live_query_with_arg(1).run();
+				await validated_live_query_with_arg(1).run().next();
 				status = 'error';
 			} catch (e) {
 				if (!isHttpError(e) || e.body.message !== 'Input must be a string') {
