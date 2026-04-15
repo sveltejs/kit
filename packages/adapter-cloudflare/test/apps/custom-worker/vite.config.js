@@ -6,9 +6,7 @@ const config = {
 	build: {
 		minify: false
 	},
-	plugins: [
-		sveltekit({ adapter: svelteConfig.kit?.adapter })
-	],
+	plugins: [sveltekit({ adapter: svelteConfig.kit?.adapter })],
 	server: {
 		fs: {
 			allow: ['../../../../kit']

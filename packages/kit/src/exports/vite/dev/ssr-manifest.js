@@ -161,14 +161,16 @@ export const manifest = {
 			})
 		),
 		matchers: async () => {
-			const importing_matchers = manifest_data.matchers.map(async ([name, file]) => {
-				const url = join(__SVELTEKIT_ROOT__, file);
-				const { module } = await resolve(url);
-				if (!module.match) {
-					throw new Error(`${file} does not export a \`match\` function`);
+			const importing_matchers = Object.entries(manifest_data.matchers).map(
+				async ([name, file]) => {
+					const url = join(__SVELTEKIT_ROOT__, file);
+					const { module } = await resolve(url);
+					if (!module.match) {
+						throw new Error(`${file} does not export a \`match\` function`);
+					}
+					return [name, module.match];
 				}
-				return [name, module.match];
-			});
+			);
 			return Object.fromEntries(await Promise.all(importing_matchers));
 		}
 	}

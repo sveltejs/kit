@@ -256,10 +256,9 @@ function revive_functions(value) {
  * - https://rolldown.rs/apis/plugin-api#build-hooks
  * - https://rolldown.rs/apis/plugin-api#output-generation-hooks
  *
- * @param {{
- * 	svelte_config: import('types').ValidatedConfig;
- * 	adapter_in_vite_config: boolean
- * }} options
+ * @param {object} opts
+ * @param {import('types').ValidatedConfig} opts.svelte_config options are only resolved after the Vite `config` hook runs
+ * @param {boolean} opts.adapter_in_vite_config True if an adapter was passed to the Vite plugin
  * @return {import('vite').PluginOption[]}
  */
 function kit({ svelte_config, adapter_in_vite_config }) {
@@ -450,70 +449,8 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 						removeServerTransformRequest: 'warn',
 						removeServerWarmupRequest: 'warn',
 						removeSsrLoadModule: 'warn'
-					}
-				};
-
-				if (kit.experimental.remoteFunctions) {
-					// treat .remote.js files as empty for the purposes of prebundling
-					const remote_id_filter = new RegExp(
-						`.remote(${kit.moduleExtensions.join('|')})$`.replaceAll('.', '\\.')
-					);
-					// @ts-expect-error optimizeDeps is already set above
-					new_config.optimizeDeps.rolldownOptions ??= {};
-					// @ts-expect-error
-					new_config.optimizeDeps.rolldownOptions.plugins ??= [];
-					// @ts-expect-error
-					new_config.optimizeDeps.rolldownOptions.plugins.push({
-						name: 'vite-plugin-sveltekit-setup:optimize-remote-functions',
-						load: {
-							filter: { id: remote_id_filter },
-							handler() {
-								return '';
-							}
-						}
-					});
-				}
-
-				const define = {
-					__SVELTEKIT_APP_DIR__: s(kit.appDir),
-					__SVELTEKIT_OUT_DIR__: s(kit.outDir),
-					__SVELTEKIT_EMBEDDED__: s(kit.embedded),
-					__SVELTEKIT_FORK_PRELOADS__: s(kit.experimental.forkPreloads),
-					__SVELTEKIT_PATHS_ASSETS__: s(kit.paths.assets),
-					__SVELTEKIT_PATHS_BASE__: s(kit.paths.base),
-					__SVELTEKIT_PATHS_RELATIVE__: s(kit.paths.relative),
-					__SVELTEKIT_CLIENT_ROUTING__: s(kit.router.resolution === 'client'),
-					__SVELTEKIT_HASH_ROUTING__: s(kit.router.type === 'hash'),
-					__SVELTEKIT_SERVER_TRACING_ENABLED__: s(kit.experimental.tracing.server),
-					__SVELTEKIT_EXPERIMENTAL_USE_TRANSFORM_ERROR__: s(kit.experimental.handleRenderingErrors),
-					__SVELTEKIT_PRERENDERING__: 'false',
-					__SVELTEKIT_GENERATING_FALLBACK__: 'false'
-				};
-
-				if (is_build) {
-					if (!new_config.build) new_config.build = {};
-
-					new_config.define = {
-						...define,
-						__SVELTEKIT_ADAPTER_NAME__: s(kit.adapter?.name),
-						__SVELTEKIT_APP_VERSION_FILE__: s(`${kit.appDir}/version.json`),
-						__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: s(kit.version.pollInterval),
-						__SVELTEKIT_BUILDING__: 'true'
-					};
-
-					manifest_data = sync.all(svelte_config, config_env.mode, root).manifest_data;
-				} else {
-					new_config.define = {
-						...define,
-						__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: '0',
-						__SVELTEKIT_PAYLOAD__: 'globalThis.__sveltekit_dev',
-						__SVELTEKIT_HAS_SERVER_LOAD__: 'true',
-						__SVELTEKIT_HAS_UNIVERSAL_LOAD__: 'true',
-						__SVELTEKIT_ROOT__: s(root),
-						__SVELTEKIT_BUILDING__: 'false'
-					};
-
-					new_config.environments = {
+					},
+					environments: {
 						ssr: {
 							// this node environment is the fallback if the adapter doesn't
 							// specify its own dev environment
@@ -554,6 +491,67 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 								}
 							}
 						}
+					}
+				};
+
+				if (kit.experimental.remoteFunctions) {
+					// treat .remote.js files as empty for the purposes of prebundling
+					const remote_id_filter = new RegExp(
+						`.remote(${kit.moduleExtensions.join('|')})$`.replaceAll('.', '\\.')
+					);
+					// @ts-expect-error optimizeDeps is already set above
+					new_config.optimizeDeps.rolldownOptions ??= {};
+					// @ts-expect-error
+					new_config.optimizeDeps.rolldownOptions.plugins ??= [];
+					// @ts-expect-error
+					new_config.optimizeDeps.rolldownOptions.plugins.push({
+						name: 'vite-plugin-sveltekit-setup:optimize-remote-functions',
+						load: {
+							filter: { id: remote_id_filter },
+							handler() {
+								return '';
+							}
+						}
+					});
+				}
+
+				const define = {
+					__SVELTEKIT_APP_DIR__: s(kit.appDir),
+					__SVELTEKIT_OUT_DIR__: s(kit.outDir),
+					__SVELTEKIT_EMBEDDED__: s(kit.embedded),
+					__SVELTEKIT_FORK_PRELOADS__: s(kit.experimental.forkPreloads),
+					__SVELTEKIT_PATHS_ASSETS__: s(kit.paths.assets),
+					__SVELTEKIT_PATHS_BASE__: s(kit.paths.base),
+					__SVELTEKIT_PATHS_RELATIVE__: s(kit.paths.relative),
+					__SVELTEKIT_CLIENT_ROUTING__: s(kit.router.resolution === 'client'),
+					__SVELTEKIT_HASH_ROUTING__: s(kit.router.type === 'hash'),
+					__SVELTEKIT_SERVER_TRACING_ENABLED__: s(kit.experimental.tracing.server),
+					__SVELTEKIT_EXPERIMENTAL_USE_TRANSFORM_ERROR__: s(kit.experimental.handleRenderingErrors),
+					__SVELTEKIT_PRERENDERING__: 'false',
+					__SVELTEKIT_GENERATING_FALLBACK__: 'false',
+					__SVELTEKIT_ROOT__: s(root)
+				};
+
+				if (is_build) {
+					if (!new_config.build) new_config.build = {};
+
+					new_config.define = {
+						...define,
+						__SVELTEKIT_ADAPTER_NAME__: s(kit.adapter?.name),
+						__SVELTEKIT_APP_VERSION_FILE__: s(`${kit.appDir}/version.json`),
+						__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: s(kit.version.pollInterval),
+						__SVELTEKIT_BUILDING__: 'true'
+					};
+
+					manifest_data = sync.all(svelte_config, config_env.mode, root).manifest_data;
+				} else {
+					new_config.define = {
+						...define,
+						__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: '0',
+						__SVELTEKIT_PAYLOAD__: 'globalThis.__sveltekit_dev',
+						__SVELTEKIT_HAS_SERVER_LOAD__: 'true',
+						__SVELTEKIT_HAS_UNIVERSAL_LOAD__: 'true',
+						__SVELTEKIT_BUILDING__: 'false'
 					};
 				}
 
@@ -726,7 +724,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 								},
 								nodes: ${devalue.uneval(manifest_data.nodes, revive_functions)},
 								routes: ${devalue.uneval(manifest_data.routes)},
-								matchers: ${s(Object.entries(manifest_data.matchers))},
+								matchers: ${s(manifest_data.matchers)}
 							};
 
 							export const mime_types = ${s(get_mime_lookup(manifest_data))};
@@ -856,7 +854,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 						return create_service_worker_module(svelte_config);
 
 					case sveltekit_environment: {
-						const { version } = svelte_config.kit;
+						const { version } = kit;
 
 						return dedent`
 							export const version = ${s(version.name)};
@@ -993,7 +991,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 
 					chain.push((current = candidates[0]));
 
-					includes_remote_file ||= svelte_config.kit.moduleExtensions.some((ext) => {
+					includes_remote_file ||= kit.moduleExtensions.some((ext) => {
 						return current.endsWith(`.remote${ext}`);
 					});
 
@@ -1079,7 +1077,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 			}
 
 			const normalized = normalize_id(id, normalized_lib, normalized_cwd);
-			if (!svelte_config.kit.moduleExtensions.some((ext) => normalized.endsWith(`.remote${ext}`))) {
+			if (!kit.moduleExtensions.some((ext) => normalized.endsWith(`.remote${ext}`))) {
 				return;
 			}
 
@@ -1166,6 +1164,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 			// being called again with `opts.ssr === true` if the module isn't
 			// already loaded) so we can determine what it exports
 			if (dev_environment?.vite) {
+				/** @type {PromiseWithResolvers<Record<string, { type: import('types').RemoteInternals['type'] }>>} */
 				const { promise, resolve } = Promise.withResolvers();
 
 				const event = `sveltekit:remote-${remote.hash}-response`;
@@ -1393,7 +1392,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 					/** @type {Record<string, string>} */
 					const client_input = {};
 
-					if (svelte_config.kit.output.bundleStrategy !== 'split') {
+					if (kit.output.bundleStrategy !== 'split') {
 						client_input['bundle'] = `${runtime_directory}/client/bundle.js`;
 					} else {
 						client_input['entry/start'] = `${runtime_directory}/client/entry.js`;
@@ -1406,7 +1405,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 						});
 					}
 
-					const inline = svelte_config.kit.output.bundleStrategy === 'inline';
+					const inline = kit.output.bundleStrategy === 'inline';
 
 					const config_base = assets_base(kit);
 
@@ -1485,7 +1484,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 											format: inline ? 'iife' : 'esm',
 											entryFileNames: `${prefix}/[name].[hash].js`,
 											chunkFileNames: `${prefix}/chunks/[hash].js`,
-											codeSplitting: svelte_config.kit.output.bundleStrategy === 'split'
+											codeSplitting: kit.output.bundleStrategy === 'split'
 										},
 										// This silences Rolldown warnings about not supporting `import.meta`
 										// for the `iife` output format. We don't care because it's
@@ -1590,8 +1589,6 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 		 * @see https://vitejs.dev/guide/api-plugin.html#configureserver
 		 */
 		configureServer(vite) {
-			vite.environments.ssr.hot.off('sveltekit:ssr-load-module', display_ssr_error_on_client);
-
 			// other properties will be populated after running the `dev` function below
 			dev_environment = /** @type {import('types').DevEnvironment} */ ({
 				vite,
@@ -1610,7 +1607,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 		configurePreviewServer(vite) {
 			// TODO: ensure `paths.assets` is correctly proxied during preview
 
-			if (svelte_config.kit.adapter?.vite?.plugins) return;
+			if (kit.adapter?.vite?.plugins) return;
 
 			return preview(vite, vite_config, svelte_config);
 		},
@@ -1654,7 +1651,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 				await builder.build(builder.environments.ssr)
 			);
 
-			const verbose = vite_config.logLevel === 'info';
+			const verbose = builder.config.logLevel === 'info';
 			const log = logger({ verbose });
 
 			/** @type {import('vite').Manifest} */
@@ -1687,10 +1684,8 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 			log.info('Analysing routes');
 
 			const { metadata } = await analyse({
-				vite_config,
+				vite_config: builder.config,
 				hash: kit.router.type === 'hash',
-				base: kit.paths.base,
-				app_dir: kit.appDir,
 				manifest_path,
 				manifest_data,
 				server_manifest,
@@ -1698,7 +1693,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 				private_env: env.private,
 				public_env: env.public,
 				out,
-				output_config: svelte_config.output,
+				output_config: kit.output,
 				root
 			});
 
@@ -1782,7 +1777,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 			const deps_of = (entry, add_dynamic_css = false) =>
 				find_deps(client_manifest, posixify(path.relative(root, entry)), add_dynamic_css, root);
 
-			if (svelte_config.kit.output.bundleStrategy === 'split') {
+			if (kit.output.bundleStrategy === 'split') {
 				const start = deps_of(`${runtime_directory}/client/entry.js`);
 				const app = deps_of(`${kit.outDir}/generated/client-optimized/app.js`);
 
@@ -1800,7 +1795,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 				// In case of server-side route resolution, we create a purpose-built route manifest that is
 				// similar to that on the client, with as much information computed upfront so that we
 				// don't need to include any code of the actual routes in the server bundle.
-				if (svelte_config.kit.router.resolution === 'server') {
+				if (kit.router.resolution === 'server') {
 					const nodes = manifest_data.nodes.map((node, i) => {
 						if (node.component || node.universal) {
 							const entry = `${kit.outDir}/generated/client-optimized/nodes/${i}.js`;
@@ -1847,7 +1842,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 					)
 				};
 
-				if (svelte_config.kit.output.bundleStrategy === 'inline') {
+				if (kit.output.bundleStrategy === 'inline') {
 					const style = /** @type {import('vite').Rolldown.OutputAsset} */ (
 						client_chunks.find(
 							(chunk) =>
@@ -1879,28 +1874,28 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 			);
 
 			// regenerate nodes with the client manifest...
-			build_server_nodes(
+			build_server_nodes({
 				out,
-				kit,
 				manifest_data,
 				server_manifest,
 				client_manifest,
+				paths: kit.paths,
+				inline_style_threshold: kit.inlineStyleThreshold,
 				assets_path,
 				client_chunks,
-				svelte_config.kit.output,
+				output_config: kit.output,
 				root
-			);
+			});
 
 			// ...and prerender
 			const prerender_results = await prerender({
 				vite_config: builder.config,
-				kit,
-				hash: kit.router.type === 'hash',
 				out,
 				manifest_path,
+				private_env: env.private,
+				public_env: env.public,
 				metadata,
 				verbose,
-				env: { ...env.private, ...env.public },
 				root
 			});
 			prerendered = prerender_results.prerendered;
@@ -1912,7 +1907,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 				metadata,
 				cwd,
 				server_bundle,
-				vite_config.build.sourcemap
+				builder.config.build.sourcemap
 			);
 
 			// generate a new manifest that doesn't include prerendered pages
@@ -1945,7 +1940,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 					builder.environments.serviceWorker.config.define =
 						builder.environments.client.config.define;
 					builder.environments.serviceWorker.config.resolve.alias = [
-						...get_config_aliases(kit, vite_config.root)
+						...get_config_aliases(kit, builder.config.root)
 					];
 					builder.environments.serviceWorker.config.experimental.renderBuiltUrl = (filename) => {
 						return {
@@ -1970,7 +1965,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 						prerender_results.prerender_map,
 						log,
 						remotes,
-						vite_config
+						builder.config
 					);
 				} else {
 					console.log(styleText(['bold', 'yellow'], '\nNo adapter specified'));

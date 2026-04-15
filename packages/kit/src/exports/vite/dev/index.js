@@ -193,6 +193,11 @@ export function dev(vite, vite_config, svelte_config, root, dev_environment) {
 		svelte_config.kit.appDir,
 		'/check-feature'
 	);
+	const read_pathname = create_app_dir_matcher(
+		svelte_config.kit.paths.base,
+		svelte_config.kit.appDir,
+		'/read'
+	);
 
 	return () => {
 		const serve_static_middleware = vite.middlewares.stack.find(
@@ -220,7 +225,8 @@ export function dev(vite, vite_config, svelte_config, root, dev_environment) {
 					invalidate_module(vite, sveltekit_manifest_data);
 				}
 
-				const decoded = decodeURI(new URL(base + req.url).pathname);
+				const url = new URL(base + req.url);
+				const decoded = decodeURI(url.pathname);
 
 				const file = posixify(
 					path.resolve(root, decoded.slice(svelte_config.kit.paths.base.length + 1))
@@ -246,7 +252,14 @@ export function dev(vite, vite_config, svelte_config, root, dev_environment) {
 				}
 
 				if (decoded.match(inline_styles_pathname)) {
-					const urls = new URL(base + req.url).searchParams.getAll('urls');
+					const urls = url.searchParams.getAll('urls');
+
+					if (!urls.length) {
+						res.writeHead(400);
+						res.end('Missing urls query argument');
+						return;
+					}
+
 					const styles = await get_inline_css(vite, urls);
 					res.writeHead(200, {
 						'content-type': 'application/json'
@@ -256,15 +269,42 @@ export function dev(vite, vite_config, svelte_config, root, dev_environment) {
 				}
 
 				if (decoded.match(check_feature_pathname)) {
-					const url = new URL(base + req.url);
-					const route_id = url.searchParams.get('route_id') || 'undefined';
-					const config = url.searchParams.get('config') || 'undefined';
-					const feature = url.searchParams.get('feature') || 'undefined';
+					const route_id = url.searchParams.get('route_id');
+					const config = url.searchParams.get('config');
+					const feature = url.searchParams.get('feature');
 
-					const result = check_feature(route_id, config, feature, svelte_config.kit.adapter);
+					if (!route_id || !config || !feature) {
+						res.writeHead(400);
+						res.end('Must have route_id, config, and feature query arguments');
+						return;
+					}
+
+					const result = check_feature(
+						route_id,
+						JSON.parse(config),
+						feature,
+						svelte_config.kit.adapter
+					);
 
 					res.writeHead(200);
 					res.end(result?.message);
+					return;
+				}
+
+				if (decoded.match(read_pathname)) {
+					const file = url.searchParams.get('file');
+					if (!file) {
+						res.writeHead(400);
+						res.end('Missing file query argument');
+						return;
+					}
+
+					const readable_stream = fs.createReadStream(
+						`${svelte_config.kit.outDir}/output/server/${file}`
+					);
+
+					res.writeHead(200);
+					readable_stream.pipe(res);
 					return;
 				}
 
@@ -430,6 +470,7 @@ export function invalidate_module(vite, id) {
 }
 
 /**
+ * Creates a RegExp to help match against app directory requests.
  * @param {string} base
  * @param {string} appDir
  * @param {string} pattern

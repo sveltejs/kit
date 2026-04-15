@@ -122,7 +122,6 @@ export default function (options = {}) {
 		},
 		vite: {
 			plugins: [
-				// TODO: remove browser condition from resolve so that optimizeDeps works correctly with esm-env
 				{
 					name: 'vite-plugin-sveltekit-cloudflare-pre',
 					config(user_config, env) {

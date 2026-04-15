@@ -10,15 +10,7 @@ import { PageNodes } from '../../utils/page_nodes.js';
 import { check_feature } from '../../utils/features.js';
 import { create_synchronous_read } from '../../runtime/server/utils.js';
 
-const event = 'sveltekit:analyse-request';
-
-if (import.meta.hot) {
-	import.meta.hot.off(event, analyse);
-	import.meta.hot.on(event, analyse);
-}
-
 /**
- *
  * @param {{
  *   private_env: Record<string, string>;
  *   public_env: Record<string, string>;
@@ -35,13 +27,11 @@ async function analyse({ private_env, public_env, hash, server_manifest, tracked
 	set_read_implementation(
 		create_synchronous_read(async (file) => {
 			const response = await get(`/read?${new URLSearchParams({ file })}`);
-
 			if (!response.ok) {
 				throw new Error(
 					`read(...) failed: could not fetch ${file} (${response.status} ${response.statusText})`
 				);
 			}
-
 			return response.body;
 		})
 	);
@@ -261,3 +251,5 @@ function list_features(route, manifest_data, server_manifest, tracked_features) 
 
 	return Array.from(features);
 }
+
+import.meta.hot?.on('sveltekit:analyse-request', analyse);

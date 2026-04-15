@@ -41,9 +41,8 @@
 		"format": "pnpm lint --write",
 		"check": "tsc",
 		"test:unit": "vitest run",
-		"test:e2e": "pnpm build && pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test",
-		"test": "pnpm test:unit && pnpm test:e2e",
-		"prepublishOnly": "pnpm build"
+		"test:e2e": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test",
+		"test": "pnpm test:unit && pnpm test:e2e"
 	},
 	"dependencies": {
 		"@cloudflare/workers-types": "^4.20260408.1",

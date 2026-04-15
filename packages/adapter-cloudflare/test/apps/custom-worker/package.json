@@ -7,7 +7,7 @@
 		"build": "vite build",
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",
-		"check": "wrangler types && tsc",
+		"check": "wrangler types --config ./config/wrangler.jsonc && tsc",
 		"test:dev": "DEV=true playwright test",
 		"test:build": "playwright test",
 		"test": "pnpm test:dev && pnpm test:build"

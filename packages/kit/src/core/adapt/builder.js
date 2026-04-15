@@ -114,12 +114,11 @@ export function create_builder({
 
 		async generateFallback(dest) {
 			const manifest_path = `${config.kit.outDir}/output/server/manifest-full.js`;
-			const env = get_env(config.kit.env, vite_config.mode);
 
 			const fallback = await generate_fallback({
-				manifest_path,
-				env: { ...env.private, ...env.public },
-				root: vite_config.root
+				vite_config,
+				origin: config.kit.prerender.origin,
+				manifest_path
 			});
 
 			if (existsSync(dest)) {

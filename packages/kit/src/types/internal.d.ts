@@ -176,7 +176,7 @@ export class InternalServer extends Server {
 			prerendering?: PrerenderOptions;
 			/** @internal for saving dependencies during prerendering and generating fallback pages */
 			read: (file: string) => MaybePromise<Buffer<ArrayBuffer>>;
-			/** @internal a hook called before `handle` during dev, so that `AsyncLocalStorage` can be populated */
+			/** @internal used during development to check feature availability depending on the current route */
 			before_handle?: (
 				event: RequestEvent,
 				config: any,
