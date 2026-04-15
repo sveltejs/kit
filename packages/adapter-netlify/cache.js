@@ -73,17 +73,13 @@ export default function create_cache() {
 			}
 
 			const tags = cache.tags.filter(Boolean);
-			const cache_control = create_cache_control(cache);
 			const netlify_cache_control = create_cache_control(cache, true);
 			const headers = new Headers({
-				'Cache-Control': cache_control,
-				'CDN-Cache-Control': cache_control,
 				'Netlify-CDN-Cache-Control': netlify_cache_control
 			});
 
 			if (tags.length > 0) {
 				const value = tags.join(',');
-				headers.set('Cache-Tag', value);
 				headers.set('Netlify-Cache-Tag', value);
 			}
 
@@ -92,14 +88,11 @@ export default function create_cache() {
 
 		async setHeaders(/** @type {Headers} */ headers, /** @type {KitCacheOptions} */ cache) {
 			const tags = cache.tags.filter(Boolean);
-			const cache_control = create_cache_control(cache);
 
-			headers.set('CDN-Cache-Control', cache_control);
 			headers.set('Netlify-CDN-Cache-Control', create_cache_control(cache, true));
 
 			if (tags.length > 0) {
 				const value = tags.join(',');
-				headers.set('Cache-Tag', value);
 				headers.set('Netlify-Cache-Tag', value);
 			}
 		},

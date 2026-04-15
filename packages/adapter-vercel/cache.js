@@ -33,12 +33,10 @@ export default function create_cache() {
 			}
 			const cache_control = value.join(', ');
 
-			headers.set('CDN-Cache-Control', cache_control);
 			headers.set('Vercel-CDN-Cache-Control', cache_control);
 
 			if (tags.length > 0) {
 				const value = tags.join(',');
-				headers.set('Cache-Tag', value);
 				headers.set('Vercel-Cache-Tag', value);
 			}
 		},
