@@ -438,12 +438,10 @@ test.describe('remote function mutations', () => {
 			await page.click('#run');
 			await expect(page.locator('#result')).toHaveText('0');
 
-			await page.click('#read-await');
+			await page.click('#read-current');
 			await expect(page.locator('#result')).toContainText(
 				'This query was not created in a reactive context'
 			);
-			await page.click('#read-current');
-			await expect(page.locator('#result')).toContainText('success! :)');
 		});
 
 		test('query becomes inactive after its tracking context is destroyed', async ({ page }) => {
@@ -467,6 +465,15 @@ test.describe('remote function mutations', () => {
 			await expect(page.locator('#error')).toContainText(
 				'On the client, .run() can only be called outside render'
 			);
+		});
+
+		test('non-reactive query can still access non-awaited properties', async ({ page }) => {
+			await page.goto('/remote/query-non-reactive');
+
+			await expect(page.locator('#current')).toContainText('undefined');
+			await expect(page.locator('#error')).toContainText('undefined');
+			await expect(page.locator('#ready')).toContainText('false');
+			await expect(page.locator('#loading')).toContainText('false');
 		});
 	});
 
