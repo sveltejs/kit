@@ -1,14 +1,14 @@
 <script>
-	import { untrack } from 'svelte';
 	import { get_count } from '../query-command.remote.js';
 
-	let result = $state({
-		current: undefined,
-		error: undefined,
-		ready: undefined,
-		loading: undefined
-	});
+	/** @type {{ current?: unknown, error?: unknown; ready?: boolean; loading?: boolean }} */
+	let result = $state({});
 
+	/**
+	 * @template T
+	 * @param {T} value
+	 * @returns {T | 'undefined'}
+	 */
 	function undefined_to_string(value) {
 		return value === undefined ? 'undefined' : value;
 	}
