@@ -308,6 +308,11 @@ export class Query {
 				resolve(undefined);
 			})
 			.catch((e) => {
+				// TODO: Our behavior here could be better:
+				// - We should not reject on redirects, but should hook into the router
+				//   to ensure the query is properly refreshed before the navigation completes
+				// - Instead of failing on transport-level errors, we should probably do what
+				//   LiveQuery does and preserve the last known good value and retry the connection
 				const idx = this.#latest.indexOf(resolve);
 				if (idx === -1) return;
 
@@ -570,6 +575,8 @@ export class LiveQuery {
 				if (error instanceof Redirect) {
 					// goto() was already called by handle_side_channel_response.
 					// Reconnect promptly
+					// TODO this really needs to hook into the router so the reconnect can
+					// finish before applying the navigation
 					this.#attempt = 0;
 					continue;
 				}

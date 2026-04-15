@@ -546,6 +546,7 @@ test.describe('remote function mutations', () => {
 		expect(reconnect_command_requests).toBeGreaterThan(0);
 		expect(reconnect_response).toContain('"type":"result"');
 		expect(sent_refreshes).toBeGreaterThan(0);
+		// @ts-expect-error
 		expect(first_refresh?.includes('/')).toBe(true);
 
 		await expect

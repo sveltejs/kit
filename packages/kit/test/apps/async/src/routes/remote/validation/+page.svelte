@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { isHttpError } from '@sveltejs/kit';
+	import { isHttpError, type RemoteLiveQuery } from '@sveltejs/kit';
 	import {
 		validated_query_no_args,
 		validated_query_with_arg,
@@ -19,7 +19,7 @@
 		}
 	}
 
-	async function read_live(resource) {
+	async function read_live(resource: RemoteLiveQuery<'success' | 'failure'>) {
 		const iterator = resource.run();
 
 		try {
@@ -30,7 +30,7 @@
 
 			return result.value;
 		} finally {
-			await iterator.return?.();
+			await iterator.return?.(undefined);
 		}
 	}
 
