@@ -23,13 +23,19 @@
 			"types": "./index.d.ts",
 			"import": "./index.js"
 		},
+		"./cache": {
+			"types": "./cache.d.ts",
+			"import": "./cache.js"
+		},
 		"./package.json": "./package.json"
 	},
 	"types": "index.d.ts",
 	"files": [
 		"files",
 		"index.js",
+		"cache.js",
 		"index.d.ts",
+		"cache.d.ts",
 		"ambient.d.ts"
 	],
 	"scripts": {
@@ -45,12 +51,12 @@
 	},
 	"dependencies": {
 		"@iarna/toml": "^2.2.5",
+		"@netlify/functions": "catalog:",
 		"esbuild": "^0.25.4"
 	},
 	"devDependencies": {
 		"@netlify/dev": "catalog:",
 		"@netlify/edge-functions": "catalog:",
-		"@netlify/functions": "catalog:",
 		"@netlify/node-cookies": "^0.1.0",
 		"@netlify/types": "^2.1.0",
 		"@rollup/plugin-commonjs": "catalog:",

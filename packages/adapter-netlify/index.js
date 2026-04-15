@@ -97,6 +97,10 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 		supports: {
 			read: () => true,
 			instrumentation: () => true
+		},
+
+		cache: {
+			path: '@sveltejs/adapter-netlify/cache'
 		}
 	};
 }

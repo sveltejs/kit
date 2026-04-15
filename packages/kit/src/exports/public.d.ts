@@ -357,7 +357,7 @@ export interface KitCacheMetadata {
  */
 export interface KitCacheHandler {
 	get(queryId: string): MaybePromise<string | undefined>;
-	set(stringifiedResponse: string, cache: KitCacheMetadata): MaybePromise<void>;
+	set(queryId: string, stringifiedResponse: string, cache: KitCacheMetadata): MaybePromise<void>;
 	setHeaders?(headers: Headers, cache: KitCacheMetadata): MaybePromise<void>;
 	invalidate(tags: string[]): MaybePromise<void>;
 }

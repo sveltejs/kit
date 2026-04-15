@@ -1,5 +1,6 @@
 import { getCache, invalidateByTag } from '@vercel/functions';
 
+/** @returns {import('@sveltejs/kit').KitCacheHandler} */
 export default function create_cache() {
 	return {
 		get: async (query_id) => {
