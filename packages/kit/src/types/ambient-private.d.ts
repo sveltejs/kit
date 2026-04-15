@@ -31,7 +31,7 @@ declare module '__sveltekit/manifest-data' {
 	import { ManifestData } from 'types';
 
 	export const env: Record<string, string>;
-	export const mime_types: string[];
+	export const mime_types: Record<string, string>;
 	export const manifest_data: ManifestData;
 	export function get(pathname: string): Promise<Response>;
 }

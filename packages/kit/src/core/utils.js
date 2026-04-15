@@ -3,6 +3,7 @@ import path from 'node:path';
 import { styleText } from 'node:util';
 import { to_fs } from '../exports/vite/filesystem.js';
 import { runtime_directory } from '../runtime/utils.js';
+import { noop } from '../utils/functions.js';
 
 /**
  * This allows us to import SvelteKit internals that aren't exposed via `pkg.exports` in a
@@ -16,8 +17,6 @@ export function get_runtime_base(root) {
 		? `/${path.relative(root, runtime_directory)}`
 		: to_fs(runtime_directory);
 }
-
-function noop() {}
 
 /** @param {{ verbose: boolean }} opts */
 export function logger({ verbose }) {

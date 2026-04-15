@@ -1,6 +1,7 @@
 import { existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { mkdirp, walk } from '../../utils/filesystem.js';
+import { noop } from '../../utils/functions.js';
 import { decode_uri, is_root_relative, resolve } from '../../utils/url.js';
 import { escape_html } from '../../utils/escape.js';
 import { logger } from '../utils.js';
@@ -128,7 +129,7 @@ async function prerender({
 					log.error(format(details));
 				};
 			case 'ignore':
-				return () => {};
+				return noop;
 			default:
 				// @ts-expect-error TS thinks T might be of a different kind, but it's not
 				return (details) => input({ ...details, message: format(details) });

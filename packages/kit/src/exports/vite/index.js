@@ -1,3 +1,7 @@
+/** @import { Options } from '@sveltejs/vite-plugin-svelte' */
+/** @import { PreprocessorGroup } from 'svelte/compiler' */
+/** @import { ConfigEnv, Plugin, PluginOption, ResolvedConfig, UserConfig, Manifest, EnvironmentOptions, Rolldown } from 'vite' */
+/** @import { ModuleRunner } from 'vite/module-runner' */
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
@@ -108,7 +112,7 @@ const options_regex = /(export\s+const\s+(prerender|csr|ssr|trailingSlash))\s*=/
 /** @type {Set<string>} */
 const warned = new Set();
 
-/** @type {import('svelte/compiler').PreprocessorGroup} */
+/** @type {PreprocessorGroup} */
 const warning_preprocessor = {
 	script: ({ content, filename }) => {
 		if (!filename) return;
@@ -157,14 +161,14 @@ let vite_plugin_svelte;
  * @param {{
  *   adapter?: import('@sveltejs/kit').Adapter;
  * }=} options
- * @returns {Promise<import('vite').PluginOption[]>}
+ * @returns {Promise<PluginOption[]>}
  */
 export async function sveltekit(options = {}) {
 	// the config options will be set only after the Vite `config` hook runs
 	// because we need to find `svelte.config.js` relative to `vite.config.root`
 	const svelte_config = /** @type {import('types').ValidatedConfig} */ ({});
 
-	/** @type {import('@sveltejs/vite-plugin-svelte').Options} */
+	/** @type {Options} */
 	const vite_plugin_svelte_options = {
 		// we don't want vite-plugin-svelte to load the config file itself because
 		// it will try to validate it without knowing that kit options are valid
@@ -181,7 +185,7 @@ export async function sveltekit(options = {}) {
 	];
 }
 
-/** @param {import('vite').UserConfig | import('vite').ResolvedConfig} vite_config */
+/** @param {UserConfig | ResolvedConfig} vite_config */
 function resolve_root(vite_config) {
 	return posixify(vite_config.root ? path.resolve(vite_config.root) : cwd);
 }
@@ -193,7 +197,7 @@ function resolve_root(vite_config) {
  *   vite_plugin_svelte_options: import('@sveltejs/vite-plugin-svelte').Options;
  * 	 svelte_config: import('types').ValidatedConfig;
  * }} options
- * @return {import('vite').Plugin}
+ * @return {Plugin}
  */
 function plugin_svelte_config({ vite_plugin_svelte_options, svelte_config }) {
 	return {
@@ -259,7 +263,7 @@ function revive_functions(value) {
  * @param {object} opts
  * @param {import('types').ValidatedConfig} opts.svelte_config options are only resolved after the Vite `config` hook runs
  * @param {boolean} opts.adapter_in_vite_config True if an adapter was passed to the Vite plugin
- * @return {import('vite').PluginOption[]}
+ * @return {PluginOption[]}
  */
 function kit({ svelte_config, adapter_in_vite_config }) {
 	/** @type {typeof import('vite')} */
@@ -273,10 +277,10 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 	/** @type {string} */
 	let version_hash;
 
-	/** @type {import('vite').ResolvedConfig} */
+	/** @type {ResolvedConfig} */
 	let vite_config;
 
-	/** @type {import('vite').ConfigEnv} */
+	/** @type {ConfigEnv} */
 	let vite_config_env;
 
 	/** @type {boolean} */
@@ -291,7 +295,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 	/** @type {import('types').ServerMetadata | undefined} only set at build time once analysis is finished */
 	let build_metadata = undefined;
 
-	/** @type {import('vite').UserConfig} */
+	/** @type {UserConfig} */
 	let initial_config;
 
 	/** @type {string | null} */
@@ -318,10 +322,10 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 	const sourcemapIgnoreList = /** @param {string} relative_path */ (relative_path) =>
 		relative_path.includes('node_modules') || relative_path.includes(kit.outDir);
 
-	/** @type {import('vite/module-runner').ModuleRunner | null} */
+	/** @type {ModuleRunner | null} */
 	let module_runner = null;
 
-	/** @type {import('vite').Plugin} */
+	/** @type {Plugin} */
 	const plugin_setup = {
 		name: 'vite-plugin-sveltekit-setup',
 
@@ -384,7 +388,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 				const generated = path.posix.join(kit.outDir, 'generated');
 
 				// dev and preview config can be shared
-				/** @type {import('vite').UserConfig} */
+				/** @type {UserConfig} */
 				const new_config = {
 					resolve: {
 						alias: [
@@ -574,7 +578,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 
 	/**
 	 * Allows us to access the filesystem from an environment that doesn't have `node:fs`
-	 * @type {import('vite').Plugin}
+	 * @type {Plugin}
 	 */
 	const plugin_server_filesystem = {
 		name: 'vite-plugin-sveltekit-server-filesystem',
@@ -622,7 +626,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 	const dev_server_entry = path.join(import.meta.dirname, 'dev/entry.js');
 	const dev_ssr_manifest = path.join(import.meta.dirname, 'dev/ssr-manifest.js');
 
-	/** @type {import('vite').Plugin} */
+	/** @type {Plugin} */
 	const plugin_dev_ssr = {
 		name: 'vite-plugin-sveltekit-dev-ssr',
 		apply: 'serve',
@@ -758,7 +762,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 		}
 	};
 
-	/** @type {import('vite').Plugin} */
+	/** @type {Plugin} */
 	const plugin_virtual_modules = {
 		name: 'vite-plugin-sveltekit-virtual-modules',
 
@@ -890,7 +894,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 	/**
 	 * Ensures that client-side code can't accidentally import server-side code,
 	 * whether in `*.server.js` files, `$app/server`, `$lib/server`, or `$env/[static|dynamic]/private`
-	 * @type {import('vite').Plugin}
+	 * @type {Plugin}
 	 */
 	const plugin_guard = {
 		name: 'vite-plugin-sveltekit-guard',
@@ -1033,7 +1037,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 	/** @type {Set<string>} Track which remote hashes have already been emitted */
 	const emitted_remote_hashes = new Set();
 
-	/** @type {import('vite').Plugin} */
+	/** @type {Plugin} */
 	const plugin_remote = {
 		name: 'vite-plugin-sveltekit-remote',
 
@@ -1216,7 +1220,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 		}
 	};
 
-	/** @type {import('vite').Manifest} */
+	/** @type {Manifest} */
 	let client_manifest;
 	/** @type {import('types').Prerendered} */
 	let prerendered;
@@ -1228,7 +1232,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 
 	/**
 	 * Creates the service worker virtual modules
-	 * @type {import('vite').Plugin}
+	 * @type {Plugin}
 	 */
 	const plugin_service_worker = {
 		name: 'vite-plugin-sveltekit-service-worker',
@@ -1305,7 +1309,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 	/** @type {() => Promise<void>} */
 	let finalise;
 
-	/** @type {import('vite').Plugin} */
+	/** @type {Plugin} */
 	const plugin_compile = {
 		name: 'vite-plugin-sveltekit-compile',
 
@@ -1318,7 +1322,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 			// avoids overwriting the base setting that's also set by Vitest
 			order: 'pre',
 			handler(config) {
-				/** @type {import('vite').UserConfig} */
+				/** @type {UserConfig} */
 				let new_config;
 
 				if (is_build) {
@@ -1540,7 +1544,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 					};
 
 					if (service_worker_entry_file) {
-						/** @type {Record<string, import('vite').EnvironmentOptions>} */ (
+						/** @type {Record<string, EnvironmentOptions>} */ (
 							new_config.environments
 						).serviceWorker = {
 							build: {
@@ -1647,14 +1651,14 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 			}
 			mkdirp(out);
 
-			const server_bundle = /** @type {import('vite').Rolldown.RolldownOutput} */ (
+			const server_bundle = /** @type {Rolldown.RolldownOutput} */ (
 				await builder.build(builder.environments.ssr)
 			);
 
 			const verbose = builder.config.logLevel === 'info';
 			const log = logger({ verbose });
 
-			/** @type {import('vite').Manifest} */
+			/** @type {Manifest} */
 			const server_manifest = JSON.parse(read(`${out}/server/.vite/manifest.json`));
 
 			/** @type {import('types').BuildData} */
@@ -1724,7 +1728,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 					s(has_universal_load);
 			}
 
-			const { output: client_chunks } = /** @type {import('vite').Rolldown.RolldownOutput} */ (
+			const { output: client_chunks } = /** @type {Rolldown.RolldownOutput} */ (
 				await builder.build(builder.environments.client)
 			);
 
@@ -1767,7 +1771,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 				}
 			}
 
-			/** @type {import('vite').Manifest} */
+			/** @type {Manifest} */
 			client_manifest = JSON.parse(read(`${out}/client/.vite/manifest.json`));
 
 			/**
@@ -1843,7 +1847,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 				};
 
 				if (kit.output.bundleStrategy === 'inline') {
-					const style = /** @type {import('vite').Rolldown.OutputAsset} */ (
+					const style = /** @type {Rolldown.OutputAsset} */ (
 						client_chunks.find(
 							(chunk) =>
 								chunk.type === 'asset' && chunk.names.length === 1 && chunk.names[0] === 'style.css'
@@ -1979,7 +1983,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 		}
 	};
 
-	/** @type {import('vite').Plugin} */
+	/** @type {Plugin} */
 	const plugin_adapter = {
 		name: 'vite-plugin-sveltekit-adapter',
 		buildApp: {
@@ -2006,8 +2010,8 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 }
 
 /**
- * @param {Record<string, any>} config
- * @param {Record<string, any>} resolved_config
+ * @param {UserConfig} config
+ * @param {UserConfig} resolved_config
  */
 function warn_overridden_config(config, resolved_config) {
 	const overridden = find_overridden_config(config, resolved_config, enforced_config, '', []);

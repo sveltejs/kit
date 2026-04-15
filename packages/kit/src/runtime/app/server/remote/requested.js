@@ -2,6 +2,7 @@
 /** @import { MaybePromise, RemoteQueryInternals } from 'types' */
 import { get_request_store } from '@sveltejs/kit/internal/server';
 import { create_remote_key, parse_remote_arg } from '../../../shared.js';
+import { noop } from '../../../../utils/functions.js';
 import { mark_argument_validated } from './query.js';
 
 /**
@@ -55,7 +56,7 @@ export function requested(query, limit = Infinity) {
 	 */
 	const record_failure = (payload, error) => {
 		const promise = Promise.reject(error);
-		promise.catch(() => {});
+		promise.catch(noop);
 
 		const key = create_remote_key(internals.id, payload);
 		refreshes[key] = promise;
@@ -156,7 +157,7 @@ async function* race_all(array, fn) {
 			value: result
 		}));
 
-		promise.catch(() => {});
+		promise.catch(noop);
 		pending.add(promise);
 	}
 

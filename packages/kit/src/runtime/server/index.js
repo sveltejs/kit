@@ -1,3 +1,4 @@
+import { noop } from '../../utils/functions.js';
 import { IN_WEBCONTAINER } from './constants.js';
 import { respond } from './respond.js';
 import { set_private_env, set_public_env } from '../shared-server.js';
@@ -92,7 +93,7 @@ export class Server {
 							console.error('Remote function schema validation failed:', issues);
 							return { message: 'Bad Request' };
 						}),
-					reroute: module.reroute || (() => {}),
+					reroute: module.reroute || noop,
 					transport: module.transport || {}
 				};
 
@@ -116,7 +117,7 @@ export class Server {
 						handleValidationError: () => {
 							return { message: 'Bad Request' };
 						},
-						reroute: () => {},
+						reroute: noop,
 						transport: {}
 					};
 

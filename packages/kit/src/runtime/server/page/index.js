@@ -2,6 +2,7 @@ import { text } from '@sveltejs/kit';
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
 import { compact } from '../../../utils/array.js';
 import { get_status, normalize_error } from '../../../utils/error.js';
+import { noop } from '../../../utils/functions.js';
 import { add_data_suffix } from '../../pathname.js';
 import { redirect_response, static_error_page, handle_error_and_jsonify } from '../utils.js';
 import {
@@ -239,8 +240,8 @@ export async function render_page(
 		});
 
 		// if we don't do this, rejections will be unhandled
-		for (const p of server_promises) p.catch(() => {});
-		for (const p of load_promises) p.catch(() => {});
+		for (const p of server_promises) p.catch(noop);
+		for (const p of load_promises) p.catch(noop);
 
 		for (let i = 0; i < nodes.data.length; i += 1) {
 			const node = nodes.data[i];

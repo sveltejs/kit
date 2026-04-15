@@ -1,3 +1,4 @@
+/** @import { SSRManifest } from '@sveltejs/kit' */
 import { server_assets } from '__sveltekit/server-assets';
 import { remotes } from '__sveltekit/remotes';
 import { env, manifest_data, mime_types, get } from '__sveltekit/manifest-data';
@@ -10,6 +11,7 @@ export { env };
 export const basePath = __SVELTEKIT_PATHS_BASE__;
 export const prerendered = new Set();
 
+/** @type {SSRManifest} */
 export const manifest = {
 	appDir: __SVELTEKIT_APP_DIR__,
 	appPath: __SVELTEKIT_APP_DIR__,

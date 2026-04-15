@@ -2,6 +2,7 @@ import { BROWSER, DEV } from 'esm-env';
 import { writable } from 'svelte/store';
 import { assets } from '$app/paths';
 import { version } from '__sveltekit/environment';
+import { noop } from '../../utils/functions.js';
 import { PRELOAD_PRIORITIES } from './constants.js';
 
 export const origin = BROWSER ? location.origin : '';
@@ -240,7 +241,7 @@ export function notifiable_store(value) {
 }
 
 export const updated_listener = {
-	v: () => {}
+	v: noop
 };
 
 export function create_updated_store() {
