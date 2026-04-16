@@ -137,6 +137,8 @@ export async function render_page(
 			}
 
 			return await render_response({
+				// provide nodes without running load functions so that the styles and
+				// fonts are linked in the head before CSR takes over
 				branch: compact(nodes.data).map((node) => {
 					return {
 						node,

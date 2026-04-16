@@ -566,16 +566,14 @@ export async function internal_respond(request, options, manifest, state) {
 					page_config: { ssr: false, csr: true },
 					status: 200,
 					error: null,
-					branch: page_nodes
-						? [
-								// include the root layout because it applies to every page
-								{
-									node: /** @type {SSRNode} */ (page_nodes.data[0]),
-									data: null,
-									server_data: null
-								}
-							]
-						: [],
+					branch: [
+						// include the root layout because it applies to every page
+						{
+							node: /** @type {SSRNode} */ (await manifest._.nodes[0]()),
+							data: null,
+							server_data: null
+						}
+					],
 					fetched: [],
 					resolve_opts,
 					data_serializer: server_data_serializer(event, event_state, options)
