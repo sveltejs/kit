@@ -204,6 +204,11 @@ export async function* run_remote_generator(event, state, allow_cookies, get_inp
 
 	try {
 		while (true) {
+			// the code of a generator function is basically chopped apart at each
+			// yield, and each part is an invocation of `.next`. So, to provide
+			// access to the request context in generator functions, we have to
+			// provide it to every invocation of `.next`. (It's more obvious that
+			// this is necessary with plain iterators.)
 			const result = await with_request_store(store, () => iterator.next());
 			if (result.done) {
 				done = true;

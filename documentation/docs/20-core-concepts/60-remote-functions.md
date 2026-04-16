@@ -1034,7 +1034,7 @@ export const markAllRead = form(v.object({ userId: v.string() }), async ({ userI
 });
 ```
 
-This schedules a reconnect for the matching active client instances and applies it as part of the mutation response (i.e. in the same flight as the form/command result).
+This schedules a reconnect for the matching active client instances and applies it as part of the mutation response (i.e. in the same flight as the form/command result). You might need this if, for example, the command modifies a cookie that the live query needs to restart in order to capture.
 
 ### Client-requested refreshes
 

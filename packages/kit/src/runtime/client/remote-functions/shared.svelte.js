@@ -9,6 +9,7 @@ import { untrack } from 'svelte';
 import { create_remote_key, split_remote_key } from '../../shared.js';
 import { navigating, page } from '../state.svelte.js';
 import { noop } from '../../../utils/functions.js';
+import { read_ndjson } from '../ndjson.js';
 
 /** Indicates a query function, as opposed to a query instance */
 export const QUERY_FUNCTION_ID = Symbol('sveltekit.query_function_id');
@@ -229,58 +230,18 @@ async function get_stream_reader(response) {
 }
 
 /**
- * @param {string} line
- */
-async function parse_stream_line(line) {
-	const node = JSON.parse(line);
-
-	if (node.type === 'result') {
-		return devalue.parse(node.result, app.decoders);
-	}
-
-	await handle_side_channel_response(node);
-	throw new HttpError(500, 'Invalid query.live response');
-}
-
-/**
- * Yields parsed JSON objects from a ReadableStream of newline-delimited JSON
+ * Yields deserialized results from a ReadableStream of newline-delimited JSON
  * @param {ReadableStreamDefaultReader<Uint8Array>} reader
  */
-async function* read_ndjson(reader) {
-	let done = false;
-	let buffer = '';
-	const decoder = new TextDecoder();
-
-	while (true) {
-		let split = buffer.indexOf('\n');
-		while (split !== -1) {
-			const line = buffer.slice(0, split).trim();
-			buffer = buffer.slice(split + 1);
-
-			if (line) {
-				yield await parse_stream_line(line);
-			}
-
-			split = buffer.indexOf('\n');
+async function* read_live_ndjson(reader) {
+	for await (const node of read_ndjson(reader)) {
+		if (node.type === 'result') {
+			yield devalue.parse(node.result, app.decoders);
+			continue;
 		}
 
-		if (done) {
-			const line = buffer.trim();
-			if (line) {
-				yield await parse_stream_line(line);
-			}
-			return;
-		}
-
-		const chunk = await reader.read();
-		done = chunk.done;
-		if (chunk.value) {
-			buffer += decoder.decode(chunk.value, { stream: true });
-		}
-
-		if (done) {
-			buffer += decoder.decode();
-		}
+		await handle_side_channel_response(node);
+		throw new HttpError(500, 'Invalid query.live response');
 	}
 }
 
@@ -311,7 +272,7 @@ export async function* create_live_iterator(
 
 		on_connect();
 
-		yield* read_ndjson(reader);
+		yield* read_live_ndjson(reader);
 	} finally {
 		try {
 			await reader?.cancel();

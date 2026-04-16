@@ -53,6 +53,7 @@ import { writable } from 'svelte/store';
 import { page, update, navigating } from './state.svelte.js';
 import { add_data_suffix, add_resolution_suffix } from '../pathname.js';
 import { noop_span } from '../telemetry/noop.js';
+import { read_ndjson } from './ndjson.js';
 
 export { load_css };
 const ICON_REL_ATTRIBUTES = new Set(['icon', 'shortcut icon', 'apple-touch-icon']);
@@ -3072,55 +3073,31 @@ async function load_data(url, invalid) {
 			});
 		}
 
-		let text = '';
-		const decoder = new TextDecoder();
-
-		while (true) {
-			// Format follows ndjson (each line is a JSON object) or regular JSON spec
-			const { done, value } = await reader.read();
-
-			if (done) {
-				text += decoder.decode();
-				if (!text) break;
-				text += '\n';
-			} else {
-				text += decoder.decode(value, { stream: true });
+		for await (const node of read_ndjson(reader)) {
+			if (node.type === 'redirect') {
+				return resolve(node);
 			}
 
-			while (true) {
-				const split = text.indexOf('\n');
-				if (split === -1) {
-					break;
-				}
-
-				const node = JSON.parse(text.slice(0, split));
-				text = text.slice(split + 1);
-
-				if (node.type === 'redirect') {
-					return resolve(node);
-				}
-
-				if (node.type === 'data') {
-					// This is the first (and possibly only, if no pending promises) chunk
-					node.nodes?.forEach((/** @type {any} */ node) => {
-						if (node?.type === 'data') {
-							node.uses = deserialize_uses(node.uses);
-							node.data = deserialize(node.data);
-						}
-					});
-
-					resolve(node);
-				} else if (node.type === 'chunk') {
-					// This is a subsequent chunk containing deferred data
-					const { id, data, error } = node;
-					const deferred = /** @type {import('types').Deferred} */ (deferreds.get(id));
-					deferreds.delete(id);
-
-					if (error) {
-						deferred.reject(deserialize(error));
-					} else {
-						deferred.fulfil(deserialize(data));
+			if (node.type === 'data') {
+				// This is the first (and possibly only, if no pending promises) chunk
+				node.nodes?.forEach((/** @type {any} */ node) => {
+					if (node?.type === 'data') {
+						node.uses = deserialize_uses(node.uses);
+						node.data = deserialize(node.data);
 					}
+				});
+
+				resolve(node);
+			} else if (node.type === 'chunk') {
+				// This is a subsequent chunk containing deferred data
+				const { id, data, error } = node;
+				const deferred = /** @type {import('types').Deferred} */ (deferreds.get(id));
+				deferreds.delete(id);
+
+				if (error) {
+					deferred.reject(deserialize(error));
+				} else {
+					deferred.fulfil(deserialize(data));
 				}
 			}
 		}
