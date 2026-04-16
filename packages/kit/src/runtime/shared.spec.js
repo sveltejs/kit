@@ -1,8 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import {
-	parse_remote_arg,
-	stringify_remote_arg
-} from './shared.js';
+import { parse_remote_arg, stringify_remote_arg } from './shared.js';
 
 class Thing {
 	/** @param {number} a @param {number} z */

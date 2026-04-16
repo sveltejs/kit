@@ -20,9 +20,6 @@ export const INVALIDATED_PARAM = 'x-sveltekit-invalidated';
 
 export const TRAILING_SLASH_PARAM = 'x-sveltekit-trailing-slash';
 
-/** Tags to evict from runtime caches; set when `invalidate()` runs on the server. */
-export const SVELTEKIT_CACHE_CONTROL_INVALIDATE_HEADER = 'x-sveltekit-cache-control-invalidate';
-
 /**
  * @param {any} data
  * @param {string} [location_description]

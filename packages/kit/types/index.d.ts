@@ -2201,7 +2201,7 @@ declare module '@sveltejs/kit' {
 		 */
 		refresh(): Promise<void>;
 		/**
-		 * Queue cache invalidation for this query (public or private, depending on how it was cached).
+		 * Queue cache invalidation for this query.
 		 */
 		invalidate(): Promise<void>;
 		/**
@@ -2236,7 +2236,7 @@ declare module '@sveltejs/kit' {
 	) => RemoteResource<Output>;
 
 	/**
-	 * The return value of a remote `query` function (client stub or shared typing). See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query) for full documentation.
+	 * The return value of a remote `query` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query) for full documentation.
 	 */
 	export type RemoteQueryFunction<Input, Output> = (
 		arg: undefined extends Input ? Input | void : Input

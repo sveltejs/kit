@@ -15,24 +15,6 @@ export const QUERY_OVERRIDE_KEY = Symbol('sveltekit.query_override_key');
 export const QUERY_RESOURCE_KEY = Symbol('sveltekit.query_resource_key');
 
 /**
- * Shared unwrap logic for remote function responses (redirect / error / result).
- * @param {RemoteFunctionResponse} result
- * @returns {Promise<any>}
- */
-async function unwrap_remote_result(result) {
-	if (result.type === 'redirect') {
-		await goto(result.location);
-		throw new Redirect(307, result.location);
-	}
-
-	if (result.type === 'error') {
-		throw new HttpError(result.status ?? 500, result.error);
-	}
-
-	return result.result;
-}
-
-/**
  * @returns {{ 'x-sveltekit-pathname': string, 'x-sveltekit-search': string }}
  */
 export function get_remote_request_headers() {
@@ -54,21 +36,29 @@ export function get_remote_request_headers() {
  * @param {HeadersInit} headers
  */
 export async function remote_request(url, headers) {
-	const init = {
+	const response = await fetch(url, {
 		headers: {
 			'Content-Type': 'application/json',
 			...headers
 		}
-	};
-
-	const response = await fetch(url, init);
+	});
 
 	if (!response.ok) {
 		throw new HttpError(500, 'Failed to execute remote function');
 	}
 
 	const result = /** @type {RemoteFunctionResponse} */ (await response.json());
-	return unwrap_remote_result(result);
+
+	if (result.type === 'redirect') {
+		await goto(result.location);
+		throw new Redirect(307, result.location);
+	}
+
+	if (result.type === 'error') {
+		throw new HttpError(result.status ?? 500, result.error);
+	}
+
+	return result.result;
 }
 
 /**

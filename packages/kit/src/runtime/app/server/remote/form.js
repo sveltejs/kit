@@ -124,7 +124,6 @@ export function form(validate_or_fn, maybe_fn) {
 				output.submission = true;
 
 				const { event, state } = get_request_store();
-
 				const validated = await schema?.['~standard'].validate(data);
 
 				if (meta.validate_only) {

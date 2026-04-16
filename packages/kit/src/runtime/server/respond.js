@@ -450,7 +450,7 @@ export async function internal_respond(request, options, manifest, state) {
 									// e.g. accessible when loading modules needed to handle the request
 									return with_request_store(null, () =>
 										resolve(merge_tracing(event, resolve_span), page_nodes, opts).then(
-											async (response) => {
+											(response) => {
 												// add headers/cookies here, rather than inside `resolve`, so that we
 												// can do it once for all responses instead of once per `return`
 												for (const key in headers) {
@@ -498,9 +498,8 @@ export async function internal_respond(request, options, manifest, state) {
 
 				// https://datatracker.ietf.org/doc/html/rfc7232#section-4.1 + set-cookie
 				for (const key of [
+					// TODO do we need to add cdn-cache headers here?
 					'cache-control',
-					'cdn-cache-control',
-					'cache-tag',
 					'content-location',
 					'date',
 					'expires',

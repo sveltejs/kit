@@ -10,7 +10,6 @@ import { filter_env } from '../../utils/env.js';
 import { format_server_error } from './utils.js';
 import { set_read_implementation, set_manifest } from '__sveltekit/server';
 import { set_app } from './app.js';
-import { pathToFileURL } from 'node:url';
 
 /** @type {Promise<any>} */
 let init_promise;
