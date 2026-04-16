@@ -315,7 +315,10 @@ export const config = defineConfig({
 			]
 		: 'list',
 	testDir: 'test',
-	testMatch: /(.+\.)?(test|spec)\.[jt]s/
+	testMatch: /(.+\.)?(test|spec)\.[jt]s/,
+	// Exclude component tests (*.component.test.js) — these run
+	// via their own vitest config, not through Playwright
+	testIgnore: [/\.component\.test\.[jt]s$/]
 });
 
 /**

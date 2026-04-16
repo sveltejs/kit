@@ -83,3 +83,27 @@ export function with_request_store(store, fn) {
 		}
 	}
 }
+
+/**
+ * Sets a persistent request store for the current async context using `als.enterWith()`.
+ * Unlike `with_request_store` (which scopes to a callback), this persists through
+ * the remainder of the current execution — including across nested `with_request_store`
+ * calls, which properly restore the outer ALS context when they complete.
+ *
+ * Intended for usage in test environments (e.g. called from `beforeEach`
+ * in the svelteKitTest plugin setup).
+ *
+ * @param {RequestStore} store
+ */
+export function __test_set_request_store(store) {
+	als?.enterWith(store);
+}
+
+/**
+ * Clears the request store set by `__test_set_request_store`.
+ * Intended for usage in test environments (e.g. called from `afterEach`
+ * in the svelteKitTest plugin setup).
+ */
+export function __test_clear_request_store() {
+	als?.enterWith(/** @type {any} */ (null));
+}
