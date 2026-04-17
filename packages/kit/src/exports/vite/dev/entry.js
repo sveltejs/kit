@@ -1,9 +1,10 @@
-/** @import { InternalServer, ValidatedKitConfig } from 'types' */
+/** @import { InternalServer } from 'types' */
 
 import fs from 'node:fs';
 import path from 'node:path';
+import { env } from 'sveltekit:env';
 import { Server } from 'sveltekit:server';
-import { env, manifest } from 'sveltekit:server-manifest';
+import { manifest } from 'sveltekit:server-manifest';
 import { createReadableStream } from '@sveltejs/kit/node';
 import { from_fs } from '../filesystem.js';
 
@@ -18,10 +19,9 @@ await server.init({
 /**
  * @param {Request} request
  * @param {string | undefined} remote_address
- * @param {ValidatedKitConfig} kit
  * @returns {Promise<Response>}
  */
-export async function respond(request, remote_address, kit) {
+export async function respond(request, remote_address) {
 	return await server.respond(request, {
 		getClientAddress: () => {
 			if (remote_address) return remote_address;
@@ -32,7 +32,7 @@ export async function respond(request, remote_address, kit) {
 				return fs.readFileSync(from_fs(file));
 			}
 
-			return fs.readFileSync(path.join(kit.files.assets, file));
+			return fs.readFileSync(path.join(__SVELTEKIT_PATHS_ASSETS__, file));
 		}
 	});
 }

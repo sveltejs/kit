@@ -1,55 +1,70 @@
-/** @import { ManifestData, RecursiveRequired, ServerMetadata, ValidatedConfig } from 'types' */
+/** @import { ManifestData, ServerMetadata } from 'types' */
 /** @import { Manifest, ResolvedConfig } from 'vite' */
-
-import { exactRegex } from 'rolldown/filter';
+import * as devalue from 'devalue';
+import { prefixRegex } from 'rolldown/filter';
 import { createServer } from 'vite';
-import { forked } from '../../utils/fork.js';
 import { build_server_nodes } from '../../exports/vite/build/build_server.js';
 
-export default forked(import.meta.url, analyse);
-
 /**
- * @param {{
- *   vite_config: ResolvedConfig;
- *   hash: boolean;
- *   manifest_path: string;
- *   manifest_data: ManifestData;
- *   server_manifest: Manifest;
- *   tracked_features: Record<string, string[]>;
- *   private_env: Record<string, string>;
- *   public_env: Record<string, string>;
- *   out: string;
- *   output_config: RecursiveRequired<ValidatedConfig['kit']['output']>;
- *   root: string;
- * }} opts
+ * @param {object} opts Arguments must be serialisable via the structured clone algorithm
+ * @param {ResolvedConfig} opts.vite_config
+ * @param {string} opts.manifest_path
+ * @param {ManifestData} opts.manifest_data
+ * @param {Manifest} opts.server_manifest
+ * @param {Record<string, string[]>} opts.tracked_features
+ * @param {string} opts.out
+ * @param {string} opts.root
+ * @returns {Promise<{ metadata: ServerMetadata }>}
  */
-async function analyse({
+export default async function analyse({
 	vite_config,
-	hash,
 	manifest_path,
 	manifest_data,
 	server_manifest,
 	tracked_features,
-	private_env,
-	public_env,
 	out,
 	root
 }) {
+	const analyse_entry = import.meta.resolve('./analyse_entry.js');
+
 	const vite = await createServer({
-		...vite_config,
+		configFile: vite_config.configFile,
 		command: 'serve',
 		plugins: [
 			{
-				name: 'vite-plugin-sveltekit-analyse',
+				name: 'vite-plugin-sveltekit-compile:analyse',
+				config(config) {
+					if (Array.isArray(config.resolve?.alias)) {
+						for (const alias of config.resolve.alias) {
+							if (alias.find !== '__SERVER__') continue;
+
+							alias.replacement = `${out}/server`;
+							break;
+						}
+					}
+
+					if (config.define) {
+						config.define.__SVELTEKIT_ANALYSING__ = 'true';
+						config.define.__SVELTEKIT_BUILDING__ = 'true';
+					}
+				},
 				applyToEnvironment(environment) {
 					return environment.config.consumer === 'server';
 				},
 				resolveId: {
+					order: 'pre',
 					filter: {
-						id: [exactRegex('sveltekit:server-manifest')]
+						id: [prefixRegex('sveltekit:')]
 					},
-					handler() {
-						return manifest_path;
+					handler(id) {
+						if (id === 'sveltekit:server-manifest') {
+							return manifest_path;
+						}
+
+						// substitute the Server class with our analysis code instead
+						if (id === 'sveltekit:server') {
+							return analyse_entry;
+						}
 					}
 				}
 			}
@@ -59,28 +74,25 @@ async function analyse({
 	// first, build server nodes without the client manifest so we can analyse it
 	build_server_nodes({ out, manifest_data, server_manifest, root });
 
-	await vite.listen();
+	if (!vite.httpServer?.listening) {
+		await vite.listen();
+	}
 
-	/** @type {PromiseWithResolvers<ServerMetadata>} */
-	const { promise, resolve } = Promise.withResolvers();
+	const address = vite.httpServer?.address();
+	const port = typeof address === 'string' ? Number(address.split(':').at(-1)) : address?.port;
 
-	const event = 'sveltekit:analyse-response';
-	vite.environments.ssr.hot.on(event, resolve);
-
-	await vite.environments.ssr.transformRequest(import.meta.resolve('./analyse-entry.js'));
-
-	vite.environments.ssr.hot.send('sveltekit:analyse-request', {
-		private_env,
-		public_env,
-		hash,
-		server_manifest,
-		tracked_features
+	const response = await fetch(new URL(`http://localhost:${port}`), {
+		method: 'POST',
+		headers: {
+			'content-type': 'application/json'
+		},
+		body: JSON.stringify({
+			server_manifest,
+			tracked_features
+		})
 	});
-	const metadata = await promise;
-
-	vite.environments.ssr.hot.off(event, resolve);
 
 	await vite.close();
 
-	return { metadata };
+	return { metadata: devalue.parse(await response.text()) };
 }

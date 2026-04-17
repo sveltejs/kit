@@ -1,21 +1,18 @@
 /** @import { SSRManifest } from '@sveltejs/kit' */
 import { server_assets } from '__sveltekit/server-assets';
 import { remotes } from '__sveltekit/remotes';
-import { env, manifest_data, mime_types, get } from '__sveltekit/manifest-data';
+import { manifest_data, mime_types, get } from '__sveltekit/manifest-data';
 import { to_fs } from '../filesystem.js';
 import { compact } from '../../../utils/array.js';
 import { join } from '../../../utils/path.js';
 import { runtime_directory } from '../../../runtime/utils.js';
-
-export { env };
-export const basePath = __SVELTEKIT_PATHS_BASE__;
-export const prerendered = new Set();
 
 /** @type {SSRManifest} */
 export const manifest = {
 	appDir: __SVELTEKIT_APP_DIR__,
 	appPath: __SVELTEKIT_APP_DIR__,
 	assets: new Set(manifest_data.assets.map((asset) => asset.file)),
+	base: __SVELTEKIT_PATHS_BASE__,
 	mimeTypes: mime_types,
 	_: {
 		client: {

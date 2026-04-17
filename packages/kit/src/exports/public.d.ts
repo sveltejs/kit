@@ -1604,6 +1604,7 @@ export interface ServerInitOptions {
 export interface SSRManifest {
 	appDir: string;
 	appPath: string;
+	base: string;
 	/** Static files from `kit.config.files.assets` and the service worker (if any). */
 	assets: Set<string>;
 	mimeTypes: Record<string, string>;

@@ -1,7 +1,7 @@
 /// <reference types="@cloudflare/workers-types" />
 
 import { Server } from 'SERVER';
-import { manifest, prerendered, basePath } from 'MANIFEST';
+import { manifest } from 'MANIFEST';
 import { env } from 'cloudflare:workers';
 import * as Cache from 'worktop/cfw.cache';
 
@@ -63,7 +63,7 @@ export default /** @satisfies {ExportedHandler} */ ({
 
 		// files in /static, the service worker, and Vite imported server assets
 		let is_static_asset = false;
-		const filename = stripped_pathname.slice(basePath.length + 1);
+		const filename = stripped_pathname.slice(manifest.base.length + 1);
 		if (filename) {
 			is_static_asset =
 				manifest.assets.has(filename) ||
@@ -76,12 +76,12 @@ export default /** @satisfies {ExportedHandler} */ ({
 
 		if (
 			is_static_asset ||
-			prerendered.has(pathname) ||
+			manifest._.prerendered_routes.has(pathname) ||
 			pathname === version_file ||
 			pathname.startsWith(immutable)
 		) {
 			res = /** @type {Response} */ (await env[__SVELTEKIT_CLOUDFLARE_ASSETS_BINDING__].fetch(req));
-		} else if (location && prerendered.has(location)) {
+		} else if (location && manifest._.prerendered_routes.has(location)) {
 			// trailing slash redirect for prerendered pages
 			if (search) location += search;
 			res = new Response('', {

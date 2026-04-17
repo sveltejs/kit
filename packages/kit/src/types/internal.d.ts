@@ -66,6 +66,7 @@ export interface AssetDependencies {
 export interface BuildData {
 	app_dir: string;
 	app_path: string;
+	base: string;
 	manifest_data: ManifestData;
 	out_dir: string;
 	service_worker: string | null;
@@ -690,17 +691,8 @@ export interface DevEnvironment {
 	vite: ViteDevServer;
 	/** used to construct the SSR manifest */
 	manifest_data: ManifestData;
-	/** environment variables loaded according to Vite's mode */
-	env: Record<string, string>;
-	/** where app assets are served from */
-	assets: string;
 	/** used to populate `event.getClientAddress()` */
 	remote_address: string | undefined;
-	/**
-	 * used to communicate from the environment to the host process by making
-	 * requests against the Vite middleware
-	 */
-	origin: string;
 }
 
 export * from '../exports/index.js';

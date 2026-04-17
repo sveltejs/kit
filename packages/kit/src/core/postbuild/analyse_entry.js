@@ -1,41 +1,41 @@
-import { manifest } from 'sveltekit:server-manifest';
-import { get, manifest_data } from '__sveltekit/manifest-data';
+/** @import { SSRManifest } from '@sveltejs/kit' */
+/** @import { ServerMetadata } from 'types' */
+/** @import { Manifest } from 'vite' */
+import { manifest_data } from '__sveltekit/manifest-data';
 import { remotes } from '__sveltekit/remotes';
-import { set_manifest, set_read_implementation } from '__sveltekit/server';
+import * as devalue from 'devalue';
 import { ENDPOINT_METHODS } from '../../constants.js';
-import { set_private_env, set_public_env } from '../../runtime/shared-server.js';
 import { has_server_load, resolve_route } from '../../utils/routing.js';
 import { validate_server_exports } from '../../utils/exports.js';
 import { PageNodes } from '../../utils/page_nodes.js';
 import { check_feature } from '../../utils/features.js';
-import { create_synchronous_read } from '../../runtime/server/utils.js';
+import { StubServer } from './server.js';
+
+export class Server extends StubServer {
+	/** @type {StubServer['respond']} */
+	async respond(request, _) {
+		/** @type {{ hash: boolean; server_manifest: Manifest; tracked_features: Record<string, string[]>; }} */
+		const { server_manifest, tracked_features } = await request.json();
+
+		const metadata = await analyse({
+			server_manifest,
+			tracked_features,
+			manifest: this.manifest
+		});
+
+		return new Response(devalue.stringify(metadata));
+	}
+}
 
 /**
- * @param {{
- *   private_env: Record<string, string>;
- *   public_env: Record<string, string>;
- *   hash: boolean;
- *   server_manifest: import('vite').Manifest;
- *   tracked_features: Record<string, string[]>;
- * }} opts
+ *
+ * @param {object} opts
+ * @param {Manifest} opts.server_manifest
+ * @param {Record<string, string[]>} opts.tracked_features
+ * @param {SSRManifest} opts.manifest
+ * @returns {Promise<ServerMetadata>}
  */
-async function analyse({ private_env, public_env, hash, server_manifest, tracked_features }) {
-	// set env, `read`, and `manifest`, in case they're used in initialisation
-	set_private_env(private_env);
-	set_public_env(public_env);
-	set_manifest(manifest);
-	set_read_implementation(
-		create_synchronous_read(async (file) => {
-			const response = await get(`/read?${new URLSearchParams({ file })}`);
-			if (!response.ok) {
-				throw new Error(
-					`read(...) failed: could not fetch ${file} (${response.status} ${response.statusText})`
-				);
-			}
-			return response.body;
-		})
-	);
-
+async function analyse({ server_manifest, tracked_features, manifest }) {
 	/** @type {import('types').ServerMetadata} */
 	const metadata = {
 		nodes: [],
@@ -47,7 +47,7 @@ async function analyse({ private_env, public_env, hash, server_manifest, tracked
 
 	// analyse nodes
 	for (const node of nodes) {
-		if (hash && node.universal) {
+		if (__SVELTEKIT_HASH_ROUTING__ && node.universal) {
 			const options = Object.keys(node.universal).filter((o) => o !== 'load');
 			if (options.length > 0) {
 				throw new Error(
@@ -143,7 +143,7 @@ async function analyse({ private_env, public_env, hash, server_manifest, tracked
 		metadata.remotes.set(remote.hash, exports);
 	}
 
-	import.meta.hot?.send('sveltekit:analyse-response', metadata);
+	return metadata;
 }
 
 /**
@@ -251,5 +251,3 @@ function list_features(route, manifest_data, server_manifest, tracked_features) 
 
 	return Array.from(features);
 }
-
-import.meta.hot?.on('sveltekit:analyse-request', analyse);

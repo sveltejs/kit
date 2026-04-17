@@ -1,26 +1,36 @@
+/** @import { ResolvedConfig } from 'vite' */
 import { exactRegex } from 'rolldown/filter';
-import { forked } from '../../utils/fork.js';
 import { createServer, isFetchableDevEnvironment } from 'vite';
 
-export default forked(import.meta.url, generate_fallback);
-
 /**
- * @param {object} opts
- * @param {import('vite').ResolvedConfig} opts.vite_config
+ * @param {object} opts Arguments must be serialisable via the structured clone algorithm
+ * @param {ResolvedConfig} opts.vite_config
  * @param {string} opts.origin
  * @param {string} opts.manifest_path
+ * @param {string} opts.out
  */
-async function generate_fallback({ vite_config, origin, manifest_path }) {
-	const dev_server = await createServer({
-		...vite_config,
+export default async function generate_fallback({ vite_config, origin, manifest_path, out }) {
+	const vite = await createServer({
+		configFile: vite_config.configFile,
 		command: 'serve',
-		define: {
-			...vite_config.define,
-			__SVELTEKIT_GENERATING_FALLBACK__: 'true'
-		},
 		plugins: [
 			{
-				name: 'vite-plugin-sveltekit-generate-fallback',
+				name: 'vite-plugin-sveltekit-compile:generate-fallback',
+				config(config) {
+					if (Array.isArray(config.resolve?.alias)) {
+						for (const alias of config.resolve.alias) {
+							if (alias.find !== '__SERVER__') continue;
+
+							alias.replacement = `${out}/server`;
+							break;
+						}
+					}
+
+					if (config.define) {
+						config.define.__SVELTEKIT_GENERATING_FALLBACK__ = 'true';
+						config.define.__SVELTEKIT_BUILDING__ = 'true';
+					}
+				},
 				applyToEnvironment(environment) {
 					return environment.config.consumer === 'server';
 				},
@@ -36,15 +46,15 @@ async function generate_fallback({ vite_config, origin, manifest_path }) {
 		]
 	});
 
-	await dev_server.listen();
+	await vite.listen();
 
-	if (!isFetchableDevEnvironment(dev_server.environments.ssr)) {
+	if (!isFetchableDevEnvironment(vite.environments.ssr)) {
 		throw new Error('The Vite configured SSR environment must be a FetchableDevEnvironment');
 	}
 
-	const response = await dev_server.environments.ssr.dispatchFetch(
-		new Request(origin + '/[fallback]')
-	);
+	const response = await vite.environments.ssr.dispatchFetch(new Request(origin + '/[fallback]'));
+
+	await vite.close();
 
 	if (response.ok) {
 		return await response.text();

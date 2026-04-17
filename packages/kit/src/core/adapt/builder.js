@@ -32,7 +32,8 @@ const extensions = ['.html', '.js', '.mjs', '.json', '.css', '.svg', '.xml', '.w
  *   prerender_map: PrerenderMap;
  *   log: Logger;
  *   vite_config: ResolvedConfig;
- *   remotes: RemoteChunk[]
+ *   remotes: RemoteChunk[];
+ *   out: string;
  * }} opts
  * @returns {Builder}
  */
@@ -45,7 +46,8 @@ export function create_builder({
 	prerender_map,
 	log,
 	vite_config,
-	remotes
+	remotes,
+	out
 }) {
 	/** @type {Map<RouteDefinition, RouteData>} */
 	const lookup = new Map();
@@ -118,7 +120,8 @@ export function create_builder({
 			const fallback = await generate_fallback({
 				vite_config,
 				origin: config.kit.prerender.origin,
-				manifest_path
+				manifest_path,
+				out
 			});
 
 			if (existsSync(dest)) {

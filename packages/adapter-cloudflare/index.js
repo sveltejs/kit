@@ -82,9 +82,7 @@ export default function (options = {}) {
 			const server_dest = builder.getServerDirectory();
 			writeFileSync(
 				`${server_dest}/manifest.js`,
-				`export const manifest = ${builder.generateManifest({ relativePath: '.' })};\n\n` +
-					`export const prerendered = new Set(${JSON.stringify(builder.prerendered.paths)});\n\n` +
-					`export const basePath = ${JSON.stringify(builder.config.kit.paths.base)};\n`
+				`export const manifest = ${builder.generateManifest({ relativePath: '.' })};\n`
 			);
 
 			if (builder.hasServerInstrumentationFile()) {
@@ -123,7 +121,7 @@ export default function (options = {}) {
 		vite: {
 			plugins: [
 				{
-					name: 'vite-plugin-sveltekit-cloudflare-pre',
+					name: 'vite-plugin-sveltekit-cloudflare:pre',
 					config(user_config, env) {
 						building = env.command === 'build';
 
@@ -151,7 +149,7 @@ export default function (options = {}) {
 							id: [/^SERVER$/, /^MANIFEST$/]
 						},
 						async handler(id, importer, options) {
-							if (importer !== default_worker || (id !== 'SERVER' && id !== 'MANIFEST')) return;
+							if (importer !== default_worker) return;
 
 							if (!building) {
 								const source = `sveltekit:${id === 'SERVER' ? 'server' : 'server-manifest'}`;
@@ -213,23 +211,23 @@ export default function (options = {}) {
 						wrangler_config = user_config;
 					},
 					experimental: {
-						...options.vitePluginOptions?.experimental,
-						prerenderWorker: {
-							configPath: options.vitePluginOptions?.experimental?.prerenderWorker?.configPath,
-							viteEnvironment: {
-								name: 'prerender',
-								childEnvironments:
-									options.vitePluginOptions?.experimental?.prerenderWorker?.viteEnvironment
-										?.childEnvironments
-							},
-							config() {
-								return wrangler_config;
-							}
-						}
+						...options.vitePluginOptions?.experimental
+						// prerenderWorker: {
+						// 	configPath: options.vitePluginOptions?.experimental?.prerenderWorker?.configPath,
+						// 	viteEnvironment: {
+						// 		name: 'prerender',
+						// 		childEnvironments:
+						// 			options.vitePluginOptions?.experimental?.prerenderWorker?.viteEnvironment
+						// 				?.childEnvironments
+						// 	},
+						// 	config() {
+						// 		return wrangler_config;
+						// 	}
+						// }
 					}
 				}),
 				{
-					name: 'vite-plugin-sveltekit-cloudflare-post',
+					name: 'vite-plugin-sveltekit-cloudflare:post',
 					config(user_config) {
 						// noop to prevent Cloudflare's fallback `buildApp` hook from
 						// running so that it doesn't build the client and server again

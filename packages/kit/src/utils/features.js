@@ -7,7 +7,7 @@ import { get } from '__sveltekit/manifest-data';
  */
 export async function check_feature(route_id, config, feature) {
 	const response = await get(
-		`/check-feature/?${new URLSearchParams({ route_id, config: JSON.stringify(config), feature })}`
+		`/check-feature?${new URLSearchParams({ route_id, config: JSON.stringify(config), feature })}`
 	);
 	if (!response.ok) {
 		throw new Error(

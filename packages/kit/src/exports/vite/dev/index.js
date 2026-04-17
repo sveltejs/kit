@@ -147,8 +147,6 @@ export function dev(vite, vite_config, svelte_config, root, dev_environment) {
 	});
 
 	const assets = svelte_config.kit.paths.assets ? SVELTE_KIT_ASSETS : svelte_config.kit.paths.base;
-	dev_environment.assets = assets;
-	invalidate_module(vite, sveltekit_manifest_data);
 
 	const asset_server = sirv(svelte_config.kit.files.assets, {
 		dev: true,
@@ -219,11 +217,6 @@ export function dev(vite, vite_config, svelte_config, root, dev_environment) {
 				const base = `${vite.config.server.https ? 'https' : 'http'}://${
 					req.headers[':authority'] || req.headers.host
 				}`;
-
-				if (!dev_environment.origin) {
-					dev_environment.origin = base;
-					invalidate_module(vite, sveltekit_manifest_data);
-				}
 
 				const url = new URL(base + req.url);
 				const decoded = decodeURI(url.pathname);

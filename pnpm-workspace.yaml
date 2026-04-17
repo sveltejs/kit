@@ -52,7 +52,7 @@ catalog:
   valibot: ^1.1.0
   vite: ^8.0.2
   vitest: ^4.1.1
-  wrangler: ^4.81.0
+  wrangler: ^4.83.0
 catalogs:
   # these show up in the ci.yml like `vite: 'beta'`, etc.
   vite-baseline:

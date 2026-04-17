@@ -2,7 +2,7 @@ import { AsyncLocalStorage } from 'node:async_hooks';
 import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
 import { get } from '__sveltekit/manifest-data';
-import { Server as OriginalServer } from '../../../runtime/server/index.js';
+import { Server as KitServer } from '../../../runtime/server/index.js';
 import { check_feature } from '../../../runtime/../utils/features.js';
 import { SCHEME } from '../../../runtime/../utils/url.js';
 
@@ -29,7 +29,7 @@ globalThis.fetch = (info, init) => {
 	return fetch(info, init);
 };
 
-export class Server extends OriginalServer {
+export class Server extends KitServer {
 	/** @param {import('@sveltejs/kit').ServerInitOptions} options */
 	async init(options) {
 		if (__SVELTEKIT_PRERENDERING__) {
