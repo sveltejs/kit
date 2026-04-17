@@ -416,6 +416,8 @@ async function _invalidate(include_load_functions = true, reset_page_state = tru
 	discard_load_cache();
 
 	// Rerun queries
+	/** @type {Map<string, Promise<void>>} */
+	const live_query_reconnects = new Map();
 	if (force_invalidation) {
 		query_map.forEach((entries) => {
 			entries.forEach(({ resource }) => {
@@ -423,9 +425,12 @@ async function _invalidate(include_load_functions = true, reset_page_state = tru
 			});
 		});
 
-		live_query_map.forEach((entries) => {
-			entries.forEach(({ resource }) => {
-				void resource.reconnect();
+		live_query_map.forEach((entries, query_id) => {
+			entries.forEach(({ resource }, payload) => {
+				const key = create_remote_key(query_id, payload);
+				const promise = resource.reconnect();
+				promise.catch(noop);
+				live_query_reconnects.set(key, promise);
 			});
 		});
 	}
@@ -456,6 +461,7 @@ async function _invalidate(include_load_functions = true, reset_page_state = tru
 		reset_invalidation();
 	}
 
+	// only wait for promises that are connected to queries that still exist
 	/** @type {Promise<any>[]} */
 	const promises = [];
 	query_map.forEach((entries) => {
@@ -463,10 +469,13 @@ async function _invalidate(include_load_functions = true, reset_page_state = tru
 			promises.push(resource);
 		});
 	});
-	live_query_map.forEach((entries) => {
-		entries.forEach(({ resource }) => {
-			// TODO I feel weird about this behavior but I can't put my finger on it
-			promises.push(resource);
+	live_query_map.forEach((entries, query_id) => {
+		entries.forEach((_, payload) => {
+			const key = create_remote_key(query_id, payload);
+			const promise = live_query_reconnects.get(key);
+			if (promise) {
+				promises.push(promise);
+			}
 		});
 	});
 
