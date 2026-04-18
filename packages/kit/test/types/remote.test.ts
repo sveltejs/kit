@@ -430,6 +430,41 @@ function form_tests() {
 	// @ts-expect-error
 	f6.input!['array[0].prop'] = 123;
 
+	// schema with optional array fields (e.g. Zod's `.default([])` produces an input
+	// type where the property is optional, so its value type is `string[] | undefined`).
+	// Regression test for #15722.
+	const f_optional_arrays = form(
+		null as any as StandardSchemaV1<{
+			strings?: string[];
+			files?: File[];
+			objects?: Array<{ prop: string }>;
+			nested?: { strings?: string[] };
+		}>,
+		(data) => {
+			data.strings?.[0] === 'a';
+			data.files?.[0] instanceof File;
+			data.objects?.[0].prop === 'a';
+			return { success: true };
+		}
+	);
+	// `.as()` should be available on optional string[] / File[] fields
+	f_optional_arrays.fields.strings.as('checkbox', 'value');
+	f_optional_arrays.fields.strings.as('select multiple');
+	f_optional_arrays.fields.files.as('file multiple');
+	// indexed access gives back a typed field
+	f_optional_arrays.fields.strings[0].as('text');
+	f_optional_arrays.fields.files[0].as('file');
+	// optional array of objects still exposes container methods and per-item fields
+	f_optional_arrays.fields.objects.allIssues();
+	f_optional_arrays.fields.objects[0].prop.as('text');
+	// nested optional array inside optional parent also works
+	f_optional_arrays.fields.nested.strings.as('checkbox', 'value');
+	f_optional_arrays.fields.nested.strings[0].as('text');
+	// @ts-expect-error
+	f_optional_arrays.fields.strings.as('number');
+	// @ts-expect-error
+	f_optional_arrays.fields.files.as('text');
+
 	// doesn't use data
 	const f9 = form(() => Promise.resolve({ success: true }));
 	f9.result?.success === true;

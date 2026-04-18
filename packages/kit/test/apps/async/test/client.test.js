@@ -461,6 +461,15 @@ test.describe('remote function mutations', () => {
 				'On the client, .run() can only be called outside render'
 			);
 		});
+
+		test('non-reactive query can still access non-awaited properties', async ({ page }) => {
+			await page.goto('/remote/query-non-reactive');
+
+			await expect(page.locator('#current')).toContainText('undefined');
+			await expect(page.locator('#error')).toContainText('undefined');
+			await expect(page.locator('#ready')).toContainText('false');
+			await expect(page.locator('#loading')).toContainText('false');
+		});
 	});
 
 	// TODO ditto
