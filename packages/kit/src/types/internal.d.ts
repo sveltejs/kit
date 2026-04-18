@@ -40,7 +40,9 @@ export interface ServerModule {
 
 export interface ServerInternalModule {
 	set_assets(path: string): void;
+	set_building(): void;
 	set_manifest(manifest: SSRManifest): void;
+	set_prerendering(): void;
 	set_private_env(environment: Record<string, string>): void;
 	set_public_env(environment: Record<string, string>): void;
 	set_read_implementation(implementation: (path: string) => ReadableStream): void;
@@ -401,6 +403,7 @@ export interface ServerMetadata {
 	routes: Map<string, ServerMetadataRoute>;
 	/** For each hashed remote file, a map of export name -> { type, dynamic }, where `dynamic` is `false` for non-dynamic prerender functions */
 	remotes: Map<string, Map<string, { type: RemoteInternals['type']; dynamic: boolean }>>;
+	remotes_with_prerender: Set<string>;
 }
 
 export interface SSRComponent {

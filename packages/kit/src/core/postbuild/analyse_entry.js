@@ -1,19 +1,70 @@
-/** @import { SSRManifest } from '@sveltejs/kit' */
+/** @import { Server as KitServer, SSRManifest } from '@sveltejs/kit' */
 /** @import { ServerMetadata } from 'types' */
 /** @import { Manifest } from 'vite' */
-import { manifest_data } from '__sveltekit/manifest-data';
+import { get, manifest_data } from '__sveltekit/manifest-data';
 import { remotes } from '__sveltekit/remotes';
+import {
+	options,
+	set_manifest,
+	set_read_implementation,
+	set_private_env,
+	set_public_env,
+	set_building
+} from '__SERVER__/internal.js';
 import * as devalue from 'devalue';
 import { ENDPOINT_METHODS } from '../../constants.js';
+import { create_synchronous_read } from '../../runtime/server/utils.js';
 import { has_server_load, resolve_route } from '../../utils/routing.js';
 import { validate_server_exports } from '../../utils/exports.js';
 import { PageNodes } from '../../utils/page_nodes.js';
 import { check_feature } from '../../utils/features.js';
-import { StubServer } from './server.js';
+import { filter_env } from '../../utils/env.js';
 
-export class Server extends StubServer {
-	/** @type {StubServer['respond']} */
-	async respond(request, _) {
+set_building();
+
+/** @implements {KitServer} */
+export class Server {
+	/** @type {import('@sveltejs/kit').SSRManifest} */
+	manifest;
+
+	/** @type {import('types').SSROptions} */
+	options;
+
+	// set env, `read`, and `manifest`, in case they're used when we analyse the user's code
+
+	/** @param {SSRManifest} manifest */
+	constructor(manifest) {
+		this.manifest = manifest;
+		/** @type {import('types').SSROptions} */
+		this.options = options;
+
+		set_manifest(manifest);
+	}
+
+	/** @type {KitServer['init']} */
+	init({ env }) {
+		const { env_public_prefix, env_private_prefix } = this.options;
+
+		set_private_env(filter_env(env, env_private_prefix, env_public_prefix));
+		set_public_env(filter_env(env, env_public_prefix, env_private_prefix));
+
+		set_read_implementation(
+			create_synchronous_read(async (file) => {
+				const response = await get(`/read?${new URLSearchParams({ file })}`);
+				if (!response.ok) {
+					throw new Error(
+						`read(...) failed: could not fetch ${file} (${response.status} ${response.statusText})`
+					);
+				}
+				return response.body;
+			})
+		);
+
+		return Promise.resolve();
+	}
+
+	/** @type {KitServer['respond']} */
+	async respond(request) {
 		/** @type {{ hash: boolean; server_manifest: Manifest; tracked_features: Record<string, string[]>; }} */
 		const { server_manifest, tracked_features } = await request.json();
 
@@ -40,7 +91,8 @@ async function analyse({ server_manifest, tracked_features, manifest }) {
 	const metadata = {
 		nodes: [],
 		routes: new Map(),
-		remotes: new Map()
+		remotes: new Map(),
+		remotes_with_prerender: new Set()
 	};
 
 	const nodes = await Promise.all(manifest._.nodes.map((loader) => loader()));
@@ -138,6 +190,10 @@ async function analyse({ server_manifest, tracked_features, manifest }) {
 				type,
 				dynamic: type !== 'prerender' || internals.dynamic
 			});
+
+			if (type === 'prerender') {
+				metadata.remotes_with_prerender.add(remote.hash);
+			}
 		}
 
 		metadata.remotes.set(remote.hash, exports);

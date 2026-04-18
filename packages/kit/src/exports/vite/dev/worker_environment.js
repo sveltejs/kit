@@ -1,4 +1,5 @@
-/** @import { HotChannelClient, HotChannelListener, HotPayload } from 'vite' */
+/** @import { Worker } from 'node:worker_threads' */
+/** @import { HotChannel, HotChannelClient, HotChannelListener, HotPayload } from 'vite' */
 
 /**
  * Messages sent over the worker thread IPC are wrapped in this envelope
@@ -13,10 +14,11 @@ export const REQUEST_CHANNEL = '__sveltekit_request__';
 export const RESPONSE_CHANNEL = '__sveltekit_response__';
 
 /**
- * @param {import('node:worker_threads').Worker} worker
- * @returns {import('vite').HotChannel}
+ * @param {Worker} worker
+ * @returns {HotChannel}
  */
 export function create_worker_hot_channel(worker) {
+	/** @type {WeakMap<Function, any>} */
 	const handler_to_worker_listener = new WeakMap();
 
 	/** @type {HotChannelClient} */
@@ -31,13 +33,13 @@ export function create_worker_hot_channel(worker) {
 			worker.postMessage({ _channel: CHANNEL, payload });
 		},
 		/**
-		 * @template T
-		 * @param {T} event
-		 * @param {HotChannelListener<T>} handler
+		 * @param {string} event
+		 * @param {HotChannelListener<any>} handler
 		 */
 		on(event, handler) {
 			if (event === 'vite:client:connect') return;
 			if (event === 'vite:client:disconnect') {
+				/** @param {number} exitCode */
 				const listener = (exitCode) => {
 					handler(exitCode, client);
 				};
@@ -80,7 +82,7 @@ let request_id = 0;
  * Sends a Request to the worker thread for handling and returns the Response.
  * The worker must be running `worker_runner.js`.
  *
- * @param {import('node:worker_threads').Worker} worker
+ * @param {Worker} worker
  * @param {Request} request
  * @param {string | undefined} remote_address
  * @returns {Promise<Response>}
@@ -91,6 +93,7 @@ export async function dispatch_request(worker, request, remote_address) {
 	const body = request.body ? new Uint8Array(await request.arrayBuffer()) : null;
 
 	return new Promise((fulfil, reject) => {
+		/** @param {any} msg */
 		function handler(msg) {
 			if (msg?._channel !== RESPONSE_CHANNEL || msg.id !== id) return;
 			worker.off('message', handler);

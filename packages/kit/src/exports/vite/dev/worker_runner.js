@@ -1,3 +1,4 @@
+/** @import { ModuleRunnerTransport } from 'vite/module-runner' */
 import { parentPort } from 'node:worker_threads';
 import { ModuleRunner, ESModulesEvaluator, createNodeImportMeta } from 'vite/module-runner';
 import { CHANNEL, REQUEST_CHANNEL, RESPONSE_CHANNEL } from './worker_environment.js';
@@ -8,7 +9,7 @@ if (!parentPort) {
 
 const port = parentPort;
 
-/** @type {import('vite/module-runner').ModuleRunnerTransport} */
+/** @type {ModuleRunnerTransport} */
 const transport = {
 	connect({ onMessage, onDisconnection }) {
 		port.on('message', (msg) => {
@@ -31,8 +32,13 @@ const runner = new ModuleRunner(
 	new ESModulesEvaluator()
 );
 
-
-/** @typedef {{ _channel: '__sveltekit_request__'; id: number; request: Request; remote_address: string } } MyMessage */
+/**
+ * @typedef {object} MyMessage
+ * @property {'__sveltekit_request__'} _channel
+ * @property {number} id
+ * @property {Request} request
+ * @property {string} remote_address
+ */
 
 port.on(
 	'message',

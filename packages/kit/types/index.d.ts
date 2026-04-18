@@ -1583,12 +1583,12 @@ declare module '@sveltejs/kit' {
 		assets: Set<string>;
 		mimeTypes: Record<string, string>;
 
-		/** private fields */
+		/** @internal private fields */
 		_: {
 			client: NonNullable<BuildData['client']>;
 			nodes: SSRNodeLoader[];
 			/** hashed filename -> import to that file */
-			remotes: Record<string, () => Promise<any>>;
+			remotes: Record<string, () => Promise<{ default: Record<string, any> }>>;
 			routes: SSRRoute[];
 			prerendered_routes: Set<string>;
 			matchers: () => Promise<Record<string, ParamMatcher>>;

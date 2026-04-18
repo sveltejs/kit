@@ -122,23 +122,23 @@ export default function (options = {}) {
 			plugins: [
 				{
 					name: 'vite-plugin-sveltekit-cloudflare:pre',
-					config(user_config, env) {
+					config(config, env) {
 						building = env.command === 'build';
 
-						user_config.environments ??= {};
-						user_config.environments.ssr ??= {};
-						user_config.environments.ssr.build ??= {};
-						user_config.environments.ssr.build.rolldownOptions ??= {};
+						config.environments ??= {};
+						config.environments.ssr ??= {};
+						config.environments.ssr.build ??= {};
+						config.environments.ssr.build.rolldownOptions ??= {};
 
 						// The Cloudflare Vite plugin hardcodes the worker entry input as `index`
-						// and it can't be configured so we need to rename the SvelteKit one
+						// so we need to rename the SvelteKit one
 						if (
-							typeof user_config.environments.ssr.build.rolldownOptions.input === 'object' &&
-							'index' in user_config.environments.ssr.build.rolldownOptions.input
+							typeof config.environments.ssr.build.rolldownOptions.input === 'object' &&
+							'index' in config.environments.ssr.build.rolldownOptions.input
 						) {
-							user_config.environments.ssr.build.rolldownOptions.input.server =
-								user_config.environments.ssr.build.rolldownOptions.input.index;
-							delete user_config.environments.ssr.build.rolldownOptions.input.index;
+							config.environments.ssr.build.rolldownOptions.input.server =
+								config.environments.ssr.build.rolldownOptions.input.index;
+							delete config.environments.ssr.build.rolldownOptions.input.index;
 						}
 					},
 					applyToEnvironment(environment) {
@@ -194,7 +194,7 @@ export default function (options = {}) {
 							user_config.assets = {
 								binding: user_config.assets?.binding ?? 'ASSETS'
 								// no need to populate `directory` as the Cloudflare Vite plugin
-								// does that based on the client build input entry
+								// does that based on the Vite client build input entry setting
 							};
 						}
 
@@ -228,24 +228,36 @@ export default function (options = {}) {
 				}),
 				{
 					name: 'vite-plugin-sveltekit-cloudflare:post',
-					config(user_config) {
+					config(config) {
 						// noop to prevent Cloudflare's fallback `buildApp` hook from
 						// running so that it doesn't build the client and server again
-						if (user_config.builder?.buildApp) {
-							user_config.builder.buildApp = async () => {};
+						if (config.builder?.buildApp) {
+							config.builder.buildApp = async () => {};
 						}
 
-						user_config.environments ??= {};
-						user_config.environments.ssr ??= {};
-						user_config.environments.ssr.define ??= {};
-						user_config.environments.ssr.define.__SVELTEKIT_CLOUDFLARE_ASSETS_BINDING__ =
-							JSON.stringify(wrangler_config.assets?.binding);
+						config.environments ??= {};
+						config.environments.ssr ??= {};
+						config.environments.ssr.define ??= {};
+						config.environments.ssr.define.__SVELTEKIT_CLOUDFLARE_ASSETS_BINDING__ = JSON.stringify(
+							wrangler_config.assets?.binding
+						);
 
 						// prevent Vite from resolving client svelte exports
 						const browser_condition =
-							user_config.environments.ssr.resolve?.conditions?.indexOf('browser');
+							config.environments.ssr.resolve?.conditions?.indexOf('browser');
 						if (browser_condition && browser_condition >= 0) {
-							user_config.environments.ssr.resolve?.conditions?.splice(browser_condition, 1);
+							config.environments.ssr.resolve?.conditions?.splice(browser_condition, 1);
+						}
+
+						// ensure we correctly reference the build output that exports `Server`
+						// rather than the worker entry at `output/server/index.js`
+						config.resolve ??= {};
+						config.resolve.alias ??= [];
+						if (Array.isArray(config.resolve.alias)) {
+							config.resolve.alias.push({
+								find: '__SVELTEKIT__/index.js',
+								replacement: `${config.environments.ssr.build?.outDir}/server.js`
+							});
 						}
 					}
 				}

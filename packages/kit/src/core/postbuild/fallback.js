@@ -1,6 +1,9 @@
 /** @import { ResolvedConfig } from 'vite' */
-import { exactRegex } from 'rolldown/filter';
-import { createServer, isFetchableDevEnvironment } from 'vite';
+import { prefixRegex } from 'rolldown/filter';
+import { createServer } from 'vite';
+import { escape_for_regexp } from '../../utils/escape.js';
+
+const prerender_entry = import.meta.resolve('./prerender_entry.js');
 
 /**
  * @param {object} opts Arguments must be serialisable via the structured clone algorithm
@@ -25,21 +28,38 @@ export default async function generate_fallback({ vite_config, origin, manifest_
 							break;
 						}
 					}
+				},
+				configureServer(vite) {
+					return () => {
+						vite.middlewares.use((req, _, next) => {
+							console.log({ req_url: req.url, req_original_url: req.originalUrl });
 
-					if (config.define) {
-						config.define.__SVELTEKIT_GENERATING_FALLBACK__ = 'true';
-						config.define.__SVELTEKIT_BUILDING__ = 'true';
-					}
+							req.url = req.url?.replace(
+								new RegExp(escape_for_regexp(`^http://localhost:${port}`)),
+								origin
+							);
+
+							next();
+						});
+					};
 				},
 				applyToEnvironment(environment) {
 					return environment.config.consumer === 'server';
 				},
 				resolveId: {
+					order: 'pre',
 					filter: {
-						id: [exactRegex('sveltekit:server-manifest')]
+						id: [prefixRegex('sveltekit:')]
 					},
-					handler() {
-						return manifest_path;
+					handler(id) {
+						if (id === 'sveltekit:server-manifest') {
+							return manifest_path;
+						}
+
+						// substitute the Server class with our prerender code instead
+						if (id === 'sveltekit:server') {
+							return prerender_entry;
+						}
 					}
 				}
 			}
@@ -48,11 +68,9 @@ export default async function generate_fallback({ vite_config, origin, manifest_
 
 	await vite.listen();
 
-	if (!isFetchableDevEnvironment(vite.environments.ssr)) {
-		throw new Error('The Vite configured SSR environment must be a FetchableDevEnvironment');
-	}
-
-	const response = await vite.environments.ssr.dispatchFetch(new Request(origin + '/[fallback]'));
+	const address = vite.httpServer?.address();
+	const port = typeof address === 'string' ? Number(address.split(':').at(-1)) : address?.port;
+	const response = await fetch(`http://localhost:${port}/[fallback]`);
 
 	await vite.close();
 

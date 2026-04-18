@@ -5,6 +5,8 @@ import { prefixRegex } from 'rolldown/filter';
 import { createServer } from 'vite';
 import { build_server_nodes } from '../../exports/vite/build/build_server.js';
 
+const analyse_entry = import.meta.resolve('./analyse_entry.js');
+
 /**
  * @param {object} opts Arguments must be serialisable via the structured clone algorithm
  * @param {ResolvedConfig} opts.vite_config
@@ -25,7 +27,8 @@ export default async function analyse({
 	out,
 	root
 }) {
-	const analyse_entry = import.meta.resolve('./analyse_entry.js');
+	// first, build server nodes without the client manifest so we can analyse it
+	build_server_nodes({ out, manifest_data, server_manifest, root });
 
 	const vite = await createServer({
 		configFile: vite_config.configFile,
@@ -41,11 +44,6 @@ export default async function analyse({
 							alias.replacement = `${out}/server`;
 							break;
 						}
-					}
-
-					if (config.define) {
-						config.define.__SVELTEKIT_ANALYSING__ = 'true';
-						config.define.__SVELTEKIT_BUILDING__ = 'true';
 					}
 				},
 				applyToEnvironment(environment) {
@@ -70,9 +68,6 @@ export default async function analyse({
 			}
 		]
 	});
-
-	// first, build server nodes without the client manifest so we can analyse it
-	build_server_nodes({ out, manifest_data, server_manifest, root });
 
 	if (!vite.httpServer?.listening) {
 		await vite.listen();

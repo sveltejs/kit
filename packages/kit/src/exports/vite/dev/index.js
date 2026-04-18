@@ -340,10 +340,13 @@ export function dev(vite, vite_config, svelte_config, root, dev_environment) {
 				}
 
 				// fallback to our own fetch handler if the adapter doesn't provide one
-				if (
-					!svelte_config.kit.adapter?.vite?.plugins &&
-					isFetchableDevEnvironment(vite.environments.ssr)
-				) {
+				if (!svelte_config.kit.adapter?.vite?.plugins) {
+					if (!isFetchableDevEnvironment(vite.environments.ssr)) {
+						throw new Error(
+							'The Vite configured dev SSR environment must be a FetchableDevEnvironment'
+						);
+					}
+
 					const request = await getRequest({
 						base,
 						request: req

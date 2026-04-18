@@ -113,3 +113,5 @@ export default /** @satisfies {ExportedHandler} */ ({
 		return pragma && res.status < 400 ? Cache.save(req, res, ctx) : res;
 	}
 });
+
+import.meta.hot?.accept();

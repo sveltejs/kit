@@ -14,17 +14,23 @@ declare module 'vite/types/customEvent.d.ts' {
 
 		'sveltekit:ssr-load-module': Error;
 		'sveltekit:prerender-assets-update': string;
-		'sveltekit:prerender-dependencies': string;
+		'sveltekit:prerender-dependencies': Record<
+			string,
+			{
+				response: SerialisedResponse;
+				body: null | string | Uint8Array;
+			}
+		>;
 	}
 }
 
-export interface EnforcedConfig {
-	[key: string]: EnforcedConfig | true;
-}
-
-export interface SerializedResponse {
+export interface SerialisedResponse {
 	status: number;
 	statusText: string;
 	headers: Record<string, string>;
 	body: ArrayBuffer;
+}
+
+export interface EnforcedConfig {
+	[key: string]: EnforcedConfig | true;
 }

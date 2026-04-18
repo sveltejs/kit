@@ -541,10 +541,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 					__SVELTEKIT_HASH_ROUTING__: s(kit.router.type === 'hash'),
 					__SVELTEKIT_SERVER_TRACING_ENABLED__: s(kit.experimental.tracing.server),
 					__SVELTEKIT_EXPERIMENTAL_USE_TRANSFORM_ERROR__: s(kit.experimental.handleRenderingErrors),
-					__SVELTEKIT_PRERENDERING__: 'false',
-					__SVELTEKIT_GENERATING_FALLBACK__: 'false',
-					__SVELTEKIT_ROOT__: s(root),
-					__SVELTEKIT_ANALYSING__: 'false'
+					__SVELTEKIT_ROOT__: s(root)
 				};
 
 				if (is_build) {
@@ -554,8 +551,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 						...define,
 						__SVELTEKIT_ADAPTER_NAME__: s(kit.adapter?.name),
 						__SVELTEKIT_APP_VERSION_FILE__: s(`${kit.appDir}/version.json`),
-						__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: s(kit.version.pollInterval),
-						__SVELTEKIT_BUILDING__: 'true'
+						__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: s(kit.version.pollInterval)
 					};
 
 					manifest_data = sync.all(svelte_config, config_env.mode, root).manifest_data;
@@ -565,8 +561,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 						__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: '0',
 						__SVELTEKIT_PAYLOAD__: 'globalThis.__sveltekit_dev',
 						__SVELTEKIT_HAS_SERVER_LOAD__: 'true',
-						__SVELTEKIT_HAS_UNIVERSAL_LOAD__: 'true',
-						__SVELTEKIT_BUILDING__: 'false'
+						__SVELTEKIT_HAS_UNIVERSAL_LOAD__: 'true'
 					};
 				}
 
@@ -890,8 +885,16 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 
 						return dedent`
 							export const version = ${s(version.name)};
-							export let building = __SVELTEKIT_BUILDING__;
-							export let prerendering = __SVELTEKIT_PRERENDERING__;
+							export let building = false;
+							export let prerendering = false;
+
+							export function set_building() {
+								building = true;
+							}
+
+							export function set_prerendering() {
+								prerendering = true;
+							}
 						`;
 					}
 
