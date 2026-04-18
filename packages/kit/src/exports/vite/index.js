@@ -756,13 +756,16 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 
 							export const mime_types = ${s(get_mime_lookup(manifest_data))};
 
+							// helps us avoid global fetch warnings we emit when the user uses it incorrectly
+							const native_fetch = globalThis.fetch;
+
 							// we have to send a request to the Vite dev server and configure
 							// the middleware to intercept and respond instead of using
 							// import.meta.hot for two-way communication because workerd
 							// doesn't like it when we await a promise created from a different
 							// request context
 							export function get(pathname) {
-								return fetch(\`http://localhost:${port}/${kit.appDir}\${pathname}\`);
+								return native_fetch(\`http://localhost:${port}/${kit.appDir}\${pathname}\`);
 							}
 						`;
 					}

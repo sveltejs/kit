@@ -62,7 +62,7 @@ export class Server extends KitServer {
 		if (url.pathname === `${app_path}/prerender-functions`) {
 			const names = url.searchParams.getAll('name');
 			const pathnames = await get_prerender_function_paths(this.#manifest, names);
-			return Response.json(JSON.stringify(pathnames));
+			return Response.json(pathnames);
 		}
 
 		const response = await super.respond(request, options);

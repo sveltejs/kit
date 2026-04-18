@@ -226,16 +226,17 @@ export default async function prerender({
 
 		/** @param {Record<string, { response: SerialisedResponse; body: null | string | Uint8Array }>} dependencies */
 		const listener = (dependencies) => {
+			/** @type {Map<string, PrerenderDependency>} */
 			const deserialised = new Map();
 			for (const [path, dependency] of Object.entries(dependencies)) {
-				deserialised.set(
-					path,
-					new Response(dependency.response.body, {
+				deserialised.set(path, {
+					response: new Response(dependency.response.body, {
 						headers: dependency.response.headers,
 						status: dependency.response.status,
 						statusText: dependency.response.statusText
-					})
-				);
+					}),
+					body: dependency.body
+				});
 			}
 			prerender_dependencies.resolve(deserialised);
 		};
@@ -611,7 +612,7 @@ export default async function prerender({
 
 	const response = await fetch(url);
 	/** @type {string[]} */
-	const functions_to_prerender = JSON.parse(await response.json());
+	const functions_to_prerender = await response.json();
 
 	for (const decoded of functions_to_prerender) {
 		void enqueue(null, decoded);

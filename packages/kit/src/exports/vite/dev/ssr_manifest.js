@@ -110,7 +110,7 @@ export const manifest = {
 					}
 
 					/** @type {Record<string, string>} */
-					const styles = JSON.parse(await response.json());
+					const styles = await response.json();
 
 					const importing_styles = Object.entries(styles).map(async ([dep_url, inline_css_url]) => {
 						return [
