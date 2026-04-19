@@ -9,6 +9,9 @@
 	const enhanced = set_message.for(`enhanced:${params.test_name}`);
 
 	let submit_result = $state('none');
+	let imperative_submit_result = $state('none');
+	let callback_element_matches = $state('unknown');
+	let callback_has_enhance = $state('unknown');
 </script>
 
 <p>message.current: {message.current}</p>
@@ -53,9 +56,14 @@
 
 <form
 	data-enhanced
-	{...enhanced.enhance(async ({ data, submit }) => {
+	{...enhanced.enhance(async (form) => {
+		const instance = /** @type {any} */ (form);
+		callback_element_matches = String(instance.element === /** @type {any} */ (enhanced).element);
+		callback_has_enhance = String('enhance' in instance);
 		submit_result = String(
-			await submit().updates(message.withOverride(() => data.message + ' (override)'))
+			await instance
+				.submit()
+				.updates(message.withOverride(() => instance.fields.message.value() + ' (override)'))
 		);
 	})}
 >
@@ -72,6 +80,19 @@
 <p>enhanced.pending: {enhanced.pending}</p>
 <p>enhanced.result: {enhanced.result}</p>
 <p>enhanced.submit_result: {submit_result}</p>
+<p>enhanced.element: {/** @type {any} */ (enhanced).element ? 'attached' : 'null'}</p>
+<p>enhanced.callback_element_matches: {callback_element_matches}</p>
+<p>enhanced.callback_has_enhance: {callback_has_enhance}</p>
+<p>enhanced.imperative_submit_result: {imperative_submit_result}</p>
+
+<button
+	type="button"
+	onclick={async () => {
+		imperative_submit_result = String(await /** @type {any} */ (enhanced).submit());
+	}}
+>
+	submit enhanced programmatically
+</button>
 
 <hr />
 

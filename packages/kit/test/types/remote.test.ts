@@ -247,16 +247,23 @@ function form_tests() {
 
 	f.result?.success === true;
 
-	f.enhance(async ({ submit }) => {
-		const x: boolean = await submit();
+	f.enhance(async (form) => {
+		const x: boolean = await form.submit();
 		x;
-		const y: boolean = await submit().updates(
+		const y: boolean = await form.submit().updates(
 			q,
 			q(),
 			q().withOverride(() => '')
 		);
 		y;
+		const element: HTMLFormElement = form.element;
+		element;
+		// @ts-expect-error
+		form.enhance(() => {});
 	});
+
+	const element: HTMLFormElement | null = f.element;
+	element;
 
 	const f2 = form(
 		null as any as StandardSchemaV1<{ a: string; nested: { prop: string } }>,
