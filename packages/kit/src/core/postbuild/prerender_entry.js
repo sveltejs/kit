@@ -1,12 +1,10 @@
 /** @import { SSRManifest } from '@sveltejs/kit' */
 /** @import { InternalServer, RemotePrerenderInternals } from 'types' */
 /** @import { SerialisedResponse } from '../../exports/vite/types.js' */
-import { get_hooks, set_building, set_prerendering } from '__SERVER__/internal.js';
-import { get } from '__sveltekit/manifest-data';
-import { stringify_remote_arg } from '../../runtime/shared.js';
+import { get } from '__sveltekit/ipc';
 import { Server as KitServer } from '__SERVER__/index.js';
-
-const app_path = `${__SVELTEKIT_PATHS_BASE__}/${__SVELTEKIT_APP_DIR__}`;
+import { get_hooks, set_building, set_prerendering } from '__SERVER__/internal.js';
+import { stringify_remote_arg } from '../../runtime/shared.js';
 
 set_building();
 set_prerendering();
@@ -59,7 +57,7 @@ export class Server extends KitServer {
 
 		const url = new URL(request.url);
 
-		if (url.pathname === `${app_path}/prerender-functions`) {
+		if (url.pathname === `/${this.#manifest.appPath}/prerender-functions`) {
 			const names = url.searchParams.getAll('name');
 			const pathnames = await get_prerender_function_paths(this.#manifest, names);
 			return Response.json(pathnames);
@@ -80,14 +78,16 @@ export class Server extends KitServer {
 				body: value.body
 			});
 		}
+
 		// TODO: figure out why import.meta.hot.send doesn't trigger .hot.on from vite side
-		import.meta.hot?.send('sveltekit:prerender-dependencies', Object.fromEntries(dependencies));
+		import.meta.hot?.send(
+			`sveltekit:prerender-dependencies-${url.pathname}`,
+			Object.fromEntries(dependencies)
+		);
 
 		return response;
 	}
 }
-
-const remote_prefix = `${app_path}/remote/`;
 
 /**
  * @param {SSRManifest} manifest
@@ -107,6 +107,8 @@ async function get_prerender_function_paths(manifest, names) {
 			}
 		}
 	}
+
+	const remote_prefix = `/${manifest.appPath}/remote/`;
 
 	/** @type {string[]} */
 	const pathnames = [];

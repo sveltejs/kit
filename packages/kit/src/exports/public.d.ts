@@ -1602,7 +1602,9 @@ export interface ServerInitOptions {
  * Required to instantiate `Server` with project specific information
  */
 export interface SSRManifest {
+	/** The directory where SvelteKit keeps its stuff, including static assets (such as JS and CSS) and internally-used routes. */
 	appDir: string;
+	/** The `base` and `appDir` settings combined without a leading slash. */
 	appPath: string;
 	base: string;
 	/** Static files from `kit.config.files.assets` and the service worker (if any). */

@@ -1,11 +1,9 @@
 /** @import { Logger, PrerenderDependency, Prerendered, PrerenderMap, ServerMetadata, ValidatedConfig } from 'types' */
-/** @import { ResolvedConfig } from 'vite' */
+/** @import { PluginOption } from 'vite' */
 /** @import { SerialisedResponse } from '../../exports/vite/types.js' */
 import { existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import * as devalue from 'devalue';
-import { prefixRegex } from 'rolldown/filter';
-import { createServer } from 'vite';
 import { mkdirp, walk } from '../../utils/filesystem.js';
 import { noop } from '../../utils/functions.js';
 import { decode_uri, is_root_relative, resolve } from '../../utils/url.js';
@@ -17,6 +15,7 @@ import { crawl } from './crawl.js';
 import generate_fallback from './fallback.js';
 import { posixify } from '../../utils/os.js';
 import { create_app_dir_matcher } from '../../exports/vite/dev/index.js';
+import { create_build_server } from '../../exports/vite/build/vite_server.js';
 
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#scrolling-to-a-fragment
 // "If fragment is the empty string, then return the special value top of the document."
@@ -28,7 +27,6 @@ const prerender_entry = import.meta.resolve('./prerender_entry.js');
 
 /**
  * @param {object} opts Arguments must be serialisable via the structured clone algorithm
- * @param {ResolvedConfig} opts.vite_config
  * @param {ValidatedConfig} opts.svelte_config
  * @param {string} opts.out
  * @param {string} opts.manifest_path
@@ -37,7 +35,6 @@ const prerender_entry = import.meta.resolve('./prerender_entry.js');
  * @param {string} opts.root
  */
 export default async function prerender({
-	vite_config,
 	svelte_config,
 	out,
 	manifest_path,
@@ -92,8 +89,7 @@ export default async function prerender({
 
 	if (svelte_config.kit.router.type === 'hash') {
 		const fallback = await generate_fallback({
-			vite_config,
-			origin: svelte_config.kit.prerender.origin,
+			svelte_config,
 			manifest_path,
 			out
 		});
@@ -241,11 +237,10 @@ export default async function prerender({
 			prerender_dependencies.resolve(deserialised);
 		};
 
-		// TODO: fix hot.on not working for workerd
-
-		vite.environments.ssr.hot.on('sveltekit:prerender-dependencies', listener);
+		const event = `sveltekit:prerender-dependencies-${encoded}`;
+		vite.environments.ssr.hot.on(event, listener);
 		const response = await fetch(`http://localhost:${port}${encoded}`);
-		vite.environments.ssr.hot.off('sveltekit:prerender-dependencies', listener);
+		vite.environments.ssr.hot.off(event, listener);
 
 		const encoded_id = response.headers.get('x-sveltekit-routeid');
 		const decoded_id = encoded_id && decode_uri(encoded_id);
@@ -482,91 +477,66 @@ export default async function prerender({
 		'/prerender-read'
 	);
 
-	const vite = await createServer({
-		configFile: vite_config.configFile,
-		command: 'serve',
-		plugins: [
-			{
-				name: 'vite-plugin-sveltekit-compile:prerender',
-				config(config) {
-					if (Array.isArray(config.resolve?.alias)) {
-						for (const alias of config.resolve.alias) {
-							if (alias.find !== '__SERVER__') continue;
+	/** @type {PluginOption} */
+	const plugin_prerender = {
+		name: 'vite-plugin-sveltekit-compile:prerender',
+		configureServer(vite) {
+			return () => {
+				vite.middlewares.use((req, res, next) => {
+					req.url = req.url?.replace(
+						new RegExp(escape_for_regexp(`^http://localhost:${port}`)),
+						svelte_config.kit.prerender.origin
+					);
+					req.headers.host = new URL(svelte_config.kit.prerender.origin).host;
 
-							alias.replacement = `${out}/server`;
-							break;
+					const base = `${vite.config.server.https ? 'https' : 'http'}://${
+						req.headers[':authority'] || req.headers.host
+					}`;
+
+					const url = new URL(base + req.url);
+					const decoded = decodeURI(url.pathname);
+
+					if (decoded.match(prerender_read_pathname)) {
+						const file = url.searchParams.get('file');
+
+						if (!file) {
+							res.writeHead(400);
+							res.end('Missing file query argument');
+							return;
 						}
+
+						/** @type {Buffer<ArrayBuffer>} */
+						let data;
+
+						// stuff we just wrote
+						const filepath = saved.get(file);
+						if (filepath) {
+							data = readFileSync(filepath);
+						} else if (file.startsWith(svelte_config.kit.appDir)) {
+							// Static assets emitted during build
+							data = readFileSync(`${out}/server/${file}`);
+						} else {
+							// stuff in `static`
+							data = readFileSync(join(svelte_config.kit.files.assets, file));
+						}
+
+						res.setHeader('content-type', 'application/octet-stream');
+						res.end(data);
+						return;
 					}
-				},
-				configureServer(vite) {
-					return () => {
-						vite.middlewares.use((req, res, next) => {
-							req.url = req.url?.replace(
-								new RegExp(escape_for_regexp(`^http://localhost:${port}`)),
-								svelte_config.kit.prerender.origin
-							);
 
-							const base = `${vite.config.server.https ? 'https' : 'http'}://${
-								req.headers[':authority'] || req.headers.host
-							}`;
+					next();
+				});
+			};
+		}
+	};
 
-							const url = new URL(base + req.url);
-							const decoded = decodeURI(url.pathname);
-
-							if (decoded.match(prerender_read_pathname)) {
-								const file = url.searchParams.get('file');
-
-								if (!file) {
-									res.writeHead(400);
-									res.end('Missing file query argument');
-									return;
-								}
-
-								/** @type {Buffer<ArrayBuffer>} */
-								let data;
-
-								// stuff we just wrote
-								const filepath = saved.get(file);
-								if (filepath) {
-									data = readFileSync(filepath);
-								} else if (file.startsWith(svelte_config.kit.appDir)) {
-									// Static assets emitted during build
-									data = readFileSync(`${out}/server/${file}`);
-								} else {
-									// stuff in `static`
-									data = readFileSync(join(svelte_config.kit.files.assets, file));
-								}
-
-								res.setHeader('content-type', 'application/octet-stream');
-								res.end(data);
-								return;
-							}
-
-							next();
-						});
-					};
-				},
-				applyToEnvironment(environment) {
-					return environment.config.consumer === 'server';
-				},
-				resolveId: {
-					order: 'pre',
-					filter: {
-						id: [prefixRegex('sveltekit:')]
-					},
-					handler(id) {
-						if (id === 'sveltekit:server-manifest') {
-							return manifest_path;
-						}
-
-						// substitute the Server class with our prerender code instead
-						if (id === 'sveltekit:server') {
-							return prerender_entry;
-						}
-					}
-				}
-			}
-		]
+	const vite = await create_build_server({
+		svelte_config,
+		out,
+		manifest_path,
+		server_path: prerender_entry,
+		vite_plugins: [plugin_prerender]
 	});
 
 	// only start the app server after checking if prerendering is needed so

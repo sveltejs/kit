@@ -1,7 +1,8 @@
 /** @import { SSRManifest } from '@sveltejs/kit' */
 import { server_assets } from '__sveltekit/server-assets';
 import { remotes } from '__sveltekit/remotes';
-import { manifest_data, mime_types, get } from '__sveltekit/manifest-data';
+import { manifest_data, mime_types } from '__sveltekit/manifest-data';
+import { get } from '__sveltekit/ipc';
 import { to_fs } from '../filesystem.js';
 import { compact } from '../../../utils/array.js';
 import { join } from '../../../utils/path.js';

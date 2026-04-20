@@ -1,8 +1,7 @@
 /** @import { Server as KitServer, SSRManifest } from '@sveltejs/kit' */
-/** @import { ServerMetadata } from 'types' */
+/** @import { ManifestData, ServerMetadata } from 'types' */
 /** @import { Manifest } from 'vite' */
-import { get, manifest_data } from '__sveltekit/manifest-data';
-import { remotes } from '__sveltekit/remotes';
+import { get } from '__sveltekit/ipc';
 import {
 	options,
 	set_manifest,
@@ -13,12 +12,12 @@ import {
 } from '__SERVER__/internal.js';
 import * as devalue from 'devalue';
 import { ENDPOINT_METHODS } from '../../constants.js';
-import { create_synchronous_read } from '../../runtime/server/utils.js';
 import { has_server_load, resolve_route } from '../../utils/routing.js';
 import { validate_server_exports } from '../../utils/exports.js';
 import { PageNodes } from '../../utils/page_nodes.js';
 import { check_feature } from '../../utils/features.js';
 import { filter_env } from '../../utils/env.js';
+import { create_synchronous_read } from '../../runtime/server/read.js';
 
 set_building();
 
@@ -65,13 +64,17 @@ export class Server {
 
 	/** @type {KitServer['respond']} */
 	async respond(request) {
-		/** @type {{ hash: boolean; server_manifest: Manifest; tracked_features: Record<string, string[]>; }} */
-		const { server_manifest, tracked_features } = await request.json();
+		/** @type {{ hash: boolean; server_manifest: Manifest; tracked_features: Record<string, string[]>; manifest_data: ManifestData; }} */
+		const { server_manifest, tracked_features, manifest_data, hash } = devalue.parse(
+			await request.text()
+		);
 
 		const metadata = await analyse({
 			server_manifest,
 			tracked_features,
-			manifest: this.manifest
+			manifest: this.manifest,
+			manifest_data,
+			hash
 		});
 
 		return new Response(devalue.stringify(metadata));
@@ -84,9 +87,11 @@ export class Server {
  * @param {Manifest} opts.server_manifest
  * @param {Record<string, string[]>} opts.tracked_features
  * @param {SSRManifest} opts.manifest
+ * @param {ManifestData} opts.manifest_data
+ * @param {boolean} opts.hash
  * @returns {Promise<ServerMetadata>}
  */
-async function analyse({ server_manifest, tracked_features, manifest }) {
+async function analyse({ server_manifest, tracked_features, manifest, manifest_data, hash }) {
 	/** @type {import('types').ServerMetadata} */
 	const metadata = {
 		nodes: [],
@@ -99,7 +104,7 @@ async function analyse({ server_manifest, tracked_features, manifest }) {
 
 	// analyse nodes
 	for (const node of nodes) {
-		if (__SVELTEKIT_HASH_ROUTING__ && node.universal) {
+		if (hash && node.universal) {
 			const options = Object.keys(node.universal).filter((o) => o !== 'load');
 			if (options.length > 0) {
 				throw new Error(
@@ -176,8 +181,7 @@ async function analyse({ server_manifest, tracked_features, manifest }) {
 	}
 
 	// analyse remotes
-	for (const remote of remotes) {
-		const loader = manifest._.remotes[remote.hash];
+	for (const [hash, loader] of Object.entries(manifest._.remotes)) {
 		const { default: functions } = await loader();
 
 		const exports = new Map();
@@ -192,11 +196,11 @@ async function analyse({ server_manifest, tracked_features, manifest }) {
 			});
 
 			if (type === 'prerender') {
-				metadata.remotes_with_prerender.add(remote.hash);
+				metadata.remotes_with_prerender.add(hash);
 			}
 		}
 
-		metadata.remotes.set(remote.hash, exports);
+		metadata.remotes.set(hash, exports);
 	}
 
 	return metadata;

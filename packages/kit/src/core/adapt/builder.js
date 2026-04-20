@@ -118,8 +118,7 @@ export function create_builder({
 			const manifest_path = `${config.kit.outDir}/output/server/manifest-full.js`;
 
 			const fallback = await generate_fallback({
-				vite_config,
-				origin: config.kit.prerender.origin,
+				svelte_config: config,
 				manifest_path,
 				out
 			});

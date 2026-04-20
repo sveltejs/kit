@@ -1,6 +1,5 @@
 /** @import { Worker } from 'node:worker_threads' */
 /** @import { HotChannel, HotChannelClient, HotChannelListener, HotPayload } from 'vite' */
-
 /**
  * Messages sent over the worker thread IPC are wrapped in this envelope
  * to distinguish them from other messages on the same port.
@@ -72,6 +71,9 @@ export function create_worker_hot_channel(worker) {
 				worker.off('message', listener);
 				handler_to_worker_listener.delete(handler);
 			}
+		},
+		close() {
+			return worker.terminate();
 		}
 	};
 }
@@ -92,38 +94,43 @@ export async function dispatch_request(worker, request, remote_address) {
 
 	const body = request.body ? new Uint8Array(await request.arrayBuffer()) : null;
 
-	return new Promise((fulfil, reject) => {
-		/** @param {any} msg */
-		function handler(msg) {
-			if (msg?._channel !== RESPONSE_CHANNEL || msg.id !== id) return;
-			worker.off('message', handler);
+	const { promise, resolve, reject } = Promise.withResolvers();
 
-			if (msg.error) {
-				const error = new Error(msg.error.message);
-				error.stack = msg.error.stack;
-				reject(error);
-				return;
-			}
+	/** @param {any} msg */
+	function handler(msg) {
+		if (msg?._channel !== RESPONSE_CHANNEL || msg.id !== id) return;
 
-			const { status, statusText, headers } = msg.response;
-			fulfil(new Response(msg.response.body, { status, statusText, headers }));
+		if (msg.error) {
+			const error = new Error(msg.error.message);
+			error.stack = msg.error.stack;
+			reject(error);
+			return;
 		}
 
-		worker.on('message', handler);
+		const { status, statusText, headers } = msg.response;
+		resolve(new Response(msg.response.body, { status, statusText, headers }));
+	}
 
-		worker.postMessage(
-			{
-				_channel: REQUEST_CHANNEL,
-				id,
-				request: {
-					url: request.url,
-					method: request.method,
-					headers: Object.fromEntries(request.headers),
-					body
-				},
-				remote_address
+	worker.on('message', handler);
+
+	worker.postMessage(
+		{
+			_channel: REQUEST_CHANNEL,
+			id,
+			request: {
+				url: request.url,
+				method: request.method,
+				headers: Object.fromEntries(request.headers),
+				body
 			},
-			body ? [body.buffer] : []
-		);
-	});
+			remote_address
+		},
+		body ? [body.buffer] : []
+	);
+
+	const result = await promise;
+
+	worker.off('message', handler);
+
+	return result;
 }

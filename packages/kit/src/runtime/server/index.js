@@ -5,9 +5,10 @@ import { set_private_env, set_public_env } from '../shared-server.js';
 import { options, get_hooks } from '__SERVER__/internal.js';
 import { DEV } from 'esm-env';
 import { filter_env } from '../../utils/env.js';
-import { format_server_error, create_synchronous_read } from './utils.js';
+import { format_server_error } from './utils.js';
 import { set_read_implementation, set_manifest } from '__sveltekit/server';
 import { set_app } from './app.js';
+import { create_synchronous_read } from './read.js';
 
 /** @type {Promise<any>} */
 let init_promise;

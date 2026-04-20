@@ -191,11 +191,6 @@ export function dev(vite, vite_config, svelte_config, root, dev_environment) {
 		svelte_config.kit.appDir,
 		'/check-feature'
 	);
-	const read_pathname = create_app_dir_matcher(
-		svelte_config.kit.paths.base,
-		svelte_config.kit.appDir,
-		'/read'
-	);
 
 	return () => {
 		const serve_static_middleware = vite.middlewares.stack.find(
@@ -284,23 +279,6 @@ export function dev(vite, vite_config, svelte_config, root, dev_environment) {
 					return;
 				}
 
-				if (decoded.match(read_pathname)) {
-					const file = url.searchParams.get('file');
-					if (!file) {
-						res.writeHead(400);
-						res.end('Missing file query argument');
-						return;
-					}
-
-					const readable_stream = fs.createReadStream(
-						`${svelte_config.kit.outDir}/output/server/${file}`
-					);
-
-					res.writeHead(200);
-					readable_stream.pipe(res);
-					return;
-				}
-
 				if (decoded === svelte_config.kit.paths.base + '/service-worker.js') {
 					const resolved = resolve_entry(svelte_config.kit.files.serviceWorker);
 
@@ -377,7 +355,7 @@ export function dev(vite, vite_config, svelte_config, root, dev_environment) {
 /**
  * @param {import('connect').Server} server
  */
-function remove_static_middlewares(server) {
+export function remove_static_middlewares(server) {
 	const static_middlewares = ['viteServeStaticMiddleware', 'viteServePublicMiddleware'];
 	for (let i = server.stack.length - 1; i > 0; i--) {
 		// @ts-expect-error using internals
@@ -439,7 +417,7 @@ async function find_deps(vite, node, deps) {
  * @param {string} assets
  * @returns {boolean}
  */
-function has_correct_case(file, assets) {
+export function has_correct_case(file, assets) {
 	if (file === assets) return true;
 
 	const parent = path.dirname(file);
@@ -514,7 +492,7 @@ async function get_inline_css(vite, urls) {
  * @param {import('@sveltejs/kit').Adapter | undefined} adapter
  * @returns { { message: string } | void }
  */
-function check_feature(route_id, config, feature, adapter) {
+export function check_feature(route_id, config, feature, adapter) {
 	if (!adapter) return;
 
 	switch (feature) {

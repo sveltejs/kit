@@ -1,4 +1,4 @@
-import { get } from '__sveltekit/manifest-data';
+import { get } from '__sveltekit/ipc';
 
 /**
  * @param {string} route_id

@@ -1,4 +1,6 @@
-import { copyFileSync, existsSync, writeFileSync } from 'node:fs';
+/** @import { WorkerConfig } from '@cloudflare/vite-plugin' */
+/** @import { ResolvedConfig } from 'vite' */
+import { copyFileSync, existsSync, writeFileSync, symlinkSync } from 'node:fs';
 import path from 'node:path';
 import { cloudflare } from '@cloudflare/vite-plugin';
 import { DEV } from 'esm-env';
@@ -9,7 +11,7 @@ const default_worker = path.join(import.meta.dirname, 'src/worker.js');
 
 /**
  * Resolved after the Cloudflare Vite plugin `config` hook runs
- * @type {import('@cloudflare/vite-plugin').WorkerConfig}
+ * @type {WorkerConfig}
  */
 let wrangler_config;
 
@@ -161,6 +163,12 @@ export default function (options = {}) {
 								external: true
 							};
 						}
+					},
+					writeBundle(output) {
+						// manifest.js doesn't exist until the adapter.adapt() method runs,
+						// so we need to symlink the full manifest for the sake of the build
+						// analysis and prerender phases
+						symlinkSync(`${output.dir}/manifest-full.js`, `${output.dir}/manifest.js`);
 					}
 				},
 				cloudflare({
@@ -232,7 +240,7 @@ export default function (options = {}) {
 						// noop to prevent Cloudflare's fallback `buildApp` hook from
 						// running so that it doesn't build the client and server again
 						if (config.builder?.buildApp) {
-							config.builder.buildApp = async () => {};
+							config.builder.buildApp ??= async () => {};
 						}
 
 						config.environments ??= {};
@@ -249,13 +257,13 @@ export default function (options = {}) {
 							config.environments.ssr.resolve?.conditions?.splice(browser_condition, 1);
 						}
 
-						// ensure we correctly reference the build output that exports `Server`
-						// rather than the worker entry at `output/server/index.js`
+						// ensure we correctly reference the build output file that exports
+						// `Server` rather than the Cloudflare worker entry `output/server/index.js`
 						config.resolve ??= {};
 						config.resolve.alias ??= [];
 						if (Array.isArray(config.resolve.alias)) {
-							config.resolve.alias.push({
-								find: '__SVELTEKIT__/index.js',
+							config.resolve.alias.unshift({
+								find: '__SERVER__/index.js',
 								replacement: `${config.environments.ssr.build?.outDir}/server.js`
 							});
 						}

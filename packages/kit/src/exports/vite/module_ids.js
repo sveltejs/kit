@@ -14,6 +14,7 @@ export const sveltekit_manifest_data = '\0virtual:__sveltekit/manifest-data';
 export const sveltekit_server_assets = '\0virtual:__sveltekit/server-assets';
 export const sveltekit_remotes = '\0virtual:__sveltekit/remotes';
 export const sveltekit_traced = '\0virtual:__sveltekit/traced';
+export const sveltekit_ipc = '\0virtual:__sveltekit/ipc';
 export const sveltekit_env = '\0virtual:sveltekit:env';
 
 export const app_server = posixify(

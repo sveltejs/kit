@@ -35,7 +35,6 @@ declare module '__sveltekit/manifest-data' {
 	export const env: Record<string, string>;
 	export const mime_types: Record<string, string>;
 	export const manifest_data: ManifestData;
-	export function get(pathname: string): Promise<Response>;
 }
 
 /** Used to read the filesystem during development from an environment without `node:fs` */
@@ -47,4 +46,8 @@ declare module '__sveltekit/server-assets' {
 /** Used to identify remote functions processed by Vite from any environment */
 declare module '__sveltekit/remotes' {
 	export const remotes: Array<{ hash: string; file: string }>;
+}
+
+declare module '__sveltekit/ipc' {
+	export function get(pathname: string): Promise<Response>;
 }

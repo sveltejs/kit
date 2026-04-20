@@ -1,72 +1,46 @@
-/** @import { ResolvedConfig } from 'vite' */
-import { prefixRegex } from 'rolldown/filter';
-import { createServer } from 'vite';
+/** @import { ValidatedConfig } from 'types' */
+/** @import { PluginOption } from 'vite' */
 import { escape_for_regexp } from '../../utils/escape.js';
+import { create_build_server } from '../../exports/vite/build/vite_server.js';
 
 const prerender_entry = import.meta.resolve('./prerender_entry.js');
 
 /**
  * @param {object} opts Arguments must be serialisable via the structured clone algorithm
- * @param {ResolvedConfig} opts.vite_config
- * @param {string} opts.origin
+ * @param {ValidatedConfig} opts.svelte_config
  * @param {string} opts.manifest_path
  * @param {string} opts.out
  */
-export default async function generate_fallback({ vite_config, origin, manifest_path, out }) {
-	const vite = await createServer({
-		configFile: vite_config.configFile,
-		command: 'serve',
-		plugins: [
-			{
-				name: 'vite-plugin-sveltekit-compile:generate-fallback',
-				config(config) {
-					if (Array.isArray(config.resolve?.alias)) {
-						for (const alias of config.resolve.alias) {
-							if (alias.find !== '__SERVER__') continue;
+export default async function generate_fallback({ svelte_config, manifest_path, out }) {
+	/** @type {PluginOption} */
+	const plugin_generate_fallback = {
+		name: 'vite-plugin-sveltekit-compile:generate-fallback',
+		configureServer(vite) {
+			return () => {
+				vite.middlewares.use((req, _, next) => {
+					req.url = req.url?.replace(
+						new RegExp(escape_for_regexp(`^http://localhost:${port}`)),
+						svelte_config.kit.prerender.origin
+					);
+					req.headers.host = new URL(svelte_config.kit.prerender.origin).host;
 
-							alias.replacement = `${out}/server`;
-							break;
-						}
-					}
-				},
-				configureServer(vite) {
-					return () => {
-						vite.middlewares.use((req, _, next) => {
-							console.log({ req_url: req.url, req_original_url: req.originalUrl });
+					next();
+				});
+			};
+		}
+	};
 
-							req.url = req.url?.replace(
-								new RegExp(escape_for_regexp(`^http://localhost:${port}`)),
-								origin
-							);
-
-							next();
-						});
-					};
-				},
-				applyToEnvironment(environment) {
-					return environment.config.consumer === 'server';
-				},
-				resolveId: {
-					order: 'pre',
-					filter: {
-						id: [prefixRegex('sveltekit:')]
-					},
-					handler(id) {
-						if (id === 'sveltekit:server-manifest') {
-							return manifest_path;
-						}
-
-						// substitute the Server class with our prerender code instead
-						if (id === 'sveltekit:server') {
-							return prerender_entry;
-						}
-					}
-				}
-			}
-		]
+	const vite = await create_build_server({
+		svelte_config,
+		out,
+		manifest_path,
+		server_path: prerender_entry,
+		vite_plugins: [plugin_generate_fallback]
 	});
 
-	await vite.listen();
+	if (!vite.httpServer?.listening) {
+		await vite.listen();
+	}
 
 	const address = vite.httpServer?.address();
 	const port = typeof address === 'string' ? Number(address.split(':').at(-1)) : address?.port;

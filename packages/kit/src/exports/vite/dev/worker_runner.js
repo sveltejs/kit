@@ -4,23 +4,32 @@ import { ModuleRunner, ESModulesEvaluator, createNodeImportMeta } from 'vite/mod
 import { CHANNEL, REQUEST_CHANNEL, RESPONSE_CHANNEL } from './worker_environment.js';
 
 if (!parentPort) {
-	throw new Error('This file must be run as a worker thread');
+	throw new Error('src/exports/vite/dev/worker_runner.js must be run as a worker thread');
 }
 
 const port = parentPort;
 
+let message_handler;
+let close_handler;
+
 /** @type {ModuleRunnerTransport} */
 const transport = {
 	connect({ onMessage, onDisconnection }) {
-		port.on('message', (msg) => {
+		message_handler = (msg) => {
 			if (msg?._channel === CHANNEL) {
 				onMessage(msg.payload);
 			}
-		});
-		port.on('close', onDisconnection);
+		};
+		port.on('message', message_handler);
+		close_handler = onDisconnection;
+		port.on('close', close_handler);
 	},
 	send(data) {
 		port.postMessage({ _channel: CHANNEL, payload: data });
+	},
+	disconnect() {
+		port.off('message', message_handler);
+		port.off('close', close_handler);
 	}
 };
 
@@ -33,8 +42,8 @@ const runner = new ModuleRunner(
 );
 
 /**
- * @typedef {object} MyMessage
- * @property {'__sveltekit_request__'} _channel
+ * @typedef {object} Message
+ * @property {string} _channel
  * @property {number} id
  * @property {Request} request
  * @property {string} remote_address
@@ -42,7 +51,7 @@ const runner = new ModuleRunner(
 
 port.on(
 	'message',
-	/** @param {MyMessage} msg */
+	/** @param {Message} msg */
 	async (msg) => {
 		if (msg?._channel !== REQUEST_CHANNEL) return;
 
@@ -53,11 +62,11 @@ port.on(
 				method: data.method,
 				headers: data.headers,
 				body: data.body,
-				// @ts-ignore duplex is needed for request bodies in Node.js
+				// @ts-expect-error duplex is needed for request bodies in Node.js
 				duplex: data.body ? 'half' : undefined
 			});
 
-			/** @type {import('./entry.js')} */
+			/** @type {import('./ssr_entry.js')} */
 			const { respond } = await runner.import('__sveltekit/dev-server-entry');
 			const response = await respond(request, remote_address);
 
