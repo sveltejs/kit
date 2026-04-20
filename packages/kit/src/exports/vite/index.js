@@ -659,11 +659,6 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 							throw new Error('dev_environment was not initialised. But this should never happen');
 						}
 
-						// we need to start listening to get the port
-						if (!dev_environment.vite.httpServer?.listening) {
-							dev_environment.vite.httpServer?.listen();
-						}
-
 						const address = dev_environment.vite.httpServer?.address();
 						const port =
 							typeof address === 'string' ? Number(address.split(':').at(-1)) : address?.port;

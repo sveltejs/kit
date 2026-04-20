@@ -36,9 +36,7 @@ export default async function analyse({
 		server_path: analyse_entry
 	});
 
-	if (!vite.httpServer?.listening) {
-		await vite.listen();
-	}
+	await vite.listen();
 
 	const address = vite.httpServer?.address();
 	const port = typeof address === 'string' ? Number(address.split(':').at(-1)) : address?.port;

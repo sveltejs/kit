@@ -11,6 +11,7 @@ import {
 	check_feature,
 	create_app_dir_matcher,
 	has_correct_case,
+	invalidate_module,
 	remove_static_middlewares
 } from '../dev/index.js';
 import { getRequest, setResponse } from '@sveltejs/kit/node';
@@ -128,11 +129,6 @@ export async function create_build_server({
 				id: exactRegex(sveltekit_ipc)
 			},
 			handler() {
-				// we need to start listening to get the port
-				if (!dev_server.httpServer?.listening) {
-					dev_server.httpServer?.listen();
-				}
-
 				const address = dev_server.httpServer?.address();
 				const port =
 					typeof address === 'string' ? Number(address.split(':').at(-1)) : address?.port;
@@ -244,6 +240,9 @@ export async function create_build_server({
 			);
 
 			return () => {
+				// ensure the server port is up-to-date
+				invalidate_module(vite, sveltekit_ipc);
+
 				vite.middlewares.use((req, res, next) => {
 					// Vite's base middleware strips out the base path. Restore it
 					req.url = req.originalUrl;

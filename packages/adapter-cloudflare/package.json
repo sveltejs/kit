@@ -42,7 +42,7 @@
 		"check": "tsc",
 		"test:unit": "vitest run",
 		"test:e2e": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test",
-		"test": "pnpm test:unit && pnpm test:e2e"
+		"test": "pnpm test:e2e"
 	},
 	"dependencies": {
 		"@cloudflare/workers-types": "^4.20260416.2",

@@ -13,7 +13,7 @@ import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import * as sync from '../../../core/sync/sync.js';
 import { is_chrome_devtools_request, not_found } from '../utils.js';
 import { escape_for_regexp, escape_html } from '../../../utils/escape.js';
-import { sveltekit_manifest_data } from '../module_ids.js';
+import { sveltekit_ipc, sveltekit_manifest_data } from '../module_ids.js';
 import { to_fs } from '../filesystem.js';
 
 // vite-specifc queries that we should skip handling for css urls
@@ -193,6 +193,9 @@ export function dev(vite, vite_config, svelte_config, root, dev_environment) {
 	);
 
 	return () => {
+		// ensure it has the correct server port
+		invalidate_module(vite, sveltekit_ipc);
+
 		const serve_static_middleware = vite.middlewares.stack.find(
 			(middleware) =>
 				/** @type {Function} */ (middleware.handle).name === 'viteServeStaticMiddleware'

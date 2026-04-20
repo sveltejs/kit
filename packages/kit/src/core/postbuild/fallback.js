@@ -38,9 +38,7 @@ export default async function generate_fallback({ svelte_config, manifest_path, 
 		vite_plugins: [plugin_generate_fallback]
 	});
 
-	if (!vite.httpServer?.listening) {
-		await vite.listen();
-	}
+	await vite.listen();
 
 	const address = vite.httpServer?.address();
 	const port = typeof address === 'string' ? Number(address.split(':').at(-1)) : address?.port;

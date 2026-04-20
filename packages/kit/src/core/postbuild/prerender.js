@@ -535,9 +535,7 @@ export default async function prerender({ svelte_config, out, manifest_path, met
 
 	// only start the app server after checking if prerendering is needed so
 	// that we don't run the user's `init` hook unnecessarily
-	if (!vite.httpServer?.listening) {
-		await vite.listen();
-	}
+	await vite.listen();
 
 	const address = vite.httpServer?.address();
 	const port = typeof address === 'string' ? Number(address.split(':').at(-1)) : address?.port;
