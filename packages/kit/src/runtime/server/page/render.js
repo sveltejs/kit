@@ -267,25 +267,25 @@ export async function render_response({
 
 			paths.reset(); // just in case `options.root.render(...)` failed
 		}
-
-		for (const { node } of branch) {
-			for (const url of node.imports) modulepreloads.add(url);
-			for (const url of node.stylesheets) stylesheets.add(url);
-			for (const url of node.fonts) fonts.add(url);
-
-			if (node.inline_styles && !client.inline) {
-				Object.entries(await node.inline_styles()).forEach(([filename, css]) => {
-					if (typeof css === 'string') {
-						inline_styles.set(filename, css);
-						return;
-					}
-
-					inline_styles.set(filename, css(`${assets}/${paths.app_dir}/immutable/assets`, assets));
-				});
-			}
-		}
 	} else {
 		rendered = { head: '', html: '', css: { code: '', map: null }, hashes: { script: [] } };
+	}
+
+	for (const { node } of branch) {
+		for (const url of node.imports) modulepreloads.add(url);
+		for (const url of node.stylesheets) stylesheets.add(url);
+		for (const url of node.fonts) fonts.add(url);
+
+		if (node.inline_styles && !client.inline) {
+			Object.entries(await node.inline_styles()).forEach(([filename, css]) => {
+				if (typeof css === 'string') {
+					inline_styles.set(filename, css);
+					return;
+				}
+
+				inline_styles.set(filename, css(`${assets}/${paths.app_dir}/immutable/assets`, assets));
+			});
+		}
 	}
 
 	const head = new Head(rendered.head, !!state.prerendering);

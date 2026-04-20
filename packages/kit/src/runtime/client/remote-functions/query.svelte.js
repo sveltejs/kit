@@ -500,53 +500,24 @@ class QueryProxy {
 		};
 	}
 
-	#get_cached_query() {
-		// TODO iterate on error messages
-		if (!this.#tracking) {
-			throw new Error(
-				'This query was not created in a reactive context and is limited to calling `.run`, `.refresh`, and `.set`.'
-			);
-		}
-
-		if (!this.#active) {
-			throw new Error(
-				'This query instance is no longer active and can no longer be used for reactive state access. ' +
-					'This typically means you created the query in a tracking context and stashed it somewhere outside of a tracking context.'
-			);
-		}
-
-		const cached = query_map.get(this.#id)?.get(this.#payload);
-
-		if (!cached) {
-			// The only case where `this.#active` can be `true` is when we've added an entry to `query_map`, and the
-			// only way that entry can get removed is if this instance (and all others) have been deactivated.
-			// So if we get here, someone (us, check git blame and point fingers) did `entry.count -= 1` improperly.
-			throw new Error(
-				'No cached query found. This should be impossible. Please file a bug report.'
-			);
-		}
-
-		return cached.resource;
-	}
-
 	#safe_get_cached_query() {
 		return query_map.get(this.#id)?.get(this.#payload)?.resource;
 	}
 
 	get current() {
-		return this.#get_cached_query().current;
+		return this.#safe_get_cached_query()?.current;
 	}
 
 	get error() {
-		return this.#get_cached_query().error;
+		return this.#safe_get_cached_query()?.error;
 	}
 
 	get loading() {
-		return this.#get_cached_query().loading;
+		return this.#safe_get_cached_query()?.loading ?? false;
 	}
 
 	get ready() {
-		return this.#get_cached_query().ready;
+		return this.#safe_get_cached_query()?.ready ?? false;
 	}
 
 	run() {
@@ -586,6 +557,35 @@ class QueryProxy {
 		Object.defineProperty(release, QUERY_OVERRIDE_KEY, { value: override[QUERY_OVERRIDE_KEY] });
 
 		return release;
+	}
+
+	#get_cached_query() {
+		// TODO iterate on error messages
+		if (!this.#tracking) {
+			throw new Error(
+				'This query was not created in a reactive context and cannot be awaited. Use `.run()` to execute the query instead.'
+			);
+		}
+
+		if (!this.#active) {
+			throw new Error(
+				'This query instance is no longer active and can no longer be awaited. ' +
+					'This typically means you created the query in a tracking context and stashed it somewhere outside of a tracking context.'
+			);
+		}
+
+		const cached = query_map.get(this.#id)?.get(this.#payload);
+
+		if (!cached) {
+			// The only case where `this.#active` can be `true` is when we've added an entry to `query_map`, and the
+			// only way that entry can get removed is if this instance (and all others) have been deactivated.
+			// So if we get here, someone (us, check git blame and point fingers) did `entry.count -= 1` improperly.
+			throw new Error(
+				'No cached query found. This should be impossible. Please file a bug report.'
+			);
+		}
+
+		return cached.resource;
 	}
 
 	/** @type {Query<T>['then']} */

@@ -10,6 +10,14 @@ import {
 import buffer from 'node:buffer';
 import { text_encoder } from './utils.js';
 
+const POLLUTION_ATTACKS = [
+	'__proto__.polluted',
+	'constructor.polluted',
+	'prototype.polluted',
+	'user.__proto__.polluted',
+	'user.constructor.polluted'
+];
+
 describe('split_path', () => {
 	const good = [
 		{
@@ -83,21 +91,11 @@ describe('convert_formdata', () => {
 		});
 	});
 
-	const pollution_attacks = [
-		'__proto__.polluted',
-		'constructor.polluted',
-		'prototype.polluted',
-		'user.__proto__.polluted',
-		'user.constructor.polluted'
-	];
-
-	for (const attack of pollution_attacks) {
-		test(`prevents prototype pollution: ${attack}`, () => {
-			const data = new FormData();
-			data.append(attack, 'bad');
-			expect(() => convert_formdata(data)).toThrow(/Invalid key "/);
-		});
-	}
+	test.each(POLLUTION_ATTACKS)('prevents prototype pollution: %s', (attack) => {
+		const data = new FormData();
+		data.append(attack, 'bad');
+		expect(() => convert_formdata(data)).toThrow(/Invalid key "/);
+	});
 });
 
 describe('binary form serializer', () => {
@@ -764,5 +762,16 @@ describe('deep_set', () => {
 		expect(target.toString.property).toBe('hello');
 		// @ts-ignore
 		expect(Object.prototype.toString.property).toBeUndefined();
+	});
+
+	test.each(POLLUTION_ATTACKS)('avoids prototype injection', (attack) => {
+		const target = {};
+		expect(() => deep_set(target, attack.split('.'), 'bad')).toThrow(/Invalid key/);
+	});
+
+	test.each([null, undefined])('creates nested object when intermediate value is %s', (value) => {
+		const target = { nested: value };
+		deep_set(target, ['nested', 'name'], 'hello');
+		expect(target).toEqual({ nested: { name: 'hello' } });
 	});
 });
