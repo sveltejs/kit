@@ -555,6 +555,16 @@ test.describe('client error boundaries', () => {
 		// The nested layout should still be visible
 		await expect(page.locator('#nested-layout')).toBeVisible();
 	});
+	test('redirecting from form clears result', async ({ page }) => {
+		await page.goto('/remote/form/reset-on-redirect');
+
+		const result = page.locator('#result');
+
+		await page.locator('#return').click();
+		await expect(result).toHaveText('hello world');
+		await page.locator('#redirect').click();
+		await expect(result).not.toHaveText('hello world');
+	});
 });
 
 test.describe('fork', () => {
