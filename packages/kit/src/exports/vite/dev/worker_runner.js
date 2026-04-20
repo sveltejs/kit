@@ -9,7 +9,9 @@ if (!parentPort) {
 
 const port = parentPort;
 
+/** @type {(value: any) => void} */
 let message_handler;
+/** @type {(ev: Event) => void} */
 let close_handler;
 
 /** @type {ModuleRunnerTransport} */
