@@ -1,5 +1,5 @@
 /** @import { ValidatedConfig } from 'types' */
-/** @import { PluginOption, ViteDevServer } from 'vite' */
+/** @import { Connect, PluginOption, ViteDevServer } from 'vite' */
 import fs from 'node:fs';
 import path, { basename } from 'node:path';
 import { createServer, isFetchableDevEnvironment } from 'vite';
@@ -36,73 +36,8 @@ export async function create_build_server({
 	server_path,
 	vite_plugins
 }) {
-	/** @type {PluginOption} */
-	const plugin_node_environment = {
-		name: 'vite-plugin-sveltekit-compile:node-environment',
-		config() {
-			return {
-				environments: {
-					ssr: {
-						dev: {
-							createEnvironment: createNodeWorkerEnvironment
-						}
-					}
-				}
-			};
-		},
-		configureServer(vite) {
-			const serve_static_middleware = vite.middlewares.stack.find(
-				(middleware) =>
-					/** @type {Function} */ (middleware.handle).name === 'viteServeStaticMiddleware'
-			);
-
-			return () => {
-				vite.middlewares.use(async (req, res, next) => {
-					// Vite's base middleware strips out the base path. Restore it
-					req.url = req.originalUrl;
-
-					const base = `${vite.config.server.https ? 'https' : 'http'}://${
-						req.headers[':authority'] || req.headers.host
-					}`;
-
-					// fallback to our own fetch handler if the adapter doesn't provide one
-					if (!isFetchableDevEnvironment(vite.environments.ssr)) {
-						throw new Error(
-							'The Vite configured dev SSR environment must be a FetchableDevEnvironment'
-						);
-					}
-
-					const request = await getRequest({
-						base,
-						request: req
-					});
-					const response = await vite.environments.ssr.dispatchFetch(request);
-
-					if (response.status === 404) {
-						// @ts-expect-error
-						serve_static_middleware?.handle(req, res, () => {
-							void setResponse(res, response);
-						});
-					} else {
-						void setResponse(res, response);
-					}
-
-					next();
-				});
-			};
-		},
-		applyToEnvironment(environment) {
-			return environment.config.consumer === 'server';
-		},
-		resolveId: {
-			filter: {
-				id: exactRegex('__sveltekit/dev-server-entry')
-			},
-			handler() {
-				return path.join(import.meta.dirname, '../dev/ssr_entry.js');
-			}
-		}
-	};
+	/** @type {Connect.ServerStackItem | undefined} */
+	let serve_static_middleware;
 
 	/** @type {ViteDevServer} */
 	let dev_server;
@@ -223,10 +158,6 @@ export async function create_build_server({
 				next();
 			});
 
-			// Vite will give a 403 on URLs like /test, /static, and /package.json preventing us from
-			// serving routes with those names. See https://github.com/vitejs/vite/issues/7363
-			remove_static_middlewares(vite.middlewares);
-
 			const read_pathname = create_app_dir_matcher(
 				svelte_config.kit.paths.base,
 				svelte_config.kit.appDir,
@@ -240,6 +171,15 @@ export async function create_build_server({
 			);
 
 			return () => {
+				serve_static_middleware = vite.middlewares.stack.find(
+					(middleware) =>
+						/** @type {Function} */ (middleware.handle).name === 'viteServeStaticMiddleware'
+				);
+
+				// Vite will give a 403 on URLs like /test, /static, and /package.json preventing us from
+				// serving routes with those names. See https://github.com/vitejs/vite/issues/7363
+				remove_static_middlewares(vite.middlewares);
+
 				// ensure the server port is up-to-date
 				invalidate_module(vite, sveltekit_ipc);
 
@@ -335,12 +275,74 @@ export async function create_build_server({
 	};
 
 	/** @type {PluginOption} */
+	const plugin_node_environment = {
+		name: 'vite-plugin-sveltekit-compile:node-environment',
+		config() {
+			return {
+				environments: {
+					ssr: {
+						dev: {
+							createEnvironment: createNodeWorkerEnvironment
+						}
+					}
+				}
+			};
+		},
+		configureServer(vite) {
+			return () => {
+				vite.middlewares.use(async (req, res, next) => {
+					// Vite's base middleware strips out the base path. Restore it
+					req.url = req.originalUrl;
+
+					const base = `${vite.config.server.https ? 'https' : 'http'}://${
+						req.headers[':authority'] || req.headers.host
+					}`;
+
+					// fallback to our own fetch handler if the adapter doesn't provide one
+					if (!isFetchableDevEnvironment(vite.environments.ssr)) {
+						throw new Error(
+							'The Vite configured dev SSR environment must be a FetchableDevEnvironment'
+						);
+					}
+
+					const request = await getRequest({
+						base,
+						request: req
+					});
+					const response = await vite.environments.ssr.dispatchFetch(request);
+
+					if (response.status === 404) {
+						// @ts-expect-error
+						serve_static_middleware?.handle(req, res, () => {
+							void setResponse(res, response);
+						});
+					} else {
+						void setResponse(res, response);
+					}
+
+					next();
+				});
+			};
+		},
+		applyToEnvironment(environment) {
+			return environment.config.consumer === 'server';
+		},
+		resolveId: {
+			filter: {
+				id: exactRegex('__sveltekit/dev-server-entry')
+			},
+			handler() {
+				return path.join(import.meta.dirname, '../dev/ssr_entry.js');
+			}
+		}
+	};
+
+	/** @type {PluginOption} */
 	const plugins = [
 		vite_plugins,
-		svelte_config.kit.adapter?.vite?.plugins ? undefined : plugin_node_environment,
 		plugin_ipc,
 		plugin_server,
-		svelte_config.kit.adapter?.vite?.plugins
+		svelte_config.kit.adapter?.vite?.plugins ?? plugin_node_environment
 	].filter(Boolean);
 
 	return createServer({
