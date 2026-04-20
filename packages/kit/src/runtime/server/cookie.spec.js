@@ -191,6 +191,14 @@ describe.skipIf(process.env.NODE_ENV !== 'production')('cookies in prod', () => 
 		]);
 	});
 
+	test('getAll excludes cookies deleted during the current event', () => {
+		const { cookies } = cookies_setup();
+
+		cookies.delete('a', { path: '/' });
+
+		expect(cookies.getAll()).toEqual([]);
+	});
+
 	test("set_internal isn't affected by defaults", () => {
 		const { cookies, new_cookies, set_internal } = cookies_setup({
 			href: 'https://example.com/a/b/c'

@@ -139,7 +139,11 @@ export function get_cookies(request, url) {
 
 			// Add the most specific cookies to the result
 			for (const c of lookup.values()) {
-				cookies[c.name] = c.value;
+				if (c.options.maxAge === 0) {
+					delete cookies[c.name];
+				} else {
+					cookies[c.name] = c.value;
+				}
 			}
 
 			return Object.entries(cookies).map(([name, value]) => ({ name, value }));
