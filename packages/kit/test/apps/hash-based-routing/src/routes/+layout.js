@@ -1,3 +1,4 @@
+/** @type {import('./$types').LayoutLoad} */
 export function load({ params, route, url }) {
 	return {
 		params,

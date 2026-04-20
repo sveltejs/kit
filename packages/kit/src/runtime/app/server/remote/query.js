@@ -1,9 +1,10 @@
 /** @import { RemoteQuery, RemoteQueryFunction } from '@sveltejs/kit' */
-/** @import { RemoteInfo, MaybePromise } from 'types' */
+/** @import { RemoteInternals, MaybePromise, RequestState, RemoteQueryBatchInternals, RemoteQueryInternals } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 import { get_request_store } from '@sveltejs/kit/internal/server';
-import { create_remote_key, stringify_remote_arg } from '../../../shared.js';
+import { create_remote_key, stringify, stringify_remote_arg } from '../../../shared.js';
 import { prerendering } from '__sveltekit/environment';
+import { noop } from '../../../../utils/functions.js';
 import { create_validator, get_cache, get_response, run_remote_function } from './shared.js';
 import { handle_error_and_jsonify } from '../../../server/utils.js';
 import { HttpError, SvelteKitError } from '@sveltejs/kit/internal';
@@ -61,10 +62,10 @@ export function query(validate_or_fn, maybe_fn) {
 	/** @type {(arg?: any) => MaybePromise<Input>} */
 	const validate = create_validator(validate_or_fn, maybe_fn);
 
-	/** @type {RemoteInfo} */
-	const __ = { type: 'query', id: '', name: '' };
+	/** @type {RemoteQueryInternals} */
+	const __ = { type: 'query', id: '', name: '', validate };
 
-	/** @type {RemoteQueryFunction<Input, Output> & { __: RemoteInfo }} */
+	/** @type {RemoteQueryFunction<Input, Output> & { __: RemoteQueryInternals }} */
 	const wrapper = (arg) => {
 		if (prerendering) {
 			throw new Error(
@@ -73,34 +74,44 @@ export function query(validate_or_fn, maybe_fn) {
 		}
 
 		const { event, state } = get_request_store();
+		// if the user got this argument from `requested(query)`, it will have already passed validation
+		const is_validated = is_validated_argument(__, state, arg);
 
-		const get_remote_function_result = () =>
-			run_remote_function(event, state, false, () => validate(arg), fn);
-
-		/** @type {Promise<any> & Partial<RemoteQuery<any>>} */
-		const promise = get_response(__, arg, state, get_remote_function_result);
-
-		promise.catch(() => {});
-
-		promise.set = (value) => update_refresh_value(get_refresh_context(__, 'set', arg), value);
-
-		promise.refresh = () => {
-			const refresh_context = get_refresh_context(__, 'refresh', arg);
-			const is_immediate_refresh = !refresh_context.cache[refresh_context.cache_key];
-			const value = is_immediate_refresh ? promise : get_remote_function_result();
-			return update_refresh_value(refresh_context, value, is_immediate_refresh);
-		};
-
-		promise.withOverride = () => {
-			throw new Error(`Cannot call '${__.name}.withOverride()' on the server`);
-		};
-
-		return /** @type {RemoteQuery<Output>} */ (promise);
+		return create_query_resource(__, arg, state, () =>
+			run_remote_function(event, state, false, () => (is_validated ? arg : validate(arg)), fn)
+		);
 	};
 
 	Object.defineProperty(wrapper, '__', { value: __ });
 
 	return wrapper;
+}
+
+/**
+ * @param {RemoteQueryInternals} __
+ * @param {RequestState} state
+ * @param {any} arg
+ */
+function is_validated_argument(__, state, arg) {
+	return state.remote.validated?.get(__.id)?.has(arg) ?? false;
+}
+
+/**
+ * @param {RemoteQueryInternals} __
+ * @param {RequestState} state
+ * @param {any} arg
+ */
+export function mark_argument_validated(__, state, arg) {
+	const validated = (state.remote.validated ??= new Map());
+	let validated_args = validated.get(__.id);
+
+	if (!validated_args) {
+		validated_args = new Set();
+		validated.set(__.id, validated_args);
+	}
+
+	validated_args.add(arg);
+	return arg;
 }
 
 /**
@@ -145,7 +156,7 @@ function batch(validate_or_fn, maybe_fn) {
 	/** @type {(arg?: any) => MaybePromise<Input>} */
 	const validate = create_validator(validate_or_fn, maybe_fn);
 
-	/** @type {RemoteInfo & { type: 'query_batch' }} */
+	/** @type {RemoteQueryBatchInternals} */
 	const __ = {
 		type: 'query_batch',
 		id: '',
@@ -164,7 +175,8 @@ function batch(validate_or_fn, maybe_fn) {
 					return Promise.all(
 						input.map(async (arg, i) => {
 							try {
-								return { type: 'result', data: get_result(arg, i) };
+								const data = get_result(arg, i);
+								return { type: 'result', data: stringify(data, state.transport) };
 							} catch (error) {
 								return {
 									type: 'error',
@@ -182,10 +194,10 @@ function batch(validate_or_fn, maybe_fn) {
 		}
 	};
 
-	/** @type {{ args: any[], resolvers: Array<{resolve: (value: any) => void, reject: (error: any) => void}> }} */
-	let batching = { args: [], resolvers: [] };
+	/** @type {Map<string, { arg: any, resolvers: Array<{resolve: (value: any) => void, reject: (error: any) => void}> }>} */
+	let batching = new Map();
 
-	/** @type {RemoteQueryFunction<Input, Output> & { __: RemoteInfo }} */
+	/** @type {RemoteQueryFunction<Input, Output> & { __: RemoteQueryBatchInternals }} */
 	const wrapper = (arg) => {
 		if (prerendering) {
 			throw new Error(
@@ -195,66 +207,65 @@ function batch(validate_or_fn, maybe_fn) {
 
 		const { event, state } = get_request_store();
 
-		const get_remote_function_result = () => {
+		return create_query_resource(__, arg, state, () => {
 			// Collect all the calls to the same query in the same macrotask,
 			// then execute them as one backend request.
 			return new Promise((resolve, reject) => {
-				// We don't need to deduplicate args here, because get_response already caches/reuses identical calls
-				batching.args.push(arg);
-				batching.resolvers.push({ resolve, reject });
+				const key = stringify_remote_arg(arg, state.transport);
+				const entry = batching.get(key);
 
-				if (batching.args.length > 1) return;
+				if (entry) {
+					entry.resolvers.push({ resolve, reject });
+					return;
+				}
+
+				batching.set(key, {
+					arg,
+					resolvers: [{ resolve, reject }]
+				});
+
+				if (batching.size > 1) return;
 
 				setTimeout(async () => {
 					const batched = batching;
-					batching = { args: [], resolvers: [] };
+					batching = new Map();
+					const entries = Array.from(batched.values());
+					const args = entries.map((entry) => entry.arg);
 
 					try {
 						return await run_remote_function(
 							event,
 							state,
 							false,
-							async () => Promise.all(batched.args.map(validate)),
+							async () => Promise.all(args.map(validate)),
 							async (input) => {
 								const get_result = await fn(input);
 
-								for (let i = 0; i < batched.resolvers.length; i++) {
+								for (let i = 0; i < entries.length; i++) {
 									try {
-										batched.resolvers[i].resolve(get_result(input[i], i));
+										const result = get_result(input[i], i);
+
+										for (const resolver of entries[i].resolvers) {
+											resolver.resolve(result);
+										}
 									} catch (error) {
-										batched.resolvers[i].reject(error);
+										for (const resolver of entries[i].resolvers) {
+											resolver.reject(error);
+										}
 									}
 								}
 							}
 						);
 					} catch (error) {
-						for (const resolver of batched.resolvers) {
-							resolver.reject(error);
+						for (const entry of batched.values()) {
+							for (const resolver of entry.resolvers) {
+								resolver.reject(error);
+							}
 						}
 					}
 				}, 0);
 			});
-		};
-
-		/** @type {Promise<any> & Partial<RemoteQuery<any>>} */
-		const promise = get_response(__, arg, state, get_remote_function_result);
-
-		promise.catch(() => {});
-
-		promise.set = (value) => update_refresh_value(get_refresh_context(__, 'set', arg), value);
-
-		promise.refresh = () => {
-			const refresh_context = get_refresh_context(__, 'refresh', arg);
-			const is_immediate_refresh = !refresh_context.cache[refresh_context.cache_key];
-			const value = is_immediate_refresh ? promise : get_remote_function_result();
-			return update_refresh_value(refresh_context, value, is_immediate_refresh);
-		};
-
-		promise.withOverride = () => {
-			throw new Error(`Cannot call '${__.name}.withOverride()' on the server`);
-		};
-
-		return /** @type {RemoteQuery<Output>} */ (promise);
+		});
 	};
 
 	Object.defineProperty(wrapper, '__', { value: __ });
@@ -262,18 +273,80 @@ function batch(validate_or_fn, maybe_fn) {
 	return wrapper;
 }
 
+/**
+ * @param {RemoteInternals} __
+ * @param {any} arg
+ * @param {RequestState} state
+ * @param {() => Promise<any>} fn
+ * @returns {RemoteQuery<any>}
+ */
+function create_query_resource(__, arg, state, fn) {
+	/** @type {Promise<any> | null} */
+	let promise = null;
+
+	const get_promise = () => {
+		return (promise ??= get_response(__, arg, state, fn));
+	};
+
+	return {
+		/** @type {Promise<any>['catch']} */
+		catch(onrejected) {
+			return get_promise().catch(onrejected);
+		},
+		current: undefined,
+		error: undefined,
+		/** @type {Promise<any>['finally']} */
+		finally(onfinally) {
+			return get_promise().finally(onfinally);
+		},
+		loading: true,
+		ready: false,
+		refresh() {
+			const refresh_context = get_refresh_context(__, 'refresh', arg);
+			const is_immediate_refresh = !refresh_context.cache[refresh_context.cache_key];
+			const value = is_immediate_refresh ? get_promise() : fn();
+			return update_refresh_value(refresh_context, value, is_immediate_refresh);
+		},
+		run() {
+			// potential TODO: if we want to be able to run queries at the top level of modules / outside of the request context, we could technically remove
+			// the requirement that `state` is defined, but that's kind of an annoying change to make, so we're going to wait on that until we have any sort of
+			// concrete use case.
+			if (!state.is_in_universal_load) {
+				throw new Error(
+					'On the server, .run() can only be called in universal `load` functions. Anywhere else, just await the query directly'
+				);
+			}
+			return get_response(__, arg, state, fn);
+		},
+		/** @param {any} value */
+		set(value) {
+			return update_refresh_value(get_refresh_context(__, 'set', arg), value);
+		},
+		/** @type {Promise<any>['then']} */
+		then(onfulfilled, onrejected) {
+			return get_promise().then(onfulfilled, onrejected);
+		},
+		withOverride() {
+			throw new Error(`Cannot call '${__.name}.withOverride()' on the server`);
+		},
+		get [Symbol.toStringTag]() {
+			return 'QueryResource';
+		}
+	};
+}
+
 // Add batch as a property to the query function
 Object.defineProperty(query, 'batch', { value: batch, enumerable: true });
 
 /**
- * @param {RemoteInfo} __
+ * @param {RemoteInternals} __
  * @param {'set' | 'refresh'} action
  * @param {any} [arg]
- * @returns {{ __: RemoteInfo; state: any; refreshes: Record<string, Promise<any>>; cache: Record<string, Promise<any>>; refreshes_key: string; cache_key: string }}
+ * @returns {{ __: RemoteInternals; state: any; refreshes: Record<string, Promise<any>>; cache: Record<string, { serialize: boolean; data: any }>; refreshes_key: string; cache_key: string }}
  */
 function get_refresh_context(__, action, arg) {
 	const { state } = get_request_store();
-	const { refreshes } = state;
+	const { refreshes } = state.remote;
 
 	if (!refreshes) {
 		const name = __.type === 'query_batch' ? `query.batch '${__.name}'` : `query '${__.name}'`;
@@ -290,7 +363,7 @@ function get_refresh_context(__, action, arg) {
 }
 
 /**
- * @param {{ __: RemoteInfo; refreshes: Record<string, Promise<any>>; cache: Record<string, Promise<any>>; refreshes_key: string; cache_key: string }} context
+ * @param {{ __: RemoteInternals; refreshes: Record<string, Promise<any>>; cache: Record<string, { serialize: boolean; data: any }>; refreshes_key: string; cache_key: string }} context
  * @param {any} value
  * @param {boolean} [is_immediate_refresh=false]
  * @returns {Promise<void>}
@@ -303,12 +376,12 @@ function update_refresh_value(
 	const promise = Promise.resolve(value);
 
 	if (!is_immediate_refresh) {
-		cache[cache_key] = promise;
+		cache[cache_key] = { serialize: true, data: promise };
 	}
 
 	if (__.id) {
 		refreshes[refreshes_key] = promise;
 	}
 
-	return promise.then(() => {});
+	return promise.then(noop, noop);
 }

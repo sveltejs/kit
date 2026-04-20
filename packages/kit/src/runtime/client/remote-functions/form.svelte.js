@@ -1,14 +1,13 @@
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
-/** @import { RemoteFormInput, RemoteForm, RemoteQueryOverride } from '@sveltejs/kit' */
+/** @import { RemoteFormInput, RemoteForm, RemoteQueryUpdate } from '@sveltejs/kit' */
 /** @import { InternalRemoteFormIssue, RemoteFunctionResponse } from 'types' */
-/** @import { Query } from './query.svelte.js' */
 import { app_dir, base } from '$app/paths/internal/client';
 import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
 import { HttpError } from '@sveltejs/kit/internal';
-import { app, remote_responses, _goto, set_nearest_error_page, invalidateAll } from '../client.js';
+import { app, query_responses, _goto, set_nearest_error_page, invalidateAll } from '../client.js';
 import { tick } from 'svelte';
-import { refresh_queries, release_overrides } from './shared.svelte.js';
+import { apply_refreshes, categorize_updates } from './shared.svelte.js';
 import { createAttachmentKey } from 'svelte/attachments';
 import {
 	convert_formdata,
@@ -53,7 +52,6 @@ function merge_with_server_issues(form_data, current_issues, client_issues) {
  */
 export function form(id) {
 	/** @type {Map<any, { count: number, instance: RemoteForm<T, U> }>} */
-	// eslint-disable-next-line svelte/prefer-svelte-reactivity -- we don't need reactivity for this
 	const instances = new Map();
 
 	/** @param {string | number | boolean} [key] */
@@ -73,7 +71,7 @@ export function form(id) {
 		const issues = $derived(flatten_issues(raw_issues));
 
 		/** @type {any} */
-		let result = $state.raw(remote_responses[action_id]);
+		let result = $state.raw(query_responses[action_id]);
 
 		/** @type {number} */
 		let pending_count = $state(0);
@@ -158,6 +156,7 @@ export function form(id) {
 			}
 
 			try {
+				// eslint-disable-next-line @typescript-eslint/await-thenable -- `callback` is typed as returning `void` to allow returning e.g. `Promise<boolean>`
 				await callback({
 					form,
 					data,
@@ -167,12 +166,14 @@ export function form(id) {
 				const error = e instanceof HttpError ? e.body : { message: /** @type {any} */ (e).message };
 				const status = e instanceof HttpError ? e.status : 500;
 				void set_nearest_error_page(error, status);
+			} finally {
+				pending_count--;
 			}
 		}
 
 		/**
 		 * @param {FormData} data
-		 * @returns {Promise<any> & { updates: (...args: any[]) => any }}
+		 * @returns {Promise<boolean> & { updates: (...args: any[]) => Promise<boolean> }}
 		 */
 		function submit(data) {
 			// Store a reference to the current instance and increment the usage count for the duration
@@ -185,16 +186,25 @@ export function form(id) {
 				entry.count++;
 			}
 
-			/** @type {Array<Query<any> | RemoteQueryOverride>} */
-			let updates = [];
+			let overrides = /** @type {Array<() => void> | null} */ (null);
 
-			/** @type {Promise<any> & { updates: (...args: any[]) => any }} */
+			/** @type {Set<string> | null} */
+			let refreshes = null;
+
+			/** @type {Error | undefined} */
+			let updates_error;
+
+			/** @type {Promise<boolean> & { updates: (...args: RemoteQueryUpdate[]) => Promise<boolean> }} */
 			const promise = (async () => {
 				try {
 					await Promise.resolve();
 
+					if (updates_error) {
+						throw updates_error;
+					}
+
 					const { blob } = serialize_binary_form(convert(data), {
-						remote_refreshes: updates.map((u) => u._key)
+						remote_refreshes: Array.from(refreshes ?? [])
 					});
 
 					const response = await fetch(`${base}/${app_dir}/remote/${action_id_without_key}`, {
@@ -221,34 +231,33 @@ export function form(id) {
 
 					if (form_result.type === 'result') {
 						({ issues: raw_issues = [], result } = devalue.parse(form_result.result, app.decoders));
+						const succeeded = raw_issues.length === 0;
 
-						if (issues.$) {
-							release_overrides(updates);
-						} else {
+						if (succeeded) {
 							if (form_result.refreshes) {
-								refresh_queries(form_result.refreshes, updates);
+								apply_refreshes(form_result.refreshes);
 							} else {
 								void invalidateAll();
 							}
 						}
+
+						return succeeded;
 					} else if (form_result.type === 'redirect') {
-						const refreshes = form_result.refreshes ?? '';
-						const invalidateAll = !refreshes && updates.length === 0;
-						if (!invalidateAll) {
-							refresh_queries(refreshes, updates);
+						const stringified_refreshes = form_result.refreshes ?? '';
+						if (stringified_refreshes) {
+							apply_refreshes(stringified_refreshes);
 						}
 						// Use internal version to allow redirects to external URLs
-						void _goto(form_result.location, { invalidateAll }, 0);
+						void _goto(form_result.location, { invalidateAll: !stringified_refreshes }, 0);
+						return true;
 					} else {
 						throw new HttpError(form_result.status ?? 500, form_result.error);
 					}
 				} catch (e) {
 					result = undefined;
-					release_overrides(updates);
 					throw e;
 				} finally {
-					// Decrement pending count when submission completes
-					pending_count--;
+					overrides?.forEach((fn) => fn());
 
 					void tick().then(() => {
 						if (entry) {
@@ -261,8 +270,22 @@ export function form(id) {
 				}
 			})();
 
+			let updates_called = false;
 			promise.updates = (...args) => {
-				updates = args;
+				if (updates_called) {
+					console.warn(
+						'Updates can only be sent once per form submission. Ignoring additional updates.'
+					);
+					return promise;
+				}
+				updates_called = true;
+
+				try {
+					({ refreshes, overrides } = categorize_updates(args));
+				} catch (error) {
+					updates_error = /** @type {Error} */ (error);
+				}
+
 				return promise;
 			};
 
@@ -286,7 +309,6 @@ export function form(id) {
 
 				if (method !== 'post') return;
 
-				// eslint-disable-next-line svelte/prefer-svelte-reactivity
 				const action = new URL(
 					// We can't do submitter.formAction directly because that property is always set
 					event.submitter?.hasAttribute('formaction')
@@ -443,8 +465,8 @@ export function form(id) {
 
 		instance[createAttachmentKey()] = create_attachment(
 			form_onsubmit(({ submit, form }) =>
-				submit().then(() => {
-					if (!issues.$) {
+				submit().then((succeeded) => {
+					if (succeeded) {
 						form.reset();
 					}
 				})

@@ -84,10 +84,6 @@ export function serialize_binary_form(data, meta) {
 	/** @type {Array<[file: File, index: number]>} */
 	const files = [];
 
-	if (!meta.remote_refreshes?.length) {
-		delete meta.remote_refreshes;
-	}
-
 	const encoded_header = devalue.stringify([data, meta], {
 		File: (file) => {
 			if (!(file instanceof File)) return;
@@ -324,7 +320,7 @@ export async function deserialize_binary_form(request) {
 		}
 	}
 
-	// Read the request body asyncronously so it doesn't stall
+	// Read the request body asynchronously so it doesn't stall
 	void (async () => {
 		let has_more = true;
 		while (has_more) {
@@ -507,8 +503,8 @@ export function deep_set(object, keys, value) {
 		check_prototype_pollution(key);
 
 		const is_array = /^\d+$/.test(keys[i + 1]);
-		const exists = Object.hasOwn(current, key);
-		const inner = current[key];
+		const inner = Object.hasOwn(current, key) ? current[key] : undefined;
+		const exists = inner != null;
 
 		if (exists && is_array !== Array.isArray(inner)) {
 			throw new Error(`Invalid array key ${keys[i + 1]}`);
@@ -718,7 +714,7 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 							value: {
 								enumerable: true,
 								get() {
-									return get_value();
+									return get_value() ?? input_value;
 								}
 							}
 						});
@@ -804,7 +800,7 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 						value: {
 							enumerable: true,
 							get() {
-								const value = get_value();
+								const value = get_value() ?? input_value;
 								return value != null ? String(value) : '';
 							}
 						}

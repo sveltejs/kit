@@ -8,7 +8,7 @@ import { create_static_module } from '../../../core/env.js';
 import { env_static_public, service_worker } from '../module_ids.js';
 
 // @ts-ignore `vite.rolldownVersion` only exists in `rolldown-vite`
-const isRolldown = !!vite.rolldownVersion;
+const is_rolldown = !!vite.rolldownVersion;
 
 /**
  * @param {string} out
@@ -98,7 +98,8 @@ export async function build_service_worker(
 		}
 	};
 
-	await vite.build({
+	/** @type {import('vite').InlineConfig} */
+	const config = {
 		build: {
 			modulePreload: false,
 			rollupOptions: {
@@ -107,9 +108,9 @@ export async function build_service_worker(
 				},
 				output: {
 					// .mjs so that esbuild doesn't incorrectly inject `export` https://github.com/vitejs/vite/issues/15379
-					entryFileNames: `service-worker.${isRolldown ? 'js' : 'mjs'}`,
+					entryFileNames: `service-worker.${is_rolldown ? 'js' : 'mjs'}`,
 					assetFileNames: `${kit.appDir}/immutable/assets/[name].[hash][extname]`,
-					inlineDynamicImports: true
+					inlineDynamicImports: !is_rolldown ? true : undefined
 				}
 			},
 			outDir: `${out}/client`,
@@ -130,10 +131,19 @@ export async function build_service_worker(
 				};
 			}
 		}
-	});
+	};
+
+	// we must reference Vite 8 options conditionally. Otherwise, older Vite
+	// versions throw an error about unknown config options
+	if (is_rolldown && config?.build?.rollupOptions?.output) {
+		// @ts-ignore only available in Vite 8
+		config.build.rollupOptions.output.codeSplitting = true;
+	}
+
+	await vite.build(config);
 
 	// rename .mjs to .js to avoid incorrect MIME types with ancient webservers
-	if (!isRolldown) {
+	if (!is_rolldown) {
 		fs.renameSync(`${out}/client/service-worker.mjs`, `${out}/client/service-worker.js`);
 	}
 }

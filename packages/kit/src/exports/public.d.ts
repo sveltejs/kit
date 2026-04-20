@@ -1452,6 +1452,22 @@ export interface Page<
  */
 export type ParamMatcher = (param: string) => boolean;
 
+export type RequestedResult<T> = Iterable<T> &
+	AsyncIterable<T> & {
+		/**
+		 * Call `refresh` on all queries selected by this `requested` invocation.
+		 * This is identical to:
+		 * ```ts
+		 * import { requested } from '$app/server';
+		 *
+		 * for await (const arg of requested(query, ...) {
+		 *   void query(arg).refresh();
+		 * }
+		 * ```
+		 */
+		refreshAll: () => Promise<void>;
+	};
+
 export interface RequestEvent<
 	Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
 	RouteId extends AppRouteId | null = AppRouteId | null
@@ -1877,28 +1893,35 @@ type InputElementProps<T extends keyof InputTypeMap> = T extends 'checkbox' | 'r
 				get files(): FileList | null;
 				set files(v: FileList | null);
 			}
-		: T extends 'select' | 'select multiple'
+		: T extends 'select'
 			? {
 					name: string;
-					multiple: T extends 'select' ? false : true;
 					'aria-invalid': boolean | 'false' | 'true' | undefined;
-					get value(): string | number;
-					set value(v: string | number);
+					get value(): string;
+					set value(v: string);
 				}
-			: T extends 'text'
+			: T extends 'select multiple'
 				? {
 						name: string;
+						multiple: true;
 						'aria-invalid': boolean | 'false' | 'true' | undefined;
-						get value(): string | number;
-						set value(v: string | number);
+						get value(): string[];
+						set value(v: string[]);
 					}
-				: {
-						name: string;
-						type: T;
-						'aria-invalid': boolean | 'false' | 'true' | undefined;
-						get value(): string | number;
-						set value(v: string | number);
-					};
+				: T extends 'text'
+					? {
+							name: string;
+							'aria-invalid': boolean | 'false' | 'true' | undefined;
+							get value(): string | number;
+							set value(v: string | number);
+						}
+					: {
+							name: string;
+							type: T;
+							'aria-invalid': boolean | 'false' | 'true' | undefined;
+							get value(): string | number;
+							set value(v: string | number);
+						};
 
 type RemoteFormFieldMethods<T> = {
 	/** The values that will be submitted */
@@ -1909,15 +1932,26 @@ type RemoteFormFieldMethods<T> = {
 	issues(): RemoteFormIssue[] | undefined;
 };
 
+// These two types use "T extends unknown ? .. : .." to distribute over unions.
+// Example: if "type T = A | b" then "keyof T" only contains keys that both A and B have, with "KeysOfUnion<T>" we get the keys of both A and B
+type KeysOfUnion<T> = T extends unknown ? keyof T : never;
+type ValueOfUnionKey<T, K extends PropertyKey> = T extends unknown
+	? K extends keyof T
+		? T[K]
+		: never
+	: never;
+
 export type RemoteFormFieldValue = string | string[] | number | boolean | File | File[];
 
 type AsArgs<Type extends keyof InputTypeMap, Value> = Type extends 'checkbox'
 	? Value extends string[]
 		? [type: Type, value: Value[number] | (string & {})]
-		: [type: Type]
+		: [type: Type] | [type: Type, value: Value | (string & {})]
 	: Type extends 'radio' | 'submit' | 'hidden'
 		? [type: Type, value: Value | (string & {})]
-		: [type: Type];
+		: Type extends 'file' | 'file multiple'
+			? [type: Type]
+			: [type: Type] | [type: Type, value: Value | (string & {})];
 
 /**
  * Form field accessor type that provides name(), value(), and issues() methods
@@ -1979,14 +2013,19 @@ export type RemoteFormFields<T> =
 		? RecursiveFormFields
 		: NonNullable<T> extends string | number | boolean | File
 			? RemoteFormField<NonNullable<T>>
-			: T extends string[] | File[]
-				? RemoteFormField<T> & { [K in number]: RemoteFormField<T[number]> }
-				: T extends Array<infer U>
-					? RemoteFormFieldContainer<T> & {
+			: // [NonNullable<T>] is used to prevent distributing over union while still allowing
+				// nullable wrappers (e.g. `string[] | undefined` from a schema with `.default([])`)
+				// to be treated as arrays; only the last condition should distribute over unions
+				[NonNullable<T>] extends [string[] | File[]]
+				? RemoteFormField<NonNullable<T>> & {
+						[K in number]: RemoteFormField<NonNullable<T>[number]>;
+					}
+				: [NonNullable<T>] extends [Array<infer U>]
+					? RemoteFormFieldContainer<NonNullable<T>> & {
 							[K in number]: RemoteFormFields<U>;
 						}
 					: RemoteFormFieldContainer<T> & {
-							[K in keyof T]-?: RemoteFormFields<T[K]>;
+							[K in KeysOfUnion<T>]-?: RemoteFormFields<ValueOfUnionKey<T, K>>;
 						};
 
 // By breaking this out into its own type, we avoid the TS recursion depth limit
@@ -2057,10 +2096,10 @@ export type RemoteForm<Input extends RemoteFormInput | void, Output> = {
 		callback: (opts: {
 			form: HTMLFormElement;
 			data: Input;
-			submit: () => Promise<void> & {
-				updates: (...queries: Array<RemoteQuery<any> | RemoteQueryOverride>) => Promise<void>;
+			submit: () => Promise<boolean> & {
+				updates: (...updates: RemoteQueryUpdate[]) => Promise<boolean>;
 			};
-		}) => void | Promise<void>
+		}) => void
 	): {
 		method: 'POST';
 		action: string;
@@ -2102,14 +2141,19 @@ export type RemoteForm<Input extends RemoteFormInput | void, Output> = {
  * The return value of a remote `command` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#command) for full documentation.
  */
 export type RemoteCommand<Input, Output> = {
-	(arg: undefined extends Input ? Input | void : Input): Promise<Awaited<Output>> & {
-		updates(...queries: Array<RemoteQuery<any> | RemoteQueryOverride>): Promise<Awaited<Output>>;
+	(arg: undefined extends Input ? Input | void : Input): Promise<Output> & {
+		updates(...updates: RemoteQueryUpdate[]): Promise<Output>;
 	};
 	/** The number of pending command executions */
 	get pending(): number;
 };
 
-export type RemoteResource<T> = Promise<Awaited<T>> & {
+export type RemoteQueryUpdate =
+	| RemoteQuery<any>
+	| RemoteQueryFunction<any, any>
+	| RemoteQueryOverride;
+
+export type RemoteResource<T> = Promise<T> & {
 	/** The error in case the query fails. Most often this is a [`HttpError`](https://svelte.dev/docs/kit/@sveltejs-kit#HttpError) but it isn't guaranteed to be. */
 	get error(): any;
 	/** `true` before the first result is available and during refreshes */
@@ -2122,12 +2166,18 @@ export type RemoteResource<T> = Promise<Awaited<T>> & {
 		  }
 		| {
 				/** The current value of the query. Undefined until `ready` is `true` */
-				get current(): Awaited<T>;
+				get current(): T;
 				ready: true;
 		  }
 	);
 
 export type RemoteQuery<T> = RemoteResource<T> & {
+	/**
+	 * Returns a plain promise with the result.
+	 * Unlike awaiting the resource directly, this can only be used _outside_ render
+	 * (i.e. in load functions, event handlers and so on)
+	 */
+	run(): Promise<T>;
 	/**
 	 * On the client, this function will update the value of the query without re-fetching it.
 	 *
@@ -2143,7 +2193,7 @@ export type RemoteQuery<T> = RemoteResource<T> & {
 	 */
 	refresh(): Promise<void>;
 	/**
-	 * Temporarily override the value of a query. This is used with the `updates` method of a [command](https://svelte.dev/docs/kit/remote-functions#command-Updating-queries) or [enhanced form submission](https://svelte.dev/docs/kit/remote-functions#form-enhance) to provide optimistic updates.
+	 * Temporarily override a query's value during a [single-flight mutation](https://svelte.dev/docs/kit/remote-functions#Single-flight-mutations) to provide optimistic updates.
 	 *
 	 * ```svelte
 	 * <script>
@@ -2161,13 +2211,10 @@ export type RemoteQuery<T> = RemoteResource<T> & {
 	 * </form>
 	 * ```
 	 */
-	withOverride(update: (current: Awaited<T>) => Awaited<T>): RemoteQueryOverride;
+	withOverride(update: (current: T) => T): RemoteQueryOverride;
 };
 
-export interface RemoteQueryOverride {
-	_key: string;
-	release(): void;
-}
+export type RemoteQueryOverride = () => void;
 
 /**
  * The return value of a remote `prerender` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#prerender) for full documentation.

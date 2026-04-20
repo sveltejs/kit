@@ -4,6 +4,7 @@
 	/** @type {import('./$types').ActionData} */
 	export let form;
 
+	/** @type {string} */
 	let result;
 
 	/** @param {string} method */
