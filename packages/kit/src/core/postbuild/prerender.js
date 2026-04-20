@@ -34,13 +34,7 @@ const prerender_entry = import.meta.resolve('./prerender_entry.js');
  * @param {boolean} opts.verbose
  * @param {string} opts.root
  */
-export default async function prerender({
-	svelte_config,
-	out,
-	manifest_path,
-	metadata,
-	verbose
-}) {
+export default async function prerender({ svelte_config, out, manifest_path, metadata, verbose }) {
 	/**
 	 * @template {{message: string}} T
 	 * @template {Omit<T, 'message'>} K
