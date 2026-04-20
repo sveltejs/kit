@@ -5,11 +5,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { styleText } from 'node:util';
-import { Worker } from 'node:worker_threads';
 
 import * as devalue from 'devalue';
 import { exactRegex, prefixRegex } from 'rolldown/filter';
-import { buildErrorMessage, createFetchableDevEnvironment } from 'vite';
+import { buildErrorMessage } from 'vite';
 
 import { copy, mkdirp, read, resolve_entry, rimraf } from '../../utils/filesystem.js';
 import { create_static_module, create_dynamic_module } from '../../core/env.js';
@@ -59,7 +58,7 @@ import { should_ignore, has_children } from './static_analysis/utils.js';
 import { load_config } from '../../core/config/index.js';
 import { treeshake_prerendered_remotes } from './build/remote.js';
 import { runtime_directory } from '../../runtime/utils.js';
-import { create_worker_hot_channel, dispatch_request } from './dev/worker_environment.js';
+import { createNodeWorkerEnvironment } from './dev/worker_environment.js';
 import { SVELTE_KIT_ASSETS } from '../../constants.js';
 
 const cwd = process.cwd();
@@ -537,34 +536,8 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 			const new_config = {
 				environments: {
 					ssr: {
-						// The dev server defaults to running a Node.js child process
-						// if the adapter doesn't specify its own dev environment
 						dev: {
-							createEnvironment(name, config) {
-								const worker = new Worker(new URL(import.meta.resolve('./dev/worker_runner.js')), {
-									env: {
-										...process.env,
-										SVELTEKIT_FORK: 'true'
-									}
-								});
-
-								// allow the process to exit even if the worker is still running
-								worker.unref();
-
-								return createFetchableDevEnvironment(name, config, {
-									hot: true,
-									transport: create_worker_hot_channel(worker),
-									handleRequest(request) {
-										if (!dev_environment) {
-											throw new Error(
-												'dev_environment was not found. But this should never happen'
-											);
-										}
-
-										return dispatch_request(worker, request, dev_environment.remote_address);
-									}
-								});
-							}
+							createEnvironment: createNodeWorkerEnvironment
 						}
 					}
 				}

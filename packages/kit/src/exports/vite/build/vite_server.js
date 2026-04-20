@@ -2,12 +2,10 @@
 /** @import { PluginOption, ViteDevServer } from 'vite' */
 import fs from 'node:fs';
 import path, { basename } from 'node:path';
-import process from 'node:process';
-import { Worker } from 'node:worker_threads';
-import { createFetchableDevEnvironment, createServer, isFetchableDevEnvironment } from 'vite';
+import { createServer, isFetchableDevEnvironment } from 'vite';
 import { exactRegex } from 'rolldown/filter';
 import { sveltekit_env, sveltekit_ipc } from '../module_ids.js';
-import { create_worker_hot_channel, dispatch_request } from '../dev/worker_environment.js';
+import { createNodeWorkerEnvironment } from '../dev/worker_environment.js';
 import { dedent } from '../../../core/sync/utils.js';
 import {
 	check_feature,
@@ -44,29 +42,8 @@ export async function create_build_server({
 			return {
 				environments: {
 					ssr: {
-						// The dev server defaults to running a Node.js child process
-						// if the adapter doesn't specify its own dev environment
 						dev: {
-							createEnvironment(name, config) {
-								const worker = new Worker(new URL(import.meta.resolve('../dev/worker_runner.js')), {
-									env: {
-										...process.env,
-										SVELTEKIT_FORK: 'true'
-									}
-								});
-
-								// allow the process to exit even if the worker is still running
-								worker.unref();
-
-								return createFetchableDevEnvironment(name, config, {
-									hot: true,
-									transport: create_worker_hot_channel(worker),
-									handleRequest(request) {
-										const url = new URL(request.url);
-										return dispatch_request(worker, request, url.host);
-									}
-								});
-							}
+							createEnvironment: createNodeWorkerEnvironment
 						}
 					}
 				}

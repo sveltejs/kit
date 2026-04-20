@@ -9,7 +9,7 @@ if (!parentPort) {
 
 const port = parentPort;
 
-/** @type {(value: any) => void} */
+/** @type {(value: { _channel?: string; payload?: any }) => void} */
 let message_handler;
 /** @type {(ev: Event) => void} */
 let close_handler;
@@ -45,7 +45,7 @@ const runner = new ModuleRunner(
 
 /**
  * @typedef {object} Message
- * @property {string} _channel
+ * @property {'__sveltekit_request__'} _channel
  * @property {number} id
  * @property {Request} request
  * @property {string} remote_address
@@ -53,7 +53,7 @@ const runner = new ModuleRunner(
 
 port.on(
 	'message',
-	/** @param {Message} msg */
+	/** @param {Message | { _channel?: '__vite_hot__' }} msg */
 	async (msg) => {
 		if (msg?._channel !== REQUEST_CHANNEL) return;
 
