@@ -1,5 +1,4 @@
 /** @import { WorkerConfig } from '@cloudflare/vite-plugin' */
-/** @import { ResolvedConfig } from 'vite' */
 import { copyFileSync, existsSync, writeFileSync, symlinkSync } from 'node:fs';
 import path from 'node:path';
 import { cloudflare } from '@cloudflare/vite-plugin';
@@ -132,8 +131,8 @@ export default function (options = {}) {
 						config.environments.ssr.build ??= {};
 						config.environments.ssr.build.rolldownOptions ??= {};
 
-						// The Cloudflare Vite plugin hardcodes the worker entry input as `index`
-						// so we need to rename the SvelteKit one
+						// We need to rename the SvelteKit server entry to `server.js` because
+						// The Cloudflare Vite plugin hardcodes the worker entry as `index.js`
 						if (
 							typeof config.environments.ssr.build.rolldownOptions.input === 'object' &&
 							'index' in config.environments.ssr.build.rolldownOptions.input
@@ -243,6 +242,7 @@ export default function (options = {}) {
 							config.builder.buildApp ??= async () => {};
 						}
 
+						// use the assets binding name configured in the wrangler config file
 						config.environments ??= {};
 						config.environments.ssr ??= {};
 						config.environments.ssr.define ??= {};
@@ -250,7 +250,7 @@ export default function (options = {}) {
 							wrangler_config.assets?.binding
 						);
 
-						// prevent Vite from resolving client svelte exports
+						// prevent Vite from resolving Svelte client exports
 						const browser_condition =
 							config.environments.ssr.resolve?.conditions?.indexOf('browser');
 						if (browser_condition && browser_condition >= 0) {
