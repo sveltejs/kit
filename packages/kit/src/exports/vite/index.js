@@ -590,8 +590,9 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 					const filepath = pathname.startsWith(root)
 						? posixify(path.relative(root, pathname))
 						: to_fs(pathname);
-					const size = fs.statSync(pathname).size;
-					const data = fs.readFileSync(pathname);
+					// it should be a typed array for devalue to serialise it
+					const data = new Uint8Array(fs.readFileSync(pathname));
+					const size = data.byteLength;
 
 					// update it immediately
 					dev_environment.vite.environments.ssr.hot.send(`sveltekit:server-assets`, {
@@ -679,26 +680,25 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 					}
 
 					case sveltekit_server_assets: {
+						/** @type {Array<[string, { size: number; data: string }]>} */
+						const entries = Object.entries(server_assets);
+
 						return dedent`
 							import * as devalue from 'devalue';
 
 							export const server_assets = {
-								${server_assets
-									.entries()
+								${entries
 									.map(([filepath, { size }]) => {
 										return `${s(filepath)}: ${size}`;
 									})
-									.toArray()
 									.join(',\n')}
 							};
 
 							export const server_assets_content = {
-								${server_assets
-									.entries()
+								${entries
 									.map(([filepath, { data }]) => {
 										return `${s(filepath)}: ${data}`;
 									})
-									.toArray()
 									.join(',\n')}
 							};
 
