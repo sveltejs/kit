@@ -9,7 +9,9 @@ import { posixify } from '../utils/os.js';
  * In playwright debug mode run through VS Code this a root-to-lowercase conversion is needed in order for the tests to run.
  * If we do this conversion in other cases it has the opposite effect though and fails.
  */
-export const runtime_directory = posixify(import.meta.dirname);
+// import.meta.dirname doesn't exist on the client so we need to avoid running
+// posixify to avoid a runtime error when it's undefined
+export const runtime_directory = import.meta.dirname ? posixify(import.meta.dirname) : undefined;
 
 export const text_encoder = new TextEncoder();
 export const text_decoder = new TextDecoder();
