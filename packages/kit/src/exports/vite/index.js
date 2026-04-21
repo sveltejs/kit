@@ -1206,14 +1206,18 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 				const { promise, resolve } = Promise.withResolvers();
 
 				const event = `sveltekit:remote-${remote.hash}-response`;
-				dev_environment.vite.environments.ssr.hot.on(event, resolve);
+				/** @param {Record<string, { type: import('types').RemoteInternals['type'] }>} payload */
+				const listener = (payload) => {
+					resolve(payload);
+					dev_environment?.vite.environments.ssr.hot.off(event, listener);
+				};
+
+				dev_environment.vite.environments.ssr.hot.on(event, listener);
 
 				await dev_environment.vite.environments.ssr.transformRequest(id);
 
 				dev_environment.vite.environments.ssr.hot.send(`sveltekit:remote-${remote.hash}-request`);
 				const exports = await promise;
-
-				dev_environment.vite.environments.ssr.hot.off(event, resolve);
 
 				for (const [name, value] of Object.entries(exports)) {
 					const type = value.type;

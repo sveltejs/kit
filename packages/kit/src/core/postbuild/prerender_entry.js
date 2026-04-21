@@ -79,7 +79,6 @@ export class Server extends KitServer {
 			});
 		}
 
-		// TODO: figure out why import.meta.hot.send doesn't trigger .hot.on from vite side
 		import.meta.hot?.send(
 			`sveltekit:prerender-dependencies-${url.pathname}`,
 			Object.fromEntries(dependencies)

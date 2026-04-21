@@ -214,6 +214,7 @@ export default async function prerender({ svelte_config, out, manifest_path, met
 		/** @type {PromiseWithResolvers<Map<string, PrerenderDependency>>} */
 		const prerender_dependencies = Promise.withResolvers();
 
+		const event = `sveltekit:prerender-dependencies-${encoded}`;
 		/** @param {Record<string, { response: SerialisedResponse; body: null | string | Uint8Array }>} dependencies */
 		const listener = (dependencies) => {
 			/** @type {Map<string, PrerenderDependency>} */
@@ -229,12 +230,11 @@ export default async function prerender({ svelte_config, out, manifest_path, met
 				});
 			}
 			prerender_dependencies.resolve(deserialised);
+			vite.environments.ssr.hot.off(event, listener);
 		};
 
-		const event = `sveltekit:prerender-dependencies-${encoded}`;
 		vite.environments.ssr.hot.on(event, listener);
 		const response = await fetch(`http://localhost:${port}${encoded}`);
-		vite.environments.ssr.hot.off(event, listener);
 
 		const encoded_id = response.headers.get('x-sveltekit-routeid');
 		const decoded_id = encoded_id && decode_uri(encoded_id);

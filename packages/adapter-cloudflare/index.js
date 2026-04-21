@@ -8,9 +8,11 @@ const name = '@sveltejs/adapter-cloudflare';
 
 const default_worker = path.join(import.meta.dirname, 'src/worker.js');
 
+const DEFAULT_ASSET_BINDING = 'ASSETS';
+
 /**
  * Resolved after the Cloudflare Vite plugin `config` hook runs
- * @type {WorkerConfig}
+ * @type {WorkerConfig | undefined}
  */
 let wrangler_config;
 
@@ -69,13 +71,13 @@ export default function (options = {}) {
 
 			// generate plaintext 404.html first which can then be overridden by
 			// prerendering, if the user defined such a page.
-			if (wrangler_config.assets?.not_found_handling === '404-page') {
+			if (wrangler_config?.assets?.not_found_handling === '404-page') {
 				await builder.generateFallback(path.join(client_dest, '404.html'));
 			}
 
 			builder.writePrerendered(client_dest);
 
-			if (wrangler_config.assets?.not_found_handling === 'single-page-application') {
+			if (wrangler_config?.assets?.not_found_handling === 'single-page-application') {
 				await builder.generateFallback(path.join(client_dest, 'index.html'));
 			}
 
@@ -167,7 +169,10 @@ export default function (options = {}) {
 						// manifest.js doesn't exist until the adapter.adapt() method runs,
 						// so we need to symlink the full manifest for the sake of the build
 						// analysis and prerender phases
-						symlinkSync(`${output.dir}/manifest-full.js`, `${output.dir}/manifest.js`);
+						const filepath = `${output.dir}/manifest.js`;
+						if (!existsSync(filepath)) {
+							symlinkSync(`${output.dir}/manifest-full.js`, filepath);
+						}
 					}
 				},
 				cloudflare({
@@ -177,6 +182,7 @@ export default function (options = {}) {
 						name: 'ssr',
 						childEnvironments: options.vitePluginOptions?.viteEnvironment?.childEnvironments
 					},
+					// this function does not run for `vite preview`
 					config(user_config) {
 						// merge with the user's programmatic config
 						if (typeof options.vitePluginOptions?.config === 'function') {
@@ -188,7 +194,7 @@ export default function (options = {}) {
 						if (DEV) {
 							if (!user_config.assets?.binding) {
 								user_config.assets = {
-									binding: 'ASSETS'
+									binding: DEFAULT_ASSET_BINDING
 								};
 							}
 
@@ -199,7 +205,7 @@ export default function (options = {}) {
 							// TODO: only configure these if the user does not intend to deploy an assets-only worker
 							user_config.main = default_worker;
 							user_config.assets = {
-								binding: user_config.assets?.binding ?? 'ASSETS'
+								binding: user_config.assets?.binding ?? DEFAULT_ASSET_BINDING
 								// no need to populate `directory` as the Cloudflare Vite plugin
 								// does that based on the Vite client build input entry setting
 							};
@@ -239,7 +245,7 @@ export default function (options = {}) {
 						// noop to prevent Cloudflare's fallback `buildApp` hook from
 						// running so that it doesn't build the client and server again
 						if (config.builder?.buildApp) {
-							config.builder.buildApp ??= async () => {};
+							config.builder.buildApp = async () => {};
 						}
 
 						// use the assets binding name configured in the wrangler config file
@@ -247,7 +253,7 @@ export default function (options = {}) {
 						config.environments.ssr ??= {};
 						config.environments.ssr.define ??= {};
 						config.environments.ssr.define.__SVELTEKIT_CLOUDFLARE_ASSETS_BINDING__ = JSON.stringify(
-							wrangler_config.assets?.binding
+							wrangler_config?.assets?.binding ?? DEFAULT_ASSET_BINDING
 						);
 
 						// prevent Vite from resolving Svelte client exports
