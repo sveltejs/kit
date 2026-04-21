@@ -664,6 +664,7 @@ export interface RequestState {
 		refreshes: null | Record<string, Promise<any>>;
 		requested: null | Map<string, string[]>;
 		validated: null | Map<string, Set<any>>;
+		raw_args: null | Map<string, Map<any, any>>;
 	};
 	readonly is_in_remote_function: boolean;
 	readonly is_in_render: boolean;

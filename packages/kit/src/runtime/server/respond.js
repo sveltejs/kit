@@ -158,7 +158,12 @@ export async function internal_respond(request, options, manifest, state) {
 			 * A map of remote function ID to objects that have passed validation;
 			 * used to prevent revalidating parameters returned from `requested`
 			 */
-			validated: null
+			validated: null,
+			/**
+			 * A map of remote function ID to raw arguments passed to the function;
+			 * Used to generate the cache_key, ensuring queries are refreshed correctly based on their original input
+			 */
+			raw_args: null
 		},
 		is_in_remote_function: false,
 		is_in_render: false,

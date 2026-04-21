@@ -85,7 +85,7 @@ export function requested(query, limit = Infinity) {
 						);
 					}
 
-					yield mark_argument_validated(internals, state, validated);
+					yield mark_argument_validated(internals, state, validated, parsed);
 				} catch (error) {
 					record_failure(payload, error);
 					continue;
@@ -97,7 +97,7 @@ export function requested(query, limit = Infinity) {
 				try {
 					const parsed = parse_remote_arg(payload, state.transport);
 					const validated = await internals.validate(parsed);
-					return mark_argument_validated(internals, state, validated);
+					return mark_argument_validated(internals, state, validated, parsed);
 				} catch (error) {
 					record_failure(payload, error);
 					throw new Error(`Skipping ${internals.name}(${payload})`, { cause: error });

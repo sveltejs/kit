@@ -100,8 +100,9 @@ function is_validated_argument(__, state, arg) {
  * @param {RemoteQueryInternals} __
  * @param {RequestState} state
  * @param {any} arg
+ * @param {any} raw_arg
  */
-export function mark_argument_validated(__, state, arg) {
+export function mark_argument_validated(__, state, arg, raw_arg) {
 	const validated = (state.remote.validated ??= new Map());
 	let validated_args = validated.get(__.id);
 
@@ -111,6 +112,18 @@ export function mark_argument_validated(__, state, arg) {
 	}
 
 	validated_args.add(arg);
+
+	/** @type {Map<string, Map<any, any>>} */
+	const raw = (state.remote.raw_args ??= new Map());
+	let raw_args = raw.get(__.id);
+
+	if (!raw_args) {
+		raw_args = new Map();
+		raw.set(__.id, raw_args);
+	}
+
+	raw_args.set(arg, raw_arg);
+
 	return arg;
 }
 
@@ -302,7 +315,8 @@ function create_query_resource(__, arg, state, fn) {
 		loading: true,
 		ready: false,
 		refresh() {
-			const refresh_context = get_refresh_context(__, 'refresh', arg);
+			const refresh_arg = state.remote.raw_args?.get(__.id)?.get(arg) ?? arg;
+			const refresh_context = get_refresh_context(__, 'refresh', refresh_arg);
 			const is_immediate_refresh = !refresh_context.cache[refresh_context.cache_key];
 			const value = is_immediate_refresh ? get_promise() : fn();
 			return update_refresh_value(refresh_context, value, is_immediate_refresh);
