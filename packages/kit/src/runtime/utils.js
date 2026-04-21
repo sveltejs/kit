@@ -11,7 +11,7 @@ import { posixify } from '../utils/os.js';
  */
 // import.meta.dirname doesn't exist on the client so we need to avoid running
 // posixify to avoid a runtime error when it's undefined
-export const runtime_directory = import.meta.dirname ? posixify(import.meta.dirname) : undefined;
+export const runtime_directory = import.meta.dirname ? posixify(import.meta.dirname) : '';
 
 export const text_encoder = new TextEncoder();
 export const text_decoder = new TextDecoder();
