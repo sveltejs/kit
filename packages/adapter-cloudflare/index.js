@@ -1,5 +1,5 @@
 /** @import { WorkerConfig } from '@cloudflare/vite-plugin' */
-import { copyFileSync, existsSync, writeFileSync, symlinkSync } from 'node:fs';
+import { copyFileSync, existsSync, writeFileSync, symlinkSync, rmSync, unlinkSync } from 'node:fs';
 import path from 'node:path';
 import { cloudflare } from '@cloudflare/vite-plugin';
 import { DEV } from 'esm-env';
@@ -83,8 +83,10 @@ export default function (options = {}) {
 
 			// worker
 			const server_dest = builder.getServerDirectory();
+			const manifest_path = `${server_dest}/manifest.js`;
+			unlinkSync(manifest_path);
 			writeFileSync(
-				`${server_dest}/manifest.js`,
+				manifest_path,
 				`export const manifest = ${builder.generateManifest({ relativePath: '.' })};\n`
 			);
 
@@ -197,18 +199,18 @@ export default function (options = {}) {
 									binding: DEFAULT_ASSET_BINDING
 								};
 							}
-
-							if (!user_config.main) {
-								user_config.main = default_worker;
-							}
 						} else {
 							// TODO: only configure these if the user does not intend to deploy an assets-only worker
-							user_config.main = default_worker;
+
+							// no need to populate `directory` as the Cloudflare Vite plugin
+							// does that based on the Vite client build input entry setting
 							user_config.assets = {
 								binding: user_config.assets?.binding ?? DEFAULT_ASSET_BINDING
-								// no need to populate `directory` as the Cloudflare Vite plugin
-								// does that based on the Vite client build input entry setting
 							};
+						}
+
+						if (!user_config.main) {
+							user_config.main = default_worker;
 						}
 
 						if (
