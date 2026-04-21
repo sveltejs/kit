@@ -43,7 +43,7 @@ export async function create_build_server({
 	 * Allows us to perform Node operations from a non-Node environment by sending
 	 * a request to the Vite dev server. We can then configure a middleware to
 	 * intercept, operate, and respond.
-	 * 
+	 *
 	 * We can't achieve the same with import.meta.hot and Promise.withResolver()
 	 * because Cloudflare's workerd doesn't like it when we await a promise resolved
 	 * from import.meta.hot
