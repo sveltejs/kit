@@ -11,7 +11,7 @@ packages:
   - packages/kit/test/build-errors/apps/*
   - '!.test-tmp/**'
   - playgrounds/*
-allow-builds:
+allowBuilds:
   '@parcel/watcher': true
   esbuild: true
   protobufjs: true
