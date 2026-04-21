@@ -694,8 +694,6 @@ export interface DevEnvironment {
 	vite: ViteDevServer;
 	/** used to construct the SSR manifest */
 	manifest_data: ManifestData;
-	/** used to populate `event.getClientAddress()` */
-	remote_address: string | undefined;
 }
 
 export * from '../exports/index.js';

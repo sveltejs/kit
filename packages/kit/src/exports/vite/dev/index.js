@@ -206,8 +206,6 @@ export function dev(vite, vite_config, svelte_config, root, dev_environment) {
 		remove_static_middlewares(vite.middlewares);
 
 		vite.middlewares.use(async (req, res, next) => {
-			dev_environment.remote_address = req.socket.remoteAddress;
-
 			// Vite's base middleware strips out the base path. Restore it
 			const original_url = req.url;
 			req.url = req.originalUrl;
@@ -244,13 +242,6 @@ export function dev(vite, vite_config, svelte_config, root, dev_environment) {
 
 				if (decoded.match(inline_styles_pathname)) {
 					const urls = url.searchParams.getAll('urls');
-
-					if (!urls.length) {
-						res.writeHead(400);
-						res.end('Missing urls query argument');
-						return;
-					}
-
 					const styles = await get_inline_css(vite, urls);
 					res.writeHead(200, {
 						'content-type': 'application/json'

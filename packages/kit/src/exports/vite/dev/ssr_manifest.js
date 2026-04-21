@@ -103,7 +103,7 @@ export const manifest = {
 						search_params.append('urls', url);
 					}
 
-					const response = await get(`/inline-styles?${search_params.toString()}`);
+					const response = await get(`/inline-styles?${search_params}`);
 					if (!response.ok) {
 						throw new Error(
 							`Failed to fetch inline styles for node ${i}: ${response.status} ${response.statusText}. This should never happen`

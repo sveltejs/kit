@@ -21,12 +21,12 @@ test('read from $app/server works', async ({ request }) => {
 	expect(await response.text()).toBe(content);
 });
 
-// TODO: test param matchers in dev-only
+// TODO: dev-only test param matchers
 
-// TODO: test prerendering a page that imports from cloudflare:workers works after build
+// TODO: after build test prerendering a page that imports from cloudflare:workers
 
-// TODO: test prerender remote function after build
+// TODO: after build test prerender remote function
 
-// TODO: test paths.assets works after build in preview
+// TODO: after build test paths.assets
 
-// TODO: test service worker still works after build
+// TODO: after build test service worker

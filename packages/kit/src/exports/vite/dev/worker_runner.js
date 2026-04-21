@@ -72,6 +72,7 @@ port.on(
 			const { respond } = await runner.import('__sveltekit/dev-server-entry');
 			const response = await respond(request, remote_address);
 
+			// TODO: TypeError: Received non-Uint8Array chunk /Users/teeming/git/sveltejs/kit-version-3/packages/kit/test/apps/basics/src/routes/endpoint-output/stream-throw-error/+server.js:6:11
 			const body = response.body ? new Uint8Array(await response.arrayBuffer()) : null;
 
 			port.postMessage(
@@ -88,15 +89,10 @@ port.on(
 				body ? [body.buffer] : []
 			);
 		} catch (error) {
-			const err = /** @type {Error} */ (error);
-
-			// Log in the worker so the error is visible
-			console.error(err);
-
 			port.postMessage({
 				_channel: RESPONSE_CHANNEL,
 				id,
-				error: { message: err.message, stack: err.stack ?? '' }
+				error
 			});
 		}
 	}

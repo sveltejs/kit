@@ -144,9 +144,15 @@ export function createNodeWorkerEnvironment(name, config) {
 	return createFetchableDevEnvironment(name, config, {
 		hot: true,
 		transport,
-		handleRequest(request) {
-			const url = new URL(request.url);
-			return dispatch_request(request, url.host);
+		async handleRequest(request) {
+			try {
+				const url = new URL(request.url);
+				return await dispatch_request(request, url.host);
+			} catch (error) {
+				// Vite doesn't log errors thrown here so we need to do it ourselves
+				console.error(error);
+				throw error;
+			}
 		}
 	});
 }
