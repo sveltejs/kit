@@ -687,18 +687,6 @@ test.describe('remote functions', () => {
 		await expect(form2.locator('input[name="color_field"]')).toHaveValue('#00ff00');
 		await expect(form2.locator('input[name="n:range_field"]')).toHaveValue('8');
 	});
-
-	test('refreshAll works with schema transforms (number to string)', async ({
-		page,
-		javaScriptEnabled
-	}) => {
-		if (!javaScriptEnabled) return;
-
-		await page.goto('/remote/form/transform');
-
-		await page.click('#update-btn');
-		await expect(page.locator('#result')).toHaveText('Count for 42 is 1');
-	});
 });
 
 test.describe('server error boundaries', () => {

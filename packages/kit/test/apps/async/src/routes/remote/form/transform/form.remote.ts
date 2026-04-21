@@ -18,3 +18,9 @@ export const update_data = command(async () => {
 
 	await requested(get_transformed_data, 1).refreshAll();
 });
+
+export const set_data = command(async () => {
+	for await (const arg of requested(get_transformed_data, 1)) {
+		get_transformed_data(arg).set(`Set value for ${arg}`);
+	}
+});

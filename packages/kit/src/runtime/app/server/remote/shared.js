@@ -4,12 +4,7 @@ import { parse } from 'devalue';
 import { error } from '@sveltejs/kit';
 import { with_request_store, get_request_store } from '@sveltejs/kit/internal/server';
 import { noop } from '../../../../utils/functions.js';
-import {
-	stringify_remote_arg,
-	create_remote_key,
-	stringify,
-	unfriendly_hydratable
-} from '../../../shared.js';
+import { create_remote_key, stringify, unfriendly_hydratable } from '../../../shared.js';
 
 /**
  * @param {any} validate_or_fn
@@ -68,18 +63,17 @@ export function create_validator(validate_or_fn, maybe_fn) {
  *
  * @template {MaybePromise<any>} T
  * @param {RemoteInternals} internals
- * @param {any} arg
+ * @param {string} key — the stringified raw argument (i.e. the cache key the client will use)
  * @param {RequestState} state
  * @param {() => Promise<T>} get_result
  * @returns {Promise<T>}
  */
-export async function get_response(internals, arg, state, get_result) {
+export async function get_response(internals, key, state, get_result) {
 	// wait a beat, in case `myQuery().set(...)` or `myQuery().refresh()` is immediately called
 	// eslint-disable-next-line @typescript-eslint/await-thenable
 	await 0;
 
 	const cache = get_cache(internals, state);
-	const key = stringify_remote_arg(arg, state.transport);
 	const entry = (cache[key] ??= {
 		serialize: false,
 		data: get_result()
