@@ -609,10 +609,30 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 		}
 	};
 
+	/** @type {number | undefined} */
+	let port;
+
 	/** @type {Plugin} */
 	const plugin_dev_ssr = {
 		name: 'vite-plugin-sveltekit-dev-ssr',
 		apply: 'serve',
+		configureServer(vite) {
+			return () => {
+				vite.middlewares.use((_req, _res, next) => {
+					// ensure the server port is up-to-date
+					const address = vite.httpServer?.address();
+					const current_port =
+						typeof address === 'string' ? Number(address.split(':').at(-1)) : address?.port;
+					if (current_port && current_port !== port) {
+						port = current_port;
+						vite.environments.ssr.hot.send('sveltekit:port', port);
+						invalidate_module(vite, sveltekit_ipc);
+					}
+
+					next();
+				});
+			};
+		},
 		applyToEnvironment(environment) {
 			return environment.config.consumer === 'server';
 		},
@@ -668,14 +688,12 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 							// helps us avoid global fetch warnings we emit when the user uses it incorrectly
 							const native_fetch = globalThis.fetch;
 
-							// we have to send a request to the Vite dev server and configure
-							// the middleware to intercept and respond instead of using
-							// import.meta.hot for two-way communication because workerd
-							// doesn't like it when we await a promise created from a different
-							// request context
 							export function get(pathname) {
-								return native_fetch(\`http://localhost:${port}/${kit.appDir}\${pathname}\`);
+								return native_fetch(\`http://localhost:\${port}/${svelte_config.kit.appDir}\${pathname}\`);
 							}
+
+							let port${port ? ` = ${port}` : ''};
+							import.meta.hot?.on('sveltekit:port', (update) => { port = update });
 						`;
 					}
 

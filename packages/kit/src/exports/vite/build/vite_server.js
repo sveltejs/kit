@@ -36,17 +36,37 @@ export async function create_build_server({
 	server_path,
 	vite_plugins
 }) {
-	/** @type {Connect.ServerStackItem | undefined} */
-	let serve_static_middleware;
+	/** @type {number | undefined} */
+	let port;
 
-	/** @type {ViteDevServer} */
-	let dev_server;
-
-	/** @type {PluginOption} */
+	/**
+	 * Allows us to perform Node operations from a non-Node environment by sending
+	 * a request to the Vite dev server. We can then configure a middleware to
+	 * intercept, operate, and respond.
+	 * 
+	 * We can't achieve the same with import.meta.hot and Promise.withResolver()
+	 * because Cloudflare's workerd doesn't like it when we await a promise resolved
+	 * from import.meta.hot
+	 * @type {PluginOption}
+	 */
 	const plugin_ipc = {
 		name: 'vite-plugin-sveltekit-compile:ipc',
 		configureServer(vite) {
-			dev_server = vite;
+			return () => {
+				vite.middlewares.use((_req, _res, next) => {
+					// ensure the server port is up-to-date
+					const address = vite.httpServer?.address();
+					const current_port =
+						typeof address === 'string' ? Number(address.split(':').at(-1)) : address?.port;
+					if (current_port && current_port !== port) {
+						port = current_port;
+						vite.environments.ssr.hot.send('sveltekit:port', port);
+						invalidate_module(vite, sveltekit_ipc);
+					}
+
+					next();
+				});
+			};
 		},
 		applyToEnvironment(environment) {
 			return environment.config.consumer === 'server';
@@ -64,22 +84,16 @@ export async function create_build_server({
 				id: exactRegex(sveltekit_ipc)
 			},
 			handler() {
-				const address = dev_server.httpServer?.address();
-				const port =
-					typeof address === 'string' ? Number(address.split(':').at(-1)) : address?.port;
-
 				return dedent`
           // helps us avoid global fetch warnings we emit when the user uses it incorrectly
           const native_fetch = globalThis.fetch;
 
-          // we have to send a request to the Vite dev server and configure
-          // the middleware to intercept and respond instead of using
-          // import.meta.hot for two-way communication because workerd
-          // doesn't like it when we await a promise created from a different
-          // request context
           export function get(pathname) {
-            return native_fetch(\`http://localhost:${port}/${svelte_config.kit.appDir}\${pathname}\`);
+            return native_fetch(\`http://localhost:\${port}/${svelte_config.kit.appDir}\${pathname}\`);
           }
+
+					let port${port ? ` = ${port}` : ''};
+					import.meta.hot?.on('sveltekit:port', (update) => { port = update });
         `;
 			}
 		}
@@ -87,6 +101,9 @@ export async function create_build_server({
 
 	/** @type {{ public: Record<string, string>; private: Record<string, string> }} */
 	let env;
+
+	/** @type {Connect.ServerStackItem | undefined} */
+	let serve_static_middleware;
 
 	/** @type {PluginOption} */
 	const plugin_server = {
@@ -179,9 +196,6 @@ export async function create_build_server({
 				// Vite will give a 403 on URLs like /test, /static, and /package.json preventing us from
 				// serving routes with those names. See https://github.com/vitejs/vite/issues/7363
 				remove_static_middlewares(vite.middlewares);
-
-				// ensure the server port is up-to-date
-				invalidate_module(vite, sveltekit_ipc);
 
 				vite.middlewares.use((req, res, next) => {
 					// Vite's base middleware strips out the base path. Restore it
@@ -289,6 +303,7 @@ export async function create_build_server({
 			};
 		},
 		configureServer(vite) {
+			vite.environments.ssr.hot.on('hello', console.log);
 			return () => {
 				vite.middlewares.use(async (req, res, next) => {
 					// Vite's base middleware strips out the base path. Restore it
