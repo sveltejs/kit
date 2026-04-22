@@ -233,6 +233,7 @@ export async function internal_respond(request, options, manifest, state) {
 		});
 	}
 
+	/** @type {string | null} */
 	let resolved_path = url.pathname;
 
 	if (!remote_id) {
@@ -257,77 +258,79 @@ export async function internal_respond(request, options, manifest, state) {
 	try {
 		resolved_path = decode_pathname(resolved_path);
 	} catch {
-		return text('Malformed URI', { status: 400 });
-	}
-
-	// try to serve the rerouted prerendered resource if it exists
-	if (
-		// the resolved path has been decoded so it should be compared to the decoded url pathname
-		resolved_path !== decode_pathname(url.pathname) &&
-		!state.prerendering?.fallback &&
-		has_prerendered_path(manifest, resolved_path)
-	) {
-		const url = new URL(request.url);
-		url.pathname = is_data_request
-			? add_data_suffix(resolved_path)
-			: is_route_resolution_request
-				? add_resolution_suffix(resolved_path)
-				: resolved_path;
-
-		try {
-			// `fetch` automatically decodes the body, so we need to delete the related headers to not break the response
-			// Also see https://github.com/sveltejs/kit/issues/12197 for more info (we should fix this more generally at some point)
-			const response = await fetch(url, request);
-			const headers = new Headers(response.headers);
-			if (headers.has('content-encoding')) {
-				headers.delete('content-encoding');
-				headers.delete('content-length');
-			}
-
-			return new Response(response.body, {
-				headers,
-				status: response.status,
-				statusText: response.statusText
-			});
-		} catch (error) {
-			return await handle_fatal_error(event, event_state, options, error);
-		}
+		resolved_path = null;
 	}
 
 	/** @type {import('types').SSRRoute | null} */
 	let route = null;
 
-	if (base && !state.prerendering?.fallback) {
-		if (!resolved_path.startsWith(base)) {
-			return text('Not found', { status: 404 });
+	if (resolved_path) {
+		// try to serve the rerouted prerendered resource if it exists
+		if (
+			// the resolved path has been decoded so it should be compared to the decoded url pathname
+			resolved_path !== decode_pathname(url.pathname) &&
+			!state.prerendering?.fallback &&
+			has_prerendered_path(manifest, resolved_path)
+		) {
+			const url = new URL(request.url);
+			url.pathname = is_data_request
+				? add_data_suffix(resolved_path)
+				: is_route_resolution_request
+					? add_resolution_suffix(resolved_path)
+					: resolved_path;
+
+			try {
+				// `fetch` automatically decodes the body, so we need to delete the related headers to not break the response
+				// Also see https://github.com/sveltejs/kit/issues/12197 for more info (we should fix this more generally at some point)
+				const response = await fetch(url, request);
+				const headers = new Headers(response.headers);
+				if (headers.has('content-encoding')) {
+					headers.delete('content-encoding');
+					headers.delete('content-length');
+				}
+
+				return new Response(response.body, {
+					headers,
+					status: response.status,
+					statusText: response.statusText
+				});
+			} catch (error) {
+				return await handle_fatal_error(event, event_state, options, error);
+			}
 		}
-		resolved_path = resolved_path.slice(base.length) || '/';
-	}
 
-	if (is_route_resolution_request) {
-		return resolve_route(resolved_path, new URL(request.url), manifest);
-	}
+		if (base && !state.prerendering?.fallback) {
+			if (!resolved_path.startsWith(base)) {
+				return text('Not found', { status: 404 });
+			}
+			resolved_path = resolved_path.slice(base.length) || '/';
+		}
 
-	if (resolved_path === `/${app_dir}/env.js`) {
-		return get_public_env(request);
-	}
+		if (is_route_resolution_request) {
+			return resolve_route(resolved_path, new URL(request.url), manifest);
+		}
 
-	if (!remote_id && resolved_path.startsWith(`/${app_dir}`)) {
-		// Ensure that 404'd static assets are not cached - some adapters might apply caching by default
-		const headers = new Headers();
-		headers.set('cache-control', 'public, max-age=0, must-revalidate');
-		return text('Not found', { status: 404, headers });
-	}
+		if (resolved_path === `/${app_dir}/env.js`) {
+			return get_public_env(request);
+		}
 
-	if (!state.prerendering?.fallback) {
-		// TODO this could theoretically break — should probably be inside a try-catch
-		const matchers = await manifest._.matchers();
-		const result = find_route(resolved_path, manifest._.routes, matchers);
+		if (!remote_id && resolved_path.startsWith(`/${app_dir}`)) {
+			// Ensure that 404'd static assets are not cached - some adapters might apply caching by default
+			const headers = new Headers();
+			headers.set('cache-control', 'public, max-age=0, must-revalidate');
+			return text('Not found', { status: 404, headers });
+		}
 
-		if (result) {
-			route = result.route;
-			event.route = { id: route.id };
-			event.params = result.params;
+		if (!state.prerendering?.fallback) {
+			// TODO this could theoretically break — should probably be inside a try-catch
+			const matchers = await manifest._.matchers();
+			const result = find_route(resolved_path, manifest._.routes, matchers);
+
+			if (result) {
+				route = result.route;
+				event.route = { id: route.id };
+				event.params = result.params;
+			}
 		}
 	}
 
@@ -554,6 +557,23 @@ export async function internal_respond(request, options, manifest, state) {
 					filterSerializedResponseHeaders: opts.filterSerializedResponseHeaders || default_filter,
 					preload: opts.preload || default_preload
 				};
+			}
+
+			if (resolved_path === null) {
+				return await respond_with_error({
+					event,
+					event_state,
+					options,
+					manifest,
+					state,
+					status: 400,
+					error: new SvelteKitError(
+						400,
+						'Malformed URI',
+						`Failed to decode URI: ${event.url.pathname}`
+					),
+					resolve_opts
+				});
 			}
 
 			if (options.hash_routing || state.prerendering?.fallback) {
