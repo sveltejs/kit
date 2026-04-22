@@ -972,8 +972,8 @@ export const createPost = form(
 	async (data) => {
 		// form logic goes here...
 
-		+++for (const arg of requested(getPosts, 1)) {+++
-		+++	void getPosts(arg).refresh();+++
+		+++for (const { query } of requested(getPosts, 1)) {+++
+		+++	void query.refresh();+++
 		+++}+++
 
 		// Redirect to the newly created page
@@ -982,7 +982,7 @@ export const createPost = form(
 );
 ```
 
-`requested` gives you access to the requested query arguments for the supplied query. It returns the *parsed* arguments for the query -- when these arguments are passed back into the query in `getPosts(arg).refresh()`, they will not be parsed again. If parsing an argument fails, that query will error, but the entire command will not fail. `requested`'s second parameter, `limit`, is the maximum number of items it will return. Any refresh requests beyond this limit will fail.
+`requested` gives you access to the queries the client requested to refresh. Each entry is an `{ arg, query }` object: `arg` is the argument passed to the query and validated using the query's schema, and `query` is a `RemoteQuery` already bound to the client's original cache key, so calling `query.refresh()` / `query.set(...)` updates the correct client instance. If parsing an argument fails, that query will error, but the entire command will not fail. `requested`'s second parameter, `limit`, is the maximum number of items it will return. Any refresh requests beyond this limit will fail.
 
 Additionally, `requested` allows a simple shorthand when all you want to do is refresh the requested query instances:
 
@@ -991,7 +991,7 @@ import type { RemoteQueryFunction } from '@sveltejs/kit';
 import { requested } from '$app/server';
 declare const getPosts: RemoteQueryFunction<any, any>;
 // ---cut---
-// this is the same as looping over the result and calling `void getPosts(arg).refresh()`.
+// this is the same as looping over the result and calling `void query.refresh()`.
 await requested(getPosts, 1).refreshAll();
 ```
 

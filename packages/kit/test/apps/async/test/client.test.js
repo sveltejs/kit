@@ -435,9 +435,7 @@ test.describe('remote function mutations', () => {
 		await expect(page.locator('#result')).toHaveText('Count for 42 is 1');
 	});
 
-	test('.set() works with schema transforms when arg comes from requested()', async ({
-		page
-	}) => {
+	test('.set() works with schema transforms when arg comes from requested()', async ({ page }) => {
 		await page.goto('/remote/form/transform');
 
 		await expect(page.locator('#result')).toHaveText(/Count for 42 is \d+/);

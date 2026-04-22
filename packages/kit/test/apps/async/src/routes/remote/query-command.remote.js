@@ -25,8 +25,8 @@ export const set_count = command('unchecked', async ({ c, slow = false, deferred
 	}
 	count = c;
 
-	for (const arg of requested(get_count)) {
-		await get_count(arg).refresh();
+	for (const { query } of requested(get_count)) {
+		await query.refresh();
 	}
 
 	return count;
@@ -53,8 +53,8 @@ export const set_count_partial_refresh = command('unchecked', async (c) => {
 	count = c;
 	should_fail_flaky = true;
 
-	for (const key of requested(get_flaky_count)) {
-		await get_flaky_count(key).refresh();
+	for (const { query } of requested(get_flaky_count)) {
+		await query.refresh();
 	}
 
 	return c;

@@ -153,15 +153,7 @@ export async function internal_respond(request, options, manifest, state) {
 			/** A map of remote function key to corresponding single-flight-mutation promise */
 			refreshes: null,
 			/** A map of remote function ID to payloads requested for refreshing by the client */
-			requested: null,
-			/**
-			 * A map of remote function ID to a map of validated argument to the
-			 * corresponding raw (pre-validation) argument. Membership of the inner
-			 * map is used to prevent revalidating parameters returned from `requested`,
-			 * and the mapping is used to key caches/refreshes by the raw argument
-			 * (the one the client uses) rather than the possibly-transformed one.
-			 */
-			validated: null
+			requested: null
 		},
 		is_in_remote_function: false,
 		is_in_render: false,

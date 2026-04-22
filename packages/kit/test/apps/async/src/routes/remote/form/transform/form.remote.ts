@@ -20,7 +20,7 @@ export const update_data = command(async () => {
 });
 
 export const set_data = command(async () => {
-	for await (const arg of requested(get_transformed_data, 1)) {
-		get_transformed_data(arg).set(`Set value for ${arg}`);
+	for await (const { arg, query } of requested(get_transformed_data, 1)) {
+		query.set(`Set value for ${arg}`);
 	}
 });

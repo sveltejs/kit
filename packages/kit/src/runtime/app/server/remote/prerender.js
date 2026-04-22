@@ -92,18 +92,18 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 		/** @type {Promise<Output> & Partial<RemoteResource<Output>>} */
 		const promise = (async () => {
 			const { event, state } = get_request_store();
-			const key = stringify_remote_arg(arg, state.transport);
+			const payload = stringify_remote_arg(arg, state.transport);
 			const id = __.id;
-			const url = `${base}/${app_dir}/remote/${id}${key ? `/${key}` : ''}`;
+			const url = `${base}/${app_dir}/remote/${id}${payload ? `/${payload}` : ''}`;
 
 			if (!state.prerendering && !DEV && !event.isRemoteRequest) {
 				try {
-					return await get_response(__, key, state, async () => {
+					return await get_response(__, payload, state, async () => {
 						const cache = get_cache(__, state);
 
 						// TODO adapters can provide prerendered data more efficiently than
 						// fetching from the public internet
-						const promise = (cache[key] ??= {
+						const promise = (cache[payload] ??= {
 							serialize: true,
 							data: fetch(new URL(url, event.url.origin).href).then(async (response) => {
 								if (!response.ok) {
@@ -131,7 +131,7 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 				return /** @type {Promise<any>} */ (state.prerendering.remote_responses.get(url));
 			}
 
-			const promise = get_response(__, key, state, () =>
+			const promise = get_response(__, payload, state, () =>
 				run_remote_function(event, state, false, () => validate(arg), fn)
 			);
 
