@@ -418,6 +418,9 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 							`${kit.files.routes}/**/+*.{svelte,js,ts}`,
 							`!${kit.files.routes}/**/+*server.*`
 						],
+						// these aren't discovered until the server responds to a request
+						// so we include them here to avoid them from being optimised too late
+						include: ['@sveltejs/kit > devalue', '@sveltejs/kit > esm-env'],
 						exclude: [
 							// Without this SvelteKit will be prebundled on the client, which means we end up with two versions of Redirect etc.
 							// Also see https://github.com/sveltejs/kit/issues/5952#issuecomment-1218844057
@@ -702,8 +705,6 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 						const entries = Object.entries(server_assets);
 
 						return dedent`
-							import * as devalue from 'devalue';
-
 							export const server_assets = {
 								${entries
 									.map(([filepath, { size }]) => {
@@ -720,7 +721,12 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 									.join(',\n')}
 							};
 
-							import.meta.hot?.on('sveltekit:server-assets', ({ filepath, size, data }) => {
+							let devalue;
+
+							import.meta.hot?.on('sveltekit:server-assets', async ({ filepath, size, data }) => {
+								// we have to dynamically import this because a static import throws
+								// Error: Cannot find module 'devalue' imported from 'virtual:__sveltekit/server-assets'
+								devalue ??= await import('devalue');
 								server_assets[filepath] = size;
 								server_assets_content[filepath] = devalue.parse(data);
 							});
