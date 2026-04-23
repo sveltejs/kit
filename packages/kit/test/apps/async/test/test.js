@@ -402,6 +402,124 @@ test.describe('remote functions', () => {
 		await expect(issues).not.toContainText('a is too short');
 	});
 
+	test('form respects HTML constraints before submitting remote requests', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/form/html-constraints');
+
+		let request_count = 0;
+
+		/** @param {import('@playwright/test').Request} request */
+		const handler = (request) => {
+			if (request.url().includes('/_app/remote') && request.method() === 'POST') {
+				request_count += 1;
+			}
+		};
+
+		page.on('request', handler);
+
+		const input = page.locator('[data-submit] input[name="code"]');
+		const submit = page.locator('[data-submit] button[type="submit"]');
+		const result = page.locator('#result');
+
+		await input.focus();
+		await input.pressSequentially('1');
+		await submit.click();
+		await expect(result).toHaveText('');
+		await expect(
+			page.waitForRequest(
+				(request) => request.url().includes('/_app/remote') && request.method() === 'POST',
+				{ timeout: 200 }
+			)
+		).rejects.toThrow();
+
+		await input.fill('');
+		await input.pressSequentially('123456');
+		await submit.click();
+		await expect(result).toHaveText('123456');
+		expect(request_count).toBe(1);
+
+		page.off('request', handler);
+	});
+
+	test('form validate({ preflightOnly: true }) respects HTML constraints on dirty fields', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/form/html-constraints');
+
+		let request_count = 0;
+
+		/** @param {import('@playwright/test').Request} request */
+		const handler = (request) => {
+			if (request.url().includes('/_app/remote') && request.method() === 'POST') {
+				request_count += 1;
+			}
+		};
+
+		page.on('request', handler);
+
+		const input = page.locator('[data-preflight] input[name="code"]');
+		const issue_count = page.locator('#preflight-issue-count');
+
+		await input.focus();
+		await input.pressSequentially('1');
+		await input.blur();
+		await expect(issue_count).toHaveText('1');
+		expect(request_count).toBe(0);
+
+		await input.fill('123456');
+		await input.blur();
+		await expect(issue_count).toHaveText('0');
+		expect(request_count).toBe(0);
+
+		page.off('request', handler);
+	});
+
+	test('form allows programmatic values that only fail length constraints', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/form/html-constraints');
+
+		const input = page.locator('[data-submit] input[name="code"]');
+		const set = page.locator('[data-programmatic-submit]');
+		const submit = page.locator('[data-submit] button[type="submit"]');
+		const result = page.locator('#result');
+		const request = page.waitForRequest(
+			(request) => request.url().includes('/_app/remote') && request.method() === 'POST'
+		);
+
+		await set.click();
+		await expect(input).toHaveValue('1');
+		await submit.click();
+		await request;
+		await expect(result).toHaveText('1');
+	});
+
+	test('form validate({ preflightOnly: true }) ignores programmatic length values', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/form/html-constraints');
+
+		const input = page.locator('[data-preflight] input[name="code"]');
+		const issue_count = page.locator('#preflight-issue-count');
+
+		await page.locator('[data-programmatic-preflight]').click();
+		await expect(input).toHaveValue('1');
+		await expect(issue_count).toHaveText('0');
+	});
+
 	test('form validate works', async ({ page, javaScriptEnabled }) => {
 		if (!javaScriptEnabled) return;
 
