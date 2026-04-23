@@ -72,11 +72,12 @@ config(userConfig) {
 }
 ```
 
-You can also create your own server entry file by importing `Server` from `sveltekit:server` and `env` and `manifest` from `sveltekit:server-manifest`.
+You can also create your own development server entry file by importing `Server` from `sveltekit:server` and `env` and `manifest` from `sveltekit:server-manifest`.
 
 ```js
+import { env } from 'sveltekit:env';
 import { Server } from 'sveltekit:server';
-import { env, manifest } from 'sveltekit:server-manifest';
+import { manifest } from 'sveltekit:server-manifest';
 
 const server = new Server(manifest);
 
