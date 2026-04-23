@@ -1816,7 +1816,7 @@ declare module '@sveltejs/kit' {
 	type WillRecurseIndefinitely<T> = unknown extends T ? true : string extends keyof T ? true : false;
 
 	// Input type mappings for form fields
-	type InputTypeMap = {
+	export type InputTypeMap = {
 		text: string;
 		email: string;
 		password: string;
