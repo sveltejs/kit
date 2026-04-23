@@ -1,20 +1,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { styleText } from 'node:util';
-import { posixify } from '../utils/os.js';
 import { to_fs } from '../exports/vite/filesystem.js';
+import { runtime_directory } from '../runtime/utils.js';
 import { noop } from '../utils/functions.js';
-
-/**
- * Resolved path of the `runtime` directory
- *
- * TODO Windows issue:
- * Vite or sth else somehow sets the driver letter inconsistently to lower or upper case depending on the run environment.
- * In playwright debug mode run through VS Code this a root-to-lowercase conversion is needed in order for the tests to run.
- * If we do this conversion in other cases it has the opposite effect though and fails.
- */
-export const runtime_directory = posixify(fileURLToPath(new URL('../runtime', import.meta.url)));
 
 /**
  * This allows us to import SvelteKit internals that aren't exposed via `pkg.exports` in a

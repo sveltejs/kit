@@ -12,8 +12,8 @@ import { load_error_page } from '../../../core/config/index.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import * as sync from '../../../core/sync/sync.js';
 import { is_chrome_devtools_request, not_found } from '../utils.js';
-import { escape_html } from '../../../utils/escape.js';
-import { sveltekit_manifest_data } from '../module_ids.js';
+import { escape_for_regexp, escape_html } from '../../../utils/escape.js';
+import { sveltekit_ipc, sveltekit_manifest_data } from '../module_ids.js';
 import { to_fs } from '../filesystem.js';
 
 // vite-specifc queries that we should skip handling for css urls
@@ -60,7 +60,7 @@ export function dev(vite, vite_config, svelte_config, root, dev_environment) {
 			return;
 		}
 
-		void invalidate_module(vite, sveltekit_manifest_data);
+		invalidate_module(vite, sveltekit_manifest_data);
 	}
 
 	update_manifest();
@@ -147,7 +147,6 @@ export function dev(vite, vite_config, svelte_config, root, dev_environment) {
 	});
 
 	const assets = svelte_config.kit.paths.assets ? SVELTE_KIT_ASSETS : svelte_config.kit.paths.base;
-	dev_environment.assets = assets;
 
 	const asset_server = sirv(svelte_config.kit.files.assets, {
 		dev: true,
@@ -182,7 +181,21 @@ export function dev(vite, vite_config, svelte_config, root, dev_environment) {
 		next();
 	});
 
+	const inline_styles_pathname = create_app_dir_matcher(
+		svelte_config.kit.paths.base,
+		svelte_config.kit.appDir,
+		'/inline-styles'
+	);
+	const check_feature_pathname = create_app_dir_matcher(
+		svelte_config.kit.paths.base,
+		svelte_config.kit.appDir,
+		'/check-feature'
+	);
+
 	return () => {
+		// ensure it has the correct server port
+		invalidate_module(vite, sveltekit_ipc);
+
 		const serve_static_middleware = vite.middlewares.stack.find(
 			(middleware) =>
 				/** @type {Function} */ (middleware.handle).name === 'viteServeStaticMiddleware'
@@ -193,25 +206,16 @@ export function dev(vite, vite_config, svelte_config, root, dev_environment) {
 		remove_static_middlewares(vite.middlewares);
 
 		vite.middlewares.use(async (req, res, next) => {
-			dev_environment.remote_address = req.socket.remoteAddress;
-
 			// Vite's base middleware strips out the base path. Restore it
-			let original_url = req.url;
+			const original_url = req.url;
 			req.url = req.originalUrl;
 			try {
 				const base = `${vite.config.server.https ? 'https' : 'http'}://${
 					req.headers[':authority'] || req.headers.host
 				}`;
 
-				let decoded = decodeURI(new URL(base + req.url).pathname);
-
-				// requests to _app/immutable during development are fetchable dev
-				// environments trying to read the filesystem
-				const immutable = `/${svelte_config.kit.appDir}/immutable`;
-				if (decoded.startsWith(immutable)) {
-					decoded = decoded.slice(immutable.length);
-					original_url = original_url?.slice(immutable.length);
-				}
+				const url = new URL(base + req.url);
+				const decoded = decodeURI(url.pathname);
 
 				const file = posixify(
 					path.resolve(root, decoded.slice(svelte_config.kit.paths.base.length + 1))
@@ -234,6 +238,39 @@ export function dev(vite, vite_config, svelte_config, root, dev_environment) {
 
 				if (!decoded.startsWith(svelte_config.kit.paths.base)) {
 					return not_found(req, res, svelte_config.kit.paths.base);
+				}
+
+				if (decoded.match(inline_styles_pathname)) {
+					const urls = url.searchParams.getAll('urls');
+					const styles = await get_inline_css(vite, urls);
+					res.writeHead(200, {
+						'content-type': 'application/json'
+					});
+					res.end(JSON.stringify(styles));
+					return;
+				}
+
+				if (decoded.match(check_feature_pathname)) {
+					const route_id = url.searchParams.get('route_id');
+					const config = url.searchParams.get('config');
+					const feature = url.searchParams.get('feature');
+
+					if (!route_id || !config || !feature) {
+						res.writeHead(400);
+						res.end('Must have route_id, config, and feature query arguments');
+						return;
+					}
+
+					const result = check_feature(
+						route_id,
+						JSON.parse(config),
+						feature,
+						svelte_config.kit.adapter
+					);
+
+					res.writeHead(200);
+					res.end(result?.message);
+					return;
 				}
 
 				if (decoded === svelte_config.kit.paths.base + '/service-worker.js') {
@@ -275,10 +312,13 @@ export function dev(vite, vite_config, svelte_config, root, dev_environment) {
 				}
 
 				// fallback to our own fetch handler if the adapter doesn't provide one
-				if (
-					!svelte_config.kit.adapter?.vite?.plugins &&
-					isFetchableDevEnvironment(vite.environments.ssr)
-				) {
+				if (!svelte_config.kit.adapter?.vite?.plugins) {
+					if (!isFetchableDevEnvironment(vite.environments.ssr)) {
+						throw new Error(
+							'The Vite configured dev SSR environment must be a FetchableDevEnvironment'
+						);
+					}
+
 					const request = await getRequest({
 						base,
 						request: req
@@ -309,7 +349,7 @@ export function dev(vite, vite_config, svelte_config, root, dev_environment) {
 /**
  * @param {import('connect').Server} server
  */
-function remove_static_middlewares(server) {
+export function remove_static_middlewares(server) {
 	const static_middlewares = ['viteServeStaticMiddleware', 'viteServePublicMiddleware'];
 	for (let i = server.stack.length - 1; i > 0; i--) {
 		// @ts-expect-error using internals
@@ -371,7 +411,7 @@ async function find_deps(vite, node, deps) {
  * @param {string} assets
  * @returns {boolean}
  */
-function has_correct_case(file, assets) {
+export function has_correct_case(file, assets) {
 	if (file === assets) return true;
 
 	const parent = path.dirname(file);
@@ -398,11 +438,22 @@ export function invalidate_module(vite, id) {
 }
 
 /**
+ * Creates a RegExp to help match against app directory requests.
+ * @param {string} base
+ * @param {string} appDir
+ * @param {string} pattern
+ * @returns {RegExp}
+ */
+export function create_app_dir_matcher(base, appDir, pattern) {
+	return new RegExp(`^${escape_for_regexp(`${base}/${appDir}${pattern}`)}$`);
+}
+
+/**
  * @param {import('vite').ViteDevServer} vite
  * @param {string[]} urls
  * @returns {Promise<Record<string, string>>}
  */
-export async function get_inline_css(vite, urls) {
+async function get_inline_css(vite, urls) {
 	/** @type {Set<import('vite').EnvironmentModuleNode>} */
 	const deps = new Set();
 
@@ -425,4 +476,31 @@ export async function get_inline_css(vite, urls) {
 	}
 
 	return Object.fromEntries(styles);
+}
+
+/**
+ *
+ * @param {string} route_id
+ * @param {unknown} config
+ * @param {string} feature
+ * @param {import('@sveltejs/kit').Adapter | undefined} adapter
+ * @returns { { message: string } | void }
+ */
+export function check_feature(route_id, config, feature, adapter) {
+	if (!adapter) return;
+
+	switch (feature) {
+		case '$app/server:read': {
+			const supported = adapter.supports?.read?.({
+				route: { id: route_id },
+				config
+			});
+
+			if (!supported) {
+				return {
+					message: `Cannot use \`read\` from \`$app/server\` in ${route_id} when using ${adapter.name}. Please ensure that your adapter is up to date and supports this feature.`
+				};
+			}
+		}
+	}
 }

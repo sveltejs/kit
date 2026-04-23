@@ -32,7 +32,8 @@ const extensions = ['.html', '.js', '.mjs', '.json', '.css', '.svg', '.xml', '.w
  *   prerender_map: PrerenderMap;
  *   log: Logger;
  *   vite_config: ResolvedConfig;
- *   remotes: RemoteChunk[]
+ *   remotes: RemoteChunk[];
+ *   out: string;
  * }} opts
  * @returns {Builder}
  */
@@ -45,7 +46,8 @@ export function create_builder({
 	prerender_map,
 	log,
 	vite_config,
-	remotes
+	remotes,
+	out
 }) {
 	/** @type {Map<RouteDefinition, RouteData>} */
 	const lookup = new Map();
@@ -114,12 +116,11 @@ export function create_builder({
 
 		async generateFallback(dest) {
 			const manifest_path = `${config.kit.outDir}/output/server/manifest-full.js`;
-			const env = get_env(config.kit.env, vite_config.mode);
 
 			const fallback = await generate_fallback({
+				svelte_config: config,
 				manifest_path,
-				env: { ...env.private, ...env.public },
-				root: vite_config.root
+				out
 			});
 
 			if (existsSync(dest)) {

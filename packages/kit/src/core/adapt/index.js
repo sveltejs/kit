@@ -10,6 +10,7 @@ import { create_builder } from './builder.js';
  * @param {import('types').Logger} log
  * @param {import('types').RemoteChunk[]} remotes
  * @param {import('vite').ResolvedConfig} vite_config
+ * @param {string} out
  */
 export async function adapt(
 	config,
@@ -19,7 +20,8 @@ export async function adapt(
 	prerender_map,
 	log,
 	remotes,
-	vite_config
+	vite_config,
+	out
 ) {
 	// This is only called when adapter is truthy, so the cast is safe
 	const { name, adapt } = /** @type {import('@sveltejs/kit').Adapter} */ (config.kit.adapter);
@@ -35,7 +37,8 @@ export async function adapt(
 		prerender_map,
 		log,
 		remotes,
-		vite_config
+		vite_config,
+		out
 	});
 
 	await adapt(builder);

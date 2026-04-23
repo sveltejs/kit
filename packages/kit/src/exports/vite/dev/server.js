@@ -1,40 +1,43 @@
-/** @import { InternalServer, ValidatedKitConfig } from 'types' */
+import { AsyncLocalStorage } from 'node:async_hooks';
+import { DEV } from 'esm-env';
+import { Server as KitServer } from '../../../runtime/server/index.js';
+import { check_feature } from '../../../utils/features.js';
+import { SCHEME } from '../../../utils/url.js';
 
-import fs from 'node:fs';
-import path from 'node:path';
-import { Server } from 'virtual:@sveltejs/kit/vite/environment/server';
-import { env, manifest } from 'virtual:@sveltejs/kit/vite/environment';
-import { createReadableStream } from '@sveltejs/kit/node';
-import { from_fs } from '../filesystem.js';
+const async_local_storage = new AsyncLocalStorage();
 
-/** @type {InternalServer} */
-const server = new Server(manifest);
+/** @param {string} label */
+globalThis.__SVELTEKIT_TRACK__ = (label) => {
+	const context = async_local_storage.getStore();
+	if (!context || context.prerender === true) return;
 
-await server.init({
-	env,
-	read: (file) => createReadableStream(from_fs(file))
-});
+	// we can't await this because `read` has a synchronous signature
+	void check_feature(context.event.route.id, context.config, label);
+};
 
-/**
- * @param {Request} request
- * @param {string | undefined} remote_address
- * @param {ValidatedKitConfig} kit
- * @returns {Promise<Response>}
- */
-export async function respond(request, remote_address, kit) {
-	return await server.respond(request, {
-		getClientAddress: () => {
-			if (remote_address) return remote_address;
-			throw new Error('Could not determine clientAddress');
-		},
-		read: (file) => {
-			if (file in manifest._.server_assets) {
-				return fs.readFileSync(from_fs(file));
-			}
+const fetch = globalThis.fetch;
+/** @type {typeof fetch} */
+globalThis.fetch = (info, init) => {
+	if (typeof info === 'string' && !SCHEME.test(info)) {
+		throw new Error(
+			`Cannot use relative URL (\${info}) with global fetch — use \`event.fetch\` instead: https://svelte.dev/docs/kit/web-standards#fetch-apis`
+		);
+	}
 
-			return fs.readFileSync(path.join(kit.files.assets, file));
+	return fetch(info, init);
+};
+
+export class Server extends KitServer {
+	/** @type {import('types').InternalServer['respond']} */
+	async respond(request, options) {
+		if (DEV) {
+			options.before_handle = async (event, config, prerender, handle) => {
+				// we need to use .run because .enterWith() is not supported in Cloudflare Workers
+				// see https://blog.cloudflare.com/workers-node-js-asynclocalstorage/
+				return await async_local_storage.run({ event, config, prerender }, handle);
+			};
 		}
-	});
-}
 
-import.meta.hot?.accept();
+		return await super.respond(request, options);
+	}
+}

@@ -68,6 +68,7 @@ export interface AssetDependencies {
 export interface BuildData {
 	app_dir: string;
 	app_path: string;
+	base: string;
 	manifest_data: ManifestData;
 	out_dir: string;
 	service_worker: string | null;
@@ -176,11 +177,9 @@ export class InternalServer extends Server {
 		request: Request,
 		options: RequestOptions & {
 			prerendering?: PrerenderOptions;
-			/**
-			 * Used internally for saving dependencies during prerendering and generating fallback pages.
-			 */
-			read: (file: string) => NonSharedBuffer;
-			/** A hook called before `handle` during dev, so that `AsyncLocalStorage` can be populated. */
+			/** @internal for saving dependencies during prerendering and generating fallback pages */
+			read: (file: string) => MaybePromise<Buffer<ArrayBuffer>>;
+			/** @internal used during development to check feature availability depending on the current route */
 			before_handle?: (
 				event: RequestEvent,
 				config: any,
@@ -404,6 +403,7 @@ export interface ServerMetadata {
 	routes: Map<string, ServerMetadataRoute>;
 	/** For each hashed remote file, a map of export name -> { type, dynamic }, where `dynamic` is `false` for non-dynamic prerender functions */
 	remotes: Map<string, Map<string, { type: RemoteInternals['type']; dynamic: boolean }>>;
+	remotes_with_prerender: Set<string>;
 }
 
 export interface SSRComponent {
@@ -559,9 +559,9 @@ export interface SSRState {
 	 */
 	prerender_default?: PrerenderOption;
 	/**
-	 * Used internally for saving dependencies during prerendering and generating fallback pages.
+	 * @internal reads from the filesystem when user code tries to fetch a static asset
 	 */
-	read?: (file: string) => NonSharedBuffer;
+	read?: (file: string) => MaybePromise<Buffer<ArrayBuffer>>;
 	/**
 	 * Used to set up `__SVELTEKIT_TRACK__` which checks if a used feature is supported.
 	 * E.g. if `read` from `$app/server` is used, it checks whether the route's config is compatible.
@@ -692,10 +692,8 @@ export interface RequestStore {
 
 export interface DevEnvironment {
 	vite: ViteDevServer;
+	/** used to construct the SSR manifest */
 	manifest_data: ManifestData;
-	env: Record<string, string>;
-	assets: string;
-	remote_address: string | undefined;
 }
 
 export * from '../exports/index.js';
