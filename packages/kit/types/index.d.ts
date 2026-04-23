@@ -2216,7 +2216,7 @@ declare module '@sveltejs/kit' {
 	 * `Input = number` but `Validated = string`). For `'unchecked'` validators and queries
 	 * without arguments it defaults to `Input`.
 	 */
-	export type RemoteQueryFunction<Input, Output, Validated = Input> = (
+	export type RemoteQueryFunction<Input, Output, _Validated = Input> = (
 		arg: undefined extends Input ? Input | void : Input
 	) => RemoteQuery<Output>;
 	interface AdapterEntry {
