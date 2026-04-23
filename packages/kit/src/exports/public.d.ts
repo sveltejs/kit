@@ -2242,17 +2242,8 @@ export type RemotePrerenderFunction<Input, Output> = (
  * `Input = number` but `Validated = string`). For `'unchecked'` validators and queries
  * without arguments it defaults to `Input`.
  */
-export type RemoteQueryFunction<Input, Output, Validated = Input> = ((
+export type RemoteQueryFunction<Input, Output, _Validated = Input> = (
 	arg: undefined extends Input ? Input | void : Input
-) => RemoteQuery<Output>) & {
-	/**
-	 * Phantom property that exists for type inference only — it is never set at
-	 * runtime, hence the `?`. Used by
-	 * [`requested`](https://svelte.dev/docs/kit/$app-server#requested) to recover
-	 * the post-validation argument type. Do not read this property; it will always
-	 * be `undefined`. Prefixed with `~` to sort to the bottom of IntelliSense.
-	 */
-	readonly ['~validated']?: Validated;
-};
+) => RemoteQuery<Output>;
 
 export * from './index.js';
