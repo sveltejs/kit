@@ -127,24 +127,26 @@ export default function (options = {}) {
 			plugins: [
 				{
 					name: 'vite-plugin-sveltekit-cloudflare:pre',
-					applyToEnvironment(environment) {
-						return environment.name === 'ssr';
-					},
-					configEnvironment(_, config, env) {
+					config(config, env) {
 						building = env.command === 'build';
 
-						config ??= {};
-						config.build ??= {};
-						config.build.rolldownOptions ??= {};
+						config.environments ??= {};
+						config.environments.ssr ??= {};
+						config.environments.ssr.build ??= {};
+						config.environments.ssr.build.rolldownOptions ??= {};
 
 						// We need to rename the SvelteKit server entry to `server.js` because
 						// The Cloudflare Vite plugin hardcodes the worker entry as `index.js`
-						const input = config.build.rolldownOptions.input;
+						const input = config.environments.ssr.build.rolldownOptions.input;
 						if (typeof input === 'object' && 'index' in input) {
 							input.server = input.index;
 							delete input.index;
 						}
 					},
+					applyToEnvironment(environment) {
+						return environment.name === 'ssr';
+					},
+
 					resolveId: {
 						filter: {
 							id: [/^SERVER$/, /^MANIFEST$/]
