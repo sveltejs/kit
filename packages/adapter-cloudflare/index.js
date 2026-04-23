@@ -225,6 +225,9 @@ export default function (options = {}) {
 				return true;
 			},
 			instrumentation: () => true
+		},
+		cache: {
+			path: '@sveltejs/adapter-cloudflare/cache'
 		}
 	};
 }
