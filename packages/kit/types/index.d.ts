@@ -1878,6 +1878,15 @@ declare module '@sveltejs/kit' {
 		issues(): RemoteFormIssue[] | undefined;
 	};
 
+	// These two types use "T extends unknown ? .. : .." to distribute over unions.
+	// Example: if "type T = A | b" then "keyof T" only contains keys that both A and B have, with "KeysOfUnion<T>" we get the keys of both A and B
+	type KeysOfUnion<T> = T extends unknown ? keyof T : never;
+	type ValueOfUnionKey<T, K extends PropertyKey> = T extends unknown
+		? K extends keyof T
+			? T[K]
+			: never
+		: never;
+
 	export type RemoteFormFieldValue = string | string[] | number | boolean | File | File[];
 
 	type AsArgs<Type extends keyof InputTypeMap, Value> = Type extends 'checkbox'
@@ -1950,14 +1959,19 @@ declare module '@sveltejs/kit' {
 			? RecursiveFormFields
 			: NonNullable<T> extends string | number | boolean | File
 				? RemoteFormField<NonNullable<T>>
-				: T extends string[] | File[]
-					? RemoteFormField<T> & { [K in number]: RemoteFormField<T[number]> }
-					: T extends Array<infer U>
-						? RemoteFormFieldContainer<T> & {
+				: // [NonNullable<T>] is used to prevent distributing over union while still allowing
+					// nullable wrappers (e.g. `string[] | undefined` from a schema with `.default([])`)
+					// to be treated as arrays; only the last condition should distribute over unions
+					[NonNullable<T>] extends [string[] | File[]]
+					? RemoteFormField<NonNullable<T>> & {
+							[K in number]: RemoteFormField<NonNullable<T>[number]>;
+						}
+					: [NonNullable<T>] extends [Array<infer U>]
+						? RemoteFormFieldContainer<NonNullable<T>> & {
 								[K in number]: RemoteFormFields<U>;
 							}
 						: RemoteFormFieldContainer<T> & {
-								[K in keyof T]-?: RemoteFormFields<T[K]>;
+								[K in KeysOfUnion<T>]-?: RemoteFormFields<ValueOfUnionKey<T, K>>;
 							};
 
 	// By breaking this out into its own type, we avoid the TS recursion depth limit
@@ -2031,7 +2045,7 @@ declare module '@sveltejs/kit' {
 				submit: () => Promise<boolean> & {
 					updates: (...updates: RemoteQueryUpdate[]) => Promise<boolean>;
 				};
-			}) => void
+			}) => MaybePromise<void>
 		): {
 			method: 'POST';
 			action: string;
@@ -2693,7 +2707,7 @@ declare module '@sveltejs/kit' {
 	 * @param status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#redirection_messages). Must be in the range 300-308.
 	 * @param location The location to redirect to.
 	 * @throws {import('./public.js').Redirect} This error instructs SvelteKit to redirect to the specified location.
-	 * @throws {Error} If the provided status is invalid.
+	 * @throws {Error} If the provided status is invalid or the location cannot be used as a header value.
 	 * */
 	export function redirect(status: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308 | ({} & number), location: string | URL): never;
 	/**
@@ -2886,12 +2900,14 @@ declare module '@sveltejs/kit/node' {
 }
 
 declare module '@sveltejs/kit/vite' {
+	import type { Adapter } from '@sveltejs/kit';
+	import type { PluginOption } from 'vite';
 	/**
 	 * Returns the SvelteKit Vite plugins.
 	 * */
 	export function sveltekit(options?: {
-		adapter?: import("@sveltejs/kit").Adapter;
-	} | undefined): Promise<import("vite").PluginOption[]>;
+		adapter?: Adapter;
+	} | undefined): Promise<PluginOption>;
 
 	export {};
 }

@@ -1,4 +1,4 @@
-/** @import { RequestState } from 'types' */
+/** @import { RequestState, SSRNode } from 'types' */
 import { DEV } from 'esm-env';
 import { json, text } from '@sveltejs/kit';
 import { Redirect, SvelteKitError } from '@sveltejs/kit/internal';
@@ -522,14 +522,18 @@ export async function internal_respond(request, options, manifest, state) {
 		return await handle();
 	} catch (e) {
 		if (e instanceof Redirect) {
-			const response =
-				is_data_request || remote_id
-					? redirect_json_response(e)
-					: route?.page && is_action_json_request(event)
-						? action_json_redirect(e)
-						: redirect_response(e.status, e.location);
-			add_cookies_to_headers(response.headers, new_cookies.values());
-			return response;
+			try {
+				const response =
+					is_data_request || remote_id
+						? redirect_json_response(e)
+						: route?.page && is_action_json_request(event)
+							? action_json_redirect(e)
+							: redirect_response(e.status, e.location);
+				add_cookies_to_headers(response.headers, new_cookies.values());
+				return response;
+			} catch (err) {
+				return await handle_fatal_error(event, event_state, options, err);
+			}
 		}
 		return await handle_fatal_error(event, event_state, options, e);
 	}
@@ -559,7 +563,14 @@ export async function internal_respond(request, options, manifest, state) {
 					page_config: { ssr: false, csr: true },
 					status: 200,
 					error: null,
-					branch: [],
+					branch: [
+						// include the root layout because it applies to every page
+						{
+							node: /** @type {SSRNode} */ (await manifest._.nodes[0]()),
+							data: null,
+							server_data: null
+						}
+					],
 					fetched: [],
 					resolve_opts,
 					data_serializer: server_data_serializer(event, event_state, options)

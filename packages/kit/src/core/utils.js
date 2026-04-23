@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { styleText } from 'node:util';
 import { posixify } from '../utils/os.js';
 import { to_fs } from '../exports/vite/filesystem.js';
+import { noop } from '../utils/functions.js';
 
 /**
  * Resolved path of the `runtime` directory
@@ -27,8 +28,6 @@ export function get_runtime_base(root) {
 		? `/${path.relative(root, runtime_directory)}`
 		: to_fs(runtime_directory);
 }
-
-function noop() {}
 
 /** @param {{ verbose: boolean }} opts */
 export function logger({ verbose }) {

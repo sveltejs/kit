@@ -185,7 +185,7 @@ export function dev(vite, vite_config, svelte_config, root, dev_environment) {
 	return () => {
 		const serve_static_middleware = vite.middlewares.stack.find(
 			(middleware) =>
-				/** @type {function} */ (middleware.handle).name === 'viteServeStaticMiddleware'
+				/** @type {Function} */ (middleware.handle).name === 'viteServeStaticMiddleware'
 		);
 
 		// Vite will give a 403 on URLs like /test, /static, and /package.json preventing us from

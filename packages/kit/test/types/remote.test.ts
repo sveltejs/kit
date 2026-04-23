@@ -2,6 +2,7 @@ import { query, prerender, command, form, requested } from '$app/server';
 import { StandardSchemaV1 } from '@standard-schema/spec';
 import {
 	RemoteForm,
+	RemoteFormFields,
 	RemoteFormInput,
 	RemotePrerenderFunction,
 	RemoteQueryFunction,
@@ -429,6 +430,41 @@ function form_tests() {
 	// @ts-expect-error
 	f6.input!['array[0].prop'] = 123;
 
+	// schema with optional array fields (e.g. Zod's `.default([])` produces an input
+	// type where the property is optional, so its value type is `string[] | undefined`).
+	// Regression test for #15722.
+	const f_optional_arrays = form(
+		null as any as StandardSchemaV1<{
+			strings?: string[];
+			files?: File[];
+			objects?: Array<{ prop: string }>;
+			nested?: { strings?: string[] };
+		}>,
+		(data) => {
+			data.strings?.[0] === 'a';
+			data.files?.[0] instanceof File;
+			data.objects?.[0].prop === 'a';
+			return { success: true };
+		}
+	);
+	// `.as()` should be available on optional string[] / File[] fields
+	f_optional_arrays.fields.strings.as('checkbox', 'value');
+	f_optional_arrays.fields.strings.as('select multiple');
+	f_optional_arrays.fields.files.as('file multiple');
+	// indexed access gives back a typed field
+	f_optional_arrays.fields.strings[0].as('text');
+	f_optional_arrays.fields.files[0].as('file');
+	// optional array of objects still exposes container methods and per-item fields
+	f_optional_arrays.fields.objects.allIssues();
+	f_optional_arrays.fields.objects[0].prop.as('text');
+	// nested optional array inside optional parent also works
+	f_optional_arrays.fields.nested.strings.as('checkbox', 'value');
+	f_optional_arrays.fields.nested.strings[0].as('text');
+	// @ts-expect-error
+	f_optional_arrays.fields.strings.as('number');
+	// @ts-expect-error
+	f_optional_arrays.fields.files.as('text');
+
 	// doesn't use data
 	const f9 = form(() => Promise.resolve({ success: true }));
 	f9.result?.success === true;
@@ -442,6 +478,49 @@ function form_tests() {
 		form.fields.allIssues();
 	}
 	void f10;
+
+	const f11 = form(
+		null as any as StandardSchemaV1<{
+			differing: { type: 'a'; propA: string } | { type: 'b'; propB?: string };
+		}>,
+		(data) => {
+			data.differing.type === 'a' || data.differing.type === 'b';
+			if (data.differing.type === 'a') {
+				data.differing.propA === '';
+				// @ts-expect-error
+				data.differing.propB;
+			} else {
+				data.differing.propB === '';
+				// @ts-expect-error
+				data.differing.propA;
+			}
+			return { success: true };
+		}
+	);
+	f11.fields.differing.issues();
+	f11.fields.differing.value().type === 'a' || f11.fields.differing.value().type === 'b';
+	const f11_field = f11.fields.differing.value();
+	if (f11_field.type === 'a') {
+		f11_field.propA === '';
+		// @ts-expect-error
+		f11_field.propB;
+	}
+	f11.fields.differing.propA.value();
+	f11.fields.differing.propB.issues();
+	// @ts-expect-error
+	f11.fields.differing.propC.value();
+	f11.fields.differing.set({ type: 'a', propA: 'test' });
+	f11.fields.differing.set({ type: 'b', propB: 'test' });
+	f11.fields.differing.set({ type: 'b' });
+	// @ts-expect-error
+	f11.fields.differing.set({ type: 'b', propA: 'test' });
+	// @ts-expect-error
+	f11.fields.differing.set({ type: 'a', propB: 'test' });
+	// test that you can narrow yourself if you want to
+	const f11_field2 = f11.fields.differing as RemoteFormFields<{ type: 'a'; propA: string }>;
+	f11_field2.propA;
+	// @ts-expect-error
+	f11_field2.propB;
 }
 form_tests();
 
