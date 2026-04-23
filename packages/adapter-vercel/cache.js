@@ -43,7 +43,7 @@ export default function create_cache() {
 		invalidate: async (tags) => {
 			if (tags.length === 0) return;
 
-			await Promise.all([getCache().expireTag(tags), invalidateByTag(tags)]);
+			await getCache().expireTag(tags); // besides deleting from the cache this also purges the tag on the CDN
 		}
 	};
 }
