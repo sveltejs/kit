@@ -504,7 +504,8 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 						__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: '0',
 						__SVELTEKIT_PAYLOAD__: 'globalThis.__sveltekit_dev',
 						__SVELTEKIT_HAS_SERVER_LOAD__: 'true',
-						__SVELTEKIT_HAS_UNIVERSAL_LOAD__: 'true'
+						__SVELTEKIT_HAS_UNIVERSAL_LOAD__: 'true',
+						__SVELTEKIT_FILES_ASSETS__: s(kit.files.assets)
 					};
 				}
 
@@ -587,11 +588,13 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 		}
 	};
 
-	/** @type {Map<string, { size: number; data: string }>} */
+	/** @type {Map<string, { size: number; data: Uint8Array<ArrayBuffer> }>} */
 	let server_assets;
 
 	/**
-	 * Allows us to access the filesystem from an environment that doesn't have `node:fs`
+	 * Allows us to access the filesystem synchronously from an environment that
+	 * doesn't have `node:fs`. This is used to dynamically populate the server
+	 * manifest's `server_assets` property.
 	 * @type {Plugin}
 	 */
 	const plugin_server_filesystem = {
@@ -630,7 +633,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 					});
 
 					// persist changes in case of server reload
-					server_assets.set(filepath, { size, data: devalue.uneval(data) });
+					server_assets.set(filepath, { size, data });
 					invalidate_module(dev_environment.vite, sveltekit_server_assets);
 				}
 			}
@@ -726,8 +729,12 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 					}
 
 					case sveltekit_server_assets: {
-						/** @type {Array<[string, { size: number; data: string }]>} */
-						const entries = Object.entries(server_assets);
+						/** @type {Array<[string, { size: number; data: Uint8Array<ArrayBuffer> }]>} */
+						const entries = [];
+
+						for (const asset of server_assets) {
+							entries.push(asset);
+						}
 
 						return dedent`
 							export const server_assets = {
@@ -738,13 +745,9 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 									.join(',\n')}
 							};
 
-							export const server_assets_content = {
-								${entries
-									.map(([filepath, { data }]) => {
-										return `${s(filepath)}: ${data}`;
-									})
-									.join(',\n')}
-							};
+							export const server_assets_content = ${devalue.uneval(
+								Object.fromEntries(entries.map(([filepath, { data }]) => [filepath, data]))
+							)};
 
 							let devalue;
 
