@@ -1677,8 +1677,6 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 		 * @see https://vitejs.dev/guide/api-plugin.html#configurepreviewserver
 		 */
 		configurePreviewServer(vite) {
-			// TODO: ensure `paths.assets` is correctly proxied during preview
-
 			if (kit.adapter?.vite?.plugins) return;
 
 			return preview(vite, vite_config, svelte_config);
