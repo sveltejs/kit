@@ -23,28 +23,36 @@ import adapter from '@sveltejs/adapter-cloudflare';
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
 	kit: {
-		adapter: adapter()
+		adapter: adapter({
+			// See the next section for an explanations of these options
+			vitePluginOptions: undefined
+		})
 	}
 };
 
 export default config;
 ```
 
-And also to your `vite.config.js`:
+And to your `vite.config.js`:
 
 ```js
 /// file: vite.config.js
-import adapter from '@sveltejs/adapter-cloudflare';
+// @filename: ambient.d.ts
+declare module './svelte.config.js' {
+	const svelteConfig: import('@sveltejs/kit').Config
+	export default svelteConfig;
+}
+
+// @filename: index.js
+// ---cut---
+import svelteConfig from './svelte.config.js';
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
 	plugins: [
 		sveltekit({
-			adapter: adapter({
-				// See below for an explanations of these options
-				vitePluginOptions: undefined
-			})
+			adapter: svelteConfig.kit?.adapter
 		})
 	]
 });
