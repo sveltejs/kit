@@ -79,3 +79,18 @@ test('rejects request bodies that exceed content-length', async () => {
 		message: 'request body size exceeded content-length of 4'
 	});
 });
+
+// Test for fix of CVE-2026-40073
+test('requests with no content-length and no transfer-encoding return null body', async () => {
+	const { request, req } = await create_request({
+		headers: {},
+		bodySizeLimit: 10
+	});
+
+	const text = request.text();
+
+	req.write(Buffer.from('0123456789a')); // 11 bytes, over limit
+	req.end();
+
+	await expect(text).resolves.toBe(''); // Should return an empty string if bug is actually fixed
+});

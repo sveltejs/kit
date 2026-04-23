@@ -1382,7 +1382,6 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 	const plugin_compile = {
 		name: 'vite-plugin-sveltekit-compile',
 
-		// TODO: add `order: pre` to avoid false-positive warnings of overridden config options set by Vitest
 		/**
 		 * Build the SvelteKit-provided Vite config to be merged with the user's vite.config.js file.
 		 * @see https://vitejs.dev/guide/api-plugin.html#config
