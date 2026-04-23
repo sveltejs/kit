@@ -1,11 +1,17 @@
 /** @import { ValidatedConfig } from 'types' */
 /** @import { Connect, PluginOption, ViteDevServer } from 'vite' */
+/** @import { ModuleRunner } from 'vite/module-runner' */
 import fs from 'node:fs';
 import path, { basename } from 'node:path';
-import { createServer, isFetchableDevEnvironment } from 'vite';
+import {
+	createFetchableDevEnvironment,
+	createServer,
+	createServerHotChannel,
+	createServerModuleRunner,
+	isFetchableDevEnvironment
+} from 'vite';
 import { exactRegex } from 'rolldown/filter';
 import { sveltekit_env, sveltekit_ipc } from '../module_ids.js';
-import { createNodeWorkerEnvironment } from '../dev/worker_environment.js';
 import { dedent } from '../../../core/sync/utils.js';
 import {
 	check_feature,
@@ -288,6 +294,12 @@ export async function create_build_server({
 		}
 	};
 
+	/** @type {ModuleRunner} */
+	let runner;
+
+	/** @type {string | undefined} */
+	let remote_address;
+
 	/** @type {PluginOption} */
 	const plugin_node_environment = {
 		name: 'vite-plugin-sveltekit-compile:node-environment',
@@ -296,16 +308,36 @@ export async function create_build_server({
 				environments: {
 					ssr: {
 						dev: {
-							createEnvironment: createNodeWorkerEnvironment
+							createEnvironment(name, config) {
+								return createFetchableDevEnvironment(name, config, {
+									hot: true,
+									transport: createServerHotChannel(),
+									async handleRequest(request) {
+										try {
+											/** @type {import('../dev/ssr_entry.js')} */
+											const { respond } = await runner.import('__sveltekit/dev-server-entry');
+											return await respond(request, remote_address);
+										} catch (error) {
+											// Vite doesn't log errors so we do it ourselves
+											console.error(error);
+											throw error;
+										}
+									}
+								});
+							}
 						}
 					}
 				}
 			};
 		},
-		configureServer(vite) {
-			vite.environments.ssr.hot.on('hello', console.log);
+		async configureServer(vite) {
+			if (runner) await runner.close();
+			runner = createServerModuleRunner(vite.environments.ssr);
+
 			return () => {
 				vite.middlewares.use(async (req, res, next) => {
+					remote_address = req.socket.remoteAddress;
+
 					// Vite's base middleware strips out the base path. Restore it
 					req.url = req.originalUrl;
 

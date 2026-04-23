@@ -1,6 +1,7 @@
 /** @import { Options } from '@sveltejs/vite-plugin-svelte' */
 /** @import { PreprocessorGroup } from 'svelte/compiler' */
 /** @import { ConfigEnv, Plugin, PluginOption, ResolvedConfig, UserConfig, Manifest, EnvironmentOptions, Rolldown } from 'vite' */
+/** @import { ModuleRunner } from 'vite/module-runner' */
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
@@ -8,7 +9,12 @@ import { styleText } from 'node:util';
 
 import * as devalue from 'devalue';
 import { exactRegex, prefixRegex } from 'rolldown/filter';
-import { buildErrorMessage } from 'vite';
+import {
+	buildErrorMessage,
+	createFetchableDevEnvironment,
+	createServerHotChannel,
+	createServerModuleRunner
+} from 'vite';
 
 import { copy, mkdirp, read, resolve_entry, rimraf } from '../../utils/filesystem.js';
 import { create_static_module, create_dynamic_module } from '../../core/env.js';
@@ -58,7 +64,6 @@ import { should_ignore, has_children } from './static_analysis/utils.js';
 import { load_config } from '../../core/config/index.js';
 import { treeshake_prerendered_remotes } from './build/remote.js';
 import { runtime_directory } from '../../runtime/utils.js';
-import { createNodeWorkerEnvironment } from './dev/worker_environment.js';
 import { SVELTE_KIT_ASSETS } from '../../constants.js';
 
 const cwd = process.cwd();
@@ -517,6 +522,12 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 		}
 	};
 
+	/** @type {ModuleRunner} */
+	let runner;
+
+	/** @type {string | undefined} */
+	let remote_address;
+
 	/** @type {Plugin} */
 	const plugin_node_environment = {
 		name: 'vite-plugin-sveltekit-node-environment',
@@ -527,7 +538,23 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 				environments: {
 					ssr: {
 						dev: {
-							createEnvironment: createNodeWorkerEnvironment
+							createEnvironment(name, config) {
+								return createFetchableDevEnvironment(name, config, {
+									hot: true,
+									transport: createServerHotChannel(),
+									async handleRequest(request) {
+										try {
+											/** @type {import('./dev/ssr_entry.js')} */
+											const { respond } = await runner.import('__sveltekit/dev-server-entry');
+											return await respond(request, remote_address);
+										} catch (error) {
+											// Vite doesn't log errors so we do it ourselves
+											console.error(error);
+											throw error;
+										}
+									}
+								});
+							}
 						}
 					}
 				}
@@ -536,6 +563,17 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 			warn_overridden_config(config, new_config);
 
 			return new_config;
+		},
+		async configureServer(vite) {
+			if (runner) await runner.close();
+			runner = createServerModuleRunner(vite.environments.ssr);
+
+			return () => {
+				vite.middlewares.use((req, _res, next) => {
+					remote_address = req.socket.remoteAddress;
+					next();
+				});
+			};
 		},
 		resolveId: {
 			filter: {
