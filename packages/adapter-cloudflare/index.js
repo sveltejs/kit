@@ -274,9 +274,6 @@ export default function (options = {}) {
 							});
 						}
 
-						// TODO: remove this once @cloudflare/vite-plugin adds it by itself
-						config.environments.ssr.consumer = 'server';
-
 						config.environments.ssr.optimizeDeps ??= {};
 						config.environments.ssr.optimizeDeps.entries ??= [];
 						if (typeof config.environments.ssr.optimizeDeps.entries === 'string') {
