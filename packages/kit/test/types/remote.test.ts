@@ -172,26 +172,62 @@ function command_tests() {
 		const wrong: number = await cmd();
 		wrong;
 
-		for (const value of requested(q)) {
-			const output: void = value;
-			output;
+		for (const { arg, query: bound } of requested(q, 5)) {
+			const arg_output: void = arg;
+			arg_output;
+			void bound.refresh();
 		}
 
-		for await (const value of requested(q)) {
-			const output: void = value;
-			output;
+		for await (const { arg, query: bound } of requested(q, 5)) {
+			const arg_output: void = arg;
+			arg_output;
+			void bound.refresh();
 		}
 
-		for (const value of requested(q, 1)) {
-			const output: void = value;
-			output;
+		for (const { arg, query: bound } of requested(q, 1)) {
+			const arg_output: void = arg;
+			arg_output;
+			void bound.refresh();
 		}
 
-		const refreshes = requested(q);
+		// @ts-expect-error — `limit` is required
+		requested(q);
+
+		const refreshes = requested(q, 5);
 		const refreshed: Promise<void> = refreshes.refreshAll();
 		refreshed;
 	}
 	void command_without_args();
+
+	async function requested_validated_type_tracks_schema_output() {
+		// schema2 declares InferInput = string, InferOutput = number, so `arg`
+		// in `requested(...)` must be `number` (the post-validation / post-transform
+		// value), NOT the pre-validation `string`.
+		const q = query(schema2, (a) => a);
+		for (const { arg, query: bound } of requested(q, 5)) {
+			const arg_output: number = arg;
+			arg_output;
+			void bound.refresh();
+			// @ts-expect-error — `arg` is number, not string
+			const wrong: string = arg;
+			wrong;
+		}
+
+		// `'unchecked'` queries: `arg` is the caller's Input type
+		const unchecked = query('unchecked', (a: number) => a);
+		for (const { arg } of requested(unchecked, 5)) {
+			const arg_output: number = arg;
+			arg_output;
+		}
+
+		// Queries without arguments: `arg` is `void`
+		const no_arg = query(() => 'hi');
+		for (const { arg } of requested(no_arg, 5)) {
+			const arg_output: void = arg;
+			arg_output;
+		}
+	}
+	void requested_validated_type_tracks_schema_output();
 
 	async function command_with_optional_arg() {
 		const q = command(schema3, () => 'Hello world');

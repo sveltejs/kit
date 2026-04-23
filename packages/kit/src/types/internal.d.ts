@@ -22,7 +22,8 @@ import {
 	ClientInit,
 	Transport,
 	HandleValidationError,
-	RemoteFormIssue
+	RemoteFormIssue,
+	RemoteQuery
 } from '@sveltejs/kit';
 import {
 	HttpMethod,
@@ -593,6 +594,14 @@ interface BaseRemoteInternals {
 export interface RemoteQueryInternals extends BaseRemoteInternals {
 	type: 'query';
 	validate: (arg?: any) => MaybePromise<any>;
+	/**
+	 * Creates a `RemoteQuery` bound directly to a specific client payload (the
+	 * stringified raw argument) and a pre-validated argument, skipping the query
+	 * wrapper's re-validation step. Used by `requested(query)` to ensure
+	 * `refresh()` / `set()` target the same cache key the client is listening on
+	 * even when the schema transforms the input.
+	 */
+	bind(payload: string, arg: any): RemoteQuery<any>;
 }
 export interface RemoteQueryLiveInternals extends BaseRemoteInternals {
 	type: 'query_live';
@@ -663,7 +672,6 @@ export interface RequestState {
 		forms: null | Map<any, any>;
 		refreshes: null | Record<string, Promise<any>>;
 		requested: null | Map<string, string[]>;
-		validated: null | Map<string, Set<any>>;
 	};
 	readonly is_in_remote_function: boolean;
 	readonly is_in_render: boolean;
