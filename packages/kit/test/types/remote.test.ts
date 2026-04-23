@@ -172,13 +172,13 @@ function command_tests() {
 		const wrong: number = await cmd();
 		wrong;
 
-		for (const { arg, query: bound } of requested(q)) {
+		for (const { arg, query: bound } of requested(q, 5)) {
 			const arg_output: void = arg;
 			arg_output;
 			void bound.refresh();
 		}
 
-		for await (const { arg, query: bound } of requested(q)) {
+		for await (const { arg, query: bound } of requested(q, 5)) {
 			const arg_output: void = arg;
 			arg_output;
 			void bound.refresh();
@@ -190,7 +190,10 @@ function command_tests() {
 			void bound.refresh();
 		}
 
-		const refreshes = requested(q);
+		// @ts-expect-error — `limit` is required
+		requested(q);
+
+		const refreshes = requested(q, 5);
 		const refreshed: Promise<void> = refreshes.refreshAll();
 		refreshed;
 	}
@@ -201,7 +204,7 @@ function command_tests() {
 		// in `requested(...)` must be `number` (the post-validation / post-transform
 		// value), NOT the pre-validation `string`.
 		const q = query(schema2, (a) => a);
-		for (const { arg, query: bound } of requested(q)) {
+		for (const { arg, query: bound } of requested(q, 5)) {
 			const arg_output: number = arg;
 			arg_output;
 			void bound.refresh();
@@ -212,14 +215,14 @@ function command_tests() {
 
 		// `'unchecked'` queries: `arg` is the caller's Input type
 		const unchecked = query('unchecked', (a: number) => a);
-		for (const { arg } of requested(unchecked)) {
+		for (const { arg } of requested(unchecked, 5)) {
 			const arg_output: number = arg;
 			arg_output;
 		}
 
 		// Queries without arguments: `arg` is `void`
 		const no_arg = query(() => 'hi');
-		for (const { arg } of requested(no_arg)) {
+		for (const { arg } of requested(no_arg, 5)) {
 			const arg_output: void = arg;
 			arg_output;
 		}

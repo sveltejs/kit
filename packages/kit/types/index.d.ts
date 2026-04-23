@@ -3473,7 +3473,7 @@ declare module '$app/server' {
 	 * ```
 	 *
 	 * */
-	export function requested<Input, Output, Validated = Input>(query: RemoteQueryFunction<Input, Output, Validated>, limit?: number): RequestedResult<Validated, Output>;
+	export function requested<Input, Output, Validated = Input>(query: RemoteQueryFunction<Input, Output, Validated>, limit: number): RequestedResult<Validated, Output>;
 	type RemotePrerenderInputsGenerator<Input = any> = () => MaybePromise<Input[]>;
 	type MaybePromise<T> = T | Promise<T>;
 

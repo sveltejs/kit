@@ -40,10 +40,10 @@ import { noop } from '../../../../utils/functions.js';
  * @template Output
  * @template [Validated=Input]
  * @param {RemoteQueryFunction<Input, Output, Validated>} query
- * @param {number} [limit=Infinity]
+ * @param {number} limit
  * @returns {RequestedResult<Validated, Output>}
  */
-export function requested(query, limit = Infinity) {
+export function requested(query, limit) {
 	const { state } = get_request_store();
 	const internals = /** @type {RemoteQueryInternals | undefined} */ (/** @type {any} */ (query).__);
 
