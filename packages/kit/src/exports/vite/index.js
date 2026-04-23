@@ -413,14 +413,10 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 					preview: {
 						cors: { preflightContinue: true }
 					},
+					// By default, only client environments inherit the top-level `optimizeDeps`
+					// but we manually pass it down in adapters that use `optimizeDeps` for "full-bundle mode"
 					optimizeDeps: {
-						entries: [
-							`${kit.files.routes}/**/+*.{svelte,js,ts}`,
-							`!${kit.files.routes}/**/+*server.*`
-						],
-						// these aren't discovered until the server responds to a request
-						// so we include them here to avoid them from being optimised too late
-						include: ['@sveltejs/kit > devalue', '@sveltejs/kit > esm-env'],
+						entries: [`${kit.files.routes}/**/+*.{svelte,js,ts}`],
 						exclude: [
 							// Without this SvelteKit will be prebundled on the client, which means we end up with two versions of Redirect etc.
 							// Also see https://github.com/sveltejs/kit/issues/5952#issuecomment-1218844057
@@ -429,7 +425,9 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 							// this does not affect app code, just handling of imported libraries that use $app or $env
 							'$app',
 							'$env'
-						]
+						],
+						// avoid Vite dev server reloading the first time a page is requested
+						include: ['@sveltejs/kit > devalue', '@sveltejs/kit > esm-env']
 					},
 					ssr: {
 						noExternal: [
@@ -445,17 +443,6 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 							// uses basic concatenation)
 							'@sveltejs/kit/src/runtime'
 						]
-					},
-					future: {
-						removePluginHookHandleHotUpdate: 'warn',
-						removePluginHookSsrArgument: 'warn',
-						removeServerHot: 'warn',
-						removeServerModuleGraph: 'warn',
-						removeServerPluginContainer: 'warn',
-						removeServerReloadModule: 'warn',
-						removeServerTransformRequest: 'warn',
-						removeServerWarmupRequest: 'warn',
-						removeSsrLoadModule: 'warn'
 					}
 				};
 

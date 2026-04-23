@@ -1,5 +1,5 @@
 /** @import { WorkerConfig } from '@cloudflare/vite-plugin' */
-import { copyFileSync, existsSync, writeFileSync, symlinkSync, rmSync, unlinkSync } from 'node:fs';
+import { copyFileSync, existsSync, writeFileSync, symlinkSync, unlinkSync } from 'node:fs';
 import path from 'node:path';
 import { cloudflare } from '@cloudflare/vite-plugin';
 import { DEV } from 'esm-env';
@@ -127,27 +127,23 @@ export default function (options = {}) {
 			plugins: [
 				{
 					name: 'vite-plugin-sveltekit-cloudflare:pre',
-					config(config, env) {
+					applyToEnvironment(environment) {
+						return environment.name === 'ssr';
+					},
+					configEnvironment(_, config, env) {
 						building = env.command === 'build';
 
-						config.environments ??= {};
-						config.environments.ssr ??= {};
-						config.environments.ssr.build ??= {};
-						config.environments.ssr.build.rolldownOptions ??= {};
+						config ??= {};
+						config.build ??= {};
+						config.build.rolldownOptions ??= {};
 
 						// We need to rename the SvelteKit server entry to `server.js` because
 						// The Cloudflare Vite plugin hardcodes the worker entry as `index.js`
-						if (
-							typeof config.environments.ssr.build.rolldownOptions.input === 'object' &&
-							'index' in config.environments.ssr.build.rolldownOptions.input
-						) {
-							config.environments.ssr.build.rolldownOptions.input.server =
-								config.environments.ssr.build.rolldownOptions.input.index;
-							delete config.environments.ssr.build.rolldownOptions.input.index;
+						const input = config.build.rolldownOptions.input;
+						if (typeof input === 'object' && 'index' in input) {
+							input.server = input.index;
+							delete input.index;
 						}
-					},
-					applyToEnvironment(environment) {
-						return environment.name === 'ssr';
 					},
 					resolveId: {
 						filter: {
@@ -274,6 +270,30 @@ export default function (options = {}) {
 								find: '__SERVER__/index.js',
 								replacement: `${config.environments.ssr.build?.outDir}/server.js`
 							});
+						}
+
+						// TODO: remove this once @cloudflare/vite-plugin adds it by itself
+						config.environments.ssr.consumer = 'server';
+
+						config.environments.ssr.optimizeDeps ??= {};
+						config.environments.ssr.optimizeDeps.entries ??= [];
+						if (typeof config.environments.ssr.optimizeDeps.entries === 'string') {
+							config.environments.ssr.optimizeDeps.entries = [
+								config.environments.ssr.optimizeDeps.entries
+							];
+						}
+
+						// inherit top-level `optimizeDeps.entries` that we set in SvelteKit's
+						// Vite config so that server-side deps are correctly pre-bundled
+						if (config.optimizeDeps?.entries) {
+							const top_level_entries = (
+								Array.isArray(config.optimizeDeps.entries)
+									? config.optimizeDeps.entries
+									: [config.optimizeDeps.entries]
+							).filter((entry) => {
+								return entry.endsWith('/**/+*.{svelte,js,ts}');
+							});
+							config.environments.ssr.optimizeDeps.entries.push(...top_level_entries);
 						}
 					}
 				}
