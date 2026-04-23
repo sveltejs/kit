@@ -303,6 +303,7 @@ export type RemoteFunctionResponse =
 	| (ServerRedirectNode & {
 			/** devalue'd Record<string, any> */
 			refreshes?: string;
+			reconnects?: string[];
 	  })
 	| ServerErrorNode
 	| {
@@ -310,6 +311,7 @@ export type RemoteFunctionResponse =
 			result: string;
 			/** devalue'd Record<string, any> */
 			refreshes: string | undefined;
+			reconnects?: string[];
 	  };
 
 export type RemoteRefreshResult = {
@@ -596,11 +598,7 @@ export interface RemoteQueryInternals extends BaseRemoteInternals {
 }
 export interface RemoteQueryLiveInternals extends BaseRemoteInternals {
 	type: 'query_live';
-	run(
-		event: RequestEvent,
-		state: RequestState,
-		arg: any
-	): Promise<{ iterator: AsyncIterator<any>; cancel: () => void }>;
+	run(event: RequestEvent, state: RequestState, arg: any): Promise<AsyncIterator<any>>;
 }
 
 export interface RemoteQueryBatchInternals extends BaseRemoteInternals {
@@ -662,6 +660,7 @@ export interface RequestState {
 		>;
 		forms: null | Map<any, any>;
 		refreshes: null | Record<string, Promise<any>>;
+		reconnects: null | Set<string>;
 		requested: null | Map<string, string[]>;
 		validated: null | Map<string, Set<any>>;
 	};

@@ -1,7 +1,7 @@
 /** @import { RemoteFunctionResponse, RemoteRefreshMap } from 'types' */
 /** @import { RemoteQueryUpdate } from '@sveltejs/kit' */
 import * as devalue from 'devalue';
-import { app, goto, query_map } from '../client.js';
+import { app, goto, live_query_map, query_map } from '../client.js';
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
 import { untrack } from 'svelte';
 import { create_remote_key, split_remote_key } from '../../shared.js';
@@ -151,5 +151,12 @@ export function apply_refreshes(stringified_refreshes) {
 		} else {
 			entry?.resource.fail(new HttpError(value.status ?? 500, value.error));
 		}
+	}
+}
+
+/** @param {string[]} reconnects */
+export function reconnect_live_queries(reconnects) {
+	for (const key of reconnects) {
+		live_query_map.get(key)?.resource.reconnect();
 	}
 }

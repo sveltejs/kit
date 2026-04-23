@@ -1,4 +1,4 @@
-/** @import { RemoteQueryCacheEntry } from './remote-functions/query.svelte.js' */
+/** @import { RemoteLiveQueryCacheEntry, RemoteQueryCacheEntry } from './remote-functions/query.svelte.js' */
 import { BROWSER, DEV } from 'esm-env';
 import * as svelte from 'svelte';
 import { HttpError, Redirect, SvelteKitError } from '@sveltejs/kit/internal';
@@ -304,6 +304,12 @@ export let pending_invalidate;
  * A map of query id -> payload -> query internals for all active queries.
  */
 export const query_map = new Map();
+
+/**
+ * @type {Map<string, RemoteLiveQueryCacheEntry<any>>}
+ * A map of id -> live query info with all live queries that currently exist in the app.
+ */
+export const live_query_map = new Map();
 
 /**
  * @param {import('./types.js').SvelteKitApp} _app

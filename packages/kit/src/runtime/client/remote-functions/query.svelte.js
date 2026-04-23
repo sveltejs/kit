@@ -1,7 +1,7 @@
-/** @import { RemoteQueryFunction } from '@sveltejs/kit' */
+/** @import { RemoteLiveQueryFunction, RemoteQueryFunction } from '@sveltejs/kit' */
 /** @import { RemoteFunctionResponse } from 'types' */
 import { app_dir, base } from '$app/paths/internal/client';
-import { app, goto, query_map, query_responses } from '../client.js';
+import { app, goto, live_query_map, query_map, query_responses } from '../client.js';
 import {
 	get_remote_request_headers,
 	QUERY_FUNCTION_ID,
@@ -24,6 +24,15 @@ import { create_remote_key, stringify_remote_arg, unfriendly_hydratable } from '
  *   resource: Query<T>;
  *   cleanup: () => void;
  * }} RemoteQueryCacheEntry
+ */
+
+/**
+ * @template T
+ * @typedef {{
+ *   count: number;
+ *   resource: LiveQuery<T>;
+ *   cleanup: () => void;
+ * }} RemoteLiveQueryCacheEntry
  */
 
 /**
@@ -71,6 +80,22 @@ export function query(id) {
 	Object.defineProperty(wrapper, QUERY_FUNCTION_ID, { value: id });
 
 	return wrapper;
+}
+
+/**
+ * @param {string} id
+ * @returns {RemoteLiveQueryFunction<any, any>}
+ */
+export function query_live(id) {
+	if (DEV) {
+		for (const [key, entry] of live_query_map) {
+			if (key === id || key.startsWith(id + '/')) {
+				void entry.resource.reconnect();
+			}
+		}
+	}
+
+	return (arg) => new LiveQueryProxy(id, arg);
 }
 
 /**
@@ -404,6 +429,451 @@ export class Query {
 }
 
 /**
+ * @param {Response} response
+ * @returns {Promise<ReadableStreamDefaultReader<Uint8Array>>}
+ */
+async function get_stream_reader(response) {
+	const content_type = response.headers.get('content-type') ?? '';
+
+	if (response.ok && content_type.includes('application/json')) {
+		// we can end up here if we e.g. redirect in `handle`
+		const result = await response.json();
+
+		if (result.type === 'redirect') {
+			await goto(result.location);
+			throw new Redirect(307, result.location);
+		}
+
+		if (result.type === 'error') {
+			throw new HttpError(result.status ?? 500, result.error);
+		}
+
+		throw new HttpError(500, 'Invalid query.live response');
+	}
+
+	if (!response.ok) {
+		const result = await response.json().catch(() => ({
+			type: 'error',
+			status: response.status,
+			error: response.statusText
+		}));
+
+		throw new HttpError(result.status ?? response.status ?? 500, result.error);
+	}
+
+	if (!response.body) {
+		throw new Error('Expected query.live response body to be a ReadableStream');
+	}
+
+	return response.body.getReader();
+}
+
+/**
+ * @param {ReadableStreamDefaultReader<Uint8Array>} reader
+ */
+function create_stream_reader(reader) {
+	let done = false;
+	let buffer = '';
+	const text_decoder = new TextDecoder();
+
+	return async () => {
+		while (true) {
+			const split = buffer.indexOf('\n');
+			if (split !== -1) {
+				const line = buffer.slice(0, split).trim();
+				buffer = buffer.slice(split + 1);
+
+				if (!line) continue;
+
+				const node = JSON.parse(line);
+
+				if (node.type === 'result') {
+					return devalue.parse(node.result, app.decoders);
+				}
+
+				if (node.type === 'redirect') {
+					await goto(node.location);
+					throw new Redirect(307, node.location);
+				}
+
+				if (node.type === 'error') {
+					throw new HttpError(node.status ?? 500, node.error);
+				}
+
+				throw new Error('Invalid query.live response');
+			}
+
+			if (done) {
+				if (buffer.trim()) {
+					const node = JSON.parse(buffer.trim());
+					buffer = '';
+
+					if (node.type === 'result') {
+						return devalue.parse(node.result, app.decoders);
+					}
+
+					if (node.type === 'redirect') {
+						await goto(node.location);
+						throw new Redirect(307, node.location);
+					}
+
+					if (node.type === 'error') {
+						throw new HttpError(node.status ?? 500, node.error);
+					}
+				}
+
+				return undefined;
+			}
+
+			const chunk = await reader.read();
+			done = chunk.done;
+			if (chunk.value) {
+				buffer += text_decoder.decode(chunk.value, { stream: true });
+			}
+		}
+	};
+}
+
+/**
+ * @template T
+ * @param {string} id
+ * @param {string} payload
+ * @returns {Promise<AsyncIterableIterator<T>>}
+ */
+async function create_live_iterator(id, payload) {
+	const controller = new AbortController();
+	const url = `${base}/${app_dir}/remote/${id}${payload ? `?payload=${payload}` : ''}`;
+	const response = await fetch(url, {
+		headers: get_remote_request_headers(),
+		signal: controller.signal
+	});
+	const reader = await get_stream_reader(response);
+	const next_value = create_stream_reader(reader);
+
+	let closed = false;
+
+	/** @type {AsyncIterableIterator<T>} */
+	const iterator = {
+		[Symbol.asyncIterator]() {
+			return iterator;
+		},
+		async next() {
+			if (closed) {
+				return { value: undefined, done: true };
+			}
+
+			const value = await next_value();
+			if (value === undefined) {
+				closed = true;
+				return { value: undefined, done: true };
+			}
+
+			return { value, done: false };
+		},
+		async return(value) {
+			closed = true;
+			controller.abort();
+			try {
+				await reader.cancel();
+			} catch {
+				// already closed
+			}
+			return { value, done: true };
+		}
+	};
+
+	return iterator;
+}
+
+/**
+ * @template T
+ * @implements {Promise<T>}
+ */
+export class LiveQuery {
+	_key;
+	#id;
+	#payload;
+	#loading = $state(true);
+	#ready = $state(false);
+	#connected = $state(false);
+	#finished = $state(false);
+	#version = $state(0);
+	/** @type {T | undefined} */
+	#raw = $state.raw();
+	/** @type {any} */
+	#error = $state.raw(undefined);
+	/** @type {Promise<T>} */
+	#promise;
+
+	/** @type {Promise<T>['then']} */
+	// @ts-expect-error TS doesn't understand that the promise returns something
+	#then = $derived.by(() => {
+		this.#version;
+		const p = this.#promise;
+
+		return (resolve, reject) => {
+			const result = p.then(tick).then(() => /** @type {T} */ (this.#raw));
+
+			if (resolve || reject) {
+				return result.then(resolve, reject);
+			}
+
+			return result;
+		};
+	});
+	/** @type {(value: T | PromiseLike<T>) => void} */
+	#resolve_first;
+	/** @type {(reason?: any) => void} */
+	#reject_first;
+	#active = false;
+	#destroyed = false;
+	#attempt = 0;
+	/** @type {ReturnType<typeof setTimeout> | null} */
+	#retry_timer = null;
+	/** @type {AbortController | null} */
+	#controller = null;
+	#connection = 0;
+
+	/**
+	 * @param {string} id
+	 * @param {string} key
+	 * @param {string} payload
+	 */
+	constructor(id, key, payload) {
+		this.#id = id;
+		this._key = key;
+		this.#payload = payload;
+
+		const { promise, resolve, reject } = with_resolvers();
+		this.#promise = promise;
+		this.#resolve_first = resolve;
+		this.#reject_first = reject;
+
+		if (Object.hasOwn(query_responses, key)) {
+			this.#set_value(query_responses[key]);
+			this.#resolve_first(query_responses[key]);
+		}
+	}
+
+	#clear_retry() {
+		if (this.#retry_timer) {
+			clearTimeout(this.#retry_timer);
+			this.#retry_timer = null;
+		}
+	}
+
+	/** @param {T} value */
+	#set_value(value) {
+		this.#ready = true;
+		this.#loading = false;
+		this.#error = undefined;
+		this.#raw = value;
+		this.#version += 1;
+	}
+
+	#disconnect_current() {
+		this.#controller?.abort();
+		this.#controller = null;
+		this.#connected = false;
+	}
+
+	#schedule_reconnect() {
+		if (!this.#active || this.#destroyed || this.#finished || this.#retry_timer) return;
+
+		if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+			return;
+		}
+
+		const base_delay = Math.min(250 * 2 ** this.#attempt, 10_000);
+		const jitter = base_delay * (Math.random() * 0.4 - 0.2);
+		const delay = Math.max(0, Math.round(base_delay + jitter));
+		this.#attempt += 1;
+
+		this.#retry_timer = setTimeout(() => {
+			this.#retry_timer = null;
+			void this.#connect_stream();
+		}, delay);
+	}
+
+	async #connect_stream() {
+		if (!this.#active || this.#destroyed || this.#finished) return;
+
+		const connection = ++this.#connection;
+		const controller = new AbortController();
+		this.#controller = controller;
+
+		const url = `${base}/${app_dir}/remote/${this.#id}${this.#payload ? `?payload=${this.#payload}` : ''}`;
+
+		try {
+			const response = await fetch(url, {
+				headers: get_remote_request_headers(),
+				signal: controller.signal
+			});
+
+			if (connection !== this.#connection || !this.#active || this.#destroyed) {
+				return;
+			}
+
+			const reader = await get_stream_reader(response);
+			const next_value = create_stream_reader(reader);
+			let finished = false;
+			this.#connected = true;
+			this.#attempt = 0;
+
+			while (this.#active && !this.#destroyed && connection === this.#connection) {
+				const value = await next_value();
+				if (value === undefined) {
+					finished = true;
+					break;
+				}
+
+				if (!this.#ready) {
+					this.#resolve_first(value);
+				}
+
+				this.#set_value(value);
+			}
+
+			if (finished && this.#active && !this.#destroyed && connection === this.#connection) {
+				this.#finished = true;
+			}
+		} catch (error) {
+			if (controller.signal.aborted || connection !== this.#connection) {
+				return;
+			}
+
+			this.#connected = false;
+			this.#error = /** @type {any} */ (error);
+			if (!this.#ready) {
+				this.#loading = false;
+				this.#reject_first(error);
+			}
+		} finally {
+			if (connection === this.#connection) {
+				this.#connected = false;
+				this.#controller = null;
+
+				if (this.#active && !this.#destroyed && !this.#finished) {
+					this.#schedule_reconnect();
+				}
+			}
+		}
+	}
+
+	#on_online = () => {
+		if (!this.#active || this.#destroyed || this.#finished) return;
+		this.#clear_retry();
+		void this.#connect_stream();
+	};
+
+	#on_offline = () => {
+		this.#disconnect_current();
+	};
+
+	#on_pagehide = () => {
+		this.#disconnect_current();
+	};
+
+	connect() {
+		this.#active = true;
+
+		if (typeof window !== 'undefined') {
+			window.addEventListener('online', this.#on_online);
+			window.addEventListener('offline', this.#on_offline);
+			window.addEventListener('pagehide', this.#on_pagehide);
+			window.addEventListener('beforeunload', this.#on_pagehide);
+		}
+
+		this.#clear_retry();
+		if (!this.#controller && !this.#finished) {
+			void this.#connect_stream();
+		}
+	}
+
+	disconnect() {
+		this.#active = false;
+		this.#clear_retry();
+		this.#disconnect_current();
+
+		if (typeof window !== 'undefined') {
+			window.removeEventListener('online', this.#on_online);
+			window.removeEventListener('offline', this.#on_offline);
+			window.removeEventListener('pagehide', this.#on_pagehide);
+			window.removeEventListener('beforeunload', this.#on_pagehide);
+		}
+	}
+
+	destroy() {
+		this.#destroyed = true;
+		this.disconnect();
+	}
+
+	get then() {
+		return this.#then;
+	}
+
+	get catch() {
+		this.#then;
+		return (/** @type {any} */ reject) => {
+			return this.#then(undefined, reject);
+		};
+	}
+
+	get finally() {
+		this.#then;
+		return (/** @type {any} */ fn) => {
+			return this.#then(
+				(value) => {
+					fn();
+					return value;
+				},
+				(error) => {
+					fn();
+					throw error;
+				}
+			);
+		};
+	}
+
+	get current() {
+		return this.#raw;
+	}
+
+	get error() {
+		return this.#error;
+	}
+
+	get loading() {
+		return this.#loading;
+	}
+
+	get ready() {
+		return this.#ready;
+	}
+
+	get connected() {
+		return this.#connected;
+	}
+
+	get finished() {
+		return this.#finished;
+	}
+
+	reconnect() {
+		if (!this.#active || this.#destroyed) return;
+		this.#finished = false;
+		this.#attempt = 0;
+		this.#clear_retry();
+		this.#disconnect_current();
+		void this.#connect_stream();
+	}
+
+	get [Symbol.toStringTag]() {
+		return 'LiveQuery';
+	}
+}
+
+/**
  * Manages the caching layer between the user and the actual {@link Query} instance. This is the thing
  * the developer actually gets to interact with in their application code.
  *
@@ -545,7 +1015,7 @@ class QueryProxy {
 	/** @type {Query<T>['withOverride']} */
 	withOverride(fn) {
 		const entry = this.#get_or_create_cache_entry();
-		const override = entry.resource.withOverride(fn);
+		const override = /** @type {Query<T>} */ (entry.resource).withOverride(fn);
 
 		const release = /** @type {(() => void) & { [QUERY_OVERRIDE_KEY]: string }} */ (
 			() => {
@@ -608,5 +1078,168 @@ class QueryProxy {
 
 	get [Symbol.toStringTag]() {
 		return 'QueryProxy';
+	}
+}
+
+/**
+ * @template T
+ * @implements {Promise<T>}
+ */
+class LiveQueryProxy {
+	_key;
+	#id;
+	#payload;
+	#active = true;
+	#tracking = is_in_effect();
+
+	/**
+	 * @param {string} id
+	 * @param {any} arg
+	 */
+	constructor(id, arg) {
+		this.#id = id;
+		this.#payload = stringify_remote_arg(arg, app.hooks.transport);
+		this._key = create_remote_key(id, this.#payload);
+
+		if (!this.#tracking) {
+			this.#active = false;
+			return;
+		}
+
+		const entry = this.#get_or_create_cache_entry();
+		entry.resource.connect();
+
+		$effect.pre(() => () => {
+			const die = this.#release(entry);
+			void tick().then(die);
+		});
+	}
+
+	/** @returns {RemoteLiveQueryCacheEntry<T>} */
+	#get_or_create_cache_entry() {
+		let cached = live_query_map.get(this._key);
+
+		if (!cached) {
+			const c = (cached = {
+				count: 0,
+				resource: /** @type {LiveQuery<T>} */ (/** @type {unknown} */ (null)),
+				cleanup: /** @type {() => void} */ (/** @type {unknown} */ (null))
+			});
+
+			c.cleanup = $effect.root(() => {
+				c.resource = new LiveQuery(this.#id, this._key, this.#payload);
+			});
+
+			live_query_map.set(this._key, cached);
+		}
+
+		cached.count += 1;
+
+		return /** @type {RemoteLiveQueryCacheEntry<T>} */ (cached);
+	}
+
+	/**
+	 * @param {RemoteLiveQueryCacheEntry<T>} entry
+	 * @param {boolean} [deactivate]
+	 */
+	#release(entry, deactivate = true) {
+		this.#active &&= !deactivate;
+		entry.count -= 1;
+
+		return () => {
+			const cached = live_query_map.get(this._key);
+			if (cached?.count === 0) {
+				cached.resource.disconnect();
+				cached.resource.destroy();
+				cached.cleanup();
+				live_query_map.delete(this._key);
+			}
+		};
+	}
+
+	#get_cached_query() {
+		if (!this.#tracking) {
+			throw new Error(
+				'This live query was not created in a reactive context and is limited to calling `.run` and `.reconnect`.'
+			);
+		}
+
+		if (!this.#active) {
+			throw new Error(
+				'This query instance is no longer active and can no longer be used for reactive state access. ' +
+					'This typically means you created the query in a tracking context and stashed it somewhere outside of a tracking context.'
+			);
+		}
+
+		const cached = live_query_map.get(this._key);
+
+		if (!cached) {
+			throw new Error(
+				'No cached query found. This should be impossible. Please file a bug report.'
+			);
+		}
+
+		return /** @type {LiveQuery<T>} */ (cached.resource);
+	}
+
+	#safe_get_cached_query() {
+		return live_query_map.get(this._key)?.resource;
+	}
+
+	get current() {
+		return this.#get_cached_query().current;
+	}
+
+	get error() {
+		return this.#get_cached_query().error;
+	}
+
+	get loading() {
+		return this.#get_cached_query().loading;
+	}
+
+	get ready() {
+		return this.#get_cached_query().ready;
+	}
+
+	get connected() {
+		return this.#get_cached_query().connected;
+	}
+
+	get finished() {
+		return this.#get_cached_query().finished;
+	}
+
+	run() {
+		if (is_in_effect()) {
+			throw new Error(
+				'On the client, .run() can only be called outside render, e.g. in universal `load` functions and event handlers. In render, await the query directly'
+			);
+		}
+
+		return create_live_iterator(this.#id, this.#payload);
+	}
+
+	reconnect() {
+		this.#safe_get_cached_query()?.reconnect();
+	}
+
+	get then() {
+		const cached = this.#get_cached_query();
+		return cached.then.bind(cached);
+	}
+
+	get catch() {
+		const cached = this.#get_cached_query();
+		return cached.catch.bind(cached);
+	}
+
+	get finally() {
+		const cached = this.#get_cached_query();
+		return cached.finally.bind(cached);
+	}
+
+	get [Symbol.toStringTag]() {
+		return 'LiveQueryProxy';
 	}
 }

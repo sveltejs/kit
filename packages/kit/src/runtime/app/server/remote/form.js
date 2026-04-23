@@ -137,6 +137,7 @@ export function form(validate_or_fn, maybe_fn) {
 					}
 
 					state.remote.refreshes ??= {};
+					state.remote.reconnects ??= new Set();
 
 					const issue = create_issues();
 

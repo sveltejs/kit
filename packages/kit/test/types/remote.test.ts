@@ -4,6 +4,7 @@ import {
 	RemoteForm,
 	RemoteFormFields,
 	RemoteFormInput,
+	RemoteLiveQueryFunction,
 	RemotePrerenderFunction,
 	RemoteQueryFunction,
 	invalid
@@ -83,6 +84,61 @@ function query_tests() {
 	void query_schema_input_and_output();
 }
 query_tests();
+
+function live_query_tests() {
+	const no_args: RemoteLiveQueryFunction<void, string> = query.live(async function* () {
+		yield 'hello';
+	});
+	void no_args();
+	// @ts-expect-error
+	void no_args('');
+
+	const one_arg: RemoteLiveQueryFunction<number, string> = query.live(
+		'unchecked',
+		async function* (a: number) {
+			yield a.toString();
+		}
+	);
+	void one_arg(1);
+	// @ts-expect-error
+	void one_arg('1');
+	// @ts-expect-error
+	void one_arg();
+
+	async function live_without_args() {
+		const q = query.live(async function* () {
+			yield 'Hello world';
+		});
+
+		const result: string = await q();
+		result;
+
+		const iterator: AsyncIterator<string> = await q().run();
+		iterator;
+
+		q().connected === true;
+		q().finished === false;
+		q().reconnect();
+		// @ts-expect-error
+		q().refresh();
+		// @ts-expect-error
+		q().set('x');
+	}
+	void live_without_args();
+
+	async function live_with_schema() {
+		const q: RemoteLiveQueryFunction<string, string> = query.live(schema, async function* (a) {
+			yield a;
+		});
+
+		const result: string = await q('x');
+		result;
+		// @ts-expect-error
+		void q(123);
+	}
+	void live_with_schema();
+}
+live_query_tests();
 
 function prerender_tests() {
 	const no_args: RemotePrerenderFunction<void, string> = prerender(() => 'Hello world');

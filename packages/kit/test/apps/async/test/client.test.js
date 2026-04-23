@@ -426,6 +426,126 @@ test.describe('remote function mutations', () => {
 		await expect(page.locator('#phrase')).toHaveText('i am your father');
 	});
 
+	test('query.live streams updates and reconnects after disconnect', async ({ page }) => {
+		await page.goto('/remote/live');
+		await page.click('#reset');
+
+		await expect(page.locator('#first-value')).toHaveText('0');
+		await expect(page.locator('#count')).toHaveText('0');
+		await expect(page.locator('#connected')).toHaveText('true');
+
+		await page.click('#increment');
+		await expect(page.locator('#count')).toHaveText('1');
+		await expect(page.locator('#first-value')).toHaveText('1');
+
+		await page.click('#drop');
+
+		await page.click('#increment');
+		await expect(page.locator('#count')).toHaveText('2');
+
+		await page.click('#reconnect');
+		await expect(page.locator('#connected')).toHaveText('true');
+	});
+
+	test('query.live marks finite iterators as finished and only reconnects explicitly', async ({
+		page
+	}) => {
+		await page.goto('/remote/live');
+		await page.click('#reset');
+
+		await expect(page.locator('#finite-finished')).toHaveText('true');
+		await expect(page.locator('#finite-connected')).toHaveText('false');
+
+		await page.waitForTimeout(200);
+		await page.click('#stats');
+		await expect(page.locator('#stats-value')).not.toHaveText('pending');
+		const stats = JSON.parse((await page.locator('#stats-value').textContent()) ?? '{}');
+		const before = stats.finite_connection_count;
+
+		await page.waitForTimeout(200);
+		await page.click('#stats');
+		await expect(page.locator('#stats-value')).not.toHaveText('pending');
+		const after_wait = JSON.parse((await page.locator('#stats-value').textContent()) ?? '{}');
+		expect(after_wait.finite_connection_count).toBe(before);
+
+		await page.click('#finite-reconnect');
+		await expect
+			.poll(async () => {
+				await page.click('#stats');
+				await expect(page.locator('#stats-value')).not.toHaveText('pending');
+				return JSON.parse((await page.locator('#stats-value').textContent()) ?? '{}')
+					.finite_connection_count;
+			})
+			.toBeGreaterThan(before);
+		await expect(page.locator('#finite-finished')).toHaveText('true');
+	});
+
+	test('query.live can be reconnected from server command handlers', async ({ page }) => {
+		await page.goto('/remote/live');
+		await page.click('#reset');
+
+		await page.click('#stats');
+		await expect(page.locator('#stats-value')).not.toHaveText('pending');
+		const before = JSON.parse((await page.locator('#stats-value').textContent()) ?? '{}');
+
+		await page.click('#reconnect-live');
+
+		await expect
+			.poll(async () => {
+				await page.click('#stats');
+				const value = (await page.locator('#stats-value').textContent()) ?? '{}';
+				if (value === 'pending') return before.cleanup_count;
+				return JSON.parse(value).cleanup_count;
+			})
+			.toBeGreaterThan(before.cleanup_count);
+
+		await expect(page.locator('#connected')).toHaveText('true');
+	});
+
+	test('query.live can be detached from the page', async ({ page }) => {
+		await page.goto('/remote/live');
+		await page.click('#reset');
+		await expect(page.locator('#count')).toHaveText('0');
+
+		await page.click('#toggle-live');
+		await expect(page.locator('#detached')).toHaveText('detached');
+	});
+
+	test('query.live does not resend unchanged devalue payloads', async ({ page }) => {
+		await page.goto('/remote/live');
+		await page.click('#reset');
+
+		await expect(page.locator('#duplicate-payload-count')).toHaveText('0');
+		const before = Number(await page.locator('#duplicate-updates').textContent());
+
+		await page.click('#notify-only');
+		await page.waitForTimeout(100);
+		await expect(page.locator('#duplicate-payload-count')).toHaveText('0');
+		await expect(page.locator('#duplicate-updates')).toHaveText(String(before));
+	});
+
+	test('query.live cleans up server iterator on reload', async ({ page }) => {
+		await page.goto('/remote/live');
+		await page.click('#stats');
+		await expect(page.locator('#stats-value')).not.toHaveText('pending');
+		const before_cleanup = JSON.parse(
+			(await page.locator('#stats-value').textContent()) ?? '{}'
+		).cleanup_count;
+
+		await page.reload();
+		await expect(page.locator('#count')).toBeVisible();
+
+		await expect
+			.poll(async () => {
+				await page.click('#stats');
+				const value = (await page.locator('#stats-value').textContent()) ?? '{}';
+				if (value === 'pending') return before_cleanup;
+				const stats = JSON.parse(value);
+				return stats.cleanup_count;
+			})
+			.toBeGreaterThan(before_cleanup);
+	});
+
 	test.describe('query runtime guardrails', () => {
 		test('query created outside tracking context can run but cannot expose reactive state', async ({
 			page

@@ -8,7 +8,8 @@ import { stringify_remote_arg } from '../../shared.js';
 import {
 	get_remote_request_headers,
 	apply_refreshes,
-	categorize_updates
+	categorize_updates,
+	reconnect_live_queries,
 } from './shared.svelte.js';
 
 /**
@@ -77,6 +78,10 @@ export function command(id) {
 				} else {
 					if (result.refreshes) {
 						apply_refreshes(result.refreshes);
+					}
+
+					if (result.reconnects) {
+						reconnect_live_queries(result.reconnects);
 					}
 
 					return devalue.parse(result.result, app.decoders);

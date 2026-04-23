@@ -78,6 +78,7 @@ export function command(validate_or_fn, maybe_fn) {
 		}
 
 		state.remote.refreshes ??= {};
+		state.remote.reconnects ??= new Set();
 
 		const promise = Promise.resolve(
 			run_remote_function(event, state, true, () => validate(arg), fn)

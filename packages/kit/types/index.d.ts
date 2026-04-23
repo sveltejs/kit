@@ -2188,6 +2188,21 @@ declare module '@sveltejs/kit' {
 		withOverride(update: (current: T) => T): RemoteQueryOverride;
 	};
 
+	export type RemoteLiveQuery<T> = RemoteResource<T> & {
+		/**
+		 * Returns an async iterator with live updates.
+		 * Unlike awaiting the resource directly, this can only be used _outside_ render
+		 * (i.e. in load functions, event handlers and so on)
+		 */
+		run(): Promise<AsyncIterator<T>>;
+		/** `true` if the live stream is currently connected. */
+		readonly connected: boolean;
+		/** `true` once the live stream iterator has completed. */
+		readonly finished: boolean;
+		/** Reconnects the live stream immediately. */
+		reconnect(): void;
+	};
+
 	export type RemoteQueryOverride = () => void;
 
 	/**
@@ -2203,6 +2218,13 @@ declare module '@sveltejs/kit' {
 	export type RemoteQueryFunction<Input, Output> = (
 		arg: undefined extends Input ? Input | void : Input
 	) => RemoteQuery<Output>;
+
+	/**
+	 * The return value of a remote `query.live` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query.live) for full documentation.
+	 */
+	export type RemoteLiveQueryFunction<Input, Output> = (
+		arg: undefined extends Input ? Input | void : Input
+	) => RemoteLiveQuery<Output>;
 	interface AdapterEntry {
 		/**
 		 * A string that uniquely identifies an HTTP service (e.g. serverless function) and is used for deduplication.
@@ -3269,7 +3291,7 @@ declare module '$app/paths' {
 }
 
 declare module '$app/server' {
-	import type { RequestEvent, RemoteCommand, RemoteForm, RemoteFormInput, InvalidField, RemotePrerenderFunction, RemoteQueryFunction, RequestedResult } from '@sveltejs/kit';
+	import type { RequestEvent, RemoteCommand, RemoteForm, RemoteFormInput, InvalidField, RemotePrerenderFunction, RemoteQueryFunction, RemoteLiveQueryFunction, RequestedResult } from '@sveltejs/kit';
 	import type { StandardSchemaV1 } from '@standard-schema/spec';
 	/**
 	 * Read the contents of an imported asset from the filesystem
@@ -3414,6 +3436,17 @@ declare module '$app/server' {
 		 * @since 2.35
 		 */
 		function batch<Schema extends StandardSchemaV1, Output>(schema: Schema, fn: (args: StandardSchemaV1.InferOutput<Schema>[]) => MaybePromise<(arg: StandardSchemaV1.InferOutput<Schema>, idx: number) => Output>): RemoteQueryFunction<StandardSchemaV1.InferInput<Schema>, Output>;
+		/**
+		 * Creates a live remote query. When called from the browser, the function will be invoked on the server via a streaming `fetch` call.
+		 *
+		 * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query.live) for full documentation.
+		 *
+		 * */
+		function live<Output>(fn: (arg: void) => MaybePromise<Generator<Output> | AsyncIterator<Output> | AsyncIterable<Output>>): RemoteLiveQueryFunction<void, Output>;
+		
+		function live<Input, Output>(validate: "unchecked", fn: (arg: Input) => MaybePromise<Generator<Output> | AsyncIterator<Output> | AsyncIterable<Output>>): RemoteLiveQueryFunction<Input, Output>;
+		
+		function live<Schema extends StandardSchemaV1, Output>(schema: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => MaybePromise<Generator<Output> | AsyncIterator<Output> | AsyncIterable<Output>>): RemoteLiveQueryFunction<StandardSchemaV1.InferInput<Schema>, Output>;
 	}
 	/**
 	 * In the context of a remote `command` or `form` request, returns an iterable
