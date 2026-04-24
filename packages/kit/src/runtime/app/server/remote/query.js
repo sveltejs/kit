@@ -15,11 +15,7 @@ import {
 } from './shared.js';
 import { handle_error_and_jsonify } from '../../../server/utils.js';
 import { HttpError, SvelteKitError } from '@sveltejs/kit/internal';
-import {
-	create_erroring_cache,
-	create_request_cache,
-	get_request_cache_options
-} from '../../../server/cache.js';
+import { create_request_cache, get_request_cache_options } from '../../../server/cache.js';
 
 /**
  * Creates a remote query. When called from the browser, the function will be invoked on the server via a `fetch` call.
@@ -110,20 +106,15 @@ export function query(validate_or_fn, maybe_fn) {
 
 		return create_query_resource(__, payload, state, () =>
 			(async () => {
-				const cached = await state.remote.cache?.get(query_id);
-				if (cached !== undefined) {
-					const cache_entry = deserialize_query_cache_entry(cached);
-					if (cache_entry) {
-						await set_remote_query_cache_headers(
-							event,
-							state,
-							__.id,
-							get_remaining_cache_options(cache_entry)
-						);
-						return parse_remote_response(cache_entry.response, state.transport);
-					}
-
-					return parse_remote_response(cached, state.transport);
+				const cached = deserialize_query_cache_entry(await state.remote.cache?.get(query_id));
+				if (cached !== null) {
+					await set_remote_query_cache_headers(
+						event,
+						state,
+						__.id,
+						get_remaining_cache_options(cached)
+					);
+					return parse_remote_response(cached.response, state.transport);
 				}
 
 				const cache = create_request_cache(state, query_id);
@@ -220,39 +211,90 @@ function batch(validate_or_fn, maybe_fn) {
 		name: '',
 		run: async (args, options) => {
 			const { event, state } = get_request_store();
+			const payloads = args.map((arg) => stringify_remote_arg(arg, state.transport));
+			const query_ids = payloads.map((payload) => create_remote_key(__.id, payload));
+			const results = new Array(args.length);
+			/** @type {number[]} */
+			const missing = [];
+			const cached = await Promise.all(
+				query_ids.map(async (query_id) =>
+					deserialize_query_cache_entry(await state.remote.cache?.get(query_id))
+				)
+			);
 
-			return run_remote_function(
+			for (let i = 0; i < cached.length; i++) {
+				if (cached[i] !== null) {
+					results[i] = { type: 'result', data: cached[i] };
+				} else {
+					missing.push(i);
+				}
+			}
+
+			if (missing.length === 0) {
+				return /** @type {any[]} */ (results);
+			}
+
+			const missing_args = missing.map((index) => args[index]);
+			const cache = create_request_cache(state, __.id);
+
+			const computed = await run_remote_function(
 				event,
 				state,
 				false,
-				create_erroring_cache(),
-				async () => Promise.all(args.map(validate)),
+				cache,
+				async () => Promise.all(missing_args.map(validate)),
 				async (/** @type {any[]} */ input) => {
 					const get_result = await fn(input);
 
 					return Promise.all(
 						input.map(async (arg, i) => {
+							const index = missing[i];
+							const query_id = query_ids[index];
 							try {
 								const data = get_result(arg, i);
-								return { type: 'result', data: stringify(data, state.transport) };
+								const stringified = stringify(data, state.transport);
+								const cache_options = get_request_cache_options(cache);
+								if (cache_options && state.remote.cache) {
+									await state.remote.cache.set(
+										query_id,
+										serialize_query_cache_entry(stringified, {
+											...cache_options,
+											tags: [...cache_options.tags, query_id]
+										}),
+										cache_options
+									);
+								}
+								return {
+									index,
+									result: { type: 'result', data: stringified }
+								};
 							} catch (error) {
 								return {
-									type: 'error',
-									error: await handle_error_and_jsonify(event, state, options, error),
-									status:
-										error instanceof HttpError || error instanceof SvelteKitError
-											? error.status
-											: 500
+									index,
+									result: {
+										type: 'error',
+										error: await handle_error_and_jsonify(event, state, options, error),
+										status:
+											error instanceof HttpError || error instanceof SvelteKitError
+												? error.status
+												: 500
+									}
 								};
 							}
 						})
 					);
 				}
 			);
+
+			for (const item of computed) {
+				results[item.index] = item.result;
+			}
+
+			return /** @type {any[]} */ (results);
 		}
 	};
 
-	/** @type {Map<string, { arg: any, resolvers: Array<{resolve: (value: any) => void, reject: (error: any) => void}> }>} */
+	/** @type {Map<string, { arg: any, payload: string, resolvers: Array<{resolve: (value: any) => void, reject: (error: any) => void}> }>} */
 	let batching = new Map();
 
 	/** @type {RemoteQueryFunction<Input, Output> & { __: RemoteQueryBatchInternals }} */
@@ -281,6 +323,7 @@ function batch(validate_or_fn, maybe_fn) {
 
 				batching.set(payload, {
 					arg,
+					payload,
 					resolvers: [{ resolve, reject }]
 				});
 
@@ -289,28 +332,71 @@ function batch(validate_or_fn, maybe_fn) {
 				setTimeout(async () => {
 					const batched = batching;
 					batching = new Map();
-					const entries = Array.from(batched.values());
-					const args = entries.map((entry) => entry.arg);
-
+					const all_entries = Array.from(batched.values());
+					const all_payloads = all_entries.map((entry) => entry.payload);
+					const all_query_ids = all_payloads.map((payload) => create_remote_key(__.id, payload));
 					try {
-						return await run_remote_function(
+						const cached = await Promise.all(
+							all_query_ids.map(async (query_id) =>
+								deserialize_query_cache_entry(await state.remote.cache?.get(query_id))
+							)
+						);
+
+						/** @type {Array<{ arg: any, query_id: string, resolvers: Array<{resolve: (value: any) => void, reject: (error: any) => void}> }>} */
+						const missing_entries = [];
+
+						for (let i = 0; i < cached.length; i++) {
+							if (cached[i] !== null) {
+								const value = parse_remote_response(cached[i], state.transport);
+								for (const resolver of all_entries[i].resolvers) {
+									resolver.resolve(value);
+								}
+							} else {
+								missing_entries.push({
+									arg: all_entries[i].arg,
+									query_id: all_query_ids[i],
+									resolvers: all_entries[i].resolvers
+								});
+							}
+						}
+
+						if (missing_entries.length === 0) {
+							return;
+						}
+
+						const args = missing_entries.map((entry) => entry.arg);
+						const cache = create_request_cache(state, __.id);
+
+						await run_remote_function(
 							event,
 							state,
 							false,
-							create_erroring_cache(),
+							cache,
 							async () => Promise.all(args.map(validate)),
 							async (input) => {
 								const get_result = await fn(input);
 
-								for (let i = 0; i < entries.length; i++) {
+								for (let i = 0; i < missing_entries.length; i++) {
 									try {
 										const result = get_result(input[i], i);
+										const stringified = stringify(result, state.transport);
+										const cache_options = get_request_cache_options(cache);
+										if (cache_options && state.remote.cache) {
+											await state.remote.cache.set(
+												missing_entries[i].query_id,
+												serialize_query_cache_entry(stringified, {
+													...cache_options,
+													tags: [...cache_options.tags, missing_entries[i].query_id]
+												}),
+												cache_options
+											);
+										}
 
-										for (const resolver of entries[i].resolvers) {
+										for (const resolver of missing_entries[i].resolvers) {
 											resolver.resolve(result);
 										}
 									} catch (error) {
-										for (const resolver of entries[i].resolvers) {
+										for (const resolver of missing_entries[i].resolvers) {
 											resolver.reject(error);
 										}
 									}
@@ -318,7 +404,7 @@ function batch(validate_or_fn, maybe_fn) {
 							}
 						);
 					} catch (error) {
-						for (const entry of batched.values()) {
+						for (const entry of all_entries) {
 							for (const resolver of entry.resolvers) {
 								resolver.reject(error);
 							}
@@ -499,11 +585,12 @@ function serialize_query_cache_entry(stringified_response, cache) {
 
 /**
  * Better safe than sorry: deserialize the cache entry and validate the fields
- * @param {string} value
+ * @param {string | undefined | null} value
  * @returns {QueryCacheEntry | null}
  */
 function deserialize_query_cache_entry(value) {
 	try {
+		if (value == null) return null;
 		const entry = JSON.parse(value);
 		if (typeof entry !== 'object' || !entry) return null;
 		if (typeof entry.response !== 'string') return null;
