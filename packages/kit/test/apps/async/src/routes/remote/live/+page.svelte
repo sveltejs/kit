@@ -29,7 +29,11 @@
 <button id="reconnect-live-requested" onclick={() => reconnect_requested_live().updates(get_count)}>
 	reconnect requested live queries
 </button>
-<form {...reconnect_live_form.enhance(async ({ submit }) => await submit())}>
+<form
+	{...reconnect_live_form.enhance(async ({ submit }) => {
+		await submit();
+	})}
+>
 	<button id="reconnect-live-form" type="submit">reconnect live query (form)</button>
 </form>
 <button id="toggle-live" onclick={() => (show_live = !show_live)}>toggle live query</button>
