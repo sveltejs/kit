@@ -463,7 +463,10 @@ function is_remote_query_endpoint_request(event, query_id) {
 	if (!event.isRemoteRequest || event.isSubRequest) return false;
 
 	const pathname = new URL(event.request.url).pathname;
-	const prefix = `${base}/${app_dir}/remote/${query_id}`;
+	let prefix = `${base}/${app_dir}/remote/${query_id}`;
+	if (prefix.endsWith('/')) {
+		prefix = prefix.slice(0, -1);
+	}
 
 	return pathname === prefix || pathname.startsWith(`${prefix}/`);
 }
