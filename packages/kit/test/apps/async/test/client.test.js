@@ -516,18 +516,25 @@ test.describe('remote function mutations', () => {
 
 		const form1 = page.locator('form').nth(0);
 
-		// initial values rendered correctly
-		await expect(form1.locator('input[name="text_field"]')).toHaveValue('Example text');
+		const text = form1.locator('input[name="text_field"]');
+		const checkbox = form1.locator('input[name="b:checkbox_field"]');
 
-		// change the text field and submit
-		await form1.locator('input[name="text_field"]').fill('Updated text');
+		// initial values rendered correctly
+		await expect(text).toHaveValue('Example text');
+
+		await expect(checkbox).toBeChecked();
+
+		// change the fields and submit
+		await text.fill('Updated text');
+		await checkbox.uncheck();
 		await form1.locator('button').click();
 
 		// after submission, the query refreshes and the display should update
 		await expect(page.locator('div').first()).toContainText('Updated text');
 
 		// the input value should reflect the updated data
-		await expect(form1.locator('input[name="text_field"]')).toHaveValue('Updated text');
+		await expect(text).toHaveValue('Updated text');
+		await expect(checkbox).not.toBeChecked();
 
 		// reset the values for the client tests
 		await page.click('#reset-values');
