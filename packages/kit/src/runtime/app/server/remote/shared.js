@@ -4,20 +4,14 @@ import { parse } from 'devalue';
 import { error } from '@sveltejs/kit';
 import { with_request_store, get_request_store } from '@sveltejs/kit/internal/server';
 import { noop } from '../../../../utils/functions.js';
-import {
-	stringify_remote_arg,
-	create_remote_key,
-	stringify,
-	unfriendly_hydratable
-} from '../../../shared.js';
+import { create_remote_key, stringify, unfriendly_hydratable } from '../../../shared.js';
 
 /**
- * @param {() => RemoteInternals} get_internals
  * @param {any} validate_or_fn
- * @param {((arg?: any) => any) | undefined} maybe_fn
+ * @param {((arg?: any) => any) | undefined} [maybe_fn]
  * @returns {(arg?: any) => MaybePromise<any>}
  */
-export function create_validator(get_internals, validate_or_fn, maybe_fn) {
+export function create_validator(validate_or_fn, maybe_fn) {
 	// prevent functions without validators being called with arguments
 	if (!maybe_fn) {
 		return (arg) => {
@@ -37,10 +31,6 @@ export function create_validator(get_internals, validate_or_fn, maybe_fn) {
 		return async (arg) => {
 			// Get event before async validation to ensure it's available in server environments without AsyncLocalStorage, too
 			const { event, state } = get_request_store();
-
-			if (is_validated_argument(get_internals(), state, arg)) {
-				return arg;
-			}
 
 			// access property and call method in one go to preserve potential this context
 			const result = await validate_or_fn['~standard'].validate(arg);
@@ -74,19 +64,18 @@ export function create_validator(get_internals, validate_or_fn, maybe_fn) {
  *
  * @template {MaybePromise<any>} T
  * @param {RemoteInternals} internals
- * @param {any} arg
+ * @param {string} payload — the stringified raw argument (i.e. the cache key the client will use)
  * @param {RequestState} state
  * @param {() => Promise<T>} get_result
  * @returns {Promise<T>}
  */
-export async function get_response(internals, arg, state, get_result) {
+export async function get_response(internals, payload, state, get_result) {
 	// wait a beat, in case `myQuery().set(...)` or `myQuery().refresh()` is immediately called
 	// eslint-disable-next-line @typescript-eslint/await-thenable
 	await 0;
 
 	const cache = get_cache(internals, state);
-	const key = stringify_remote_arg(arg, state.transport);
-	const entry = (cache[key] ??= {
+	const entry = (cache[payload] ??= {
 		serialize: false,
 		data: get_result()
 	});
@@ -94,7 +83,7 @@ export async function get_response(internals, arg, state, get_result) {
 	entry.serialize ||= !!state.is_in_universal_load;
 
 	if (state.is_in_render && internals.id) {
-		const remote_key = create_remote_key(internals.id, key);
+		const remote_key = create_remote_key(internals.id, payload);
 
 		Promise.resolve(entry.data)
 			.then((value) => {
@@ -261,31 +250,4 @@ export function get_cache(internals, state = get_request_store().state) {
 	}
 
 	return cache;
-}
-
-/**
- * @param {RemoteInternals} internals
- * @param {RequestState} state
- * @param {any} arg
- */
-function is_validated_argument(internals, state, arg) {
-	return state.remote.validated?.get(internals.id)?.has(arg) ?? false;
-}
-
-/**
- * @param {RemoteInternals} internals
- * @param {RequestState} state
- * @param {any} arg
- */
-export function mark_argument_validated(internals, state, arg) {
-	const validated = (state.remote.validated ??= new Map());
-	let validated_args = validated.get(internals.id);
-
-	if (!validated_args) {
-		validated_args = new Set();
-		validated.set(internals.id, validated_args);
-	}
-
-	validated_args.add(arg);
-	return arg;
 }

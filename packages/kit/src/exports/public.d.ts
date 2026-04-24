@@ -1452,39 +1452,66 @@ export interface Page<
  */
 export type ParamMatcher = (param: string) => boolean;
 
-export type RequestedResult<T> = QueryRequestedResult<T> | LiveQueryRequestedResult<T>;
+/**
+ * A single entry yielded by [`requested`](https://svelte.dev/docs/kit/$app-server#requested)
+ * when called with a regular `query`. `arg` is the validated argument (the input *after*
+ * the query's schema validated and transformed it, if applicable); `query` is a
+ * `RemoteQuery` bound to the client's original cache key, so `refresh()` / `set()` will
+ * update the correct client entry.
+ */
+export type RequestedEntry<Validated, Output> = {
+	arg: Validated;
+	query: RemoteQuery<Output>;
+};
 
-export type QueryRequestedResult<T> = Iterable<T> &
-	AsyncIterable<T> & {
+/**
+ * A single entry yielded by [`requested`](https://svelte.dev/docs/kit/$app-server#requested)
+ * when called with a `query.live`. `arg` is the validated argument; `query` is a
+ * `RemoteLiveQuery` bound to the client's original cache key, so `reconnect()` targets
+ * the correct client subscription.
+ */
+export type LiveRequestedEntry<Validated, Output> = {
+	arg: Validated;
+	query: RemoteLiveQuery<Output>;
+};
+
+export type QueryRequestedResult<Validated, Output> = Iterable<RequestedEntry<Validated, Output>> &
+	AsyncIterable<RequestedEntry<Validated, Output>> & {
 		/**
 		 * Call `refresh` on all queries selected by this `requested` invocation.
 		 * This is identical to:
 		 * ```ts
 		 * import { requested } from '$app/server';
 		 *
-		 * for await (const arg of requested(query, ...) {
-		 *   void query(arg).refresh();
+		 * for await (const { query } of requested(getPost, ...)) {
+		 *   void query.refresh();
 		 * }
 		 * ```
 		 */
 		refreshAll: () => Promise<void>;
 	};
 
-export type LiveQueryRequestedResult<T> = Iterable<T> &
-	AsyncIterable<T> & {
+export type LiveQueryRequestedResult<Validated, Output> = Iterable<
+	LiveRequestedEntry<Validated, Output>
+> &
+	AsyncIterable<LiveRequestedEntry<Validated, Output>> & {
 		/**
 		 * Call `reconnect` on all live queries selected by this `requested` invocation.
 		 * This is identical to:
 		 * ```ts
 		 * import { requested } from '$app/server';
 		 *
-		 * for await (const arg of requested(query, ...)) {
-		 *   query(arg).reconnect();
+		 * for await (const { query } of requested(liveQuery, ...)) {
+		 *   void query.reconnect();
 		 * }
 		 * ```
 		 */
 		reconnectAll: () => Promise<void>;
 	};
+
+export type RequestedResult<Validated, Output> =
+	| QueryRequestedResult<Validated, Output>
+	| LiveQueryRequestedResult<Validated, Output>;
 
 export interface RequestEvent<
 	Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
@@ -2031,11 +2058,15 @@ export type RemoteFormFields<T> =
 		? RecursiveFormFields
 		: NonNullable<T> extends string | number | boolean | File
 			? RemoteFormField<NonNullable<T>>
-			: // [T] is used to prevent distributing over union, only the last condition should distribute over unions
-				[T] extends [string[] | File[]]
-				? RemoteFormField<T> & { [K in number]: RemoteFormField<T[number]> }
-				: [T] extends [Array<infer U>]
-					? RemoteFormFieldContainer<T> & {
+			: // [NonNullable<T>] is used to prevent distributing over union while still allowing
+				// nullable wrappers (e.g. `string[] | undefined` from a schema with `.default([])`)
+				// to be treated as arrays; only the last condition should distribute over unions
+				[NonNullable<T>] extends [string[] | File[]]
+				? RemoteFormField<NonNullable<T>> & {
+						[K in number]: RemoteFormField<NonNullable<T>[number]>;
+					}
+				: [NonNullable<T>] extends [Array<infer U>]
+					? RemoteFormFieldContainer<NonNullable<T>> & {
 							[K in number]: RemoteFormFields<U>;
 						}
 					: RemoteFormFieldContainer<T> & {
@@ -2113,7 +2144,7 @@ export type RemoteForm<Input extends RemoteFormInput | void, Output> = {
 			submit: () => Promise<boolean> & {
 				updates: (...updates: RemoteQueryUpdate[]) => Promise<boolean>;
 			};
-		}) => void
+		}) => MaybePromise<void>
 	): {
 		method: 'POST';
 		action: string;
@@ -2255,16 +2286,29 @@ export type RemotePrerenderFunction<Input, Output> = (
 ) => RemoteResource<Output>;
 
 /**
- * The type of a remote `query` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query) for full documentation.
+ * The return value of a remote `query` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query) for full documentation.
+ *
+ * The optional `Validated` generic parameter represents the argument type *after* the
+ * query's schema has validated and (optionally) transformed it — this is the type the
+ * query's implementation function receives on the server, and the type yielded by
+ * [`requested`](https://svelte.dev/docs/kit/$app-server#requested). For queries declared
+ * with [Standard Schema](https://standardschema.dev/) it differs from `Input` when the
+ * schema contains a transform (e.g. `v.pipe(v.number(), v.transform(String))` has
+ * `Input = number` but `Validated = string`). For `'unchecked'` validators and queries
+ * without arguments it defaults to `Input`.
  */
-export type RemoteQueryFunction<Input, Output> = (
+export type RemoteQueryFunction<Input, Output, _Validated = Input> = (
 	arg: undefined extends Input ? Input | void : Input
 ) => RemoteQuery<Output>;
 
 /**
  * The type of a remote `query.live` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query.live) for full documentation.
+ *
+ * The optional `Validated` generic parameter represents the argument type *after* the
+ * query's schema has validated and (optionally) transformed it, and matches the type
+ * yielded by [`requested`](https://svelte.dev/docs/kit/$app-server#requested).
  */
-export type RemoteLiveQueryFunction<Input, Output> = (
+export type RemoteLiveQueryFunction<Input, Output, _Validated = Input> = (
 	arg: undefined extends Input ? Input | void : Input
 ) => RemoteLiveQuery<Output>;
 

@@ -52,6 +52,13 @@ const pathname_prefix = hash_routing ? '#' : '';
  * @returns {ResolvedPathname}
  */
 export function resolve(...args) {
+	if (!args[0].startsWith('/')) {
+		throw new Error(
+			`Cannot use \`resolve(...)\` with a non-absolute pathname or route ID (got "${args[0]}"). ` +
+				'`resolve` is only for internal pathnames and route IDs; external URLs should be used directly.'
+		);
+	}
+
 	// The type error is correct here, and if someone doesn't pass params when they should there's a runtime error,
 	// but we don't want to adjust the internal resolve_route function to accept `undefined`, hence the type cast.
 	return (

@@ -109,7 +109,7 @@ export const reconnect_live = command(() => {
 });
 
 export const reconnect_requested_live = command(async () => {
-	await requested(get_count).reconnectAll();
+	await requested(get_count, 5).reconnectAll();
 	requested_reconnect_count += 1;
 });
 

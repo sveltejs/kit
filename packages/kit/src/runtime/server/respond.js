@@ -1,4 +1,4 @@
-/** @import { RequestState } from 'types' */
+/** @import { RequestState, SSRNode } from 'types' */
 import { DEV } from 'esm-env';
 import { json, text } from '@sveltejs/kit';
 import { Redirect, SvelteKitError } from '@sveltejs/kit/internal';
@@ -154,12 +154,7 @@ export async function internal_respond(request, options, manifest, state) {
 			refreshes: null,
 			reconnects: null,
 			/** A map of remote function ID to payloads requested for refreshing by the client */
-			requested: null,
-			/**
-			 * A map of remote function ID to objects that have passed validation;
-			 * used to prevent revalidating parameters returned from `requested`
-			 */
-			validated: null
+			requested: null
 		},
 		is_in_remote_function: false,
 		is_in_render: false,
@@ -567,7 +562,14 @@ export async function internal_respond(request, options, manifest, state) {
 					page_config: { ssr: false, csr: true },
 					status: 200,
 					error: null,
-					branch: [],
+					branch: [
+						// include the root layout because it applies to every page
+						{
+							node: /** @type {SSRNode} */ (await manifest._.nodes[0]()),
+							data: null,
+							server_data: null
+						}
+					],
 					fetched: [],
 					resolve_opts,
 					data_serializer: server_data_serializer(event, event_state, options)
