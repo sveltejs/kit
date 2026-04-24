@@ -23,7 +23,7 @@ import {
 	Transport,
 	HandleValidationError,
 	RemoteFormIssue,
-	RequestCache
+	RequestCache,
 	RemoteQuery
 } from '@sveltejs/kit';
 import {

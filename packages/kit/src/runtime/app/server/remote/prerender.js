@@ -132,10 +132,7 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 				return /** @type {Promise<any>} */ (state.prerendering.remote_responses.get(url));
 			}
 
-			const query_id =
-				arg !== undefined
-					? create_remote_key(__.id, stringify_remote_arg(arg, state.transport))
-					: __.id;
+			const query_id = create_remote_key(__.id, stringify_remote_arg(arg, state.transport));
 			const promise = get_response(__, payload, state, () =>
 				run_remote_function(
 					event,

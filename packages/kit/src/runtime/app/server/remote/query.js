@@ -84,7 +84,14 @@ export function query(validate_or_fn, maybe_fn) {
 			const { event, state } = get_request_store();
 
 			return create_query_resource(__, payload, state, () =>
-				run_remote_function(event, state, false, () => validated_arg, fn)
+				run_remote_function(
+					event,
+					state,
+					false,
+					create_request_cache(state, create_remote_key(__.id, payload)),
+					() => validated_arg,
+					fn
+				)
 			);
 		}
 	};
@@ -99,7 +106,7 @@ export function query(validate_or_fn, maybe_fn) {
 
 		const { event, state } = get_request_store();
 		const payload = stringify_remote_arg(arg, state.transport);
-		const query_id = arg !== undefined ? create_remote_key(__.id, payload) : __.id;
+		const query_id = create_remote_key(__.id, payload);
 
 		return create_query_resource(__, payload, state, () =>
 			(async () => {
@@ -362,12 +369,8 @@ function create_query_resource(__, payload, state, fn) {
 			return update_refresh_value(refresh_context, value, is_immediate_refresh);
 		},
 		async invalidate() {
-			const { state } = get_request_store();
-			const invalidate_key =
-				arg !== undefined
-					? create_remote_key(__.id, stringify_remote_arg(arg, state.transport))
-					: __.id;
-			await invalidate_query_cache([invalidate_key]);
+			const tag = create_remote_key(__.id, payload);
+			await invalidate_query_cache([tag]);
 		},
 		run() {
 			// potential TODO: if we want to be able to run queries at the top level of modules / outside of the request context, we could technically remove
