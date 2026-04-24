@@ -1,9 +1,9 @@
-import { getCache, invalidateByTag } from '@vercel/functions';
+import { getCache } from '@vercel/functions';
 
 /** @returns {import('@sveltejs/kit').KitCacheHandler} */
 export default function create_cache() {
 	return {
-		get: async (query_id) => {
+		async get(query_id) {
 			const value = await getCache().get(query_id);
 
 			if (typeof value === 'string') {
@@ -12,7 +12,7 @@ export default function create_cache() {
 
 			return undefined;
 		},
-		set: async (query_id, stringified_response, cache) => {
+		async set(query_id, stringified_response, cache) {
 			const runtime_cache = getCache();
 
 			if (!Number.isFinite(cache.maxAge) || cache.maxAge <= 0) {
@@ -25,7 +25,7 @@ export default function create_cache() {
 				tags: cache.tags
 			});
 		},
-		setHeaders: async (headers, cache) => {
+		setHeaders(headers, cache) {
 			const tags = cache.tags;
 			const value = ['public', `max-age=${Math.floor(cache.maxAge)}`];
 			if (cache.staleWhileRevalidate && cache.staleWhileRevalidate > 0) {
@@ -40,7 +40,7 @@ export default function create_cache() {
 				headers.set('Vercel-Cache-Tag', value);
 			}
 		},
-		invalidate: async (tags) => {
+		async invalidate(tags) {
 			if (tags.length === 0) return;
 
 			await getCache().expireTag(tags); // besides deleting from the cache this also purges the tag on the CDN

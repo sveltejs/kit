@@ -23,7 +23,7 @@ export default function create_in_memory_query_cache() {
 	const key_to_tags = new Map();
 
 	return {
-		async get(query_id) {
+		get(query_id) {
 			const now = Date.now();
 			const hit = entries.get(query_id);
 
@@ -38,7 +38,7 @@ export default function create_in_memory_query_cache() {
 			return hit.value;
 		},
 
-		async set(query_id, stringified_response, cache) {
+		set(query_id, stringified_response, cache) {
 			if (!Number.isFinite(cache.maxAge) || cache.maxAge <= 0) {
 				entries.delete(query_id);
 				remove_key_from_tag_index(tag_to_keys, key_to_tags, query_id);
@@ -75,7 +75,7 @@ export default function create_in_memory_query_cache() {
 			}
 		},
 
-		async invalidate(tags) {
+		invalidate(tags) {
 			for (const tag of tags) {
 				const keys = tag_to_keys.get(tag);
 				if (!keys) continue;

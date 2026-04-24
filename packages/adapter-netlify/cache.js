@@ -86,7 +86,7 @@ export default function create_cache() {
 			await runtime_cache.put(key, new Response(stringified_response, { headers }));
 		},
 
-		async setHeaders(/** @type {Headers} */ headers, /** @type {KitCacheOptions} */ cache) {
+		setHeaders(/** @type {Headers} */ headers, /** @type {KitCacheOptions} */ cache) {
 			const tags = cache.tags.filter(Boolean);
 
 			headers.set('Netlify-CDN-Cache-Control', create_cache_control(cache, true));

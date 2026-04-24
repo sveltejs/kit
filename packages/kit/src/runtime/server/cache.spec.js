@@ -37,8 +37,8 @@ test('create_invalidate_cache forwards tags to request cache implementation', as
 	const state = {
 		remote: {
 			cache: {
-				get: async () => undefined,
-				set: async () => {},
+				get: () => undefined,
+				set: () => {},
 				invalidate
 			}
 		}

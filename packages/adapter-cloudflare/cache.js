@@ -102,7 +102,7 @@ export default function create_cache() {
 			);
 		},
 
-		async setHeaders(headers, cache) {
+		setHeaders(headers, cache) {
 			const tags = cache.tags;
 			const cache_control = create_cache_control(cache);
 

@@ -134,11 +134,12 @@ export function create_invalidate_cache(state) {
 	}
 
 	/** @param {string[]} tags */
-	cache.invalidate = async (tags) => {
+	cache.invalidate = (tags) => {
 		if (!state.remote.cache) {
 			console.error('No cache implementation provided, cannot invalidate remote function cache');
+			return Promise.resolve();
 		} else {
-			state.remote.cache.invalidate(tags);
+			return Promise.resolve(state.remote.cache.invalidate(tags));
 		}
 	};
 
