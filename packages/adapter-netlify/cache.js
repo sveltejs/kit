@@ -29,12 +29,9 @@ function get_cache_key(query_id) {
 
 /**
  * @param {KitCacheOptions} cache
- * @param {boolean} durable
  */
-function create_cache_control(cache, durable = false) {
-	const value = ['public', `max-age=${Math.floor(cache.maxAge)}`];
-
-	if (durable) value.splice(1, 0, 'durable');
+function create_cache_control(cache) {
+	const value = ['public', 'durable', `max-age=${Math.floor(cache.maxAge)}`];
 
 	if (cache.staleWhileRevalidate && cache.staleWhileRevalidate > 0) {
 		value.push(`stale-while-revalidate=${Math.floor(cache.staleWhileRevalidate)}`);
@@ -73,7 +70,7 @@ export default function create_cache() {
 			}
 
 			const tags = cache.tags.filter(Boolean);
-			const netlify_cache_control = create_cache_control(cache, true);
+			const netlify_cache_control = create_cache_control(cache);
 			const headers = new Headers({
 				'Netlify-CDN-Cache-Control': netlify_cache_control
 			});
@@ -89,7 +86,7 @@ export default function create_cache() {
 		setHeaders(/** @type {Headers} */ headers, /** @type {KitCacheOptions} */ cache) {
 			const tags = cache.tags.filter(Boolean);
 
-			headers.set('Netlify-CDN-Cache-Control', create_cache_control(cache, true));
+			headers.set('Netlify-CDN-Cache-Control', create_cache_control(cache));
 
 			if (tags.length > 0) {
 				const value = tags.join(',');
