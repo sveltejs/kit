@@ -237,6 +237,9 @@ importers:
       '@iarna/toml':
         specifier: ^2.2.5
         version: 2.2.5
+      '@netlify/functions':
+        specifier: 'catalog:'
+        version: 5.1.2
       esbuild:
         specifier: ^0.25.4
         version: 0.25.12
@@ -247,9 +250,6 @@ importers:
       '@netlify/edge-functions':
         specifier: 'catalog:'
         version: 3.0.3
-      '@netlify/functions':
-        specifier: 'catalog:'
-        version: 5.1.2
       '@netlify/node-cookies':
         specifier: ^0.1.0
         version: 0.1.0
