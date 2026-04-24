@@ -55,7 +55,7 @@ import {
  * @overload
  * @param {Schema} schema
  * @param {(arg: StandardSchemaV1.InferOutput<Schema>) => MaybePromise<Output>} fn
- * @returns {RemoteQueryFunction<StandardSchemaV1.InferInput<Schema>, Output>}
+ * @returns {RemoteQueryFunction<StandardSchemaV1.InferInput<Schema>, Output, StandardSchemaV1.InferOutput<Schema>>}
  * @since 2.27
  */
 /**
@@ -75,7 +75,19 @@ export function query(validate_or_fn, maybe_fn) {
 	const validate = create_validator(validate_or_fn, maybe_fn);
 
 	/** @type {RemoteQueryInternals} */
-	const __ = { type: 'query', id: '', name: '', validate };
+	const __ = {
+		type: 'query',
+		id: '',
+		name: '',
+		validate,
+		bind(payload, validated_arg) {
+			const { event, state } = get_request_store();
+
+			return create_query_resource(__, payload, state, () =>
+				run_remote_function(event, state, false, () => validated_arg, fn)
+			);
+		}
+	};
 
 	/** @type {RemoteQueryFunction<Input, Output> & { __: RemoteQueryInternals }} */
 	const wrapper = (arg) => {
@@ -86,14 +98,10 @@ export function query(validate_or_fn, maybe_fn) {
 		}
 
 		const { event, state } = get_request_store();
-		// if the user got this argument from `requested(query)`, it will have already passed validation
-		const is_validated = is_validated_argument(__, state, arg);
-		const query_id =
-			arg !== undefined
-				? create_remote_key(__.id, stringify_remote_arg(arg, state.transport))
-				: __.id;
+		const payload = stringify_remote_arg(arg, state.transport);
+		const query_id = arg !== undefined ? create_remote_key(__.id, payload) : __.id;
 
-		return create_query_resource(__, arg, state, () =>
+		return create_query_resource(__, payload, state, () =>
 			(async () => {
 				const cached = await state.remote.cache?.get(query_id);
 				if (cached !== undefined) {
@@ -117,7 +125,7 @@ export function query(validate_or_fn, maybe_fn) {
 					state,
 					false,
 					cache,
-					() => (is_validated ? arg : validate(arg)),
+					() => validate(arg),
 					fn
 				);
 
@@ -157,33 +165,6 @@ async function invalidate_query_cache(tags) {
 }
 
 /**
- * @param {RemoteQueryInternals} __
- * @param {RequestState} state
- * @param {any} arg
- */
-function is_validated_argument(__, state, arg) {
-	return state.remote.validated?.get(__.id)?.has(arg) ?? false;
-}
-
-/**
- * @param {RemoteQueryInternals} __
- * @param {RequestState} state
- * @param {any} arg
- */
-export function mark_argument_validated(__, state, arg) {
-	const validated = (state.remote.validated ??= new Map());
-	let validated_args = validated.get(__.id);
-
-	if (!validated_args) {
-		validated_args = new Set();
-		validated.set(__.id, validated_args);
-	}
-
-	validated_args.add(arg);
-	return arg;
-}
-
-/**
  * Creates a batch query function that collects multiple calls and executes them in a single request
  *
  * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query.batch) for full documentation.
@@ -206,7 +187,7 @@ export function mark_argument_validated(__, state, arg) {
  * @overload
  * @param {Schema} schema
  * @param {(args: StandardSchemaV1.InferOutput<Schema>[]) => MaybePromise<(arg: StandardSchemaV1.InferOutput<Schema>, idx: number) => Output>} fn
- * @returns {RemoteQueryFunction<StandardSchemaV1.InferInput<Schema>, Output>}
+ * @returns {RemoteQueryFunction<StandardSchemaV1.InferInput<Schema>, Output, StandardSchemaV1.InferOutput<Schema>>}
  * @since 2.35
  */
 /**
@@ -276,20 +257,22 @@ function batch(validate_or_fn, maybe_fn) {
 		}
 
 		const { event, state } = get_request_store();
+		// batched queries do not participate in `requested(...)`, so `arg` is
+		// always the raw user-supplied value and can be used for the cache key directly
+		const payload = stringify_remote_arg(arg, state.transport);
 
-		return create_query_resource(__, arg, state, () => {
+		return create_query_resource(__, payload, state, () => {
 			// Collect all the calls to the same query in the same macrotask,
 			// then execute them as one backend request.
 			return new Promise((resolve, reject) => {
-				const key = stringify_remote_arg(arg, state.transport);
-				const entry = batching.get(key);
+				const entry = batching.get(payload);
 
 				if (entry) {
 					entry.resolvers.push({ resolve, reject });
 					return;
 				}
 
-				batching.set(key, {
+				batching.set(payload, {
 					arg,
 					resolvers: [{ resolve, reject }]
 				});
@@ -346,17 +329,17 @@ function batch(validate_or_fn, maybe_fn) {
 
 /**
  * @param {RemoteInternals} __
- * @param {any} arg
+ * @param {string} payload — the stringified raw argument (i.e. the cache key the client will use)
  * @param {RequestState} state
  * @param {() => Promise<any>} fn
  * @returns {RemoteQuery<any>}
  */
-function create_query_resource(__, arg, state, fn) {
+function create_query_resource(__, payload, state, fn) {
 	/** @type {Promise<any> | null} */
 	let promise = null;
 
 	const get_promise = () => {
-		return (promise ??= get_response(__, arg, state, fn));
+		return (promise ??= get_response(__, payload, state, fn));
 	};
 
 	return {
@@ -373,8 +356,8 @@ function create_query_resource(__, arg, state, fn) {
 		loading: true,
 		ready: false,
 		refresh() {
-			const refresh_context = get_refresh_context(__, 'refresh', arg);
-			const is_immediate_refresh = !refresh_context.cache[refresh_context.cache_key];
+			const refresh_context = get_refresh_context(__, 'refresh', payload);
+			const is_immediate_refresh = !refresh_context.cache[refresh_context.payload];
 			const value = is_immediate_refresh ? get_promise() : fn();
 			return update_refresh_value(refresh_context, value, is_immediate_refresh);
 		},
@@ -395,11 +378,11 @@ function create_query_resource(__, arg, state, fn) {
 					'On the server, .run() can only be called in universal `load` functions. Anywhere else, just await the query directly'
 				);
 			}
-			return get_response(__, arg, state, fn);
+			return get_response(__, payload, state, fn);
 		},
 		/** @param {any} value */
 		set(value) {
-			return update_refresh_value(get_refresh_context(__, 'set', arg), value);
+			return update_refresh_value(get_refresh_context(__, 'set', payload), value);
 		},
 		/** @type {Promise<any>['then']} */
 		then(onfulfilled, onrejected) {
@@ -425,10 +408,10 @@ Object.defineProperty(query_cache, 'invalidate', {
 /**
  * @param {RemoteInternals} __
  * @param {'set' | 'refresh'} action
- * @param {any} [arg]
- * @returns {{ __: RemoteInternals; state: any; refreshes: Record<string, Promise<any>>; cache: Record<string, { serialize: boolean; data: any }>; refreshes_key: string; cache_key: string }}
+ * @param {string} payload — the stringified raw argument
+ * @returns {{ __: RemoteInternals; state: any; refreshes: Record<string, Promise<any>>; cache: Record<string, { serialize: boolean; data: any }>; refreshes_key: string; payload: string }}
  */
-function get_refresh_context(__, action, arg) {
+function get_refresh_context(__, action, payload) {
 	const { state } = get_request_store();
 	const { refreshes } = state.remote;
 
@@ -440,27 +423,26 @@ function get_refresh_context(__, action, arg) {
 	}
 
 	const cache = get_cache(__, state);
-	const cache_key = stringify_remote_arg(arg, state.transport);
-	const refreshes_key = create_remote_key(__.id, cache_key);
+	const refreshes_key = create_remote_key(__.id, payload);
 
-	return { __, state, refreshes, refreshes_key, cache, cache_key };
+	return { __, state, refreshes, refreshes_key, cache, payload };
 }
 
 /**
- * @param {{ __: RemoteInternals; refreshes: Record<string, Promise<any>>; cache: Record<string, { serialize: boolean; data: any }>; refreshes_key: string; cache_key: string }} context
+ * @param {{ __: RemoteInternals; refreshes: Record<string, Promise<any>>; cache: Record<string, { serialize: boolean; data: any }>; refreshes_key: string; payload: string }} context
  * @param {any} value
  * @param {boolean} [is_immediate_refresh=false]
  * @returns {Promise<void>}
  */
 function update_refresh_value(
-	{ __, refreshes, refreshes_key, cache, cache_key },
+	{ __, refreshes, refreshes_key, cache, payload },
 	value,
 	is_immediate_refresh = false
 ) {
 	const promise = Promise.resolve(value);
 
 	if (!is_immediate_refresh) {
-		cache[cache_key] = { serialize: true, data: promise };
+		cache[payload] = { serialize: true, data: promise };
 	}
 
 	if (__.id) {

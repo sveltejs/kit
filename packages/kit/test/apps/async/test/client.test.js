@@ -426,6 +426,24 @@ test.describe('remote function mutations', () => {
 		await expect(page.locator('#phrase')).toHaveText('i am your father');
 	});
 
+	test('refreshAll works with schema transforms (number to string)', async ({ page }) => {
+		await page.goto('/remote/form/transform');
+
+		await expect(page.locator('#result')).toHaveText('Count for 42 is 0');
+
+		await page.click('#update-btn');
+		await expect(page.locator('#result')).toHaveText('Count for 42 is 1');
+	});
+
+	test('.set() works with schema transforms when arg comes from requested()', async ({ page }) => {
+		await page.goto('/remote/form/transform');
+
+		await expect(page.locator('#result')).toHaveText(/Count for 42 is \d+/);
+
+		await page.click('#set-btn');
+		await expect(page.locator('#result')).toHaveText('Set value for 42');
+	});
+
 	test.describe('query runtime guardrails', () => {
 		test('query created outside tracking context can run but cannot expose reactive state', async ({
 			page
@@ -466,6 +484,15 @@ test.describe('remote function mutations', () => {
 				'On the client, .run() can only be called outside render'
 			);
 		});
+
+		test('non-reactive query can still access non-awaited properties', async ({ page }) => {
+			await page.goto('/remote/query-non-reactive');
+
+			await expect(page.locator('#current')).toContainText('undefined');
+			await expect(page.locator('#error')).toContainText('undefined');
+			await expect(page.locator('#ready')).toContainText('false');
+			await expect(page.locator('#loading')).toContainText('false');
+		});
 	});
 
 	// TODO ditto
@@ -505,6 +532,24 @@ test.describe('remote function mutations', () => {
 		// reset the values for the client tests
 		await page.click('#reset-values');
 	});
+
+	test('.as(type, value) updates when field.set() is called', async ({ page }) => {
+		await page.goto('/remote/form/as-value');
+
+		const input = page.locator('[data-testid="as-value-set-input"]');
+
+		// initial default value should be rendered
+		await expect(input).toHaveValue('default text');
+
+		// click button to call field.set()
+		await page.click('#set-text-field');
+
+		// the input with a default value should reflect the updated state
+		await expect(input).toHaveValue('Set via method');
+
+		// the value display should also show the updated value
+		await expect(page.locator('#set-value-display')).toHaveText('Set via method');
+	});
 });
 
 test.describe('client error boundaries', () => {
@@ -527,6 +572,16 @@ test.describe('client error boundaries', () => {
 		);
 		// The nested layout should still be visible
 		await expect(page.locator('#nested-layout')).toBeVisible();
+	});
+	test('redirecting from form clears result', async ({ page }) => {
+		await page.goto('/remote/form/reset-on-redirect');
+
+		const result = page.locator('#result');
+
+		await page.locator('#return').click();
+		await expect(result).toHaveText('hello world');
+		await page.locator('#redirect').click();
+		await expect(result).not.toHaveText('hello world');
 	});
 });
 

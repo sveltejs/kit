@@ -1,5 +1,84 @@
 # @sveltejs/kit
 
+## 2.58.0
+### Minor Changes
+
+
+- breaking: require `limit` in `requested` (as originally intended) ([#15739](https://github.com/sveltejs/kit/pull/15739))
+
+
+- feat: `RemoteQueryFunction` gains an optional third generic parameter `Validated` (defaulting to `Input`) that represents the argument type after schema validation/transformation ([#15739](https://github.com/sveltejs/kit/pull/15739))
+
+
+- breaking: `requested` now yields `{ arg, query }` entries instead of the validated argument ([#15739](https://github.com/sveltejs/kit/pull/15739))
+
+
+### Patch Changes
+
+
+- fix: allow `query().current`, `.error`, `.loading`, and `.ready` to work in non-reactive contexts ([#15699](https://github.com/sveltejs/kit/pull/15699))
+
+
+- fix: prevent `deep_set` crash on nullish nested values ([#15600](https://github.com/sveltejs/kit/pull/15600))
+
+
+- fix: restore correct `RemoteFormFields` typing for nullable array fields (e.g. when a schema uses `.default([])`), so `.as('checkbox')` and friends work again ([#15723](https://github.com/sveltejs/kit/pull/15723))
+
+
+- fix: don't warn about removed SSI comments in `transformPageChunk` ([#15695](https://github.com/sveltejs/kit/pull/15695))
+  
+  Server-side include (SSI) directives like `<!--#include virtual="..." -->` are HTML comments that are replaced by servers such as nginx. Previously, removing them in `transformPageChunk` would trigger a false positive warning about breaking Svelte's hydration. Since SSI comments always start with `<!--#` and Svelte's hydration comments never do, they can be safely excluded from the check.
+
+- Change enhance function return type from void to MaybePromise<void>. ([#15710](https://github.com/sveltejs/kit/pull/15710))
+
+
+- fix: throw an error when `resolve` is called with an external URL ([#15733](https://github.com/sveltejs/kit/pull/15733))
+
+
+- fix: avoid FOUC for CSR-only pages by loading styles and fonts before CSR starts ([#15718](https://github.com/sveltejs/kit/pull/15718))
+
+
+- fix: reset form result on redirect ([#15724](https://github.com/sveltejs/kit/pull/15724))
+
+## 2.57.1
+### Patch Changes
+
+
+- fix: better validation for `redirect` inputs ([`10d7b44`](https://github.com/sveltejs/kit/commit/10d7b44425c3d9da642eecce373d0c6ef83b4fcd))
+
+
+- fix: enforce `BODY_SIZE_LIMIT` on chunked requests ([`3202ed6`](https://github.com/sveltejs/kit/commit/3202ed6c98f9e8d86bf0c4c7ad0f2e273e5e3b95))
+
+
+- fix: use default values as fallbacks ([#15680](https://github.com/sveltejs/kit/pull/15680))
+
+
+- fix: relax form typings for union types ([#15687](https://github.com/sveltejs/kit/pull/15687))
+
+## 2.57.0
+### Minor Changes
+
+
+- feat: return boolean from `submit` to indicate submission validity for enhanced `form` remote functions ([#15530](https://github.com/sveltejs/kit/pull/15530))
+
+
+### Patch Changes
+
+
+- fix: use array type for select fields that accept multiple values ([#15591](https://github.com/sveltejs/kit/pull/15591))
+
+
+- fix: silently 404 Chrome DevTools workspaces request in dev and preview ([#15656](https://github.com/sveltejs/kit/pull/15656))
+
+
+- fix: `config.kit.csp.directives['trusted-types']` requires `'svelte-trusted-html'` (and `'sveltekit-trusted-url'` when a service worker is automatically registered) if it is configured ([#15323](https://github.com/sveltejs/kit/pull/15323))
+
+
+- fix: avoid inlineDynamicImports ignored with codeSplitting warning when using Vite 8 ([#15647](https://github.com/sveltejs/kit/pull/15647))
+
+
+- fix: reimplement treeshaking non-dynamic prerendered remote functions ([#15447](https://github.com/sveltejs/kit/pull/15447))
+
 ## 2.56.1
 ### Patch Changes
 
