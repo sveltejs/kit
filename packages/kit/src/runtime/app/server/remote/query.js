@@ -576,5 +576,9 @@ function update_refresh_value(
 	}
 
 	promise.catch(noop);
+
+	// we return an immediately-resolving promise so that the `refresh()` signature is consistent,
+	// but it doesn't delay anything if awaited inside a command. this way, people aren't
+	// penalised if they do `await q1.refresh(); await q2.refresh()`
 	return Promise.resolve();
 }
