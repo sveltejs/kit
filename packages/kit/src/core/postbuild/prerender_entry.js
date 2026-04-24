@@ -67,15 +67,15 @@ export class Server extends KitServer {
 
 		/** @type {Map<string, { response: SerialisedResponse; body: null | string | Uint8Array }>} */
 		const dependencies = new Map();
-		for (const [key, value] of options.prerendering.dependencies) {
-			dependencies.set(key, {
+		for (const [pathname, dependency] of options.prerendering.dependencies) {
+			dependencies.set(pathname, {
 				response: {
-					status: value.response.status,
-					statusText: value.response.statusText,
-					headers: Object.fromEntries(value.response.headers),
-					body: await value.response.arrayBuffer()
+					status: dependency.response.status,
+					statusText: dependency.response.statusText,
+					headers: Object.fromEntries(dependency.response.headers),
+					body: await dependency.response.arrayBuffer()
 				},
-				body: value.body
+				body: dependency.body
 			});
 		}
 
