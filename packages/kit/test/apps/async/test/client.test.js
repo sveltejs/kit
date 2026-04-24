@@ -418,6 +418,28 @@ test.describe('remote function mutations', () => {
 		expect(request_count).toBe(1); // only the command request
 	});
 
+	test('query.batch refresh via requested(...) reuses single batched flight', async ({ page }) => {
+		await page.goto('/remote/batch');
+		await page.click('#batch-reset-btn');
+		await expect(page.locator('#batch-result-1')).toHaveText('Buy groceries');
+		await expect(page.locator('#batch-result-2')).toHaveText('Walk the dog');
+
+		let request_count = 0;
+		/** @param {import('@playwright/test').Request} r */
+		const handler = (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0);
+		page.on('request', handler);
+
+		await page.click('#batch-requested-refresh-all-btn');
+		await expect(page.locator('#batch-result-1')).toHaveText('Buy groceries (requested)');
+		await expect(page.locator('#batch-result-2')).toHaveText('Walk the dog (requested)');
+		await page.waitForTimeout(100); // allow all requests to finish
+
+		// Only the command request itself — refreshes for every requested entry
+		// were rolled into a single batched call and returned via single-flight
+		// in the command response.
+		expect(request_count).toBe(1);
+	});
+
 	test('query.batch resolver function always receives validated arguments', async ({ page }) => {
 		await page.goto('/remote/batch-validation');
 
