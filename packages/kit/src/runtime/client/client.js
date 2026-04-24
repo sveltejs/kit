@@ -419,20 +419,20 @@ async function _invalidate(include_load_functions = true, reset_page_state = tru
 	/** @type {Map<string, Promise<void>>} */
 	const live_query_reconnects = new Map();
 	if (force_invalidation) {
-		query_map.forEach((entries) => {
-			entries.forEach(({ resource }) => {
+		for (const entries of query_map.values()) {
+			for (const { resource } of entries.values()) {
 				void resource.refresh();
-			});
-		});
+			}
+		}
 
-		live_query_map.forEach((entries, query_id) => {
-			entries.forEach(({ resource }, payload) => {
+		for (const [query_id, entries] of live_query_map) {
+			for (const [payload, { resource }] of entries) {
 				const key = create_remote_key(query_id, payload);
 				const promise = resource.reconnect();
 				promise.catch(noop);
 				live_query_reconnects.set(key, promise);
-			});
-		});
+			}
+		}
 	}
 
 	if (include_load_functions) {
@@ -464,20 +464,20 @@ async function _invalidate(include_load_functions = true, reset_page_state = tru
 	// only wait for promises that are connected to queries that still exist
 	/** @type {Promise<any>[]} */
 	const promises = [];
-	query_map.forEach((entries) => {
-		entries.forEach(({ resource }) => {
+	for (const entries of query_map.values()) {
+		for (const { resource } of entries.values()) {
 			promises.push(resource);
-		});
-	});
-	live_query_map.forEach((entries, query_id) => {
-		entries.forEach((_, payload) => {
+		}
+	}
+	for (const [query_id, entries] of live_query_map) {
+		for (const payload of entries.keys()) {
 			const key = create_remote_key(query_id, payload);
 			const promise = live_query_reconnects.get(key);
 			if (promise) {
 				promises.push(promise);
 			}
-		});
-	});
+		}
+	}
 
 	// Don't use allSettled yet because it's too new
 	await Promise.all(promises).catch(noop);
@@ -541,17 +541,17 @@ export async function _goto(url, options, redirect_count, nav_token) {
 			if (options.invalidateAll) {
 				force_invalidation = true;
 				query_keys = new Set();
-				query_map.forEach((entries, id) => {
+				for (const [id, entries] of query_map) {
 					for (const payload of entries.keys()) {
 						query_keys.add(create_remote_key(id, payload));
 					}
-				});
+				}
 				live_query_keys = new Set();
-				live_query_map.forEach((entries, id) => {
+				for (const [id, entries] of live_query_map) {
 					for (const payload of entries.keys()) {
 						live_query_keys.add(create_remote_key(id, payload));
 					}
-				});
+				}
 			}
 
 			if (options.invalidate) {
@@ -567,20 +567,20 @@ export async function _goto(url, options, redirect_count, nav_token) {
 			.tick()
 			.then(svelte.tick)
 			.then(() => {
-				query_map.forEach((entries, id) => {
-					entries.forEach(({ resource }, payload) => {
+				for (const [id, entries] of query_map) {
+					for (const [payload, { resource }] of entries) {
 						if (query_keys?.has(create_remote_key(id, payload))) {
 							void resource.refresh();
 						}
-					});
-				});
-				live_query_map.forEach((entries, id) => {
-					entries.forEach(({ resource }, payload) => {
+					}
+				}
+				for (const [id, entries] of live_query_map) {
+					for (const [payload, { resource }] of entries) {
 						if (live_query_keys?.has(create_remote_key(id, payload))) {
 							void resource.reconnect();
 						}
-					});
-				});
+					}
+				}
 			});
 	}
 }
