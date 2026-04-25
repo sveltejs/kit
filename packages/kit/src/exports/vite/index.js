@@ -292,7 +292,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 	let env;
 
 	/** @type {import('types').ManifestData} */
-	let manifest_data;
+	let build_manifest_data;
 
 	/** @type {import('types').ServerMetadata | undefined} only set at build time once analysis is finished */
 	let build_metadata = undefined;
@@ -497,7 +497,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 						__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: s(kit.version.pollInterval)
 					};
 
-					manifest_data = sync.all(svelte_config, config_env.mode, root).manifest_data;
+					build_manifest_data = sync.all(svelte_config, config_env.mode, root).manifest_data;
 				} else {
 					new_config.define = {
 						...define,
@@ -1041,6 +1041,8 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 					return;
 				}
 
+				const manifest_data = dev_environment?.manifest_data ?? build_manifest_data;
+
 				/** @type {Set<string>} */
 				const entrypoints = new Set();
 				for (const node of manifest_data.nodes) {
@@ -1322,7 +1324,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 					];
 
 					export const files = [
-						${manifest_data.assets
+						${build_manifest_data.assets
 							.filter((asset) => kit.serviceWorker.files(asset.file))
 							.map((asset) => `base + ${s(`/${asset.file}`)}`)
 							.join(',\n')}
@@ -1385,7 +1387,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 					};
 
 					// add entry points for every endpoint...
-					manifest_data.routes.forEach((route) => {
+					build_manifest_data.routes.forEach((route) => {
 						if (route.endpoint) {
 							const resolved = path.resolve(root, route.endpoint.file);
 							const relative = decodeURIComponent(path.relative(kit.files.routes, resolved));
@@ -1395,7 +1397,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 					});
 
 					// ...and every component used by pages...
-					manifest_data.nodes.forEach((node) => {
+					build_manifest_data.nodes.forEach((node) => {
 						for (const file of [node.component, node.universal, node.server]) {
 							if (file) {
 								const resolved = path.resolve(root, file);
@@ -1410,19 +1412,22 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 					});
 
 					// ...and every matcher
-					Object.entries(manifest_data.matchers).forEach(([key, file]) => {
+					Object.entries(build_manifest_data.matchers).forEach(([key, file]) => {
 						const name = posixify(path.join('entries/matchers', key));
 						server_input[name] = path.resolve(root, file);
 					});
 
 					// ...and the hooks files
-					if (manifest_data.hooks.server) {
-						server_input['entries/hooks.server'] = path.resolve(root, manifest_data.hooks.server);
+					if (build_manifest_data.hooks.server) {
+						server_input['entries/hooks.server'] = path.resolve(
+							root,
+							build_manifest_data.hooks.server
+						);
 					}
-					if (manifest_data.hooks.universal) {
+					if (build_manifest_data.hooks.universal) {
 						server_input['entries/hooks.universal'] = path.resolve(
 							root,
-							manifest_data.hooks.universal
+							build_manifest_data.hooks.universal
 						);
 					}
 
@@ -1450,7 +1455,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 					} else {
 						client_input['entry/start'] = `${runtime_directory}/client/entry.js`;
 						client_input['entry/app'] = `${kit.outDir}/generated/client-optimized/app.js`;
-						manifest_data.nodes.forEach((node, i) => {
+						build_manifest_data.nodes.forEach((node, i) => {
 							if (node.component || node.universal) {
 								client_input[`nodes/${i}`] =
 									`${kit.outDir}/generated/client-optimized/nodes/${i}.js`;
@@ -1712,7 +1717,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 				app_dir: kit.appDir,
 				app_path: `${kit.paths.base.slice(1)}${kit.paths.base ? '/' : ''}${kit.appDir}`,
 				base: kit.paths.base,
-				manifest_data,
+				manifest_data: build_manifest_data,
 				out_dir: out,
 				service_worker: service_worker_entry_file ? 'service-worker.js' : null, // TODO make file configurable?
 				client: null,
@@ -1726,7 +1731,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 					build_data,
 					prerendered: [],
 					relative_path: '.',
-					routes: manifest_data.routes,
+					routes: build_manifest_data.routes,
 					remotes,
 					root
 				})};\n`
@@ -1737,7 +1742,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 			const { metadata } = await analyse({
 				svelte_config,
 				manifest_path,
-				manifest_data,
+				manifest_data: build_manifest_data,
 				server_manifest,
 				tracked_features,
 				out,
@@ -1751,7 +1756,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 			// create client build
 			write_client_manifest(
 				kit,
-				manifest_data,
+				build_manifest_data,
 				`${kit.outDir}/generated/client-optimized`,
 				metadata.nodes
 			);
@@ -1843,7 +1848,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 				// similar to that on the client, with as much information computed upfront so that we
 				// don't need to include any code of the actual routes in the server bundle.
 				if (kit.router.resolution === 'server') {
-					const nodes = manifest_data.nodes.map((node, i) => {
+					const nodes = build_manifest_data.nodes.map((node, i) => {
 						if (node.component || node.universal) {
 							const entry = `${kit.outDir}/generated/client-optimized/nodes/${i}.js`;
 							const deps = deps_of(entry, true);
@@ -1860,7 +1865,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 					build_data.client.css = nodes.map((node) => node?.css);
 
 					build_data.client.routes = compact(
-						manifest_data.routes.map((route) => {
+						build_manifest_data.routes.map((route) => {
 							if (!route.page) return;
 
 							return {
@@ -1914,7 +1919,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 					build_data,
 					prerendered: [],
 					relative_path: '.',
-					routes: manifest_data.routes,
+					routes: build_manifest_data.routes,
 					remotes,
 					root
 				})};\n`
@@ -1923,7 +1928,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 			// regenerate nodes with the client manifest...
 			build_server_nodes({
 				out,
-				manifest_data,
+				manifest_data: build_manifest_data,
 				server_manifest,
 				client_manifest,
 				paths: kit.paths,
@@ -1962,7 +1967,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 					build_data,
 					prerendered: prerendered.paths,
 					relative_path: '.',
-					routes: manifest_data.routes.filter(
+					routes: build_manifest_data.routes.filter(
 						(route) => prerender_results.prerender_map.get(route.id) !== true
 					),
 					remotes,
