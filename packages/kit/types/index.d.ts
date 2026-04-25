@@ -1869,6 +1869,7 @@ declare module '@sveltejs/kit' {
 				'aria-invalid': boolean | 'false' | 'true' | undefined;
 				get checked(): boolean;
 				set checked(value: boolean);
+				readonly defaultChecked?: boolean;
 			}
 		: T extends 'file'
 			? {
@@ -1899,6 +1900,7 @@ declare module '@sveltejs/kit' {
 								'aria-invalid': boolean | 'false' | 'true' | undefined;
 								get value(): string | number;
 								set value(v: string | number);
+								readonly defaultValue?: string | number;
 							}
 						: {
 								name: string;
@@ -1906,6 +1908,7 @@ declare module '@sveltejs/kit' {
 								'aria-invalid': boolean | 'false' | 'true' | undefined;
 								get value(): string | number;
 								set value(v: string | number);
+								readonly defaultValue?: string | number;
 							};
 
 	type RemoteFormFieldMethods<T> = {

@@ -1895,6 +1895,7 @@ type InputElementProps<T extends keyof InputTypeMap> = T extends 'checkbox' | 'r
 			'aria-invalid': boolean | 'false' | 'true' | undefined;
 			get checked(): boolean;
 			set checked(value: boolean);
+			readonly defaultChecked?: boolean;
 		}
 	: T extends 'file'
 		? {
@@ -1925,6 +1926,7 @@ type InputElementProps<T extends keyof InputTypeMap> = T extends 'checkbox' | 'r
 							'aria-invalid': boolean | 'false' | 'true' | undefined;
 							get value(): string | number;
 							set value(v: string | number);
+							readonly defaultValue?: string | number;
 						}
 					: {
 							name: string;
@@ -1932,6 +1934,7 @@ type InputElementProps<T extends keyof InputTypeMap> = T extends 'checkbox' | 'r
 							'aria-invalid': boolean | 'false' | 'true' | undefined;
 							get value(): string | number;
 							set value(v: string | number);
+							readonly defaultValue?: string | number;
 						};
 
 type RemoteFormFieldMethods<T> = {

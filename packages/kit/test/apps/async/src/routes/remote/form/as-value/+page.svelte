@@ -13,13 +13,7 @@
 
 <div class="forms">
 	{#each values as value (value.id)}
-		<form
-			class="form"
-			{...as_value_form.for(value.id).enhance(({ submit }) => {
-				// TODO: needed to keep the values when JS is enabled, remove when reset is implemented
-				submit();
-			})}
-		>
+		<form class="form" {...as_value_form.for(value.id)}>
 			<input {...as_value_form.fields.text_field.as('text', value.text_field)} />
 
 			<input {...as_value_form.fields.number_field.as('number', value.number_field)} />
