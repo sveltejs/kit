@@ -11,7 +11,7 @@ const ValueSchema = v.object({
 	checkbox_field: v.optional(v.boolean(), false)
 });
 
-const default_values: Array<v.InferInput<typeof ValueSchema>> = [
+const default_values: Array<v.InferOutput<typeof ValueSchema>> = [
 	{
 		id: '1',
 		text_field: 'Example text',
