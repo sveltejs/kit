@@ -214,7 +214,7 @@ export default async function prerender({ svelte_config, out, manifest_path, met
 		/** @type {PromiseWithResolvers<Map<string, PrerenderDependency>>} */
 		const prerender_dependencies = Promise.withResolvers();
 
-		const event = `sveltekit:prerender-dependencies-${encoded}`;
+		const event = `sveltekit:prerender-dependencies:${encoded}`;
 		/** @param {Record<string, { response: SerialisedResponse; body: null | string | Uint8Array }>} dependencies */
 		const listener = (dependencies) => {
 			/** @type {Map<string, PrerenderDependency>} */
@@ -444,7 +444,7 @@ export default async function prerender({ svelte_config, out, manifest_path, met
 			handle_http_error({ status: response.status, path: decoded, referrer, referenceType });
 		}
 
-		vite.environments.ssr.hot.send('sveltekit:prerender-assets-update', file);
+		vite.environments.ssr.hot.send('sveltekit:prerender-assets', file);
 		saved.set(file, dest);
 	}
 

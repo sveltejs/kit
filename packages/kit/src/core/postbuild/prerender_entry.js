@@ -18,7 +18,7 @@ export class Server extends KitServer {
 
 		this.#manifest = manifest;
 
-		import.meta.hot?.on('sveltekit:prerender-assets-update', (data) => {
+		import.meta.hot?.on('sveltekit:prerender-assets', (data) => {
 			manifest.assets.add(data);
 		});
 	}
@@ -80,7 +80,7 @@ export class Server extends KitServer {
 		}
 
 		import.meta.hot?.send(
-			`sveltekit:prerender-dependencies-${url.pathname}`,
+			`sveltekit:prerender-dependencies:${url.pathname}`,
 			Object.fromEntries(dependencies)
 		);
 

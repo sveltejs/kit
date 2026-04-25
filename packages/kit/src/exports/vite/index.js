@@ -1189,28 +1189,6 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 						fn.__.id = ${s(remote.hash)} + '/' + name;
 						fn.__.name = name;
 					}
-					${
-						dev_environment?.vite
-							? dedent`
-									if (import.meta.hot) {
-										const exports = new Map();
-										for (const name in $$_self_$$) {
-											exports.set(name, { type: $$_self_$$[name].__.type });
-										}
-										const data = Object.fromEntries(exports);
-										const event = 'sveltekit:remote-${remote.hash}-response';
-
-										// we need to send the data immediately in case of preloads
-										import.meta.hot.send(event, data);
-
-										// otherwise, we send it when requested
-										import.meta.hot.on('sveltekit:remote-${remote.hash}-request', async () => {
-											import.meta.hot.send(event, data);
-										});
-									}
-								`
-							: ''
-					}
 				`;
 
 				// Emit a dedicated entry chunk for this remote in SSR builds (prod only)
@@ -1239,21 +1217,19 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 			// already loaded) so we can determine what it exports
 			if (dev_environment?.vite) {
 				/** @type {PromiseWithResolvers<Record<string, { type: import('types').RemoteInternals['type'] }>>} */
-				const { promise, resolve } = Promise.withResolvers();
+				const load_ssr_remote = Promise.withResolvers();
 
-				const event = `sveltekit:remote-${remote.hash}-response`;
+				const event = `sveltekit:remote:${remote.hash}`;
 				/** @param {Record<string, { type: import('types').RemoteInternals['type'] }>} payload */
 				const listener = (payload) => {
-					resolve(payload);
+					load_ssr_remote.resolve(payload);
 					dev_environment?.vite.environments.ssr.hot.off(event, listener);
 				};
 
 				dev_environment.vite.environments.ssr.hot.on(event, listener);
+				dev_environment.vite.environments.ssr.hot.send('sveltekit:remote', remote.hash);
 
-				await dev_environment.vite.environments.ssr.transformRequest(id);
-
-				dev_environment.vite.environments.ssr.hot.send(`sveltekit:remote-${remote.hash}-request`);
-				const exports = await promise;
+				const exports = await load_ssr_remote.promise;
 
 				for (const [name, value] of Object.entries(exports)) {
 					const type = value.type;
@@ -1671,7 +1647,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 				vite
 			});
 
-			vite.environments.ssr.hot.on('sveltekit:ssr-load-module', display_ssr_error_on_client);
+			vite.environments.ssr.hot.on('sveltekit:ssr-load-module-error', display_ssr_error_on_client);
 
 			return dev(vite, vite_config, svelte_config, root, dev_environment);
 		},

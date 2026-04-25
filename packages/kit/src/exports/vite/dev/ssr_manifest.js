@@ -182,7 +182,7 @@ async function loud_ssr_load_module(url) {
 		return await import(/* @vite-ignore */ url);
 	} catch (err) {
 		if (err instanceof Error) {
-			import.meta.hot?.send('sveltekit:ssr-load-module', {
+			import.meta.hot?.send('sveltekit:ssr-load-module-error', {
 				...err,
 				// these properties are non-enumerable and will not be
 				// serialized unless we explicitly include them

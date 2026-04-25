@@ -7,21 +7,14 @@ declare module 'vite/types/customEvent.d.ts' {
 			hash: string;
 			file: string;
 		};
+		'sveltekit:remote': string;
 		'sveltekit:server-assets': {
 			filepath: string;
 			size: number;
 			data: string;
 		};
-
-		'sveltekit:ssr-load-module': Error;
-		'sveltekit:prerender-assets-update': string;
-		'sveltekit:prerender-dependencies': Record<
-			string,
-			{
-				response: SerialisedResponse;
-				body: null | string | Uint8Array;
-			}
-		>;
+		'sveltekit:ssr-load-module-error': Error;
+		'sveltekit:prerender-assets': string;
 	}
 }
 
