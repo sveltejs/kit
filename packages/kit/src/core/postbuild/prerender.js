@@ -6,7 +6,7 @@ import { dirname, join } from 'node:path';
 import * as devalue from 'devalue';
 import { mkdirp, walk } from '../../utils/filesystem.js';
 import { noop } from '../../utils/functions.js';
-import { decode_pathname, decode_uri, is_root_relative, resolve } from '../../utils/url.js';
+import { decode_uri, is_root_relative, resolve } from '../../utils/url.js';
 import { escape_for_regexp, escape_html } from '../../utils/escape.js';
 import { logger } from '../utils.js';
 import { get_route_segments } from '../../utils/routing.js';
@@ -302,8 +302,8 @@ export default async function prerender({ svelte_config, out, manifest_path, met
 			// we should use the response URL because the server might have redirected,
 			// changing the URL's trailing slash state and affect how we resolve the
 			// relative dependency URLs
-			const decoded = decode_pathname(new URL(response.url).pathname);
-			const { ids, hrefs } = crawl(body.toString(), decoded);
+			const response_decoded = decode_uri(new URL(response.url).pathname);
+			const { ids, hrefs } = crawl(body.toString(), response_decoded);
 
 			actual_hashlinks.set(decoded, ids);
 
