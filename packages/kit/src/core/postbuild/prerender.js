@@ -214,26 +214,42 @@ export default async function prerender({ svelte_config, out, manifest_path, met
 		/** @type {PromiseWithResolvers<Map<string, PrerenderDependency>>} */
 		const prerender_dependencies = Promise.withResolvers();
 
-		const event = `sveltekit:prerender-dependencies:${encoded}`;
-		/** @param {Record<string, { response: SerialisedResponse; body: null | string | Uint8Array }>} dependencies */
-		const listener = (dependencies) => {
-			/** @type {Map<string, PrerenderDependency>} */
-			const deserialised = new Map();
-			for (const [path, dependency] of Object.entries(dependencies)) {
-				deserialised.set(path, {
-					response: new Response(dependency.response.body, {
-						headers: dependency.response.headers,
-						status: dependency.response.status,
-						statusText: dependency.response.statusText
-					}),
-					body: dependency.body
-				});
-			}
-			prerender_dependencies.resolve(deserialised);
-			vite.environments.ssr.hot.off(event, listener);
+		/** @param {string} event */
+		const create_dependency_handler = (event) => {
+			/** @param {{ dependencies: Record<string, { response: SerialisedResponse; body: null | string | Uint8Array }> } | { location: string; }} data */
+			const dependency_handler = (data) => {
+				if ('location' in data) {
+					const handle_redirected_dependencies = create_dependency_handler(
+						`sveltekit:prerender-dependencies:${data.location}`
+					);
+					vite.environments.ssr.hot.on(
+						`sveltekit:prerender-dependencies:${data.location}`,
+						handle_redirected_dependencies
+					);
+				} else {
+					/** @type {Map<string, PrerenderDependency>} */
+					const deserialised = new Map();
+					for (const [path, dependency] of Object.entries(data.dependencies)) {
+						deserialised.set(path, {
+							response: new Response(dependency.response.body, {
+								headers: dependency.response.headers,
+								status: dependency.response.status,
+								statusText: dependency.response.statusText
+							}),
+							body: dependency.body
+						});
+					}
+					prerender_dependencies.resolve(deserialised);
+				}
+				vite.environments.ssr.hot.off(event, dependency_handler);
+			};
+			return dependency_handler;
 		};
 
-		vite.environments.ssr.hot.on(event, listener);
+		const event = `sveltekit:prerender-dependencies:${encoded}`;
+		const handle_dependencies = create_dependency_handler(event);
+		vite.environments.ssr.hot.on(event, handle_dependencies);
+
 		const response = await fetch(`http://localhost:${port}${encoded}`);
 
 		const encoded_id = response.headers.get('x-sveltekit-routeid');
@@ -300,7 +316,7 @@ export default async function prerender({ svelte_config, out, manifest_path, met
 			headers['content-type'] === 'text/html'
 		) {
 			// we should use the response URL because the server might have redirected,
-			// changing the URL's trailing slash state and affect how we resolve the
+			// changing the URL's trailing slash presence and affecting how we resolve
 			// relative dependency URLs
 			const response_decoded = decode_uri(new URL(response.url).pathname);
 			const { ids, hrefs } = crawl(body.toString(), response_decoded);

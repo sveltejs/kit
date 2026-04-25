@@ -65,24 +65,25 @@ export class Server extends KitServer {
 
 		const response = await super.respond(request, options);
 
-		/** @type {Map<string, { response: SerialisedResponse; body: null | string | Uint8Array }>} */
-		const dependencies = new Map();
-		for (const [pathname, dependency] of options.prerendering.dependencies) {
-			dependencies.set(pathname, {
-				response: {
-					status: dependency.response.status,
-					statusText: dependency.response.statusText,
-					headers: Object.fromEntries(dependency.response.headers),
-					body: await dependency.response.arrayBuffer()
-				},
-				body: dependency.body
-			});
+		const event = `sveltekit:prerender-dependencies:${url.pathname}`;
+		if (response.headers.has('x-sveltekit-normalize')) {
+			import.meta.hot?.send(event, { location: response.headers.get('location') });
+		} else {
+			/** @type {Map<string, { response: SerialisedResponse; body: null | string | Uint8Array }>} */
+			const dependencies = new Map();
+			for (const [pathname, dependency] of options.prerendering.dependencies) {
+				dependencies.set(pathname, {
+					response: {
+						status: dependency.response.status,
+						statusText: dependency.response.statusText,
+						headers: Object.fromEntries(dependency.response.headers),
+						body: await dependency.response.arrayBuffer()
+					},
+					body: dependency.body
+				});
+			}
+			import.meta.hot?.send(event, { dependencies: Object.fromEntries(dependencies) });
 		}
-
-		import.meta.hot?.send(
-			`sveltekit:prerender-dependencies:${url.pathname}`,
-			Object.fromEntries(dependencies)
-		);
 
 		return response;
 	}
