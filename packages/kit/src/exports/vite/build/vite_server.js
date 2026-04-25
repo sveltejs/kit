@@ -3,6 +3,8 @@
 /** @import { ModuleRunner } from 'vite/module-runner' */
 import fs from 'node:fs';
 import path, { basename } from 'node:path';
+import { exactRegex } from 'rolldown/filter';
+import sirv from 'sirv';
 import {
 	createFetchableDevEnvironment,
 	createServer,
@@ -10,7 +12,7 @@ import {
 	createServerModuleRunner,
 	isFetchableDevEnvironment
 } from 'vite';
-import { exactRegex } from 'rolldown/filter';
+import { getRequest, setResponse } from '@sveltejs/kit/node';
 import { sveltekit_env, sveltekit_ipc } from '../module_ids.js';
 import { dedent } from '../../../core/sync/utils.js';
 import {
@@ -20,10 +22,8 @@ import {
 	invalidate_module,
 	remove_static_middlewares
 } from '../dev/index.js';
-import { getRequest, setResponse } from '@sveltejs/kit/node';
 import { s } from '../../../utils/misc.js';
 import { get_env } from '../utils.js';
-import sirv from 'sirv';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 
 /**
@@ -35,7 +35,7 @@ import { SVELTE_KIT_ASSETS } from '../../../constants.js';
  * @param {PluginOption} [opts.vite_plugins]
  * @returns {Promise<ViteDevServer>}
  */
-export async function create_build_server({
+export function create_build_server({
 	svelte_config,
 	out,
 	manifest_path,
@@ -394,6 +394,7 @@ export async function create_build_server({
 		svelte_config.kit.adapter?.vite?.plugins ?? plugin_node_environment
 	].filter(Boolean);
 
+	// TODO: run in a separate process so that user code doesn't cause the build to hang
 	return createServer({
 		configFile: false,
 		command: 'serve',
