@@ -715,12 +715,14 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 						const port =
 							typeof address === 'string' ? Number(address.split(':').at(-1)) : address?.port;
 
+						const app_path = `${svelte_config.kit.paths.base}/${svelte_config.kit.appDir}`;
+
 						return dedent`
 							// helps us avoid global fetch warnings we emit when the user uses it incorrectly
 							const native_fetch = globalThis.fetch;
 
 							export function get(pathname) {
-								return native_fetch(\`http://localhost:\${port}/${svelte_config.kit.appDir}\${pathname}\`);
+								return native_fetch(\`http://localhost:\${port}${app_path}\${pathname}\`);
 							}
 
 							let port${port ? ` = ${port}` : ''};

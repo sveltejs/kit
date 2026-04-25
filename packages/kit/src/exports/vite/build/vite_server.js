@@ -45,6 +45,8 @@ export async function create_build_server({
 	/** @type {number | undefined} */
 	let port;
 
+	const app_path = `${svelte_config.kit.paths.base}/${svelte_config.kit.appDir}`;
+
 	/**
 	 * Allows us to perform Node operations from a non-Node environment by sending
 	 * a request to the Vite dev server. We can then configure a middleware to
@@ -95,7 +97,7 @@ export async function create_build_server({
           const native_fetch = globalThis.fetch;
 
           export function get(pathname) {
-            return native_fetch(\`http://localhost:\${port}/${svelte_config.kit.appDir}\${pathname}\`);
+            return native_fetch(\`http://localhost:\${port}${app_path}\${pathname}\`);
           }
 
 					let port${port ? ` = ${port}` : ''};

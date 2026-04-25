@@ -66,7 +66,9 @@ export interface AssetDependencies {
 }
 
 export interface BuildData {
+	/** The _app directory configured. */
 	app_dir: string;
+	/** Path to the _app directory, including any base path. */
 	app_path: string;
 	base: string;
 	manifest_data: ManifestData;
