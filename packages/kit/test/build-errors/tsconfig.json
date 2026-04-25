@@ -4,8 +4,7 @@
 		"checkJs": true,
 		"noEmit": true,
 		"target": "esnext",
-		"module": "nodenext",
-		"moduleResolution": "nodenext"
+		"moduleResolution": "node"
 	},
 	"include": ["./*"]
 }
