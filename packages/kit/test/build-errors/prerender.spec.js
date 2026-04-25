@@ -1,4 +1,4 @@
-import { assert, expect, test } from 'vitest';
+import { expect, test } from 'vitest';
 import { execSync } from 'node:child_process';
 import path from 'node:path';
 import { EOL } from 'node:os';
@@ -6,13 +6,13 @@ import { EOL } from 'node:os';
 const timeout = 60_000;
 
 test('prerenderable routes must be prerendered', { timeout }, () => {
-	assert.throws(
-		() =>
-			execSync('pnpm build', {
-				cwd: path.join(import.meta.dirname, 'apps/prerenderable-not-prerendered'),
-				stdio: 'pipe',
-				timeout
-			}),
+	expect(() =>
+		execSync('pnpm build', {
+			cwd: path.join(import.meta.dirname, 'apps/prerenderable-not-prerendered'),
+			stdio: 'pipe',
+			timeout
+		})
+	).toThrow(
 		/The following routes were marked as prerenderable, but were not prerendered because they were not found while crawling your app:\r?\n {2}- \/\[x\]/gs
 	);
 });
@@ -30,13 +30,11 @@ test('entry generators should match their own route', { timeout }, () => {
 });
 
 test('an error in a `prerender` function should fail the build', { timeout }, () => {
-	assert.throws(
-		() =>
-			execSync('pnpm build', {
-				cwd: path.join(import.meta.dirname, 'apps/prerender-remote-function-error'),
-				stdio: 'pipe',
-				timeout
-			}),
-		/remote function blew up/
-	);
+	expect(() =>
+		execSync('pnpm build', {
+			cwd: path.join(import.meta.dirname, 'apps/prerender-remote-function-error'),
+			stdio: 'pipe',
+			timeout
+		})
+	).toThrow(/remote function blew up/);
 });
