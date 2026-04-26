@@ -134,6 +134,7 @@ After configuring the bindings in your Wrangler configuration file, you can add 
 Finally, add `Env` to the `platform.env` property in `src/app.d.ts`:
 
 ```ts
+// @errors: 2304
 /// file: src/app.d.ts
 declare global {
 	namespace App {
