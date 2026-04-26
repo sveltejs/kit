@@ -107,8 +107,16 @@ export function dev(vite, vite_config, svelte_config, root, dev_environment) {
 		// Unless it's a file where the trailing slash page option might have changed
 		if (timeout || restarting || !/\+(page|layout|server).*$/.test(file)) return;
 		sync.update(svelte_config, manifest_data, file, root);
-		// TODO: perform a partial update instead of invalidating the whole virtual module?
-		void invalidate_module(vite, sveltekit_manifest_data);
+
+		const nodes_page_options = manifest_data.nodes.map((node) => node.page_options);
+		const endpoints_page_options = manifest_data.routes.map(
+			(route) => route.endpoint?.page_options
+		);
+		vite.environments.ssr.hot.send('sveltekit:manifest-data', {
+			nodes_page_options,
+			endpoints_page_options
+		});
+		invalidate_module(vite, sveltekit_manifest_data);
 	});
 
 	const { appTemplate, errorTemplate, serviceWorker, hooks } = svelte_config.kit.files;

@@ -802,6 +802,20 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 							};
 
 							export const mime_types = ${s(get_mime_lookup(manifest_data))};
+
+							import.meta.hot?.on(
+								'sveltekit:manifest-data',
+								({ nodes_page_options, endpoints_page_options }) => {
+									for (let i = 0; i < nodes_page_options.length; i++) {
+									  manifest_data.nodes[i].page_options = nodes_page_options[i];
+									}
+
+									for (let i = 0; i < endpoints_page_options.length; i++) {
+									  const endpoint = manifest_data.routes[i].endpoint;
+										if (endpoint) endpoint.page_options = endpoints_page_options[i];
+									}
+								}
+							);
 						`;
 					}
 
