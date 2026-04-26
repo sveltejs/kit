@@ -24,7 +24,7 @@ test('entry generators should match their own route', { timeout }, () => {
 				stdio: 'pipe',
 				timeout
 			}),
-		/Error: The entries export from \/\[slug\]\/\[notSpecific\] generated entry \/whatever\/specific, which was matched by \/\[slug\]\/specific - see the `handleEntryGeneratorMismatch` option in https:\/\/svelte\.dev\/docs\/kit\/configuration#prerender for more info\.\nTo suppress or handle this error, implement `handleEntryGeneratorMismatch` in https:\/\/svelte\.dev\/docs\/kit\/configuration#prerender/
+		/Error: The entries export from \/\[slug\]\/\[notSpecific\] generated entry \/whatever\/specific, which was matched by \/\[slug\]\/specific - see the `handleEntryGeneratorMismatch` option in https:\/\/svelte\.dev\/docs\/kit\/configuration#prerender for more info\.\r?\nTo suppress or handle this error, implement `handleEntryGeneratorMismatch` in https:\/\/svelte\.dev\/docs\/kit\/configuration#prerender/
 	);
 });
 
