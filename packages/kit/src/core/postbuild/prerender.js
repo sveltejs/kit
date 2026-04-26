@@ -1,9 +1,8 @@
-/** @import { Logger, PrerenderDependency, Prerendered, PrerenderMap, ServerMetadata, ValidatedConfig } from 'types' */
+/** @import { Logger, PrerenderDependency, Prerendered, PrerenderMap, ServerMetadata } from 'types' */
 /** @import { PluginOption } from 'vite' */
 /** @import { SerialisedResponse } from '../../exports/vite/types.js' */
 import { existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
-import * as devalue from 'devalue';
 import { mkdirp, walk } from '../../utils/filesystem.js';
 import { noop } from '../../utils/functions.js';
 import { decode_uri, is_root_relative, resolve } from '../../utils/url.js';
@@ -12,10 +11,15 @@ import { logger } from '../utils.js';
 import { get_route_segments } from '../../utils/routing.js';
 import { queue } from './queue.js';
 import { crawl } from './crawl.js';
+import { forked } from '../../utils/fork.js';
+import * as devalue from 'devalue';
 import generate_fallback from './fallback.js';
 import { posixify } from '../../utils/os.js';
 import { create_app_dir_matcher } from '../../exports/vite/dev/index.js';
 import { create_build_server } from '../../exports/vite/build/vite_server.js';
+import { load_config } from '../config/index.js';
+
+export default forked(import.meta.url, prerender);
 
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#scrolling-to-a-fragment
 // "If fragment is the empty string, then return the special value top of the document."
@@ -27,14 +31,13 @@ const prerender_entry = import.meta.resolve('./prerender_entry.js');
 
 /**
  * @param {object} opts Arguments must be serialisable via the structured clone algorithm
- * @param {ValidatedConfig} opts.svelte_config
  * @param {string} opts.out
  * @param {string} opts.manifest_path
  * @param {ServerMetadata} opts.metadata
  * @param {boolean} opts.verbose
  * @param {string} opts.root
  */
-export default async function prerender({ svelte_config, out, manifest_path, metadata, verbose }) {
+async function prerender({ out, manifest_path, metadata, verbose, root }) {
 	/**
 	 * @template {{message: string}} T
 	 * @template {Omit<T, 'message'>} K
@@ -81,11 +84,13 @@ export default async function prerender({ svelte_config, out, manifest_path, met
 		}
 	}
 
+	const svelte_config = await load_config({ cwd: root });
+
 	if (svelte_config.kit.router.type === 'hash') {
 		const fallback = await generate_fallback({
-			svelte_config,
 			manifest_path,
-			out
+			out,
+			root
 		});
 
 		const file = output_filename('/', true);
@@ -214,12 +219,12 @@ export default async function prerender({ svelte_config, out, manifest_path, met
 		/** @type {PromiseWithResolvers<Map<string, PrerenderDependency>>} */
 		const prerender_dependencies = Promise.withResolvers();
 
-		const event = `sveltekit:prerender-dependencies-${encoded}`;
-		/** @param {Record<string, { response: SerialisedResponse; body: null | string | Uint8Array }>} dependencies */
-		const listener = (dependencies) => {
+		const event = `sveltekit:prerender-dependencies:${encoded}`;
+		/** @param {{ dependencies: Record<string, { response: SerialisedResponse; body: null | string | Uint8Array }> }} data */
+		const handle_dependencies = (data) => {
 			/** @type {Map<string, PrerenderDependency>} */
 			const deserialised = new Map();
-			for (const [path, dependency] of Object.entries(dependencies)) {
+			for (const [path, dependency] of Object.entries(data.dependencies)) {
 				deserialised.set(path, {
 					response: new Response(dependency.response.body, {
 						headers: dependency.response.headers,
@@ -230,11 +235,11 @@ export default async function prerender({ svelte_config, out, manifest_path, met
 				});
 			}
 			prerender_dependencies.resolve(deserialised);
-			vite.environments.ssr.hot.off(event, listener);
+			vite.environments.ssr.hot.off(event, handle_dependencies);
 		};
+		vite.environments.ssr.hot.on(event, handle_dependencies);
 
-		vite.environments.ssr.hot.on(event, listener);
-		const response = await fetch(`http://localhost:${port}${encoded}`);
+		const response = await fetch(`http://localhost:${port}${encoded}`, { redirect: 'manual' });
 
 		const encoded_id = response.headers.get('x-sveltekit-routeid');
 		const decoded_id = encoded_id && decode_uri(encoded_id);
@@ -444,7 +449,7 @@ export default async function prerender({ svelte_config, out, manifest_path, met
 			handle_http_error({ status: response.status, path: decoded, referrer, referenceType });
 		}
 
-		vite.environments.ssr.hot.send('sveltekit:prerender-assets-update', file);
+		vite.environments.ssr.hot.send('sveltekit:prerender-assets', file);
 		saved.set(file, dest);
 	}
 

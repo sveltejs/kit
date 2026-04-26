@@ -31,7 +31,7 @@ export async function respond(request, remote_address) {
 				return fs.readFileSync(from_fs(file));
 			}
 
-			return fs.readFileSync(path.join(__SVELTEKIT_PATHS_ASSETS__, file));
+			return fs.readFileSync(path.join(__SVELTEKIT_FILES_ASSETS__, file));
 		}
 	});
 }

@@ -1,14 +1,17 @@
-/** @import { ManifestData, ServerMetadata, ValidatedConfig } from 'types' */
+/** @import { ManifestData, ServerMetadata } from 'types' */
 /** @import { Manifest } from 'vite' */
 import * as devalue from 'devalue';
+import { forked } from '../../utils/fork.js';
 import { build_server_nodes } from '../../exports/vite/build/build_server.js';
 import { create_build_server } from '../../exports/vite/build/vite_server.js';
+import { load_config } from '../config/index.js';
+
+export default forked(import.meta.url, analyse);
 
 const analyse_entry = import.meta.resolve('./analyse_entry.js');
 
 /**
  * @param {object} opts Arguments must be serialisable via the structured clone algorithm
- * @param {ValidatedConfig} opts.svelte_config
  * @param {string} opts.manifest_path
  * @param {ManifestData} opts.manifest_data
  * @param {Manifest} opts.server_manifest
@@ -17,8 +20,7 @@ const analyse_entry = import.meta.resolve('./analyse_entry.js');
  * @param {string} opts.root
  * @returns {Promise<{ metadata: ServerMetadata }>}
  */
-export default async function analyse({
-	svelte_config,
+async function analyse({
 	manifest_path,
 	manifest_data,
 	server_manifest,
@@ -28,6 +30,8 @@ export default async function analyse({
 }) {
 	// first, build server nodes without the client manifest so we can analyse it
 	build_server_nodes({ out, manifest_data, server_manifest, root });
+
+	const svelte_config = await load_config({ cwd: root });
 
 	const vite = await create_build_server({
 		svelte_config,

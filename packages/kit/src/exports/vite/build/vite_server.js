@@ -3,6 +3,8 @@
 /** @import { ModuleRunner } from 'vite/module-runner' */
 import fs from 'node:fs';
 import path, { basename } from 'node:path';
+import { exactRegex } from 'rolldown/filter';
+import sirv from 'sirv';
 import {
 	createFetchableDevEnvironment,
 	createServer,
@@ -10,7 +12,7 @@ import {
 	createServerModuleRunner,
 	isFetchableDevEnvironment
 } from 'vite';
-import { exactRegex } from 'rolldown/filter';
+import { getRequest, setResponse } from '@sveltejs/kit/node';
 import { sveltekit_env, sveltekit_ipc } from '../module_ids.js';
 import { dedent } from '../../../core/sync/utils.js';
 import {
@@ -20,10 +22,8 @@ import {
 	invalidate_module,
 	remove_static_middlewares
 } from '../dev/index.js';
-import { getRequest, setResponse } from '@sveltejs/kit/node';
 import { s } from '../../../utils/misc.js';
 import { get_env } from '../utils.js';
-import sirv from 'sirv';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 
 /**
@@ -35,7 +35,7 @@ import { SVELTE_KIT_ASSETS } from '../../../constants.js';
  * @param {PluginOption} [opts.vite_plugins]
  * @returns {Promise<ViteDevServer>}
  */
-export async function create_build_server({
+export function create_build_server({
 	svelte_config,
 	out,
 	manifest_path,
@@ -44,6 +44,8 @@ export async function create_build_server({
 }) {
 	/** @type {number | undefined} */
 	let port;
+
+	const app_path = `${svelte_config.kit.paths.base}/${svelte_config.kit.appDir}`;
 
 	/**
 	 * Allows us to perform Node operations from a non-Node environment by sending
@@ -95,7 +97,7 @@ export async function create_build_server({
           const native_fetch = globalThis.fetch;
 
           export function get(pathname) {
-            return native_fetch(\`http://localhost:\${port}/${svelte_config.kit.appDir}\${pathname}\`);
+            return native_fetch(\`http://localhost:\${port}${app_path}\${pathname}\`);
           }
 
 					let port${port ? ` = ${port}` : ''};

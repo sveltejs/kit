@@ -1415,16 +1415,27 @@ export interface Page<
  */
 export type ParamMatcher = (param: string) => boolean;
 
-export type RequestedResult<T> = Iterable<T> &
-	AsyncIterable<T> & {
+/**
+ * A single entry yielded by [`requested`](https://svelte.dev/docs/kit/$app-server#requested).
+ * `arg` is the validated argument (the input *after* the query's schema validated and
+ * transformed it, if applicable); `query` is a `RemoteQuery` bound to the client's
+ * original cache key, so `refresh()` / `set()` will update the correct client entry.
+ */
+export type RequestedEntry<Validated, Output> = {
+	arg: Validated;
+	query: RemoteQuery<Output>;
+};
+
+export type RequestedResult<Validated, Output> = Iterable<RequestedEntry<Validated, Output>> &
+	AsyncIterable<RequestedEntry<Validated, Output>> & {
 		/**
 		 * Call `refresh` on all queries selected by this `requested` invocation.
 		 * This is identical to:
 		 * ```ts
 		 * import { requested } from '$app/server';
 		 *
-		 * for await (const arg of requested(query, ...) {
-		 *   void query(arg).refresh();
+		 * for await (const { query } of requested(getPost, ...)) {
+		 *   void query.refresh();
 		 * }
 		 * ```
 		 */
@@ -2194,8 +2205,17 @@ export type RemotePrerenderFunction<Input, Output> = (
 
 /**
  * The return value of a remote `query` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query) for full documentation.
+ *
+ * The optional `Validated` generic parameter represents the argument type *after* the
+ * query's schema has validated and (optionally) transformed it — this is the type the
+ * query's implementation function receives on the server, and the type yielded by
+ * [`requested`](https://svelte.dev/docs/kit/$app-server#requested). For queries declared
+ * with [Standard Schema](https://standardschema.dev/) it differs from `Input` when the
+ * schema contains a transform (e.g. `v.pipe(v.number(), v.transform(String))` has
+ * `Input = number` but `Validated = string`). For `'unchecked'` validators and queries
+ * without arguments it defaults to `Input`.
  */
-export type RemoteQueryFunction<Input, Output> = (
+export type RemoteQueryFunction<Input, Output, _Validated = Input> = (
 	arg: undefined extends Input ? Input | void : Input
 ) => RemoteQuery<Output>;
 

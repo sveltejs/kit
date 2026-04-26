@@ -421,6 +421,24 @@ test.describe('remote function mutations', () => {
 		await expect(page.locator('#phrase')).toHaveText('i am your father');
 	});
 
+	test('refreshAll works with schema transforms (number to string)', async ({ page }) => {
+		await page.goto('/remote/form/transform');
+
+		await expect(page.locator('#result')).toHaveText('Count for 42 is 0');
+
+		await page.click('#update-btn');
+		await expect(page.locator('#result')).toHaveText('Count for 42 is 1');
+	});
+
+	test('.set() works with schema transforms when arg comes from requested()', async ({ page }) => {
+		await page.goto('/remote/form/transform');
+
+		await expect(page.locator('#result')).toHaveText(/Count for 42 is \d+/);
+
+		await page.click('#set-btn');
+		await expect(page.locator('#result')).toHaveText('Set value for 42');
+	});
+
 	test.describe('query runtime guardrails', () => {
 		test('query created outside tracking context can run but cannot expose reactive state', async ({
 			page

@@ -3,6 +3,7 @@ import { DEV } from 'esm-env';
 import { Server as KitServer } from '../../../runtime/server/index.js';
 import { check_feature } from '../../../utils/features.js';
 import { SCHEME } from '../../../utils/url.js';
+import { manifest } from './ssr_manifest.js';
 
 const async_local_storage = new AsyncLocalStorage();
 
@@ -41,3 +42,16 @@ export class Server extends KitServer {
 		return await super.respond(request, options);
 	}
 }
+
+import.meta.hot?.on('sveltekit:remote', async (hash) => {
+	const remote = (await manifest._.remotes[hash]()).default;
+
+	/** @type {Map<string, { type: string }>} */
+	const exports = new Map();
+	for (const name in remote) {
+		exports.set(name, { type: remote[name].__.type });
+	}
+	const data = Object.fromEntries(exports);
+
+	import.meta.hot?.send(`sveltekit:remote:${hash}`, data);
+});

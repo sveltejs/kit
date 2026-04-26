@@ -1,17 +1,23 @@
-/** @import { ValidatedConfig } from 'types' */
 /** @import { PluginOption } from 'vite' */
 import { escape_for_regexp } from '../../utils/escape.js';
 import { create_build_server } from '../../exports/vite/build/vite_server.js';
+import { load_config } from '../config/index.js';
+import { forked } from '../../utils/fork.js';
+
+export default forked(import.meta.url, generate_fallback);
 
 const prerender_entry = import.meta.resolve('./prerender_entry.js');
 
 /**
  * @param {object} opts Arguments must be serialisable via the structured clone algorithm
- * @param {ValidatedConfig} opts.svelte_config
  * @param {string} opts.manifest_path
  * @param {string} opts.out
+ * @param {string} opts.root
+ * @returns {Promise<string>}
  */
-export default async function generate_fallback({ svelte_config, manifest_path, out }) {
+async function generate_fallback({ manifest_path, out, root }) {
+	const svelte_config = await load_config({ cwd: root });
+
 	/** @type {PluginOption} */
 	const plugin_generate_fallback = {
 		name: 'vite-plugin-sveltekit-compile:generate-fallback',
