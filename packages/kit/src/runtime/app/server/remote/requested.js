@@ -3,23 +3,28 @@
 import { get_request_store } from '@sveltejs/kit/internal/server';
 import { create_remote_key, parse_remote_arg } from '../../../shared.js';
 import { noop } from '../../../../utils/functions.js';
-import { mark_argument_validated } from './query.js';
 
 /**
  * In the context of a remote `command` or `form` request, returns an iterable
- * of the client-requested refreshes' validated arguments up to the supplied limit.
- * Arguments that fail validation or exceed the limit are recorded as failures in
+ * of `{ arg, query }` entries for the refreshes requested by the client, up to
+ * the supplied `limit`. Each `query` is a `RemoteQuery` bound to the original
+ * client-side cache key, so `refresh()` / `set()` propagate correctly even when
+ * the query's schema transforms the input. `arg` is the *validated* argument,
+ * i.e. the value after the schema has run (so `InferOutput<Schema>` for queries
+ * declared with a Standard Schema).
+ *
+ * Arguments that fail validation or exceed `limit` are recorded as failures in
  * the response to the client.
  *
  * @example
  * ```ts
  * import { requested } from '$app/server';
  *
- * for (const arg of requested(getPost, 5)) {
- * 	// it's safe to throw away this promise -- SvelteKit
- * 	// will await it for us and handle any errors by sending
- * 	// them to the client.
- * 	void getPost(arg).refresh();
+ * for (const { arg, query } of requested(getPost, 5)) {
+ * 	// `arg` is the validated argument; `query` is bound to the client's
+ * 	// cache key. It's safe to throw away this promise -- SvelteKit will
+ * 	// await it and forward any errors to the client.
+ * 	void query.refresh();
  * }
  * ```
  *
@@ -33,11 +38,12 @@ import { mark_argument_validated } from './query.js';
  *
  * @template Input
  * @template Output
- * @param {RemoteQueryFunction<Input, Output>} query
- * @param {number} [limit=Infinity]
- * @returns {RequestedResult<Input>}
+ * @template [Validated=Input]
+ * @param {RemoteQueryFunction<Input, Output, Validated>} query
+ * @param {number} limit
+ * @returns {RequestedResult<Validated, Output>}
  */
-export function requested(query, limit = Infinity) {
+export function requested(query, limit) {
 	const { state } = get_request_store();
 	const internals = /** @type {RemoteQueryInternals | undefined} */ (/** @type {any} */ (query).__);
 
@@ -85,7 +91,7 @@ export function requested(query, limit = Infinity) {
 						);
 					}
 
-					yield mark_argument_validated(internals, state, validated);
+					yield { arg: validated, query: internals.bind(payload, validated) };
 				} catch (error) {
 					record_failure(payload, error);
 					continue;
@@ -97,7 +103,7 @@ export function requested(query, limit = Infinity) {
 				try {
 					const parsed = parse_remote_arg(payload, state.transport);
 					const validated = await internals.validate(parsed);
-					return mark_argument_validated(internals, state, validated);
+					return { arg: validated, query: internals.bind(payload, validated) };
 				} catch (error) {
 					record_failure(payload, error);
 					throw new Error(`Skipping ${internals.name}(${payload})`, { cause: error });
@@ -105,8 +111,8 @@ export function requested(query, limit = Infinity) {
 			});
 		},
 		async refreshAll() {
-			for await (const arg of this) {
-				void query(arg).refresh();
+			for await (const { query } of this) {
+				void query.refresh();
 			}
 		}
 	};
