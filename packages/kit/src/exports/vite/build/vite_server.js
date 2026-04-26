@@ -394,7 +394,6 @@ export function create_build_server({
 		svelte_config.kit.adapter?.vite?.plugins ?? plugin_node_environment
 	].filter(Boolean);
 
-	// TODO: run in a separate process so that user code doesn't cause the build to hang
 	return createServer({
 		configFile: false,
 		command: 'serve',

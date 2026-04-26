@@ -1740,7 +1740,6 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 			log.info('Analysing routes');
 
 			const { metadata } = await analyse({
-				svelte_config,
 				manifest_path,
 				manifest_data: build_manifest_data,
 				server_manifest,
@@ -1941,7 +1940,6 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 
 			// ...and prerender
 			const prerender_results = await prerender({
-				svelte_config,
 				out,
 				manifest_path,
 				metadata,
