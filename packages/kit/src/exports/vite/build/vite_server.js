@@ -27,12 +27,17 @@ import { get_env } from '../utils.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 
 /**
+ * Spins up a Vite dev server along with the build output so that we can run
+ * analysis and prerendering in the environment itself. This helps us avoid
+ * runtime errors when the user imports non-Node runtime APIs such as `cloudflare:workers`.
+ * We achieve this by using Vite's `resolveId` hook to intercept module resolution
+ * and provide a `Server` class that runs our custom instructions.
  * @param {object} opts
  * @param {ValidatedConfig} opts.svelte_config
  * @param {string} opts.out
  * @param {string} opts.manifest_path
- * @param {string} opts.server_path
- * @param {PluginOption} [opts.vite_plugins]
+ * @param {string} opts.server_path path to the module with our custom Server export
+ * @param {PluginOption} [opts.vite_plugins] additional plugins to customise the Vite behaviour
  * @returns {Promise<ViteDevServer>}
  */
 export function create_build_server({
