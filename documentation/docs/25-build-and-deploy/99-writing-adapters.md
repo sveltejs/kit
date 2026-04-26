@@ -59,11 +59,11 @@ Within the `adapt` method, there are a number of things that an adapter should d
 
 Where possible, we recommend putting the adapter output under the `build/` directory with any intermediate output placed under `.svelte-kit/[adapter-name]`.
 
-## Configuring the development server
+## Configuring the development and preview experience
 
-By default, SvelteKit runs your server code through a Node.js runtime during development and preview. You can change this by adding a Vite plugin to run code and respond to requests from [a different SSR environment](https://vite.dev/guide/api-environment-runtimes).
+By default, SvelteKit runs your server code through a Node.js runtime when running `vite dev` and `vite preview`. You can change this behaviour by adding a Vite plugin that has a `configureServer` and `configurePreviewServer` hook to route requests to [a different runtime](https://vite.dev/guide/api-environment-runtimes).
 
-The default Vite environment SvelteKit uses is named `ssr`. You can customise it by referencing it in the `config` hook of your Vite plugin.
+The main Vite server environment SvelteKit uses is named `ssr`. You can change its settings by referencing it in the `config` hook of a Vite plugin.
 
 ```js
 // @errors: 2304 1005 1109
@@ -72,7 +72,7 @@ config(userConfig) {
 }
 ```
 
-You can also create your own development server entry file by importing `Server` from `sveltekit:server`, `env` from `sveltekit:env`, and `manifest` from `sveltekit:server-manifest`.
+You can also create your own server entry file by importing the `Server` class from `sveltekit:server`, the environment variables loaded by Vite through `env` from `sveltekit:env`, and your app-specific information as `manifest` from `sveltekit:server-manifest`.
 
 ```js
 import { env } from 'sveltekit:env';
@@ -91,7 +91,7 @@ export default {
 	async fetch(request) {
 		return await server.respond(request, {
 			getClientAddress: () => {
-				return request.headers.get('your-platform-exposes-the-remote-address')
+				return request.headers.get('how-your-platform-exposes-the-remote-address')
 			}
 		});
 	}
