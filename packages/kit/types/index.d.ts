@@ -1936,7 +1936,7 @@ declare module '@sveltejs/kit' {
 			? [type: Type, value: Value | (string & {})]
 			: Type extends 'file' | 'file multiple'
 				? [type: Type]
-				: [type: Type] | [type: Type, value: Value | (string & {})];
+				: [type: Type] | [type: Type, value: Value | undefined | null];
 
 	/**
 	 * Form field accessor type that provides name(), value(), and issues() methods
