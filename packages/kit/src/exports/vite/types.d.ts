@@ -17,7 +17,7 @@ declare module 'vite/types/customEvent.d.ts' {
 		'sveltekit:manifest-data': {
 			nodes_page_options: Array<PageOptions | null | undefined>;
 			endpoints_page_options: Array<PageOptions | null | undefined>;
-		}
+		};
 		'sveltekit:ssr-load-module-error': Error;
 		'sveltekit:prerender-assets': string;
 	}
