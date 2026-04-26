@@ -1,5 +1,45 @@
 # @sveltejs/kit
 
+## 2.58.0
+### Minor Changes
+
+
+- breaking: require `limit` in `requested` (as originally intended) ([#15739](https://github.com/sveltejs/kit/pull/15739))
+
+
+- feat: `RemoteQueryFunction` gains an optional third generic parameter `Validated` (defaulting to `Input`) that represents the argument type after schema validation/transformation ([#15739](https://github.com/sveltejs/kit/pull/15739))
+
+
+- breaking: `requested` now yields `{ arg, query }` entries instead of the validated argument ([#15739](https://github.com/sveltejs/kit/pull/15739))
+
+
+### Patch Changes
+
+
+- fix: allow `query().current`, `.error`, `.loading`, and `.ready` to work in non-reactive contexts ([#15699](https://github.com/sveltejs/kit/pull/15699))
+
+
+- fix: prevent `deep_set` crash on nullish nested values ([#15600](https://github.com/sveltejs/kit/pull/15600))
+
+
+- fix: restore correct `RemoteFormFields` typing for nullable array fields (e.g. when a schema uses `.default([])`), so `.as('checkbox')` and friends work again ([#15723](https://github.com/sveltejs/kit/pull/15723))
+
+
+- fix: don't warn about removed SSI comments in `transformPageChunk` ([#15695](https://github.com/sveltejs/kit/pull/15695))
+  
+  Server-side include (SSI) directives like `<!--#include virtual="..." -->` are HTML comments that are replaced by servers such as nginx. Previously, removing them in `transformPageChunk` would trigger a false positive warning about breaking Svelte's hydration. Since SSI comments always start with `<!--#` and Svelte's hydration comments never do, they can be safely excluded from the check.
+
+- Change enhance function return type from void to MaybePromise<void>. ([#15710](https://github.com/sveltejs/kit/pull/15710))
+
+
+- fix: throw an error when `resolve` is called with an external URL ([#15733](https://github.com/sveltejs/kit/pull/15733))
+
+
+- fix: avoid FOUC for CSR-only pages by loading styles and fonts before CSR starts ([#15718](https://github.com/sveltejs/kit/pull/15718))
+
+
+- fix: reset form result on redirect ([#15724](https://github.com/sveltejs/kit/pull/15724))
+
 ## 2.57.1
 ### Patch Changes
 

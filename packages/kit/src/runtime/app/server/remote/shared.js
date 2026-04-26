@@ -4,7 +4,7 @@ import { parse } from 'devalue';
 import { error } from '@sveltejs/kit';
 import { hydratable } from 'svelte';
 import { with_request_store, get_request_store } from '@sveltejs/kit/internal/server';
-import { stringify_remote_arg, create_remote_key, stringify } from '../../../shared.js';
+import { create_remote_key, stringify } from '../../../shared.js';
 import { noop } from '../../../../utils/functions.js';
 
 /**
@@ -64,19 +64,18 @@ export function create_validator(validate_or_fn, maybe_fn) {
  *
  * @template {MaybePromise<any>} T
  * @param {RemoteInternals} internals
- * @param {any} arg
+ * @param {string} payload — the stringified raw argument (i.e. the cache key the client will use)
  * @param {RequestState} state
  * @param {() => Promise<T>} get_result
  * @returns {Promise<T>}
  */
-export async function get_response(internals, arg, state, get_result) {
+export async function get_response(internals, payload, state, get_result) {
 	// wait a beat, in case `myQuery().set(...)` or `myQuery().refresh()` is immediately called
 	// eslint-disable-next-line @typescript-eslint/await-thenable
 	await 0;
 
 	const cache = get_cache(internals, state);
-	const key = stringify_remote_arg(arg, state.transport);
-	const entry = (cache[key] ??= {
+	const entry = (cache[payload] ??= {
 		serialize: false,
 		data: get_result()
 	});
@@ -84,7 +83,7 @@ export async function get_response(internals, arg, state, get_result) {
 	entry.serialize ||= !!state.is_in_universal_load;
 
 	if (state.is_in_render && internals.id) {
-		const remote_key = create_remote_key(internals.id, key);
+		const remote_key = create_remote_key(internals.id, payload);
 
 		void Promise.resolve(entry.data)
 			.then((value) => {

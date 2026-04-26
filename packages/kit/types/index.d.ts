@@ -1389,16 +1389,27 @@ declare module '@sveltejs/kit' {
 	 */
 	export type ParamMatcher = (param: string) => boolean;
 
-	export type RequestedResult<T> = Iterable<T> &
-		AsyncIterable<T> & {
+	/**
+	 * A single entry yielded by [`requested`](https://svelte.dev/docs/kit/$app-server#requested).
+	 * `arg` is the validated argument (the input *after* the query's schema validated and
+	 * transformed it, if applicable); `query` is a `RemoteQuery` bound to the client's
+	 * original cache key, so `refresh()` / `set()` will update the correct client entry.
+	 */
+	export type RequestedEntry<Validated, Output> = {
+		arg: Validated;
+		query: RemoteQuery<Output>;
+	};
+
+	export type RequestedResult<Validated, Output> = Iterable<RequestedEntry<Validated, Output>> &
+		AsyncIterable<RequestedEntry<Validated, Output>> & {
 			/**
 			 * Call `refresh` on all queries selected by this `requested` invocation.
 			 * This is identical to:
 			 * ```ts
 			 * import { requested } from '$app/server';
 			 *
-			 * for await (const arg of requested(query, ...) {
-			 *   void query(arg).refresh();
+			 * for await (const { query } of requested(getPost, ...)) {
+			 *   void query.refresh();
 			 * }
 			 * ```
 			 */
@@ -2168,8 +2179,17 @@ declare module '@sveltejs/kit' {
 
 	/**
 	 * The return value of a remote `query` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query) for full documentation.
+	 *
+	 * The optional `Validated` generic parameter represents the argument type *after* the
+	 * query's schema has validated and (optionally) transformed it — this is the type the
+	 * query's implementation function receives on the server, and the type yielded by
+	 * [`requested`](https://svelte.dev/docs/kit/$app-server#requested). For queries declared
+	 * with [Standard Schema](https://standardschema.dev/) it differs from `Input` when the
+	 * schema contains a transform (e.g. `v.pipe(v.number(), v.transform(String))` has
+	 * `Input = number` but `Validated = string`). For `'unchecked'` validators and queries
+	 * without arguments it defaults to `Input`.
 	 */
-	export type RemoteQueryFunction<Input, Output> = (
+	export type RemoteQueryFunction<Input, Output, _Validated = Input> = (
 		arg: undefined extends Input ? Input | void : Input
 	) => RemoteQuery<Output>;
 	interface AdapterEntry {
@@ -3349,7 +3369,7 @@ declare module '$app/server' {
 	 *
 	 * @since 2.27
 	 */
-	export function query<Schema extends StandardSchemaV1, Output>(schema: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => MaybePromise<Output>): RemoteQueryFunction<StandardSchemaV1.InferInput<Schema>, Output>;
+	export function query<Schema extends StandardSchemaV1, Output>(schema: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => MaybePromise<Output>): RemoteQueryFunction<StandardSchemaV1.InferInput<Schema>, Output, StandardSchemaV1.InferOutput<Schema>>;
 	export namespace query {
 		/**
 		 * Creates a batch query function that collects multiple calls and executes them in a single request
@@ -3366,23 +3386,29 @@ declare module '$app/server' {
 		 *
 		 * @since 2.35
 		 */
-		function batch<Schema extends StandardSchemaV1, Output>(schema: Schema, fn: (args: StandardSchemaV1.InferOutput<Schema>[]) => MaybePromise<(arg: StandardSchemaV1.InferOutput<Schema>, idx: number) => Output>): RemoteQueryFunction<StandardSchemaV1.InferInput<Schema>, Output>;
+		function batch<Schema extends StandardSchemaV1, Output>(schema: Schema, fn: (args: StandardSchemaV1.InferOutput<Schema>[]) => MaybePromise<(arg: StandardSchemaV1.InferOutput<Schema>, idx: number) => Output>): RemoteQueryFunction<StandardSchemaV1.InferInput<Schema>, Output, StandardSchemaV1.InferOutput<Schema>>;
 	}
 	/**
 	 * In the context of a remote `command` or `form` request, returns an iterable
-	 * of the client-requested refreshes' validated arguments up to the supplied limit.
-	 * Arguments that fail validation or exceed the limit are recorded as failures in
+	 * of `{ arg, query }` entries for the refreshes requested by the client, up to
+	 * the supplied `limit`. Each `query` is a `RemoteQuery` bound to the original
+	 * client-side cache key, so `refresh()` / `set()` propagate correctly even when
+	 * the query's schema transforms the input. `arg` is the *validated* argument,
+	 * i.e. the value after the schema has run (so `InferOutput<Schema>` for queries
+	 * declared with a Standard Schema).
+	 *
+	 * Arguments that fail validation or exceed `limit` are recorded as failures in
 	 * the response to the client.
 	 *
 	 * @example
 	 * ```ts
 	 * import { requested } from '$app/server';
 	 *
-	 * for (const arg of requested(getPost, 5)) {
-	 * 	// it's safe to throw away this promise -- SvelteKit
-	 * 	// will await it for us and handle any errors by sending
-	 * 	// them to the client.
-	 * 	void getPost(arg).refresh();
+	 * for (const { arg, query } of requested(getPost, 5)) {
+	 * 	// `arg` is the validated argument; `query` is bound to the client's
+	 * 	// cache key. It's safe to throw away this promise -- SvelteKit will
+	 * 	// await it and forward any errors to the client.
+	 * 	void query.refresh();
 	 * }
 	 * ```
 	 *
@@ -3395,7 +3421,7 @@ declare module '$app/server' {
 	 * ```
 	 *
 	 * */
-	export function requested<Input, Output>(query: RemoteQueryFunction<Input, Output>, limit?: number): RequestedResult<Input>;
+	export function requested<Input, Output, Validated = Input>(query: RemoteQueryFunction<Input, Output, Validated>, limit: number): RequestedResult<Validated, Output>;
 	type RemotePrerenderInputsGenerator<Input = any> = () => MaybePromise<Input[]>;
 	type MaybePromise<T> = T | Promise<T>;
 
