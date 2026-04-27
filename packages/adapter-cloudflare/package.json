@@ -23,40 +23,42 @@
 			"types": "./index.d.ts",
 			"import": "./index.js"
 		},
+		"./worker": {
+			"types": "./src/exports.d.ts",
+			"import": "./src/exports.js"
+		},
 		"./package.json": "./package.json"
 	},
 	"types": "index.d.ts",
 	"files": [
-		"files",
+		"src",
 		"index.js",
-		"utils.js",
 		"index.d.ts",
 		"ambient.d.ts"
 	],
 	"scripts": {
-		"build": "rolldown -c",
 		"lint": "prettier --check .",
 		"format": "pnpm lint --write",
-		"check": "tsc --skipLibCheck",
+		"check": "tsc",
 		"test:unit": "vitest run",
-		"test:e2e": "pnpm build && pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test",
-		"test": "pnpm test:unit && pnpm test:e2e",
-		"prepublishOnly": "pnpm build"
+		"test:e2e": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test",
+		"test": "pnpm test:e2e"
 	},
 	"dependencies": {
-		"@cloudflare/workers-types": "^4.20260219.0",
+		"@cloudflare/workers-types": "^4.20260416.2",
+		"esm-env": "^1.2.2",
 		"worktop": "0.8.0-next.18"
 	},
 	"devDependencies": {
 		"@playwright/test": "catalog:",
 		"@sveltejs/kit": "workspace:^",
 		"@types/node": "catalog:",
-		"rolldown": "catalog:",
 		"typescript": "catalog:",
+		"vite": "catalog:",
 		"vitest": "catalog:"
 	},
 	"peerDependencies": {
 		"@sveltejs/kit": "^3.0.0",
-		"wrangler": "^4.67.0"
+		"@cloudflare/vite-plugin": "^1.32.3"
 	}
 }

@@ -11,6 +11,7 @@ vite.config.js.timestamp-*
 .vercel_build_output
 .svelte-kit
 .cloudflare
+.wrangler
 .pnpm-debug.log
 .netlify
 .turbo
