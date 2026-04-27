@@ -1,7 +1,5 @@
 /** @import { RemoteFunctionResponse, RemoteSingleflightMap, RemoteSingleflightEntry } from 'types' */
 /** @import { RemoteQueryUpdate } from '@sveltejs/kit' */
-/** @import { RemoteQueryCacheEntry, RemoteLiveQueryCacheEntry } from './query.svelte.js' */
-import { app_dir, base } from '$app/paths/internal/client';
 import * as devalue from 'devalue';
 import { app, goto, live_query_map, query_map } from '../client.js';
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
@@ -9,7 +7,6 @@ import { untrack } from 'svelte';
 import { create_remote_key, split_remote_key } from '../../shared.js';
 import { navigating, page } from '../state.svelte.js';
 import { noop } from '../../../utils/functions.js';
-import { read_ndjson } from '../ndjson.js';
 
 /** Indicates a query function, as opposed to a query instance */
 export const QUERY_FUNCTION_ID = Symbol('sveltekit.query_function_id');
@@ -17,6 +14,18 @@ export const QUERY_FUNCTION_ID = Symbol('sveltekit.query_function_id');
 export const QUERY_OVERRIDE_KEY = Symbol('sveltekit.query_override_key');
 /** Indicates a query instance */
 export const QUERY_RESOURCE_KEY = Symbol('sveltekit.query_resource_key');
+
+/**
+ * @returns {boolean} Returns `true` if we are in an effect
+ */
+export function is_in_effect() {
+	try {
+		$effect.pre(noop);
+		return true;
+	} catch {
+		return false;
+	}
+}
 
 /**
  * @returns {{ 'x-sveltekit-pathname': string, 'x-sveltekit-search': string }}
@@ -62,7 +71,7 @@ export async function remote_request(url, headers) {
  * @param {RemoteFunctionResponse} response
  * @returns {Promise<Extract<RemoteFunctionResponse, { type: 'result' }>>}
  */
-async function handle_side_channel_response(response) {
+export async function handle_side_channel_response(response) {
 	if (response.type === 'redirect') {
 		await goto(response.location);
 		throw new Redirect(307, response.location);
@@ -152,10 +161,10 @@ export function categorize_updates(updates) {
 }
 
 /**
- * @template {RemoteQueryCacheEntry<any> | RemoteLiveQueryCacheEntry<any>} TCacheEntry
+ * @template TResource
  * @param {string} stringified_singleflight
- * @param {Map<string, Map<string, TCacheEntry>>} map
- * @param {(resource: TCacheEntry['resource'], value: RemoteSingleflightEntry) => void} callback
+ * @param {Map<string, Map<string, { resource: TResource }>>} map
+ * @param {(resource: TResource, value: RemoteSingleflightEntry) => void} callback
  */
 function apply_singleflight(stringified_singleflight, map, callback) {
 	const singleflight = /** @type {RemoteSingleflightMap} */ (
@@ -197,87 +206,3 @@ export const apply_reconnections = (stringified_reconnects) => {
 		}
 	});
 };
-
-/**
- * @param {Response} response
- * @returns {Promise<ReadableStreamDefaultReader<Uint8Array>>}
- */
-async function get_stream_reader(response) {
-	const content_type = response.headers.get('content-type') ?? '';
-
-	if (response.ok && content_type.includes('application/json')) {
-		// we can end up here if we e.g. redirect in `handle`
-		const result = await response.json();
-		await handle_side_channel_response(result);
-		throw new HttpError(500, 'Invalid query.live response');
-	}
-
-	if (!response.ok) {
-		const result = await response.json().catch(() => ({
-			type: 'error',
-			status: response.status,
-			error: response.statusText
-		}));
-
-		throw new HttpError(result.status ?? response.status ?? 500, result.error);
-	}
-
-	if (!response.body) {
-		throw new Error('Expected query.live response body to be a ReadableStream');
-	}
-
-	return response.body.getReader();
-}
-
-/**
- * Yields deserialized results from a ReadableStream of newline-delimited JSON
- * @param {ReadableStreamDefaultReader<Uint8Array>} reader
- */
-async function* read_live_ndjson(reader) {
-	for await (const node of read_ndjson(reader)) {
-		if (node.type === 'result') {
-			yield devalue.parse(node.result, app.decoders);
-			continue;
-		}
-
-		await handle_side_channel_response(node);
-		throw new HttpError(500, 'Invalid query.live response');
-	}
-}
-
-/**
- * @template T
- * @param {string} id
- * @param {string} payload
- * @param {AbortController} [controller]
- * @param {() => void} [on_connect]
- * @returns {AsyncGenerator<T>}
- */
-export async function* create_live_iterator(
-	id,
-	payload,
-	controller = new AbortController(),
-	on_connect = noop
-) {
-	const url = `${base}/${app_dir}/remote/${id}${payload ? `?payload=${payload}` : ''}`;
-	/** @type {ReadableStreamDefaultReader<Uint8Array> | null} */
-	let reader = null;
-
-	try {
-		const response = await fetch(url, {
-			headers: get_remote_request_headers(),
-			signal: controller.signal
-		});
-		reader = await get_stream_reader(response);
-
-		on_connect();
-
-		yield* read_live_ndjson(reader);
-	} finally {
-		try {
-			await reader?.cancel();
-		} catch {
-			// already closed
-		}
-	}
-}
