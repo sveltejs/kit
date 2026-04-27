@@ -1,7 +1,7 @@
 {
 	"$schema": "./node_modules/wrangler/config-schema.json",
 	"compatibility_date": "2026-04-08",
-  "assets": {
-    "not_found_handling": "single-page-application"
-  }
+	"assets": {
+		"not_found_handling": "single-page-application"
+	}
 }
