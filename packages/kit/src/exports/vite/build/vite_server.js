@@ -98,16 +98,16 @@ export function create_build_server({
 			},
 			handler() {
 				return dedent`
-          // helps us avoid global fetch warnings we emit when the user uses it incorrectly
-          const native_fetch = globalThis.fetch;
+					// helps us avoid global fetch warnings we emit when the user uses it incorrectly
+					const native_fetch = globalThis.fetch;
 
-          export function get(pathname) {
-            return native_fetch(\`http://localhost:\${port}${app_path}\${pathname}\`);
-          }
+					export function get(pathname) {
+						return native_fetch(\`http://localhost:\${port}${app_path}\${pathname}\`);
+					}
 
 					let port${port ? ` = ${port}` : ''};
 					import.meta.hot?.on('sveltekit:port', (update) => { port = update });
-        `;
+				`;
 			}
 		}
 	};
