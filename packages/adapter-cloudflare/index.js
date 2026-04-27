@@ -13,6 +13,8 @@ import {
 
 const name = '@sveltejs/adapter-cloudflare';
 const [kit_major, kit_minor] = VERSION.split('.');
+const CACHE_STRATEGY_PURGE_API = 'purge-api';
+const CACHE_STRATEGY_KV = 'kv';
 
 /** @type {import('./index.js').default} */
 export default function (options = {}) {
@@ -226,10 +228,32 @@ export default function (options = {}) {
 			},
 			instrumentation: () => true
 		},
-		cache: {
-			path: '@sveltejs/adapter-cloudflare/cache'
-		}
+		cache: get_cache_config(options.cache)
 	};
+}
+
+/**
+ * @param {import('./index.js').AdapterCacheOptions | undefined} options
+ */
+function get_cache_config(options) {
+	const strategy = options.strategy ?? CACHE_STRATEGY_PURGE_API;
+
+	if (strategy === CACHE_STRATEGY_PURGE_API) {
+		return {
+			path: '@sveltejs/adapter-cloudflare/cache'
+		};
+	}
+
+	if (options.strategy === CACHE_STRATEGY_KV) {
+		return {
+			path: '@sveltejs/adapter-cloudflare/cache-kv',
+			options: {
+				kvBinding: options.kvBinding
+			}
+		};
+	}
+
+	throw new Error(`Unsupported Cloudflare cache strategy "${strategy}"`);
 }
 
 /**
