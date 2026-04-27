@@ -521,9 +521,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes) {
 				const { set_assets } = await vite.ssrLoadModule('$app/paths/internal/server');
 				set_assets(assets);
 
-				const memory_cache = await vite.ssrLoadModule(
-					`${runtime_base}/server/in-memory-query-cache.js`
-				);
+				const memory_cache = await vite.ssrLoadModule('@sveltejs/kit/node/in-memory-cache');
 
 				const server = new Server(manifest);
 
