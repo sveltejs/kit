@@ -1,5 +1,5 @@
 {
-	"name": "test-cloudflare-custom-worker",
+	"name": "test-cloudflare-assets-only",
 	"version": "0.0.1",
 	"private": true,
 	"scripts": {

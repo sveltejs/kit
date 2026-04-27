@@ -45,6 +45,7 @@ export async function preview(vite, vite_config, svelte_config) {
 
 	const { manifest } = await import(pathToFileURL(join(dir, 'manifest.js')).href);
 
+	// TODO: figure out how to set and serve `/_svelte_kit_assets` even when a custom environment is used
 	set_assets(assets);
 
 	const server = new Server(manifest);

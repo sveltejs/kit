@@ -1,5 +1,5 @@
 {
-	"name": "test-cloudflare-workers",
+	"name": "test-cloudflare-basic",
 	"version": "0.0.1",
 	"private": true,
 	"scripts": {

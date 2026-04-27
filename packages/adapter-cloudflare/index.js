@@ -21,6 +21,8 @@ let building;
 
 /** @type {import('./index.js').default} */
 export default function (options = {}) {
+	options.worker ??= true;
+
 	// TODO: remove in a future major after users have had time to migrate
 	if (options.config) {
 		throw new Error(
@@ -82,19 +84,21 @@ export default function (options = {}) {
 			}
 
 			// worker
-			const server_dest = builder.getServerDirectory();
-			const manifest_path = `${server_dest}/manifest.js`;
-			unlinkSync(manifest_path);
-			writeFileSync(
-				manifest_path,
-				`export const manifest = ${builder.generateManifest({ relativePath: '.' })};\n`
-			);
+			if (options.worker) {
+				const server_dest = builder.getServerDirectory();
+				const manifest_path = `${server_dest}/manifest.js`;
+				unlinkSync(manifest_path);
+				writeFileSync(
+					manifest_path,
+					`export const manifest = ${builder.generateManifest({ relativePath: '.' })};\n`
+				);
 
-			if (builder.hasServerInstrumentationFile()) {
-				builder.instrument({
-					entrypoint: `${server_dest}/index.js`,
-					instrumentation: `${server_dest}/instrumentation.server.js`
-				});
+				if (builder.hasServerInstrumentationFile()) {
+					builder.instrument({
+						entrypoint: `${server_dest}/index.js`,
+						instrumentation: `${server_dest}/instrumentation.server.js`
+					});
+				}
 			}
 
 			// _headers
@@ -117,6 +121,7 @@ export default function (options = {}) {
 				});
 			}
 
+			// avoid deploying the Vite manifest
 			writeFileSync(`${client_dest}/.assetsignore`, '\n.vite', { flag: 'a' });
 		},
 		supports: {
@@ -130,17 +135,24 @@ export default function (options = {}) {
 					config(config, env) {
 						building = env.command === 'build';
 
+						// We need to rename the SvelteKit server entry to `server.js` because
+						// The Cloudflare Vite plugin hardcodes the worker entry as `index.js`
 						config.environments ??= {};
 						config.environments.ssr ??= {};
 						config.environments.ssr.build ??= {};
 						config.environments.ssr.build.rolldownOptions ??= {};
-
-						// We need to rename the SvelteKit server entry to `server.js` because
-						// The Cloudflare Vite plugin hardcodes the worker entry as `index.js`
 						const input = config.environments.ssr.build.rolldownOptions.input;
 						if (typeof input === 'object' && 'index' in input) {
 							input.server = input.index;
 							delete input.index;
+						}
+
+						// noop to prevent Cloudflare's fallback `buildApp` hook from running
+						// so that it doesn't build the client and server again, but also
+						// avoid overwriting the user's `buildApp` hook if they defined one
+						if (!config.builder?.buildApp) {
+							config.builder ??= {};
+							config.builder.buildApp = async () => {};
 						}
 					},
 					applyToEnvironment(environment) {
@@ -151,7 +163,7 @@ export default function (options = {}) {
 						filter: {
 							id: [/^SERVER$/, /^MANIFEST$/]
 						},
-						async handler(id, importer, options) {
+						handler(id, importer, options) {
 							if (importer !== default_worker) return;
 
 							if (!building) {
@@ -166,9 +178,9 @@ export default function (options = {}) {
 						}
 					},
 					writeBundle(output) {
-						// manifest.js doesn't exist until the adapter.adapt() method runs,
-						// so we need to symlink the full manifest for the sake of the build
-						// analysis and prerender phases
+						// manifest.js isn't written until the `adapter.adapt()` method runs
+						// so we need to temporarily symlink the full manifest for the
+						// the build analysis and prerender phases
 						const filepath = `${output.dir}/manifest.js`;
 						if (!existsSync(filepath)) {
 							symlinkSync(`${output.dir}/manifest-full.js`, filepath);
@@ -191,32 +203,32 @@ export default function (options = {}) {
 							Object.assign(user_config, options.vitePluginOptions?.config);
 						}
 
-						if (DEV) {
-							if (!user_config.assets?.binding) {
-								user_config.assets = {
-									binding: DEFAULT_ASSET_BINDING
-								};
+						if (!options.worker && (user_config.main || user_config.assets?.binding)) {
+							throw new Error(
+								'The Cloudflare adapter `worker` option has been set to `false`' +
+									' but your Wrangler configuration file has the Worker keys `main` or `assets.binding` configured.' +
+									' Please remove the keys from your Wrangler configuration file or enable the Cloudflare adapter `worker` option in your Svelte config file'
+							);
+						}
+
+						if (DEV || options.worker) {
+							user_config.main ??= default_worker;
+
+							// we don't need to populate `assets.directory` because
+							// the Cloudflare Vite plugin does that based on the Vite client
+							// build input entry value
+							user_config.assets ??= {};
+							user_config.assets.binding ??= DEFAULT_ASSET_BINDING;
+
+							// svelte and kit both require `node:async_hooks` on the server so
+							// we need to ensure either `nodejs_als` or `nodejs_compat` are enabled
+							if (
+								!user_config.compatibility_flags.find(
+									(flag) => flag === 'nodejs_als' || flag === 'nodejs_compat'
+								)
+							) {
+								user_config.compatibility_flags.push('nodejs_als');
 							}
-						} else {
-							// TODO: only configure these if the user does not intend to deploy an assets-only worker
-
-							// no need to populate `directory` as the Cloudflare Vite plugin
-							// does that based on the Vite client build input entry setting
-							user_config.assets = {
-								binding: user_config.assets?.binding ?? DEFAULT_ASSET_BINDING
-							};
-						}
-
-						if (!user_config.main) {
-							user_config.main = default_worker;
-						}
-
-						if (
-							!user_config.compatibility_flags.find(
-								(flag) => flag === 'nodejs_als' || flag === 'nodejs_compat'
-							)
-						) {
-							user_config.compatibility_flags.push('nodejs_als');
 						}
 
 						// TODO: warn on overridden config options?
@@ -225,6 +237,7 @@ export default function (options = {}) {
 					},
 					experimental: {
 						...options.vitePluginOptions?.experimental
+						// TODO: identify when kit is prerendering and use this prerender worker instead of the main worker
 						// prerenderWorker: {
 						// 	configPath: options.vitePluginOptions?.experimental?.prerenderWorker?.configPath,
 						// 	viteEnvironment: {
@@ -242,12 +255,6 @@ export default function (options = {}) {
 				{
 					name: 'vite-plugin-sveltekit-cloudflare:post',
 					config(config) {
-						// noop to prevent Cloudflare's fallback `buildApp` hook from
-						// running so that it doesn't build the client and server again
-						if (config.builder?.buildApp) {
-							config.builder.buildApp = async () => {};
-						}
-
 						// use the assets binding name configured in the wrangler config file
 						config.environments ??= {};
 						config.environments.ssr ??= {};
@@ -274,6 +281,8 @@ export default function (options = {}) {
 							});
 						}
 
+						// inherit top-level `optimizeDeps.entries` that we set in SvelteKit's
+						// Vite config so that server-side deps are correctly pre-bundled
 						config.environments.ssr.optimizeDeps ??= {};
 						config.environments.ssr.optimizeDeps.entries ??= [];
 						if (typeof config.environments.ssr.optimizeDeps.entries === 'string') {
@@ -281,9 +290,6 @@ export default function (options = {}) {
 								config.environments.ssr.optimizeDeps.entries
 							];
 						}
-
-						// inherit top-level `optimizeDeps.entries` that we set in SvelteKit's
-						// Vite config so that server-side deps are correctly pre-bundled
 						if (config.optimizeDeps?.entries) {
 							const top_level_entries = (
 								Array.isArray(config.optimizeDeps.entries)

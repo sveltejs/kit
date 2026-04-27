@@ -11,6 +11,11 @@ export interface AdapterOptions {
 	 */
 	vitePluginOptions?: PluginConfig;
 	/**
+	 * Whether to deploy a Cloudflare Worker or static assets only.
+	 * @default true
+	 */
+	worker?: boolean;
+	/**
 	 * Whether to render a plaintext 404.html page or a rendered SPA fallback page
 	 * for non-matching asset requests.
 	 *

@@ -25,7 +25,8 @@ const config = {
 	kit: {
 		adapter: adapter({
 			// See the next section for an explanations of these options
-			vitePluginOptions: undefined
+			vitePluginOptions: undefined,
+			worker: true
 		})
 	}
 };
@@ -62,7 +63,11 @@ export default defineConfig({
 
 ### vitePluginOptions
 
-// TODO:
+Additional preferences for the Cloudflare Vite environment. See the [Cloudflare Vite plugin API](https://developers.cloudflare.com/workers/vite-plugin/reference/api/#interface-pluginconfig) documentation for a full list of options.
+
+### worker
+
+By default, a Cloudflare Worker is alongside your application. You can turn this off if you intend to only deploy static assets. You may also want to [configure your routing](https://developers.cloudflare.com/workers/static-assets/routing/) to suit a Single Page Application (SPA) or Static Site Generation (SSG) architecture.
 
 ## Customising your worker
 
