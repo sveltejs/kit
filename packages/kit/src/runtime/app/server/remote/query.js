@@ -162,7 +162,6 @@ function query_cache(input) {
  */
 async function invalidate_query_cache(tags) {
 	const { state } = get_request_store();
-	state.remote.invalidated = true;
 	await state.cache.invalidate(tags);
 }
 
@@ -458,7 +457,7 @@ function create_query_resource(__, payload, state, fn) {
 		refresh() {
 			const refresh_context = get_refresh_context(__, 'refresh', payload);
 			const is_immediate_refresh = !refresh_context.cache[refresh_context.payload];
-			const read_cache = !refresh_context.state.remote.invalidated;
+			const read_cache = !refresh_context.state.remote.invalidations?.length;
 			const value = is_immediate_refresh ? get_promise(read_cache) : fn(read_cache);
 			return update_refresh_value(refresh_context, value, is_immediate_refresh);
 		},
@@ -506,7 +505,7 @@ Object.defineProperty(query_cache, 'invalidate', {
  * @param {RemoteInternals} __
  * @param {'set' | 'refresh'} action
  * @param {string} payload — the stringified raw argument
- * @returns {{ __: RemoteInternals; state: any; refreshes: Record<string, Promise<any>>; cache: Record<string, { serialize: boolean; data: any }>; refreshes_key: string; payload: string }}
+ * @returns {{ __: RemoteInternals; state: RequestState; refreshes: Record<string, Promise<any>>; cache: Record<string, { serialize: boolean; data: any }>; refreshes_key: string; payload: string }}
  */
 function get_refresh_context(__, action, payload) {
 	const { state } = get_request_store();

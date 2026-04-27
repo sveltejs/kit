@@ -4,7 +4,7 @@
 import { get_request_store } from '@sveltejs/kit/internal/server';
 import { create_validator, run_remote_function } from './shared.js';
 import { MUTATIVE_METHODS } from '../../../../constants.js';
-import { create_invalidate_cache } from '../../../server/cache.js';
+import { await_remote_invalidations, create_invalidate_cache } from '../../../server/cache.js';
 
 /**
  * Creates a remote command. When called from the browser, the function will be invoked on the server via a `fetch` call.
@@ -89,7 +89,7 @@ export function command(validate_or_fn, maybe_fn) {
 				() => validate(arg),
 				fn
 			)
-		);
+		).finally(() => await_remote_invalidations(state));
 
 		// @ts-expect-error
 		promise.updates = () => {

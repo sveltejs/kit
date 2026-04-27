@@ -43,7 +43,7 @@ test('create_invalidate_cache forwards tags to request cache implementation', as
 	const invalidate = vi.fn();
 	const state = {
 		remote: {
-			invalidated: false,
+			invalidations: null,
 			cache: {
 				get: () => undefined,
 				set: () => {},
@@ -55,6 +55,6 @@ test('create_invalidate_cache forwards tags to request cache implementation', as
 	const cache = create_invalidate_cache(/** @type {any} */ (state));
 
 	await cache.invalidate(['tag:a', 'tag:b']);
-	expect(state.remote.invalidated).toBe(true);
+	expect(state.remote.invalidations).toHaveLength(1);
 	expect(invalidate).toHaveBeenCalledWith(['tag:a', 'tag:b']);
 });

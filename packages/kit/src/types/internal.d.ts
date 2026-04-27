@@ -687,8 +687,11 @@ export interface RequestState {
 		forms: null | Map<any, any>;
 		refreshes: null | Record<string, Promise<any>>;
 		requested: null | Map<string, string[]>;
-		/** True if a tag was invalidated. Used to ignore cache reads on subsequent refresh calls. */
-		invalidated: boolean;
+		/**
+		 * A list of promises to await for invalidations to complete.
+		 * Used to await them at the end and to ignore cache reads on subsequent refresh calls.
+		 */
+		invalidations: null | Promise<void>[];
 		/** The cache implementation to use for remote query functions. */
 		cache: null | KitCacheHandler;
 	};

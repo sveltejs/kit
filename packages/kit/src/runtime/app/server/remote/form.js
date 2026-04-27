@@ -13,7 +13,7 @@ import {
 } from '../../../form-utils.js';
 import { get_cache, run_remote_function } from './shared.js';
 import { ValidationError } from '@sveltejs/kit/internal';
-import { create_invalidate_cache } from '../../../server/cache.js';
+import { await_remote_invalidations, create_invalidate_cache } from '../../../server/cache.js';
 
 /**
  * Creates a form object that can be spread onto a `<form>` element.
@@ -156,6 +156,8 @@ export function form(validate_or_fn, maybe_fn) {
 						} else {
 							throw e;
 						}
+					} finally {
+						await await_remote_invalidations(state);
 					}
 				}
 
