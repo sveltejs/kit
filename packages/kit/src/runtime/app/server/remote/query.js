@@ -104,9 +104,11 @@ export function query(validate_or_fn, maybe_fn) {
 		const payload = stringify_remote_arg(arg, state.transport);
 		const query_id = create_remote_key(__.id, payload);
 
-		return create_query_resource(__, payload, state, () =>
+		return create_query_resource(__, payload, state, (read_cache = true) =>
 			(async () => {
-				const cached = deserialize_query_cache_entry(await state.remote.cache?.get(query_id));
+				const cached = read_cache
+					? deserialize_query_cache_entry(await state.remote.cache?.get(query_id))
+					: null;
 				if (cached !== null) {
 					await set_remote_query_cache_headers(
 						event,
@@ -159,7 +161,9 @@ function query_cache(input) {
  * @param {string[]} tags
  */
 async function invalidate_query_cache(tags) {
-	await get_request_store().state.cache.invalidate(tags);
+	const { state } = get_request_store();
+	state.remote.invalidated = true;
+	await state.cache.invalidate(tags);
 }
 
 /**
@@ -310,7 +314,7 @@ function batch(validate_or_fn, maybe_fn) {
 		// always the raw user-supplied value and can be used for the cache key directly
 		const payload = stringify_remote_arg(arg, state.transport);
 
-		return create_query_resource(__, payload, state, () => {
+		return create_query_resource(__, payload, state, (read_cache = true) => {
 			// Collect all the calls to the same query in the same macrotask,
 			// then execute them as one backend request.
 			return new Promise((resolve, reject) => {
@@ -338,7 +342,9 @@ function batch(validate_or_fn, maybe_fn) {
 					try {
 						const cached = await Promise.all(
 							all_query_ids.map(async (query_id) =>
-								deserialize_query_cache_entry(await state.remote.cache?.get(query_id))
+								read_cache
+									? deserialize_query_cache_entry(await state.remote.cache?.get(query_id))
+									: null
 							)
 						);
 
@@ -424,15 +430,16 @@ function batch(validate_or_fn, maybe_fn) {
  * @param {RemoteInternals} __
  * @param {string} payload — the stringified raw argument (i.e. the cache key the client will use)
  * @param {RequestState} state
- * @param {() => Promise<any>} fn
+ * @param {(read_cache?: boolean) => Promise<any>} fn
  * @returns {RemoteQuery<any>}
  */
 function create_query_resource(__, payload, state, fn) {
 	/** @type {Promise<any> | null} */
 	let promise = null;
 
-	const get_promise = () => {
-		return (promise ??= get_response(__, payload, state, fn));
+	/** @param {boolean} read_cache */
+	const get_promise = (read_cache = true) => {
+		return (promise ??= get_response(__, payload, state, () => fn(read_cache)));
 	};
 
 	return {
@@ -451,7 +458,8 @@ function create_query_resource(__, payload, state, fn) {
 		refresh() {
 			const refresh_context = get_refresh_context(__, 'refresh', payload);
 			const is_immediate_refresh = !refresh_context.cache[refresh_context.payload];
-			const value = is_immediate_refresh ? get_promise() : fn();
+			const read_cache = !refresh_context.state.remote.invalidated;
+			const value = is_immediate_refresh ? get_promise(read_cache) : fn(read_cache);
 			return update_refresh_value(refresh_context, value, is_immediate_refresh);
 		},
 		async invalidate() {

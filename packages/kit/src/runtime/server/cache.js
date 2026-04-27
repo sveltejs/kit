@@ -135,6 +135,8 @@ export function create_invalidate_cache(state) {
 
 	/** @param {string[]} tags */
 	cache.invalidate = (tags) => {
+		state.remote.invalidated = true;
+
 		if (!state.remote.cache) {
 			console.error('No cache implementation provided, cannot invalidate remote function cache');
 			return Promise.resolve();

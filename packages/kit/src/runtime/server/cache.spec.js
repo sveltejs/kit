@@ -18,7 +18,14 @@ describe('parse_cache_duration', () => {
 
 test('create_request_cache stores normalized options internally', () => {
 	const state = {
-		transport: {}
+		transport: {},
+		remote: {
+			cache: {
+				get: () => undefined,
+				set: () => {},
+				invalidate: () => {}
+			}
+		}
 	};
 	const expected_tag = create_remote_key('r/one', stringify_remote_arg({ a: 1 }, {}));
 	const cache = create_request_cache(/** @type {any} */ (state), expected_tag);
@@ -36,6 +43,7 @@ test('create_invalidate_cache forwards tags to request cache implementation', as
 	const invalidate = vi.fn();
 	const state = {
 		remote: {
+			invalidated: false,
 			cache: {
 				get: () => undefined,
 				set: () => {},
@@ -47,5 +55,6 @@ test('create_invalidate_cache forwards tags to request cache implementation', as
 	const cache = create_invalidate_cache(/** @type {any} */ (state));
 
 	await cache.invalidate(['tag:a', 'tag:b']);
+	expect(state.remote.invalidated).toBe(true);
 	expect(invalidate).toHaveBeenCalledWith(['tag:a', 'tag:b']);
 });

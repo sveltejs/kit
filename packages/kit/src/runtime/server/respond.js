@@ -155,6 +155,7 @@ export async function internal_respond(request, options, manifest, state) {
 			refreshes: null,
 			/** A map of remote function ID to payloads requested for refreshing by the client */
 			requested: null,
+			invalidated: false,
 			cache: options.kit_cache_handler
 		},
 		cache: create_erroring_cache(),
