@@ -236,7 +236,7 @@ export default function (options = {}) {
  * @param {import('./index.js').AdapterCacheOptions | undefined} options
  */
 function get_cache_config(options) {
-	const strategy = options?.strategy ?? CACHE_STRATEGY_PURGE_API;
+	const strategy = options?.strategy;
 
 	if (strategy === CACHE_STRATEGY_PURGE_API) {
 		return {
@@ -244,7 +244,7 @@ function get_cache_config(options) {
 		};
 	}
 
-	if (options?.strategy === CACHE_STRATEGY_KV) {
+	if (strategy === CACHE_STRATEGY_KV) {
 		return {
 			path: '@sveltejs/adapter-cloudflare/cache-kv',
 			options: {
@@ -253,7 +253,9 @@ function get_cache_config(options) {
 		};
 	}
 
-	throw new Error(`Unsupported Cloudflare cache strategy "${strategy}"`);
+	if (strategy) {
+		throw new Error(`Unsupported Cloudflare cache strategy "${strategy}"`);
+	}
 }
 
 /**

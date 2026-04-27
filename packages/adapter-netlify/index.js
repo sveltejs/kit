@@ -24,7 +24,7 @@ const edge_set_in_env_var =
 const FUNCTION_PREFIX = 'sveltekit-';
 
 /** @type {import('./index.js').default} */
-export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
+export default function ({ split = false, edge = edge_set_in_env_var, cache = true } = {}) {
 	return {
 		name,
 		/** @param {import('@sveltejs/kit').Builder} builder */
@@ -99,9 +99,11 @@ export default function ({ split = false, edge = edge_set_in_env_var } = {}) {
 			instrumentation: () => true
 		},
 
-		cache: {
-			path: '@sveltejs/adapter-netlify/cache'
-		}
+		cache: cache
+			? {
+					path: '@sveltejs/adapter-netlify/cache'
+				}
+			: undefined
 	};
 }
 /**
