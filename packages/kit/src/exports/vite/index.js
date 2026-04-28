@@ -154,7 +154,7 @@ export async function sveltekit() {
 	// all plugin init and config-related hooks an additional time
 	if (!pre_resolved_vite_config) {
 		pre_resolved_vite_config = resolveConfig({}, 'serve');
-	} else {
+	} else if (!root) {
 		// return early if we're pre-resolving the Vite config but ensure
 		// vite-plugin-svelte is returned because enhanced-img expects it
 		return vite_plugin_svelte.svelte({ configFile: false });
