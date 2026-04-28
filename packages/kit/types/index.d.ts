@@ -3020,6 +3020,18 @@ declare module '@sveltejs/kit/node/polyfills' {
 	export {};
 }
 
+declare module '@sveltejs/kit/node/cache' {
+	export function inMemoryCache(): import("@sveltejs/kit").Adapter["cache"];
+
+	export function redisCache(options?: RedisQueryCacheOptions): import("@sveltejs/kit").Adapter["cache"];
+	type RedisQueryCacheOptions = {
+		url?: string;
+		prefix?: string;
+	};
+
+	export {};
+}
+
 declare module '@sveltejs/kit/vite' {
 	import type { Plugin } from 'vite';
 	/**

@@ -1259,9 +1259,7 @@ export const getFastData = query(async () => {
 });
 ```
 
-The cache is public, i.e. not per-user but shared. The cache implementation is platform-specific (for example, on Vercel remote function endpoints emit `CDN-Cache-Control` and `Cache-Tag`
-headers as well as using the runtime cache API, while the Node runtime uses a runtime
-cache implementation).
+The cache is public, i.e. not per-user but shared. The cache implementation is platform-specific (for example, on [Vercel](adapter-vercel) remote functions use the Vercel Runtime Cache API, and endpoints additionally emit `CDN-Cache-Control` and `Cache-Tag` headers).
 
 ### Invalidating the cache
 
