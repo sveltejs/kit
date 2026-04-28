@@ -6,6 +6,7 @@ import { DEV } from 'esm-env';
 import * as devalue from 'devalue';
 import { text_decoder, text_encoder } from './utils.js';
 import { SvelteKitError } from '@sveltejs/kit/internal';
+import { untrack } from 'svelte';
 
 /**
  * Sets a value in a nested object using a path string, mutating the original object
@@ -678,6 +679,11 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 							: type === 'checkbox' && !is_array
 								? 'b:'
 								: '';
+
+					// If the input has a default value and there is no current value, set it to the default value
+					if (input_value !== undefined && get_value() == null) {
+						untrack(() => set_input(path, input_value));
+					}
 
 					// Base properties for all input types
 					/** @type {Record<string, any>} */

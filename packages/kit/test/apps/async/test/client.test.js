@@ -511,6 +511,19 @@ test.describe('remote function mutations', () => {
 		}
 	});
 
+	test('.value() reflects input_value default before any user interaction', async ({ page }) => {
+		await page.goto('/remote/form/value-default');
+
+		const input = page.locator('[data-testid="as-value-default-input"]');
+		const display = page.locator('#default-value-display');
+
+		// input has to output the default value provided
+		await expect(input).toHaveValue('default text');
+
+		// value() also needs to output the default value provided WITHOUT any user interaction
+		await expect(display).toHaveText('default text');
+	});
+
 	test('.as(type, value) updates when data changes after submission', async ({ page }) => {
 		await page.goto('/remote/form/as-value');
 
