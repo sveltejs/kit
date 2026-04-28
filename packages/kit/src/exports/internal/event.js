@@ -85,11 +85,21 @@ export function with_request_store(store, fn) {
 			// See https://github.com/nodejs/node/issues/53408
 			const container = /** @type {RequestStoreContainer} */ ({ current: store });
 			const result = als.run(container, fn);
-			if (result !== null && typeof result === 'object' && typeof (/** @type {any} */ (result)).then === 'function') {
+			if (
+				result !== null &&
+				typeof result === 'object' &&
+				typeof (/** @type {any} */ (result).then) === 'function'
+			) {
 				return /** @type {T} */ (
 					/** @type {Promise<any>} */ (/** @type {unknown} */ (result)).then(
-						(value) => { container.current = null; return value; },
-						(error) => { container.current = null; throw error; }
+						(value) => {
+							container.current = null;
+							return value;
+						},
+						(error) => {
+							container.current = null;
+							throw error;
+						}
 					)
 				);
 			}
