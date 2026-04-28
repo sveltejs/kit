@@ -3543,6 +3543,9 @@ declare module '$app/server' {
 	 * await requested(getPost, 5).refreshAll();
 	 * ```
 	 *
+	 * Works with `query.batch` as well — refreshes for individual entries are
+	 * collected into a single batched call.
+	 *
 	 * For live queries, the same applies, but with `reconnect` and `reconnectAll`.
 	 *
 	 * */

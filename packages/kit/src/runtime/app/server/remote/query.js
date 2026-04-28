@@ -250,11 +250,81 @@ function batch(validate_or_fn, maybe_fn) {
 	/** @type {(arg?: any) => MaybePromise<Input>} */
 	const validate = create_validator(validate_or_fn, maybe_fn);
 
+	/** @type {Map<string, { get_validated: () => MaybePromise<any>, resolvers: Array<{resolve: (value: any) => void, reject: (error: any) => void}> }>} */
+	let batching = new Map();
+
+	/**
+	 * Enqueues a single call into the current batch (creating one if necessary)
+	 * and returns a promise that resolves with the result for this entry.
+	 *
+	 * @param {string} payload — the stringified raw argument (cache key)
+	 * @param {() => MaybePromise<any>} get_validated — produces the validated argument for this entry
+	 * @returns {Promise<any>}
+	 */
+	const enqueue = (payload, get_validated) => {
+		const { event, state } = get_request_store();
+
+		return new Promise((resolve, reject) => {
+			const entry = batching.get(payload);
+
+			if (entry) {
+				entry.resolvers.push({ resolve, reject });
+				return;
+			}
+
+			batching.set(payload, {
+				get_validated,
+				resolvers: [{ resolve, reject }]
+			});
+
+			if (batching.size > 1) return;
+
+			setTimeout(async () => {
+				const batched = batching;
+				batching = new Map();
+				const entries = Array.from(batched.values());
+
+				try {
+					return await run_remote_function(
+						event,
+						state,
+						false,
+						async () => Promise.all(entries.map((entry) => entry.get_validated())),
+						async (input) => {
+							const get_result = await fn(input);
+
+							for (let i = 0; i < entries.length; i++) {
+								try {
+									const result = get_result(input[i], i);
+
+									for (const resolver of entries[i].resolvers) {
+										resolver.resolve(result);
+									}
+								} catch (error) {
+									for (const resolver of entries[i].resolvers) {
+										resolver.reject(error);
+									}
+								}
+							}
+						}
+					);
+				} catch (error) {
+					for (const entry of batched.values()) {
+						for (const resolver of entry.resolvers) {
+							resolver.reject(error);
+						}
+					}
+				}
+			}, 0);
+		});
+	};
+
 	/** @type {RemoteQueryBatchInternals} */
 	const __ = {
 		type: 'query_batch',
 		id: '',
 		name: '',
+		validate,
 		run: async (args, options) => {
 			const { event, state } = get_request_store();
 
@@ -285,11 +355,13 @@ function batch(validate_or_fn, maybe_fn) {
 					);
 				}
 			);
+		},
+		bind(payload, validated_arg) {
+			const { state } = get_request_store();
+
+			return create_query_resource(__, payload, state, () => enqueue(payload, () => validated_arg));
 		}
 	};
-
-	/** @type {Map<string, { arg: any, resolvers: Array<{resolve: (value: any) => void, reject: (error: any) => void}> }>} */
-	let batching = new Map();
 
 	/** @type {RemoteQueryFunction<Input, Output> & { __: RemoteQueryBatchInternals }} */
 	const wrapper = (arg) => {
@@ -299,69 +371,14 @@ function batch(validate_or_fn, maybe_fn) {
 			);
 		}
 
-		const { event, state } = get_request_store();
-		// batched queries do not participate in `requested(...)`, so `arg` is
-		// always the raw user-supplied value and can be used for the cache key directly
+		const { state } = get_request_store();
 		const payload = stringify_remote_arg(arg, state.transport);
 
-		return create_query_resource(__, payload, state, () => {
+		return create_query_resource(__, payload, state, () =>
 			// Collect all the calls to the same query in the same macrotask,
 			// then execute them as one backend request.
-			return new Promise((resolve, reject) => {
-				const entry = batching.get(payload);
-
-				if (entry) {
-					entry.resolvers.push({ resolve, reject });
-					return;
-				}
-
-				batching.set(payload, {
-					arg,
-					resolvers: [{ resolve, reject }]
-				});
-
-				if (batching.size > 1) return;
-
-				setTimeout(async () => {
-					const batched = batching;
-					batching = new Map();
-					const entries = Array.from(batched.values());
-					const args = entries.map((entry) => entry.arg);
-
-					try {
-						return await run_remote_function(
-							event,
-							state,
-							false,
-							async () => Promise.all(args.map(validate)),
-							async (input) => {
-								const get_result = await fn(input);
-
-								for (let i = 0; i < entries.length; i++) {
-									try {
-										const result = get_result(input[i], i);
-
-										for (const resolver of entries[i].resolvers) {
-											resolver.resolve(result);
-										}
-									} catch (error) {
-										for (const resolver of entries[i].resolvers) {
-											resolver.reject(error);
-										}
-									}
-								}
-							}
-						);
-					} catch (error) {
-						for (const entry of batched.values()) {
-							for (const resolver of entry.resolvers) {
-								resolver.reject(error);
-							}
-						}
-					}
-				}, 0);
-			});
-		});
+			enqueue(payload, () => validate(arg))
+		);
 	};
 
 	Object.defineProperty(wrapper, '__', { value: __ });

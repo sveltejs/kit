@@ -1,5 +1,5 @@
 /** @import { RemoteLiveQuery, RemoteLiveQueryFunction, RemoteQuery, RemoteQueryFunction, RequestedResult, QueryRequestedResult, LiveQueryRequestedResult } from '@sveltejs/kit' */
-/** @import { MaybePromise, RemoteQueryInternals, RemoteQueryLiveInternals } from 'types' */
+/** @import { MaybePromise, RemoteAnyQueryInternals } from 'types' */
 import { get_request_store } from '@sveltejs/kit/internal/server';
 import { create_remote_key, parse_remote_arg } from '../../../shared.js';
 import { noop } from '../../../../utils/functions.js';
@@ -36,6 +36,9 @@ import { noop } from '../../../../utils/functions.js';
  *
  * await requested(getPost, 5).refreshAll();
  * ```
+ *
+ * Works with `query.batch` as well — refreshes for individual entries are
+ * collected into a single batched call.
  *
  * For live queries, the same applies, but with `reconnect` and `reconnectAll`.
  *
@@ -93,13 +96,17 @@ import { noop } from '../../../../utils/functions.js';
  */
 export function requested(query, limit) {
 	const { state } = get_request_store();
-	const internals = /** @type {RemoteQueryInternals | RemoteQueryLiveInternals | undefined} */ (
+	const internals = /** @type {RemoteAnyQueryInternals | undefined} */ (
 		/** @type {any} */ (query).__
 	);
 
-	if (!internals || (internals.type !== 'query' && internals.type !== 'query_live')) {
+	if (
+		internals?.type !== 'query' &&
+		internals?.type !== 'query_batch' &&
+		internals?.type !== 'query_live'
+	) {
 		throw new Error(
-			'requested(...) expects a query function created with query(...) or query.live(...)'
+			'requested(...) expects a query function created with query(...), query.batch(...), or query.live(...)'
 		);
 	}
 
@@ -114,7 +121,7 @@ export function requested(query, limit) {
 	// such as load functions or other server functions
 	const refreshes = state.remote.refreshes;
 	const reconnects = state.remote.reconnects;
-	const store = __.type === 'query' ? refreshes : reconnects;
+	const store = __.type === 'query_live' ? reconnects : refreshes;
 
 	if (!store) {
 		throw new Error(
@@ -178,7 +185,7 @@ export function requested(query, limit) {
 			});
 		},
 		async refreshAll() {
-			if (__.type !== 'query') {
+			if (__.type === 'query_live') {
 				throw new Error('refreshAll() is invalid for live queries. Use reconnectAll() instead.');
 			}
 
