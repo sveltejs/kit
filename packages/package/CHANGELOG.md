@@ -1,5 +1,17 @@
 # @sveltejs/package
 
+## 3.0.0-next.0
+### Major Changes
+
+
+- breaking: require Node 22 or newer ([#15311](https://github.com/sveltejs/kit/pull/15311))
+
+
+### Patch Changes
+
+
+- chore: remove dependency on kleur ([#15311](https://github.com/sveltejs/kit/pull/15311))
+
 ## 2.5.7
 ### Patch Changes
 
