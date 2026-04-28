@@ -38,7 +38,9 @@ describe('with_request_store', () => {
 
 	test('returns null from try_get_request_store after async execution completes', async () => {
 		const store = make_store();
-		await with_request_store(store, async () => 'rendered');
+		// Use Promise.resolve() rather than async/await to return a thenable without
+		// triggering the require-await lint rule on a trivial async arrow.
+		await with_request_store(store, () => Promise.resolve('rendered'));
 		expect(try_get_request_store()).toBeNull();
 	});
 
@@ -52,16 +54,16 @@ describe('with_request_store', () => {
 
 		// Simulate what Svelte 4's component_subscribe does: create a Promise-based
 		// callback inside the ALS context that outlives the render.
-		let late_callback_promise;
+		let late_callback_promise = Promise.resolve(); // typed; overwritten inside render fn
 
 		await with_request_store(store, async () => {
+			await Promise.resolve(); // ensure the async code path through with_request_store
 			late_callback_promise = new Promise((resolve) => setTimeout(resolve, 0)).then(() => {
 				// This runs inside the ALS context that was active when setTimeout was called
 				// (i.e. the context from als.run()). Without the fix, try_get_request_store()
 				// returns `store` here. With the fix, the container is nulled so it returns null.
 				store_seen_in_continuation = try_get_request_store();
 			});
-			return 'rendered';
 		});
 
 		await late_callback_promise;
@@ -69,10 +71,10 @@ describe('with_request_store', () => {
 		expect(store_seen_in_continuation).toBeNull();
 	});
 
-	test('getRequestEvent returns event during execution', async () => {
+	test('getRequestEvent returns event during execution', () => {
 		const store = make_store();
 		let event = null;
-		await with_request_store(store, async () => {
+		with_request_store(store, () => {
 			event = getRequestEvent();
 		});
 		expect(event).toBe(store.event);
@@ -89,7 +91,8 @@ describe('with_request_store', () => {
 		let seen_after_inner = null;
 
 		await with_request_store(outer, async () => {
-			await with_request_store(inner, async () => {
+			await Promise.resolve(); // exercise the async path
+			await with_request_store(inner, () => {
 				seen_in_inner = try_get_request_store();
 			});
 			seen_after_inner = try_get_request_store();
