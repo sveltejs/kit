@@ -370,7 +370,7 @@ export async function start(_app, _target, hydrate) {
 	function restore_scroll() {
 		if (scroll) {
 			history.scrollRestoration = 'manual';
-			scrollTo(scroll.x, scroll.y);
+			scrollTo({ left: scroll.x, top: scroll.y, behavior: 'instant' });
 		}
 	}
 
@@ -1876,14 +1876,14 @@ async function navigate({
 	if (autoscroll) {
 		const scroll = popped ? popped.scroll : noscroll ? scroll_state() : null;
 		if (scroll) {
-			scrollTo(scroll.x, scroll.y);
+			scrollTo({ left: scroll.x, top: scroll.y, behavior: 'instant' });
 		} else if ((deep_linked = url.hash && document.getElementById(get_id(url)))) {
 			// Here we use `scrollIntoView` on the element instead of `scrollTo`
 			// because it natively supports the `scroll-margin` and `scroll-behavior`
 			// CSS properties.
 			deep_linked.scrollIntoView();
 		} else {
-			scrollTo(0, 0);
+			scrollTo({ left: 0, top: 0, behavior: 'instant' });
 		}
 	}
 
@@ -2772,7 +2772,7 @@ function _start_router() {
 				update_url(url);
 
 				scroll_positions[current_history_index] = scroll_state();
-				if (scroll) scrollTo(scroll.x, scroll.y);
+				if (scroll) scrollTo({ left: scroll.x, top: scroll.y, behavior: 'instant' });
 
 				current_history_index = history_index;
 				return;
@@ -3140,7 +3140,7 @@ function reset_focus(url, scroll = true) {
 
 				// If scroll management has already happened earlier, we need to restore
 				// the scroll position after setting the sequential focus navigation starting point
-				if (scroll) scrollTo(x, y);
+				if (scroll) scrollTo({ left: x, top: y, behavior: 'instant' });
 				resetting_focus = false;
 			});
 		} else {

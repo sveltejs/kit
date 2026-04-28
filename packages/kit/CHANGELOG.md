@@ -179,6 +179,8 @@
 ### Patch Changes
 
 
+- fix: use `behavior: 'instant'` for all navigation scroll calls to prevent interference from CSS `scroll-behavior: smooth` ([#2733](https://github.com/sveltejs/kit/issues/2733))
+
 - fix: avoid Vite warning about unknown `codeSplitting` option ([#15451](https://github.com/sveltejs/kit/pull/15451))
 
 ## 2.53.3
