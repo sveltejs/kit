@@ -7,6 +7,7 @@ import process from 'node:process';
 import { styleText } from 'node:util';
 
 import { exactRegex, prefixRegex } from 'rolldown/filter';
+import { resolveConfig } from 'vite';
 
 import { copy, mkdirp, posixify, read, resolve_entry, rimraf } from '../../utils/filesystem.js';
 import { create_static_module, create_dynamic_module } from '../../core/env.js';
@@ -135,6 +136,9 @@ const warning_preprocessor = {
 	}
 };
 
+/** @type {Promise<ResolvedConfig> | ResolvedConfig} */
+let pre_resolved_vite_config;
+
 /** @type {typeof import('@sveltejs/vite-plugin-svelte')} */
 let vite_plugin_svelte;
 
@@ -143,79 +147,52 @@ let vite_plugin_svelte;
  * @returns {Promise<Plugin[]>}
  */
 export async function sveltekit() {
-	// the config options will be set only after the Vite `config` hook runs
-	// because we need to find `svelte.config.js` relative to `vite.config.root`
-	const svelte_config = /** @type {import('types').ValidatedConfig} */ ({});
+	vite_plugin_svelte = await import_peer('@sveltejs/vite-plugin-svelte', cwd);
+
+	// preload the resolved Vite config to get the root setting early so that we can
+	// resolve the Svelte config file early too. This isn't ideal because it runs
+	// all plugin init and config-related hooks an additional time
+	if (!pre_resolved_vite_config) {
+		pre_resolved_vite_config = resolveConfig({}, 'serve');
+	} else {
+		// return early if we're pre-resolving the Vite config but ensure
+		// vite-plugin-svelte is returned because enhanced-img expects it
+		return vite_plugin_svelte.svelte({ configFile: false });
+	}
+	pre_resolved_vite_config = await pre_resolved_vite_config;
+
+	root = resolve_root(pre_resolved_vite_config);
+
+	const svelte_config = await load_config({ cwd: root });
+
+	/** @type {import('@sveltejs/vite-plugin-svelte').Options['preprocess']} */
+	let preprocess = svelte_config.preprocess;
+	if (Array.isArray(preprocess)) {
+		preprocess = [...preprocess, warning_preprocessor];
+	} else if (preprocess) {
+		preprocess = [preprocess, warning_preprocessor];
+	} else {
+		preprocess = warning_preprocessor;
+	}
 
 	/** @type {Options} */
 	const vite_plugin_svelte_options = {
 		// we don't want vite-plugin-svelte to load the config file itself because
 		// it will try to validate it without knowing that kit options are valid
-		configFile: false
+		configFile: false,
+		extensions: svelte_config.extensions,
+		preprocess,
+		onwarn: svelte_config.onwarn,
+		compilerOptions: { ...svelte_config.compilerOptions },
+		...svelte_config.vitePlugin
 	};
 
-	vite_plugin_svelte = await import_peer('@sveltejs/vite-plugin-svelte', cwd);
-
-	return [
-		plugin_svelte_config({ vite_plugin_svelte_options, svelte_config }),
-		...vite_plugin_svelte.svelte(vite_plugin_svelte_options),
-		...kit({ svelte_config })
-	];
+	return [...vite_plugin_svelte.svelte(vite_plugin_svelte_options), ...kit({ svelte_config })];
 }
 
 /** @param {import('vite').UserConfig | import('vite').ResolvedConfig} vite_config */
 function resolve_root(vite_config) {
 	return posixify(vite_config.root ? path.resolve(vite_config.root) : cwd);
-}
-
-/**
- * Resolves the Svelte config using the `vite.config.root` setting before any
- * of our other plugins try to access the config objects
- * @param {{
- *   vite_plugin_svelte_options: import('@sveltejs/vite-plugin-svelte').Options;
- * 	 svelte_config: import('types').ValidatedConfig;
- * }} options
- * @return {import('vite').Plugin}
- */
-function plugin_svelte_config({ vite_plugin_svelte_options, svelte_config }) {
-	return {
-		name: 'vite-plugin-sveltekit-resolve-svelte-config',
-		// make sure it runs first
-		enforce: 'pre',
-		config: {
-			order: 'pre',
-			async handler(config) {
-				root = resolve_root(config);
-
-				const user_svelte_config = await load_config({ cwd: root });
-
-				/** @type {import('@sveltejs/vite-plugin-svelte').Options['preprocess']} */
-				let preprocess = user_svelte_config.preprocess;
-				if (Array.isArray(preprocess)) {
-					preprocess = [...preprocess, warning_preprocessor];
-				} else if (preprocess) {
-					preprocess = [preprocess, warning_preprocessor];
-				} else {
-					preprocess = warning_preprocessor;
-				}
-
-				vite_plugin_svelte_options.extensions = user_svelte_config.extensions;
-				vite_plugin_svelte_options.preprocess = preprocess;
-				vite_plugin_svelte_options.onwarn = user_svelte_config.onwarn;
-				vite_plugin_svelte_options.compilerOptions = { ...user_svelte_config.compilerOptions };
-				Object.assign(vite_plugin_svelte_options, user_svelte_config.vitePlugin);
-
-				Object.assign(svelte_config, user_svelte_config);
-			}
-		},
-		// TODO: do we even need to set `root` based on the final Vite config?
-		configResolved: {
-			order: 'pre',
-			handler(config) {
-				root = resolve_root(config);
-			}
-		}
-	};
 }
 
 /**
