@@ -1965,7 +1965,9 @@ declare module '@sveltejs/kit' {
 	type AsArgs<Type extends keyof InputTypeMap, Value> = Type extends 'checkbox'
 		? Value extends string[]
 			? [type: Type, value: Value[number] | (string & {})]
-			: [type: Type] | [type: Type, value: Value | (string & {})]
+			: Value extends boolean
+				? [type: Type] | [type: Type, value: boolean]
+				: [type: Type] | [type: Type, value: Value | (string & {})]
 		: Type extends 'radio' | 'submit' | 'hidden'
 			? [type: Type, value: Value | (string & {})]
 			: Type extends 'file' | 'file multiple'
