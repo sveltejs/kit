@@ -1079,10 +1079,14 @@ function diff_search_params(old_url, new_url) {
 }
 
 /**
- * @param {Omit<import('./types.js').NavigationFinished['state'], 'branch'> & { error: App.Error }} opts
+ * @param {Omit<import('./types.js').NavigationFinished['state'], 'branch'> & { error: App.Error; status: number }} opts
  * @returns {import('./types.js').NavigationFinished}
  */
-function preload_error({ error, url, route, params }) {
+function preload_error({ error, status, url, route, params }) {
+	// we skipped loading the error page, so we need to use the current page
+	// store, but we still pass the updated status to the preloadData function
+	const new_page = clone_page(page);
+	new_page.status = status;
 	return {
 		type: 'loaded',
 		state: {
@@ -1093,7 +1097,7 @@ function preload_error({ error, url, route, params }) {
 			branch: []
 		},
 		props: {
-			page: clone_page(page),
+			page: new_page,
 			constructors: []
 		}
 	};
@@ -1158,12 +1162,14 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 			} catch (error) {
 				const handled_error = await handle_error(error, { url, params, route: { id } });
 
+				const status = get_status(error);
+
 				if (preload_tokens.has(preload)) {
-					return preload_error({ error: handled_error, url, params, route });
+					return preload_error({ error: handled_error, status, url, params, route });
 				}
 
 				return load_root_error_page({
-					status: get_status(error),
+					status,
 					error: handled_error,
 					url,
 					route
@@ -1244,20 +1250,23 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 				if (err instanceof Redirect) {
 					return {
 						type: 'redirect',
+						status: err.status,
 						location: err.location
 					};
 				}
 
+				let status = get_status(err);
+
 				if (preload_tokens.has(preload)) {
 					return preload_error({
 						error: await handle_error(err, { params, url, route: { id: route.id } }),
+						status,
 						url,
 						params,
 						route
 					});
 				}
 
-				let status = get_status(err);
 				/** @type {App.Error} */
 				let error;
 
@@ -2299,7 +2308,7 @@ export function refreshAll({ includeLoadFunctions = true } = {}) {
  * Returns a Promise that resolves with the result of running the new route's `load` functions once the preload is complete.
  *
  * @param {string} href Page to preload
- * @returns {Promise<{ type: 'loaded'; status: number; data: Record<string, any> } | { type: 'redirect'; location: string }>}
+ * @returns {Promise<({ type: 'loaded'; data: Record<string, any> } | { type: 'redirect'; location: string } | { type: 'error'; error: App.Error }) & { status: number; }>}
  */
 export async function preloadData(href) {
 	if (!BROWSER) {
@@ -2317,11 +2326,21 @@ export async function preloadData(href) {
 	if (result.type === 'redirect') {
 		return {
 			type: result.type,
+			status: result.status,
 			location: result.location
 		};
 	}
 
 	const { status, data } = result.props.page ?? page;
+
+	if (result.type === 'loaded' && result.state.error) {
+		return {
+			type: 'error',
+			status,
+			error: result.state.error
+		};
+	}
+
 	return { type: result.type, status, data };
 }
 

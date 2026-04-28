@@ -289,6 +289,7 @@ export interface RouteData {
 
 export type ServerRedirectNode = {
 	type: 'redirect';
+	status: number;
 	location: string;
 };
 
