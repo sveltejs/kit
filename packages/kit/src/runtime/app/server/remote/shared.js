@@ -1,5 +1,5 @@
 /** @import { RequestEvent } from '@sveltejs/kit' */
-/** @import { ServerHooks, MaybePromise, RequestState, RemoteInternals, RequestStore } from 'types' */
+/** @import { ServerHooks, MaybePromise, RequestState, RemoteInternals, RequestStore, RemoteLiveQueryUserFunctionReturnType } from 'types' */
 import { parse } from 'devalue';
 import { error } from '@sveltejs/kit';
 import { with_request_store, get_request_store } from '@sveltejs/kit/internal/server';
@@ -8,7 +8,7 @@ import { create_remote_key, stringify, unfriendly_hydratable } from '../../../sh
 
 /**
  * @param {any} validate_or_fn
- * @param {(arg?: any) => any} [maybe_fn]
+ * @param {((arg?: any) => any) | undefined} [maybe_fn]
  * @returns {(arg?: any) => MaybePromise<any>}
  */
 export function create_validator(validate_or_fn, maybe_fn) {
@@ -31,6 +31,7 @@ export function create_validator(validate_or_fn, maybe_fn) {
 		return async (arg) => {
 			// Get event before async validation to ensure it's available in server environments without AsyncLocalStorage, too
 			const { event, state } = get_request_store();
+
 			// access property and call method in one go to preserve potential this context
 			const result = await validate_or_fn['~standard'].validate(arg);
 
@@ -109,17 +110,13 @@ export function parse_remote_response(data, transport) {
 }
 
 /**
- * Like `with_event` but removes things from `event` you cannot see/call in remote functions, such as `setHeaders`.
- * @template T
  * @param {RequestEvent} event
  * @param {RequestState} state
  * @param {boolean} allow_cookies
- * @param {() => any} get_input
- * @param {(arg?: any) => T} fn
+ * @returns {RequestStore}
  */
-export async function run_remote_function(event, state, allow_cookies, get_input, fn) {
-	/** @type {RequestStore} */
-	const store = {
+function derive_remote_function_event(event, state, allow_cookies) {
+	return {
 		event: {
 			...event,
 			setHeaders: () => {
@@ -156,10 +153,88 @@ export async function run_remote_function(event, state, allow_cookies, get_input
 			is_in_remote_function: true
 		}
 	};
+}
+
+/**
+ * Like `with_event` but removes things from `event` you cannot see/call in remote functions, such as `setHeaders`.
+ * @template T
+ * @param {RequestEvent} event
+ * @param {RequestState} state
+ * @param {boolean} allow_cookies
+ * @param {() => any} get_input
+ * @param {(arg?: any) => T} fn
+ */
+export async function run_remote_function(event, state, allow_cookies, get_input, fn) {
+	const store = derive_remote_function_event(event, state, allow_cookies);
 
 	// In two parts, each with_event, so that runtimes without async local storage can still get the event at the start of the function
 	const input = await with_request_store(store, get_input);
 	return with_request_store(store, () => fn(input));
+}
+
+/**
+ * Like `with_event` but removes things from `event` you cannot see/call in remote functions, such as `setHeaders`.
+ * @template T
+ * @param {RequestEvent} event
+ * @param {RequestState} state
+ * @param {boolean} allow_cookies
+ * @param {() => any} get_input
+ * @param {(arg?: any) => RemoteLiveQueryUserFunctionReturnType<T>} fn
+ * @param {string} name
+ */
+export async function* run_remote_generator(event, state, allow_cookies, get_input, fn, name) {
+	const store = derive_remote_function_event(event, state, allow_cookies);
+
+	// In two parts, each with_event, so that runtimes without async local storage can still get the event at the start of the function / calls to next
+	const input = await with_request_store(store, get_input);
+	const source = await with_request_store(store, () => fn(input));
+	const iterator = to_iterator(source, name);
+	let done = false;
+
+	try {
+		while (true) {
+			// the code of a generator function is basically chopped apart at each
+			// yield, and each part is an invocation of `.next`. So, to provide
+			// access to the request context in generator functions, we have to
+			// provide it to every invocation of `.next`. (It's more obvious that
+			// this is necessary with plain iterators.)
+			const result = await with_request_store(store, () => iterator.next());
+			if (result.done) {
+				done = true;
+				return result.value;
+			}
+			yield result.value;
+		}
+	} finally {
+		if (!done && typeof iterator.return === 'function') {
+			await with_request_store(store, () => iterator.return?.(undefined));
+		}
+	}
+}
+
+/**
+ * @template T
+ * @param {Awaited<RemoteLiveQueryUserFunctionReturnType<T>>} source
+ * @param {string} name
+ * @returns {Iterator<T> | AsyncIterator<T>}
+ */
+function to_iterator(source, name) {
+	// intentionally using `in` because these could be inherited
+	if ('next' in source && typeof source.next === 'function') {
+		return source;
+	}
+
+	if (Symbol.asyncIterator in source && typeof source[Symbol.asyncIterator] === 'function') {
+		return source[Symbol.asyncIterator]();
+	}
+
+	if (Symbol.iterator in source && typeof source[Symbol.iterator] === 'function') {
+		return source[Symbol.iterator]();
+	}
+
+	throw new Error(
+		`query.live '${name}' must return an Iterator, Iterable, AsyncIterator or AsyncIterable`
+	);
 }
 
 /**

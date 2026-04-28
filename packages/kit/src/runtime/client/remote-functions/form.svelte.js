@@ -7,7 +7,7 @@ import { DEV } from 'esm-env';
 import { HttpError } from '@sveltejs/kit/internal';
 import { app, query_responses, _goto, set_nearest_error_page, invalidateAll } from '../client.js';
 import { tick } from 'svelte';
-import { apply_refreshes, categorize_updates } from './shared.svelte.js';
+import { apply_refreshes, categorize_updates, apply_reconnections } from './shared.svelte.js';
 import { createAttachmentKey } from 'svelte/attachments';
 import {
 	convert_formdata,
@@ -156,7 +156,6 @@ export function form(id) {
 			}
 
 			try {
-				// eslint-disable-next-line @typescript-eslint/await-thenable -- `callback` is typed as returning `void` to allow returning e.g. `Promise<boolean>`
 				await callback({
 					form,
 					data,
@@ -235,21 +234,39 @@ export function form(id) {
 						const succeeded = raw_issues.length === 0;
 
 						if (succeeded) {
-							if (form_result.refreshes) {
-								apply_refreshes(form_result.refreshes);
-							} else {
+							if (refreshes === null && !form_result.refreshes && !form_result.reconnects) {
 								void invalidateAll();
+							} else {
+								if (form_result.refreshes) {
+									apply_refreshes(form_result.refreshes);
+								}
+								if (form_result.reconnects) {
+									apply_reconnections(form_result.reconnects);
+								}
 							}
 						}
 
 						return succeeded;
 					} else if (form_result.type === 'redirect') {
 						const stringified_refreshes = form_result.refreshes ?? '';
+						const stringified_reconnects = form_result.reconnects ?? '';
 						if (stringified_refreshes) {
 							apply_refreshes(stringified_refreshes);
 						}
+
+						if (stringified_reconnects) {
+							apply_reconnections(stringified_reconnects);
+						}
+
 						// Use internal version to allow redirects to external URLs
-						void _goto(form_result.location, { invalidateAll: !stringified_refreshes }, 0);
+						void _goto(
+							form_result.location,
+							{
+								invalidateAll:
+									refreshes === null && !stringified_refreshes && !stringified_reconnects
+							},
+							0
+						);
 						return true;
 					} else {
 						throw new HttpError(form_result.status ?? 500, form_result.error);
