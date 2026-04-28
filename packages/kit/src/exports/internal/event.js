@@ -7,7 +7,9 @@ import { IN_WEBCONTAINER } from '../../runtime/server/constants.js';
 /** @type {RequestStore | null} */
 let sync_store = null;
 
-/** @type {AsyncLocalStorage<RequestStore | null> | null} */
+/** @typedef {{ current: RequestStore | null }} RequestStoreContainer */
+
+/** @type {AsyncLocalStorage<RequestStoreContainer | null> | null} */
 let als;
 
 import('node:async_hooks')
@@ -63,7 +65,7 @@ export function get_request_store() {
 }
 
 export function try_get_request_store() {
-	return sync_store ?? als?.getStore() ?? null;
+	return sync_store ?? als?.getStore()?.current ?? null;
 }
 
 /**
@@ -74,7 +76,27 @@ export function try_get_request_store() {
 export function with_request_store(store, fn) {
 	try {
 		sync_store = store;
-		return als ? als.run(store, fn) : fn();
+		if (als) {
+			// Wrap the store in a container so that async resources created inside fn
+			// (e.g. Svelte 4 subscription callbacks, Promise continuations) only hold a
+			// reference to the container rather than the full RequestStore. After fn
+			// completes we null out container.current, allowing the RequestStore and its
+			// RequestEvent to be garbage-collected even if stale async resources linger.
+			// See https://github.com/nodejs/node/issues/53408
+			const container = /** @type {RequestStoreContainer} */ ({ current: store });
+			const result = als.run(container, fn);
+			if (result !== null && typeof result === 'object' && typeof (/** @type {any} */ (result)).then === 'function') {
+				return /** @type {T} */ (
+					/** @type {Promise<any>} */ (/** @type {unknown} */ (result)).then(
+						(value) => { container.current = null; return value; },
+						(error) => { container.current = null; throw error; }
+					)
+				);
+			}
+			container.current = null;
+			return result;
+		}
+		return fn();
 	} finally {
 		// Since AsyncLocalStorage is not working in webcontainers, we don't reset `sync_store`
 		// and handle only one request at a time in `src/runtime/server/index.js`.
