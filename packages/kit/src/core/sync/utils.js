@@ -1,12 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { mkdirp } from '../../utils/filesystem.js';
-import { import_peer } from '../../utils/import.js';
-
-/** @type {{ VERSION: string }} */
-const { VERSION } = await import_peer('svelte/compiler');
-
-const [MAJOR, MINOR] = VERSION.split('.').map(Number);
 
 /** @type {Map<string, string>} */
 const previous_contents = new Map();
@@ -73,13 +67,4 @@ export function dedent(strings, ...values) {
 	str = str.trim();
 
 	return str;
-}
-
-export function isSvelte5Plus() {
-	return MAJOR >= 5;
-}
-
-// TODO 3.0 remove this once we can bump the peerDep range
-export function supportsTrustedTypes() {
-	return (MAJOR === 5 && MINOR >= 51) || MAJOR > 5;
 }

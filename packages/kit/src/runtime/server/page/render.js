@@ -370,14 +370,8 @@ export async function render_response({
 			);
 
 			for (const path of included_modulepreloads) {
-				// see the kit.output.preloadStrategy option for details on why we have multiple options here
 				link_headers.add(`<${encodeURI(path)}>; rel="modulepreload"; nopush`);
-
-				if (options.preload_strategy !== 'modulepreload') {
-					head.add_script_preload(path);
-				} else {
-					head.add_link_tag(path, ['rel="modulepreload"']);
-				}
+				head.add_link_tag(path, ['rel="modulepreload"']);
 			}
 		}
 
@@ -738,8 +732,6 @@ class Head {
 	/** @type {string[]} */
 	#link_tags = [];
 	/** @type {string[]} */
-	#script_preloads = [];
-	/** @type {string[]} */
 	#style_tags = [];
 	/** @type {string[]} */
 	#stylesheet_links = [];
@@ -757,7 +749,6 @@ class Head {
 		return [
 			...this.#http_equiv,
 			...this.#link_tags,
-			...this.#script_preloads,
 			this.#rendered,
 			...this.#style_tags,
 			...this.#stylesheet_links
@@ -780,13 +771,6 @@ class Head {
 	 */
 	add_stylesheet(href, attributes) {
 		this.#stylesheet_links.push(`<link href="${href}" ${attributes.join(' ')}>`);
-	}
-
-	/** @param {string} href */
-	add_script_preload(href) {
-		this.#script_preloads.push(
-			`<link rel="preload" as="script" crossorigin="anonymous" href="${href}">`
-		);
 	}
 
 	/**

@@ -271,7 +271,6 @@ export function create_updated_store() {
 		try {
 			const res = await fetch(`${assets}/${__SVELTEKIT_APP_VERSION_FILE__}`, {
 				headers: {
-					pragma: 'no-cache',
 					'cache-control': 'no-cache'
 				}
 			});

@@ -12,10 +12,9 @@ import {
 import * as devalue from 'devalue';
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
 import { DEV } from 'esm-env';
+import { tick, untrack, hydratable } from 'svelte';
+import { create_remote_key, stringify_remote_arg } from '../../shared.js';
 import { noop } from '../../../utils/functions.js';
-import { with_resolvers } from '../../../utils/promise.js';
-import { tick, untrack } from 'svelte';
-import { create_remote_key, stringify_remote_arg, unfriendly_hydratable } from '../../shared.js';
 
 /**
  * @template T
@@ -60,7 +59,7 @@ export function query(id) {
 		return new QueryProxy(id, arg, async (key, payload) => {
 			const url = `${base}/${app_dir}/remote/${id}${payload ? `?payload=${payload}` : ''}`;
 
-			const serialized = await unfriendly_hydratable(key, () =>
+			const serialized = await hydratable(key, () =>
 				remote_request(url, get_remote_request_headers())
 			);
 
@@ -84,7 +83,7 @@ export function query_batch(id) {
 	/** @type {RemoteQueryFunction<any, any>} */
 	const wrapper = (arg) => {
 		return new QueryProxy(id, arg, async (key, payload) => {
-			const serialized = await unfriendly_hydratable(key, () => {
+			const serialized = await hydratable(key, () => {
 				return new Promise((resolve, reject) => {
 					// create_remote_function caches identical calls, but in case a refresh to the same query is called multiple times this function
 					// is invoked multiple times with the same payload, so we need to deduplicate here
@@ -252,7 +251,7 @@ export class Query {
 	#run() {
 		this.#loading = true;
 
-		const { promise, resolve, reject } = with_resolvers();
+		const { promise, resolve, reject } = Promise.withResolvers();
 
 		this.#latest.push(resolve);
 

@@ -2,7 +2,6 @@ import { execSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
-import { fileURLToPath } from 'node:url';
 import { assert, expect, test } from 'vitest';
 import { rimraf } from '../../../utils/filesystem.js';
 import create_manifest_data from '../create_manifest_data/index.js';
@@ -10,7 +9,7 @@ import { tweak_types, write_all_types } from './index.js';
 import { write_non_ambient } from '../write_non_ambient.js';
 import { validate_config } from '../../config/index.js';
 
-const cwd = fileURLToPath(new URL('./test', import.meta.url));
+const cwd = path.join(import.meta.dirname, 'test');
 
 /**
  * @param {string} dir
@@ -23,13 +22,16 @@ function run_test(dir) {
 	initial.kit.files.assets = path.resolve(cwd, 'static');
 	initial.kit.files.params = path.resolve(cwd, dir, 'params');
 	initial.kit.files.routes = path.resolve(cwd, dir);
-	initial.kit.outDir = path.resolve(cwd, path.join(dir, '.svelte-kit'));
+	initial.kit.outDir = path.resolve(cwd, dir, '.svelte-kit');
+
+	const root = path.join(cwd, dir);
 
 	const manifest = create_manifest_data({
-		config: /** @type {import('types').ValidatedConfig} */ (initial)
+		config: /** @type {import('types').ValidatedConfig} */ (initial),
+		cwd: root
 	});
 
-	write_all_types(initial, manifest);
+	write_all_types(initial, manifest, root);
 	write_non_ambient(initial.kit, manifest);
 }
 

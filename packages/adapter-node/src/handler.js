@@ -1,4 +1,3 @@
-import 'SHIMS';
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
@@ -10,9 +9,6 @@ import { Server } from 'SERVER';
 import { manifest, prerendered, base } from 'MANIFEST';
 import { env } from 'ENV';
 import { parse_as_bytes, parse_origin } from '../utils.js';
-
-/* global ENV_PREFIX */
-/* global PRECOMPRESS */
 
 const server = new Server(manifest);
 

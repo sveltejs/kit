@@ -1,4 +1,4 @@
-/** @type {import('../../.svelte-kit/types/src/core/sync/write_types/test/slugs/x/[[optional]]/$types').PageLoad} */
+/** @type {import('../../.svelte-kit/types/x/[[optional]]/$types').PageLoad} */
 export async function load({ parent, params }) {
 	const p = await parent();
 	/** @type {NonNullable<typeof p>} */

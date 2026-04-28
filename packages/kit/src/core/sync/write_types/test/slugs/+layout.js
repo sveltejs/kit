@@ -1,4 +1,4 @@
-/** @type {import('./.svelte-kit/types/src/core/sync/write_types/test/slugs/$types').LayoutLoad} */
+/** @type {import('./.svelte-kit/types/$types').LayoutLoad} */
 export function load({ params }) {
 	params.optional;
 	params.rest;

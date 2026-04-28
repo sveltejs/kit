@@ -1,8 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import process from 'node:process';
 import { fileURLToPath } from 'node:url';
-import colors from 'kleur';
+import { styleText } from 'node:util';
 import { posixify, to_fs } from '../utils/filesystem.js';
 import { noop } from '../utils/functions.js';
 
@@ -20,10 +19,14 @@ export const runtime_directory = posixify(fileURLToPath(new URL('../runtime', im
  * This allows us to import SvelteKit internals that aren't exposed via `pkg.exports` in a
  * way that works whether `@sveltejs/kit` is installed inside the project's `node_modules`
  * or in a workspace root
+ * @param {string} root
+ * @returns {string}
  */
-export const runtime_base = runtime_directory.startsWith(process.cwd())
-	? `/${path.relative('.', runtime_directory)}`
-	: to_fs(runtime_directory);
+export function get_runtime_base(root) {
+	return runtime_directory.startsWith(root)
+		? `/${path.relative(root, runtime_directory)}`
+		: to_fs(runtime_directory);
+}
 
 /** @param {{ verbose: boolean }} opts */
 export function logger({ verbose }) {
@@ -33,11 +36,10 @@ export function logger({ verbose }) {
 	/** @param {string} msg */
 	const err = (msg) => console.error(msg.replace(/^/gm, '  '));
 
-	log.success = (msg) => log(colors.green(`✔ ${msg}`));
-	log.error = (msg) => err(colors.bold().red(msg));
-	log.warn = (msg) => log(colors.bold().yellow(msg));
-
-	log.minor = verbose ? (msg) => log(colors.grey(msg)) : noop;
+	log.success = (msg) => log(styleText('green', `✔ ${msg}`));
+	log.error = (msg) => err(styleText(['bold', 'red'], msg));
+	log.warn = (msg) => log(styleText(['bold', 'yellow'], msg));
+	log.minor = verbose ? (msg) => log(styleText('grey', msg)) : noop;
 	log.info = verbose ? log : noop;
 
 	return log;

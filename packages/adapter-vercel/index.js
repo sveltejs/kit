@@ -1,31 +1,44 @@
-/** @import { BuildOptions } from 'esbuild' */
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
-import { nodeFileTrace } from '@vercel/nft';
-import esbuild from 'esbuild';
-import { get_pathname, parse_isr_expiration, pattern_to_src, resolve_runtime } from './utils.js';
 import { VERSION } from '@sveltejs/kit';
-
-/**
- * @template T
- * @template {keyof T} K
- * @typedef {Partial<Omit<T, K>> & Required<Pick<T, K>>} PartialExcept
- */
-
-/**
- * We use a custom `Builder` type here to support the minimum version of SvelteKit.
- * @typedef {PartialExcept<import('@sveltejs/kit').Builder, 'log' | 'rimraf' | 'mkdirp' | 'config' | 'prerendered' | 'routes' | 'createEntries' | 'findServerAssets' | 'generateFallback' | 'generateEnvModule' | 'generateManifest' | 'getBuildDirectory' | 'getClientDirectory' | 'getServerDirectory' | 'getAppPath' | 'writeClient' | 'writePrerendered' | 'writePrerendered' | 'writeServer' | 'copy' | 'compress'>} Builder2_4_0
- */
+import { nodeFileTrace } from '@vercel/nft';
+import { build } from 'rolldown';
+import { get_pathname, parse_isr_expiration, pattern_to_src, resolve_runtime } from './utils.js';
 
 const name = '@sveltejs/adapter-vercel';
 const INTERNAL = '![-]'; // this name is guaranteed not to conflict with user routes
 
-const [kit_major, kit_minor] = VERSION.split('.');
-
 // https://vercel.com/docs/functions/edge-functions/edge-runtime#compatible-node.js-modules
 const compatible_node_modules = ['async_hooks', 'events', 'buffer', 'assert', 'util'];
+
+/** @satisfies {import('rolldown').BuildOptions} */
+const rolldown_config = {
+	platform: 'browser',
+	resolve: {
+		conditionNames: [
+			// Vercel's Edge runtime key https://runtime-keys.proposal.wintercg.org/#edge-light
+			'edge-light',
+			// re-include these since they are included by default when no conditions are specified
+			'import',
+			'browser',
+			'default'
+		]
+	},
+	external: [...compatible_node_modules, ...compatible_node_modules.map((id) => `node:${id}`)],
+	transform: {
+		// minimum Node.js version supported is v14.6.0 that is mapped to ES2019
+		// https://edge-runtime.vercel.app/features/polyfills
+		// TODO verify the latest ES version the edge runtime supports
+		target: 'es2022'
+	},
+	output: {
+		sourcemap: true,
+		banner: () => 'globalThis.global = globalThis;',
+		codeSplitting: false
+	}
+};
 
 /** @type {import('./index.js').default} **/
 const plugin = function (defaults = {}) {
@@ -35,7 +48,7 @@ const plugin = function (defaults = {}) {
 
 	return {
 		name,
-		/** @param {Builder2_4_0} builder */
+		/** @param {import('@sveltejs/kit').Builder} builder */
 		async adapt(builder) {
 			if (!builder.routes) {
 				throw new Error(
@@ -87,8 +100,8 @@ const plugin = function (defaults = {}) {
 						MANIFEST: './manifest.js'
 					}
 				});
-				if (builder.hasServerInstrumentationFile?.()) {
-					builder.instrument?.({
+				if (builder.hasServerInstrumentationFile()) {
+					builder.instrument({
 						entrypoint: `${tmp}/index.js`,
 						instrumentation: `${builder.getServerDirectory()}/instrumentation.server.js`
 					});
@@ -139,53 +152,34 @@ const plugin = function (defaults = {}) {
 
 				try {
 					const outdir = `${dirs.functions}/${name}.func`;
-					/** @type {BuildOptions} */
-					const esbuild_config = {
-						// minimum Node.js version supported is v14.6.0 that is mapped to ES2019
-						// https://edge-runtime.vercel.app/features/polyfills
-						// TODO verify the latest ES version the edge runtime supports
-						target: 'es2020',
-						bundle: true,
-						platform: 'browser',
-						conditions: [
-							// Vercel's Edge runtime key https://runtime-keys.proposal.wintercg.org/#edge-light
-							'edge-light',
-							// re-include these since they are included by default when no conditions are specified
-							// https://esbuild.github.io/api/#conditions
-							'module'
-						],
-						format: 'esm',
-						external: [
-							...compatible_node_modules,
-							...compatible_node_modules.map((id) => `node:${id}`),
-							...(config.external || [])
-						],
-						sourcemap: 'linked',
-						banner: { js: 'globalThis.global = globalThis;' },
-						loader: {
-							'.wasm': 'copy',
-							'.woff': 'copy',
-							'.woff2': 'copy',
-							'.ttf': 'copy',
-							'.eot': 'copy',
-							'.otf': 'copy'
-						}
+
+					const build_config = {
+						...rolldown_config,
+						external: [...rolldown_config.external, ...(config.external || [])]
 					};
-					const result = await esbuild.build({
-						entryPoints: [`${tmp}/edge.js`],
-						outfile: `${outdir}/index.js`,
-						...esbuild_config
-					});
 
-					let instrumentation_result;
-					if (builder.hasServerInstrumentationFile?.()) {
-						instrumentation_result = await esbuild.build({
-							entryPoints: [`${builder.getServerDirectory()}/instrumentation.server.js`],
-							outfile: `${outdir}/instrumentation.server.js`,
-							...esbuild_config
-						});
+					await Promise.all([
+						build({
+							...build_config,
+							input: `${tmp}/edge.js`,
+							output: {
+								...build_config.output,
+								file: `${outdir}/index.js`
+							}
+						}),
+						builder.hasServerInstrumentationFile() &&
+							build({
+								...build_config,
+								input: `${builder.getServerDirectory()}/instrumentation.server.js`,
+								output: {
+									...build_config.output,
+									file: `${outdir}/instrumentation.server.js`
+								}
+							})
+					]);
 
-						builder.instrument?.({
+					if (builder.hasServerInstrumentationFile()) {
+						builder.instrument({
 							entrypoint: `${outdir}/index.js`,
 							instrumentation: `${outdir}/instrumentation.server.js`,
 							module: {
@@ -193,45 +187,10 @@ const plugin = function (defaults = {}) {
 							}
 						});
 					}
-
-					const warnings = instrumentation_result
-						? [...result.warnings, ...instrumentation_result.warnings]
-						: result.warnings;
-
-					if (warnings.length > 0) {
-						const formatted = await esbuild.formatMessages(warnings, {
-							kind: 'warning',
-							color: true
-						});
-
-						console.error(formatted.join('\n'));
-					}
 				} catch (err) {
-					const error = /** @type {import('esbuild').BuildFailure} */ (err);
-					for (const e of error.errors) {
-						for (const node of e.notes) {
-							const match =
-								/The package "(.+)" wasn't found on the file system but is built into node/.exec(
-									node.text
-								);
-
-							if (match) {
-								node.text = `Cannot use "${match[1]}" when deploying to Vercel Edge Functions.`;
-							}
-						}
-					}
-
-					const formatted = await esbuild.formatMessages(error.errors, {
-						kind: 'error',
-						color: true
-					});
-
-					console.error(formatted.join('\n'));
-
 					throw new Error(
-						`Bundling with esbuild failed with ${error.errors.length} ${
-							error.errors.length === 1 ? 'error' : 'errors'
-						}`,
+						'Bundling edge function with Rolldown failed' +
+							(err instanceof Error ? `: ${err.message}` : ''),
 						{ cause: err }
 					);
 				}
@@ -486,8 +445,7 @@ const plugin = function (defaults = {}) {
 				}
 			}
 
-			// optional chaining to support older versions that don't have this setting yet
-			if (builder.config.kit.router?.resolution === 'server') {
+			if (builder.config.kit.router.resolution === 'server') {
 				// Create a separate edge function just for server-side route resolution.
 				// By omitting all routes we're ensuring it's small (the routes will still be available
 				// to the route resolution, because it does not rely on the server routing manifest)
@@ -516,18 +474,7 @@ const plugin = function (defaults = {}) {
 		},
 
 		supports: {
-			read: ({ config, route }) => {
-				const runtime = config.runtime ?? defaults.runtime;
-
-				// TODO bump peer dep in next adapter major to simplify this
-				if (runtime === 'edge' && kit_major === '2' && kit_minor < '25') {
-					throw new Error(
-						`${name}: Cannot use \`read\` from \`$app/server\` in route \`${route.id}\` configured with \`runtime: 'edge'\` and SvelteKit < 2.25.0`
-					);
-				}
-
-				return true;
-			},
+			read: () => true,
 			instrumentation: () => true
 		}
 	};
@@ -561,7 +508,7 @@ function write(file, data) {
 
 // This function is duplicated in adapter-static
 /**
- * @param {Builder2_4_0} builder
+ * @param {import('@sveltejs/kit').Builder} builder
  * @param {import('./index.js').Config} config
  * @param {string} dir
  */
@@ -699,7 +646,7 @@ function static_vercel_config(builder, config, dir) {
 }
 
 /**
- * @param {Builder2_4_0} builder
+ * @param {import('@sveltejs/kit').Builder} builder
  * @param {string} entry
  * @param {string} dir
  * @param {import('./index.js').ServerlessConfig} config
@@ -820,18 +767,10 @@ async function create_function_bundle(builder, entry, dir, config) {
 }
 
 /**
- *
- * @param {Builder2_4_0} builder
- * @param {any} vercel_config
+ * @param {import('@sveltejs/kit').Builder} builder
+ * @param {any} vercel_config see https://vercel.com/docs/project-configuration/vercel-json
  */
 function validate_vercel_json(builder, vercel_config) {
-	if (builder.routes.length > 0 && !builder.routes[0].api) {
-		// bail — we're on an older SvelteKit version that doesn't
-		// populate `route.api.methods`, so we can't check
-		// to see if cron paths are valid
-		return;
-	}
-
 	const crons = /** @type {Array<unknown>} */ (
 		Array.isArray(vercel_config?.crons) ? vercel_config.crons : []
 	);

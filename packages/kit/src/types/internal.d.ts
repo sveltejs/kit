@@ -480,7 +480,6 @@ export interface SSROptions {
 	env_private_prefix: string;
 	hash_routing: boolean;
 	hooks: ServerHooks;
-	preload_strategy: ValidatedConfig['kit']['output']['preloadStrategy'];
 	root: SSRComponent['default'];
 	service_worker: boolean;
 	service_worker_options: RegistrationOptions;

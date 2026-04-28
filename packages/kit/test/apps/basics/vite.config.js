@@ -21,20 +21,12 @@ export default defineConfig({
 	},
 	test: {
 		expect: { requireAssertions: true },
-		projects: [
-			{
-				extends: './vite.config.js',
-				test: {
-					name: 'client',
-					browser: {
-						enabled: true,
-						provider: playwright(),
-						instances: [{ browser: 'chromium' }],
-						headless: true
-					},
-					include: ['unit-test/**/*.spec.js']
-				}
-			}
-		]
+		browser: {
+			enabled: true,
+			provider: playwright(),
+			instances: [{ browser: 'chromium' }],
+			headless: true
+		},
+		include: ['unit-test/**/*.spec.js']
 	}
 });

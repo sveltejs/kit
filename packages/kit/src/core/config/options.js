@@ -1,8 +1,6 @@
 /** @import { Validator } from './types.js' */
 
 import process from 'node:process';
-import colors from 'kleur';
-import { supportsTrustedTypes } from '../sync/utils.js';
 
 const directives = object({
 	'child-src': string_array(),
@@ -29,14 +27,8 @@ const directives = object({
 	'navigate-to': string_array(),
 	'report-uri': string_array(),
 	'report-to': string_array(),
-	'require-trusted-types-for': validate(undefined, (input, keypath) => {
-		assert_trusted_types_supported(keypath);
-		return string_array()(input, keypath);
-	}),
-	'trusted-types': validate(undefined, (input, keypath) => {
-		assert_trusted_types_supported(keypath);
-		return string_array()(input, keypath);
-	}),
+	'require-trusted-types-for': string_array(),
+	'trusted-types': string_array(),
 	'upgrade-insecure-requests': boolean(false),
 	'require-sri-for': string_array(),
 	'block-all-mixed-content': boolean(false),
@@ -116,10 +108,8 @@ const options = object(
 			}),
 
 			csrf: object({
-				checkOrigin: deprecate(
-					boolean(true),
-					(keypath) =>
-						`\`${keypath}\` has been deprecated in favour of \`csrf.trustedOrigins\`. It will be removed in a future version`
+				checkOrigin: removed(
+					(keypath) => `\`${keypath}\` has been removed in favour of \`csrf.trustedOrigins\``
 				),
 				trustedOrigins: string_array([])
 			}),
@@ -167,7 +157,9 @@ const options = object(
 			outDir: string('.svelte-kit'),
 
 			output: object({
-				preloadStrategy: list(['modulepreload', 'preload-js', 'preload-mjs']),
+				preloadStrategy: removed(
+					(keypath) => `\`${keypath}\` has been removed. modulepreload will always be used`
+				),
 				bundleStrategy: list(['split', 'single', 'inline'])
 			}),
 
@@ -325,22 +317,37 @@ const options = object(
 	true
 );
 
+// /**
+//  * @param {Validator} fn
+//  * @param {(keypath: string) => string} get_message
+//  * @returns {Validator}
+//  */
+// function deprecate(
+// 	fn,
+// 	get_message = (keypath) =>
+// 		`The \`${keypath}\` option is deprecated, and will be removed in a future version`
+// ) {
+// 	return (input, keypath) => {
+// 		if (input !== undefined) {
+// 			console.warn(styleText(['bold', 'yellow'], get_message(keypath)));
+// 		}
+
+// 		return fn(input, keypath);
+// 	};
+// }
+
 /**
- * @param {Validator} fn
  * @param {(keypath: string) => string} get_message
  * @returns {Validator}
  */
-function deprecate(
-	fn,
+function removed(
 	get_message = (keypath) =>
-		`The \`${keypath}\` option is deprecated, and will be removed in a future version`
+		`The \`${keypath}\` option has been removed. Please see the list of breaking changes for your major release`
 ) {
 	return (input, keypath) => {
-		if (input !== undefined) {
-			console.warn(colors.bold().yellow(get_message(keypath)));
+		if (typeof input !== 'undefined') {
+			throw new Error(get_message(keypath));
 		}
-
-		return fn(input, keypath);
 	};
 }
 
@@ -490,15 +497,6 @@ function fun(fallback) {
 function assert_string(input, keypath) {
 	if (typeof input !== 'string') {
 		throw new Error(`${keypath} should be a string, if specified`);
-	}
-}
-
-/** @param {string} keypath */
-function assert_trusted_types_supported(keypath) {
-	if (!supportsTrustedTypes()) {
-		throw new Error(
-			`${keypath} is not supported by your version of Svelte. Please upgrade to Svelte 5.51.0 or later to use this directive.`
-		);
 	}
 }
 

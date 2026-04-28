@@ -122,13 +122,12 @@ export interface Builder {
 	/** An array of all routes (including prerendered) */
 	routes: RouteDefinition[];
 
-	// TODO 3.0 remove this method
 	/**
 	 * Create separate functions that map to one or more routes of your app.
 	 * @param fn A function that groups a set of routes into an entry point
-	 * @deprecated Use `builder.routes` instead
+	 * @deprecated removed in 3.0. Use `builder.routes` instead
 	 */
-	createEntries: (fn: (route: RouteDefinition) => AdapterEntry) => Promise<void>;
+	createEntries?: (fn: (route: RouteDefinition) => AdapterEntry) => Promise<void>;
 
 	/**
 	 * Find all the assets imported by server files belonging to `routes`
@@ -264,57 +263,50 @@ export interface Cookies {
 	/**
 	 * Gets a cookie that was previously set with `cookies.set`, or from the request headers.
 	 * @param name the name of the cookie
-	 * @param opts the options, passed directly to `cookie.parse`. See documentation [here](https://github.com/jshttp/cookie#cookieparsestr-options)
+	 * @param opts the options, passed directly to `cookie.parse`. See documentation [here](https://github.com/jshttp/cookie?tab=readme-ov-file#cookieparsecookiestr-options)
 	 */
-	get: (name: string, opts?: import('cookie').CookieParseOptions) => string | undefined;
+	get: (name: string, opts?: import('cookie').ParseOptions) => string | undefined;
 
 	/**
 	 * Gets all cookies that were previously set with `cookies.set`, or from the request headers.
-	 * @param opts the options, passed directly to `cookie.parse`. See documentation [here](https://github.com/jshttp/cookie#cookieparsestr-options)
+	 * @param opts the options, passed directly to `cookie.parse`. See documentation [here](https://github.com/jshttp/cookie?tab=readme-ov-file#cookieparsecookiestr-options)
 	 */
-	getAll: (opts?: import('cookie').CookieParseOptions) => Array<{ name: string; value: string }>;
+	getAll: (opts?: import('cookie').ParseOptions) => Array<{ name: string; value: string }>;
 
 	/**
 	 * Sets a cookie. This will add a `set-cookie` header to the response, but also make the cookie available via `cookies.get` or `cookies.getAll` during the current request.
 	 *
-	 * The `httpOnly` and `secure` options are `true` by default (except on http://localhost, where `secure` is `false`), and must be explicitly disabled if you want cookies to be readable by client-side JavaScript and/or transmitted over HTTP. The `sameSite` option defaults to `lax`.
+	 * The `httpOnly` and `secure` options are `true` by default (except on http://localhost, where `secure` is `false`), and must be explicitly disabled if you want cookies to be readable by client-side JavaScript and/or transmitted over HTTP.
 	 *
-	 * You must specify a `path` for the cookie. In most cases you should explicitly set `path: '/'` to make the cookie available throughout your app. You can use relative paths, or set `path: ''` to make the cookie only available on the current path and its children
+	 * The `path` option is `'/'` by default. You can use relative paths, or set `path: ''` to make the cookie only available on the current path and its children.
 	 * @param name the name of the cookie
 	 * @param value the cookie value
-	 * @param opts the options, passed directly to `cookie.serialize`. See documentation [here](https://github.com/jshttp/cookie#cookieserializename-value-options)
+	 * @param opts the options passed to `cookie.serialize` with the SvelteKit defaults described above. See documentation [here](https://github.com/jshttp/cookie?tab=readme-ov-file#cookiestringifysetcookiesetcookieobj-options)
 	 */
-	set: (
-		name: string,
-		value: string,
-		opts: import('cookie').CookieSerializeOptions & { path: string }
-	) => void;
+	set: (name: string, value: string, opts: import('cookie').SerializeOptions) => void;
 
 	/**
 	 * Deletes a cookie by setting its value to an empty string and setting the expiry date in the past.
 	 *
-	 * You must specify a `path` for the cookie. In most cases you should explicitly set `path: '/'` to make the cookie available throughout your app. You can use relative paths, or set `path: ''` to make the cookie only available on the current path and its children
+	 * The `httpOnly` and `secure` options are `true` by default (except on http://localhost, where `secure` is `false`), and must be explicitly disabled if you want cookies to be readable by client-side JavaScript and/or transmitted over HTTP.
+	 *
+	 * The `path` option is `'/'` by default. You can use relative paths, or set `path: ''` to make the cookie only available on the current path and its children.
 	 * @param name the name of the cookie
-	 * @param opts the options, passed directly to `cookie.serialize`. The `path` must match the path of the cookie you want to delete. See documentation [here](https://github.com/jshttp/cookie#cookieserializename-value-options)
+	 * @param opts the options passed to `cookie.serialize` with the SvelteKit defaults described above. See documentation [here](https://github.com/jshttp/cookie?tab=readme-ov-file#cookiestringifysetcookiesetcookieobj-options)
 	 */
-	delete: (name: string, opts: import('cookie').CookieSerializeOptions & { path: string }) => void;
+	delete: (name: string, opts: import('cookie').SerializeOptions) => void;
 
 	/**
 	 * Serialize a cookie name-value pair into a `Set-Cookie` header string, but don't apply it to the response.
 	 *
-	 * The `httpOnly` and `secure` options are `true` by default (except on http://localhost, where `secure` is `false`), and must be explicitly disabled if you want cookies to be readable by client-side JavaScript and/or transmitted over HTTP. The `sameSite` option defaults to `lax`.
+	 * The `httpOnly` and `secure` options are `true` by default (except on http://localhost, where `secure` is `false`), and must be explicitly disabled if you want cookies to be readable by client-side JavaScript and/or transmitted over HTTP.
 	 *
-	 * You must specify a `path` for the cookie. In most cases you should explicitly set `path: '/'` to make the cookie available throughout your app. You can use relative paths, or set `path: ''` to make the cookie only available on the current path and its children
-	 *
+	 * The `path` option is `'/'` by default. You can use relative paths, or set `path: ''` to make the cookie only available on the current path and its children.
 	 * @param name the name of the cookie
 	 * @param value the cookie value
-	 * @param opts the options, passed directly to `cookie.serialize`. See documentation [here](https://github.com/jshttp/cookie#cookieserializename-value-options)
+	 * @param opts the options passed to `cookie.serialize` with the SvelteKit defaults described above. See documentation [here](https://github.com/jshttp/cookie?tab=readme-ov-file#cookiestringifysetcookiesetcookieobj-options)
 	 */
-	serialize: (
-		name: string,
-		value: string,
-		opts: import('cookie').CookieSerializeOptions & { path: string }
-	) => string;
+	serialize: (name: string, value: string, opts: import('cookie').SerializeOptions) => string;
 }
 
 /**
@@ -428,7 +420,7 @@ export interface KitConfig {
 		 *
 		 * To allow people to make `POST`, `PUT`, `PATCH`, or `DELETE` requests with a `Content-Type` of `application/x-www-form-urlencoded`, `multipart/form-data`, or `text/plain` to your app from other origins, you will need to disable this option. Be careful!
 		 * @default true
-		 * @deprecated Use `trustedOrigins: ['*']` instead
+		 * @deprecated removed in 3.0. Use `trustedOrigins: ['*']` instead
 		 */
 		checkOrigin?: boolean;
 		/**
@@ -628,6 +620,7 @@ export interface KitConfig {
 		 * - `preload-mjs` - uses `<link rel="preload">` but with the `.mjs` extension which prevents double-parsing in Chromium. Some static webservers will fail to serve .mjs files with a `Content-Type: application/javascript` header, which will cause your application to break. If that doesn't apply to you, this is the option that will deliver the best performance for the largest number of users, until `modulepreload` is more widely supported.
 		 * @default "modulepreload"
 		 * @since 1.8.4
+		 * @deprecated removed in 3.0
 		 */
 		preloadStrategy?: 'modulepreload' | 'preload-js' | 'preload-mjs';
 		/**
@@ -636,7 +629,7 @@ export interface KitConfig {
 		 * - If `'single'`, creates just one .js bundle and one .css file containing code for the entire app.
 		 * - If `'inline'`, inlines all JavaScript and CSS of the entire app into the HTML. The result is usable without a server (i.e. you can just open the file in your browser).
 		 *
-		 * When using `'split'`, you can also adjust the bundling behaviour by setting [`output.experimentalMinChunkSize`](https://rollupjs.org/configuration-options/#output-experimentalminchunksize) and [`output.manualChunks`](https://rollupjs.org/configuration-options/#output-manualchunks) inside your Vite config's [`build.rollupOptions`](https://vite.dev/config/build-options.html#build-rollupoptions).
+		 * When using `'split'`, you can also adjust the bundling behaviour by setting [`output.codeSplitting`](https://rolldown.rs/reference/OutputOptions.codeSplitting) inside your Vite config's [`build.rolldownOptions`](https://vite.dev/config/build-options#build-rolldownoptions).
 		 *
 		 * If you want to inline your assets, you'll need to set Vite's [`build.assetsInlineLimit`](https://vite.dev/config/build-options.html#build-assetsinlinelimit) option to an appropriate size then import your assets through Vite.
 		 *
@@ -1281,13 +1274,6 @@ export interface NavigationGoto extends NavigationBase {
 	 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
 	 */
 	type: 'goto';
-
-	// TODO 3.0 remove this property, so that it only exists when type is 'popstate'
-	// (would possibly be a breaking change to do it prior to that)
-	/**
-	 * In case of a history back/forward navigation, the number of steps to go back/forward
-	 */
-	delta?: undefined;
 }
 
 export interface NavigationLeave extends NavigationBase {
@@ -1296,13 +1282,6 @@ export interface NavigationLeave extends NavigationBase {
 	 * - `leave`: The app is being left either because the tab is being closed or a navigation to a different document is occurring
 	 */
 	type: 'leave';
-
-	// TODO 3.0 remove this property, so that it only exists when type is 'popstate'
-	// (would possibly be a breaking change to do it prior to that)
-	/**
-	 * In case of a history back/forward navigation, the number of steps to go back/forward
-	 */
-	delta?: undefined;
 }
 
 export interface NavigationFormSubmit extends NavigationBase {
@@ -1316,13 +1295,6 @@ export interface NavigationFormSubmit extends NavigationBase {
 	 * The `SubmitEvent` that caused the navigation
 	 */
 	event: SubmitEvent;
-
-	// TODO 3.0 remove this property, so that it only exists when type is 'popstate'
-	// (would possibly be a breaking change to do it prior to that)
-	/**
-	 * In case of a history back/forward navigation, the number of steps to go back/forward
-	 */
-	delta?: undefined;
 }
 
 export interface NavigationPopState extends NavigationBase {
@@ -1354,13 +1326,6 @@ export interface NavigationLink extends NavigationBase {
 	 * The `PointerEvent` that caused the navigation
 	 */
 	event: PointerEvent;
-
-	// TODO 3.0 remove this property, so that it only exists when type is 'popstate'
-	// (would possibly be a breaking change to do it prior to that)
-	/**
-	 * In case of a history back/forward navigation, the number of steps to go back/forward
-	 */
-	delta?: undefined;
 }
 
 export type Navigation =
