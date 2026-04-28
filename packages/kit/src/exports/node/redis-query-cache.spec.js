@@ -145,7 +145,7 @@ function create_redis_client(options) {
 		connect: vi.fn(() => Promise.resolve()),
 		on: vi.fn(),
 		/** @param {string} key */
-		async get(key) {
+		get(key) {
 			expire(key);
 			return strings.get(key) ?? null;
 		},
@@ -154,27 +154,27 @@ function create_redis_client(options) {
 		 * @param {string} value
 		 * @param {{ PX?: number }} [options]
 		 */
-		async set(key, value, options) {
+		set(key, value, options) {
 			strings.set(key, value);
 			if (options?.PX !== undefined) {
 				expiries.set(key, Date.now() + options.PX);
 			}
 		},
 		/** @param {string[]} keys */
-		async mGet(keys) {
+		mGet(keys) {
 			return keys.map((key) => {
 				expire(key);
 				return strings.get(key) ?? null;
 			});
 		},
 		/** @param {string} key */
-		async del(key) {
+		del(key) {
 			const removed = strings.delete(key) ? 1 : 0;
 			expiries.delete(key);
 			return removed;
 		},
 		/** @param {string} key */
-		async incr(key) {
+		incr(key) {
 			const value = Number(strings.get(key) ?? 0) + 1;
 			strings.set(key, String(value));
 			return value;

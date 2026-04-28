@@ -24,7 +24,7 @@ const edge_set_in_env_var =
 const FUNCTION_PREFIX = 'sveltekit-';
 
 /** @type {import('./index.js').default} */
-export default function ({ split = false, edge = edge_set_in_env_var, cache = true } = {}) {
+export default function ({ split = false, edge = edge_set_in_env_var, cache = false } = {}) {
 	return {
 		name,
 		/** @param {import('@sveltejs/kit').Builder} builder */

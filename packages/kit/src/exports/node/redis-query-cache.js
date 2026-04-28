@@ -2,6 +2,7 @@
 
 // @ts-ignore optional dependency provided by the user cache adapter setup
 import { createClient } from 'redis';
+import process from 'node:process';
 
 /**
  * @typedef {{ expires: number; tags: string[]; value: string; versions: Record<string, number> }} RedisCacheEntry
