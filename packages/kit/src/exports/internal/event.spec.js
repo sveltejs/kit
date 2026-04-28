@@ -47,7 +47,8 @@ describe('with_request_store', () => {
 	// Regression test for https://github.com/sveltejs/kit/issues/15764
 	// Async resources created inside als.run() inherit kResourceStore and can retain the
 	// RequestStore after the render completes (Node.js AsyncLocalStorage leak). The fix wraps
-	// the store in a container object; after render the container is nulled, allowing GC.
+	// the store in a container object; when gc_barrier=true (the render path), the container is
+	// nulled after render, allowing GC.
 	test('async continuations created inside render cannot access store after render completes', async () => {
 		const store = make_store();
 		let store_seen_in_continuation = /** @type {RequestStore | null | undefined} */ (undefined);
@@ -56,15 +57,20 @@ describe('with_request_store', () => {
 		// callback inside the ALS context that outlives the render.
 		let late_callback_promise = Promise.resolve(); // typed; overwritten inside render fn
 
-		await with_request_store(store, async () => {
-			await Promise.resolve(); // ensure the async code path through with_request_store
-			late_callback_promise = new Promise((resolve) => setTimeout(resolve, 0)).then(() => {
-				// This runs inside the ALS context that was active when setTimeout was called
-				// (i.e. the context from als.run()). Without the fix, try_get_request_store()
-				// returns `store` here. With the fix, the container is nulled so it returns null.
-				store_seen_in_continuation = try_get_request_store();
-			});
-		});
+		// gc_barrier=true mirrors the SSR render call in render.js
+		await with_request_store(
+			store,
+			async () => {
+				await Promise.resolve(); // ensure the async code path through with_request_store
+				late_callback_promise = new Promise((resolve) => setTimeout(resolve, 0)).then(() => {
+					// This runs inside the ALS context that was active when setTimeout was called
+					// (i.e. the context from als.run()). Without the fix, try_get_request_store()
+					// returns `store` here. With the fix, the container is nulled so it returns null.
+					store_seen_in_continuation = try_get_request_store();
+				});
+			},
+			true
+		);
 
 		await late_callback_promise;
 
@@ -92,7 +98,7 @@ describe('with_request_store', () => {
 
 		await with_request_store(outer, async () => {
 			await Promise.resolve(); // exercise the async path
-			await with_request_store(inner, () => {
+			with_request_store(inner, () => {
 				seen_in_inner = try_get_request_store();
 			});
 			seen_after_inner = try_get_request_store();

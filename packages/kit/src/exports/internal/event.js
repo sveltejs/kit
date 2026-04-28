@@ -72,17 +72,20 @@ export function try_get_request_store() {
  * @template T
  * @param {RequestStore | null} store
  * @param {() => T} fn
+ * @param {boolean} [gc_barrier] - When true, nulls the ALS container after `fn` settles so that
+ *   async resources created during `fn` (e.g. Svelte 4 subscription callbacks) cannot retain the
+ *   RequestStore beyond the lifetime of the call. Only needed for the SSR render context where
+ *   long-lived subscriptions would otherwise pin the RequestEvent in memory.
+ *   See https://github.com/nodejs/node/issues/53408
  */
-export function with_request_store(store, fn) {
+export function with_request_store(store, fn, gc_barrier = false) {
 	try {
 		sync_store = store;
 		if (als) {
-			// Wrap the store in a container so that async resources created inside fn
-			// (e.g. Svelte 4 subscription callbacks, Promise continuations) only hold a
-			// reference to the container rather than the full RequestStore. After fn
-			// completes we null out container.current, allowing the RequestStore and its
-			// RequestEvent to be garbage-collected even if stale async resources linger.
-			// See https://github.com/nodejs/node/issues/53408
+			// Wrap the store in a container so that async resources created inside fn only hold a
+			// reference to the container object rather than the full RequestStore. When gc_barrier
+			// is true (SSR render path) we null container.current after fn settles, severing the
+			// only path from lingering async resources back to the RequestStore and allowing GC.
 			const container = /** @type {RequestStoreContainer} */ ({ current: store });
 			const result = als.run(container, fn);
 			if (
@@ -90,20 +93,23 @@ export function with_request_store(store, fn) {
 				typeof result === 'object' &&
 				typeof (/** @type {any} */ (result).then) === 'function'
 			) {
-				return /** @type {T} */ (
-					/** @type {Promise<any>} */ (/** @type {unknown} */ (result)).then(
-						(value) => {
-							container.current = null;
-							return value;
-						},
-						(error) => {
-							container.current = null;
-							throw error;
-						}
-					)
-				);
+				if (gc_barrier) {
+					return /** @type {T} */ (
+						/** @type {Promise<any>} */ (/** @type {unknown} */ (result)).then(
+							(value) => {
+								container.current = null;
+								return value;
+							},
+							(error) => {
+								container.current = null;
+								throw error;
+							}
+						)
+					);
+				}
+				return /** @type {T} */ (result);
 			}
-			container.current = null;
+			if (gc_barrier) container.current = null;
 			return result;
 		}
 		return fn();
