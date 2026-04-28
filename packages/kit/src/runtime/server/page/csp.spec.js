@@ -37,6 +37,7 @@ describe.skipIf(process.env.NODE_ENV === 'production')('CSPs in dev', () => {
 		);
 	});
 
+	// TODO: re-enable when we support strict-dynamic in dev again
 	test.skip('removes strict-dynamic', () => {
 		['default-src', 'script-src'].forEach((name) => {
 			const csp = new Csp(

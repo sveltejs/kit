@@ -31,6 +31,7 @@ declare namespace App {
 	/**
 	 * The interface that defines `event.locals`, which can be accessed in server [hooks](https://svelte.dev/docs/kit/hooks) (`handle`, and `handleError`), server-only `load` functions, and `+server.js` files.
 	 */
+	// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 	export interface Locals {}
 
 	/**
@@ -38,16 +39,19 @@ declare namespace App {
 	 * The `Load` and `ServerLoad` functions in `./$types` will be narrowed accordingly.
 	 * Use optional properties for data that is only present on specific pages. Do not add an index signature (`[key: string]: any`).
 	 */
+	// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 	export interface PageData {}
 
 	/**
 	 * The shape of the `page.state` object, which can be manipulated using the [`pushState`](https://svelte.dev/docs/kit/$app-navigation#pushState) and [`replaceState`](https://svelte.dev/docs/kit/$app-navigation#replaceState) functions from `$app/navigation`.
 	 */
+	// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 	export interface PageState {}
 
 	/**
 	 * If your adapter provides [platform-specific context](https://svelte.dev/docs/kit/adapters#Platform-specific-context) via `event.platform`, you can specify it here.
 	 */
+	// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 	export interface Platform {}
 }
 
@@ -145,4 +149,57 @@ declare module '$app/types' {
 	 * A union of all the filenames of assets contained in your `static` directory.
 	 */
 	export type Asset = ReturnType<AppTypes['Asset']>;
+}
+
+/**
+ * Exports the `Server` class for creating custom server entry points.
+ * @example
+ * ```js
+ * import { env } from 'sveltekit:env';
+ * import { Server } from 'sveltekit:server';
+ * import { manifest } from 'sveltekit:server-manifest';
+ *
+ * const server = new Server(manifest);
+ *
+ * await server.init({ env });
+ * ```
+ */
+declare module 'sveltekit:server' {
+	export { Server } from '@sveltejs/kit';
+}
+
+/**
+ * Exports the SSR manifest used to initialise the server.
+ * @example
+ * ```js
+ * import { env } from 'sveltekit:env';
+ * import { Server } from 'sveltekit:server';
+ * import { manifest } from 'sveltekit:server-manifest';
+ *
+ * const server = new Server(manifest);
+ *
+ * await server.init({ env });
+ * ```
+ */
+declare module 'sveltekit:server-manifest' {
+	import { SSRManifest } from '@sveltejs/kit';
+
+	export const manifest: SSRManifest;
+}
+
+/**
+ * Exports the environment variables loaded by Vite. Used when initialising the server.
+ * @example
+ * ```js
+ * import { env } from 'sveltekit:env';
+ * import { Server } from 'sveltekit:server';
+ * import { manifest } from 'sveltekit:server-manifest';
+ *
+ * const server = new Server(manifest);
+ *
+ * await server.init({ env });
+ * ```
+ */
+declare module 'sveltekit:env' {
+	export const env: Record<string, string>;
 }

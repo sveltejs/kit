@@ -4,6 +4,7 @@
 declare module '@sveltejs/kit' {
 	import type { SvelteConfig } from '@sveltejs/vite-plugin-svelte';
 	import type { StandardSchemaV1 } from '@standard-schema/spec';
+	import type { PluginOption } from 'vite';
 	import type { RouteId as AppRouteId, LayoutParams as AppLayoutParams, ResolvedPathname } from '$app/types';
 	// @ts-ignore this is an optional peer dependency so could be missing. Written like this so dts-buddy preserves the ts-ignore
 	type Span = import('@opentelemetry/api').Span;
@@ -37,11 +38,14 @@ declare module '@sveltejs/kit' {
 			 */
 			instrumentation?: () => boolean;
 		};
-		/**
-		 * Creates an `Emulator`, which allows the adapter to influence the environment
-		 * during dev, build and prerendering.
-		 */
-		emulate?: () => MaybePromise<Emulator>;
+		vite?: {
+			/**
+			 * Add a Vite plugin here to replace the default Node SSR environment.
+			 * The provided Vite plugins should configure the dev and preview servers
+			 * @since 3.0.0
+			 */
+			plugins?: PluginOption;
+		};
 	}
 
 	export type LoadProperties<input extends Record<string, any> | void> = input extends void
@@ -77,6 +81,12 @@ declare module '@sveltejs/kit' {
 			: T extends void
 				? undefined // needs to be undefined, because void will corrupt union type
 				: T;
+
+	export interface ManifestGenerationOptions {
+		/** A relative path to the base directory of the server build output */
+		relativePath: string;
+		routes?: RouteDefinition[];
+	}
 
 	/**
 	 * This object is passed to the `adapt` function of adapters.
@@ -121,9 +131,8 @@ declare module '@sveltejs/kit' {
 
 		/**
 		 * Generate a server-side manifest to initialise the SvelteKit [server](https://svelte.dev/docs/kit/@sveltejs-kit#Server) with.
-		 * @param opts a relative path to the base directory of the app and optionally in which format (esm or cjs) the manifest should be generated
 		 */
-		generateManifest: (opts: { relativePath: string; routes?: RouteDefinition[] }) => string;
+		generateManifest: (opts: ManifestGenerationOptions) => string;
 
 		/**
 		 * Resolve a path to the `name` directory inside `outDir`, e.g. `/path/to/.svelte-kit/my-adapter`.
@@ -281,17 +290,6 @@ declare module '@sveltejs/kit' {
 		 * @param opts the options passed to `cookie.serialize` with the SvelteKit defaults described above. See documentation [here](https://github.com/jshttp/cookie?tab=readme-ov-file#cookiestringifysetcookiesetcookieobj-options)
 		 */
 		serialize: (name: string, value: string, opts: import('cookie').SerializeOptions) => string;
-	}
-
-	/**
-	 * A collection of functions that influence the environment during dev, build and prerendering
-	 */
-	export interface Emulator {
-		/**
-		 * A function that is called with the current route `config` and `prerender` option
-		 * and returns an `App.Platform` object
-		 */
-		platform?(details: { config: any; prerender: PrerenderOption }): MaybePromise<App.Platform>;
 	}
 
 	export interface KitConfig {
@@ -1585,19 +1583,25 @@ declare module '@sveltejs/kit' {
 		read?: (file: string) => MaybePromise<ReadableStream | null>;
 	}
 
+	/**
+	 * Required to instantiate `Server` with project specific information
+	 */
 	export interface SSRManifest {
+		/** The directory where SvelteKit keeps its stuff, including static assets (such as JS and CSS) and internally-used routes. */
 		appDir: string;
+		/** The `base` and `appDir` settings combined without a leading slash. */
 		appPath: string;
+		base: string;
 		/** Static files from `kit.config.files.assets` and the service worker (if any). */
 		assets: Set<string>;
 		mimeTypes: Record<string, string>;
 
-		/** private fields */
+		/** @internal private fields */
 		_: {
 			client: NonNullable<BuildData['client']>;
 			nodes: SSRNodeLoader[];
 			/** hashed filename -> import to that file */
-			remotes: Record<string, () => Promise<any>>;
+			remotes: Record<string, () => Promise<{ default: Record<string, any> }>>;
 			routes: SSRRoute[];
 			prerendered_routes: Set<string>;
 			matchers: () => Promise<Record<string, ParamMatcher>>;
@@ -2441,8 +2445,11 @@ declare module '@sveltejs/kit' {
 	}
 
 	interface BuildData {
+		/** The _app directory configured. */
 		app_dir: string;
+		/** Path to the _app directory, including any base path. */
 		app_path: string;
+		base: string;
 		manifest_data: ManifestData;
 		out_dir: string;
 		service_worker: string | null;
@@ -2483,6 +2490,9 @@ declare module '@sveltejs/kit' {
 		server_manifest: import('vite').Manifest;
 	}
 
+	/**
+	 * Used to construct the SSR manifest
+	 */
 	interface ManifestData {
 		/** Static files from `kit.config.files.assets`. */
 		assets: Asset[];
@@ -2910,11 +2920,13 @@ declare module '@sveltejs/kit/node' {
 }
 
 declare module '@sveltejs/kit/vite' {
-	import type { Plugin } from 'vite';
+	import type { PluginOption } from 'vite';
 	/**
 	 * Returns the SvelteKit Vite plugins.
 	 * */
-	export function sveltekit(): Promise<Plugin[]>;
+	export function sveltekit(options?: {
+		adapter?: import("@sveltejs/kit").Adapter;
+	} | undefined): Promise<PluginOption[]>;
 
 	export {};
 }
@@ -3549,6 +3561,7 @@ declare namespace App {
 	/**
 	 * The interface that defines `event.locals`, which can be accessed in server [hooks](https://svelte.dev/docs/kit/hooks) (`handle`, and `handleError`), server-only `load` functions, and `+server.js` files.
 	 */
+	// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 	export interface Locals {}
 
 	/**
@@ -3556,16 +3569,19 @@ declare namespace App {
 	 * The `Load` and `ServerLoad` functions in `./$types` will be narrowed accordingly.
 	 * Use optional properties for data that is only present on specific pages. Do not add an index signature (`[key: string]: any`).
 	 */
+	// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 	export interface PageData {}
 
 	/**
 	 * The shape of the `page.state` object, which can be manipulated using the [`pushState`](https://svelte.dev/docs/kit/$app-navigation#pushState) and [`replaceState`](https://svelte.dev/docs/kit/$app-navigation#replaceState) functions from `$app/navigation`.
 	 */
+	// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 	export interface PageState {}
 
 	/**
 	 * If your adapter provides [platform-specific context](https://svelte.dev/docs/kit/adapters#Platform-specific-context) via `event.platform`, you can specify it here.
 	 */
+	// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 	export interface Platform {}
 }
 
@@ -3663,6 +3679,59 @@ declare module '$app/types' {
 	 * A union of all the filenames of assets contained in your `static` directory.
 	 */
 	export type Asset = ReturnType<AppTypes['Asset']>;
+}
+
+/**
+ * Exports the `Server` class for creating custom server entry points.
+ * @example
+ * ```js
+ * import { env } from 'sveltekit:env';
+ * import { Server } from 'sveltekit:server';
+ * import { manifest } from 'sveltekit:server-manifest';
+ *
+ * const server = new Server(manifest);
+ *
+ * await server.init({ env });
+ * ```
+ */
+declare module 'sveltekit:server' {
+	export { Server } from '@sveltejs/kit';
+}
+
+/**
+ * Exports the SSR manifest used to initialise the server.
+ * @example
+ * ```js
+ * import { env } from 'sveltekit:env';
+ * import { Server } from 'sveltekit:server';
+ * import { manifest } from 'sveltekit:server-manifest';
+ *
+ * const server = new Server(manifest);
+ *
+ * await server.init({ env });
+ * ```
+ */
+declare module 'sveltekit:server-manifest' {
+	import { SSRManifest } from '@sveltejs/kit';
+
+	export const manifest: SSRManifest;
+}
+
+/**
+ * Exports the environment variables loaded by Vite. Used when initialising the server.
+ * @example
+ * ```js
+ * import { env } from 'sveltekit:env';
+ * import { Server } from 'sveltekit:server';
+ * import { manifest } from 'sveltekit:server-manifest';
+ *
+ * const server = new Server(manifest);
+ *
+ * await server.init({ env });
+ * ```
+ */
+declare module 'sveltekit:env' {
+	export const env: Record<string, string>;
 }
 
 //# sourceMappingURL=index.d.ts.map

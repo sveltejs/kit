@@ -5,7 +5,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { Parser } from 'acorn';
 import MagicString from 'magic-string';
-import { posixify } from '../../../utils/filesystem.js';
+import { posixify } from '../../../utils/os.js';
 
 /**
  * @param {typeof import('vite')} vite
