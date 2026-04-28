@@ -48,7 +48,39 @@
     "prerendering-test-paths-base": "0.0.1",
     "@sveltejs/package": "2.5.7",
     "test-redirect-importer": "0.0.1",
-    "playground-basic": "0.0.0"
+    "playground-basic": "0.0.0",
+    "test-netlify-instrumentation": "0.0.1",
+    "test-netlify-split": "0.0.1",
+    "test-vercel-basic": "0.0.1"
   },
-  "changesets": []
+  "changesets": [
+    "chilly-berries-press",
+    "clean-papers-give",
+    "cold-carrots-raise",
+    "cuddly-radios-brush",
+    "cuddly-tigers-attend",
+    "cyan-zoos-love",
+    "early-worlds-slide",
+    "easy-shrimps-like",
+    "eighty-paws-love",
+    "fine-ghosts-camp",
+    "five-readers-march",
+    "fluffy-tires-judge",
+    "forty-ducks-fly",
+    "gentle-radios-go",
+    "gentle-signs-cross",
+    "giant-numbers-care",
+    "heavy-showers-leave",
+    "large-onions-attack",
+    "late-lions-crash",
+    "light-singers-lie",
+    "nasty-impalas-wear",
+    "nine-coins-cheer",
+    "plenty-cougars-wave",
+    "polite-lemons-refuse",
+    "salty-chefs-sleep",
+    "shaggy-walls-wave",
+    "shiny-feet-crash",
+    "spicy-drinks-build"
+  ]
 }
