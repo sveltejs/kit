@@ -7,7 +7,9 @@ import { IN_WEBCONTAINER } from '../../runtime/server/constants.js';
 /** @type {RequestStore | null} */
 let sync_store = null;
 
-/** @type {AsyncLocalStorage<RequestStore | null> | null} */
+/** @typedef {{ current: RequestStore | null }} RequestStoreContainer */
+
+/** @type {AsyncLocalStorage<RequestStoreContainer | null> | null} */
 let als;
 
 import('node:async_hooks')
@@ -63,18 +65,54 @@ export function get_request_store() {
 }
 
 export function try_get_request_store() {
-	return sync_store ?? als?.getStore() ?? null;
+	return sync_store ?? als?.getStore()?.current ?? null;
 }
 
 /**
  * @template T
  * @param {RequestStore | null} store
  * @param {() => T} fn
+ * @param {boolean} [gc_barrier] - When true, nulls the ALS container after `fn` settles so that
+ *   async resources created during `fn` (e.g. Svelte 4 subscription callbacks) cannot retain the
+ *   RequestStore beyond the lifetime of the call. Only needed for the SSR render context where
+ *   long-lived subscriptions would otherwise pin the RequestEvent in memory.
+ *   See https://github.com/nodejs/node/issues/53408
  */
-export function with_request_store(store, fn) {
+export function with_request_store(store, fn, gc_barrier = false) {
 	try {
 		sync_store = store;
-		return als ? als.run(store, fn) : fn();
+		if (als) {
+			// Wrap the store in a container so that async resources created inside fn only hold a
+			// reference to the container object rather than the full RequestStore. When gc_barrier
+			// is true (SSR render path) we null container.current after fn settles, severing the
+			// only path from lingering async resources back to the RequestStore and allowing GC.
+			const container = /** @type {RequestStoreContainer} */ ({ current: store });
+			const result = als.run(container, fn);
+			if (
+				result !== null &&
+				typeof result === 'object' &&
+				typeof (/** @type {any} */ (result).then) === 'function'
+			) {
+				if (gc_barrier) {
+					return /** @type {T} */ (
+						/** @type {Promise<any>} */ (/** @type {unknown} */ (result)).then(
+							(value) => {
+								container.current = null;
+								return value;
+							},
+							(error) => {
+								container.current = null;
+								throw error;
+							}
+						)
+					);
+				}
+				return /** @type {T} */ (result);
+			}
+			if (gc_barrier) container.current = null;
+			return result;
+		}
+		return fn();
 	} finally {
 		// Since AsyncLocalStorage is not working in webcontainers, we don't reset `sync_store`
 		// and handle only one request at a time in `src/runtime/server/index.js`.
