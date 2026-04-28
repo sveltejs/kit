@@ -23,7 +23,8 @@ import {
 	Transport,
 	HandleValidationError,
 	RemoteFormIssue,
-	RemoteQuery
+	RemoteQuery,
+	RemoteLiveQuery
 } from '@sveltejs/kit';
 import {
 	HttpMethod,
@@ -304,6 +305,8 @@ export type RemoteFunctionResponse =
 	| (ServerRedirectNode & {
 			/** devalue'd Record<string, any> */
 			refreshes?: string;
+			/** devalue'd Record<string, any> */
+			reconnects?: string;
 	  })
 	| ServerErrorNode
 	| {
@@ -311,22 +314,33 @@ export type RemoteFunctionResponse =
 			result: string;
 			/** devalue'd Record<string, any> */
 			refreshes: string | undefined;
+			/** devalue'd Record<string, any> */
+			reconnects: string | undefined;
 	  };
 
-export type RemoteRefreshResult = {
+export type RemoteSingleflightResult = {
 	type: 'result';
 	data: any;
 };
 
-export type RemoteRefreshError = {
+export type RemoteSingleflightError = {
 	type: 'error';
 	status?: number;
 	error: App.Error;
 };
 
-export type RemoteRefreshEntry = RemoteRefreshResult | RemoteRefreshError;
+export type RemoteSingleflightEntry = RemoteSingleflightResult | RemoteSingleflightError;
 
-export type RemoteRefreshMap = Record<string, RemoteRefreshEntry>;
+export type RemoteSingleflightMap = Record<string, RemoteSingleflightEntry>;
+
+export type RemoteLiveQueryUserFunctionReturnType<Output> = MaybePromise<
+	| AsyncGenerator<Output>
+	| AsyncIterator<Output>
+	| AsyncIterable<Output>
+	| Generator<Output>
+	| Iterator<Output>
+	| Iterable<Output>
+>;
 
 /**
  * Signals a successful response of the server `load` function.
@@ -605,16 +619,30 @@ export interface RemoteQueryInternals extends BaseRemoteInternals {
 }
 export interface RemoteQueryLiveInternals extends BaseRemoteInternals {
 	type: 'query_live';
-	run(
-		event: RequestEvent,
-		state: RequestState,
-		arg: any
-	): Promise<{ iterator: AsyncIterator<any>; cancel: () => void }>;
+	validate: (arg?: any) => MaybePromise<any>;
+	run(event: RequestEvent, state: RequestState, arg: any): AsyncGenerator<any>;
+	/**
+	 * Creates a `RemoteLiveQuery` bound directly to a specific client payload (the
+	 * stringified raw argument) and a pre-validated argument, skipping the query
+	 * wrapper's re-validation step. Used by `requested(liveQuery)` to ensure
+	 * `reconnect()` targets the same cache key the client is listening on even
+	 * when the schema transforms the input.
+	 */
+	bind(payload: string, arg: any): RemoteLiveQuery<any>;
 }
 
 export interface RemoteQueryBatchInternals extends BaseRemoteInternals {
 	type: 'query_batch';
+	validate: (arg?: any) => MaybePromise<any>;
 	run: (args: any[], options: SSROptions) => Promise<any[]>;
+	/**
+	 * Creates a `RemoteQuery` bound directly to a specific client payload (the
+	 * stringified raw argument) and a pre-validated argument, skipping the query
+	 * wrapper's re-validation step. Used by `requested(batchQuery)` to ensure
+	 * `refresh()` / `set()` target the same cache key the client is listening on
+	 * even when the schema transforms the input.
+	 */
+	bind(payload: string, arg: any): RemoteQuery<any>;
 }
 
 export interface RemoteCommandInternals extends BaseRemoteInternals {
@@ -633,10 +661,13 @@ export interface RemotePrerenderInternals extends BaseRemoteInternals {
 	inputs?: RemotePrerenderInputsGenerator;
 }
 
-export type RemoteInternals =
+export type RemoteAnyQueryInternals =
 	| RemoteQueryInternals
-	| RemoteQueryLiveInternals
 	| RemoteQueryBatchInternals
+	| RemoteQueryLiveInternals;
+
+export type RemoteInternals =
+	| RemoteAnyQueryInternals
 	| RemoteCommandInternals
 	| RemoteFormInternals
 	| RemotePrerenderInternals;
@@ -670,7 +701,8 @@ export interface RequestState {
 			Record<string, { serialize: boolean; data: MaybePromise<any> }>
 		>;
 		forms: null | Map<any, any>;
-		refreshes: null | Record<string, Promise<any>>;
+		refreshes: null | Map<string, Promise<any>>;
+		reconnects: null | Map<string, Promise<any>>;
 		requested: null | Map<string, string[]>;
 	};
 	readonly is_in_remote_function: boolean;
