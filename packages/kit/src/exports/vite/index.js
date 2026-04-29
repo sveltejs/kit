@@ -1,5 +1,7 @@
+/** @import { Adapter } from '@sveltejs/kit' */
 /** @import { Options } from '@sveltejs/vite-plugin-svelte' */
 /** @import { PreprocessorGroup } from 'svelte/compiler' */
+/** @import { ValidatedConfig, ValidatedKitConfig } from 'types' */
 /** @import { ConfigEnv, Plugin, PluginOption, ResolvedConfig, UserConfig, Manifest, EnvironmentOptions, Rolldown } from 'vite' */
 /** @import { ModuleRunner } from 'vite/module-runner' */
 import fs from 'node:fs';
@@ -161,12 +163,11 @@ let vite_plugin_svelte;
 
 /**
  * Returns the SvelteKit Vite plugins.
- * @param {{
- *   adapter?: import('@sveltejs/kit').Adapter;
- * }=} options
+ * @param {object} options
+ * @param {Adapter} [options.adapter] Your [adapter](https://svelte.dev/docs/kit/adapters) is run when executing `vite build`. It determines how the output is converted for different platforms. @default undefined
  * @returns {Promise<PluginOption[]>}
  */
-export async function sveltekit(options = {}) {
+export async function sveltekit({ adapter }) {
 	// the config options will be set only after the Vite `config` hook runs
 	// because we need to find `svelte.config.js` relative to `vite.config.root`
 	const svelte_config = /** @type {import('types').ValidatedConfig} */ ({});
@@ -183,7 +184,7 @@ export async function sveltekit(options = {}) {
 	return [
 		plugin_svelte_config({ vite_plugin_svelte_options, svelte_config }),
 		vite_plugin_svelte.svelte(vite_plugin_svelte_options),
-		kit({ svelte_config, adapter_in_vite_config: options.adapter })
+		kit({ svelte_config, adapter })
 	];
 }
 
@@ -263,15 +264,15 @@ function revive_functions(value) {
  * - https://rolldown.rs/apis/plugin-api#output-generation-hooks
  *
  * @param {object} opts
- * @param {import('types').ValidatedConfig} opts.svelte_config options are only resolved after the Vite `config` hook runs
- * @param {import('@sveltejs/kit').Adapter | undefined} opts.adapter_in_vite_config True if an adapter was passed to the Vite plugin
+ * @param {ValidatedConfig} opts.svelte_config options are only resolved after the Vite `config` hook runs
+ * @param {Adapter | undefined} opts.adapter
  * @return {PluginOption[]}
  */
-function kit({ svelte_config, adapter_in_vite_config }) {
+function kit({ svelte_config, adapter }) {
 	/** @type {typeof import('vite')} */
 	let vite;
 
-	/** @type {import('types').ValidatedKitConfig} */
+	/** @type {ValidatedKitConfig} */
 	let kit;
 	/** @type {string} */
 	let out;
@@ -344,19 +345,15 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 				vite_config_env = config_env;
 				is_build = config_env.command === 'build';
 
-				// if the adapter vite plugins store some values at the module level, we
-				// should use the adapter instance passed through the vite config to
-				// avoid losing those values
-				if (adapter_in_vite_config) svelte_config.kit.adapter = adapter_in_vite_config;
-
 				({ kit } = svelte_config);
 				out = `${kit.outDir}/output`;
 
-				if (kit.adapter?.vite?.plugins && !adapter_in_vite_config) {
-					// TODO: use the actual pathname of the user's svelte config file in the error message example
+				// TODO: remove this in 4.0
+				// @ts-expect-error kit.adapter existed prior to 3.0
+				if (kit.adapter) {
 					throw new Error(
-						`${kit.adapter.name} requires the adapter to be passed to the \`sveltekit\` Vite plugin in the \`vite.config.js\` file. For example:\n\n` +
-							`+++import svelteConfig from './svelte.config.js';+++\n\nexport default defineConfig({\n  plugins: [sveltekit( +++{ adapter: svelteConfig.kit?.adapter  }+++ )]\n});`
+						`Your adapter must be passed to the \`sveltekit\` Vite plugin in the \`vite.config.js\` file instead of the \`svelte.config.js\` file. For example:\n\n` +
+							`+++import adapter from '@sveltejs/adapter-auto';+++\n\nexport default defineConfig({\n  plugins: [sveltekit( +++{ adapter }+++ )]\n});`
 					);
 				}
 
@@ -492,7 +489,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 
 					new_config.define = {
 						...define,
-						__SVELTEKIT_ADAPTER_NAME__: s(kit.adapter?.name),
+						__SVELTEKIT_ADAPTER_NAME__: s(adapter?.name),
 						__SVELTEKIT_APP_VERSION_FILE__: s(`${kit.appDir}/version.json`),
 						__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: s(kit.version.pollInterval)
 					};
@@ -1447,7 +1444,6 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 
 					// ...and the server instrumentation file
 					if (server_instrumentation_file) {
-						const { adapter } = kit;
 						if (adapter && !adapter.supports?.instrumentation?.()) {
 							throw new Error(`${server_instrumentation_file} is unsupported in ${adapter.name}.`);
 						}
@@ -1676,7 +1672,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 		 * @see https://vitejs.dev/guide/api-plugin.html#configurepreviewserver
 		 */
 		configurePreviewServer(vite) {
-			if (kit.adapter?.vite?.plugins) return;
+			if (adapter?.vite?.plugins) return;
 
 			return preview(vite, vite_config, svelte_config);
 		},
@@ -2017,9 +2013,10 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 					`\nRun ${styleText(['bold', 'cyan'], 'npm run preview')} to preview your production build locally.`
 				);
 
-				if (kit.adapter) {
+				if (adapter) {
 					const { adapt } = await import('../../core/adapt/index.js');
 					await adapt(
+						adapter,
 						svelte_config,
 						build_data,
 						metadata,
@@ -2058,7 +2055,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 
 	return [
 		plugin_setup,
-		adapter_in_vite_config?.vite?.plugins ? undefined : plugin_node_environment,
+		adapter?.vite?.plugins ? undefined : plugin_node_environment,
 		plugin_remote,
 		plugin_server_filesystem,
 		plugin_dev_ssr,
@@ -2067,7 +2064,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 		plugin_service_worker,
 		plugin_compile,
 		plugin_adapter,
-		adapter_in_vite_config?.vite?.plugins
+		adapter?.vite?.plugins
 	].filter(Boolean);
 }
 
