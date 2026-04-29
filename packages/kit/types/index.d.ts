@@ -1392,17 +1392,29 @@ declare module '@sveltejs/kit' {
 	export type ParamMatcher = (param: string) => boolean;
 
 	/**
-	 * A single entry yielded by [`requested`](https://svelte.dev/docs/kit/$app-server#requested).
-	 * `arg` is the validated argument (the input *after* the query's schema validated and
-	 * transformed it, if applicable); `query` is a `RemoteQuery` bound to the client's
-	 * original cache key, so `refresh()` / `set()` will update the correct client entry.
+	 * A single entry yielded by [`requested`](https://svelte.dev/docs/kit/$app-server#requested)
+	 * when called with a regular `query`. `arg` is the validated argument (the input *after*
+	 * the query's schema validated and transformed it, if applicable); `query` is a
+	 * `RemoteQuery` bound to the client's original cache key, so `refresh()` / `set()` will
+	 * update the correct client entry.
 	 */
 	export type RequestedEntry<Validated, Output> = {
 		arg: Validated;
 		query: RemoteQuery<Output>;
 	};
 
-	export type RequestedResult<Validated, Output> = Iterable<RequestedEntry<Validated, Output>> &
+	/**
+	 * A single entry yielded by [`requested`](https://svelte.dev/docs/kit/$app-server#requested)
+	 * when called with a `query.live`. `arg` is the validated argument; `query` is a
+	 * `RemoteLiveQuery` bound to the client's original cache key, so `reconnect()` targets
+	 * the correct client subscription.
+	 */
+	export type LiveRequestedEntry<Validated, Output> = {
+		arg: Validated;
+		query: RemoteLiveQuery<Output>;
+	};
+
+	export type QueryRequestedResult<Validated, Output> = Iterable<RequestedEntry<Validated, Output>> &
 		AsyncIterable<RequestedEntry<Validated, Output>> & {
 			/**
 			 * Call `refresh` on all queries selected by this `requested` invocation.
@@ -1417,6 +1429,28 @@ declare module '@sveltejs/kit' {
 			 */
 			refreshAll: () => Promise<void>;
 		};
+
+	export type LiveQueryRequestedResult<Validated, Output> = Iterable<
+		LiveRequestedEntry<Validated, Output>
+	> &
+		AsyncIterable<LiveRequestedEntry<Validated, Output>> & {
+			/**
+			 * Call `reconnect` on all live queries selected by this `requested` invocation.
+			 * This is identical to:
+			 * ```ts
+			 * import { requested } from '$app/server';
+			 *
+			 * for await (const { query } of requested(liveQuery, ...)) {
+			 *   void query.reconnect();
+			 * }
+			 * ```
+			 */
+			reconnectAll: () => Promise<void>;
+		};
+
+	export type RequestedResult<Validated, Output> =
+		| QueryRequestedResult<Validated, Output>
+		| LiveQueryRequestedResult<Validated, Output>;
 
 	export interface RequestEvent<
 		Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
@@ -1834,6 +1868,7 @@ declare module '@sveltejs/kit' {
 				'aria-invalid': boolean | 'false' | 'true' | undefined;
 				get checked(): boolean;
 				set checked(value: boolean);
+				readonly defaultChecked?: boolean;
 			}
 		: T extends 'file'
 			? {
@@ -1864,6 +1899,7 @@ declare module '@sveltejs/kit' {
 								'aria-invalid': boolean | 'false' | 'true' | undefined;
 								get value(): string | number;
 								set value(v: string | number);
+								readonly defaultValue?: string | number;
 							}
 						: {
 								name: string;
@@ -1871,6 +1907,7 @@ declare module '@sveltejs/kit' {
 								'aria-invalid': boolean | 'false' | 'true' | undefined;
 								get value(): string | number;
 								set value(v: string | number);
+								readonly defaultValue?: string | number;
 							};
 
 	type RemoteFormFieldMethods<T> = {
@@ -1896,7 +1933,9 @@ declare module '@sveltejs/kit' {
 	type AsArgs<Type extends keyof InputTypeMap, Value> = Type extends 'checkbox'
 		? Value extends string[]
 			? [type: Type, value: Value[number] | (string & {})]
-			: [type: Type] | [type: Type, value: Value | (string & {})]
+			: Value extends boolean
+				? [type: Type] | [type: Type, value: boolean]
+				: [type: Type] | [type: Type, value: Value | (string & {})]
 		: Type extends 'radio' | 'submit' | 'hidden'
 			? [type: Type, value: Value | (string & {})]
 			: Type extends 'file' | 'file multiple'
@@ -2033,7 +2072,7 @@ declare module '@sveltejs/kit' {
 	}
 
 	/**
-	 * The return value of a remote `form` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
+	 * The type of a remote `form` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
 	 */
 	export type RemoteForm<Input extends RemoteFormInput | void, Output> = {
 		/** Attachment that sets up an event handler that intercepts the form submission on the client to prevent a full page reload */
@@ -2088,7 +2127,7 @@ declare module '@sveltejs/kit' {
 	};
 
 	/**
-	 * The return value of a remote `command` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#command) for full documentation.
+	 * The type of a remote `command` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#command) for full documentation.
 	 */
 	export type RemoteCommand<Input, Output> = {
 		(arg: undefined extends Input ? Input | void : Input): Promise<Output> & {
@@ -2100,7 +2139,9 @@ declare module '@sveltejs/kit' {
 
 	export type RemoteQueryUpdate =
 		| RemoteQuery<any>
+		| RemoteLiveQuery<any>
 		| RemoteQueryFunction<any, any>
+		| RemoteLiveQueryFunction<any, any>
 		| RemoteQueryOverride;
 
 	export type RemoteResource<T> = Promise<T> & {
@@ -2164,10 +2205,25 @@ declare module '@sveltejs/kit' {
 		withOverride(update: (current: T) => T): RemoteQueryOverride;
 	};
 
+	export type RemoteLiveQuery<T> = RemoteResource<T> & {
+		/**
+		 * Returns an async iterator with live updates.
+		 * Unlike awaiting the resource directly, this can only be used _outside_ render
+		 * (i.e. in load functions, event handlers and so on)
+		 */
+		run(): AsyncGenerator<T>;
+		/** `true` if the live stream is currently connected. */
+		readonly connected: boolean;
+		/** `true` once the current live stream iterator is done. */
+		readonly done: boolean;
+		/** Reconnects the live stream immediately. */
+		reconnect(): Promise<void>;
+	};
+
 	export type RemoteQueryOverride = () => void;
 
 	/**
-	 * The return value of a remote `prerender` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#prerender) for full documentation.
+	 * The type of a remote `prerender` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#prerender) for full documentation.
 	 */
 	export type RemotePrerenderFunction<Input, Output> = (
 		arg: undefined extends Input ? Input | void : Input
@@ -2188,6 +2244,17 @@ declare module '@sveltejs/kit' {
 	export type RemoteQueryFunction<Input, Output, _Validated = Input> = (
 		arg: undefined extends Input ? Input | void : Input
 	) => RemoteQuery<Output>;
+
+	/**
+	 * The type of a remote `query.live` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query.live) for full documentation.
+	 *
+	 * The optional `Validated` generic parameter represents the argument type *after* the
+	 * query's schema has validated and (optionally) transformed it, and matches the type
+	 * yielded by [`requested`](https://svelte.dev/docs/kit/$app-server#requested).
+	 */
+	export type RemoteLiveQueryFunction<Input, Output, _Validated = Input> = (
+		arg: undefined extends Input ? Input | void : Input
+	) => RemoteLiveQuery<Output>;
 	interface AdapterEntry {
 		/**
 		 * A string that uniquely identifies an HTTP service (e.g. serverless function) and is used for deduplication.
@@ -3230,7 +3297,7 @@ declare module '$app/paths' {
 }
 
 declare module '$app/server' {
-	import type { RequestEvent, RemoteCommand, RemoteForm, RemoteFormInput, InvalidField, RemotePrerenderFunction, RemoteQueryFunction, RequestedResult } from '@sveltejs/kit';
+	import type { RequestEvent, RemoteCommand, RemoteForm, RemoteFormInput, InvalidField, RemotePrerenderFunction, RemoteQueryFunction, RemoteLiveQueryFunction, QueryRequestedResult, LiveQueryRequestedResult } from '@sveltejs/kit';
 	import type { StandardSchemaV1 } from '@standard-schema/spec';
 	/**
 	 * Read the contents of an imported asset from the filesystem
@@ -3260,7 +3327,7 @@ declare module '$app/server' {
 	 *
 	 * @since 2.27
 	 */
-	export function command<Output>(fn: () => Output): RemoteCommand<void, Output>;
+	export function command<Output>(fn: () => MaybePromise<Output>): RemoteCommand<void, Output>;
 	/**
 	 * Creates a remote command. When called from the browser, the function will be invoked on the server via a `fetch` call.
 	 *
@@ -3268,7 +3335,7 @@ declare module '$app/server' {
 	 *
 	 * @since 2.27
 	 */
-	export function command<Input, Output>(validate: "unchecked", fn: (arg: Input) => Output): RemoteCommand<Input, Output>;
+	export function command<Input, Output>(validate: "unchecked", fn: (arg: Input) => MaybePromise<Output>): RemoteCommand<Input, Output>;
 	/**
 	 * Creates a remote command. When called from the browser, the function will be invoked on the server via a `fetch` call.
 	 *
@@ -3276,7 +3343,7 @@ declare module '$app/server' {
 	 *
 	 * @since 2.27
 	 */
-	export function command<Schema extends StandardSchemaV1, Output>(validate: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => Output): RemoteCommand<StandardSchemaV1.InferInput<Schema>, Output>;
+	export function command<Schema extends StandardSchemaV1, Output>(validate: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => MaybePromise<Output>): RemoteCommand<StandardSchemaV1.InferInput<Schema>, Output>;
 	/**
 	 * Creates a form object that can be spread onto a `<form>` element.
 	 *
@@ -3375,6 +3442,17 @@ declare module '$app/server' {
 		 * @since 2.35
 		 */
 		function batch<Schema extends StandardSchemaV1, Output>(schema: Schema, fn: (args: StandardSchemaV1.InferOutput<Schema>[]) => MaybePromise<(arg: StandardSchemaV1.InferOutput<Schema>, idx: number) => Output>): RemoteQueryFunction<StandardSchemaV1.InferInput<Schema>, Output, StandardSchemaV1.InferOutput<Schema>>;
+		/**
+		 * Creates a live remote query. When called from the browser, the function will be invoked on the server via a streaming `fetch` call.
+		 *
+		 * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query.live) for full documentation.
+		 *
+		 * */
+		function live<Output>(fn: (arg: void) => RemoteLiveQueryUserFunctionReturnType<Output>): RemoteLiveQueryFunction<void, Output>;
+		
+		function live<Input, Output>(validate: "unchecked", fn: (arg: Input) => RemoteLiveQueryUserFunctionReturnType<Output>): RemoteLiveQueryFunction<Input, Output>;
+		
+		function live<Schema extends StandardSchemaV1, Output>(schema: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => RemoteLiveQueryUserFunctionReturnType<Output>): RemoteLiveQueryFunction<StandardSchemaV1.InferInput<Schema>, Output, StandardSchemaV1.InferOutput<Schema>>;
 	}
 	/**
 	 * In the context of a remote `command` or `form` request, returns an iterable
@@ -3402,14 +3480,58 @@ declare module '$app/server' {
 	 *
 	 * As a shorthand for the above, you can also call `refreshAll` on the result:
 	 *
+	 * @example
 	 * ```ts
 	 * import { requested } from '$app/server';
 	 *
 	 * await requested(getPost, 5).refreshAll();
 	 * ```
 	 *
+	 * Works with `query.batch` as well — refreshes for individual entries are
+	 * collected into a single batched call.
+	 *
+	 * For live queries, the same applies, but with `reconnect` and `reconnectAll`.
+	 *
 	 * */
-	export function requested<Input, Output, Validated = Input>(query: RemoteQueryFunction<Input, Output, Validated>, limit: number): RequestedResult<Validated, Output>;
+	export function requested<Input, Output, Validated = Input>(query: RemoteQueryFunction<Input, Output, Validated>, limit: number): QueryRequestedResult<Validated, Output>;
+	/**
+	 * In the context of a remote `command` or `form` request, returns an iterable
+	 * of `{ arg, query }` entries for the reconnects requested by the client, up to
+	 * the supplied `limit`. Each `query` is a `RemoteLiveQuery` bound to the original
+	 * client-side cache key, so `reconnect()` propagates correctly even when
+	 * the query's schema transforms the input. `arg` is the *validated* argument.
+	 *
+	 * Arguments that fail validation or exceed `limit` are recorded as failures in
+	 * the response to the client.
+	 *
+	 * @example
+	 * ```ts
+	 * import { requested } from '$app/server';
+	 *
+	 * for (const { query } of requested(getPost, 5)) {
+	 * 	void query.reconnect();
+	 * }
+	 * ```
+	 *
+	 * As a shorthand, you can also call `reconnectAll` on the result:
+	 *
+	 * @example
+	 * ```ts
+	 * import { requested } from '$app/server';
+	 *
+	 * await requested(getPost, 5).reconnectAll();
+	 * ```
+	 *
+	 * */
+	export function requested<Input, Output, Validated = Input>(query: RemoteLiveQueryFunction<Input, Output, Validated>, limit: number): LiveQueryRequestedResult<Validated, Output>;
+	type RemoteLiveQueryUserFunctionReturnType<Output> = MaybePromise<
+		| AsyncGenerator<Output>
+		| AsyncIterator<Output>
+		| AsyncIterable<Output>
+		| Generator<Output>
+		| Iterator<Output>
+		| Iterable<Output>
+	>;
 	type RemotePrerenderInputsGenerator<Input = any> = () => MaybePromise<Input[]>;
 	type MaybePromise<T> = T | Promise<T>;
 

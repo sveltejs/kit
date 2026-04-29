@@ -12,7 +12,7 @@ import { MUTATIVE_METHODS } from '../../../../constants.js';
  *
  * @template Output
  * @overload
- * @param {() => Output} fn
+ * @param {() => MaybePromise<Output>} fn
  * @returns {RemoteCommand<void, Output>}
  * @since 2.27
  */
@@ -25,7 +25,7 @@ import { MUTATIVE_METHODS } from '../../../../constants.js';
  * @template Output
  * @overload
  * @param {'unchecked'} validate
- * @param {(arg: Input) => Output} fn
+ * @param {(arg: Input) => MaybePromise<Output>} fn
  * @returns {RemoteCommand<Input, Output>}
  * @since 2.27
  */
@@ -38,7 +38,7 @@ import { MUTATIVE_METHODS } from '../../../../constants.js';
  * @template Output
  * @overload
  * @param {Schema} validate
- * @param {(arg: StandardSchemaV1.InferOutput<Schema>) => Output} fn
+ * @param {(arg: StandardSchemaV1.InferOutput<Schema>) => MaybePromise<Output>} fn
  * @returns {RemoteCommand<StandardSchemaV1.InferInput<Schema>, Output>}
  * @since 2.27
  */
@@ -46,13 +46,13 @@ import { MUTATIVE_METHODS } from '../../../../constants.js';
  * @template Input
  * @template Output
  * @param {any} validate_or_fn
- * @param {(arg?: Input) => Output} [maybe_fn]
+ * @param {(arg?: Input) => MaybePromise<Output>} [maybe_fn]
  * @returns {RemoteCommand<Input, Output>}
  * @since 2.27
  */
 /*@__NO_SIDE_EFFECTS__*/
 export function command(validate_or_fn, maybe_fn) {
-	/** @type {(arg?: Input) => Output} */
+	/** @type {(arg?: Input) => MaybePromise<Output>} */
 	const fn = maybe_fn ?? validate_or_fn;
 
 	/** @type {(arg?: any) => MaybePromise<Input>} */
@@ -77,7 +77,8 @@ export function command(validate_or_fn, maybe_fn) {
 			);
 		}
 
-		state.remote.refreshes ??= {};
+		state.remote.refreshes ??= new Map();
+		state.remote.reconnects ??= new Map();
 
 		const promise = Promise.resolve(
 			run_remote_function(event, state, true, () => validate(arg), fn)
