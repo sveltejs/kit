@@ -136,7 +136,8 @@ export function form(validate_or_fn, maybe_fn) {
 						data = validated.value;
 					}
 
-					state.remote.refreshes ??= {};
+					state.remote.refreshes ??= new Map();
+					state.remote.reconnects ??= new Map();
 
 					const issue = create_issues();
 

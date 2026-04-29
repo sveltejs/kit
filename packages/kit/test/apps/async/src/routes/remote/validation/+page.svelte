@@ -1,8 +1,10 @@
 <script lang="ts">
-	import { isHttpError } from '@sveltejs/kit';
+	import { isHttpError, type RemoteLiveQuery } from '@sveltejs/kit';
 	import {
 		validated_query_no_args,
 		validated_query_with_arg,
+		validated_live_query_no_args,
+		validated_live_query_with_arg,
 		validated_prerendered_query_no_args,
 		validated_prerendered_query_with_arg,
 		validated_command_no_args,
@@ -17,6 +19,21 @@
 		}
 	}
 
+	async function read_live(resource: RemoteLiveQuery<'success' | 'failure'>) {
+		const iterator = resource.run();
+
+		try {
+			const result = await iterator.next();
+			if (result.done) {
+				throw new Error('query.live did not yield a value');
+			}
+
+			return result.value;
+		} finally {
+			await iterator.return?.(undefined);
+		}
+	}
+
 	let status = $state('pending');
 </script>
 
@@ -27,10 +44,12 @@
 		status = 'pending';
 		try {
 			validate_result(await validated_query_no_args().run());
+			validate_result(await read_live(validated_live_query_no_args()));
 			validate_result(await validated_prerendered_query_no_args());
 			validate_result(await validated_command_no_args());
 
 			validate_result(await validated_query_with_arg('valid').run());
+			validate_result(await read_live(validated_live_query_with_arg('valid')));
 			validate_result(await validated_prerendered_query_with_arg('valid'));
 			validate_result(await validated_command_with_arg('valid'));
 
@@ -56,15 +75,21 @@
 		} catch {
 			try {
 				// @ts-expect-error
-				await validated_prerendered_query_no_args('invalid');
+				await validated_live_query_no_args('invalid').run().next();
 				status = 'error';
 			} catch {
 				try {
 					// @ts-expect-error
-					await validated_command_no_args('invalid');
+					await validated_prerendered_query_no_args('invalid');
 					status = 'error';
 				} catch {
-					status = 'success';
+					try {
+						// @ts-expect-error
+						await validated_command_no_args('invalid');
+						status = 'error';
+					} catch {
+						status = 'success';
+					}
 				}
 			}
 		}
@@ -85,18 +110,20 @@
 				status = 'wrong error message';
 				return;
 			}
+
 			try {
 				// @ts-expect-error
-				await validated_prerendered_query_with_arg(1);
+				await validated_live_query_with_arg(1).run().next();
 				status = 'error';
 			} catch (e) {
 				if (!isHttpError(e) || e.body.message !== 'Input must be a string') {
 					status = 'wrong error message';
 					return;
 				}
+
 				try {
 					// @ts-expect-error
-					await validated_command_with_arg(1);
+					await validated_prerendered_query_with_arg(1);
 					status = 'error';
 				} catch (e) {
 					if (!isHttpError(e) || e.body.message !== 'Input must be a string') {
@@ -106,14 +133,26 @@
 
 					try {
 						// @ts-expect-error
-						await validated_batch_query_with_validation(123).run();
+						await validated_command_with_arg(1);
 						status = 'error';
 					} catch (e) {
 						if (!isHttpError(e) || e.body.message !== 'Input must be a string') {
 							status = 'wrong error message';
 							return;
 						}
-						status = 'success';
+
+						try {
+							// @ts-expect-error
+							await validated_batch_query_with_validation(123).run();
+							status = 'error';
+						} catch (e) {
+							if (!isHttpError(e) || e.body.message !== 'Input must be a string') {
+								status = 'wrong error message';
+								return;
+							}
+
+							status = 'success';
+						}
 					}
 				}
 			}
@@ -129,6 +168,8 @@
 		try {
 			// @ts-expect-error
 			validate_result(await validated_query_with_arg('valid', 'ignored').run());
+			// @ts-expect-error
+			validate_result(await read_live(validated_live_query_with_arg('valid', 'ignored')));
 			// @ts-expect-error
 			validate_result(await validated_prerendered_query_with_arg('valid', 'ignored'));
 			// @ts-expect-error
