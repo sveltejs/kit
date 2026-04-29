@@ -602,7 +602,10 @@ function kit({ svelte_config }) {
 
 	/** @type {Map<string, Set<string>>} */
 	const import_map = new Map();
-	const server_only_pattern = /.*\.server\..+/;
+	// Matches any ID that has .server. in its filename
+	const server_only_module_pattern = /\.server\.[^/]+$/;
+	// Matches any ID that has /server/ in its path
+	const server_only_directory_pattern = /\/server\//;
 
 	/**
 	 * Ensures that client-side code can't accidentally import server-side code,
@@ -653,8 +656,8 @@ function kit({ svelte_config }) {
 					exactRegex(env_static_private),
 					exactRegex(env_dynamic_private),
 					exactRegex(app_server),
-					/\/server\//,
-					new RegExp(`${server_only_pattern.source}$`)
+					server_only_module_pattern,
+					server_only_directory_pattern
 				]
 			},
 			handler(id) {
@@ -670,8 +673,8 @@ function kit({ svelte_config }) {
 					normalized === '$env/static/private' ||
 					normalized === '$env/dynamic/private' ||
 					normalized === '$app/server' ||
-					normalized.startsWith('$lib/server/') ||
-					(is_internal && server_only_pattern.test(path.basename(id)));
+					(normalized.startsWith('$lib/') && server_only_directory_pattern.test(id)) ||
+					(is_internal && server_only_module_pattern.test(id));
 
 				// skip .server.js files outside the cwd or in node_modules, as the filename might not mean 'server-only module' in this context
 				// TODO: address https://github.com/sveltejs/kit/issues/12529
