@@ -80,7 +80,7 @@ export default [
 			json(),
 			prefixBuiltinModules()
 		],
-		external: ['ENV', 'MANIFEST', 'SERVER', 'SHIMS']
+		external: ['ENV', 'MANIFEST', 'SERVER', 'SHIMS', '@sveltejs/kit/node']
 	},
 	{
 		input: 'src/shims.js',
