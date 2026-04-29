@@ -14,7 +14,6 @@ import { posixify } from '../utils/os.js';
 export const runtime_directory = import.meta.dirname ? posixify(import.meta.dirname) : '';
 
 export const text_encoder = new TextEncoder();
-export const text_decoder = new TextDecoder();
 
 /**
  * Like node's path.relative, but without using node
