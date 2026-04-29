@@ -27,7 +27,7 @@ declare module '@sveltejs/kit' {
 		supports?: {
 			/**
 			 * Test support for `read` from `$app/server`.
-			 * @param details.config The merged route config
+			 * @param details.config The merged adapter-specific route config exported from the route with `export const config`
 			 */
 			read?: (details: { config: any; route: { id: string } }) => boolean;
 
