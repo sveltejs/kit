@@ -66,6 +66,8 @@ function query_tests() {
 		void q(1, 2, 3);
 		// @ts-expect-error
 		void q('1', '2');
+		// @ts-expect-error - .run() was removed from regular queries; await directly instead
+		void q(1).run();
 	}
 	void query_unsafe();
 

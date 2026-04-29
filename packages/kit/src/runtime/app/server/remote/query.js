@@ -439,17 +439,6 @@ function create_query_resource(__, payload, state, fn) {
 			const value = is_immediate_refresh ? get_promise() : fn();
 			return update_refresh_value(refresh_context, value, is_immediate_refresh);
 		},
-		run() {
-			// potential TODO: if we want to be able to run queries at the top level of modules / outside of the request context, we could technically remove
-			// the requirement that `state` is defined, but that's kind of an annoying change to make, so we're going to wait on that until we have any sort of
-			// concrete use case.
-			if (!state.is_in_universal_load) {
-				throw new Error(
-					'On the server, .run() can only be called in universal `load` functions. Anywhere else, just await the query directly'
-				);
-			}
-			return get_response(__, payload, state, fn);
-		},
 		/** @param {any} value */
 		set(value) {
 			return update_refresh_value(get_refresh_context(__, 'set', payload), value);

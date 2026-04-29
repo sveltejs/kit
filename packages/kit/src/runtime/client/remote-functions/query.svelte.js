@@ -3,7 +3,6 @@ import { app_dir, base } from '$app/paths/internal/client';
 import { app, query_map, query_responses } from '../client.js';
 import {
 	get_remote_request_headers,
-	is_in_effect,
 	QUERY_FUNCTION_ID,
 	QUERY_OVERRIDE_KEY,
 	QUERY_RESOURCE_KEY,
@@ -15,15 +14,10 @@ import { noop } from '../../../utils/functions.js';
 import { with_resolvers } from '../../../utils/promise.js';
 import { tick, untrack } from 'svelte';
 import { create_remote_key, stringify_remote_arg, unfriendly_hydratable } from '../../shared.js';
+import { CacheController } from './cache.svelte.js';
 
-/**
- * @template T
- * @typedef {{
- *   count: number;
- *   resource: Query<T>;
- *   cleanup: () => void;
- * }} RemoteQueryCacheEntry
- */
+/** @type {CacheController<Query<any>>} */
+const cache = new CacheController(query_map);
 
 /**
  * @param {string} id
@@ -31,12 +25,12 @@ import { create_remote_key, stringify_remote_arg, unfriendly_hydratable } from '
  */
 export function query(id) {
 	if (DEV) {
-		// If this reruns as part of HMR, refresh the query
+		// If this reruns as part of HMR, refresh all live entries.
 		const entries = query_map.get(id);
 
 		if (entries) {
-			for (const entry of entries.values()) {
-				void entry.resource.refresh();
+			for (const { resource } of entries.values()) {
+				void resource.refresh();
 			}
 		}
 	}
@@ -44,6 +38,12 @@ export function query(id) {
 	/** @type {RemoteQueryFunction<any, any>} */
 	const wrapper = (arg) => {
 		return new QueryProxy(id, arg, async (key, payload) => {
+			if (Object.hasOwn(query_responses, key)) {
+				const value = query_responses[key];
+				delete query_responses[key];
+				return value;
+			}
+
 			const url = `${base}/${app_dir}/remote/${id}${payload ? `?payload=${payload}` : ''}`;
 
 			const serialized = await unfriendly_hydratable(key, () =>
@@ -315,12 +315,6 @@ export class QueryProxy {
 	#key;
 	#payload;
 	#fn;
-	#active = true;
-	/**
-	 * Whether this proxy was created in a tracking context.
-	 * @readonly
-	 */
-	#tracking = is_in_effect();
 
 	/**
 	 * @param {string} id
@@ -334,158 +328,78 @@ export class QueryProxy {
 		Object.defineProperty(this, QUERY_RESOURCE_KEY, { value: this.#key });
 		this.#fn = fn;
 
-		if (!this.#tracking) {
-			this.#active = false;
-			return;
-		}
-
-		const entry = this.#get_or_create_cache_entry();
-
-		$effect.pre(() => () => {
-			const die = this.#release(entry);
-			void tick().then(die);
-		});
-	}
-
-	/** @returns {RemoteQueryCacheEntry<T>} */
-	#get_or_create_cache_entry() {
-		let query_instances = query_map.get(this.#id);
-
-		if (!query_instances) {
-			query_instances = new Map();
-			query_map.set(this.#id, query_instances);
-		}
-
-		let this_instance = query_instances.get(this.#payload);
-
-		if (!this_instance) {
-			const c = (this_instance = {
-				count: 0,
-				resource: /** @type {Query<T>} */ (/** @type {unknown} */ (null)),
-				cleanup: /** @type {() => void} */ (/** @type {unknown} */ (null))
-			});
-
-			c.cleanup = $effect.root(() => {
-				c.resource = new Query(this.#key, () => this.#fn(this.#key, this.#payload));
-			});
-
-			query_instances.set(this.#payload, this_instance);
-		}
-
-		this_instance.count += 1;
-
-		return this_instance;
-	}
-
-	/**
-	 * @param {RemoteQueryCacheEntry<T>} entry
-	 * @param {boolean} [deactivate]
-	 * @returns
-	 */
-	#release(entry, deactivate = true) {
-		this.#active &&= !deactivate;
-		entry.count -= 1;
-
-		return () => {
-			const query_instances = query_map.get(this.#id);
-			const this_instance = query_instances?.get(this.#payload);
-
-			if (this_instance?.count === 0) {
-				this_instance.cleanup();
-				query_instances?.delete(this.#payload);
-			}
-			if (query_instances?.size === 0) {
-				query_map.delete(this.#id);
-			}
-		};
-	}
-
-	#safe_get_cached_query() {
-		return query_map.get(this.#id)?.get(this.#payload)?.resource;
-	}
-
-	get current() {
-		return this.#safe_get_cached_query()?.current;
-	}
-
-	get error() {
-		return this.#safe_get_cached_query()?.error;
-	}
-
-	get loading() {
-		return this.#safe_get_cached_query()?.loading ?? false;
-	}
-
-	get ready() {
-		return this.#safe_get_cached_query()?.ready ?? false;
-	}
-
-	run() {
-		if (is_in_effect()) {
-			throw new Error(
-				'On the client, .run() can only be called outside render, e.g. in universal `load` functions and event handlers. In render, await the query directly'
-			);
-		}
-
-		if (Object.hasOwn(query_responses, this.#key)) {
-			return Promise.resolve(query_responses[this.#key]);
-		}
-		return this.#fn(this.#key, this.#payload);
-	}
-
-	refresh() {
-		return this.#safe_get_cached_query()?.refresh() ?? Promise.resolve();
-	}
-
-	/** @type {Query<T>['set']} */
-	set(value) {
-		this.#safe_get_cached_query()?.set(value);
-	}
-
-	/** @type {Query<T>['withOverride']} */
-	withOverride(fn) {
-		const entry = this.#get_or_create_cache_entry();
-		const override = /** @type {Query<T>} */ (entry.resource).withOverride(fn);
-
-		const release = /** @type {(() => void) & { [QUERY_OVERRIDE_KEY]: string }} */ (
-			() => {
-				override();
-				this.#release(entry, false)();
-			}
+		const entry = cache.ensure_entry(
+			this.#id,
+			this.#payload,
+			() => new Query(this.#key, () => this.#fn(this.#key, this.#payload))
 		);
 
-		Object.defineProperty(release, QUERY_OVERRIDE_KEY, { value: override[QUERY_OVERRIDE_KEY] });
-
-		return release;
+		cache.ref(this, entry, this.#id, this.#payload);
 	}
 
 	#get_cached_query() {
-		// TODO iterate on error messages
-		if (!this.#tracking) {
-			throw new Error(
-				'This query was not created in a reactive context and cannot be awaited. Use `.run()` to execute the query instead.'
-			);
-		}
-
-		if (!this.#active) {
-			throw new Error(
-				'This query instance is no longer active and can no longer be awaited. ' +
-					'This typically means you created the query in a tracking context and stashed it somewhere outside of a tracking context.'
-			);
-		}
-
 		const cached = query_map.get(this.#id)?.get(this.#payload);
 
 		if (!cached) {
-			// The only case where `this.#active` can be `true` is when we've added an entry to `query_map`, and the
-			// only way that entry can get removed is if this instance (and all others) have been deactivated.
-			// So if we get here, someone (us, check git blame and point fingers) did `entry.count -= 1` improperly.
+			// Sanity check: a live proxy should always keep its cache entry alive via
+			// `proxy_count`, and the invalidation paths never locally evict entries.
 			throw new Error(
 				'No cached query found. This should be impossible. Please file a bug report.'
 			);
 		}
 
 		return cached.resource;
+	}
+
+	get current() {
+		return this.#get_cached_query().current;
+	}
+
+	get error() {
+		return this.#get_cached_query().error;
+	}
+
+	get loading() {
+		return this.#get_cached_query().loading;
+	}
+
+	get ready() {
+		return this.#get_cached_query().ready;
+	}
+
+	refresh() {
+		return this.#get_cached_query().refresh();
+	}
+
+	/** @type {Query<T>['set']} */
+	set(value) {
+		this.#get_cached_query().set(value);
+	}
+
+	/** @type {Query<T>['withOverride']} */
+	withOverride(fn) {
+		// The override increments `proxy_count` to keep the cache entry alive until the
+		// release function is called.
+		const entry = cache.ensure_entry(
+			this.#id,
+			this.#payload,
+			() => new Query(this.#key, () => this.#fn(this.#key, this.#payload))
+		);
+
+		const deref = cache.manual_ref(entry, this.#id, this.#payload);
+
+		const override = entry.resource.withOverride(fn);
+
+		const release = /** @type {(() => void) & { [QUERY_OVERRIDE_KEY]: string }} */ (
+			() => {
+				override();
+				deref();
+			}
+		);
+
+		Object.defineProperty(release, QUERY_OVERRIDE_KEY, { value: override[QUERY_OVERRIDE_KEY] });
+
+		return release;
 	}
 
 	/** @type {Query<T>['then']} */

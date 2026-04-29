@@ -16,7 +16,7 @@
 	let stats = $state('pending');
 
 	async function refresh_stats() {
-		const next = await get_stats().run();
+		const next = await get_stats();
 		stats = JSON.stringify(next);
 	}
 </script>

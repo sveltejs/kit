@@ -17,15 +17,9 @@ import { with_resolvers } from '../../../utils/promise.js';
 import { tick } from 'svelte';
 import { create_remote_key, stringify_remote_arg, unfriendly_hydratable } from '../../shared.js';
 import { read_ndjson } from '../ndjson.js';
+import { CacheController } from './cache.svelte.js';
 
-/**
- * @template T
- * @typedef {{
- *   count: number;
- *   resource: LiveQuery<T>;
- *   cleanup: () => void;
- * }} RemoteLiveQueryCacheEntry
- */
+const cache = new CacheController(live_query_map, (resource) => resource.destroy());
 
 /**
  * @param {string} id
@@ -33,12 +27,12 @@ import { read_ndjson } from '../ndjson.js';
  */
 export function query_live(id) {
 	if (DEV) {
-		// If this reruns as part of HMR, refresh the query
+		// If this reruns as part of HMR, reconnect all live entries.
 		const entries = live_query_map.get(id);
 
 		if (entries) {
-			for (const entry of entries.values()) {
-				void entry.resource.reconnect();
+			for (const { resource } of entries.values()) {
+				void resource.reconnect();
 			}
 		}
 	}
@@ -272,7 +266,6 @@ export class LiveQuery {
 				if (!this.#ready) {
 					// If we haven't successfully connected and received a value yet, surface the error
 					this.fail(error);
-					this.#done = true;
 					on_connect_failed(error);
 					break;
 				}
@@ -280,7 +273,6 @@ export class LiveQuery {
 				if (error instanceof HttpError) {
 					// Server intentionally sent an error. Surface it and stop.
 					this.fail(error);
-					this.#done = true;
 					break;
 				}
 
@@ -443,6 +435,12 @@ export class LiveQuery {
 	fail(error) {
 		this.#loading = false;
 		this.#error = error;
+		// `fail` is terminal — once a live query has hard-failed, the only way to start
+		// streaming again is via `reconnect()`. Mark it done and abort any in-flight
+		// request so that callers from outside the main loop (e.g. `apply_reconnections`)
+		// don't leave the loop spinning.
+		this.#done = true;
+		void this.#interrupt?.();
 
 		if (this.#reject_first) {
 			this.#reject_first(error);
@@ -468,8 +466,6 @@ class LiveQueryProxy {
 	#key;
 	#id;
 	#payload;
-	#active = true;
-	#tracking = is_in_effect();
 
 	/**
 	 * @param {string} id
@@ -481,87 +477,16 @@ class LiveQueryProxy {
 		this.#key = create_remote_key(id, this.#payload);
 		Object.defineProperty(this, QUERY_RESOURCE_KEY, { value: this.#key });
 
-		if (!this.#tracking) {
-			this.#active = false;
-			return;
-		}
+		const entry = cache.ensure_entry(
+			this.#id,
+			this.#payload,
+			() => new LiveQuery(this.#id, this.#key, this.#payload)
+		);
 
-		const entry = this.#get_or_create_cache_entry();
-
-		$effect.pre(() => () => {
-			const die = this.#release(entry);
-			void tick().then(die);
-		});
-	}
-
-	/** @returns {RemoteLiveQueryCacheEntry<T>} */
-	#get_or_create_cache_entry() {
-		let query_instances = live_query_map.get(this.#id);
-
-		if (!query_instances) {
-			query_instances = new Map();
-			live_query_map.set(this.#id, query_instances);
-		}
-
-		let this_instance = query_instances.get(this.#payload);
-
-		if (!this_instance) {
-			const c = (this_instance = {
-				count: 0,
-				resource: /** @type {LiveQuery<T>} */ (/** @type {unknown} */ (null)),
-				cleanup: /** @type {() => void} */ (/** @type {unknown} */ (null))
-			});
-
-			c.cleanup = $effect.root(() => {
-				c.resource = new LiveQuery(this.#id, this.#key, this.#payload);
-			});
-
-			query_instances.set(this.#payload, this_instance);
-		}
-
-		this_instance.count += 1;
-
-		return this_instance;
-	}
-
-	/**
-	 * @param {RemoteLiveQueryCacheEntry<T>} entry
-	 * @param {boolean} [deactivate]
-	 */
-	#release(entry, deactivate = true) {
-		this.#active &&= !deactivate;
-		entry.count -= 1;
-
-		return () => {
-			const query_instances = live_query_map.get(this.#id);
-			const this_instance = query_instances?.get(this.#payload);
-
-			if (this_instance?.count === 0) {
-				this_instance.resource.destroy();
-				this_instance.cleanup();
-				query_instances?.delete(this.#payload);
-			}
-
-			if (query_instances?.size === 0) {
-				live_query_map.delete(this.#id);
-			}
-		};
+		cache.ref(this, entry, this.#id, this.#payload);
 	}
 
 	#get_cached_query() {
-		if (!this.#tracking) {
-			throw new Error(
-				'This live query was not created in a reactive context and is limited to calling `.run` and `.reconnect`.'
-			);
-		}
-
-		if (!this.#active) {
-			throw new Error(
-				'This query instance is no longer active and can no longer be used for reactive state access. ' +
-					'This typically means you created the query in a tracking context and stashed it somewhere outside of a tracking context.'
-			);
-		}
-
 		const cached = live_query_map.get(this.#id)?.get(this.#payload);
 
 		if (!cached) {
@@ -573,35 +498,32 @@ class LiveQueryProxy {
 		return cached.resource;
 	}
 
-	#safe_get_cached_query() {
-		return live_query_map.get(this.#id)?.get(this.#payload)?.resource;
-	}
-
 	get current() {
-		return this.#safe_get_cached_query()?.current;
+		return this.#get_cached_query().current;
 	}
 
 	get error() {
-		return this.#safe_get_cached_query()?.error;
+		return this.#get_cached_query().error;
 	}
 
 	get loading() {
-		return this.#safe_get_cached_query()?.loading ?? false;
+		return this.#get_cached_query().loading;
 	}
 
 	get ready() {
-		return this.#safe_get_cached_query()?.ready ?? false;
+		return this.#get_cached_query().ready;
 	}
 
 	get connected() {
-		return this.#safe_get_cached_query()?.connected ?? false;
+		return this.#get_cached_query().connected;
 	}
 
 	get done() {
-		return this.#safe_get_cached_query()?.done ?? false;
+		return this.#get_cached_query().done;
 	}
 
 	run() {
+		// TODO; should this just hook into the existing iterator?
 		if (is_in_effect()) {
 			throw new Error(
 				'On the client, .run() can only be called outside render, e.g. in universal `load` functions and event handlers. In render, await the query directly'
@@ -612,7 +534,7 @@ class LiveQueryProxy {
 	}
 
 	reconnect() {
-		return this.#safe_get_cached_query()?.reconnect() ?? Promise.resolve();
+		return this.#get_cached_query().reconnect();
 	}
 
 	get then() {

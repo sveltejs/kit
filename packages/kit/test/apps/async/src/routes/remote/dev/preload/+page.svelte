@@ -5,4 +5,4 @@
 </script>
 
 <p>{data.example}</p>
-<button onclick={async () => (data.example = await example('baz').run())}>Refresh</button>
+<button onclick={async () => (data.example = await example('baz'))}>Refresh</button>
