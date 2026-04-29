@@ -1,7 +1,7 @@
 {
 	"private": true,
 	"type": "module",
-		"devDependencies": {
+	"devDependencies": {
 		"typescript": "catalog:"
 	},
 	"scripts": {
