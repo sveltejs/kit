@@ -348,15 +348,6 @@ function kit({ svelte_config, adapter }) {
 				({ kit } = svelte_config);
 				out = `${kit.outDir}/output`;
 
-				// TODO: remove this in 4.0
-				// @ts-expect-error kit.adapter existed prior to 3.0
-				if (kit.adapter) {
-					throw new Error(
-						`Your adapter must be passed to the \`sveltekit\` Vite plugin in the \`vite.config.js\` file instead of the \`svelte.config.js\` file. For example:\n\n` +
-							`+++import adapter from '@sveltejs/adapter-auto';+++\n\nexport default defineConfig({\n  plugins: [sveltekit( +++{ adapter }+++ )]\n});`
-					);
-				}
-
 				version_hash = hash(kit.version.name);
 
 				env = get_env(kit.env, vite_config_env.mode);

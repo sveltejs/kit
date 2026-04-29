@@ -58,20 +58,11 @@ const options = object(
 		}),
 
 		kit: object({
-			adapter: validate(null, (input, keypath) => {
-				if (typeof input !== 'object' || !input.adapt) {
-					let message = `${keypath} should be an object with an "adapt" method`;
-
-					if (Array.isArray(input) || typeof input === 'string') {
-						// for the early adapter adopters
-						message += ', rather than the name of an adapter';
-					}
-
-					throw new Error(`${message}. See https://svelte.dev/docs/kit/adapters`);
-				}
-
-				return input;
-			}),
+			adapter: removed(
+				(keypath) =>
+					`\`${keypath}\` has been removed. Instead, pass your adapter to the \`sveltekit\` Vite plugin in the \`vite.config.js\` file. For example:\n\n` +
+					`+++import adapter from '@sveltejs/adapter-auto';+++\n\nexport default defineConfig({\n  plugins: [sveltekit( +++{ adapter }+++ )]\n});`
+			),
 
 			alias: validate({}, (input, keypath) => {
 				if (typeof input !== 'object') {
