@@ -170,7 +170,7 @@ let vite_plugin_svelte;
 export async function sveltekit({ adapter }) {
 	// the config options will be set only after the Vite `config` hook runs
 	// because we need to find `svelte.config.js` relative to `vite.config.root`
-	const svelte_config = /** @type {import('types').ValidatedConfig} */ ({});
+	const svelte_config = /** @type {ValidatedConfig} */ ({});
 
 	/** @type {Options} */
 	const vite_plugin_svelte_options = {
@@ -198,7 +198,7 @@ function resolve_root(vite_config) {
  * of our other plugins try to access the config objects
  * @param {{
  *   vite_plugin_svelte_options: import('@sveltejs/vite-plugin-svelte').Options;
- * 	 svelte_config: import('types').ValidatedConfig;
+ * 	 svelte_config: ValidatedConfig;
  * }} options
  * @return {Plugin}
  */
@@ -2105,7 +2105,7 @@ function find_overridden_config(config, resolved_config, enforced_config, path, 
 }
 
 /**
- * @param {import('types').ValidatedConfig} config
+ * @param {ValidatedConfig} config
  * @returns {string}
  */
 function create_service_worker_module(config) {
