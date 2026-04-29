@@ -45,6 +45,7 @@ export const as_value_form = form(ValueSchema, async (data) => {
 		element.color_field = data.color_field;
 		element.range_field = data.range_field;
 		element.checkbox_field = data.checkbox_field;
+		await get_values().refresh();
 	}
 });
 
