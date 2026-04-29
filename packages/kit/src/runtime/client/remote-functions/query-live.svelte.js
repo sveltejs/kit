@@ -1,5 +1,4 @@
 /** @import { RemoteLiveQuery, RemoteLiveQueryFunction } from '@sveltejs/kit' */
-/** @import { PromiseWithResolvers } from '../../../utils/promise.js' */
 import { app_dir, base } from '$app/paths/internal/client';
 import { app, live_query_map } from '../client.js';
 import {
@@ -13,9 +12,8 @@ import * as devalue from 'devalue';
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
 import { DEV } from 'esm-env';
 import { noop, once } from '../../../utils/functions.js';
-import { with_resolvers } from '../../../utils/promise.js';
-import { tick } from 'svelte';
-import { create_remote_key, stringify_remote_arg, unfriendly_hydratable } from '../../shared.js';
+import { hydratable, tick } from 'svelte';
+import { create_remote_key, stringify_remote_arg } from '../../shared.js';
 import { read_ndjson } from '../ndjson.js';
 
 /**
@@ -198,12 +196,12 @@ export class LiveQuery {
 		// the semantics of awaiting a live query are a bit weird, but it's basically:
 		// - It's a promise that resolves to the first value from the server
 		// - Thereafter, it's a promise that immediately resolves to the current value
-		const { promise, resolve, reject } = with_resolvers();
+		const { promise, resolve, reject } = Promise.withResolvers();
 		this.#promise = $state.raw(promise);
 		this.#resolve_first = resolve;
 		this.#reject_first = reject;
 
-		const serialized = unfriendly_hydratable(key, () => undefined);
+		const serialized = hydratable(key, () => undefined);
 		if (serialized !== undefined) {
 			this.set(devalue.parse(serialized, app.decoders));
 		}
@@ -225,7 +223,7 @@ export class LiveQuery {
 		if (this.#interrupt) return;
 
 		/** @type {PromiseWithResolvers<void>} */
-		const { promise: stopped, resolve: on_stop } = with_resolvers();
+		const { promise: stopped, resolve: on_stop } = Promise.withResolvers();
 
 		while (!this.#done) {
 			const controller = new AbortController();
@@ -415,7 +413,7 @@ export class LiveQuery {
 	async reconnect() {
 		await this.#interrupt?.();
 		/** @type {PromiseWithResolvers<void>} */
-		const { promise, resolve: on_connect, reject: on_connect_failed } = with_resolvers();
+		const { promise, resolve: on_connect, reject: on_connect_failed } = Promise.withResolvers();
 		promise.catch(noop);
 		this.#done = false;
 		this.#attempt = 0;
