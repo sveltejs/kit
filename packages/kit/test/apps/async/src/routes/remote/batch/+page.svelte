@@ -3,7 +3,8 @@
 		get_todo,
 		set_todo_title_server_refresh,
 		reset_todos,
-		set_todo_title
+		set_todo_title,
+		append_to_all_titles_requested
 	} from './batch.remote.js';
 
 	const todoIds = ['1', '2', '1', 'error'];
@@ -54,4 +55,12 @@
 	id="batch-reset-btn"
 >
 	reset todos
+</button>
+<button
+	onclick={async () => {
+		await append_to_all_titles_requested(' (requested)').updates(get_todo);
+	}}
+	id="batch-requested-refresh-all-btn"
+>
+	refresh all via requested
 </button>

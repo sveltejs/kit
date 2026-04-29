@@ -418,12 +418,251 @@ test.describe('remote function mutations', () => {
 		expect(request_count).toBe(1); // only the command request
 	});
 
+	test('query.batch refresh via requested(...) reuses single batched flight', async ({ page }) => {
+		await page.goto('/remote/batch');
+		await page.click('#batch-reset-btn');
+		await expect(page.locator('#batch-result-1')).toHaveText('Buy groceries');
+		await expect(page.locator('#batch-result-2')).toHaveText('Walk the dog');
+
+		let request_count = 0;
+		/** @param {import('@playwright/test').Request} r */
+		const handler = (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0);
+		page.on('request', handler);
+
+		await page.click('#batch-requested-refresh-all-btn');
+		await expect(page.locator('#batch-result-1')).toHaveText('Buy groceries (requested)');
+		await expect(page.locator('#batch-result-2')).toHaveText('Walk the dog (requested)');
+		await page.waitForTimeout(100); // allow all requests to finish
+
+		// Only the command request itself — refreshes for every requested entry
+		// were rolled into a single batched call and returned via single-flight
+		// in the command response.
+		expect(request_count).toBe(1);
+	});
+
 	test('query.batch resolver function always receives validated arguments', async ({ page }) => {
 		await page.goto('/remote/batch-validation');
 
 		await expect(page.locator('#phrase')).toHaveText('use the force');
 		await page.locator('button').click();
 		await expect(page.locator('#phrase')).toHaveText('i am your father');
+	});
+
+	test('query.live streams updates and reconnects after disconnect', async ({ page, context }) => {
+		await page.goto('/remote/live');
+		await page.click('#reset');
+
+		await expect(page.locator('#first-value')).toHaveText('0');
+		await expect(page.locator('#count')).toHaveText('0');
+		await expect(page.locator('#connected')).toHaveText('true');
+
+		await page.click('#increment');
+		await expect(page.locator('#count')).toHaveText('1');
+		await expect(page.locator('#first-value')).toHaveText('1');
+
+		await context.setOffline(true);
+		await expect(page.locator('#count')).toHaveText('1');
+		await expect(page.locator('#first-value')).toHaveText('1');
+
+		await context.setOffline(false);
+		await page.click('#increment');
+		await expect(page.locator('#count')).toHaveText('2');
+		await expect(page.locator('#first-value')).toHaveText('2');
+		await expect(page.locator('#connected')).toHaveText('true');
+	});
+
+	test('query.live marks finite iterators as done and only reconnects explicitly', async ({
+		page
+	}) => {
+		await page.goto('/remote/live');
+		await page.click('#reset');
+
+		await expect(page.locator('#finite-done')).toHaveText('true');
+		await expect(page.locator('#finite-connected')).toHaveText('false');
+
+		await page.waitForTimeout(200);
+		await page.click('#stats');
+		await expect(page.locator('#stats-value')).not.toHaveText('pending');
+		const stats = JSON.parse((await page.locator('#stats-value').textContent()) ?? '{}');
+		const before = stats.finite_connection_count;
+
+		await page.waitForTimeout(200);
+		await page.click('#stats');
+		await expect(page.locator('#stats-value')).not.toHaveText('pending');
+		const after_wait = JSON.parse((await page.locator('#stats-value').textContent()) ?? '{}');
+		expect(after_wait.finite_connection_count).toBe(before);
+
+		await page.click('#finite-reconnect');
+		await expect
+			.poll(async () => {
+				await page.click('#stats');
+				await expect(page.locator('#stats-value')).not.toHaveText('pending');
+				return JSON.parse((await page.locator('#stats-value').textContent()) ?? '{}')
+					.finite_connection_count;
+			})
+			.toBeGreaterThan(before);
+		await expect(page.locator('#finite-done')).toHaveText('true');
+	});
+
+	test('query.live can be reconnected from server command handlers', async ({ page }) => {
+		await page.goto('/remote/live');
+		await page.click('#reset');
+
+		await page.click('#stats');
+		await expect(page.locator('#stats-value')).not.toHaveText('pending');
+		const before = JSON.parse((await page.locator('#stats-value').textContent()) ?? '{}');
+
+		await page.click('#reconnect-live');
+
+		await expect
+			.poll(async () => {
+				await page.click('#stats');
+				const value = (await page.locator('#stats-value').textContent()) ?? '{}';
+				if (value === 'pending') return before.cleanup_count;
+				return JSON.parse(value).cleanup_count;
+			})
+			.toBeGreaterThan(before.cleanup_count);
+
+		await expect(page.locator('#connected')).toHaveText('true');
+	});
+
+	test('command updates(live_query_function) can request reconnect via requested(...).reconnectAll', async ({
+		page
+	}) => {
+		await page.goto('/remote/live');
+		await page.click('#reset');
+		await expect(page.locator('#connected')).toHaveText('true');
+
+		await page.click('#stats');
+		await expect(page.locator('#stats-value')).not.toHaveText('pending');
+		const before = JSON.parse((await page.locator('#stats-value').textContent()) ?? '{}');
+
+		let sent_refreshes = 0;
+		/** @type {string | null} */
+		let first_refresh = null;
+		let reconnect_command_requests = 0;
+		/** @type {string[]} */
+		const page_errors = [];
+		page.on('pageerror', (error) => {
+			page_errors.push(String(error));
+		});
+		page.on('request', (request) => {
+			if (!request.url().includes('/_app/remote/')) return;
+			if (request.method() !== 'POST') return;
+			if (request.url().includes('reconnect_requested_live')) {
+				reconnect_command_requests += 1;
+			}
+
+			const body = request.postDataJSON();
+			if (Array.isArray(body?.refreshes)) {
+				sent_refreshes += body.refreshes.length;
+				if (!first_refresh && body.refreshes[0]) first_refresh = body.refreshes[0];
+			}
+		});
+		const [response] = await Promise.all([
+			page.waitForResponse((response) => response.url().includes('reconnect_requested_live')),
+			page.click('#reconnect-live-requested')
+		]);
+		const reconnect_response = await response.text();
+		expect(page_errors).toEqual([]);
+		expect(reconnect_command_requests).toBeGreaterThan(0);
+		expect(reconnect_response).toContain('"type":"result"');
+		expect(sent_refreshes).toBeGreaterThan(0);
+		// @ts-expect-error
+		expect(first_refresh?.includes('/')).toBe(true);
+
+		await expect
+			.poll(async () => {
+				await page.click('#stats');
+				const value = (await page.locator('#stats-value').textContent()) ?? '{}';
+				if (value === 'pending') return 0;
+				return JSON.parse(value).requested_reconnect_count;
+			})
+			.toBeGreaterThan(0);
+
+		await expect
+			.poll(async () => {
+				await page.click('#stats');
+				const value = (await page.locator('#stats-value').textContent()) ?? '{}';
+				if (value === 'pending') return before.cleanup_count;
+				return JSON.parse(value).cleanup_count;
+			})
+			.toBeGreaterThan(before.cleanup_count);
+	});
+
+	test('form reconnect updates targeted live query without reconnecting all live queries', async ({
+		page
+	}) => {
+		await page.goto('/remote/live');
+		await page.click('#reset');
+
+		await page.click('#stats');
+		await expect(page.locator('#stats-value')).not.toHaveText('pending');
+		const before = JSON.parse((await page.locator('#stats-value').textContent()) ?? '{}');
+
+		await page.click('#reconnect-live-form');
+
+		await expect
+			.poll(async () => {
+				await page.click('#stats');
+				const value = (await page.locator('#stats-value').textContent()) ?? '{}';
+				if (value === 'pending') return before.cleanup_count;
+				return JSON.parse(value).cleanup_count;
+			})
+			.toBeGreaterThan(before.cleanup_count);
+
+		await expect
+			.poll(async () => {
+				await page.click('#stats');
+				const value = (await page.locator('#stats-value').textContent()) ?? '{}';
+				if (value === 'pending') return before.finite_connection_count;
+				return JSON.parse(value).finite_connection_count;
+			})
+			.toBe(before.finite_connection_count);
+	});
+
+	test('query.live can be detached from the page', async ({ page }) => {
+		await page.goto('/remote/live');
+		await page.click('#reset');
+		await expect(page.locator('#count')).toHaveText('0');
+
+		await page.click('#toggle-live');
+		await expect(page.locator('#detached')).toHaveText('detached');
+	});
+
+	test('query.live does not resend unchanged devalue payloads', async ({ page }) => {
+		await page.goto('/remote/live');
+		await page.click('#reset');
+
+		await expect(page.locator('#duplicate-payload-count')).toHaveText('0');
+		const before = Number(await page.locator('#duplicate-updates').textContent());
+
+		await page.click('#notify-only');
+		await page.waitForTimeout(100);
+		await expect(page.locator('#duplicate-payload-count')).toHaveText('0');
+		await expect(page.locator('#duplicate-updates')).toHaveText(String(before));
+	});
+
+	test('query.live cleans up server iterator on reload', async ({ page }) => {
+		await page.goto('/remote/live');
+		await page.click('#stats');
+		await expect(page.locator('#stats-value')).not.toHaveText('pending');
+		const before_cleanup = JSON.parse(
+			(await page.locator('#stats-value').textContent()) ?? '{}'
+		).cleanup_count;
+
+		await page.reload();
+		await expect(page.locator('#count')).toBeVisible();
+
+		await expect
+			.poll(async () => {
+				await page.click('#stats');
+				const value = (await page.locator('#stats-value').textContent()) ?? '{}';
+				if (value === 'pending') return before_cleanup;
+				const stats = JSON.parse(value);
+				return stats.cleanup_count;
+			})
+			.toBeGreaterThan(before_cleanup);
 	});
 
 	test('refreshAll works with schema transforms (number to string)', async ({ page }) => {
@@ -516,18 +755,25 @@ test.describe('remote function mutations', () => {
 
 		const form1 = page.locator('form').nth(0);
 
-		// initial values rendered correctly
-		await expect(form1.locator('input[name="text_field"]')).toHaveValue('Example text');
+		const text = form1.locator('input[name="text_field"]');
+		const checkbox = form1.locator('input[name="b:checkbox_field"]');
 
-		// change the text field and submit
-		await form1.locator('input[name="text_field"]').fill('Updated text');
+		// initial values rendered correctly
+		await expect(text).toHaveValue('Example text');
+
+		await expect(checkbox).toBeChecked();
+
+		// change the fields and submit
+		await text.fill('Updated text');
+		await checkbox.uncheck();
 		await form1.locator('button').click();
 
 		// after submission, the query refreshes and the display should update
 		await expect(page.locator('div').first()).toContainText('Updated text');
 
 		// the input value should reflect the updated data
-		await expect(form1.locator('input[name="text_field"]')).toHaveValue('Updated text');
+		await expect(text).toHaveValue('Updated text');
+		await expect(checkbox).not.toBeChecked();
 
 		// reset the values for the client tests
 		await page.click('#reset-values');

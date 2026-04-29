@@ -189,9 +189,9 @@ function create_redis_client(options) {
 					commands.push(['INCR', key]);
 					return this;
 				},
-				async exec() {
+				exec() {
 					transactions.push(commands);
-					return Promise.all(commands.map(([, key]) => client.incr(key)));
+					return commands.map(([, key]) => client.incr(key));
 				}
 			};
 		}
