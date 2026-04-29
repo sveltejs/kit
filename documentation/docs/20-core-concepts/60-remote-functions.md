@@ -221,6 +221,28 @@ Any query can be re-fetched via its `refresh` method, which retrieves the latest
 
 > [!NOTE] Queries are cached while they're on the page, meaning `getPosts() === getPosts()`. This means you don't need a reference like `const posts = getPosts()` in order to update the query.
 
+### Query lifetime
+
+By default, a query is considered stale after 60 minutes, does not refresh on client-side navigation, and is retained in the client cache for up to 5 navigations or 10 minutes after nothing on the page references it. You can override this from inside the query function with `query.lifetime(...)`:
+
+```js
+/// file: src/routes/data.remote.js
+import { query } from '$app/server';
+
+export const getPosts = query(async () => {
+	query.lifetime({
+		staleAfter: '5s',
+		refreshAfter: '10s',
+		refreshOnNavigation: true,
+		bfcache: { limit: 5, maxAge: '10s' }
+	});
+
+	return getPostsFromDatabase();
+});
+```
+
+Time values can be a number of seconds, or a string ending in `s` or `m`. `staleAfter` controls when reusing a still-referenced query should trigger a refresh, `refreshAfter` schedules a refresh while the query remains referenced, and `refreshOnNavigation` refreshes after client-side navigations. Set `bfcache: false` to remove a query from the client cache as soon as it is no longer referenced, or provide `limit` and `maxAge` to keep it around temporarily.
+
 ## query.batch
 
 `query.batch` works like `query` except that it batches requests that happen within the same macrotask. This solves the so-called n+1 problem: rather than each query resulting in a separate database call (for example), simultaneous queries are grouped together.

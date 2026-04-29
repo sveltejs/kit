@@ -352,6 +352,22 @@ export interface KitCacheMetadata {
 	tags: string[];
 }
 
+export interface QueryLifetime {
+	/** If a referenced query is reused after this many seconds, it will be refreshed. If omitted, it never goes stale. */
+	staleAfter?: `${number}m` | `${number}s` | number;
+	/** If a query remains referenced for this many seconds, it will be refreshed. If omitted, it never refreshes automatically. */
+	refreshAfter?: `${number}m` | `${number}s` | number;
+	/** Whether the query should refresh after client-side navigations. */
+	refreshOnNavigation?: boolean;
+	/** How long to retain the query in the client cache after it is no longer referenced. */
+	bfcache?:
+		| {
+				limit: number;
+				maxAge: `${number}m` | `${number}s` | number;
+		  }
+		| false;
+}
+
 /**
  * Custom query cache integration. Export `get`, `set`, and `invalidate` from `kit.cache.path`.
  */

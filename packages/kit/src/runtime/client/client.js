@@ -207,6 +207,14 @@ export let app;
 export let query_responses = {};
 
 /**
+ * Lifetime configuration serialized by query.lifetime(...) during SSR or remote endpoint calls.
+ * @type {Record<string, import('types').NormalizedQueryLifetime>}
+ */
+export let query_lifetimes = {};
+
+export let remote_query_navigation_version = 0;
+
+/**
  * Data that was serialized during SSR for prerender functions.
  * This persists across client-side navigations.
  * @type {Record<string, any>}
@@ -327,6 +335,7 @@ export async function start(_app, _target, hydrate) {
 
 	if (__SVELTEKIT_PAYLOAD__) {
 		query_responses = __SVELTEKIT_PAYLOAD__.query ?? {};
+		query_lifetimes = /** @type {any} */ (__SVELTEKIT_PAYLOAD__).lifetimes ?? {};
 		prerender_responses = __SVELTEKIT_PAYLOAD__.prerender ?? {};
 	}
 
@@ -487,6 +496,19 @@ async function _invalidate(include_load_functions = true, reset_page_state = tru
 function reset_invalidation() {
 	invalidated.length = 0;
 	force_invalidation = false;
+}
+
+/** @param {boolean} pending_only */
+function notify_remote_queries_of_navigation(pending_only = false) {
+	if (pending_only) {
+		remote_query_navigation_version += 1;
+	}
+
+	for (const entries of query_map.values()) {
+		for (const entry of entries.values()) {
+			entry.resource.notify_navigation(entry, pending_only);
+		}
+	}
 }
 
 /** @param {number} index */
@@ -1704,6 +1726,7 @@ async function navigate({
 
 	if (started && nav.navigation.type !== 'enter') {
 		stores.navigating.set((navigating.current = nav.navigation));
+		notify_remote_queries_of_navigation(true);
 	}
 
 	let navigation_result = intent && (await load_route(intent));
@@ -1975,6 +1998,7 @@ async function navigate({
 	after_navigate_callbacks.forEach((fn) =>
 		fn(/** @type {import('@sveltejs/kit').AfterNavigate} */ (nav.navigation))
 	);
+	notify_remote_queries_of_navigation();
 
 	stores.navigating.set((navigating.current = null));
 

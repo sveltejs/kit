@@ -81,7 +81,8 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 			return json(
 				/** @type {RemoteFunctionResponse} */ ({
 					type: 'result',
-					result: stringify(results, transport)
+					result: stringify(results, transport),
+					lifetimes: serialize_lifetimes(state.remote.lifetimes)
 				})
 			);
 		}
@@ -266,7 +267,9 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 		return json(
 			/** @type {RemoteFunctionResponse} */ ({
 				type: 'result',
-				result: stringify(data, transport)
+				result: stringify(data, transport),
+				lifetimes:
+					internals.type === 'query' ? serialize_lifetimes(state.remote.lifetimes) : undefined
 			})
 		);
 	} catch (error) {
@@ -276,7 +279,11 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 					type: 'redirect',
 					location: error.location,
 					refreshes: await serialize_singleflight(state.remote.refreshes),
-					reconnects: await serialize_singleflight(state.remote.reconnects)
+					reconnects: await serialize_singleflight(state.remote.reconnects),
+					lifetimes:
+						internals.type === 'query' || internals.type === 'query_batch'
+							? serialize_lifetimes(state.remote.lifetimes)
+							: undefined
 				})
 			);
 		}
@@ -328,6 +335,15 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 		);
 
 		return stringify(Object.fromEntries(results), transport);
+	}
+
+	/** @param {Map<string, import('types').NormalizedQueryLifetime> | null} map */
+	function serialize_lifetimes(map) {
+		if (!map || map.size === 0) {
+			return undefined;
+		}
+
+		return stringify(Object.fromEntries(map), transport);
 	}
 }
 
