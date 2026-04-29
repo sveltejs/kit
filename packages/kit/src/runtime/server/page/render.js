@@ -506,6 +506,7 @@ export async function render_response({
 		const { remote } = event_state;
 
 		let serialized_query_data = '';
+		let serialized_lifetime_data = '';
 		let serialized_prerender_data = '';
 
 		if (remote.data) {
@@ -571,12 +572,19 @@ export async function render_response({
 				serialized_query_data = `${global}.query = ${devalue.uneval(query, replacer)};\n\n\t\t\t\t\t\t`;
 			}
 
+			if (remote.lifetimes?.size) {
+				serialized_lifetime_data = `${global}.lifetimes = ${devalue.uneval(
+					Object.fromEntries(remote.lifetimes),
+					replacer
+				)};\n\n\t\t\t\t\t\t`;
+			}
+
 			if (Object.keys(prerender).length > 0) {
 				serialized_prerender_data = `${global}.prerender = ${devalue.uneval(prerender, replacer)};\n\n\t\t\t\t\t\t`;
 			}
 		}
 
-		const serialized_remote_data = `${serialized_query_data}${serialized_prerender_data}`;
+		const serialized_remote_data = `${serialized_query_data}${serialized_lifetime_data}${serialized_prerender_data}`;
 
 		// `client.app` is a proxy for `bundleStrategy === 'split'`
 		const boot = client.inline

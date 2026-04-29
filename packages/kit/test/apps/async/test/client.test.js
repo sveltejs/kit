@@ -26,6 +26,35 @@ test.describe('remote functions', () => {
 		await page.getByRole('button', { name: 'Refresh' }).click();
 		await expect(page.locator('p')).toHaveText('foobaz');
 	});
+
+	test('query.lifetime controls refresh and client cache behavior', async ({ page, clicknav }) => {
+		await page.goto('/remote/lifetime');
+		await expect(page.locator('#navigation-count')).toHaveText('1');
+		await expect(page.locator('#auto-count')).toHaveText('1');
+		await expect(page.locator('#stale-count')).toHaveText('1');
+		await expect(page.locator('#bfcache-count')).toHaveText('1');
+
+		await expect
+			.poll(async () => Number(await page.locator('#auto-count').textContent()))
+			.toBeGreaterThan(1);
+
+		await page.waitForTimeout(250);
+		await page.locator('#show-stale-child').click();
+		await expect(page.locator('#stale-count')).toHaveText('2');
+		await expect(page.locator('#stale-child-count')).toHaveText('2');
+
+		await page.locator('#toggle-bfcache').click();
+		await expect(page.locator('#bfcache-detached')).toHaveText('detached');
+		await clicknav('a[href="/remote/lifetime/other"]', { waitForURL: '/remote/lifetime/other' });
+		await expect(page.locator('#navigation-count')).toHaveText('2');
+		await clicknav('a[href="/remote/lifetime"]', { waitForURL: '/remote/lifetime' });
+		await expect(page.locator('#bfcache-count')).toHaveText('2');
+
+		await page.locator('#start-pending').click();
+		await page.waitForTimeout(50);
+		await clicknav('a[href="/remote/lifetime/other"]', { waitForURL: '/remote/lifetime/other' });
+		await expect(page.locator('#pending-count')).toHaveText('2');
+	});
 });
 
 // have to run in serial because commands mutate in-memory data on the server (should fix this at some point)

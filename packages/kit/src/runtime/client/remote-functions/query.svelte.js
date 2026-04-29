@@ -1,6 +1,13 @@
 /** @import { RemoteQueryFunction } from '@sveltejs/kit' */
+/** @import { NormalizedQueryLifetime } from 'types' */
 import { app_dir, base } from '$app/paths/internal/client';
-import { app, query_map, query_responses } from '../client.js';
+import {
+	app,
+	query_lifetimes,
+	query_map,
+	query_responses,
+	remote_query_navigation_version
+} from '../client.js';
 import {
 	get_remote_request_headers,
 	is_in_effect,
@@ -22,8 +29,21 @@ import { create_remote_key, stringify_remote_arg, unfriendly_hydratable } from '
  *   count: number;
  *   resource: Query<T>;
  *   cleanup: () => void;
+ *   evict: () => void;
+ *   evict_timeout: ReturnType<typeof setTimeout> | null;
+ *   inactive_navigations: number;
  * }} RemoteQueryCacheEntry
  */
+
+/** @type {NormalizedQueryLifetime} */
+const DEFAULT_QUERY_LIFETIME = {
+	staleAfter: 60 * 60,
+	refreshOnNavigation: false,
+	bfcache: {
+		limit: 5,
+		maxAge: 10 * 60
+	}
+};
 
 /**
  * @param {string} id
@@ -43,7 +63,7 @@ export function query(id) {
 
 	/** @type {RemoteQueryFunction<any, any>} */
 	const wrapper = (arg) => {
-		return new QueryProxy(id, arg, async (key, payload) => {
+		const proxy = new QueryProxy(id, arg, async (key, payload) => {
 			const url = `${base}/${app_dir}/remote/${id}${payload ? `?payload=${payload}` : ''}`;
 
 			const serialized = await unfriendly_hydratable(key, () =>
@@ -52,6 +72,7 @@ export function query(id) {
 
 			return devalue.parse(serialized, app.decoders);
 		});
+		return /** @type {any} */ (proxy); // TODO why is the cast necessary all of a sudden?
 	};
 
 	Object.defineProperty(wrapper, QUERY_FUNCTION_ID, { value: id });
@@ -64,6 +85,7 @@ export function query(id) {
 	return wrapper;
 }
 
+/**
  * The actual query instance. There should only ever be one active query instance per key.
  *
  * @template T
@@ -87,6 +109,13 @@ export class Query {
 	#promise = $state.raw(null);
 	/** @type {Array<(old: T) => T>} */
 	#overrides = $state([]);
+	#active = false;
+	#updated_at = 0;
+	#last_navigation_refresh_version = 0;
+	/** @type {NormalizedQueryLifetime | undefined} */
+	#lifetime = undefined;
+	/** @type {ReturnType<typeof setTimeout> | null} */
+	#refresh_timeout = null;
 
 	/** @type {T | undefined} */
 	#current = $derived.by(() => {
@@ -102,7 +131,9 @@ export class Query {
 	/** @type {Promise<T>['then']} */
 	// @ts-expect-error TS doesn't understand that the promise returns something
 	#then = $derived.by(() => {
+		console.trace('then', this.#key);
 		const p = this.#get_promise();
+		this.#promise;
 		this.#overrides.length;
 
 		return (resolve, reject) => {
@@ -123,6 +154,7 @@ export class Query {
 	constructor(key, fn) {
 		this.#key = key;
 		this.#fn = fn;
+		this.#consume_lifetime();
 	}
 
 	#get_promise() {
@@ -143,8 +175,57 @@ export class Query {
 		this.#latest.length = 0;
 	}
 
+	#get_lifetime() {
+		this.#consume_lifetime();
+		return this.#lifetime ?? DEFAULT_QUERY_LIFETIME;
+	}
+
+	#has_lifetime() {
+		this.#consume_lifetime();
+		return this.#lifetime !== undefined;
+	}
+
+	#consume_lifetime() {
+		if (Object.hasOwn(query_lifetimes, this.#key)) {
+			this.#lifetime = query_lifetimes[this.#key];
+			delete query_lifetimes[this.#key];
+		}
+	}
+
+	#clear_refresh_timer() {
+		if (this.#refresh_timeout) {
+			clearTimeout(this.#refresh_timeout);
+			this.#refresh_timeout = null;
+		}
+	}
+
+	#schedule_refresh() {
+		if (this.#refresh_timeout) return;
+
+		const refresh_after = this.#get_lifetime().refreshAfter;
+		if (!this.#active || refresh_after === undefined) return;
+
+		this.#refresh_timeout = setTimeout(() => {
+			this.#refresh_timeout = null;
+			if (this.#active) {
+				void this.refresh();
+			}
+		}, refresh_after * 1000);
+	}
+
+	#is_stale() {
+		const stale_after = this.#get_lifetime().staleAfter;
+		return (
+			this.#ready &&
+			!this.#loading &&
+			stale_after !== undefined &&
+			Date.now() - this.#updated_at >= stale_after * 1000
+		);
+	}
+
 	#run() {
 		this.#loading = true;
+		const navigation_version = remote_query_navigation_version;
 
 		const { promise, resolve, reject } = with_resolvers();
 
@@ -163,7 +244,17 @@ export class Query {
 					this.#loading = false;
 					this.#raw = value;
 					this.#error = undefined;
+					this.#updated_at = Date.now();
 				});
+
+				if (
+					!this.#has_lifetime() &&
+					navigation_version !== remote_query_navigation_version &&
+					this.#last_navigation_refresh_version !== remote_query_navigation_version
+				) {
+					this.#last_navigation_refresh_version = remote_query_navigation_version;
+					void this.refresh();
+				}
 
 				resolve(undefined);
 			})
@@ -254,6 +345,60 @@ export class Query {
 		return (this.#promise = this.#run());
 	}
 
+	activate() {
+		this.#active = true;
+		this.#schedule_refresh();
+	}
+
+	refresh_if_stale() {
+		if (this.#is_stale()) {
+			// Without the timeout this will not correctly trigger then/current etc,
+			// even if we would untrack to avoid the mutation validation error.
+			setTimeout(() => {
+				if (this.#active && this.#is_stale()) {
+					void this.refresh();
+				}
+			});
+		}
+	}
+
+	deactivate() {
+		this.#active = false;
+		this.#clear_refresh_timer();
+	}
+
+	get_bfcache() {
+		return this.#get_lifetime().bfcache;
+	}
+
+	/**
+	 * @param {RemoteQueryCacheEntry<T>} entry
+	 * @param {boolean} [pending_only]
+	 */
+	notify_navigation(entry, pending_only = false) {
+		if (entry.count === 0) {
+			if (pending_only) return;
+
+			const bfcache = this.#get_lifetime().bfcache;
+			if (bfcache === false) return entry.evict();
+
+			entry.inactive_navigations += 1;
+			if (entry.inactive_navigations >= bfcache.limit) {
+				entry.evict();
+			}
+			return;
+		}
+
+		const lifetime = this.#get_lifetime();
+		if (!pending_only && lifetime.refreshOnNavigation) {
+			setTimeout(() => {
+				if (this.#active) {
+					void this.refresh();
+				}
+			}, 0);
+		}
+	}
+
 	/**
 	 * @param {T} value
 	 */
@@ -263,6 +408,7 @@ export class Query {
 		this.#loading = false;
 		this.#error = undefined;
 		this.#raw = value;
+		this.#updated_at = Date.now();
 		this.#promise = Promise.resolve();
 	}
 
@@ -366,17 +512,47 @@ export class QueryProxy {
 			const c = (this_instance = {
 				count: 0,
 				resource: /** @type {Query<T>} */ (/** @type {unknown} */ (null)),
-				cleanup: /** @type {() => void} */ (/** @type {unknown} */ (null))
+				cleanup: /** @type {() => void} */ (/** @type {unknown} */ (null)),
+				evict: /** @type {() => void} */ (/** @type {unknown} */ (null)),
+				evict_timeout: null,
+				inactive_navigations: 0
 			});
 
 			c.cleanup = $effect.root(() => {
 				c.resource = new Query(this.#key, () => this.#fn(this.#key, this.#payload));
 			});
+			c.evict = () => {
+				const query_instances = query_map.get(this.#id);
+				const entry = query_instances?.get(this.#payload);
+				if (entry !== c || c.count !== 0) return;
+
+				if (c.evict_timeout) {
+					clearTimeout(c.evict_timeout);
+					c.evict_timeout = null;
+				}
+				c.resource.deactivate();
+				c.cleanup();
+				query_instances?.delete(this.#payload);
+				if (query_instances?.size === 0) {
+					query_map.delete(this.#id);
+				}
+			};
 
 			query_instances.set(this.#payload, this_instance);
 		}
 
+		if (this_instance.evict_timeout) {
+			clearTimeout(this_instance.evict_timeout);
+			this_instance.evict_timeout = null;
+		}
+		this_instance.inactive_navigations = 0;
+		const was_inactive = this_instance.count === 0;
 		this_instance.count += 1;
+		if (was_inactive) {
+			this_instance.resource.activate();
+		} else {
+			this_instance.resource.refresh_if_stale();
+		}
 
 		return this_instance;
 	}
@@ -391,16 +567,17 @@ export class QueryProxy {
 		entry.count -= 1;
 
 		return () => {
-			const query_instances = query_map.get(this.#id);
-			const this_instance = query_instances?.get(this.#payload);
+			if (entry.count !== 0) return;
 
-			if (this_instance?.count === 0) {
-				this_instance.cleanup();
-				query_instances?.delete(this.#payload);
+			entry.resource.deactivate();
+
+			const bfcache = entry.resource.get_bfcache();
+			if (bfcache === false) {
+				entry.evict();
+				return;
 			}
-			if (query_instances?.size === 0) {
-				query_map.delete(this.#id);
-			}
+
+			entry.evict_timeout = setTimeout(entry.evict, bfcache.maxAge * 1000);
 		};
 	}
 

@@ -1,7 +1,7 @@
 /** @import { RemoteFunctionResponse, RemoteSingleflightMap, RemoteSingleflightEntry } from 'types' */
 /** @import { RemoteQueryUpdate } from '@sveltejs/kit' */
 import * as devalue from 'devalue';
-import { app, goto, live_query_map, query_map } from '../client.js';
+import { app, goto, live_query_map, query_lifetimes, query_map } from '../client.js';
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
 import { untrack } from 'svelte';
 import { create_remote_key, split_remote_key } from '../../shared.js';
@@ -79,6 +79,10 @@ export async function handle_side_channel_response(response) {
 
 	if (response.type === 'error') {
 		throw new HttpError(response.status ?? 500, response.error);
+	}
+
+	if (response.lifetimes) {
+		apply_lifetimes(response.lifetimes);
 	}
 
 	return response;
@@ -205,4 +209,17 @@ export const apply_reconnections = (stringified_reconnects) => {
 			resource?.fail(new HttpError(value.status ?? 500, value.error));
 		}
 	});
+};
+
+/**
+ * Apply lifetime metadata from the server to matching query keys
+ *
+ * @param {string} stringified_lifetimes
+ */
+export const apply_lifetimes = (stringified_lifetimes) => {
+	const lifetimes = /** @type {Record<string, import('types').NormalizedQueryLifetime>} */ (
+		devalue.parse(stringified_lifetimes, app.decoders)
+	);
+
+	Object.assign(query_lifetimes, lifetimes);
 };

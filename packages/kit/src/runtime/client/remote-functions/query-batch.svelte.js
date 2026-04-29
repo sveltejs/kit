@@ -2,7 +2,7 @@
 /** @import { RemoteFunctionResponse } from 'types' */
 import { app_dir, base } from '$app/paths/internal/client';
 import { app, goto } from '../client.js';
-import { get_remote_request_headers, QUERY_FUNCTION_ID } from './shared.svelte.js';
+import { apply_lifetimes, get_remote_request_headers, QUERY_FUNCTION_ID } from './shared.svelte.js';
 import { QueryProxy } from './query.svelte.js';
 import * as devalue from 'devalue';
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
@@ -18,7 +18,7 @@ export function query_batch(id) {
 
 	/** @type {RemoteQueryFunction<any, any>} */
 	const wrapper = (arg) => {
-		return new QueryProxy(id, arg, async (key, payload) => {
+		const proxy = new QueryProxy(id, arg, async (key, payload) => {
 			const serialized = await unfriendly_hydratable(key, () => {
 				return new Promise((resolve, reject) => {
 					// create_remote_function caches identical calls, but in case a refresh to the same query is called multiple times this function
@@ -67,6 +67,10 @@ export function query_batch(id) {
 								throw new Redirect(307, result.location);
 							}
 
+							if (result.lifetimes) {
+								apply_lifetimes(result.lifetimes);
+							}
+
 							const results = devalue.parse(result.result, app.decoders);
 
 							// Resolve individual queries
@@ -97,6 +101,8 @@ export function query_batch(id) {
 
 			return devalue.parse(serialized, app.decoders);
 		});
+
+		return /** @type {any} */ (proxy); // TODO why is the cast necessary all of a sudden?
 	};
 
 	Object.defineProperty(wrapper, QUERY_FUNCTION_ID, { value: id });

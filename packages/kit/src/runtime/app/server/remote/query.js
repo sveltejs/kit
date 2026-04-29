@@ -1,5 +1,5 @@
 /** @import { RemoteLiveQuery, RemoteLiveQueryFunction, RemoteQuery, RemoteQueryFunction } from '@sveltejs/kit' */
-/** @import { RemoteInternals, MaybePromise, RequestState, RemoteQueryLiveInternals, RemoteQueryBatchInternals, RemoteQueryInternals, RemoteLiveQueryUserFunctionReturnType } from 'types' */
+/** @import { RemoteInternals, MaybePromise, RequestState, RemoteQueryLiveInternals, RemoteQueryBatchInternals, RemoteQueryInternals, RemoteLiveQueryUserFunctionReturnType, QueryLifetime, NormalizedQueryLifetime, QueryLifetimeTime } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 import { get_request_store } from '@sveltejs/kit/internal/server';
 import { create_remote_key, stringify, stringify_remote_arg } from '../../../shared.js';
@@ -17,6 +17,16 @@ import { handle_error_and_jsonify } from '../../../server/utils.js';
 import { HttpError, SvelteKitError } from '@sveltejs/kit/internal';
 import { noop } from '../../../../utils/functions.js';
 import { create_request_cache, get_request_cache_options } from '../../../server/cache.js';
+
+/** @type {NormalizedQueryLifetime} */
+export const DEFAULT_QUERY_LIFETIME = {
+	staleAfter: 60 * 60,
+	refreshOnNavigation: false,
+	bfcache: {
+		limit: 5,
+		maxAge: 10 * 60
+	}
+};
 
 /**
  * Creates a remote query. When called from the browser, the function will be invoked on the server via a `fetch` call.
@@ -79,15 +89,16 @@ export function query(validate_or_fn, maybe_fn) {
 		validate,
 		bind(payload, validated_arg) {
 			const { event, state } = get_request_store();
+			const query_id = create_remote_key(__.id, payload);
 
 			return create_query_resource(__, payload, state, () =>
 				run_remote_function(
 					event,
 					state,
 					false,
-					create_request_cache(state, create_remote_key(__.id, payload)),
+					create_request_cache(state, query_id),
 					() => validated_arg,
-					fn
+					(input) => with_lifetime_context(state, __.id ? query_id : null, () => fn(input))
 				)
 			);
 		}
@@ -127,7 +138,7 @@ export function query(validate_or_fn, maybe_fn) {
 					false,
 					cache,
 					() => validate(arg),
-					fn
+					(input) => with_lifetime_context(state, __.id ? query_id : null, () => fn(input))
 				);
 
 				const options = get_request_cache_options(cache);
@@ -159,11 +170,107 @@ function query_cache(input) {
 }
 
 /**
+ * Configure the lifetime of the currently executing query.
+ *
+ * @param {QueryLifetime} options
+ */
+function query_lifetime(options) {
+	const { state } = get_request_store();
+	const context = state.remote.lifetime_context;
+
+	if (!context) {
+		throw new Error('query.lifetime(...) can only be called while executing a query function');
+	}
+
+	const lifetime = normalize_query_lifetime(options);
+	state.remote.lifetimes ??= new Map();
+
+	for (const key of Array.isArray(context) ? context : [context]) {
+		state.remote.lifetimes.set(key, lifetime);
+	}
+}
+
+/**
  * @param {string[]} tags
  */
 async function invalidate_query_cache(tags) {
 	const { state } = get_request_store();
 	await state.cache.invalidate(tags);
+}
+
+/**
+ * @param {QueryLifetimeTime | undefined} value
+ * @returns {number | undefined}
+ */
+function normalize_lifetime_time(value) {
+	if (value === undefined) return undefined;
+
+	if (typeof value === 'number') {
+		if (value < 0 || !Number.isFinite(value)) {
+			throw new Error('query.lifetime(...) times must be finite, non-negative numbers');
+		}
+		return value;
+	}
+
+	const match = /^(\d+(?:\.\d+)?)([ms])$/.exec(value);
+	if (!match) {
+		throw new Error("query.lifetime(...) times must be numbers or strings like '10s' or '5m'");
+	}
+
+	const amount = Number(match[1]);
+	return match[2] === 'm' ? amount * 60 : amount;
+}
+
+/**
+ * @param {QueryLifetime} options
+ * @returns {NormalizedQueryLifetime}
+ */
+function normalize_query_lifetime(options) {
+	const bfcache_max_age =
+		options.bfcache && typeof options.bfcache === 'object'
+			? normalize_lifetime_time(options.bfcache.maxAge)
+			: undefined;
+
+	if (
+		options.bfcache &&
+		(!Number.isFinite(options.bfcache.limit) ||
+			options.bfcache.limit < 0 ||
+			bfcache_max_age === undefined)
+	) {
+		throw new Error('query.lifetime(...) bfcache requires a finite, non-negative limit and maxAge');
+	}
+
+	return {
+		staleAfter: normalize_lifetime_time(options.staleAfter),
+		refreshAfter: normalize_lifetime_time(options.refreshAfter),
+		refreshOnNavigation: options.refreshOnNavigation ?? false,
+		bfcache:
+			options.bfcache === undefined
+				? false
+				: options.bfcache === false
+					? false
+					: {
+							limit: options.bfcache.limit,
+							maxAge: /** @type {number} */ (bfcache_max_age)
+						}
+	};
+}
+
+/**
+ * @template T
+ * @param {RequestState} state
+ * @param {string | string[] | null} context
+ * @param {() => T} fn
+ * @returns {T}
+ */
+function with_lifetime_context(state, context, fn) {
+	const previous = state.remote.lifetime_context;
+	state.remote.lifetime_context = previous && context ? [] : context;
+	try {
+		return fn();
+	} finally {
+		state.remote.lifetime_context = previous;
+	}
 }
 
 /**
@@ -353,7 +460,7 @@ function batch(validate_or_fn, maybe_fn) {
 
 				try {
 					const cached = await Promise.all(
-						entries.map((entry, i) =>
+						entries.map(async (entry, i) =>
 							entry.read_cache
 								? deserialize_query_cache_entry(await state.remote.cache?.get(query_ids[i]))
 								: null
@@ -364,8 +471,9 @@ function batch(validate_or_fn, maybe_fn) {
 					const missing = [];
 
 					for (let i = 0; i < cached.length; i++) {
-						if (cached[i] !== null) {
-							const value = parse_remote_response(cached[i].response, state.transport);
+						const cached_entry = cached[i];
+						if (cached_entry !== null) {
+							const value = parse_remote_response(cached_entry.response, state.transport);
 							for (const resolver of entries[i].resolvers) {
 								resolver.resolve(value);
 							}
@@ -389,7 +497,11 @@ function batch(validate_or_fn, maybe_fn) {
 						cache,
 						async () => Promise.all(missing.map((entry) => entry.get_validated())),
 						async (input) => {
-							const get_result = await fn(input);
+							const get_result = await with_lifetime_context(
+								state,
+								__.id ? missing.map((entry) => entry.query_id) : null,
+								() => fn(input)
+							);
 
 							for (let i = 0; i < missing.length; i++) {
 								try {
@@ -449,8 +561,9 @@ function batch(validate_or_fn, maybe_fn) {
 			);
 
 			for (let i = 0; i < cached.length; i++) {
-				if (cached[i] !== null) {
-					results[i] = { type: 'result', data: cached[i].response };
+				const cached_entry = cached[i];
+				if (cached_entry !== null) {
+					results[i] = { type: 'result', data: cached_entry.response };
 				} else {
 					missing.push(i);
 				}
@@ -470,7 +583,11 @@ function batch(validate_or_fn, maybe_fn) {
 				cache,
 				async () => Promise.all(missing_args.map(validate)),
 				async (/** @type {any[]} */ input) => {
-					const get_result = await fn(input);
+					const get_result = await with_lifetime_context(
+						state,
+						__.id ? missing.map((index) => query_ids[index]) : null,
+						() => fn(input)
+					);
 
 					return Promise.all(
 						input.map(async (arg, i) => {
@@ -717,6 +834,7 @@ function create_live_query_resource(__, payload, state, get_first_value) {
 // Add batch as a property to the query function
 Object.defineProperty(query, 'batch', { value: batch, enumerable: true });
 Object.defineProperty(query, 'cache', { value: query_cache, enumerable: true });
+Object.defineProperty(query, 'lifetime', { value: query_lifetime, enumerable: true });
 Object.defineProperty(query_cache, 'invalidate', {
 	value: invalidate_query_cache,
 	enumerable: true

@@ -35,6 +35,8 @@ declare global {
 		env?: Record<string, string>;
 		/** Serialized data from query/form/command functions */
 		query?: Record<string, any>;
+		/** Lifetime metadata from query functions */
+		lifetimes?: Record<string, import('types').NormalizedQueryLifetime>;
 		/** Serialized data from prerender functions */
 		prerender?: Record<string, any>;
 		/** Create a placeholder promise */

@@ -326,6 +326,22 @@ declare module '@sveltejs/kit' {
 		tags: string[];
 	}
 
+	export interface QueryLifetime {
+		/** If a referenced query is reused after this many seconds, it will be refreshed. If omitted, it never goes stale. */
+		staleAfter?: `${number}m` | `${number}s` | number;
+		/** If a query remains referenced for this many seconds, it will be refreshed. If omitted, it never refreshes automatically. */
+		refreshAfter?: `${number}m` | `${number}s` | number;
+		/** Whether the query should refresh after client-side navigations. */
+		refreshOnNavigation?: boolean;
+		/** How long to retain the query in the client cache after it is no longer referenced. */
+		bfcache?:
+			| {
+					limit: number;
+					maxAge: `${number}m` | `${number}s` | number;
+			  }
+			| false;
+	}
+
 	/**
 	 * Custom query cache integration. Export `get`, `set`, and `invalidate` from `kit.cache.path`.
 	 */
@@ -3569,6 +3585,11 @@ declare module '$app/server' {
 			function invalidate(tags: string[]): Promise<void>;
 		}
 		/**
+		 * Configure the lifetime of the currently executing query.
+		 *
+		 * */
+		function lifetime(options: QueryLifetime): void;
+		/**
 		 * Creates a live remote query. When called from the browser, the function will be invoked on the server via a streaming `fetch` call.
 		 *
 		 * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query.live) for full documentation.
@@ -3650,6 +3671,20 @@ declare module '$app/server' {
 	 *
 	 * */
 	export function requested<Input, Output, Validated = Input>(query: RemoteLiveQueryFunction<Input, Output, Validated>, limit: number): LiveQueryRequestedResult<Validated, Output>;
+	type QueryLifetimeTime = `${number}m` | `${number}s` | number;
+
+	interface QueryLifetime {
+		staleAfter?: QueryLifetimeTime;
+		refreshAfter?: QueryLifetimeTime;
+		refreshOnNavigation?: boolean;
+		bfcache?:
+			| {
+					limit: number;
+					maxAge: QueryLifetimeTime;
+			  }
+			| false;
+	}
+
 	type RemoteLiveQueryUserFunctionReturnType<Output> = MaybePromise<
 		| AsyncGenerator<Output>
 		| AsyncIterator<Output>

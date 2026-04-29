@@ -154,6 +154,8 @@ export async function internal_respond(request, options, manifest, state) {
 			/** A map of remote function key to corresponding single-flight-mutation promise */
 			refreshes: null,
 			reconnects: null,
+			lifetimes: null,
+			lifetime_context: null,
 			/** A map of remote function ID to payloads requested for refreshing by the client */
 			requested: null,
 			invalidations: null,

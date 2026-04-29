@@ -310,6 +310,8 @@ export type RemoteFunctionResponse =
 			refreshes?: string;
 			/** devalue'd Record<string, any> */
 			reconnects?: string;
+			/** devalue'd Record<string, QueryLifetime> */
+			lifetimes?: string;
 	  })
 	| ServerErrorNode
 	| {
@@ -319,6 +321,8 @@ export type RemoteFunctionResponse =
 			refreshes: string | undefined;
 			/** devalue'd Record<string, any> */
 			reconnects: string | undefined;
+			/** devalue'd Record<string, QueryLifetime> */
+			lifetimes?: string;
 	  };
 
 export type RemoteSingleflightResult = {
@@ -335,6 +339,32 @@ export type RemoteSingleflightError = {
 export type RemoteSingleflightEntry = RemoteSingleflightResult | RemoteSingleflightError;
 
 export type RemoteSingleflightMap = Record<string, RemoteSingleflightEntry>;
+
+export type QueryLifetimeTime = `${number}m` | `${number}s` | number;
+
+export interface QueryLifetime {
+	staleAfter?: QueryLifetimeTime;
+	refreshAfter?: QueryLifetimeTime;
+	refreshOnNavigation?: boolean;
+	bfcache?:
+		| {
+				limit: number;
+				maxAge: QueryLifetimeTime;
+		  }
+		| false;
+}
+
+export interface NormalizedQueryLifetime {
+	staleAfter?: number;
+	refreshAfter?: number;
+	refreshOnNavigation: boolean;
+	bfcache:
+		| {
+				limit: number;
+				maxAge: number;
+		  }
+		| false;
+}
 
 export type RemoteLiveQueryUserFunctionReturnType<Output> = MaybePromise<
 	| AsyncGenerator<Output>
@@ -718,6 +748,8 @@ export interface RequestState {
 		forms: null | Map<any, any>;
 		refreshes: null | Map<string, Promise<any>>;
 		reconnects: null | Map<string, Promise<any>>;
+		lifetimes: null | Map<string, NormalizedQueryLifetime>;
+		lifetime_context: null | string | string[];
 		requested: null | Map<string, string[]>;
 		/**
 		 * A list of promises to await for invalidations to complete.
