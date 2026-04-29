@@ -56,6 +56,7 @@ export class SvelteKitError extends Error {
 		super(message);
 		this.status = status;
 		this.text = text;
+		this.name = 'SvelteKitError';
 	}
 }
 
