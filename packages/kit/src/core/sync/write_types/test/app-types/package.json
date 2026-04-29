@@ -1,6 +1,9 @@
 {
 	"private": true,
 	"type": "module",
+		"devDependencies": {
+		"typescript": "catalog:"
+	},
 	"scripts": {
 		"testtypes": "tsc"
 	}
