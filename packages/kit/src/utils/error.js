@@ -27,12 +27,27 @@ export function normalize_error(error) {
  * @param {unknown} error
  */
 export function get_status(error) {
-	return error instanceof HttpError || error instanceof SvelteKitError ? error.status : 500;
+	if (error instanceof HttpError || error instanceof SvelteKitError) return error.status;
+	// Fallback for when SvelteKitError or HttpError crosses a bundle boundary and instanceof fails
+	// due to class identity mismatch (e.g. adapter-node bundling its own copy of @sveltejs/kit)
+	const e = /** @type {any} */ (error);
+	if (
+		e != null &&
+		(e.name === 'SvelteKitError' || e.name === 'HttpError') &&
+		typeof e.status === 'number'
+	) {
+		return e.status;
+	}
+	return 500;
 }
 
 /**
  * @param {unknown} error
  */
 export function get_message(error) {
-	return error instanceof SvelteKitError ? error.text : 'Internal Error';
+	if (error instanceof SvelteKitError) return error.text;
+	// Fallback for when SvelteKitError crosses a bundle boundary and instanceof fails
+	const e = /** @type {any} */ (error);
+	if (e != null && e.name === 'SvelteKitError' && typeof e.text === 'string') return e.text;
+	return 'Internal Error';
 }
