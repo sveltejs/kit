@@ -55,11 +55,15 @@ export function query(id) {
 	};
 
 	Object.defineProperty(wrapper, QUERY_FUNCTION_ID, { value: id });
+	Object.defineProperty(wrapper, 'invalidate', {
+		value() {
+			throw new Error('Cannot call query().invalidate() on the client');
+		}
+	});
 
 	return wrapper;
 }
 
-/**
  * The actual query instance. There should only ever be one active query instance per key.
  *
  * @template T
@@ -508,5 +512,9 @@ export class QueryProxy {
 
 	get [Symbol.toStringTag]() {
 		return 'QueryProxy';
+	}
+
+	invalidate() {
+		throw new Error('invalidate() can only be called on the server');
 	}
 }

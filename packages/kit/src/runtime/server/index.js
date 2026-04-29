@@ -51,9 +51,9 @@ export class Server {
 	}
 
 	/**
-	 * @param {import('@sveltejs/kit').ServerInitOptions} opts
+	 * @param {import('@sveltejs/kit').ServerInitOptions & { memory_cache?: import('types').KitCacheHandler }} opts
 	 */
-	async init({ env, read }) {
+	async init({ env, read, memory_cache }) {
 		// Take care: Some adapters may have to call `Server.init` per-request to set env vars,
 		// so anything that shouldn't be rerun should be wrapped in an `if` block to make sure it hasn't
 		// been done already.
@@ -139,6 +139,13 @@ export class Server {
 
 				if (module.init) {
 					await module.init();
+				}
+
+				const load_cache = this.#options.kit_cache_config;
+				if (memory_cache) {
+					this.#options.kit_cache_handler = memory_cache;
+				} else if (load_cache) {
+					this.#options.kit_cache_handler = await load_cache();
 				}
 			} catch (e) {
 				if (DEV) {

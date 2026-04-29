@@ -175,6 +175,25 @@ When a new version of your app is deployed, assets belonging to the previous ver
 
 Cookie-based skew protection comes with one caveat: if a user has multiple versions of your app open in multiple tabs, requests from older versions will be routed to the newer one, meaning they will fall back to SvelteKit's built-in skew protection.
 
+## Caching
+
+If you are using SvelteKit's built-in remote caching, the Vercel adapter provides a default cache implementation. It leverages the Vercel Runtime Cache API and additionally CDN cache headers when doing remote function requests from the client.
+
+```js
+// @errors: 2307
+/// file: svelte.config.js
+import adapter from '@sveltejs/adapter-vercel';
+
+/** @type {import('@sveltejs/kit').Config} */
+const config = {
+	kit: {
+		adapter: adapter({ cache: true })
+	}
+};
+
+export default config;
+```
+
 ## Notes
 
 ### Vercel utilities

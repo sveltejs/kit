@@ -23,6 +23,7 @@ import {
 	Transport,
 	HandleValidationError,
 	RemoteFormIssue,
+	RequestCache,
 	RemoteQuery,
 	RemoteLiveQuery
 } from '@sveltejs/kit';
@@ -174,7 +175,9 @@ export interface Env {
 }
 
 export class InternalServer extends Server {
-	init(options: ServerInitOptions): Promise<void>;
+	init(
+		options: ServerInitOptions & { memory_cache?: import('types').KitCacheHandler }
+	): Promise<void>;
 	respond(
 		request: Request,
 		options: RequestOptions & {
@@ -494,6 +497,9 @@ export interface SSROptions {
 	env_private_prefix: string;
 	hash_routing: boolean;
 	hooks: ServerHooks;
+	kit_cache_config: () => Promise<KitCacheHandler>;
+	/** Filled during `Server.init` when `kit.cache.path` is set, or during dev/preview when `memory_cache` is provided */
+	kit_cache_handler: KitCacheHandler | null;
 	preload_strategy: ValidatedConfig['kit']['output']['preloadStrategy'];
 	root: SSRComponent['default'];
 	service_worker: boolean;
@@ -684,10 +690,19 @@ export type RecordSpan = <T>(options: {
 	fn: (current: Span) => Promise<T>;
 }) => Promise<T>;
 
-/**
- * Internal state associated with the current `RequestEvent`,
- * used for tracking things like remote function calls
- */
+export interface KitCacheOptions {
+	maxAge: number;
+	staleWhileRevalidate?: number;
+	tags: string[];
+}
+
+export interface KitCacheHandler {
+	get(queryId: string): MaybePromise<string | undefined>;
+	set(queryId: string, stringifiedResponse: string, cache: KitCacheOptions): MaybePromise<void>;
+	setHeaders?(headers: Headers, cache: KitCacheOptions): MaybePromise<void>;
+	invalidate(tags: string[]): MaybePromise<void>;
+}
+
 export interface RequestState {
 	readonly prerendering: PrerenderOptions | undefined;
 	readonly transport: ServerHooks['transport'];
@@ -704,7 +719,15 @@ export interface RequestState {
 		refreshes: null | Map<string, Promise<any>>;
 		reconnects: null | Map<string, Promise<any>>;
 		requested: null | Map<string, string[]>;
+		/**
+		 * A list of promises to await for invalidations to complete.
+		 * Used to await them at the end and to ignore cache reads on subsequent refresh calls.
+		 */
+		invalidations: null | Promise<void>[];
+		/** The cache implementation to use for remote query functions. */
+		cache: null | KitCacheHandler;
 	};
+	readonly cache: RequestCache;
 	readonly is_in_remote_function: boolean;
 	readonly is_in_render: boolean;
 	readonly is_in_universal_load: boolean;

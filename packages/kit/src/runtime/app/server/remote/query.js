@@ -3,17 +3,20 @@
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 import { get_request_store } from '@sveltejs/kit/internal/server';
 import { create_remote_key, stringify, stringify_remote_arg } from '../../../shared.js';
+import { app_dir, base } from '$app/paths/internal/server';
 import { prerendering } from '__sveltekit/environment';
 import {
 	create_validator,
 	get_cache,
 	get_response,
+	parse_remote_response,
 	run_remote_function,
 	run_remote_generator
 } from './shared.js';
 import { handle_error_and_jsonify } from '../../../server/utils.js';
 import { HttpError, SvelteKitError } from '@sveltejs/kit/internal';
 import { noop } from '../../../../utils/functions.js';
+import { create_request_cache, get_request_cache_options } from '../../../server/cache.js';
 
 /**
  * Creates a remote query. When called from the browser, the function will be invoked on the server via a `fetch` call.
@@ -78,7 +81,14 @@ export function query(validate_or_fn, maybe_fn) {
 			const { event, state } = get_request_store();
 
 			return create_query_resource(__, payload, state, () =>
-				run_remote_function(event, state, false, () => validated_arg, fn)
+				run_remote_function(
+					event,
+					state,
+					false,
+					create_request_cache(state, create_remote_key(__.id, payload)),
+					() => validated_arg,
+					fn
+				)
 			);
 		}
 	};
@@ -93,15 +103,67 @@ export function query(validate_or_fn, maybe_fn) {
 
 		const { event, state } = get_request_store();
 		const payload = stringify_remote_arg(arg, state.transport);
+		const query_id = create_remote_key(__.id, payload);
 
-		return create_query_resource(__, payload, state, () =>
-			run_remote_function(event, state, false, () => validate(arg), fn)
+		return create_query_resource(__, payload, state, (read_cache = true) =>
+			(async () => {
+				const cached = read_cache
+					? deserialize_query_cache_entry(await state.remote.cache?.get(query_id))
+					: null;
+				if (cached !== null) {
+					await set_remote_query_cache_headers(
+						event,
+						state,
+						__.id,
+						get_remaining_cache_options(cached)
+					);
+					return parse_remote_response(cached.response, state.transport);
+				}
+
+				const cache = create_request_cache(state, query_id);
+				const result = await run_remote_function(
+					event,
+					state,
+					false,
+					cache,
+					() => validate(arg),
+					fn
+				);
+
+				const options = get_request_cache_options(cache);
+				if (!options || !state.remote.cache) return result;
+
+				const stringified = stringify(result, state.transport);
+				await state.remote.cache.set(
+					query_id,
+					serialize_query_cache_entry(stringified, options),
+					options
+				);
+				await set_remote_query_cache_headers(event, state, __.id, options);
+
+				return result;
+			})()
 		);
 	};
 
 	Object.defineProperty(wrapper, '__', { value: __ });
 
 	return wrapper;
+}
+
+/**
+ * @param {import('@sveltejs/kit').CacheOptions} input
+ */
+function query_cache(input) {
+	get_request_store().state.cache(input);
+}
+
+/**
+ * @param {string[]} tags
+ */
+async function invalidate_query_cache(tags) {
+	const { state } = get_request_store();
+	await state.cache.invalidate(tags);
 }
 
 /**
@@ -250,7 +312,7 @@ function batch(validate_or_fn, maybe_fn) {
 	/** @type {(arg?: any) => MaybePromise<Input>} */
 	const validate = create_validator(validate_or_fn, maybe_fn);
 
-	/** @type {Map<string, { get_validated: () => MaybePromise<any>, resolvers: Array<{resolve: (value: any) => void, reject: (error: any) => void}> }>} */
+	/** @type {Map<string, { payload: string, get_validated: () => MaybePromise<any>, read_cache: boolean, resolvers: Array<{resolve: (value: any) => void, reject: (error: any) => void}> }>} */
 	let batching = new Map();
 
 	/**
@@ -259,21 +321,25 @@ function batch(validate_or_fn, maybe_fn) {
 	 *
 	 * @param {string} payload — the stringified raw argument (cache key)
 	 * @param {() => MaybePromise<any>} get_validated — produces the validated argument for this entry
+	 * @param {boolean} [read_cache]
 	 * @returns {Promise<any>}
 	 */
-	const enqueue = (payload, get_validated) => {
+	const enqueue = (payload, get_validated, read_cache = true) => {
 		const { event, state } = get_request_store();
 
 		return new Promise((resolve, reject) => {
 			const entry = batching.get(payload);
 
 			if (entry) {
+				entry.read_cache &&= read_cache;
 				entry.resolvers.push({ resolve, reject });
 				return;
 			}
 
 			batching.set(payload, {
+				payload,
 				get_validated,
+				read_cache,
 				resolvers: [{ resolve, reject }]
 			});
 
@@ -283,25 +349,69 @@ function batch(validate_or_fn, maybe_fn) {
 				const batched = batching;
 				batching = new Map();
 				const entries = Array.from(batched.values());
+				const query_ids = entries.map((entry) => create_remote_key(__.id, entry.payload));
 
 				try {
-					return await run_remote_function(
+					const cached = await Promise.all(
+						entries.map((entry, i) =>
+							entry.read_cache
+								? deserialize_query_cache_entry(await state.remote.cache?.get(query_ids[i]))
+								: null
+						)
+					);
+
+					/** @type {Array<{ get_validated: () => MaybePromise<any>, query_id: string, resolvers: Array<{resolve: (value: any) => void, reject: (error: any) => void}> }>} */
+					const missing = [];
+
+					for (let i = 0; i < cached.length; i++) {
+						if (cached[i] !== null) {
+							const value = parse_remote_response(cached[i].response, state.transport);
+							for (const resolver of entries[i].resolvers) {
+								resolver.resolve(value);
+							}
+						} else {
+							missing.push({
+								get_validated: entries[i].get_validated,
+								query_id: query_ids[i],
+								resolvers: entries[i].resolvers
+							});
+						}
+					}
+
+					if (missing.length === 0) return;
+
+					const cache = create_request_cache(state, __.id);
+
+					await run_remote_function(
 						event,
 						state,
 						false,
-						async () => Promise.all(entries.map((entry) => entry.get_validated())),
+						cache,
+						async () => Promise.all(missing.map((entry) => entry.get_validated())),
 						async (input) => {
 							const get_result = await fn(input);
 
-							for (let i = 0; i < entries.length; i++) {
+							for (let i = 0; i < missing.length; i++) {
 								try {
 									const result = get_result(input[i], i);
+									const stringified = stringify(result, state.transport);
+									const cache_options = get_request_cache_options(cache);
+									if (cache_options && state.remote.cache) {
+										await state.remote.cache.set(
+											missing[i].query_id,
+											serialize_query_cache_entry(stringified, {
+												...cache_options,
+												tags: [...cache_options.tags, missing[i].query_id]
+											}),
+											cache_options
+										);
+									}
 
-									for (const resolver of entries[i].resolvers) {
+									for (const resolver of missing[i].resolvers) {
 										resolver.resolve(result);
 									}
 								} catch (error) {
-									for (const resolver of entries[i].resolvers) {
+									for (const resolver of missing[i].resolvers) {
 										resolver.reject(error);
 									}
 								}
@@ -327,39 +437,93 @@ function batch(validate_or_fn, maybe_fn) {
 		validate,
 		run: async (args, options) => {
 			const { event, state } = get_request_store();
+			const payloads = args.map((arg) => stringify_remote_arg(arg, state.transport));
+			const query_ids = payloads.map((payload) => create_remote_key(__.id, payload));
+			const results = new Array(args.length);
+			/** @type {number[]} */
+			const missing = [];
+			const cached = await Promise.all(
+				query_ids.map(async (query_id) =>
+					deserialize_query_cache_entry(await state.remote.cache?.get(query_id))
+				)
+			);
 
-			return run_remote_function(
+			for (let i = 0; i < cached.length; i++) {
+				if (cached[i] !== null) {
+					results[i] = { type: 'result', data: cached[i].response };
+				} else {
+					missing.push(i);
+				}
+			}
+
+			if (missing.length === 0) {
+				return /** @type {any[]} */ (results);
+			}
+
+			const missing_args = missing.map((index) => args[index]);
+			const cache = create_request_cache(state, __.id);
+
+			const computed = await run_remote_function(
 				event,
 				state,
 				false,
-				async () => Promise.all(args.map(validate)),
+				cache,
+				async () => Promise.all(missing_args.map(validate)),
 				async (/** @type {any[]} */ input) => {
 					const get_result = await fn(input);
 
 					return Promise.all(
 						input.map(async (arg, i) => {
+							const index = missing[i];
+							const query_id = query_ids[index];
 							try {
 								const data = get_result(arg, i);
-								return { type: 'result', data: stringify(data, state.transport) };
+								const stringified = stringify(data, state.transport);
+								const cache_options = get_request_cache_options(cache);
+								if (cache_options && state.remote.cache) {
+									await state.remote.cache.set(
+										query_id,
+										serialize_query_cache_entry(stringified, {
+											...cache_options,
+											tags: [...cache_options.tags, query_id]
+										}),
+										cache_options
+									);
+								}
+								return {
+									index,
+									result: { type: 'result', data: stringified }
+								};
 							} catch (error) {
 								return {
-									type: 'error',
-									error: await handle_error_and_jsonify(event, state, options, error),
-									status:
-										error instanceof HttpError || error instanceof SvelteKitError
-											? error.status
-											: 500
+									index,
+									result: {
+										type: 'error',
+										error: await handle_error_and_jsonify(event, state, options, error),
+										status:
+											error instanceof HttpError || error instanceof SvelteKitError
+												? error.status
+												: 500
+									}
 								};
 							}
 						})
 					);
 				}
 			);
+
+			for (const item of computed) {
+				results[item.index] = item.result;
+			}
+
+			return /** @type {any[]} */ (results);
 		},
 		bind(payload, validated_arg) {
 			const { state } = get_request_store();
 
-			return create_query_resource(__, payload, state, () => enqueue(payload, () => validated_arg));
+			return create_query_resource(__, payload, state, (read_cache = true) =>
+				enqueue(payload, () => validated_arg, read_cache)
+			);
 		}
 	};
 
@@ -374,10 +538,10 @@ function batch(validate_or_fn, maybe_fn) {
 		const { state } = get_request_store();
 		const payload = stringify_remote_arg(arg, state.transport);
 
-		return create_query_resource(__, payload, state, () =>
+		return create_query_resource(__, payload, state, (read_cache = true) =>
 			// Collect all the calls to the same query in the same macrotask,
 			// then execute them as one backend request.
-			enqueue(payload, () => validate(arg))
+			enqueue(payload, () => validate(arg), read_cache)
 		);
 	};
 
@@ -390,15 +554,16 @@ function batch(validate_or_fn, maybe_fn) {
  * @param {RemoteInternals} __
  * @param {string} payload — the stringified raw argument (i.e. the cache key the client will use)
  * @param {RequestState} state
- * @param {() => Promise<any>} fn
+ * @param {(read_cache?: boolean) => Promise<any>} fn
  * @returns {RemoteQuery<any>}
  */
 function create_query_resource(__, payload, state, fn) {
 	/** @type {Promise<any> | null} */
 	let promise = null;
 
-	const get_promise = () => {
-		return (promise ??= get_response(__, payload, state, fn));
+	/** @param {boolean} read_cache */
+	const get_promise = (read_cache = true) => {
+		return (promise ??= get_response(__, payload, state, () => fn(read_cache)));
 	};
 
 	const populate_hydratable = () => {
@@ -436,8 +601,13 @@ function create_query_resource(__, payload, state, fn) {
 		refresh() {
 			const refresh_context = get_refresh_context(__, 'refresh', payload);
 			const is_immediate_refresh = !refresh_context.cache[refresh_context.payload];
-			const value = is_immediate_refresh ? get_promise() : fn();
+			const read_cache = !refresh_context.state.remote.invalidations?.length;
+			const value = is_immediate_refresh ? get_promise(read_cache) : fn(read_cache);
 			return update_refresh_value(refresh_context, value, is_immediate_refresh);
+		},
+		async invalidate() {
+			const tag = create_remote_key(__.id, payload);
+			await invalidate_query_cache([tag]);
 		},
 		run() {
 			// potential TODO: if we want to be able to run queries at the top level of modules / outside of the request context, we could technically remove
@@ -546,13 +716,18 @@ function create_live_query_resource(__, payload, state, get_first_value) {
 
 // Add batch as a property to the query function
 Object.defineProperty(query, 'batch', { value: batch, enumerable: true });
+Object.defineProperty(query, 'cache', { value: query_cache, enumerable: true });
+Object.defineProperty(query_cache, 'invalidate', {
+	value: invalidate_query_cache,
+	enumerable: true
+});
 Object.defineProperty(query, 'live', { value: live, enumerable: true });
 
 /**
  * @param {RemoteInternals} __
  * @param {'set' | 'refresh'} action
  * @param {string} payload — the stringified raw argument (i.e. the cache key the client will use)
- * @returns {{ __: RemoteInternals; state: any; refreshes: Map<string, Promise<any>>; cache: Record<string, { serialize: boolean; data: any }>; refreshes_key: string; payload: string }}
+ * @returns {{ __: RemoteInternals; state: RequestState; refreshes: Map<string, Promise<any>>; cache: Record<string, { serialize: boolean; data: any }>; refreshes_key: string; payload: string }}
  */
 function get_refresh_context(__, action, payload) {
 	const { state } = get_request_store();
@@ -598,4 +773,115 @@ function update_refresh_value(
 	// but it doesn't delay anything if awaited inside a command. this way, people aren't
 	// penalised if they do `await q1.refresh(); await q2.refresh()`
 	return Promise.resolve();
+}
+
+/**
+ * @param {import('@sveltejs/kit').RequestEvent} event
+ * @param {string} query_id
+ */
+function is_remote_query_endpoint_request(event, query_id) {
+	if (!event.isRemoteRequest || event.isSubRequest) return false;
+
+	const pathname = new URL(event.request.url).pathname;
+	let prefix = `${base}/${app_dir}/remote/${query_id}`;
+	if (prefix.endsWith('/')) {
+		prefix = prefix.slice(0, -1);
+	}
+
+	return pathname === prefix || pathname.startsWith(`${prefix}/`);
+}
+
+/**
+ * @typedef {{
+ * 	response: string;
+ * 	maxAge: number;
+ * 	staleWhileRevalidate?: number;
+ * 	tags: string[];
+ * 	age: number;
+ * }} QueryCacheEntry
+ */
+
+/**
+ * @param {string} stringified_response
+ * @param {import('types').KitCacheOptions} cache
+ */
+function serialize_query_cache_entry(stringified_response, cache) {
+	return JSON.stringify({
+		response: stringified_response,
+		maxAge: cache.maxAge,
+		staleWhileRevalidate: cache.staleWhileRevalidate,
+		tags: cache.tags,
+		// not great that we have to trust the node process to have the correct time,
+		// but cross-provider this is the best we can do.
+		age: Date.now()
+	});
+}
+
+/**
+ * Better safe than sorry: deserialize the cache entry and validate the fields
+ * @param {string | undefined | null} value
+ * @returns {QueryCacheEntry | null}
+ */
+function deserialize_query_cache_entry(value) {
+	try {
+		if (value == null) return null;
+		const entry = JSON.parse(value);
+		if (typeof entry !== 'object' || !entry) return null;
+		if (typeof entry.response !== 'string') return null;
+		if (typeof entry.maxAge !== 'number' || !Number.isFinite(entry.maxAge)) return null;
+		if (typeof entry.age !== 'number' || !Number.isFinite(entry.age)) return null;
+		if (!Array.isArray(entry.tags)) return null;
+		for (const tag of entry.tags) {
+			if (typeof tag !== 'string') return null;
+		}
+		if (
+			entry.staleWhileRevalidate !== undefined &&
+			(typeof entry.staleWhileRevalidate !== 'number' ||
+				!Number.isFinite(entry.staleWhileRevalidate))
+		) {
+			return null;
+		}
+
+		return entry;
+	} catch {
+		return null;
+	}
+}
+
+/**
+ * @param {QueryCacheEntry} entry
+ * @returns {import('types').KitCacheOptions}
+ */
+function get_remaining_cache_options(entry) {
+	const elapsed = Math.max(0, (Date.now() - entry.age) / 1000);
+	const max_age = Math.max(0, entry.maxAge - elapsed);
+	const stale_window = Math.max(
+		0,
+		entry.maxAge + (entry.staleWhileRevalidate ?? 0) - elapsed - max_age
+	);
+
+	return {
+		maxAge: max_age,
+		staleWhileRevalidate: stale_window > 0 ? stale_window : undefined,
+		tags: entry.tags
+	};
+}
+
+/**
+ * @param {import('@sveltejs/kit').RequestEvent} event
+ * @param {RequestState} state
+ * @param {string} query_id
+ * @param {import('types').KitCacheOptions} cache
+ */
+async function set_remote_query_cache_headers(event, state, query_id, cache) {
+	if (!state.remote.cache?.setHeaders) return;
+	if (!is_remote_query_endpoint_request(event, query_id)) return;
+
+	const headers = new Headers();
+	await state.remote.cache.setHeaders(headers, cache);
+
+	const values = Object.fromEntries(headers.entries());
+	if (Object.keys(values).length > 0) {
+		event.setHeaders(values);
+	}
 }

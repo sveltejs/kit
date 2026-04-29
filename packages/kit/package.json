@@ -119,6 +119,16 @@
 			"types": "./types/index.d.ts",
 			"import": "./src/exports/node/polyfills.js"
 		},
+		"./node/cache": {
+			"types": "./types/index.d.ts",
+			"import": "./src/exports/node/cache.js"
+		},
+		"./node/in-memory-cache": {
+			"import": "./src/exports/node/in-memory-query-cache.js"
+		},
+		"./node/redis-cache": {
+			"import": "./src/exports/node/redis-query-cache.js"
+		},
 		"./hooks": {
 			"types": "./types/index.d.ts",
 			"import": "./src/exports/hooks/index.js"
