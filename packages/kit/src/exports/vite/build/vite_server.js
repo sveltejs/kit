@@ -322,7 +322,7 @@ export function create_build_server({
 									async handleRequest(request) {
 										try {
 											/** @type {import('../dev/ssr_entry.js')} */
-											const { respond } = await runner.import('__sveltekit/dev-server-entry');
+											const { respond } = await runner.import('__sveltekit/dev-server-entry.js');
 											return await respond(request, remote_address);
 										} catch (error) {
 											// Vite doesn't log errors so we do it ourselves
@@ -383,7 +383,7 @@ export function create_build_server({
 		},
 		resolveId: {
 			filter: {
-				id: exactRegex('__sveltekit/dev-server-entry')
+				id: exactRegex('__sveltekit/dev-server-entry.js')
 			},
 			handler() {
 				return path.join(import.meta.dirname, '../dev/ssr_entry.js');
