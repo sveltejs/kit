@@ -1,5 +1,7 @@
+/** @import { Adapter, KitViteConfig } from '@sveltejs/kit' */
 /** @import { Options } from '@sveltejs/vite-plugin-svelte' */
 /** @import { PreprocessorGroup } from 'svelte/compiler' */
+/** @import { ValidatedConfig, ValidatedKitConfig } from 'types' */
 /** @import { ConfigEnv, Plugin, PluginOption, ResolvedConfig, UserConfig, Manifest, EnvironmentOptions, Rolldown } from 'vite' */
 /** @import { ModuleRunner } from 'vite/module-runner' */
 import fs from 'node:fs';
@@ -65,6 +67,7 @@ import { load_config } from '../../core/config/index.js';
 import { treeshake_prerendered_remotes } from './build/remote.js';
 import { runtime_directory } from '../../runtime/utils.js';
 import { SVELTE_KIT_ASSETS } from '../../constants.js';
+import options from './options.js';
 
 const cwd = process.cwd();
 
@@ -161,15 +164,16 @@ let vite_plugin_svelte;
 
 /**
  * Returns the SvelteKit Vite plugins.
- * @param {{
- *   adapter?: import('@sveltejs/kit').Adapter;
- * }=} options
+ * @param {KitViteConfig} [config]
  * @returns {Promise<PluginOption[]>}
  */
-export async function sveltekit(options = {}) {
+export async function sveltekit(config) {
+	/** @type {KitViteConfig} */
+	const validated = options(config, 'options');
+
 	// the config options will be set only after the Vite `config` hook runs
 	// because we need to find `svelte.config.js` relative to `vite.config.root`
-	const svelte_config = /** @type {import('types').ValidatedConfig} */ ({});
+	const svelte_config = /** @type {ValidatedConfig} */ ({});
 
 	/** @type {Options} */
 	const vite_plugin_svelte_options = {
@@ -183,7 +187,7 @@ export async function sveltekit(options = {}) {
 	return [
 		plugin_svelte_config({ vite_plugin_svelte_options, svelte_config }),
 		vite_plugin_svelte.svelte(vite_plugin_svelte_options),
-		kit({ svelte_config, adapter_in_vite_config: options.adapter })
+		kit({ svelte_config, adapter: validated.adapter })
 	];
 }
 
@@ -197,7 +201,7 @@ function resolve_root(vite_config) {
  * of our other plugins try to access the config objects
  * @param {{
  *   vite_plugin_svelte_options: import('@sveltejs/vite-plugin-svelte').Options;
- * 	 svelte_config: import('types').ValidatedConfig;
+ * 	 svelte_config: ValidatedConfig;
  * }} options
  * @return {Plugin}
  */
@@ -263,15 +267,15 @@ function revive_functions(value) {
  * - https://rolldown.rs/apis/plugin-api#output-generation-hooks
  *
  * @param {object} opts
- * @param {import('types').ValidatedConfig} opts.svelte_config options are only resolved after the Vite `config` hook runs
- * @param {import('@sveltejs/kit').Adapter | undefined} opts.adapter_in_vite_config True if an adapter was passed to the Vite plugin
+ * @param {ValidatedConfig} opts.svelte_config options are only resolved after the Vite `config` hook runs
+ * @param {Adapter | undefined} opts.adapter
  * @return {PluginOption[]}
  */
-function kit({ svelte_config, adapter_in_vite_config }) {
+function kit({ svelte_config, adapter }) {
 	/** @type {typeof import('vite')} */
 	let vite;
 
-	/** @type {import('types').ValidatedKitConfig} */
+	/** @type {ValidatedKitConfig} */
 	let kit;
 	/** @type {string} */
 	let out;
@@ -344,21 +348,8 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 				vite_config_env = config_env;
 				is_build = config_env.command === 'build';
 
-				// if the adapter vite plugins store some values at the module level, we
-				// should use the adapter instance passed through the vite config to
-				// avoid losing those values
-				if (adapter_in_vite_config) svelte_config.kit.adapter = adapter_in_vite_config;
-
 				({ kit } = svelte_config);
 				out = `${kit.outDir}/output`;
-
-				if (kit.adapter?.vite?.plugins && !adapter_in_vite_config) {
-					// TODO: use the actual pathname of the user's svelte config file in the error message example
-					throw new Error(
-						`${kit.adapter.name} requires the adapter to be passed to the \`sveltekit\` Vite plugin in the \`vite.config.js\` file. For example:\n\n` +
-							`+++import svelteConfig from './svelte.config.js';+++\n\nexport default defineConfig({\n  plugins: [sveltekit( +++{ adapter: svelteConfig.kit?.adapter  }+++ )]\n});`
-					);
-				}
 
 				version_hash = hash(kit.version.name);
 
@@ -492,7 +483,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 
 					new_config.define = {
 						...define,
-						__SVELTEKIT_ADAPTER_NAME__: s(kit.adapter?.name),
+						__SVELTEKIT_ADAPTER_NAME__: s(adapter?.name),
 						__SVELTEKIT_APP_VERSION_FILE__: s(`${kit.appDir}/version.json`),
 						__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: s(kit.version.pollInterval)
 					};
@@ -1447,7 +1438,6 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 
 					// ...and the server instrumentation file
 					if (server_instrumentation_file) {
-						const { adapter } = kit;
 						if (adapter && !adapter.supports?.instrumentation?.()) {
 							throw new Error(`${server_instrumentation_file} is unsupported in ${adapter.name}.`);
 						}
@@ -1676,7 +1666,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 		 * @see https://vitejs.dev/guide/api-plugin.html#configurepreviewserver
 		 */
 		configurePreviewServer(vite) {
-			if (kit.adapter?.vite?.plugins) return;
+			if (adapter?.vite?.plugins) return;
 
 			return preview(vite, vite_config, svelte_config);
 		},
@@ -2017,9 +2007,10 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 					`\nRun ${styleText(['bold', 'cyan'], 'npm run preview')} to preview your production build locally.`
 				);
 
-				if (kit.adapter) {
+				if (adapter) {
 					const { adapt } = await import('../../core/adapt/index.js');
 					await adapt(
+						adapter,
 						svelte_config,
 						build_data,
 						metadata,
@@ -2058,7 +2049,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 
 	return [
 		plugin_setup,
-		adapter_in_vite_config?.vite?.plugins ? undefined : plugin_node_environment,
+		adapter?.vite?.plugins ? undefined : plugin_node_environment,
 		plugin_remote,
 		plugin_server_filesystem,
 		plugin_dev_ssr,
@@ -2067,7 +2058,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 		plugin_service_worker,
 		plugin_compile,
 		plugin_adapter,
-		adapter_in_vite_config?.vite?.plugins
+		adapter?.vite?.plugins
 	].filter(Boolean);
 }
 
@@ -2117,7 +2108,7 @@ function find_overridden_config(config, resolved_config, enforced_config, path, 
 }
 
 /**
- * @param {import('types').ValidatedConfig} config
+ * @param {ValidatedConfig} config
  * @returns {string}
  */
 function create_service_worker_module(config) {

@@ -16,22 +16,23 @@ First, disable SSR for the pages you don't want to prerender. These pages will b
 export const ssr = false;
 ```
 
-If you don't have any server-side logic (i.e. `+page.server.js`, `+layout.server.js` or `+server.js` files) you can use [`adapter-static`](adapter-static) to create your SPA. Install `adapter-static` with `npm i -D @sveltejs/adapter-static` and add it to your `svelte.config.js` with the `fallback` option:
+If you don't have any server-side logic (i.e. `+page.server.js`, `+layout.server.js` or `+server.js` files) you can use [`adapter-static`](adapter-static) to create your SPA. Install `adapter-static` with `npm i -D @sveltejs/adapter-static` and add it to your `vite.config.js` with the `fallback` option:
 
 ```js
-/// file: svelte.config.js
+/// file: vite.config.js
 import adapter from '@sveltejs/adapter-static';
+import { sveltekit } from '@sveltejs/kit/vite';
+import { defineConfig } from 'vite';
 
-/** @type {import('@sveltejs/kit').Config} */
-const config = {
-	kit: {
-		adapter: adapter({
-			fallback: '200.html' // may differ from host to host
-		})
-	}
-};
-
-export default config;
+export default defineConfig({
+  plugins: [
+    sveltekit({
+      adapter: adapter({
+				fallback: '200.html' // may differ from host to host
+      })
+    })
+  ]
+});
 ```
 
 The `fallback` page is an HTML page created by SvelteKit from your page template (e.g. `app.html`) that loads your app and navigates to the correct route. For example [Surge](https://surge.sh/help/adding-a-200-page-for-client-side-routing), a static web host, lets you add a `200.html` file that will handle any requests that don't correspond to static assets or prerendered pages.
@@ -39,6 +40,9 @@ The `fallback` page is an HTML page created by SvelteKit from your page template
 On some hosts it may be something else entirely — consult your platform's documentation. We recommend avoiding `index.html` if possible as it may conflict with prerendering.
 
 > [!NOTE] Note that the fallback page will always contain absolute asset paths (i.e. beginning with `/` rather than `.`) regardless of the value of [`paths.relative`](configuration#paths), since it is used to respond to requests for arbitrary paths.
+
+> [!LEGACY]
+> The `adapter` option was moved to the SvelteKit Vite plugin in SvelteKit 3.0.0. In earlier versions, you had to add it to the `kit` property in the `svelte.config.js` file instead.
 
 ## Prerendering individual pages
 

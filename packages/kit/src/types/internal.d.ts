@@ -607,9 +607,8 @@ export type ValidatedConfig = Config & {
 	extensions: string[];
 };
 
-export type ValidatedKitConfig = Omit<RecursiveRequired<KitConfig>, 'adapter'> & {
-	adapter?: Adapter;
-};
+// TODO: remove the omit in 4.0
+export type ValidatedKitConfig = Omit<RecursiveRequired<KitConfig>, 'adapter'>;
 
 export type BinaryFormMeta = {
 	remote_refreshes?: string[];
