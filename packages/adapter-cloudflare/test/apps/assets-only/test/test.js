@@ -1,9 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-test('custom worker entry point', async ({ request }) => {
-	const response = await request.get('/');
-	expect(await response.text()).toContain('hello world!');
-	expect(response.headers()).toHaveProperty('x-custom-worker', 'true');
+test('assets only works', async ({ page }) => {
+	await page.goto('/');
+	expect(page.locator('p')).toHaveText('hello world!');
 });
-
-// TODO: test generating a fallback page

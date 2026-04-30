@@ -1,6 +1,7 @@
 /** @import { WorkerConfig } from '@cloudflare/vite-plugin' */
 import { copyFileSync, existsSync, writeFileSync, symlinkSync, unlinkSync } from 'node:fs';
 import path from 'node:path';
+import process from 'node:process';
 import { cloudflare } from '@cloudflare/vite-plugin';
 import { DEV } from 'esm-env';
 
@@ -158,7 +159,6 @@ export default function (options = {}) {
 					applyToEnvironment(environment) {
 						return environment.name === 'ssr';
 					},
-
 					resolveId: {
 						filter: {
 							id: [/^SERVER$/, /^MANIFEST$/]
@@ -190,7 +190,6 @@ export default function (options = {}) {
 				},
 				cloudflare({
 					...options.vitePluginOptions,
-					configPath: options.vitePluginOptions?.configPath,
 					viteEnvironment: {
 						name: 'ssr',
 						childEnvironments: options.vitePluginOptions?.viteEnvironment?.childEnvironments
@@ -212,7 +211,9 @@ export default function (options = {}) {
 							);
 						}
 
-						if (DEV || options.worker) {
+						// if we're developing, analysing, or prerendering, there must be a
+						// worker so that we can run some code in the workerd environment
+						if (DEV || options.worker || process.env.SVELTEKIT_FORK) {
 							user_config.main ??= default_worker;
 
 							// we don't need to populate `assets.directory` because
@@ -235,22 +236,6 @@ export default function (options = {}) {
 						// TODO: warn on overridden config options?
 
 						wrangler_config = user_config;
-					},
-					experimental: {
-						...options.vitePluginOptions?.experimental
-						// TODO: identify when kit is prerendering and use this prerender worker instead of the main worker
-						// prerenderWorker: {
-						// 	configPath: options.vitePluginOptions?.experimental?.prerenderWorker?.configPath,
-						// 	viteEnvironment: {
-						// 		name: 'prerender',
-						// 		childEnvironments:
-						// 			options.vitePluginOptions?.experimental?.prerenderWorker?.viteEnvironment
-						// 				?.childEnvironments
-						// 	},
-						// 	config() {
-						// 		return wrangler_config;
-						// 	}
-						// }
 					}
 				}),
 				{
