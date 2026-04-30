@@ -27,7 +27,7 @@ export async function adapt(
 	out
 ) {
 	// This is only called when adapter is truthy, so the cast is safe
-	const { name, adapt } = (adapter);
+	const { name, adapt } = adapter;
 
 	console.log(styleText(['bold', 'cyan'], `\n> Using ${name}`));
 
