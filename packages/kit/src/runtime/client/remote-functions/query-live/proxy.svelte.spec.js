@@ -1,26 +1,16 @@
 import { describe, expect, test, beforeEach, vi } from 'vitest';
 import { tick } from 'svelte';
 
-// Mock `client.js` and `shared.svelte.js` because the real `client.js` pulls in the
-// SvelteKit router/hydration machinery and resolves `$app/paths` to a server-side
-// virtual module that only exists during a real SvelteKit build. We only need the
-// cache `Map`s and a stub `app` for the proxy's interaction with the cache.
+// Mock `client.js` because the real one pulls in the SvelteKit
+// router/hydration machinery and resolves `$app/paths` to a server-side
+// virtual module that only exists during a real SvelteKit build. We only need
+// the cache `Map`s and a stub `app` for the proxy's interaction with the cache.
 vi.mock(new URL('../../client.js', import.meta.url).pathname, () => ({
 	app: { hooks: { transport: {} }, decoders: {} },
 	query_map: new Map(),
 	query_responses: {},
 	live_query_map: new Map(),
 	goto: () => Promise.resolve()
-}));
-
-vi.mock(new URL('../shared.svelte.js', import.meta.url).pathname, () => ({
-	QUERY_FUNCTION_ID: Symbol('QUERY_FUNCTION_ID'),
-	QUERY_OVERRIDE_KEY: Symbol('QUERY_OVERRIDE_KEY'),
-	QUERY_RESOURCE_KEY: Symbol('QUERY_RESOURCE_KEY'),
-	get_remote_request_headers: () => ({}),
-	remote_request: () => Promise.resolve(null),
-	is_in_effect: () => false,
-	handle_side_channel_response: () => Promise.resolve(undefined)
 }));
 
 vi.mock(new URL('./instance.svelte.js', import.meta.url).pathname, () => {
@@ -35,6 +25,7 @@ vi.mock(new URL('./instance.svelte.js', import.meta.url).pathname, () => {
 			this.key = key;
 			this.payload = payload;
 			this.destroyed = false;
+			this.then = (/** @type {any} */ resolve) => Promise.resolve().then(resolve);
 		}
 		destroy() {
 			this.destroyed = true;
@@ -149,6 +140,45 @@ describe('LiveQueryProxy', () => {
 		await wait_for(() => live_query.destroyed);
 
 		expect(live_query.destroyed).toBe(true);
+		expect(live_query_map.has('q')).toBe(false);
+	});
+
+	test('reading `then` inside an effect pins the cache entry until the effect is destroyed', async () => {
+		/** @type {WeakRef<any>} */
+		let proxy_ref;
+
+		const destroy = $effect.root(() => {
+			$effect.pre(() => {
+				const proxy = new LiveQueryProxy('q', 'arg');
+				proxy_ref = new WeakRef(proxy);
+				void proxy.then;
+			});
+		});
+
+		await tick();
+
+		await wait_for(() => proxy_ref.deref() === undefined);
+
+		expect(live_query_map.has('q')).toBe(true);
+		const entries = /** @type {Map<string, any>} */ (live_query_map.get('q'));
+		const [entry] = /** @type {Iterable<any>} */ (entries.values());
+		expect(entry.proxy_count).toBe(1);
+
+		destroy();
+		await tick();
+		await tick();
+
+		expect(live_query_map.has('q')).toBe(false);
+	});
+
+	test('reading `then` outside an effect does not pin the cache entry', async () => {
+		(() => {
+			const proxy = new LiveQueryProxy('q', 'arg');
+			void proxy.then;
+		})();
+
+		await wait_for(() => !live_query_map.has('q'));
+
 		expect(live_query_map.has('q')).toBe(false);
 	});
 });

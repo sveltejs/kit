@@ -1,26 +1,16 @@
 import { describe, expect, test, beforeEach, vi } from 'vitest';
 import { tick } from 'svelte';
 
-// Mock `client.js` and `shared.svelte.js` because the real `client.js` pulls in the
-// SvelteKit router/hydration machinery and resolves `$app/paths` to a server-side
-// virtual module that only exists during a real SvelteKit build. We only need the
-// cache `Map`s and a stub `app` for the proxy's interaction with the cache.
+// Mock `client.js` because the real one pulls in the SvelteKit
+// router/hydration machinery and resolves `$app/paths` to a server-side
+// virtual module that only exists during a real SvelteKit build. We only need
+// the cache `Map`s and a stub `app` for the proxy's interaction with the cache.
 vi.mock(new URL('../../client.js', import.meta.url).pathname, () => ({
 	app: { hooks: { transport: {} }, decoders: {} },
 	query_map: new Map(),
 	query_responses: {},
 	live_query_map: new Map(),
 	goto: () => {}
-}));
-
-vi.mock(new URL('../shared.svelte.js', import.meta.url).pathname, () => ({
-	QUERY_FUNCTION_ID: Symbol('QUERY_FUNCTION_ID'),
-	QUERY_OVERRIDE_KEY: Symbol('QUERY_OVERRIDE_KEY'),
-	QUERY_RESOURCE_KEY: Symbol('QUERY_RESOURCE_KEY'),
-	get_remote_request_headers: () => ({}),
-	remote_request: () => Promise.resolve(null),
-	is_in_effect: () => false,
-	handle_side_channel_response: () => Promise.resolve(undefined)
 }));
 
 const { QueryProxy } = await import('./proxy.js');
@@ -188,6 +178,70 @@ describe('QueryProxy', () => {
 		release?.();
 		await tick();
 		await tick();
+
+		expect(query_map.has('q')).toBe(false);
+	});
+
+	test('reading `then` inside an effect pins the cache entry until the effect is destroyed', async () => {
+		const fn = () => Promise.resolve('value');
+
+		/** @type {WeakRef<any>} */
+		let proxy_ref;
+
+		const destroy = $effect.root(() => {
+			$effect.pre(() => {
+				const proxy = new QueryProxy('q', 'arg', fn);
+				proxy_ref = new WeakRef(proxy);
+				// touch `then` so the proxy registers an effect-scoped manual_ref.
+				// Wrap in try so we don't trip the `state_unsafe_mutation` guard
+				// from the underlying `Query.then` derived running synchronously
+				// here — we only care that `pin_in_effect` got the chance to run.
+				try {
+					void proxy.then;
+				} catch {
+					// ignore
+				}
+			});
+		});
+
+		// flush effects so `$effect.pre` actually runs
+		await tick();
+
+		// after the effect ran, the proxy should be GC-eligible (the local
+		// `proxy` binding is gone) but the cache entry should still be alive
+		// because the effect's `manual_ref` is keeping it pinned.
+		await wait_for(() => proxy_ref.deref() === undefined);
+
+		expect(query_map.has('q')).toBe(true);
+		const entries = /** @type {Map<string, any>} */ (query_map.get('q'));
+		const [entry] = /** @type {Iterable<any>} */ (entries.values());
+		// constructor `ref` was dropped when the proxy was GC'd; the manual_ref
+		// from `pin_in_effect` is the only thing keeping the entry alive.
+		expect(entry.proxy_count).toBe(1);
+
+		destroy();
+		await tick();
+		await tick();
+
+		expect(query_map.has('q')).toBe(false);
+	});
+
+	test('reading `then` outside an effect does not pin the cache entry', async () => {
+		const fn = () => Promise.resolve('value');
+
+		(() => {
+			const proxy = new QueryProxy('q', 'arg', fn);
+			// touch `then` outside any effect — the try/catch inside
+			// `pin_in_effect` should swallow the `$effect.pre` failure and
+			// leave the proxy as the only thing keeping the entry alive.
+			try {
+				void proxy.then;
+			} catch {
+				// ignore — see note above
+			}
+		})();
+
+		await wait_for(() => !query_map.has('q'));
 
 		expect(query_map.has('q')).toBe(false);
 	});
