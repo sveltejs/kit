@@ -29,8 +29,8 @@ declare module 'svelte-adapter-foo' {
 // @filename: index.js
 // ---cut---
 import { sveltekit } from '@sveltejs/kit/vite';
-+++import adapter from 'svelte-adapter-foo';+++
 import { defineConfig } from 'vite';
++++import adapter from 'svelte-adapter-foo';+++
 
 export default defineConfig({
 	plugins: [
