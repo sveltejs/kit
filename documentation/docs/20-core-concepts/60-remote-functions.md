@@ -313,6 +313,8 @@ Unlike `query`, live queries do not have a `refresh()` method, as they are self-
 
 As with `query` and `query.batch`, call `.run()` outside render when you need imperative access. For live queries, `run()` returns a `Promise<AsyncGenerator<T>>`.
 
+> [!NOTE] It's essential that you don't cache live query responses in a service worker, since by cloning them you will cause the stream to continue long after the page is closed. Make sure that your caching logic excludes any responses with a `Cache-Control` header that includes `no-store`.
+
 ## form
 
 The `form` function makes it easy to write data to the server. It takes a callback that receives `data` constructed from the submitted [`FormData`](https://developer.mozilla.org/en-US/docs/Web/API/FormData)...
