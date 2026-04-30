@@ -1,3 +1,4 @@
+/** @import { Adapter } from '@sveltejs/kit' */
 /** @import { ValidatedConfig } from 'types' */
 /** @import { Connect, PluginOption, ViteDevServer } from 'vite' */
 /** @import { ModuleRunner } from 'vite/module-runner' */
@@ -10,7 +11,8 @@ import {
 	createServer,
 	createServerHotChannel,
 	createServerModuleRunner,
-	isFetchableDevEnvironment
+	isFetchableDevEnvironment,
+	resolveConfig
 } from 'vite';
 import { getRequest, setResponse } from '@sveltejs/kit/node';
 import { sveltekit_env, sveltekit_ipc } from '../module_ids.js';
@@ -40,13 +42,19 @@ import { SVELTE_KIT_ASSETS } from '../../../constants.js';
  * @param {PluginOption} [opts.vite_plugins] additional plugins to customise the Vite behaviour
  * @returns {Promise<ViteDevServer>}
  */
-export function create_build_server({
+export async function create_build_server({
 	svelte_config,
 	out,
 	manifest_path,
 	server_path,
 	vite_plugins
 }) {
+	const vite_config = await resolveConfig({}, 'build');
+	/** @type {Adapter | undefined} */
+	const adapter = vite_config.plugins.find(
+		(plugin) => plugin.name === 'vite-plugin-sveltekit-adapter'
+	)?.api?.adapter;
+
 	/** @type {number | undefined} */
 	let port;
 
@@ -232,12 +240,7 @@ export function create_build_server({
 							return;
 						}
 
-						const result = check_feature(
-							route_id,
-							JSON.parse(config),
-							feature,
-							svelte_config.kit.adapter
-						);
+						const result = check_feature(route_id, JSON.parse(config), feature, adapter);
 
 						res.writeHead(200);
 						res.end(result?.message);
@@ -396,10 +399,10 @@ export function create_build_server({
 		vite_plugins,
 		plugin_ipc,
 		plugin_server,
-		svelte_config.kit.adapter?.vite?.plugins ?? plugin_node_environment
+		adapter?.vite?.plugins ?? plugin_node_environment
 	].filter(Boolean);
 
-	return createServer({
+	return await createServer({
 		configFile: false,
 		command: 'serve',
 		plugins

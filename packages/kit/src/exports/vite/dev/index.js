@@ -25,9 +25,10 @@ const vite_css_query_regex = /(?:\?|&)(?:raw|url|inline)(?:&|$)/;
  * @param {import('types').ValidatedConfig} svelte_config
  * @param {string} root The project root directory
  * @param {import('types').DevEnvironment} dev_environment
+ * @param {import('@sveltejs/kit').Adapter | undefined} adapter
  * @return {() => void}
  */
-export function dev(vite, vite_config, svelte_config, root, dev_environment) {
+export function dev(vite, vite_config, svelte_config, root, dev_environment, adapter) {
 	sync.init(svelte_config, vite_config.mode, root);
 
 	/** @type {import('types').ManifestData} */
@@ -273,7 +274,7 @@ export function dev(vite, vite_config, svelte_config, root, dev_environment) {
 						route_id,
 						JSON.parse(config),
 						feature,
-						svelte_config.kit.adapter
+						adapter
 					);
 
 					res.writeHead(200);
@@ -320,7 +321,7 @@ export function dev(vite, vite_config, svelte_config, root, dev_environment) {
 				}
 
 				// fallback to our own fetch handler if the adapter doesn't provide one
-				if (!svelte_config.kit.adapter?.vite?.plugins) {
+				if (!adapter?.vite?.plugins) {
 					if (!isFetchableDevEnvironment(vite.environments.ssr)) {
 						throw new Error(
 							'The Vite configured dev SSR environment must be a FetchableDevEnvironment'

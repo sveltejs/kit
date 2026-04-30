@@ -1657,7 +1657,7 @@ function kit({ svelte_config, adapter }) {
 
 			vite.environments.ssr.hot.on('sveltekit:ssr-load-module-error', display_ssr_error_on_client);
 
-			return dev(vite, vite_config, svelte_config, root, dev_environment);
+			return dev(vite, vite_config, svelte_config, root, dev_environment, adapter);
 		},
 
 		/**
@@ -2043,6 +2043,10 @@ function kit({ svelte_config, adapter }) {
 			async handler() {
 				await finalise();
 			}
+		},
+		// add it here so that we can retrieve from a separate process by resolving the Vite config
+		api: {
+			adapter
 		}
 	};
 
