@@ -13,7 +13,26 @@ export default defineConfig({
 		// the reload confuses Playwright
 		include: ['cookie']
 	},
-	plugins: [sveltekit()],
+	plugins: [
+		sveltekit({
+			adapter: {
+				name: 'test-adapter',
+				adapt(builder) {
+					builder.instrument({
+						entrypoint: `${builder.getServerDirectory()}/index.js`,
+						instrumentation: `${builder.getServerDirectory()}/instrumentation.server.js`,
+						module: {
+							exports: ['Server']
+						}
+					});
+				},
+				supports: {
+					read: () => true,
+					instrumentation: () => true
+				}
+			}
+		})
+	],
 	server: {
 		fs: {
 			allow: [path.resolve('../../../src')]
