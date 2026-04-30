@@ -6,7 +6,7 @@ import { DEV } from 'esm-env';
 
 const name = '@sveltejs/adapter-cloudflare';
 
-const default_worker = path.join(import.meta.dirname, 'src/worker.js');
+const default_worker = path.join(import.meta.dirname, 'src', 'worker.js');
 
 const DEFAULT_ASSET_BINDING = 'ASSETS';
 
@@ -181,9 +181,10 @@ export default function (options = {}) {
 						// manifest.js isn't written until the `adapter.adapt()` method runs
 						// so we need to temporarily symlink the full manifest for the
 						// the build analysis and prerender phases
-						const filepath = `${output.dir}/manifest.js`;
+						const output_dir = output.dir ?? '';
+						const filepath = path.join(output_dir, 'manifest.js');
 						if (!existsSync(filepath)) {
-							symlinkSync(`${output.dir}/manifest-full.js`, filepath);
+							symlinkSync(path.join(output_dir, 'manifest-full.js'), filepath);
 						}
 					}
 				},
