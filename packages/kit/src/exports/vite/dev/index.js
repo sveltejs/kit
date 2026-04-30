@@ -270,12 +270,7 @@ export function dev(vite, vite_config, svelte_config, root, dev_environment, ada
 						return;
 					}
 
-					const result = check_feature(
-						route_id,
-						JSON.parse(config),
-						feature,
-						adapter
-					);
+					const result = check_feature(route_id, JSON.parse(config), feature, adapter);
 
 					res.writeHead(200);
 					res.end(result?.message);
