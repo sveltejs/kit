@@ -68,7 +68,7 @@ const options = object(
 						+++import adapter from '@sveltejs/adapter-auto';+++
 
 						export default defineConfig({
-						  plugins: [sveltekit( +++{ adapter: adapter() }+++ )]
+						  plugins: [sveltekit(+++{ adapter: adapter() }+++)]
 						});
 					`;
 			}),
