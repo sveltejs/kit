@@ -16,10 +16,10 @@ Additional [community-provided adapters](/packages#sveltekit-adapters) exist for
 
 ## Using adapters
 
-Your adapter is specified in `svelte.config.js`:
+Your adapter is specified in `vite.config.js`:
 
 ```js
-/// file: svelte.config.js
+/// file: vite.config.js
 // @filename: ambient.d.ts
 declare module 'svelte-adapter-foo' {
 	const adapter: (opts: any) => import('@sveltejs/kit').Adapter;
@@ -28,19 +28,17 @@ declare module 'svelte-adapter-foo' {
 
 // @filename: index.js
 // ---cut---
+import { sveltekit } from '@sveltejs/kit/vite';
 import adapter from 'svelte-adapter-foo';
+import { defineConfig } from 'vite';
 
-/** @type {import('@sveltejs/kit').Config} */
-const config = {
-	kit: {
-		adapter: adapter({
-			// adapter options go here
-		})
-	}
-};
-
-export default config;
+export default defineConfig({
+	plugins: [sveltekit({ adapter: adapter() })]
+});
 ```
+
+> [!LEGACY]
+> The `adapter` option was moved to the SvelteKit Vite plugin in SvelteKit 3.0.0. In earlier versions, you had to add it to the `kit` property in the `svelte.config.js` file instead.
 
 ## Platform-specific context
 

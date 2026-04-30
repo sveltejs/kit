@@ -323,7 +323,7 @@ export interface KitConfig {
 	/**
 	 * Your [adapter](https://svelte.dev/docs/kit/adapters) is run when executing `vite build`. It determines how the output is converted for different platforms.
 	 * @default undefined
-	 * @deprecated removed in 3.0. Adapters should now be passed to the `sveltekit` Vite plugin in `vite.config.js`
+	 * @deprecated removed in 3.0.0. Adapters should now be passed to the `sveltekit` Vite plugin in `vite.config.js`
 	 */
 	adapter?: Adapter;
 	/**
@@ -907,6 +907,15 @@ export interface KitConfig {
 		 */
 		pollInterval?: number;
 	};
+}
+
+export interface KitViteConfig {
+	/**
+	 * Your [adapter](https://svelte.dev/docs/kit/adapters) is run when executing `vite build`. It determines how the output is converted for different platforms.
+	 * @since 3.0.0
+	 * @default undefined
+	 */
+	adapter?: Adapter;
 }
 
 /**

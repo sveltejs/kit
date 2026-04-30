@@ -1,4 +1,4 @@
-/** @import { Adapter } from '@sveltejs/kit' */
+/** @import { Adapter, KitViteConfig } from '@sveltejs/kit' */
 /** @import { Options } from '@sveltejs/vite-plugin-svelte' */
 /** @import { PreprocessorGroup } from 'svelte/compiler' */
 /** @import { ValidatedConfig, ValidatedKitConfig } from 'types' */
@@ -67,6 +67,7 @@ import { load_config } from '../../core/config/index.js';
 import { treeshake_prerendered_remotes } from './build/remote.js';
 import { runtime_directory } from '../../runtime/utils.js';
 import { SVELTE_KIT_ASSETS } from '../../constants.js';
+import options from './options.js';
 
 const cwd = process.cwd();
 
@@ -163,11 +164,13 @@ let vite_plugin_svelte;
 
 /**
  * Returns the SvelteKit Vite plugins.
- * @param {object} options
- * @param {Adapter} [options.adapter] Your [adapter](https://svelte.dev/docs/kit/adapters) is run when executing `vite build`. It determines how the output is converted for different platforms. @default undefined
+ * @param {unknown} opts
  * @returns {Promise<PluginOption[]>}
  */
-export async function sveltekit({ adapter }) {
+export async function sveltekit(opts) {
+	/** @type {KitViteConfig} */
+	const validated = options(opts, 'options');
+
 	// the config options will be set only after the Vite `config` hook runs
 	// because we need to find `svelte.config.js` relative to `vite.config.root`
 	const svelte_config = /** @type {ValidatedConfig} */ ({});
@@ -184,7 +187,7 @@ export async function sveltekit({ adapter }) {
 	return [
 		plugin_svelte_config({ vite_plugin_svelte_options, svelte_config }),
 		vite_plugin_svelte.svelte(vite_plugin_svelte_options),
-		kit({ svelte_config, adapter })
+		kit({ svelte_config, adapter: validated.adapter })
 	];
 }
 
