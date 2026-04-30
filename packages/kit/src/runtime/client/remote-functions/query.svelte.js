@@ -328,10 +328,14 @@ export class QueryProxy {
 		Object.defineProperty(this, QUERY_RESOURCE_KEY, { value: this.#key });
 		this.#fn = fn;
 
+		const key = this.#key;
+		const payload = this.#payload;
 		const entry = cache.ensure_entry(
 			this.#id,
 			this.#payload,
-			() => new Query(this.#key, () => this.#fn(this.#key, this.#payload))
+			// IMPORTANT: This cannot close over `this` or it becomes impossible to
+			// garbage collect the QueryProxy and thus impossible to evict cache entries.
+			() => new Query(key, () => fn(key, payload))
 		);
 
 		cache.ref(this, entry, this.#id, this.#payload);
@@ -378,12 +382,17 @@ export class QueryProxy {
 
 	/** @type {Query<T>['withOverride']} */
 	withOverride(fn) {
+		const fn_ref = this.#fn;
+		const key_ref = this.#key;
+		const payload_ref = this.#payload;
 		// The override increments `proxy_count` to keep the cache entry alive until the
 		// release function is called.
 		const entry = cache.ensure_entry(
 			this.#id,
 			this.#payload,
-			() => new Query(this.#key, () => this.#fn(this.#key, this.#payload))
+			// IMPORTANT: This cannot close over `this` or it becomes impossible to
+			// garbage collect the QueryProxy and thus impossible to evict cache entries.
+			() => new Query(key_ref, () => fn_ref(key_ref, payload_ref))
 		);
 
 		const deref = cache.manual_ref(entry, this.#id, this.#payload);

@@ -477,13 +477,18 @@ class LiveQueryProxy {
 		this.#key = create_remote_key(id, this.#payload);
 		Object.defineProperty(this, QUERY_RESOURCE_KEY, { value: this.#key });
 
+		// Capture key/payload in locals so the create_resource closure doesn't capture
+		// `this` (the LiveQueryProxy), which would prevent the FinalizationRegistry from
+		// observing the proxy as unreachable and so leak the first proxy for a given key.
+		const key = this.#key;
+		const payload = this.#payload;
 		const entry = cache.ensure_entry(
 			this.#id,
-			this.#payload,
-			() => new LiveQuery(this.#id, this.#key, this.#payload)
+			payload,
+			() => new LiveQuery(id, key, payload)
 		);
 
-		cache.ref(this, entry, this.#id, this.#payload);
+		cache.ref(this, entry, this.#id, payload);
 	}
 
 	#get_cached_query() {
