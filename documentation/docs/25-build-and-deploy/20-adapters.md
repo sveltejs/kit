@@ -22,18 +22,22 @@ Your adapter is specified in `vite.config.js`:
 /// file: vite.config.js
 // @filename: ambient.d.ts
 declare module 'svelte-adapter-foo' {
-	const adapter: (opts: any) => import('@sveltejs/kit').Adapter;
+	const adapter: (opts?: any) => import('@sveltejs/kit').Adapter;
 	export default adapter;
 }
 
 // @filename: index.js
 // ---cut---
 import { sveltekit } from '@sveltejs/kit/vite';
-import adapter from 'svelte-adapter-foo';
++++import adapter from 'svelte-adapter-foo';+++
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-	plugins: [sveltekit({ adapter: adapter() })]
+	plugins: [
+		sveltekit({
+			+++adapter: adapter()+++
+		})
+	]
 });
 ```
 
