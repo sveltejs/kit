@@ -1,6 +1,6 @@
 /** @import { CacheEntry } from './remote-functions/cache.svelte.js' */
-/** @import { Query } from './remote-functions/query.svelte.js' */
-/** @import { LiveQuery } from './remote-functions/query-live.svelte.js' */
+/** @import { Query } from './remote-functions/query/instance.svelte.js' */
+/** @import { LiveQuery } from './remote-functions/query-live/instance.svelte.js' */
 import { BROWSER, DEV } from 'esm-env';
 import * as svelte from 'svelte';
 import { HttpError, Redirect, SvelteKitError } from '@sveltejs/kit/internal';

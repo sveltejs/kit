@@ -3,7 +3,7 @@
 import { app_dir, base } from '$app/paths/internal/client';
 import { app, goto } from '../client.js';
 import { get_remote_request_headers, QUERY_FUNCTION_ID } from './shared.svelte.js';
-import { QueryProxy } from './query.svelte.js';
+import { QueryProxy } from './query/proxy.js';
 import * as devalue from 'devalue';
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
 import { unfriendly_hydratable } from '../../shared.js';
