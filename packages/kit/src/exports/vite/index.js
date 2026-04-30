@@ -1,5 +1,7 @@
+/** @import { Adapter, KitViteConfig } from '@sveltejs/kit' */
 /** @import { Options } from '@sveltejs/vite-plugin-svelte' */
 /** @import { PreprocessorGroup } from 'svelte/compiler' */
+/** @import { ValidatedConfig, ValidatedKitConfig } from 'types' */
 /** @import { ConfigEnv, Plugin, PluginOption, ResolvedConfig, UserConfig, Manifest, EnvironmentOptions, Rolldown } from 'vite' */
 /** @import { ModuleRunner } from 'vite/module-runner' */
 import fs from 'node:fs';
@@ -39,7 +41,7 @@ import prerender from '../../core/postbuild/prerender.js';
 import analyse from '../../core/postbuild/analyse.js';
 import { s } from '../../utils/misc.js';
 import { hash } from '../../utils/hash.js';
-import { dedent } from '../../core/sync/utils.js';
+import { dedent, write_if_changed } from '../../core/sync/utils.js';
 import {
 	app_server,
 	env_dynamic_private,
@@ -48,7 +50,6 @@ import {
 	env_static_public,
 	service_worker,
 	sveltekit_remotes,
-	sveltekit_server_assets,
 	sveltekit_environment,
 	sveltekit_server,
 	sveltekit_traced,
@@ -65,6 +66,7 @@ import { load_config } from '../../core/config/index.js';
 import { treeshake_prerendered_remotes } from './build/remote.js';
 import { runtime_directory } from '../../runtime/utils.js';
 import { SVELTE_KIT_ASSETS } from '../../constants.js';
+import options from './options.js';
 
 const cwd = process.cwd();
 
@@ -161,15 +163,16 @@ let vite_plugin_svelte;
 
 /**
  * Returns the SvelteKit Vite plugins.
- * @param {{
- *   adapter?: import('@sveltejs/kit').Adapter;
- * }=} options
+ * @param {KitViteConfig} [config]
  * @returns {Promise<PluginOption[]>}
  */
-export async function sveltekit(options = {}) {
+export async function sveltekit(config) {
+	/** @type {KitViteConfig} */
+	const validated = options(config, 'options');
+
 	// the config options will be set only after the Vite `config` hook runs
 	// because we need to find `svelte.config.js` relative to `vite.config.root`
-	const svelte_config = /** @type {import('types').ValidatedConfig} */ ({});
+	const svelte_config = /** @type {ValidatedConfig} */ ({});
 
 	/** @type {Options} */
 	const vite_plugin_svelte_options = {
@@ -183,7 +186,7 @@ export async function sveltekit(options = {}) {
 	return [
 		plugin_svelte_config({ vite_plugin_svelte_options, svelte_config }),
 		vite_plugin_svelte.svelte(vite_plugin_svelte_options),
-		kit({ svelte_config, adapter_in_vite_config: options.adapter })
+		kit({ svelte_config, adapter: validated.adapter })
 	];
 }
 
@@ -197,7 +200,7 @@ function resolve_root(vite_config) {
  * of our other plugins try to access the config objects
  * @param {{
  *   vite_plugin_svelte_options: import('@sveltejs/vite-plugin-svelte').Options;
- * 	 svelte_config: import('types').ValidatedConfig;
+ * 	 svelte_config: ValidatedConfig;
  * }} options
  * @return {Plugin}
  */
@@ -263,15 +266,15 @@ function revive_functions(value) {
  * - https://rolldown.rs/apis/plugin-api#output-generation-hooks
  *
  * @param {object} opts
- * @param {import('types').ValidatedConfig} opts.svelte_config options are only resolved after the Vite `config` hook runs
- * @param {import('@sveltejs/kit').Adapter | undefined} opts.adapter_in_vite_config True if an adapter was passed to the Vite plugin
+ * @param {ValidatedConfig} opts.svelte_config options are only resolved after the Vite `config` hook runs
+ * @param {Adapter | undefined} opts.adapter
  * @return {PluginOption[]}
  */
-function kit({ svelte_config, adapter_in_vite_config }) {
+function kit({ svelte_config, adapter }) {
 	/** @type {typeof import('vite')} */
 	let vite;
 
-	/** @type {import('types').ValidatedKitConfig} */
+	/** @type {ValidatedKitConfig} */
 	let kit;
 	/** @type {string} */
 	let out;
@@ -344,21 +347,8 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 				vite_config_env = config_env;
 				is_build = config_env.command === 'build';
 
-				// if the adapter vite plugins store some values at the module level, we
-				// should use the adapter instance passed through the vite config to
-				// avoid losing those values
-				if (adapter_in_vite_config) svelte_config.kit.adapter = adapter_in_vite_config;
-
 				({ kit } = svelte_config);
 				out = `${kit.outDir}/output`;
-
-				if (kit.adapter?.vite?.plugins && !adapter_in_vite_config) {
-					// TODO: use the actual pathname of the user's svelte config file in the error message example
-					throw new Error(
-						`${kit.adapter.name} requires the adapter to be passed to the \`sveltekit\` Vite plugin in the \`vite.config.js\` file. For example:\n\n` +
-							`+++import svelteConfig from './svelte.config.js';+++\n\nexport default defineConfig({\n  plugins: [sveltekit( +++{ adapter: svelteConfig.kit?.adapter  }+++ )]\n});`
-					);
-				}
 
 				version_hash = hash(kit.version.name);
 
@@ -492,7 +482,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 
 					new_config.define = {
 						...define,
-						__SVELTEKIT_ADAPTER_NAME__: s(kit.adapter?.name),
+						__SVELTEKIT_ADAPTER_NAME__: s(adapter?.name),
 						__SVELTEKIT_APP_VERSION_FILE__: s(`${kit.appDir}/version.json`),
 						__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: s(kit.version.pollInterval)
 					};
@@ -546,7 +536,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 									async handleRequest(request) {
 										try {
 											/** @type {import('./dev/ssr_entry.js')} */
-											const { respond } = await runner.import('__sveltekit/dev-server-entry');
+											const { respond } = await runner.import('__sveltekit/dev-server-entry.js');
 											return await respond(request, remote_address);
 										} catch (error) {
 											// Vite doesn't log errors so we do it ourselves
@@ -578,7 +568,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 		},
 		resolveId: {
 			filter: {
-				id: exactRegex('__sveltekit/dev-server-entry')
+				id: exactRegex('__sveltekit/dev-server-entry.js')
 			},
 			handler() {
 				return server_instrumentation_file
@@ -626,7 +616,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 					const size = data.byteLength;
 
 					// update it immediately
-					dev_environment.vite.environments.ssr.hot.send(`sveltekit:server-assets`, {
+					dev_environment.vite.environments.ssr.hot.send('sveltekit:server-assets', {
 						filepath,
 						size,
 						data: devalue.stringify(data)
@@ -634,7 +624,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 
 					// persist changes in case of server reload
 					server_assets.set(filepath, { size, data });
-					invalidate_module(dev_environment.vite, sveltekit_server_assets);
+					invalidate_module(dev_environment.vite, '__sveltekit/server-assets');
 				}
 			}
 		}
@@ -672,7 +662,8 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 				id: [
 					exactRegex('sveltekit:server-manifest'),
 					exactRegex('sveltekit:server'),
-					exactRegex('sveltekit:env')
+					exactRegex('sveltekit:env'),
+					exactRegex('__sveltekit/server-assets')
 				]
 			},
 			handler(id) {
@@ -687,6 +678,39 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 				if (id === 'sveltekit:env') {
 					return sveltekit_env;
 				}
+
+				if (id === '__sveltekit/server-assets') {
+					/** @type {Array<[string, { size: number; data: Uint8Array<ArrayBuffer> }]>} */
+					const entries = [];
+
+					for (const asset of server_assets) {
+						entries.push(asset);
+					}
+
+					const content = dedent`
+						import { devalue } from '@sveltejs/kit/internal';
+
+						export const server_assets = {
+							${entries
+								.map(([filepath, { size }]) => {
+									return `${s(filepath)}: ${size}`;
+								})
+								.join(',\n')}
+						};
+
+						export const server_assets_content = ${devalue.uneval(
+							Object.fromEntries(entries.map(([filepath, { data }]) => [filepath, data]))
+						)};
+
+						import.meta.hot?.on('sveltekit:server-assets', async ({ filepath, size, data }) => {
+							server_assets[filepath] = size;
+							server_assets_content[filepath] = devalue.parse(data);
+						});
+					`;
+					const filepath = `${kit.outDir}/generated/server/server-assets.js`;
+					write_if_changed(filepath, content);
+					return filepath;
+				}
 			}
 		},
 		load: {
@@ -695,7 +719,6 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 					exactRegex(sveltekit_env),
 					exactRegex(sveltekit_ipc),
 					exactRegex(sveltekit_remotes),
-					exactRegex(sveltekit_server_assets),
 					exactRegex(sveltekit_manifest_data),
 					exactRegex(sveltekit_traced)
 				]
@@ -727,39 +750,6 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 
 							let port${port ? ` = ${port}` : ''};
 							import.meta.hot?.on('sveltekit:port', (update) => { port = update });
-						`;
-					}
-
-					case sveltekit_server_assets: {
-						/** @type {Array<[string, { size: number; data: Uint8Array<ArrayBuffer> }]>} */
-						const entries = [];
-
-						for (const asset of server_assets) {
-							entries.push(asset);
-						}
-
-						return dedent`
-							export const server_assets = {
-								${entries
-									.map(([filepath, { size }]) => {
-										return `${s(filepath)}: ${size}`;
-									})
-									.join(',\n')}
-							};
-
-							export const server_assets_content = ${devalue.uneval(
-								Object.fromEntries(entries.map(([filepath, { data }]) => [filepath, data]))
-							)};
-
-							let devalue;
-
-							import.meta.hot?.on('sveltekit:server-assets', async ({ filepath, size, data }) => {
-								// we have to dynamically import this because a static import throws
-								// Error: Cannot find module 'devalue' imported from 'virtual:__sveltekit/server-assets'
-								devalue ??= await import('devalue');
-								server_assets[filepath] = size;
-								server_assets_content[filepath] = devalue.parse(data);
-							});
 						`;
 					}
 
@@ -883,7 +873,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 				return `${runtime_directory}/client/remote-functions/index.js`;
 			}
 
-			if (id.startsWith('__sveltekit/')) {
+			if (id.startsWith('__sveltekit/') && id !== '__sveltekit/dev-server-entry.js') {
 				return `\0virtual:${id}`;
 			}
 		},
@@ -1447,7 +1437,6 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 
 					// ...and the server instrumentation file
 					if (server_instrumentation_file) {
-						const { adapter } = kit;
 						if (adapter && !adapter.supports?.instrumentation?.()) {
 							throw new Error(`${server_instrumentation_file} is unsupported in ${adapter.name}.`);
 						}
@@ -1676,7 +1665,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 		 * @see https://vitejs.dev/guide/api-plugin.html#configurepreviewserver
 		 */
 		configurePreviewServer(vite) {
-			if (kit.adapter?.vite?.plugins) return;
+			if (adapter?.vite?.plugins) return;
 
 			return preview(vite, vite_config, svelte_config);
 		},
@@ -2017,9 +2006,10 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 					`\nRun ${styleText(['bold', 'cyan'], 'npm run preview')} to preview your production build locally.`
 				);
 
-				if (kit.adapter) {
+				if (adapter) {
 					const { adapt } = await import('../../core/adapt/index.js');
 					await adapt(
+						adapter,
 						svelte_config,
 						build_data,
 						metadata,
@@ -2058,7 +2048,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 
 	return [
 		plugin_setup,
-		adapter_in_vite_config?.vite?.plugins ? undefined : plugin_node_environment,
+		adapter?.vite?.plugins ? undefined : plugin_node_environment,
 		plugin_remote,
 		plugin_server_filesystem,
 		plugin_dev_ssr,
@@ -2067,7 +2057,7 @@ function kit({ svelte_config, adapter_in_vite_config }) {
 		plugin_service_worker,
 		plugin_compile,
 		plugin_adapter,
-		adapter_in_vite_config?.vite?.plugins
+		adapter?.vite?.plugins
 	].filter(Boolean);
 }
 
@@ -2117,7 +2107,7 @@ function find_overridden_config(config, resolved_config, enforced_config, path, 
 }
 
 /**
- * @param {import('types').ValidatedConfig} config
+ * @param {ValidatedConfig} config
  * @returns {string}
  */
 function create_service_worker_module(config) {

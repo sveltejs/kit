@@ -1,4 +1,4 @@
-import { command, query } from '$app/server';
+import { command, query, requested } from '$app/server';
 import { error } from '@sveltejs/kit';
 
 /** @type {Array<[string, { id: string; title: string }]>} **/
@@ -41,3 +41,16 @@ export const reset_todos = command(() => {
 		get_todo(id).set({ ...todo });
 	}
 });
+
+export const append_to_all_titles_requested = command(
+	'unchecked',
+	async (/** @type {string} */ suffix) => {
+		for (const [id, todo] of todos) {
+			todos.set(id, { ...todo, title: todo.title + suffix });
+		}
+
+		for (const { query } of requested(get_todo, Infinity)) {
+			void query.refresh();
+		}
+	}
+);

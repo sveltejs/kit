@@ -1,12 +1,16 @@
 import { sveltekit } from '@sveltejs/kit/vite';
-import svelteConfig from './svelte.config.js';
+import adapter from '../../../index.js';
 
 /** @type {import('vite').UserConfig} */
 const config = {
 	build: {
 		minify: false
 	},
-	plugins: [sveltekit({ adapter: svelteConfig.kit?.adapter })],
+	plugins: [
+		sveltekit({
+			adapter: adapter({ vitePluginOptions: { configPath: './config/wrangler.jsonc' } })
+		})
+	],
 	server: {
 		fs: {
 			allow: ['../../../../kit']
