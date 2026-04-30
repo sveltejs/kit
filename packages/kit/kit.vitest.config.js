@@ -14,7 +14,7 @@ const exclude = [
 ];
 
 export default defineConfig({
-	plugins: [svelte({ compilerOptions: { hmr: false } })],
+	plugins: [svelte({ compilerOptions: { hmr: false, experimental: { async: true } } })],
 	define: {
 		__SVELTEKIT_SERVER_TRACING_ENABLED__: false
 	},

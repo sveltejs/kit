@@ -23,9 +23,6 @@ vi.mock(new URL('../shared.svelte.js', import.meta.url).pathname, () => ({
 	handle_side_channel_response: () => Promise.resolve(undefined)
 }));
 
-// Stub the LiveQuery instance: the real one calls `svelte.hydratable` in its
-// constructor, which requires the Svelte compiler's `experimental.async` flag —
-// setting that up here would mean wiring the entire SvelteKit build pipeline.
 vi.mock(new URL('./instance.svelte.js', import.meta.url).pathname, () => {
 	class LiveQuery {
 		/**
