@@ -164,12 +164,12 @@ let vite_plugin_svelte;
 
 /**
  * Returns the SvelteKit Vite plugins.
- * @param {unknown} opts
+ * @param {KitViteConfig} [config]
  * @returns {Promise<PluginOption[]>}
  */
-export async function sveltekit(opts) {
+export async function sveltekit(config) {
 	/** @type {KitViteConfig} */
-	const validated = options(opts, 'options');
+	const validated = options(config, 'options');
 
 	// the config options will be set only after the Vite `config` hook runs
 	// because we need to find `svelte.config.js` relative to `vite.config.root`

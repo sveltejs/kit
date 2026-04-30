@@ -2997,11 +2997,12 @@ declare module '@sveltejs/kit/node' {
 }
 
 declare module '@sveltejs/kit/vite' {
+	import type { KitViteConfig } from '@sveltejs/kit';
 	import type { PluginOption } from 'vite';
 	/**
 	 * Returns the SvelteKit Vite plugins.
 	 * */
-	export function sveltekit(opts: unknown): Promise<PluginOption[]>;
+	export function sveltekit(config?: KitViteConfig): Promise<PluginOption[]>;
 
 	export {};
 }
