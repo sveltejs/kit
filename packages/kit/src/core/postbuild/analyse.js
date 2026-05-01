@@ -34,6 +34,7 @@ async function analyse({
 	const svelte_config = await load_config({ cwd: root });
 
 	const vite = await create_build_server({
+		name: 'analyse',
 		svelte_config,
 		out,
 		manifest_path,
