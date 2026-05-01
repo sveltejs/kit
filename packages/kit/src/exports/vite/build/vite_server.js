@@ -3,7 +3,7 @@
 /** @import { Connect, PluginOption, ViteDevServer } from 'vite' */
 /** @import { ModuleRunner } from 'vite/module-runner' */
 import fs from 'node:fs';
-import path, { basename } from 'node:path';
+import path from 'node:path';
 import { exactRegex } from 'rolldown/filter';
 import sirv from 'sirv';
 import {
@@ -35,6 +35,7 @@ import { SVELTE_KIT_ASSETS } from '../../../constants.js';
  * We achieve this by using Vite's `resolveId` hook to intercept module resolution
  * and provide a `Server` class that runs our custom instructions.
  * @param {object} opts
+ * @param {string} opts.name a unique name to avoid Vite `optimizeDeps` cache collision
  * @param {ValidatedConfig} opts.svelte_config
  * @param {string} opts.out
  * @param {string} opts.manifest_path
@@ -43,6 +44,7 @@ import { SVELTE_KIT_ASSETS } from '../../../constants.js';
  * @returns {Promise<ViteDevServer>}
  */
 export async function create_build_server({
+	name,
 	svelte_config,
 	out,
 	manifest_path,
@@ -134,7 +136,7 @@ export async function create_build_server({
 
 			return {
 				appType: 'custom',
-				cacheDir: `node_modules/.vite-${basename(server_path, '.js')}`,
+				cacheDir: `node_modules/.vite-${name}`,
 				environments: {
 					ssr: {
 						build: {
@@ -405,6 +407,12 @@ export async function create_build_server({
 	return await createServer({
 		configFile: false,
 		command: 'serve',
-		plugins
+		plugins,
+		// we need to avoid using the default port of 5173 because some test configs
+		// may wait for that port to be available and start tests immediately because
+		// of our dev server instead of their app
+		server: {
+			port: 8483
+		}
 	});
 }

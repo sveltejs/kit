@@ -37,6 +37,7 @@ async function generate_fallback({ manifest_path, out, root }) {
 	};
 
 	const vite = await create_build_server({
+		name: 'generate-fallback',
 		svelte_config,
 		out,
 		manifest_path,

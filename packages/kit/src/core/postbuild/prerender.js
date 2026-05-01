@@ -531,6 +531,7 @@ async function prerender({ out, manifest_path, metadata, verbose, root }) {
 	};
 
 	const vite = await create_build_server({
+		name: 'prerender',
 		svelte_config,
 		out,
 		manifest_path,
