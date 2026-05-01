@@ -1260,7 +1260,7 @@ export const getStuff = query('unchecked', async ({ id }: { id: string }) => {
 Inside `query`, `form` and `command` you can use [`getRequestEvent`]($app-server#getRequestEvent) to get the current [`RequestEvent`](@sveltejs-kit#RequestEvent) object. This makes it easy to build abstractions for interacting with cookies, for example:
 
 ```ts
-/// file: user.remote.ts
+/// file: user.remote.js
 // @filename: ambient.d.ts
 interface User {
 	name: string;
