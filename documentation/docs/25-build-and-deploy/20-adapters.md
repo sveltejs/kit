@@ -26,6 +26,7 @@ declare module 'svelte-adapter-foo' {
 	export default adapter;
 }
 
+// @errors: 2554
 // @filename: index.js
 // ---cut---
 import { sveltekit } from '@sveltejs/kit/vite';

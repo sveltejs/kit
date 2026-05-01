@@ -9,7 +9,7 @@ To generate a standalone Node server, use [`adapter-node`](https://github.com/sv
 Install with `npm i -D @sveltejs/adapter-node`, then add the adapter to your `vite.config.js`:
 
 ```js
-// @errors: 2307
+// @errors: 2307 2554
 /// file: vite.config.js
 import adapter from '@sveltejs/adapter-node';
 import { sveltekit } from '@sveltejs/kit/vite';
@@ -149,7 +149,7 @@ The number of seconds for [`keepAliveTimeout`](https://nodejs.org/api/http.html#
 The adapter can be configured with various options:
 
 ```js
-// @errors: 2307
+// @errors: 2307 2554
 /// file: vite.config.js
 import adapter from '@sveltejs/adapter-node';
 import { sveltekit } from '@sveltejs/kit/vite';
