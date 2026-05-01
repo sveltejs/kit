@@ -123,6 +123,7 @@ export default config;
 ```
 
 ```js
+// @errors: 2307
 /// file: vite.config.js
 import adapter from '@sveltejs/adapter-static';
 import { sveltekit } from '@sveltejs/kit/vite';

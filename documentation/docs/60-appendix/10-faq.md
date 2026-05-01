@@ -154,6 +154,7 @@ export function GET({ params, url }) {
 `@sveltejs/adapter-node` builds a middleware that you can use with your own server for production mode. In dev, you can add middleware to Vite by using a Vite plugin. For example:
 
 ```js
+// @errors: 2307
 /// file: vite.config.js
 import adapter from '@sveltejs/adapter-node';
 import { sveltekit } from '@sveltejs/kit/vite';
