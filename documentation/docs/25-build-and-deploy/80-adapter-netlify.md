@@ -11,6 +11,7 @@ This adapter will be installed by default when you use [`adapter-auto`](adapter-
 Install with `npm i -D @sveltejs/adapter-netlify`, then add the adapter to your `vite.config.js`:
 
 ```js
+// @errors: 2307
 /// file: vite.config.js
 import adapter from '@sveltejs/adapter-netlify';
 import { sveltekit } from '@sveltejs/kit/vite';
