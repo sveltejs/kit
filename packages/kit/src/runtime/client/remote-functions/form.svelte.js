@@ -348,7 +348,7 @@ export function form(id) {
 
 				event.preventDefault();
 
-				const form_data = new FormData(form, event.submitter);
+				const form_data = get_form_data(form, event.submitter);
 
 				if (DEV) {
 					validate_form_data(form_data, clone(form).enctype);
@@ -466,7 +466,7 @@ export function form(id) {
 					// the inputs are actually updated (so that it can be cancelled)
 					await tick();
 
-					input = convert_formdata(new FormData(form));
+					input = convert_formdata(get_form_data(form));
 				};
 
 				form.addEventListener('reset', handle_reset);
@@ -553,7 +553,7 @@ export function form(id) {
 						element.querySelector('button:not([type]), [type="submit"]')
 					);
 
-					const form_data = new FormData(element, default_submitter);
+					const form_data = get_form_data(element, default_submitter);
 
 					/** @type {InternalRemoteFormIssue[]} */
 					let array = [];
@@ -687,4 +687,26 @@ function validate_form_data(form_data, enctype) {
 			}
 		}
 	}
+}
+
+/**
+ * @param {HTMLFormElement} form
+ * @param {HTMLElement | null | undefined} [submitter]
+ */
+function get_form_data(form, submitter) {
+	const form_data = new FormData(form, submitter ?? undefined);
+
+	for (const element of form.elements) {
+		const input = /** @type {HTMLInputElement} */ (element);
+		if (
+			input.name &&
+			input.name.startsWith('b:') &&
+			!input.disabled &&
+			!form_data.has(input.name)
+		) {
+			form_data.append(input.name, 'false');
+		}
+	}
+
+	return form_data;
 }
