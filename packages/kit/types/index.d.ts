@@ -1517,6 +1517,10 @@ declare module '@sveltejs/kit' {
 		locals: App.Locals;
 		/**
 		 * The parameters of the current route - e.g. for a route like `/blog/[slug]`, a `{ slug: string }` object.
+		 *
+		 * In the context of a remote function request initiated by the client, this relates to the page the remote function
+		 * was called from, _not_ the URL of the endpoint SvelteKit creates for the remote function. Never use this to determine
+		 * whether or not a user is authorized to access certain data, as these values are part of the request which could be manipulated.
 		 */
 		params: Params;
 		/**
@@ -1533,6 +1537,10 @@ declare module '@sveltejs/kit' {
 		route: {
 			/**
 			 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`. It is `null` when no route is matched.
+			 *
+			 * In the context of a remote function request initiated by the client, this relates to the page the remote function
+			 * was called from, _not_ the URL of the endpoint SvelteKit creates for the remote function. Never use this to determine
+			 * whether or not a user is authorized to access certain data, as these values are part of the request which could be manipulated.
 			 */
 			id: RouteId;
 		};
@@ -1561,6 +1569,10 @@ declare module '@sveltejs/kit' {
 		setHeaders: (headers: Record<string, string>) => void;
 		/**
 		 * The requested URL.
+		 *
+		 * In the context of a remote function request initiated by the client, this relates to the page the remote function
+		 * was called from, _not_ the URL of the endpoint SvelteKit creates for the remote function. Never use this to determine
+		 * whether or not a user is authorized to access certain data, as these values are part of the request which could be manipulated.
 		 */
 		url: URL;
 		/**
