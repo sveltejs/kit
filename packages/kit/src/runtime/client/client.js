@@ -1481,7 +1481,6 @@ async function load_root_error_page({ status, error, url, route }) {
 					.replace(/%sveltekit\.error\.message%/g, message)
 			);
 			document.close();
-			return;
 		}
 
 		throw error;
