@@ -8,7 +8,7 @@ import { load_config } from '../config/index.js';
 
 export default forked(import.meta.url, analyse);
 
-const analyse_entry = import.meta.resolve('./analyse_entry.js');
+const analysis_entry = import.meta.resolve('./analysis_entry.js');
 
 /**
  * @param {object} opts Arguments must be serialisable via the structured clone algorithm
@@ -37,8 +37,9 @@ async function analyse({
 		name: 'analyse',
 		svelte_config,
 		out,
+		root,
 		manifest_path,
-		server_path: analyse_entry
+		server_path: analysis_entry
 	});
 
 	await vite.listen();
