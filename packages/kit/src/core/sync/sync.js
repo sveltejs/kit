@@ -36,7 +36,13 @@ export function create(config) {
 
 	const output = path.join(config.kit.outDir, 'generated');
 
-	write_client_manifest(config.kit, manifest_data, `${output}/client`, undefined, load_error_page(config));
+	write_client_manifest(
+		config.kit,
+		manifest_data,
+		`${output}/client`,
+		undefined,
+		load_error_page(config)
+	);
 	write_server(config, output);
 	write_root(manifest_data, config, output);
 	write_all_types(config, manifest_data);
@@ -101,6 +107,12 @@ export function server(config) {
 	const output = path.join(config.kit.outDir, 'generated');
 	write_server(config, output);
 	if (cached_manifest_data) {
-		write_client_manifest(config.kit, cached_manifest_data, `${output}/client`, undefined, load_error_page(config));
+		write_client_manifest(
+			config.kit,
+			cached_manifest_data,
+			`${output}/client`,
+			undefined,
+			load_error_page(config)
+		);
 	}
 }
