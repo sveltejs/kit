@@ -5,6 +5,7 @@ import { forked } from '../../utils/fork.js';
 import { build_server_nodes } from '../../exports/vite/build/build_server.js';
 import { create_build_server } from '../../exports/vite/build/vite_server.js';
 import { load_config } from '../config/index.js';
+import { get_port } from '../utils.js';
 
 export default forked(import.meta.url, analyse);
 
@@ -33,7 +34,7 @@ async function analyse({
 
 	const svelte_config = await load_config({ cwd: root });
 
-	const vite = await create_build_server({
+	const server = await create_build_server({
 		name: 'analyse',
 		svelte_config,
 		out,
@@ -42,11 +43,9 @@ async function analyse({
 		server_path: analysis_entry
 	});
 
-	await vite.listen();
+	await server.listen();
 
-	const address = vite.httpServer?.address();
-	const port = typeof address === 'string' ? Number(address.split(':').at(-1)) : address?.port;
-
+	const port = get_port(server);
 	const response = await fetch(new URL(`http://localhost:${port}`), {
 		method: 'POST',
 		headers: {
@@ -60,7 +59,7 @@ async function analyse({
 		})
 	});
 
-	await vite.close();
+	await server.close();
 
 	return { metadata: devalue.parse(await response.text()) };
 }

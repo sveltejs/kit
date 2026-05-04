@@ -3,6 +3,7 @@ import { escape_for_regexp } from '../../utils/escape.js';
 import { create_build_server } from '../../exports/vite/build/vite_server.js';
 import { load_config } from '../config/index.js';
 import { forked } from '../../utils/fork.js';
+import { get_port } from '../utils.js';
 
 export default forked(import.meta.url, generate_fallback);
 
@@ -36,7 +37,7 @@ async function generate_fallback({ manifest_path, out, root }) {
 		}
 	};
 
-	const vite = await create_build_server({
+	const server = await create_build_server({
 		name: 'generate-fallback',
 		svelte_config,
 		out,
@@ -46,13 +47,12 @@ async function generate_fallback({ manifest_path, out, root }) {
 		vite_plugins: [plugin_generate_fallback]
 	});
 
-	await vite.listen();
+	await server.listen();
 
-	const address = vite.httpServer?.address();
-	const port = typeof address === 'string' ? Number(address.split(':').at(-1)) : address?.port;
+	const port = get_port(server);
 	const response = await fetch(`http://localhost:${port}/[fallback]`);
 
-	await vite.close();
+	await server.close();
 
 	if (response.ok) {
 		return await response.text();
