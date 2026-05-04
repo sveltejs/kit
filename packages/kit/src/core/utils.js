@@ -1,3 +1,4 @@
+/** @import { ViteDevServer } from 'vite' */
 import fs from 'node:fs';
 import path from 'node:path';
 import { styleText } from 'node:util';
@@ -76,4 +77,17 @@ export function list_files(dir, filter) {
 	if (fs.existsSync(dir)) walk('');
 
 	return files;
+}
+
+/**
+ * Gets the port number of a Vite dev server that's already listening.
+ * Otherwise, it throws an error
+ * @param {ViteDevServer} server
+ * @returns {number}
+ */
+export function get_port(server) {
+	const address = server.httpServer?.address();
+	const port = typeof address === 'string' ? Number(address.split(':').at(-1)) : address?.port;
+	if (!port) throw new Error('Failed to determine Vite dev server port');
+	return port;
 }

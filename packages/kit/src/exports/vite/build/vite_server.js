@@ -20,6 +20,7 @@ import { s } from '../../../utils/misc.js';
 import { get_env } from '../utils.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import { import_peer } from '../../../utils/import.js';
+import { get_port } from '../../../core/utils.js';
 
 /**
  * Spins up a Vite dev server along with the build output so that we can run
@@ -49,6 +50,7 @@ export async function create_build_server({
 	/** @type {typeof import('vite')} */
 	const vite = await import_peer('vite', root);
 
+	// TODO: is it important to set defaultMode, defaultNodeEnv, and isPreview?
 	const vite_config = await vite.resolveConfig({}, 'build');
 	/** @type {Adapter | undefined} */
 	const adapter = vite_config.plugins.find(
@@ -72,17 +74,15 @@ export async function create_build_server({
 	 */
 	const plugin_ipc = {
 		name: 'vite-plugin-sveltekit-compile:ipc',
-		configureServer(vite) {
+		configureServer(server) {
 			return () => {
-				vite.middlewares.use((_req, _res, next) => {
+				server.middlewares.use((_req, _res, next) => {
 					// ensure the server port is up-to-date
-					const address = vite.httpServer?.address();
-					const current_port =
-						typeof address === 'string' ? Number(address.split(':').at(-1)) : address?.port;
+					const current_port = get_port(server);
 					if (current_port && current_port !== port) {
 						port = current_port;
-						vite.environments.ssr.hot.send('sveltekit:port', port);
-						invalidate_module(vite, sveltekit_ipc);
+						server.environments.ssr.hot.send('sveltekit:port', port);
+						invalidate_module(server, sveltekit_ipc);
 					}
 
 					next();
@@ -196,16 +196,16 @@ export async function create_build_server({
 				next();
 			});
 
-			const read_pathname = create_app_dir_matcher(
-				svelte_config.kit.paths.base,
-				svelte_config.kit.appDir,
-				'/read'
-			);
-
 			const check_feature_pathname = create_app_dir_matcher(
 				svelte_config.kit.paths.base,
 				svelte_config.kit.appDir,
 				'/check-feature'
+			);
+
+			const read_pathname = create_app_dir_matcher(
+				svelte_config.kit.paths.base,
+				svelte_config.kit.appDir,
+				'/read'
 			);
 
 			return () => {

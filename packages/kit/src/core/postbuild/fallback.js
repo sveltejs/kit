@@ -40,6 +40,7 @@ async function generate_fallback({ manifest_path, out, root }) {
 		name: 'generate-fallback',
 		svelte_config,
 		out,
+		root,
 		manifest_path,
 		server_path: prerender_entry,
 		vite_plugins: [plugin_generate_fallback]

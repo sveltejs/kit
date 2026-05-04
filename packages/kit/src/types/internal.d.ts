@@ -16,7 +16,6 @@ import {
 	Reroute,
 	RequestEvent,
 	SSRManifest,
-	Adapter,
 	ServerInit,
 	ClientInit,
 	Transport,
@@ -731,8 +730,8 @@ export interface RequestStore {
 	state: RequestState;
 }
 
-export interface DevEnvironment {
-	vite: ViteDevServer;
+export interface DevContext {
+	server: ViteDevServer;
 	/** used to construct the SSR manifest */
 	manifest_data: ManifestData;
 }

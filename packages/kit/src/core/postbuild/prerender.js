@@ -534,6 +534,7 @@ async function prerender({ out, manifest_path, metadata, verbose, root }) {
 		name: 'prerender',
 		svelte_config,
 		out,
+		root,
 		manifest_path,
 		server_path: prerender_entry,
 		vite_plugins: [plugin_prerender]
