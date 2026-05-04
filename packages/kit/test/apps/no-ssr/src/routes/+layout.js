@@ -7,4 +7,8 @@ export const load = ({ url }) => {
 	if (url.pathname === '/redirect') {
 		redirect(302, '/');
 	}
+
+	if (url.pathname === '/root-layout-error') {
+		throw new Error('Root layout load failed');
+	}
 };

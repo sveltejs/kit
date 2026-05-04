@@ -11,6 +11,10 @@ import {
 	create_node_analyser,
 	get_page_options
 } from '../../exports/vite/static_analysis/index.js';
+import { load_error_page } from '../config/index.js';
+
+/** @type {import('types').ManifestData | null} */
+let cached_manifest_data = null;
 
 /**
  * Initialize SvelteKit's generated files that only depend on the config and mode.
@@ -28,10 +32,11 @@ export function init(config, mode) {
  */
 export function create(config) {
 	const manifest_data = create_manifest_data({ config });
+	cached_manifest_data = manifest_data;
 
 	const output = path.join(config.kit.outDir, 'generated');
 
-	write_client_manifest(config.kit, manifest_data, `${output}/client`);
+	write_client_manifest(config.kit, manifest_data, `${output}/client`, undefined, load_error_page(config));
 	write_server(config, output);
 	write_root(manifest_data, config, output);
 	write_all_types(config, manifest_data);
@@ -88,9 +93,14 @@ export function all_types(config, mode) {
 }
 
 /**
- * Regenerate __SERVER__/internal.js in response to src/{app.html,error.html,service-worker.js} changing
+ * Regenerate __SERVER__/internal.js and client/app.js in response to
+ * src/{app.html,error.html,service-worker.js} changing
  * @param {import('types').ValidatedConfig} config
  */
 export function server(config) {
-	write_server(config, path.join(config.kit.outDir, 'generated'));
+	const output = path.join(config.kit.outDir, 'generated');
+	write_server(config, output);
+	if (cached_manifest_data) {
+		write_client_manifest(config.kit, cached_manifest_data, `${output}/client`, undefined, load_error_page(config));
+	}
 }

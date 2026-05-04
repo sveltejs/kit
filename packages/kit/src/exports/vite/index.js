@@ -12,7 +12,7 @@ import { create_static_module, create_dynamic_module } from '../../core/env.js';
 import * as sync from '../../core/sync/sync.js';
 import { create_assets } from '../../core/sync/create_manifest_data/index.js';
 import { runtime_directory, logger } from '../../core/utils.js';
-import { load_config } from '../../core/config/index.js';
+import { load_config, load_error_page } from '../../core/config/index.js';
 import { generate_manifest } from '../../core/generate_manifest/index.js';
 import { build_server_nodes } from './build/build_server.js';
 import { build_service_worker } from './build/build_service_worker.js';
@@ -1122,7 +1122,8 @@ async function kit({ svelte_config }) {
 					kit,
 					manifest_data,
 					`${kit.outDir}/generated/client-optimized`,
-					metadata.nodes
+					metadata.nodes,
+					load_error_page(svelte_config)
 				);
 
 				secondary_build_started = true;

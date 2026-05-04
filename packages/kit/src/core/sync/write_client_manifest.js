@@ -11,8 +11,9 @@ import colors from 'kleur';
  * @param {import('types').ManifestData} manifest_data
  * @param {string} output
  * @param {import('types').ServerMetadata['nodes']} [metadata] If this is omitted, we have to assume that all routes with a `+layout/page.server.js` file have a server load function
+ * @param {string} [error_page] The contents of error.html, used as a fallback when the root layout load throws in SPA mode
  */
-export function write_client_manifest(kit, manifest_data, output, metadata) {
+export function write_client_manifest(kit, manifest_data, output, metadata, error_page = '') {
 	const client_routing = kit.router.resolution === 'client';
 
 	/**
@@ -178,6 +179,8 @@ export function write_client_manifest(kit, manifest_data, output, metadata) {
 			export const decode = (type, value) => decoders[type](value);
 
 			export { default as root } from '../root.${isSvelte5Plus() ? 'js' : 'svelte'}';
+
+			export const error_template = ${s(error_page)};
 		`
 	);
 
