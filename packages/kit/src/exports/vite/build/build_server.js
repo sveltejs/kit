@@ -1,6 +1,5 @@
 /** @import { AssetDependencies, ManifestData, RecursiveRequired, SSRNode, ValidatedConfig, ValidatedKitConfig } from 'types' */
 /** @import { Manifest, Rolldown } from 'vite' */
-
 import fs from 'node:fs';
 import { mkdirp } from '../../../utils/filesystem.js';
 import {
