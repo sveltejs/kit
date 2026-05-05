@@ -763,7 +763,9 @@ function kit({ svelte_config, adapter }) {
 						return dedent`
 							export const remotes = ${s(remotes)};
 
-							import.meta.hot?.on('sveltekit:remotes', remotes.push);
+							import.meta.hot?.on('sveltekit:remotes', (remote) => {
+								remotes.push(remote);
+							});
 						`;
 					}
 
