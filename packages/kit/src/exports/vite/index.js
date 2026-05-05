@@ -581,7 +581,7 @@ function kit({ svelte_config, adapter }) {
 			handler() {
 				return server_instrumentation_file
 					? sveltekit_traced
-					: path.join(import.meta.dirname, 'dev/ssr_entry.js');
+					: posixify(path.join(import.meta.dirname, 'dev/ssr_entry.js'));
 			}
 		}
 	};
@@ -1464,8 +1464,7 @@ function kit({ svelte_config, adapter }) {
 						client_input['entry/app'] = `${out_dir}/generated/client-optimized/app.js`;
 						build_manifest_data.nodes.forEach((node, i) => {
 							if (node.component || node.universal) {
-								client_input[`nodes/${i}`] =
-									`${out_dir}/generated/client-optimized/nodes/${i}.js`;
+								client_input[`nodes/${i}`] = `${out_dir}/generated/client-optimized/nodes/${i}.js`;
 							}
 						});
 					}
@@ -1474,7 +1473,6 @@ function kit({ svelte_config, adapter }) {
 
 					const config_base = assets_base(kit);
 
-					/** @type {string} */
 					const base = kit.paths.assets || kit.paths.base || '/';
 					const root_to_assets = prefix + '/assets/';
 					const assets_to_root =
