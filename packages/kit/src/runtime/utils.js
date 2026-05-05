@@ -2,7 +2,7 @@ import { BROWSER } from 'esm-env';
 import { posixify } from '../utils/os.js';
 
 /**
- * Resolved path of the `runtime` directory
+ * Resolved path of the `runtime` directory posix-ified
  *
  * TODO Windows issue:
  * Vite or sth else somehow sets the driver letter inconsistently to lower or upper case depending on the run environment.

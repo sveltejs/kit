@@ -6,14 +6,6 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { exactRegex } from 'rolldown/filter';
 import sirv from 'sirv';
-import {
-	createFetchableDevEnvironment,
-	createServer,
-	createServerHotChannel,
-	createServerModuleRunner,
-	isFetchableDevEnvironment,
-	resolveConfig
-} from 'vite';
 import { getRequest, setResponse } from '@sveltejs/kit/node';
 import { sveltekit_env, sveltekit_ipc } from '../module_ids.js';
 import { dedent } from '../../../core/sync/utils.js';
@@ -27,6 +19,8 @@ import {
 import { s } from '../../../utils/misc.js';
 import { get_env } from '../utils.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
+import { import_peer } from '../../../utils/import.js';
+import { get_port } from '../../../core/utils.js';
 
 /**
  * Spins up a Vite dev server along with the build output so that we can run
@@ -37,6 +31,7 @@ import { SVELTE_KIT_ASSETS } from '../../../constants.js';
  * @param {object} opts
  * @param {string} opts.name a unique name to avoid Vite `optimizeDeps` cache collision
  * @param {ValidatedConfig} opts.svelte_config
+ * @param {string} opts.root
  * @param {string} opts.out
  * @param {string} opts.manifest_path
  * @param {string} opts.server_path path to the module with our custom Server export
@@ -46,12 +41,17 @@ import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 export async function create_build_server({
 	name,
 	svelte_config,
+	root,
 	out,
 	manifest_path,
 	server_path,
 	vite_plugins
 }) {
-	const vite_config = await resolveConfig({}, 'build');
+	/** @type {typeof import('vite')} */
+	const vite = await import_peer('vite', root);
+
+	// TODO: is it important to set defaultMode, defaultNodeEnv, and isPreview?
+	const vite_config = await vite.resolveConfig({}, 'build');
 	/** @type {Adapter | undefined} */
 	const adapter = vite_config.plugins.find(
 		(plugin) => plugin.name === 'vite-plugin-sveltekit-adapter'
@@ -74,17 +74,15 @@ export async function create_build_server({
 	 */
 	const plugin_ipc = {
 		name: 'vite-plugin-sveltekit-compile:ipc',
-		configureServer(vite) {
+		configureServer(server) {
 			return () => {
-				vite.middlewares.use((_req, _res, next) => {
+				server.middlewares.use((_req, _res, next) => {
 					// ensure the server port is up-to-date
-					const address = vite.httpServer?.address();
-					const current_port =
-						typeof address === 'string' ? Number(address.split(':').at(-1)) : address?.port;
+					const current_port = get_port(server);
 					if (current_port && current_port !== port) {
 						port = current_port;
-						vite.environments.ssr.hot.send('sveltekit:port', port);
-						invalidate_module(vite, sveltekit_ipc);
+						server.environments.ssr.hot.send('sveltekit:port', port);
+						invalidate_module(server, sveltekit_ipc);
 					}
 
 					next();
@@ -198,16 +196,16 @@ export async function create_build_server({
 				next();
 			});
 
-			const read_pathname = create_app_dir_matcher(
-				svelte_config.kit.paths.base,
-				svelte_config.kit.appDir,
-				'/read'
-			);
-
 			const check_feature_pathname = create_app_dir_matcher(
 				svelte_config.kit.paths.base,
 				svelte_config.kit.appDir,
 				'/check-feature'
+			);
+
+			const read_pathname = create_app_dir_matcher(
+				svelte_config.kit.paths.base,
+				svelte_config.kit.appDir,
+				'/read'
 			);
 
 			return () => {
@@ -321,9 +319,9 @@ export async function create_build_server({
 					ssr: {
 						dev: {
 							createEnvironment(name, config) {
-								return createFetchableDevEnvironment(name, config, {
+								return vite.createFetchableDevEnvironment(name, config, {
 									hot: true,
-									transport: createServerHotChannel(),
+									transport: vite.createServerHotChannel(),
 									async handleRequest(request) {
 										try {
 											/** @type {import('../dev/ssr_entry.js')} */
@@ -342,23 +340,23 @@ export async function create_build_server({
 				}
 			};
 		},
-		async configureServer(vite) {
+		async configureServer(server) {
 			if (runner) await runner.close();
-			runner = createServerModuleRunner(vite.environments.ssr);
+			runner = vite.createServerModuleRunner(server.environments.ssr);
 
 			return () => {
-				vite.middlewares.use(async (req, res, next) => {
+				server.middlewares.use(async (req, res, next) => {
 					remote_address = req.socket.remoteAddress;
 
 					// Vite's base middleware strips out the base path. Restore it
 					req.url = req.originalUrl;
 
-					const base = `${vite.config.server.https ? 'https' : 'http'}://${
+					const base = `${server.config.server.https ? 'https' : 'http'}://${
 						req.headers[':authority'] || req.headers.host
 					}`;
 
 					// fallback to our own fetch handler if the adapter doesn't provide one
-					if (!isFetchableDevEnvironment(vite.environments.ssr)) {
+					if (!vite.isFetchableDevEnvironment(server.environments.ssr)) {
 						throw new Error(
 							'The Vite configured dev SSR environment must be a FetchableDevEnvironment'
 						);
@@ -368,7 +366,7 @@ export async function create_build_server({
 						base,
 						request: req
 					});
-					const response = await vite.environments.ssr.dispatchFetch(request);
+					const response = await server.environments.ssr.dispatchFetch(request);
 
 					if (response.status === 404) {
 						// @ts-expect-error
@@ -404,7 +402,7 @@ export async function create_build_server({
 		adapter?.vite?.plugins ?? plugin_node_environment
 	].filter(Boolean);
 
-	return await createServer({
+	return await vite.createServer({
 		configFile: false,
 		command: 'serve',
 		plugins,

@@ -7,7 +7,7 @@ import { mkdirp, walk } from '../../utils/filesystem.js';
 import { noop } from '../../utils/functions.js';
 import { decode_uri, is_root_relative, resolve } from '../../utils/url.js';
 import { escape_for_regexp, escape_html } from '../../utils/escape.js';
-import { logger } from '../utils.js';
+import { get_port, logger } from '../utils.js';
 import { get_route_segments } from '../../utils/routing.js';
 import { queue } from './queue.js';
 import { crawl } from './crawl.js';
@@ -235,9 +235,9 @@ async function prerender({ out, manifest_path, metadata, verbose, root }) {
 				});
 			}
 			prerender_dependencies.resolve(deserialised);
-			vite.environments.ssr.hot.off(event, handle_dependencies);
+			server.environments.ssr.hot.off(event, handle_dependencies);
 		};
-		vite.environments.ssr.hot.on(event, handle_dependencies);
+		server.environments.ssr.hot.on(event, handle_dependencies);
 
 		const response = await fetch(`http://localhost:${port}${encoded}`, { redirect: 'manual' });
 
@@ -449,7 +449,7 @@ async function prerender({ out, manifest_path, metadata, verbose, root }) {
 			handle_http_error({ status: response.status, path: decoded, referrer, referenceType });
 		}
 
-		vite.environments.ssr.hot.send('sveltekit:prerender-assets', file);
+		server.environments.ssr.hot.send('sveltekit:prerender-assets', file);
 		saved.set(file, dest);
 	}
 
@@ -530,10 +530,11 @@ async function prerender({ out, manifest_path, metadata, verbose, root }) {
 		}
 	};
 
-	const vite = await create_build_server({
+	const server = await create_build_server({
 		name: 'prerender',
 		svelte_config,
 		out,
+		root,
 		manifest_path,
 		server_path: prerender_entry,
 		vite_plugins: [plugin_prerender]
@@ -541,10 +542,9 @@ async function prerender({ out, manifest_path, metadata, verbose, root }) {
 
 	// only start the app server after checking if prerendering is needed so
 	// that we don't run the user's `init` hook unnecessarily
-	await vite.listen();
+	await server.listen();
 
-	const address = vite.httpServer?.address();
-	const port = typeof address === 'string' ? Number(address.split(':').at(-1)) : address?.port;
+	const port = get_port(server);
 
 	for (const entry of svelte_config.kit.prerender.entries) {
 		if (entry === '*') {
@@ -588,7 +588,7 @@ async function prerender({ out, manifest_path, metadata, verbose, root }) {
 
 	await q.done();
 
-	await vite.close();
+	await server.close();
 
 	// handle invalid fragment links
 	for (const [key, referrers] of expected_hashlinks) {
