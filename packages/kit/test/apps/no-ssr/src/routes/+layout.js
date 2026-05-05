@@ -1,4 +1,4 @@
-import { redirect } from '@sveltejs/kit';
+import { error, redirect } from '@sveltejs/kit';
 
 export const ssr = false;
 
@@ -9,6 +9,6 @@ export const load = ({ url }) => {
 	}
 
 	if (url.pathname === '/root-layout-error') {
-		throw new Error('Root layout load failed');
+		error(500, 'Root layout load failed');
 	}
 };
