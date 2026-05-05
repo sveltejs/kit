@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.59.1
+### Patch Changes
+
+
+- fix: resolve paths to route files with the letter drive on Windows ([#15793](https://github.com/sveltejs/kit/pull/15793))
+
 ## 2.59.0
 ### Minor Changes
 
