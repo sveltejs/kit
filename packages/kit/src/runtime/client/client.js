@@ -1470,7 +1470,8 @@ async function load_root_error_page({ status, error, url, route }) {
 		}
 
 		if (app.error_template) {
-			const message = get_message(error)
+			const handled = await handle_error(error, { url, params, route });
+			const message = String(handled?.message ?? '')
 				.replace(/&/g, '&amp;')
 				.replace(/</g, '&lt;')
 				.replace(/>/g, '&gt;');
