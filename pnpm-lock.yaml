@@ -588,6 +588,66 @@ importers:
         specifier: 'catalog:'
         version: 4.1.2(@opentelemetry/api@1.9.0)(@types/node@24.12.0)(@vitest/browser-playwright@4.1.2)(vite@8.0.10(@types/node@24.12.0)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
 
+  packages/kit/src/core/sync/write_types/test/actions:
+    devDependencies:
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.2
+
+  packages/kit/src/core/sync/write_types/test/app-types:
+    devDependencies:
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.2
+
+  packages/kit/src/core/sync/write_types/test/layout:
+    devDependencies:
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.2
+
+  packages/kit/src/core/sync/write_types/test/layout-advanced:
+    devDependencies:
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.2
+
+  packages/kit/src/core/sync/write_types/test/param-type-inference:
+    devDependencies:
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.2
+
+  packages/kit/src/core/sync/write_types/test/simple-page-server-and-shared:
+    devDependencies:
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.2
+
+  packages/kit/src/core/sync/write_types/test/simple-page-server-only:
+    devDependencies:
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.2
+
+  packages/kit/src/core/sync/write_types/test/simple-page-shared-only:
+    devDependencies:
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.2
+
+  packages/kit/src/core/sync/write_types/test/slugs:
+    devDependencies:
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.2
+
+  packages/kit/src/core/sync/write_types/test/slugs-layout-not-all-pages-have-load:
+    devDependencies:
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.2
+
   packages/kit/test/apps/amp:
     devDependencies:
       '@sveltejs/amp':
