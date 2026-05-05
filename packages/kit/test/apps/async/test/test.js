@@ -25,13 +25,6 @@ test.describe('remote functions', () => {
 		await expect(page.locator('#first-value')).toHaveText('0');
 	});
 
-	test('run is blocked during server render', async ({ page }) => {
-		await page.goto('/remote/query-runtime-errors/run-in-render');
-		await expect(page.locator('#error')).toContainText(
-			'On the server, .run() can only be called in universal `load` functions'
-		);
-	});
-
 	test('query redirects on page load (query in common layout)', async ({ page }) => {
 		await page.goto('/remote/query-redirect');
 		await page.click('a[href="/remote/query-redirect/from-common-layout"]');

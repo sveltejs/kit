@@ -2,6 +2,6 @@ import { echo } from './query-command.remote';
 
 export async function load() {
 	return {
-		echo_result: await echo('Hello world').run()
+		echo_result: await echo('Hello world')
 	};
 }

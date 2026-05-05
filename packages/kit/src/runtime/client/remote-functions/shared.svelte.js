@@ -28,6 +28,34 @@ export function is_in_effect() {
 }
 
 /**
+ * If we're inside a reactive context, pin a cache entry for as long as the
+ * surrounding effect is alive. Without this, a transiently-referenced
+ * `QueryProxy`/`LiveQueryProxy` (e.g. one produced by `{await fn()}` in a
+ * template or by `$derived(await fn())`) would be eligible for GC as soon as
+ * the awaited value has been read, after which the FinalizationRegistry
+ * would evict the cache entry — even though the consuming effect is still
+ * alive and may rely on the entry being refreshed (e.g. via `refreshAll()`
+ * or a server-initiated single-flight refresh).
+ *
+ * @template TResource
+ * @param {Map<string, Map<string, { resource: TResource }>>} cache_map
+ * @param {{ manual_ref: (entry: any, id: string, payload: string) => () => void }} cache
+ * @param {string} id
+ * @param {string} payload
+ */
+export function pin_in_effect(cache_map, cache, id, payload) {
+	try {
+		$effect.pre(() => {
+			const entry = cache_map.get(id)?.get(payload);
+			if (!entry) return;
+			return cache.manual_ref(entry, id, payload);
+		});
+	} catch {
+		// not in an effect context — nothing to pin
+	}
+}
+
+/**
  * @returns {{ 'x-sveltekit-pathname': string, 'x-sveltekit-search': string }}
  */
 export function get_remote_request_headers() {

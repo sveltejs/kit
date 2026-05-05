@@ -48,6 +48,7 @@ catalog:
   dropcss: ^1.0.16
   esbuild: ^0.25.4
   eslint: ^10.0.0
+  happy-dom: ^17.6.3
   polka: ^1.0.0-next.28
   publint: ^0.3.0
   prettier: ^3.8.1
@@ -76,3 +77,12 @@ catalogs:
 overrides:
 # ci script replaces all overrides with the vite-xxx or node-xx catalogs above.
 # if you want to introduce an override, make sure to add it to all of them too
+peerDependencyRules:
+  # `vitest@4` declares an optional peer dep on `@types/node@>=20`. Once
+  # any package in the workspace pulls vitest into a context where pnpm
+  # decides to resolve that optional peer (e.g. by adding `happy-dom` to
+  # `packages/kit`), pnpm installs `@types/node@25` alongside our pinned
+  # `@types/node@18`. tsc then sees two unrelated identities for vite/vitest
+  # types across the workspace's test apps. Force the catalog version.
+  allowedVersions:
+    '@types/node': '18'

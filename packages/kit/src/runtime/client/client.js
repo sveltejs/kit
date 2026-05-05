@@ -1,5 +1,6 @@
-/** @import { RemoteQueryCacheEntry } from './remote-functions/query.svelte.js' */
-/** @import { RemoteLiveQueryCacheEntry } from './remote-functions/query-live.svelte.js' */
+/** @import { CacheEntry } from './remote-functions/cache.svelte.js' */
+/** @import { Query } from './remote-functions/query/instance.svelte.js' */
+/** @import { LiveQuery } from './remote-functions/query-live/instance.svelte.js' */
 import { BROWSER, DEV } from 'esm-env';
 import * as svelte from 'svelte';
 import { HttpError, Redirect, SvelteKitError } from '@sveltejs/kit/internal';
@@ -302,13 +303,13 @@ const preload_tokens = new Set();
 export let pending_invalidate;
 
 /**
- * @type {Map<string, Map<string, RemoteQueryCacheEntry<any>>>}
+ * @type {Map<string, Map<string, CacheEntry<Query<any>>>>}
  * A map of query id -> payload -> query internals for all active queries.
  */
 export const query_map = new Map();
 
 /**
- * @type {Map<string, Map<string, RemoteLiveQueryCacheEntry<any>>>}
+ * @type {Map<string, Map<string, CacheEntry<LiveQuery<any>>>>}
  * A map of id -> payload -> live query internals for all active queries.
  */
 export const live_query_map = new Map();
