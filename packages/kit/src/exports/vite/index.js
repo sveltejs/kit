@@ -1173,7 +1173,7 @@ function kit({ svelte_config, adapter }) {
 
 			remotes.push(remote);
 			if (dev_context) {
-				dev_context.server.environments.ssr.hot.send(`sveltekit:remotes`, remote);
+				dev_context.server.environments.ssr.hot.send('sveltekit:remotes', remote);
 				invalidate_module(dev_context.server, sveltekit_remotes);
 			}
 
