@@ -1,3 +1,5 @@
+/** @import { AssetDependencies, ManifestData, RecursiveRequired, SSRNode, ValidatedConfig, ValidatedKitConfig } from 'types' */
+/** @import { Manifest, Rolldown } from 'vite' */
 import fs from 'node:fs';
 import { mkdirp } from '../../../utils/filesystem.js';
 import {
@@ -14,27 +16,55 @@ import { fix_css_urls } from '../../../utils/css.js';
 import { escape_for_interpolation } from '../../../utils/escape.js';
 
 /**
- * @param {string} out
- * @param {import('types').ValidatedKitConfig} kit
- * @param {import('types').ManifestData} manifest_data
- * @param {import('vite').Manifest} server_manifest
- * @param {import('vite').Manifest | null} client_manifest
- * @param {string | null} assets_path
- * @param {import('vite').Rolldown.RolldownOutput['output'] | null} client_chunks
- * @param {import('types').RecursiveRequired<import('types').ValidatedConfig['kit']['output']>} output_config
- * @param {string} root
+ * @overload partial build to analyse the server nodes
+ * @param {object} opts
+ * @param {string} opts.out
+ * @param {ManifestData} opts.manifest_data
+ * @param {Manifest} opts.server_manifest
+ * @param {string} opts.root
+ * @returns {void}
  */
-export function build_server_nodes(
+/**
+ * @overload final build
+ * @param {object} opts
+ * @param {string} opts.out
+ * @param {ManifestData} opts.manifest_data
+ * @param {Manifest} opts.server_manifest
+ * @param {Manifest} opts.client_manifest
+ * @param {ValidatedKitConfig['paths']} opts.paths
+ * @param {number} opts.inline_style_threshold
+ * @param {string} opts.assets_path
+ * @param {Rolldown.RolldownOutput['output']} opts.client_chunks
+ * @param {RecursiveRequired<ValidatedConfig['kit']['output']>} opts.output_config
+ * @param {string} opts.root
+ * @returns {void}
+ */
+/**
+ * @param {object} opts
+ * @param {string} opts.out
+ * @param {ManifestData} opts.manifest_data
+ * @param {Manifest} opts.server_manifest
+ * @param {Manifest} [opts.client_manifest]
+ * @param {ValidatedKitConfig['paths']} [opts.paths]
+ * @param {number} [opts.inline_style_threshold]
+ * @param {string} [opts.assets_path] path to `_app/immutable/assets`
+ * @param {Rolldown.RolldownOutput['output']} [opts.client_chunks]
+ * @param {RecursiveRequired<ValidatedConfig['kit']['output']>} [opts.output_config]
+ * @param {string} opts.root
+ * @returns {void}
+ */
+export function build_server_nodes({
 	out,
-	kit,
 	manifest_data,
 	server_manifest,
 	client_manifest,
+	paths,
+	inline_style_threshold,
 	assets_path,
 	client_chunks,
 	output_config,
 	root
-) {
+}) {
 	mkdirp(`${out}/server/nodes`);
 	mkdirp(`${out}/server/stylesheets`);
 
@@ -51,14 +81,19 @@ export function build_server_nodes(
 	 */
 	let prepare_css_for_inlining = (css) => s(css);
 
-	if (client_chunks && kit.inlineStyleThreshold > 0 && output_config.bundleStrategy === 'split') {
+	if (
+		client_chunks &&
+		inline_style_threshold &&
+		inline_style_threshold > 0 &&
+		output_config?.bundleStrategy === 'split'
+	) {
 		for (const chunk of client_chunks) {
 			if (chunk.type !== 'asset' || !chunk.fileName.endsWith('.css')) {
 				continue;
 			}
 
 			const source = chunk.source.toString();
-			if (source.length < kit.inlineStyleThreshold) {
+			if (source.length < inline_style_threshold) {
 				stylesheets_to_inline.set(chunk.fileName, source);
 			}
 		}
@@ -67,7 +102,7 @@ export function build_server_nodes(
 		// relative path so that they are correct when inlined into the document.
 		// Although `paths.assets` is static, we need to pass in a fake path
 		// `/_svelte_kit_assets` at runtime when running `vite preview`
-		if (kit.paths.assets || kit.paths.relative) {
+		if (paths?.assets || paths?.relative) {
 			const static_assets = new Set(
 				manifest_data.assets.map((asset) => decodeURIComponent(asset.file))
 			);
@@ -115,7 +150,7 @@ export function build_server_nodes(
 		const imports = [];
 
 		// String representation of
-		/** @type {import('types').SSRNode} */
+		/** @type {SSRNode} */
 		/** @type {string[]} */
 		const exports = [`export const index = ${i};`];
 
@@ -164,22 +199,22 @@ export function build_server_nodes(
 		if (
 			client_manifest &&
 			(node.universal || node.component) &&
-			output_config.bundleStrategy === 'split'
+			output_config?.bundleStrategy === 'split'
 		) {
-			const entry_path = `${normalizePath(kit.outDir)}/generated/client-optimized/nodes/${i}.js`;
+			const entry_path = `${normalizePath(`${out}/..`)}/generated/client-optimized/nodes/${i}.js`;
 			const entry = find_deps(client_manifest, entry_path, true, root);
 
 			// Eagerly load client stylesheets and fonts imported by the SSR-ed page to avoid FOUC.
 			// However, if it is not used during SSR (not present in the server manifest),
 			// then it can be lazily loaded in the browser.
 
-			/** @type {import('types').AssetDependencies | undefined} */
+			/** @type {AssetDependencies | undefined} */
 			let component;
 			if (node.component) {
 				component = find_deps(server_manifest, node.component, true, root);
 			}
 
-			/** @type {import('types').AssetDependencies | undefined} */
+			/** @type {AssetDependencies | undefined} */
 			let universal;
 			if (node.universal) {
 				universal = find_deps(server_manifest, node.universal, true, root);

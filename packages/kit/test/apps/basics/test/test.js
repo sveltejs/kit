@@ -8,32 +8,6 @@ test.skip(() => process.env.KIT_E2E_BROWSER === 'webkit');
 
 test.describe.configure({ mode: 'parallel' });
 
-test.describe('adapter', () => {
-	test('populates event.platform for dynamic SSR', async ({ page }) => {
-		await page.goto('/adapter/dynamic');
-		const json = JSON.parse((await page.textContent('pre')) ?? '');
-
-		expect(json).toEqual({
-			config: {
-				message: 'hello from dynamic page'
-			},
-			prerender: false
-		});
-	});
-
-	test('populates event.platform for prerendered page', async ({ page }) => {
-		await page.goto('/adapter/prerendered');
-		const json = JSON.parse((await page.textContent('pre')) ?? '');
-
-		expect(json).toEqual({
-			config: {
-				message: 'hello from prerendered page'
-			},
-			prerender: true
-		});
-	});
-});
-
 test.describe('Imports', () => {
 	// https://github.com/sveltejs/kit/issues/461
 	test('handles static asset imports', async ({ baseURL, page }) => {

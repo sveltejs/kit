@@ -1,9 +1,9 @@
 import path from 'node:path';
 import { loadEnv } from 'vite';
-import { posixify } from '../../utils/filesystem.js';
+import { posixify } from '../../utils/os.js';
 import { negotiate } from '../../utils/http.js';
 import { filter_env } from '../../utils/env.js';
-import { escape_html } from '../../utils/escape.js';
+import { escape_for_regexp, escape_html } from '../../utils/escape.js';
 import { dedent } from '../../core/sync/utils.js';
 import {
 	app_server,
@@ -21,13 +21,13 @@ import {
  *
  * @param {import('types').ValidatedKitConfig} config
  * @param {string} root
- * */
+ */
 export function get_config_aliases(config, root) {
 	/** @type {import('vite').Alias[]} */
 	const alias = [
 		// For now, we handle `$lib` specially here rather than make it a default value for
 		// `config.kit.alias` since it has special meaning for packaging, etc.
-		{ find: '$lib', replacement: config.files.lib }
+		{ find: '$lib', replacement: posixify(config.files.lib) }
 	];
 
 	for (let [key, value] of Object.entries(config.alias)) {
@@ -39,27 +39,20 @@ export function get_config_aliases(config, root) {
 			// Doing just `{ find: key.slice(0, -2) ,..}` would mean `import .. from "key"` would also be matched, which we don't want
 			alias.push({
 				find: new RegExp(`^${escape_for_regexp(key.slice(0, -2))}\\/(.+)$`),
-				replacement: `${path.resolve(root, value)}/$1`
+				replacement: `${posixify(path.resolve(root, value))}/$1`
 			});
 		} else if (key + '/*' in config.alias) {
 			// key and key/* both exist -> the replacement for key needs to happen _only_ on import .. from "key"
 			alias.push({
 				find: new RegExp(`^${escape_for_regexp(key)}$`),
-				replacement: path.resolve(root, value)
+				replacement: posixify(path.resolve(root, value))
 			});
 		} else {
-			alias.push({ find: key, replacement: path.resolve(root, value) });
+			alias.push({ find: key, replacement: posixify(path.resolve(root, value)) });
 		}
 	}
 
 	return alias;
-}
-
-/**
- * @param {string} str
- */
-function escape_for_regexp(str) {
-	return str.replace(/[.*+?^${}()|[\]\\]/g, (match) => '\\' + match);
 }
 
 /**

@@ -55,7 +55,6 @@ const directive_defaults = {
 const get_defaults = (prefix = '') => ({
 	extensions: ['.svelte'],
 	kit: {
-		adapter: null,
 		alias: {},
 		appDir: '_app',
 		csp: {

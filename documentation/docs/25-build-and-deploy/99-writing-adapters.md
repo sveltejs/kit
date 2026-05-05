@@ -21,14 +21,6 @@ export default function (options) {
 		async adapt(builder) {
 			// adapter implementation
 		},
-		async emulate() {
-			return {
-				async platform({ config, prerender }) {
-					// the returned object becomes `event.platform` during dev, build and
-					// preview. Its shape is that of `App.Platform`
-				}
-			}
-		},
 		supports: {
 			read: ({ config, route }) => {
 				// Return `true` if the route with the given `config` can use `read`
@@ -39,6 +31,11 @@ export default function (options) {
 				// Return `true` if this adapter supports loading `instrumentation.server.js`.
 				// Return `false if it can't, or throw a descriptive error.
 			}
+		},
+		vite: {
+			plugins: [
+				// add plugins here to integrate with Vite
+			]
 		}
 	};
 
@@ -46,7 +43,7 @@ export default function (options) {
 }
 ```
 
-Of these, `name` and `adapt` are required. `emulate` and `supports` are optional.
+Of these, `name` and `adapt` are required. `vite.plugins` and `supports` are optional.
 
 Within the `adapt` method, there are a number of things that an adapter should do:
 
@@ -61,3 +58,44 @@ Within the `adapt` method, there are a number of things that an adapter should d
 - Put the user's static files and the generated JS/CSS in the correct location for the target platform
 
 Where possible, we recommend putting the adapter output under the `build/` directory with any intermediate output placed under `.svelte-kit/[adapter-name]`.
+
+## Configuring the development and preview experience
+
+By default, SvelteKit runs your server code through a Node.js runtime when running `vite dev` and `vite preview`. You can change this behaviour by adding a Vite plugin that has a `configureServer` and `configurePreviewServer` hook to route requests to [a different runtime](https://vite.dev/guide/api-environment-runtimes).
+
+The main Vite server environment SvelteKit uses is named `ssr`. You can change its settings by referencing it in the `config` hook of a Vite plugin.
+
+```js
+// @errors: 2304 1005 1109
+config(userConfig) {
+	userConfig.environments.ssr = { ... }
+}
+```
+
+You can also create your own server entry file by importing the `Server` class from `sveltekit:server`, the environment variables loaded by Vite through `env` from `sveltekit:env`, and your app-specific information as `manifest` from `sveltekit:server-manifest`.
+
+```js
+import { env } from 'sveltekit:env';
+import { Server } from 'sveltekit:server';
+import { manifest } from 'sveltekit:server-manifest';
+
+const server = new Server(manifest);
+
+await server.init({ env });
+
+export default {
+	/**
+	 * @param {Request} request
+	 * @returns {Promise<Response>}
+	 */
+	async fetch(request) {
+		return await server.respond(request, {
+			getClientAddress: () => {
+				return request.headers.get('how-your-platform-exposes-the-remote-address')
+			}
+		});
+	}
+}
+
+import.meta.hot?.accept();
+```

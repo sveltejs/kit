@@ -6,25 +6,16 @@ Your project's configuration lives in a `svelte.config.js` file at the root of y
 
 ```js
 /// file: svelte.config.js
-// @filename: ambient.d.ts
-declare module '@sveltejs/adapter-auto' {
-	const plugin: () => import('@sveltejs/kit').Adapter;
-	export default plugin;
-}
-
-// @filename: index.js
-// ---cut---
-import adapter from '@sveltejs/adapter-auto';
-
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
-	kit: {
-		adapter: adapter()
-	}
+	kit: { }
 };
 
 export default config;
 ```
+
+> [!LEGACY]
+> The `adapter` option was moved to the SvelteKit Vite plugin in SvelteKit 3.0.0. In earlier versions, you had to add it to the `kit` property in the `svelte.config.js` file instead.
 
 ## Config
 

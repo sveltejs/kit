@@ -14,35 +14,39 @@ This adapter will be installed by default when you use [`adapter-auto`](adapter-
 
 ## Usage
 
-Install with `npm i -D @sveltejs/adapter-cloudflare`, then add the adapter to your `svelte.config.js`:
+Install with `npm i -D @sveltejs/adapter-cloudflare`, then add the adapter to your `vite.config.js`:
 
 ```js
 // @errors: 2307
-/// file: svelte.config.js
+/// file: vite.config.js
 import adapter from '@sveltejs/adapter-cloudflare';
+import { sveltekit } from '@sveltejs/kit/vite';
+import { defineConfig } from 'vite';
 
-/** @type {import('@sveltejs/kit').Config} */
-const config = {
-	kit: {
-		adapter: adapter({
-			// See below for an explanation of these options
-			config: undefined,
-			platformProxy: {
-				configPath: undefined,
-				environment: undefined,
-				persist: undefined
-			},
-			fallback: 'plaintext',
-			routes: {
-				include: ['/*'],
-				exclude: ['<all>']
-			}
-		})
-	}
-};
-
-export default config;
+export default defineConfig({
+  plugins: [
+    sveltekit({
+      adapter: adapter({
+				// See below for an explanation of these options
+				config: undefined,
+				platformProxy: {
+					configPath: undefined,
+					environment: undefined,
+					persist: undefined
+				},
+				fallback: 'plaintext',
+				routes: {
+					include: ['/*'],
+					exclude: ['<all>']
+				}
+      })
+    })
+  ]
+});
 ```
+
+> [!LEGACY]
+> The `adapter` option was moved to the SvelteKit Vite plugin in SvelteKit 3.0.0. In earlier versions, you had to add it to the `kit` property in the `svelte.config.js` file instead.
 
 ## Options
 
@@ -223,16 +227,31 @@ Cloudflare no longer recommends using [Workers Sites](https://developers.cloudfl
 // @errors: 2307
 /// file: svelte.config.js
 ---import adapter from '@sveltejs/adapter-cloudflare-workers';---
-+++import adapter from '@sveltejs/adapter-cloudflare';+++
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
 	kit: {
-		adapter: adapter()
+		---adapter: adapter()---
 	}
 };
 
 export default config;
+```
+
+```js
+// @errors: 2307
+/// file: vite.config.js
++++import adapter from '@sveltejs/adapter-cloudflare';+++
+import { sveltekit } from '@sveltejs/kit/vite';
+import { defineConfig } from 'vite';
+
+export default defineConfig({
+  plugins: [
+    sveltekit({
+      +++adapter: adapter()+++
+    })
+  ]
+});
 ```
 
 ### wrangler.toml

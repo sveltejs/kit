@@ -5,8 +5,6 @@ import { version } from '__sveltekit/environment';
 import { noop } from '../../utils/functions.js';
 import { PRELOAD_PRIORITIES } from './constants.js';
 
-/* global __SVELTEKIT_APP_VERSION_FILE__, __SVELTEKIT_APP_VERSION_POLL_INTERVAL__ */
-
 export const origin = BROWSER ? location.origin : '';
 
 /** @param {string | URL} url */

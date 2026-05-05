@@ -2,7 +2,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 /**
- * Resolves a peer dependency relative to the current working directory. Duplicated with `packages/adapter-auto`
+ * Resolves a peer dependency relative to the current working directory.
+ * Used to resolve the correct Vite package when an app's SvelteKit is a
+ * linked local repository.
+ * Duplicated with `packages/adapter-auto`
  * @param {string} dependency
  * @param {string} root
  */

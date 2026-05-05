@@ -27,3 +27,27 @@ declare module '__sveltekit/server' {
 	export function set_manifest(manifest: SSRManifest): void;
 	export function set_read_implementation(fn: (path: string) => ReadableStream): void;
 }
+
+/** Used to construct the SSR manifest in development from a Node-agnostic environment */
+declare module '__sveltekit/manifest-data' {
+	import { ManifestData } from 'types';
+
+	export const env: Record<string, string>;
+	export const mime_types: Record<string, string>;
+	export const manifest_data: ManifestData;
+}
+
+/** Used to read the filesystem during development from an environment without `node:fs` */
+declare module '__sveltekit/server-assets' {
+	export const server_assets: Record<string, number>;
+	export const server_assets_content: Record<string, Buffer<ArrayBuffer>>;
+}
+
+/** Used to identify remote functions processed by Vite from any environment */
+declare module '__sveltekit/remotes' {
+	export const remotes: Array<{ hash: string; file: string }>;
+}
+
+declare module '__sveltekit/ipc' {
+	export function get(pathname: string): Promise<Response>;
+}

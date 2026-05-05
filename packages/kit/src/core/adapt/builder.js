@@ -7,7 +7,7 @@ import { extname, resolve, join, dirname, relative } from 'node:path';
 import { pipeline } from 'node:stream';
 import { promisify, styleText } from 'node:util';
 import zlib from 'node:zlib';
-import { copy, rimraf, mkdirp, posixify } from '../../utils/filesystem.js';
+import { copy, rimraf, mkdirp } from '../../utils/filesystem.js';
 import { generate_manifest } from '../generate_manifest/index.js';
 import { get_route_segments } from '../../utils/routing.js';
 import { get_env } from '../../exports/vite/utils.js';
@@ -16,6 +16,7 @@ import { write } from '../sync/utils.js';
 import { list_files } from '../utils.js';
 import { find_server_assets } from '../generate_manifest/find_server_assets.js';
 import { reserved } from '../env.js';
+import { posixify } from '../../utils/os.js';
 
 const pipe = promisify(pipeline);
 const extensions = ['.html', '.js', '.mjs', '.json', '.css', '.svg', '.xml', '.wasm', '.txt'];
@@ -31,7 +32,8 @@ const extensions = ['.html', '.js', '.mjs', '.json', '.css', '.svg', '.xml', '.w
  *   prerender_map: PrerenderMap;
  *   log: Logger;
  *   vite_config: ResolvedConfig;
- *   remotes: RemoteChunk[]
+ *   remotes: RemoteChunk[];
+ *   out: string;
  * }} opts
  * @returns {Builder}
  */
@@ -44,7 +46,8 @@ export function create_builder({
 	prerender_map,
 	log,
 	vite_config,
-	remotes
+	remotes,
+	out
 }) {
 	/** @type {Map<RouteDefinition, RouteData>} */
 	const lookup = new Map();
@@ -113,11 +116,10 @@ export function create_builder({
 
 		async generateFallback(dest) {
 			const manifest_path = `${config.kit.outDir}/output/server/manifest-full.js`;
-			const env = get_env(config.kit.env, vite_config.mode);
 
 			const fallback = await generate_fallback({
 				manifest_path,
-				env: { ...env.private, ...env.public },
+				out,
 				root: vite_config.root
 			});
 

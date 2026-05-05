@@ -8,29 +8,30 @@ This will prerender your entire site as a collection of static files. If you'd l
 
 ## Usage
 
-Install with `npm i -D @sveltejs/adapter-static`, then add the adapter to your `svelte.config.js`:
+Install with `npm i -D @sveltejs/adapter-static`, then add the adapter to your `vite.config.js`:
 
 ```js
 // @errors: 2307
-/// file: svelte.config.js
+/// file: vite.config.js
 import adapter from '@sveltejs/adapter-static';
+import { sveltekit } from '@sveltejs/kit/vite';
+import { defineConfig } from 'vite';
 
-/** @type {import('@sveltejs/kit').Config} */
-const config = {
-	kit: {
-		adapter: adapter({
-			// default options are shown. On some platforms
-			// these options are set automatically — see below
-			pages: 'build',
-			assets: 'build',
-			fallback: undefined,
-			precompress: false,
-			strict: true
-		})
-	}
-};
-
-export default config;
+export default defineConfig({
+  plugins: [
+    sveltekit({
+      adapter: adapter({
+        // default options are shown. On some platforms
+        // these options are set automatically — see below
+        pages: 'build',
+        assets: 'build',
+        fallback: undefined,
+        precompress: false,
+        strict: true
+      })
+    })
+  ]
+});
 ```
 
 ...and add the [`prerender`](page-options#prerender) option to your root layout:
@@ -47,6 +48,9 @@ export const prerender = true;
 
 > [!NOTE] You must ensure SvelteKit's [`ssr`](page-options#ssr) option isn't set to `false`. Otherwise, prerendering will save an empty 'shell' page instead of the fully rendered content.
 
+> [!LEGACY]
+> The `adapter` option was moved to the SvelteKit Vite plugin in SvelteKit 3.0.0. In earlier versions, you had to add it to the `kit` property in the `svelte.config.js` file instead.
+
 ## Zero-config support
 
 Some platforms have zero-config support (more to come in future):
@@ -57,17 +61,18 @@ On these platforms, you should omit the adapter options so that `adapter-static`
 
 ```js
 // @errors: 2307
-/// file: svelte.config.js
+/// file: vite.config.js
 import adapter from '@sveltejs/adapter-static';
+import { sveltekit } from '@sveltejs/kit/vite';
+import { defineConfig } from 'vite';
 
-/** @type {import('@sveltejs/kit').Config} */
-const config = {
-	kit: {
-		adapter: adapter(---{...}---)
-	}
-};
-
-export default config;
+export default defineConfig({
+  plugins: [
+    sveltekit({
+      adapter: adapter(---{...}---)
+    })
+  ]
+});
 ```
 
 ## Options
@@ -105,14 +110,9 @@ A config for GitHub Pages might look like the following:
 ```js
 // @errors: 2307 2322
 /// file: svelte.config.js
-import adapter from '@sveltejs/adapter-static';
-
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
 	kit: {
-		adapter: adapter({
-			fallback: '404.html'
-		}),
 		paths: {
 			base: process.argv.includes('dev') ? '' : process.env.BASE_PATH
 		}
@@ -120,6 +120,24 @@ const config = {
 };
 
 export default config;
+```
+
+```js
+// @errors: 2307
+/// file: vite.config.js
+import adapter from '@sveltejs/adapter-static';
+import { sveltekit } from '@sveltejs/kit/vite';
+import { defineConfig } from 'vite';
+
+export default defineConfig({
+  plugins: [
+    sveltekit({
+      adapter: adapter({
+        fallback: '404.html'
+      })
+    })
+  ]
+});
 ```
 
 You can use GitHub actions to automatically deploy your site to GitHub Pages when you make a change. Here's an example workflow:

@@ -1,19 +1,11 @@
+/** @import { ViteDevServer } from 'vite' */
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { styleText } from 'node:util';
-import { posixify, to_fs } from '../utils/filesystem.js';
+import { to_fs } from '../exports/vite/filesystem.js';
+import { runtime_directory } from '../runtime/utils.js';
 import { noop } from '../utils/functions.js';
-
-/**
- * Resolved path of the `runtime` directory
- *
- * TODO Windows issue:
- * Vite or sth else somehow sets the driver letter inconsistently to lower or upper case depending on the run environment.
- * In playwright debug mode run through VS Code this a root-to-lowercase conversion is needed in order for the tests to run.
- * If we do this conversion in other cases it has the opposite effect though and fails.
- */
-export const runtime_directory = posixify(fileURLToPath(new URL('../runtime', import.meta.url)));
+import { posixify } from '../utils/os.js';
 
 /**
  * This allows us to import SvelteKit internals that aren't exposed via `pkg.exports` in a
@@ -24,7 +16,7 @@ export const runtime_directory = posixify(fileURLToPath(new URL('../runtime', im
  */
 export function get_runtime_base(root) {
 	return runtime_directory.startsWith(root)
-		? `/${path.relative(root, runtime_directory)}`
+		? `/${posixify(path.relative(root, runtime_directory))}`
 		: to_fs(runtime_directory);
 }
 
@@ -85,4 +77,17 @@ export function list_files(dir, filter) {
 	if (fs.existsSync(dir)) walk('');
 
 	return files;
+}
+
+/**
+ * Gets the port number of a Vite dev server that's already listening.
+ * Otherwise, it throws an error
+ * @param {ViteDevServer} server
+ * @returns {number}
+ */
+export function get_port(server) {
+	const address = server.httpServer?.address();
+	const port = typeof address === 'string' ? Number(address.split(':').at(-1)) : address?.port;
+	if (!port) throw new Error('Failed to determine Vite dev server port');
+	return port;
 }
