@@ -98,7 +98,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root) {
 
 	/** @param {string} id */
 	async function resolve(id) {
-		const url = id.startsWith('..') ? to_fs(path.posix.resolve(id)) : `/${id}`;
+		const url = id.startsWith('..') ? to_fs(path.resolve(id)) : `/${id}`;
 
 		const module = await loud_ssr_load_module(url);
 
