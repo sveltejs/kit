@@ -8,7 +8,7 @@ export async function GET({ url }) {
 
 	return new Response(response.body, {
 		headers: {
-			'Content-Type': response.headers.get('Content-Type')
+			'Content-Type': response.headers.get('Content-Type') ?? ''
 		}
 	});
 }

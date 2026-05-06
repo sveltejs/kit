@@ -1,4 +1,6 @@
+/** @type {import('./$types').PageServerLoad} */
 export function load({ url }) {
+	/** @type {Record<string, string | null>} */
 	const values = {};
 
 	for (const key of url.searchParams.keys()) {

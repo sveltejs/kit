@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-netlify",
-	"version": "6.0.0",
+	"version": "6.0.4",
 	"description": "A SvelteKit adapter that creates a Netlify app",
 	"keywords": [
 		"adapter",
@@ -57,10 +57,9 @@
 		"@rollup/plugin-json": "catalog:",
 		"@rollup/plugin-node-resolve": "catalog:",
 		"@sveltejs/kit": "workspace:^",
-		"@sveltejs/vite-plugin-svelte": "catalog:",
 		"@types/node": "catalog:",
-		"rollup": "^4.14.2",
-		"typescript": "^5.3.3",
+		"rollup": "^4.59.0",
+		"typescript": "catalog:",
 		"vitest": "catalog:"
 	},
 	"peerDependencies": {

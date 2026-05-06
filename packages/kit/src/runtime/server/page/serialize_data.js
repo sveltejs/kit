@@ -6,7 +6,7 @@ import { hash } from '../../../utils/hash.js';
  *
  * The first closes the script element, so everything after is treated as raw HTML.
  * The second disables further parsing until `-->`, so the script element might be unexpectedly
- * kept open until until an unrelated HTML comment in the page.
+ * kept open up until an unrelated HTML comment in the page.
  *
  * U+2028 LINE SEPARATOR and U+2029 PARAGRAPH SEPARATOR are escaped for the sake of pre-2018
  * browsers.

@@ -68,7 +68,7 @@ Issues with the [**soon**](https://github.com/sveltejs/kit/issues?q=is%3Aissue+i
 
 ## Testing
 
-Run `pnpm test:kit` to run the tests from the `packages/kit` directory. You can also run `pnpm test:others` to run tests from all packages __except__ the `packages/kit` directory. Browser tests live in subdirectories of `packages/kit/test` such as `packages/kit/test/apps/basics`.
+Run `pnpm test:kit` to run the tests from the `packages/kit` directory. You can also run `pnpm test:others` to run tests from all packages **except** the `packages/kit` directory. Browser tests live in subdirectories of `packages/kit/test` such as `packages/kit/test/apps/basics`.
 
 You can run the tests for only a single package by first moving to that directory. E.g. `cd packages/kit`.
 
@@ -84,8 +84,20 @@ If there are tests that fail on the CI, you can retrieve the failed screenshots 
 
 It is very easy to introduce flakiness in a browser test. If you try to fix the flakiness in a test, you can run it until failure to gain some confidence you've fixed the test with a command like:
 
+```sh
+pnpx playwright test --workers=1 --repeat-each 1000 --max-failures 1 -g "accepts a Request object"
 ```
-npx playwright test --workers=1 --repeat-each 1000 --max-failures 1 -g "accepts a Request object"
+
+The Playwright tests can also be run with the following environment variables to augment how the tests run locally:
+
+```sh
+# Default values
+KIT_E2E_BROWSER=chromium
+KIT_E2E_RETRIES=0
+KIT_E2E_WORKERS=undefined
+
+# Append the modified environment variable before the test command
+KIT_E2E_RETRIES=2 pnpm test:kit
 ```
 
 ## Working on Vite and other dependencies
@@ -111,6 +123,10 @@ If you would like to test local changes to Vite or another dependency, you can b
 All documentation for SvelteKit is in the [`documentation` directory](https://github.com/sveltejs/kit/tree/main/documentation), and any improvements should be made as a Pull Request to this repository. The site itself is located in the [`sveltejs/svelte.dev` repo](https://github.com/sveltejs/svelte.dev) and can be run locally to preview changes.
 
 ## Sending PRs
+
+When you open a PR, the [PR template](./.github/PULL_REQUEST_TEMPLATE.md) includes a checklist. Please read it carefully and don't delete it.
+
+**Run tests locally before submitting.** CI runs the full suite, but catching failures early saves time for everyone. At a minimum, run `pnpm format`, `pnpm lint`, `pnpm check`, and `pnpm -F @sveltejs/kit test:unit`.
 
 ### Coding style
 

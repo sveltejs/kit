@@ -3,10 +3,12 @@
 		"allowJs": true,
 		"checkJs": true,
 		"noEmit": true,
+		// TODO: remove when we switch to TS 6.0
 		"strict": true,
 		"target": "es2023",
 		"module": "node16",
 		"moduleResolution": "node16",
+		// TODO: remove when we switch to TS 6.0
 		"allowSyntheticDefaultImports": true,
 		"paths": {
 			"@sveltejs/kit": ["./src/exports/public.d.ts"],
@@ -22,7 +24,8 @@
 			"types": ["./src/types/internal.d.ts"]
 		},
 		"noUnusedLocals": true,
-		"noUnusedParameters": true
+		"noUnusedParameters": true,
+		"types": ["node"]
 	},
 	"include": ["*.js", "scripts/**/*", "src/**/*"],
 	"exclude": ["./**/write_types/test/**"]
