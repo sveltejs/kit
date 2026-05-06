@@ -10,7 +10,7 @@ Remote functions are a tool for type-safe communication between client and serve
 
 Combined with Svelte's experimental support for [`await`](/docs/svelte/await-expressions), it allows you to load and manipulate data directly inside your components.
 
-This feature is currently experimental, meaning it is likely to contain bugs and is subject to change without notice. You must opt in by adding the `kit.experimental.remoteFunctions` option in your `svelte.config.js` and optionally, the `compilerOptions.experimental.async` option to use `await` in components:
+This feature is currently experimental, meaning it is likely to contain bugs and is subject to change without notice. You must opt in by adding the `compilerOptions.experimental.async` and `kit.experimental.remoteFunctions` options in your `svelte.config.js`:
 
 ```js
 /// file: svelte.config.js
@@ -162,6 +162,53 @@ Both the argument and the return value are serialized with [devalue](https://git
 
 > [!NOTE] For `query` and `prerender` arguments (but not return values), objects, maps, and sets are sorted so that instances with the same members result in the same cache key. For example, `getPosts({ limit: 10, offset: 10 })` and `getPosts({ offset: 10, limit: 10 })` will result in the same cache key. If order is important to you, you'll have to use an array.
 
+### Deduplication
+
+When you call a query function, SvelteKit serializes the argument you call it with and uses it as a cache key. On the server, this is used to create a request-scoped cache so that multiple invocations of the same query only result in the work happening once. On the client, SvelteKit does something similar: Multiple identical invocations of a query all point to the same instance.
+
+To prevent memory leaks, this instance is kept cached only as long as it is actively used on the page in a _reactive context_, which means it must be created in a [derived](../svelte/$derived), [effect](../svelte/$effect) or component template. In practice, you're most likely to run into this limitation in universal `load` functions, event handlers, or when trying to access a query's data during module initialization.
+
+To illustrate:
+
+```svelte
+<script>
+  import { getData } from './data.remote.js';
+
+	// this instance is "anchored" to the reactive context of this component
+	const data = getData();
+</script>
+
+<!--
+	Awaiting `data` in a non-reactive context is valid, because it's anchored
+	and will be cleaned up when this component is cleaned up.
+-->
+<button onclick={async () => console.log(await data)}>
+	click me!
+</button>
+
+<!--
+	This, however, will throw, because `getData` isn't anchored to any reactive context.
+-->
+<button onclick={async () => console.log(await getData())}>
+	don't click me!
+</button>
+```
+
+This limitation only applies to accessing the _data_ of a query by `await`ing it or trying to access its properties. If all you need is one-off access to the query's data, you can call `query.run`:
+
+```svelte
+<script>
+  import { getData } from './data.remote.js';
+</script>
+
+<!-- This bypasses the cache and runs the query directly, returning a plain old Promise<T> -->
+<button onclick={async () => console.log(await getData().run())}>
+	click me!
+</button>
+```
+
+You can also still call [`refresh`](#query-Refreshing-queries) and `set` in non-reactive contexts. If there are no active listeners to the query, they both result in no-ops.
+
 ### Refreshing queries
 
 Any query can be re-fetched via its `refresh` method, which retrieves the latest value from the server:
@@ -226,6 +273,47 @@ export const getWeather = query.batch(v.string(), async (cityIds) => {
 	</button>
 {/if}
 ```
+
+## query.live
+
+`query.live` is for accessing real-time data from the server. It behaves similarly to `query`, but the callback — typically an async [generator function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/function*) — returns an `AsyncIterable`:
+
+```js
+import { query } from '$app/server';
+
+export const getTime = query.live(async function* () {
+	while (true) {
+		yield new Date();
+		await new Promise((f) => setTimeout(f, 1000));
+	}
+});
+```
+
+During server-side rendering, `await getTime()` returns the first yielded value then closes the iterator. This initial value is serialized and reused during hydration.
+
+On the client, the query stays connected while it's actively used in a component. Multiple instances share a connection. When there are no active uses left, the stream disconnects and server-side iteration is stopped.
+
+Live queries expose a `connected` property and `reconnect()` method:
+
+```svelte
+<script>
+	import { getTime } from './time.remote.js';
+
+	const time = getTime();
+</script>
+
+<p>{await time}</p>
+<p>connected: {time.connected}</p>
+<button onclick={() => time.reconnect()}>Reconnect</button>
+```
+
+If the connection drops, `connected` becomes `false`. SvelteKit will attempt to reconnect passively, with exponential backoff, and actively if `navigator.onLine` goes from `false` to `true`.
+
+Unlike `query`, live queries do not have a `refresh()` method, as they are self-updating.
+
+As with `query` and `query.batch`, call `.run()` outside render when you need imperative access. For live queries, `run()` returns a `Promise<AsyncGenerator<T>>`.
+
+> [!NOTE] It's essential that you don't cache live query responses in a service worker, since the cloned response will continue streaming long after the page is closed. Make sure that your caching logic excludes any responses with a `Cache-Control` header that includes `no-store`.
 
 ## form
 
@@ -393,12 +481,21 @@ Because our form contains a `file` input, we've added an `enctype="multipart/for
 In the case of `radio` and `checkbox` inputs that all belong to the same field, the `value` must be specified as a second argument to `.as(...)`:
 
 ```js
+/// file: constants.js
+export const operatingSystems = /** @type {const} */ (['windows', 'mac', 'linux']);
+export const languages = /** @type {const} */ (['html', 'css', 'js']);
+```
+
+```js
 /// file: data.remote.js
+// @filename: constants.js
+export const operatingSystems = /** @type {const} */ (['windows', 'mac', 'linux']);
+export const languages = /** @type {const} */ (['html', 'css', 'js']);
+// @filename: index.js
 import * as v from 'valibot';
 import { form } from '$app/server';
 // ---cut---
-export const operatingSystems = /** @type {const} */ (['windows', 'mac', 'linux']);
-export const languages = /** @type {const} */ (['html', 'css', 'js']);
+import { operatingSystems, languages } from './constants';
 
 export const survey = form(
 	v.object({
@@ -467,7 +564,14 @@ In addition to declarative schema validation, you can programmatically mark fiel
 - It accepts multiple arguments that can be strings (for issues relating to the form as a whole — these will only show up in `fields.allIssues()`) or standard-schema-compliant issues (for those relating to a specific field). Use the `issue` parameter for type-safe creation of such issues:
 
 ```js
+// @errors: 18046
 /// file: src/routes/shop/data.remote.js
+// @filename: ambient.d.ts
+declare module '$lib/server/database' {
+	export function buy(qty: number): Promise<void>
+}
+// @filename: index.js
+// ---cut---
 import * as v from 'valibot';
 import { invalid } from '@sveltejs/kit';
 import { form } from '$app/server';
@@ -704,10 +808,13 @@ We can customize what happens when the form is submitted with the `enhance` meth
 
 <form {...createPost.enhance(async ({ form, data, submit }) => {
 	try {
-		await submit();
-		form.reset();
+		if (await submit()) {
+			form.reset();
 
-		showToast('Successfully published!');
+			showToast('Successfully published!');
+		} else {
+			showToast('Invalid data!');
+		}
 	} catch (error) {
 		showToast('Oh no! Something went wrong');
 	}
@@ -915,6 +1022,29 @@ export const updatePost = form(
 
 Because queries are keyed based on their arguments, `await getPost(post.id).set(result)` on the server knows to look up the matching `getPost(id)` on the client to update it. The same goes for `getPosts().refresh()` -- it knows to look up `getPosts()` with no argument on the client.
 
+### Reconnecting live queries in mutations
+
+Single-flight mutations can also reconnect `query.live` instances. In a `form`/`command` handler, call `.reconnect()` on the live query resource you want to reconnect:
+
+```js
+import * as v from 'valibot';
+import { form, query } from '$app/server';
+
+export const getNotifications = query.live(v.string(), async function* (userId) {
+	while (true) {
+		yield await db.notifications(userId);
+		await wait(1000);
+	}
+});
+
+export const markAllRead = form(v.object({ userId: v.string() }), async ({ userId }) => {
+	// mutation logic...
+	+++getNotifications(userId).reconnect();+++
+});
+```
+
+This schedules a reconnect for the matching active client instances and applies it as part of the mutation response (i.e. in the same flight as the form/command result). You might need this if, for example, the command modifies a cookie that the live query needs to restart in order to capture.
+
 ### Client-requested refreshes
 
 Unfortunately, life isn't always as simple as the preceding example. The server always knows which query _functions_ to update, but it may not know which specific query _instances_ to update. For example, if `getPosts({ filter: 'author:santa' })` is rendered on the client, calling `getPosts().refresh()` in the server handler won't update it. You'd need to call `getPosts({ filter: 'author:santa' }).refresh()` instead — but how could you know which specific combinations of filters are currently rendered on the client, especially if your query argument is more complicated than an object with just one key?
@@ -960,8 +1090,8 @@ export const createPost = form(
 	async (data) => {
 		// form logic goes here...
 
-		+++for (const arg of requested(getPosts, 1)) {+++
-		+++	void getPosts(arg).refresh();+++
+		+++for (const { query } of requested(getPosts, 1)) {+++
+		+++	void query.refresh();+++
 		+++}+++
 
 		// Redirect to the newly created page
@@ -970,7 +1100,9 @@ export const createPost = form(
 );
 ```
 
-`requested` gives you access to the requested query arguments for the supplied query. It returns the *parsed* arguments for the query -- when these arguments are passed back into the query in `getPosts(arg).refresh()`, they will not be parsed again. If parsing an argument fails, that query will error, but the entire command will not fail. `requested`'s second parameter, `limit`, is the maximum number of items it will return. Any refresh requests beyond this limit will fail.
+`requested` gives you access to the queries the client requested to refresh. Each entry is an `{ arg, query }` object: `arg` is the value the query's implementation function received — i.e. the argument *after* the schema has validated and (where applicable) transformed it — and `query` is a `RemoteQuery` already bound to the client's original cache key, so calling `query.refresh()` / `query.set(...)` updates the correct client instance. If parsing an argument fails, that query will error, but the entire command will not fail. `requested`'s second parameter, `limit`, is the maximum number of items it will return. Any refresh requests beyond this limit will fail.
+
+> [!NOTE] `limit` is required because the list of refresh requests is controlled by the client — each entry causes the server to validate an argument and usually re-fetch data, so an unbounded list is a denial-of-service risk. Choose a limit that reflects the worst case you're willing to handle per request. You _can_ pass `Infinity` if you have explicitly decided to accept any number of refreshes, but it is not recommended.
 
 Additionally, `requested` allows a simple shorthand when all you want to do is refresh the requested query instances:
 
@@ -979,9 +1111,14 @@ import type { RemoteQueryFunction } from '@sveltejs/kit';
 import { requested } from '$app/server';
 declare const getPosts: RemoteQueryFunction<any, any>;
 // ---cut---
-// this is the same as looping over the result and calling `void getPosts(arg).refresh()`.
+// this is the same as looping over the result and calling `void query.refresh()`.
 await requested(getPosts, 1).refreshAll();
 ```
+
+> [!NOTE] Why does the command have to name every query it's willing to refresh? Two reasons:
+>
+> - **Bundle size.** If a command could implicitly refresh *any* query in your app, SvelteKit would have to include every query's code in the command's server bundle, because it can't know ahead of time which ones will be called.
+> - **Denial-of-service.** Any malicious user can inspect their network tab to discover which queries your app uses, then POST a command with a client-supplied list of thousands of refreshes. The only defence is for the server handler to declare which queries it is willing to refresh — and in what quantity (hence the required `limit`).
 
 ## prerender
 
@@ -1099,7 +1236,7 @@ As long as _you're_ not passing invalid data to your remote functions, there are
 In the second case, we don't want to give the attacker any help, so SvelteKit will generate a generic [400 Bad Request](https://http.dog/400) response. You can control the message by implementing the [`handleValidationError`](hooks#Server-hooks-handleValidationError) server hook, which, like [`handleError`](hooks#Shared-hooks-handleError), must return an [`App.Error`](errors#Type-safety) (which defaults to `{ message: string }`):
 
 ```js
-/// file: src/hooks.server.ts
+/// file: src/hooks.server.js
 /** @type {import('@sveltejs/kit').HandleValidationError} */
 export function handleValidationError({ event, issues }) {
 	return {
@@ -1125,14 +1262,26 @@ export const getStuff = query('unchecked', async ({ id }: { id: string }) => {
 Inside `query`, `form` and `command` you can use [`getRequestEvent`]($app-server#getRequestEvent) to get the current [`RequestEvent`](@sveltejs-kit#RequestEvent) object. This makes it easy to build abstractions for interacting with cookies, for example:
 
 ```ts
-/// file: user.remote.ts
+/// file: user.remote.js
+// @filename: ambient.d.ts
+interface User {
+	name: string;
+	avatar: string;
+}
+
+declare module '$lib/server/database' {
+	export function findUser(sessionId: string | undefined): Promise<User | null>;
+}
+
+// @filename: index.js
+// ---cut---
 import { getRequestEvent, query } from '$app/server';
 import { findUser } from '$lib/server/database';
 
 export const getProfile = query(async () => {
 	const user = await getUser();
 
-	return {
+	return user && {
 		name: user.name,
 		avatar: user.avatar
 	};

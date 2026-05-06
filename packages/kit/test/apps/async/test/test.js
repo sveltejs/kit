@@ -20,6 +20,11 @@ test.describe('remote functions', () => {
 		await expect(page.locator('body')).not.toContainText('Loading todo');
 	});
 
+	test('query.live renders the first yielded value during SSR', async ({ page }) => {
+		await page.goto('/remote/live');
+		await expect(page.locator('#first-value')).toHaveText('0');
+	});
+
 	test('run is blocked during server render', async ({ page }) => {
 		await page.goto('/remote/query-runtime-errors/run-in-render');
 		await expect(page.locator('#error')).toContainText(
@@ -281,6 +286,29 @@ test.describe('remote functions', () => {
 
 		await expect(page.getByText('enhanced.result')).toHaveText(
 			'enhanced.result: hello (from: enhanced:enhanced)'
+		);
+	});
+
+	test('form enhance submit returns boolean', async ({ page, javaScriptEnabled }) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/form/enhanced');
+
+		await expect(page.getByText('enhanced.submit_result:')).toHaveText(
+			'enhanced.submit_result: none'
+		);
+
+		await page.fill('[data-enhanced] input', 'hello');
+		await page.locator('[data-enhanced] span').click();
+		await page.getByText('resolve deferreds').click();
+		await expect(page.getByText('enhanced.submit_result:')).toHaveText(
+			'enhanced.submit_result: true'
+		);
+
+		await page.fill('[data-enhanced] input', 'invalid');
+		await page.locator('[data-enhanced] span').click();
+		await expect(page.getByText('enhanced.submit_result:')).toHaveText(
+			'enhanced.submit_result: false'
 		);
 	});
 
@@ -656,13 +684,15 @@ test.describe('remote functions', () => {
 		await expect(form1.locator('select[name="select_field"]')).toHaveValue('apple');
 		await expect(form1.locator('input[name="color_field"]')).toHaveValue('#ff0000');
 		await expect(form1.locator('input[name="n:range_field"]')).toHaveValue('5');
+		await expect(form1.locator('input[name="b:checkbox_field"]')).toBeChecked();
 
 		// second record values
 		await expect(form2.locator('input[name="text_field"]')).toHaveValue('Another example');
 		await expect(form2.locator('input[name="n:number_field"]')).toHaveValue('100');
 		await expect(form2.locator('select[name="select_field"]')).toHaveValue('banana');
-		await expect(form2.locator('input[name="color_field"]')).toHaveValue('#00ff00');
+		await expect(form2.locator('input[name="color_field"]')).toHaveValue('#ffff00');
 		await expect(form2.locator('input[name="n:range_field"]')).toHaveValue('8');
+		await expect(form2.locator('input[name="b:checkbox_field"]')).not.toBeChecked();
 	});
 });
 

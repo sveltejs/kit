@@ -1,9 +1,10 @@
 import { DEV } from 'esm-env';
+import { noop } from '../../../utils/functions.js';
 import { disable_search, make_trackable } from '../../../utils/url.js';
 import { validate_depends, validate_load_response } from '../../shared.js';
 import { with_request_store, merge_tracing } from '@sveltejs/kit/internal/server';
 import { record_span } from '../../telemetry/record_span.js';
-import { base64_encode, text_decoder } from '../../utils.js';
+import { base64_encode } from '../../utils.js';
 import { NULL_BODY_STATUS } from '../constants.js';
 import { get_node_type } from '../utils.js';
 
@@ -243,7 +244,7 @@ export async function load_data({
 					route: event.route,
 					fetch: create_universal_fetch(event, state, fetched, csr, resolve_opts),
 					setHeaders: event.setHeaders,
-					depends: () => {},
+					depends: noop,
 					parent,
 					untrack: (fn) => fn(),
 					tracing: traced_event.tracing
@@ -477,11 +478,11 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 	};
 
 	// Don't make this function `async`! Otherwise, the user has to `catch` promises they use for streaming responses or else
-	// it will be an unhandled rejection. Instead, we add a `.catch(() => {})` ourselves below to this from happening.
+	// it will be an unhandled rejection. Instead, we add a `.catch(noop)` ourselves below to this from happening.
 	return (input, init) => {
 		// See docs in fetch.js for why we need to do this
 		const response = universal_fetch(input, init);
-		response.catch(() => {});
+		response.catch(noop);
 		return response;
 	};
 }
@@ -492,12 +493,14 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 async function stream_to_string(stream) {
 	let result = '';
 	const reader = stream.getReader();
+	const decoder = new TextDecoder();
 	while (true) {
 		const { done, value } = await reader.read();
 		if (done) {
+			result += decoder.decode();
 			break;
 		}
-		result += text_decoder.decode(value);
+		result += decoder.decode(value, { stream: true });
 	}
 	return result;
 }
