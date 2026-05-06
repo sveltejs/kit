@@ -711,7 +711,7 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 					// Handle submit and hidden inputs
 					if (type === 'submit' || type === 'hidden') {
 						if (DEV) {
-							if (!input_value) {
+							if (input_value === null || input_value === undefined) {
 								throw new Error(`\`${type}\` inputs must have a value`);
 							}
 						}
