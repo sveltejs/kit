@@ -1,3 +1,5 @@
+export function noop() {}
+
 /**
  * @template T
  * @param {() => T} fn

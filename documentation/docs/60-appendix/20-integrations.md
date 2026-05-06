@@ -29,7 +29,7 @@ Use `vitePreprocess()` to enable CSS preprocessors in `<style>` tags: PostCSS, S
 
 ### `script`
 
-Use `vitePreprocess({ script: true })` if: 
+Use `vitePreprocess({ script: true })` if:
 - your project is before Svelte 5
 - you are using advanced TypeScript features that emit code _(check [`vitePreprocess`](https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/preprocess.md) documentation)_
 
@@ -38,17 +38,19 @@ TypeScript is supported natively in Svelte 5, so if you are using Svelte 5 and y
 
 ## Add-ons
 
-Run [`npx sv add`](/docs/cli/sv-add) to setup many different complex integrations with a single command including:
+Run [`npx sv add`](/docs/cli/sv-add) to set up many different complex integrations with a single command including:
 - prettier (formatting)
 - eslint (linting)
 - vitest (unit testing)
 - playwright (e2e testing)
-- lucia (auth)
+- better-auth (auth)
 - tailwind (CSS)
 - drizzle (DB)
 - paraglide (i18n)
 - mdsvex (markdown)
 - storybook (frontend workshop)
+- adapters (hosting)
+- mcp (LLM tooling)
 
 ## Packages
 

@@ -603,6 +603,19 @@ test.describe('Redirects', () => {
 		expect(page.url()).toBe(`${baseURL}/redirect`);
 	});
 
+	test('invalid redirect location in handle hook returns 500 without crashing server', async ({
+		request
+	}) => {
+		const bad_redirect = await request.get(
+			'/redirect/in-handle?location=%2Fredirect%2Fc%0D%0Aset-cookie%3A%20evil%3D1'
+		);
+
+		expect(bad_redirect.status()).toBe(500);
+
+		const follow_up = await request.get('/');
+		expect(follow_up.status()).toBe(200);
+	});
+
 	test('sets cookies when redirect in handle hook', async ({ page, app, javaScriptEnabled }) => {
 		await page.goto('/cookies/set');
 		let span = page.locator('#cookie-value');

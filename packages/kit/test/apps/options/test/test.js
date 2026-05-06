@@ -40,6 +40,38 @@ test.describe('CSP', () => {
 			/require-trusted-types-for 'script'/
 		);
 	});
+
+	test('allows hydratable scripts with CSP', async ({ request }) => {
+		const response = await request.get('/path-base/csp-hydratable');
+		const html = await response.text();
+
+		const csp_header = response.headers()['content-security-policy'];
+		expect(csp_header).toBeDefined();
+
+		// Extract nonce from CSP header (e.g., 'nonce-ABC123')
+		const nonce_match = csp_header.match(/'nonce-([^']+)'/);
+		expect(nonce_match).not.toBeNull();
+		const nonce = nonce_match?.[1];
+
+		// Find the hydratable script in the raw HTML - it sets up (window.__svelte ??= {}).h
+		const hydratable_script_match = html.match(
+			/<script\s+nonce="([^"]+)"[^>]*>[^<]*\(window\.__svelte \?\?= \{\}\)\.h/
+		);
+		expect(hydratable_script_match).not.toBeNull();
+		expect(hydratable_script_match?.[1]).toBe(nonce);
+	});
+
+	test('require-trusted-types-for', async ({ page, javaScriptEnabled }) => {
+		test.skip(!javaScriptEnabled, 'trusted types only affects scripts');
+
+		const errors = [];
+		page.on('pageerror', (err) => {
+			errors.push(err.message);
+		});
+
+		await page.goto('/path-base/csp-trusted-types');
+		expect(errors.length).toEqual(0);
+	});
 });
 
 test.describe('Custom extensions', () => {
@@ -140,7 +172,12 @@ test.describe('trailingSlash', () => {
 
 		/** @type {string[]} */
 		let requests = [];
-		page.on('request', (r) => requests.push(new URL(r.url()).pathname));
+		page.on('request', (r) => {
+			const url = r.url();
+			// Headless Chrome re-requests the favicon.png on every URL change
+			if (url.endsWith('/favicon.png')) return;
+			return requests.push(new URL(url).pathname);
+		});
 
 		// also wait for network processing to complete, see
 		// https://playwright.dev/docs/network#network-events
@@ -206,6 +243,24 @@ test.describe('Vite options', () => {
 
 		const mode = process.env.DEV ? 'development' : 'custom';
 		expect(await page.textContent('h2')).toBe(`${mode} === ${mode} === ${mode}`);
+	});
+});
+
+test.describe('$app/paths', () => {
+	test('match() works with base paths', async ({ request }) => {
+		const response = await request.get('/path-base/match');
+
+		expect(await response.json()).toEqual([
+			{
+				path: '/path-base/resolve-route',
+				result: { id: '/resolve-route', params: {} }
+			},
+			{
+				path: '/path-base/resolve-route/resolved',
+				result: { id: '/resolve-route/[foo]', params: { foo: 'resolved' } }
+			},
+			{ path: '/path-base/not-a-real-route-that-exists', result: null }
+		]);
 	});
 });
 

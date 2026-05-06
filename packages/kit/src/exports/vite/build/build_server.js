@@ -1,40 +1,18 @@
 import fs from 'node:fs';
 import { mkdirp } from '../../../utils/filesystem.js';
-import { filter_fonts, find_deps, resolve_symlinks } from './utils.js';
+import {
+	create_function_as_string,
+	filter_fonts,
+	find_deps,
+	generate_placeholder,
+	resolve_symlinks
+} from './utils.js';
 import { s } from '../../../utils/misc.js';
 import { normalizePath } from 'vite';
-import { basename, join } from 'node:path';
-import { create_node_analyser } from '../static_analysis/index.js';
+import { basename } from 'node:path';
 import { fix_css_urls } from '../../../utils/css.js';
+import { escape_for_interpolation } from '../../../utils/escape.js';
 
-/**
- * Regenerate server nodes after acquiring client manifest
- * @overload
- * @param {string} out
- * @param {import('types').ValidatedKitConfig} kit
- * @param {import('types').ManifestData} manifest_data
- * @param {import('vite').Manifest} server_manifest
- * @param {import('vite').Manifest} client_manifest
- * @param {string} assets_path
- * @param {import('vite').Rollup.RollupOutput['output']} client_chunks
- * @param {import('types').RecursiveRequired<import('types').ValidatedConfig['kit']['output']>} output_config
- * @param {Map<string, { page_options: Record<string, any> | null, children: string[] }>} static_exports
- * @returns {Promise<void>}
- */
-/**
- * Build server nodes without client manifest for analysis phase
- * @overload
- * @param {string} out
- * @param {import('types').ValidatedKitConfig} kit
- * @param {import('types').ManifestData} manifest_data
- * @param {import('vite').Manifest} server_manifest
- * @param {null} client_manifest
- * @param {null} assets_path
- * @param {null} client_chunks
- * @param {import('types').RecursiveRequired<import('types').ValidatedConfig['kit']['output']>} output_config
- * @param {Map<string, { page_options: Record<string, any> | null, children: string[] }>} static_exports
- * @returns {Promise<void>}
- */
 /**
  * @param {string} out
  * @param {import('types').ValidatedKitConfig} kit
@@ -44,9 +22,8 @@ import { fix_css_urls } from '../../../utils/css.js';
  * @param {string | null} assets_path
  * @param {import('vite').Rollup.RollupOutput['output'] | null} client_chunks
  * @param {import('types').RecursiveRequired<import('types').ValidatedConfig['kit']['output']>} output_config
- * @param {Map<string, { page_options: Record<string, any> | null, children: string[] }>} static_exports
  */
-export async function build_server_nodes(
+export function build_server_nodes(
 	out,
 	kit,
 	manifest_data,
@@ -54,8 +31,7 @@ export async function build_server_nodes(
 	client_manifest,
 	assets_path,
 	client_chunks,
-	output_config,
-	static_exports
+	output_config
 ) {
 	mkdirp(`${out}/server/nodes`);
 	mkdirp(`${out}/server/stylesheets`);
@@ -98,33 +74,37 @@ export async function build_server_nodes(
 			const static_asset_prefix = segments.map(() => '..').join('/') + '/';
 
 			prepare_css_for_inlining = (css, eager_assets) => {
+				const assets_placeholder = generate_placeholder(css, 'ASSETS');
+				const base_placeholder = generate_placeholder(css, 'BASE');
+
 				const transformed_css = fix_css_urls({
 					css,
 					vite_assets: eager_assets,
 					static_assets,
-					paths_assets: '${assets}',
-					base: '${base}',
+					paths_assets: assets_placeholder,
+					base: base_placeholder,
 					static_asset_prefix
 				});
 
 				// only convert to a function if we have adjusted any URLs
 				if (css !== transformed_css) {
-					return `function css(assets, base) { return \`${s(transformed_css).slice(1, -1)}\`; }`;
+					const escaped = escape_for_interpolation(transformed_css, [
+						{
+							placeholder: assets_placeholder,
+							replacement: '${assets}'
+						},
+						{
+							placeholder: base_placeholder,
+							replacement: '${base}'
+						}
+					]);
+					return create_function_as_string('css', ['assets', 'base'], escaped);
 				}
+
 				return s(css);
 			};
 		}
 	}
-
-	const { get_page_options } = create_node_analyser({
-		resolve: (server_node) => {
-			// Windows needs the file:// protocol for absolute path dynamic imports
-			return import(
-				`file://${join(out, 'server', resolve_symlinks(server_manifest, server_node).chunk.file)}`
-			);
-		},
-		static_exports
-	});
 
 	/** @type {string[] | undefined} */
 	let root_stylesheets;
@@ -157,7 +137,7 @@ export async function build_server_nodes(
 		let fonts = [];
 
 		/** @type {Set<string>} */
-		let eager_assets = new Set();
+		const eager_assets = new Set();
 
 		if (node.component && client_manifest) {
 			exports.push(
@@ -169,9 +149,8 @@ export async function build_server_nodes(
 		}
 
 		if (node.universal) {
-			const page_options = await get_page_options(node);
-			if (!!page_options && page_options.ssr === false) {
-				exports.push(`export const universal = ${s(page_options, null, 2)};`);
+			if (!!node.page_options && node.page_options.ssr === false) {
+				exports.push(`export const universal = ${s(node.page_options, null, 2)};`);
 			} else {
 				imports.push(
 					`import * as universal from '../${resolve_symlinks(server_manifest, node.universal).chunk.file}';`
@@ -266,7 +245,7 @@ export async function build_server_nodes(
 					const filename = basename(file);
 					const dest = `${out}/server/stylesheets/${filename}.js`;
 
-					let css = /** @type {string} */ (stylesheets_to_inline.get(file));
+					const css = /** @type {string} */ (stylesheets_to_inline.get(file));
 
 					fs.writeFileSync(
 						dest,

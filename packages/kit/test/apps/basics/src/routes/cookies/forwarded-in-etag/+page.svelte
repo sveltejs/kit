@@ -1,6 +1,7 @@
 <script>
 	import { onMount } from 'svelte';
 
+	/** @type {string} */
 	let cookies;
 
 	onMount(() => {

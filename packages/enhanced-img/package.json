@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/enhanced-img",
-	"version": "0.9.3",
+	"version": "0.10.4",
 	"description": "Image optimization for your Svelte apps",
 	"repository": {
 		"type": "git",
@@ -41,21 +41,20 @@
 		"magic-string": "^0.30.5",
 		"sharp": "^0.34.1",
 		"svelte-parse-markup": "^0.1.5",
-		"vite-imagetools": "^9.0.2",
+		"vite-imagetools": "^9.0.3",
 		"zimmerframe": "^1.1.2"
 	},
 	"devDependencies": {
-		"@sveltejs/vite-plugin-svelte": "catalog:",
 		"@types/estree": "catalog:",
 		"@types/node": "catalog:",
-		"rollup": "^4.27.4",
+		"rollup": "^4.59.0",
 		"svelte": "catalog:",
-		"typescript": "^5.6.3",
+		"typescript": "catalog:",
 		"vite": "catalog:",
 		"vitest": "catalog:"
 	},
 	"peerDependencies": {
-		"@sveltejs/vite-plugin-svelte": "^6.0.0",
+		"@sveltejs/vite-plugin-svelte": "^6.0.0 || ^7.0.0",
 		"svelte": "^5.0.0",
 		"vite": "^6.3.0 || >=7.0.0"
 	}

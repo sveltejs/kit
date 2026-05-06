@@ -52,7 +52,6 @@ export function server_data_serializer(event, event_state, options) {
 									options,
 									new Error(`Failed to serialize promise while rendering ${event.route.id}`)
 								);
-								data = undefined;
 								str = devalue.uneval([, error], replacer);
 							}
 
@@ -99,7 +98,7 @@ export function server_data_serializer(event, event_state, options) {
 			} catch (e) {
 				// @ts-expect-error
 				e.path = e.path.slice(1);
-				throw new Error(clarify_devalue_error(event, /** @type {any} */ (e)));
+				throw new Error(clarify_devalue_error(event, /** @type {any} */ (e)), { cause: e });
 			}
 		},
 
@@ -209,7 +208,7 @@ export function server_data_serializer_json(event, event_state, options) {
 			} catch (e) {
 				// @ts-expect-error
 				e.path = 'data' + e.path;
-				throw new Error(clarify_devalue_error(event, /** @type {any} */ (e)));
+				throw new Error(clarify_devalue_error(event, /** @type {any} */ (e)), { cause: e });
 			}
 		},
 

@@ -2,7 +2,7 @@ import process from 'node:process';
 import { expect } from '@playwright/test';
 import { test } from '../../../../utils.js';
 
-/** @typedef {import('@playwright/test').Response} Response */
+/** @typedef {{ fromScroll: { x: number, y: number }, toScroll: { x: number, y: number }, type: string }} ScrollState */
 
 test.skip(({ javaScriptEnabled }) => !javaScriptEnabled);
 
@@ -300,6 +300,128 @@ test.describe('Navigation lifecycle functions', () => {
 			'popstate /navigation-lifecycle/before-navigate/event/b -> /navigation-lifecycle/before-navigate/event/a'
 		]);
 	});
+
+	test('scroll state is provided on initial page load', async ({ page }) => {
+		/** @type {any} */
+		let afterNav;
+		const afterNavPromise = new Promise((resolve) => {
+			page.on('console', (msg) => {
+				const text = msg.text();
+				if (text.startsWith('afterNavigate:')) {
+					afterNav = JSON.parse(text.slice('afterNavigate:'.length));
+					resolve(afterNav);
+				}
+			});
+		});
+
+		await page.goto('/navigation-lifecycle/scroll-state/a');
+		await afterNavPromise;
+
+		expect(afterNav.fromScroll).toBe(undefined);
+		expect(afterNav.toScroll).toEqual({ x: 0, y: 0 });
+		expect(afterNav.type).toBe('enter');
+	});
+
+	test('scroll state is provided on link navigation', async ({ page, clicknav, scroll_to }) => {
+		await page.goto('/navigation-lifecycle/scroll-state/a');
+		await scroll_to(0, 500);
+
+		const navPromise = new Promise((resolve) => {
+			/** @type {ScrollState} */
+			let beforeNav;
+			/** @type {ScrollState} */
+			let onNav;
+			/** @type {ScrollState} */
+			let afterNav;
+			page.on('console', (msg) => {
+				const text = msg.text();
+				if (text.startsWith('beforeNavigate:')) {
+					beforeNav = JSON.parse(text.slice('beforeNavigate:'.length));
+				} else if (text.startsWith('onNavigate:')) {
+					onNav = JSON.parse(text.slice('onNavigate:'.length));
+				} else if (text.startsWith('afterNavigate:')) {
+					afterNav = JSON.parse(text.slice('afterNavigate:'.length));
+				}
+
+				if (beforeNav && onNav && afterNav) resolve({ beforeNav, onNav, afterNav });
+			});
+		});
+
+		await clicknav('#to-b');
+		const { beforeNav, onNav, afterNav } = await navPromise;
+
+		expect(beforeNav.fromScroll).toEqual({ x: 0, y: 500 });
+		expect(beforeNav.toScroll).toBe(null);
+		expect(beforeNav.type).toBe('link');
+
+		expect(onNav.fromScroll).toEqual({ x: 0, y: 500 });
+		expect(onNav.toScroll).toBe(null);
+		expect(onNav.type).toBe('link');
+
+		expect(afterNav.fromScroll).toEqual({ x: 0, y: 500 });
+		expect(afterNav.toScroll).toEqual({ x: 0, y: 0 });
+		expect(afterNav.type).toBe('link');
+	});
+
+	test('scroll state is provided on popstate navigation', async ({ page, clicknav, scroll_to }) => {
+		await page.goto('/navigation-lifecycle/scroll-state/a');
+		await scroll_to(0, 500);
+
+		/** @type {any} */
+		let afterNav;
+		let navPromise = new Promise((resolve) => {
+			page.on('console', (msg) => {
+				const text = msg.text();
+				if (text.startsWith('afterNavigate:')) {
+					afterNav = JSON.parse(text.slice('afterNavigate:'.length));
+					resolve(undefined);
+				}
+			});
+		});
+
+		await clicknav('#to-b');
+		await navPromise;
+
+		const savedScrollY = afterNav.fromScroll.y;
+
+		navPromise = new Promise((resolve) => {
+			/** @type {ScrollState} */
+			let beforeNav;
+			/** @type {ScrollState} */
+			let onNav;
+			/** @type {ScrollState} */
+			let afterNav;
+			page.on('console', (msg) => {
+				const text = msg.text();
+				if (text.startsWith('beforeNavigate:')) {
+					beforeNav = JSON.parse(text.slice('beforeNavigate:'.length));
+				} else if (text.startsWith('onNavigate:')) {
+					onNav = JSON.parse(text.slice('onNavigate:'.length));
+				} else if (text.startsWith('afterNavigate:')) {
+					afterNav = JSON.parse(text.slice('afterNavigate:'.length));
+				}
+
+				if (beforeNav && onNav && afterNav) resolve({ beforeNav, onNav, afterNav });
+			});
+		});
+
+		await page.goBack();
+		await page.waitForURL('/navigation-lifecycle/scroll-state/a');
+		/** @type {any} */
+		let beforeNav, onNav;
+		({ beforeNav, onNav, afterNav } = await navPromise);
+
+		expect(beforeNav.fromScroll).toEqual({ x: 0, y: 0 });
+		expect(beforeNav.toScroll).toEqual({ x: 0, y: savedScrollY });
+		expect(beforeNav.type).toBe('popstate');
+
+		expect(onNav.fromScroll).toEqual({ x: 0, y: 0 });
+		expect(onNav.toScroll).toEqual({ x: 0, y: savedScrollY });
+		expect(onNav.type).toBe('popstate');
+
+		expect(afterNav.toScroll).toEqual({ x: 0, y: savedScrollY });
+		expect(afterNav.type).toBe('popstate');
+	});
 });
 
 test.describe('Scrolling', () => {
@@ -374,6 +496,16 @@ test.describe('Scrolling', () => {
 		await page.goto('/anchor');
 		await clicknav('#last-anchor');
 		expect(await in_view('#go-to-element')).toBe(true);
+	});
+
+	test('scrolling to url-supplied anchor respects scroll-margin', async ({ page, clicknav }) => {
+		await page.goto('/anchor');
+		await clicknav('#to-scroll-margin');
+		expect(
+			await page.evaluate(
+				() => document.getElementById('scroll-margin')?.getBoundingClientRect().top
+			)
+		).toBe(40);
 	});
 
 	test('no-anchor url will scroll to top when navigated from bottom of page', async ({
@@ -693,7 +825,12 @@ test.describe('Prefetching', () => {
 
 		/** @type {string[]} */
 		let requests = [];
-		page.on('request', (r) => requests.push(r.url()));
+		page.on('request', (r) => {
+			const url = r.url();
+			// Headless Chrome re-requests the favicon.png on every URL change
+			if (url.endsWith('/favicon.png')) return;
+			requests.push(url);
+		});
 
 		// also wait for network processing to complete, see
 		// https://playwright.dev/docs/network#network-events
@@ -888,6 +1025,19 @@ test.describe('Routing', () => {
 		await page.waitForURL(`${baseURL}/routing/hashes/a`);
 	});
 
+	test('navigating to a hash link works when base element is present', async ({
+		page,
+		clicknav,
+		baseURL
+	}) => {
+		await page.goto('/routing/hashes/base');
+
+		await clicknav('#navigate');
+
+		await expect(page.locator('p')).toHaveText('X');
+		expect(page.url()).toBe(`${baseURL}/routing/hashes/base/a#x`);
+	});
+
 	test('does not normalize external path', async ({ page, start_server }) => {
 		const html_ok = '<html><head></head><body>ok</body></html>';
 		const { port } = await start_server((_req, res) => {
@@ -932,7 +1082,12 @@ test.describe('Routing', () => {
 
 		/** @type {string[]} */
 		const requests = [];
-		page.on('request', (request) => requests.push(request.url()));
+		page.on('request', (request) => {
+			const url = request.url();
+			// Headless Chrome re-requests the favicon.png on every URL change
+			if (url.endsWith('/favicon.png')) return;
+			requests.push(url);
+		});
 
 		await page.locator('input').fill('updated');
 		await page.locator('button').click();
@@ -950,9 +1105,7 @@ test.describe('Routing', () => {
 		let tabs = page.context().pages();
 		expect(tabs.length === 1);
 
-		const new_tab = page.waitForEvent('popup', { timeout: 1000 });
 		await page.locator('button', { hasText: 'Inside form' }).click();
-		await new_tab;
 
 		tabs = page.context().pages();
 		expect(tabs.length > 1);
@@ -964,9 +1117,7 @@ test.describe('Routing', () => {
 		let tabs = page.context().pages();
 		expect(tabs.length === 1);
 
-		const new_tab = page.waitForEvent('popup', { timeout: 1000 });
 		await page.locator('button', { hasText: 'Outside form' }).click();
-		await new_tab;
 
 		tabs = page.context().pages();
 		expect(tabs.length > 1);
