@@ -34,7 +34,7 @@ catalog:
   '@playwright/test': ^1.59.1
   '@polka/url': ^1.0.0-next.28
   '@sveltejs/eslint-config': ^10.0.0
-  '@sveltejs/vite-plugin-svelte': ^7.0.0
+  '@sveltejs/vite-plugin-svelte': ^7.1.1
   '@svitejs/changesets-changelog-github-compact': ^1.2.0
   '@types/connect': ^3.4.38
   '@types/estree': ^1.0.5
