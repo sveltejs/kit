@@ -1,8 +1,8 @@
+/** @import { Reporter, TestCase } from '@playwright/test/reporter' */
 import { appendFileSync } from 'node:fs';
 
 /**
- * @class
- * @implements {import('@playwright/test/reporter').Reporter}
+ * @implements {Reporter}
  */
 export default class GithubFlakyWarningReporter {
 	/**
@@ -14,7 +14,7 @@ export default class GithubFlakyWarningReporter {
 		this._flaky = [];
 	}
 	/**
-	 * @param test {import('@playwright/test/reporter').TestCase}
+	 * @param {TestCase} test
 	 */
 	onTestEnd(test) {
 		if (test.outcome() === 'flaky') {
