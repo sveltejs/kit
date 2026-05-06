@@ -18,8 +18,10 @@ test.describe('Filesystem updates', () => {
 			// future test file that has the same name
 			const route = 'zzzz' + Date.now();
 			const content = 'Hello new route';
-			const __dirname = path.dirname(fileURLToPath(import.meta.url));
-			const filepath = path.join(__dirname, `../src/routes/new-route/${route}/+page.svelte`);
+			const filepath = path.join(
+				import.meta.dirname,
+				`../src/routes/new-route/${route}/+page.svelte`
+			);
 			const dir = path.dirname(filepath);
 
 			try {

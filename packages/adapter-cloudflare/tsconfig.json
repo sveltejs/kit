@@ -3,20 +3,22 @@
 		"allowJs": true,
 		"checkJs": true,
 		"noEmit": true,
-		"target": "es2022",
-		"module": "node16",
-		"moduleResolution": "node16",
+		"module": "nodenext",
+		"moduleResolution": "nodenext",
 		"paths": {
 			"@sveltejs/kit": ["../kit/types/index"]
 		},
 		// taken from the Cloudflare Workers TypeScript template https://github.com/cloudflare/workers-sdk/blob/main/packages/create-cloudflare/templates/hello-world/ts/tsconfig.json
-		"lib": ["es2021"],
+		"target": "es2024",
+		"lib": ["es2024"],
 		"types": ["node", "@cloudflare/workers-types"]
 	},
 	"include": [
 		"index.js",
 		"utils.js",
 		"utils.spec.js",
+		"rolldown.config.js",
+		"vitest.config.js",
 		"test/utils.js",
 		"internal.d.ts",
 		"src/worker.js"

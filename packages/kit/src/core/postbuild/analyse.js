@@ -4,7 +4,6 @@ import { pathToFileURL } from 'node:url';
 import { validate_server_exports } from '../../utils/exports.js';
 import { load_config } from '../config/index.js';
 import { forked } from '../../utils/fork.js';
-import { installPolyfills } from '../../exports/node/polyfills.js';
 import { ENDPOINT_METHODS } from '../../constants.js';
 import { filter_env } from '../../utils/env.js';
 import { has_server_load, resolve_route } from '../../utils/routing.js';
@@ -26,6 +25,7 @@ export default forked(import.meta.url, analyse);
  *   out: string;
  *   output_config: import('types').RecursiveRequired<import('types').ValidatedConfig['kit']['output']>;
  *   remotes: RemoteChunk[];
+ *   root: string;
  * }} opts
  */
 async function analyse({
@@ -37,20 +37,19 @@ async function analyse({
 	env,
 	out,
 	output_config,
-	remotes
+	remotes,
+	root
 }) {
 	/** @type {import('@sveltejs/kit').SSRManifest} */
 	const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
 
 	/** @type {import('types').ValidatedKitConfig} */
-	const config = (await load_config()).kit;
+	const config = (await load_config({ cwd: root })).kit;
 
 	const server_root = join(config.outDir, 'output');
 
 	/** @type {import('types').ServerInternalModule} */
 	const internal = await import(pathToFileURL(`${server_root}/server/internal.js`).href);
-
-	installPolyfills();
 
 	// configure `import { building } from '$app/environment'` —
 	// essential we do this before analysing the code
@@ -66,7 +65,17 @@ async function analyse({
 	internal.set_read_implementation((file) => createReadableStream(`${server_root}/server/${file}`));
 
 	// first, build server nodes without the client manifest so we can analyse it
-	build_server_nodes(out, config, manifest_data, server_manifest, null, null, null, output_config);
+	build_server_nodes(
+		out,
+		config,
+		manifest_data,
+		server_manifest,
+		null,
+		null,
+		null,
+		output_config,
+		root
+	);
 
 	/** @type {import('types').ServerMetadata} */
 	const metadata = {

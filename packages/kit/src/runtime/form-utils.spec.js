@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, test } from 'vitest';
+import { describe, expect, test } from 'vitest';
 import {
 	BINARY_FORM_CONTENT_TYPE,
 	convert_formdata,
@@ -7,7 +7,6 @@ import {
 	serialize_binary_form,
 	split_path
 } from './form-utils.js';
-import buffer from 'node:buffer';
 import { text_encoder } from './utils.js';
 
 const POLLUTION_ATTACKS = [
@@ -99,13 +98,6 @@ describe('convert_formdata', () => {
 });
 
 describe('binary form serializer', () => {
-	beforeAll(() => {
-		// TODO: remove after dropping support for Node 18
-		if (!('File' in globalThis)) {
-			// @ts-ignore
-			globalThis.File = buffer.File;
-		}
-	});
 	test.each([
 		{
 			data: {},

@@ -13,7 +13,7 @@ test('$env/dynamic/private is not statically importable from the client', { time
 	assert.throws(
 		() =>
 			execSync('pnpm build', {
-				cwd: path.join(process.cwd(), 'apps/private-dynamic-env'),
+				cwd: path.join(import.meta.dirname, 'apps/private-dynamic-env'),
 				stdio: 'pipe',
 				timeout,
 				env
@@ -26,7 +26,7 @@ test('$env/dynamic/private is not dynamically importable from the client', { tim
 	assert.throws(
 		() =>
 			execSync('pnpm build', {
-				cwd: path.join(process.cwd(), 'apps/private-dynamic-env-dynamic-import'),
+				cwd: path.join(import.meta.dirname, 'apps/private-dynamic-env-dynamic-import'),
 				stdio: 'pipe',
 				timeout,
 				env
@@ -39,7 +39,7 @@ test('$env/static/private is not statically importable from the client', { timeo
 	assert.throws(
 		() =>
 			execSync('pnpm build', {
-				cwd: path.join(process.cwd(), 'apps/private-static-env'),
+				cwd: path.join(import.meta.dirname, 'apps/private-static-env'),
 				stdio: 'pipe',
 				timeout,
 				env
@@ -52,7 +52,7 @@ test('$env/static/private is not dynamically importable from the client', { time
 	assert.throws(
 		() =>
 			execSync('pnpm build', {
-				cwd: path.join(process.cwd(), 'apps/private-static-env-dynamic-import'),
+				cwd: path.join(import.meta.dirname, 'apps/private-static-env-dynamic-import'),
 				stdio: 'pipe',
 				timeout,
 				env
@@ -65,7 +65,7 @@ test('$env/dynamic/private is not importable from the service worker', { timeout
 	assert.throws(
 		() =>
 			execSync('pnpm build', {
-				cwd: path.join(process.cwd(), 'apps/service-worker-private-env'),
+				cwd: path.join(import.meta.dirname, 'apps/service-worker-private-env'),
 				stdio: 'pipe',
 				timeout,
 				env
@@ -78,7 +78,7 @@ test('$env/dynamic/public is not importable from the service worker', { timeout 
 	assert.throws(
 		() =>
 			execSync('pnpm build', {
-				cwd: path.join(process.cwd(), 'apps/service-worker-dynamic-public-env'),
+				cwd: path.join(import.meta.dirname, 'apps/service-worker-dynamic-public-env'),
 				stdio: 'pipe',
 				timeout,
 				env

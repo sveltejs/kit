@@ -1,7 +1,6 @@
 import fs from 'node:fs';
 import process from 'node:process';
-import { parseArgs } from 'node:util';
-import colors from 'kleur';
+import { parseArgs, styleText } from 'node:util';
 import { load_config } from './core/config/index.js';
 import { coalesce_to_error } from './utils/error.js';
 
@@ -11,9 +10,9 @@ function handle_error(e) {
 
 	if (error.name === 'SyntaxError') throw error;
 
-	console.error(colors.bold().red(`> ${error.message}`));
+	console.error(styleText(['bold', 'red'], `> ${error.message}`));
 	if (error.stack) {
-		console.error(colors.gray(error.stack.split('\n').slice(1).join('\n')));
+		console.error(styleText('grey', error.stack.split('\n').slice(1).join('\n')));
 	}
 
 	process.exit(1);
@@ -48,7 +47,7 @@ try {
 	});
 } catch (err) {
 	const error = /** @type {Error} */ (err);
-	console.error(colors.bold().red(`> ${error.message}`));
+	console.error(styleText(['bold', 'red'], `> ${error.message}`));
 	console.log(help);
 	process.exit(1);
 }
@@ -82,14 +81,14 @@ if (command === 'sync') {
 	}
 
 	try {
-		const config = await load_config();
+		const config = await load_config({ cwd: process.cwd() });
 		const sync = await import('./core/sync/sync.js');
 		sync.all_types(config, values.mode);
 	} catch (error) {
 		handle_error(error);
 	}
 } else {
-	console.error(colors.bold().red(`> Unknown command: ${command}`));
+	console.error(styleText(['bold', 'red'], `> Unknown command: ${command}`));
 	console.log(help);
 	process.exit(1);
 }

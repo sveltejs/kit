@@ -7,9 +7,10 @@ import { normalizePath } from 'vite';
  * @param {import('vite').Manifest} manifest
  * @param {string} entry
  * @param {boolean} add_dynamic_css
+ * @param {string} root
  * @returns {import('types').AssetDependencies}
  */
-export function find_deps(manifest, entry, add_dynamic_css) {
+export function find_deps(manifest, entry, add_dynamic_css, root) {
 	/** @type {Set<string>} */
 	const seen = new Set();
 
@@ -35,7 +36,7 @@ export function find_deps(manifest, entry, add_dynamic_css) {
 		if (seen.has(current)) return;
 		seen.add(current);
 
-		const { chunk } = resolve_symlinks(manifest, current);
+		const { chunk } = resolve_symlinks(manifest, current, root);
 
 		if (add_js) imports.add(chunk.file);
 
@@ -81,7 +82,7 @@ export function find_deps(manifest, entry, add_dynamic_css) {
 		}
 	}
 
-	const { chunk, file } = resolve_symlinks(manifest, entry);
+	const { chunk, file } = resolve_symlinks(manifest, entry, root);
 
 	traverse(file, true, entry, 0);
 
@@ -101,10 +102,11 @@ export function find_deps(manifest, entry, add_dynamic_css) {
 /**
  * @param {import('vite').Manifest} manifest
  * @param {string} file
+ * @param {string} root
  */
-export function resolve_symlinks(manifest, file) {
+export function resolve_symlinks(manifest, file, root) {
 	while (!manifest[file]) {
-		const next = normalizePath(path.relative('.', fs.realpathSync(file)));
+		const next = normalizePath(path.relative(root, fs.realpathSync(file)));
 		if (next === file) throw new Error(`Could not find file "${file}" in Vite manifest`);
 		file = next;
 	}

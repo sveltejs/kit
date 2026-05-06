@@ -11,10 +11,9 @@ import {
 } from './shared.svelte.js';
 import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
+import { tick, untrack, hydratable } from 'svelte';
+import { create_remote_key, stringify_remote_arg } from '../../shared.js';
 import { noop } from '../../../utils/functions.js';
-import { with_resolvers } from '../../../utils/promise.js';
-import { tick, untrack } from 'svelte';
-import { create_remote_key, stringify_remote_arg, unfriendly_hydratable } from '../../shared.js';
 
 /**
  * @template T
@@ -46,7 +45,7 @@ export function query(id) {
 		return new QueryProxy(id, arg, async (key, payload) => {
 			const url = `${base}/${app_dir}/remote/${id}${payload ? `?payload=${payload}` : ''}`;
 
-			const serialized = await unfriendly_hydratable(key, () =>
+			const serialized = await hydratable(key, () =>
 				remote_request(url, get_remote_request_headers())
 			);
 
@@ -142,7 +141,7 @@ export class Query {
 	#run() {
 		this.#loading = true;
 
-		const { promise, resolve, reject } = with_resolvers();
+		const { promise, resolve, reject } = Promise.withResolvers();
 
 		this.#latest.push(resolve);
 

@@ -38,7 +38,6 @@ const config = {
 		},
 
 		csrf: {
-			checkOrigin: true,
 			trustedOrigins: ['https://trusted.example.com', 'https://payment-gateway.test']
 		},
 
@@ -70,6 +69,12 @@ const config = {
 
 		router: {
 			resolution: /** @type {'client' | 'server'} */ (process.env.ROUTER_RESOLUTION) || 'client'
+		},
+
+		typescript: {
+			config: (config) => {
+				config.include.push('../unit-test');
+			}
 		}
 	},
 
