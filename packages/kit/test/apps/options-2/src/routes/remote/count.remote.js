@@ -23,5 +23,7 @@ export const prerendered = prerender(() => {
 });
 
 export const set_count_form = form(v.object({ count: v.string() }), async (data) => {
-	return (count = parseInt(data.count));
+	count = parseInt(data.count);
+	get_count().set(count);
+	return count;
 });

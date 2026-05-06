@@ -1,10 +1,17 @@
 import fs from 'node:fs';
 import { mkdirp } from '../../../utils/filesystem.js';
-import { create_function_as_string, filter_fonts, find_deps, resolve_symlinks } from './utils.js';
+import {
+	create_function_as_string,
+	filter_fonts,
+	find_deps,
+	generate_placeholder,
+	resolve_symlinks
+} from './utils.js';
 import { s } from '../../../utils/misc.js';
 import { normalizePath } from 'vite';
 import { basename } from 'node:path';
 import { fix_css_urls } from '../../../utils/css.js';
+import { escape_for_interpolation } from '../../../utils/escape.js';
 
 /**
  * @param {string} out
@@ -67,18 +74,31 @@ export function build_server_nodes(
 			const static_asset_prefix = segments.map(() => '..').join('/') + '/';
 
 			prepare_css_for_inlining = (css, eager_assets) => {
+				const assets_placeholder = generate_placeholder(css, 'ASSETS');
+				const base_placeholder = generate_placeholder(css, 'BASE');
+
 				const transformed_css = fix_css_urls({
 					css,
 					vite_assets: eager_assets,
 					static_assets,
-					paths_assets: '${assets}',
-					base: '${base}',
+					paths_assets: assets_placeholder,
+					base: base_placeholder,
 					static_asset_prefix
 				});
 
 				// only convert to a function if we have adjusted any URLs
 				if (css !== transformed_css) {
-					return create_function_as_string('css', ['assets', 'base'], transformed_css);
+					const escaped = escape_for_interpolation(transformed_css, [
+						{
+							placeholder: assets_placeholder,
+							replacement: '${assets}'
+						},
+						{
+							placeholder: base_placeholder,
+							replacement: '${base}'
+						}
+					]);
+					return create_function_as_string('css', ['assets', 'base'], escaped);
 				}
 
 				return s(css);
@@ -107,7 +127,7 @@ export function build_server_nodes(
 		let fonts = [];
 
 		/** @type {Set<string>} */
-		let eager_assets = new Set();
+		const eager_assets = new Set();
 
 		if (node.component && client_manifest) {
 			exports.push(
@@ -215,7 +235,7 @@ export function build_server_nodes(
 					const filename = basename(file);
 					const dest = `${out}/server/stylesheets/${filename}.js`;
 
-					let css = /** @type {string} */ (stylesheets_to_inline.get(file));
+					const css = /** @type {string} */ (stylesheets_to_inline.get(file));
 
 					fs.writeFileSync(
 						dest,
