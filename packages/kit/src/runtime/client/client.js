@@ -1469,7 +1469,21 @@ async function load_root_error_page({ status, error, url, route }) {
 			return _goto(new URL(error.location, location.href), {}, 0);
 		}
 
-		// TODO: this falls back to the server when a server exists, but what about SPA mode?
+		if (app.error_template) {
+			const handled = await handle_error(error, { url, params, route });
+			const message = String(handled?.message ?? '')
+				.replace(/&/g, '&amp;')
+				.replace(/</g, '&lt;')
+				.replace(/>/g, '&gt;');
+			document.open();
+			document.write(
+				app.error_template
+					.replace(/%sveltekit\.status%/g, String(status))
+					.replace(/%sveltekit\.error\.message%/g, message)
+			);
+			document.close();
+		}
+
 		throw error;
 	}
 }

@@ -21,3 +21,10 @@ test('universal pages/layouts are not executed on the server', async ({ page }) 
 	await page.goto('/browser-globals');
 	await expect(page.locator('p')).toHaveText('pathname: /browser-globals');
 });
+
+test('displays error.html when root layout load() throws in SPA mode', async ({ page }) => {
+	await page.goto('/root-layout-error');
+	await expect(page.locator('#error-status')).toHaveText('500');
+	await expect(page.locator('#error-message')).toHaveText('Root layout load failed');
+	expect(page.url()).toContain('/root-layout-error');
+});

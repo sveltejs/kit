@@ -58,6 +58,12 @@ export interface SvelteKitApp {
 	hash: boolean;
 
 	root: typeof SvelteComponent;
+
+	/**
+	 * The contents of src/error.html (or the built-in default), used as a last-resort
+	 * error page when the root layout's load function throws during client-side rendering.
+	 */
+	error_template: string;
 }
 
 export type NavigationIntent = {
