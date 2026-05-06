@@ -1,14 +1,13 @@
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
-/** @import { RemoteFormInput, RemoteForm, RemoteQueryOverride } from '@sveltejs/kit' */
+/** @import { RemoteFormInput, RemoteForm, RemoteQueryUpdate } from '@sveltejs/kit' */
 /** @import { InternalRemoteFormIssue, RemoteFunctionResponse } from 'types' */
-/** @import { Query } from './query.svelte.js' */
 import { app_dir, base } from '$app/paths/internal/client';
 import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
 import { HttpError } from '@sveltejs/kit/internal';
-import { app, remote_responses, _goto, set_nearest_error_page, invalidateAll } from '../client.js';
+import { app, query_responses, _goto, set_nearest_error_page, invalidateAll } from '../client.js';
 import { tick } from 'svelte';
-import { refresh_queries, release_overrides } from './shared.svelte.js';
+import { apply_refreshes, categorize_updates, apply_reconnections } from './shared.svelte.js';
 import { createAttachmentKey } from 'svelte/attachments';
 import {
 	convert_formdata,
@@ -72,7 +71,7 @@ export function form(id) {
 		const issues = $derived(flatten_issues(raw_issues));
 
 		/** @type {any} */
-		let result = $state.raw(remote_responses[action_id]);
+		let result = $state.raw(query_responses[action_id]);
 
 		/** @type {number} */
 		let pending_count = $state(0);
@@ -110,6 +109,10 @@ export function form(id) {
 
 			submitted = true;
 
+			// Increment pending count immediately so that `pending` reflects
+			// the in-progress state during async preflight validation
+			pending_count++;
+
 			const validated = await preflight_schema?.['~standard'].validate(data);
 
 			if (validated?.issues) {
@@ -118,7 +121,13 @@ export function form(id) {
 					raw_issues,
 					validated.issues.map((issue) => normalize_issue(issue, false))
 				);
+				pending_count--;
 				return;
+			}
+
+			// Preflight passed - clear stale client-side preflight issues
+			if (preflight_schema) {
+				raw_issues = raw_issues.filter((issue) => issue.server);
 			}
 
 			// TODO 3.0 remove this warning
@@ -156,12 +165,14 @@ export function form(id) {
 				const error = e instanceof HttpError ? e.body : { message: /** @type {any} */ (e).message };
 				const status = e instanceof HttpError ? e.status : 500;
 				void set_nearest_error_page(error, status);
+			} finally {
+				pending_count--;
 			}
 		}
 
 		/**
 		 * @param {FormData} data
-		 * @returns {Promise<any> & { updates: (...args: any[]) => any }}
+		 * @returns {Promise<boolean> & { updates: (...args: any[]) => Promise<boolean> }}
 		 */
 		function submit(data) {
 			// Store a reference to the current instance and increment the usage count for the duration
@@ -174,25 +185,32 @@ export function form(id) {
 				entry.count++;
 			}
 
-			// Increment pending count when submission starts
-			pending_count++;
+			let overrides = /** @type {Array<() => void> | null} */ (null);
 
-			/** @type {Array<Query<any> | RemoteQueryOverride>} */
-			let updates = [];
+			/** @type {Set<string> | null} */
+			let refreshes = null;
 
-			/** @type {Promise<any> & { updates: (...args: any[]) => any }} */
+			/** @type {Error | undefined} */
+			let updates_error;
+
+			/** @type {Promise<boolean> & { updates: (...args: RemoteQueryUpdate[]) => Promise<boolean> }} */
 			const promise = (async () => {
 				try {
 					await Promise.resolve();
 
+					if (updates_error) {
+						throw updates_error;
+					}
+
 					const { blob } = serialize_binary_form(convert(data), {
-						remote_refreshes: updates.map((u) => u._key)
+						remote_refreshes: Array.from(refreshes ?? [])
 					});
 
 					const response = await fetch(`${base}/${app_dir}/remote/${action_id_without_key}`, {
 						method: 'POST',
 						headers: {
 							'Content-Type': BINARY_FORM_CONTENT_TYPE,
+							// Forms cannot be called during rendering, so it's save to use location here
 							'x-sveltekit-pathname': location.pathname,
 							'x-sveltekit-search': location.search
 						},
@@ -209,37 +227,55 @@ export function form(id) {
 
 					// reset issues in case it's a redirect or error (but issues passed in that case)
 					raw_issues = [];
+					result = undefined;
 
 					if (form_result.type === 'result') {
 						({ issues: raw_issues = [], result } = devalue.parse(form_result.result, app.decoders));
+						const succeeded = raw_issues.length === 0;
 
-						if (issues.$) {
-							release_overrides(updates);
-						} else {
-							if (form_result.refreshes) {
-								refresh_queries(form_result.refreshes, updates);
-							} else {
+						if (succeeded) {
+							if (refreshes === null && !form_result.refreshes && !form_result.reconnects) {
 								void invalidateAll();
+							} else {
+								if (form_result.refreshes) {
+									apply_refreshes(form_result.refreshes);
+								}
+								if (form_result.reconnects) {
+									apply_reconnections(form_result.reconnects);
+								}
 							}
 						}
+
+						return succeeded;
 					} else if (form_result.type === 'redirect') {
-						const refreshes = form_result.refreshes ?? '';
-						const invalidateAll = !refreshes && updates.length === 0;
-						if (!invalidateAll) {
-							refresh_queries(refreshes, updates);
+						const stringified_refreshes = form_result.refreshes ?? '';
+						const stringified_reconnects = form_result.reconnects ?? '';
+						if (stringified_refreshes) {
+							apply_refreshes(stringified_refreshes);
 						}
+
+						if (stringified_reconnects) {
+							apply_reconnections(stringified_reconnects);
+						}
+
 						// Use internal version to allow redirects to external URLs
-						void _goto(form_result.location, { invalidateAll }, 0);
+						void _goto(
+							form_result.location,
+							{
+								invalidateAll:
+									refreshes === null && !stringified_refreshes && !stringified_reconnects
+							},
+							0
+						);
+						return true;
 					} else {
 						throw new HttpError(form_result.status ?? 500, form_result.error);
 					}
 				} catch (e) {
 					result = undefined;
-					release_overrides(updates);
 					throw e;
 				} finally {
-					// Decrement pending count when submission completes
-					pending_count--;
+					overrides?.forEach((fn) => fn());
 
 					void tick().then(() => {
 						if (entry) {
@@ -252,8 +288,22 @@ export function form(id) {
 				}
 			})();
 
+			let updates_called = false;
 			promise.updates = (...args) => {
-				updates = args;
+				if (updates_called) {
+					console.warn(
+						'Updates can only be sent once per form submission. Ignoring additional updates.'
+					);
+					return promise;
+				}
+				updates_called = true;
+
+				try {
+					({ refreshes, overrides } = categorize_updates(args));
+				} catch (error) {
+					updates_error = /** @type {Error} */ (error);
+				}
+
 				return promise;
 			};
 
@@ -288,6 +338,14 @@ export function form(id) {
 					return;
 				}
 
+				const target = event.submitter?.hasAttribute('formtarget')
+					? /** @type {HTMLButtonElement | HTMLInputElement} */ (event.submitter).formTarget
+					: clone(form).target;
+
+				if (target === '_blank') {
+					return;
+				}
+
 				event.preventDefault();
 
 				const form_data = new FormData(form, event.submitter);
@@ -319,7 +377,8 @@ export function form(id) {
 
 				form.addEventListener('submit', onsubmit);
 
-				form.addEventListener('input', (e) => {
+				/** @param {Event} e */
+				const handle_input = (e) => {
 					// strictly speaking it can be an HTMLTextAreaElement or HTMLSelectElement
 					// but that makes the types unnecessarily awkward
 					const element = /** @type {HTMLInputElement} */ (e.target);
@@ -398,17 +457,24 @@ export function form(id) {
 					name = name.replace(/^[nb]:/, '');
 
 					touched[name] = true;
-				});
+				};
 
-				form.addEventListener('reset', async () => {
+				form.addEventListener('input', handle_input);
+
+				const handle_reset = async () => {
 					// need to wait a moment, because the `reset` event occurs before
 					// the inputs are actually updated (so that it can be cancelled)
 					await tick();
 
 					input = convert_formdata(new FormData(form));
-				});
+				};
+
+				form.addEventListener('reset', handle_reset);
 
 				return () => {
+					form.removeEventListener('submit', onsubmit);
+					form.removeEventListener('input', handle_input);
+					form.removeEventListener('reset', handle_reset);
 					element = null;
 					preflight_schema = undefined;
 				};
@@ -417,8 +483,8 @@ export function form(id) {
 
 		instance[createAttachmentKey()] = create_attachment(
 			form_onsubmit(({ submit, form }) =>
-				submit().then(() => {
-					if (!issues.$) {
+				submit().then((succeeded) => {
+					if (succeeded) {
 						form.reset();
 					}
 				})
@@ -507,6 +573,7 @@ export function form(id) {
 							method: 'POST',
 							headers: {
 								'Content-Type': BINARY_FORM_CONTENT_TYPE,
+								// Validation should not be and will not be called during rendering, so it's save to use location here
 								'x-sveltekit-pathname': location.pathname,
 								'x-sveltekit-search': location.search
 							},

@@ -1,5 +1,6 @@
 <script>
 	import SharedCSS from '$lib/SharedCSS.svelte';
+	// @ts-ignore this is a vite font import so it has no side-effect types
 	import '@fontsource/libre-barcode-128-text';
 </script>
 

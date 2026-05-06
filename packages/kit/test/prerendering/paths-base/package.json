@@ -6,6 +6,7 @@
 		"dev": "vite dev",
 		"build": "vite build",
 		"preview": "vite preview",
+		"prepare": "svelte-kit sync",
 		"check": "svelte-kit sync && tsc && svelte-check",
 		"test": "svelte-kit sync && pnpm build && vitest run"
 	},
@@ -14,7 +15,7 @@
 		"@sveltejs/vite-plugin-svelte": "catalog:",
 		"svelte": "catalog:",
 		"svelte-check": "catalog:",
-		"typescript": "^5.5.4",
+		"typescript": "^6.0.0",
 		"vite": "catalog:",
 		"vitest": "catalog:"
 	},

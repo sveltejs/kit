@@ -1,8 +1,10 @@
-import { query, prerender, command, form } from '$app/server';
+import { query, prerender, command, form, requested } from '$app/server';
 import { StandardSchemaV1 } from '@standard-schema/spec';
 import {
 	RemoteForm,
+	RemoteFormFields,
 	RemoteFormInput,
+	RemoteLiveQueryFunction,
 	RemotePrerenderFunction,
 	RemoteQueryFunction,
 	invalid
@@ -10,6 +12,7 @@ import {
 
 const schema: StandardSchemaV1<string> = null as any;
 const schema2: StandardSchemaV1<string, number> = null as any;
+const schema3: StandardSchemaV1<string | undefined, number> = null as any;
 
 function query_tests() {
 	const no_args: RemoteQueryFunction<void, string> = query(() => 'Hello world');
@@ -40,6 +43,21 @@ function query_tests() {
 	}
 	void query_without_args();
 
+	async function query_with_optional_arg() {
+		const q = query(schema3, () => 'Hello world');
+		void q();
+		void q('hi');
+		// @ts-expect-error
+		void q(1);
+
+		const q2 = query('unchecked', (a?: string) => a);
+		void q2();
+		void q2('hi');
+		// @ts-expect-error
+		void q2(1);
+	}
+	void query_with_optional_arg();
+
 	async function query_unsafe() {
 		const q = query('unchecked', (a: number) => a);
 		const result: number = await q(1);
@@ -66,6 +84,63 @@ function query_tests() {
 	void query_schema_input_and_output();
 }
 query_tests();
+
+function live_query_tests() {
+	const no_args: RemoteLiveQueryFunction<void, string> = query.live(async function* () {
+		yield 'hello';
+	});
+	void no_args();
+	// @ts-expect-error
+	void no_args('');
+
+	const one_arg: RemoteLiveQueryFunction<number, string> = query.live(
+		'unchecked',
+		async function* (a: number) {
+			yield a.toString();
+		}
+	);
+	void one_arg(1);
+	// @ts-expect-error
+	void one_arg('1');
+	// @ts-expect-error
+	void one_arg();
+
+	async function live_without_args() {
+		const q = query.live(async function* () {
+			yield 'Hello world';
+		});
+
+		const result: string = await q();
+		result;
+
+		const iterator: AsyncIterator<string> = await q().run();
+		iterator;
+
+		q().connected === true;
+		q().done === false;
+		q().reconnect();
+		// @ts-expect-error
+		q().refresh();
+		// @ts-expect-error
+		q().set('x');
+		// @ts-expect-error
+		q().fail(new Error('x'));
+	}
+	void live_without_args();
+
+	async function live_with_schema() {
+		const q: RemoteLiveQueryFunction<string, string> = query.live(schema, async function* (a) {
+			yield a;
+		});
+
+		const result: string = await q('x');
+		result;
+		// @ts-expect-error
+		void q(123);
+	}
+	void live_with_schema();
+}
+live_query_tests();
 
 function prerender_tests() {
 	const no_args: RemotePrerenderFunction<void, string> = prerender(() => 'Hello world');
@@ -106,6 +181,21 @@ function prerender_tests() {
 	}
 	void prerender_unsafe();
 
+	async function prerender_with_optional_arg() {
+		const q = prerender(schema3, () => 'Hello world');
+		void q();
+		void q('hi');
+		// @ts-expect-error
+		void q(1);
+
+		const q2 = prerender('unchecked', (a?: string) => a);
+		void q2();
+		void q2('hi');
+		// @ts-expect-error
+		void q2(1);
+	}
+	void prerender_with_optional_arg();
+
 	async function prerender_schema() {
 		const q = prerender(schema, (a) => a);
 		const result: string = await q('1');
@@ -127,19 +217,99 @@ prerender_tests();
 function command_tests() {
 	async function command_without_args() {
 		const q = query(() => '');
+		const lq = query.live(async function* () {
+			yield '';
+		});
 		const cmd = command(() => 'Hello world');
 		const result: string = await cmd();
 		result;
 		const result2: string = await cmd().updates(
+			q,
+			lq,
 			q(),
+			lq(),
 			q().withOverride(() => '')
 		);
 		result2;
 		// @ts-expect-error
 		const wrong: number = await cmd();
 		wrong;
+
+		for (const { arg, query: bound } of requested(q, 5)) {
+			const arg_output: void = arg;
+			arg_output;
+			void bound.refresh();
+		}
+
+		for await (const { arg, query: bound } of requested(q, 5)) {
+			const arg_output: void = arg;
+			arg_output;
+			void bound.refresh();
+		}
+
+		for (const { arg, query: bound } of requested(q, 1)) {
+			const arg_output: void = arg;
+			arg_output;
+			void bound.refresh();
+		}
+
+		// @ts-expect-error — `limit` is required
+		requested(q);
+
+		const refreshes = requested(q, 5);
+		const refreshed: Promise<void> = refreshes.refreshAll();
+		refreshed;
+
+		const reconnects = requested(lq, 5);
+		const reconnected: Promise<void> = reconnects.reconnectAll();
+		reconnected;
 	}
 	void command_without_args();
+
+	async function requested_validated_type_tracks_schema_output() {
+		// schema2 declares InferInput = string, InferOutput = number, so `arg`
+		// in `requested(...)` must be `number` (the post-validation / post-transform
+		// value), NOT the pre-validation `string`.
+		const q = query(schema2, (a) => a);
+		for (const { arg, query: bound } of requested(q, 5)) {
+			const arg_output: number = arg;
+			arg_output;
+			void bound.refresh();
+			// @ts-expect-error — `arg` is number, not string
+			const wrong: string = arg;
+			wrong;
+		}
+
+		// `'unchecked'` queries: `arg` is the caller's Input type
+		const unchecked = query('unchecked', (a: number) => a);
+		for (const { arg } of requested(unchecked, 5)) {
+			const arg_output: number = arg;
+			arg_output;
+		}
+
+		// Queries without arguments: `arg` is `void`
+		const no_arg = query(() => 'hi');
+		for (const { arg } of requested(no_arg, 5)) {
+			const arg_output: void = arg;
+			arg_output;
+		}
+	}
+	void requested_validated_type_tracks_schema_output();
+
+	async function command_with_optional_arg() {
+		const q = command(schema3, () => 'Hello world');
+		void q();
+		void q('hi');
+		// @ts-expect-error
+		void q(1);
+
+		const q2 = command('unchecked', (a?: string) => a);
+		void q2();
+		void q2('hi');
+		// @ts-expect-error
+		void q2(1);
+	}
+	void command_with_optional_arg();
 
 	async function command_unsafe() {
 		const cmd = command('unchecked', (a: string) => a);
@@ -181,9 +351,10 @@ function form_tests() {
 	f.result?.success === true;
 
 	f.enhance(async ({ submit }) => {
-		const x: void = await submit();
+		const x: boolean = await submit();
 		x;
-		const y: void = await submit().updates(
+		const y: boolean = await submit().updates(
+			q,
 			q(),
 			q().withOverride(() => '')
 		);
@@ -362,6 +533,41 @@ function form_tests() {
 	// @ts-expect-error
 	f6.input!['array[0].prop'] = 123;
 
+	// schema with optional array fields (e.g. Zod's `.default([])` produces an input
+	// type where the property is optional, so its value type is `string[] | undefined`).
+	// Regression test for #15722.
+	const f_optional_arrays = form(
+		null as any as StandardSchemaV1<{
+			strings?: string[];
+			files?: File[];
+			objects?: Array<{ prop: string }>;
+			nested?: { strings?: string[] };
+		}>,
+		(data) => {
+			data.strings?.[0] === 'a';
+			data.files?.[0] instanceof File;
+			data.objects?.[0].prop === 'a';
+			return { success: true };
+		}
+	);
+	// `.as()` should be available on optional string[] / File[] fields
+	f_optional_arrays.fields.strings.as('checkbox', 'value');
+	f_optional_arrays.fields.strings.as('select multiple');
+	f_optional_arrays.fields.files.as('file multiple');
+	// indexed access gives back a typed field
+	f_optional_arrays.fields.strings[0].as('text');
+	f_optional_arrays.fields.files[0].as('file');
+	// optional array of objects still exposes container methods and per-item fields
+	f_optional_arrays.fields.objects.allIssues();
+	f_optional_arrays.fields.objects[0].prop.as('text');
+	// nested optional array inside optional parent also works
+	f_optional_arrays.fields.nested.strings.as('checkbox', 'value');
+	f_optional_arrays.fields.nested.strings[0].as('text');
+	// @ts-expect-error
+	f_optional_arrays.fields.strings.as('number');
+	// @ts-expect-error
+	f_optional_arrays.fields.files.as('text');
+
 	// doesn't use data
 	const f9 = form(() => Promise.resolve({ success: true }));
 	f9.result?.success === true;
@@ -375,6 +581,49 @@ function form_tests() {
 		form.fields.allIssues();
 	}
 	void f10;
+
+	const f11 = form(
+		null as any as StandardSchemaV1<{
+			differing: { type: 'a'; propA: string } | { type: 'b'; propB?: string };
+		}>,
+		(data) => {
+			data.differing.type === 'a' || data.differing.type === 'b';
+			if (data.differing.type === 'a') {
+				data.differing.propA === '';
+				// @ts-expect-error
+				data.differing.propB;
+			} else {
+				data.differing.propB === '';
+				// @ts-expect-error
+				data.differing.propA;
+			}
+			return { success: true };
+		}
+	);
+	f11.fields.differing.issues();
+	f11.fields.differing.value().type === 'a' || f11.fields.differing.value().type === 'b';
+	const f11_field = f11.fields.differing.value();
+	if (f11_field.type === 'a') {
+		f11_field.propA === '';
+		// @ts-expect-error
+		f11_field.propB;
+	}
+	f11.fields.differing.propA.value();
+	f11.fields.differing.propB.issues();
+	// @ts-expect-error
+	f11.fields.differing.propC.value();
+	f11.fields.differing.set({ type: 'a', propA: 'test' });
+	f11.fields.differing.set({ type: 'b', propB: 'test' });
+	f11.fields.differing.set({ type: 'b' });
+	// @ts-expect-error
+	f11.fields.differing.set({ type: 'b', propA: 'test' });
+	// @ts-expect-error
+	f11.fields.differing.set({ type: 'a', propB: 'test' });
+	// test that you can narrow yourself if you want to
+	const f11_field2 = f11.fields.differing as RemoteFormFields<{ type: 'a'; propA: string }>;
+	f11_field2.propA;
+	// @ts-expect-error
+	f11_field2.propB;
 }
 form_tests();
 

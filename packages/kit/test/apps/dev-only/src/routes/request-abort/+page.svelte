@@ -1,7 +1,7 @@
-<script>
+<script lang="ts">
 	import { onMount } from 'svelte';
 
-	let result;
+	let result: { ok: true } | { aborted: boolean };
 
 	function test_abort() {
 		const controller = new AbortController();
@@ -11,7 +11,7 @@
 			fetch('/request-abort', { headers: { accept: 'application/json' } }).then(
 				async (r) => (result = await r.json())
 			);
-		}, 100);
+		}, 50);
 	}
 
 	onMount(test_abort);

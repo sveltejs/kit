@@ -65,21 +65,8 @@ async function analyse({
 	internal.set_manifest(manifest);
 	internal.set_read_implementation((file) => createReadableStream(`${server_root}/server/${file}`));
 
-	/** @type {Map<string, { page_options: Record<string, any> | null, children: string[] }>} */
-	const static_exports = new Map();
-
 	// first, build server nodes without the client manifest so we can analyse it
-	await build_server_nodes(
-		out,
-		config,
-		manifest_data,
-		server_manifest,
-		null,
-		null,
-		null,
-		output_config,
-		static_exports
-	);
+	build_server_nodes(out, config, manifest_data, server_manifest, null, null, null, output_config);
 
 	/** @type {import('types').ServerMetadata} */
 	const metadata = {
@@ -176,19 +163,19 @@ async function analyse({
 		const exports = new Map();
 
 		for (const name in functions) {
-			const info = /** @type {import('types').RemoteInfo} */ (functions[name].__);
-			const type = info.type;
+			const internals = /** @type {import('types').RemoteInternals} */ (functions[name].__);
+			const type = internals.type;
 
 			exports.set(name, {
 				type,
-				dynamic: type !== 'prerender' || info.dynamic
+				dynamic: type !== 'prerender' || internals.dynamic
 			});
 		}
 
 		metadata.remotes.set(remote.hash, exports);
 	}
 
-	return { metadata, static_exports };
+	return { metadata };
 }
 
 /**
