@@ -192,7 +192,7 @@ When deploying to a traditional web server via FTP or SSH, you need to configure
 
 Create an `.htaccess` file in your `static` directory (so it gets copied to the build output):
 
-```apacheconf
+```apache
 ### file: static/.htaccess
 RewriteEngine On
 
