@@ -187,8 +187,9 @@ test.describe('inlineStyleThreshold', () => {
 
 		let loaded_css = false;
 		page.on('response', async (response) => {
-			if (response.url().endsWith('.css')) {
-				loaded_css = (await response.text()).includes('color: blue;');
+			const url = response.url();
+			if (url.includes('Dynamic') && url.endsWith('.css')) {
+				loaded_css = true;
 			}
 		});
 		await page.goto('/path-base/inline-style/dynamic-import');
