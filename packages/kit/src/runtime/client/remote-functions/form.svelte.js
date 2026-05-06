@@ -482,13 +482,13 @@ export function form(id) {
 		}
 
 		instance[createAttachmentKey()] = create_attachment(
-			form_onsubmit(({ submit, form }) =>
-				submit().then((succeeded) => {
-					if (succeeded) {
-						form.reset();
-					}
-				})
-			)
+			form_onsubmit(async ({ submit, form }) => {
+				const succeeded = await submit();
+				if (succeeded) {
+					await tick();
+					form.reset();
+				}
+			})
 		);
 
 		let validate_id = 0;
