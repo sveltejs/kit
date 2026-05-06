@@ -83,7 +83,7 @@ test.describe('remote functions', () => {
 		await expect(page.locator('[data-id="pathname"]')).toHaveText('pathname: /remote/event');
 	});
 
-	test('commands on rerouted pages resolve the correct route.id', async ({
+	test('commands on rerouted pages resolve the correct route.id and params', async ({
 		page,
 		javaScriptEnabled
 	}) => {
@@ -92,10 +92,13 @@ test.describe('remote functions', () => {
 		await page.goto('/remote/rerouted/original');
 		await page.locator('button').click();
 
-		await expect(page.locator('[data-id="route"]')).toHaveText('route: /remote/rerouted/actual');
+		await expect(page.locator('[data-id="route"]')).toHaveText(
+			'route: /remote/rerouted/actual/[id]'
+		);
 		await expect(page.locator('[data-id="pathname"]')).toHaveText(
 			'pathname: /remote/rerouted/original'
 		);
+		await expect(page.locator('[data-id="params"]')).toHaveText('params: {"id":"123"}');
 	});
 
 	test('form works', async ({ page, javaScriptEnabled }) => {

@@ -13,4 +13,5 @@
 {#if result}
 	<p data-id="route">route: {result.routeId}</p>
 	<p data-id="pathname">pathname: {result.pathname}</p>
+	<p data-id="params">params: {JSON.stringify(result.params)}</p>
 {/if}
