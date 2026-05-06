@@ -434,6 +434,12 @@ function create_query_resource(__, payload, state, fn) {
 			return false;
 		},
 		refresh() {
+			const { event } = get_request_store();
+			if (!event.isRemoteRequest) {
+				// If the form submission is not a remote request, refreshing the data is
+				// useless, because it can't be returned to the client.
+				return Promise.resolve();
+			}
 			const refresh_context = get_refresh_context(__, 'refresh', payload);
 			const is_immediate_refresh = !refresh_context.cache[refresh_context.payload];
 			const value = is_immediate_refresh ? get_promise() : fn();
