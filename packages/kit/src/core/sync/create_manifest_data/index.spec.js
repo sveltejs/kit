@@ -757,8 +757,8 @@ test('creates param matchers', () => {
 	const { matchers } = create('samples/basic'); // directory doesn't matter for the test
 
 	expect(matchers).toEqual({
-		foo: path.join('params', 'foo.js'),
-		bar: path.join('params', 'bar.js')
+		foo: 'params/foo.js',
+		bar: 'params/bar.js'
 	});
 });
 

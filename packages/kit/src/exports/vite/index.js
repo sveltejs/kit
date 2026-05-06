@@ -763,7 +763,9 @@ function kit({ svelte_config, adapter }) {
 						return dedent`
 							export const remotes = ${s(remotes)};
 
-							import.meta.hot?.on('sveltekit:remotes', remotes.push);
+							import.meta.hot?.on('sveltekit:remotes', (remote) => {
+								remotes.push(remote);
+							});
 						`;
 					}
 
@@ -1173,7 +1175,7 @@ function kit({ svelte_config, adapter }) {
 
 			remotes.push(remote);
 			if (dev_context) {
-				dev_context.server.environments.ssr.hot.send(`sveltekit:remotes`, remote);
+				dev_context.server.environments.ssr.hot.send('sveltekit:remotes', remote);
 				invalidate_module(dev_context.server, sveltekit_remotes);
 			}
 
