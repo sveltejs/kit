@@ -1,5 +1,12 @@
 import { Foo } from '$lib';
 
+/** @type {import("@sveltejs/kit").Reroute} */
+export const reroute = ({ url }) => {
+	if (url.pathname === '/remote/rerouted/original') {
+		return '/remote/rerouted/actual/123';
+	}
+};
+
 /** @type {import("@sveltejs/kit").Transport} */
 export const transport = {
 	Foo: {
