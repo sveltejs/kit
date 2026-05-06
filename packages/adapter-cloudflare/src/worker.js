@@ -1,5 +1,7 @@
+/// <reference types="@cloudflare/workers-types" />
+
 import { Server } from 'SERVER';
-import { manifest, prerendered, base_path } from 'MANIFEST';
+import { manifest } from 'MANIFEST';
 import { env } from 'cloudflare:workers';
 import * as Cache from 'worktop/cfw.cache';
 
@@ -22,9 +24,9 @@ const initialized = server.init({
 	env,
 	read: async (file) => {
 		const url = `${origin}/${file}`;
-		const response = await /** @type {{ ASSETS: { fetch: typeof fetch } }} */ (env).ASSETS.fetch(
-			url
-		);
+		const response = await /** @type {{ [key: string]: { fetch: typeof fetch } }} */ (env)[
+			__SVELTEKIT_CLOUDFLARE_ASSETS_BINDING__
+		].fetch(url);
 
 		if (!response.ok) {
 			throw new Error(
@@ -36,13 +38,7 @@ const initialized = server.init({
 	}
 });
 
-export default {
-	/**
-	 * @param {Request} req
-	 * @param {{ ASSETS: { fetch: typeof fetch } }} env
-	 * @param {ExecutionContext} ctx
-	 * @returns {Promise<Response>}
-	 */
+export default /** @satisfies {ExportedHandler} */ ({
 	async fetch(req, env, ctx) {
 		if (!origin) {
 			origin = new URL(req.url).origin;
@@ -67,7 +63,7 @@ export default {
 
 		// files in /static, the service worker, and Vite imported server assets
 		let is_static_asset = false;
-		const filename = stripped_pathname.slice(base_path.length + 1);
+		const filename = stripped_pathname.slice(manifest.base.length + 1);
 		if (filename) {
 			is_static_asset =
 				manifest.assets.has(filename) ||
@@ -80,12 +76,12 @@ export default {
 
 		if (
 			is_static_asset ||
-			prerendered.has(pathname) ||
+			manifest._.prerendered_routes.has(pathname) ||
 			pathname === version_file ||
 			pathname.startsWith(immutable)
 		) {
-			res = await env.ASSETS.fetch(req);
-		} else if (location && prerendered.has(location)) {
+			res = /** @type {Response} */ (await env[__SVELTEKIT_CLOUDFLARE_ASSETS_BINDING__].fetch(req));
+		} else if (location && manifest._.prerendered_routes.has(location)) {
 			// trailing slash redirect for prerendered pages
 			if (search) location += search;
 			res = new Response('', {
@@ -116,4 +112,6 @@ export default {
 		pragma = res.headers.get('cache-control') || '';
 		return pragma && res.status < 400 ? Cache.save(req, res, ctx) : res;
 	}
-};
+});
+
+import.meta.hot?.accept();
