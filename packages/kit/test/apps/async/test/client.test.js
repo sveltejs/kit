@@ -797,7 +797,7 @@ test.describe('remote function mutations', () => {
 		await expect(page.locator('#set-value-display')).toHaveText('Set via method');
 	});
 	test('form does refresh queries when a remote request', async ({ page }) => {
-		await page.goto('/remote/form/noop-refresh-non-enhanced');
+		await page.goto(`/remote/form/noop-refresh-non-enhanced/${crypto.randomUUID()}`);
 
 		const count = page.locator('#count');
 		await expect(count).toHaveText('Count: 0');

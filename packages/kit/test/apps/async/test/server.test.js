@@ -23,7 +23,7 @@ test.describe('remote functions', () => {
 		expect(code.includes('const with_read = prerender(')).toBe(false);
 	});
 	test("form doesn't refresh queries when not a remote request", async ({ page }) => {
-		await page.goto('/remote/form/noop-refresh-non-enhanced');
+		await page.goto(`/remote/form/noop-refresh-non-enhanced/${crypto.randomUUID()}`);
 
 		const count = page.locator('#count');
 		await expect(count).toHaveText('Count: 0');
