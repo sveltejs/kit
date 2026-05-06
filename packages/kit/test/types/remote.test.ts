@@ -624,6 +624,36 @@ function form_tests() {
 	f11_field2.propA;
 	// @ts-expect-error
 	f11_field2.propB;
+
+	// non-optional booleans
+	form(
+		// @ts-expect-error
+		null as unknown as StandardSchemaV1<{
+			a: boolean;
+		}>,
+		() => {}
+	);
+	form(
+		// @ts-expect-error
+		null as unknown as StandardSchemaV1<{
+			a: boolean[];
+		}>,
+		() => {}
+	);
+	form(
+		// @ts-expect-error
+		null as unknown as StandardSchemaV1<{
+			nested?: { a: boolean };
+			b?: boolean;
+		}>,
+		() => {}
+	);
+	form(
+		null as unknown as StandardSchemaV1<{
+			a?: boolean;
+		}>,
+		() => {}
+	);
 }
 form_tests();
 
