@@ -521,11 +521,14 @@ export async function dev(vite, vite_config, svelte_config, get_remotes) {
 				const { set_assets } = await vite.ssrLoadModule('$app/paths/internal/server');
 				set_assets(assets);
 
+				const memory_cache = await vite.ssrLoadModule('@sveltejs/kit/node/in-memory-cache');
+
 				const server = new Server(manifest);
 
 				await server.init({
 					env,
-					read: (file) => createReadableStream(from_fs(file))
+					read: (file) => createReadableStream(from_fs(file)),
+					memory_cache: memory_cache.default()
 				});
 
 				const request = await getRequest({

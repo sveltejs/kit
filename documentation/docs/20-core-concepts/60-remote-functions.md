@@ -1304,3 +1304,82 @@ Note that some properties of `RequestEvent` are different inside remote function
 ## Redirects
 
 Inside `query`, `form` and `prerender` functions it is possible to use the [`redirect(...)`](@sveltejs-kit#redirect) function. It is *not* possible inside `command` functions, as you should avoid redirecting here. (If you absolutely have to, you can return a `{ redirect: location }` object and deal with it in the client.)
+
+## Caching
+
+By default, remote functions do not cache their results. You can change this by using `query.cache(...)`, which allows you to store the result of a remote function for a certain amount of time.
+
+```ts
+/// file: src/routes/data.remote.js
+// ---cut---
+import { query } from '$app/server';
+
+export const getFastData = query(async () => {
+	// cache for 100 seconds
+	query.cache('100s');
+
+	return { data: '...' };
+});
+```
+
+The `cache` function accepts an object with the following configuration:
+
+```ts
+/// file: src/routes/data.remote.js
+import { query } from '$app/server';
+// ---cut---
+export const getFastData = query(async () => {
+	query.cache({
+		// fresh for 1 minute
+		maxAge: '1m',
+		// can serve stale up to 5 minutes
+		staleWhileRevalidate: '5m',
+		// used for invalidation, when not given is the URL
+		tags: ['my-data'],
+	});
+
+	// ...
+});
+```
+
+The cache is public, i.e. not per-user but shared. The cache implementation is platform-specific (for example, on [Vercel](adapter-vercel) remote functions use the Vercel Runtime Cache API, and endpoints additionally emit `CDN-Cache-Control` and `Cache-Tag` headers).
+
+### Invalidating the cache
+
+To invalidate the cache for a specific query, you can call its `invalidate` method:
+
+```ts
+/// file: src/routes/data.remote.js
+import { query, command } from '$app/server';
+
+export const getFastData = query(async () => {
+	query.cache('100s');
+	return { data: '...' };
+});
+
+export const updateData = command(async () => {
+	// invalidates getFastData;
+	// the next time someone requests it, it will be called again
+	getFastData().invalidate();
+});
+```
+
+Alternatively, if you used tags when setting up the cache, you can invalidate by tag using `query.cache.invalidate(...)`:
+
+```ts
+/// file: src/routes/data.remote.js
+import { query, command } from '$app/server';
+
+export const getFastData = query(async () => {
+	query.cache({ maxAge: '100s', tags: ['my-data'] });
+	return { data: '...' };
+});
+
+export const updateData = command(async () => {
+	// invalidate all queries using the my-data tag;
+	// the next time someone requests a query which had that tag, it will be called again
+	query.cache.invalidate(['my-data']);
+});
+```
+
+> [!NOTE] Cache tags are public metadata. Do not put secrets or user-specific private data in tags.

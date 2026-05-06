@@ -115,6 +115,25 @@ Additionally, you can add your own Netlify functions by creating a directory for
 	directory = "functions"
 ```
 
+## Caching
+
+If you are using SvelteKit's built-in remote caching, the Netlify adapter provides a default cache implementation. It leverages Netlify's edge cache (via `globalThis.caches`) and additionally CDN cache headers when doing remote function requests from the client.
+
+```js
+// @errors: 2307
+/// file: svelte.config.js
+import adapter from '@sveltejs/adapter-netlify';
+
+/** @type {import('@sveltejs/kit').Config} */
+const config = {
+	kit: {
+		adapter: adapter({ cache: true })
+	}
+};
+
+export default config;
+```
+
 ## Troubleshooting
 
 ### Accessing the file system

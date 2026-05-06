@@ -188,6 +188,28 @@ The [`_headers`](https://developers.cloudflare.com/pages/configuration/headers/)
 
 However, they will have no effect on responses dynamically rendered by SvelteKit, which should return custom headers or redirect responses from [server endpoints](routing#server) or with the [`handle`](hooks#Server-hooks-handle) hook.
 
+## Caching
+
+If you are using SvelteKit's built-in remote caching, the Cloudflare adapter provides two cache implementations:
+
+- **Cache API**: Leverages Cloudflare's `Cache` API. You can opt into this by setting the cache strategy to `"purge-api"`. While fast and built-in, cache invalidation requires calling the Cloudflare API, which means you must provide `CLOUDFLARE_ZONE_ID` and `CLOUDFLARE_API_TOKEN` environment variables. Consequently, this approach requires your project to have a custom domain.
+- **KV Namespace**: Uses Cloudflare KV. You can opt into this by setting the cache strategy to `"kv"` and configuring a `kvBinding` in your adapter options (e.g., `adapter({ cache: { strategy: 'kv', kvBinding: 'MY_KV' } })`). This doesn't require a zone ID, but you must be mindful of Cloudflare KV plan limits for reads, writes, and storage, and it does not cache remote endpoint responses on a CDN-level, only at the runtime level.
+
+```js
+// @errors: 2307
+/// file: svelte.config.js
+import adapter from '@sveltejs/adapter-cloudflare';
+
+/** @type {import('@sveltejs/kit').Config} */
+const config = {
+	kit: {
+		adapter: adapter({ cache: 'purge-api' })
+	}
+};
+
+export default config;
+```
+
 ## Troubleshooting
 
 ### Node.js compatibility

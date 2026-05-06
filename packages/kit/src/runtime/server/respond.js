@@ -39,6 +39,7 @@ import { server_data_serializer } from './page/data_serializer.js';
 import { get_remote_id, handle_remote_call } from './remote.js';
 import { record_span } from '../telemetry/record_span.js';
 import { otel } from '../telemetry/otel.js';
+import { create_erroring_cache } from './cache.js';
 
 /* global __SVELTEKIT_ADAPTER_NAME__ */
 
@@ -154,8 +155,11 @@ export async function internal_respond(request, options, manifest, state) {
 			refreshes: null,
 			reconnects: null,
 			/** A map of remote function ID to payloads requested for refreshing by the client */
-			requested: null
+			requested: null,
+			invalidations: null,
+			cache: options.kit_cache_handler
 		},
+		cache: create_erroring_cache(),
 		is_in_remote_function: false,
 		is_in_render: false,
 		is_in_universal_load: false
@@ -491,6 +495,7 @@ export async function internal_respond(request, options, manifest, state) {
 
 				// https://datatracker.ietf.org/doc/html/rfc7232#section-4.1 + set-cookie
 				for (const key of [
+					// TODO do we need to add cdn-cache headers here?
 					'cache-control',
 					'content-location',
 					'date',

@@ -65,7 +65,43 @@ export interface AdapterOptions {
 	 * during development and preview.
 	 */
 	platformProxy?: GetPlatformProxyOptions;
+
+	/**
+	 * Configures the remote query cache implementation provided by the adapter.
+	 *
+	 * By default, cached responses are tagged with `Cache-Tag` and invalidated
+	 * through Cloudflare's purge cache API. This requires CLOUDFLARE_ZONE_ID and
+	 * CLOUDFLARE_API_TOKEN to be set in the environment variables. The `kv`
+	 * strategy stores responses in a KV namespace instead, subject to your plan's
+	 * KV read/write limits.
+	 */
+	cache?: AdapterCacheOptions;
 }
+
+export type AdapterCacheOptions =
+	| {
+			/**
+			 * Use Cloudflare's purge cache API for remote query cache invalidation.
+			 * Requires CLOUDFLARE_ZONE_ID and CLOUDFLARE_API_TOKEN to be set in the
+			 * environment variables.
+			 *
+			 * @default 'purge-api'
+			 */
+			strategy?: 'purge-api';
+	  }
+	| {
+			/**
+			 * Use a KV namespace for remote query caching and tag-version invalidation.
+			 * Subject to your plan's KV read/write limits (the implementation uses one
+			 * read per remote query, one write per and tags.length+1 reads per save, and
+			 * tags.length+1 reads and writes per invalidate).
+			 */
+			strategy: 'kv';
+			/**
+			 * The name of the KV binding that stores cached responses and tag versions.
+			 */
+			kvBinding: string;
+	  };
 
 /**
  * The JSON format of the {@link https://developers.cloudflare.com/pages/functions/routing/#create-a-_routesjson-file | `_routes.json`}

@@ -42,6 +42,15 @@ declare module '@sveltejs/kit' {
 		 * during dev, build and prerendering.
 		 */
 		emulate?: () => MaybePromise<Emulator>;
+		/**
+		 * Provides a cache implementation.
+		 */
+		cache?: {
+			/** A path that can be imported as a module */
+			path?: string;
+			/** Options to pass to the cache implementation. Must be JSON-serializeable. */
+			options?: Record<string, unknown>;
+		};
 	}
 
 	export type LoadProperties<input extends Record<string, any> | void> = input extends void
@@ -302,12 +311,51 @@ declare module '@sveltejs/kit' {
 		platform?(details: { config: any; prerender: PrerenderOption }): MaybePromise<App.Platform>;
 	}
 
+	/**
+	 * Options for [`query.cache`](https://svelte.dev/docs/kit/remote-functions#Caching)
+	 */
+	export interface CacheOptions {
+		maxAge: string | number;
+		staleWhileRevalidate?: string | number;
+		tags?: string[];
+	}
+
+	export interface KitCacheMetadata {
+		maxAge: number;
+		staleWhileRevalidate?: number;
+		tags: string[];
+	}
+
+	/**
+	 * Custom query cache integration. Export `get`, `set`, and `invalidate` from `kit.cache.path`.
+	 */
+	export interface KitCacheHandler {
+		get(queryId: string): MaybePromise<string | undefined>;
+		set(queryId: string, stringifiedResponse: string, cache: KitCacheMetadata): MaybePromise<void>;
+		setHeaders?(headers: Headers, cache: KitCacheMetadata): MaybePromise<void>;
+		invalidate(tags: string[]): MaybePromise<void>;
+	}
+
+	export interface RequestCache {
+		(arg: CacheOptions): void;
+		invalidate(tags: string[]): Promise<void>;
+	}
+
 	export interface KitConfig {
 		/**
 		 * Your [adapter](https://svelte.dev/docs/kit/adapters) is run when executing `vite build`. It determines how the output is converted for different platforms.
 		 * @default undefined
 		 */
 		adapter?: Adapter;
+		/**
+		 * Provides a cache implementation. If set, overrides the cache handler provided by the adapter.
+		 */
+		cache?: {
+			/** A path that can be imported as a module */
+			path?: string;
+			/** Options to pass to the cache implementation. Must be JSON-serializeable. */
+			options?: Record<string, unknown>;
+		};
 		/**
 		 * An object containing zero or more aliases used to replace values in `import` statements. These aliases are automatically passed to Vite and TypeScript.
 		 *
@@ -2219,6 +2267,10 @@ declare module '@sveltejs/kit' {
 		 */
 		refresh(): Promise<void>;
 		/**
+		 * Queue cache invalidation for this query.
+		 */
+		invalidate(): Promise<void>;
+		/**
 		 * Temporarily override a query's value during a [single-flight mutation](https://svelte.dev/docs/kit/remote-functions#Single-flight-mutations) to provide optimistic updates.
 		 *
 		 * ```svelte
@@ -3035,6 +3087,18 @@ declare module '@sveltejs/kit/node/polyfills' {
 	export {};
 }
 
+declare module '@sveltejs/kit/node/cache' {
+	export function inMemoryCache(): import("@sveltejs/kit").Adapter["cache"];
+
+	export function redisCache(options?: RedisQueryCacheOptions): import("@sveltejs/kit").Adapter["cache"];
+	type RedisQueryCacheOptions = {
+		url?: string;
+		prefix?: string;
+	};
+
+	export {};
+}
+
 declare module '@sveltejs/kit/vite' {
 	import type { Plugin } from 'vite';
 	/**
@@ -3501,6 +3565,12 @@ declare module '$app/server' {
 		 * @since 2.35
 		 */
 		function batch<Schema extends StandardSchemaV1, Output>(schema: Schema, fn: (args: StandardSchemaV1.InferOutput<Schema>[]) => MaybePromise<(arg: StandardSchemaV1.InferOutput<Schema>, idx: number) => Output>): RemoteQueryFunction<StandardSchemaV1.InferInput<Schema>, Output, StandardSchemaV1.InferOutput<Schema>>;
+		
+		function cache(input: import("@sveltejs/kit").CacheOptions): void;
+		namespace cache {
+			
+			function invalidate(tags: string[]): Promise<void>;
+		}
 		/**
 		 * Creates a live remote query. When called from the browser, the function will be invoked on the server via a streaming `fetch` call.
 		 *

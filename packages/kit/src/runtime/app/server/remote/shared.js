@@ -113,9 +113,10 @@ export function parse_remote_response(data, transport) {
  * @param {RequestEvent} event
  * @param {RequestState} state
  * @param {boolean} allow_cookies
+ * @param {import('@sveltejs/kit').RequestCache} cache
  * @returns {RequestStore}
  */
-function derive_remote_function_event(event, state, allow_cookies) {
+function derive_remote_function_event(event, state, allow_cookies, cache) {
 	return {
 		event: {
 			...event,
@@ -150,6 +151,7 @@ function derive_remote_function_event(event, state, allow_cookies) {
 		},
 		state: {
 			...state,
+			cache,
 			is_in_remote_function: true
 		}
 	};
@@ -161,11 +163,12 @@ function derive_remote_function_event(event, state, allow_cookies) {
  * @param {RequestEvent} event
  * @param {RequestState} state
  * @param {boolean} allow_cookies
+ * @param {import('@sveltejs/kit').RequestCache} cache
  * @param {() => any} get_input
  * @param {(arg?: any) => T} fn
  */
-export async function run_remote_function(event, state, allow_cookies, get_input, fn) {
-	const store = derive_remote_function_event(event, state, allow_cookies);
+export async function run_remote_function(event, state, allow_cookies, cache, get_input, fn) {
+	const store = derive_remote_function_event(event, state, allow_cookies, cache);
 
 	// In two parts, each with_event, so that runtimes without async local storage can still get the event at the start of the function
 	const input = await with_request_store(store, get_input);
@@ -183,7 +186,7 @@ export async function run_remote_function(event, state, allow_cookies, get_input
  * @param {string} name
  */
 export async function* run_remote_generator(event, state, allow_cookies, get_input, fn, name) {
-	const store = derive_remote_function_event(event, state, allow_cookies);
+	const store = derive_remote_function_event(event, state, allow_cookies, state.cache);
 
 	// In two parts, each with_event, so that runtimes without async local storage can still get the event at the start of the function / calls to next
 	const input = await with_request_store(store, get_input);

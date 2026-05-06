@@ -23,12 +23,20 @@
 			"types": "./index.d.ts",
 			"import": "./index.js"
 		},
+		"./cache": {
+			"import": "./cache.js"
+		},
+		"./cache-kv": {
+			"import": "./cache-kv.js"
+		},
 		"./package.json": "./package.json"
 	},
 	"types": "index.d.ts",
 	"files": [
 		"files",
 		"index.js",
+		"cache.js",
+		"cache-kv.js",
 		"utils.js",
 		"index.d.ts",
 		"ambient.d.ts"
