@@ -1,6 +1,7 @@
 <script>
 	import { get_route_info } from './data.remote.ts';
 
+	/** @type {Awaited<ReturnType<typeof get_route_info>> | null} */
 	let result = $state(null);
 
 	async function handleClick() {
