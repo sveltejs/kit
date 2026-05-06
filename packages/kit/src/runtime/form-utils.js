@@ -602,6 +602,23 @@ export function deep_get(object, path) {
 }
 
 /**
+ *
+ * @param {string} field_type
+ * @param {boolean} is_array
+ * @param {unknown} input_value
+ */
+function get_type_prefix(field_type, is_array, input_value) {
+	if (field_type === 'number' || field_type === 'range') return 'n:';
+	if (field_type === 'checkbox' && !is_array) return 'b:';
+	if (field_type === 'hidden' || field_type === 'submit') {
+		const input_type = typeof input_value;
+		if (input_type === 'number') return 'n:';
+		if (input_type === 'boolean') return 'b:';
+	}
+	return '';
+}
+
+/**
  * Creates a proxy-based field accessor for form data
  * @param {any} target - Function or empty POJO
  * @param {() => Record<string, any>} get_input - Function to get current input data
@@ -674,12 +691,7 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 						type === 'select multiple' ||
 						(type === 'checkbox' && typeof input_value === 'string');
 
-					const prefix =
-						type === 'number' || type === 'range'
-							? 'n:'
-							: type === 'checkbox' && !is_array
-								? 'b:'
-								: '';
+					const prefix = get_type_prefix(type, is_array, input_value);
 
 					// Base properties for all input types
 					/** @type {Record<string, any>} */
