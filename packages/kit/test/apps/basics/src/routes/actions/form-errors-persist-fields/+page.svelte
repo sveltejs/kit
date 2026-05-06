@@ -7,6 +7,10 @@
 
 	$: hydrated_form_values = browser ? form?.values : '';
 
+	/**
+	 * @type {import('svelte/elements').EventHandler<SubmitEvent, HTMLFormElement>}
+	 * @this {HTMLFormElement}
+	 */
 	async function submit() {
 		const res = await fetch(this.action, {
 			method: 'POST',

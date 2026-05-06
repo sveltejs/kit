@@ -18,3 +18,5 @@ declare module 'MANIFEST' {
 declare module 'SERVER' {
 	export { Server } from '@sveltejs/kit';
 }
+
+declare module 'SHIMS' {}

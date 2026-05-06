@@ -1,7 +1,7 @@
-import { RouteId, Pathname, ResolvedPathname } from '$app/types';
+import { RouteIdWithSearchOrHash, PathnameWithSearchOrHash, ResolvedPathname } from '$app/types';
 import { ResolveArgs } from './types.js';
 
-export { resolve, asset } from './client.js';
+export { resolve, asset, match } from './client.js';
 
 /**
  * A string that matches [`config.kit.paths.base`](https://svelte.dev/docs/kit/configuration#paths).
@@ -24,6 +24,6 @@ export let assets: '' | `https://${string}` | `http://${string}` | '/_svelte_kit
 /**
  * @deprecated Use [`resolve(...)`](https://svelte.dev/docs/kit/$app-paths#resolve) instead
  */
-export function resolveRoute<T extends RouteId | Pathname>(
+export function resolveRoute<T extends RouteIdWithSearchOrHash | PathnameWithSearchOrHash>(
 	...args: ResolveArgs<T>
 ): ResolvedPathname;

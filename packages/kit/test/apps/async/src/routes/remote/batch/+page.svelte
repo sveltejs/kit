@@ -3,7 +3,8 @@
 		get_todo,
 		set_todo_title_server_refresh,
 		reset_todos,
-		set_todo_title
+		set_todo_title,
+		append_to_all_titles_requested
 	} from './batch.remote.js';
 
 	const todoIds = ['1', '2', '1', 'error'];
@@ -18,15 +19,11 @@
 	{#each todos as { id, promise }, idx (idx)}
 		<li>
 			<svelte:boundary>
-				<span id="batch-result-{idx + 1}">{(await promise).title}</span>
-
-				{#snippet pending()}
-					<span id="batch-result-{idx + 1}">Loading todo {id}...</span>
-				{/snippet}
+				<span id="batch-result-{idx + 1}">{(await promise)?.title}</span>
 
 				{#snippet failed(error)}
 					<span id="batch-result-{idx + 1}"
-						>Error loading todo {id}: {(error as any).body.message}</span
+						>Error loading todo {id}: {(error as App.Error).message}</span
 					>
 				{/snippet}
 			</svelte:boundary>
@@ -58,4 +55,12 @@
 	id="batch-reset-btn"
 >
 	reset todos
+</button>
+<button
+	onclick={async () => {
+		await append_to_all_titles_requested(' (requested)').updates(get_todo);
+	}}
+	id="batch-requested-refresh-all-btn"
+>
+	refresh all via requested
 </button>
