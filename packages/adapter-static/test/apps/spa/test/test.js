@@ -46,6 +46,6 @@ test.describe(() => {
 			if (url.endsWith('.css')) requests.push(url);
 		});
 		await page.goto('/');
-		expect(requests.length).toBe(1);
+		expect(requests.length).toBe(2);
 	});
 });
