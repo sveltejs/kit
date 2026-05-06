@@ -796,6 +796,22 @@ test.describe('remote function mutations', () => {
 		// the value display should also show the updated value
 		await expect(page.locator('#set-value-display')).toHaveText('Set via method');
 	});
+
+	test('unchecked checkbox submits successfully', async ({ page }) => {
+		await page.goto('/remote/form/unchecked-checkbox');
+
+		// Checkbox is unchecked by default
+		await expect(page.locator('#result')).toHaveText('true'); // Initial state
+
+		// Test unchecked
+		await page.click('#submit');
+		await expect(page.locator('#result')).toHaveText('false'); // The form submission should succeed and update result to false
+
+		// Test checked
+		await page.locator('[data-testid="checkbox"]').check();
+		await page.click('#submit');
+		await expect(page.locator('#result')).toHaveText('true'); // The form submission should succeed and update result back to true
+	});
 });
 
 test.describe('client error boundaries', () => {
