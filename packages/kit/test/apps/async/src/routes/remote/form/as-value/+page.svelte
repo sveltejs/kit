@@ -14,6 +14,10 @@
 <div class="forms">
 	{#each values as value (value.id)}
 		<form class="form" {...as_value_form.for(value.id)}>
+			<input {...as_value_form.fields.hidden.string.as('hidden', 'string')} />
+			<input {...as_value_form.fields.hidden.number.as('hidden', 1)} />
+			<input {...as_value_form.fields.hidden.boolean.as('hidden', true)} />
+
 			<input {...as_value_form.fields.text_field.as('text', value.text_field)} />
 
 			<input {...as_value_form.fields.number_field.as('number', value.number_field)} />

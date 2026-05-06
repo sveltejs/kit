@@ -1905,8 +1905,8 @@ type InputTypeMap = {
 	checkbox: boolean | string[];
 	radio: string;
 	file: File;
-	hidden: string;
-	submit: string;
+	hidden: string | number | boolean;
+	submit: string | number | boolean;
 	button: string;
 	reset: string;
 	image: string;
@@ -1997,11 +1997,15 @@ type AsArgs<Type extends keyof InputTypeMap, Value> = Type extends 'checkbox'
 		: Value extends boolean
 			? [type: Type] | [type: Type, value: boolean]
 			: [type: Type] | [type: Type, value: Value | (string & {})]
-	: Type extends 'radio' | 'submit' | 'hidden'
-		? [type: Type, value: Value | (string & {})]
-		: Type extends 'file' | 'file multiple'
-			? [type: Type]
-			: [type: Type] | [type: Type, value: Value | (string & {})];
+	: Type extends 'submit' | 'hidden'
+		? Value extends string
+			? [type: Type, value: Value | (string & {})]
+			: [type: Type, value: Value]
+		: Type extends 'radio'
+			? [type: Type, value: Value | (string & {})]
+			: Type extends 'file' | 'file multiple'
+				? [type: Type]
+				: [type: Type] | [type: Type, value: Value | (string & {})];
 
 /**
  * Form field accessor type that provides name(), value(), and issues() methods
