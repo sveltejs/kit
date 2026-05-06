@@ -32,6 +32,7 @@ import analyse from '../../core/postbuild/analyse.js';
 import { s } from '../../utils/misc.js';
 import { hash } from '../../utils/hash.js';
 import { dedent, isSvelte5Plus } from '../../core/sync/utils.js';
+import MagicString from 'magic-string';
 import {
 	env_dynamic_private,
 	env_dynamic_public,
@@ -731,9 +732,10 @@ async function kit({ svelte_config }) {
 				// triggering a dev server error. By adding a microtask we ensure that the module is fully loaded
 
 				// Extra newlines to prevent syntax errors around missing semicolons or comments
-				code +=
+				const ms = new MagicString(code);
+				ms.append(
 					'\n\n' +
-					dedent`
+						dedent`
 					import * as $$_self_$$ from './${path.basename(id)}';
 					import { init_remote_functions as $$_init_$$ } from '@sveltejs/kit/internal';
 
@@ -745,7 +747,8 @@ async function kit({ svelte_config }) {
 						fn.__.id = ${s(remote.hash)} + '/' + name;
 						fn.__.name = name;
 					}
-				`;
+				`
+				);
 
 				// Emit a dedicated entry chunk for this remote in SSR builds (prod only)
 				if (!dev_server) {
@@ -760,7 +763,7 @@ async function kit({ svelte_config }) {
 					}
 				}
 
-				return code;
+				return { code: ms.toString(), map: ms.generateMap({ hires: true }) };
 			}
 
 			// For the client, read the exports and create a new module that only contains fetch functions with the correct metadata
@@ -808,7 +811,8 @@ async function kit({ svelte_config }) {
 			}
 
 			return {
-				code: result
+				code: result,
+				map: { mappings: '' }
 			};
 		}
 	};
