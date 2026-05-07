@@ -2165,8 +2165,8 @@ declare module '@sveltejs/kit' {
 	 * The type of a remote `command` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#command) for full documentation.
 	 */
 	export type RemoteCommand<Input, Output> = {
-		(arg: undefined extends Input ? Input | void : Input): Promise<Output> & {
-			updates(...updates: RemoteQueryUpdate[]): Promise<Output>;
+		(arg: undefined extends Input ? Input | void : Input): Promise<Awaited<Output>> & {
+			updates(...updates: RemoteQueryUpdate[]): Promise<Awaited<Output>>;
 		};
 		/** The number of pending command executions */
 		get pending(): number;

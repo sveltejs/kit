@@ -330,6 +330,25 @@ function command_tests() {
 		void cmd(123);
 	}
 	void command_schema();
+
+	async function command_with_promise_handler() {
+		// Regression test for #15763
+		// When handler returns Promise<T>, output type should be Promise<T>, not Promise<Promise<T>>
+		const cmd = command(async () => ({ ok: true }));
+		const result: { ok: boolean } = await cmd();
+		result;
+		// @ts-expect-error
+		const wrong: Promise<{ ok: boolean }> = result;
+		wrong;
+
+		const cmdWithArg = command("unchecked", async (a: number) => ({ value: a }));
+		const result2: { value: number } = await cmdWithArg(5);
+		result2;
+		// @ts-expect-error
+		const wrong2: Promise<{ value: number }> = result2;
+		wrong2;
+	}
+	void command_with_promise_handler();
 }
 command_tests();
 
