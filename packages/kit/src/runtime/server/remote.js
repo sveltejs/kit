@@ -121,7 +121,12 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 				/** @type {RemoteFunctionResponse} */ ({
 					type: 'result',
 					result: stringify(result, transport),
-					refreshes: result.issues ? undefined : await serialize_refreshes()
+					refreshes: result.issues
+						? undefined
+						: await serialize_singleflight(state.remote.refreshes),
+					reconnects: result.issues
+						? undefined
+						: await serialize_singleflight(state.remote.reconnects)
 				})
 			);
 		}
@@ -137,8 +142,112 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 				/** @type {RemoteFunctionResponse} */ ({
 					type: 'result',
 					result: stringify(data, transport),
-					refreshes: await serialize_refreshes()
+					refreshes: await serialize_singleflight(state.remote.refreshes),
+					reconnects: await serialize_singleflight(state.remote.reconnects)
 				})
+			);
+		}
+
+		if (internals.type === 'query_live') {
+			if (event.request.method !== 'GET') {
+				throw new SvelteKitError(
+					405,
+					'Method Not Allowed',
+					`\`query.live\` functions must be invoked via GET request, not ${event.request.method}`
+				);
+			}
+
+			const payload = /** @type {string} */ (
+				new URL(event.request.url).searchParams.get('payload')
+			);
+
+			const generator = internals.run(event, state, parse_remote_arg(payload, transport));
+
+			const encoder = new TextEncoder();
+
+			/**
+			 * @param {ReadableStreamDefaultController} controller
+			 * @param {any} payload
+			 */
+			function send(controller, payload) {
+				controller.enqueue(encoder.encode(JSON.stringify(payload) + '\n'));
+			}
+
+			let closed = false;
+
+			/** @type {string | undefined} */
+			let result = undefined;
+
+			async function cancel() {
+				if (closed) return;
+				closed = true;
+				await generator.return(undefined);
+			}
+
+			event.request.signal.addEventListener('abort', cancel, { once: true });
+
+			return new Response(
+				new ReadableStream({
+					async pull(controller) {
+						if (event.request.signal.aborted) {
+							await cancel();
+							controller.close();
+							return;
+						}
+
+						try {
+							while (true) {
+								const { value, done } = await generator.next();
+
+								if (done) {
+									await cancel();
+									controller.close();
+									return;
+								}
+
+								// only send changed data
+								if (result !== (result = stringify(value, transport))) {
+									send(controller, {
+										type: 'result',
+										result
+									});
+
+									return;
+								}
+							}
+						} catch (error) {
+							if (!event.request.signal.aborted) {
+								if (error instanceof Redirect) {
+									send(controller, {
+										type: 'redirect',
+										location: error.location
+									});
+								} else {
+									const status =
+										error instanceof HttpError || error instanceof SvelteKitError
+											? error.status
+											: 500;
+
+									send(controller, {
+										type: 'error',
+										error: await handle_error_and_jsonify(event, state, options, error),
+										status
+									});
+								}
+							}
+
+							await cancel();
+							controller.close();
+						}
+					},
+					cancel
+				}),
+				{
+					headers: {
+						'cache-control': 'private, no-store',
+						'content-type': 'application/x-ndjson'
+					}
+				}
 			);
 		}
 
@@ -166,7 +275,8 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 				/** @type {RemoteFunctionResponse} */ ({
 					type: 'redirect',
 					location: error.location,
-					refreshes: await serialize_refreshes()
+					refreshes: await serialize_singleflight(state.remote.refreshes),
+					reconnects: await serialize_singleflight(state.remote.reconnects)
 				})
 			);
 		}
@@ -191,16 +301,14 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 		);
 	}
 
-	async function serialize_refreshes() {
-		const refreshes = state.remote.refreshes ?? {};
-
-		const entries = Object.entries(refreshes);
-		if (entries.length === 0) {
+	/** @param {Map<string, Promise<any>> | null} map */
+	async function serialize_singleflight(map) {
+		if (!map || map.size === 0) {
 			return undefined;
 		}
 
 		const results = await Promise.all(
-			entries.map(async ([key, promise]) => {
+			Array.from(map, async ([key, promise]) => {
 				try {
 					return [key, { type: 'result', data: await promise }];
 				} catch (error) {

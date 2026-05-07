@@ -1,4 +1,5 @@
 /** @import { RemoteQueryCacheEntry } from './remote-functions/query.svelte.js' */
+/** @import { RemoteLiveQueryCacheEntry } from './remote-functions/query-live.svelte.js' */
 import { BROWSER, DEV } from 'esm-env';
 import * as svelte from 'svelte';
 import { HttpError, Redirect, SvelteKitError } from '@sveltejs/kit/internal';
@@ -39,10 +40,12 @@ import {
 	PAGE_URL_KEY
 } from './constants.js';
 import { validate_page_exports } from '../../utils/exports.js';
+import { noop } from '../../utils/functions.js';
 import { compact } from '../../utils/array.js';
 import {
 	INVALIDATED_PARAM,
 	TRAILING_SLASH_PARAM,
+	create_remote_key,
 	validate_depends,
 	validate_load_response
 } from '../shared.js';
@@ -51,7 +54,7 @@ import { writable } from 'svelte/store';
 import { page, update, navigating } from './state.svelte.js';
 import { add_data_suffix, add_resolution_suffix } from '../pathname.js';
 import { noop_span } from '../telemetry/noop.js';
-import { text_decoder } from '../utils.js';
+import { read_ndjson } from './ndjson.js';
 
 export { load_css };
 const ICON_REL_ATTRIBUTES = new Set(['icon', 'shortcut icon', 'apple-touch-icon']);
@@ -166,7 +169,7 @@ function native_navigation(url, replace = false) {
 	} else {
 		location.href = url.href;
 	}
-	return new Promise(() => {});
+	return new Promise(noop);
 }
 
 /**
@@ -181,8 +184,6 @@ async function update_service_worker() {
 		}
 	}
 }
-
-function noop() {}
 
 /** @type {import('types').CSRRoute[]} All routes of the app. Only available when kit.router.resolution=client */
 let routes;
@@ -307,6 +308,12 @@ export let pending_invalidate;
 export const query_map = new Map();
 
 /**
+ * @type {Map<string, Map<string, RemoteLiveQueryCacheEntry<any>>>}
+ * A map of id -> payload -> live query internals for all active queries.
+ */
+export const live_query_map = new Map();
+
+/**
  * @param {import('./types.js').SvelteKitApp} _app
  * @param {HTMLElement} _target
  * @param {Parameters<typeof _hydrate>[1]} [hydrate]
@@ -410,12 +417,23 @@ async function _invalidate(include_load_functions = true, reset_page_state = tru
 	discard_load_cache();
 
 	// Rerun queries
+	/** @type {Map<string, Promise<void>>} */
+	const live_query_reconnects = new Map();
 	if (force_invalidation) {
-		query_map.forEach((entries) => {
-			entries.forEach(({ resource }) => {
-				void resource.refresh?.();
-			});
-		});
+		for (const entries of query_map.values()) {
+			for (const { resource } of entries.values()) {
+				void resource.refresh();
+			}
+		}
+
+		for (const [query_id, entries] of live_query_map) {
+			for (const [payload, { resource }] of entries) {
+				const key = create_remote_key(query_id, payload);
+				const promise = resource.reconnect();
+				promise.catch(noop);
+				live_query_reconnects.set(key, promise);
+			}
+		}
 	}
 
 	if (include_load_functions) {
@@ -444,12 +462,26 @@ async function _invalidate(include_load_functions = true, reset_page_state = tru
 		reset_invalidation();
 	}
 
+	// only wait for promises that are connected to queries that still exist
+	/** @type {Promise<any>[]} */
+	const promises = [];
+	for (const entries of query_map.values()) {
+		for (const { resource } of entries.values()) {
+			promises.push(resource);
+		}
+	}
+	for (const [query_id, entries] of live_query_map) {
+		for (const payload of entries.keys()) {
+			const key = create_remote_key(query_id, payload);
+			const promise = live_query_reconnects.get(key);
+			if (promise) {
+				promises.push(promise);
+			}
+		}
+	}
+
 	// Don't use allSettled yet because it's too new
-	await Promise.all(
-		[...query_map.values()].flatMap((entries) =>
-			[...entries.values()].map(({ resource }) => resource)
-		)
-	).catch(noop);
+	await Promise.all(promises).catch(noop);
 }
 
 function reset_invalidation() {
@@ -486,8 +518,10 @@ function persist_state() {
  * @param {{}} [nav_token]
  */
 export async function _goto(url, options, redirect_count, nav_token) {
-	/** @type {string[]} */
+	/** @type {Set<string>} */
 	let query_keys;
+	/** @type {Set<string>} */
+	let live_query_keys;
 
 	// Clear preload cache when invalidateAll is true to ensure fresh data
 	// after form submissions or explicit invalidations
@@ -507,12 +541,18 @@ export async function _goto(url, options, redirect_count, nav_token) {
 		accept: () => {
 			if (options.invalidateAll) {
 				force_invalidation = true;
-				query_keys = [];
-				query_map.forEach((entries, id) => {
+				query_keys = new Set();
+				for (const [id, entries] of query_map) {
 					for (const payload of entries.keys()) {
-						query_keys.push(id + '/' + payload);
+						query_keys.add(create_remote_key(id, payload));
 					}
-				});
+				}
+				live_query_keys = new Set();
+				for (const [id, entries] of live_query_map) {
+					for (const payload of entries.keys()) {
+						live_query_keys.add(create_remote_key(id, payload));
+					}
+				}
 			}
 
 			if (options.invalidate) {
@@ -528,13 +568,20 @@ export async function _goto(url, options, redirect_count, nav_token) {
 			.tick()
 			.then(svelte.tick)
 			.then(() => {
-				query_map.forEach((entries, id) => {
-					entries.forEach(({ resource }, payload) => {
-						if (query_keys?.includes(id + '/' + payload)) {
-							void resource.refresh?.();
+				for (const [id, entries] of query_map) {
+					for (const [payload, { resource }] of entries) {
+						if (query_keys?.has(create_remote_key(id, payload))) {
+							void resource.refresh();
 						}
-					});
-				});
+					}
+				}
+				for (const [id, entries] of live_query_map) {
+					for (const [payload, { resource }] of entries) {
+						if (live_query_keys?.has(create_remote_key(id, payload))) {
+							void resource.reconnect();
+						}
+					}
+				}
 			});
 	}
 }
@@ -940,7 +987,7 @@ async function load_node({ loader, parent, url, params, route, server_data_node 
 
 				return promise;
 			},
-			setHeaders: () => {}, // noop
+			setHeaders: noop,
 			depends,
 			parent() {
 				if (is_tracking) {
@@ -1118,8 +1165,8 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 	// preload modules to avoid waterfall, but handle rejections
 	// so they don't get reported to Sentry et al (we don't need
 	// to act on the failures at this point)
-	errors.forEach((loader) => loader?.().catch(() => {}));
-	loaders.forEach((loader) => loader?.[1]().catch(() => {}));
+	errors.forEach((loader) => loader?.().catch(noop));
+	loaders.forEach((loader) => loader?.[1]().catch(noop));
 
 	/** @type {import('types').ServerNodesResponse | import('types').ServerRedirectNode | null} */
 	let server_data = null;
@@ -1189,7 +1236,7 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 
 		const server_data_node = server_data_nodes?.[i];
 
-		// re-use data from previous load if it's still valid
+		// reuse data from previous load if it's still valid
 		const valid =
 			(!server_data_node || server_data_node.type === 'skip') &&
 			loader[1] === previous?.loader &&
@@ -1232,7 +1279,7 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 	});
 
 	// if we don't do this, rejections will be unhandled
-	for (const p of branch_promises) p.catch(() => {});
+	for (const p of branch_promises) p.catch(noop);
 
 	/** @type {Array<import('./types.js').BranchNode | undefined>} */
 	const branch = [];
@@ -3036,49 +3083,31 @@ async function load_data(url, invalid) {
 			});
 		}
 
-		let text = '';
+		for await (const node of read_ndjson(reader)) {
+			if (node.type === 'redirect') {
+				return resolve(node);
+			}
 
-		while (true) {
-			// Format follows ndjson (each line is a JSON object) or regular JSON spec
-			const { done, value } = await reader.read();
-			if (done && !text) break;
-
-			text += !value && text ? '\n' : text_decoder.decode(value, { stream: true }); // no value -> final chunk -> add a new line to trigger the last parse
-
-			while (true) {
-				const split = text.indexOf('\n');
-				if (split === -1) {
-					break;
-				}
-
-				const node = JSON.parse(text.slice(0, split));
-				text = text.slice(split + 1);
-
-				if (node.type === 'redirect') {
-					return resolve(node);
-				}
-
-				if (node.type === 'data') {
-					// This is the first (and possibly only, if no pending promises) chunk
-					node.nodes?.forEach((/** @type {any} */ node) => {
-						if (node?.type === 'data') {
-							node.uses = deserialize_uses(node.uses);
-							node.data = deserialize(node.data);
-						}
-					});
-
-					resolve(node);
-				} else if (node.type === 'chunk') {
-					// This is a subsequent chunk containing deferred data
-					const { id, data, error } = node;
-					const deferred = /** @type {import('types').Deferred} */ (deferreds.get(id));
-					deferreds.delete(id);
-
-					if (error) {
-						deferred.reject(deserialize(error));
-					} else {
-						deferred.fulfil(deserialize(data));
+			if (node.type === 'data') {
+				// This is the first (and possibly only, if no pending promises) chunk
+				node.nodes?.forEach((/** @type {any} */ node) => {
+					if (node?.type === 'data') {
+						node.uses = deserialize_uses(node.uses);
+						node.data = deserialize(node.data);
 					}
+				});
+
+				resolve(node);
+			} else if (node.type === 'chunk') {
+				// This is a subsequent chunk containing deferred data
+				const { id, data, error } = node;
+				const deferred = /** @type {import('types').Deferred} */ (deferreds.get(id));
+				deferreds.delete(id);
+
+				if (error) {
+					deferred.reject(deserialize(error));
+				} else {
+					deferred.fulfil(deserialize(data));
 				}
 			}
 		}
@@ -3229,7 +3258,7 @@ function create_navigation(current, intent, url, type, target_scroll = null) {
 	});
 
 	// Handle any errors off-chain so that it doesn't show up as an unhandled rejection
-	complete.catch(() => {});
+	complete.catch(noop);
 
 	/** @type {(import('@sveltejs/kit').Navigation | import('@sveltejs/kit').AfterNavigate) & { type: T }} */
 	const navigation = /** @type {any} */ ({

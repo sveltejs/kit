@@ -1,6 +1,6 @@
 /** @import { Transport } from '@sveltejs/kit' */
 import * as devalue from 'devalue';
-import { base64_decode, base64_encode, text_decoder } from './utils.js';
+import { base64_decode, base64_encode, text_encoder } from './utils.js';
 import * as svelte from 'svelte';
 
 /**
@@ -261,7 +261,7 @@ export function stringify_remote_arg(value, transport, sort = true) {
 		create_remote_arg_reducers(transport, sort, new Map())
 	);
 
-	const bytes = new TextEncoder().encode(json_string);
+	const bytes = text_encoder.encode(json_string);
 	return base64_encode(bytes).replaceAll('=', '').replaceAll('+', '-').replaceAll('/', '_');
 }
 
@@ -273,7 +273,7 @@ export function stringify_remote_arg(value, transport, sort = true) {
 export function parse_remote_arg(string, transport) {
 	if (!string) return undefined;
 
-	const json_string = text_decoder.decode(
+	const json_string = new TextDecoder().decode(
 		// no need to add back `=` characters, atob can handle it
 		base64_decode(string.replaceAll('-', '+').replaceAll('_', '/'))
 	);

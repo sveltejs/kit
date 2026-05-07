@@ -110,7 +110,7 @@ export async function build_service_worker(
 					// .mjs so that esbuild doesn't incorrectly inject `export` https://github.com/vitejs/vite/issues/15379
 					entryFileNames: `service-worker.${is_rolldown ? 'js' : 'mjs'}`,
 					assetFileNames: `${kit.appDir}/immutable/assets/[name].[hash][extname]`,
-					inlineDynamicImports: !is_rolldown
+					inlineDynamicImports: !is_rolldown ? true : undefined
 				}
 			},
 			outDir: `${out}/client`,
