@@ -1,7 +1,6 @@
 // this file needs to be runtime agnostic and avoid importing from `node:*` since
 // it may not be available in edge environments
-
-import { posixify } from '../../utils/os.js';
+import { posixify } from './os.js';
 
 /**
  * Prepend given path with `/@fs` prefix
