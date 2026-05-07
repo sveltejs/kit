@@ -1919,7 +1919,8 @@ async function navigate({
 
 	if (token !== nav_token) {
 		// a new navigation happened while we were waiting for the DOM to update, so abort
-		return;
+		nav.reject(new Error('navigation aborted'));
+		return false;
 	}
 
 	// Check for async rendering error
