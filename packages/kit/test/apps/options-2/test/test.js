@@ -110,12 +110,12 @@ test.describe('trailing slash', () => {
 		clicknav,
 		javaScriptEnabled
 	}) => {
-		test.skip(!javaScriptEnabled || !process.env.DEV);
+		test.skip(!javaScriptEnabled || !!process.env.DEV);
 
 		await page.goto('/basepath/trailing-slash-server');
 
 		await clicknav('a[href="/basepath/trailing-slash-server/prerender"]');
-		expect(await page.textContent('h2')).toBe('/basepath/trailing-slash-server/prerender/');
+		await expect(page.locator('h2')).toHaveText('/basepath/trailing-slash-server/prerender/');
 	});
 });
 

@@ -13,6 +13,13 @@ export function asset(file) {
 
 /** @type {import('./client.js').resolve} */
 export function resolve(id, params) {
+	if (!id.startsWith('/')) {
+		throw new Error(
+			`Cannot use \`resolve(...)\` with a non-absolute pathname or route ID (got "${id}"). ` +
+				'`resolve` is only for internal pathnames and route IDs; external URLs should be used directly.'
+		);
+	}
+
 	const resolved = resolve_route(id, /** @type {Record<string, string>} */ (params));
 
 	if (relative) {
