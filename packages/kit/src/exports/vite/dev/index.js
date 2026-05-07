@@ -16,7 +16,7 @@ import * as sync from '../../../core/sync/sync.js';
 import { is_chrome_devtools_request, not_found } from '../utils.js';
 import { escape_for_regexp, escape_html } from '../../../utils/escape.js';
 import { sveltekit_ipc, sveltekit_manifest_data } from '../module_ids.js';
-import { to_fs } from '../filesystem.js';
+import { to_fs } from '../../../utils/vite.js';
 
 // vite-specifc queries that we should skip handling for css urls
 const vite_css_query_regex = /(?:\?|&)(?:raw|url|inline)(?:&|$)/;

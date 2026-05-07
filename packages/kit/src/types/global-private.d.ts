@@ -42,10 +42,15 @@ declare global {
 		/** Resolve a placeholder promise */
 		resolve?: (data: { id: number; data: any; error: any }) => void;
 	};
-	/** Allows us to resolve paths relative to the Vite root setting during development */
+	/**
+	 * The Vite `root` setting used to construct paths to nodes and components
+	 * for the SSR manifest during development
+	 */
 	const __SVELTEKIT_ROOT__: string;
 	const __SVELTEKIT_OUT_DIR__: string;
 	const __SVELTEKIT_FILES_ASSETS__: string;
+	/** Path to the internal SvelteKit runtime directory */
+	const __SVELTEKIT_RUNTIME__: string;
 	/**
 	 * This makes the use of specific features visible at both dev and build time, in such a
 	 * way that we can error when they are not supported by the target platform.

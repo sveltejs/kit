@@ -5,7 +5,7 @@ import { env } from 'sveltekit:env';
 import { Server } from 'sveltekit:server';
 import { manifest } from 'sveltekit:server-manifest';
 import { createReadableStream } from '@sveltejs/kit/node';
-import { from_fs } from '../filesystem.js';
+import { from_fs } from '../../../utils/vite.js';
 
 /** @type {InternalServer} */
 const server = new Server(manifest);

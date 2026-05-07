@@ -3,10 +3,9 @@ import { server_assets } from '__sveltekit/server-assets';
 import { remotes } from '__sveltekit/remotes';
 import { manifest_data, mime_types } from '__sveltekit/manifest-data';
 import { get } from '__sveltekit/ipc';
-import { to_fs } from '../filesystem.js';
+import { to_fs } from '../../../utils/vite.js';
 import { compact } from '../../../utils/array.js';
 import { join } from '../../../utils/path.js';
-import { runtime_directory } from '../../../runtime/utils.js';
 
 /** @type {SSRManifest} */
 export const manifest = {
@@ -17,7 +16,7 @@ export const manifest = {
 	mimeTypes: mime_types,
 	_: {
 		client: {
-			start: to_fs(`${runtime_directory}/client/entry.js`),
+			start: `${__SVELTEKIT_RUNTIME__}/client/entry.js`,
 			app: `${to_fs(__SVELTEKIT_OUT_DIR__)}/generated/client/app.js`,
 			imports: [],
 			stylesheets: [],

@@ -16,7 +16,13 @@ import { copy, mkdirp, read, resolve_entry, rimraf } from '../../utils/filesyste
 import { create_static_module, create_dynamic_module } from '../../core/env.js';
 import * as sync from '../../core/sync/sync.js';
 import { create_assets } from '../../core/sync/create_manifest_data/index.js';
-import { logger, get_mime_lookup, get_port } from '../../core/utils.js';
+import {
+	logger,
+	get_mime_lookup,
+	get_port,
+	runtime_directory,
+	get_runtime_base
+} from '../../core/utils.js';
 import { generate_manifest } from '../../core/generate_manifest/index.js';
 import { build_server_nodes } from './build/build_server.js';
 import { assets_base, find_deps, resolve_symlinks } from './build/utils.js';
@@ -51,14 +57,13 @@ import {
 	sveltekit_env,
 	sveltekit_ipc
 } from './module_ids.js';
-import { to_fs } from './filesystem.js';
+import { to_fs } from '../../utils/vite.js';
 import { import_peer } from '../../utils/import.js';
 import { compact } from '../../utils/array.js';
 import { posixify } from '../../utils/os.js';
 import { should_ignore, has_children } from './static_analysis/utils.js';
 import { load_config } from '../../core/config/index.js';
 import { treeshake_prerendered_remotes } from './build/remote.js';
-import { runtime_directory } from '../../runtime/utils.js';
 import { SVELTE_KIT_ASSETS } from '../../constants.js';
 import options from './options.js';
 
@@ -482,7 +487,8 @@ function kit({ svelte_config, adapter }) {
 					__SVELTEKIT_HASH_ROUTING__: s(kit.router.type === 'hash'),
 					__SVELTEKIT_SERVER_TRACING_ENABLED__: s(kit.experimental.tracing.server),
 					__SVELTEKIT_EXPERIMENTAL_USE_TRANSFORM_ERROR__: s(kit.experimental.handleRenderingErrors),
-					__SVELTEKIT_ROOT__: s(root)
+					__SVELTEKIT_ROOT__: s(root),
+					__SVELTEKIT_RUNTIME__: s(get_runtime_base(root))
 				};
 
 				if (is_build) {
