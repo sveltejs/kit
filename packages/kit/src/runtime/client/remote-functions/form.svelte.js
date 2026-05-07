@@ -87,6 +87,38 @@ export function form(id) {
 
 		let submitted = false;
 
+		/** @type {InternalRemoteFormIssue[] | null} */
+		let unread_issues = null;
+
+		/**
+		 * In dev, warn if there are validation issues going unread
+		 */
+		function warn_on_missing_issue_reads() {
+			unread_issues = raw_issues;
+
+			setTimeout(() => {
+				if (unread_issues === null) {
+					return;
+				}
+
+				if (unread_issues.length > 0) {
+					const message = `Form submission had invalid data, but the validation issues were ignored:`;
+					const summary = unread_issues
+						.map((issue) =>
+							issue.path.length === 0
+								? `  - ${issue.message}`
+								: `  - ${issue.path.join('.')} (${issue.message})`
+						)
+						.join('\n');
+					const suggestion = `Make sure you provide actionable feedback to users, using e.g. \`myForm.fields.myField.issues()\` or \`myForm.fields.allIssues()\``;
+
+					console.warn(`${message}\n\n${summary}\n\n${suggestion}`);
+				}
+
+				unread_issues = null;
+			});
+		}
+
 		/**
 		 * @param {FormData} form_data
 		 * @returns {Record<string, any>}
@@ -121,6 +153,11 @@ export function form(id) {
 					raw_issues,
 					validated.issues.map((issue) => normalize_issue(issue, false))
 				);
+
+				if (DEV) {
+					warn_on_missing_issue_reads();
+				}
+
 				pending_count--;
 				return;
 			}
@@ -243,6 +280,10 @@ export function form(id) {
 								if (form_result.reconnects) {
 									apply_reconnections(form_result.reconnects);
 								}
+							}
+						} else {
+							if (DEV) {
+								warn_on_missing_issue_reads();
 							}
 						}
 
@@ -523,7 +564,18 @@ export function form(id) {
 								touched[key] = true;
 							}
 						},
-						() => issues
+						(path, all) => {
+							if (DEV && unread_issues !== null && path !== undefined) {
+								unread_issues = unread_issues.filter((issue) => {
+									return (
+										(all ? issue.path.slice(0, path.length) : issue.path).join('.') !==
+										path.join('.')
+									);
+								});
+							}
+
+							return issues;
+						}
 					)
 			},
 			result: {
