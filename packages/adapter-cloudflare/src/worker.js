@@ -110,7 +110,19 @@ export default /** @satisfies {ExportedHandler} */ ({
 		// write to `Cache` only if response is not an error,
 		// let `Cache.save` handle the Cache-Control and Vary headers
 		pragma = res.headers.get('cache-control') || '';
-		return pragma && res.status < 400 ? Cache.save(req, res, ctx) : res;
+		res = pragma && res.status < 400 ? Cache.save(req, res, ctx) : res;
+
+		// wait a macrotask so that any import.meta.hot.send calls have a chance to execute.
+		// This is important for prerendering because crawled pages that shouldn't be
+		// prerendered return a 204 response too quickly and cause the worker to exit
+		// before import.meta.hot.send fires
+		if (import.meta.hot) {
+			const { promise, resolve } = Promise.withResolvers();
+			setTimeout(resolve);
+			await promise;
+		}
+
+		return res;
 	}
 });
 
