@@ -313,6 +313,12 @@ export function create_updated_store() {
  * @param {boolean} hash_routing
  */
 export function is_external_url(url, base, hash_routing) {
+	// about: and data: are non-hierarchical protocols used in embedded webviews
+	// and iframes with srcdoc — treat them as internal so navigation works
+	if (url.protocol === 'about:' || url.protocol === 'data:') {
+		return false;
+	}
+
 	if (url.origin !== origin || !url.pathname.startsWith(base)) {
 		return true;
 	}
