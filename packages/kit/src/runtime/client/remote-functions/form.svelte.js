@@ -567,9 +567,9 @@ export function form(id) {
 						(path, all) => {
 							if (DEV && unread_issues !== null && path !== undefined) {
 								unread_issues = unread_issues.filter((issue) => {
-									return all
-										? issue.path.slice(0, path.length).join('.') !== path.join('.')
-										: issue.path.join('.') !== path.join('.');
+									return (
+										(all ? issue.path.slice(0, path.length) : issue.path).join('.') !== path.join('.')
+									);
 								});
 							}
 
