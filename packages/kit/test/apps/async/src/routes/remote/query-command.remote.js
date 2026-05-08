@@ -1,9 +1,12 @@
-import { command, query } from '$app/server';
+import { command, query, requested } from '$app/server';
 
 export const echo = query('unchecked', (value) => value);
 export const add = query('unchecked', ({ a, b }) => a + b);
 
 let count = 0;
+/**
+ * @type {PromiseWithResolvers<any>[]}
+ */
 const deferreds = [];
 
 let get_count_called = false;
@@ -20,12 +23,53 @@ export const set_count = command('unchecked', async ({ c, slow = false, deferred
 	} else if (slow) {
 		await new Promise((resolve) => setTimeout(resolve, 500));
 	}
-	return (count = c);
+	count = c;
+
+	for (const { query } of requested(get_count, Infinity)) {
+		await query.refresh();
+	}
+
+	return count;
+});
+
+export const set_count_refresh_all = command('unchecked', async (c) => {
+	count = c;
+	await requested(get_count, Infinity).refreshAll();
+	return c;
+});
+
+let should_fail_flaky = false;
+
+export const get_flaky_count = query('unchecked', (key) => {
+	if (key === 'fail' && should_fail_flaky) {
+		should_fail_flaky = false;
+		throw new Error('flaky refresh failed');
+	}
+
+	return `${key}:${count}`;
+});
+
+export const set_count_partial_refresh = command('unchecked', async (c) => {
+	count = c;
+	should_fail_flaky = true;
+
+	for (const { query } of requested(get_flaky_count, Infinity)) {
+		await query.refresh();
+	}
+
+	return c;
+});
+
+export const set_count_partial_refresh_all = command('unchecked', async (c) => {
+	count = c;
+	should_fail_flaky = true;
+	await requested(get_flaky_count, Infinity).refreshAll();
+	return c;
 });
 
 export const resolve_deferreds = command(() => {
 	for (const deferred of deferreds) {
-		deferred.resolve();
+		deferred.resolve(null);
 	}
 	deferreds.length = 0;
 });

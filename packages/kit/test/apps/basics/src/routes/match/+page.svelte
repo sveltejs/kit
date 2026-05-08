@@ -5,6 +5,7 @@
 
 	let { data } = $props();
 
+	/** @type {Array<{ path: string; result: { id: import('$app/types').RouteId; params: Record<string, string> } | null }>} */
 	const clientResults = $state([]);
 
 	onMount(async () => {
