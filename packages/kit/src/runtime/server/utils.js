@@ -8,18 +8,6 @@ import { fix_stack_trace } from '../shared-server.js';
 import { ENDPOINT_METHODS } from '../../constants.js';
 import { escape_html } from '../../utils/escape.js';
 
-/** @param {any} body */
-export function is_pojo(body) {
-	if (typeof body !== 'object') return false;
-
-	if (body) {
-		if (body instanceof Uint8Array) return false;
-		if (body instanceof ReadableStream) return false;
-	}
-
-	return true;
-}
-
 /**
  * @param {Partial<Record<import('types').HttpMethod, any>>} mod
  * @param {import('types').HttpMethod} method
@@ -262,4 +250,14 @@ export function get_node_type(node_id) {
 	if (!filename) return 'unknown';
 	const dot_parts = filename.split('.');
 	return dot_parts.slice(0, -1).join('.');
+}
+
+/**
+ * Counts HTML comments that are not SSI directives (which start with `<!--#`).
+ * Used to detect when `transformPageChunk` removes comments that Svelte needs for hydration.
+ * @param {string} str
+ * @returns {number}
+ */
+export function count_non_ssi_comments(str) {
+	return (str.match(/<!--(?!#)/g) ?? []).length;
 }

@@ -1,7 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { normalizePath } from 'vite';
-import { s } from '../../../utils/misc.js';
 
 /**
  * Adds transitive JS and CSS dependencies to the js and css inputs.
@@ -137,11 +136,27 @@ export function assets_base(config) {
  * @param {string} name The name of the function
  * @param {string[]} placeholder_names The names of the placeholders in the string
  * @param {string} str A string with placeholders such as "Hello ${arg0}".
- * 										 It must have backticks and dollar signs escaped.
+ * 										 It must have backslashes, backticks and dollar signs already escaped.
  * @returns {string} The function written as a string
  */
 export function create_function_as_string(name, placeholder_names, str) {
-	str = s(str).slice(1, -1);
 	const args = placeholder_names ? placeholder_names.join(', ') : '';
 	return `function ${name}(${args}) { return \`${str}\`; }`;
+}
+
+/**
+ * Guarantees that the generated placeholder is not already present in the content.
+ * @param {string} content
+ * @param {string} key
+ * @returns {string}
+ */
+export function generate_placeholder(content, key) {
+	let id = 1;
+	let placeholder = `__SVELTEKIT_${key}_${id}__`;
+
+	while (content.includes(placeholder)) {
+		placeholder = `__SVELTEKIT_${key}_${++id}__`;
+	}
+
+	return placeholder;
 }

@@ -2,6 +2,7 @@ import { createReadStream } from 'node:fs';
 import { Readable } from 'node:stream';
 import * as set_cookie_parser from 'set-cookie-parser';
 import { SvelteKitError } from '../internal/index.js';
+import { noop } from '../../utils/functions.js';
 
 /**
  * @param {import('http').IncomingMessage} req
@@ -15,10 +16,11 @@ function get_raw_body(req, body_size_limit) {
 	}
 
 	const content_length = Number(h['content-length']);
+	const has_content_length = Number.isFinite(content_length);
 
 	// check if no request body
 	if (
-		(req.httpVersionMajor === 1 && isNaN(content_length) && h['transfer-encoding'] == null) ||
+		(req.httpVersionMajor === 1 && !has_content_length && h['transfer-encoding'] == null) ||
 		content_length === 0
 	) {
 		return null;
@@ -35,7 +37,7 @@ function get_raw_body(req, body_size_limit) {
 
 	return new ReadableStream({
 		start(controller) {
-			if (body_size_limit !== undefined && content_length > body_size_limit) {
+			if (body_size_limit !== undefined && has_content_length && content_length > body_size_limit) {
 				let message = `Content-length of ${content_length} exceeds limit of ${body_size_limit} bytes.`;
 
 				if (body_size_limit === 0) {
@@ -64,11 +66,22 @@ function get_raw_body(req, body_size_limit) {
 				if (cancelled) return;
 
 				size += chunk.length;
-				if (size > content_length) {
+
+				if (body_size_limit !== undefined && size > body_size_limit) {
 					cancelled = true;
 
-					const constraint = content_length ? 'content-length' : 'BODY_SIZE_LIMIT';
-					const message = `request body size exceeded ${constraint} of ${content_length}`;
+					const message = `request body size exceeded BODY_SIZE_LIMIT of ${body_size_limit}`;
+
+					const error = new SvelteKitError(413, 'Payload Too Large', message);
+					controller.error(error);
+
+					return;
+				}
+
+				if (has_content_length && size > content_length) {
+					cancelled = true;
+
+					const message = `request body size exceeded content-length of ${content_length}`;
 
 					const error = new SvelteKitError(413, 'Payload Too Large', message);
 					controller.error(error);
@@ -200,7 +213,7 @@ export async function setResponse(res, response) {
 
 		// If the reader has already been interrupted with an error earlier,
 		// then it will appear here, it is useless, but it needs to be catch.
-		reader.cancel(error).catch(() => {});
+		reader.cancel(error).catch(noop);
 		if (error) res.destroy(error);
 	};
 
