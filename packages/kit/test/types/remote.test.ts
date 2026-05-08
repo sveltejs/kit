@@ -2,6 +2,7 @@ import { query, prerender, command, form, requested } from '$app/server';
 import { StandardSchemaV1 } from '@standard-schema/spec';
 import {
 	RemoteForm,
+	RemoteFormSubmitFunction,
 	RemoteFormFields,
 	RemoteFormInput,
 	RemoteLiveQueryFunction,
@@ -349,6 +350,19 @@ function form_tests() {
 	});
 
 	f.result?.success === true;
+
+	const submit: RemoteFormSubmitFunction<{ input: string }, { success: boolean }> = async (
+		form
+	) => {
+		const result: { success: boolean } | undefined = form.result;
+		result;
+		// @ts-expect-error
+		form.enhance(() => {});
+		const x: boolean = await form.submit();
+		x;
+	};
+
+	f.enhance(submit);
 
 	f.enhance(async (form) => {
 		const x: boolean = await form.submit();
