@@ -1475,13 +1475,18 @@ async function load_root_error_page({ status, error, url, route }) {
 				.replace(/&/g, '&amp;')
 				.replace(/</g, '&lt;')
 				.replace(/>/g, '&gt;');
-			document.open();
-			document.write(
-				app.error_template
-					.replace(/%sveltekit\.status%/g, String(status))
-					.replace(/%sveltekit\.error\.message%/g, message)
+			const html = app.error_template
+				.replace(/%sveltekit\.status%/g, String(status))
+				.replace(/%sveltekit\.error\.message%/g, message);
+			const parsed = new DOMParser().parseFromString(html, 'text/html');
+			document.documentElement.replaceChild(
+				document.adoptNode(parsed.head),
+				document.head
 			);
-			document.close();
+			document.documentElement.replaceChild(
+				document.adoptNode(parsed.body),
+				document.body
+			);
 		}
 
 		throw error;
