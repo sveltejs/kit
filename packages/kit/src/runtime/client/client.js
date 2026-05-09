@@ -1479,14 +1479,8 @@ async function load_root_error_page({ status, error, url, route }) {
 				.replace(/%sveltekit\.status%/g, String(status))
 				.replace(/%sveltekit\.error\.message%/g, message);
 			const parsed = new DOMParser().parseFromString(html, 'text/html');
-			document.documentElement.replaceChild(
-				document.adoptNode(parsed.head),
-				document.head
-			);
-			document.documentElement.replaceChild(
-				document.adoptNode(parsed.body),
-				document.body
-			);
+			document.documentElement.replaceChild(document.adoptNode(parsed.head), document.head);
+			document.documentElement.replaceChild(document.adoptNode(parsed.body), document.body);
 		}
 
 		throw error;
