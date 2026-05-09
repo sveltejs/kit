@@ -58,7 +58,7 @@ export function read(asset) {
 		DEV && asset.startsWith('/@fs') ? asset : asset.slice(base.length + 1)
 	);
 
-	if (file in manifest._.server_assets) {
+	if (Object.hasOwn(manifest._.server_assets, file)) {
 		const length = manifest._.server_assets[file];
 		const type = manifest.mimeTypes[file.slice(file.lastIndexOf('.'))];
 

@@ -88,9 +88,11 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 				).slice(1);
 				const filename_html = `${filename}/index.html`; // path may also match path/index.html
 
-				const is_asset = manifest.assets.has(filename) || filename in manifest._.server_assets;
+				const is_asset =
+					manifest.assets.has(filename) || Object.hasOwn(manifest._.server_assets, filename);
 				const is_asset_html =
-					manifest.assets.has(filename_html) || filename_html in manifest._.server_assets;
+					manifest.assets.has(filename_html) ||
+					Object.hasOwn(manifest._.server_assets, filename_html);
 
 				if (is_asset || is_asset_html) {
 					const file = is_asset ? filename : filename_html;
@@ -103,7 +105,7 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 						return new Response(state.read(file), {
 							headers: type ? { 'content-type': type } : {}
 						});
-					} else if (read_implementation && file in manifest._.server_assets) {
+					} else if (read_implementation && Object.hasOwn(manifest._.server_assets, file)) {
 						const length = manifest._.server_assets[file];
 						const type = manifest.mimeTypes[file.slice(file.lastIndexOf('.'))];
 

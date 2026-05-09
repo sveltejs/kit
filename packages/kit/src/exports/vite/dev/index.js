@@ -562,7 +562,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes) {
 						throw new Error('Could not determine clientAddress');
 					},
 					read: (file) => {
-						if (file in manifest._.server_assets) {
+						if (Object.hasOwn(manifest._.server_assets, file)) {
 							return fs.readFileSync(from_fs(file));
 						}
 
