@@ -47,7 +47,7 @@ export default defineConfig({
 				extends: true,
 				test: {
 					name: 'client',
-					environment: 'happy-dom',
+					environment: 'jsdom',
 					include: ['src/**/*.svelte.spec.js'],
 					exclude,
 					// `forks` (child_process) accepts `--expose-gc`; `threads` (worker_threads) does not.
