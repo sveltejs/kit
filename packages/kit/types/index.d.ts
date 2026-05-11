@@ -27,7 +27,7 @@ declare module '@sveltejs/kit' {
 		supports?: {
 			/**
 			 * Test support for `read` from `$app/server`.
-			 * @param details.config The merged route config
+			 * @param details.config The merged adapter-specific route config exported from the route with `export const config`
 			 */
 			read?: (details: { config: any; route: { id: string } }) => boolean;
 
@@ -1903,6 +1903,7 @@ declare module '@sveltejs/kit' {
 				'aria-invalid': boolean | 'false' | 'true' | undefined;
 				get checked(): boolean;
 				set checked(value: boolean);
+				readonly defaultChecked?: boolean;
 			}
 		: T extends 'file'
 			? {
@@ -1933,6 +1934,7 @@ declare module '@sveltejs/kit' {
 								'aria-invalid': boolean | 'false' | 'true' | undefined;
 								get value(): string | number;
 								set value(v: string | number);
+								readonly defaultValue?: string | number;
 							}
 						: {
 								name: string;
@@ -1940,6 +1942,7 @@ declare module '@sveltejs/kit' {
 								'aria-invalid': boolean | 'false' | 'true' | undefined;
 								get value(): string | number;
 								set value(v: string | number);
+								readonly defaultValue?: string | number;
 							};
 
 	type RemoteFormFieldMethods<T> = {
@@ -3383,7 +3386,7 @@ declare module '$app/server' {
 	 *
 	 * @since 2.27
 	 */
-	export function command<Output>(fn: () => Output): RemoteCommand<void, Output>;
+	export function command<Output>(fn: () => MaybePromise<Output>): RemoteCommand<void, Output>;
 	/**
 	 * Creates a remote command. When called from the browser, the function will be invoked on the server via a `fetch` call.
 	 *
@@ -3391,7 +3394,7 @@ declare module '$app/server' {
 	 *
 	 * @since 2.27
 	 */
-	export function command<Input, Output>(validate: "unchecked", fn: (arg: Input) => Output): RemoteCommand<Input, Output>;
+	export function command<Input, Output>(validate: "unchecked", fn: (arg: Input) => MaybePromise<Output>): RemoteCommand<Input, Output>;
 	/**
 	 * Creates a remote command. When called from the browser, the function will be invoked on the server via a `fetch` call.
 	 *
@@ -3399,7 +3402,7 @@ declare module '$app/server' {
 	 *
 	 * @since 2.27
 	 */
-	export function command<Schema extends StandardSchemaV1, Output>(validate: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => Output): RemoteCommand<StandardSchemaV1.InferInput<Schema>, Output>;
+	export function command<Schema extends StandardSchemaV1, Output>(validate: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => MaybePromise<Output>): RemoteCommand<StandardSchemaV1.InferInput<Schema>, Output>;
 	/**
 	 * Creates a form object that can be spread onto a `<form>` element.
 	 *

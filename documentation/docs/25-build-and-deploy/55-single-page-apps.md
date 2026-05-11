@@ -19,6 +19,7 @@ export const ssr = false;
 If you don't have any server-side logic (i.e. `+page.server.js`, `+layout.server.js` or `+server.js` files) you can use [`adapter-static`](adapter-static) to create your SPA. Install `adapter-static` with `npm i -D @sveltejs/adapter-static` and add it to your `svelte.config.js` with the `fallback` option:
 
 ```js
+// @errors: 2307
 /// file: svelte.config.js
 import adapter from '@sveltejs/adapter-static';
 

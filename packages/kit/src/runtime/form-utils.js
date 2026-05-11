@@ -606,7 +606,7 @@ export function deep_get(object, path) {
  * @param {any} target - Function or empty POJO
  * @param {() => Record<string, any>} get_input - Function to get current input data
  * @param {(path: (string | number)[], value: any) => void} set_input - Function to set input data
- * @param {() => Record<string, InternalRemoteFormIssue[]>} get_issues - Function to get current issues
+ * @param {(path?: (string | number)[], all?: boolean) => Record<string, InternalRemoteFormIssue[]>} get_issues - Function to get current issues
  * @param {(string | number)[]} path - Current access path
  * @returns {any} Proxy object with name(), value(), and issues() methods
  */
@@ -643,7 +643,7 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 
 			if (prop === 'issues' || prop === 'allIssues') {
 				const issues_func = () => {
-					const all_issues = get_issues()[key === '' ? '$' : key];
+					const all_issues = get_issues(path, prop === 'allIssues')[key === '' ? '$' : key];
 
 					if (prop === 'allIssues') {
 						return all_issues?.map((issue) => ({
@@ -666,7 +666,7 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 			if (prop === 'as') {
 				/**
 				 * @param {string} type
-				 * @param {string} [input_value]
+				 * @param {unknown} [input_value]
 				 */
 				const as_func = (type, input_value) => {
 					const is_array =
@@ -736,6 +736,12 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 
 						if (type === 'checkbox' && !is_array) {
 							return Object.defineProperties(base_props, {
+								defaultChecked: {
+									enumerable: true,
+									get() {
+										return input_value;
+									}
+								},
 								checked: {
 									enumerable: true,
 									get() {
@@ -806,6 +812,12 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 
 					// Handle all other input types (text, number, etc.)
 					return Object.defineProperties(base_props, {
+						defaultValue: {
+							enumerable: true,
+							get() {
+								return input_value;
+							}
+						},
 						value: {
 							enumerable: true,
 							get() {

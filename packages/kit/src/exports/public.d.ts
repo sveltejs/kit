@@ -52,7 +52,7 @@ export interface Adapter {
 	supports?: {
 		/**
 		 * Test support for `read` from `$app/server`.
-		 * @param details.config The merged route config
+		 * @param details.config The merged adapter-specific route config exported from the route with `export const config`
 		 */
 		read?: (details: { config: any; route: { id: string } }) => boolean;
 
@@ -1929,6 +1929,7 @@ type InputElementProps<T extends keyof InputTypeMap> = T extends 'checkbox' | 'r
 			'aria-invalid': boolean | 'false' | 'true' | undefined;
 			get checked(): boolean;
 			set checked(value: boolean);
+			readonly defaultChecked?: boolean;
 		}
 	: T extends 'file'
 		? {
@@ -1959,6 +1960,7 @@ type InputElementProps<T extends keyof InputTypeMap> = T extends 'checkbox' | 'r
 							'aria-invalid': boolean | 'false' | 'true' | undefined;
 							get value(): string | number;
 							set value(v: string | number);
+							readonly defaultValue?: string | number;
 						}
 					: {
 							name: string;
@@ -1966,6 +1968,7 @@ type InputElementProps<T extends keyof InputTypeMap> = T extends 'checkbox' | 'r
 							'aria-invalid': boolean | 'false' | 'true' | undefined;
 							get value(): string | number;
 							set value(v: string | number);
+							readonly defaultValue?: string | number;
 						};
 
 type RemoteFormFieldMethods<T> = {
