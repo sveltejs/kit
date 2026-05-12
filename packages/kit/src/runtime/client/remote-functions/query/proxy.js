@@ -121,12 +121,14 @@ export class QueryProxy {
 
 	/** @type {Query<T>['catch']} */
 	get catch() {
+		pin_in_effect(query_map, cache, this.#id, this.#payload);
 		const cached = this.#get_cached_query();
 		return cached.catch.bind(cached);
 	}
 
 	/** @type {Query<T>['finally']} */
 	get finally() {
+		pin_in_effect(query_map, cache, this.#id, this.#payload);
 		const cached = this.#get_cached_query();
 		return cached.finally.bind(cached);
 	}

@@ -92,11 +92,13 @@ export class LiveQueryProxy {
 	}
 
 	get catch() {
+		pin_in_effect(live_query_map, cache, this.#id, this.#payload);
 		const cached = this.#get_cached_query();
 		return cached.catch.bind(cached);
 	}
 
 	get finally() {
+		pin_in_effect(live_query_map, cache, this.#id, this.#payload);
 		const cached = this.#get_cached_query();
 		return cached.finally.bind(cached);
 	}
