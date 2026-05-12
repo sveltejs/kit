@@ -796,6 +796,17 @@ test.describe('remote function mutations', () => {
 		// the value display should also show the updated value
 		await expect(page.locator('#set-value-display')).toHaveText('Set via method');
 	});
+	test('form does refresh queries when a remote request', async ({ page }) => {
+		await page.goto(`/remote/form/noop-refresh-non-enhanced/${Date.now()}${Math.random()}`);
+
+		const count = page.locator('#count');
+		await expect(count).toHaveText('Count: 0');
+
+		await page.click('button');
+
+		// Should have refreshed
+		await expect(count).toHaveText('Count: 1');
+	});
 });
 
 test.describe('client error boundaries', () => {

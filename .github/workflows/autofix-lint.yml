@@ -50,7 +50,7 @@ jobs:
         if: github.event_name == 'workflow_dispatch' || steps.pr.outcome == 'success'
         with:
           ref: ${{ github.event_name == 'workflow_dispatch' && github.ref || steps.pr.outputs.ref }}
-      - uses: pnpm/action-setup@v6.0.5
+      - uses: pnpm/action-setup@v6.0.6
       - uses: actions/setup-node@v6
         with:
           node-version: 24

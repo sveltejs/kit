@@ -6,6 +6,10 @@
 </script>
 
 <form class="form" {...form}>
+	<input {...form.fields.hidden.string.as('hidden', 'string')} />
+	<input {...form.fields.hidden.number.as('hidden', 1)} />
+	<input {...form.fields.hidden.boolean.as('hidden', true)} />
+
 	<input {...form.fields.text_field.as('text', value.text_field)} />
 
 	<input {...form.fields.number_field.as('number', value.number_field)} />
