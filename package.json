@@ -27,6 +27,7 @@
 		"@changesets/cli": "catalog:",
 		"@playwright/test": "catalog:",
 		"@sveltejs/eslint-config": "catalog:",
+		"@sveltejs/target": "^0.0.7",
 		"@svitejs/changesets-changelog-github-compact": "catalog:",
 		"eslint": "catalog:",
 		"prettier": "catalog:",
