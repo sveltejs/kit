@@ -1250,10 +1250,12 @@ async function kit({ svelte_config }) {
 									pattern: route.pattern,
 									params: route.params,
 									layouts: route.page.layouts.map((l) =>
-										l !== undefined ? [metadata.nodes[l].has_server_load, l] : undefined
+										l !== undefined
+											? [metadata.nodes[l].has_server_load, metadata.nodes[l].is_gate, l]
+											: undefined
 									),
 									errors: route.page.errors,
-									leaf: [metadata.nodes[route.page.leaf].has_server_load, route.page.leaf]
+									leaf: [metadata.nodes[route.page.leaf].has_server_load, false, route.page.leaf]
 								};
 							})
 						);

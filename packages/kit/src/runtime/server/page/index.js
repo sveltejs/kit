@@ -190,6 +190,13 @@ export async function render_page(
 						throw action_result.error;
 					}
 
+					// Wait for any gated ancestor server loads to complete before starting this one.
+					for (let j = 0; j < i; j += 1) {
+						if (nodes.data[j]?.server?.gate) {
+							await server_promises[j];
+						}
+					}
+
 					const server_data = await load_server_data({
 						event,
 						event_state,
@@ -225,6 +232,13 @@ export async function render_page(
 			if (load_error) throw load_error;
 			return Promise.resolve().then(async () => {
 				try {
+					// Wait for any gated ancestor loads to complete before starting this one.
+					for (let j = 0; j < i; j += 1) {
+						if (nodes.data[j]?.server?.gate || nodes.data[j]?.universal?.gate) {
+							await load_promises[j];
+						}
+					}
+
 					return await load_data({
 						event,
 						event_state,

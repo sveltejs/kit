@@ -386,6 +386,53 @@ test.describe('Load', () => {
 		}
 	});
 
+	test.describe('gate', () => {
+		test('server gate blocks child load until layout resolves', async ({
+			page,
+			javaScriptEnabled,
+			clicknav
+		}) => {
+			await page.goto('/load/gate/server');
+			expect(await page.textContent('h1')).toBe('true');
+
+			if (javaScriptEnabled) {
+				await page.goto('/load/gate');
+				await clicknav('[href="/load/gate/server"]');
+				expect(await page.textContent('h1')).toBe('true');
+			}
+		});
+
+		test('universal gate renders correctly', async ({ page, javaScriptEnabled, clicknav }) => {
+			await page.goto('/load/gate/universal');
+			expect(await page.textContent('h1')).toBe('1:page_data');
+
+			if (javaScriptEnabled) {
+				await page.goto('/load/gate');
+				await clicknav('[href="/load/gate/universal"]');
+				expect(await page.textContent('h1')).toBe('1:page_data');
+			}
+		});
+
+		test('nested gates run sequentially', async ({ page, javaScriptEnabled, clicknav }) => {
+			await page.goto('/load/gate/nested/inner');
+			expect(await page.textContent('#inner-saw-outer')).toBe('true');
+			expect(await page.textContent('#page-saw-inner')).toBe('true');
+
+			if (javaScriptEnabled) {
+				await page.goto('/load/gate');
+				await clicknav('[href="/load/gate/nested/inner"]');
+				expect(await page.textContent('#inner-saw-outer')).toBe('true');
+				expect(await page.textContent('#page-saw-inner')).toBe('true');
+			}
+		});
+
+		test('gate redirects before child load runs', async ({ page }) => {
+			await page.goto('/load/gate/redirect');
+			expect(page.url()).toContain('authed=1');
+			expect(await page.textContent('h1')).toBe('true');
+		});
+	});
+
 	test('fetch accepts a Request object', async ({ page, clicknav }) => {
 		await page.goto('/load');
 		await clicknav('[href="/load/fetch-request"]');

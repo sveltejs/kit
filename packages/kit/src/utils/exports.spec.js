@@ -30,7 +30,8 @@ test('validates +layout.js', () => {
 		csr: false,
 		ssr: false,
 		trailingSlash: false,
-		config: {}
+		config: {},
+		gate: true
 	});
 
 	validate_layout_exports({
@@ -41,7 +42,7 @@ test('validates +layout.js', () => {
 		validate_layout_exports({
 			answer: 42
 		});
-	}, "Invalid export 'answer' (valid exports are load, prerender, csr, ssr, trailingSlash, config, or anything with a '_' prefix)");
+	}, "Invalid export 'answer' (valid exports are load, prerender, csr, ssr, trailingSlash, config, gate, or anything with a '_' prefix)");
 
 	check_error(() => {
 		validate_layout_exports(
@@ -103,7 +104,8 @@ test('validates +layout.server.js', () => {
 		csr: false,
 		ssr: false,
 		trailingSlash: false,
-		config: {}
+		config: {},
+		gate: true
 	});
 
 	validate_layout_server_exports({
@@ -114,7 +116,7 @@ test('validates +layout.server.js', () => {
 		validate_layout_server_exports({
 			answer: 42
 		});
-	}, "Invalid export 'answer' (valid exports are load, prerender, csr, ssr, trailingSlash, config, or anything with a '_' prefix)");
+	}, "Invalid export 'answer' (valid exports are load, prerender, csr, ssr, trailingSlash, config, gate, or anything with a '_' prefix)");
 
 	check_error(() => {
 		validate_layout_exports(

@@ -13,7 +13,7 @@ import { get_relative_path } from '../../utils.js';
 export function generate_route_object(route, url, manifest) {
 	const { errors, layouts, leaf } = route;
 
-	const nodes = [...errors, ...layouts.map((l) => l?.[1]), leaf[1]]
+	const nodes = [...errors, ...layouts.map((l) => l?.[2]), leaf[2]]
 		.filter((n) => typeof n === 'number')
 		.map((n) => `'${n}': () => ${create_client_import(manifest._.client.nodes?.[n], url)}`)
 		.join(',\n\t\t');
@@ -113,7 +113,7 @@ function create_css_import(route, url, manifest) {
 
 	let css = '';
 
-	for (const node of [...errors, ...layouts.map((l) => l?.[1]), leaf[1]]) {
+	for (const node of [...errors, ...layouts.map((l) => l?.[2]), leaf[2]]) {
 		if (typeof node !== 'number') continue;
 		const node_css = manifest._.client.css?.[node];
 		for (const css_path of node_css ?? []) {

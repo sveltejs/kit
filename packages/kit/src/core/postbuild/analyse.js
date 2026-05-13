@@ -93,7 +93,8 @@ async function analyse({
 
 		metadata.nodes[node.index] = {
 			has_server_load: has_server_load(node),
-			has_universal_load: node.universal?.load !== undefined
+			has_universal_load: node.universal?.load !== undefined,
+			is_gate: !!(node.server?.gate || node.universal?.gate)
 		};
 	}
 

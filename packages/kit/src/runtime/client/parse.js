@@ -4,8 +4,9 @@ import { exec, parse_route_id } from '../../utils/routing.js';
  * @param {import('./types.js').SvelteKitApp} app
  * @returns {import('types').CSRRoute[]}
  */
-export function parse({ nodes, server_loads, dictionary, matchers }) {
+export function parse({ nodes, server_loads, gate_layouts, dictionary, matchers }) {
 	const layouts_with_server_load = new Set(server_loads);
+	const layouts_with_gate = new Set(gate_layouts);
 
 	return Object.entries(dictionary).map(([id, [leaf, layouts, errors]]) => {
 		const { pattern, params } = parse_route_id(id);
@@ -36,24 +37,26 @@ export function parse({ nodes, server_loads, dictionary, matchers }) {
 
 	/**
 	 * @param {number} id
-	 * @returns {[boolean, import('types').CSRPageNodeLoader]}
+	 * @returns {[boolean, boolean, import('types').CSRPageNodeLoader]}
 	 */
 	function create_leaf_loader(id) {
 		// whether or not the route uses the server data is
 		// encoded using the ones' complement, to save space
 		const uses_server_data = id < 0;
 		if (uses_server_data) id = ~id;
-		return [uses_server_data, nodes[id]];
+		return [uses_server_data, false, nodes[id]];
 	}
 
 	/**
 	 * @param {number | undefined} id
-	 * @returns {[boolean, import('types').CSRPageNodeLoader] | undefined}
+	 * @returns {[boolean, boolean, import('types').CSRPageNodeLoader] | undefined}
 	 */
 	function create_layout_loader(id) {
 		// whether or not the layout uses the server data is
 		// encoded in the layouts array, to save space
-		return id === undefined ? id : [layouts_with_server_load.has(id), nodes[id]];
+		return id === undefined
+			? id
+			: [layouts_with_server_load.has(id), layouts_with_gate.has(id), nodes[id]];
 	}
 }
 
@@ -71,7 +74,7 @@ export function parse_server_route({ nodes, id, leaf, layouts, errors }, app_nod
 		// Code elsewhere in client.js relies on this referential equality to determine
 		// if a loader is different and should therefore (re-)run.
 		errors: errors.map((n) => (n ? (app_nodes[n] ||= nodes[n]) : undefined)),
-		layouts: layouts.map((n) => (n ? [n[0], (app_nodes[n[1]] ||= nodes[n[1]])] : undefined)),
-		leaf: [leaf[0], (app_nodes[leaf[1]] ||= nodes[leaf[1]])]
+		layouts: layouts.map((n) => (n ? [n[0], n[1], (app_nodes[n[2]] ||= nodes[n[2]])] : undefined)),
+		leaf: [leaf[0], leaf[1], (app_nodes[leaf[2]] ||= nodes[leaf[2]])]
 	};
 }

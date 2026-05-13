@@ -123,14 +123,16 @@ export type CSRPageNodeLoader = () => Promise<CSRPageNode>;
 
 /**
  * Definition of a client side route.
- * The boolean in the tuples indicates whether the route has a server load.
+ * The booleans in the layout tuples indicate whether the route has a server load and whether it is a gate.
  */
 export type CSRRoute = {
 	id: string;
 	exec(path: string): undefined | Record<string, string>;
 	errors: Array<CSRPageNodeLoader | undefined>;
-	layouts: Array<[has_server_load: boolean, node_loader: CSRPageNodeLoader] | undefined>;
-	leaf: [has_server_load: boolean, node_loader: CSRPageNodeLoader];
+	layouts: Array<
+		[has_server_load: boolean, is_gate: boolean, node_loader: CSRPageNodeLoader] | undefined
+	>;
+	leaf: [has_server_load: boolean, is_gate: boolean, node_loader: CSRPageNodeLoader];
 };
 
 /**
@@ -139,8 +141,8 @@ export type CSRRoute = {
 export type CSRRouteServer = {
 	id: string;
 	errors: Array<number | undefined>;
-	layouts: Array<[has_server_load: boolean, node_id: number] | undefined>;
-	leaf: [has_server_load: boolean, node_id: number];
+	layouts: Array<[has_server_load: boolean, is_gate: boolean, node_id: number] | undefined>;
+	leaf: [has_server_load: boolean, is_gate: boolean, node_id: number];
 	nodes: Record<string, CSRPageNodeLoader>;
 };
 
@@ -406,6 +408,7 @@ export interface ServerMetadata {
 		/** Also `true` when using `trailingSlash`, because we need to do a server request in that case to get its value. */
 		has_server_load: boolean;
 		has_universal_load: boolean;
+		is_gate: boolean;
 	}>;
 	routes: Map<string, ServerMetadataRoute>;
 	/** For each hashed remote file, a map of export name -> { type, dynamic }, where `dynamic` is `false` for non-dynamic prerender functions */
@@ -443,6 +446,7 @@ export interface UniversalNode {
 	trailingSlash?: TrailingSlash;
 	config?: any;
 	entries?: PrerenderEntryGenerator;
+	gate?: boolean;
 }
 
 export interface ServerNode {
@@ -454,6 +458,7 @@ export interface ServerNode {
 	actions?: Actions;
 	config?: any;
 	entries?: PrerenderEntryGenerator;
+	gate?: boolean;
 }
 
 export interface SSRNode {
@@ -543,8 +548,8 @@ export interface SSRClientRoute {
 	pattern: RegExp;
 	params: RouteParam[];
 	errors: Array<number | undefined>;
-	layouts: Array<[has_server_load: boolean, node_id: number] | undefined>;
-	leaf: [has_server_load: boolean, node_id: number];
+	layouts: Array<[has_server_load: boolean, is_gate: boolean, node_id: number] | undefined>;
+	leaf: [has_server_load: boolean, is_gate: boolean, node_id: number];
 }
 
 export interface SSRState {

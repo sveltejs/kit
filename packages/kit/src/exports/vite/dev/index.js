@@ -168,10 +168,16 @@ export async function dev(vite, vite_config, svelte_config, get_remotes) {
 											pattern: route.pattern,
 											params: route.params,
 											layouts: route.page.layouts.map((l) =>
-												l !== undefined ? [!!manifest_data.nodes[l].server, l] : undefined
+												l !== undefined
+													? [
+															!!manifest_data.nodes[l].server,
+															!!manifest_data.nodes[l].page_options?.gate,
+															l
+														]
+													: undefined
 											),
 											errors: route.page.errors,
-											leaf: [!!manifest_data.nodes[route.page.leaf].server, route.page.leaf]
+											leaf: [!!manifest_data.nodes[route.page.leaf].server, false, route.page.leaf]
 										};
 									})
 								)

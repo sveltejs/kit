@@ -47,7 +47,13 @@ export async function render_data(
 
 		const new_event = { ...event, url };
 
-		const functions = node_ids.map((n, i) => {
+		// Pre-load all nodes in parallel to detect gate status before starting loads.
+		// Nodes are small cached JS modules so this is essentially free.
+		const loaded_nodes = await Promise.all(
+			node_ids.map((id) => (id == undefined ? Promise.resolve(null) : manifest._.nodes[id]()))
+		);
+
+		const functions = node_ids.map((_n, i) => {
 			return once(async () => {
 				try {
 					if (aborted) {
@@ -56,8 +62,15 @@ export async function render_data(
 						});
 					}
 
-					// == because it could be undefined (in dev) or null (in build, because of JSON.stringify)
-					const node = n == undefined ? n : await manifest._.nodes[n]();
+					const node = loaded_nodes[i] ?? undefined;
+
+					// Wait for any gated ancestor to finish before starting this load.
+					for (let j = 0; j < i; j += 1) {
+						if (loaded_nodes[j]?.server?.gate) {
+							await functions[j]();
+						}
+					}
+
 					// load this. for the child, return as is. for the final result, stream things
 					return load_server_data({
 						event: new_event,

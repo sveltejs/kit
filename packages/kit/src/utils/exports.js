@@ -60,7 +60,7 @@ function hint_for_supported_files(key, ext = '.js') {
 	}
 }
 
-const valid_layout_exports = new Set([
+const valid_shared_exports = new Set([
 	'load',
 	'prerender',
 	'csr',
@@ -68,9 +68,10 @@ const valid_layout_exports = new Set([
 	'trailingSlash',
 	'config'
 ]);
-const valid_page_exports = new Set([...valid_layout_exports, 'entries']);
-const valid_layout_server_exports = new Set([...valid_layout_exports]);
-const valid_page_server_exports = new Set([...valid_layout_server_exports, 'actions', 'entries']);
+const valid_layout_exports = new Set([...valid_shared_exports, 'gate']);
+const valid_page_exports = new Set([...valid_shared_exports, 'entries']);
+const valid_layout_server_exports = new Set([...valid_shared_exports, 'gate']);
+const valid_page_server_exports = new Set([...valid_shared_exports, 'actions', 'entries']);
 const valid_server_exports = new Set([
 	'GET',
 	'POST',

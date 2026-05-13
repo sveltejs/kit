@@ -29,6 +29,12 @@ export interface SvelteKitApp {
 	server_loads: number[];
 
 	/**
+	 * A list of all layout node ids that export `gate = true`.
+	 * Gates block descendant load functions and renders until they resolve.
+	 */
+	gate_layouts: number[];
+
+	/**
 	 * A map of `[routeId: string]: [leaf, layouts, errors]` tuples, which
 	 * is parsed into an array of routes on startup. The numbers refer to the indices in `nodes`.
 	 * If the leaf number is negative, it means it does use a server load function and the complement is the node index.

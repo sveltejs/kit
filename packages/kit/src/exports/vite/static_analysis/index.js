@@ -9,7 +9,8 @@ const valid_page_options_array = /** @type {const} */ ([
 	'trailingSlash',
 	'config',
 	'entries',
-	'load'
+	'load',
+	'gate'
 ]);
 
 /** @type {Set<string>} */

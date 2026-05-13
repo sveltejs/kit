@@ -2696,6 +2696,7 @@ declare module '@sveltejs/kit' {
 		trailingSlash?: TrailingSlash;
 		config?: any;
 		entries?: PrerenderEntryGenerator;
+		gate?: boolean;
 	}
 
 	interface ServerNode {
@@ -2707,6 +2708,7 @@ declare module '@sveltejs/kit' {
 		actions?: Actions;
 		config?: any;
 		entries?: PrerenderEntryGenerator;
+		gate?: boolean;
 	}
 
 	interface SSRNode {
@@ -2766,8 +2768,8 @@ declare module '@sveltejs/kit' {
 		pattern: RegExp;
 		params: RouteParam[];
 		errors: Array<number | undefined>;
-		layouts: Array<[has_server_load: boolean, node_id: number] | undefined>;
-		leaf: [has_server_load: boolean, node_id: number];
+		layouts: Array<[has_server_load: boolean, is_gate: boolean, node_id: number] | undefined>;
+		leaf: [has_server_load: boolean, is_gate: boolean, node_id: number];
 	}
 
 	type ValidatedConfig = Config & {
@@ -2913,7 +2915,7 @@ declare module '@sveltejs/kit' {
 	export type NumericRange<TStart extends number, TEnd extends number> = Exclude<TEnd | LessThan<TEnd>, LessThan<TStart>>;
 	type ValidPageOption = (typeof valid_page_options_array)[number];
 	type PageOptions = Partial<Record<ValidPageOption, any>>;
-	const valid_page_options_array: readonly ["ssr", "prerender", "csr", "trailingSlash", "config", "entries", "load"];
+	const valid_page_options_array: readonly ["ssr", "prerender", "csr", "trailingSlash", "config", "entries", "load", "gate"];
 	export const VERSION: string;
 	class HttpError_1 {
 		

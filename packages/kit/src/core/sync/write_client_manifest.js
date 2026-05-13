@@ -55,6 +55,7 @@ export function write_client_manifest(kit, manifest_data, output, metadata) {
 		.join(',\n');
 
 	const layouts_with_server_load = new Set();
+	const layouts_with_gate = new Set();
 
 	let dictionary = dedent`
 		{
@@ -90,6 +91,10 @@ export function write_client_manifest(kit, manifest_data, output, metadata) {
 
 							let layout_has_server_load = false;
 
+							const layout_is_gate = metadata
+								? metadata[layout].is_gate
+								: !!manifest_data.nodes[layout].page_options?.gate;
+
 							if (metadata) {
 								layout_has_server_load = metadata[layout].has_server_load;
 							} else if (manifest_data.nodes[layout].server) {
@@ -98,6 +103,10 @@ export function write_client_manifest(kit, manifest_data, output, metadata) {
 
 							if (layout_has_server_load) {
 								layouts_with_server_load.add(layout);
+							}
+
+							if (layout_is_gate) {
+								layouts_with_gate.add(layout);
 							}
 						});
 
@@ -118,6 +127,10 @@ export function write_client_manifest(kit, manifest_data, output, metadata) {
 		const root_layout = layouts_with_server_load.has(0);
 		layouts_with_server_load.clear();
 		if (root_layout) layouts_with_server_load.add(0);
+
+		const root_layout_is_gate = layouts_with_gate.has(0);
+		layouts_with_gate.clear();
+		if (root_layout_is_gate) layouts_with_gate.add(0);
 	}
 
 	const client_hooks_file = resolve_entry(kit.files.hooks.client);
@@ -158,6 +171,8 @@ export function write_client_manifest(kit, manifest_data, output, metadata) {
 			];
 
 			export const server_loads = [${[...layouts_with_server_load].join(',')}];
+
+			export const gate_layouts = [${[...layouts_with_gate].join(',')}];
 
 			export const dictionary = ${dictionary};
 

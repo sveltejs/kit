@@ -645,9 +645,9 @@ async function _preload_code(url) {
 
 	if (route) {
 		await Promise.all(
-			/** @type {[has_server_load: boolean, node_loader: import('types').CSRPageNodeLoader][]} */ (
+			/** @type {[has_server_load: boolean, is_gate: boolean, node_loader: import('types').CSRPageNodeLoader][]} */ (
 				[...route.layouts, route.leaf].filter(Boolean)
-			).map((load) => load[1]())
+			).map((load) => load[2]())
 		);
 	}
 }
@@ -1166,7 +1166,7 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 	// so they don't get reported to Sentry et al (we don't need
 	// to act on the failures at this point)
 	errors.forEach((loader) => loader?.().catch(noop));
-	loaders.forEach((loader) => loader?.[1]().catch(noop));
+	loaders.forEach((loader) => loader?.[2]().catch(noop));
 
 	/** @type {import('types').ServerNodesResponse | import('types').ServerRedirectNode | null} */
 	let server_data = null;
@@ -1182,7 +1182,7 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 
 			const invalid =
 				!!loader?.[0] &&
-				(previous?.loader !== loader[1] ||
+				(previous?.loader !== loader[2] ||
 					has_changed(
 						parent_invalid,
 						route_changed,
@@ -1228,6 +1228,22 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 
 	let parent_changed = false;
 
+	// Pre-create deferred promises for gated layouts so we can await them inside
+	// the branch_promises map without hitting the TDZ of branch_promises itself.
+	/** @type {Array<{ promise: Promise<any>, resolve: (v: any) => void, reject: (e: any) => void } | null>} */
+	const gate_deferreds = loaders.map((loader) => {
+		if (!loader?.[1]) return null;
+		/** @type {(v: any) => void} */
+		let resolve = /** @type {any} */ (undefined);
+		/** @type {(e: any) => void} */
+		let reject = /** @type {any} */ (undefined);
+		const promise = new Promise((res, rej) => {
+			resolve = res;
+			reject = rej;
+		});
+		return { promise, resolve, reject };
+	});
+
 	const branch_promises = loaders.map(async (loader, i) => {
 		if (!loader) return;
 
@@ -1239,7 +1255,7 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 		// reuse data from previous load if it's still valid
 		const valid =
 			(!server_data_node || server_data_node.type === 'skip') &&
-			loader[1] === previous?.loader &&
+			loader[2] === previous?.loader &&
 			!has_changed(
 				parent_changed,
 				route_changed,
@@ -1257,25 +1273,43 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 			throw server_data_node;
 		}
 
-		return load_node({
-			loader: loader[1],
-			url,
-			params,
-			route,
-			parent: async () => {
-				const data = {};
-				for (let j = 0; j < i; j += 1) {
-					Object.assign(data, (await branch_promises[j])?.data);
-				}
-				return data;
-			},
-			server_data_node: create_data_node(
-				// server_data_node is undefined if it wasn't reloaded from the server;
-				// and if current loader uses server data, we want to reuse previous data.
-				server_data_node === undefined && loader[0] ? { type: 'skip' } : (server_data_node ?? null),
-				loader[0] ? previous?.server : undefined
-			)
-		});
+		// Wait for any gated ancestor to complete before starting this load.
+		// Uses gate_deferreds (pre-initialized) rather than branch_promises directly
+		// to avoid accessing branch_promises while it's still in the TDZ.
+		for (let j = 0; j < i; j += 1) {
+			const gd = gate_deferreds[j];
+			if (gd) await gd.promise;
+		}
+
+		let result;
+		try {
+			result = await load_node({
+				loader: loader[2],
+				url,
+				params,
+				route,
+				parent: async () => {
+					const data = {};
+					for (let j = 0; j < i; j += 1) {
+						Object.assign(data, (await branch_promises[j])?.data);
+					}
+					return data;
+				},
+				server_data_node: create_data_node(
+					// server_data_node is undefined if it wasn't reloaded from the server;
+					// and if current loader uses server data, we want to reuse previous data.
+					server_data_node === undefined && loader[0]
+						? { type: 'skip' }
+						: (server_data_node ?? null),
+					loader[0] ? previous?.server : undefined
+				)
+			});
+		} catch (e) {
+			gate_deferreds[i]?.reject(e);
+			throw e;
+		}
+		gate_deferreds[i]?.resolve(result);
+		return result;
 	});
 
 	// if we don't do this, rejections will be unhandled
