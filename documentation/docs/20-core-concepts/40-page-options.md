@@ -221,6 +221,17 @@ export const config = {
 
 ...which results in the config value `{ runtime: 'edge', regions: ['us1', 'us2'], foo: { baz: true } }` for that page.
 
+## gate
+
+Exporting `gate = true` from a `+layout.js` or `+layout.server.js` causes all descendant `load` functions to wait for the layout's `load` to finish before they start. See [Gate](load#Loading-data-Gate) for details.
+
+```js
+/// file: +layout.server.js
+export const gate = true;
+```
+
+> [!NOTE] Unlike the other options, `gate` only applies to `+layout.js` and `+layout.server.js` — it is not valid on `+page.js` or `+page.server.js`.
+
 ## Further reading
 
 - [Tutorial: Page options](/tutorial/kit/page-options)

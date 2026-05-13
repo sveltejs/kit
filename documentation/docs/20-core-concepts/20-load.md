@@ -403,6 +403,25 @@ In `+page.js` or `+layout.js` it will return data from parent `+layout.js` files
 
 Take care not to introduce waterfalls when using `await parent()`. Here, for example, `getData(params)` does not depend on the result of calling `parent()`, so we should call it first to avoid a delayed render.
 
+## Gate
+
+If you want all descendant `load` functions to wait for a layout's `load` to finish before they start — without requiring each child to call `await parent()` — you can export `gate = true` from the layout:
+
+```js
+/// file: +layout.server.js
+export const gate = true;
+
+/** @type {import('./$types').LayoutServerLoad} */
+export async function load({ locals }) {
+	if (!locals.user) redirect(307, '/login');
+	return { user: locals.user };
+}
+```
+
+With `gate = true`, all child `load` functions (both server and universal) will wait for the layout's `load` to resolve before starting. This is useful for auth guards and other checks that must complete before any child data is fetched, without forcing every child to explicitly call `await parent()`.
+
+`gate` can be exported from `+layout.js` or `+layout.server.js`. Multiple nested gates run sequentially — each gated layout waits for all gated ancestors above it to finish first.
+
 ```js
 /// file: +page.js
 // @filename: ambient.d.ts
@@ -711,7 +730,7 @@ To prevent data waterfalls and preserve layout `load` caches:
 - Use [hooks](hooks) to protect multiple routes before any `load` functions run
 - Use auth guards directly in `+page.server.js` `load` functions for route specific protection
 
-Putting an auth guard in `+layout.server.js` requires all child pages to call `await parent()` before protected code. Unless every child page depends on returned data from `await parent()`, the other options will be more performant.
+Putting an auth guard in `+layout.server.js` requires all child pages to call `await parent()` before protected code, unless you use [`gate`](#Loading-data-Gate) — which blocks all descendant loads from starting until the layout's `load` resolves, without requiring changes to each child.
 
 ## Using `getRequestEvent`
 
