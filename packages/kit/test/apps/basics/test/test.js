@@ -413,6 +413,25 @@ test.describe('Load', () => {
 			}
 		});
 
+		test('cached universal gate does not hang descendant loads', async ({
+			page,
+			javaScriptEnabled,
+			clicknav
+		}) => {
+			if (!javaScriptEnabled) return;
+
+			// SSR load hydrates current.branch with the universal gate layout
+			await page.goto('/load/gate/universal');
+			expect(await page.textContent('h1')).toBe('1:page_data');
+
+			// Navigate away, then back via client-side nav.
+			// On the way back, the layout load is valid (cached) and returns early —
+			// gate_deferreds[i] must still be resolved or the page load hangs forever.
+			await clicknav('[href="/load/gate"]');
+			await clicknav('[href="/load/gate/universal"]');
+			expect(await page.textContent('h1')).toBe('1:page_data');
+		});
+
 		test('nested gates run sequentially', async ({ page, javaScriptEnabled, clicknav }) => {
 			await page.goto('/load/gate/nested/inner');
 			expect(await page.textContent('#inner-saw-outer')).toBe('true');

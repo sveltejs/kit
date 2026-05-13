@@ -1269,7 +1269,10 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 				previous.universal?.uses,
 				params
 			);
-		if (valid) return previous;
+		if (valid) {
+			gate_deferreds[i]?.resolve(previous);
+			return previous;
+		}
 
 		parent_changed = true;
 
