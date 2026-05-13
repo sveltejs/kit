@@ -39,7 +39,7 @@ import {
 	SNAPSHOT_KEY,
 	PAGE_URL_KEY
 } from './constants.js';
-import { validate_page_exports } from '../../utils/exports.js';
+import { validate_layout_exports, validate_page_exports } from '../../utils/exports.js';
 import { noop } from '../../utils/functions.js';
 import { compact } from '../../utils/array.js';
 import {
@@ -865,10 +865,11 @@ async function get_navigation_result_from_branch({
  *   params: Record<string, string>;
  *   route: { id: string | null };
  * 	 server_data_node: import('./types.js').DataNode | null;
+ *   is_leaf?: boolean;
  * }} options
  * @returns {Promise<import('./types.js').BranchNode>}
  */
-async function load_node({ loader, parent, url, params, route, server_data_node }) {
+async function load_node({ loader, parent, url, params, route, server_data_node, is_leaf }) {
 	/** @type {Record<string, any> | null} */
 	let data = null;
 
@@ -887,7 +888,11 @@ async function load_node({ loader, parent, url, params, route, server_data_node 
 	const node = await loader();
 
 	if (DEV) {
-		validate_page_exports(node.universal);
+		if (is_leaf) {
+			validate_page_exports(node.universal);
+		} else {
+			validate_layout_exports(node.universal);
+		}
 
 		if (node.universal && app.hash) {
 			const options = Object.keys(node.universal).filter((o) => o !== 'load');
@@ -1288,6 +1293,7 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 				url,
 				params,
 				route,
+				is_leaf: i === loaders.length - 1,
 				parent: async () => {
 					const data = {};
 					for (let j = 0; j < i; j += 1) {
@@ -1475,6 +1481,7 @@ async function load_root_error_page({ status, error, url, route }) {
 			url,
 			params,
 			route,
+			is_leaf: false,
 			parent: () => Promise.resolve({}),
 			server_data_node: create_data_node(server_data_node)
 		});
@@ -2996,6 +3003,7 @@ async function _hydrate(
 				url,
 				params,
 				route,
+				is_leaf: i === node_ids.length - 1,
 				parent: async () => {
 					const data = {};
 					for (let j = 0; j < i; j += 1) {
