@@ -1,5 +1,23 @@
 # @sveltejs/kit
 
+## 2.60.0
+### Minor Changes
+
+
+- feat: allow 'submit' and 'hidden' form fields to accept numbers and booleans ([#15802](https://github.com/sveltejs/kit/pull/15802))
+
+
+- feat: warn on unread `form` remote function validation issues ([#15653](https://github.com/sveltejs/kit/pull/15653))
+
+
+### Patch Changes
+
+
+- fix: abort navigation after async rendering if obsolete ([#15811](https://github.com/sveltejs/kit/pull/15811))
+
+
+- fix: skip refreshing queries on full-page reload form submissions ([#15803](https://github.com/sveltejs/kit/pull/15803))
+
 ## 2.59.1
 ### Patch Changes
 
