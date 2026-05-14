@@ -164,6 +164,7 @@ export default function (options = {}) {
 							id: [/^SERVER$/, /^MANIFEST$/]
 						},
 						handler(id, importer, options) {
+							// TODO: add a test for this by ensuring the test apps copy the adapter into node_modules rather than symlinking the source files
 							// the importer id could have a ?v= query string suffix so we need
 							// to extract the pathname before comparing
 							const importer_url = importer ? new URL(importer, 'file://') : undefined;
