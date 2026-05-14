@@ -1288,7 +1288,7 @@ function kit({ svelte_config, adapter }) {
 		 * @see https://vitejs.dev/guide/api-plugin.html#configureserver
 		 */
 		async configureServer(vite) {
-			return await dev(vite, vite_config, svelte_config, () => remotes, root);
+			return await dev(vite, vite_config, svelte_config, () => remotes, root, adapter);
 		},
 
 		/**
@@ -1296,7 +1296,7 @@ function kit({ svelte_config, adapter }) {
 		 * @see https://vitejs.dev/guide/api-plugin.html#configurepreviewserver
 		 */
 		configurePreviewServer(vite) {
-			return preview(vite, vite_config, svelte_config);
+			return preview(vite, vite_config, svelte_config, adapter);
 		},
 
 		renderChunk(code, chunk) {
@@ -1651,13 +1651,24 @@ function kit({ svelte_config, adapter }) {
 		}
 	};
 
+	/** @type {Plugin} */
+	const plugin_adapter = {
+		name: 'vite-plugin-sveltekit-adapter',
+		// expose the adapter so that forked processes (e.g. prerendering)
+		// can retrieve it by resolving the Vite config
+		api: {
+			adapter
+		}
+	};
+
 	return [
 		plugin_setup,
 		plugin_remote,
 		plugin_virtual_modules,
 		process.env.TEST !== 'true' ? plugin_guard : undefined,
 		plugin_service_worker,
-		plugin_compile
+		plugin_compile,
+		plugin_adapter
 	].filter((p) => !!p);
 }
 

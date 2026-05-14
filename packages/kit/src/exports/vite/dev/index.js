@@ -29,9 +29,10 @@ const vite_css_query_regex = /(?:\?|&)(?:raw|url|inline)(?:&|$)/;
  * @param {import('types').ValidatedConfig} svelte_config
  * @param {() => Array<{ hash: string, file: string }>} get_remotes
  * @param {string} root The project root directory
+ * @param {import('@sveltejs/kit').Adapter | undefined} adapter
  * @return {Promise<Promise<() => void>>}
  */
-export async function dev(vite, vite_config, svelte_config, get_remotes, root) {
+export async function dev(vite, vite_config, svelte_config, get_remotes, root, adapter) {
 	/** @type {AsyncLocalStorage<{ event: RequestEvent, config: any, prerender: PrerenderOption }>} */
 	const async_local_storage = new AsyncLocalStorage();
 
@@ -39,12 +40,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root) {
 		const context = async_local_storage.getStore();
 		if (!context || context.prerender === true) return;
 
-		check_feature(
-			/** @type {string} */ (context.event.route.id),
-			context.config,
-			label,
-			svelte_config.kit.adapter
-		);
+		check_feature(/** @type {string} */ (context.event.route.id), context.config, label, adapter);
 	};
 
 	const fetch = globalThis.fetch;
@@ -438,7 +434,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root) {
 	});
 
 	const env = loadEnv(vite_config.mode, svelte_config.kit.env.dir, '');
-	const emulator = await svelte_config.kit.adapter?.emulate?.();
+	const emulator = await adapter?.emulate?.();
 
 	return () => {
 		const serve_static_middleware = vite.middlewares.stack.find(
