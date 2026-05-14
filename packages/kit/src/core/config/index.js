@@ -101,6 +101,10 @@ function process_config(config, { cwd = process.cwd() } = {}) {
 
 	validated.kit.outDir = path.resolve(cwd, validated.kit.outDir);
 
+	if (validated.kit.cache?.path) {
+		validated.kit.cache.path = path.resolve(cwd, validated.kit.cache.path);
+	}
+
 	for (const key in validated.kit.files) {
 		if (key === 'hooks') {
 			validated.kit.files.hooks.client = path.resolve(cwd, validated.kit.files.hooks.client);

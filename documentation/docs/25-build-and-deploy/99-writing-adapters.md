@@ -39,6 +39,14 @@ export default function (options) {
 				// Return `true` if this adapter supports loading `instrumentation.server.js`.
 				// Return `false if it can't, or throw a descriptive error.
 			}
+		},
+		cache: {
+			// This module will be imported and used to handle cache operations
+			path: 'adapter-package-name/cache',
+			// Optional: these will be passed to the default export of the module
+			options: {
+				some: 'value'
+			}
 		}
 	};
 
@@ -46,7 +54,7 @@ export default function (options) {
 }
 ```
 
-Of these, `name` and `adapt` are required. `emulate` and `supports` are optional.
+Of these, `name` and `adapt` are required. `emulate`, `supports` and `cache` are optional.
 
 Within the `adapt` method, there are a number of things that an adapter should do:
 
@@ -62,3 +70,60 @@ Within the `adapt` method, there are a number of things that an adapter should d
 - Put the user's static files and the generated JS/CSS in the correct location for the target platform
 
 Where possible, we recommend putting the adapter output under the `build/` directory with any intermediate output placed under `.svelte-kit/[adapter-name]`.
+
+## Cache adapter
+
+SvelteKit's remote functions come with a caching API, but its implementation is provided through a cache adapter. If your target platform provides a caching layer (like a CDN cache, edge cache, or Key-Value store), you can provide a cache implementation directly inside your adapter, or you provide a standalone implementation (like SvelteKit's built-in `inMemoryCache`).
+
+In both cases, you need to provide a module with a default export function that implements the following signature:
+
+```js
+// @filename: cache.js
+// ---cut---
+/** 
+ * @param {Record<string, unknown>} options
+ * @returns {import('@sveltejs/kit').KitCacheHandler} 
+ */
+export default function create_cache(options) {
+	return {
+		// Called to retrieve a cached response
+		async get(query_id) {
+			// Fetch and return the cached string, or undefined if not found
+		},
+
+		// Called to cache a successful response
+		async set(query_id, stringified_response, cache) {
+			// Save the response. The `cache` object contains:
+			// { maxAge: number, staleWhileRevalidate?: number, tags: string[] }
+		},
+
+		// Called when the remote query is called from the client. Optional.
+		setHeaders(headers, cache) {
+			// Example: headers.set('CDN-Cache-Control', `public, max-age=${cache.maxAge}`);
+		},
+
+		// Called to invalidate specific tags, including single queries (which are represented via a tag, too)
+		async invalidate(tags) {
+			// Purge the tags from your cache
+		}
+	};
+}
+```
+
+Then either provide the cache implementation through your adapter, or in case of a standalone cache adapter via `svelte.config.js` using the `kit.cache` option:
+
+```js
+// @errors: 2307
+/// file: svelte.config.js
+import { cacheAdapter } from 'cache-adapter-package-name';
+
+/** @type {import('@sveltejs/kit').Config} */
+const config = {
+	kit: {
+		// the function should return { path: 'cache-adapter-package-name/cache', options: { some: 'option' } }
+		cache: cacheAdapter({ some: 'option' })
+	}
+};
+
+export default config;
+```

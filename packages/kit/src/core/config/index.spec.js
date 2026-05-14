@@ -60,6 +60,7 @@ const get_defaults = (prefix = '') => ({
 	extensions: ['.svelte'],
 	kit: {
 		adapter: null,
+		cache: undefined,
 		alias: {},
 		appDir: '_app',
 		csp: {

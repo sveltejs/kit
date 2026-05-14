@@ -529,7 +529,13 @@ const plugin = function (defaults = {}) {
 				return true;
 			},
 			instrumentation: () => true
-		}
+		},
+
+		cache: defaults.cache
+			? {
+					path: '@sveltejs/adapter-vercel/cache'
+				}
+			: undefined
 	};
 };
 

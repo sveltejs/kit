@@ -102,6 +102,10 @@ export type Config = (EdgeConfig | ServerlessConfig) & {
 	 * https://vercel.com/docs/build-output-api/v3/configuration#images
 	 */
 	images?: ImagesConfig;
+	/**
+	 * If `true`, the cache will be enabled.
+	 */
+	cache?: boolean;
 };
 
 // we copy the RequestContext interface from `@vercel/edge` because that package can't co-exist with `@types/node`.

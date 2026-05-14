@@ -15,6 +15,7 @@
 	},
 	"include": [
 		"index.js",
+		"cache.js",
 		"utils.js",
 		"utils.spec.js",
 		"test/utils.js",

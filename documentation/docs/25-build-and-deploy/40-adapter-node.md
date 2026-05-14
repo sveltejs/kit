@@ -191,6 +191,32 @@ MY_CUSTOM_ORIGIN=https://my.site \
 node build
 ```
 
+## Caching
+
+`adapter-node` can make use of SvelteKit's remote caching. SvelteKit provides two implementations:
+
+- **In-memory cache**: A simple, standalone cache that stores data in memory using standard JavaScript `Map` objects. This is easy to use and requires no setup, but it only works reliably if you are running a single Node instance. If your application scales across multiple instances, each instance will have its own isolated cache.
+- **Redis cache**: If you need to scale horizontally, you should use the Redis cache. This stores data centrally, allowing multiple Node instances to share the same cache. To use it, you will need to install the `redis` package and configure a `REDIS_URL` environment variable (or pass a `url` option to the cache configuration).
+
+```js
+// @errors: 2307
+/// file: svelte.config.js
+import adapter from '@sveltejs/adapter-node';
+import { inMemoryCache } from '@sveltejs/kit/node/cache';
+
+/** @type {import('@sveltejs/kit').Config} */
+const config = {
+	kit: {
+		adapter: adapter(),
+		cache: inMemoryCache(), // or redisCache()
+	}
+};
+
+export default config;
+```
+
+If neither suits your use case, you can also [create your own](writing-adapters#Cache-adapter).
+
 ## Graceful shutdown
 
 By default `adapter-node` gracefully shuts down the HTTP server when a `SIGTERM` or `SIGINT` signal is received. It will:
