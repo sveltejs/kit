@@ -8,23 +8,28 @@ This adapter will be installed by default when you use [`adapter-auto`](adapter-
 
 ## Usage
 
-Install with `npm i -D @sveltejs/adapter-vercel`, then add the adapter to your `svelte.config.js`:
+Install with `npm i -D @sveltejs/adapter-vercel`, then add the adapter to your `vite.config.js`:
 
 ```js
-/// file: svelte.config.js
+// @errors: 2554
+/// file: vite.config.js
 import adapter from '@sveltejs/adapter-vercel';
+import { sveltekit } from '@sveltejs/kit/vite';
+import { defineConfig } from 'vite';
 
-/** @type {import('@sveltejs/kit').Config} */
-const config = {
-	kit: {
-		adapter: adapter({
-			// see below for options that can be set here
-		})
-	}
-};
-
-export default config;
+export default defineConfig({
+  plugins: [
+    sveltekit({
+      adapter: adapter({
+				// see below for options that can be set here
+      })
+    })
+  ]
+});
 ```
+
+> [!LEGACY]
+> The `adapter` option was moved to the SvelteKit Vite plugin in SvelteKit 3.0.0. In earlier versions, you had to add it to the `kit` property in the `svelte.config.js` file instead.
 
 ## Deployment configuration
 
@@ -64,24 +69,26 @@ If your functions need to access data in a specific region, it's recommended tha
 You may set the `images` config to control how Vercel builds your images. See the [image configuration reference](https://vercel.com/docs/build-output-api/v3/configuration#images) for full details. As an example, you may set:
 
 ```js
-/// file: svelte.config.js
+// @errors: 2554
+/// file: vite.config.js
 import adapter from '@sveltejs/adapter-vercel';
+import { sveltekit } from '@sveltejs/kit/vite';
+import { defineConfig } from 'vite';
 
-/** @type {import('@sveltejs/kit').Config} */
-const config = {
-	kit: {
-		adapter: adapter({
-			images: {
-				sizes: [640, 828, 1200, 1920, 3840],
-				formats: ['image/avif', 'image/webp'],
-				minimumCacheTTL: 300,
-				domains: ['example-app.vercel.app'],
-			}
-		})
-	}
-};
-
-export default config;
+export default defineConfig({
+  plugins: [
+    sveltekit({
+      adapter: adapter({
+				images: {
+					sizes: [640, 828, 1200, 1920, 3840],
+					formats: ['image/avif', 'image/webp'],
+					minimumCacheTTL: 300,
+					domains: ['example-app.vercel.app'],
+				}
+      })
+    })
+  ]
+});
 ```
 
 ## Incremental Static Regeneration

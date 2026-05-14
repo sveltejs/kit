@@ -8,31 +8,31 @@ This adapter will be installed by default when you use [`adapter-auto`](adapter-
 
 ## Usage
 
-Install with `npm i -D @sveltejs/adapter-netlify`, then add the adapter to your `svelte.config.js`:
+Install with `npm i -D @sveltejs/adapter-netlify`, then add the adapter to your `vite.config.js`:
 
 ```js
 // @errors: 2307
-/// file: svelte.config.js
+/// file: vite.config.js
 import adapter from '@sveltejs/adapter-netlify';
+import { sveltekit } from '@sveltejs/kit/vite';
+import { defineConfig } from 'vite';
 
-/** @type {import('@sveltejs/kit').Config} */
-const config = {
-	kit: {
-		// default options are shown
-		adapter: adapter({
-			// if true, will create a Netlify Edge Function rather
-			// than using standard Node-based functions
-			edge: false,
+export default defineConfig({
+  plugins: [
+    sveltekit({
+      adapter: adapter({
+				// if true, will create a Netlify Edge Function rather
+				// than using standard Node-based functions
+				edge: false,
 
-			// if true, will split your app into multiple functions
-			// instead of creating a single one for the entire app.
-			// if `edge` is true, this option cannot be used
-			split: false
-		})
-	}
-};
-
-export default config;
+				// if true, will split your app into multiple functions
+				// instead of creating a single one for the entire app.
+				// if `edge` is true, this option cannot be used
+				split: false
+      })
+    })
+  ]
+});
 ```
 
 Then, make sure you have a [netlify.toml](https://docs.netlify.com/configure-builds/file-based-configuration) file in the project root. This will determine where to write static assets based on the `build.publish` settings, as per this sample configuration:
@@ -45,6 +45,9 @@ Then, make sure you have a [netlify.toml](https://docs.netlify.com/configure-bui
 
 If the `netlify.toml` file or the `build.publish` value is missing, a default value of `"build"` will be used. Note that if you have set the publish directory in the Netlify UI to something else then you will need to set it in `netlify.toml` too, or use the default value of `"build"`.
 
+> [!LEGACY]
+> The `adapter` option was moved to the SvelteKit Vite plugin in SvelteKit 3.0.0. In earlier versions, you had to add it to the `kit` property in the `svelte.config.js` file instead.
+
 ### Node version
 
 New projects will use the current Node LTS version by default. However, if you're upgrading a project you created a while ago it may be stuck on an older version. See [the Netlify docs](https://docs.netlify.com/configure-builds/manage-dependencies/#node-js-and-javascript) for details on manually specifying a current Node version.
@@ -55,21 +58,22 @@ SvelteKit supports [Netlify Edge Functions](https://docs.netlify.com/build/edge-
 
 ```js
 // @errors: 2307
-/// file: svelte.config.js
+/// file: vite.config.js
 import adapter from '@sveltejs/adapter-netlify';
+import { sveltekit } from '@sveltejs/kit/vite';
+import { defineConfig } from 'vite';
 
-/** @type {import('@sveltejs/kit').Config} */
-const config = {
-	kit: {
-		adapter: adapter({
-			// will create a Netlify Edge Function using Deno-based
-			// rather than using standard Node-based functions
-			edge: true
-		})
-	}
-};
-
-export default config;
+export default defineConfig({
+  plugins: [
+    sveltekit({
+      adapter: adapter({
+				// will create a Netlify Edge Function using Deno-based
+				// rather than using standard Node-based functions
+				edge: true
+      })
+    })
+  ]
+});
 ```
 
 ## Netlify alternatives to SvelteKit functionality
