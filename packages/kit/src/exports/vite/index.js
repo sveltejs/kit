@@ -1930,18 +1930,17 @@ function kit({ svelte_config, adapter }) {
 			);
 
 			// regenerate nodes with the client manifest...
-			build_server_nodes({
+			build_server_nodes(
 				out,
-				manifest_data: build_manifest_data,
+				kit,
+				build_manifest_data,
 				server_manifest,
 				client_manifest,
-				paths: kit.paths,
-				inline_style_threshold: kit.inlineStyleThreshold,
 				assets_path,
 				client_chunks,
-				output_config: kit.output,
+				kit.output,
 				root
-			});
+			);
 
 			// ...and prerender
 			const prerender_results = await prerender({
