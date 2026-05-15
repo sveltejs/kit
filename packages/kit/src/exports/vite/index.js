@@ -250,16 +250,6 @@ function plugin_svelte_config({ vite_plugin_svelte_options, svelte_config }) {
 }
 
 /**
- * @param {unknown} value
- * @returns {string | undefined}
- */
-function revive_functions(value) {
-	if (value instanceof Function) {
-		return value.toString();
-	}
-}
-
-/**
  * Returns the SvelteKit Vite plugin. Vite executes Rolldown hooks as well as some of its own.
  * Background reading is available at:
  * - https://vite.dev/guide/api-plugin.html
@@ -798,7 +788,7 @@ function kit({ svelte_config, adapter }) {
 									server: ${s(manifest_data.hooks.server)},
 									universal: ${s(manifest_data.hooks.universal)}
 								},
-								nodes: ${devalue.uneval(manifest_data.nodes, revive_functions)},
+								nodes: ${devalue.uneval(manifest_data.nodes)},
 								routes: ${devalue.uneval(manifest_data.routes)},
 								matchers: ${s(manifest_data.matchers)}
 							};
