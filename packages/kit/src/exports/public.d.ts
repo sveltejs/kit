@@ -65,8 +65,10 @@ export interface Adapter {
 	/**
 	 * Creates an `Emulator`, which allows the adapter to influence the environment
 	 * during dev, build and prerendering.
+	 * @since 2.5.0
+	 * @deprecated Removed in 3.0.0. Add a Vite plugin that configures the dev and preview server instead
 	 */
-	emulate?: () => MaybePromise<Emulator>;
+	emulate?: never;
 }
 
 export type LoadProperties<input extends Record<string, any> | void> = input extends void
@@ -307,17 +309,6 @@ export interface Cookies {
 	 * @param opts the options passed to `cookie.serialize` with the SvelteKit defaults described above. See documentation [here](https://github.com/jshttp/cookie?tab=readme-ov-file#cookiestringifysetcookiesetcookieobj-options)
 	 */
 	serialize: (name: string, value: string, opts: import('cookie').SerializeOptions) => string;
-}
-
-/**
- * A collection of functions that influence the environment during dev, build and prerendering
- */
-export interface Emulator {
-	/**
-	 * A function that is called with the current route `config` and `prerender` option
-	 * and returns an `App.Platform` object
-	 */
-	platform?(details: { config: any; prerender: PrerenderOption }): MaybePromise<App.Platform>;
 }
 
 export interface KitConfig {

@@ -21,14 +21,6 @@ export default function (options) {
 		async adapt(builder) {
 			// adapter implementation
 		},
-		async emulate() {
-			return {
-				async platform({ config, prerender }) {
-					// the returned object becomes `event.platform` during dev, build and
-					// preview. Its shape is that of `App.Platform`
-				}
-			}
-		},
 		supports: {
 			read: ({ config, route }) => {
 				// Return `true` if the route with the given `config` can use `read`
@@ -46,7 +38,10 @@ export default function (options) {
 }
 ```
 
-Of these, `name` and `adapt` are required. `emulate` and `supports` are optional.
+Of these, `name` and `adapt` are required. `supports` is optional.
+
+> [!LEGACY]
+> The `emulate` property was added in 2.5.0 but removed in 3.0.0.
 
 Within the `adapt` method, there are a number of things that an adapter should do:
 

@@ -16,7 +16,6 @@ import {
 	Reroute,
 	RequestEvent,
 	SSRManifest,
-	Emulator,
 	Adapter,
 	ServerInit,
 	ClientInit,
@@ -182,7 +181,6 @@ export class InternalServer extends Server {
 			read: (file: string) => NonSharedBuffer;
 			/** A hook called before `handle` during dev, so that `AsyncLocalStorage` can be populated. */
 			before_handle?: (event: RequestEvent, config: any, prerender: PrerenderOption) => void;
-			emulator?: Emulator;
 		}
 	): Promise<Response>;
 }
@@ -570,7 +568,6 @@ export interface SSRState {
 	 * E.g. if `read` from `$app/server` is used, it checks whether the route's config is compatible.
 	 */
 	before_handle?: (event: RequestEvent, config: any, prerender: PrerenderOption) => void;
-	emulator?: Emulator;
 }
 
 export type StrictBody = string | ArrayBufferView;

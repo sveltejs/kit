@@ -221,13 +221,6 @@ export async function internal_respond(request, options, manifest, state) {
 		set_internal
 	});
 
-	if (state.emulator?.platform) {
-		event.platform = await state.emulator.platform({
-			config: {},
-			prerender: !!state.prerendering?.fallback
-		});
-	}
-
 	let resolved_path = url.pathname;
 
 	if (!remote_id) {
@@ -378,7 +371,7 @@ export async function internal_respond(request, options, manifest, state) {
 				}
 			}
 
-			if (state.before_handle || state.emulator?.platform) {
+			if (state.before_handle) {
 				let config = {};
 
 				/** @type {import('types').PrerenderOption} */
@@ -395,10 +388,6 @@ export async function internal_respond(request, options, manifest, state) {
 
 				if (state.before_handle) {
 					state.before_handle(event, config, prerender);
-				}
-
-				if (state.emulator?.platform) {
-					event.platform = await state.emulator.platform({ config, prerender });
 				}
 			}
 		}

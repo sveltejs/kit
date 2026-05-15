@@ -121,8 +121,6 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, roo
 		return { prerendered, prerender_map };
 	}
 
-	const emulator = await config.adapter?.emulate?.();
-
 	/** @type {import('types').Logger} */
 	const log = logger({ verbose });
 
@@ -259,8 +257,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, roo
 
 				// stuff in `static`
 				return readFileSync(join(config.files.assets, file));
-			},
-			emulator
+			}
 		});
 
 		const encoded_id = response.headers.get('x-sveltekit-routeid');
