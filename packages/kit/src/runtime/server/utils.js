@@ -53,7 +53,7 @@ export function get_global_name(options) {
 export function static_error_page(options, status, message) {
 	let page = options.templates.error({ status, message: escape_html(message) });
 
-	if (DEV) {
+	if (__SVELTEKIT_DEV__) {
 		// inject Vite HMR client, for easier debugging
 		page = page.replace('</head>', '<script type="module" src="/@vite/client"></script></head>');
 	}

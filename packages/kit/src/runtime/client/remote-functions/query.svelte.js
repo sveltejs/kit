@@ -10,7 +10,6 @@ import {
 	remote_request
 } from './shared.svelte.js';
 import * as devalue from 'devalue';
-import { DEV } from 'esm-env';
 import { noop } from '../../../utils/functions.js';
 import { with_resolvers } from '../../../utils/promise.js';
 import { tick, untrack } from 'svelte';
@@ -30,7 +29,7 @@ import { create_remote_key, stringify_remote_arg, unfriendly_hydratable } from '
  * @returns {RemoteQueryFunction<any, any>}
  */
 export function query(id) {
-	if (DEV) {
+	if (__SVELTEKIT_DEV__) {
 		// If this reruns as part of HMR, refresh the query
 		const entries = query_map.get(id);
 
