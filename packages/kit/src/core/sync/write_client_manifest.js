@@ -180,9 +180,16 @@ export function write_client_manifest(kit, manifest_data, output, metadata, erro
 
 			export { default as root } from '../root.${isSvelte5Plus() ? 'js' : 'svelte'}';
 
-			export const error_template = ${s(error_page)};
+			export const get_error_template = ${error_page ? `() => import('./error-template.js').then(m => m.error_template)` : 'null'};
 		`
 	);
+
+	if (error_page) {
+		write_if_changed(
+			`${output}/error-template.js`,
+			`export const error_template = ${s(error_page)};`
+		);
+	}
 
 	if (client_routing) {
 		// write matchers to a separate module so that we don't

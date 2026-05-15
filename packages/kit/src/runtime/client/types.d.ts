@@ -60,10 +60,11 @@ export interface SvelteKitApp {
 	root: typeof SvelteComponent;
 
 	/**
-	 * The contents of src/error.html (or the built-in default), used as a last-resort
+	 * Lazily loads the contents of src/error.html, used as a last-resort
 	 * error page when the root layout's load function throws during client-side rendering.
+	 * `null` when no custom error.html is configured.
 	 */
-	error_template: string;
+	get_error_template: (() => Promise<string>) | null;
 }
 
 export type NavigationIntent = {

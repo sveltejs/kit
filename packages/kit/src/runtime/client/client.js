@@ -1469,13 +1469,14 @@ async function load_root_error_page({ status, error, url, route }) {
 			return _goto(new URL(error.location, location.href), {}, 0);
 		}
 
-		if (app.error_template) {
+		if (app.get_error_template) {
+			const error_template = await app.get_error_template();
 			const handled = await handle_error(error, { url, params, route });
 			const message = String(handled?.message ?? '')
 				.replace(/&/g, '&amp;')
 				.replace(/</g, '&lt;')
 				.replace(/>/g, '&gt;');
-			const html = app.error_template
+			const html = error_template
 				.replace(/%sveltekit\.status%/g, String(status))
 				.replace(/%sveltekit\.error\.message%/g, message);
 			const parsed = new DOMParser().parseFromString(html, 'text/html');
