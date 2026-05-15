@@ -1308,8 +1308,7 @@ async function kit({ svelte_config }) {
 					server_manifest,
 					client_manifest,
 					assets_path,
-					client_chunks,
-					svelte_config.kit.output
+					client_chunks
 				);
 
 				// ...and prerender
