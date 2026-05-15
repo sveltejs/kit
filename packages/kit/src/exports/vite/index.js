@@ -2115,25 +2115,22 @@ function find_overridden_config(config, resolved_config, enforced_config, path, 
 
 /**
  * @param {ValidatedConfig} config
- * @returns {string}
  */
-function create_service_worker_module(config) {
-	return dedent`
-		if (typeof self === 'undefined' || self instanceof ServiceWorkerGlobalScope === false) {
-			throw new Error('This module can only be imported inside a service worker');
-		}
+const create_service_worker_module = (config) => dedent`
+	if (typeof self === 'undefined' || self instanceof ServiceWorkerGlobalScope === false) {
+		throw new Error('This module can only be imported inside a service worker');
+	}
 
-		export const build = [];
-		export const files = [
-			${create_assets(config)
-				.filter((asset) => config.kit.serviceWorker.files(asset.file))
-				.map((asset) => `${s(`${config.kit.paths.base}/${asset.file}`)}`)
-				.join(',\n')}
-		];
-		export const prerendered = [];
-		export const version = ${s(config.kit.version.name)};
-	`;
-}
+	export const build = [];
+	export const files = [
+		${create_assets(config)
+			.filter((asset) => config.kit.serviceWorker.files(asset.file))
+			.map((asset) => `${s(`${config.kit.paths.base}/${asset.file}`)}`)
+			.join(',\n')}
+	];
+	export const prerendered = [];
+	export const version = ${s(config.kit.version.name)};
+`;
 
 /**
  * @param {typeof import('vite')} vite
