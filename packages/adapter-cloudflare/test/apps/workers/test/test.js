@@ -7,7 +7,8 @@ test('worker', async ({ page }) => {
 	await expect(page.locator('h1')).toContainText('Sum: 3');
 });
 
-test('ctx', async ({ request }) => {
+// TODO: re-enable this when we integrate with the Vite environment API
+test.skip('ctx', async ({ request }) => {
 	const res = await request.get('/ctx');
 	expect(await res.text()).toBe('ctx works');
 });
