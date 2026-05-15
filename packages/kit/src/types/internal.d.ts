@@ -589,6 +589,7 @@ export type ValidatedConfig = Config & {
 	extensions: string[];
 };
 
+// TODO: remove the omit in 4.0
 export type ValidatedKitConfig = Omit<RecursiveRequired<KitConfig>, 'adapter'>;
 
 export type BinaryFormMeta = {

@@ -1654,6 +1654,7 @@ function kit({ svelte_config, adapter }) {
 	/** @type {Plugin} */
 	const plugin_adapter = {
 		name: 'vite-plugin-sveltekit-adapter',
+		apply: 'build',
 		// expose the adapter so that forked processes (e.g. prerendering)
 		// can retrieve it by resolving the Vite config
 		api: {
