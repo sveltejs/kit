@@ -3,23 +3,6 @@ import process from 'node:process';
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
 	kit: {
-		adapter: {
-			name: 'test-adapter',
-			adapt(builder) {
-				builder.instrument({
-					entrypoint: `${builder.getServerDirectory()}/index.js`,
-					instrumentation: `${builder.getServerDirectory()}/instrumentation.server.js`,
-					module: {
-						exports: ['Server']
-					}
-				});
-			},
-			supports: {
-				read: () => true,
-				instrumentation: () => true
-			}
-		},
-
 		experimental: {
 			remoteFunctions: true,
 			tracing: {
