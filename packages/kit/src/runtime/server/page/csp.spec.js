@@ -77,7 +77,7 @@ describe('CSPs in dev', () => {
 describe('CSPs in prod', () => {
 	beforeAll(() => {
 		// @ts-expect-error
-		globalThis.__SVELTEKIT_DEV__ = true;
+		globalThis.__SVELTEKIT_DEV__ = false;
 	});
 
 	test('generates blank CSP header', () => {
