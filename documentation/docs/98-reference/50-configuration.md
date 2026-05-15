@@ -8,7 +8,7 @@ Your project's configuration lives in a `svelte.config.js` file at the root of y
 /// file: svelte.config.js
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
-	kit: { }
+	kit: {}
 };
 
 export default config;
