@@ -180,7 +180,7 @@ export class InternalServer extends Server {
 		options: RequestOptions & {
 			prerendering?: PrerenderOptions;
 			/** @internal for saving dependencies during prerendering and generating fallback pages */
-			read: (file: string) => MaybePromise<Buffer<ArrayBuffer>>;
+			read: (file: string) => Buffer<ArrayBuffer>;
 			/** @internal used during development to check feature availability depending on the current route */
 			before_handle?: (
 				event: RequestEvent,
@@ -572,7 +572,7 @@ export interface SSRState {
 	 */
 	prerender_default?: PrerenderOption;
 	/** @internal reads from the filesystem when user code tries to fetch a static asset */
-	read?: (file: string) => MaybePromise<Buffer<ArrayBuffer>>;
+	read?: (file: string) => Buffer<ArrayBuffer>;
 	/**
 	 * Used to set up `__SVELTEKIT_TRACK__` which checks if a used feature is supported.
 	 * E.g. if `read` from `$app/server` is used, it checks whether the route's config is compatible.
