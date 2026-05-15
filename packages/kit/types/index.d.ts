@@ -2747,6 +2747,7 @@ declare module '@sveltejs/kit' {
 		extensions: string[];
 	};
 
+	// TODO: remove the omit in 4.0
 	type ValidatedKitConfig = Omit<RecursiveRequired<KitConfig>, 'adapter'>;
 	/**
 	 * Throws an error with a HTTP status code and an optional message.
