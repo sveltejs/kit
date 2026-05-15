@@ -2,8 +2,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { styleText } from 'node:util';
-import { posixify, to_fs } from '../utils/filesystem.js';
+import { to_fs } from '../utils/vite.js';
 import { noop } from '../utils/functions.js';
+import { posixify } from '../utils/os.js';
 
 /**
  * Resolved path of the `runtime` directory

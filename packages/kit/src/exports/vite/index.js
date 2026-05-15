@@ -8,7 +8,8 @@ import { styleText } from 'node:util';
 
 import { exactRegex, prefixRegex } from 'rolldown/filter';
 
-import { copy, mkdirp, posixify, read, resolve_entry, rimraf } from '../../utils/filesystem.js';
+import { copy, mkdirp, read, resolve_entry, rimraf } from '../../utils/filesystem.js';
+import { posixify } from '../../utils/os.js';
 import { create_static_module, create_dynamic_module } from '../../core/env.js';
 import * as sync from '../../core/sync/sync.js';
 import { create_assets } from '../../core/sync/create_manifest_data/index.js';

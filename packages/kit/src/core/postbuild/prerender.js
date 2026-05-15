@@ -1,7 +1,8 @@
 import { existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { mkdirp, posixify, walk } from '../../utils/filesystem.js';
+import { mkdirp, walk } from '../../utils/filesystem.js';
+import { posixify } from '../../utils/os.js';
 import { noop } from '../../utils/functions.js';
 import { decode_uri, is_root_relative, resolve } from '../../utils/url.js';
 import { escape_html } from '../../utils/escape.js';
