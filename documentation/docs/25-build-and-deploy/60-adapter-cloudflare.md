@@ -223,21 +223,6 @@ Cloudflare no longer recommends using [Workers Sites](https://developers.cloudfl
 
 ```js
 // @errors: 2307
-/// file: svelte.config.js
----import adapter from '@sveltejs/adapter-cloudflare-workers';---
-
-/** @type {import('@sveltejs/kit').Config} */
-const config = {
-	kit: {
-		---adapter: adapter()---
-	}
-};
-
-export default config;
-```
-
-```js
-// @errors: 2307
 /// file: vite.config.js
 +++import adapter from '@sveltejs/adapter-cloudflare';+++
 import { sveltekit } from '@sveltejs/kit/vite';
