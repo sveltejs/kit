@@ -40,7 +40,7 @@ const cookies_setup = ({ href, headers } = {}) => {
 describe('cookies in dev', () => {
 	beforeAll(() => {
 		// @ts-expect-error
-		globalThis.__SVELTEKIT_DEV__ = false;
+		globalThis.__SVELTEKIT_DEV__ = true;
 	});
 
 	test('warns if cookie exceeds 4,129 bytes', () => {
@@ -58,7 +58,7 @@ describe('cookies in dev', () => {
 describe('cookies in prod', () => {
 	beforeAll(() => {
 		// @ts-expect-error
-		globalThis.__SVELTEKIT_DEV__ = true;
+		globalThis.__SVELTEKIT_DEV__ = false;
 	});
 
 	domains.positive.forEach(([hostname, constraint]) => {
