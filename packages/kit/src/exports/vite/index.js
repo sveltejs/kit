@@ -1109,7 +1109,6 @@ async function kit({ svelte_config }) {
 					tracked_features,
 					env: { ...env.private, ...env.public },
 					out,
-					output_config: svelte_config.output,
 					remotes
 				});
 
