@@ -675,7 +675,7 @@ async function initialize(result, target, hydrate) {
 	const style = document.querySelector('style[data-sveltekit]');
 	if (style) style.remove();
 
-	Object.assign(page, /** @type {import('@sveltejs/kit').Page} */ (result.props.page));
+	update(/** @type {import('@sveltejs/kit').Page} */ (result.props.page));
 
 	root = new app.root({
 		target,
@@ -1917,6 +1917,17 @@ async function navigate({
 	await svelte.tick();
 	await svelte.tick();
 
+	if (token !== nav_token) {
+		// a new navigation happened while we were waiting for the DOM to update, so abort
+		nav.reject(new Error('navigation aborted'));
+		return false;
+	}
+
+	// Check for async rendering error
+	if (navigation_result.props.page && rendering_error) {
+		Object.assign(navigation_result.props.page, rendering_error);
+	}
+
 	// we reset scroll before dealing with focus, to avoid a flash of unscrolled content
 	/** @type {Element | null | ''} */
 	let deep_linked = null;
@@ -1950,14 +1961,6 @@ async function navigate({
 	}
 
 	autoscroll = true;
-
-	if (navigation_result.props.page) {
-		// Check for async rendering error
-		if (rendering_error) {
-			Object.assign(navigation_result.props.page, rendering_error);
-		}
-		Object.assign(page, navigation_result.props.page);
-	}
 
 	is_navigating = false;
 

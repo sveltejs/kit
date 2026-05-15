@@ -156,16 +156,16 @@ import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  plugins: [
-    sveltekit({
-      adapter: adapter({
-        // default options are shown
-        out: 'build',
-        precompress: true,
-        envPrefix: ''
-      })
-    })
-  ]
+	plugins: [
+		sveltekit({
+			adapter: adapter({
+				// default options are shown
+				out: 'build',
+				precompress: true,
+				envPrefix: ''
+			})
+		})
+	]
 });
 ```
 
@@ -207,8 +207,8 @@ You can listen to the `sveltekit:shutdown` event which is emitted after the HTTP
 ```js
 // @errors: 2304
 process.on('sveltekit:shutdown', async (reason) => {
-  await jobs.stop();
-  await db.close();
+	await jobs.stop();
+	await db.close();
 });
 ```
 

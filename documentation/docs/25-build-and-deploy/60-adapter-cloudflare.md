@@ -24,9 +24,9 @@ import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  plugins: [
-    sveltekit({
-      adapter: adapter({
+	plugins: [
+		sveltekit({
+			adapter: adapter({
 				// See below for an explanation of these options
 				config: undefined,
 				platformProxy: {
@@ -39,9 +39,9 @@ export default defineConfig({
 					include: ['/*'],
 					exclude: ['<all>']
 				}
-      })
-    })
-  ]
+			})
+		})
+	]
 });
 ```
 
@@ -221,8 +221,6 @@ Alternatively, you can [prerender](page-options#prerender) the routes in questio
 
 Cloudflare no longer recommends using [Workers Sites](https://developers.cloudflare.com/workers/configuration/sites/configuration/) and instead recommends using [Workers Static Assets](https://developers.cloudflare.com/workers/static-assets/). To migrate, replace `@sveltejs/adapter-cloudflare-workers` with `@sveltejs/adapter-cloudflare` and remove all `site` configuration settings from your Wrangler configuration file, then add the `assets.directory` and `assets.binding` configuration settings:
 
-### svelte.config.js
-
 ```js
 // @errors: 2307
 /// file: svelte.config.js
@@ -246,11 +244,11 @@ import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  plugins: [
-    sveltekit({
-      +++adapter: adapter()+++
-    })
-  ]
+	plugins: [
+		sveltekit({
+			+++adapter: adapter()+++
+		})
+	]
 });
 ```
 

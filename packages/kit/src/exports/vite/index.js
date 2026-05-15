@@ -2056,7 +2056,8 @@ function kit({ svelte_config, adapter }) {
 				await finalise();
 			}
 		},
-		// add it here so that we can retrieve from a separate process by resolving the Vite config
+		// expose the adapter so that forked processes (e.g. prerendering)
+		// can retrieve it by resolving the Vite config
 		api: {
 			adapter
 		}
