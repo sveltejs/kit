@@ -212,7 +212,7 @@ export async function preview(vite, vite_config, svelte_config) {
 						}
 
 						return fs.readFileSync(join(svelte_config.kit.files.assets, file));
-					},
+					}
 				})
 			);
 		});
