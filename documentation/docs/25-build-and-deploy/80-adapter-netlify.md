@@ -18,9 +18,9 @@ import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  plugins: [
-    sveltekit({
-      adapter: adapter({
+	plugins: [
+		sveltekit({
+			adapter: adapter({
 				// if true, will create a Netlify Edge Function rather
 				// than using standard Node-based functions
 				edge: false,
@@ -29,9 +29,9 @@ export default defineConfig({
 				// instead of creating a single one for the entire app.
 				// if `edge` is true, this option cannot be used
 				split: false
-      })
-    })
-  ]
+			})
+		})
+	]
 });
 ```
 
@@ -64,15 +64,15 @@ import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  plugins: [
-    sveltekit({
-      adapter: adapter({
+	plugins: [
+		sveltekit({
+			adapter: adapter({
 				// will create a Netlify Edge Function using Deno-based
 				// rather than using standard Node-based functions
 				edge: true
-      })
-    })
-  ]
+			})
+		})
+	]
 });
 ```
 

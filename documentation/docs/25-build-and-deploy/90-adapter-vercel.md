@@ -18,13 +18,13 @@ import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  plugins: [
-    sveltekit({
-      adapter: adapter({
+	plugins: [
+		sveltekit({
+			adapter: adapter({
 				// see below for options that can be set here
-      })
-    })
-  ]
+			})
+		})
+	]
 });
 ```
 
@@ -76,18 +76,18 @@ import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  plugins: [
-    sveltekit({
-      adapter: adapter({
+	plugins: [
+		sveltekit({
+			adapter: adapter({
 				images: {
 					sizes: [640, 828, 1200, 1920, 3840],
 					formats: ['image/avif', 'image/webp'],
 					minimumCacheTTL: 300,
 					domains: ['example-app.vercel.app'],
 				}
-      })
-    })
-  ]
+			})
+		})
+	]
 });
 ```
 
