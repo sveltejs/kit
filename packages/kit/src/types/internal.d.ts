@@ -469,7 +469,10 @@ export interface SSRNode {
 	universal_id?: string;
 	server_id?: string;
 
-	/** inlined styles */
+	/**
+	 * During development, all styles are inlined for the page to avoid FOUC.
+	 * But in production, this stores styles that are below the inline threshold
+	 */
 	inline_styles?(): MaybePromise<
 		Record<string, string | ((assets: string, base: string) => string)>
 	>;
