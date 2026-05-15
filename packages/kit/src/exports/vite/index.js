@@ -1,3 +1,4 @@
+/** @import { Adapter, KitViteConfig } from '@sveltejs/kit' */
 /** @import { Options } from '@sveltejs/vite-plugin-svelte' */
 /** @import { PreprocessorGroup } from 'svelte/compiler' */
 /** @import { ConfigEnv, Plugin, ResolvedConfig, UserConfig, ViteDevServer } from 'vite' */
@@ -47,6 +48,7 @@ import { compact } from '../../utils/array.js';
 import { should_ignore, has_children } from './static_analysis/utils.js';
 import { load_config } from '../../core/config/index.js';
 import { treeshake_prerendered_remotes } from './build/remote.js';
+import options from './options.js';
 
 const cwd = process.cwd();
 
@@ -140,9 +142,13 @@ let vite_plugin_svelte;
 
 /**
  * Returns the SvelteKit Vite plugins.
+ * @param {KitViteConfig} [config]
  * @returns {Promise<Plugin[]>}
  */
-export async function sveltekit() {
+export async function sveltekit(config) {
+	/** @type {KitViteConfig} */
+	const validated = options(config, 'options');
+
 	// the config options will be set only after the Vite `config` hook runs
 	// because we need to find `svelte.config.js` relative to `vite.config.root`
 	const svelte_config = /** @type {import('types').ValidatedConfig} */ ({});
@@ -159,7 +165,7 @@ export async function sveltekit() {
 	return [
 		plugin_svelte_config({ vite_plugin_svelte_options, svelte_config }),
 		...vite_plugin_svelte.svelte(vite_plugin_svelte_options),
-		...kit({ svelte_config })
+		...kit({ svelte_config, adapter: validated.adapter })
 	];
 }
 
@@ -228,10 +234,12 @@ function plugin_svelte_config({ vite_plugin_svelte_options, svelte_config }) {
  * - https://rolldown.rs/apis/plugin-api#build-hooks
  * - https://rolldown.rs/apis/plugin-api#output-generation-hooks
  *
- * @param {{ svelte_config: import('types').ValidatedConfig }} options
+ * @param {object} opts
+ * @param {import('types').ValidatedConfig} opts.svelte_config options are only resolved after the Vite `config` hook runs
+ * @param {Adapter | undefined} opts.adapter
  * @return {import('vite').Plugin[]}
  */
-function kit({ svelte_config }) {
+function kit({ svelte_config, adapter }) {
 	/** @type {typeof import('vite')} */
 	let vite;
 
@@ -431,7 +439,7 @@ function kit({ svelte_config }) {
 				if (is_build) {
 					new_config.define = {
 						...define,
-						__SVELTEKIT_ADAPTER_NAME__: s(kit.adapter?.name),
+						__SVELTEKIT_ADAPTER_NAME__: s(adapter?.name),
 						__SVELTEKIT_APP_VERSION_FILE__: s(`${kit.appDir}/version.json`),
 						__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: s(kit.version.pollInterval)
 					};
@@ -1067,7 +1075,6 @@ function kit({ svelte_config }) {
 						path.join(kit.files.src, 'instrumentation.server')
 					);
 					if (server_instrumentation) {
-						const { adapter } = kit;
 						if (adapter && !adapter.supports?.instrumentation?.()) {
 							throw new Error(`${server_instrumentation} is unsupported in ${adapter.name}.`);
 						}
@@ -1281,7 +1288,7 @@ function kit({ svelte_config }) {
 		 * @see https://vitejs.dev/guide/api-plugin.html#configureserver
 		 */
 		async configureServer(vite) {
-			return await dev(vite, vite_config, svelte_config, () => remotes, root);
+			return await dev(vite, vite_config, svelte_config, () => remotes, root, adapter);
 		},
 
 		/**
@@ -1289,7 +1296,7 @@ function kit({ svelte_config }) {
 		 * @see https://vitejs.dev/guide/api-plugin.html#configurepreviewserver
 		 */
 		configurePreviewServer(vite) {
-			return preview(vite, vite_config, svelte_config);
+			return preview(vite, vite_config, svelte_config, adapter);
 		},
 
 		renderChunk(code, chunk) {
@@ -1620,9 +1627,10 @@ function kit({ svelte_config }) {
 				`\nRun ${styleText(['bold', 'cyan'], 'npm run preview')} to preview your production build locally.`
 			);
 
-			if (kit.adapter) {
+			if (adapter) {
 				const { adapt } = await import('../../core/adapt/index.js');
 				await adapt(
+					adapter,
 					svelte_config,
 					build_data,
 					metadata,
@@ -1643,13 +1651,25 @@ function kit({ svelte_config }) {
 		}
 	};
 
+	/** @type {Plugin} */
+	const plugin_adapter = {
+		name: 'vite-plugin-sveltekit-adapter',
+		apply: 'build',
+		// expose the adapter so that forked processes (e.g. prerendering)
+		// can retrieve it by resolving the Vite config
+		api: {
+			adapter
+		}
+	};
+
 	return [
 		plugin_setup,
 		plugin_remote,
 		plugin_virtual_modules,
 		process.env.TEST !== 'true' ? plugin_guard : undefined,
 		plugin_service_worker,
-		plugin_compile
+		plugin_compile,
+		plugin_adapter
 	].filter((p) => !!p);
 }
 

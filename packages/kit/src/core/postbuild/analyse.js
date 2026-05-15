@@ -1,6 +1,8 @@
+/** @import { Adapter } from '@sveltejs/kit' */
 /** @import { RemoteChunk } from 'types' */
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { resolveConfig } from 'vite';
 import { validate_server_exports } from '../../utils/exports.js';
 import { load_config } from '../config/index.js';
 import { forked } from '../../utils/fork.js';
@@ -45,6 +47,12 @@ async function analyse({
 
 	/** @type {import('types').ValidatedKitConfig} */
 	const config = (await load_config({ cwd: root })).kit;
+
+	const vite_config = await resolveConfig({}, 'build');
+	/** @type {Adapter | undefined} */
+	const adapter = vite_config.plugins.find(
+		(plugin) => plugin.name === 'vite-plugin-sveltekit-adapter'
+	)?.api?.adapter;
 
 	const server_root = join(config.outDir, 'output');
 
@@ -141,7 +149,7 @@ async function analyse({
 				server_manifest,
 				tracked_features
 			)) {
-				check_feature(route.id, route_config, feature, config.adapter);
+				check_feature(route.id, route_config, feature, adapter);
 			}
 		}
 
