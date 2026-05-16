@@ -67,6 +67,7 @@ catalogs:
   vite-baseline:
     vite: ^5.4.21 # should be 5.0.3 but older versions cause errors in some tests
     '@sveltejs/vite-plugin-svelte': ^4.0.0
+    vitest: 4.0.18 # vitest@4.1 doesn't work with vite@6
     'vitest>vite': ^6.0.0 # vitest@4 doesn't work with vite@5, vite@7 doesn't work on node18
   vite-beta:
     vite: ^8.0.0
