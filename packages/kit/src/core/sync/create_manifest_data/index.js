@@ -87,6 +87,8 @@ function create_matchers(config, cwd) {
 	const matchers = {};
 	if (fs.existsSync(config.kit.files.params)) {
 		for (const file of fs.readdirSync(config.kit.files.params)) {
+			if (config.kit.testExtensions.find((ext) => file.endsWith(ext))) continue;
+
 			const ext = path.extname(file);
 			if (!config.kit.moduleExtensions.includes(ext)) continue;
 			const type = file.slice(0, -ext.length);
@@ -226,6 +228,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 			// process files first
 			for (const file of files) {
 				if (file.is_dir) continue;
+				if (config.kit.testExtensions.find((ext) => file.name.endsWith(ext))) continue;
 
 				const ext = valid_extensions.find((ext) => file.name.endsWith(ext));
 				if (!ext) continue;
