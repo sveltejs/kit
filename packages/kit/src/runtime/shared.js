@@ -317,5 +317,16 @@ export function unfriendly_hydratable(key, fn) {
 	if (!svelte.hydratable) {
 		throw new Error('Remote functions require Svelte 5.44.0 or later');
 	}
+
+	const store =
+		typeof window === 'undefined'
+			? undefined
+			: /** @type {{ __svelte?: { h?: Map<string, any> } }} */ (window).__svelte?.h;
+	if (store?.has(key)) {
+		const value = store.get(key);
+		store.delete(key);
+		return value;
+	}
+
 	return svelte.hydratable(key, fn);
 }

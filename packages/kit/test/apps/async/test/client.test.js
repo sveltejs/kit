@@ -69,6 +69,16 @@ test.describe('remote function mutations', () => {
 		expect(request_count).toBe(0);
 	});
 
+	test('hydrated data is reused across derived await waterfalls', async ({ page }) => {
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		await page.goto('/remote/query-derived-await-waterfall');
+		await expect(page.locator('#result')).toHaveText('3');
+		await page.waitForTimeout(100);
+		expect(request_count).toBe(0);
+	});
+
 	test('command returns correct sum but does not refresh data by default', async ({ page }) => {
 		await page.goto('/remote');
 		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
