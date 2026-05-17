@@ -24,7 +24,7 @@ outputs:
 runs:
   using: 'composite'
   steps:
-    - uses: pnpm/action-setup@v6.0.5
+    - uses: pnpm/action-setup@v6.0.6
 
     - uses: actions/setup-node@v6
       with:
