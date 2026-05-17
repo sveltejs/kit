@@ -242,13 +242,13 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 			return;
 		}
 
-		const requestHeaders = expect_html ? { Accept: 'text/html' } : undefined;
+		const request_headers = expect_html ? { Accept: 'text/html' } : undefined;
 
 		/** @type {Map<string, import('types').PrerenderDependency>} */
 		const dependencies = new Map();
 
 		const response = await server.respond(
-			new Request(config.prerender.origin + encoded, { headers: requestHeaders }),
+			new Request(config.prerender.origin + encoded, { headers: request_headers }),
 			{
 				getClientAddress() {
 					throw new Error('Cannot read clientAddress during prerendering');
