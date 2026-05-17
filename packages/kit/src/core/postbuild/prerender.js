@@ -1,3 +1,4 @@
+/** @import { ServerMetadataRoute } from 'types' */
 import { existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -547,13 +548,13 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 					const path = `/${get_route_segments(processed_id).join('/')}`;
 
 					const route_data = metadata.routes.get(id);
-					if (route_data?.page.prerender && route_data?.page.methods.includes('GET'))
-						void enqueue(null, config.paths.base + path, undefined, undefined, true);
-					if (
-						route_data?.api.prerender &&
-						(route_data?.api.methods.includes('GET') || route_data?.api.methods.includes('*'))
-					)
-						void enqueue(null, config.paths.base + path, undefined, undefined, false);
+					void enqueue(
+						null,
+						config.paths.base + path,
+						undefined,
+						undefined,
+						!!route_data?.page.prerender
+					);
 				}
 			}
 		} else {
@@ -563,15 +564,9 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 
 	for (const { id, entries } of route_level_entries) {
 		const route_data = metadata.routes.get(id);
-
+		const expect_html = !!route_data?.page.prerender;
 		for (const entry of entries) {
-			if (route_data?.page.prerender && route_data?.page.methods.includes('GET'))
-				void enqueue(null, config.paths.base + entry, undefined, id, true);
-			if (
-				route_data?.api.prerender &&
-				(route_data?.api.methods.includes('GET') || route_data?.api.methods.includes('*'))
-			)
-				void enqueue(null, config.paths.base + entry, undefined, id, false);
+			void enqueue(null, config.paths.base + entry, undefined, undefined, expect_html);
 		}
 	}
 
