@@ -1,3 +1,5 @@
+/** @import { RequestEvent } from '@sveltejs/kit' */
+/** @import { PrerenderOption, UniversalNode } from 'types' */
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
@@ -15,11 +17,10 @@ import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import * as sync from '../../../core/sync/sync.js';
 import { get_mime_lookup, runtime_base } from '../../../core/utils.js';
 import { compact } from '../../../utils/array.js';
-import { not_found } from '../utils.js';
+import { is_chrome_devtools_request, not_found } from '../utils.js';
 import { SCHEME } from '../../../utils/url.js';
 import { check_feature } from '../../../utils/features.js';
 import { escape_html } from '../../../utils/escape.js';
-import { create_node_analyser } from '../static_analysis/index.js';
 
 const cwd = process.cwd();
 // vite-specifc queries that we should skip handling for css urls
@@ -35,13 +36,19 @@ const vite_css_query_regex = /(?:\?|&)(?:raw|url|inline)(?:&|$)/;
 export async function dev(vite, vite_config, svelte_config, get_remotes) {
 	installPolyfills();
 
+	/** @type {AsyncLocalStorage<{ event: RequestEvent, config: any, prerender: PrerenderOption }>} */
 	const async_local_storage = new AsyncLocalStorage();
 
 	globalThis.__SVELTEKIT_TRACK__ = (label) => {
 		const context = async_local_storage.getStore();
 		if (!context || context.prerender === true) return;
 
-		check_feature(context.event.route.id, context.config, label, svelte_config.kit.adapter);
+		check_feature(
+			/** @type {string} */ (context.event.route.id),
+			context.config,
+			label,
+			svelte_config.kit.adapter
+		);
 	};
 
 	const fetch = globalThis.fetch;
@@ -69,7 +76,8 @@ export async function dev(vite, vite_config, svelte_config, get_remotes) {
 	async function loud_ssr_load_module(url) {
 		try {
 			return await vite.ssrLoadModule(url, { fixStacktrace: true });
-		} catch (/** @type {any} */ err) {
+		} catch (/** @type {unknown} */ e) {
+			const err = /** @type {import('rollup').RollupError} */ (e);
 			const msg = buildErrorMessage(err, [colors.red(`Internal server error: ${err.message}`)]);
 
 			if (!vite.config.logger.hasErrorLogged(err)) {
@@ -78,13 +86,13 @@ export async function dev(vite, vite_config, svelte_config, get_remotes) {
 
 			vite.ws.send({
 				type: 'error',
-				err: {
+				err: /** @type {import('vite').ErrorPayload['err']} */ ({
 					...err,
 					// these properties are non-enumerable and will
 					// not be serialized unless we explicitly include them
 					message: err.message,
-					stack: err.stack
-				}
+					stack: err.stack ?? ''
+				})
 			});
 
 			throw err;
@@ -93,7 +101,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes) {
 
 	/** @param {string} id */
 	async function resolve(id) {
-		const url = id.startsWith('..') ? to_fs(path.posix.resolve(id)) : `/${id}`;
+		const url = id.startsWith('..') ? to_fs(path.resolve(id)) : `/${id}`;
 
 		const module = await loud_ssr_load_module(url);
 
@@ -102,9 +110,6 @@ export async function dev(vite, vite_config, svelte_config, get_remotes) {
 
 		return { module, module_node, url };
 	}
-
-	/** @type {(file: string) => void} */
-	let invalidate_page_options;
 
 	function update_manifest() {
 		try {
@@ -128,14 +133,6 @@ export async function dev(vite, vite_config, svelte_config, get_remotes) {
 
 			return;
 		}
-
-		const node_analyser = create_node_analyser({
-			resolve: async (server_node) => {
-				const { module } = await resolve(server_node);
-				return module;
-			}
-		});
-		invalidate_page_options = node_analyser.invalidate_page_options;
 
 		manifest = {
 			appDir: svelte_config.kit.appDir,
@@ -215,9 +212,8 @@ export async function dev(vite, vite_config, svelte_config, get_remotes) {
 						}
 
 						if (node.universal) {
-							const page_options = await node_analyser.get_page_options(node);
-							if (page_options?.ssr === false) {
-								result.universal = page_options;
+							if (node.page_options?.ssr === false) {
+								result.universal = /** @type {UniversalNode} */ (node.page_options);
 							} else {
 								// TODO: explain why the file was loaded on the server if we fail to load it
 								const { module, module_node } = await resolve(node.universal);
@@ -370,12 +366,8 @@ export async function dev(vite, vite_config, svelte_config, get_remotes) {
 	watch('unlink', () => debounce(update_manifest));
 	watch('change', (file) => {
 		// Don't run for a single file if the whole manifest is about to get updated
-		if (timeout || restarting) return;
-
-		if (/\+(page|layout).*$/.test(file)) {
-			invalidate_page_options(path.relative(cwd, file));
-		}
-
+		// Unless it's a file where the trailing slash page option might have changed
+		if (timeout || restarting || !/\+(page|layout|server).*$/.test(file)) return;
 		sync.update(svelte_config, manifest_data, file);
 	});
 
@@ -454,7 +446,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes) {
 	return () => {
 		const serve_static_middleware = vite.middlewares.stack.find(
 			(middleware) =>
-				/** @type {function} */ (middleware.handle).name === 'viteServeStaticMiddleware'
+				/** @type {Function} */ (middleware.handle).name === 'viteServeStaticMiddleware'
 		);
 
 		// Vite will give a 403 on URLs like /test, /static, and /package.json preventing us from
@@ -481,6 +473,10 @@ export async function dev(vite, vite_config, svelte_config, get_remotes) {
 					req.url = original_url;
 					// @ts-expect-error
 					serve_static_middleware.handle(req, res);
+					return;
+				}
+
+				if (is_chrome_devtools_request(decoded, res)) {
 					return;
 				}
 

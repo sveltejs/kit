@@ -65,7 +65,7 @@ export function parse_redirects(file_contents) {
 
 	for (const line of file_contents.split('\n')) {
 		const content = line.trim();
-		if (!content) continue;
+		if (!content || content.startsWith('#')) continue;
 
 		const [pathname] = line.split(' ');
 		// pathnames with placeholders are not supported

@@ -148,6 +148,19 @@ describe('validates Wrangler config', () => {
 	});
 });
 
+test('ignores comments in _redirects file', () => {
+	const redirects = parse_redirects(
+		`
+# This is a comment
+/home301 / 301
+  # Indented comment
+/blog/* https://blog.my.domain/:splat
+`.trim()
+	);
+
+	expect(redirects).toEqual(['/home301', '/blog/*']);
+});
+
 test('parses _redirects file', () => {
 	const redirects = parse_redirects(
 		`

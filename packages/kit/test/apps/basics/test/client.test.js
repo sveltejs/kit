@@ -223,7 +223,7 @@ test.describe('Load', () => {
 		await page.goto('/load/fetch-cache-control/headers-diff');
 
 		// 1. We expect the right data
-		expect(await page.textContent('h2')).toBe('a / b');
+		await expect(page.locator('h2')).toHaveText('a / b');
 
 		// 2. Change to another route (client side)
 		await clicknav('[href="/load/fetch-cache-control"]');
@@ -231,11 +231,16 @@ test.describe('Load', () => {
 		// 3. Come back to the original page (client side)
 		/** @type {string[]} */
 		const requests = [];
-		page.on('request', (request) => requests.push(request.url()));
+		page.on('request', (request) => {
+			const url = request.url();
+			// Headless Chrome re-requests the favicon.png on every URL change
+			if (url.endsWith('/favicon.png')) return;
+			requests.push(url);
+		});
 		await clicknav('[href="/load/fetch-cache-control/headers-diff"]');
 
 		// 4. We expect the same data and no new request (except a navigation request in case of server-side route resolution) because it was cached.
-		expect(await page.textContent('h2')).toBe('a / b');
+		await expect(page.locator('h2')).toHaveText('a / b');
 		expect(requests.filter((r) => !r.includes('/__route.js'))).toEqual([]);
 	});
 
@@ -260,6 +265,7 @@ test.describe('Load', () => {
 	});
 
 	test('permits 3rd party patching of server load fetch requests', async ({ page }) => {
+		/** @type {string[]} */
 		const logs = [];
 		page.on('console', (msg) => {
 			if (msg.type() === 'log') {
@@ -277,6 +283,7 @@ test.describe('Load', () => {
 	});
 
 	test('does not repeat fetch on hydration when using Request object', async ({ page }) => {
+		/** @type {import('@playwright/test').Request[]} */
 		const requests = [];
 		page.on('request', (request) => {
 			if (request.url().includes('/load/fetch-request.json')) {
@@ -577,34 +584,45 @@ test.describe('Invalidation', () => {
 		expect(await page.textContent('span')).toBe('count: 1');
 	});
 
-	test('server-only load functions are re-run following forced invalidation', async ({ page }) => {
+	test('server-only load functions are re-run following forced invalidation', async ({
+		page,
+		request,
+		baseURL
+	}) => {
+		const res = await request.post(baseURL + '/load/invalidation/forced/reset-states');
+		expect(res.ok()).toBe(true);
+
 		await page.goto('/load/invalidation/forced');
-		expect(await page.textContent('h1')).toBe('a: 0, b: 1');
+		expect(await page.textContent('h1')).toBe('a: 0, b: 0');
 
 		await page.click('button.invalidateall');
 		await page.evaluate(
 			() => /** @type {Window & typeof globalThis & { promise: Promise<void> }} */ (window).promise
 		);
-		expect(await page.textContent('h1')).toBe('a: 2, b: 3');
+		expect(await page.textContent('h1')).toBe('a: 1, b: 1');
 
 		await page.click('button.invalidateall');
 		await page.evaluate(
 			() => /** @type {Window & typeof globalThis & { promise: Promise<void> }} */ (window).promise
 		);
-		expect(await page.textContent('h1')).toBe('a: 4, b: 5');
+		expect(await page.textContent('h1')).toBe('a: 2, b: 2');
 	});
 
 	test('server-only load functions are re-run following goto with forced invalidation', async ({
-		page
+		page,
+		request,
+		baseURL
 	}) => {
+		const res = await request.post(baseURL + '/load/invalidation/forced-goto/reset-states');
+		expect(res.ok()).toBe(true);
 		await page.goto('/load/invalidation/forced-goto');
-		expect(await page.textContent('h1')).toBe('a: 0, b: 1');
+		expect(await page.textContent('h1')).toBe('a: 0, b: 0');
 
 		await page.click('button.goto');
 		await page.evaluate(
 			() => /** @type {Window & typeof globalThis & { promise: Promise<void> }} */ (window).promise
 		);
-		expect(await page.textContent('h1')).toBe('a: 2, b: 3');
+		expect(await page.textContent('h1')).toBe('a: 1, b: 1');
 	});
 
 	test('multiple invalidations run concurrently', async ({ page }) => {
@@ -1490,7 +1508,7 @@ test.describe('goto', () => {
 			const expectGoback = makeExpectGoback(testFinishPage, testEntryPage);
 
 			test('app.invalidate', async ({ app, page }) => {
-				await app.invalidate('app:goto', { replaceState: true });
+				await app.invalidate('app:goto');
 				await expectGoback(page);
 			});
 
@@ -1776,11 +1794,15 @@ test.describe('init', () => {
 test.describe('INP', () => {
 	test('does not block next paint', async ({ page }) => {
 		// Thanks to https://publishing-project.rivendellweb.net/measuring-performance-tasks-with-playwright/#interaction-to-next-paint-inp
+		/** @param {string} selector */
 		async function measureInteractionToPaint(selector) {
 			return page.evaluate(async (selector) => {
 				return new Promise((resolve) => {
 					const startTime = performance.now();
-					document.querySelector(selector).click();
+					const element = document.querySelector(selector);
+					if (element instanceof HTMLAnchorElement) {
+						element.click();
+					}
 					requestAnimationFrame(() => {
 						const endTime = performance.now();
 						resolve(endTime - startTime);
@@ -1807,7 +1829,7 @@ test.describe('binding_property_non_reactive warn', () => {
 		let is_warning_thrown = false;
 		page.on('console', (m) => {
 			if (
-				m.type() === 'warn' &&
+				m.type() === 'warning' &&
 				m.text().includes('binding_property_non_reactive `bind:this={components[0]}`')
 			) {
 				is_warning_thrown = true;

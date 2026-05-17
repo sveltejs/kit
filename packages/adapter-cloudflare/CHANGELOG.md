@@ -1,5 +1,26 @@
 # @sveltejs/adapter-cloudflare
 
+## 7.2.8
+### Patch Changes
+
+
+- fix: skip comment lines in `_redirects` file ([#15325](https://github.com/sveltejs/kit/pull/15325))
+
+- Updated dependencies [[`e87efba`](https://github.com/sveltejs/kit/commit/e87efba90aeb04227e6a1a5e9017989e7f1c78dc), [`71ddbc7`](https://github.com/sveltejs/kit/commit/71ddbc7ff19a612cfcd483f3b7ba58586372528b), [`1bae374`](https://github.com/sveltejs/kit/commit/1bae374e2e106eb82502afd1ddf0167d66f224a1), [`20dfadf`](https://github.com/sveltejs/kit/commit/20dfadfbef312b4e750318aa871aebbfcb4396a4), [`8c2384a`](https://github.com/sveltejs/kit/commit/8c2384a346825d54eb4281f9da854388fb4d81b3)]:
+  - @sveltejs/kit@2.52.1
+
+## 7.2.7
+### Patch Changes
+
+
+- fix: error if `_routes.json` is in the `/static` public directory ([#12821](https://github.com/sveltejs/kit/pull/12821))
+
+
+- fix: correctly handle pathnames found in the `_redirects` file ([#12821](https://github.com/sveltejs/kit/pull/12821))
+
+- Updated dependencies [[`37293a5`](https://github.com/sveltejs/kit/commit/37293a5c913b014e823bc823f2c8c6da38b88d6e), [`5d05ca6`](https://github.com/sveltejs/kit/commit/5d05ca6f606cf68417e4ed1ccb68cd77383f1f0f), [`ed69b77`](https://github.com/sveltejs/kit/commit/ed69b77cf9ef1af088008ff559f8de2e2a2f6bf4), [`b1fc959`](https://github.com/sveltejs/kit/commit/b1fc95966e0aeee689fdae71fa488c34b4806303), [`159aece`](https://github.com/sveltejs/kit/commit/159aece0654db020f95bc414f6a21f25fbc5f22f), [`c690579`](https://github.com/sveltejs/kit/commit/c690579620e131cd077ded0bc8e55090d3681d35), [`dc8cf2d`](https://github.com/sveltejs/kit/commit/dc8cf2defa71dd987437895eb89587c724f6e9bb), [`ace2116`](https://github.com/sveltejs/kit/commit/ace2116d95e13293dbc1e26b5b7d780202fd02dd), [`0f38f49`](https://github.com/sveltejs/kit/commit/0f38f498e0e7052db7b8cfe9ea892e7882a67b66)]:
+  - @sveltejs/kit@2.51.0
+
 ## 7.2.6
 ### Patch Changes
 

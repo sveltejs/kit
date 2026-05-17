@@ -11,7 +11,6 @@ export function get_pathname(route) {
 			}
 
 			const parts = segment.content.split(/\[(.+?)\](?!\])/);
-			let result = '';
 
 			if (
 				parts.length === 3 &&
@@ -21,9 +20,9 @@ export function get_pathname(route) {
 			) {
 				// Special case: segment is a single optional or rest parameter.
 				// In that case we don't prepend a slash (also see comment in pattern_to_src).
-				result = `$${i++}`;
+				return `$${i++}`;
 			} else {
-				result =
+				return (
 					'/' +
 					parts
 						.map((content, j) => {
@@ -33,10 +32,9 @@ export function get_pathname(route) {
 								return content;
 							}
 						})
-						.join('');
+						.join('')
+				);
 			}
-
-			return result;
 		})
 		.join('');
 

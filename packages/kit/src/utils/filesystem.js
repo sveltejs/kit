@@ -8,7 +8,9 @@ export function mkdirp(dir) {
 	} catch (/** @type {any} */ e) {
 		if (e.code === 'EEXIST') {
 			if (!fs.statSync(dir).isDirectory()) {
-				throw new Error(`Cannot create directory ${dir}, a file already exists at this position`);
+				throw new Error(`Cannot create directory ${dir}, a file already exists at this position`, {
+					cause: e
+				});
 			}
 			return;
 		}

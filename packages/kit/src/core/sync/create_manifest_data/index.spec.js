@@ -87,7 +87,7 @@ test('creates routes', () => {
 		{
 			id: '/blog.json',
 			pattern: '/^/blog.json/?$/',
-			endpoint: { file: 'samples/basic/blog.json/+server.js' }
+			endpoint: { file: 'samples/basic/blog.json/+server.js', page_options: null }
 		},
 		{
 			id: '/blog',
@@ -98,7 +98,8 @@ test('creates routes', () => {
 			id: '/blog/[slug].json',
 			pattern: '/^/blog/([^/]+?).json/?$/',
 			endpoint: {
-				file: 'samples/basic/blog/[slug].json/+server.ts'
+				file: 'samples/basic/blog/[slug].json/+server.ts',
+				page_options: null
 			}
 		},
 		{
@@ -110,7 +111,7 @@ test('creates routes', () => {
 });
 
 const symlink_survived_git = fs
-	.statSync(path.join(cwd, 'samples/symlinks/routes/foo'))
+	.lstatSync(path.join(cwd, 'samples/symlinks/routes/foo'))
 	.isSymbolicLink();
 
 const test_symlinks = symlink_survived_git ? test : test.skip;
@@ -121,21 +122,21 @@ test_symlinks('creates symlinked routes', () => {
 	expect(nodes.map(simplify_node)).toEqual([
 		default_layout,
 		default_error,
-		{ component: 'samples/symlinks/routes/foo/index.svelte' },
-		{ component: 'samples/symlinks/routes/index.svelte' }
+		{ component: 'samples/symlinks/routes/+page.svelte' },
+		{ component: 'samples/symlinks/routes/foo/+page.svelte' }
 	]);
 
-	expect(routes).toEqual([
+	expect(routes.map(simplify_route)).toEqual([
 		{
 			id: '/',
 			pattern: '/^/$/',
-			page: { layouts: [0], errors: [1], leaf: 1 }
+			page: { layouts: [0], errors: [1], leaf: 2 }
 		},
 
 		{
 			id: '/foo',
 			pattern: '/^/foo/?$/',
-			page: { layouts: [0], errors: [1], leaf: 2 }
+			page: { layouts: [0], errors: [1], leaf: 3 }
 		}
 	]);
 });
@@ -308,7 +309,8 @@ test('allows rest parameters inside segments', () => {
 			id: '/[...rest].json',
 			pattern: '/^/([^]*?).json/?$/',
 			endpoint: {
-				file: 'samples/rest-prefix-suffix/[...rest].json/+server.js'
+				file: 'samples/rest-prefix-suffix/[...rest].json/+server.js',
+				page_options: null
 			}
 		}
 	]);
@@ -346,7 +348,7 @@ test('optional parameters', () => {
 		{
 			id: '/[[foo]]bar',
 			pattern: '/^/([^/]*)?bar/?$/',
-			endpoint: { file: 'samples/optional/[[foo]]bar/+server.js' }
+			endpoint: { file: 'samples/optional/[[foo]]bar/+server.js', page_options: null }
 		},
 		{ id: '/nested', pattern: '/^/nested/?$/' },
 		{
@@ -478,7 +480,8 @@ test('allows multiple slugs', () => {
 			id: '/[file].[ext]',
 			pattern: '/^/([^/]+?).([^/]+?)/?$/',
 			endpoint: {
-				file: 'samples/multiple-slugs/[file].[ext]/+server.js'
+				file: 'samples/multiple-slugs/[file].[ext]/+server.js',
+				page_options: null
 			}
 		}
 	]);
@@ -502,7 +505,8 @@ test('ignores things that look like lockfiles', () => {
 			id: '/foo',
 			pattern: '/^/foo/?$/',
 			endpoint: {
-				file: 'samples/lockfiles/foo/+server.js'
+				file: 'samples/lockfiles/foo/+server.js',
+				page_options: null
 			}
 		}
 	]);
@@ -537,7 +541,8 @@ test('works with custom extensions', () => {
 			id: '/blog.json',
 			pattern: '/^/blog.json/?$/',
 			endpoint: {
-				file: 'samples/custom-extension/blog.json/+server.js'
+				file: 'samples/custom-extension/blog.json/+server.js',
+				page_options: null
 			}
 		},
 		{
@@ -549,7 +554,8 @@ test('works with custom extensions', () => {
 			id: '/blog/[slug].json',
 			pattern: '/^/blog/([^/]+?).json/?$/',
 			endpoint: {
-				file: 'samples/custom-extension/blog/[slug].json/+server.js'
+				file: 'samples/custom-extension/blog/[slug].json/+server.js',
+				page_options: null
 			}
 		},
 		{
