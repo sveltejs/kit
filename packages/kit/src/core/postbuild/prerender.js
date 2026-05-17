@@ -1,4 +1,3 @@
-/** @import { ServerMetadataRoute } from 'types' */
 import { existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
