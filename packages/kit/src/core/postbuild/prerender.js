@@ -565,7 +565,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 		const route_data = metadata.routes.get(id);
 		const expect_html = !!route_data?.page.prerender;
 		for (const entry of entries) {
-			void enqueue(null, config.paths.base + entry, undefined, undefined, expect_html);
+			void enqueue(null, config.paths.base + entry, undefined, id, expect_html);
 		}
 	}
 
