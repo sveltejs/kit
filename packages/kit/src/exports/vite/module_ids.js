@@ -1,5 +1,5 @@
 import { fileURLToPath } from 'node:url';
-import { posixify } from '../../utils/filesystem.js';
+import { posixify } from '../../utils/os.js';
 
 export const env_static_private = '\0virtual:env/static/private';
 export const env_static_public = '\0virtual:env/static/public';

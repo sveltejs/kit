@@ -4,9 +4,6 @@ import { normalize_path, resolve } from '../../utils/url.js';
 import { add_data_suffix } from '../pathname.js';
 import { text_encoder } from '../utils.js';
 
-// eslint-disable-next-line no-control-regex -- control characters are invalid in cookie names
-const INVALID_COOKIE_CHARACTER_REGEX = /[\x00-\x1F\x7F()<>@,;:"/[\]?={} \t]/;
-
 /**
  * Tracks all cookies set during dev mode so we can emit warnings
  * when we detect that there's likely cookie misusage due to wrong paths
@@ -19,14 +16,6 @@ const cookie_paths = {};
  * attributes) are discarded by browsers
  */
 const MAX_COOKIE_SIZE = 4129;
-
-// TODO 3.0 remove this check
-/** @param {import('./page/types.js').Cookie['options']} options */
-function validate_options(options) {
-	if (options?.path === undefined) {
-		throw new Error('You must specify a `path` when setting, deleting or serializing cookies');
-	}
-}
 
 /**
  * Generates a unique key for a cookie based on its domain, path, and name in
@@ -49,7 +38,9 @@ function generate_cookie_key(domain, path, name) {
  */
 export function get_cookies(request, url) {
 	const header = request.headers.get('cookie') ?? '';
-	const initial_cookies = parse(header, { decode: (value) => value });
+	const initial_cookies = /** @type {Record<string, string>} */ (
+		parse(header, { decode: (value) => value })
+	);
 
 	/** @type {string | undefined} */
 	let normalized_url;
@@ -57,9 +48,10 @@ export function get_cookies(request, url) {
 	/** @type {Map<string, import('./page/types.js').Cookie>} */
 	const new_cookies = new Map();
 
-	/** @type {import('cookie').CookieSerializeOptions} */
+	/** @type {import('cookie').SerializeOptions} */
 	const defaults = {
 		httpOnly: true,
+		path: '/',
 		sameSite: 'lax',
 		secure: url.hostname === 'localhost' && url.protocol === 'http:' ? false : true
 	};
@@ -73,7 +65,7 @@ export function get_cookies(request, url) {
 
 		/**
 		 * @param {string} name
-		 * @param {import('cookie').CookieParseOptions} [opts]
+		 * @param {import('cookie').ParseOptions} [opts]
 		 */
 		get(name, opts) {
 			// Look for the most specific matching cookie from new_cookies
@@ -115,7 +107,7 @@ export function get_cookies(request, url) {
 		},
 
 		/**
-		 * @param {import('cookie').CookieParseOptions} [opts]
+		 * @param {import('cookie').ParseOptions} [opts]
 		 */
 		getAll(opts) {
 			const cookies = parse(header, { decode: opts?.decode });
@@ -142,47 +134,37 @@ export function get_cookies(request, url) {
 				cookies[c.name] = c.value;
 			}
 
-			return Object.entries(cookies).map(([name, value]) => ({ name, value }));
+			return /** @type {Array<{ name: string; value: string }>} */ (
+				Object.entries(cookies)
+					.filter(([, value]) => value != null)
+					.map(([name, value]) => ({ name, value }))
+			);
 		},
 
 		/**
 		 * @param {string} name
 		 * @param {string} value
-		 * @param {import('./page/types.js').Cookie['options']} options
+		 * @param {import('cookie').SerializeOptions} options
 		 */
 		set(name, value, options) {
-			// TODO: remove this check in 3.0
-			const illegal_characters = name.match(INVALID_COOKIE_CHARACTER_REGEX);
-			if (illegal_characters) {
-				console.warn(
-					`The cookie name "${name}" will be invalid in SvelteKit 3.0 as it contains ${illegal_characters.join(
-						' and '
-					)}. See RFC 2616 for more details https://datatracker.ietf.org/doc/html/rfc2616#section-2.2`
-				);
-			}
-
-			validate_options(options);
 			set_internal(name, value, { ...defaults, ...options });
 		},
 
 		/**
 		 * @param {string} name
-		 *  @param {import('./page/types.js').Cookie['options']} options
+		 * @param {import('cookie').SerializeOptions} options
 		 */
 		delete(name, options) {
-			validate_options(options);
 			cookies.set(name, '', { ...options, maxAge: 0 });
 		},
 
 		/**
 		 * @param {string} name
 		 * @param {string} value
-		 *  @param {import('./page/types.js').Cookie['options']} options
+		 * @param {import('cookie').SerializeOptions} options
 		 */
 		serialize(name, value, options) {
-			validate_options(options);
-
-			let path = options.path;
+			let path = options.path ?? '/';
 
 			if (!options.domain || options.domain === url.hostname) {
 				if (!normalized_url) {
@@ -217,7 +199,9 @@ export function get_cookies(request, url) {
 
 		// explicit header has highest precedence
 		if (header) {
-			const parsed = parse(header, { decode: (value) => value });
+			const parsed = /** @type {Record<string, string>} */ (
+				parse(header, { decode: (value) => value })
+			);
 			for (const name in parsed) {
 				combined_cookies[name] = parsed[name];
 			}
@@ -234,7 +218,7 @@ export function get_cookies(request, url) {
 	/**
 	 * @param {string} name
 	 * @param {string} value
-	 * @param {import('./page/types.js').Cookie['options']} options
+	 * @param {import('cookie').SerializeOptions} options
 	 */
 	function set_internal(name, value, options) {
 		if (!normalized_url) {
@@ -242,7 +226,7 @@ export function get_cookies(request, url) {
 			return;
 		}
 
-		let path = options.path;
+		let path = options.path ?? '/';
 
 		if (!options.domain || options.domain === url.hostname) {
 			path = resolve(normalized_url, path);

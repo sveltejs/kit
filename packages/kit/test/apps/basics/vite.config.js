@@ -13,7 +13,33 @@ export default defineConfig({
 		// the reload confuses Playwright
 		include: ['cookie']
 	},
-	plugins: [sveltekit()],
+	plugins: [
+		sveltekit({
+			adapter: {
+				name: 'test-adapter',
+				adapt(builder) {
+					builder.instrument({
+						entrypoint: `${builder.getServerDirectory()}/index.js`,
+						instrumentation: `${builder.getServerDirectory()}/instrumentation.server.js`,
+						module: {
+							exports: ['Server']
+						}
+					});
+				},
+				emulate() {
+					return {
+						platform({ config, prerender }) {
+							return { config, prerender };
+						}
+					};
+				},
+				supports: {
+					read: () => true,
+					instrumentation: () => true
+				}
+			}
+		})
+	],
 	server: {
 		fs: {
 			allow: [path.resolve('../../../src')]
@@ -21,20 +47,12 @@ export default defineConfig({
 	},
 	test: {
 		expect: { requireAssertions: true },
-		projects: [
-			{
-				extends: './vite.config.js',
-				test: {
-					name: 'client',
-					browser: {
-						enabled: true,
-						provider: playwright(),
-						instances: [{ browser: 'chromium' }],
-						headless: true
-					},
-					include: ['unit-test/**/*.spec.js']
-				}
-			}
-		]
+		browser: {
+			enabled: true,
+			provider: playwright(),
+			instances: [{ browser: 'chromium' }],
+			headless: true
+		},
+		include: ['unit-test/**/*.spec.js']
 	}
 });

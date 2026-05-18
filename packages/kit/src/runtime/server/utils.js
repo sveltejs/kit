@@ -7,6 +7,7 @@ import { negotiate } from '../../utils/http.js';
 import { fix_stack_trace } from '../shared-server.js';
 import { ENDPOINT_METHODS } from '../../constants.js';
 import { escape_html } from '../../utils/escape.js';
+import * as path from '../../utils/path.js';
 
 /**
  * @param {Partial<Record<import('types').HttpMethod, any>>} mod
@@ -210,10 +211,7 @@ let relative = (file) => file;
 
 if (DEV) {
 	try {
-		const path = await import('node:path');
-		const process = await import('node:process');
-
-		relative = (file) => path.relative(process.cwd(), file);
+		relative = (file) => path.relative(__SVELTEKIT_ROOT__, file);
 	} catch {
 		// do nothing
 	}

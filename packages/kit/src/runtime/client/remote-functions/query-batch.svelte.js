@@ -6,7 +6,7 @@ import { get_remote_request_headers, QUERY_FUNCTION_ID } from './shared.svelte.j
 import { QueryProxy } from './query.svelte.js';
 import * as devalue from 'devalue';
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
-import { unfriendly_hydratable } from '../../shared.js';
+import { hydratable } from 'svelte';
 
 /**
  * @param {string} id
@@ -19,7 +19,7 @@ export function query_batch(id) {
 	/** @type {RemoteQueryFunction<any, any>} */
 	const wrapper = (arg) => {
 		return new QueryProxy(id, arg, async (key, payload) => {
-			const serialized = await unfriendly_hydratable(key, () => {
+			const serialized = await hydratable(key, () => {
 				return new Promise((resolve, reject) => {
 					// create_remote_function caches identical calls, but in case a refresh to the same query is called multiple times this function
 					// is invoked multiple times with the same payload, so we need to deduplicate here

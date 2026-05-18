@@ -1,5 +1,3 @@
-import { with_resolvers } from './promise.js';
-
 /**
  * Create an async iterator and a function to push values into it
  * @template T
@@ -12,7 +10,7 @@ export function create_async_iterator() {
 	let resolved = -1;
 	let returned = -1;
 
-	/** @type {import('./promise.js').PromiseWithResolvers<T>[]} */
+	/** @type {PromiseWithResolvers<T>[]} */
 	const deferred = [];
 
 	return {
@@ -32,7 +30,7 @@ export function create_async_iterator() {
 			};
 		},
 		add: (promise) => {
-			deferred.push(with_resolvers());
+			deferred.push(Promise.withResolvers());
 			void promise.then((value) => {
 				deferred[++resolved].resolve(value);
 			});
