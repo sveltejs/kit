@@ -1,7 +1,8 @@
+import process from 'node:process';
 import { assert, test, describe, beforeAll } from 'vitest';
 import { Csp } from './csp.js';
 
-describe('CSPs in dev', () => {
+describe.skipIf(process.env.NODE_ENV === 'production')('CSPs in dev', () => {
 	beforeAll(() => {
 		// @ts-expect-error
 		globalThis.__SVELTEKIT_DEV__ = true;
@@ -68,7 +69,7 @@ describe('CSPs in dev', () => {
 	});
 });
 
-describe('CSPs in prod', () => {
+describe.skipIf(process.env.NODE_ENV !== 'production')('CSPs in prod', () => {
 	beforeAll(() => {
 		// @ts-expect-error
 		globalThis.__SVELTEKIT_DEV__ = false;
