@@ -469,7 +469,10 @@ export interface SSRNode {
 	universal_id?: string;
 	server_id?: string;
 
-	/** inlined styles */
+	/**
+	 * During development, all styles are inlined for the page to avoid FOUC.
+	 * But in production, this stores styles that are below the inline threshold
+	 */
 	inline_styles?(): MaybePromise<
 		Record<string, string | ((assets: string, base: string) => string)>
 	>;
@@ -700,10 +703,24 @@ export interface RequestState {
 			RemoteInternals,
 			Record<string, { serialize: boolean; data: MaybePromise<any> }>
 		>;
-		forms: null | Map<any, any>;
+		/** Instances created via `myForm.for(...)` */
+		forms: null | Map<string, any>;
+		/** A map of remote function key to corresponding single-flight-mutation promise */
 		refreshes: null | Map<string, Promise<any>>;
-		reconnects: null | Map<string, Promise<any>>;
+		reconnects: null | Map<string, Promise<void>>;
+		/** A map of remote function ID to payloads requested for refreshing by the client */
 		requested: null | Map<string, string[]>;
+		/** A map of query.batch ID to payloads requested for that batch within the same macrotask */
+		batches: null | Map<
+			string,
+			Map<
+				string,
+				{
+					get_validated: () => MaybePromise<any>;
+					resolvers: Array<{ resolve: (value: any) => void; reject: (error: any) => void }>;
+				}
+			>
+		>;
 	};
 	readonly is_in_remote_function: boolean;
 	readonly is_in_render: boolean;
