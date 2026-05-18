@@ -456,7 +456,7 @@ test('group preceding optional parameters', () => {
 	]);
 });
 
-test('optional parameters adjacent to page', () => {
+test('optional parameters adjacent to another route', () => {
 	const { nodes, routes } = create('samples/optional-adjacent');
 
 	expect(nodes.map(simplify_node)).toEqual([
@@ -477,7 +477,7 @@ test('optional parameters adjacent to page', () => {
 			page: {
 				layouts: [0],
 				errors: [1],
-				leaf: 2
+				leaf: nodes.findIndex((node) => node.component?.includes('/optional-adjacent/+page.svelte'))
 			}
 		},
 		{
@@ -486,13 +486,13 @@ test('optional parameters adjacent to page', () => {
 			page: {
 				layouts: [0],
 				errors: [1],
-				leaf: 3
+				leaf: nodes.findIndex((node) => node.component?.includes('/[[optional]]'))
 			}
 		}
 	]);
 });
 
-test('optional parameters inside a group adjacent to page', () => {
+test('optional parameters inside a group adjacent to another route', () => {
 	const { nodes, routes } = create('samples/group-optional');
 
 	expect(nodes.map(simplify_node)).toEqual([
@@ -517,7 +517,7 @@ test('optional parameters inside a group adjacent to page', () => {
 			page: {
 				layouts: [0],
 				errors: [1],
-				leaf: 2
+				leaf: nodes.findIndex((node) => node.component?.includes('/group-optional/+page.svelte'))
 			}
 		},
 		{
@@ -526,7 +526,7 @@ test('optional parameters inside a group adjacent to page', () => {
 			page: {
 				layouts: [0],
 				errors: [1],
-				leaf: 3
+				leaf: nodes.findIndex((node) => node.component?.includes('/(group)/[[optional]]'))
 			}
 		}
 	]);
