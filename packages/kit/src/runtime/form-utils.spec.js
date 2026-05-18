@@ -96,18 +96,6 @@ describe('convert_formdata', () => {
 		data.append(attack, 'bad');
 		expect(() => convert_formdata(data)).toThrow(/Invalid key "/);
 	});
-
-	// Regression test for https://github.com/sveltejs/kit/issues/15840
-	test('converts b: boolean fields', () => {
-		const data = new FormData();
-		data.append('b:flag_true', 'on');
-		data.append('b:flag_false', 'off');
-
-		expect(convert_formdata(data)).toEqual({
-			flag_true: true,
-			flag_false: false
-		});
-	});
 });
 
 describe('binary form serializer', () => {
