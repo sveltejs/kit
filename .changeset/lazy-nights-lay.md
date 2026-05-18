@@ -2,4 +2,4 @@
 '@sveltejs/kit': major
 ---
 
-recursive $lib server dirs
+breaking: nested server-only directories
