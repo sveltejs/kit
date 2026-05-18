@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix: `.as('hidden', booleanValue)` now round-trips correctly
+fix: correctly send `true` value to the server for 'submit' and 'hidden' form fields
