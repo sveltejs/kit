@@ -2,4 +2,4 @@
 '@sveltejs/kit': minor
 ---
 
-feat: pass form instance into `enhance` callback
+feat: pass `form` remote function instance into `enhance` callback
