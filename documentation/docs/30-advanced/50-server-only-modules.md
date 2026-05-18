@@ -16,7 +16,7 @@ The [`$app/server`]($app-server) module, which contains a [`read`]($app-server#r
 
 You can make your own modules server-only in two ways:
 
-- For single modules, add `.server` to the filename, e.g. `secrets.server.js`. This works for _any_ file in the project directory, including within `$lib` or `$routes`.
+- For single modules, add `.server` to the filename, e.g. `secrets.server.js`. This works for _any_ file in the project directory, including within `$lib`.
 - Directories named `server` under `$lib`, at any depth, mark _all_ code within as server-only, e.g. `$lib/server/config.js` or `$lib/data/server/user/profile.js`.
 
 ## How it works
