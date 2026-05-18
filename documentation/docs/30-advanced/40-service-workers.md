@@ -126,7 +126,7 @@ navigator.serviceWorker.register('/service-worker.js', {
 });
 ```
 
-> [!NOTE] The service worker is bundled for production, but not during development so you will need to pass the `{ type: 'module' }` option in development.
+> [!NOTE] The service worker is bundled for production, but not during development.
 
 ## Other solutions
 
