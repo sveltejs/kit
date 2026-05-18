@@ -7,19 +7,21 @@
 	const schema = v.object({
 		value: v.pipe(v.number(), v.maxValue(20, 'too big'))
 	});
+
+	// preflight().for() ordering — the bug: preflight was lost when chained before for
+	const form = set_value.preflight(schema).for('a');
 </script>
 
 <p>value.current: {value.current}</p>
 
-<!-- preflight().for() ordering — the bug: preflight was lost when chained before for -->
-<form data-preflight-for {...set_value.preflight(schema).for('a')}>
-	{#each set_value.fields.value.issues() as issue}
+<form data-preflight-for {...form}>
+	{#each form.fields.value.issues() as issue}
 		<p>{issue.message}</p>
 	{/each}
 
-	<input data-preflight-for-input {...set_value.fields.value.as('number')} />
+	<input data-preflight-for-input {...form.fields.value.as('number')} />
 	<button>submit</button>
 </form>
 
-<p data-preflight-for-pending>set_value.pending: {set_value.pending}</p>
-<p data-preflight-for-result>set_value.result: {set_value.result}</p>
+<p data-preflight-for-pending>form.pending: {form.pending}</p>
+<p data-preflight-for-result>form.result: {form.result}</p>
