@@ -321,9 +321,11 @@ export interface Emulator {
 }
 
 export interface KitConfig {
+	// TODO: remove this in 4.0
 	/**
 	 * Your [adapter](https://svelte.dev/docs/kit/adapters) is run when executing `vite build`. It determines how the output is converted for different platforms.
 	 * @default undefined
+	 * @deprecated removed in 3.0.0. Adapters should now be passed to the `sveltekit` Vite plugin in `vite.config.js`
 	 */
 	adapter?: Adapter;
 	/**
@@ -907,6 +909,15 @@ export interface KitConfig {
 		 */
 		pollInterval?: number;
 	};
+}
+
+export interface KitViteConfig {
+	/**
+	 * Your [adapter](https://svelte.dev/docs/kit/adapters) is run when executing `vite build`. It determines how the output is converted for different platforms.
+	 * @since 3.0.0
+	 * @default undefined
+	 */
+	adapter?: Adapter;
 }
 
 /**
@@ -1870,8 +1881,8 @@ type InputTypeMap = {
 	checkbox: boolean | string[];
 	radio: string;
 	file: File;
-	hidden: string;
-	submit: string;
+	hidden: string | number | boolean;
+	submit: string | number | boolean;
 	button: string;
 	reset: string;
 	image: string;
@@ -1962,11 +1973,15 @@ type AsArgs<Type extends keyof InputTypeMap, Value> = Type extends 'checkbox'
 		: Value extends boolean
 			? [type: Type] | [type: Type, value: boolean]
 			: [type: Type] | [type: Type, value: Value | (string & {})]
-	: Type extends 'radio' | 'submit' | 'hidden'
-		? [type: Type, value: Value | (string & {})]
-		: Type extends 'file' | 'file multiple'
-			? [type: Type]
-			: [type: Type] | [type: Type, value: Value | (string & {})];
+	: Type extends 'submit' | 'hidden'
+		? Value extends string
+			? [type: Type, value: Value | (string & {})]
+			: [type: Type, value: Value]
+		: Type extends 'radio'
+			? [type: Type, value: Value | (string & {})]
+			: Type extends 'file' | 'file multiple'
+				? [type: Type]
+				: [type: Type] | [type: Type, value: Value | (string & {})];
 
 /**
  * Form field accessor type that provides name(), value(), and issues() methods

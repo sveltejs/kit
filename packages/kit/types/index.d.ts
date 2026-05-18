@@ -295,9 +295,11 @@ declare module '@sveltejs/kit' {
 	}
 
 	export interface KitConfig {
+		// TODO: remove this in 4.0
 		/**
 		 * Your [adapter](https://svelte.dev/docs/kit/adapters) is run when executing `vite build`. It determines how the output is converted for different platforms.
 		 * @default undefined
+		 * @deprecated removed in 3.0.0. Adapters should now be passed to the `sveltekit` Vite plugin in `vite.config.js`
 		 */
 		adapter?: Adapter;
 		/**
@@ -881,6 +883,15 @@ declare module '@sveltejs/kit' {
 			 */
 			pollInterval?: number;
 		};
+	}
+
+	export interface KitViteConfig {
+		/**
+		 * Your [adapter](https://svelte.dev/docs/kit/adapters) is run when executing `vite build`. It determines how the output is converted for different platforms.
+		 * @since 3.0.0
+		 * @default undefined
+		 */
+		adapter?: Adapter;
 	}
 
 	/**
@@ -1844,8 +1855,8 @@ declare module '@sveltejs/kit' {
 		checkbox: boolean | string[];
 		radio: string;
 		file: File;
-		hidden: string;
-		submit: string;
+		hidden: string | number | boolean;
+		submit: string | number | boolean;
 		button: string;
 		reset: string;
 		image: string;
@@ -1936,11 +1947,15 @@ declare module '@sveltejs/kit' {
 			: Value extends boolean
 				? [type: Type] | [type: Type, value: boolean]
 				: [type: Type] | [type: Type, value: Value | (string & {})]
-		: Type extends 'radio' | 'submit' | 'hidden'
-			? [type: Type, value: Value | (string & {})]
-			: Type extends 'file' | 'file multiple'
-				? [type: Type]
-				: [type: Type] | [type: Type, value: Value | (string & {})];
+		: Type extends 'submit' | 'hidden'
+			? Value extends string
+				? [type: Type, value: Value | (string & {})]
+				: [type: Type, value: Value]
+			: Type extends 'radio'
+				? [type: Type, value: Value | (string & {})]
+				: Type extends 'file' | 'file multiple'
+					? [type: Type]
+					: [type: Type] | [type: Type, value: Value | (string & {})];
 
 	/**
 	 * Form field accessor type that provides name(), value(), and issues() methods
@@ -2683,7 +2698,10 @@ declare module '@sveltejs/kit' {
 		universal_id?: string;
 		server_id?: string;
 
-		/** inlined styles */
+		/**
+		 * During development, all styles are inlined for the page to avoid FOUC.
+		 * But in production, this stores styles that are below the inline threshold
+		 */
 		inline_styles?(): MaybePromise<
 			Record<string, string | ((assets: string, base: string) => string)>
 		>;
@@ -2736,9 +2754,8 @@ declare module '@sveltejs/kit' {
 		extensions: string[];
 	};
 
-	type ValidatedKitConfig = Omit<RecursiveRequired<KitConfig>, 'adapter'> & {
-		adapter?: Adapter;
-	};
+	// TODO: remove the omit in 4.0
+	type ValidatedKitConfig = Omit<RecursiveRequired<KitConfig>, 'adapter'>;
 	/**
 	 * Throws an error with a HTTP status code and an optional message.
 	 * When called during request handling, this will cause SvelteKit to
@@ -2977,11 +2994,12 @@ declare module '@sveltejs/kit/node' {
 }
 
 declare module '@sveltejs/kit/vite' {
+	import type { KitViteConfig } from '@sveltejs/kit';
 	import type { Plugin } from 'vite';
 	/**
 	 * Returns the SvelteKit Vite plugins.
 	 * */
-	export function sveltekit(): Promise<Plugin[]>;
+	export function sveltekit(config?: KitViteConfig): Promise<Plugin[]>;
 
 	export {};
 }

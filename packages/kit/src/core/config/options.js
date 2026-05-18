@@ -1,4 +1,6 @@
 /** @import { Validator } from './types.js' */
+import { dedent } from '../sync/utils.js';
+
 const directives = object({
 	'child-src': string_array(),
 	'default-src': string_array(),
@@ -55,19 +57,18 @@ const options = object(
 		}),
 
 		kit: object({
-			adapter: validate(null, (input, keypath) => {
-				if (typeof input !== 'object' || !input.adapt) {
-					let message = `${keypath} should be an object with an "adapt" method`;
+			adapter: removed((keypath) => {
+				return dedent`
+						${keypath} has been removed. Instead, pass your adapter to the \`sveltekit\` Vite plugin in the \`vite.config.js\` file. For example:
 
-					if (Array.isArray(input) || typeof input === 'string') {
-						// for the early adapter adopters
-						message += ', rather than the name of an adapter';
-					}
+						import { defineConfig } from 'vite';
+						import { sveltekit } from '@sveltejs/kit/vite';
+						import adapter from '@sveltejs/adapter-auto';
 
-					throw new Error(`${message}. See https://svelte.dev/docs/kit/adapters`);
-				}
-
-				return input;
+						export default defineConfig({
+							plugins: [sveltekit({ adapter: adapter() })]
+						});
+					`;
 			}),
 
 			alias: validate({}, (input, keypath) => {
@@ -353,7 +354,7 @@ function removed(
  * @param {boolean} [allow_unknown]
  * @returns {Validator}
  */
-function object(children, allow_unknown = false) {
+export function object(children, allow_unknown = false) {
 	return (input, keypath) => {
 		/** @type {Record<string, any>} */
 		const output = {};
@@ -393,7 +394,7 @@ function object(children, allow_unknown = false) {
  * @param {(value: any, keypath: string) => any} fn
  * @returns {Validator}
  */
-function validate(fallback, fn) {
+export function validate(fallback, fn) {
 	return (input, keypath) => {
 		return input === undefined ? fallback : fn(input, keypath);
 	};

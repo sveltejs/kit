@@ -9,7 +9,9 @@ import sirv from 'sirv';
 import { isCSSRequest, loadEnv, buildErrorMessage } from 'vite';
 import { createReadableStream, getRequest, setResponse } from '../../../exports/node/index.js';
 import { coalesce_to_error } from '../../../utils/error.js';
-import { from_fs, posixify, resolve_entry, to_fs } from '../../../utils/filesystem.js';
+import { resolve_entry } from '../../../utils/filesystem.js';
+import { from_fs, to_fs } from '../../../utils/vite.js';
+import { posixify } from '../../../utils/os.js';
 import { load_error_page } from '../../../core/config/index.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import * as sync from '../../../core/sync/sync.js';
@@ -29,9 +31,10 @@ const vite_css_query_regex = /(?:\?|&)(?:raw|url|inline)(?:&|$)/;
  * @param {import('types').ValidatedConfig} svelte_config
  * @param {() => Array<{ hash: string, file: string }>} get_remotes
  * @param {string} root The project root directory
+ * @param {import('@sveltejs/kit').Adapter | undefined} adapter
  * @return {Promise<Promise<() => void>>}
  */
-export async function dev(vite, vite_config, svelte_config, get_remotes, root) {
+export async function dev(vite, vite_config, svelte_config, get_remotes, root, adapter) {
 	/** @type {AsyncLocalStorage<{ event: RequestEvent, config: any, prerender: PrerenderOption }>} */
 	const async_local_storage = new AsyncLocalStorage();
 
@@ -39,12 +42,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root) {
 		const context = async_local_storage.getStore();
 		if (!context || context.prerender === true) return;
 
-		check_feature(
-			/** @type {string} */ (context.event.route.id),
-			context.config,
-			label,
-			svelte_config.kit.adapter
-		);
+		check_feature(/** @type {string} */ (context.event.route.id), context.config, label, adapter);
 	};
 
 	const fetch = globalThis.fetch;
@@ -98,7 +96,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root) {
 
 	/** @param {string} id */
 	async function resolve(id) {
-		const url = id.startsWith('..') ? to_fs(path.posix.resolve(id)) : `/${id}`;
+		const url = id.startsWith('..') ? to_fs(path.resolve(id)) : `/${id}`;
 
 		const module = await loud_ssr_load_module(url);
 
@@ -438,7 +436,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root) {
 	});
 
 	const env = loadEnv(vite_config.mode, svelte_config.kit.env.dir, '');
-	const emulator = await svelte_config.kit.adapter?.emulate?.();
+	const emulator = await adapter?.emulate?.();
 
 	return () => {
 		const serve_static_middleware = vite.middlewares.stack.find(
@@ -569,8 +567,10 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root) {
 
 						return fs.readFileSync(path.join(svelte_config.kit.files.assets, file));
 					},
-					before_handle: (event, config, prerender) => {
-						async_local_storage.enterWith({ event, config, prerender });
+					before_handle: async (event, config, prerender, handle) => {
+						// we need to use .run because .enterWith() is not supported in Cloudflare Workers
+						// see https://blog.cloudflare.com/workers-node-js-asynclocalstorage/
+						return await async_local_storage.run({ event, config, prerender }, handle);
 					},
 					emulator
 				});

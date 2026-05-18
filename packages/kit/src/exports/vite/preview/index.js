@@ -16,8 +16,9 @@ import { is_chrome_devtools_request, not_found } from '../utils.js';
  * @param {import('vite').PreviewServer} vite
  * @param {import('vite').ResolvedConfig} vite_config
  * @param {import('types').ValidatedConfig} svelte_config
+ * @param {import('@sveltejs/kit').Adapter | undefined} adapter
  */
-export async function preview(vite, vite_config, svelte_config) {
+export async function preview(vite, vite_config, svelte_config, adapter) {
 	const { paths } = svelte_config.kit;
 	const base = paths.base;
 	const assets = paths.assets ? SVELTE_KIT_ASSETS : paths.base;
@@ -53,7 +54,7 @@ export async function preview(vite, vite_config, svelte_config) {
 		read: (file) => createReadableStream(`${dir}/${file}`)
 	});
 
-	const emulator = await svelte_config.kit.adapter?.emulate?.();
+	const emulator = await adapter?.emulate?.();
 
 	return () => {
 		// Remove the base middleware. It screws with the URL.

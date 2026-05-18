@@ -8,10 +8,16 @@ const ValueSchema = v.object({
 	select_field: v.string(),
 	color_field: v.string(),
 	range_field: v.number(),
-	checkbox_field: v.optional(v.boolean(), false)
+	checkbox_field: v.optional(v.boolean(), false),
+
+	hidden: v.object({
+		string: v.string(),
+		number: v.number(),
+		boolean: v.boolean()
+	})
 });
 
-const default_values: Array<v.InferOutput<typeof ValueSchema>> = [
+const default_values: Array<Omit<v.InferOutput<typeof ValueSchema>, 'hidden'>> = [
 	{
 		id: '1',
 		text_field: 'Example text',
