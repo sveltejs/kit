@@ -3,6 +3,11 @@ declare global {
 	const __SVELTEKIT_APP_DIR__: string;
 	const __SVELTEKIT_APP_VERSION_FILE__: string;
 	const __SVELTEKIT_APP_VERSION_POLL_INTERVAL__: number;
+	/**
+	 * True if the user ran `vite dev`. This is different from `esm-env` because
+	 * it is influenced by `NODE_ENV` which can still be true during `vite preview`
+	 */
+	const __SVELTEKIT_DEV__: boolean;
 	const __SVELTEKIT_EMBEDDED__: boolean;
 	const __SVELTEKIT_PATHS_ASSETS__: string;
 	const __SVELTEKIT_PATHS_BASE__: string;

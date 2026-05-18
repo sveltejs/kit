@@ -455,6 +455,82 @@ test('group preceding optional parameters', () => {
 	]);
 });
 
+test('optional parameters adjacent to another route', () => {
+	const { nodes, routes } = create('samples/optional-adjacent');
+
+	expect(nodes.map(simplify_node)).toEqual([
+		default_layout,
+		default_error,
+		{
+			component: 'samples/optional-adjacent/+page.svelte'
+		},
+		{
+			component: 'samples/optional-adjacent/[[optional]]/+page.svelte'
+		}
+	]);
+
+	expect(routes.map(simplify_route)).toEqual([
+		{
+			id: '/',
+			pattern: '/^/$/',
+			page: {
+				layouts: [0],
+				errors: [1],
+				leaf: nodes.findIndex((node) => node.component?.includes('/optional-adjacent/+page.svelte'))
+			}
+		},
+		{
+			id: '/[[optional]]',
+			pattern: '/^(?:/([^/]+))?/?$/',
+			page: {
+				layouts: [0],
+				errors: [1],
+				leaf: nodes.findIndex((node) => node.component?.includes('/[[optional]]'))
+			}
+		}
+	]);
+});
+
+test('optional parameters inside a group adjacent to another route', () => {
+	const { nodes, routes } = create('samples/group-optional');
+
+	expect(nodes.map(simplify_node)).toEqual([
+		default_layout,
+		default_error,
+		{
+			component: 'samples/group-optional/+page.svelte'
+		},
+		{
+			component: 'samples/group-optional/(group)/[[optional]]/+page.svelte'
+		}
+	]);
+
+	expect(routes.map(simplify_route)).toEqual([
+		{
+			id: '/(group)',
+			pattern: '/^/$/'
+		},
+		{
+			id: '/',
+			pattern: '/^/$/',
+			page: {
+				layouts: [0],
+				errors: [1],
+				leaf: nodes.findIndex((node) => node.component?.includes('/group-optional/+page.svelte'))
+			}
+		},
+		{
+			id: '/(group)/[[optional]]',
+			pattern: '/^(?:/([^/]+))?/?$/',
+			page: {
+				layouts: [0],
+				errors: [1],
+				leaf: nodes.findIndex((node) => node.component?.includes('/(group)/[[optional]]'))
+			}
+		}
+	]);
+});
+
 test('ignores files and directories with leading underscores', () => {
 	const { routes } = create('samples/hidden-underscore');
 

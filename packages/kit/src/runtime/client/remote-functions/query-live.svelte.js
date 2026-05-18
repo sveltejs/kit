@@ -10,7 +10,6 @@ import {
 } from './shared.svelte.js';
 import * as devalue from 'devalue';
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
-import { DEV } from 'esm-env';
 import { noop, once } from '../../../utils/functions.js';
 import { hydratable, tick } from 'svelte';
 import { create_remote_key, stringify_remote_arg } from '../../shared.js';
@@ -30,7 +29,7 @@ import { read_ndjson } from '../ndjson.js';
  * @returns {RemoteLiveQueryFunction<any, any>}
  */
 export function query_live(id) {
-	if (DEV) {
+	if (__SVELTEKIT_DEV__) {
 		// If this reruns as part of HMR, refresh the query
 		const entries = live_query_map.get(id);
 
