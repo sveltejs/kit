@@ -53,6 +53,9 @@ export function form(id) {
 	/** @type {Map<any, { count: number, instance: RemoteForm<T, U> }>} */
 	const instances = new Map();
 
+	/** @type {WeakMap<object, StandardSchemaV1>} */
+	const preflight_schemas = new WeakMap();
+
 	/** @param {string | number | boolean} [key] */
 	function create_instance(key) {
 		const action_id_without_key = id;
@@ -613,6 +616,7 @@ export function form(id) {
 				/** @type {RemoteForm<T, U>['preflight']} */
 				value: (schema) => {
 					preflight_schema = schema;
+					preflight_schemas.set(instance, schema);
 					return instance;
 				}
 			},
@@ -700,6 +704,11 @@ export function form(id) {
 		/** @type {RemoteForm<T, U>['for']} */
 		value: (key) => {
 			const entry = instances.get(key) ?? { count: 0, instance: create_instance(key) };
+
+			const caller_preflight = preflight_schemas.get(instance);
+			if (caller_preflight && !preflight_schemas.has(entry.instance)) {
+				entry.instance.preflight(caller_preflight);
+			}
 
 			try {
 				$effect.pre(() => {
