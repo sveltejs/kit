@@ -384,9 +384,7 @@ export async function internal_respond(request, options, manifest, state) {
 					prerender = page_nodes.prerender();
 				}
 
-				if (state.before_handle) {
-					return await state.before_handle(event, config, prerender, handle);
-				}
+				return await state.before_handle(event, config, prerender, handle);
 			}
 		}
 

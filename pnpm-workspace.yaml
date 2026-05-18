@@ -29,7 +29,7 @@ catalog:
   '@netlify/dev': ^4.11.2
   '@netlify/edge-functions': ^3.0.0
   '@netlify/functions': ^5.0.0
-  '@opentelemetry/sdk-node': ^0.214.0
+  '@opentelemetry/sdk-node': ^0.218.0
   '@opentelemetry/sdk-trace-node': ^2.0.1
   '@playwright/test': ^1.59.1
   '@polka/url': ^1.0.0-next.28

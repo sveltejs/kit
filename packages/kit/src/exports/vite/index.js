@@ -13,6 +13,7 @@ import * as devalue from 'devalue';
 import { exactRegex, prefixRegex } from 'rolldown/filter';
 
 import { copy, mkdirp, read, resolve_entry, rimraf } from '../../utils/filesystem.js';
+import { posixify } from '../../utils/os.js';
 import { create_static_module, create_dynamic_module } from '../../core/env.js';
 import * as sync from '../../core/sync/sync.js';
 import { create_assets } from '../../core/sync/create_manifest_data/index.js';
@@ -60,7 +61,6 @@ import {
 import { to_fs } from '../../utils/vite.js';
 import { import_peer } from '../../utils/import.js';
 import { compact } from '../../utils/array.js';
-import { posixify } from '../../utils/os.js';
 import { should_ignore, has_children } from './static_analysis/utils.js';
 import { load_config } from '../../core/config/index.js';
 import { treeshake_prerendered_remotes } from './build/remote.js';
@@ -478,7 +478,8 @@ function kit({ svelte_config, adapter }) {
 					__SVELTEKIT_SERVER_TRACING_ENABLED__: s(kit.experimental.tracing.server),
 					__SVELTEKIT_EXPERIMENTAL_USE_TRANSFORM_ERROR__: s(kit.experimental.handleRenderingErrors),
 					__SVELTEKIT_ROOT__: s(root),
-					__SVELTEKIT_RUNTIME__: s(get_runtime_base(root))
+					__SVELTEKIT_RUNTIME__: s(get_runtime_base(root)),
+					__SVELTEKIT_DEV__: s(!is_build)
 				};
 
 				if (is_build) {

@@ -1,8 +1,12 @@
-import process from 'node:process';
-import { assert, test, describe } from 'vitest';
+import { assert, test, describe, beforeAll } from 'vitest';
 import { Csp } from './csp.js';
 
-describe.skipIf(process.env.NODE_ENV === 'production')('CSPs in dev', () => {
+describe('CSPs in dev', () => {
+	beforeAll(() => {
+		// @ts-expect-error
+		globalThis.__SVELTEKIT_DEV__ = true;
+	});
+
 	test('adds unsafe-inline styles', () => {
 		const csp = new Csp(
 			{
@@ -64,7 +68,12 @@ describe.skipIf(process.env.NODE_ENV === 'production')('CSPs in dev', () => {
 	});
 });
 
-describe.skipIf(process.env.NODE_ENV !== 'production')('CSPs in prod', () => {
+describe('CSPs in prod', () => {
+	beforeAll(() => {
+		// @ts-expect-error
+		globalThis.__SVELTEKIT_DEV__ = false;
+	});
+
 	test('generates blank CSP header', () => {
 		const csp = new Csp(
 			{

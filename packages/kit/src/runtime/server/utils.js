@@ -40,7 +40,7 @@ export function allowed_methods(mod) {
  * @param {import('types').SSROptions} options
  */
 export function get_global_name(options) {
-	return DEV ? '__sveltekit_dev' : `__sveltekit_${options.version_hash}`;
+	return __SVELTEKIT_DEV__ ? '__sveltekit_dev' : `__sveltekit_${options.version_hash}`;
 }
 
 /**
@@ -53,7 +53,7 @@ export function get_global_name(options) {
 export function static_error_page(options, status, message) {
 	let page = options.templates.error({ status, message: escape_html(message) });
 
-	if (DEV) {
+	if (__SVELTEKIT_DEV__) {
 		// inject Vite HMR client, for easier debugging
 		page = page.replace('</head>', '<script type="module" src="/@vite/client"></script></head>');
 	}
@@ -206,8 +206,7 @@ let relative = (file) => file;
 
 if (DEV) {
 	try {
-		const root = typeof __SVELTEKIT_ROOT__ === 'string' ? __SVELTEKIT_ROOT__ : '';
-		relative = (file) => path.relative(root, file);
+		relative = (file) => path.relative(__SVELTEKIT_ROOT__, file);
 	} catch {
 		// do nothing
 	}
