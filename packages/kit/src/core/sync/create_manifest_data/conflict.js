@@ -6,7 +6,7 @@ export function prevent_conflicts(routes) {
 	for (const route of routes) {
 		if (!route.leaf && !route.endpoint) continue;
 
-    /** @type {string[]} */
+		/** @type {string[]} */
 		let permutations;
 
 		const normalized = normalize_route_id(route.id);
