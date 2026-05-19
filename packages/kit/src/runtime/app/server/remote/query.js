@@ -250,9 +250,6 @@ function batch(validate_or_fn, maybe_fn) {
 	/** @type {(arg?: any) => MaybePromise<Input>} */
 	const validate = create_validator(validate_or_fn, maybe_fn);
 
-	/** @type {Map<string, { get_validated: () => MaybePromise<any>, resolvers: Array<{resolve: (value: any) => void, reject: (error: any) => void}> }>} */
-	let batching = new Map();
-
 	/**
 	 * Enqueues a single call into the current batch (creating one if necessary)
 	 * and returns a promise that resolves with the result for this entry.
@@ -265,23 +262,29 @@ function batch(validate_or_fn, maybe_fn) {
 		const { event, state } = get_request_store();
 
 		return new Promise((resolve, reject) => {
-			const entry = batching.get(payload);
+			const batches = (state.remote.batches ??=
+				/** @type {NonNullable<typeof state.remote.batches>} */ (new Map()));
+			let batched = batches.get(__.id);
+			if (!batched) {
+				batched = new Map();
+				batches.set(__.id, batched);
+			}
+			const entry = batched.get(payload);
 
 			if (entry) {
 				entry.resolvers.push({ resolve, reject });
 				return;
 			}
 
-			batching.set(payload, {
+			batched.set(payload, {
 				get_validated,
 				resolvers: [{ resolve, reject }]
 			});
 
-			if (batching.size > 1) return;
+			if (batched.size > 1) return;
 
 			setTimeout(async () => {
-				const batched = batching;
-				batching = new Map();
+				batches.delete(__.id);
 				const entries = Array.from(batched.values());
 
 				try {

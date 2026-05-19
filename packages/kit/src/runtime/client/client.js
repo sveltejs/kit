@@ -658,7 +658,8 @@ async function _preload_code(url) {
  * @param {boolean} hydrate
  */
 async function initialize(result, target, hydrate) {
-	if (DEV && result.state.error && document.querySelector('vite-error-overlay')) return;
+	if (__SVELTEKIT_DEV__ && result.state.error && document.querySelector('vite-error-overlay'))
+		return;
 
 	/** @type {import('@sveltejs/kit').NavigationEvent} */
 	const nav = {
@@ -672,8 +673,11 @@ async function initialize(result, target, hydrate) {
 		nav
 	};
 
-	const style = document.querySelector('style[data-sveltekit]');
-	if (style) style.remove();
+	// Removes the style node we used to avoid FOUC during development
+	if (__SVELTEKIT_DEV__) {
+		const style = document.querySelector('style[data-sveltekit]');
+		if (style) style.remove();
+	}
 
 	update(/** @type {import('@sveltejs/kit').Page} */ (result.props.page));
 
