@@ -38,7 +38,7 @@ catalog:
   '@svitejs/changesets-changelog-github-compact': ^1.2.0
   '@types/connect': ^3.4.38
   '@types/estree': ^1.0.5
-  '@types/node': ^24.1.0
+  '@types/node': ^22.13.14
   '@types/semver': ^7.5.6
   '@vitest/browser-playwright': ^4.1.0
   dropcss: ^1.0.16
