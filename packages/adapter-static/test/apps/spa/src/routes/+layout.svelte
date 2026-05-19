@@ -4,3 +4,9 @@
 </nav>
 
 <slot />
+
+<style>
+	nav {
+		background-color: lightblue;
+	}
+</style>

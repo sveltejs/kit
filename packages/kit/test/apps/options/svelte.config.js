@@ -8,7 +8,8 @@ const config = {
 		csp: {
 			directives: {
 				'script-src': ['self'],
-				'require-trusted-types-for': ['script']
+				'require-trusted-types-for': ['script'],
+				'trusted-types': ['svelte-trusted-html']
 			}
 		},
 		files: {
@@ -23,7 +24,7 @@ const config = {
 			// while we specify a path for the service worker, we expect it to not exist in the test
 			serviceWorker: 'source/service-worker'
 		},
-		appDir: '_wheee',
+		appDir: '_wheee/nested',
 		inlineStyleThreshold: 1024,
 		outDir: '.custom-out-dir',
 		output: {
@@ -31,7 +32,8 @@ const config = {
 		},
 		paths: {
 			base: '/path-base',
-			assets: 'https://cdn.example.com/stuff'
+			// @ts-expect-error our env var string can't match the https template literal
+			assets: process.env.PATHS_ASSETS || ''
 		},
 		env: {
 			dir: './env-dir',

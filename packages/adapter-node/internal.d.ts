@@ -1,5 +1,6 @@
 declare module 'ENV' {
 	export function env(key: string, fallback?: any): string;
+	export function timeout_env(key: string, fallback?: any): number | undefined;
 }
 
 declare module 'HANDLER' {
@@ -17,3 +18,5 @@ declare module 'MANIFEST' {
 declare module 'SERVER' {
 	export { Server } from '@sveltejs/kit';
 }
+
+declare module 'SHIMS' {}

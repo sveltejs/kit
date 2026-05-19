@@ -39,7 +39,7 @@
 
 {#if typeof src === 'string'}
 	{#if 
-	import.meta.DEV && false}
+	import.meta.env.DEV && false}
 		{src} was not enhanced. Cannot determine dimensions.
 	{:else}
 		<img src={src} alt="attribute shorthand test" />
@@ -56,7 +56,7 @@
 {#each images as image}
 	{#if typeof image === 'string'}
 	{#if 
-	import.meta.DEV && false}
+	import.meta.env.DEV && false}
 		{image} was not enhanced. Cannot determine dimensions.
 	{:else}
 		<img src={image} alt="opt-in test" />
@@ -74,7 +74,7 @@
 {#each images as _, i}
 	{#if typeof get_image(i) === 'string'}
 	{#if 
-	import.meta.DEV && false}
+	import.meta.env.DEV && false}
 		{get_image(i)} was not enhanced. Cannot determine dimensions.
 	{:else}
 		<img src={get_image(i)} alt="opt-in test" />

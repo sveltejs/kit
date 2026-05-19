@@ -3,14 +3,19 @@ declare global {
 	const __SVELTEKIT_APP_DIR__: string;
 	const __SVELTEKIT_APP_VERSION_FILE__: string;
 	const __SVELTEKIT_APP_VERSION_POLL_INTERVAL__: number;
+	/**
+	 * True if the user ran `vite dev`. This is different from `esm-env` because
+	 * it is influenced by `NODE_ENV` which can still be true during `vite preview`
+	 */
+	const __SVELTEKIT_DEV__: boolean;
 	const __SVELTEKIT_EMBEDDED__: boolean;
 	const __SVELTEKIT_PATHS_ASSETS__: string;
 	const __SVELTEKIT_PATHS_BASE__: string;
 	const __SVELTEKIT_PATHS_RELATIVE__: boolean;
 	/** True if `config.kit.experimental.instrumentation.server` is `true` */
 	const __SVELTEKIT_SERVER_TRACING_ENABLED__: boolean;
-	/** true if corresponding config option is set to true */
-	const __SVELTEKIT_EXPERIMENTAL__REMOTE_FUNCTIONS__: boolean;
+	/** True if `config.kit.experimental.forkPreloads` is `true` */
+	const __SVELTEKIT_FORK_PRELOADS__: boolean;
 	/** True if `config.kit.router.resolution === 'client'` */
 	const __SVELTEKIT_CLIENT_ROUTING__: boolean;
 	/** True if `config.kit.router.type === 'hash'` */
@@ -33,8 +38,10 @@ declare global {
 		assets?: string;
 		/** Public environment variables */
 		env?: Record<string, string>;
-		/** Serialized data from remote functions */
-		data?: Record<string, any>;
+		/** Serialized data from query/form/command functions */
+		query?: Record<string, any>;
+		/** Serialized data from prerender functions */
+		prerender?: Record<string, any>;
 		/** Create a placeholder promise */
 		defer?: (id: number) => Promise<any>;
 		/** Resolve a placeholder promise */
@@ -55,6 +62,7 @@ declare global {
 	 * to throw an error if the feature would fail in production.
 	 */
 	var __SVELTEKIT_TRACK__: (label: string) => void;
+	var __SVELTEKIT_EXPERIMENTAL_USE_TRANSFORM_ERROR__: boolean;
 	var Bun: object;
 	var Deno: object;
 }

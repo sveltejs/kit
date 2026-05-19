@@ -6,8 +6,13 @@ import { lookup } from 'mrmime';
 import { list_files, runtime_directory } from '../../utils.js';
 import { posixify, resolve_entry } from '../../../utils/filesystem.js';
 import { parse_route_id } from '../../../utils/routing.js';
+import { prevent_conflicts } from './conflict.js';
 import { sort_routes } from './sort.js';
 import { isSvelte5Plus } from '../utils.js';
+import {
+	create_node_analyser,
+	get_page_options
+} from '../../../exports/vite/static_analysis/index.js';
 
 /**
  * Generates the manifest data used for the client-side manifest and types generation.
@@ -342,7 +347,8 @@ function create_routes_and_nodes(cwd, config, fallback) {
 					}
 
 					route.endpoint = {
-						file: project_relative
+						file: project_relative,
+						page_options: null // will be filled later
 					};
 				}
 			}
@@ -415,6 +421,8 @@ function create_routes_and_nodes(cwd, config, fallback) {
 
 	const indexes = new Map(nodes.map((node, i) => [node, i]));
 
+	const node_analyser = create_node_analyser();
+
 	for (const route of routes) {
 		if (!route.leaf) continue;
 
@@ -456,6 +464,16 @@ function create_routes_and_nodes(cwd, config, fallback) {
 
 		if (parent_id !== undefined) {
 			throw new Error(`${current_node.component} references missing segment "${parent_id}"`);
+		}
+	}
+
+	for (const node of nodes) {
+		node.page_options = node_analyser.get_page_options(node);
+	}
+
+	for (const route of routes) {
+		if (route.endpoint) {
+			route.endpoint.page_options = get_page_options(route.endpoint.file);
 		}
 	}
 
@@ -528,69 +546,4 @@ function count_occurrences(needle, haystack) {
 		if (haystack[i] === needle) count += 1;
 	}
 	return count;
-}
-
-/** @param {import('types').RouteData[]} routes */
-function prevent_conflicts(routes) {
-	/** @type {Map<string, string>} */
-	const lookup = new Map();
-
-	for (const route of routes) {
-		if (!route.leaf && !route.endpoint) continue;
-
-		const normalized = normalize_route_id(route.id);
-
-		// find all permutations created by optional parameters
-		const split = normalized.split(/<\?(.+?)>/g);
-
-		let permutations = [/** @type {string} */ (split[0])];
-
-		// turn `x/[[optional]]/y` into `x/y` and `x/[required]/y`
-		for (let i = 1; i < split.length; i += 2) {
-			const matcher = split[i];
-			const next = split[i + 1];
-
-			permutations = permutations.reduce((a, b) => {
-				a.push(b + next);
-				if (!(matcher === '*' && b.endsWith('//'))) a.push(b + `<${matcher}>${next}`);
-				return a;
-			}, /** @type {string[]} */ ([]));
-		}
-
-		for (const permutation of permutations) {
-			// remove leading/trailing/duplicated slashes caused by prior
-			// manipulation of optional parameters and (groups)
-			const key = permutation
-				.replace(/\/{2,}/, '/')
-				.replace(/^\//, '')
-				.replace(/\/$/, '');
-
-			if (lookup.has(key)) {
-				throw new Error(
-					`The "${lookup.get(key)}" and "${route.id}" routes conflict with each other`
-				);
-			}
-
-			lookup.set(key, route.id);
-		}
-	}
-}
-
-/** @param {string} id */
-function normalize_route_id(id) {
-	return (
-		id
-			// remove groups
-			.replace(/(?<=^|\/)\(.+?\)(?=$|\/)/g, '')
-
-			.replace(/\[[ux]\+([0-9a-f]+)\]/g, (_, x) =>
-				String.fromCharCode(parseInt(x, 16)).replace(/\//g, '%2f')
-			)
-
-			// replace `[param]` with `<*>`, `[param=x]` with `<x>`, and `[[param]]` with `<?*>`
-			.replace(
-				/\[(?:(\[)|(\.\.\.))?.+?(=.+?)?\]\]?/g,
-				(_, optional, rest, matcher) => `<${optional ? '?' : ''}${rest ?? ''}${matcher ?? '*'}>`
-			)
-	);
 }

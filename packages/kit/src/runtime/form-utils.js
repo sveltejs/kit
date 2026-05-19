@@ -4,7 +4,10 @@
 
 import { DEV } from 'esm-env';
 import * as devalue from 'devalue';
-import { text_decoder, text_encoder } from './utils.js';
+import { text_encoder } from './utils.js';
+import { SvelteKitError } from '@sveltejs/kit/internal';
+
+const decoder = new TextDecoder();
 
 /**
  * Sets a value in a nested object using a path string, mutating the original object
@@ -64,7 +67,7 @@ export function convert_formdata(data) {
 
 export const BINARY_FORM_CONTENT_TYPE = 'application/x-sveltekit-formdata';
 const BINARY_FORM_VERSION = 0;
-
+const HEADER_BYTES = 1 + 4 + 2;
 /**
  * The binary format is as follows:
  * - 1 byte: Format version
@@ -82,10 +85,6 @@ export function serialize_binary_form(data, meta) {
 
 	/** @type {Array<[file: File, index: number]>} */
 	const files = [];
-
-	if (!meta.remote_refreshes?.length) {
-		delete meta.remote_refreshes;
-	}
 
 	const encoded_header = devalue.stringify([data, meta], {
 		File: (file) => {
@@ -144,7 +143,11 @@ export async function deserialize_binary_form(request) {
 		return { data: convert_formdata(form_data), meta: {}, form_data };
 	}
 	if (!request.body) {
-		throw new Error('Could not deserialize binary form: no body');
+		throw deserialize_error('no body');
+	}
+	const content_length = parseInt(request.headers.get('content-length') ?? '');
+	if (Number.isNaN(content_length)) {
+		throw deserialize_error('invalid Content-Length header');
 	}
 
 	const reader = request.body.getReader();
@@ -156,7 +159,7 @@ export async function deserialize_binary_form(request) {
 	 * @param {number} index
 	 * @returns {Promise<Uint8Array<ArrayBuffer> | undefined>}
 	 */
-	async function get_chunk(index) {
+	function get_chunk(index) {
 		if (index in chunks) return chunks[index];
 
 		let i = chunks.length;
@@ -195,8 +198,7 @@ export async function deserialize_binary_form(request) {
 			return start_chunk.subarray(offset - chunk_start, offset + length - chunk_start);
 		}
 		// Otherwise, copy the data into a new buffer
-		const buffer = new Uint8Array(length);
-		buffer.set(start_chunk.subarray(offset - chunk_start));
+		const chunks = [start_chunk.subarray(offset - chunk_start)];
 		let cursor = start_chunk.byteLength - offset + chunk_start;
 		while (cursor < length) {
 			chunk_index++;
@@ -205,6 +207,12 @@ export async function deserialize_binary_form(request) {
 			if (chunk.byteLength > length - cursor) {
 				chunk = chunk.subarray(0, length - cursor);
 			}
+			chunks.push(chunk);
+			cursor += chunk.byteLength;
+		}
+		const buffer = new Uint8Array(length);
+		cursor = 0;
+		for (const chunk of chunks) {
 			buffer.set(chunk, cursor);
 			cursor += chunk.byteLength;
 		}
@@ -212,60 +220,109 @@ export async function deserialize_binary_form(request) {
 		return buffer;
 	}
 
-	const header = await get_buffer(0, 1 + 4 + 2);
-	if (!header) throw new Error('Could not deserialize binary form: too short');
+	const header = await get_buffer(0, HEADER_BYTES);
+	if (!header) throw deserialize_error('too short');
 
 	if (header[0] !== BINARY_FORM_VERSION) {
-		throw new Error(
-			`Could not deserialize binary form: got version ${header[0]}, expected version ${BINARY_FORM_VERSION}`
-		);
+		throw deserialize_error(`got version ${header[0]}, expected version ${BINARY_FORM_VERSION}`);
 	}
 	const header_view = new DataView(header.buffer, header.byteOffset, header.byteLength);
 	const data_length = header_view.getUint32(1, true);
+
+	if (HEADER_BYTES + data_length > content_length) {
+		throw deserialize_error('data overflow');
+	}
+
 	const file_offsets_length = header_view.getUint16(5, true);
 
-	// Read the form data
-	const data_buffer = await get_buffer(1 + 4 + 2, data_length);
-	if (!data_buffer) throw new Error('Could not deserialize binary form: data too short');
+	if (HEADER_BYTES + data_length + file_offsets_length > content_length) {
+		throw deserialize_error('file offset table overflow');
+	}
 
-	/** @type {Array<number>} */
+	// Read the form data
+	const data_buffer = await get_buffer(HEADER_BYTES, data_length);
+	if (!data_buffer) throw deserialize_error('data too short');
+
+	/** @type {Array<number | undefined>} */
 	let file_offsets;
 	/** @type {number} */
 	let files_start_offset;
 	if (file_offsets_length > 0) {
 		// Read the file offset table
-		const file_offsets_buffer = await get_buffer(1 + 4 + 2 + data_length, file_offsets_length);
-		if (!file_offsets_buffer)
-			throw new Error('Could not deserialize binary form: file offset table too short');
+		const file_offsets_buffer = await get_buffer(HEADER_BYTES + data_length, file_offsets_length);
+		if (!file_offsets_buffer) throw deserialize_error('file offset table too short');
 
-		file_offsets = /** @type {Array<number>} */ (
-			JSON.parse(text_decoder.decode(file_offsets_buffer))
-		);
-		files_start_offset = 1 + 4 + 2 + data_length + file_offsets_length;
+		const parsed_offsets = JSON.parse(decoder.decode(file_offsets_buffer));
+
+		if (
+			!Array.isArray(parsed_offsets) ||
+			parsed_offsets.some((n) => typeof n !== 'number' || !Number.isInteger(n) || n < 0)
+		) {
+			throw deserialize_error('invalid file offset table');
+		}
+
+		file_offsets = /** @type {Array<number>} */ (parsed_offsets);
+		files_start_offset = HEADER_BYTES + data_length + file_offsets_length;
 	}
 
-	const [data, meta] = devalue.parse(text_decoder.decode(data_buffer), {
+	/** @type {Array<{ offset: number, size: number }>} */
+	const file_spans = [];
+	const [data, meta] = devalue.parse(decoder.decode(data_buffer), {
 		File: ([name, type, size, last_modified, index]) => {
-			return new Proxy(
-				new LazyFile(
-					name,
-					type,
-					size,
-					last_modified,
-					get_chunk,
-					files_start_offset + file_offsets[index]
-				),
-				{
-					getPrototypeOf() {
-						// Trick validators into thinking this is a normal File
-						return File.prototype;
-					}
+			if (
+				typeof name !== 'string' ||
+				typeof type !== 'string' ||
+				typeof size !== 'number' ||
+				typeof last_modified !== 'number' ||
+				typeof index !== 'number'
+			) {
+				throw deserialize_error('invalid file metadata');
+			}
+
+			let offset = file_offsets[index];
+
+			// Check that the file offset table entry has not been already
+			// used. If not, immediately mark it as used.
+			if (offset === undefined) {
+				throw deserialize_error('duplicate file offset table index');
+			}
+			file_offsets[index] = undefined;
+
+			offset += files_start_offset;
+			if (offset + size > content_length) {
+				throw deserialize_error('file data overflow');
+			}
+
+			file_spans.push({ offset, size });
+
+			return new Proxy(new LazyFile(name, type, size, last_modified, get_chunk, offset), {
+				getPrototypeOf() {
+					// Trick validators into thinking this is a normal File
+					return File.prototype;
 				}
-			);
+			});
 		}
 	});
 
-	// Read the request body asyncronously so it doesn't stall
+	// Sort file spans in increasing order primarily by offset
+	// and secondarily by size (to allow 0-length files).
+	file_spans.sort((a, b) => a.offset - b.offset || a.size - b.size);
+
+	// Check that file spans do not overlap and there are no gaps between them.
+	for (let i = 1; i < file_spans.length; i++) {
+		const previous = file_spans[i - 1];
+		const current = file_spans[i];
+
+		const previous_end = previous.offset + previous.size;
+		if (previous_end < current.offset) {
+			throw deserialize_error('gaps in file data');
+		}
+		if (previous_end > current.offset) {
+			throw deserialize_error('overlapping file data');
+		}
+	}
+
+	// Read the request body asynchronously so it doesn't stall
 	void (async () => {
 		let has_more = true;
 		while (has_more) {
@@ -275,6 +332,12 @@ export async function deserialize_binary_form(request) {
 	})();
 
 	return { data, meta, form_data: null };
+}
+/**
+ * @param {string} message
+ */
+function deserialize_error(message) {
+	return new SvelteKitError(400, 'Bad Request', `Could not deserialize binary form: ${message}`);
 }
 
 /** @implements {File} */
@@ -352,7 +415,8 @@ class LazyFile {
 		return new ReadableStream({
 			start: async (controller) => {
 				let chunk_start = 0;
-				let start_chunk = null;
+				/** @type {Uint8Array} */
+				let start_chunk;
 				for (chunk_index = 0; ; chunk_index++) {
 					const chunk = await this.#get_chunk(chunk_index);
 					if (!chunk) return null;
@@ -380,7 +444,7 @@ class LazyFile {
 				chunk_index++;
 				let chunk = await this.#get_chunk(chunk_index);
 				if (!chunk) {
-					controller.error('Could not deserialize binary form: incomplete file data');
+					controller.error('incomplete file data');
 					controller.close();
 					return;
 				}
@@ -396,7 +460,7 @@ class LazyFile {
 		});
 	}
 	async text() {
-		return text_decoder.decode(await this.arrayBuffer());
+		return decoder.decode(await this.arrayBuffer());
 	}
 }
 
@@ -441,8 +505,8 @@ export function deep_set(object, keys, value) {
 		check_prototype_pollution(key);
 
 		const is_array = /^\d+$/.test(keys[i + 1]);
-		const exists = key in current;
-		const inner = current[key];
+		const inner = Object.hasOwn(current, key) ? current[key] : undefined;
+		const exists = inner != null;
 
 		if (exists && is_array !== Array.isArray(inner)) {
 			throw new Error(`Invalid array key ${keys[i + 1]}`);
@@ -538,11 +602,28 @@ export function deep_get(object, path) {
 }
 
 /**
+ *
+ * @param {string} field_type
+ * @param {boolean} is_array
+ * @param {unknown} input_value
+ */
+function get_type_prefix(field_type, is_array, input_value) {
+	if (field_type === 'number' || field_type === 'range') return 'n:';
+	if (field_type === 'checkbox' && !is_array) return 'b:';
+	if (field_type === 'hidden' || field_type === 'submit') {
+		const input_type = typeof input_value;
+		if (input_type === 'number') return 'n:';
+		if (input_type === 'boolean') return 'b:';
+	}
+	return '';
+}
+
+/**
  * Creates a proxy-based field accessor for form data
  * @param {any} target - Function or empty POJO
  * @param {() => Record<string, any>} get_input - Function to get current input data
  * @param {(path: (string | number)[], value: any) => void} set_input - Function to set input data
- * @param {() => Record<string, InternalRemoteFormIssue[]>} get_issues - Function to get current issues
+ * @param {(path?: (string | number)[], all?: boolean) => Record<string, InternalRemoteFormIssue[]>} get_issues - Function to get current issues
  * @param {(string | number)[]} path - Current access path
  * @returns {any} Proxy object with name(), value(), and issues() methods
  */
@@ -579,7 +660,7 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 
 			if (prop === 'issues' || prop === 'allIssues') {
 				const issues_func = () => {
-					const all_issues = get_issues()[key === '' ? '$' : key];
+					const all_issues = get_issues(path, prop === 'allIssues')[key === '' ? '$' : key];
 
 					if (prop === 'allIssues') {
 						return all_issues?.map((issue) => ({
@@ -602,7 +683,7 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 			if (prop === 'as') {
 				/**
 				 * @param {string} type
-				 * @param {string} [input_value]
+				 * @param {unknown} [input_value]
 				 */
 				const as_func = (type, input_value) => {
 					const is_array =
@@ -610,12 +691,7 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 						type === 'select multiple' ||
 						(type === 'checkbox' && typeof input_value === 'string');
 
-					const prefix =
-						type === 'number' || type === 'range'
-							? 'n:'
-							: type === 'checkbox' && !is_array
-								? 'b:'
-								: '';
+					const prefix = get_type_prefix(type, is_array, input_value);
 
 					// Base properties for all input types
 					/** @type {Record<string, any>} */
@@ -635,13 +711,16 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 					// Handle submit and hidden inputs
 					if (type === 'submit' || type === 'hidden') {
 						if (DEV) {
-							if (!input_value) {
+							if (input_value === null || input_value === undefined) {
 								throw new Error(`\`${type}\` inputs must have a value`);
 							}
 						}
 
+						const value =
+							typeof input_value === 'boolean' ? (input_value ? 'on' : 'off') : input_value;
+
 						return Object.defineProperties(base_props, {
-							value: { value: input_value, enumerable: true }
+							value: { value, enumerable: true }
 						});
 					}
 
@@ -652,7 +731,7 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 							value: {
 								enumerable: true,
 								get() {
-									return get_value();
+									return get_value() ?? input_value;
 								}
 							}
 						});
@@ -670,6 +749,23 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 							}
 						}
 
+						if (type === 'checkbox' && !is_array) {
+							return Object.defineProperties(base_props, {
+								defaultChecked: {
+									enumerable: true,
+									get() {
+										return input_value;
+									}
+								},
+								checked: {
+									enumerable: true,
+									get() {
+										return get_value() ?? input_value;
+									}
+								}
+							});
+						}
+
 						return Object.defineProperties(base_props, {
 							value: { value: input_value ?? 'on', enumerable: true },
 							checked: {
@@ -681,11 +777,7 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 										return value === input_value;
 									}
 
-									if (is_array) {
-										return (value ?? []).includes(input_value);
-									}
-
-									return value;
+									return (value ?? []).includes(input_value);
 								}
 							}
 						});
@@ -735,10 +827,16 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 
 					// Handle all other input types (text, number, etc.)
 					return Object.defineProperties(base_props, {
+						defaultValue: {
+							enumerable: true,
+							get() {
+								return input_value;
+							}
+						},
 						value: {
 							enumerable: true,
 							get() {
-								const value = get_value();
+								const value = get_value() ?? input_value;
 								return value != null ? String(value) : '';
 							}
 						}

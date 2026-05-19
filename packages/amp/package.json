@@ -35,7 +35,7 @@
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:^",
-		"typescript": "^5.3.3"
+		"typescript": "catalog:"
 	},
 	"peerDependencies": {
 		"@sveltejs/kit": "^1.0.0 || ^2.0.0"

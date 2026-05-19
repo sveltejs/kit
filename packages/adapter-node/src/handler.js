@@ -9,13 +9,16 @@ import { getRequest, setResponse, createReadableStream } from '@sveltejs/kit/nod
 import { Server } from 'SERVER';
 import { manifest, prerendered, base } from 'MANIFEST';
 import { env } from 'ENV';
-import { parse_as_bytes } from '../utils.js';
+import { parse_as_bytes, parse_origin } from '../utils.js';
 
 /* global ENV_PREFIX */
+/* global PRECOMPRESS */
 
 const server = new Server(manifest);
 
-const origin = env('ORIGIN', undefined);
+// parse_origin validates ORIGIN and throws descriptive errors for invalid values
+const origin = parse_origin(env('ORIGIN', undefined));
+
 const xff_depth = parseInt(env('XFF_DEPTH', '1'));
 const address_header = env('ADDRESS_HEADER', '').toLowerCase();
 const protocol_header = env('PROTOCOL_HEADER', '').toLowerCase();
@@ -47,8 +50,8 @@ function serve(path, client = false) {
 	return fs.existsSync(path)
 		? sirv(path, {
 				etag: true,
-				gzip: true,
-				brotli: true,
+				gzip: PRECOMPRESS,
+				brotli: PRECOMPRESS,
 				setHeaders: client
 					? (res, pathname) => {
 							// only apply to build directory, not e.g. version.json
@@ -180,13 +183,54 @@ function sequence(handlers) {
 }
 
 /**
+ * @param {string} name
+ * @param {string | string[] | undefined} value
+ * @returns {string | undefined}
+ */
+function normalise_header(name, value) {
+	if (!name) return undefined;
+	if (Array.isArray(value)) {
+		if (value.length === 0) return undefined;
+		if (value.length === 1) return value[0];
+		throw new Error(
+			`Multiple values provided for ${name} header where only one expected: ${value}`
+		);
+	}
+	return value;
+}
+
+/**
  * @param {import('http').IncomingHttpHeaders} headers
- * @returns
+ * @returns {string}
  */
 function get_origin(headers) {
-	const protocol = (protocol_header && headers[protocol_header]) || 'https';
-	const host = (host_header && headers[host_header]) || headers['host'];
-	const port = port_header && headers[port_header];
+	const protocol = decodeURIComponent(
+		normalise_header(protocol_header, headers[protocol_header]) || 'https'
+	);
+
+	// this helps us avoid host injections through the protocol header
+	if (protocol.includes(':')) {
+		throw new Error(
+			`The ${protocol_header} header specified ${protocol} which is an invalid because it includes \`:\`. It should only contain the protocol scheme (e.g. \`https\`)`
+		);
+	}
+
+	const host =
+		normalise_header(host_header, headers[host_header]) ||
+		normalise_header('host', headers['host']);
+	if (!host) {
+		const header_names = host_header ? `${host_header} or host headers` : 'host header';
+		throw new Error(
+			`Could not determine host. The request must have a value provided by the ${header_names}`
+		);
+	}
+
+	const port = normalise_header(port_header, headers[port_header]);
+	if (port && isNaN(+port)) {
+		throw new Error(
+			`The ${port_header} header specified ${port} which is an invalid port because it is not a number. The value should only contain the port number (e.g. 443)`
+		);
+	}
 
 	return port ? `${protocol}://${host}:${port}` : `${protocol}://${host}`;
 }

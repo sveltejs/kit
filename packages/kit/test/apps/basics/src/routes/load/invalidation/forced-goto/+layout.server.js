@@ -1,7 +1,7 @@
-import { increment } from './state';
+import { increment } from '../../state.js';
 
 export const load = () => {
 	return {
-		a: increment()
+		a: increment(import.meta.url)
 	};
 };

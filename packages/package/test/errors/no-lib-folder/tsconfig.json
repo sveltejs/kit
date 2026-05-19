@@ -1,7 +1,6 @@
 {
 	"compilerOptions": {
 		"checkJs": true,
-		"baseUrl": ".",
 		"paths": {
 			"$lib/*": ["./src/lib/*"]
 		}

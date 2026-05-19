@@ -5,14 +5,13 @@
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
-		"preview": "BROWSER=none netlify serve",
+		"preview": "node ../../preview.js",
 		"prepare": "svelte-kit sync || echo ''",
 		"test": "playwright test"
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "catalog:",
-		"netlify-cli": "catalog:",
 		"svelte": "catalog:",
 		"vite": "catalog:"
 	},

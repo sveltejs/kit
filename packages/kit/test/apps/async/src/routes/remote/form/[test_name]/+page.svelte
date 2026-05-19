@@ -1,10 +1,5 @@
 <script>
-	import {
-		get_message,
-		set_message,
-		resolve_deferreds,
-		set_reverse_message
-	} from './form.remote.js';
+	import { get_message, set_message, resolve_deferreds } from './form.remote.ts';
 
 	const { params } = $props();
 
@@ -12,6 +7,11 @@
 
 	const scoped = set_message.for(`scoped:${params.test_name}`);
 	const enhanced = set_message.for(`enhanced:${params.test_name}`);
+
+	let submit_result = $state('none');
+	let imperative_submit_result = $state('none');
+	let callback_element_matches = $state('unknown');
+	let callback_has_enhance = $state('unknown');
 </script>
 
 <p>message.current: {message.current}</p>
@@ -22,18 +22,14 @@
 
 <form data-unscoped {...set_message}>
 	{#if set_message.fields.message.issues()}
-		<p>{set_message.fields.message.issues()[0].message}</p>
+		<p>{set_message.fields.message.issues()?.[0].message}</p>
 	{/if}
 
 	<input {...set_message.fields.message.as('text')} />
 	<input {...set_message.fields.test_name.as('hidden', params.test_name)} />
-	<!--
-	 NOTE: there really probably should be a `set_reverse_message' test_name hidden field here, but it collides with the one above.
-	 This kind of lines up with our discussions from earlier where we were talking about needing to include the RF hash in the field name.
-	 If we do that and this test starts failing, all we'll need to do is add the hidden field back in.
-	-->
-	<button>set message</button>
-	<button {...set_reverse_message.buttonProps}>set reverse message</button>
+
+	<button {...set_message.fields.action.as('submit', 'normal')}>set message</button>
+	<button {...set_message.fields.action.as('submit', 'reverse')}>set reverse message</button>
 </form>
 
 <p>set_message.input.message: {set_message.fields.message.value()}</p>
@@ -41,13 +37,12 @@
 <!-- NOTE: the ?? false should not be necessary, but somehow in the tests submitted is undefined sometimes... -->
 <p>set_message.submitted: {set_message.submitted ?? false}</p>
 <p>set_message.result: {set_message.result}</p>
-<p>set_reverse_message.result: {set_reverse_message.result}</p>
 
 <hr />
 
 <form data-scoped {...scoped}>
 	{#if scoped.fields.message.issues()}
-		<p>{scoped.fields.message.issues()[0].message}</p>
+		<p>{scoped.fields.message.issues()?.[0].message}</p>
 	{/if}
 
 	<input {...scoped.fields.message.as('text')} />
@@ -63,14 +58,19 @@
 
 <form
 	data-enhanced
-	{...enhanced.enhance(async ({ data, submit }) => {
-		await submit().updates(
-			get_message(params.test_name).withOverride(() => data.message + ' (override)')
+	{...enhanced.enhance(async (form) => {
+		const instance = /** @type {any} */ (form);
+		callback_element_matches = String(instance.element === /** @type {any} */ (enhanced).element);
+		callback_has_enhance = String('enhance' in instance);
+		submit_result = String(
+			await instance
+				.submit()
+				.updates(message.withOverride(() => instance.fields.message.value() + ' (override)'))
 		);
 	})}
 >
 	{#if enhanced.fields.message.issues()}
-		<p>{enhanced.fields.message.issues()[0].message}</p>
+		<p>{enhanced.fields.message.issues()?.[0].message}</p>
 	{/if}
 
 	<input {...enhanced.fields.message.as('text')} />
@@ -81,6 +81,20 @@
 <p>enhanced.input.message: {enhanced.fields.message.value()}</p>
 <p>enhanced.pending: {enhanced.pending}</p>
 <p>enhanced.result: {enhanced.result}</p>
+<p>enhanced.submit_result: {submit_result}</p>
+<p>enhanced.element: {/** @type {any} */ (enhanced).element ? 'attached' : 'null'}</p>
+<p>enhanced.callback_element_matches: {callback_element_matches}</p>
+<p>enhanced.callback_has_enhance: {callback_has_enhance}</p>
+<p>enhanced.imperative_submit_result: {imperative_submit_result}</p>
+
+<button
+	type="button"
+	onclick={async () => {
+		imperative_submit_result = String(await /** @type {any} */ (enhanced).submit());
+	}}
+>
+	submit enhanced programmatically
+</button>
 
 <hr />
 
