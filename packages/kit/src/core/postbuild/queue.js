@@ -16,6 +16,7 @@ export function queue(concurrency) {
 
 	let current = 0;
 	let closed = false;
+	let done = false;
 
 	promise.catch(() => {
 		// this is necessary in case a catch handler is never added
@@ -39,7 +40,7 @@ export function queue(concurrency) {
 						current -= 1;
 						dequeue();
 					});
-			} else if (current === 0) {
+			} else if (done && current === 0) {
 				closed = true;
 				resolve();
 			}
@@ -60,6 +61,8 @@ export function queue(concurrency) {
 		},
 
 		done: () => {
+			done = true;
+
 			if (current === 0) {
 				closed = true;
 				resolve();

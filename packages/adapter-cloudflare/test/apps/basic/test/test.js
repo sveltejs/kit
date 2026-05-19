@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import process from 'node:process';
 import { expect, test } from '@playwright/test';
 
 test('worker', async ({ page }) => {
@@ -12,7 +13,7 @@ test('ctx', async ({ request }) => {
 	expect(await res.text()).toBe('ctx works');
 });
 
-test('read from $app/server works', async ({ request }) => {
+test('read from $app/server', async ({ request }) => {
 	const content = fs.readFileSync(
 		path.resolve(import.meta.dirname, '../src/routes/read/file.txt'),
 		'utf-8'
@@ -21,12 +22,24 @@ test('read from $app/server works', async ({ request }) => {
 	expect(await response.text()).toBe(content);
 });
 
-// TODO: dev-only test param matchers
+test.describe('dev only', () => {
+	test.skip(!process.env.DEV);
 
-// TODO: after build test prerendering a page that imports from cloudflare:workers
+	test('inlines styles during dev to avoid FOUC', async ({ page }) => {
+		await page.goto('/inline-style');
+		await expect(page.locator('p')).toHaveCSS('color', 'rgb(0, 0, 255)');
+	});
 
-// TODO: after build test prerender remote function
+	test('resolves param matchers', async ({ page }) => {
+		await page.goto('/matchers/apple');
+		await expect(page.locator('p')).toHaveText('apple is a fruit');
+	});
+});
 
-// TODO: after build test paths.assets
+test.describe('after build', () => {
+	test.skip(!!process.env.DEV);
 
-// TODO: after build test service worker
+	// TODO: test paths.assets
+
+	// TODO: test service worker
+});

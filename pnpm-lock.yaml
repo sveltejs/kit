@@ -222,6 +222,9 @@ importers:
       vite:
         specifier: 'catalog:'
         version: 8.0.10(@types/node@24.12.0)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3)
+      wrangler:
+        specifier: 'catalog:'
+        version: 4.83.0(@cloudflare/workers-types@4.20260416.2)
 
   packages/adapter-cloudflare/test/apps/custom-worker:
     devDependencies:
