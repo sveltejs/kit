@@ -737,18 +737,18 @@ async function kit({ svelte_config }) {
 				ms.append(
 					'\n\n' +
 						dedent`
-					import * as $$_self_$$ from './${path.basename(id)}';
-					import { init_remote_functions as $$_init_$$ } from '@sveltejs/kit/internal';
+							import * as $$_self_$$ from './${path.basename(id)}';
+							import { init_remote_functions as $$_init_$$ } from '@sveltejs/kit/internal';
 
-					${dev_server ? 'await Promise.resolve()' : ''}
+							${dev_server ? 'await Promise.resolve()' : ''}
 
-					$$_init_$$($$_self_$$, ${s(file)}, ${s(remote.hash)});
+							$$_init_$$($$_self_$$, ${s(file)}, ${s(remote.hash)});
 
-					for (const [name, fn] of Object.entries($$_self_$$)) {
-						fn.__.id = ${s(remote.hash)} + '/' + name;
-						fn.__.name = name;
-					}
-				`
+							for (const [name, fn] of Object.entries($$_self_$$)) {
+								fn.__.id = ${s(remote.hash)} + '/' + name;
+								fn.__.name = name;
+							}
+						`
 				);
 
 				// Emit a dedicated entry chunk for this remote in SSR builds (prod only)
