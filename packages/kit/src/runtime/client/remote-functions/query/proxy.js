@@ -1,5 +1,5 @@
 import { app, query_map } from '../../client.js';
-import { pin_in_effect, QUERY_OVERRIDE_KEY, QUERY_RESOURCE_KEY } from '../shared.svelte.js';
+import { pin_while_active, QUERY_OVERRIDE_KEY, QUERY_RESOURCE_KEY } from '../shared.svelte.js';
 import { create_remote_key, stringify_remote_arg } from '../../../shared.js';
 import { Query } from './instance.svelte.js';
 import { cache } from './cache.js';
@@ -114,23 +114,20 @@ export class QueryProxy {
 
 	/** @type {Query<T>['then']} */
 	get then() {
-		pin_in_effect(query_map, cache, this.#id, this.#payload);
 		const cached = this.#get_cached_query();
-		return cached.then.bind(cached);
+		return pin_while_active(query_map, cache, this.#id, this.#payload, cached.then.bind(cached));
 	}
 
 	/** @type {Query<T>['catch']} */
 	get catch() {
-		pin_in_effect(query_map, cache, this.#id, this.#payload);
 		const cached = this.#get_cached_query();
-		return cached.catch.bind(cached);
+		return pin_while_active(query_map, cache, this.#id, this.#payload, cached.catch.bind(cached));
 	}
 
 	/** @type {Query<T>['finally']} */
 	get finally() {
-		pin_in_effect(query_map, cache, this.#id, this.#payload);
 		const cached = this.#get_cached_query();
-		return cached.finally.bind(cached);
+		return pin_while_active(query_map, cache, this.#id, this.#payload, cached.finally.bind(cached));
 	}
 
 	get [Symbol.toStringTag]() {

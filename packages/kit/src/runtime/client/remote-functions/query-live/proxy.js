@@ -1,5 +1,5 @@
 import { app, live_query_map } from '../../client.js';
-import { is_in_effect, pin_in_effect, QUERY_RESOURCE_KEY } from '../shared.svelte.js';
+import { is_in_effect, pin_while_active, QUERY_RESOURCE_KEY } from '../shared.svelte.js';
 import { create_remote_key, stringify_remote_arg } from '../../../shared.js';
 import { LiveQuery } from './instance.svelte.js';
 import { cache } from './cache.js';
@@ -86,21 +86,18 @@ export class LiveQueryProxy {
 	}
 
 	get then() {
-		pin_in_effect(live_query_map, cache, this.#id, this.#payload);
 		const cached = this.#get_cached_query();
-		return cached.then.bind(cached);
+		return pin_while_active(live_query_map, cache, this.#id, this.#payload, cached.then.bind(cached));
 	}
 
 	get catch() {
-		pin_in_effect(live_query_map, cache, this.#id, this.#payload);
 		const cached = this.#get_cached_query();
-		return cached.catch.bind(cached);
+		return pin_while_active(live_query_map, cache, this.#id, this.#payload, cached.catch.bind(cached));
 	}
 
 	get finally() {
-		pin_in_effect(live_query_map, cache, this.#id, this.#payload);
 		const cached = this.#get_cached_query();
-		return cached.finally.bind(cached);
+		return pin_while_active(live_query_map, cache, this.#id, this.#payload, cached.finally.bind(cached));
 	}
 
 	get [Symbol.toStringTag]() {
