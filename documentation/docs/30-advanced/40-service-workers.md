@@ -121,9 +121,13 @@ You can [disable automatic registration](configuration#serviceWorker) if you nee
 ```js
 import { dev } from '$app/environment';
 
-navigator.serviceWorker.register('/service-worker.js', {
-	type: dev ? 'module' : 'classic'
-});
+if ('serviceWorker' in navigator) {
+	addEventListener('load', function () {
+		navigator.serviceWorker.register('./path/to/service-worker.js', {
+			type: dev ? 'module' : 'classic'
+		});
+	});
+}
 ```
 
 > [!NOTE] The service worker is bundled for production, but not during development.
