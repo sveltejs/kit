@@ -1,7 +1,7 @@
 /** @import { Adapter, KitViteConfig } from '@sveltejs/kit' */
 /** @import { Options } from '@sveltejs/vite-plugin-svelte' */
 /** @import { PreprocessorGroup } from 'svelte/compiler' */
-/** @import { ValidatedConfig, ValidatedKitConfig } from 'types' */
+/** @import { DevContext, ValidatedConfig, ValidatedKitConfig } from 'types' */
 /** @import { ConfigEnv, Plugin, PluginOption, ResolvedConfig, UserConfig, Manifest, EnvironmentOptions, Rolldown } from 'vite' */
 /** @import { ModuleRunner } from 'vite/module-runner' */
 import fs from 'node:fs';
@@ -76,7 +76,7 @@ const cwd = process.cwd();
  */
 let root;
 
-/** @type {import('types').DevContext | null} */
+/** @type {DevContext | null} */
 let dev_context = null;
 
 /** @type {import('./types.js').EnforcedConfig} */
@@ -1653,14 +1653,10 @@ function kit({ svelte_config, adapter }) {
 		 * @see https://vitejs.dev/guide/api-plugin.html#configureserver
 		 */
 		configureServer(server) {
-			// other properties will be populated after running the `dev` function below
-			dev_context = /** @type {import('types').DevContext} */ ({
+			// manifest_data will be populated after running the `dev` function below
+			dev_context = /** @type {DevContext} */ ({
 				server
 			});
-
-			server.environments.ssr.hot.on('sveltekit:ssr-load-module-error', (error) =>
-				display_ssr_error_on_client(vite, error)
-			);
 
 			return dev(server, vite_config, vite, svelte_config, root, dev_context, adapter);
 		},
@@ -1670,9 +1666,7 @@ function kit({ svelte_config, adapter }) {
 		 * @see https://vitejs.dev/guide/api-plugin.html#configurepreviewserver
 		 */
 		configurePreviewServer(server) {
-			if (adapter?.vite?.plugins) return;
-
-			return preview(server, vite_config, svelte_config);
+			return preview(server, vite_config, svelte_config, adapter);
 		},
 
 		applyToEnvironment(environment) {
@@ -2133,32 +2127,3 @@ const create_service_worker_module = (config) => dedent`
 	export const prerendered = [];
 	export const version = ${s(config.kit.version.name)};
 `;
-
-/**
- * @param {typeof import('vite')} vite
- * @param {Error} err
- * @returns {void}
- */
-function display_ssr_error_on_client(vite, err) {
-	const server = dev_context?.server;
-	if (!server) return;
-
-	const msg = vite.buildErrorMessage(err, [
-		styleText('red', `Internal server error: ${err.message}`)
-	]);
-
-	if (!server.config.logger.hasErrorLogged(err)) {
-		server.config.logger.error(msg, { error: err });
-	}
-
-	server.ws.send({
-		type: 'error',
-		err: {
-			...err,
-			// these properties are non-enumerable and will
-			// not be serialized unless we explicitly include them
-			message: err.message,
-			stack: err.stack ?? ''
-		}
-	});
-}
