@@ -204,6 +204,10 @@ export function dev(server, vite_config, vite, svelte_config, root, dev_context,
 		'/check-feature'
 	);
 
+	server.environments.ssr.hot.on('sveltekit:ssr-load-module-error', (error) =>
+		display_ssr_error_on_client(server, vite, error)
+	);
+
 	return () => {
 		// ensure it has the correct server port
 		invalidate_module(server, sveltekit_ipc);
@@ -511,4 +515,31 @@ export function check_feature(route_id, config, feature, adapter) {
 			}
 		}
 	}
+}
+
+/**
+ * @param {ViteDevServer} server
+ * @param {typeof import('vite')} vite
+ * @param {Error} err
+ * @returns {void}
+ */
+function display_ssr_error_on_client(server, vite, err) {
+	const msg = vite.buildErrorMessage(err, [
+		styleText('red', `Internal server error: ${err.message}`)
+	]);
+
+	if (!server.config.logger.hasErrorLogged(err)) {
+		server.config.logger.error(msg, { error: err });
+	}
+
+	server.ws.send({
+		type: 'error',
+		err: {
+			...err,
+			// these properties are non-enumerable and will
+			// not be serialized unless we explicitly include them
+			message: err.message,
+			stack: err.stack ?? ''
+		}
+	});
 }
