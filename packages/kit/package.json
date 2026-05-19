@@ -19,9 +19,9 @@
 	"type": "module",
 	"dependencies": {
 		"@standard-schema/spec": "^1.0.0",
-		"@sveltejs/acorn-typescript": "^1.0.5",
+		"@sveltejs/acorn-typescript": "^1.0.9",
 		"@types/cookie": "^0.6.0",
-		"acorn": "^8.14.1",
+		"acorn": "^8.16.0",
 		"cookie": "^0.6.0",
 		"devalue": "^5.8.1",
 		"esm-env": "^1.2.2",
@@ -39,6 +39,7 @@
 		"@types/node": "catalog:",
 		"@types/set-cookie-parser": "catalog:",
 		"dts-buddy": "^0.8.0",
+		"jsdom": "catalog:",
 		"rollup": "^4.59.0",
 		"svelte": "catalog:",
 		"typescript": "^5.3.3",
@@ -46,8 +47,8 @@
 		"vitest": "catalog:"
 	},
 	"peerDependencies": {
-		"@sveltejs/vite-plugin-svelte": "^3.0.0 || ^4.0.0-next.1 || ^5.0.0 || ^6.0.0-next.0 || ^7.0.0",
 		"@opentelemetry/api": "^1.0.0",
+		"@sveltejs/vite-plugin-svelte": "^3.0.0 || ^4.0.0-next.1 || ^5.0.0 || ^6.0.0-next.0 || ^7.0.0",
 		"svelte": "^4.0.0 || ^5.0.0-next.0",
 		"typescript": "^5.3.3 || ^6.0.0",
 		"vite": "^5.0.3 || ^6.0.0 || ^7.0.0-beta.0 || ^8.0.0"
