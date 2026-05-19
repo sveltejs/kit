@@ -25,7 +25,6 @@ export default forked(import.meta.url, analyse);
  *   tracked_features: Record<string, string[]>;
  *   env: Record<string, string>;
  *   out: string;
- *   output_config: import('types').RecursiveRequired<import('types').ValidatedConfig['kit']['output']>;
  *   remotes: RemoteChunk[];
  *   root: string;
  * }} opts
@@ -38,7 +37,6 @@ async function analyse({
 	tracked_features,
 	env,
 	out,
-	output_config,
 	remotes,
 	root
 }) {
@@ -81,7 +79,6 @@ async function analyse({
 		null,
 		null,
 		null,
-		output_config,
 		root
 	);
 
