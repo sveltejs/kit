@@ -175,23 +175,6 @@ Cloudflare Workers is now preferred over Pages because of its broader feature se
 
 Cloudflare no longer recommends using [Workers Sites](https://developers.cloudflare.com/workers/configuration/sites/configuration/) and instead recommends using [Workers Static Assets](https://developers.cloudflare.com/workers/static-assets/). To migrate, replace `@sveltejs/adapter-cloudflare-workers` with `@sveltejs/adapter-cloudflare` and remove all `site` configuration settings from your Wrangler configuration file, then add the `assets.directory` and `assets.binding` configuration settings:
 
-### svelte.config.js
-
-```js
-// @errors: 2307
-/// file: svelte.config.js
----import adapter from '@sveltejs/adapter-cloudflare-workers';---
-
-/** @type {import('@sveltejs/kit').Config} */
-const config = {
-	kit: {
-		---adapter: adapter()---
-	}
-};
-
-export default config;
-```
-
 ```js
 // @errors: 2307
 /// file: vite.config.js
@@ -200,11 +183,11 @@ import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  plugins: [
-    sveltekit({
-      +++adapter: adapter()+++
-    })
-  ]
+	plugins: [
+		sveltekit({
+			+++adapter: adapter()+++
+		})
+	]
 });
 ```
 

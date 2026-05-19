@@ -29,10 +29,20 @@ async function analyse({
 	out,
 	root
 }) {
-	// first, build server nodes without the client manifest so we can analyse it
-	build_server_nodes({ out, manifest_data, server_manifest, root });
-
 	const svelte_config = await load_config({ cwd: root });
+
+	// first, build server nodes without the client manifest so we can analyse it
+	build_server_nodes(
+		out,
+		svelte_config.kit,
+		manifest_data,
+		server_manifest,
+		null,
+		null,
+		null,
+		svelte_config.kit.output,
+		root
+	);
 
 	const server = await create_build_server({
 		name: 'analyse',

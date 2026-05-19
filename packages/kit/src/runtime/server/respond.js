@@ -148,11 +148,10 @@ export async function internal_respond(request, options, manifest, state) {
 		remote: {
 			data: null,
 			forms: null,
-			/** A map of remote function key to corresponding single-flight-mutation promise */
 			refreshes: null,
+			requested: null,
 			reconnects: null,
-			/** A map of remote function ID to payloads requested for refreshing by the client */
-			requested: null
+			batches: null
 		},
 		is_in_remote_function: false,
 		is_in_render: false,
@@ -385,9 +384,7 @@ export async function internal_respond(request, options, manifest, state) {
 					prerender = page_nodes.prerender();
 				}
 
-				if (state.before_handle) {
-					return await state.before_handle(event, config, prerender, handle);
-				}
+				return await state.before_handle(event, config, prerender, handle);
 			}
 		}
 

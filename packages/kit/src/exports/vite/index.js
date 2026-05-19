@@ -13,6 +13,7 @@ import * as devalue from 'devalue';
 import { exactRegex, prefixRegex } from 'rolldown/filter';
 
 import { copy, mkdirp, read, resolve_entry, rimraf } from '../../utils/filesystem.js';
+import { posixify } from '../../utils/os.js';
 import { create_static_module, create_dynamic_module } from '../../core/env.js';
 import * as sync from '../../core/sync/sync.js';
 import { create_assets } from '../../core/sync/create_manifest_data/index.js';
@@ -60,7 +61,6 @@ import {
 import { to_fs } from '../../utils/vite.js';
 import { import_peer } from '../../utils/import.js';
 import { compact } from '../../utils/array.js';
-import { posixify } from '../../utils/os.js';
 import { should_ignore, has_children } from './static_analysis/utils.js';
 import { load_config } from '../../core/config/index.js';
 import { treeshake_prerendered_remotes } from './build/remote.js';
@@ -247,16 +247,6 @@ function plugin_svelte_config({ vite_plugin_svelte_options, svelte_config }) {
 			}
 		}
 	};
-}
-
-/**
- * @param {unknown} value
- * @returns {string | undefined}
- */
-function revive_functions(value) {
-	if (value instanceof Function) {
-		return value.toString();
-	}
 }
 
 /**
@@ -488,7 +478,8 @@ function kit({ svelte_config, adapter }) {
 					__SVELTEKIT_SERVER_TRACING_ENABLED__: s(kit.experimental.tracing.server),
 					__SVELTEKIT_EXPERIMENTAL_USE_TRANSFORM_ERROR__: s(kit.experimental.handleRenderingErrors),
 					__SVELTEKIT_ROOT__: s(root),
-					__SVELTEKIT_RUNTIME__: s(get_runtime_base(root))
+					__SVELTEKIT_RUNTIME__: s(get_runtime_base(root)),
+					__SVELTEKIT_DEV__: s(!is_build)
 				};
 
 				if (is_build) {
@@ -800,7 +791,7 @@ function kit({ svelte_config, adapter }) {
 									server: ${s(manifest_data.hooks.server)},
 									universal: ${s(manifest_data.hooks.universal)}
 								},
-								nodes: ${devalue.uneval(manifest_data.nodes, revive_functions)},
+								nodes: ${devalue.uneval(manifest_data.nodes)},
 								routes: ${devalue.uneval(manifest_data.routes)},
 								matchers: ${s(manifest_data.matchers)}
 							};
@@ -1942,18 +1933,17 @@ function kit({ svelte_config, adapter }) {
 			);
 
 			// regenerate nodes with the client manifest...
-			build_server_nodes({
+			build_server_nodes(
 				out,
-				manifest_data: build_manifest_data,
+				kit,
+				build_manifest_data,
 				server_manifest,
 				client_manifest,
-				paths: kit.paths,
-				inline_style_threshold: kit.inlineStyleThreshold,
 				assets_path,
 				client_chunks,
-				output_config: kit.output,
+				kit.output,
 				root
-			});
+			);
 
 			// ...and prerender
 			const prerender_results = await prerender({
@@ -2058,7 +2048,8 @@ function kit({ svelte_config, adapter }) {
 				await finalise();
 			}
 		},
-		// add it here so that we can retrieve from a separate process by resolving the Vite config
+		// expose the adapter so that forked processes (e.g. prerendering)
+		// can retrieve it by resolving the Vite config
 		api: {
 			adapter
 		}
@@ -2126,25 +2117,22 @@ function find_overridden_config(config, resolved_config, enforced_config, path, 
 
 /**
  * @param {ValidatedConfig} config
- * @returns {string}
  */
-function create_service_worker_module(config) {
-	return dedent`
-		if (typeof self === 'undefined' || self instanceof ServiceWorkerGlobalScope === false) {
-			throw new Error('This module can only be imported inside a service worker');
-		}
+const create_service_worker_module = (config) => dedent`
+	if (typeof self === 'undefined' || self instanceof ServiceWorkerGlobalScope === false) {
+		throw new Error('This module can only be imported inside a service worker');
+	}
 
-		export const build = [];
-		export const files = [
-			${create_assets(config)
-				.filter((asset) => config.kit.serviceWorker.files(asset.file))
-				.map((asset) => `${s(`${config.kit.paths.base}/${asset.file}`)}`)
-				.join(',\n')}
-		];
-		export const prerendered = [];
-		export const version = ${s(config.kit.version.name)};
-	`;
-}
+	export const build = [];
+	export const files = [
+		${create_assets(config)
+			.filter((asset) => config.kit.serviceWorker.files(asset.file))
+			.map((asset) => `${s(`${config.kit.paths.base}/${asset.file}`)}`)
+			.join(',\n')}
+	];
+	export const prerendered = [];
+	export const version = ${s(config.kit.version.name)};
+`;
 
 /**
  * @param {typeof import('vite')} vite
