@@ -250,9 +250,6 @@ function batch(validate_or_fn, maybe_fn) {
 	/** @type {(arg?: any) => MaybePromise<Input>} */
 	const validate = create_validator(validate_or_fn, maybe_fn);
 
-	/** @type {Map<string, { get_validated: () => MaybePromise<any>, resolvers: Array<{resolve: (value: any) => void, reject: (error: any) => void}> }>} */
-	let batching = new Map();
-
 	/**
 	 * Enqueues a single call into the current batch (creating one if necessary)
 	 * and returns a promise that resolves with the result for this entry.
@@ -265,23 +262,29 @@ function batch(validate_or_fn, maybe_fn) {
 		const { event, state } = get_request_store();
 
 		return new Promise((resolve, reject) => {
-			const entry = batching.get(payload);
+			const batches = (state.remote.batches ??=
+				/** @type {NonNullable<typeof state.remote.batches>} */ (new Map()));
+			let batched = batches.get(__.id);
+			if (!batched) {
+				batched = new Map();
+				batches.set(__.id, batched);
+			}
+			const entry = batched.get(payload);
 
 			if (entry) {
 				entry.resolvers.push({ resolve, reject });
 				return;
 			}
 
-			batching.set(payload, {
+			batched.set(payload, {
 				get_validated,
 				resolvers: [{ resolve, reject }]
 			});
 
-			if (batching.size > 1) return;
+			if (batched.size > 1) return;
 
 			setTimeout(async () => {
-				const batched = batching;
-				batching = new Map();
+				batches.delete(__.id);
 				const entries = Array.from(batched.values());
 
 				try {
@@ -434,6 +437,12 @@ function create_query_resource(__, payload, state, fn) {
 			return false;
 		},
 		refresh() {
+			const { event } = get_request_store();
+			if (!event.isRemoteRequest) {
+				// If the form submission is not a remote request, refreshing the data is
+				// useless, because it can't be returned to the client.
+				return Promise.resolve();
+			}
 			const refresh_context = get_refresh_context(__, 'refresh', payload);
 			const is_immediate_refresh = !refresh_context.cache[refresh_context.payload];
 			const value = is_immediate_refresh ? get_promise() : fn();

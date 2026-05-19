@@ -1,5 +1,71 @@
 # @sveltejs/kit
 
+## 2.60.1
+### Patch Changes
+
+
+- chore: bump `svelte` and `devalue` ([#15836](https://github.com/sveltejs/kit/pull/15836))
+
+
+- fix: prevent `query.batch` cross-talk ([`dadaefc`](https://github.com/sveltejs/kit/commit/dadaefc2e647a0a62f49f3ee8bc7aa46f5e27056))
+
+## 2.60.0
+### Minor Changes
+
+
+- feat: allow 'submit' and 'hidden' form fields to accept numbers and booleans ([#15802](https://github.com/sveltejs/kit/pull/15802))
+
+
+- feat: warn on unread `form` remote function validation issues ([#15653](https://github.com/sveltejs/kit/pull/15653))
+
+
+### Patch Changes
+
+
+- fix: abort navigation after async rendering if obsolete ([#15811](https://github.com/sveltejs/kit/pull/15811))
+
+
+- fix: skip refreshing queries on full-page reload form submissions ([#15803](https://github.com/sveltejs/kit/pull/15803))
+
+## 2.59.1
+### Patch Changes
+
+
+- fix: resolve paths to route files with the letter drive on Windows ([#15793](https://github.com/sveltejs/kit/pull/15793))
+
+## 2.59.0
+### Minor Changes
+
+
+- feat: support `query.batch` in `requested(...)` ([#15751](https://github.com/sveltejs/kit/pull/15751))
+
+
+- breaking: on the server, make the promise returned from `refresh` represent adding the refresh to the map, not the time it takes to run the remote function ([#15705](https://github.com/sveltejs/kit/pull/15705))
+
+
+- feat: experimental `query.live` function ([#15705](https://github.com/sveltejs/kit/pull/15705))
+
+
+### Patch Changes
+
+
+- fix: unwrap `Promise` in `RemoteCommand` output type ([#15771](https://github.com/sveltejs/kit/pull/15771))
+
+
+- fix: empty call to `.updates()` on a command/form invocation means "don't update anything" ([#15705](https://github.com/sveltejs/kit/pull/15705))
+
+
+- fix: `form.fields.foo.as('checkbox', default_value)` now works ([#15752](https://github.com/sveltejs/kit/pull/15752))
+
+
+- fix: remote forms with default values defined by `field.as('text', defaultValue)` now correctly reset to the provided default values once submitted ([#15753](https://github.com/sveltejs/kit/pull/15753))
+
+
+- fix: make sure queries always get started correctly ([#15705](https://github.com/sveltejs/kit/pull/15705))
+
+
+- fix: allow plain functions as overrides in `updates` ([#15705](https://github.com/sveltejs/kit/pull/15705))
+
 ## 2.58.0
 ### Minor Changes
 

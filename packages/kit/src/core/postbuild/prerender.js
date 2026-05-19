@@ -1,7 +1,10 @@
+/** @import { Adapter } from '@sveltejs/kit' */
 import { existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { mkdirp, posixify, walk } from '../../utils/filesystem.js';
+import { resolveConfig } from 'vite';
+import { mkdirp, walk } from '../../utils/filesystem.js';
+import { posixify } from '../../utils/os.js';
 import { noop } from '../../utils/functions.js';
 import { decode_uri, is_root_relative, resolve } from '../../utils/url.js';
 import { escape_html } from '../../utils/escape.js';
@@ -121,7 +124,13 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, roo
 		return { prerendered, prerender_map };
 	}
 
-	const emulator = await config.adapter?.emulate?.();
+	const vite_config = await resolveConfig({}, 'build');
+	/** @type {Adapter | undefined} */
+	const adapter = vite_config.plugins.find(
+		(plugin) => plugin.name === 'vite-plugin-sveltekit-adapter'
+	)?.api?.adapter;
+
+	const emulator = await adapter?.emulate?.();
 
 	/** @type {import('types').Logger} */
 	const log = logger({ verbose });

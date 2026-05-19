@@ -25,12 +25,12 @@ allowBuilds:
 # wouldn't require publishing a new package version
 # see https://github.com/changesets/changesets/issues/1707
 catalog:
-  '@changesets/cli': ^2.29.6
+  '@changesets/cli': ^3.0.0-next.2
   '@fontsource/libre-barcode-128-text': ^5.1.0
   '@netlify/dev': ^4.11.2
   '@netlify/edge-functions': ^3.0.0
   '@netlify/functions': ^5.0.0
-  '@opentelemetry/sdk-node': ^0.214.0
+  '@opentelemetry/sdk-node': ^0.218.0
   '@opentelemetry/sdk-trace-node': ^2.0.1
   '@playwright/test': ^1.59.1
   '@polka/url': ^1.0.0-next.28
@@ -39,7 +39,7 @@ catalog:
   '@svitejs/changesets-changelog-github-compact': ^1.2.0
   '@types/connect': ^3.4.38
   '@types/estree': ^1.0.5
-  '@types/node': ^24.1.0
+  '@types/node': ^22.13.14
   '@types/semver': ^7.5.6
   '@vitest/browser-playwright': ^4.1.0
   dropcss: ^1.0.16
@@ -52,7 +52,7 @@ catalog:
   prettier-plugin-svelte: ^3.5.1
   semver: ^7.5.4
   sirv-cli: ^3.0.0
-  svelte: ^5.53.12
+  svelte: ^5.55.7
   svelte-check: ^4.4.6
   svelte-preprocess: ^6.0.0
   # This version of TypeScript is for apps using it just for type checking.
