@@ -43,7 +43,7 @@ export function is_in_effect() {
  * @param {string} id
  * @param {string} payload
  */
-function pin_in_effect(cache_map, cache, id, payload) {
+export function pin_in_effect(cache_map, cache, id, payload) {
 	try {
 		$effect.pre(() => {
 			const entry = cache_map.get(id)?.get(payload);
@@ -56,14 +56,13 @@ function pin_in_effect(cache_map, cache, id, payload) {
 }
 
 /**
- * If we're inside a reactive context, pin a cache entry for as long as the
- * surrounding effect is alive. Without this, a transiently-referenced
- * `QueryProxy`/`LiveQueryProxy` (e.g. one produced by `{await fn()}` in a
- * template or by `$derived(await fn())`) would be eligible for GC as soon as
- * the awaited value has been read, after which the FinalizationRegistry
- * would evict the cache entry — even though the consuming effect is still
- * alive and may rely on the entry being refreshed (e.g. via `refreshAll()`
- * or a server-initiated single-flight refresh).
+ * Wrap a proxy's `then`/`catch`/`finally` function so that the underlying
+ * cache entry stays pinned for the lifetime of the awaited promise. Without
+ * this, a proxy awaited outside any effect (e.g. in an event handler) could
+ * be GC'd between the `.then` getter returning the thenable and the
+ * underlying promise settling, causing the FinalizationRegistry to evict the
+ * cache entry mid-flight and the awaited value to resolve to Svelte's
+ * `UNINITIALIZED` sentinel from a torn-down `$derived`.
  *
  * @template TResource
  * @template {(...args: any[]) => Promise<any>} TThen
@@ -74,17 +73,18 @@ function pin_in_effect(cache_map, cache, id, payload) {
  * @param {TThen} then
  * @returns {TThen}
  */
-export function pin_while_active(cache_map, cache, id, payload, then) {
-	pin_in_effect(cache_map, cache, id, payload);
-	return /** @type {TThen} */ ((...a) => {
-		const entry = cache_map.get(id)?.get(payload);
-		const release = entry ? cache.manual_ref(entry, id, payload) : undefined;
-		const promise = then(...a);
-		if (release) {
-			promise.then(release, release);
+export function pin_while_resolving(cache_map, cache, id, payload, then) {
+	return /** @type {TThen} */ (
+		(...a) => {
+			const entry = cache_map.get(id)?.get(payload);
+			const release = entry ? cache.manual_ref(entry, id, payload) : undefined;
+			const promise = then(...a);
+			if (release) {
+				promise.then(release, release);
+			}
+			return promise;
 		}
-		return promise;
-	});
+	);
 }
 
 /**
