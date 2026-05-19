@@ -14,7 +14,7 @@ import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 const config = {
 	preprocess: [
 		vitePreprocess({
-			style: true,	    // default value
+			style: true,      // default value
 			script: false     // default value
 		})
 	]
