@@ -38,7 +38,7 @@
 		"@types/connect": "catalog:",
 		"@types/node": "catalog:",
 		"@types/set-cookie-parser": "catalog:",
-		"dts-buddy": "^0.7.0",
+		"dts-buddy": "^0.8.0",
 		"rollup": "^4.59.0",
 		"svelte": "catalog:",
 		"typescript": "^5.3.3",
