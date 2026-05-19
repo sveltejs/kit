@@ -172,7 +172,7 @@ To illustrate:
 
 ```svelte
 <script>
-  import { getData } from './data.remote.js';
+	import { getData } from './data.remote.js';
 
 	// this instance is "anchored" to the reactive context of this component
 	const data = getData();
