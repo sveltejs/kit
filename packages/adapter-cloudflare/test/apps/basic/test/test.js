@@ -35,11 +35,3 @@ test.describe('dev only', () => {
 		await expect(page.locator('p')).toHaveText('apple is a fruit');
 	});
 });
-
-test.describe('after build', () => {
-	test.skip(!!process.env.DEV);
-
-	// TODO: test paths.assets
-
-	// TODO: test service worker
-});

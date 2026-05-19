@@ -17,6 +17,14 @@ test('environment variables', async ({ page }) => {
 	await expect(page.locator('#var')).toHaveText(`Var: ${prod_string}VAR`);
 });
 
+test('serves static assets with assets path prefix', async ({ page, request }) => {
+	await page.goto('/');
+	const href = await page.locator('link[rel="icon"]').getAttribute('href');
+
+	const response = await request.get(href ?? '');
+	expect(response.status()).toBe(200);
+});
+
 test.describe('after build', () => {
 	test.skip(!!process.env.DEV);
 
@@ -35,4 +43,6 @@ test.describe('after build', () => {
 		await page.goto('/remotes/prerender');
 		await expect(page.locator('p')).toHaveText('this text is prerendered at build-time');
 	});
+
+	// TODO: test service worker
 });
