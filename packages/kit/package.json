@@ -34,7 +34,7 @@
 		"@sveltejs/vite-plugin-svelte": "catalog:",
 		"@types/connect": "catalog:",
 		"@types/node": "catalog:",
-		"dts-buddy": "catalog:",
+		"dts-buddy": "^0.8.0",
 		"rolldown": "catalog:",
 		"svelte": "catalog:",
 		"svelte-preprocess": "catalog:",
