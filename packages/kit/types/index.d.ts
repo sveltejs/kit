@@ -2119,15 +2119,19 @@ declare module '@sveltejs/kit' {
 		method: 'POST';
 		/** The URL to send the form to. */
 		action: string;
+		/** The `<form>` element this instance is currently attached to, if any. */
+		get element(): HTMLFormElement | null;
+		/** Submit the currently attached form programmatically. */
+		submit(): Promise<boolean> & {
+			updates: (...updates: RemoteQueryUpdate[]) => Promise<boolean>;
+		};
 		/** Use the `enhance` method to influence what happens when the form is submitted. */
 		enhance(
-			callback: (opts: {
-				form: HTMLFormElement;
-				data: Input;
-				submit: () => Promise<boolean> & {
-					updates: (...updates: RemoteQueryUpdate[]) => Promise<boolean>;
-				};
-			}) => MaybePromise<void>
+			callback: (
+				form: Omit<RemoteForm<Input, Output>, 'enhance' | 'element'> & {
+					readonly element: HTMLFormElement;
+				}
+			) => MaybePromise<void>
 		): {
 			method: 'POST';
 			action: string;
@@ -2225,9 +2229,9 @@ declare module '@sveltejs/kit' {
 		 *   const todos = getTodos();
 		 * </script>
 		 *
-		 * <form {...addTodo.enhance(async ({ data, submit }) => {
-		 *   await submit().updates(
-		 *     todos.withOverride((todos) => [...todos, { text: data.get('text') }])
+		 * <form {...addTodo.enhance(async (form) => {
+		 *   await form.submit().updates(
+		 *     todos.withOverride((todos) => [...todos, { text: form.fields.text.value() }])
 		 *   );
 		 * })}>
 		 *   <input type="text" name="text" />
