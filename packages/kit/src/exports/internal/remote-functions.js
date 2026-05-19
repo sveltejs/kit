@@ -1,7 +1,7 @@
 /** @import { RemoteInternals } from 'types' */
 
 /** @type {RemoteInternals['type'][]} */
-const types = ['command', 'form', 'prerender', 'query', 'query_batch'];
+const types = ['command', 'form', 'prerender', 'query', 'query_batch', 'query_live'];
 
 /**
  * @param {Record<string, any>} module

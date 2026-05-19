@@ -1,11 +1,12 @@
-/** @import { RemoteFunctionResponse, RemoteRefreshMap } from 'types' */
+/** @import { RemoteFunctionResponse, RemoteSingleflightMap, RemoteSingleflightEntry } from 'types' */
 /** @import { RemoteQueryUpdate } from '@sveltejs/kit' */
 import * as devalue from 'devalue';
-import { app, goto, query_map } from '../client.js';
+import { app, goto, live_query_map, query_map } from '../client.js';
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
 import { untrack } from 'svelte';
 import { create_remote_key, split_remote_key } from '../../shared.js';
 import { navigating, page } from '../state.svelte.js';
+import { noop } from '../../../utils/functions.js';
 
 /** Indicates a query function, as opposed to a query instance */
 export const QUERY_FUNCTION_ID = Symbol('sveltekit.query_function_id');
@@ -13,6 +14,18 @@ export const QUERY_FUNCTION_ID = Symbol('sveltekit.query_function_id');
 export const QUERY_OVERRIDE_KEY = Symbol('sveltekit.query_override_key');
 /** Indicates a query instance */
 export const QUERY_RESOURCE_KEY = Symbol('sveltekit.query_resource_key');
+
+/**
+ * @returns {boolean} Returns `true` if we are in an effect
+ */
+export function is_in_effect() {
+	try {
+		$effect.pre(noop);
+		return true;
+	} catch {
+		return false;
+	}
+}
 
 /**
  * @returns {{ 'x-sveltekit-pathname': string, 'x-sveltekit-search': string }}
@@ -49,16 +62,26 @@ export async function remote_request(url, headers) {
 
 	const result = /** @type {RemoteFunctionResponse} */ (await response.json());
 
-	if (result.type === 'redirect') {
-		await goto(result.location);
-		throw new Redirect(307, result.location);
+	const resolved = await handle_side_channel_response(result);
+
+	return resolved.result;
+}
+
+/**
+ * @param {RemoteFunctionResponse} response
+ * @returns {Promise<Extract<RemoteFunctionResponse, { type: 'result' }>>}
+ */
+export async function handle_side_channel_response(response) {
+	if (response.type === 'redirect') {
+		await goto(response.location);
+		throw new Redirect(307, response.location);
 	}
 
-	if (result.type === 'error') {
-		throw new HttpError(result.status ?? 500, result.error);
+	if (response.type === 'error') {
+		throw new HttpError(response.status ?? 500, response.error);
 	}
 
-	return result.result;
+	return response;
 }
 
 /**
@@ -81,10 +104,10 @@ export function categorize_updates(updates) {
 		if (typeof update === 'function') {
 			if (Object.hasOwn(update, QUERY_FUNCTION_ID)) {
 				// this is a query function (not instance), so we need to find all active instances
-				// of this functionand request that they be refreshed by the command handler
+				// of this function and request that they be refreshed/reconnected by the command handler
 				// @ts-expect-error
 				const id = /** @type {string} */ (update[QUERY_FUNCTION_ID]);
-				const entries = query_map.get(id);
+				const entries = query_map.get(id) ?? live_query_map.get(id);
 
 				if (entries) {
 					for (const payload of entries.keys()) {
@@ -112,6 +135,10 @@ export function categorize_updates(updates) {
 				overrides.push(/** @type {() => void} */ (update));
 				continue;
 			}
+
+			// this is just a regular function provided by some user integration, so we can just stash it in the overrides array
+			overrides.push(/** @type {() => void} */ (update));
+			continue;
 		}
 
 		if (
@@ -125,10 +152,32 @@ export function categorize_updates(updates) {
 			continue;
 		}
 
-		throw new Error('updates() expects a query function, query resource, or query override');
+		throw new Error(
+			'updates() expects a query or live query function, query resource, or query override'
+		);
 	}
 
 	return { overrides, refreshes };
+}
+
+/**
+ * @template TResource
+ * @param {string} stringified_singleflight
+ * @param {Map<string, Map<string, { resource: TResource }>>} map
+ * @param {(resource: TResource, value: RemoteSingleflightEntry) => void} callback
+ */
+function apply_singleflight(stringified_singleflight, map, callback) {
+	const singleflight = /** @type {RemoteSingleflightMap} */ (
+		devalue.parse(stringified_singleflight, app.decoders)
+	);
+
+	for (const [key, value] of Object.entries(singleflight)) {
+		const parts = split_remote_key(key);
+		const entry = map.get(parts.id)?.get(parts.payload);
+		if (entry?.resource) {
+			callback(entry.resource, value);
+		}
+	}
 }
 
 /**
@@ -136,20 +185,24 @@ export function categorize_updates(updates) {
  *
  * @param {string} stringified_refreshes
  */
-export function apply_refreshes(stringified_refreshes) {
-	const refreshes = Object.entries(
-		/** @type {RemoteRefreshMap} */ (devalue.parse(stringified_refreshes, app.decoders))
-	);
-
-	for (const [key, value] of refreshes) {
-		const parts = split_remote_key(key);
-
-		const entry = query_map.get(parts.id)?.get(parts.payload);
-
+export const apply_refreshes = (stringified_refreshes) => {
+	apply_singleflight(stringified_refreshes, query_map, (resource, value) => {
 		if (value.type === 'result') {
-			entry?.resource.set(value.data);
+			resource?.set(value.data);
 		} else {
-			entry?.resource.fail(new HttpError(value.status ?? 500, value.error));
+			resource?.fail(new HttpError(value.status ?? 500, value.error));
 		}
-	}
-}
+	});
+};
+
+/** @param {string} stringified_reconnects */
+export const apply_reconnections = (stringified_reconnects) => {
+	apply_singleflight(stringified_reconnects, live_query_map, (resource, value) => {
+		if (value.type === 'result') {
+			resource?.set(value.data);
+			void resource?.reconnect();
+		} else {
+			resource?.fail(new HttpError(value.status ?? 500, value.error));
+		}
+	});
+};
