@@ -20,6 +20,9 @@ allowBuilds:
   svelte-preprocess: true
   unix-dgram: true
   workerd: true
+linkWorkspacePackages: true
+shellEmulator: true
+engineStrict: true
 # pnpm catalogs are currently only suitable for dependencies that
 # wouldn't require publishing a new package version
 # see https://github.com/changesets/changesets/issues/1707
