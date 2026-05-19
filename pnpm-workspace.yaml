@@ -38,7 +38,7 @@ catalog:
   '@svitejs/changesets-changelog-github-compact': ^1.2.0
   '@types/connect': ^3.4.38
   '@types/estree': ^1.0.5
-  '@types/node': ^22.13.14
+  '@types/node': ^22.19.19
   '@types/semver': ^7.5.6
   '@vitest/browser-playwright': ^4.1.0
   dropcss: ^1.0.16
@@ -67,10 +67,14 @@ catalogs:
   vite-baseline:
     vite: ^8.0.10
     '@sveltejs/vite-plugin-svelte': ^7.0.0
+    '@types/node': ^22.19.19
   # TODO: uncomment this when we start working on Vite 9 support
   # vite-beta:
   #   vite: ^9.0.0-beta.0
   #   '@sveltejs/vite-plugin-svelte': ^7.0.0
 overrides:
-# ci script replaces all overrides with the vite-xxx or node-xx catalogs above.
-# if you want to introduce an override, make sure to add it to all of them too
+  # ci script replaces all overrides with the vite-xxx or node-xx catalogs above.
+  # if you want to introduce an override, make sure to add it to all of them too
+
+  # we need this to avoid a duplicate version of packages being installed with @types/node@24
+  '@types/node': ^22.19.19
