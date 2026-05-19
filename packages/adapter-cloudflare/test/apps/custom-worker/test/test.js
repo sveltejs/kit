@@ -43,6 +43,4 @@ test.describe('after build', () => {
 		await page.goto('/remotes/prerender');
 		await expect(page.locator('p')).toHaveText('this text is prerendered at build-time');
 	});
-
-	// TODO: test service worker
 });
