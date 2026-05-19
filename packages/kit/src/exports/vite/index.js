@@ -764,7 +764,7 @@ async function kit({ svelte_config }) {
 					}
 				}
 
-				return { code: ms.toString(), map: ms.generateMap({ hires: true }) };
+				return { code: ms.toString(), map: ms.generateMap({ hires: true, source: file }) };
 			}
 
 			// For the client, read the exports and create a new module that only contains fetch functions with the correct metadata
