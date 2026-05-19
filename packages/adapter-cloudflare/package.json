@@ -45,8 +45,7 @@
 		"test": "pnpm test:e2e"
 	},
 	"dependencies": {
-		"@cloudflare/workers-types": "^4.20260416.2",
-		"esm-env": "^1.2.2",
+		"@cloudflare/workers-types": "^4.20260519.1",
 		"worktop": "0.8.0-next.18"
 	},
 	"devDependencies": {
@@ -59,6 +58,6 @@
 	},
 	"peerDependencies": {
 		"@sveltejs/kit": "^3.0.0",
-		"@cloudflare/vite-plugin": "^1.32.3"
+		"@cloudflare/vite-plugin": "^1.37.1"
 	}
 }

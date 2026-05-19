@@ -1,9 +1,7 @@
 /** @import { WorkerConfig } from '@cloudflare/vite-plugin' */
 import { copyFileSync, existsSync, writeFileSync, symlinkSync, unlinkSync } from 'node:fs';
 import path from 'node:path';
-import process from 'node:process';
 import { cloudflare } from '@cloudflare/vite-plugin';
-import { DEV } from 'esm-env';
 
 const name = '@sveltejs/adapter-cloudflare';
 
@@ -24,7 +22,7 @@ let building;
 export default function (options = {}) {
 	options.worker ??= true;
 
-	// TODO: remove in a future major after users have had time to migrate
+	// TODO: remove in a future major once users have had time to migrate
 	if (options.config) {
 		throw new Error(
 			'Remove the `adapter.config` option and configure the `adapter.vitePluginOptions.config` option in your `vite.config.js` file instead'
@@ -46,7 +44,7 @@ export default function (options = {}) {
 	return {
 		name,
 		async adapt(builder) {
-			// TODO: remove in a future major when users have had time to migrate to Cloudflare Workers
+			// TODO: remove in a future major once users have had time to migrate to Cloudflare Workers
 			let routes_json_path = '_routes.json';
 			if (
 				existsSync(routes_json_path) ||
@@ -198,7 +196,8 @@ export default function (options = {}) {
 						name: 'ssr',
 						childEnvironments: options.vitePluginOptions?.viteEnvironment?.childEnvironments
 					},
-					// this function does not run for `vite preview`
+					// TODO: use the experimental.prerenderWorker during prerendering?
+					// `config` only runs for `vite dev` and `vite build`
 					config(user_config) {
 						// merge with the user's programmatic config
 						if (typeof options.vitePluginOptions?.config === 'function') {
@@ -217,7 +216,7 @@ export default function (options = {}) {
 
 						// if we're developing, analysing, or prerendering, there must be a
 						// worker so that we can run some code in the workerd environment
-						if (DEV || options.worker || process.env.SVELTEKIT_FORK) {
+						if (options.worker) {
 							user_config.main ??= default_worker;
 
 							// we don't need to populate `assets.directory` because
