@@ -113,7 +113,14 @@ function live_query_tests() {
 		const result: string = await q();
 		result;
 
-		const iterator: AsyncIterator<string> = await q().run();
+		for await (const value of q()) {
+			const _: string = value;
+			_;
+			break;
+		}
+
+		// `.run()` is deprecated but still typed; calling it throws at runtime.
+		const iterator: AsyncGenerator<string> = q().run();
 		iterator;
 
 		q().connected === true;
