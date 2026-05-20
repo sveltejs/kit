@@ -1,3 +1,13 @@
+minimumReleaseAge: 1440
+minimumReleaseAgeExclude:
+  - '@sveltejs/*'
+  - svelte
+  - esrap
+  - devalue
+blockExoticSubdeps: true
+linkWorkspacePackages: true
+shellEmulator: true
+
 packages:
   - packages/*
   - packages/adapter-cloudflare/test/apps/*
