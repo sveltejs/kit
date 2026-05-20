@@ -5,7 +5,7 @@ export async function load() {
 	return {
 		paths: {
 			base: resolve('/'),
-			assets: asset('')
+			assets: asset('/')
 		}
 	};
 }

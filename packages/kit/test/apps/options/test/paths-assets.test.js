@@ -47,7 +47,7 @@ test.describe('base path', () => {
 		expect(await page.textContent('[data-source="base"]')).toBe(
 			javaScriptEnabled ? '/path-base/' : '../'
 		);
-		expect(await page.textContent('[data-source="assets"]')).toBe('/_svelte_kit_assets');
+		expect(await page.textContent('[data-source="assets"]')).toBe('/_svelte_kit_assets/');
 	});
 
 	test('loads javascript', async ({ page, javaScriptEnabled }) => {
