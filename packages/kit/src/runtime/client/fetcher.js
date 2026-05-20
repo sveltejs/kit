@@ -1,11 +1,12 @@
 import { BROWSER, DEV } from 'esm-env';
+import { noop } from '../../utils/functions.js';
 import { hash } from '../../utils/hash.js';
 import { base64_decode } from '../utils.js';
 
 let loading = 0;
 
 /** @type {typeof fetch} */
-const native_fetch = BROWSER ? window.fetch : /** @type {any} */ (() => {});
+const native_fetch = BROWSER ? window.fetch : /** @type {any} */ (noop);
 
 export function lock_fetch() {
 	loading += 1;

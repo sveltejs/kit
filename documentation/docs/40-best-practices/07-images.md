@@ -39,14 +39,14 @@ npm i -D @sveltejs/enhanced-img
 Adjust `vite.config.js`:
 
 ```js
-import { sveltekit } from '@sveltejs/kit/vite';
 +++import { enhancedImages } from '@sveltejs/enhanced-img';+++
+import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
 	plugins: [
 		+++enhancedImages(), // must come before the SvelteKit plugin+++
-		sveltekit()
+		sveltekit({/* ... */})
 	]
 });
 ```
@@ -125,10 +125,11 @@ If you have a large image, such as a hero image taking the width of the design, 
 If `sizes` is specified, `<enhanced:img>` will generate small images for smaller devices and populate the `srcset` attribute.
 
 The smallest picture generated automatically will have a width of 540px. If you'd like smaller images or would otherwise like to specify custom widths, you can do that with the `w` query parameter:
+
 ```svelte
 <enhanced:img
-  src="./image.png?w=1280;640;400"
-  sizes="(min-width:1920px) 1280px, (min-width:1080px) 640px, (min-width:768px) 400px"
+	src="./image.png?w=1280;640;400"
+	sizes="(min-width:1920px) 1280px, (min-width:1080px) 640px, (min-width:768px) 400px"
 />
 ```
 

@@ -36,8 +36,10 @@ export const handleError = ({ error: e, event, status, message }) => {
 	return { message: `${error.message} (${status} ${message}, on ${event.url.pathname})` };
 };
 
-// @ts-ignore this doesn't exist in old Node TODO remove SvelteKit 3 (same in test-basics)
+// TODO: remove in SvelteKit 3.0
+// @ts-ignore this doesn't exist in old Node
 Promise.withResolvers ??= () => {
+	/** @type {{ promise: Promise<any>, resolve: (value: any) => void, reject: (reason?: any) => void }} */
 	const d = {};
 	d.promise = new Promise((resolve, reject) => {
 		d.resolve = resolve;

@@ -1,10 +1,10 @@
 <script>
 	import { onNavigate } from '$app/navigation';
 
-	/** @type {import('@sveltejs/kit').NavigationTarget} */
+	/** @type {import("@sveltejs/kit").OnNavigate['from']} */
 	let from;
 
-	/** @type {import('@sveltejs/kit').NavigationTarget} */
+	/** @type {import("@sveltejs/kit").OnNavigate['to']} */
 	let to;
 
 	/** @type {Omit<import('@sveltejs/kit').NavigationType, 'enter' | 'leave'>} */

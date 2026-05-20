@@ -8,23 +8,28 @@ This adapter will be installed by default when you use [`adapter-auto`](adapter-
 
 ## Usage
 
-Install with `npm i -D @sveltejs/adapter-vercel`, then add the adapter to your `svelte.config.js`:
+Install with `npm i -D @sveltejs/adapter-vercel`, then add the adapter to your `vite.config.js`:
 
 ```js
-/// file: svelte.config.js
+// @errors: 2554
+/// file: vite.config.js
 import adapter from '@sveltejs/adapter-vercel';
+import { sveltekit } from '@sveltejs/kit/vite';
+import { defineConfig } from 'vite';
 
-/** @type {import('@sveltejs/kit').Config} */
-const config = {
-	kit: {
-		adapter: adapter({
-			// see below for options that can be set here
+export default defineConfig({
+	plugins: [
+		sveltekit({
+			adapter: adapter({
+				// see below for options that can be set here
+			})
 		})
-	}
-};
-
-export default config;
+	]
+});
 ```
+
+> [!LEGACY]
+> The `adapter` option was moved to the SvelteKit Vite plugin in SvelteKit 3.0.0. In earlier versions, you had to add it to the `kit` property in the `svelte.config.js` file instead.
 
 ## Deployment configuration
 
@@ -48,7 +53,7 @@ The following options apply to all functions:
 - `split`: if `true`, causes a route to be deployed as an individual function. If `split` is set to `true` at the adapter level, all routes will be deployed as individual functions
 
 Additionally, the following option applies to edge functions:
-- `external`: an array of dependencies that esbuild should treat as external when bundling functions. This should only be used to exclude optional dependencies that will not run outside Node
+- `external`: an array of dependencies that Rolldown should treat as external when bundling functions. This should only be used to exclude optional dependencies that will not run outside Node
 
 And the following option apply to serverless functions:
 - `memory`: the amount of memory available to the function. Defaults to `1024` Mb, and can be decreased to `128` Mb or [increased](https://vercel.com/docs/concepts/limits/overview#serverless-function-memory) in 64Mb increments up to `3008` Mb on Pro or Enterprise accounts
@@ -64,24 +69,26 @@ If your functions need to access data in a specific region, it's recommended tha
 You may set the `images` config to control how Vercel builds your images. See the [image configuration reference](https://vercel.com/docs/build-output-api/v3/configuration#images) for full details. As an example, you may set:
 
 ```js
-/// file: svelte.config.js
+// @errors: 2554
+/// file: vite.config.js
 import adapter from '@sveltejs/adapter-vercel';
+import { sveltekit } from '@sveltejs/kit/vite';
+import { defineConfig } from 'vite';
 
-/** @type {import('@sveltejs/kit').Config} */
-const config = {
-	kit: {
-		adapter: adapter({
-			images: {
-				sizes: [640, 828, 1200, 1920, 3840],
-				formats: ['image/avif', 'image/webp'],
-				minimumCacheTTL: 300,
-				domains: ['example-app.vercel.app'],
-			}
+export default defineConfig({
+	plugins: [
+		sveltekit({
+			adapter: adapter({
+				images: {
+					sizes: [640, 828, 1200, 1920, 3840],
+					formats: ['image/avif', 'image/webp'],
+					minimumCacheTTL: 300,
+					domains: ['example-app.vercel.app'],
+				}
+			})
 		})
-	}
-};
-
-export default config;
+	]
+});
 ```
 
 ## Incremental Static Regeneration

@@ -22,7 +22,9 @@ import {
 	ClientInit,
 	Transport,
 	HandleValidationError,
-	RemoteFormIssue
+	RemoteFormIssue,
+	RemoteQuery,
+	RemoteLiveQuery
 } from '@sveltejs/kit';
 import {
 	HttpMethod,
@@ -177,9 +179,15 @@ export class InternalServer extends Server {
 		request: Request,
 		options: RequestOptions & {
 			prerendering?: PrerenderOptions;
-			read: (file: string) => NonSharedBuffer;
-			/** A hook called before `handle` during dev, so that `AsyncLocalStorage` can be populated. */
-			before_handle?: (event: RequestEvent, config: any, prerender: PrerenderOption) => void;
+			/** @internal for saving dependencies during prerendering and generating fallback pages */
+			read: (file: string) => Buffer<ArrayBuffer>;
+			/** @internal used during development to check feature availability depending on the current route */
+			before_handle?: (
+				event: RequestEvent,
+				config: any,
+				prerender: PrerenderOption,
+				handle: () => Promise<Response>
+			) => Promise<Response>;
 			emulator?: Emulator;
 		}
 	): Promise<Response>;
@@ -303,6 +311,8 @@ export type RemoteFunctionResponse =
 	| (ServerRedirectNode & {
 			/** devalue'd Record<string, any> */
 			refreshes?: string;
+			/** devalue'd Record<string, any> */
+			reconnects?: string;
 	  })
 	| ServerErrorNode
 	| {
@@ -310,7 +320,33 @@ export type RemoteFunctionResponse =
 			result: string;
 			/** devalue'd Record<string, any> */
 			refreshes: string | undefined;
+			/** devalue'd Record<string, any> */
+			reconnects: string | undefined;
 	  };
+
+export type RemoteSingleflightResult = {
+	type: 'result';
+	data: any;
+};
+
+export type RemoteSingleflightError = {
+	type: 'error';
+	status?: number;
+	error: App.Error;
+};
+
+export type RemoteSingleflightEntry = RemoteSingleflightResult | RemoteSingleflightError;
+
+export type RemoteSingleflightMap = Record<string, RemoteSingleflightEntry>;
+
+export type RemoteLiveQueryUserFunctionReturnType<Output> = MaybePromise<
+	| AsyncGenerator<Output>
+	| AsyncIterator<Output>
+	| AsyncIterable<Output>
+	| Generator<Output>
+	| Iterator<Output>
+	| Iterable<Output>
+>;
 
 /**
  * Signals a successful response of the server `load` function.
@@ -379,7 +415,7 @@ export interface ServerMetadata {
 	}>;
 	routes: Map<string, ServerMetadataRoute>;
 	/** For each hashed remote file, a map of export name -> { type, dynamic }, where `dynamic` is `false` for non-dynamic prerender functions */
-	remotes: Map<string, Map<string, { type: RemoteInfo['type']; dynamic: boolean }>>;
+	remotes: Map<string, Map<string, { type: RemoteInternals['type']; dynamic: boolean }>>;
 }
 
 export interface SSRComponent {
@@ -439,7 +475,10 @@ export interface SSRNode {
 	universal_id?: string;
 	server_id?: string;
 
-	/** inlined styles */
+	/**
+	 * During development, all styles are inlined for the page to avoid FOUC.
+	 * But in production, this stores styles that are below the inline threshold
+	 */
 	inline_styles?(): MaybePromise<
 		Record<string, string | ((assets: string, base: string) => string)>
 	>;
@@ -534,12 +573,18 @@ export interface SSRState {
 	 * prerender option is inherited by the endpoint, unless overridden.
 	 */
 	prerender_default?: PrerenderOption;
-	read?: (file: string) => NonSharedBuffer;
+	/** @internal reads from the filesystem when user code tries to fetch a static asset */
+	read?: (file: string) => Buffer<ArrayBuffer>;
 	/**
 	 * Used to set up `__SVELTEKIT_TRACK__` which checks if a used feature is supported.
 	 * E.g. if `read` from `$app/server` is used, it checks whether the route's config is compatible.
 	 */
-	before_handle?: (event: RequestEvent, config: any, prerender: PrerenderOption) => void;
+	before_handle?: (
+		event: RequestEvent,
+		config: any,
+		prerender: PrerenderOption,
+		handle: () => Promise<Response>
+	) => Promise<Response>;
 	emulator?: Emulator;
 }
 
@@ -559,49 +604,86 @@ export type ValidatedConfig = Config & {
 	extensions: string[];
 };
 
-export type ValidatedKitConfig = Omit<RecursiveRequired<KitConfig>, 'adapter'> & {
-	adapter?: Adapter;
-};
+// TODO: remove the omit in 4.0
+export type ValidatedKitConfig = Omit<RecursiveRequired<KitConfig>, 'adapter'>;
 
 export type BinaryFormMeta = {
 	remote_refreshes?: string[];
 	validate_only?: boolean;
 };
 
-export type RemoteInfo =
-	| {
-			type: 'query' | 'command';
-			id: string;
-			name: string;
-	  }
-	| {
-			/**
-			 * Corresponds to the name of the client-side exports (that's why we use underscores and not dots)
-			 */
-			type: 'query_batch';
-			id: string;
-			name: string;
-			/** Direct access to the function, for remote functions called from the client */
-			run: (args: any[], options: SSROptions) => Promise<any[]>;
-	  }
-	| {
-			type: 'form';
-			id: string;
-			name: string;
-			fn: (
-				body: Record<string, any>,
-				meta: BinaryFormMeta,
-				form_data: FormData | null
-			) => Promise<any>;
-	  }
-	| {
-			type: 'prerender';
-			id: string;
-			name: string;
-			has_arg: boolean;
-			dynamic?: boolean;
-			inputs?: RemotePrerenderInputsGenerator;
-	  };
+interface BaseRemoteInternals {
+	type: string;
+	id: string;
+	name: string;
+}
+
+export interface RemoteQueryInternals extends BaseRemoteInternals {
+	type: 'query';
+	validate: (arg?: any) => MaybePromise<any>;
+	/**
+	 * Creates a `RemoteQuery` bound directly to a specific client payload (the
+	 * stringified raw argument) and a pre-validated argument, skipping the query
+	 * wrapper's re-validation step. Used by `requested(query)` to ensure
+	 * `refresh()` / `set()` target the same cache key the client is listening on
+	 * even when the schema transforms the input.
+	 */
+	bind(payload: string, arg: any): RemoteQuery<any>;
+}
+export interface RemoteQueryLiveInternals extends BaseRemoteInternals {
+	type: 'query_live';
+	validate: (arg?: any) => MaybePromise<any>;
+	run(event: RequestEvent, state: RequestState, arg: any): AsyncGenerator<any>;
+	/**
+	 * Creates a `RemoteLiveQuery` bound directly to a specific client payload (the
+	 * stringified raw argument) and a pre-validated argument, skipping the query
+	 * wrapper's re-validation step. Used by `requested(liveQuery)` to ensure
+	 * `reconnect()` targets the same cache key the client is listening on even
+	 * when the schema transforms the input.
+	 */
+	bind(payload: string, arg: any): RemoteLiveQuery<any>;
+}
+
+export interface RemoteQueryBatchInternals extends BaseRemoteInternals {
+	type: 'query_batch';
+	validate: (arg?: any) => MaybePromise<any>;
+	run: (args: any[], options: SSROptions) => Promise<any[]>;
+	/**
+	 * Creates a `RemoteQuery` bound directly to a specific client payload (the
+	 * stringified raw argument) and a pre-validated argument, skipping the query
+	 * wrapper's re-validation step. Used by `requested(batchQuery)` to ensure
+	 * `refresh()` / `set()` target the same cache key the client is listening on
+	 * even when the schema transforms the input.
+	 */
+	bind(payload: string, arg: any): RemoteQuery<any>;
+}
+
+export interface RemoteCommandInternals extends BaseRemoteInternals {
+	type: 'command';
+}
+
+export interface RemoteFormInternals extends BaseRemoteInternals {
+	type: 'form';
+	fn(body: Record<string, any>, meta: BinaryFormMeta, form_data: FormData | null): Promise<any>;
+}
+
+export interface RemotePrerenderInternals extends BaseRemoteInternals {
+	type: 'prerender';
+	has_arg: boolean;
+	dynamic?: boolean;
+	inputs?: RemotePrerenderInputsGenerator;
+}
+
+export type RemoteAnyQueryInternals =
+	| RemoteQueryInternals
+	| RemoteQueryBatchInternals
+	| RemoteQueryLiveInternals;
+
+export type RemoteInternals =
+	| RemoteAnyQueryInternals
+	| RemoteCommandInternals
+	| RemoteFormInternals
+	| RemotePrerenderInternals;
 
 export interface InternalRemoteFormIssue extends RemoteFormIssue {
 	name: string;
@@ -620,17 +702,39 @@ export type RecordSpan = <T>(options: {
  * used for tracking things like remote function calls
  */
 export interface RequestState {
-	prerendering: PrerenderOptions | undefined;
-	transport: ServerHooks['transport'];
-	handleValidationError: ServerHooks['handleValidationError'];
-	tracing: {
+	readonly prerendering: PrerenderOptions | undefined;
+	readonly transport: ServerHooks['transport'];
+	readonly handleValidationError: ServerHooks['handleValidationError'];
+	readonly tracing: {
 		record_span: RecordSpan;
 	};
-	is_in_remote_function: boolean;
-	form_instances?: Map<any, any>;
-	remote_data?: Map<RemoteInfo, Record<string, MaybePromise<any>>>;
-	refreshes?: Record<string, Promise<any>>;
-	allows_commands?: boolean;
+	readonly remote: {
+		data: null | Map<
+			RemoteInternals,
+			Record<string, { serialize: boolean; data: MaybePromise<any> }>
+		>;
+		/** Instances created via `myForm.for(...)` */
+		forms: null | Map<string, any>;
+		/** A map of remote function key to corresponding single-flight-mutation promise */
+		refreshes: null | Map<string, Promise<any>>;
+		reconnects: null | Map<string, Promise<void>>;
+		/** A map of remote function ID to payloads requested for refreshing by the client */
+		requested: null | Map<string, string[]>;
+		/** A map of query.batch ID to payloads requested for that batch within the same macrotask */
+		batches: null | Map<
+			string,
+			Map<
+				string,
+				{
+					get_validated: () => MaybePromise<any>;
+					resolvers: Array<{ resolve: (value: any) => void; reject: (error: any) => void }>;
+				}
+			>
+		>;
+	};
+	readonly is_in_remote_function: boolean;
+	readonly is_in_render: boolean;
+	readonly is_in_universal_load: boolean;
 }
 
 export interface RequestStore {

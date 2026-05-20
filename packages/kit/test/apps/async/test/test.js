@@ -11,6 +11,20 @@ test.describe('remote functions', () => {
 		}
 	});
 
+	test('query.batch renders final values and errors on first load', async ({ page }) => {
+		await page.goto('/remote/batch-ssr');
+
+		await expect(page.locator('#ssr-batch-result-1')).toHaveText('Buy groceries');
+		await expect(page.locator('#ssr-batch-result-2')).toHaveText('Walk the dog');
+		await expect(page.locator('#ssr-batch-result-3')).toHaveText('Not found');
+		await expect(page.locator('body')).not.toContainText('Loading todo');
+	});
+
+	test('query.live renders the first yielded value during SSR', async ({ page }) => {
+		await page.goto('/remote/live');
+		await expect(page.locator('#first-value')).toHaveText('0');
+	});
+
 	test('query redirects on page load (query in common layout)', async ({ page }) => {
 		await page.goto('/remote/query-redirect');
 		await page.click('a[href="/remote/query-redirect/from-common-layout"]');
@@ -250,6 +264,7 @@ test.describe('remote functions', () => {
 
 		if (javaScriptEnabled) {
 			await expect(page.getByText('enhanced.pending:')).toHaveText('enhanced.pending: 1');
+			await expect(page.getByText('enhanced.element:')).toHaveText('enhanced.element: attached');
 
 			await page.getByText('message.current: hello (override)').waitFor();
 
@@ -259,11 +274,63 @@ test.describe('remote functions', () => {
 
 			// enhanced submission should not clear the input; the developer must do that at the appropriate time
 			await expect(page.locator('[data-enhanced] input[name="message"]')).toHaveValue('hello');
+			await expect(page.getByText('enhanced.callback_element_matches:')).toHaveText(
+				'enhanced.callback_element_matches: true'
+			);
+			await expect(page.getByText('enhanced.callback_has_enhance:')).toHaveText(
+				'enhanced.callback_has_enhance: false'
+			);
 		} else {
 			await expect(page.locator('[data-enhanced] input[name="message"]')).toHaveValue('');
 		}
 
 		await expect(page.getByText('enhanced.result')).toHaveText(
+			'enhanced.result: hello (from: enhanced:enhanced)'
+		);
+	});
+
+	test('form enhance submit returns boolean', async ({ page, javaScriptEnabled }) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/form/enhanced');
+
+		await expect(page.getByText('enhanced.submit_result:')).toHaveText(
+			'enhanced.submit_result: none'
+		);
+
+		await page.fill('[data-enhanced] input', 'hello');
+		await page.locator('[data-enhanced] span').click();
+		await page.getByText('resolve deferreds').click();
+		await expect(page.getByText('enhanced.submit_result:')).toHaveText(
+			'enhanced.submit_result: true'
+		);
+
+		await page.fill('[data-enhanced] input', 'invalid');
+		await page.locator('[data-enhanced] span').click();
+		await expect(page.getByText('enhanced.submit_result:')).toHaveText(
+			'enhanced.submit_result: false'
+		);
+	});
+
+	test('form submit() enables programmatic submission', async ({ page, javaScriptEnabled }) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/form/enhanced');
+
+		await expect(page.getByText('enhanced.imperative_submit_result:')).toHaveText(
+			'enhanced.imperative_submit_result: none'
+		);
+
+		await page.fill('[data-enhanced] input', 'hello');
+		await page.getByText('submit enhanced programmatically').click();
+
+		await expect(page.getByText('enhanced.pending:')).toHaveText('enhanced.pending: 1');
+
+		await page.getByText('resolve deferreds').click();
+		await expect(page.getByText('enhanced.imperative_submit_result:')).toHaveText(
+			'enhanced.imperative_submit_result: true'
+		);
+		await expect(page.getByText('enhanced.result:')).toHaveText(
 			'enhanced.result: hello (from: enhanced:enhanced)'
 		);
 	});
@@ -462,19 +529,19 @@ test.describe('remote functions', () => {
 
 		// Initially should be empty object or undefined values
 		const initialValue = await page.locator('#full-value').textContent();
-		expect(JSON.parse(initialValue)).toEqual({});
+		expect(initialValue ? JSON.parse(initialValue) : null).toEqual({});
 
 		// Fill leaf field
 		await page.fill('input[name="leaf"]', 'leaf-value');
 		const afterLeaf = await page.locator('#full-value').textContent();
-		expect(JSON.parse(afterLeaf)).toEqual({
+		expect(afterLeaf ? JSON.parse(afterLeaf) : null).toEqual({
 			leaf: 'leaf-value'
 		});
 
 		// Fill object.leaf field
 		await page.fill('input[name="object.leaf"]', 'object-leaf-value');
 		const afterObjectLeaf = await page.locator('#full-value').textContent();
-		expect(JSON.parse(afterObjectLeaf)).toEqual({
+		expect(afterObjectLeaf ? JSON.parse(afterObjectLeaf) : null).toEqual({
 			leaf: 'leaf-value',
 			object: {
 				leaf: 'object-leaf-value'
@@ -484,7 +551,7 @@ test.describe('remote functions', () => {
 		// Fill object.array fields
 		await page.fill('input[name="object.array[0]"]', 'array-item-1');
 		const afterArrayItem1 = await page.locator('#full-value').textContent();
-		expect(JSON.parse(afterArrayItem1)).toEqual({
+		expect(afterArrayItem1 ? JSON.parse(afterArrayItem1) : null).toEqual({
 			leaf: 'leaf-value',
 			object: {
 				leaf: 'object-leaf-value',
@@ -494,7 +561,7 @@ test.describe('remote functions', () => {
 
 		await page.fill('input[name="object.array[1]"]', 'array-item-2');
 		const afterArrayItem2 = await page.locator('#full-value').textContent();
-		expect(JSON.parse(afterArrayItem2)).toEqual({
+		expect(afterArrayItem2 ? JSON.parse(afterArrayItem2) : null).toEqual({
 			leaf: 'leaf-value',
 			object: {
 				leaf: 'object-leaf-value',
@@ -505,7 +572,7 @@ test.describe('remote functions', () => {
 		// Fill array[0].leaf field
 		await page.fill('input[name="array[0].leaf"]', 'array-0-leaf');
 		const afterArray0 = await page.locator('#full-value').textContent();
-		expect(JSON.parse(afterArray0)).toEqual({
+		expect(afterArray0 ? JSON.parse(afterArray0) : null).toEqual({
 			leaf: 'leaf-value',
 			object: {
 				leaf: 'object-leaf-value',
@@ -517,7 +584,7 @@ test.describe('remote functions', () => {
 		// Fill array[1].leaf field
 		await page.fill('input[name="array[1].leaf"]', 'array-1-leaf');
 		const afterArray1 = await page.locator('#full-value').textContent();
-		expect(JSON.parse(afterArray1)).toEqual({
+		expect(afterArray1 ? JSON.parse(afterArray1) : null).toEqual({
 			leaf: 'leaf-value',
 			object: {
 				leaf: 'object-leaf-value',
@@ -528,14 +595,17 @@ test.describe('remote functions', () => {
 
 		// Test nested object value access
 		const objectValue = await page.locator('#object-value').textContent();
-		expect(JSON.parse(objectValue)).toEqual({
+		expect(objectValue ? JSON.parse(objectValue) : null).toEqual({
 			leaf: 'object-leaf-value',
 			array: ['array-item-1', 'array-item-2']
 		});
 
 		// Test array value access
 		const arrayValue = await page.locator('#array-value').textContent();
-		expect(JSON.parse(arrayValue)).toEqual([{ leaf: 'array-0-leaf' }, { leaf: 'array-1-leaf' }]);
+		expect(arrayValue ? JSON.parse(arrayValue) : null).toEqual([
+			{ leaf: 'array-0-leaf' },
+			{ leaf: 'array-1-leaf' }
+		]);
 	});
 
 	test('nested field set is SSR rendered', async ({ page }) => {
@@ -615,6 +685,37 @@ test.describe('remote functions', () => {
 				timeout: 5000
 			});
 		}
+	});
+
+	test('awaiting multiple queries inside $derived does not fail mutation validation', async ({
+		page
+	}) => {
+		await page.goto('/remote/query-derived-awaits');
+
+		await expect(page.locator('#result')).toHaveText('3');
+	});
+
+	test('.as(type, value) renders correct values', async ({ page }) => {
+		await page.goto('/remote/form/as-value');
+
+		const form1 = page.locator('form').nth(0);
+		const form2 = page.locator('form').nth(1);
+
+		// first record values
+		await expect(form1.locator('input[name="text_field"]')).toHaveValue('Example text');
+		await expect(form1.locator('input[name="n:number_field"]')).toHaveValue('42');
+		await expect(form1.locator('select[name="select_field"]')).toHaveValue('apple');
+		await expect(form1.locator('input[name="color_field"]')).toHaveValue('#ff0000');
+		await expect(form1.locator('input[name="n:range_field"]')).toHaveValue('5');
+		await expect(form1.locator('input[name="b:checkbox_field"]')).toBeChecked();
+
+		// second record values
+		await expect(form2.locator('input[name="text_field"]')).toHaveValue('Another example');
+		await expect(form2.locator('input[name="n:number_field"]')).toHaveValue('100');
+		await expect(form2.locator('select[name="select_field"]')).toHaveValue('banana');
+		await expect(form2.locator('input[name="color_field"]')).toHaveValue('#ffff00');
+		await expect(form2.locator('input[name="n:range_field"]')).toHaveValue('8');
+		await expect(form2.locator('input[name="b:checkbox_field"]')).not.toBeChecked();
 	});
 });
 
