@@ -29,7 +29,7 @@
 		"svelte": "catalog:",
 		"svelte-check": "catalog:",
 		"test-redirect-importer": "workspace:*",
-		"typescript": "^5.5.4",
+		"typescript": "catalog:",
 		"valibot": "catalog:",
 		"vite": "catalog:",
 		"vitest": "catalog:"

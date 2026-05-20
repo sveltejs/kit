@@ -1,9 +1,6 @@
 import process from 'node:process';
-import { assert, expect, test, describe } from 'vitest';
+import { assert, expect, test, describe, beforeAll } from 'vitest';
 import { domain_matches, path_matches, get_cookies } from './cookie.js';
-import { installPolyfills } from '@sveltejs/kit/node/polyfills';
-
-installPolyfills();
 
 const domains = {
 	positive: [
@@ -39,6 +36,11 @@ const cookies_setup = ({ href, headers } = {}) => {
 };
 
 describe.skipIf(process.env.NODE_ENV === 'production')('cookies in dev', () => {
+	beforeAll(() => {
+		// @ts-expect-error
+		globalThis.__SVELTEKIT_DEV__ = true;
+	});
+
 	test('warns if cookie exceeds 4,129 bytes', () => {
 		try {
 			const { cookies } = cookies_setup();
@@ -52,6 +54,11 @@ describe.skipIf(process.env.NODE_ENV === 'production')('cookies in dev', () => {
 });
 
 describe.skipIf(process.env.NODE_ENV !== 'production')('cookies in prod', () => {
+	beforeAll(() => {
+		// @ts-expect-error
+		globalThis.__SVELTEKIT_DEV__ = false;
+	});
+
 	domains.positive.forEach(([hostname, constraint]) => {
 		test(`${hostname} / ${constraint}`, () => {
 			assert.ok(domain_matches(hostname, constraint));

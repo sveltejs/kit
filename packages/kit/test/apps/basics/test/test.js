@@ -774,6 +774,34 @@ test.describe('$app/paths', () => {
 			javaScriptEnabled ? absolute : '../../../../favicon.png'
 		);
 	});
+
+	test('match() returns route id and params for matching routes', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		await page.goto('/match');
+
+		const samples = [
+			{ path: '/match/load/foo', expected: { id: '/match/load/foo', params: {} } },
+			{
+				path: '/match/slug/test-slug',
+				expected: { id: '/match/slug/[slug]', params: { slug: 'test-slug' } }
+			},
+			{
+				path: '/match/slug/test-slug?from=query',
+				expected: { id: '/match/slug/[slug]', params: { slug: 'test-slug' } }
+			},
+			{ path: '/match/not-a-real-route-that-exists', expected: null },
+			{ path: '/reroute/basic/a', expected: { id: '/reroute/basic/b', params: {} } }
+		];
+
+		for (const { path, expected } of samples) {
+			const results = javaScriptEnabled
+				? page.locator('#client-results')
+				: page.locator('#server-results');
+			await expect(results.locator(`[data-path="${path}"]`)).toHaveText(JSON.stringify(expected));
+		}
+	});
 });
 
 // TODO SvelteKit 3: remove these tests

@@ -100,7 +100,6 @@ export default {
 				platform: {
 					env,
 					ctx,
-					context: ctx, // deprecated in favor of ctx
 					// @ts-expect-error webworker types from worktop are not compatible with Cloudflare Workers types
 					caches,
 					// @ts-expect-error the type is correct but ts is confused because platform.cf uses the type from index.ts while req.cf uses the type from index.d.ts

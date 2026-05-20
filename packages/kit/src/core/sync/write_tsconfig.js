@@ -1,8 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import process from 'node:process';
-import colors from 'kleur';
-import { posixify } from '../../utils/filesystem.js';
+import { styleText } from 'node:util';
+import { posixify } from '../../utils/os.js';
 import { write_if_changed } from './utils.js';
 
 /**
@@ -17,10 +16,11 @@ function maybe_file(cwd, file) {
 }
 
 /**
+ * @param {string} cwd
  * @param {string} file
  */
-function project_relative(file) {
-	return posixify(path.relative('.', file));
+function project_relative(cwd, file) {
+	return posixify(path.relative(cwd, file));
 }
 
 /**
@@ -37,21 +37,23 @@ function remove_trailing_slashstar(file) {
 /**
  * Generates the tsconfig that the user's tsconfig inherits from.
  * @param {import('types').ValidatedKitConfig} kit
+ * @param {string} cwd
  */
-export function write_tsconfig(kit, cwd = process.cwd()) {
+export function write_tsconfig(kit, cwd) {
 	const out = path.join(kit.outDir, 'tsconfig.json');
 
 	const user_config = load_user_tsconfig(cwd);
 	if (user_config) validate_user_config(cwd, out, user_config);
 
-	write_if_changed(out, JSON.stringify(get_tsconfig(kit), null, '\t'));
+	write_if_changed(out, JSON.stringify(get_tsconfig(kit, cwd), null, '\t'));
 }
 
 /**
  * Generates the tsconfig that the user's tsconfig inherits from.
  * @param {import('types').ValidatedKitConfig} kit
+ * @param {string} cwd
  */
-export function get_tsconfig(kit) {
+export function get_tsconfig(kit, cwd) {
 	/** @param {string} file */
 	const config_relative = (file) => posixify(path.relative(kit.outDir, file));
 
@@ -59,13 +61,12 @@ export function get_tsconfig(kit) {
 		'ambient.d.ts', // careful: changing this name would be a breaking change, because it's referenced in the service-workers documentation
 		'non-ambient.d.ts',
 		'./types/**/$types.d.ts',
+		config_relative('svelte.config.js'),
 		config_relative('vite.config.js'),
 		config_relative('vite.config.ts')
 	]);
-	// TODO(v2): find a better way to include all src files. We can't just use routes/lib only because
-	// people might have other folders/files in src that they want included.
-	const src_includes = [kit.files.routes, kit.files.lib, path.resolve('src')].filter((dir) => {
-		const relative = path.relative(path.resolve('src'), dir);
+	const src_includes = [kit.files.routes, kit.files.lib, kit.files.src].filter((dir) => {
+		const relative = path.relative(kit.files.src, dir);
 		return !relative || relative.startsWith('..');
 	});
 	for (const dir of src_includes) {
@@ -76,7 +77,11 @@ export function get_tsconfig(kit) {
 
 	// Test folder is a special case - we advocate putting tests in a top-level test folder
 	// and it's not configurable (should we make it?)
-	const tests_folder = project_relative('tests');
+	const test_folder = project_relative(cwd, 'test');
+	include.add(config_relative(`${test_folder}/**/*.js`));
+	include.add(config_relative(`${test_folder}/**/*.ts`));
+	include.add(config_relative(`${test_folder}/**/*.svelte`));
+	const tests_folder = project_relative(cwd, 'tests');
 	include.add(config_relative(`${tests_folder}/**/*.js`));
 	include.add(config_relative(`${tests_folder}/**/*.ts`));
 	include.add(config_relative(`${tests_folder}/**/*.svelte`));
@@ -99,7 +104,7 @@ export function get_tsconfig(kit) {
 		compilerOptions: {
 			// generated options
 			paths: {
-				...get_tsconfig_paths(kit),
+				...get_tsconfig_paths(kit, cwd),
 				// This allows files outside the Vite pipeline to access $env
 				'$env/static/private': ['./generated/env/static/private.js'],
 				'$env/static/public': ['./generated/env/static/public.js'],
@@ -124,7 +129,8 @@ export function get_tsconfig(kit) {
 			moduleResolution: 'bundler',
 			module: 'esnext',
 			noEmit: true, // prevent tsconfig error "overwriting input files" - Vite handles the build and ignores this
-			target: 'esnext'
+			target: 'esnext',
+			types: ['node']
 		},
 		include: [...include],
 		exclude
@@ -168,24 +174,25 @@ function validate_user_config(cwd, out, config) {
 	if (extends_framework_config) {
 		const { paths, baseUrl } = options;
 
+		// TODO: baseUrl will be removed in TypeScript 7.0
 		if (baseUrl || paths) {
 			console.warn(
-				colors
-					.bold()
-					.yellow(
-						`You have specified a baseUrl and/or paths in your ${config.kind} which interferes with SvelteKit's auto-generated tsconfig.json. ` +
-							'Remove it to avoid problems with intellisense. For path aliases, use `kit.alias` instead: https://svelte.dev/docs/kit/configuration#alias'
-					)
+				styleText(
+					['bold', 'yellow'],
+					`You have specified a baseUrl and/or paths in your ${config.kind} which interferes with SvelteKit's auto-generated tsconfig.json. ` +
+						'Remove it to avoid problems with intellisense. For path aliases, use `kit.alias` instead: https://svelte.dev/docs/kit/configuration#alias'
+				)
 			);
 		}
 	} else {
-		let relative = posixify(path.relative('.', out));
+		let relative = posixify(path.relative(cwd, out));
 		if (!relative.startsWith('./')) relative = './' + relative;
 
 		console.warn(
-			colors
-				.bold()
-				.yellow(`Your ${config.kind} should extend the configuration generated by SvelteKit:`)
+			styleText(
+				['bold', 'yellow'],
+				`Your ${config.kind} should extend the configuration generated by SvelteKit:`
+			)
 		);
 		console.warn(`{\n  "extends": "${relative}"\n}`);
 	}
@@ -201,8 +208,9 @@ const value_regex = /^(.*?)((\/\*)|(\.\w+))?$/;
  * Related to vite alias creation.
  *
  * @param {import('types').ValidatedKitConfig} config
+ * @param {string} cwd
  */
-function get_tsconfig_paths(config) {
+function get_tsconfig_paths(config, cwd) {
 	/** @param {string} file */
 	const config_relative = (file) => {
 		let relative_path = path.relative(config.outDir, file);
@@ -213,8 +221,8 @@ function get_tsconfig_paths(config) {
 	};
 
 	const alias = { ...config.alias };
-	if (fs.existsSync(project_relative(config.files.lib))) {
-		alias['$lib'] = project_relative(config.files.lib);
+	if (fs.existsSync(project_relative(cwd, config.files.lib))) {
+		alias['$lib'] = project_relative(cwd, config.files.lib);
 	}
 
 	/** @type {Record<string, string[]>} */

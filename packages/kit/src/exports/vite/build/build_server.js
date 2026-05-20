@@ -1,52 +1,55 @@
+/** @import { AssetDependencies, ManifestData, SSRNode, ValidatedKitConfig } from 'types' */
+/** @import { Manifest, Rolldown } from 'vite' */
 import fs from 'node:fs';
 import { mkdirp } from '../../../utils/filesystem.js';
-import { filter_fonts, find_deps, resolve_symlinks } from './utils.js';
+import {
+	create_function_as_string,
+	filter_fonts,
+	find_deps,
+	generate_placeholder,
+	resolve_symlinks
+} from './utils.js';
 import { s } from '../../../utils/misc.js';
 import { normalizePath } from 'vite';
-import { basename, join } from 'node:path';
-import { create_node_analyser } from '../static_analysis/index.js';
+import { basename } from 'node:path';
 import { fix_css_urls } from '../../../utils/css.js';
+import { escape_for_interpolation } from '../../../utils/escape.js';
 
 /**
- * Regenerate server nodes after acquiring client manifest
- * @overload
+ * @overload Build without the client manifest so we can analyse the nodes.
  * @param {string} out
- * @param {import('types').ValidatedKitConfig} kit
- * @param {import('types').ManifestData} manifest_data
- * @param {import('vite').Manifest} server_manifest
- * @param {import('vite').Manifest} client_manifest
- * @param {string} assets_path
- * @param {import('vite').Rollup.RollupOutput['output']} client_chunks
- * @param {import('types').RecursiveRequired<import('types').ValidatedConfig['kit']['output']>} output_config
- * @param {Map<string, { page_options: Record<string, any> | null, children: string[] }>} static_exports
- * @returns {Promise<void>}
- */
-/**
- * Build server nodes without client manifest for analysis phase
- * @overload
- * @param {string} out
- * @param {import('types').ValidatedKitConfig} kit
- * @param {import('types').ManifestData} manifest_data
- * @param {import('vite').Manifest} server_manifest
+ * @param {ValidatedKitConfig} kit
+ * @param {ManifestData} manifest_data
+ * @param {Manifest} server_manifest
  * @param {null} client_manifest
  * @param {null} assets_path
  * @param {null} client_chunks
- * @param {import('types').RecursiveRequired<import('types').ValidatedConfig['kit']['output']>} output_config
- * @param {Map<string, { page_options: Record<string, any> | null, children: string[] }>} static_exports
- * @returns {Promise<void>}
+ * @param {string} root
+ * @returns {void}
+ */
+/**
+ * @overload Or build with the client manifest
+ * @param {string} out
+ * @param {ValidatedKitConfig} kit
+ * @param {ManifestData} manifest_data
+ * @param {Manifest} server_manifest
+ * @param {Manifest} client_manifest
+ * @param {string} assets_path
+ * @param {Rolldown.RolldownOutput['output']} client_chunks
+ * @param {string} root
+ * @returns {void}
  */
 /**
  * @param {string} out
- * @param {import('types').ValidatedKitConfig} kit
- * @param {import('types').ManifestData} manifest_data
- * @param {import('vite').Manifest} server_manifest
- * @param {import('vite').Manifest | null} client_manifest
+ * @param {ValidatedKitConfig} kit
+ * @param {ManifestData} manifest_data
+ * @param {Manifest} server_manifest
+ * @param {Manifest | null} client_manifest
  * @param {string | null} assets_path
- * @param {import('vite').Rollup.RollupOutput['output'] | null} client_chunks
- * @param {import('types').RecursiveRequired<import('types').ValidatedConfig['kit']['output']>} output_config
- * @param {Map<string, { page_options: Record<string, any> | null, children: string[] }>} static_exports
+ * @param {Rolldown.RolldownOutput['output'] | null} client_chunks
+ * @param {string} root
  */
-export async function build_server_nodes(
+export function build_server_nodes(
 	out,
 	kit,
 	manifest_data,
@@ -54,8 +57,7 @@ export async function build_server_nodes(
 	client_manifest,
 	assets_path,
 	client_chunks,
-	output_config,
-	static_exports
+	root
 ) {
 	mkdirp(`${out}/server/nodes`);
 	mkdirp(`${out}/server/stylesheets`);
@@ -73,7 +75,7 @@ export async function build_server_nodes(
 	 */
 	let prepare_css_for_inlining = (css) => s(css);
 
-	if (client_chunks && kit.inlineStyleThreshold > 0 && output_config.bundleStrategy === 'split') {
+	if (client_chunks && kit.inlineStyleThreshold > 0 && kit.output.bundleStrategy === 'split') {
 		for (const chunk of client_chunks) {
 			if (chunk.type !== 'asset' || !chunk.fileName.endsWith('.css')) {
 				continue;
@@ -98,33 +100,37 @@ export async function build_server_nodes(
 			const static_asset_prefix = segments.map(() => '..').join('/') + '/';
 
 			prepare_css_for_inlining = (css, eager_assets) => {
+				const assets_placeholder = generate_placeholder(css, 'ASSETS');
+				const base_placeholder = generate_placeholder(css, 'BASE');
+
 				const transformed_css = fix_css_urls({
 					css,
 					vite_assets: eager_assets,
 					static_assets,
-					paths_assets: '${assets}',
-					base: '${base}',
+					paths_assets: assets_placeholder,
+					base: base_placeholder,
 					static_asset_prefix
 				});
 
 				// only convert to a function if we have adjusted any URLs
 				if (css !== transformed_css) {
-					return `function css(assets, base) { return \`${s(transformed_css).slice(1, -1)}\`; }`;
+					const escaped = escape_for_interpolation(transformed_css, [
+						{
+							placeholder: assets_placeholder,
+							replacement: '${assets}'
+						},
+						{
+							placeholder: base_placeholder,
+							replacement: '${base}'
+						}
+					]);
+					return create_function_as_string('css', ['assets', 'base'], escaped);
 				}
+
 				return s(css);
 			};
 		}
 	}
-
-	const { get_page_options } = create_node_analyser({
-		resolve: (server_node) => {
-			// Windows needs the file:// protocol for absolute path dynamic imports
-			return import(
-				`file://${join(out, 'server', resolve_symlinks(server_manifest, server_node).chunk.file)}`
-			);
-		},
-		static_exports
-	});
 
 	for (let i = 0; i < manifest_data.nodes.length; i++) {
 		const node = manifest_data.nodes[i];
@@ -133,7 +139,7 @@ export async function build_server_nodes(
 		const imports = [];
 
 		// String representation of
-		/** @type {import('types').SSRNode} */
+		/** @type {SSRNode} */
 		/** @type {string[]} */
 		const exports = [`export const index = ${i};`];
 
@@ -147,24 +153,23 @@ export async function build_server_nodes(
 		let fonts = [];
 
 		/** @type {Set<string>} */
-		let eager_assets = new Set();
+		const eager_assets = new Set();
 
 		if (node.component && client_manifest) {
 			exports.push(
 				'let component_cache;',
 				`export const component = async () => component_cache ??= (await import('../${
-					resolve_symlinks(server_manifest, node.component).chunk.file
+					resolve_symlinks(server_manifest, node.component, root).chunk.file
 				}')).default;`
 			);
 		}
 
 		if (node.universal) {
-			const page_options = await get_page_options(node);
-			if (!!page_options && page_options.ssr === false) {
-				exports.push(`export const universal = ${s(page_options, null, 2)};`);
+			if (!!node.page_options && node.page_options.ssr === false) {
+				exports.push(`export const universal = ${s(node.page_options, null, 2)};`);
 			} else {
 				imports.push(
-					`import * as universal from '../${resolve_symlinks(server_manifest, node.universal).chunk.file}';`
+					`import * as universal from '../${resolve_symlinks(server_manifest, node.universal, root).chunk.file}';`
 				);
 				// TODO: when building for analysis, explain why the file was loaded on the server if we fail to load it
 				exports.push('export { universal };');
@@ -174,7 +179,7 @@ export async function build_server_nodes(
 
 		if (node.server) {
 			imports.push(
-				`import * as server from '../${resolve_symlinks(server_manifest, node.server).chunk.file}';`
+				`import * as server from '../${resolve_symlinks(server_manifest, node.server, root).chunk.file}';`
 			);
 			exports.push('export { server };');
 			exports.push(`export const server_id = ${s(node.server)};`);
@@ -183,25 +188,25 @@ export async function build_server_nodes(
 		if (
 			client_manifest &&
 			(node.universal || node.component) &&
-			output_config.bundleStrategy === 'split'
+			kit.output.bundleStrategy === 'split'
 		) {
 			const entry_path = `${normalizePath(kit.outDir)}/generated/client-optimized/nodes/${i}.js`;
-			const entry = find_deps(client_manifest, entry_path, true);
+			const entry = find_deps(client_manifest, entry_path, true, root);
 
 			// Eagerly load client stylesheets and fonts imported by the SSR-ed page to avoid FOUC.
 			// However, if it is not used during SSR (not present in the server manifest),
 			// then it can be lazily loaded in the browser.
 
-			/** @type {import('types').AssetDependencies | undefined} */
+			/** @type {AssetDependencies | undefined} */
 			let component;
 			if (node.component) {
-				component = find_deps(server_manifest, node.component, true);
+				component = find_deps(server_manifest, node.component, true, root);
 			}
 
-			/** @type {import('types').AssetDependencies | undefined} */
+			/** @type {AssetDependencies | undefined} */
 			let universal;
 			if (node.universal) {
-				universal = find_deps(server_manifest, node.universal, true);
+				universal = find_deps(server_manifest, node.universal, true, root);
 			}
 
 			/** @type {Set<string>} */
@@ -256,7 +261,7 @@ export async function build_server_nodes(
 					const filename = basename(file);
 					const dest = `${out}/server/stylesheets/${filename}.js`;
 
-					let css = /** @type {string} */ (stylesheets_to_inline.get(file));
+					const css = /** @type {string} */ (stylesheets_to_inline.get(file));
 
 					fs.writeFileSync(
 						dest,

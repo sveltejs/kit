@@ -30,7 +30,7 @@ test('sets body to empty when mode is no-cors', async () => {
 	assert.equal(text, '');
 });
 
-test('keeps body when mode isnt no-cors on same domain', async () => {
+test("keeps body when mode isn't no-cors on same domain", async () => {
 	const fetch = create_fetch({});
 	const response = await fetch('https://domain-a.com');
 	const text = await response.text();

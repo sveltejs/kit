@@ -8,30 +8,31 @@ This adapter will be installed by default when you use [`adapter-auto`](adapter-
 
 ## Usage
 
-Install with `npm i -D @sveltejs/adapter-netlify`, then add the adapter to your `svelte.config.js`:
+Install with `npm i -D @sveltejs/adapter-netlify`, then add the adapter to your `vite.config.js`:
 
 ```js
-/// file: svelte.config.js
+// @errors: 2307
+/// file: vite.config.js
 import adapter from '@sveltejs/adapter-netlify';
+import { sveltekit } from '@sveltejs/kit/vite';
+import { defineConfig } from 'vite';
 
-/** @type {import('@sveltejs/kit').Config} */
-const config = {
-	kit: {
-		// default options are shown
-		adapter: adapter({
-			// if true, will create a Netlify Edge Function rather
-			// than using standard Node-based functions
-			edge: false,
+export default defineConfig({
+	plugins: [
+		sveltekit({
+			adapter: adapter({
+				// if true, will create a Netlify Edge Function rather
+				// than using standard Node-based functions
+				edge: false,
 
-			// if true, will split your app into multiple functions
-			// instead of creating a single one for the entire app.
-			// if `edge` is true, this option cannot be used
-			split: false
+				// if true, will split your app into multiple functions
+				// instead of creating a single one for the entire app.
+				// if `edge` is true, this option cannot be used
+				split: false
+			})
 		})
-	}
-};
-
-export default config;
+	]
+});
 ```
 
 Then, make sure you have a [netlify.toml](https://docs.netlify.com/configure-builds/file-based-configuration) file in the project root. This will determine where to write static assets based on the `build.publish` settings, as per this sample configuration:
@@ -44,6 +45,9 @@ Then, make sure you have a [netlify.toml](https://docs.netlify.com/configure-bui
 
 If the `netlify.toml` file or the `build.publish` value is missing, a default value of `"build"` will be used. Note that if you have set the publish directory in the Netlify UI to something else then you will need to set it in `netlify.toml` too, or use the default value of `"build"`.
 
+> [!LEGACY]
+> The `adapter` option was moved to the SvelteKit Vite plugin in SvelteKit 3.0.0. In earlier versions, you had to add it to the `kit` property in the `svelte.config.js` file instead.
+
 ### Node version
 
 New projects will use the current Node LTS version by default. However, if you're upgrading a project you created a while ago it may be stuck on an older version. See [the Netlify docs](https://docs.netlify.com/configure-builds/manage-dependencies/#node-js-and-javascript) for details on manually specifying a current Node version.
@@ -53,21 +57,23 @@ New projects will use the current Node LTS version by default. However, if you'r
 SvelteKit supports [Netlify Edge Functions](https://docs.netlify.com/build/edge-functions/overview/). If you pass the option `edge: true` to the `adapter` function, server-side rendering will happen in a Deno-based edge function that's deployed close to the site visitor. If set to `false` (the default), the site will deploy to Node-based Netlify Functions.
 
 ```js
-/// file: svelte.config.js
+// @errors: 2307
+/// file: vite.config.js
 import adapter from '@sveltejs/adapter-netlify';
+import { sveltekit } from '@sveltejs/kit/vite';
+import { defineConfig } from 'vite';
 
-/** @type {import('@sveltejs/kit').Config} */
-const config = {
-	kit: {
-		adapter: adapter({
-			// will create a Netlify Edge Function using Deno-based
-			// rather than using standard Node-based functions
-			edge: true
+export default defineConfig({
+	plugins: [
+		sveltekit({
+			adapter: adapter({
+				// will create a Netlify Edge Function using Deno-based
+				// rather than using standard Node-based functions
+				edge: true
+			})
 		})
-	}
-};
-
-export default config;
+	]
+});
 ```
 
 ## Netlify alternatives to SvelteKit functionality
@@ -76,14 +82,7 @@ You may build your app using functionality provided directly by SvelteKit withou
 
 ### `_headers` and `_redirects`
 
-The [`_headers`](https://docs.netlify.com/routing/headers/#syntax-for-the-headers-file) and [`_redirects`](https://docs.netlify.com/routing/redirects/redirect-options/) files specific to Netlify can be used for static asset responses (like images) by putting them into the project root folder.
-
-### Redirect rules
-
-During compilation, redirect rules are automatically appended to your `_redirects` file. (If it doesn't exist yet, it will be created.) That means:
-
-- `[[redirects]]` in `netlify.toml` will never match as `_redirects` has a [higher priority](https://docs.netlify.com/routing/redirects/#rule-processing-order). So always put your rules in the [`_redirects` file](https://docs.netlify.com/routing/redirects/#syntax-for-the-redirects-file).
-- `_redirects` shouldn't have any custom "catch all" rules such as `/* /foobar/:splat`. Otherwise the automatically appended rule will never be applied as Netlify is only processing [the first matching rule](https://docs.netlify.com/routing/redirects/#rule-processing-order).
+The [`_headers`](https://docs.netlify.com/routing/headers/#syntax-for-the-headers-file) and [`_redirects`](https://docs.netlify.com/routing/redirects/redirect-options/) files specific to Netlify can be used for static asset responses (like images) by putting them into the project root folder. You can also use [`[[redirects]]`](https://docs.netlify.com/routing/redirects/#syntax-for-the-netlify-configuration-file) in your `netlify.toml`.
 
 ### Netlify Forms
 

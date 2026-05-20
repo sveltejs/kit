@@ -46,19 +46,12 @@ export const navigating = {
 		return _navigating.current ? _navigating.current.willUnload : null;
 	},
 	get delta() {
-		return _navigating.current ? _navigating.current.delta : null;
+		return _navigating.current?.type === 'popstate' ? _navigating.current.delta : null;
 	},
 	get complete() {
 		return _navigating.current ? _navigating.current.complete : null;
 	}
 };
-
-Object.defineProperty(navigating, 'current', {
-	get() {
-		// between 2.12.0 and 2.12.1 `navigating.current` existed
-		throw new Error('Replace navigating.current.<prop> with navigating.<prop>');
-	}
-});
 
 export const updated = {
 	get current() {

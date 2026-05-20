@@ -4,9 +4,7 @@
 	afterNavigate(() => {
 		console.log('after navigate called');
 
-		/**
-		 * @type {HTMLElement}
-		 */
+		/** @type {HTMLElement | null} */
 		const el = document.querySelector('.nav-lifecycle-after-nav-removed-test-target');
 
 		if (el) {

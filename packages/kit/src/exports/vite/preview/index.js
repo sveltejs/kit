@@ -5,9 +5,8 @@ import { lookup } from 'mrmime';
 import sirv from 'sirv';
 import { loadEnv, normalizePath } from 'vite';
 import { createReadableStream, getRequest, setResponse } from '../../../exports/node/index.js';
-import { installPolyfills } from '../../../exports/node/polyfills.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
-import { not_found } from '../utils.js';
+import { is_chrome_devtools_request, not_found } from '../utils.js';
 
 /** @typedef {import('http').IncomingMessage} Req */
 /** @typedef {import('http').ServerResponse} Res */
@@ -17,10 +16,9 @@ import { not_found } from '../utils.js';
  * @param {import('vite').PreviewServer} vite
  * @param {import('vite').ResolvedConfig} vite_config
  * @param {import('types').ValidatedConfig} svelte_config
+ * @param {import('@sveltejs/kit').Adapter | undefined} adapter
  */
-export async function preview(vite, vite_config, svelte_config) {
-	installPolyfills();
-
+export async function preview(vite, vite_config, svelte_config, adapter) {
 	const { paths } = svelte_config.kit;
 	const base = paths.base;
 	const assets = paths.assets ? SVELTE_KIT_ASSETS : paths.base;
@@ -56,7 +54,7 @@ export async function preview(vite, vite_config, svelte_config) {
 		read: (file) => createReadableStream(`${dir}/${file}`)
 	});
 
-	const emulator = await svelte_config.kit.adapter?.emulate?.();
+	const emulator = await adapter?.emulate?.();
 
 	return () => {
 		// Remove the base middleware. It screws with the URL.
@@ -99,6 +97,10 @@ export async function preview(vite, vite_config, svelte_config) {
 					location
 				});
 				res.end();
+				return;
+			}
+
+			if (is_chrome_devtools_request(pathname, res)) {
 				return;
 			}
 

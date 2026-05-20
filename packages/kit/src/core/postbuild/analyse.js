@@ -1,10 +1,11 @@
+/** @import { Adapter } from '@sveltejs/kit' */
 /** @import { RemoteChunk } from 'types' */
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { resolveConfig } from 'vite';
 import { validate_server_exports } from '../../utils/exports.js';
 import { load_config } from '../config/index.js';
 import { forked } from '../../utils/fork.js';
-import { installPolyfills } from '../../exports/node/polyfills.js';
 import { ENDPOINT_METHODS } from '../../constants.js';
 import { filter_env } from '../../utils/env.js';
 import { has_server_load, resolve_route } from '../../utils/routing.js';
@@ -24,8 +25,8 @@ export default forked(import.meta.url, analyse);
  *   tracked_features: Record<string, string[]>;
  *   env: Record<string, string>;
  *   out: string;
- *   output_config: import('types').RecursiveRequired<import('types').ValidatedConfig['kit']['output']>;
  *   remotes: RemoteChunk[];
+ *   root: string;
  * }} opts
  */
 async function analyse({
@@ -36,21 +37,25 @@ async function analyse({
 	tracked_features,
 	env,
 	out,
-	output_config,
-	remotes
+	remotes,
+	root
 }) {
 	/** @type {import('@sveltejs/kit').SSRManifest} */
 	const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
 
 	/** @type {import('types').ValidatedKitConfig} */
-	const config = (await load_config()).kit;
+	const config = (await load_config({ cwd: root })).kit;
+
+	const vite_config = await resolveConfig({}, 'build');
+	/** @type {Adapter | undefined} */
+	const adapter = vite_config.plugins.find(
+		(plugin) => plugin.name === 'vite-plugin-sveltekit-adapter'
+	)?.api?.adapter;
 
 	const server_root = join(config.outDir, 'output');
 
 	/** @type {import('types').ServerInternalModule} */
 	const internal = await import(pathToFileURL(`${server_root}/server/internal.js`).href);
-
-	installPolyfills();
 
 	// configure `import { building } from '$app/environment'` —
 	// essential we do this before analysing the code
@@ -65,21 +70,8 @@ async function analyse({
 	internal.set_manifest(manifest);
 	internal.set_read_implementation((file) => createReadableStream(`${server_root}/server/${file}`));
 
-	/** @type {Map<string, { page_options: Record<string, any> | null, children: string[] }>} */
-	const static_exports = new Map();
-
 	// first, build server nodes without the client manifest so we can analyse it
-	await build_server_nodes(
-		out,
-		config,
-		manifest_data,
-		server_manifest,
-		null,
-		null,
-		null,
-		output_config,
-		static_exports
-	);
+	build_server_nodes(out, config, manifest_data, server_manifest, null, null, null, root);
 
 	/** @type {import('types').ServerMetadata} */
 	const metadata = {
@@ -145,7 +137,7 @@ async function analyse({
 				server_manifest,
 				tracked_features
 			)) {
-				check_feature(route.id, route_config, feature, config.adapter);
+				check_feature(route.id, route_config, feature, adapter);
 			}
 		}
 
@@ -176,19 +168,19 @@ async function analyse({
 		const exports = new Map();
 
 		for (const name in functions) {
-			const info = /** @type {import('types').RemoteInfo} */ (functions[name].__);
-			const type = info.type;
+			const internals = /** @type {import('types').RemoteInternals} */ (functions[name].__);
+			const type = internals.type;
 
 			exports.set(name, {
 				type,
-				dynamic: type !== 'prerender' || info.dynamic
+				dynamic: type !== 'prerender' || internals.dynamic
 			});
 		}
 
 		metadata.remotes.set(remote.hash, exports);
 	}
 
-	return { metadata, static_exports };
+	return { metadata };
 }
 
 /**

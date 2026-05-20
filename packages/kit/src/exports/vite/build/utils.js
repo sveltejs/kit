@@ -7,9 +7,10 @@ import { normalizePath } from 'vite';
  * @param {import('vite').Manifest} manifest
  * @param {string} entry
  * @param {boolean} add_dynamic_css
+ * @param {string} root
  * @returns {import('types').AssetDependencies}
  */
-export function find_deps(manifest, entry, add_dynamic_css) {
+export function find_deps(manifest, entry, add_dynamic_css, root) {
 	/** @type {Set<string>} */
 	const seen = new Set();
 
@@ -35,7 +36,7 @@ export function find_deps(manifest, entry, add_dynamic_css) {
 		if (seen.has(current)) return;
 		seen.add(current);
 
-		const { chunk } = resolve_symlinks(manifest, current);
+		const { chunk } = resolve_symlinks(manifest, current, root);
 
 		if (add_js) imports.add(chunk.file);
 
@@ -81,7 +82,7 @@ export function find_deps(manifest, entry, add_dynamic_css) {
 		}
 	}
 
-	const { chunk, file } = resolve_symlinks(manifest, entry);
+	const { chunk, file } = resolve_symlinks(manifest, entry, root);
 
 	traverse(file, true, entry, 0);
 
@@ -101,10 +102,11 @@ export function find_deps(manifest, entry, add_dynamic_css) {
 /**
  * @param {import('vite').Manifest} manifest
  * @param {string} file
+ * @param {string} root
  */
-export function resolve_symlinks(manifest, file) {
+export function resolve_symlinks(manifest, file, root) {
 	while (!manifest[file]) {
-		const next = normalizePath(path.relative('.', fs.realpathSync(file)));
+		const next = normalizePath(path.relative(root, fs.realpathSync(file)));
 		if (next === file) throw new Error(`Could not find file "${file}" in Vite manifest`);
 		file = next;
 	}
@@ -128,4 +130,35 @@ export function filter_fonts(assets) {
  */
 export function assets_base(config) {
 	return (config.paths.assets || config.paths.base || '.') + '/';
+}
+
+/**
+ * Writes a function with arguments used by a template literal.
+ * This helps us store strings in a module and inject values at runtime.
+ * @param {string} name The name of the function
+ * @param {string[]} placeholder_names The names of the placeholders in the string
+ * @param {string} str A string with placeholders such as "Hello ${arg0}".
+ * 										 It must have backslashes, backticks and dollar signs already escaped.
+ * @returns {string} The function written as a string
+ */
+export function create_function_as_string(name, placeholder_names, str) {
+	const args = placeholder_names ? placeholder_names.join(', ') : '';
+	return `function ${name}(${args}) { return \`${str}\`; }`;
+}
+
+/**
+ * Guarantees that the generated placeholder is not already present in the content.
+ * @param {string} content
+ * @param {string} key
+ * @returns {string}
+ */
+export function generate_placeholder(content, key) {
+	let id = 1;
+	let placeholder = `__SVELTEKIT_${key}_${id}__`;
+
+	while (content.includes(placeholder)) {
+		placeholder = `__SVELTEKIT_${key}_${++id}__`;
+	}
+
+	return placeholder;
 }

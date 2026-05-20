@@ -1,5 +1,5 @@
 <script>
-	import { get_event } from './data.remote.js';
+	import { get_event } from './data.remote.ts';
 
 	const event = await get_event();
 </script>

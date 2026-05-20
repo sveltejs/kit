@@ -1,12 +1,10 @@
 /** @import { RemoteFormInput, RemoteForm, InvalidField } from '@sveltejs/kit' */
-/** @import { InternalRemoteFormIssue, MaybePromise, RemoteInfo } from 'types' */
+/** @import { InternalRemoteFormIssue, MaybePromise, RemoteFormInternals } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 import { get_request_store } from '@sveltejs/kit/internal/server';
-import { DEV } from 'esm-env';
 import {
 	create_field_proxy,
 	set_nested_value,
-	throw_on_old_property_access,
 	deep_set,
 	normalize_issue,
 	flatten_issues
@@ -84,38 +82,12 @@ export function form(validate_or_fn, maybe_fn) {
 			}
 		});
 
-		/** @type {RemoteInfo} */
+		/** @type {RemoteFormInternals} */
 		const __ = {
 			type: 'form',
 			name: '',
 			id: '',
 			fn: async (data, meta, form_data) => {
-				// TODO 3.0 remove this warning
-				if (DEV && !data) {
-					const error = () => {
-						throw new Error(
-							'Remote form functions no longer get passed a FormData object. ' +
-								"`form` now has the same signature as `query` or `command`, i.e. it expects to be invoked like `form(schema, callback)` or `form('unchecked', callback)`. " +
-								'The payload of the callback function is now a POJO instead of a FormData object. See https://kit.svelte.dev/docs/remote-functions#form for details.'
-						);
-					};
-					data = {};
-					for (const key of [
-						'append',
-						'delete',
-						'entries',
-						'forEach',
-						'get',
-						'getAll',
-						'has',
-						'keys',
-						'set',
-						'values'
-					]) {
-						Object.defineProperty(data, key, { get: error });
-					}
-				}
-
 				/** @type {{ submission: true, input?: Record<string, any>, issues?: InternalRemoteFormIssue[], result: Output }} */
 				const output = {};
 
@@ -136,7 +108,8 @@ export function form(validate_or_fn, maybe_fn) {
 						data = validated.value;
 					}
 
-					state.refreshes ??= {};
+					state.remote.refreshes ??= new Map();
+					state.remote.reconnects ??= new Map();
 
 					const issue = create_issues();
 
@@ -160,7 +133,7 @@ export function form(validate_or_fn, maybe_fn) {
 				// We don't need to care about args or deduplicating calls, because uneval results are only relevant in full page reloads
 				// where only one form submission is active at the same time
 				if (!event.isRemoteRequest) {
-					get_cache(__, state)[''] ??= output;
+					get_cache(__, state)[''] ??= { serialize: true, data: output };
 				}
 
 				return output;
@@ -176,46 +149,36 @@ export function form(validate_or_fn, maybe_fn) {
 
 		Object.defineProperty(instance, 'fields', {
 			get() {
-				const data = get_cache(__)?.[''];
-				const issues = flatten_issues(data?.issues ?? []);
-
 				return create_field_proxy(
 					{},
-					() => data?.input ?? {},
+					() => get_cache(__)?.['']?.data?.input ?? {},
 					(path, value) => {
-						if (data?.submission) {
+						const cache = get_cache(__);
+						const entry = cache[''];
+
+						if (entry?.data?.submission) {
 							// don't override a submission
 							return;
 						}
 
-						const input =
-							path.length === 0 ? value : deep_set(data?.input ?? {}, path.map(String), value);
+						if (path.length === 0) {
+							(cache[''] ??= { serialize: true, data: {} }).data.input = value;
+							return;
+						}
 
-						(get_cache(__)[''] ??= {}).input = input;
+						const input = entry?.data?.input ?? {};
+						deep_set(input, path.map(String), value);
+						(cache[''] ??= { serialize: true, data: {} }).data.input = input;
 					},
-					() => issues
+					() => flatten_issues(get_cache(__)?.['']?.data?.issues ?? [])
 				);
 			}
 		});
 
-		// TODO 3.0 remove
-		if (DEV) {
-			throw_on_old_property_access(instance);
-
-			Object.defineProperty(instance, 'buttonProps', {
-				get() {
-					throw new Error(
-						'`form.buttonProps` has been removed: Instead of `<button {...form.buttonProps}>, use `<button {...form.fields.action.as("submit", "value")}>`.' +
-							' See the PR for more info: https://github.com/sveltejs/kit/pull/14622'
-					);
-				}
-			});
-		}
-
 		Object.defineProperty(instance, 'result', {
 			get() {
 				try {
-					return get_cache(__)?.['']?.result;
+					return get_cache(__)?.['']?.data?.result;
 				} catch {
 					return undefined;
 				}
@@ -238,20 +201,30 @@ export function form(validate_or_fn, maybe_fn) {
 			}
 		});
 
+		Object.defineProperty(instance, 'submit', {
+			value: () => {
+				throw new Error('Cannot call submit() on the server');
+			}
+		});
+
+		Object.defineProperty(instance, 'element', {
+			get: () => null
+		});
+
 		if (key == undefined) {
 			Object.defineProperty(instance, 'for', {
 				/** @type {RemoteForm<any, any>['for']} */
 				value: (key) => {
 					const { state } = get_request_store();
 					const cache_key = __.id + '|' + JSON.stringify(key);
-					let instance = (state.form_instances ??= new Map()).get(cache_key);
+					let instance = (state.remote.forms ??= new Map()).get(cache_key);
 
 					if (!instance) {
 						instance = create_instance(key);
 						instance.__.id = `${__.id}/${encodeURIComponent(JSON.stringify(key))}`;
 						instance.__.name = __.name;
 
-						state.form_instances.set(cache_key, instance);
+						state.remote.forms.set(cache_key, instance);
 					}
 
 					return instance;
@@ -305,15 +278,6 @@ function create_issues() {
 		new Proxy(
 			/** @param {string} message */
 			(message) => {
-				// TODO 3.0 remove
-				if (typeof message !== 'string') {
-					throw new Error(
-						'`invalid` should now be imported from `@sveltejs/kit` to throw validation issues. ' +
-							"The second parameter provided to the form function (renamed to `issue`) is still used to construct issues, e.g. `invalid(issue.field('message'))`. " +
-							'For more info see https://github.com/sveltejs/kit/pulls/14768'
-					);
-				}
-
 				return create_issue(message);
 			},
 			{

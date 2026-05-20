@@ -1,6 +1,6 @@
 import { createHash, randomBytes } from 'node:crypto';
 
-/** @type {import('@sveltejs/kit').RequestHandler} */
+/** @type {import('./$types').RequestHandler} */
 export function GET() {
 	const data = randomBytes(1024 * 256);
 	const digest = createHash('sha256').update(data).digest('base64url');
@@ -12,6 +12,7 @@ export function GET() {
 			{
 				pull(controller) {
 					const offset = data.byteOffset + length;
+					if (!controller.desiredSize) throw new Error('desiredSize is not set');
 					const chunk =
 						data.byteLength - length > controller.desiredSize
 							? new Uint8Array(data.buffer, offset, controller.desiredSize)

@@ -1,0 +1,46 @@
+name: Platform Tests (Vercel)
+
+on:
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: 'Commit SHA to test'
+        required: false
+        default: ''
+  workflow_call:
+    inputs:
+      sha:
+        description: 'Commit SHA to test'
+        required: false
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+
+env:
+  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+
+jobs:
+  test-basic:
+    if: github.repository == 'sveltejs/kit'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: '@sveltejs/adapter-vercel platform tests'
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.sha || github.sha }}
+
+      - uses: ./.github/actions/vercel-deploy
+        id: deploy
+        with:
+          test-app-dir: packages/adapter-vercel/test/apps/basic
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_BASIC }}
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+
+      - uses: ./.github/actions/platform-test
+        with:
+          test-app-dir: packages/adapter-vercel/test/apps/basic
+          deployment-url: ${{ steps.deploy.outputs.deployment-url }}

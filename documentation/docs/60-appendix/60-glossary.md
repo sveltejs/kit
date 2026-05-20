@@ -36,11 +36,12 @@ Traditional applications that render each page view on the server — such as th
 
 Prerendering means computing the contents of a page at build time and saving the HTML for display. This approach has the same benefits as traditional server-rendered pages, but avoids recomputing the page for each visitor and so scales nearly for free as the number of visitors increases. The tradeoff is that the build process is more expensive and prerendered content can only be updated by building and deploying a new version of the application.
 
-Not all pages can be prerendered. The basic rule is this: for content to be prerenderable, any two users hitting it directly must get the same content from the server, and the page must not contain [actions](form-actions). Note that you can still prerender content that is loaded based on the page's parameters as long as all users will be seeing the same prerendered content.
+For content to be prerenderable, any two users hitting it directly must get the same content from the server, and the page must not contain [actions](form-actions). Note that you can still prerender content that is loaded based on the page's parameters as long as all users will be seeing the same prerendered content. Prerendering all of your pages is also known as [Static Site Generation](#SSG).
 
 Pre-rendered pages are not limited to static content. You can build personalized pages if user-specific data is fetched and rendered client-side. This is subject to the caveat that you will experience the downsides of not doing SSR for that content as discussed above.
 
 In SvelteKit, you can control prerendering with [the `prerender` page option](page-options#prerender) and [`prerender` config](configuration#prerender) in `svelte.config.js`.
+
 
 ## PWA
 
@@ -62,7 +63,7 @@ In SvelteKit, you can [build SPAs with `adapter-static`](single-page-apps).
 
 Static Site Generation (SSG) is a term that refers to a site where every page is prerendered. One benefit of fully prerendering a site is that you do not need to maintain or pay for servers to perform SSR. Once generated, the site can be served from CDNs, leading to great “time to first byte” performance. This delivery model is often referred to as JAMstack.
 
-In SvelteKit, you can do static site generation by using [`adapter-static`](adapter-static) or by configuring every page to be prerendered using [the `prerender` page option](page-options#prerender) or [`prerender` config](configuration#prerender) in `svelte.config.js`.
+In SvelteKit, you can do static site generation by using [`adapter-static`](adapter-static) or by configuring every page to be [prerendered](#Prerendering) using [the `prerender` page option](page-options#prerender) or [`prerender` config](configuration#prerender) in `svelte.config.js`.
 
 ## SSR
 

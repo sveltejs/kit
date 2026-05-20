@@ -1,5 +1,5 @@
 import path from 'node:path';
-import { posixify } from '../../utils/filesystem.js';
+import { posixify } from '../../utils/os.js';
 import { negotiate } from '../../utils/http.js';
 import { escape_html } from '../../utils/escape.js';
 import { dedent } from '../../core/sync/utils.js';
@@ -18,8 +18,9 @@ import {
  * Related to tsconfig path alias creation.
  *
  * @param {import('types').ValidatedKitConfig} config
+ * @param {string} root
  * */
-export function get_config_aliases(config) {
+export function get_config_aliases(config, root) {
 	/** @type {import('vite').Alias[]} */
 	const alias = [
 		// For now, we handle `$lib` specially here rather than make it a default value for
@@ -36,16 +37,16 @@ export function get_config_aliases(config) {
 			// Doing just `{ find: key.slice(0, -2) ,..}` would mean `import .. from "key"` would also be matched, which we don't want
 			alias.push({
 				find: new RegExp(`^${escape_for_regexp(key.slice(0, -2))}\\/(.+)$`),
-				replacement: `${path.resolve(value)}/$1`
+				replacement: `${path.resolve(root, value)}/$1`
 			});
 		} else if (key + '/*' in config.alias) {
 			// key and key/* both exist -> the replacement for key needs to happen _only_ on import .. from "key"
 			alias.push({
 				find: new RegExp(`^${escape_for_regexp(key)}$`),
-				replacement: path.resolve(value)
+				replacement: path.resolve(root, value)
 			});
 		} else {
-			alias.push({ find: key, replacement: path.resolve(value) });
+			alias.push({ find: key, replacement: path.resolve(root, value) });
 		}
 	}
 
@@ -57,6 +58,24 @@ export function get_config_aliases(config) {
  */
 function escape_for_regexp(str) {
 	return str.replace(/[.*+?^${}()|[\]\\]/g, (match) => '\\' + match);
+}
+
+/**
+ * Silently respond with 404 for Chrome DevTools workspaces request.
+ * Chrome always requests this at the root, regardless of base path.
+ * Users who want workspaces can install `vite-plugin-devtools-json`,
+ * which takes precedence as Vite plugin middleware runs first.
+ * @param {string} pathname
+ * @param {import('http').ServerResponse} res
+ * @returns {boolean} `true` if the request was handled
+ */
+export function is_chrome_devtools_request(pathname, res) {
+	if (pathname === '/.well-known/appspecific/com.chrome.devtools.json') {
+		res.writeHead(404);
+		res.end('not found');
+		return true;
+	}
+	return false;
 }
 
 /**
