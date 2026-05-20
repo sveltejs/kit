@@ -25,7 +25,6 @@ export default forked(import.meta.url, analyse);
  *   tracked_features: Record<string, string[]>;
  *   env: Record<string, string>;
  *   out: string;
- *   output_config: import('types').RecursiveRequired<import('types').ValidatedConfig['kit']['output']>;
  *   remotes: RemoteChunk[];
  *   root: string;
  * }} opts
@@ -38,7 +37,6 @@ async function analyse({
 	tracked_features,
 	env,
 	out,
-	output_config,
 	remotes,
 	root
 }) {
@@ -73,17 +71,7 @@ async function analyse({
 	internal.set_read_implementation((file) => createReadableStream(`${server_root}/server/${file}`));
 
 	// first, build server nodes without the client manifest so we can analyse it
-	build_server_nodes(
-		out,
-		config,
-		manifest_data,
-		server_manifest,
-		null,
-		null,
-		null,
-		output_config,
-		root
-	);
+	build_server_nodes(out, config, manifest_data, server_manifest, null, null, null, root);
 
 	/** @type {import('types').ServerMetadata} */
 	const metadata = {

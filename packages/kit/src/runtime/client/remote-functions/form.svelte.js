@@ -426,7 +426,6 @@ export function form(id) {
 					const valid = await preflight(form_data);
 					if (!valid) return;
 
-					// eslint-disable-next-line @typescript-eslint/await-thenable -- `callback` is typed as returning `void` to allow returning e.g. `Promise<boolean>`
 					await enhance_callback(create_enhance_callback_instance(form, form_data));
 				} catch (e) {
 					const error =
