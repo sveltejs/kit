@@ -3,6 +3,7 @@ import path from 'node:path';
 import { chdir } from 'node:process';
 import { load_config } from '../packages/kit/src/core/config/index.js';
 import { all as syncAll } from '../packages/kit/src/core/sync/sync.js';
+import { get_env } from '../packages/kit/src/exports/vite/env.js';
 
 // This isn't strictly necessary, but it eliminates some annoying warnings in CI
 
@@ -20,6 +21,8 @@ for (const directories of [
 
 		chdir(cwd);
 
-		syncAll(await load_config({ cwd }), 'development', cwd);
+		const config = await load_config({ cwd });
+		const env = get_env(config.kit.env, 'development');
+		syncAll(config, 'development', env, cwd);
 	}
 }
