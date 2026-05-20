@@ -29,16 +29,14 @@ test.describe('paths', () => {
 		await page.goto('/basepath');
 
 		let base = javaScriptEnabled ? '/basepath/' : './';
-		let assets = javaScriptEnabled ? '/basepath' : '.';
 		expect(await page.textContent('[data-testid="base"]')).toBe(`base: ${base}`);
-		expect(await page.textContent('[data-testid="assets"]')).toBe(`assets: ${assets}`);
+		expect(await page.textContent('[data-testid="assets"]')).toBe(`assets: ${base}`);
 
 		await page.goto('/basepath/deeply/nested/page');
 
 		base = javaScriptEnabled ? '/basepath/' : '../../';
-		assets = javaScriptEnabled ? '/basepath' : '../..';
 		expect(await page.textContent('[data-testid="base"]')).toBe(`base: ${base}`);
-		expect(await page.textContent('[data-testid="assets"]')).toBe(`assets: ${assets}`);
+		expect(await page.textContent('[data-testid="assets"]')).toBe(`assets: ${base}`);
 	});
 
 	test('serves /basepath with trailing slash always', async ({ page }) => {

@@ -5,7 +5,7 @@
 <h1>Hello</h1>
 
 <p data-testid="base">base: {resolve('/')}</p>
-<p data-testid="assets">assets: {asset('')}</p>
+<p data-testid="assets">assets: {asset('/')}</p>
 
 <style>
 	p {
