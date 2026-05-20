@@ -232,7 +232,10 @@ export function form(id) {
 									if (uploaded > total) uploaded = total;
 									const path = file_paths.get(file.file);
 									if (!path) continue;
-									deep_get(upload_progress, path).uploaded = uploaded;
+									// Could be null if the form was reset mid-upload
+									const progress = deep_get(upload_progress, path);
+									if (!progress) continue;
+									progress.uploaded = uploaded;
 								}
 							});
 						}
@@ -579,6 +582,8 @@ export function form(id) {
 				await tick();
 
 				input = convert_formdata(new FormData(form));
+
+				upload_progress = {};
 			};
 
 			form.addEventListener('submit', handle_submit);

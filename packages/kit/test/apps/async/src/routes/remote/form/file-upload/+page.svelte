@@ -18,7 +18,8 @@
 	</label>
 	<br />
 	<br />
-	<button>Submit</button>
+	<button id="submit">Submit</button>
+	<button id="reset" type="reset">Reset</button>
 </form>
 
 <pre>{JSON.stringify(upload.result)}</pre>

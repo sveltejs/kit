@@ -643,7 +643,7 @@ test.describe('remote functions', () => {
 			buffer: Buffer.from('c')
 		});
 		await page.locator('input[type="checkbox"]').check();
-		await page.locator('button').click();
+		await page.locator('#submit').click();
 
 		await expect(page.locator('pre')).toHaveText(
 			JSON.stringify({
@@ -671,7 +671,7 @@ test.describe('remote functions', () => {
 			mimeType: 'text/plain',
 			buffer: Buffer.from('c')
 		});
-		await page.locator('button').click();
+		await page.locator('#submit').click();
 
 		await expect(page.locator('pre')).toHaveText(
 			JSON.stringify({
@@ -711,7 +711,7 @@ test.describe('remote functions', () => {
 				mimeType: 'text/plain',
 				buffer: Buffer.from('c')
 			});
-			await page.locator('button').click();
+			await page.locator('#submit').click();
 			await expect(progress).not.toHaveText(/"uploaded":0/);
 			async function check_percent() {
 				const progress_value = JSON.parse(/** @type {string} */ (await progress.textContent()));
@@ -722,6 +722,8 @@ test.describe('remote functions', () => {
 			await check_percent();
 			await expect(progress).not.toHaveText(progress_text);
 			await check_percent();
+			await page.locator('#reset').click();
+			await expect(progress).toHaveText('{"uploaded":0,"total":0,"percent":0}');
 		} finally {
 			await cdp.send('Network.emulateNetworkConditions', {
 				offline: false,
