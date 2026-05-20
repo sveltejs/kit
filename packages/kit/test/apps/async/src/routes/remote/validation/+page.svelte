@@ -43,18 +43,18 @@
 	onclick={async () => {
 		status = 'pending';
 		try {
-			validate_result(await validated_query_no_args().run());
+			validate_result(await validated_query_no_args());
 			validate_result(await read_live(validated_live_query_no_args()));
 			validate_result(await validated_prerendered_query_no_args());
 			validate_result(await validated_command_no_args());
 
-			validate_result(await validated_query_with_arg('valid').run());
+			validate_result(await validated_query_with_arg('valid'));
 			validate_result(await read_live(validated_live_query_with_arg('valid')));
 			validate_result(await validated_prerendered_query_with_arg('valid'));
 			validate_result(await validated_command_with_arg('valid'));
 
-			validate_result(await validated_batch_query_no_validation('valid').run());
-			validate_result(await validated_batch_query_with_validation('valid').run());
+			validate_result(await validated_batch_query_no_validation('valid'));
+			validate_result(await validated_batch_query_with_validation('valid'));
 
 			status = 'success';
 		} catch {
@@ -70,7 +70,7 @@
 		status = 'pending';
 		try {
 			// @ts-expect-error
-			await validated_query_no_args('invalid').run();
+			await validated_query_no_args('invalid');
 			status = 'error';
 		} catch {
 			try {
@@ -103,7 +103,7 @@
 		status = 'pending';
 		try {
 			// @ts-expect-error
-			await validated_query_with_arg(1).run();
+			await validated_query_with_arg(1);
 			status = 'error';
 		} catch (e) {
 			if (!isHttpError(e) || e.body.message !== 'Input must be a string') {
@@ -143,7 +143,7 @@
 
 						try {
 							// @ts-expect-error
-							await validated_batch_query_with_validation(123).run();
+							await validated_batch_query_with_validation(123);
 							status = 'error';
 						} catch (e) {
 							if (!isHttpError(e) || e.body.message !== 'Input must be a string') {
@@ -167,7 +167,7 @@
 		status = 'pending';
 		try {
 			// @ts-expect-error
-			validate_result(await validated_query_with_arg('valid', 'ignored').run());
+			validate_result(await validated_query_with_arg('valid', 'ignored'));
 			// @ts-expect-error
 			validate_result(await read_live(validated_live_query_with_arg('valid', 'ignored')));
 			// @ts-expect-error
@@ -175,7 +175,7 @@
 			// @ts-expect-error
 			validate_result(await validated_command_with_arg('valid', 'ignored'));
 			// @ts-expect-error
-			validate_result(await validated_batch_query_no_validation('valid', 'ignored').run());
+			validate_result(await validated_batch_query_no_validation('valid', 'ignored'));
 
 			status = 'success';
 		} catch {

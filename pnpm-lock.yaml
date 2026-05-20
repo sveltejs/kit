@@ -57,9 +57,6 @@ catalogs:
     dropcss:
       specifier: ^1.0.16
       version: 1.0.16
-    dts-buddy:
-      specifier: ^0.7.0
-      version: 0.7.0
     eslint:
       specifier: ^10.0.0
       version: 10.0.0
@@ -527,10 +524,10 @@ importers:
         specifier: ^1.0.0
         version: 1.1.0
       '@sveltejs/acorn-typescript':
-        specifier: ^1.0.5
+        specifier: ^1.0.9
         version: 1.0.9(acorn@8.16.0)
       acorn:
-        specifier: ^8.14.1
+        specifier: ^8.16.0
         version: 8.16.0
       cookie:
         specifier: ^1.1.1
@@ -567,8 +564,8 @@ importers:
         specifier: ^22.19.19
         version: 22.19.19
       dts-buddy:
-        specifier: 'catalog:'
-        version: 0.7.0(typescript@5.8.3)
+        specifier: ^0.8.0
+        version: 0.8.0(typescript@5.8.3)
       rolldown:
         specifier: 'catalog:'
         version: 1.0.0-rc.17
@@ -3521,11 +3518,11 @@ packages:
   dropcss@1.0.16:
     resolution: {integrity: sha512-QgA6BUh2SoBYE/dSuMmeGhNdoGtGewt3Rn66xKyXoGNyjrKRXf163wuM+xeQ83p87l/3ALoB6Il1dgKyGS5pEw==}
 
-  dts-buddy@0.7.0:
-    resolution: {integrity: sha512-smcL+Hg0HTt83U2rhBiqUaPRdPBTONItZU1rF42zBffHobyQird6/R/QcGFguem4aCrRwBozoz4l4KtMYcXEKA==}
+  dts-buddy@0.8.0:
+    resolution: {integrity: sha512-OpwKT1I+nSAFhLtLXrNXOBBn9jAzlAkERPVe5NoEP3aAxfDkEVsvpCc7lWJXA+pSfMF8Xf9APqa8wPr+fJjtUg==}
     hasBin: true
     peerDependencies:
-      typescript: '>=5.0.4 <6'
+      typescript: ^5.0.4 || ^6.0.0
 
   e2e-test-dep-cjs-only@file:packages/kit/test/apps/dev-only/_test_dependencies/cjs-only:
     resolution: {directory: packages/kit/test/apps/dev-only/_test_dependencies/cjs-only, type: directory}
@@ -7743,7 +7740,7 @@ snapshots:
 
   dropcss@1.0.16: {}
 
-  dts-buddy@0.7.0(typescript@5.8.3):
+  dts-buddy@0.8.0(typescript@5.8.3):
     dependencies:
       '@jridgewell/source-map': 0.3.6
       '@jridgewell/sourcemap-codec': 1.5.5

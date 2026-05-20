@@ -25,13 +25,13 @@
 </button>
 
 <button
-	id="run"
+	id="await"
 	onclick={async () => {
-		result = String(await stored.run());
-		status = 'query run';
+		result = String(await stored);
+		status = 'query awaited';
 	}}
 >
-	run query
+	await query
 </button>
 
 <button
@@ -39,7 +39,7 @@
 	onclick={async () => {
 		try {
 			await stored;
-			result = 'success! :(';
+			result = String(stored.current);
 		} catch (error) {
 			result = get_message(error);
 		}
