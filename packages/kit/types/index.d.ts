@@ -2887,6 +2887,8 @@ declare module '@sveltejs/kit' {
 		wasNormalized: boolean;
 		denormalize: (url?: string | URL) => URL;
 	};
+	export type LessThan<TNumber extends number, TArray extends any[] = []> = TNumber extends TArray["length"] ? TArray[number] : LessThan<TNumber, [...TArray, TArray["length"]]>;
+	export type NumericRange<TStart extends number, TEnd extends number> = Exclude<TEnd | LessThan<TEnd>, LessThan<TStart>>;
 	type ValidPageOption = (typeof valid_page_options_array)[number];
 	type PageOptions = Partial<Record<ValidPageOption, any>>;
 	const valid_page_options_array: readonly ["ssr", "prerender", "csr", "trailingSlash", "config", "entries", "load"];
