@@ -249,7 +249,7 @@ export const updated_listener = {
 export function create_updated_store() {
 	const { set, subscribe } = writable(false);
 
-	if (DEV || !BROWSER) {
+	if (__SVELTEKIT_DEV__ || !BROWSER) {
 		return {
 			subscribe,
 			// eslint-disable-next-line @typescript-eslint/require-await
