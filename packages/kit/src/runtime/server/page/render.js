@@ -15,7 +15,12 @@ import { create_server_routing_response, generate_route_object } from './server_
 import { add_resolution_suffix } from '../../pathname.js';
 import { try_get_request_store, with_request_store } from '@sveltejs/kit/internal/server';
 import { text_encoder } from '../../utils.js';
-import { count_non_ssi_comments, get_global_name, handle_error_and_jsonify } from '../utils.js';
+import {
+	count_non_ssi_comments,
+	create_replacer,
+	get_global_name,
+	handle_error_and_jsonify
+} from '../utils.js';
 import { create_remote_key } from '../../shared.js';
 import { get_status } from '../../../utils/error.js';
 
@@ -559,15 +564,7 @@ export async function render_response({
 				}
 			}
 
-			// TODO this is repeated in a few places — dedupe it
-			const replacer = (/** @type {any} */ thing) => {
-				for (const key in options.hooks.transport) {
-					const encoded = options.hooks.transport[key].encode(thing);
-					if (encoded) {
-						return `app.decode('${key}', ${devalue.uneval(encoded, replacer)})`;
-					}
-				}
-			};
+			const replacer = create_replacer(options.hooks.transport);
 
 			if (Object.keys(query).length > 0) {
 				serialized_query_data = `${global}.query = ${devalue.uneval(query, replacer)};\n\n\t\t\t\t\t\t`;
