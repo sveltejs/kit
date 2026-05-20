@@ -1,11 +1,9 @@
 /** @import { CacheEntry } from './remote-functions/cache.svelte.js' */
 /** @import { Query } from './remote-functions/query/instance.svelte.js' */
 /** @import { LiveQuery } from './remote-functions/query-live/instance.svelte.js' */
-import * as devalue from 'devalue';
 import { BROWSER, DEV } from 'esm-env';
 import * as svelte from 'svelte';
 import { HttpError, Redirect, SvelteKitError } from '@sveltejs/kit/internal';
-import { base } from '$app/paths';
 import {
 	decode_params,
 	decode_pathname,
@@ -26,6 +24,8 @@ import {
 	scroll_state,
 	load_css
 } from './utils.js';
+import { base } from '$app/paths';
+import * as devalue from 'devalue';
 import {
 	HISTORY_INDEX,
 	NAVIGATION_INDEX,
