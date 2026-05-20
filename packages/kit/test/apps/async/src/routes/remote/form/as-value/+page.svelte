@@ -1,7 +1,8 @@
 <script>
-	import { as_value_form, get_values, reset_values } from './form.remote.ts';
+	import { as_value_form, get_values, get_hidden_values, reset_values } from './form.remote.ts';
 
 	const values = $derived(await get_values());
+	const hidden_values = $derived(await get_hidden_values());
 </script>
 
 {#each values as value (value.id)}
@@ -11,9 +12,19 @@
 	</div>
 {/each}
 
+{#each Object.entries(hidden_values) as [key, value] (key)}
+	<div id="hidden-{key}">
+		hidden {key}: {value}
+	</div>
+{/each}
+
 <div class="forms">
 	{#each values as value (value.id)}
 		<form class="form" {...as_value_form.for(value.id)}>
+			<input {...as_value_form.fields.hidden.string.as('hidden', 'string')} />
+			<input {...as_value_form.fields.hidden.number.as('hidden', 1)} />
+			<input {...as_value_form.fields.hidden.boolean.as('hidden', true)} />
+
 			<input {...as_value_form.fields.text_field.as('text', value.text_field)} />
 
 			<input {...as_value_form.fields.number_field.as('number', value.number_field)} />
