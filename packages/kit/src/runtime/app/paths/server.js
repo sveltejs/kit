@@ -8,11 +8,18 @@ import { get_hooks } from '__SERVER__/internal.js';
 /** @type {import('./client.js').asset} */
 export function asset(file) {
 	// @ts-expect-error we use the `resolve` mechanism, but with the 'wrong' input
-	return assets ? assets + file : resolve(file);
+	return assets && assets !== base ? assets + file : resolve(file);
 }
 
 /** @type {import('./client.js').resolve} */
 export function resolve(id, params) {
+	if (!id.startsWith('/')) {
+		throw new Error(
+			`Cannot use \`resolve(...)\` with a non-absolute pathname or route ID (got "${id}"). ` +
+				'`resolve` is only for internal pathnames and route IDs; external URLs should be used directly.'
+		);
+	}
+
 	const resolved = resolve_route(id, /** @type {Record<string, string>} */ (params));
 
 	if (relative) {

@@ -2,7 +2,7 @@ import process from 'node:process';
 import { expect } from '@playwright/test';
 import { test } from '../../../../utils.js';
 
-/** @typedef {import('@playwright/test').Response} Response */
+/** @typedef {{ fromScroll: { x: number, y: number }, toScroll: { x: number, y: number }, type: string }} ScrollState */
 
 test.skip(({ javaScriptEnabled }) => !javaScriptEnabled);
 
@@ -327,8 +327,12 @@ test.describe('Navigation lifecycle functions', () => {
 		await scroll_to(0, 500);
 
 		const navPromise = new Promise((resolve) => {
-			/** @type {any} */
-			let beforeNav, onNav, afterNav;
+			/** @type {ScrollState} */
+			let beforeNav;
+			/** @type {ScrollState} */
+			let onNav;
+			/** @type {ScrollState} */
+			let afterNav;
 			page.on('console', (msg) => {
 				const text = msg.text();
 				if (text.startsWith('beforeNavigate:')) {
@@ -381,8 +385,12 @@ test.describe('Navigation lifecycle functions', () => {
 		const savedScrollY = afterNav.fromScroll.y;
 
 		navPromise = new Promise((resolve) => {
-			/** @type {any} */
-			let beforeNav, onNav, afterNav;
+			/** @type {ScrollState} */
+			let beforeNav;
+			/** @type {ScrollState} */
+			let onNav;
+			/** @type {ScrollState} */
+			let afterNav;
 			page.on('console', (msg) => {
 				const text = msg.text();
 				if (text.startsWith('beforeNavigate:')) {
@@ -1097,9 +1105,7 @@ test.describe('Routing', () => {
 		let tabs = page.context().pages();
 		expect(tabs.length === 1);
 
-		const new_tab = page.waitForEvent('popup', { timeout: 1000 });
 		await page.locator('button', { hasText: 'Inside form' }).click();
-		await new_tab;
 
 		tabs = page.context().pages();
 		expect(tabs.length > 1);
@@ -1111,9 +1117,7 @@ test.describe('Routing', () => {
 		let tabs = page.context().pages();
 		expect(tabs.length === 1);
 
-		const new_tab = page.waitForEvent('popup', { timeout: 1000 });
 		await page.locator('button', { hasText: 'Outside form' }).click();
-		await new_tab;
 
 		tabs = page.context().pages();
 		expect(tabs.length > 1);

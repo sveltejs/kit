@@ -10,7 +10,7 @@ export async function load({ parent, params }) {
 
 	params.optional;
 	params.optional?.charAt(1);
-	// @ts-expect-error
+	// @ts-ignore this doesn't error with TypeScript 6
 	params.optional.charAt(1);
 	// @ts-expect-error
 	params.slug;

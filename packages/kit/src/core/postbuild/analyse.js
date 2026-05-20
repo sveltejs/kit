@@ -1,6 +1,8 @@
+/** @import { Adapter } from '@sveltejs/kit' */
 /** @import { RemoteChunk } from 'types' */
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { resolveConfig } from 'vite';
 import { validate_server_exports } from '../../utils/exports.js';
 import { load_config } from '../config/index.js';
 import { forked } from '../../utils/fork.js';
@@ -23,7 +25,6 @@ export default forked(import.meta.url, analyse);
  *   tracked_features: Record<string, string[]>;
  *   env: Record<string, string>;
  *   out: string;
- *   output_config: import('types').RecursiveRequired<import('types').ValidatedConfig['kit']['output']>;
  *   remotes: RemoteChunk[];
  *   root: string;
  * }} opts
@@ -36,7 +37,6 @@ async function analyse({
 	tracked_features,
 	env,
 	out,
-	output_config,
 	remotes,
 	root
 }) {
@@ -45,6 +45,12 @@ async function analyse({
 
 	/** @type {import('types').ValidatedKitConfig} */
 	const config = (await load_config({ cwd: root })).kit;
+
+	const vite_config = await resolveConfig({}, 'build');
+	/** @type {Adapter | undefined} */
+	const adapter = vite_config.plugins.find(
+		(plugin) => plugin.name === 'vite-plugin-sveltekit-adapter'
+	)?.api?.adapter;
 
 	const server_root = join(config.outDir, 'output');
 
@@ -65,17 +71,7 @@ async function analyse({
 	internal.set_read_implementation((file) => createReadableStream(`${server_root}/server/${file}`));
 
 	// first, build server nodes without the client manifest so we can analyse it
-	build_server_nodes(
-		out,
-		config,
-		manifest_data,
-		server_manifest,
-		null,
-		null,
-		null,
-		output_config,
-		root
-	);
+	build_server_nodes(out, config, manifest_data, server_manifest, null, null, null, root);
 
 	/** @type {import('types').ServerMetadata} */
 	const metadata = {
@@ -141,7 +137,7 @@ async function analyse({
 				server_manifest,
 				tracked_features
 			)) {
-				check_feature(route.id, route_config, feature, config.adapter);
+				check_feature(route.id, route_config, feature, adapter);
 			}
 		}
 
@@ -172,12 +168,12 @@ async function analyse({
 		const exports = new Map();
 
 		for (const name in functions) {
-			const info = /** @type {import('types').RemoteInfo} */ (functions[name].__);
-			const type = info.type;
+			const internals = /** @type {import('types').RemoteInternals} */ (functions[name].__);
+			const type = internals.type;
 
 			exports.set(name, {
 				type,
-				dynamic: type !== 'prerender' || info.dynamic
+				dynamic: type !== 'prerender' || internals.dynamic
 			});
 		}
 

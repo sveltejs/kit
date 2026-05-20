@@ -1,6 +1,6 @@
 import path from 'node:path';
 import { loadEnv } from 'vite';
-import { posixify } from '../../utils/filesystem.js';
+import { posixify } from '../../utils/os.js';
 import { negotiate } from '../../utils/http.js';
 import { filter_env } from '../../utils/env.js';
 import { escape_html } from '../../utils/escape.js';
@@ -75,6 +75,24 @@ export function get_env(env_config, mode) {
 		public: filter_env(env, public_prefix, private_prefix),
 		private: filter_env(env, private_prefix, public_prefix)
 	};
+}
+
+/**
+ * Silently respond with 404 for Chrome DevTools workspaces request.
+ * Chrome always requests this at the root, regardless of base path.
+ * Users who want workspaces can install `vite-plugin-devtools-json`,
+ * which takes precedence as Vite plugin middleware runs first.
+ * @param {string} pathname
+ * @param {import('http').ServerResponse} res
+ * @returns {boolean} `true` if the request was handled
+ */
+export function is_chrome_devtools_request(pathname, res) {
+	if (pathname === '/.well-known/appspecific/com.chrome.devtools.json') {
+		res.writeHead(404);
+		res.end('not found');
+		return true;
+	}
+	return false;
 }
 
 /**

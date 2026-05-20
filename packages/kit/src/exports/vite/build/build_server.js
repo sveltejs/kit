@@ -1,20 +1,52 @@
+/** @import { AssetDependencies, ManifestData, SSRNode, ValidatedKitConfig } from 'types' */
+/** @import { Manifest, Rolldown } from 'vite' */
 import fs from 'node:fs';
 import { mkdirp } from '../../../utils/filesystem.js';
-import { create_function_as_string, filter_fonts, find_deps, resolve_symlinks } from './utils.js';
+import {
+	create_function_as_string,
+	filter_fonts,
+	find_deps,
+	generate_placeholder,
+	resolve_symlinks
+} from './utils.js';
 import { s } from '../../../utils/misc.js';
 import { normalizePath } from 'vite';
 import { basename } from 'node:path';
 import { fix_css_urls } from '../../../utils/css.js';
+import { escape_for_interpolation } from '../../../utils/escape.js';
 
 /**
+ * @overload Build without the client manifest so we can analyse the nodes.
  * @param {string} out
- * @param {import('types').ValidatedKitConfig} kit
- * @param {import('types').ManifestData} manifest_data
- * @param {import('vite').Manifest} server_manifest
- * @param {import('vite').Manifest | null} client_manifest
+ * @param {ValidatedKitConfig} kit
+ * @param {ManifestData} manifest_data
+ * @param {Manifest} server_manifest
+ * @param {null} client_manifest
+ * @param {null} assets_path
+ * @param {null} client_chunks
+ * @param {string} root
+ * @returns {void}
+ */
+/**
+ * @overload Or build with the client manifest
+ * @param {string} out
+ * @param {ValidatedKitConfig} kit
+ * @param {ManifestData} manifest_data
+ * @param {Manifest} server_manifest
+ * @param {Manifest} client_manifest
+ * @param {string} assets_path
+ * @param {Rolldown.RolldownOutput['output']} client_chunks
+ * @param {string} root
+ * @returns {void}
+ */
+/**
+ * @param {string} out
+ * @param {ValidatedKitConfig} kit
+ * @param {ManifestData} manifest_data
+ * @param {Manifest} server_manifest
+ * @param {Manifest | null} client_manifest
  * @param {string | null} assets_path
- * @param {import('vite').Rolldown.RolldownOutput['output'] | null} client_chunks
- * @param {import('types').RecursiveRequired<import('types').ValidatedConfig['kit']['output']>} output_config
+ * @param {Rolldown.RolldownOutput['output'] | null} client_chunks
  * @param {string} root
  */
 export function build_server_nodes(
@@ -25,7 +57,6 @@ export function build_server_nodes(
 	client_manifest,
 	assets_path,
 	client_chunks,
-	output_config,
 	root
 ) {
 	mkdirp(`${out}/server/nodes`);
@@ -44,7 +75,7 @@ export function build_server_nodes(
 	 */
 	let prepare_css_for_inlining = (css) => s(css);
 
-	if (client_chunks && kit.inlineStyleThreshold > 0 && output_config.bundleStrategy === 'split') {
+	if (client_chunks && kit.inlineStyleThreshold > 0 && kit.output.bundleStrategy === 'split') {
 		for (const chunk of client_chunks) {
 			if (chunk.type !== 'asset' || !chunk.fileName.endsWith('.css')) {
 				continue;
@@ -69,18 +100,31 @@ export function build_server_nodes(
 			const static_asset_prefix = segments.map(() => '..').join('/') + '/';
 
 			prepare_css_for_inlining = (css, eager_assets) => {
+				const assets_placeholder = generate_placeholder(css, 'ASSETS');
+				const base_placeholder = generate_placeholder(css, 'BASE');
+
 				const transformed_css = fix_css_urls({
 					css,
 					vite_assets: eager_assets,
 					static_assets,
-					paths_assets: '${assets}',
-					base: '${base}',
+					paths_assets: assets_placeholder,
+					base: base_placeholder,
 					static_asset_prefix
 				});
 
 				// only convert to a function if we have adjusted any URLs
 				if (css !== transformed_css) {
-					return create_function_as_string('css', ['assets', 'base'], transformed_css);
+					const escaped = escape_for_interpolation(transformed_css, [
+						{
+							placeholder: assets_placeholder,
+							replacement: '${assets}'
+						},
+						{
+							placeholder: base_placeholder,
+							replacement: '${base}'
+						}
+					]);
+					return create_function_as_string('css', ['assets', 'base'], escaped);
 				}
 
 				return s(css);
@@ -95,7 +139,7 @@ export function build_server_nodes(
 		const imports = [];
 
 		// String representation of
-		/** @type {import('types').SSRNode} */
+		/** @type {SSRNode} */
 		/** @type {string[]} */
 		const exports = [`export const index = ${i};`];
 
@@ -144,7 +188,7 @@ export function build_server_nodes(
 		if (
 			client_manifest &&
 			(node.universal || node.component) &&
-			output_config.bundleStrategy === 'split'
+			kit.output.bundleStrategy === 'split'
 		) {
 			const entry_path = `${normalizePath(kit.outDir)}/generated/client-optimized/nodes/${i}.js`;
 			const entry = find_deps(client_manifest, entry_path, true, root);
@@ -153,13 +197,13 @@ export function build_server_nodes(
 			// However, if it is not used during SSR (not present in the server manifest),
 			// then it can be lazily loaded in the browser.
 
-			/** @type {import('types').AssetDependencies | undefined} */
+			/** @type {AssetDependencies | undefined} */
 			let component;
 			if (node.component) {
 				component = find_deps(server_manifest, node.component, true, root);
 			}
 
-			/** @type {import('types').AssetDependencies | undefined} */
+			/** @type {AssetDependencies | undefined} */
 			let universal;
 			if (node.universal) {
 				universal = find_deps(server_manifest, node.universal, true, root);

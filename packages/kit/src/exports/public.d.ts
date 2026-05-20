@@ -52,7 +52,7 @@ export interface Adapter {
 	supports?: {
 		/**
 		 * Test support for `read` from `$app/server`.
-		 * @param details.config The merged route config
+		 * @param details.config The merged adapter-specific route config exported from the route with `export const config`
 		 */
 		read?: (details: { config: any; route: { id: string } }) => boolean;
 
@@ -321,9 +321,11 @@ export interface Emulator {
 }
 
 export interface KitConfig {
+	// TODO: remove this in 4.0
 	/**
 	 * Your [adapter](https://svelte.dev/docs/kit/adapters) is run when executing `vite build`. It determines how the output is converted for different platforms.
 	 * @default undefined
+	 * @deprecated removed in 3.0.0. Adapters should now be passed to the `sveltekit` Vite plugin in `vite.config.js`
 	 */
 	adapter?: Adapter;
 	/**
@@ -629,7 +631,7 @@ export interface KitConfig {
 		 * - If `'single'`, creates just one .js bundle and one .css file containing code for the entire app.
 		 * - If `'inline'`, inlines all JavaScript and CSS of the entire app into the HTML. The result is usable without a server (i.e. you can just open the file in your browser).
 		 *
-		 * When using `'split'`, you can also adjust the bundling behaviour by setting [`output.experimentalMinChunkSize`](https://rollupjs.org/configuration-options/#output-experimentalminchunksize) and [`output.manualChunks`](https://rollupjs.org/configuration-options/#output-manualchunks) inside your Vite config's [`build.rollupOptions`](https://vite.dev/config/build-options.html#build-rollupoptions).
+		 * When using `'split'`, you can also adjust the bundling behaviour by setting [`output.codeSplitting`](https://rolldown.rs/reference/OutputOptions.codeSplitting) inside your Vite config's [`build.rolldownOptions`](https://vite.dev/config/build-options#build-rolldownoptions).
 		 *
 		 * If you want to inline your assets, you'll need to set Vite's [`build.assetsInlineLimit`](https://vite.dev/config/build-options.html#build-assetsinlinelimit) option to an appropriate size then import your assets through Vite.
 		 *
@@ -907,6 +909,15 @@ export interface KitConfig {
 		 */
 		pollInterval?: number;
 	};
+}
+
+export interface KitViteConfig {
+	/**
+	 * Your [adapter](https://svelte.dev/docs/kit/adapters) is run when executing `vite build`. It determines how the output is converted for different platforms.
+	 * @since 3.0.0
+	 * @default undefined
+	 */
+	adapter?: Adapter;
 }
 
 /**
@@ -1417,6 +1428,67 @@ export interface Page<
  */
 export type ParamMatcher = (param: string) => boolean;
 
+/**
+ * A single entry yielded by [`requested`](https://svelte.dev/docs/kit/$app-server#requested)
+ * when called with a regular `query`. `arg` is the validated argument (the input *after*
+ * the query's schema validated and transformed it, if applicable); `query` is a
+ * `RemoteQuery` bound to the client's original cache key, so `refresh()` / `set()` will
+ * update the correct client entry.
+ */
+export type RequestedEntry<Validated, Output> = {
+	arg: Validated;
+	query: RemoteQuery<Output>;
+};
+
+/**
+ * A single entry yielded by [`requested`](https://svelte.dev/docs/kit/$app-server#requested)
+ * when called with a `query.live`. `arg` is the validated argument; `query` is a
+ * `RemoteLiveQuery` bound to the client's original cache key, so `reconnect()` targets
+ * the correct client subscription.
+ */
+export type LiveRequestedEntry<Validated, Output> = {
+	arg: Validated;
+	query: RemoteLiveQuery<Output>;
+};
+
+export type QueryRequestedResult<Validated, Output> = Iterable<RequestedEntry<Validated, Output>> &
+	AsyncIterable<RequestedEntry<Validated, Output>> & {
+		/**
+		 * Call `refresh` on all queries selected by this `requested` invocation.
+		 * This is identical to:
+		 * ```ts
+		 * import { requested } from '$app/server';
+		 *
+		 * for await (const { query } of requested(getPost, ...)) {
+		 *   void query.refresh();
+		 * }
+		 * ```
+		 */
+		refreshAll: () => Promise<void>;
+	};
+
+export type LiveQueryRequestedResult<Validated, Output> = Iterable<
+	LiveRequestedEntry<Validated, Output>
+> &
+	AsyncIterable<LiveRequestedEntry<Validated, Output>> & {
+		/**
+		 * Call `reconnect` on all live queries selected by this `requested` invocation.
+		 * This is identical to:
+		 * ```ts
+		 * import { requested } from '$app/server';
+		 *
+		 * for await (const { query } of requested(liveQuery, ...)) {
+		 *   void query.reconnect();
+		 * }
+		 * ```
+		 */
+		reconnectAll: () => Promise<void>;
+	};
+
+export type RequestedResult<Validated, Output> =
+	| QueryRequestedResult<Validated, Output>
+	| LiveQueryRequestedResult<Validated, Output>;
+
 export interface RequestEvent<
 	Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
 	RouteId extends AppRouteId | null = AppRouteId | null
@@ -1809,8 +1881,8 @@ type InputTypeMap = {
 	checkbox: boolean | string[];
 	radio: string;
 	file: File;
-	hidden: string;
-	submit: string;
+	hidden: string | number | boolean;
+	submit: string | number | boolean;
 	button: string;
 	reset: string;
 	image: string;
@@ -1833,6 +1905,7 @@ type InputElementProps<T extends keyof InputTypeMap> = T extends 'checkbox' | 'r
 			'aria-invalid': boolean | 'false' | 'true' | undefined;
 			get checked(): boolean;
 			set checked(value: boolean);
+			readonly defaultChecked?: boolean;
 		}
 	: T extends 'file'
 		? {
@@ -1842,28 +1915,37 @@ type InputElementProps<T extends keyof InputTypeMap> = T extends 'checkbox' | 'r
 				get files(): FileList | null;
 				set files(v: FileList | null);
 			}
-		: T extends 'select' | 'select multiple'
+		: T extends 'select'
 			? {
 					name: string;
-					multiple: T extends 'select' ? false : true;
 					'aria-invalid': boolean | 'false' | 'true' | undefined;
-					get value(): string | number;
-					set value(v: string | number);
+					get value(): string;
+					set value(v: string);
 				}
-			: T extends 'text'
+			: T extends 'select multiple'
 				? {
 						name: string;
+						multiple: true;
 						'aria-invalid': boolean | 'false' | 'true' | undefined;
-						get value(): string | number;
-						set value(v: string | number);
+						get value(): string[];
+						set value(v: string[]);
 					}
-				: {
-						name: string;
-						type: T;
-						'aria-invalid': boolean | 'false' | 'true' | undefined;
-						get value(): string | number;
-						set value(v: string | number);
-					};
+				: T extends 'text'
+					? {
+							name: string;
+							'aria-invalid': boolean | 'false' | 'true' | undefined;
+							get value(): string | number;
+							set value(v: string | number);
+							readonly defaultValue?: string | number;
+						}
+					: {
+							name: string;
+							type: T;
+							'aria-invalid': boolean | 'false' | 'true' | undefined;
+							get value(): string | number;
+							set value(v: string | number);
+							readonly defaultValue?: string | number;
+						};
 
 type RemoteFormFieldMethods<T> = {
 	/** The values that will be submitted */
@@ -1874,15 +1956,32 @@ type RemoteFormFieldMethods<T> = {
 	issues(): RemoteFormIssue[] | undefined;
 };
 
+// These two types use "T extends unknown ? .. : .." to distribute over unions.
+// Example: if "type T = A | b" then "keyof T" only contains keys that both A and B have, with "KeysOfUnion<T>" we get the keys of both A and B
+type KeysOfUnion<T> = T extends unknown ? keyof T : never;
+type ValueOfUnionKey<T, K extends PropertyKey> = T extends unknown
+	? K extends keyof T
+		? T[K]
+		: never
+	: never;
+
 export type RemoteFormFieldValue = string | string[] | number | boolean | File | File[];
 
 type AsArgs<Type extends keyof InputTypeMap, Value> = Type extends 'checkbox'
 	? Value extends string[]
 		? [type: Type, value: Value[number] | (string & {})]
-		: [type: Type]
-	: Type extends 'radio' | 'submit' | 'hidden'
-		? [type: Type, value: Value | (string & {})]
-		: [type: Type];
+		: Value extends boolean
+			? [type: Type] | [type: Type, value: boolean]
+			: [type: Type] | [type: Type, value: Value | (string & {})]
+	: Type extends 'submit' | 'hidden'
+		? Value extends string
+			? [type: Type, value: Value | (string & {})]
+			: [type: Type, value: Value]
+		: Type extends 'radio'
+			? [type: Type, value: Value | (string & {})]
+			: Type extends 'file' | 'file multiple'
+				? [type: Type]
+				: [type: Type] | [type: Type, value: Value | (string & {})];
 
 /**
  * Form field accessor type that provides name(), value(), and issues() methods
@@ -1944,14 +2043,19 @@ export type RemoteFormFields<T> =
 		? RecursiveFormFields
 		: NonNullable<T> extends string | number | boolean | File
 			? RemoteFormField<NonNullable<T>>
-			: T extends string[] | File[]
-				? RemoteFormField<T> & { [K in number]: RemoteFormField<T[number]> }
-				: T extends Array<infer U>
-					? RemoteFormFieldContainer<T> & {
+			: // [NonNullable<T>] is used to prevent distributing over union while still allowing
+				// nullable wrappers (e.g. `string[] | undefined` from a schema with `.default([])`)
+				// to be treated as arrays; only the last condition should distribute over unions
+				[NonNullable<T>] extends [string[] | File[]]
+				? RemoteFormField<NonNullable<T>> & {
+						[K in number]: RemoteFormField<NonNullable<T>[number]>;
+					}
+				: [NonNullable<T>] extends [Array<infer U>]
+					? RemoteFormFieldContainer<NonNullable<T>> & {
 							[K in number]: RemoteFormFields<U>;
 						}
 					: RemoteFormFieldContainer<T> & {
-							[K in keyof T]-?: RemoteFormFields<T[K]>;
+							[K in KeysOfUnion<T>]-?: RemoteFormFields<ValueOfUnionKey<T, K>>;
 						};
 
 // By breaking this out into its own type, we avoid the TS recursion depth limit
@@ -2009,7 +2113,7 @@ export interface ValidationError {
 }
 
 /**
- * The return value of a remote `form` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
+ * The type of a remote `form` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
  */
 export type RemoteForm<Input extends RemoteFormInput | void, Output> = {
 	/** Attachment that sets up an event handler that intercepts the form submission on the client to prevent a full page reload */
@@ -2017,15 +2121,19 @@ export type RemoteForm<Input extends RemoteFormInput | void, Output> = {
 	method: 'POST';
 	/** The URL to send the form to. */
 	action: string;
+	/** The `<form>` element this instance is currently attached to, if any. */
+	get element(): HTMLFormElement | null;
+	/** Submit the currently attached form programmatically. */
+	submit(): Promise<boolean> & {
+		updates: (...updates: RemoteQueryUpdate[]) => Promise<boolean>;
+	};
 	/** Use the `enhance` method to influence what happens when the form is submitted. */
 	enhance(
-		callback: (opts: {
-			form: HTMLFormElement;
-			data: Input;
-			submit: () => Promise<void> & {
-				updates: (...queries: Array<RemoteQuery<any> | RemoteQueryOverride>) => Promise<void>;
-			};
-		}) => void | Promise<void>
+		callback: (
+			form: Omit<RemoteForm<Input, Output>, 'enhance' | 'element'> & {
+				readonly element: HTMLFormElement;
+			}
+		) => MaybePromise<void>
 	): {
 		method: 'POST';
 		action: string;
@@ -2064,17 +2172,24 @@ export type RemoteForm<Input extends RemoteFormInput | void, Output> = {
 };
 
 /**
- * The return value of a remote `command` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#command) for full documentation.
+ * The type of a remote `command` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#command) for full documentation.
  */
 export type RemoteCommand<Input, Output> = {
-	(arg: undefined extends Input ? Input | void : Input): Promise<Awaited<Output>> & {
-		updates(...queries: Array<RemoteQuery<any> | RemoteQueryOverride>): Promise<Awaited<Output>>;
+	(arg: undefined extends Input ? Input | void : Input): Promise<Output> & {
+		updates(...updates: RemoteQueryUpdate[]): Promise<Output>;
 	};
 	/** The number of pending command executions */
 	get pending(): number;
 };
 
-export type RemoteResource<T> = Promise<Awaited<T>> & {
+export type RemoteQueryUpdate =
+	| RemoteQuery<any>
+	| RemoteLiveQuery<any>
+	| RemoteQueryFunction<any, any>
+	| RemoteLiveQueryFunction<any, any>
+	| RemoteQueryOverride;
+
+export type RemoteResource<T> = Promise<T> & {
 	/** The error in case the query fails. Most often this is a [`HttpError`](https://svelte.dev/docs/kit/@sveltejs-kit#HttpError) but it isn't guaranteed to be. */
 	get error(): any;
 	/** `true` before the first result is available and during refreshes */
@@ -2087,7 +2202,7 @@ export type RemoteResource<T> = Promise<Awaited<T>> & {
 		  }
 		| {
 				/** The current value of the query. Undefined until `ready` is `true` */
-				get current(): Awaited<T>;
+				get current(): T;
 				ready: true;
 		  }
 	);
@@ -2108,7 +2223,7 @@ export type RemoteQuery<T> = RemoteResource<T> & {
 	 */
 	refresh(): Promise<void>;
 	/**
-	 * Temporarily override the value of a query. This is used with the `updates` method of a [command](https://svelte.dev/docs/kit/remote-functions#command-Updating-queries) or [enhanced form submission](https://svelte.dev/docs/kit/remote-functions#form-enhance) to provide optimistic updates.
+	 * Temporarily override a query's value during a [single-flight mutation](https://svelte.dev/docs/kit/remote-functions#Single-flight-mutations) to provide optimistic updates.
 	 *
 	 * ```svelte
 	 * <script>
@@ -2116,9 +2231,9 @@ export type RemoteQuery<T> = RemoteResource<T> & {
 	 *   const todos = getTodos();
 	 * </script>
 	 *
-	 * <form {...addTodo.enhance(async ({ data, submit }) => {
-	 *   await submit().updates(
-	 *     todos.withOverride((todos) => [...todos, { text: data.get('text') }])
+	 * <form {...addTodo.enhance(async (form) => {
+	 *   await form.submit().updates(
+	 *     todos.withOverride((todos) => [...todos, { text: form.fields.text.value() }])
 	 *   );
 	 * })}>
 	 *   <input type="text" name="text" />
@@ -2126,16 +2241,28 @@ export type RemoteQuery<T> = RemoteResource<T> & {
 	 * </form>
 	 * ```
 	 */
-	withOverride(update: (current: Awaited<T>) => Awaited<T>): RemoteQueryOverride;
+	withOverride(update: (current: T) => T): RemoteQueryOverride;
 };
 
-export interface RemoteQueryOverride {
-	_key: string;
-	release(): void;
-}
+export type RemoteLiveQuery<T> = RemoteResource<T> & {
+	/**
+	 * Returns an async iterator with live updates.
+	 * Unlike awaiting the resource directly, this can only be used _outside_ render
+	 * (i.e. in load functions, event handlers and so on)
+	 */
+	run(): AsyncGenerator<T>;
+	/** `true` if the live stream is currently connected. */
+	readonly connected: boolean;
+	/** `true` once the current live stream iterator is done. */
+	readonly done: boolean;
+	/** Reconnects the live stream immediately. */
+	reconnect(): Promise<void>;
+};
+
+export type RemoteQueryOverride = () => void;
 
 /**
- * The return value of a remote `prerender` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#prerender) for full documentation.
+ * The type of a remote `prerender` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#prerender) for full documentation.
  */
 export type RemotePrerenderFunction<Input, Output> = (
 	arg: undefined extends Input ? Input | void : Input
@@ -2143,9 +2270,29 @@ export type RemotePrerenderFunction<Input, Output> = (
 
 /**
  * The return value of a remote `query` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query) for full documentation.
+ *
+ * The optional `Validated` generic parameter represents the argument type *after* the
+ * query's schema has validated and (optionally) transformed it — this is the type the
+ * query's implementation function receives on the server, and the type yielded by
+ * [`requested`](https://svelte.dev/docs/kit/$app-server#requested). For queries declared
+ * with [Standard Schema](https://standardschema.dev/) it differs from `Input` when the
+ * schema contains a transform (e.g. `v.pipe(v.number(), v.transform(String))` has
+ * `Input = number` but `Validated = string`). For `'unchecked'` validators and queries
+ * without arguments it defaults to `Input`.
  */
-export type RemoteQueryFunction<Input, Output> = (
+export type RemoteQueryFunction<Input, Output, _Validated = Input> = (
 	arg: undefined extends Input ? Input | void : Input
 ) => RemoteQuery<Output>;
+
+/**
+ * The type of a remote `query.live` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query.live) for full documentation.
+ *
+ * The optional `Validated` generic parameter represents the argument type *after* the
+ * query's schema has validated and (optionally) transformed it, and matches the type
+ * yielded by [`requested`](https://svelte.dev/docs/kit/$app-server#requested).
+ */
+export type RemoteLiveQueryFunction<Input, Output, _Validated = Input> = (
+	arg: undefined extends Input ? Input | void : Input
+) => RemoteLiveQuery<Output>;
 
 export * from './index.js';

@@ -3,8 +3,10 @@
 
 import { DEV } from 'esm-env';
 import * as devalue from 'devalue';
-import { text_decoder, text_encoder } from './utils.js';
+import { text_encoder } from './utils.js';
 import { SvelteKitError } from '@sveltejs/kit/internal';
+
+const decoder = new TextDecoder();
 
 /**
  * Sets a value in a nested object using a path string, mutating the original object
@@ -83,10 +85,6 @@ export function serialize_binary_form(data, meta) {
 	/** @type {Array<[file: File, index: number]>} */
 	const files = [];
 
-	if (!meta.remote_refreshes?.length) {
-		delete meta.remote_refreshes;
-	}
-
 	const encoded_header = devalue.stringify([data, meta], {
 		File: (file) => {
 			if (!(file instanceof File)) return;
@@ -151,7 +149,10 @@ export async function deserialize_binary_form(request) {
 		throw deserialize_error('invalid Content-Length header');
 	}
 
-	const reader = request.body.getReader();
+	// TODO: remove this workaround once we upgrade to TS 6.0
+	const reader = /** @type {ReadableStreamDefaultReader<Uint8Array<ArrayBuffer>>} */ (
+		request.body.getReader()
+	);
 
 	/** @type {Array<Promise<Uint8Array<ArrayBuffer> | undefined>>} */
 	const chunks = [];
@@ -253,7 +254,7 @@ export async function deserialize_binary_form(request) {
 		const file_offsets_buffer = await get_buffer(HEADER_BYTES + data_length, file_offsets_length);
 		if (!file_offsets_buffer) throw deserialize_error('file offset table too short');
 
-		const parsed_offsets = JSON.parse(text_decoder.decode(file_offsets_buffer));
+		const parsed_offsets = JSON.parse(decoder.decode(file_offsets_buffer));
 
 		if (
 			!Array.isArray(parsed_offsets) ||
@@ -268,7 +269,7 @@ export async function deserialize_binary_form(request) {
 
 	/** @type {Array<{ offset: number, size: number }>} */
 	const file_spans = [];
-	const [data, meta] = devalue.parse(text_decoder.decode(data_buffer), {
+	const [data, meta] = devalue.parse(decoder.decode(data_buffer), {
 		File: ([name, type, size, last_modified, index]) => {
 			if (
 				typeof name !== 'string' ||
@@ -323,7 +324,7 @@ export async function deserialize_binary_form(request) {
 		}
 	}
 
-	// Read the request body asyncronously so it doesn't stall
+	// Read the request body asynchronously so it doesn't stall
 	void (async () => {
 		let has_more = true;
 		while (has_more) {
@@ -461,7 +462,7 @@ class LazyFile {
 		});
 	}
 	async text() {
-		return text_decoder.decode(await this.arrayBuffer());
+		return decoder.decode(await this.arrayBuffer());
 	}
 }
 
@@ -506,8 +507,8 @@ export function deep_set(object, keys, value) {
 		check_prototype_pollution(key);
 
 		const is_array = /^\d+$/.test(keys[i + 1]);
-		const exists = Object.hasOwn(current, key);
-		const inner = current[key];
+		const inner = Object.hasOwn(current, key) ? current[key] : undefined;
+		const exists = inner != null;
 
 		if (exists && is_array !== Array.isArray(inner)) {
 			throw new Error(`Invalid array key ${keys[i + 1]}`);
@@ -603,11 +604,28 @@ export function deep_get(object, path) {
 }
 
 /**
+ *
+ * @param {string} field_type
+ * @param {boolean} is_array
+ * @param {unknown} input_value
+ */
+function get_type_prefix(field_type, is_array, input_value) {
+	if (field_type === 'number' || field_type === 'range') return 'n:';
+	if (field_type === 'checkbox' && !is_array) return 'b:';
+	if (field_type === 'hidden' || field_type === 'submit') {
+		const input_type = typeof input_value;
+		if (input_type === 'number') return 'n:';
+		if (input_type === 'boolean') return 'b:';
+	}
+	return '';
+}
+
+/**
  * Creates a proxy-based field accessor for form data
  * @param {any} target - Function or empty POJO
  * @param {() => Record<string, any>} get_input - Function to get current input data
  * @param {(path: (string | number)[], value: any) => void} set_input - Function to set input data
- * @param {() => Record<string, InternalRemoteFormIssue[]>} get_issues - Function to get current issues
+ * @param {(path?: (string | number)[], all?: boolean) => Record<string, InternalRemoteFormIssue[]>} get_issues - Function to get current issues
  * @param {(string | number)[]} path - Current access path
  * @returns {any} Proxy object with name(), value(), and issues() methods
  */
@@ -644,7 +662,7 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 
 			if (prop === 'issues' || prop === 'allIssues') {
 				const issues_func = () => {
-					const all_issues = get_issues()[key === '' ? '$' : key];
+					const all_issues = get_issues(path, prop === 'allIssues')[key === '' ? '$' : key];
 
 					if (prop === 'allIssues') {
 						return all_issues?.map((issue) => ({
@@ -667,7 +685,7 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 			if (prop === 'as') {
 				/**
 				 * @param {string} type
-				 * @param {string} [input_value]
+				 * @param {unknown} [input_value]
 				 */
 				const as_func = (type, input_value) => {
 					const is_array =
@@ -675,12 +693,7 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 						type === 'select multiple' ||
 						(type === 'checkbox' && typeof input_value === 'string');
 
-					const prefix =
-						type === 'number' || type === 'range'
-							? 'n:'
-							: type === 'checkbox' && !is_array
-								? 'b:'
-								: '';
+					const prefix = get_type_prefix(type, is_array, input_value);
 
 					// Base properties for all input types
 					/** @type {Record<string, any>} */
@@ -700,13 +713,16 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 					// Handle submit and hidden inputs
 					if (type === 'submit' || type === 'hidden') {
 						if (DEV) {
-							if (!input_value) {
+							if (input_value === null || input_value === undefined) {
 								throw new Error(`\`${type}\` inputs must have a value`);
 							}
 						}
 
+						const value =
+							typeof input_value === 'boolean' ? (input_value ? 'on' : 'off') : input_value;
+
 						return Object.defineProperties(base_props, {
-							value: { value: input_value, enumerable: true }
+							value: { value, enumerable: true }
 						});
 					}
 
@@ -717,7 +733,7 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 							value: {
 								enumerable: true,
 								get() {
-									return get_value();
+									return get_value() ?? input_value;
 								}
 							}
 						});
@@ -735,6 +751,23 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 							}
 						}
 
+						if (type === 'checkbox' && !is_array) {
+							return Object.defineProperties(base_props, {
+								defaultChecked: {
+									enumerable: true,
+									get() {
+										return input_value;
+									}
+								},
+								checked: {
+									enumerable: true,
+									get() {
+										return get_value() ?? input_value;
+									}
+								}
+							});
+						}
+
 						return Object.defineProperties(base_props, {
 							value: { value: input_value ?? 'on', enumerable: true },
 							checked: {
@@ -746,11 +779,7 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 										return value === input_value;
 									}
 
-									if (is_array) {
-										return (value ?? []).includes(input_value);
-									}
-
-									return value;
+									return (value ?? []).includes(input_value);
 								}
 							}
 						});
@@ -800,10 +829,16 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 
 					// Handle all other input types (text, number, etc.)
 					return Object.defineProperties(base_props, {
+						defaultValue: {
+							enumerable: true,
+							get() {
+								return input_value;
+							}
+						},
 						value: {
 							enumerable: true,
 							get() {
-								const value = get_value();
+								const value = get_value() ?? input_value;
 								return value != null ? String(value) : '';
 							}
 						}

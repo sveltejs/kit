@@ -1,3 +1,4 @@
+/** @param {ReadableStream} body */
 const body_stream_to_buffer = async (body) => {
 	let buffer = new Uint8Array();
 	const reader = body.getReader();
@@ -14,6 +15,7 @@ const body_stream_to_buffer = async (body) => {
 	return buffer;
 };
 
+/** @type {import("./$types").PageLoad} */
 export async function load({ fetch }) {
 	const res = await fetch('/load/fetch-body-stream-b64/data');
 
@@ -21,6 +23,8 @@ export async function load({ fetch }) {
 		body: Uint8Array.from(Array(256).fill(0), (_, i) => i),
 		method: 'POST'
 	});
+
+	if (!res.body || !l.body) throw new Error('body is null');
 
 	return {
 		data: await body_stream_to_buffer(res.body),

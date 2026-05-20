@@ -1,7 +1,11 @@
+/** @import { Adapter } from '@sveltejs/kit' */
 import { existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { mkdirp, posixify, walk } from '../../utils/filesystem.js';
+import { resolveConfig } from 'vite';
+import { mkdirp, walk } from '../../utils/filesystem.js';
+import { posixify } from '../../utils/os.js';
+import { noop } from '../../utils/functions.js';
 import { decode_uri, is_root_relative, resolve } from '../../utils/url.js';
 import { escape_html } from '../../utils/escape.js';
 import { logger } from '../utils.js';
@@ -69,7 +73,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, roo
 					log.error(format(details));
 				};
 			case 'ignore':
-				return () => {};
+				return noop;
 			default:
 				// @ts-expect-error TS thinks T might be of a different kind, but it's not
 				return (details) => input({ ...details, message: format(details) });
@@ -120,7 +124,13 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, roo
 		return { prerendered, prerender_map };
 	}
 
-	const emulator = await config.adapter?.emulate?.();
+	const vite_config = await resolveConfig({}, 'build');
+	/** @type {Adapter | undefined} */
+	const adapter = vite_config.plugins.find(
+		(plugin) => plugin.name === 'vite-plugin-sveltekit-adapter'
+	)?.api?.adapter;
+
+	const emulator = await adapter?.emulate?.();
 
 	/** @type {import('types').Logger} */
 	const log = logger({ verbose });
@@ -495,7 +505,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, roo
 	internal.set_manifest(manifest);
 	internal.set_read_implementation((file) => createReadableStream(`${out}/server/${file}`));
 
-	/** @type {Array<import('types').RemoteInfo & { type: 'prerender'}>} */
+	/** @type {Array<import('types').RemotePrerenderInternals>} */
 	const prerender_functions = [];
 
 	for (const loader of Object.values(manifest._.remotes)) {
@@ -548,13 +558,16 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, roo
 	}
 
 	const transport = (await internal.get_hooks()).transport ?? {};
-	for (const info of prerender_functions) {
-		if (info.has_arg) {
-			for (const arg of (await info.inputs?.()) ?? []) {
-				void enqueue(null, remote_prefix + info.id + '/' + stringify_remote_arg(arg, transport));
+	for (const internals of prerender_functions) {
+		if (internals.has_arg) {
+			for (const arg of (await internals.inputs?.()) ?? []) {
+				void enqueue(
+					null,
+					remote_prefix + internals.id + '/' + stringify_remote_arg(arg, transport)
+				);
 			}
 		} else {
-			void enqueue(null, remote_prefix + info.id);
+			void enqueue(null, remote_prefix + internals.id);
 		}
 	}
 
