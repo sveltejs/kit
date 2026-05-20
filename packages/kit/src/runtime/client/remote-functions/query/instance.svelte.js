@@ -1,7 +1,6 @@
 import { query_responses } from '../../client.js';
 import { QUERY_OVERRIDE_KEY } from '../shared.svelte.js';
 import { noop } from '../../../../utils/functions.js';
-import { with_resolvers } from '../../../../utils/promise.js';
 import { tick, untrack } from 'svelte';
 
 /**
@@ -87,7 +86,7 @@ export class Query {
 	#run() {
 		this.#loading = true;
 
-		const { promise, resolve, reject } = with_resolvers();
+		const { promise, resolve, reject } = Promise.withResolvers();
 
 		this.#latest.push(resolve);
 
