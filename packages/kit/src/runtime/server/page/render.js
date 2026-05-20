@@ -15,7 +15,7 @@ import { create_server_routing_response, generate_route_object } from './server_
 import { add_resolution_suffix } from '../../pathname.js';
 import { try_get_request_store, with_request_store } from '@sveltejs/kit/internal/server';
 import { text_encoder } from '../../utils.js';
-import { get_global_name, handle_error_and_jsonify } from '../utils.js';
+import { count_non_ssi_comments, get_global_name, handle_error_and_jsonify } from '../utils.js';
 import { create_remote_key } from '../../shared.js';
 import { get_status } from '../../../utils/error.js';
 
@@ -267,25 +267,25 @@ export async function render_response({
 
 			paths.reset(); // just in case `options.root.render(...)` failed
 		}
-
-		for (const { node } of branch) {
-			for (const url of node.imports) modulepreloads.add(url);
-			for (const url of node.stylesheets) stylesheets.add(url);
-			for (const url of node.fonts) fonts.add(url);
-
-			if (node.inline_styles && !client.inline) {
-				Object.entries(await node.inline_styles()).forEach(([filename, css]) => {
-					if (typeof css === 'string') {
-						inline_styles.set(filename, css);
-						return;
-					}
-
-					inline_styles.set(filename, css(`${assets}/${paths.app_dir}/immutable/assets`, assets));
-				});
-			}
-		}
 	} else {
 		rendered = { head: '', html: '', css: { code: '', map: null }, hashes: { script: [] } };
+	}
+
+	for (const { node } of branch) {
+		for (const url of node.imports) modulepreloads.add(url);
+		for (const url of node.stylesheets) stylesheets.add(url);
+		for (const url of node.fonts) fonts.add(url);
+
+		if (node.inline_styles && !client.inline) {
+			Object.entries(await node.inline_styles()).forEach(([filename, css]) => {
+				if (typeof css === 'string') {
+					inline_styles.set(filename, css);
+					return;
+				}
+
+				inline_styles.set(filename, css(`${assets}/${paths.app_dir}/immutable/assets`, assets));
+			});
+		}
 	}
 
 	const head = new Head(rendered.head, !!state.prerendering);
@@ -302,13 +302,15 @@ export async function render_response({
 		return `${assets}/${path}`;
 	};
 
-	// inline styles can come from `bundleStrategy: 'inline'` or `inlineStyleThreshold`
 	const style = client.inline
 		? client.inline?.style
 		: Array.from(inline_styles.values()).join('\n');
 
 	if (style) {
-		const attributes = DEV ? ['data-sveltekit'] : [];
+		// We always inline all styles to avoid FOUC during development.
+		// Once that's accomplished, we find and remove the style node using the
+		// `data-sveltekit` attribute once CSR kicks in
+		const attributes = __SVELTEKIT_DEV__ ? ['data-sveltekit'] : [];
 		if (csp.style_needs_nonce) attributes.push(`nonce="${csp.nonce}"`);
 		csp.add_style(style);
 		head.add_style(style, attributes);
@@ -529,7 +531,10 @@ export async function render_response({
 
 					const store = internals.type === 'prerender' ? prerender : query;
 
-					if (event_state.remote.refreshes?.[remote_key] !== undefined) {
+					if (
+						event_state.remote.refreshes?.has(remote_key) ||
+						event_state.remote.reconnects?.has(remote_key)
+					) {
 						// This entry was refreshed/set by a command or form action.
 						// Always await it so the mutation result is serialized.
 						store[remote_key] = await entry.data;
@@ -602,10 +607,10 @@ export async function render_response({
 		}
 
 		if (options.service_worker) {
-			let opts = DEV ? ", { type: 'module' }" : '';
+			let opts = __SVELTEKIT_DEV__ ? ", { type: 'module' }" : '';
 			if (options.service_worker_options != null) {
 				const service_worker_options = { ...options.service_worker_options };
-				if (DEV) {
+				if (__SVELTEKIT_DEV__) {
 					service_worker_options.type = 'module';
 				}
 				opts = `, ${s(service_worker_options)}`;
@@ -691,7 +696,7 @@ export async function render_response({
 
 	if (DEV) {
 		if (page_config.csr) {
-			if (transformed.split('<!--').length < html.split('<!--').length) {
+			if (count_non_ssi_comments(transformed) < count_non_ssi_comments(html)) {
 				// the \u001B stuff is ANSI codes, so that we don't need to add a library to the runtime
 				// https://svelte.dev/playground/1b3f49696f0c44c881c34587f2537aa2?version=4.2.19
 				console.warn(

@@ -9,11 +9,13 @@ The `RequestHandler` and `Load` types both accept a `Params` argument allowing y
 ```js
 /// file: src/routes/[foo]/[bar]/[baz]/+server.js
 // @errors: 2355 2322 1360
-/** @type {import('@sveltejs/kit').RequestHandler<{
-    foo: string;
-    bar: string;
-    baz: string
-  }>} */
+/**
+ * @type {import('@sveltejs/kit').RequestHandler<{
+ *   foo: string;
+ *   bar: string;
+ *   baz: string
+ * }>}
+ */
 export async function GET({ params }) {
 	// ...
 }

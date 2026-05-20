@@ -138,12 +138,12 @@ export function make_trackable(url, callback, search_params_callback, allow_hash
 
 	if (!BROWSER) {
 		// @ts-ignore
-		tracked[Symbol.for('nodejs.util.inspect.custom')] = (depth, opts, inspect) => {
+		tracked[Symbol.for('nodejs.util.inspect.custom')] = (_depth, opts, inspect) => {
 			return inspect(url, opts);
 		};
 
 		// @ts-ignore
-		tracked.searchParams[Symbol.for('nodejs.util.inspect.custom')] = (depth, opts, inspect) => {
+		tracked.searchParams[Symbol.for('nodejs.util.inspect.custom')] = (_depth, opts, inspect) => {
 			return inspect(url.searchParams, opts);
 		};
 	}
@@ -194,7 +194,7 @@ export function disable_search(url) {
 function allow_nodejs_console_log(url) {
 	if (!BROWSER) {
 		// @ts-ignore
-		url[Symbol.for('nodejs.util.inspect.custom')] = (depth, opts, inspect) => {
+		url[Symbol.for('nodejs.util.inspect.custom')] = (_depth, opts, inspect) => {
 			return inspect(new URL(url), opts);
 		};
 	}

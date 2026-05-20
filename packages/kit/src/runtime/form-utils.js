@@ -4,8 +4,10 @@
 
 import { DEV } from 'esm-env';
 import * as devalue from 'devalue';
-import { text_decoder, text_encoder } from './utils.js';
+import { text_encoder } from './utils.js';
 import { SvelteKitError } from '@sveltejs/kit/internal';
+
+const decoder = new TextDecoder();
 
 /**
  * Sets a value in a nested object using a path string, mutating the original object
@@ -261,7 +263,7 @@ export async function deserialize_binary_form(request) {
 		const file_offsets_buffer = await get_buffer(HEADER_BYTES + data_length, file_offsets_length);
 		if (!file_offsets_buffer) throw deserialize_error('file offset table too short');
 
-		const parsed_offsets = JSON.parse(text_decoder.decode(file_offsets_buffer));
+		const parsed_offsets = JSON.parse(decoder.decode(file_offsets_buffer));
 
 		if (
 			!Array.isArray(parsed_offsets) ||
@@ -276,7 +278,7 @@ export async function deserialize_binary_form(request) {
 
 	/** @type {Array<{ offset: number, size: number }>} */
 	const file_spans = [];
-	const [data, meta] = devalue.parse(text_decoder.decode(data_buffer), {
+	const [data, meta] = devalue.parse(decoder.decode(data_buffer), {
 		File: ([name, type, size, last_modified, index]) => {
 			if (
 				typeof name !== 'string' ||
@@ -469,7 +471,7 @@ class LazyFile {
 		});
 	}
 	async text() {
-		return text_decoder.decode(await this.arrayBuffer());
+		return decoder.decode(await this.arrayBuffer());
 	}
 }
 
@@ -535,8 +537,8 @@ export function deep_set(object, keys, value) {
 		check_prototype_pollution(key);
 
 		const is_array = /^\d+$/.test(keys[i + 1]);
-		const exists = Object.hasOwn(current, key);
-		const inner = current[key];
+		const inner = Object.hasOwn(current, key) ? current[key] : undefined;
+		const exists = inner != null;
 
 		if (exists && is_array !== Array.isArray(inner)) {
 			throw new Error(`Invalid array key ${keys[i + 1]}`);
@@ -632,9 +634,26 @@ export function deep_get(object, path) {
 }
 
 /**
+ *
+ * @param {string} field_type
+ * @param {boolean} is_array
+ * @param {unknown} input_value
+ */
+function get_type_prefix(field_type, is_array, input_value) {
+	if (field_type === 'number' || field_type === 'range') return 'n:';
+	if (field_type === 'checkbox' && !is_array) return 'b:';
+	if (field_type === 'hidden' || field_type === 'submit') {
+		const input_type = typeof input_value;
+		if (input_type === 'number') return 'n:';
+		if (input_type === 'boolean') return 'b:';
+	}
+	return '';
+}
+
+/**
  * Creates a proxy-based field accessor for form data
  * @param {any} target - Function or empty POJO
- * @param {{ get_input: () => Record<string, any>, set_input: (path: (string | number)[], value: any) => void, get_issues: () => Record<string, InternalRemoteFormIssue[]>, get_progress: (path: (string | number)[]) => { uploaded: number, total: number, percent: number } }} accessors - Accessor functions
+ * @param {{ get_input: () => Record<string, any>, set_input: (path: (string | number)[], value: any) => void, get_issues: (path?: (string | number)[], all?: boolean) => Record<string, InternalRemoteFormIssue[]>, get_progress: (path: (string | number)[]) => { uploaded: number, total: number, percent: number } }} accessors - Accessor functions
  * @param {(string | number)[]} path - Current access path
  *
  * @returns {any} Proxy object with name(), value(), and issues() methods
@@ -669,7 +688,9 @@ export function create_field_proxy(target, accessors, path = []) {
 
 			if (prop === 'issues' || prop === 'allIssues') {
 				const issues_func = () => {
-					const all_issues = accessors.get_issues()[key === '' ? '$' : key];
+					const all_issues = accessors.get_issues(path, prop === 'allIssues')[
+						key === '' ? '$' : key
+					];
 
 					if (prop === 'allIssues') {
 						return all_issues?.map((issue) => ({
@@ -698,7 +719,7 @@ export function create_field_proxy(target, accessors, path = []) {
 			if (prop === 'as') {
 				/**
 				 * @param {string} type
-				 * @param {string} [input_value]
+				 * @param {unknown} [input_value]
 				 */
 				const as_func = (type, input_value) => {
 					const is_array =
@@ -706,12 +727,7 @@ export function create_field_proxy(target, accessors, path = []) {
 						type === 'select multiple' ||
 						(type === 'checkbox' && typeof input_value === 'string');
 
-					const prefix =
-						type === 'number' || type === 'range'
-							? 'n:'
-							: type === 'checkbox' && !is_array
-								? 'b:'
-								: '';
+					const prefix = get_type_prefix(type, is_array, input_value);
 
 					// Base properties for all input types
 					/** @type {Record<string, any>} */
@@ -731,13 +747,16 @@ export function create_field_proxy(target, accessors, path = []) {
 					// Handle submit and hidden inputs
 					if (type === 'submit' || type === 'hidden') {
 						if (DEV) {
-							if (!input_value) {
+							if (input_value === null || input_value === undefined) {
 								throw new Error(`\`${type}\` inputs must have a value`);
 							}
 						}
 
+						const value =
+							typeof input_value === 'boolean' ? (input_value ? 'on' : 'off') : input_value;
+
 						return Object.defineProperties(base_props, {
-							value: { value: input_value, enumerable: true }
+							value: { value, enumerable: true }
 						});
 					}
 
@@ -748,7 +767,7 @@ export function create_field_proxy(target, accessors, path = []) {
 							value: {
 								enumerable: true,
 								get() {
-									return input_value !== undefined ? input_value : get_value();
+									return get_value() ?? input_value;
 								}
 							}
 						});
@@ -766,6 +785,23 @@ export function create_field_proxy(target, accessors, path = []) {
 							}
 						}
 
+						if (type === 'checkbox' && !is_array) {
+							return Object.defineProperties(base_props, {
+								defaultChecked: {
+									enumerable: true,
+									get() {
+										return input_value;
+									}
+								},
+								checked: {
+									enumerable: true,
+									get() {
+										return get_value() ?? input_value;
+									}
+								}
+							});
+						}
+
 						return Object.defineProperties(base_props, {
 							value: { value: input_value ?? 'on', enumerable: true },
 							checked: {
@@ -777,11 +813,7 @@ export function create_field_proxy(target, accessors, path = []) {
 										return value === input_value;
 									}
 
-									if (is_array) {
-										return (value ?? []).includes(input_value);
-									}
-
-									return value;
+									return (value ?? []).includes(input_value);
 								}
 							}
 						});
@@ -831,10 +863,16 @@ export function create_field_proxy(target, accessors, path = []) {
 
 					// Handle all other input types (text, number, etc.)
 					return Object.defineProperties(base_props, {
+						defaultValue: {
+							enumerable: true,
+							get() {
+								return input_value;
+							}
+						},
 						value: {
 							enumerable: true,
 							get() {
-								const value = input_value !== undefined ? input_value : get_value();
+								const value = get_value() ?? input_value;
 								return value != null ? String(value) : '';
 							}
 						}
