@@ -251,7 +251,7 @@ test.describe('$app/paths', () => {
 		const response = await request.get('/path-base/match');
 
 		expect(await response.json()).toEqual(
-			/** @satisfies {({ path: import('$app/types').ResolvedPathname ; result: { id: import('$app/types').RouteId; params: Record<string, string> }})[]} */
+			/** @satisfies {({ path: import('$app/types').ResolvedPathname ; result: { id: import('$app/types').RouteId; params: Record<string, string> } | null})[]} */
 			([
 				{
 					path: '/path-base/base/',
