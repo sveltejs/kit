@@ -119,8 +119,6 @@ function live_query_tests() {
 			break;
 		}
 
-		// `.run()` is deprecated but still typed; calling it throws at runtime.
-		const iterator: AsyncGenerator<string> = q().run();
 		iterator;
 
 		q().connected === true;
