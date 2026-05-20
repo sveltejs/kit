@@ -303,22 +303,6 @@ export function form(id) {
 					{},
 					{
 						...descriptors,
-						data: {
-							get() {
-								// TODO 3.0 remove
-								throw new Error(
-									`The \`data\` property has been removed from the \`enhance\` callback argument. Use \`instance.fields.value()\` instead.`
-								);
-							}
-						},
-						form: {
-							get() {
-								// TODO 3.0 remove
-								throw new Error(
-									`The \`form\` property has been removed from the \`enhance\` callback argument. To get the current \`<form>\` element, use \`instance.element\` instead.`
-								);
-							}
-						},
 						element: {
 							value: form
 						},

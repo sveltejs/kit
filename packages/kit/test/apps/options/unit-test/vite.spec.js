@@ -1,11 +1,8 @@
 import { test, expect } from 'vitest';
 import { spawnSync } from 'node:child_process';
-import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
-// TODO: change to import.meta.dir in version-3 branch
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const cwd = path.resolve(__dirname, '..');
+const cwd = path.resolve(import.meta.dirname, '..');
 
 test('no overridden options warning', () => {
 	const result = spawnSync('vitest', ['run', '--config', './vite.custom.config.js', '-t', 'noop'], {

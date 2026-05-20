@@ -16,7 +16,8 @@ await createBundle({
 		'$app/state': 'src/runtime/app/state/index.js',
 		'$app/stores': 'src/runtime/app/stores.js'
 	},
-	include: ['src']
+	include: ['src'],
+	exclude: ['**/test/**', '**/fixtures/**', '**/*.spec.js']
 });
 
 // dts-buddy doesn't inline imports of module declaration in ambient-private.d.ts but also doesn't include them, resulting in broken types - guard against that
