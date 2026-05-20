@@ -1,5 +1,5 @@
 /** @import { AssetDependencies, ManifestData, SSRNode, ValidatedKitConfig } from 'types' */
-/** @import { Manifest, Rollup } from 'vite' */
+/** @import { Manifest, Rolldown } from 'vite' */
 import fs from 'node:fs';
 import { mkdirp } from '../../../utils/filesystem.js';
 import {
@@ -24,6 +24,7 @@ import { escape_for_interpolation } from '../../../utils/escape.js';
  * @param {null} client_manifest
  * @param {null} assets_path
  * @param {null} client_chunks
+ * @param {string} root
  * @returns {void}
  */
 /**
@@ -34,7 +35,8 @@ import { escape_for_interpolation } from '../../../utils/escape.js';
  * @param {Manifest} server_manifest
  * @param {Manifest} client_manifest
  * @param {string} assets_path
- * @param {Rollup.RollupOutput['output']} client_chunks
+ * @param {Rolldown.RolldownOutput['output']} client_chunks
+ * @param {string} root
  * @returns {void}
  */
 /**
@@ -44,7 +46,7 @@ import { escape_for_interpolation } from '../../../utils/escape.js';
  * @param {Manifest} server_manifest
  * @param {Manifest | null} client_manifest
  * @param {string | null} assets_path
- * @param {import('vite').Rolldown.RolldownOutput['output'] | null} client_chunks
+ * @param {Rolldown.RolldownOutput['output'] | null} client_chunks
  * @param {string} root
  */
 export function build_server_nodes(
