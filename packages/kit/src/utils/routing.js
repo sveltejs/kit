@@ -3,6 +3,8 @@ import { decode_params } from './url.js';
 
 const param_pattern = /^(\[)?(\.\.\.)?(\w+)(?:=(\w+))?(\])?$/;
 
+const root_group_pattern = /^\/\((?:.+)\)$/;
+
 /**
  * Creates the regex pattern, extracts parameter names, and generates types for a route
  * @param {string} id
@@ -12,7 +14,7 @@ export function parse_route_id(id) {
 	const params = [];
 
 	const pattern =
-		id === '/'
+		id === '/' || root_group_pattern.test(id)
 			? /^\/$/
 			: new RegExp(
 					`^${get_route_segments(id)

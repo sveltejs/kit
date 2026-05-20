@@ -1,5 +1,14 @@
 # @sveltejs/kit
 
+## 2.60.1
+### Patch Changes
+
+
+- chore: bump `svelte` and `devalue` ([#15836](https://github.com/sveltejs/kit/pull/15836))
+
+
+- fix: prevent `query.batch` cross-talk ([`dadaefc`](https://github.com/sveltejs/kit/commit/dadaefc2e647a0a62f49f3ee8bc7aa46f5e27056))
+
 ## 2.60.0
 ### Minor Changes
 

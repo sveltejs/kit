@@ -1,14 +1,21 @@
 <script>
-	import { as_value_form, get_values, reset_values } from './form.remote.ts';
+	import { as_value_form, get_values, get_hidden_values, reset_values } from './form.remote.ts';
 	import Form from './Form.svelte';
 
 	const values = $derived(await get_values());
+	const hidden_values = $derived(await get_hidden_values());
 </script>
 
 {#each values as value (value.id)}
 	<div>
 		{value.text_field} - {value.number_field} - {value.select_field} - {value.color_field} - {value.range_field}
 		- {value.checkbox_field}
+	</div>
+{/each}
+
+{#each Object.entries(hidden_values) as [key, value] (key)}
+	<div id="hidden-{key}">
+		hidden {key}: {value}
 	</div>
 {/each}
 
