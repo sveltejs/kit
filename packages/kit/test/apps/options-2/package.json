@@ -9,7 +9,7 @@
 		"prepare": "svelte-kit sync",
 		"check": "svelte-kit sync && tsc && svelte-check",
 		"test": "pnpm test:dev && pnpm test:build",
-		"test:dev": "DEV=true playwright test",
+		"test:dev": "DEV=true playwright test && REGISTER_SERVICE_WORKER=true DEV=true playwright test",
 		"test:build": "playwright test && REGISTER_SERVICE_WORKER=true playwright test"
 	},
 	"devDependencies": {
