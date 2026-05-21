@@ -2121,15 +2121,19 @@ export type RemoteForm<Input extends RemoteFormInput | void, Output> = {
 	method: 'POST';
 	/** The URL to send the form to. */
 	action: string;
+	/** The `<form>` element this instance is currently attached to, if any. */
+	get element(): HTMLFormElement | null;
+	/** Submit the currently attached form programmatically. */
+	submit(): Promise<boolean> & {
+		updates: (...updates: RemoteQueryUpdate[]) => Promise<boolean>;
+	};
 	/** Use the `enhance` method to influence what happens when the form is submitted. */
 	enhance(
-		callback: (opts: {
-			form: HTMLFormElement;
-			data: Input;
-			submit: () => Promise<boolean> & {
-				updates: (...updates: RemoteQueryUpdate[]) => Promise<boolean>;
-			};
-		}) => MaybePromise<void>
+		callback: (
+			form: Omit<RemoteForm<Input, Output>, 'enhance' | 'element'> & {
+				readonly element: HTMLFormElement;
+			}
+		) => MaybePromise<void>
 	): {
 		method: 'POST';
 		action: string;
@@ -2205,12 +2209,6 @@ export type RemoteResource<T> = Promise<T> & {
 
 export type RemoteQuery<T> = RemoteResource<T> & {
 	/**
-	 * Returns a plain promise with the result.
-	 * Unlike awaiting the resource directly, this can only be used _outside_ render
-	 * (i.e. in load functions, event handlers and so on)
-	 */
-	run(): Promise<T>;
-	/**
 	 * On the client, this function will update the value of the query without re-fetching it.
 	 *
 	 * On the server, this can be called in the context of a `command` or `form` and the specified data will accompany the action response back to the client.
@@ -2233,9 +2231,9 @@ export type RemoteQuery<T> = RemoteResource<T> & {
 	 *   const todos = getTodos();
 	 * </script>
 	 *
-	 * <form {...addTodo.enhance(async ({ data, submit }) => {
-	 *   await submit().updates(
-	 *     todos.withOverride((todos) => [...todos, { text: data.get('text') }])
+	 * <form {...addTodo.enhance(async (form) => {
+	 *   await form.submit().updates(
+	 *     todos.withOverride((todos) => [...todos, { text: form.fields.text.value() }])
 	 *   );
 	 * })}>
 	 *   <input type="text" name="text" />

@@ -14,5 +14,6 @@
 		"noUnusedParameters": true,
 		"types": ["node"]
 	},
-	"include": ["src/**/*", "types/**/*", "test/**/*", "vitest.config.js"]
+	"include": ["src/**/*", "types/**/*", "test/**/*", "vitest.config.js"],
+	"exclude": ["test/apps"]
 }

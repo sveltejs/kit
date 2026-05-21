@@ -1377,7 +1377,6 @@ function kit({ svelte_config, adapter }) {
 				tracked_features,
 				env: { ...env.private, ...env.public },
 				out,
-				output_config: svelte_config.output,
 				remotes,
 				root
 			});
@@ -1564,7 +1563,6 @@ function kit({ svelte_config, adapter }) {
 				client_manifest,
 				assets_path,
 				client_chunks,
-				svelte_config.kit.output,
 				root
 			);
 
