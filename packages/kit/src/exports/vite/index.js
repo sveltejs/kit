@@ -1933,7 +1933,6 @@ function kit({ svelte_config, adapter }) {
 				client_manifest,
 				assets_path,
 				client_chunks,
-				kit.output,
 				root
 			);
 

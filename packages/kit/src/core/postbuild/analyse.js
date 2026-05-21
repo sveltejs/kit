@@ -40,7 +40,6 @@ async function analyse({
 		null,
 		null,
 		null,
-		svelte_config.kit.output,
 		root
 	);
 

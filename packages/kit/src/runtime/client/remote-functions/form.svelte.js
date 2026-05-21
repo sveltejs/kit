@@ -303,22 +303,6 @@ export function form(id) {
 					{},
 					{
 						...descriptors,
-						data: {
-							get() {
-								// TODO 3.0 remove
-								throw new Error(
-									`The \`data\` property has been removed from the \`enhance\` callback argument. Use \`instance.fields.value()\` instead.`
-								);
-							}
-						},
-						form: {
-							get() {
-								// TODO 3.0 remove
-								throw new Error(
-									`The \`form\` property has been removed from the \`enhance\` callback argument. To get the current \`<form>\` element, use \`instance.element\` instead.`
-								);
-							}
-						},
 						element: {
 							value: form
 						},
@@ -426,7 +410,6 @@ export function form(id) {
 					const valid = await preflight(form_data);
 					if (!valid) return;
 
-					// eslint-disable-next-line @typescript-eslint/await-thenable -- `callback` is typed as returning `void` to allow returning e.g. `Promise<boolean>`
 					await enhance_callback(create_enhance_callback_instance(form, form_data));
 				} catch (e) {
 					const error =
