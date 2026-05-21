@@ -248,85 +248,6 @@ export async function internal_respond(request, options, manifest, state) {
 		}
 	}
 
-	try {
-		resolved_path = decode_pathname(resolved_path);
-	} catch {
-		resolved_path = null;
-	}
-
-	/** @type {import('types').SSRRoute | null} */
-	let route = null;
-
-	if (resolved_path) {
-		// try to serve the rerouted prerendered resource if it exists
-		if (
-			// the resolved path has been decoded so it should be compared to the decoded url pathname
-			resolved_path !== decode_pathname(url.pathname) &&
-			!state.prerendering?.fallback &&
-			has_prerendered_path(manifest, resolved_path)
-		) {
-			const url = new URL(request.url);
-			url.pathname = is_data_request
-				? add_data_suffix(resolved_path)
-				: is_route_resolution_request
-					? add_resolution_suffix(resolved_path)
-					: resolved_path;
-
-			try {
-				// `fetch` automatically decodes the body, so we need to delete the related headers to not break the response
-				// Also see https://github.com/sveltejs/kit/issues/12197 for more info (we should fix this more generally at some point)
-				const response = await fetch(url, request);
-				const headers = new Headers(response.headers);
-				if (headers.has('content-encoding')) {
-					headers.delete('content-encoding');
-					headers.delete('content-length');
-				}
-
-				return new Response(response.body, {
-					headers,
-					status: response.status,
-					statusText: response.statusText
-				});
-			} catch (error) {
-				return await handle_fatal_error(event, event_state, options, error);
-			}
-		}
-
-		if (base && !state.prerendering?.fallback) {
-			if (!resolved_path.startsWith(base)) {
-				return text('Not found', { status: 404 });
-			}
-			resolved_path = resolved_path.slice(base.length) || '/';
-		}
-
-		if (is_route_resolution_request) {
-			return resolve_route(resolved_path, new URL(request.url), manifest);
-		}
-
-		if (resolved_path === `/${app_dir}/env.js`) {
-			return get_public_env(request);
-		}
-
-		if (!remote_id && resolved_path.startsWith(`/${app_dir}`)) {
-			// Ensure that 404'd static assets are not cached - some adapters might apply caching by default
-			const headers = new Headers();
-			headers.set('cache-control', 'public, max-age=0, must-revalidate');
-			return text('Not found', { status: 404, headers });
-		}
-
-		if (!state.prerendering?.fallback) {
-			// TODO this could theoretically break — should probably be inside a try-catch
-			const matchers = await manifest._.matchers();
-			const result = find_route(resolved_path, manifest._.routes, matchers);
-
-			if (result) {
-				route = result.route;
-				event.route = { id: route.id };
-				event.params = result.params;
-			}
-		}
-	}
-
 	/** @type {import('types').RequiredResolveOptions} */
 	let resolve_opts = {
 		transformPageChunk: default_transform,
@@ -337,9 +258,89 @@ export async function internal_respond(request, options, manifest, state) {
 	/** @type {import('types').TrailingSlash} */
 	let trailing_slash = 'never';
 
+	/** @type {PageNodes | undefined} */
+	let page_nodes;
+
 	try {
-		/** @type {PageNodes | undefined} */
-		const page_nodes = route?.page
+		resolved_path = decode_pathname(resolved_path);
+	} catch {
+		resolved_path = null;
+		return await handle();
+	}
+
+	/** @type {import('types').SSRRoute | null} */
+	let route = null;
+
+	// try to serve the rerouted prerendered resource if it exists
+	if (
+		// the resolved path has been decoded so it should be compared to the decoded url pathname
+		resolved_path !== decode_pathname(url.pathname) &&
+		!state.prerendering?.fallback &&
+		has_prerendered_path(manifest, resolved_path)
+	) {
+		const url = new URL(request.url);
+		url.pathname = is_data_request
+			? add_data_suffix(resolved_path)
+			: is_route_resolution_request
+				? add_resolution_suffix(resolved_path)
+				: resolved_path;
+
+		try {
+			// `fetch` automatically decodes the body, so we need to delete the related headers to not break the response
+			// Also see https://github.com/sveltejs/kit/issues/12197 for more info (we should fix this more generally at some point)
+			const response = await fetch(url, request);
+			const headers = new Headers(response.headers);
+			if (headers.has('content-encoding')) {
+				headers.delete('content-encoding');
+				headers.delete('content-length');
+			}
+
+			return new Response(response.body, {
+				headers,
+				status: response.status,
+				statusText: response.statusText
+			});
+		} catch (error) {
+			return await handle_fatal_error(event, event_state, options, error);
+		}
+	}
+
+	if (base && !state.prerendering?.fallback) {
+		if (!resolved_path.startsWith(base)) {
+			return text('Not found', { status: 404 });
+		}
+		resolved_path = resolved_path.slice(base.length) || '/';
+	}
+
+	if (is_route_resolution_request) {
+		return resolve_route(resolved_path, new URL(request.url), manifest);
+	}
+
+	if (resolved_path === `/${app_dir}/env.js`) {
+		return get_public_env(request);
+	}
+
+	if (!remote_id && resolved_path.startsWith(`/${app_dir}`)) {
+		// Ensure that 404'd static assets are not cached - some adapters might apply caching by default
+		const headers = new Headers();
+		headers.set('cache-control', 'public, max-age=0, must-revalidate');
+		return text('Not found', { status: 404, headers });
+	}
+
+	if (!state.prerendering?.fallback) {
+		// TODO this could theoretically break — should probably be inside a try-catch
+		const matchers = await manifest._.matchers();
+		const result = find_route(resolved_path, manifest._.routes, matchers);
+
+		if (result) {
+			route = result.route;
+			event.route = { id: route.id };
+			event.params = result.params;
+		}
+	}
+
+	try {
+		page_nodes = route?.page
 			? new PageNodes(await load_page_nodes(route.page, manifest))
 			: undefined;
 
@@ -404,130 +405,6 @@ export async function internal_respond(request, options, manifest, state) {
 			}
 		}
 
-		async function handle() {
-			set_trailing_slash(trailing_slash);
-
-			if (
-				state.prerendering &&
-				!state.prerendering.fallback &&
-				!state.prerendering.inside_reroute
-			) {
-				disable_search(url);
-			}
-
-			const response = await record_span({
-				name: 'sveltekit.handle.root',
-				attributes: {
-					'http.route': event.route.id || 'unknown',
-					'http.method': event.request.method,
-					'http.url': event.url.href,
-					'sveltekit.is_data_request': is_data_request,
-					'sveltekit.is_sub_request': event.isSubRequest
-				},
-				fn: async (root_span) => {
-					const traced_event = {
-						...event,
-						tracing: {
-							enabled: __SVELTEKIT_SERVER_TRACING_ENABLED__,
-							root: root_span,
-							current: root_span
-						}
-					};
-
-					return await with_request_store({ event: traced_event, state: event_state }, () =>
-						options.hooks.handle({
-							event: traced_event,
-							resolve: (event, opts) => {
-								return record_span({
-									name: 'sveltekit.resolve',
-									attributes: {
-										'http.route': event.route.id || 'unknown'
-									},
-									fn: (resolve_span) => {
-										// counter-intuitively, we need to clear the event, so that it's not
-										// e.g. accessible when loading modules needed to handle the request
-										return with_request_store(null, () =>
-											resolve(merge_tracing(event, resolve_span), page_nodes, opts).then(
-												(response) => {
-													// add headers/cookies here, rather than inside `resolve`, so that we
-													// can do it once for all responses instead of once per `return`
-													for (const key in headers) {
-														const value = headers[key];
-														response.headers.set(key, /** @type {string} */ (value));
-													}
-
-													add_cookies_to_headers(response.headers, new_cookies.values());
-
-													if (state.prerendering && event.route.id !== null) {
-														response.headers.set('x-sveltekit-routeid', encodeURI(event.route.id));
-													}
-
-													resolve_span.setAttributes({
-														'http.response.status_code': response.status,
-														'http.response.body.size':
-															response.headers.get('content-length') || 'unknown'
-													});
-
-													return response;
-												}
-											)
-										);
-									}
-								});
-							}
-						})
-					);
-				}
-			});
-
-			// respond with 304 if etag matches
-			if (response.status === 200 && response.headers.has('etag')) {
-				let if_none_match_value = request.headers.get('if-none-match');
-
-				// ignore W/ prefix https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/If-None-Match#directives
-				if (if_none_match_value?.startsWith('W/"')) {
-					if_none_match_value = if_none_match_value.substring(2);
-				}
-
-				const etag = /** @type {string} */ (response.headers.get('etag'));
-
-				if (if_none_match_value === etag) {
-					const headers = new Headers({ etag });
-
-					// https://datatracker.ietf.org/doc/html/rfc7232#section-4.1 + set-cookie
-					for (const key of [
-						'cache-control',
-						'content-location',
-						'date',
-						'expires',
-						'vary',
-						'set-cookie'
-					]) {
-						const value = response.headers.get(key);
-						if (value) headers.set(key, value);
-					}
-
-					return new Response(undefined, {
-						status: 304,
-						headers
-					});
-				}
-			}
-
-			// Edge case: If user does `return Response(30x)` in handle hook while processing a data request,
-			// we need to transform the redirect response to a corresponding JSON response.
-			if (is_data_request && response.status >= 300 && response.status <= 308) {
-				const location = response.headers.get('location');
-				if (location) {
-					return redirect_json_response(
-						new Redirect(/** @type {any} */ (response.status), location)
-					);
-				}
-			}
-
-			return response;
-		}
-
 		return await handle();
 	} catch (e) {
 		if (e instanceof Redirect) {
@@ -545,6 +422,124 @@ export async function internal_respond(request, options, manifest, state) {
 			}
 		}
 		return await handle_fatal_error(event, event_state, options, e);
+	}
+
+	async function handle() {
+		set_trailing_slash(trailing_slash);
+
+		if (state.prerendering && !state.prerendering.fallback && !state.prerendering.inside_reroute) {
+			disable_search(url);
+		}
+
+		const response = await record_span({
+			name: 'sveltekit.handle.root',
+			attributes: {
+				'http.route': event.route.id || 'unknown',
+				'http.method': event.request.method,
+				'http.url': event.url.href,
+				'sveltekit.is_data_request': is_data_request,
+				'sveltekit.is_sub_request': event.isSubRequest
+			},
+			fn: async (root_span) => {
+				const traced_event = {
+					...event,
+					tracing: {
+						enabled: __SVELTEKIT_SERVER_TRACING_ENABLED__,
+						root: root_span,
+						current: root_span
+					}
+				};
+
+				return await with_request_store({ event: traced_event, state: event_state }, () =>
+					options.hooks.handle({
+						event: traced_event,
+						resolve: (event, opts) => {
+							return record_span({
+								name: 'sveltekit.resolve',
+								attributes: {
+									'http.route': event.route.id || 'unknown'
+								},
+								fn: (resolve_span) => {
+									// counter-intuitively, we need to clear the event, so that it's not
+									// e.g. accessible when loading modules needed to handle the request
+									return with_request_store(null, () =>
+										resolve(merge_tracing(event, resolve_span), page_nodes, opts).then(
+											(response) => {
+												// add headers/cookies here, rather than inside `resolve`, so that we
+												// can do it once for all responses instead of once per `return`
+												for (const key in headers) {
+													const value = headers[key];
+													response.headers.set(key, /** @type {string} */ (value));
+												}
+
+												add_cookies_to_headers(response.headers, new_cookies.values());
+
+												if (state.prerendering && event.route.id !== null) {
+													response.headers.set('x-sveltekit-routeid', encodeURI(event.route.id));
+												}
+
+												resolve_span.setAttributes({
+													'http.response.status_code': response.status,
+													'http.response.body.size':
+														response.headers.get('content-length') || 'unknown'
+												});
+
+												return response;
+											}
+										)
+									);
+								}
+							});
+						}
+					})
+				);
+			}
+		});
+
+		// respond with 304 if etag matches
+		if (response.status === 200 && response.headers.has('etag')) {
+			let if_none_match_value = request.headers.get('if-none-match');
+
+			// ignore W/ prefix https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/If-None-Match#directives
+			if (if_none_match_value?.startsWith('W/"')) {
+				if_none_match_value = if_none_match_value.substring(2);
+			}
+
+			const etag = /** @type {string} */ (response.headers.get('etag'));
+
+			if (if_none_match_value === etag) {
+				const headers = new Headers({ etag });
+
+				// https://datatracker.ietf.org/doc/html/rfc7232#section-4.1 + set-cookie
+				for (const key of [
+					'cache-control',
+					'content-location',
+					'date',
+					'expires',
+					'vary',
+					'set-cookie'
+				]) {
+					const value = response.headers.get(key);
+					if (value) headers.set(key, value);
+				}
+
+				return new Response(undefined, {
+					status: 304,
+					headers
+				});
+			}
+		}
+
+		// Edge case: If user does `return Response(30x)` in handle hook while processing a data request,
+		// we need to transform the redirect response to a corresponding JSON response.
+		if (is_data_request && response.status >= 300 && response.status <= 308) {
+			const location = response.headers.get('location');
+			if (location) {
+				return redirect_json_response(new Redirect(/** @type {any} */ (response.status), location));
+			}
+		}
+
+		return response;
 	}
 
 	/**
