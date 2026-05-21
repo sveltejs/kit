@@ -549,8 +549,9 @@ function kit({ svelte_config, adapter }) {
 						);
 					}
 
+					// dev-only
 					case service_worker:
-						throw new Error('$service-worker can only be imported inside a service worker');
+						return create_service_worker_module(svelte_config);
 
 					case sveltekit_environment: {
 						const { version } = svelte_config.kit;
@@ -953,6 +954,8 @@ function kit({ svelte_config, adapter }) {
 			return new_config;
 		},
 
+		// the serviceWorker environment only applies during build because Vite currently
+		// only supports the default client environment during development
 		applyToEnvironment(environment) {
 			return environment.name === 'serviceWorker';
 		},
@@ -1013,7 +1016,7 @@ function kit({ svelte_config, adapter }) {
 					];
 
 					export const files = [
-						${(manifest_data?.assets ?? create_assets(svelte_config))
+						${manifest_data.assets
 							.filter((asset) => kit.serviceWorker.files(asset.file))
 							.map((asset) => `base + ${s(`/${asset.file}`)}`)
 							.join(',\n')}
@@ -1024,7 +1027,7 @@ function kit({ svelte_config, adapter }) {
 					];
 
 					export const version = ${s(kit.version.name)};
-				`;
+					`;
 				}
 
 				if (id === service_worker) {
@@ -1743,3 +1746,22 @@ function find_overridden_config(config, resolved_config, enforced_config, path, 
 	}
 	return out;
 }
+
+/**
+ * @param {import('types').ValidatedConfig} config
+ */
+const create_service_worker_module = (config) => dedent`
+	if (typeof self === 'undefined' || self instanceof ServiceWorkerGlobalScope === false) {
+		throw new Error('This module can only be imported inside a service worker');
+	}
+
+	export const build = [];
+	export const files = [
+		${create_assets(config)
+			.filter((asset) => config.kit.serviceWorker.files(asset.file))
+			.map((asset) => `${s(`${config.kit.paths.base}/${asset.file}`)}`)
+			.join(',\n')}
+	];
+	export const prerendered = [];
+	export const version = ${s(config.kit.version.name)};
+`;
