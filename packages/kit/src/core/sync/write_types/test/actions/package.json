@@ -1,4 +1,5 @@
 {
+	"name": "test-write-types-actions",
 	"private": true,
 	"type": "module",
 	"devDependencies": {

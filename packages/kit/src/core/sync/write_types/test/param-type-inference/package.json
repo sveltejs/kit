@@ -1,4 +1,5 @@
 {
+	"name": "test-write-types-param-type-inference",
 	"private": true,
 	"type": "module",
 	"devDependencies": {

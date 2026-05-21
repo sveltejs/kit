@@ -1,4 +1,5 @@
 {
+	"name": "test-write-types-simple-page-server-only",
 	"private": true,
 	"type": "module",
 	"devDependencies": {
