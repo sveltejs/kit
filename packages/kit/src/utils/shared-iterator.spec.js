@@ -1,4 +1,4 @@
-import { describe, expect, test, vi } from 'vitest';
+import { describe, expect, test } from 'vitest';
 import { SharedIterator } from './shared-iterator.js';
 
 /**
@@ -111,40 +111,6 @@ describe('SharedIterator', () => {
 		expect(await iter.next()).toEqual({ value: 3, done: false });
 
 		await iter.return();
-	});
-
-	test('on_first_subscribe is called when count goes 0 -> 1', () => {
-		const on_first_subscribe = vi.fn();
-		const shared = /** @type {SharedIterator<number>} */ (
-			new SharedIterator({ on_first_subscribe })
-		);
-
-		expect(on_first_subscribe).not.toHaveBeenCalled();
-		const a = shared.subscribe();
-		expect(on_first_subscribe).toHaveBeenCalledTimes(1);
-
-		// Second subscribe doesn't fire the hook again
-		const b = shared.subscribe();
-		expect(on_first_subscribe).toHaveBeenCalledTimes(1);
-
-		void a.return();
-		void b.return();
-	});
-
-	test('on_last_unsubscribe is called when count returns to 0', async () => {
-		const on_last_unsubscribe = vi.fn();
-		const shared = /** @type {SharedIterator<number>} */ (
-			new SharedIterator({ on_last_unsubscribe })
-		);
-
-		const a = shared.subscribe();
-		const b = shared.subscribe();
-
-		await a.return();
-		expect(on_last_unsubscribe).not.toHaveBeenCalled();
-
-		await b.return();
-		expect(on_last_unsubscribe).toHaveBeenCalledTimes(1);
 	});
 
 	test('iterator.return() resolves a pending next() with done', async () => {

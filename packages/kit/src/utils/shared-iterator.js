@@ -40,27 +40,11 @@ export class SharedIterator {
 	/** @type {Set<Subscriber>} */
 	#subscribers = new Set();
 
-	/** @type {(() => void) | undefined} */
-	#on_first_subscribe;
-
-	/** @type {(() => void) | undefined} */
-	#on_last_unsubscribe;
-
 	/** Once `done()` or `fail()` has been broadcast, no new values are accepted. */
 	#closed = false;
 
 	/** @type {unknown} */
 	#terminal_error = undefined;
-
-	/**
-	 * @param {object} [hooks]
-	 * @param {() => void} [hooks.on_first_subscribe]
-	 * @param {() => void} [hooks.on_last_unsubscribe]
-	 */
-	constructor({ on_first_subscribe, on_last_unsubscribe } = {}) {
-		this.#on_first_subscribe = on_first_subscribe;
-		this.#on_last_unsubscribe = on_last_unsubscribe;
-	}
 
 	/** @param {T} value */
 	push(value) {
@@ -144,23 +128,12 @@ export class SharedIterator {
 			waiting_reject: null
 		};
 
-		const should_start = this.#subscribers.size === 0 && !this.#closed;
-
 		if (!subscriber.finished && subscriber.pending_error === null) {
 			this.#subscribers.add(subscriber);
 		}
 
-		if (should_start) {
-			this.#on_first_subscribe?.();
-		}
-
 		const unsubscribe = () => {
 			subscriber.finished = true;
-			const was_present = this.#subscribers.delete(subscriber);
-
-			if (was_present && this.#subscribers.size === 0 && !this.#closed) {
-				this.#on_last_unsubscribe?.();
-			}
 		};
 
 		/** @type {AsyncGenerator<T, void, void>} */
