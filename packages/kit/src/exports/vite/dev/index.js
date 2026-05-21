@@ -101,7 +101,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes) {
 
 	/** @param {string} id */
 	async function resolve(id) {
-		const url = id.startsWith('..') ? to_fs(path.posix.resolve(id)) : `/${id}`;
+		const url = id.startsWith('..') ? to_fs(path.resolve(id)) : `/${id}`;
 
 		const module = await loud_ssr_load_module(url);
 
@@ -568,8 +568,10 @@ export async function dev(vite, vite_config, svelte_config, get_remotes) {
 
 						return fs.readFileSync(path.join(svelte_config.kit.files.assets, file));
 					},
-					before_handle: (event, config, prerender) => {
-						async_local_storage.enterWith({ event, config, prerender });
+					before_handle: async (event, config, prerender, handle) => {
+						// we need to use .run because .enterWith() is not supported in Cloudflare Workers
+						// see https://blog.cloudflare.com/workers-node-js-asynclocalstorage/
+						return await async_local_storage.run({ event, config, prerender }, handle);
 					},
 					emulator
 				});

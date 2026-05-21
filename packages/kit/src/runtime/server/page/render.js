@@ -302,13 +302,15 @@ export async function render_response({
 		return `${assets}/${path}`;
 	};
 
-	// inline styles can come from `bundleStrategy: 'inline'` or `inlineStyleThreshold`
 	const style = client.inline
 		? client.inline?.style
 		: Array.from(inline_styles.values()).join('\n');
 
 	if (style) {
-		const attributes = DEV ? ['data-sveltekit'] : [];
+		// We always inline all styles to avoid FOUC during development.
+		// Once that's accomplished, we find and remove the style node using the
+		// `data-sveltekit` attribute once CSR kicks in
+		const attributes = __SVELTEKIT_DEV__ ? ['data-sveltekit'] : [];
 		if (csp.style_needs_nonce) attributes.push(`nonce="${csp.nonce}"`);
 		csp.add_style(style);
 		head.add_style(style, attributes);
@@ -529,7 +531,10 @@ export async function render_response({
 
 					const store = internals.type === 'prerender' ? prerender : query;
 
-					if (event_state.remote.refreshes?.[remote_key] !== undefined) {
+					if (
+						event_state.remote.refreshes?.has(remote_key) ||
+						event_state.remote.reconnects?.has(remote_key)
+					) {
 						// This entry was refreshed/set by a command or form action.
 						// Always await it so the mutation result is serialized.
 						store[remote_key] = await entry.data;
@@ -602,10 +607,10 @@ export async function render_response({
 		}
 
 		if (options.service_worker) {
-			let opts = DEV ? ", { type: 'module' }" : '';
+			let opts = __SVELTEKIT_DEV__ ? ", { type: 'module' }" : '';
 			if (options.service_worker_options != null) {
 				const service_worker_options = { ...options.service_worker_options };
-				if (DEV) {
+				if (__SVELTEKIT_DEV__) {
 					service_worker_options.type = 'module';
 				}
 				opts = `, ${s(service_worker_options)}`;

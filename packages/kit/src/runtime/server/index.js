@@ -5,7 +5,6 @@ import { IN_WEBCONTAINER } from './constants.js';
 import { respond } from './respond.js';
 import { set_private_env, set_public_env } from '../shared-server.js';
 import { options, get_hooks } from '__SERVER__/internal.js';
-import { DEV } from 'esm-env';
 import { filter_env } from '../../utils/env.js';
 import { format_server_error } from './utils.js';
 import { set_read_implementation, set_manifest } from '__sveltekit/server';
@@ -102,7 +101,7 @@ export class Server {
 			set_read_implementation(wrapped_read);
 		}
 
-		// During DEV and for some adapters this function might be called in quick succession,
+		// During dev and for some adapters this function might be called in quick succession,
 		// so we need to make sure we're not invoking this logic (most notably the init hook) multiple times
 		await (init_promise ??= (async () => {
 			try {
@@ -141,7 +140,7 @@ export class Server {
 					await module.init();
 				}
 			} catch (e) {
-				if (DEV) {
+				if (__SVELTEKIT_DEV__) {
 					this.#options.hooks = {
 						handle: () => {
 							throw e;

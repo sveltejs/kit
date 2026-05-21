@@ -136,7 +136,8 @@ export function form(validate_or_fn, maybe_fn) {
 						data = validated.value;
 					}
 
-					state.remote.refreshes ??= {};
+					state.remote.refreshes ??= new Map();
+					state.remote.reconnects ??= new Map();
 
 					const issue = create_issues();
 
@@ -240,6 +241,16 @@ export function form(validate_or_fn, maybe_fn) {
 			value: () => {
 				throw new Error('Cannot call validate() on the server');
 			}
+		});
+
+		Object.defineProperty(instance, 'submit', {
+			value: () => {
+				throw new Error('Cannot call submit() on the server');
+			}
+		});
+
+		Object.defineProperty(instance, 'element', {
+			get: () => null
 		});
 
 		if (key == undefined) {
