@@ -663,6 +663,8 @@ test.describe('remote function mutations', () => {
 		// iteration breaks after 3 values
 		await expect(page.locator('#for-await-count')).toHaveText('3');
 		await expect(page.locator('#for-await-values')).toHaveText('0,1,2');
+
+		await page.click('#reset');
 	});
 
 	test('query.live cleans up server iterator on reload', async ({ page }) => {
