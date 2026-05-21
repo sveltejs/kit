@@ -14,7 +14,6 @@ import {
 import { handle_error_and_jsonify } from '../../../server/utils.js';
 import { HttpError, SvelteKitError } from '@sveltejs/kit/internal';
 import { noop } from '../../../../utils/functions.js';
-import { SharedIterator } from '../../../../utils/shared-iterator.js';
 
 /**
  * Creates a remote query. When called from the browser, the function will be invoked on the server via a `fetch` call.
@@ -164,7 +163,7 @@ function live(validate_or_fn, maybe_fn) {
 		bind(payload, validated_arg) {
 			const { event, state } = get_request_store();
 
-			return create_live_query_resource(__, payload, state, event.request.signal, () =>
+			return create_live_query_resource(__, payload, state, () =>
 				run(event, state, () => validated_arg)
 			);
 		}
@@ -181,7 +180,7 @@ function live(validate_or_fn, maybe_fn) {
 		const { event, state } = get_request_store();
 		const payload = stringify_remote_arg(arg, state.transport);
 
-		return create_live_query_resource(__, payload, state, event.request.signal, () =>
+		return create_live_query_resource(__, payload, state, () =>
 			run(event, state, () => validate(arg))
 		);
 	};
@@ -459,11 +458,10 @@ function create_query_resource(__, payload, state, fn) {
  * @param {RemoteQueryLiveInternals} __
  * @param {string} payload — the stringified raw argument (i.e. the cache key the client will use)
  * @param {RequestState} state
- * @param {AbortSignal} signal — the request signal; aborts in-flight iteration when the client disconnects
  * @param {() => AsyncGenerator<any, void, void>} get_generator
  * @returns {RemoteLiveQuery<any>}
  */
-function create_live_query_resource(__, payload, state, signal, get_generator) {
+function create_live_query_resource(__, payload, state, get_generator) {
 	/** @type {Promise<any> | null} */
 	let promise = null;
 
@@ -548,127 +546,10 @@ function create_live_query_resource(__, payload, state, signal, get_generator) {
 			return get_promise().then(onfulfilled, onrejected);
 		},
 		[Symbol.asyncIterator]() {
-			const shared = get_or_create_shared_live_iterator(__, payload, state, signal, get_generator);
-			return shared.subscribe();
+			throw new Error('Cannot iterate over a live query result during server-side rendering');
 		},
 		get [Symbol.toStringTag]() {
 			return 'LiveQueryResource';
-		}
-	};
-}
-
-/**
- * @param {RemoteQueryLiveInternals} __
- * @param {string} payload
- * @param {RequestState} state
- * @param {AbortSignal} signal
- * @param {() => AsyncGenerator<any, void, void>} get_generator
- * @returns {SharedServerLiveIterator}
- */
-function get_or_create_shared_live_iterator(__, payload, state, signal, get_generator) {
-	const map = (state.remote.live_iterators ??= new Map());
-	let by_payload = map.get(__.id);
-	if (!by_payload) {
-		by_payload = new Map();
-		map.set(__.id, by_payload);
-	}
-
-	let shared = by_payload.get(payload);
-	if (!shared) {
-		shared = create_shared_live_iterator(signal, get_generator);
-		by_payload.set(payload, shared);
-	}
-
-	return shared;
-}
-
-/**
- * Wraps a lazily-created live-query generator so that multiple `for await`
- * consumers within the same request share one underlying iteration. The first
- * subscriber starts the generator; values are broadcast to all subscribers
- * via a `SharedIterator`. When the last subscriber unsubscribes, the generator
- * is closed via `generator.return(undefined)`.
- *
- * If `signal` aborts (typically because the client has disconnected), the
- * pump is torn down and any in-flight `next()` calls on consumer iterators
- * resolve with `{ done: true }`, so suspended `for await` loops unwind
- * cleanly rather than leaking.
- *
- * @param {AbortSignal} signal
- * @param {() => AsyncGenerator<any, void, void>} get_generator
- * @returns {SharedServerLiveIterator}
- */
-function create_shared_live_iterator(signal, get_generator) {
-	/** @type {AsyncGenerator<any, void, void> | null} */
-	let generator = null;
-
-	// Set to `true` when we deliberately close the generator (because every
-	// subscriber has unsubscribed, or the request was aborted). The pump's
-	// `g.next()` will reject as a result; we use this flag to swallow that
-	// abort error rather than surfacing it through `fan_out.fail()`.
-	let aborted = false;
-
-	const close_generator = () => {
-		if (!generator) return;
-		const g = generator;
-		generator = null;
-		aborted = true;
-		g.return().catch(noop);
-	};
-
-	/** @type {SharedIterator<any>} */
-	const fan_out = new SharedIterator({
-		on_first_subscribe: () => {
-			if (generator) return;
-			// Don't bother starting the pump if the request has already been
-			// aborted between cache creation and first subscription.
-			if (signal.aborted) {
-				fan_out.done();
-				return;
-			}
-
-			generator = get_generator();
-			const g = generator;
-
-			void (async () => {
-				try {
-					while (true) {
-						const result = await g.next();
-						if (result.done) {
-							fan_out.done();
-							return;
-						}
-						fan_out.push(result.value);
-					}
-				} catch (error) {
-					if (!aborted) fan_out.fail(error);
-				} finally {
-					close_generator();
-				}
-			})();
-		},
-		on_last_unsubscribe: () => {
-			close_generator();
-		}
-	});
-
-	// On request abort, tear down the pump and notify subscribers. `done()` is
-	// used (rather than `fail()`) because an aborted request is a normal
-	// termination — there's no error to surface to user code that's already
-	// been disconnected from the client.
-	const on_abort = () => {
-		close_generator();
-		fan_out.done();
-	};
-	if (signal.aborted) {
-		on_abort();
-	} else {
-		signal.addEventListener('abort', on_abort, { once: true });
-	}
-
-	return {
-		subscribe() {
-			return fan_out.subscribe();
 		}
 	};
 }
