@@ -268,9 +268,6 @@ export async function internal_respond(request, options, manifest, state) {
 		return await handle();
 	}
 
-	/** @type {import('types').SSRRoute | null} */
-	let route = null;
-
 	// try to serve the rerouted prerendered resource if it exists
 	if (
 		// the resolved path has been decoded so it should be compared to the decoded url pathname
@@ -304,6 +301,9 @@ export async function internal_respond(request, options, manifest, state) {
 			return await handle_fatal_error(event, event_state, options, error);
 		}
 	}
+
+	/** @type {import('types').SSRRoute | null} */
+	let route = null;
 
 	if (base && !state.prerendering?.fallback) {
 		if (!resolved_path.startsWith(base)) {
