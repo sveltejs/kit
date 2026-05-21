@@ -2244,13 +2244,6 @@ declare module '@sveltejs/kit' {
 
 	export type RemoteLiveQuery<T> = RemoteResource<T> &
 		AsyncIterable<T> & {
-			/**
-			 * @deprecated Use `for await (const value of liveQuery())` instead.
-			 *
-			 * Previously returned an async iterator with live updates. This method now
-			 * throws when invoked — live query instances are themselves async-iterable.
-			 */
-			run(): AsyncGenerator<T>;
 			/** `true` if the live stream is currently connected. */
 			readonly connected: boolean;
 			/** `true` once the current live stream iterator is done. */

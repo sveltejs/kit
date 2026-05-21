@@ -119,8 +119,6 @@ function live_query_tests() {
 			break;
 		}
 
-		iterator;
-
 		q().connected === true;
 		q().done === false;
 		q().reconnect();

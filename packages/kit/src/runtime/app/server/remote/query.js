@@ -468,18 +468,10 @@ function create_live_query_resource(__, payload, state, signal, get_generator) {
 	let promise = null;
 
 	const get_first_value = async () => {
-		const generator = get_generator();
-		try {
-			const { value, done } = await generator.next();
-
-			if (done) {
-				throw new Error(`query.live '${__.name}' did not yield a value`);
-			}
-
+		for await (const value of get_generator()) {
 			return value;
-		} finally {
-			await generator.return(undefined);
 		}
+		throw new Error(`query.live '${__.name}' did not yield a value`);
 	};
 
 	const get_promise = () => {
@@ -535,9 +527,7 @@ function create_live_query_resource(__, payload, state, signal, get_generator) {
 			reconnects.set(create_remote_key(__.id, payload), get_promise());
 			return Promise.resolve();
 		},
-		/**
-		 * @deprecated Use `for await (const value of liveQuery())` instead.
-		 */
+		/** @ts-expect-error This method no longer exists */
 		run() {
 			throw new Error(
 				'`.run()` has been removed from live queries. Use `for await (const value of liveQuery())` instead.'
@@ -609,17 +599,13 @@ function create_shared_live_iterator(signal, get_generator) {
 	let aborted = false;
 
 	const close_generator = () => {
-		if (!generator) return;
-		const g = generator;
+		void generator?.return().catch(noop);
 		generator = null;
 		aborted = true;
-		g.return().catch(noop);
 	};
 
-	/** @type {SharedIterator<any>} */
 	const fan_out = new SharedIterator({
 		on_first_subscribe: () => {
-			if (generator) return;
 			// Don't bother starting the pump if the request has already been
 			// aborted between cache creation and first subscription.
 			if (signal.aborted) {
