@@ -1,4 +1,5 @@
 {
+	"name": "test-write-types-slugs",
 	"private": true,
 	"type": "module",
 	"devDependencies": {

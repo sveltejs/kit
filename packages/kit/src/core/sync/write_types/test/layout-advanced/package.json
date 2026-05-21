@@ -1,4 +1,5 @@
 {
+	"name": "test-write-types-layout-advanced",
 	"private": true,
 	"type": "module",
 	"devDependencies": {

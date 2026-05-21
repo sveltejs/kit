@@ -1,4 +1,5 @@
 {
+	"name": "test-write-types-slugs-layout-not-all-pages-have-load",
 	"private": true,
 	"type": "module",
 	"devDependencies": {
