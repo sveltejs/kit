@@ -1,5 +1,5 @@
 /** @import { RemoteLiveQuery, RemoteLiveQueryFunction, RemoteQuery, RemoteQueryFunction } from '@sveltejs/kit' */
-/** @import { RemoteInternals, MaybePromise, RequestState, RemoteQueryLiveInternals, RemoteQueryBatchInternals, RemoteQueryInternals, RemoteLiveQueryUserFunctionReturnType, SharedServerLiveIterator } from 'types' */
+/** @import { RemoteInternals, MaybePromise, RequestState, RemoteQueryLiveInternals, RemoteQueryBatchInternals, RemoteQueryInternals, RemoteLiveQueryUserFunctionReturnType } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 import { get_request_store } from '@sveltejs/kit/internal/server';
 import { create_remote_key, stringify, stringify_remote_arg } from '../../../shared.js';
@@ -553,7 +553,7 @@ function create_live_query_resource(__, payload, state, signal, get_generator) {
  * @param {RequestState} state
  * @param {AbortSignal} signal
  * @param {() => AsyncGenerator<any, void, void>} get_generator
- * @returns {SharedServerLiveIterator}
+ * @returns {SharedIterator<any>}
  */
 function get_or_create_shared_live_iterator(__, payload, state, signal, get_generator) {
 	const map = (state.remote.live_iterators ??= new Map());
@@ -586,7 +586,6 @@ function get_or_create_shared_live_iterator(__, payload, state, signal, get_gene
  *
  * @param {AbortSignal} signal
  * @param {() => AsyncGenerator<any, void, void>} get_generator
- * @returns {SharedServerLiveIterator}
  */
 function create_shared_live_iterator(signal, get_generator) {
 	return new SharedIterator((instance) => {
