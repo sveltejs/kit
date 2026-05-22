@@ -538,38 +538,17 @@ function create_live_query_resource(__, payload, state, signal, get_generator) {
 			return get_promise().then(onfulfilled, onrejected);
 		},
 		[Symbol.asyncIterator]() {
-			const shared = get_or_create_shared_live_iterator(__, payload, state, signal, get_generator);
-			return shared.subscribe();
+			const key = create_remote_key(__.id, payload);
+
+			const cache = (state.remote.live_iterators ??= {});
+			const cached = (cache[key] ??= create_shared_live_iterator(signal, get_generator));
+
+			return cached.subscribe();
 		},
 		get [Symbol.toStringTag]() {
 			return 'LiveQueryResource';
 		}
 	};
-}
-
-/**
- * @param {RemoteQueryLiveInternals} __
- * @param {string} payload
- * @param {RequestState} state
- * @param {AbortSignal} signal
- * @param {() => AsyncGenerator<any, void, void>} get_generator
- * @returns {SharedServerLiveIterator}
- */
-function get_or_create_shared_live_iterator(__, payload, state, signal, get_generator) {
-	const map = (state.remote.live_iterators ??= new Map());
-	let by_payload = map.get(__.id);
-	if (!by_payload) {
-		by_payload = new Map();
-		map.set(__.id, by_payload);
-	}
-
-	let shared = by_payload.get(payload);
-	if (!shared) {
-		shared = create_shared_live_iterator(signal, get_generator);
-		by_payload.set(payload, shared);
-	}
-
-	return shared;
 }
 
 /**
