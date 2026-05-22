@@ -518,6 +518,8 @@ function form_tests() {
 	f6.fields.array[0].array.value();
 	// @ts-expect-error
 	f6.fields.array[0].array.as('text');
+	// @ts-expect-error
+	f6.input!['array[0].prop'] = 123;
 
 	// any
 	const f7 = form(null as any, (data, issue) => {
@@ -543,8 +545,6 @@ function form_tests() {
 	f8.fields.allIssues();
 	// @ts-expect-error
 	f8.fields.x;
-	// @ts-expect-error
-	f6.input!['array[0].prop'] = 123;
 
 	// schema with optional array fields (e.g. Zod's `.default([])` produces an input
 	// type where the property is optional, so its value type is `string[] | undefined`).
