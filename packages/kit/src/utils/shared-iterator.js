@@ -40,7 +40,7 @@ export class SharedIterator {
 	/** @type {Set<Subscriber>} */
 	#subscribers = new Set();
 
-	/** @type {(() => (() => void)) | undefined} */
+	/** @type {((instance: SharedIterator<T>) => (() => void)) | undefined} */
 	#start = undefined;
 
 	/** @type {(() => void) | undefined} */
@@ -53,7 +53,7 @@ export class SharedIterator {
 	#terminal_error = undefined;
 
 	/**
-	 * @param {() => (() => void)} [start]
+	 * @param {(instance: SharedIterator<T>) => (() => void)} [start]
 	 */
 	constructor(start) {
 		this.#start = start;
@@ -146,7 +146,7 @@ export class SharedIterator {
 		}
 
 		if (!this.#closed) {
-			this.#stop ??= this.#start?.();
+			this.#stop ??= this.#start?.(this);
 		}
 
 		const unsubscribe = () => {

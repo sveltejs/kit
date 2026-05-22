@@ -589,11 +589,11 @@ function get_or_create_shared_live_iterator(__, payload, state, signal, get_gene
  * @returns {SharedServerLiveIterator}
  */
 function create_shared_live_iterator(signal, get_generator) {
-	const fan_out = new SharedIterator(() => {
+	return new SharedIterator((instance) => {
 		// Don't bother starting the pump if the request has already been
 		// aborted between cache creation and first subscription.
 		if (signal.aborted) {
-			fan_out.done();
+			instance.done();
 			return noop;
 		}
 
@@ -601,53 +601,40 @@ function create_shared_live_iterator(signal, get_generator) {
 
 		// Set to `true` when we deliberately close the generator (because every
 		// subscriber has unsubscribed, or the request was aborted). The pump's
-		// `g.next()` will reject as a result; we use this flag to swallow that
-		// abort error rather than surfacing it through `fan_out.fail()`.
+		// `generator.next()` will reject as a result; we use this flag to swallow that
+		// abort error rather than surfacing it through `instance.fail()`.
 		let aborted = false;
 
-		const close_generator = () => {
-			void generator?.return().catch(noop);
+		const close = () => {
 			aborted = true;
+			void generator.return().catch(noop);
 		};
 
 		// On request abort, tear down the pump and notify subscribers. `done()` is
 		// used (rather than `fail()`) because an aborted request is a normal
 		// termination — there's no error to surface to user code that's already
 		// been disconnected from the client.
-		const on_abort = () => {
-			close_generator();
-			fan_out.done();
-		};
-
-		signal.addEventListener('abort', on_abort, { once: true });
+		signal.addEventListener('abort', () => (close(), instance.done()), { once: true });
 
 		void (async () => {
 			try {
 				while (true) {
 					const result = await generator.next();
 					if (result.done) {
-						fan_out.done();
+						instance.done();
 						return;
 					}
-					fan_out.push(result.value);
+					instance.push(result.value);
 				}
 			} catch (error) {
-				if (!aborted) fan_out.fail(error);
+				if (!aborted) instance.fail(error);
 			} finally {
-				close_generator();
+				close();
 			}
 		})();
 
-		return () => {
-			close_generator();
-		};
+		return close;
 	});
-
-	return {
-		subscribe() {
-			return fan_out.subscribe();
-		}
-	};
 }
 
 // Add batch as a property to the query function
