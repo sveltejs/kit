@@ -1,7 +1,9 @@
 {
 	"extends": "../../tsconfig.json",
 	"compilerOptions": {
-		"noEmit": true
+		"exactOptionalPropertyTypes": true,
+		"noEmit": true,
+		"skipLibCheck": true
 	},
 	"include": ["**/*.test.ts", "../../src/types/*.d.ts"]
 }

@@ -61,6 +61,23 @@ function query_tests() {
 	}
 	void query_with_optional_arg();
 
+	async function query_with_optional_undefined_arg() {
+		const q = query(
+			null as any as StandardSchemaV1<{ a?: string | undefined }>,
+			() => 'Hello world'
+		);
+		// @ts-expect-error
+		void q();
+		void q({});
+		void q({ a: 'hi' });
+		void q({ a: undefined });
+		// @ts-expect-error
+		void q({ a: null });
+		// @ts-expect-error
+		void q(1);
+	}
+	void query_with_optional_undefined_arg();
+
 	async function query_unsafe() {
 		const q = query('unchecked', (a: number) => a);
 		const result: number = await q(1);
@@ -580,6 +597,26 @@ function form_tests() {
 	f_optional_arrays.fields.strings.as('number');
 	// @ts-expect-error
 	f_optional_arrays.fields.files.as('text');
+
+	// schema with optional & value-undefined fields. (e.g. Valibot's `.optional()`
+	// produces an input type that accepts `undefined` as value, which under
+	// `exactOptionalPropertyTypes` is treated distinctly from an omitted property.)
+	const f_optional_undefined_prop = form(
+		null as any as StandardSchemaV1<{
+			strings?: string[] | undefined;
+		}>,
+		(data) => {
+			data.strings?.[0] === 'a';
+			return { success: true };
+		}
+	);
+	// `.as()` should be available on optional|undefined fields
+	f_optional_undefined_prop.fields.strings.as('checkbox', 'value');
+	f_optional_undefined_prop.fields.strings.as('select multiple');
+	// indexed access gives back a typed field
+	f_optional_undefined_prop.fields.strings[0].as('text');
+	// @ts-expect-error
+	f_optional_undefined_prop.fields.strings.as('number');
 
 	// doesn't use data
 	const f9 = form(() => Promise.resolve({ success: true }));
