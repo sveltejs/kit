@@ -91,10 +91,15 @@ export class LiveQueryProxy {
 	/**
 	 * @returns {AsyncGenerator<T, void, void>}
 	 */
-	[Symbol.asyncIterator]() {
+	async *[Symbol.asyncIterator]() {
 		const entry = this.#get_cache_entry();
 		const release = cache.manual_ref(entry, this.#id, this.#payload);
-		return reffed_generator(entry.resource, release);
+
+		try {
+			yield* entry.resource;
+		} finally {
+			release();
+		}
 	}
 
 	get then() {
