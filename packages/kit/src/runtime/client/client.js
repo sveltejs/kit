@@ -978,7 +978,10 @@ async function load_node({ loader, parent, url, params, route, server_data_node 
 						// To keep the two values in sync, we explicitly set the headers to `undefined`.
 						// Also, not sure why, but sometimes 0 is evaluated as truthy so we need to
 						// explicitly compare the headers length to a number here
-						headers: [...resource.headers].length > 0 ? resource?.headers : /** @type {never} */ (undefined),
+						headers:
+							[...resource.headers].length > 0
+								? resource?.headers
+								: /** @type {never} */ (undefined),
 						integrity: resource.integrity,
 						keepalive: resource.keepalive,
 						method: resource.method,
