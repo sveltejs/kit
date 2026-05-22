@@ -100,14 +100,14 @@ export type BranchNode = {
 	server: DataNode | null;
 	universal: DataNode | null;
 	data: Record<string, any> | null;
-	slash?: TrailingSlash;
+	slash?: TrailingSlash | undefined;
 };
 
 export interface DataNode {
 	type: 'data';
 	data: Record<string, any> | null;
 	uses: Uses;
-	slash?: TrailingSlash;
+	slash?: TrailingSlash | undefined;
 }
 
 export interface NavigationState {

@@ -514,7 +514,14 @@ function persist_state() {
 
 /**
  * @param {string | URL} url
- * @param {{ replaceState?: boolean; noScroll?: boolean; keepFocus?: boolean; invalidateAll?: boolean; invalidate?: Array<string | URL | ((url: URL) => boolean)>; state?: Record<string, any> }} options
+ * @param {{
+ *   replaceState?: boolean | undefined;
+ *   noScroll?: boolean | undefined;
+ *   keepFocus?: boolean | undefined;
+ *   invalidateAll?: boolean | undefined;
+ *   invalidate?: Array<string | URL | ((url: URL) => boolean)> | undefined;
+ *   state?: Record<string, any> | undefined;
+ * }} options
  * @param {number} redirect_count
  * @param {{}} [nav_token]
  */
@@ -697,7 +704,7 @@ async function initialize(result, target, hydrate) {
 					page.status = rendering_error.status;
 					return error;
 				}
-			: undefined
+			: /** @type {never} */ (undefined)
 	});
 
 	// Wait for a microtask in case svelte experimental async is enabled,
@@ -731,11 +738,11 @@ async function initialize(result, target, hydrate) {
  *   url: URL;
  *   params: Record<string, string>;
  *   branch: Array<import('./types.js').BranchNode | undefined>;
- *   errors?: Array<import('types').CSRPageNodeLoader | undefined>;
+ *   errors?: Array<import('types').CSRPageNodeLoader | undefined> | undefined;
  *   status: number;
  *   error: App.Error | null;
  *   route: import('types').CSRRoute | null;
- *   form?: Record<string, any> | null;
+ *   form?: Record<string, any> | null | undefined;
  * }} opts
  */
 async function get_navigation_result_from_branch({
@@ -962,7 +969,7 @@ async function load_node({ loader, parent, url, params, route, server_data_node 
 						// implement streaming request bodies and/or the body getter
 						body:
 							resource.method === 'GET' || resource.method === 'HEAD'
-								? undefined
+								? /** @type {never} */ (undefined)
 								: await resource.blob(),
 						cache: resource.cache,
 						credentials: resource.credentials,
@@ -971,7 +978,7 @@ async function load_node({ loader, parent, url, params, route, server_data_node 
 						// To keep the two values in sync, we explicitly set the headers to `undefined`.
 						// Also, not sure why, but sometimes 0 is evaluated as truthy so we need to
 						// explicitly compare the headers length to a number here
-						headers: [...resource.headers].length > 0 ? resource?.headers : undefined,
+						headers: [...resource.headers].length > 0 ? resource?.headers : /** @type {never} */ (undefined),
 						integrity: resource.integrity,
 						keepalive: resource.keepalive,
 						method: resource.method,
@@ -1650,16 +1657,16 @@ function _before_navigate({ url, type, intent, delta, event, scroll }) {
  *     state: Record<string, any>;
  *     scroll: { x: number, y: number };
  *     delta: number;
- *   };
- *   keepfocus?: boolean;
- *   noscroll?: boolean;
- *   replace_state?: boolean;
- *   state?: Record<string, any>;
- *   redirect_count?: number;
- *   nav_token?: {};
- *   accept?: () => void;
- *   block?: () => void;
- *   event?: Event
+ *   } | undefined;
+ *   keepfocus?: boolean | undefined;
+ *   noscroll?: boolean | undefined;
+ *   replace_state?: boolean | undefined;
+ *   state?: Record<string, any> | undefined;
+ *   redirect_count?: number | undefined;
+ *   nav_token?: {} | undefined;
+ *   accept?: (() => void) | undefined;
+ *   block?: (() => void) | undefined;
+ *   event?: Event | undefined;
  * }} opts
  */
 async function navigate({

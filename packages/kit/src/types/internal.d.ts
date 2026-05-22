@@ -673,8 +673,8 @@ export interface RemoteFormInternals extends BaseRemoteInternals {
 export interface RemotePrerenderInternals extends BaseRemoteInternals {
 	type: 'prerender';
 	has_arg: boolean;
-	dynamic?: boolean;
-	inputs?: RemotePrerenderInputsGenerator;
+	dynamic?: boolean | undefined;
+	inputs?: RemotePrerenderInputsGenerator | undefined;
 }
 
 export type RemoteAnyQueryInternals =
