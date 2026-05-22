@@ -142,17 +142,3 @@ export class LiveQueryProxy {
 		return 'LiveQueryProxy';
 	}
 }
-
-/**
- * @template T
- * @param {AsyncIterable<T>} inner
- * @param {() => void} release
- * @returns {AsyncGenerator<T, void, void>}
- */
-async function* reffed_generator(inner, release) {
-	try {
-		yield* inner;
-	} finally {
-		release();
-	}
-}
