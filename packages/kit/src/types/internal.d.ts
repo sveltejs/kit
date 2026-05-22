@@ -35,6 +35,7 @@ import {
 } from './private.js';
 import { Span } from '@opentelemetry/api';
 import type { PageOptions } from '../exports/vite/static_analysis/index.js';
+import { SharedIterator } from '../utils/shared-iterator.js';
 
 export interface ServerModule {
 	Server: typeof InternalServer;
@@ -646,17 +647,6 @@ export interface RemoteQueryLiveInternals extends BaseRemoteInternals {
 	bind(payload: string, arg: any): RemoteLiveQuery<any>;
 }
 
-/**
- * A reference-counted, per-request live-query iterator shared between multiple
- * `for await` consumers within the same request. Lazily drives the underlying
- * user generator on first subscription, fans every yielded value out to all
- * subscribers, and tears the generator down once all subscribers have
- * unsubscribed.
- */
-export interface SharedServerLiveIterator {
-	subscribe(): AsyncGenerator<any, void, void>;
-}
-
 export interface RemoteQueryBatchInternals extends BaseRemoteInternals {
 	type: 'query_batch';
 	validate: (arg?: any) => MaybePromise<any>;
@@ -750,7 +740,7 @@ export interface RequestState {
 		 * consumers of the same `query.live` call within one request multiplex a
 		 * single underlying user generator.
 		 */
-		live_iterators: null | Map<string, Map<string, SharedServerLiveIterator>>;
+		live_iterators: null | Map<string, Map<string, SharedIterator<any>>>;
 	};
 	readonly is_in_remote_function: boolean;
 	readonly is_in_render: boolean;
