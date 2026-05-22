@@ -17,7 +17,7 @@ type $$__sveltets_2_PropsWithChildren<Props, Slots> = Props & (Slots extends {
 	children?: any;
 } : {});
 declare const Test: $$__sveltets_2_IsomorphicComponent<$$__sveltets_2_PropsWithChildren<{
-	astring?: string | undefined;
+	astring?: string;
 }, {
 	default: {
 			astring: string;
