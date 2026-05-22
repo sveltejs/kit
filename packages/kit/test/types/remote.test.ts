@@ -10,6 +10,9 @@ import {
 	invalid
 } from '@sveltejs/kit';
 
+/* eslint-disable @typescript-eslint/require-await */
+/* eslint-disable @typescript-eslint/no-floating-promises */
+
 const schema: StandardSchemaV1<string> = null as any;
 const schema2: StandardSchemaV1<string, number> = null as any;
 const schema3: StandardSchemaV1<string | undefined, number> = null as any;
