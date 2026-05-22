@@ -605,7 +605,7 @@ function create_shared_live_iterator(signal, get_generator) {
 	};
 
 	const fan_out = new SharedIterator({
-		on_first_subscribe: () => {
+		on_first_subscribe: async () => {
 			// Don't bother starting the pump if the request has already been
 			// aborted between cache creation and first subscription.
 			if (signal.aborted) {
@@ -616,22 +616,20 @@ function create_shared_live_iterator(signal, get_generator) {
 			generator = get_generator();
 			const g = generator;
 
-			void (async () => {
-				try {
-					while (true) {
-						const result = await g.next();
-						if (result.done) {
-							fan_out.done();
-							return;
-						}
-						fan_out.push(result.value);
+			try {
+				while (true) {
+					const result = await g.next();
+					if (result.done) {
+						fan_out.done();
+						return;
 					}
-				} catch (error) {
-					if (!aborted) fan_out.fail(error);
-				} finally {
-					close_generator();
+					fan_out.push(result.value);
 				}
-			})();
+			} catch (error) {
+				if (!aborted) fan_out.fail(error);
+			} finally {
+				close_generator();
+			}
 		},
 		on_last_unsubscribe: () => {
 			close_generator();
