@@ -740,7 +740,7 @@ export interface RequestState {
 		 * consumers of the same `query.live` call within one request multiplex a
 		 * single underlying user generator.
 		 */
-		live_iterators: null | Map<string, Map<string, SharedIterator<any>>>;
+		live_iterators: null | Map<string, SharedIterator<any>>;
 	};
 	readonly is_in_remote_function: boolean;
 	readonly is_in_render: boolean;
