@@ -114,8 +114,11 @@ function live_query_tests() {
 		const result: string = await q();
 		result;
 
-		const iterator: AsyncIterator<string> = await q().run();
-		iterator;
+		for await (const value of q()) {
+			const _: string = value;
+			_;
+			break;
+		}
 
 		q().connected === true;
 		q().done === false;

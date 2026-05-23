@@ -643,6 +643,30 @@ test.describe('remote function mutations', () => {
 		await expect(page.locator('#duplicate-updates')).toHaveText(String(before));
 	});
 
+	test('query.live is async-iterable and joins the shared cache stream', async ({ page }) => {
+		await page.goto('/remote/live');
+		await page.click('#reset');
+		await expect(page.locator('#count')).toHaveText('0');
+
+		await page.click('#start-for-await');
+
+		// the first value should be the current value (0) — emitted synchronously
+		// from the shared LiveQuery's cache rather than via a fresh connection.
+		await expect(page.locator('#for-await-count')).toHaveText('1');
+		await expect(page.locator('#for-await-values')).toHaveText('0');
+
+		await page.click('#increment');
+		await expect(page.locator('#for-await-count')).toHaveText('2');
+		await expect(page.locator('#for-await-values')).toHaveText('0,1');
+
+		await page.click('#increment');
+		// iteration breaks after 3 values
+		await expect(page.locator('#for-await-count')).toHaveText('3');
+		await expect(page.locator('#for-await-values')).toHaveText('0,1,2');
+
+		await page.click('#reset');
+	});
+
 	test('query.live cleans up server iterator on reload', async ({ page }) => {
 		await page.goto('/remote/live');
 		await page.click('#stats');
@@ -684,7 +708,7 @@ test.describe('remote function mutations', () => {
 	});
 
 	test.describe('query runtime guardrails', () => {
-		test('query created outside tracking context can run but cannot expose reactive state', async ({
+		test('query created outside tracking context can be awaited and access reactive state', async ({
 			page
 		}) => {
 			await page.goto('/remote/query-runtime-errors/not-tracked');
@@ -692,45 +716,23 @@ test.describe('remote function mutations', () => {
 			await page.click('#create');
 			await expect(page.locator('#status')).toHaveText('query created');
 
-			await page.click('#run');
+			await page.click('#await');
 			await expect(page.locator('#result')).toHaveText('0');
 
 			await page.click('#read-current');
-			await expect(page.locator('#result')).toContainText(
-				'This query was not created in a reactive context'
-			);
+			await expect(page.locator('#result')).toHaveText('0');
 		});
+	});
 
-		test('query becomes inactive after its tracking context is destroyed', async ({ page }) => {
-			await page.goto('/remote/query-runtime-errors/inactive');
+	test.describe('isomorphic query caching', () => {
+		test('await in event handler shares cache with simultaneous awaits', async ({ page }) => {
+			await page.goto('/remote/isomorphic-caching');
+			await page.click('#reset');
 
-			await expect(page.locator('#tracked-child')).toHaveText('tracked query ready');
-			await page.click('#unmount');
-			await expect(page.locator('#status')).toHaveText('child unmounted');
-			await expect(page.locator('#tracked-child')).toHaveCount(0);
-
-			await page.click('#read-current');
-			await expect(page.locator('#result')).toContainText(
-				'This query instance is no longer active'
-			);
-		});
-
-		test('run is blocked during client render', async ({ page, app }) => {
-			await page.goto('/remote');
-			await app.goto('/remote/query-runtime-errors/run-in-render');
-
-			await expect(page.locator('#error')).toContainText(
-				'On the client, .run() can only be called outside render'
-			);
-		});
-
-		test('non-reactive query can still access non-awaited properties', async ({ page }) => {
-			await page.goto('/remote/query-non-reactive');
-
-			await expect(page.locator('#current')).toContainText('undefined');
-			await expect(page.locator('#error')).toContainText('undefined');
-			await expect(page.locator('#ready')).toContainText('false');
-			await expect(page.locator('#loading')).toContainText('false');
+			await page.click('#await-dedupe');
+			await expect(page.locator('#dedupe')).toHaveText('dedupe ok');
+			// All three awaits should have deduped to a single network request
+			await expect(page.locator('#call-count')).toHaveText('1');
 		});
 	});
 
