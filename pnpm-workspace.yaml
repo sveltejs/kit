@@ -73,8 +73,8 @@ catalog:
   wrangler: ^4.92.0
 
   # unit test deps that should be upgraded together
-  '@vitest/browser-playwright': ^4.1.6
-  vitest: ^4.1.6
+  '@vitest/browser-playwright': ^4.1.7
+  vitest: ^4.1.7
   jsdom: ^29.1.1
 catalogs:
   # these show up in the ci.yml like `vite: 'beta'`, etc.
@@ -85,3 +85,6 @@ catalogs:
   # vite-beta:
   #   vite: ^9.0.0-beta.0
   #   '@sveltejs/vite-plugin-svelte': ^7.0.0
+overrides:
+# ci script replaces all overrides with the vite-xxx or node-xx catalogs above.
+# if you want to introduce an override, make sure to add it to all of them too
