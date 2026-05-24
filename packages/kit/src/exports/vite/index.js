@@ -1104,8 +1104,7 @@ function kit({ svelte_config, adapter }) {
 						client_input['entry/app'] = `${out_dir}/generated/client-optimized/app.js`;
 						manifest_data.nodes.forEach((node, i) => {
 							if (node.component || node.universal) {
-								client_input[`nodes/${i}`] =
-									`${out_dir}/generated/client-optimized/nodes/${i}.js`;
+								client_input[`nodes/${i}`] = `${out_dir}/generated/client-optimized/nodes/${i}.js`;
 							}
 						});
 					}
