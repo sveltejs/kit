@@ -6,7 +6,6 @@ import { HttpError, Redirect } from '@sveltejs/kit/internal';
 import { untrack } from 'svelte';
 import { create_remote_key, split_remote_key } from '../../shared.js';
 import { navigating, page } from '../state.svelte.js';
-import { noop } from '../../../utils/functions.js';
 
 /** Indicates a query function, as opposed to a query instance */
 export const QUERY_FUNCTION_ID = Symbol('sveltekit.query_function_id');
@@ -14,18 +13,6 @@ export const QUERY_FUNCTION_ID = Symbol('sveltekit.query_function_id');
 export const QUERY_OVERRIDE_KEY = Symbol('sveltekit.query_override_key');
 /** Indicates a query instance */
 export const QUERY_RESOURCE_KEY = Symbol('sveltekit.query_resource_key');
-
-/**
- * @returns {boolean} Returns `true` if we are in an effect
- */
-export function is_in_effect() {
-	try {
-		$effect.pre(noop);
-		return true;
-	} catch {
-		return false;
-	}
-}
 
 /**
  * If we're inside a reactive context, pin a cache entry for as long as the
