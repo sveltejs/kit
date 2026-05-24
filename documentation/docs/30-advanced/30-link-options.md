@@ -39,7 +39,7 @@ In these cases, you can specify the `"tap"` value, which causes SvelteKit to cal
 
 > [!NOTE] You can also programmatically invoke `preloadData` from `$app/navigation`.
 
-Data will never be preloaded if the user has chosen reduced data usage, meaning [`navigator.connection.saveData`](https://developer.mozilla.org/en-US/docs/Web/API/NetworkInformation/saveData) is `true`.
+Data will never be preloaded if the user has chosen reduced data usage or if the user is on a slow Internet connection, meaning [`navigator.connection.saveData`](https://developer.mozilla.org/en-US/docs/Web/API/NetworkInformation/saveData) is `true` or [`navigator.connection.effectiveType`](https://developer.mozilla.org/en-US/docs/Web/API/NetworkInformation/effectiveType) contains the string `'2g'`.
 
 ## data-sveltekit-preload-code
 

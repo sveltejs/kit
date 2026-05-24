@@ -270,15 +270,9 @@ function kit({ svelte_config, adapter }) {
 
 	/** @type {ValidatedKitConfig} */
 	let kit;
-	/**
-	 * config.kit.outDir but posix-ified
-	 * @type {string}
-	 */
+	/** @type {string} `kit.outDir` but posix-ified */
 	let out_dir;
-	/**
-	 * Build output directory
-	 * @type {string}
-	 */
+	/** @type {string} The base directory for the Vite builds */
 	let out;
 
 	/** @type {string} */
@@ -1756,7 +1750,7 @@ function kit({ svelte_config, adapter }) {
 			write_client_manifest(
 				kit,
 				build_manifest_data,
-				`${kit.outDir}/generated/client-optimized`,
+				`${out_dir}/generated/client-optimized`,
 				metadata.nodes
 			);
 
@@ -1830,7 +1824,7 @@ function kit({ svelte_config, adapter }) {
 
 			if (kit.output.bundleStrategy === 'split') {
 				const start = deps_of(`${runtime_directory}/client/entry.js`);
-				const app = deps_of(`${kit.outDir}/generated/client-optimized/app.js`);
+				const app = deps_of(`${out_dir}/generated/client-optimized/app.js`);
 
 				build_data.client = {
 					start: start.file,
@@ -1849,7 +1843,7 @@ function kit({ svelte_config, adapter }) {
 				if (kit.router.resolution === 'server') {
 					const nodes = build_manifest_data.nodes.map((node, i) => {
 						if (node.component || node.universal) {
-							const entry = `${kit.outDir}/generated/client-optimized/nodes/${i}.js`;
+							const entry = `${out_dir}/generated/client-optimized/nodes/${i}.js`;
 							const deps = deps_of(entry, true);
 							const file = resolve_symlinks(
 								client_manifest,

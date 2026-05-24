@@ -1,5 +1,56 @@
 # @sveltejs/kit
 
+## 2.61.1
+### Patch Changes
+
+
+- fix: regression where routes starting and ending with a route group are not matched correctly ([#15903](https://github.com/sveltejs/kit/pull/15903))
+
+## 2.61.0
+### Minor Changes
+
+
+- breaking: the `.run()` method has been removed from remote queries on both the client and the server. Use `await query()` directly instead — it now works everywhere ([#15779](https://github.com/sveltejs/kit/pull/15779))
+
+
+- feat: remote queries can now be awaited in any context (event handlers, module scope, async callbacks), not just inside reactive contexts. The cache is shared across reactive and non-reactive subscribers, so awaiting a query in an event handler will dedupe with components that have already subscribed to the same query. ([#15779](https://github.com/sveltejs/kit/pull/15779))
+
+
+- feat: live query instances are now themselves async-iterable ([#15878](https://github.com/sveltejs/kit/pull/15878))
+
+
+- feat: add programmatic `submit` method to `form` remote function instances ([#15657](https://github.com/sveltejs/kit/pull/15657))
+
+
+- feat: pass `form` remote function instance into `enhance` callback ([#15657](https://github.com/sveltejs/kit/pull/15657))
+
+
+### Patch Changes
+
+
+- fix: resolve the app payload without using `process.env.NODE_ENV` ([#15852](https://github.com/sveltejs/kit/pull/15852))
+
+
+- fix: support `exactOptionalPropertyTypes` for optional route params ([#15825](https://github.com/sveltejs/kit/pull/15825))
+
+
+- fix: correctly send `true` value to the server for 'submit' and 'hidden' form fields ([#15858](https://github.com/sveltejs/kit/pull/15858))
+
+
+- fix: avoid build warnings about undefined universal hooks ([#15895](https://github.com/sveltejs/kit/pull/15895))
+
+
+- fix: prefer default error page when failing to decode the URL pathname ([#15744](https://github.com/sveltejs/kit/pull/15744))
+
+
+- fix: disable link prefetching on slow internet connections ([#15885](https://github.com/sveltejs/kit/pull/15885))
+
+
+- fix: allow routes ending with optional parameters next to more specific routes ([#15861](https://github.com/sveltejs/kit/pull/15861))
+
+
+- fix: remove reliance on Content-Length header in deserialize_binary_form, which caused failures when proxies (e.g. Vercel, Azure) strip the header and use chunked transfer encoding ([#15796](https://github.com/sveltejs/kit/pull/15796))
+
 ## 2.60.1
 ### Patch Changes
 

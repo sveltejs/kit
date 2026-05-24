@@ -2,12 +2,14 @@ import { app } from '../../client.js';
 import * as devalue from 'devalue';
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
 import { noop, once } from '../../../../utils/functions.js';
+import { SharedIterator } from '../../../../utils/shared-iterator.js';
 import { hydratable, tick } from 'svelte';
 import { create_live_iterator } from './iterator.js';
 
 /**
  * @template T
  * @implements {Promise<T>}
+ * @implements {AsyncIterable<T>}
  */
 export class LiveQuery {
 	#id;
@@ -39,6 +41,15 @@ export class LiveQuery {
 	 */
 	#interrupt = null;
 	#attempt = 0;
+
+	/**
+	 * Fan-out for `for await` consumers attached to this LiveQuery's shared
+	 * stream. New subscribers see the most-recently-emitted value (if any) as
+	 * their first yield. Subsequent yields fire whenever `set()` is called.
+	 *
+	 * @type {SharedIterator<T>}
+	 */
+	#fan_out = new SharedIterator();
 
 	/** @type {Promise<T>['then']} */
 	// @ts-expect-error TS doesn't understand that the promise returns something
@@ -127,6 +138,7 @@ export class LiveQuery {
 				}
 
 				this.#done = true;
+				this.#fan_out.done();
 			} catch (error) {
 				if (controller.signal.aborted) break;
 
@@ -217,7 +229,36 @@ export class LiveQuery {
 			window.removeEventListener('pageshow', this.#on_pageshow);
 		}
 
+		this.#fan_out.done();
+
 		void this.#interrupt?.();
+	}
+
+	/**
+	 * Iterate the stream of values yielded by this live query. Multiple
+	 * iterators share the underlying connection; the most-recently emitted value
+	 * (if any) is yielded first to each new iterator, mirroring the semantics
+	 * of awaiting the query directly.
+	 *
+	 * Backpressure note: if values arrive faster than the consumer drains, only
+	 * the latest pending value is kept. This matches the reactive `.current`
+	 * semantics — live streams are not event logs.
+	 *
+	 * @returns {AsyncGenerator<T, void, void>}
+	 */
+	[Symbol.asyncIterator]() {
+		this.#start();
+
+		// Seed the new iterator with the current value (if any) so the first
+		// `.next()` resolves synchronously — mirroring `await liveQuery()`
+		// semantics. If the query has hard-failed, `#fan_out` is already closed
+		// with the terminal error and `subscribe()` returns an iterator whose
+		// first `.next()` rejects.
+		return this.#fan_out.subscribe(
+			this.#ready && this.#error === undefined
+				? { initial_value: { value: /** @type {T} */ (this.#raw) } }
+				: undefined
+		);
 	}
 
 	get then() {
@@ -287,6 +328,10 @@ export class LiveQuery {
 		promise.catch(noop);
 		this.#done = false;
 		this.#attempt = 0;
+		// The previous fan-out may have been closed by `done()`/`fail()`. Future
+		// `for await` consumers need a fresh, open fan-out attached to the new
+		// `#main` lifetime.
+		this.#fan_out = new SharedIterator();
 		this.#main({ on_connect, on_connect_failed }).catch(noop);
 		await promise;
 	}
@@ -305,6 +350,8 @@ export class LiveQuery {
 		} else {
 			this.#promise = Promise.resolve();
 		}
+
+		this.#fan_out.push(value);
 	}
 
 	/** @param {unknown} error */
@@ -327,6 +374,8 @@ export class LiveQuery {
 			promise.catch(noop);
 			this.#promise = promise;
 		}
+
+		this.#fan_out.fail(error);
 	}
 
 	get [Symbol.toStringTag]() {
