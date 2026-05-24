@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.61.1
+### Patch Changes
+
+
+- fix: regression where routes starting and ending with a route group are not matched correctly ([#15903](https://github.com/sveltejs/kit/pull/15903))
+
 ## 2.61.0
 ### Minor Changes
 
