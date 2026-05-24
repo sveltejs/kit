@@ -246,7 +246,9 @@ function kit({ svelte_config, adapter }) {
 
 	/** @type {import('types').ValidatedKitConfig} */
 	let kit;
-	/** @type {string} */
+	/** @type {string} `kit.outDir` but posix-ified */
+	let out_dir;
+	/** @type {string} The base directory for the Vite builds */
 	let out;
 
 	/** @type {string} */
@@ -314,7 +316,8 @@ function kit({ svelte_config, adapter }) {
 				is_build = config_env.command === 'build';
 
 				({ kit } = svelte_config);
-				out = `${kit.outDir}/output`;
+				out_dir = posixify(kit.outDir);
+				out = `${out_dir}/output`;
 
 				version_hash = hash(kit.version.name);
 
@@ -343,7 +346,7 @@ function kit({ svelte_config, adapter }) {
 				const client_hooks = resolve_entry(kit.files.hooks.client);
 				if (client_hooks) allow.add(path.dirname(client_hooks));
 
-				const generated = path.posix.join(kit.outDir, 'generated');
+				const generated = path.posix.join(out_dir, 'generated');
 
 				// dev and preview config can be shared
 				/** @type {UserConfig} */
@@ -364,7 +367,7 @@ function kit({ svelte_config, adapter }) {
 						watch: {
 							ignored: [
 								// Ignore all siblings of config.kit.outDir/generated
-								`${posixify(kit.outDir)}/!(generated)`
+								`${out_dir}/!(generated)`
 							]
 						}
 					},
@@ -488,7 +491,7 @@ function kit({ svelte_config, adapter }) {
 
 		resolveId(id, importer) {
 			if (id === '__sveltekit/manifest') {
-				return `${kit.outDir}/generated/client-optimized/app.js`;
+				return `${out_dir}/generated/client-optimized/app.js`;
 			}
 
 			// If importing from a service-worker, only allow $service-worker & $env/static/public, but none of the other virtual modules.
@@ -1027,7 +1030,7 @@ function kit({ svelte_config, adapter }) {
 					/** @type {Record<string, string>} */
 					const server_input = {
 						index: `${runtime_directory}/server/index.js`,
-						internal: `${kit.outDir}/generated/server/internal.js`,
+						internal: `${out_dir}/generated/server/internal.js`,
 						['remote-entry']: `${runtime_directory}/app/server/remote/index.js`
 					};
 
@@ -1098,11 +1101,11 @@ function kit({ svelte_config, adapter }) {
 						client_input['bundle'] = `${runtime_directory}/client/bundle.js`;
 					} else {
 						client_input['entry/start'] = `${runtime_directory}/client/entry.js`;
-						client_input['entry/app'] = `${kit.outDir}/generated/client-optimized/app.js`;
+						client_input['entry/app'] = `${out_dir}/generated/client-optimized/app.js`;
 						manifest_data.nodes.forEach((node, i) => {
 							if (node.component || node.universal) {
 								client_input[`nodes/${i}`] =
-									`${kit.outDir}/generated/client-optimized/nodes/${i}.js`;
+									`${out_dir}/generated/client-optimized/nodes/${i}.js`;
 							}
 						});
 					}
@@ -1139,7 +1142,7 @@ function kit({ svelte_config, adapter }) {
 								onwarn(warning, handler) {
 									if (
 										warning.code === 'IMPORT_IS_UNDEFINED' &&
-										warning.id === `${kit.outDir}/generated/client-optimized/app.js`
+										warning.id === `${out_dir}/generated/client-optimized/app.js`
 									) {
 										// ignore e.g. undefined `handleError` hook when
 										// referencing `client_hooks.handleError`
@@ -1389,7 +1392,7 @@ function kit({ svelte_config, adapter }) {
 			write_client_manifest(
 				kit,
 				manifest_data,
-				`${kit.outDir}/generated/client-optimized`,
+				`${out_dir}/generated/client-optimized`,
 				metadata.nodes
 			);
 
@@ -1463,7 +1466,7 @@ function kit({ svelte_config, adapter }) {
 
 			if (svelte_config.kit.output.bundleStrategy === 'split') {
 				const start = deps_of(`${runtime_directory}/client/entry.js`);
-				const app = deps_of(`${kit.outDir}/generated/client-optimized/app.js`);
+				const app = deps_of(`${out_dir}/generated/client-optimized/app.js`);
 
 				build_data.client = {
 					start: start.file,
@@ -1482,11 +1485,11 @@ function kit({ svelte_config, adapter }) {
 				if (svelte_config.kit.router.resolution === 'server') {
 					const nodes = manifest_data.nodes.map((node, i) => {
 						if (node.component || node.universal) {
-							const entry = `${kit.outDir}/generated/client-optimized/nodes/${i}.js`;
+							const entry = `${out_dir}/generated/client-optimized/nodes/${i}.js`;
 							const deps = deps_of(entry, true);
 							const file = resolve_symlinks(
 								client_manifest,
-								`${kit.outDir}/generated/client-optimized/nodes/${i}.js`,
+								`${out_dir}/generated/client-optimized/nodes/${i}.js`,
 								root
 							).chunk.file;
 

@@ -204,7 +204,7 @@ function generate_app_types(manifest_data, config) {
 		if (route.params.length > 0) {
 			const params = route.params.map((p) => {
 				const type = get_matcher_type(p.matcher);
-				return `${p.name}${p.optional ? '?:' : ':'} ${type}`;
+				return `${p.name}${p.optional ? '?:' : ':'} ${type}${p.optional ? ' | undefined' : ''}`;
 			});
 			const route_type = `${s(route.id)}: { ${params.join('; ')} }`;
 
@@ -225,7 +225,7 @@ function generate_app_types(manifest_data, config) {
 			const params = Array.from(layout_params)
 				.map(([name, { optional, matchers }]) => {
 					const type = get_matchers_type(matchers);
-					return `${name}${optional ? '?:' : ':'} ${type}`;
+					return `${name}${optional ? '?:' : ':'} ${type}${optional ? ' | undefined' : ''}`;
 				})
 				.join('; ');
 
