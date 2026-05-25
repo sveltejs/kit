@@ -14,6 +14,7 @@ import {
 import { handle_error_and_jsonify } from '../../../server/utils.js';
 import { HttpError, SvelteKitError } from '@sveltejs/kit/internal';
 import { noop } from '../../../../utils/functions.js';
+import { SharedIterator } from '../../../../utils/shared-iterator.js';
 
 /**
  * Creates a remote query. When called from the browser, the function will be invoked on the server via a `fetch` call.
@@ -153,24 +154,6 @@ function live(validate_or_fn, maybe_fn) {
 	const run = (event, state, get_input) =>
 		run_remote_generator(event, state, false, get_input, fn, __.name);
 
-	/**
-	 * @param {any} generator
-	 * @returns {Promise<any>}
-	 */
-	const first_value = async (generator) => {
-		try {
-			const { value, done } = await generator.next();
-
-			if (done) {
-				throw new Error(`query.live '${__.name}' did not yield a value`);
-			}
-
-			return value;
-		} finally {
-			await generator.return(undefined);
-		}
-	};
-
 	/** @type {RemoteQueryLiveInternals} */
 	const __ = {
 		type: 'query_live',
@@ -181,8 +164,8 @@ function live(validate_or_fn, maybe_fn) {
 		bind(payload, validated_arg) {
 			const { event, state } = get_request_store();
 
-			return create_live_query_resource(__, payload, state, () =>
-				first_value(run(event, state, () => validated_arg))
+			return create_live_query_resource(__, payload, state, event.request.signal, () =>
+				run(event, state, () => validated_arg)
 			);
 		}
 	};
@@ -198,8 +181,8 @@ function live(validate_or_fn, maybe_fn) {
 		const { event, state } = get_request_store();
 		const payload = stringify_remote_arg(arg, state.transport);
 
-		return create_live_query_resource(__, payload, state, () =>
-			first_value(run(event, state, () => validate(arg)))
+		return create_live_query_resource(__, payload, state, event.request.signal, () =>
+			run(event, state, () => validate(arg))
 		);
 	};
 
@@ -476,12 +459,20 @@ function create_query_resource(__, payload, state, fn) {
  * @param {RemoteQueryLiveInternals} __
  * @param {string} payload — the stringified raw argument (i.e. the cache key the client will use)
  * @param {RequestState} state
- * @param {() => Promise<any>} get_first_value
+ * @param {AbortSignal} signal — the request signal; aborts in-flight iteration when the client disconnects
+ * @param {() => AsyncGenerator<any, void, void>} get_generator
  * @returns {RemoteLiveQuery<any>}
  */
-function create_live_query_resource(__, payload, state, get_first_value) {
+function create_live_query_resource(__, payload, state, signal, get_generator) {
 	/** @type {Promise<any> | null} */
 	let promise = null;
+
+	const get_first_value = async () => {
+		for await (const value of get_generator()) {
+			return value;
+		}
+		throw new Error(`query.live '${__.name}' did not yield a value`);
+	};
 
 	const get_promise = () => {
 		return (promise ??= get_response(__, payload, state, get_first_value));
@@ -536,17 +527,94 @@ function create_live_query_resource(__, payload, state, get_first_value) {
 			reconnects.set(create_remote_key(__.id, payload), get_promise());
 			return Promise.resolve();
 		},
+		/** @ts-expect-error This method no longer exists */
 		run() {
-			throw new Error('Cannot call .run() on a live query on the server');
+			throw new Error(
+				'`.run()` has been removed from live queries. Use `for await (const value of liveQuery())` instead.'
+			);
 		},
 		/** @type {Promise<any>['then']} */
 		then(onfulfilled, onrejected) {
 			return get_promise().then(onfulfilled, onrejected);
 		},
+		[Symbol.asyncIterator]() {
+			const key = create_remote_key(__.id, payload);
+			const cache = (state.remote.live_iterators ??= new Map());
+			let cached = cache.get(key);
+			if (!cached) {
+				cached = create_shared_live_iterator(signal, get_generator);
+				cache.set(key, cached);
+			}
+			return cached.subscribe();
+		},
 		get [Symbol.toStringTag]() {
 			return 'LiveQueryResource';
 		}
 	};
+}
+
+/**
+ * Wraps a lazily-created live-query generator so that multiple `for await`
+ * consumers within the same request share one underlying iteration. The first
+ * subscriber starts the generator; values are broadcast to all subscribers
+ * via a `SharedIterator`. When the last subscriber unsubscribes, the generator
+ * is closed via `generator.return(undefined)`.
+ *
+ * If `signal` aborts (typically because the client has disconnected), the
+ * pump is torn down and any in-flight `next()` calls on consumer iterators
+ * resolve with `{ done: true }`, so suspended `for await` loops unwind
+ * cleanly rather than leaking.
+ *
+ * @param {AbortSignal} signal
+ * @param {() => AsyncGenerator<any, void, void>} get_generator
+ */
+function create_shared_live_iterator(signal, get_generator) {
+	return new SharedIterator((instance) => {
+		// Don't bother starting the pump if the request has already been
+		// aborted between cache creation and first subscription.
+		if (signal.aborted) {
+			instance.done();
+			return noop;
+		}
+
+		const generator = get_generator();
+
+		// Set to `true` when we deliberately close the generator (because every
+		// subscriber has unsubscribed, or the request was aborted). The pump's
+		// `generator.next()` will reject as a result; we use this flag to swallow that
+		// abort error rather than surfacing it through `instance.fail()`.
+		let aborted = false;
+
+		const close = () => {
+			aborted = true;
+			void generator.return().catch(noop);
+		};
+
+		// On request abort, tear down the pump and notify subscribers. `done()` is
+		// used (rather than `fail()`) because an aborted request is a normal
+		// termination — there's no error to surface to user code that's already
+		// been disconnected from the client.
+		signal.addEventListener('abort', () => (close(), instance.done()), { once: true });
+
+		void (async () => {
+			try {
+				while (true) {
+					const result = await generator.next();
+					if (result.done) {
+						instance.done();
+						return;
+					}
+					instance.push(result.value);
+				}
+			} catch (error) {
+				if (!aborted) instance.fail(error);
+			} finally {
+				close();
+			}
+		})();
+
+		return close;
+	});
 }
 
 // Add batch as a property to the query function
