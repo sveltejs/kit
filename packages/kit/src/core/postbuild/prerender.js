@@ -366,7 +366,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 					/** @type {Set<string>} */ (expected_hashlinks.get(key)).add(decoded);
 				}
 
-				void enqueue(decoded, decode_uri(pathname), pathname, undefined, true);
+				void enqueue(decoded, decode_uri(pathname), pathname, undefined, false);
 			}
 		}
 	}
