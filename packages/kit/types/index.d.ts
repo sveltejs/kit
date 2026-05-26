@@ -2119,15 +2119,19 @@ declare module '@sveltejs/kit' {
 		method: 'POST';
 		/** The URL to send the form to. */
 		action: string;
+		/** The `<form>` element this instance is currently attached to, if any. */
+		get element(): HTMLFormElement | null;
+		/** Submit the currently attached form programmatically. */
+		submit(): Promise<boolean> & {
+			updates: (...updates: RemoteQueryUpdate[]) => Promise<boolean>;
+		};
 		/** Use the `enhance` method to influence what happens when the form is submitted. */
 		enhance(
-			callback: (opts: {
-				form: HTMLFormElement;
-				data: Input;
-				submit: () => Promise<boolean> & {
-					updates: (...updates: RemoteQueryUpdate[]) => Promise<boolean>;
-				};
-			}) => MaybePromise<void>
+			callback: (
+				form: Omit<RemoteForm<Input, Output>, 'enhance' | 'element'> & {
+					readonly element: HTMLFormElement;
+				}
+			) => MaybePromise<void>
 		): {
 			method: 'POST';
 			action: string;
@@ -2203,12 +2207,6 @@ declare module '@sveltejs/kit' {
 
 	export type RemoteQuery<T> = RemoteResource<T> & {
 		/**
-		 * Returns a plain promise with the result.
-		 * Unlike awaiting the resource directly, this can only be used _outside_ render
-		 * (i.e. in load functions, event handlers and so on)
-		 */
-		run(): Promise<T>;
-		/**
 		 * On the client, this function will update the value of the query without re-fetching it.
 		 *
 		 * On the server, this can be called in the context of a `command` or `form` and the specified data will accompany the action response back to the client.
@@ -2231,9 +2229,9 @@ declare module '@sveltejs/kit' {
 		 *   const todos = getTodos();
 		 * </script>
 		 *
-		 * <form {...addTodo.enhance(async ({ data, submit }) => {
-		 *   await submit().updates(
-		 *     todos.withOverride((todos) => [...todos, { text: data.get('text') }])
+		 * <form {...addTodo.enhance(async (form) => {
+		 *   await form.submit().updates(
+		 *     todos.withOverride((todos) => [...todos, { text: form.fields.text.value() }])
 		 *   );
 		 * })}>
 		 *   <input type="text" name="text" />
@@ -2244,20 +2242,15 @@ declare module '@sveltejs/kit' {
 		withOverride(update: (current: T) => T): RemoteQueryOverride;
 	};
 
-	export type RemoteLiveQuery<T> = RemoteResource<T> & {
-		/**
-		 * Returns an async iterator with live updates.
-		 * Unlike awaiting the resource directly, this can only be used _outside_ render
-		 * (i.e. in load functions, event handlers and so on)
-		 */
-		run(): AsyncGenerator<T>;
-		/** `true` if the live stream is currently connected. */
-		readonly connected: boolean;
-		/** `true` once the current live stream iterator is done. */
-		readonly done: boolean;
-		/** Reconnects the live stream immediately. */
-		reconnect(): Promise<void>;
-	};
+	export type RemoteLiveQuery<T> = RemoteResource<T> &
+		AsyncIterable<T> & {
+			/** `true` if the live stream is currently connected. */
+			readonly connected: boolean;
+			/** `true` once the current live stream iterator is done. */
+			readonly done: boolean;
+			/** Reconnects the live stream immediately. */
+			reconnect(): Promise<void>;
+		};
 
 	export type RemoteQueryOverride = () => void;
 
@@ -2722,7 +2715,10 @@ declare module '@sveltejs/kit' {
 		universal_id?: string;
 		server_id?: string;
 
-		/** inlined styles */
+		/**
+		 * During development, all styles are inlined for the page to avoid FOUC.
+		 * But in production, this stores styles that are below the inline threshold
+		 */
 		inline_styles?(): MaybePromise<
 			Record<string, string | ((assets: string, base: string) => string)>
 		>;

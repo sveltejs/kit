@@ -15,7 +15,12 @@ import { create_server_routing_response, generate_route_object } from './server_
 import { add_resolution_suffix } from '../../pathname.js';
 import { try_get_request_store, with_request_store } from '@sveltejs/kit/internal/server';
 import { text_encoder } from '../../utils.js';
-import { count_non_ssi_comments, get_global_name, handle_error_and_jsonify } from '../utils.js';
+import {
+	count_non_ssi_comments,
+	create_replacer,
+	get_global_name,
+	handle_error_and_jsonify
+} from '../utils.js';
 import { create_remote_key } from '../../shared.js';
 import { get_status } from '../../../utils/error.js';
 
@@ -302,13 +307,15 @@ export async function render_response({
 		return `${assets}/${path}`;
 	};
 
-	// inline styles can come from `bundleStrategy: 'inline'` or `inlineStyleThreshold`
 	const style = client.inline
 		? client.inline?.style
 		: Array.from(inline_styles.values()).join('\n');
 
 	if (style) {
-		const attributes = DEV ? ['data-sveltekit'] : [];
+		// We always inline all styles to avoid FOUC during development.
+		// Once that's accomplished, we find and remove the style node using the
+		// `data-sveltekit` attribute once CSR kicks in
+		const attributes = __SVELTEKIT_DEV__ ? ['data-sveltekit'] : [];
 		if (csp.style_needs_nonce) attributes.push(`nonce="${csp.nonce}"`);
 		csp.add_style(style);
 		head.add_style(style, attributes);
@@ -557,15 +564,7 @@ export async function render_response({
 				}
 			}
 
-			// TODO this is repeated in a few places — dedupe it
-			const replacer = (/** @type {any} */ thing) => {
-				for (const key in options.hooks.transport) {
-					const encoded = options.hooks.transport[key].encode(thing);
-					if (encoded) {
-						return `app.decode('${key}', ${devalue.uneval(encoded, replacer)})`;
-					}
-				}
-			};
+			const replacer = create_replacer(options.hooks.transport);
 
 			if (Object.keys(query).length > 0) {
 				serialized_query_data = `${global}.query = ${devalue.uneval(query, replacer)};\n\n\t\t\t\t\t\t`;
@@ -605,10 +604,10 @@ export async function render_response({
 		}
 
 		if (options.service_worker) {
-			let opts = DEV ? ", { type: 'module' }" : '';
+			let opts = __SVELTEKIT_DEV__ ? ", { type: 'module' }" : '';
 			if (options.service_worker_options != null) {
 				const service_worker_options = { ...options.service_worker_options };
-				if (DEV) {
+				if (__SVELTEKIT_DEV__) {
 					service_worker_options.type = 'module';
 				}
 				opts = `, ${s(service_worker_options)}`;

@@ -1,5 +1,6 @@
-/** @import { RemoteQueryCacheEntry } from './remote-functions/query.svelte.js' */
-/** @import { RemoteLiveQueryCacheEntry } from './remote-functions/query-live.svelte.js' */
+/** @import { CacheEntry } from './remote-functions/cache.svelte.js' */
+/** @import { Query } from './remote-functions/query/instance.svelte.js' */
+/** @import { LiveQuery } from './remote-functions/query-live/instance.svelte.js' */
 import { BROWSER, DEV } from 'esm-env';
 import * as svelte from 'svelte';
 import { HttpError, Redirect, SvelteKitError } from '@sveltejs/kit/internal';
@@ -302,13 +303,13 @@ const preload_tokens = new Set();
 export let pending_invalidate;
 
 /**
- * @type {Map<string, Map<string, RemoteQueryCacheEntry<any>>>}
+ * @type {Map<string, Map<string, CacheEntry<Query<any>>>>}
  * A map of query id -> payload -> query internals for all active queries.
  */
 export const query_map = new Map();
 
 /**
- * @type {Map<string, Map<string, RemoteLiveQueryCacheEntry<any>>>}
+ * @type {Map<string, Map<string, CacheEntry<LiveQuery<any>>>>}
  * A map of id -> payload -> live query internals for all active queries.
  */
 export const live_query_map = new Map();
@@ -658,7 +659,8 @@ async function _preload_code(url) {
  * @param {boolean} hydrate
  */
 async function initialize(result, target, hydrate) {
-	if (DEV && result.state.error && document.querySelector('vite-error-overlay')) return;
+	if (__SVELTEKIT_DEV__ && result.state.error && document.querySelector('vite-error-overlay'))
+		return;
 
 	/** @type {import('@sveltejs/kit').NavigationEvent} */
 	const nav = {
@@ -672,8 +674,11 @@ async function initialize(result, target, hydrate) {
 		nav
 	};
 
-	const style = document.querySelector('style[data-sveltekit]');
-	if (style) style.remove();
+	// Removes the style node we used to avoid FOUC during development
+	if (__SVELTEKIT_DEV__) {
+		const style = document.querySelector('style[data-sveltekit]');
+		if (style) style.remove();
+	}
 
 	update(/** @type {import('@sveltejs/kit').Page} */ (result.props.page));
 
@@ -2621,7 +2626,7 @@ function _start_router() {
 	});
 
 	// @ts-expect-error this isn't supported everywhere yet
-	if (!navigator.connection?.saveData) {
+	if (!navigator.connection?.saveData && !/2g/.test(navigator.connection?.effectiveType)) {
 		setup_preload();
 	}
 

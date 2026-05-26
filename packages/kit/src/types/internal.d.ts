@@ -35,6 +35,7 @@ import {
 } from './private.js';
 import { Span } from '@opentelemetry/api';
 import type { PageOptions } from '../exports/vite/static_analysis/index.js';
+import { SharedIterator } from '../utils/shared-iterator.js';
 
 export interface ServerModule {
 	Server: typeof InternalServer;
@@ -179,9 +180,15 @@ export class InternalServer extends Server {
 		request: Request,
 		options: RequestOptions & {
 			prerendering?: PrerenderOptions;
-			read: (file: string) => NonSharedBuffer;
-			/** A hook called before `handle` during dev, so that `AsyncLocalStorage` can be populated. */
-			before_handle?: (event: RequestEvent, config: any, prerender: PrerenderOption) => void;
+			/** @internal for saving dependencies during prerendering and generating fallback pages */
+			read: (file: string) => Buffer<ArrayBuffer>;
+			/** @internal used during development to check feature availability depending on the current route */
+			before_handle?: (
+				event: RequestEvent,
+				config: any,
+				prerender: PrerenderOption,
+				handle: () => Promise<Response>
+			) => Promise<Response>;
 			emulator?: Emulator;
 		}
 	): Promise<Response>;
@@ -469,7 +476,10 @@ export interface SSRNode {
 	universal_id?: string;
 	server_id?: string;
 
-	/** inlined styles */
+	/**
+	 * During development, all styles are inlined for the page to avoid FOUC.
+	 * But in production, this stores styles that are below the inline threshold
+	 */
 	inline_styles?(): MaybePromise<
 		Record<string, string | ((assets: string, base: string) => string)>
 	>;
@@ -565,12 +575,18 @@ export interface SSRState {
 	 * prerender option is inherited by the endpoint, unless overridden.
 	 */
 	prerender_default?: PrerenderOption;
-	read?: (file: string) => NonSharedBuffer;
+	/** @internal reads from the filesystem when user code tries to fetch a static asset */
+	read?: (file: string) => Buffer<ArrayBuffer>;
 	/**
 	 * Used to set up `__SVELTEKIT_TRACK__` which checks if a used feature is supported.
 	 * E.g. if `read` from `$app/server` is used, it checks whether the route's config is compatible.
 	 */
-	before_handle?: (event: RequestEvent, config: any, prerender: PrerenderOption) => void;
+	before_handle?: (
+		event: RequestEvent,
+		config: any,
+		prerender: PrerenderOption,
+		handle: () => Promise<Response>
+	) => Promise<Response>;
 	emulator?: Emulator;
 }
 
@@ -718,6 +734,13 @@ export interface RequestState {
 				}
 			>
 		>;
+		/**
+		 * A per-request cache of shared live-query iterators, keyed by remote id
+		 * and stringified argument payload. Used so that multiple `for await`
+		 * consumers of the same `query.live` call within one request multiplex a
+		 * single underlying user generator.
+		 */
+		live_iterators: null | Map<string, SharedIterator<any>>;
 	};
 	readonly is_in_remote_function: boolean;
 	readonly is_in_render: boolean;

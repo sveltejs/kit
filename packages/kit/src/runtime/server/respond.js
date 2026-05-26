@@ -40,8 +40,6 @@ import { get_remote_id, handle_remote_call } from './remote.js';
 import { record_span } from '../telemetry/record_span.js';
 import { otel } from '../telemetry/otel.js';
 
-/* global __SVELTEKIT_ADAPTER_NAME__ */
-
 /** @type {import('types').RequiredResolveOptions['transformPageChunk']} */
 const default_transform = ({ html }) => html;
 
@@ -153,7 +151,8 @@ export async function internal_respond(request, options, manifest, state) {
 			refreshes: null,
 			requested: null,
 			reconnects: null,
-			batches: null
+			batches: null,
+			live_iterators: null
 		},
 		is_in_remote_function: false,
 		is_in_render: false,
@@ -228,6 +227,7 @@ export async function internal_respond(request, options, manifest, state) {
 		});
 	}
 
+	/** @type {string | null} */
 	let resolved_path = url.pathname;
 
 	if (!remote_id) {
@@ -249,10 +249,24 @@ export async function internal_respond(request, options, manifest, state) {
 		}
 	}
 
+	/** @type {import('types').RequiredResolveOptions} */
+	let resolve_opts = {
+		transformPageChunk: default_transform,
+		filterSerializedResponseHeaders: default_filter,
+		preload: default_preload
+	};
+
+	/** @type {import('types').TrailingSlash} */
+	let trailing_slash = 'never';
+
+	/** @type {PageNodes | undefined} */
+	let page_nodes;
+
 	try {
 		resolved_path = decode_pathname(resolved_path);
 	} catch {
-		return text('Malformed URI', { status: 400 });
+		resolved_path = null;
+		return await handle();
 	}
 
 	// try to serve the rerouted prerendered resource if it exists
@@ -326,19 +340,8 @@ export async function internal_respond(request, options, manifest, state) {
 		}
 	}
 
-	/** @type {import('types').RequiredResolveOptions} */
-	let resolve_opts = {
-		transformPageChunk: default_transform,
-		filterSerializedResponseHeaders: default_filter,
-		preload: default_preload
-	};
-
-	/** @type {import('types').TrailingSlash} */
-	let trailing_slash = 'never';
-
 	try {
-		/** @type {PageNodes | undefined} */
-		const page_nodes = route?.page
+		page_nodes = route?.page
 			? new PageNodes(await load_page_nodes(route.page, manifest))
 			: undefined;
 
@@ -393,16 +396,36 @@ export async function internal_respond(request, options, manifest, state) {
 					prerender = page_nodes.prerender();
 				}
 
-				if (state.before_handle) {
-					state.before_handle(event, config, prerender);
-				}
-
 				if (state.emulator?.platform) {
 					event.platform = await state.emulator.platform({ config, prerender });
+				}
+
+				if (state.before_handle) {
+					return await state.before_handle(event, config, prerender, handle);
 				}
 			}
 		}
 
+		return await handle();
+	} catch (e) {
+		if (e instanceof Redirect) {
+			try {
+				const response =
+					is_data_request || remote_id
+						? redirect_json_response(e)
+						: route?.page && is_action_json_request(event)
+							? action_json_redirect(e)
+							: redirect_response(e.status, e.location);
+				add_cookies_to_headers(response.headers, new_cookies.values());
+				return response;
+			} catch (err) {
+				return await handle_fatal_error(event, event_state, options, err);
+			}
+		}
+		return await handle_fatal_error(event, event_state, options, e);
+	}
+
+	async function handle() {
 		set_trailing_slash(trailing_slash);
 
 		if (state.prerendering && !state.prerendering.fallback && !state.prerendering.inside_reroute) {
@@ -518,22 +541,6 @@ export async function internal_respond(request, options, manifest, state) {
 		}
 
 		return response;
-	} catch (e) {
-		if (e instanceof Redirect) {
-			try {
-				const response =
-					is_data_request || remote_id
-						? redirect_json_response(e)
-						: route?.page && is_action_json_request(event)
-							? action_json_redirect(e)
-							: redirect_response(e.status, e.location);
-				add_cookies_to_headers(response.headers, new_cookies.values());
-				return response;
-			} catch (err) {
-				return await handle_fatal_error(event, event_state, options, err);
-			}
-		}
-		return await handle_fatal_error(event, event_state, options, e);
 	}
 
 	/**
@@ -549,6 +556,23 @@ export async function internal_respond(request, options, manifest, state) {
 					filterSerializedResponseHeaders: opts.filterSerializedResponseHeaders || default_filter,
 					preload: opts.preload || default_preload
 				};
+			}
+
+			if (resolved_path === null) {
+				return await respond_with_error({
+					event,
+					event_state,
+					options,
+					manifest,
+					state,
+					status: 400,
+					error: new SvelteKitError(
+						400,
+						'Malformed URI',
+						`Failed to decode URI: ${event.url.pathname}`
+					),
+					resolve_opts
+				});
 			}
 
 			if (options.hash_routing || state.prerendering?.fallback) {
