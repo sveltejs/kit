@@ -3,7 +3,7 @@ import { decode_params } from './url.js';
 
 const param_pattern = /^(\[)?(\.\.\.)?(\w+)(?:=(\w+))?(\])?$/;
 
-const root_group_pattern = /^\/\((?:.+)\)$/;
+const root_group_pattern = /^\/\((?:[^)]+)\)$/;
 
 /**
  * Creates the regex pattern, extracts parameter names, and generates types for a route

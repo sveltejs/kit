@@ -1,4 +1,5 @@
 import { tick } from 'svelte';
+import { once } from '../../../utils/functions.js';
 
 /**
  * @template R
@@ -114,7 +115,7 @@ export class CacheController {
 	 */
 	manual_ref = (entry, id, payload) => {
 		entry.proxy_count++;
-		return () => this.deref(entry, id, payload);
+		return once(() => this.deref(entry, id, payload));
 	};
 
 	/**

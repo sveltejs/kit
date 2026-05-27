@@ -643,6 +643,30 @@ test.describe('remote function mutations', () => {
 		await expect(page.locator('#duplicate-updates')).toHaveText(String(before));
 	});
 
+	test('query.live is async-iterable and joins the shared cache stream', async ({ page }) => {
+		await page.goto('/remote/live');
+		await page.click('#reset');
+		await expect(page.locator('#count')).toHaveText('0');
+
+		await page.click('#start-for-await');
+
+		// the first value should be the current value (0) — emitted synchronously
+		// from the shared LiveQuery's cache rather than via a fresh connection.
+		await expect(page.locator('#for-await-count')).toHaveText('1');
+		await expect(page.locator('#for-await-values')).toHaveText('0');
+
+		await page.click('#increment');
+		await expect(page.locator('#for-await-count')).toHaveText('2');
+		await expect(page.locator('#for-await-values')).toHaveText('0,1');
+
+		await page.click('#increment');
+		// iteration breaks after 3 values
+		await expect(page.locator('#for-await-count')).toHaveText('3');
+		await expect(page.locator('#for-await-values')).toHaveText('0,1,2');
+
+		await page.click('#reset');
+	});
+
 	test('query.live cleans up server iterator on reload', async ({ page }) => {
 		await page.goto('/remote/live');
 		await page.click('#stats');
