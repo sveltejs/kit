@@ -293,6 +293,7 @@ If you need direct, imperative access to the underlying stream of values (rather
 ```js
 // @filename: ambient.d.ts
 declare module './time.remote.js' {
+	import { RemoteLiveQueryFunction } from '@sveltejs/kit';
 	export const getTime: RemoteLiveQueryFunction<undefined, Date>;
 }
 // @filename: index.js
