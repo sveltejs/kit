@@ -296,8 +296,8 @@ declare module './time.remote.js' {
 	import { RemoteLiveQueryFunction } from '@sveltejs/kit';
 	export const getTime: RemoteLiveQueryFunction<undefined, Date>;
 }
-// @filename: index.js
 // @errors: 7006 2304
+// @filename: index.js
 import { getTime } from './time.remote.js';
 // ---cut---
 async function logTimes() {
