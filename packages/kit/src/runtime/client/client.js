@@ -2626,7 +2626,7 @@ function _start_router() {
 	});
 
 	// @ts-expect-error this isn't supported everywhere yet
-	if (!navigator.connection?.saveData && !/2g/.test(navigator.connection?.effectiveType)) {
+	if (!navigator.connection?.saveData) {
 		setup_preload();
 	}
 
