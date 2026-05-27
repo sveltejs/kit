@@ -17,6 +17,7 @@ import { unfriendly_hydratable } from '../../shared.js';
  * @typedef {object} FanOutResponse
  * @property {string} item_query_id
  * @property {Array<FanOutEntry>} items
+ * @property {Record<string, any>} meta
  */
 
 /**
@@ -33,7 +34,7 @@ export function query_fan_out(id) {
 				remote_request(url, get_remote_request_headers())
 			);
 
-			const { item_query_id, items } = /** @type {FanOutResponse} */ (
+			const { item_query_id, items, meta } = /** @type {FanOutResponse} */ (
 				devalue.parse(serialized, app.decoders)
 			);
 
@@ -45,7 +46,7 @@ export function query_fan_out(id) {
 			// the page reuses this warmed value with no extra HTTP request.
 			const item_factory = query_client(item_query_id);
 
-			return items.map((entry) => {
+			const rows = items.map((entry) => {
 				const proxy = item_factory(entry.arg);
 
 				// Constructing the proxy populates `query_map[item_query_id]`
@@ -74,6 +75,8 @@ export function query_fan_out(id) {
 
 				return proxy;
 			});
+
+			return { ...meta, rows };
 		});
 	};
 

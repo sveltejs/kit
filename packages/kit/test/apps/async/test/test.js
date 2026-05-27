@@ -25,6 +25,7 @@ test.describe('remote functions', () => {
 	}) => {
 		await page.goto('/remote/fan-out-ssr');
 
+		await expect(page.locator('#ssr-fan-out-total')).toHaveText('total: 2');
 		await expect(page.locator('#ssr-fan-out-result-1')).toHaveText('Buy groceries');
 		await expect(page.locator('#ssr-fan-out-result-2')).toHaveText('Walk the dog');
 		// `get_item('1')` called *after* `get_items()` in the same render should

@@ -378,44 +378,59 @@ function batch(validate_or_fn, maybe_fn) {
 }
 
 /**
- * Creates a fan-out query that returns an array of per-item query resources from a single backend call.
+ * Creates a fan-out query that turns one server call into an array of per-item
+ * query resources, alongside any list-level metadata the user wants to
+ * pass through.
+ *
+ * The user function returns `{ rows: Array<[ItemArg, Item]>, ...meta }`. The
+ * `rows` field is fanned out: each tuple's `Item` warms the companion item
+ * query's cache and becomes a `RemoteQuery<Item>` on the consumer side. Any
+ * other fields on the returned object pass through unchanged, so paginated
+ * APIs can include cursors, totals, has-next-page flags, and so on.
  *
  * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query.fanOut) for full documentation.
  *
  * @template ItemArg
  * @template Item
+ * @template {Record<string, any>} Result
  * @overload
  * @param {RemoteQueryFunction<ItemArg, Item, any>} item_query
- * @param {() => MaybePromise<Array<[ItemArg, Item]>>} fn
- * @returns {RemoteQueryFunction<void, Array<RemoteQuery<Item>>>}
+ * @param {() => MaybePromise<Result & { rows: Array<[ItemArg, Item]> }>} fn
+ * @returns {RemoteQueryFunction<void, Omit<Result, 'rows'> & { rows: Array<RemoteQuery<Item>> }>}
  */
 /**
- * Creates a fan-out query that returns an array of per-item query resources from a single backend call.
+ * Creates a fan-out query that turns one server call into an array of per-item
+ * query resources, alongside any list-level metadata the user wants to
+ * pass through.
  *
  * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query.fanOut) for full documentation.
  *
  * @template ItemArg
  * @template Item
  * @template Input
+ * @template {Record<string, any>} Result
  * @overload
  * @param {RemoteQueryFunction<ItemArg, Item, any>} item_query
  * @param {'unchecked'} validate
- * @param {(arg: Input) => MaybePromise<Array<[ItemArg, Item]>>} fn
- * @returns {RemoteQueryFunction<Input, Array<RemoteQuery<Item>>>}
+ * @param {(arg: Input) => MaybePromise<Result & { rows: Array<[ItemArg, Item]> }>} fn
+ * @returns {RemoteQueryFunction<Input, Omit<Result, 'rows'> & { rows: Array<RemoteQuery<Item>> }>}
  */
 /**
- * Creates a fan-out query that returns an array of per-item query resources from a single backend call.
+ * Creates a fan-out query that turns one server call into an array of per-item
+ * query resources, alongside any list-level metadata the user wants to
+ * pass through.
  *
  * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query.fanOut) for full documentation.
  *
  * @template ItemArg
  * @template Item
  * @template {StandardSchemaV1} Schema
+ * @template {Record<string, any>} Result
  * @overload
  * @param {RemoteQueryFunction<ItemArg, Item, any>} item_query
  * @param {Schema} schema
- * @param {(arg: StandardSchemaV1.InferOutput<Schema>) => MaybePromise<Array<[ItemArg, Item]>>} fn
- * @returns {RemoteQueryFunction<StandardSchemaV1.InferInput<Schema>, Array<RemoteQuery<Item>>, StandardSchemaV1.InferOutput<Schema>>}
+ * @param {(arg: StandardSchemaV1.InferOutput<Schema>) => MaybePromise<Result & { rows: Array<[ItemArg, Item]> }>} fn
+ * @returns {RemoteQueryFunction<StandardSchemaV1.InferInput<Schema>, Omit<Result, 'rows'> & { rows: Array<RemoteQuery<Item>> }, StandardSchemaV1.InferOutput<Schema>>}
  */
 /**
  * @template ItemArg
@@ -423,8 +438,8 @@ function batch(validate_or_fn, maybe_fn) {
  * @template Input
  * @param {RemoteQueryFunction<ItemArg, Item, any>} item_query
  * @param {any} validate_or_fn
- * @param {(arg?: Input) => MaybePromise<Array<[ItemArg, Item]>>} [maybe_fn]
- * @returns {RemoteQueryFunction<Input, Array<RemoteQuery<Item>>>}
+ * @param {(arg?: Input) => MaybePromise<{ rows: Array<[ItemArg, Item]> } & Record<string, any>>} [maybe_fn]
+ * @returns {RemoteQueryFunction<Input, { rows: Array<RemoteQuery<Item>> } & Record<string, any>>}
  */
 /*@__NO_SIDE_EFFECTS__*/
 function fan_out(item_query, validate_or_fn, maybe_fn) {
@@ -438,34 +453,50 @@ function fan_out(item_query, validate_or_fn, maybe_fn) {
 		);
 	}
 
-	/** @type {(arg?: Input) => MaybePromise<Array<[ItemArg, Item]>>} */
+	/** @type {(arg?: Input) => MaybePromise<{ rows: Array<[ItemArg, Item]> } & Record<string, any>>} */
 	const fn = maybe_fn ?? validate_or_fn;
 
 	/** @type {(arg?: any) => MaybePromise<Input>} */
 	const validate = create_validator(validate_or_fn, maybe_fn);
 
 	/**
-	 * For each `[item_arg, data]` tuple:
-	 *   1. Validate `item_arg` through the companion item query's validator.
-	 *      A failure becomes a per-row error entry (other rows still succeed).
-	 *   2. Warm the per-request cache for the item query so subsequent
-	 *      `item_query(arg)` calls within this render reuse this value
-	 *      rather than re-running the user function.
-	 *   3. Return an entry describing the row's outcome, including a
-	 *      jsonified error if `options` is supplied (i.e. we're producing
-	 *      a wire response). When `options` is missing (the SSR render
-	 *      path), errors are kept raw and the entry's `error`/`status`
-	 *      are computed lazily by the hydration handoff.
+	 * Invoke the user function and process its result:
+	 *   1. Pull `rows` out of the returned object — the rest is metadata
+	 *      and rides through unchanged.
+	 *   2. For each `[item_arg, data]` tuple:
+	 *      a. Validate `item_arg` through the companion item query's
+	 *         validator. A failure becomes a per-row error entry; other
+	 *         rows still succeed.
+	 *      b. Warm the per-request cache for the item query so subsequent
+	 *         `item_query(arg)` calls within this render reuse this value
+	 *         rather than re-running the user function.
+	 *      c. Build an entry describing the row's outcome, including a
+	 *         jsonified error when `options` is supplied (i.e. we're
+	 *         producing a wire response). When `options` is missing (the
+	 *         SSR render path), errors get a minimal `{ message }`
+	 *         placeholder.
 	 *
-	 * @param {Array<[ItemArg, Item]>} tuples
+	 * @param {Input | undefined} input
 	 * @param {any} options
-	 * @returns {Promise<Array<FanOutEntry>>}
+	 * @returns {Promise<{ items: Array<FanOutEntry>, meta: Record<string, any> }>}
 	 */
-	const fan_out_items = async (tuples, options) => {
+	const process_user_result = async (input, options) => {
 		const { event, state } = get_request_store();
 		const item_cache = get_cache(item_internals, state);
 
-		return Promise.all(
+		const result = await fn(input);
+		if (result === null || typeof result !== 'object' || !Array.isArray(result.rows)) {
+			throw new Error(
+				`query.fanOut '${__.name}' must return an object with a \`rows\` array of [arg, item] tuples`
+			);
+		}
+
+		// Shallow-copy without `rows` — everything else rides through as
+		// list-level metadata (cursors, totals, etc).
+		const { rows, ...meta } = result;
+		const tuples = /** @type {Array<[ItemArg, Item]>} */ (rows);
+
+		const items = await Promise.all(
 			tuples.map(async ([item_arg, data]) => {
 				try {
 					const validated_item_arg = await item_internals.validate(item_arg);
@@ -516,6 +547,8 @@ function fan_out(item_query, validate_or_fn, maybe_fn) {
 				}
 			})
 		);
+
+		return { items, meta };
 	};
 
 	/** @type {RemoteQueryFanOutInternals} */
@@ -533,9 +566,8 @@ function fan_out(item_query, validate_or_fn, maybe_fn) {
 				false,
 				() => validate(arg),
 				async (input) => {
-					const tuples = await fn(input);
-					const items = await fan_out_items(tuples, options);
-					return { item_query_id: item_internals.id, items };
+					const { items, meta } = await process_user_result(input, options);
+					return { item_query_id: item_internals.id, items, meta };
 				}
 			);
 		},
@@ -548,16 +580,13 @@ function fan_out(item_query, validate_or_fn, maybe_fn) {
 					state,
 					false,
 					() => validated_arg,
-					async (input) => {
-						const tuples = await fn(input);
-						return fan_out_items(tuples, /* options */ undefined);
-					}
+					async (input) => process_user_result(input, /* options */ undefined)
 				)
 			);
 		}
 	};
 
-	/** @type {RemoteQueryFunction<Input, Array<RemoteQuery<Item>>> & { __: RemoteQueryFanOutInternals }} */
+	/** @type {RemoteQueryFunction<Input, { rows: Array<RemoteQuery<Item>> } & Record<string, any>> & { __: RemoteQueryFanOutInternals }} */
 	const wrapper = (arg) => {
 		if (prerendering) {
 			throw new Error(
@@ -574,10 +603,7 @@ function fan_out(item_query, validate_or_fn, maybe_fn) {
 				state,
 				false,
 				() => validate(arg),
-				async (input) => {
-					const tuples = await fn(input);
-					return fan_out_items(tuples, /* options */ undefined);
-				}
+				async (input) => process_user_result(input, /* options */ undefined)
 			)
 		);
 	};
@@ -593,17 +619,23 @@ function fan_out(item_query, validate_or_fn, maybe_fn) {
  */
 
 /**
+ * @typedef {{ items: Array<FanOutEntry>, meta: Record<string, any> }} FanOutInternalResult
+ */
+
+/**
  * Like `create_query_resource`, but specialized for `query.fanOut`:
  *
- *   - The cached value is the wire-format `{ item_query_id, items }`, so
- *     repeat calls to `wrapper(arg)` within the same render reuse it.
- *   - Hydration seeds the wire format under `__.id + payload`, not the
- *     unserializable array of resources. The client stub reads this on
- *     first call, unwraps it into per-item `QueryProxy` instances, and
- *     never has to issue an extra HTTP request.
- *   - Awaiting the resource resolves to `Array<RemoteQuery<Item>>` for
- *     user code, built by `bind`-ing each item entry to the companion
- *     item query (whose per-request cache was warmed by `fan_out_items`).
+ *   - The cached value is the internal `{ items, meta }` shape, so repeat
+ *     calls to `wrapper(arg)` within the same render reuse it.
+ *   - Hydration seeds the wire format `{ item_query_id, items, meta }`
+ *     under `__.id + payload`, not the unserializable array of resources.
+ *     The client stub reads this on first call, unwraps it into per-item
+ *     `QueryProxy` instances merged with `meta`, and never has to issue
+ *     an extra HTTP request.
+ *   - Awaiting the resource resolves to `{ rows: Array<RemoteQuery<Item>>, ...meta }`
+ *     for user code, built by `bind`-ing each item entry to the companion
+ *     item query (whose per-request cache was warmed) and spreading
+ *     the metadata.
  *
  * @template Item
  * @param {RemoteQueryFanOutInternals} __
@@ -611,67 +643,70 @@ function fan_out(item_query, validate_or_fn, maybe_fn) {
  * @param {string} payload — the stringified raw argument (i.e. the cache key the client will use)
  * @param {RequestState} state
  * @param {() => Promise<any>} fn
- * @returns {RemoteQuery<Array<RemoteQuery<Item>>>}
+ * @returns {RemoteQuery<{ rows: Array<RemoteQuery<Item>> } & Record<string, any>>}
  */
 function create_fan_out_resource(__, item_internals, payload, state, fn) {
-	/** @type {Promise<Array<FanOutEntry>> | null} */
-	let items_promise = null;
+	/** @type {Promise<FanOutInternalResult> | null} */
+	let internal_promise = null;
 
-	/** @type {Promise<Array<RemoteQuery<Item>>> | null} */
-	let resources_promise = null;
+	/** @type {Promise<{ rows: Array<RemoteQuery<Item>> } & Record<string, any>> | null} */
+	let resolved_promise = null;
 
-	const get_items_promise = () => {
-		if (items_promise) return items_promise;
+	const get_internal_promise = () => {
+		if (internal_promise) return internal_promise;
 
-		// Cache the wire entries on `state.remote.data` so that a second
-		// `wrapper(arg)` in the same render reuses them, and so that the
-		// hydration handoff serializes the wire format (not the array of
-		// resources, which is not serializable).
+		// Cache on `state.remote.data` so that a second `wrapper(arg)` in
+		// the same render reuses the same { items, meta } payload, and so
+		// that the hydration handoff serializes a known-shape wire format
+		// (not the array of resources, which is not serializable).
 		const cache = get_cache(__, state);
 		const existing = cache[payload];
 		if (existing) {
-			items_promise = /** @type {Promise<Array<FanOutEntry>>} */ (Promise.resolve(existing.data));
+			internal_promise = /** @type {Promise<FanOutInternalResult>} */ (
+				Promise.resolve(existing.data)
+			);
 		} else {
-			items_promise = fn();
-			cache[payload] = { serialize: true, data: items_promise };
+			internal_promise = fn();
+			cache[payload] = { serialize: true, data: internal_promise };
 		}
 
 		// Seed the hydration cache under our own (id, payload). The client
 		// stub looks this up in `query_responses` and skips the HTTP fetch.
 		if (state.is_in_render && __.id) {
 			const remote_key = create_remote_key(__.id, payload);
-			items_promise
-				.then((items) => {
+			internal_promise
+				.then(({ items, meta }) => {
 					void unfriendly_hydratable(remote_key, () =>
-						stringify({ item_query_id: item_internals.id, items }, state.transport)
+						stringify({ item_query_id: item_internals.id, items, meta }, state.transport)
 					);
 				})
 				.catch(noop);
 		}
 
-		return items_promise;
+		return internal_promise;
 	};
 
-	const get_resources_promise = () => {
-		return (resources_promise ??= get_items_promise().then((items) =>
-			items.map(
+	const get_resolved_promise = () => {
+		return (resolved_promise ??= get_internal_promise().then(({ items, meta }) => ({
+			...meta,
+			rows: items.map(
 				(entry) => /** @type {RemoteQuery<Item>} */ (item_internals.bind(entry.payload, entry.arg))
 			)
-		));
+		})));
 	};
 
 	const populate_hydratable = () => {
 		// Accessing the data accessors must kick off the work so that the
 		// value gets seeded into the hydration cache and becomes available
 		// on the client without an extra round-trip.
-		void (__.id && state.is_in_render && get_resources_promise());
+		void (__.id && state.is_in_render && get_resolved_promise());
 	};
 
-	return /** @type {RemoteQuery<Array<RemoteQuery<Item>>>} */ (
+	return /** @type {RemoteQuery<{ rows: Array<RemoteQuery<Item>> } & Record<string, any>>} */ (
 		/** @type {unknown} */ ({
 			/** @type {Promise<any>['catch']} */
 			catch(onrejected) {
-				return get_resources_promise().catch(onrejected);
+				return get_resolved_promise().catch(onrejected);
 			},
 			get current() {
 				populate_hydratable();
@@ -683,7 +718,7 @@ function create_fan_out_resource(__, item_internals, payload, state, fn) {
 			},
 			/** @type {Promise<any>['finally']} */
 			finally(onfinally) {
-				return get_resources_promise().finally(onfinally);
+				return get_resolved_promise().finally(onfinally);
 			},
 			get loading() {
 				populate_hydratable();
@@ -698,7 +733,7 @@ function create_fan_out_resource(__, item_internals, payload, state, fn) {
 				if (!event.isRemoteRequest) return Promise.resolve();
 				const refresh_context = get_refresh_context(__, 'refresh', payload);
 				const is_immediate_refresh = !refresh_context.cache[refresh_context.payload];
-				const value = is_immediate_refresh ? get_items_promise() : fn();
+				const value = is_immediate_refresh ? get_internal_promise() : fn();
 				return update_refresh_value(refresh_context, value, is_immediate_refresh);
 			},
 			/** @param {any} value */
@@ -707,7 +742,7 @@ function create_fan_out_resource(__, item_internals, payload, state, fn) {
 			},
 			/** @type {Promise<any>['then']} */
 			then(onfulfilled, onrejected) {
-				return get_resources_promise().then(onfulfilled, onrejected);
+				return get_resolved_promise().then(onfulfilled, onrejected);
 			},
 			withOverride() {
 				throw new Error(`Cannot call '${__.name}.withOverride()' on the server`);

@@ -15,8 +15,9 @@
 <h1>Query FanOut Test</h1>
 
 <ul>
-	{#await pulls then resources}
-		{#each resources as resource, idx (idx)}
+	{#await pulls then page}
+		<li id="fan-out-total">total: {page.total}</li>
+		{#each page.rows as resource, idx (idx)}
 			<li>
 				<svelte:boundary>
 					<span id="fan-out-result-{idx + 1}">{(await resource)?.title}</span>

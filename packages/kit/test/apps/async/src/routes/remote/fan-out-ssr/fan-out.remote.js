@@ -14,6 +14,6 @@ export const get_item = query('unchecked', (/** @type {string} */ id) => {
 
 export const get_items = query.fanOut(get_item, () => {
 	/** @type {Array<[string, { id: string; title: string }]>} */
-	const tuples = Array.from(ITEMS.values()).map((item) => [item.id, item]);
-	return tuples;
+	const rows = Array.from(ITEMS.values()).map((item) => [item.id, item]);
+	return { rows, total: ITEMS.size };
 });

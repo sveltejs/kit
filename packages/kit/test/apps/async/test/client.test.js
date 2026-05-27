@@ -455,6 +455,12 @@ test.describe('remote function mutations', () => {
 		await expect(page.locator('#fan-out-result-2')).toHaveText('Walk the dog');
 	});
 
+	test('query.fanOut passes list-level metadata through alongside rows', async ({ page }) => {
+		await page.goto('/remote/fan-out');
+
+		await expect(page.locator('#fan-out-total')).toHaveText('total: 2');
+	});
+
 	test('query.fanOut warms the item-query cache (no extra request on detail page)', async ({
 		page
 	}) => {

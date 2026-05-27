@@ -6,10 +6,12 @@
 	// `get_items()` running just above — no extra fetch should happen.
 	const direct = get_item('1');
 
-	const resources = await pulls;
+	const page = await pulls;
 </script>
 
-{#each resources as resource, idx (idx)}
+<p id="ssr-fan-out-total">total: {page.total}</p>
+
+{#each page.rows as resource, idx (idx)}
 	<p id="ssr-fan-out-result-{idx + 1}">{(await resource)?.title}</p>
 {/each}
 

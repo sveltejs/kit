@@ -3502,26 +3502,50 @@ declare module '$app/server' {
 		 */
 		function batch<Schema extends StandardSchemaV1, Output>(schema: Schema, fn: (args: StandardSchemaV1.InferOutput<Schema>[]) => MaybePromise<(arg: StandardSchemaV1.InferOutput<Schema>, idx: number) => Output>): RemoteQueryFunction<StandardSchemaV1.InferInput<Schema>, Output, StandardSchemaV1.InferOutput<Schema>>;
 		/**
-		 * Creates a fan-out query that returns an array of per-item query resources from a single backend call.
+		 * Creates a fan-out query that turns one server call into an array of per-item
+		 * query resources, alongside any list-level metadata the user wants to
+		 * pass through.
+		 *
+		 * The user function returns `{ rows: Array<[ItemArg, Item]>, ...meta }`. The
+		 * `rows` field is fanned out: each tuple's `Item` warms the companion item
+		 * query's cache and becomes a `RemoteQuery<Item>` on the consumer side. Any
+		 * other fields on the returned object pass through unchanged, so paginated
+		 * APIs can include cursors, totals, has-next-page flags, and so on.
 		 *
 		 * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query.fanOut) for full documentation.
 		 *
 		 * */
-		function fanOut<ItemArg, Item>(item_query: RemoteQueryFunction<ItemArg, Item, any>, fn: () => MaybePromise<Array<[ItemArg, Item]>>): RemoteQueryFunction<void, Array<RemoteQuery<Item>>>;
+		function fanOut<ItemArg, Item, Result extends Record<string, any>>(item_query: RemoteQueryFunction<ItemArg, Item, any>, fn: () => MaybePromise<Result & {
+			rows: Array<[ItemArg, Item]>;
+		}>): RemoteQueryFunction<void, Omit<Result, "rows"> & {
+			rows: Array<RemoteQuery<Item>>;
+		}>;
 		/**
-		 * Creates a fan-out query that returns an array of per-item query resources from a single backend call.
+		 * Creates a fan-out query that turns one server call into an array of per-item
+		 * query resources, alongside any list-level metadata the user wants to
+		 * pass through.
 		 *
 		 * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query.fanOut) for full documentation.
 		 *
 		 * */
-		function fanOut<ItemArg, Item, Input>(item_query: RemoteQueryFunction<ItemArg, Item, any>, validate: "unchecked", fn: (arg: Input) => MaybePromise<Array<[ItemArg, Item]>>): RemoteQueryFunction<Input, Array<RemoteQuery<Item>>>;
+		function fanOut<ItemArg, Item, Input, Result extends Record<string, any>>(item_query: RemoteQueryFunction<ItemArg, Item, any>, validate: "unchecked", fn: (arg: Input) => MaybePromise<Result & {
+			rows: Array<[ItemArg, Item]>;
+		}>): RemoteQueryFunction<Input, Omit<Result, "rows"> & {
+			rows: Array<RemoteQuery<Item>>;
+		}>;
 		/**
-		 * Creates a fan-out query that returns an array of per-item query resources from a single backend call.
+		 * Creates a fan-out query that turns one server call into an array of per-item
+		 * query resources, alongside any list-level metadata the user wants to
+		 * pass through.
 		 *
 		 * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query.fanOut) for full documentation.
 		 *
 		 * */
-		function fanOut<ItemArg, Item, Schema extends StandardSchemaV1>(item_query: RemoteQueryFunction<ItemArg, Item, any>, schema: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => MaybePromise<Array<[ItemArg, Item]>>): RemoteQueryFunction<StandardSchemaV1.InferInput<Schema>, Array<RemoteQuery<Item>>, StandardSchemaV1.InferOutput<Schema>>;
+		function fanOut<ItemArg, Item, Schema extends StandardSchemaV1, Result extends Record<string, any>>(item_query: RemoteQueryFunction<ItemArg, Item, any>, schema: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => MaybePromise<Result & {
+			rows: Array<[ItemArg, Item]>;
+		}>): RemoteQueryFunction<StandardSchemaV1.InferInput<Schema>, Omit<Result, "rows"> & {
+			rows: Array<RemoteQuery<Item>>;
+		}, StandardSchemaV1.InferOutput<Schema>>;
 		/**
 		 * Creates a live remote query. When called from the browser, the function will be invoked on the server via a streaming `fetch` call.
 		 *
