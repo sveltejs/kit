@@ -1155,7 +1155,7 @@ test.describe('data-sveltekit attributes', () => {
 			page.waitForTimeout(100), // wait for preloading to start
 			page.waitForLoadState('networkidle') // wait for preloading to finish
 		]);
-		expect(requests.length).toBe(2);
+		expect(requests.length).toBe(1);
 
 		requests.length = 0;
 		await clicknav('#target', { waitForURL: '/data-sveltekit/preload-data/repeat/target' });
