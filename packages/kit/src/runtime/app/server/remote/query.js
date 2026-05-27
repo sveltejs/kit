@@ -1,8 +1,13 @@
 /** @import { RemoteLiveQuery, RemoteLiveQueryFunction, RemoteQuery, RemoteQueryFunction } from '@sveltejs/kit' */
-/** @import { RemoteInternals, MaybePromise, RequestState, RemoteQueryLiveInternals, RemoteQueryBatchInternals, RemoteQueryInternals, RemoteLiveQueryUserFunctionReturnType } from 'types' */
+/** @import { RemoteInternals, MaybePromise, RequestState, RemoteQueryLiveInternals, RemoteQueryBatchInternals, RemoteQueryFanOutInternals, RemoteQueryInternals, RemoteLiveQueryUserFunctionReturnType } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 import { get_request_store } from '@sveltejs/kit/internal/server';
-import { create_remote_key, stringify, stringify_remote_arg } from '../../../shared.js';
+import {
+	create_remote_key,
+	stringify,
+	stringify_remote_arg,
+	unfriendly_hydratable
+} from '../../../shared.js';
 import { prerendering } from '__sveltekit/environment';
 import {
 	create_validator,
@@ -373,6 +378,348 @@ function batch(validate_or_fn, maybe_fn) {
 }
 
 /**
+ * Creates a fan-out query that returns an array of per-item query resources from a single backend call.
+ *
+ * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query.fanOut) for full documentation.
+ *
+ * @template ItemArg
+ * @template Item
+ * @overload
+ * @param {RemoteQueryFunction<ItemArg, Item, any>} item_query
+ * @param {() => MaybePromise<Array<[ItemArg, Item]>>} fn
+ * @returns {RemoteQueryFunction<void, Array<RemoteQuery<Item>>>}
+ */
+/**
+ * Creates a fan-out query that returns an array of per-item query resources from a single backend call.
+ *
+ * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query.fanOut) for full documentation.
+ *
+ * @template ItemArg
+ * @template Item
+ * @template Input
+ * @overload
+ * @param {RemoteQueryFunction<ItemArg, Item, any>} item_query
+ * @param {'unchecked'} validate
+ * @param {(arg: Input) => MaybePromise<Array<[ItemArg, Item]>>} fn
+ * @returns {RemoteQueryFunction<Input, Array<RemoteQuery<Item>>>}
+ */
+/**
+ * Creates a fan-out query that returns an array of per-item query resources from a single backend call.
+ *
+ * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query.fanOut) for full documentation.
+ *
+ * @template ItemArg
+ * @template Item
+ * @template {StandardSchemaV1} Schema
+ * @overload
+ * @param {RemoteQueryFunction<ItemArg, Item, any>} item_query
+ * @param {Schema} schema
+ * @param {(arg: StandardSchemaV1.InferOutput<Schema>) => MaybePromise<Array<[ItemArg, Item]>>} fn
+ * @returns {RemoteQueryFunction<StandardSchemaV1.InferInput<Schema>, Array<RemoteQuery<Item>>, StandardSchemaV1.InferOutput<Schema>>}
+ */
+/**
+ * @template ItemArg
+ * @template Item
+ * @template Input
+ * @param {RemoteQueryFunction<ItemArg, Item, any>} item_query
+ * @param {any} validate_or_fn
+ * @param {(arg?: Input) => MaybePromise<Array<[ItemArg, Item]>>} [maybe_fn]
+ * @returns {RemoteQueryFunction<Input, Array<RemoteQuery<Item>>>}
+ */
+/*@__NO_SIDE_EFFECTS__*/
+function fan_out(item_query, validate_or_fn, maybe_fn) {
+	const item_internals = /** @type {RemoteQueryInternals | undefined} */ (
+		/** @type {any} */ (item_query)?.__
+	);
+
+	if (!item_internals || item_internals.type !== 'query') {
+		throw new Error(
+			"query.fanOut's first argument must be a query function created with `query(...)`"
+		);
+	}
+
+	/** @type {(arg?: Input) => MaybePromise<Array<[ItemArg, Item]>>} */
+	const fn = maybe_fn ?? validate_or_fn;
+
+	/** @type {(arg?: any) => MaybePromise<Input>} */
+	const validate = create_validator(validate_or_fn, maybe_fn);
+
+	/**
+	 * For each `[item_arg, data]` tuple:
+	 *   1. Validate `item_arg` through the companion item query's validator.
+	 *      A failure becomes a per-row error entry (other rows still succeed).
+	 *   2. Warm the per-request cache for the item query so subsequent
+	 *      `item_query(arg)` calls within this render reuse this value
+	 *      rather than re-running the user function.
+	 *   3. Return an entry describing the row's outcome, including a
+	 *      jsonified error if `options` is supplied (i.e. we're producing
+	 *      a wire response). When `options` is missing (the SSR render
+	 *      path), errors are kept raw and the entry's `error`/`status`
+	 *      are computed lazily by the hydration handoff.
+	 *
+	 * @param {Array<[ItemArg, Item]>} tuples
+	 * @param {any} options
+	 * @returns {Promise<Array<FanOutEntry>>}
+	 */
+	const fan_out_items = async (tuples, options) => {
+		const { event, state } = get_request_store();
+		const item_cache = get_cache(item_internals, state);
+
+		return Promise.all(
+			tuples.map(async ([item_arg, data]) => {
+				try {
+					const validated_item_arg = await item_internals.validate(item_arg);
+					const item_payload = stringify_remote_arg(validated_item_arg, state.transport);
+
+					// Warm the per-request cache. Subsequent `item_query(arg)` calls
+					// within this render look up `state.remote.data` keyed by
+					// `(item_internals, item_payload)` and will reuse this value.
+					// `serialize: true` ensures the value is included in the hydration
+					// payload so the client can avoid a follow-up fetch.
+					item_cache[item_payload] = { serialize: true, data: Promise.resolve(data) };
+
+					return {
+						type: /** @type {const} */ ('result'),
+						arg: validated_item_arg,
+						payload: item_payload,
+						data
+					};
+				} catch (error) {
+					// We don't have a validated item_arg, so we use the raw one for both
+					// `arg` (sent to the client) and `payload` (cache key). This is fine
+					// for error entries: if the client subsequently calls `item_query(arg)`
+					// with the same raw arg, validation will fail in the same way.
+					const item_payload = stringify_remote_arg(item_arg, state.transport);
+					const status =
+						error instanceof HttpError || error instanceof SvelteKitError ? error.status : 500;
+
+					// Poison the item-query cache entry so awaiting a sibling
+					// `item_query(arg)` call in the same render produces the same
+					// error rather than silently re-running the user function.
+					const rejected = Promise.reject(error);
+					rejected.catch(noop);
+					item_cache[item_payload] = { serialize: false, data: rejected };
+
+					const jsonified = options
+						? await handle_error_and_jsonify(event, state, options, error)
+						: /** @type {any} */ ({
+								message: error instanceof Error ? error.message : 'Unknown Error'
+							});
+
+					return {
+						type: /** @type {const} */ ('error'),
+						arg: item_arg,
+						payload: item_payload,
+						error: jsonified,
+						status
+					};
+				}
+			})
+		);
+	};
+
+	/** @type {RemoteQueryFanOutInternals} */
+	const __ = {
+		type: 'query_fan_out',
+		id: '',
+		name: '',
+		validate,
+		run: async (arg, options) => {
+			const { event, state } = get_request_store();
+
+			return run_remote_function(
+				event,
+				state,
+				false,
+				() => validate(arg),
+				async (input) => {
+					const tuples = await fn(input);
+					const items = await fan_out_items(tuples, options);
+					return { item_query_id: item_internals.id, items };
+				}
+			);
+		},
+		bind(payload, validated_arg) {
+			const { event, state } = get_request_store();
+
+			return create_fan_out_resource(__, item_internals, payload, state, () =>
+				run_remote_function(
+					event,
+					state,
+					false,
+					() => validated_arg,
+					async (input) => {
+						const tuples = await fn(input);
+						return fan_out_items(tuples, /* options */ undefined);
+					}
+				)
+			);
+		}
+	};
+
+	/** @type {RemoteQueryFunction<Input, Array<RemoteQuery<Item>>> & { __: RemoteQueryFanOutInternals }} */
+	const wrapper = (arg) => {
+		if (prerendering) {
+			throw new Error(
+				`Cannot call query.fanOut '${__.name}' while prerendering, as prerendered pages need static data. Use 'prerender' from $app/server instead`
+			);
+		}
+
+		const { event, state } = get_request_store();
+		const payload = stringify_remote_arg(arg, state.transport);
+
+		return create_fan_out_resource(__, item_internals, payload, state, () =>
+			run_remote_function(
+				event,
+				state,
+				false,
+				() => validate(arg),
+				async (input) => {
+					const tuples = await fn(input);
+					return fan_out_items(tuples, /* options */ undefined);
+				}
+			)
+		);
+	};
+
+	Object.defineProperty(wrapper, '__', { value: __ });
+
+	return wrapper;
+}
+
+/**
+ * @typedef {| { type: 'result'; arg: any; payload: string; data: any }
+ *           | { type: 'error'; arg: any; payload: string; error: any; status: number }} FanOutEntry
+ */
+
+/**
+ * Like `create_query_resource`, but specialized for `query.fanOut`:
+ *
+ *   - The cached value is the wire-format `{ item_query_id, items }`, so
+ *     repeat calls to `wrapper(arg)` within the same render reuse it.
+ *   - Hydration seeds the wire format under `__.id + payload`, not the
+ *     unserializable array of resources. The client stub reads this on
+ *     first call, unwraps it into per-item `QueryProxy` instances, and
+ *     never has to issue an extra HTTP request.
+ *   - Awaiting the resource resolves to `Array<RemoteQuery<Item>>` for
+ *     user code, built by `bind`-ing each item entry to the companion
+ *     item query (whose per-request cache was warmed by `fan_out_items`).
+ *
+ * @template Item
+ * @param {RemoteQueryFanOutInternals} __
+ * @param {RemoteQueryInternals} item_internals
+ * @param {string} payload — the stringified raw argument (i.e. the cache key the client will use)
+ * @param {RequestState} state
+ * @param {() => Promise<any>} fn
+ * @returns {RemoteQuery<Array<RemoteQuery<Item>>>}
+ */
+function create_fan_out_resource(__, item_internals, payload, state, fn) {
+	/** @type {Promise<Array<FanOutEntry>> | null} */
+	let items_promise = null;
+
+	/** @type {Promise<Array<RemoteQuery<Item>>> | null} */
+	let resources_promise = null;
+
+	const get_items_promise = () => {
+		if (items_promise) return items_promise;
+
+		// Cache the wire entries on `state.remote.data` so that a second
+		// `wrapper(arg)` in the same render reuses them, and so that the
+		// hydration handoff serializes the wire format (not the array of
+		// resources, which is not serializable).
+		const cache = get_cache(__, state);
+		const existing = cache[payload];
+		if (existing) {
+			items_promise = /** @type {Promise<Array<FanOutEntry>>} */ (Promise.resolve(existing.data));
+		} else {
+			items_promise = fn();
+			cache[payload] = { serialize: true, data: items_promise };
+		}
+
+		// Seed the hydration cache under our own (id, payload). The client
+		// stub looks this up in `query_responses` and skips the HTTP fetch.
+		if (state.is_in_render && __.id) {
+			const remote_key = create_remote_key(__.id, payload);
+			items_promise
+				.then((items) => {
+					void unfriendly_hydratable(remote_key, () =>
+						stringify({ item_query_id: item_internals.id, items }, state.transport)
+					);
+				})
+				.catch(noop);
+		}
+
+		return items_promise;
+	};
+
+	const get_resources_promise = () => {
+		return (resources_promise ??= get_items_promise().then((items) =>
+			items.map(
+				(entry) => /** @type {RemoteQuery<Item>} */ (item_internals.bind(entry.payload, entry.arg))
+			)
+		));
+	};
+
+	const populate_hydratable = () => {
+		// Accessing the data accessors must kick off the work so that the
+		// value gets seeded into the hydration cache and becomes available
+		// on the client without an extra round-trip.
+		void (__.id && state.is_in_render && get_resources_promise());
+	};
+
+	return /** @type {RemoteQuery<Array<RemoteQuery<Item>>>} */ (
+		/** @type {unknown} */ ({
+			/** @type {Promise<any>['catch']} */
+			catch(onrejected) {
+				return get_resources_promise().catch(onrejected);
+			},
+			get current() {
+				populate_hydratable();
+				return undefined;
+			},
+			get error() {
+				populate_hydratable();
+				return undefined;
+			},
+			/** @type {Promise<any>['finally']} */
+			finally(onfinally) {
+				return get_resources_promise().finally(onfinally);
+			},
+			get loading() {
+				populate_hydratable();
+				return true;
+			},
+			get ready() {
+				populate_hydratable();
+				return false;
+			},
+			refresh() {
+				const { event } = get_request_store();
+				if (!event.isRemoteRequest) return Promise.resolve();
+				const refresh_context = get_refresh_context(__, 'refresh', payload);
+				const is_immediate_refresh = !refresh_context.cache[refresh_context.payload];
+				const value = is_immediate_refresh ? get_items_promise() : fn();
+				return update_refresh_value(refresh_context, value, is_immediate_refresh);
+			},
+			/** @param {any} value */
+			set(value) {
+				return update_refresh_value(get_refresh_context(__, 'set', payload), value);
+			},
+			/** @type {Promise<any>['then']} */
+			then(onfulfilled, onrejected) {
+				return get_resources_promise().then(onfulfilled, onrejected);
+			},
+			withOverride() {
+				throw new Error(`Cannot call '${__.name}.withOverride()' on the server`);
+			},
+			get [Symbol.toStringTag]() {
+				return 'QueryResource';
+			}
+		})
+	);
+}
+
+/**
  * @param {RemoteInternals} __
  * @param {string} payload — the stringified raw argument (i.e. the cache key the client will use)
  * @param {RequestState} state
@@ -619,6 +966,7 @@ function create_shared_live_iterator(signal, get_generator) {
 
 // Add batch as a property to the query function
 Object.defineProperty(query, 'batch', { value: batch, enumerable: true });
+Object.defineProperty(query, 'fanOut', { value: fan_out, enumerable: true });
 Object.defineProperty(query, 'live', { value: live, enumerable: true });
 
 /**

@@ -448,6 +448,83 @@ test.describe('remote function mutations', () => {
 		await expect(page.locator('#phrase')).toHaveText('i am your father');
 	});
 
+	test('query.fanOut renders per-row queries from a single request', async ({ page }) => {
+		await page.goto('/remote/fan-out');
+
+		await expect(page.locator('#fan-out-result-1')).toHaveText('Buy groceries');
+		await expect(page.locator('#fan-out-result-2')).toHaveText('Walk the dog');
+	});
+
+	test('query.fanOut warms the item-query cache (no extra request on detail page)', async ({
+		page
+	}) => {
+		await page.goto('/remote/fan-out');
+		await expect(page.locator('#fan-out-result-1')).toHaveText('Buy groceries');
+
+		let request_count = 0;
+		/** @param {import('@playwright/test').Request} r */
+		const handler = (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0);
+		page.on('request', handler);
+
+		await page.click('#fan-out-detail-link-1');
+		await expect(page.locator('#fan-out-detail-title')).toHaveText('Buy groceries');
+		await page.waitForTimeout(100); // allow any stragglers to land
+		expect(request_count).toBe(0);
+	});
+
+	test('query.fanOut per-row set updates only that row', async ({ page }) => {
+		await page.goto('/remote/fan-out');
+		await page.click('#fan-out-reset-btn');
+		await expect(page.locator('#fan-out-result-1')).toHaveText('Buy groceries');
+
+		let request_count = 0;
+		/** @param {import('@playwright/test').Request} r */
+		const handler = (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0);
+		page.on('request', handler);
+
+		await page.click('#fan-out-set-btn');
+		await expect(page.locator('#fan-out-result-1')).toHaveText('Buy cat food');
+		await page.waitForTimeout(100);
+		expect(request_count).toBe(1); // only the command request
+	});
+
+	test('query.fanOut per-row refresh in command reuses single flight', async ({ page }) => {
+		await page.goto('/remote/fan-out');
+		await page.click('#fan-out-reset-btn');
+		await expect(page.locator('#fan-out-result-2')).toHaveText('Walk the dog');
+
+		let request_count = 0;
+		/** @param {import('@playwright/test').Request} r */
+		const handler = (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0);
+		page.on('request', handler);
+
+		await page.click('#fan-out-refresh-btn');
+		await expect(page.locator('#fan-out-result-2')).toHaveText('Walk the dog (refreshed)');
+		await page.waitForTimeout(100);
+		expect(request_count).toBe(1); // only the command request
+	});
+
+	test('query.fanOut refresh via requested(...) reuses single flight', async ({ page }) => {
+		await page.goto('/remote/fan-out');
+		await page.click('#fan-out-reset-btn');
+		await expect(page.locator('#fan-out-result-1')).toHaveText('Buy groceries');
+		await expect(page.locator('#fan-out-result-2')).toHaveText('Walk the dog');
+
+		let request_count = 0;
+		/** @param {import('@playwright/test').Request} r */
+		const handler = (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0);
+		page.on('request', handler);
+
+		await page.click('#fan-out-requested-refresh-all-btn');
+		await expect(page.locator('#fan-out-result-1')).toHaveText('Buy groceries (requested)');
+		await expect(page.locator('#fan-out-result-2')).toHaveText('Walk the dog (requested)');
+		await page.waitForTimeout(100);
+
+		// Only the command request itself — all per-row refreshes were
+		// served via single-flight in the command response.
+		expect(request_count).toBe(1);
+	});
+
 	test('query.live streams updates and reconnects after disconnect', async ({ page, context }) => {
 		await page.goto('/remote/live');
 		await page.click('#reset');

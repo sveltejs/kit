@@ -661,6 +661,20 @@ export interface RemoteQueryBatchInternals extends BaseRemoteInternals {
 	bind(payload: string, arg: any): RemoteQuery<any>;
 }
 
+export interface RemoteQueryFanOutInternals extends BaseRemoteInternals {
+	type: 'query_fan_out';
+	validate: (arg?: any) => MaybePromise<any>;
+	run: (arg: any, options: SSROptions) => Promise<any>;
+	/**
+	 * Creates a `RemoteQuery` bound directly to a specific client payload (the
+	 * stringified raw argument) and a pre-validated argument, skipping the query
+	 * wrapper's re-validation step. Used by `requested(fanOutQuery)` to ensure
+	 * `refresh()` / `set()` target the same cache key the client is listening on
+	 * even when the schema transforms the input.
+	 */
+	bind(payload: string, arg: any): RemoteQuery<any>;
+}
+
 export interface RemoteCommandInternals extends BaseRemoteInternals {
 	type: 'command';
 }
@@ -680,6 +694,7 @@ export interface RemotePrerenderInternals extends BaseRemoteInternals {
 export type RemoteAnyQueryInternals =
 	| RemoteQueryInternals
 	| RemoteQueryBatchInternals
+	| RemoteQueryFanOutInternals
 	| RemoteQueryLiveInternals;
 
 export type RemoteInternals =

@@ -86,6 +86,31 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 			);
 		}
 
+		if (internals.type === 'query_fan_out') {
+			if (event.request.method !== 'GET') {
+				throw new SvelteKitError(
+					405,
+					'Method Not Allowed',
+					`\`query.fanOut\` functions must be invoked via GET request, not ${event.request.method}`
+				);
+			}
+
+			const payload = /** @type {string} */ (
+				new URL(event.request.url).searchParams.get('payload')
+			);
+
+			const arg = parse_remote_arg(payload, transport);
+
+			const result = await with_request_store({ event, state }, () => internals.run(arg, options));
+
+			return json(
+				/** @type {RemoteFunctionResponse} */ ({
+					type: 'result',
+					result: stringify(result, transport)
+				})
+			);
+		}
+
 		if (internals.type === 'form') {
 			if (event.request.method !== 'POST') {
 				throw new SvelteKitError(

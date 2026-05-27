@@ -103,10 +103,11 @@ export function requested(query, limit) {
 	if (
 		internals?.type !== 'query' &&
 		internals?.type !== 'query_batch' &&
+		internals?.type !== 'query_fan_out' &&
 		internals?.type !== 'query_live'
 	) {
 		throw new Error(
-			'requested(...) expects a query function created with query(...), query.batch(...), or query.live(...)'
+			'requested(...) expects a query function created with query(...), query.batch(...), query.fanOut(...), or query.live(...)'
 		);
 	}
 

@@ -20,6 +20,18 @@ test.describe('remote functions', () => {
 		await expect(page.locator('body')).not.toContainText('Loading todo');
 	});
 
+	test('query.fanOut renders all items and warms the item-query cache during SSR', async ({
+		page
+	}) => {
+		await page.goto('/remote/fan-out-ssr');
+
+		await expect(page.locator('#ssr-fan-out-result-1')).toHaveText('Buy groceries');
+		await expect(page.locator('#ssr-fan-out-result-2')).toHaveText('Walk the dog');
+		// `get_item('1')` called *after* `get_items()` in the same render should
+		// hit the warm per-request cache populated by the fan-out.
+		await expect(page.locator('#ssr-fan-out-direct')).toHaveText('Buy groceries');
+	});
+
 	test('query.live renders the first yielded value during SSR', async ({ page }) => {
 		await page.goto('/remote/live');
 		await expect(page.locator('#first-value')).toHaveText('0');
