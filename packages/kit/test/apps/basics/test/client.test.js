@@ -1107,6 +1107,61 @@ test.describe('data-sveltekit attributes', () => {
 		await expect(page.getByText('slow navigation', { exact: true })).toBeVisible();
 	});
 
+	test('data-sveltekit-preload repeatedly works on the same anchor element', async ({
+		page,
+		clicknav
+	}) => {
+		/** @type {string[]} */
+		const requests = [];
+		page.on('request', (req) => {
+			if (req.resourceType() === 'script') {
+				req
+					.response()
+					.then(
+						(res) => res?.text(),
+						() => ''
+					)
+					.then((text) => {
+						if (text?.includes('this string should only appear in this preloaded file')) {
+							requests.push(req.url());
+						}
+					});
+			}
+
+			if (req.url().includes('__data.json')) {
+				requests.push(req.url());
+			}
+		});
+
+		await page.goto('/data-sveltekit/preload-data/repeat');
+		await page.locator('#target').hover();
+		await page.locator('#target').dispatchEvent('touchstart');
+		await Promise.all([
+			page.waitForTimeout(100), // wait for preloading to start
+			page.waitForLoadState('networkidle') // wait for preloading to finish
+		]);
+		expect(requests.length).toBe(2);
+
+		requests.length = 0;
+		await clicknav('#target', { waitForURL: '/data-sveltekit/preload-data/repeat/target' });
+		expect(requests.length).toBe(0);
+
+		await clicknav('#home', { waitForURL: '/data-sveltekit/preload-data/repeat' });
+		expect(requests.length).toBe(0);
+
+		await page.locator('#target').hover();
+		await page.locator('#target').dispatchEvent('touchstart');
+		await Promise.all([
+			page.waitForTimeout(100), // wait for preloading to start
+			page.waitForLoadState('networkidle') // wait for preloading to finish
+		]);
+		expect(requests.length).toBe(1);
+
+		requests.length = 0;
+		await clicknav('#target', { waitForURL: '/data-sveltekit/preload-data/repeat/target' });
+		expect(requests.length).toBe(0);
+	});
+
 	test('data-sveltekit-preload-data tap works after data-sveltekit-preload-code hover', async ({
 		page
 	}) => {
