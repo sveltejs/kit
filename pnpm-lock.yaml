@@ -594,62 +594,62 @@ importers:
   packages/kit/src/core/sync/write_types/test/actions:
     devDependencies:
       typescript:
-        specifier: 'catalog:'
-        version: 6.0.2
+        specifier: 5.8.3
+        version: 5.8.3
 
   packages/kit/src/core/sync/write_types/test/app-types:
     devDependencies:
       typescript:
-        specifier: 'catalog:'
-        version: 6.0.2
+        specifier: 5.8.3
+        version: 5.8.3
 
   packages/kit/src/core/sync/write_types/test/layout:
     devDependencies:
       typescript:
-        specifier: 'catalog:'
-        version: 6.0.2
+        specifier: 5.8.3
+        version: 5.8.3
 
   packages/kit/src/core/sync/write_types/test/layout-advanced:
     devDependencies:
       typescript:
-        specifier: 'catalog:'
-        version: 6.0.2
+        specifier: 5.8.3
+        version: 5.8.3
 
   packages/kit/src/core/sync/write_types/test/param-type-inference:
     devDependencies:
       typescript:
-        specifier: 'catalog:'
-        version: 6.0.2
+        specifier: 5.8.3
+        version: 5.8.3
 
   packages/kit/src/core/sync/write_types/test/simple-page-server-and-shared:
     devDependencies:
       typescript:
-        specifier: 'catalog:'
-        version: 6.0.2
+        specifier: 5.8.3
+        version: 5.8.3
 
   packages/kit/src/core/sync/write_types/test/simple-page-server-only:
     devDependencies:
       typescript:
-        specifier: 'catalog:'
-        version: 6.0.2
+        specifier: 5.8.3
+        version: 5.8.3
 
   packages/kit/src/core/sync/write_types/test/simple-page-shared-only:
     devDependencies:
       typescript:
-        specifier: 'catalog:'
-        version: 6.0.2
+        specifier: 5.8.3
+        version: 5.8.3
 
   packages/kit/src/core/sync/write_types/test/slugs:
     devDependencies:
       typescript:
-        specifier: 'catalog:'
-        version: 6.0.2
+        specifier: 5.8.3
+        version: 5.8.3
 
   packages/kit/src/core/sync/write_types/test/slugs-layout-not-all-pages-have-load:
     devDependencies:
       typescript:
-        specifier: 'catalog:'
-        version: 6.0.2
+        specifier: 5.8.3
+        version: 5.8.3
 
   packages/kit/test/apps/amp:
     devDependencies:
@@ -3009,6 +3009,7 @@ packages:
   '@svitejs/changesets-changelog-github-compact@1.2.0':
     resolution: {integrity: sha512-08eKiDAjj4zLug1taXSIJ0kGL5cawjVCyJkBb6EWSg5fEPX6L+Wtr0CH2If4j5KYylz85iaZiFlUItvgJvll5g==}
     engines: {node: ^14.13.1 || ^16.0.0 || >=18}
+    deprecated: unmaintained
 
   '@tybys/wasm-util@0.10.1':
     resolution: {integrity: sha512-9tTaPJLSiejZKx+Bmog4uSubteqTvFrVrURwkmHixBo0G4seD0zUxp98E1DzUBJxLQ3NPwXrGKDiVjwx/DpPsg==}
