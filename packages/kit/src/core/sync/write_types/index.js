@@ -615,7 +615,7 @@ function generate_params_type(params, outdir, config) {
 					param.matcher
 						? `MatcherParam<typeof import('${path_to_matcher(param.matcher)}').match>`
 						: 'string'
-				}`
+				}${param.optional ? ' | undefined' : ''}`
 		)
 		.join('; ')} }`;
 }
