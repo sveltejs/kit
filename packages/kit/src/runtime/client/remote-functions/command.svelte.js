@@ -11,6 +11,7 @@ import {
 	categorize_updates,
 	apply_reconnections
 } from './shared.svelte.js';
+import { create_query_value_revivers } from './transport.js';
 
 /**
  * Client-version of the `command` function from `$app/server`.
@@ -84,7 +85,7 @@ export function command(id) {
 						apply_reconnections(result.reconnects);
 					}
 
-					return devalue.parse(result.result, app.decoders);
+					return devalue.parse(result.result, create_query_value_revivers());
 				}
 			} finally {
 				overrides?.forEach((fn) => fn());

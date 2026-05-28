@@ -1,11 +1,12 @@
 /** @import { RemoteFunctionResponse, RemoteSingleflightMap, RemoteSingleflightEntry } from 'types' */
 /** @import { RemoteQueryUpdate } from '@sveltejs/kit' */
 import * as devalue from 'devalue';
-import { app, goto, live_query_map, query_map } from '../client.js';
+import { goto, live_query_map, query_map } from '../client.js';
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
 import { untrack } from 'svelte';
 import { create_remote_key, split_remote_key } from '../../shared.js';
 import { navigating, page } from '../state.svelte.js';
+import { create_query_value_revivers } from './transport.js';
 
 /** Indicates a query function, as opposed to a query instance */
 export const QUERY_FUNCTION_ID = Symbol('sveltekit.query_function_id');
@@ -215,7 +216,7 @@ export function categorize_updates(updates) {
  */
 function apply_singleflight(stringified_singleflight, map, callback) {
 	const singleflight = /** @type {RemoteSingleflightMap} */ (
-		devalue.parse(stringified_singleflight, app.decoders)
+		devalue.parse(stringified_singleflight, create_query_value_revivers())
 	);
 
 	for (const [key, value] of Object.entries(singleflight)) {

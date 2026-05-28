@@ -2237,8 +2237,12 @@ export type RemoteQuery<T> = RemoteResource<T> & {
 	 *
 	 * On the server, this can be called in the context of a `command` or `form` and the specified data will accompany the action response back to the client.
 	 * This prevents SvelteKit needing to refresh all queries on the page in a second server round-trip.
+	 *
+	 * Inside another query's user function, populates the per-request cache so subsequent direct calls to this query within the same render reuse the value, and returns this `RemoteQuery` instance so it can be embedded in the surrounding query's return value (e.g. `data.map((d) => my_query(d.id).set(d))`).
+	 *
+	 * Returns the `RemoteQuery` instance so calls can be chained.
 	 */
-	set(value: T): void;
+	set(value: T): RemoteQuery<T>;
 	/**
 	 * On the client, this function will re-fetch the query from the server.
 	 *

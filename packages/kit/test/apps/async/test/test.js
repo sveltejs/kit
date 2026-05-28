@@ -20,6 +20,19 @@ test.describe('remote functions', () => {
 		await expect(page.locator('body')).not.toContainText('Loading todo');
 	});
 
+	test('query returning nested queries renders all rows and warms the item-query cache during SSR', async ({
+		page
+	}) => {
+		await page.goto('/remote/query-in-query-ssr');
+
+		await expect(page.locator('#ssr-qiq-total')).toHaveText('total: 2');
+		await expect(page.locator('#ssr-qiq-result-1')).toHaveText('Buy groceries');
+		await expect(page.locator('#ssr-qiq-result-2')).toHaveText('Walk the dog');
+		// `get_item('1')` called *after* `get_items()` in the same render
+		// should hit the warm per-request cache populated by `.from()`.
+		await expect(page.locator('#ssr-qiq-direct')).toHaveText('Buy groceries');
+	});
+
 	test('query.live renders the first yielded value during SSR', async ({ page }) => {
 		await page.goto('/remote/live');
 		await expect(page.locator('#first-value')).toHaveText('0');

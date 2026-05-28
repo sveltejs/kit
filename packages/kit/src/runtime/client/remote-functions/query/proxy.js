@@ -81,9 +81,13 @@ export class QueryProxy {
 		return this.#get_cached_query().refresh();
 	}
 
-	/** @type {Query<T>['set']} */
+	/**
+	 * @param {T} value
+	 * @returns {this}
+	 */
 	set(value) {
 		this.#get_cached_query().set(value);
+		return this;
 	}
 
 	/** @type {Query<T>['withOverride']} */

@@ -7,6 +7,11 @@ import { with_request_store, merge_tracing } from '@sveltejs/kit/internal/server
 import { app_dir, base } from '$app/paths/internal/server';
 import { is_form_content_type } from '../../utils/http.js';
 import { parse_remote_arg, split_remote_key, stringify } from '../shared.js';
+import {
+	pre_resolve_queries,
+	stringify_remote_response,
+	stringify_with_remote_queries
+} from './remote-query-serializer.js';
 import { handle_error_and_jsonify } from './utils.js';
 import { normalize_error } from '../../utils/error.js';
 import { check_incorrect_fail_use } from './page/actions.js';
@@ -81,7 +86,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 			return json(
 				/** @type {RemoteFunctionResponse} */ ({
 					type: 'result',
-					result: stringify(results, transport)
+					result: await stringify_remote_response(results, event, state, options)
 				})
 			);
 		}
@@ -120,7 +125,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 			return json(
 				/** @type {RemoteFunctionResponse} */ ({
 					type: 'result',
-					result: stringify(result, transport),
+					result: await stringify_remote_response(result, event, state, options),
 					refreshes: result.issues
 						? undefined
 						: await serialize_singleflight(state.remote.refreshes),
@@ -141,7 +146,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 			return json(
 				/** @type {RemoteFunctionResponse} */ ({
 					type: 'result',
-					result: stringify(data, transport),
+					result: await stringify_remote_response(data, event, state, options),
 					refreshes: await serialize_singleflight(state.remote.refreshes),
 					reconnects: await serialize_singleflight(state.remote.reconnects)
 				})
@@ -266,7 +271,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 		return json(
 			/** @type {RemoteFunctionResponse} */ ({
 				type: 'result',
-				result: stringify(data, transport)
+				result: await stringify_remote_response(data, event, state, options)
 			})
 		);
 	} catch (error) {
@@ -327,7 +332,12 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 			})
 		);
 
-		return stringify(Object.fromEntries(results), transport);
+		// Pre-resolve nested query instances inside the single-flight map
+		// (e.g. when a `command` body calls `myQuery(arg).set(<value containing a query>)`),
+		// then stringify with the built-in `__skq` codec.
+		const value = Object.fromEntries(results);
+		const resolved = await pre_resolve_queries(value, event, state, options);
+		return stringify_with_remote_queries(value, transport, resolved);
 	}
 }
 

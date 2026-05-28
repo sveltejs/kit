@@ -1,11 +1,12 @@
 /** @import { RemoteQueryFunction } from '@sveltejs/kit' */
 import { app_dir, base } from '$app/paths/internal/client';
-import { app, query_map, query_responses } from '../../client.js';
+import { query_map, query_responses } from '../../client.js';
 import { get_remote_request_headers, QUERY_FUNCTION_ID, remote_request } from '../shared.svelte.js';
 import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
 import { unfriendly_hydratable } from '../../../shared.js';
 import { QueryProxy } from './proxy.js';
+import { create_query_value_revivers } from '../transport.js';
 
 /**
  * @param {string} id
@@ -38,7 +39,7 @@ export function query(id) {
 				remote_request(url, get_remote_request_headers())
 			);
 
-			return devalue.parse(serialized, app.decoders);
+			return devalue.parse(serialized, create_query_value_revivers());
 		});
 	};
 

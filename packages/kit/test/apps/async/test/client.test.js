@@ -448,6 +448,85 @@ test.describe('remote function mutations', () => {
 		await expect(page.locator('#phrase')).toHaveText('i am your father');
 	});
 
+	test('query returning nested queries renders all rows from a single request', async ({
+		page
+	}) => {
+		await page.goto('/remote/query-in-query');
+		await page.click('#qiq-reset-btn');
+
+		await expect(page.locator('#qiq-result-1')).toHaveText('Buy groceries');
+		await expect(page.locator('#qiq-result-2')).toHaveText('Walk the dog');
+		await expect(page.locator('#qiq-total')).toHaveText('total: 2');
+	});
+
+	test('nested queries warm the item-query cache (no extra request on detail page)', async ({
+		page
+	}) => {
+		await page.goto('/remote/query-in-query');
+		await page.click('#qiq-reset-btn');
+		await expect(page.locator('#qiq-result-1')).toHaveText('Buy groceries');
+
+		let request_count = 0;
+		/** @param {import('@playwright/test').Request} r */
+		const handler = (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0);
+		page.on('request', handler);
+
+		await page.click('#qiq-detail-link-1');
+		await expect(page.locator('#qiq-detail-title')).toHaveText('Buy groceries');
+		await page.waitForTimeout(100);
+		expect(request_count).toBe(0);
+	});
+
+	test('nested per-row set updates only that row', async ({ page }) => {
+		await page.goto('/remote/query-in-query');
+		await page.click('#qiq-reset-btn');
+		await expect(page.locator('#qiq-result-1')).toHaveText('Buy groceries');
+
+		let request_count = 0;
+		/** @param {import('@playwright/test').Request} r */
+		const handler = (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0);
+		page.on('request', handler);
+
+		await page.click('#qiq-set-btn');
+		await expect(page.locator('#qiq-result-1')).toHaveText('Buy cat food');
+		await page.waitForTimeout(100);
+		expect(request_count).toBe(1); // only the command request
+	});
+
+	test('nested per-row refresh in command reuses single flight', async ({ page }) => {
+		await page.goto('/remote/query-in-query');
+		await page.click('#qiq-reset-btn');
+		await expect(page.locator('#qiq-result-2')).toHaveText('Walk the dog');
+
+		let request_count = 0;
+		/** @param {import('@playwright/test').Request} r */
+		const handler = (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0);
+		page.on('request', handler);
+
+		await page.click('#qiq-refresh-btn');
+		await expect(page.locator('#qiq-result-2')).toHaveText('Walk the dog (refreshed)');
+		await page.waitForTimeout(100);
+		expect(request_count).toBe(1);
+	});
+
+	test('nested refresh via requested(...) reuses single flight', async ({ page }) => {
+		await page.goto('/remote/query-in-query');
+		await page.click('#qiq-reset-btn');
+		await expect(page.locator('#qiq-result-1')).toHaveText('Buy groceries');
+		await expect(page.locator('#qiq-result-2')).toHaveText('Walk the dog');
+
+		let request_count = 0;
+		/** @param {import('@playwright/test').Request} r */
+		const handler = (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0);
+		page.on('request', handler);
+
+		await page.click('#qiq-requested-refresh-all-btn');
+		await expect(page.locator('#qiq-result-1')).toHaveText('Buy groceries (requested)');
+		await expect(page.locator('#qiq-result-2')).toHaveText('Walk the dog (requested)');
+		await page.waitForTimeout(100);
+		expect(request_count).toBe(1);
+	});
+
 	test('query.live streams updates and reconnects after disconnect', async ({ page, context }) => {
 		await page.goto('/remote/live');
 		await page.click('#reset');

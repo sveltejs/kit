@@ -5,9 +5,10 @@ import { app_dir, base } from '$app/paths/internal/client';
 import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
 import { HttpError } from '@sveltejs/kit/internal';
-import { app, query_responses, _goto, set_nearest_error_page, invalidateAll } from '../client.js';
+import { query_responses, _goto, set_nearest_error_page, invalidateAll } from '../client.js';
 import { tick } from 'svelte';
 import { apply_refreshes, categorize_updates, apply_reconnections } from './shared.svelte.js';
+import { create_query_value_revivers } from './transport.js';
 import { createAttachmentKey } from 'svelte/attachments';
 import {
 	convert_formdata,
@@ -206,7 +207,10 @@ export function form(id) {
 					result = undefined;
 
 					if (form_result.type === 'result') {
-						({ issues: raw_issues = [], result } = devalue.parse(form_result.result, app.decoders));
+						({ issues: raw_issues = [], result } = devalue.parse(
+							form_result.result,
+							create_query_value_revivers()
+						));
 						const succeeded = raw_issues.length === 0;
 
 						if (succeeded) {
@@ -682,7 +686,7 @@ export function form(id) {
 
 						if (result.type === 'result') {
 							array = /** @type {InternalRemoteFormIssue[]} */ (
-								devalue.parse(result.result, app.decoders)
+								devalue.parse(result.result, create_query_value_revivers())
 							);
 						}
 					}

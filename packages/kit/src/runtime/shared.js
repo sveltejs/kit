@@ -21,6 +21,19 @@ export const INVALIDATED_PARAM = 'x-sveltekit-invalidated';
 export const TRAILING_SLASH_PARAM = 'x-sveltekit-trailing-slash';
 
 /**
+ * Brand stamped non-enumerably onto every server-side `RemoteQuery` resource
+ * by `create_query_resource`. Carries the resource's identity (`id`, raw
+ * `arg`) so the response serializer can detect nested query instances in
+ * arbitrary user-returned data structures, await them, and inline their
+ * resolved values on the wire. The client decoder then reconstructs a
+ * `QueryProxy` for the same `(id, arg)` pair, sharing cache identity with
+ * direct `query(arg)` calls.
+ *
+ * The matching transport key (built-in encoder/decoder) is `__skq`.
+ */
+export const REMOTE_QUERY_RESOURCE = Symbol('sveltekit.remote_query_resource');
+
+/**
  * @param {any} data
  * @param {string} [location_description]
  */

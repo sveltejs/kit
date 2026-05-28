@@ -1,12 +1,13 @@
 /** @import { RemoteQueryFunction } from '@sveltejs/kit' */
 /** @import { RemoteFunctionResponse } from 'types' */
 import { app_dir, base } from '$app/paths/internal/client';
-import { app, goto } from '../client.js';
+import { goto } from '../client.js';
 import { get_remote_request_headers, QUERY_FUNCTION_ID } from './shared.svelte.js';
 import { QueryProxy } from './query/proxy.js';
 import * as devalue from 'devalue';
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
 import { unfriendly_hydratable } from '../../shared.js';
+import { create_query_value_revivers } from './transport.js';
 
 /**
  * @param {string} id
@@ -67,7 +68,7 @@ export function query_batch(id) {
 								throw new Redirect(307, result.location);
 							}
 
-							const results = devalue.parse(result.result, app.decoders);
+							const results = devalue.parse(result.result, create_query_value_revivers());
 
 							// Resolve individual queries
 							// Maps guarantee insertion order so we can do it like this
@@ -95,7 +96,7 @@ export function query_batch(id) {
 				});
 			});
 
-			return devalue.parse(serialized, app.decoders);
+			return devalue.parse(serialized, create_query_value_revivers());
 		});
 	};
 

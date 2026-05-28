@@ -2,7 +2,7 @@
 /** @import { RemoteInternals, MaybePromise, RequestState, RemoteQueryLiveInternals, RemoteQueryBatchInternals, RemoteQueryInternals, RemoteLiveQueryUserFunctionReturnType } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 import { get_request_store } from '@sveltejs/kit/internal/server';
-import { create_remote_key, stringify, stringify_remote_arg } from '../../../shared.js';
+import { create_remote_key, REMOTE_QUERY_RESOURCE, stringify_remote_arg } from '../../../shared.js';
 import { prerendering } from '__sveltekit/environment';
 import {
 	create_validator,
@@ -12,6 +12,10 @@ import {
 	run_remote_generator
 } from './shared.js';
 import { handle_error_and_jsonify } from '../../../server/utils.js';
+import {
+	pre_resolve_queries,
+	stringify_with_remote_queries
+} from '../../../server/remote-query-serializer.js';
 import { HttpError, SvelteKitError } from '@sveltejs/kit/internal';
 import { noop } from '../../../../utils/functions.js';
 import { SharedIterator } from '../../../../utils/shared-iterator.js';
@@ -78,8 +82,12 @@ export function query(validate_or_fn, maybe_fn) {
 		bind(payload, validated_arg) {
 			const { event, state } = get_request_store();
 
-			return create_query_resource(__, payload, state, () =>
-				run_remote_function(event, state, false, () => validated_arg, fn)
+			return create_query_resource(
+				__,
+				payload,
+				state,
+				() => run_remote_function(event, state, false, () => validated_arg, fn),
+				validated_arg
 			);
 		}
 	};
@@ -95,8 +103,12 @@ export function query(validate_or_fn, maybe_fn) {
 		const { event, state } = get_request_store();
 		const payload = stringify_remote_arg(arg, state.transport);
 
-		return create_query_resource(__, payload, state, () =>
-			run_remote_function(event, state, false, () => validate(arg), fn)
+		return create_query_resource(
+			__,
+			payload,
+			state,
+			() => run_remote_function(event, state, false, () => validate(arg), fn),
+			arg
 		);
 	};
 
@@ -326,10 +338,21 @@ function batch(validate_or_fn, maybe_fn) {
 						input.map(async (arg, i) => {
 							try {
 								const data = get_result(arg, i);
-								return { type: 'result', data: stringify(data, state.transport) };
+								// Pre-resolve nested query instances and stringify
+								// the per-entry data with the built-in `__skq`
+								// codec. This double-encoding (one devalue per
+								// entry, one for the outer wrapper) is intentional
+								// — it lets each entry survive serialization
+								// errors independently and matches the client
+								// stub's per-entry `devalue.parse`.
+								const resolved = await pre_resolve_queries(data, event, state, options);
+								return {
+									type: /** @type {const} */ ('result'),
+									data: stringify_with_remote_queries(data, state.transport, resolved)
+								};
 							} catch (error) {
 								return {
-									type: 'error',
+									type: /** @type {const} */ ('error'),
 									error: await handle_error_and_jsonify(event, state, options, error),
 									status:
 										error instanceof HttpError || error instanceof SvelteKitError
@@ -345,7 +368,13 @@ function batch(validate_or_fn, maybe_fn) {
 		bind(payload, validated_arg) {
 			const { state } = get_request_store();
 
-			return create_query_resource(__, payload, state, () => enqueue(payload, () => validated_arg));
+			return create_query_resource(
+				__,
+				payload,
+				state,
+				() => enqueue(payload, () => validated_arg),
+				validated_arg
+			);
 		}
 	};
 
@@ -360,10 +389,14 @@ function batch(validate_or_fn, maybe_fn) {
 		const { state } = get_request_store();
 		const payload = stringify_remote_arg(arg, state.transport);
 
-		return create_query_resource(__, payload, state, () =>
+		return create_query_resource(
+			__,
+			payload,
+			state,
 			// Collect all the calls to the same query in the same macrotask,
 			// then execute them as one backend request.
-			enqueue(payload, () => validate(arg))
+			() => enqueue(payload, () => validate(arg)),
+			arg
 		);
 	};
 
@@ -377,9 +410,13 @@ function batch(validate_or_fn, maybe_fn) {
  * @param {string} payload — the stringified raw argument (i.e. the cache key the client will use)
  * @param {RequestState} state
  * @param {() => Promise<any>} fn
+ * @param {any} arg — the raw argument used to construct this resource. Carried on the
+ *   `REMOTE_QUERY_RESOURCE` brand so the response serializer can reconstruct
+ *   a matching `QueryProxy` on the client when this resource is returned
+ *   from another query.
  * @returns {RemoteQuery<any>}
  */
-function create_query_resource(__, payload, state, fn) {
+function create_query_resource(__, payload, state, fn, arg) {
 	/** @type {Promise<any> | null} */
 	let promise = null;
 
@@ -394,7 +431,8 @@ function create_query_resource(__, payload, state, fn) {
 		void (__.id && state.is_in_render && get_promise());
 	};
 
-	return {
+	/** @type {RemoteQuery<any>} */
+	const resource = {
 		/** @type {Promise<any>['catch']} */
 		catch(onrejected) {
 			return get_promise().catch(onrejected);
@@ -431,9 +469,29 @@ function create_query_resource(__, payload, state, fn) {
 			const value = is_immediate_refresh ? get_promise() : fn();
 			return update_refresh_value(refresh_context, value, is_immediate_refresh);
 		},
-		/** @param {any} value */
+		/**
+		 * @param {any} value
+		 * @returns {RemoteQuery<any>}
+		 */
 		set(value) {
-			return update_refresh_value(get_refresh_context(__, 'set', payload), value);
+			const { state } = get_request_store();
+
+			// Inside a command/form, ride back via single-flight (existing
+			// behavior). Outside that context — e.g. inside another query's
+			// body — fall back to populating the per-request cache so that
+			// subsequent direct calls to this query within the same render
+			// reuse the value. Either way, return `this` so callers can
+			// chain: `my_query(arg).set(data)`.
+			if (state.remote.refreshes) {
+				void update_refresh_value(get_refresh_context(__, 'set', payload), value);
+			} else {
+				const promise = Promise.resolve(value);
+				promise.catch(noop);
+				const cache = get_cache(__, state);
+				cache[payload] = { serialize: true, data: promise };
+			}
+
+			return resource;
 		},
 		// TODO 3.0 remove this
 		// @ts-expect-error This method no longer exists
@@ -453,6 +511,18 @@ function create_query_resource(__, payload, state, fn) {
 			return 'QueryResource';
 		}
 	};
+
+	// Brand the resource with its identity so `stringify_remote_response`
+	// can detect nested query instances and serialize them via the built-in
+	// `__skq` codec. Non-enumerable to avoid showing up in user iteration.
+	// (eslint-disable: `arg` is the user-supplied query argument and may be
+	// any value, including thenables; storing it as-is is intentional.)
+	// eslint-disable-next-line @typescript-eslint/no-floating-promises
+	Object.defineProperty(resource, REMOTE_QUERY_RESOURCE, {
+		value: { id: __.id, arg }
+	});
+
+	return resource;
 }
 
 /**
