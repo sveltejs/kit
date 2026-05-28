@@ -231,6 +231,7 @@ let load_cache = null;
 function discard_load_cache() {
 	void load_cache?.fork?.then((f) => f?.discard());
 	load_cache = null;
+	current_a = { element: undefined, href: undefined };
 }
 
 /**
@@ -1842,8 +1843,10 @@ async function navigate({
 	if (load_cache?.fork && !load_cache_fork) {
 		// discard fork of different route
 		discard_load_cache();
+	} else {
+		load_cache = null;
+		current_a = { element: undefined, href: undefined };
 	}
-	load_cache = null;
 
 	navigation_result.props.page.state = state;
 
@@ -2029,11 +2032,16 @@ if (import.meta.hot) {
 
 /** @typedef {(typeof PRELOAD_PRIORITIES)['hover'] | (typeof PRELOAD_PRIORITIES)['tap']} PreloadDataPriority */
 
+/**
+ * The anchor element whose href is being preloaded. It is reset after navigation
+ * or changes when a different anchor element is being preloaded.
+ * @type {{ element: Element | SVGAElement | undefined; href: string | SVGAnimatedString | undefined }}
+ */
+let current_a = { element: undefined, href: undefined };
+
 function setup_preload() {
 	/** @type {NodeJS.Timeout} */
 	let mousemove_timeout;
-	/** @type {{ element: Element | SVGAElement | undefined; href: string | SVGAnimatedString | undefined }} */
-	let current_a = { element: undefined, href: undefined };
 	/** @type {PreloadDataPriority} */
 	let current_priority;
 
@@ -2626,7 +2634,7 @@ function _start_router() {
 	});
 
 	// @ts-expect-error this isn't supported everywhere yet
-	if (!navigator.connection?.saveData && !/2g/.test(navigator.connection?.effectiveType)) {
+	if (!navigator.connection?.saveData) {
 		setup_preload();
 	}
 
