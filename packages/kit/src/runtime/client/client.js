@@ -3075,61 +3075,56 @@ async function load_data(url, invalid) {
 		throw new HttpError(res.status, message);
 	}
 
-	// TODO: fix eslint error / figure out if it actually applies to our situation
-	// eslint-disable-next-line
-	return new Promise(async (resolve) => {
-		/**
-		 * Map of deferred promises that will be resolved by a subsequent chunk of data
-		 * @type {Map<string, import('types').Deferred>}
-		 */
-		const deferreds = new Map();
-		const reader = /** @type {ReadableStream<Uint8Array>} */ (res.body).getReader();
+	/**
+	 * Map of deferred promises that will be resolved by a subsequent chunk of data
+	 * @type {Map<string, import('types').Deferred>}
+	 */
+	const deferreds = new Map();
+	const reader = /** @type {ReadableStream<Uint8Array>} */ (res.body).getReader();
 
-		/**
-		 * @param {any} data
-		 */
-		function deserialize(data) {
-			return devalue.unflatten(data, {
-				...app.decoders,
-				Promise: (id) => {
-					return new Promise((fulfil, reject) => {
-						deferreds.set(id, { fulfil, reject });
-					});
+	/** @param {any} data */
+	function deserialize(data) {
+		return devalue.unflatten(data, {
+			...app.decoders,
+			Promise: (id) => {
+				return new Promise((fulfil, reject) => {
+					deferreds.set(id, { fulfil, reject });
+				});
+			}
+		});
+	}
+
+	for await (const node of read_ndjson(reader)) {
+		if (node.type === 'redirect') {
+			return node;
+		}
+
+		if (node.type === 'data') {
+			// This is the first (and possibly only, if no pending promises) chunk
+			node.nodes?.forEach((/** @type {any} */ node) => {
+				if (node?.type === 'data') {
+					node.uses = deserialize_uses(node.uses);
+					node.data = deserialize(node.data);
 				}
 			});
-		}
 
-		for await (const node of read_ndjson(reader)) {
-			if (node.type === 'redirect') {
-				return resolve(node);
-			}
+			return node;
+		} else if (node.type === 'chunk') {
+			// This is a subsequent chunk containing deferred data
+			const { id, data, error } = node;
+			const deferred = /** @type {import('types').Deferred} */ (deferreds.get(id));
+			deferreds.delete(id);
 
-			if (node.type === 'data') {
-				// This is the first (and possibly only, if no pending promises) chunk
-				node.nodes?.forEach((/** @type {any} */ node) => {
-					if (node?.type === 'data') {
-						node.uses = deserialize_uses(node.uses);
-						node.data = deserialize(node.data);
-					}
-				});
-
-				resolve(node);
-			} else if (node.type === 'chunk') {
-				// This is a subsequent chunk containing deferred data
-				const { id, data, error } = node;
-				const deferred = /** @type {import('types').Deferred} */ (deferreds.get(id));
-				deferreds.delete(id);
-
-				if (error) {
-					deferred.reject(deserialize(error));
-				} else {
-					deferred.fulfil(deserialize(data));
-				}
+			if (error) {
+				deferred.reject(deserialize(error));
+			} else {
+				deferred.fulfil(deserialize(data));
 			}
 		}
-	});
+	}
 
 	// TODO edge case handling necessary? stream() read fails?
+	throw new Error('Failed to deserialize data stream');
 }
 
 /**
