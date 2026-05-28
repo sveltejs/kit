@@ -60,20 +60,19 @@ export function query_fan_out(id) {
 					query_map.get(item_query_id)
 				).get(entry.payload);
 
-				if (!cached) {
-					// Should be unreachable; the proxy constructor above
-					// always populates the cache entry. Fall through and
-					// let the proxy fetch normally if this ever happens.
-					return proxy;
+				if (cached) {
+					if (entry.type === 'result') {
+						cached.resource.set(entry.data);
+					} else {
+						cached.resource.fail(new HttpError(entry.status, entry.error));
+					}
 				}
 
-				if (entry.type === 'result') {
-					cached.resource.set(entry.data);
-				} else {
-					cached.resource.fail(new HttpError(entry.status, entry.error));
-				}
-
-				return proxy;
+				// `key` is the per-item payload — the same stable string the
+				// server uses as the item query's cache key. It survives
+				// serialization and is suitable as the identity in a Svelte
+				// `#each (row.key)` block.
+				return { query: proxy, key: entry.payload };
 			});
 
 			return { ...meta, rows };

@@ -17,10 +17,10 @@
 <ul>
 	{#await pulls then page}
 		<li id="fan-out-total">total: {page.total}</li>
-		{#each page.rows as resource, idx (idx)}
-			<li>
+		{#each page.rows as row, idx (row.key)}
+			<li data-fan-out-key={row.key}>
 				<svelte:boundary>
-					<span id="fan-out-result-{idx + 1}">{(await resource)?.title}</span>
+					<span id="fan-out-result-{idx + 1}">{(await row.query)?.title}</span>
 
 					{#snippet failed(error)}
 						<span id="fan-out-result-{idx + 1}"

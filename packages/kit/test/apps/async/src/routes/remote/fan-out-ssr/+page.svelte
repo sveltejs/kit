@@ -11,8 +11,8 @@
 
 <p id="ssr-fan-out-total">total: {page.total}</p>
 
-{#each page.rows as resource, idx (idx)}
-	<p id="ssr-fan-out-result-{idx + 1}">{(await resource)?.title}</p>
+{#each page.rows as row, idx (row.key)}
+	<p id="ssr-fan-out-result-{idx + 1}">{(await row.query)?.title}</p>
 {/each}
 
 <p id="ssr-fan-out-direct">{(await direct)?.title}</p>

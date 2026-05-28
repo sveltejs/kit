@@ -3508,9 +3508,11 @@ declare module '$app/server' {
 		 *
 		 * The user function returns `{ rows: Array<[ItemArg, Item]>, ...meta }`. The
 		 * `rows` field is fanned out: each tuple's `Item` warms the companion item
-		 * query's cache and becomes a `RemoteQuery<Item>` on the consumer side. Any
-		 * other fields on the returned object pass through unchanged, so paginated
-		 * APIs can include cursors, totals, has-next-page flags, and so on.
+		 * query's cache and surfaces as `{ query: RemoteQuery<Item>, key: string }`
+		 * on the consumer side. The `key` is a stable, payload-derived string
+		 * suitable for use as the identity in a Svelte `#each` block. Any other
+		 * fields on the returned object pass through unchanged, so paginated APIs
+		 * can include cursors, totals, has-next-page flags, and so on.
 		 *
 		 * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query.fanOut) for full documentation.
 		 *
@@ -3518,7 +3520,10 @@ declare module '$app/server' {
 		function fanOut<ItemArg, Item, Result extends Record<string, any>>(item_query: RemoteQueryFunction<ItemArg, Item, any>, fn: () => MaybePromise<Result & {
 			rows: Array<[ItemArg, Item]>;
 		}>): RemoteQueryFunction<void, Omit<Result, "rows"> & {
-			rows: Array<RemoteQuery<Item>>;
+			rows: Array<{
+				query: RemoteQuery<Item>;
+				key: string;
+			}>;
 		}>;
 		/**
 		 * Creates a fan-out query that turns one server call into an array of per-item
@@ -3531,7 +3536,10 @@ declare module '$app/server' {
 		function fanOut<ItemArg, Item, Input, Result extends Record<string, any>>(item_query: RemoteQueryFunction<ItemArg, Item, any>, validate: "unchecked", fn: (arg: Input) => MaybePromise<Result & {
 			rows: Array<[ItemArg, Item]>;
 		}>): RemoteQueryFunction<Input, Omit<Result, "rows"> & {
-			rows: Array<RemoteQuery<Item>>;
+			rows: Array<{
+				query: RemoteQuery<Item>;
+				key: string;
+			}>;
 		}>;
 		/**
 		 * Creates a fan-out query that turns one server call into an array of per-item
@@ -3544,7 +3552,10 @@ declare module '$app/server' {
 		function fanOut<ItemArg, Item, Schema extends StandardSchemaV1, Result extends Record<string, any>>(item_query: RemoteQueryFunction<ItemArg, Item, any>, schema: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => MaybePromise<Result & {
 			rows: Array<[ItemArg, Item]>;
 		}>): RemoteQueryFunction<StandardSchemaV1.InferInput<Schema>, Omit<Result, "rows"> & {
-			rows: Array<RemoteQuery<Item>>;
+			rows: Array<{
+				query: RemoteQuery<Item>;
+				key: string;
+			}>;
 		}, StandardSchemaV1.InferOutput<Schema>>;
 		/**
 		 * Creates a live remote query. When called from the browser, the function will be invoked on the server via a streaming `fetch` call.

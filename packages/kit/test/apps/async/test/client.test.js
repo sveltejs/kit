@@ -461,6 +461,39 @@ test.describe('remote function mutations', () => {
 		await expect(page.locator('#fan-out-total')).toHaveText('total: 2');
 	});
 
+	test('query.fanOut exposes a stable per-row key suitable for keyed #each', async ({ page }) => {
+		await page.goto('/remote/fan-out');
+		await page.click('#fan-out-reset-btn');
+
+		await expect(page.locator('#fan-out-result-1')).toHaveText('Buy groceries');
+
+		const keys = await page
+			.locator('[data-fan-out-key]')
+			.evaluateAll((els) => els.map((el) => el.getAttribute('data-fan-out-key')));
+
+		expect(keys).toHaveLength(2);
+		expect(keys[0]).toBeTruthy();
+		expect(keys[1]).toBeTruthy();
+		expect(keys[0]).not.toBe(keys[1]);
+
+		// Key is stable across re-renders (after a per-row mutation, the
+		// keyed `#each` does not replace the row's DOM node).
+		const initial_handle = await page
+			.locator('[data-fan-out-key]')
+			.first()
+			.evaluateHandle((el) => el);
+		await page.click('#fan-out-set-btn');
+		await expect(page.locator('#fan-out-result-1')).toHaveText('Buy cat food');
+		const same_node = await page
+			.locator('[data-fan-out-key]')
+			.first()
+			.evaluate((el, initial) => el === initial, initial_handle);
+		expect(same_node).toBe(true);
+
+		// Restore state for downstream serial tests.
+		await page.click('#fan-out-reset-btn');
+	});
+
 	test('query.fanOut warms the item-query cache (no extra request on detail page)', async ({
 		page
 	}) => {

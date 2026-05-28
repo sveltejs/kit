@@ -384,9 +384,11 @@ function batch(validate_or_fn, maybe_fn) {
  *
  * The user function returns `{ rows: Array<[ItemArg, Item]>, ...meta }`. The
  * `rows` field is fanned out: each tuple's `Item` warms the companion item
- * query's cache and becomes a `RemoteQuery<Item>` on the consumer side. Any
- * other fields on the returned object pass through unchanged, so paginated
- * APIs can include cursors, totals, has-next-page flags, and so on.
+ * query's cache and surfaces as `{ query: RemoteQuery<Item>, key: string }`
+ * on the consumer side. The `key` is a stable, payload-derived string
+ * suitable for use as the identity in a Svelte `#each` block. Any other
+ * fields on the returned object pass through unchanged, so paginated APIs
+ * can include cursors, totals, has-next-page flags, and so on.
  *
  * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query.fanOut) for full documentation.
  *
@@ -396,7 +398,7 @@ function batch(validate_or_fn, maybe_fn) {
  * @overload
  * @param {RemoteQueryFunction<ItemArg, Item, any>} item_query
  * @param {() => MaybePromise<Result & { rows: Array<[ItemArg, Item]> }>} fn
- * @returns {RemoteQueryFunction<void, Omit<Result, 'rows'> & { rows: Array<RemoteQuery<Item>> }>}
+ * @returns {RemoteQueryFunction<void, Omit<Result, 'rows'> & { rows: Array<{ query: RemoteQuery<Item>, key: string }> }>}
  */
 /**
  * Creates a fan-out query that turns one server call into an array of per-item
@@ -413,7 +415,7 @@ function batch(validate_or_fn, maybe_fn) {
  * @param {RemoteQueryFunction<ItemArg, Item, any>} item_query
  * @param {'unchecked'} validate
  * @param {(arg: Input) => MaybePromise<Result & { rows: Array<[ItemArg, Item]> }>} fn
- * @returns {RemoteQueryFunction<Input, Omit<Result, 'rows'> & { rows: Array<RemoteQuery<Item>> }>}
+ * @returns {RemoteQueryFunction<Input, Omit<Result, 'rows'> & { rows: Array<{ query: RemoteQuery<Item>, key: string }> }>}
  */
 /**
  * Creates a fan-out query that turns one server call into an array of per-item
@@ -430,7 +432,7 @@ function batch(validate_or_fn, maybe_fn) {
  * @param {RemoteQueryFunction<ItemArg, Item, any>} item_query
  * @param {Schema} schema
  * @param {(arg: StandardSchemaV1.InferOutput<Schema>) => MaybePromise<Result & { rows: Array<[ItemArg, Item]> }>} fn
- * @returns {RemoteQueryFunction<StandardSchemaV1.InferInput<Schema>, Omit<Result, 'rows'> & { rows: Array<RemoteQuery<Item>> }, StandardSchemaV1.InferOutput<Schema>>}
+ * @returns {RemoteQueryFunction<StandardSchemaV1.InferInput<Schema>, Omit<Result, 'rows'> & { rows: Array<{ query: RemoteQuery<Item>, key: string }> }, StandardSchemaV1.InferOutput<Schema>>}
  */
 /**
  * @template ItemArg
@@ -439,7 +441,7 @@ function batch(validate_or_fn, maybe_fn) {
  * @param {RemoteQueryFunction<ItemArg, Item, any>} item_query
  * @param {any} validate_or_fn
  * @param {(arg?: Input) => MaybePromise<{ rows: Array<[ItemArg, Item]> } & Record<string, any>>} [maybe_fn]
- * @returns {RemoteQueryFunction<Input, { rows: Array<RemoteQuery<Item>> } & Record<string, any>>}
+ * @returns {RemoteQueryFunction<Input, { rows: Array<{ query: RemoteQuery<Item>, key: string }> } & Record<string, any>>}
  */
 /*@__NO_SIDE_EFFECTS__*/
 function fan_out(item_query, validate_or_fn, maybe_fn) {
@@ -586,7 +588,7 @@ function fan_out(item_query, validate_or_fn, maybe_fn) {
 		}
 	};
 
-	/** @type {RemoteQueryFunction<Input, { rows: Array<RemoteQuery<Item>> } & Record<string, any>> & { __: RemoteQueryFanOutInternals }} */
+	/** @type {RemoteQueryFunction<Input, { rows: Array<{ query: RemoteQuery<Item>, key: string }> } & Record<string, any>> & { __: RemoteQueryFanOutInternals }} */
 	const wrapper = (arg) => {
 		if (prerendering) {
 			throw new Error(
@@ -632,10 +634,12 @@ function fan_out(item_query, validate_or_fn, maybe_fn) {
  *     The client stub reads this on first call, unwraps it into per-item
  *     `QueryProxy` instances merged with `meta`, and never has to issue
  *     an extra HTTP request.
- *   - Awaiting the resource resolves to `{ rows: Array<RemoteQuery<Item>>, ...meta }`
+ *   - Awaiting the resource resolves to
+ *     `{ rows: Array<{ query: RemoteQuery<Item>, key: string }>, ...meta }`
  *     for user code, built by `bind`-ing each item entry to the companion
  *     item query (whose per-request cache was warmed) and spreading
- *     the metadata.
+ *     the metadata. The `key` is the per-item payload, which is stable
+ *     across renders and suitable for use in a Svelte `#each` block.
  *
  * @template Item
  * @param {RemoteQueryFanOutInternals} __
@@ -643,13 +647,13 @@ function fan_out(item_query, validate_or_fn, maybe_fn) {
  * @param {string} payload — the stringified raw argument (i.e. the cache key the client will use)
  * @param {RequestState} state
  * @param {() => Promise<any>} fn
- * @returns {RemoteQuery<{ rows: Array<RemoteQuery<Item>> } & Record<string, any>>}
+ * @returns {RemoteQuery<{ rows: Array<{ query: RemoteQuery<Item>, key: string }> } & Record<string, any>>}
  */
 function create_fan_out_resource(__, item_internals, payload, state, fn) {
 	/** @type {Promise<FanOutInternalResult> | null} */
 	let internal_promise = null;
 
-	/** @type {Promise<{ rows: Array<RemoteQuery<Item>> } & Record<string, any>> | null} */
+	/** @type {Promise<{ rows: Array<{ query: RemoteQuery<Item>, key: string }> } & Record<string, any>> | null} */
 	let resolved_promise = null;
 
 	const get_internal_promise = () => {
@@ -689,9 +693,10 @@ function create_fan_out_resource(__, item_internals, payload, state, fn) {
 	const get_resolved_promise = () => {
 		return (resolved_promise ??= get_internal_promise().then(({ items, meta }) => ({
 			...meta,
-			rows: items.map(
-				(entry) => /** @type {RemoteQuery<Item>} */ (item_internals.bind(entry.payload, entry.arg))
-			)
+			rows: items.map((entry) => ({
+				query: /** @type {RemoteQuery<Item>} */ (item_internals.bind(entry.payload, entry.arg)),
+				key: entry.payload
+			}))
 		})));
 	};
 
@@ -702,7 +707,7 @@ function create_fan_out_resource(__, item_internals, payload, state, fn) {
 		void (__.id && state.is_in_render && get_resolved_promise());
 	};
 
-	return /** @type {RemoteQuery<{ rows: Array<RemoteQuery<Item>> } & Record<string, any>>} */ (
+	return /** @type {RemoteQuery<{ rows: Array<{ query: RemoteQuery<Item>, key: string }> } & Record<string, any>>} */ (
 		/** @type {unknown} */ ({
 			/** @type {Promise<any>['catch']} */
 			catch(onrejected) {
