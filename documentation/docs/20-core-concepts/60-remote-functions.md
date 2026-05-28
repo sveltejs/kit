@@ -291,12 +291,10 @@ Unlike `query`, live queries do not have a `refresh()` method, as they are self-
 If you need direct, imperative access to the underlying stream of values (rather than the reactive `current` property), live query instances are themselves [async-iterable](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/for-await...of). You can `for await` over the instance directly:
 
 ```js
-// @filename: ambient.d.ts
-declare module './time.remote.js' {
-	import { RemoteLiveQueryFunction } from '@sveltejs/kit';
-	export const getTime: RemoteLiveQueryFunction<undefined, Date>;
-}
-// @errors: 7006 2304
+// @filename: time.remote.ts
+import { RemoteLiveQueryFunction } from '@sveltejs/kit';
+export declare const getTime: RemoteLiveQueryFunction<undefined, Date>;
+// @errors: 2304
 // @filename: index.js
 import { getTime } from './time.remote.js';
 // ---cut---
