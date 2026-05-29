@@ -91,8 +91,8 @@ catalogs:
       specifier: ^4.4.6
       version: 4.4.6
     svelte-preprocess:
-      specifier: ^6.0.0
-      version: 6.0.0
+      specifier: ^6.0.5
+      version: 6.0.5
     typescript:
       specifier: ^6.0.2
       version: 6.0.2
@@ -580,7 +580,7 @@ importers:
         version: 5.55.7(@typescript-eslint/types@8.59.4)
       svelte-preprocess:
         specifier: 'catalog:'
-        version: 6.0.0(postcss-load-config@3.1.4(postcss@8.5.15))(postcss@8.5.15)(svelte@5.55.7(@typescript-eslint/types@8.59.4))(typescript@5.8.3)
+        version: 6.0.5(postcss-load-config@3.1.4(postcss@8.5.15))(postcss@8.5.15)(svelte@5.55.7(@typescript-eslint/types@8.59.4))(typescript@5.8.3)
       typescript:
         specifier: ^5.3.3
         version: 5.8.3
@@ -1395,8 +1395,8 @@ importers:
         specifier: ^7.5.4
         version: 7.8.0
       svelte2tsx:
-        specifier: ~0.7.33
-        version: 0.7.33(svelte@5.55.7(@typescript-eslint/types@8.59.4))(typescript@5.8.3)
+        specifier: ~0.7.55
+        version: 0.7.55(svelte@5.55.7(@typescript-eslint/types@8.59.4))(typescript@6.0.2)
     devDependencies:
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
@@ -1415,13 +1415,10 @@ importers:
         version: 5.55.7(@typescript-eslint/types@8.59.4)
       svelte-preprocess:
         specifier: 'catalog:'
-        version: 6.0.0(postcss-load-config@3.1.4(postcss@8.5.15))(postcss@8.5.15)(svelte@5.55.7(@typescript-eslint/types@8.59.4))(typescript@5.8.3)
+        version: 6.0.5(postcss-load-config@3.1.4(postcss@8.5.15))(postcss@8.5.15)(svelte@5.55.7(@typescript-eslint/types@8.59.4))(typescript@6.0.2)
       typescript:
-        specifier: ^5.3.3
-        version: 5.8.3
-      vite:
         specifier: 'catalog:'
-        version: 8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3)
+        version: 6.0.2
       vitest:
         specifier: 'catalog:'
         version: 4.1.7(@opentelemetry/api@1.9.0)(@types/node@22.19.19)(@vitest/browser-playwright@4.1.7)(jsdom@29.1.1)(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
@@ -4469,9 +4466,6 @@ packages:
   long@5.3.2:
     resolution: {integrity: sha512-mNAgZ1GmyNhD7AuqnTG3/VQ26o760+ZYBPKjPvugO8+nLbYfX6TVpJPseBvopbdY+qpZ/lKUnmEc1LeZYS3QAA==}
 
-  lower-case@2.0.2:
-    resolution: {integrity: sha512-7fm3l3NAF9WfN6W3JOmf5drwpVqX78JtoGJ3A6W0a6ZnldM41w2fV5D490psKFTpMds8TJse/eHLFFsNHHjHgg==}
-
   lru-cache@10.4.3:
     resolution: {integrity: sha512-JNAzZcXrCt42VGLuYz0zfAzDfAvJWW6AfYlDBQyDV5DClI2m5sAmK+OIO7s59XfsRsWHp02jAJrRadPRGTt6SQ==}
 
@@ -4522,10 +4516,6 @@ packages:
   mimic-fn@4.0.0:
     resolution: {integrity: sha512-vqiC06CuhBTUdZH+RYl8sFrL096vA45Ok5ISO6sE/Mr1jRbGH4Csnhi8f3wKVl7x8mO4Au7Ir9D3Oyv1VYMFJw==}
     engines: {node: '>=12'}
-
-  min-indent@1.0.1:
-    resolution: {integrity: sha512-I9jwMn07Sy/IwOj3zVkVik2JTvgpaykDZEigL6Rx6N9LbMywwUSMtxET+7lVoDLLd3O3IXwJwvuuns8UB/HeAg==}
-    engines: {node: '>=4'}
 
   miniflare@4.20260329.0:
     resolution: {integrity: sha512-+G+1YFVeuEpw/gZZmUHQR7IfzJV+DDGvnSl0yXzhgvHh8Nbr8Go5uiWIwl17EyZ1Uors3FKUMDUyU6+ejeKZOw==}
@@ -4587,9 +4577,6 @@ packages:
 
   netlify-redirector@0.5.0:
     resolution: {integrity: sha512-4zdzIP+6muqPCuE8avnrgDJ6KW/2+UpHTRcTbMXCIRxiRmyrX+IZ4WSJGZdHPWF3WmQpXpy603XxecZ9iygN7w==}
-
-  no-case@3.0.4:
-    resolution: {integrity: sha512-fgAN3jGAh+RoxUGZHTSOLJIqUc2wmoBwGR4tbpNAKmmovFoWq0OdRkb0VkldReO2a2iBT/OEulG9XSUc10r3zg==}
 
   node-addon-api@7.1.1:
     resolution: {integrity: sha512-5m3bsyrjFWE1xf7nz7YXdN4udnVtXK6/Yfgn5qnahL6bCkf2yKt4k3nuTKAtT4r3IG8JNR2ncsIMdZuAzJjHQQ==}
@@ -4740,9 +4727,6 @@ packages:
 
   parse5@8.0.1:
     resolution: {integrity: sha512-z1e/HMG90obSGeidlli3hj7cbocou0/wa5HacvI3ASx34PecNjNQeaHNo5WIZpWofN9kgkqV1q5YvXe3F0FoPw==}
-
-  pascal-case@3.1.2:
-    resolution: {integrity: sha512-uWlGT3YSnK9x3BQJaOdcZwrnV6hPpd8jFH1/ucpiLRPh/2zCVJKS19E4GvYHvaCcACn3foXZ0cLB9Wrx1KGe5g==}
 
   path-exists@4.0.0:
     resolution: {integrity: sha512-ak9Qy5Q7jYb2Wwcey5Fpvg2KoAc/ZIhLSLOSBmRmygPsGwkVVt0fZa0qrtMz+m6tJTAHfZQ8FnmB4MG4LWy7/w==}
@@ -5024,6 +5008,9 @@ packages:
     resolution: {integrity: sha512-xAg7SOnEhrm5zI3puOOKyy1OMcMlIJZYNJY7xLBwSze0UjhPLnWfj2GF2EpT0jmzaJKIWKHLsaSSajf35bcYnA==}
     engines: {node: '>=v12.22.7'}
 
+  scule@1.3.0:
+    resolution: {integrity: sha512-6FtHJEvt+pVMIB9IBY+IcCJ6Z5f1iQnytgyfKMhDKgmzYG+TeH/wx1y3l27rshSbLiSanrR9ffZDrEsmjlQF2g==}
+
   semiver@1.1.0:
     resolution: {integrity: sha512-QNI2ChmuioGC1/xjyYwyZYADILWyW6AmS1UH6gDj/SFUUUS4MBAWs/7mxnkRPc/F4iHezDP+O8t0dO8WHiEOdg==}
     engines: {node: '>=6'}
@@ -5137,10 +5124,6 @@ packages:
     resolution: {integrity: sha512-dOESqjYr96iWYylGObzd39EuNTa5VJxyvVAEm5Jnh7KGo75V43Hk1odPQkNDyXNmUR6k+gEiDVXnjB8HJ3crXw==}
     engines: {node: '>=12'}
 
-  strip-indent@3.0.0:
-    resolution: {integrity: sha512-laJTa3Jb+VQpaC6DseHhF7dXVqHTfJPCRDaEbid/drOhgitgYku/letMUqOXFoWV0zIIUbjpdH2t+tYj4bQMRQ==}
-    engines: {node: '>=8'}
-
   supports-color@10.2.2:
     resolution: {integrity: sha512-SS+jx45GF1QjgEXQx4NJZV9ImqmO2NPz5FNsIHrsDjh2YsHnawpan7SNQ1o8NuhrbHZy9AZhIoCUiCeaW/C80g==}
     engines: {node: '>=18'}
@@ -5175,8 +5158,8 @@ packages:
     peerDependencies:
       svelte: ^3.0.0 || ^4.0.0 || ^5.0.0-next.1
 
-  svelte-preprocess@6.0.0:
-    resolution: {integrity: sha512-sbyHnWBwIphuaJWC7hnJd6ZoW/VN0va3jVb/8dDfeT2+0hVmo1DCx+zBK0/JfUKQmzg/FOEtcsGKRnbt8pRRkw==}
+  svelte-preprocess@6.0.5:
+    resolution: {integrity: sha512-sgwew5yV/2eMeQobIWgAxCNarKwiTUDIc3siAUbq3sp0G6ONtzk0W+wJihMdqjbYb3iGU3ubpGv0usnnuXT3qg==}
     engines: {node: '>= 18.0.0'}
     peerDependencies:
       '@babel/core': ^7.10.2
@@ -5189,7 +5172,7 @@ packages:
       stylus: '>=0.55'
       sugarss: ^2.0.0 || ^3.0.0 || ^4.0.0
       svelte: ^4.0.0 || ^5.0.0-next.100 || ^5.0.0
-      typescript: ^5.0.0
+      typescript: ^5.0.0 || ^6.0.0
     peerDependenciesMeta:
       '@babel/core':
         optional: true
@@ -5212,11 +5195,11 @@ packages:
       typescript:
         optional: true
 
-  svelte2tsx@0.7.33:
-    resolution: {integrity: sha512-geogGkzfciwteiKvlbaDBnKOitWuh6e1n2f5KLBBXEfZgui9gy5yRlOBYtNEkdwciO4MC9fTM/EyltsiQrOPNQ==}
+  svelte2tsx@0.7.55:
+    resolution: {integrity: sha512-JWzgeM3lqySRNfqcsesvVEh8LhTWBxQJ9RMjzJ+VepdmXtVnNd0SbtGctG6+/fbHq0N6mhwSd823gszw9JHeGQ==}
     peerDependencies:
       svelte: ^3.55 || ^4.0.0-next.0 || ^4.0 || ^5.0.0-next.0
-      typescript: ^4.9.4 || ^5.0.0
+      typescript: ^4.9.4 || ^5.0.0 || ^6.0.0
 
   svelte@5.55.7:
     resolution: {integrity: sha512-ymI5ykLPwIHW839E053FQbI1G+jnRFJEw3Kv5Y4njixVWywQBx+NUFpkkKyk5LIb36Fg9DVXSYpqiGekLD0hyw==}
@@ -8883,10 +8866,6 @@ snapshots:
 
   long@5.3.2: {}
 
-  lower-case@2.0.2:
-    dependencies:
-      tslib: 2.8.1
-
   lru-cache@10.4.3: {}
 
   lru-cache@11.4.0: {}
@@ -8923,8 +8902,6 @@ snapshots:
       mime-db: 1.54.0
 
   mimic-fn@4.0.0: {}
-
-  min-indent@1.0.1: {}
 
   miniflare@4.20260329.0:
     dependencies:
@@ -8983,11 +8960,6 @@ snapshots:
   natural-compare@1.4.0: {}
 
   netlify-redirector@0.5.0: {}
-
-  no-case@3.0.4:
-    dependencies:
-      lower-case: 2.0.2
-      tslib: 2.8.1
 
   node-addon-api@7.1.1: {}
 
@@ -9128,11 +9100,6 @@ snapshots:
   parse5@8.0.1:
     dependencies:
       entities: 8.0.0
-
-  pascal-case@3.1.2:
-    dependencies:
-      no-case: 3.0.4
-      tslib: 2.8.1
 
   path-exists@4.0.0: {}
 
@@ -9428,6 +9395,8 @@ snapshots:
     dependencies:
       xmlchars: 2.2.0
 
+  scule@1.3.0: {}
+
   semiver@1.1.0: {}
 
   semver@7.8.0: {}
@@ -9568,10 +9537,6 @@ snapshots:
 
   strip-final-newline@3.0.0: {}
 
-  strip-indent@3.0.0:
-    dependencies:
-      min-indent: 1.0.1
-
   supports-color@10.2.2: {}
 
   supports-color@7.2.0:
@@ -9608,22 +9573,28 @@ snapshots:
     dependencies:
       svelte: 5.55.7(@typescript-eslint/types@8.59.4)
 
-  svelte-preprocess@6.0.0(postcss-load-config@3.1.4(postcss@8.5.15))(postcss@8.5.15)(svelte@5.55.7(@typescript-eslint/types@8.59.4))(typescript@5.8.3):
+  svelte-preprocess@6.0.5(postcss-load-config@3.1.4(postcss@8.5.15))(postcss@8.5.15)(svelte@5.55.7(@typescript-eslint/types@8.59.4))(typescript@5.8.3):
     dependencies:
-      detect-indent: 6.1.0
-      strip-indent: 3.0.0
       svelte: 5.55.7(@typescript-eslint/types@8.59.4)
     optionalDependencies:
       postcss: 8.5.15
       postcss-load-config: 3.1.4(postcss@8.5.15)
       typescript: 5.8.3
 
-  svelte2tsx@0.7.33(svelte@5.55.7(@typescript-eslint/types@8.59.4))(typescript@5.8.3):
+  svelte-preprocess@6.0.5(postcss-load-config@3.1.4(postcss@8.5.15))(postcss@8.5.15)(svelte@5.55.7(@typescript-eslint/types@8.59.4))(typescript@6.0.2):
+    dependencies:
+      svelte: 5.55.7(@typescript-eslint/types@8.59.4)
+    optionalDependencies:
+      postcss: 8.5.15
+      postcss-load-config: 3.1.4(postcss@8.5.15)
+      typescript: 6.0.2
+
+  svelte2tsx@0.7.55(svelte@5.55.7(@typescript-eslint/types@8.59.4))(typescript@6.0.2):
     dependencies:
       dedent-js: 1.0.1
-      pascal-case: 3.1.2
+      scule: 1.3.0
       svelte: 5.55.7(@typescript-eslint/types@8.59.4)
-      typescript: 5.8.3
+      typescript: 6.0.2
 
   svelte@5.55.7(@typescript-eslint/types@8.59.4):
     dependencies:
