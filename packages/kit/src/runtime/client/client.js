@@ -1,3 +1,5 @@
+/** @import { ServerNodesResponse, ServerRedirectNode } from 'types' */
+/** @import { PromiseWithResolvers } from '../../utils/promise.js' */
 /** @import { CacheEntry } from './remote-functions/cache.svelte.js' */
 /** @import { Query } from './remote-functions/query/instance.svelte.js' */
 /** @import { LiveQuery } from './remote-functions/query-live/instance.svelte.js' */
@@ -56,6 +58,7 @@ import { page, update, navigating } from './state.svelte.js';
 import { add_data_suffix, add_resolution_suffix } from '../pathname.js';
 import { noop_span } from '../telemetry/noop.js';
 import { read_ndjson } from './ndjson.js';
+import { with_resolvers } from '../../utils/promise.js';
 
 export { load_css };
 const ICON_REL_ATTRIBUTES = new Set(['icon', 'shortcut icon', 'apple-touch-icon']);
@@ -3041,7 +3044,7 @@ async function _hydrate(
 /**
  * @param {URL} url
  * @param {boolean[]} invalid
- * @returns {Promise<import('types').ServerNodesResponse | import('types').ServerRedirectNode>}
+ * @returns {Promise<ServerNodesResponse | ServerRedirectNode>}
  */
 async function load_data(url, invalid) {
 	const data_url = new URL(url);
@@ -3094,9 +3097,14 @@ async function load_data(url, invalid) {
 		});
 	}
 
+	// TODO: replace this with Promise.withResolvers once ES2024 is widely used
+	/** @type {PromiseWithResolvers<ServerNodesResponse | ServerRedirectNode>} */
+	const { promise, resolve } = with_resolvers();
+
 	for await (const node of read_ndjson(reader)) {
 		if (node.type === 'redirect') {
-			return node;
+			resolve(node);
+			return promise;
 		}
 
 		if (node.type === 'data') {
@@ -3107,8 +3115,7 @@ async function load_data(url, invalid) {
 					node.data = deserialize(node.data);
 				}
 			});
-
-			return node;
+			resolve(node);
 		} else if (node.type === 'chunk') {
 			// This is a subsequent chunk containing deferred data
 			const { id, data, error } = node;
@@ -3124,7 +3131,8 @@ async function load_data(url, invalid) {
 	}
 
 	// TODO edge case handling necessary? stream() read fails?
-	throw new Error('Failed to deserialize data stream');
+
+	return promise;
 }
 
 /**
