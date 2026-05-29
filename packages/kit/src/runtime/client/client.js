@@ -163,6 +163,7 @@ function clear_onward_history(current_history_index, current_navigation_index) {
  * subsequent work, e.g. history manipulation, from happening)
  * @param {URL} url
  * @param {boolean} [replace] If `true`, will replace the current `history` entry rather than creating a new one with `pushState`
+ * @returns {Promise<void>}
  */
 function native_navigation(url, replace = false) {
 	if (replace) {
@@ -298,6 +299,7 @@ let token;
  * If a preload token is in the set and the preload errors, the error
  * handling logic (for example reloading) is skipped.
  */
+/** @type {Set<{}>} */
 const preload_tokens = new Set();
 
 /** @type {Promise<void> | null} */
@@ -518,6 +520,7 @@ function persist_state() {
  * @param {{ replaceState?: boolean; noScroll?: boolean; keepFocus?: boolean; invalidateAll?: boolean; invalidate?: Array<string | URL | ((url: URL) => boolean)>; state?: Record<string, any> }} options
  * @param {number} redirect_count
  * @param {{}} [nav_token]
+ * @returns {Promise<void>}
  */
 export async function _goto(url, options, redirect_count, nav_token) {
 	/** @type {Set<string>} */
@@ -655,12 +658,12 @@ async function _preload_code(url) {
 }
 
 /**
- * @param {import('./types.js').NavigationFinished} result
+ * @param {import('./types.js').NavigationFinished | undefined} result
  * @param {HTMLElement} target
  * @param {boolean} hydrate
  */
 async function initialize(result, target, hydrate) {
-	if (__SVELTEKIT_DEV__ && result.state.error && document.querySelector('vite-error-overlay'))
+	if (__SVELTEKIT_DEV__ && result?.state.error && document.querySelector('vite-error-overlay'))
 		return;
 
 	/** @type {import('@sveltejs/kit').NavigationEvent} */
@@ -670,10 +673,12 @@ async function initialize(result, target, hydrate) {
 		url: new URL(location.href)
 	};
 
-	current = {
-		...result.state,
-		nav
-	};
+	if (result) {
+		current = {
+			...result.state,
+			nav
+		};
+	}
 
 	// Removes the style node we used to avoid FOUC during development
 	if (__SVELTEKIT_DEV__) {
@@ -681,11 +686,11 @@ async function initialize(result, target, hydrate) {
 		if (style) style.remove();
 	}
 
-	update(/** @type {import('@sveltejs/kit').Page} */ (result.props.page));
+	update(/** @type {import('@sveltejs/kit').Page} */ (result?.props.page));
 
 	root = new app.root({
 		target,
-		props: { ...result.props, stores, components },
+		props: { ...result?.props, stores, components },
 		hydrate,
 		// @ts-ignore Svelte 5 specific: asynchronously instantiate the component, i.e. don't call flushSync
 		sync: false,
@@ -1154,8 +1159,18 @@ function preload_error({ error, url, route, params }) {
 }
 
 /**
- * @param {import('./types.js').NavigationIntent & { preload?: {} }} intent
+ * @overload
+ * @param {import('./types.js').NavigationIntent} intent
+ * @returns {Promise<import('./types.js').NavigationResult | undefined>}
+ */
+/**
+ * @overload
+ * @param {import('./types.js').NavigationIntent & { preload: {} }} intent
  * @returns {Promise<import('./types.js').NavigationResult>}
+ */
+/**
+ * @param {import('./types.js').NavigationIntent & { preload?: {} }} intent
+ * @returns {Promise<import('./types.js').NavigationResult | undefined>}
  */
 async function load_route({ id, invalidating, url, params, route, preload }) {
 	if (load_cache?.id === id) {
@@ -1212,7 +1227,7 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 			} catch (error) {
 				const handled_error = await handle_error(error, { url, params, route: { id } });
 
-				if (preload_tokens.has(preload)) {
+				if (preload && preload_tokens.has(preload)) {
 					return preload_error({ error: handled_error, url, params, route });
 				}
 
@@ -1302,7 +1317,7 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 					};
 				}
 
-				if (preload_tokens.has(preload)) {
+				if (preload && preload_tokens.has(preload)) {
 					return preload_error({
 						error: await handle_error(err, { params, url, route: { id: route.id } }),
 						url,
@@ -1328,7 +1343,7 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 					if (updated) {
 						// Before reloading, try to update the service worker if it exists
 						await update_service_worker();
-						return await native_navigation(url);
+						await native_navigation(url);
 					}
 
 					error = await handle_error(err, { params, url, route: { id: route.id } });
@@ -1405,7 +1420,7 @@ async function load_nearest_error_page(i, branch, errors) {
  *   url: URL;
  *   route: { id: string | null }
  * }} opts
- * @returns {Promise<import('./types.js').NavigationFinished>}
+ * @returns {Promise<import('./types.js').NavigationFinished | undefined>}
  */
 async function load_root_error_page({ status, error, url, route }) {
 	/** @type {Record<string, string>} */
@@ -1471,8 +1486,8 @@ async function load_root_error_page({ status, error, url, route }) {
 		});
 	} catch (error) {
 		if (error instanceof Redirect) {
-			// @ts-expect-error TODO investigate this
-			return _goto(new URL(error.location, location.href), {}, 0);
+			await _goto(new URL(error.location, location.href), {}, 0);
+			return;
 		}
 
 		// TODO: this falls back to the server when a server exists, but what about SPA mode?
@@ -1662,6 +1677,7 @@ function _before_navigate({ url, type, intent, delta, event, scroll }) {
  *   block?: () => void;
  *   event?: Event
  * }} opts
+ * @returns {Promise<void>}
  */
 async function navigate({
 	type,
@@ -1738,7 +1754,7 @@ async function navigate({
 					replace_state
 				);
 			} else {
-				return await native_navigation(url, replace_state);
+				await native_navigation(url, replace_state);
 			}
 		} else {
 			navigation_result = await server_fallback(
@@ -1762,8 +1778,10 @@ async function navigate({
 	// abort if user navigated during update
 	if (token !== nav_token) {
 		nav.reject(new Error('navigation aborted'));
-		return false;
+		return;
 	}
+
+	if (!navigation_result) return;
 
 	if (navigation_result.type === 'redirect') {
 		// whatwg fetch spec https://fetch.spec.whatwg.org/#http-redirect-fetch says to error after 20 redirects
@@ -1794,6 +1812,8 @@ async function navigate({
 			url,
 			route: { id: null }
 		});
+
+		if (!navigation_result) return;
 	} else if (/** @type {number} */ (navigation_result.props.page.status) >= 400) {
 		const updated = await stores.updated.check();
 		if (updated) {
@@ -1928,7 +1948,7 @@ async function navigate({
 	if (token !== nav_token) {
 		// a new navigation happened while we were waiting for the DOM to update, so abort
 		nav.reject(new Error('navigation aborted'));
-		return false;
+		return;
 	}
 
 	// Check for async rendering error
@@ -1999,7 +2019,7 @@ async function navigate({
  * @param {App.Error} error
  * @param {number} status
  * @param {boolean} [replace_state]
- * @returns {Promise<import('./types.js').NavigationFinished>}
+ * @returns {Promise<import('./types.js').NavigationFinished | undefined>}
  */
 async function server_fallback(url, route, error, status, replace_state) {
 	if (url.origin === origin && url.pathname === location.pathname && !hydrated) {
@@ -2021,7 +2041,7 @@ async function server_fallback(url, route, error, status, replace_state) {
 		debugger; // eslint-disable-line
 	}
 
-	return await native_navigation(url, replace_state);
+	await native_navigation(url, replace_state);
 }
 
 if (import.meta.hot) {
@@ -2928,6 +2948,7 @@ function _start_router() {
 /**
  * @param {HTMLElement} target
  * @param {import('./types.js').HydrateOptions} opts
+ * @returns {Promise<void>}
  */
 async function _hydrate(
 	target,
@@ -3015,7 +3036,6 @@ async function _hydrate(
 			// this is a real edge case — `load` would need to return
 			// a redirect but only in the browser
 			await native_navigation(new URL(error.location, location.href));
-			return;
 		}
 
 		result = await load_root_error_page({
@@ -3031,7 +3051,7 @@ async function _hydrate(
 		query_responses = {};
 	}
 
-	if (result.props.page) {
+	if (result?.props.page) {
 		result.props.page.state = {};
 	}
 
