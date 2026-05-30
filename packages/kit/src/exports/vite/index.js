@@ -302,12 +302,6 @@ async function kit({ svelte_config }) {
 					resolve: {
 						alias: [
 							{ find: '__SERVER__', replacement: `${generated}/server` },
-							{ find: '$app/env/private', replacement: `${runtime_directory}/app/env/private.js` },
-							{ find: '$app/env/public', replacement: `${runtime_directory}/app/env/public.js` },
-							{ find: '$app/env', replacement: `${runtime_directory}/app/env/index.js` },
-							...(uses_explicit_env
-								? [{ find: '$app/environment', replacement: sveltekit_environment_public }]
-								: []),
 							{ find: '$app', replacement: `${runtime_directory}/app` },
 							...get_config_aliases(kit)
 						]

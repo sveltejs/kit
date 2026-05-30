@@ -100,7 +100,7 @@ export function write_root(manifest_data, config, output) {
 			${isSvelte5Plus() ? '<svelte:options runes={true} />' : ''}
 			<script>
 				import { setContext, ${isSvelte5Plus() ? '' : 'afterUpdate, '}onMount, tick } from 'svelte';
-				import { BROWSER as browser } from 'esm-env';
+				import { browser } from '$app/env';
 
 				// stores
 				${
