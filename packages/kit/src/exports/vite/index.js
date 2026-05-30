@@ -223,7 +223,7 @@ async function kit({ svelte_config }) {
 	/** @type {boolean} */
 	let is_build;
 
-	/** @type {{ public: Record<string, string>; private: Record<string, string> }} */
+	/** @type {{ all: Record<string, string>; public: Record<string, string>; private: Record<string, string> }} */
 	let env;
 
 	/** @type {() => Promise<void>} */
@@ -234,10 +234,12 @@ async function kit({ svelte_config }) {
 
 	const service_worker_entry_file = resolve_entry(kit.files.serviceWorker);
 	const parsed_service_worker = path.parse(kit.files.serviceWorker);
+
 	const explicit_env_entry = resolve_explicit_env_entry(kit);
-	const get_explicit_build_env = () => ({ ...env.private, ...env.public });
+
 	/** @type {Promise<import('../../core/env.js').ExplicitEnvVar[]> | null} */
 	let explicit_env_promise = null;
+
 	const get_explicit_env = () => {
 		explicit_env_promise ??= load_explicit_env(explicit_env_entry, kit, vite_config_env.mode);
 		return explicit_env_promise;
@@ -562,7 +564,7 @@ async function kit({ svelte_config }) {
 				case sveltekit_env:
 					return create_sveltekit_env(
 						await get_explicit_env(),
-						get_explicit_build_env(),
+						env.all,
 						explicit_env_entry
 					);
 
