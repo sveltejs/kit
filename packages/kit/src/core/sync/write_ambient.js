@@ -23,8 +23,8 @@ function read_description(filename) {
 /**
  * @param {import('types').Env} env
  * @param {{
- *   public_prefix: string;
- *   private_prefix: string
+ * 	public_prefix: string;
+ * 	private_prefix: string;
  * }} prefixes
  */
 const template = (env, prefixes) => `
