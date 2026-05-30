@@ -24,8 +24,17 @@ import { resolve_entry } from '../utils/filesystem.js';
  * @returns {string | null}
  */
 export function resolve_explicit_env_entry(config) {
-	if (!config.experimental.explicitEnvironmentVariables) return null;
-	return resolve_entry(path.join(config.files.src, 'env'));
+	const resolved = resolve_entry(path.join(config.files.src, 'env'));
+
+	if (resolved) {
+		if (config.experimental.explicitEnvironmentVariables) {
+			return resolved;
+		}
+
+		console.warn(`${path.relative(process.cwd(), resolved)} requires the \`experimental.explicitEnvironmentVariables\` flag to be set`);
+	}
+
+	return null;
 }
 
 /**
