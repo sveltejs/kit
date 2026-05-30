@@ -3,6 +3,7 @@
 /** @import { RouteDefinition } from '@sveltejs/kit' */
 /** @import { RouteData, ValidatedConfig, BuildData, ServerMetadata, ServerMetadataRoute, Prerendered, PrerenderMap, Logger, RemoteChunk } from 'types' */
 import colors from 'kleur';
+import * as devalue from 'uneval';
 import { createReadStream, createWriteStream, existsSync, statSync } from 'node:fs';
 import { extname, resolve, join, dirname, relative } from 'node:path';
 import { pipeline } from 'node:stream';
@@ -168,7 +169,7 @@ export function create_builder({
 
 			const fallback = await generate_fallback({
 				manifest_path,
-				env: { ...env.private, ...env.public }
+				env: env.all
 			});
 
 			if (existsSync(dest)) {
@@ -188,7 +189,11 @@ export function create_builder({
 			const dest = `${config.kit.outDir}/output/prerendered/dependencies/${config.kit.appDir}/env.js`;
 			const env = get_env(config.kit.env, vite_config.mode);
 
-			write(dest, `export const env=${JSON.stringify(env.public)}`);
+			if (config.kit.experimental.explicitEnvironmentVariables) {
+				throw new Error('TODO');
+			}
+
+			write(dest, `export const env=${devalue.uneval(env.public)}`);
 		},
 
 		generateManifest({ relativePath, routes: subset }) {

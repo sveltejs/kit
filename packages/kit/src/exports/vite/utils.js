@@ -72,6 +72,7 @@ export function get_env(env_config, mode) {
 	const env = loadEnv(mode, env_config.dir, '');
 
 	return {
+		all: env,
 		public: filter_env(env, public_prefix, private_prefix),
 		private: filter_env(env, private_prefix, public_prefix)
 	};
