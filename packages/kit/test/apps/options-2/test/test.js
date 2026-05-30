@@ -9,12 +9,12 @@ test.describe.configure({ mode: 'parallel' });
 test.describe('env', () => {
 	test('resolves upwards', async ({ page }) => {
 		await page.goto('/basepath/env');
-		expect(await page.textContent('[data-testid="public"]')).toBe('public: resolves upwards!');
+		expect(await page.textContent('[data-testid="public"]')).toBe('public: hello');
 		expect(await page.textContent('[data-testid="private-dynamic"]')).toBe(
-			'private dynamic: private resolves upwards!'
+			'private dynamic: secret resolved at runtime'
 		);
 		expect(await page.textContent('[data-testid="private-static"]')).toBe(
-			'private static: private static resolves upwards!'
+			'private static: secret resolved at build time'
 		);
 		expect(await page.textContent('[data-testid="private-validated-default"]')).toBe(
 			'private validated default: foo'
