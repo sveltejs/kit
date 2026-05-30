@@ -161,23 +161,6 @@ export function create_dynamic_module(type, dev_values) {
 }
 
 /**
- * @param {string} id
- * @param {string[]} exports
- */
-export function create_forbidden_module(id, exports) {
-	const unique_exports = Array.from(new Set(exports)).filter((name) => valid_identifier.test(name));
-	const declarations = unique_exports.map((name) => `export let ${name};`).join('\n');
-
-	return dedent`
-		throw new Error(${JSON.stringify(
-			`Cannot import ${id} when kit.experimental.explicitEnvironmentVariables is enabled. Use $app/env instead.`
-		)});
-
-		${declarations}
-	`;
-}
-
-/**
  * @param {ExplicitEnvVar[]} variables
  * @param {Record<string, string>} env
  * @param {string | null} entry
