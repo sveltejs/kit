@@ -84,7 +84,7 @@ if (command === 'sync') {
 	try {
 		const config = await load_config();
 		const sync = await import('./core/sync/sync.js');
-		sync.all_types(config, values.mode);
+		await sync.all_types(config, values.mode);
 	} catch (error) {
 		handle_error(error);
 	}

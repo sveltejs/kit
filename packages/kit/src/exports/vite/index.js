@@ -14,7 +14,7 @@ import {
 	create_explicit_env_module,
 	create_forbidden_module,
 	create_static_module,
-	read_explicit_env,
+	load_explicit_env,
 	resolve_explicit_env_entry
 } from '../../core/env.js';
 import * as sync from '../../core/sync/sync.js';
@@ -240,9 +240,14 @@ async function kit({ svelte_config }) {
 	const service_worker_entry_file = resolve_entry(kit.files.serviceWorker);
 	const parsed_service_worker = path.parse(kit.files.serviceWorker);
 	const explicit_env_entry = resolve_explicit_env_entry(kit);
-	const explicit_env = read_explicit_env(explicit_env_entry);
 	const uses_explicit_env = explicit_env_entry !== null;
 	const get_explicit_build_env = () => ({ ...env.private, ...env.public });
+	/** @type {Promise<import('../../core/env.js').ExplicitEnvVar[]> | null} */
+	let explicit_env_promise = null;
+	const get_explicit_env = () => {
+		explicit_env_promise ??= load_explicit_env(explicit_env_entry, kit, vite_config_env.mode);
+		return explicit_env_promise;
+	};
 
 	const normalized_cwd = vite.normalizePath(cwd);
 	const normalized_lib = vite.normalizePath(kit.files.lib);
@@ -268,7 +273,7 @@ async function kit({ svelte_config }) {
 		 */
 		config: {
 			order: 'pre',
-			handler(config, config_env) {
+			async handler(config, config_env) {
 				initial_config = config;
 				vite_config_env = config_env;
 				is_build = config_env.command === 'build';
@@ -419,7 +424,7 @@ async function kit({ svelte_config }) {
 					};
 
 					if (!secondary_build_started) {
-						manifest_data = sync.all(svelte_config, config_env.mode).manifest_data;
+						manifest_data = (await sync.all(svelte_config, config_env.mode)).manifest_data;
 						// During the initial server build we don't know yet
 						new_config.define.__SVELTEKIT_HAS_SERVER_LOAD__ = 'true';
 						new_config.define.__SVELTEKIT_HAS_UNIVERSAL_LOAD__ = 'true';
@@ -469,10 +474,25 @@ async function kit({ svelte_config }) {
 		}
 	};
 
+	/** @param {ViteDevServer} server */
+	function watch_explicit_env(server) {
+		if (!explicit_env_entry) return;
+
+		server.watcher.on('change', async (file) => {
+			if (file !== explicit_env_entry) return;
+
+			explicit_env_promise = null;
+			await sync.init(svelte_config, vite_config_env.mode);
+			server.ws.send({ type: 'full-reload' });
+		});
+	}
+
 	/** @type {Plugin} */
 	const plugin_virtual_modules = {
 		name: 'vite-plugin-sveltekit-virtual-modules',
 		enforce: 'pre',
+
+		configureServer: watch_explicit_env,
 
 		resolveId(id, importer) {
 			if (id === '__sveltekit/manifest') {
@@ -532,7 +552,7 @@ async function kit({ svelte_config }) {
 			}
 		},
 
-		load(id, options) {
+		async load(id, options) {
 			const browser = !options?.ssr;
 
 			const global = is_build
@@ -595,18 +615,18 @@ async function kit({ svelte_config }) {
 						return create_forbidden_module('$app/env/private', []);
 					}
 
-					return create_app_env_module(explicit_env, 'private');
+					return create_app_env_module(await get_explicit_env(), 'private');
 
 				case app_env_public:
 					if (!uses_explicit_env) {
 						return create_forbidden_module('$app/env/public', []);
 					}
 
-					return create_app_env_module(explicit_env, 'public');
+					return create_app_env_module(await get_explicit_env(), 'public');
 
 				case sveltekit_env_private:
 					return create_explicit_env_module(
-						explicit_env,
+						await get_explicit_env(),
 						'private',
 						get_explicit_build_env(),
 						explicit_env_entry,
@@ -618,7 +638,7 @@ async function kit({ svelte_config }) {
 
 				case sveltekit_env_public:
 					return create_explicit_env_module(
-						explicit_env,
+						await get_explicit_env(),
 						'public',
 						get_explicit_build_env(),
 						explicit_env_entry,
@@ -708,7 +728,7 @@ async function kit({ svelte_config }) {
 			}
 		},
 
-		load(id, options) {
+		async load(id, options) {
 			if (options?.ssr === true || process.env.TEST === 'true') {
 				return;
 			}
@@ -728,7 +748,7 @@ async function kit({ svelte_config }) {
 
 			if (is_server_only) {
 				// in dev, this doesn't exist, so we need to create it
-				manifest_data ??= sync.all(svelte_config, vite_config_env.mode).manifest_data;
+				manifest_data ??= (await sync.all(svelte_config, vite_config_env.mode)).manifest_data;
 
 				/** @type {Set<string>} */
 				const entrypoints = new Set();

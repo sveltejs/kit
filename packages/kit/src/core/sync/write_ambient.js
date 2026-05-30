@@ -7,7 +7,7 @@ import {
 	create_dynamic_types,
 	create_explicit_env_types,
 	create_static_types,
-	read_explicit_env,
+	load_explicit_env,
 	resolve_explicit_env_entry
 } from '../env.js';
 import { write_if_changed } from './utils.js';
@@ -68,10 +68,11 @@ ${create_dynamic_types('public', env, prefixes)}
  * @param {import('types').ValidatedKitConfig} config
  * @param {string} mode The Vite mode
  */
-export function write_ambient(config, mode) {
+export async function write_ambient(config, mode) {
 	const env = get_env(config.env, mode);
 	const { publicPrefix: public_prefix, privatePrefix: private_prefix } = config.env;
-	const explicit_env = read_explicit_env(resolve_explicit_env_entry(config));
+	const explicit_env_entry = resolve_explicit_env_entry(config);
+	const explicit_env = await load_explicit_env(explicit_env_entry, config, mode);
 
 	write_if_changed(
 		path.join(config.outDir, 'ambient.d.ts'),

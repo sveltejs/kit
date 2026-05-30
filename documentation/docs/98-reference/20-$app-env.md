@@ -27,6 +27,8 @@ export const variables = {
 };
 ```
 
+`src/env.js` is bundled and evaluated before the rest of your app is built, so `variables` can use normal JavaScript such as imports, spreads and conditionals.
+
 Variables listed in `variables` can be imported by name from `$app/env/private` or `$app/env/public`:
 
 ```js

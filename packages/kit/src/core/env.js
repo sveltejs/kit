@@ -1,7 +1,6 @@
-import fs from 'node:fs';
 import path from 'node:path';
-import { Parser } from 'acorn';
-import { tsPlugin } from '@sveltejs/acorn-typescript';
+import process from 'node:process';
+import * as vite from 'vite';
 import { GENERATED_COMMENT } from '../constants.js';
 import { dedent } from './sync/utils.js';
 import { runtime_base } from './utils.js';
@@ -10,8 +9,6 @@ import { resolve_entry } from '../utils/filesystem.js';
 /**
  * @typedef {'public' | 'private'} EnvType
  */
-
-const parser = Parser.extend(tsPlugin());
 
 /**
  * @typedef {object} ExplicitEnvVar
@@ -33,82 +30,67 @@ export function resolve_explicit_env_entry(config) {
 
 /**
  * @param {string | null} file
- * @returns {ExplicitEnvVar[]}
+ * @param {import('types').ValidatedKitConfig} config
+ * @param {string} mode
+ * @returns {Promise<ExplicitEnvVar[]>}
  */
-export function read_explicit_env(file) {
+export async function load_explicit_env(file, config, mode) {
 	if (!file) return [];
 
-	const ast = /** @type {any} */ (
-		parser.parse(fs.readFileSync(file, 'utf8'), {
-			ecmaVersion: 'latest',
-			sourceType: 'module'
+	const bundle = /** @type {import('vite').Rollup.RollupOutput} */ (
+		await vite.build({
+			configFile: false,
+			envDir: config.env.dir,
+			logLevel: 'silent',
+			mode,
+			root: process.cwd(),
+			ssr: {
+				noExternal: true
+			},
+			build: {
+				emptyOutDir: false,
+				ssr: file,
+				write: false,
+				rollupOptions: {
+					output: {
+						format: 'es',
+						inlineDynamicImports: true
+					}
+				}
+			}
 		})
 	);
 
-	/** @type {any} */
-	let variables = null;
-
-	for (const node of ast.body) {
-		if (node.type !== 'ExportNamedDeclaration' || !node.declaration) continue;
-		if (node.declaration.type !== 'VariableDeclaration') continue;
-
-		for (const declaration of node.declaration.declarations) {
-			if (declaration.id.type !== 'Identifier' || declaration.id.name !== 'variables') continue;
-			if (declaration.init?.type === 'ObjectExpression') variables = declaration.init;
-		}
+	const chunk = bundle.output.find((chunk) => chunk.type === 'chunk' && chunk.isEntry);
+	if (!chunk || chunk.type !== 'chunk') {
+		throw new Error(`Could not build ${file}`);
 	}
 
-	if (!variables) return [];
+	const href = `data:text/javascript;base64,${Buffer.from(chunk.code).toString('base64')}#${Date.now()}`;
+	const { variables } = await import(href);
 
-	return variables.properties.map((/** @type {any} */ property) => {
-		if (property.type !== 'Property') {
-			throw new Error('Environment variable declarations cannot use spread properties');
-		}
+	if (!variables || typeof variables !== 'object') {
+		throw new Error(`${file} must export a variables object`);
+	}
 
-		const name = get_property_name(property.key);
-
+	return Object.entries(variables).map(([name, value]) => {
 		if (!valid_identifier.test(name) || reserved.has(name)) {
 			throw new Error(`Invalid environment variable name ${JSON.stringify(name)}`);
 		}
 
+		const config = value && typeof value === 'object' ? value : {};
+
 		/** @type {ExplicitEnvVar} */
 		const variable = {
 			name,
-			public: false,
-			static: false,
-			validates: false,
-			description: null
+			public: config.public === true,
+			static: config.static === true || config.inline === true,
+			validates: 'validate' in config,
+			description: typeof config.description === 'string' ? config.description : null
 		};
-
-		if (property.value.type !== 'ObjectExpression') return variable;
-
-		for (const option of property.value.properties) {
-			if (option.type !== 'Property') continue;
-
-			const key = get_property_name(option.key);
-			if (key === 'public' && option.value.type === 'Literal') {
-				variable.public = option.value.value === true;
-			} else if ((key === 'static' || key === 'inline') && option.value.type === 'Literal') {
-				variable.static = option.value.value === true;
-			} else if (key === 'validate') {
-				variable.validates = true;
-			} else if (key === 'description' && option.value.type === 'Literal') {
-				variable.description = typeof option.value.value === 'string' ? option.value.value : null;
-			}
-		}
 
 		return variable;
 	});
-}
-
-/**
- * @param {any} key
- * @returns {string}
- */
-function get_property_name(key) {
-	if (key.type === 'Identifier') return key.name;
-	if (key.type === 'Literal' && typeof key.value === 'string') return key.value;
-	throw new Error('Environment variable declarations must use static property names');
 }
 
 /**
