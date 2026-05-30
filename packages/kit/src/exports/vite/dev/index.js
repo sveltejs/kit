@@ -322,7 +322,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes) {
 			// ssrFixStacktrace can fail on StackBlitz web containers and we don't know why
 			// by ignoring it the line numbers are wrong, but at least we can show the error
 		}
-		return error.stack;
+		return error.stack?.replaceAll('\0', ''); // remove null bytes from e.g. virtual module IDs, or the response will fail
 	}
 
 	update_manifest();

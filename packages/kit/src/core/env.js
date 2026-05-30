@@ -19,6 +19,8 @@ import { resolve_entry } from '../utils/filesystem.js';
  * @property {string | null} description
  */
 
+let warned = false;
+
 /**
  * @param {import('types').ValidatedKitConfig} config
  * @returns {string | null}
@@ -31,7 +33,12 @@ export function resolve_explicit_env_entry(config) {
 			return resolved;
 		}
 
-		console.warn(`${path.relative(process.cwd(), resolved)} requires the \`experimental.explicitEnvironmentVariables\` flag to be set`);
+		if (!warned) {
+			console.warn(`${path.relative(process.cwd(), resolved)} requires the \`experimental.explicitEnvironmentVariables\` flag to be set`);
+			warned = true;
+		}
+	} else if (config.experimental.explicitEnvironmentVariables) {
+		throw new Error('experimental.explicitEnvironmentVariables was set, but no src/env.ts or src/env.js file could be found');
 	}
 
 	return null;
