@@ -405,7 +405,7 @@ export async function render_response({
 		// import the env.js module so that it evaluates before any user code can evaluate.
 		// TODO revert to using top-level await once https://bugs.webkit.org/show_bug.cgi?id=242740 is fixed
 		// https://github.com/sveltejs/kit/pull/11601
-		const load_env_eagerly = client.uses_env_dynamic_public && state.prerendering;
+		const load_env_eagerly = (__SVELTEKIT_EXPERIMENTAL_EXPLICIT_ENVIRONMENT_VARIABLES__ || client.uses_env_dynamic_public) && state.prerendering;
 
 		const properties = [`base: ${base_expression}`];
 

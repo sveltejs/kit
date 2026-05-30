@@ -318,7 +318,6 @@ export async function internal_respond(request, options, manifest, state) {
 	}
 
 	if (resolved_path === `/${app_dir}/env.js`) {
-		// TODO use explicit env vars where appropriate
 		return get_public_env(request);
 	}
 
