@@ -8,6 +8,8 @@ import { options, get_hooks } from '__SERVER__/internal.js';
 import { filter_env } from '../../utils/env.js';
 import { format_server_error } from './utils.js';
 import { set_read_implementation, set_manifest } from '__sveltekit/server';
+import { set as set_explicit_private_env } from '__sveltekit/env/private';
+import { set as set_explicit_public_env } from '__sveltekit/env/public';
 import { set_app } from './app.js';
 
 /** @type {Promise<any>} */
@@ -62,6 +64,8 @@ export class Server {
 
 		set_private_env(filter_env(env, env_private_prefix, env_public_prefix));
 		set_public_env(filter_env(env, env_public_prefix, env_private_prefix));
+		set_explicit_private_env(env);
+		set_explicit_public_env(env);
 
 		if (read) {
 			// Wrap the read function to handle MaybePromise<ReadableStream>

@@ -27,3 +27,13 @@ declare module '__sveltekit/server' {
 	export function set_manifest(manifest: SSRManifest): void;
 	export function set_read_implementation(fn: (path: string) => ReadableStream): void;
 }
+
+/** Internal version of $app/env/private */
+declare module '__sveltekit/env/private' {
+	export function set(environment: Record<string, string>): void;
+}
+
+/** Internal version of $app/env/public */
+declare module '__sveltekit/env/public' {
+	export function set(environment: Record<string, string>): void;
+}

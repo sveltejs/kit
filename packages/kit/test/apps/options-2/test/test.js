@@ -9,8 +9,16 @@ test.describe.configure({ mode: 'parallel' });
 test.describe('env', () => {
 	test('resolves upwards', async ({ page }) => {
 		await page.goto('/basepath/env');
-		expect(await page.textContent('[data-testid="static"]')).toBe('static: resolves upwards!');
-		expect(await page.textContent('[data-testid="dynamic"]')).toBe('dynamic: resolves upwards!');
+		expect(await page.textContent('[data-testid="public"]')).toBe('public: resolves upwards!');
+		expect(await page.textContent('[data-testid="private-dynamic"]')).toBe(
+			'private dynamic: private resolves upwards!'
+		);
+		expect(await page.textContent('[data-testid="private-static"]')).toBe(
+			'private static: private static resolves upwards!'
+		);
+		expect(await page.textContent('[data-testid="private-validated-default"]')).toBe(
+			'private validated default: foo'
+		);
 	});
 });
 

@@ -1,10 +1,115 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import { Parser } from 'acorn';
+import { tsPlugin } from '@sveltejs/acorn-typescript';
 import { GENERATED_COMMENT } from '../constants.js';
 import { dedent } from './sync/utils.js';
 import { runtime_base } from './utils.js';
+import { resolve_entry } from '../utils/filesystem.js';
 
 /**
  * @typedef {'public' | 'private'} EnvType
  */
+
+const parser = Parser.extend(tsPlugin());
+
+/**
+ * @typedef {object} ExplicitEnvVar
+ * @property {string} name
+ * @property {boolean} public
+ * @property {boolean} static
+ * @property {boolean} validates
+ * @property {string | null} description
+ */
+
+/**
+ * @param {import('types').ValidatedKitConfig} config
+ * @returns {string | null}
+ */
+export function resolve_explicit_env_entry(config) {
+	if (!config.experimental.explicitEnvironmentVariables) return null;
+	return resolve_entry(path.join(config.files.src, 'env'));
+}
+
+/**
+ * @param {string | null} file
+ * @returns {ExplicitEnvVar[]}
+ */
+export function read_explicit_env(file) {
+	if (!file) return [];
+
+	const ast = /** @type {any} */ (
+		parser.parse(fs.readFileSync(file, 'utf8'), {
+			ecmaVersion: 'latest',
+			sourceType: 'module'
+		})
+	);
+
+	/** @type {any} */
+	let variables = null;
+
+	for (const node of ast.body) {
+		if (node.type !== 'ExportNamedDeclaration' || !node.declaration) continue;
+		if (node.declaration.type !== 'VariableDeclaration') continue;
+
+		for (const declaration of node.declaration.declarations) {
+			if (declaration.id.type !== 'Identifier' || declaration.id.name !== 'variables') continue;
+			if (declaration.init?.type === 'ObjectExpression') variables = declaration.init;
+		}
+	}
+
+	if (!variables) return [];
+
+	return variables.properties.map((/** @type {any} */ property) => {
+		if (property.type !== 'Property') {
+			throw new Error('Environment variable declarations cannot use spread properties');
+		}
+
+		const name = get_property_name(property.key);
+
+		if (!valid_identifier.test(name) || reserved.has(name)) {
+			throw new Error(`Invalid environment variable name ${JSON.stringify(name)}`);
+		}
+
+		/** @type {ExplicitEnvVar} */
+		const variable = {
+			name,
+			public: false,
+			static: false,
+			validates: false,
+			description: null
+		};
+
+		if (property.value.type !== 'ObjectExpression') return variable;
+
+		for (const option of property.value.properties) {
+			if (option.type !== 'Property') continue;
+
+			const key = get_property_name(option.key);
+			if (key === 'public' && option.value.type === 'Literal') {
+				variable.public = option.value.value === true;
+			} else if ((key === 'static' || key === 'inline') && option.value.type === 'Literal') {
+				variable.static = option.value.value === true;
+			} else if (key === 'validate') {
+				variable.validates = true;
+			} else if (key === 'description' && option.value.type === 'Literal') {
+				variable.description = typeof option.value.value === 'string' ? option.value.value : null;
+			}
+		}
+
+		return variable;
+	});
+}
+
+/**
+ * @param {any} key
+ * @returns {string}
+ */
+function get_property_name(key) {
+	if (key.type === 'Identifier') return key.name;
+	if (key.type === 'Literal' && typeof key.value === 'string') return key.value;
+	throw new Error('Environment variable declarations must use static property names');
+}
 
 /**
  * @param {string} id
@@ -41,6 +146,151 @@ export function create_dynamic_module(type, dev_values) {
 		return `export const env = {\n${keys.join(',\n')}\n}`;
 	}
 	return `export { ${type}_env as env } from '${runtime_base}/shared-server.js';`;
+}
+
+/**
+ * @param {string} id
+ * @param {string[]} exports
+ */
+export function create_forbidden_module(id, exports) {
+	const unique_exports = Array.from(new Set(exports)).filter((name) => valid_identifier.test(name));
+	const declarations = unique_exports.map((name) => `export let ${name};`).join('\n');
+
+	return dedent`
+		throw new Error(${JSON.stringify(
+			`Cannot import ${id} when kit.experimental.explicitEnvironmentVariables is enabled. Use $app/env instead.`
+		)});
+
+		${declarations}
+	`;
+}
+
+/**
+ * @param {ExplicitEnvVar[]} variables
+ * @param {EnvType} type
+ */
+export function create_app_env_module(variables, type) {
+	const exports = variables
+		.filter((variable) => variable.public === (type === 'public'))
+		.map((variable) => variable.name);
+
+	return exports.length > 0
+		? `export { ${exports.join(', ')} } from '__sveltekit/env/${type}';`
+		: '';
+}
+
+/**
+ * @param {ExplicitEnvVar[]} variables
+ * @param {EnvType} type
+ * @param {Record<string, string>} env
+ * @param {string | null} entry
+ * @param {{ browser: boolean, global: string }} opts
+ */
+export function create_explicit_env_module(variables, type, env, entry, { browser, global }) {
+	if (!entry) return 'export function set() {}';
+
+	const relevant = variables.filter((variable) => variable.public === (type === 'public'));
+
+	if (browser && type === 'public') {
+		return GENERATED_COMMENT + create_browser_public_env(relevant, env, global);
+	}
+
+	const imports = `import { variables } from ${JSON.stringify(entry)};`;
+	const declarations = [];
+	const setters = [];
+	const validations = [];
+
+	for (const variable of relevant) {
+		const comment = variable.description ? `${create_jsdoc(variable.description)}\n` : '';
+
+		if (variable.static) {
+			const value = JSON.stringify(env[variable.name]);
+			if (variable.validates) {
+				declarations.push(
+					`${comment}export const ${variable.name} = validate(variables.${variable.name} ?? {}, ${value}, ${JSON.stringify(variable.name)});`
+				);
+			} else {
+				validations.push(
+					`validate(variables.${variable.name} ?? {}, ${value}, ${JSON.stringify(variable.name)});`
+				);
+				declarations.push(`${comment}export const ${variable.name} = ${value};`);
+			}
+		} else {
+			declarations.push(`${comment}export var ${variable.name};`);
+			setters.push(
+				`${variable.name} = validate(variables.${variable.name} ?? {}, env[${JSON.stringify(
+					variable.name
+				)}], ${JSON.stringify(variable.name)});`
+			);
+		}
+	}
+
+	return `${GENERATED_COMMENT}${imports}\n\n${create_validator()}\n\n${declarations.join(
+		'\n\n'
+	)}\n\n${validations.join('\n')}\n\nexport function set(env) {\n${setters
+		.map((line) => `\t${line}`)
+		.join('\n')}\n}`;
+}
+
+/**
+ * @param {ExplicitEnvVar[]} variables
+ * @param {Record<string, string>} env
+ * @param {string} global
+ */
+function create_browser_public_env(variables, env, global) {
+	return variables
+		.map((variable) => {
+			const comment = variable.description ? `${create_jsdoc(variable.description)}\n` : '';
+			const value = variable.static
+				? JSON.stringify(env[variable.name])
+				: `${global}.env?.[${JSON.stringify(variable.name)}]`;
+
+			return `${comment}export const ${variable.name} = ${value};`;
+		})
+		.join('\n\n');
+}
+
+function create_validator() {
+	return dedent`
+		function validate(config, value, name) {
+			const schema = config.validate ?? string_schema;
+			const standard = schema?.['~standard'];
+
+			if (!standard) {
+				throw new Error(\`Environment variable \${name} was configured with a validator that does not implement Standard Schema\`);
+			}
+
+			const result = standard.validate(value);
+
+			if (typeof result?.then === 'function') {
+				throw new Error(\`Environment variable \${name} uses an async validator, which is not supported\`);
+			}
+
+			if (result.issues) {
+				throw new Error(\`Environment variable \${name} is invalid: \${result.issues.map((issue) => issue.message).join(', ')}\`);
+			}
+
+			return result.value;
+		}
+
+		const string_schema = {
+			'~standard': {
+				validate(value) {
+					return typeof value === 'string'
+						? { value }
+						: { issues: [{ message: 'Expected a string' }] };
+				}
+			}
+		};
+	`;
+}
+
+/** @param {string} description */
+function create_jsdoc(description) {
+	return `/**\n${description
+		.split('\n')
+		.map((line) => ` * ${line.replaceAll('*/', '*\\/')}`)
+		.join('\n')}\n */`;
 }
 
 /**
@@ -94,6 +344,25 @@ export function create_dynamic_types(id, env, { public_prefix, private_prefix })
 			export const env: {
 				${properties.join('\n')}
 			}
+		}
+	`;
+}
+
+/**
+ * @param {ExplicitEnvVar[]} variables
+ * @param {EnvType} type
+ */
+export function create_explicit_env_types(variables, type) {
+	const declarations = variables
+		.filter((variable) => variable.public === (type === 'public'))
+		.map((variable) => {
+			const comment = variable.description ? `${create_jsdoc(variable.description)}\n\t` : '';
+			return `${comment}export const ${variable.name}: string;`;
+		});
+
+	return dedent`
+		declare module '$app/env/${type}' {
+			${declarations.join('\n')}
 		}
 	`;
 }

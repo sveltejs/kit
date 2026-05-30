@@ -477,6 +477,13 @@ export interface KitConfig {
 	/** Experimental features. Here be dragons. These are not subject to semantic versioning, so breaking changes or removal can happen in any release. */
 	experimental?: {
 		/**
+		 * Whether to enable explicit environment variables using `src/env.js` or `src/env.ts`.
+		 * This feature is not yet stable and may be changed or removed at any time.
+		 * @default false
+		 */
+		explicitEnvironmentVariables?: boolean;
+
+		/**
 		 * Options for enabling server-side [OpenTelemetry](https://opentelemetry.io/) tracing for SvelteKit operations including the [`handle` hook](https://svelte.dev/docs/kit/hooks#Server-hooks-handle), [`load` functions](https://svelte.dev/docs/kit/load), [form actions](https://svelte.dev/docs/kit/form-actions), and [remote functions](https://svelte.dev/docs/kit/remote-functions).
 		 * @default { server: false, serverFile: false }
 		 * @since 2.31.0

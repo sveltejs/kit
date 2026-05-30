@@ -8,7 +8,15 @@ import process from 'node:process';
 import colors from 'kleur';
 
 import { copy, mkdirp, posixify, read, resolve_entry, rimraf } from '../../utils/filesystem.js';
-import { create_static_module, create_dynamic_module } from '../../core/env.js';
+import {
+	create_app_env_module,
+	create_dynamic_module,
+	create_explicit_env_module,
+	create_forbidden_module,
+	create_static_module,
+	read_explicit_env,
+	resolve_explicit_env_entry
+} from '../../core/env.js';
 import * as sync from '../../core/sync/sync.js';
 import { create_assets } from '../../core/sync/create_manifest_data/index.js';
 import { runtime_directory, logger } from '../../core/utils.js';
@@ -37,8 +45,14 @@ import {
 	env_dynamic_public,
 	env_static_private,
 	env_static_public,
+	app_env,
+	app_env_private,
+	app_env_public,
 	service_worker,
+	sveltekit_env_private,
+	sveltekit_env_public,
 	sveltekit_environment,
+	sveltekit_environment_public,
 	sveltekit_server
 } from './module_ids.js';
 import { import_peer } from '../../utils/import.js';
@@ -225,6 +239,10 @@ async function kit({ svelte_config }) {
 
 	const service_worker_entry_file = resolve_entry(kit.files.serviceWorker);
 	const parsed_service_worker = path.parse(kit.files.serviceWorker);
+	const explicit_env_entry = resolve_explicit_env_entry(kit);
+	const explicit_env = read_explicit_env(explicit_env_entry);
+	const uses_explicit_env = explicit_env_entry !== null;
+	const get_explicit_build_env = () => ({ ...env.private, ...env.public });
 
 	const normalized_cwd = vite.normalizePath(cwd);
 	const normalized_lib = vite.normalizePath(kit.files.lib);
@@ -279,6 +297,12 @@ async function kit({ svelte_config }) {
 					resolve: {
 						alias: [
 							{ find: '__SERVER__', replacement: `${generated}/server` },
+							{ find: '$app/env/private', replacement: `${runtime_directory}/app/env/private.js` },
+							{ find: '$app/env/public', replacement: `${runtime_directory}/app/env/public.js` },
+							{ find: '$app/env', replacement: `${runtime_directory}/app/env/index.js` },
+							...(uses_explicit_env
+								? [{ find: '$app/environment', replacement: sveltekit_environment_public }]
+								: []),
 							{ find: '$app', replacement: `${runtime_directory}/app` },
 							...get_config_aliases(kit)
 						]
@@ -448,6 +472,7 @@ async function kit({ svelte_config }) {
 	/** @type {Plugin} */
 	const plugin_virtual_modules = {
 		name: 'vite-plugin-sveltekit-virtual-modules',
+		enforce: 'pre',
 
 		resolveId(id, importer) {
 			if (id === '__sveltekit/manifest') {
@@ -476,6 +501,22 @@ async function kit({ svelte_config }) {
 				}
 			}
 
+			if (id === '$app/env') {
+				return app_env;
+			}
+
+			if (id === '$app/env/private') {
+				return app_env_private;
+			}
+
+			if (id === '$app/env/public') {
+				return app_env_public;
+			}
+
+			if (uses_explicit_env && id === '$app/environment') {
+				return sveltekit_environment_public;
+			}
+
 			// treat $env/static/[public|private] as virtual
 			if (id.startsWith('$env/') || id === '$service-worker') {
 				// ids with :$ don't work with reverse proxies like nginx
@@ -500,18 +541,34 @@ async function kit({ svelte_config }) {
 
 			switch (id) {
 				case env_static_private:
+					if (uses_explicit_env) {
+						return create_forbidden_module('$env/static/private', Object.keys(env.private));
+					}
+
 					return create_static_module('$env/static/private', env.private);
 
 				case env_static_public:
+					if (uses_explicit_env) {
+						return create_forbidden_module('$env/static/public', Object.keys(env.public));
+					}
+
 					return create_static_module('$env/static/public', env.public);
 
 				case env_dynamic_private:
+					if (uses_explicit_env) {
+						return create_forbidden_module('$env/dynamic/private', ['env']);
+					}
+
 					return create_dynamic_module(
 						'private',
 						vite_config_env.command === 'serve' ? env.private : undefined
 					);
 
 				case env_dynamic_public:
+					if (uses_explicit_env) {
+						return create_forbidden_module('$env/dynamic/public', ['env']);
+					}
+
 					// populate `$env/dynamic/public` from `window`
 					if (browser) {
 						return `export const env = ${global}.env;`;
@@ -524,6 +581,60 @@ async function kit({ svelte_config }) {
 
 				case service_worker:
 					return create_service_worker_module(svelte_config);
+
+				case app_env:
+					return uses_explicit_env
+						? dedent`
+							export { BROWSER as browser, DEV as dev } from 'esm-env';
+							export { building, version } from '__sveltekit/environment';
+						`
+						: `export * from '$app/environment';`;
+
+				case app_env_private:
+					if (!uses_explicit_env) {
+						return create_forbidden_module('$app/env/private', []);
+					}
+
+					return create_app_env_module(explicit_env, 'private');
+
+				case app_env_public:
+					if (!uses_explicit_env) {
+						return create_forbidden_module('$app/env/public', []);
+					}
+
+					return create_app_env_module(explicit_env, 'public');
+
+				case sveltekit_env_private:
+					return create_explicit_env_module(
+						explicit_env,
+						'private',
+						get_explicit_build_env(),
+						explicit_env_entry,
+						{
+							browser,
+							global
+						}
+					);
+
+				case sveltekit_env_public:
+					return create_explicit_env_module(
+						explicit_env,
+						'public',
+						get_explicit_build_env(),
+						explicit_env_entry,
+						{
+							browser,
+							global
+						}
+					);
+
+				case sveltekit_environment_public:
+					return create_forbidden_module('$app/environment', [
+						'browser',
+						'dev',
+						'building',
+						'version'
+					]);
 
 				case sveltekit_environment: {
 					const { version } = svelte_config.kit;
@@ -568,7 +679,7 @@ async function kit({ svelte_config }) {
 
 	/**
 	 * Ensures that client-side code can't accidentally import server-side code,
-	 * whether in `*.server.js` files, `$app/server`, `$lib/server`, or `$env/[static|dynamic]/private`
+	 * whether in `*.server.js` files, `$app/server`, `$lib/server`, `$app/env/private`, or `$env/[static|dynamic]/private`
 	 * @type {Plugin}
 	 */
 	const plugin_guard = {
@@ -610,6 +721,7 @@ async function kit({ svelte_config }) {
 			const is_server_only =
 				normalized === '$env/static/private' ||
 				normalized === '$env/dynamic/private' ||
+				normalized === '$app/env/private' ||
 				normalized === '$app/server' ||
 				normalized.startsWith('$lib/server/') ||
 				(is_internal && server_only_pattern.test(path.basename(id)));
@@ -1221,7 +1333,9 @@ async function kit({ svelte_config }) {
 						stylesheets: [...start.stylesheets, ...app.stylesheets],
 						fonts: [...start.fonts, ...app.fonts],
 						uses_env_dynamic_public: client_chunks.some(
-							(chunk) => chunk.type === 'chunk' && chunk.modules[env_dynamic_public]
+							(chunk) =>
+								chunk.type === 'chunk' &&
+								(chunk.modules[env_dynamic_public] || chunk.modules[sveltekit_env_public])
 						)
 					};
 
@@ -1270,7 +1384,9 @@ async function kit({ svelte_config }) {
 						stylesheets: start.stylesheets,
 						fonts: start.fonts,
 						uses_env_dynamic_public: client_chunks.some(
-							(chunk) => chunk.type === 'chunk' && chunk.modules[env_dynamic_public]
+							(chunk) =>
+								chunk.type === 'chunk' &&
+								(chunk.modules[env_dynamic_public] || chunk.modules[sveltekit_env_public])
 						)
 					};
 
