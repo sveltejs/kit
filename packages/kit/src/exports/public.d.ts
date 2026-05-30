@@ -478,7 +478,7 @@ export interface KitConfig {
 	experimental?: {
 		/**
 		 * Whether to enable explicit environment variables using `src/env.js` or `src/env.ts`.
-		 * This feature is not yet stable and may be changed or removed at any time.
+		 * @since 2.62.0
 		 * @default false
 		 */
 		explicitEnvironmentVariables?: boolean;
