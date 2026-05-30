@@ -161,17 +161,17 @@ export function create_dynamic_module(type, dev_values) {
 }
 
 /**
+ * Creates the `__sveltekit/env` module
  * @param {ExplicitEnvVar[]} variables
  * @param {Record<string, string>} env
  * @param {string | null} entry
  */
-export function create_explicit_env_module(variables, env, entry) {
+export function create_sveltekit_env(variables, env, entry) {
 	const imports = entry ? `import { variables } from ${JSON.stringify(entry)};` : `const variables = {};`;
 	const declarations = [];
 	const setters = [];
 
 	for (const variable of variables) {
-		const comment = variable.description ? `${create_jsdoc(variable.description)}\n` : '';
 		const name = JSON.stringify(variable.name);
 
 		let lhs = variable.name;
@@ -182,9 +182,9 @@ export function create_explicit_env_module(variables, env, entry) {
 
 		if (variable.static) {
 			const value = JSON.stringify(env[variable.name]);
-			declarations.push(`${comment}export const ${lhs} = validate(${value}, ${name});`);
+			declarations.push(`export const ${lhs} = validate(${value}, ${name});`);
 		} else {
-			declarations.push(`${comment}export var ${variable.name};`);
+			declarations.push(`export var ${variable.name};`);
 			setters.push(`${lhs} = validate(env[${name}], ${name});`);
 		}
 	}
@@ -204,10 +204,11 @@ export function create_explicit_env_module(variables, env, entry) {
 }
 
 /**
+ * Creates the `__sveltekit/env/browser` module
  * @param {ExplicitEnvVar[]} variables
  * @param {string} global
  */
-export function create_explicit_env_public_module(variables, global) {
+export function create_sveltekit_env_browser(variables, global) {
 	return dedent`
 		const env = ${global}.env;
 

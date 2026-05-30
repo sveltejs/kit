@@ -38,6 +38,6 @@ declare module '__sveltekit/env' {
 	export const rendered_env: Record<string, any>;
 }
 
-declare module '__sveltekit/env/public' {
+declare module '__sveltekit/env/browser' {
 	// exported environment variables are defined in ambient.d.ts
 }

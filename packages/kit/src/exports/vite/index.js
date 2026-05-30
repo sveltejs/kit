@@ -10,8 +10,8 @@ import colors from 'kleur';
 import { copy, mkdirp, posixify, read, resolve_entry, rimraf } from '../../utils/filesystem.js';
 import {
 	create_dynamic_module,
-	create_explicit_env_module,
-	create_explicit_env_public_module,
+	create_sveltekit_env,
+	create_sveltekit_env_browser,
 	create_static_module,
 	load_explicit_env,
 	resolve_explicit_env_entry
@@ -560,14 +560,14 @@ async function kit({ svelte_config }) {
 					return create_service_worker_module(svelte_config);
 
 				case sveltekit_env:
-					return create_explicit_env_module(
+					return create_sveltekit_env(
 						await get_explicit_env(),
 						get_explicit_build_env(),
 						explicit_env_entry
 					);
 
 				case sveltekit_env_public:
-					return create_explicit_env_public_module(
+					return create_sveltekit_env_browser(
 						await get_explicit_env(),
 						global
 					);

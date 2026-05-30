@@ -7,7 +7,7 @@ export const env_dynamic_private = '\0virtual:env/dynamic/private';
 export const env_dynamic_public = '\0virtual:env/dynamic/public';
 
 export const sveltekit_env = '\0virtual:__sveltekit/env';
-export const sveltekit_env_public = '\0virtual:__sveltekit/env/public';
+export const sveltekit_env_public = '\0virtual:__sveltekit/env/browser';
 
 export const service_worker = '\0virtual:service-worker';
 
