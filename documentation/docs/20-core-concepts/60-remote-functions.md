@@ -965,6 +965,16 @@ Now simply call `addLike`, from (for example) an event handler:
 
 > [!NOTE] Commands cannot be called during render.
 
+> [!NOTE] Unlike `form` (where an unhandled `error()` renders the nearest `+error.svelte` page), throwing `error()` inside a `command` rejects the promise returned to the caller — the error page is not rendered. Catch it client-side:
+>
+> ```js
+> try {
+> 	await myCommand();
+> } catch (e) {
+> 	// handle the error — e.g. show a notification
+> }
+> ```
+
 ## Single-flight mutations
 
 The purpose of both [`form`](#form) and [`command`](#command) is *mutating data*. In many cases, mutating data invalidates other data. By default, `form` deals with this by automatically invalidating all queries and load functions following a successful submission, to emulate what would happen with a traditional full-page reload. `command`, on the other hand, does nothing. Typically, neither of these options is going to be the ideal solution — invalidating everything is likely wasteful, as it's unlikely a form submission changed *everything* being displayed on your webpage. In the case of `command`, doing nothing likely *under*-invalidates your app, leaving stale data displayed. In both cases, it's common to have to perform two round-trips to the server: One to run the mutation, and another after that completes to re-request the data from any queries you need to refresh.
