@@ -9,7 +9,7 @@ export const env_dynamic_public = '\0virtual:env/dynamic/public';
 export const app_env = '\0virtual:app/env';
 export const app_env_private = '\0virtual:app/env/private';
 export const app_env_public = '\0virtual:app/env/public';
-export const sveltekit_env_private = '\0virtual:__sveltekit/env/private';
+export const sveltekit_env = '\0virtual:__sveltekit/env';
 export const sveltekit_env_public = '\0virtual:__sveltekit/env/public';
 export const sveltekit_environment_public = '\0virtual:app/environment';
 

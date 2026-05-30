@@ -94,6 +94,10 @@
 		"#app/paths": {
 			"browser": "./src/runtime/app/paths/client.js",
 			"default": "./src/runtime/app/paths/server.js"
+		},
+		"#app/env/public": {
+			"browser": "./src/runtime/app/env/public/client.js",
+			"default": "./src/runtime/app/env/public/server.js"
 		}
 	},
 	"exports": {

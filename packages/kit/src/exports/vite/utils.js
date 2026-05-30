@@ -8,13 +8,11 @@ import { dedent } from '../../core/sync/utils.js';
 import {
 	app_server,
 	app_env_private,
-	app_env_private_file,
 	env_dynamic_private,
 	env_dynamic_public,
 	env_static_private,
 	env_static_public,
-	service_worker,
-	sveltekit_env_private
+	service_worker
 } from './module_ids.js';
 
 /**
@@ -158,7 +156,7 @@ export function normalize_id(id, lib, cwd) {
 		return '$app/server';
 	}
 
-	if (id === app_env_private || id === app_env_private_file || id === sveltekit_env_private) {
+	if (id === app_env_private) {
 		return '$app/env/private';
 	}
 

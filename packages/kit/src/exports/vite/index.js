@@ -12,6 +12,7 @@ import {
 	create_app_env_module,
 	create_dynamic_module,
 	create_explicit_env_module,
+	create_explicit_env_public_module,
 	create_forbidden_module,
 	create_static_module,
 	load_explicit_env,
@@ -49,7 +50,7 @@ import {
 	app_env_private,
 	app_env_public,
 	service_worker,
-	sveltekit_env_private,
+	sveltekit_env,
 	sveltekit_env_public,
 	sveltekit_environment,
 	sveltekit_environment_public,
@@ -618,28 +619,17 @@ async function kit({ svelte_config }) {
 
 					return create_app_env_module(await get_explicit_env(), 'public');
 
-				case sveltekit_env_private:
+				case sveltekit_env:
 					return create_explicit_env_module(
 						await get_explicit_env(),
-						'private',
 						get_explicit_build_env(),
-						explicit_env_entry,
-						{
-							browser,
-							global
-						}
+						explicit_env_entry
 					);
 
 				case sveltekit_env_public:
-					return create_explicit_env_module(
+					return create_explicit_env_public_module(
 						await get_explicit_env(),
-						'public',
-						get_explicit_build_env(),
-						explicit_env_entry,
-						{
-							browser,
-							global
-						}
+						global
 					);
 
 				case sveltekit_environment_public:

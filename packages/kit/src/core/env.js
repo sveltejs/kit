@@ -173,84 +173,72 @@ export function create_app_env_module(variables, type) {
 		.map((variable) => variable.name);
 
 	return exports.length > 0
-		? `export { ${exports.join(', ')} } from '__sveltekit/env/${type}';`
+		? `export { ${exports.join(', ')} } from '__sveltekit/env';`
 		: '';
 }
 
 /**
  * @param {ExplicitEnvVar[]} variables
- * @param {EnvType} type
  * @param {Record<string, string>} env
  * @param {string | null} entry
- * @param {{ browser: boolean, global: string }} opts
  */
-export function create_explicit_env_module(variables, type, env, entry, { browser, global }) {
-	if (!entry) return 'export function set() {}';
-
-	const relevant = variables.filter((variable) => variable.public === (type === 'public'));
-
-	if (browser && type === 'public') {
-		return GENERATED_COMMENT + create_browser_public_env(relevant, env, global);
-	}
+export function create_explicit_env_module(variables, env, entry) {
+	if (!entry) return 'export function set() {}; export const rendered_env = {};';
 
 	const imports = `import { variables } from ${JSON.stringify(entry)};`;
 	const declarations = [];
 	const setters = [];
-	const validations = [];
 
-	for (const variable of relevant) {
+	for (const variable of variables) {
 		const comment = variable.description ? `${create_jsdoc(variable.description)}\n` : '';
+		const name = JSON.stringify(variable.name);
+
+		let lhs = variable.name;
+
+		if (variable.public) {
+			lhs += ` = rendered_env[${name}]`;
+		}
 
 		if (variable.static) {
 			const value = JSON.stringify(env[variable.name]);
-			if (variable.validates) {
-				declarations.push(
-					`${comment}export const ${variable.name} = validate(variables.${variable.name} ?? {}, ${value}, ${JSON.stringify(variable.name)});`
-				);
-			} else {
-				validations.push(
-					`validate(variables.${variable.name} ?? {}, ${value}, ${JSON.stringify(variable.name)});`
-				);
-				declarations.push(`${comment}export const ${variable.name} = ${value};`);
-			}
+			declarations.push(`${comment}export const ${lhs} = validate(${value}, ${name});`);
 		} else {
 			declarations.push(`${comment}export var ${variable.name};`);
-			setters.push(
-				`${variable.name} = validate(variables.${variable.name} ?? {}, env[${JSON.stringify(
-					variable.name
-				)}], ${JSON.stringify(variable.name)});`
-			);
+			setters.push(`${lhs} = validate(env[${name}], ${name});`);
 		}
 	}
 
-	return `${GENERATED_COMMENT}${imports}\n\n${create_validator()}\n\n${declarations.join(
-		'\n\n'
-	)}\n\n${validations.join('\n')}\n\nexport function set(env) {\n${setters
-		.map((line) => `\t${line}`)
-		.join('\n')}\n}`;
+	const blocks = [
+		GENERATED_COMMENT,
+		imports,
+		'export const rendered_env = {};',
+		create_validator(),
+		...declarations,
+		`export function set_env(env) {${setters.map((line) => `\n\t${line};`).join('')}\n}`
+	]
+
+	const module = blocks.join('\n\n');
+
+	return module;
 }
 
 /**
  * @param {ExplicitEnvVar[]} variables
- * @param {Record<string, string>} env
  * @param {string} global
  */
-function create_browser_public_env(variables, env, global) {
-	return variables
-		.map((variable) => {
-			const comment = variable.description ? `${create_jsdoc(variable.description)}\n` : '';
-			const value = variable.static
-				? JSON.stringify(env[variable.name])
-				: `${global}.env?.[${JSON.stringify(variable.name)}]`;
+export function create_explicit_env_public_module(variables, global) {
+	return dedent`
+		const env = ${global}.env;
 
-			return `${comment}export const ${variable.name} = ${value};`;
-		})
-		.join('\n\n');
+		${variables.map((v) => `export const ${v.name} = env.${v.name};\n`).join('')}
+	`;
 }
 
 function create_validator() {
 	return dedent`
-		function validate(config, value, name) {
+		function validate(value, name) {
+			const config = variables[name] ?? {};
+
 			const schema = config.validate ?? string_schema;
 			const standard = schema?.['~standard'];
 

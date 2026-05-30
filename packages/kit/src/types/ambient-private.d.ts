@@ -28,12 +28,16 @@ declare module '__sveltekit/server' {
 	export function set_read_implementation(fn: (path: string) => ReadableStream): void;
 }
 
-/** Internal version of $app/env/private */
-declare module '__sveltekit/env/private' {
-	export function set(environment: Record<string, string>): void;
+declare module '__sveltekit/env' {
+	// exported environment variables are defined in ambient.d.ts
+
+	/** Populate exported environment variables */
+	export function set_env(environment: Record<string, string>): void;
+
+	/** public env vars that should be inlined when a page is rendered */
+	export const rendered_env: Record<string, any>;
 }
 
-/** Internal version of $app/env/public */
 declare module '__sveltekit/env/public' {
-	export function set(environment: Record<string, string>): void;
+	// exported environment variables are defined in ambient.d.ts
 }

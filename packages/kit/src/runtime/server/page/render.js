@@ -23,6 +23,7 @@ import {
 } from '../utils.js';
 import { create_remote_key } from '../../shared.js';
 import { get_status } from '../../../utils/error.js';
+import * as env from '__sveltekit/env';
 
 // TODO rename this function/module
 
@@ -412,7 +413,9 @@ export async function render_response({
 			properties.push(`assets: ${s(paths.assets)}`);
 		}
 
-		if (client.uses_env_dynamic_public) {
+		if (Object.keys(env).length > 0) { // TODO gate this on experimental.explicitEnvironmentVariables
+			properties.push(`env: ${load_env_eagerly ? 'null' : devalue.uneval(env.rendered_env)}`);
+		} else if (client.uses_env_dynamic_public) {
 			properties.push(`env: ${load_env_eagerly ? 'null' : s(public_env)}`);
 		}
 

@@ -494,8 +494,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 	const public_env = filter_env(env, public_prefix, private_prefix);
 	internal.set_private_env(private_env);
 	internal.set_public_env(public_env);
-	internal.set_explicit_private_env(env);
-	internal.set_explicit_public_env(env);
+	internal.set_env(env);
 	internal.set_manifest(manifest);
 	internal.set_read_implementation((file) => createReadableStream(`${out}/server/${file}`));
 

@@ -44,8 +44,7 @@ export interface ServerModule {
 export interface ServerInternalModule {
 	set_assets(path: string): void;
 	set_building(): void;
-	set_explicit_private_env(environment: Record<string, string>): void;
-	set_explicit_public_env(environment: Record<string, string>): void;
+	set_env(environment: Record<string, string>): void;
 	set_manifest(manifest: SSRManifest): void;
 	set_prerendering(): void;
 	set_private_env(environment: Record<string, string>): void;
