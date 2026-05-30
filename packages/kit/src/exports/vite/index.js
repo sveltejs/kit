@@ -1318,9 +1318,7 @@ async function kit({ svelte_config }) {
 						stylesheets: start.stylesheets,
 						fonts: start.fonts,
 						uses_env_dynamic_public: client_chunks.some(
-							(chunk) =>
-								chunk.type === 'chunk' &&
-								(chunk.modules[env_dynamic_public] || chunk.modules[sveltekit_env_public])
+							(chunk) => chunk.type === 'chunk' && chunk.modules[env_dynamic_public]
 						)
 					};
 
