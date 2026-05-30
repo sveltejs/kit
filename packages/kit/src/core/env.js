@@ -116,7 +116,15 @@ export async function load_explicit_env(file, config, mode) {
  */
 export function create_static_module(id, env) {
 	/** @type {string[]} */
-	const declarations = [];
+	const statements = [];
+
+	statements.push(
+		dedent`
+			if (__SVELTEKIT_EXPERIMENTAL_EXPLICIT_ENVIRONMENT_VARIABLES__) {
+				throw new Error('Cannot import \`${id}\` when \`experimental.explicitEnvironmentVariables\` is enabled. Use \`${id.replace('$env/static', '$app/env')}\` instead.');
+			}
+		`
+	)
 
 	for (const key in env) {
 		if (!valid_identifier.test(key) || reserved.has(key)) {
@@ -126,10 +134,10 @@ export function create_static_module(id, env) {
 		const comment = `/** @type {import('${id}').${key}} */`;
 		const declaration = `export const ${key} = ${JSON.stringify(env[key])};`;
 
-		declarations.push(`${comment}\n${declaration}`);
+		statements.push(`${comment}\n${declaration}`);
 	}
 
-	return GENERATED_COMMENT + declarations.join('\n\n');
+	return GENERATED_COMMENT + statements.join('\n\n');
 }
 
 /**
@@ -137,13 +145,19 @@ export function create_static_module(id, env) {
  * @param {Record<string, string> | undefined} dev_values If in a development mode, values to pre-populate the module with.
  */
 export function create_dynamic_module(type, dev_values) {
+	const prelude = dedent`
+		if (__SVELTEKIT_EXPERIMENTAL_EXPLICIT_ENVIRONMENT_VARIABLES__) {
+			throw new Error('Cannot import \`\$env/dynamic/{type}\` when \`experimental.explicitEnvironmentVariables\` is enabled. Use \`\$app/env/${type}\` instead.');
+		}
+	`;
+
 	if (dev_values) {
 		const keys = Object.entries(dev_values).map(
 			([k, v]) => `${JSON.stringify(k)}: ${JSON.stringify(v)}`
 		);
-		return `export const env = {\n${keys.join(',\n')}\n}`;
+		return `${prelude}\n\nexport const env = {\n${keys.join(',\n')}\n}`;
 	}
-	return `export { ${type}_env as env } from '${runtime_base}/shared-server.js';`;
+	return `${prelude}\n\nexport { ${type}_env as env } from '${runtime_base}/shared-server.js';`;
 }
 
 /**
@@ -161,20 +175,6 @@ export function create_forbidden_module(id, exports) {
 
 		${declarations}
 	`;
-}
-
-/**
- * @param {ExplicitEnvVar[]} variables
- * @param {EnvType} type
- */
-export function create_app_env_module(variables, type) {
-	const exports = variables
-		.filter((variable) => variable.public === (type === 'public'))
-		.map((variable) => variable.name);
-
-	return exports.length > 0
-		? `export { ${exports.join(', ')} } from '__sveltekit/env';`
-		: '';
 }
 
 /**

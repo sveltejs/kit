@@ -9,11 +9,9 @@ import colors from 'kleur';
 
 import { copy, mkdirp, posixify, read, resolve_entry, rimraf } from '../../utils/filesystem.js';
 import {
-	create_app_env_module,
 	create_dynamic_module,
 	create_explicit_env_module,
 	create_explicit_env_public_module,
-	create_forbidden_module,
 	create_static_module,
 	load_explicit_env,
 	resolve_explicit_env_entry
@@ -401,6 +399,7 @@ async function kit({ svelte_config }) {
 					__SVELTEKIT_HASH_ROUTING__: s(kit.router.type === 'hash'),
 					__SVELTEKIT_SERVER_TRACING_ENABLED__: s(kit.experimental.tracing.server),
 					__SVELTEKIT_EXPERIMENTAL_USE_TRANSFORM_ERROR__: s(kit.experimental.handleRenderingErrors),
+					__SVELTEKIT_EXPERIMENTAL_EXPLICIT_ENVIRONMENT_VARIABLES__: s(kit.experimental.explicitEnvironmentVariables),
 					__SVELTEKIT_DEV__: s(!is_build)
 				};
 
@@ -556,34 +555,18 @@ async function kit({ svelte_config }) {
 
 			switch (id) {
 				case env_static_private:
-					if (uses_explicit_env) {
-						return create_forbidden_module('$env/static/private', Object.keys(env.private));
-					}
-
 					return create_static_module('$env/static/private', env.private);
 
 				case env_static_public:
-					if (uses_explicit_env) {
-						return create_forbidden_module('$env/static/public', Object.keys(env.public));
-					}
-
 					return create_static_module('$env/static/public', env.public);
 
 				case env_dynamic_private:
-					if (uses_explicit_env) {
-						return create_forbidden_module('$env/dynamic/private', ['env']);
-					}
-
 					return create_dynamic_module(
 						'private',
 						vite_config_env.command === 'serve' ? env.private : undefined
 					);
 
 				case env_dynamic_public:
-					if (uses_explicit_env) {
-						return create_forbidden_module('$env/dynamic/public', ['env']);
-					}
-
 					// populate `$env/dynamic/public` from `window`
 					if (browser) {
 						return `export const env = ${global}.env;`;
@@ -597,28 +580,6 @@ async function kit({ svelte_config }) {
 				case service_worker:
 					return create_service_worker_module(svelte_config);
 
-				case app_env:
-					return uses_explicit_env
-						? dedent`
-							export { BROWSER as browser, DEV as dev } from 'esm-env';
-							export { building, version } from '__sveltekit/environment';
-						`
-						: `export * from '$app/environment';`;
-
-				case app_env_private:
-					if (!uses_explicit_env) {
-						return create_forbidden_module('$app/env/private', []);
-					}
-
-					return create_app_env_module(await get_explicit_env(), 'private');
-
-				case app_env_public:
-					if (!uses_explicit_env) {
-						return create_forbidden_module('$app/env/public', []);
-					}
-
-					return create_app_env_module(await get_explicit_env(), 'public');
-
 				case sveltekit_env:
 					return create_explicit_env_module(
 						await get_explicit_env(),
@@ -631,14 +592,6 @@ async function kit({ svelte_config }) {
 						await get_explicit_env(),
 						global
 					);
-
-				case sveltekit_environment_public:
-					return create_forbidden_module('$app/environment', [
-						'browser',
-						'dev',
-						'building',
-						'version'
-					]);
 
 				case sveltekit_environment: {
 					const { version } = svelte_config.kit;
