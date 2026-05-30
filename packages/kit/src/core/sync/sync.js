@@ -17,9 +17,9 @@ import {
  * @param {import('types').ValidatedConfig} config
  * @param {string} mode
  */
-export async function init(config, mode) {
+export function init(config, mode) {
 	write_tsconfig(config.kit);
-	await write_ambient(config.kit, mode);
+	write_ambient(config.kit, mode);
 }
 
 /**
@@ -70,8 +70,8 @@ export function update(config, manifest_data, file) {
  * @param {import('types').ValidatedConfig} config
  * @param {string} mode The Vite mode
  */
-export async function all(config, mode) {
-	await init(config, mode);
+export function all(config, mode) {
+	init(config, mode);
 	return create(config);
 }
 
@@ -80,8 +80,8 @@ export async function all(config, mode) {
  * @param {import('types').ValidatedConfig} config
  * @param {string} mode The Vite mode
  */
-export async function all_types(config, mode) {
-	await init(config, mode);
+export function all_types(config, mode) {
+	init(config, mode);
 	const manifest_data = create_manifest_data({ config });
 	write_all_types(config, manifest_data);
 	write_non_ambient(config.kit, manifest_data);

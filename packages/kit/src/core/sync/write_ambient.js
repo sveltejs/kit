@@ -3,13 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { get_env } from '../../exports/vite/utils.js';
 import { GENERATED_COMMENT } from '../../constants.js';
-import {
-	create_dynamic_types,
-	create_explicit_env_types,
-	create_static_types,
-	load_explicit_env,
-	resolve_explicit_env_entry
-} from '../env.js';
+import { create_dynamic_types, create_static_types } from '../env.js';
 import { write_if_changed } from './utils.js';
 
 // TODO these types should be described in a neutral place, rather than
@@ -29,24 +23,11 @@ function read_description(filename) {
 /**
  * @param {import('types').Env} env
  * @param {{ public_prefix: string; private_prefix: string }} prefixes
- * @param {import('../env.js').ExplicitEnvVar[]} explicit_env
  */
-const template = (env, prefixes, explicit_env) => `
+const template = (env, prefixes) => `
 ${GENERATED_COMMENT}
 
 /// <reference types="@sveltejs/kit" />
-
-
-declare module '$app/env' {
-	export const browser: boolean;
-	export const building: boolean;
-	export const dev: boolean;
-	export const version: string;
-}
-
-${create_explicit_env_types(explicit_env, 'private')}
-
-${create_explicit_env_types(explicit_env, 'public')}
 
 ${read_description('$env+static+private.md')}
 ${create_static_types('private', env)}
@@ -68,14 +49,12 @@ ${create_dynamic_types('public', env, prefixes)}
  * @param {import('types').ValidatedKitConfig} config
  * @param {string} mode The Vite mode
  */
-export async function write_ambient(config, mode) {
+export function write_ambient(config, mode) {
 	const env = get_env(config.env, mode);
 	const { publicPrefix: public_prefix, privatePrefix: private_prefix } = config.env;
-	const explicit_env_entry = resolve_explicit_env_entry(config);
-	const explicit_env = await load_explicit_env(explicit_env_entry, config, mode);
 
 	write_if_changed(
 		path.join(config.outDir, 'ambient.d.ts'),
-		template(env, { public_prefix, private_prefix }, explicit_env)
+		template(env, { public_prefix, private_prefix })
 	);
 }

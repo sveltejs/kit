@@ -235,16 +235,6 @@ async function kit({ svelte_config }) {
 	const service_worker_entry_file = resolve_entry(kit.files.serviceWorker);
 	const parsed_service_worker = path.parse(kit.files.serviceWorker);
 
-	const explicit_env_entry = resolve_explicit_env_entry(kit);
-
-	/** @type {Promise<import('../../core/env.js').ExplicitEnvVar[]> | null} */
-	let explicit_env_promise = null;
-
-	const get_explicit_env = () => {
-		explicit_env_promise ??= load_explicit_env(explicit_env_entry, kit, vite_config_env.mode);
-		return explicit_env_promise;
-	};
-
 	const normalized_cwd = vite.normalizePath(cwd);
 	const normalized_lib = vite.normalizePath(kit.files.lib);
 	const normalized_node_modules = vite.normalizePath(path.resolve('node_modules'));
@@ -415,7 +405,7 @@ async function kit({ svelte_config }) {
 					};
 
 					if (!secondary_build_started) {
-						manifest_data = (await sync.all(svelte_config, config_env.mode)).manifest_data;
+						manifest_data = (sync.all(svelte_config, config_env.mode)).manifest_data;
 						// During the initial server build we don't know yet
 						new_config.define.__SVELTEKIT_HAS_SERVER_LOAD__ = 'true';
 						new_config.define.__SVELTEKIT_HAS_UNIVERSAL_LOAD__ = 'true';
@@ -465,25 +455,32 @@ async function kit({ svelte_config }) {
 		}
 	};
 
-	/** @param {ViteDevServer} server */
-	function watch_explicit_env(server) {
-		if (!explicit_env_entry) return;
+	const explicit_env_entry = resolve_explicit_env_entry(kit);
 
-		server.watcher.on('change', async (file) => {
-			if (file !== explicit_env_entry) return;
-
-			explicit_env_promise = null;
-			await sync.init(svelte_config, vite_config_env.mode);
-			server.ws.send({ type: 'full-reload' });
-		});
-	}
+	/** @type {import('../../core/env.js').ExplicitEnvVar[]} */
+	let explicit_env;
 
 	/** @type {Plugin} */
 	const plugin_virtual_modules = {
 		name: 'vite-plugin-sveltekit-virtual-modules',
 		enforce: 'pre',
 
-		configureServer: watch_explicit_env,
+		configureServer(server) {
+			if (!explicit_env_entry) return;
+
+			server.watcher.on('change', async (file) => {
+				if (file !== explicit_env_entry) return;
+
+				explicit_env = await load_explicit_env(explicit_env_entry, kit, vite_config_env.mode);
+
+				await sync.init(svelte_config, vite_config_env.mode);
+				server.ws.send({ type: 'full-reload' });
+			});
+		},
+
+		async configResolved(config) {
+			explicit_env = await load_explicit_env(explicit_env_entry, kit, config.mode);
+		},
 
 		resolveId(id, importer) {
 			if (id === '__sveltekit/manifest') {
@@ -527,7 +524,7 @@ async function kit({ svelte_config }) {
 			}
 		},
 
-		async load(id, options) {
+		load(id, options) {
 			const browser = !options?.ssr;
 
 			const global = is_build
@@ -562,17 +559,10 @@ async function kit({ svelte_config }) {
 					return create_service_worker_module(svelte_config);
 
 				case sveltekit_env:
-					return create_sveltekit_env(
-						await get_explicit_env(),
-						env.all,
-						explicit_env_entry
-					);
+					return create_sveltekit_env(explicit_env, env.all, explicit_env_entry);
 
 				case sveltekit_env_public:
-					return create_sveltekit_env_browser(
-						await get_explicit_env(),
-						global
-					);
+					return create_sveltekit_env_browser(explicit_env, global);
 
 				case sveltekit_environment: {
 					const { version } = svelte_config.kit;
@@ -666,7 +656,7 @@ async function kit({ svelte_config }) {
 
 			if (is_server_only) {
 				// in dev, this doesn't exist, so we need to create it
-				manifest_data ??= (await sync.all(svelte_config, vite_config_env.mode)).manifest_data;
+				manifest_data ??= (sync.all(svelte_config, vite_config_env.mode)).manifest_data;
 
 				/** @type {Set<string>} */
 				const entrypoints = new Set();
