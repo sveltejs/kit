@@ -44,14 +44,10 @@ import {
 	env_dynamic_public,
 	env_static_private,
 	env_static_public,
-	app_env,
-	app_env_private,
-	app_env_public,
 	service_worker,
 	sveltekit_env,
 	sveltekit_env_public,
 	sveltekit_environment,
-	sveltekit_environment_public,
 	sveltekit_server
 } from './module_ids.js';
 import { import_peer } from '../../utils/import.js';
@@ -239,7 +235,6 @@ async function kit({ svelte_config }) {
 	const service_worker_entry_file = resolve_entry(kit.files.serviceWorker);
 	const parsed_service_worker = path.parse(kit.files.serviceWorker);
 	const explicit_env_entry = resolve_explicit_env_entry(kit);
-	const uses_explicit_env = explicit_env_entry !== null;
 	const get_explicit_build_env = () => ({ ...env.private, ...env.public });
 	/** @type {Promise<import('../../core/env.js').ExplicitEnvVar[]> | null} */
 	let explicit_env_promise = null;
@@ -513,22 +508,6 @@ async function kit({ svelte_config }) {
 						)} into service-worker code. Only the modules $service-worker and $env/static/public are available in service workers.`
 					);
 				}
-			}
-
-			if (id === '$app/env') {
-				return app_env;
-			}
-
-			if (id === '$app/env/private') {
-				return app_env_private;
-			}
-
-			if (id === '$app/env/public') {
-				return app_env_public;
-			}
-
-			if (uses_explicit_env && id === '$app/environment') {
-				return sveltekit_environment_public;
 			}
 
 			// treat $env/static/[public|private] as virtual
