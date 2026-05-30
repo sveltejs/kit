@@ -277,7 +277,14 @@ export async function render_response({
 	}
 
 	for (const { node } of branch) {
-		for (const url of node.imports) modulepreloads.add(url);
+		// only preload route JS chunks when SSR is enabled — without SSR the page
+		// shell is empty and the route nodes are loaded lazily by the client entry,
+		// so listing them in the Link header just bloats it (can exceed nginx's
+		// default 4–8 KB proxy_buffer_size, causing 502s). Stylesheets and fonts
+		// still need to load eagerly to avoid FOUC during CSR boot (#15718).
+		if (page_config.ssr) {
+			for (const url of node.imports) modulepreloads.add(url);
+		}
 		for (const url of node.stylesheets) stylesheets.add(url);
 		for (const url of node.fonts) fonts.add(url);
 
