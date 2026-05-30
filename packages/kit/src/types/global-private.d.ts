@@ -63,6 +63,7 @@ declare global {
 	 */
 	var __SVELTEKIT_TRACK__: (label: string) => void;
 	var __SVELTEKIT_EXPERIMENTAL_USE_TRANSFORM_ERROR__: boolean;
+	var __SVELTEKIT_EXPERIMENTAL_EXPLICIT_ENVIRONMENT_VARIABLES__: boolean;
 	var Bun: object;
 	var Deno: object;
 }

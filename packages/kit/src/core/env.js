@@ -166,9 +166,7 @@ export function create_dynamic_module(type, dev_values) {
  * @param {string | null} entry
  */
 export function create_explicit_env_module(variables, env, entry) {
-	if (!entry) return 'export function set() {}; export const rendered_env = {};';
-
-	const imports = `import { variables } from ${JSON.stringify(entry)};`;
+	const imports = entry ? `import { variables } from ${JSON.stringify(entry)};` : `const variables = {};`;
 	const declarations = [];
 	const setters = [];
 
