@@ -532,17 +532,20 @@ async function kit({ svelte_config }) {
 				? `globalThis.__sveltekit_${version_hash}`
 				: 'globalThis.__sveltekit_dev';
 
+			const explicit_env_flag = kit.experimental.explicitEnvironmentVariables;
+
 			switch (id) {
 				case env_static_private:
-					return create_static_module('$env/static/private', env.private);
+					return create_static_module('$env/static/private', env.private, explicit_env_flag);
 
 				case env_static_public:
-					return create_static_module('$env/static/public', env.public);
+					return create_static_module('$env/static/public', env.public, explicit_env_flag);
 
 				case env_dynamic_private:
 					return create_dynamic_module(
 						'private',
-						vite_config_env.command === 'serve' ? env.private : undefined
+						vite_config_env.command === 'serve' ? env.private : undefined,
+						explicit_env_flag
 					);
 
 				case env_dynamic_public:
@@ -553,7 +556,8 @@ async function kit({ svelte_config }) {
 
 					return create_dynamic_module(
 						'public',
-						vite_config_env.command === 'serve' ? env.public : undefined
+						vite_config_env.command === 'serve' ? env.public : undefined,
+						explicit_env_flag
 					);
 
 				case service_worker:
@@ -637,7 +641,7 @@ async function kit({ svelte_config }) {
 			}
 		},
 
-		async load(id, options) {
+		load(id, options) {
 			if (options?.ssr === true || process.env.TEST === 'true') {
 				return;
 			}
