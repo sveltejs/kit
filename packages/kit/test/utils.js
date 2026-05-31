@@ -280,7 +280,7 @@ if (!test_browser_device) {
 }
 
 export const config = defineConfig({
-	// forbidOnly: !!process.env.CI,
+	forbidOnly: !!process.env.CI,
 	// generous timeouts on CI
 	timeout: process.env.CI ? 45000 : 15000,
 	webServer: {

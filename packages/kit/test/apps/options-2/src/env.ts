@@ -1,9 +1,6 @@
 import * as v from 'valibot';
 
 export const variables = {
-	PUBLIC_LOOK_IN_OPTIONS_2: {
-		public: true
-	},
 	MESSAGE: {
 		public: true,
 		description: 'Public env var loaded from the shared test env directory'
