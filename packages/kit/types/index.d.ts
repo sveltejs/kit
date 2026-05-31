@@ -2295,10 +2295,36 @@ declare module '@sveltejs/kit' {
 		arg: undefined extends Input ? Input | void : Input
 	) => RemoteLiveQuery<Output>;
 
+	/**
+	 * [Environment variables](https://svelte.dev/docs/kit/environment-variables) can be configured by exporting
+	 * a `variables` object from `src/env.ts`, using [`defineEnvVars`](https://svelte.dev/docs/kit/@sveltejs-kit-hooks#defineEnvVars).
+	 */
 	export interface EnvVarConfig<T> {
+		/**
+		 * Whether the environment variable can be accessed by client-side code.
+		 * - if `true`, it can be imported from `$app/env/public`
+		 * - if `false`, it can be imported from `$app/env/private`, which is a [server-only module](https://svelte.dev/docs/kit/server-only-modules)
+		 * @default false
+		 */
 		public?: boolean;
+		/**
+		 * Whether the value is determined at build time or when the app runs.
+		 * - if `true`, the build time value is inlined into the bundle. This enables optimisations like dead-code elimination
+		 * - if `false`, the value is read from the environment when the app starts
+		 * @default false
+		 */
 		static?: boolean;
+		/**
+		 * A [Standard Schema](https://standardschema.dev/) validator that is applied to the value when the app starts.
+		 * The validator can output any value — not necessarily a string — but public, non-static values must be
+		 * serializable by [devalue](https://github.com/sveltejs/devalue) so that they can be sent to the browser.
+		 *
+		 * If omitted, the value must be a non-empty string.
+		 */
 		validate?: StandardSchemaV1<string | undefined, T>;
+		/**
+		 * A description of the variable that will be used for inline documentation on hover.
+		 */
 		description?: string;
 	}
 	interface AdapterEntry {
@@ -2947,8 +2973,8 @@ declare module '@sveltejs/kit' {
 declare module '@sveltejs/kit/hooks' {
 	import type { EnvVarConfig, Handle } from '@sveltejs/kit';
 	/**
-	 * Utility for defining environment variables, which are made available via
-	 * `$app/env/public` and `$app/env/private`.
+	 * Utility for defining [environment variables](https://svelte.dev/docs/kit/environment-variables),
+	 * which are made available via `$app/env/public` and `$app/env/private`.
 	 * */
 	export function defineEnvVars<T extends Record<string, EnvVarConfig<any>>>(variables: T): T;
 	/**
