@@ -43,26 +43,43 @@ export default {
 };
 ```
 
-...and add a `src/env.ts` (or `src/env.js`) file that exports `variables`.  This one defines an `API_KEY` variable with the default options:
+...and add a `src/env.ts` (or `src/env.js`) file that exports a `variables` object:
 
 ```ts
 /// file: src/env.ts
 import { defineEnvVars } from '@sveltejs/kit/hooks';
 
 export const variables = defineEnvVars({
-	API_KEY: {}
+	// ...
 });
 ```
 
-Each value in the object passed to [`defineEnvVars`](@sveltejs-kit-hooks#defineEnvVars) is an [`EnvVarConfig`](@sveltejs-kit#EnvVarConfig) object that configures the environment variable. Now that `API_KEY` is defined, it can be imported into app code via `$app/env/private`:
+Each value in the object passed to [`defineEnvVars`](@sveltejs-kit-hooks#defineEnvVars) is an [`EnvVarConfig`](@sveltejs-kit#EnvVarConfig) object that configures the environment variable.
+
+### Private variables
+
+By default, all variables are considered private. For example, you don't want to reveal your `API_KEY`:
+
+```ts
+/// file: src/env.ts
+import { defineEnvVars } from '@sveltejs/kit/hooks';
+
+export const variables = defineEnvVars({
+	+++API_KEY: {}+++
+});
+```
+
+> [!NOTE] Since no configuration is needed for this variable, we can use an empty object (`{}`).
+
+Now that `API_KEY` is defined, it can be imported into app code via `$app/env/private`:
 
 ```js
 import { API_KEY } from '$app/env/private';
 ```
 
-### Public variables
+The `$app/env/private` module cannot be imported into code that runs in the browser, so that you can't accidentally reveal your secrets in a JavaScript bundle.
 
-By default, all variables are considered private. The `$app/env/private` module cannot be imported into code that runs in the browser, so that you can't accidentally reveal your secrets in a JavaScript bundle.
+### Public variables
 
 Some variables are perfectly safe — necessary, even — to expose to the browser. For these, we can specify `public: true`:
 
@@ -72,7 +89,7 @@ import { defineEnvVars } from '@sveltejs/kit/hooks';
 
 export const variables = defineEnvVars({
 	GOOGLE_ANALYTICS_ID: {
-		public: true
+		+++public: true+++
 	}
 });
 ```
