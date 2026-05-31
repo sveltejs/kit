@@ -1453,7 +1453,8 @@ async function kit({ svelte_config }) {
 							prerender_map,
 							log,
 							remotes,
-							vite_config
+							vite_config,
+							explicit_env_config
 						);
 					} else {
 						console.log(colors.bold().yellow('\nNo adapter specified'));

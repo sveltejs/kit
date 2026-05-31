@@ -18,7 +18,7 @@ export function validate(variables, value, name) {
 			);
 		}
 
-		return;
+		return value;
 	}
 
 	if (!validator['~standard']) {

@@ -1,6 +1,6 @@
 /** @import { Builder } from '@sveltejs/kit' */
 /** @import { ResolvedConfig } from 'vite' */
-/** @import { RouteDefinition } from '@sveltejs/kit' */
+/** @import { RouteDefinition, EnvVarConfig } from '@sveltejs/kit' */
 /** @import { RouteData, ValidatedConfig, BuildData, ServerMetadata, ServerMetadataRoute, Prerendered, PrerenderMap, Logger, RemoteChunk } from 'types' */
 import colors from 'kleur';
 import * as devalue from 'devalue';
@@ -18,6 +18,7 @@ import { write } from '../sync/utils.js';
 import { list_files } from '../utils.js';
 import { find_server_assets } from '../generate_manifest/find_server_assets.js';
 import { reserved } from '../env.js';
+import { validate } from '../../exports/internal/env.js';
 
 const pipe = promisify(pipeline);
 const extensions = ['.html', '.js', '.mjs', '.json', '.css', '.svg', '.xml', '.wasm', '.txt'];
@@ -33,7 +34,8 @@ const extensions = ['.html', '.js', '.mjs', '.json', '.css', '.svg', '.xml', '.w
  *   prerender_map: PrerenderMap;
  *   log: Logger;
  *   vite_config: ResolvedConfig;
- *   remotes: RemoteChunk[]
+ *   remotes: RemoteChunk[];
+ *   explicit_env_config: Record<string, EnvVarConfig<any>> | null;
  * }} opts
  * @returns {Builder}
  */
@@ -46,7 +48,8 @@ export function create_builder({
 	prerender_map,
 	log,
 	vite_config,
-	remotes
+	remotes,
+	explicit_env_config
 }) {
 	/** @type {Map<RouteDefinition, RouteData>} */
 	const lookup = new Map();
@@ -189,11 +192,22 @@ export function create_builder({
 			const dest = `${config.kit.outDir}/output/prerendered/dependencies/${config.kit.appDir}/env.js`;
 			const env = get_env(config.kit.env, vite_config.mode);
 
-			if (config.kit.experimental.explicitEnvironmentVariables) {
-				throw new Error('TODO');
+			if (!config.kit.experimental.explicitEnvironmentVariables) {
+				write(dest, `export const env=${devalue.uneval(env.public)}`);
+				return;
 			}
 
-			write(dest, `export const env=${devalue.uneval(env.public)}`);
+			const variables = explicit_env_config ?? {};
+			let content = '';
+
+			for (const [name, config] of Object.entries(variables)) {
+				if (config.static || !config.public) continue;
+
+				const value = validate(variables, env.all[name], name);
+				content += `export const ${name}=${devalue.uneval(value)}\n`;
+			}
+
+			write(dest, content);
 		},
 
 		generateManifest({ relativePath, routes: subset }) {
