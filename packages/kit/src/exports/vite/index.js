@@ -14,7 +14,6 @@ import {
 	create_sveltekit_env,
 	create_sveltekit_env_browser,
 	create_static_module,
-	load_explicit_env,
 	resolve_explicit_env_entry
 } from '../../core/env.js';
 import * as sync from '../../core/sync/sync.js';
