@@ -1484,8 +1484,8 @@ async function kit({ svelte_config }) {
 	return [
 		plugin_setup,
 		kit.experimental.remoteFunctions && plugin_remote,
-		plugin_virtual_modules,
 		plugin_guard,
+		plugin_virtual_modules,
 		plugin_compile
 	].filter((p) => !!p);
 }
