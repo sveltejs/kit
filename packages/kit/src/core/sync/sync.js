@@ -96,7 +96,7 @@ export function all_types(config, mode) {
  * @param {string} mode The Vite mode
  */
 export async function env(kit, entry, mode) {
-	const config = await load_explicit_env(entry, kit, mode);
+	const config = await load_explicit_env(entry, mode);
 
 	write_env(kit, config);
 

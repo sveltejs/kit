@@ -46,44 +46,20 @@ export function resolve_explicit_env_entry(config) {
 
 /**
  * @param {string | null} file
- * @param {import('types').ValidatedKitConfig} config
  * @param {string} mode
  * @returns {Promise<ExplicitEnvVar[]>}
  */
-export async function load_explicit_env(file, config, mode) {
+export async function load_explicit_env(file, mode) {
 	if (!file) return [];
 
-	const bundle = /** @type {import('vite').Rollup.RollupOutput} */ (
-		await vite.build({
-			configFile: false,
-			envDir: config.env.dir,
-			logLevel: 'silent',
-			mode,
-			root: process.cwd(),
-			ssr: {
-				noExternal: true
-			},
-			build: {
-				emptyOutDir: false,
-				ssr: file,
-				write: false,
-				rollupOptions: {
-					output: {
-						format: 'es',
-						inlineDynamicImports: true
-					}
-				}
-			}
-		})
-	);
+	const server = await vite.createServer({
+		configFile: false,
+		logLevel: 'silent',
+		mode,
+		// TODO do we need to provide certain aliases here?
+	});
 
-	const chunk = bundle.output.find((chunk) => chunk.type === 'chunk' && chunk.isEntry);
-	if (!chunk || chunk.type !== 'chunk') {
-		throw new Error(`Could not build ${file}`);
-	}
-
-	const href = `data:text/javascript;base64,${Buffer.from(chunk.code).toString('base64')}#${Date.now()}`;
-	const { variables } = await import(href);
+	const { variables } = await server.ssrLoadModule(file);
 
 	if (!variables || typeof variables !== 'object') {
 		throw new Error(`${file} must export a variables object`);
@@ -101,7 +77,7 @@ export async function load_explicit_env(file, config, mode) {
 			name,
 			public: config.public === true,
 			static: config.static === true || config.inline === true,
-			validates: 'validate' in config,
+			validates: Object.hasOwn(config, 'validate'),
 			description: typeof config.description === 'string' ? config.description : null
 		};
 
