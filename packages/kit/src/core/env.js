@@ -274,7 +274,7 @@ export function create_dynamic_types(id, env, { public_prefix, private_prefix })
  */
 export function create_explicit_env_types(variables, relative, type) {
 	const declarations = Object.entries(variables)
-		.filter(([_, config]) => config.public === (type === 'public'))
+		.filter(([_, config]) => !!config.public === (type === 'public'))
 		.map(([name, config]) => {
 			const comment = config.description ? `${create_jsdoc(config.description)}\n` : '';
 			const type = config.validate
