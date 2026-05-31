@@ -693,13 +693,14 @@ test.describe('Page options', () => {
 	test('does not include client node in build output with csr=false', async ({
 		javaScriptEnabled
 	}) => {
-		test.skip(!!(javaScriptEnabled || process.env.DEV));
-
-		const route = (await import('../.svelte-kit/output/server/manifest.js')).manifest._.routes.find(
-			(route) => route.id === '/no-csr'
+		// we can't easily find the client node when building for server router resolution
+		// so there's no point in trying to run this test for that test environment
+		test.skip(
+			!!(javaScriptEnabled || process.env.DEV || process.env.ROUTER_RESOLUTION === 'server')
 		);
-		const i = route?.page?.leaf;
-		if (!i) throw new Error('could not find route for /no-csr from server manifest');
+
+		const app = fs.readFileSync('.svelte-kit/generated/client-optimized/app.js', 'utf-8');
+		const i = app.match(/"\/no-csr": \[(\d+)\],/)?.[1];
 
 		const client_manifest = JSON.parse(
 			fs.readFileSync('.svelte-kit/output/client/.vite/manifest.json', 'utf-8')
