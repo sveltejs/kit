@@ -2294,6 +2294,14 @@ declare module '@sveltejs/kit' {
 	export type RemoteLiveQueryFunction<Input, Output, _Validated = Input> = (
 		arg: undefined extends Input ? Input | void : Input
 	) => RemoteLiveQuery<Output>;
+
+	export interface EnvVarConfig<T = string> {
+		public?: boolean;
+		static?: boolean;
+		validate?: StandardSchemaV1<string | undefined, T>;
+		default?: T;
+		description?: string;
+	}
 	interface AdapterEntry {
 		/**
 		 * A string that uniquely identifies an HTTP service (e.g. serverless function) and is used for deduplication.
@@ -2938,7 +2946,12 @@ declare module '@sveltejs/kit' {
 }
 
 declare module '@sveltejs/kit/hooks' {
-	import type { Handle } from '@sveltejs/kit';
+	import type { EnvVarConfig, Handle } from '@sveltejs/kit';
+	/**
+	 * Utility for defining environment variables, which are made available via
+	 * `$app/env/public` and `$app/env/private`.
+	 * */
+	export function defineEnvVars(variables: Record<string, EnvVarConfig>): Record<string, EnvVarConfig>;
 	/**
 	 * A helper function for sequencing multiple `handle` calls in a middleware-like manner.
 	 * The behavior for the `handle` options is as follows:
