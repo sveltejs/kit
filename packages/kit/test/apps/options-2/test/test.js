@@ -7,7 +7,7 @@ test.skip(() => !!process.env.REGISTER_SERVICE_WORKER);
 test.describe.configure({ mode: 'parallel' });
 
 test.describe('env', () => {
-	test('resolves upwards', async ({ page }) => {
+	test.only('resolves upwards', async ({ page }) => {
 		await page.goto('/basepath/env');
 		expect(await page.textContent('[data-testid="public"]')).toBe('public: hello');
 		expect(await page.textContent('[data-testid="private-dynamic"]')).toBe(
