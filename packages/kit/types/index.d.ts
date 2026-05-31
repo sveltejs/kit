@@ -2299,7 +2299,6 @@ declare module '@sveltejs/kit' {
 		public?: boolean;
 		static?: boolean;
 		validate?: StandardSchemaV1<string | undefined, T>;
-		default?: T;
 		description?: string;
 	}
 	interface AdapterEntry {
