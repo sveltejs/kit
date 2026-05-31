@@ -47,11 +47,13 @@ export async function load_explicit_env(file, mode) {
 	const server = await vite.createServer({
 		configFile: false,
 		logLevel: 'silent',
-		mode,
+		mode
 		// TODO do we need to provide certain aliases here?
 	});
 
 	const { variables } = await server.ssrLoadModule(file);
+
+	await server.close();
 
 	if (!variables || typeof variables !== 'object') {
 		throw new Error(`${file} must export a variables object`);
