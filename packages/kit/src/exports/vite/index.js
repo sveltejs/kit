@@ -259,7 +259,7 @@ async function kit({ svelte_config }) {
 		 */
 		config: {
 			order: 'pre',
-			async handler(config, config_env) {
+			handler(config, config_env) {
 				initial_config = config;
 				vite_config_env = config_env;
 				is_build = config_env.command === 'build';
@@ -473,7 +473,7 @@ async function kit({ svelte_config }) {
 
 				explicit_env = await load_explicit_env(explicit_env_entry, kit, vite_config_env.mode);
 
-				await sync.init(svelte_config, vite_config_env.mode);
+				sync.init(svelte_config, vite_config_env.mode);
 				server.ws.send({ type: 'full-reload' });
 			});
 		},
