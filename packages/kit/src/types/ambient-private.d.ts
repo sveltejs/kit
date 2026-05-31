@@ -34,6 +34,9 @@ declare module '__sveltekit/env' {
 	/** Populate exported environment variables */
 	export function set_env(environment: Record<string, string>): void;
 
+	/** public env vars */
+	export const explicit_public_env: Record<string, any>;
+
 	/** public env vars that should be inlined when a page is rendered */
 	export const rendered_env: Record<string, any>;
 }

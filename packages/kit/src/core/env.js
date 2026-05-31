@@ -144,7 +144,11 @@ export function create_sveltekit_env(variables, env, entry) {
 		let lhs = name;
 
 		if (config.public) {
-			lhs += ` = rendered_env.${name}`;
+			lhs += ` = explicit_public_env.${name}`;
+
+			if (!config.static) {
+				lhs += ` = rendered_env.${name}`;
+			}
 		}
 
 		if (config.static) {
@@ -162,6 +166,7 @@ export function create_sveltekit_env(variables, env, entry) {
 		GENERATED_COMMENT,
 		imports.join('\n'),
 		'export { variables }',
+		'export const explicit_public_env = {};',
 		'export const rendered_env = {};',
 		...declarations,
 		`export function set_env(env) {${setters.map((line) => `\n\t${line};`).join('')}\n}`
