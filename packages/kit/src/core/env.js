@@ -1,3 +1,4 @@
+/** @import { EnvVarConfig } from '@sveltejs/kit' */
 import path from 'node:path';
 import process from 'node:process';
 import * as vite from 'vite';
@@ -8,15 +9,6 @@ import { resolve_entry } from '../utils/filesystem.js';
 
 /**
  * @typedef {'public' | 'private'} EnvType
- */
-
-/**
- * @typedef {object} ExplicitEnvVar
- * @property {string} name
- * @property {boolean} public
- * @property {boolean} static
- * @property {boolean} validates
- * @property {string | null} description
  */
 
 let warned = false;
@@ -47,10 +39,10 @@ export function resolve_explicit_env_entry(config) {
 /**
  * @param {string | null} file
  * @param {string} mode
- * @returns {Promise<ExplicitEnvVar[]>}
+ * @returns {Promise<Record<string, EnvVarConfig> | null>}
  */
 export async function load_explicit_env(file, mode) {
-	if (!file) return [];
+	if (!file) return null;
 
 	const server = await vite.createServer({
 		configFile: false,
@@ -65,24 +57,14 @@ export async function load_explicit_env(file, mode) {
 		throw new Error(`${file} must export a variables object`);
 	}
 
-	return Object.entries(variables).map(([name, value]) => {
+	// validate
+	for (const name of Object.keys(variables)) {
 		if (!valid_identifier.test(name) || reserved.has(name)) {
 			throw new Error(`Invalid environment variable name ${JSON.stringify(name)}`);
 		}
+	}
 
-		const config = value && typeof value === 'object' ? value : {};
-
-		/** @type {ExplicitEnvVar} */
-		const variable = {
-			name,
-			public: config.public === true,
-			static: config.static === true || config.inline === true,
-			validates: Object.hasOwn(config, 'validate'),
-			description: typeof config.description === 'string' ? config.description : null
-		};
-
-		return variable;
-	});
+	return variables;
 }
 
 /**
@@ -134,7 +116,7 @@ export function create_dynamic_module(type, dev_values, disabled) {
 
 /**
  * Creates the `__sveltekit/env` module
- * @param {ExplicitEnvVar[] | null} variables
+ * @param {Record<string, EnvVarConfig> | null} variables
  * @param {Record<string, string>} env
  * @param {string | null} entry
  */
@@ -143,21 +125,19 @@ export function create_sveltekit_env(variables, env, entry) {
 	const declarations = [];
 	const setters = [];
 
-	for (const variable of variables ?? []) {
-		const name = JSON.stringify(variable.name);
+	for (const [name, config] of Object.entries(variables ?? {})) {
+		let lhs = name;
 
-		let lhs = variable.name;
-
-		if (variable.public) {
-			lhs += ` = rendered_env[${name}]`;
+		if (config.public) {
+			lhs += ` = rendered_env.${name}`;
 		}
 
-		if (variable.static) {
-			const value = JSON.stringify(env[variable.name]);
-			declarations.push(`export const ${lhs} = validate(${value}, ${name});`);
+		if (config.static) {
+			const value = JSON.stringify(env[name]);
+			declarations.push(`export const ${lhs} = validate(${value}, ${JSON.stringify(name)});`);
 		} else {
-			declarations.push(`export var ${variable.name};`);
-			setters.push(`${lhs} = validate(env[${name}], ${name});`);
+			declarations.push(`export var ${name};`);
+			setters.push(`${lhs} = validate(env.${name}, ${JSON.stringify(name)});`);
 		}
 	}
 
@@ -177,14 +157,14 @@ export function create_sveltekit_env(variables, env, entry) {
 
 /**
  * Creates the `__sveltekit/env/browser` module
- * @param {ExplicitEnvVar[] | null} variables
+ * @param {Record<string, EnvVarConfig> | null} variables
  * @param {string} global
  */
 export function create_sveltekit_env_browser(variables, global) {
 	return dedent`
 		const env = ${global}.env;
 
-		${(variables ?? []).map((v) => `export const ${v.name} = env.${v.name};\n`).join('')}
+		${(Object.keys(variables ?? {})).map((name) => `export const ${name} = env.${name};\n`).join('')}
 	`;
 }
 
@@ -289,15 +269,15 @@ export function create_dynamic_types(id, env, { public_prefix, private_prefix })
 }
 
 /**
- * @param {ExplicitEnvVar[]} variables
+ * @param {Record<string, EnvVarConfig>} variables
  * @param {EnvType} type
  */
 export function create_explicit_env_types(variables, type) {
-	const declarations = variables
-		.filter((variable) => variable.public === (type === 'public'))
-		.map((variable) => {
-			const comment = variable.description ? `${create_jsdoc(variable.description)}\n` : '';
-			return `${comment}export const ${variable.name}: string;`;
+	const declarations = Object.entries(variables)
+		.filter(([_, config]) => config.public === (type === 'public'))
+		.map(([name, config]) => {
+			const comment = config.description ? `${create_jsdoc(config.description)}\n` : '';
+			return `${comment}export const ${name}: string;`;
 		});
 
 	return dedent`

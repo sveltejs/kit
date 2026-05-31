@@ -1,7 +1,7 @@
+/** @import { EnvVarConfig } from '@sveltejs/kit' */
 /** @import { Options } from '@sveltejs/vite-plugin-svelte' */
 /** @import { PreprocessorGroup } from 'svelte/compiler' */
 /** @import { ConfigEnv, Manifest, Plugin, ResolvedConfig, UserConfig, ViteDevServer } from 'vite' */
-/** @import { ExplicitEnvVar } from '../../core/env.js' */
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
@@ -458,7 +458,7 @@ async function kit({ svelte_config }) {
 	/** @type {string | null} */
 	let explicit_env_entry = null;
 
-	/** @type {ExplicitEnvVar[] | null} */
+	/** @type {Record<string, EnvVarConfig> | null} */
 	let explicit_env_config = null;
 
 	/** @type {Plugin} */

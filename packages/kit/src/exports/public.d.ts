@@ -2321,4 +2321,12 @@ export type RemoteLiveQueryFunction<Input, Output, _Validated = Input> = (
 	arg: undefined extends Input ? Input | void : Input
 ) => RemoteLiveQuery<Output>;
 
+export interface EnvVarConfig<T = string> {
+	public?: boolean;
+	static?: boolean;
+	validate?: StandardSchemaV1<string | undefined, T>;
+	default?: T;
+	description?: string;
+}
+
 export * from './index.js';
