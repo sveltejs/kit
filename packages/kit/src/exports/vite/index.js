@@ -1,6 +1,7 @@
 /** @import { Options } from '@sveltejs/vite-plugin-svelte' */
 /** @import { PreprocessorGroup } from 'svelte/compiler' */
 /** @import { ConfigEnv, Manifest, Plugin, ResolvedConfig, UserConfig, ViteDevServer } from 'vite' */
+/** @import { ExplicitEnvVar } from '../../core/env.js' */
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
@@ -455,31 +456,47 @@ async function kit({ svelte_config }) {
 		}
 	};
 
-	const explicit_env_entry = resolve_explicit_env_entry(kit);
+	/** @type {string | null} */
+	let explicit_env_entry = null;
 
-	/** @type {import('../../core/env.js').ExplicitEnvVar[]} */
-	let explicit_env;
+	/** @type {ExplicitEnvVar[] | null} */
+	let explicit_env_config = null;
 
 	/** @type {Plugin} */
 	const plugin_virtual_modules = {
 		name: 'vite-plugin-sveltekit-virtual-modules',
 		enforce: 'pre',
 
-		configureServer(server) {
-			if (!explicit_env_entry) return;
+		async configureServer(server) {
+			if (!kit.experimental.explicitEnvironmentVariables) {
+				return;
+			}
 
-			server.watcher.on('change', async (file) => {
-				if (file !== explicit_env_entry) return;
+			explicit_env_entry = resolve_explicit_env_entry(kit);
+			explicit_env_config = await sync.env(kit, explicit_env_entry, vite_config_env.mode)
 
-				explicit_env = await load_explicit_env(explicit_env_entry, kit, vite_config_env.mode);
+			server.watcher.on('all', async (_, file) => {
+				if (!file.includes('env')) {
+					return;
+				}
 
-				sync.init(svelte_config, vite_config_env.mode);
-				server.ws.send({ type: 'full-reload' });
+				const resolved = resolve_explicit_env_entry(kit)
+
+				if (file === explicit_env_entry || file === (resolved)) {
+					explicit_env_entry = resolved;
+					explicit_env_config = await sync.env(kit, explicit_env_entry, vite_config_env.mode)
+
+					for (const id of [sveltekit_env, sveltekit_env_public]) {
+						const module = server.moduleGraph.getModuleById(id);
+
+						if (module) {
+							server.moduleGraph.invalidateModule(module);
+						}
+					}
+
+					server.ws.send({ type: 'full-reload' });
+				}
 			});
-		},
-
-		async configResolved(config) {
-			explicit_env = await load_explicit_env(explicit_env_entry, kit, config.mode);
 		},
 
 		resolveId(id, importer) {
@@ -564,10 +581,10 @@ async function kit({ svelte_config }) {
 					return create_service_worker_module(svelte_config);
 
 				case sveltekit_env:
-					return create_sveltekit_env(explicit_env, env.all, explicit_env_entry);
+					return create_sveltekit_env(explicit_env_config, env.all, explicit_env_entry);
 
 				case sveltekit_env_public:
-					return create_sveltekit_env_browser(explicit_env, global);
+					return create_sveltekit_env_browser(explicit_env_config, global);
 
 				case sveltekit_environment: {
 					const { version } = svelte_config.kit;

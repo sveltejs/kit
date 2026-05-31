@@ -38,7 +38,7 @@ export function resolve_explicit_env_entry(config) {
 			warned = true;
 		}
 	} else if (config.experimental.explicitEnvironmentVariables) {
-		throw new Error('experimental.explicitEnvironmentVariables was set, but no src/env.ts or src/env.js file could be found');
+		console.warn('experimental.explicitEnvironmentVariables was set, but no src/env.ts or src/env.js file could be found');
 	}
 
 	return null;
@@ -158,7 +158,7 @@ export function create_dynamic_module(type, dev_values, disabled) {
 
 /**
  * Creates the `__sveltekit/env` module
- * @param {ExplicitEnvVar[]} variables
+ * @param {ExplicitEnvVar[] | null} variables
  * @param {Record<string, string>} env
  * @param {string | null} entry
  */
@@ -167,7 +167,7 @@ export function create_sveltekit_env(variables, env, entry) {
 	const declarations = [];
 	const setters = [];
 
-	for (const variable of variables) {
+	for (const variable of variables ?? []) {
 		const name = JSON.stringify(variable.name);
 
 		let lhs = variable.name;
@@ -201,14 +201,14 @@ export function create_sveltekit_env(variables, env, entry) {
 
 /**
  * Creates the `__sveltekit/env/browser` module
- * @param {ExplicitEnvVar[]} variables
+ * @param {ExplicitEnvVar[] | null} variables
  * @param {string} global
  */
 export function create_sveltekit_env_browser(variables, global) {
 	return dedent`
 		const env = ${global}.env;
 
-		${variables.map((v) => `export const ${v.name} = env.${v.name};\n`).join('')}
+		${(variables ?? []).map((v) => `export const ${v.name} = env.${v.name};\n`).join('')}
 	`;
 }
 
@@ -320,7 +320,7 @@ export function create_explicit_env_types(variables, type) {
 	const declarations = variables
 		.filter((variable) => variable.public === (type === 'public'))
 		.map((variable) => {
-			const comment = variable.description ? `${create_jsdoc(variable.description)}\n\t` : '';
+			const comment = variable.description ? `${create_jsdoc(variable.description)}\n` : '';
 			return `${comment}export const ${variable.name}: string;`;
 		});
 
