@@ -1,8 +1,6 @@
-/** @import { EnvVarConfig } from '@sveltejs/kit' */
-
 /**
  *
- * @param {Record<string, EnvVarConfig<any>>} variables
+ * @param {Record<string, import('@sveltejs/kit').EnvVarConfig<any>>} variables
  * @param {string | undefined} value
  * @param {string} name
  * @returns
