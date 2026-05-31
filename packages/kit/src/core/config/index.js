@@ -29,11 +29,13 @@ export function load_template(cwd, { kit }) {
 		}
 	});
 
-	for (const match of contents.matchAll(/%sveltekit\.env\.([^%]+)%/g)) {
-		if (!match[1].startsWith(env.publicPrefix)) {
-			throw new Error(
-				`Environment variables in ${relative} must start with ${env.publicPrefix} (saw %sveltekit.env.${match[1]}%)`
-			);
+	if (!kit.experimental.explicitEnvironmentVariables) {
+		for (const match of contents.matchAll(/%sveltekit\.env\.([^%]+)%/g)) {
+			if (!match[1].startsWith(env.publicPrefix)) {
+				throw new Error(
+					`Environment variables in ${relative} must start with ${env.publicPrefix} (saw %sveltekit.env.${match[1]}%)`
+				);
+			}
 		}
 	}
 

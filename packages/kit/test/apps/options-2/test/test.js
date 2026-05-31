@@ -20,6 +20,11 @@ test.describe('env', () => {
 			'private validated default: foo'
 		);
 	});
+
+	test('applies explicit env vars to %sveltekit.env%', async ({ page }) => {
+		await page.goto('/basepath');
+		await expect(page.locator('body')).toHaveAttribute('data-message', 'hello');
+	});
 });
 
 test.describe('paths', () => {

@@ -468,13 +468,15 @@ async function kit({ svelte_config }) {
 		name: 'vite-plugin-sveltekit-virtual-modules',
 		enforce: 'pre',
 
-		async configureServer(server) {
+		async configResolved(config) {
+			explicit_env_entry = resolve_explicit_env_entry(kit);
+			explicit_env_config = await sync.env(kit, explicit_env_entry, config.mode);
+		},
+
+		configureServer(server) {
 			if (!kit.experimental.explicitEnvironmentVariables) {
 				return;
 			}
-
-			explicit_env_entry = resolve_explicit_env_entry(kit);
-			explicit_env_config = await sync.env(kit, explicit_env_entry, vite_config_env.mode);
 
 			server.watcher.on('all', async (_, file) => {
 				if (!file.includes('env')) {

@@ -683,7 +683,7 @@ export async function render_response({
 		body,
 		assets,
 		nonce: /** @type {string} */ (csp.nonce),
-		env: public_env
+		env: __SVELTEKIT_EXPERIMENTAL_EXPLICIT_ENVIRONMENT_VARIABLES__ ? env.rendered_env : public_env
 	});
 
 	// TODO flush chunks as early as we can
