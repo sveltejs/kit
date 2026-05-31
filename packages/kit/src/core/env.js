@@ -144,6 +144,7 @@ export function create_sveltekit_env(variables, env, entry) {
 	const blocks = [
 		GENERATED_COMMENT,
 		imports,
+		'export { variables }',
 		'export const rendered_env = {};',
 		create_validator(),
 		...declarations,
@@ -270,14 +271,16 @@ export function create_dynamic_types(id, env, { public_prefix, private_prefix })
 
 /**
  * @param {Record<string, EnvVarConfig<any>>} variables
+ * @param {string} relative
  * @param {EnvType} type
  */
-export function create_explicit_env_types(variables, type) {
+export function create_explicit_env_types(variables, relative, type) {
 	const declarations = Object.entries(variables)
 		.filter(([_, config]) => config.public === (type === 'public'))
 		.map(([name, config]) => {
 			const comment = config.description ? `${create_jsdoc(config.description)}\n` : '';
-			return `${comment}export const ${name}: string;`;
+			const type = config.validate ? `import('@sveltejs/kit/internal/types').StandardSchemaV1.InferOutput<typeof import('${relative}').variables.${name}.validate>` : 'string';
+			return `${comment}export const ${name}: ${type};`;
 		});
 
 	return dedent`

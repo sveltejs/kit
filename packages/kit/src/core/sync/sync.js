@@ -98,7 +98,7 @@ export function all_types(config, mode) {
 export async function env(kit, entry, mode) {
 	const env_config = await load_explicit_env(entry, mode);
 
-	write_env(kit, env_config);
+	write_env(kit, entry, env_config);
 
 	return env_config;
 }

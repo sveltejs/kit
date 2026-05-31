@@ -2295,7 +2295,7 @@ declare module '@sveltejs/kit' {
 		arg: undefined extends Input ? Input | void : Input
 	) => RemoteLiveQuery<Output>;
 
-	export interface EnvVarConfig<T = string> {
+	export interface EnvVarConfig<T> {
 		public?: boolean;
 		static?: boolean;
 		validate?: StandardSchemaV1<string | undefined, T>;
@@ -2951,7 +2951,7 @@ declare module '@sveltejs/kit/hooks' {
 	 * Utility for defining environment variables, which are made available via
 	 * `$app/env/public` and `$app/env/private`.
 	 * */
-	export function defineEnvVars(variables: Record<string, EnvVarConfig>): Record<string, EnvVarConfig>;
+	export function defineEnvVars<T extends Record<string, EnvVarConfig<any>>>(variables: T): T;
 	/**
 	 * A helper function for sequencing multiple `handle` calls in a middleware-like manner.
 	 * The behavior for the `handle` options is as follows:

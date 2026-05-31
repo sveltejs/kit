@@ -9,17 +9,20 @@ import { write_if_changed } from './utils.js';
  * and the existing environment variables in process.env to
  * $env/static/private and $env/static/public
  * @param {import('types').ValidatedKitConfig} kit
+ * @param {string | null} entry
  * @param {Record<string, EnvVarConfig<any>> | null} env_config
  */
-export function write_env(kit, env_config) {
+export function write_env(kit, entry, env_config) {
 	const content = [GENERATED_COMMENT];
+	const out = path.join(kit.outDir, 'env.d.ts')
 
-	if (env_config) {
-		content.push(create_explicit_env_types(env_config, 'private'), create_explicit_env_types(env_config, 'public'))
+	if (entry && env_config) {
+		const relative = path.relative(kit.outDir, entry);
+		content.push(create_explicit_env_types(env_config, relative, 'private'), create_explicit_env_types(env_config, relative, 'public'))
 	}
 
 	write_if_changed(
-		path.join(kit.outDir, 'env.d.ts'),
+		out,
 		content.join('\n\n')
 	);
 }
