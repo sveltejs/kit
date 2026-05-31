@@ -192,22 +192,18 @@ export function create_builder({
 			const dest = `${config.kit.outDir}/output/prerendered/dependencies/${config.kit.appDir}/env.js`;
 			const env = get_env(config.kit.env, vite_config.mode);
 
-			if (!config.kit.experimental.explicitEnvironmentVariables) {
-				write(dest, `export const env=${devalue.uneval(env.public)}`);
-				return;
+			const values = config.kit.experimental.explicitEnvironmentVariables ? {} : env.public;
+
+			if (config.kit.experimental.explicitEnvironmentVariables) {
+				const variables = explicit_env_config ?? {};
+
+				for (const [name, config] of Object.entries(variables)) {
+					if (config.static || !config.public) continue;
+					values[name] = validate(variables, env.all[name], name);
+				}
 			}
 
-			const variables = explicit_env_config ?? {};
-			let content = '';
-
-			for (const [name, config] of Object.entries(variables)) {
-				if (config.static || !config.public) continue;
-
-				const value = validate(variables, env.all[name], name);
-				content += `export const ${name}=${devalue.uneval(value)}\n`;
-			}
-
-			write(dest, content);
+			write(dest, `export const env=${devalue.uneval(values)}`);
 		},
 
 		generateManifest({ relativePath, routes: subset }) {
