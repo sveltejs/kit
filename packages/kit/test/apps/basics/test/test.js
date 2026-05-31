@@ -695,8 +695,11 @@ test.describe('Page options', () => {
 	}) => {
 		test.skip(!!(javaScriptEnabled || process.env.DEV));
 
-		const app = fs.readFileSync('.svelte-kit/generated/client-optimized/app.js', 'utf-8');
-		const i = app.match(/"\/no-csr": \[(\d+)\],/)?.[1];
+		const route = (await import('../.svelte-kit/output/server/manifest.js')).manifest._.routes.find(
+			(route) => route.id === '/no-csr'
+		);
+		const i = route?.page?.leaf;
+		if (!i) throw new Error('could not find route for /no-csr from server manifest');
 
 		const client_manifest = JSON.parse(
 			fs.readFileSync('.svelte-kit/output/client/.vite/manifest.json', 'utf-8')
