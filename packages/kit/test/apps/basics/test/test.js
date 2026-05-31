@@ -696,7 +696,7 @@ test.describe('Page options', () => {
 		test.skip(!!(javaScriptEnabled || process.env.DEV));
 
 		const app = fs.readFileSync('.svelte-kit/generated/client-optimized/app.js', 'utf-8');
-		const i = app.match(/"\/no-csr": \[(\d+)\],/)[1];
+		const i = app.match(/"\/no-csr": \[(\d+)\],/)?.[1];
 
 		const client_manifest = JSON.parse(
 			fs.readFileSync('.svelte-kit/output/client/.vite/manifest.json', 'utf-8')
