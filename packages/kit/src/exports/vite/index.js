@@ -1225,22 +1225,32 @@ async function kit({ svelte_config }) {
 						)
 					};
 
+					const nodes = manifest_data.nodes.map((node, i) => {
+						if (node.component || node.universal) {
+							const entry = `${out_dir}/generated/client-optimized/nodes/${i}.js`;
+							const deps = deps_of(entry, true);
+
+							/** @type {string | undefined} */
+							let file;
+
+							const key = path.relative(vite_config.root, entry);
+							if (node.page_options?.csr === false && key in client_manifest) {
+								fs.rmSync(`${out}/client/${client_manifest[key].file}`);
+							} else {
+								file = resolve_symlinks(client_manifest, entry).chunk.file;
+							}
+
+							return {
+								file,
+								css: deps.stylesheets
+							};
+						}
+					});
+
 					// In case of server-side route resolution, we create a purpose-built route manifest that is
 					// similar to that on the client, with as much information computed upfront so that we
 					// don't need to include any code of the actual routes in the server bundle.
 					if (svelte_config.kit.router.resolution === 'server') {
-						const nodes = manifest_data.nodes.map((node, i) => {
-							if (node.component || node.universal) {
-								const entry = `${out_dir}/generated/client-optimized/nodes/${i}.js`;
-								const deps = deps_of(entry, true);
-								const file = resolve_symlinks(
-									client_manifest,
-									`${out_dir}/generated/client-optimized/nodes/${i}.js`
-								).chunk.file;
-
-								return { file, css: deps.stylesheets };
-							}
-						});
 						build_data.client.nodes = nodes.map((node) => node?.file);
 						build_data.client.css = nodes.map((node) => node?.css);
 

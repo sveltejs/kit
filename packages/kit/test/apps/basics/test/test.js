@@ -1,4 +1,5 @@
 import process from 'node:process';
+import fs from 'node:fs';
 import { expect } from '@playwright/test';
 import { test } from '../../../utils.js';
 
@@ -679,14 +680,29 @@ test.describe('Page options', () => {
 		page,
 		javaScriptEnabled
 	}) => {
-		if (!javaScriptEnabled) {
-			await page.goto('/no-csr');
-			expect(await page.textContent('h1')).toBe('look ma no javascript');
-			expect(await page.$$('link[rel="modulepreload"]')).toHaveLength(0);
+		test.skip(javaScriptEnabled);
 
-			// ensure data wasn't inlined
-			expect(await page.$$('script[sveltekit\\:data-type="data"]')).toHaveLength(0);
-		}
+		await page.goto('/no-csr');
+		expect(await page.textContent('h1')).toBe('look ma no javascript');
+		expect(await page.$$('link[rel="modulepreload"]')).toHaveLength(0);
+
+		// ensure data wasn't inlined
+		expect(await page.$$('script[sveltekit\\:data-type="data"]')).toHaveLength(0);
+	});
+
+	test('does not include client node in build output with csr=false', async ({
+		javaScriptEnabled
+	}) => {
+		test.skip(!!(javaScriptEnabled || process.env.DEV));
+
+		const app = fs.readFileSync('.svelte-kit/generated/client-optimized/app.js', 'utf-8');
+		const i = app.match(/"\/no-csr": \[(\d+)\],/)[1];
+
+		const client_manifest = JSON.parse(
+			fs.readFileSync('.svelte-kit/output/client/.vite/manifest.json', 'utf-8')
+		);
+		const { file } = client_manifest[`.svelte-kit/generated/client-optimized/nodes/${i}.js`];
+		expect(fs.existsSync(`.svelte-kit/output/client/${file}`)).toBe(false);
 	});
 
 	test('does not SSR page with ssr=false', async ({ page, javaScriptEnabled }) => {
