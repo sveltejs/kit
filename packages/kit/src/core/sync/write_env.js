@@ -14,15 +14,15 @@ import { write_if_changed } from './utils.js';
  */
 export function write_env(kit, entry, env_config) {
 	const content = [GENERATED_COMMENT];
-	const out = path.join(kit.outDir, 'env.d.ts')
+	const out = path.join(kit.outDir, 'env.d.ts');
 
 	if (entry && env_config) {
 		const relative = path.relative(kit.outDir, entry);
-		content.push(create_explicit_env_types(env_config, relative, 'private'), create_explicit_env_types(env_config, relative, 'public'))
+		content.push(
+			create_explicit_env_types(env_config, relative, 'private'),
+			create_explicit_env_types(env_config, relative, 'public')
+		);
 	}
 
-	write_if_changed(
-		out,
-		content.join('\n\n')
-	);
+	write_if_changed(out, content.join('\n\n'));
 }

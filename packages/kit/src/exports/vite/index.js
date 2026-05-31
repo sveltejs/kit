@@ -386,7 +386,9 @@ async function kit({ svelte_config }) {
 					__SVELTEKIT_HASH_ROUTING__: s(kit.router.type === 'hash'),
 					__SVELTEKIT_SERVER_TRACING_ENABLED__: s(kit.experimental.tracing.server),
 					__SVELTEKIT_EXPERIMENTAL_USE_TRANSFORM_ERROR__: s(kit.experimental.handleRenderingErrors),
-					__SVELTEKIT_EXPERIMENTAL_EXPLICIT_ENVIRONMENT_VARIABLES__: s(kit.experimental.explicitEnvironmentVariables),
+					__SVELTEKIT_EXPERIMENTAL_EXPLICIT_ENVIRONMENT_VARIABLES__: s(
+						kit.experimental.explicitEnvironmentVariables
+					),
 					__SVELTEKIT_DEV__: s(!is_build)
 				};
 
@@ -405,7 +407,7 @@ async function kit({ svelte_config }) {
 					};
 
 					if (!secondary_build_started) {
-						manifest_data = (sync.all(svelte_config, config_env.mode)).manifest_data;
+						manifest_data = sync.all(svelte_config, config_env.mode).manifest_data;
 						// During the initial server build we don't know yet
 						new_config.define.__SVELTEKIT_HAS_SERVER_LOAD__ = 'true';
 						new_config.define.__SVELTEKIT_HAS_UNIVERSAL_LOAD__ = 'true';
@@ -472,18 +474,18 @@ async function kit({ svelte_config }) {
 			}
 
 			explicit_env_entry = resolve_explicit_env_entry(kit);
-			explicit_env_config = await sync.env(kit, explicit_env_entry, vite_config_env.mode)
+			explicit_env_config = await sync.env(kit, explicit_env_entry, vite_config_env.mode);
 
 			server.watcher.on('all', async (_, file) => {
 				if (!file.includes('env')) {
 					return;
 				}
 
-				const resolved = resolve_explicit_env_entry(kit)
+				const resolved = resolve_explicit_env_entry(kit);
 
-				if (file === explicit_env_entry || file === (resolved)) {
+				if (file === explicit_env_entry || file === resolved) {
 					explicit_env_entry = resolved;
-					explicit_env_config = await sync.env(kit, explicit_env_entry, vite_config_env.mode)
+					explicit_env_config = await sync.env(kit, explicit_env_entry, vite_config_env.mode);
 
 					for (const id of [sveltekit_env, sveltekit_env_public]) {
 						const module = server.moduleGraph.getModuleById(id);
@@ -677,7 +679,7 @@ async function kit({ svelte_config }) {
 
 			if (is_server_only) {
 				// in dev, this doesn't exist, so we need to create it
-				manifest_data ??= (sync.all(svelte_config, vite_config_env.mode)).manifest_data;
+				manifest_data ??= sync.all(svelte_config, vite_config_env.mode).manifest_data;
 
 				/** @type {Set<string>} */
 				const entrypoints = new Set();
