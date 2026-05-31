@@ -458,7 +458,7 @@ async function kit({ svelte_config }) {
 	/** @type {string | null} */
 	let explicit_env_entry = null;
 
-	/** @type {Record<string, EnvVarConfig> | null} */
+	/** @type {Record<string, EnvVarConfig<any>> | null} */
 	let explicit_env_config = null;
 
 	/** @type {Plugin} */

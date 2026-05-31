@@ -39,7 +39,7 @@ export function resolve_explicit_env_entry(config) {
 /**
  * @param {string | null} file
  * @param {string} mode
- * @returns {Promise<Record<string, EnvVarConfig> | null>}
+ * @returns {Promise<Record<string, EnvVarConfig<any>> | null>}
  */
 export async function load_explicit_env(file, mode) {
 	if (!file) return null;
@@ -116,7 +116,7 @@ export function create_dynamic_module(type, dev_values, disabled) {
 
 /**
  * Creates the `__sveltekit/env` module
- * @param {Record<string, EnvVarConfig> | null} variables
+ * @param {Record<string, EnvVarConfig<any>> | null} variables
  * @param {Record<string, string>} env
  * @param {string | null} entry
  */
@@ -157,7 +157,7 @@ export function create_sveltekit_env(variables, env, entry) {
 
 /**
  * Creates the `__sveltekit/env/browser` module
- * @param {Record<string, EnvVarConfig> | null} variables
+ * @param {Record<string, EnvVarConfig<any>> | null} variables
  * @param {string} global
  */
 export function create_sveltekit_env_browser(variables, global) {
@@ -269,7 +269,7 @@ export function create_dynamic_types(id, env, { public_prefix, private_prefix })
 }
 
 /**
- * @param {Record<string, EnvVarConfig>} variables
+ * @param {Record<string, EnvVarConfig<any>>} variables
  * @param {EnvType} type
  */
 export function create_explicit_env_types(variables, type) {

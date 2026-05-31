@@ -9,7 +9,7 @@ import { write_if_changed } from './utils.js';
  * and the existing environment variables in process.env to
  * $env/static/private and $env/static/public
  * @param {import('types').ValidatedKitConfig} kit
- * @param {Record<string, EnvVarConfig> | null} env_config
+ * @param {Record<string, EnvVarConfig<any>> | null} env_config
  */
 export function write_env(kit, env_config) {
 	const content = [GENERATED_COMMENT];
