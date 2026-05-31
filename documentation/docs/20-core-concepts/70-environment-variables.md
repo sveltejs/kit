@@ -10,7 +10,7 @@ During development, and at build time, variables defined in a `.env` or `.env.lo
 API_KEY=19f401ba-e8b0-48c4-8c77-b0ebb26d97fe
 ```
 
-By default, every environment variable is available inside your app via the following modules:
+By default, every environment variable is implicitly available inside your app via the following modules:
 
 - [`$env/static/private`]($env-static-private)
 - [`$env/static/public`]($env-static-public)
