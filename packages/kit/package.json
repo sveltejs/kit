@@ -110,6 +110,10 @@
 			"types": "./types/index.d.ts",
 			"import": "./src/exports/internal/index.js"
 		},
+		"./internal/env": {
+			"types": "./types/index.d.ts",
+			"import": "./src/exports/internal/env.js"
+		},
 		"./internal/types": {
 			"import": "./src/exports/internal/types.js"
 		},

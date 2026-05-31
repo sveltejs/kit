@@ -2,10 +2,12 @@
 import path from 'node:path';
 import process from 'node:process';
 import * as vite from 'vite';
+import * as devalue from 'devalue';
 import { GENERATED_COMMENT } from '../constants.js';
 import { dedent } from './sync/utils.js';
 import { runtime_base } from './utils.js';
 import { resolve_entry } from '../utils/filesystem.js';
+import { validate } from '../exports/internal/env.js';
 
 /**
  * @typedef {'public' | 'private'} EnvType
@@ -130,8 +132,11 @@ export function create_dynamic_module(type, dev_values, disabled) {
  */
 export function create_sveltekit_env(variables, env, entry) {
 	const imports = entry
-		? `import { variables } from ${JSON.stringify(entry)};`
-		: `const variables = {};`;
+		? [
+				`import { variables } from ${JSON.stringify(entry)};`,
+				`import { validate } from '@sveltejs/kit/internal/env';`
+			]
+		: [`const variables = {};`];
 	const declarations = [];
 	const setters = [];
 
@@ -144,19 +149,20 @@ export function create_sveltekit_env(variables, env, entry) {
 
 		if (config.static) {
 			const value = JSON.stringify(env[name]);
-			declarations.push(`export const ${lhs} = validate(${value}, ${JSON.stringify(name)});`);
+			declarations.push(
+				`export const ${lhs} = validate(variables, ${value}, ${JSON.stringify(name)});`
+			);
 		} else {
 			declarations.push(`export var ${name};`);
-			setters.push(`${lhs} = validate(env.${name}, ${JSON.stringify(name)});`);
+			setters.push(`${lhs} = validate(variables, env.${name}, ${JSON.stringify(name)});`);
 		}
 	}
 
 	const blocks = [
 		GENERATED_COMMENT,
-		imports,
+		imports.join('\n'),
 		'export { variables }',
 		'export const rendered_env = {};',
-		create_validator(),
 		...declarations,
 		`export function set_env(env) {${setters.map((line) => `\n\t${line};`).join('')}\n}`
 	];
@@ -169,52 +175,27 @@ export function create_sveltekit_env(variables, env, entry) {
 /**
  * Creates the `__sveltekit/env/browser` module
  * @param {Record<string, EnvVarConfig<any>> | null} variables
+ * @param {Record<string, string>} env
  * @param {string} global
  */
-export function create_sveltekit_env_browser(variables, global) {
+export function create_sveltekit_env_browser(variables, env, global) {
+	if (!variables) {
+		return '';
+	}
+
 	return dedent`
 		const env = ${global}.env;
 
-		${Object.keys(variables ?? {})
-			.map((name) => `export const ${name} = env.${name};\n`)
-			.join('')}
-	`;
-}
-
-function create_validator() {
-	return dedent`
-		function validate(value, name) {
-			const config = variables[name] ?? {};
-
-			const schema = config.validate ?? string_schema;
-			const standard = schema?.['~standard'];
-
-			if (!standard) {
-				throw new Error(\`Environment variable \${name} was configured with a validator that does not implement Standard Schema\`);
-			}
-
-			const result = standard.validate(value);
-
-			if (typeof result?.then === 'function') {
-				throw new Error(\`Environment variable \${name} uses an async validator, which is not supported\`);
-			}
-
-			if (result.issues) {
-				throw new Error(\`Environment variable \${name} is invalid: \${result.issues.map((issue) => issue.message).join(', ')}\`);
-			}
-
-			return result.value;
-		}
-
-		const string_schema = {
-			'~standard': {
-				validate(value) {
-					return typeof value === 'string'
-						? { value }
-						: { issues: [{ message: 'Expected a string' }] };
+		${Object.entries(variables)
+			.map(([name, config]) => {
+				if (config.static) {
+					const value = validate(variables, env[name], name);
+					return `export const ${name} = ${devalue.uneval(value)};\n`;
 				}
-			}
-		};
+
+				return `export const ${name} = env.${name};\n`;
+			})
+			.join('')}
 	`;
 }
 

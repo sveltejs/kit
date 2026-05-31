@@ -46,7 +46,7 @@ import {
 	env_static_public,
 	service_worker,
 	sveltekit_env,
-	sveltekit_env_public,
+	sveltekit_env_browser,
 	sveltekit_environment,
 	sveltekit_server
 } from './module_ids.js';
@@ -489,7 +489,7 @@ async function kit({ svelte_config }) {
 					explicit_env_entry = resolved;
 					explicit_env_config = await sync.env(kit, explicit_env_entry, vite_config_env.mode);
 
-					for (const id of [sveltekit_env, sveltekit_env_public]) {
+					for (const id of [sveltekit_env, sveltekit_env_browser]) {
 						const module = server.moduleGraph.getModuleById(id);
 
 						if (module) {
@@ -586,8 +586,8 @@ async function kit({ svelte_config }) {
 				case sveltekit_env:
 					return create_sveltekit_env(explicit_env_config, env.all, explicit_env_entry);
 
-				case sveltekit_env_public:
-					return create_sveltekit_env_browser(explicit_env_config, global);
+				case sveltekit_env_browser:
+					return create_sveltekit_env_browser(explicit_env_config, env.all, global);
 
 				case sveltekit_environment: {
 					const { version } = svelte_config.kit;
