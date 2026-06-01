@@ -64,7 +64,7 @@ export function handle_issues(issues) {
 	let message = 'Invalid environment variables\n';
 
 	for (const [name, issues] of entries) {
-		message += `\n${name}\n${issues.map((issue) => `  - ${issue.message}`)}\n`;
+		message += `\n${name}\n${issues.map((issue) => `  - ${issue.message}`).join('\n')}\n`;
 	}
 
 	throw new Error(message);
