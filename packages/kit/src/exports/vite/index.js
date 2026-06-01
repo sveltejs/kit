@@ -1,5 +1,6 @@
-/** @import { Options } from '@sveltejs/vite-plugin-svelte' */
+/** @import { Options, SvelteConfig } from '@sveltejs/vite-plugin-svelte' */
 /** @import { PreprocessorGroup } from 'svelte/compiler' */
+/** @import { KitConfig } from '@sveltejs/kit' */
 /** @import { ConfigEnv, Manifest, Plugin, ResolvedConfig, UserConfig, ViteDevServer } from 'vite' */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -133,10 +134,15 @@ const warning_preprocessor = {
 
 /**
  * Returns the SvelteKit Vite plugins.
+ * Since version 2.62.0 you can also pass the Svelte config inline. The svelte.config.js will be ignored in this case.
+ * @param {KitConfig & SvelteConfig} [inline_config]
  * @returns {Promise<Plugin[]>}
  */
-export async function sveltekit() {
-	const svelte_config = await load_config();
+export async function sveltekit(inline_config) {
+	const svelte_config = await load_config({
+		inline_config,
+		try_vite: false // prevent fallback to loading Vite config, causing an infinite loop
+	});
 
 	/** @type {Options['preprocess']} */
 	let preprocess = svelte_config.preprocess;
@@ -243,6 +249,11 @@ async function kit({ svelte_config }) {
 	/** @type {Plugin} */
 	const plugin_setup = {
 		name: 'vite-plugin-sveltekit-setup',
+		api: {
+			sveltekit: {
+				config: svelte_config
+			}
+		},
 
 		/**
 		 * Build the SvelteKit-provided Vite config to be merged with the user's vite.config.js file.

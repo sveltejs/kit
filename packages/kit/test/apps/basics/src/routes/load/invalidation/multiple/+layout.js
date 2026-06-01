@@ -11,6 +11,7 @@ export function load({ depends }) {
 		redirect(307, '/load/invalidation/multiple/redirect');
 	}
 
+	/** @type {Promise<{ count_layout: Number, redirect_mode: string }>} */
 	return new Promise((resolve) =>
 		setTimeout(
 			() =>
