@@ -1,5 +1,5 @@
 ---
-'@sveltejs/kit': patch
+'@sveltejs/kit': major
 ---
 
-fix: avoid preloading with the Link header by default. Use `config.kit.output.linkHeaderPreload` to re-enable this behaviour
+breaking: add `config.kit.output.linkHeaderPreload` to preload using the `Link` header
