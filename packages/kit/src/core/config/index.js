@@ -80,7 +80,7 @@ export async function load_config({ cwd = process.cwd(), inline_config, try_vite
 			if (vite_config) {
 				return vite_config;
 			}
-		} catch (e) {
+		} catch {
 			// TODO SvelteKit 3: pass on the error instead
 			vite_failed = true;
 		}
