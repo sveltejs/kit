@@ -3,10 +3,11 @@ import { imagetools } from 'vite-imagetools';
 import { image_plugin } from './vite-plugin.js';
 
 /**
+ * @param {import('../types/index.js').EnhancedImgOptions} [options]
  * @returns {import('vite').Plugin[]}
  */
-export function enhancedImages() {
-	const imagetools_instance = imagetools_plugin();
+export function enhancedImages(options) {
+	const imagetools_instance = imagetools_plugin(options);
 	return !process.versions.webcontainer
 		? [image_plugin(imagetools_instance), imagetools_instance]
 		: [];
@@ -26,7 +27,11 @@ function fallback_format(meta) {
 	return 'jpg';
 }
 
-function imagetools_plugin() {
+/**
+ * @param {import('../types/index.js').EnhancedImgOptions} [options]
+ * @returns {import('vite').Plugin}
+ */
+function imagetools_plugin(options) {
 	/** @type {Partial<import('vite-imagetools').VitePluginOptions>} */
 	const imagetools_opts = {
 		defaultDirectives: async ({ pathname, searchParams: qs }, metadata) => {
@@ -41,10 +46,18 @@ function imagetools_plugin() {
 				return new URLSearchParams();
 			}
 
+			// When `formats` is provided, use it verbatim and skip the raster fallback. Otherwise
+			// keep the default `avif;webp;<fallback_format>` so behavior is unchanged when no options
+			// are passed.
+			const format = options?.formats
+				? options.formats.join(';')
+				: `avif;webp;${fallback_format(meta)}`;
+
 			const { widths, kind } = get_widths(width, qs.get('imgSizes'));
 			return new URLSearchParams({
 				as: 'picture',
-				format: `avif;webp;${fallback_format(meta)}`,
+				format,
+				...(options?.quality && { quality: options.quality.toString() }),
 				w: widths.join(';'),
 				...(kind === 'x' && !qs.has('w') && { basePixels: widths[0].toString() })
 			});
@@ -52,7 +65,6 @@ function imagetools_plugin() {
 		namedExports: false
 	};
 
-	// TODO: should we make formats or sizes configurable besides just letting people override defaultDirectives?
 	// TODO: generate img rather than picture if only a single format is provided
 	//     by resolving the directives for the URL in the preprocessor
 	return imagetools(imagetools_opts);
