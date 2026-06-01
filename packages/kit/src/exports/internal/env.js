@@ -33,7 +33,7 @@ export function validate(variables, value, name) {
 
 	if (result.issues) {
 		throw new Error(
-			`Environment variable ${name} is invalid: \${result.issues.map((issue) => issue.message).join(', ')}`
+			`Environment variable ${name} is invalid: ${result.issues.map((issue) => issue.message).join(', ')}`
 		);
 	}
 
