@@ -28,5 +28,5 @@
 		"types": ["node"]
 	},
 	"include": ["*.js", "scripts/**/*", "src/**/*"],
-	"exclude": ["./**/write_types/test/**"]
+	"exclude": ["./**/write_types/test/**", "./src/core/config/fixtures/**"]
 }
