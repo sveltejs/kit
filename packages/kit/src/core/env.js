@@ -137,7 +137,7 @@ export function create_sveltekit_env(variables, env, entry) {
 				`import { variables } from ${JSON.stringify(entry)};`,
 				`import { validate, handle_issues } from '@sveltejs/kit/internal/env';`
 			]
-		: [`const variables = {};`];
+		: [`const variables = {};`, `const handle_issues = () => {};`];
 	const declarations = [];
 	const setters = [];
 
