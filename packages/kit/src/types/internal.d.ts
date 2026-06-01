@@ -504,7 +504,6 @@ export interface SSROptions {
 	env_private_prefix: string;
 	hash_routing: boolean;
 	hooks: ServerHooks;
-	preload_strategy: ValidatedConfig['kit']['output']['preloadStrategy'];
 	link_header_preload: ValidatedConfig['kit']['output']['linkHeaderPreload'];
 	root: SSRComponent['default'];
 	service_worker: boolean;
@@ -607,9 +606,8 @@ export type ValidatedConfig = Config & {
 	extensions: string[];
 };
 
-export type ValidatedKitConfig = Omit<RecursiveRequired<KitConfig>, 'adapter'> & {
-	adapter?: Adapter;
-};
+// TODO: remove the omit in 4.0
+export type ValidatedKitConfig = Omit<RecursiveRequired<KitConfig>, 'adapter'>;
 
 export type BinaryFormMeta = {
 	remote_refreshes?: string[];

@@ -1,7 +1,9 @@
-import colors from 'kleur';
+/** @import { Adapter } from '@sveltejs/kit' */
+import { styleText } from 'node:util';
 import { create_builder } from './builder.js';
 
 /**
+ * @param {Adapter} adapter
  * @param {import('types').ValidatedConfig} config
  * @param {import('types').BuildData} build_data
  * @param {import('types').ServerMetadata} server_metadata
@@ -12,6 +14,7 @@ import { create_builder } from './builder.js';
  * @param {import('vite').ResolvedConfig} vite_config
  */
 export async function adapt(
+	adapter,
 	config,
 	build_data,
 	server_metadata,
@@ -21,10 +24,9 @@ export async function adapt(
 	remotes,
 	vite_config
 ) {
-	// This is only called when adapter is truthy, so the cast is safe
-	const { name, adapt } = /** @type {import('@sveltejs/kit').Adapter} */ (config.kit.adapter);
+	const { name, adapt } = adapter;
 
-	console.log(colors.bold().cyan(`\n> Using ${name}`));
+	console.log(styleText(['bold', 'cyan'], `\n> Using ${name}`));
 
 	const builder = create_builder({
 		config,

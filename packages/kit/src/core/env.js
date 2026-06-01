@@ -1,6 +1,6 @@
 import { GENERATED_COMMENT } from '../constants.js';
 import { dedent } from './sync/utils.js';
-import { runtime_base } from './utils.js';
+import { get_runtime_base } from './utils.js';
 
 /**
  * @typedef {'public' | 'private'} EnvType
@@ -32,15 +32,16 @@ export function create_static_module(id, env) {
 /**
  * @param {EnvType} type
  * @param {Record<string, string> | undefined} dev_values If in a development mode, values to pre-populate the module with.
+ * @param {string} root
  */
-export function create_dynamic_module(type, dev_values) {
+export function create_dynamic_module(type, dev_values, root) {
 	if (dev_values) {
 		const keys = Object.entries(dev_values).map(
 			([k, v]) => `${JSON.stringify(k)}: ${JSON.stringify(v)}`
 		);
 		return `export const env = {\n${keys.join(',\n')}\n}`;
 	}
-	return `export { ${type}_env as env } from '${runtime_base}/shared-server.js';`;
+	return `export { ${type}_env as env } from '${get_runtime_base(root)}/shared-server.js';`;
 }
 
 /**

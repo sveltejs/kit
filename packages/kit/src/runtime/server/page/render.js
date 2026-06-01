@@ -390,8 +390,6 @@ export async function render_response({
 			if (options.link_header_preload && !state.prerendering) {
 				add_preload = (path) =>
 					link_headers.add(`<${encodeURI(path)}>; rel="modulepreload"; nopush`);
-			} else if (options.preload_strategy !== 'modulepreload') {
-				add_preload = (path) => head.add_script_preload(path);
 			} else {
 				add_preload = (path) => head.add_link_tag(path, ['rel="modulepreload"']);
 			}
@@ -752,8 +750,6 @@ class Head {
 	/** @type {string[]} */
 	#link_tags = [];
 	/** @type {string[]} */
-	#script_preloads = [];
-	/** @type {string[]} */
 	#style_tags = [];
 	/** @type {string[]} */
 	#stylesheet_links = [];
@@ -769,7 +765,6 @@ class Head {
 		return [
 			...this.#http_equiv,
 			...this.#link_tags,
-			...this.#script_preloads,
 			this.#rendered,
 			...this.#style_tags,
 			...this.#stylesheet_links
@@ -792,13 +787,6 @@ class Head {
 	 */
 	add_stylesheet(href, attributes) {
 		this.#stylesheet_links.push(`<link href="${href}" ${attributes.join(' ')}>`);
-	}
-
-	/** @param {string} href */
-	add_script_preload(href) {
-		this.#script_preloads.push(
-			`<link rel="preload" as="script" crossorigin="anonymous" href="${href}">`
-		);
 	}
 
 	/**

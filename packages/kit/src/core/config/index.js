@@ -59,10 +59,10 @@ export function load_error_page(config) {
 
 /**
  * Loads and validates Svelte config file
- * @param {{ cwd?: string }} options
+ * @param {{ cwd: string }} options
  * @returns {Promise<import('types').ValidatedConfig>}
  */
-export async function load_config({ cwd = process.cwd() } = {}) {
+export async function load_config({ cwd }) {
 	const config_files = ['js', 'ts']
 		.map((ext) => path.join(cwd, `svelte.config.${ext}`))
 		.filter((f) => fs.existsSync(f));
@@ -94,11 +94,13 @@ export async function load_config({ cwd = process.cwd() } = {}) {
 
 /**
  * @param {import('@sveltejs/kit').Config} config
+ * @param {{ cwd: string }} options
  * @returns {import('types').ValidatedConfig}
  */
-function process_config(config, { cwd = process.cwd() } = {}) {
+export function process_config(config, { cwd }) {
 	const validated = validate_config(config, cwd);
 
+	validated.kit.env.dir = path.resolve(cwd, validated.kit.env.dir);
 	validated.kit.outDir = path.resolve(cwd, validated.kit.outDir);
 
 	for (const key in validated.kit.files) {

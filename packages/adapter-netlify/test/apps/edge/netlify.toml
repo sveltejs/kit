@@ -1,14 +1,11 @@
 [build]
 publish = "build"
 
-# TODO: remove these once we overhaul the Netlify adapter to use the new edge declarations https://docs.netlify.com/build/edge-functions/declarations/#declare-edge-functions-inline
+# TODO(serhalp): remove this when @netlify/dev supports serve/preview.
+# @netlify/dev does not yet have explicit support for a "serve" mode, but this funky workaround is
+# sufficient for our purposes for now. NOTE: do not do this in real apps; this is only for testing.
+edge_functions = ".netlify/v1/edge-functions"
 
-# defaults to "netlify/edge-functions" (without the . prefix)
-edge_functions = ".netlify/edge-functions"
-
-# the dev server doesn't read the manifest.json in edge-functions so we need
-# to explicitly declare this here
 [[edge_functions]]
+function = "sveltekit-render"
 path = "/*"
-function = "render"
-excludedPath = ["/_app/immutable/*", "/_app/version.json", "/.netlify/*"]

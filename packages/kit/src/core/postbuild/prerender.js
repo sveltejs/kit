@@ -1,8 +1,10 @@
+/** @import { Adapter } from '@sveltejs/kit' */
 import { existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { installPolyfills } from '../../exports/node/polyfills.js';
-import { mkdirp, posixify, walk } from '../../utils/filesystem.js';
+import { resolveConfig } from 'vite';
+import { mkdirp, walk } from '../../utils/filesystem.js';
+import { posixify } from '../../utils/os.js';
 import { noop } from '../../utils/functions.js';
 import { decode_uri, is_root_relative, resolve } from '../../utils/url.js';
 import { escape_html } from '../../utils/escape.js';
@@ -33,10 +35,11 @@ const SPECIAL_HASHLINKS = new Set(['', 'top']);
  *   manifest_path: string;
  *   metadata: import('types').ServerMetadata;
  *   verbose: boolean;
- *   env: Record<string, string>
+ *   env: Record<string, string>;
+ *   root: string;
  * }} opts
  */
-async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
+async function prerender({ hash, out, manifest_path, metadata, verbose, env, root }) {
 	/** @type {import('@sveltejs/kit').SSRManifest} */
 	const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
 
@@ -101,12 +104,13 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 	const prerendered_routes = new Set();
 
 	/** @type {import('types').ValidatedKitConfig} */
-	const config = (await load_config()).kit;
+	const config = (await load_config({ cwd: root })).kit;
 
 	if (hash) {
 		const fallback = await generate_fallback({
 			manifest_path,
-			env
+			env,
+			root
 		});
 
 		const file = output_filename('/', true);
@@ -120,12 +124,16 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 		return { prerendered, prerender_map };
 	}
 
-	const emulator = await config.adapter?.emulate?.();
+	const vite_config = await resolveConfig({}, 'build');
+	/** @type {Adapter | undefined} */
+	const adapter = vite_config.plugins.find(
+		(plugin) => plugin.name === 'vite-plugin-sveltekit-adapter'
+	)?.api?.adapter;
+
+	const emulator = await adapter?.emulate?.();
 
 	/** @type {import('types').Logger} */
 	const log = logger({ verbose });
-
-	installPolyfills();
 
 	/** @type {Map<string, string>} */
 	const saved = new Map();

@@ -1,6 +1,6 @@
 import path from 'node:path';
 import { GENERATED_COMMENT } from '../../constants.js';
-import { posixify } from '../../utils/filesystem.js';
+import { posixify } from '../../utils/os.js';
 import { write_if_changed } from './utils.js';
 import { s } from '../../utils/misc.js';
 import { get_route_segments } from '../../utils/routing.js';

@@ -6,7 +6,7 @@ import { BROWSER, DEV } from 'esm-env';
  */
 export const SCHEME = /^[a-z][a-z\d+\-.]+:/i;
 
-const internal = new URL('sveltekit-internal://');
+const internal = new URL('a://');
 
 /**
  * @param {string} base

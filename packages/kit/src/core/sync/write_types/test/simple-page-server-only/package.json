@@ -1,6 +1,10 @@
 {
+	"name": "test-write-types-simple-page-server-only",
 	"private": true,
 	"type": "module",
+	"devDependencies": {
+		"typescript": "5.8.3"
+	},
 	"scripts": {
 		"testtypes": "tsc"
 	}

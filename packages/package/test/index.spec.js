@@ -1,7 +1,6 @@
 import fs from 'node:fs';
 import process from 'node:process';
 import { join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
 
 import prettier from 'prettier';
 import { test, expect } from 'vitest';
@@ -12,15 +11,12 @@ import { rimraf, walk } from '../src/filesystem.js';
 import { _create_validator } from '../src/validate.js';
 import { resolve_aliases } from '../src/utils.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = join(__filename, '..');
-
 /**
  * @param {string} path
  * @param {Partial<import('../src/types.js').Options>} [options]
  */
 async function test_make_package(path, options) {
-	const cwd = join(__dirname, 'fixtures', path);
+	const cwd = join(import.meta.dirname, 'fixtures', path);
 	const ewd = join(cwd, 'expected');
 	const output = join(cwd, 'dist');
 
@@ -85,9 +81,9 @@ async function format(file, content) {
 	});
 }
 
-for (const dir of fs.readdirSync(join(__dirname, 'errors'))) {
+for (const dir of fs.readdirSync(join(import.meta.dirname, 'errors'))) {
 	test(`package error [${dir}]`, async () => {
-		const cwd = join(__dirname, 'errors', dir);
+		const cwd = join(import.meta.dirname, 'errors', dir);
 		const output = join(cwd, 'dist');
 
 		const config = await load_config({ cwd });
@@ -177,7 +173,7 @@ test('create package with tsconfig specified', async () => {
 // chokidar doesn't fire events in github actions :shrug:
 if (!process.env.CI) {
 	test('watches for changes', async () => {
-		const cwd = join(__dirname, 'watch');
+		const cwd = join(import.meta.dirname, 'watch');
 
 		const config = await load_config({ cwd });
 
@@ -197,7 +193,7 @@ if (!process.env.CI) {
 
 		/** @param {string} file */
 		function read(file) {
-			return fs.readFileSync(join(__dirname, 'watch', file), 'utf-8');
+			return fs.readFileSync(join(import.meta.dirname, 'watch', file), 'utf-8');
 		}
 
 		/**
@@ -205,12 +201,12 @@ if (!process.env.CI) {
 		 * @param {string} data
 		 */
 		function write(file, data) {
-			return fs.writeFileSync(join(__dirname, 'watch', file), data);
+			return fs.writeFileSync(join(import.meta.dirname, 'watch', file), data);
 		}
 
 		/** @param {string} file */
 		function remove(file) {
-			const filepath = join(__dirname, 'watch', file);
+			const filepath = join(import.meta.dirname, 'watch', file);
 			if (fs.existsSync(filepath)) fs.unlinkSync(filepath);
 		}
 
@@ -346,7 +342,7 @@ test('validates package (all ok 2)', () => {
 });
 
 test('create package with preserved output', async () => {
-	const output = join(__dirname, 'fixtures', 'preserve-output', 'dist');
+	const output = join(import.meta.dirname, 'fixtures', 'preserve-output', 'dist');
 	rimraf(output);
 	fs.mkdirSync(join(output, 'assets'), { recursive: true });
 	fs.writeFileSync(join(output, 'assets', 'theme.css'), ':root { color: red }');
