@@ -162,7 +162,7 @@ test.describe('Link header preload', () => {
 	test.skip(({ javaScriptEnabled }) => javaScriptEnabled || !!process.env.DEV);
 
 	test('injects Link headers', async ({ request }) => {
-		const response = await request.get('/asset-preload');
+		const response = await request.get('/base-path/asset-preload');
 
 		const header = response.headers()['link'];
 
@@ -171,14 +171,14 @@ test.describe('Link header preload', () => {
 	});
 
 	test('does not inject Link headers on prerendered pages', async ({ request }) => {
-		const response = await request.get('/asset-preload/prerendered');
+		const response = await request.get('/base-path/asset-preload/prerendered');
 
 		const header = response.headers()['link'];
 		expect(header).toBeUndefined();
 	});
 
 	test('injects <link> tags on prerendered pages', async ({ request }) => {
-		const response = await request.get('/asset-preload/prerendered');
+		const response = await request.get('/base-path/asset-preload/prerendered');
 
 		const body = await response.text();
 
@@ -187,7 +187,7 @@ test.describe('Link header preload', () => {
 	});
 
 	test('does not inject <link> tags on non-prerendered pages', async ({ request }) => {
-		const response = await request.get('/asset-preload');
+		const response = await request.get('/base-path/asset-preload');
 
 		const body = await response.text();
 
