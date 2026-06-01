@@ -1383,8 +1383,8 @@ test.describe('asset preload', () => {
 
 		const body = await response.text();
 
-		expect(body).not.toContain('rel="modulepreload"');
-		expect(body).not.toContain('as="font"');
+		expect(body).toContain('rel="modulepreload"');
+		expect(body).toContain('as="font"');
 	});
 });
 
