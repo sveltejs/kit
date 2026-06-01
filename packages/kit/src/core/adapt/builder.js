@@ -1,3 +1,4 @@
+/** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 /** @import { Builder } from '@sveltejs/kit' */
 /** @import { ResolvedConfig } from 'vite' */
 /** @import { RouteDefinition, EnvVarConfig } from '@sveltejs/kit' */
@@ -18,7 +19,7 @@ import { write } from '../sync/utils.js';
 import { list_files } from '../utils.js';
 import { find_server_assets } from '../generate_manifest/find_server_assets.js';
 import { reserved } from '../env.js';
-import { validate } from '../../exports/internal/env.js';
+import { handle_issues, validate } from '../../exports/internal/env.js';
 
 const pipe = promisify(pipeline);
 const extensions = ['.html', '.js', '.mjs', '.json', '.css', '.svg', '.xml', '.wasm', '.txt'];
@@ -197,10 +198,15 @@ export function create_builder({
 			if (config.kit.experimental.explicitEnvironmentVariables) {
 				const variables = explicit_env_config ?? {};
 
+				/** @type {Record<string, StandardSchemaV1.Issue[]>} */
+				const issues = {};
+
 				for (const [name, config] of Object.entries(variables)) {
 					if (config.static || !config.public) continue;
-					values[name] = validate(variables, env.all[name], name);
+					values[name] = validate(variables, env.all[name], name, issues);
 				}
+
+				handle_issues(issues);
 			}
 
 			write(dest, `export const env=${devalue.uneval(values)}`);

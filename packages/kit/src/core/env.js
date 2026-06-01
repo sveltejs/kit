@@ -1,3 +1,4 @@
+/** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 /** @import { EnvVarConfig } from '@sveltejs/kit' */
 import path from 'node:path';
 import process from 'node:process';
@@ -7,7 +8,7 @@ import { GENERATED_COMMENT } from '../constants.js';
 import { dedent } from './sync/utils.js';
 import { runtime_base } from './utils.js';
 import { resolve_entry } from '../utils/filesystem.js';
-import { validate } from '../exports/internal/env.js';
+import { handle_issues, validate } from '../exports/internal/env.js';
 
 /**
  * @typedef {'public' | 'private'} EnvType
@@ -134,7 +135,7 @@ export function create_sveltekit_env(variables, env, entry) {
 	const imports = entry
 		? [
 				`import { variables } from ${JSON.stringify(entry)};`,
-				`import { validate } from '@sveltejs/kit/internal/env';`
+				`import { validate, handle_issues } from '@sveltejs/kit/internal/env';`
 			]
 		: [`const variables = {};`];
 	const declarations = [];
@@ -154,22 +155,29 @@ export function create_sveltekit_env(variables, env, entry) {
 		if (config.static) {
 			const value = JSON.stringify(env[name]);
 			declarations.push(
-				`export const ${lhs} = validate(variables, ${value}, ${JSON.stringify(name)});`
+				`export const ${lhs} = validate(variables, ${value}, ${JSON.stringify(name)}, issues);`
 			);
 		} else {
 			declarations.push(`export var ${name};`);
-			setters.push(`${lhs} = validate(variables, env.${name}, ${JSON.stringify(name)});`);
+			setters.push(`${lhs} = validate(variables, env.${name}, ${JSON.stringify(name)}, issues);`);
 		}
 	}
 
 	const blocks = [
 		GENERATED_COMMENT,
 		imports.join('\n'),
+		`const issues = {};`,
 		'export { variables }',
 		'export const explicit_public_env = {};',
 		'export const rendered_env = {};',
 		...declarations,
-		`export function set_env(env) {${setters.map((line) => `\n\t${line};`).join('')}\n}`
+		`handle_issues(issues);`,
+		dedent`
+			export function set_env(env) {
+				const issues = {};
+				${setters.join('\n')}
+				handle_issues(issues);
+			}`
 	];
 
 	const module = blocks.join('\n\n');
@@ -188,20 +196,21 @@ export function create_sveltekit_env_browser(variables, env, global) {
 		return '';
 	}
 
-	return dedent`
-		const env = ${global}.env;
+	/** @type {Record<string, StandardSchemaV1.Issue[]>} */
+	const issues = {};
 
-		${Object.entries(variables)
-			.map(([name, config]) => {
-				if (config.static) {
-					const value = validate(variables, env[name], name);
-					return `export const ${name} = ${devalue.uneval(value)};\n`;
-				}
+	const exports = Object.entries(variables).map(([name, config]) => {
+		if (config.static) {
+			const value = validate(variables, env[name], name, issues);
+			return `export const ${name} = ${devalue.uneval(value)};\n`;
+		}
 
-				return `export const ${name} = env.${name};\n`;
-			})
-			.join('')}
-	`;
+		return `export const ${name} = env.${name};\n`;
+	});
+
+	handle_issues(issues);
+
+	return `const env = ${global}.env;\n\n${exports.join('')}`;
 }
 
 /** @param {string} description */
