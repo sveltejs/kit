@@ -67,5 +67,5 @@ export function handle_issues(issues) {
 		message += `\n${name}\n${issues.map((issue) => `  - ${issue.message}`).join('\n')}\n`;
 	}
 
-	throw new Error(message);
+	throw stackless(message);
 }
