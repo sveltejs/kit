@@ -621,7 +621,7 @@ export interface KitConfig {
 	 */
 	output?: {
 		/**
-		 * Whether to use the [HTTP `Link` header](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Link) to preload assets instead of the [`<link>` HTML element]((https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/link)) for non-prerendered pages.
+		 * Whether to use the [HTTP `Link` header](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Link) to preload assets instead of the [`<link>` HTML element](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/link) for non-prerendered pages.
 		 *
 		 * Note that some web servers such as Nginx and Apache have a default header size limit which may be easily exceeded.
 		 * If you are using one of these web servers, you may want to leave this as `false` or configure a higher limit.
