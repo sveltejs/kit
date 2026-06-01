@@ -2353,7 +2353,7 @@ declare module '@sveltejs/kit' {
 		type HostProtocolSchemes = `${string}://` | '';
 		type HttpDelineator = '/' | '?' | '#' | '\\';
 		type PortScheme = `:${number}` | '' | ':*';
-		type SchemeSource = 
+		type SchemeSource =
 			| 'http:'
 			| 'https:'
 			| 'ws:'
