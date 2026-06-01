@@ -56,6 +56,8 @@ export const variables = defineEnvVars({
 
 Each value in the object passed to [`defineEnvVars`](@sveltejs-kit-hooks#defineEnvVars) is an [`EnvVarConfig`](@sveltejs-kit#EnvVarConfig) object that configures the environment variable.
 
+> [!NOTE] `defineEnvVars` returns its argument unaltered — it exists purely to help with type safety.
+
 ### Private variables
 
 By default, all variables are considered private. For example, you don't want to reveal your `API_KEY`:
