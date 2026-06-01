@@ -293,7 +293,7 @@ export async function render_response({
 		}
 	}
 
-	const head = new Head(rendered.head, !!state.prerendering);
+	const head = new Head(rendered.head);
 	let body = rendered.html;
 
 	/** @param {string} path */
@@ -331,7 +331,7 @@ export async function render_response({
 			// include them in disabled state so that Vite can detect them and doesn't try to add them
 			attributes.push('disabled', 'media="(max-width: 0)"');
 		} else {
-			if (resolve_opts.preload({ type: 'css', path })) {
+			if (options.link_header_preload && resolve_opts.preload({ type: 'css', path })) {
 				link_headers.add(`<${encodeURI(path)}>; rel="preload"; as="style"; nopush`);
 			}
 		}
@@ -345,11 +345,18 @@ export async function render_response({
 		if (resolve_opts.preload({ type: 'font', path })) {
 			const ext = dep.slice(dep.lastIndexOf('.') + 1);
 
-			head.add_link_tag(path, ['rel="preload"', 'as="font"', `type="font/${ext}"`, 'crossorigin']);
-
-			link_headers.add(
-				`<${encodeURI(path)}>; rel="preload"; as="font"; type="font/${ext}"; crossorigin; nopush`
-			);
+			if (options.link_header_preload) {
+				link_headers.add(
+					`<${encodeURI(path)}>; rel="preload"; as="font"; type="font/${ext}"; crossorigin; nopush`
+				);
+			} else {
+				head.add_link_tag(path, [
+					'rel="preload"',
+					'as="font"',
+					`type="font/${ext}"`,
+					'crossorigin'
+				]);
+			}
 		}
 	}
 
@@ -376,15 +383,21 @@ export async function render_response({
 				(path) => resolve_opts.preload({ type: 'js', path })
 			);
 
-			for (const path of included_modulepreloads) {
-				// see the kit.output.preloadStrategy option for details on why we have multiple options here
-				link_headers.add(`<${encodeURI(path)}>; rel="modulepreload"; nopush`);
+			/** @type {(path: string) => void} */
+			let add_preload;
 
-				if (options.preload_strategy !== 'modulepreload') {
-					head.add_script_preload(path);
-				} else {
-					head.add_link_tag(path, ['rel="modulepreload"']);
-				}
+			// see the kit.output.preloadStrategy option for details on why we have multiple options here
+			if (options.link_header_preload && !state.prerendering) {
+				add_preload = (path) =>
+					link_headers.add(`<${encodeURI(path)}>; rel="modulepreload"; nopush`);
+			} else if (options.preload_strategy !== 'modulepreload') {
+				add_preload = (path) => head.add_script_preload(path);
+			} else {
+				add_preload = (path) => head.add_link_tag(path, ['rel="modulepreload"']);
+			}
+
+			for (const path of included_modulepreloads) {
+				add_preload(path);
 			}
 		}
 
@@ -667,7 +680,7 @@ export async function render_response({
 			headers.set('content-security-policy-report-only', report_only_header);
 		}
 
-		if (link_headers.size) {
+		if (options.link_header_preload && link_headers.size) {
 			headers.set('link', Array.from(link_headers).join(', '));
 		}
 	}
@@ -734,7 +747,6 @@ export async function render_response({
 
 class Head {
 	#rendered;
-	#prerendering;
 	/** @type {string[]} */
 	#http_equiv = [];
 	/** @type {string[]} */
@@ -748,11 +760,9 @@ class Head {
 
 	/**
 	 * @param {string} rendered
-	 * @param {boolean} prerendering
 	 */
-	constructor(rendered, prerendering) {
+	constructor(rendered) {
 		this.#rendered = rendered;
-		this.#prerendering = prerendering;
 	}
 
 	build() {
@@ -796,13 +806,11 @@ class Head {
 	 * @param {string[]} attributes
 	 */
 	add_link_tag(href, attributes) {
-		if (!this.#prerendering) return;
 		this.#link_tags.push(`<link href="${href}" ${attributes.join(' ')}>`);
 	}
 
 	/** @param {string} tag */
 	add_http_equiv(tag) {
-		if (!this.#prerendering) return;
 		this.#http_equiv.push(tag);
 	}
 }

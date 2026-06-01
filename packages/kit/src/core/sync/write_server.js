@@ -47,6 +47,7 @@ export const options = {
 	hash_routing: ${s(config.kit.router.type === 'hash')},
 	hooks: null, // added lazily, via \`get_hooks\`
 	preload_strategy: ${s(config.kit.output.preloadStrategy)},
+	link_header_preload: ${s(config.kit.output.linkHeaderPreload)},
 	root,
 	service_worker: ${has_service_worker},
 	service_worker_options: ${config.kit.serviceWorker.register ? s(config.kit.serviceWorker.options) : 'null'},
