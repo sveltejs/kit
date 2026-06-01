@@ -138,30 +138,33 @@ export function create_sveltekit_env(variables, env, entry) {
 				`import { validate, handle_issues } from '@sveltejs/kit/internal/env';`
 			]
 		: [`const variables = {};`, `const handle_issues = () => {};`];
+
 	const declarations = [];
 	const setters = [];
 
+	/** @type {Record<string, StandardSchemaV1.Issue[]>} */
+	const issues = {};
+
 	for (const [name, config] of Object.entries(variables ?? {})) {
-		let lhs = name;
-
-		if (config.public) {
-			lhs += ` = explicit_public_env.${name}`;
-
-			if (!config.static) {
-				lhs += ` = rendered_env.${name}`;
-			}
-		}
-
 		if (config.static) {
-			const value = JSON.stringify(env[name]);
-			declarations.push(
-				`export const ${lhs} = validate(variables, ${value}, ${JSON.stringify(name)}, issues);`
-			);
+			const value = validate(variables ?? {}, env[name], name, issues);
+			declarations.push(`export const ${name} = ${devalue.uneval(value)};`);
+
+			if (config.public) {
+				declarations.push(`explicit_public_env.${name} = ${name};`);
+			}
 		} else {
 			declarations.push(`export var ${name};`);
-			setters.push(`${lhs} = validate(variables, env.${name}, ${JSON.stringify(name)}, issues);`);
+			setters.push(`${name} = validate(variables, env.${name}, ${JSON.stringify(name)}, issues);`);
+
+			if (config.public) {
+				setters.push(`explicit_public_env.${name} = ${name};`);
+				setters.push(`rendered_env.${name} = ${name};`);
+			}
 		}
 	}
+
+	handle_issues(issues);
 
 	const blocks = [
 		GENERATED_COMMENT,
