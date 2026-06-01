@@ -466,7 +466,6 @@ async function kit({ svelte_config }) {
 	/** @type {Plugin} */
 	const plugin_virtual_modules = {
 		name: 'vite-plugin-sveltekit-virtual-modules',
-		enforce: 'pre',
 
 		async configResolved(config) {
 			explicit_env_entry = resolve_explicit_env_entry(kit);
@@ -1485,8 +1484,8 @@ async function kit({ svelte_config }) {
 	return [
 		plugin_setup,
 		kit.experimental.remoteFunctions && plugin_remote,
-		plugin_guard,
 		plugin_virtual_modules,
+		plugin_guard,
 		plugin_compile
 	].filter((p) => !!p);
 }
