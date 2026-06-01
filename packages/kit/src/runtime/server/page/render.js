@@ -345,7 +345,7 @@ export async function render_response({
 		if (resolve_opts.preload({ type: 'font', path })) {
 			const ext = dep.slice(dep.lastIndexOf('.') + 1);
 
-			if (options.link_header_preload) {
+			if (options.link_header_preload && !state.prerendering) {
 				link_headers.add(
 					`<${encodeURI(path)}>; rel="preload"; as="font"; type="font/${ext}"; crossorigin; nopush`
 				);
