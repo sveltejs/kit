@@ -74,7 +74,7 @@ export namespace Csp {
 		| 'http:'
 		| 'https:'
 		| 'ws:'
-		| 'wss'
+		| 'wss:'
 		| 'data:'
 		| 'mediastream:'
 		| 'blob:'

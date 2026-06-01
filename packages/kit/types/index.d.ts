@@ -2357,7 +2357,7 @@ declare module '@sveltejs/kit' {
 			| 'http:'
 			| 'https:'
 			| 'ws:'
-			| 'wss'
+			| 'wss:'
 			| 'data:'
 			| 'mediastream:'
 			| 'blob:'
