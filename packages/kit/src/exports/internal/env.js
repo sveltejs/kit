@@ -24,7 +24,7 @@ const ASYNC_VALIDATOR = {
  */
 export function validate(variables, value, name, issues) {
 	const config = variables[name] ?? {};
-	const validator = config.validate;
+	const validator = config.schema;
 
 	if (!validator) {
 		if (!value) issues[name] = [MISSING];

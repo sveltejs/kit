@@ -10,6 +10,6 @@ export const variables = {
 		static: true
 	},
 	PRIVATE_VALIDATED_DEFAULT_ENV: {
-		validate: v.optional(v.picklist(['foo', 'bar']), 'foo')
+		schema: v.optional(v.picklist(['foo', 'bar']), 'foo')
 	}
 };

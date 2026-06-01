@@ -289,8 +289,8 @@ export function create_explicit_env_types(variables, relative, type) {
 		.filter(([_, config]) => !!config.public === (type === 'public'))
 		.map(([name, config]) => {
 			const comment = config.description ? `${create_jsdoc(config.description)}\n` : '';
-			const type = config.validate
-				? `import('@sveltejs/kit/internal/types').StandardSchemaV1.InferOutput<typeof import('${relative}').variables.${name}.validate>`
+			const type = config.schema
+				? `import('@sveltejs/kit/internal/types').StandardSchemaV1.InferOutput<typeof import('${relative}').variables.${name}.schema>`
 				: 'string';
 			return `${comment}export const ${name}: ${type};`;
 		});

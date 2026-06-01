@@ -2347,7 +2347,7 @@ export interface EnvVarConfig<T> {
 	 *
 	 * If omitted, the value must be a non-empty string.
 	 */
-	validate?: StandardSchemaV1<string | undefined, T>;
+	schema?: StandardSchemaV1<string | undefined, T>;
 	/**
 	 * A description of the variable that will be used for inline documentation on hover.
 	 */
