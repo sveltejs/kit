@@ -1,14 +1,16 @@
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 /** @import { EnvVarConfig } from '@sveltejs/kit' */
+/** @import { ValidatedKitConfig } from 'types' */
 import path from 'node:path';
 import process from 'node:process';
 import * as vite from 'vite';
 import * as devalue from 'devalue';
 import { GENERATED_COMMENT } from '../constants.js';
 import { dedent } from './sync/utils.js';
-import { runtime_base } from './utils.js';
+import { runtime_base, runtime_directory } from './utils.js';
 import { resolve_entry } from '../utils/filesystem.js';
 import { handle_issues, validate } from '../exports/internal/env.js';
+import { get_config_aliases, stackless } from '../exports/vite/utils.js';
 
 /**
  * @typedef {'public' | 'private'} EnvType
@@ -44,33 +46,61 @@ export function resolve_explicit_env_entry(config) {
 }
 
 /**
+ * @param {ValidatedKitConfig} kit
  * @param {string | null} file
  * @param {string} mode
  * @returns {Promise<Record<string, EnvVarConfig<any>> | null>}
  */
-export async function load_explicit_env(file, mode) {
+export async function load_explicit_env(kit, file, mode) {
 	if (!file) return null;
 
 	const server = await vite.createServer({
 		configFile: false,
 		logLevel: 'silent',
-		mode
-		// TODO do we need to provide certain aliases here?
+		mode,
+		define: {
+			__SVELTEKIT_APP_VERSION__: JSON.stringify(kit.version.name) // needed by $app/env
+		},
+		resolve: {
+			alias: [
+				{ find: '$app/env', replacement: `${runtime_directory}/app/env` },
+				...get_config_aliases(kit)
+			]
+		}
 	});
 
-	const { variables } = await server.ssrLoadModule(file);
+	/** @type {Record<string, EnvVarConfig<any>>} */
+	let variables;
 
-	await server.close();
+	try {
+		({ variables } = await server.ssrLoadModule(file));
 
-	if (!variables || typeof variables !== 'object') {
-		throw new Error(`${file} must export a variables object`);
-	}
-
-	// validate
-	for (const name of Object.keys(variables)) {
-		if (!valid_identifier.test(name) || reserved.has(name)) {
-			throw new Error(`Invalid environment variable name ${JSON.stringify(name)}`);
+		if (!variables || typeof variables !== 'object') {
+			throw new Error(`${file} must export a variables object`);
 		}
+
+		// validate
+		for (const name of Object.keys(variables)) {
+			if (!valid_identifier.test(name) || reserved.has(name)) {
+				throw new Error(`Invalid environment variable name ${JSON.stringify(name)}`);
+			}
+		}
+	} catch (e) {
+		const error = /** @type {any} */ (e || {});
+
+		if (
+			error.code === 'ERR_MODULE_NOT_FOUND' &&
+			error.message?.includes(`Cannot find module '$app`)
+		) {
+			throw new Error(
+				`Cannot import \`$app/*\` modules other than \`$app/env\` inside \`src/env\``,
+				{ cause: e }
+			);
+		}
+
+		throw error;
+	} finally {
+		await server.close();
 	}
 
 	return variables;

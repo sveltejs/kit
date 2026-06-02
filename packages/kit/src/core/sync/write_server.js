@@ -30,7 +30,7 @@ const server_template = ({
 	error_page
 }) => `
 import root from '../root.${isSvelte5Plus() ? 'js' : 'svelte'}';
-import { set_building, set_prerendering } from '__sveltekit/environment';
+import { set_building, set_prerendering } from '$app/env/internal';
 import { set_assets } from '$app/paths/internal/server';
 import { set_manifest, set_read_implementation } from '__sveltekit/server';
 import { set_env } from '__sveltekit/env';

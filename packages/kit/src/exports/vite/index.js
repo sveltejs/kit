@@ -47,7 +47,6 @@ import {
 	service_worker,
 	sveltekit_env,
 	sveltekit_env_browser,
-	sveltekit_environment,
 	sveltekit_server
 } from './module_ids.js';
 import { import_peer } from '../../utils/import.js';
@@ -333,7 +332,7 @@ async function kit({ svelte_config }) {
 							// because they for example use esbuild.build with `platform: 'browser'`
 							'esm-env',
 							// This forces `$app/*` modules to be bundled, since they depend on
-							// virtual modules like `__sveltekit/environment` (this isn't a valid bare
+							// virtual modules like `__sveltekit/env` (this isn't a valid bare
 							// import, but it works with vite-node's externalization logic, which
 							// uses basic concatenation)
 							'@sveltejs/kit/src/runtime'
@@ -377,6 +376,7 @@ async function kit({ svelte_config }) {
 
 				const define = {
 					__SVELTEKIT_APP_DIR__: s(kit.appDir),
+					__SVELTEKIT_APP_VERSION__: s(kit.version.name),
 					__SVELTEKIT_EMBEDDED__: s(kit.embedded),
 					__SVELTEKIT_FORK_PRELOADS__: s(kit.experimental.forkPreloads),
 					__SVELTEKIT_PATHS_ASSETS__: s(kit.paths.assets),
@@ -587,24 +587,6 @@ async function kit({ svelte_config }) {
 
 				case sveltekit_env_browser:
 					return create_sveltekit_env_browser(explicit_env_config, env.all, global);
-
-				case sveltekit_environment: {
-					const { version } = svelte_config.kit;
-
-					return dedent`
-						export const version = ${s(version.name)};
-						export let building = false;
-						export let prerendering = false;
-
-						export function set_building() {
-							building = true;
-						}
-
-						export function set_prerendering() {
-							prerendering = true;
-						}
-					`;
-				}
 
 				case sveltekit_server: {
 					return dedent`

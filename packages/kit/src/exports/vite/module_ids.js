@@ -11,7 +11,6 @@ export const sveltekit_env_browser = '\0virtual:__sveltekit/env/browser';
 
 export const service_worker = '\0virtual:service-worker';
 
-export const sveltekit_environment = '\0virtual:__sveltekit/environment';
 export const sveltekit_server = '\0virtual:__sveltekit/server';
 
 export const app_server = posixify(

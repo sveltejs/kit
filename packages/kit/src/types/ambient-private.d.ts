@@ -1,12 +1,3 @@
-/** Internal version of $app/environment */
-declare module '__sveltekit/environment' {
-	export const building: boolean;
-	export const prerendering: boolean;
-	export const version: string;
-	export function set_building(): void;
-	export function set_prerendering(): void;
-}
-
 /** Internal version of $app/paths */
 declare module '__sveltekit/paths' {
 	export let base: '' | `/${string}`;
