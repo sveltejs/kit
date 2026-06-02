@@ -10,7 +10,7 @@ import { dedent } from './sync/utils.js';
 import { runtime_base, runtime_directory } from './utils.js';
 import { resolve_entry } from '../utils/filesystem.js';
 import { handle_issues, validate } from '../exports/internal/env.js';
-import { get_config_aliases, stackless } from '../exports/vite/utils.js';
+import { get_config_aliases } from '../exports/vite/utils.js';
 
 /**
  * @typedef {'public' | 'private'} EnvType
