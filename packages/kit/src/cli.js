@@ -81,12 +81,42 @@ if (command === 'sync') {
 		process.exit(0);
 	}
 
+	// create placeholder .svelte-kit/tsconfig.json if necessary, to squelch warnings.
+	// this isn't bulletproof — if someone has some esoteric config, it will continue
+	// to harmlessly warn — but we handle the 90% case and clean up after ourselves
+	const sveltekit_dir = '.svelte-kit';
+	const base_tsconfig = `${sveltekit_dir}/tsconfig.json`;
+	const base_tsconfig_json = '{}';
+
+	const sveltekit_dir_exists = fs.existsSync(sveltekit_dir);
+	const base_tsconfig_exists = fs.existsSync(base_tsconfig);
+
+	if (!base_tsconfig_exists) {
+		try {
+			fs.mkdirSync('.svelte-kit');
+		} catch {
+			// ignore
+		}
+
+		fs.writeFileSync(base_tsconfig, base_tsconfig_json);
+	}
+
 	try {
 		const config = await load_config();
 		const sync = await import('./core/sync/sync.js');
 		sync.all_types(config, values.mode);
 	} catch (error) {
 		handle_error(error);
+	} finally {
+		// if we errored, or accidentally created the wrong file
+		// (could happen!) then clean up after ourselves
+		if (fs.readFileSync(base_tsconfig, 'utf-8') === base_tsconfig_json) {
+			fs.unlinkSync(base_tsconfig);
+		}
+
+		if (!sveltekit_dir_exists && fs.readdirSync(sveltekit_dir).length === 0) {
+			fs.rmSync(sveltekit_dir, { recursive: true });
+		}
 	}
 } else {
 	console.error(colors.bold().red(`> Unknown command: ${command}`));
