@@ -1,5 +1,4 @@
-/** @import { SvelteConfig } from '@sveltejs/vite-plugin-svelte' */
-/** @import { Config, KitConfig } from '@sveltejs/kit' */
+/** @import { Config } from '@sveltejs/kit' */
 /** @import { ValidatedConfig } from 'types' */
 /** @import { ResolvedConfig } from 'vite' */
 import fs from 'node:fs';
