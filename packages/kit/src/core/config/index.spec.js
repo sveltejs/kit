@@ -80,6 +80,7 @@ const get_defaults = (prefix = '') => ({
 		experimental: {
 			tracing: { server: false },
 			instrumentation: { server: false },
+			explicitEnvironmentVariables: false,
 			remoteFunctions: false,
 			forkPreloads: false,
 			handleRenderingErrors: false
@@ -108,6 +109,7 @@ const get_defaults = (prefix = '') => ({
 			resolution: 'client'
 		},
 		serviceWorker: {
+			options: undefined,
 			register: true
 		},
 		typescript: {},

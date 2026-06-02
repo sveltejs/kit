@@ -85,7 +85,11 @@ export async function build_service_worker(
 			}
 
 			if (id === env_static_public) {
-				return create_static_module('$env/static/public', env.public);
+				return create_static_module(
+					'$env/static/public',
+					env.public,
+					kit.experimental.explicitEnvironmentVariables
+				);
 			}
 
 			const normalized_cwd = vite.normalizePath(process.cwd());
