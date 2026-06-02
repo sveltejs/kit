@@ -921,15 +921,6 @@ export interface KitConfig {
 	};
 }
 
-export interface KitViteConfig {
-	/**
-	 * Your [adapter](https://svelte.dev/docs/kit/adapters) is run when executing `vite build`. It determines how the output is converted for different platforms.
-	 * @since 3.0.0
-	 * @default undefined
-	 */
-	adapter?: Adapter;
-}
-
 /**
  * The [`handle`](https://svelte.dev/docs/kit/hooks#Server-hooks-handle) hook runs every time the SvelteKit server receives a [request](https://svelte.dev/docs/kit/web-standards#Fetch-APIs-Request) and
  * determines the [response](https://svelte.dev/docs/kit/web-standards#Fetch-APIs-Response).
