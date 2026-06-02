@@ -32,7 +32,6 @@ export default defineConfig({
 			'$app/paths/internal/client': mock('app-paths-internal-client'),
 			'$app/paths/internal/server': mock('app-paths-internal-server'),
 			'$app/paths': mock('app-paths'),
-			'__sveltekit/environment': mock('sveltekit-environment'),
 			'__sveltekit/paths': mock('sveltekit-paths')
 		},
 		projects: [
