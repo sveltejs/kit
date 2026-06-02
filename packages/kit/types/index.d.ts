@@ -3043,7 +3043,7 @@ declare module '@sveltejs/kit/vite' {
 	 * Returns the SvelteKit Vite plugins.
 	 * Since version 2.62.0 you can also pass the Svelte config inline. The svelte.config.js will be ignored in this case.
 	 * */
-	export function sveltekit(inline_config?: KitConfig & SvelteConfig): Promise<Plugin[]>;
+	export function sveltekit(inline_config?: KitConfig & Omit<SvelteConfig, "onwarn">): Promise<Plugin[]>;
 
 	export {};
 }

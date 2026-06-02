@@ -63,36 +63,41 @@ export function load_error_page(config) {
 }
 
 /**
- * Loads and validates Svelte config file
- * @param {{ cwd?: string; inline_config?: KitConfig & Omit<SvelteConfig, 'onwarn'>, try_vite?: boolean }} options
+ * Loads and validates Svelte config file. Tries Vite config first, falls back to svelte.config.js
+ * @param {{ cwd?: string }} options
  * @returns {Promise<ValidatedConfig>}
  */
-export async function load_config({ cwd = process.cwd(), inline_config, try_vite = true } = {}) {
-	if (inline_config !== undefined) {
-		const { extensions, compilerOptions, vitePlugin, preprocess, ...kit } = inline_config;
-		return process_config({ extensions, compilerOptions, vitePlugin, preprocess, kit }, { cwd });
-	}
-
-	let vite_failed = false;
-	if (try_vite) {
-		try {
-			const vite_config = await load_config_from_vite({ cwd });
-			if (vite_config) {
-				return vite_config;
-			}
-		} catch {
-			// TODO SvelteKit 3: pass on the error instead
-			vite_failed = true;
+export async function load_config({ cwd = process.cwd() } = {}) {
+	try {
+		const vite_config = await load_config_from_vite({ cwd });
+		if (vite_config) {
+			return vite_config;
 		}
+	} catch (e) {
+		// TODO SvelteKit 3: fail completely instead
+		console.error(
+			'Loading Svelte config from Vite config failed:',
+			e,
+			'\n\nFalling back to loading svelte.config.js'
+		);
 	}
 
+	return load_svelte_config(cwd);
+}
+
+/**
+ * Loads and validates Svelte config file
+ * @param {string} [cwd]
+ * @returns {Promise<ValidatedConfig>}
+ */
+export async function load_svelte_config(cwd = process.cwd()) {
 	const config_files = ['js', 'ts']
 		.map((ext) => path.join(cwd, `svelte.config.${ext}`))
 		.filter((f) => fs.existsSync(f));
 
 	if (config_files.length === 0) {
 		console.log(
-			`No Svelte config file found in ${cwd}${vite_failed ? ' and loading Vite config failed' : ''} - using SvelteKit's default configuration without an adapter.`
+			`No Svelte config file found in ${cwd} - using SvelteKit's default configuration without an adapter.`
 		);
 		return process_config({}, { cwd });
 	}
@@ -143,7 +148,10 @@ async function load_config_from_vite({ cwd = process.cwd(), mode } = {}) {
  * @param {Config} config
  * @returns {ValidatedConfig}
  */
-function process_config(config, { cwd = process.cwd(), config_file = 'svelte.config.js' } = {}) {
+export function process_config(
+	config,
+	{ cwd = process.cwd(), config_file = 'svelte.config.js' } = {}
+) {
 	try {
 		const validated = validate_config(config, cwd);
 

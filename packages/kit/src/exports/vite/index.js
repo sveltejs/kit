@@ -2,6 +2,7 @@
 /** @import { PreprocessorGroup } from 'svelte/compiler' */
 /** @import { KitConfig } from '@sveltejs/kit' */
 /** @import { ConfigEnv, Manifest, Plugin, ResolvedConfig, UserConfig, ViteDevServer } from 'vite' */
+/** @import { ValidatedConfig } from 'types' */
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
@@ -13,7 +14,7 @@ import { create_static_module, create_dynamic_module } from '../../core/env.js';
 import * as sync from '../../core/sync/sync.js';
 import { create_assets } from '../../core/sync/create_manifest_data/index.js';
 import { runtime_directory, logger } from '../../core/utils.js';
-import { load_config } from '../../core/config/index.js';
+import { load_svelte_config, process_config } from '../../core/config/index.js';
 import { generate_manifest } from '../../core/generate_manifest/index.js';
 import { build_server_nodes } from './build/build_server.js';
 import { build_service_worker } from './build/build_service_worker.js';
@@ -135,14 +136,22 @@ const warning_preprocessor = {
 /**
  * Returns the SvelteKit Vite plugins.
  * Since version 2.62.0 you can also pass the Svelte config inline. The svelte.config.js will be ignored in this case.
- * @param {KitConfig & SvelteConfig} [inline_config]
+ * @param {KitConfig & Omit<SvelteConfig, 'onwarn'>} [inline_config]
  * @returns {Promise<Plugin[]>}
  */
 export async function sveltekit(inline_config) {
-	const svelte_config = await load_config({
-		inline_config,
-		try_vite: false // prevent fallback to loading Vite config, causing an infinite loop
-	});
+	/** @type {ValidatedConfig} */
+	let svelte_config;
+
+	if (inline_config !== undefined) {
+		const { extensions, compilerOptions, vitePlugin, preprocess, ...kit } = inline_config;
+		svelte_config = process_config(
+			{ extensions, compilerOptions, vitePlugin, preprocess, kit },
+			{ cwd, config_file: 'SvelteKit inline config via vite.config' }
+		);
+	} else {
+		svelte_config = await load_svelte_config();
+	}
 
 	/** @type {Options['preprocess']} */
 	let preprocess = svelte_config.preprocess;
