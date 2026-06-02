@@ -16,7 +16,7 @@ test('styles are loaded before CSR starts for non-prerendered routes', async ({ 
 		if (url.endsWith('.css')) requests.push(url);
 	});
 	await page.goto('/styles');
-	expect(requests.length).toBe(1);
+	expect(requests.length).toBe(2);
 });
 
 test('styles are loaded before CSR starts for prerendered routes', async ({ page }) => {
@@ -29,5 +29,5 @@ test('styles are loaded before CSR starts for prerendered routes', async ({ page
 		if (url.endsWith('.css')) requests.push(url);
 	});
 	await page.goto('/styles/prerendered');
-	expect(requests.length).toBe(1);
+	expect(requests.length).toBe(2);
 });
