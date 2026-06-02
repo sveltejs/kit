@@ -12,6 +12,7 @@
 		"allowSyntheticDefaultImports": true,
 		"paths": {
 			"@sveltejs/kit": ["./src/exports/public.d.ts"],
+			"@sveltejs/kit/vite": ["./src/exports/vite/index.js"],
 			"@sveltejs/kit/node": ["./src/exports/node/index.js"],
 			"@sveltejs/kit/node/polyfills": ["./src/exports/node/polyfills.js"],
 			"@sveltejs/kit/internal": ["./src/exports/internal/index.js"],
@@ -28,5 +29,5 @@
 		"types": ["node"]
 	},
 	"include": ["*.js", "scripts/**/*", "src/**/*"],
-	"exclude": ["./**/write_types/test/**", "./src/core/config/fixtures/**"]
+	"exclude": ["./**/write_types/test/**"]
 }
