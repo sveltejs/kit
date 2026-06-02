@@ -106,7 +106,10 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 	if (hash) {
 		const fallback = await generate_fallback({
 			manifest_path,
-			env
+			env,
+			out_dir: config.outDir,
+			origin: config.prerender.origin,
+			assets: config.files.assets
 		});
 
 		const file = output_filename('/', true);

@@ -173,7 +173,10 @@ export function create_builder({
 
 			const fallback = await generate_fallback({
 				manifest_path,
-				env: env.all
+				env: env.all,
+				out_dir: config.kit.outDir,
+				origin: config.kit.prerender.origin,
+				assets: config.kit.files.assets
 			});
 
 			if (existsSync(dest)) {
@@ -190,6 +193,8 @@ export function create_builder({
 		},
 
 		generateEnvModule() {
+			if (!build_data.client?.uses_env_dynamic_public) return;
+
 			const dest = `${config.kit.outDir}/output/prerendered/dependencies/${config.kit.appDir}/env.js`;
 			const env = get_env(config.kit.env, vite_config.mode);
 

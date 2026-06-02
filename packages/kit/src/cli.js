@@ -74,14 +74,6 @@ if (!command) {
 }
 
 if (command === 'sync') {
-	const config_files = ['js', 'ts']
-		.map((ext) => `svelte.config.${ext}`)
-		.filter((f) => fs.existsSync(f));
-	if (config_files.length === 0) {
-		console.warn(`Missing Svelte config file in ${process.cwd()} — skipping`);
-		process.exit(0);
-	}
-
 	try {
 		const config = await load_config();
 		const sync = await import('./core/sync/sync.js');
