@@ -119,7 +119,9 @@ export function create_builder({
 			const fallback = await generate_fallback({
 				manifest_path,
 				env: { ...env.private, ...env.public },
-				root: vite_config.root
+				out_dir: config.kit.outDir,
+				origin: config.kit.prerender.origin,
+				assets: config.kit.files.assets
 			});
 
 			if (existsSync(dest)) {

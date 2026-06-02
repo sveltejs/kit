@@ -2896,6 +2896,24 @@ declare module '@sveltejs/kit' {
 	type PageOptions = Partial<Record<ValidPageOption, any>>;
 	const valid_page_options_array: readonly ["ssr", "prerender", "csr", "trailingSlash", "config", "entries", "load"];
 	export const VERSION: string;
+<<<<<<< HEAD
+=======
+	class HttpError_1 {
+		
+		constructor(status: number, body: {
+			message: string;
+		} extends App.Error ? (App.Error | string | undefined) : App.Error);
+		status: number;
+		body: App.Error;
+		toString(): string;
+	}
+	class Redirect_1 {
+		
+		constructor(status: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308, location: string);
+		status: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308;
+		location: string;
+	}
+>>>>>>> main
 
 	export {};
 }
@@ -2995,12 +3013,22 @@ declare module '@sveltejs/kit/node' {
 }
 
 declare module '@sveltejs/kit/vite' {
+<<<<<<< HEAD
 	import type { KitViteConfig } from '@sveltejs/kit';
+=======
+	import type { KitConfig } from '@sveltejs/kit';
+	import type { SvelteConfig } from '@sveltejs/vite-plugin-svelte';
+>>>>>>> main
 	import type { Plugin } from 'vite';
 	/**
 	 * Returns the SvelteKit Vite plugins.
+	 * Since version 2.62.0 you can pass [configuration](configuration) directly, in which case `svelte.config.js` is ignored.
 	 * */
+<<<<<<< HEAD
 	export function sveltekit(config?: KitViteConfig): Promise<Plugin[]>;
+=======
+	export function sveltekit(config?: KitConfig & Omit<SvelteConfig, "onwarn">): Promise<Plugin[]>;
+>>>>>>> main
 
 	export {};
 }

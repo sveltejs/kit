@@ -7,7 +7,21 @@ const config = {
 		minify: false
 	},
 	clearScreen: false,
-	plugins: [sveltekit()],
+	plugins: [
+		sveltekit({
+			compilerOptions: {
+				experimental: {
+					async: true
+				}
+			},
+
+			experimental: {
+				remoteFunctions: true,
+				handleRenderingErrors: true,
+				forkPreloads: true
+			}
+		})
+	],
 	server: {
 		fs: {
 			allow: [path.resolve('../../../src')]

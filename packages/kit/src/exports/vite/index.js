@@ -1,5 +1,4 @@
-/** @import { Adapter, KitViteConfig } from '@sveltejs/kit' */
-/** @import { Options } from '@sveltejs/vite-plugin-svelte' */
+/** @import { Options, SvelteConfig } from '@sveltejs/vite-plugin-svelte' */
 /** @import { PreprocessorGroup } from 'svelte/compiler' */
 /** @import { ConfigEnv, Plugin, ResolvedConfig, UserConfig, ViteDevServer } from 'vite' */
 import fs from 'node:fs';
@@ -47,9 +46,8 @@ import {
 import { import_peer } from '../../utils/import.js';
 import { compact } from '../../utils/array.js';
 import { should_ignore, has_children } from './static_analysis/utils.js';
-import { load_config } from '../../core/config/index.js';
+import { load_config, load_svelte_config, process_config } from '../../core/config/index.js';
 import { treeshake_prerendered_remotes } from './build/remote.js';
-import options from './options.js';
 
 const cwd = process.cwd();
 
@@ -143,16 +141,31 @@ let vite_plugin_svelte;
 
 /**
  * Returns the SvelteKit Vite plugins.
- * @param {KitViteConfig} [config]
+ * Since version 2.62.0 you can pass [configuration](configuration) directly, in which case `svelte.config.js` is ignored.
+ * @param {import('@sveltejs/kit').KitConfig & Omit<SvelteConfig, 'onwarn'>} [config]
  * @returns {Promise<Plugin[]>}
  */
 export async function sveltekit(config) {
-	/** @type {KitViteConfig} */
-	const validated = options(config, 'options');
+	/** @type {import('types').ValidatedConfig} */
+	let svelte_config;
 
-	// the config options will be set only after the Vite `config` hook runs
-	// because we need to find `svelte.config.js` relative to `vite.config.root`
-	const svelte_config = /** @type {import('types').ValidatedConfig} */ ({});
+	if (config !== undefined) {
+		const { extensions, compilerOptions, vitePlugin, preprocess, ...kit } = config;
+		svelte_config = process_config(
+			{ extensions, compilerOptions, vitePlugin, preprocess, kit },
+			{ cwd, source: 'SvelteKit options from Vite config' }
+		);
+
+		const config_file = ['svelte.config.js', 'svelte.config.ts'].find((file) =>
+			fs.existsSync(file)
+		);
+
+		if (config_file) {
+			console.warn(`${config_file} is ignored when options are passed via your Vite config`);
+		}
+	} else {
+		svelte_config = await load_svelte_config();
+	}
 
 	/** @type {Options} */
 	const vite_plugin_svelte_options = {
@@ -166,7 +179,10 @@ export async function sveltekit(config) {
 	return [
 		plugin_svelte_config({ vite_plugin_svelte_options, svelte_config }),
 		...vite_plugin_svelte.svelte(vite_plugin_svelte_options),
-		...kit({ svelte_config, adapter: validated.adapter })
+		...kit({
+			svelte_config,
+			adapter: svelte_config.adapter
+		})
 	];
 }
 
@@ -191,13 +207,11 @@ function plugin_svelte_config({ vite_plugin_svelte_options, svelte_config }) {
 		enforce: 'pre',
 		config: {
 			order: 'pre',
-			async handler(config) {
+			handler(config) {
 				root = resolve_root(config);
 
-				const user_svelte_config = await load_config({ cwd: root });
-
 				/** @type {import('@sveltejs/vite-plugin-svelte').Options['preprocess']} */
-				let preprocess = user_svelte_config.preprocess;
+				let preprocess = svelte_config.preprocess;
 				if (Array.isArray(preprocess)) {
 					preprocess = [...preprocess, warning_preprocessor];
 				} else if (preprocess) {
@@ -206,13 +220,11 @@ function plugin_svelte_config({ vite_plugin_svelte_options, svelte_config }) {
 					preprocess = warning_preprocessor;
 				}
 
-				vite_plugin_svelte_options.extensions = user_svelte_config.extensions;
+				vite_plugin_svelte_options.extensions = svelte_config.extensions;
 				vite_plugin_svelte_options.preprocess = preprocess;
-				vite_plugin_svelte_options.onwarn = user_svelte_config.onwarn;
-				vite_plugin_svelte_options.compilerOptions = { ...user_svelte_config.compilerOptions };
-				Object.assign(vite_plugin_svelte_options, user_svelte_config.vitePlugin);
-
-				Object.assign(svelte_config, user_svelte_config);
+				vite_plugin_svelte_options.onwarn = svelte_config.onwarn;
+				vite_plugin_svelte_options.compilerOptions = { ...svelte_config.compilerOptions };
+				Object.assign(vite_plugin_svelte_options, svelte_config.vitePlugin);
 			}
 		},
 		// TODO: do we even need to set `root` based on the final Vite config?
@@ -237,7 +249,7 @@ function plugin_svelte_config({ vite_plugin_svelte_options, svelte_config }) {
  *
  * @param {object} opts
  * @param {import('types').ValidatedConfig} opts.svelte_config options are only resolved after the Vite `config` hook runs
- * @param {Adapter | undefined} opts.adapter
+ * @param {import('@sveltejs/kit').Adapter | undefined} opts.adapter
  * @return {import('vite').Plugin[]}
  */
 function kit({ svelte_config, adapter }) {
@@ -299,6 +311,9 @@ function kit({ svelte_config, adapter }) {
 	/** @type {Plugin} */
 	const plugin_setup = {
 		name: 'vite-plugin-sveltekit-setup',
+		api: {
+			options: svelte_config
+		},
 
 		applyToEnvironment(environment) {
 			return environment.name !== 'serviceWorker';

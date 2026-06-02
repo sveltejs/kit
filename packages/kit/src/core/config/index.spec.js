@@ -394,6 +394,20 @@ test('load .js config when both .js and .ts configs are present', async () => {
 	expect(config).toEqual(defaults);
 });
 
+test('load config from Vite plugin API', async () => {
+	const cwd = join(__dirname, 'fixtures/vite-inline');
+	const original_cwd = process.cwd();
+
+	process.chdir(cwd);
+
+	try {
+		const config = await load_config({ cwd });
+		expect(config?.kit.paths.base).toBe('/from-vite');
+	} finally {
+		process.chdir(original_cwd);
+	}
+});
+
 test('errors on loading config with incorrect default export', async () => {
 	let message = null;
 

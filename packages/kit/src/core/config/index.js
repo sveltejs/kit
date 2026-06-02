@@ -1,15 +1,19 @@
+/** @import { Config } from '@sveltejs/kit' */
+/** @import { ValidatedConfig } from 'types' */
+/** @import { ResolvedConfig } from 'vite' */
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import * as url from 'node:url';
 import options from './options.js';
 import { resolve_entry } from '../../utils/filesystem.js';
+import { import_peer } from '../../utils/import.js';
 
 /**
  * Loads the template (src/app.html by default) and validates that it has the
  * required content.
  * @param {string} cwd
- * @param {import('types').ValidatedConfig} config
+ * @param {ValidatedConfig} config
  */
 export function load_template(cwd, { kit }) {
 	const { env, files } = kit;
@@ -43,7 +47,7 @@ export function load_template(cwd, { kit }) {
 /**
  * Loads the error page (src/error.html by default) if it exists.
  * Falls back to a generic error page content.
- * @param {import('types').ValidatedConfig} config
+ * @param {ValidatedConfig} config
  */
 export function load_error_page(config) {
 	let { errorTemplate } = config.kit.files;
@@ -58,11 +62,34 @@ export function load_error_page(config) {
 }
 
 /**
- * Loads and validates Svelte config file
- * @param {{ cwd: string }} options
- * @returns {Promise<import('types').ValidatedConfig>}
+ * Loads and validates Svelte config file. Tries Vite config first, falls back to svelte.config.js
+ * @param {{ cwd?: string }} options
+ * @returns {Promise<ValidatedConfig>}
  */
-export async function load_config({ cwd }) {
+export async function load_config({ cwd = process.cwd() } = {}) {
+	try {
+		const vite_config = await load_config_from_vite({ cwd });
+		if (vite_config) {
+			return vite_config;
+		}
+	} catch (e) {
+		// TODO SvelteKit 3: fail completely instead
+		console.error(
+			'Loading Svelte config from Vite config failed:',
+			e,
+			'\n\nFalling back to loading svelte.config.js'
+		);
+	}
+
+	return load_svelte_config(cwd);
+}
+
+/**
+ * Loads and validates Svelte config file
+ * @param {string} [cwd]
+ * @returns {Promise<ValidatedConfig>}
+ */
+export async function load_svelte_config(cwd = process.cwd()) {
 	const config_files = ['js', 'ts']
 		.map((ext) => path.join(cwd, `svelte.config.${ext}`))
 		.filter((f) => fs.existsSync(f));
@@ -73,54 +100,87 @@ export async function load_config({ cwd }) {
 		);
 		return process_config({}, { cwd });
 	}
+
 	const config_file = config_files[0];
 	if (config_files.length > 1) {
 		console.log(
 			`Found multiple Svelte config files in ${cwd}: ${config_files.map((f) => path.basename(f)).join(', ')}. Using ${path.basename(config_file)}`
 		);
 	}
+
 	const config = await import(`${url.pathToFileURL(config_file).href}?ts=${Date.now()}`);
+	return process_config(config.default, { cwd, source: path.relative(cwd, config_file) });
+}
+
+/**
+ * Loads and validates Svelte config via Vite config resolution (if set that way).
+ * @param {{ cwd?: string; mode?: string }} options
+ * @returns {Promise<ValidatedConfig | undefined>}
+ */
+async function load_config_from_vite({ cwd = process.cwd(), mode } = {}) {
+	const { resolveConfig } = await import_peer('vite', cwd);
+	const current_cwd = process.cwd();
+
+	if (cwd !== current_cwd) {
+		process.chdir(cwd);
+	}
+
+	/** @type {ResolvedConfig} */
+	let resolved;
 
 	try {
-		return process_config(config.default, { cwd });
+		resolved = await resolveConfig({}, 'build', mode ?? process.env.MODE ?? 'production');
+	} finally {
+		if (cwd !== current_cwd) {
+			process.chdir(current_cwd);
+		}
+	}
+
+	const plugin = resolved.plugins.find(
+		(plugin) => plugin.name === 'vite-plugin-sveltekit-setup' && plugin.api?.options
+	);
+
+	return plugin?.api.options;
+}
+
+/**
+ * @param {Config} config
+ * @returns {ValidatedConfig}
+ */
+export function process_config(config, { cwd = process.cwd(), source = 'svelte.config.js' } = {}) {
+	try {
+		const validated = validate_config(config, cwd);
+
+		validated.kit.outDir = path.resolve(cwd, validated.kit.outDir);
+
+		for (const key in validated.kit.files) {
+			if (key === 'hooks') {
+				validated.kit.files.hooks.client = path.resolve(cwd, validated.kit.files.hooks.client);
+				validated.kit.files.hooks.server = path.resolve(cwd, validated.kit.files.hooks.server);
+				validated.kit.files.hooks.universal = path.resolve(
+					cwd,
+					validated.kit.files.hooks.universal
+				);
+			} else {
+				// @ts-expect-error
+				validated.kit.files[key] = path.resolve(cwd, validated.kit.files[key]);
+			}
+		}
+
+		return validated;
 	} catch (e) {
 		const error = /** @type {Error} */ (e);
 
 		// redact the stack trace — it's not helpful to users
-		error.stack = `Could not load ${config_file}: ${error.message}\n`;
+		error.stack = `Error loading ${source}: ${error.message}\n`;
 		throw error;
 	}
 }
 
 /**
- * @param {import('@sveltejs/kit').Config} config
- * @param {{ cwd: string }} options
- * @returns {import('types').ValidatedConfig}
- */
-export function process_config(config, { cwd }) {
-	const validated = validate_config(config, cwd);
-
-	validated.kit.env.dir = path.resolve(cwd, validated.kit.env.dir);
-	validated.kit.outDir = path.resolve(cwd, validated.kit.outDir);
-
-	for (const key in validated.kit.files) {
-		if (key === 'hooks') {
-			validated.kit.files.hooks.client = path.resolve(cwd, validated.kit.files.hooks.client);
-			validated.kit.files.hooks.server = path.resolve(cwd, validated.kit.files.hooks.server);
-			validated.kit.files.hooks.universal = path.resolve(cwd, validated.kit.files.hooks.universal);
-		} else {
-			// @ts-expect-error
-			validated.kit.files[key] = path.resolve(cwd, validated.kit.files[key]);
-		}
-	}
-
-	return validated;
-}
-
-/**
- * @param {import('@sveltejs/kit').Config} config
+ * @param {Config} config
  * @param {string} [cwd]
- * @returns {import('types').ValidatedConfig}
+ * @returns {ValidatedConfig}
  */
 export function validate_config(config, cwd = process.cwd()) {
 	if (typeof config !== 'object') {
@@ -129,7 +189,7 @@ export function validate_config(config, cwd = process.cwd()) {
 		);
 	}
 
-	/** @type {import('types').ValidatedConfig} */
+	/** @type {ValidatedConfig} */
 	const validated = options(config, 'config');
 	const files = validated.kit.files;
 
