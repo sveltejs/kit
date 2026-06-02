@@ -113,7 +113,7 @@ export function create_static_module(id, env, disabled) {
  */
 export function create_dynamic_module(type, dev_values, disabled) {
 	const prelude = disabled
-		? `throw new Error('Cannot import \`$env/dynamic/{type}\` when \`experimental.explicitEnvironmentVariables\` is enabled. Use \`$app/env/${type}\` instead.');\n\n`
+		? `throw new Error('Cannot import \`$env/dynamic/${type}\` when \`experimental.explicitEnvironmentVariables\` is enabled. Use \`$app/env/${type}\` instead.');\n\n`
 		: '';
 
 	if (dev_values) {
