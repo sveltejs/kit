@@ -1,4 +1,3 @@
-import * as set_cookie_parser from 'set-cookie-parser';
 import { BINARY_FORM_CONTENT_TYPE } from '../runtime/form-utils.js';
 
 /**
