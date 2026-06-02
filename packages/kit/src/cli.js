@@ -73,14 +73,6 @@ if (!command) {
 }
 
 if (command === 'sync') {
-	const config_files = ['js', 'ts']
-		.map((ext) => `svelte.config.${ext}`)
-		.filter((f) => fs.existsSync(f));
-	if (config_files.length === 0) {
-		console.warn(`Missing Svelte config file in ${process.cwd()} — skipping`);
-		process.exit(0);
-	}
-
 	// create placeholder .svelte-kit/tsconfig.json if necessary, to squelch warnings.
 	// this isn't bulletproof — if someone has some esoteric config, it will continue
 	// to harmlessly warn — but we handle the 90% case and clean up after ourselves
