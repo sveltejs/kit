@@ -8,7 +8,7 @@ import { is_endpoint_request, render_endpoint } from './endpoint.js';
 import { render_page } from './page/index.js';
 import { render_response } from './page/render.js';
 import { respond_with_error } from './page/respond_with_error.js';
-import { is_form_content_type } from '../../utils/http.js';
+import { get_set_cookies, is_form_content_type } from '../../utils/http.js';
 import {
 	handle_fatal_error,
 	has_prerendered_path,
@@ -517,9 +517,7 @@ export async function internal_respond(request, options, manifest, state) {
 					if (value) headers.set(key, value);
 				}
 
-				// `Headers.get('set-cookie')` collapses multiple values into a single
-				// comma-joined string that browsers cannot parse correctly
-				for (const cookie of response.headers.getSetCookie()) {
+				for (const cookie of get_set_cookies(response.headers)) {
 					headers.append('set-cookie', cookie);
 				}
 
