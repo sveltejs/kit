@@ -135,6 +135,8 @@ export function create_builder({
 		},
 
 		generateEnvModule() {
+			if (!build_data.client?.uses_env_dynamic_public) return;
+
 			const dest = `${config.kit.outDir}/output/prerendered/dependencies/${config.kit.appDir}/env.js`;
 			const env = get_env(config.kit.env, vite_config.mode);
 

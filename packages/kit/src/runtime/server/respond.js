@@ -511,17 +511,14 @@ export async function internal_respond(request, options, manifest, state) {
 			if (if_none_match_value === etag) {
 				const headers = new Headers({ etag });
 
-				// https://datatracker.ietf.org/doc/html/rfc7232#section-4.1 + set-cookie
-				for (const key of [
-					'cache-control',
-					'content-location',
-					'date',
-					'expires',
-					'vary',
-					'set-cookie'
-				]) {
+				// https://datatracker.ietf.org/doc/html/rfc7232#section-4.1
+				for (const key of ['cache-control', 'content-location', 'date', 'expires', 'vary']) {
 					const value = response.headers.get(key);
 					if (value) headers.set(key, value);
+				}
+
+				for (const cookie of response.headers.getSetCookie()) {
+					headers.append('set-cookie', cookie);
 				}
 
 				return new Response(undefined, {

@@ -115,7 +115,7 @@ declare module '@sveltejs/kit' {
 		generateFallback: (dest: string) => Promise<void>;
 
 		/**
-		 * Generate a module exposing build-time environment variables as `$env/dynamic/public`.
+		 * Generate a module exposing build-time environment variables as `$env/dynamic/public` if the app uses it.
 		 */
 		generateEnvModule: () => void;
 
