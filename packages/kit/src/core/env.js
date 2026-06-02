@@ -327,7 +327,7 @@ export function create_explicit_env_types(variables, relative, type) {
 
 	return dedent`
 		declare module '$app/env/${type}' {
-			${declarations.join('\n')}
+			${declarations.join('\n') || `// no ${type} environment variables were defined`}
 		}
 	`;
 }
