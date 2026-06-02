@@ -27,6 +27,8 @@ export default defineConfig({
 		alias: {
 			// Order matters: vite prefix-matches with trailing-slash, so longer keys must
 			// come first to avoid `$app/paths` matching `$app/paths/internal/client`.
+			'$app/env/internal': mock('app-env-internal'),
+			'$app/env': mock('app-env'),
 			'$app/paths/internal/client': mock('app-paths-internal-client'),
 			'$app/paths/internal/server': mock('app-paths-internal-server'),
 			'$app/paths': mock('app-paths'),
