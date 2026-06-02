@@ -168,7 +168,10 @@ export function create_builder({
 
 			const fallback = await generate_fallback({
 				manifest_path,
-				env: { ...env.private, ...env.public }
+				env: { ...env.private, ...env.public },
+				out_dir: config.kit.outDir,
+				origin: config.kit.prerender.origin,
+				assets: config.kit.files.assets
 			});
 
 			if (existsSync(dest)) {
