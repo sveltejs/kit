@@ -157,6 +157,7 @@ const options = object(
 			outDir: string('.svelte-kit'),
 
 			output: object({
+				linkHeaderPreload: boolean(false),
 				preloadStrategy: removed(
 					(keypath) => `\`${keypath}\` has been removed. modulepreload will always be used`
 				),

@@ -25,6 +25,7 @@ const config = {
 			dir: '../../env'
 		},
 		output: {
+			linkHeaderPreload: true,
 			bundleStrategy: 'single'
 		},
 		experimental: {

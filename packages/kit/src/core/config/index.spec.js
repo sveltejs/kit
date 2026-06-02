@@ -96,7 +96,7 @@ const get_defaults = (prefix = '') => ({
 		},
 		inlineStyleThreshold: 0,
 		moduleExtensions: ['.js', '.ts'],
-		output: { bundleStrategy: 'split', preloadStrategy: undefined },
+		output: { bundleStrategy: 'split', preloadStrategy: undefined, linkHeaderPreload: false },
 		outDir: join(prefix, '.svelte-kit'),
 		router: {
 			type: 'pathname',
