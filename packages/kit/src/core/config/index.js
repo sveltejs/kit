@@ -138,10 +138,10 @@ async function load_config_from_vite({ cwd = process.cwd(), mode } = {}) {
 	}
 
 	const plugin = resolved.plugins.find(
-		(plugin) => plugin.name === 'vite-plugin-sveltekit-setup' && plugin.api?.sveltekit?.config
+		(plugin) => plugin.name === 'vite-plugin-sveltekit-setup' && plugin.api?.options
 	);
 
-	return plugin?.api.sveltekit.config;
+	return plugin?.api.options;
 }
 
 /**

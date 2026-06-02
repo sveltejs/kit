@@ -259,9 +259,7 @@ async function kit({ svelte_config }) {
 	const plugin_setup = {
 		name: 'vite-plugin-sveltekit-setup',
 		api: {
-			sveltekit: {
-				config: svelte_config
-			}
+			options: svelte_config
 		},
 
 		/**
