@@ -67,7 +67,7 @@ catalog:
   # This version of TypeScript is for apps using it just for type checking.
   # `kit` and `package` cannot follow the catalog version because they require it
   # for generating types and TypeScript can have breaking changes in minors
-  typescript: ^6.0.2
+  typescript: ^6.0.3
   valibot: ^1.1.0
   vite: ^8.0.10
   wrangler: ^4.67.0
