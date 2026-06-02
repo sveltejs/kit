@@ -2923,7 +2923,7 @@ declare module '@sveltejs/kit' {
 	class Redirect_1 {
 		
 		constructor(status: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308, location: string);
-		status: 301 | 302 | 303 | 307 | 308 | 300 | 304 | 305 | 306;
+		status: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308;
 		location: string;
 	}
 
@@ -3036,11 +3036,14 @@ declare module '@sveltejs/kit/node/polyfills' {
 }
 
 declare module '@sveltejs/kit/vite' {
+	import type { KitConfig } from '@sveltejs/kit';
+	import type { SvelteConfig } from '@sveltejs/vite-plugin-svelte';
 	import type { Plugin } from 'vite';
 	/**
 	 * Returns the SvelteKit Vite plugins.
+	 * Since version 2.62.0 you can pass [configuration](configuration) directly, in which case `svelte.config.js` is ignored.
 	 * */
-	export function sveltekit(): Promise<Plugin[]>;
+	export function sveltekit(config?: KitConfig & Omit<SvelteConfig, "onwarn">): Promise<Plugin[]>;
 
 	export {};
 }

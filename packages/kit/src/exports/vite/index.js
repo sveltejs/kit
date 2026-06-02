@@ -1,6 +1,8 @@
-/** @import { Options } from '@sveltejs/vite-plugin-svelte' */
+/** @import { Options, SvelteConfig } from '@sveltejs/vite-plugin-svelte' */
 /** @import { PreprocessorGroup } from 'svelte/compiler' */
+/** @import { KitConfig } from '@sveltejs/kit' */
 /** @import { ConfigEnv, Manifest, Plugin, ResolvedConfig, UserConfig, ViteDevServer } from 'vite' */
+/** @import { ValidatedConfig } from 'types' */
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
@@ -12,7 +14,7 @@ import { create_static_module, create_dynamic_module } from '../../core/env.js';
 import * as sync from '../../core/sync/sync.js';
 import { create_assets } from '../../core/sync/create_manifest_data/index.js';
 import { runtime_directory, logger } from '../../core/utils.js';
-import { load_config } from '../../core/config/index.js';
+import { load_svelte_config, process_config } from '../../core/config/index.js';
 import { generate_manifest } from '../../core/generate_manifest/index.js';
 import { build_server_nodes } from './build/build_server.js';
 import { build_service_worker } from './build/build_service_worker.js';
@@ -133,10 +135,31 @@ const warning_preprocessor = {
 
 /**
  * Returns the SvelteKit Vite plugins.
+ * Since version 2.62.0 you can pass [configuration](configuration) directly, in which case `svelte.config.js` is ignored.
+ * @param {KitConfig & Omit<SvelteConfig, 'onwarn'>} [config]
  * @returns {Promise<Plugin[]>}
  */
-export async function sveltekit() {
-	const svelte_config = await load_config();
+export async function sveltekit(config) {
+	/** @type {ValidatedConfig} */
+	let svelte_config;
+
+	if (config !== undefined) {
+		const { extensions, compilerOptions, vitePlugin, preprocess, ...kit } = config;
+		svelte_config = process_config(
+			{ extensions, compilerOptions, vitePlugin, preprocess, kit },
+			{ cwd, source: 'SvelteKit options from Vite config' }
+		);
+
+		const config_file = ['svelte.config.js', 'svelte.config.ts'].find((file) =>
+			fs.existsSync(file)
+		);
+
+		if (config_file) {
+			console.warn(`${config_file} is ignored when options are passed via your Vite config`);
+		}
+	} else {
+		svelte_config = await load_svelte_config();
+	}
 
 	/** @type {Options['preprocess']} */
 	let preprocess = svelte_config.preprocess;
@@ -243,6 +266,9 @@ async function kit({ svelte_config }) {
 	/** @type {Plugin} */
 	const plugin_setup = {
 		name: 'vite-plugin-sveltekit-setup',
+		api: {
+			options: svelte_config
+		},
 
 		/**
 		 * Build the SvelteKit-provided Vite config to be merged with the user's vite.config.js file.
