@@ -1,3 +1,4 @@
+import { DEV } from 'esm-env';
 import {
 	page as _page,
 	navigating as _navigating,
