@@ -2,14 +2,15 @@
 /** @import { RemoteInternals, MaybePromise, RequestState, RemoteQueryLiveInternals, RemoteQueryBatchInternals, RemoteQueryInternals, RemoteLiveQueryUserFunctionReturnType } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 import { get_request_store } from '@sveltejs/kit/internal/server';
-import { create_remote_key, stringify, stringify_remote_arg } from '../../../shared.js';
+import { create_remote_key, REMOTE_VALUE_BRAND, stringify_remote_arg } from '../../../shared.js';
 import { prerendering } from '__sveltekit/environment';
 import {
 	create_validator,
 	get_cache,
 	get_response,
 	run_remote_function,
-	run_remote_generator
+	run_remote_generator,
+	serialize_remote_result
 } from './shared.js';
 import { handle_error_and_jsonify } from '../../../server/utils.js';
 import { HttpError, SvelteKitError } from '@sveltejs/kit/internal';
@@ -326,7 +327,7 @@ function batch(validate_or_fn, maybe_fn) {
 						input.map(async (arg, i) => {
 							try {
 								const data = get_result(arg, i);
-								return { type: 'result', data: stringify(data, state.transport) };
+								return { type: 'result', data: serialize_remote_result(data, state) };
 							} catch (error) {
 								return {
 									type: 'error',
@@ -394,7 +395,8 @@ function create_query_resource(__, payload, state, fn) {
 		void (__.id && state.is_in_render && get_promise());
 	};
 
-	return {
+	/** @type {RemoteQuery<any>} */
+	const resource = {
 		/** @type {Promise<any>['catch']} */
 		catch(onrejected) {
 			return get_promise().catch(onrejected);
@@ -453,6 +455,10 @@ function create_query_resource(__, payload, state, fn) {
 			return 'QueryResource';
 		}
 	};
+
+	void Object.defineProperty(resource, REMOTE_VALUE_BRAND, { value: { internals: __, payload } });
+
+	return resource;
 }
 
 /**
@@ -482,7 +488,8 @@ function create_live_query_resource(__, payload, state, signal, get_generator) {
 		void (__.id && state.is_in_render && get_promise());
 	};
 
-	return {
+	/** @type {RemoteLiveQuery<any>} */
+	const resource = {
 		/** @type {Promise<any>['catch']} */
 		catch(onrejected) {
 			return get_promise().catch(onrejected);
@@ -551,6 +558,10 @@ function create_live_query_resource(__, payload, state, signal, get_generator) {
 			return 'LiveQueryResource';
 		}
 	};
+
+	void Object.defineProperty(resource, REMOTE_VALUE_BRAND, { value: { internals: __, payload } });
+
+	return resource;
 }
 
 /**

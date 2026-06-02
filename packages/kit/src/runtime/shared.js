@@ -1,4 +1,5 @@
 /** @import { Transport } from '@sveltejs/kit' */
+/** @import { RemoteInternals } from 'types' */
 import * as devalue from 'devalue';
 import { base64_decode, base64_encode, text_encoder } from './utils.js';
 import * as svelte from 'svelte';
@@ -49,6 +50,109 @@ export function stringify(data, transport) {
 	const encoders = Object.fromEntries(Object.entries(transport).map(([k, v]) => [k, v.encode]));
 
 	return devalue.stringify(data, encoders);
+}
+
+// "sveltekit query pointer"
+const remote_value_pointer = '__skq';
+
+export const REMOTE_VALUE_BRAND = Symbol('sveltekit.remote_value_pointer');
+
+/**
+ * Single-character codes used to identify the kind of resource a pointer refers to,
+ * kept short to minimise wire size. `query.live` is intentionally absent — live queries
+ * cannot be returned from other remote functions.
+ * @type {Record<string, 'q' | 'b' | 'p'>}
+ */
+const remote_type_codes = {
+	query: 'q',
+	query_batch: 'b',
+	prerender: 'p'
+};
+
+/**
+ * `devalue.stringify` a remote function's return value, replacing any nested remote
+ * resources (query / query.batch / prerender) with `[id, payload, code]` pointer tuples
+ * via the `__skq` reducer. Reading the pointer marker does not execute the nested
+ * resource — only its identity is serialized. The nested resource's *value* is serialized
+ * separately (and only if it was used), via the relevant hydration/side-channel.
+ *
+ * @param {any} value
+ * @param {Transport} transport
+ * @param {{
+ *   allow_queries?: boolean,
+ *   on_pointer?: (info: { internals: RemoteInternals, payload: string, code: 'q' | 'b' | 'p' }) => void
+ * }} [options]
+ * @returns {string}
+ */
+export function stringify_remote_value(
+	value,
+	transport,
+	{ allow_queries = true, on_pointer } = {}
+) {
+	/** @type {Record<string, (value: any) => any>} */
+	const reducers = {};
+
+	for (const key in transport) {
+		reducers[key] = transport[key].encode;
+	}
+
+	reducers[remote_value_pointer] = (thing) => {
+		const marker =
+			thing != null && typeof thing === 'object'
+				? /** @type {any} */ (thing)[REMOTE_VALUE_BRAND]
+				: undefined;
+
+		if (!marker) return;
+
+		/** @type {{ internals: RemoteInternals, payload: string }} */
+		const { internals, payload } = marker;
+		const { type, id, name } = internals;
+
+		if (type === 'query_live') {
+			throw new Error(
+				`Cannot return the live query \`${name}\` from a remote function — live queries cannot be nested`
+			);
+		}
+
+		const code = remote_type_codes[type];
+
+		// not a nestable remote resource (e.g. command/form) — let devalue handle it
+		if (!code) return;
+
+		if (!allow_queries && code !== 'p') {
+			throw new Error(
+				`Cannot return the query \`${name}\` from a prerender function — prerender functions can only return other prerender functions`
+			);
+		}
+
+		if (!id) {
+			throw new Error(
+				`Cannot serialize the remote function \`${name}\` because it is not exported from a \`.remote\` file`
+			);
+		}
+
+		on_pointer?.({ internals, payload, code });
+
+		return [id, payload, code];
+	};
+
+	return devalue.stringify(value, reducers);
+}
+
+/**
+ * `devalue.parse` a remote function's return value, reviving nested resource pointers
+ * (`[id, payload, code]` tuples emitted by {@link stringify_remote_value}) via the
+ * supplied `revive_pointer` callback.
+ *
+ * @param {string} serialized
+ * @param {Record<string, (data: any) => any>} decoders
+ * @param {(pointer: [string, string, 'q' | 'b' | 'p']) => any} revive_pointer
+ */
+export function parse_remote_value(serialized, decoders, revive_pointer) {
+	return devalue.parse(serialized, {
+		...decoders,
+		[remote_value_pointer]: revive_pointer
+	});
 }
 
 const object_proto_names = /* @__PURE__ */ Object.getOwnPropertyNames(Object.prototype)

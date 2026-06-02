@@ -1,5 +1,11 @@
 import { describe, expect, test } from 'vitest';
-import { parse_remote_arg, stringify_remote_arg } from './shared.js';
+import {
+	parse_remote_arg,
+	parse_remote_value,
+	REMOTE_VALUE_BRAND,
+	stringify_remote_arg,
+	stringify_remote_value
+} from './shared.js';
 
 class Thing {
 	/** @param {number} a @param {number} z */
@@ -367,5 +373,83 @@ describe('parse_remote_arg', () => {
 		expect(Object.getPrototypeOf(parsed.nested)).toBeNull();
 		expect(Object.keys(parsed)).toEqual(['nested', 'z']);
 		expect(Object.keys(parsed.nested)).toEqual(['a', 'b']);
+	});
+});
+
+/**
+ * @param {{ id: string, type: string, name?: string }} internals
+ * @param {string} payload
+ */
+function fake_resource(internals, payload) {
+	const resource = {};
+	Object.defineProperty(resource, REMOTE_VALUE_BRAND, {
+		value: { internals: { name: '', ...internals }, payload }
+	});
+	return resource;
+}
+
+describe('stringify_remote_value / parse_remote_value', () => {
+	test('serializes a nested query resource as an [id, payload, code] pointer', () => {
+		const child = fake_resource({ id: 'app/x.remote.js/get_child', type: 'query' }, 'PAYLOAD');
+		const serialized = stringify_remote_value({ a: 1, child }, {});
+
+		const revived = parse_remote_value(serialized, {}, (pointer) => ({ pointer }));
+
+		expect(revived).toEqual({
+			a: 1,
+			child: { pointer: ['app/x.remote.js/get_child', 'PAYLOAD', 'q'] }
+		});
+	});
+
+	test('uses single-character codes for query, query.batch and prerender', () => {
+		/** @type {Array<[string, string]>} */
+		const cases = [
+			['query', 'q'],
+			['query_batch', 'b'],
+			['prerender', 'p']
+		];
+
+		for (const [type, code] of cases) {
+			const res = fake_resource({ id: 'id', type }, 'P');
+			const serialized = stringify_remote_value(
+				{ res },
+				{},
+				{ allow_queries: type !== 'prerender' }
+			);
+			const revived = parse_remote_value(serialized, {}, (pointer) => pointer);
+			expect(revived.res).toEqual(['id', 'P', code]);
+		}
+	});
+
+	test('invokes on_pointer for each emitted pointer', () => {
+		const child = fake_resource({ id: 'id', type: 'query' }, 'P');
+		/** @type {string[]} */
+		const seen = [];
+
+		stringify_remote_value({ child }, {}, { on_pointer: (info) => seen.push(info.code) });
+
+		expect(seen).toEqual(['q']);
+	});
+
+	test('throws when a live query is returned', () => {
+		const live = fake_resource({ id: 'id', type: 'query_live', name: 'myLive' }, 'P');
+		expect(() => stringify_remote_value({ live }, {})).toThrow(/live quer/i);
+	});
+
+	test('throws when a prerender returns a query', () => {
+		const q = fake_resource({ id: 'id', type: 'query', name: 'myQuery' }, 'P');
+		expect(() => stringify_remote_value({ q }, {}, { allow_queries: false })).toThrow(/prerender/i);
+	});
+
+	test('allows a prerender to return a prerender', () => {
+		const p = fake_resource({ id: 'id', type: 'prerender' }, 'P');
+		const serialized = stringify_remote_value({ p }, {}, { allow_queries: false });
+		const revived = parse_remote_value(serialized, {}, (pointer) => pointer);
+		expect(revived.p).toEqual(['id', 'P', 'p']);
+	});
+
+	test('throws for a resource that is not exported (no id)', () => {
+		const res = fake_resource({ id: '', type: 'query', name: 'anon' }, 'P');
+		expect(() => stringify_remote_value({ res }, {})).toThrow(/not exported/i);
 	});
 });

@@ -4,7 +4,11 @@ import { parse } from 'devalue';
 import { error } from '@sveltejs/kit';
 import { with_request_store, get_request_store } from '@sveltejs/kit/internal/server';
 import { noop } from '../../../../utils/functions.js';
-import { create_remote_key, stringify, unfriendly_hydratable } from '../../../shared.js';
+import {
+	create_remote_key,
+	stringify_remote_value,
+	unfriendly_hydratable
+} from '../../../shared.js';
 
 /**
  * @param {any} validate_or_fn
@@ -87,7 +91,11 @@ export async function get_response(internals, payload, state, get_result) {
 
 		Promise.resolve(entry.data)
 			.then((value) => {
-				void unfriendly_hydratable(remote_key, () => stringify(value, state.transport));
+				void unfriendly_hydratable(remote_key, () =>
+					stringify_remote_value(value, state.transport, {
+						allow_queries: internals.type !== 'prerender'
+					})
+				);
 			})
 			.catch(noop);
 	}
@@ -96,17 +104,56 @@ export async function get_response(internals, payload, state, get_result) {
 }
 
 /**
+ * Serialize a remote function's return value, emitting `[id, payload, code]` pointers for
+ * any nested remote resources. Every nested resource that was *used* during this request
+ * (i.e. has a cached value) is recorded in `state.remote.collected` so that the HTTP
+ * response handler can ship its value alongside the result (the side-channel), letting the
+ * client revive the pointer without an extra round-trip.
+ *
+ * @param {any} value
+ * @param {RequestState} state
+ * @param {boolean} [allow_queries=true] `false` for prerender results (which may only nest prerenders)
+ * @returns {string}
+ */
+export function serialize_remote_result(value, state, allow_queries = true) {
+	return stringify_remote_value(value, state.transport, {
+		allow_queries,
+		on_pointer: ({ internals, payload, code }) => {
+			const key = create_remote_key(internals.id, payload);
+			const collected = (state.remote.collected ??= new Map());
+
+			if (collected.has(key)) return;
+
+			// only collect the value if the nested resource was actually used during
+			// this request — otherwise we just ship the pointer and let the client fetch on use
+			const cache = state.remote.data?.get(internals);
+			if (!cache || !(payload in cache)) return;
+
+			collected.set(key, { internals, payload, code });
+		}
+	});
+}
+
+/**
+ * Build the devalue revivers (decoders) for the app's transport hooks.
+ * @param {ServerHooks['transport']} transport
+ */
+export function get_decoders(transport) {
+	/** @type {Record<string, any>} */
+	const decoders = {};
+	for (const key in transport) {
+		decoders[key] = transport[key].decode;
+	}
+
+	return decoders;
+}
+
+/**
  * @param {any} data
  * @param {ServerHooks['transport']} transport
  */
 export function parse_remote_response(data, transport) {
-	/** @type {Record<string, any>} */
-	const revivers = {};
-	for (const key in transport) {
-		revivers[key] = transport[key].decode;
-	}
-
-	return parse(data, revivers);
+	return parse(data, get_decoders(transport));
 }
 
 /**

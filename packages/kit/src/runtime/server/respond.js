@@ -151,6 +151,9 @@ export async function internal_respond(request, options, manifest, state) {
 			refreshes: null,
 			requested: null,
 			reconnects: null,
+			collected: null,
+			prerender_seeds: null,
+			prerender_resolved: null,
 			batches: null,
 			live_iterators: null
 		},
