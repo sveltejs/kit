@@ -149,6 +149,14 @@ export async function sveltekit(config) {
 			{ extensions, compilerOptions, vitePlugin, preprocess, kit },
 			{ cwd, source: 'SvelteKit options from Vite config' }
 		);
+
+		const config_file = ['svelte.config.js', 'svelte.config.ts'].find((file) =>
+			fs.existsSync(file)
+		);
+
+		if (config_file) {
+			console.warn(`${config_file} is ignored when options are passed via your Vite config`);
+		}
 	} else {
 		svelte_config = await load_svelte_config();
 	}
