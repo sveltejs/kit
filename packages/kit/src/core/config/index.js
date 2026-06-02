@@ -109,7 +109,7 @@ export async function load_svelte_config(cwd = process.cwd()) {
 	}
 
 	const config = await import(`${url.pathToFileURL(config_file).href}?ts=${Date.now()}`);
-	return process_config(config.default, { cwd, config_file });
+	return process_config(config.default, { cwd, source: path.relative(cwd, config_file) });
 }
 
 /**
@@ -147,10 +147,7 @@ async function load_config_from_vite({ cwd = process.cwd(), mode } = {}) {
  * @param {Config} config
  * @returns {ValidatedConfig}
  */
-export function process_config(
-	config,
-	{ cwd = process.cwd(), config_file = 'svelte.config.js' } = {}
-) {
+export function process_config(config, { cwd = process.cwd(), source = 'svelte.config.js' } = {}) {
 	try {
 		const validated = validate_config(config, cwd);
 
@@ -175,7 +172,7 @@ export function process_config(
 		const error = /** @type {Error} */ (e);
 
 		// redact the stack trace — it's not helpful to users
-		error.stack = `Could not load ${config_file}: ${error.message}\n`;
+		error.stack = `Error loading ${source}: ${error.message}\n`;
 		throw error;
 	}
 }

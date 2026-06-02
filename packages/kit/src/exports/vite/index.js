@@ -147,7 +147,7 @@ export async function sveltekit(inline_config) {
 		const { extensions, compilerOptions, vitePlugin, preprocess, ...kit } = inline_config;
 		svelte_config = process_config(
 			{ extensions, compilerOptions, vitePlugin, preprocess, kit },
-			{ cwd, config_file: 'SvelteKit inline config via vite.config' }
+			{ cwd, source: 'SvelteKit options from Vite config' }
 		);
 	} else {
 		svelte_config = await load_svelte_config();
