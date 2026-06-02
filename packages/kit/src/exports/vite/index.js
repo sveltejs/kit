@@ -135,16 +135,16 @@ const warning_preprocessor = {
 
 /**
  * Returns the SvelteKit Vite plugins.
- * Since version 2.62.0 you can also pass the Svelte config inline. The svelte.config.js will be ignored in this case.
- * @param {KitConfig & Omit<SvelteConfig, 'onwarn'>} [inline_config]
+ * Since version 2.62.0 you can pass [configuration](configuration) directly, in which case `svelte.config.js` is ignored.
+ * @param {KitConfig & Omit<SvelteConfig, 'onwarn'>} [config]
  * @returns {Promise<Plugin[]>}
  */
-export async function sveltekit(inline_config) {
+export async function sveltekit(config) {
 	/** @type {ValidatedConfig} */
 	let svelte_config;
 
-	if (inline_config !== undefined) {
-		const { extensions, compilerOptions, vitePlugin, preprocess, ...kit } = inline_config;
+	if (config !== undefined) {
+		const { extensions, compilerOptions, vitePlugin, preprocess, ...kit } = config;
 		svelte_config = process_config(
 			{ extensions, compilerOptions, vitePlugin, preprocess, kit },
 			{ cwd, source: 'SvelteKit options from Vite config' }
