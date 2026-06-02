@@ -54,6 +54,7 @@ export const navigating = {
 	}
 };
 
+// TODO: remove in 3.0
 if (DEV) {
 	Object.defineProperty(navigating, 'current', {
 		get() {
