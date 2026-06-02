@@ -26,7 +26,7 @@ const config = {
 export default config;
 ```
 
-Since version 2.62.0 you can also pass your configuration to the `sveltekit` plugin inside `vite.config.js/ts`, along with the Svelte compiler options:
+Since version 2.62.0 you can also pass your configuration to the `sveltekit` plugin in your Vite config, along with the Svelte compiler options:
 
 ```js
 /// file: vite.config.js
@@ -59,7 +59,7 @@ export default defineConfig({
 });
 ```
 
-Note how the `kit` namespace is at the same level as the other top level entries; this is the only difference to the `svelte.config.js` layout.
+> [!NOTE] The `kit` namespace is at the same level as the other top level entries; this is the only difference to the `svelte.config.js` layout.
 
 If the config is defined via the plugin, the `svelte.config.js` file is ignored.
 
