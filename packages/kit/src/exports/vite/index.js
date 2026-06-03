@@ -7,7 +7,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
-
 import colors from 'kleur';
 
 import { copy, mkdirp, posixify, read, resolve_entry, rimraf } from '../../utils/filesystem.js';
@@ -16,7 +15,8 @@ import {
 	create_sveltekit_env,
 	create_sveltekit_env_browser,
 	create_static_module,
-	resolve_explicit_env_entry
+	resolve_explicit_env_entry,
+	create_sveltekit_env_service_worker_dev
 } from '../../core/env.js';
 import * as sync from '../../core/sync/sync.js';
 import { create_assets } from '../../core/sync/create_manifest_data/index.js';
@@ -49,6 +49,7 @@ import {
 	service_worker,
 	sveltekit_env,
 	sveltekit_env_browser,
+	sveltekit_env_service_worker,
 	sveltekit_server
 } from './module_ids.js';
 import { import_peer } from '../../utils/import.js';
@@ -544,13 +545,19 @@ async function kit({ svelte_config }) {
 					parsed_importer.dir === parsed_service_worker.dir &&
 					parsed_importer.name === parsed_service_worker.name;
 
-				if (importer_is_service_worker && id !== '$service-worker' && id !== '$env/static/public') {
+				if (
+					importer_is_service_worker &&
+					id !== '$service-worker' &&
+					id !== '$env/static/public' &&
+					id !== 'virtual:$app/env/public' &&
+					id !== '__sveltekit/env/service-worker'
+				) {
 					throw new Error(
 						`Cannot import ${normalize_id(
 							id,
 							normalized_lib,
 							normalized_cwd
-						)} into service-worker code. Only the modules $service-worker and $env/static/public are available in service workers.`
+						)} into service-worker code. Only the modules $service-worker, $env/static/public and $app/env/public are available in service workers.`
 					);
 				}
 			}
@@ -612,7 +619,14 @@ async function kit({ svelte_config }) {
 					return create_sveltekit_env(explicit_env_config, env.all, explicit_env_entry);
 
 				case sveltekit_env_browser:
-					return create_sveltekit_env_browser(explicit_env_config, env.all, global);
+					return create_sveltekit_env_browser(
+						explicit_env_config,
+						env.all,
+						`const env = ${global}.env;`
+					);
+
+				case sveltekit_env_service_worker:
+					return create_sveltekit_env_service_worker_dev(explicit_env_config, env.all, global);
 
 				case sveltekit_server: {
 					return dedent`
@@ -886,6 +900,26 @@ async function kit({ svelte_config }) {
 			return {
 				code: result
 			};
+		}
+	};
+
+	/** @type {Plugin} */
+	const plugin_service_worker_env = {
+		name: 'vite-plugin-sveltekit-service-worker-env',
+
+		transform: {
+			filter: {
+				id: service_worker_entry_file || '<skip>'
+			},
+			handler(code) {
+				// in dev, we prepend the service worker with an import that
+				// configures `env`, in case `$app/env/public` is imported,
+				// in prod, where we currently use non-module service
+				// workers, we have to use `importScripts` instead
+				return {
+					code: `import '__sveltekit/env/service-worker';\n${code}`
+				};
+			}
 		}
 	};
 
@@ -1437,7 +1471,8 @@ async function kit({ svelte_config }) {
 						manifest_data,
 						service_worker_entry_file,
 						prerendered,
-						client_manifest
+						client_manifest,
+						explicit_env_config
 					);
 				}
 
@@ -1494,6 +1529,9 @@ async function kit({ svelte_config }) {
 		kit.experimental.remoteFunctions && plugin_remote,
 		plugin_virtual_modules,
 		plugin_guard,
+		kit.experimental.explicitEnvironmentVariables &&
+			service_worker_entry_file &&
+			plugin_service_worker_env,
 		plugin_compile
 	].filter((p) => !!p);
 }

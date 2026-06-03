@@ -222,9 +222,9 @@ export function create_sveltekit_env(variables, env, entry) {
  * Creates the `__sveltekit/env/browser` module
  * @param {Record<string, EnvVarConfig<any>> | null} variables
  * @param {Record<string, string>} env
- * @param {string} global
+ * @param {string} prelude
  */
-export function create_sveltekit_env_browser(variables, env, global) {
+export function create_sveltekit_env_browser(variables, env, prelude) {
 	if (!variables) {
 		return '';
 	}
@@ -233,6 +233,8 @@ export function create_sveltekit_env_browser(variables, env, global) {
 	const issues = {};
 
 	const exports = Object.entries(variables).map(([name, config]) => {
+		// TODO should we exclude private vars here?
+
 		if (config.static) {
 			const value = validate(variables, env[name], name, issues);
 			return `export const ${name} = ${devalue.uneval(value)};\n`;
@@ -243,7 +245,45 @@ export function create_sveltekit_env_browser(variables, env, global) {
 
 	handle_issues(issues);
 
-	return `const env = ${global}.env;\n\n${exports.join('')}`;
+	return `${prelude}\n\n${exports.join('')}`;
+}
+
+/**
+ * Creates the `__sveltekit/env/service-worker` module used in development
+ * (but not in prod, which goes through build_service_worker instead)
+ * @param {Record<string, EnvVarConfig<any>> | null} variables
+ * @param {Record<string, string>} env
+ * @param {string} global
+ */
+export function create_sveltekit_env_service_worker_dev(variables, env, global) {
+	if (!variables) {
+		return `${global} = { env: {} }`;
+	}
+
+	/** @type {string[]} */
+	const properties = [];
+
+	/** @type {Record<string, StandardSchemaV1.Issue[]>} */
+	const issues = {};
+
+	for (const [name, config] of Object.entries(variables)) {
+		if (!config.public) continue;
+
+		const value = validate(variables, env[name], name, issues);
+		properties.push(`${name}: ${devalue.uneval(value)}`);
+	}
+
+	handle_issues(issues);
+
+	return dedent`
+		globalThis.__SVELTEKIT_EXPERIMENTAL_EXPLICIT_ENVIRONMENT_VARIABLES__ = true;
+
+		${global} = {
+			env: {
+				${properties.join(',\n\t\t')}
+			}
+		};
+	`;
 }
 
 /** @param {string} description */
