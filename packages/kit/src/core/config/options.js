@@ -1,6 +1,4 @@
 /** @import { Validator } from './types.js' */
-
-import process from 'node:process';
 import { dedent } from '../sync/utils.js';
 
 const directives = object({
@@ -112,7 +110,7 @@ const options = object(
 			embedded: boolean(false),
 
 			env: object({
-				dir: string(process.cwd()),
+				dir: string(''),
 				publicPrefix: string('PUBLIC_'),
 				privatePrefix: string('')
 			}),

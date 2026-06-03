@@ -1,7 +1,6 @@
 import { join } from 'node:path';
 import { assert, expect, test } from 'vitest';
 import { validate_config, load_config } from './index.js';
-import process from 'node:process';
 
 /**
  * mutates and remove keys from an object when check callback returns true
@@ -68,7 +67,7 @@ const get_defaults = (prefix = '') => ({
 		},
 		embedded: false,
 		env: {
-			dir: process.cwd(),
+			dir: prefix,
 			publicPrefix: 'PUBLIC_',
 			privatePrefix: ''
 		},
@@ -364,7 +363,7 @@ test('load default config (esm)', async () => {
 	const config = await load_config({ cwd });
 	remove_keys(config, ([, v]) => typeof v === 'function');
 
-	const defaults = get_defaults(cwd + '/');
+	const defaults = get_defaults(cwd);
 	defaults.kit.version.name = config.kit.version.name;
 
 	expect(config).toEqual(defaults);
@@ -376,7 +375,7 @@ test('load default config (esm) with .ts extensions', async () => {
 	const config = await load_config({ cwd });
 	remove_keys(config, ([, v]) => typeof v === 'function');
 
-	const defaults = get_defaults(cwd + '/');
+	const defaults = get_defaults(cwd);
 	defaults.kit.version.name = config.kit.version.name;
 
 	expect(config).toEqual(defaults);
@@ -388,7 +387,7 @@ test('load .js config when both .js and .ts configs are present', async () => {
 	const config = await load_config({ cwd });
 	remove_keys(config, ([, v]) => typeof v === 'function');
 
-	const defaults = get_defaults(cwd + '/');
+	const defaults = get_defaults(cwd);
 	defaults.kit.version.name = config.kit.version.name;
 
 	expect(config).toEqual(defaults);
@@ -521,7 +520,7 @@ test('uses src prefix for other kit.files options', async () => {
 	const config = await load_config({ cwd });
 	remove_keys(config, ([, v]) => typeof v === 'function');
 
-	const defaults = get_defaults(cwd + '/');
+	const defaults = get_defaults(cwd);
 	defaults.kit.version.name = config.kit.version.name;
 
 	expect(config.kit.files.lib).toEqual(join(cwd, 'source/lib'));
