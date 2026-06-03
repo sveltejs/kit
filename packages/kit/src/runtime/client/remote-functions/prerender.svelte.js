@@ -136,10 +136,13 @@ function get_prerender_resource(id, payload, initial) {
 				: { type: 'error', error: initial.error }
 		);
 
-		// populate the browser cache as if the data had been fetched
-		if (initial.type === 'result') {
+		// populate the browser cache as if the data had been fetched. Prerender seeds always
+		// carry their serialized `data` (the `data`-less `initial` only arises from the
+		// query/query.batch `from(...)` seeding path, which never produces prerenders).
+		if (initial.type === 'result' && initial.data !== undefined) {
+			const data = initial.data;
 			void prerender_cache_ready.then(() => {
-				if (prerender_cache) void put(url, initial.data);
+				if (prerender_cache) void put(url, data);
 			});
 		}
 	} else {

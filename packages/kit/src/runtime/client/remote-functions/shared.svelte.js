@@ -14,7 +14,7 @@ import { navigating, page } from '../state.svelte.js';
 
 /**
  * @typedef {[string, string, RemoteResourceCode]} RemotePointer
- * @typedef {{ type: 'result', value: any, data: string } | { type: 'error', error: HttpError }} PointerInitial
+ * @typedef {{ type: 'result', value: any, data?: string } | { type: 'error', error: HttpError }} PointerInitial
  */
 
 /** Indicates a query function, as opposed to a query instance */

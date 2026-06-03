@@ -90,6 +90,18 @@ export function query(id) {
 	};
 
 	Object.defineProperty(wrapper, QUERY_FUNCTION_ID, { value: id });
+	Object.defineProperty(wrapper, 'from', {
+		value: /** @type {RemoteQueryFunction<any, any>['from']} */ (
+			(arg, value) =>
+				// Seed via `initial` (rather than `.set`) so an already-mounted entry for the
+				// same key is never clobbered — matching how revived nested pointers are seeded.
+				new QueryProxy(id, stringify_remote_arg(arg, app.hooks.transport), fetcher, {
+					type: 'result',
+					value
+				})
+		),
+		enumerable: true
+	});
 
 	return wrapper;
 }

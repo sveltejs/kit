@@ -878,6 +878,44 @@ test.describe('remote function mutations', () => {
 		// only the command POST itself — the nested query was seeded, not fetched
 		expect(request_count).toBe(1);
 	});
+
+	test('a query can return a nested query seeded with `.from(...)`', async ({ page }) => {
+		let request_count = 0;
+		/** @param {import('@playwright/test').Request} r */
+		const handler = (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0);
+		page.on('request', handler);
+
+		await page.goto('/remote/nested-from');
+
+		await expect(page.locator('#parent')).toHaveText('parent-from:a');
+		// the child's value was provided via `.from(...)` (its function never ran), and seeded
+		// into the page — so it resolves to the seeded value without a request
+		await expect(page.locator('#child')).toHaveText('seeded:a');
+		// a query seeded purely on the client via `.from(...)` also resolves without a request
+		await expect(page.locator('#client-seeded')).toHaveText('client-seeded');
+
+		await page.waitForTimeout(100);
+		expect(request_count).toBe(0);
+	});
+
+	test('a command can return a nested query seeded with `.from(...)`', async ({ page }) => {
+		await page.goto('/remote/nested-from');
+		await expect(page.locator('#parent')).toHaveText('parent-from:a');
+
+		let request_count = 0;
+		/** @param {import('@playwright/test').Request} r */
+		const handler = (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0);
+		page.on('request', handler);
+
+		await page.click('#create-child');
+
+		// the nested query created by the command via `.from(...)` resolves to its seeded value
+		await expect(page.locator('#command-result')).toHaveText('z/seeded:z');
+
+		await page.waitForTimeout(100);
+		// only the command POST itself — the nested query was seeded, not fetched
+		expect(request_count).toBe(1);
+	});
 });
 
 test.describe('client error boundaries', () => {

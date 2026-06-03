@@ -31,6 +31,21 @@ export const create_child = command('unchecked', async (/** @type {string} */ id
 	return { created: id, child };
 });
 
+// returns a nested query seeded via `.from(...)`: the query's own function is never invoked,
+// but the provided value still travels to the client so the pointer resolves without a fetch
+export const get_parent_from = query('unchecked', (/** @type {string} */ id) => {
+	return {
+		id,
+		label: `parent-from:${id}`,
+		child: get_child.from(id, { id, value: `seeded:${id}` })
+	};
+});
+
+// a command that returns a nested query created (and seeded) via `.from(...)`
+export const create_child_from = command('unchecked', (/** @type {string} */ id) => {
+	return { created: id, child: get_child.from(id, { id, value: `seeded:${id}` }) };
+});
+
 // a live query that yields values containing a nested query, seeded per stream message
 /** @type {Set<() => void>} */
 const live_listeners = new Set();

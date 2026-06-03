@@ -2273,9 +2273,32 @@ declare module '@sveltejs/kit' {
 	 * `Input = number` but `Validated = string`). For `'unchecked'` validators and queries
 	 * without arguments it defaults to `Input`.
 	 */
-	export type RemoteQueryFunction<Input, Output, _Validated = Input> = (
+	export type RemoteQueryFunction<Input, Output, _Validated = Input> = ((
 		arg: undefined extends Input ? Input | void : Input
-	) => RemoteQuery<Output>;
+	) => RemoteQuery<Output>) & {
+		/**
+		 * Create a query that is seeded with a value you already have, without invoking the
+		 * query's function. This is useful on the server when one remote function has already
+		 * loaded the data a nested query would otherwise fetch — seed it with `from(...)` and
+		 * return it, and its value travels back to the client alongside the response so the
+		 * client never has to fetch it:
+		 *
+		 * ```js
+		 * export const getPost = query(async (slug) => {
+		 *   const post = await db.getPost(slug);
+		 *   // seed the per-comment queries so the client doesn't refetch them
+		 *   return { post, comments: post.comments.map((c) => getComment.from(c.id, c)) };
+		 * });
+		 * ```
+		 *
+		 * Pass `undefined` as `arg` for queries that take no argument.
+		 *
+		 * Unlike [`set`](#type-RemoteQuery), which updates a query the client already has
+		 * mounted as part of a single-flight `command`/`form` mutation, `from` constructs a new
+		 * query instance carrying the provided value.
+		 */
+		from(arg: undefined extends Input ? Input | void : Input, value: Output): RemoteQuery<Output>;
+	};
 
 	/**
 	 * The type of a remote `query.live` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#query.live) for full documentation.
