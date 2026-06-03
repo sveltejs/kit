@@ -296,7 +296,7 @@ function kit({ svelte_config, adapter }) {
 	let initial_config;
 
 	/** @type {string | null} */
-	let service_worker_entry_file = resolve_entry(svelte_config.files.serviceWorker);
+	let service_worker_entry_file = resolve_entry(svelte_config.kit.files.serviceWorker);
 	/** @type {import('node:path').ParsedPath} */
 	let parsed_service_worker;
 
@@ -1731,9 +1731,7 @@ function kit({ svelte_config, adapter }) {
 		plugin_remote,
 		plugin_virtual_modules,
 		process.env.TEST !== 'true' ? plugin_guard : undefined,
-		svelte_config.experimental.explicitEnvironmentVariables &&
-			service_worker_entry_file &&
-			plugin_service_worker_env,
+		service_worker_entry_file && plugin_service_worker_env,
 		plugin_service_worker,
 		plugin_compile,
 		plugin_adapter
