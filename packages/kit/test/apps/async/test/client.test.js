@@ -809,6 +809,75 @@ test.describe('remote function mutations', () => {
 		// Should have refreshed
 		await expect(count).toHaveText('Count: 1');
 	});
+
+	test('a query returning a nested query seeds it without an extra request', async ({ page }) => {
+		let request_count = 0;
+		/** @param {import('@playwright/test').Request} r */
+		const handler = (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0);
+		page.on('request', handler);
+
+		await page.goto('/remote/nested');
+
+		await expect(page.locator('#parent')).toHaveText('parent:a');
+		// the nested query value was seeded during SSR, so it resolves without a request
+		await expect(page.locator('#child')).toHaveText('child:a');
+
+		await page.waitForTimeout(100);
+		expect(request_count).toBe(0);
+	});
+
+	test('a prerender can return a nested prerender', async ({ page }) => {
+		let nested_request_count = 0;
+		/** @param {import('@playwright/test').Request} r */
+		const handler = (r) => (nested_request_count += r.url().includes('prerender_child') ? 1 : 0);
+		page.on('request', handler);
+
+		await page.goto('/remote/nested-prerender');
+		await expect(page.locator('#prerender-child')).toHaveText('pchild:p');
+
+		await page.waitForTimeout(100);
+		// the nested prerender's value is seeded (server-side revival + the parent response's
+		// `queries` side-channel), so it never has to be fetched separately on the client
+		expect(nested_request_count).toBe(0);
+	});
+
+	test('a live query can return a nested query seeded per stream message', async ({ page }) => {
+		let nested_request_count = 0;
+		/** @param {import('@playwright/test').Request} r */
+		const handler = (r) => (nested_request_count += r.url().includes('get_child') ? 1 : 0);
+		page.on('request', handler);
+
+		await page.goto('/remote/nested-live');
+		await expect(page.locator('#live-child')).toHaveText('0:child:live-0');
+
+		// trigger a new stream value whose nested query value only arrives over the stream
+		await page.click('#bump');
+		await expect(page.locator('#live-child')).toHaveText('1:child:live-1');
+
+		await page.waitForTimeout(100);
+		// the nested query's value rides along in each stream message's `queries` side-channel,
+		// so it's never fetched separately
+		expect(nested_request_count).toBe(0);
+	});
+
+	test('a command can return a nested query seeded via the side-channel', async ({ page }) => {
+		await page.goto('/remote/nested');
+		await expect(page.locator('#parent')).toHaveText('parent:a');
+
+		let request_count = 0;
+		/** @param {import('@playwright/test').Request} r */
+		const handler = (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0);
+		page.on('request', handler);
+
+		await page.click('#create-child');
+
+		// the nested query returned by the command resolves to its seeded value
+		await expect(page.locator('#command-result')).toHaveText('z/child:z');
+
+		await page.waitForTimeout(100);
+		// only the command POST itself — the nested query was seeded, not fetched
+		expect(request_count).toBe(1);
+	});
 });
 
 test.describe('client error boundaries', () => {

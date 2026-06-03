@@ -1,7 +1,11 @@
 import { app_dir, base } from '$app/paths/internal/client';
 import { app } from '../../client.js';
-import { get_remote_request_headers, handle_side_channel_response } from '../shared.svelte.js';
-import * as devalue from 'devalue';
+import {
+	apply_queries,
+	get_remote_request_headers,
+	handle_side_channel_response
+} from '../shared.svelte.js';
+import { parse_remote_value } from '../../../shared.js';
 import { HttpError } from '@sveltejs/kit/internal';
 import { noop } from '../../../../utils/functions.js';
 import { read_ndjson } from '../../ndjson.js';
@@ -44,7 +48,8 @@ async function get_stream_reader(response) {
 async function* read_live_ndjson(reader) {
 	for await (const node of read_ndjson(reader)) {
 		if (node.type === 'result') {
-			yield devalue.parse(node.result, app.decoders);
+			const revive = apply_queries(node.queries);
+			yield parse_remote_value(node.result, app.decoders, revive);
 			continue;
 		}
 

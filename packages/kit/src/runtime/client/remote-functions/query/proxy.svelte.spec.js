@@ -51,7 +51,7 @@ describe('QueryProxy', () => {
 
 	test('constructing a proxy populates the cache', () => {
 		const fn = () => Promise.resolve('value');
-		new QueryProxy('q', undefined, fn);
+		new QueryProxy('q', '', fn);
 
 		const entries = /** @type {Map<string, any>} */ (query_map.get('q'));
 		expect(entries).toBeDefined();
@@ -61,10 +61,10 @@ describe('QueryProxy', () => {
 		expect(entry.proxy_count).toBe(1);
 	});
 
-	test('two proxies for the same (id, arg) share a single cache entry', () => {
+	test('two proxies for the same (id, payload) share a single cache entry', () => {
 		const fn = () => Promise.resolve('value');
-		new QueryProxy('q', { x: 1 }, fn);
-		new QueryProxy('q', { x: 1 }, fn);
+		new QueryProxy('q', '{"x":1}', fn);
+		new QueryProxy('q', '{"x":1}', fn);
 
 		const entries = /** @type {Map<string, any>} */ (query_map.get('q'));
 		expect(entries.size).toBe(1);
@@ -73,10 +73,10 @@ describe('QueryProxy', () => {
 		expect(entry.proxy_count).toBe(2);
 	});
 
-	test('proxies for different args produce different cache entries', () => {
+	test('proxies for different payloads produce different cache entries', () => {
 		const fn = () => Promise.resolve('value');
-		new QueryProxy('q', { x: 1 }, fn);
-		new QueryProxy('q', { x: 2 }, fn);
+		new QueryProxy('q', '{"x":1}', fn);
+		new QueryProxy('q', '{"x":2}', fn);
 
 		expect(query_map.get('q')?.size).toBe(2);
 	});
@@ -87,7 +87,7 @@ describe('QueryProxy', () => {
 		// Construct the proxy in a nested scope so V8's debug scope tracking can't
 		// keep it alive in the surrounding closure.
 		(() => {
-			new QueryProxy('q', { name: 'echo' }, fn);
+			new QueryProxy('q', '{"name":"echo"}', fn);
 		})();
 
 		expect(query_map.get('q')?.size).toBe(1);

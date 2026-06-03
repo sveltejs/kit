@@ -1,5 +1,5 @@
 /** @import { ActionResult, RemoteForm, RequestEvent, SSRManifest } from '@sveltejs/kit' */
-/** @import { RemoteFormInternals, RemoteFunctionResponse, RemoteInternals, RequestState, SSROptions } from 'types' */
+/** @import { RemoteFormInternals, RemoteFunctionResponse, RemoteInternals, RemoteResourceCode, RemoteSingleflightEntry, RequestState, SSROptions } from 'types' */
 
 import { json, error } from '@sveltejs/kit';
 import { HttpError, Redirect, SvelteKitError } from '@sveltejs/kit/internal';
@@ -327,7 +327,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 	 * `[id, payload, code]` pointers (and collects their values for the `queries` channel).
 	 * @param {Promise<any>} promise
 	 * @param {boolean} [allow_queries=true]
-	 * @returns {Promise<import('types').RemoteSingleflightEntry>}
+	 * @returns {Promise<RemoteSingleflightEntry>}
 	 */
 	async function serialize_entry(promise, allow_queries = true) {
 		try {
@@ -365,11 +365,11 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 	 * fixpoint because serializing one value can reveal further nested pointers.
 	 */
 	async function build_queries() {
-		/** @type {Record<string, import('types').RemoteSingleflightEntry & { code?: import('types').RemoteResourceCode }>} */
+		/** @type {Record<string, RemoteSingleflightEntry & { code?: RemoteResourceCode }>} */
 		const serialized = {};
 		const seen = new Set();
 
-		/** @type {Array<{ key: string, code: import('types').RemoteResourceCode, get_value: () => Promise<any> }>} */
+		/** @type {Array<{ key: string, code: RemoteResourceCode, get_value: () => Promise<any> }>} */
 		let worklist = [];
 
 		// explicit single-flight refreshes/sets target queries already mounted on the client
