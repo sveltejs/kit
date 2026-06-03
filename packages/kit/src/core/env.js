@@ -291,20 +291,16 @@ export function create_sveltekit_env_public(variables, env, prelude) {
  * @param {string} global
  */
 export function create_sveltekit_env_service_worker_dev(variables, env, global) {
-	if (!variables) {
-		return `${global} = { env: {} }`;
-	}
-
 	/** @type {string[]} */
 	const properties = [];
 
 	/** @type {Record<string, StandardSchemaV1.Issue[]>} */
 	const issues = {};
 
-	for (const [name, config] of Object.entries(variables)) {
+	for (const [name, config] of Object.entries(variables ?? {})) {
 		if (!config.public) continue;
 
-		const value = validate(variables, env[name], name, issues);
+		const value = validate(variables ?? {}, env[name], name, issues);
 		properties.push(`${name}: ${devalue.uneval(value)}`);
 	}
 
@@ -315,7 +311,7 @@ export function create_sveltekit_env_service_worker_dev(variables, env, global) 
 
 		${global} = {
 			env: {
-				${properties.join(',\n\t\t')}
+				${properties.join(',\n\t\t') || '// empty'}
 			}
 		};
 	`;

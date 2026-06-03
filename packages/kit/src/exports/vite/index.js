@@ -518,7 +518,7 @@ async function kit({ svelte_config }) {
 					explicit_env_entry = resolved;
 					explicit_env_config = await sync.env(kit, explicit_env_entry, vite_config_env.mode);
 
-					for (const id of [sveltekit_env, sveltekit_env_public]) {
+					for (const id of [sveltekit_env, sveltekit_env_public_client]) {
 						const module = server.moduleGraph.getModuleById(id);
 
 						if (module) {
