@@ -557,7 +557,7 @@ async function kit({ svelte_config }) {
 							id,
 							normalized_lib,
 							normalized_cwd
-						)} into service-worker code. Only the modules $service-worker and $env/static/public are available in service workers.`
+						)} into service-worker code. Only the modules $service-worker, $env/static/public and $app/env/public are available in service workers.`
 					);
 				}
 			}

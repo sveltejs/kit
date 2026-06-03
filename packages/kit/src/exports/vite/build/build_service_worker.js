@@ -109,7 +109,7 @@ export async function build_service_worker(
 			const relative = normalize_id(id, normalized_lib, normalized_cwd);
 			const stripped = strip_virtual_prefix(relative);
 			throw new Error(
-				`Cannot import ${stripped} into service-worker code. Only the modules $service-worker and $env/static/public are available in service workers.`
+				`Cannot import ${stripped} into service-worker code. Only the modules $service-worker, $env/static/public and $app/env/public are available in service workers.`
 			);
 		}
 	};
