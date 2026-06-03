@@ -1,3 +1,4 @@
+/** @import { EnvVarConfig } from '@sveltejs/kit' */
 /** @import { Options, SvelteConfig } from '@sveltejs/vite-plugin-svelte' */
 /** @import { PreprocessorGroup } from 'svelte/compiler' */
 /** @import { ConfigEnv, Plugin, ResolvedConfig, UserConfig, ViteDevServer } from 'vite' */
@@ -10,7 +11,11 @@ import { exactRegex, prefixRegex } from 'rolldown/filter';
 
 import { copy, mkdirp, read, resolve_entry, rimraf } from '../../utils/filesystem.js';
 import { posixify } from '../../utils/os.js';
-import { create_static_module, create_dynamic_module } from '../../core/env.js';
+import {
+	create_sveltekit_env,
+	create_sveltekit_env_browser,
+	resolve_explicit_env_entry
+} from '../../core/env.js';
 import * as sync from '../../core/sync/sync.js';
 import { create_assets } from '../../core/sync/create_manifest_data/index.js';
 import { runtime_directory, logger } from '../../core/utils.js';
@@ -34,19 +39,17 @@ import { s } from '../../utils/misc.js';
 import { hash } from '../../utils/hash.js';
 import { dedent } from '../../core/sync/utils.js';
 import {
+	app_env_private,
 	app_server,
-	env_dynamic_private,
-	env_dynamic_public,
-	env_static_private,
-	env_static_public,
 	service_worker,
-	sveltekit_environment,
+	sveltekit_env,
+	sveltekit_env_browser,
 	sveltekit_server
 } from './module_ids.js';
 import { import_peer } from '../../utils/import.js';
 import { compact } from '../../utils/array.js';
 import { should_ignore, has_children } from './static_analysis/utils.js';
-import { load_config, load_svelte_config, process_config } from '../../core/config/index.js';
+import { load_svelte_config, process_config } from '../../core/config/index.js';
 import { treeshake_prerendered_remotes } from './build/remote.js';
 
 const cwd = process.cwd();
@@ -275,7 +278,7 @@ function kit({ svelte_config, adapter }) {
 	/** @type {boolean} */
 	let is_build;
 
-	/** @type {{ public: Record<string, string>; private: Record<string, string> }} */
+	/** @type {{ all: Record<string, string>; public: Record<string, string>; private: Record<string, string> }} */
 	let env;
 
 	/** @type {import('types').ManifestData} */
@@ -413,7 +416,7 @@ function kit({ svelte_config, adapter }) {
 							// because they for example use rolldown.build with `platform: 'browser'`
 							'esm-env',
 							// This forces `$app/*` modules to be bundled, since they depend on
-							// virtual modules like `__sveltekit/environment` (this isn't a valid bare
+							// virtual modules like `__sveltekit/env` (this isn't a valid bare
 							// import, but it works with vite-node's externalization logic, which
 							// uses basic concatenation)
 							'@sveltejs/kit/src/runtime'
@@ -444,6 +447,7 @@ function kit({ svelte_config, adapter }) {
 
 				const define = {
 					__SVELTEKIT_APP_DIR__: s(kit.appDir),
+					__SVELTEKIT_APP_VERSION__: s(kit.version.name),
 					__SVELTEKIT_EMBEDDED__: s(kit.embedded),
 					__SVELTEKIT_FORK_PRELOADS__: s(kit.experimental.forkPreloads),
 					__SVELTEKIT_PATHS_ASSETS__: s(kit.paths.assets),
@@ -454,6 +458,9 @@ function kit({ svelte_config, adapter }) {
 					__SVELTEKIT_SERVER_TRACING_ENABLED__: s(kit.experimental.tracing.server),
 					__SVELTEKIT_EXPERIMENTAL_USE_TRANSFORM_ERROR__: s(kit.experimental.handleRenderingErrors),
 					__SVELTEKIT_ROOT__: s(root),
+					__SVELTEKIT_EXPERIMENTAL_EXPLICIT_ENVIRONMENT_VARIABLES__: s(
+						kit.experimental.explicitEnvironmentVariables
+					),
 					__SVELTEKIT_DEV__: s(!is_build)
 				};
 
@@ -496,12 +503,52 @@ function kit({ svelte_config, adapter }) {
 		}
 	};
 
+	/** @type {string | null} */
+	let explicit_env_entry = null;
+
+	/** @type {Record<string, EnvVarConfig<any>> | null} */
+	let explicit_env_config = null;
+
 	/** @type {Plugin} */
 	const plugin_virtual_modules = {
 		name: 'vite-plugin-sveltekit-virtual-modules',
 
 		applyToEnvironment(environment) {
 			return environment.name !== 'serviceWorker';
+		},
+
+		async configResolved(config) {
+			explicit_env_entry = resolve_explicit_env_entry(kit);
+			explicit_env_config = await sync.env(kit, explicit_env_entry, config.mode);
+		},
+
+		configureServer(server) {
+			if (!kit.experimental.explicitEnvironmentVariables) {
+				return;
+			}
+
+			server.watcher.on('all', async (_, file) => {
+				if (!file.includes('env')) {
+					return;
+				}
+
+				const resolved = resolve_explicit_env_entry(kit);
+
+				if (file === explicit_env_entry || file === resolved) {
+					explicit_env_entry = resolved;
+					explicit_env_config = await sync.env(kit, explicit_env_entry, vite_config_env.mode);
+
+					for (const id of [sveltekit_env, sveltekit_env_browser]) {
+						const module = server.moduleGraph.getModuleById(id);
+
+						if (module) {
+							server.moduleGraph.invalidateModule(module);
+						}
+					}
+
+					server.ws.send({ type: 'full-reload' });
+				}
+			});
 		},
 
 		resolveId(id, importer) {
@@ -513,6 +560,7 @@ function kit({ svelte_config, adapter }) {
 			// This check won't catch transitive imports, but it will warn when the import comes from a service-worker directly.
 			// Transitive imports will be caught during the build.
 			// TODO move this logic to plugin_guard. add a filter to this resolveId when doing so
+			// TODO allow $app/env/public
 			if (importer) {
 				const parsed_importer = path.parse(importer);
 
@@ -547,67 +595,22 @@ function kit({ svelte_config, adapter }) {
 		},
 		load: {
 			filter: {
-				id: [
-					exactRegex(env_static_private),
-					exactRegex(env_static_public),
-					exactRegex(env_dynamic_private),
-					exactRegex(env_dynamic_public),
-					exactRegex(service_worker),
-					exactRegex(sveltekit_environment),
-					exactRegex(sveltekit_server)
-				]
+				id: [exactRegex(service_worker), exactRegex(sveltekit_server)]
 			},
 			handler(id) {
+				const global = is_build
+					? `globalThis.__sveltekit_${version_hash}`
+					: 'globalThis.__sveltekit_dev';
+
 				switch (id) {
-					case env_static_private:
-						return create_static_module('$env/static/private', env.private);
-
-					case env_static_public:
-						return create_static_module('$env/static/public', env.public);
-
-					case env_dynamic_private:
-						return create_dynamic_module(
-							'private',
-							vite_config_env.command === 'serve' ? env.private : undefined,
-							root
-						);
-
-					case env_dynamic_public: {
-						// populate `$env/dynamic/public` from `window`
-						if (this.environment.config.consumer === 'client') {
-							const global = is_build
-								? `globalThis.__sveltekit_${version_hash}`
-								: 'globalThis.__sveltekit_dev';
-							return `export const env = ${global}.env;`;
-						}
-
-						return create_dynamic_module(
-							'public',
-							vite_config_env.command === 'serve' ? env.public : undefined,
-							root
-						);
-					}
-
 					case service_worker:
 						return create_service_worker_module(svelte_config);
 
-					case sveltekit_environment: {
-						const { version } = svelte_config.kit;
+					case sveltekit_env:
+						return create_sveltekit_env(explicit_env_config, env.all, explicit_env_entry);
 
-						return dedent`
-						export const version = ${s(version.name)};
-						export let building = false;
-						export let prerendering = false;
-
-						export function set_building() {
-							building = true;
-						}
-
-						export function set_prerendering() {
-							prerendering = true;
-						}
-					`;
-					}
+					case sveltekit_env_browser:
+						return create_sveltekit_env_browser(explicit_env_config, env.all, global);
 
 					case sveltekit_server: {
 						return dedent`
@@ -635,7 +638,7 @@ function kit({ svelte_config, adapter }) {
 
 	/**
 	 * Ensures that client-side code can't accidentally import server-side code,
-	 * whether in `*.server.js` files, `$app/server`, `$lib/server`, or `$env/[static|dynamic]/private`
+	 * whether in `*.server.js` files, `$app/server`, `$lib/server`, `$app/env/private`, or `$env/[static|dynamic]/private`
 	 * @type {Plugin}
 	 */
 	const plugin_guard = {
@@ -679,9 +682,8 @@ function kit({ svelte_config, adapter }) {
 		load: {
 			filter: {
 				id: [
-					exactRegex(env_static_private),
-					exactRegex(env_dynamic_private),
 					exactRegex(app_server),
+					exactRegex(app_env_private),
 					/\/server\//,
 					new RegExp(`${server_only_pattern.source}$`)
 				]
@@ -696,8 +698,7 @@ function kit({ svelte_config, adapter }) {
 				const normalized = normalize_id(id, normalized_lib, normalized_cwd);
 
 				const is_server_only =
-					normalized === '$env/static/private' ||
-					normalized === '$env/dynamic/private' ||
+					normalized === '$app/env/private' ||
 					normalized === '$app/server' ||
 					normalized.startsWith('$lib/server/') ||
 					(is_internal && server_only_pattern.test(path.basename(id)));
@@ -1004,10 +1005,6 @@ function kit({ svelte_config, adapter }) {
 
 			if (id === service_worker) {
 				return service_worker_code;
-			}
-
-			if (id === env_static_public) {
-				return create_static_module('$env/static/public', env.public);
 			}
 
 			const normalized_cwd = vite.normalizePath(vite_config.root);
@@ -1488,9 +1485,8 @@ function kit({ svelte_config, adapter }) {
 					imports: [...start.imports, ...app.imports],
 					stylesheets: [...start.stylesheets, ...app.stylesheets],
 					fonts: [...start.fonts, ...app.fonts],
-					uses_env_dynamic_public: client_chunks.some(
-						(chunk) => chunk.type === 'chunk' && chunk.modules[env_dynamic_public]
-					)
+					// TODO this previously checked for use of $env/dynamic/public, does it now need to check for $app/env/public?
+					uses_env_dynamic_public: false
 				};
 
 				// In case of server-side route resolution, we create a purpose-built route manifest that is
@@ -1538,9 +1534,8 @@ function kit({ svelte_config, adapter }) {
 					imports: start.imports,
 					stylesheets: start.stylesheets,
 					fonts: start.fonts,
-					uses_env_dynamic_public: client_chunks.some(
-						(chunk) => chunk.type === 'chunk' && chunk.modules[env_dynamic_public]
-					)
+					// TODO this previously checked for use of $env/dynamic/public, does it now need to check for $app/env/public?
+					uses_env_dynamic_public: false
 				};
 
 				if (svelte_config.kit.output.bundleStrategy === 'inline') {
@@ -1656,7 +1651,8 @@ function kit({ svelte_config, adapter }) {
 					prerender_results.prerender_map,
 					log,
 					remotes,
-					vite_config
+					vite_config,
+					explicit_env_config
 				);
 			} else {
 				console.log(styleText(['bold', 'yellow'], '\nNo adapter specified'));

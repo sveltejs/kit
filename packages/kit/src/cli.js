@@ -3,6 +3,7 @@ import process from 'node:process';
 import { parseArgs, styleText } from 'node:util';
 import { load_config } from './core/config/index.js';
 import { coalesce_to_error } from './utils/error.js';
+import { resolve_explicit_env_entry } from './core/env.js';
 
 /** @param {unknown} e */
 function handle_error(e) {
@@ -96,6 +97,9 @@ if (command === 'sync') {
 		const config = await load_config({ cwd: process.cwd() });
 		const sync = await import('./core/sync/sync.js');
 		sync.all_types(config, values.mode);
+
+		const explicit_env_entry = resolve_explicit_env_entry(config.kit);
+		await sync.env(config.kit, explicit_env_entry, values.mode);
 	} catch (error) {
 		handle_error(error);
 	} finally {

@@ -12,6 +12,8 @@ import {
 	create_node_analyser,
 	get_page_options
 } from '../../exports/vite/static_analysis/index.js';
+import { load_explicit_env } from '../env.js';
+import { write_env } from './write_env.js';
 
 /**
  * Initialize SvelteKit's generated files that only depend on the config and mode.
@@ -91,6 +93,20 @@ export function all_types(config, mode) {
 	const manifest_data = create_manifest_data({ config, cwd });
 	write_all_types(config, manifest_data, cwd);
 	write_non_ambient(config.kit, manifest_data);
+}
+
+/**
+ * Generate modules and types for explicit env vars
+ * @param {import('types').ValidatedKitConfig} kit
+ * @param {string | null} entry
+ * @param {string} mode The Vite mode
+ */
+export async function env(kit, entry, mode) {
+	const env_config = await load_explicit_env(kit, entry, 'TODO', mode);
+
+	write_env(kit, entry, env_config);
+
+	return env_config;
 }
 
 /**

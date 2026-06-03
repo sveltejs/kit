@@ -93,6 +93,10 @@
 		"#app/paths": {
 			"browser": "./src/runtime/app/paths/client.js",
 			"default": "./src/runtime/app/paths/server.js"
+		},
+		"#app/env/public": {
+			"browser": "./src/runtime/app/env/public/client.js",
+			"default": "./src/runtime/app/env/public/server.js"
 		}
 	},
 	"exports": {
@@ -104,6 +108,13 @@
 		"./internal": {
 			"types": "./types/index.d.ts",
 			"import": "./src/exports/internal/index.js"
+		},
+		"./internal/env": {
+			"types": "./types/index.d.ts",
+			"import": "./src/exports/internal/env.js"
+		},
+		"./internal/types": {
+			"import": "./src/exports/internal/types.js"
 		},
 		"./internal/server": {
 			"types": "./types/index.d.ts",

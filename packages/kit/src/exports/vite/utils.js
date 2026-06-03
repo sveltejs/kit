@@ -7,6 +7,7 @@ import { escape_html } from '../../utils/escape.js';
 import { dedent } from '../../core/sync/utils.js';
 import {
 	app_server,
+	app_env_private,
 	env_dynamic_private,
 	env_dynamic_public,
 	env_static_private,
@@ -72,6 +73,7 @@ export function get_env(env_config, mode) {
 	const env = loadEnv(mode, env_config.dir, '');
 
 	return {
+		all: env,
 		public: filter_env(env, public_prefix, private_prefix),
 		private: filter_env(env, private_prefix, public_prefix)
 	};
@@ -154,6 +156,10 @@ export function normalize_id(id, lib, cwd) {
 
 	if (id === app_server) {
 		return '$app/server';
+	}
+
+	if (id === app_env_private) {
+		return '$app/env/private';
 	}
 
 	if (id === env_static_private) {

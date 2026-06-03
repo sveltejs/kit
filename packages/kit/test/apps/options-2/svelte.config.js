@@ -29,6 +29,7 @@ const config = {
 			bundleStrategy: 'single'
 		},
 		experimental: {
+			explicitEnvironmentVariables: true,
 			remoteFunctions: true
 		}
 	}

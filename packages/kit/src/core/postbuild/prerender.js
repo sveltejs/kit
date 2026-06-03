@@ -49,7 +49,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, roo
 	/** @type {import('types').ServerModule} */
 	const { Server } = await import(pathToFileURL(`${out}/server/index.js`).href);
 
-	// configure `import { building } from '$app/environment'` —
+	// configure `import { building } from '$app/environment'` and `$app/env` —
 	// essential we do this before analysing the code
 	internal.set_building();
 	internal.set_prerendering();
@@ -504,6 +504,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, roo
 	const public_env = filter_env(env, public_prefix, private_prefix);
 	internal.set_private_env(private_env);
 	internal.set_public_env(public_env);
+	internal.set_env(env);
 	internal.set_manifest(manifest);
 	internal.set_read_implementation((file) => createReadableStream(`${out}/server/${file}`));
 

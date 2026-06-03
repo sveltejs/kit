@@ -75,6 +75,7 @@ const get_defaults = (prefix = '') => ({
 		experimental: {
 			tracing: { server: false },
 			instrumentation: { server: false },
+			explicitEnvironmentVariables: false,
 			remoteFunctions: false,
 			forkPreloads: false,
 			handleRenderingErrors: false
