@@ -1,1 +1,1 @@
-export * from '__sveltekit/env/browser';
+export * from '__sveltekit/env/public/client';
