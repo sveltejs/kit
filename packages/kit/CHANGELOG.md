@@ -1,5 +1,32 @@
 # @sveltejs/kit
 
+## 2.62.0
+### Minor Changes
+
+
+- feat: support passing Svelte(Kit) config via Vite plugin ([#15944](https://github.com/sveltejs/kit/pull/15944))
+
+
+### Patch Changes
+
+
+- fix: preserve multiple `Set-Cookie` headers on 304 responses ([#15902](https://github.com/sveltejs/kit/pull/15902))
+
+
+- fix: preload for anchor elements that were just previously preloaded ([#15915](https://github.com/sveltejs/kit/pull/15915))
+
+
+- fix: catch load function streaming errors on the client ([#15929](https://github.com/sveltejs/kit/pull/15929))
+
+
+- fix: avoid generating the `_app/env.js` module if public dynamic environment variables are not used by the app ([#15940](https://github.com/sveltejs/kit/pull/15940))
+
+## 2.61.1
+### Patch Changes
+
+
+- fix: regression where routes starting and ending with a route group are not matched correctly ([#15903](https://github.com/sveltejs/kit/pull/15903))
+
 ## 2.61.0
 ### Minor Changes
 
