@@ -7,7 +7,13 @@ const config = {
 		minify: false
 	},
 	clearScreen: false,
-	plugins: [sveltekit()],
+	plugins: [
+		sveltekit({
+			output: {
+				bundleStrategy: 'inline'
+			}
+		})
+	],
 	server: {
 		fs: {
 			allow: [path.resolve('../../../src')]
