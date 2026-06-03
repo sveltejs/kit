@@ -15,7 +15,6 @@ import { escape_html } from '../../utils/escape.js';
  *   universal_hooks: string | null;
  *   config: import('types').ValidatedConfig;
  *   has_service_worker: boolean;
- *   runtime_directory: string;
  *   template: string;
  *   error_page: string;
  * }} opts
@@ -25,7 +24,6 @@ const server_template = ({
 	server_hooks,
 	universal_hooks,
 	has_service_worker,
-	runtime_directory,
 	template,
 	error_page
 }) => `
@@ -34,7 +32,6 @@ import { set_building, set_prerendering } from '$app/env/internal';
 import { set_assets } from '$app/paths/internal/server';
 import { set_manifest, set_read_implementation } from '__sveltekit/server';
 import { set_env } from '__sveltekit/env';
-import { set_private_env, set_public_env } from '${runtime_directory}/shared-server.js';
 
 export const options = {
 	app_template_contains_nonce: ${template.includes('%sveltekit.nonce%')},
@@ -93,7 +90,7 @@ export async function get_hooks() {
 	};
 }
 
-export { set_assets, set_building, set_env, set_manifest, set_prerendering, set_private_env, set_public_env, set_read_implementation };
+export { set_assets, set_building, set_env, set_manifest, set_prerendering, set_read_implementation };
 `;
 
 // TODO need to re-run this whenever src/app.html or src/error.html are
