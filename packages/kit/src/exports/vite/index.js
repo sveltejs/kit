@@ -6,7 +6,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { styleText } from 'node:util';
-
+import { loadEnv } from 'vite';
 import { exactRegex, prefixRegex } from 'rolldown/filter';
 
 import { copy, mkdirp, read, resolve_entry, rimraf } from '../../utils/filesystem.js';
@@ -29,7 +29,6 @@ import { preview } from './preview/index.js';
 import {
 	error_for_missing_config,
 	get_config_aliases,
-	get_env,
 	normalize_id,
 	stackless,
 	strip_virtual_prefix
@@ -283,7 +282,7 @@ function kit({ svelte_config, adapter }) {
 	/** @type {boolean} */
 	let is_build;
 
-	/** @type {{ all: Record<string, string>; public: Record<string, string>; private: Record<string, string> }} */
+	/** @type {Record<string, string>} */
 	let env;
 
 	/** @type {import('types').ManifestData} */
@@ -344,7 +343,7 @@ function kit({ svelte_config, adapter }) {
 
 				version_hash = hash(kit.version.name);
 
-				env = get_env(kit.env, vite_config_env.mode);
+				env = loadEnv(config_env.mode, kit.env.dir, '');
 
 				service_worker_entry_file = resolve_entry(kit.files.serviceWorker);
 				parsed_service_worker = path.parse(kit.files.serviceWorker);
@@ -474,7 +473,7 @@ function kit({ svelte_config, adapter }) {
 						__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: s(kit.version.pollInterval)
 					};
 
-					manifest_data = sync.all(svelte_config, config_env.mode, root).manifest_data;
+					manifest_data = sync.all(svelte_config, root).manifest_data;
 				} else {
 					new_config.define = {
 						...define,
@@ -618,27 +617,27 @@ function kit({ svelte_config, adapter }) {
 						return create_service_worker_module(svelte_config);
 
 					case sveltekit_env:
-						return create_sveltekit_env(explicit_env_config, env.all, explicit_env_entry);
+						return create_sveltekit_env(explicit_env_config, env, explicit_env_entry);
 
 					case sveltekit_env_public_client:
 						return create_sveltekit_env_public(
 							explicit_env_config,
-							env.all,
+							env,
 							`const env = ${global}.env;`
 						);
 
 					case sveltekit_env_public_server:
 						return create_sveltekit_env_public(
 							explicit_env_config,
-							env.all,
+							env,
 							`import { rendered_env as env } from '__sveltekit/env';`
 						);
 
 					case sveltekit_env_private:
-						return create_sveltekit_env_private(explicit_env_config, env.all);
+						return create_sveltekit_env_private(explicit_env_config, env);
 
 					case sveltekit_env_service_worker:
-						return create_sveltekit_env_service_worker_dev(explicit_env_config, env.all, global);
+						return create_sveltekit_env_service_worker_dev(explicit_env_config, env, global);
 
 					case sveltekit_server: {
 						return dedent`
@@ -738,7 +737,7 @@ function kit({ svelte_config, adapter }) {
 				}
 
 				// in dev, this doesn't exist, so we need to create it
-				manifest_data ??= sync.all(svelte_config, vite_config_env.mode, root).manifest_data;
+				manifest_data ??= sync.all(svelte_config, root).manifest_data;
 
 				/** @type {Set<string>} */
 				const entrypoints = new Set();
@@ -1437,7 +1436,7 @@ function kit({ svelte_config, adapter }) {
 				manifest_data,
 				server_manifest,
 				tracked_features,
-				env: { ...env.private, ...env.public },
+				env,
 				out,
 				remotes,
 				root
@@ -1635,7 +1634,7 @@ function kit({ svelte_config, adapter }) {
 				manifest_path,
 				metadata,
 				verbose,
-				env: { ...env.private, ...env.public },
+				env,
 				root
 			});
 			prerendered = prerender_results.prerendered;

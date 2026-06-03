@@ -96,7 +96,7 @@ if (command === 'sync') {
 	try {
 		const config = await load_config({ cwd: process.cwd() });
 		const sync = await import('./core/sync/sync.js');
-		sync.all_types(config, values.mode);
+		sync.all_types(config);
 
 		const explicit_env_entry = resolve_explicit_env_entry(config.kit);
 		await sync.env(config.kit, explicit_env_entry, values.mode);

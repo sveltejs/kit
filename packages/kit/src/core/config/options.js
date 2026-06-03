@@ -1,7 +1,6 @@
 /** @import { Validator } from './types.js' */
 
 import process from 'node:process';
-import { dedent } from '../sync/utils.js';
 
 const directives = object({
 	'child-src': string_array(),

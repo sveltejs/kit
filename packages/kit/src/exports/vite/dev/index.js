@@ -56,7 +56,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, a
 		return fetch(info, init);
 	};
 
-	sync.init(svelte_config, vite_config.mode, root);
+	sync.init(svelte_config, root);
 
 	/** @type {import('types').ManifestData} */
 	let manifest_data;

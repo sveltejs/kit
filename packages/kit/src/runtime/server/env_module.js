@@ -1,5 +1,4 @@
 import * as devalue from 'devalue';
-import { public_env } from '../shared-server.js'; // TODO get rid
 import { rendered_env } from '__sveltekit/env';
 
 /** @type {string} */
