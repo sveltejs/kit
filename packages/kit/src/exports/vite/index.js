@@ -458,9 +458,6 @@ function kit({ svelte_config, adapter }) {
 					__SVELTEKIT_SERVER_TRACING_ENABLED__: s(kit.experimental.tracing.server),
 					__SVELTEKIT_EXPERIMENTAL_USE_TRANSFORM_ERROR__: s(kit.experimental.handleRenderingErrors),
 					__SVELTEKIT_ROOT__: s(root),
-					__SVELTEKIT_EXPERIMENTAL_EXPLICIT_ENVIRONMENT_VARIABLES__: s(
-						kit.experimental.explicitEnvironmentVariables
-					),
 					__SVELTEKIT_DEV__: s(!is_build)
 				};
 
@@ -523,10 +520,6 @@ function kit({ svelte_config, adapter }) {
 		},
 
 		configureServer(server) {
-			if (!kit.experimental.explicitEnvironmentVariables) {
-				return;
-			}
-
 			server.watcher.on('all', async (_, file) => {
 				if (!file.includes('env')) {
 					return;
@@ -1490,8 +1483,8 @@ function kit({ svelte_config, adapter }) {
 					imports: [...start.imports, ...app.imports],
 					stylesheets: [...start.stylesheets, ...app.stylesheets],
 					fonts: [...start.fonts, ...app.fonts],
-					// TODO this previously checked for use of $env/dynamic/public, does it now need to check for $app/env/public?
-					uses_env_dynamic_public: false
+					// TODO this previously checked for use of $env/dynamic/public, it should now need to check for $app/env/public
+					uses_env_dynamic_public: true
 				};
 
 				// In case of server-side route resolution, we create a purpose-built route manifest that is
@@ -1539,8 +1532,8 @@ function kit({ svelte_config, adapter }) {
 					imports: start.imports,
 					stylesheets: start.stylesheets,
 					fonts: start.fonts,
-					// TODO this previously checked for use of $env/dynamic/public, does it now need to check for $app/env/public?
-					uses_env_dynamic_public: false
+					// TODO this previously checked for use of $env/dynamic/public, it should now need to check for $app/env/public
+					uses_env_dynamic_public: true
 				};
 
 				if (svelte_config.kit.output.bundleStrategy === 'inline') {

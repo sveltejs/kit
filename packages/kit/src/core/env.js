@@ -2,7 +2,6 @@
 /** @import { EnvVarConfig } from '@sveltejs/kit' */
 /** @import { ValidatedKitConfig } from 'types' */
 import path from 'node:path';
-import process from 'node:process';
 import * as vite from 'vite';
 import * as devalue from 'devalue';
 import { GENERATED_COMMENT } from '../constants.js';
@@ -16,33 +15,12 @@ import { get_config_aliases } from '../exports/vite/utils.js';
  * @typedef {'public' | 'private'} EnvType
  */
 
-let warned = false;
-
 /**
  * @param {import('types').ValidatedKitConfig} config
  * @returns {string | null}
  */
 export function resolve_explicit_env_entry(config) {
-	const resolved = resolve_entry(path.join(config.files.src, 'env'));
-
-	if (resolved) {
-		if (config.experimental.explicitEnvironmentVariables) {
-			return resolved;
-		}
-
-		if (!warned) {
-			console.warn(
-				`${path.relative(process.cwd(), resolved)} requires the \`experimental.explicitEnvironmentVariables\` flag to be set`
-			);
-			warned = true;
-		}
-	} else if (config.experimental.explicitEnvironmentVariables) {
-		console.warn(
-			'experimental.explicitEnvironmentVariables was set, but no src/env.ts or src/env.js file could be found'
-		);
-	}
-
-	return null;
+	return resolve_entry(path.join(config.files.src, 'env')) ?? null;
 }
 
 /**

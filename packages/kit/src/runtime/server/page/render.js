@@ -8,7 +8,7 @@ import { serialize_data } from './serialize_data.js';
 import { s } from '../../../utils/misc.js';
 import { Csp } from './csp.js';
 import { uneval_action_response } from './actions.js';
-import { public_env } from '../../shared-server.js';
+import { public_env } from '../../shared-server.js'; // TODO get rid
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import { SCHEME } from '../../../utils/url.js';
 import { create_server_routing_response, generate_route_object } from './server_routing.js';
@@ -416,10 +416,7 @@ export async function render_response({
 		// import the env.js module so that it evaluates before any user code can evaluate.
 		// TODO revert to using top-level await once https://bugs.webkit.org/show_bug.cgi?id=242740 is fixed
 		// https://github.com/sveltejs/kit/pull/11601
-		const load_env_eagerly =
-			(__SVELTEKIT_EXPERIMENTAL_EXPLICIT_ENVIRONMENT_VARIABLES__ ||
-				client.uses_env_dynamic_public) &&
-			state.prerendering;
+		const load_env_eagerly = client.uses_env_dynamic_public && state.prerendering; // TODO implement uses_env_dynamic_public
 
 		const properties = [`base: ${base_expression}`];
 
@@ -427,10 +424,8 @@ export async function render_response({
 			properties.push(`assets: ${s(paths.assets)}`);
 		}
 
-		if (__SVELTEKIT_EXPERIMENTAL_EXPLICIT_ENVIRONMENT_VARIABLES__) {
+		if (client.uses_env_dynamic_public) {
 			properties.push(`env: ${load_env_eagerly ? 'null' : devalue.uneval(env.rendered_env)}`);
-		} else if (client.uses_env_dynamic_public) {
-			properties.push(`env: ${load_env_eagerly ? 'null' : s(public_env)}`);
 		}
 
 		if (chunks) {
@@ -694,9 +689,7 @@ export async function render_response({
 		body,
 		assets,
 		nonce: /** @type {string} */ (csp.nonce),
-		env: __SVELTEKIT_EXPERIMENTAL_EXPLICIT_ENVIRONMENT_VARIABLES__
-			? env.explicit_public_env
-			: public_env
+		env: env.explicit_public_env
 	});
 
 	// TODO flush chunks as early as we can

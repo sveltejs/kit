@@ -2,8 +2,8 @@
 // Therefore, we need to ensure $env, etc. still works during this process so that it doesn't throw errors
 // when it's evaluated as `undefined`
 
-import { env } from '$env/dynamic/public';
+import { PUBLIC_DYNAMIC } from '$app/env/public';
 
-if (!env.PUBLIC_DYNAMIC) {
+if (!PUBLIC_DYNAMIC) {
 	throw Error('this should not happen');
 }

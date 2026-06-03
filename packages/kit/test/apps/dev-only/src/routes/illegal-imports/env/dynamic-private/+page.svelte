@@ -1,5 +1,5 @@
 <script>
-	import { env } from '$env/dynamic/private';
+	import { SHOULD_EXPLODE } from '$app/env/private';
 </script>
 
-<p>{env.SHOULD_EXPLODE}</p>
+<p>{SHOULD_EXPLODE}</p>

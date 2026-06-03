@@ -124,7 +124,6 @@ const options = object(
 				instrumentation: object({
 					server: boolean(false)
 				}),
-				explicitEnvironmentVariables: boolean(false),
 				remoteFunctions: boolean(false),
 				forkPreloads: boolean(false),
 				handleRenderingErrors: boolean(false)

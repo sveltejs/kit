@@ -147,21 +147,19 @@ export function create_builder({
 			const dest = `${config.kit.outDir}/output/prerendered/dependencies/${config.kit.appDir}/env.js`;
 			const env = get_env(config.kit.env, vite_config.mode);
 
-			const values = config.kit.experimental.explicitEnvironmentVariables ? {} : env.public;
+			/** @type {Record<string, any>} */
+			const values = {};
+			const variables = explicit_env_config ?? {};
 
-			if (config.kit.experimental.explicitEnvironmentVariables) {
-				const variables = explicit_env_config ?? {};
+			/** @type {Record<string, StandardSchemaV1.Issue[]>} */
+			const issues = {};
 
-				/** @type {Record<string, StandardSchemaV1.Issue[]>} */
-				const issues = {};
-
-				for (const [name, config] of Object.entries(variables)) {
-					if (config.static || !config.public) continue;
-					values[name] = validate(variables, env.all[name], name, issues);
-				}
-
-				handle_issues(issues);
+			for (const [name, config] of Object.entries(variables)) {
+				if (config.static || !config.public) continue;
+				values[name] = validate(variables, env.all[name], name, issues);
 			}
+
+			handle_issues(issues);
 
 			write(dest, `export const env=${devalue.uneval(values)}`);
 		},

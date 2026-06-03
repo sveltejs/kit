@@ -16,7 +16,7 @@ import { import_peer } from '../../utils/import.js';
  * @param {ValidatedConfig} config
  */
 export function load_template(cwd, { kit }) {
-	const { env, files } = kit;
+	const { files } = kit;
 
 	const relative = path.relative(cwd, files.appTemplate);
 
@@ -32,16 +32,6 @@ export function load_template(cwd, { kit }) {
 			throw new Error(`${relative} is missing ${tag}`);
 		}
 	});
-
-	if (!kit.experimental.explicitEnvironmentVariables) {
-		for (const match of contents.matchAll(/%sveltekit\.env\.([^%]+)%/g)) {
-			if (!match[1].startsWith(env.publicPrefix)) {
-				throw new Error(
-					`Environment variables in ${relative} must start with ${env.publicPrefix} (saw %sveltekit.env.${match[1]}%)`
-				);
-			}
-		}
-	}
 
 	return contents;
 }
