@@ -20,7 +20,7 @@ declare module '__sveltekit/server' {
 }
 
 declare module '__sveltekit/env' {
-	// exported environment variables are defined in ambient.d.ts
+	// exported environment variables are defined in env.d.ts
 
 	/** Populate exported environment variables */
 	export function set_env(environment: Record<string, string>): void;
@@ -32,6 +32,14 @@ declare module '__sveltekit/env' {
 	export const rendered_env: Record<string, any>;
 }
 
-declare module '__sveltekit/env/browser' {
-	// exported environment variables are defined in ambient.d.ts
+declare module '__sveltekit/env/private' {
+	// exported environment variables are defined in env.d.ts
+}
+
+declare module '__sveltekit/env/public/client' {
+	// exported environment variables are defined in env.d.ts
+}
+
+declare module '__sveltekit/env/public/server' {
+	// exported environment variables are defined in env.d.ts
 }

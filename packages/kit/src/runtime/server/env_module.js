@@ -1,6 +1,6 @@
 import * as devalue from 'devalue';
 import { public_env } from '../shared-server.js';
-import { explicit_public_env } from '__sveltekit/env';
+import { rendered_env } from '__sveltekit/env';
 
 /** @type {string} */
 let payload;
@@ -18,9 +18,7 @@ let headers;
 export function get_public_env(request) {
 	const script = request.url.endsWith('.script.js');
 
-	const env = __SVELTEKIT_EXPERIMENTAL_EXPLICIT_ENVIRONMENT_VARIABLES__
-		? explicit_public_env // TODO can we strip out static vars?
-		: public_env;
+	const env = __SVELTEKIT_EXPERIMENTAL_EXPLICIT_ENVIRONMENT_VARIABLES__ ? rendered_env : public_env;
 
 	payload ??= devalue.uneval(env);
 	etag ??= `W/${Date.now()}`;
