@@ -595,7 +595,12 @@ function kit({ svelte_config, adapter }) {
 		},
 		load: {
 			filter: {
-				id: [exactRegex(service_worker), exactRegex(sveltekit_server)]
+				id: [
+					exactRegex(service_worker),
+					exactRegex(sveltekit_env),
+					exactRegex(sveltekit_env_browser),
+					exactRegex(sveltekit_server)
+				]
 			},
 			handler(id) {
 				const global = is_build
