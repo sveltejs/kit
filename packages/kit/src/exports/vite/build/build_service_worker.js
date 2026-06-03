@@ -96,6 +96,7 @@ export async function build_service_worker(
 			}
 
 			if (id === '\0virtual:app/env/public') {
+				// TODO ideally we would only add the `importScripts` if there are dynamic vars that are known to be used
 				return create_sveltekit_env_browser(
 					env_config,
 					env,
