@@ -445,13 +445,6 @@ declare module '@sveltejs/kit' {
 		/** Experimental features. Here be dragons. These are not subject to semantic versioning, so breaking changes or removal can happen in any release. */
 		experimental?: {
 			/**
-			 * Whether to enable explicit environment variables using `src/env.js` or `src/env.ts`.
-			 * @since 2.62.0
-			 * @default false
-			 */
-			explicitEnvironmentVariables?: boolean;
-
-			/**
 			 * Options for enabling server-side [OpenTelemetry](https://opentelemetry.io/) tracing for SvelteKit operations including the [`handle` hook](https://svelte.dev/docs/kit/hooks#Server-hooks-handle), [`load` functions](https://svelte.dev/docs/kit/load), [form actions](https://svelte.dev/docs/kit/form-actions), and [remote functions](https://svelte.dev/docs/kit/remote-functions).
 			 * @default { server: false, serverFile: false }
 			 * @since 2.31.0
@@ -3043,30 +3036,6 @@ declare module '@sveltejs/kit/vite' {
 }
 
 declare module '$app/env' {
-	/**
-	 * `true` if the app is running in the browser.
-	 */
-	export const browser: boolean;
-
-	/**
-	 * Whether the dev server is running. This is not guaranteed to correspond to `NODE_ENV` or `MODE`.
-	 */
-	export const dev: boolean;
-
-	/**
-	 * SvelteKit analyses your app during the `build` step by running it. During this process, `building` is `true`. This also applies during prerendering.
-	 */
-	export const building: boolean;
-
-	/**
-	 * The value of `config.kit.version.name`.
-	 */
-	export const version: string;
-
-	export {};
-}
-
-declare module '$app/environment' {
 	/**
 	 * `true` if the app is running in the browser.
 	 */

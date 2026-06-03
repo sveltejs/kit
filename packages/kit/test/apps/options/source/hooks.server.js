@@ -1,4 +1,4 @@
-import { building } from '$app/environment';
+import { building } from '$app/env';
 import { env } from '$env/dynamic/private';
 
 // this verifies that dynamic env vars can be read during analysis phase

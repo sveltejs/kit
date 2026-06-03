@@ -886,7 +886,7 @@ test.describe('$app/forms', () => {
 
 const root = path.resolve(fileURLToPath(import.meta.url), '..', '..');
 
-test.describe('$app/environment', () => {
+test.describe('$app/env', () => {
 	test('treeshakes dev check', async () => {
 		test.skip(!!process.env.DEV, 'skip when in dev mode');
 

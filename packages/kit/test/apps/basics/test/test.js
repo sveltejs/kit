@@ -722,7 +722,7 @@ test.describe('Page options', () => {
 	});
 });
 
-test.describe('$app/environment', () => {
+test.describe('$app/env', () => {
 	test('includes version', async ({ page }) => {
 		await page.goto('/app-environment');
 		expect(await page.textContent('h1')).toBe('TEST_VERSION');
