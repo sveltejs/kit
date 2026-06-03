@@ -99,7 +99,7 @@ export async function build_service_worker(
 				// TODO ideally we would only add the `importScripts` if there are dynamic vars that are known to be used
 				return create_sveltekit_env_browser(
 					env_config,
-					env,
+					env.all,
 					`importScripts('${kit.paths.base}/${kit.appDir}/env.script.js'); const env = globalThis.__sveltekit_sw.env;`
 				);
 			}
