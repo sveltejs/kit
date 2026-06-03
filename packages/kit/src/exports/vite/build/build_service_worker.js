@@ -5,7 +5,7 @@ import * as vite from 'vite';
 import { dedent } from '../../../core/sync/utils.js';
 import { s } from '../../../utils/misc.js';
 import { get_config_aliases, strip_virtual_prefix, get_env, normalize_id } from '../utils.js';
-import { create_static_module, create_sveltekit_env_browser } from '../../../core/env.js';
+import { create_static_module, create_sveltekit_env_public } from '../../../core/env.js';
 import { env_static_public, service_worker } from '../module_ids.js';
 
 // @ts-ignore `vite.rolldownVersion` only exists in `rolldown-vite`
@@ -97,7 +97,7 @@ export async function build_service_worker(
 
 			if (id === '\0virtual:app/env/public') {
 				// TODO ideally we would only add the `importScripts` if there are dynamic vars that are known to be used
-				return create_sveltekit_env_browser(
+				return create_sveltekit_env_public(
 					env_config,
 					env.all,
 					`importScripts('${kit.paths.base}/${kit.appDir}/env.script.js'); const env = globalThis.__sveltekit_sw.env;`

@@ -13,10 +13,11 @@ import { copy, mkdirp, posixify, read, resolve_entry, rimraf } from '../../utils
 import {
 	create_dynamic_module,
 	create_sveltekit_env,
-	create_sveltekit_env_browser,
+	create_sveltekit_env_public,
 	create_static_module,
 	resolve_explicit_env_entry,
-	create_sveltekit_env_service_worker_dev
+	create_sveltekit_env_service_worker_dev,
+	create_sveltekit_env_private
 } from '../../core/env.js';
 import * as sync from '../../core/sync/sync.js';
 import { create_assets } from '../../core/sync/create_manifest_data/index.js';
@@ -48,9 +49,11 @@ import {
 	env_static_public,
 	service_worker,
 	sveltekit_env,
-	sveltekit_env_browser,
+	sveltekit_env_private,
 	sveltekit_env_service_worker,
-	sveltekit_server
+	sveltekit_server,
+	sveltekit_env_public_client,
+	sveltekit_env_public_server
 } from './module_ids.js';
 import { import_peer } from '../../utils/import.js';
 import { compact } from '../../utils/array.js';
@@ -515,7 +518,7 @@ async function kit({ svelte_config }) {
 					explicit_env_entry = resolved;
 					explicit_env_config = await sync.env(kit, explicit_env_entry, vite_config_env.mode);
 
-					for (const id of [sveltekit_env, sveltekit_env_browser]) {
+					for (const id of [sveltekit_env, sveltekit_env_public_client]) {
 						const module = server.moduleGraph.getModuleById(id);
 
 						if (module) {
@@ -618,12 +621,22 @@ async function kit({ svelte_config }) {
 				case sveltekit_env:
 					return create_sveltekit_env(explicit_env_config, env.all, explicit_env_entry);
 
-				case sveltekit_env_browser:
-					return create_sveltekit_env_browser(
+				case sveltekit_env_public_client:
+					return create_sveltekit_env_public(
 						explicit_env_config,
 						env.all,
 						`const env = ${global}.env;`
 					);
+
+				case sveltekit_env_public_server:
+					return create_sveltekit_env_public(
+						explicit_env_config,
+						env.all,
+						`import { rendered_env as env } from '__sveltekit/env';`
+					);
+
+				case sveltekit_env_private:
+					return create_sveltekit_env_private(explicit_env_config, env.all);
 
 				case sveltekit_env_service_worker:
 					return create_sveltekit_env_service_worker_dev(explicit_env_config, env.all, global);

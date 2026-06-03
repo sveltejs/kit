@@ -1,1 +1,1 @@
-export * from '__sveltekit/env';
+export * from '__sveltekit/env/private';
