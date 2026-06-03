@@ -1532,8 +1532,9 @@ function kit({ svelte_config, adapter }) {
 					imports: [...start.imports, ...app.imports],
 					stylesheets: [...start.stylesheets, ...app.stylesheets],
 					fonts: [...start.fonts, ...app.fonts],
-					// TODO this previously checked for use of $env/dynamic/public, it should now need to check for $app/env/public
-					uses_env_dynamic_public: true
+					uses_env_dynamic_public: client_chunks.some(
+						(chunk) => chunk.type === 'chunk' && chunk.modules[sveltekit_env_public_client]
+					)
 				};
 
 				// In case of server-side route resolution, we create a purpose-built route manifest that is
@@ -1581,7 +1582,6 @@ function kit({ svelte_config, adapter }) {
 					imports: start.imports,
 					stylesheets: start.stylesheets,
 					fonts: start.fonts,
-					// TODO this previously checked for use of $env/dynamic/public, it should now need to check for $app/env/public
 					uses_env_dynamic_public: client_chunks.some(
 						(chunk) => chunk.type === 'chunk' && chunk.modules[sveltekit_env_public_client]
 					)
