@@ -291,7 +291,11 @@ Unlike `query`, live queries do not have a `refresh()` method, as they are self-
 If you need direct, imperative access to the underlying stream of values (rather than the reactive `current` property), live query instances are themselves [async-iterable](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/for-await...of). You can `for await` over the instance directly:
 
 ```js
-// @errors: 7006
+// @filename: time.remote.ts
+import { RemoteLiveQueryFunction } from '@sveltejs/kit';
+export declare const getTime: RemoteLiveQueryFunction<undefined, Date>;
+// @errors: 2304
+// @filename: index.js
 import { getTime } from './time.remote.js';
 // ---cut---
 async function logTimes() {
@@ -1013,7 +1017,7 @@ export const updatePost = form(
 );
 ```
 
-Because queries are keyed based on their arguments, `await getPost(post.id).set(result)` on the server knows to look up the matching `getPost(id)` on the client to update it. The same goes for `getPosts().refresh()` -- it knows to look up `getPosts()` with no argument on the client.
+Because queries are keyed based on their arguments, `getPost(post.id).set(result)` on the server knows to look up the matching `getPost(id)` on the client to update it. The same goes for `getPosts().refresh()` -- it knows to look up `getPosts()` with no argument on the client.
 
 ### Reconnecting live queries in mutations
 

@@ -1,3 +1,4 @@
+/** @import { ServerNodesResponse, ServerRedirectNode } from 'types' */
 /** @import { CacheEntry } from './remote-functions/cache.svelte.js' */
 /** @import { Query } from './remote-functions/query/instance.svelte.js' */
 /** @import { LiveQuery } from './remote-functions/query-live/instance.svelte.js' */
@@ -231,6 +232,7 @@ let load_cache = null;
 function discard_load_cache() {
 	void load_cache?.fork?.then((f) => f?.discard());
 	load_cache = null;
+	current_a = { element: undefined, href: undefined };
 }
 
 /**
@@ -1842,8 +1844,10 @@ async function navigate({
 	if (load_cache?.fork && !load_cache_fork) {
 		// discard fork of different route
 		discard_load_cache();
+	} else {
+		load_cache = null;
+		current_a = { element: undefined, href: undefined };
 	}
-	load_cache = null;
 
 	navigation_result.props.page.state = state;
 
@@ -2029,11 +2033,16 @@ if (import.meta.hot) {
 
 /** @typedef {(typeof PRELOAD_PRIORITIES)['hover'] | (typeof PRELOAD_PRIORITIES)['tap']} PreloadDataPriority */
 
+/**
+ * The anchor element whose href is being preloaded. It is reset after navigation
+ * or changes when a different anchor element is being preloaded.
+ * @type {{ element: Element | SVGAElement | undefined; href: string | SVGAnimatedString | undefined }}
+ */
+let current_a = { element: undefined, href: undefined };
+
 function setup_preload() {
 	/** @type {NodeJS.Timeout} */
 	let mousemove_timeout;
-	/** @type {{ element: Element | SVGAElement | undefined; href: string | SVGAnimatedString | undefined }} */
-	let current_a = { element: undefined, href: undefined };
 	/** @type {PreloadDataPriority} */
 	let current_priority;
 
@@ -2626,7 +2635,7 @@ function _start_router() {
 	});
 
 	// @ts-expect-error this isn't supported everywhere yet
-	if (!navigator.connection?.saveData && !/2g/.test(navigator.connection?.effectiveType)) {
+	if (!navigator.connection?.saveData) {
 		setup_preload();
 	}
 
@@ -3067,61 +3076,69 @@ async function load_data(url, invalid) {
 		throw new HttpError(res.status, message);
 	}
 
-	// TODO: fix eslint error / figure out if it actually applies to our situation
-	// eslint-disable-next-line
-	return new Promise(async (resolve) => {
-		/**
-		 * Map of deferred promises that will be resolved by a subsequent chunk of data
-		 * @type {Map<string, import('types').Deferred>}
-		 */
-		const deferreds = new Map();
-		const reader = /** @type {ReadableStream<Uint8Array>} */ (res.body).getReader();
-
-		/**
-		 * @param {any} data
-		 */
-		function deserialize(data) {
-			return devalue.unflatten(data, {
-				...app.decoders,
-				Promise: (id) => {
-					return new Promise((fulfil, reject) => {
-						deferreds.set(id, { fulfil, reject });
-					});
-				}
-			});
-		}
-
-		for await (const node of read_ndjson(reader)) {
-			if (node.type === 'redirect') {
-				return resolve(node);
-			}
-
-			if (node.type === 'data') {
-				// This is the first (and possibly only, if no pending promises) chunk
-				node.nodes?.forEach((/** @type {any} */ node) => {
-					if (node?.type === 'data') {
-						node.uses = deserialize_uses(node.uses);
-						node.data = deserialize(node.data);
-					}
-				});
-
-				resolve(node);
-			} else if (node.type === 'chunk') {
-				// This is a subsequent chunk containing deferred data
-				const { id, data, error } = node;
-				const deferred = /** @type {import('types').Deferred} */ (deferreds.get(id));
-				deferreds.delete(id);
-
-				if (error) {
-					deferred.reject(deserialize(error));
-				} else {
-					deferred.fulfil(deserialize(data));
-				}
-			}
-		}
+	return new Promise((resolve, reject) => {
+		process_stream(resolve, res).catch(reject);
 	});
 
 	// TODO edge case handling necessary? stream() read fails?
+}
+
+/**
+ * @param {(value: ServerNodesResponse | ServerRedirectNode) => void} resolve
+ * @param {Response} res
+ * @returns {Promise<void>}
+ */
+async function process_stream(resolve, res) {
+	const reader = /** @type {ReadableStream<Uint8Array>} */ (res.body).getReader();
+
+	/**
+	 * Map of deferred promises that will be resolved by a subsequent chunk of data
+	 * @type {Map<string, import('types').Deferred>}
+	 */
+	const deferreds = new Map();
+
+	/**
+	 * @param {any} data
+	 */
+	function deserialize(data) {
+		return devalue.unflatten(data, {
+			...app.decoders,
+			Promise: (id) => {
+				return new Promise((fulfil, reject) => {
+					deferreds.set(id, { fulfil, reject });
+				});
+			}
+		});
+	}
+
+	for await (const node of read_ndjson(reader)) {
+		if (node.type === 'redirect') {
+			return resolve(node);
+		}
+
+		if (node.type === 'data') {
+			// This is the first (and possibly only, if no pending promises) chunk
+			node.nodes?.forEach((/** @type {any} */ node) => {
+				if (node?.type === 'data') {
+					node.uses = deserialize_uses(node.uses);
+					node.data = deserialize(node.data);
+				}
+			});
+
+			resolve(node);
+		} else if (node.type === 'chunk') {
+			// This is a subsequent chunk containing deferred data
+			const { id, data, error } = node;
+			const deferred = /** @type {import('types').Deferred} */ (deferreds.get(id));
+			deferreds.delete(id);
+
+			if (error) {
+				deferred.reject(deserialize(error));
+			} else {
+				deferred.fulfil(deserialize(data));
+			}
+		}
+	}
 }
 
 /**
