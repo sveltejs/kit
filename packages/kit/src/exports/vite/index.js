@@ -1,3 +1,4 @@
+/** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 /** @import { EnvVarConfig } from '@sveltejs/kit' */
 /** @import { Options, SvelteConfig } from '@sveltejs/vite-plugin-svelte' */
 /** @import { PreprocessorGroup } from 'svelte/compiler' */
@@ -7,7 +8,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
-
+import * as devalue from 'devalue';
 import colors from 'kleur';
 
 import { copy, mkdirp, posixify, read, resolve_entry, rimraf } from '../../utils/filesystem.js';
@@ -49,12 +50,14 @@ import {
 	service_worker,
 	sveltekit_env,
 	sveltekit_env_browser,
+	sveltekit_env_service_worker,
 	sveltekit_server
 } from './module_ids.js';
 import { import_peer } from '../../utils/import.js';
 import { compact } from '../../utils/array.js';
 import { should_ignore, has_children } from './static_analysis/utils.js';
 import { treeshake_prerendered_remotes } from './build/remote.js';
+import { handle_issues, validate } from '../internal/env.js';
 
 const cwd = posixify(process.cwd());
 
@@ -256,6 +259,8 @@ async function kit({ svelte_config }) {
 
 	const service_worker_entry_file = resolve_entry(kit.files.serviceWorker);
 	const parsed_service_worker = path.parse(kit.files.serviceWorker);
+
+	const runtime_env_module = `${svelte_config.kit.paths.base}/${svelte_config.kit.appDir}/env.js`;
 
 	const normalized_cwd = vite.normalizePath(cwd);
 	const normalized_lib = vite.normalizePath(kit.files.lib);
@@ -544,7 +549,13 @@ async function kit({ svelte_config }) {
 					parsed_importer.dir === parsed_service_worker.dir &&
 					parsed_importer.name === parsed_service_worker.name;
 
-				if (importer_is_service_worker && id !== '$service-worker' && id !== '$env/static/public') {
+				if (
+					importer_is_service_worker &&
+					id !== '$service-worker' &&
+					id !== '$env/static/public' &&
+					id !== 'virtual:$app/env/public' &&
+					id !== '__sveltekit/env/service-worker'
+				) {
 					throw new Error(
 						`Cannot import ${normalize_id(
 							id,
@@ -612,7 +623,19 @@ async function kit({ svelte_config }) {
 					return create_sveltekit_env(explicit_env_config, env.all, explicit_env_entry);
 
 				case sveltekit_env_browser:
-					return create_sveltekit_env_browser(explicit_env_config, env.all, global);
+					return create_sveltekit_env_browser(
+						explicit_env_config,
+						env.all,
+						`const env = ${global}.env;`
+					);
+
+				case sveltekit_env_service_worker:
+					return dedent`
+						import { env } from '${runtime_env_module}';
+
+						globalThis.__SVELTEKIT_EXPERIMENTAL_EXPLICIT_ENVIRONMENT_VARIABLES__ = true;
+						${global} = { env };
+					`;
 
 				case sveltekit_server: {
 					return dedent`
@@ -886,6 +909,66 @@ async function kit({ svelte_config }) {
 			return {
 				code: result
 			};
+		}
+	};
+
+	/** @type {Plugin} */
+	const plugin_service_worker_env = {
+		name: 'vite-plugin-sveltekit-service-worker-env',
+
+		resolveId: {
+			filter: {
+				id: new RegExp(runtime_env_module.replaceAll('/', '\\/'))
+			},
+
+			handler(id) {
+				return { id };
+			}
+		},
+
+		load: {
+			filter: {
+				id: runtime_env_module
+			},
+			handler() {
+				const properties = [];
+
+				/** @type {Record<string, StandardSchemaV1.Issue[]>} */
+				const issues = {};
+
+				if (explicit_env_config === null) {
+					return '';
+				}
+
+				for (const [name, config] of Object.entries(explicit_env_config)) {
+					if (!config.public) continue;
+
+					const value = config.schema
+						? validate(explicit_env_config, env.all[name], name, issues)
+						: env.all[name];
+
+					properties.push(`${name}: ${devalue.uneval(value)}`);
+				}
+
+				handle_issues(issues);
+
+				return dedent`
+					export const env = {
+						${properties.join(',\n')}
+					};
+				`;
+			}
+		},
+
+		transform: {
+			filter: {
+				id: service_worker_entry_file || '<skip>'
+			},
+			handler(code) {
+				return {
+					code: `import '__sveltekit/env/service-worker';\n${code}`
+				};
+			}
 		}
 	};
 
@@ -1437,7 +1520,9 @@ async function kit({ svelte_config }) {
 						manifest_data,
 						service_worker_entry_file,
 						prerendered,
-						client_manifest
+						client_manifest,
+						explicit_env_config,
+						env.all
 					);
 				}
 
@@ -1494,6 +1579,9 @@ async function kit({ svelte_config }) {
 		kit.experimental.remoteFunctions && plugin_remote,
 		plugin_virtual_modules,
 		plugin_guard,
+		kit.experimental.explicitEnvironmentVariables &&
+			service_worker_entry_file &&
+			plugin_service_worker_env,
 		plugin_compile
 	].filter((p) => !!p);
 }

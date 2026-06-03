@@ -222,9 +222,9 @@ export function create_sveltekit_env(variables, env, entry) {
  * Creates the `__sveltekit/env/browser` module
  * @param {Record<string, EnvVarConfig<any>> | null} variables
  * @param {Record<string, string>} env
- * @param {string} global
+ * @param {string} prelude
  */
-export function create_sveltekit_env_browser(variables, env, global) {
+export function create_sveltekit_env_browser(variables, env, prelude) {
 	if (!variables) {
 		return '';
 	}
@@ -243,7 +243,7 @@ export function create_sveltekit_env_browser(variables, env, global) {
 
 	handle_issues(issues);
 
-	return `const env = ${global}.env;\n\n${exports.join('')}`;
+	return `${prelude}\n\n${exports.join('')}`;
 }
 
 /** @param {string} description */
