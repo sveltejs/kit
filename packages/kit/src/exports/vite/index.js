@@ -1,4 +1,3 @@
-/** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 /** @import { EnvVarConfig } from '@sveltejs/kit' */
 /** @import { Options, SvelteConfig } from '@sveltejs/vite-plugin-svelte' */
 /** @import { PreprocessorGroup } from 'svelte/compiler' */
@@ -8,7 +7,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
-import * as devalue from 'devalue';
 import colors from 'kleur';
 
 import { copy, mkdirp, posixify, read, resolve_entry, rimraf } from '../../utils/filesystem.js';
@@ -58,7 +56,6 @@ import { import_peer } from '../../utils/import.js';
 import { compact } from '../../utils/array.js';
 import { should_ignore, has_children } from './static_analysis/utils.js';
 import { treeshake_prerendered_remotes } from './build/remote.js';
-import { handle_issues, validate } from '../internal/env.js';
 
 const cwd = posixify(process.cwd());
 
@@ -260,8 +257,6 @@ async function kit({ svelte_config }) {
 
 	const service_worker_entry_file = resolve_entry(kit.files.serviceWorker);
 	const parsed_service_worker = path.parse(kit.files.serviceWorker);
-
-	const runtime_env_module = `${svelte_config.kit.paths.base}/${svelte_config.kit.appDir}/env.js`;
 
 	const normalized_cwd = vite.normalizePath(cwd);
 	const normalized_lib = vite.normalizePath(kit.files.lib);
@@ -1477,8 +1472,7 @@ async function kit({ svelte_config }) {
 						service_worker_entry_file,
 						prerendered,
 						client_manifest,
-						explicit_env_config,
-						env.all
+						explicit_env_config
 					);
 				}
 

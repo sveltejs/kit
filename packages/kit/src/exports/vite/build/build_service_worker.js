@@ -4,7 +4,7 @@ import process from 'node:process';
 import * as vite from 'vite';
 import { dedent } from '../../../core/sync/utils.js';
 import { s } from '../../../utils/misc.js';
-import { get_config_aliases, strip_virtual_prefix, normalize_id } from '../utils.js';
+import { get_config_aliases, strip_virtual_prefix, get_env, normalize_id } from '../utils.js';
 import { create_static_module, create_sveltekit_env_browser } from '../../../core/env.js';
 import { env_static_public, service_worker } from '../module_ids.js';
 
@@ -20,7 +20,6 @@ const is_rolldown = !!vite.rolldownVersion;
  * @param {import('types').Prerendered} prerendered
  * @param {import('vite').Manifest} client_manifest
  * @param {Record<string, EnvVarConfig<any>> | null} env_config
- * @param {Record<string, any>} env
  */
 export async function build_service_worker(
 	out,
@@ -30,8 +29,7 @@ export async function build_service_worker(
 	service_worker_entry_file,
 	prerendered,
 	client_manifest,
-	env_config,
-	env
+	env_config
 ) {
 	const build = new Set();
 	for (const key in client_manifest) {
@@ -67,6 +65,8 @@ export async function build_service_worker(
 
 		export const version = ${s(kit.version.name)};
 	`;
+
+	const env = get_env(kit.env, vite_config.mode);
 
 	/**
 	 * @type {import('vite').Plugin}
