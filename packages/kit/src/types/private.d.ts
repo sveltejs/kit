@@ -62,6 +62,7 @@ export namespace Csp {
 		| 'unsafe-hashes'
 		| 'unsafe-inline'
 		| 'wasm-unsafe-eval'
+		| 'trusted-types-eval'
 		| 'none';
 	type CryptoSource = `${'nonce' | 'sha256' | 'sha384' | 'sha512'}-${string}`;
 	type FrameSource = HostSource | SchemeSource | 'self' | 'none';

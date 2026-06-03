@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix: support WebSocket protocol for CSP scheme sources
+fix: support WebSocket protocol and Trusted Types Eval for CSP sources
