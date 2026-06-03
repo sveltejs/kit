@@ -17,7 +17,8 @@ import {
 	create_sveltekit_env,
 	create_sveltekit_env_browser,
 	create_static_module,
-	resolve_explicit_env_entry
+	resolve_explicit_env_entry,
+	create_sveltekit_env_service_worker_dev
 } from '../../core/env.js';
 import * as sync from '../../core/sync/sync.js';
 import { create_assets } from '../../core/sync/create_manifest_data/index.js';
@@ -630,12 +631,7 @@ async function kit({ svelte_config }) {
 					);
 
 				case sveltekit_env_service_worker:
-					return dedent`
-						import { env } from '${runtime_env_module}';
-
-						globalThis.__SVELTEKIT_EXPERIMENTAL_EXPLICIT_ENVIRONMENT_VARIABLES__ = true;
-						${global} = { env };
-					`;
+					return create_sveltekit_env_service_worker_dev(explicit_env_config, env.all, global);
 
 				case sveltekit_server: {
 					return dedent`
@@ -916,55 +912,15 @@ async function kit({ svelte_config }) {
 	const plugin_service_worker_env = {
 		name: 'vite-plugin-sveltekit-service-worker-env',
 
-		resolveId: {
-			filter: {
-				id: new RegExp(runtime_env_module.replaceAll('/', '\\/'))
-			},
-
-			handler(id) {
-				return { id };
-			}
-		},
-
-		load: {
-			filter: {
-				id: runtime_env_module
-			},
-			handler() {
-				const properties = [];
-
-				/** @type {Record<string, StandardSchemaV1.Issue[]>} */
-				const issues = {};
-
-				if (explicit_env_config === null) {
-					return '';
-				}
-
-				for (const [name, config] of Object.entries(explicit_env_config)) {
-					if (!config.public) continue;
-
-					const value = config.schema
-						? validate(explicit_env_config, env.all[name], name, issues)
-						: env.all[name];
-
-					properties.push(`${name}: ${devalue.uneval(value)}`);
-				}
-
-				handle_issues(issues);
-
-				return dedent`
-					export const env = {
-						${properties.join(',\n')}
-					};
-				`;
-			}
-		},
-
 		transform: {
 			filter: {
 				id: service_worker_entry_file || '<skip>'
 			},
 			handler(code) {
+				// in dev, we prepend the service worker with an import that
+				// configures `env`, in case `$app/env/public` is imported,
+				// in prod, where we currently use non-module service
+				// workers, we have to use `importScripts` instead
 				return {
 					code: `import '__sveltekit/env/service-worker';\n${code}`
 				};
