@@ -1,7 +1,7 @@
 /** @import { EnvVarConfig } from '@sveltejs/kit' */
 /** @import { Options, SvelteConfig } from '@sveltejs/vite-plugin-svelte' */
 /** @import { PreprocessorGroup } from 'svelte/compiler' */
-/** @import { ConfigEnv, Plugin, ResolvedConfig, UserConfig, ViteDevServer } from 'vite' */
+/** @import { Plugin, ResolvedConfig, UserConfig, ViteDevServer } from 'vite' */
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';

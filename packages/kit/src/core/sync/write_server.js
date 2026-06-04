@@ -5,7 +5,6 @@ import { resolve_entry } from '../../utils/filesystem.js';
 import { posixify } from '../../utils/os.js';
 import { s } from '../../utils/misc.js';
 import { load_error_page, load_template } from '../config/index.js';
-import { runtime_directory } from '../utils.js';
 import { write_if_changed } from './utils.js';
 import { escape_html } from '../../utils/escape.js';
 
@@ -131,7 +130,6 @@ export function write_server(config, output, root) {
 			universal_hooks: universal_hooks_file ? relative(universal_hooks_file) : null,
 			has_service_worker:
 				config.kit.serviceWorker.register && !!resolve_entry(config.kit.files.serviceWorker),
-			runtime_directory: relative(runtime_directory),
 			template: load_template(root, config),
 			error_page: load_error_page(config)
 		})
