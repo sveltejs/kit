@@ -25,6 +25,20 @@ test.describe('env', () => {
 		await page.goto('/basepath');
 		await expect(page.locator('body')).toHaveAttribute('data-message', 'hello');
 	});
+
+	test('correct values are exported from $app/env/*', async ({ page }) => {
+		await page.goto('/basepath/env/import-all');
+
+		await expect(page.locator('[data-private]')).toHaveText(
+			JSON.stringify({
+				PRIVATE_EXPLICIT_ENV: 'secret resolved at runtime',
+				PRIVATE_STATIC_EXPLICIT_ENV: 'secret resolved at build time',
+				PRIVATE_VALIDATED_DEFAULT_ENV: 'foo'
+			})
+		);
+
+		await expect(page.locator('[data-public]')).toHaveText(JSON.stringify({ MESSAGE: 'hello' }));
+	});
 });
 
 test.describe('paths', () => {

@@ -1,10 +1,11 @@
+/** @import { EnvVarConfig } from '@sveltejs/kit' */
 import fs from 'node:fs';
 import process from 'node:process';
 import * as vite from 'vite';
 import { dedent } from '../../../core/sync/utils.js';
 import { s } from '../../../utils/misc.js';
 import { get_config_aliases, strip_virtual_prefix, get_env, normalize_id } from '../utils.js';
-import { create_static_module } from '../../../core/env.js';
+import { create_static_module, create_sveltekit_env_public } from '../../../core/env.js';
 import { env_static_public, service_worker } from '../module_ids.js';
 
 // @ts-ignore `vite.rolldownVersion` only exists in `rolldown-vite`
@@ -18,6 +19,7 @@ const is_rolldown = !!vite.rolldownVersion;
  * @param {string} service_worker_entry_file
  * @param {import('types').Prerendered} prerendered
  * @param {import('vite').Manifest} client_manifest
+ * @param {Record<string, EnvVarConfig<any>> | null} env_config
  */
 export async function build_service_worker(
 	out,
@@ -26,7 +28,8 @@ export async function build_service_worker(
 	manifest_data,
 	service_worker_entry_file,
 	prerendered,
-	client_manifest
+	client_manifest,
+	env_config
 ) {
 	const build = new Set();
 	for (const key in client_manifest) {
@@ -92,12 +95,21 @@ export async function build_service_worker(
 				);
 			}
 
+			if (id === '\0virtual:app/env/public') {
+				// TODO ideally we would only add the `importScripts` if there are dynamic vars that are known to be used
+				return create_sveltekit_env_public(
+					env_config,
+					env.all,
+					`importScripts('${kit.paths.base}/${kit.appDir}/env.script.js'); const env = globalThis.__sveltekit_sw.env;`
+				);
+			}
+
 			const normalized_cwd = vite.normalizePath(process.cwd());
 			const normalized_lib = vite.normalizePath(kit.files.lib);
 			const relative = normalize_id(id, normalized_lib, normalized_cwd);
 			const stripped = strip_virtual_prefix(relative);
 			throw new Error(
-				`Cannot import ${stripped} into service-worker code. Only the modules $service-worker and $env/static/public are available in service workers.`
+				`Cannot import ${stripped} into service-worker code. Only the modules $service-worker, $env/static/public and $app/env/public are available in service workers.`
 			);
 		}
 	};
