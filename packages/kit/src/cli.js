@@ -99,7 +99,7 @@ if (command === 'sync') {
 		sync.all_types(config);
 
 		const explicit_env_entry = resolve_explicit_env_entry(config.kit);
-		await sync.env(config.kit, explicit_env_entry, values.mode);
+		await sync.env(config.kit, explicit_env_entry, process.cwd(), values.mode); // TODO instead of process.cwd() we should be using the vite root, but that means changes to `load_config`
 	} catch (error) {
 		handle_error(error);
 	} finally {

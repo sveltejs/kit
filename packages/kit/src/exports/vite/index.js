@@ -276,9 +276,6 @@ function kit({ svelte_config, adapter }) {
 	/** @type {ResolvedConfig} */
 	let vite_config;
 
-	/** @type {ConfigEnv} */
-	let vite_config_env;
-
 	/** @type {boolean} */
 	let is_build;
 
@@ -334,7 +331,6 @@ function kit({ svelte_config, adapter }) {
 			order: 'pre',
 			async handler(config, config_env) {
 				initial_config = config;
-				vite_config_env = config_env;
 				is_build = config_env.command === 'build';
 
 				({ kit } = svelte_config);
@@ -520,7 +516,7 @@ function kit({ svelte_config, adapter }) {
 
 		async configResolved(config) {
 			explicit_env_entry = resolve_explicit_env_entry(kit);
-			explicit_env_config = await sync.env(kit, explicit_env_entry, config.mode);
+			explicit_env_config = await sync.env(kit, explicit_env_entry, config.root, config.mode);
 		},
 
 		configureServer(server) {
@@ -533,7 +529,12 @@ function kit({ svelte_config, adapter }) {
 
 				if (file === explicit_env_entry || file === resolved) {
 					explicit_env_entry = resolved;
-					explicit_env_config = await sync.env(kit, explicit_env_entry, vite_config_env.mode);
+					explicit_env_config = await sync.env(
+						kit,
+						explicit_env_entry,
+						vite_config.root,
+						vite_config.mode
+					);
 
 					for (const id of [sveltekit_env, sveltekit_env_public_client]) {
 						const module = server.moduleGraph.getModuleById(id);
@@ -983,10 +984,16 @@ function kit({ svelte_config, adapter }) {
 			return environment.name === 'serviceWorker';
 		},
 
-		resolveId(id) {
-			if (id.startsWith('$env/') || id.startsWith('$app/') || id === '$service-worker') {
-				// ids with :$ don't work with reverse proxies like nginx
-				return `\0virtual:${id.substring(1)}`;
+		resolveId: {
+			handler(id) {
+				if (id.startsWith('$app/') || id === '$service-worker') {
+					// ids with :$ don't work with reverse proxies like nginx
+					return `\0virtual:${id.substring(1)}`;
+				}
+
+				if (id.startsWith('__sveltekit')) {
+					return `\0virtual:${id}`;
+				}
 			}
 		},
 
@@ -1030,8 +1037,20 @@ function kit({ svelte_config, adapter }) {
 
 			if (!id.startsWith('\0virtual:')) return;
 
+			const global = is_build
+				? `globalThis.__sveltekit_${version_hash}`
+				: 'globalThis.__sveltekit_dev';
+
 			if (id === service_worker) {
 				return service_worker_code;
+			}
+
+			if (id === sveltekit_env_service_worker) {
+				return create_sveltekit_env_service_worker_dev(explicit_env_config, env, global);
+			}
+
+			if (id === sveltekit_env_public_client) {
+				return create_sveltekit_env_public(explicit_env_config, env, `const env = ${global}.env;`);
 			}
 
 			const normalized_cwd = vite.normalizePath(vite_config.root);
