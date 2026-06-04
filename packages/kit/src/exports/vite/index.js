@@ -724,7 +724,6 @@ function kit({ svelte_config, adapter }) {
 		load: {
 			filter: {
 				id: [
-					exactRegex(sveltekit_env),
 					exactRegex(sveltekit_ipc),
 					exactRegex(sveltekit_remotes),
 					exactRegex(sveltekit_manifest_data),
@@ -733,10 +732,6 @@ function kit({ svelte_config, adapter }) {
 			},
 			handler(id) {
 				switch (id) {
-					case sveltekit_env: {
-						return `export const env = ${s(env)};`;
-					}
-
 					case sveltekit_ipc: {
 						if (!dev_context) {
 							throw new Error('dev_context was not initialised. But this should never happen');
