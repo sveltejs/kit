@@ -11,6 +11,8 @@ import { rimraf, walk } from '../src/filesystem.js';
 import { _create_validator } from '../src/validate.js';
 import { resolve_aliases } from '../src/utils.js';
 
+const original_cwd = process.cwd();
+
 /**
  * @param {string} path
  * @param {Partial<import('../src/types.js').Options>} [options]
@@ -20,7 +22,9 @@ async function test_make_package(path, options) {
 	const ewd = join(cwd, 'expected');
 	const output = join(cwd, 'dist');
 
-	const config = await load_config({ cwd });
+	process.chdir(cwd);
+	const config = await load_config();
+	process.chdir(original_cwd);
 
 	const input = resolve(cwd, config.kit?.files?.lib ?? 'src/lib');
 
@@ -86,7 +90,9 @@ for (const dir of fs.readdirSync(join(import.meta.dirname, 'errors'))) {
 		const cwd = join(import.meta.dirname, 'errors', dir);
 		const output = join(cwd, 'dist');
 
-		const config = await load_config({ cwd });
+		process.chdir(cwd);
+		const config = await load_config();
+		process.chdir(original_cwd);
 
 		const input = resolve(cwd, config.kit?.files?.lib ?? 'src/lib');
 
@@ -175,7 +181,9 @@ if (!process.env.CI) {
 	test('watches for changes', async () => {
 		const cwd = join(import.meta.dirname, 'watch');
 
-		const config = await load_config({ cwd });
+		process.chdir(cwd);
+		const config = await load_config();
+		process.chdir(original_cwd);
 
 		const { watcher, ready, settled } = await watch({
 			cwd,

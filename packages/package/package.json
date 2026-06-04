@@ -26,6 +26,7 @@
 		"svelte2tsx": "~0.7.55"
 	},
 	"devDependencies": {
+		"@sveltejs/kit": "workspace:",
 		"@sveltejs/vite-plugin-svelte": "catalog:",
 		"@types/node": "catalog:",
 		"@types/semver": "catalog:",
@@ -33,6 +34,7 @@
 		"svelte": "catalog:",
 		"svelte-preprocess": "catalog:",
 		"typescript": "catalog:",
+		"vite": "catalog:",
 		"vitest": "catalog:"
 	},
 	"peerDependencies": {
