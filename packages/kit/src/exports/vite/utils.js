@@ -185,8 +185,6 @@ export function normalize_id(id, lib, cwd) {
 	return posixify(id);
 }
 
-export { stackless };
-
 export const strip_virtual_prefix = /** @param {string} id */ (id) => id.replace('\0virtual:', '');
 
 /**
