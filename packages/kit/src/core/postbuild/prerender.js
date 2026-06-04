@@ -35,10 +35,9 @@ const SPECIAL_HASHLINKS = new Set(['', 'top']);
  *   metadata: import('types').ServerMetadata;
  *   verbose: boolean;
  *   env: Record<string, string>;
- *   root: string;
  * }} opts
  */
-async function prerender({ hash, out, manifest_path, metadata, verbose, env, root }) {
+async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 	/** @type {import('@sveltejs/kit').SSRManifest} */
 	const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
 

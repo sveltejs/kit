@@ -600,6 +600,7 @@ function kit({ svelte_config, adapter }) {
 					exactRegex(sveltekit_env_private),
 					exactRegex(sveltekit_env_public_client),
 					exactRegex(sveltekit_env_public_server),
+					exactRegex(sveltekit_env_service_worker),
 					exactRegex(sveltekit_server)
 				]
 			},
@@ -1648,8 +1649,7 @@ function kit({ svelte_config, adapter }) {
 				manifest_path,
 				metadata,
 				verbose,
-				env,
-				root
+				env
 			});
 			prerendered = prerender_results.prerendered;
 
