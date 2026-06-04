@@ -26,7 +26,7 @@ test('$app/env/private is not dynamically importable from the client', { timeout
 	assert.throws(
 		() =>
 			execSync('pnpm build', {
-				cwd: path.join(import.meta.dirname, 'apps/private-dynamic-env-dynamic-import'),
+				cwd: path.join(import.meta.dirname, 'apps/env-private-dynamic'),
 				stdio: 'pipe',
 				timeout,
 				env

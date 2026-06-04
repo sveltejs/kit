@@ -3,7 +3,12 @@ import { posixify } from '../../utils/os.js';
 import { negotiate } from '../../utils/http.js';
 import { escape_html } from '../../utils/escape.js';
 import { dedent } from '../../core/sync/utils.js';
-import { app_server, app_env_private, service_worker } from './module_ids.js';
+import {
+	app_server,
+	app_env_private,
+	service_worker,
+	sveltekit_env_private
+} from './module_ids.js';
 
 /**
  * Transforms kit.alias to a valid vite.resolve.alias array.
@@ -132,7 +137,7 @@ export function normalize_id(id, lib, cwd) {
 		return '$app/server';
 	}
 
-	if (id === app_env_private) {
+	if (id === app_env_private || id === sveltekit_env_private) {
 		return '$app/env/private';
 	}
 
