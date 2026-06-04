@@ -17,7 +17,7 @@ import generate_fallback from './fallback.js';
 import { posixify } from '../../utils/os.js';
 import { create_app_dir_matcher } from '../../exports/vite/dev/index.js';
 import { create_build_server } from '../../exports/vite/build/vite_server.js';
-import { load_config } from '../config/index.js';
+import { extract_svelte_config, load_vite_config } from '../config/index.js';
 
 export default forked(import.meta.url, prerender);
 
@@ -36,8 +36,9 @@ const prerender_entry = import.meta.resolve('./prerender_entry.js');
  * @param {ServerMetadata} opts.metadata
  * @param {boolean} opts.verbose
  * @param {string} opts.root
+ * @param {string | undefined} opts.vite_config_file
  */
-async function prerender({ out, manifest_path, metadata, verbose, root }) {
+async function prerender({ out, manifest_path, metadata, verbose, root, vite_config_file }) {
 	/**
 	 * @template {{message: string}} T
 	 * @template {Omit<T, 'message'>} K
@@ -84,7 +85,9 @@ async function prerender({ out, manifest_path, metadata, verbose, root }) {
 		}
 	}
 
-	const svelte_config = await load_config({ cwd: root });
+	const vite_config = await load_vite_config(vite_config_file);
+
+	const svelte_config = extract_svelte_config(vite_config);
 
 	if (svelte_config.kit.router.type === 'hash') {
 		const fallback = await generate_fallback({

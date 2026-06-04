@@ -1,17 +1,13 @@
 import path from 'node:path';
-import { loadEnv } from 'vite';
 import { posixify } from '../../utils/os.js';
 import { negotiate } from '../../utils/http.js';
-import { filter_env } from '../../utils/env.js';
 import { escape_for_regexp, escape_html } from '../../utils/escape.js';
 import { dedent } from '../../core/sync/utils.js';
 import {
 	app_server,
-	env_dynamic_private,
-	env_dynamic_public,
-	env_static_private,
-	env_static_public,
-	service_worker
+	app_env_private,
+	service_worker,
+	sveltekit_env_private
 } from './module_ids.js';
 
 /**
@@ -53,21 +49,6 @@ export function get_config_aliases(config, root) {
 	}
 
 	return alias;
-}
-
-/**
- * Load environment variables from process.env and .env files
- * @param {import('types').ValidatedKitConfig['env']} env_config
- * @param {string} mode
- */
-export function get_env(env_config, mode) {
-	const { publicPrefix: public_prefix, privatePrefix: private_prefix } = env_config;
-	const env = loadEnv(mode, env_config.dir, '');
-
-	return {
-		public: filter_env(env, public_prefix, private_prefix),
-		private: filter_env(env, private_prefix, public_prefix)
-	};
 }
 
 /**
@@ -149,20 +130,8 @@ export function normalize_id(id, lib, cwd) {
 		return '$app/server';
 	}
 
-	if (id === env_static_private) {
-		return '$env/static/private';
-	}
-
-	if (id === env_static_public) {
-		return '$env/static/public';
-	}
-
-	if (id === env_dynamic_private) {
-		return '$env/dynamic/private';
-	}
-
-	if (id === env_dynamic_public) {
-		return '$env/dynamic/public';
+	if (id === app_env_private || id === sveltekit_env_private) {
+		return '$app/env/private';
 	}
 
 	if (id === service_worker) {

@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/kit",
-	"version": "2.61.1",
+	"version": "2.62.0",
 	"description": "SvelteKit is the fastest way to build Svelte apps",
 	"keywords": [
 		"framework",
@@ -39,7 +39,7 @@
 		"rolldown": "catalog:",
 		"svelte": "catalog:",
 		"svelte-preprocess": "catalog:",
-		"typescript": "^5.3.3",
+		"typescript": "~6.0.0",
 		"vite": "catalog:",
 		"vitest": "catalog:"
 	},
@@ -47,7 +47,7 @@
 		"@sveltejs/vite-plugin-svelte": "^7.0.0",
 		"@opentelemetry/api": "^1.0.0",
 		"svelte": "^5.48.0",
-		"typescript": "^5.3.3 || ^6.0.0",
+		"typescript": "^6.0.0",
 		"vite": "^8.0.0"
 	},
 	"peerDependenciesMeta": {
@@ -93,6 +93,10 @@
 		"#app/paths": {
 			"browser": "./src/runtime/app/paths/client.js",
 			"default": "./src/runtime/app/paths/server.js"
+		},
+		"#app/env/public": {
+			"browser": "./src/runtime/app/env/public/client.js",
+			"default": "./src/runtime/app/env/public/server.js"
 		}
 	},
 	"exports": {
@@ -104,6 +108,13 @@
 		"./internal": {
 			"types": "./types/index.d.ts",
 			"import": "./src/exports/internal/index.js"
+		},
+		"./internal/env": {
+			"types": "./types/index.d.ts",
+			"import": "./src/exports/internal/env.js"
+		},
+		"./internal/types": {
+			"import": "./src/exports/internal/types.js"
 		},
 		"./internal/server": {
 			"types": "./types/index.d.ts",

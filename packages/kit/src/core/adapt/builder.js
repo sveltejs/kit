@@ -1,7 +1,10 @@
+/** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 /** @import { Builder } from '@sveltejs/kit' */
 /** @import { ResolvedConfig } from 'vite' */
-/** @import { RouteDefinition } from '@sveltejs/kit' */
+/** @import { RouteDefinition, EnvVarConfig } from '@sveltejs/kit' */
 /** @import { RouteData, ValidatedConfig, BuildData, ServerMetadata, ServerMetadataRoute, Prerendered, PrerenderMap, Logger, RemoteChunk } from 'types' */
+import { loadEnv } from 'vite';
+import * as devalue from 'devalue';
 import { createReadStream, createWriteStream, existsSync, statSync } from 'node:fs';
 import { extname, resolve, join, dirname, relative } from 'node:path';
 import { pipeline } from 'node:stream';
@@ -11,12 +14,12 @@ import { copy, rimraf, mkdirp } from '../../utils/filesystem.js';
 import { posixify } from '../../utils/os.js';
 import { generate_manifest } from '../generate_manifest/index.js';
 import { get_route_segments } from '../../utils/routing.js';
-import { get_env } from '../../exports/vite/utils.js';
 import generate_fallback from '../postbuild/fallback.js';
 import { write } from '../sync/utils.js';
 import { list_files } from '../utils.js';
 import { find_server_assets } from '../generate_manifest/find_server_assets.js';
 import { reserved } from '../env.js';
+import { handle_issues, validate } from '../../exports/internal/env.js';
 
 const pipe = promisify(pipeline);
 const extensions = ['.html', '.js', '.mjs', '.json', '.css', '.svg', '.xml', '.wasm', '.txt'];
@@ -34,6 +37,7 @@ const extensions = ['.html', '.js', '.mjs', '.json', '.css', '.svg', '.xml', '.w
  *   vite_config: ResolvedConfig;
  *   remotes: RemoteChunk[];
  *   out: string;
+ *   explicit_env_config: Record<string, EnvVarConfig<any>> | null;
  * }} opts
  * @returns {Builder}
  */
@@ -47,7 +51,8 @@ export function create_builder({
 	log,
 	vite_config,
 	remotes,
-	out
+	out,
+	explicit_env_config
 }) {
 	/** @type {Map<RouteDefinition, RouteData>} */
 	const lookup = new Map();
@@ -119,8 +124,8 @@ export function create_builder({
 
 			const fallback = await generate_fallback({
 				manifest_path,
-				out,
-				root: vite_config.root
+				root: vite_config.root,
+				out
 			});
 
 			if (existsSync(dest)) {
@@ -136,10 +141,26 @@ export function create_builder({
 		},
 
 		generateEnvModule() {
-			const dest = `${config.kit.outDir}/output/prerendered/dependencies/${config.kit.appDir}/env.js`;
-			const env = get_env(config.kit.env, vite_config.mode);
+			if (!build_data.client?.uses_env_dynamic_public) return;
 
-			write(dest, `export const env=${JSON.stringify(env.public)}`);
+			const dest = `${config.kit.outDir}/output/prerendered/dependencies/${config.kit.appDir}/env.js`;
+			const env = loadEnv(vite_config.mode, config.kit.env.dir, '');
+
+			/** @type {Record<string, any>} */
+			const values = {};
+			const variables = explicit_env_config ?? {};
+
+			/** @type {Record<string, StandardSchemaV1.Issue[]>} */
+			const issues = {};
+
+			for (const [name, config] of Object.entries(variables)) {
+				if (config.static || !config.public) continue;
+				values[name] = validate(variables, env[name], name, issues);
+			}
+
+			handle_issues(issues);
+
+			write(dest, `export const env=${devalue.uneval(values)}`);
 		},
 
 		generateManifest({ relativePath, routes: subset }) {

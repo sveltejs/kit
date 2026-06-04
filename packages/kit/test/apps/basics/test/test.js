@@ -149,7 +149,7 @@ test.describe('Encoded paths', () => {
 	});
 });
 
-test.describe('$env', () => {
+test.describe('$app/env', () => {
 	test('includes environment variables', async ({ page, clicknav }) => {
 		await page.goto('/env/includes');
 
@@ -696,7 +696,7 @@ test.describe('Page options', () => {
 	});
 });
 
-test.describe('$app/environment', () => {
+test.describe('$app/env', () => {
 	test('includes version', async ({ page }) => {
 		await page.goto('/app-environment');
 		expect(await page.textContent('h1')).toBe('TEST_VERSION');

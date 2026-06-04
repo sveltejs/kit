@@ -1,9 +1,9 @@
 /** @import { PluginOption } from 'vite' */
 import { escape_for_regexp } from '../../utils/escape.js';
 import { create_build_server } from '../../exports/vite/build/vite_server.js';
-import { load_config } from '../config/index.js';
 import { forked } from '../../utils/fork.js';
 import { get_port } from '../utils.js';
+import { extract_svelte_config, load_vite_config } from '../config/index.js';
 
 export default forked(import.meta.url, generate_fallback);
 
@@ -17,7 +17,8 @@ const prerender_entry = import.meta.resolve('./prerender_entry.js');
  * @returns {Promise<string>}
  */
 async function generate_fallback({ manifest_path, out, root }) {
-	const svelte_config = await load_config({ cwd: root });
+	const vite_config = await load_vite_config(); // TODO configFile
+	const svelte_config = extract_svelte_config(vite_config);
 
 	/** @type {PluginOption} */
 	const plugin_generate_fallback = {

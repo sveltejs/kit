@@ -81,12 +81,9 @@ export function _create_validator(options) {
 		/** @type {string[]} */
 		const warnings = [];
 
-		if (
-			imports.has('$app/environment') &&
-			[...imports].filter((i) => i.startsWith('$app/')).length === 1
-		) {
+		if (imports.has('$app/env') && [...imports].filter((i) => i.startsWith('$app/')).length === 1) {
 			warnings.push(
-				'Avoid usage of `$app/environment` in your code, if you want the library to work for people not using SvelteKit (only regular Svelte, for example). ' +
+				'Avoid usage of `$app/env` in your code, if you want the library to work for people not using SvelteKit (only regular Svelte, for example). ' +
 					'Consider using packages like `esm-env` instead which provide cross-bundler-compatible environment variables.'
 			);
 		}

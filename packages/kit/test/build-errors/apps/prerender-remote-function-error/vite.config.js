@@ -14,7 +14,11 @@ const config = {
 
 	plugins: [
 		sveltekit({
-			adapter: adapter()
+			adapter: adapter(),
+
+			experimental: {
+				remoteFunctions: true
+			}
 		})
 	],
 

@@ -1,7 +1,6 @@
 /** @import { Validator } from './types.js' */
 
 import process from 'node:process';
-import { dedent } from '../sync/utils.js';
 
 const directives = object({
 	'child-src': string_array(),
@@ -59,18 +58,13 @@ const options = object(
 		}),
 
 		kit: object({
-			adapter: removed((keypath) => {
-				return dedent`
-						${keypath} has been removed. Instead, pass your adapter to the \`sveltekit\` Vite plugin in the \`vite.config.js\` file. For example:
+			adapter: validate(undefined, (input, keypath) => {
+				if (typeof input !== 'object' || !input.adapt) {
+					const message = `The SvelteKit Vite plugin ${keypath} should be an object with an \`adapt\` method`;
+					throw new Error(`${message}. See https://svelte.dev/docs/kit/adapters`);
+				}
 
-						import { defineConfig } from 'vite';
-						import { sveltekit } from '@sveltejs/kit/vite';
-						import adapter from '@sveltejs/adapter-auto';
-
-						export default defineConfig({
-							plugins: [sveltekit({ adapter: adapter() })]
-						});
-					`;
+				return input;
 			}),
 
 			alias: validate({}, (input, keypath) => {
@@ -117,9 +111,7 @@ const options = object(
 			embedded: boolean(false),
 
 			env: object({
-				dir: string(process.cwd()),
-				publicPrefix: string('PUBLIC_'),
-				privatePrefix: string('')
+				dir: string(process.cwd())
 			}),
 
 			experimental: object({
@@ -157,6 +149,7 @@ const options = object(
 			outDir: string('.svelte-kit'),
 
 			output: object({
+				linkHeaderPreload: boolean(false),
 				preloadStrategy: removed(
 					(keypath) => `\`${keypath}\` has been removed. modulepreload will always be used`
 				),

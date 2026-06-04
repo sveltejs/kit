@@ -6,8 +6,6 @@ import {
 	options,
 	set_manifest,
 	set_read_implementation,
-	set_private_env,
-	set_public_env,
 	set_building
 } from '__SERVER__/internal.js';
 import * as devalue from 'devalue';
@@ -16,8 +14,8 @@ import { has_server_load, resolve_route } from '../../utils/routing.js';
 import { validate_server_exports } from '../../utils/exports.js';
 import { PageNodes } from '../../utils/page_nodes.js';
 import { check_feature } from '../../utils/features.js';
-import { filter_env } from '../../utils/env.js';
 import { create_synchronous_read } from '../../runtime/server/read.js';
+import { set_env } from '__sveltekit/env';
 
 set_building();
 
@@ -42,10 +40,7 @@ export class Server {
 
 	/** @type {KitServer['init']} */
 	init({ env }) {
-		const { env_public_prefix, env_private_prefix } = this.options;
-
-		set_private_env(filter_env(env, env_private_prefix, env_public_prefix));
-		set_public_env(filter_env(env, env_public_prefix, env_private_prefix));
+		set_env(env);
 
 		set_read_implementation(
 			create_synchronous_read(async (file) => {

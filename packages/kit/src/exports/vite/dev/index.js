@@ -32,7 +32,7 @@ const vite_css_query_regex = /(?:\?|&)(?:raw|url|inline)(?:&|$)/;
  * @return {() => void}
  */
 export function dev(server, vite_config, vite, svelte_config, root, dev_context, adapter) {
-	sync.init(svelte_config, vite_config.mode, root);
+	sync.init(svelte_config, root);
 
 	/** @type {ManifestData} */
 	let manifest_data;
@@ -351,7 +351,7 @@ export function dev(server, vite_config, vite, svelte_config, root, dev_context,
 			} catch (e) {
 				const error = coalesce_to_error(e);
 				res.statusCode = 500;
-				res.end(error.stack);
+				res.end(error.stack || error.message); // handle `stackless` errors
 			}
 		});
 	};

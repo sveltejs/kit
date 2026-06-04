@@ -4,6 +4,7 @@
 /** @import { ModuleRunner } from 'vite/module-runner' */
 import fs from 'node:fs';
 import path from 'node:path';
+import { loadEnv } from 'vite';
 import { exactRegex } from 'rolldown/filter';
 import sirv from 'sirv';
 import { getRequest, setResponse } from '@sveltejs/kit/node';
@@ -17,7 +18,6 @@ import {
 	remove_static_middlewares
 } from '../dev/index.js';
 import { s } from '../../../utils/misc.js';
-import { get_env } from '../utils.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import { import_peer } from '../../../utils/import.js';
 import { get_port } from '../../../core/utils.js';
@@ -120,7 +120,7 @@ export async function create_build_server({
 		}
 	};
 
-	/** @type {{ public: Record<string, string>; private: Record<string, string> }} */
+	/** @type {Record<string, string>} */
 	let env;
 
 	/** @type {Connect.ServerStackItem | undefined} */
@@ -130,7 +130,7 @@ export async function create_build_server({
 	const plugin_server = {
 		name: 'vite-plugin-sveltekit-compile:build-entry',
 		config(_, vite_config_env) {
-			env = get_env(svelte_config.kit.env, vite_config_env.mode);
+			env = loadEnv(vite_config_env.mode, svelte_config.kit.env.dir, '');
 
 			return {
 				appType: 'custom',
@@ -299,7 +299,7 @@ export async function create_build_server({
 				id: exactRegex(sveltekit_env)
 			},
 			handler() {
-				return `export const env = ${s({ ...env.private, ...env.public })};`;
+				return `export const env = ${s(env)};`;
 			}
 		}
 	};

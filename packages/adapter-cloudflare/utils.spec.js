@@ -226,9 +226,7 @@ test('generates a _routes.json file', () => {
 						reportOnly: {}
 					},
 					env: {
-						dir: '.',
-						publicPrefix: 'PUBLIC_',
-						privatePrefix: ''
+						dir: '.'
 					},
 					outDir: '.svelte-kit'
 				}
@@ -306,9 +304,7 @@ test('truncates excess _routes.json exclude rules', () => {
 						reportOnly: {}
 					},
 					env: {
-						dir: '.',
-						publicPrefix: 'PUBLIC_',
-						privatePrefix: ''
+						dir: '.'
 					},
 					outDir: '.svelte-kit'
 				}

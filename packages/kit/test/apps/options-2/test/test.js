@@ -9,8 +9,35 @@ test.describe.configure({ mode: 'parallel' });
 test.describe('env', () => {
 	test('resolves upwards', async ({ page }) => {
 		await page.goto('/basepath/env');
-		expect(await page.textContent('[data-testid="static"]')).toBe('static: resolves upwards!');
-		expect(await page.textContent('[data-testid="dynamic"]')).toBe('dynamic: resolves upwards!');
+		expect(await page.textContent('[data-testid="public"]')).toBe('public: hello');
+		expect(await page.textContent('[data-testid="private-dynamic"]')).toBe(
+			'private dynamic: secret resolved at runtime'
+		);
+		expect(await page.textContent('[data-testid="private-static"]')).toBe(
+			'private static: secret resolved at build time'
+		);
+		expect(await page.textContent('[data-testid="private-validated-default"]')).toBe(
+			'private validated default: foo'
+		);
+	});
+
+	test('applies explicit env vars to %sveltekit.env%', async ({ page }) => {
+		await page.goto('/basepath');
+		await expect(page.locator('body')).toHaveAttribute('data-message', 'hello');
+	});
+
+	test('correct values are exported from $app/env/*', async ({ page }) => {
+		await page.goto('/basepath/env/import-all');
+
+		await expect(page.locator('[data-private]')).toHaveText(
+			JSON.stringify({
+				PRIVATE_EXPLICIT_ENV: 'secret resolved at runtime',
+				PRIVATE_STATIC_EXPLICIT_ENV: 'secret resolved at build time',
+				PRIVATE_VALIDATED_DEFAULT_ENV: 'foo'
+			})
+		);
+
+		await expect(page.locator('[data-public]')).toHaveText(JSON.stringify({ MESSAGE: 'hello' }));
 	});
 });
 
@@ -155,5 +182,43 @@ test.describe("bundleStrategy: 'single'", () => {
 	test('serialization works with streaming', async ({ page }) => {
 		await page.goto('/basepath/serialization-stream');
 		await expect(page.locator('h1', { hasText: 'It works!' })).toBeVisible();
+	});
+});
+
+test.describe('Link header preload', () => {
+	test.skip(({ javaScriptEnabled }) => javaScriptEnabled || !!process.env.DEV);
+
+	test('injects Link headers', async ({ request }) => {
+		const response = await request.get('/basepath/asset-preload');
+
+		const header = response.headers()['link'];
+
+		expect(header).toContain('rel="modulepreload"');
+		expect(header).toContain('as="font"');
+	});
+
+	test('does not inject Link headers on prerendered pages', async ({ request }) => {
+		const response = await request.get('/basepath/asset-preload/prerendered');
+
+		const header = response.headers()['link'];
+		expect(header).toBeUndefined();
+	});
+
+	test('injects <link> tags on prerendered pages', async ({ request }) => {
+		const response = await request.get('/basepath/asset-preload/prerendered');
+
+		const body = await response.text();
+
+		expect(body).toContain('rel="modulepreload"');
+		expect(body).toContain('as="font"');
+	});
+
+	test('does not inject <link> tags on non-prerendered pages', async ({ request }) => {
+		const response = await request.get('/basepath/asset-preload');
+
+		const body = await response.text();
+
+		expect(body).not.toContain('rel="modulepreload"');
+		expect(body).not.toContain('as="font"');
 	});
 });

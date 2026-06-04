@@ -9,28 +9,15 @@ import process from 'node:process';
 test.describe.serial('Illegal imports', () => {
 	test.skip(({ javaScriptEnabled }) => !process.env.DEV || !javaScriptEnabled);
 
-	test('$env/dynamic/private is not importable from the client', async ({ page }) => {
-		await page.goto('/illegal-imports/env/dynamic-private', {
+	test('$app/env/private is not importable from the client', async ({ page }) => {
+		await page.goto('/illegal-imports/env/private', {
 			wait_for_started: false
 		});
 		expect(await page.textContent('.message-body'))
-			.toBe(`Cannot import $env/dynamic/private into code that runs in the browser, as this could leak sensitive information.
+			.toBe(`Cannot import $app/env/private into code that runs in the browser, as this could leak sensitive information.
 
- src/routes/illegal-imports/env/dynamic-private/+page.svelte imports
-  $env/dynamic/private
-
-If you're only using the import as a type, change it to \`import type\`.`);
-	});
-
-	test('$env/static/private is not importable from the client', async ({ page }) => {
-		await page.goto('/illegal-imports/env/static-private', {
-			wait_for_started: false
-		});
-		expect(await page.textContent('.message-body'))
-			.toBe(`Cannot import $env/static/private into code that runs in the browser, as this could leak sensitive information.
-
- src/routes/illegal-imports/env/static-private/+page.svelte imports
-  $env/static/private
+ src/routes/illegal-imports/env/private/+page.svelte imports
+  $app/env/private
 
 If you're only using the import as a type, change it to \`import type\`.`);
 	});

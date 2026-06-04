@@ -43,10 +43,9 @@ export interface ServerModule {
 export interface ServerInternalModule {
 	set_assets(path: string): void;
 	set_building(): void;
+	set_env(environment: Record<string, string>): void;
 	set_manifest(manifest: SSRManifest): void;
 	set_prerendering(): void;
-	set_private_env(environment: Record<string, string>): void;
-	set_public_env(environment: Record<string, string>): void;
 	set_read_implementation(implementation: (path: string) => ReadableStream): void;
 	set_version(version: string): void;
 	get_hooks: () => Promise<Record<string, any>>;
@@ -504,10 +503,9 @@ export interface SSROptions {
 	csrf_check_origin: boolean;
 	csrf_trusted_origins: string[];
 	embedded: boolean;
-	env_public_prefix: string;
-	env_private_prefix: string;
 	hash_routing: boolean;
 	hooks: ServerHooks;
+	link_header_preload: ValidatedConfig['kit']['output']['linkHeaderPreload'];
 	root: SSRComponent['default'];
 	service_worker: boolean;
 	service_worker_options: RegistrationOptions;

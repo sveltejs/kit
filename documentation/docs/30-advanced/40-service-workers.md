@@ -127,7 +127,7 @@ self.addEventListener('fetch', (event) => {
 The service worker is bundled for production, but not during development. For that reason, only browsers that support [modules in service workers](https://web.dev/es-modules-in-sw) will be able to use them at dev time. If you are manually registering your service worker, you will need to pass the `{ type: 'module' }` option in development:
 
 ```js
-import { dev } from '$app/environment';
+import { dev } from '$app/env';
 
 navigator.serviceWorker.register('/service-worker.js', {
 	type: dev ? 'module' : 'classic'

@@ -1,4 +1,4 @@
-import { browser } from '$app/environment';
+import { browser } from '$app/env';
 
 /** @type {import('./$types').PageLoad} */
 export async function load({ url, fetch }) {
