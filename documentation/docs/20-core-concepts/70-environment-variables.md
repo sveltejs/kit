@@ -2,6 +2,8 @@
 title: Environment variables
 ---
 
+<!-- TODO this is out of date -->
+
 Environment variables are values your app needs that exist separately from the app's source code. They allow you to use sensitive information like API keys and database credentials without storing them in version control.
 
 During development, and at build time, variables defined in a `.env` or `.env.local` file will be added to the environment:

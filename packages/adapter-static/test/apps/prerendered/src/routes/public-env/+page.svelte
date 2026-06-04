@@ -1,5 +1,5 @@
 <script>
-	import { browser } from '$app/environment';
+	import { browser } from '$app/env';
 	import { PUBLIC_ANSWER } from '$env/static/public';
 	import { env } from '$env/dynamic/public';
 </script>
