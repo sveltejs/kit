@@ -4,9 +4,36 @@ import { fileURLToPath } from 'node:url';
 import { parse } from 'acorn';
 import { assert, test } from 'vitest';
 
+const package_dir = fileURLToPath(new URL('../../..', import.meta.url));
+
+/** @type {{ exports: Record<string, string | { import?: string }> }} */
+const pkg = JSON.parse(fs.readFileSync(path.join(package_dir, 'package.json'), 'utf-8'));
+
+/**
+ * Resolve an import specifier to a source file, for relative imports and `@sveltejs/kit`
+ * self-imports (via the package's `exports` map). Returns `undefined` for anything else
+ * (bare dependencies, `node:` builtins) — those aren't followed.
+ * @param {string} source
+ * @param {string} importer
+ * @returns {string | undefined}
+ */
+function resolve_import(source, importer) {
+	if (source.startsWith('.')) {
+		return path.resolve(path.dirname(importer), source);
+	}
+
+	if (source === '@sveltejs/kit' || source.startsWith('@sveltejs/kit/')) {
+		const key = source === '@sveltejs/kit' ? '.' : `.${source.slice('@sveltejs/kit'.length)}`;
+		const exported = pkg.exports[key];
+		const target = typeof exported === 'string' ? exported : exported?.import;
+		if (!target) throw new Error(`could not resolve self-import "${source}"`);
+		return path.resolve(package_dir, target);
+	}
+}
+
 /**
  * Collect every static `import`/`export ... from` edge reachable from `entry`,
- * following relative imports only.
+ * following relative imports and `@sveltejs/kit/*` self-imports.
  * @param {string} entry
  */
 function import_graph(entry) {
@@ -40,9 +67,8 @@ function import_graph(entry) {
 
 			edges.push({ file, source });
 
-			if (source.startsWith('.') && file.endsWith('.js')) {
-				walk(path.resolve(path.dirname(file), source));
-			}
+			const resolved = resolve_import(source, file);
+			if (resolved?.endsWith('.js')) walk(resolved);
 		}
 	}
 

@@ -4,7 +4,7 @@ import { posixify } from '../../utils/filesystem.js';
 import { negotiate } from '../../utils/http.js';
 import { filter_env } from '../../utils/env.js';
 import { escape_html } from '../../utils/escape.js';
-import { stackless } from '../../utils/stackless.js';
+import { stackless } from '../../utils/error.js';
 import { dedent } from '../../core/sync/utils.js';
 import {
 	app_server,
