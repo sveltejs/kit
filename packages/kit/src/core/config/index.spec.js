@@ -68,9 +68,7 @@ const get_defaults = (prefix = '') => ({
 		},
 		embedded: false,
 		env: {
-			dir: process.cwd(),
-			publicPrefix: 'PUBLIC_',
-			privatePrefix: ''
+			dir: process.cwd()
 		},
 		experimental: {
 			tracing: { server: false },

@@ -40,8 +40,6 @@ export const options = {
 	csrf_check_origin: ${s(!config.kit.csrf.trustedOrigins.includes('*'))},
 	csrf_trusted_origins: ${s(config.kit.csrf.trustedOrigins)},
 	embedded: ${config.kit.embedded},
-	env_public_prefix: '${config.kit.env.publicPrefix}',
-	env_private_prefix: '${config.kit.env.privatePrefix}',
 	hash_routing: ${s(config.kit.router.type === 'hash')},
 	hooks: null, // added lazily, via \`get_hooks\`
 	link_header_preload: ${s(config.kit.output.linkHeaderPreload)},

@@ -499,8 +499,6 @@ export interface SSROptions {
 	csrf_check_origin: boolean;
 	csrf_trusted_origins: string[];
 	embedded: boolean;
-	env_public_prefix: string;
-	env_private_prefix: string;
 	hash_routing: boolean;
 	hooks: ServerHooks;
 	link_header_preload: ValidatedConfig['kit']['output']['linkHeaderPreload'];

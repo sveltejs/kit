@@ -111,9 +111,7 @@ const options = object(
 			embedded: boolean(false),
 
 			env: object({
-				dir: string(process.cwd()),
-				publicPrefix: string('PUBLIC_'),
-				privatePrefix: string('')
+				dir: string(process.cwd())
 			}),
 
 			experimental: object({

@@ -47,9 +47,7 @@ const config = {
 				assets: process.env.PATHS_ASSETS || ''
 			},
 			env: {
-				dir: './env-dir',
-				publicPrefix: 'GO_AWAY_',
-				privatePrefix: 'TOP_SECRET_SHH'
+				dir: './env-dir'
 			},
 			router: {
 				resolution: /** @type {'client' | 'server'} */ (process.env.ROUTER_RESOLUTION) || 'client'
