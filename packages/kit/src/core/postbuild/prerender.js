@@ -2,14 +2,13 @@
 import { existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { resolveConfig } from 'vite';
 import { mkdirp, walk } from '../../utils/filesystem.js';
 import { posixify } from '../../utils/os.js';
 import { noop } from '../../utils/functions.js';
 import { decode_uri, is_root_relative, resolve } from '../../utils/url.js';
 import { escape_html } from '../../utils/escape.js';
 import { logger } from '../utils.js';
-import { load_config } from '../config/index.js';
+import { extract_svelte_config, load_vite_config } from '../config/index.js';
 import { get_route_segments } from '../../utils/routing.js';
 import { queue } from './queue.js';
 import { crawl } from './crawl.js';
@@ -101,8 +100,9 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 	/** @type {Set<string>} */
 	const prerendered_routes = new Set();
 
-	/** @type {import('types').ValidatedKitConfig} */
-	const config = (await load_config()).kit;
+	const vite_config = await load_vite_config(); // TODO pass down custom config file
+
+	const config = extract_svelte_config(vite_config).kit;
 
 	if (hash) {
 		const fallback = await generate_fallback({
@@ -124,7 +124,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 		return { prerendered, prerender_map };
 	}
 
-	const vite_config = await resolveConfig({}, 'build');
+	// TODO this can just be config.adapter?
 	/** @type {Adapter | undefined} */
 	const adapter = vite_config.plugins.find(
 		(plugin) => plugin.name === 'vite-plugin-sveltekit-adapter'

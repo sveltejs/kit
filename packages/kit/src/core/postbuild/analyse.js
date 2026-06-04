@@ -2,9 +2,8 @@
 /** @import { RemoteChunk } from 'types' */
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { resolveConfig } from 'vite';
 import { validate_server_exports } from '../../utils/exports.js';
-import { load_config } from '../config/index.js';
+import { extract_svelte_config, load_vite_config } from '../config/index.js';
 import { forked } from '../../utils/fork.js';
 import { ENDPOINT_METHODS } from '../../constants.js';
 import { has_server_load, resolve_route } from '../../utils/routing.js';
@@ -42,10 +41,11 @@ async function analyse({
 	/** @type {import('@sveltejs/kit').SSRManifest} */
 	const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
 
-	/** @type {import('types').ValidatedKitConfig} */
-	const config = (await load_config()).kit;
+	const vite_config = await load_vite_config(); // TODO pass down custom vite config file
 
-	const vite_config = await resolveConfig({}, 'build');
+	const config = extract_svelte_config(vite_config).kit;
+
+	// TODO i think this can just be config.adapter?
 	/** @type {Adapter | undefined} */
 	const adapter = vite_config.plugins.find(
 		(plugin) => plugin.name === 'vite-plugin-sveltekit-adapter'

@@ -54,22 +54,22 @@ export function load_error_page(config) {
 }
 
 /**
- * Loads and validates config from `vite.config.ts`
- * @param {{ configFile?: string }} [options]
- * @returns {Promise<ValidatedConfig>}
+ * @param {string} [config]
  */
-export async function load_config({ configFile } = {}) {
+export async function load_vite_config(config) {
 	const { resolveConfig } = /** @type {import('vite')} */ (
 		await import_peer('vite', process.cwd())
 	);
 
-	/** @type {ResolvedConfig} */
-	const resolved = await resolveConfig({ configFile }, 'build', process.env.MODE ?? 'production');
+	return resolveConfig({ configFile: config }, 'build', process.env.MODE ?? 'production');
+}
 
-	const plugin = resolved.plugins.find(
-		(plugin) => plugin.name === 'vite-plugin-sveltekit-setup' && plugin.api?.options
-	);
-
+/**
+ * @param {ResolvedConfig} vite_config
+ * @returns {ValidatedConfig}
+ */
+export function extract_svelte_config(vite_config) {
+	const plugin = vite_config.plugins.find((p) => p.name === 'vite-plugin-sveltekit-setup');
 	return plugin?.api.options ?? process_config({});
 }
 
