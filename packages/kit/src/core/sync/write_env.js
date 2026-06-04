@@ -25,7 +25,11 @@ export function write_env(kit, entry, env_config) {
 			create_explicit_env_types(env_config, relative, 'public')
 		);
 	} else {
-		content.push(DOCS);
+		content.push(
+			DOCS,
+			create_explicit_env_types({}, '', 'private'),
+			create_explicit_env_types({}, '', 'public')
+		);
 	}
 
 	write_if_changed(out, content.join('\n\n'));
