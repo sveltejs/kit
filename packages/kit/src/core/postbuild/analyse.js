@@ -25,6 +25,7 @@ export default forked(import.meta.url, analyse);
  *   out: string;
  *   remotes: RemoteChunk[];
  *   root: string;
+ *   vite_config_file: string | undefined;
  * }} opts
  */
 async function analyse({
@@ -36,12 +37,13 @@ async function analyse({
 	env,
 	out,
 	remotes,
-	root
+	root,
+	vite_config_file
 }) {
 	/** @type {import('@sveltejs/kit').SSRManifest} */
 	const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
 
-	const vite_config = await load_vite_config(); // TODO pass down custom vite config file
+	const vite_config = await load_vite_config(vite_config_file);
 
 	const config = extract_svelte_config(vite_config).kit;
 

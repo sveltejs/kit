@@ -34,9 +34,10 @@ const SPECIAL_HASHLINKS = new Set(['', 'top']);
  *   metadata: import('types').ServerMetadata;
  *   verbose: boolean;
  *   env: Record<string, string>;
+ *   vite_config_file: string | undefined;
  * }} opts
  */
-async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
+async function prerender({ hash, out, manifest_path, metadata, verbose, env, vite_config_file }) {
 	/** @type {import('@sveltejs/kit').SSRManifest} */
 	const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
 
@@ -100,7 +101,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 	/** @type {Set<string>} */
 	const prerendered_routes = new Set();
 
-	const vite_config = await load_vite_config(); // TODO pass down custom config file
+	const vite_config = await load_vite_config(vite_config_file);
 
 	const config = extract_svelte_config(vite_config).kit;
 

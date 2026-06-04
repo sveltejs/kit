@@ -1454,7 +1454,8 @@ function kit({ svelte_config, adapter }) {
 				env,
 				out,
 				remotes,
-				root
+				root,
+				vite_config_file: vite_config.configFile
 			});
 
 			build_metadata = metadata;
@@ -1649,7 +1650,8 @@ function kit({ svelte_config, adapter }) {
 				manifest_path,
 				metadata,
 				verbose,
-				env
+				env,
+				vite_config_file: vite_config.configFile
 			});
 			prerendered = prerender_results.prerendered;
 
