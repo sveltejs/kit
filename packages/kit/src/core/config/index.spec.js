@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 import { assert, expect, test } from 'vitest';
-import { validate_config, load_config } from './index.js';
+import { validate_config } from './index.js';
 import process from 'node:process';
 
 /**

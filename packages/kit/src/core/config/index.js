@@ -81,7 +81,7 @@ export async function load_config({ cwd = process.cwd() } = {}) {
 		(plugin) => plugin.name === 'vite-plugin-sveltekit-setup' && plugin.api?.options
 	);
 
-	return plugin?.api.options;
+	return plugin?.api.options ?? process_config({});
 }
 
 /**
