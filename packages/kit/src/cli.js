@@ -25,15 +25,15 @@ const help = `
   Usage: svelte-kit <command> [options]
 
   Commands:
-    sync               Synchronise generated type definitions
+    sync                   Synchronise generated type definitions
 
   Options:
-    --version, -v      Show version number
-    --help, -h         Show this help message
+    --version, -v          Show version number
+    --help, -h             Show this help message
 
   Sync Options:
-    --config <config>  Specify a custom Vite config file
-    --mode <mode>      Specify a mode for loading environment variables (default: development)
+    --config, -c <config>  Specify a custom Vite config file
+    --mode <mode>          Specify a mode for loading environment variables (default: development)
 `;
 
 let parsed;
@@ -43,7 +43,7 @@ try {
 			version: { type: 'boolean', short: 'v' },
 			help: { type: 'boolean', short: 'h' },
 			mode: { type: 'string', default: 'development' },
-			config: { type: 'string', default: undefined }
+			config: { type: 'string', short: 'c', default: undefined }
 		},
 		allowPositionals: true,
 		strict: true
