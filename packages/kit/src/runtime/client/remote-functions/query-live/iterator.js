@@ -4,7 +4,7 @@ import { get_remote_request_headers, handle_side_channel_response } from '../sha
 import * as devalue from 'devalue';
 import { HttpError } from '@sveltejs/kit/internal';
 import { noop } from '../../../../utils/functions.js';
-import { read_ndjson } from '../../ndjson.js';
+import { read_sse } from '../../sse.js';
 
 /**
  * @param {Response} response
@@ -38,11 +38,11 @@ async function get_stream_reader(response) {
 }
 
 /**
- * Yields deserialized results from a ReadableStream of newline-delimited JSON
+ * Yields deserialized results from a ReadableStream of Server-Sent Events
  * @param {ReadableStreamDefaultReader<Uint8Array>} reader
  */
-async function* read_live_ndjson(reader) {
-	for await (const node of read_ndjson(reader)) {
+async function* read_live_sse(reader) {
+	for await (const node of read_sse(reader)) {
 		if (node.type === 'result') {
 			yield devalue.parse(node.result, app.decoders);
 			continue;
@@ -80,7 +80,7 @@ export async function* create_live_iterator(
 
 		on_connect();
 
-		yield* read_live_ndjson(reader);
+		yield* read_live_sse(reader);
 	} finally {
 		try {
 			await reader?.cancel();
