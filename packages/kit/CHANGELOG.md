@@ -1,5 +1,23 @@
 # @sveltejs/kit
 
+## 2.63.0
+### Minor Changes
+
+
+- feat: explicit env vars ([#15934](https://github.com/sveltejs/kit/pull/15934))
+
+
+### Patch Changes
+
+
+- fix: remove check for svelte.config.js before running `sync` ([#15946](https://github.com/sveltejs/kit/pull/15946))
+
+
+- fix: generate a placeholder tsconfig.json to squelch sync-time warnings ([#15948](https://github.com/sveltejs/kit/pull/15948))
+
+
+- fix: allow use of `$app/env/public` in service workers ([#15950](https://github.com/sveltejs/kit/pull/15950))
+
 ## 2.62.0
 ### Minor Changes
 
