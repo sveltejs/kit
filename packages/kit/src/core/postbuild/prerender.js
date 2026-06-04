@@ -103,7 +103,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, roo
 	const prerendered_routes = new Set();
 
 	/** @type {import('types').ValidatedKitConfig} */
-	const config = (await load_config({ cwd: root })).kit;
+	const config = (await load_config()).kit;
 
 	if (hash) {
 		const fallback = await generate_fallback({

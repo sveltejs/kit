@@ -54,28 +54,14 @@ export function load_error_page(config) {
 }
 
 /**
- * Loads and validates Svelte config file. Tries Vite config first, falls back to svelte.config.js
- * @param {{ cwd?: string }} options
+ * Loads and validates config from `vite.config.ts`
  * @returns {Promise<ValidatedConfig>}
  */
-export async function load_config({ cwd = process.cwd() } = {}) {
-	const { resolveConfig } = await import_peer('vite', cwd);
-	const current_cwd = process.cwd();
-
-	if (cwd !== current_cwd) {
-		process.chdir(cwd);
-	}
+export async function load_config() {
+	const { resolveConfig } = await import_peer('vite', process.cwd());
 
 	/** @type {ResolvedConfig} */
-	let resolved;
-
-	try {
-		resolved = await resolveConfig({}, 'build', process.env.MODE ?? 'production');
-	} finally {
-		if (cwd !== current_cwd) {
-			process.chdir(current_cwd);
-		}
-	}
+	const resolved = await resolveConfig({}, 'build', process.env.MODE ?? 'production');
 
 	const plugin = resolved.plugins.find(
 		(plugin) => plugin.name === 'vite-plugin-sveltekit-setup' && plugin.api?.options

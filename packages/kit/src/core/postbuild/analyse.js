@@ -43,7 +43,7 @@ async function analyse({
 	const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
 
 	/** @type {import('types').ValidatedKitConfig} */
-	const config = (await load_config({ cwd: root })).kit;
+	const config = (await load_config()).kit;
 
 	const vite_config = await resolveConfig({}, 'build');
 	/** @type {Adapter | undefined} */

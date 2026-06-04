@@ -94,7 +94,7 @@ if (command === 'sync') {
 	}
 
 	try {
-		const config = await load_config({ cwd: process.cwd() });
+		const config = await load_config();
 		const sync = await import('./core/sync/sync.js');
 		sync.all_types(config);
 
