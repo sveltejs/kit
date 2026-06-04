@@ -140,7 +140,7 @@ export interface Builder {
 	generateFallback: (dest: string) => Promise<void>;
 
 	/**
-	 * Generate a module exposing build-time environment variables as `$env/dynamic/public` if the app uses it.
+	 * Generate a module exposing public environment variables as `$app/env/public` if the app uses it.
 	 */
 	generateEnvModule: () => void;
 
@@ -456,17 +456,6 @@ export interface KitConfig {
 		 * @default "."
 		 */
 		dir?: string;
-		/**
-		 * A prefix that signals that an environment variable is safe to expose to client-side code. See [`$env/static/public`](https://svelte.dev/docs/kit/$env-static-public) and [`$env/dynamic/public`](https://svelte.dev/docs/kit/$env-dynamic-public). Note that Vite's [`envPrefix`](https://vitejs.dev/config/shared-options.html#envprefix) must be set separately if you are using Vite's environment variable handling - though use of that feature should generally be unnecessary.
-		 * @default "PUBLIC_"
-		 */
-		publicPrefix?: string;
-		/**
-		 * A prefix that signals that an environment variable is unsafe to expose to client-side code. Environment variables matching neither the public nor the private prefix will be discarded completely. See [`$env/static/private`](https://svelte.dev/docs/kit/$env-static-private) and [`$env/dynamic/private`](https://svelte.dev/docs/kit/$env-dynamic-private).
-		 * @default ""
-		 * @since 1.21.0
-		 */
-		privatePrefix?: string;
 	};
 	/** Experimental features. Here be dragons. These are not subject to semantic versioning, so breaking changes or removal can happen in any release. */
 	experimental?: {

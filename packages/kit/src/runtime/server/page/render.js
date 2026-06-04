@@ -411,7 +411,7 @@ export async function render_response({
 
 		const blocks = [];
 
-		// when serving a prerendered page in an app that uses $env/dynamic/public, we must
+		// when serving a prerendered page in an app that uses $app/env/public, we must
 		// import the env.js module so that it evaluates before any user code can evaluate.
 		// TODO revert to using top-level await once https://bugs.webkit.org/show_bug.cgi?id=242740 is fixed
 		// https://github.com/sveltejs/kit/pull/11601

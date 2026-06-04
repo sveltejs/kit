@@ -554,7 +554,7 @@ function kit({ svelte_config, adapter }) {
 				return `${out_dir}/generated/client-optimized/app.js`;
 			}
 
-			// If importing from a service-worker, only allow $service-worker & $env/static/public, but none of the other virtual modules.
+			// If importing from a service-worker, only allow $service-worker & $app/env/public, but none of the other virtual modules.
 			// This check won't catch transitive imports, but it will warn when the import comes from a service-worker directly.
 			// Transitive imports will be caught during the build.
 			// TODO move this logic to plugin_guard. add a filter to this resolveId when doing so
@@ -569,7 +569,6 @@ function kit({ svelte_config, adapter }) {
 				if (
 					importer_is_service_worker &&
 					id !== '$service-worker' &&
-					id !== '$env/static/public' &&
 					id !== 'virtual:$app/env/public' &&
 					id !== '__sveltekit/env/service-worker'
 				) {
@@ -578,13 +577,12 @@ function kit({ svelte_config, adapter }) {
 							id,
 							normalized_lib,
 							normalized_cwd
-						)} into service-worker code. Only the modules $service-worker, $env/static/public and $app/env/public are available in service workers.`
+						)} into service-worker code. Only the modules $service-worker and $app/env/public are available in service workers.`
 					);
 				}
 			}
 
-			// treat $env/static/[public|private] as virtual
-			if (id.startsWith('$env/') || id === '$service-worker') {
+			if (id === '$service-worker') {
 				// ids with :$ don't work with reverse proxies like nginx
 				return `\0virtual:${id.substring(1)}`;
 			}
@@ -666,7 +664,7 @@ function kit({ svelte_config, adapter }) {
 
 	/**
 	 * Ensures that client-side code can't accidentally import server-side code,
-	 * whether in `*.server.js` files, `$app/server`, `$lib/server`, `$app/env/private`, or `$env/[static|dynamic]/private`
+	 * whether in `*.server.js` files, `$app/server`, `$lib/server`, or `$app/env/private`
 	 * @type {Plugin}
 	 */
 	const plugin_guard = {
@@ -1058,7 +1056,7 @@ function kit({ svelte_config, adapter }) {
 			const relative = normalize_id(id, normalized_lib, normalized_cwd);
 			const stripped = strip_virtual_prefix(relative);
 			throw new Error(
-				`Cannot import ${stripped} into service-worker code. Only the modules $service-worker and $env/static/public are available in service workers.`
+				`Cannot import ${stripped} into service-worker code. Only the modules $service-worker and $app/env/public are available in service workers.`
 			);
 		}
 	};
