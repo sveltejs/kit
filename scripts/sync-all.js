@@ -14,12 +14,15 @@ for (const directories of [
 	for (const dir of fs.readdirSync(directories)) {
 		const cwd = path.join(directories, dir);
 
-		if (!fs.existsSync(path.join(cwd, 'svelte.config.js'))) {
+		if (
+			!fs.existsSync(path.join(cwd, 'vite.config.js')) &&
+			!fs.existsSync(path.join(cwd, 'vite.config.ts'))
+		) {
 			continue;
 		}
 
 		chdir(cwd);
 
-		syncAll(await load_config({ cwd }), 'development', cwd);
+		syncAll(await load_config(), cwd);
 	}
 }
