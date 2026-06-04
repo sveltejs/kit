@@ -27,9 +27,9 @@ env:
   # we call `pnpm playwright install` instead
   PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
 
-# cancel in-progress runs on new commits to same PR (gitub.event.number)
+# dedupe push/pull_request runs for the same ref and cancel superseded runs
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.number || github.sha }}
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
   cancel-in-progress: true
 
 permissions:
