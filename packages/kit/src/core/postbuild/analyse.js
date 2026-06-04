@@ -45,10 +45,8 @@ async function analyse({
 
 	const config = extract_svelte_config(vite_config);
 
-	const server_root = join(config.outDir, 'output');
-
 	/** @type {import('types').ServerInternalModule} */
-	const internal = await import(pathToFileURL(`${server_root}/server/internal.js`).href);
+	const internal = await import(pathToFileURL(`${out}/server/internal.js`).href);
 
 	// configure `import { building } from '$app/env'` —
 	// essential we do this before analysing the code
@@ -57,7 +55,7 @@ async function analyse({
 	// set env, `read`, and `manifest`, in case they're used in initialisation
 	internal.set_env(env);
 	internal.set_manifest(manifest);
-	internal.set_read_implementation((file) => createReadableStream(`${server_root}/server/${file}`));
+	internal.set_read_implementation((file) => createReadableStream(`${out}/server/${file}`));
 
 	// first, build server nodes without the client manifest so we can analyse it
 	build_server_nodes(out, config.kit, manifest_data, server_manifest, null, null, null, root);
