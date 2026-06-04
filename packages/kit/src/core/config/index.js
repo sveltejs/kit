@@ -55,13 +55,16 @@ export function load_error_page(config) {
 
 /**
  * Loads and validates config from `vite.config.ts`
+ * @param {{ configFile?: string }} [options]
  * @returns {Promise<ValidatedConfig>}
  */
-export async function load_config() {
-	const { resolveConfig } = await import_peer('vite', process.cwd());
+export async function load_config({ configFile } = {}) {
+	const { resolveConfig } = /** @type {import('vite')} */ (
+		await import_peer('vite', process.cwd())
+	);
 
 	/** @type {ResolvedConfig} */
-	const resolved = await resolveConfig({}, 'build', process.env.MODE ?? 'production');
+	const resolved = await resolveConfig({ configFile }, 'build', process.env.MODE ?? 'production');
 
 	const plugin = resolved.plugins.find(
 		(plugin) => plugin.name === 'vite-plugin-sveltekit-setup' && plugin.api?.options
