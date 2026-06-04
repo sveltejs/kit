@@ -152,8 +152,8 @@ let vite_plugin_svelte;
  * @param {import('@sveltejs/kit').KitConfig & Omit<SvelteConfig, 'onwarn'>} [config]
  * @returns {Promise<Plugin[]>}
  */
-export async function sveltekit(config = {}) {
-	const { extensions, compilerOptions, vitePlugin, preprocess, ...rest } = config;
+export async function sveltekit(config) {
+	const { extensions, compilerOptions, vitePlugin, preprocess, ...rest } = config ?? {};
 	const svelte_config = process_config(
 		{ extensions, compilerOptions, vitePlugin, preprocess, kit: rest },
 		{ cwd, source: 'SvelteKit options from Vite config' }
@@ -162,9 +162,13 @@ export async function sveltekit(config = {}) {
 	const config_file = ['svelte.config.js', 'svelte.config.ts'].find((file) => fs.existsSync(file));
 
 	if (config_file) {
-		throw new Error(
-			`${config_file} is no longer used. Please pass configuration via the \`sveltekit(...)\` plugin in your Vite config.`
-		);
+		const message = `${config_file} is no longer used. Please pass configuration via the \`sveltekit(...)\` plugin in your Vite config.`;
+
+		if (!config) {
+			throw new Error(message);
+		}
+
+		console.warn(message);
 	}
 
 	/** @type {Options} */
