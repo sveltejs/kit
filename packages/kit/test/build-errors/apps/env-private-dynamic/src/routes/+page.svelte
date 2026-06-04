@@ -1,5 +1,5 @@
 <script>
-	const p = import('$env/static/private');
+	const p = import('$app/env/private');
 </script>
 
 {#await p}
