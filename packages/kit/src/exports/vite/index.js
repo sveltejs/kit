@@ -53,7 +53,7 @@ import {
 import { import_peer } from '../../utils/import.js';
 import { compact } from '../../utils/array.js';
 import { should_ignore, has_children } from './static_analysis/utils.js';
-import { load_svelte_config, process_config } from '../../core/config/index.js';
+import { process_config } from '../../core/config/index.js';
 import { treeshake_prerendered_remotes } from './build/remote.js';
 
 const cwd = process.cwd();
@@ -152,26 +152,19 @@ let vite_plugin_svelte;
  * @param {import('@sveltejs/kit').KitConfig & Omit<SvelteConfig, 'onwarn'>} [config]
  * @returns {Promise<Plugin[]>}
  */
-export async function sveltekit(config) {
-	/** @type {import('types').ValidatedConfig} */
-	let svelte_config;
+export async function sveltekit(config = {}) {
+	const { extensions, compilerOptions, vitePlugin, preprocess, ...rest } = config;
+	const svelte_config = process_config(
+		{ extensions, compilerOptions, vitePlugin, preprocess, kit: rest },
+		{ cwd, source: 'SvelteKit options from Vite config' }
+	);
 
-	if (config !== undefined) {
-		const { extensions, compilerOptions, vitePlugin, preprocess, ...kit } = config;
-		svelte_config = process_config(
-			{ extensions, compilerOptions, vitePlugin, preprocess, kit },
-			{ cwd, source: 'SvelteKit options from Vite config' }
+	const config_file = ['svelte.config.js', 'svelte.config.ts'].find((file) => fs.existsSync(file));
+
+	if (config_file) {
+		throw new Error(
+			`${config_file} is no longer used. Please pass configuration via the \`sveltekit(...)\` plugin in your Vite config.`
 		);
-
-		const config_file = ['svelte.config.js', 'svelte.config.ts'].find((file) =>
-			fs.existsSync(file)
-		);
-
-		if (config_file) {
-			console.warn(`${config_file} is ignored when options are passed via your Vite config`);
-		}
-	} else {
-		svelte_config = await load_svelte_config();
 	}
 
 	/** @type {Options} */

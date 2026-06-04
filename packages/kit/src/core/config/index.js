@@ -59,57 +59,6 @@ export function load_error_page(config) {
  * @returns {Promise<ValidatedConfig>}
  */
 export async function load_config({ cwd = process.cwd() } = {}) {
-	try {
-		const vite_config = await load_config_from_vite({ cwd });
-		if (vite_config) {
-			return vite_config;
-		}
-	} catch (e) {
-		// TODO SvelteKit 3: fail completely instead
-		console.error(
-			'Loading Svelte config from Vite config failed:',
-			e,
-			'\n\nFalling back to loading svelte.config.js'
-		);
-	}
-
-	return load_svelte_config(cwd);
-}
-
-/**
- * Loads and validates Svelte config file
- * @param {string} [cwd]
- * @returns {Promise<ValidatedConfig>}
- */
-export async function load_svelte_config(cwd = process.cwd()) {
-	const config_files = ['js', 'ts']
-		.map((ext) => path.join(cwd, `svelte.config.${ext}`))
-		.filter((f) => fs.existsSync(f));
-
-	if (config_files.length === 0) {
-		console.log(
-			`No Svelte config file found in ${cwd} - using SvelteKit's default configuration without an adapter.`
-		);
-		return process_config({}, { cwd });
-	}
-
-	const config_file = config_files[0];
-	if (config_files.length > 1) {
-		console.log(
-			`Found multiple Svelte config files in ${cwd}: ${config_files.map((f) => path.basename(f)).join(', ')}. Using ${path.basename(config_file)}`
-		);
-	}
-
-	const config = await import(`${url.pathToFileURL(config_file).href}?ts=${Date.now()}`);
-	return process_config(config.default, { cwd, source: path.relative(cwd, config_file) });
-}
-
-/**
- * Loads and validates Svelte config via Vite config resolution (if set that way).
- * @param {{ cwd?: string; mode?: string }} options
- * @returns {Promise<ValidatedConfig | undefined>}
- */
-async function load_config_from_vite({ cwd = process.cwd(), mode } = {}) {
 	const { resolveConfig } = await import_peer('vite', cwd);
 	const current_cwd = process.cwd();
 
@@ -121,7 +70,7 @@ async function load_config_from_vite({ cwd = process.cwd(), mode } = {}) {
 	let resolved;
 
 	try {
-		resolved = await resolveConfig({}, 'build', mode ?? process.env.MODE ?? 'production');
+		resolved = await resolveConfig({}, 'build', process.env.MODE ?? 'production');
 	} finally {
 		if (cwd !== current_cwd) {
 			process.chdir(current_cwd);
