@@ -15,11 +15,9 @@ import { exactRegex, prefixRegex } from 'rolldown/filter';
 import { copy, mkdirp, read, resolve_entry, rimraf } from '../../utils/filesystem.js';
 import { posixify } from '../../utils/os.js';
 import {
-	create_sveltekit_env,
 	create_sveltekit_env_public,
-	resolve_explicit_env_entry,
 	create_sveltekit_env_service_worker_dev,
-	create_sveltekit_env_private
+	resolve_explicit_env_entry
 } from '../../core/env.js';
 import * as sync from '../../core/sync/sync.js';
 import { create_assets } from '../../core/sync/create_manifest_data/index.js';
@@ -53,15 +51,11 @@ import {
 	app_server,
 	service_worker,
 	sveltekit_remotes,
-	sveltekit_server,
 	sveltekit_traced,
 	sveltekit_manifest_data,
 	sveltekit_ipc,
-	sveltekit_env,
-	sveltekit_env_private,
 	sveltekit_env_service_worker,
 	sveltekit_env_public_client,
-	sveltekit_env_public_server,
 	public_sveltekit_env
 } from './module_ids.js';
 import { to_fs } from '../../utils/vite.js';
@@ -311,8 +305,6 @@ function kit({ svelte_config, adapter }) {
 
 	/** @type {string | null} */
 	let service_worker_entry_file = resolve_entry(svelte_config.kit.files.serviceWorker);
-	/** @type {import('node:path').ParsedPath} */
-	let parsed_service_worker;
 
 	/** @type {string | null} */
 	let server_instrumentation_file;
@@ -364,7 +356,6 @@ function kit({ svelte_config, adapter }) {
 				env = loadEnv(config_env.mode, kit.env.dir, '');
 
 				service_worker_entry_file = resolve_entry(kit.files.serviceWorker);
-				parsed_service_worker = path.parse(kit.files.serviceWorker);
 				server_instrumentation_file = resolve_entry(
 					path.join(kit.files.src, 'instrumentation.server')
 				);
@@ -1156,6 +1147,12 @@ function kit({ svelte_config, adapter }) {
 	/** @type {string} */
 	let service_worker_code;
 
+	/** @type {string | null} */
+	let explicit_env_entry = null;
+
+	/** @type {Record<string, EnvVarConfig<any>> | null} */
+	let explicit_env_config = null;
+
 	/**
 	 * Creates the service worker virtual modules
 	 * @type {Plugin}
@@ -1165,6 +1162,20 @@ function kit({ svelte_config, adapter }) {
 
 		applyToEnvironment(environment) {
 			return environment.name === 'serviceWorker';
+		},
+
+		// TODO this is awkwardly duplicated with plugin_virtual_modules
+		async configResolved(config) {
+			vite_config = config;
+			env = loadEnv(config.mode, svelte_config.kit.env.dir, '');
+
+			explicit_env_entry = resolve_explicit_env_entry(svelte_config);
+			explicit_env_config = await sync.env(
+				svelte_config.kit,
+				explicit_env_entry,
+				config.root,
+				config.mode
+			);
 		},
 
 		resolveId: {

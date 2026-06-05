@@ -96,7 +96,7 @@ export function plugin_virtual_modules(sveltekit_config) {
 			});
 		},
 
-		resolveId(id, importer) {
+		resolveId(id) {
 			if (id === '__sveltekit/manifest') {
 				return `${sveltekit_config.kit.outDir}/generated/client-optimized/app.js`;
 			}
