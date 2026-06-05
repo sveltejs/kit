@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { parse as polka_url_parser } from '@polka/url';
 import { getRequest, setResponse, createReadableStream } from '@sveltejs/kit/node';
 import { Server } from 'SERVER';
-import { manifest, prerendered, base } from 'MANIFEST';
+import { manifest } from 'MANIFEST';
 import { env } from 'ENV';
 import { parse_as_bytes, parse_origin } from '../utils.js';
 
@@ -31,7 +31,7 @@ if (isNaN(body_size_limit)) {
 
 const dir = path.dirname(fileURLToPath(import.meta.url));
 
-const asset_dir = `${dir}/client${base}`;
+const asset_dir = `${dir}/client${manifest.base}`;
 
 await server.init({
 	env: /** @type {Record<string, string>} */ (process.env),
@@ -77,13 +77,13 @@ function serve_prerendered() {
 			// ignore invalid URI
 		}
 
-		if (prerendered.has(pathname)) {
+		if (manifest._.prerendered_routes.has(pathname)) {
 			return handler?.(req, res, next);
 		}
 
 		// remove or add trailing slash as appropriate
 		let location = pathname.at(-1) === '/' ? pathname.slice(0, -1) : pathname + '/';
-		if (prerendered.has(location)) {
+		if (manifest._.prerendered_routes.has(location)) {
 			if (query) location += search;
 			res.writeHead(308, { location }).end();
 		} else {

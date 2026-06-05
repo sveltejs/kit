@@ -1,0 +1,17 @@
+// we've moved the wrangler config away from the root of the project
+// to test that the adapter still resolves the paths correctly
+{
+	"$schema": "../node_modules/wrangler/config-schema.json",
+	"compatibility_date": "2026-04-08",
+	"main": "../src/worker.js",
+	"vars": {
+		"MY_VAR": "VAR"
+	},
+	"env": {
+		"production": {
+			"vars": {
+				"MY_VAR": "PROD_VAR"
+			}
+		}
+	}
+}

@@ -735,6 +735,8 @@ function kit({ svelte_config, adapter }) {
 							`${svelte_config.kit.paths.base}/${svelte_config.kit.appDir}`
 						);
 
+						// This will be undefined if Vite optimises the server dependencies
+						// before the dev server starts
 						const port = get_port(dev_context.server);
 
 						return dedent`

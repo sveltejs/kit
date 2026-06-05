@@ -37,8 +37,8 @@ catalogs:
       specifier: ^10.0.0
       version: 10.0.0
     '@sveltejs/vite-plugin-svelte':
-      specifier: ^7.0.0
-      version: 7.0.0
+      specifier: ^7.1.2
+      version: 7.1.2
     '@svitejs/changesets-changelog-github-compact':
       specifier: ^1.2.0
       version: 1.2.0
@@ -106,8 +106,8 @@ catalogs:
       specifier: ^4.1.7
       version: 4.1.7
     wrangler:
-      specifier: ^4.67.0
-      version: 4.79.0
+      specifier: ^4.92.0
+      version: 4.92.0
 
 importers:
 
@@ -155,15 +155,15 @@ importers:
 
   packages/adapter-cloudflare:
     dependencies:
+      '@cloudflare/vite-plugin':
+        specifier: ^1.37.1
+        version: 1.37.1(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))(workerd@1.20260515.1)(wrangler@4.92.0(@cloudflare/workers-types@4.20260519.1))
       '@cloudflare/workers-types':
-        specifier: ^4.20260219.0
-        version: 4.20260401.1
+        specifier: ^4.20260519.1
+        version: 4.20260519.1
       worktop:
         specifier: 0.8.0-next.18
         version: 0.8.0-next.18
-      wrangler:
-        specifier: ^4.67.0
-        version: 4.79.0(@cloudflare/workers-types@4.20260401.1)
     devDependencies:
       '@playwright/test':
         specifier: 'catalog:'
@@ -174,27 +174,24 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 22.19.19
-      rolldown:
-        specifier: 'catalog:'
-        version: 1.0.0-rc.17
       typescript:
         specifier: 'catalog:'
         version: 6.0.2
+      vite:
+        specifier: 'catalog:'
+        version: 8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3)
       vitest:
         specifier: 'catalog:'
         version: 4.1.7(@opentelemetry/api@1.9.0)(@types/node@22.19.19)(@vitest/browser-playwright@4.1.7)(jsdom@29.1.1)(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
 
-  packages/adapter-cloudflare/test/apps/pages:
+  packages/adapter-cloudflare/test/apps/assets-only:
     devDependencies:
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../../../../kit
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 7.0.0(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
-      server-side-dep:
-        specifier: file:server-side-dep
-        version: file:packages/adapter-cloudflare/test/apps/pages/server-side-dep
+        version: 7.1.2(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
       svelte:
         specifier: 'catalog:'
         version: 5.55.7(@typescript-eslint/types@8.59.4)
@@ -203,19 +200,34 @@ importers:
         version: 8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3)
       wrangler:
         specifier: 'catalog:'
-        version: 4.79.0(@cloudflare/workers-types@4.20260401.1)
+        version: 4.92.0(@cloudflare/workers-types@4.20260519.1)
 
-  packages/adapter-cloudflare/test/apps/workers:
+  packages/adapter-cloudflare/test/apps/basic:
     devDependencies:
       '@sveltejs/kit':
         specifier: workspace:^
         version: link:../../../../kit
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 7.0.0(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
+        version: 7.1.2(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
       server-side-dep:
         specifier: file:server-side-dep
-        version: file:packages/adapter-cloudflare/test/apps/workers/server-side-dep
+        version: file:packages/adapter-cloudflare/test/apps/basic/server-side-dep
+      svelte:
+        specifier: 'catalog:'
+        version: 5.55.7(@typescript-eslint/types@8.59.4)
+      vite:
+        specifier: 'catalog:'
+        version: 8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3)
+
+  packages/adapter-cloudflare/test/apps/custom-worker:
+    devDependencies:
+      '@sveltejs/kit':
+        specifier: workspace:^
+        version: link:../../../../kit
+      '@sveltejs/vite-plugin-svelte':
+        specifier: 'catalog:'
+        version: 7.1.2(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
       svelte:
         specifier: 'catalog:'
         version: 5.55.7(@typescript-eslint/types@8.59.4)
@@ -224,7 +236,7 @@ importers:
         version: 8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3)
       wrangler:
         specifier: 'catalog:'
-        version: 4.79.0(@cloudflare/workers-types@4.20260401.1)
+        version: 4.92.0(@cloudflare/workers-types@4.20260519.1)
 
   packages/adapter-netlify:
     dependencies:
@@ -270,7 +282,7 @@ importers:
         version: link:../../../../kit
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 7.0.0(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
+        version: 7.1.2(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
       svelte:
         specifier: 'catalog:'
         version: 5.55.7(@typescript-eslint/types@8.59.4)
@@ -285,7 +297,7 @@ importers:
         version: link:../../../../kit
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 7.0.0(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
+        version: 7.1.2(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
       svelte:
         specifier: 'catalog:'
         version: 5.55.7(@typescript-eslint/types@8.59.4)
@@ -300,7 +312,7 @@ importers:
         version: link:../../../../kit
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 7.0.0(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
+        version: 7.1.2(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
       svelte:
         specifier: 'catalog:'
         version: 5.55.7(@typescript-eslint/types@8.59.4)
@@ -315,7 +327,7 @@ importers:
         version: link:../../../../kit
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 7.0.0(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
+        version: 7.1.2(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
       svelte:
         specifier: 'catalog:'
         version: 5.55.7(@typescript-eslint/types@8.59.4)
@@ -382,7 +394,7 @@ importers:
         version: link:../../../../kit
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 7.0.0(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
+        version: 7.1.2(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
       sirv-cli:
         specifier: 'catalog:'
         version: 3.0.0
@@ -400,7 +412,7 @@ importers:
         version: link:../../../../kit
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 7.0.0(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
+        version: 7.1.2(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
       sirv-cli:
         specifier: 'catalog:'
         version: 3.0.0
@@ -440,7 +452,7 @@ importers:
         version: link:../../../../kit
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 7.0.0(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
+        version: 7.1.2(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
       svelte:
         specifier: 'catalog:'
         version: 5.55.7(@typescript-eslint/types@8.59.4)
@@ -464,7 +476,7 @@ importers:
     dependencies:
       '@sveltejs/vite-plugin-svelte':
         specifier: ^7.0.0
-        version: 7.0.0(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
+        version: 7.1.2(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
       magic-string:
         specifier: ^0.30.5
         version: 0.30.21
@@ -513,7 +525,7 @@ importers:
         version: link:../../../../kit
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 7.0.0(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
+        version: 7.1.2(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
       svelte:
         specifier: 'catalog:'
         version: 5.55.7(@typescript-eslint/types@8.59.4)
@@ -559,7 +571,7 @@ importers:
         version: 1.60.0
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 7.0.0(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
+        version: 7.1.2(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
       '@types/connect':
         specifier: 'catalog:'
         version: 3.4.38
@@ -661,7 +673,7 @@ importers:
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 7.0.0(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
+        version: 7.1.2(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
       dropcss:
         specifier: 'catalog:'
         version: 1.0.16
@@ -685,7 +697,7 @@ importers:
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 7.0.0(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
+        version: 7.1.2(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
       svelte:
         specifier: 'catalog:'
         version: 5.55.7(@typescript-eslint/types@8.59.4)
@@ -718,7 +730,7 @@ importers:
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 7.0.0(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
+        version: 7.1.2(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
       '@vitest/browser-playwright':
         specifier: 'catalog:'
         version: 4.1.7(playwright@1.60.0)(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))(vitest@4.1.7)
@@ -751,7 +763,7 @@ importers:
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 7.0.0(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
+        version: 7.1.2(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
       e2e-test-dep-error:
         specifier: file:./_test_dependencies/cjs-only
         version: e2e-test-dep-cjs-only@file:packages/kit/test/apps/dev-only/_test_dependencies/cjs-only
@@ -802,7 +814,7 @@ importers:
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 7.0.0(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
+        version: 7.1.2(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
       svelte:
         specifier: 'catalog:'
         version: 5.55.7(@typescript-eslint/types@8.59.4)
@@ -823,7 +835,7 @@ importers:
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 7.0.0(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
+        version: 7.1.2(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
       svelte:
         specifier: 'catalog:'
         version: 5.55.7(@typescript-eslint/types@8.59.4)
@@ -844,7 +856,7 @@ importers:
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 7.0.0(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
+        version: 7.1.2(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
       svelte:
         specifier: 'catalog:'
         version: 5.55.7(@typescript-eslint/types@8.59.4)
@@ -868,7 +880,7 @@ importers:
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 7.0.0(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
+        version: 7.1.2(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
       svelte:
         specifier: 'catalog:'
         version: 5.55.7(@typescript-eslint/types@8.59.4)
@@ -895,7 +907,7 @@ importers:
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 7.0.0(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
+        version: 7.1.2(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
       svelte:
         specifier: 'catalog:'
         version: 5.55.7(@typescript-eslint/types@8.59.4)
@@ -922,7 +934,7 @@ importers:
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 7.0.0(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
+        version: 7.1.2(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
       svelte:
         specifier: 'catalog:'
         version: 5.55.7(@typescript-eslint/types@8.59.4)
@@ -943,7 +955,7 @@ importers:
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 7.0.0(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
+        version: 7.1.2(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
       svelte:
         specifier: 'catalog:'
         version: 5.55.7(@typescript-eslint/types@8.59.4)
@@ -964,7 +976,7 @@ importers:
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 7.0.0(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
+        version: 7.1.2(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
       svelte:
         specifier: 'catalog:'
         version: 5.55.7(@typescript-eslint/types@8.59.4)
@@ -994,7 +1006,7 @@ importers:
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 7.0.0(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
+        version: 7.1.2(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
       svelte:
         specifier: 'catalog:'
         version: 5.55.7(@typescript-eslint/types@8.59.4)
@@ -1018,7 +1030,7 @@ importers:
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 7.0.0(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
+        version: 7.1.2(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
       svelte:
         specifier: 'catalog:'
         version: 5.55.7(@typescript-eslint/types@8.59.4)
@@ -1042,7 +1054,7 @@ importers:
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 7.0.0(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
+        version: 7.1.2(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
       svelte:
         specifier: 'catalog:'
         version: 5.55.7(@typescript-eslint/types@8.59.4)
@@ -1066,7 +1078,7 @@ importers:
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 7.0.0(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
+        version: 7.1.2(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
       svelte:
         specifier: 'catalog:'
         version: 5.55.7(@typescript-eslint/types@8.59.4)
@@ -1087,7 +1099,7 @@ importers:
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 7.0.0(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
+        version: 7.1.2(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
       svelte:
         specifier: 'catalog:'
         version: 5.55.7(@typescript-eslint/types@8.59.4)
@@ -1108,7 +1120,7 @@ importers:
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 7.0.0(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
+        version: 7.1.2(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
       svelte:
         specifier: 'catalog:'
         version: 5.55.7(@typescript-eslint/types@8.59.4)
@@ -1129,7 +1141,7 @@ importers:
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 7.0.0(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
+        version: 7.1.2(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
       svelte:
         specifier: 'catalog:'
         version: 5.55.7(@typescript-eslint/types@8.59.4)
@@ -1150,7 +1162,7 @@ importers:
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 7.0.0(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
+        version: 7.1.2(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
       svelte:
         specifier: 'catalog:'
         version: 5.55.7(@typescript-eslint/types@8.59.4)
@@ -1171,7 +1183,7 @@ importers:
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 7.0.0(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
+        version: 7.1.2(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
       svelte:
         specifier: 'catalog:'
         version: 5.55.7(@typescript-eslint/types@8.59.4)
@@ -1192,7 +1204,7 @@ importers:
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 7.0.0(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
+        version: 7.1.2(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
       svelte:
         specifier: 'catalog:'
         version: 5.55.7(@typescript-eslint/types@8.59.4)
@@ -1213,7 +1225,7 @@ importers:
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 7.0.0(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
+        version: 7.1.2(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
       svelte:
         specifier: 'catalog:'
         version: 5.55.7(@typescript-eslint/types@8.59.4)
@@ -1234,7 +1246,7 @@ importers:
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 7.0.0(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
+        version: 7.1.2(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
       svelte:
         specifier: 'catalog:'
         version: 5.55.7(@typescript-eslint/types@8.59.4)
@@ -1255,7 +1267,7 @@ importers:
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 7.0.0(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
+        version: 7.1.2(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
       svelte:
         specifier: 'catalog:'
         version: 5.55.7(@typescript-eslint/types@8.59.4)
@@ -1276,7 +1288,7 @@ importers:
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 7.0.0(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
+        version: 7.1.2(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
       svelte:
         specifier: 'catalog:'
         version: 5.55.7(@typescript-eslint/types@8.59.4)
@@ -1297,7 +1309,7 @@ importers:
         version: link:../../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 7.0.0(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
+        version: 7.1.2(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
       svelte:
         specifier: 'catalog:'
         version: 5.55.7(@typescript-eslint/types@8.59.4)
@@ -1318,7 +1330,7 @@ importers:
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 7.0.0(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
+        version: 7.1.2(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
       svelte:
         specifier: 'catalog:'
         version: 5.55.7(@typescript-eslint/types@8.59.4)
@@ -1342,7 +1354,7 @@ importers:
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 7.0.0(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
+        version: 7.1.2(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
       svelte:
         specifier: 'catalog:'
         version: 5.55.7(@typescript-eslint/types@8.59.4)
@@ -1366,7 +1378,7 @@ importers:
         version: link:../../..
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 7.0.0(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
+        version: 7.1.2(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
       svelte:
         specifier: 'catalog:'
         version: 5.55.7(@typescript-eslint/types@8.59.4)
@@ -1400,7 +1412,7 @@ importers:
     devDependencies:
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 7.0.0(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
+        version: 7.1.2(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
       '@types/node':
         specifier: 'catalog:'
         version: 22.19.19
@@ -1466,7 +1478,7 @@ importers:
         version: link:../../packages/package
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 7.0.0(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
+        version: 7.1.2(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
       prettier:
         specifier: 'catalog:'
         version: 3.8.1
@@ -1613,51 +1625,57 @@ packages:
     resolution: {integrity: sha512-kGXA9k86osXeI5KRotFSqQdWuHtrCCsMZ8AoYS4rIblOhdHiw95XolrKYIdPnEx/0rl4A5l6vXhhClqcMqdvvA==}
     engines: {node: '>=20.19.0'}
 
-  '@cloudflare/kv-asset-handler@0.4.2':
-    resolution: {integrity: sha512-SIOD2DxrRRwQ+jgzlXCqoEFiKOFqaPjhnNTGKXSRLvp1HiOvapLaFG2kEr9dYQTYe8rKrd9uvDUzmAITeNyaHQ==}
-    engines: {node: '>=18.0.0'}
+  '@cloudflare/kv-asset-handler@0.5.0':
+    resolution: {integrity: sha512-jxQYkj8dSIzc0cD6cMMNdOc1UVjqSqu8BZdor5s8cGjW2I8BjODt/kWPVdY+u9zj3ms75Q5qaZgnxUad83+eAg==}
+    engines: {node: '>=22.0.0'}
 
-  '@cloudflare/unenv-preset@2.16.0':
-    resolution: {integrity: sha512-8ovsRpwzPoEqPUzoErAYVv8l3FMZNeBVQfJTvtzP4AgLSRGZISRfuChFxHWUQd3n6cnrwkuTGxT+2cGo8EsyYg==}
+  '@cloudflare/unenv-preset@2.16.1':
+    resolution: {integrity: sha512-ECxObrMfyTl5bhQf/lZCXwo5G6xX9IAUo+nDMKK4SZ8m4Jvvxp52vilxyySSWh2YTZz8+HQ07qGH/2rEom1vDw==}
     peerDependencies:
       unenv: 2.0.0-rc.24
-      workerd: 1.20260301.1 || ~1.20260302.1 || ~1.20260303.1 || ~1.20260304.1 || >1.20260305.0 <2.0.0-0
+      workerd: '>1.20260305.0 <2.0.0-0'
     peerDependenciesMeta:
       workerd:
         optional: true
 
-  '@cloudflare/workerd-darwin-64@1.20260329.1':
-    resolution: {integrity: sha512-oyDXYlPBuGXKkZ85+M3jFz0/qYmvA4AEURN8USIGPDCR5q+HFSRwywSd9neTx3Wi7jhey2wuYaEpD3fEFWyWUA==}
+  '@cloudflare/vite-plugin@1.37.1':
+    resolution: {integrity: sha512-FldhsmkXyLsX3yI+p0aJDo/kGyY69pDdynz2JjcuH3eCiQ+G9XaY3CrN+UYEfCbWv8CiR2wL95lNg0fT/HfwWA==}
+    peerDependencies:
+      vite: ^6.1.0 || ^7.0.0 || ^8.0.0
+      wrangler: ^4.92.0
+
+  '@cloudflare/workerd-darwin-64@1.20260515.1':
+    resolution: {integrity: sha512-Wtw44el2pNbzixvTkWdfeBDTrQwQbJRz7/JUvPKV27I0pQWXbhNJPpM8cstq/pbrU5AGcA/HjFH6yPMRTIRKig==}
     engines: {node: '>=16'}
     cpu: [x64]
     os: [darwin]
 
-  '@cloudflare/workerd-darwin-arm64@1.20260329.1':
-    resolution: {integrity: sha512-++ZxVa3ovzYeDLEG6zMqql9gzZAG8vak6ZSBQgprGKZp7akr+GKTpw9f3RrMP552NSi3gTisroLobrrkPBtYLQ==}
+  '@cloudflare/workerd-darwin-arm64@1.20260515.1':
+    resolution: {integrity: sha512-X8EqkZej6FfmhF9AVAQ3FhyQRr9acS4RcDunMU2YiuxKHF1IU8zzH3vY30/POaG+rUu9vGDp/VgUl49VPenHJQ==}
     engines: {node: '>=16'}
     cpu: [arm64]
     os: [darwin]
 
-  '@cloudflare/workerd-linux-64@1.20260329.1':
-    resolution: {integrity: sha512-kkeywAgIHwbqHkVILqbj/YkfbrA6ARbmutjiYzZA2MwMSfNXlw6/kedAKOY8YwcymZIgepx3YTIPnBP50pOotw==}
+  '@cloudflare/workerd-linux-64@1.20260515.1':
+    resolution: {integrity: sha512-CDC89QxQ7Y7t7RG1Jd9vj/qolE1sQRkI2OSEuV5BMJi0vW/gV4OVG6xjpdK3b1OYnSWDzF7NpvlR5Yg86q7k4g==}
     engines: {node: '>=16'}
     cpu: [x64]
     os: [linux]
 
-  '@cloudflare/workerd-linux-arm64@1.20260329.1':
-    resolution: {integrity: sha512-eYBN20+B7XOUSWEe0mlqkMUbfLoIKjKZnpqQiSxnLbL72JKY0D/KlfN/b7RVGLpewB7i8rTrwTNr0szCKnZzSQ==}
+  '@cloudflare/workerd-linux-arm64@1.20260515.1':
+    resolution: {integrity: sha512-WxbW/PToYES4fvHXzsr/5qOiETQs/Z9iZ0mjSZAiEwq5cMLZemzGN0COx+uFb9OvQwzh6Pg159qPFnw3+i9FuA==}
     engines: {node: '>=16'}
     cpu: [arm64]
     os: [linux]
 
-  '@cloudflare/workerd-windows-64@1.20260329.1':
-    resolution: {integrity: sha512-5R+/oxrDhS9nL3oA3ZWtD6ndMOqm7RfKknDNxLcmYW5DkUu7UH3J/s1t/Dz66iFePzr5BJmE7/8gbmve6TjtZQ==}
+  '@cloudflare/workerd-windows-64@1.20260515.1':
+    resolution: {integrity: sha512-WmV/iv+MHjYsvkcMVzpM2B5/mf06UUkdpVhZrtMfV9graWjBGPYFvE/eab8748RPVGKh1Xe1vXofLzDSwc08lA==}
     engines: {node: '>=16'}
     cpu: [x64]
     os: [win32]
 
-  '@cloudflare/workers-types@4.20260401.1':
-    resolution: {integrity: sha512-tKBeV/ySfJjbO0qMKkFrstHDdWzZHAcW4vCpO5QaqjB/667y9lhZt9gZyTKeJ0gluIBwpeQ/efBjqRLqpkgw9g==}
+  '@cloudflare/workers-types@4.20260519.1':
+    resolution: {integrity: sha512-BMWAwg4RyyZn3zcdoXbqpfogm2DGfNb83DXNCM1oFUMhYtEX8I+B+oxf67YPKvSiAEbzd7nHzW2mLv3eBH8Etw==}
 
   '@colors/colors@1.6.0':
     resolution: {integrity: sha512-Ir+AOibqzrIsL6ajt3Rz3LskB7OiMVHqltZmspbW/TJuTVuyOMirVqAkjfY6JISiLHgyNqicAC8AyHHGzNd/dA==}
@@ -2999,8 +3017,8 @@ packages:
       typescript: '>= 5 < 7'
       typescript-eslint: '>= 8'
 
-  '@sveltejs/vite-plugin-svelte@7.0.0':
-    resolution: {integrity: sha512-ILXmxC7HAsnkK2eslgPetrqqW1BKSL7LktsFgqzNj83MaivMGZzluWq32m25j2mDOjmSKX7GGWahePhuEs7P/g==}
+  '@sveltejs/vite-plugin-svelte@7.1.2':
+    resolution: {integrity: sha512-DrUBA2UXRfDmUX/ZTiEopd3X40yavsJF1FX2RygcuIScHL7o5YX1fMvoYnDhjeJQC4weCOklirpNWlcb2NiSeA==}
     engines: {node: ^20.19 || ^22.12 || >=24}
     peerDependencies:
       svelte: ^5.46.4
@@ -4527,9 +4545,9 @@ packages:
     resolution: {integrity: sha512-I9jwMn07Sy/IwOj3zVkVik2JTvgpaykDZEigL6Rx6N9LbMywwUSMtxET+7lVoDLLd3O3IXwJwvuuns8UB/HeAg==}
     engines: {node: '>=4'}
 
-  miniflare@4.20260329.0:
-    resolution: {integrity: sha512-+G+1YFVeuEpw/gZZmUHQR7IfzJV+DDGvnSl0yXzhgvHh8Nbr8Go5uiWIwl17EyZ1Uors3FKUMDUyU6+ejeKZOw==}
-    engines: {node: '>=18.0.0'}
+  miniflare@4.20260515.0:
+    resolution: {integrity: sha512-2j0oQWizk1Eu4Cm8tDX7Z+Nsjd0nebIj1TQcQ+Oy1QKeo0Ay9+bdn8wfLAtOj9znDCybDCUlnS1+nYvKXEdfNg==}
+    engines: {node: '>=22.0.0'}
     hasBin: true
 
   minimatch@10.2.5:
@@ -5033,11 +5051,8 @@ packages:
     engines: {node: '>=10'}
     hasBin: true
 
-  server-side-dep@file:packages/adapter-cloudflare/test/apps/pages/server-side-dep:
-    resolution: {directory: packages/adapter-cloudflare/test/apps/pages/server-side-dep, type: directory}
-
-  server-side-dep@file:packages/adapter-cloudflare/test/apps/workers/server-side-dep:
-    resolution: {directory: packages/adapter-cloudflare/test/apps/workers/server-side-dep, type: directory}
+  server-side-dep@file:packages/adapter-cloudflare/test/apps/basic/server-side-dep:
+    resolution: {directory: packages/adapter-cloudflare/test/apps/basic/server-side-dep, type: directory}
 
   sharp@0.34.5:
     resolution: {integrity: sha512-Ou9I5Ft9WNcCbXrU9cMgPBcCK8LiwLqcbywW3t4oDV37n1pzpuNLsYiAV8eODnjbtQlSDwZ2cUEeQz4E54Hltg==}
@@ -5375,8 +5390,8 @@ packages:
   undici-types@6.21.0:
     resolution: {integrity: sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ==}
 
-  undici@7.24.4:
-    resolution: {integrity: sha512-BM/JzwwaRXxrLdElV2Uo6cTLEjhSb3WXboncJamZ15NgUURmvlXvxa6xkwIOILIjPNo9i8ku136ZvWV0Uly8+w==}
+  undici@7.24.8:
+    resolution: {integrity: sha512-6KQ/+QxK49Z/p3HO6E5ZCZWNnCasyZLa5ExaVYyvPxUwKtbCPMKELJOqh7EqOle0t9cH/7d2TaaTRRa6Nhs4YQ==}
     engines: {node: '>=20.18.1'}
 
   undici@7.25.0:
@@ -5637,8 +5652,8 @@ packages:
     resolution: {integrity: sha512-DLiFIXYC5fMPxaRg832S6F5mJYvePtmO5G9v9IgUFPhXm9/GkXarH/TUrBAVzhTCzAj9anE/+GjrgXp/54nOgw==}
     engines: {node: '>= 12.0.0'}
 
-  workerd@1.20260329.1:
-    resolution: {integrity: sha512-+ifMv3uBuD33ee7pan5n8+sgVxm2u5HnbgfXzHKwMNTKw86znqBJSnJoBqtP88+2T5U2Lu11xXUt+khPYioXwQ==}
+  workerd@1.20260515.1:
+    resolution: {integrity: sha512-MjKOJLcvU45xXedQowvuiHtJTxu4WTHYQeIlF7YmjuqhiI6dImTFxWCEoRQHiskztxuVSNEmdO7/0UfDu6OMnQ==}
     engines: {node: '>=16'}
     hasBin: true
 
@@ -5646,12 +5661,12 @@ packages:
     resolution: {integrity: sha512-+TvsA6VAVoMC3XDKR5MoC/qlLqDixEfOBysDEKnPIPou/NvoPWCAuXHXMsswwlvmEuvX56lQjvELLyLuzTKvRw==}
     engines: {node: '>=12'}
 
-  wrangler@4.79.0:
-    resolution: {integrity: sha512-NMinIdB1pXIqdk+NLw4+RjzB7K5z4+lWMxhTxFTfZomwJu3Pm6N+kZ+a66D3nI7w0oCjsdv/umrZVmSHCBp2cg==}
-    engines: {node: '>=20.3.0'}
+  wrangler@4.92.0:
+    resolution: {integrity: sha512-/DKpQHPxkuZbQsO9dFW2700VTD/4DSZMHjy92fO/frNoDRi/zQsFCAd2ONCV6TGqcUoXcP3D8Bo2gj/L4M0qQQ==}
+    engines: {node: '>=22.0.0'}
     hasBin: true
     peerDependencies:
-      '@cloudflare/workers-types': ^4.20260329.1
+      '@cloudflare/workers-types': ^4.20260515.1
     peerDependenciesMeta:
       '@cloudflare/workers-types':
         optional: true
@@ -5942,30 +5957,43 @@ snapshots:
       human-id: 4.1.1
       prettier: 3.8.1
 
-  '@cloudflare/kv-asset-handler@0.4.2': {}
+  '@cloudflare/kv-asset-handler@0.5.0': {}
 
-  '@cloudflare/unenv-preset@2.16.0(unenv@2.0.0-rc.24)(workerd@1.20260329.1)':
+  '@cloudflare/unenv-preset@2.16.1(unenv@2.0.0-rc.24)(workerd@1.20260515.1)':
     dependencies:
       unenv: 2.0.0-rc.24
     optionalDependencies:
-      workerd: 1.20260329.1
+      workerd: 1.20260515.1
 
-  '@cloudflare/workerd-darwin-64@1.20260329.1':
+  '@cloudflare/vite-plugin@1.37.1(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))(workerd@1.20260515.1)(wrangler@4.92.0(@cloudflare/workers-types@4.20260519.1))':
+    dependencies:
+      '@cloudflare/unenv-preset': 2.16.1(unenv@2.0.0-rc.24)(workerd@1.20260515.1)
+      miniflare: 4.20260515.0
+      unenv: 2.0.0-rc.24
+      vite: 8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3)
+      wrangler: 4.92.0(@cloudflare/workers-types@4.20260519.1)
+      ws: 8.18.0
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
+      - workerd
+
+  '@cloudflare/workerd-darwin-64@1.20260515.1':
     optional: true
 
-  '@cloudflare/workerd-darwin-arm64@1.20260329.1':
+  '@cloudflare/workerd-darwin-arm64@1.20260515.1':
     optional: true
 
-  '@cloudflare/workerd-linux-64@1.20260329.1':
+  '@cloudflare/workerd-linux-64@1.20260515.1':
     optional: true
 
-  '@cloudflare/workerd-linux-arm64@1.20260329.1':
+  '@cloudflare/workerd-linux-arm64@1.20260515.1':
     optional: true
 
-  '@cloudflare/workerd-windows-64@1.20260329.1':
+  '@cloudflare/workerd-windows-64@1.20260515.1':
     optional: true
 
-  '@cloudflare/workers-types@4.20260401.1': {}
+  '@cloudflare/workers-types@4.20260519.1': {}
 
   '@colors/colors@1.6.0': {}
 
@@ -7246,7 +7274,7 @@ snapshots:
       typescript: 6.0.2
       typescript-eslint: 8.58.0(eslint@10.0.0(jiti@2.4.2))(typescript@6.0.2)
 
-  '@sveltejs/vite-plugin-svelte@7.0.0(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))':
+  '@sveltejs/vite-plugin-svelte@7.1.2(svelte@5.55.7(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))':
     dependencies:
       deepmerge: 4.3.1
       magic-string: 0.30.21
@@ -8926,12 +8954,12 @@ snapshots:
 
   min-indent@1.0.1: {}
 
-  miniflare@4.20260329.0:
+  miniflare@4.20260515.0:
     dependencies:
       '@cspotcode/source-map-support': 0.8.1
       sharp: 0.34.5
-      undici: 7.24.4
-      workerd: 1.20260329.1
+      undici: 7.24.8
+      workerd: 1.20260515.1
       ws: 8.18.0
       youch: 4.1.0-beta.10
     transitivePeerDependencies:
@@ -9432,9 +9460,7 @@ snapshots:
 
   semver@7.8.0: {}
 
-  server-side-dep@file:packages/adapter-cloudflare/test/apps/pages/server-side-dep: {}
-
-  server-side-dep@file:packages/adapter-cloudflare/test/apps/workers/server-side-dep: {}
+  server-side-dep@file:packages/adapter-cloudflare/test/apps/basic/server-side-dep: {}
 
   sharp@0.34.5:
     dependencies:
@@ -9781,7 +9807,7 @@ snapshots:
 
   undici-types@6.21.0: {}
 
-  undici@7.24.4: {}
+  undici@7.24.8: {}
 
   undici@7.25.0: {}
 
@@ -9952,31 +9978,31 @@ snapshots:
       triple-beam: 1.4.1
       winston-transport: 4.9.0
 
-  workerd@1.20260329.1:
+  workerd@1.20260515.1:
     optionalDependencies:
-      '@cloudflare/workerd-darwin-64': 1.20260329.1
-      '@cloudflare/workerd-darwin-arm64': 1.20260329.1
-      '@cloudflare/workerd-linux-64': 1.20260329.1
-      '@cloudflare/workerd-linux-arm64': 1.20260329.1
-      '@cloudflare/workerd-windows-64': 1.20260329.1
+      '@cloudflare/workerd-darwin-64': 1.20260515.1
+      '@cloudflare/workerd-darwin-arm64': 1.20260515.1
+      '@cloudflare/workerd-linux-64': 1.20260515.1
+      '@cloudflare/workerd-linux-arm64': 1.20260515.1
+      '@cloudflare/workerd-windows-64': 1.20260515.1
 
   worktop@0.8.0-next.18:
     dependencies:
       mrmime: 2.0.0
       regexparam: 3.0.0
 
-  wrangler@4.79.0(@cloudflare/workers-types@4.20260401.1):
+  wrangler@4.92.0(@cloudflare/workers-types@4.20260519.1):
     dependencies:
-      '@cloudflare/kv-asset-handler': 0.4.2
-      '@cloudflare/unenv-preset': 2.16.0(unenv@2.0.0-rc.24)(workerd@1.20260329.1)
+      '@cloudflare/kv-asset-handler': 0.5.0
+      '@cloudflare/unenv-preset': 2.16.1(unenv@2.0.0-rc.24)(workerd@1.20260515.1)
       blake3-wasm: 2.1.5
       esbuild: 0.27.3
-      miniflare: 4.20260329.0
+      miniflare: 4.20260515.0
       path-to-regexp: 6.3.0
       unenv: 2.0.0-rc.24
-      workerd: 1.20260329.1
+      workerd: 1.20260515.1
     optionalDependencies:
-      '@cloudflare/workers-types': 4.20260401.1
+      '@cloudflare/workers-types': 4.20260519.1
       fsevents: 2.3.3
     transitivePeerDependencies:
       - bufferutil

@@ -1,0 +1,14 @@
+{
+	"compilerOptions": {
+		"allowJs": true,
+		"checkJs": true,
+		"esModuleInterop": true,
+		"forceConsistentCasingInFileNames": true,
+		"resolveJsonModule": true,
+		"skipLibCheck": true,
+		"sourceMap": true,
+		"moduleResolution": "bundler",
+		"types": ["./worker-configuration.d.ts"]
+	},
+	"extends": "./.svelte-kit/tsconfig.json"
+}

@@ -5,22 +5,23 @@
 		"noEmit": true,
 		"module": "nodenext",
 		"moduleResolution": "nodenext",
+		// `@cloudflare/vite-plugin`, `wrangler`, and `@cloudflare/workers-types`
+		// are full of type errors we can't fix
+		"skipLibCheck": true,
 		"paths": {
 			"@sveltejs/kit": ["../kit/types/index"]
 		},
 		// taken from the Cloudflare Workers TypeScript template https://github.com/cloudflare/workers-sdk/blob/main/packages/create-cloudflare/templates/hello-world/ts/tsconfig.json
 		"target": "es2024",
 		"lib": ["es2024"],
-		"types": ["node", "@cloudflare/workers-types"]
+		"types": ["node"]
 	},
 	"include": [
 		"index.js",
-		"utils.js",
-		"utils.spec.js",
-		"rolldown.config.js",
-		"vitest.config.js",
-		"test/utils.js",
+		"ambient.d.ts",
 		"internal.d.ts",
-		"src/worker.js"
+		"vitest.config.js",
+		"src/*",
+		"test/utils.js"
 	]
 }

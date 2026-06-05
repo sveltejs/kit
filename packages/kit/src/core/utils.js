@@ -90,14 +90,12 @@ export function list_files(dir, filter) {
 }
 
 /**
- * Gets the port number of a Vite dev server that's already listening.
- * Otherwise, it throws an error
+ * Gets the port number of a Vite dev server if it's started. Otherwise, returns `undefined`.
  * @param {ViteDevServer} server
- * @returns {number}
+ * @returns {number| undefined}
  */
 export function get_port(server) {
 	const address = server.httpServer?.address();
 	const port = typeof address === 'string' ? Number(address.split(':').at(-1)) : address?.port;
-	if (!port) throw new Error('Failed to determine Vite dev server port');
 	return port;
 }
