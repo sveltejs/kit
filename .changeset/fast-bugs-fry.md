@@ -1,5 +1,5 @@
 ---
-'@sveltejs/kit': minor
+'@sveltejs/kit': patch
 ---
 
-feat: use SSE for `query.live`
+fix: use SSE for `query.live`
