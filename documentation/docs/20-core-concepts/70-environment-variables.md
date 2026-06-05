@@ -109,13 +109,17 @@ export const variables = defineEnvVars({
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		%sveltekit.head%
 
-+++		<script async src="https://www.googletagmanager.com/gtag/js?id=%sveltekit.env.GOOGLE_ANALYTICS_ID%"></script>
+		<script
+			async
+			src="https://www.googletagmanager.com/gtag/js?id=+++%sveltekit.env.GOOGLE_ANALYTICS_ID%+++"
+		></script>
+
 		<script>
 			window.dataLayer ??= [];
-			function gtag(){dataLayer.push(arguments);}
+			function gtag(){dataLayer.push(arguments)}
 			gtag('js', new Date());
-			gtag('config', '%sveltekit.env.GOOGLE_ANALYTICS_ID%');
-		</script>+++
+			gtag('config', +++'%sveltekit.env.GOOGLE_ANALYTICS_ID%'+++);
+		</script>
 	</head>
 	<body data-sveltekit-preload-data="hover">
 		<div style="display: contents">%sveltekit.body%</div>
