@@ -38,22 +38,6 @@ async function get_stream_reader(response) {
 }
 
 /**
- * Yields deserialized results from a ReadableStream of Server-Sent Events
- * @param {ReadableStreamDefaultReader<Uint8Array>} reader
- */
-async function* read_live_sse(reader) {
-	for await (const node of read_sse(reader)) {
-		if (node.type === 'result') {
-			yield devalue.parse(node.result, app.decoders);
-			continue;
-		}
-
-		await handle_side_channel_response(node);
-		throw new HttpError(500, 'Invalid query.live response');
-	}
-}
-
-/**
  * @template T
  * @param {string} id
  * @param {string} payload
@@ -76,11 +60,20 @@ export async function* create_live_iterator(
 			headers: get_remote_request_headers(),
 			signal: controller.signal
 		});
+
 		reader = await get_stream_reader(response);
 
 		on_connect();
 
-		yield* read_live_sse(reader);
+		for await (const node of read_sse(reader)) {
+			if (node.type === 'result') {
+				yield devalue.parse(node.result, app.decoders);
+				continue;
+			}
+
+			await handle_side_channel_response(node);
+			throw new HttpError(500, 'Invalid query.live response');
+		}
 	} finally {
 		try {
 			await reader?.cancel();
