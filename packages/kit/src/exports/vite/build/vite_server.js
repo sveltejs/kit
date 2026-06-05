@@ -8,7 +8,7 @@ import { loadEnv } from 'vite';
 import { exactRegex } from 'rolldown/filter';
 import sirv from 'sirv';
 import { getRequest, setResponse } from '@sveltejs/kit/node';
-import { sveltekit_env, sveltekit_ipc } from '../module_ids.js';
+import { public_sveltekit_env, sveltekit_ipc } from '../module_ids.js';
 import { dedent } from '../../../core/sync/utils.js';
 import {
 	check_feature,
@@ -291,13 +291,13 @@ export async function create_build_server({
 				}
 
 				if (id === 'sveltekit:env') {
-					return sveltekit_env;
+					return public_sveltekit_env;
 				}
 			}
 		},
 		load: {
 			filter: {
-				id: exactRegex(sveltekit_env)
+				id: exactRegex(public_sveltekit_env)
 			},
 			handler() {
 				return `export const env = ${s(env)};`;

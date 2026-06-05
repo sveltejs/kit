@@ -2,7 +2,6 @@
 /** @import { ManifestData, ServerMetadata } from 'types' */
 /** @import { Manifest } from 'vite' */
 import * as devalue from 'devalue';
-import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { extract_svelte_config, load_vite_config } from '../config/index.js';
 import { forked } from '../../utils/fork.js';

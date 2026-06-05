@@ -1,6 +1,8 @@
 import { fileURLToPath } from 'node:url';
 import { posixify } from '../../utils/os.js';
 
+export const public_sveltekit_env = '\0virtual:sveltekit/env';
+
 export const sveltekit_env = '\0virtual:__sveltekit/env';
 export const sveltekit_env_public_client = '\0virtual:__sveltekit/env/public/client';
 export const sveltekit_env_public_server = '\0virtual:__sveltekit/env/public/server';
