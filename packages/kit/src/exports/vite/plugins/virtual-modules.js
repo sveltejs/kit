@@ -141,6 +141,10 @@ export function plugin_virtual_modules(sveltekit_config) {
 			if (id.startsWith('__sveltekit/') && id !== '__sveltekit/dev-server-entry.js') {
 				return `\0virtual:${id}`;
 			}
+
+			if (id === 'sveltekit:env') {
+				return public_sveltekit_env;
+			}
 		},
 		load: {
 			filter: {
