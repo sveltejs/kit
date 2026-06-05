@@ -184,7 +184,10 @@ export async function sveltekit(config) {
 			throw new Error(message);
 		}
 
-		console.warn(message);
+		if (!process.env.SVELTEKIT_FORK) {
+			// only warn once, not in worker threads
+			console.warn(message);
+		}
 	}
 
 	/** @type {Options} */
