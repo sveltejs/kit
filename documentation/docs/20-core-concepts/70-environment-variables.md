@@ -7,6 +7,7 @@ Environment variables are values your app needs that exist separately from the a
 During development, and at build time, variables defined in a `.env` or `.env.local` file will be added to the environment:
 
 ```env
+/// file: .env.local
 API_KEY=19f401ba-e8b0-48c4-8c77-b0ebb26d97fe
 ```
 
@@ -99,7 +100,7 @@ export const variables = defineEnvVars({
 `GOOGLE_ANALYTICS_ID` can now be imported from `$app/env/public`, or used in your `app.html` template as `%sveltekit.env.GOOGLE_ANALYTICS_ID%`:
 
 ```html
-<!--- file: src/app.html -->
+<!--- file: src/app.html --->
 <!doctype html>
 <html lang="en">
 	<head>
@@ -108,13 +109,17 @@ export const variables = defineEnvVars({
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		%sveltekit.head%
 
-+++		<script async src="https://www.googletagmanager.com/gtag/js?id=%sveltekit.env.GOOGLE_ANALYTICS_ID%"></script>
+		<script
+			async
+			src="https://www.googletagmanager.com/gtag/js?id=+++%sveltekit.env.GOOGLE_ANALYTICS_ID%+++"
+		></script>
+
 		<script>
 			window.dataLayer ??= [];
-			function gtag(){dataLayer.push(arguments);}
+			function gtag(){dataLayer.push(arguments)}
 			gtag('js', new Date());
-			gtag('config', '%sveltekit.env.GOOGLE_ANALYTICS_ID%');
-		</script>+++
+			gtag('config', +++'%sveltekit.env.GOOGLE_ANALYTICS_ID%'+++);
+		</script>
 	</head>
 	<body data-sveltekit-preload-data="hover">
 		<div style="display: contents">%sveltekit.body%</div>
