@@ -684,7 +684,7 @@ function kit({ svelte_config, adapter }) {
 				}
 
 				if (id === 'sveltekit:env') {
-					return sveltekit_env;
+					return id;
 				}
 
 				if (id === '__sveltekit/server-assets') {
@@ -724,6 +724,7 @@ function kit({ svelte_config, adapter }) {
 		load: {
 			filter: {
 				id: [
+					exactRegex('sveltekit:env'),
 					exactRegex(sveltekit_ipc),
 					exactRegex(sveltekit_remotes),
 					exactRegex(sveltekit_manifest_data),
@@ -825,6 +826,10 @@ function kit({ svelte_config, adapter }) {
 
 							import.meta.hot?.accept();
 						`;
+					}
+
+					case 'sveltekit:env': {
+						return `export const env = ${s(env)};`;
 					}
 				}
 			}
@@ -1447,8 +1452,7 @@ function kit({ svelte_config, adapter }) {
 					const server_input = {
 						index: `${runtime_directory}/server/index.js`,
 						internal: `${out_dir}/generated/server/internal.js`,
-						['remote-entry']: `${runtime_directory}/app/server/remote/index.js`,
-						env: '__sveltekit/env'
+						['remote-entry']: `${runtime_directory}/app/server/remote/index.js`
 					};
 
 					// add entry points for every endpoint...

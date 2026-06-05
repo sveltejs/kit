@@ -4,6 +4,7 @@
 import { get } from '__sveltekit/ipc';
 import {
 	options,
+	set_env,
 	set_manifest,
 	set_read_implementation,
 	set_building
@@ -15,7 +16,6 @@ import { validate_server_exports } from '../../utils/exports.js';
 import { PageNodes } from '../../utils/page_nodes.js';
 import { check_feature } from '../../utils/features.js';
 import { create_synchronous_read } from '../../runtime/server/read.js';
-import { set_env } from '__sveltekit/env';
 
 set_building();
 
