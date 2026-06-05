@@ -1,47 +1,59 @@
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { pathToFileURL } from 'node:url';
+/** @import { PluginOption } from 'vite' */
+import { escape_for_regexp } from '../../utils/escape.js';
+import { create_build_server } from '../../exports/vite/build/vite_server.js';
 import { forked } from '../../utils/fork.js';
+import { get_port } from '../utils.js';
+import { extract_svelte_config, load_vite_config } from '../config/index.js';
 
 export default forked(import.meta.url, generate_fallback);
 
+const prerender_entry = import.meta.resolve('./prerender_entry.js');
+
 /**
- * @param {{
- *   manifest_path: string;
- *   env: Record<string, string>
- *   out_dir: string;
- *   origin: string;
- *   assets: string;
- * }} opts
+ * @param {object} opts Arguments must be serialisable via the structured clone algorithm
+ * @param {string} opts.manifest_path
+ * @param {string} opts.out
+ * @param {string} opts.root
+ * @returns {Promise<string>}
  */
-async function generate_fallback({ manifest_path, env, out_dir, origin, assets }) {
-	const server_root = join(out_dir, 'output');
+async function generate_fallback({ manifest_path, out, root }) {
+	const vite_config = await load_vite_config(); // TODO configFile
+	const svelte_config = extract_svelte_config(vite_config);
 
-	/** @type {import('types').ServerInternalModule} */
-	const { set_building } = await import(pathToFileURL(`${server_root}/server/internal.js`).href);
+	/** @type {PluginOption} */
+	const plugin_generate_fallback = {
+		name: 'vite-plugin-sveltekit-compile:generate-fallback',
+		configureServer(vite) {
+			return () => {
+				vite.middlewares.use((req, _, next) => {
+					req.url = req.url?.replace(
+						new RegExp(escape_for_regexp(`^http://localhost:${port}`)),
+						svelte_config.kit.prerender.origin
+					);
+					req.headers.host = new URL(svelte_config.kit.prerender.origin).host;
 
-	/** @type {import('types').ServerModule} */
-	const { Server } = await import(pathToFileURL(`${server_root}/server/index.js`).href);
+					next();
+				});
+			};
+		}
+	};
 
-	/** @type {import('@sveltejs/kit').SSRManifest} */
-	const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
-
-	set_building();
-
-	const server = new Server(manifest);
-	await server.init({ env });
-
-	const response = await server.respond(new Request(origin + '/[fallback]'), {
-		getClientAddress: () => {
-			throw new Error('Cannot read clientAddress during prerendering');
-		},
-		prerendering: {
-			fallback: true,
-			dependencies: new Map(),
-			remote_responses: new Map()
-		},
-		read: (file) => readFileSync(join(assets, file))
+	const server = await create_build_server({
+		name: 'generate-fallback',
+		svelte_config,
+		out,
+		root,
+		manifest_path,
+		server_path: prerender_entry,
+		vite_plugins: [plugin_generate_fallback]
 	});
+
+	await server.listen();
+
+	const port = get_port(server);
+	const response = await fetch(`http://localhost:${port}/[fallback]`);
+
+	await server.close();
 
 	if (response.ok) {
 		return await response.text();

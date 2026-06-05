@@ -36,6 +36,7 @@ const extensions = ['.html', '.js', '.mjs', '.json', '.css', '.svg', '.xml', '.w
  *   log: Logger;
  *   vite_config: ResolvedConfig;
  *   remotes: RemoteChunk[];
+ *   out: string;
  *   explicit_env_config: Record<string, EnvVarConfig<any>> | null;
  * }} opts
  * @returns {Builder}
@@ -50,6 +51,7 @@ export function create_builder({
 	log,
 	vite_config,
 	remotes,
+	out,
 	explicit_env_config
 }) {
 	/** @type {Map<RouteDefinition, RouteData>} */
@@ -119,14 +121,11 @@ export function create_builder({
 
 		async generateFallback(dest) {
 			const manifest_path = `${config.kit.outDir}/output/server/manifest-full.js`;
-			const env = loadEnv(vite_config.mode, config.kit.env.dir, '');
 
 			const fallback = await generate_fallback({
 				manifest_path,
-				env,
-				out_dir: config.kit.outDir,
-				origin: config.kit.prerender.origin,
-				assets: config.kit.files.assets
+				root: vite_config.root,
+				out
 			});
 
 			if (existsSync(dest)) {

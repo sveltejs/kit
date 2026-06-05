@@ -1,3 +1,8 @@
+/** @import { Adapter, SSRManifest } from '@sveltejs/kit' */
+/** @import { NextHandleFunction } from 'connect' */
+/** @import { ValidatedConfig, ServerInternalModule, ServerModule, InternalServer } from 'types' */
+/** @import { PreviewServer, ResolvedConfig } from 'vite' */
+
 import fs from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -8,17 +13,15 @@ import { createReadableStream, getRequest, setResponse } from '../../../exports/
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import { is_chrome_devtools_request, not_found } from '../utils.js';
 
-/** @typedef {import('http').IncomingMessage} Req */
-/** @typedef {import('http').ServerResponse} Res */
-/** @typedef {(req: Req, res: Res, next: () => void) => void} Handler */
-
 /**
- * @param {import('vite').PreviewServer} vite
- * @param {import('vite').ResolvedConfig} vite_config
- * @param {import('types').ValidatedConfig} svelte_config
- * @param {import('@sveltejs/kit').Adapter | undefined} adapter
+ * @param {PreviewServer} vite
+ * @param {ResolvedConfig} vite_config
+ * @param {ValidatedConfig} svelte_config
+ * @param {Adapter | undefined} adapter
  */
 export async function preview(vite, vite_config, svelte_config, adapter) {
+	const custom_preview_handling = !!adapter?.vite?.plugins;
+
 	const { paths } = svelte_config.kit;
 	const base = paths.base;
 	const assets = paths.assets ? SVELTE_KIT_ASSETS : paths.base;
@@ -33,28 +36,33 @@ export async function preview(vite, vite_config, svelte_config, adapter) {
 		throw new Error(`Server files not found at ${dir}, did you run \`build\` first?`);
 	}
 
-	const instrumentation = join(dir, 'instrumentation.server.js');
-	if (fs.existsSync(instrumentation)) {
-		await import(pathToFileURL(instrumentation).href);
+	/** @type {InternalServer | null} */
+	let server = null;
+	/** @type {SSRManifest} */
+	let manifest;
+
+	if (!custom_preview_handling) {
+		const instrumentation = join(dir, 'instrumentation.server.js');
+		if (fs.existsSync(instrumentation)) {
+			await import(pathToFileURL(instrumentation).href);
+		}
+
+		/** @type {ServerInternalModule} */
+		const { set_assets } = await import(pathToFileURL(join(dir, 'internal.js')).href);
+
+		/** @type {ServerModule} */
+		const { Server } = await import(pathToFileURL(join(dir, 'index.js')).href);
+
+		({ manifest } = await import(pathToFileURL(join(dir, 'manifest.js')).href));
+
+		set_assets(assets);
+
+		server = new Server(manifest);
+		await server.init({
+			env: loadEnv(vite_config.mode, svelte_config.kit.env.dir, ''),
+			read: (file) => createReadableStream(`${dir}/${file}`)
+		});
 	}
-
-	/** @type {import('types').ServerInternalModule} */
-	const { set_assets } = await import(pathToFileURL(join(dir, 'internal.js')).href);
-
-	/** @type {import('types').ServerModule} */
-	const { Server } = await import(pathToFileURL(join(dir, 'index.js')).href);
-
-	const { manifest } = await import(pathToFileURL(join(dir, 'manifest.js')).href);
-
-	set_assets(assets);
-
-	const server = new Server(manifest);
-	await server.init({
-		env: loadEnv(vite_config.mode, svelte_config.kit.env.dir, ''),
-		read: (file) => createReadableStream(`${dir}/${file}`)
-	});
-
-	const emulator = await adapter?.emulate?.();
 
 	return () => {
 		// Remove the base middleware. It screws with the URL.
@@ -70,19 +78,21 @@ export async function preview(vite, vite_config, svelte_config, adapter) {
 		}
 
 		// generated client assets and the contents of `static`
-		vite.middlewares.use(
-			scoped(
-				assets,
-				sirv(join(svelte_config.kit.outDir, 'output/client'), {
-					setHeaders: (res, pathname) => {
-						// only apply to immutable directory, not e.g. version.json
-						if (pathname.startsWith(`/${svelte_config.kit.appDir}/immutable`)) {
-							res.setHeader('cache-control', 'public,max-age=31536000,immutable');
+		if (!custom_preview_handling || paths.assets) {
+			vite.middlewares.use(
+				scoped(
+					assets,
+					sirv(join(svelte_config.kit.outDir, 'output/client'), {
+						setHeaders: (res, pathname) => {
+							// only apply to immutable directory, not e.g. version.json
+							if (pathname.startsWith(`/${svelte_config.kit.appDir}/immutable`)) {
+								res.setHeader('cache-control', 'public,max-age=31536000,immutable');
+							}
 						}
-					}
-				})
-			)
-		);
+					})
+				)
+			);
+		}
 
 		vite.middlewares.use((req, res, next) => {
 			const original_url = /** @type {string} */ (req.url);
@@ -111,6 +121,8 @@ export async function preview(vite, vite_config, svelte_config, adapter) {
 				not_found(req, res, base);
 			}
 		});
+
+		if (!server) return;
 
 		// prerendered dependencies
 		vite.middlewares.use(
@@ -215,8 +227,7 @@ export async function preview(vite, vite_config, svelte_config, adapter) {
 						}
 
 						return fs.readFileSync(join(svelte_config.kit.files.assets, file));
-					},
-					emulator
+					}
 				})
 			);
 		});
@@ -225,7 +236,7 @@ export async function preview(vite, vite_config, svelte_config, adapter) {
 
 /**
  * @param {string} dir
- * @returns {Handler}
+ * @returns {NextHandleFunction}
  */
 const mutable = (dir) =>
 	fs.existsSync(dir)
@@ -237,8 +248,8 @@ const mutable = (dir) =>
 
 /**
  * @param {string} scope
- * @param {Handler} handler
- * @returns {Handler}
+ * @param {NextHandleFunction} handler
+ * @returns {NextHandleFunction}
  */
 function scoped(scope, handler) {
 	if (scope === '') return handler;

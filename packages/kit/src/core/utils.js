@@ -1,3 +1,4 @@
+/** @import { ViteDevServer } from 'vite' */
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -7,7 +8,7 @@ import { noop } from '../utils/functions.js';
 import { posixify } from '../utils/os.js';
 
 /**
- * Resolved path of the `runtime` directory
+ * Resolved path of the `runtime` directory posix-ified
  *
  * TODO Windows issue:
  * Vite or sth else somehow sets the driver letter inconsistently to lower or upper case depending on the run environment.
@@ -25,7 +26,7 @@ export const runtime_directory = posixify(fileURLToPath(new URL('../runtime', im
  */
 export function get_runtime_base(root) {
 	return runtime_directory.startsWith(root)
-		? `/${path.relative(root, runtime_directory)}`
+		? `/${posixify(path.relative(root, runtime_directory))}`
 		: to_fs(runtime_directory);
 }
 
@@ -86,4 +87,17 @@ export function list_files(dir, filter) {
 	if (fs.existsSync(dir)) walk('');
 
 	return files;
+}
+
+/**
+ * Gets the port number of a Vite dev server that's already listening.
+ * Otherwise, it throws an error
+ * @param {ViteDevServer} server
+ * @returns {number}
+ */
+export function get_port(server) {
+	const address = server.httpServer?.address();
+	const port = typeof address === 'string' ? Number(address.split(':').at(-1)) : address?.port;
+	if (!port) throw new Error('Failed to determine Vite dev server port');
+	return port;
 }

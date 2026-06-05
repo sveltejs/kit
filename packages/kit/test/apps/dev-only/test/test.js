@@ -92,7 +92,7 @@ test.describe('Vite', () => {
 		expect(manifest).toHaveProperty('optimized.e2e-test-dep-page-universal');
 	});
 
-	test('skips optimizing +page.server.js dependencies', async ({ page }) => {
+	test('optimizes +page.server.js dependencies', async ({ page }) => {
 		await page.goto('/');
 		await page.getByText('hello world!').waitFor();
 
@@ -102,7 +102,7 @@ test.describe('Vite', () => {
 		);
 		const manifest = JSON.parse(fs.readFileSync(manifest_path, 'utf-8'));
 
-		expect(manifest).not.toHaveProperty('optimized.e2e-test-dep-page-server');
+		expect(manifest).toHaveProperty('optimized.e2e-test-dep-page-server');
 	});
 
 	test('optimizes +layout.svelte dependencies', async ({ page }) => {
@@ -131,7 +131,7 @@ test.describe('Vite', () => {
 		expect(manifest).toHaveProperty('optimized.e2e-test-dep-layout-universal');
 	});
 
-	test('skips optimizing +layout.server.js dependencies', async ({ page }) => {
+	test('optimizes +layout.server.js dependencies', async ({ page }) => {
 		await page.goto('/');
 		await page.getByText('hello world!').waitFor();
 
@@ -141,7 +141,7 @@ test.describe('Vite', () => {
 		);
 		const manifest = JSON.parse(fs.readFileSync(manifest_path, 'utf-8'));
 
-		expect(manifest).not.toHaveProperty('optimized.e2e-test-dep-layout-server');
+		expect(manifest).toHaveProperty('optimized.e2e-test-dep-layout-server');
 	});
 
 	test('optimizes +error.svelte dependencies', async ({ page }) => {

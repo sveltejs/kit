@@ -98,7 +98,7 @@ function create_matchers(config, cwd) {
 				if (matchers[type]) {
 					throw new Error(`Duplicate matchers: ${matcher_file} and ${matchers[type]}`);
 				} else {
-					matchers[type] = matcher_file;
+					matchers[type] = posixify(matcher_file);
 				}
 			} else {
 				// Allow for matcher test collocation
