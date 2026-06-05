@@ -276,7 +276,8 @@ export async function create_build_server({
 				id: [
 					exactRegex('sveltekit:server-manifest'),
 					exactRegex('sveltekit:server'),
-					exactRegex('sveltekit:env')
+					exactRegex('sveltekit:env'),
+					exactRegex('__sveltekit/env')
 				]
 			},
 			handler(id) {
@@ -290,13 +291,20 @@ export async function create_build_server({
 				}
 
 				if (id === 'sveltekit:env') {
-					return sveltekit_env;
+					return id;
+				}
+
+				if (id === '__sveltekit/env') {
+					return {
+						id: `${out}/server/env.js`,
+						external: true
+					};
 				}
 			}
 		},
 		load: {
 			filter: {
-				id: exactRegex(sveltekit_env)
+				id: exactRegex('sveltekit:env')
 			},
 			handler() {
 				return `export const env = ${s(env)};`;

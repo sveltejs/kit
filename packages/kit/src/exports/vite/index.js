@@ -724,7 +724,6 @@ function kit({ svelte_config, adapter }) {
 		load: {
 			filter: {
 				id: [
-					exactRegex(sveltekit_env),
 					exactRegex(sveltekit_ipc),
 					exactRegex(sveltekit_remotes),
 					exactRegex(sveltekit_manifest_data),
@@ -733,10 +732,6 @@ function kit({ svelte_config, adapter }) {
 			},
 			handler(id) {
 				switch (id) {
-					case sveltekit_env: {
-						return `export const env = ${s(env)};`;
-					}
-
 					case sveltekit_ipc: {
 						if (!dev_context) {
 							throw new Error('dev_context was not initialised. But this should never happen');
@@ -1452,7 +1447,8 @@ function kit({ svelte_config, adapter }) {
 					const server_input = {
 						index: `${runtime_directory}/server/index.js`,
 						internal: `${out_dir}/generated/server/internal.js`,
-						['remote-entry']: `${runtime_directory}/app/server/remote/index.js`
+						['remote-entry']: `${runtime_directory}/app/server/remote/index.js`,
+						env: '__sveltekit/env'
 					};
 
 					// add entry points for every endpoint...
@@ -1806,7 +1802,6 @@ function kit({ svelte_config, adapter }) {
 				manifest_data: build_manifest_data,
 				server_manifest,
 				tracked_features,
-				env,
 				out,
 				remotes,
 				root,
