@@ -205,7 +205,7 @@ export async function sveltekit(config) {
 	return [
 		plugin_svelte_config({ vite_plugin_svelte_options, svelte_config }),
 		...vite_plugin_svelte.svelte(vite_plugin_svelte_options),
-		...kit({ svelte_config, adapter: svelte_config.adapter })
+		...kit({ svelte_config, adapter: svelte_config.kit.adapter })
 	];
 }
 
