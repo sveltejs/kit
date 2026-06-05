@@ -7,6 +7,7 @@ Environment variables are values your app needs that exist separately from the a
 During development, and at build time, variables defined in a `.env` or `.env.local` file will be added to the environment:
 
 ```env
+/// file: .env.local
 API_KEY=19f401ba-e8b0-48c4-8c77-b0ebb26d97fe
 ```
 
@@ -99,7 +100,7 @@ export const variables = defineEnvVars({
 `GOOGLE_ANALYTICS_ID` can now be imported from `$app/env/public`, or used in your `app.html` template as `%sveltekit.env.GOOGLE_ANALYTICS_ID%`:
 
 ```html
-<!--- file: src/app.html -->
+<!--- file: src/app.html --->
 <!doctype html>
 <html lang="en">
 	<head>
