@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 3.0.0-next.1
+### Patch Changes
+
+
+- fix: reinstate `$app/environment` as an alias for `$app/env`, in case dependencies import it ([#15964](https://github.com/sveltejs/kit/pull/15964))
+
 ## 3.0.0-next.0
 ### Major Changes
 
