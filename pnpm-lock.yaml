@@ -1336,7 +1336,7 @@ importers:
         version: 0.7.55(svelte@5.55.7(@typescript-eslint/types@8.59.4))(typescript@6.0.3)
     devDependencies:
       '@sveltejs/kit':
-        specifier: 'workspace:'
+        specifier: workspace:3.0.0-next.0
         version: link:../kit
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
