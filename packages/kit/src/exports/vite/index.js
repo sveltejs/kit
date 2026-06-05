@@ -1651,7 +1651,6 @@ function kit({ svelte_config, adapter }) {
 				manifest_data: build_manifest_data,
 				server_manifest,
 				tracked_features,
-				env,
 				out,
 				remotes,
 				root,

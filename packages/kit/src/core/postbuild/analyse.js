@@ -20,7 +20,6 @@ const analysis_entry = import.meta.resolve('./analysis_entry.js');
  * @param {ManifestData} opts.manifest_data
  * @param {Manifest} opts.server_manifest
  * @param {Record<string, string[]>} opts.tracked_features
- * @param {Record<string, string>} opts.env
  * @param {string} opts.out
  * @param {RemoteChunk[]} opts.remotes
  * @param {string} opts.root
@@ -32,29 +31,12 @@ async function analyse({
 	manifest_data,
 	server_manifest,
 	tracked_features,
-	env,
 	out,
 	root,
 	vite_config_file
 }) {
-	/** @type {import('@sveltejs/kit').SSRManifest} */
-	const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
-
 	const vite_config = await load_vite_config(vite_config_file);
-
 	const config = extract_svelte_config(vite_config);
-
-	/** @type {import('types').ServerInternalModule} */
-	const internal = await import(pathToFileURL(`${out}/server/internal.js`).href);
-
-	// configure `import { building } from '$app/env'` —
-	// essential we do this before analysing the code
-	internal.set_building();
-
-	// set env, `read`, and `manifest`, in case they're used in initialisation
-	internal.set_env(env);
-	internal.set_manifest(manifest);
-	internal.set_read_implementation((file) => createReadableStream(`${out}/server/${file}`));
 
 	// first, build server nodes without the client manifest so we can analyse it
 	build_server_nodes(out, config.kit, manifest_data, server_manifest, null, null, null, root);
