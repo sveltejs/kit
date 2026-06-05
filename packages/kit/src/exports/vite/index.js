@@ -61,7 +61,8 @@ import {
 	sveltekit_env_private,
 	sveltekit_env_service_worker,
 	sveltekit_env_public_client,
-	sveltekit_env_public_server
+	sveltekit_env_public_server,
+	public_sveltekit_env
 } from './module_ids.js';
 import { to_fs } from '../../utils/vite.js';
 import { import_peer } from '../../utils/import.js';
@@ -685,7 +686,7 @@ function kit({ svelte_config, adapter }) {
 				}
 
 				if (id === 'sveltekit:env') {
-					return sveltekit_env;
+					return public_sveltekit_env;
 				}
 
 				if (id === '__sveltekit/server-assets') {

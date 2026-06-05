@@ -11,6 +11,7 @@ import {
 	resolve_explicit_env_entry
 } from '../../../core/env.js';
 import {
+	public_sveltekit_env,
 	service_worker,
 	sveltekit_env,
 	sveltekit_env_private,
@@ -24,6 +25,7 @@ import { exactRegex } from 'rolldown/filter';
 import { create_service_worker_module } from '../index.js';
 import { dedent } from '../../../core/sync/utils.js';
 import { hash } from '../../../utils/hash.js';
+import { s } from '../../../utils/misc.js';
 
 /**
  * @param {ValidatedConfig} sveltekit_config
@@ -149,7 +151,8 @@ export function plugin_virtual_modules(sveltekit_config) {
 					exactRegex(sveltekit_env_public_client),
 					exactRegex(sveltekit_env_public_server),
 					exactRegex(sveltekit_env_service_worker),
-					exactRegex(sveltekit_server)
+					exactRegex(sveltekit_server),
+					exactRegex(public_sveltekit_env)
 				]
 			},
 			handler(id) {
@@ -200,6 +203,9 @@ export function plugin_virtual_modules(sveltekit_config) {
 							}
 						`;
 					}
+
+					case public_sveltekit_env:
+						return `export const env = ${s(env)};`;
 				}
 			}
 		}

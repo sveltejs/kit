@@ -4,11 +4,10 @@
 /** @import { ModuleRunner } from 'vite/module-runner' */
 import fs from 'node:fs';
 import path from 'node:path';
-import { loadEnv } from 'vite';
 import { exactRegex } from 'rolldown/filter';
 import sirv from 'sirv';
 import { getRequest, setResponse } from '@sveltejs/kit/node';
-import { public_sveltekit_env, sveltekit_ipc } from '../module_ids.js';
+import { sveltekit_ipc } from '../module_ids.js';
 import { dedent } from '../../../core/sync/utils.js';
 import {
 	check_feature,
@@ -17,7 +16,6 @@ import {
 	invalidate_module,
 	remove_static_middlewares
 } from '../dev/index.js';
-import { s } from '../../../utils/misc.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import { import_peer } from '../../../utils/import.js';
 import { get_port } from '../../../core/utils.js';
@@ -121,18 +119,13 @@ export async function create_build_server({
 		}
 	};
 
-	/** @type {Record<string, string>} */
-	let env;
-
 	/** @type {Connect.ServerStackItem | undefined} */
 	let serve_static_middleware;
 
 	/** @type {PluginOption} */
 	const plugin_server = {
 		name: 'vite-plugin-sveltekit-compile:build-entry',
-		config(_, vite_config_env) {
-			env = loadEnv(vite_config_env.mode, svelte_config.kit.env.dir, '');
-
+		config(_) {
 			return {
 				appType: 'custom',
 				cacheDir: `node_modules/.vite-${name}`,
@@ -274,13 +267,10 @@ export async function create_build_server({
 		},
 		resolveId: {
 			filter: {
-				id: [
-					exactRegex('sveltekit:server-manifest'),
-					exactRegex('sveltekit:server'),
-					exactRegex('sveltekit:env')
-				]
+				id: [exactRegex('sveltekit:server-manifest'), exactRegex('sveltekit:server')]
 			},
 			handler(id) {
+				// TODO probably move this into the virtual modules plugin?
 				if (id === 'sveltekit:server-manifest') {
 					return manifest_path;
 				}
@@ -289,18 +279,6 @@ export async function create_build_server({
 				if (id === 'sveltekit:server') {
 					return server_path;
 				}
-
-				if (id === 'sveltekit:env') {
-					return public_sveltekit_env;
-				}
-			}
-		},
-		load: {
-			filter: {
-				id: exactRegex(public_sveltekit_env)
-			},
-			handler() {
-				return `export const env = ${s(env)};`;
 			}
 		}
 	};
