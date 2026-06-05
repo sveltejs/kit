@@ -70,6 +70,7 @@ import { should_ignore, has_children } from './static_analysis/utils.js';
 import { process_config } from '../../core/config/index.js';
 import { treeshake_prerendered_remotes } from './build/remote.js';
 import { SVELTE_KIT_ASSETS } from '../../constants.js';
+import { plugin_virtual_modules } from './plugins/virtual-modules.js';
 
 /**
  * The posix-ified root of the project based on the Vite configuration
@@ -824,164 +825,6 @@ function kit({ svelte_config, adapter }) {
 							export { respond };
 
 							import.meta.hot?.accept();
-						`;
-					}
-				}
-			}
-		}
-	};
-	/** @type {string | null} */
-	let explicit_env_entry = null;
-
-	/** @type {Record<string, EnvVarConfig<any>> | null} */
-	let explicit_env_config = null;
-
-	/** @type {Plugin} */
-	const plugin_virtual_modules = {
-		name: 'vite-plugin-sveltekit-virtual-modules',
-
-		applyToEnvironment(environment) {
-			return environment.name !== 'serviceWorker';
-		},
-
-		async configResolved(config) {
-			explicit_env_entry = resolve_explicit_env_entry(kit);
-			explicit_env_config = await sync.env(kit, explicit_env_entry, config.root, config.mode);
-		},
-
-		configureServer(server) {
-			server.watcher.on('all', async (_, file) => {
-				if (!file.includes('env')) {
-					return;
-				}
-
-				const resolved = resolve_explicit_env_entry(kit);
-
-				if (file === explicit_env_entry || file === resolved) {
-					explicit_env_entry = resolved;
-					explicit_env_config = await sync.env(
-						kit,
-						explicit_env_entry,
-						vite_config.root,
-						vite_config.mode
-					);
-
-					for (const id of [sveltekit_env, sveltekit_env_public_client]) {
-						const module = server.moduleGraph.getModuleById(id);
-
-						if (module) {
-							server.moduleGraph.invalidateModule(module);
-						}
-					}
-
-					server.ws.send({ type: 'full-reload' });
-				}
-			});
-		},
-
-		resolveId(id, importer) {
-			if (id === '__sveltekit/manifest') {
-				return `${out_dir}/generated/client-optimized/app.js`;
-			}
-
-			// If importing from a service-worker, only allow $service-worker & $app/env/public, but none of the other virtual modules.
-			// This check won't catch transitive imports, but it will warn when the import comes from a service-worker directly.
-			// Transitive imports will be caught during the build.
-			// TODO move this logic to plugin_guard. add a filter to this resolveId when doing so
-			// TODO allow $app/env/public
-			if (importer) {
-				const parsed_importer = path.parse(importer);
-
-				const importer_is_service_worker =
-					parsed_importer.dir === parsed_service_worker.dir &&
-					parsed_importer.name === parsed_service_worker.name;
-
-				if (
-					importer_is_service_worker &&
-					id !== '$service-worker' &&
-					id !== 'virtual:$app/env/public' &&
-					id !== '__sveltekit/env/service-worker'
-				) {
-					throw new Error(
-						`Cannot import ${normalize_id(
-							id,
-							normalized_lib,
-							normalized_cwd
-						)} into service-worker code. Only the modules $service-worker and $app/env/public are available in service workers.`
-					);
-				}
-			}
-
-			if (id === '$service-worker') {
-				// ids with :$ don't work with reverse proxies like nginx
-				return `\0virtual:${id.substring(1)}`;
-			}
-
-			if (id === '__sveltekit/remote') {
-				return `${runtime_directory}/client/remote-functions/index.js`;
-			}
-
-			if (id.startsWith('__sveltekit/') && id !== '__sveltekit/dev-server-entry.js') {
-				return `\0virtual:${id}`;
-			}
-		},
-		load: {
-			filter: {
-				id: [
-					exactRegex(service_worker),
-					exactRegex(sveltekit_env),
-					exactRegex(sveltekit_env_private),
-					exactRegex(sveltekit_env_public_client),
-					exactRegex(sveltekit_env_public_server),
-					exactRegex(sveltekit_env_service_worker),
-					exactRegex(sveltekit_server)
-				]
-			},
-			handler(id) {
-				const global = is_build
-					? `globalThis.__sveltekit_${version_hash}`
-					: 'globalThis.__sveltekit_dev';
-
-				switch (id) {
-					case service_worker:
-						return create_service_worker_module(svelte_config);
-
-					case sveltekit_env:
-						return create_sveltekit_env(explicit_env_config, env, explicit_env_entry);
-
-					case sveltekit_env_public_client:
-						return create_sveltekit_env_public(
-							explicit_env_config,
-							env,
-							`const env = ${global}.env;`
-						);
-
-					case sveltekit_env_public_server:
-						return create_sveltekit_env_public(
-							explicit_env_config,
-							env,
-							`import { rendered_env as env } from '__sveltekit/env';`
-						);
-
-					case sveltekit_env_private:
-						return create_sveltekit_env_private(explicit_env_config, env);
-
-					case sveltekit_env_service_worker:
-						return create_sveltekit_env_service_worker_dev(explicit_env_config, env, global);
-
-					case sveltekit_server: {
-						return dedent`
-							export let read_implementation = null;
-
-							export let manifest = null;
-
-							export function set_read_implementation(fn) {
-								read_implementation = fn;
-							}
-
-							export function set_manifest(_) {
-								manifest = _;
-							}
 						`;
 					}
 				}
@@ -2115,7 +1958,7 @@ function kit({ svelte_config, adapter }) {
 			plugin_remote,
 			plugin_server_filesystem,
 			plugin_dev_ssr,
-			plugin_virtual_modules,
+			plugin_virtual_modules(svelte_config),
 			process.env.TEST !== 'true' ? plugin_guard : undefined,
 			service_worker_entry_file && plugin_service_worker_env,
 			plugin_service_worker,
@@ -2174,7 +2017,7 @@ function find_overridden_config(config, resolved_config, enforced_config, path, 
 /**
  * @param {ValidatedConfig} config
  */
-const create_service_worker_module = (config) => dedent`
+export const create_service_worker_module = (config) => dedent`
 	if (typeof self === 'undefined' || self instanceof ServiceWorkerGlobalScope === false) {
 		throw new Error('This module can only be imported inside a service worker');
 	}

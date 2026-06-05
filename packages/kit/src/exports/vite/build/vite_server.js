@@ -21,6 +21,7 @@ import { s } from '../../../utils/misc.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import { import_peer } from '../../../utils/import.js';
 import { get_port } from '../../../core/utils.js';
+import { plugin_virtual_modules } from '../plugins/virtual-modules.js';
 
 /**
  * Spins up a Vite dev server along with the build output so that we can run
@@ -399,6 +400,7 @@ export async function create_build_server({
 		vite_plugins,
 		plugin_ipc,
 		plugin_server,
+		plugin_virtual_modules(svelte_config),
 		adapter?.vite?.plugins ?? plugin_node_environment
 	].filter(Boolean);
 

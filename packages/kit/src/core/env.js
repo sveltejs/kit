@@ -16,11 +16,11 @@ import { get_config_aliases } from '../exports/vite/utils.js';
  */
 
 /**
- * @param {import('types').ValidatedKitConfig} config
+ * @param {import('types').ValidatedConfig} config
  * @returns {string | null}
  */
 export function resolve_explicit_env_entry(config) {
-	return resolve_entry(path.join(config.files.src, 'env')) ?? null;
+	return resolve_entry(path.join(config.kit.files.src, 'env')) ?? null;
 }
 
 /**
