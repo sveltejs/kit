@@ -52,17 +52,15 @@ export async function* create_live_iterator(
 	on_connect = noop
 ) {
 	const url = `${base}/${app_dir}/remote/${id}${payload ? `?payload=${payload}` : ''}`;
-	/** @type {ReadableStreamDefaultReader<Uint8Array> | null} */
-	let reader = null;
+
+	const response = await fetch(url, {
+		headers: get_remote_request_headers(),
+		signal: controller.signal
+	});
+
+	const reader = await get_stream_reader(response);
 
 	try {
-		const response = await fetch(url, {
-			headers: get_remote_request_headers(),
-			signal: controller.signal
-		});
-
-		reader = await get_stream_reader(response);
-
 		on_connect();
 
 		for await (const node of read_sse(reader)) {
@@ -76,7 +74,7 @@ export async function* create_live_iterator(
 		}
 	} finally {
 		try {
-			await reader?.cancel();
+			await reader.cancel();
 		} catch {
 			// already closed
 		}
