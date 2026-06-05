@@ -1,7 +1,7 @@
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 /** @import { EnvVarConfig } from '@sveltejs/kit' */
 
-import { stackless } from '../vite/utils.js';
+import { stackless } from '../../utils/error.js';
 
 const MISSING = {
 	message: `Value is missing. If it is optional, add a Standard Schema validator declaring it as such.`
