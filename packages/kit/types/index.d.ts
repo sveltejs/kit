@@ -3025,11 +3025,29 @@ declare module '@sveltejs/kit/node' {
 declare module '@sveltejs/kit/vite' {
 	import type { SvelteConfig } from '@sveltejs/vite-plugin-svelte';
 	import type { Plugin } from 'vite';
+	import type { Config, KitConfig } from '@sveltejs/kit';
 	/**
 	 * Returns the SvelteKit Vite plugins.
 	 * Since version 2.62.0 you can pass [configuration](configuration) directly, in which case `svelte.config.js` is ignored.
 	 * */
 	export function sveltekit(config?: import("@sveltejs/kit").KitConfig & Omit<SvelteConfig, "onwarn">): Promise<Plugin[]>;
+	export function create_service_worker_module(config: ValidatedConfig): string;
+	type RecursiveRequired<T> = {
+		// Recursive implementation of TypeScript's Required utility type.
+		// Will recursively continue until it reaches a primitive or Function
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
+		[K in keyof T]-?: Extract<T[K], Function> extends never // If it does not have a Function type
+			? RecursiveRequired<T[K]> // recursively continue through.
+			: T[K]; // Use the exact type for everything else
+	};
+
+	type ValidatedConfig = Config & {
+		kit: ValidatedKitConfig;
+		extensions: string[];
+	};
+
+	// TODO: remove the omit in 4.0
+	type ValidatedKitConfig = Omit<RecursiveRequired<KitConfig>, 'adapter'>;
 
 	export {};
 }
