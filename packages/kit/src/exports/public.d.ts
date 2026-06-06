@@ -2161,8 +2161,9 @@ export type RemoteForm<Input extends RemoteFormInput | void, Output> = {
 	/** Use the `enhance` method to influence what happens when the form is submitted. */
 	enhance(
 		callback: (
-			form: Omit<RemoteForm<Input, Output>, 'enhance' | 'element'> & {
+			form: Omit<RemoteForm<Input, Output>, 'enhance' | 'element' | 'data'> & {
 				readonly element: HTMLFormElement;
+				readonly data: Input;
 			}
 		) => MaybePromise<void>
 	): {

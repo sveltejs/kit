@@ -45,14 +45,16 @@ function merge_with_server_issues(form_data, current_issues, client_issues) {
 
 /**
  * Client-version of the `form` function from `$app/server`.
- * @template {RemoteFormInput} T
- * @template U
+ * @template {RemoteFormInput} TInput
+ * @template TOutput
  * @param {string} id
- * @returns {RemoteForm<T, U>}
+ * @returns {RemoteForm<TInput, TOutput>}
  */
 export function form(id) {
-	/** @type {Map<any, { count: number, instance: RemoteForm<T, U> }>} */
+	/** @type {Map<any, { count: number, instance: RemoteForm<TInput, TOutput> }>} */
 	const instances = new Map();
+
+	/** @typedef {Omit<RemoteForm<TInput, TOutput>, 'enhance' | 'element' | 'data'> & { readonly element: HTMLFormElement, readonly data: TInput }} EnhanceCallbackInstance */
 
 	/** @param {string | number | boolean} [key] */
 	function create_instance(key) {
@@ -80,7 +82,7 @@ export function form(id) {
 		let preflight_schema = undefined;
 
 		/**
-		 * @param {Omit<RemoteForm<T, U>, 'enhance' | 'element'> & { readonly element: HTMLFormElement }} instance
+		 * @param {} instance
 		 */
 		let enhance_callback = async (instance) => {
 			if (await instance.submit()) {
@@ -295,13 +297,13 @@ export function form(id) {
 		 * @param {HTMLFormElement} form
 		 * @param {FormData} form_data
 		 * @param {Record<string, any>} data
-		 * @returns {Omit<RemoteForm<T, U>, 'enhance' | 'element'> & { readonly element: HTMLFormElement }}
+		 * @returns {EnhanceCallbackInstance}
 		 */
 		function create_enhance_callback_instance(form, form_data, data) {
 			const { enhance: _enhance, ...descriptors } = Object.getOwnPropertyDescriptors(instance);
 			void _enhance;
 
-			return /** @type {Omit<RemoteForm<T, U>, 'enhance' | 'element'> & { readonly element: HTMLFormElement }} */ (
+			return /** @type {EnhanceCallbackInstance} */ (
 				Object.defineProperties(
 					{},
 					{
@@ -359,7 +361,7 @@ export function form(id) {
 			return true;
 		}
 
-		/** @type {RemoteForm<T, U>} */
+		/** @type {RemoteForm<TInput, TOutput>} */
 		const instance = {};
 
 		instance.method = 'POST';
@@ -626,7 +628,7 @@ export function form(id) {
 				get: () => pending_count
 			},
 			preflight: {
-				/** @type {RemoteForm<T, U>['preflight']} */
+				/** @type {RemoteForm<TInput, TOutput>['preflight']} */
 				value: (schema) => {
 					preflight_schema = schema;
 					return instance;
@@ -701,7 +703,7 @@ export function form(id) {
 			},
 			enhance: {
 				/**
-				 * @param {(instance: Omit<RemoteForm<T, U>, 'enhance' | 'element'> & { readonly element: HTMLFormElement }) => any} callback
+				 * @param {(instance: EnhanceCallbackInstance) => any} callback
 				 */
 				value: (callback) => {
 					enhance_callback = callback;
@@ -716,7 +718,7 @@ export function form(id) {
 	const instance = create_instance();
 
 	Object.defineProperty(instance, 'for', {
-		/** @type {RemoteForm<T, U>['for']} */
+		/** @type {RemoteForm<TInput, TOutput>['for']} */
 		value: (key) => {
 			const entry = instances.get(key) ?? { count: 0, instance: create_instance(key) };
 
