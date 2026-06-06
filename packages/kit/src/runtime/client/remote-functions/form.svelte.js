@@ -142,10 +142,11 @@ export function form(id) {
 
 		/**
 		 * @param {FormData} form_data
+		 * @param {Record<string, any>} data
 		 * @param {boolean} should_preflight
 		 * @returns {Promise<boolean> & { updates: (...args: any[]) => Promise<boolean> }}
 		 */
-		function submit(form_data, should_preflight) {
+		function submit(form_data, data, should_preflight) {
 			// Store a reference to the current instance and increment the usage count for the duration
 			// of the request. This ensures that the instance is not deleted in case of an optimistic update
 			// (e.g. when deleting an item in a list) that fails and wants to surface an error to the user afterwards.
@@ -174,11 +175,11 @@ export function form(id) {
 					}
 
 					if (should_preflight) {
-						const valid = await preflight(form_data);
+						const valid = await preflight(form_data, data);
 						if (!valid) return false;
 					}
 
-					const { blob } = serialize_binary_form(convert(form_data), {
+					const { blob } = serialize_binary_form(data, {
 						remote_refreshes: Array.from(refreshes ?? [])
 					});
 
@@ -293,9 +294,10 @@ export function form(id) {
 		/**
 		 * @param {HTMLFormElement} form
 		 * @param {FormData} form_data
+		 * @param {Record<string, any>} data
 		 * @returns {Omit<RemoteForm<T, U>, 'enhance' | 'element'> & { readonly element: HTMLFormElement }}
 		 */
-		function create_enhance_callback_instance(form, form_data) {
+		function create_enhance_callback_instance(form, form_data, data) {
 			const { enhance: _enhance, ...descriptors } = Object.getOwnPropertyDescriptors(instance);
 			void _enhance;
 
@@ -306,10 +308,7 @@ export function form(id) {
 						...descriptors,
 						data: {
 							get() {
-								// TODO 3.0 remove
-								throw new Error(
-									`The \`data\` property has been removed from the \`enhance\` callback argument. Use \`instance.fields.value()\` instead.`
-								);
+								return data;
 							}
 						},
 						form: {
@@ -324,7 +323,7 @@ export function form(id) {
 							value: form
 						},
 						submit: {
-							value: () => submit(form_data, false)
+							value: () => submit(form_data, data, false)
 						}
 					}
 				)
@@ -333,9 +332,9 @@ export function form(id) {
 
 		/**
 		 * @param {FormData} form_data
+		 * @param {Record<string, any>} data
 		 */
-		async function preflight(form_data) {
-			const data = convert(form_data);
+		async function preflight(form_data, data) {
 			const validated = await preflight_schema?.['~standard'].validate(data);
 
 			if (validated?.issues) {
@@ -417,6 +416,8 @@ export function form(id) {
 					validate_form_data(form_data, clone(form).enctype);
 				}
 
+				const data = convert(form_data);
+
 				submitted = true;
 
 				try {
@@ -424,10 +425,10 @@ export function form(id) {
 					// the in-progress state during async preflight validation
 					pending_count++;
 
-					const valid = await preflight(form_data);
+					const valid = await preflight(form_data, data);
 					if (!valid) return;
 
-					await enhance_callback(create_enhance_callback_instance(form, form_data));
+					await enhance_callback(create_enhance_callback_instance(form, form_data, data));
 				} catch (e) {
 					const error =
 						e instanceof HttpError ? e.body : { message: /** @type {any} */ (e).message };
@@ -580,7 +581,7 @@ export function form(id) {
 					submitted = true;
 					pending_count++;
 
-					const submission = submit(form_data, true);
+					const submission = submit(form_data, convert(form_data), true);
 
 					void submission.finally(() => {
 						pending_count--;
