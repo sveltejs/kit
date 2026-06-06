@@ -288,7 +288,27 @@ If the connection drops, `connected` becomes `false`. SvelteKit will attempt to 
 
 Unlike `query`, live queries do not have a `refresh()` method, as they are self-updating.
 
-If you need direct, imperative access to the underlying stream of values (rather than the reactive `current` property), live queries expose a `.run()` method that returns an `AsyncGenerator<T>`. This can only be called outside render — in event handlers, `load` functions, and so on.
+If you need direct, imperative access to the underlying stream of values (rather than the reactive `current` property), live query instances are themselves [async-iterable](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/for-await...of). You can `for await` over the instance directly:
+
+```js
+// @filename: time.remote.ts
+import { RemoteLiveQueryFunction } from '@sveltejs/kit';
+export declare const getTime: RemoteLiveQueryFunction<undefined, Date>;
+// @errors: 2304
+// @filename: index.js
+import { getTime } from './time.remote.js';
+// ---cut---
+async function logTimes() {
+	for await (const value of getTime()) {
+		console.log(value);
+		if (someCondition) break;
+	}
+}
+```
+
+Multiple consumers of the same live query (whether reactive — via `await` or `current` — or imperative `for await` loops) share a single underlying connection. The first value yielded to a `for await` iterator is the most-recently-received value, if one is already available, mirroring the semantics of awaiting the resource directly. Subsequent yields fire whenever a new value arrives from the server. If values arrive faster than the consumer drains the iterator, only the latest pending value is kept — live streams are not event logs.
+
+On the server, `for await` likewise joins a per-request shared iteration of the underlying generator, so concurrent consumers within the same request don't run the user-defined generator multiple times.
 
 > [!NOTE] It's essential that you don't cache live query responses in a service worker, since the cloned response will continue streaming long after the page is closed. Make sure that your caching logic excludes any responses with a `Cache-Control` header that includes `no-store`.
 
@@ -997,7 +1017,7 @@ export const updatePost = form(
 );
 ```
 
-Because queries are keyed based on their arguments, `await getPost(post.id).set(result)` on the server knows to look up the matching `getPost(id)` on the client to update it. The same goes for `getPosts().refresh()` -- it knows to look up `getPosts()` with no argument on the client.
+Because queries are keyed based on their arguments, `getPost(post.id).set(result)` on the server knows to look up the matching `getPost(id)` on the client to update it. The same goes for `getPosts().refresh()` -- it knows to look up `getPosts()` with no argument on the client.
 
 ### Reconnecting live queries in mutations
 

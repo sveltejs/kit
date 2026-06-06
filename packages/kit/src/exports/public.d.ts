@@ -141,7 +141,7 @@ export interface Builder {
 	generateFallback: (dest: string) => Promise<void>;
 
 	/**
-	 * Generate a module exposing build-time environment variables as `$env/dynamic/public`.
+	 * Generate a module exposing build-time environment variables as `$env/dynamic/public` if the app uses it.
 	 */
 	generateEnvModule: () => void;
 
@@ -476,6 +476,13 @@ export interface KitConfig {
 	};
 	/** Experimental features. Here be dragons. These are not subject to semantic versioning, so breaking changes or removal can happen in any release. */
 	experimental?: {
+		/**
+		 * Whether to enable explicit environment variables using `src/env.js` or `src/env.ts`.
+		 * @since 2.62.0
+		 * @default false
+		 */
+		explicitEnvironmentVariables?: boolean;
+
 		/**
 		 * Options for enabling server-side [OpenTelemetry](https://opentelemetry.io/) tracing for SvelteKit operations including the [`handle` hook](https://svelte.dev/docs/kit/hooks#Server-hooks-handle), [`load` functions](https://svelte.dev/docs/kit/load), [form actions](https://svelte.dev/docs/kit/form-actions), and [remote functions](https://svelte.dev/docs/kit/remote-functions).
 		 * @default { server: false, serverFile: false }
@@ -2280,20 +2287,15 @@ export type RemoteQuery<T> = RemoteResource<T> & {
 	withOverride(update: (current: T) => T): RemoteQueryOverride;
 };
 
-export type RemoteLiveQuery<T> = RemoteResource<T> & {
-	/**
-	 * Returns an async iterator with live updates.
-	 * Unlike awaiting the resource directly, this can only be used _outside_ render
-	 * (i.e. in load functions, event handlers and so on)
-	 */
-	run(): AsyncGenerator<T>;
-	/** `true` if the live stream is currently connected. */
-	readonly connected: boolean;
-	/** `true` once the current live stream iterator is done. */
-	readonly done: boolean;
-	/** Reconnects the live stream immediately. */
-	reconnect(): Promise<void>;
-};
+export type RemoteLiveQuery<T> = RemoteResource<T> &
+	AsyncIterable<T> & {
+		/** `true` if the live stream is currently connected. */
+		readonly connected: boolean;
+		/** `true` once the current live stream iterator is done. */
+		readonly done: boolean;
+		/** Reconnects the live stream immediately. */
+		reconnect(): Promise<void>;
+	};
 
 export type RemoteQueryOverride = () => void;
 
@@ -2330,5 +2332,38 @@ export type RemoteQueryFunction<Input, Output, _Validated = Input> = (
 export type RemoteLiveQueryFunction<Input, Output, _Validated = Input> = (
 	arg: undefined extends Input ? Input | void : Input
 ) => RemoteLiveQuery<Output>;
+
+/**
+ * [Environment variables](https://svelte.dev/docs/kit/environment-variables) can be configured by exporting
+ * a `variables` object from `src/env.ts`, using [`defineEnvVars`](https://svelte.dev/docs/kit/@sveltejs-kit-hooks#defineEnvVars).
+ */
+export interface EnvVarConfig<T> {
+	/**
+	 * Whether the environment variable can be accessed by client-side code.
+	 * - if `true`, it can be imported from `$app/env/public`
+	 * - if `false`, it can be imported from `$app/env/private`, which is a [server-only module](https://svelte.dev/docs/kit/server-only-modules)
+	 * @default false
+	 */
+	public?: boolean;
+	/**
+	 * Whether the value is determined at build time or when the app runs.
+	 * - if `true`, the build time value is inlined into the bundle. This enables optimisations like dead-code elimination
+	 * - if `false`, the value is read from the environment when the app starts
+	 * @default false
+	 */
+	static?: boolean;
+	/**
+	 * A [Standard Schema](https://standardschema.dev/) validator that is applied to the value when the app starts.
+	 * The validator can output any value — not necessarily a string — but public, non-static values must be
+	 * serializable by [devalue](https://github.com/sveltejs/devalue) so that they can be sent to the browser.
+	 *
+	 * If omitted, the value must be a non-empty string.
+	 */
+	schema?: StandardSchemaV1<string | undefined, T>;
+	/**
+	 * A description of the variable that will be used for inline documentation on hover.
+	 */
+	description?: string;
+}
 
 export * from './index.js';

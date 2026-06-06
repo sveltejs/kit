@@ -35,6 +35,7 @@ import {
 } from './private.js';
 import { Span } from '@opentelemetry/api';
 import type { PageOptions } from '../exports/vite/static_analysis/index.js';
+import { SharedIterator } from '../utils/shared-iterator.js';
 
 export interface ServerModule {
 	Server: typeof InternalServer;
@@ -43,6 +44,7 @@ export interface ServerModule {
 export interface ServerInternalModule {
 	set_assets(path: string): void;
 	set_building(): void;
+	set_env(environment: Record<string, string>): void;
 	set_manifest(manifest: SSRManifest): void;
 	set_prerendering(): void;
 	set_private_env(environment: Record<string, string>): void;
@@ -733,6 +735,13 @@ export interface RequestState {
 				}
 			>
 		>;
+		/**
+		 * A per-request cache of shared live-query iterators, keyed by remote id
+		 * and stringified argument payload. Used so that multiple `for await`
+		 * consumers of the same `query.live` call within one request multiplex a
+		 * single underlying user generator.
+		 */
+		live_iterators: null | Map<string, SharedIterator<any>>;
 	};
 	readonly is_in_remote_function: boolean;
 	readonly is_in_render: boolean;
