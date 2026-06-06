@@ -1,6 +1,6 @@
 import { text } from '@sveltejs/kit';
-import { HttpError, SvelteKitError, Redirect } from '@sveltejs/kit/internal';
-import { normalize_error } from '../../../utils/error.js';
+import { Redirect } from '@sveltejs/kit/internal';
+import { get_status_if_known, normalize_error } from '../../../utils/error.js';
 import { once } from '../../../utils/functions.js';
 import { server_data_serializer_json } from '../page/data_serializer.js';
 import { load_server_data } from '../page/load_data.js';
@@ -110,10 +110,7 @@ export async function render_data(
 					return /** @type {import('types').ServerErrorNode} */ ({
 						type: 'error',
 						error: await handle_error_and_jsonify(event, event_state, options, error),
-						status:
-							error instanceof HttpError || error instanceof SvelteKitError
-								? error.status
-								: undefined
+						status: get_status_if_known(error)
 					});
 				})
 			)
@@ -124,8 +121,7 @@ export async function render_data(
 		const { data, chunks } = data_serializer.get_data();
 
 		if (!chunks) {
-			// use a normal JSON response where possible, so we get `content-length`
-			// and can use browser JSON devtools for easier inspecting
+			// use a normal JSON response where possible, so we get `content-length` and can use browser JSON devtools for easier inspecting
 			return json_response(data);
 		}
 
@@ -143,8 +139,7 @@ export async function render_data(
 			}),
 			{
 				headers: {
-					// we use a proprietary content type to prevent buffering.
-					// the `text` prefix makes it inspectable
+					// we use a proprietary content type to prevent buffering. the `text` prefix makes it inspectable
 					'content-type': 'text/sveltekit-data',
 					'cache-control': 'private, no-store'
 				}

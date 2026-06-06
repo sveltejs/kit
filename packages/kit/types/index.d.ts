@@ -2956,6 +2956,7 @@ declare module '@sveltejs/kit' {
 		constructor(status: number, body: {
 			message: string;
 		} extends App.Error ? (App.Error | string | undefined) : App.Error);
+		name: string;
 		status: number;
 		body: App.Error;
 		toString(): string;

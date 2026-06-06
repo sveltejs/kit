@@ -88,8 +88,12 @@ export function error(status, body) {
  * @return {e is (HttpError & { status: T extends undefined ? never : T })}
  */
 export function isHttpError(e, status) {
-	if (!(e instanceof HttpError)) return false;
-	return !status || e.status === status;
+	const err = /** @type {any} */ (e);
+	// Name-based fallback covers cross-bundle instanceof failures (e.g. adapter-node inlining its own @sveltejs/kit copy)
+	const isHttp =
+		e instanceof HttpError || (err?.name === 'HttpError' && Number.isFinite(err.status));
+	if (!isHttp) return false;
+	return !status || err.status === status;
 }
 
 /**

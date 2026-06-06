@@ -2,9 +2,8 @@
 import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
 import { json, text } from '@sveltejs/kit';
-import { HttpError } from '@sveltejs/kit/internal';
 import { with_request_store } from '@sveltejs/kit/internal/server';
-import { coalesce_to_error, get_message, get_status } from '../../utils/error.js';
+import { coalesce_to_error, get_message, get_status, is_http_error } from '../../utils/error.js';
 import { negotiate } from '../../utils/http.js';
 import { fix_stack_trace } from '../shared-server.js';
 import { ENDPOINT_METHODS } from '../../constants.js';
@@ -73,7 +72,10 @@ export function static_error_page(options, status, message) {
  * @param {unknown} error
  */
 export async function handle_fatal_error(event, state, options, error) {
-	error = error instanceof HttpError ? error : coalesce_to_error(error);
+	// Detect HttpError by name as well as instanceof — a cross-bundle HttpError would otherwise be
+	// collapsed into a generic Error by coalesce_to_error before get_status could read its status.
+	// A SvelteKitError extends Error and so passes through coalesce_to_error unchanged.
+	error = is_http_error(error) ? error : coalesce_to_error(error);
 	const status = get_status(error);
 	const body = await handle_error_and_jsonify(event, state, options, error);
 
@@ -100,7 +102,7 @@ export async function handle_fatal_error(event, state, options, error) {
  * @returns {Promise<App.Error>}
  */
 export async function handle_error_and_jsonify(event, state, options, error) {
-	if (error instanceof HttpError) {
+	if (is_http_error(error)) {
 		// @ts-expect-error custom user errors may not have a message field if App.Error is overwritten
 		return { message: 'Unknown Error', ...error.body };
 	}
