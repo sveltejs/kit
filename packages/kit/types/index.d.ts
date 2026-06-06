@@ -452,7 +452,7 @@ declare module '@sveltejs/kit' {
 		experimental?: {
 			/**
 			 * Whether to enable explicit environment variables using `src/env.js` or `src/env.ts`.
-			 * @since 2.62.0
+			 * @since 2.63.0
 			 * @default false
 			 */
 			explicitEnvironmentVariables?: boolean;
