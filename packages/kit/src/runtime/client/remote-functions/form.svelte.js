@@ -82,7 +82,7 @@ export function form(id) {
 		let preflight_schema = undefined;
 
 		/**
-		 * @param {} instance
+		 * @param {EnhanceCallbackInstance} instance
 		 */
 		let enhance_callback = async (instance) => {
 			if (await instance.submit()) {
