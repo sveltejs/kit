@@ -124,8 +124,8 @@ Finally, you may also consider using an `{#await}` block:
 
 {#await ComponentConstructor}
 	<p>Loading...</p>
-{:then component}
-	<svelte:component this={component} />
+{:then Component}
+	<Component />
 {:catch error}
 	<p>Something went wrong: {error.message}</p>
 {/await}
