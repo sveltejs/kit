@@ -26,7 +26,7 @@ import { load_svelte_config, process_config } from '../../core/config/index.js';
 import { generate_manifest } from '../../core/generate_manifest/index.js';
 import { build_server_nodes } from './build/build_server.js';
 import { build_service_worker } from './build/build_service_worker.js';
-import { assets_base, find_deps, resolve_symlinks } from './build/utils.js';
+import { find_deps, resolve_symlinks } from './build/utils.js';
 import { dev } from './dev/index.js';
 import { preview } from './preview/index.js';
 import { error_for_missing_config, get_config_aliases, get_env, normalize_id } from './utils.js';
@@ -1034,18 +1034,20 @@ async function kit({ svelte_config }) {
 					// see the kit.output.preloadStrategy option for details on why we have multiple options here
 					const ext = kit.output.preloadStrategy === 'preload-mjs' ? 'mjs' : 'js';
 
-					// We could always use a relative asset base path here, but it's better for performance not to.
-					// E.g. Vite generates `new URL('/asset.png', import.meta).href` for a relative path vs just '/asset.png'.
-					// That's larger and takes longer to run and also causes an HTML diff between SSR and client
-					// causing us to do a more expensive hydration check.
-					const client_base =
-						kit.paths.relative !== false || kit.paths.assets ? './' : kit_paths_base;
-
 					const inline = !ssr && svelte_config.kit.output.bundleStrategy === 'inline';
 					const split = ssr || svelte_config.kit.output.bundleStrategy === 'split';
 
+					/** @type {string} */
+					const base = (kit.paths.assets || kit.paths.base) + '/';
+					const root_to_assets = prefix + '/assets/';
+					const assets_to_root =
+						prefix
+							.split('/')
+							.map(() => '..')
+							.join('/') + '/../';
+
 					new_config = {
-						base: ssr ? assets_base(kit) : client_base,
+						base: './',
 						build: {
 							copyPublicDir: !ssr,
 							cssCodeSplit: svelte_config.kit.output.bundleStrategy !== 'inline',
@@ -1093,6 +1095,32 @@ async function kit({ svelte_config }) {
 									assetFileNames: `${prefix}/workers/assets/[name]-[hash][extname]`,
 									hoistTransitiveImports: false
 								}
+							}
+						},
+						experimental: {
+							// Allows us to use relative paths in as many places as we can
+							renderBuiltUrl(filename, { ssr, hostType }) {
+								if (hostType === 'js') {
+									// SSR builds should use an absolute path in JS modules to
+									// match the default Vite behaviour
+									if (ssr) return base + filename;
+
+									// We could always use a relative asset base path here, but it's better for performance not to.
+									// E.g. Vite generates `new URL('/asset.png', import.meta).href` for a relative path vs just '/asset.png'.
+									// That's larger and takes longer to run and also causes an HTML diff between SSR and client
+									// causing us to do a more expensive hydration check.
+									return {
+										relative: kit.paths.relative !== false || !!kit.paths.assets
+									};
+								}
+
+								// _app/immutable/assets files
+								if (filename.startsWith(root_to_assets)) {
+									return `./${filename.slice(root_to_assets.length)}`;
+								}
+
+								// static dir files
+								return assets_to_root + filename;
 							}
 						}
 					};
@@ -1299,15 +1327,6 @@ async function kit({ svelte_config }) {
 
 						if (fs.existsSync(dest) || ssr_stylesheets.has(`${assets_path}/${file}`)) {
 							continue;
-						}
-
-						if (file.endsWith('.css')) {
-							// make absolute paths in CSS relative, for portability
-							const content = fs
-								.readFileSync(src, 'utf-8')
-								.replaceAll(`${kit.paths.base}/${assets_path}`, '.');
-
-							fs.writeFileSync(src, content);
 						}
 
 						copy(src, dest);
