@@ -172,7 +172,7 @@ export function load() {
 <p>This staging environment was deployed from {data.deploymentGitBranch}.</p>
 ```
 
-Since all of these variables are unchanged between build time and run time when building on Vercel, we recommend configuring the variable with `state: true` — which will statically replace the variables, enabling optimisations like dead code elimination.
+Since all of these variables are unchanged between build time and run time when building on Vercel, we recommend configuring the variable with `static: true` — which will statically replace the variables, enabling optimisations like dead code elimination.
 
 ## Skew protection
 
