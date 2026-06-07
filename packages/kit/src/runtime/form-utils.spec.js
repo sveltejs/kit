@@ -91,6 +91,18 @@ describe('convert_formdata', () => {
 		});
 	});
 
+	test('omits empty file inputs instead of setting them to undefined', () => {
+		const data = new FormData();
+		// an unselected `<input type="file">` submits an empty, nameless file
+		data.append('file', new File([], ''));
+		data.append('text', 'hello');
+
+		const converted = convert_formdata(data);
+
+		expect('file' in converted).toBe(false);
+		expect(converted).toStrictEqual({ text: 'hello' });
+	});
+
 	test.each(POLLUTION_ATTACKS)('prevents prototype pollution: %s', (attack) => {
 		const data = new FormData();
 		data.append(attack, 'bad');

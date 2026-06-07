@@ -59,7 +59,13 @@ export function convert_formdata(data) {
 			values = values.map((v) => v === 'on');
 		}
 
-		set_nested_value(result, key, is_array ? values : values[0]);
+		if (is_array) {
+			set_nested_value(result, key, values);
+		} else if (values.length > 0) {
+			// omit the key entirely when there's no value (e.g. an unselected
+			// `<input type="file">`), rather than setting it to `undefined`
+			set_nested_value(result, key, values[0]);
+		}
 	}
 
 	return result;
