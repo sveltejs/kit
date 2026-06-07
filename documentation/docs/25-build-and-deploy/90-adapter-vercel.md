@@ -104,8 +104,8 @@ To add ISR to a route, include the `isr` property in your `config` object:
 declare module '$app/env/private' {
 	export const BYPASS_TOKEN: string;
 }
-// ---cut---
 // @filename: +page.server.js
+// ---cut---
 import { BYPASS_TOKEN } from '$app/env/private';
 
 /** @type {import('@sveltejs/adapter-vercel').Config} */
