@@ -97,6 +97,7 @@ function to_sorted(value, clones) {
 const remote_object = '__skrao';
 const remote_map = '__skram';
 const remote_set = '__skras';
+const remote_file = '__skraf';
 const remote_regex_guard = '__skrag';
 const remote_arg_marker = Symbol(remote_object);
 
@@ -230,6 +231,26 @@ function create_remote_arg_revivers(transport) {
 			}
 
 			return set;
+		},
+		/** @type {(value: any) => File} */
+		[remote_file]: (value) => {
+			if (!value || typeof value !== 'object') {
+				throw new Error('Invalid data for File reviver');
+			}
+
+			if (
+				typeof value.name !== 'string' ||
+				typeof value.type !== 'string' ||
+				typeof value.size !== 'number' ||
+				typeof value.lastModified !== 'number' ||
+				!(value.data instanceof ArrayBuffer)
+			) {
+				throw new Error('Invalid data for File reviver');
+			}
+
+			const { data, name, ...meta } = value;
+
+			return new File([data], name, meta);
 		}
 	};
 
@@ -250,16 +271,42 @@ function create_remote_arg_revivers(transport) {
  * it is both a valid URL and a valid file name (necessary for prerendering).
  * @param {any} value
  * @param {Transport} transport
- * @param {boolean} [sort]
  */
-export function stringify_remote_arg(value, transport, sort = true) {
+export function stringify_remote_arg(value, transport) {
 	if (value === undefined) return '';
 
 	// If people hit file/url size limits, we can look into using something like compress_and_encode_text from svelte.dev beyond a certain size
 	const json_string = devalue.stringify(
 		value,
-		create_remote_arg_reducers(transport, sort, new Map())
+		create_remote_arg_reducers(transport, true, new Map())
 	);
+
+	const bytes = text_encoder.encode(json_string);
+	return base64_encode(bytes).replaceAll('=', '').replaceAll('+', '-').replaceAll('/', '_');
+}
+
+/**
+ * Stringifies command arguments, including `File` objects.
+ * @param {any} value
+ * @param {Transport} transport
+ */
+export async function stringify_command_arg(value, transport) {
+	if (value === undefined) return '';
+
+	const reducers = create_remote_arg_reducers(transport, false, new Map());
+
+	/** @param {any} value */
+	reducers[remote_file] = (value) =>
+		value instanceof File &&
+		value.arrayBuffer().then((data) => ({
+			data,
+			lastModified: value.lastModified,
+			name: value.name,
+			size: value.size,
+			type: value.type
+		}));
+
+	const json_string = await devalue.stringifyAsync(value, reducers);
 
 	const bytes = text_encoder.encode(json_string);
 	return base64_encode(bytes).replaceAll('=', '').replaceAll('+', '-').replaceAll('/', '_');
