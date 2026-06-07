@@ -158,6 +158,12 @@ Vercel makes a set of [deployment-specific environment variables](https://vercel
 
 ```js
 /// file: +layout.server.js
+// @filename: env.d.ts
+declare module '$app/env/private' {
+	export const VERCEL_COMMIT_REF: string;
+}
+// @filename: +layout.server.js
+// ---cut---
 import { VERCEL_COMMIT_REF } from '$app/env/private';
 
 /** @type {import('./$types').LayoutServerLoad} */
