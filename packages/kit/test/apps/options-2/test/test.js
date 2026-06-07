@@ -222,3 +222,19 @@ test.describe('Link header preload', () => {
 		expect(body).not.toContain('as="font"');
 	});
 });
+
+test.describe('$app/env', () => {
+	// regression test for https://github.com/sveltejs/kit/issues/15971:
+	// importing `$app/env` before the router is initialized (e.g. in
+	// hooks.client.js) must not throw `__SVELTEKIT_APP_VERSION__ is not defined`
+	test('version is defined when imported during client init', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		test.skip(!javaScriptEnabled || !process.env.DEV);
+
+		await page.goto('/basepath', { wait_for_started: false });
+		await expect(page.locator('body.started')).toBeVisible();
+		expect(await page.pageErrors()).toHaveLength(0);
+	});
+});

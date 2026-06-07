@@ -2906,9 +2906,18 @@ declare module '@sveltejs/kit' {
 		denormalize: (url?: string | URL) => URL;
 	};
 	type ValidPageOption = (typeof valid_page_options_array)[number];
-	type PageOptions = Partial<Record<ValidPageOption, any>>;
-	const valid_page_options_array: readonly ["ssr", "prerender", "csr", "trailingSlash", "config", "entries", "load"];
+
+	type PageOptions = Partial<{
+		[K in ValidPageOption]: K extends 'ssr' | 'csr'
+			? boolean
+			: K extends 'prerender'
+				? PrerenderOption
+				: K extends 'trailingSlash'
+					? TrailingSlash
+					: any;
+	}>;
 	export const VERSION: string;
+	const valid_page_options_array: readonly ["ssr", "prerender", "csr", "trailingSlash", "config", "entries", "load"];
 
 	export {};
 }
