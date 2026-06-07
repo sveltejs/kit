@@ -33,8 +33,8 @@ The following example caches the built app and any files in `static` eagerly, an
 // Ensures that the `$service-worker` import has proper type definitions
 /// <reference types="@sveltejs/kit" />
 
-// Only necessary if you have an import from `$env/static/public`
-/// <reference types="../.svelte-kit/ambient.d.ts" />
+// Only necessary if you have an import from `$app/env/*`
+/// <reference types="../.svelte-kit/env.d.ts" />
 
 import { build, files, version } from '$service-worker';
 
