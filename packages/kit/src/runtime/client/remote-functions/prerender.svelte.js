@@ -1,6 +1,6 @@
 /** @import { RemotePrerenderFunction } from '@sveltejs/kit' */
 import { app_dir, base } from '$app/paths/internal/client';
-import { version } from '__sveltekit/environment';
+import { version } from '$app/env';
 import * as devalue from 'devalue';
 import { app, prerender_responses } from '../client.js';
 import { get_remote_request_headers, remote_request } from './shared.svelte.js';
