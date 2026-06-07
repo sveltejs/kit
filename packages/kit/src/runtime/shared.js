@@ -234,11 +234,9 @@ function create_remote_arg_revivers(transport) {
 		},
 		/** @type {(value: any) => File} */
 		[remote_file]: (value) => {
-			if (!value || typeof value !== 'object') {
-				throw new Error('Invalid data for File reviver');
-			}
-
 			if (
+				!value ||
+				typeof value !== 'object' ||
 				typeof value.name !== 'string' ||
 				typeof value.type !== 'string' ||
 				typeof value.size !== 'number' ||
