@@ -66,6 +66,18 @@
 
 - chore: deprecate `Response` helpers in favor of platform-provided alternatives ([#15448](https://github.com/sveltejs/kit/pull/15448))
 
+### Patch Changes
+
+
+- chore: remove dependency on kleur ([#12548](https://github.com/sveltejs/kit/pull/12548))
+
+
+- chore: remove dependency on `set-cookie-parser` ([#15384](https://github.com/sveltejs/kit/pull/15384))
+
+
+## 2.63.0
+### Minor Changes
+
 
 - feat: explicit env vars ([#15934](https://github.com/sveltejs/kit/pull/15934))
 
@@ -77,12 +89,6 @@
 
 
 - fix: generate a placeholder tsconfig.json to squelch sync-time warnings ([#15948](https://github.com/sveltejs/kit/pull/15948))
-
-
-- chore: remove dependency on kleur ([#12548](https://github.com/sveltejs/kit/pull/12548))
-
-
-- chore: remove dependency on `set-cookie-parser` ([#15384](https://github.com/sveltejs/kit/pull/15384))
 
 
 - fix: allow use of `$app/env/public` in service workers ([#15950](https://github.com/sveltejs/kit/pull/15950))

@@ -30,9 +30,9 @@ import {
 	error_for_missing_config,
 	get_config_aliases,
 	normalize_id,
-	stackless,
 	strip_virtual_prefix
 } from './utils.js';
+import { stackless } from '../../utils/error.js';
 import { write_client_manifest } from '../../core/sync/write_client_manifest.js';
 import prerender from '../../core/postbuild/prerender.js';
 import analyse from '../../core/postbuild/analyse.js';
