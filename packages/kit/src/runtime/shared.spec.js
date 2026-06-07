@@ -1,5 +1,12 @@
+import buffer from 'node:buffer';
 import { describe, expect, test } from 'vitest';
 import { parse_remote_arg, stringify_command_arg, stringify_remote_arg } from './shared.js';
+
+if (!globalThis.File) {
+	// TODO remove in SvelteKit 3 — we only need it for node 18
+	// @ts-expect-error
+	globalThis.File = /** @type {import('node:buffer') & { File?: File}} */ (buffer).File;
+}
 
 class Thing {
 	/** @param {number} a @param {number} z */
