@@ -98,6 +98,7 @@ const remote_object = '__skrao';
 const remote_map = '__skram';
 const remote_set = '__skras';
 const remote_file = '__skraf';
+const remote_promise_guard = '__skrap';
 const remote_regex_guard = '__skrag';
 const remote_arg_marker = Symbol(remote_object);
 
@@ -109,13 +110,12 @@ const remote_arg_marker = Symbol(remote_object);
 function create_remote_arg_reducers(transport, sort, remote_arg_clones) {
 	/** @type {Record<string, (value: unknown) => unknown>} */
 	const remote_fns_reducers = {
-		[remote_regex_guard]:
-			/** @type {(value: unknown) => void} */
-			(value) => {
-				if (value instanceof RegExp) {
-					throw new Error('Regular expressions are not valid remote function arguments');
-				}
+		/** @param {unknown} value */
+		[remote_regex_guard]: (value) => {
+			if (value instanceof RegExp) {
+				throw new Error('Regular expressions are not valid remote function arguments');
 			}
+		}
 	};
 
 	if (sort) {
@@ -295,16 +295,36 @@ export async function stringify_command_arg(value, transport) {
 
 	const reducers = create_remote_arg_reducers(transport, false, new Map());
 
+	/** @type {Set<Promise<any>>} */
+	const allowed_promises = new Set();
+
 	/** @param {any} value */
-	reducers[remote_file] = (value) =>
-		value instanceof File &&
-		value.arrayBuffer().then((data) => ({
-			data,
-			lastModified: value.lastModified,
-			name: value.name,
-			size: value.size,
-			type: value.type
-		}));
+	reducers[remote_file] = (value) => {
+		if (value instanceof File) {
+			const promise = value.arrayBuffer().then((data) => ({
+				data,
+				lastModified: value.lastModified,
+				name: value.name,
+				size: value.size,
+				type: value.type
+			}));
+
+			allowed_promises.add(promise);
+
+			return promise;
+		}
+	};
+
+	// we don't want to allow arbitrary promises, because they won't
+	// show up as promises on the other side. this is something
+	// we could potentially change in future. stringifyAsync
+	// will await them, so we need to explicitly deny them
+	/** @param {unknown} value */
+	reducers[remote_promise_guard] = (value) => {
+		if (value instanceof Promise && !allowed_promises.has(value)) {
+			throw new Error('Promises are not valid remote function arguments');
+		}
+	};
 
 	const json_string = await devalue.stringifyAsync(value, reducers);
 
