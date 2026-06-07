@@ -3,7 +3,7 @@
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 import { get_request_store } from '@sveltejs/kit/internal/server';
 import { create_remote_key, stringify, stringify_remote_arg } from '../../../shared.js';
-import { prerendering } from '__sveltekit/environment';
+import { prerendering } from '$app/env/internal';
 import {
 	create_validator,
 	get_cache,
