@@ -34,7 +34,7 @@ import {
 	TrailingSlash
 } from './private.js';
 import { Span } from '@opentelemetry/api';
-import type { PageOptions } from '../exports/vite/static_analysis/index.js';
+import { PageOptions } from '../exports/vite/static_analysis/types.js';
 import { SharedIterator } from '../utils/shared-iterator.js';
 
 export interface ServerModule {

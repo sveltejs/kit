@@ -1,6 +1,7 @@
 /** @import { EnvVarConfig } from '@sveltejs/kit' */
 import path from 'node:path';
 import { create_explicit_env_types } from '../env.js';
+import { posixify } from '../../utils/filesystem.js';
 import { write_if_changed } from './utils.js';
 
 const DOCS = '// See https://svelte.dev/docs/kit/environment-variables for more information';
@@ -18,7 +19,7 @@ export function write_env(kit, entry, env_config) {
 	const out = path.join(kit.outDir, 'env.d.ts');
 
 	if (entry && env_config) {
-		const relative = path.relative(kit.outDir, entry);
+		const relative = posixify(path.relative(kit.outDir, entry));
 		content.push(
 			`// This file is generated from ${relative}.\n${DOCS}`,
 			create_explicit_env_types(env_config, relative, 'private'),
