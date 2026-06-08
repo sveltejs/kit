@@ -45,8 +45,8 @@ function resolve_peer(dependency) {
  */
 export async function import_peer(dependency) {
 	try {
-		return await import(resolve_peer(dependency));
+		return await import(/* @vite-ignore */ resolve_peer(dependency));
 	} catch {
-		return await import(dependency);
+		return await import(/* @vite-ignore */ dependency);
 	}
 }

@@ -177,7 +177,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 			 * @param {any} payload
 			 */
 			function send(controller, payload) {
-				controller.enqueue(encoder.encode(JSON.stringify(payload) + '\n'));
+				controller.enqueue(encoder.encode('data: ' + JSON.stringify(payload) + '\n\n'));
 			}
 
 			let closed = false;
@@ -260,7 +260,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 				{
 					headers: {
 						'cache-control': 'private, no-store',
-						'content-type': 'application/x-ndjson'
+						'content-type': 'text/event-stream'
 					}
 				}
 			);

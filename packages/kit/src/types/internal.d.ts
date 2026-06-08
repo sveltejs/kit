@@ -34,7 +34,7 @@ import {
 	TrailingSlash
 } from './private.js';
 import { Span } from '@opentelemetry/api';
-import type { PageOptions } from '../exports/vite/static_analysis/index.js';
+import { PageOptions } from '../exports/vite/static_analysis/types.js';
 import { SharedIterator } from '../utils/shared-iterator.js';
 
 export interface ServerModule {
@@ -44,6 +44,7 @@ export interface ServerModule {
 export interface ServerInternalModule {
 	set_assets(path: string): void;
 	set_building(): void;
+	set_env(environment: Record<string, string>): void;
 	set_manifest(manifest: SSRManifest): void;
 	set_prerendering(): void;
 	set_private_env(environment: Record<string, string>): void;

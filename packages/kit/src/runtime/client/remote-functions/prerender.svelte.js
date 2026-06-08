@@ -1,7 +1,7 @@
 /** @import { RemotePrerenderFunction } from '@sveltejs/kit' */
 /** @import { PointerInitial } from './shared.svelte.js' */
 import { app_dir, base } from '$app/paths/internal/client';
-import { version } from '__sveltekit/environment';
+import { version } from '$app/env';
 import { app, prerender_responses } from '../client.js';
 import {
 	apply_queries,
