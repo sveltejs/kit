@@ -99,6 +99,9 @@ export function form(id) {
 		/** @type {InternalRemoteFormIssue[] | null} */
 		let unread_issues = null;
 
+		/** @type {string | null} */
+		let previous_submitter_name = null;
+
 		/**
 		 * In dev, warn if there are validation issues going unread
 		 */
@@ -413,6 +416,10 @@ export function form(id) {
 
 				const form_data = new FormData(form, event.submitter);
 
+				if (previous_submitter_name !== null) {
+					set_nested_value(input, previous_submitter_name, undefined);
+				}
+
 				if (event.submitter) {
 					const name = event.submitter.getAttribute('name');
 					const value = /** @type {any} */ (event.submitter).value;
@@ -420,6 +427,10 @@ export function form(id) {
 					if (name !== null && value !== undefined) {
 						set_nested_value(input, name, value);
 					}
+
+					previous_submitter_name = name;
+				} else {
+					previous_submitter_name = null;
 				}
 
 				if (DEV) {
