@@ -152,7 +152,7 @@ export function build_server_nodes(
 		/** @type {Set<string>} */
 		const eager_assets = new Set();
 
-		if (node.component && client_manifest) {
+		if (node.component && client_manifest && node.page_options?.ssr !== false) {
 			exports.push(
 				'let component_cache;',
 				`export const component = async () => component_cache ??= (await import('../${
