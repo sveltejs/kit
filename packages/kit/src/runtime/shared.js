@@ -375,17 +375,3 @@ export function split_remote_key(key) {
 		payload: key.slice(i + 1)
 	};
 }
-
-/**
- * @template T
- * @param {string} key
- * @param {() => T} fn
- * @returns {T}
- * @deprecated TODO remove in SvelteKit 3.0
- */
-export function unfriendly_hydratable(key, fn) {
-	if (!svelte.hydratable) {
-		throw new Error('Remote functions require Svelte 5.44.0 or later');
-	}
-	return svelte.hydratable(key, fn);
-}

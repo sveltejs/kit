@@ -536,8 +536,6 @@ export async function render_response({
 				for (const key in cache) {
 					const entry = cache[key];
 
-					if (!entry.serialize) continue;
-
 					const remote_key = create_remote_key(internals.id, key);
 
 					const store = internals.type === 'prerender' ? prerender : query;
@@ -563,7 +561,7 @@ export async function render_response({
 						]);
 
 						if (result.settled) {
-							if ('error' in result) throw result.error;
+							if ('error' in result && entry.serialize) throw result.error;
 							store[remote_key] = result.value;
 						}
 					}

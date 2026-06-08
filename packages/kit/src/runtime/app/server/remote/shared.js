@@ -3,8 +3,6 @@
 import { parse } from 'devalue';
 import { error } from '@sveltejs/kit';
 import { with_request_store, get_request_store } from '@sveltejs/kit/internal/server';
-import { noop } from '../../../../utils/functions.js';
-import { create_remote_key, stringify, unfriendly_hydratable } from '../../../shared.js';
 
 /**
  * @param {any} validate_or_fn
@@ -81,16 +79,6 @@ export async function get_response(internals, payload, state, get_result) {
 	});
 
 	entry.serialize ||= !!state.is_in_universal_load;
-
-	if (state.is_in_render && internals.id) {
-		const remote_key = create_remote_key(internals.id, payload);
-
-		Promise.resolve(entry.data)
-			.then((value) => {
-				void unfriendly_hydratable(remote_key, () => stringify(value, state.transport));
-			})
-			.catch(noop);
-	}
 
 	return entry.data;
 }

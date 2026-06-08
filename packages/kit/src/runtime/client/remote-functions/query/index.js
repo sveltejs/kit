@@ -4,7 +4,6 @@ import { app, query_map, query_responses } from '../../client.js';
 import { get_remote_request_headers, QUERY_FUNCTION_ID, remote_request } from '../shared.svelte.js';
 import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
-import { unfriendly_hydratable } from '../../../shared.js';
 import { QueryProxy } from './proxy.js';
 
 /**
@@ -34,9 +33,7 @@ export function query(id) {
 
 			const url = `${base}/${app_dir}/remote/${id}${payload ? `?payload=${payload}` : ''}`;
 
-			const serialized = await unfriendly_hydratable(key, () =>
-				remote_request(url, get_remote_request_headers())
-			);
+			const serialized = await remote_request(url, get_remote_request_headers());
 
 			return devalue.parse(serialized, app.decoders);
 		});

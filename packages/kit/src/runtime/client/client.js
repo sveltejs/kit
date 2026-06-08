@@ -702,6 +702,10 @@ async function initialize(result, target, hydrate) {
 			: undefined
 	});
 
+	void svelte.settled?.().then(() => {
+		query_responses = {};
+	});
+
 	// Wait for a microtask in case svelte experimental async is enabled,
 	// which causes component script blocks to run asynchronously
 	void (await Promise.resolve());
@@ -3028,8 +3032,6 @@ async function _hydrate(
 
 		target.textContent = '';
 		hydrate = false;
-	} finally {
-		query_responses = {};
 	}
 
 	if (result.props.page) {
