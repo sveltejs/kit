@@ -413,6 +413,15 @@ export function form(id) {
 
 				const form_data = new FormData(form, event.submitter);
 
+				if (event.submitter) {
+					const name = event.submitter.getAttribute('name');
+					const value = /** @type {any} */ (event.submitter).value;
+
+					if (name !== null && value !== undefined) {
+						set_nested_value(input, name, value);
+					}
+				}
+
 				if (DEV) {
 					validate_form_data(form_data, clone(form).enctype);
 				}
