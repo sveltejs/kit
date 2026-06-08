@@ -1270,6 +1270,16 @@ async function kit({ svelte_config }) {
 					metadata.nodes
 				);
 
+				const ssr_stylesheets = new Set(
+					Object.values(server_manifest)
+						.map((chunk) => chunk.css ?? [])
+						.flat()
+				);
+
+				const assets_path = `${kit.appDir}/immutable/assets`;
+				const server_assets = `${out}/server/${assets_path}`;
+				const client_assets = `${out}/client/${assets_path}`;
+
 				const skip_client_build = manifest_data.nodes.every(
 					(node) => node.page_options?.csr === false
 				);
@@ -1322,16 +1332,6 @@ async function kit({ svelte_config }) {
 					// a no-op, but for SSR builds `url(...)` paths are handled
 					// differently (relative for client, absolute for server)
 					// resulting in different hashes, and thus duplication
-					const ssr_stylesheets = new Set(
-						Object.values(server_manifest)
-							.map((chunk) => chunk.css ?? [])
-							.flat()
-					);
-
-					const assets_path = `${kit.appDir}/immutable/assets`;
-					const server_assets = `${out}/server/${assets_path}`;
-					const client_assets = `${out}/client/${assets_path}`;
-
 					if (fs.existsSync(server_assets)) {
 						for (const file of fs.readdirSync(server_assets)) {
 							const src = `${server_assets}/${file}`;
@@ -1460,6 +1460,19 @@ async function kit({ svelte_config }) {
 						assets_path,
 						client_chunks
 					);
+				} else {
+					if (fs.existsSync(server_assets)) {
+						for (const file of fs.readdirSync(server_assets)) {
+							const src = `${server_assets}/${file}`;
+							const dest = `${client_assets}/${file}`;
+
+							if (!ssr_stylesheets.has(`${assets_path}/${file}`)) {
+								continue;
+							}
+
+							copy(src, dest);
+						}
+					}
 				}
 
 				// ...and prerender
