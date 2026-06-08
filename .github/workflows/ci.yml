@@ -267,8 +267,8 @@ jobs:
       # required for testing netlify edge functions
       - uses: denoland/setup-deno@v2
         with:
-          cache-hash: ${{ runner.os }}-${{ runner.arch }}
           deno-version: ^2.2.4
+          cache: true
       - run: pnpm install --frozen-lockfile
       - name: setup overrides for matrix.node
         if: matrix.node-version == 18
