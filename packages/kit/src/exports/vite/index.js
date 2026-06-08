@@ -1245,6 +1245,20 @@ async function kit({ svelte_config }) {
 					})};\n`
 				);
 
+				const server_chunks = Object.values(server_bundle);
+				const assets_path = `${kit.appDir}/immutable/assets`;
+
+				// first, build server nodes without the client manifest so we can analyse it
+				build_server_nodes(
+					out,
+					kit,
+					manifest_data,
+					server_manifest,
+					null,
+					assets_path,
+					server_chunks
+				);
+
 				log.info('Analysing routes');
 
 				const { metadata } = await analyse({
@@ -1276,7 +1290,6 @@ async function kit({ svelte_config }) {
 						.flat()
 				);
 
-				const assets_path = `${kit.appDir}/immutable/assets`;
 				const server_assets = `${out}/server/${assets_path}`;
 				const client_assets = `${out}/client/${assets_path}`;
 
@@ -1461,14 +1474,6 @@ async function kit({ svelte_config }) {
 						client_chunks
 					);
 				} else {
-					build_data.client = {
-						start: '',
-						imports: [],
-						stylesheets: [],
-						fonts: [],
-						uses_env_dynamic_public: false
-					};
-
 					if (fs.existsSync(server_assets)) {
 						for (const file of fs.readdirSync(server_assets)) {
 							const src = `${server_assets}/${file}`;
