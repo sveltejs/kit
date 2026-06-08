@@ -1670,7 +1670,7 @@ declare module '@sveltejs/kit' {
 
 		/** private fields */
 		_: {
-			client: NonNullable<BuildData['client']>;
+			client: BuildData['client'];
 			nodes: SSRNodeLoader[];
 			/** hashed filename -> import to that file */
 			remotes: Record<string, () => Promise<any>>;
