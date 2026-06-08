@@ -311,8 +311,8 @@ export type ServerNodesResponse = {
 
 export type RemoteFunctionResponse =
 	| (ServerRedirectNode & {
-			/** devalue'd Record<string, any> */
-			refreshes?: string;
+			/** devalue'd RemoteQueriesMap */
+			queries?: string;
 			/** devalue'd Record<string, any> */
 			reconnects?: string;
 	  })
@@ -320,26 +320,37 @@ export type RemoteFunctionResponse =
 	| {
 			type: 'result';
 			result: string;
-			/** devalue'd Record<string, any> */
-			refreshes: string | undefined;
+			/**
+			 * devalue'd RemoteQueriesMap — the single-flight/side-channel map of query
+			 * (and nested-returned query/prerender) values to apply/seed on the client
+			 */
+			queries: string | undefined;
 			/** devalue'd Record<string, any> */
 			reconnects: string | undefined;
 	  };
 
+/** Single-character code identifying the kind of resource a side-channel entry seeds */
+export type RemoteResourceCode = 'q' | 'b' | 'p';
+
 export type RemoteSingleflightResult = {
 	type: 'result';
-	data: any;
+	/** devalue'd value string (may itself contain `[id, payload, code]` pointers) */
+	data: string;
+	code?: RemoteResourceCode;
 };
 
 export type RemoteSingleflightError = {
 	type: 'error';
 	status?: number;
 	error: App.Error;
+	code?: RemoteResourceCode;
 };
 
 export type RemoteSingleflightEntry = RemoteSingleflightResult | RemoteSingleflightError;
 
 export type RemoteSingleflightMap = Record<string, RemoteSingleflightEntry>;
+
+export type RemoteQueriesMap = RemoteSingleflightMap;
 
 export type RemoteLiveQueryUserFunctionReturnType<Output> = MaybePromise<
 	| AsyncGenerator<Output>
@@ -722,6 +733,23 @@ export interface RequestState {
 		/** A map of remote function key to corresponding single-flight-mutation promise */
 		refreshes: null | Map<string, Promise<any>>;
 		reconnects: null | Map<string, Promise<void>>;
+		/**
+		 * Nested remote resources (query / query.batch / prerender) that were used during the
+		 * request and referenced as pointers in a serialized result. Populated by
+		 * `serialize_remote_result` and flushed into the response's `queries` side-channel so
+		 * the client can revive the pointers without an extra round-trip.
+		 */
+		collected: null | Map<
+			string,
+			{ internals: RemoteInternals; payload: string; code: 'q' | 'b' | 'p' }
+		>;
+		/**
+		 * Server-side seeds for nested prerender pointers, populated from a parent prerender's
+		 * `queries` side-channel so the pointers can be revived without re-fetching.
+		 */
+		prerender_seeds: null | Map<string, RemoteSingleflightEntry>;
+		/** De-dupes server-side revival of nested prerender pointers within a request */
+		prerender_resolved: null | Map<string, Promise<any>>;
 		/** A map of remote function ID to payloads requested for refreshing by the client */
 		requested: null | Map<string, string[]>;
 		/** A map of query.batch ID to payloads requested for that batch within the same macrotask */

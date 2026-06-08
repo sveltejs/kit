@@ -1,12 +1,11 @@
 /** @import { PromiseWithResolvers } from '../../../../utils/promise.js' */
-import { app } from '../../client.js';
-import * as devalue from 'devalue';
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
 import { noop, once } from '../../../../utils/functions.js';
 import { with_resolvers } from '../../../../utils/promise.js';
 import { SharedIterator } from '../../../../utils/shared-iterator.js';
 import { tick } from 'svelte';
 import { unfriendly_hydratable } from '../../../shared.js';
+import { revive_remote_value } from '../shared.svelte.js';
 import { create_live_iterator } from './iterator.js';
 
 /**
@@ -89,7 +88,7 @@ export class LiveQuery {
 
 		const serialized = unfriendly_hydratable(key, () => undefined);
 		if (serialized !== undefined) {
-			this.set(devalue.parse(serialized, app.decoders));
+			this.set(revive_remote_value(serialized));
 		}
 	}
 

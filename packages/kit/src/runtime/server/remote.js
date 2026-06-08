@@ -1,5 +1,5 @@
 /** @import { ActionResult, RemoteForm, RequestEvent, SSRManifest } from '@sveltejs/kit' */
-/** @import { RemoteFormInternals, RemoteFunctionResponse, RemoteInternals, RequestState, SSROptions } from 'types' */
+/** @import { RemoteFormInternals, RemoteFunctionResponse, RemoteInternals, RemoteResourceCode, RemoteSingleflightEntry, RequestState, SSROptions } from 'types' */
 
 import { json, error } from '@sveltejs/kit';
 import { HttpError, Redirect, SvelteKitError } from '@sveltejs/kit/internal';
@@ -7,6 +7,7 @@ import { with_request_store, merge_tracing } from '@sveltejs/kit/internal/server
 import { app_dir, base } from '$app/paths/internal/server';
 import { is_form_content_type } from '../../utils/http.js';
 import { parse_remote_arg, split_remote_key, stringify } from '../shared.js';
+import { serialize_remote_result } from '../app/server/remote/shared.js';
 import { handle_error_and_jsonify } from './utils.js';
 import { normalize_error } from '../../utils/error.js';
 import { check_incorrect_fail_use } from './page/actions.js';
@@ -78,10 +79,14 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 				internals.run(args, options)
 			);
 
+			// `results` is an array of `{ type, data }` entries whose `data` was already
+			// serialized (via `serialize_remote_result`) per-entry inside `run`, collecting any
+			// nested pointers into `state.remote.collected` along the way.
 			return json(
 				/** @type {RemoteFunctionResponse} */ ({
 					type: 'result',
-					result: stringify(results, transport)
+					result: stringify(results, transport),
+					queries: await build_queries()
 				})
 			);
 		}
@@ -117,16 +122,15 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 			const fn = internals.fn;
 			const result = await with_request_store({ event, state }, () => fn(data, meta, form_data));
 
+			const result_string = serialize_remote_result(result, state);
+			const reconnects = result.issues ? undefined : await serialize_reconnects();
+
 			return json(
 				/** @type {RemoteFunctionResponse} */ ({
 					type: 'result',
-					result: stringify(result, transport),
-					refreshes: result.issues
-						? undefined
-						: await serialize_singleflight(state.remote.refreshes),
-					reconnects: result.issues
-						? undefined
-						: await serialize_singleflight(state.remote.reconnects)
+					result: result_string,
+					queries: result.issues ? undefined : await build_queries(),
+					reconnects
 				})
 			);
 		}
@@ -138,12 +142,15 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 			const arg = parse_remote_arg(payload, transport);
 			const data = await with_request_store({ event, state }, () => fn(arg));
 
+			const result_string = serialize_remote_result(data, state);
+			const reconnects = await serialize_reconnects();
+
 			return json(
 				/** @type {RemoteFunctionResponse} */ ({
 					type: 'result',
-					result: stringify(data, transport),
-					refreshes: await serialize_singleflight(state.remote.refreshes),
-					reconnects: await serialize_singleflight(state.remote.reconnects)
+					result: result_string,
+					queries: await build_queries(),
+					reconnects
 				})
 			);
 		}
@@ -206,10 +213,18 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 								}
 
 								// only send changed data
-								if (result !== (result = stringify(value, transport))) {
+								if (result !== (result = serialize_remote_result(value, state))) {
+									// ship any nested query/prerender values used by this emitted value in a
+									// per-message `queries` side-channel so the client can revive their
+									// pointers without a separate request. Collected pointers accumulate on
+									// `state.remote`, so clear them afterwards to keep each message self-contained.
+									const queries = await build_queries();
+									state.remote.collected?.clear();
+
 									send(controller, {
 										type: 'result',
-										result
+										result,
+										queries
 									});
 
 									return;
@@ -263,20 +278,25 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 			fn(parse_remote_arg(payload, transport))
 		);
 
+		// prerender results may only nest other prerenders (allow_queries: false)
+		const result_string = serialize_remote_result(data, state, internals.type !== 'prerender');
+
 		return json(
 			/** @type {RemoteFunctionResponse} */ ({
 				type: 'result',
-				result: stringify(data, transport)
+				result: result_string,
+				queries: await build_queries()
 			})
 		);
 	} catch (error) {
 		if (error instanceof Redirect) {
+			const reconnects = await serialize_reconnects();
 			return json(
 				/** @type {RemoteFunctionResponse} */ ({
 					type: 'redirect',
 					location: error.location,
-					refreshes: await serialize_singleflight(state.remote.refreshes),
-					reconnects: await serialize_singleflight(state.remote.reconnects)
+					queries: await build_queries(),
+					reconnects
 				})
 			);
 		}
@@ -301,33 +321,96 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 		);
 	}
 
-	/** @param {Map<string, Promise<any>> | null} map */
-	async function serialize_singleflight(map) {
-		if (!map || map.size === 0) {
-			return undefined;
+	/**
+	 * Serialize a settled promise into a side-channel entry. The value is serialized via
+	 * `serialize_remote_result` so it's a per-value string that may itself contain nested
+	 * `[id, payload, code]` pointers (and collects their values for the `queries` channel).
+	 * @param {Promise<any>} promise
+	 * @param {boolean} [allow_queries=true]
+	 * @returns {Promise<RemoteSingleflightEntry>}
+	 */
+	async function serialize_entry(promise, allow_queries = true) {
+		try {
+			return { type: 'result', data: serialize_remote_result(await promise, state, allow_queries) };
+		} catch (error) {
+			const status =
+				error instanceof HttpError || error instanceof SvelteKitError ? error.status : 500;
+
+			return {
+				type: 'error',
+				status,
+				error: await handle_error_and_jsonify(event, state, options, error)
+			};
 		}
+	}
 
-		const results = await Promise.all(
-			Array.from(map, async ([key, promise]) => {
-				try {
-					return [key, { type: 'result', data: await promise }];
-				} catch (error) {
-					const status =
-						error instanceof HttpError || error instanceof SvelteKitError ? error.status : 500;
+	/**
+	 * The live-query `reconnects` side-channel: a map of live-query key -> current value, so
+	 * the client can render the latest value before re-establishing its stream.
+	 */
+	async function serialize_reconnects() {
+		const map = state.remote.reconnects;
+		if (!map || map.size === 0) return undefined;
 
-					return [
-						key,
-						{
-							type: 'error',
-							status,
-							error: await handle_error_and_jsonify(event, state, options, error)
-						}
-					];
-				}
-			})
+		const entries = await Promise.all(
+			Array.from(map, async ([key, promise]) => [key, await serialize_entry(promise)])
 		);
 
-		return stringify(Object.fromEntries(results), transport);
+		return stringify(Object.fromEntries(entries), transport);
+	}
+
+	/**
+	 * The `queries` side-channel: explicit single-flight refreshes/sets *plus* every nested
+	 * query/prerender that was used and referenced as a pointer in the response. Iterated to a
+	 * fixpoint because serializing one value can reveal further nested pointers.
+	 */
+	async function build_queries() {
+		/** @type {Record<string, RemoteSingleflightEntry & { code?: RemoteResourceCode }>} */
+		const serialized = {};
+		const seen = new Set();
+
+		/** @type {Array<{ key: string, code: RemoteResourceCode, get_value: () => Promise<any> }>} */
+		let worklist = [];
+
+		// explicit single-flight refreshes/sets target queries already mounted on the client
+		for (const [key, promise] of state.remote.refreshes ?? []) {
+			if (seen.has(key)) continue;
+			seen.add(key);
+			worklist.push({ key, code: 'q', get_value: () => promise });
+		}
+
+		const enqueue_collected = () => {
+			for (const [key, { internals, payload, code }] of state.remote.collected ?? []) {
+				if (seen.has(key)) continue;
+				seen.add(key);
+				worklist.push({
+					key,
+					code,
+					get_value: () =>
+						Promise.resolve(/** @type {any} */ (state.remote.data?.get(internals))?.[payload]?.data)
+				});
+			}
+		};
+
+		enqueue_collected();
+
+		while (worklist.length > 0) {
+			const batch = worklist;
+			worklist = [];
+
+			await Promise.all(
+				batch.map(async ({ key, code, get_value }) => {
+					serialized[key] = { ...(await serialize_entry(get_value(), code !== 'p')), code };
+				})
+			);
+
+			// serializing values above may have collected further nested pointers
+			enqueue_collected();
+		}
+
+		if (Object.keys(serialized).length === 0) return undefined;
+
+		return stringify(serialized, transport);
 	}
 }
 

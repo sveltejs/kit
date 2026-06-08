@@ -15,13 +15,8 @@ import { create_server_routing_response, generate_route_object } from './server_
 import { add_resolution_suffix } from '../../pathname.js';
 import { try_get_request_store, with_request_store } from '@sveltejs/kit/internal/server';
 import { text_encoder } from '../../utils.js';
-import {
-	count_non_ssi_comments,
-	create_replacer,
-	get_global_name,
-	handle_error_and_jsonify
-} from '../utils.js';
-import { create_remote_key } from '../../shared.js';
+import { count_non_ssi_comments, get_global_name, handle_error_and_jsonify } from '../utils.js';
+import { create_remote_key, stringify_remote_value } from '../../shared.js';
 import { get_status } from '../../../utils/error.js';
 import * as env from '__sveltekit/env';
 
@@ -522,16 +517,22 @@ export async function render_response({
 		let serialized_prerender_data = '';
 
 		if (remote.data) {
-			/** @type {Record<string, any>} */
+			// each value is serialized to a devalue string (which may contain `[id, payload, code]`
+			// pointers to nested remote resources) so render- and load-channel revival are identical
+			// on the client; the outer object of strings is then `uneval`'d into the page
+			/** @type {Record<string, string>} */
 			const query = {};
 
-			/** @type {Record<string, any>} */
+			/** @type {Record<string, string>} */
 			const prerender = {};
 
 			for (const [internals, cache] of remote.data) {
 				// remote functions without an `id` aren't exported, and thus
 				// cannot be called from the client
 				if (!internals.id) continue;
+
+				// prerender results may only nest other prerenders
+				const allow_queries = internals.type !== 'prerender';
 
 				for (const key in cache) {
 					const entry = cache[key];
@@ -548,7 +549,9 @@ export async function render_response({
 					) {
 						// This entry was refreshed/set by a command or form action.
 						// Always await it so the mutation result is serialized.
-						store[remote_key] = await entry.data;
+						store[remote_key] = stringify_remote_value(await entry.data, options.hooks.transport, {
+							allow_queries
+						});
 					} else {
 						// Don't block the response on pending remote data - if a query
 						// hasn't settled yet, it wasn't awaited in the template (or is behind a pending boundary).
@@ -564,20 +567,21 @@ export async function render_response({
 
 						if (result.settled) {
 							if ('error' in result) throw result.error;
-							store[remote_key] = result.value;
+							store[remote_key] = stringify_remote_value(result.value, options.hooks.transport, {
+								allow_queries
+							});
 						}
 					}
 				}
 			}
 
-			const replacer = create_replacer(options.hooks.transport);
-
+			// values are already devalue strings, so no replacer is needed here
 			if (Object.keys(query).length > 0) {
-				serialized_query_data = `${global}.query = ${devalue.uneval(query, replacer)};\n\n\t\t\t\t\t\t`;
+				serialized_query_data = `${global}.query = ${devalue.uneval(query)};\n\n\t\t\t\t\t\t`;
 			}
 
 			if (Object.keys(prerender).length > 0) {
-				serialized_prerender_data = `${global}.prerender = ${devalue.uneval(prerender, replacer)};\n\n\t\t\t\t\t\t`;
+				serialized_prerender_data = `${global}.prerender = ${devalue.uneval(prerender)};\n\n\t\t\t\t\t\t`;
 			}
 		}
 

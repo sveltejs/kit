@@ -7,7 +7,13 @@ import { DEV } from 'esm-env';
 import { HttpError } from '@sveltejs/kit/internal';
 import { app, query_responses, _goto, set_nearest_error_page, invalidateAll } from '../client.js';
 import { tick } from 'svelte';
-import { apply_refreshes, categorize_updates, apply_reconnections } from './shared.svelte.js';
+import {
+	apply_queries,
+	create_remote_pointer_reviver,
+	categorize_updates,
+	apply_reconnections
+} from './shared.svelte.js';
+import { parse_remote_value } from '../../shared.js';
 import { createAttachmentKey } from 'svelte/attachments';
 import {
 	convert_formdata,
@@ -71,7 +77,15 @@ export function form(id) {
 		const issues = $derived(flatten_issues(raw_issues));
 
 		/** @type {any} */
-		let result = $state.raw(query_responses[action_id]);
+		let result = $state.raw(
+			query_responses[action_id] === undefined
+				? undefined
+				: parse_remote_value(
+						query_responses[action_id],
+						app.decoders,
+						create_remote_pointer_reviver()
+					)?.result
+		);
 
 		/** @type {number} */
 		let pending_count = $state(0);
@@ -206,19 +220,24 @@ export function form(id) {
 					result = undefined;
 
 					if (form_result.type === 'result') {
-						({ issues: raw_issues = [], result } = devalue.parse(form_result.result, app.decoders));
+						// apply the `queries` side-channel before reviving the result, so nested
+						// query/prerender pointers in the form's return value resolve without fetching
+						const revive = apply_queries(form_result.queries);
+
+						if (form_result.reconnects) {
+							apply_reconnections(form_result.reconnects, revive);
+						}
+
+						({ issues: raw_issues = [], result } = parse_remote_value(
+							form_result.result,
+							app.decoders,
+							revive
+						));
 						const succeeded = raw_issues.length === 0;
 
 						if (succeeded) {
-							if (refreshes === null && !form_result.refreshes && !form_result.reconnects) {
+							if (refreshes === null && !form_result.queries && !form_result.reconnects) {
 								void invalidateAll();
-							} else {
-								if (form_result.refreshes) {
-									apply_refreshes(form_result.refreshes);
-								}
-								if (form_result.reconnects) {
-									apply_reconnections(form_result.reconnects);
-								}
 							}
 						} else {
 							if (DEV) {
@@ -228,22 +247,20 @@ export function form(id) {
 
 						return succeeded;
 					} else if (form_result.type === 'redirect') {
-						const stringified_refreshes = form_result.refreshes ?? '';
+						const stringified_queries = form_result.queries ?? '';
 						const stringified_reconnects = form_result.reconnects ?? '';
-						if (stringified_refreshes) {
-							apply_refreshes(stringified_refreshes);
-						}
+
+						const revive = apply_queries(stringified_queries || undefined);
 
 						if (stringified_reconnects) {
-							apply_reconnections(stringified_reconnects);
+							apply_reconnections(stringified_reconnects, revive);
 						}
 
 						// Use internal version to allow redirects to external URLs
 						void _goto(
 							form_result.location,
 							{
-								invalidateAll:
-									refreshes === null && !stringified_refreshes && !stringified_reconnects
+								invalidateAll: refreshes === null && !stringified_queries && !stringified_reconnects
 							},
 							0
 						);

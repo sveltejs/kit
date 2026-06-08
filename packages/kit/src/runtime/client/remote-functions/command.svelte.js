@@ -1,13 +1,12 @@
 /** @import { RemoteCommand, RemoteQueryUpdate } from '@sveltejs/kit' */
 /** @import { RemoteFunctionResponse } from 'types' */
 import { app_dir, base } from '$app/paths/internal/client';
-import * as devalue from 'devalue';
 import { HttpError } from '@sveltejs/kit/internal';
 import { app } from '../client.js';
-import { stringify_remote_arg } from '../../shared.js';
+import { parse_remote_value, stringify_remote_arg } from '../../shared.js';
 import {
 	get_remote_request_headers,
-	apply_refreshes,
+	apply_queries,
 	categorize_updates,
 	apply_reconnections
 } from './shared.svelte.js';
@@ -76,15 +75,16 @@ export function command(id) {
 				} else if (result.type === 'error') {
 					throw new HttpError(result.status ?? 500, result.error);
 				} else {
-					if (result.refreshes) {
-						apply_refreshes(result.refreshes);
-					}
+					// apply the `queries` side-channel (live-update mounted queries, seed new ones)
+					// *before* reviving the result so that any nested query/prerender pointers in
+					// the return value resolve to the freshly-applied values without fetching
+					const revive = apply_queries(result.queries);
 
 					if (result.reconnects) {
-						apply_reconnections(result.reconnects);
+						apply_reconnections(result.reconnects, revive);
 					}
 
-					return devalue.parse(result.result, app.decoders);
+					return parse_remote_value(result.result, app.decoders, revive);
 				}
 			} finally {
 				overrides?.forEach((fn) => fn());

@@ -1,11 +1,21 @@
-/** @import { RemoteFunctionResponse, RemoteSingleflightMap, RemoteSingleflightEntry } from 'types' */
+/** @import { RemoteFunctionResponse, RemoteQueriesMap, RemoteSingleflightEntry, RemoteResourceCode } from 'types' */
 /** @import { RemoteQueryUpdate } from '@sveltejs/kit' */
 import * as devalue from 'devalue';
 import { app, goto, live_query_map, query_map } from '../client.js';
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
 import { untrack } from 'svelte';
-import { create_remote_key, split_remote_key } from '../../shared.js';
+import {
+	create_remote_key,
+	parse_remote_value,
+	split_remote_key,
+	unfriendly_hydratable
+} from '../../shared.js';
 import { navigating, page } from '../state.svelte.js';
+
+/**
+ * @typedef {[string, string, RemoteResourceCode]} RemotePointer
+ * @typedef {{ type: 'result', value: any, data?: string } | { type: 'error', error: HttpError }} PointerInitial
+ */
 
 /** Indicates a query function, as opposed to a query instance */
 export const QUERY_FUNCTION_ID = Symbol('sveltekit.query_function_id');
@@ -92,10 +102,14 @@ export function get_remote_request_headers() {
 }
 
 /**
+ * Perform a GET request to a remote function endpoint and return the resolved
+ * `result`-typed response (after handling redirects/errors). The caller is responsible for
+ * applying the `queries` side-channel and reviving `result`.
+ *
  * @param {string} url
  * @param {HeadersInit} headers
  */
-export async function remote_request(url, headers) {
+export async function remote_response(url, headers) {
 	const response = await fetch(url, {
 		headers: {
 			'Content-Type': 'application/json',
@@ -109,9 +123,7 @@ export async function remote_request(url, headers) {
 
 	const result = /** @type {RemoteFunctionResponse} */ (await response.json());
 
-	const resolved = await handle_side_channel_response(result);
-
-	return resolved.result;
+	return handle_side_channel_response(result);
 }
 
 /**
@@ -208,48 +220,156 @@ export function categorize_updates(updates) {
 }
 
 /**
- * @template TResource
- * @param {string} stringified_singleflight
- * @param {Map<string, Map<string, { resource: TResource }>>} map
- * @param {(resource: TResource, value: RemoteSingleflightEntry) => void} callback
+ * Registered by the query / query.batch / prerender client modules so that nested resource
+ * pointers (`[id, payload, code]`) can be revived into the correct resource type without
+ * needing a client-side id→type registry (which wouldn't work if the nested module isn't
+ * loaded). There are only three codes and all three modules are always present in the
+ * `__sveltekit/remote` barrel.
+ * @type {Partial<Record<RemoteResourceCode, (id: string, payload: string, initial: PointerInitial | undefined) => any>>}
  */
-function apply_singleflight(stringified_singleflight, map, callback) {
-	const singleflight = /** @type {RemoteSingleflightMap} */ (
-		devalue.parse(stringified_singleflight, app.decoders)
-	);
+const pointer_revivers = {};
 
-	for (const [key, value] of Object.entries(singleflight)) {
-		const parts = split_remote_key(key);
-		const entry = map.get(parts.id)?.get(parts.payload);
-		if (entry?.resource) {
-			callback(entry.resource, value);
-		}
-	}
+/**
+ * @param {RemoteResourceCode} code
+ * @param {(id: string, payload: string, initial: PointerInitial | undefined) => any} reviver
+ */
+export function register_pointer_reviver(code, reviver) {
+	pointer_revivers[code] = reviver;
 }
 
 /**
- * Apply refresh data from the server to the relevant queries
+ * Build the `__skq` reviver that turns `[id, payload, code]` pointer tuples back into live
+ * resources. When a `seeds` map is supplied (from a response's `queries` side-channel), a
+ * matching entry is consumed and used to construct the resource directly in its
+ * resolved/errored state, so it never needs to fetch.
  *
- * @param {string} stringified_refreshes
+ * @param {Map<string, RemoteSingleflightEntry>} [seeds]
+ * @returns {(pointer: RemotePointer) => any}
  */
-export const apply_refreshes = (stringified_refreshes) => {
-	apply_singleflight(stringified_refreshes, query_map, (resource, value) => {
-		if (value.type === 'result') {
-			resource?.set(value.data);
-		} else {
-			resource?.fail(new HttpError(value.status ?? 500, value.error));
-		}
-	});
-};
+export function create_remote_pointer_reviver(seeds) {
+	/** @param {RemotePointer} pointer */
+	const revive = (pointer) => {
+		const [id, payload, code] = pointer;
+		const reviver = pointer_revivers[code];
 
-/** @param {string} stringified_reconnects */
-export const apply_reconnections = (stringified_reconnects) => {
-	apply_singleflight(stringified_reconnects, live_query_map, (resource, value) => {
-		if (value.type === 'result') {
-			resource?.set(value.data);
-			void resource?.reconnect();
-		} else {
-			resource?.fail(new HttpError(value.status ?? 500, value.error));
+		if (!reviver) {
+			throw new Error(`Cannot revive remote function pointer with unknown code "${code}"`);
 		}
-	});
+
+		/** @type {PointerInitial | undefined} */
+		let initial;
+
+		const key = create_remote_key(id, payload);
+		const entry = seeds?.get(key);
+
+		if (entry) {
+			seeds?.delete(key);
+
+			if (entry.type === 'result') {
+				initial = {
+					type: 'result',
+					value: parse_remote_value(entry.data, app.decoders, revive),
+					data: entry.data
+				};
+			} else {
+				initial = { type: 'error', error: new HttpError(entry.status ?? 500, entry.error) };
+			}
+		} else {
+			const serialized = unfriendly_hydratable(key, () => undefined);
+
+			if (serialized !== undefined) {
+				initial = {
+					type: 'result',
+					value: parse_remote_value(serialized, app.decoders, revive),
+					data: serialized
+				};
+			}
+		}
+
+		return reviver(id, payload, initial);
+	};
+
+	return revive;
+}
+
+/**
+ * Revive a serialized remote value, turning any nested `[id, payload, code]` pointers into
+ * resources (seeding them from `seeds` where available, otherwise leaving them to fetch on
+ * use).
+ * @param {string} serialized
+ * @param {Map<string, RemoteSingleflightEntry>} [seeds]
+ */
+export function revive_remote_value(serialized, seeds) {
+	return parse_remote_value(serialized, app.decoders, create_remote_pointer_reviver(seeds));
+}
+
+/**
+ * Apply the `queries` side-channel from a remote function response: live-update any queries
+ * already mounted on the client, and return a `__skq` reviver that seeds the *remaining*
+ * (new, not-yet-mounted) nested resources as they're revived from the result.
+ *
+ * @param {string | undefined} stringified_queries
+ * @returns {(pointer: RemotePointer) => any}
+ */
+export function apply_queries(stringified_queries) {
+	/** @type {Map<string, RemoteSingleflightEntry>} */
+	const seeds = new Map(
+		stringified_queries
+			? Object.entries(
+					/** @type {RemoteQueriesMap} */ (devalue.parse(stringified_queries, app.decoders))
+				)
+			: []
+	);
+
+	const revive = create_remote_pointer_reviver(seeds);
+
+	for (const key of [...seeds.keys()]) {
+		// may have been consumed as a nested seed while reviving another entry's value
+		if (!seeds.has(key)) continue;
+
+		const { id, payload } = split_remote_key(key);
+		const live = query_map.get(id)?.get(payload);
+
+		// not mounted — leave it in `seeds` so revival can construct a new, seeded instance
+		if (!live?.resource) continue;
+
+		const entry = /** @type {RemoteSingleflightEntry} */ (seeds.get(key));
+		seeds.delete(key);
+
+		if (entry.type === 'result') {
+			live.resource.set(parse_remote_value(entry.data, app.decoders, revive));
+		} else {
+			live.resource.fail(new HttpError(entry.status ?? 500, entry.error));
+		}
+	}
+
+	return revive;
+}
+
+/**
+ * Apply the live-query `reconnects` side-channel: set the latest value on mounted live
+ * queries and trigger a reconnect, or surface an error.
+ *
+ * @param {string} stringified_reconnects
+ * @param {(pointer: RemotePointer) => any} [revive]
+ */
+export const apply_reconnections = (
+	stringified_reconnects,
+	revive = create_remote_pointer_reviver()
+) => {
+	const map = /** @type {RemoteQueriesMap} */ (devalue.parse(stringified_reconnects, app.decoders));
+
+	for (const [key, entry] of Object.entries(map)) {
+		const { id, payload } = split_remote_key(key);
+		const live = live_query_map.get(id)?.get(payload);
+
+		if (!live?.resource) continue;
+
+		if (entry.type === 'result') {
+			live.resource.set(parse_remote_value(entry.data, app.decoders, revive));
+			void live.resource.reconnect();
+		} else {
+			live.resource.fail(new HttpError(entry.status ?? 500, entry.error));
+		}
+	}
 };

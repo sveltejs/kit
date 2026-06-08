@@ -1,11 +1,12 @@
-import { app, query_map } from '../../client.js';
+/** @import { PointerInitial } from '../shared.svelte.js' */
+import { query_map } from '../../client.js';
 import {
 	pin_in_effect,
 	pin_while_resolving,
 	QUERY_OVERRIDE_KEY,
 	QUERY_RESOURCE_KEY
 } from '../shared.svelte.js';
-import { create_remote_key, stringify_remote_arg } from '../../../shared.js';
+import { create_remote_key } from '../../../shared.js';
 import { Query } from './instance.svelte.js';
 import { cache } from './cache.js';
 
@@ -24,24 +25,40 @@ export class QueryProxy {
 
 	/**
 	 * @param {string} id
-	 * @param {any} arg
+	 * @param {string} payload the stringified raw argument (the cache key)
 	 * @param {(key: string, payload: string) => Promise<T>} fn
+	 * @param {PointerInitial} [initial] when this proxy is
+	 *   revived from a nested pointer with a seeded value, the underlying `Query` is
+	 *   constructed directly in its resolved/errored state so it never fetches.
 	 */
-	constructor(id, arg, fn) {
+	constructor(id, payload, fn, initial) {
 		this.#id = id;
-		this.#payload = stringify_remote_arg(arg, app.hooks.transport);
-		this.#key = create_remote_key(id, this.#payload);
+		this.#payload = payload;
+		this.#key = create_remote_key(id, payload);
 		Object.defineProperty(this, QUERY_RESOURCE_KEY, { value: this.#key });
 		this.#fn = fn;
 
 		const key = this.#key;
-		const payload = this.#payload;
 		const entry = cache.ensure_entry(
 			this.#id,
 			this.#payload,
 			// IMPORTANT: This cannot close over `this` or it becomes impossible to
 			// garbage collect the QueryProxy and thus impossible to evict cache entries.
-			() => new Query(key, () => fn(key, payload))
+			// `initial` is only applied when the entry is newly created (i.e. this revival
+			// owns the cache entry), so it never clobbers an already-mounted query.
+			() => {
+				const query = new Query(key, () => fn(key, payload));
+
+				if (initial) {
+					if (initial.type === 'result') {
+						query.set(initial.value);
+					} else {
+						query.fail(initial.error);
+					}
+				}
+
+				return query;
+			}
 		);
 
 		cache.ref(this, entry, this.#id, this.#payload);
