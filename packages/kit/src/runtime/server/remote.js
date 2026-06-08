@@ -86,22 +86,12 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 			);
 		}
 
-		if (internals.type === 'form') {
+		if (internals.type === 'form' && is_form_content_type(event.request)) {
 			if (event.request.method !== 'POST') {
 				throw new SvelteKitError(
 					405,
 					'Method Not Allowed',
 					`\`form\` functions must be invoked via POST request, not ${event.request.method}`
-				);
-			}
-
-			if (!is_form_content_type(event.request)) {
-				throw new SvelteKitError(
-					415,
-					'Unsupported Media Type',
-					`\`form\` functions expect form-encoded data — received ${event.request.headers.get(
-						'content-type'
-					)}`
 				);
 			}
 
@@ -131,7 +121,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 			);
 		}
 
-		if (internals.type === 'command') {
+		if (internals.type === 'command' || internals.type === 'form') {
 			/** @type {{ payload: string, refreshes?: string[] }} */
 			const { payload, refreshes } = await event.request.json();
 			state.remote.requested = create_requested_map(refreshes);
