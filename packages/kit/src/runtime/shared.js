@@ -274,13 +274,9 @@ export function stringify_remote_arg(value, transport) {
 	if (value === undefined) return '';
 
 	// If people hit file/url size limits, we can look into using something like compress_and_encode_text from svelte.dev beyond a certain size
-	const json_string = devalue.stringify(
-		value,
-		create_remote_arg_reducers(transport, true, new Map())
-	);
+	const json = devalue.stringify(value, create_remote_arg_reducers(transport, true, new Map()));
 
-	const bytes = text_encoder.encode(json_string);
-	return base64_encode(bytes).replaceAll('=', '').replaceAll('+', '-').replaceAll('/', '_');
+	return url_friendly_base64_encode(json);
 }
 
 /**
@@ -324,9 +320,18 @@ export async function stringify_command_arg(value, transport) {
 		}
 	};
 
-	const json_string = await devalue.stringifyAsync(value, reducers);
+	const json = await devalue.stringifyAsync(value, reducers);
 
-	const bytes = text_encoder.encode(json_string);
+	return url_friendly_base64_encode(json);
+}
+
+/**
+ * Base64-encodes `string` in such a way that the result is safe to use
+ * as both a URI component and a filename
+ * @param {string} string
+ */
+function url_friendly_base64_encode(string) {
+	const bytes = text_encoder.encode(string);
 	return base64_encode(bytes).replaceAll('=', '').replaceAll('+', '-').replaceAll('/', '_');
 }
 
