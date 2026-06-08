@@ -1461,6 +1461,14 @@ async function kit({ svelte_config }) {
 						client_chunks
 					);
 				} else {
+					build_data.client = {
+						start: '',
+						imports: [],
+						stylesheets: [],
+						fonts: [],
+						uses_env_dynamic_public: false
+					};
+
 					if (fs.existsSync(server_assets)) {
 						for (const file of fs.readdirSync(server_assets)) {
 							const src = `${server_assets}/${file}`;
