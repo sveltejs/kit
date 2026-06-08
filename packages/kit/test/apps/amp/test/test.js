@@ -1,3 +1,4 @@
+import fs from 'node:fs';
 import process from 'node:process';
 import { expect } from '@playwright/test';
 import { test } from '../../../utils.js';
@@ -70,4 +71,11 @@ test.skip('throws error on encountering stylesheet links', async ({ page }) => {
 	expect(await page.textContent('body')).toContain(
 		'An AMP document cannot contain <link rel="stylesheet"> — ensure that inlineStyleThreshold is set to Infinity, and remove links from your page template and <svelte:head> elements'
 	);
+});
+
+test('skips client build if every node has CSR disabled', async () => {
+	test.skip(!!process.env.DEV);
+
+	const files = fs.existsSync('.svelte-kit/output/client/_app/immutable/nodes');
+	expect(files).toBe(false);
 });
