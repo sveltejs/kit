@@ -20,7 +20,7 @@ By default, every environment variable is implicitly available inside your app v
 
 ## Explicit environment variables
 
-As of SvelteKit 2.62, you can opt into _explicit_ environment variables, in which case you instead import environment variables from these modules:
+As of SvelteKit 2.63, you can opt into _explicit_ environment variables, in which case you instead import environment variables from these modules:
 
 - [`$app/env/private`]($app-env-private)
 - [`$app/env/public`]($app-env-public)
