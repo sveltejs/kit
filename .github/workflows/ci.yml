@@ -260,6 +260,7 @@ jobs:
       - uses: denoland/setup-deno@v2
         with:
           deno-version: ^2.2.4
+          cache: true
       - run: pnpm install --frozen-lockfile
       - run: pnpm playwright install chromium --no-shell
       - run: cd packages/kit && pnpm prepublishOnly
