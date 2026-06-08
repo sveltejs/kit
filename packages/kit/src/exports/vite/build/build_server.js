@@ -133,7 +133,11 @@ export function build_server_nodes(
 		/** @type {Set<string>} */
 		const eager_assets = new Set();
 
-		if (node.component) {
+		const uses_server_component = node.child_pages
+			? node.child_pages.some((child) => child.page_options?.ssr !== false)
+			: node.page_options?.ssr !== false;
+
+		if (node.component && uses_server_component) {
 			exports.push(
 				'let component_cache;',
 				`export const component = async () => component_cache ??= (await import('../${
