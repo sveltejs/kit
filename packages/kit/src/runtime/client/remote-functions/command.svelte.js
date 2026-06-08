@@ -4,7 +4,7 @@ import { app_dir, base } from '$app/paths/internal/client';
 import * as devalue from 'devalue';
 import { HttpError } from '@sveltejs/kit/internal';
 import { app } from '../client.js';
-import { stringify_remote_arg } from '../../shared.js';
+import { stringify_command_arg } from '../../shared.js';
 import {
 	get_remote_request_headers,
 	apply_refreshes,
@@ -56,7 +56,7 @@ export function command(id) {
 				const response = await fetch(`${base}/${app_dir}/remote/${id}`, {
 					method: 'POST',
 					body: JSON.stringify({
-						payload: stringify_remote_arg(arg, app.hooks.transport, false),
+						payload: await stringify_command_arg(arg, app.hooks.transport),
 						refreshes: Array.from(refreshes ?? [])
 					}),
 					headers
