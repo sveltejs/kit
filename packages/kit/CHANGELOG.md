@@ -74,6 +74,26 @@
 
 - chore: remove dependency on `set-cookie-parser` ([#15384](https://github.com/sveltejs/kit/pull/15384))
 
+## 2.63.1
+### Patch Changes
+
+
+- fix: use SSE for `query.live` ([#15957](https://github.com/sveltejs/kit/pull/15957))
+
+
+- fix: use forward slashes in the generated `env.d.ts` import path on Windows ([#15977](https://github.com/sveltejs/kit/pull/15977))
+
+
+- fix: allow `$app/environment` with a warning when `explicitEnvironmentVariables` is enabled ([#15980](https://github.com/sveltejs/kit/pull/15980))
+
+
+- fix: avoid importing Vite while validating explicit environment variables ([#15953](https://github.com/sveltejs/kit/pull/15953))
+
+
+- docs: adjust the release version of explicit env vars ([#15968](https://github.com/sveltejs/kit/pull/15968))
+
+
+- fix: ensure `version` is defined when importing from `$app/env` with explicit environment variables ([#15971](https://github.com/sveltejs/kit/pull/15971))
 
 ## 2.63.0
 ### Minor Changes
@@ -257,7 +277,7 @@
 
 
 - fix: don't warn about removed SSI comments in `transformPageChunk` ([#15695](https://github.com/sveltejs/kit/pull/15695))
-  
+
   Server-side include (SSI) directives like `<!--#include virtual="..." -->` are HTML comments that are replaced by servers such as nginx. Previously, removing them in `transformPageChunk` would trigger a false positive warning about breaking Svelte's hydration. Since SSI comments always start with `<!--#` and Svelte's hydration comments never do, they can be safely excluded from the check.
 
 - Change enhance function return type from void to MaybePromise<void>. ([#15710](https://github.com/sveltejs/kit/pull/15710))
@@ -507,12 +527,12 @@
 
 
 - feat: add `scroll` property to `NavigationTarget` in navigation callbacks ([#15248](https://github.com/sveltejs/kit/pull/15248))
-  
+
   Navigation callbacks (`beforeNavigate`, `onNavigate`, and `afterNavigate`) now include scroll position information via the `scroll` property on `from` and `to` targets:
-  
+
   - `from.scroll`: The scroll position at the moment navigation was triggered
   - `to.scroll`: In `beforeNavigate` and `onNavigate`, this is populated for `popstate` navigations (back/forward) with the scroll position that will be restored, and `null` for other navigation types. In `afterNavigate`, this is always the final scroll position after navigation completed.
-  
+
   This enables use cases like animating transitions based on the target scroll position when using browser back/forward navigation.
 
 - feat: `hydratable`'s injected script now works with CSP ([#15048](https://github.com/sveltejs/kit/pull/15048))
@@ -1431,7 +1451,7 @@
 
 
 - feat: support svelte.config.ts ([#13935](https://github.com/sveltejs/kit/pull/13935))
-  
+
   > **NOTE**
   >
   > Your runtime has to support importing TypeScript files for `svelte.config.ts` to work.
@@ -1732,11 +1752,11 @@
 
 
 - feat: remove the `postinstall` script to support pnpm 10 ([#13304](https://github.com/sveltejs/kit/pull/13304))
-  
+
   NOTE: users should add `"prepare": "svelte-kit sync`" to their `package.json` in order to avoid the following warning upon first running Vite:
   ```
   ▲ [WARNING] Cannot find base config file "./.svelte-kit/tsconfig.json" [tsconfig.json]
-  
+
       tsconfig.json:2:12:
         2 │   "extends": "./.svelte-kit/tsconfig.json",
           ╵              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
