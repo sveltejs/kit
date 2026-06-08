@@ -679,14 +679,14 @@ test.describe('Page options', () => {
 		page,
 		javaScriptEnabled
 	}) => {
-		test.skip(javaScriptEnabled);
+		if (!javaScriptEnabled) {
+			await page.goto('/no-csr');
+			expect(await page.textContent('h1')).toBe('look ma no javascript');
+			expect(await page.$$('link[rel="modulepreload"]')).toHaveLength(0);
 
-		await page.goto('/no-csr');
-		expect(await page.textContent('h1')).toBe('look ma no javascript');
-		expect(await page.$$('link[rel="modulepreload"]')).toHaveLength(0);
-
-		// ensure data wasn't inlined
-		expect(await page.$$('script[sveltekit\\:data-type="data"]')).toHaveLength(0);
+			// ensure data wasn't inlined
+			expect(await page.$$('script[sveltekit\\:data-type="data"]')).toHaveLength(0);
+		}
 	});
 
 	test('does not SSR page with ssr=false', async ({ page, javaScriptEnabled }) => {
