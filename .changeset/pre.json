@@ -57,7 +57,6 @@
     "test-build-errors": "0.0.0-next.0"
   },
   "changesets": [
-    "better-cooks-rush",
     "blue-plants-work",
     "chilly-berries-press",
     "clean-papers-give",
@@ -69,8 +68,10 @@
     "early-worlds-slide",
     "easy-shrimps-like",
     "eighty-paws-love",
+    "fast-bugs-fry",
     "fine-ghosts-camp",
     "five-readers-march",
+    "fix-env-dts-windows-path",
     "fluffy-tires-judge",
     "forty-ducks-fly",
     "gentle-radios-go",
@@ -83,14 +84,14 @@
     "nasty-impalas-wear",
     "nine-coins-cheer",
     "nine-suns-nail",
-    "old-mails-wait",
+    "no-vite-in-env-validator",
     "pink-cobras-rush",
     "plenty-cougars-wave",
     "polite-lemons-refuse",
+    "rich-dragons-rest",
     "salty-chefs-sleep",
     "shiny-feet-crash",
     "spicy-drinks-build",
-    "thick-dolls-run",
-    "thirty-corners-tie"
+    "wide-otters-shout"
   ]
 }
