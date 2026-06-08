@@ -73,9 +73,16 @@ test.skip('throws error on encountering stylesheet links', async ({ page }) => {
 	);
 });
 
-test('skips client build if every node has CSR disabled', async () => {
+test('skips client build if every node has CSR disabled', async ({ page, request }) => {
 	test.skip(!!process.env.DEV);
 
 	const files = fs.existsSync('.svelte-kit/output/client/_app/immutable/nodes');
 	expect(files).toBe(false);
+
+	await page.goto('/assets');
+	const src = await page.locator('img').getAttribute('src');
+	if (!src) throw new Error('Image src not found on /assets page');
+	
+	const response = await request.get(src);
+	expect(response.status()).toBe(200);
 });
