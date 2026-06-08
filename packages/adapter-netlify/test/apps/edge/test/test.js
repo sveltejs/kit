@@ -27,3 +27,14 @@ test('_headers are copied to publish directory', () => {
 	const headers = fs.readFileSync(path.resolve(import.meta.dirname, '../build/_headers'), 'utf-8');
 	expect(headers).toContain('X-Custom-Header: test-value');
 });
+
+test('treeshakes component from the server bundle if SSR is turned off', async ({ page }) => {
+	await page.goto('/treeshake-server');
+	const component_text = 'this should never appear in the server bundle';
+	const server_bundle = fs.readFileSync(
+		path.resolve(import.meta.dirname, '../.netlify/edge-functions/render.js'),
+		'utf-8'
+	);
+	expect(server_bundle).not.toContain(component_text);
+	await expect(page.locator('p')).toHaveText(component_text);
+});
