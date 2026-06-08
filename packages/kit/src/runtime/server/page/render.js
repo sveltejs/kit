@@ -395,7 +395,7 @@ export async function render_response({
 
 			state.prerendering.dependencies.set(
 				pathname,
-				create_server_routing_response(route, event.params, new URL(pathname, event.url), manifest)
+				create_server_routing_response(route, event.params, new URL(pathname, event.url), client)
 			);
 		}
 
@@ -502,7 +502,7 @@ export async function render_response({
 
 			if (client.routes) {
 				if (route) {
-					const stringified = generate_route_object(route, event.url, manifest).replaceAll(
+					const stringified = generate_route_object(route, event.url, client).replaceAll(
 						'\n',
 						'\n\t\t\t\t\t\t\t'
 					); // make output after it's put together with the rest more readable
