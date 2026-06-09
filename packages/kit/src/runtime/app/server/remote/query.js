@@ -1,7 +1,7 @@
 /** @import { RemoteLiveQuery, RemoteLiveQueryFunction, RemoteQuery, RemoteQueryFunction } from '@sveltejs/kit' */
 /** @import { RemoteInternals, MaybePromise, RequestState, RemoteQueryLiveInternals, RemoteQueryBatchInternals, RemoteQueryInternals, RemoteLiveQueryUserFunctionReturnType } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
-import { get_request_store } from '@sveltejs/kit/internal/server';
+import { get_request_store, with_request_store } from '@sveltejs/kit/internal/server';
 import { create_remote_key, stringify_remote_arg } from '../../../shared.js';
 import { prerendering } from '$app/env/internal';
 import {
@@ -79,10 +79,16 @@ export function query(validate_or_fn, maybe_fn) {
 		bind(payload, validated_arg) {
 			const { event, state } = get_request_store();
 
-			const child_state = { ...state, is_in_remote_function_query: true };
-
-			return create_query_resource(__, payload, child_state, () =>
-				run_remote_function(event, child_state, false, () => validated_arg, fn)
+			return create_query_resource(__, payload, state, () =>
+				run_remote_function(
+					event,
+					state,
+					false,
+					() => validated_arg,
+					() => {
+						return with_request_store({ event, state: { ...state, is_in_remote_query: true } }, fn);
+					}
+				)
 			);
 		}
 	};
@@ -98,9 +104,17 @@ export function query(validate_or_fn, maybe_fn) {
 		const { event, state } = get_request_store();
 		const payload = stringify_remote_arg(arg, state.transport);
 
-		return create_query_resource(__, payload, state, () =>
-			run_remote_function(event, state, false, () => validate(arg), fn)
-		);
+		return create_query_resource(__, payload, state, () => {
+			return run_remote_function(
+				event,
+				state,
+				false,
+				() => validate(arg),
+				() => {
+					return with_request_store({ event, state: { ...state, is_in_remote_query: true } }, fn);
+				}
+			);
+		});
 	};
 
 	Object.defineProperty(wrapper, '__', { value: __ });
