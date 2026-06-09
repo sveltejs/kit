@@ -1,7 +1,7 @@
 /** @import { RemoteLiveQuery, RemoteLiveQueryFunction, RemoteQuery, RemoteQueryFunction } from '@sveltejs/kit' */
 /** @import { RemoteInternals, MaybePromise, RequestState, RemoteQueryLiveInternals, RemoteQueryBatchInternals, RemoteQueryInternals, RemoteLiveQueryUserFunctionReturnType } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
-import { get_request_store, with_request_store } from '@sveltejs/kit/internal/server';
+import { get_request_store } from '@sveltejs/kit/internal/server';
 import { create_remote_key, stringify_remote_arg } from '../../../shared.js';
 import { prerendering } from '$app/env/internal';
 import {
@@ -82,15 +82,10 @@ export function query(validate_or_fn, maybe_fn) {
 			return create_query_resource(__, payload, state, () =>
 				run_remote_function(
 					event,
-					state,
+					{ ...state, is_in_remote_query: true },
 					false,
 					() => validated_arg,
-					(arg) => {
-						return with_request_store(
-							{ event, state: { ...state, is_in_remote_query: true } },
-							() => fn(arg)
-						);
-					}
+					fn
 				)
 			);
 		}
@@ -107,19 +102,15 @@ export function query(validate_or_fn, maybe_fn) {
 		const { event, state } = get_request_store();
 		const payload = stringify_remote_arg(arg, state.transport);
 
-		return create_query_resource(__, payload, state, () => {
-			return run_remote_function(
+		return create_query_resource(__, payload, state, () =>
+			run_remote_function(
 				event,
-				state,
+				{ ...state, is_in_remote_query: true },
 				false,
 				() => validate(arg),
-				(arg) => {
-					return with_request_store({ event, state: { ...state, is_in_remote_query: true } }, () =>
-						fn(arg)
-					);
-				}
-			);
-		});
+				fn
+			)
+		);
 	};
 
 	Object.defineProperty(wrapper, '__', { value: __ });
@@ -174,7 +165,14 @@ function live(validate_or_fn, maybe_fn) {
 	 * @param {any} get_input
 	 */
 	const run = (event, state, get_input) =>
-		run_remote_generator(event, state, false, get_input, fn, __.name);
+		run_remote_generator(
+			event,
+			{ ...state, is_in_remote_query: true },
+			false,
+			get_input,
+			fn,
+			__.name
+		);
 
 	/** @type {RemoteQueryLiveInternals} */
 	const __ = {
@@ -295,7 +293,7 @@ function batch(validate_or_fn, maybe_fn) {
 				try {
 					return await run_remote_function(
 						event,
-						state,
+						{ ...state, is_in_remote_query: true },
 						false,
 						async () => Promise.all(entries.map((entry) => entry.get_validated())),
 						async (input) => {

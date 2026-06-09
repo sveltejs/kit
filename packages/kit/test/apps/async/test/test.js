@@ -704,6 +704,23 @@ test.describe('remote functions', () => {
 		}
 	});
 
+	test('queries cannot set cookies or headers', async ({ page }) => {
+		await page.goto('/remote/query-event-guards');
+
+		await expect(page.locator('#result')).toHaveText(
+			'Cannot set cookies in `query` or `prerender` functions | setHeaders is not allowed in remote functions'
+		);
+	});
+
+	test('queries nested inside live queries are not implicitly serialized', async ({ page }) => {
+		await page.goto('/remote/live-nested-query');
+
+		await expect(page.locator('#live-result')).toHaveText('NESTED-SECRET');
+
+		// the nested query's raw value must not leak into the page payload
+		expect(await page.content()).not.toContain('nested-secret');
+	});
+
 	test('awaiting multiple queries inside $derived does not fail mutation validation', async ({
 		page
 	}) => {
