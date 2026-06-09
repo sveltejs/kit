@@ -130,7 +130,7 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 			const result = await run_remote_function(event, state, false, () => validate(arg), fn);
 
 			if (state.prerendering) {
-				const body = { type: 'result', result: stringify(result, state.transport) };
+				const body = { type: 'result', data: stringify({ _: result }, state.transport) };
 				state.prerendering.dependencies.set(url, {
 					body: JSON.stringify(body),
 					response: json(body)

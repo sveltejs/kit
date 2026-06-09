@@ -96,25 +96,21 @@ export function prerender(id) {
 					}
 				}
 
-				const response = await remote_request(url, { headers });
+				const result = await remote_request(url, { headers });
 
-				if (response.redirect) {
-					void goto(response.redirect);
+				if (result.redirect) {
+					void goto(result.redirect);
 					return;
 				}
 
-				const node = /** @type {Record<string, RemoteFunctionDataNode>} */ (response.p)[cache_key];
-
-				if (node.e) {
-					throw new HttpError(node.e[0], node.e[1]);
-				}
+				const data = result._;
 
 				// For successful prerender requests, save to cache
 				if (prerender_cache) {
-					void put(url, devalue.stringify(node.v, app.encoders));
+					void put(url, devalue.stringify(data, app.encoders));
 				}
 
-				return node.v;
+				return data;
 			});
 
 			prerender_resources.set(cache_key, new WeakRef(resource));

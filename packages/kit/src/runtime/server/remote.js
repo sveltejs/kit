@@ -242,9 +242,10 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 			}
 
 			case 'prerender': {
-				await with_request_store({ event, state }, () =>
+				data._ = await with_request_store({ event, state }, () =>
 					fn(parse_remote_arg(additional_args, transport))
 				);
+
 				break;
 			}
 
@@ -254,7 +255,10 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 					new URL(event.request.url).searchParams.get('payload')
 				);
 
-				await with_request_store({ event, state }, () => fn(parse_remote_arg(payload, transport)));
+				data._ = await with_request_store({ event, state }, () =>
+					fn(parse_remote_arg(payload, transport))
+				);
+
 				break;
 			}
 		}
