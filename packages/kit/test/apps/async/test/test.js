@@ -721,6 +721,18 @@ test.describe('remote functions', () => {
 		expect(await page.content()).not.toContain('nested-secret');
 	});
 
+	test('requested(...) works in form handlers regardless of progressive enhancement', async ({
+		page
+	}) => {
+		await page.goto('/remote/form/requested');
+
+		await expect(page.locator('#form-result')).toHaveText('not submitted');
+
+		await page.locator('#requested-submit').click();
+
+		await expect(page.locator('#form-result')).toHaveText('submitted successfully');
+	});
+
 	test('awaiting multiple queries inside $derived does not fail mutation validation', async ({
 		page
 	}) => {

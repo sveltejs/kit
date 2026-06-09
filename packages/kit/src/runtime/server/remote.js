@@ -501,7 +501,10 @@ async function handle_remote_form_post_internal(event, state, manifest, id) {
 			data.id = JSON.parse(decodeURIComponent(action_id));
 		}
 
-		await with_request_store({ event, state }, () => fn(data, meta, form_data));
+		await with_request_store(
+			{ event, state: { ...state, is_in_remote_form_or_command: true } },
+			() => fn(data, meta, form_data)
+		);
 
 		// We don't want the data to appear on `let { form } = $props()`, which is why we're not returning it.
 		// It is instead available on `myForm.result`, setting of which happens within the remote `form` function.
