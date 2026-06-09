@@ -820,7 +820,7 @@ We can customize what happens when the form is submitted with the `enhance` meth
 </form>
 ```
 
-> When using `enhance`, the `<form>` is not automatically reset — you must call `form.element.reset()` if you want to clear the inputs.
+> [!NOTE] When using `enhance`, the `<form>` is not automatically reset — you must call `form.element.reset()` if you want to clear the inputs.
 
 The callback receives a copy of the form instance. It has all the same properties and methods except `enhance`, and `form.submit()` performs the submission directly without re-running the enhance callback. Inside the callback, `form.element` is always defined.
 
