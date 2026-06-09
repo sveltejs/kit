@@ -32,7 +32,7 @@ test('treeshakes component from the server bundle if SSR is turned off', async (
 	await page.goto('/treeshake-server');
 	const component_text = 'this should never appear in the server bundle';
 	const server_bundle = fs.readFileSync(
-		path.resolve(import.meta.dirname, '../.netlify/edge-functions/render.js'),
+		path.resolve(import.meta.dirname, '../.netlify/v1/edge-functions/sveltekit-render.js'),
 		'utf-8'
 	);
 	expect(server_bundle).not.toContain(component_text);
