@@ -48,30 +48,38 @@ export function query_batch(id) {
 					const batched = batching;
 					batching = new Map();
 
-					const response = await remote_request(`${base}/${app_dir}/remote/${id}`, {
-						method: 'POST',
-						body: JSON.stringify({
-							payloads: Array.from(batched.keys())
-						}),
-						headers
-					});
+					try {
+						const response = await remote_request(`${base}/${app_dir}/remote/${id}`, {
+							method: 'POST',
+							body: JSON.stringify({
+								payloads: Array.from(batched.keys())
+							}),
+							headers
+						});
 
-					if (response.redirect) {
-						await goto(response.redirect);
-						return;
-					}
-
-					for (const resolvers of batched.values()) {
-						for (const { resolve, reject } of resolvers) {
-							// TODO
-							// if (results[i].type === 'error') {
-							// 	reject(new HttpError(results[i].status, results[i].error));
-							// } else {
-							// 	resolve(results[i].data);
-							// }
-							resolve();
+						if (response.redirect) {
+							await goto(response.redirect);
+							return;
 						}
-						// i++;
+
+						for (const resolvers of batched.values()) {
+							for (const { resolve, reject } of resolvers) {
+								// TODO
+								// if (results[i].type === 'error') {
+								// 	reject(new HttpError(results[i].status, results[i].error));
+								// } else {
+								// 	resolve(results[i].data);
+								// }
+								resolve();
+							}
+							// i++;
+						}
+					} catch (e) {
+						for (const resolvers of batched.values()) {
+							for (const { resolve, reject } of resolvers) {
+								reject(e);
+							}
+						}
 					}
 
 					// try {
