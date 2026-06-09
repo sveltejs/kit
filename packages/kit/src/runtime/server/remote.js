@@ -1,5 +1,5 @@
 /** @import { ActionResult, RemoteForm, RequestEvent, SSRManifest, Transport } from '@sveltejs/kit' */
-/** @import { RemoteFormInternals, RemoteFunctionData, RemoteFunctionResponse, RemoteInternals, RequestState, SSROptions } from 'types' */
+/** @import { RemoteFormInternals, RemoteFunctionData, RemoteFunctionDataNode, RemoteFunctionResponse, RemoteInternals, RequestState, SSROptions } from 'types' */
 
 import { json, error } from '@sveltejs/kit';
 import { HttpError, Redirect, SvelteKitError } from '@sveltejs/kit/internal';
@@ -139,14 +139,13 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 			const { payload, refreshes } = await event.request.json();
 			state.remote.requested = create_requested_map(refreshes);
 			const arg = parse_remote_arg(payload, transport);
-			const data = await with_request_store({ event, state }, () => fn(arg));
+			const _ = await with_request_store({ event, state }, () => fn(arg));
+			const data = await collect_remote_data({ _ }, event, state, options);
 
 			return json(
 				/** @type {RemoteFunctionResponse} */ ({
 					type: 'result',
-					result: stringify(data, transport),
-					refreshes: await serialize_singleflight(state.remote.refreshes),
-					reconnects: await serialize_singleflight(state.remote.reconnects)
+					data: stringify(data, transport)
 				})
 			);
 		}
@@ -270,9 +269,6 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 			/** @type {RemoteFunctionResponse} */ ({
 				type: 'result',
 				data: stringify(data, transport)
-				// result: stringify(data, transport),
-				// refreshes: await serialize_singleflight(state.remote.refreshes),
-				// reconnects: await serialize_singleflight(state.remote.reconnects)
 			})
 		);
 	} catch (error) {
@@ -358,6 +354,7 @@ export async function collect_remote_data(data, event, state, options) {
 		return [status, await handle_error_and_jsonify(event, state, options, error)];
 	}
 
+	/** @type {Promise<any>[]} */
 	const promises = [];
 
 	if (state.remote.data) {
@@ -397,15 +394,30 @@ export async function collect_remote_data(data, event, state, options) {
 		}
 	}
 
+	/**
+	 * @param {RemoteFunctionDataNode} node
+	 * @param {Promise<any>} promise
+	 */
+	function add(node, promise) {
+		promises.push(
+			promise.then(
+				(v) => (node.v = v),
+				async (e) => {
+					node.e = await convert_error(e);
+				}
+			)
+		);
+	}
+
 	if (state.remote.refreshes) {
 		for (const [key, fn] of state.remote.refreshes) {
-			promises.push(fn().then((value) => ((data.q ??= {})[key] = value)));
+			add(((data.q ??= {})[key] ??= {}), fn());
 		}
 	}
 
 	if (state.remote.reconnects) {
 		for (const [key, fn] of state.remote.reconnects) {
-			promises.push(fn().then((value) => ((data.q ??= {})[key] = value)));
+			add(((data.l ??= {})[key] ??= {}), fn());
 		}
 	}
 

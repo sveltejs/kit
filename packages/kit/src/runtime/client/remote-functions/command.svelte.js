@@ -1,16 +1,10 @@
 /** @import { RemoteCommand, RemoteQueryUpdate } from '@sveltejs/kit' */
-/** @import { RemoteFunctionResponse } from 'types' */
+/** @import { RemoteFunctionDataNode } from 'types' */
 import { app_dir, base } from '$app/paths/internal/client';
-import * as devalue from 'devalue';
-import { HttpError } from '@sveltejs/kit/internal';
+import { Redirect } from '@sveltejs/kit/internal';
 import { app } from '../client.js';
-import { stringify_command_arg } from '../../shared.js';
-import {
-	get_remote_request_headers,
-	apply_refreshes,
-	categorize_updates,
-	apply_reconnections
-} from './shared.svelte.js';
+import { create_remote_key, stringify_command_arg } from '../../shared.js';
+import { get_remote_request_headers, categorize_updates, remote_request } from './shared.svelte.js';
 
 /**
  * Client-version of the `command` function from `$app/server`.
@@ -53,38 +47,28 @@ export function command(id) {
 					throw updates_error;
 				}
 
-				const response = await fetch(`${base}/${app_dir}/remote/${id}`, {
-					method: 'POST',
-					body: JSON.stringify({
-						payload: await stringify_command_arg(arg, app.hooks.transport),
-						refreshes: Array.from(refreshes ?? [])
-					}),
-					headers
-				});
+				try {
+					const response = await remote_request(`${base}/${app_dir}/remote/${id}`, {
+						method: 'POST',
+						body: JSON.stringify({
+							payload: await stringify_command_arg(arg, app.hooks.transport),
+							refreshes: Array.from(refreshes ?? [])
+						}),
+						headers
+					});
 
-				if (!response.ok) {
-					// We only end up here in case of a network error or if the server has an internal error
-					// (which shouldn't happen because we handle errors on the server and always send a 200 response)
-					throw new Error('Failed to execute remote function');
-				}
+					console.log('response', response);
 
-				const result = /** @type {RemoteFunctionResponse} */ (await response.json());
-				if (result.type === 'redirect') {
-					throw new Error(
-						'Redirects are not allowed in commands. Return a result instead and use goto on the client'
-					);
-				} else if (result.type === 'error') {
-					throw new HttpError(result.status ?? 500, result.error);
-				} else {
-					if (result.refreshes) {
-						apply_refreshes(result.refreshes);
+					return response._;
+				} catch (e) {
+					if (e instanceof Redirect) {
+						// eslint-disable-next-line preserve-caught-error
+						throw new Error(
+							'Redirects are not allowed in commands. Return a result instead and use goto on the client'
+						);
 					}
 
-					if (result.reconnects) {
-						apply_reconnections(result.reconnects);
-					}
-
-					return devalue.parse(result.result, app.decoders);
+					throw e;
 				}
 			} finally {
 				overrides?.forEach((fn) => fn());

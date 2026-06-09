@@ -312,11 +312,10 @@ export type RemoteFunctionDataNode = {
 };
 
 export type RemoteFunctionData = {
+	_?: any;
 	q?: Record<string, RemoteFunctionDataNode>;
 	l?: Record<string, RemoteFunctionDataNode>;
 	p?: Record<string, RemoteFunctionDataNode>;
-	c?: Record<string, RemoteFunctionDataNode>;
-	f?: Record<string, RemoteFunctionDataNode>;
 };
 
 export type RemoteFunctionResponse =
