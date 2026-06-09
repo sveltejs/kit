@@ -13,7 +13,7 @@ import { posixify } from '../../../utils/os.js';
  * @param {Array<{ hash: string, file: string }>} remotes
  * @param {ServerMetadata} metadata
  * @param {string} cwd
- * @param {Rolldown.RolldownOutput} server_bundle
+ * @param {(Rolldown.OutputAsset | Rolldown.OutputChunk)[]} server_chunks
  * @param {NonNullable<import('vitest/config').ViteUserConfig['build']>['sourcemap']} sourcemap
  */
 export async function treeshake_prerendered_remotes(
@@ -22,7 +22,7 @@ export async function treeshake_prerendered_remotes(
 	remotes,
 	metadata,
 	cwd,
-	server_bundle,
+	server_chunks,
 	sourcemap
 ) {
 	if (remotes.length === 0) return;
@@ -45,7 +45,7 @@ export async function treeshake_prerendered_remotes(
 		// remove file extension
 		const remote_filename = path.basename(remote.file).split('.').slice(0, -1).join('.');
 
-		const remote_chunk = Object.values(server_bundle).find((chunk) => {
+		const remote_chunk = server_chunks.find((chunk) => {
 			return chunk.name === remote_filename;
 		});
 
@@ -89,7 +89,7 @@ export async function treeshake_prerendered_remotes(
 		const stubbed = modified_code.toString();
 		fs.writeFileSync(chunk_path, stubbed);
 
-		const bundle = /** @type {import('vite').Rolldown.RolldownOutput} */ (
+		const bundle = /** @type {Rolldown.RolldownOutput} */ (
 			await vite.build({
 				configFile: false,
 				build: {

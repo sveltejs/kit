@@ -1400,7 +1400,7 @@ function kit({ svelte_config, adapter }) {
 			}
 			mkdirp(out);
 
-			const server_bundle = /** @type {Rolldown.RolldownOutput} */ (
+			const { output: server_chunks } = /** @type {Rolldown.RolldownOutput} */ (
 				await builder.build(builder.environments.ssr)
 			);
 
@@ -1434,7 +1434,6 @@ function kit({ svelte_config, adapter }) {
 				})};\n`
 			);
 
-			const server_chunks = Object.values(server_bundle);
 			const assets_path = `${kit.appDir}/immutable/assets`;
 
 			// first, build server nodes without the client manifest so we can analyse it
@@ -1482,9 +1481,7 @@ function kit({ svelte_config, adapter }) {
 			);
 
 			if (!skip_client_build) {
-				const nodes = Object.values(
-					/** @type {import('types').ServerMetadata} */ (build_metadata).nodes
-				);
+				const nodes = Object.values(build_metadata.nodes);
 
 				// Through the finished analysis we can now check if any node has server or universal load functions
 				const has_server_load = nodes.some((node) => node.has_server_load);
@@ -1666,7 +1663,7 @@ function kit({ svelte_config, adapter }) {
 				remotes,
 				metadata,
 				process.cwd(),
-				server_bundle,
+				server_chunks,
 				vite_config.build.sourcemap
 			);
 
