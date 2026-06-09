@@ -727,11 +727,18 @@ export interface RequestState {
 	readonly remote: {
 		/** Resolved query/prerender data, populated by `await myQuery()` or `myQuery.set(...)` */
 		data: null | Map<RemoteInternals, Record<string, MaybePromise<any>>>;
+		/**
+		 * Data that is implicitly included because it was awaited during render.
+		 * This is serialized during SSR if the promise already resolved
+		 */
+		implicit: null | Map<RemoteInternals, Record<string, () => MaybePromise<any>>>;
+		/**
+		 * Data that is explicitly included because of a `set(...)` or `refresh()`.
+		 * This is always awaited
+		 */
+		explicit: null | Map<RemoteInternals, Record<string, () => MaybePromise<any>>>;
 		/** Instances created via `myForm.for(...)` */
 		forms: null | Map<string, any>;
-		/** Keys that should be refreshed, and a function to get the data if not in `remote.data` */
-		refreshes: null | Map<string, () => Promise<any>>;
-		reconnects: null | Map<string, () => Promise<any>>;
 		/** A map of remote function ID to payloads requested for refreshing by the client */
 		requested: null | Map<string, string[]>;
 		/** A map of query.batch ID to payloads requested for that batch within the same macrotask */
@@ -754,6 +761,8 @@ export interface RequestState {
 		live_iterators: null | Map<string, SharedIterator<any>>;
 	};
 	readonly is_in_remote_function: boolean;
+	readonly is_in_remote_form_or_command: boolean;
+	readonly is_in_remote_query: boolean;
 	readonly is_in_render: boolean;
 	readonly is_in_universal_load: boolean;
 }

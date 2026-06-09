@@ -204,7 +204,6 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 
 	const seen = new Set();
 	const written = new Set();
-	const remote_responses = new Map();
 
 	/** @type {Map<string, Set<string>>} */
 	const expected_hashlinks = new Map();

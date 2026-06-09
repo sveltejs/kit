@@ -73,6 +73,10 @@ export async function get_response(internals, payload, state, get_result) {
 	await 0;
 
 	const cache = get_cache(internals, state);
+
+	// TODO don't do this if we're inside a query
+	get_implicit_lookup(internals, state)[payload] = get_result;
+
 	return (cache[payload] ??= get_result());
 }
 
@@ -228,6 +232,35 @@ export function get_cache(internals, state = get_request_store().state) {
 	if (cache === undefined) {
 		cache = {};
 		(state.remote.data ??= new Map()).set(internals, cache);
+	}
+
+	return cache;
+}
+
+/**
+ * @param {RemoteInternals} internals
+ * @param {RequestState} state
+ */
+export function get_implicit_lookup(internals, state = get_request_store().state) {
+	let cache = state.remote.explicit?.get(internals);
+
+	if (cache === undefined) {
+		cache = {};
+		(state.remote.explicit ??= new Map()).set(internals, cache);
+	}
+
+	return cache;
+}
+/**
+ * @param {RemoteInternals} internals
+ * @param {RequestState} state
+ */
+export function get_explicit_lookup(internals, state = get_request_store().state) {
+	let cache = state.remote.explicit?.get(internals);
+
+	if (cache === undefined) {
+		cache = {};
+		(state.remote.explicit ??= new Map()).set(internals, cache);
 	}
 
 	return cache;

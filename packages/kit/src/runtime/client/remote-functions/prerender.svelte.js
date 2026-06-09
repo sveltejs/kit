@@ -1,12 +1,10 @@
 /** @import { RemotePrerenderFunction } from '@sveltejs/kit' */
-/** @import { RemoteFunctionDataNode } from 'types' */
 import { app_dir, base } from '$app/paths/internal/client';
 import { version } from '$app/env';
 import * as devalue from 'devalue';
 import { app, goto, prerender_responses } from '../client.js';
 import { get_remote_request_headers, remote_request } from './shared.svelte.js';
 import { create_remote_key, stringify_remote_arg } from '../../shared.js';
-import { HttpError } from '@sveltejs/kit/internal';
 
 // Initialize Cache API for prerender functions
 const CACHE_NAME = __SVELTEKIT_DEV__ ? `sveltekit:${Date.now()}` : `sveltekit:${version}`;

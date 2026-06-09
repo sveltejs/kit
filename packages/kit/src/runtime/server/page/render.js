@@ -21,10 +21,8 @@ import {
 	get_global_name,
 	handle_error_and_jsonify
 } from '../utils.js';
-import { create_remote_key } from '../../shared.js';
 import { get_status } from '../../../utils/error.js';
 import * as env from '__sveltekit/env';
-import { noop } from '../../../utils/functions.js';
 import { collect_remote_data } from '../remote.js';
 
 // TODO rename this function/module

@@ -1,5 +1,5 @@
 /** @import { ActionResult, RemoteForm, RequestEvent, SSRManifest } from '@sveltejs/kit' */
-/** @import { RemoteFormInternals, RemoteFunctionData, RemoteFunctionDataNode, RemoteFunctionResponse, RemoteInternals, RequestState, SSROptions } from 'types' */
+/** @import { RemoteFormInternals, RemoteFunctionData, RemoteFunctionResponse, RemoteInternals, RequestState, SSROptions } from 'types' */
 
 import { json, error } from '@sveltejs/kit';
 import { HttpError, Redirect, SvelteKitError } from '@sveltejs/kit/internal';
@@ -215,7 +215,10 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 				}
 
 				const fn = internals.fn;
-				data._ = await with_request_store({ event, state }, () => fn(input, meta, form_data));
+				data._ = await with_request_store(
+					{ event, state: { ...state, is_in_remote_form_or_command: true } },
+					() => fn(input, meta, form_data)
+				);
 
 				if (data._.issues) {
 					// special case — don't serialize refreshes/reconnects
@@ -236,7 +239,10 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 				state.remote.requested = create_requested_map(refreshes);
 				const arg = parse_remote_arg(payload, transport);
 
-				data._ = await with_request_store({ event, state }, () => fn(arg));
+				data._ = await with_request_store(
+					{ event, state: { ...state, is_in_remote_form_or_command: true } },
+					() => fn(arg)
+				);
 
 				break;
 			}
@@ -328,25 +334,56 @@ export async function collect_remote_data(data, event, state, options) {
 	/** @type {Promise<any>[]} */
 	const promises = [];
 
-	if (state.remote.data) {
-		for (const [internals, cache] of state.remote.data) {
-			// remote functions without an `id` aren't exported, and thus
-			// cannot be called from the client
-			if (!internals.id) continue;
-
-			for (const key in cache) {
+	if (state.remote.explicit) {
+		for (const [internals, record] of state.remote.explicit) {
+			for (const key in record) {
 				const remote_key = create_remote_key(internals.id, key);
-				const type = /** @type {keyof RemoteFunctionData} */ (
+
+				const type = /** @type {'p' | 'q' | 'l'} */ (
 					internals.type === 'query_live' ? 'l' : internals.type[0]
 				);
+
+				const promise = state.remote.data?.get(internals)?.[key] ?? record[key]();
+				const node = ((data[type] ??= {})[remote_key] ??= {});
+
+				promises.push(
+					Promise.resolve(promise).then(
+						(v) => (node.v = v),
+						async (e) => {
+							if (e instanceof Redirect) {
+								// already handled elsewhere
+								return;
+							}
+
+							node.e = await convert_error(e);
+						}
+					)
+				);
+			}
+		}
+	}
+
+	await Promise.all(promises);
+
+	if (state.remote.implicit) {
+		for (const [internals, record] of state.remote.implicit) {
+			for (const key in record) {
+				const remote_key = create_remote_key(internals.id, key);
+
+				const type = /** @type {'p' | 'q' | 'l'} */ (
+					internals.type === 'query_live' ? 'l' : internals.type[0]
+				);
+
+				const promise = state.remote.data?.get(internals)?.[key] ?? record[key]();
+				const node = ((data[type] ??= {})[remote_key] ??= {});
 
 				let resolved = true;
 
 				await Promise.race([
-					Promise.resolve(cache[key]).then(
+					Promise.resolve(promise).then(
 						(v) => {
 							if (resolved) {
-								(data[type] ??= {})[remote_key] = { v };
+								node.v = v;
 							}
 						},
 						(e) => {
@@ -358,7 +395,7 @@ export async function collect_remote_data(data, event, state, options) {
 							if (resolved) {
 								promises.push(
 									convert_error(e).then((e) => {
-										(data[type] ??= {})[remote_key] = { e };
+										node.e = e;
 									})
 								);
 							}
@@ -367,40 +404,6 @@ export async function collect_remote_data(data, event, state, options) {
 					Promise.resolve().then(() => (resolved = false))
 				]);
 			}
-		}
-	}
-
-	/**
-	 * @param {RemoteFunctionDataNode} node
-	 * @param {Promise<any>} promise
-	 */
-	function add(node, promise) {
-		data.r = true;
-
-		promises.push(
-			Promise.resolve(promise).then(
-				(v) => (node.v = v),
-				async (e) => {
-					if (e instanceof Redirect) {
-						// already handled elsewhere
-						return;
-					}
-
-					node.e = await convert_error(e);
-				}
-			)
-		);
-	}
-
-	if (state.remote.refreshes) {
-		for (const [key, fn] of state.remote.refreshes) {
-			add(((data.q ??= {})[key] ??= {}), fn());
-		}
-	}
-
-	if (state.remote.reconnects) {
-		for (const [key, fn] of state.remote.reconnects) {
-			add(((data.l ??= {})[key] ??= {}), fn());
 		}
 	}
 

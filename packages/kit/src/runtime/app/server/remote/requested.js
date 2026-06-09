@@ -3,6 +3,7 @@
 import { get_request_store } from '@sveltejs/kit/internal/server';
 import { create_remote_key, parse_remote_arg } from '../../../shared.js';
 import { noop } from '../../../../utils/functions.js';
+import { get_cache } from './shared.js';
 
 /**
  * In the context of a remote `command` or `form` request, returns an iterable
@@ -115,15 +116,12 @@ export function requested(query, limit) {
 
 	const requested = state.remote.requested;
 	const payloads = requested?.get(__.id) ?? [];
+
 	// note: don't initialize these maps here -- they will be initialized by the
 	// command/form wrapper when we enter them, and if we initialize them here
 	// we will enable requested(...) in contexts where it shouldn't be allowed,
 	// such as load functions or other server functions
-	const refreshes = state.remote.refreshes;
-	const reconnects = state.remote.reconnects;
-	const store = __.type === 'query_live' ? reconnects : refreshes;
-
-	if (!store) {
+	if (!state.is_in_remote_form_or_command) {
 		throw new Error(
 			'requested(...) can only be called in the context of a command/form remote function'
 		);
@@ -138,8 +136,7 @@ export function requested(query, limit) {
 		const promise = Promise.reject(error);
 		promise.catch(noop);
 
-		const key = create_remote_key(__.id, payload);
-		store.set(key, () => promise);
+		get_cache(__, state)[payload] = promise;
 	};
 
 	for (const payload of skipped) {

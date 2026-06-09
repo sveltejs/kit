@@ -147,14 +147,16 @@ export async function internal_respond(request, options, manifest, state) {
 		},
 		remote: {
 			data: null,
+			explicit: null,
+			implicit: null,
 			forms: null,
-			refreshes: null,
 			requested: null,
-			reconnects: null,
 			batches: null,
 			live_iterators: null
 		},
 		is_in_remote_function: false,
+		is_in_remote_form_or_command: false,
+		is_in_remote_query: false,
 		is_in_render: false,
 		is_in_universal_load: false
 	};

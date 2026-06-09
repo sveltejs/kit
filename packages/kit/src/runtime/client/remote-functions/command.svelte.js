@@ -1,9 +1,7 @@
 /** @import { RemoteCommand, RemoteQueryUpdate } from '@sveltejs/kit' */
-/** @import { RemoteFunctionDataNode } from 'types' */
 import { app_dir, base } from '$app/paths/internal/client';
-import { Redirect } from '@sveltejs/kit/internal';
 import { app } from '../client.js';
-import { create_remote_key, stringify_command_arg } from '../../shared.js';
+import { stringify_command_arg } from '../../shared.js';
 import { get_remote_request_headers, categorize_updates, remote_request } from './shared.svelte.js';
 
 /**

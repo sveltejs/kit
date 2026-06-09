@@ -4,7 +4,6 @@ import { goto, query_map, query_responses } from '../../client.js';
 import { get_remote_request_headers, QUERY_FUNCTION_ID, remote_request } from '../shared.svelte.js';
 import { DEV } from 'esm-env';
 import { QueryProxy } from './proxy.js';
-import { Redirect } from '@sveltejs/kit/internal';
 
 /**
  * @param {string} id

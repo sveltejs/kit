@@ -2,17 +2,16 @@
 /** @import { RemoteInternals, MaybePromise, RequestState, RemoteQueryLiveInternals, RemoteQueryBatchInternals, RemoteQueryInternals, RemoteLiveQueryUserFunctionReturnType } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 import { get_request_store } from '@sveltejs/kit/internal/server';
-import { create_remote_key, stringify, stringify_remote_arg } from '../../../shared.js';
+import { create_remote_key, stringify_remote_arg } from '../../../shared.js';
 import { prerendering } from '$app/env/internal';
 import {
 	create_validator,
 	get_cache,
+	get_explicit_lookup,
 	get_response,
 	run_remote_function,
 	run_remote_generator
 } from './shared.js';
-import { handle_error_and_jsonify } from '../../../server/utils.js';
-import { HttpError, SvelteKitError } from '@sveltejs/kit/internal';
 import { noop } from '../../../../utils/functions.js';
 import { SharedIterator } from '../../../../utils/shared-iterator.js';
 
@@ -78,8 +77,10 @@ export function query(validate_or_fn, maybe_fn) {
 		bind(payload, validated_arg) {
 			const { event, state } = get_request_store();
 
-			return create_query_resource(__, payload, state, () =>
-				run_remote_function(event, state, false, () => validated_arg, fn)
+			const child_state = { ...state, is_in_remote_function_query: true };
+
+			return create_query_resource(__, payload, child_state, () =>
+				run_remote_function(event, child_state, false, () => validated_arg, fn)
 			);
 		}
 	};
@@ -316,7 +317,7 @@ function batch(validate_or_fn, maybe_fn) {
 
 			return run_remote_function(
 				event,
-				state,
+				{ ...state, is_in_remote_query: true },
 				false,
 				async () => Promise.all(args.map(validate)),
 				async (/** @type {any[]} */ input) => {
@@ -413,10 +414,8 @@ function create_query_resource(__, payload, state, fn) {
 			return false;
 		},
 		refresh() {
-			const key = create_remote_key(__.id, payload);
-
 			delete get_cache(__, state)[payload];
-			(state.remote.refreshes ??= new Map())?.set(key, fn);
+			get_explicit_lookup(__, state)[payload] = fn;
 
 			return Promise.resolve();
 		},
@@ -424,10 +423,8 @@ function create_query_resource(__, payload, state, fn) {
 		set(value) {
 			const promise = Promise.resolve(value);
 
-			const key = create_remote_key(__.id, payload);
-
 			get_cache(__)[payload] = promise;
-			(state.remote.refreshes ??= new Map())?.set(key, () => promise);
+			get_explicit_lookup(__, state)[payload] = () => promise;
 		},
 		// TODO 3.0 remove this
 		// @ts-expect-error This method no longer exists
@@ -510,15 +507,9 @@ function create_live_query_resource(__, payload, state, signal, get_generator) {
 			return false;
 		},
 		reconnect() {
-			const reconnects = state.remote.reconnects;
+			delete get_cache(__, state)[payload];
+			get_explicit_lookup(__, state)[payload] = get_promise;
 
-			if (!reconnects) {
-				throw new Error(
-					`Cannot call reconnect on query.live '${__.name}' because it is not executed in the context of a command/form remote function`
-				);
-			}
-
-			reconnects.set(create_remote_key(__.id, payload), get_promise);
 			return Promise.resolve();
 		},
 		/** @ts-expect-error This method no longer exists */

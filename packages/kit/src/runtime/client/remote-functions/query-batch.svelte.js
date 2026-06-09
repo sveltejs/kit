@@ -1,11 +1,8 @@
 /** @import { RemoteQueryFunction } from '@sveltejs/kit' */
-/** @import { RemoteFunctionResponse } from 'types' */
 import { app_dir, base } from '$app/paths/internal/client';
 import { app, goto, query_responses } from '../client.js';
 import { get_remote_request_headers, QUERY_FUNCTION_ID, remote_request } from './shared.svelte.js';
 import { QueryProxy } from './query/proxy.js';
-import * as devalue from 'devalue';
-import { HttpError, Redirect } from '@sveltejs/kit/internal';
 
 /**
  * @param {string} id
