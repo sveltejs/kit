@@ -80,7 +80,7 @@ export async function get_response(internals, payload, state, get_result) {
 
 	// TODO: Add some sort of "&& not nested in remote function context" check here,
 	// as this would mean we don't need to serialize this entry (it's opaque to the client)
-	entry.serialize ||= !!state.is_in_universal_load;
+	entry.serialize ||= state.is_in_universal_load || state.is_in_render;
 
 	return entry.data;
 }
