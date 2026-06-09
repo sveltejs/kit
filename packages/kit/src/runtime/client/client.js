@@ -213,7 +213,7 @@ export let query_responses = {};
  * This persists across client-side navigations.
  * @type {Record<string, any>}
  */
-export let prerender_responses = {};
+export const prerender_responses = {};
 
 /** @type {Array<((url: URL) => boolean)>} */
 const invalidated = [];
