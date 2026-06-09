@@ -733,6 +733,22 @@ test.describe('remote functions', () => {
 		await expect(page.locator('#form-result')).toHaveText('submitted successfully');
 	});
 
+	test('SSR data for query.live is reused on hydration', async ({ page, javaScriptEnabled }) => {
+		await page.goto(`/remote/live-ssr-value?key=${Date.now()}-${Math.random()}`);
+
+		if (javaScriptEnabled) {
+			// the SSR'd first value must be seeded into the live query on hydration —
+			// the reconnect (deliberately blocked server-side) must not reset it to a loading state
+			await expect(page.locator('#live-state')).toHaveText('initial');
+
+			// the live connection still works after seeding
+			await page.click('#notify');
+			await expect(page.locator('#live-state')).toHaveText('updated');
+		} else {
+			await expect(page.locator('#live-state')).toHaveText('loading');
+		}
+	});
+
 	test('awaiting multiple queries inside $derived does not fail mutation validation', async ({
 		page
 	}) => {
