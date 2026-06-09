@@ -113,7 +113,9 @@ export async function remote_request(url, headers) {
 		throw new HttpError(response.status ?? 500, result.error);
 	}
 
-	const data = /** @type {RemoteFunctionData} */ (devalue.parse(result.data, app.decoders));
+	const data = result.data
+		? /** @type {RemoteFunctionData} */ (devalue.parse(result.data, app.decoders))
+		: {};
 
 	// update queries with refreshed data
 	if (data.q) {
