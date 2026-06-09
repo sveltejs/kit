@@ -749,6 +749,21 @@ test.describe('remote functions', () => {
 		}
 	});
 
+	test('prerender functions are deduplicated across prerendered pages during build', async ({
+		page
+	}) => {
+		test.skip(!!process.env.DEV, 'pages are only prerendered when building');
+
+		await page.goto('/remote/prerender-dedupe/a');
+		const a = await page.locator('#count').textContent();
+
+		await page.goto('/remote/prerender-dedupe/b');
+		const b = await page.locator('#count').textContent();
+
+		// the shared prerender function must only have executed once at build time
+		expect(b).toBe(a);
+	});
+
 	test('awaiting multiple queries inside $derived does not fail mutation validation', async ({
 		page
 	}) => {

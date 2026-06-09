@@ -58,6 +58,16 @@ test.describe('remote function mutations', () => {
 		expect(request_count).toBe(0);
 	});
 
+	test('hydrated prerender data is reused', async ({ page }) => {
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		await page.goto('/remote/prerender-inline');
+		await expect(page.locator('#prerender-value')).toHaveText('prerendered: hello');
+		await page.waitForTimeout(100); // allow all requests to finish
+		expect(request_count).toBe(0);
+	});
+
 	test('hydrated batch data is reused', async ({ page }) => {
 		let request_count = 0;
 		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));

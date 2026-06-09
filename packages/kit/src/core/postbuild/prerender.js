@@ -205,6 +205,9 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 	const seen = new Set();
 	const written = new Set();
 
+	/** @type {Map<string, Promise<any>>} */
+	const remote_responses = new Map();
+
 	/** @type {Map<string, Set<string>>} */
 	const expected_hashlinks = new Map();
 
@@ -247,7 +250,8 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 				throw new Error('Cannot read clientAddress during prerendering');
 			},
 			prerendering: {
-				dependencies
+				dependencies,
+				remote_responses
 			},
 			read: (file) => {
 				// stuff we just wrote
