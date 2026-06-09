@@ -78,9 +78,9 @@ export async function render_response({
 
 	const { client } = manifest._;
 
-	const modulepreloads = new Set(client.imports);
-	const stylesheets = new Set(client.stylesheets);
-	const fonts = new Set(client.fonts);
+	const modulepreloads = new Set(client?.imports);
+	const stylesheets = new Set(client?.stylesheets);
+	const fonts = new Set(client?.fonts);
 
 	/**
 	 * The value of the Link header that is added to the response when not prerendering
@@ -281,7 +281,7 @@ export async function render_response({
 		for (const url of node.stylesheets) stylesheets.add(url);
 		for (const url of node.fonts) fonts.add(url);
 
-		if (node.inline_styles && !client.inline) {
+		if (node.inline_styles && !client?.inline) {
 			Object.entries(await node.inline_styles()).forEach(([filename, css]) => {
 				if (typeof css === 'string') {
 					inline_styles.set(filename, css);
@@ -307,7 +307,7 @@ export async function render_response({
 		return `${assets}/${path}`;
 	};
 
-	const style = client.inline
+	const style = client?.inline
 		? client.inline?.style
 		: Array.from(inline_styles.values()).join('\n');
 
@@ -371,8 +371,8 @@ export async function render_response({
 			.join('\n\t\t\t')}`;
 	}
 
-	if (page_config.csr) {
-		const route = manifest._.client.routes?.find((r) => r.id === event.route.id) ?? null;
+	if (page_config.csr && client) {
+		const route = client.routes?.find((r) => r.id === event.route.id) ?? null;
 
 		if (client.uses_env_dynamic_public && state.prerendering) {
 			modulepreloads.add(`${paths.app_dir}/env.js`);
@@ -400,12 +400,12 @@ export async function render_response({
 		}
 
 		// prerender a `/path/to/page/__route.js` module
-		if (manifest._.client.routes && state.prerendering && !state.prerendering.fallback) {
+		if (client.routes && state.prerendering && !state.prerendering.fallback) {
 			const pathname = add_resolution_suffix(event.url.pathname);
 
 			state.prerendering.dependencies.set(
 				pathname,
-				create_server_routing_response(route, event.params, new URL(pathname, event.url), manifest)
+				create_server_routing_response(route, event.params, new URL(pathname, event.url), client)
 			);
 		}
 
@@ -505,9 +505,9 @@ export async function render_response({
 				hydrate.push(`status: ${status}`);
 			}
 
-			if (manifest._.client.routes) {
+			if (client.routes) {
 				if (route) {
-					const stringified = generate_route_object(route, event.url, manifest).replaceAll(
+					const stringified = generate_route_object(route, event.url, client).replaceAll(
 						'\n',
 						'\n\t\t\t\t\t\t\t'
 					); // make output after it's put together with the rest more readable

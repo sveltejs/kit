@@ -4,7 +4,9 @@ import { sveltekit } from '@sveltejs/kit/vite';
 /** @type {import('vite').UserConfig} */
 const config = {
 	build: {
-		minify: false
+		minify: false,
+		// TODO: remove when we stop testing for vite on node 18
+		assetsInlineLimit: 0
 	},
 	clearScreen: false,
 	plugins: [
