@@ -10,7 +10,6 @@ import { app_dir, base } from '$app/paths/internal/server';
 import {
 	create_validator,
 	get_cache,
-	get_response,
 	parse_remote_response,
 	run_remote_function
 } from './shared.js';
@@ -99,29 +98,21 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 
 			if (!state.prerendering && !DEV && !event.isRemoteRequest) {
 				try {
-					return await get_response(__, payload, state, async () => {
-						const cache = get_cache(__, state);
+					// TODO adapters can provide prerendered data more efficiently than
+					// fetching from the public internet
+					const response = await fetch(new URL(url, event.url.origin).href);
 
-						// TODO adapters can provide prerendered data more efficiently than
-						// fetching from the public internet
-						const promise = (cache[payload] ??= fetch(new URL(url, event.url.origin).href).then(
-							async (response) => {
-								if (!response.ok) {
-									throw new Error('Prerendered response not found');
-								}
+					if (!response.ok) {
+						throw new Error('Prerendered response not found');
+					}
 
-								const prerendered = await response.json();
+					const prerendered = /** @type {RemoteFunctionResponse} */ await response.json();
 
-								if (prerendered.type === 'error') {
-									error(prerendered.status, prerendered.error);
-								}
+					if (prerendered.type === 'error') {
+						error(prerendered.status, prerendered.error);
+					}
 
-								return prerendered.result;
-							}
-						));
-
-						return parse_remote_response(await promise, state.transport);
-					});
+					return parse_remote_response(prerendered.data, state.transport)._;
 				} catch {
 					// not available prerendered, fallback to normal function
 				}
