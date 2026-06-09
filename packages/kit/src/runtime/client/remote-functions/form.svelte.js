@@ -196,8 +196,6 @@ export function form(id) {
 						}
 					);
 
-					console.log('response', response);
-
 					if (response.redirect) {
 						// Use internal version to allow redirects to external URLs
 						void _goto(

@@ -205,17 +205,17 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 					);
 				}
 
-				const { data, meta, form_data } = await deserialize_binary_form(event.request);
+				const { data: input, meta, form_data } = await deserialize_binary_form(event.request);
 				state.remote.requested = create_requested_map(meta.remote_refreshes);
 
 				// If this is a keyed form instance (created via form.for(key)), add the key to the form data (unless already set)
 				// Note that additional_args will only be set if the form is not enhanced, as enhanced forms transfer the key inside `data`.
-				if (additional_args && !('id' in data)) {
-					data.id = JSON.parse(decodeURIComponent(additional_args));
+				if (additional_args && !('id' in input)) {
+					input.id = JSON.parse(decodeURIComponent(additional_args));
 				}
 
 				const fn = internals.fn;
-				data._ = await with_request_store({ event, state }, () => fn(data, meta, form_data));
+				data._ = await with_request_store({ event, state }, () => fn(input, meta, form_data));
 
 				if (data._.issues) {
 					// special case — don't serialize refreshes/reconnects
