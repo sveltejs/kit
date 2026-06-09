@@ -1,18 +1,19 @@
-/** @import { ActionResult, RemoteForm, RequestEvent, SSRManifest } from '@sveltejs/kit' */
-/** @import { RemoteFormInternals, RemoteFunctionResponse, RemoteInternals, RequestState, SSROptions } from 'types' */
+/** @import { ActionResult, RemoteForm, RequestEvent, SSRManifest, Transport } from '@sveltejs/kit' */
+/** @import { RemoteFormInternals, RemoteFunctionData, RemoteFunctionResponse, RemoteInternals, RequestState, SSROptions } from 'types' */
 
 import { json, error } from '@sveltejs/kit';
 import { HttpError, Redirect, SvelteKitError } from '@sveltejs/kit/internal';
 import { with_request_store, merge_tracing } from '@sveltejs/kit/internal/server';
 import { app_dir, base } from '$app/paths/internal/server';
 import { is_form_content_type } from '../../utils/http.js';
-import { parse_remote_arg, split_remote_key, stringify } from '../shared.js';
+import { create_remote_key, parse_remote_arg, split_remote_key, stringify } from '../shared.js';
 import { handle_error_and_jsonify } from './utils.js';
 import { normalize_error } from '../../utils/error.js';
 import { check_incorrect_fail_use } from './page/actions.js';
 import { DEV } from 'esm-env';
 import { record_span } from '../telemetry/record_span.js';
 import { deserialize_binary_form } from '../form-utils.js';
+import { noop } from '../../utils/functions.js';
 
 /** @type {typeof handle_remote_call_internal} */
 export async function handle_remote_call(event, state, options, manifest, id) {
@@ -261,16 +262,17 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 						new URL(event.request.url).searchParams.get('payload')
 					);
 
-		const data = await with_request_store({ event, state }, () =>
-			fn(parse_remote_arg(payload, transport))
-		);
+		await with_request_store({ event, state }, () => fn(parse_remote_arg(payload, transport)));
+
+		const data = await collect_remote_data({}, event, state, options);
 
 		return json(
 			/** @type {RemoteFunctionResponse} */ ({
 				type: 'result',
-				result: stringify(data, transport),
-				refreshes: await serialize_singleflight(state.remote.refreshes),
-				reconnects: await serialize_singleflight(state.remote.reconnects)
+				data: stringify(data, transport)
+				// result: stringify(data, transport),
+				// refreshes: await serialize_singleflight(state.remote.refreshes),
+				// reconnects: await serialize_singleflight(state.remote.reconnects)
 			})
 		);
 	} catch (error) {
@@ -333,6 +335,83 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 
 		return stringify(Object.fromEntries(results), transport);
 	}
+}
+
+/**
+ * Collects all the query/prerender data that was retrieved
+ * during the request and adds it to `data`
+ * @param {RemoteFunctionData} data
+ * @param {RequestEvent} event
+ * @param {RequestState} state
+ * @param {SSROptions} options
+ */
+export async function collect_remote_data(data, event, state, options) {
+	/**
+	 *
+	 * @param {unknown} error
+	 * @returns {Promise<[status: number, error: App.Error]>}
+	 */
+	async function convert_error(error) {
+		const status =
+			error instanceof HttpError || error instanceof SvelteKitError ? error.status : 500;
+
+		return [status, await handle_error_and_jsonify(event, state, options, error)];
+	}
+
+	const promises = [];
+
+	if (state.remote.data) {
+		for (const [internals, cache] of state.remote.data) {
+			// remote functions without an `id` aren't exported, and thus
+			// cannot be called from the client
+			if (!internals.id) continue;
+
+			for (const key in cache) {
+				const remote_key = create_remote_key(internals.id, key);
+				const type = /** @type {keyof RemoteFunctionData} */ (
+					internals.type === 'query_live' ? 'l' : internals.type[0]
+				);
+
+				let resolved = true;
+
+				await Promise.race([
+					Promise.resolve(cache[key]).then(
+						(v) => {
+							if (resolved) {
+								(data[type] ??= {})[remote_key] = { v };
+							}
+						},
+						(e) => {
+							if (resolved) {
+								promises.push(
+									convert_error(e).then((e) => {
+										(data[type] ??= {})[remote_key] = { e };
+									})
+								);
+							}
+						}
+					),
+					Promise.resolve().then(() => (resolved = false))
+				]);
+			}
+		}
+	}
+
+	if (state.remote.refreshes) {
+		for (const [key, fn] of state.remote.refreshes) {
+			promises.push(fn().then((value) => ((data.q ??= {})[key] = value)));
+		}
+	}
+
+	if (state.remote.reconnects) {
+		for (const [key, fn] of state.remote.reconnects) {
+			promises.push(fn().then((value) => ((data.q ??= {})[key] = value)));
+		}
+	}
+
+	await Promise.all(promises);
+
+	return data;
 }
 
 /**

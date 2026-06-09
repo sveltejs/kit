@@ -309,21 +309,31 @@ export type ServerNodesResponse = {
 	nodes: Array<ServerDataNode | ServerDataSkippedNode | ServerErrorNode | null>;
 };
 
+export type RemoteFunctionDataNode = {
+	/** value */
+	v?: any;
+	/** error */
+	e?: [status: number, error: any];
+};
+
+export type RemoteFunctionData = {
+	q?: Record<string, RemoteFunctionDataNode>;
+	l?: Record<string, RemoteFunctionDataNode>;
+	p?: Record<string, RemoteFunctionDataNode>;
+	c?: Record<string, RemoteFunctionDataNode>;
+	f?: Record<string, RemoteFunctionDataNode>;
+};
+
 export type RemoteFunctionResponse =
 	| (ServerRedirectNode & {
-			/** devalue'd Record<string, any> */
-			refreshes?: string;
-			/** devalue'd Record<string, any> */
-			reconnects?: string;
+			/** stringified RemoteFunctionData */
+			data: string;
 	  })
 	| ServerErrorNode
 	| {
 			type: 'result';
-			result: string;
-			/** devalue'd Record<string, any> */
-			refreshes: string | undefined;
-			/** devalue'd Record<string, any> */
-			reconnects: string | undefined;
+			/** stringified RemoteFunctionData */
+			data: string;
 	  };
 
 export type RemoteSingleflightResult = {
@@ -719,7 +729,7 @@ export interface RequestState {
 		forms: null | Map<string, any>;
 		/** Keys that should be refreshed, and a function to get the data if not in `remote.data` */
 		refreshes: null | Map<string, () => Promise<any>>;
-		reconnects: null | Map<string, () => Promise<void>>;
+		reconnects: null | Map<string, () => Promise<any>>;
 		/** A map of remote function ID to payloads requested for refreshing by the client */
 		requested: null | Map<string, string[]>;
 		/** A map of query.batch ID to payloads requested for that batch within the same macrotask */

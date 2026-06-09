@@ -328,9 +328,17 @@ export async function start(_app, _target, hydrate) {
 		);
 	}
 
-	if (__SVELTEKIT_PAYLOAD__) {
-		query_responses = __SVELTEKIT_PAYLOAD__.query ?? {};
-		prerender_responses = __SVELTEKIT_PAYLOAD__.prerender ?? {};
+	if (__SVELTEKIT_PAYLOAD__.data) {
+		const { q = {}, p = {} } = __SVELTEKIT_PAYLOAD__.data;
+
+		// TODO we're currently ignoring errors, is that right?
+		for (const k in q) {
+			if (q[k].v) query_responses[k] = q[k].v;
+		}
+
+		for (const k in p) {
+			if (p[k].v) prerender_responses[k] = p[k].v;
+		}
 	}
 
 	// detect basic auth credentials in the current URL

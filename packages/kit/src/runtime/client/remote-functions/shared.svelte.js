@@ -1,4 +1,4 @@
-/** @import { RemoteFunctionResponse, RemoteSingleflightMap, RemoteSingleflightEntry } from 'types' */
+/** @import { RemoteFunctionResponse, RemoteSingleflightMap, RemoteSingleflightEntry, RemoteFunctionData } from 'types' */
 /** @import { RemoteQueryUpdate } from '@sveltejs/kit' */
 import * as devalue from 'devalue';
 import { app, goto, live_query_map, query_map } from '../client.js';
@@ -110,18 +110,51 @@ export async function remote_request(url, headers) {
 	const result = /** @type {RemoteFunctionResponse} */ (await response.json());
 
 	if (result.type !== 'error') {
-		if (result.refreshes) {
-			apply_refreshes(result.refreshes);
+		const data = /** @type {RemoteFunctionData} */ (devalue.parse(result.data, app.decoders));
+
+		// update queries with refreshed data
+		if (data.q) {
+			for (const key in data.q) {
+				const parts = split_remote_key(key);
+				const entry = query_map.get(parts.id)?.get(parts.payload);
+
+				if (entry?.resource) {
+					const result = data.q[key];
+
+					if (result.e) {
+						entry.resource.fail(new HttpError(result.e[0] ?? 500, result.e[1]));
+					} else {
+						entry.resource.set(result.v);
+					}
+				}
+			}
 		}
 
-		if (result.reconnects) {
-			apply_reconnections(result.reconnects);
+		// reconnect live queries
+		if (data.l) {
+			for (const key in data.l) {
+				const parts = split_remote_key(key);
+				const entry = live_query_map.get(parts.id)?.get(parts.payload);
+
+				if (entry?.resource) {
+					const result = data.l[key];
+
+					if (result.e) {
+						entry.resource.fail(new HttpError(result.e[0] ?? 500, result.e[1]));
+					} else {
+						entry.resource.set(result.v);
+						void entry.resource.reconnect();
+					}
+				}
+			}
 		}
+
+		// TODO populate the prerender cache?
 	}
 
 	const resolved = await handle_side_channel_response(result);
 
-	return resolved.result;
+	return resolved.data;
 }
 
 /**
