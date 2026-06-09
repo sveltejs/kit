@@ -519,7 +519,7 @@ export async function render_response({
 		const remote_data = await collect_remote_data({}, event, event_state, options);
 
 		const serialized_data =
-			Object.keys(data).length > 1
+			Object.keys(remote_data).length > 0
 				? `${global}.data = ${devalue.uneval(remote_data, create_replacer(options.hooks.transport))};\n\n\t\t\t\t\t\t`
 				: '';
 
