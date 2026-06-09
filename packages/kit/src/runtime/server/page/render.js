@@ -24,6 +24,7 @@ import {
 import { create_remote_key } from '../../shared.js';
 import { get_status } from '../../../utils/error.js';
 import * as env from '__sveltekit/env';
+import { noop } from '../../../utils/functions.js';
 
 // TODO rename this function/module
 
@@ -540,7 +541,7 @@ export async function render_response({
 					let resolved = true;
 
 					await Promise.race([
-						Promise.resolve(cache[key]).then((v) => resolved && (store[remote_key] = v)),
+						Promise.resolve(cache[key]).then((v) => resolved && (store[remote_key] = v), noop),
 						Promise.resolve().then(() => (resolved = false))
 					]);
 				}
