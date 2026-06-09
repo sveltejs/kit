@@ -196,6 +196,8 @@ export function form(id) {
 						}
 					);
 
+					({ issues: raw_issues = [], result } = response._ ?? {});
+
 					if (response.redirect) {
 						// Use internal version to allow redirects to external URLs
 						void _goto(
@@ -208,7 +210,6 @@ export function form(id) {
 						return true;
 					}
 
-					({ issues: raw_issues = [], result } = response._ ?? {});
 					const succeeded = raw_issues.length === 0;
 
 					if (succeeded) {
@@ -224,6 +225,7 @@ export function form(id) {
 					return succeeded;
 				} catch (e) {
 					result = undefined;
+					raw_issues = [];
 					throw e;
 				} finally {
 					overrides?.forEach((fn) => fn());
@@ -632,30 +634,27 @@ export function form(id) {
 					if (validated?.issues) {
 						array = validated.issues.map((issue) => normalize_issue(issue, false));
 					} else if (!preflightOnly) {
-						const response = await fetch(`${base}/${app_dir}/remote/${action_id_without_key}`, {
-							method: 'POST',
-							headers: {
-								'Content-Type': BINARY_FORM_CONTENT_TYPE,
-								// Validation should not be and will not be called during rendering, so it's save to use location here
-								'x-sveltekit-pathname': location.pathname,
-								'x-sveltekit-search': location.search
-							},
-							body: serialize_binary_form(data, {
-								validate_only: true
-							}).blob
-						});
-
-						const result = await response.json();
+						const result = await remote_request(
+							`${base}/${app_dir}/remote/${action_id_without_key}`,
+							{
+								method: 'POST',
+								headers: {
+									'Content-Type': BINARY_FORM_CONTENT_TYPE,
+									// Validation should not be and will not be called during rendering, so it's save to use location here
+									'x-sveltekit-pathname': location.pathname,
+									'x-sveltekit-search': location.search
+								},
+								body: serialize_binary_form(data, {
+									validate_only: true
+								}).blob
+							}
+						);
 
 						if (validate_id !== id) {
 							return;
 						}
 
-						if (result.type === 'result') {
-							array = /** @type {InternalRemoteFormIssue[]} */ (
-								devalue.parse(result.result, app.decoders)
-							);
-						}
+						array = /** @type {InternalRemoteFormIssue[]} */ (result._);
 					}
 
 					if (!includeUntouched && !submitted) {
