@@ -687,6 +687,23 @@ test.describe('remote functions', () => {
 		}
 	});
 
+	test('query rendered in its loading state during SSR is fetched on the client', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		await page.goto('/remote/query-loading-state');
+
+		if (javaScriptEnabled) {
+			// the query was still pending when SSR finished, so it must not be
+			// seeded into the hydration cache — the client has to fetch it itself
+			await expect(page.locator('#slow-state')).toHaveText('slow data', {
+				timeout: 5000
+			});
+		} else {
+			await expect(page.locator('#slow-state')).toHaveText('loading');
+		}
+	});
+
 	test('awaiting multiple queries inside $derived does not fail mutation validation', async ({
 		page
 	}) => {
