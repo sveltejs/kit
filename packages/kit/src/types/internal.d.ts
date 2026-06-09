@@ -338,21 +338,6 @@ export type RemoteFunctionResponse =
 			data: string;
 	  };
 
-export type RemoteSingleflightResult = {
-	type: 'result';
-	data: any;
-};
-
-export type RemoteSingleflightError = {
-	type: 'error';
-	status?: number;
-	error: App.Error;
-};
-
-export type RemoteSingleflightEntry = RemoteSingleflightResult | RemoteSingleflightError;
-
-export type RemoteSingleflightMap = Record<string, RemoteSingleflightEntry>;
-
 export type RemoteLiveQueryUserFunctionReturnType<Output> = MaybePromise<
 	| AsyncGenerator<Output>
 	| AsyncIterator<Output>

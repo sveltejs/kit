@@ -1,4 +1,4 @@
-/** @import { RemoteFunctionResponse, RemoteSingleflightMap, RemoteSingleflightEntry, RemoteFunctionData } from 'types' */
+/** @import { RemoteFunctionResponse, RemoteFunctionData } from 'types' */
 /** @import { RemoteQueryUpdate } from '@sveltejs/kit' */
 import * as devalue from 'devalue';
 import { app, goto, live_query_map, query_map } from '../client.js';
@@ -244,50 +244,3 @@ export function categorize_updates(updates) {
 
 	return { overrides, refreshes };
 }
-
-/**
- * @template TResource
- * @param {string} stringified_singleflight
- * @param {Map<string, Map<string, { resource: TResource }>>} map
- * @param {(resource: TResource, value: RemoteSingleflightEntry) => void} callback
- */
-function apply_singleflight(stringified_singleflight, map, callback) {
-	const singleflight = /** @type {RemoteSingleflightMap} */ (
-		devalue.parse(stringified_singleflight, app.decoders)
-	);
-
-	for (const [key, value] of Object.entries(singleflight)) {
-		const parts = split_remote_key(key);
-		const entry = map.get(parts.id)?.get(parts.payload);
-		if (entry?.resource) {
-			callback(entry.resource, value);
-		}
-	}
-}
-
-/**
- * Apply refresh data from the server to the relevant queries
- *
- * @param {string} stringified_refreshes
- */
-export const apply_refreshes = (stringified_refreshes) => {
-	apply_singleflight(stringified_refreshes, query_map, (resource, value) => {
-		if (value.type === 'result') {
-			resource?.set(value.data);
-		} else {
-			resource?.fail(new HttpError(value.status ?? 500, value.error));
-		}
-	});
-};
-
-/** @param {string} stringified_reconnects */
-export const apply_reconnections = (stringified_reconnects) => {
-	apply_singleflight(stringified_reconnects, live_query_map, (resource, value) => {
-		if (value.type === 'result') {
-			resource?.set(value.data);
-			void resource?.reconnect();
-		} else {
-			resource?.fail(new HttpError(value.status ?? 500, value.error));
-		}
-	});
-};
