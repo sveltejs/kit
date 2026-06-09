@@ -1,7 +1,7 @@
 /** @import { RemoteResource, RemotePrerenderFunction } from '@sveltejs/kit' */
 /** @import { RemotePrerenderInputsGenerator, RemotePrerenderInternals, MaybePromise } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
-import { error, json } from '@sveltejs/kit';
+import { json } from '@sveltejs/kit';
 import { DEV } from 'esm-env';
 import { get_request_store } from '@sveltejs/kit/internal/server';
 import { stringify, stringify_remote_arg } from '../../../shared.js';
@@ -13,6 +13,7 @@ import {
 	parse_remote_response,
 	run_remote_function
 } from './shared.js';
+import { HttpError } from '@sveltejs/kit/internal';
 
 /**
  * Creates a remote prerender function. When called from the browser, the function will be invoked on the server via a `fetch` call.
@@ -109,7 +110,7 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 					const prerendered = /** @type {RemoteFunctionResponse} */ await response.json();
 
 					if (prerendered.type === 'error') {
-						error(prerendered.status, prerendered.error);
+						throw new HttpError(prerendered.status, prerendered.error);
 					}
 
 					return parse_remote_response(prerendered.data, state.transport)._;
