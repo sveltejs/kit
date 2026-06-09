@@ -645,7 +645,7 @@ function get_refresh_context(__, action, payload) {
 }
 
 /**
- * @param {{ __: RemoteInternals; refreshes: Map<string, Promise<any>>; cache: Record<string, any>; refreshes_key: string; payload: string }} context
+ * @param {{ __: RemoteInternals; refreshes: Map<string, Promise<any>>; cache: Record<string, { serialize: boolean; data: any }>; refreshes_key: string; payload: string }} context
  * @param {any} value
  * @param {boolean} [is_immediate_refresh=false]
  * @returns {Promise<void>}
@@ -658,7 +658,7 @@ function update_refresh_value(
 	const promise = Promise.resolve(value);
 
 	if (!is_immediate_refresh) {
-		cache[payload] = promise;
+		cache[payload] = { serialize: true, data: promise };
 	}
 
 	if (__.id) {

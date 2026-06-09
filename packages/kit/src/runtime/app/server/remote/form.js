@@ -161,7 +161,7 @@ export function form(validate_or_fn, maybe_fn) {
 				// We don't need to care about args or deduplicating calls, because uneval results are only relevant in full page reloads
 				// where only one form submission is active at the same time
 				if (!event.isRemoteRequest) {
-					get_cache(__, state)[''] ??= output;
+					get_cache(__, state)[''] ??= { serialize: true, data: output };
 				}
 
 				return output;
@@ -179,26 +179,26 @@ export function form(validate_or_fn, maybe_fn) {
 			get() {
 				return create_field_proxy(
 					{},
-					() => get_cache(__)?.['']?.input ?? {},
+					() => get_cache(__)?.['']?.data?.input ?? {},
 					(path, value) => {
 						const cache = get_cache(__);
 						const entry = cache[''];
 
-						if (entry?.submission) {
+						if (entry?.data?.submission) {
 							// don't override a submission
 							return;
 						}
 
 						if (path.length === 0) {
-							(cache[''] ??= {}).input = value;
+							(cache[''] ??= { serialize: true, data: {} }).data.input = value;
 							return;
 						}
 
-						const input = entry?.input ?? {};
+						const input = entry?.data?.input ?? {};
 						deep_set(input, path.map(String), value);
-						(cache[''] ??= {}).input = input;
+						(cache[''] ??= { serialize: true, data: {} }).data.input = input;
 					},
-					() => flatten_issues(get_cache(__)?.['']?.issues ?? [])
+					() => flatten_issues(get_cache(__)?.['']?.data?.issues ?? [])
 				);
 			}
 		});
@@ -220,7 +220,7 @@ export function form(validate_or_fn, maybe_fn) {
 		Object.defineProperty(instance, 'result', {
 			get() {
 				try {
-					return get_cache(__)?.['']?.result;
+					return get_cache(__)?.['']?.data?.result;
 				} catch {
 					return undefined;
 				}

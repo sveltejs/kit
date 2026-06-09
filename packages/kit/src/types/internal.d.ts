@@ -713,7 +713,10 @@ export interface RequestState {
 		record_span: RecordSpan;
 	};
 	readonly remote: {
-		data: null | Map<RemoteInternals, Record<string, MaybePromise<any>>>;
+		data: null | Map<
+			RemoteInternals,
+			Record<string, { serialize: boolean; data: MaybePromise<any> }>
+		>;
 		/** Instances created via `myForm.for(...)` */
 		forms: null | Map<string, any>;
 		/** A map of remote function key to corresponding single-flight-mutation promise */

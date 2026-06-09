@@ -24,7 +24,6 @@ import {
 import { create_remote_key } from '../../shared.js';
 import { get_status } from '../../../utils/error.js';
 import * as env from '__sveltekit/env';
-import { noop } from '../../../utils/functions.js';
 
 // TODO rename this function/module
 
@@ -535,7 +534,7 @@ export async function render_response({
 				if (!internals.id) continue;
 
 				for (const key in cache) {
-					const value = cache[key];
+					const entry = cache[key];
 
 					const remote_key = create_remote_key(internals.id, key);
 
@@ -547,16 +546,24 @@ export async function render_response({
 					) {
 						// This entry was refreshed/set by a command or form action.
 						// Always await it so the mutation result is serialized.
-						store[remote_key] = await value;
+						store[remote_key] = await entry.data;
 					} else {
-						let resolved = true;
-
 						// Don't block the response on pending remote data - if a query
 						// hasn't settled yet, it wasn't awaited in the template (or is behind a pending boundary).
-						await Promise.race([
-							Promise.resolve(value).then((v) => resolved && (store[remote_key] = v), noop),
-							Promise.resolve().then(() => (resolved = false))
+						const result = await Promise.race([
+							Promise.resolve(entry.data).then(
+								(v) => /** @type {const} */ ({ settled: true, value: v }),
+								(e) => /** @type {const} */ ({ settled: true, error: e })
+							),
+							new Promise((resolve) => {
+								queueMicrotask(() => resolve(/** @type {const} */ ({ settled: false })));
+							})
 						]);
+
+						if (result.settled) {
+							if ('error' in result && entry.serialize) throw result.error;
+							store[remote_key] = result.value;
+						}
 					}
 				}
 			}

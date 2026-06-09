@@ -73,7 +73,16 @@ export async function get_response(internals, payload, state, get_result) {
 	await 0;
 
 	const cache = get_cache(internals, state);
-	return (cache[payload] ??= get_result());
+	const entry = (cache[payload] ??= {
+		serialize: false,
+		data: get_result()
+	});
+
+	// TODO: Add some sort of "&& not nested in remote function context" check here,
+	// as this would mean we don't need to serialize this entry (it's opaque to the client)
+	entry.serialize ||= !!state.is_in_universal_load;
+
+	return entry.data;
 }
 
 /**
