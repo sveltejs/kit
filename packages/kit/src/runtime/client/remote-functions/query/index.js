@@ -1,10 +1,10 @@
 /** @import { RemoteQueryFunction } from '@sveltejs/kit' */
 import { app_dir, base } from '$app/paths/internal/client';
-import { app, query_map, query_responses } from '../../client.js';
+import { goto, query_map, query_responses } from '../../client.js';
 import { get_remote_request_headers, QUERY_FUNCTION_ID, remote_request } from '../shared.svelte.js';
-import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
 import { QueryProxy } from './proxy.js';
+import { Redirect } from '@sveltejs/kit/internal';
 
 /**
  * @param {string} id
@@ -33,9 +33,15 @@ export function query(id) {
 
 			const url = `${base}/${app_dir}/remote/${id}${payload ? `?payload=${payload}` : ''}`;
 
-			const serialized = await remote_request(url, get_remote_request_headers());
-
-			return devalue.parse(serialized, app.decoders);
+			try {
+				await remote_request(url, { headers: get_remote_request_headers() });
+			} catch (e) {
+				if (e instanceof Redirect) {
+					await goto(e.location);
+				} else {
+					throw e;
+				}
+			}
 		});
 	};
 

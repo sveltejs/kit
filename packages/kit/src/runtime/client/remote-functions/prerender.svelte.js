@@ -3,10 +3,10 @@
 import { app_dir, base } from '$app/paths/internal/client';
 import { version } from '$app/env';
 import * as devalue from 'devalue';
-import { app, prerender_responses } from '../client.js';
+import { app, goto, prerender_responses } from '../client.js';
 import { get_remote_request_headers, remote_request } from './shared.svelte.js';
 import { create_remote_key, stringify_remote_arg } from '../../shared.js';
-import { HttpError } from '@sveltejs/kit/internal';
+import { HttpError, Redirect } from '@sveltejs/kit/internal';
 
 // Initialize Cache API for prerender functions
 const CACHE_NAME = __SVELTEKIT_DEV__ ? `sveltekit:${Date.now()}` : `sveltekit:${version}`;
@@ -79,6 +79,7 @@ export function prerender(id) {
 				}
 
 				// Do this here, after await Svelte' reactivity context is gone.
+				// TODO we really don't want to be sending these specific headers here?
 				const headers = get_remote_request_headers();
 
 				// Check the Cache API first
@@ -95,19 +96,29 @@ export function prerender(id) {
 					}
 				}
 
-				const response = await remote_request(url, headers);
-				const node = /** @type {Record<string, RemoteFunctionDataNode>} */ (response.p)[cache_key];
+				try {
+					const response = await remote_request(url, { headers });
+					const node = /** @type {Record<string, RemoteFunctionDataNode>} */ (response.p)[
+						cache_key
+					];
 
-				if (node.e) {
-					throw new HttpError(node.e[0], node.e[1]);
+					if (node.e) {
+						throw new HttpError(node.e[0], node.e[1]);
+					}
+
+					// For successful prerender requests, save to cache
+					if (prerender_cache) {
+						void put(url, devalue.stringify(node.v, app.encoders));
+					}
+
+					return node.v;
+				} catch (e) {
+					if (e instanceof Redirect) {
+						await goto(e.location);
+					} else {
+						throw e;
+					}
 				}
-
-				// For successful prerender requests, save to cache
-				if (prerender_cache) {
-					void put(url, devalue.stringify(node.v, app.encoders));
-				}
-
-				return node.v;
 			});
 
 			prerender_resources.set(cache_key, new WeakRef(resource));

@@ -93,15 +93,10 @@ export function get_remote_request_headers() {
 
 /**
  * @param {string} url
- * @param {HeadersInit} headers
+ * @param {RequestInit} [init]
  */
-export async function remote_request(url, headers) {
-	const response = await fetch(url, {
-		headers: {
-			'Content-Type': 'application/json',
-			...headers
-		}
-	});
+export async function remote_request(url, init) {
+	const response = await fetch(url, init);
 
 	if (!response.ok) {
 		throw new HttpError(500, 'Failed to execute remote function');
@@ -157,7 +152,6 @@ export async function remote_request(url, headers) {
 	// TODO populate the prerender cache?
 
 	if (result.type === 'redirect') {
-		await goto(result.location);
 		throw new Redirect(307, result.location);
 	}
 
