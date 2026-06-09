@@ -85,8 +85,11 @@ export function query(validate_or_fn, maybe_fn) {
 					state,
 					false,
 					() => validated_arg,
-					() => {
-						return with_request_store({ event, state: { ...state, is_in_remote_query: true } }, fn);
+					(arg) => {
+						return with_request_store(
+							{ event, state: { ...state, is_in_remote_query: true } },
+							() => fn(arg)
+						);
 					}
 				)
 			);
@@ -110,8 +113,10 @@ export function query(validate_or_fn, maybe_fn) {
 				state,
 				false,
 				() => validate(arg),
-				() => {
-					return with_request_store({ event, state: { ...state, is_in_remote_query: true } }, fn);
+				(arg) => {
+					return with_request_store({ event, state: { ...state, is_in_remote_query: true } }, () =>
+						fn(arg)
+					);
 				}
 			);
 		});
