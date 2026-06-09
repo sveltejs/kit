@@ -1,5 +1,8 @@
 <script>
 	import { reveal } from './data.remote.js';
+
+	let result = $state('none');
 </script>
 
-<button onclick={async () => console.log(await reveal())}>reveal</button>
+<button id="reveal" onclick={async () => (result = await reveal())}>reveal</button>
+<p id="result">{result}</p>

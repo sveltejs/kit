@@ -460,6 +460,24 @@ test.describe('remote function mutations', () => {
 		expect(page.url()).toContain('#redirected');
 	});
 
+	test('non-exported remote functions are never serialized into responses', async ({ page }) => {
+		await page.goto('/remote/private-query');
+
+		const [response] = await Promise.all([
+			page.waitForResponse((r) => r.url().includes('/_app/remote')),
+			page.click('#reveal')
+		]);
+
+		const body = await response.text();
+
+		// the command's own (transformed) result is present...
+		expect(body).toContain('PRIVATE-DATA');
+		// ...but the private query's raw value must not leak
+		expect(body).not.toContain('private-data');
+
+		await expect(page.locator('#result')).toHaveText('PRIVATE-DATA');
+	});
+
 	test('query.batch resolver function always receives validated arguments', async ({ page }) => {
 		await page.goto('/remote/batch-validation');
 

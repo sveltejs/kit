@@ -174,11 +174,13 @@ export function form(validate_or_fn, maybe_fn) {
 
 		Object.defineProperty(instance, 'fields', {
 			get() {
+				// the form instance is created once per module and shared across requests,
+				// so the current request's state has to be resolved at access time
 				return create_field_proxy(
 					{},
-					() => get_cache(__)?.['']?.input ?? {},
+					() => get_cache(__, get_request_store().state)?.['']?.input ?? {},
 					(path, value) => {
-						const cache = get_cache(__);
+						const cache = get_cache(__, get_request_store().state);
 						const entry = cache[''];
 
 						if (entry?.submission) {
@@ -195,7 +197,7 @@ export function form(validate_or_fn, maybe_fn) {
 						deep_set(input, path.map(String), value);
 						(cache[''] ??= {}).input = input;
 					},
-					() => flatten_issues(get_cache(__)?.['']?.issues ?? [])
+					() => flatten_issues(get_cache(__, get_request_store().state)?.['']?.issues ?? [])
 				);
 			}
 		});
@@ -217,7 +219,7 @@ export function form(validate_or_fn, maybe_fn) {
 		Object.defineProperty(instance, 'result', {
 			get() {
 				try {
-					return get_cache(__)?.['']?.result;
+					return get_cache(__, get_request_store().state)?.['']?.result;
 				} catch {
 					return undefined;
 				}
