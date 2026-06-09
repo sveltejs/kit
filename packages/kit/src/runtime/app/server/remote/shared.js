@@ -73,14 +73,7 @@ export async function get_response(internals, payload, state, get_result) {
 	await 0;
 
 	const cache = get_cache(internals, state);
-	const entry = (cache[payload] ??= {
-		serialize: false,
-		data: get_result()
-	});
-
-	entry.serialize ||= !!state.is_in_universal_load;
-
-	return entry.data;
+	return (cache[payload] ??= get_result());
 }
 
 /**
