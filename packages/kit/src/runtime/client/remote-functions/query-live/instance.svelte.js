@@ -1,6 +1,5 @@
 /** @import { PromiseWithResolvers } from '../../../../utils/promise.js' */
-import { app, query_responses } from '../../client.js';
-import * as devalue from 'devalue';
+import { query_responses } from '../../client.js';
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
 import { noop, once } from '../../../../utils/functions.js';
 import { with_resolvers } from '../../../../utils/promise.js';
@@ -86,8 +85,8 @@ export class LiveQuery {
 		this.#resolve_first = resolve;
 		this.#reject_first = reject;
 
-		const value = query_responses[key];
-		if (value !== undefined) {
+		if (Object.hasOwn(query_responses, key)) {
+			const value = query_responses[key];
 			delete query_responses[key];
 			this.set(value);
 		}
