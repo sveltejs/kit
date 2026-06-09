@@ -33,14 +33,10 @@ export function query(id) {
 
 			const url = `${base}/${app_dir}/remote/${id}${payload ? `?payload=${payload}` : ''}`;
 
-			try {
-				await remote_request(url, { headers: get_remote_request_headers() });
-			} catch (e) {
-				if (e instanceof Redirect) {
-					await goto(e.location);
-				} else {
-					throw e;
-				}
+			const result = await remote_request(url, { headers: get_remote_request_headers() });
+
+			if (result.redirect) {
+				await goto(result.redirect);
 			}
 		});
 	};

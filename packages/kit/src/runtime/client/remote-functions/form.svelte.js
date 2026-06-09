@@ -1,13 +1,13 @@
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 /** @import { RemoteFormInput, RemoteForm, RemoteQueryUpdate } from '@sveltejs/kit' */
-/** @import { InternalRemoteFormIssue, RemoteFunctionResponse } from 'types' */
+/** @import { InternalRemoteFormIssue } from 'types' */
 import { app_dir, base } from '$app/paths/internal/client';
 import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
 import { HttpError } from '@sveltejs/kit/internal';
 import { app, query_responses, _goto, set_nearest_error_page, invalidateAll } from '../client.js';
 import { tick } from 'svelte';
-import { apply_refreshes, categorize_updates, apply_reconnections } from './shared.svelte.js';
+import { categorize_updates, remote_request } from './shared.svelte.js';
 import { createAttachmentKey } from 'svelte/attachments';
 import {
 	convert_formdata,
@@ -182,75 +182,48 @@ export function form(id) {
 						remote_refreshes: Array.from(refreshes ?? [])
 					});
 
-					const response = await fetch(`${base}/${app_dir}/remote/${action_id_without_key}`, {
-						method: 'POST',
-						headers: {
-							'Content-Type': BINARY_FORM_CONTENT_TYPE,
-							// Forms cannot be called during rendering, so it's save to use location here
-							'x-sveltekit-pathname': location.pathname,
-							'x-sveltekit-search': location.search
-						},
-						body: blob
-					});
-
-					if (!response.ok) {
-						// We only end up here in case of a network error or if the server has an internal error
-						// (which shouldn't happen because we handle errors on the server and always send a 200 response)
-						throw new Error('Failed to execute remote function');
-					}
-
-					const form_result = /** @type { RemoteFunctionResponse} */ (await response.json());
-
-					// reset issues in case it's a redirect or error (but issues passed in that case)
-					raw_issues = [];
-					result = undefined;
-
-					if (form_result.type === 'result') {
-						({ issues: raw_issues = [], result } = devalue.parse(form_result.result, app.decoders));
-						const succeeded = raw_issues.length === 0;
-
-						if (succeeded) {
-							if (refreshes === null && !form_result.refreshes && !form_result.reconnects) {
-								void invalidateAll();
-							} else {
-								if (form_result.refreshes) {
-									apply_refreshes(form_result.refreshes);
-								}
-								if (form_result.reconnects) {
-									apply_reconnections(form_result.reconnects);
-								}
-							}
-						} else {
-							if (DEV) {
-								warn_on_missing_issue_reads();
-							}
+					const response = await remote_request(
+						`${base}/${app_dir}/remote/${action_id_without_key}`,
+						{
+							method: 'POST',
+							headers: {
+								'Content-Type': BINARY_FORM_CONTENT_TYPE,
+								// Forms cannot be called during rendering, so it's save to use location here
+								'x-sveltekit-pathname': location.pathname,
+								'x-sveltekit-search': location.search
+							},
+							body: blob
 						}
+					);
 
-						return succeeded;
-					} else if (form_result.type === 'redirect') {
-						const stringified_refreshes = form_result.refreshes ?? '';
-						const stringified_reconnects = form_result.reconnects ?? '';
-						if (stringified_refreshes) {
-							apply_refreshes(stringified_refreshes);
-						}
+					console.log('response', response);
 
-						if (stringified_reconnects) {
-							apply_reconnections(stringified_reconnects);
-						}
-
+					if (response.redirect) {
 						// Use internal version to allow redirects to external URLs
 						void _goto(
-							form_result.location,
+							response.redirect,
 							{
-								invalidateAll:
-									refreshes === null && !stringified_refreshes && !stringified_reconnects
+								invalidateAll: !response.r
 							},
 							0
 						);
 						return true;
-					} else {
-						throw new HttpError(form_result.status ?? 500, form_result.error);
 					}
+
+					({ issues: raw_issues = [], result } = response._ ?? {});
+					const succeeded = raw_issues.length === 0;
+
+					if (succeeded) {
+						if (!response.r) {
+							void invalidateAll();
+						}
+					} else {
+						if (DEV) {
+							warn_on_missing_issue_reads();
+						}
+					}
+
+					return succeeded;
 				} catch (e) {
 					result = undefined;
 					throw e;

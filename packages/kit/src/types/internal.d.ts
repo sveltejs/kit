@@ -312,10 +312,18 @@ export type RemoteFunctionDataNode = {
 };
 
 export type RemoteFunctionData = {
+	/** The result of a command/form invocation */
 	_?: any;
-	q?: Record<string, RemoteFunctionDataNode>;
-	l?: Record<string, RemoteFunctionDataNode>;
+	/** `prerender` data that was accessed during the request */
 	p?: Record<string, RemoteFunctionDataNode>;
+	/** `query` or `query.batch` data that was accessed during the request */
+	q?: Record<string, RemoteFunctionDataNode>;
+	/** `query.live` data that was accessed during the request */
+	l?: Record<string, RemoteFunctionDataNode>;
+	/** Whether there were any refreshes/reconnects during the request */
+	r?: true;
+	/** The redirect location, if any */
+	redirect?: string;
 };
 
 export type RemoteFunctionResponse =

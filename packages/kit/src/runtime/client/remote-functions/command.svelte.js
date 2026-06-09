@@ -47,29 +47,22 @@ export function command(id) {
 					throw updates_error;
 				}
 
-				try {
-					const response = await remote_request(`${base}/${app_dir}/remote/${id}`, {
-						method: 'POST',
-						body: JSON.stringify({
-							payload: await stringify_command_arg(arg, app.hooks.transport),
-							refreshes: Array.from(refreshes ?? [])
-						}),
-						headers
-					});
+				const response = await remote_request(`${base}/${app_dir}/remote/${id}`, {
+					method: 'POST',
+					body: JSON.stringify({
+						payload: await stringify_command_arg(arg, app.hooks.transport),
+						refreshes: Array.from(refreshes ?? [])
+					}),
+					headers
+				});
 
-					console.log('response', response);
-
-					return response._;
-				} catch (e) {
-					if (e instanceof Redirect) {
-						// eslint-disable-next-line preserve-caught-error
-						throw new Error(
-							'Redirects are not allowed in commands. Return a result instead and use goto on the client'
-						);
-					}
-
-					throw e;
+				if (response.redirect) {
+					throw new Error(
+						'Redirects are not allowed in commands. Return a result instead and use goto on the client'
+					);
 				}
+
+				return response._;
 			} finally {
 				overrides?.forEach((fn) => fn());
 

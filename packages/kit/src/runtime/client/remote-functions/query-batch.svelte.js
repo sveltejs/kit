@@ -2,7 +2,7 @@
 /** @import { RemoteFunctionResponse } from 'types' */
 import { app_dir, base } from '$app/paths/internal/client';
 import { app, goto, query_responses } from '../client.js';
-import { get_remote_request_headers, QUERY_FUNCTION_ID } from './shared.svelte.js';
+import { get_remote_request_headers, QUERY_FUNCTION_ID, remote_request } from './shared.svelte.js';
 import { QueryProxy } from './query/proxy.js';
 import * as devalue from 'devalue';
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
@@ -48,57 +48,83 @@ export function query_batch(id) {
 					const batched = batching;
 					batching = new Map();
 
-					try {
-						const response = await fetch(`${base}/${app_dir}/remote/${id}`, {
-							method: 'POST',
-							body: JSON.stringify({
-								payloads: Array.from(batched.keys())
-							}),
-							headers
-						});
+					const response = await remote_request(`${base}/${app_dir}/remote/${id}`, {
+						method: 'POST',
+						body: JSON.stringify({
+							payloads: Array.from(batched.keys())
+						}),
+						headers
+					});
 
-						if (!response.ok) {
-							throw new Error('Failed to execute batch query');
-						}
-
-						const result = /** @type {RemoteFunctionResponse} */ (await response.json());
-						if (result.type === 'error') {
-							throw new HttpError(result.status ?? 500, result.error);
-						}
-
-						if (result.type === 'redirect') {
-							await goto(result.location);
-							throw new Redirect(307, result.location);
-						}
-
-						const results = devalue.parse(result.result, app.decoders);
-
-						// Resolve individual queries
-						// Maps guarantee insertion order so we can do it like this
-						let i = 0;
-
-						for (const resolvers of batched.values()) {
-							for (const { resolve, reject } of resolvers) {
-								if (results[i].type === 'error') {
-									reject(new HttpError(results[i].status, results[i].error));
-								} else {
-									resolve(results[i].data);
-								}
-							}
-							i++;
-						}
-					} catch (error) {
-						// Reject all queries in the batch
-						for (const resolver of batched.values()) {
-							for (const { reject } of resolver) {
-								reject(error);
-							}
-						}
+					if (response.redirect) {
+						await goto(response.redirect);
+						return;
 					}
+
+					for (const resolvers of batched.values()) {
+						for (const { resolve, reject } of resolvers) {
+							// TODO
+							// if (results[i].type === 'error') {
+							// 	reject(new HttpError(results[i].status, results[i].error));
+							// } else {
+							// 	resolve(results[i].data);
+							// }
+							resolve();
+						}
+						// i++;
+					}
+
+					// try {
+					// 	const response = await fetch(`${base}/${app_dir}/remote/${id}`, {
+					// 		method: 'POST',
+					// 		body: JSON.stringify({
+					// 			payloads: Array.from(batched.keys())
+					// 		}),
+					// 		headers
+					// 	});
+
+					// 	if (!response.ok) {
+					// 		throw new Error('Failed to execute batch query');
+					// 	}
+
+					// 	const result = /** @type {RemoteFunctionResponse} */ (await response.json());
+					// 	if (result.type === 'error') {
+					// 		throw new HttpError(result.status ?? 500, result.error);
+					// 	}
+
+					// 	if (result.type === 'redirect') {
+					// 		await goto(result.location);
+					// 		throw new Redirect(307, result.location);
+					// 	}
+
+					// 	const results = devalue.parse(result.result, app.decoders);
+
+					// 	// Resolve individual queries
+					// 	// Maps guarantee insertion order so we can do it like this
+					// 	let i = 0;
+
+					// 	for (const resolvers of batched.values()) {
+					// 		for (const { resolve, reject } of resolvers) {
+					// 			if (results[i].type === 'error') {
+					// 				reject(new HttpError(results[i].status, results[i].error));
+					// 			} else {
+					// 				resolve(results[i].data);
+					// 			}
+					// 		}
+					// 		i++;
+					// 	}
+					// } catch (error) {
+					// 	// Reject all queries in the batch
+					// 	for (const resolver of batched.values()) {
+					// 		for (const { reject } of resolver) {
+					// 			reject(error);
+					// 		}
+					// 	}
+					// }
 				}, 0);
 			});
 
-			return devalue.parse(serialized, app.decoders);
+			// return devalue.parse(serialized, app.decoders);
 		});
 	};
 

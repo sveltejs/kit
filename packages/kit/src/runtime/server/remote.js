@@ -1,4 +1,4 @@
-/** @import { ActionResult, RemoteForm, RequestEvent, SSRManifest, Transport } from '@sveltejs/kit' */
+/** @import { ActionResult, RemoteForm, RequestEvent, SSRManifest } from '@sveltejs/kit' */
 /** @import { RemoteFormInternals, RemoteFunctionData, RemoteFunctionDataNode, RemoteFunctionResponse, RemoteInternals, RequestState, SSROptions } from 'types' */
 
 import { json, error } from '@sveltejs/kit';
@@ -13,7 +13,6 @@ import { check_incorrect_fail_use } from './page/actions.js';
 import { DEV } from 'esm-env';
 import { record_span } from '../telemetry/record_span.js';
 import { deserialize_binary_form } from '../form-utils.js';
-import { noop } from '../../utils/functions.js';
 
 /** @type {typeof handle_remote_call_internal} */
 export async function handle_remote_call(event, state, options, manifest, id) {
@@ -59,97 +58,6 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 	});
 
 	try {
-		if (internals.type === 'query_batch') {
-			if (event.request.method !== 'POST') {
-				throw new SvelteKitError(
-					405,
-					'Method Not Allowed',
-					`\`query.batch\` functions must be invoked via POST request, not ${event.request.method}`
-				);
-			}
-
-			/** @type {{ payloads: string[] }} */
-			const { payloads } = await event.request.json();
-
-			const args = await Promise.all(
-				payloads.map((payload) => parse_remote_arg(payload, transport))
-			);
-
-			const results = await with_request_store({ event, state }, () =>
-				internals.run(args, options)
-			);
-
-			return json(
-				/** @type {RemoteFunctionResponse} */ ({
-					type: 'result',
-					result: stringify(results, transport),
-					refreshes: await serialize_singleflight(state.remote.refreshes),
-					reconnects: await serialize_singleflight(state.remote.reconnects)
-				})
-			);
-		}
-
-		if (internals.type === 'form') {
-			if (event.request.method !== 'POST') {
-				throw new SvelteKitError(
-					405,
-					'Method Not Allowed',
-					`\`form\` functions must be invoked via POST request, not ${event.request.method}`
-				);
-			}
-
-			if (!is_form_content_type(event.request)) {
-				throw new SvelteKitError(
-					415,
-					'Unsupported Media Type',
-					`\`form\` functions expect form-encoded data — received ${event.request.headers.get(
-						'content-type'
-					)}`
-				);
-			}
-
-			const { data, meta, form_data } = await deserialize_binary_form(event.request);
-			state.remote.requested = create_requested_map(meta.remote_refreshes);
-
-			// If this is a keyed form instance (created via form.for(key)), add the key to the form data (unless already set)
-			// Note that additional_args will only be set if the form is not enhanced, as enhanced forms transfer the key inside `data`.
-			if (additional_args && !('id' in data)) {
-				data.id = JSON.parse(decodeURIComponent(additional_args));
-			}
-
-			const fn = internals.fn;
-			const result = await with_request_store({ event, state }, () => fn(data, meta, form_data));
-
-			return json(
-				/** @type {RemoteFunctionResponse} */ ({
-					type: 'result',
-					result: stringify(result, transport),
-					refreshes: result.issues
-						? undefined
-						: await serialize_singleflight(state.remote.refreshes),
-					reconnects: result.issues
-						? undefined
-						: await serialize_singleflight(state.remote.reconnects)
-				})
-			);
-		}
-
-		if (internals.type === 'command') {
-			/** @type {{ payload: string, refreshes?: string[] }} */
-			const { payload, refreshes } = await event.request.json();
-			state.remote.requested = create_requested_map(refreshes);
-			const arg = parse_remote_arg(payload, transport);
-			const _ = await with_request_store({ event, state }, () => fn(arg));
-			const data = await collect_remote_data({ _ }, event, state, options);
-
-			return json(
-				/** @type {RemoteFunctionResponse} */ ({
-					type: 'result',
-					data: stringify(data, transport)
-				})
-			);
-		}
-
 		if (internals.type === 'query_live') {
 			if (event.request.method !== 'GET') {
 				throw new SvelteKitError(
@@ -253,17 +161,105 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 			);
 		}
 
-		const payload =
-			internals.type === 'prerender'
-				? additional_args
-				: /** @type {string} */ (
-						// new URL(...) necessary because we're hiding the URL from the user in the event object
-						new URL(event.request.url).searchParams.get('payload')
+		/** @type {RemoteFunctionData} */
+		const data = {};
+
+		switch (internals.type) {
+			case 'query_batch': {
+				if (event.request.method !== 'POST') {
+					throw new SvelteKitError(
+						405,
+						'Method Not Allowed',
+						`\`query.batch\` functions must be invoked via POST request, not ${event.request.method}`
 					);
+				}
 
-		await with_request_store({ event, state }, () => fn(parse_remote_arg(payload, transport)));
+				/** @type {{ payloads: string[] }} */
+				const { payloads } = await event.request.json();
 
-		const data = await collect_remote_data({}, event, state, options);
+				const args = await Promise.all(
+					payloads.map((payload) => parse_remote_arg(payload, transport))
+				);
+
+				await with_request_store({ event, state }, () => internals.run(args, options));
+
+				break;
+			}
+
+			case 'form': {
+				if (event.request.method !== 'POST') {
+					throw new SvelteKitError(
+						405,
+						'Method Not Allowed',
+						`\`form\` functions must be invoked via POST request, not ${event.request.method}`
+					);
+				}
+
+				if (!is_form_content_type(event.request)) {
+					throw new SvelteKitError(
+						415,
+						'Unsupported Media Type',
+						`\`form\` functions expect form-encoded data — received ${event.request.headers.get(
+							'content-type'
+						)}`
+					);
+				}
+
+				const { data, meta, form_data } = await deserialize_binary_form(event.request);
+				state.remote.requested = create_requested_map(meta.remote_refreshes);
+
+				// If this is a keyed form instance (created via form.for(key)), add the key to the form data (unless already set)
+				// Note that additional_args will only be set if the form is not enhanced, as enhanced forms transfer the key inside `data`.
+				if (additional_args && !('id' in data)) {
+					data.id = JSON.parse(decodeURIComponent(additional_args));
+				}
+
+				const fn = internals.fn;
+				data._ = await with_request_store({ event, state }, () => fn(data, meta, form_data));
+
+				if (data._.issues) {
+					// special case — don't serialize refreshes/reconnects
+					return json(
+						/** @type {RemoteFunctionResponse} */ ({
+							type: 'result',
+							data: stringify(data, transport)
+						})
+					);
+				}
+
+				break;
+			}
+
+			case 'command': {
+				/** @type {{ payload: string, refreshes?: string[] }} */
+				const { payload, refreshes } = await event.request.json();
+				state.remote.requested = create_requested_map(refreshes);
+				const arg = parse_remote_arg(payload, transport);
+
+				data._ = await with_request_store({ event, state }, () => fn(arg));
+
+				break;
+			}
+
+			case 'prerender': {
+				await with_request_store({ event, state }, () =>
+					fn(parse_remote_arg(additional_args, transport))
+				);
+				break;
+			}
+
+			case 'query': {
+				const payload = /** @type {string} */ (
+					// new URL(...) necessary because we're hiding the URL from the user in the event object
+					new URL(event.request.url).searchParams.get('payload')
+				);
+
+				await with_request_store({ event, state }, () => fn(parse_remote_arg(payload, transport)));
+				break;
+			}
+		}
+
+		await collect_remote_data(data, event, state, options);
 
 		return json(
 			/** @type {RemoteFunctionResponse} */ ({
@@ -273,12 +269,12 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 		);
 	} catch (error) {
 		if (error instanceof Redirect) {
+			const data = await collect_remote_data({ redirect: error.location }, event, state, options);
+
 			return json(
 				/** @type {RemoteFunctionResponse} */ ({
-					type: 'redirect',
-					location: error.location,
-					refreshes: await serialize_singleflight(state.remote.refreshes),
-					reconnects: await serialize_singleflight(state.remote.reconnects)
+					type: 'result',
+					data: stringify(data, transport)
 				})
 			);
 		}
@@ -301,35 +297,6 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 				}
 			}
 		);
-	}
-
-	/** @param {Map<string, () => Promise<any>> | null} map */
-	async function serialize_singleflight(map) {
-		if (!map || map.size === 0) {
-			return undefined;
-		}
-
-		const results = await Promise.all(
-			Array.from(map, async ([key, promise]) => {
-				try {
-					return [key, { type: 'result', data: await promise() }];
-				} catch (error) {
-					const status =
-						error instanceof HttpError || error instanceof SvelteKitError ? error.status : 500;
-
-					return [
-						key,
-						{
-							type: 'error',
-							status,
-							error: await handle_error_and_jsonify(event, state, options, error)
-						}
-					];
-				}
-			})
-		);
-
-		return stringify(Object.fromEntries(results), transport);
 	}
 }
 
@@ -379,6 +346,11 @@ export async function collect_remote_data(data, event, state, options) {
 							}
 						},
 						(e) => {
+							if (e instanceof Redirect) {
+								// already handled elsewhere
+								return;
+							}
+
 							if (resolved) {
 								promises.push(
 									convert_error(e).then((e) => {
@@ -399,10 +371,17 @@ export async function collect_remote_data(data, event, state, options) {
 	 * @param {Promise<any>} promise
 	 */
 	function add(node, promise) {
+		data.r = true;
+
 		promises.push(
-			promise.then(
+			Promise.resolve(promise).then(
 				(v) => (node.v = v),
 				async (e) => {
+					if (e instanceof Redirect) {
+						// already handled elsewhere
+						return;
+					}
+
 					node.e = await convert_error(e);
 				}
 			)

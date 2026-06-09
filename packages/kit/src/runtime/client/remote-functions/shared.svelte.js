@@ -105,12 +105,12 @@ export async function remote_request(url, init) {
 	const result = /** @type {RemoteFunctionResponse} */ (await response.json());
 
 	if (result.type === 'error') {
-		throw new HttpError(response.status ?? 500, result.error);
+		throw new HttpError(result.status ?? 500, result.error);
 	}
 
-	const data = result.data
-		? /** @type {RemoteFunctionData} */ (devalue.parse(result.data, app.decoders))
-		: {};
+	const data = /** @type {RemoteFunctionData} */ (
+		result.data ? devalue.parse(result.data, app.decoders) : {}
+	);
 
 	// update queries with refreshed data
 	if (data.q) {
@@ -147,12 +147,6 @@ export async function remote_request(url, init) {
 				}
 			}
 		}
-	}
-
-	// TODO populate the prerender cache?
-
-	if (result.type === 'redirect') {
-		throw new Redirect(307, result.location);
 	}
 
 	return data;
