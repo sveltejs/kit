@@ -1,7 +1,6 @@
 /** @import { Transport } from '@sveltejs/kit' */
 import * as devalue from 'devalue';
 import { base64_decode, base64_encode, text_encoder } from './utils.js';
-import * as svelte from 'svelte';
 
 /**
  * @param {string} route_id

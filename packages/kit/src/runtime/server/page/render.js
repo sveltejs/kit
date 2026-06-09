@@ -24,7 +24,6 @@ import {
 import { create_remote_key } from '../../shared.js';
 import { get_status } from '../../../utils/error.js';
 import * as env from '__sveltekit/env';
-import { noop } from '../../../utils/functions.js';
 
 // TODO rename this function/module
 
@@ -522,54 +521,56 @@ export async function render_response({
 		let serialized_query_data = '';
 		let serialized_prerender_data = '';
 
+		/** @type {Record<string, any>} */
+		const query = {};
+
+		/** @type {Record<string, any>} */
+		const prerender = {};
+
 		if (remote.data) {
-			/** @type {Record<string, any>} */
-			const query = {};
-
-			/** @type {Record<string, any>} */
-			const prerender = {};
-
 			for (const [internals, cache] of remote.data) {
 				// remote functions without an `id` aren't exported, and thus
 				// cannot be called from the client
 				if (!internals.id) continue;
 
 				for (const key in cache) {
-					const value = cache[key];
-
 					const remote_key = create_remote_key(internals.id, key);
-
 					const store = internals.type === 'prerender' ? prerender : query;
 
-					if (
-						event_state.remote.refreshes?.has(remote_key) ||
-						event_state.remote.reconnects?.has(remote_key)
-					) {
-						// This entry was refreshed/set by a command or form action.
-						// Always await it so the mutation result is serialized.
-						store[remote_key] = await value;
-					} else {
-						let resolved = true;
+					let resolved = true;
 
-						// Don't block the response on pending remote data - if a query
-						// hasn't settled yet, it wasn't awaited in the template (or is behind a pending boundary).
-						await Promise.race([
-							Promise.resolve(value).then((v) => resolved && (store[remote_key] = v), noop),
-							Promise.resolve().then(() => (resolved = false))
-						]);
-					}
+					await Promise.race([
+						Promise.resolve(cache[key]).then((v) => resolved && (store[remote_key] = v)),
+						Promise.resolve().then(() => (resolved = false))
+					]);
 				}
 			}
+		}
 
-			const replacer = create_replacer(options.hooks.transport);
+		const promises = [];
 
-			if (Object.keys(query).length > 0) {
-				serialized_query_data = `${global}.query = ${devalue.uneval(query, replacer)};\n\n\t\t\t\t\t\t`;
+		if (event_state.remote.refreshes) {
+			for (const [key, fn] of event_state.remote.refreshes) {
+				promises.push(fn().then((value) => (query[key] = value)));
 			}
+		}
 
-			if (Object.keys(prerender).length > 0) {
-				serialized_prerender_data = `${global}.prerender = ${devalue.uneval(prerender, replacer)};\n\n\t\t\t\t\t\t`;
+		if (event_state.remote.reconnects) {
+			for (const [key, fn] of event_state.remote.reconnects) {
+				promises.push(fn().then((value) => (query[key] = value)));
 			}
+		}
+
+		await Promise.all(promises);
+
+		const replacer = create_replacer(options.hooks.transport);
+
+		if (Object.keys(query).length > 0) {
+			serialized_query_data = `${global}.query = ${devalue.uneval(query, replacer)};\n\n\t\t\t\t\t\t`;
+		}
+
+		if (Object.keys(prerender).length > 0) {
+			serialized_prerender_data = `${global}.prerender = ${devalue.uneval(prerender, replacer)};\n\n\t\t\t\t\t\t`;
 		}
 
 		const serialized_remote_data = `${serialized_query_data}${serialized_prerender_data}`;

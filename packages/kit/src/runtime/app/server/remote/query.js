@@ -420,20 +420,18 @@ function create_query_resource(__, payload, state, fn) {
 			return false;
 		},
 		refresh() {
-			const { event } = get_request_store();
-			if (!event.isRemoteRequest) {
-				// If the form submission is not a remote request, refreshing the data is
-				// useless, because it can't be returned to the client.
-				return Promise.resolve();
-			}
-			const refresh_context = get_refresh_context(__, 'refresh', payload);
-			const is_immediate_refresh = !refresh_context.cache[refresh_context.payload];
-			const value = is_immediate_refresh ? get_promise() : fn();
-			return update_refresh_value(refresh_context, value, is_immediate_refresh);
+			const { state } = get_request_store();
+
+			const key = create_remote_key(__.id, payload);
+
+			delete get_cache(__, state)[payload];
+			(state.remote.refreshes ??= new Map())?.set(key, fn);
+
+			return Promise.resolve();
 		},
 		/** @param {any} value */
 		set(value) {
-			return update_refresh_value(get_refresh_context(__, 'set', payload), value);
+			get_cache(__)[payload] = Promise.resolve(value);
 		},
 		// TODO 3.0 remove this
 		// @ts-expect-error This method no longer exists
@@ -524,7 +522,7 @@ function create_live_query_resource(__, payload, state, signal, get_generator) {
 				);
 			}
 
-			reconnects.set(create_remote_key(__.id, payload), get_promise());
+			reconnects.set(create_remote_key(__.id, payload), get_promise);
 			return Promise.resolve();
 		},
 		/** @ts-expect-error This method no longer exists */
@@ -620,55 +618,3 @@ function create_shared_live_iterator(signal, get_generator) {
 // Add batch as a property to the query function
 Object.defineProperty(query, 'batch', { value: batch, enumerable: true });
 Object.defineProperty(query, 'live', { value: live, enumerable: true });
-
-/**
- * @param {RemoteInternals} __
- * @param {'set' | 'refresh'} action
- * @param {string} payload — the stringified raw argument (i.e. the cache key the client will use)
- * @returns {{ __: RemoteInternals; state: any; refreshes: Map<string, Promise<any>>; cache: Record<string, { serialize: boolean; data: any }>; refreshes_key: string; payload: string }}
- */
-function get_refresh_context(__, action, payload) {
-	const { state } = get_request_store();
-	const { refreshes } = state.remote;
-
-	if (!refreshes) {
-		const name = __.type === 'query_batch' ? `query.batch '${__.name}'` : `query '${__.name}'`;
-		throw new Error(
-			`Cannot call ${action} on ${name} because it is not executed in the context of a command/form remote function`
-		);
-	}
-
-	const cache = get_cache(__, state);
-	const refreshes_key = create_remote_key(__.id, payload);
-
-	return { __, state, refreshes, refreshes_key, cache, payload };
-}
-
-/**
- * @param {{ __: RemoteInternals; refreshes: Map<string, Promise<any>>; cache: Record<string, any>; refreshes_key: string; payload: string }} context
- * @param {any} value
- * @param {boolean} [is_immediate_refresh=false]
- * @returns {Promise<void>}
- */
-function update_refresh_value(
-	{ __, refreshes, refreshes_key, cache, payload },
-	value,
-	is_immediate_refresh = false
-) {
-	const promise = Promise.resolve(value);
-
-	if (!is_immediate_refresh) {
-		cache[payload] = promise;
-	}
-
-	if (__.id) {
-		refreshes.set(refreshes_key, promise);
-	}
-
-	promise.catch(noop);
-
-	// we return an immediately-resolving promise so that the `refresh()` signature is consistent,
-	// but it doesn't delay anything if awaited inside a command. this way, people aren't
-	// penalised if they do `await q1.refresh(); await q2.refresh()`
-	return Promise.resolve();
-}

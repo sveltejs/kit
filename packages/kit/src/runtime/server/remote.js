@@ -301,7 +301,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 		);
 	}
 
-	/** @param {Map<string, Promise<any>> | null} map */
+	/** @param {Map<string, () => Promise<any>> | null} map */
 	async function serialize_singleflight(map) {
 		if (!map || map.size === 0) {
 			return undefined;
@@ -310,7 +310,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 		const results = await Promise.all(
 			Array.from(map, async ([key, promise]) => {
 				try {
-					return [key, { type: 'result', data: await promise }];
+					return [key, { type: 'result', data: await promise() }];
 				} catch (error) {
 					const status =
 						error instanceof HttpError || error instanceof SvelteKitError ? error.status : 500;

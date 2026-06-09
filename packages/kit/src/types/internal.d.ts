@@ -713,12 +713,13 @@ export interface RequestState {
 		record_span: RecordSpan;
 	};
 	readonly remote: {
+		/** Resolved query/prerender data, populated by `await myQuery()` or `myQuery.set(...)` */
 		data: null | Map<RemoteInternals, Record<string, MaybePromise<any>>>;
 		/** Instances created via `myForm.for(...)` */
 		forms: null | Map<string, any>;
-		/** A map of remote function key to corresponding single-flight-mutation promise */
-		refreshes: null | Map<string, Promise<any>>;
-		reconnects: null | Map<string, Promise<void>>;
+		/** Keys that should be refreshed, and a function to get the data if not in `remote.data` */
+		refreshes: null | Map<string, () => Promise<any>>;
+		reconnects: null | Map<string, () => Promise<void>>;
 		/** A map of remote function ID to payloads requested for refreshing by the client */
 		requested: null | Map<string, string[]>;
 		/** A map of query.batch ID to payloads requested for that batch within the same macrotask */

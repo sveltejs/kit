@@ -139,7 +139,7 @@ export function requested(query, limit) {
 		promise.catch(noop);
 
 		const key = create_remote_key(__.id, payload);
-		store.set(key, promise);
+		store.set(key, () => promise);
 	};
 
 	for (const payload of skipped) {
