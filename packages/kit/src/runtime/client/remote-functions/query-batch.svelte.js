@@ -3,6 +3,7 @@ import { app_dir, base } from '$app/paths/internal/client';
 import { app, goto, query_responses } from '../client.js';
 import { get_remote_request_headers, QUERY_FUNCTION_ID, remote_request } from './shared.svelte.js';
 import { QueryProxy } from './query/proxy.js';
+import { HttpError } from '@sveltejs/kit/internal';
 
 /**
  * @param {string} id
@@ -21,7 +22,7 @@ export function query_batch(id) {
 				return value;
 			}
 
-			const serialized = await new Promise((resolve, reject) => {
+			return await new Promise((resolve, reject) => {
 				// create_remote_function caches identical calls, but in case a refresh to the same query is called multiple times this function
 				// is invoked multiple times with the same payload, so we need to deduplicate here
 				const entry = batching.get(payload) ?? [];
@@ -59,77 +60,30 @@ export function query_batch(id) {
 							return;
 						}
 
+						const results = response._;
+						let i = 0;
+
 						for (const resolvers of batched.values()) {
+							const result = results[i];
+
 							for (const { resolve, reject } of resolvers) {
-								// TODO
-								// if (results[i].type === 'error') {
-								// 	reject(new HttpError(results[i].status, results[i].error));
-								// } else {
-								// 	resolve(results[i].data);
-								// }
-								resolve();
+								if (result.type === 'error') {
+									reject(new HttpError(result.status, result.error));
+								} else {
+									resolve(result.data);
+								}
 							}
-							// i++;
+							i++;
 						}
 					} catch (e) {
 						for (const resolvers of batched.values()) {
-							for (const { resolve, reject } of resolvers) {
+							for (const { reject } of resolvers) {
 								reject(e);
 							}
 						}
 					}
-
-					// try {
-					// 	const response = await fetch(`${base}/${app_dir}/remote/${id}`, {
-					// 		method: 'POST',
-					// 		body: JSON.stringify({
-					// 			payloads: Array.from(batched.keys())
-					// 		}),
-					// 		headers
-					// 	});
-
-					// 	if (!response.ok) {
-					// 		throw new Error('Failed to execute batch query');
-					// 	}
-
-					// 	const result = /** @type {RemoteFunctionResponse} */ (await response.json());
-					// 	if (result.type === 'error') {
-					// 		throw new HttpError(result.status ?? 500, result.error);
-					// 	}
-
-					// 	if (result.type === 'redirect') {
-					// 		await goto(result.location);
-					// 		throw new Redirect(307, result.location);
-					// 	}
-
-					// 	const results = devalue.parse(result.result, app.decoders);
-
-					// 	// Resolve individual queries
-					// 	// Maps guarantee insertion order so we can do it like this
-					// 	let i = 0;
-
-					// 	for (const resolvers of batched.values()) {
-					// 		for (const { resolve, reject } of resolvers) {
-					// 			if (results[i].type === 'error') {
-					// 				reject(new HttpError(results[i].status, results[i].error));
-					// 			} else {
-					// 				resolve(results[i].data);
-					// 			}
-					// 		}
-					// 		i++;
-					// 	}
-					// } catch (error) {
-					// 	// Reject all queries in the batch
-					// 	for (const resolver of batched.values()) {
-					// 		for (const { reject } of resolver) {
-					// 			reject(error);
-					// 		}
-					// 	}
-					// }
 				}, 0);
 			});
-
-			// return devalue.parse(serialized, app.decoders);
 		});
 	};
 

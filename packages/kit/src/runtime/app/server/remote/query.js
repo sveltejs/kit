@@ -14,6 +14,8 @@ import {
 } from './shared.js';
 import { noop } from '../../../../utils/functions.js';
 import { SharedIterator } from '../../../../utils/shared-iterator.js';
+import { handle_error_and_jsonify } from '../../../server/utils.js';
+import { HttpError, SvelteKitError } from '@sveltejs/kit/internal';
 
 /**
  * Creates a remote query. When called from the browser, the function will be invoked on the server via a `fetch` call.
@@ -321,18 +323,25 @@ function batch(validate_or_fn, maybe_fn) {
 				false,
 				async () => Promise.all(args.map(validate)),
 				async (/** @type {any[]} */ input) => {
-					const cache = get_cache(__, state);
 					const get_result = await fn(input);
 
-					for (let i = 0; i < input.length; i += 1) {
-						const payload = stringify_remote_arg(args[i], state.transport);
-
-						try {
-							cache[payload] ??= get_result(input[i], i);
-						} catch (e) {
-							cache[payload] = Promise.reject(e);
-						}
-					}
+					return Promise.all(
+						input.map(async (arg, i) => {
+							try {
+								const data = get_result(arg, i);
+								return { type: 'result', data };
+							} catch (error) {
+								return {
+									type: 'error',
+									error: await handle_error_and_jsonify(event, state, options, error),
+									status:
+										error instanceof HttpError || error instanceof SvelteKitError
+											? error.status
+											: 500
+								};
+							}
+						})
+					);
 				}
 			);
 		},
