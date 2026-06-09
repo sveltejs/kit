@@ -337,6 +337,10 @@ export async function collect_remote_data(data, event, state, options) {
 	if (state.remote.explicit) {
 		for (const [internals, record] of state.remote.explicit) {
 			for (const key in record) {
+				// there were explicit refreshes/reconnects (via `refresh()`/`set()`/`reconnect()`),
+				// so the client should apply these single-flight updates instead of calling `invalidateAll()`
+				data.r = true;
+
 				const remote_key = create_remote_key(internals.id, key);
 
 				const type = /** @type {'p' | 'q' | 'l'} */ (
