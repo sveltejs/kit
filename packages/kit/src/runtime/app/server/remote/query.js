@@ -420,8 +420,6 @@ function create_query_resource(__, payload, state, fn) {
 			return false;
 		},
 		refresh() {
-			const { state } = get_request_store();
-
 			const key = create_remote_key(__.id, payload);
 
 			delete get_cache(__, state)[payload];
@@ -431,7 +429,12 @@ function create_query_resource(__, payload, state, fn) {
 		},
 		/** @param {any} value */
 		set(value) {
-			get_cache(__)[payload] = Promise.resolve(value);
+			const promise = Promise.resolve(value);
+
+			const key = create_remote_key(__.id, payload);
+
+			get_cache(__)[payload] = promise;
+			(state.remote.refreshes ??= new Map())?.set(key, () => promise);
 		},
 		// TODO 3.0 remove this
 		// @ts-expect-error This method no longer exists
