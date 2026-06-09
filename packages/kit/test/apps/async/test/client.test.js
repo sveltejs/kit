@@ -440,6 +440,16 @@ test.describe('remote function mutations', () => {
 		expect(request_count).toBe(1);
 	});
 
+	test('query.batch redirect settles batched promises', async ({ page }) => {
+		await page.goto('/remote/batch-redirect');
+
+		await page.click('#trigger');
+
+		// the redirect must both navigate and settle the awaited query
+		await expect(page.locator('#status')).toHaveText('resolved');
+		expect(page.url()).toContain('#redirected');
+	});
+
 	test('query.batch resolver function always receives validated arguments', async ({ page }) => {
 		await page.goto('/remote/batch-validation');
 
