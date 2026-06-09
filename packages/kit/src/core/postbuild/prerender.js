@@ -248,8 +248,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 				throw new Error('Cannot read clientAddress during prerendering');
 			},
 			prerendering: {
-				dependencies,
-				remote_responses
+				dependencies
 			},
 			read: (file) => {
 				// stuff we just wrote

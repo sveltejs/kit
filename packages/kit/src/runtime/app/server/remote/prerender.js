@@ -89,10 +89,11 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 
 	/** @type {RemotePrerenderFunction<Input, Output> & { __: RemotePrerenderInternals }} */
 	const wrapper = (arg) => {
+		const { event, state } = get_request_store();
+		const payload = stringify_remote_arg(arg, state.transport);
+
 		/** @type {Promise<Output> & Partial<RemoteResource<Output>>} */
-		const promise = (async () => {
-			const { event, state } = get_request_store();
-			const payload = stringify_remote_arg(arg, state.transport);
+		const promise = (get_cache(__, state)[payload] ??= (async () => {
 			const id = __.id;
 			const url = `${base}/${app_dir}/remote/${id}${payload ? `/${payload}` : ''}`;
 
@@ -126,19 +127,7 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 				}
 			}
 
-			if (state.prerendering?.remote_responses.has(url)) {
-				return /** @type {Promise<any>} */ (state.prerendering.remote_responses.get(url));
-			}
-
-			const promise = get_response(__, payload, state, () =>
-				run_remote_function(event, state, false, () => validate(arg), fn)
-			);
-
-			if (state.prerendering) {
-				state.prerendering.remote_responses.set(url, promise);
-			}
-
-			const result = await promise;
+			const result = await run_remote_function(event, state, false, () => validate(arg), fn);
 
 			if (state.prerendering) {
 				const body = { type: 'result', result: stringify(result, state.transport) };
@@ -150,7 +139,7 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 
 			// TODO this is missing error/loading/current/status
 			return result;
-		})();
+		})());
 
 		promise.catch(noop);
 

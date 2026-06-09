@@ -1,10 +1,12 @@
 /** @import { RemotePrerenderFunction } from '@sveltejs/kit' */
+/** @import { RemoteFunctionDataNode } from 'types' */
 import { app_dir, base } from '$app/paths/internal/client';
 import { version } from '$app/env';
 import * as devalue from 'devalue';
 import { app, prerender_responses } from '../client.js';
 import { get_remote_request_headers, remote_request } from './shared.svelte.js';
 import { create_remote_key, stringify_remote_arg } from '../../shared.js';
+import { HttpError } from '@sveltejs/kit/internal';
 
 // Initialize Cache API for prerender functions
 const CACHE_NAME = __SVELTEKIT_DEV__ ? `sveltekit:${Date.now()}` : `sveltekit:${version}`;
@@ -93,14 +95,19 @@ export function prerender(id) {
 					}
 				}
 
-				const encoded = await remote_request(url, headers);
+				const response = await remote_request(url, headers);
+				const node = /** @type {Record<string, RemoteFunctionDataNode>} */ (response.p)[cache_key];
+
+				if (node.e) {
+					throw new HttpError(node.e[0], node.e[1]);
+				}
 
 				// For successful prerender requests, save to cache
 				if (prerender_cache) {
-					void put(url, encoded);
+					void put(url, devalue.stringify(node.v, app.encoders));
 				}
 
-				return devalue.parse(encoded, app.decoders);
+				return node.v;
 			});
 
 			prerender_resources.set(cache_key, new WeakRef(resource));

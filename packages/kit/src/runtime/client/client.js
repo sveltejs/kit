@@ -333,11 +333,11 @@ export async function start(_app, _target, hydrate) {
 
 		// TODO we're currently ignoring errors, is that right?
 		for (const k in q) {
-			if (q[k].v) query_responses[k] = q[k].v;
+			if (!q[k].e) query_responses[k] = q[k].v;
 		}
 
 		for (const k in p) {
-			if (p[k].v) prerender_responses[k] = p[k].v;
+			if (!p[k].e) prerender_responses[k] = p[k].v;
 		}
 	}
 

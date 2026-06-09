@@ -109,52 +109,57 @@ export async function remote_request(url, headers) {
 
 	const result = /** @type {RemoteFunctionResponse} */ (await response.json());
 
-	if (result.type !== 'error') {
-		const data = /** @type {RemoteFunctionData} */ (devalue.parse(result.data, app.decoders));
-
-		// update queries with refreshed data
-		if (data.q) {
-			for (const key in data.q) {
-				const parts = split_remote_key(key);
-				const entry = query_map.get(parts.id)?.get(parts.payload);
-
-				if (entry?.resource) {
-					const result = data.q[key];
-
-					if (result.e) {
-						entry.resource.fail(new HttpError(result.e[0] ?? 500, result.e[1]));
-					} else {
-						entry.resource.set(result.v);
-					}
-				}
-			}
-		}
-
-		// reconnect live queries
-		if (data.l) {
-			for (const key in data.l) {
-				const parts = split_remote_key(key);
-				const entry = live_query_map.get(parts.id)?.get(parts.payload);
-
-				if (entry?.resource) {
-					const result = data.l[key];
-
-					if (result.e) {
-						entry.resource.fail(new HttpError(result.e[0] ?? 500, result.e[1]));
-					} else {
-						entry.resource.set(result.v);
-						void entry.resource.reconnect();
-					}
-				}
-			}
-		}
-
-		// TODO populate the prerender cache?
+	if (result.type === 'error') {
+		throw new HttpError(response.status ?? 500, result.error);
 	}
 
-	const resolved = await handle_side_channel_response(result);
+	const data = /** @type {RemoteFunctionData} */ (devalue.parse(result.data, app.decoders));
 
-	return resolved.data;
+	// update queries with refreshed data
+	if (data.q) {
+		for (const key in data.q) {
+			const parts = split_remote_key(key);
+			const entry = query_map.get(parts.id)?.get(parts.payload);
+
+			if (entry?.resource) {
+				const result = data.q[key];
+
+				if (result.e) {
+					entry.resource.fail(new HttpError(result.e[0] ?? 500, result.e[1]));
+				} else {
+					entry.resource.set(result.v);
+				}
+			}
+		}
+	}
+
+	// reconnect live queries
+	if (data.l) {
+		for (const key in data.l) {
+			const parts = split_remote_key(key);
+			const entry = live_query_map.get(parts.id)?.get(parts.payload);
+
+			if (entry?.resource) {
+				const result = data.l[key];
+
+				if (result.e) {
+					entry.resource.fail(new HttpError(result.e[0] ?? 500, result.e[1]));
+				} else {
+					entry.resource.set(result.v);
+					void entry.resource.reconnect();
+				}
+			}
+		}
+	}
+
+	// TODO populate the prerender cache?
+
+	if (result.type === 'redirect') {
+		await goto(result.location);
+		throw new Redirect(307, result.location);
+	}
+
+	return data;
 }
 
 /**

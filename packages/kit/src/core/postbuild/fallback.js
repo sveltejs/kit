@@ -40,8 +40,7 @@ async function generate_fallback({ manifest_path, env, out_dir, origin, assets }
 		},
 		prerendering: {
 			fallback: true,
-			dependencies: new Map(),
-			remote_responses: new Map()
+			dependencies: new Map()
 		},
 		read: (file) => readFileSync(join(assets, file))
 	});
