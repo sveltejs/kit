@@ -81,7 +81,9 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 			return json(
 				/** @type {RemoteFunctionResponse} */ ({
 					type: 'result',
-					result: stringify(results, transport)
+					result: stringify(results, transport),
+					refreshes: await serialize_singleflight(state.remote.refreshes),
+					reconnects: await serialize_singleflight(state.remote.reconnects)
 				})
 			);
 		}
@@ -266,7 +268,9 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 		return json(
 			/** @type {RemoteFunctionResponse} */ ({
 				type: 'result',
-				result: stringify(data, transport)
+				result: stringify(data, transport),
+				refreshes: await serialize_singleflight(state.remote.refreshes),
+				reconnects: await serialize_singleflight(state.remote.reconnects)
 			})
 		);
 	} catch (error) {

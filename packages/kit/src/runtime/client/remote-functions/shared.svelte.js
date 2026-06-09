@@ -109,6 +109,16 @@ export async function remote_request(url, headers) {
 
 	const result = /** @type {RemoteFunctionResponse} */ (await response.json());
 
+	if (result.type !== 'error') {
+		if (result.refreshes) {
+			apply_refreshes(result.refreshes);
+		}
+
+		if (result.reconnects) {
+			apply_reconnections(result.reconnects);
+		}
+	}
+
 	const resolved = await handle_side_channel_response(result);
 
 	return resolved.result;
