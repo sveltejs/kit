@@ -244,11 +244,11 @@ export function get_cache(internals, state = get_request_store().state) {
  * @param {RequestState} state
  */
 export function get_implicit_lookup(internals, state = get_request_store().state) {
-	let cache = state.remote.explicit?.get(internals);
+	let cache = state.remote.implicit?.get(internals);
 
 	if (cache === undefined) {
 		cache = {};
-		(state.remote.explicit ??= new Map()).set(internals, cache);
+		(state.remote.implicit ??= new Map()).set(internals, cache);
 	}
 
 	return cache;
