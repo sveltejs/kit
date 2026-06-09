@@ -13,7 +13,7 @@ import {
 	parse_remote_response,
 	run_remote_function
 } from './shared.js';
-import { HttpError } from '@sveltejs/kit/internal';
+import { error } from '@sveltejs/kit';
 
 /**
  * Creates a remote prerender function. When called from the browser, the function will be invoked on the server via a `fetch` call.
@@ -110,7 +110,7 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 					const prerendered = /** @type {RemoteFunctionResponse} */ await response.json();
 
 					if (prerendered.type === 'error') {
-						throw new HttpError(prerendered.status, prerendered.error);
+						error(prerendered.status, prerendered.error);
 					}
 
 					return parse_remote_response(prerendered.data, state.transport)._;
