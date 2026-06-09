@@ -18,7 +18,7 @@ export function query_batch(id) {
 	/** @type {RemoteQueryFunction<any, any>} */
 	const wrapper = (arg) => {
 		return new QueryProxy(id, arg, async (key, payload) => {
-			if (query_responses[key]) {
+			if (Object.hasOwn(query_responses, key)) {
 				const value = query_responses[key];
 				delete query_responses[key];
 				return value;

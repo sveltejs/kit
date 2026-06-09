@@ -85,8 +85,8 @@ export class LiveQuery {
 		this.#resolve_first = resolve;
 		this.#reject_first = reject;
 
-		const value = query_responses[key];
-		if (value !== undefined) {
+		if (Object.hasOwn(query_responses, key)) {
+			const value = query_responses[key];
 			delete query_responses[key];
 			this.set(value);
 		}
