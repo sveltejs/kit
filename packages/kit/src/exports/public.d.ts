@@ -478,7 +478,7 @@ export interface KitConfig {
 	experimental?: {
 		/**
 		 * Whether to enable explicit environment variables using `src/env.js` or `src/env.ts`.
-		 * @since 2.62.0
+		 * @since 2.63.0
 		 * @default false
 		 */
 		explicitEnvironmentVariables?: boolean;
@@ -1696,7 +1696,7 @@ export interface SSRManifest {
 
 	/** private fields */
 	_: {
-		client: NonNullable<BuildData['client']>;
+		client: BuildData['client'];
 		nodes: SSRNodeLoader[];
 		/** hashed filename -> import to that file */
 		remotes: Record<string, () => Promise<any>>;

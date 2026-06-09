@@ -452,7 +452,7 @@ declare module '@sveltejs/kit' {
 		experimental?: {
 			/**
 			 * Whether to enable explicit environment variables using `src/env.js` or `src/env.ts`.
-			 * @since 2.62.0
+			 * @since 2.63.0
 			 * @default false
 			 */
 			explicitEnvironmentVariables?: boolean;
@@ -1670,7 +1670,7 @@ declare module '@sveltejs/kit' {
 
 		/** private fields */
 		_: {
-			client: NonNullable<BuildData['client']>;
+			client: BuildData['client'];
 			nodes: SSRNodeLoader[];
 			/** hashed filename -> import to that file */
 			remotes: Record<string, () => Promise<any>>;
@@ -2957,8 +2957,16 @@ declare module '@sveltejs/kit' {
 	export type LessThan<TNumber extends number, TArray extends any[] = []> = TNumber extends TArray["length"] ? TArray[number] : LessThan<TNumber, [...TArray, TArray["length"]]>;
 	export type NumericRange<TStart extends number, TEnd extends number> = Exclude<TEnd | LessThan<TEnd>, LessThan<TStart>>;
 	type ValidPageOption = (typeof valid_page_options_array)[number];
-	type PageOptions = Partial<Record<ValidPageOption, any>>;
-	const valid_page_options_array: readonly ["ssr", "prerender", "csr", "trailingSlash", "config", "entries", "load"];
+
+	type PageOptions = Partial<{
+		[K in ValidPageOption]: K extends 'ssr' | 'csr'
+			? boolean
+			: K extends 'prerender'
+				? PrerenderOption
+				: K extends 'trailingSlash'
+					? TrailingSlash
+					: any;
+	}>;
 	export const VERSION: string;
 	class HttpError_1 {
 		
@@ -2975,6 +2983,7 @@ declare module '@sveltejs/kit' {
 		status: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308;
 		location: string;
 	}
+	const valid_page_options_array: readonly ["ssr", "prerender", "csr", "trailingSlash", "config", "entries", "load"];
 
 	export {};
 }
