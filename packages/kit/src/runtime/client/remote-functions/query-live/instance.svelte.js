@@ -86,9 +86,24 @@ export class LiveQuery {
 		this.#reject_first = reject;
 
 		if (Object.hasOwn(query_responses, key)) {
-			const value = query_responses[key];
+			const node = query_responses[key];
 			delete query_responses[key];
-			this.set(value);
+
+			if (node.e) {
+				// the query failed during SSR — seed the failed state (mirroring `fail()`,
+				// minus its terminal `#done`), so the main loop still connects as usual
+				// and the query can recover
+				const error = new HttpError(node.e[0] ?? 500, node.e[1]);
+				this.#loading = false;
+				this.#error = error;
+
+				promise.catch(noop);
+				this.#reject_first?.(error);
+				this.#resolve_first = null;
+				this.#reject_first = null;
+			} else {
+				this.set(node.v);
+			}
 		}
 	}
 

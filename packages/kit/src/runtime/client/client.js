@@ -1,4 +1,4 @@
-/** @import { ServerNodesResponse, ServerRedirectNode } from 'types' */
+/** @import { RemoteFunctionDataNode, ServerNodesResponse, ServerRedirectNode } from 'types' */
 /** @import { CacheEntry } from './remote-functions/cache.svelte.js' */
 /** @import { Query } from './remote-functions/query/instance.svelte.js' */
 /** @import { LiveQuery } from './remote-functions/query-live/instance.svelte.js' */
@@ -202,18 +202,20 @@ let target;
 export let app;
 
 /**
- * Data that was serialized during SSR for queries/forms/commands.
- * This is cleared before client-side loads run.
- * @type {Record<string, any>}
+ * Data that was serialized during SSR for queries/forms/commands, stored as
+ * `{ v }` (value) or `{ e }` (error) nodes so that failed states survive hydration.
+ * Entries are deleted as they are consumed (when the corresponding resource is created).
+ * @type {Record<string, RemoteFunctionDataNode>}
  */
-export let query_responses = {};
+export const query_responses = {};
 
 /**
- * Data that was serialized during SSR for prerender functions.
+ * Data that was serialized during SSR for prerender functions, stored as
+ * `{ v }` (value) or `{ e }` (error) nodes.
  * This persists across client-side navigations.
- * @type {Record<string, any>}
+ * @type {Record<string, RemoteFunctionDataNode>}
  */
-export let prerender_responses = {};
+export const prerender_responses = {};
 
 /** @type {Array<((url: URL) => boolean)>} */
 const invalidated = [];
@@ -328,9 +330,15 @@ export async function start(_app, _target, hydrate) {
 		);
 	}
 
-	if (__SVELTEKIT_PAYLOAD__) {
-		query_responses = __SVELTEKIT_PAYLOAD__.query ?? {};
-		prerender_responses = __SVELTEKIT_PAYLOAD__.prerender ?? {};
+	if (__SVELTEKIT_PAYLOAD__.data) {
+		const { q = {}, p = {}, l = {}, f = {} } = __SVELTEKIT_PAYLOAD__.data;
+
+		// store the whole nodes — error records seed the corresponding
+		// resources in a failed state when they are created during hydration
+		for (const k in q) query_responses[k] = q[k];
+		for (const k in l) query_responses[k] = l[k];
+		for (const k in f) query_responses[k] = f[k];
+		for (const k in p) prerender_responses[k] = p[k];
 	}
 
 	// detect basic auth credentials in the current URL
@@ -700,10 +708,6 @@ async function initialize(result, target, hydrate) {
 					return error;
 				}
 			: undefined
-	});
-
-	void svelte.settled?.().then(() => {
-		query_responses = {};
 	});
 
 	// Wait for a microtask in case svelte experimental async is enabled,
