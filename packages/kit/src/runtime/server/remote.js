@@ -463,7 +463,10 @@ export async function handle_remote_form_post(event, state, manifest, id) {
  * @returns {Promise<ActionResult>}
  */
 async function handle_remote_form_post_internal(event, state, manifest, id) {
-	const [hash, name, action_id] = id.split('/');
+	// `hash` and `name` can never contain a `/`, but the JSON-stringified key of a
+	// keyed (`form.for(key)`) instance can — rejoin the remaining segments
+	const [hash, name, ...rest] = id.split('/');
+	const action_id = rest.join('/');
 	const remotes = manifest._.remotes;
 	const module = await remotes[hash]?.();
 

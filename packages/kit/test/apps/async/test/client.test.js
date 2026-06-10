@@ -887,6 +887,18 @@ test.describe('remote function mutations', () => {
 		await expect(page.locator('#result')).toHaveText('none');
 	});
 
+	test('form keys containing slashes work with native (non-enhanced) submissions', async ({
+		page
+	}) => {
+		await page.goto('/remote/form/native-result');
+		await page.locator('#keyed-slash input[name="message"]').fill('hello');
+		await page.click('#keyed-slash button');
+
+		// wait for the page resulting from the full-page POST to hydrate
+		await expect(page.locator('#hydrated')).toHaveText('true');
+		await expect(page.locator('#keyed-slash-result')).toHaveText('echo: hello');
+	});
+
 	test('form submission with .updates() does not trigger invalidateAll', async ({ page }) => {
 		await page.goto(`/remote/form/updates-no-invalidate/${Date.now()}${Math.random()}`);
 
