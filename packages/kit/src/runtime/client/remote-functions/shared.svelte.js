@@ -1,7 +1,8 @@
 /** @import { RemoteFunctionResponse, RemoteFunctionData } from 'types' */
 /** @import { RemoteQueryUpdate } from '@sveltejs/kit' */
+/** @import { CacheEntry } from './cache.svelte.js' */
 import * as devalue from 'devalue';
-import { app, goto, live_query_map, query_map } from '../client.js';
+import { app, goto, live_query_map, query_map, query_responses } from '../client.js';
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
 import { untrack } from 'svelte';
 import { create_remote_key, split_remote_key } from '../../shared.js';
@@ -112,21 +113,31 @@ export async function remote_request(url, init) {
 		result.data ? devalue.parse(result.data, app.decoders) : {}
 	);
 
+	/**
+	 *
+	 * @param {string} key
+	 * @param {CacheEntry<any> | undefined} entry
+	 * @param {any} result
+	 */
+	function refresh(key, entry, result) {
+		if (entry?.resource) {
+			if (result.e) {
+				entry.resource.fail(new HttpError(result.e[0] ?? 500, result.e[1]));
+			} else {
+				entry.resource.set(result.v);
+			}
+		} else if (!result.e) {
+			query_responses[key] = result.v;
+		}
+	}
+
 	// update queries with refreshed data
 	if (data.q) {
 		for (const key in data.q) {
 			const parts = split_remote_key(key);
 			const entry = query_map.get(parts.id)?.get(parts.payload);
 
-			if (entry?.resource) {
-				const result = data.q[key];
-
-				if (result.e) {
-					entry.resource.fail(new HttpError(result.e[0] ?? 500, result.e[1]));
-				} else {
-					entry.resource.set(result.v);
-				}
-			}
+			refresh(key, entry, data.q[key]);
 		}
 	}
 
@@ -136,16 +147,8 @@ export async function remote_request(url, init) {
 			const parts = split_remote_key(key);
 			const entry = live_query_map.get(parts.id)?.get(parts.payload);
 
-			if (entry?.resource) {
-				const result = data.l[key];
-
-				if (result.e) {
-					entry.resource.fail(new HttpError(result.e[0] ?? 500, result.e[1]));
-				} else {
-					entry.resource.set(result.v);
-					void entry.resource.reconnect();
-				}
-			}
+			refresh(key, entry, data.l[key]);
+			void entry?.resource.reconnect();
 		}
 	}
 
