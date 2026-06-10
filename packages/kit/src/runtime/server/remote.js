@@ -370,9 +370,10 @@ export async function collect_remote_data(data, event, state, options) {
 			if (!internals.id) continue;
 
 			for (const key in record) {
-				const remote_key = create_remote_key(internals.id, key);
+				// form outputs are registered under the client-side action id directly
+				const remote_key = internals.type === 'form' ? key : create_remote_key(internals.id, key);
 
-				const type = /** @type {'p' | 'q' | 'l'} */ (
+				const type = /** @type {'p' | 'q' | 'l' | 'f'} */ (
 					internals.type === 'query_live' ? 'l' : internals.type[0]
 				);
 

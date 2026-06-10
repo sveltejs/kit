@@ -322,6 +322,8 @@ export type RemoteFunctionData = {
 	q?: Record<string, RemoteFunctionDataNode>;
 	/** `query.live` data that was accessed during the request */
 	l?: Record<string, RemoteFunctionDataNode>;
+	/** `form` outputs (result/issues/input) from a non-enhanced submission, keyed by the client-side action id */
+	f?: Record<string, RemoteFunctionDataNode>;
 	/** Whether there were any refreshes/reconnects during the request */
 	r?: true;
 	/** The redirect location, if any */
@@ -667,6 +669,11 @@ export interface RemoteCommandInternals extends BaseRemoteInternals {
 
 export interface RemoteFormInternals extends BaseRemoteInternals {
 	type: 'form';
+	/**
+	 * For keyed (`form.for(key)`) instances: the id as the client computes it
+	 * (the key is JSON-stringified but not URI-encoded, unlike `id`)
+	 */
+	action_id?: string;
 	fn(body: Record<string, any>, meta: BinaryFormMeta, form_data: FormData | null): Promise<any>;
 }
 

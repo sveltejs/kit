@@ -847,6 +847,61 @@ test.describe('remote function mutations', () => {
 		// Should have refreshed
 		await expect(count).toHaveText('Count: 1');
 	});
+
+	test('form result from a native (non-enhanced) submission survives hydration', async ({
+		page
+	}) => {
+		await page.goto('/remote/form/native-result');
+		await page.locator('#plain input[name="message"]').fill('hello');
+		await page.click('#plain button');
+
+		// wait for the page resulting from the full-page POST to hydrate
+		await expect(page.locator('#hydrated')).toHaveText('true');
+		await expect(page.locator('#result')).toHaveText('echo: hello');
+	});
+
+	test('form issues and input from a native (non-enhanced) submission survive hydration', async ({
+		page
+	}) => {
+		await page.goto('/remote/form/native-result');
+		await page.locator('#plain input[name="message"]').fill('ab');
+		await page.click('#plain button');
+
+		// wait for the page resulting from the full-page POST to hydrate
+		await expect(page.locator('#hydrated')).toHaveText('true');
+		await expect(page.locator('#issue')).toHaveText('too short');
+		await expect(page.locator('#plain input[name="message"]')).toHaveValue('ab');
+	});
+
+	test('keyed form result from a native (non-enhanced) submission survives hydration', async ({
+		page
+	}) => {
+		await page.goto('/remote/form/native-result');
+		await page.locator('#keyed input[name="message"]').fill('hello');
+		await page.click('#keyed button');
+
+		// wait for the page resulting from the full-page POST to hydrate
+		await expect(page.locator('#hydrated')).toHaveText('true');
+		await expect(page.locator('#keyed-result')).toHaveText('echo: hello');
+		// the result must not leak to the unkeyed instance
+		await expect(page.locator('#result')).toHaveText('none');
+	});
+
+	test('form submission with .updates() does not trigger invalidateAll', async ({ page }) => {
+		await page.goto(`/remote/form/updates-no-invalidate/${Date.now()}${Math.random()}`);
+
+		const count = page.locator('#count');
+		await expect(count).toHaveText('Count: 0');
+
+		await page.click('button');
+		await expect(page.locator('#result')).toHaveText('Result: done');
+
+		await page.waitForTimeout(100); // allow all requests to finish (in case there are query refreshes which shouldn't happen)
+
+		// the developer took control of updates via `.updates()`, so the query
+		// must not have been refreshed by an implicit invalidateAll
+		await expect(count).toHaveText('Count: 0');
+	});
 });
 
 test.describe('client error boundaries', () => {
