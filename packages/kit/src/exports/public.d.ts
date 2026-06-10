@@ -1985,7 +1985,19 @@ type RemoteFormFieldMethods<T> = {
 	set(input: DeepPartial<T>): DeepPartial<T>;
 	/** Validation issues, if any */
 	issues(): RemoteFormIssue[] | undefined;
-};
+} & (T extends File
+	? {
+			/** Current file upload progress */
+			progress(): {
+				/** Percentage of upload progress, from 0.0 to 1.0 */
+				readonly percent: number;
+				/** Bytes uploaded so far */
+				readonly uploaded: number;
+				/** Total bytes to upload */
+				readonly total: number;
+			};
+		}
+	: unknown);
 
 // These two types use "T extends unknown ? .. : .." to distribute over unions.
 // Example: if "type T = A | b" then "keyof T" only contains keys that both A and B have, with "KeysOfUnion<T>" we get the keys of both A and B
