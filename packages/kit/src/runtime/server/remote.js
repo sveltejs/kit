@@ -336,6 +336,12 @@ export async function collect_remote_data(data, event, state, options) {
 
 	if (state.remote.explicit) {
 		for (const [internals, record] of state.remote.explicit) {
+			// Private (non-exported) remote functions have no `id` and must never be
+			// serialized into the response, otherwise their (potentially private) result
+			// would be shipped to the client under a malformed `undefined/...` key. Skip
+			// them before setting `data.r`, so private-only refreshes don't suppress `invalidateAll()`.
+			if (!internals.id) continue;
+
 			for (const key in record) {
 				// there were explicit refreshes/reconnects (via `refresh()`/`set()`/`reconnect()`),
 				// so the client should apply these single-flight updates instead of calling `invalidateAll()`
@@ -372,6 +378,11 @@ export async function collect_remote_data(data, event, state, options) {
 
 	if (state.remote.implicit) {
 		for (const [internals, record] of state.remote.implicit) {
+			// Private (non-exported) remote functions have no `id` and must never be
+			// serialized into the response — otherwise their (potentially private) result
+			// would be shipped to the client under a malformed `undefined/...` key.
+			if (!internals.id) continue;
+
 			for (const key in record) {
 				const remote_key = create_remote_key(internals.id, key);
 

@@ -64,6 +64,27 @@ test.describe('remote functions', () => {
 		await expect(page.locator('h1')).toHaveText('3');
 	});
 
+	test('private (non-exported) query results are not leaked into command responses', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		test.skip(!javaScriptEnabled, 'requires JavaScript to invoke the command');
+
+		await page.goto('/remote/private-query');
+
+		const [response] = await Promise.all([
+			page.waitForResponse((response) => response.url().includes('/remote/private-query')),
+			page.getByRole('button', { name: 'reveal' }).click()
+		]);
+
+		// the command returns the uppercased secret...
+		await expect(page.locator('[data-id="result"]')).toHaveText('PRIVATE-DATA');
+
+		// ...but the raw private query result must never appear in the serialized payload
+		const body = await response.text();
+		expect(body).not.toContain('private-data');
+	});
+
 	test('queries can access the route/url of the page they were called from', async ({
 		page,
 		clicknav
