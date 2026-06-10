@@ -56,8 +56,6 @@ import { should_ignore, has_children } from './static_analysis/utils.js';
 import { process_config } from '../../core/config/index.js';
 import { treeshake_prerendered_remotes } from './build/remote.js';
 
-const cwd = process.cwd();
-
 /** @type {string} */
 let root;
 
@@ -153,10 +151,12 @@ let vite_plugin_svelte;
  * @returns {Promise<Plugin[]>}
  */
 export async function sveltekit(config) {
+	const cwd = process.cwd();
+
 	const { extensions, compilerOptions, vitePlugin, preprocess, ...rest } = config ?? {};
 	const svelte_config = process_config(
 		{ extensions, compilerOptions, vitePlugin, preprocess, kit: rest },
-		{ cwd: process.cwd(), source: 'SvelteKit options from Vite config' }
+		{ cwd, source: 'SvelteKit options from Vite config' }
 	);
 
 	const config_file = ['svelte.config.js', 'svelte.config.ts'].find((file) => fs.existsSync(file));
@@ -356,7 +356,7 @@ function kit({ svelte_config, adapter }) {
 					// include the directory that contains the workspaces declaration
 					// which usually also contains hoisted packages
 					// see https://vite.dev/guide/api-javascript#searchforworkspaceroot
-					path.resolve(vite.searchForWorkspaceRoot(cwd), 'node_modules')
+					path.resolve(vite.searchForWorkspaceRoot(process.cwd()), 'node_modules')
 				]);
 
 				// We can only add directories to the allow list, so we find out
@@ -1666,7 +1666,7 @@ function kit({ svelte_config, adapter }) {
 				out,
 				remotes,
 				metadata,
-				cwd,
+				process.cwd(),
 				server_chunks,
 				vite_config.build.sourcemap
 			);
