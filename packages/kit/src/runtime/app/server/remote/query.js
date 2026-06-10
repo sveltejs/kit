@@ -12,8 +12,8 @@ import {
 	run_remote_generator
 } from './shared.js';
 import { handle_error_and_jsonify } from '../../../server/utils.js';
-import { HttpError, SvelteKitError } from '@sveltejs/kit/internal';
 import { noop } from '../../../../utils/functions.js';
+import { get_status } from '../../../../utils/error.js';
 import { SharedIterator } from '../../../../utils/shared-iterator.js';
 
 /**
@@ -331,10 +331,7 @@ function batch(validate_or_fn, maybe_fn) {
 								return {
 									type: 'error',
 									error: await handle_error_and_jsonify(event, state, options, error),
-									status:
-										error instanceof HttpError || error instanceof SvelteKitError
-											? error.status
-											: 500
+									status: get_status(error)
 								};
 							}
 						})
@@ -361,8 +358,7 @@ function batch(validate_or_fn, maybe_fn) {
 		const payload = stringify_remote_arg(arg, state.transport);
 
 		return create_query_resource(__, payload, state, () =>
-			// Collect all the calls to the same query in the same macrotask,
-			// then execute them as one backend request.
+			// Collect all the calls to the same query in the same macrotask, then execute them as one backend request.
 			enqueue(payload, () => validate(arg))
 		);
 	};
@@ -388,9 +384,7 @@ function create_query_resource(__, payload, state, fn) {
 	};
 
 	const populate_hydratable = () => {
-		// accessing data properties needs to kick off the work
-		// so that it gets seeded in the hydration cache
-		// and becomes available on the client
+		// accessing data properties needs to kick off the work so that it gets seeded in the hydration cache and becomes available on the client
 		void (__.id && state.is_in_render && get_promise());
 	};
 
@@ -422,8 +416,7 @@ function create_query_resource(__, payload, state, fn) {
 		refresh() {
 			const { event } = get_request_store();
 			if (!event.isRemoteRequest) {
-				// If the form submission is not a remote request, refreshing the data is
-				// useless, because it can't be returned to the client.
+				// If the form submission is not a remote request, refreshing the data is useless, because it can't be returned to the client.
 				return Promise.resolve();
 			}
 			const refresh_context = get_refresh_context(__, 'refresh', payload);
@@ -570,8 +563,7 @@ function create_live_query_resource(__, payload, state, signal, get_generator) {
  */
 function create_shared_live_iterator(signal, get_generator) {
 	return new SharedIterator((instance) => {
-		// Don't bother starting the pump if the request has already been
-		// aborted between cache creation and first subscription.
+		// Don't bother starting the pump if the request has already been aborted between cache creation and first subscription.
 		if (signal.aborted) {
 			instance.done();
 			return noop;
@@ -579,10 +571,7 @@ function create_shared_live_iterator(signal, get_generator) {
 
 		const generator = get_generator();
 
-		// Set to `true` when we deliberately close the generator (because every
-		// subscriber has unsubscribed, or the request was aborted). The pump's
-		// `generator.next()` will reject as a result; we use this flag to swallow that
-		// abort error rather than surfacing it through `instance.fail()`.
+		// Set to `true` when we deliberately close the generator (because every subscriber has unsubscribed, or the request was aborted). The pump's `generator.next()` will reject as a result; we use this flag to swallow that abort error rather than surfacing it through `instance.fail()`.
 		let aborted = false;
 
 		const close = () => {
@@ -590,10 +579,7 @@ function create_shared_live_iterator(signal, get_generator) {
 			void generator.return().catch(noop);
 		};
 
-		// On request abort, tear down the pump and notify subscribers. `done()` is
-		// used (rather than `fail()`) because an aborted request is a normal
-		// termination — there's no error to surface to user code that's already
-		// been disconnected from the client.
+		// On request abort, tear down the pump and notify subscribers. `done()` is used (rather than `fail()`) because an aborted request is a normal termination — there's no error to surface to user code that's already been disconnected from the client.
 		signal.addEventListener('abort', () => (close(), instance.done()), { once: true });
 
 		void (async () => {
@@ -667,8 +653,6 @@ function update_refresh_value(
 
 	promise.catch(noop);
 
-	// we return an immediately-resolving promise so that the `refresh()` signature is consistent,
-	// but it doesn't delay anything if awaited inside a command. this way, people aren't
-	// penalised if they do `await q1.refresh(); await q2.refresh()`
+	// we return an immediately-resolving promise so that the `refresh()` signature is consistent, but it doesn't delay anything if awaited inside a command. this way, people aren't penalised if they do `await q1.refresh(); await q2.refresh()`
 	return Promise.resolve();
 }

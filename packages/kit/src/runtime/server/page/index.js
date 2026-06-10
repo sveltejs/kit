@@ -1,7 +1,7 @@
 /** @import { ActionResult, RequestEvent, SSRManifest } from '@sveltejs/kit' */
 /** @import { PageNodeIndexes, RequestState, RequiredResolveOptions, ServerDataNode, SSRComponent, SSRNode, SSROptions, SSRState } from 'types' */
 import { text } from '@sveltejs/kit';
-import { HttpError, Redirect } from '@sveltejs/kit/internal';
+import { Redirect } from '@sveltejs/kit/internal';
 import { compact } from '../../../utils/array.js';
 import { get_status, normalize_error } from '../../../utils/error.js';
 import { noop } from '../../../utils/functions.js';
@@ -88,9 +88,7 @@ export async function render_page(
 			}
 		}
 
-		// it's crucial that we do this before returning the non-SSR response, otherwise
-		// SvelteKit will erroneously believe that the path has been prerendered,
-		// causing functions to be omitted from the manifest generated later
+		// it's crucial that we do this before returning the non-SSR response, otherwise SvelteKit will erroneously believe that the path has been prerendered, causing functions to be omitted from the manifest generated later
 		const should_prerender = nodes.prerender();
 		if (should_prerender) {
 			const mod = leaf_node.server;
@@ -104,8 +102,7 @@ export async function render_page(
 			});
 		}
 
-		// if we fetch any endpoints while loading data for this page, they should
-		// inherit the prerender option of the page
+		// if we fetch any endpoints while loading data for this page, they should inherit the prerender option of the page
 		state.prerender_default = should_prerender;
 
 		const should_prerender_data = nodes.should_prerender_data();
@@ -117,12 +114,9 @@ export async function render_page(
 		const ssr = nodes.ssr();
 		const csr = nodes.csr();
 
-		// renders an empty 'shell' page if SSR is turned off and if there is
-		// no server data to prerender. As a result, the load functions and rendering
-		// only occur client-side.
+		// renders an empty 'shell' page if SSR is turned off and if there is no server data to prerender. As a result, the load functions and rendering only occur client-side.
 		if (ssr === false && !(state.prerendering && should_prerender_data)) {
-			// if the user makes a request through a non-enhanced form, the returned value is lost
-			// because there is no SSR or client-side handling of the response
+			// if the user makes a request through a non-enhanced form, the returned value is lost because there is no SSR or client-side handling of the response
 			if (DEV && action_result && !event.request.headers.has('x-sveltekit-action')) {
 				if (action_result.type === 'error') {
 					console.warn(
@@ -329,13 +323,11 @@ export async function render_page(
 						}
 					}
 
-					// if we're still here, it means the error happened in the root layout,
-					// which means we have to fall back to error.html
+					// if we're still here, it means the error happened in the root layout, which means we have to fall back to error.html
 					return static_error_page(options, status, error.message);
 				}
 			} else {
-				// push an empty slot so we can rewind past gaps to the
-				// layout that corresponds with an +error.svelte page
+				// push an empty slot so we can rewind past gaps to the layout that corresponds with an +error.svelte page
 				branch.push(null);
 			}
 		}
@@ -381,15 +373,14 @@ export async function render_page(
 			return redirect_response(e.status, e.location);
 		}
 
-		// if we end up here, it means the data loaded successfully
-		// but the page failed to render, or that a prerendering error occurred
+		// if we end up here, it means the data loaded successfully but the page failed to render, or that a prerendering error occurred
 		return await respond_with_error({
 			event,
 			event_state,
 			options,
 			manifest,
 			state,
-			status: e instanceof HttpError ? e.status : 500,
+			status: get_status(e),
 			error: e,
 			resolve_opts
 		});

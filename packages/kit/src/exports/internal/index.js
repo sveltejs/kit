@@ -6,6 +6,7 @@ export class HttpError {
 	 * @param {{message: string} extends App.Error ? (App.Error | string | undefined) : App.Error} body
 	 */
 	constructor(status, body) {
+		this.name = 'HttpError';
 		this.status = status;
 		if (typeof body === 'string') {
 			this.body = { message: body };
@@ -54,6 +55,7 @@ export class SvelteKitError extends Error {
 	 */
 	constructor(status, text, message) {
 		super(message);
+		this.name = 'SvelteKitError';
 		this.status = status;
 		this.text = text;
 	}

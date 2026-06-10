@@ -37,14 +37,51 @@ export function normalize_error(error) {
 
 /**
  * @param {unknown} error
+ * @returns {number | undefined}
+ */
+export function get_status_if_known(error) {
+	if (error instanceof HttpError || error instanceof SvelteKitError) return error.status;
+	// Fallback for cross-bundle instanceof failures (e.g. adapter-node inlining its own @sveltejs/kit copy); Number.isFinite rejects NaN
+	const e = /** @type {any} */ (error);
+	if (
+		e != null &&
+		(e.name === 'SvelteKitError' || e.name === 'HttpError') &&
+		Number.isFinite(e.status)
+	) {
+		return e.status;
+	}
+	return undefined;
+}
+
+/**
+ * @param {unknown} error
  */
 export function get_status(error) {
-	return error instanceof HttpError || error instanceof SvelteKitError ? error.status : 500;
+	return get_status_if_known(error) ?? 500;
+}
+
+/**
+ * Detects {@link HttpError} instances, including across bundle boundaries where
+ * `instanceof` fails (e.g. adapter-node inlining its own `@sveltejs/kit` copy)
+ * @param {unknown} error
+ * @returns {error is HttpError}
+ */
+export function is_http_error(error) {
+	if (error instanceof HttpError) return true;
+	// Require a `body` too: this predicate narrows to `HttpError`, whose consumers read
+	// `error.body.message`. A genuine HttpError always has a body (the constructor defaults
+	// it), so this only rejects hand-spoofed objects, not real cross-bundle instances.
+	const e = /** @type {any} */ (error);
+	return e != null && e.name === 'HttpError' && Number.isFinite(e.status) && e.body != null;
 }
 
 /**
  * @param {unknown} error
  */
 export function get_message(error) {
-	return error instanceof SvelteKitError ? error.text : 'Internal Error';
+	if (error instanceof SvelteKitError) return error.text;
+	// Fallback for cross-bundle instanceof failures; HttpError omitted — it has no text field
+	const e = /** @type {any} */ (error);
+	if (e != null && e.name === 'SvelteKitError' && typeof e.text === 'string') return e.text;
+	return 'Internal Error';
 }

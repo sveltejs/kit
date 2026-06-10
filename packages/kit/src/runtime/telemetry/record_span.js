@@ -1,5 +1,6 @@
 /** @import { RecordSpan } from 'types' */
-import { HttpError, Redirect } from '@sveltejs/kit/internal';
+import { Redirect } from '@sveltejs/kit/internal';
+import { is_http_error } from '../../utils/error.js';
 import { noop_span } from './noop.js';
 import { otel } from './otel.js';
 
@@ -15,7 +16,7 @@ export async function record_span({ name, attributes, fn }) {
 		try {
 			return await fn(span);
 		} catch (error) {
-			if (error instanceof HttpError) {
+			if (is_http_error(error)) {
 				span.setAttributes({
 					[`${name}.result.type`]: 'known_error',
 					[`${name}.result.status`]: error.status,
