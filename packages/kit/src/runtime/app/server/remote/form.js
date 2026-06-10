@@ -11,7 +11,7 @@ import {
 	normalize_issue,
 	flatten_issues
 } from '../../../form-utils.js';
-import { get_cache, run_remote_function } from './shared.js';
+import { get_cache, get_implicit_lookup, run_remote_function } from './shared.js';
 import { ValidationError } from '@sveltejs/kit/internal';
 
 /**
@@ -158,7 +158,12 @@ export function form(validate_or_fn, maybe_fn) {
 				// We don't need to care about args or deduplicating calls, because uneval results are only relevant in full page reloads
 				// where only one form submission is active at the same time
 				if (!event.isRemoteRequest) {
-					get_cache(__, state)[''] ??= output;
+					const cache = get_cache(__, state);
+					cache[''] ??= output;
+
+					// register under the client-side action id so the output is serialized
+					// into the page, allowing the hydrated client to restore `result`/`issues`/`input`
+					get_implicit_lookup(__, state)[__.action_id ?? __.id] = () => cache[''];
 				}
 
 				return output;
@@ -174,11 +179,13 @@ export function form(validate_or_fn, maybe_fn) {
 
 		Object.defineProperty(instance, 'fields', {
 			get() {
+				// the form instance is created once per module and shared across requests,
+				// so the current request's state has to be resolved at access time
 				return create_field_proxy(
 					{},
-					() => get_cache(__)?.['']?.input ?? {},
+					() => get_cache(__, get_request_store().state)?.['']?.input ?? {},
 					(path, value) => {
-						const cache = get_cache(__);
+						const cache = get_cache(__, get_request_store().state);
 						const entry = cache[''];
 
 						if (entry?.submission) {
@@ -195,7 +202,7 @@ export function form(validate_or_fn, maybe_fn) {
 						deep_set(input, path.map(String), value);
 						(cache[''] ??= {}).input = input;
 					},
-					() => flatten_issues(get_cache(__)?.['']?.issues ?? [])
+					() => flatten_issues(get_cache(__, get_request_store().state)?.['']?.issues ?? [])
 				);
 			}
 		});
@@ -217,7 +224,7 @@ export function form(validate_or_fn, maybe_fn) {
 		Object.defineProperty(instance, 'result', {
 			get() {
 				try {
-					return get_cache(__)?.['']?.result;
+					return get_cache(__, get_request_store().state)?.['']?.result;
 				} catch {
 					return undefined;
 				}
@@ -261,6 +268,7 @@ export function form(validate_or_fn, maybe_fn) {
 					if (!instance) {
 						instance = create_instance(key);
 						instance.__.id = `${__.id}/${encodeURIComponent(JSON.stringify(key))}`;
+						instance.__.action_id = `${__.id}/${JSON.stringify(key)}`;
 						instance.__.name = __.name;
 
 						state.remote.forms.set(cache_key, instance);

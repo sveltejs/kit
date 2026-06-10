@@ -370,9 +370,10 @@ export async function collect_remote_data(data, event, state, options) {
 			if (!internals.id) continue;
 
 			for (const key in record) {
-				const remote_key = create_remote_key(internals.id, key);
+				// form outputs are registered under the client-side action id directly
+				const remote_key = internals.type === 'form' ? key : create_remote_key(internals.id, key);
 
-				const type = /** @type {'p' | 'q' | 'l'} */ (
+				const type = /** @type {'p' | 'q' | 'l' | 'f'} */ (
 					internals.type === 'query_live' ? 'l' : internals.type[0]
 				);
 
@@ -462,7 +463,10 @@ export async function handle_remote_form_post(event, state, manifest, id) {
  * @returns {Promise<ActionResult>}
  */
 async function handle_remote_form_post_internal(event, state, manifest, id) {
-	const [hash, name, action_id] = id.split('/');
+	// `hash` and `name` can never contain a `/`, but the JSON-stringified key of a
+	// keyed (`form.for(key)`) instance can — rejoin the remaining segments
+	const [hash, name, ...rest] = id.split('/');
+	const action_id = rest.join('/');
 	const remotes = manifest._.remotes;
 	const module = await remotes[hash]?.();
 

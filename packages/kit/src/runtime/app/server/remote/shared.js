@@ -225,10 +225,15 @@ function to_iterator(source, name) {
 }
 
 /**
+ * Note that `state` is deliberately not optional: resources that capture the request
+ * state at creation must pass it explicitly, because reading it from the request store
+ * at call time is only equivalent on runtimes with `AsyncLocalStorage` support.
+ * Callers without a captured state (such as the module-level `form` instance getters)
+ * should pass `get_request_store().state` themselves.
  * @param {RemoteInternals} internals
  * @param {RequestState} state
  */
-export function get_cache(internals, state = get_request_store().state) {
+export function get_cache(internals, state) {
 	let cache = state.remote.data?.get(internals);
 
 	if (cache === undefined) {
@@ -243,7 +248,7 @@ export function get_cache(internals, state = get_request_store().state) {
  * @param {RemoteInternals} internals
  * @param {RequestState} state
  */
-export function get_implicit_lookup(internals, state = get_request_store().state) {
+export function get_implicit_lookup(internals, state) {
 	let cache = state.remote.implicit?.get(internals);
 
 	if (cache === undefined) {

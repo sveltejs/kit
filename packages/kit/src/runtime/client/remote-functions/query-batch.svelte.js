@@ -1,6 +1,6 @@
 /** @import { RemoteQueryFunction } from '@sveltejs/kit' */
 import { app_dir, base } from '$app/paths/internal/client';
-import { goto, query_responses } from '../client.js';
+import { goto } from '../client.js';
 import { get_remote_request_headers, QUERY_FUNCTION_ID, remote_request } from './shared.svelte.js';
 import { QueryProxy } from './query/proxy.js';
 import { HttpError } from '@sveltejs/kit/internal';
@@ -15,13 +15,7 @@ export function query_batch(id) {
 
 	/** @type {RemoteQueryFunction<any, any>} */
 	const wrapper = (arg) => {
-		return new QueryProxy(id, arg, async (key, payload) => {
-			if (Object.hasOwn(query_responses, key)) {
-				const value = query_responses[key];
-				delete query_responses[key];
-				return value;
-			}
-
+		return new QueryProxy(id, arg, async (payload) => {
 			return await new Promise((resolve, reject) => {
 				// create_remote_function caches identical calls, but in case a refresh to the same query is called multiple times this function
 				// is invoked multiple times with the same payload, so we need to deduplicate here

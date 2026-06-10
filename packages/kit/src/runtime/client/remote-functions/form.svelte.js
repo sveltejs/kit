@@ -59,18 +59,25 @@ export function form(id) {
 		const action_id = id + (key != undefined ? `/${JSON.stringify(key)}` : '');
 		const action = '?/remote=' + encodeURIComponent(action_id);
 
+		// the output of a non-enhanced submission that resulted in this page —
+		// consume it so the form's state survives hydration (form outputs are
+		// always value nodes; the server never serializes them as errors)
+		/** @type {{ input?: Record<string, any>, issues?: InternalRemoteFormIssue[], result?: any } | undefined} */
+		const initial = query_responses[action_id]?.v;
+		delete query_responses[action_id];
+
 		/**
 		 * @type {Record<string, string | string[] | File | File[]>}
 		 */
-		let input = $state({});
+		let input = $state(initial?.input ?? {});
 
 		/** @type {InternalRemoteFormIssue[]} */
-		let raw_issues = $state.raw([]);
+		let raw_issues = $state.raw(initial?.issues ?? []);
 
 		const issues = $derived(flatten_issues(raw_issues));
 
 		/** @type {any} */
-		let result = $state.raw(query_responses[action_id]);
+		let result = $state.raw(initial?.result);
 
 		/** @type {number} */
 		let pending_count = $state(0);
@@ -197,12 +204,16 @@ export function form(id) {
 
 					({ issues: raw_issues = [], result } = response._ ?? {});
 
+					// if the developer took control of updates via `.updates(...)` (even with
+					// no arguments), or the server performed explicit refreshes, don't invalidateAll
+					const should_invalidate = refreshes === null && !response.r;
+
 					if (response.redirect) {
 						// Use internal version to allow redirects to external URLs
 						void _goto(
 							response.redirect,
 							{
-								invalidateAll: !response.r
+								invalidateAll: should_invalidate
 							},
 							0
 						);
@@ -212,7 +223,7 @@ export function form(id) {
 					const succeeded = raw_issues.length === 0;
 
 					if (succeeded) {
-						if (!response.r) {
+						if (should_invalidate) {
 							void invalidateAll();
 						}
 					} else {
