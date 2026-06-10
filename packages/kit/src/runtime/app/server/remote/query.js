@@ -414,9 +414,20 @@ function refresh(event, state, internals, payload, fn) {
 
 	const key = create_remote_key(internals.id, payload);
 
+	// `fn()` is invoked eagerly here, which starts running the query immediately.
+	// The resulting promise is normally awaited (and its rejection handled) in
+	// `collect_remote_data`, but some code paths (e.g. a command throwing a
+	// non-redirect error) never reach that point. Attach a no-op `catch` to the
+	// promise so a rejection is always considered handled and can never become an
+	// unhandled promise rejection (which crashes the process on modern Node).
+	// We still store the original promise so `collect_remote_data` can serialize
+	// either its value or its error as before.
+	const promise = fn();
+	promise.catch(() => {});
+
 	(state.remote.explicit ??= new Map()).set(key, {
 		internals,
-		promise: fn()
+		promise
 	});
 }
 
