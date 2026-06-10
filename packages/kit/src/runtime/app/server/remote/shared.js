@@ -253,17 +253,3 @@ export function get_implicit_lookup(internals, state = get_request_store().state
 
 	return cache;
 }
-/**
- * @param {RemoteInternals} internals
- * @param {RequestState} state
- */
-export function get_explicit_lookup(internals, state = get_request_store().state) {
-	let cache = state.remote.explicit?.get(internals);
-
-	if (cache === undefined) {
-		cache = {};
-		(state.remote.explicit ??= new Map()).set(internals, cache);
-	}
-
-	return cache;
-}

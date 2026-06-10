@@ -723,7 +723,13 @@ export interface RequestState {
 		 * Data that is explicitly included because of a `set(...)` or `refresh()`.
 		 * This is always awaited
 		 */
-		explicit: null | Map<RemoteInternals, Record<string, () => MaybePromise<any>>>;
+		explicit: null | Map<
+			string,
+			{
+				internals: RemoteInternals;
+				promise: Promise<any>;
+			}
+		>;
 		/** Instances created via `myForm.for(...)` */
 		forms: null | Map<string, any>;
 		/** A map of remote function ID to payloads requested for refreshing by the client */

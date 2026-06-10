@@ -1,4 +1,4 @@
-/** @import { RemoteLiveQuery, RemoteLiveQueryFunction, RemoteQuery, RemoteQueryFunction } from '@sveltejs/kit' */
+/** @import { RemoteLiveQuery, RemoteLiveQueryFunction, RemoteQuery, RemoteQueryFunction, RequestEvent } from '@sveltejs/kit' */
 /** @import { RemoteInternals, MaybePromise, RequestState, RemoteQueryLiveInternals, RemoteQueryBatchInternals, RemoteQueryInternals, RemoteLiveQueryUserFunctionReturnType } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 import { get_request_store } from '@sveltejs/kit/internal/server';
@@ -7,7 +7,6 @@ import { prerendering } from '$app/env/internal';
 import {
 	create_validator,
 	get_cache,
-	get_explicit_lookup,
 	get_response,
 	run_remote_function,
 	run_remote_generator
@@ -79,7 +78,7 @@ export function query(validate_or_fn, maybe_fn) {
 		bind(payload, validated_arg) {
 			const { event, state } = get_request_store();
 
-			return create_query_resource(__, payload, state, () =>
+			return create_query_resource(__, payload, event, state, () =>
 				run_remote_function(
 					event,
 					{ ...state, is_in_remote_query: true },
@@ -102,7 +101,7 @@ export function query(validate_or_fn, maybe_fn) {
 		const { event, state } = get_request_store();
 		const payload = stringify_remote_arg(arg, state.transport);
 
-		return create_query_resource(__, payload, state, () =>
+		return create_query_resource(__, payload, event, state, () =>
 			run_remote_function(
 				event,
 				{ ...state, is_in_remote_query: true },
@@ -184,7 +183,7 @@ function live(validate_or_fn, maybe_fn) {
 		bind(payload, validated_arg) {
 			const { event, state } = get_request_store();
 
-			return create_live_query_resource(__, payload, state, event.request.signal, () =>
+			return create_live_query_resource(__, payload, event, state, () =>
 				run(event, state, () => validated_arg)
 			);
 		}
@@ -201,7 +200,7 @@ function live(validate_or_fn, maybe_fn) {
 		const { event, state } = get_request_store();
 		const payload = stringify_remote_arg(arg, state.transport);
 
-		return create_live_query_resource(__, payload, state, event.request.signal, () =>
+		return create_live_query_resource(__, payload, event, state, () =>
 			run(event, state, () => validate(arg))
 		);
 	};
@@ -363,9 +362,11 @@ function batch(validate_or_fn, maybe_fn) {
 			);
 		},
 		bind(payload, validated_arg) {
-			const { state } = get_request_store();
+			const { event, state } = get_request_store();
 
-			return create_query_resource(__, payload, state, () => enqueue(payload, () => validated_arg));
+			return create_query_resource(__, payload, event, state, () =>
+				enqueue(payload, () => validated_arg)
+			);
 		}
 	};
 
@@ -377,10 +378,10 @@ function batch(validate_or_fn, maybe_fn) {
 			);
 		}
 
-		const { state } = get_request_store();
+		const { event, state } = get_request_store();
 		const payload = stringify_remote_arg(arg, state.transport);
 
-		return create_query_resource(__, payload, state, () =>
+		return create_query_resource(__, payload, event, state, () =>
 			// Collect all the calls to the same query in the same macrotask,
 			// then execute them as one backend request.
 			enqueue(payload, () => validate(arg))
@@ -393,13 +394,41 @@ function batch(validate_or_fn, maybe_fn) {
 }
 
 /**
+ * Include this value in the returned payload...
+ * @param {RequestEvent} event
+ * @param {RequestState} state
+ * @param {RemoteInternals} internals
+ * @param {string} payload
+ * @param {() => Promise<any>} fn
+ */
+function refresh(event, state, internals, payload, fn) {
+	if (!internals.id) {
+		// unless this is a non-exported (i.e. private) query...
+		return;
+	}
+
+	if (!event.isRemoteRequest) {
+		// or this is a no-JS form submission
+		return;
+	}
+
+	const key = create_remote_key(internals.id, payload);
+
+	(state.remote.explicit ??= new Map()).set(key, {
+		internals,
+		promise: fn()
+	});
+}
+
+/**
  * @param {RemoteInternals} __
  * @param {string} payload — the stringified raw argument (i.e. the cache key the client will use)
+ * @param {RequestEvent} event
  * @param {RequestState} state
  * @param {() => Promise<any>} fn
  * @returns {RemoteQuery<any>}
  */
-function create_query_resource(__, payload, state, fn) {
+function create_query_resource(__, payload, event, state, fn) {
 	/** @type {Promise<any> | null} */
 	let promise = null;
 
@@ -440,17 +469,19 @@ function create_query_resource(__, payload, state, fn) {
 			return false;
 		},
 		refresh() {
+			promise = null;
 			delete get_cache(__, state)[payload];
-			get_explicit_lookup(__, state)[payload] = fn;
+
+			refresh(event, state, __, payload, get_promise);
 
 			return Promise.resolve();
 		},
 		/** @param {any} value */
 		set(value) {
-			const promise = Promise.resolve(value);
+			const p = (promise = Promise.resolve(value));
+			get_cache(__, state)[payload] = p;
 
-			get_cache(__, state)[payload] = promise;
-			get_explicit_lookup(__, state)[payload] = () => promise;
+			refresh(event, state, __, payload, () => p);
 		},
 		// TODO 3.0 remove this
 		// @ts-expect-error This method no longer exists
@@ -475,12 +506,12 @@ function create_query_resource(__, payload, state, fn) {
 /**
  * @param {RemoteQueryLiveInternals} __
  * @param {string} payload — the stringified raw argument (i.e. the cache key the client will use)
+ * @param {RequestEvent} event
  * @param {RequestState} state
- * @param {AbortSignal} signal — the request signal; aborts in-flight iteration when the client disconnects
  * @param {() => AsyncGenerator<any, void, void>} get_generator
  * @returns {RemoteLiveQuery<any>}
  */
-function create_live_query_resource(__, payload, state, signal, get_generator) {
+function create_live_query_resource(__, payload, event, state, get_generator) {
 	/** @type {Promise<any> | null} */
 	let promise = null;
 
@@ -533,8 +564,10 @@ function create_live_query_resource(__, payload, state, signal, get_generator) {
 			return false;
 		},
 		reconnect() {
+			promise = null;
 			delete get_cache(__, state)[payload];
-			get_explicit_lookup(__, state)[payload] = get_promise;
+
+			refresh(event, state, __, payload, get_promise);
 
 			return Promise.resolve();
 		},
@@ -553,7 +586,7 @@ function create_live_query_resource(__, payload, state, signal, get_generator) {
 			const cache = (state.remote.live_iterators ??= new Map());
 			let cached = cache.get(key);
 			if (!cached) {
-				cached = create_shared_live_iterator(signal, get_generator);
+				cached = create_shared_live_iterator(event.request.signal, get_generator);
 				cache.set(key, cached);
 			}
 			return cached.subscribe();
