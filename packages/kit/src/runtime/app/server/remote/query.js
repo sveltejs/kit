@@ -449,7 +449,7 @@ function create_query_resource(__, payload, state, fn) {
 		set(value) {
 			const promise = Promise.resolve(value);
 
-			get_cache(__)[payload] = promise;
+			get_cache(__, state)[payload] = promise;
 			get_explicit_lookup(__, state)[payload] = () => promise;
 		},
 		// TODO 3.0 remove this
