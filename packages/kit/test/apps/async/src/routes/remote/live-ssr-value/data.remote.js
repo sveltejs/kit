@@ -4,7 +4,7 @@ import { command, query } from '$app/server';
 const seen = new Set();
 /** @type {Set<string>} */
 const notified = new Set();
-/** @type {Set<{ key: string, resolve: () => void }>} */
+/** @type {Set<{ key: string, resolve: (value?: any) => void }>} */
 const listeners = new Set();
 
 export const live_value = query.live('unchecked', async function* (key) {
