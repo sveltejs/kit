@@ -108,6 +108,23 @@ test.describe('remote function mutations', () => {
 		await expect(page.locator('#live-error')).toHaveText('418: live teapot');
 	});
 
+	test('server-initiated updates for inactive queries are reused when the resource is created', async ({
+		page
+	}) => {
+		await page.goto(`/remote/sidechannel-store/${Date.now()}${Math.random()}`);
+
+		await page.click('#update');
+		await page.waitForTimeout(100); // allow the command roundtrip to finish
+
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		await page.click('#show');
+		await expect(page.locator('#value')).toHaveText('updated');
+		await page.waitForTimeout(100); // allow all requests to finish (there shouldn't be any)
+		expect(request_count).toBe(0);
+	});
+
 	test('over-limit requested() refreshes fail the client query', async ({ page }) => {
 		await page.goto(`/remote/requested-limit/${Date.now()}${Math.random()}`);
 

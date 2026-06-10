@@ -141,7 +141,10 @@ export async function remote_request(url, init) {
 				entry.resource.set(result.v);
 			}
 		} else if (!result.e) {
-			query_responses[key] = result.v;
+			// `query_responses` stores `{ v }`/`{ e }` nodes, not raw values.
+			// Errors are deliberately dropped here: they are responses to a specific
+			// refresh, not durable state a future resource should initialize with
+			query_responses[key] = result;
 		}
 	}
 
