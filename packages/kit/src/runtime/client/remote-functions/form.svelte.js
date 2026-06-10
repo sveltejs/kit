@@ -60,9 +60,10 @@ export function form(id) {
 		const action = '?/remote=' + encodeURIComponent(action_id);
 
 		// the output of a non-enhanced submission that resulted in this page —
-		// consume it so the form's state survives hydration
+		// consume it so the form's state survives hydration (form outputs are
+		// always value nodes; the server never serializes them as errors)
 		/** @type {{ input?: Record<string, any>, issues?: InternalRemoteFormIssue[], result?: any } | undefined} */
-		const initial = query_responses[action_id];
+		const initial = query_responses[action_id]?.v;
 		delete query_responses[action_id];
 
 		/**

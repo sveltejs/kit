@@ -79,6 +79,48 @@ test.describe('remote function mutations', () => {
 		expect(request_count).toBe(0);
 	});
 
+	test('hydrated query errors are reused', async ({ page }) => {
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		await page.goto('/remote/error-hydration');
+		await expect(page.locator('#q-error')).toHaveText('418: teapot');
+		await page.waitForTimeout(100); // allow all requests to finish (there shouldn't be any)
+		expect(request_count).toBe(0);
+	});
+
+	test('hydrated batch query errors are reused', async ({ page }) => {
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		await page.goto('/remote/error-hydration/batch');
+		await expect(page.locator('#batch-error')).toHaveText('418: batch teapot');
+		await page.waitForTimeout(100); // allow all requests to finish (there shouldn't be any)
+		expect(request_count).toBe(0);
+	});
+
+	test('hydrated query.live errors are reused', async ({ page }) => {
+		await page.goto(`/remote/live-error-seed/${Date.now()}${Math.random()}`);
+
+		// the SSR HTML shows no error (server-side getters are static), but the
+		// hydrated client must seed the failed state from the payload — the
+		// reconnection attempt never settles, so this is the only way the error can appear
+		await expect(page.locator('#live-error')).toHaveText('418: live teapot');
+	});
+
+	test('over-limit requested() refreshes fail the client query', async ({ page }) => {
+		await page.goto(`/remote/requested-limit/${Date.now()}${Math.random()}`);
+
+		await expect(page.locator('#value')).toHaveText('0');
+		await expect(page.locator('#error')).toHaveText('none');
+
+		await page.click('button');
+
+		await expect(page.locator('#error')).toHaveText(
+			'400: Requested refresh was rejected because it exceeded requested(get_count, 0) limit'
+		);
+	});
+
 	test('command returns correct sum but does not refresh data by default', async ({ page }) => {
 		await page.goto('/remote');
 		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');

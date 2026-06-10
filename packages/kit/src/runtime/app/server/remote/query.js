@@ -401,7 +401,7 @@ function batch(validate_or_fn, maybe_fn) {
  * @param {string} payload
  * @param {() => Promise<any>} fn
  */
-function refresh(event, state, internals, payload, fn) {
+export function refresh(event, state, internals, payload, fn) {
 	if (!internals.id) {
 		// unless this is a non-exported (i.e. private) query...
 		return;
@@ -451,7 +451,11 @@ function create_query_resource(__, payload, event, state, fn) {
 		// accessing data properties needs to kick off the work
 		// so that it gets seeded in the hydration cache
 		// and becomes available on the client
-		void (__.id && state.is_in_render && get_promise());
+		if (__.id && state.is_in_render) {
+			// swallow rejections so they don't crash the server — the error is
+			// serialized into the response and surfaced on the client instead
+			get_promise().catch(noop);
+		}
 	};
 
 	return {
@@ -538,7 +542,11 @@ function create_live_query_resource(__, payload, event, state, get_generator) {
 	};
 
 	const populate_hydratable = () => {
-		void (__.id && state.is_in_render && get_promise());
+		if (__.id && state.is_in_render) {
+			// swallow rejections so they don't crash the server — the error is
+			// serialized into the response and surfaced on the client instead
+			get_promise().catch(noop);
+		}
 	};
 
 	return {

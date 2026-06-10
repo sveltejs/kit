@@ -1,4 +1,4 @@
-/** @import { RemoteFunctionResponse, RemoteFunctionData } from 'types' */
+/** @import { RemoteFunctionResponse, RemoteFunctionData, RemoteFunctionDataNode } from 'types' */
 /** @import { RemoteQueryUpdate } from '@sveltejs/kit' */
 /** @import { CacheEntry } from './cache.svelte.js' */
 import * as devalue from 'devalue';
@@ -78,6 +78,20 @@ export function pin_while_resolving(cache_map, cache, id, payload, then) {
 /**
  * @returns {{ 'x-sveltekit-pathname': string, 'x-sveltekit-search': string }}
  */
+/**
+ * Unwraps a `RemoteFunctionDataNode` that was serialized during SSR,
+ * rethrowing serialized errors so the consuming resource ends up
+ * in the same failed state it had on the server
+ * @param {RemoteFunctionDataNode} node
+ */
+export function unwrap_node(node) {
+	if (node.e) {
+		throw new HttpError(node.e[0] ?? 500, node.e[1]);
+	}
+
+	return node.v;
+}
+
 export function get_remote_request_headers() {
 	// This will be the correct value of the current or soon-current url,
 	// even in forks because it's state-based - therefore not using window.location.
