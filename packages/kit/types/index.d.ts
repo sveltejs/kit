@@ -3091,13 +3091,14 @@ declare module '@sveltejs/kit/node/polyfills' {
 
 declare module '@sveltejs/kit/vite' {
 	import type { KitConfig } from '@sveltejs/kit';
-	import type { SvelteConfig } from '@sveltejs/vite-plugin-svelte';
+	import type { Options, SvelteConfig } from '@sveltejs/vite-plugin-svelte';
 	import type { Plugin } from 'vite';
 	/**
 	 * Returns the SvelteKit Vite plugins.
 	 * Since version 2.62.0 you can pass [configuration](configuration) directly, in which case `svelte.config.js` is ignored.
+	 * Any options that don't belong to SvelteKit are passed through to `vite-plugin-svelte`.
 	 * */
-	export function sveltekit(config?: KitConfig & Omit<SvelteConfig, "onwarn">): Promise<Plugin[]>;
+	export function sveltekit(config?: KitConfig & Omit<Options, "onwarn"> & Pick<SvelteConfig, "vitePlugin">): Promise<Plugin[]>;
 
 	export {};
 }

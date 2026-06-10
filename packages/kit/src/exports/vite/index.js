@@ -22,7 +22,7 @@ import {
 import * as sync from '../../core/sync/sync.js';
 import { create_assets } from '../../core/sync/create_manifest_data/index.js';
 import { runtime_directory, logger } from '../../core/utils.js';
-import { load_svelte_config, process_config } from '../../core/config/index.js';
+import { load_svelte_config, process_config, split_config } from '../../core/config/index.js';
 import { generate_manifest } from '../../core/generate_manifest/index.js';
 import { build_server_nodes } from './build/build_server.js';
 import { build_service_worker } from './build/build_service_worker.js';
@@ -143,19 +143,27 @@ const warning_preprocessor = {
 /**
  * Returns the SvelteKit Vite plugins.
  * Since version 2.62.0 you can pass [configuration](configuration) directly, in which case `svelte.config.js` is ignored.
- * @param {KitConfig & Omit<SvelteConfig, 'onwarn'>} [config]
+ * Any options that don't belong to SvelteKit are passed through to `vite-plugin-svelte`.
+ * @param {KitConfig & Omit<Options, 'onwarn'> & Pick<SvelteConfig, 'vitePlugin'>} [config]
  * @returns {Promise<Plugin[]>}
  */
 export async function sveltekit(config) {
 	/** @type {ValidatedConfig} */
 	let svelte_config;
 
+	// any options passed to the plugin that SvelteKit doesn't use itself are
+	// forwarded to vite-plugin-svelte, which does its own validation
+	/** @type {Record<string, any>} */
+	let vite_plugin_svelte_config = {};
+
 	if (config !== undefined) {
-		const { extensions, compilerOptions, vitePlugin, preprocess, ...kit } = config;
-		svelte_config = process_config(
-			{ extensions, compilerOptions, vitePlugin, preprocess, kit },
-			{ cwd, source: 'SvelteKit options from Vite config' }
-		);
+		const split = split_config(config);
+		vite_plugin_svelte_config = split.vite_plugin_svelte_config;
+
+		svelte_config = process_config(split.svelte_config, {
+			cwd,
+			source: 'SvelteKit options from Vite config'
+		});
 
 		const config_file = ['svelte.config.js', 'svelte.config.ts'].find((file) =>
 			fs.existsSync(file)
@@ -180,6 +188,9 @@ export async function sveltekit(config) {
 
 	/** @type {Options} */
 	const vite_plugin_svelte_options = {
+		// pass through any options that SvelteKit doesn't use itself first, so
+		// that the options SvelteKit manages below always take precedence
+		...vite_plugin_svelte_config,
 		configFile: false,
 		extensions: svelte_config.extensions,
 		preprocess,
