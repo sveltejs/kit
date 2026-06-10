@@ -238,6 +238,8 @@ export interface PrerenderOptions {
 	cache?: string; // including this here is a bit of a hack, but it makes it easy to add <meta http-equiv>
 	fallback?: boolean;
 	dependencies: Map<string, PrerenderDependency>;
+	/** Results of remote `prerender` functions, shared across the whole prerender run so that each only executes once */
+	remote_responses: Map<string, Promise<any>>;
 	/** True for the duration of a call to the `reroute` hook */
 	inside_reroute?: boolean;
 }

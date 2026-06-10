@@ -57,6 +57,15 @@ export function query_batch(id) {
 
 						if (response.redirect) {
 							await goto(response.redirect);
+
+							// settle all batched promises (with `undefined`, like a redirect
+							// from a non-batched query) so that callers don't hang forever
+							for (const resolvers of batched.values()) {
+								for (const { resolve } of resolvers) {
+									resolve(undefined);
+								}
+							}
+
 							return;
 						}
 

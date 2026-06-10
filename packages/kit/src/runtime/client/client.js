@@ -329,11 +329,15 @@ export async function start(_app, _target, hydrate) {
 	}
 
 	if (__SVELTEKIT_PAYLOAD__.data) {
-		const { q = {}, p = {} } = __SVELTEKIT_PAYLOAD__.data;
+		const { q = {}, p = {}, l = {} } = __SVELTEKIT_PAYLOAD__.data;
 
 		// TODO we're currently ignoring errors, is that right?
 		for (const k in q) {
 			if (!q[k].e) query_responses[k] = q[k].v;
+		}
+
+		for (const k in l) {
+			if (!l[k].e) query_responses[k] = l[k].v;
 		}
 
 		for (const k in p) {

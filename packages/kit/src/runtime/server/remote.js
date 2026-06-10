@@ -348,18 +348,19 @@ export async function collect_remote_data(data, event, state, options) {
 				);
 
 				const promise = state.remote.data?.get(internals)?.[key] ?? record[key]();
-				const node = ((data[type] ??= {})[remote_key] ??= {});
 
 				promises.push(
 					Promise.resolve(promise).then(
-						(v) => (node.v = v),
+						(v) => {
+							((data[type] ??= {})[remote_key] ??= {}).v = v;
+						},
 						async (e) => {
 							if (e instanceof Redirect) {
 								// already handled elsewhere
 								return;
 							}
 
-							node.e = await convert_error(e);
+							((data[type] ??= {})[remote_key] ??= {}).e = await convert_error(e);
 						}
 					)
 				);
@@ -379,15 +380,17 @@ export async function collect_remote_data(data, event, state, options) {
 				);
 
 				const promise = state.remote.data?.get(internals)?.[key] ?? record[key]();
-				const node = ((data[type] ??= {})[remote_key] ??= {});
 
+				// If the promise is still pending (e.g. the query was rendered in its loading
+				// state during SSR), omit it from the payload entirely so that the client
+				// fetches it itself — an entry without `v`/`e` would hydrate as `undefined`.
 				let resolved = true;
 
 				await Promise.race([
 					Promise.resolve(promise).then(
 						(v) => {
 							if (resolved) {
-								node.v = v;
+								((data[type] ??= {})[remote_key] ??= {}).v = v;
 							}
 						},
 						(e) => {
@@ -399,7 +402,7 @@ export async function collect_remote_data(data, event, state, options) {
 							if (resolved) {
 								promises.push(
 									convert_error(e).then((e) => {
-										node.e = e;
+										((data[type] ??= {})[remote_key] ??= {}).e = e;
 									})
 								);
 							}
@@ -498,7 +501,10 @@ async function handle_remote_form_post_internal(event, state, manifest, id) {
 			data.id = JSON.parse(decodeURIComponent(action_id));
 		}
 
-		await with_request_store({ event, state }, () => fn(data, meta, form_data));
+		await with_request_store(
+			{ event, state: { ...state, is_in_remote_form_or_command: true } },
+			() => fn(data, meta, form_data)
+		);
 
 		// We don't want the data to appear on `let { form } = $props()`, which is why we're not returning it.
 		// It is instead available on `myForm.result`, setting of which happens within the remote `form` function.

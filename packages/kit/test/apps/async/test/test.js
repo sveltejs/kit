@@ -687,6 +687,83 @@ test.describe('remote functions', () => {
 		}
 	});
 
+	test('query rendered in its loading state during SSR is fetched on the client', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		await page.goto('/remote/query-loading-state');
+
+		if (javaScriptEnabled) {
+			// the query was still pending when SSR finished, so it must not be
+			// seeded into the hydration cache — the client has to fetch it itself
+			await expect(page.locator('#slow-state')).toHaveText('slow data', {
+				timeout: 5000
+			});
+		} else {
+			await expect(page.locator('#slow-state')).toHaveText('loading');
+		}
+	});
+
+	test('queries cannot set cookies or headers', async ({ page }) => {
+		await page.goto('/remote/query-event-guards');
+
+		await expect(page.locator('#result')).toHaveText(
+			'Cannot set cookies in `query` or `prerender` functions | setHeaders is not allowed in remote functions'
+		);
+	});
+
+	test('queries nested inside live queries are not implicitly serialized', async ({ page }) => {
+		await page.goto('/remote/live-nested-query');
+
+		await expect(page.locator('#live-result')).toHaveText('NESTED-SECRET');
+
+		// the nested query's raw value must not leak into the page payload
+		expect(await page.content()).not.toContain('nested-secret');
+	});
+
+	test('requested(...) works in form handlers regardless of progressive enhancement', async ({
+		page
+	}) => {
+		await page.goto('/remote/form/requested');
+
+		await expect(page.locator('#form-result')).toHaveText('not submitted');
+
+		await page.locator('#requested-submit').click();
+
+		await expect(page.locator('#form-result')).toHaveText('submitted successfully');
+	});
+
+	test('SSR data for query.live is reused on hydration', async ({ page, javaScriptEnabled }) => {
+		await page.goto(`/remote/live-ssr-value?key=${Date.now()}-${Math.random()}`);
+
+		if (javaScriptEnabled) {
+			// the SSR'd first value must be seeded into the live query on hydration —
+			// the reconnect (deliberately blocked server-side) must not reset it to a loading state
+			await expect(page.locator('#live-state')).toHaveText('initial');
+
+			// the live connection still works after seeding
+			await page.click('#notify');
+			await expect(page.locator('#live-state')).toHaveText('updated');
+		} else {
+			await expect(page.locator('#live-state')).toHaveText('loading');
+		}
+	});
+
+	test('prerender functions are deduplicated across prerendered pages during build', async ({
+		page
+	}) => {
+		test.skip(!!process.env.DEV, 'pages are only prerendered when building');
+
+		await page.goto('/remote/prerender-dedupe/a');
+		const a = await page.locator('#count').textContent();
+
+		await page.goto('/remote/prerender-dedupe/b');
+		const b = await page.locator('#count').textContent();
+
+		// the shared prerender function must only have executed once at build time
+		expect(b).toBe(a);
+	});
+
 	test('awaiting multiple queries inside $derived does not fail mutation validation', async ({
 		page
 	}) => {

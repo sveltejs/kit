@@ -58,6 +58,16 @@ test.describe('remote function mutations', () => {
 		expect(request_count).toBe(0);
 	});
 
+	test('hydrated prerender data is reused', async ({ page }) => {
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		await page.goto('/remote/prerender-inline');
+		await expect(page.locator('#prerender-value')).toHaveText('prerendered: hello');
+		await page.waitForTimeout(100); // allow all requests to finish
+		expect(request_count).toBe(0);
+	});
+
 	test('hydrated batch data is reused', async ({ page }) => {
 		let request_count = 0;
 		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
@@ -438,6 +448,16 @@ test.describe('remote function mutations', () => {
 		// were rolled into a single batched call and returned via single-flight
 		// in the command response.
 		expect(request_count).toBe(1);
+	});
+
+	test('query.batch redirect settles batched promises', async ({ page }) => {
+		await page.goto('/remote/batch-redirect');
+
+		await page.click('#trigger');
+
+		// the redirect must both navigate and settle the awaited query
+		await expect(page.locator('#status')).toHaveText('resolved');
+		expect(page.url()).toContain('#redirected');
 	});
 
 	test('query.batch resolver function always receives validated arguments', async ({ page }) => {

@@ -1,7 +1,7 @@
 /** @import { RemoteResource, RemotePrerenderFunction } from '@sveltejs/kit' */
 /** @import { RemotePrerenderInputsGenerator, RemotePrerenderInternals, MaybePromise } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
-import { json } from '@sveltejs/kit';
+import { json, error } from '@sveltejs/kit';
 import { DEV } from 'esm-env';
 import { get_request_store } from '@sveltejs/kit/internal/server';
 import { stringify, stringify_remote_arg } from '../../../shared.js';
@@ -9,11 +9,10 @@ import { noop } from '../../../../utils/functions.js';
 import { app_dir, base } from '$app/paths/internal/server';
 import {
 	create_validator,
-	get_cache,
+	get_response,
 	parse_remote_response,
 	run_remote_function
 } from './shared.js';
-import { error } from '@sveltejs/kit';
 
 /**
  * Creates a remote prerender function. When called from the browser, the function will be invoked on the server via a `fetch` call.
@@ -92,8 +91,11 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 		const { event, state } = get_request_store();
 		const payload = stringify_remote_arg(arg, state.transport);
 
+		// `get_response` (as opposed to bare `get_cache`) also registers the call in the
+		// implicit lookup, so that the result is inlined into the page payload (`data.p`)
+		// and the client doesn't need to fetch it again upon hydration
 		/** @type {Promise<Output> & Partial<RemoteResource<Output>>} */
-		const promise = (get_cache(__, state)[payload] ??= (async () => {
+		const promise = get_response(__, payload, state, async () => {
 			const id = __.id;
 			const url = `${base}/${app_dir}/remote/${id}${payload ? `/${payload}` : ''}`;
 
@@ -119,7 +121,19 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 				}
 			}
 
-			const result = await run_remote_function(event, state, false, () => validate(arg), fn);
+			// during a prerender run, the same function might be invoked while rendering
+			// multiple pages — share the result across the entire run
+			if (state.prerendering?.remote_responses.has(url)) {
+				return /** @type {Promise<any>} */ (state.prerendering.remote_responses.get(url));
+			}
+
+			const promise = run_remote_function(event, state, false, () => validate(arg), fn);
+
+			if (state.prerendering) {
+				state.prerendering.remote_responses.set(url, promise);
+			}
+
+			const result = await promise;
 
 			if (state.prerendering) {
 				const body = { type: 'result', data: stringify({ _: result }, state.transport) };
@@ -131,7 +145,7 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 
 			// TODO this is missing error/loading/current/status
 			return result;
-		})());
+		});
 
 		promise.catch(noop);
 
