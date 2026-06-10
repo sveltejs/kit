@@ -1308,7 +1308,8 @@ function kit({ svelte_config, adapter }) {
 								// static dir files
 								return assets_to_root + filename;
 							}
-						}
+						},
+						publicDir: kit.files.assets
 					};
 
 					if (service_worker_entry_file) {
