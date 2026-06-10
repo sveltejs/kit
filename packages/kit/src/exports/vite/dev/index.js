@@ -41,7 +41,12 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root) {
 		const context = async_local_storage.getStore();
 		if (!context || context.prerender === true) return;
 
-		check_feature(/** @type {string} */ (context.event.route.id), context.config, label, svelte_config.kit.adapter);
+		check_feature(
+			/** @type {string} */ (context.event.route.id),
+			context.config,
+			label,
+			svelte_config.kit.adapter
+		);
 	};
 
 	const fetch = globalThis.fetch;
