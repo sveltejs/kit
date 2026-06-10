@@ -156,7 +156,7 @@ export async function sveltekit(config) {
 	const { extensions, compilerOptions, vitePlugin, preprocess, ...rest } = config ?? {};
 	const svelte_config = process_config(
 		{ extensions, compilerOptions, vitePlugin, preprocess, kit: rest },
-		{ cwd, source: 'SvelteKit options from Vite config' }
+		{ cwd: process.cwd(), source: 'SvelteKit options from Vite config' }
 	);
 
 	const config_file = ['svelte.config.js', 'svelte.config.ts'].find((file) => fs.existsSync(file));
@@ -192,7 +192,7 @@ export async function sveltekit(config) {
 
 /** @param {UserConfig | ResolvedConfig} vite_config */
 function resolve_root(vite_config) {
-	return posixify(vite_config.root ? path.resolve(vite_config.root) : cwd);
+	return posixify(vite_config.root ? path.resolve(vite_config.root) : process.cwd());
 }
 
 /**
