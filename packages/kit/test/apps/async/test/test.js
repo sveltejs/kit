@@ -1,3 +1,4 @@
+import process from 'node:process';
 import http from 'node:http';
 import { expect } from '@playwright/test';
 import { test } from '../../../utils.js';
