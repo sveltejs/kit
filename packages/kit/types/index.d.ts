@@ -295,11 +295,9 @@ declare module '@sveltejs/kit' {
 	}
 
 	export interface KitConfig {
-		// TODO: remove this in 4.0
 		/**
 		 * Your [adapter](https://svelte.dev/docs/kit/adapters) is run when executing `vite build`. It determines how the output is converted for different platforms.
 		 * @default undefined
-		 * @deprecated removed in 3.0.0. Adapters should now be passed to the `sveltekit` Vite plugin in `vite.config.js`
 		 */
 		adapter?: Adapter;
 		/**
@@ -2770,8 +2768,7 @@ declare module '@sveltejs/kit' {
 		extensions: string[];
 	};
 
-	// TODO: remove the omit in 4.0
-	type ValidatedKitConfig = Omit<RecursiveRequired<KitConfig>, 'adapter'>;
+	type ValidatedKitConfig = RecursiveRequired<KitConfig>;
 	/**
 	 * Throws an error with a HTTP status code and an optional message.
 	 * When called during request handling, this will cause SvelteKit to
@@ -3027,7 +3024,6 @@ declare module '@sveltejs/kit/vite' {
 	import type { Plugin } from 'vite';
 	/**
 	 * Returns the SvelteKit Vite plugins.
-	 * Since version 2.62.0 you can pass [configuration](configuration) directly, in which case `svelte.config.js` is ignored.
 	 * */
 	export function sveltekit(config?: KitConfig & Omit<SvelteConfig, "onwarn">): Promise<Plugin[]>;
 

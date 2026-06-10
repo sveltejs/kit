@@ -1,4 +1,3 @@
-/** @import { Adapter } from '@sveltejs/kit' */
 import { existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -125,13 +124,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 		return { prerendered, prerender_map };
 	}
 
-	// TODO this can just be config.adapter?
-	/** @type {Adapter | undefined} */
-	const adapter = vite_config.plugins.find(
-		(plugin) => plugin.name === 'vite-plugin-sveltekit-adapter'
-	)?.api?.adapter;
-
-	const emulator = await adapter?.emulate?.();
+	const emulator = await config.adapter?.emulate?.();
 
 	/** @type {import('types').Logger} */
 	const log = logger({ verbose });
