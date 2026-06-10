@@ -1475,6 +1475,7 @@ async function kit({ svelte_config }) {
 					);
 				} else {
 					copy(server_assets, client_assets);
+					copy(kit.files.assets, `${out}/client`);
 				}
 
 				// ...and prerender
