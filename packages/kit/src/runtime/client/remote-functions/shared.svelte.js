@@ -148,7 +148,13 @@ export async function remote_request(url, init) {
 			const entry = live_query_map.get(parts.id)?.get(parts.payload);
 
 			refresh(key, entry, data.l[key]);
-			void entry?.resource.reconnect();
+
+			// `fail()` is terminal, so only reconnect on the success path —
+			// reconnecting after a hard failure would wipe the error state and
+			// restart the stream (see commit 63a3e83 regression).
+			if (!data.l[key].e) {
+				void entry?.resource.reconnect();
+			}
 		}
 	}
 
