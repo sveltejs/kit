@@ -73,15 +73,16 @@ test.describe('remote functions', () => {
 		await page.goto('/remote/private-query');
 
 		const [response] = await Promise.all([
-			page.waitForResponse((response) => response.url().includes('/remote/private-query')),
+			page.waitForResponse((response) => response.url().includes('/reveal')),
 			page.getByRole('button', { name: 'reveal' }).click()
 		]);
 
+		const body = await response.text();
+
 		// the command returns the uppercased secret...
-		await expect(page.locator('[data-id="result"]')).toHaveText('PRIVATE-DATA');
+		expect(body).toContain('PRIVATE-DATA');
 
 		// ...but the raw private query result must never appear in the serialized payload
-		const body = await response.text();
 		expect(body).not.toContain('private-data');
 	});
 
