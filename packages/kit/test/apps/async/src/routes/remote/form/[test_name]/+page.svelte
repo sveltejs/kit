@@ -33,7 +33,7 @@
 </form>
 
 <p>set_message.input.message: {set_message.fields.message.value()}</p>
-<p>set_message.pending: {set_message.pending}</p>
+<p>set_message.submitting: {set_message.submitting}</p>
 <p>set_message.result: {set_message.result}</p>
 
 <hr />
@@ -49,7 +49,7 @@
 </form>
 
 <p>scoped.input.message: {scoped.fields.message.value()}</p>
-<p>scoped.pending: {scoped.pending}</p>
+<p>scoped.submitting: {scoped.submitting}</p>
 <p>scoped.result: {scoped.result}</p>
 
 <hr />
@@ -77,7 +77,7 @@
 </form>
 
 <p>enhanced.input.message: {enhanced.fields.message.value()}</p>
-<p>enhanced.pending: {enhanced.pending}</p>
+<p>enhanced.submitting: {enhanced.submitting}</p>
 <p>enhanced.result: {enhanced.result}</p>
 <p>enhanced.submit_result: {submit_result}</p>
 <p>enhanced.element: {/** @type {any} */ (enhanced).element ? 'attached' : 'null'}</p>

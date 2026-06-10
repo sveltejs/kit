@@ -92,7 +92,7 @@ export function command(validate_or_fn, maybe_fn) {
 		return /** @type {ReturnType<RemoteCommand<Input, Output>>} */ (promise);
 	};
 
-	Object.defineProperty(wrapper, '__', { value: __ });
+	Object.defineProperty(wrapper, '__', { value: __, configurable: true });
 
 	// On the server, pending is always 0
 	Object.defineProperty(wrapper, 'pending', {

@@ -5,7 +5,7 @@
 
 	const pendings_arr: number[] = [];
 	const pendings = $derived.by(() => {
-		pendings_arr.push(set_message.pending);
+		pendings_arr.push(set_message.submitting);
 		return pendings_arr.join(', ');
 	});
 </script>

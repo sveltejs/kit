@@ -88,9 +88,13 @@ test.describe('remote functions', () => {
 		await page.getByText('set message').click();
 
 		if (javaScriptEnabled) {
-			await expect(page.getByText('set_message.pending:')).toHaveText('set_message.pending: 1');
+			await expect(page.getByText('set_message.submitting:')).toHaveText(
+				'set_message.submitting: 1'
+			);
 			await page.getByText('resolve deferreds').click();
-			await expect(page.getByText('set_message.pending:')).toHaveText('set_message.pending: 0');
+			await expect(page.getByText('set_message.submitting:')).toHaveText(
+				'set_message.submitting: 0'
+			);
 			await expect(page.getByText('message.current:')).toHaveText('message.current: hello');
 		}
 
@@ -240,9 +244,9 @@ test.describe('remote functions', () => {
 		await page.getByText('set scoped message').click();
 
 		if (javaScriptEnabled) {
-			await expect(page.getByText('scoped.pending:')).toHaveText('scoped.pending: 1');
+			await expect(page.getByText('scoped.submitting:')).toHaveText('scoped.submitting: 1');
 			await page.getByText('resolve deferreds').click();
-			await expect(page.getByText('scoped.pending:')).toHaveText('scoped.pending: 0');
+			await expect(page.getByText('scoped.submitting:')).toHaveText('scoped.submitting: 0');
 
 			await page.getByText('message.current: hello').waitFor();
 			await expect(page.getByText('await get_message():')).toHaveText('await get_message(): hello');
@@ -263,13 +267,13 @@ test.describe('remote functions', () => {
 		await page.locator('[data-enhanced] span').click();
 
 		if (javaScriptEnabled) {
-			await expect(page.getByText('enhanced.pending:')).toHaveText('enhanced.pending: 1');
+			await expect(page.getByText('enhanced.submitting:')).toHaveText('enhanced.submitting: 1');
 			await expect(page.getByText('enhanced.element:')).toHaveText('enhanced.element: attached');
 
 			await page.getByText('message.current: hello (override)').waitFor();
 
 			await page.getByText('resolve deferreds').click();
-			await expect(page.getByText('enhanced.pending:')).toHaveText('enhanced.pending: 0');
+			await expect(page.getByText('enhanced.submitting:')).toHaveText('enhanced.submitting: 0');
 			await expect(page.getByText('await get_message():')).toHaveText('await get_message(): hello');
 
 			// enhanced submission should not clear the input; the developer must do that at the appropriate time
@@ -324,7 +328,7 @@ test.describe('remote functions', () => {
 		await page.fill('[data-enhanced] input', 'hello');
 		await page.getByText('submit enhanced programmatically').click();
 
-		await expect(page.getByText('enhanced.pending:')).toHaveText('enhanced.pending: 1');
+		await expect(page.getByText('enhanced.submitting:')).toHaveText('enhanced.submitting: 1');
 
 		await page.getByText('resolve deferreds').click();
 		await expect(page.getByText('enhanced.imperative_submit_result:')).toHaveText(
@@ -377,29 +381,29 @@ test.describe('remote functions', () => {
 		await page.goto('/remote/form/preflight-pending');
 
 		// Test 1: async preflight that passes — pending should be true immediately
-		await expect(page.locator('[data-passing-pending]')).toHaveText('passing pending: 0');
+		await expect(page.locator('[data-passing-submitting]')).toHaveText('passing submitting: 0');
 
 		void page.click('[data-passing] button');
 
-		// pending should be true immediately (before async preflight finishes)
-		await expect(page.locator('[data-passing-pending]')).toHaveText('passing pending: 1');
+		// submitting should be true immediately (before async preflight finishes)
+		await expect(page.locator('[data-passing-submitting]')).toHaveText('passing submitting: 1');
 
-		// after submission completes, pending should return to 0
-		await expect(page.locator('[data-passing-pending]')).toHaveText('passing pending: 0', {
+		// after submission completes, submitting should return to 0
+		await expect(page.locator('[data-passing-submitting]')).toHaveText('passing submitting: 0', {
 			timeout: 5000
 		});
 		await expect(page.locator('[data-passing-result]')).toContainText('created:');
 
-		// Test 2: async preflight that fails — pending should be true during validation, then return to 0
-		await expect(page.locator('[data-failing-pending]')).toHaveText('failing pending: 0');
+		// Test 2: async preflight that fails — submitting should be true during validation, then return to 0
+		await expect(page.locator('[data-failing-submitting]')).toHaveText('failing submitting: 0');
 
 		void page.click('[data-failing] button');
 
-		// pending should be true immediately
-		await expect(page.locator('[data-failing-pending]')).toHaveText('failing pending: 1');
+		// submitting should be true immediately
+		await expect(page.locator('[data-failing-submitting]')).toHaveText('failing submitting: 1');
 
-		// after preflight fails, pending should return to 0 and issues should appear
-		await expect(page.locator('[data-failing-pending]')).toHaveText('failing pending: 0', {
+		// after preflight fails, submitting should return to 0 and issues should appear
+		await expect(page.locator('[data-failing-submitting]')).toHaveText('failing submitting: 0', {
 			timeout: 5000
 		});
 		await expect(page.locator('[data-failing-issue]')).toHaveText('async check failed');

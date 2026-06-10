@@ -30,7 +30,7 @@
 	<input {...passing.fields.name.as('text')} value="test" />
 	<button>submit passing</button>
 </form>
-<p data-passing-pending>passing pending: {passing.pending}</p>
+<p data-passing-submitting>passing submitting: {passing.submitting}</p>
 <p data-passing-result>passing result: {passing.result}</p>
 
 <hr />
@@ -39,7 +39,7 @@
 	<input {...failing.fields.name.as('text')} value="test" />
 	<button>submit failing</button>
 </form>
-<p data-failing-pending>failing pending: {failing.pending}</p>
+<p data-failing-submitting>failing submitting: {failing.submitting}</p>
 {#each failing.fields.allIssues() as issue}
 	<p data-failing-issue>{issue.message}</p>
 {/each}

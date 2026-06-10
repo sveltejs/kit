@@ -13,6 +13,7 @@ import {
 } from '../../../form-utils.js';
 import { get_cache, run_remote_function } from './shared.js';
 import { ValidationError } from '@sveltejs/kit/internal';
+import { command } from './command.js';
 
 /**
  * Creates a form object that can be spread onto a `<form>` element.
@@ -74,7 +75,8 @@ export function form(validate_or_fn, maybe_fn) {
 	 */
 	function create_instance(key) {
 		/** @type {RemoteForm<Input, Output>} */
-		const instance = {};
+		// @ts-expect-error `command` is missing the properties we're about to add
+		const instance = command(validate_or_fn, maybe_fn);
 
 		instance.method = 'POST';
 
@@ -225,11 +227,6 @@ export function form(validate_or_fn, maybe_fn) {
 					return undefined;
 				}
 			}
-		});
-
-		// On the server, pending is always 0
-		Object.defineProperty(instance, 'pending', {
-			get: () => 0
 		});
 
 		Object.defineProperty(instance, 'preflight', {

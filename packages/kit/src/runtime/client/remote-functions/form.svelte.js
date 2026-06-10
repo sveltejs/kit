@@ -21,6 +21,7 @@ import {
 	serialize_binary_form,
 	BINARY_FORM_CONTENT_TYPE
 } from '../../form-utils.js';
+import { command } from './command.svelte.js';
 
 /**
  * Merge client issues into server issues. Server issues are persisted unless
@@ -74,7 +75,7 @@ export function form(id) {
 		let result = $state.raw(query_responses[action_id]);
 
 		/** @type {number} */
-		let pending_count = $state(0);
+		let submitting_count = $state(0);
 
 		/** @type {StandardSchemaV1 | undefined} */
 		let preflight_schema = undefined;
@@ -361,7 +362,8 @@ export function form(id) {
 		}
 
 		/** @type {RemoteForm<T, U>} */
-		const instance = {};
+		// @ts-expect-error `command` is missing properties we're about to add
+		const instance = command(action_id);
 
 		instance.method = 'POST';
 		instance.action = action;
@@ -422,7 +424,7 @@ export function form(id) {
 				try {
 					// Increment pending count immediately so that `pending` reflects
 					// the in-progress state during async preflight validation
-					pending_count++;
+					submitting_count++;
 
 					const valid = await preflight(form_data);
 					if (!valid) return;
@@ -434,7 +436,7 @@ export function form(id) {
 					const status = e instanceof HttpError ? e.status : 500;
 					void set_nearest_error_page(error, status);
 				} finally {
-					pending_count--;
+					submitting_count--;
 				}
 			};
 
@@ -578,12 +580,12 @@ export function form(id) {
 					}
 
 					submitted = true;
-					pending_count++;
+					submitting_count++;
 
 					const submission = submit(form_data, true);
 
 					void submission.finally(() => {
-						pending_count--;
+						submitting_count--;
 					});
 
 					return submission;
@@ -621,8 +623,8 @@ export function form(id) {
 			result: {
 				get: () => result
 			},
-			pending: {
-				get: () => pending_count
+			submitting: {
+				get: () => submitting_count
 			},
 			preflight: {
 				/** @type {RemoteForm<T, U>['preflight']} */
