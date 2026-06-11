@@ -125,14 +125,18 @@ export async function render_response({
 			base = segments.map(() => '..').join('/') || '.';
 
 			// resolve e.g. '../..' against current location, then remove trailing slash
-			base_expression = `new URL(${s(base)}, location).pathname.slice(0, -1)`;
+			// the try/catch handles non-hierarchical protocols like about: and data:
+			// (e.g. when embedded in <iframe srcdoc> or data: URLs)
+			base_expression = `(() => { try { return new URL(${s(base)}, location).pathname.slice(0, -1) } catch { return ${s(paths.base || '')} } })()`;
 
 			if (!paths.assets || (paths.assets[0] === '/' && paths.assets !== SVELTE_KIT_ASSETS)) {
 				assets = base;
 			}
 		} else if (options.hash_routing) {
 			// we have to assume that we're in the right place
-			base_expression = "new URL('.', location).pathname.slice(0, -1)";
+			// the try/catch handles non-hierarchical protocols like about: and data:
+			base_expression =
+				"(() => { try { return new URL('.', location).pathname.slice(0, -1) } catch { return '' } })()";
 		}
 	}
 
