@@ -83,6 +83,9 @@ test('skips client build if every node has CSR disabled', async ({ page, request
 	const src = await page.locator('img').getAttribute('src');
 	if (!src) throw new Error('Image src not found on /assets page');
 
-	const response = await request.get(src);
-	expect(response.status()).toBe(200);
+	const img_response = await request.get(src);
+	expect(img_response.status()).toBe(200);
+
+	const public_asset_response = await request.get('/asset.json');
+	expect(public_asset_response.status()).toBe(200);
 });

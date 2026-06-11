@@ -1,5 +1,27 @@
 # @sveltejs/kit
 
+## 3.0.0-next.4
+### Patch Changes
+
+
+- fix: reset queries before navigating when `invalidateAll` is set ([#16014](https://github.com/sveltejs/kit/pull/16014))
+
+## 3.0.0-next.3
+## 2.65.0
+### Minor Changes
+
+
+- feat: allow queries to refresh other queries ([#16012](https://github.com/sveltejs/kit/pull/16012))
+
+
+### Patch Changes
+
+
+- fix: dedupe remote data ([#15991](https://github.com/sveltejs/kit/pull/15991))
+
+
+- fix: skip client build if all routes have CSR disabled ([#15936](https://github.com/sveltejs/kit/pull/15936))
+
 ## 3.0.0-next.2
 ### Patch Changes
 
@@ -91,6 +113,21 @@
 
 
 - chore: remove dependency on `set-cookie-parser` ([#15384](https://github.com/sveltejs/kit/pull/15384))
+
+## 2.65.0
+### Minor Changes
+
+
+- feat: allow queries to refresh other queries ([#16012](https://github.com/sveltejs/kit/pull/16012))
+
+
+### Patch Changes
+
+
+- fix: dedupe remote data ([#15991](https://github.com/sveltejs/kit/pull/15991))
+
+
+- fix: skip client build if all routes have CSR disabled ([#15936](https://github.com/sveltejs/kit/pull/15936))
 
 ## 2.64.0
 ### Minor Changes
