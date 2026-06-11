@@ -786,6 +786,47 @@ test.describe('remote function mutations', () => {
 			.toBeGreaterThan(before_cleanup);
 	});
 
+	test('query.live surfaces mid-stream HttpError and does not reconnect', async ({ page }) => {
+		await page.goto('/remote/live-terminal');
+
+		await expect(page.locator('#value')).toHaveText('0');
+		await expect(page.locator('#connected')).toHaveText('true');
+
+		await page.click('#refresh-connections');
+		await expect(page.locator('#connections')).not.toHaveText('pending');
+		const before = Number(await page.locator('#connections').textContent());
+
+		await page.click('#trigger-error');
+
+		await expect(page.locator('#error')).toHaveText('418 terminal teapot');
+		await expect(page.locator('#connected')).toHaveText('false');
+		await expect(page.locator('#done')).toHaveText('true');
+
+		// A terminal HttpError must not trigger a reconnect — the connection count
+		// should not increase after the failure.
+		await page.waitForTimeout(500);
+		await page.click('#refresh-connections');
+		await expect
+			.poll(async () => Number(await page.locator('#connections').textContent()))
+			.toBe(before);
+	});
+
+	test('query.live navigates on mid-stream redirect', async ({ page }) => {
+		await page.goto('/remote/live-terminal');
+
+		await expect(page.locator('#value')).toHaveText('0');
+		await expect(page.locator('#connected')).toHaveText('true');
+
+		await page.click('#trigger-redirect');
+
+		// Characterizes the current mid-stream redirect behavior. The client
+		// navigates to the redirect target and reconnects (see the TODO at
+		// query-live/instance.svelte.js:165-166). If the redirect semantics are
+		// redesigned, this test must be updated deliberately.
+		await expect(page.locator('#redirect-target')).toBeVisible();
+		expect(page.url()).toMatch(/\/remote\/live-terminal\/target$/);
+	});
+
 	test('refreshAll works with schema transforms (number to string)', async ({ page }) => {
 		await page.goto('/remote/form/transform');
 
