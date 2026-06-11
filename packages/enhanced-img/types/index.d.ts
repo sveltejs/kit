@@ -5,7 +5,7 @@ import './ambient.js';
 
 export { Picture };
 
-type EnhancedImgAttributes = Omit<HTMLImgAttributes, 'src'> & { src: string | Picture };
+export type EnhancedImgAttributes = Omit<HTMLImgAttributes, 'src'> & { src: string | Picture };
 
 // https://svelte.dev/docs/svelte/typescript#enhancing-built-in-dom-types
 declare module 'svelte/elements' {
