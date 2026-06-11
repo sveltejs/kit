@@ -1643,6 +1643,7 @@ const create_service_worker_module = (config) => dedent`
 		throw new Error('This module can only be imported inside a service worker');
 	}
 
+	export const base = location.pathname.split('/').slice(0, -1).join('/');
 	export const build = [];
 	export const files = [
 		${create_assets(config)
