@@ -58,7 +58,6 @@
   },
   "changesets": [
     "blue-plants-work",
-    "brave-rockets-rest",
     "chilly-berries-press",
     "clean-papers-give",
     "cold-carrots-raise",
@@ -80,16 +79,15 @@
     "large-onions-attack",
     "late-lions-crash",
     "light-singers-lie",
+    "long-yaks-care",
     "nasty-impalas-wear",
     "nine-coins-cheer",
     "nine-suns-nail",
     "pink-cobras-rush",
     "plenty-cougars-wave",
     "polite-lemons-refuse",
-    "sad-frogs-wink",
     "salty-chefs-sleep",
     "shiny-feet-crash",
-    "spicy-drinks-build",
-    "yellow-waves-care"
+    "spicy-drinks-build"
   ]
 }
