@@ -1,3 +1,4 @@
+/* eslint-disable n/prefer-global/process */
 import { describe, expect, test, vi } from 'vitest';
 import { tick } from 'svelte';
 
