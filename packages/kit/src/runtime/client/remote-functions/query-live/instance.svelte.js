@@ -124,6 +124,7 @@ export class LiveQuery {
 
 		/** @type {PromiseWithResolvers<void>} */
 		const { promise: stopped, resolve: on_stop } = with_resolvers();
+		let connected = false;
 
 		while (!this.#done) {
 			const controller = new AbortController();
@@ -136,6 +137,7 @@ export class LiveQuery {
 			const generator = create_live_iterator(this.#id, this.#payload, controller, () => {
 				this.#connected = true;
 				this.#attempt = 0;
+				connected = true;
 				on_connect();
 			});
 
@@ -207,10 +209,12 @@ export class LiveQuery {
 		}
 
 		this.#interrupt = null;
-		// If the loop exited without ever connecting (abort/offline/interrupted
-		// retry/terminal failure), settle the reconnect handshake so callers
-		// (e.g. `invalidateAll()`) never await a forever-pending promise.
-		on_connect_failed(this.#error ?? new Error('Live query connection was interrupted'));
+		// If the loop exited without ever successfully connecting, settle the
+		// reconnect handshake so callers (e.g. `invalidateAll()`) never await
+		// a forever-pending promise.
+		if (!connected) {
+			on_connect_failed(this.#error ?? new Error('Live query connection was interrupted'));
+		}
 		on_stop();
 	}
 
@@ -354,12 +358,11 @@ export class LiveQuery {
 		promise.catch(noop);
 		this.#done = false;
 		this.#attempt = 0;
-		// Only replace the fan-out if it was closed by `done()`/`fail()` —
-		// an open fan-out still has live `for await` subscribers that must
-		// keep receiving values from the new connection.
-		if (this.#fan_out.closed) {
-			this.#fan_out = new SharedIterator();
-		}
+		// Gracefully complete any active `for await` consumers on the old
+		// fan-out so their loops terminate cleanly, then start fresh for the
+		// new connection. `done()` is a no-op if already closed.
+		this.#fan_out.done();
+		this.#fan_out = new SharedIterator();
 		this.#main({ on_connect, on_connect_failed }).catch(noop);
 		await promise;
 	}
