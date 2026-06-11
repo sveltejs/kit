@@ -764,7 +764,7 @@ test.describe('remote function mutations', () => {
 		await page.click('#reset');
 	});
 
-	test('for await consumers terminate cleanly when reconnect() closes the fan-out', async ({
+	test('for await consumers continue receiving values across invalidateAll-triggered reconnects', async ({
 		page
 	}) => {
 		await page.goto('/remote/live');
@@ -775,14 +775,17 @@ test.describe('remote function mutations', () => {
 		// the first value should be the current value (0)
 		await expect(page.locator('#stream-log')).toHaveText(/0/);
 
-		// invalidateAll() calls reconnect(), which gracefully closes the current
-		// fan-out via done(). Active `for await` loops must terminate cleanly
-		// (not hang forever on an orphaned iterator).
+		// invalidateAll() calls reconnect(), which keeps the existing fan-out
+		// open so active `for await` consumers continue receiving values from
+		// the new connection without interruption.
 		await page.click('#run-invalidate-all');
 		await expect(page.locator('#invalidate-state')).toHaveText('resolved');
 
-		// The stream-log loop has exited — no error was thrown; it just ended.
-		await expect(page.locator('#stream-log')).not.toContainText('error:');
+		// Trigger a new value — the still-attached consumer must see it.
+		// Before the fix the fan-out was replaced, orphaning the subscriber so
+		// this value never arrived and the loop hung.
+		await page.click('#increment');
+		await expect(page.locator('#stream-log')).toContainText('1');
 
 		await page.click('#reset');
 	});

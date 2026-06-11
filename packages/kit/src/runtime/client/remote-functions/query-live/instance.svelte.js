@@ -358,11 +358,14 @@ export class LiveQuery {
 		promise.catch(noop);
 		this.#done = false;
 		this.#attempt = 0;
-		// Gracefully complete any active `for await` consumers on the old
-		// fan-out so their loops terminate cleanly, then start fresh for the
-		// new connection. `done()` is a no-op if already closed.
-		this.#fan_out.done();
-		this.#fan_out = new SharedIterator();
+		// Keep the existing fan-out open so active `for await` consumers
+		// continue receiving values from the new connection without interruption.
+		// Only replace it if it was already closed by a prior `done()`/`fail()`
+		// (e.g. reconnecting after a finite or hard-failed stream) — a closed
+		// fan-out silently drops all pushes, so a fresh one is required.
+		if (this.#fan_out.closed) {
+			this.#fan_out = new SharedIterator();
+		}
 		this.#main({ on_connect, on_connect_failed }).catch(noop);
 		await promise;
 	}
