@@ -142,10 +142,15 @@ export class LiveQuery {
 			try {
 				const { done, value } = await generator.next();
 
-				// TODO how much special handling does this need?
-				// should we even try to reconnect if this is the case?
-				if (done && !this.#ready) {
-					throw new Error('Live query completed before yielding a value');
+				if (done) {
+					if (!this.#ready) {
+						throw new Error('Live query completed before yielding a value');
+					}
+					// stream completed without yielding (e.g. the generator returned
+					// immediately on reconnect) — keep the last good value
+					this.#done = true;
+					this.#fan_out.done();
+					break;
 				}
 
 				this.set(value);
@@ -202,6 +207,10 @@ export class LiveQuery {
 		}
 
 		this.#interrupt = null;
+		// If the loop exited without ever connecting (abort/offline/interrupted
+		// retry/terminal failure), settle the reconnect handshake so callers
+		// (e.g. `invalidateAll()`) never await a forever-pending promise.
+		on_connect_failed(this.#error ?? new Error('Live query connection was interrupted'));
 		on_stop();
 	}
 
@@ -345,10 +354,12 @@ export class LiveQuery {
 		promise.catch(noop);
 		this.#done = false;
 		this.#attempt = 0;
-		// The previous fan-out may have been closed by `done()`/`fail()`. Future
-		// `for await` consumers need a fresh, open fan-out attached to the new
-		// `#main` lifetime.
-		this.#fan_out = new SharedIterator();
+		// Only replace the fan-out if it was closed by `done()`/`fail()` —
+		// an open fan-out still has live `for await` subscribers that must
+		// keep receiving values from the new connection.
+		if (this.#fan_out.closed) {
+			this.#fan_out = new SharedIterator();
+		}
 		this.#main({ on_connect, on_connect_failed }).catch(noop);
 		await promise;
 	}

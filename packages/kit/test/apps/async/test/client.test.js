@@ -764,6 +764,42 @@ test.describe('remote function mutations', () => {
 		await page.click('#reset');
 	});
 
+	test('for await consumers survive invalidateAll-triggered reconnects', async ({ page }) => {
+		await page.goto('/remote/live');
+		await page.click('#reset');
+		await expect(page.locator('#count')).toHaveText('0');
+
+		await page.click('#start-stream-log');
+		// the first value should be the current value (0)
+		await expect(page.locator('#stream-log')).toHaveText(/0/);
+
+		// invalidateAll() reconnects every live query — the open fan-out must be
+		// preserved so this for-await consumer keeps receiving values.
+		await page.click('#run-invalidate-all');
+		await page.click('#increment');
+
+		// before the fix the consumer was attached to an orphaned fan-out and
+		// never saw this value, so the loop hung forever.
+		await expect(page.locator('#stream-log')).toContainText('1');
+
+		await page.click('#reset');
+	});
+
+	test('invalidateAll resolves while a live query is offline', async ({ page, context }) => {
+		await page.goto('/remote/live');
+		await page.click('#reset');
+		await expect(page.locator('#connected')).toHaveText('true');
+
+		await context.setOffline(true);
+
+		// reconnect()'s handshake must settle on every #main exit path (here:
+		// offline) so that awaiting invalidateAll() doesn't deadlock.
+		await page.click('#run-invalidate-all');
+		await expect(page.locator('#invalidate-state')).toHaveText(/resolved|rejected/);
+
+		await context.setOffline(false);
+	});
+
 	test('query.live cleans up server iterator on reload', async ({ page }) => {
 		await page.goto('/remote/live');
 		await page.click('#stats');
