@@ -586,7 +586,7 @@ export async function _goto(url, options, redirect_count, nav_token) {
 				for (const [id, entries] of query_map) {
 					for (const [payload, { resource }] of entries) {
 						if (query_keys?.has(create_remote_key(id, payload))) {
-							void resource.refresh();
+							void resource.start();
 						}
 					}
 				}
