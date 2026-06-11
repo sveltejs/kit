@@ -819,10 +819,6 @@ test.describe('remote function mutations', () => {
 
 		await page.click('#trigger-redirect');
 
-		// Characterizes the current mid-stream redirect behavior. The client
-		// navigates to the redirect target and reconnects (see the TODO at
-		// query-live/instance.svelte.js:165-166). If the redirect semantics are
-		// redesigned, this test must be updated deliberately.
 		await expect(page.locator('#redirect-target')).toBeVisible();
 		expect(page.url()).toMatch(/\/remote\/live-terminal\/target$/);
 	});
