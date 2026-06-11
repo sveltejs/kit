@@ -104,6 +104,30 @@ When building for Cloudflare Workers, this adapter expects to find a [Wrangler c
 
 You can use the Wrangler CLI to deploy your application by running `npx wrangler deploy` or use the [Cloudflare Git integration](https://developers.cloudflare.com/workers/ci-cd/builds/) to enable automatic builds and deployments on push.
 
+### Redirecting HTTP to HTTPS
+
+Unlike Cloudflare Pages, Cloudflare Workers does not redirect HTTP requests to HTTPS. Cloudflare's [redirect rules](https://developers.cloudflare.com/rules/url-forwarding/single-redirects/) are only available once you onboard a domain, so to force HTTPS for all visitors you can redirect in the [`handle`](hooks#Server-hooks-handle) hook:
+
+```js
+/// file: src/hooks.server.js
+import { dev } from '$app/environment';
+
+/** @type {import('@sveltejs/kit').Handle} */
+export async function handle({ event, resolve }) {
+	if (!dev && event.url.protocol === 'http:') {
+		if (event.request.method === 'GET') {
+			const location = new URL(event.url);
+			location.protocol = 'https:';
+			return Response.redirect(location, 307);
+		}
+
+		return new Response(null, { status: 426 }); // Upgrade Required
+	}
+
+	return resolve(event);
+}
+```
+
 ## Cloudflare Pages
 
 ### Deployment
