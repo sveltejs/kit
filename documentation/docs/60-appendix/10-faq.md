@@ -16,7 +16,7 @@ If you'd like to include your application's version number or other information 
 
 ```ts
 // @errors: 2732
-/// file: svelte.config.js
+/// file: vite.config.js
 import pkg from './package.json' with { type: 'json' };
 ```
 

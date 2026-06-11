@@ -62,7 +62,7 @@ catalog:
   semver: ^7.5.4
   sirv-cli: ^3.0.0
   svelte: ^5.55.7
-  svelte-check: ^4.4.6
+  svelte-check: ^4.6.0
   svelte-preprocess: ^6.0.5
   # This version of TypeScript is for apps using it just for type checking.
   # `kit` and `package` cannot follow the catalog version because they require it

@@ -103,8 +103,6 @@ jobs:
       - run: pnpm playwright install ${{ matrix.e2e-browser }}
       - run: pnpm run sync-all
       - run: pnpm test:kit
-        env:
-          NODE_OPTIONS: ${{matrix.node-version == 22 && '--experimental-strip-types' || ''}} # allows loading svelte.config.ts
       - name: Print flaky test report
         run: node scripts/print-flaky-test-report.js
       - name: Archive test results

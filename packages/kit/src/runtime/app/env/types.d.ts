@@ -14,6 +14,6 @@ export const dev: boolean;
 export const building: boolean;
 
 /**
- * The value of `config.kit.version.name`.
+ * The value of `version.name`.
  */
 export const version: string;

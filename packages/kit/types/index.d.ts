@@ -304,24 +304,28 @@ declare module '@sveltejs/kit' {
 		 * An object containing zero or more aliases used to replace values in `import` statements. These aliases are automatically passed to Vite and TypeScript.
 		 *
 		 * ```js
-		 * /// file: svelte.config.js
-		 * /// type: import('@sveltejs/kit').Config
-		 * const config = {
-		 *   kit: {
-		 *     alias: {
-		 *       // this will match a file
-		 *       'my-file': 'path/to/my-file.js',
+		 * /// file: vite.config.js
+		 * import { defineConfig } from 'vite';
+		 * import { sveltekit } from '@sveltejs/kit/vite';
+		 * 
+		 * export default defineConfig({
+		 *   plugins: [
+		 *     sveltekit({
+		 *       alias: {
+		 *         // this will match a file
+		 *         'my-file': 'path/to/my-file.js',
 		 *
-		 *       // this will match a directory and its contents
-		 *       // (`my-directory/x` resolves to `path/to/my-directory/x`)
-		 *       'my-directory': 'path/to/my-directory',
+		 *         // this will match a directory and its contents
+		 *         // (`my-directory/x` resolves to `path/to/my-directory/x`)
+		 *         'my-directory': 'path/to/my-directory',
 		 *
-		 *       // an alias ending /* will only match
-		 *       // the contents of a directory, not the directory itself
-		 *       'my-directory/*': 'path/to/my-directory/*'
-		 *     }
-		 *   }
-		 * };
+		 *         // an alias ending /* will only match
+		 *         // the contents of a directory, not the directory itself
+		 *         'my-directory/*': 'path/to/my-directory/*'
+		 *       }
+		 *     })
+		 *   ]
+		 * });
 		 * ```
 		 *
 		 * > [!NOTE] You will need to run `npm run dev` to have SvelteKit automatically generate the required alias configuration in `jsconfig.json` or `tsconfig.json`.
@@ -339,24 +343,26 @@ declare module '@sveltejs/kit' {
 		 * [Content Security Policy](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy) configuration. CSP helps to protect your users against cross-site scripting (XSS) attacks, by limiting the places resources can be loaded from. For example, a configuration like this...
 		 *
 		 * ```js
-		 * /// file: svelte.config.js
-		 * /// type: import('@sveltejs/kit').Config
-		 * const config = {
-		 *   kit: {
-		 *     csp: {
-		 *       directives: {
-		 *         'script-src': ['self']
-		 *       },
-		 *       // must be specified with either the `report-uri` or `report-to` directives, or both
-		 *       reportOnly: {
-		 *         'script-src': ['self'],
-		 *         'report-uri': ['/']
-		 *       }
-		 *     }
-		 *   }
-		 * };
-		 *
-		 * export default config;
+		 * /// file: vite.config.js
+		 * import { sveltekit } from '@sveltejs/kit/vite';
+		 * import { defineConfig } from 'vite';
+		 * 
+		 * export default defineConfig({
+		 * 	plugins: [
+		 * 		sveltekit({
+		 * 			csp: {
+		 * 				directives: {
+		 * 					'script-src': ['self']
+		 * 				},
+		 * 				// must be specified with either the `report-uri` or `report-to` directives, or both
+		 * 				reportOnly: {
+		 * 					'script-src': ['self'],
+		 * 					'report-uri': ['/']
+		 * 				}
+		 * 			}
+		 * 		})
+		 * 	]
+		 * });
 		 * ```
 		 *
 		 * ...would prevent scripts loading from external sites. SvelteKit will augment the specified directives with nonces or hashes (depending on `mode`) for any inline styles and scripts it generates.
@@ -693,23 +699,27 @@ declare module '@sveltejs/kit' {
 			 * - `(details) => void` — a custom error handler that takes a `details` object with `status`, `path`, `referrer`, `referenceType` and `message` properties. If you `throw` from this function, the build will fail
 			 *
 			 * ```js
-			 * /// file: svelte.config.js
-			 * /// type: import('@sveltejs/kit').Config
-			 * const config = {
-			 *   kit: {
-			 *     prerender: {
-			 *       handleHttpError: ({ path, referrer, message }) => {
-			 *         // ignore deliberate link to shiny 404 page
-			 *         if (path === '/not-found' && referrer === '/blog/how-we-built-our-404-page') {
-			 *           return;
-			 *         }
+			 * /// file: vite.config.js
+			 * import { sveltekit } from '@sveltejs/kit/vite';
+			 * import { defineConfig } from 'vite';
 			 *
-			 *         // otherwise fail the build
-			 *         throw new Error(message);
-			 *       }
-			 *     }
-			 *   }
-			 * };
+			 * export default defineConfig({
+			 * 	plugins: [
+			 * 		sveltekit({
+			 *  		prerender: {
+			 *  			handleHttpError: ({ path, referrer, message }) => {
+			 * 					// ignore deliberate link to shiny 404 page
+			 * 					if (path === '/not-found' && referrer === '/blog/how-we-built-our-404-page') {
+			 * 						return;
+			 * 					}
+			 *
+			 * 					// otherwise fail the build
+			 * 					throw new Error(message);
+			 * 				}
+			 * 			}
+			 * 		})
+			 * 	]
+			 * });
 			 * ```
 			 *
 			 * @default "fail"
@@ -861,16 +871,20 @@ declare module '@sveltejs/kit' {
 			 * For example, to use the current commit hash, you could do use `git rev-parse HEAD`:
 			 *
 			 * ```js
-			 * /// file: svelte.config.js
+			 * /// file: vite.config.js
 			 * import * as child_process from 'node:child_process';
+			 * import { sveltekit } from '@sveltejs/kit/vite';
+			 * import { defineConfig } from 'vite';
 			 *
-			 * export default {
-			 *   kit: {
-			 *     version: {
-			 *       name: child_process.execSync('git rev-parse HEAD').toString().trim()
-			 *     }
-			 *   }
-			 * };
+			 * export default defineConfig({
+			 * 	plugins: [
+			 * 		sveltekit({
+			 *  		version: {
+			 * 				name: child_process.execSync('git rev-parse HEAD').toString().trim()
+			 * 			}
+			 * 		})
+			 * 	]
+			 * });
 			 * ```
 			 */
 			name?: string;
@@ -3024,6 +3038,10 @@ declare module '@sveltejs/kit/vite' {
 	import type { Plugin } from 'vite';
 	/**
 	 * Returns the SvelteKit Vite plugins.
+	 *
+	 * Since version 3.0.0 you must pass the [configuration](configuration) directly.
+	 *
+	 * Since version 2.62.0 you can pass configuration directly, in which case `svelte.config.js` is ignored.
 	 * */
 	export function sveltekit(config?: KitConfig & Omit<SvelteConfig, "onwarn">): Promise<Plugin[]>;
 

@@ -355,9 +355,6 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root) {
 		}, 100);
 	};
 
-	// flag to skip watchers if server is already restarting
-	let restarting = false;
-
 	// Debounce add/unlink events because in case of folder deletion or moves
 	// they fire in rapid succession, causing needless invocations.
 	// These watchers only run for routes, param matchers, and client hooks.
@@ -366,7 +363,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root) {
 	watch('change', (file) => {
 		// Don't run for a single file if the whole manifest is about to get updated
 		// Unless it's a file where the trailing slash page option might have changed
-		if (timeout || restarting || !/\+(page|layout|server).*$/.test(file)) return;
+		if (timeout || !/\+(page|layout|server).*$/.test(file)) return;
 		sync.update(svelte_config, manifest_data, file, root);
 	});
 
@@ -377,7 +374,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root) {
 	// send the vite client a full-reload event without path being set
 	if (appTemplate !== 'index.html') {
 		vite.watcher.on('change', (file) => {
-			if (file === appTemplate && !restarting) {
+			if (file === appTemplate) {
 				vite.ws.send({ type: 'full-reload' });
 			}
 		});
@@ -391,17 +388,6 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root) {
 			file.startsWith(hooks.server)
 		) {
 			sync.server(svelte_config, root);
-		}
-	});
-
-	vite.watcher.on('change', async (file) => {
-		// changing the svelte config requires restarting the dev server
-		// the config is only read on start and passed on to vite-plugin-svelte
-		// which needs up-to-date values to operate correctly
-		if (file.match(/[/\\]svelte\.config\.[jt]s$/)) {
-			console.log(`svelte config changed, restarting vite dev-server. changed file: ${file}`);
-			restarting = true;
-			await vite.restart();
 		}
 	});
 

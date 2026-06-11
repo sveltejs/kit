@@ -12,7 +12,7 @@ import {
 } from './module_ids.js';
 
 /**
- * Transforms kit.alias to a valid vite.resolve.alias array.
+ * Transforms alias to a valid vite.resolve.alias array.
  *
  * Related to tsconfig path alias creation.
  *
@@ -23,7 +23,7 @@ export function get_config_aliases(config, root) {
 	/** @type {import('vite').Alias[]} */
 	const alias = [
 		// For now, we handle `$lib` specially here rather than make it a default value for
-		// `config.kit.alias` since it has special meaning for packaging, etc.
+		// `alias` since it has special meaning for packaging, etc.
 		{ find: '$lib', replacement: config.files.lib }
 	];
 
@@ -152,18 +152,16 @@ export function normalize_id(id, lib, cwd) {
 export const strip_virtual_prefix = /** @param {string} id */ (id) => id.replace('\0virtual:', '');
 
 /**
- * For `error_for_missing_config('instrumentation.server.js', 'kit.experimental.instrumentation.server', true)`,
+ * For `error_for_missing_config('instrumentation.server.js', 'experimental.instrumentation.server', true)`,
  * returns:
  *
  * ```
- * To enable `instrumentation.server.js`, add the following to your `svelte.config.js`:
+ * To enable `instrumentation.server.js`, add the following to the SvelteKit plugin in your `vite.config.js`:
  *
  *\`\`\`js
- *	kit:
- *		experimental:
- *			instrumentation:
- *				server: true
- *			}
+ *	experimental: {
+ *		instrumentation: {
+ *			server: true
  *		}
  *	}
  *\`\`\`
@@ -185,7 +183,7 @@ export function error_for_missing_config(feature_name, path, value) {
 
 	throw stackless(
 		dedent`\
-			To enable ${feature_name}, add the following to your \`svelte.config.js\`:
+			To enable ${feature_name}, add the following to your SvelteKit plugin in \`vite.config.js\`:
 
 			${result}
 		`

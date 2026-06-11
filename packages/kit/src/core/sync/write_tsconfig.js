@@ -62,7 +62,6 @@ export function get_tsconfig(kit, cwd) {
 		'env.d.ts',
 		'non-ambient.d.ts',
 		'./types/**/$types.d.ts',
-		config_relative('svelte.config.js'),
 		config_relative('vite.config.js'),
 		config_relative('vite.config.ts')
 	]);
@@ -176,7 +175,7 @@ function validate_user_config(cwd, out, config) {
 				styleText(
 					['bold', 'yellow'],
 					`You have specified a baseUrl and/or paths in your ${config.kind} which interferes with SvelteKit's auto-generated tsconfig.json. ` +
-						'Remove it to avoid problems with intellisense. For path aliases, use `kit.alias` instead: https://svelte.dev/docs/kit/configuration#alias'
+						'Remove it to avoid problems with intellisense. For path aliases, use `alias` instead: https://svelte.dev/docs/kit/configuration#alias'
 				)
 			);
 		}

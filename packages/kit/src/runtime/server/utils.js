@@ -228,7 +228,7 @@ export function clean_up_stack_trace(error) {
 		return line.replace(/\((.+)(:\d+:\d+)\)$/, (_, file, loc) => `(${relative(file)}${loc})`);
 	});
 
-	// progressive enhancement for people who haven't configured kit.files.src to something else
+	// progressive enhancement for people who haven't configured files.src to something else
 	const last_line_from_src_code = stack_trace.findLastIndex((line) => /\(src[\\/]/.test(line));
 
 	if (last_line_from_src_code === -1) {

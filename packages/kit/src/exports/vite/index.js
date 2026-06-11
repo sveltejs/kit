@@ -147,9 +147,9 @@ let vite_plugin_svelte;
 /**
  * Returns the SvelteKit Vite plugins.
  *
- * Since version 3.0.0 you must pass the [configuration](configuration) directly.
+ * Since version 3.0.0 you must pass [configuration](configuration) directly.
  *
- * Since version 2.62.0 you can pass [configuration](configuration) directly, in which case `svelte.config.js` is ignored.
+ * Since version 2.62.0 you can pass configuration directly, in which case `svelte.config.js` is ignored.
  * @param {KitConfig & Omit<SvelteConfig, 'onwarn'>} [config]
  * @returns {Promise<Plugin[]>}
  */
@@ -168,7 +168,7 @@ export async function sveltekit(config) {
 
 	const svelte_config = process_config(
 		{ extensions, compilerOptions, vitePlugin, preprocess, kit: rest },
-		{ cwd, source: 'SvelteKit options from Vite config' }
+		{ cwd }
 	);
 
 	vite_plugin_svelte = await import_peer('@sveltejs/vite-plugin-svelte', cwd);
@@ -368,7 +368,7 @@ function kit({ svelte_config }) {
 						sourcemapIgnoreList,
 						watch: {
 							ignored: [
-								// Ignore all siblings of config.kit.outDir/generated
+								// Ignore all siblings of outDir/generated
 								`${out_dir}/!(generated)`
 							]
 						}

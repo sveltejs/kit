@@ -26,7 +26,6 @@ my-project/
 ├ tests/
 │ └ [your tests]
 ├ package.json
-├ svelte.config.js
 ├ tsconfig.json
 └ vite.config.js
 ```
@@ -77,17 +76,13 @@ Your `package.json` file must include `@sveltejs/kit`, `svelte` and `vite` as `d
 
 When you create a project with `npx sv create`, you'll also notice that `package.json` includes `"type": "module"`. This means that `.js` files are interpreted as native JavaScript modules with `import` and `export` keywords. Legacy CommonJS files need a `.cjs` file extension.
 
-### svelte.config.js
-
-This file contains your Svelte and SvelteKit [configuration](configuration).
-
 ### tsconfig.json
 
 This file (or `jsconfig.json`, if you prefer type-checked `.js` files over `.ts` files) configures TypeScript, if you added typechecking during `npx sv create`. Since SvelteKit relies on certain configuration being set a specific way, it generates its own `.svelte-kit/tsconfig.json` file which your own config `extends`. To make changes to top-level options such as `include` and `exclude`, we recommend extending the generated config; see the [`typescript.config` setting](configuration#typescript) for more details.
 
 ### vite.config.js
 
-A SvelteKit project is really just a [Vite](https://vitejs.dev) project that uses the [`@sveltejs/kit/vite`](@sveltejs-kit-vite) plugin, along with any other [Vite configuration](https://vitejs.dev/config/).
+A SvelteKit project is really just a [Vite](https://vitejs.dev) project that uses the [`@sveltejs/kit/vite`](@sveltejs-kit-vite) plugin, along with any other [Vite configuration](https://vitejs.dev/config/). The plugin accepts your Svelte and SvelteKit [configuration](configuration).
 
 ## Other files
 
