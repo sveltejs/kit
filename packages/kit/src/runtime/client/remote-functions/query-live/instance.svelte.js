@@ -361,8 +361,7 @@ export class LiveQuery {
 		// Keep the existing fan-out open so active `for await` consumers
 		// continue receiving values from the new connection without interruption.
 		// Only replace it if it was already closed by a prior `done()`/`fail()`
-		// (e.g. reconnecting after a finite or hard-failed stream) — a closed
-		// fan-out silently drops all pushes, so a fresh one is required.
+		// (e.g. reconnecting after a finite or hard-failed stream)
 		if (this.#fan_out.closed) {
 			this.#fan_out = new SharedIterator();
 		}
