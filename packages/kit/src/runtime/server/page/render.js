@@ -12,7 +12,7 @@ import { public_env } from '../../shared-server.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import { SCHEME } from '../../../utils/url.js';
 import { create_server_routing_response, generate_route_object } from './server_routing.js';
-import { add_resolution_suffix } from '../../pathname.js';
+import { add_data_suffix, add_resolution_suffix } from '../../pathname.js';
 import { try_get_request_store, with_request_store } from '@sveltejs/kit/internal/server';
 import { text_encoder } from '../../utils.js';
 import {
@@ -120,7 +120,12 @@ export async function render_response({
 	// if appropriate, use relative paths for greater portability
 	if (paths.relative) {
 		if (!state.prerendering?.fallback) {
-			const segments = event.url.pathname.slice(paths.base.length).split('/').slice(2);
+			// the relative path depth must reflect the URL the browser is actually at, which
+			// for a data request includes the `__data.json` suffix that was stripped during routing
+			const pathname = event.isDataRequest
+				? add_data_suffix(event.url.pathname)
+				: event.url.pathname;
+			const segments = pathname.slice(paths.base.length).split('/').slice(2);
 
 			base = segments.map(() => '..').join('/') || '.';
 

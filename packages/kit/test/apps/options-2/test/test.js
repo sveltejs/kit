@@ -66,6 +66,34 @@ test.describe('paths', () => {
 		expect(await page.textContent('[data-testid="assets"]')).toBe(`assets: ${base}`);
 	});
 
+	test('uses correct relative paths when rendering an error page for a missing __data.json', async ({
+		request
+	}) => {
+		// a non-existent page requested with the data suffix renders the error page. Its relative
+		// paths must be resolved against the requested URL (including the `__data.json` suffix),
+		// otherwise they end up one directory too shallow and fail to load the app's assets
+		const path = '/basepath/this/does/not/exist/__data.json';
+		const response = await request.get(path);
+		expect(response.status()).toBe(404);
+
+		const html = await response.text();
+
+		// `resolve('/')` and `asset('/')` (from `$app/paths`)
+		const relative_base = /base: ((?:\.\.\/)+)</.exec(html)?.[1];
+		const relative_assets = /assets: ((?:\.\.\/)+)</.exec(html)?.[1];
+		// the base path expression embedded in the bootstrap script
+		const base_expression = /new URL\("((?:\.\.\/?)+)", location\)/.exec(html)?.[1];
+
+		expect(relative_base).toBeTruthy();
+		expect(relative_assets).toBeTruthy();
+		expect(base_expression).toBeTruthy();
+
+		const base_url = `http://localhost${path}`;
+		expect(new URL(/** @type {string} */ (relative_base), base_url).pathname).toBe('/basepath/');
+		expect(new URL(/** @type {string} */ (relative_assets), base_url).pathname).toBe('/basepath/');
+		expect(new URL(/** @type {string} */ (base_expression), base_url).pathname).toBe('/basepath/');
+	});
+
 	test('serves /basepath with trailing slash always', async ({ page }) => {
 		await page.goto('/basepath');
 		expect(new URL(page.url()).pathname).toBe('/basepath/');
