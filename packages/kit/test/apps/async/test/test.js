@@ -428,6 +428,26 @@ test.describe('remote functions', () => {
 		await expect(page.locator('[data-failing-issue]')).toHaveText('async check failed');
 	});
 
+	test('form preflight before for ordering works', async ({ page, javaScriptEnabled }) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/form/preflight-for');
+
+		const form = page.locator('[data-preflight-for]');
+		const input = form.locator('input');
+		const button = form.locator('button');
+
+		// Preflight should catch oversized value
+		await input.fill('21');
+		await button.click();
+		await form.getByText('too big').waitFor();
+
+		// After fixing, submission should succeed
+		await input.fill('5');
+		await button.click();
+		await expect(page.getByText('value.current')).toHaveText('value.current: 5');
+	});
+
 	test('form preflight-only validation works', async ({ page, javaScriptEnabled }) => {
 		if (!javaScriptEnabled) return;
 

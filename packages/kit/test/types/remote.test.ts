@@ -634,6 +634,27 @@ function form_tests() {
 	f11_field2.propA;
 	// @ts-expect-error
 	f11_field2.propB;
+
+	// schema with nullable values (e.g. Zod nullable())
+	const f12 = form(
+		null as any as StandardSchemaV1<{
+			nullable_string: string | null;
+			nested: { nullable_value: number | null };
+		}>,
+		(data) => {
+			data.nullable_string === '' || data.nullable_string === null;
+			data.nested.nullable_value === 0 || data.nested.nullable_value === null;
+			// @ts-expect-error
+			data.nonexistent;
+			return { success: true };
+		}
+	);
+	// @ts-expect-error
+	f12.fields.as('text');
+	f12.fields.nullable_string.issues();
+	f12.fields.nullable_string.value();
+	f12.fields.nested.nullable_value.issues();
+	f12.fields.nested.nullable_value.value();
 }
 form_tests();
 
