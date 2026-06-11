@@ -22,7 +22,19 @@ import { reserved } from '../env.js';
 import { handle_issues, validate } from '../../exports/internal/env.js';
 
 const pipe = promisify(pipeline);
-const extensions = ['.html', '.js', '.mjs', '.json', '.css', '.svg', '.xml', '.wasm', '.txt'];
+const extensions = [
+	'.html',
+	'.js',
+	'.mjs',
+	'.json',
+	'.css',
+	'.svg',
+	'.xml',
+	'.wasm',
+	'.txt',
+	'.md',
+	'.mdx'
+];
 
 /**
  * Creates the Builder which is passed to adapters for building the application.
