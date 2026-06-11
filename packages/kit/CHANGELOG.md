@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 3.0.0-next.4
+### Patch Changes
+
+
+- fix: reset queries before navigating when `invalidateAll` is set ([#16014](https://github.com/sveltejs/kit/pull/16014))
+
 ## 3.0.0-next.3
 ## 2.65.0
 ### Minor Changes
