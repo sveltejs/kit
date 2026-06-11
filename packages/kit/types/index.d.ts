@@ -90,7 +90,7 @@ declare module '@sveltejs/kit' {
 		/** Create `dir` and any required parent directories. */
 		mkdirp: (dir: string) => void;
 
-		/** The fully resolved Svelte config. */
+		/** The fully resolved SvelteKit config. */
 		config: ValidatedConfig;
 		/** Information about prerendered pages and assets, if any. */
 		prerendered: Prerendered;
@@ -307,7 +307,7 @@ declare module '@sveltejs/kit' {
 		 * /// file: vite.config.js
 		 * import { defineConfig } from 'vite';
 		 * import { sveltekit } from '@sveltejs/kit/vite';
-		 * 
+		 *
 		 * export default defineConfig({
 		 *   plugins: [
 		 *     sveltekit({
@@ -346,7 +346,7 @@ declare module '@sveltejs/kit' {
 		 * /// file: vite.config.js
 		 * import { sveltekit } from '@sveltejs/kit/vite';
 		 * import { defineConfig } from 'vite';
-		 * 
+		 *
 		 * export default defineConfig({
 		 * 	plugins: [
 		 * 		sveltekit({
@@ -568,7 +568,7 @@ declare module '@sveltejs/kit' {
 		 */
 		inlineStyleThreshold?: number;
 		/**
-		 * An array of file extensions that SvelteKit will treat as modules. Files with extensions that match neither `config.extensions` nor `config.kit.moduleExtensions` will be ignored by the router.
+		 * An array of file extensions that SvelteKit will treat as modules. Files with extensions that match neither `extensions` nor `moduleExtensions` will be ignored by the router.
 		 * @default [".js", ".ts"]
 		 */
 		moduleExtensions?: string[];
@@ -1635,7 +1635,7 @@ declare module '@sveltejs/kit' {
 	export interface SSRManifest {
 		appDir: string;
 		appPath: string;
-		/** Static files from `kit.config.files.assets` and the service worker (if any). */
+		/** Static files from `files.assets` and the service worker (if any). */
 		assets: Set<string>;
 		mimeTypes: Record<string, string>;
 
@@ -2594,7 +2594,7 @@ declare module '@sveltejs/kit' {
 	}
 
 	interface ManifestData {
-		/** Static files from `kit.config.files.assets`. */
+		/** Static files from `files.assets`. */
 		assets: Asset[];
 		hooks: {
 			client: string | null;
@@ -3039,7 +3039,7 @@ declare module '@sveltejs/kit/vite' {
 	/**
 	 * Returns the SvelteKit Vite plugins.
 	 *
-	 * Since version 3.0.0 you must pass the [configuration](configuration) directly.
+	 * Since version 3.0.0 you must pass [configuration](configuration) directly.
 	 *
 	 * Since version 2.62.0 you can pass configuration directly, in which case `svelte.config.js` is ignored.
 	 * */
@@ -3065,7 +3065,7 @@ declare module '$app/env' {
 	export const building: boolean;
 
 	/**
-	 * The value of `config.kit.version.name`.
+	 * The value of `version.name`.
 	 */
 	export const version: string;
 
@@ -3167,7 +3167,7 @@ declare module '$app/navigation' {
 	 *
 	 * For external URLs, use `window.location = url` instead of calling `goto(url)`.
 	 *
-	 * @param url Where to navigate to. Note that if you've set [`config.kit.paths.base`](https://svelte.dev/docs/kit/configuration#paths) and the URL is root-relative, you need to prepend the base path if you want to navigate within the app.
+	 * @param url Where to navigate to. Note that if you've set [`paths.base`](https://svelte.dev/docs/kit/configuration#paths) and the URL is root-relative, you need to prepend the base path if you want to navigate within the app.
 	 * @param {Object} opts Options related to the navigation
 	 * */
 	export function goto(url: string | URL, opts?: {
@@ -3255,7 +3255,7 @@ declare module '$app/navigation' {
 declare module '$app/paths' {
 	import type { RouteIdWithSearchOrHash, PathnameWithSearchOrHash, ResolvedPathname, RouteId, RouteParams, Asset, Pathname as Pathname_1 } from '$app/types';
 	/**
-	 * A string that matches [`config.kit.paths.base`](https://svelte.dev/docs/kit/configuration#paths).
+	 * A string that matches [`paths.base`](https://svelte.dev/docs/kit/configuration#paths).
 	 *
 	 * Example usage: `<a href="{base}/your-page">Link</a>`
 	 *
@@ -3264,9 +3264,9 @@ declare module '$app/paths' {
 	export let base: '' | `/${string}`;
 
 	/**
-	 * An absolute path that matches [`config.kit.paths.assets`](https://svelte.dev/docs/kit/configuration#paths).
+	 * An absolute path that matches [`paths.assets`](https://svelte.dev/docs/kit/configuration#paths).
 	 *
-	 * > [!NOTE] If a value for `config.kit.paths.assets` is specified, it will be replaced with `'/_svelte_kit_assets'` during `vite dev` or `vite preview`, since the assets don't yet live at their eventual URL.
+	 * > [!NOTE] If a value for `paths.assets` is specified, it will be replaced with `'/_svelte_kit_assets'` during `vite dev` or `vite preview`, since the assets don't yet live at their eventual URL.
 	 *
 	 * @deprecated Use [`asset(...)`](https://svelte.dev/docs/kit/$app-paths#asset) instead
 	 */
@@ -3295,7 +3295,7 @@ declare module '$app/paths' {
 					: [route: T, params: RouteParams<U>]
 				: [route: T];
 	/**
-	 * Resolve the URL of an asset in your `static` directory, by prefixing it with [`config.kit.paths.assets`](https://svelte.dev/docs/kit/configuration#paths) if configured, or otherwise by prefixing it with the base path.
+	 * Resolve the URL of an asset in your `static` directory, by prefixing it with [`paths.assets`](https://svelte.dev/docs/kit/configuration#paths) if configured, or otherwise by prefixing it with the base path.
 	 *
 	 * During server rendering, the base path is relative and depends on the page currently being rendered.
 	 *
@@ -3758,8 +3758,8 @@ declare namespace App {
  */
 declare module '$service-worker' {
 	/**
-	 * The `base` path of the deployment. Typically this is equivalent to `config.kit.paths.base`, but it is calculated from `location.pathname` meaning that it will continue to work correctly if the site is deployed to a subdirectory.
-	 * Note that there is a `base` but no `assets`, since service workers cannot be used if `config.kit.paths.assets` is specified.
+	 * The `base` path of the deployment. Typically this is equivalent to `paths.base`, but it is calculated from `location.pathname` meaning that it will continue to work correctly if the site is deployed to a subdirectory.
+	 * Note that there is a `base` but no `assets`, since service workers cannot be used if `paths.assets` is specified.
 	 */
 	export const base: string;
 	/**
@@ -3768,7 +3768,7 @@ declare module '$service-worker' {
 	 */
 	export const build: string[];
 	/**
-	 * An array of URL strings representing the files in your static directory, or whatever directory is specified by `config.kit.files.assets`. You can customize which files are included from `static` directory using [`config.kit.serviceWorker.files`](https://svelte.dev/docs/kit/configuration#serviceWorker)
+	 * An array of URL strings representing the files in your static directory, or whatever directory is specified by `files.assets`. You can customize which files are included from `static` directory using [`serviceWorker.files`](https://svelte.dev/docs/kit/configuration#serviceWorker)
 	 */
 	export const files: string[];
 	/**
@@ -3777,7 +3777,7 @@ declare module '$service-worker' {
 	 */
 	export const prerendered: string[];
 	/**
-	 * See [`config.kit.version`](https://svelte.dev/docs/kit/configuration#version). It's useful for generating unique cache names inside your service worker, so that a later deployment of your app can invalidate old caches.
+	 * See [`version`](https://svelte.dev/docs/kit/configuration#version). It's useful for generating unique cache names inside your service worker, so that a later deployment of your app can invalidate old caches.
 	 */
 	export const version: string;
 }
