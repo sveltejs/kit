@@ -36,9 +36,7 @@ import { defineConfig } from 'vite';
 export default defineConfig({
 	plugins: [
 		sveltekit({
-			kit: {
-				+++adapter: adapter()+++
-			}
+			+++adapter: adapter()+++
 		})
 	]
 });
