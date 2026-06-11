@@ -83,7 +83,7 @@ export class Query {
 		return /** @type {Promise<T>} */ (this.#promise);
 	}
 
-	#start() {
+	start() {
 		// there is a really weird bug with untrack and writes and initializations
 		// every time you see this comment, try removing the `tick.then` here and see
 		// if all the tests still pass with the latest svelte version
@@ -144,12 +144,12 @@ export class Query {
 	get then() {
 		// TODO this should be unnecessary but due to the bug described
 		// in #start, we need to do this in some circumstances
-		this.#start();
+		this.start();
 		return this.#then;
 	}
 
 	get catch() {
-		this.#start();
+		this.start();
 		this.#then;
 		return (/** @type {any} */ reject) => {
 			return this.#then(undefined, reject);
@@ -157,7 +157,7 @@ export class Query {
 	}
 
 	get finally() {
-		this.#start();
+		this.start();
 		this.#then;
 		return (/** @type {any} */ fn) => {
 			return this.#then(
@@ -174,12 +174,12 @@ export class Query {
 	}
 
 	get current() {
-		this.#start();
+		this.start();
 		return this.#current;
 	}
 
 	get error() {
-		this.#start();
+		this.start();
 		return this.#error;
 	}
 
@@ -187,7 +187,7 @@ export class Query {
 	 * Returns true if the resource is loading or reloading.
 	 */
 	get loading() {
-		this.#start();
+		this.start();
 		return this.#loading;
 	}
 
@@ -195,7 +195,7 @@ export class Query {
 	 * Returns true once the resource has been loaded for the first time.
 	 */
 	get ready() {
-		this.#start();
+		this.start();
 		return this.#ready;
 	}
 
@@ -261,6 +261,15 @@ export class Query {
 		Object.defineProperty(release, QUERY_OVERRIDE_KEY, { value: this.#key });
 
 		return release;
+	}
+
+	/**
+	 * Reset ahead of a navigation that invalidates all, to force newly
+	 * rendered queries to get fresh data
+	 */
+	reset() {
+		this.#promise = null;
+		delete query_responses[this.#key];
 	}
 
 	get [Symbol.toStringTag]() {

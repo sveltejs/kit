@@ -554,7 +554,11 @@ export async function _goto(url, options, redirect_count, nav_token) {
 				force_invalidation = true;
 				query_keys = new Set();
 				for (const [id, entries] of query_map) {
-					for (const payload of entries.keys()) {
+					for (const [payload, entry] of entries) {
+						// don't refresh yet, as some queries will be unrendered,
+						// but clear caches so that newly rendered queries
+						// don't use stale data. TODO same for `live_query_map`
+						entry.resource?.reset();
 						query_keys.add(create_remote_key(id, payload));
 					}
 				}
@@ -582,7 +586,7 @@ export async function _goto(url, options, redirect_count, nav_token) {
 				for (const [id, entries] of query_map) {
 					for (const [payload, { resource }] of entries) {
 						if (query_keys?.has(create_remote_key(id, payload))) {
-							void resource.refresh();
+							void resource.start();
 						}
 					}
 				}
