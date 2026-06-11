@@ -263,6 +263,15 @@ export class Query {
 		return release;
 	}
 
+	/**
+	 * Reset ahead of a navigation that invalidates all, to force newly
+	 * rendered queries to get fresh data
+	 */
+	reset() {
+		this.#promise = null;
+		delete query_responses[this.#key];
+	}
+
 	get [Symbol.toStringTag]() {
 		return 'Query';
 	}
