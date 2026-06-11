@@ -528,7 +528,7 @@ importers:
         version: 1.1.0
       '@sveltejs/acorn-typescript':
         specifier: ^1.0.9
-        version: 1.0.9(acorn@8.16.0)
+        version: 1.0.10(acorn@8.16.0)
       acorn:
         specifier: ^8.16.0
         version: 8.16.0
@@ -2924,11 +2924,6 @@ packages:
 
   '@sveltejs/acorn-typescript@1.0.10':
     resolution: {integrity: sha512-4WfKk68eTih+MiJD4fSbxN7E8kVBmTMPWHUPYjvl2N0rMs53YLTT8/YjKU5Dtnz5LqDjl7LEw4U7lXR2W3J5WA==}
-    peerDependencies:
-      acorn: ^8.9.0
-
-  '@sveltejs/acorn-typescript@1.0.9':
-    resolution: {integrity: sha512-lVJX6qEgs/4DOcRTpo56tmKzVPtoWAaVbL4hfO7t7NVwl9AAXzQR6cihesW1BmNMPl+bK6dreu2sOKBP2Q9CIA==}
     peerDependencies:
       acorn: ^8.9.0
 
@@ -7166,10 +7161,6 @@ snapshots:
       picomatch: 4.0.4
 
   '@sveltejs/acorn-typescript@1.0.10(acorn@8.16.0)':
-    dependencies:
-      acorn: 8.16.0
-
-  '@sveltejs/acorn-typescript@1.0.9(acorn@8.16.0)':
     dependencies:
       acorn: 8.16.0
 
