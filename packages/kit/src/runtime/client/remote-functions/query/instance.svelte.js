@@ -1,4 +1,5 @@
 import { query_responses } from '../../client.js';
+import { HttpError } from '@sveltejs/kit/internal';
 import { QUERY_OVERRIDE_KEY } from '../shared.svelte.js';
 import { noop } from '../../../../utils/functions.js';
 import { tick, untrack } from 'svelte';
@@ -63,6 +64,17 @@ export class Query {
 	constructor(key, fn) {
 		this.#key = key;
 		this.#fn = fn;
+
+		if (Object.hasOwn(query_responses, key)) {
+			const node = query_responses[key];
+			delete query_responses[key];
+
+			if (node.e) {
+				this.fail(new HttpError(node.e[0] ?? 500, node.e[1]));
+			} else {
+				this.set(/** @type {T} */ (node.v));
+			}
+		}
 	}
 
 	#get_promise() {
@@ -198,6 +210,10 @@ export class Query {
 	 * @param {T} value
 	 */
 	set(value) {
+		// normally consumed in the constructor, but make sure a leftover
+		// SSR record can never shadow the newly-set value
+		delete query_responses[this.#key];
+
 		this.#clear_pending();
 		this.#ready = true;
 		this.#loading = false;
@@ -210,6 +226,10 @@ export class Query {
 	 * @param {unknown} error
 	 */
 	fail(error) {
+		// normally consumed in the constructor, but make sure a leftover
+		// SSR record can never shadow the newly-set error
+		delete query_responses[this.#key];
+
 		this.#clear_pending();
 		this.#loading = false;
 		this.#error = error;

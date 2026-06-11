@@ -210,6 +210,8 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 
 	const seen = new Set();
 	const written = new Set();
+
+	/** @type {Map<string, Promise<any>>} */
 	const remote_responses = new Map();
 
 	/** @type {Map<string, Set<string>>} */

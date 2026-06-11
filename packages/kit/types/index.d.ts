@@ -2782,7 +2782,7 @@ declare module '@sveltejs/kit' {
 	 * @throws {import('./public.js').HttpError} This error instructs SvelteKit to initiate HTTP error handling.
 	 * @throws {Error} If the provided status is invalid (not between 400 and 599).
 	 */
-	export function error(status: number, body: App.Error): never;
+	function error_1(status: number, body: App.Error): never;
 	/**
 	 * Throws an error with a HTTP status code and an optional message.
 	 * When called during request handling, this will cause SvelteKit to
@@ -2793,7 +2793,7 @@ declare module '@sveltejs/kit' {
 	 * @throws {import('./public.js').HttpError} This error instructs SvelteKit to initiate HTTP error handling.
 	 * @throws {Error} If the provided status is invalid (not between 400 and 599).
 	 */
-	export function error(status: number, body?: {
+	function error_1(status: number, body?: {
 		message: string;
 	} extends App.Error ? App.Error | string | undefined : never): never;
 	/**
@@ -2919,7 +2919,7 @@ declare module '@sveltejs/kit' {
 	export const VERSION: string;
 	const valid_page_options_array: readonly ["ssr", "prerender", "csr", "trailingSlash", "config", "entries", "load"];
 
-	export {};
+	export { error_1 as error };
 }
 
 declare module '@sveltejs/kit/hooks' {

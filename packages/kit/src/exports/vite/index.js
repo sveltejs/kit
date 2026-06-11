@@ -1644,6 +1644,7 @@ function kit({ svelte_config, adapter }) {
 				);
 			} else {
 				copy(server_assets, client_assets);
+				copy(kit.files.assets, `${out}/client`);
 			}
 
 			// ...and prerender

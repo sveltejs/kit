@@ -2,10 +2,7 @@
 /** @import { ServerHooks, MaybePromise, RequestState, RemoteInternals, RequestStore, RemoteLiveQueryUserFunctionReturnType } from 'types' */
 import { parse } from 'devalue';
 import { error } from '@sveltejs/kit';
-import { hydratable } from 'svelte';
 import { with_request_store, get_request_store } from '@sveltejs/kit/internal/server';
-import { create_remote_key, stringify } from '../../../shared.js';
-import { noop } from '../../../../utils/functions.js';
 
 /**
  * @param {any} validate_or_fn
@@ -76,24 +73,13 @@ export async function get_response(internals, payload, state, get_result) {
 	await 0;
 
 	const cache = get_cache(internals, state);
-	const entry = (cache[payload] ??= {
-		serialize: false,
-		data: get_result()
-	});
 
-	entry.serialize ||= !!state.is_in_universal_load;
-
-	if (state.is_in_render && internals.id) {
-		const remote_key = create_remote_key(internals.id, payload);
-
-		void Promise.resolve(entry.data)
-			.then((value) => {
-				void hydratable(remote_key, () => stringify(value, state.transport));
-			})
-			.catch(noop);
+	if (!state.is_in_remote_query) {
+		// if this is a top-level (not nested) `await myQuery()`, include it in the serialized response
+		get_implicit_lookup(internals, state)[payload] = get_result;
 	}
 
-	return entry.data;
+	return (cache[payload] ??= get_result());
 }
 
 /**
@@ -239,15 +225,35 @@ function to_iterator(source, name) {
 }
 
 /**
+ * Note that `state` is deliberately not optional: resources that capture the request
+ * state at creation must pass it explicitly, because reading it from the request store
+ * at call time is only equivalent on runtimes with `AsyncLocalStorage` support.
+ * Callers without a captured state (such as the module-level `form` instance getters)
+ * should pass `get_request_store().state` themselves.
  * @param {RemoteInternals} internals
  * @param {RequestState} state
  */
-export function get_cache(internals, state = get_request_store().state) {
+export function get_cache(internals, state) {
 	let cache = state.remote.data?.get(internals);
 
 	if (cache === undefined) {
 		cache = {};
 		(state.remote.data ??= new Map()).set(internals, cache);
+	}
+
+	return cache;
+}
+
+/**
+ * @param {RemoteInternals} internals
+ * @param {RequestState} state
+ */
+export function get_implicit_lookup(internals, state) {
+	let cache = state.remote.implicit?.get(internals);
+
+	if (cache === undefined) {
+		cache = {};
+		(state.remote.implicit ??= new Map()).set(internals, cache);
 	}
 
 	return cache;
