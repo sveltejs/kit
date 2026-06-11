@@ -219,15 +219,19 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 	 * @param {string} decoded
 	 * @param {string} [encoded]
 	 * @param {string} [generated_from_id]
+	 * @param {boolean} [expect_html]
 	 */
-	function enqueue(referrer, decoded, encoded, generated_from_id) {
-		if (seen.has(decoded)) return;
-		seen.add(decoded);
+	function enqueue(referrer, decoded, encoded, generated_from_id, expect_html) {
+		const key = expect_html ? decoded + '\x00page' : decoded;
+		if (seen.has(key)) return;
+		seen.add(key);
 
 		const file = decoded.slice(config.paths.base.length + 1);
 		if (files.has(file)) return;
 
-		return q.add(() => visit(decoded, encoded || encodeURI(decoded), referrer, generated_from_id));
+		return q.add(() =>
+			visit(decoded, encoded || encodeURI(decoded), referrer, generated_from_id, expect_html)
+		);
 	}
 
 	/**
@@ -235,39 +239,45 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 	 * @param {string} encoded
 	 * @param {string?} referrer
 	 * @param {string} [generated_from_id]
+	 * @param {boolean} [expect_html]
 	 */
-	async function visit(decoded, encoded, referrer, generated_from_id) {
+	async function visit(decoded, encoded, referrer, generated_from_id, expect_html) {
 		if (!decoded.startsWith(config.paths.base)) {
 			handle_http_error({ status: 404, path: decoded, referrer, referenceType: 'linked' });
 			return;
 		}
 
+		const request_headers = expect_html ? { Accept: 'text/html' } : undefined;
+
 		/** @type {Map<string, import('types').PrerenderDependency>} */
 		const dependencies = new Map();
 
-		const response = await server.respond(new Request(config.prerender.origin + encoded), {
-			getClientAddress() {
-				throw new Error('Cannot read clientAddress during prerendering');
-			},
-			prerendering: {
-				dependencies,
-				remote_responses
-			},
-			read: (file) => {
-				// stuff we just wrote
-				const filepath = saved.get(file);
-				if (filepath) return readFileSync(filepath);
+		const response = await server.respond(
+			new Request(config.prerender.origin + encoded, { headers: request_headers }),
+			{
+				getClientAddress() {
+					throw new Error('Cannot read clientAddress during prerendering');
+				},
+				prerendering: {
+					dependencies,
+					remote_responses
+				},
+				read: (file) => {
+					// stuff we just wrote
+					const filepath = saved.get(file);
+					if (filepath) return readFileSync(filepath);
 
-				// Static assets emitted during build
-				if (file.startsWith(config.appDir)) {
-					return readFileSync(`${out}/server/${file}`);
-				}
+					// Static assets emitted during build
+					if (file.startsWith(config.appDir)) {
+						return readFileSync(`${out}/server/${file}`);
+					}
 
-				// stuff in `static`
-				return readFileSync(join(config.files.assets, file));
-			},
-			emulator
-		});
+					// stuff in `static`
+					return readFileSync(join(config.files.assets, file));
+				},
+				emulator
+			}
+		);
 
 		const encoded_id = response.headers.get('x-sveltekit-routeid');
 		const decoded_id = encoded_id && decode_uri(encoded_id);
@@ -361,7 +371,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 					/** @type {Set<string>} */ (expected_hashlinks.get(key)).add(decoded);
 				}
 
-				void enqueue(decoded, decode_uri(pathname), pathname);
+				void enqueue(decoded, decode_uri(pathname), pathname, undefined, false);
 			}
 		}
 	}
@@ -541,7 +551,15 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 
 					if (processed_id.includes('[')) continue;
 					const path = `/${get_route_segments(processed_id).join('/')}`;
-					void enqueue(null, config.paths.base + path);
+
+					const route_data = metadata.routes.get(id);
+					void enqueue(
+						null,
+						config.paths.base + path,
+						undefined,
+						undefined,
+						!!route_data?.page.prerender
+					);
 				}
 			}
 		} else {
@@ -550,8 +568,10 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 	}
 
 	for (const { id, entries } of route_level_entries) {
+		const route_data = metadata.routes.get(id);
+		const expect_html = !!route_data?.page.prerender;
 		for (const entry of entries) {
-			void enqueue(null, config.paths.base + entry, undefined, id);
+			void enqueue(null, config.paths.base + entry, undefined, id, expect_html);
 		}
 	}
 

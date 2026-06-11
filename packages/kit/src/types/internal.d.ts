@@ -401,9 +401,11 @@ export interface ServerMetadataRoute {
 	config: any;
 	api: {
 		methods: Array<HttpMethod | '*'>;
+		prerender: PrerenderOption | undefined;
 	};
 	page: {
 		methods: Array<'GET' | 'POST'>;
+		prerender: PrerenderOption | undefined;
 	};
 	methods: Array<HttpMethod | '*'>;
 	prerender: PrerenderOption | undefined;
