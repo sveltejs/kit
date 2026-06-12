@@ -201,11 +201,14 @@ test.describe('$app/env', () => {
 	});
 });
 
-test.describe('vite define', () => {
+test.describe('Vite', () => {
 	// regression test for https://github.com/sveltejs/kit/issues/13249:
 	// user `define`s referenced at the top level of hooks.client.js must be
 	// available during client init
-	test('user define is available during client init', async ({ page, javaScriptEnabled }) => {
+	test('global constant replacements are available during client init', async ({
+		page,
+		javaScriptEnabled
+	}) => {
 		test.skip(!javaScriptEnabled);
 
 		await page.goto('/basepath', { wait_for_started: false });
