@@ -1453,6 +1453,12 @@ async function kit({ svelte_config }) {
 								script: read(`${out}/client/${start.file}`),
 								style: /** @type {string | undefined} */ (style?.source)
 							};
+
+							// the bundle and stylesheet are inlined into the page, so the
+							// emitted files are never loaded
+							fs.unlinkSync(`${out}/client/${start.file}`);
+							fs.rmSync(`${out}/client/${start.file}.map`, { force: true });
+							if (style) fs.unlinkSync(`${out}/client/${style.fileName}`);
 						}
 					}
 
