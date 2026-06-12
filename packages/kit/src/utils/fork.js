@@ -60,6 +60,14 @@ export function forked(module, callback) {
 				}
 			);
 
+			// Forward any worker-side exceptions to the caller. Without this,
+			// an uncaught throw inside `callback` (or anything it imports)
+			// only surfaces as a code-1 exit, so the actual error — for
+			// example a ReferenceError thrown when a `+page.ts` references
+			// a browser-only global like `indexedDB` at module scope — is
+			// silently swallowed and the build fails with no diagnostic.
+			worker.on('error', reject);
+
 			worker.on('exit', (code) => {
 				if (code) {
 					reject(new Error(`Failed with code ${code}`));
