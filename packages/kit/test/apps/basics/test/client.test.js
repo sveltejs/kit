@@ -516,6 +516,21 @@ test.describe('$app/state', () => {
 		await page.locator('button').click();
 		await expect(page.locator('p')).toHaveText('test');
 	});
+
+	test('page.url properties are fine-grained', async ({ page, app }) => {
+		await page.goto('/state/url-fine-grained/a?q=1');
+
+		const runs = () => page.evaluate(() => /** @type {any} */ (window).__url_runs);
+		await expect.poll(runs).toEqual({ url: 1, pathname: 1, search: 1 });
+
+		// same pathname, new search: only the search effect re-runs
+		await app.goto('/state/url-fine-grained/a?q=2');
+		await expect.poll(runs).toEqual({ url: 1, pathname: 1, search: 2 });
+
+		// new pathname, same search: only the pathname effect re-runs
+		await app.goto('/state/url-fine-grained/b?q=2');
+		await expect.poll(runs).toEqual({ url: 1, pathname: 2, search: 2 });
+	});
 });
 
 test.describe('Invalidation', () => {

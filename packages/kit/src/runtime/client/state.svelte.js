@@ -1,4 +1,5 @@
 import { onMount } from 'svelte';
+import { SvelteURL } from 'svelte/reactivity';
 import { updated_listener } from './utils.js';
 
 /** @type {import('@sveltejs/kit').Page} */
@@ -38,7 +39,19 @@ if (is_legacy) {
 		route = $state.raw({ id: null });
 		state = $state.raw({});
 		status = $state.raw(-1);
-		url = $state.raw(new URL(placeholder_url));
+
+		// a stable `SvelteURL` that is mutated on navigation, so that reads of
+		// e.g. `url.search` only react when the search string actually changes
+		#url = new SvelteURL(placeholder_url);
+
+		get url() {
+			return this.#url;
+		}
+
+		/** @param {URL} value */
+		set url(value) {
+			this.#url.href = value.href;
+		}
 	})();
 
 	navigating = new (class Navigating {
