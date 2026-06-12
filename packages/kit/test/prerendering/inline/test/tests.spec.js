@@ -32,3 +32,9 @@ test('omits inlined files from the service worker build list', () => {
 test('still emits version.json', () => {
 	assert.isTrue(fs.existsSync(`${build}/_app/version.json`));
 });
+
+test('emits a fallback page with the app inlined', () => {
+	const content = read('200.html');
+	expect(content).toMatch('__sveltekit_');
+	expect(content).not.toMatch('<script src');
+});
