@@ -413,10 +413,12 @@ export async function render_response({
 			properties.push(`assets: ${s(paths.assets)}`);
 		}
 
-		if (__SVELTEKIT_EXPERIMENTAL_EXPLICIT_ENVIRONMENT_VARIABLES__) {
-			properties.push(`env: ${load_env_eagerly ? 'null' : devalue.uneval(env.rendered_env)}`);
-		} else if (client.uses_env_dynamic_public) {
-			properties.push(`env: ${load_env_eagerly ? 'null' : s(public_env)}`);
+		if (client.uses_env_dynamic_public) {
+			const rendered = __SVELTEKIT_EXPERIMENTAL_EXPLICIT_ENVIRONMENT_VARIABLES__
+				? devalue.uneval(env.rendered_env)
+				: s(public_env);
+
+			properties.push(`env: ${load_env_eagerly ? 'null' : rendered}`);
 		}
 
 		if (chunks) {
