@@ -1,5 +1,5 @@
-/** @import { Adapter, EnvVarConfig, KitConfig } from '@sveltejs/kit' */
-/** @import { Options, SvelteConfig } from '@sveltejs/vite-plugin-svelte' */
+/** @import { EnvVarConfig, KitConfig } from '@sveltejs/kit' */
+/** @import { SvelteConfig } from '@sveltejs/vite-plugin-svelte' */
 /** @import { PreprocessorGroup } from 'svelte/compiler' */
 /** @import { Plugin, Manifest, ResolvedConfig, UserConfig, ViteDevServer, Rolldown, EnvironmentOptions } from 'vite' */
 import fs from 'node:fs';
@@ -146,46 +146,46 @@ let vite_plugin_svelte;
 
 /**
  * Returns the SvelteKit Vite plugins.
- * Since version 2.62.0 you can pass [configuration](configuration) directly, in which case `svelte.config.js` is ignored.
+ *
+ * Since version 3.0.0 you must pass [configuration](configuration) directly.
+ *
+ * Since version 2.62.0 you can pass configuration directly, in which case `svelte.config.js` is ignored.
  * @param {KitConfig & Omit<SvelteConfig, 'onwarn'>} [config]
  * @returns {Promise<Plugin[]>}
  */
 export async function sveltekit(config) {
 	const cwd = process.cwd();
 
-	const { extensions, compilerOptions, vitePlugin, preprocess, ...rest } = config ?? {};
-	const svelte_config = process_config(
-		{ extensions, compilerOptions, vitePlugin, preprocess, kit: rest },
-		{ cwd, source: 'SvelteKit options from Vite config' }
-	);
+	let { extensions, compilerOptions, vitePlugin, preprocess, ...rest } = config ?? {};
 
-	const config_file = ['svelte.config.js', 'svelte.config.ts'].find((file) => fs.existsSync(file));
-
-	if (config_file) {
-		const message = `${config_file} is no longer used. Please pass configuration via the \`sveltekit(...)\` plugin in your Vite config.`;
-
-		if (!config) {
-			throw new Error(message);
-		}
-
-		console.warn(message);
+	if (Array.isArray(preprocess)) {
+		preprocess.push(warning_preprocessor);
+	} else if (preprocess) {
+		preprocess = [preprocess, warning_preprocessor];
+	} else {
+		preprocess = warning_preprocessor;
 	}
 
-	/** @type {Options} */
-	const vite_plugin_svelte_options = {
-		// we don't want vite-plugin-svelte to load the config file itself because
-		// it will try to validate it without knowing that kit options are valid
-		configFile: false
-	};
+	const svelte_config = process_config(
+		{ extensions, compilerOptions, vitePlugin, preprocess, kit: rest },
+		{ cwd }
+	);
 
 	vite_plugin_svelte = await import_peer('@sveltejs/vite-plugin-svelte', cwd);
 
 	return [
-		plugin_svelte_config({ vite_plugin_svelte_options, svelte_config }),
-		...vite_plugin_svelte.svelte(vite_plugin_svelte_options),
+		plugin_svelte_config(),
+		...vite_plugin_svelte.svelte({
+			// we don't want vite-plugin-svelte to load the config file itself because
+			// it will try to validate it without knowing that kit options are valid
+			configFile: false,
+			extensions,
+			compilerOptions: { ...(compilerOptions ?? {}) },
+			preprocess,
+			...(vitePlugin ?? {})
+		}),
 		...kit({
-			svelte_config,
-			adapter: svelte_config.kit.adapter
+			svelte_config
 		})
 	];
 }
@@ -196,15 +196,9 @@ function resolve_root(vite_config) {
 }
 
 /**
- * Resolves the Svelte config using the `vite.config.root` setting before any
- * of our other plugins try to access the config objects
- * @param {{
- *   vite_plugin_svelte_options: Options;
- * 	 svelte_config: import('types').ValidatedConfig;
- * }} options
  * @return {Plugin}
  */
-function plugin_svelte_config({ vite_plugin_svelte_options, svelte_config }) {
+function plugin_svelte_config() {
 	return {
 		name: 'vite-plugin-sveltekit-resolve-svelte-config',
 		// make sure it runs first
@@ -214,21 +208,15 @@ function plugin_svelte_config({ vite_plugin_svelte_options, svelte_config }) {
 			handler(config) {
 				root = resolve_root(config);
 
-				/** @type {Options['preprocess']} */
-				let preprocess = svelte_config.preprocess;
-				if (Array.isArray(preprocess)) {
-					preprocess = [...preprocess, warning_preprocessor];
-				} else if (preprocess) {
-					preprocess = [preprocess, warning_preprocessor];
-				} else {
-					preprocess = warning_preprocessor;
+				// TODO: mjs mts?
+				const config_file = ['svelte.config.js', 'svelte.config.ts'].find((file) =>
+					fs.existsSync(`${root}/${file}`)
+				);
+				if (config_file) {
+					throw new Error(
+						`${config_file} is no longer used. Please pass configuration via the \`sveltekit(...)\` plugin in your Vite config.`
+					);
 				}
-
-				vite_plugin_svelte_options.extensions = svelte_config.extensions;
-				vite_plugin_svelte_options.preprocess = preprocess;
-				vite_plugin_svelte_options.onwarn = svelte_config.onwarn;
-				vite_plugin_svelte_options.compilerOptions = { ...svelte_config.compilerOptions };
-				Object.assign(vite_plugin_svelte_options, svelte_config.vitePlugin);
 			}
 		},
 		// TODO: do we even need to set `root` based on the final Vite config?
@@ -253,10 +241,9 @@ function plugin_svelte_config({ vite_plugin_svelte_options, svelte_config }) {
  *
  * @param {object} opts
  * @param {import('types').ValidatedConfig} opts.svelte_config options are only resolved after the Vite `config` hook runs
- * @param {Adapter | undefined} opts.adapter
  * @return {Plugin[]}
  */
-function kit({ svelte_config, adapter }) {
+function kit({ svelte_config }) {
 	/** @type {typeof import('vite')} */
 	let vite;
 
@@ -384,7 +371,7 @@ function kit({ svelte_config, adapter }) {
 						sourcemapIgnoreList,
 						watch: {
 							ignored: [
-								// Ignore all siblings of config.kit.outDir/generated
+								// Ignore all siblings of outDir/generated
 								`${out_dir}/!(generated)`
 							]
 						}
@@ -464,7 +451,7 @@ function kit({ svelte_config, adapter }) {
 				if (is_build) {
 					new_config.define = {
 						...define,
-						__SVELTEKIT_ADAPTER_NAME__: s(adapter?.name),
+						__SVELTEKIT_ADAPTER_NAME__: s(kit.adapter?.name),
 						__SVELTEKIT_APP_VERSION_FILE__: s(`${kit.appDir}/version.json`),
 						__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: s(kit.version.pollInterval)
 					};
@@ -1159,8 +1146,8 @@ function kit({ svelte_config, adapter }) {
 						path.join(kit.files.src, 'instrumentation.server')
 					);
 					if (server_instrumentation) {
-						if (adapter && !adapter.supports?.instrumentation?.()) {
-							throw new Error(`${server_instrumentation} is unsupported in ${adapter.name}.`);
+						if (kit.adapter && !kit.adapter.supports?.instrumentation?.()) {
+							throw new Error(`${server_instrumentation} is unsupported in ${kit.adapter.name}.`);
 						}
 						if (!kit.experimental.instrumentation.server) {
 							error_for_missing_config(
@@ -1362,7 +1349,7 @@ function kit({ svelte_config, adapter }) {
 		 * @see https://vitejs.dev/guide/api-plugin.html#configureserver
 		 */
 		async configureServer(vite) {
-			return await dev(vite, vite_config, svelte_config, () => remotes, root, adapter);
+			return await dev(vite, vite_config, svelte_config, () => remotes, root);
 		},
 
 		/**
@@ -1370,7 +1357,7 @@ function kit({ svelte_config, adapter }) {
 		 * @see https://vitejs.dev/guide/api-plugin.html#configurepreviewserver
 		 */
 		configurePreviewServer(vite) {
-			return preview(vite, vite_config, svelte_config, adapter);
+			return preview(vite, vite_config, svelte_config);
 		},
 
 		renderChunk(code, chunk) {
@@ -1712,10 +1699,9 @@ function kit({ svelte_config, adapter }) {
 				`\nRun ${styleText(['bold', 'cyan'], 'npm run preview')} to preview your production build locally.`
 			);
 
-			if (adapter) {
+			if (kit.adapter) {
 				const { adapt } = await import('../../core/adapt/index.js');
 				await adapt(
-					adapter,
 					svelte_config,
 					build_data,
 					metadata,
@@ -1737,17 +1723,6 @@ function kit({ svelte_config, adapter }) {
 		}
 	};
 
-	/** @type {Plugin} */
-	const plugin_adapter = {
-		name: 'vite-plugin-sveltekit-adapter',
-		apply: 'build',
-		// expose the adapter so that forked processes (e.g. prerendering)
-		// can retrieve it by resolving the Vite config
-		api: {
-			adapter
-		}
-	};
-
 	return [
 		plugin_setup,
 		plugin_remote,
@@ -1755,8 +1730,7 @@ function kit({ svelte_config, adapter }) {
 		process.env.TEST !== 'true' ? plugin_guard : undefined,
 		service_worker_entry_file && plugin_service_worker_env,
 		plugin_service_worker,
-		plugin_compile,
-		plugin_adapter
+		plugin_compile
 	].filter((p) => !!p);
 }
 

@@ -48,9 +48,6 @@ export const prerender = true;
 
 > [!NOTE] You must ensure SvelteKit's [`ssr`](page-options#ssr) option isn't set to `false`. Otherwise, prerendering will save an empty 'shell' page instead of the fully rendered content.
 
-> [!LEGACY]
-> The `adapter` option was moved to the SvelteKit Vite plugin in SvelteKit 3.0.0. In earlier versions, you had to add it to the `kit` property in the `svelte.config.js` file instead.
-
 ## Zero-config support
 
 Some platforms have zero-config support (more to come in future):
@@ -101,7 +98,7 @@ By default, `adapter-static` checks that either all pages and endpoints (if any)
 
 ## GitHub Pages
 
-When building for [GitHub Pages](https://docs.github.com/en/pages/getting-started-with-github-pages/about-github-pages), if your repo name is not equivalent to `your-username.github.io`, make sure to update [`config.kit.paths.base`](configuration#paths) to match your repo name. This is because the site will be served from `https://your-username.github.io/your-repo-name` rather than from the root.
+When building for [GitHub Pages](https://docs.github.com/en/pages/getting-started-with-github-pages/about-github-pages), if your repo name is not equivalent to `your-username.github.io`, make sure to update [`paths.base`](configuration#paths) to match your repo name. This is because the site will be served from `https://your-username.github.io/your-repo-name` rather than from the root.
 
 You'll also want to generate a fallback `404.html` page to replace the default 404 page shown by GitHub Pages.
 
@@ -109,22 +106,8 @@ A config for GitHub Pages might look like the following:
 
 ```js
 // @errors: 2307 2322
-/// file: svelte.config.js
-/** @type {import('@sveltejs/kit').Config} */
-const config = {
-	kit: {
-		paths: {
-			base: process.argv.includes('dev') ? '' : process.env.BASE_PATH
-		}
-	}
-};
-
-export default config;
-```
-
-```js
-// @errors: 2307
 /// file: vite.config.js
+import process from 'node:process';
 import adapter from '@sveltejs/adapter-static';
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
@@ -134,7 +117,10 @@ export default defineConfig({
 		sveltekit({
 			adapter: adapter({
 				fallback: '404.html'
-			})
+			}),
+			paths: {
+				base: process.argv.includes('dev') ? '' : process.env.BASE_PATH
+			},
 		})
 	]
 });

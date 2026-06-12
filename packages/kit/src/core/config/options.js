@@ -85,7 +85,7 @@ const options = object(
 				if (input) {
 					if (input.startsWith('/') || input.endsWith('/')) {
 						throw new Error(
-							"config.kit.appDir cannot start or end with '/'. See https://svelte.dev/docs/kit/configuration"
+							"appDir cannot start or end with '/'. See https://svelte.dev/docs/kit/configuration"
 						);
 					}
 				} else {

@@ -15,13 +15,13 @@ declare global {
 	const __SVELTEKIT_PATHS_ASSETS__: string;
 	const __SVELTEKIT_PATHS_BASE__: string;
 	const __SVELTEKIT_PATHS_RELATIVE__: boolean;
-	/** True if `config.kit.experimental.instrumentation.server` is `true` */
+	/** True if `experimental.instrumentation.server` is `true` */
 	const __SVELTEKIT_SERVER_TRACING_ENABLED__: boolean;
-	/** True if `config.kit.experimental.forkPreloads` is `true` */
+	/** True if `experimental.forkPreloads` is `true` */
 	const __SVELTEKIT_FORK_PRELOADS__: boolean;
-	/** True if `config.kit.router.resolution === 'client'` */
+	/** True if `router.resolution === 'client'` */
 	const __SVELTEKIT_CLIENT_ROUTING__: boolean;
-	/** True if `config.kit.router.type === 'hash'` */
+	/** True if `router.type === 'hash'` */
 	const __SVELTEKIT_HASH_ROUTING__: boolean;
 	/**
 	 * True if any node in the manifest has a server load function.

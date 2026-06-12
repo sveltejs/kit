@@ -299,7 +299,7 @@ test('fails if prerender.entries are invalid', () => {
 				}
 			}
 		});
-	}, /^Each member of config\.kit.prerender.entries must be either '\*' or an absolute path beginning with '\/' — saw 'foo'$/);
+	}, /^Each member of prerender.entries must be either '\*' or an absolute path beginning with '\/' — saw 'foo'$/);
 });
 
 /**

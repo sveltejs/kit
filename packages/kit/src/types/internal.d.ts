@@ -17,7 +17,6 @@ import {
 	RequestEvent,
 	SSRManifest,
 	Emulator,
-	Adapter,
 	ServerInit,
 	ClientInit,
 	Transport,
@@ -194,7 +193,7 @@ export class InternalServer extends Server {
 }
 
 export interface ManifestData {
-	/** Static files from `kit.config.files.assets`. */
+	/** Static files from `files.assets`. */
 	assets: Asset[];
 	hooks: {
 		client: string | null;
@@ -604,8 +603,7 @@ export type ValidatedConfig = Config & {
 	extensions: string[];
 };
 
-// TODO: remove the omit in 4.0
-export type ValidatedKitConfig = Omit<RecursiveRequired<KitConfig>, 'adapter'>;
+export type ValidatedKitConfig = RecursiveRequired<KitConfig>;
 
 export type BinaryFormMeta = {
 	remote_refreshes?: string[];
