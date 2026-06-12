@@ -219,6 +219,28 @@ test.describe('Load', () => {
 		expect(did_request_data).toBe(false);
 	});
 
+	test('cached base64-serialized response is decoded when replayed', async ({ page, clicknav }) => {
+		// 1. go to the page (first load, we expect the right data)
+		await page.goto('/load/fetch-cache-control/b64');
+		expect(await page.textContent('.test-content')).toBe('[1,2,3,4]');
+
+		// 2. change to another route (client side)
+		await clicknav('[href="/load/fetch-cache-control"]');
+
+		// 3. come back to the original page (client side)
+		let did_request_data = false;
+		page.on('request', (request) => {
+			if (request.url().endsWith('fetch-cache-control/b64/data')) {
+				did_request_data = true;
+			}
+		});
+		await clicknav('[href="/load/fetch-cache-control/b64"]');
+
+		// 4. data should still be the same (and cached)
+		expect(await page.textContent('.test-content')).toBe('[1,2,3,4]');
+		expect(did_request_data).toBe(false);
+	});
+
 	test('do not use cache if headers are different', async ({ page, clicknav }) => {
 		await page.goto('/load/fetch-cache-control/headers-diff');
 
