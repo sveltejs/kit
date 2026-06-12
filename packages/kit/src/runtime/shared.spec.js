@@ -1,3 +1,4 @@
+/** @import { Transport } from '@sveltejs/kit' */
 import buffer from 'node:buffer';
 import { describe, expect, test } from 'vitest';
 import { parse_remote_arg, stringify_command_arg, stringify_remote_arg } from './shared.js';
@@ -268,6 +269,7 @@ describe('stringify_command_arg', () => {
 
 describe('transport caching', () => {
 	test('repeated stringify with the same transport object is stable and independent', () => {
+		/** @type {Transport} */
 		const transport = {};
 
 		const first_shared = { z: 1, a: 2 };
@@ -353,6 +355,7 @@ describe('transport caching', () => {
 	});
 
 	test('concurrent stringify_command_arg calls with files round-trip', async () => {
+		/** @type {Transport} */
 		const transport = {};
 
 		const first = stringify_command_arg(
