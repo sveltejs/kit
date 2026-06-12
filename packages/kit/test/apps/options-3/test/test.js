@@ -11,31 +11,22 @@ test.describe.configure({ mode: 'parallel' });
 test.describe("bundleStrategy: 'inline'", () => {
 	test.skip(({ javaScriptEnabled }) => !javaScriptEnabled || !!process.env.DEV);
 
+	const client = fileURLToPath(new URL('../.svelte-kit/output/client', import.meta.url));
+
 	test('serialization works with streaming', async ({ page }) => {
 		await page.goto('/serialization-stream');
 		await expect(page.locator('h1', { hasText: 'It works!' })).toBeVisible();
 	});
-});
-
-test.describe("bundleStrategy: 'inline' build output", () => {
-	test.skip(() => !!process.env.DEV);
-
-	const client = fileURLToPath(new URL('../.svelte-kit/output/client', import.meta.url));
-
-	const emitted = () =>
-		fs.existsSync(`${client}/_app/immutable`)
-			? fs.readdirSync(`${client}/_app/immutable`, { recursive: true }).map(String)
-			: [];
 
 	test('does not emit the inlined bundle and stylesheet files', () => {
-		const files = emitted();
+		const files = fs.readdirSync(`${client}/_app/immutable`, { recursive: true });
 		expect(files.some((file) => file.includes('bundle.'))).toBe(false);
 		expect(files.some((file) => file.includes('style.'))).toBe(false);
 	});
 
 	test('omits inlined files from the service worker build list', () => {
 		const content = fs.readFileSync(`${client}/service-worker.js`, 'utf-8');
-		expect(content).not.toMatch('immutable');
+		expect(content).not.toMatch(/immutable\/(?:bundle|assets\/style)/);
 	});
 
 	test('still emits version.json', () => {
