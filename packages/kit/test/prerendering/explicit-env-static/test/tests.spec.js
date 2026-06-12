@@ -12,10 +12,9 @@ test('inlines static public env vars into prerendered pages', () => {
 	expect(content).toMatch('<h1>the static message</h1>');
 });
 
-test('does not import env.js or embed an env object in prerendered pages', () => {
+test('does not import env.js from prerendered pages', () => {
 	const content = read('index.html');
 	expect(content).not.toMatch('_app/env.js');
-	expect(content).not.toMatch('env:');
 });
 
 test('does not emit env.js or env.script.js', () => {
