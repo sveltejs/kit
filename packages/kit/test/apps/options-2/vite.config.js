@@ -40,6 +40,9 @@ const config = {
 			}
 		})
 	],
+	define: {
+		__TEST_USER_DEFINE__: '"works"'
+	},
 	server: {
 		fs: {
 			allow: [path.resolve('../../../src')]

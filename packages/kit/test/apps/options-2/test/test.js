@@ -238,3 +238,20 @@ test.describe('$app/env', () => {
 		expect(await page.pageErrors()).toHaveLength(0);
 	});
 });
+
+test.describe('Vite', () => {
+	// regression test for https://github.com/sveltejs/kit/issues/13249:
+	// user `define`s referenced at the top level of hooks.client.js must be
+	// available during client init
+	test('global constant replacements are available during client init', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		test.skip(!javaScriptEnabled);
+
+		await page.goto('/basepath', { wait_for_started: false });
+		await expect(page.locator('body.started')).toBeVisible();
+		expect(await page.evaluate(() => window.__test_user_define__)).toBe('works');
+		expect(await page.pageErrors()).toHaveLength(0);
+	});
+});
