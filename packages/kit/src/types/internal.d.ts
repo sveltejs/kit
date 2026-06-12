@@ -103,6 +103,11 @@ export interface BuildData {
 		routes?: SSRClientRoute[];
 		stylesheets: string[];
 		fonts: string[];
+		/**
+		 * Whether the client reads public env vars that are only known at runtime —
+		 * `$env/dynamic/public`, or `$app/env/public` when dynamic public variables
+		 * are declared with `experimental.explicitEnvironmentVariables`.
+		 */
 		uses_env_dynamic_public: boolean;
 		/** Only set in case of `bundleStrategy === 'inline'`. */
 		inline?: {

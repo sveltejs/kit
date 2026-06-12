@@ -96,11 +96,17 @@ export async function build_service_worker(
 			}
 
 			if (id === '\0virtual:app/env/public') {
-				// TODO ideally we would only add the `importScripts` if there are dynamic vars that are known to be used
+				// static values are inlined — only load env.script.js if there are dynamic public vars
+				const has_dynamic_public_env = Object.values(env_config ?? {}).some(
+					(variable) => variable.public && !variable.static
+				);
+
 				return create_sveltekit_env_public(
 					env_config,
 					env.all,
-					`importScripts('${kit.paths.base}/${kit.appDir}/env.script.js'); const env = globalThis.__sveltekit_sw.env;`
+					has_dynamic_public_env
+						? `importScripts('${kit.paths.base}/${kit.appDir}/env.script.js'); const env = globalThis.__sveltekit_sw.env;`
+						: ''
 				);
 			}
 

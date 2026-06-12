@@ -193,15 +193,14 @@ export function create_builder({
 		},
 
 		generateEnvModule() {
-			if (!build_data.client?.uses_env_dynamic_public) return;
-
-			const dest = `${config.kit.outDir}/output/prerendered/dependencies/${config.kit.appDir}/env.js`;
 			const env = get_env(config.kit.env, vite_config.mode);
 
-			const values = config.kit.experimental.explicitEnvironmentVariables ? {} : env.public;
+			/** @type {Record<string, any>} */
+			let values;
 
 			if (config.kit.experimental.explicitEnvironmentVariables) {
 				const variables = explicit_env_config ?? {};
+				values = {};
 
 				/** @type {Record<string, StandardSchemaV1.Issue[]>} */
 				const issues = {};
@@ -212,9 +211,24 @@ export function create_builder({
 				}
 
 				handle_issues(issues);
+
+				// all public env vars are static and inlined at build time — nothing imports env.js
+				if (Object.keys(values).length === 0) return;
+			} else {
+				values = env.public;
 			}
 
-			write(dest, `export const env=${devalue.uneval(values)}`);
+			const dependencies = `${config.kit.outDir}/output/prerendered/dependencies/${config.kit.appDir}`;
+			const payload = devalue.uneval(values);
+
+			if (build_data.client?.uses_env_dynamic_public) {
+				write(`${dependencies}/env.js`, `export const env=${payload}`);
+			}
+
+			// service workers can't use ES modules, so dynamic env is loaded via `importScripts`
+			if (config.kit.experimental.explicitEnvironmentVariables && build_data.service_worker) {
+				write(`${dependencies}/env.script.js`, `globalThis.__sveltekit_sw={env:${payload}}`);
+			}
 		},
 
 		generateManifest({ relativePath, routes: subset }) {
