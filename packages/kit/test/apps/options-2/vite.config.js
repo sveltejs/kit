@@ -8,6 +8,9 @@ const config = {
 		minify: false
 	},
 	clearScreen: false,
+	define: {
+		__TEST_USER_DEFINE__: '"works"'
+	},
 	plugins: [
 		sveltekit({
 			compilerOptions: {
