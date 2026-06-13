@@ -1,4 +1,4 @@
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { pathToFileURL } from 'node:url';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -28,9 +28,9 @@ test('forked() rejects with the worker-side error rather than swallowing it', as
 	// the parent only saw `Error: Failed with code 1` — with no clue what
 	// the underlying module-load failure actually was. The error event
 	// forwarder makes the actual stack reach the caller.
-	const forkPath = fileURLToPath(new URL('./fork.js', import.meta.url));
+	const forkURL = new URL('./fork.js', import.meta.url).href;
 	const { module, cleanup } = tempWorker(
-		`import { forked } from ${JSON.stringify(forkPath)};` +
+		`import { forked } from ${JSON.stringify(forkURL)};` +
 			`export default forked(import.meta.url, async () => {` +
 			`  throw new ReferenceError('indexedDB is not defined');` +
 			`});`
@@ -58,9 +58,9 @@ test('forked() still rejects on a non-zero exit when the worker exits without th
 	// Regression guard: forwarding the error event must not break the
 	// existing exit-code path (e.g. an explicit `process.exit(1)` with no
 	// thrown error still has to reject the returned promise).
-	const forkPath = fileURLToPath(new URL('./fork.js', import.meta.url));
+	const forkURL = new URL('./fork.js', import.meta.url).href;
 	const { module, cleanup } = tempWorker(
-		`import { forked } from ${JSON.stringify(forkPath)};` +
+		`import { forked } from ${JSON.stringify(forkURL)};` +
 			`export default forked(import.meta.url, async () => {` +
 			`  process.exit(1);` +
 			`});`
