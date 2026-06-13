@@ -3,7 +3,6 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { assert, test } from 'vitest';
-import { forked } from './fork.js';
 
 /**
  * Write a `forked()` subprocess module to a throwaway file and return the
