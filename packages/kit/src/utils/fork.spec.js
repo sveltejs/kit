@@ -38,7 +38,7 @@ test('forked() rejects with the worker-side error rather than swallowing it', as
 
 	try {
 		const run = (await import(module)).default;
-		const err = /** @type {Error} */ (await run({}).catch((e) => e));
+		const err = /** @type {Error} */ (await run({}).catch((/** @type {unknown} */ e) => e));
 		assert.instanceOf(err, Error);
 		// Either the original ReferenceError surfaces (post-fix, expected),
 		// or the legacy `Failed with code 1` surrogate is what the caller
@@ -68,7 +68,7 @@ test('forked() still rejects on a non-zero exit when the worker exits without th
 
 	try {
 		const run = (await import(module)).default;
-		const err = /** @type {Error} */ (await run({}).catch((e) => e));
+		const err = /** @type {Error} */ (await run({}).catch((/** @type {unknown} */ e) => e));
 		assert.instanceOf(err, Error);
 		assert.match(err.message, /Failed with code 1/);
 	} finally {
