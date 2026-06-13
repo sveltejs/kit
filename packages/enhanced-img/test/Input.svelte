@@ -1,6 +1,7 @@
 <script lang="ts">
-	import manual_image1 from './no.png';
-	import manual_image2 from './no.svg';
+	import manual_image1 from './no.png?enhanced';
+	import manual_image2 from './no.svg?enhanced';
+	import webp_image from './dev.png?format=webp&enhanced';
 
 	const src = manual_image1;
 	const images = [manual_image1, manual_image2];
@@ -14,6 +15,8 @@
 <img src="./dev.png" alt="non-enhanced test" />
 
 <enhanced:img src="./dev.png" alt="dev test" />
+
+<enhanced:img src="./dev.png?format=webp" alt="single format static test" />
 
 <div>
 	<enhanced:img src="./dev.png" alt="nested test" />
@@ -44,6 +47,8 @@
 <enhanced:img src="/src/dev.png" alt="absolute path test" />
 
 <enhanced:img {src} alt="attribute shorthand test" />
+
+<enhanced:img src={webp_image} alt="single format dynamic test" />
 
 {#each images as image}
 	<enhanced:img src={image} alt="opt-in test" />
