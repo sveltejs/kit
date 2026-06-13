@@ -66,7 +66,23 @@ export function forked(module, callback) {
 			// example a ReferenceError thrown when a `+page.ts` references
 			// a browser-only global like `indexedDB` at module scope — is
 			// silently swallowed and the build fails with no diagnostic.
-			worker.on('error', reject);
+			worker.on('error', (error) => {
+				// Re-create the Error so `.stack` / `.frame` stay writable in
+				// the parent: downstream consumers (e.g. vite's
+				// enhanceRollupError) mutate those, and the structured-clone
+				// round-trip through worker_threads can leave them
+				// non-writable, surfacing as `Cannot assign to read only
+				// property 'stack'` instead of the underlying build error.
+				if (error instanceof Error) {
+					const wrapped = new Error(error.message);
+					wrapped.name = error.name;
+					wrapped.stack = error.stack;
+					Object.assign(wrapped, error);
+					reject(wrapped);
+				} else {
+					reject(error);
+				}
+			});
 
 			worker.on('exit', (code) => {
 				if (code) {
