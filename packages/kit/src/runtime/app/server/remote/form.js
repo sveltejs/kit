@@ -236,6 +236,10 @@ export function form(validate_or_fn, maybe_fn) {
 			get: () => 0
 		});
 
+		Object.defineProperty(instance, 'submitted', {
+			get: () => false
+		});
+
 		Object.defineProperty(instance, 'preflight', {
 			// preflight is a noop on the server
 			value: () => instance
