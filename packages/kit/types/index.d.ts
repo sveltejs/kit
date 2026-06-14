@@ -2130,6 +2130,18 @@ declare module '@sveltejs/kit' {
 	}
 
 	/**
+	 * The callback passed to a remote form's `enhance` method. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
+	 */
+	export type RemoteFormSubmitFunction<
+		Input extends RemoteFormInput | void = RemoteFormInput | void,
+		Output = any
+	> = (
+		form: Omit<RemoteForm<Input, Output>, 'enhance' | 'element'> & {
+			readonly element: HTMLFormElement;
+		}
+	) => MaybePromise<void>;
+
+	/**
 	 * The type of a remote `form` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
 	 */
 	export type RemoteForm<Input extends RemoteFormInput | void, Output> = {
@@ -2145,13 +2157,7 @@ declare module '@sveltejs/kit' {
 			updates: (...updates: RemoteQueryUpdate[]) => Promise<boolean>;
 		};
 		/** Use the `enhance` method to influence what happens when the form is submitted. */
-		enhance(
-			callback: (
-				form: Omit<RemoteForm<Input, Output>, 'enhance' | 'element'> & {
-					readonly element: HTMLFormElement;
-				}
-			) => MaybePromise<void>
-		): {
+		enhance(callback: RemoteFormSubmitFunction<Input, Output>): {
 			method: 'POST';
 			action: string;
 			[attachment: symbol]: (node: HTMLFormElement) => void;
