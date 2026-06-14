@@ -166,48 +166,25 @@ Both the argument and the return value are serialized with [devalue](https://git
 
 When you call a query function, SvelteKit serializes the argument you call it with and uses it as a cache key. On the server, this is used to create a request-scoped cache so that multiple invocations of the same query only result in the work happening once. On the client, SvelteKit does something similar: Multiple identical invocations of a query all point to the same instance.
 
-To prevent memory leaks, this instance is kept cached only as long as it is actively used on the page in a _reactive context_, which means it must be created in a [derived](../svelte/$derived), [effect](../svelte/$effect) or component template. In practice, you're most likely to run into this limitation in universal `load` functions, event handlers, or when trying to access a query's data during module initialization.
-
-To illustrate:
+You can `await` a query in any context — components, event handlers, universal `load` functions, async callbacks — and SvelteKit will dedupe with whatever other consumers are using the same query. For example:
 
 ```svelte
 <script>
-  import { getData } from './data.remote.js';
+	import { getData } from './data.remote.js';
 
-	// this instance is "anchored" to the reactive context of this component
-	const data = getData();
+  // awaited inside the component template — populates the cache
+  const data = getData();
 </script>
 
-<!--
-	Awaiting `data` in a non-reactive context is valid, because it's anchored
-	and will be cleaned up when this component is cleaned up.
--->
-<button onclick={async () => console.log(await data)}>
-	click me!
-</button>
+<p>{await data}</p>
 
-<!--
-	This, however, will throw, because `getData` isn't anchored to any reactive context.
--->
+<!-- this dedupes with the component-level use above; no extra request -->
 <button onclick={async () => console.log(await getData())}>
-	don't click me!
-</button>
-```
-
-This limitation only applies to accessing the _data_ of a query by `await`ing it or trying to access its properties. If all you need is one-off access to the query's data, you can call `query.run`:
-
-```svelte
-<script>
-  import { getData } from './data.remote.js';
-</script>
-
-<!-- This bypasses the cache and runs the query directly, returning a plain old Promise<T> -->
-<button onclick={async () => console.log(await getData().run())}>
 	click me!
 </button>
 ```
 
-You can also still call [`refresh`](#query-Refreshing-queries) and `set` in non-reactive contexts. If there are no active listeners to the query, they both result in no-ops.
+The cache is shared as long as the query is in active use — rendered in a component, currently being awaited, or otherwise referenced. Once nothing is using it, the cached value is released.
 
 ### Refreshing queries
 
@@ -311,7 +288,27 @@ If the connection drops, `connected` becomes `false`. SvelteKit will attempt to 
 
 Unlike `query`, live queries do not have a `refresh()` method, as they are self-updating.
 
-As with `query` and `query.batch`, call `.run()` outside render when you need imperative access. For live queries, `run()` returns a `Promise<AsyncGenerator<T>>`.
+If you need direct, imperative access to the underlying stream of values (rather than the reactive `current` property), live query instances are themselves [async-iterable](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/for-await...of). You can `for await` over the instance directly:
+
+```js
+// @filename: time.remote.ts
+import { RemoteLiveQueryFunction } from '@sveltejs/kit';
+export declare const getTime: RemoteLiveQueryFunction<undefined, Date>;
+// @errors: 2304
+// @filename: index.js
+import { getTime } from './time.remote.js';
+// ---cut---
+async function logTimes() {
+	for await (const value of getTime()) {
+		console.log(value);
+		if (someCondition) break;
+	}
+}
+```
+
+Multiple consumers of the same live query (whether reactive — via `await` or `current` — or imperative `for await` loops) share a single underlying connection. The first value yielded to a `for await` iterator is the most-recently-received value, if one is already available, mirroring the semantics of awaiting the resource directly. Subsequent yields fire whenever a new value arrives from the server. If values arrive faster than the consumer drains the iterator, only the latest pending value is kept — live streams are not event logs.
+
+On the server, `for await` likewise joins a per-request shared iteration of the underlying generator, so concurrent consumers within the same request don't run the user-defined generator multiple times.
 
 > [!NOTE] It's essential that you don't cache live query responses in a service worker, since the cloned response will continue streaming long after the page is closed. Make sure that your caching logic excludes any responses with a `Cache-Control` header that includes `no-store`.
 
@@ -806,10 +803,10 @@ We can customize what happens when the form is submitted with the `enhance` meth
 
 <h1>Create a new post</h1>
 
-<form {...createPost.enhance(async ({ form, data, submit }) => {
+<form {...createPost.enhance(async (form) => {
 	try {
-		if (await submit()) {
-			form.reset();
+		if (await form.submit()) {
+			form.element.reset();
 
 			showToast('Successfully published!');
 		} else {
@@ -823,9 +820,9 @@ We can customize what happens when the form is submitted with the `enhance` meth
 </form>
 ```
 
-> When using `enhance`, the `<form>` is not automatically reset — you must call `form.reset()` if you want to clear the inputs.
+> [!NOTE] When using `enhance`, the `<form>` is not automatically reset — you must call `form.element.reset()` if you want to clear the inputs.
 
-The callback receives the `form` element, the `data` it contains, and a `submit` function.
+The callback receives a copy of the form instance. It has all the same properties and methods except `enhance`, and `form.submit()` performs the submission directly without re-running the enhance callback. Inside the callback, `form.element` is always defined.
 
 ### Multiple instances of a form
 
@@ -1020,7 +1017,7 @@ export const updatePost = form(
 );
 ```
 
-Because queries are keyed based on their arguments, `await getPost(post.id).set(result)` on the server knows to look up the matching `getPost(id)` on the client to update it. The same goes for `getPosts().refresh()` -- it knows to look up `getPosts()` with no argument on the client.
+Because queries are keyed based on their arguments, `getPost(post.id).set(result)` on the server knows to look up the matching `getPost(id)` on the client to update it. The same goes for `getPosts().refresh()` -- it knows to look up `getPosts()` with no argument on the client.
 
 ### Reconnecting live queries in mutations
 

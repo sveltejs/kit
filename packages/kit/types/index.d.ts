@@ -116,7 +116,7 @@ declare module '@sveltejs/kit' {
 		generateFallback: (dest: string) => Promise<void>;
 
 		/**
-		 * Generate a module exposing build-time environment variables as `$env/dynamic/public`.
+		 * Generate a module exposing build-time environment variables as `$env/dynamic/public` if the app uses it.
 		 */
 		generateEnvModule: () => void;
 
@@ -450,6 +450,13 @@ declare module '@sveltejs/kit' {
 		};
 		/** Experimental features. Here be dragons. These are not subject to semantic versioning, so breaking changes or removal can happen in any release. */
 		experimental?: {
+			/**
+			 * Whether to enable explicit environment variables using `src/env.js` or `src/env.ts`.
+			 * @since 2.63.0
+			 * @default false
+			 */
+			explicitEnvironmentVariables?: boolean;
+
 			/**
 			 * Options for enabling server-side [OpenTelemetry](https://opentelemetry.io/) tracing for SvelteKit operations including the [`handle` hook](https://svelte.dev/docs/kit/hooks#Server-hooks-handle), [`load` functions](https://svelte.dev/docs/kit/load), [form actions](https://svelte.dev/docs/kit/form-actions), and [remote functions](https://svelte.dev/docs/kit/remote-functions).
 			 * @default { server: false, serverFile: false }
@@ -1675,7 +1682,7 @@ declare module '@sveltejs/kit' {
 
 		/** private fields */
 		_: {
-			client: NonNullable<BuildData['client']>;
+			client: BuildData['client'];
 			nodes: SSRNodeLoader[];
 			/** hashed filename -> import to that file */
 			remotes: Record<string, () => Promise<any>>;
@@ -1891,8 +1898,8 @@ declare module '@sveltejs/kit' {
 		checkbox: boolean | string[];
 		radio: string;
 		file: File;
-		hidden: string;
-		submit: string;
+		hidden: string | number | boolean;
+		submit: string | number | boolean;
 		button: string;
 		reset: string;
 		image: string;
@@ -1983,11 +1990,15 @@ declare module '@sveltejs/kit' {
 			: Value extends boolean
 				? [type: Type] | [type: Type, value: boolean]
 				: [type: Type] | [type: Type, value: Value | (string & {})]
-		: Type extends 'radio' | 'submit' | 'hidden'
-			? [type: Type, value: Value | (string & {})]
-			: Type extends 'file' | 'file multiple'
-				? [type: Type]
-				: [type: Type] | [type: Type, value: Value | (string & {})];
+		: Type extends 'submit' | 'hidden'
+			? Value extends string
+				? [type: Type, value: Value | (string & {})]
+				: [type: Type, value: Value]
+			: Type extends 'radio'
+				? [type: Type, value: Value | (string & {})]
+				: Type extends 'file' | 'file multiple'
+					? [type: Type]
+					: [type: Type] | [type: Type, value: Value | (string & {})];
 
 	/**
 	 * Form field accessor type that provides name(), value(), and issues() methods
@@ -2127,15 +2138,19 @@ declare module '@sveltejs/kit' {
 		method: 'POST';
 		/** The URL to send the form to. */
 		action: string;
+		/** The `<form>` element this instance is currently attached to, if any. */
+		get element(): HTMLFormElement | null;
+		/** Submit the currently attached form programmatically. */
+		submit(): Promise<boolean> & {
+			updates: (...updates: RemoteQueryUpdate[]) => Promise<boolean>;
+		};
 		/** Use the `enhance` method to influence what happens when the form is submitted. */
 		enhance(
-			callback: (opts: {
-				form: HTMLFormElement;
-				data: Input;
-				submit: () => Promise<boolean> & {
-					updates: (...updates: RemoteQueryUpdate[]) => Promise<boolean>;
-				};
-			}) => MaybePromise<void>
+			callback: (
+				form: Omit<RemoteForm<Input, Output>, 'enhance' | 'element'> & {
+					readonly element: HTMLFormElement;
+				}
+			) => MaybePromise<void>
 		): {
 			method: 'POST';
 			action: string;
@@ -2211,12 +2226,6 @@ declare module '@sveltejs/kit' {
 
 	export type RemoteQuery<T> = RemoteResource<T> & {
 		/**
-		 * Returns a plain promise with the result.
-		 * Unlike awaiting the resource directly, this can only be used _outside_ render
-		 * (i.e. in load functions, event handlers and so on)
-		 */
-		run(): Promise<T>;
-		/**
 		 * On the client, this function will update the value of the query without re-fetching it.
 		 *
 		 * On the server, this can be called in the context of a `command` or `form` and the specified data will accompany the action response back to the client.
@@ -2239,9 +2248,9 @@ declare module '@sveltejs/kit' {
 		 *   const todos = getTodos();
 		 * </script>
 		 *
-		 * <form {...addTodo.enhance(async ({ data, submit }) => {
-		 *   await submit().updates(
-		 *     todos.withOverride((todos) => [...todos, { text: data.get('text') }])
+		 * <form {...addTodo.enhance(async (form) => {
+		 *   await form.submit().updates(
+		 *     todos.withOverride((todos) => [...todos, { text: form.fields.text.value() }])
 		 *   );
 		 * })}>
 		 *   <input type="text" name="text" />
@@ -2252,20 +2261,15 @@ declare module '@sveltejs/kit' {
 		withOverride(update: (current: T) => T): RemoteQueryOverride;
 	};
 
-	export type RemoteLiveQuery<T> = RemoteResource<T> & {
-		/**
-		 * Returns an async iterator with live updates.
-		 * Unlike awaiting the resource directly, this can only be used _outside_ render
-		 * (i.e. in load functions, event handlers and so on)
-		 */
-		run(): AsyncGenerator<T>;
-		/** `true` if the live stream is currently connected. */
-		readonly connected: boolean;
-		/** `true` once the current live stream iterator is done. */
-		readonly done: boolean;
-		/** Reconnects the live stream immediately. */
-		reconnect(): Promise<void>;
-	};
+	export type RemoteLiveQuery<T> = RemoteResource<T> &
+		AsyncIterable<T> & {
+			/** `true` if the live stream is currently connected. */
+			readonly connected: boolean;
+			/** `true` once the current live stream iterator is done. */
+			readonly done: boolean;
+			/** Reconnects the live stream immediately. */
+			reconnect(): Promise<void>;
+		};
 
 	export type RemoteQueryOverride = () => void;
 
@@ -2302,6 +2306,39 @@ declare module '@sveltejs/kit' {
 	export type RemoteLiveQueryFunction<Input, Output, _Validated = Input> = (
 		arg: undefined extends Input ? Input | void : Input
 	) => RemoteLiveQuery<Output>;
+
+	/**
+	 * [Environment variables](https://svelte.dev/docs/kit/environment-variables) can be configured by exporting
+	 * a `variables` object from `src/env.ts`, using [`defineEnvVars`](https://svelte.dev/docs/kit/@sveltejs-kit-hooks#defineEnvVars).
+	 */
+	export interface EnvVarConfig<T> {
+		/**
+		 * Whether the environment variable can be accessed by client-side code.
+		 * - if `true`, it can be imported from `$app/env/public`
+		 * - if `false`, it can be imported from `$app/env/private`, which is a [server-only module](https://svelte.dev/docs/kit/server-only-modules)
+		 * @default false
+		 */
+		public?: boolean;
+		/**
+		 * Whether the value is determined at build time or when the app runs.
+		 * - if `true`, the build time value is inlined into the bundle. This enables optimisations like dead-code elimination
+		 * - if `false`, the value is read from the environment when the app starts
+		 * @default false
+		 */
+		static?: boolean;
+		/**
+		 * A [Standard Schema](https://standardschema.dev/) validator that is applied to the value when the app starts.
+		 * The validator can output any value — not necessarily a string — but public, non-static values must be
+		 * serializable by [devalue](https://github.com/sveltejs/devalue) so that they can be sent to the browser.
+		 *
+		 * If omitted, the value must be a non-empty string.
+		 */
+		schema?: StandardSchemaV1<string | undefined, T>;
+		/**
+		 * A description of the variable that will be used for inline documentation on hover.
+		 */
+		description?: string;
+	}
 	interface AdapterEntry {
 		/**
 		 * A string that uniquely identifies an HTTP service (e.g. serverless function) and is used for deduplication.
@@ -2730,7 +2767,10 @@ declare module '@sveltejs/kit' {
 		universal_id?: string;
 		server_id?: string;
 
-		/** inlined styles */
+		/**
+		 * During development, all styles are inlined for the page to avoid FOUC.
+		 * But in production, this stores styles that are below the inline threshold
+		 */
 		inline_styles?(): MaybePromise<
 			Record<string, string | ((assets: string, base: string) => string)>
 		>;
@@ -2796,7 +2836,7 @@ declare module '@sveltejs/kit' {
 	 * @throws {HttpError} This error instructs SvelteKit to initiate HTTP error handling.
 	 * @throws {Error} If the provided status is invalid (not between 400 and 599).
 	 */
-	export function error(status: number, body: App.Error): never;
+	function error_1(status: number, body: App.Error): never;
 	/**
 	 * Throws an error with a HTTP status code and an optional message.
 	 * When called during request handling, this will cause SvelteKit to
@@ -2807,7 +2847,7 @@ declare module '@sveltejs/kit' {
 	 * @throws {HttpError} This error instructs SvelteKit to initiate HTTP error handling.
 	 * @throws {Error} If the provided status is invalid (not between 400 and 599).
 	 */
-	export function error(status: number, body?: {
+	function error_1(status: number, body?: {
 		message: string;
 	} extends App.Error ? App.Error | string | undefined : never): never;
 	/**
@@ -2920,8 +2960,16 @@ declare module '@sveltejs/kit' {
 	export type LessThan<TNumber extends number, TArray extends any[] = []> = TNumber extends TArray["length"] ? TArray[number] : LessThan<TNumber, [...TArray, TArray["length"]]>;
 	export type NumericRange<TStart extends number, TEnd extends number> = Exclude<TEnd | LessThan<TEnd>, LessThan<TStart>>;
 	type ValidPageOption = (typeof valid_page_options_array)[number];
-	type PageOptions = Partial<Record<ValidPageOption, any>>;
-	const valid_page_options_array: readonly ["ssr", "prerender", "csr", "trailingSlash", "config", "entries", "load"];
+
+	type PageOptions = Partial<{
+		[K in ValidPageOption]: K extends 'ssr' | 'csr'
+			? boolean
+			: K extends 'prerender'
+				? PrerenderOption
+				: K extends 'trailingSlash'
+					? TrailingSlash
+					: any;
+	}>;
 	export const VERSION: string;
 	class HttpError_1 {
 		
@@ -2938,12 +2986,18 @@ declare module '@sveltejs/kit' {
 		status: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308;
 		location: string;
 	}
+	const valid_page_options_array: readonly ["ssr", "prerender", "csr", "trailingSlash", "config", "entries", "load"];
 
-	export {};
+	export { error_1 as error };
 }
 
 declare module '@sveltejs/kit/hooks' {
-	import type { Handle } from '@sveltejs/kit';
+	import type { EnvVarConfig, Handle } from '@sveltejs/kit';
+	/**
+	 * Utility for defining [environment variables](https://svelte.dev/docs/kit/environment-variables),
+	 * which are made available via `$app/env/public` and `$app/env/private`.
+	 * */
+	export function defineEnvVars<T extends Record<string, EnvVarConfig<any>>>(variables: T): T;
 	/**
 	 * A helper function for sequencing multiple `handle` calls in a middleware-like manner.
 	 * The behavior for the `handle` options is as follows:
@@ -3048,11 +3102,38 @@ declare module '@sveltejs/kit/node/polyfills' {
 }
 
 declare module '@sveltejs/kit/vite' {
+	import type { KitConfig } from '@sveltejs/kit';
+	import type { SvelteConfig } from '@sveltejs/vite-plugin-svelte';
 	import type { Plugin } from 'vite';
 	/**
 	 * Returns the SvelteKit Vite plugins.
+	 * Since version 2.62.0 you can pass [configuration](configuration) directly, in which case `svelte.config.js` is ignored.
 	 * */
-	export function sveltekit(): Promise<Plugin[]>;
+	export function sveltekit(config?: KitConfig & Omit<SvelteConfig, "onwarn">): Promise<Plugin[]>;
+
+	export {};
+}
+
+declare module '$app/env' {
+	/**
+	 * `true` if the app is running in the browser.
+	 */
+	export const browser: boolean;
+
+	/**
+	 * Whether the dev server is running. This is not guaranteed to correspond to `NODE_ENV` or `MODE`.
+	 */
+	export const dev: boolean;
+
+	/**
+	 * SvelteKit analyses your app during the `build` step by running it. During this process, `building` is `true`. This also applies during prerendering.
+	 */
+	export const building: boolean;
+
+	/**
+	 * The value of `config.kit.version.name`.
+	 */
+	export const version: string;
 
 	export {};
 }

@@ -1188,6 +1188,13 @@ test.describe('cookies', () => {
 		await expect(page.locator('p')).toHaveText('foo=bar');
 	});
 
+	test('etag forwards multiple cookies', async ({ page }) => {
+		await page.goto('/cookies/forwarded-in-etag-multiple');
+		await expect(page.locator('p')).toHaveText('one=1; three=3; two=2');
+		await page.locator('button').click();
+		await expect(page.locator('p')).toHaveText('one=1; three=3; two=2');
+	});
+
 	test("fetch during SSR doesn't un- and re-escape cookies", async ({ page }) => {
 		await page.goto('/cookies/collect-without-re-escaping');
 		await expect(page.locator('p')).toHaveText('cookie-special-characters="foo"');

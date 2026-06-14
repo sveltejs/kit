@@ -40,7 +40,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - uses: pnpm/action-setup@v5.0.0
+      - uses: pnpm/action-setup@v6.0.8
       - uses: actions/setup-node@v6
         with:
           node-version: 24
@@ -52,7 +52,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - uses: pnpm/action-setup@v5.0.0
+      - uses: pnpm/action-setup@v6.0.8
       - uses: actions/setup-node@v6
         with:
           node-version: 24
@@ -94,7 +94,7 @@ jobs:
     steps:
       - run: git config --global core.autocrlf false
       - uses: actions/checkout@v6
-      - uses: pnpm/action-setup@v5.0.0
+      - uses: pnpm/action-setup@v6.0.8
       - uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node-version }}
@@ -162,7 +162,7 @@ jobs:
     steps:
       - run: git config --global core.autocrlf false
       - uses: actions/checkout@v6
-      - uses: pnpm/action-setup@v5.0.0
+      - uses: pnpm/action-setup@v6.0.8
       - uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node-version }}
@@ -196,7 +196,7 @@ jobs:
     steps:
       - run: git config --global core.autocrlf false
       - uses: actions/checkout@v6
-      - uses: pnpm/action-setup@v5.0.0
+      - uses: pnpm/action-setup@v6.0.8
       - uses: actions/setup-node@v6
         with:
           node-version: 24
@@ -230,7 +230,7 @@ jobs:
     steps:
       - run: git config --global core.autocrlf false
       - uses: actions/checkout@v6
-      - uses: pnpm/action-setup@v5.0.0
+      - uses: pnpm/action-setup@v6.0.8
       - uses: actions/setup-node@v6
         with:
           node-version: 24
@@ -259,7 +259,7 @@ jobs:
         node-version: [18, 20, 22, 24]
     steps:
       - uses: actions/checkout@v6
-      - uses: pnpm/action-setup@v5.0.0
+      - uses: pnpm/action-setup@v6.0.8
       - uses: actions/setup-node@v6
         with:
           node-version: ${{matrix.node-version}}
@@ -268,6 +268,7 @@ jobs:
       - uses: denoland/setup-deno@v2
         with:
           deno-version: ^2.2.4
+          cache: true
       - run: pnpm install --frozen-lockfile
       - name: setup overrides for matrix.node
         if: matrix.node-version == 18

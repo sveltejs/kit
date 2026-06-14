@@ -46,7 +46,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 	/** @type {import('types').ServerModule} */
 	const { Server } = await import(pathToFileURL(`${out}/server/index.js`).href);
 
-	// configure `import { building } from '$app/environment'` —
+	// configure `import { building } from '$app/environment'` and `$app/env` —
 	// essential we do this before analysing the code
 	internal.set_building();
 	internal.set_prerendering();
@@ -106,7 +106,10 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 	if (hash) {
 		const fallback = await generate_fallback({
 			manifest_path,
-			env
+			env,
+			out_dir: config.outDir,
+			origin: config.prerender.origin,
+			assets: config.files.assets
 		});
 
 		const file = output_filename('/', true);
@@ -201,6 +204,8 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 
 	const seen = new Set();
 	const written = new Set();
+
+	/** @type {Map<string, Promise<any>>} */
 	const remote_responses = new Map();
 
 	/** @type {Map<string, Set<string>>} */
@@ -494,6 +499,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 	const public_env = filter_env(env, public_prefix, private_prefix);
 	internal.set_private_env(private_env);
 	internal.set_public_env(public_env);
+	internal.set_env(env);
 	internal.set_manifest(manifest);
 	internal.set_read_implementation((file) => createReadableStream(`${out}/server/${file}`));
 
