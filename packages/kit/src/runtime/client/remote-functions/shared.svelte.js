@@ -114,7 +114,13 @@ export async function remote_request(url, init) {
 	const response = await fetch(url, init);
 
 	if (!response.ok) {
-		throw new HttpError(500, 'Failed to execute remote function');
+		const result = await response.json().catch(() => ({
+			type: 'error',
+			status: response.status,
+			error: response.statusText
+		}));
+
+		throw new HttpError(result.status ?? response.status ?? 500, result.error);
 	}
 
 	const result = /** @type {RemoteFunctionResponse} */ (await response.json());
