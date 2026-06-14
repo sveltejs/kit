@@ -2135,8 +2135,11 @@ declare module '@sveltejs/kit' {
 		/** Use the `enhance` method to influence what happens when the form is submitted. */
 		enhance(
 			callback: (
-				form: Omit<RemoteForm<Input, Output>, 'enhance' | 'element'> & {
+				form: Omit<RemoteForm<Input, Output>, 'enhance' | 'element' | 'data'> & {
+					/** The <form> element */
 					readonly element: HTMLFormElement;
+					/** The data being submitted */
+					readonly data: Input;
 				}
 			) => MaybePromise<void>
 		): {
