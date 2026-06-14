@@ -150,7 +150,7 @@ export function build_server_nodes(
 			if (
 				(kit.router.type === 'hash' &&
 					node.page_options !== null &&
-					node.page_options.ssr === undefined) ||
+					node.page_options?.ssr === undefined) ||
 				(node.page_options && node.page_options.ssr === false)
 			) {
 				exports.push(`export const universal = ${s(node.page_options, null, 2)};`);
