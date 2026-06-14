@@ -26,6 +26,15 @@ test.describe('remote functions', () => {
 		await page.getByRole('button', { name: 'Refresh' }).click();
 		await expect(page.locator('p')).toHaveText('foobaz');
 	});
+
+	test('remote query responses are not cacheable', async ({ page }) => {
+		// the query is kicked off during SSR but fetched by the client after
+		// hydration, so we can observe the response headers on the wire
+		const response_promise = page.waitForResponse((r) => r.url().includes('/_app/remote/'));
+		await page.goto('/remote/query-loading-state');
+		const response = await response_promise;
+		expect(response.headers()['cache-control']).toBe('private, no-store');
+	});
 });
 
 // have to run in serial because commands mutate in-memory data on the server (should fix this at some point)
