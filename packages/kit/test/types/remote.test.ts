@@ -10,6 +10,9 @@ import {
 	invalid
 } from '@sveltejs/kit';
 
+/* eslint-disable @typescript-eslint/require-await */
+/* eslint-disable @typescript-eslint/no-floating-promises */
+
 const schema: StandardSchemaV1<string> = null as any;
 const schema2: StandardSchemaV1<string, number> = null as any;
 const schema3: StandardSchemaV1<string | undefined, number> = null as any;
@@ -57,6 +60,23 @@ function query_tests() {
 		void q2(1);
 	}
 	void query_with_optional_arg();
+
+	async function query_with_optional_undefined_arg() {
+		const q = query(
+			null as any as StandardSchemaV1<{ a?: string | undefined }>,
+			() => 'Hello world'
+		);
+		// @ts-expect-error
+		void q();
+		void q({});
+		void q({ a: 'hi' });
+		void q({ a: undefined });
+		// @ts-expect-error
+		void q({ a: null });
+		// @ts-expect-error
+		void q(1);
+	}
+	void query_with_optional_undefined_arg();
 
 	async function query_unsafe() {
 		const q = query('unchecked', (a: number) => a);
@@ -515,6 +535,8 @@ function form_tests() {
 	f6.fields.array[0].array.value();
 	// @ts-expect-error
 	f6.fields.array[0].array.as('text');
+	// @ts-expect-error
+	f6.input!['array[0].prop'] = 123;
 
 	// any
 	const f7 = form(null as any, (data, issue) => {
@@ -540,8 +562,6 @@ function form_tests() {
 	f8.fields.allIssues();
 	// @ts-expect-error
 	f8.fields.x;
-	// @ts-expect-error
-	f6.input!['array[0].prop'] = 123;
 
 	// schema with optional array fields (e.g. Zod's `.default([])` produces an input
 	// type where the property is optional, so its value type is `string[] | undefined`).
@@ -577,6 +597,26 @@ function form_tests() {
 	f_optional_arrays.fields.strings.as('number');
 	// @ts-expect-error
 	f_optional_arrays.fields.files.as('text');
+
+	// schema with optional & value-undefined fields. (e.g. Valibot's `.optional()`
+	// produces an input type that accepts `undefined` as value, which under
+	// `exactOptionalPropertyTypes` is treated distinctly from an omitted property.)
+	const f_optional_undefined_prop = form(
+		null as any as StandardSchemaV1<{
+			strings?: string[] | undefined;
+		}>,
+		(data) => {
+			data.strings?.[0] === 'a';
+			return { success: true };
+		}
+	);
+	// `.as()` should be available on optional|undefined fields
+	f_optional_undefined_prop.fields.strings.as('checkbox', 'value');
+	f_optional_undefined_prop.fields.strings.as('select multiple');
+	// indexed access gives back a typed field
+	f_optional_undefined_prop.fields.strings[0].as('text');
+	// @ts-expect-error
+	f_optional_undefined_prop.fields.strings.as('number');
 
 	// doesn't use data
 	const f9 = form(() => Promise.resolve({ success: true }));
