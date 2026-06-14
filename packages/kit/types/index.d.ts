@@ -2397,6 +2397,7 @@ declare module '@sveltejs/kit' {
 			| 'unsafe-hashes'
 			| 'unsafe-inline'
 			| 'wasm-unsafe-eval'
+			| 'trusted-types-eval'
 			| 'none';
 		type CryptoSource = `${'nonce' | 'sha256' | 'sha384' | 'sha512'}-${string}`;
 		type FrameSource = HostSource | SchemeSource | 'self' | 'none';
@@ -2405,7 +2406,15 @@ declare module '@sveltejs/kit' {
 		type HostProtocolSchemes = `${string}://` | '';
 		type HttpDelineator = '/' | '?' | '#' | '\\';
 		type PortScheme = `:${number}` | '' | ':*';
-		type SchemeSource = 'http:' | 'https:' | 'data:' | 'mediastream:' | 'blob:' | 'filesystem:';
+		type SchemeSource =
+			| 'http:'
+			| 'https:'
+			| 'ws:'
+			| 'wss:'
+			| 'data:'
+			| 'mediastream:'
+			| 'blob:'
+			| 'filesystem:';
 		type Source = HostSource | SchemeSource | CryptoSource | BaseSource;
 		type Sources = Source[];
 	}
