@@ -293,8 +293,11 @@ async function kit({ svelte_config }) {
 				const allow = new Set([
 					kit.files.lib,
 					kit.files.routes,
+					kit.files.src,
 					kit.outDir,
-					path.resolve('src'), // TODO this isn't correct if user changed all his files to sth else than src (like in test/options)
+					// ensures that the client entry is served even if it's located outside
+					// the local node_modules, such as the pnpm global virtual store
+					runtime_directory,
 					path.resolve('node_modules'),
 					path.resolve(vite.searchForWorkspaceRoot(cwd), 'node_modules')
 				]);
