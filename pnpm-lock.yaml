@@ -543,7 +543,7 @@ importers:
         version: 1.1.0
       '@sveltejs/acorn-typescript':
         specifier: ^1.0.9
-        version: 1.0.9(acorn@8.16.0)
+        version: 1.0.10(acorn@8.16.0)
       '@types/cookie':
         specifier: ^0.6.0
         version: 0.6.0
@@ -594,8 +594,8 @@ importers:
         specifier: 'catalog:'
         version: 2.4.7
       dts-buddy:
-        specifier: ^0.8.0
-        version: 0.8.0(typescript@5.8.3)
+        specifier: ^0.8.1
+        version: 0.8.1(typescript@5.8.3)
       jsdom:
         specifier: 'catalog:'
         version: 26.1.0
@@ -3260,11 +3260,6 @@ packages:
     peerDependencies:
       acorn: ^8.9.0
 
-  '@sveltejs/acorn-typescript@1.0.9':
-    resolution: {integrity: sha512-lVJX6qEgs/4DOcRTpo56tmKzVPtoWAaVbL4hfO7t7NVwl9AAXzQR6cihesW1BmNMPl+bK6dreu2sOKBP2Q9CIA==}
-    peerDependencies:
-      acorn: ^8.9.0
-
   '@sveltejs/eslint-config@10.0.0':
     resolution: {integrity: sha512-Cns6frzTmYtV+eWrg6qK2G0dVFpeVc1vyCx0DMqE3+JJW5cudynu54KKsTFqAIuNuShonUhDDGE8bO1cJRUVJQ==}
     peerDependencies:
@@ -4004,8 +3999,8 @@ packages:
   dropcss@1.0.16:
     resolution: {integrity: sha512-QgA6BUh2SoBYE/dSuMmeGhNdoGtGewt3Rn66xKyXoGNyjrKRXf163wuM+xeQ83p87l/3ALoB6Il1dgKyGS5pEw==}
 
-  dts-buddy@0.8.0:
-    resolution: {integrity: sha512-OpwKT1I+nSAFhLtLXrNXOBBn9jAzlAkERPVe5NoEP3aAxfDkEVsvpCc7lWJXA+pSfMF8Xf9APqa8wPr+fJjtUg==}
+  dts-buddy@0.8.1:
+    resolution: {integrity: sha512-bJ+/wrJxcZwhuaB3IopMcCp0heZ55gRiyd3tKG5GhKm1EKLhaPzk3NyLcuOACyYoTMF1sVKbKU72gh1U276DUQ==}
     hasBin: true
     peerDependencies:
       typescript: ^5.0.4 || ^6.0.0
@@ -7064,7 +7059,7 @@ snapshots:
   '@netlify/edge-bundler@14.9.10':
     dependencies:
       '@import-maps/resolve': 2.0.0
-      '@sveltejs/acorn-typescript': 1.0.9(acorn@8.16.0)
+      '@sveltejs/acorn-typescript': 1.0.10(acorn@8.16.0)
       acorn: 8.16.0
       acorn-walk: 8.3.5
       ajv: 8.18.0
@@ -7778,10 +7773,6 @@ snapshots:
       picomatch: 4.0.4
 
   '@sveltejs/acorn-typescript@1.0.10(acorn@8.16.0)':
-    dependencies:
-      acorn: 8.16.0
-
-  '@sveltejs/acorn-typescript@1.0.9(acorn@8.16.0)':
     dependencies:
       acorn: 8.16.0
 
@@ -8626,7 +8617,7 @@ snapshots:
 
   dropcss@1.0.16: {}
 
-  dts-buddy@0.8.0(typescript@5.8.3):
+  dts-buddy@0.8.1(typescript@5.8.3):
     dependencies:
       '@jridgewell/source-map': 0.3.6
       '@jridgewell/sourcemap-codec': 1.5.5
