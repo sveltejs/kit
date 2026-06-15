@@ -1,6 +1,10 @@
+import fs from 'node:fs';
 import process from 'node:process';
+import { fileURLToPath } from 'node:url';
 import { expect } from '@playwright/test';
 import { test } from '../../../utils.js';
+
+const output = fileURLToPath(new URL('../.svelte-kit/output', import.meta.url));
 
 test.skip(() => !!process.env.REGISTER_SERVICE_WORKER);
 
@@ -198,5 +202,16 @@ test.describe('$app/env', () => {
 		await page.goto('/basepath', { wait_for_started: false });
 		await expect(page.locator('body.started')).toBeVisible();
 		expect(await page.pageErrors()).toHaveLength(0);
+	});
+
+	test('loads dynamic public environment variables in the service worker', () => {
+		const content = fs.readFileSync(
+			`${output}/prerendered/dependencies/_app/env.script.js`,
+			'utf-8'
+		);
+		expect(content).toContain('hello');
+
+		const service_worker = fs.readFileSync(`${output}/client/service-worker.js`, 'utf-8');
+		expect(service_worker).toContain('importScripts("/basepath/_app/env.script.js");');
 	});
 });
