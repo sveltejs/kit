@@ -96,7 +96,6 @@ export async function build_service_worker(
 			}
 
 			if (id === '\0virtual:app/env/public') {
-				// static values are inlined — only load env.script.js if there are dynamic public vars
 				const has_dynamic_public_env = Object.values(env_config ?? {}).some(
 					(variable) => variable.public && !variable.static
 				);
