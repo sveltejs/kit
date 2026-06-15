@@ -1,12 +1,12 @@
-/** @import { RemoteFunctionResponse, RemoteSingleflightMap, RemoteSingleflightEntry } from 'types' */
+/** @import { RemoteFunctionResponse, RemoteFunctionData, RemoteFunctionDataNode } from 'types' */
 /** @import { RemoteQueryUpdate } from '@sveltejs/kit' */
+/** @import { CacheEntry } from './cache.svelte.js' */
 import * as devalue from 'devalue';
-import { app, goto, live_query_map, query_map } from '../client.js';
+import { app, goto, live_query_map, query_map, query_responses } from '../client.js';
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
 import { untrack } from 'svelte';
 import { create_remote_key, split_remote_key } from '../../shared.js';
 import { navigating, page } from '../state.svelte.js';
-import { noop } from '../../../utils/functions.js';
 
 /** Indicates a query function, as opposed to a query instance */
 export const QUERY_FUNCTION_ID = Symbol('sveltekit.query_function_id');
@@ -14,18 +14,6 @@ export const QUERY_FUNCTION_ID = Symbol('sveltekit.query_function_id');
 export const QUERY_OVERRIDE_KEY = Symbol('sveltekit.query_override_key');
 /** Indicates a query instance */
 export const QUERY_RESOURCE_KEY = Symbol('sveltekit.query_resource_key');
-
-/**
- * @returns {boolean} Returns `true` if we are in an effect
- */
-export function is_in_effect() {
-	try {
-		$effect.pre(noop);
-		return true;
-	} catch {
-		return false;
-	}
-}
 
 /**
  * If we're inside a reactive context, pin a cache entry for as long as the
@@ -90,6 +78,20 @@ export function pin_while_resolving(cache_map, cache, id, payload, then) {
 /**
  * @returns {{ 'x-sveltekit-pathname': string, 'x-sveltekit-search': string }}
  */
+/**
+ * Unwraps a `RemoteFunctionDataNode` that was serialized during SSR,
+ * rethrowing serialized errors so the consuming resource ends up
+ * in the same failed state it had on the server
+ * @param {RemoteFunctionDataNode} node
+ */
+export function unwrap_node(node) {
+	if (node.e) {
+		throw new HttpError(node.e[0] ?? 500, node.e[1]);
+	}
+
+	return node.v;
+}
+
 export function get_remote_request_headers() {
 	// This will be the correct value of the current or soon-current url,
 	// even in forks because it's state-based - therefore not using window.location.
@@ -106,15 +108,10 @@ export function get_remote_request_headers() {
 
 /**
  * @param {string} url
- * @param {HeadersInit} headers
+ * @param {RequestInit} [init]
  */
-export async function remote_request(url, headers) {
-	const response = await fetch(url, {
-		headers: {
-			'Content-Type': 'application/json',
-			...headers
-		}
-	});
+export async function remote_request(url, init) {
+	const response = await fetch(url, init);
 
 	if (!response.ok) {
 		throw new HttpError(500, 'Failed to execute remote function');
@@ -122,9 +119,63 @@ export async function remote_request(url, headers) {
 
 	const result = /** @type {RemoteFunctionResponse} */ (await response.json());
 
-	const resolved = await handle_side_channel_response(result);
+	if (result.type === 'error') {
+		throw new HttpError(result.status ?? 500, result.error);
+	}
 
-	return resolved.result;
+	const data = /** @type {RemoteFunctionData} */ (
+		result.data ? devalue.parse(result.data, app.decoders) : {}
+	);
+
+	/**
+	 *
+	 * @param {string} key
+	 * @param {CacheEntry<any> | undefined} entry
+	 * @param {any} result
+	 */
+	function refresh(key, entry, result) {
+		if (entry?.resource) {
+			if (result.e) {
+				entry.resource.fail(new HttpError(result.e[0] ?? 500, result.e[1]));
+			} else {
+				entry.resource.set(result.v);
+			}
+		} else if (!result.e) {
+			// `query_responses` stores `{ v }`/`{ e }` nodes, not raw values.
+			// Errors are deliberately dropped here: they are responses to a specific
+			// refresh, not durable state a future resource should initialize with
+			query_responses[key] = result;
+		}
+	}
+
+	// update queries with refreshed data
+	if (data.q) {
+		for (const key in data.q) {
+			const parts = split_remote_key(key);
+			const entry = query_map.get(parts.id)?.get(parts.payload);
+
+			refresh(key, entry, data.q[key]);
+		}
+	}
+
+	// reconnect live queries
+	if (data.l) {
+		for (const key in data.l) {
+			const parts = split_remote_key(key);
+			const entry = live_query_map.get(parts.id)?.get(parts.payload);
+
+			refresh(key, entry, data.l[key]);
+
+			// `fail()` is terminal, so only reconnect on the success path —
+			// reconnecting after a hard failure would wipe the error state and
+			// restart the stream (see commit 63a3e83 regression).
+			if (!data.l[key].e) {
+				void entry?.resource.reconnect();
+			}
+		}
+	}
+
+	return data;
 }
 
 /**
@@ -219,50 +270,3 @@ export function categorize_updates(updates) {
 
 	return { overrides, refreshes };
 }
-
-/**
- * @template TResource
- * @param {string} stringified_singleflight
- * @param {Map<string, Map<string, { resource: TResource }>>} map
- * @param {(resource: TResource, value: RemoteSingleflightEntry) => void} callback
- */
-function apply_singleflight(stringified_singleflight, map, callback) {
-	const singleflight = /** @type {RemoteSingleflightMap} */ (
-		devalue.parse(stringified_singleflight, app.decoders)
-	);
-
-	for (const [key, value] of Object.entries(singleflight)) {
-		const parts = split_remote_key(key);
-		const entry = map.get(parts.id)?.get(parts.payload);
-		if (entry?.resource) {
-			callback(entry.resource, value);
-		}
-	}
-}
-
-/**
- * Apply refresh data from the server to the relevant queries
- *
- * @param {string} stringified_refreshes
- */
-export const apply_refreshes = (stringified_refreshes) => {
-	apply_singleflight(stringified_refreshes, query_map, (resource, value) => {
-		if (value.type === 'result') {
-			resource?.set(value.data);
-		} else {
-			resource?.fail(new HttpError(value.status ?? 500, value.error));
-		}
-	});
-};
-
-/** @param {string} stringified_reconnects */
-export const apply_reconnections = (stringified_reconnects) => {
-	apply_singleflight(stringified_reconnects, live_query_map, (resource, value) => {
-		if (value.type === 'result') {
-			resource?.set(value.data);
-			void resource?.reconnect();
-		} else {
-			resource?.fail(new HttpError(value.status ?? 500, value.error));
-		}
-	});
-};

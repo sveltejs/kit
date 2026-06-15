@@ -145,10 +145,6 @@ export async function deserialize_binary_form(request) {
 	if (!request.body) {
 		throw deserialize_error('no body');
 	}
-	const content_length = parseInt(request.headers.get('content-length') ?? '');
-	if (Number.isNaN(content_length)) {
-		throw deserialize_error('invalid Content-Length header');
-	}
 
 	const reader = request.body.getReader();
 
@@ -228,16 +224,11 @@ export async function deserialize_binary_form(request) {
 	}
 	const header_view = new DataView(header.buffer, header.byteOffset, header.byteLength);
 	const data_length = header_view.getUint32(1, true);
-
-	if (HEADER_BYTES + data_length > content_length) {
-		throw deserialize_error('data overflow');
-	}
-
 	const file_offsets_length = header_view.getUint16(5, true);
 
-	if (HEADER_BYTES + data_length + file_offsets_length > content_length) {
-		throw deserialize_error('file offset table overflow');
-	}
+	// Validation uses embedded binary header fields (data_length, file_offsets_length)
+	// rather than Content-Length, which proxies/middleboxes may strip or corrupt.
+	// See: https://github.com/sveltejs/kit/issues/15299
 
 	// Read the form data
 	const data_buffer = await get_buffer(HEADER_BYTES, data_length);
@@ -289,9 +280,6 @@ export async function deserialize_binary_form(request) {
 			file_offsets[index] = undefined;
 
 			offset += files_start_offset;
-			if (offset + size > content_length) {
-				throw deserialize_error('file data overflow');
-			}
 
 			file_spans.push({ offset, size });
 
