@@ -1046,8 +1046,15 @@ async function kit({ svelte_config }) {
 							.map(() => '..')
 							.join('/') + '/../';
 
+					const relative = kit.paths.relative !== false || !!kit.paths.assets;
+
 					new_config = {
-						base: './',
+						// Affects how Vite loads JS assets on the client.
+						// If the initial HTML we render uses an absolute path for assets,
+						// the additional chunks Vite loads must also use an absolute path.
+						// Otherwise, you end up with additional chunks being loaded relative
+						// to the current chunk rather than the root.
+						base: relative ? './' : base,
 						build: {
 							copyPublicDir: !ssr,
 							cssCodeSplit: svelte_config.kit.output.bundleStrategy !== 'inline',
@@ -1109,9 +1116,7 @@ async function kit({ svelte_config }) {
 									// E.g. Vite generates `new URL('/asset.png', import.meta).href` for a relative path vs just '/asset.png'.
 									// That's larger and takes longer to run and also causes an HTML diff between SSR and client
 									// causing us to do a more expensive hydration check.
-									return {
-										relative: kit.paths.relative !== false || !!kit.paths.assets
-									};
+									return { relative };
 								}
 
 								// _app/immutable/assets files
@@ -1448,6 +1453,12 @@ async function kit({ svelte_config }) {
 								script: read(`${out}/client/${start.file}`),
 								style: /** @type {string | undefined} */ (style?.source)
 							};
+
+							// the bundle and stylesheet are inlined into the page, so the
+							// emitted files are never loaded
+							fs.unlinkSync(`${out}/client/${start.file}`);
+							fs.rmSync(`${out}/client/${start.file}.map`, { force: true });
+							if (style) fs.unlinkSync(`${out}/client/${style.fileName}`);
 						}
 					}
 
