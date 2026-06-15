@@ -309,6 +309,9 @@ function kit({ svelte_config, adapter }) {
 	const sourcemapIgnoreList = /** @param {string} relative_path */ (relative_path) =>
 		relative_path.includes('node_modules') || relative_path.includes(kit.outDir);
 
+	/** @type {string} name for `globalThis.__sveltekit_xxx` */
+	let kit_global;
+
 	/** @type {Plugin} */
 	const plugin_setup = {
 		name: 'vite-plugin-sveltekit-setup',
@@ -335,6 +338,10 @@ function kit({ svelte_config, adapter }) {
 				out = `${out_dir}/output`;
 
 				version_hash = hash(kit.version.name);
+
+				kit_global = is_build
+					? `globalThis.__sveltekit_${version_hash}`
+					: 'globalThis.__sveltekit_dev';
 
 				env = loadEnv(config_env.mode, kit.env.dir, '');
 
@@ -471,7 +478,7 @@ function kit({ svelte_config, adapter }) {
 					new_config.define = {
 						...define,
 						__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: '0',
-						__SVELTEKIT_PAYLOAD__: 'globalThis.__sveltekit_dev',
+						__SVELTEKIT_PAYLOAD__: kit_global,
 						__SVELTEKIT_HAS_SERVER_LOAD__: 'true',
 						__SVELTEKIT_HAS_UNIVERSAL_LOAD__: 'true'
 					};
@@ -579,10 +586,6 @@ function kit({ svelte_config, adapter }) {
 				]
 			},
 			handler(id) {
-				const global = is_build
-					? `globalThis.__sveltekit_${version_hash}`
-					: 'globalThis.__sveltekit_dev';
-
 				switch (id) {
 					case service_worker:
 						return create_service_worker_module(svelte_config);
@@ -594,7 +597,7 @@ function kit({ svelte_config, adapter }) {
 						return create_sveltekit_env_public(
 							explicit_env_config,
 							env,
-							`const env = ${global}.env;`
+							`const env = ${kit_global}.env;`
 						);
 
 					case sveltekit_env_public_server:
@@ -608,7 +611,7 @@ function kit({ svelte_config, adapter }) {
 						return create_sveltekit_env_private(explicit_env_config, env);
 
 					case sveltekit_env_service_worker:
-						return create_sveltekit_env_service_worker_dev(explicit_env_config, env, global);
+						return create_sveltekit_env_service_worker_dev(explicit_env_config, env, kit_global);
 
 					case sveltekit_server: {
 						return dedent`
@@ -1094,14 +1097,14 @@ function kit({ svelte_config, adapter }) {
 				}
 
 				if (id === sveltekit_env_service_worker) {
-					return create_sveltekit_env_service_worker_dev(explicit_env_config, env, global);
+					return create_sveltekit_env_service_worker_dev(explicit_env_config, env, kit_global);
 				}
 
 				if (id === sveltekit_env_public_client) {
 					return create_sveltekit_env_public(
 						explicit_env_config,
 						env,
-						`const env = ${global}.env;`
+						`const env = ${kit_global}.env;`
 					);
 				}
 
@@ -1339,7 +1342,7 @@ function kit({ svelte_config, adapter }) {
 									}
 								},
 								define: {
-									__SVELTEKIT_PAYLOAD__: `globalThis.__sveltekit_${version_hash}`
+									__SVELTEKIT_PAYLOAD__: kit_global
 								}
 							}
 						},
