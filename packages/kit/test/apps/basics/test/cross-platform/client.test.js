@@ -1244,3 +1244,20 @@ test.describe('Load', () => {
 		});
 	}
 });
+
+test.describe('preloadCode', () => {
+	test('can be called during initial load (#13297)', async ({ page }) => {
+		// the thrown error is caught by the load machinery and surfaces as a console
+		// error (not an uncaught pageerror), so capture console output to detect it
+		/** @type {string[]} */
+		const errors = [];
+		page.on('console', (msg) => {
+			if (msg.type() === 'error') errors.push(msg.text());
+		});
+
+		await page.goto('/preload-code-on-load');
+
+		await expect(page.locator('h1')).toHaveText('preload code on load');
+		expect(errors.filter((e) => e.includes('Invalid base URL'))).toEqual([]);
+	});
+});

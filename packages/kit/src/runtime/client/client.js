@@ -2419,7 +2419,9 @@ export async function preloadCode(pathname) {
 		throw new Error('Cannot call preloadCode(...) on the server');
 	}
 
-	const url = new URL(pathname, current.url);
+	// `current.url` is null until the first navigation/hydration completes, so fall back
+	// to `location` to support calling `preloadCode` during initial page load (#13297)
+	const url = new URL(pathname, current.url ?? location.href);
 
 	if (DEV) {
 		if (!pathname.startsWith('/')) {
