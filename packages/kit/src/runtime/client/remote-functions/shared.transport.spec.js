@@ -1,5 +1,4 @@
 import { describe, expect, test, vi, beforeEach } from 'vitest';
-import * as devalue from 'devalue';
 
 // Mock `client.js` — the real module pulls in the SvelteKit router/hydration
 // machinery and resolves `$app/paths` to a server-side virtual module that only
