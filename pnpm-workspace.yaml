@@ -1,10 +1,15 @@
+minimumReleaseAge: 2880
 minimumReleaseAgeExclude:
-  - 'svelte'
   - '@sveltejs/*'
-  - 'devalue'
-  - 'dts-buddy'
-  - 'esm-env'
-  - 'zimmerframe'
+  - svelte
+  - esrap
+  - devalue
+  - dts-buddy
+  - zimmerframe
+  - prettier-plugin-svelte
+  - svelte-check
+  - esm-env
+blockExoticSubdeps: true
 linkWorkspacePackages: true
 shellEmulator: true
 engineStrict: true

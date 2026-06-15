@@ -1007,6 +1007,16 @@ function kit({ svelte_config, adapter }) {
 					assets.forEach((file) => build.add(file));
 				}
 
+				if (kit.output.bundleStrategy === 'inline') {
+					// the bundle and stylesheet are inlined into the page and their files
+					// deleted, so they must not appear in the list of cacheable assets
+					for (const file of build) {
+						if (!fs.existsSync(`${out}/client/${file}`)) {
+							build.delete(file);
+						}
+					}
+				}
+
 				// in a service worker, `location` is the location of the service worker itself,
 				// which is guaranteed to be `<base>/service-worker.js`
 				const base = "location.pathname.split('/').slice(0, -1).join('/')";
@@ -1198,9 +1208,16 @@ function kit({ svelte_config, adapter }) {
 							.map(() => '..')
 							.join('/') + '/../';
 
+					const relative = kit.paths.relative !== false || !!kit.paths.assets;
+
 					new_config = {
 						appType: 'custom',
-						base: './',
+						// Affects how Vite loads JS assets on the client.
+						// If the initial HTML we render uses an absolute path for assets,
+						// the additional chunks Vite loads must also use an absolute path.
+						// Otherwise, you end up with additional chunks being loaded relative
+						// to the current chunk rather than the root.
+						base: relative ? './' : base,
 						build: {
 							cssCodeSplit: !inline,
 							cssMinify:
@@ -1295,9 +1312,7 @@ function kit({ svelte_config, adapter }) {
 									// E.g. Vite generates `new URL('/asset.png', import.meta).href` for a relative path vs just '/asset.png'.
 									// That's larger and takes longer to run and also causes an HTML diff between SSR and client
 									// causing us to do a more expensive hydration check.
-									return {
-										relative: kit.paths.relative !== false || !!kit.paths.assets
-									};
+									return { relative };
 								}
 
 								// _app/immutable/assets files
@@ -1618,6 +1633,12 @@ function kit({ svelte_config, adapter }) {
 							script: read(`${out}/client/${start.file}`),
 							style: /** @type {string | undefined} */ (style?.source)
 						};
+
+						// the bundle and stylesheet are inlined into the page, so the
+						// emitted files are never loaded
+						fs.unlinkSync(`${out}/client/${start.file}`);
+						fs.rmSync(`${out}/client/${start.file}.map`, { force: true });
+						if (style) fs.unlinkSync(`${out}/client/${style.fileName}`);
 					}
 				}
 
