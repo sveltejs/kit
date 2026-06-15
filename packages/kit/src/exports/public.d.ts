@@ -141,9 +141,8 @@ export interface Builder {
 	generateFallback: (dest: string) => Promise<void>;
 
 	/**
-	 * Generate module(s) exposing the build-time values of the app's runtime public environment
-	 * variables (`$env/dynamic/public`, or dynamic variables declared with
-	 * `experimental.explicitEnvironmentVariables`), if the app uses them.
+	 * Generate a module exposing build-time environment variables as
+	 * `$env/dynamic/public` or `$app/env/public` if the app uses it.
 	 */
 	generateEnvModule: () => void;
 
