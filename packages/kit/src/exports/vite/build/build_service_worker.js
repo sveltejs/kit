@@ -104,7 +104,8 @@ export async function build_service_worker(
 					env_config,
 					env.all,
 					has_dynamic_public_env
-						? `importScripts('${kit.paths.base}/${kit.appDir}/env.script.js'); const env = globalThis.__sveltekit_sw.env;`
+						? // the service worker isn't registered as ESM yet, so we need to use `importScripts`
+							`importScripts('${kit.paths.base}/${kit.appDir}/env.script.js'); const env = globalThis.__sveltekit_sw.env;`
 						: ''
 				);
 			}
