@@ -1370,10 +1370,7 @@ async function kit({ svelte_config }) {
 					const deps_of = (entry, add_dynamic_css = false) =>
 						find_deps(manifest, posixify(path.relative('.', entry)), add_dynamic_css);
 
-					// `$env/dynamic/public` is unavailable with `explicitEnvironmentVariables` — there,
-					// public env is only known at runtime if the client uses `$app/env/public` and at
-					// least one public variable is dynamic (i.e. not declared with `static: true`)
-					const has_dynamic_public_env = Object.values(explicit_env_config ?? {}).some(
+					const has_explicit_dynamic_public_env = Object.values(explicit_env_config ?? {}).some(
 						(variable) => variable.public && !variable.static
 					);
 
@@ -1381,7 +1378,7 @@ async function kit({ svelte_config }) {
 						(chunk) =>
 							chunk.type === 'chunk' &&
 							(chunk.modules[env_dynamic_public] ||
-								(has_dynamic_public_env && chunk.modules[sveltekit_env_public_client]))
+								(has_explicit_dynamic_public_env && chunk.modules[sveltekit_env_public_client]))
 					);
 
 					if (svelte_config.kit.output.bundleStrategy === 'split') {
