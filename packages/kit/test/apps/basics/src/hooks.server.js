@@ -1,4 +1,4 @@
-import { building, dev } from '$app/environment';
+import { building, dev } from '$app/env';
 import { error, isHttpError, redirect } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
 import fs from 'node:fs';

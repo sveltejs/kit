@@ -70,7 +70,7 @@ If you need access to the `document` or `window` variables or otherwise need cod
 ```js
 /// <reference types="@sveltejs/kit" />
 // ---cut---
-import { browser } from '$app/environment';
+import { browser } from '$app/env';
 
 if (browser) {
 	// client-only code here
@@ -115,7 +115,7 @@ Finally, you may also consider using an `{#await}` block:
 ```svelte
 <!--- file: index.svelte --->
 <script>
-	import { browser } from '$app/environment';
+	import { browser } from '$app/env';
 
 	const ComponentConstructor = browser ?
 		import('some-browser-only-library').then((module) => module.Component) :

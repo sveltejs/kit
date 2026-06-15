@@ -886,7 +886,7 @@ test.describe('$app/forms', () => {
 
 const root = path.resolve(fileURLToPath(import.meta.url), '..', '..');
 
-test.describe('$app/environment', () => {
+test.describe('$app/env', () => {
 	test('treeshakes dev check', async () => {
 		test.skip(!!process.env.DEV, 'skip when in dev mode');
 
@@ -1369,41 +1369,23 @@ test.describe('tracing', () => {
 });
 
 test.describe('asset preload', () => {
-	if (!process.env.DEV) {
-		test('injects Link headers', async ({ request }) => {
-			const response = await request.get('/asset-preload');
+	test.skip(!!process.env.DEV);
 
-			const header = response.headers()['link'];
+	test('does not inject Link headers', async ({ request }) => {
+		const response = await request.get('/asset-preload');
 
-			expect(header).toContain('rel="modulepreload"');
-			expect(header).toContain('as="font"');
-		});
+		const header = response.headers()['link'];
+		expect(header).toBeUndefined();
+	});
 
-		test('does not inject Link headers on prerendered pages', async ({ request }) => {
-			const response = await request.get('/asset-preload/prerendered');
+	test('injects <link> tags', async ({ request }) => {
+		const response = await request.get('/asset-preload');
 
-			const header = response.headers()['link'];
-			expect(header).toBeUndefined();
-		});
+		const body = await response.text();
 
-		test('injects <link> tags on prerendered pages', async ({ request }) => {
-			const response = await request.get('/asset-preload/prerendered');
-
-			const body = await response.text();
-
-			expect(body).toContain('rel="modulepreload"');
-			expect(body).toContain('as="font"');
-		});
-
-		test('does not inject <link> tags on non-prerendered pages', async ({ request }) => {
-			const response = await request.get('/asset-preload');
-
-			const body = await response.text();
-
-			expect(body).not.toContain('rel="modulepreload"');
-			expect(body).not.toContain('as="font"');
-		});
-	}
+		expect(body).toContain('rel="modulepreload"');
+		expect(body).toContain('as="font"');
+	});
 });
 
 test.describe('Streaming', () => {

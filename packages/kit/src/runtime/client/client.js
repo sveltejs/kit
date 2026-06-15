@@ -1,3 +1,4 @@
+/** @import { RemoteFunctionDataNode, ServerNodesResponse, ServerRedirectNode } from 'types' */
 /** @import { CacheEntry } from './remote-functions/cache.svelte.js' */
 /** @import { Query } from './remote-functions/query/instance.svelte.js' */
 /** @import { LiveQuery } from './remote-functions/query-live/instance.svelte.js' */
@@ -201,18 +202,20 @@ let target;
 export let app;
 
 /**
- * Data that was serialized during SSR for queries/forms/commands.
- * This is cleared before client-side loads run.
- * @type {Record<string, any>}
+ * Data that was serialized during SSR for queries/forms/commands, stored as
+ * `{ v }` (value) or `{ e }` (error) nodes so that failed states survive hydration.
+ * Entries are deleted as they are consumed (when the corresponding resource is created).
+ * @type {Record<string, RemoteFunctionDataNode>}
  */
-export let query_responses = {};
+export const query_responses = {};
 
 /**
- * Data that was serialized during SSR for prerender functions.
+ * Data that was serialized during SSR for prerender functions, stored as
+ * `{ v }` (value) or `{ e }` (error) nodes.
  * This persists across client-side navigations.
- * @type {Record<string, any>}
+ * @type {Record<string, RemoteFunctionDataNode>}
  */
-export let prerender_responses = {};
+export const prerender_responses = {};
 
 /** @type {Array<((url: URL) => boolean)>} */
 const invalidated = [];
@@ -327,9 +330,15 @@ export async function start(_app, _target, hydrate) {
 		);
 	}
 
-	if (__SVELTEKIT_PAYLOAD__) {
-		query_responses = __SVELTEKIT_PAYLOAD__.query ?? {};
-		prerender_responses = __SVELTEKIT_PAYLOAD__.prerender ?? {};
+	if (__SVELTEKIT_PAYLOAD__.data) {
+		const { q = {}, p = {}, l = {}, f = {} } = __SVELTEKIT_PAYLOAD__.data;
+
+		// store the whole nodes — error records seed the corresponding
+		// resources in a failed state when they are created during hydration
+		for (const k in q) query_responses[k] = q[k];
+		for (const k in l) query_responses[k] = l[k];
+		for (const k in f) query_responses[k] = f[k];
+		for (const k in p) prerender_responses[k] = p[k];
 	}
 
 	// detect basic auth credentials in the current URL
@@ -545,7 +554,11 @@ export async function _goto(url, options, redirect_count, nav_token) {
 				force_invalidation = true;
 				query_keys = new Set();
 				for (const [id, entries] of query_map) {
-					for (const payload of entries.keys()) {
+					for (const [payload, entry] of entries) {
+						// don't refresh yet, as some queries will be unrendered,
+						// but clear caches so that newly rendered queries
+						// don't use stale data. TODO same for `live_query_map`
+						entry.resource?.reset();
 						query_keys.add(create_remote_key(id, payload));
 					}
 				}
@@ -573,7 +586,7 @@ export async function _goto(url, options, redirect_count, nav_token) {
 				for (const [id, entries] of query_map) {
 					for (const [payload, { resource }] of entries) {
 						if (query_keys?.has(create_remote_key(id, payload))) {
-							void resource.refresh();
+							void resource.start();
 						}
 					}
 				}
@@ -3027,8 +3040,6 @@ async function _hydrate(
 
 		target.textContent = '';
 		hydrate = false;
-	} finally {
-		query_responses = {};
 	}
 
 	if (result.props.page) {
@@ -3075,61 +3086,69 @@ async function load_data(url, invalid) {
 		throw new HttpError(res.status, message);
 	}
 
-	// TODO: fix eslint error / figure out if it actually applies to our situation
-	// eslint-disable-next-line
-	return new Promise(async (resolve) => {
-		/**
-		 * Map of deferred promises that will be resolved by a subsequent chunk of data
-		 * @type {Map<string, import('types').Deferred>}
-		 */
-		const deferreds = new Map();
-		const reader = /** @type {ReadableStream<Uint8Array>} */ (res.body).getReader();
-
-		/**
-		 * @param {any} data
-		 */
-		function deserialize(data) {
-			return devalue.unflatten(data, {
-				...app.decoders,
-				Promise: (id) => {
-					return new Promise((fulfil, reject) => {
-						deferreds.set(id, { fulfil, reject });
-					});
-				}
-			});
-		}
-
-		for await (const node of read_ndjson(reader)) {
-			if (node.type === 'redirect') {
-				return resolve(node);
-			}
-
-			if (node.type === 'data') {
-				// This is the first (and possibly only, if no pending promises) chunk
-				node.nodes?.forEach((/** @type {any} */ node) => {
-					if (node?.type === 'data') {
-						node.uses = deserialize_uses(node.uses);
-						node.data = deserialize(node.data);
-					}
-				});
-
-				resolve(node);
-			} else if (node.type === 'chunk') {
-				// This is a subsequent chunk containing deferred data
-				const { id, data, error } = node;
-				const deferred = /** @type {import('types').Deferred} */ (deferreds.get(id));
-				deferreds.delete(id);
-
-				if (error) {
-					deferred.reject(deserialize(error));
-				} else {
-					deferred.fulfil(deserialize(data));
-				}
-			}
-		}
+	return new Promise((resolve, reject) => {
+		process_stream(resolve, res).catch(reject);
 	});
 
 	// TODO edge case handling necessary? stream() read fails?
+}
+
+/**
+ * @param {(value: ServerNodesResponse | ServerRedirectNode) => void} resolve
+ * @param {Response} res
+ * @returns {Promise<void>}
+ */
+async function process_stream(resolve, res) {
+	const reader = /** @type {ReadableStream<Uint8Array>} */ (res.body).getReader();
+
+	/**
+	 * Map of deferred promises that will be resolved by a subsequent chunk of data
+	 * @type {Map<string, import('types').Deferred>}
+	 */
+	const deferreds = new Map();
+
+	/**
+	 * @param {any} data
+	 */
+	function deserialize(data) {
+		return devalue.unflatten(data, {
+			...app.decoders,
+			Promise: (id) => {
+				return new Promise((fulfil, reject) => {
+					deferreds.set(id, { fulfil, reject });
+				});
+			}
+		});
+	}
+
+	for await (const node of read_ndjson(reader)) {
+		if (node.type === 'redirect') {
+			return resolve(node);
+		}
+
+		if (node.type === 'data') {
+			// This is the first (and possibly only, if no pending promises) chunk
+			node.nodes?.forEach((/** @type {any} */ node) => {
+				if (node?.type === 'data') {
+					node.uses = deserialize_uses(node.uses);
+					node.data = deserialize(node.data);
+				}
+			});
+
+			resolve(node);
+		} else if (node.type === 'chunk') {
+			// This is a subsequent chunk containing deferred data
+			const { id, data, error } = node;
+			const deferred = /** @type {import('types').Deferred} */ (deferreds.get(id));
+			deferreds.delete(id);
+
+			if (error) {
+				deferred.reject(deserialize(error));
+			} else {
+				deferred.fulfil(deserialize(data));
+			}
+		}
+	}
 }
 
 /**

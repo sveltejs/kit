@@ -1,3 +1,4 @@
+import process from 'node:process';
 import * as path from 'node:path';
 import { sveltekit } from '@sveltejs/kit/vite';
 
@@ -7,7 +8,41 @@ const config = {
 		minify: false
 	},
 	clearScreen: false,
-	plugins: [sveltekit()],
+	plugins: [
+		sveltekit({
+			compilerOptions: {
+				experimental: {
+					async: true
+				}
+			},
+			csp: {
+				directives: {
+					'require-trusted-types-for': ['script'],
+					'trusted-types': ['svelte-trusted-html', 'sveltekit-trusted-url']
+				}
+			},
+			paths: {
+				base: '/basepath',
+				relative: true
+			},
+			serviceWorker: {
+				register: !!process.env.REGISTER_SERVICE_WORKER
+			},
+			env: {
+				dir: '../../env'
+			},
+			output: {
+				linkHeaderPreload: true,
+				bundleStrategy: 'single'
+			},
+			experimental: {
+				remoteFunctions: true
+			}
+		})
+	],
+	define: {
+		__TEST_USER_DEFINE__: '"works"'
+	},
 	server: {
 		fs: {
 			allow: [path.resolve('../../../src')]

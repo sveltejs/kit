@@ -1,4 +1,4 @@
-import { command, query, requested } from '$app/server';
+import { command, getRequestEvent, query, requested } from '$app/server';
 
 export const echo = query('unchecked', (value) => value);
 export const add = query('unchecked', ({ a, b }) => a + b);
@@ -9,9 +9,12 @@ let count = 0;
  */
 const deferreds = [];
 
-let get_count_called = false;
+// tracked per request event, so that parallel requests from other tests
+// (e.g. SSR of this route in another playwright worker) don't interfere
+const get_count_callers = new WeakSet();
+
 export const get_count = query(() => {
-	get_count_called = true;
+	get_count_callers.add(getRequestEvent());
 	return count;
 });
 
@@ -88,11 +91,11 @@ export const set_count_server_refresh_after_read = command('unchecked', async (c
 });
 
 export const set_count_server_set = command('unchecked', async (c) => {
-	get_count_called = false;
+	const event = getRequestEvent();
 	count = c;
 	get_count().set(c);
 	await new Promise((resolve) => setTimeout(resolve, 100));
-	if (get_count_called) {
+	if (get_count_callers.has(event)) {
 		throw new Error('get_count should not have been called');
 	}
 	return c;

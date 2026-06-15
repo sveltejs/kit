@@ -2,14 +2,13 @@
 import { existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { resolveConfig } from 'vite';
 import { mkdirp, walk } from '../../utils/filesystem.js';
 import { posixify } from '../../utils/os.js';
 import { noop } from '../../utils/functions.js';
 import { decode_uri, is_root_relative, resolve } from '../../utils/url.js';
 import { escape_html } from '../../utils/escape.js';
 import { logger } from '../utils.js';
-import { load_config } from '../config/index.js';
+import { extract_svelte_config, load_vite_config } from '../config/index.js';
 import { get_route_segments } from '../../utils/routing.js';
 import { queue } from './queue.js';
 import { crawl } from './crawl.js';
@@ -18,7 +17,6 @@ import * as devalue from 'devalue';
 import { createReadableStream } from '@sveltejs/kit/node';
 import generate_fallback from './fallback.js';
 import { stringify_remote_arg } from '../../runtime/shared.js';
-import { filter_env } from '../../utils/env.js';
 
 export default forked(import.meta.url, prerender);
 
@@ -36,10 +34,10 @@ const SPECIAL_HASHLINKS = new Set(['', 'top']);
  *   metadata: import('types').ServerMetadata;
  *   verbose: boolean;
  *   env: Record<string, string>;
- *   root: string;
+ *   vite_config_file: string | undefined;
  * }} opts
  */
-async function prerender({ hash, out, manifest_path, metadata, verbose, env, root }) {
+async function prerender({ hash, out, manifest_path, metadata, verbose, env, vite_config_file }) {
 	/** @type {import('@sveltejs/kit').SSRManifest} */
 	const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
 
@@ -49,7 +47,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, roo
 	/** @type {import('types').ServerModule} */
 	const { Server } = await import(pathToFileURL(`${out}/server/index.js`).href);
 
-	// configure `import { building } from '$app/environment'` —
+	// configure `import { building } from `$app/env` —
 	// essential we do this before analysing the code
 	internal.set_building();
 	internal.set_prerendering();
@@ -103,14 +101,17 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, roo
 	/** @type {Set<string>} */
 	const prerendered_routes = new Set();
 
-	/** @type {import('types').ValidatedKitConfig} */
-	const config = (await load_config({ cwd: root })).kit;
+	const vite_config = await load_vite_config(vite_config_file);
+
+	const config = extract_svelte_config(vite_config).kit;
 
 	if (hash) {
 		const fallback = await generate_fallback({
 			manifest_path,
 			env,
-			root
+			out_dir: config.outDir,
+			origin: config.prerender.origin,
+			assets: config.files.assets
 		});
 
 		const file = output_filename('/', true);
@@ -124,7 +125,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, roo
 		return { prerendered, prerender_map };
 	}
 
-	const vite_config = await resolveConfig({}, 'build');
+	// TODO this can just be config.adapter?
 	/** @type {Adapter | undefined} */
 	const adapter = vite_config.plugins.find(
 		(plugin) => plugin.name === 'vite-plugin-sveltekit-adapter'
@@ -209,6 +210,8 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, roo
 
 	const seen = new Set();
 	const written = new Set();
+
+	/** @type {Map<string, Promise<any>>} */
 	const remote_responses = new Map();
 
 	/** @type {Map<string, Set<string>>} */
@@ -497,11 +500,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, roo
 	// the user's remote function modules may reference environment variables,
 	// `read` or the `manifest` at the top-level so we need to set them before
 	// evaluating those modules to avoid potential runtime errors
-	const { publicPrefix: public_prefix, privatePrefix: private_prefix } = config.env;
-	const private_env = filter_env(env, private_prefix, public_prefix);
-	const public_env = filter_env(env, public_prefix, private_prefix);
-	internal.set_private_env(private_env);
-	internal.set_public_env(public_env);
+	internal.set_env(env);
 	internal.set_manifest(manifest);
 	internal.set_read_implementation((file) => createReadableStream(`${out}/server/${file}`));
 
