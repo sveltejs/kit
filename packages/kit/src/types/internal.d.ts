@@ -47,8 +47,6 @@ export interface ServerInternalModule {
 	set_env(environment: Record<string, string>): void;
 	set_manifest(manifest: SSRManifest): void;
 	set_prerendering(): void;
-	set_private_env(environment: Record<string, string>): void;
-	set_public_env(environment: Record<string, string>): void;
 	set_read_implementation(implementation: (path: string) => ReadableStream): void;
 	set_version(version: string): void;
 	set_fix_stack_trace(fix_stack_trace: (error: unknown) => string): void;
@@ -502,11 +500,9 @@ export interface SSROptions {
 	csrf_check_origin: boolean;
 	csrf_trusted_origins: string[];
 	embedded: boolean;
-	env_public_prefix: string;
-	env_private_prefix: string;
 	hash_routing: boolean;
 	hooks: ServerHooks;
-	preload_strategy: ValidatedConfig['kit']['output']['preloadStrategy'];
+	link_header_preload: ValidatedConfig['kit']['output']['linkHeaderPreload'];
 	root: SSRComponent['default'];
 	service_worker: boolean;
 	service_worker_options: RegistrationOptions;
@@ -608,9 +604,8 @@ export type ValidatedConfig = Config & {
 	extensions: string[];
 };
 
-export type ValidatedKitConfig = Omit<RecursiveRequired<KitConfig>, 'adapter'> & {
-	adapter?: Adapter;
-};
+// TODO: remove the omit in 4.0
+export type ValidatedKitConfig = Omit<RecursiveRequired<KitConfig>, 'adapter'>;
 
 export type BinaryFormMeta = {
 	remote_refreshes?: string[];

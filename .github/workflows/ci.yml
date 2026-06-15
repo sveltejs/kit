@@ -3,7 +3,7 @@ name: CI
 on:
   push:
     branches:
-      - main
+      - version-3
     paths-ignore: &paths_ignore
       - '.changeset/**'
       - '.githooks/**'
@@ -27,9 +27,9 @@ env:
   # we call `pnpm playwright install` instead
   PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
 
-# cancel in-progress runs on new commits to same PR (gitub.event.number)
+# dedupe push/pull_request runs for the same ref and cancel superseded runs
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.number || github.sha }}
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -56,14 +56,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - node-version: 18
-            os: ubuntu-latest
-            e2e-browser: 'chromium'
-            vite: 'baseline'
-          - node-version: 20
-            os: ubuntu-latest
-            e2e-browser: 'chromium'
-            vite: 'current'
           - node-version: 22
             os: ubuntu-latest
             e2e-browser: 'chromium'
@@ -72,10 +64,10 @@ jobs:
             os: ubuntu-latest
             e2e-browser: 'chromium'
             vite: 'current'
-          - node-version: 24
-            os: ubuntu-latest
-            e2e-browser: 'chromium'
-            vite: 'beta'
+#          - node-version: 24
+#            os: ubuntu-latest
+#            e2e-browser: 'chromium'
+#            vite: 'beta'
     env:
       KIT_E2E_BROWSER: ${{matrix.e2e-browser}}
       MATRIX_VITE: ${{matrix.vite}}
@@ -244,7 +236,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [18, 20, 22, 24]
+        node-version: [22, 24]
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
@@ -258,16 +250,6 @@ jobs:
           deno-version: ^2.2.4
           cache: true
       - run: pnpm install --frozen-lockfile
-      - name: setup overrides for matrix.node
-        if: matrix.node-version == 18
-        run:
-          | # copies catalogs.node-xx to overrides in pnpm-workspace.yaml so the subsequent `pnpm install` enforces them
-          yq -i '.overrides =.catalogs."node-18"' pnpm-workspace.yaml
-          pnpm install --no-frozen-lockfile
-          git checkout pnpm-lock.yaml pnpm-workspace.yaml # revert changes to pnpm files to avoid cache key changes
-          pnpm --dir packages/kit ls vite @sveltejs/vite-plugin-svelte
       - run: pnpm playwright install chromium --no-shell
       - run: cd packages/kit && pnpm prepublishOnly
       - run: pnpm run test:others
-        env:
-          NODE_OPTIONS: ${{matrix.node-version == 22 && '--experimental-strip-types' || ''}} # allows loading svelte.config.ts

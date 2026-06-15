@@ -185,6 +185,44 @@ test.describe("bundleStrategy: 'single'", () => {
 	});
 });
 
+test.describe('Link header preload', () => {
+	test.skip(({ javaScriptEnabled }) => javaScriptEnabled || !!process.env.DEV);
+
+	test('injects Link headers', async ({ request }) => {
+		const response = await request.get('/basepath/asset-preload');
+
+		const header = response.headers()['link'];
+
+		expect(header).toContain('rel="modulepreload"');
+		expect(header).toContain('as="font"');
+	});
+
+	test('does not inject Link headers on prerendered pages', async ({ request }) => {
+		const response = await request.get('/basepath/asset-preload/prerendered');
+
+		const header = response.headers()['link'];
+		expect(header).toBeUndefined();
+	});
+
+	test('injects <link> tags on prerendered pages', async ({ request }) => {
+		const response = await request.get('/basepath/asset-preload/prerendered');
+
+		const body = await response.text();
+
+		expect(body).toContain('rel="modulepreload"');
+		expect(body).toContain('as="font"');
+	});
+
+	test('does not inject <link> tags on non-prerendered pages', async ({ request }) => {
+		const response = await request.get('/basepath/asset-preload');
+
+		const body = await response.text();
+
+		expect(body).not.toContain('rel="modulepreload"');
+		expect(body).not.toContain('as="font"');
+	});
+});
+
 test.describe('$app/env', () => {
 	// regression test for https://github.com/sveltejs/kit/issues/15971:
 	// importing `$app/env` before the router is initialized (e.g. in

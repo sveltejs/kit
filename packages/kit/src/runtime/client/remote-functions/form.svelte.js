@@ -14,7 +14,6 @@ import {
 	create_field_proxy,
 	deep_set,
 	set_nested_value,
-	throw_on_old_property_access,
 	build_path_string,
 	normalize_issue,
 	serialize_binary_form,
@@ -287,22 +286,6 @@ export function form(id) {
 					{},
 					{
 						...descriptors,
-						data: {
-							get() {
-								// TODO 3.0 remove
-								throw new Error(
-									`The \`data\` property has been removed from the \`enhance\` callback argument. Use \`instance.fields.value()\` instead.`
-								);
-							}
-						},
-						form: {
-							get() {
-								// TODO 3.0 remove
-								throw new Error(
-									`The \`form\` property has been removed from the \`enhance\` callback argument. To get the current \`<form>\` element, use \`instance.element\` instead.`
-								);
-							}
-						},
 						element: {
 							value: form
 						},
@@ -525,20 +508,6 @@ export function form(id) {
 		};
 
 		let validate_id = 0;
-
-		// TODO 3.0 remove
-		if (DEV) {
-			throw_on_old_property_access(instance);
-
-			Object.defineProperty(instance, 'buttonProps', {
-				get() {
-					throw new Error(
-						'`form.buttonProps` has been removed: Instead of `<button {...form.buttonProps}>, use `<button {...form.fields.action.as("submit", "value")}>`.' +
-							' See the PR for more info: https://github.com/sveltejs/kit/pull/14622'
-					);
-				}
-			});
-		}
 
 		Object.defineProperties(instance, {
 			element: {

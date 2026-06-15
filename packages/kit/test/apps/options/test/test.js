@@ -103,11 +103,6 @@ test.describe('env', () => {
 		await page.goto('/path-base/env');
 		expect(await page.textContent('#public')).toBe('and thank you');
 	});
-	test('respects private prefix', async ({ page }) => {
-		await page.goto('/path-base/env');
-		expect(await page.textContent('#private')).toBe('shhhh');
-		expect(await page.textContent('#neither')).toBe('');
-	});
 });
 
 test.describe('trailingSlash', () => {
@@ -187,7 +182,7 @@ test.describe('trailingSlash', () => {
 		if (process.env.DEV) {
 			expect(requests.filter((req) => req.endsWith('.svelte')).length).toBe(1);
 		} else {
-			expect(requests.filter((req) => req.endsWith('.mjs')).length).toBeGreaterThan(0);
+			expect(requests.filter((req) => req.endsWith('.js')).length).toBeGreaterThan(0);
 		}
 
 		requests = [];
@@ -219,7 +214,7 @@ test.describe('trailingSlash', () => {
 		if (process.env.DEV) {
 			expect(requests.filter((req) => req.endsWith('.svelte')).length).toBe(1);
 		} else {
-			expect(requests.filter((req) => req.endsWith('.mjs')).length).toBeGreaterThan(0);
+			expect(requests.filter((req) => req.endsWith('.js')).length).toBeGreaterThan(0);
 		}
 
 		requests = [];

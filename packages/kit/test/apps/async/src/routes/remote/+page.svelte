@@ -1,5 +1,5 @@
 <script>
-	import { browser } from '$app/environment';
+	import { browser } from '$app/env';
 	import { refreshAll } from '$app/navigation';
 	import {
 		add,

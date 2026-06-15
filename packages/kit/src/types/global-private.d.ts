@@ -49,6 +49,11 @@ declare global {
 		resolve?: (data: { id: number; data: any; error: any }) => void;
 	};
 	/**
+	 * The Vite `root` setting used to construct paths to nodes and components
+	 * for the SSR manifest during development
+	 */
+	const __SVELTEKIT_ROOT__: string;
+	/**
 	 * This makes the use of specific features visible at both dev and build time, in such a
 	 * way that we can error when they are not supported by the target platform.
 	 *
@@ -64,7 +69,6 @@ declare global {
 	 */
 	var __SVELTEKIT_TRACK__: (label: string) => void;
 	var __SVELTEKIT_EXPERIMENTAL_USE_TRANSFORM_ERROR__: boolean;
-	var __SVELTEKIT_EXPERIMENTAL_EXPLICIT_ENVIRONMENT_VARIABLES__: boolean;
 	var Bun: object;
 	var Deno: object;
 }

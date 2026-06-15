@@ -6,25 +6,15 @@ Your project's configuration lives in a `svelte.config.js` file at the root of y
 
 ```js
 /// file: svelte.config.js
-// @filename: ambient.d.ts
-declare module '@sveltejs/adapter-auto' {
-	const plugin: () => import('@sveltejs/kit').Adapter;
-	export default plugin;
-}
-
-// @filename: index.js
-// ---cut---
-import adapter from '@sveltejs/adapter-auto';
-
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
-	kit: {
-		adapter: adapter()
-	}
+	kit: {}
 };
 
 export default config;
 ```
+
+<!-- TODO this is now wrong, you will have to pass inline config in v3. we need to overhaul the docs -->
 
 Since version 2.62.0 you can also pass your configuration to the `sveltekit` plugin in your Vite config, along with the Svelte compiler options:
 

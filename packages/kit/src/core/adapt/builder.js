@@ -3,17 +3,17 @@
 /** @import { ResolvedConfig } from 'vite' */
 /** @import { RouteDefinition, EnvVarConfig } from '@sveltejs/kit' */
 /** @import { RouteData, ValidatedConfig, BuildData, ServerMetadata, ServerMetadataRoute, Prerendered, PrerenderMap, Logger, RemoteChunk } from 'types' */
-import colors from 'kleur';
+import { loadEnv } from 'vite';
 import * as devalue from 'devalue';
 import { createReadStream, createWriteStream, existsSync, statSync } from 'node:fs';
 import { extname, resolve, join, dirname, relative } from 'node:path';
 import { pipeline } from 'node:stream';
-import { promisify } from 'node:util';
+import { promisify, styleText } from 'node:util';
 import zlib from 'node:zlib';
-import { copy, rimraf, mkdirp, posixify } from '../../utils/filesystem.js';
+import { copy, rimraf, mkdirp } from '../../utils/filesystem.js';
+import { posixify } from '../../utils/os.js';
 import { generate_manifest } from '../generate_manifest/index.js';
 import { get_route_segments } from '../../utils/routing.js';
-import { get_env } from '../../exports/vite/utils.js';
 import generate_fallback from '../postbuild/fallback.js';
 import { write } from '../sync/utils.js';
 import { list_files } from '../utils.js';
@@ -109,71 +109,21 @@ export function create_builder({
 			);
 		},
 
-		async createEntries(fn) {
-			const seen = new Set();
-
-			for (let i = 0; i < route_data.length; i += 1) {
-				const route = route_data[i];
-				if (prerender_map.get(route.id) === true) continue;
-				const { id, filter, complete } = fn(routes[i]);
-
-				if (seen.has(id)) continue;
-				seen.add(id);
-
-				const group = [route];
-
-				// figure out which lower priority routes should be considered fallbacks
-				for (let j = i + 1; j < route_data.length; j += 1) {
-					if (prerender_map.get(routes[j].id) === true) continue;
-					if (filter(routes[j])) {
-						group.push(route_data[j]);
-					}
-				}
-
-				const filtered = new Set(group);
-
-				// heuristic: if /foo/[bar] is included, /foo/[bar].json should
-				// also be included, since the page likely needs the endpoint
-				// TODO is this still necessary, given the new way of doing things?
-				filtered.forEach((route) => {
-					if (route.page) {
-						const endpoint = route_data.find((candidate) => candidate.id === route.id + '.json');
-
-						if (endpoint) {
-							filtered.add(endpoint);
-						}
-					}
-				});
-
-				if (filtered.size > 0) {
-					await complete({
-						generateManifest: ({ relativePath }) =>
-							generate_manifest({
-								build_data,
-								prerendered: [],
-								relative_path: relativePath,
-								routes: Array.from(filtered),
-								remotes
-							})
-					});
-				}
-			}
-		},
-
 		findServerAssets(route_data) {
 			return find_server_assets(
 				build_data,
-				route_data.map((route) => /** @type {import('types').RouteData} */ (lookup.get(route)))
+				route_data.map((route) => /** @type {import('types').RouteData} */ (lookup.get(route))),
+				vite_config.root
 			);
 		},
 
 		async generateFallback(dest) {
 			const manifest_path = `${config.kit.outDir}/output/server/manifest-full.js`;
-			const env = get_env(config.kit.env, vite_config.mode);
+			const env = loadEnv(vite_config.mode, config.kit.env.dir, '');
 
 			const fallback = await generate_fallback({
 				manifest_path,
-				env: env.all,
+				env,
 				out_dir: config.kit.outDir,
 				origin: config.kit.prerender.origin,
 				assets: config.kit.files.assets
@@ -181,11 +131,10 @@ export function create_builder({
 
 			if (existsSync(dest)) {
 				console.log(
-					colors
-						.bold()
-						.yellow(
-							`Overwriting ${dest} with fallback page. Consider using a different name for the fallback.`
-						)
+					styleText(
+						['bold', 'yellow'],
+						`Overwriting ${dest} with fallback page. Consider using a different name for the fallback.`
+					)
 				);
 			}
 
@@ -196,23 +145,21 @@ export function create_builder({
 			if (!build_data.client?.uses_env_dynamic_public) return;
 
 			const dest = `${config.kit.outDir}/output/prerendered/dependencies/${config.kit.appDir}/env.js`;
-			const env = get_env(config.kit.env, vite_config.mode);
+			const env = loadEnv(vite_config.mode, config.kit.env.dir, '');
 
-			const values = config.kit.experimental.explicitEnvironmentVariables ? {} : env.public;
+			/** @type {Record<string, any>} */
+			const values = {};
+			const variables = explicit_env_config ?? {};
 
-			if (config.kit.experimental.explicitEnvironmentVariables) {
-				const variables = explicit_env_config ?? {};
+			/** @type {Record<string, StandardSchemaV1.Issue[]>} */
+			const issues = {};
 
-				/** @type {Record<string, StandardSchemaV1.Issue[]>} */
-				const issues = {};
-
-				for (const [name, config] of Object.entries(variables)) {
-					if (config.static || !config.public) continue;
-					values[name] = validate(variables, env.all[name], name, issues);
-				}
-
-				handle_issues(issues);
+			for (const [name, config] of Object.entries(variables)) {
+				if (config.static || !config.public) continue;
+				values[name] = validate(variables, env[name], name, issues);
 			}
+
+			handle_issues(issues);
 
 			write(dest, `export const env=${devalue.uneval(values)}`);
 		},
@@ -225,7 +172,8 @@ export function create_builder({
 				routes: subset
 					? subset.map((route) => /** @type {import('types').RouteData} */ (lookup.get(route)))
 					: route_data.filter((route) => prerender_map.get(route.id) !== true),
-				remotes
+				remotes,
+				root: vite_config.root
 			});
 		},
 

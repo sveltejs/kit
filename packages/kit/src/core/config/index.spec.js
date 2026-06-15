@@ -1,11 +1,7 @@
 import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { assert, expect, test } from 'vitest';
-import { validate_config, load_config } from './index.js';
+import { validate_config } from './index.js';
 import process from 'node:process';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = join(__filename, '..');
 
 /**
  * mutates and remove keys from an object when check callback returns true
@@ -59,7 +55,6 @@ const directive_defaults = {
 const get_defaults = (prefix = '') => ({
 	extensions: ['.svelte'],
 	kit: {
-		adapter: null,
 		alias: {},
 		appDir: '_app',
 		csp: {
@@ -68,19 +63,16 @@ const get_defaults = (prefix = '') => ({
 			reportOnly: directive_defaults
 		},
 		csrf: {
-			checkOrigin: true,
+			checkOrigin: undefined,
 			trustedOrigins: []
 		},
 		embedded: false,
 		env: {
-			dir: process.cwd(),
-			publicPrefix: 'PUBLIC_',
-			privatePrefix: ''
+			dir: process.cwd()
 		},
 		experimental: {
 			tracing: { server: false },
 			instrumentation: { server: false },
-			explicitEnvironmentVariables: false,
 			remoteFunctions: false,
 			forkPreloads: false,
 			handleRenderingErrors: false
@@ -102,7 +94,7 @@ const get_defaults = (prefix = '') => ({
 		},
 		inlineStyleThreshold: 0,
 		moduleExtensions: ['.js', '.ts'],
-		output: { preloadStrategy: 'modulepreload', bundleStrategy: 'split' },
+		output: { bundleStrategy: 'split', preloadStrategy: undefined, linkHeaderPreload: false },
 		outDir: join(prefix, '.svelte-kit'),
 		router: {
 			type: 'pathname',
@@ -364,72 +356,6 @@ validate_paths(
 	}
 );
 
-test('load default config (esm)', async () => {
-	const cwd = join(__dirname, 'fixtures/default');
-
-	const config = await load_config({ cwd });
-	remove_keys(config, ([, v]) => typeof v === 'function');
-
-	const defaults = get_defaults(cwd + '/');
-	defaults.kit.version.name = config.kit.version.name;
-
-	expect(config).toEqual(defaults);
-});
-
-test('load default config (esm) with .ts extensions', async () => {
-	const cwd = join(__dirname, 'fixtures/typescript');
-
-	const config = await load_config({ cwd });
-	remove_keys(config, ([, v]) => typeof v === 'function');
-
-	const defaults = get_defaults(cwd + '/');
-	defaults.kit.version.name = config.kit.version.name;
-
-	expect(config).toEqual(defaults);
-});
-
-test('load .js config when both .js and .ts configs are present', async () => {
-	const cwd = join(__dirname, 'fixtures/multiple');
-
-	const config = await load_config({ cwd });
-	remove_keys(config, ([, v]) => typeof v === 'function');
-
-	const defaults = get_defaults(cwd + '/');
-	defaults.kit.version.name = config.kit.version.name;
-
-	expect(config).toEqual(defaults);
-});
-
-test('load config from Vite plugin API', async () => {
-	const cwd = join(__dirname, 'fixtures/vite-inline');
-	const original_cwd = process.cwd();
-
-	process.chdir(cwd);
-
-	try {
-		const config = await load_config({ cwd });
-		expect(config?.kit.paths.base).toBe('/from-vite');
-	} finally {
-		process.chdir(original_cwd);
-	}
-});
-
-test('errors on loading config with incorrect default export', async () => {
-	let message = null;
-
-	try {
-		const cwd = join(__dirname, 'fixtures', 'export-string');
-		await load_config({ cwd });
-	} catch (/** @type {any} */ e) {
-		message = e.message;
-	}
-
-	assert.equal(
-		message,
-		'The Svelte config file must have a configuration object as its default export. See https://svelte.dev/docs/kit/configuration'
-	);
-});
-
 test('accepts valid tracing values', () => {
 	assert.doesNotThrow(() => {
 		validate_config({
@@ -519,16 +445,4 @@ test('errors on invalid forkPreloads values', () => {
 			}
 		});
 	}, /^config\.kit\.experimental\.forkPreloads should be true or false, if specified$/);
-});
-
-test('uses src prefix for other kit.files options', async () => {
-	const cwd = join(__dirname, 'fixtures/custom-src');
-
-	const config = await load_config({ cwd });
-	remove_keys(config, ([, v]) => typeof v === 'function');
-
-	const defaults = get_defaults(cwd + '/');
-	defaults.kit.version.name = config.kit.version.name;
-
-	expect(config.kit.files.lib).toEqual(join(cwd, 'source/lib'));
 });

@@ -1,12 +1,11 @@
+/** @import { Adapter } from '@sveltejs/kit' */
 /** @import { RemoteChunk } from 'types' */
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { validate_server_exports } from '../../utils/exports.js';
-import { load_config } from '../config/index.js';
+import { extract_svelte_config, load_vite_config } from '../config/index.js';
 import { forked } from '../../utils/fork.js';
-import { installPolyfills } from '../../exports/node/polyfills.js';
 import { ENDPOINT_METHODS } from '../../constants.js';
-import { filter_env } from '../../utils/env.js';
 import { has_server_load, resolve_route } from '../../utils/routing.js';
 import { check_feature } from '../../utils/features.js';
 import { createReadableStream } from '@sveltejs/kit/node';
@@ -22,8 +21,8 @@ export default forked(import.meta.url, analyse);
  *   server_manifest: import('vite').Manifest;
  *   tracked_features: Record<string, string[]>;
  *   env: Record<string, string>;
- *   out: string;
  *   remotes: RemoteChunk[];
+ *   vite_config_file: string | undefined;
  * }} opts
  */
 async function analyse({
@@ -33,31 +32,32 @@ async function analyse({
 	server_manifest,
 	tracked_features,
 	env,
-	remotes
+	remotes,
+	vite_config_file
 }) {
 	/** @type {import('@sveltejs/kit').SSRManifest} */
 	const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
 
-	/** @type {import('types').ValidatedKitConfig} */
-	const config = (await load_config()).kit;
+	const vite_config = await load_vite_config(vite_config_file);
+
+	const config = extract_svelte_config(vite_config).kit;
+
+	// TODO i think this can just be config.adapter?
+	/** @type {Adapter | undefined} */
+	const adapter = vite_config.plugins.find(
+		(plugin) => plugin.name === 'vite-plugin-sveltekit-adapter'
+	)?.api?.adapter;
 
 	const server_root = join(config.outDir, 'output');
 
 	/** @type {import('types').ServerInternalModule} */
 	const internal = await import(pathToFileURL(`${server_root}/server/internal.js`).href);
 
-	installPolyfills();
-
-	// configure `import { building } from '$app/environment'` and `$app/env` —
+	// configure `import { building } from '$app/env'` —
 	// essential we do this before analysing the code
 	internal.set_building();
 
 	// set env, `read`, and `manifest`, in case they're used in initialisation
-	const { publicPrefix: public_prefix, privatePrefix: private_prefix } = config.env;
-	const private_env = filter_env(env, private_prefix, public_prefix);
-	const public_env = filter_env(env, public_prefix, private_prefix);
-	internal.set_private_env(private_env);
-	internal.set_public_env(public_env);
 	internal.set_env(env);
 	internal.set_manifest(manifest);
 	internal.set_read_implementation((file) => createReadableStream(`${server_root}/server/${file}`));
@@ -126,7 +126,7 @@ async function analyse({
 				server_manifest,
 				tracked_features
 			)) {
-				check_feature(route.id, route_config, feature, config.adapter);
+				check_feature(route.id, route_config, feature, adapter);
 			}
 		}
 
