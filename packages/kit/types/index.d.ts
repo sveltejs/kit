@@ -116,9 +116,8 @@ declare module '@sveltejs/kit' {
 		generateFallback: (dest: string) => Promise<void>;
 
 		/**
-		 * Generate module(s) exposing the build-time values of the app's runtime public environment
-		 * variables (`$env/dynamic/public`, or dynamic variables declared with
-		 * `experimental.explicitEnvironmentVariables`), if the app uses them.
+		 * Generate a module exposing build-time environment variables as
+		 * `$env/dynamic/public` or `$app/env/public` if the app uses it.
 		 */
 		generateEnvModule: () => void;
 
@@ -2615,9 +2614,8 @@ declare module '@sveltejs/kit' {
 			stylesheets: string[];
 			fonts: string[];
 			/**
-			 * Whether the client reads public env vars that are only known at runtime —
-			 * `$env/dynamic/public`, or `$app/env/public` when dynamic public variables
-			 * are declared with `experimental.explicitEnvironmentVariables`.
+			 * Whether the client uses public dynamic env vars — `$env/dynamic/public`
+			 * or `$app/env/public`.
 			 */
 			uses_env_dynamic_public: boolean;
 			/** Only set in case of `bundleStrategy === 'inline'`. */
@@ -2831,7 +2829,7 @@ declare module '@sveltejs/kit' {
 	 * @throws {HttpError} This error instructs SvelteKit to initiate HTTP error handling.
 	 * @throws {Error} If the provided status is invalid (not between 400 and 599).
 	 */
-	function error_1(status: number, body: App.Error): never;
+	export function error(status: number, body: App.Error): never;
 	/**
 	 * Throws an error with a HTTP status code and an optional message.
 	 * When called during request handling, this will cause SvelteKit to
@@ -2842,7 +2840,7 @@ declare module '@sveltejs/kit' {
 	 * @throws {HttpError} This error instructs SvelteKit to initiate HTTP error handling.
 	 * @throws {Error} If the provided status is invalid (not between 400 and 599).
 	 */
-	function error_1(status: number, body?: {
+	export function error(status: number, body?: {
 		message: string;
 	} extends App.Error ? App.Error | string | undefined : never): never;
 	/**
@@ -2983,7 +2981,7 @@ declare module '@sveltejs/kit' {
 	}
 	const valid_page_options_array: readonly ["ssr", "prerender", "csr", "trailingSlash", "config", "entries", "load"];
 
-	export { error_1 as error };
+	export {};
 }
 
 declare module '@sveltejs/kit/hooks' {
@@ -3338,7 +3336,7 @@ declare module '$app/navigation' {
 }
 
 declare module '$app/paths' {
-	import type { RouteIdWithSearchOrHash, PathnameWithSearchOrHash, ResolvedPathname, RouteId, RouteParams, Asset, Pathname as Pathname_1 } from '$app/types';
+	import type { RouteIdWithSearchOrHash, PathnameWithSearchOrHash, ResolvedPathname, RouteId, RouteParams, Asset, Pathname } from '$app/types';
 	/**
 	 * A string that matches [`config.kit.paths.base`](https://svelte.dev/docs/kit/configuration#paths).
 	 *
@@ -3435,7 +3433,7 @@ declare module '$app/paths' {
 	 * @since 2.52.0
 	 *
 	 * */
-	export function match(url: Pathname_1 | URL | (string & {})): Promise<{
+	export function match(url: Pathname | URL | (string & {})): Promise<{
 		id: RouteId;
 		params: Record<string, string>;
 	} | null>;
@@ -3785,7 +3783,9 @@ declare module '$app/stores' {
 	};
 
 	export {};
-}/**
+}
+
+/**
  * It's possible to tell SvelteKit how to type objects inside your app by declaring the `App` namespace. By default, a new project will have a file called `src/app.d.ts` containing the following:
  *
  * ```ts
