@@ -104,8 +104,7 @@ export interface BuildData {
 		stylesheets: string[];
 		fonts: string[];
 		/**
-		 * Whether the client uses public dynamic env vars — `$env/dynamic/public`
-		 * or `$app/env/public`.
+		 * Whether the client uses public dynamic env vars — `$env/dynamic/public` or `$app/env/public`.
 		 */
 		uses_env_dynamic_public: boolean;
 		/** Only set in case of `bundleStrategy === 'inline'`. */
