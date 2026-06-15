@@ -241,8 +241,8 @@ importers:
         specifier: ^2.2.5
         version: 2.2.5
       esbuild:
-        specifier: ^0.25.4
-        version: 0.25.12
+        specifier: ^0.28.1
+        version: 0.28.1
     devDependencies:
       '@netlify/dev':
         specifier: 'catalog:'
@@ -432,8 +432,8 @@ importers:
         specifier: ^1.3.2
         version: 1.3.2(rollup@4.59.0)
       esbuild:
-        specifier: ^0.25.4
-        version: 0.25.12
+        specifier: ^0.28.1
+        version: 0.28.1
     devDependencies:
       '@sveltejs/kit':
         specifier: workspace:^
