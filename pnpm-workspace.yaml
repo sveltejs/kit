@@ -97,5 +97,3 @@ catalogs:
 overrides:
 # ci script replaces all overrides with the vite-xxx or node-xx catalogs above.
 # if you want to introduce an override, make sure to add it to all of them too
-minimumReleaseAgeExclude:
-  - svelte
