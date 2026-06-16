@@ -1,3 +1,17 @@
+minimumReleaseAge: 2880
+minimumReleaseAgeExclude:
+  - '@sveltejs/*'
+  - svelte
+  - esrap
+  - devalue
+  - zimmerframe
+  - prettier-plugin-svelte
+  - svelte-check
+  - esm-env
+blockExoticSubdeps: true
+linkWorkspacePackages: true
+shellEmulator: true
+
 packages:
   - packages/*
   - packages/adapter-cloudflare/test/apps/*
@@ -45,7 +59,7 @@ catalog:
   '@types/semver': ^7.5.6
   '@types/set-cookie-parser': ^2.4.7
   dropcss: ^1.0.16
-  esbuild: ^0.25.4
+  esbuild: ^0.28.1
   eslint: ^10.0.0
   polka: ^1.0.0-next.28
   publint: ^0.3.0
@@ -83,5 +97,3 @@ catalogs:
 overrides:
 # ci script replaces all overrides with the vite-xxx or node-xx catalogs above.
 # if you want to introduce an override, make sure to add it to all of them too
-minimumReleaseAgeExclude:
-  - svelte

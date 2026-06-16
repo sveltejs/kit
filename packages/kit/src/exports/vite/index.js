@@ -293,8 +293,11 @@ async function kit({ svelte_config }) {
 				const allow = new Set([
 					kit.files.lib,
 					kit.files.routes,
+					kit.files.src,
 					kit.outDir,
-					path.resolve('src'), // TODO this isn't correct if user changed all his files to sth else than src (like in test/options)
+					// ensures that the client entry is served even if it's located outside
+					// the local node_modules, such as the pnpm global virtual store
+					runtime_directory,
 					path.resolve('node_modules'),
 					path.resolve(vite.searchForWorkspaceRoot(cwd), 'node_modules')
 				]);
@@ -1046,8 +1049,15 @@ async function kit({ svelte_config }) {
 							.map(() => '..')
 							.join('/') + '/../';
 
+					const relative = kit.paths.relative !== false || !!kit.paths.assets;
+
 					new_config = {
-						base: './',
+						// Affects how Vite loads JS assets on the client.
+						// If the initial HTML we render uses an absolute path for assets,
+						// the additional chunks Vite loads must also use an absolute path.
+						// Otherwise, you end up with additional chunks being loaded relative
+						// to the current chunk rather than the root.
+						base: relative ? './' : base,
 						build: {
 							copyPublicDir: !ssr,
 							cssCodeSplit: svelte_config.kit.output.bundleStrategy !== 'inline',
@@ -1109,9 +1119,7 @@ async function kit({ svelte_config }) {
 									// E.g. Vite generates `new URL('/asset.png', import.meta).href` for a relative path vs just '/asset.png'.
 									// That's larger and takes longer to run and also causes an HTML diff between SSR and client
 									// causing us to do a more expensive hydration check.
-									return {
-										relative: kit.paths.relative !== false || !!kit.paths.assets
-									};
+									return { relative };
 								}
 
 								// _app/immutable/assets files
@@ -1370,6 +1378,17 @@ async function kit({ svelte_config }) {
 					const deps_of = (entry, add_dynamic_css = false) =>
 						find_deps(manifest, posixify(path.relative('.', entry)), add_dynamic_css);
 
+					const has_explicit_dynamic_public_env = Object.values(explicit_env_config ?? {}).some(
+						(variable) => variable.public && !variable.static
+					);
+
+					const uses_env_dynamic_public = client_chunks.some(
+						(chunk) =>
+							chunk.type === 'chunk' &&
+							(chunk.modules[env_dynamic_public] ||
+								(has_explicit_dynamic_public_env && chunk.modules[sveltekit_env_public_client]))
+					);
+
 					if (svelte_config.kit.output.bundleStrategy === 'split') {
 						const start = deps_of(`${runtime_directory}/client/entry.js`);
 						const app = deps_of(`${out_dir}/generated/client-optimized/app.js`);
@@ -1380,9 +1399,7 @@ async function kit({ svelte_config }) {
 							imports: [...start.imports, ...app.imports],
 							stylesheets: [...start.stylesheets, ...app.stylesheets],
 							fonts: [...start.fonts, ...app.fonts],
-							uses_env_dynamic_public: client_chunks.some(
-								(chunk) => chunk.type === 'chunk' && chunk.modules[env_dynamic_public]
-							)
+							uses_env_dynamic_public
 						};
 
 						// In case of server-side route resolution, we create a purpose-built route manifest that is
@@ -1429,9 +1446,7 @@ async function kit({ svelte_config }) {
 							imports: start.imports,
 							stylesheets: start.stylesheets,
 							fonts: start.fonts,
-							uses_env_dynamic_public: client_chunks.some(
-								(chunk) => chunk.type === 'chunk' && chunk.modules[env_dynamic_public]
-							)
+							uses_env_dynamic_public
 						};
 
 						if (svelte_config.kit.output.bundleStrategy === 'inline') {
@@ -1448,6 +1463,12 @@ async function kit({ svelte_config }) {
 								script: read(`${out}/client/${start.file}`),
 								style: /** @type {string | undefined} */ (style?.source)
 							};
+
+							// the bundle and stylesheet are inlined into the page, so the
+							// emitted files are never loaded
+							fs.unlinkSync(`${out}/client/${start.file}`);
+							fs.rmSync(`${out}/client/${start.file}.map`, { force: true });
+							if (style) fs.unlinkSync(`${out}/client/${style.fileName}`);
 						}
 					}
 
@@ -1622,13 +1643,18 @@ function find_overridden_config(config, resolved_config, enforced_config, path, 
 	for (const key in enforced_config) {
 		if (typeof config === 'object' && key in config && key in resolved_config) {
 			const enforced = enforced_config[key];
+			const resolved = resolved_config[key];
 
 			if (enforced === true) {
-				if (config[key] !== resolved_config[key]) {
+				// Normalize path separators before comparing to avoid false positives on Windows,
+				// where config values like `root` may use backslashes while SvelteKit uses forward slashes.
+				const a = typeof config[key] === 'string' ? posixify(config[key]) : config[key];
+				const b = typeof resolved === 'string' ? posixify(resolved) : resolved;
+				if (a !== b) {
 					out.push(path + key);
 				}
 			} else {
-				find_overridden_config(config[key], resolved_config[key], enforced, path + key + '.', out);
+				find_overridden_config(config[key], resolved, enforced, path + key + '.', out);
 			}
 		}
 	}
