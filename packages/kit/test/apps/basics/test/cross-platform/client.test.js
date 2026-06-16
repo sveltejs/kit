@@ -501,11 +501,12 @@ test.describe('Scrolling', () => {
 	test('scrolling to url-supplied anchor respects scroll-margin', async ({ page, clicknav }) => {
 		await page.goto('/anchor');
 		await clicknav('#to-scroll-margin');
-		expect(
-			await page.evaluate(
-				() => document.getElementById('scroll-margin')?.getBoundingClientRect().top
-			)
-		).toBe(40);
+		const top = await page.evaluate(
+			() => document.getElementById('scroll-margin')?.getBoundingClientRect().top
+		);
+		// `scroll-margin-top` is 40px; allow sub-pixel rounding (e.g. on
+		// fractional/high-DPR displays `getBoundingClientRect` returns 40.0667)
+		expect(top).toBeCloseTo(40, 0);
 	});
 
 	test('no-anchor url will scroll to top when navigated from bottom of page', async ({

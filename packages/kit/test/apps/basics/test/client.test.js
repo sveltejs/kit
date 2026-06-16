@@ -1406,7 +1406,11 @@ test.describe('Streaming', () => {
 	// TODO `vite preview` buffers responses, causing these tests to fail
 	if (process.env.DEV) {
 		test('Works for universal load functions (direct hit)', async ({ page }) => {
-			page.goto('/streaming/universal');
+			// `waitUntil: 'commit'` resolves as soon as the streamed response starts (so we can
+			// observe the still-loading state), and `wait_for_started: false` avoids the page
+			// fixture leaving a floating `waitForSelector('body.started')` that rejects with
+			// "Target page... has been closed" when the test ends before hydration completes.
+			await page.goto('/streaming/universal', { waitUntil: 'commit', wait_for_started: false });
 
 			// Write first assertion like this to control the retry interval. Else it might happen that
 			// the test fails because the next retry is too late (probably uses a back-off strategy)
@@ -1426,7 +1430,7 @@ test.describe('Streaming', () => {
 		});
 
 		test('Works for server load functions (direct hit)', async ({ page }) => {
-			page.goto('/streaming/server');
+			await page.goto('/streaming/server', { waitUntil: 'commit', wait_for_started: false });
 
 			// Write first assertion like this to control the retry interval. Else it might happen that
 			// the test fails because the next retry is too late (probably uses a back-off strategy)
@@ -1456,7 +1460,7 @@ test.describe('Streaming', () => {
 		});
 
 		test('Catches fetch errors from server load functions (direct hit)', async ({ page }) => {
-			page.goto('/streaming/server-error');
+			await page.goto('/streaming/server-error', { waitUntil: 'commit', wait_for_started: false });
 			await expect(page.locator('p.eager')).toHaveText('eager');
 			await expect(page.locator('p.fail')).toHaveText('fail');
 		});
