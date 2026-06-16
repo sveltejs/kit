@@ -1,4 +1,3 @@
-import { randomUUID } from 'node:crypto';
 import { isRedirect } from '@sveltejs/kit';
 import { do_something } from './routes/remote/server-action/action.remote';
 
@@ -9,7 +8,7 @@ export async function handle({ event, resolve }) {
 	// Without this, tests running in parallel (different Playwright workers)
 	// against the same server clobber each other's state and flake.
 	if (!event.cookies.get('count_session')) {
-		event.cookies.set('count_session', randomUUID(), {
+		event.cookies.set('count_session', crypto.randomUUID(), {
 			path: '/',
 			httpOnly: true,
 			sameSite: 'lax'
