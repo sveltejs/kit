@@ -380,7 +380,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 		const type = headers['content-type'];
 		const is_html = response_type === REDIRECT || type === 'text/html';
 
-		if (!is_html && decoded.slice(config.paths.base.length + 1) === '') {
+		if (!is_html && response.status === 200 && decoded.slice(config.paths.base.length + 1) === '') {
 			throw new Error(
 				`Cannot prerender a root +server.js that returns a non-HTML response - static hosts always serve an HTML file for \`${config.paths.base || '/'}\``
 			);
