@@ -7,7 +7,8 @@ import {
 declare global {
 	namespace App {
 		export interface Platform {
-			env: unknown;
+			// we should not type `env` here because it will override any type set by
+			// the user in `src/app.d.ts`
 			ctx: ExecutionContext;
 			/** @deprecated Use `ctx` instead */
 			context: ExecutionContext;

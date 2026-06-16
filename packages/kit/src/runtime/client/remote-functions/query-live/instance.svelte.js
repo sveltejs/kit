@@ -1,12 +1,10 @@
 /** @import { PromiseWithResolvers } from '../../../../utils/promise.js' */
-import { app } from '../../client.js';
-import * as devalue from 'devalue';
+import { query_responses } from '../../client.js';
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
 import { noop, once } from '../../../../utils/functions.js';
 import { with_resolvers } from '../../../../utils/promise.js';
 import { SharedIterator } from '../../../../utils/shared-iterator.js';
 import { tick } from 'svelte';
-import { unfriendly_hydratable } from '../../../shared.js';
 import { create_live_iterator } from './iterator.js';
 
 /**
@@ -87,9 +85,25 @@ export class LiveQuery {
 		this.#resolve_first = resolve;
 		this.#reject_first = reject;
 
-		const serialized = unfriendly_hydratable(key, () => undefined);
-		if (serialized !== undefined) {
-			this.set(devalue.parse(serialized, app.decoders));
+		if (Object.hasOwn(query_responses, key)) {
+			const node = query_responses[key];
+			delete query_responses[key];
+
+			if (node.e) {
+				// the query failed during SSR — seed the failed state (mirroring `fail()`,
+				// minus its terminal `#done`), so the main loop still connects as usual
+				// and the query can recover
+				const error = new HttpError(node.e[0] ?? 500, node.e[1]);
+				this.#loading = false;
+				this.#error = error;
+
+				promise.catch(noop);
+				this.#reject_first?.(error);
+				this.#resolve_first = null;
+				this.#reject_first = null;
+			} else {
+				this.set(node.v);
+			}
 		}
 	}
 
@@ -369,6 +383,7 @@ export class LiveQuery {
 		void this.#interrupt?.();
 
 		if (this.#reject_first) {
+			this.#promise.catch(noop);
 			this.#reject_first(error);
 			this.#resolve_first = null;
 			this.#reject_first = null;

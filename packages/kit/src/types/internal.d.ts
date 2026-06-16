@@ -34,7 +34,7 @@ import {
 	TrailingSlash
 } from './private.js';
 import { Span } from '@opentelemetry/api';
-import type { PageOptions } from '../exports/vite/static_analysis/index.js';
+import { PageOptions } from '../exports/vite/static_analysis/types.js';
 import { SharedIterator } from '../utils/shared-iterator.js';
 
 export interface ServerModule {
@@ -102,6 +102,9 @@ export interface BuildData {
 		routes?: SSRClientRoute[];
 		stylesheets: string[];
 		fonts: string[];
+		/**
+		 * Whether the client uses public dynamic env vars — `$env/dynamic/public` or `$app/env/public`.
+		 */
 		uses_env_dynamic_public: boolean;
 		/** Only set in case of `bundleStrategy === 'inline'`. */
 		inline?: {
@@ -237,10 +240,7 @@ export interface PrerenderOptions {
 	cache?: string; // including this here is a bit of a hack, but it makes it easy to add <meta http-equiv>
 	fallback?: boolean;
 	dependencies: Map<string, PrerenderDependency>;
-	/**
-	 * For each key the (possibly still pending) result of a prerendered remote function.
-	 * Used to deduplicate requests to the same remote function with the same arguments.
-	 */
+	/** Results of remote `prerender` functions, shared across the whole prerender run so that each only executes once */
 	remote_responses: Map<string, Promise<any>>;
 	/** True for the duration of a call to the `reroute` hook */
 	inside_reroute?: boolean;
@@ -308,37 +308,41 @@ export type ServerNodesResponse = {
 	nodes: Array<ServerDataNode | ServerDataSkippedNode | ServerErrorNode | null>;
 };
 
+export type RemoteFunctionDataNode = {
+	/** value */
+	v?: any;
+	/** error */
+	e?: [status: number, error: any];
+};
+
+export type RemoteFunctionData = {
+	/** The result of a command/form invocation */
+	_?: any;
+	/** `prerender` data that was accessed during the request */
+	p?: Record<string, RemoteFunctionDataNode>;
+	/** `query` or `query.batch` data that was accessed during the request */
+	q?: Record<string, RemoteFunctionDataNode>;
+	/** `query.live` data that was accessed during the request */
+	l?: Record<string, RemoteFunctionDataNode>;
+	/** `form` outputs (result/issues/input) from a non-enhanced submission, keyed by the client-side action id */
+	f?: Record<string, RemoteFunctionDataNode>;
+	/** Whether there were any refreshes/reconnects during the request */
+	r?: true;
+	/** The redirect location, if any */
+	redirect?: string;
+};
+
 export type RemoteFunctionResponse =
 	| (ServerRedirectNode & {
-			/** devalue'd Record<string, any> */
-			refreshes?: string;
-			/** devalue'd Record<string, any> */
-			reconnects?: string;
+			/** stringified RemoteFunctionData */
+			data: string;
 	  })
 	| ServerErrorNode
 	| {
 			type: 'result';
-			result: string;
-			/** devalue'd Record<string, any> */
-			refreshes: string | undefined;
-			/** devalue'd Record<string, any> */
-			reconnects: string | undefined;
+			/** stringified RemoteFunctionData */
+			data: string;
 	  };
-
-export type RemoteSingleflightResult = {
-	type: 'result';
-	data: any;
-};
-
-export type RemoteSingleflightError = {
-	type: 'error';
-	status?: number;
-	error: App.Error;
-};
-
-export type RemoteSingleflightEntry = RemoteSingleflightResult | RemoteSingleflightError;
-
-export type RemoteSingleflightMap = Record<string, RemoteSingleflightEntry>;
 
 export type RemoteLiveQueryUserFunctionReturnType<Output> = MaybePromise<
 	| AsyncGenerator<Output>
@@ -667,6 +671,11 @@ export interface RemoteCommandInternals extends BaseRemoteInternals {
 
 export interface RemoteFormInternals extends BaseRemoteInternals {
 	type: 'form';
+	/**
+	 * For keyed (`form.for(key)`) instances: the id as the client computes it
+	 * (the key is JSON-stringified but not URI-encoded, unlike `id`)
+	 */
+	action_id?: string;
 	fn(body: Record<string, any>, meta: BinaryFormMeta, form_data: FormData | null): Promise<any>;
 }
 
@@ -712,15 +721,26 @@ export interface RequestState {
 		record_span: RecordSpan;
 	};
 	readonly remote: {
-		data: null | Map<
-			RemoteInternals,
-			Record<string, { serialize: boolean; data: MaybePromise<any> }>
+		/** Resolved query/prerender data, populated by `await myQuery()` or `myQuery.set(...)` */
+		data: null | Map<RemoteInternals, Record<string, MaybePromise<any>>>;
+		/**
+		 * Data that is implicitly included because it was awaited during render.
+		 * This is serialized during SSR if the promise already resolved
+		 */
+		implicit: null | Map<RemoteInternals, Record<string, () => MaybePromise<any>>>;
+		/**
+		 * Data that is explicitly included because of a `set(...)` or `refresh()`.
+		 * This is always awaited
+		 */
+		explicit: null | Map<
+			string,
+			{
+				internals: RemoteInternals;
+				promise: Promise<any>;
+			}
 		>;
 		/** Instances created via `myForm.for(...)` */
 		forms: null | Map<string, any>;
-		/** A map of remote function key to corresponding single-flight-mutation promise */
-		refreshes: null | Map<string, Promise<any>>;
-		reconnects: null | Map<string, Promise<void>>;
 		/** A map of remote function ID to payloads requested for refreshing by the client */
 		requested: null | Map<string, string[]>;
 		/** A map of query.batch ID to payloads requested for that batch within the same macrotask */
@@ -743,6 +763,8 @@ export interface RequestState {
 		live_iterators: null | Map<string, SharedIterator<any>>;
 	};
 	readonly is_in_remote_function: boolean;
+	readonly is_in_remote_form_or_command: boolean;
+	readonly is_in_remote_query: boolean;
 	readonly is_in_render: boolean;
 	readonly is_in_universal_load: boolean;
 }
