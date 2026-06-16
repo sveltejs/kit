@@ -50,6 +50,14 @@ describe('split_path', () => {
 });
 
 describe('convert_formdata', () => {
+	beforeAll(() => {
+		// TODO: remove after dropping support for Node 18
+		if (!('File' in globalThis)) {
+			// @ts-ignore
+			globalThis.File = buffer.File;
+		}
+	});
+
 	test('converts a FormData object', () => {
 		const data = new FormData();
 
@@ -89,6 +97,23 @@ describe('convert_formdata', () => {
 				}
 			}
 		});
+	});
+
+	test('omits empty file inputs', () => {
+		const data = new FormData();
+
+		data.append('file', new File([], ''));
+
+		expect(convert_formdata(data)).toEqual({});
+	});
+
+	test('keeps real zero-byte files', () => {
+		const data = new FormData();
+		const file = new File([], 'empty.txt');
+
+		data.append('file', file);
+
+		expect(convert_formdata(data)).toEqual({ file });
 	});
 
 	test.each(POLLUTION_ATTACKS)('prevents prototype pollution: %s', (attack) => {
