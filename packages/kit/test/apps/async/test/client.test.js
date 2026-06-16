@@ -26,6 +26,15 @@ test.describe('remote functions', () => {
 		await page.getByRole('button', { name: 'Refresh' }).click();
 		await expect(page.locator('p')).toHaveText('foobaz');
 	});
+
+	test('remote query responses are not cacheable', async ({ page }) => {
+		// the query is kicked off during SSR but fetched by the client after
+		// hydration, so we can observe the response headers on the wire
+		const response_promise = page.waitForResponse((r) => r.url().includes('/_app/remote/'));
+		await page.goto('/remote/query-loading-state');
+		const response = await response_promise;
+		expect(response.headers()['cache-control']).toBe('private, no-store');
+	});
 });
 
 // have to run in serial because commands mutate in-memory data on the server (should fix this at some point)
@@ -784,6 +793,43 @@ test.describe('remote function mutations', () => {
 				return stats.cleanup_count;
 			})
 			.toBeGreaterThan(before_cleanup);
+	});
+
+	test('query.live surfaces mid-stream HttpError and does not reconnect', async ({ page }) => {
+		await page.goto('/remote/live-terminal');
+
+		await expect(page.locator('#value')).toHaveText('0');
+		await expect(page.locator('#connected')).toHaveText('true');
+
+		await page.click('#refresh-connections');
+		await expect(page.locator('#connections')).not.toHaveText('pending');
+		const before = Number(await page.locator('#connections').textContent());
+
+		await page.click('#trigger-error');
+
+		await expect(page.locator('#error')).toHaveText('418 terminal teapot');
+		await expect(page.locator('#connected')).toHaveText('false');
+		await expect(page.locator('#done')).toHaveText('true');
+
+		// A terminal HttpError must not trigger a reconnect — the connection count
+		// should not increase after the failure.
+		await page.waitForTimeout(500);
+		await page.click('#refresh-connections');
+		await expect
+			.poll(async () => Number(await page.locator('#connections').textContent()))
+			.toBe(before);
+	});
+
+	test('query.live navigates on mid-stream redirect', async ({ page }) => {
+		await page.goto('/remote/live-terminal');
+
+		await expect(page.locator('#value')).toHaveText('0');
+		await expect(page.locator('#connected')).toHaveText('true');
+
+		await page.click('#trigger-redirect');
+
+		await expect(page.locator('#redirect-target')).toBeVisible();
+		expect(page.url()).toMatch(/\/remote\/live-terminal\/target$/);
 	});
 
 	test('refreshAll works with schema transforms (number to string)', async ({ page }) => {

@@ -193,12 +193,12 @@ export function create_builder({
 		},
 
 		generateEnvModule() {
-			if (!build_data.client?.uses_env_dynamic_public) return;
-
-			const dest = `${config.kit.outDir}/output/prerendered/dependencies/${config.kit.appDir}/env.js`;
 			const env = get_env(config.kit.env, vite_config.mode);
 
-			const values = config.kit.experimental.explicitEnvironmentVariables ? {} : env.public;
+			const dest = `${config.kit.outDir}/output/prerendered/dependencies/${config.kit.appDir}`;
+
+			/** @type {string} */
+			let payload;
 
 			if (config.kit.experimental.explicitEnvironmentVariables) {
 				const variables = explicit_env_config ?? {};
@@ -206,15 +206,30 @@ export function create_builder({
 				/** @type {Record<string, StandardSchemaV1.Issue[]>} */
 				const issues = {};
 
+				/** @type {Record<string, any>} */
+				const values = {};
+
 				for (const [name, config] of Object.entries(variables)) {
 					if (config.static || !config.public) continue;
 					values[name] = validate(variables, env.all[name], name, issues);
 				}
 
 				handle_issues(issues);
+
+				if (Object.keys(values).length === 0) return;
+
+				payload = devalue.uneval(values);
+
+				if (config.kit.experimental.explicitEnvironmentVariables && build_data.service_worker) {
+					write(`${dest}/env.script.js`, `globalThis.__sveltekit_sw={env:${payload}}`);
+				}
+			} else {
+				payload = devalue.uneval(env.public);
 			}
 
-			write(dest, `export const env=${devalue.uneval(values)}`);
+			if (build_data.client?.uses_env_dynamic_public) {
+				write(`${dest}/env.js`, `export const env=${payload}`);
+			}
 		},
 
 		generateManifest({ relativePath, routes: subset }) {
