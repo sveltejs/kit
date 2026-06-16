@@ -1,16 +1,8 @@
 /** @import { RemoteCommand, RemoteQueryUpdate } from '@sveltejs/kit' */
-/** @import { RemoteFunctionResponse } from 'types' */
 import { app_dir, base } from '$app/paths/internal/client';
-import * as devalue from 'devalue';
-import { HttpError } from '@sveltejs/kit/internal';
 import { app } from '../client.js';
-import { stringify_remote_arg } from '../../shared.js';
-import {
-	get_remote_request_headers,
-	apply_refreshes,
-	categorize_updates,
-	apply_reconnections
-} from './shared.svelte.js';
+import { stringify_command_arg } from '../../shared.js';
+import { get_remote_request_headers, categorize_updates, remote_request } from './shared.svelte.js';
 
 /**
  * Client-version of the `command` function from `$app/server`.
@@ -53,39 +45,22 @@ export function command(id) {
 					throw updates_error;
 				}
 
-				const response = await fetch(`${base}/${app_dir}/remote/${id}`, {
+				const response = await remote_request(`${base}/${app_dir}/remote/${id}`, {
 					method: 'POST',
 					body: JSON.stringify({
-						payload: stringify_remote_arg(arg, app.hooks.transport, false),
+						payload: await stringify_command_arg(arg, app.hooks.transport),
 						refreshes: Array.from(refreshes ?? [])
 					}),
 					headers
 				});
 
-				if (!response.ok) {
-					// We only end up here in case of a network error or if the server has an internal error
-					// (which shouldn't happen because we handle errors on the server and always send a 200 response)
-					throw new Error('Failed to execute remote function');
-				}
-
-				const result = /** @type {RemoteFunctionResponse} */ (await response.json());
-				if (result.type === 'redirect') {
+				if (response.redirect) {
 					throw new Error(
 						'Redirects are not allowed in commands. Return a result instead and use goto on the client'
 					);
-				} else if (result.type === 'error') {
-					throw new HttpError(result.status ?? 500, result.error);
-				} else {
-					if (result.refreshes) {
-						apply_refreshes(result.refreshes);
-					}
-
-					if (result.reconnects) {
-						apply_reconnections(result.reconnects);
-					}
-
-					return devalue.parse(result.result, app.decoders);
 				}
+
+				return response._;
 			} finally {
 				overrides?.forEach((fn) => fn());
 

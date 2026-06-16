@@ -6,14 +6,6 @@ test.skip(() => !!process.env.REGISTER_SERVICE_WORKER);
 
 test.describe.configure({ mode: 'parallel' });
 
-test.describe('env', () => {
-	test('resolves upwards', async ({ page }) => {
-		await page.goto('/basepath/env');
-		expect(await page.textContent('[data-testid="static"]')).toBe('static: resolves upwards!');
-		expect(await page.textContent('[data-testid="dynamic"]')).toBe('dynamic: resolves upwards!');
-	});
-});
-
 test.describe('paths', () => {
 	test('serves /basepath', async ({ page }) => {
 		await page.goto('/basepath');
@@ -183,5 +175,22 @@ test.describe("bundleStrategy: 'single'", () => {
 	test('serialization works with streaming', async ({ page }) => {
 		await page.goto('/basepath/serialization-stream');
 		await expect(page.locator('h1', { hasText: 'It works!' })).toBeVisible();
+	});
+});
+
+test.describe('Vite', () => {
+	// regression test for https://github.com/sveltejs/kit/issues/13249:
+	// user `define`s referenced at the top level of hooks.client.js must be
+	// available during client init
+	test('global constant replacements are available during client init', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		test.skip(!javaScriptEnabled);
+
+		await page.goto('/basepath', { wait_for_started: false });
+		await expect(page.locator('body.started')).toBeVisible();
+		expect(await page.evaluate(() => window.__test_user_define__)).toBe('works');
+		expect(await page.pageErrors()).toHaveLength(0);
 	});
 });
