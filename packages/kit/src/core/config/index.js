@@ -6,7 +6,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import * as url from 'node:url';
-import options, { kit_options, kit_experimental_options } from './options.js';
+import { options, kit_options, kit_experimental_options } from './options.js';
 import { resolve_entry } from '../../utils/filesystem.js';
 import { import_peer } from '../../utils/import.js';
 
