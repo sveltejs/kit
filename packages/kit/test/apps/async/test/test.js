@@ -1,3 +1,4 @@
+import process from 'node:process';
 import http from 'node:http';
 import { expect } from '@playwright/test';
 import { test } from '../../../utils.js';
@@ -62,6 +63,28 @@ test.describe('remote functions', () => {
 		await page.goto('/remote/query-non-exported');
 
 		await expect(page.locator('h1')).toHaveText('3');
+	});
+
+	test('private (non-exported) query results are not leaked into command responses', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		test.skip(!javaScriptEnabled, 'requires JavaScript to invoke the command');
+
+		await page.goto('/remote/private-query');
+
+		const [response] = await Promise.all([
+			page.waitForResponse((response) => response.url().includes('/reveal')),
+			page.getByRole('button', { name: 'reveal' }).click()
+		]);
+
+		const body = await response.text();
+
+		// the command returns the uppercased secret...
+		expect(body).toContain('PRIVATE-DATA');
+
+		// ...but the raw private query result must never appear in the serialized payload
+		expect(body).not.toContain('private-data');
 	});
 
 	test('queries can access the route/url of the page they were called from', async ({
@@ -685,6 +708,83 @@ test.describe('remote functions', () => {
 				timeout: 5000
 			});
 		}
+	});
+
+	test('query rendered in its loading state during SSR is fetched on the client', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		await page.goto('/remote/query-loading-state');
+
+		if (javaScriptEnabled) {
+			// the query was still pending when SSR finished, so it must not be
+			// seeded into the hydration cache — the client has to fetch it itself
+			await expect(page.locator('#slow-state')).toHaveText('slow data', {
+				timeout: 5000
+			});
+		} else {
+			await expect(page.locator('#slow-state')).toHaveText('loading');
+		}
+	});
+
+	test('queries cannot set cookies or headers', async ({ page }) => {
+		await page.goto('/remote/query-event-guards');
+
+		await expect(page.locator('#result')).toHaveText(
+			'Cannot set cookies in `query` or `prerender` functions | setHeaders is not allowed in remote functions'
+		);
+	});
+
+	test('queries nested inside live queries are not implicitly serialized', async ({ page }) => {
+		await page.goto('/remote/live-nested-query');
+
+		await expect(page.locator('#live-result')).toHaveText('NESTED-SECRET');
+
+		// the nested query's raw value must not leak into the page payload
+		expect(await page.content()).not.toContain('nested-secret');
+	});
+
+	test('requested(...) works in form handlers regardless of progressive enhancement', async ({
+		page
+	}) => {
+		await page.goto('/remote/form/requested');
+
+		await expect(page.locator('#form-result')).toHaveText('not submitted');
+
+		await page.locator('#requested-submit').click();
+
+		await expect(page.locator('#form-result')).toHaveText('submitted successfully');
+	});
+
+	test('SSR data for query.live is reused on hydration', async ({ page, javaScriptEnabled }) => {
+		await page.goto(`/remote/live-ssr-value?key=${Date.now()}-${Math.random()}`);
+
+		if (javaScriptEnabled) {
+			// the SSR'd first value must be seeded into the live query on hydration —
+			// the reconnect (deliberately blocked server-side) must not reset it to a loading state
+			await expect(page.locator('#live-state')).toHaveText('initial');
+
+			// the live connection still works after seeding
+			await page.click('#notify');
+			await expect(page.locator('#live-state')).toHaveText('updated');
+		} else {
+			await expect(page.locator('#live-state')).toHaveText('loading');
+		}
+	});
+
+	test('prerender functions are deduplicated across prerendered pages during build', async ({
+		page
+	}) => {
+		test.skip(!!process.env.DEV, 'pages are only prerendered when building');
+
+		await page.goto('/remote/prerender-dedupe/a');
+		const a = await page.locator('#count').textContent();
+
+		await page.goto('/remote/prerender-dedupe/b');
+		const b = await page.locator('#count').textContent();
+
+		// the shared prerender function must only have executed once at build time
+		expect(b).toBe(a);
 	});
 
 	test('awaiting multiple queries inside $derived does not fail mutation validation', async ({

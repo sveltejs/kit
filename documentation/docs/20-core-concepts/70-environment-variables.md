@@ -139,12 +139,26 @@ import { defineEnvVars } from '@sveltejs/kit/hooks';
 export const variables = defineEnvVars({
 	GOOGLE_ANALYTICS_ID: {
 		public: true,
-		+++validate: v.pipe(v.string(), v.regex(/G-[A-Z0-9]+/))+++
+		+++schema: v.pipe(v.string(), v.regex(/G-[A-Z0-9]+/))+++
 	}
 });
 ```
 
-If a value is invalid, the app will fail to start (or build).
+If a value is invalid, the app will fail to start (or build). To opt out of one or the other, use [`building`]($app-env#building) from `$app/env` along with a validator that accepts an optional value:
+
+```ts
+/// file: src/env.ts
+import { defineEnvVars } from '@sveltejs/kit/hooks';
++++import { building } from '$app/env'+++
+import * as v from 'valibot';
+
+export const variables = defineEnvVars({
+	SECRET: {
+		// optional when building but required when starting the app
+		+++schema: building ? v.optional(v.string()) : v.string()+++
+	}
+});
+```
 
 You can use validators to make values optional, or transform them (such as turning a string into a boolean, or parsing JSON) — see your validation library's documentation to learn how.
 
@@ -163,7 +177,7 @@ export const variables = defineEnvVars({
 		+++static: true,+++
 
 		// coerce to true/false
-		validate: v.pipe(
+		schema: v.pipe(
 			v.optional(v.string(), ''),
 			v.transform((str) => str !== '')
 		)
