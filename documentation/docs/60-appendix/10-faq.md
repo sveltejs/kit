@@ -117,9 +117,9 @@ Finally, you may also consider using an `{#await}` block:
 <script>
 	import { browser } from '$app/environment';
 
-	const promise = browser ?
-		import('./BrowserComponent.svelte') :
-		import('./ServerComponent.svelte');
+	const promise = browser
+		? import('./BrowserComponent.svelte')
+		: import('./ServerComponent.svelte');
 </script>
 
 {#await promise}
