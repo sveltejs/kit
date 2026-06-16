@@ -1,4 +1,5 @@
 import { query_responses } from '../../client.js';
+import { HttpError } from '@sveltejs/kit/internal';
 import { QUERY_OVERRIDE_KEY } from '../shared.svelte.js';
 import { noop } from '../../../../utils/functions.js';
 import { with_resolvers } from '../../../../utils/promise.js';
@@ -64,6 +65,17 @@ export class Query {
 	constructor(key, fn) {
 		this.#key = key;
 		this.#fn = fn;
+
+		if (Object.hasOwn(query_responses, key)) {
+			const node = query_responses[key];
+			delete query_responses[key];
+
+			if (node.e) {
+				this.fail(new HttpError(node.e[0] ?? 500, node.e[1]));
+			} else {
+				this.set(/** @type {T} */ (node.v));
+			}
+		}
 	}
 
 	#get_promise() {
@@ -71,7 +83,7 @@ export class Query {
 		return /** @type {Promise<T>} */ (this.#promise);
 	}
 
-	#start() {
+	start() {
 		// there is a really weird bug with untrack and writes and initializations
 		// every time you see this comment, try removing the `tick.then` here and see
 		// if all the tests still pass with the latest svelte version
@@ -132,12 +144,12 @@ export class Query {
 	get then() {
 		// TODO this should be unnecessary but due to the bug described
 		// in #start, we need to do this in some circumstances
-		this.#start();
+		this.start();
 		return this.#then;
 	}
 
 	get catch() {
-		this.#start();
+		this.start();
 		this.#then;
 		return (/** @type {any} */ reject) => {
 			return this.#then(undefined, reject);
@@ -145,7 +157,7 @@ export class Query {
 	}
 
 	get finally() {
-		this.#start();
+		this.start();
 		this.#then;
 		return (/** @type {any} */ fn) => {
 			return this.#then(
@@ -162,12 +174,12 @@ export class Query {
 	}
 
 	get current() {
-		this.#start();
+		this.start();
 		return this.#current;
 	}
 
 	get error() {
-		this.#start();
+		this.start();
 		return this.#error;
 	}
 
@@ -175,7 +187,7 @@ export class Query {
 	 * Returns true if the resource is loading or reloading.
 	 */
 	get loading() {
-		this.#start();
+		this.start();
 		return this.#loading;
 	}
 
@@ -183,7 +195,7 @@ export class Query {
 	 * Returns true once the resource has been loaded for the first time.
 	 */
 	get ready() {
-		this.#start();
+		this.start();
 		return this.#ready;
 	}
 
@@ -199,6 +211,10 @@ export class Query {
 	 * @param {T} value
 	 */
 	set(value) {
+		// normally consumed in the constructor, but make sure a leftover
+		// SSR record can never shadow the newly-set value
+		delete query_responses[this.#key];
+
 		this.#clear_pending();
 		this.#ready = true;
 		this.#loading = false;
@@ -211,6 +227,10 @@ export class Query {
 	 * @param {unknown} error
 	 */
 	fail(error) {
+		// normally consumed in the constructor, but make sure a leftover
+		// SSR record can never shadow the newly-set error
+		delete query_responses[this.#key];
+
 		this.#clear_pending();
 		this.#loading = false;
 		this.#error = error;
@@ -241,6 +261,15 @@ export class Query {
 		Object.defineProperty(release, QUERY_OVERRIDE_KEY, { value: this.#key });
 
 		return release;
+	}
+
+	/**
+	 * Reset ahead of a navigation that invalidates all, to force newly
+	 * rendered queries to get fresh data
+	 */
+	reset() {
+		this.#promise = null;
+		delete query_responses[this.#key];
 	}
 
 	get [Symbol.toStringTag]() {

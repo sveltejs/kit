@@ -21,9 +21,9 @@ import {
 	get_global_name,
 	handle_error_and_jsonify
 } from '../utils.js';
-import { create_remote_key } from '../../shared.js';
 import { get_status } from '../../../utils/error.js';
 import * as env from '__sveltekit/env';
+import { collect_remote_data } from '../remote.js';
 
 // TODO rename this function/module
 
@@ -368,7 +368,13 @@ export async function render_response({
 	if (page_config.csr && client) {
 		const route = client.routes?.find((r) => r.id === event.route.id) ?? null;
 
-		if (client.uses_env_dynamic_public && state.prerendering) {
+		// when serving a prerendered page in an app that uses runtime public env vars, we must
+		// import the env.js module so that it evaluates before any user code can evaluate.
+		// TODO revert to using top-level await once https://bugs.webkit.org/show_bug.cgi?id=242740 is fixed
+		// https://github.com/sveltejs/kit/pull/11601
+		const load_env_eagerly = client.uses_env_dynamic_public && !!state.prerendering;
+
+		if (load_env_eagerly) {
 			modulepreloads.add(`${paths.app_dir}/env.js`);
 		}
 
@@ -400,15 +406,6 @@ export async function render_response({
 		}
 
 		const blocks = [];
-
-		// when serving a prerendered page in an app that uses $env/dynamic/public, we must
-		// import the env.js module so that it evaluates before any user code can evaluate.
-		// TODO revert to using top-level await once https://bugs.webkit.org/show_bug.cgi?id=242740 is fixed
-		// https://github.com/sveltejs/kit/pull/11601
-		const load_env_eagerly =
-			(__SVELTEKIT_EXPERIMENTAL_EXPLICIT_ENVIRONMENT_VARIABLES__ ||
-				client.uses_env_dynamic_public) &&
-			state.prerendering;
 
 		const properties = [`base: ${base_expression}`];
 
@@ -516,87 +513,27 @@ export async function render_response({
 			args.push(`{\n${indent}\t${hydrate.join(`,\n${indent}\t`)}\n${indent}}`);
 		}
 
-		const { remote } = event_state;
+		const remote_data = await collect_remote_data({}, event, event_state, options);
 
-		let serialized_query_data = '';
-		let serialized_prerender_data = '';
-
-		if (remote.data) {
-			/** @type {Record<string, any>} */
-			const query = {};
-
-			/** @type {Record<string, any>} */
-			const prerender = {};
-
-			for (const [internals, cache] of remote.data) {
-				// remote functions without an `id` aren't exported, and thus
-				// cannot be called from the client
-				if (!internals.id) continue;
-
-				for (const key in cache) {
-					const entry = cache[key];
-
-					if (!entry.serialize) continue;
-
-					const remote_key = create_remote_key(internals.id, key);
-
-					const store = internals.type === 'prerender' ? prerender : query;
-
-					if (
-						event_state.remote.refreshes?.has(remote_key) ||
-						event_state.remote.reconnects?.has(remote_key)
-					) {
-						// This entry was refreshed/set by a command or form action.
-						// Always await it so the mutation result is serialized.
-						store[remote_key] = await entry.data;
-					} else {
-						// Don't block the response on pending remote data - if a query
-						// hasn't settled yet, it wasn't awaited in the template (or is behind a pending boundary).
-						const result = await Promise.race([
-							Promise.resolve(entry.data).then(
-								(v) => /** @type {const} */ ({ settled: true, value: v }),
-								(e) => /** @type {const} */ ({ settled: true, error: e })
-							),
-							new Promise((resolve) => {
-								queueMicrotask(() => resolve(/** @type {const} */ ({ settled: false })));
-							})
-						]);
-
-						if (result.settled) {
-							if ('error' in result) throw result.error;
-							store[remote_key] = result.value;
-						}
-					}
-				}
-			}
-
-			const replacer = create_replacer(options.hooks.transport);
-
-			if (Object.keys(query).length > 0) {
-				serialized_query_data = `${global}.query = ${devalue.uneval(query, replacer)};\n\n\t\t\t\t\t\t`;
-			}
-
-			if (Object.keys(prerender).length > 0) {
-				serialized_prerender_data = `${global}.prerender = ${devalue.uneval(prerender, replacer)};\n\n\t\t\t\t\t\t`;
-			}
-		}
-
-		const serialized_remote_data = `${serialized_query_data}${serialized_prerender_data}`;
+		const serialized_data =
+			Object.keys(remote_data).length > 0
+				? `${global}.data = ${devalue.uneval(remote_data, create_replacer(options.hooks.transport))};\n\n\t\t\t\t\t\t`
+				: '';
 
 		// `client.app` is a proxy for `bundleStrategy === 'split'`
 		const boot = client.inline
 			? `${client.inline.script}
 
-					${serialized_remote_data}${global}.app.start(${args.join(', ')});`
+					${serialized_data}${global}.app.start(${args.join(', ')});`
 			: client.app
 				? `Promise.all([
 						import(${s(prefixed(client.start))}),
 						import(${s(prefixed(client.app))})
 					]).then(([kit, app]) => {
-						${serialized_remote_data}kit.start(app, ${args.join(', ')});
+						${serialized_data}kit.start(app, ${args.join(', ')});
 					});`
 				: `import(${s(prefixed(client.start))}).then((app) => {
-						${serialized_remote_data}app.start(${args.join(', ')})
+						${serialized_data}app.start(${args.join(', ')})
 					});`;
 
 		if (load_env_eagerly) {
@@ -634,11 +571,8 @@ export async function render_response({
 					}`);
 		}
 
-		// we need to eagerly import the Vite client module in development to ensure
-		// that Vite global constant replacements are initialised before our code runs
 		const init_app = `
 				{
-					${DEV ? `import('${paths.base}/@vite/client')` : ''}
 					${blocks.join('\n\n\t\t\t\t\t')}
 				}
 			`;

@@ -1,5 +1,35 @@
 # @sveltejs/kit
 
+## 2.65.1
+### Patch Changes
+
+
+- fix: avoid importing the Vite development client code into builds with a non-standard `NODE_ENV` ([#16023](https://github.com/sveltejs/kit/pull/16023))
+
+
+- fix: don't emit the unused bundle and stylesheet files when using `bundleStrategy: 'inline'` ([#16025](https://github.com/sveltejs/kit/pull/16025))
+
+
+- fix: reset queries before navigating when `invalidateAll` is set ([#16014](https://github.com/sveltejs/kit/pull/16014))
+
+
+- fix: regression in loading assets for absolute path apps ([#16026](https://github.com/sveltejs/kit/pull/16026))
+
+## 2.65.0
+### Minor Changes
+
+
+- feat: allow queries to refresh other queries ([#16012](https://github.com/sveltejs/kit/pull/16012))
+
+
+### Patch Changes
+
+
+- fix: dedupe remote data ([#15991](https://github.com/sveltejs/kit/pull/15991))
+
+
+- fix: skip client build if all routes have CSR disabled ([#15936](https://github.com/sveltejs/kit/pull/15936))
+
 ## 2.64.0
 ### Minor Changes
 
