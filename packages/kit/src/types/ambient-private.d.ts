@@ -23,7 +23,7 @@ declare module '__sveltekit/env' {
 	// exported environment variables are defined in env.d.ts
 
 	/** Populate exported environment variables */
-	export function set_env(environment: Record<string, string>): Promise<void>;
+	export function set_env(environment: Record<string, string>): void;
 
 	/** public env vars */
 	export const explicit_public_env: Record<string, any>;
