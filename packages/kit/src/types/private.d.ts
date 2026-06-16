@@ -61,6 +61,8 @@ export namespace Csp {
 		| 'unsafe-eval'
 		| 'unsafe-hashes'
 		| 'unsafe-inline'
+		| 'unsafe-allow-redirects'
+		| 'unsafe-webtransport-hashes'
 		| 'wasm-unsafe-eval'
 		| 'trusted-types-eval'
 		| 'none';
