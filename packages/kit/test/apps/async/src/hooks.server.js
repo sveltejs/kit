@@ -3,6 +3,13 @@ import { do_something } from './routes/remote/server-action/action.remote';
 
 /** @type {import('@sveltejs/kit').Handle} */
 export async function handle({ event, resolve }) {
+	if (event.isRemoteRequest && event.cookies.get('deny-remote') === '1') {
+		return new Response(JSON.stringify({ message: 'denied by hook' }), {
+			status: 403,
+			headers: { 'content-type': 'application/json' }
+		});
+	}
+
 	if (event.url.pathname === '/remote/hook-command') {
 		try {
 			const result = await do_something('from-hook');
