@@ -1,6 +1,7 @@
 import process from 'node:process';
 import { assert, expect, test, describe, beforeAll } from 'vitest';
 import { domain_matches, path_matches, get_cookies } from './cookie.js';
+import { create_mock_request } from '../../../test/mocks/server.js';
 
 const domains = {
 	positive: [
@@ -24,11 +25,9 @@ const paths = {
 /** @param {{ href?: string, headers?: Record<string, string> }} href */
 const cookies_setup = ({ href, headers } = {}) => {
 	const url = new URL(href || 'https://example.com');
-	const request = new Request(url, {
-		headers: new Headers({
-			cookie: 'a=b;',
-			...headers
-		})
+	const request = create_mock_request({
+		url: url.href,
+		headers: { cookie: 'a=b;', ...headers }
 	});
 	const result = get_cookies(request, url);
 	result.set_trailing_slash('ignore');

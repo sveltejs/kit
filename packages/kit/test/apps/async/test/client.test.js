@@ -514,6 +514,11 @@ test.describe('remote function mutations', () => {
 		expect(page.url()).toContain('#redirected');
 	});
 
+	// UNIT-MIGRATION-CANDIDATE: the core guarantee (remote functions without an `id`
+	// are never serialized into the response) is now covered by the unit test
+	// `src/runtime/server/remote/collect.spec.js` :: 'skips private (non-exported)
+	// functions that have no id'. Keep this integration test until we're confident
+	// in the unit suite, then delete it.
 	test('non-exported remote functions are never serialized into responses', async ({ page }) => {
 		await page.goto('/remote/private-query');
 
@@ -941,6 +946,11 @@ test.describe('remote function mutations', () => {
 		await expect(page.locator('#result')).toHaveText('none');
 	});
 
+	// UNIT-MIGRATION-CANDIDATE: the server-side slash-rejoining of keyed form ids is
+	// now covered by the unit test `src/runtime/server/remote/form-post.spec.js` ::
+	// 'rejoins keys that contain slashes' (the hydration mechanics are covered by the
+	// non-slash keyed test above). Keep this integration test until we're confident
+	// in the unit suite, then delete it.
 	test('form keys containing slashes work with native (non-enhanced) submissions', async ({
 		page
 	}) => {
