@@ -2414,7 +2414,8 @@ declare module '@sveltejs/kit' {
 			| 'data:'
 			| 'mediastream:'
 			| 'blob:'
-			| 'filesystem:';
+			| 'filesystem:'
+			| `${string}:`;
 		type Source = HostSource | SchemeSource | CryptoSource | BaseSource;
 		type Sources = Source[];
 	}
