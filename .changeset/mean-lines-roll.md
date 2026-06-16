@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix: support WebSocket protocol and Trusted Types Eval for CSP sources
+fix: support `ws:`/`wss:` and `trusted-types-eval` for CSP sources
