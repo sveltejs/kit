@@ -82,7 +82,7 @@ export namespace Csp {
 		| 'mediastream:'
 		| 'blob:'
 		| 'filesystem:'
-		| `${string}:`;
+		| (`${string}:` & {});
 	type Source = HostSource | SchemeSource | CryptoSource | BaseSource;
 	type Sources = Source[];
 }
