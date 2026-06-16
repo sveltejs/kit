@@ -84,15 +84,19 @@ test.describe('a11y', () => {
 
 		await clicknav('[href="/selection/b"]');
 
-		expect(
-			await page.evaluate(() => {
-				const selection = getSelection();
-				if (selection) {
-					return selection.rangeCount;
-				}
-				return -1;
-			})
-		).toBe(0);
+		// the selection is reset in a `setTimeout` that runs after navigation completes,
+		// so we poll until the ranges have been cleared rather than checking immediately
+		await expect
+			.poll(() =>
+				page.evaluate(() => {
+					const selection = getSelection();
+					if (selection) {
+						return selection.rangeCount;
+					}
+					return -1;
+				})
+			)
+			.toBe(0);
 	});
 
 	test('keepfocus works', async ({ page }) => {
