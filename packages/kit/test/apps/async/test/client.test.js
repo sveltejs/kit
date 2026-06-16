@@ -886,6 +886,27 @@ test.describe('remote function mutations', () => {
 		await expect(page.locator('h1')).toHaveText('hello from remote function!');
 	});
 
+	test('denied by hook: transport 403 surfaces as error.status 403 on query resource', async ({
+		page
+	}) => {
+		await page.goto('/remote/transport-status');
+
+		// initial load should succeed and show the value
+		await expect(page.locator('#value')).toHaveText('ok');
+
+		// set the cookie and trigger a refresh; the handle hook blocks remote requests
+		await page.click('#deny-btn');
+
+		// the query resource should report the 403 status from the hook
+		await expect(page.locator('#status')).toHaveText('403');
+
+		// clean up the cookie so other tests aren't affected
+		await page.click('#clear-btn');
+		await page.evaluate(() => {
+			document.cookie = 'deny-remote=; path=/; max-age=0';
+		});
+	});
+
 	test('form.for() with enhance does not duplicate requests', async ({ page }) => {
 		await page.goto('/remote/form/for-duplicate');
 
