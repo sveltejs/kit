@@ -141,7 +141,7 @@ export interface Builder {
 	generateFallback: (dest: string) => Promise<void>;
 
 	/**
-	 * Generate a module exposing build-time environment variables as `$env/dynamic/public` if the app uses it.
+	 * Generate a module exposing build-time environment variables as `$env/dynamic/public` or `$app/env/public` if the app uses it.
 	 */
 	generateEnvModule: () => void;
 
@@ -478,7 +478,7 @@ export interface KitConfig {
 	experimental?: {
 		/**
 		 * Whether to enable explicit environment variables using `src/env.js` or `src/env.ts`.
-		 * @since 2.62.0
+		 * @since 2.63.0
 		 * @default false
 		 */
 		explicitEnvironmentVariables?: boolean;
@@ -1550,6 +1550,10 @@ export interface RequestEvent<
 	locals: App.Locals;
 	/**
 	 * The parameters of the current route - e.g. for a route like `/blog/[slug]`, a `{ slug: string }` object.
+	 *
+	 * In the context of a remote function request initiated by the client, this relates to the page the remote function
+	 * was called from, _not_ the URL of the endpoint SvelteKit creates for the remote function. Never use this to determine
+	 * whether or not a user is authorized to access certain data, as these values are part of the request which could be manipulated.
 	 */
 	params: Params;
 	/**
@@ -1566,6 +1570,10 @@ export interface RequestEvent<
 	route: {
 		/**
 		 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`. It is `null` when no route is matched.
+		 *
+		 * In the context of a remote function request initiated by the client, this relates to the page the remote function
+		 * was called from, _not_ the URL of the endpoint SvelteKit creates for the remote function. Never use this to determine
+		 * whether or not a user is authorized to access certain data, as these values are part of the request which could be manipulated.
 		 */
 		id: RouteId;
 	};
@@ -1594,6 +1602,10 @@ export interface RequestEvent<
 	setHeaders: (headers: Record<string, string>) => void;
 	/**
 	 * The requested URL.
+	 *
+	 * In the context of a remote function request initiated by the client, this relates to the page the remote function
+	 * was called from, _not_ the URL of the endpoint SvelteKit creates for the remote function. Never use this to determine
+	 * whether or not a user is authorized to access certain data, as these values are part of the request which could be manipulated.
 	 */
 	url: URL;
 	/**
@@ -1696,7 +1708,7 @@ export interface SSRManifest {
 
 	/** private fields */
 	_: {
-		client: NonNullable<BuildData['client']>;
+		client: BuildData['client'];
 		nodes: SSRNodeLoader[];
 		/** hashed filename -> import to that file */
 		remotes: Record<string, () => Promise<any>>;

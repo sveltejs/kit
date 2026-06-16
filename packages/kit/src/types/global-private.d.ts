@@ -1,3 +1,5 @@
+import { RemoteFunctionData } from 'types';
+
 declare global {
 	const __SVELTEKIT_ADAPTER_NAME__: string;
 	const __SVELTEKIT_APP_DIR__: string;
@@ -40,9 +42,7 @@ declare global {
 		/** Public environment variables */
 		env?: Record<string, string>;
 		/** Serialized data from query/form/command functions */
-		query?: Record<string, any>;
-		/** Serialized data from prerender functions */
-		prerender?: Record<string, any>;
+		data?: RemoteFunctionData;
 		/** Create a placeholder promise */
 		defer?: (id: number) => Promise<any>;
 		/** Resolve a placeholder promise */
