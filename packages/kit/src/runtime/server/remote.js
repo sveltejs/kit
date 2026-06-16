@@ -57,6 +57,9 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 		'sveltekit.remote.call.name': internals.name
 	});
 
+	/** @type {HeadersInit | undefined} */
+	const headers = state.prerendering ? undefined : { 'cache-control': 'private, no-store' };
+
 	try {
 		/** @type {RemoteFunctionData} */
 		const data = {};
@@ -226,7 +229,8 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 						/** @type {RemoteFunctionResponse} */ ({
 							type: 'result',
 							data: stringify(data, transport)
-						})
+						}),
+						{ headers }
 					);
 				}
 
@@ -275,7 +279,8 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 			/** @type {RemoteFunctionResponse} */ ({
 				type: 'result',
 				data: stringify(data, transport)
-			})
+			}),
+			{ headers }
 		);
 	} catch (error) {
 		if (error instanceof Redirect) {
@@ -285,7 +290,8 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 				/** @type {RemoteFunctionResponse} */ ({
 					type: 'result',
 					data: stringify(data, transport)
-				})
+				}),
+				{ headers }
 			);
 		}
 
