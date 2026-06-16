@@ -3,6 +3,18 @@ import { do_something } from './routes/remote/server-action/action.remote';
 
 /** @type {import('@sveltejs/kit').Handle} */
 export async function handle({ event, resolve }) {
+	// Assign each browser session a unique id so that the in-memory `count`
+	// state in `routes/remote/query-command.remote.js` is isolated per test.
+	// Without this, tests running in parallel (different Playwright workers)
+	// against the same server clobber each other's state and flake.
+	if (!event.cookies.get('count_session')) {
+		event.cookies.set('count_session', crypto.randomUUID(), {
+			path: '/',
+			httpOnly: true,
+			sameSite: 'lax'
+		});
+	}
+
 	if (event.isRemoteRequest && event.cookies.get('deny-remote') === '1') {
 		return new Response(JSON.stringify({ message: 'denied by hook' }), {
 			status: 403,
