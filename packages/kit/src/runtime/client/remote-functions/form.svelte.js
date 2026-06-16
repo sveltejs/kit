@@ -565,9 +565,10 @@ export function form(id) {
 
 					const submission = submit(form_data, true);
 
-					void submission.finally(() => {
+					const decrement = () => {
 						pending_count--;
-					});
+					};
+					void submission.then(decrement, decrement);
 
 					return submission;
 				}
