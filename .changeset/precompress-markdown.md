@@ -1,5 +1,5 @@
 ---
-'@sveltejs/adapter-static': minor
+'@sveltejs/kit': minor
 ---
 
 feat: precompress prerendered `.md` and `.mdx` files
