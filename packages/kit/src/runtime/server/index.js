@@ -63,7 +63,7 @@ export class Server {
 
 		set_private_env(filter_env(env, env_private_prefix, env_public_prefix));
 		set_public_env(filter_env(env, env_public_prefix, env_private_prefix));
-		await set_env(env);
+		set_env(env);
 
 		if (read) {
 			// Wrap the read function to handle MaybePromise<ReadableStream>

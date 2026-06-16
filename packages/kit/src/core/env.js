@@ -167,8 +167,11 @@ export function create_dynamic_module(type, dev_values, disabled) {
  */
 export function create_sveltekit_env(variables, env, entry) {
 	const imports = entry
-		? [`import { validate, handle_issues } from '@sveltejs/kit/internal/env';`]
-		: [`const handle_issues = () => {};`];
+		? [
+				`import { variables } from ${JSON.stringify(entry)};`,
+				`import { validate, handle_issues } from '@sveltejs/kit/internal/env';`
+			]
+		: [`const variables = {};`, `const handle_issues = () => {};`];
 
 	const declarations = [];
 	const setters = [];
@@ -202,16 +205,14 @@ export function create_sveltekit_env(variables, env, entry) {
 		GENERATED_COMMENT,
 		imports.join('\n'),
 		`const issues = {};`,
+		'export { variables }',
 		'export const dynamic_private_env = {};',
 		'export const explicit_public_env = {};',
 		'export const rendered_env = {};',
 		...declarations,
 		`handle_issues(issues);`,
-		// avoid `variables` from being imported before `set_building` is called
-		// because that causes expressions with `building` to resolve incorrectly
 		dedent`
-			export async function set_env(env) {
-				${entry ? `const { variables } = (await import(${JSON.stringify(entry)}));` : ''}
+			export function set_env(env) {
 				const issues = {};
 				${setters.join('\n')}
 				handle_issues(issues);

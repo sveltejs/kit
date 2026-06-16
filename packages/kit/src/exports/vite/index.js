@@ -961,6 +961,7 @@ async function kit({ svelte_config }) {
 					if (ssr) {
 						input.index = `${runtime_directory}/server/index.js`;
 						input.internal = `${out_dir}/generated/server/internal.js`;
+						input.env = `__sveltekit/env`;
 						input['remote-entry'] = `${runtime_directory}/app/server/remote/index.js`;
 
 						// add entry points for every endpoint...
