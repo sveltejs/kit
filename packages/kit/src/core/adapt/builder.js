@@ -220,7 +220,7 @@ export function create_builder({
 
 				payload = devalue.uneval(values);
 
-				if (config.kit.experimental.explicitEnvironmentVariables && build_data.service_worker) {
+				if (build_data.service_worker) {
 					write(`${dest}/env.script.js`, `globalThis.__sveltekit_sw={env:${payload}}`);
 				}
 			} else {
