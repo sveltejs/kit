@@ -31,6 +31,21 @@ test.describe('paths', () => {
 		expect(await page.textContent('[data-testid="assets"]')).toBe(`assets: ${base}`);
 	});
 
+	test('uses correct relative paths when rendering an error page for a missing __data.json', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		// a non-existent page requested with the data suffix renders the error page. Its relative
+		// paths must be resolved against the requested URL (including the `__data.json` suffix),
+		// otherwise they end up one directory too shallow and fail to load the app's assets
+		await page.goto('/basepath/this/does/not/exist/__data.json');
+
+		const expected = javaScriptEnabled ? '/basepath/' : '../../../../';
+
+		expect(await page.textContent('[data-testid="base"]')).toBe(`base: ${expected}`);
+		expect(await page.textContent('[data-testid="assets"]')).toBe(`assets: ${expected}`);
+	});
+
 	test('serves /basepath with trailing slash always', async ({ page }) => {
 		await page.goto('/basepath');
 		expect(new URL(page.url()).pathname).toBe('/basepath/');
