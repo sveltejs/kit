@@ -1,9 +1,11 @@
+import process from 'node:process';
 import * as v from 'valibot';
 
 export const variables = {
 	MESSAGE: {
 		public: true,
-		description: 'Public env var loaded from the shared test env directory'
+		description: 'Public env var loaded from the shared test env directory',
+		static: !process.env.DYNAMIC_PUBLIC_ENV
 	},
 	PRIVATE_EXPLICIT_ENV: {},
 	PRIVATE_STATIC_EXPLICIT_ENV: {

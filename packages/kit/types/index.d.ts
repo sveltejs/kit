@@ -116,7 +116,7 @@ declare module '@sveltejs/kit' {
 		generateFallback: (dest: string) => Promise<void>;
 
 		/**
-		 * Generate a module exposing build-time environment variables as `$env/dynamic/public` if the app uses it.
+		 * Generate a module exposing build-time environment variables as `$env/dynamic/public` or `$app/env/public` if the app uses it.
 		 */
 		generateEnvModule: () => void;
 
@@ -2624,6 +2624,9 @@ declare module '@sveltejs/kit' {
 			routes?: SSRClientRoute[];
 			stylesheets: string[];
 			fonts: string[];
+			/**
+			 * Whether the client uses public dynamic env vars — `$env/dynamic/public` or `$app/env/public`.
+			 */
 			uses_env_dynamic_public: boolean;
 			/** Only set in case of `bundleStrategy === 'inline'`. */
 			inline?: {

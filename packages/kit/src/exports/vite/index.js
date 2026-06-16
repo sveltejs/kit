@@ -1378,6 +1378,17 @@ async function kit({ svelte_config }) {
 					const deps_of = (entry, add_dynamic_css = false) =>
 						find_deps(manifest, posixify(path.relative('.', entry)), add_dynamic_css);
 
+					const has_explicit_dynamic_public_env = Object.values(explicit_env_config ?? {}).some(
+						(variable) => variable.public && !variable.static
+					);
+
+					const uses_env_dynamic_public = client_chunks.some(
+						(chunk) =>
+							chunk.type === 'chunk' &&
+							(chunk.modules[env_dynamic_public] ||
+								(has_explicit_dynamic_public_env && chunk.modules[sveltekit_env_public_client]))
+					);
+
 					if (svelte_config.kit.output.bundleStrategy === 'split') {
 						const start = deps_of(`${runtime_directory}/client/entry.js`);
 						const app = deps_of(`${out_dir}/generated/client-optimized/app.js`);
@@ -1388,9 +1399,7 @@ async function kit({ svelte_config }) {
 							imports: [...start.imports, ...app.imports],
 							stylesheets: [...start.stylesheets, ...app.stylesheets],
 							fonts: [...start.fonts, ...app.fonts],
-							uses_env_dynamic_public: client_chunks.some(
-								(chunk) => chunk.type === 'chunk' && chunk.modules[env_dynamic_public]
-							)
+							uses_env_dynamic_public
 						};
 
 						// In case of server-side route resolution, we create a purpose-built route manifest that is
@@ -1437,9 +1446,7 @@ async function kit({ svelte_config }) {
 							imports: start.imports,
 							stylesheets: start.stylesheets,
 							fonts: start.fonts,
-							uses_env_dynamic_public: client_chunks.some(
-								(chunk) => chunk.type === 'chunk' && chunk.modules[env_dynamic_public]
-							)
+							uses_env_dynamic_public
 						};
 
 						if (svelte_config.kit.output.bundleStrategy === 'inline') {
