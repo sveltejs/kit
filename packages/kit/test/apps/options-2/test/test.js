@@ -204,7 +204,11 @@ test.describe('$app/env', () => {
 		expect(await page.pageErrors()).toHaveLength(0);
 	});
 
-	test('loads dynamic public environment variables in the service worker', () => {
+	test('loads dynamic public environment variables in the service worker', ({
+		javaScriptEnabled
+	}) => {
+		test.skip(javaScriptEnabled || !process.env.DEV);
+
 		const content = fs.readFileSync(
 			`${output}/prerendered/dependencies/_app/env.script.js`,
 			'utf-8'
