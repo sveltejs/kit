@@ -3,9 +3,9 @@
 	"private": true,
 	"version": "0.0.1",
 	"scripts": {
-		"dev": "vite dev",
+		"dev": "RUNTIME_ONLY=secret vite dev",
 		"build": "vite build",
-		"preview": "vite preview",
+		"preview": "RUNTIME_ONLY=secret vite preview",
 		"prepare": "svelte-kit sync",
 		"check": "svelte-kit sync && tsc && svelte-check",
 		"test": "pnpm test:dev && pnpm test:build",

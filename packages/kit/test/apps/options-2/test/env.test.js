@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import { execFile } from 'node:child_process';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 import { expect } from '@playwright/test';
@@ -56,7 +57,8 @@ test.describe('$app/env', () => {
 			JSON.stringify({
 				PRIVATE_EXPLICIT_ENV: 'secret resolved at runtime',
 				PRIVATE_STATIC_EXPLICIT_ENV: 'secret resolved at build time',
-				PRIVATE_VALIDATED_DEFAULT_ENV: 'foo'
+				PRIVATE_VALIDATED_DEFAULT_ENV: 'foo',
+				RUNTIME_ONLY: 'secret'
 			})
 		);
 
@@ -83,5 +85,24 @@ test.describe('$app/env', () => {
 		const serviceWorker = read('/client/service-worker.js');
 		expect(serviceWorker).not.toContain('importScripts("/basepath/_app/env.script.js");');
 		expect(fs.existsSync(`${output}/prerendered/dependencies/_app/env.script.js`)).toBeFalsy();
+	});
+
+	test('runtime-only validation', async ({ page, javaScriptEnabled }) => {
+		test.skip(javaScriptEnabled);
+
+		await page.goto('/basepath/env/runtime-only');
+		await expect(page.locator('p')).toHaveText('runtime-only environment variable exists: true');
+
+		// test validation runs at runtime
+		if (!process.env.DEV) {
+			const app_dir = fileURLToPath(new URL('..', import.meta.url));
+			const output = await new Promise((resolve) => {
+				execFile('pnpm', ['vite', 'preview'], { cwd: app_dir }, (_, stdout, stderr) =>
+					resolve(stdout + stderr)
+				);
+			});
+			expect(output).toContain('Invalid environment variables');
+			expect(output).toContain('RUNTIME_ONLY');
+		}
 	});
 });

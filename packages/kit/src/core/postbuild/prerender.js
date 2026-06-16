@@ -382,6 +382,12 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 		const type = headers['content-type'];
 		const is_html = response_type === REDIRECT || type === 'text/html';
 
+		if (!is_html && response.status === 200 && decoded.slice(config.paths.base.length + 1) === '') {
+			throw new Error(
+				`Cannot prerender a root +server.js that returns a non-HTML response - static hosts always serve an HTML file for \`${config.paths.base || '/'}\``
+			);
+		}
+
 		const file = output_filename(decoded, is_html);
 		const dest = `${config.outDir}/output/prerendered/${category}/${file}`;
 
@@ -499,7 +505,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 	const public_env = filter_env(env, public_prefix, private_prefix);
 	internal.set_private_env(private_env);
 	internal.set_public_env(public_env);
-	internal.set_env(env);
+	await internal.set_env(env);
 	internal.set_manifest(manifest);
 	internal.set_read_implementation((file) => createReadableStream(`${out}/server/${file}`));
 

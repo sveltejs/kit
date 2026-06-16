@@ -72,6 +72,10 @@ export async function load_explicit_env(kit, file, mode) {
 	/** @type {Record<string, EnvVarConfig<any>>} */
 	let variables;
 
+	/** @type {import('../runtime/app/env/internal.js')} */ (
+		await server.ssrLoadModule(`${runtime_directory}/app/env/internal.js`)
+	).set_building();
+
 	try {
 		({ variables } = await server.ssrLoadModule(file));
 
@@ -157,17 +161,14 @@ export function create_dynamic_module(type, dev_values, disabled) {
 
 /**
  * Creates the `__sveltekit/env` module
- * @param {Record<string, EnvVarConfig<any>> | null} variables
+ * @param {Record<string, EnvVarConfig<any> | undefined> | null} variables
  * @param {Record<string, string>} env
  * @param {string | null} entry
  */
 export function create_sveltekit_env(variables, env, entry) {
 	const imports = entry
-		? [
-				`import { variables } from ${JSON.stringify(entry)};`,
-				`import { validate, handle_issues } from '@sveltejs/kit/internal/env';`
-			]
-		: [`const variables = {};`, `const handle_issues = () => {};`];
+		? [`import { validate, handle_issues } from '@sveltejs/kit/internal/env';`]
+		: [`const handle_issues = () => {};`];
 
 	const declarations = [];
 	const setters = [];
@@ -176,7 +177,7 @@ export function create_sveltekit_env(variables, env, entry) {
 	const issues = {};
 
 	for (const [name, config] of Object.entries(variables ?? {})) {
-		if (config.static) {
+		if (config?.static) {
 			if (config.public) {
 				const value = validate(variables ?? {}, env[name], name, issues);
 				declarations.push(`explicit_public_env.${name} = ${devalue.uneval(value)};`);
@@ -186,7 +187,7 @@ export function create_sveltekit_env(variables, env, entry) {
 				`const ${name} = validate(variables, env.${name}, ${JSON.stringify(name)}, issues);`
 			);
 
-			if (config.public) {
+			if (config?.public) {
 				setters.push(`explicit_public_env.${name} = ${name};`);
 				setters.push(`rendered_env.${name} = ${name};`);
 			} else {
@@ -201,14 +202,16 @@ export function create_sveltekit_env(variables, env, entry) {
 		GENERATED_COMMENT,
 		imports.join('\n'),
 		`const issues = {};`,
-		'export { variables }',
 		'export const dynamic_private_env = {};',
 		'export const explicit_public_env = {};',
 		'export const rendered_env = {};',
 		...declarations,
 		`handle_issues(issues);`,
+		// avoid `variables` from being imported before `set_building` is called
+		// because that causes expressions with `building` to resolve incorrectly
 		dedent`
-			export function set_env(env) {
+			export async function set_env(env) {
+				${entry ? `const { variables } = (await import(${JSON.stringify(entry)}));` : ''}
 				const issues = {};
 				${setters.join('\n')}
 				handle_issues(issues);
