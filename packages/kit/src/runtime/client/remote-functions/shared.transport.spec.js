@@ -28,12 +28,15 @@ describe('remote_request transport error handling', () => {
 	});
 
 	test('non-OK response with JSON error body preserves status and error body', async () => {
-		vi.stubGlobal('fetch', async () => ({
-			ok: false,
-			status: 401,
-			statusText: 'Unauthorized',
-			json: async () => ({ type: 'error', status: 401, error: { message: 'unauthorized' } })
-		}));
+		vi.stubGlobal('fetch', () =>
+			Promise.resolve({
+				ok: false,
+				status: 401,
+				statusText: 'Unauthorized',
+				json: () =>
+					Promise.resolve({ type: 'error', status: 401, error: { message: 'unauthorized' } })
+			})
+		);
 
 		await expect(remote_request('/x')).rejects.toSatisfy((e) => {
 			return e instanceof HttpError && e.status === 401 && e.body?.message === 'unauthorized';
@@ -41,14 +44,14 @@ describe('remote_request transport error handling', () => {
 	});
 
 	test('non-OK response with non-JSON body falls back to response.status and statusText', async () => {
-		vi.stubGlobal('fetch', async () => ({
-			ok: false,
-			status: 503,
-			statusText: 'Service Unavailable',
-			json: async () => {
-				throw new SyntaxError('Unexpected token');
-			}
-		}));
+		vi.stubGlobal('fetch', () =>
+			Promise.resolve({
+				ok: false,
+				status: 503,
+				statusText: 'Service Unavailable',
+				json: () => Promise.reject(new SyntaxError('Unexpected token'))
+			})
+		);
 
 		await expect(remote_request('/x')).rejects.toSatisfy((e) => {
 			return e instanceof HttpError && e.status === 503;
@@ -59,12 +62,14 @@ describe('remote_request transport error handling', () => {
 		// Build a minimal valid RemoteFunctionResponse with type 'result' and no data.
 		const body = JSON.stringify({ type: 'result', data: null });
 
-		vi.stubGlobal('fetch', async () => ({
-			ok: true,
-			status: 200,
-			statusText: 'OK',
-			json: async () => JSON.parse(body)
-		}));
+		vi.stubGlobal('fetch', () =>
+			Promise.resolve({
+				ok: true,
+				status: 200,
+				statusText: 'OK',
+				json: () => Promise.resolve(JSON.parse(body))
+			})
+		);
 
 		// Should resolve without throwing.
 		await expect(remote_request('/x')).resolves.toBeDefined();
