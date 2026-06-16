@@ -14,7 +14,7 @@ export default {
 
 			adapter: adapter(),
 			experimental: {
-				remoteFunctions: true
+				// remoteFunctions: true
 			}
 		})
 	],
