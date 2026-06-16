@@ -8,7 +8,7 @@ minimumReleaseAgeExclude:
   - prettier-plugin-svelte
   - svelte-check
   - esm-env
-	- dts-buddy
+  - dts-buddy
 blockExoticSubdeps: true
 linkWorkspacePackages: true
 shellEmulator: true
