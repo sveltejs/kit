@@ -7,8 +7,10 @@ import { HttpError, SvelteKitError } from '@sveltejs/kit/internal';
  * @param {string} message
  */
 export function stackless(message) {
-	const error = new Error(message);
-	error.stack = '';
+	// Vite only shows the stack but not the message during `vite preview` so
+	// we store it on the stack instead to avoid the error being hidden
+	const error = new Error();
+	error.stack = message;
 	return error;
 }
 
