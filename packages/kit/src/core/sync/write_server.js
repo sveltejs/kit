@@ -17,7 +17,6 @@ import { escape_html } from '../../utils/escape.js';
  *   has_service_worker: boolean;
  *   runtime_directory: string;
  *   template: string;
- *   error_page: string;
  * }} opts
  */
 const server_template = ({
@@ -26,14 +25,14 @@ const server_template = ({
 	universal_hooks,
 	has_service_worker,
 	runtime_directory,
-	template,
-	error_page
+	template
 }) => `
 import root from '../root.${isSvelte5Plus() ? 'js' : 'svelte'}';
 import { set_building, set_prerendering } from '__sveltekit/environment';
 import { set_assets } from '$app/paths/internal/server';
 import { set_manifest, set_read_implementation } from '__sveltekit/server';
 import { set_private_env, set_public_env } from '${runtime_directory}/shared-server.js';
+import error from '../shared/error-template.js';
 
 export const options = {
 	app_template_contains_nonce: ${template.includes('%sveltekit.nonce%')},
@@ -62,9 +61,7 @@ export const options = {
 				/%sveltekit\.env\.([^%]+)%/g,
 				(_match, capture) => `" + (env[${s(capture)}] ?? "") + "`
 			)},
-		error: ({ status, message }) => ${s(error_page)
-			.replace(/%sveltekit\.status%/g, '" + status + "')
-			.replace(/%sveltekit\.error\.message%/g, '" + message + "')}
+		error
 	},
 	version_hash: ${s(hash(config.kit.version.name))}
 };
@@ -125,6 +122,13 @@ export function write_server(config, output) {
 		return posixify(path.relative(`${output}/server`, file));
 	}
 
+	write_if_changed(
+		`${output}/shared/error-template.js`,
+		`export default ({ status, message }) => ${s(load_error_page(config))
+			.replace(/%sveltekit\.status%/g, '" + status + "')
+			.replace(/%sveltekit\.error\.message%/g, '" + message + "')};`
+	);
+
 	// Contains the stringified version of
 	/** @type {import('types').SSROptions} */
 	write_if_changed(
@@ -136,8 +140,7 @@ export function write_server(config, output) {
 			has_service_worker:
 				config.kit.serviceWorker.register && !!resolve_entry(config.kit.files.serviceWorker),
 			runtime_directory: relative(runtime_directory),
-			template: load_template(process.cwd(), config),
-			error_page: load_error_page(config)
+			template: load_template(process.cwd(), config)
 		})
 	);
 }

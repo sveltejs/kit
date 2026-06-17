@@ -62,9 +62,8 @@ export interface SvelteKitApp {
 	/**
 	 * Lazily loads the contents of src/error.html, used as a last-resort
 	 * error page when the root layout's load function throws during client-side rendering.
-	 * `null` when no custom error.html is configured.
 	 */
-	get_error_template: (() => Promise<string>) | null;
+	get_error_template: () => Promise<(data: { status: number; message: string }) => string>;
 }
 
 export type NavigationIntent = {
