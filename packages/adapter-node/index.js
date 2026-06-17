@@ -89,6 +89,10 @@ export default function (opts = {}) {
 					}),
 					// @ts-expect-error https://github.com/rollup/plugins/issues/1329
 					replace({
+						// only replace tokens in the adapter's own entrypoints, so that
+						// identifiers like `BASE` in the user's app code or bundled
+						// dependencies aren't accidentally replaced
+						include: [`${tmp}/entries/**`],
 						values: {
 							BASE: JSON.stringify(builder.config.kit.paths.base),
 							ENV_PREFIX: JSON.stringify(envPrefix),
