@@ -1,3 +1,18 @@
+minimumReleaseAge: 2880
+minimumReleaseAgeExclude:
+  - '@sveltejs/*'
+  - svelte
+  - esrap
+  - devalue
+  - zimmerframe
+  - prettier-plugin-svelte
+  - svelte-check
+  - esm-env
+  - dts-buddy
+blockExoticSubdeps: true
+linkWorkspacePackages: true
+shellEmulator: true
+
 packages:
   - packages/*
   - packages/adapter-cloudflare/test/apps/*
@@ -45,20 +60,20 @@ catalog:
   '@types/semver': ^7.5.6
   '@types/set-cookie-parser': ^2.4.7
   dropcss: ^1.0.16
-  esbuild: ^0.25.4
+  esbuild: ^0.28.1
   eslint: ^10.0.0
   polka: ^1.0.0-next.28
   publint: ^0.3.0
   prettier: ^3.8.1
-  prettier-plugin-svelte: ^3.5.1
+  prettier-plugin-svelte: ^4.1.1
   semver: ^7.5.4
   sirv-cli: ^3.0.0
-  svelte: ^5.55.7
+  svelte: ^5.56.3
   svelte-check: ^4.4.6
   svelte-preprocess: ^6.0.5
   typescript: ^6.0.2
   valibot: ^1.1.0
-  vite: ^6.4.2
+  vite: ^6.4.3
   wrangler: ^4.14.3
 
   # unit test deps that should be upgraded together
@@ -76,7 +91,7 @@ catalogs:
     vite: ^8.0.0
     '@sveltejs/vite-plugin-svelte': ^7.0.0-next.0
   node-18:
-    vite: ^6.4.2 # vite7 requires node20
+    vite: ^6.4.3 # vite7 requires node20
     '@sveltejs/vite-plugin-svelte': ^5.0.0 #vps6 requires node20
     vitest: 4.0.18
     '@vitest/browser-playwright': 4.0.18
