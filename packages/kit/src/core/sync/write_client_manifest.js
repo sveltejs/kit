@@ -183,6 +183,8 @@ export function write_client_manifest(kit, manifest_data, output, metadata) {
 			export const decode = (type, value) => decoders[type](value);
 
 			export { default as root } from '../root.${isSvelte5Plus() ? 'js' : 'svelte'}';
+
+			export const get_error_template = () => import('../shared/error-template.js').then(m => m.default);
 		`
 	);
 
