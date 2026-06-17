@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { rollup } from 'rollup';
 import { nodeResolve } from '@rollup/plugin-node-resolve';
@@ -47,10 +47,9 @@ export default function (opts = {}) {
 
 			builder.log.minor('Building server');
 
+			// Copy the entrypoints into `.svelte-kit/adapter-node/entries`,
+			// so that node modules are correctly resolved
 			builder.copy(files, `${tmp}/entries`);
-			builder.writeServer(`${tmp}/app`);
-
-			const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
 
 			/** @type {Record<string, string>} */
 			const input = {
@@ -64,6 +63,7 @@ export default function (opts = {}) {
 				input['instrumentation.server'] = `${tmp}/instrumentation.server.js`;
 			}
 
+			const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
 			const server = builder.getServerDirectory();
 
 			// we bundle the Vite output so that deployments only need
@@ -79,24 +79,15 @@ export default function (opts = {}) {
 					{
 						name: 'adapter-node:alias',
 						resolveId(id) {
-							if (id === 'SERVER') {
-								return {
-									id: `${server}/index.js`
-								};
-							}
-
-							if (id === 'MANIFEST') {
-								return {
-									id: `${server}/manifest.js`
-								};
-							}
+							if (id === 'SERVER') return `${server}/index.js`;
+							if (id === 'MANIFEST') return `${server}/manifest.js`;
 						}
 					},
 					nodeResolve({
 						preferBuiltins: true,
 						exportConditions: ['node']
 					}),
-					// @ts-expect-error typescript is just... wrong here?
+					// @ts-expect-error https://github.com/rollup/plugins/issues/1329
 					replace({
 						values: {
 							BASE: JSON.stringify(builder.config.kit.paths.base),
@@ -106,9 +97,9 @@ export default function (opts = {}) {
 						},
 						preventAssignment: true
 					}),
-					// @ts-ignore https://github.com/rollup/plugins/issues/1329
+					// @ts-expect-error https://github.com/rollup/plugins/issues/1329
 					commonjs({ strictRequires: true }),
-					// @ts-ignore https://github.com/rollup/plugins/issues/1329
+					// @ts-expect-error https://github.com/rollup/plugins/issues/1329
 					json()
 				]
 			});
