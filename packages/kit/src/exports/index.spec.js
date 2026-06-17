@@ -54,17 +54,10 @@ describe('normalizeUrl', () => {
 
 describe('redirect', () => {
 	it('throws Redirect for valid locations', () => {
-		try {
-			redirect(307, '/valid-location');
-			assert.fail('Expected redirect to throw');
-		} catch (e) {
-			if (!isRedirect(e)) {
-				assert.fail('Expected a Redirect error');
-			}
-
-			assert.equal(e.status, 307);
-			assert.equal(e.location, '/valid-location');
-		}
+		const e = assert.throws(() => redirect(307, '/valid-location'));
+		assert.ok(isRedirect(e));
+		assert.equal(e.status, 307);
+		assert.equal(e.location, '/valid-location');
 	});
 
 	it('throws a descriptive error for invalid redirect locations', () => {
