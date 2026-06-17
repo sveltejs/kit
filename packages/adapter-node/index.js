@@ -50,15 +50,6 @@ export default function (opts = {}) {
 			builder.copy(files, `${tmp}/entries`);
 			builder.writeServer(`${tmp}/app`);
 
-			writeFileSync(
-				`${tmp}/app/manifest.js`,
-				[
-					`export const manifest = ${builder.generateManifest({ relativePath: './' })};`,
-					`export const prerendered = new Set(${JSON.stringify(builder.prerendered.paths)});`,
-					`export const base = ${JSON.stringify(builder.config.kit.paths.base)};`
-				].join('\n\n')
-			);
-
 			const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
 
 			/** @type {Record<string, string>} */
@@ -66,23 +57,14 @@ export default function (opts = {}) {
 				index: `${tmp}/entries/index.js`,
 				env: `${tmp}/entries/env.js`,
 				handler: `${tmp}/entries/handler.js`,
-				shims: `${tmp}/entries/shims.js`,
-				['server/index']: `${tmp}/app/index.js`,
-				['server/manifest']: `${tmp}/app/manifest.js`
+				shims: `${tmp}/entries/shims.js`
 			};
 
 			if (builder.hasServerInstrumentationFile?.()) {
-				input['server/instrumentation.server'] = `${tmp}/instrumentation.server.js`;
+				input['instrumentation.server'] = `${tmp}/instrumentation.server.js`;
 			}
 
-			/** @type {Record<string, string>} */
-			const entries = {
-				ENV: './env.js',
-				HANDLER: './handler.js',
-				MANIFEST: './server/manifest.js',
-				SERVER: './server/index.js',
-				SHIMS: './shims.js'
-			};
+			const server = builder.getServerDirectory();
 
 			// we bundle the Vite output so that deployments only need
 			// their production dependencies. Anything in devDependencies
@@ -97,10 +79,15 @@ export default function (opts = {}) {
 					{
 						name: 'adapter-node:alias',
 						resolveId(id) {
-							if (Object.hasOwn(entries, id)) {
+							if (id === 'SERVER') {
 								return {
-									id: entries[id],
-									external: true
+									id: `${server}/index.js`
+								};
+							}
+
+							if (id === 'MANIFEST') {
+								return {
+									id: `${server}/manifest.js`
 								};
 							}
 						}
@@ -112,8 +99,10 @@ export default function (opts = {}) {
 					// @ts-expect-error typescript is just... wrong here?
 					replace({
 						values: {
+							BASE: JSON.stringify(builder.config.kit.paths.base),
 							ENV_PREFIX: JSON.stringify(envPrefix),
-							PRECOMPRESS: JSON.stringify(precompress)
+							PRECOMPRESS: JSON.stringify(precompress),
+							PRERENDERED: `new Set(${JSON.stringify(builder.prerendered.paths)})`
 						},
 						preventAssignment: true
 					}),
@@ -134,7 +123,7 @@ export default function (opts = {}) {
 			if (builder.hasServerInstrumentationFile?.()) {
 				builder.instrument?.({
 					entrypoint: `${out}/index.js`,
-					instrumentation: `${out}/server/instrumentation.server.js`,
+					instrumentation: `${out}/instrumentation.server.js`,
 					module: {
 						exports: ['path', 'host', 'port', 'server']
 					}

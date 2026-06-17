@@ -35,60 +35,27 @@ function prefixBuiltinModules() {
 	};
 }
 
-// TODO could this be a single build with multiple entries?
 export default [
 	{
-		input: 'src/index.js',
+		input: {
+			index: 'src/index.js',
+			env: 'src/env.js',
+			handler: 'src/handler.js',
+			shims: 'src/shims.js'
+		},
 		output: {
-			file: 'files/index.js',
-			format: 'esm'
+			dir: 'files',
+			format: 'esm',
+			hoistTransitiveImports: false,
+			chunkFileNames: 'chunks/[hash].js'
 		},
 		plugins: [
-			clearOutput('files/index.js'),
+			clearOutput('files'),
 			nodeResolve({ preferBuiltins: true }),
 			commonjs(),
 			json(),
 			prefixBuiltinModules()
 		],
-		external: ['ENV', 'HANDLER']
-	},
-	{
-		input: 'src/env.js',
-		output: {
-			file: 'files/env.js',
-			format: 'esm'
-		},
-		plugins: [
-			clearOutput('files/env.js'),
-			nodeResolve(),
-			commonjs(),
-			json(),
-			prefixBuiltinModules()
-		],
-		external: ['HANDLER']
-	},
-	{
-		input: 'src/handler.js',
-		output: {
-			file: 'files/handler.js',
-			format: 'esm',
-			inlineDynamicImports: true
-		},
-		plugins: [
-			clearOutput('files/handler.js'),
-			nodeResolve(),
-			commonjs(),
-			json(),
-			prefixBuiltinModules()
-		],
-		external: ['ENV', 'MANIFEST', 'SERVER', 'SHIMS', '@sveltejs/kit/node']
-	},
-	{
-		input: 'src/shims.js',
-		output: {
-			file: 'files/shims.js',
-			format: 'esm'
-		},
-		plugins: [clearOutput('files/shims.js'), nodeResolve(), commonjs(), prefixBuiltinModules()]
+		external: ['MANIFEST', 'SERVER', '@sveltejs/kit/node', '@sveltejs/kit/node/polyfills']
 	}
 ];

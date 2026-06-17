@@ -1,7 +1,7 @@
 import http from 'node:http';
 import process from 'node:process';
-import { handler } from 'HANDLER';
-import { env, timeout_env } from 'ENV';
+import { handler } from './handler.js';
+import { env, timeout_env } from './env.js';
 import polka from 'polka';
 import { format_listening_address } from '../utils.js';
 
