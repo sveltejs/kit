@@ -8,10 +8,16 @@ const ValueSchema = v.object({
 	select_field: v.string(),
 	color_field: v.string(),
 	range_field: v.number(),
-	checkbox_field: v.optional(v.boolean(), false)
+	checkbox_field: v.optional(v.boolean(), false),
+
+	hidden: v.object({
+		string: v.string(),
+		number: v.number(),
+		boolean: v.boolean()
+	})
 });
 
-const default_values: Array<v.InferOutput<typeof ValueSchema>> = [
+const default_values: Array<Omit<v.InferOutput<typeof ValueSchema>, 'hidden'>> = [
 	{
 		id: '1',
 		text_field: 'Example text',
@@ -36,6 +42,12 @@ let values = structuredClone(default_values);
 
 export const get_values = query(() => values);
 
+let hidden_values: {
+	string?: string;
+	number?: number;
+	boolean?: boolean;
+} = {};
+
 export const as_value_form = form(ValueSchema, async (data) => {
 	const element = values.find((v) => v.id === data.id);
 	if (element) {
@@ -47,8 +59,12 @@ export const as_value_form = form(ValueSchema, async (data) => {
 		element.checkbox_field = data.checkbox_field;
 		await get_values().refresh();
 	}
+	hidden_values = data.hidden;
 });
+
+export const get_hidden_values = query(() => hidden_values);
 
 export const reset_values = form(async () => {
 	values = structuredClone(default_values);
+	hidden_values = {};
 });

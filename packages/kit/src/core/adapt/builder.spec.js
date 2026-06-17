@@ -65,12 +65,20 @@ test('compress files', async () => {
 		route_data: []
 	});
 
-	const target = fileURLToPath(new URL('./fixtures/compress/foo.css', import.meta.url));
-	rmSync(target + '.br', { force: true });
-	rmSync(target + '.gz', { force: true });
-	await builder.compress(dirname(target));
-	assert.ok(existsSync(target + '.br'));
-	assert.ok(existsSync(target + '.gz'));
+	const targets = [
+		fileURLToPath(new URL('./fixtures/compress/foo.css', import.meta.url)),
+		fileURLToPath(new URL('./fixtures/compress/foo.md', import.meta.url)),
+		fileURLToPath(new URL('./fixtures/compress/foo.mdx', import.meta.url))
+	];
+	for (const target of targets) {
+		rmSync(target + '.br', { force: true });
+		rmSync(target + '.gz', { force: true });
+	}
+	await builder.compress(dirname(targets[0]));
+	for (const target of targets) {
+		assert.ok(existsSync(target + '.br'));
+		assert.ok(existsSync(target + '.gz'));
+	}
 });
 
 test('instrument generates facade with posix paths', () => {
