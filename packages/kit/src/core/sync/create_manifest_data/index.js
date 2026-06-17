@@ -497,6 +497,17 @@ function create_routes_and_nodes(cwd, config, fallback) {
 		if (route.endpoint) {
 			route.endpoint.page_options = get_page_options(route.endpoint.file);
 		}
+
+		if (route.page && route.endpoint) {
+			const page = nodes[route.page.leaf];
+			if (page.page_options?.prerender || route.endpoint.page_options?.prerender) {
+				const endpoint_file = route.endpoint.file.split('/').pop();
+
+				throw new Error(
+					`Cannot prerender a route (${route.id}) with both a \`+page.svelte\` and a \`${endpoint_file}\``
+				);
+			}
+		}
 	}
 
 	return {
