@@ -1068,7 +1068,7 @@ test.describe('data-sveltekit attributes', () => {
 			// it's chrome-error://chromewebdata/ on ubuntu but not on windows
 			offline_url = /chrome-error:\/\/chromewebdata\/|\/data-sveltekit\/preload-data\/offline/;
 		}
-		expect(page).toHaveURL(offline_url);
+		await expect(page).toHaveURL(offline_url);
 	});
 
 	test('data-sveltekit-preload-data error does not block user navigation', async ({
@@ -1086,7 +1086,7 @@ test.describe('data-sveltekit attributes', () => {
 			page.waitForLoadState('networkidle') // wait for preloading to finish
 		]);
 
-		expect(page).toHaveURL('/data-sveltekit/preload-data/offline');
+		await expect(page).toHaveURL('/data-sveltekit/preload-data/offline');
 
 		await page.locator('#one').dispatchEvent('click');
 		await page.waitForTimeout(100); // wait for navigation to start
@@ -1097,7 +1097,7 @@ test.describe('data-sveltekit attributes', () => {
 			// it's chrome-error://chromewebdata/ on ubuntu but not on windows
 			offline_url = /chrome-error:\/\/chromewebdata\/|\/data-sveltekit\/preload-data\/offline/;
 		}
-		expect(page).toHaveURL(offline_url);
+		await expect(page).toHaveURL(offline_url);
 	});
 
 	test('data-sveltekit-preload does not abort ongoing navigation', async ({ page }) => {
@@ -1111,7 +1111,7 @@ test.describe('data-sveltekit attributes', () => {
 			page.waitForLoadState('networkidle') // wait for preloading to finish
 		]);
 
-		expect(page).toHaveURL('/data-sveltekit/preload-data/offline/slow-navigation');
+		await expect(page).toHaveURL('/data-sveltekit/preload-data/offline/slow-navigation');
 	});
 
 	test('data-sveltekit-preload does not abort ongoing navigation #2', async ({ page }) => {
@@ -1125,7 +1125,7 @@ test.describe('data-sveltekit attributes', () => {
 			page.waitForLoadState('networkidle') // wait for preloading to finish
 		]);
 
-		expect(page).toHaveURL('/data-sveltekit/preload-data/offline/slow-navigation');
+		await expect(page).toHaveURL('/data-sveltekit/preload-data/offline/slow-navigation');
 		await expect(page.getByText('slow navigation', { exact: true })).toBeVisible();
 	});
 
@@ -1331,7 +1331,7 @@ test.describe('env', () => {
 	}) => {
 		await page.goto('/prerendering/env/prerendered');
 		await clicknav('[href="/prerendering/env/dynamic"]');
-		expect(await page.locator('h2')).toHaveText('prerendering: false');
+		await expect(page.locator('h2')).toHaveText('prerendering: false');
 	});
 });
 
