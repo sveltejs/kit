@@ -90,6 +90,7 @@ export function form(id) {
 		 */
 		let enhance_callback = async (instance) => {
 			if (await instance.submit()) {
+				await tick();
 				instance.element.reset();
 			}
 		};
