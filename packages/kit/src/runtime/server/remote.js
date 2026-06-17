@@ -48,10 +48,10 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 	const [hash, name, additional_args] = id.split('/');
 	const remotes = manifest._.remotes;
 
-	if (!remotes[hash]) error(404);
+	if (!Object.hasOwn(remotes, hash)) error(404);
 
 	const module = await remotes[hash]();
-	const fn = module.default[name];
+	const fn = Object.hasOwn(module.default, name) ? module.default[name] : undefined;
 
 	if (!fn) error(404);
 
@@ -499,9 +499,11 @@ async function handle_remote_form_post_internal(event, state, manifest, id) {
 	const [hash, name, ...rest] = id.split('/');
 	const action_id = rest.join('/');
 	const remotes = manifest._.remotes;
-	const module = await remotes[hash]?.();
+	const module = Object.hasOwn(remotes, hash) ? await remotes[hash]() : undefined;
 
-	let form = /** @type {RemoteForm<any, any>} */ (module?.default[name]);
+	let form = /** @type {RemoteForm<any, any>} */ (
+		module && Object.hasOwn(module.default, name) ? module.default[name] : undefined
+	);
 
 	if (!form) {
 		event.setHeaders({
