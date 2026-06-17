@@ -7,9 +7,7 @@ declare module 'SERVER' {
 	export { Server } from '@sveltejs/kit';
 }
 
-declare global {
-	const ENV_PREFIX: string;
-	const PRECOMPRESS: boolean;
-}
-
-export {};
+declare const BASE: string;
+declare const ENV_PREFIX: string;
+declare const PRECOMPRESS: boolean;
+declare const PRERENDERED: Set<string>;
