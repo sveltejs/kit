@@ -51,6 +51,9 @@ export default function (opts = {}) {
 			// so that node modules are correctly resolved
 			builder.copy(files, `${tmp}/entries`);
 
+			const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
+			const server = builder.getServerDirectory();
+
 			/** @type {Record<string, string>} */
 			const input = {
 				index: `${tmp}/entries/index.js`,
@@ -60,11 +63,8 @@ export default function (opts = {}) {
 			};
 
 			if (builder.hasServerInstrumentationFile?.()) {
-				input['instrumentation.server'] = `${tmp}/instrumentation.server.js`;
+				input['instrumentation.server'] = `${server}/instrumentation.server.js`;
 			}
-
-			const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
-			const server = builder.getServerDirectory();
 
 			// we bundle the Vite output so that deployments only need
 			// their production dependencies. Anything in devDependencies
