@@ -113,8 +113,11 @@ function live_query_tests() {
 		const result: string = await q();
 		result;
 
-		const iterator: AsyncIterator<string> = await q().run();
-		iterator;
+		for await (const value of q()) {
+			const _: string = value;
+			_;
+			break;
+		}
 
 		q().connected === true;
 		q().done === false;
@@ -631,6 +634,36 @@ function form_tests() {
 	f11_field2.propA;
 	// @ts-expect-error
 	f11_field2.propB;
+
+	// non-optional booleans
+	form(
+		// @ts-expect-error
+		null as unknown as StandardSchemaV1<{
+			a: boolean;
+		}>,
+		() => {}
+	);
+	form(
+		// @ts-expect-error
+		null as unknown as StandardSchemaV1<{
+			a: boolean[];
+		}>,
+		() => {}
+	);
+	form(
+		// @ts-expect-error
+		null as unknown as StandardSchemaV1<{
+			nested?: { a: boolean };
+			b?: boolean;
+		}>,
+		() => {}
+	);
+	form(
+		null as unknown as StandardSchemaV1<{
+			a?: boolean;
+		}>,
+		() => {}
+	);
 }
 form_tests();
 

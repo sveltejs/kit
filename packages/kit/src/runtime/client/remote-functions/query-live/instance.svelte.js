@@ -1,16 +1,16 @@
 /** @import { PromiseWithResolvers } from '../../../../utils/promise.js' */
-import { app } from '../../client.js';
-import * as devalue from 'devalue';
+import { query_responses } from '../../client.js';
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
 import { noop, once } from '../../../../utils/functions.js';
 import { with_resolvers } from '../../../../utils/promise.js';
+import { SharedIterator } from '../../../../utils/shared-iterator.js';
 import { tick } from 'svelte';
-import { unfriendly_hydratable } from '../../../shared.js';
 import { create_live_iterator } from './iterator.js';
 
 /**
  * @template T
  * @implements {Promise<T>}
+ * @implements {AsyncIterable<T>}
  */
 export class LiveQuery {
 	#id;
@@ -42,6 +42,15 @@ export class LiveQuery {
 	 */
 	#interrupt = null;
 	#attempt = 0;
+
+	/**
+	 * Fan-out for `for await` consumers attached to this LiveQuery's shared
+	 * stream. New subscribers see the most-recently-emitted value (if any) as
+	 * their first yield. Subsequent yields fire whenever `set()` is called.
+	 *
+	 * @type {SharedIterator<T>}
+	 */
+	#fan_out = new SharedIterator();
 
 	/** @type {Promise<T>['then']} */
 	// @ts-expect-error TS doesn't understand that the promise returns something
@@ -76,9 +85,25 @@ export class LiveQuery {
 		this.#resolve_first = resolve;
 		this.#reject_first = reject;
 
-		const serialized = unfriendly_hydratable(key, () => undefined);
-		if (serialized !== undefined) {
-			this.set(devalue.parse(serialized, app.decoders));
+		if (Object.hasOwn(query_responses, key)) {
+			const node = query_responses[key];
+			delete query_responses[key];
+
+			if (node.e) {
+				// the query failed during SSR — seed the failed state (mirroring `fail()`,
+				// minus its terminal `#done`), so the main loop still connects as usual
+				// and the query can recover
+				const error = new HttpError(node.e[0] ?? 500, node.e[1]);
+				this.#loading = false;
+				this.#error = error;
+
+				promise.catch(noop);
+				this.#reject_first?.(error);
+				this.#resolve_first = null;
+				this.#reject_first = null;
+			} else {
+				this.set(node.v);
+			}
 		}
 	}
 
@@ -99,6 +124,7 @@ export class LiveQuery {
 
 		/** @type {PromiseWithResolvers<void>} */
 		const { promise: stopped, resolve: on_stop } = with_resolvers();
+		let connected = false;
 
 		while (!this.#done) {
 			const controller = new AbortController();
@@ -111,16 +137,22 @@ export class LiveQuery {
 			const generator = create_live_iterator(this.#id, this.#payload, controller, () => {
 				this.#connected = true;
 				this.#attempt = 0;
+				connected = true;
 				on_connect();
 			});
 
 			try {
 				const { done, value } = await generator.next();
 
-				// TODO how much special handling does this need?
-				// should we even try to reconnect if this is the case?
-				if (done && !this.#ready) {
-					throw new Error('Live query completed before yielding a value');
+				if (done) {
+					if (!this.#ready) {
+						throw new Error('Live query completed before yielding a value');
+					}
+					// stream completed without yielding (e.g. the generator returned
+					// immediately on reconnect) — keep the last good value
+					this.#done = true;
+					this.#fan_out.done();
+					break;
 				}
 
 				this.set(value);
@@ -130,6 +162,7 @@ export class LiveQuery {
 				}
 
 				this.#done = true;
+				this.#fan_out.done();
 			} catch (error) {
 				if (controller.signal.aborted) break;
 
@@ -176,6 +209,12 @@ export class LiveQuery {
 		}
 
 		this.#interrupt = null;
+		// If the loop exited without ever successfully connecting, settle the
+		// reconnect handshake so callers (e.g. `invalidateAll()`) never await
+		// a forever-pending promise.
+		if (!connected) {
+			on_connect_failed(this.#error ?? new Error('Live query connection was interrupted'));
+		}
 		on_stop();
 	}
 
@@ -220,7 +259,36 @@ export class LiveQuery {
 			window.removeEventListener('pageshow', this.#on_pageshow);
 		}
 
+		this.#fan_out.done();
+
 		void this.#interrupt?.();
+	}
+
+	/**
+	 * Iterate the stream of values yielded by this live query. Multiple
+	 * iterators share the underlying connection; the most-recently emitted value
+	 * (if any) is yielded first to each new iterator, mirroring the semantics
+	 * of awaiting the query directly.
+	 *
+	 * Backpressure note: if values arrive faster than the consumer drains, only
+	 * the latest pending value is kept. This matches the reactive `.current`
+	 * semantics — live streams are not event logs.
+	 *
+	 * @returns {AsyncGenerator<T, void, void>}
+	 */
+	[Symbol.asyncIterator]() {
+		this.#start();
+
+		// Seed the new iterator with the current value (if any) so the first
+		// `.next()` resolves synchronously — mirroring `await liveQuery()`
+		// semantics. If the query has hard-failed, `#fan_out` is already closed
+		// with the terminal error and `subscribe()` returns an iterator whose
+		// first `.next()` rejects.
+		return this.#fan_out.subscribe(
+			this.#ready && this.#error === undefined
+				? { initial_value: { value: /** @type {T} */ (this.#raw) } }
+				: undefined
+		);
 	}
 
 	get then() {
@@ -290,6 +358,13 @@ export class LiveQuery {
 		promise.catch(noop);
 		this.#done = false;
 		this.#attempt = 0;
+		// Keep the existing fan-out open so active `for await` consumers
+		// continue receiving values from the new connection without interruption.
+		// Only replace it if it was already closed by a prior `done()`/`fail()`
+		// (e.g. reconnecting after a finite or hard-failed stream)
+		if (this.#fan_out.closed) {
+			this.#fan_out = new SharedIterator();
+		}
 		this.#main({ on_connect, on_connect_failed }).catch(noop);
 		await promise;
 	}
@@ -308,6 +383,8 @@ export class LiveQuery {
 		} else {
 			this.#promise = Promise.resolve();
 		}
+
+		this.#fan_out.push(value);
 	}
 
 	/** @param {unknown} error */
@@ -322,6 +399,7 @@ export class LiveQuery {
 		void this.#interrupt?.();
 
 		if (this.#reject_first) {
+			this.#promise.catch(noop);
 			this.#reject_first(error);
 			this.#resolve_first = null;
 			this.#reject_first = null;
@@ -330,6 +408,8 @@ export class LiveQuery {
 			promise.catch(noop);
 			this.#promise = promise;
 		}
+
+		this.#fan_out.fail(error);
 	}
 
 	get [Symbol.toStringTag]() {
