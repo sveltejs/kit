@@ -1,6 +1,26 @@
 import { command, form, getRequestEvent, query, requested } from '$app/server';
 
-let count = 0;
+// `count` is stored per browser session (keyed by the `count_session` cookie set
+// in `hooks.server.js`) so that tests running in parallel against the same server
+// — e.g. test.js reading the SSR value while client.test.js increments — don't
+// clobber each other. The connection counters below remain global because they're
+// only asserted relatively (and within a single, serial test file).
+/** @type {Map<string, number>} */
+const counts = new Map();
+
+function get_count_value() {
+	return counts.get(session_id()) ?? 0;
+}
+
+/** @param {number} value */
+function set_count_value(value) {
+	counts.set(session_id(), value);
+}
+
+function session_id() {
+	return getRequestEvent().cookies.get('count_session') ?? 'default';
+}
+
 let drop_next = false;
 let active_connections = 0;
 let cleanup_count = 0;
@@ -38,11 +58,13 @@ function wait_for_change(signal) {
 
 export const get_count = query.live(async function* () {
 	const signal = getRequestEvent().request.signal;
+	// capture the session id once; getRequestEvent() may not be available after awaits
+	const id = session_id();
 
 	active_connections += 1;
 
 	try {
-		yield count;
+		yield counts.get(id) ?? 0;
 
 		while (true) {
 			const status = await wait_for_change(signal);
@@ -56,7 +78,7 @@ export const get_count = query.live(async function* () {
 				throw new Error('stream dropped');
 			}
 
-			yield count;
+			yield counts.get(id) ?? 0;
 		}
 	} finally {
 		active_connections -= 1;
@@ -66,13 +88,14 @@ export const get_count = query.live(async function* () {
 
 export const get_finite_count = query.live(async function* () {
 	finite_connection_count += 1;
-	yield count;
+	yield get_count_value();
 });
 
 export const get_duplicate_payload = query.live(async function* () {
 	const signal = getRequestEvent().request.signal;
+	const id = session_id();
 
-	yield { count };
+	yield { count: counts.get(id) ?? 0 };
 
 	while (true) {
 		const status = await wait_for_change(signal);
@@ -81,17 +104,17 @@ export const get_duplicate_payload = query.live(async function* () {
 			return;
 		}
 
-		yield { count };
+		yield { count: counts.get(id) ?? 0 };
 	}
 });
 
 export const increment = command(() => {
-	count += 1;
+	set_count_value(get_count_value() + 1);
 	notify();
 });
 
 export const reset = command(() => {
-	count = 0;
+	set_count_value(0);
 	notify();
 });
 
@@ -123,6 +146,6 @@ export const get_stats = query(() => {
 		cleanup_count,
 		finite_connection_count,
 		requested_reconnect_count,
-		count
+		count: get_count_value()
 	};
 });

@@ -501,11 +501,12 @@ test.describe('Scrolling', () => {
 	test('scrolling to url-supplied anchor respects scroll-margin', async ({ page, clicknav }) => {
 		await page.goto('/anchor');
 		await clicknav('#to-scroll-margin');
-		expect(
-			await page.evaluate(
-				() => document.getElementById('scroll-margin')?.getBoundingClientRect().top
-			)
-		).toBe(40);
+		const top = await page.evaluate(
+			() => document.getElementById('scroll-margin')?.getBoundingClientRect().top
+		);
+		// `scroll-margin-top` is 40px; allow sub-pixel rounding (e.g. on
+		// fractional/high-DPR displays `getBoundingClientRect` returns 40.0667)
+		expect(top).toBeCloseTo(40, 0);
 	});
 
 	test('no-anchor url will scroll to top when navigated from bottom of page', async ({
@@ -1243,4 +1244,21 @@ test.describe('Load', () => {
 			);
 		});
 	}
+});
+
+test.describe('preloadCode', () => {
+	test('can be called during initial load (#13297)', async ({ page }) => {
+		// the thrown error is caught by the load machinery and surfaces as a console
+		// error (not an uncaught pageerror), so capture console output to detect it
+		/** @type {string[]} */
+		const errors = [];
+		page.on('console', (msg) => {
+			if (msg.type() === 'error') errors.push(msg.text());
+		});
+
+		await page.goto('/preload-code-on-load');
+
+		await expect(page.locator('h1')).toHaveText('preload code on load');
+		expect(errors.filter((e) => e.includes('Invalid base URL'))).toEqual([]);
+	});
 });

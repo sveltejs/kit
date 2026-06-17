@@ -43,13 +43,17 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 	/** @type {import('types').ServerInternalModule} */
 	const internal = await import(pathToFileURL(`${out}/server/internal.js`).href);
 
-	/** @type {import('types').ServerModule} */
-	const { Server } = await import(pathToFileURL(`${out}/server/index.js`).href);
-
 	// configure `import { building } from '$app/environment'` and `$app/env` —
 	// essential we do this before analysing the code
 	internal.set_building();
 	internal.set_prerendering();
+
+	/** @type {import('__sveltekit/env')} */
+	const { set_env } = await import(pathToFileURL(`${out}/server/env.js`).href);
+	set_env(env);
+
+	/** @type {import('types').ServerModule} */
+	const { Server } = await import(pathToFileURL(`${out}/server/index.js`).href);
 
 	/**
 	 * @template {{message: string}} T
@@ -382,6 +386,12 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 		const type = headers['content-type'];
 		const is_html = response_type === REDIRECT || type === 'text/html';
 
+		if (!is_html && response.status === 200 && decoded.slice(config.paths.base.length + 1) === '') {
+			throw new Error(
+				`Cannot prerender a root +server.js that returns a non-HTML response - static hosts always serve an HTML file for \`${config.paths.base || '/'}\``
+			);
+		}
+
 		const file = output_filename(decoded, is_html);
 		const dest = `${config.outDir}/output/prerendered/${category}/${file}`;
 
@@ -499,7 +509,6 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 	const public_env = filter_env(env, public_prefix, private_prefix);
 	internal.set_private_env(private_env);
 	internal.set_public_env(public_env);
-	internal.set_env(env);
 	internal.set_manifest(manifest);
 	internal.set_read_implementation((file) => createReadableStream(`${out}/server/${file}`));
 

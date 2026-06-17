@@ -718,8 +718,6 @@ async function initialize(result, target, hydrate) {
 	// which causes component script blocks to run asynchronously
 	void (await Promise.resolve());
 
-	restore_snapshot(current_navigation_index);
-
 	if (hydrate) {
 		/** @type {import('@sveltejs/kit').AfterNavigate} */
 		const navigation = {
@@ -735,6 +733,8 @@ async function initialize(result, target, hydrate) {
 
 		after_navigate_callbacks.forEach((fn) => fn(navigation));
 	}
+
+	restore_snapshot(current_navigation_index);
 
 	started = true;
 }
@@ -1985,10 +1985,6 @@ async function navigate({
 
 	is_navigating = false;
 
-	if (type === 'popstate') {
-		restore_snapshot(current_navigation_index);
-	}
-
 	nav.fulfil(undefined);
 
 	// Update to.scroll to the actual scroll position after navigation completed
@@ -1999,6 +1995,10 @@ async function navigate({
 	after_navigate_callbacks.forEach((fn) =>
 		fn(/** @type {import('@sveltejs/kit').AfterNavigate} */ (nav.navigation))
 	);
+
+	if (type === 'popstate') {
+		restore_snapshot(current_navigation_index);
+	}
 
 	stores.navigating.set((navigating.current = null));
 
@@ -2419,7 +2419,9 @@ export async function preloadCode(pathname) {
 		throw new Error('Cannot call preloadCode(...) on the server');
 	}
 
-	const url = new URL(pathname, current.url);
+	// `current.url` is null until the first navigation/hydration completes, so fall back
+	// to `location` to support calling `preloadCode` during initial page load (#13297)
+	const url = new URL(pathname, current.url ?? location.href);
 
 	if (DEV) {
 		if (!pathname.startsWith('/')) {

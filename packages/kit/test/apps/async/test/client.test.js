@@ -26,6 +26,15 @@ test.describe('remote functions', () => {
 		await page.getByRole('button', { name: 'Refresh' }).click();
 		await expect(page.locator('p')).toHaveText('foobaz');
 	});
+
+	test('remote query responses are not cacheable', async ({ page }) => {
+		// the query is kicked off during SSR but fetched by the client after
+		// hydration, so we can observe the response headers on the wire
+		const response_promise = page.waitForResponse((r) => r.url().includes('/_app/remote/'));
+		await page.goto('/remote/query-loading-state');
+		const response = await response_promise;
+		expect(response.headers()['cache-control']).toBe('private, no-store');
+	});
 });
 
 // have to run in serial because commands mutate in-memory data on the server (should fix this at some point)
@@ -916,6 +925,27 @@ test.describe('remote function mutations', () => {
 		await page.goto('/remote/transport');
 
 		await expect(page.locator('h1')).toHaveText('hello from remote function!');
+	});
+
+	test('denied by hook: transport 403 surfaces as error.status 403 on query resource', async ({
+		page
+	}) => {
+		await page.goto('/remote/transport-status');
+
+		// initial load should succeed and show the value
+		await expect(page.locator('#value')).toHaveText('ok');
+
+		// set the cookie and trigger a refresh; the handle hook blocks remote requests
+		await page.click('#deny-btn');
+
+		// the query resource should report the 403 status from the hook
+		await expect(page.locator('#status')).toHaveText('403');
+
+		// clean up the cookie so other tests aren't affected
+		await page.click('#clear-btn');
+		await page.evaluate(() => {
+			document.cookie = 'deny-remote=; path=/; max-age=0';
+		});
 	});
 
 	test('form.for() with enhance does not duplicate requests', async ({ page }) => {

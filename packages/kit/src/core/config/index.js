@@ -1,13 +1,71 @@
-/** @import { Config } from '@sveltejs/kit' */
+/** @import { Config, KitConfig } from '@sveltejs/kit' */
+/** @import { Options, SvelteConfig } from '@sveltejs/vite-plugin-svelte' */
 /** @import { ValidatedConfig } from 'types' */
 /** @import { ResolvedConfig } from 'vite' */
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import * as url from 'node:url';
-import options from './options.js';
+import { options, kit_options, kit_experimental_options } from './options.js';
 import { resolve_entry } from '../../utils/filesystem.js';
 import { import_peer } from '../../utils/import.js';
+
+/**
+ * Splits the config passed to the `sveltekit` Vite plugin into the options that
+ * SvelteKit processes itself and the options that are forwarded to
+ * `vite-plugin-svelte`. SvelteKit makes no assumptions about which options
+ * `vite-plugin-svelte` accepts — it plucks out its own options and passes
+ * everything else along (`vite-plugin-svelte` does its own validation).
+ * @param {KitConfig & Omit<Options, 'onwarn'> & Pick<SvelteConfig, 'vitePlugin'>} config
+ * @returns {{ svelte_config: Config, vite_plugin_svelte_config: Record<string, any> }}
+ */
+export function split_config(config) {
+	const { extensions, compilerOptions, vitePlugin, preprocess, ...rest } = config;
+
+	/** @type {KitConfig} */
+	const kit = {};
+
+	/** @type {Record<string, any>} */
+	const vite_plugin_svelte_config = {};
+
+	for (const key in rest) {
+		if (key === 'experimental') {
+			// `experimental` is a namespace that both SvelteKit and vite-plugin-svelte
+			// use, so pluck out the flags SvelteKit recognises and pass the rest along
+			const experimental = /** @type {Record<string, any>} */ (rest[key]) ?? {};
+
+			/** @type {Record<string, any>} */
+			const kit_experimental = {};
+			/** @type {Record<string, any>} */
+			const vps_experimental = {};
+
+			for (const flag in experimental) {
+				if (kit_experimental_options.includes(flag)) {
+					kit_experimental[flag] = experimental[flag];
+				} else {
+					vps_experimental[flag] = experimental[flag];
+				}
+			}
+
+			if (Object.keys(kit_experimental).length > 0) {
+				kit.experimental = kit_experimental;
+			}
+			if (Object.keys(vps_experimental).length > 0) {
+				vite_plugin_svelte_config.experimental = vps_experimental;
+			}
+		} else if (kit_options.includes(key)) {
+			// @ts-expect-error - we've verified this is one of SvelteKit's own options
+			kit[key] = rest[key];
+		} else {
+			vite_plugin_svelte_config[key] = /** @type {Record<string, any>} */ (rest)[key];
+		}
+	}
+
+	return {
+		svelte_config: { extensions, compilerOptions, vitePlugin, preprocess, kit },
+		vite_plugin_svelte_config
+	};
+}
 
 /**
  * Loads the template (src/app.html by default) and validates that it has the

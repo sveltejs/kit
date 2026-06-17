@@ -219,6 +219,28 @@ test.describe('Load', () => {
 		expect(did_request_data).toBe(false);
 	});
 
+	test('cached base64-serialized response is decoded when replayed', async ({ page, clicknav }) => {
+		// 1. go to the page (first load, we expect the right data)
+		await page.goto('/load/fetch-cache-control/b64');
+		expect(await page.textContent('.test-content')).toBe('[1,2,3,4]');
+
+		// 2. change to another route (client side)
+		await clicknav('[href="/load/fetch-cache-control"]');
+
+		// 3. come back to the original page (client side)
+		let did_request_data = false;
+		page.on('request', (request) => {
+			if (request.url().endsWith('fetch-cache-control/b64/data')) {
+				did_request_data = true;
+			}
+		});
+		await clicknav('[href="/load/fetch-cache-control/b64"]');
+
+		// 4. data should still be the same (and cached)
+		expect(await page.textContent('.test-content')).toBe('[1,2,3,4]');
+		expect(did_request_data).toBe(false);
+	});
+
 	test('do not use cache if headers are different', async ({ page, clicknav }) => {
 		await page.goto('/load/fetch-cache-control/headers-diff');
 
@@ -1340,6 +1362,21 @@ test.describe('Snapshots', () => {
 		await page.reload();
 		expect(await page.locator('input').inputValue()).toBe('works for reloads');
 	});
+
+	test('restores snapshot after afterNavigate on popstate', async ({ page, clicknav }) => {
+		await page.goto('/snapshot/order');
+		await clicknav('[href="/snapshot/b"]');
+		await page.goBack();
+
+		await expect(page.locator('[data-testid="order"]')).toHaveText('afterNavigate,restore');
+	});
+
+	test('restores snapshot after afterNavigate on reload', async ({ page }) => {
+		await page.goto('/snapshot/order');
+		await page.reload();
+
+		await expect(page.locator('[data-testid="order"]')).toHaveText('afterNavigate,restore');
+	});
 });
 
 test.describe('Streaming', () => {
@@ -1384,7 +1421,11 @@ test.describe('Streaming', () => {
 	// TODO `vite preview` buffers responses, causing these tests to fail
 	if (process.env.DEV) {
 		test('Works for universal load functions (direct hit)', async ({ page }) => {
-			page.goto('/streaming/universal');
+			// `waitUntil: 'commit'` resolves as soon as the streamed response starts (so we can
+			// observe the still-loading state), and `wait_for_started: false` avoids the page
+			// fixture leaving a floating `waitForSelector('body.started')` that rejects with
+			// "Target page... has been closed" when the test ends before hydration completes.
+			await page.goto('/streaming/universal', { waitUntil: 'commit', wait_for_started: false });
 
 			// Write first assertion like this to control the retry interval. Else it might happen that
 			// the test fails because the next retry is too late (probably uses a back-off strategy)
@@ -1404,7 +1445,7 @@ test.describe('Streaming', () => {
 		});
 
 		test('Works for server load functions (direct hit)', async ({ page }) => {
-			page.goto('/streaming/server');
+			await page.goto('/streaming/server', { waitUntil: 'commit', wait_for_started: false });
 
 			// Write first assertion like this to control the retry interval. Else it might happen that
 			// the test fails because the next retry is too late (probably uses a back-off strategy)
@@ -1434,7 +1475,7 @@ test.describe('Streaming', () => {
 		});
 
 		test('Catches fetch errors from server load functions (direct hit)', async ({ page }) => {
-			page.goto('/streaming/server-error');
+			await page.goto('/streaming/server-error', { waitUntil: 'commit', wait_for_started: false });
 			await expect(page.locator('p.eager')).toHaveText('eager');
 			await expect(page.locator('p.fail')).toHaveText('fail');
 		});

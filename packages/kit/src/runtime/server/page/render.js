@@ -12,7 +12,7 @@ import { public_env } from '../../shared-server.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import { SCHEME } from '../../../utils/url.js';
 import { create_server_routing_response, generate_route_object } from './server_routing.js';
-import { add_resolution_suffix } from '../../pathname.js';
+import { add_data_suffix, add_resolution_suffix } from '../../pathname.js';
 import { try_get_request_store, with_request_store } from '@sveltejs/kit/internal/server';
 import { text_encoder } from '../../utils.js';
 import {
@@ -120,7 +120,12 @@ export async function render_response({
 	// if appropriate, use relative paths for greater portability
 	if (paths.relative) {
 		if (!state.prerendering?.fallback) {
-			const segments = event.url.pathname.slice(paths.base.length).split('/').slice(2);
+			// the relative path depth must reflect the URL the browser is actually at, which
+			// for a data request includes the `__data.json` suffix that was stripped during routing
+			const pathname = event.isDataRequest
+				? add_data_suffix(event.url.pathname)
+				: event.url.pathname;
+			const segments = pathname.slice(paths.base.length).split('/').slice(2);
 
 			base = segments.map(() => '..').join('/') || '.';
 
@@ -368,7 +373,13 @@ export async function render_response({
 	if (page_config.csr && client) {
 		const route = client.routes?.find((r) => r.id === event.route.id) ?? null;
 
-		if (client.uses_env_dynamic_public && state.prerendering) {
+		// when serving a prerendered page in an app that uses runtime public env vars, we must
+		// import the env.js module so that it evaluates before any user code can evaluate.
+		// TODO revert to using top-level await once https://bugs.webkit.org/show_bug.cgi?id=242740 is fixed
+		// https://github.com/sveltejs/kit/pull/11601
+		const load_env_eagerly = client.uses_env_dynamic_public && !!state.prerendering;
+
+		if (load_env_eagerly) {
 			modulepreloads.add(`${paths.app_dir}/env.js`);
 		}
 
@@ -400,15 +411,6 @@ export async function render_response({
 		}
 
 		const blocks = [];
-
-		// when serving a prerendered page in an app that uses $env/dynamic/public, we must
-		// import the env.js module so that it evaluates before any user code can evaluate.
-		// TODO revert to using top-level await once https://bugs.webkit.org/show_bug.cgi?id=242740 is fixed
-		// https://github.com/sveltejs/kit/pull/11601
-		const load_env_eagerly =
-			(__SVELTEKIT_EXPERIMENTAL_EXPLICIT_ENVIRONMENT_VARIABLES__ ||
-				client.uses_env_dynamic_public) &&
-			state.prerendering;
 
 		const properties = [`base: ${base_expression}`];
 
@@ -574,11 +576,8 @@ export async function render_response({
 					}`);
 		}
 
-		// we need to eagerly import the Vite client module in development to ensure
-		// that Vite global constant replacements are initialised before our code runs
 		const init_app = `
 				{
-					${DEV ? `import('${paths.base}/@vite/client')` : ''}
 					${blocks.join('\n\n\t\t\t\t\t')}
 				}
 			`;

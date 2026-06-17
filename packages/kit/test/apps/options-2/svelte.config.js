@@ -8,6 +8,12 @@ const config = {
 		}
 	},
 	kit: {
+		adapter: {
+			name: 'test',
+			adapt(builder) {
+				builder.generateEnvModule();
+			}
+		},
 		csp: {
 			directives: {
 				'require-trusted-types-for': ['script'],

@@ -5,6 +5,7 @@ import * as devalue from 'devalue';
 import { app, goto, prerender_responses } from '../client.js';
 import { get_remote_request_headers, remote_request, unwrap_node } from './shared.svelte.js';
 import { create_remote_key, stringify_remote_arg } from '../../shared.js';
+import { noop } from '../../../utils/functions.js';
 
 // Initialize Cache API for prerender functions
 const CACHE_NAME = __SVELTEKIT_DEV__ ? `sveltekit:${Date.now()}` : `sveltekit:${version}`;
@@ -166,6 +167,10 @@ class Prerender {
 				throw error;
 			}
 		);
+
+		// rejections are surfaced via `.error` for reactive consumers — make sure the
+		// stored promise (consumed without `await`) never becomes an unhandled rejection
+		this.#promise.catch(noop);
 	}
 
 	/**

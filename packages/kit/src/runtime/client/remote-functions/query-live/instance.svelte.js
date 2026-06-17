@@ -399,6 +399,7 @@ export class LiveQuery {
 		void this.#interrupt?.();
 
 		if (this.#reject_first) {
+			this.#promise.catch(noop);
 			this.#reject_first(error);
 			this.#resolve_first = null;
 			this.#reject_first = null;
