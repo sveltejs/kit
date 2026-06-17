@@ -1,8 +1,9 @@
+/** @import { PageOptions } from './types.js' */
 import { tsPlugin } from '@sveltejs/acorn-typescript';
 import { Parser } from 'acorn';
 import { read } from '../../../utils/filesystem.js';
 
-const valid_page_options_array = /** @type {const} */ ([
+export const valid_page_options_array = /** @type {const} */ ([
 	'ssr',
 	'prerender',
 	'csr',
@@ -14,9 +15,6 @@ const valid_page_options_array = /** @type {const} */ ([
 
 /** @type {Set<string>} */
 const valid_page_options = new Set(valid_page_options_array);
-
-/** @typedef {typeof valid_page_options_array[number]} ValidPageOption */
-/** @typedef {Partial<Record<ValidPageOption, any>>} PageOptions */
 
 const skip_parsing_regex = new RegExp(
 	`${Array.from(valid_page_options).join('|')}|(?:export[\\s\\n]+\\*[\\s\\n]+from)`
