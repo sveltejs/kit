@@ -1,6 +1,5 @@
 import { read_implementation, manifest } from '__sveltekit/server';
 import { base } from '$app/paths';
-import { DEV } from 'esm-env';
 import { base64_decode } from '../../utils.js';
 
 /**
@@ -55,7 +54,7 @@ export function read(asset) {
 	}
 
 	const file = decodeURIComponent(
-		DEV && asset.startsWith('/@fs') ? asset : asset.slice(base.length + 1)
+		__SVELTEKIT_DEV__ && asset.startsWith('/@fs') ? asset : asset.slice(base.length + 1)
 	);
 
 	if (file in manifest._.server_assets) {

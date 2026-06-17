@@ -50,6 +50,7 @@ export function convert_formdata(data) {
 		values = values.filter(
 			(entry) => typeof entry === 'string' || entry.name !== '' || entry.size > 0
 		);
+		if (values.length === 0 && !is_array) continue;
 
 		if (key.startsWith('n:')) {
 			key = key.slice(2);
@@ -145,10 +146,6 @@ export async function deserialize_binary_form(request) {
 	if (!request.body) {
 		throw deserialize_error('no body');
 	}
-	const content_length = parseInt(request.headers.get('content-length') ?? '');
-	if (Number.isNaN(content_length)) {
-		throw deserialize_error('invalid Content-Length header');
-	}
 
 	const reader = request.body.getReader();
 
@@ -228,16 +225,11 @@ export async function deserialize_binary_form(request) {
 	}
 	const header_view = new DataView(header.buffer, header.byteOffset, header.byteLength);
 	const data_length = header_view.getUint32(1, true);
-
-	if (HEADER_BYTES + data_length > content_length) {
-		throw deserialize_error('data overflow');
-	}
-
 	const file_offsets_length = header_view.getUint16(5, true);
 
-	if (HEADER_BYTES + data_length + file_offsets_length > content_length) {
-		throw deserialize_error('file offset table overflow');
-	}
+	// Validation uses embedded binary header fields (data_length, file_offsets_length)
+	// rather than Content-Length, which proxies/middleboxes may strip or corrupt.
+	// See: https://github.com/sveltejs/kit/issues/15299
 
 	// Read the form data
 	const data_buffer = await get_buffer(HEADER_BYTES, data_length);
@@ -289,9 +281,6 @@ export async function deserialize_binary_form(request) {
 			file_offsets[index] = undefined;
 
 			offset += files_start_offset;
-			if (offset + size > content_length) {
-				throw deserialize_error('file data overflow');
-			}
 
 			file_spans.push({ offset, size });
 
@@ -602,6 +591,23 @@ export function deep_get(object, path) {
 }
 
 /**
+ *
+ * @param {string} field_type
+ * @param {boolean} is_array
+ * @param {unknown} input_value
+ */
+function get_type_prefix(field_type, is_array, input_value) {
+	if (field_type === 'number' || field_type === 'range') return 'n:';
+	if (field_type === 'checkbox' && !is_array) return 'b:';
+	if (field_type === 'hidden' || field_type === 'submit') {
+		const input_type = typeof input_value;
+		if (input_type === 'number') return 'n:';
+		if (input_type === 'boolean') return 'b:';
+	}
+	return '';
+}
+
+/**
  * Creates a proxy-based field accessor for form data
  * @param {any} target - Function or empty POJO
  * @param {() => Record<string, any>} get_input - Function to get current input data
@@ -674,12 +680,7 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 						type === 'select multiple' ||
 						(type === 'checkbox' && typeof input_value === 'string');
 
-					const prefix =
-						type === 'number' || type === 'range'
-							? 'n:'
-							: type === 'checkbox' && !is_array
-								? 'b:'
-								: '';
+					const prefix = get_type_prefix(type, is_array, input_value);
 
 					// Base properties for all input types
 					/** @type {Record<string, any>} */
@@ -699,13 +700,16 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 					// Handle submit and hidden inputs
 					if (type === 'submit' || type === 'hidden') {
 						if (DEV) {
-							if (!input_value) {
+							if (input_value === null || input_value === undefined) {
 								throw new Error(`\`${type}\` inputs must have a value`);
 							}
 						}
 
+						const value =
+							typeof input_value === 'boolean' ? (input_value ? 'on' : 'off') : input_value;
+
 						return Object.defineProperties(base_props, {
-							value: { value: input_value, enumerable: true }
+							value: { value, enumerable: true }
 						});
 					}
 
