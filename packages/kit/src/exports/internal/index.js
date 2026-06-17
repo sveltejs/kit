@@ -29,9 +29,7 @@ export class Redirect {
 	constructor(status, location) {
 		try {
 			// Encode non-ASCII characters so the location is valid in HTTP headers
-			location = location.replace(/[^\u0020-\u007E\t\n\r]+/g, (match) =>
-				encodeURIComponent(match)
-			);
+			location = location.replace(/[^\u0020-\u007E\t\n\r]+/g, (match) => encodeURIComponent(match));
 
 			new Headers({ location });
 		} catch {
