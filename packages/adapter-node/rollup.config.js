@@ -35,27 +35,25 @@ function prefixBuiltinModules() {
 	};
 }
 
-export default [
-	{
-		input: {
-			index: 'src/index.js',
-			env: 'src/env.js',
-			handler: 'src/handler.js',
-			shims: 'src/shims.js'
-		},
-		output: {
-			dir: 'files',
-			format: 'esm',
-			hoistTransitiveImports: false,
-			chunkFileNames: 'chunks/[hash].js'
-		},
-		plugins: [
-			clearOutput('files'),
-			nodeResolve({ preferBuiltins: true }),
-			commonjs(),
-			json(),
-			prefixBuiltinModules()
-		],
-		external: ['MANIFEST', 'SERVER', '@sveltejs/kit/node', '@sveltejs/kit/node/polyfills']
-	}
-];
+export default {
+	input: {
+		index: 'src/index.js',
+		env: 'src/env.js',
+		handler: 'src/handler.js',
+		shims: 'src/shims.js'
+	},
+	output: {
+		dir: 'files',
+		format: 'esm',
+		hoistTransitiveImports: false,
+		chunkFileNames: 'chunks/[hash].js'
+	},
+	plugins: [
+		clearOutput('files'),
+		nodeResolve({ preferBuiltins: true }),
+		commonjs(),
+		json(),
+		prefixBuiltinModules()
+	],
+	external: ['MANIFEST', 'SERVER', '@sveltejs/kit/node', '@sveltejs/kit/node/polyfills']
+};
