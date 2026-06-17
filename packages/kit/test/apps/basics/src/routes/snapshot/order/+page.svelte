@@ -2,18 +2,18 @@
 	import { afterNavigate } from '$app/navigation';
 
 	/** @type {string[]} */
-	let order = [];
+	const order = $state([]);
 
-	/** @type {import('./$types').Snapshot<string>} */
+	/** @type {import('./$types').Snapshot<void>} */
 	export const snapshot = {
-		capture: () => '',
+		capture: () => {},
 		restore: () => {
-			order = [...order, 'restore'];
+			order.push('restore');
 		}
 	};
 
 	afterNavigate(() => {
-		order = [...order, 'afterNavigate'];
+		order.push('afterNavigate');
 	});
 </script>
 
