@@ -4,6 +4,7 @@ import { rollup } from 'rollup';
 import { nodeResolve } from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import json from '@rollup/plugin-json';
+import replace from '@rollup/plugin-replace';
 
 /**
  * @template T
@@ -46,10 +47,11 @@ export default function (opts = {}) {
 
 			builder.log.minor('Building server');
 
-			builder.writeServer(tmp);
+			builder.copy(files, `${tmp}/entries`);
+			builder.writeServer(`${tmp}/app`);
 
 			writeFileSync(
-				`${tmp}/manifest.js`,
+				`${tmp}/app/manifest.js`,
 				[
 					`export const manifest = ${builder.generateManifest({ relativePath: './' })};`,
 					`export const prerendered = new Set(${JSON.stringify(builder.prerendered.paths)});`,
@@ -61,13 +63,26 @@ export default function (opts = {}) {
 
 			/** @type {Record<string, string>} */
 			const input = {
-				index: `${tmp}/index.js`,
-				manifest: `${tmp}/manifest.js`
+				index: `${tmp}/entries/index.js`,
+				env: `${tmp}/entries/env.js`,
+				handler: `${tmp}/entries/handler.js`,
+				shims: `${tmp}/entries/shims.js`,
+				['server/index']: `${tmp}/app/index.js`,
+				['server/manifest']: `${tmp}/app/manifest.js`
 			};
 
 			if (builder.hasServerInstrumentationFile?.()) {
-				input['instrumentation.server'] = `${tmp}/instrumentation.server.js`;
+				input['server/instrumentation.server'] = `${tmp}/instrumentation.server.js`;
 			}
+
+			/** @type {Record<string, string>} */
+			const entries = {
+				ENV: './env.js',
+				HANDLER: './handler.js',
+				MANIFEST: './server/manifest.js',
+				SERVER: './server/index.js',
+				SHIMS: './shims.js'
+			};
 
 			// we bundle the Vite output so that deployments only need
 			// their production dependencies. Anything in devDependencies
@@ -79,9 +94,28 @@ export default function (opts = {}) {
 					...Object.keys(pkg.dependencies || {}).map((d) => new RegExp(`^${d}(\\/.*)?$`))
 				],
 				plugins: [
+					{
+						name: 'adapter-node:alias',
+						resolveId(id) {
+							if (Object.hasOwn(entries, id)) {
+								return {
+									id: entries[id],
+									external: true
+								};
+							}
+						}
+					},
 					nodeResolve({
 						preferBuiltins: true,
 						exportConditions: ['node']
+					}),
+					// @ts-expect-error typescript is just... wrong here?
+					replace({
+						values: {
+							ENV_PREFIX: JSON.stringify(envPrefix),
+							PRECOMPRESS: JSON.stringify(precompress)
+						},
+						preventAssignment: true
 					}),
 					// @ts-ignore https://github.com/rollup/plugins/issues/1329
 					commonjs({ strictRequires: true }),
@@ -91,22 +125,10 @@ export default function (opts = {}) {
 			});
 
 			await bundle.write({
-				dir: `${out}/server`,
+				dir: out,
 				format: 'esm',
 				sourcemap: true,
-				chunkFileNames: 'chunks/[name]-[hash].js'
-			});
-
-			builder.copy(files, out, {
-				replace: {
-					ENV: './env.js',
-					HANDLER: './handler.js',
-					MANIFEST: './server/manifest.js',
-					SERVER: './server/index.js',
-					SHIMS: './shims.js',
-					ENV_PREFIX: JSON.stringify(envPrefix),
-					PRECOMPRESS: JSON.stringify(precompress)
-				}
+				chunkFileNames: 'server/chunks/[name]-[hash].js'
 			});
 
 			if (builder.hasServerInstrumentationFile?.()) {

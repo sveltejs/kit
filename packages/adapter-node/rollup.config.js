@@ -35,6 +35,7 @@ function prefixBuiltinModules() {
 	};
 }
 
+// TODO could this be a single build with multiple entries?
 export default [
 	{
 		input: 'src/index.js',
@@ -80,7 +81,7 @@ export default [
 			json(),
 			prefixBuiltinModules()
 		],
-		external: ['ENV', 'MANIFEST', 'SERVER', 'SHIMS']
+		external: ['ENV', 'MANIFEST', 'SERVER', 'SHIMS', '@sveltejs/kit/node']
 	},
 	{
 		input: 'src/shims.js',
