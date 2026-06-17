@@ -1362,6 +1362,21 @@ test.describe('Snapshots', () => {
 		await page.reload();
 		expect(await page.locator('input').inputValue()).toBe('works for reloads');
 	});
+
+	test('restores snapshot after afterNavigate on popstate', async ({ page, clicknav }) => {
+		await page.goto('/snapshot/order');
+		await clicknav('[href="/snapshot/b"]');
+		await page.goBack();
+
+		await expect(page.locator('[data-testid="order"]')).toHaveText('afterNavigate,restore');
+	});
+
+	test('restores snapshot after afterNavigate on reload', async ({ page }) => {
+		await page.goto('/snapshot/order');
+		await page.reload();
+
+		await expect(page.locator('[data-testid="order"]')).toHaveText('afterNavigate,restore');
+	});
 });
 
 test.describe('Streaming', () => {
