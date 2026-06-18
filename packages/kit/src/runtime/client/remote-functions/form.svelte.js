@@ -53,7 +53,7 @@ export function form(id) {
 	/** @type {Map<any, { count: number, instance: RemoteForm<T, U> }>} */
 	const instances = new Map();
 
-	/** @type {WeakMap<object, StandardSchemaV1>} */
+	/** @type {WeakMap<RemoteForm<T, U>, StandardSchemaV1>} */
 	const preflight_schemas = new WeakMap();
 
 	/** @param {string | number | boolean} [key] */
