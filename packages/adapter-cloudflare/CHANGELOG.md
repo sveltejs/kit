@@ -1,5 +1,14 @@
 # @sveltejs/adapter-cloudflare
 
+## 7.2.9
+### Patch Changes
+
+
+- fix: avoid type collision with user defined `App.Platform` `env` property ([#16043](https://github.com/sveltejs/kit/pull/16043))
+
+- Updated dependencies [[`80cc084`](https://github.com/sveltejs/kit/commit/80cc0844916f9f80cb91272b3dd8a82a24c7c104), [`cc68acb`](https://github.com/sveltejs/kit/commit/cc68acb816e5a6da9e171d0469e3aa37ae70e182), [`d33bc6b`](https://github.com/sveltejs/kit/commit/d33bc6bc40e6e0977890fbbff4be017582332e43), [`f3f0c94`](https://github.com/sveltejs/kit/commit/f3f0c9428be70ea26621f4045cc9676d2819e34b), [`5ced880`](https://github.com/sveltejs/kit/commit/5ced880ac9fc151aaa376e3ef2cdcfcac4120e7b), [`a34e663`](https://github.com/sveltejs/kit/commit/a34e66369023d7e2d441f43991e1845c17c71ccf), [`ab190ae`](https://github.com/sveltejs/kit/commit/ab190aeed3b7ed586c2b21e7c5213e74f042f856), [`7751d60`](https://github.com/sveltejs/kit/commit/7751d60c3929a3e57431c48833544b3a4167c3c1), [`1cfc838`](https://github.com/sveltejs/kit/commit/1cfc83883fff1aa9e5de4b71ac6836061754f841), [`c3b2c34`](https://github.com/sveltejs/kit/commit/c3b2c34d414d6ca3e1e610ecbe89c690c32d3a07), [`82bcb7d`](https://github.com/sveltejs/kit/commit/82bcb7d8852a0187b1811024b491de6cdedcd548)]:
+  - @sveltejs/kit@2.65.2
+
 ## 7.2.8
 ### Patch Changes
 

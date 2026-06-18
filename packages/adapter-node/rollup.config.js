@@ -35,59 +35,25 @@ function prefixBuiltinModules() {
 	};
 }
 
-export default [
-	{
-		input: 'src/index.js',
-		output: {
-			file: 'files/index.js',
-			format: 'esm'
-		},
-		plugins: [
-			clearOutput('files/index.js'),
-			nodeResolve({ preferBuiltins: true }),
-			commonjs(),
-			json(),
-			prefixBuiltinModules()
-		],
-		external: ['ENV', 'HANDLER']
+export default {
+	input: {
+		index: 'src/index.js',
+		env: 'src/env.js',
+		handler: 'src/handler.js',
+		shims: 'src/shims.js'
 	},
-	{
-		input: 'src/env.js',
-		output: {
-			file: 'files/env.js',
-			format: 'esm'
-		},
-		plugins: [
-			clearOutput('files/env.js'),
-			nodeResolve(),
-			commonjs(),
-			json(),
-			prefixBuiltinModules()
-		],
-		external: ['HANDLER']
+	output: {
+		dir: 'files',
+		format: 'esm',
+		hoistTransitiveImports: false,
+		chunkFileNames: 'chunks/[hash].js'
 	},
-	{
-		input: 'src/handler.js',
-		output: {
-			file: 'files/handler.js',
-			format: 'esm',
-			inlineDynamicImports: true
-		},
-		plugins: [
-			clearOutput('files/handler.js'),
-			nodeResolve(),
-			commonjs(),
-			json(),
-			prefixBuiltinModules()
-		],
-		external: ['ENV', 'MANIFEST', 'SERVER', 'SHIMS']
-	},
-	{
-		input: 'src/shims.js',
-		output: {
-			file: 'files/shims.js',
-			format: 'esm'
-		},
-		plugins: [clearOutput('files/shims.js'), nodeResolve(), commonjs(), prefixBuiltinModules()]
-	}
-];
+	plugins: [
+		clearOutput('files'),
+		nodeResolve({ preferBuiltins: true }),
+		commonjs(),
+		json(),
+		prefixBuiltinModules()
+	],
+	external: ['MANIFEST', 'SERVER', '@sveltejs/kit/node', '@sveltejs/kit/node/polyfills']
+};

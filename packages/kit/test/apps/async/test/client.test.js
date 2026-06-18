@@ -26,6 +26,15 @@ test.describe('remote functions', () => {
 		await page.getByRole('button', { name: 'Refresh' }).click();
 		await expect(page.locator('p')).toHaveText('foobaz');
 	});
+
+	test('remote query responses are not cacheable', async ({ page }) => {
+		// the query is kicked off during SSR but fetched by the client after
+		// hydration, so we can observe the response headers on the wire
+		const response_promise = page.waitForResponse((r) => r.url().includes('/_app/remote/'));
+		await page.goto('/remote/query-loading-state');
+		const response = await response_promise;
+		expect(response.headers()['cache-control']).toBe('private, no-store');
+	});
 });
 
 // have to run in serial because commands mutate in-memory data on the server (should fix this at some point)
@@ -58,6 +67,16 @@ test.describe('remote function mutations', () => {
 		expect(request_count).toBe(0);
 	});
 
+	test('hydrated prerender data is reused', async ({ page }) => {
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		await page.goto('/remote/prerender-inline');
+		await expect(page.locator('#prerender-value')).toHaveText('prerendered: hello');
+		await page.waitForTimeout(100); // allow all requests to finish
+		expect(request_count).toBe(0);
+	});
+
 	test('hydrated batch data is reused', async ({ page }) => {
 		let request_count = 0;
 		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
@@ -67,6 +86,65 @@ test.describe('remote function mutations', () => {
 		await expect(page.locator('#ssr-batch-result-2')).toHaveText('Walk the dog');
 		await expect(page.locator('#ssr-batch-result-3')).toHaveText('Not found');
 		expect(request_count).toBe(0);
+	});
+
+	test('hydrated query errors are reused', async ({ page }) => {
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		await page.goto('/remote/error-hydration');
+		await expect(page.locator('#q-error')).toHaveText('418: teapot');
+		await page.waitForTimeout(100); // allow all requests to finish (there shouldn't be any)
+		expect(request_count).toBe(0);
+	});
+
+	test('hydrated batch query errors are reused', async ({ page }) => {
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		await page.goto('/remote/error-hydration/batch');
+		await expect(page.locator('#batch-error')).toHaveText('418: batch teapot');
+		await page.waitForTimeout(100); // allow all requests to finish (there shouldn't be any)
+		expect(request_count).toBe(0);
+	});
+
+	test('hydrated query.live errors are reused', async ({ page }) => {
+		await page.goto(`/remote/live-error-seed/${Date.now()}${Math.random()}`);
+
+		// the SSR HTML shows no error (server-side getters are static), but the
+		// hydrated client must seed the failed state from the payload — the
+		// reconnection attempt never settles, so this is the only way the error can appear
+		await expect(page.locator('#live-error')).toHaveText('418: live teapot');
+	});
+
+	test('server-initiated updates for inactive queries are reused when the resource is created', async ({
+		page
+	}) => {
+		await page.goto(`/remote/sidechannel-store/${Date.now()}${Math.random()}`);
+
+		await page.click('#update');
+		await page.waitForTimeout(100); // allow the command roundtrip to finish
+
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		await page.click('#show');
+		await expect(page.locator('#value')).toHaveText('updated');
+		await page.waitForTimeout(100); // allow all requests to finish (there shouldn't be any)
+		expect(request_count).toBe(0);
+	});
+
+	test('over-limit requested() refreshes fail the client query', async ({ page }) => {
+		await page.goto(`/remote/requested-limit/${Date.now()}${Math.random()}`);
+
+		await expect(page.locator('#value')).toHaveText('0');
+		await expect(page.locator('#error')).toHaveText('none');
+
+		await page.click('button');
+
+		await expect(page.locator('#error')).toHaveText(
+			'400: Requested refresh was rejected because it exceeded requested(get_count, 0) limit'
+		);
 	});
 
 	test('command returns correct sum but does not refresh data by default', async ({ page }) => {
@@ -440,6 +518,34 @@ test.describe('remote function mutations', () => {
 		expect(request_count).toBe(1);
 	});
 
+	test('query.batch redirect settles batched promises', async ({ page }) => {
+		await page.goto('/remote/batch-redirect');
+
+		await page.click('#trigger');
+
+		// the redirect must both navigate and settle the awaited query
+		await expect(page.locator('#status')).toHaveText('resolved');
+		expect(page.url()).toContain('#redirected');
+	});
+
+	test('non-exported remote functions are never serialized into responses', async ({ page }) => {
+		await page.goto('/remote/private-query');
+
+		const [response] = await Promise.all([
+			page.waitForResponse((r) => r.url().includes('/_app/remote')),
+			page.click('#reveal')
+		]);
+
+		const body = await response.text();
+
+		// the command's own (transformed) result is present...
+		expect(body).toContain('PRIVATE-DATA');
+		// ...but the private query's raw value must not leak
+		expect(body).not.toContain('private-data');
+
+		await expect(page.locator('#result')).toHaveText('PRIVATE-DATA');
+	});
+
 	test('query.batch resolver function always receives validated arguments', async ({ page }) => {
 		await page.goto('/remote/batch-validation');
 
@@ -667,6 +773,47 @@ test.describe('remote function mutations', () => {
 		await page.click('#reset');
 	});
 
+	test('for await consumers continue receiving values across invalidateAll-triggered reconnects', async ({
+		page
+	}) => {
+		await page.goto('/remote/live');
+		await page.click('#reset');
+		await expect(page.locator('#count')).toHaveText('0');
+
+		await page.click('#start-stream-log');
+		// the first value should be the current value (0)
+		await expect(page.locator('#stream-log')).toHaveText(/0/);
+
+		// invalidateAll() calls reconnect(), which keeps the existing fan-out
+		// open so active `for await` consumers continue receiving values from
+		// the new connection without interruption.
+		await page.click('#run-invalidate-all');
+		await expect(page.locator('#invalidate-state')).toHaveText('resolved');
+
+		// Trigger a new value — the still-attached consumer must see it.
+		// Before the fix the fan-out was replaced, orphaning the subscriber so
+		// this value never arrived and the loop hung.
+		await page.click('#increment');
+		await expect(page.locator('#stream-log')).toContainText('1');
+
+		await page.click('#reset');
+	});
+
+	test('invalidateAll resolves while a live query is offline', async ({ page, context }) => {
+		await page.goto('/remote/live');
+		await page.click('#reset');
+		await expect(page.locator('#connected')).toHaveText('true');
+
+		await context.setOffline(true);
+
+		// reconnect()'s handshake must settle on every #main exit path (here:
+		// offline) so that awaiting invalidateAll() doesn't deadlock.
+		await page.click('#run-invalidate-all');
+		await expect(page.locator('#invalidate-state')).toHaveText(/resolved|rejected/);
+
+		await context.setOffline(false);
+	});
+
 	test('query.live cleans up server iterator on reload', async ({ page }) => {
 		await page.goto('/remote/live');
 		await page.click('#stats');
@@ -687,6 +834,43 @@ test.describe('remote function mutations', () => {
 				return stats.cleanup_count;
 			})
 			.toBeGreaterThan(before_cleanup);
+	});
+
+	test('query.live surfaces mid-stream HttpError and does not reconnect', async ({ page }) => {
+		await page.goto('/remote/live-terminal');
+
+		await expect(page.locator('#value')).toHaveText('0');
+		await expect(page.locator('#connected')).toHaveText('true');
+
+		await page.click('#refresh-connections');
+		await expect(page.locator('#connections')).not.toHaveText('pending');
+		const before = Number(await page.locator('#connections').textContent());
+
+		await page.click('#trigger-error');
+
+		await expect(page.locator('#error')).toHaveText('418 terminal teapot');
+		await expect(page.locator('#connected')).toHaveText('false');
+		await expect(page.locator('#done')).toHaveText('true');
+
+		// A terminal HttpError must not trigger a reconnect — the connection count
+		// should not increase after the failure.
+		await page.waitForTimeout(500);
+		await page.click('#refresh-connections');
+		await expect
+			.poll(async () => Number(await page.locator('#connections').textContent()))
+			.toBe(before);
+	});
+
+	test('query.live navigates on mid-stream redirect', async ({ page }) => {
+		await page.goto('/remote/live-terminal');
+
+		await expect(page.locator('#value')).toHaveText('0');
+		await expect(page.locator('#connected')).toHaveText('true');
+
+		await page.click('#trigger-redirect');
+
+		await expect(page.locator('#redirect-target')).toBeVisible();
+		expect(page.url()).toMatch(/\/remote\/live-terminal\/target$/);
 	});
 
 	test('refreshAll works with schema transforms (number to string)', async ({ page }) => {
@@ -741,6 +925,27 @@ test.describe('remote function mutations', () => {
 		await page.goto('/remote/transport');
 
 		await expect(page.locator('h1')).toHaveText('hello from remote function!');
+	});
+
+	test('denied by hook: transport 403 surfaces as error.status 403 on query resource', async ({
+		page
+	}) => {
+		await page.goto('/remote/transport-status');
+
+		// initial load should succeed and show the value
+		await expect(page.locator('#value')).toHaveText('ok');
+
+		// set the cookie and trigger a refresh; the handle hook blocks remote requests
+		await page.click('#deny-btn');
+
+		// the query resource should report the 403 status from the hook
+		await expect(page.locator('#status')).toHaveText('403');
+
+		// clean up the cookie so other tests aren't affected
+		await page.click('#clear-btn');
+		await page.evaluate(() => {
+			document.cookie = 'deny-remote=; path=/; max-age=0';
+		});
 	});
 
 	test('form.for() with enhance does not duplicate requests', async ({ page }) => {
@@ -808,6 +1013,73 @@ test.describe('remote function mutations', () => {
 
 		// Should have refreshed
 		await expect(count).toHaveText('Count: 1');
+	});
+
+	test('form result from a native (non-enhanced) submission survives hydration', async ({
+		page
+	}) => {
+		await page.goto('/remote/form/native-result');
+		await page.locator('#plain input[name="message"]').fill('hello');
+		await page.click('#plain button');
+
+		// wait for the page resulting from the full-page POST to hydrate
+		await expect(page.locator('#hydrated')).toHaveText('true');
+		await expect(page.locator('#result')).toHaveText('echo: hello');
+	});
+
+	test('form issues and input from a native (non-enhanced) submission survive hydration', async ({
+		page
+	}) => {
+		await page.goto('/remote/form/native-result');
+		await page.locator('#plain input[name="message"]').fill('ab');
+		await page.click('#plain button');
+
+		// wait for the page resulting from the full-page POST to hydrate
+		await expect(page.locator('#hydrated')).toHaveText('true');
+		await expect(page.locator('#issue')).toHaveText('too short');
+		await expect(page.locator('#plain input[name="message"]')).toHaveValue('ab');
+	});
+
+	test('keyed form result from a native (non-enhanced) submission survives hydration', async ({
+		page
+	}) => {
+		await page.goto('/remote/form/native-result');
+		await page.locator('#keyed input[name="message"]').fill('hello');
+		await page.click('#keyed button');
+
+		// wait for the page resulting from the full-page POST to hydrate
+		await expect(page.locator('#hydrated')).toHaveText('true');
+		await expect(page.locator('#keyed-result')).toHaveText('echo: hello');
+		// the result must not leak to the unkeyed instance
+		await expect(page.locator('#result')).toHaveText('none');
+	});
+
+	test('form keys containing slashes work with native (non-enhanced) submissions', async ({
+		page
+	}) => {
+		await page.goto('/remote/form/native-result');
+		await page.locator('#keyed-slash input[name="message"]').fill('hello');
+		await page.click('#keyed-slash button');
+
+		// wait for the page resulting from the full-page POST to hydrate
+		await expect(page.locator('#hydrated')).toHaveText('true');
+		await expect(page.locator('#keyed-slash-result')).toHaveText('echo: hello');
+	});
+
+	test('form submission with .updates() does not trigger invalidateAll', async ({ page }) => {
+		await page.goto(`/remote/form/updates-no-invalidate/${Date.now()}${Math.random()}`);
+
+		const count = page.locator('#count');
+		await expect(count).toHaveText('Count: 0');
+
+		await page.click('button');
+		await expect(page.locator('#result')).toHaveText('Result: done');
+
+		await page.waitForTimeout(100); // allow all requests to finish (in case there are query refreshes which shouldn't happen)
+
+		// the developer took control of updates via `.updates()`, so the query
+		// must not have been refreshed by an implicit invalidateAll
+		await expect(count).toHaveText('Count: 0');
 	});
 });
 

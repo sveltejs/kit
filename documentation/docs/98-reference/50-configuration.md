@@ -26,6 +26,45 @@ const config = {
 export default config;
 ```
 
+Since version 2.62.0 you can also pass your configuration to the `sveltekit` plugin in your Vite config, along with the Svelte compiler options:
+
+```js
+/// file: vite.config.js
+// @filename: ambient.d.ts
+declare module '@sveltejs/adapter-auto' {
+	const plugin: () => import('@sveltejs/kit').Adapter;
+	export default plugin;
+}
+
+// @filename: index.js
+// ---cut---
+import adapter from '@sveltejs/adapter-auto';
+import { sveltekit } from '@sveltejs/kit/vite';
+import { defineConfig } from 'vite';
+
+export default defineConfig({
+	plugins: [
+		sveltekit({
+			compilerOptions: {
+				experimental: {
+					async: true
+				}
+			},
+			adapter: adapter(),
+			experimental: {
+				remoteFunctions: true
+			}
+		})
+	]
+});
+```
+
+> [!NOTE] The `kit` namespace is at the same level as the other top level entries; this is the only difference to the `svelte.config.js` layout.
+
+Any options that don't belong to SvelteKit are passed through to [`vite-plugin-svelte`](https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/config.md), so you can set options like `inspector` here too. The `experimental` namespace is shared — SvelteKit reads its own flags and forwards the rest.
+
+If the config is defined via the plugin, the `svelte.config.js` file is ignored.
+
 ## Config
 
 > TYPES: Configuration#Config

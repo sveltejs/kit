@@ -57,6 +57,7 @@ export function get_tsconfig(kit) {
 
 	const include = new Set([
 		'ambient.d.ts', // careful: changing this name would be a breaking change, because it's referenced in the service-workers documentation
+		'env.d.ts',
 		'non-ambient.d.ts',
 		'./types/**/$types.d.ts',
 		config_relative('vite.config.js'),
@@ -121,8 +122,7 @@ export function get_tsconfig(kit) {
 			moduleResolution: 'bundler',
 			module: 'esnext',
 			noEmit: true, // prevent tsconfig error "overwriting input files" - Vite handles the build and ignores this
-			target: 'esnext',
-			types: ['node']
+			target: 'esnext'
 		},
 		include: [...include],
 		exclude
