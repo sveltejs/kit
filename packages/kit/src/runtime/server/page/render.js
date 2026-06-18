@@ -118,7 +118,9 @@ export async function render_response({
 	});
 
 	// if appropriate, use relative paths for greater portability
-	if (paths.relative) {
+	// relative paths do not work in embedded contexts (e.g. <iframe srcdoc> or data: URLs)
+	// because new URL('.', location) throws for non-hierarchical protocols
+	if (paths.relative && !options.embedded) {
 		if (!state.prerendering?.fallback) {
 			// the relative path depth must reflect the URL the browser is actually at, which
 			// for a data request includes the `__data.json` suffix that was stripped during routing
