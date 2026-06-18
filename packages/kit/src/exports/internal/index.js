@@ -34,9 +34,10 @@ export class Redirect {
 		try {
 			// Encode non-ASCII characters so that the location is valid in HTTP headers
 			if (!location.match(/[\r\n]/)) {
+				// if there's a host, use `new URL` instead so that it uses punycode
 				location = location.match(/^[./]/)
 					? encode_pathname(location)
-					: new URL(location).toString(); // if there's a host, use `new URL` so that it uses punycode
+					: new URL(location).toString();
 			}
 
 			new Headers({ location });
