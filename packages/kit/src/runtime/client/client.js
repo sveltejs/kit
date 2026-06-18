@@ -2041,7 +2041,7 @@ async function server_fallback(url, route, error, status, replace_state) {
 		debugger; // eslint-disable-line
 	}
 
-	await native_navigation(url, replace_state);
+	return await native_navigation(url, replace_state);
 }
 
 if (import.meta.hot) {
