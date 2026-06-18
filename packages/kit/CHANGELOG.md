@@ -113,6 +113,42 @@
 
 - chore: remove dependency on `set-cookie-parser` ([#15384](https://github.com/sveltejs/kit/pull/15384))
 
+## 2.65.2
+### Patch Changes
+
+
+- fix: throw an error when prerendering a root +server.js that returns a non-HTML response ([#15994](https://github.com/sveltejs/kit/pull/15994))
+
+
+- fix: decode base64-serialized fetch bodies before caching them for client-side replay ([#16034](https://github.com/sveltejs/kit/pull/16034))
+
+
+- fix: correctly access explicit dynamic public environment variables from prerendered pages and service workers ([#16024](https://github.com/sveltejs/kit/pull/16024))
+
+
+- fix: allow `preloadCode` to be called during initial page load ([#16028](https://github.com/sveltejs/kit/pull/16028))
+
+
+- fix: send `cache-control: private, no-store` on remote function responses so personalized query results can never be cached by shared caches ([#16020](https://github.com/sveltejs/kit/pull/16020))
+
+
+- fix: preserve the HTTP status and error body when a remote function request fails in transport (e.g. a 401/403 from a `handle` hook), instead of reporting a generic 500 ([#16021](https://github.com/sveltejs/kit/pull/16021))
+
+
+- fix: avoid loading universal nodes during build analysis when the app uses a hash router ([#16042](https://github.com/sveltejs/kit/pull/16042))
+
+
+- fix: correctly serve client entry during development when using the pnpm global virtual store ([#16045](https://github.com/sveltejs/kit/pull/16045))
+
+
+- fix: normalize path separators when comparing config ([#16037](https://github.com/sveltejs/kit/pull/16037))
+
+
+- fix: ensure `building` resolves correctly to allow avoiding build-time explicit environment variable validation ([#16058](https://github.com/sveltejs/kit/pull/16058))
+
+
+- fix: prevent unhandled promise rejections when remote function failures are consumed via `current`/`error` instead of `await` ([#16018](https://github.com/sveltejs/kit/pull/16018))
+
 ## 2.65.1
 ### Patch Changes
 

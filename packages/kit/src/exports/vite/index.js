@@ -15,6 +15,7 @@ import {
 	create_sveltekit_env,
 	create_sveltekit_env_public,
 	resolve_explicit_env_entry,
+	create_sveltekit_env_service_worker,
 	create_sveltekit_env_service_worker_dev,
 	create_sveltekit_env_private
 } from '../../core/env.js';
@@ -53,7 +54,7 @@ import {
 import { import_peer } from '../../utils/import.js';
 import { compact } from '../../utils/array.js';
 import { should_ignore, has_children } from './static_analysis/utils.js';
-import { process_config } from '../../core/config/index.js';
+import { process_config, split_config } from '../../core/config/index.js';
 import { treeshake_prerendered_remotes } from './build/remote.js';
 
 /** @type {string} */
@@ -147,17 +148,20 @@ let vite_plugin_svelte;
 /**
  * Returns the SvelteKit Vite plugins.
  * Since version 2.62.0 you can pass [configuration](configuration) directly, in which case `svelte.config.js` is ignored.
- * @param {KitConfig & Omit<SvelteConfig, 'onwarn'>} [config]
+ * Any options that don't belong to SvelteKit are passed through to `vite-plugin-svelte`.
+ * @param {KitConfig & Omit<Options, 'onwarn'> & Pick<SvelteConfig, 'vitePlugin'>} [config]
  * @returns {Promise<Plugin[]>}
  */
 export async function sveltekit(config) {
 	const cwd = process.cwd();
 
-	const { extensions, compilerOptions, vitePlugin, preprocess, ...rest } = config ?? {};
-	const svelte_config = process_config(
-		{ extensions, compilerOptions, vitePlugin, preprocess, kit: rest },
-		{ cwd, source: 'SvelteKit options from Vite config' }
-	);
+	// any options passed to the plugin that SvelteKit doesn't use itself are
+	// forwarded to vite-plugin-svelte, which does its own validation
+	const split = split_config(config ?? {});
+	const svelte_config = process_config(split.svelte_config, {
+		cwd,
+		source: 'SvelteKit options from Vite config'
+	});
 
 	const config_file = ['svelte.config.js', 'svelte.config.ts'].find((file) => fs.existsSync(file));
 
@@ -173,6 +177,9 @@ export async function sveltekit(config) {
 
 	/** @type {Options} */
 	const vite_plugin_svelte_options = {
+		// pass through any options that SvelteKit doesn't use itself, so that
+		// the options SvelteKit manages always take precedence
+		...split.vite_plugin_svelte_config,
 		// we don't want vite-plugin-svelte to load the config file itself because
 		// it will try to validate it without knowing that kit options are valid
 		configFile: false
@@ -616,7 +623,15 @@ function kit({ svelte_config, adapter }) {
 						return create_sveltekit_env_private(explicit_env_config, env);
 
 					case sveltekit_env_service_worker:
-						return create_sveltekit_env_service_worker_dev(explicit_env_config, env, kit_global);
+						return is_build
+							? create_sveltekit_env_service_worker(
+									explicit_env_config,
+									env,
+									kit_global,
+									kit.paths.base,
+									kit.appDir
+								)
+							: create_sveltekit_env_service_worker_dev(explicit_env_config, env, kit_global);
 
 					case sveltekit_server: {
 						return dedent`
@@ -1102,7 +1117,15 @@ function kit({ svelte_config, adapter }) {
 				}
 
 				if (id === sveltekit_env_service_worker) {
-					return create_sveltekit_env_service_worker_dev(explicit_env_config, env, kit_global);
+					return is_build
+						? create_sveltekit_env_service_worker(
+								explicit_env_config,
+								env,
+								kit_global,
+								kit.paths.base,
+								kit.appDir
+							)
+						: create_sveltekit_env_service_worker_dev(explicit_env_config, env, kit_global);
 				}
 
 				if (id === sveltekit_env_public_client) {
@@ -1170,6 +1193,7 @@ function kit({ svelte_config, adapter }) {
 					const server_input = {
 						index: `${runtime_directory}/server/index.js`,
 						internal: `${out_dir}/generated/server/internal.js`,
+						env: '__sveltekit/env',
 						['remote-entry']: `${runtime_directory}/app/server/remote/index.js`
 					};
 
@@ -1582,6 +1606,18 @@ function kit({ svelte_config, adapter }) {
 				const deps_of = (entry, add_dynamic_css = false) =>
 					find_deps(vite_manifest, posixify(path.relative(root, entry)), add_dynamic_css, root);
 
+				const has_explicit_dynamic_public_env = Object.values(explicit_env_config ?? {}).some(
+					(variable) => variable.public && !variable.static
+				);
+
+				// the app only depends on runtime public env if it imports `$app/env/public`
+				// *and* at least one public env var is actually dynamic (non-static)
+				const uses_env_dynamic_public =
+					has_explicit_dynamic_public_env &&
+					client_chunks.some(
+						(chunk) => chunk.type === 'chunk' && chunk.modules[sveltekit_env_public_client]
+					);
+
 				if (svelte_config.kit.output.bundleStrategy === 'split') {
 					const start = deps_of(`${runtime_directory}/client/entry.js`);
 					const app = deps_of(`${out_dir}/generated/client-optimized/app.js`);
@@ -1592,9 +1628,7 @@ function kit({ svelte_config, adapter }) {
 						imports: [...start.imports, ...app.imports],
 						stylesheets: [...start.stylesheets, ...app.stylesheets],
 						fonts: [...start.fonts, ...app.fonts],
-						uses_env_dynamic_public: client_chunks.some(
-							(chunk) => chunk.type === 'chunk' && chunk.modules[sveltekit_env_public_client]
-						)
+						uses_env_dynamic_public
 					};
 
 					// In case of server-side route resolution, we create a purpose-built route manifest that is
@@ -1642,9 +1676,7 @@ function kit({ svelte_config, adapter }) {
 						imports: start.imports,
 						stylesheets: start.stylesheets,
 						fonts: start.fonts,
-						uses_env_dynamic_public: client_chunks.some(
-							(chunk) => chunk.type === 'chunk' && chunk.modules[sveltekit_env_public_client]
-						)
+						uses_env_dynamic_public
 					};
 
 					if (svelte_config.kit.output.bundleStrategy === 'inline') {
@@ -1866,6 +1898,7 @@ const create_service_worker_module = (config) => dedent`
 		throw new Error('This module can only be imported inside a service worker');
 	}
 
+	export const base = location.pathname.split('/').slice(0, -1).join('/');
 	export const build = [];
 	export const files = [
 		${create_assets(config)

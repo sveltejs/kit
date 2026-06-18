@@ -73,8 +73,8 @@ catalogs:
       specifier: ^3.8.1
       version: 3.8.1
     prettier-plugin-svelte:
-      specifier: ^3.5.1
-      version: 3.5.1
+      specifier: ^4.1.1
+      version: 4.1.1
     publint:
       specifier: ^0.3.0
       version: 0.3.0
@@ -133,7 +133,7 @@ importers:
         version: 3.8.1
       prettier-plugin-svelte:
         specifier: 'catalog:'
-        version: 3.5.1(prettier@3.8.1)(svelte@5.56.3(@typescript-eslint/types@8.59.4))
+        version: 4.1.1(prettier@3.8.1)(svelte@5.56.3(@typescript-eslint/types@8.59.4))
       vitest:
         specifier: 'catalog:'
         version: 4.1.7(@opentelemetry/api@1.9.0)(@types/node@22.19.19)(@vitest/browser-playwright@4.1.7)(jsdom@29.1.1)(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
@@ -1095,6 +1095,30 @@ importers:
         specifier: 'catalog:'
         version: 8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3)
 
+  packages/kit/test/build-errors/apps/prerender-root-non-html-server:
+    devDependencies:
+      '@sveltejs/adapter-auto':
+        specifier: workspace:^
+        version: link:../../../../../adapter-auto
+      '@sveltejs/kit':
+        specifier: workspace:^
+        version: link:../../../..
+      '@sveltejs/vite-plugin-svelte':
+        specifier: 'catalog:'
+        version: 7.0.0(svelte@5.56.3(@typescript-eslint/types@8.59.4))(vite@8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
+      svelte:
+        specifier: 'catalog:'
+        version: 5.56.3(@typescript-eslint/types@8.59.4)
+      svelte-check:
+        specifier: 'catalog:'
+        version: 4.4.6(picomatch@4.0.4)(svelte@5.56.3(@typescript-eslint/types@8.59.4))(typescript@6.0.3)
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+      vite:
+        specifier: 'catalog:'
+        version: 8.0.10(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3)
+
   packages/kit/test/build-errors/apps/prerenderable-incorrect-fragment:
     devDependencies:
       '@sveltejs/adapter-auto':
@@ -1412,7 +1436,7 @@ importers:
         version: 3.8.1
       prettier-plugin-svelte:
         specifier: 'catalog:'
-        version: 3.5.1(prettier@3.8.1)(svelte@5.56.3(@typescript-eslint/types@8.59.4))
+        version: 4.1.1(prettier@3.8.1)(svelte@5.56.3(@typescript-eslint/types@8.59.4))
       publint:
         specifier: 'catalog:'
         version: 0.3.0
@@ -4796,11 +4820,12 @@ packages:
     resolution: {integrity: sha512-vkcDPrRZo1QZLbn5RLGPpg/WmIQ65qoWWhcGKf/b5eplkkarX0m9z8ppCat4mlOqUsWpyNuYgO3VRyrYHSzX5g==}
     engines: {node: '>= 0.8.0'}
 
-  prettier-plugin-svelte@3.5.1:
-    resolution: {integrity: sha512-65+fr5+cgIKWKiqM1Doum4uX6bY8iFCdztvvp2RcF+AJoieaw9kJOFMNcJo/bkmKYsxFaM9OsVZK/gWauG/5mg==}
+  prettier-plugin-svelte@4.1.1:
+    resolution: {integrity: sha512-wXvbXMjSvb4C9ENWTHXyd+ihakKCsJ6rJhLP6/8HFNj4GkZr48jqL9PoKsl2sk7SyCZRTnJ7O2TTowUpOxP/KA==}
+    engines: {node: '>=20'}
     peerDependencies:
       prettier: ^3.0.0
-      svelte: ^3.2.0 || ^4.0.0-next.0 || ^5.0.0-next.0
+      svelte: ^5.0.0
 
   prettier@3.8.1:
     resolution: {integrity: sha512-UOnG6LftzbdaHZcKoPFtOcCKztrQ57WkHDeRD9t/PTQtmT0NHSeWWepj6pS0z/N7+08BHFDQVUrfmfMRcZwbMg==}
@@ -9158,7 +9183,7 @@ snapshots:
 
   prelude-ls@1.2.1: {}
 
-  prettier-plugin-svelte@3.5.1(prettier@3.8.1)(svelte@5.56.3(@typescript-eslint/types@8.59.4)):
+  prettier-plugin-svelte@4.1.1(prettier@3.8.1)(svelte@5.56.3(@typescript-eslint/types@8.59.4)):
     dependencies:
       prettier: 3.8.1
       svelte: 5.56.3(@typescript-eslint/types@8.59.4)
