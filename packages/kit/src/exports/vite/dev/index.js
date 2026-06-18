@@ -101,7 +101,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes) {
 
 	/** @param {string} id */
 	async function resolve(id) {
-		const url = id.startsWith('..') ? to_fs(path.posix.resolve(id)) : `/${id}`;
+		const url = id.startsWith('..') ? to_fs(path.resolve(id)) : `/${id}`;
 
 		const module = await loud_ssr_load_module(url);
 
@@ -322,7 +322,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes) {
 			// ssrFixStacktrace can fail on StackBlitz web containers and we don't know why
 			// by ignoring it the line numbers are wrong, but at least we can show the error
 		}
-		return error.stack;
+		return error.stack?.replaceAll('\0', ''); // remove null bytes from e.g. virtual module IDs, or the response will fail
 	}
 
 	update_manifest();
@@ -568,8 +568,10 @@ export async function dev(vite, vite_config, svelte_config, get_remotes) {
 
 						return fs.readFileSync(path.join(svelte_config.kit.files.assets, file));
 					},
-					before_handle: (event, config, prerender) => {
-						async_local_storage.enterWith({ event, config, prerender });
+					before_handle: async (event, config, prerender, handle) => {
+						// we need to use .run because .enterWith() is not supported in Cloudflare Workers
+						// see https://blog.cloudflare.com/workers-node-js-asynclocalstorage/
+						return await async_local_storage.run({ event, config, prerender }, handle);
 					},
 					emulator
 				});
@@ -585,7 +587,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes) {
 			} catch (e) {
 				const error = coalesce_to_error(e);
 				res.statusCode = 500;
-				res.end(fix_stack_trace(error));
+				res.end(fix_stack_trace(error) || error.message); // handle `stackless` errors
 			}
 		});
 	};
