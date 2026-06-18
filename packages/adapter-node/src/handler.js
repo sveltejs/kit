@@ -11,11 +11,6 @@ import { manifest } from 'MANIFEST';
 import { env } from './env.js';
 import { parse_as_bytes, parse_origin } from '../utils.js';
 
-/* global BASE */
-/* global ENV_PREFIX */
-/* global PRECOMPRESS */
-/* global PRERENDERED */
-
 const prerendered = PRERENDERED;
 
 const server = new Server(manifest);
