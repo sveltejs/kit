@@ -330,7 +330,7 @@ export async function start(_app, _target, hydrate) {
 		);
 	}
 
-	if (__SVELTEKIT_PAYLOAD__.data) {
+	if (__SVELTEKIT_PAYLOAD__?.data) {
 		const { q = {}, p = {}, l = {}, f = {} } = __SVELTEKIT_PAYLOAD__.data;
 
 		// store the whole nodes — error records seed the corresponding
