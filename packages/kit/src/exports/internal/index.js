@@ -1,7 +1,5 @@
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 
-import { encode_pathname } from '../../utils/url.js';
-
 export class HttpError {
 	/**
 	 * @param {number} status
@@ -23,6 +21,8 @@ export class HttpError {
 	}
 }
 
+const url_base_dummy = 'a://a';
+
 export class Redirect {
 	/**
 	 * @param {300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308} status
@@ -33,7 +33,7 @@ export class Redirect {
 			// Encode non-ASCII characters so that the location is valid in HTTP headers
 			if (!location.match(/[\r\n]/)) {
 				location = location.startsWith('/')
-					? encode_pathname(location)
+					? new URL(location, url_base_dummy).href.slice(url_base_dummy.length)
 					: new URL(location).toString();
 			}
 

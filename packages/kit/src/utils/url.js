@@ -44,14 +44,6 @@ export function normalize_path(path, trailing_slash) {
 }
 
 /**
- * Encode pathname excluding % to prevent further double encoding
- * @param {string} pathname
- */
-export function encode_pathname(pathname) {
-	return pathname.split('%').map(encodeURI).join('%');
-}
-
-/**
  * Decode pathname excluding %25 to prevent further double decoding of params
  * @param {string} pathname
  */
