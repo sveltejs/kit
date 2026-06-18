@@ -429,7 +429,7 @@ test.describe('remote functions', () => {
 	});
 
 	test('form preflight before for ordering works', async ({ page, javaScriptEnabled }) => {
-		if (!javaScriptEnabled) return;
+		test.skip(!javaScriptEnabled);
 
 		await page.goto('/remote/form/preflight-for');
 
