@@ -817,6 +817,53 @@ test.describe('remote functions', () => {
 		await expect(form2.locator('input[name="n:range_field"]')).toHaveValue('8');
 		await expect(form2.locator('input[name="b:checkbox_field"]')).not.toBeChecked();
 	});
+
+	test('form isValid defaults to true', async ({ page, javaScriptEnabled }) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/form/is-valid');
+
+		const foo_status = page.locator('#foo');
+		const nested_bar_status = page.locator('#nested-bar');
+		const overall_fields_status = page.locator('#overall-fields');
+		const overall_form_status = page.locator('#overall-form');
+
+		expect(foo_status).toHaveText('foo: true');
+		expect(nested_bar_status).toHaveText('nested.bar: true');
+		expect(overall_fields_status).toHaveText('overall fields: true');
+		expect(overall_form_status).toHaveText('overall form: true');
+	});
+
+	test('form isValid set to a correct value', async ({ page, javaScriptEnabled }) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/form/is-valid');
+
+		const foo_status = page.locator('#foo');
+		const nested_bar_status = page.locator('#nested-bar');
+		const overall_fields_status = page.locator('#overall-fields');
+		const overall_form_status = page.locator('#overall-form');
+
+		// Invalid, min length is 2
+		await page.fill('input[name="foo"]', 'c');
+		expect(foo_status).toHaveText('foo: false');
+		expect(nested_bar_status).toHaveText('nested.bar: true');
+		expect(overall_fields_status).toHaveText('overall fields: false');
+		expect(overall_form_status).toHaveText('overall form: false');
+
+		await page.fill('input[name="foo"]', 'cc');
+		expect(foo_status).toHaveText('foo: true');
+		expect(nested_bar_status).toHaveText('nested.bar: true');
+		expect(overall_fields_status).toHaveText('overall fields: true');
+		expect(overall_form_status).toHaveText('overall form: true');
+
+		// Invalid, max length is 2
+		await page.fill('input[name="nested.bar"]', 'ccc');
+		expect(foo_status).toHaveText('foo: true');
+		expect(nested_bar_status).toHaveText('nested.bar: false');
+		expect(overall_fields_status).toHaveText('overall fields: false');
+		expect(overall_form_status).toHaveText('overall form: false');
+	});
 });
 
 test.describe('server error boundaries', () => {
