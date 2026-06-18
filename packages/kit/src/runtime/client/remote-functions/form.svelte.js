@@ -53,8 +53,8 @@ export function form(id) {
 	/** @type {Map<any, { count: number, instance: RemoteForm<T, U> }>} */
 	const instances = new Map();
 
-	/** @type {WeakMap<RemoteForm<T, U>, StandardSchemaV1>} */
-	const preflight_schemas = new WeakMap();
+	/** @type {StandardSchemaV1 | null} */
+	let shared_preflight_schema = null;
 
 	/** @param {string | number | boolean} [key] */
 	function create_instance(key) {
@@ -323,7 +323,8 @@ export function form(id) {
 		 */
 		async function preflight(form_data) {
 			const data = convert(form_data);
-			const validated = await preflight_schema?.['~standard'].validate(data);
+			const schema = preflight_schema ?? shared_preflight_schema;
+			const validated = await schema?.['~standard'].validate(data);
 
 			if (validated?.issues) {
 				raw_issues = merge_with_server_issues(
@@ -524,7 +525,6 @@ export function form(id) {
 				form.removeEventListener('input', handle_input);
 				form.removeEventListener('reset', handle_reset);
 				element = null;
-				preflight_schema = undefined;
 			};
 		};
 
@@ -616,7 +616,11 @@ export function form(id) {
 				/** @type {RemoteForm<T, U>['preflight']} */
 				value: (schema) => {
 					preflight_schema = schema;
-					preflight_schemas.set(instance, schema);
+
+					if (key === undefined) {
+						shared_preflight_schema = schema;
+					}
+
 					return instance;
 				}
 			},
@@ -640,8 +644,8 @@ export function form(id) {
 					let array = [];
 
 					const data = convert(form_data);
-
-					const validated = await preflight_schema?.['~standard'].validate(data);
+					const schema = preflight_schema ?? shared_preflight_schema;
+					const validated = await schema?.['~standard'].validate(data);
 
 					if (validate_id !== id) {
 						return;
@@ -704,11 +708,6 @@ export function form(id) {
 		/** @type {RemoteForm<T, U>['for']} */
 		value: (key) => {
 			const entry = instances.get(key) ?? { count: 0, instance: create_instance(key) };
-
-			const caller_preflight = preflight_schemas.get(instance);
-			if (caller_preflight && !preflight_schemas.has(entry.instance)) {
-				entry.instance.preflight(caller_preflight);
-			}
 
 			try {
 				$effect.pre(() => {
