@@ -1344,6 +1344,7 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 						// Before reloading, try to update the service worker if it exists
 						await update_service_worker();
 						await native_navigation(url);
+						return;
 					}
 
 					error = await handle_error(err, { params, url, route: { id: route.id } });
