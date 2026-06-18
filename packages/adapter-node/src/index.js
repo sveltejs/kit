@@ -1,8 +1,9 @@
 import http from 'node:http';
 import process from 'node:process';
-import { handler } from 'HANDLER';
-import { env, timeout_env } from 'ENV';
+import { handler } from './handler.js';
+import { env, timeout_env } from './env.js';
 import polka from 'polka';
+import { format_listening_address } from '../utils.js';
 
 export const path = env('SOCKET_PATH', false);
 export const host = env('HOST', '0.0.0.0');
@@ -57,7 +58,7 @@ if (socket_activation) {
 	});
 } else {
 	server.listen({ path, host, port }, () => {
-		console.log(`Listening on ${path || `http://${host}:${port}`}`);
+		console.log(`Listening on ${format_listening_address(path, host, port, httpServer.address())}`);
 	});
 }
 

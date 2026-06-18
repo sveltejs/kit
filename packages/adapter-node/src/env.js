@@ -35,7 +35,7 @@ if (ENV_PREFIX) {
 
 /**
  * @param {string} name
- * @param {any} fallback
+ * @param {any} [fallback]
  */
 export function env(name, fallback) {
 	const prefix = expected_unprefixed.has(name) ? '' : ENV_PREFIX;

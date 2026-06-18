@@ -718,8 +718,6 @@ async function initialize(result, target, hydrate) {
 	// which causes component script blocks to run asynchronously
 	void (await Promise.resolve());
 
-	restore_snapshot(current_navigation_index);
-
 	if (hydrate) {
 		/** @type {import('@sveltejs/kit').AfterNavigate} */
 		const navigation = {
@@ -735,6 +733,8 @@ async function initialize(result, target, hydrate) {
 
 		after_navigate_callbacks.forEach((fn) => fn(navigation));
 	}
+
+	restore_snapshot(current_navigation_index);
 
 	started = true;
 }
@@ -1488,7 +1488,17 @@ async function load_root_error_page({ status, error, url, route }) {
 			return _goto(new URL(error.location, location.href), {}, 0);
 		}
 
-		// TODO: this falls back to the server when a server exists, but what about SPA mode?
+		const error_template = await app.get_error_template();
+		const handled = await handle_error(error, { url, params, route });
+		const message = String(handled?.message ?? '')
+			.replace(/&/g, '&amp;')
+			.replace(/</g, '&lt;')
+			.replace(/>/g, '&gt;');
+		const html = error_template({ status, message });
+		const parsed = new DOMParser().parseFromString(html, 'text/html');
+		document.documentElement.replaceChild(document.adoptNode(parsed.head), document.head);
+		document.documentElement.replaceChild(document.adoptNode(parsed.body), document.body);
+
 		throw error;
 	}
 }
@@ -1907,6 +1917,16 @@ async function navigate({
 			navigation_result.props.page.url = url;
 		}
 
+		// Remove focus before updating the component tree, so that blur/focusout
+		// handlers fire while the old component's data is still valid (#14575)
+		if (
+			!keepfocus &&
+			document.activeElement instanceof HTMLElement &&
+			document.activeElement !== document.body
+		) {
+			document.activeElement.blur();
+		}
+
 		const fork = load_cache_fork && (await load_cache_fork);
 
 		if (fork) {
@@ -1985,10 +2005,6 @@ async function navigate({
 
 	is_navigating = false;
 
-	if (type === 'popstate') {
-		restore_snapshot(current_navigation_index);
-	}
-
 	nav.fulfil(undefined);
 
 	// Update to.scroll to the actual scroll position after navigation completed
@@ -1999,6 +2015,10 @@ async function navigate({
 	after_navigate_callbacks.forEach((fn) =>
 		fn(/** @type {import('@sveltejs/kit').AfterNavigate} */ (nav.navigation))
 	);
+
+	if (type === 'popstate') {
+		restore_snapshot(current_navigation_index);
+	}
 
 	stores.navigating.set((navigating.current = null));
 
