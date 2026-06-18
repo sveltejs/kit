@@ -1,29 +1,17 @@
-/** @import { RequestEvent } from '@sveltejs/kit' */
-/** @import { RequestState } from 'types' */
 import { assert, expect, test, vi } from 'vitest';
 import { sequence } from './sequence.js';
-import { noop_span } from '../../runtime/telemetry/noop.js';
+import { create_mock_event } from '../../../test/mocks/server.js';
 
-const dummy_event = vi.hoisted(
-	() =>
-		/** @type {RequestEvent} */ ({
-			tracing: {
-				root: {}
-			}
-		})
-);
+const dummy_event = create_mock_event();
 
 vi.mock(import('@sveltejs/kit/internal/server'), async (actualPromise) => {
 	const actual = await actualPromise();
+	const { create_mock_event, create_mock_state } = await import('../../../test/mocks/server.js');
 	return {
 		...actual,
 		get_request_store: () => ({
-			event: dummy_event,
-			state: /** @type {RequestState} */ ({
-				tracing: {
-					record_span: ({ fn }) => fn(noop_span)
-				}
-			})
+			event: create_mock_event(),
+			state: create_mock_state()
 		})
 	};
 });

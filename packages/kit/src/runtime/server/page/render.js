@@ -22,7 +22,7 @@ import {
 } from '../utils.js';
 import { get_status } from '../../../utils/error.js';
 import * as env from '__sveltekit/env';
-import { collect_remote_data } from '../remote.js';
+import { collect_remote_data } from '../remote/index.js';
 
 // TODO rename this function/module
 
@@ -521,7 +521,9 @@ export async function render_response({
 			args.push(`{\n${indent}\t${hydrate.join(`,\n${indent}\t`)}\n${indent}}`);
 		}
 
-		const remote_data = await collect_remote_data({}, event, event_state, options);
+		const remote_data = await collect_remote_data({}, event_state, (e) =>
+			handle_error_and_jsonify(event, event_state, options, e)
+		);
 
 		const serialized_data =
 			Object.keys(remote_data).length > 0

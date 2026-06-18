@@ -1,19 +1,23 @@
 import { assert, expect, test } from 'vitest';
 import { create_universal_fetch } from './load_data.js';
+import { create_mock_event } from '../../../../test/mocks/server.js';
 
 /**
- * @param {Partial<Pick<import('@sveltejs/kit').RequestEvent, 'fetch' | 'url' | 'request' | 'route'>>} event
+ * @param {Partial<import('@sveltejs/kit').RequestEvent>} [overrides]
  */
-function create_fetch(event) {
-	// eslint-disable-next-line @typescript-eslint/require-await
-	event.fetch = event.fetch || (async () => new Response('foo'));
-	event.request = event.request || new Request('doesnt:matter');
-	event.route = event.route || { id: 'foo' };
-	event.url = event.url || new URL('https://domain-a.com');
+function create_fetch(overrides) {
+	const event = create_mock_event({
+		url: new URL('https://domain-a.com'),
+		route: { id: 'foo' },
+		// eslint-disable-next-line @typescript-eslint/require-await
+		fetch: async () => new Response('foo'),
+		...overrides
+	});
+
+	// note: the second argument is not a `RequestState` — `create_universal_fetch`
+	// takes a small fetch-specific state object
 	return create_universal_fetch(
-		/** @type {Pick<import('@sveltejs/kit').RequestEvent, 'fetch' | 'url' | 'request' | 'route'>} */ (
-			event
-		),
+		event,
 		{ getClientAddress: () => '', error: false, depth: 0 },
 		[],
 		true,

@@ -18,7 +18,7 @@ import { load_data, load_server_data } from './load_data.js';
 import { render_response } from './render.js';
 import { respond_with_error } from './respond_with_error.js';
 import { DEV } from 'esm-env';
-import { get_remote_action, handle_remote_form_post } from '../remote.js';
+import { get_remote_action, handle_remote_form_post } from '../remote/index.js';
 import { PageNodes } from '../../../utils/page_nodes.js';
 
 /**
