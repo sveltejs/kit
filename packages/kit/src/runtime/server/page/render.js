@@ -1,7 +1,7 @@
 import * as devalue from 'devalue';
 import { readable, writable } from 'svelte/store';
 import { DEV } from 'esm-env';
-import { text } from '@sveltejs/kit';
+import { isRedirect, text } from '@sveltejs/kit';
 import * as paths from '$app/paths/internal/server';
 import { hash } from '../../../utils/hash.js';
 import { serialize_data } from './serialize_data.js';
@@ -12,12 +12,18 @@ import { public_env } from '../../shared-server.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import { SCHEME } from '../../../utils/url.js';
 import { create_server_routing_response, generate_route_object } from './server_routing.js';
-import { add_resolution_suffix } from '../../pathname.js';
+import { add_data_suffix, add_resolution_suffix } from '../../pathname.js';
 import { try_get_request_store, with_request_store } from '@sveltejs/kit/internal/server';
 import { text_encoder } from '../../utils.js';
-import { get_global_name, handle_error_and_jsonify } from '../utils.js';
-import { create_remote_key } from '../../shared.js';
+import {
+	count_non_ssi_comments,
+	create_replacer,
+	get_global_name,
+	handle_error_and_jsonify
+} from '../utils.js';
 import { get_status } from '../../../utils/error.js';
+import * as env from '__sveltekit/env';
+import { collect_remote_data } from '../remote.js';
 
 // TODO rename this function/module
 
@@ -73,9 +79,9 @@ export async function render_response({
 
 	const { client } = manifest._;
 
-	const modulepreloads = new Set(client.imports);
-	const stylesheets = new Set(client.stylesheets);
-	const fonts = new Set(client.fonts);
+	const modulepreloads = new Set(client?.imports);
+	const stylesheets = new Set(client?.stylesheets);
+	const fonts = new Set(client?.fonts);
 
 	/**
 	 * The value of the Link header that is added to the response when not prerendering
@@ -114,7 +120,12 @@ export async function render_response({
 	// if appropriate, use relative paths for greater portability
 	if (paths.relative) {
 		if (!state.prerendering?.fallback) {
-			const segments = event.url.pathname.slice(paths.base.length).split('/').slice(2);
+			// the relative path depth must reflect the URL the browser is actually at, which
+			// for a data request includes the `__data.json` suffix that was stripped during routing
+			const pathname = event.isDataRequest
+				? add_data_suffix(event.url.pathname)
+				: event.url.pathname;
+			const segments = pathname.slice(paths.base.length).split('/').slice(2);
 
 			base = segments.map(() => '..').join('/') || '.';
 
@@ -189,6 +200,10 @@ export async function render_response({
 			csp: csp.script_needs_nonce ? { nonce: csp.nonce } : { hash: csp.script_needs_hash },
 			transformError: error_components
 				? /** @param {unknown} e */ async (e) => {
+						if (isRedirect(e)) {
+							throw e;
+						}
+
 						const transformed = await handle_error_and_jsonify(event, event_state, options, e);
 						props.page.error = props.error = error = transformed;
 						props.page.status = status = get_status(e);
@@ -218,8 +233,9 @@ export async function render_response({
 				};
 			}
 
-			event_state.allows_commands = false;
-			rendered = await with_request_store({ event, state: event_state }, async () => {
+			const state = { ...event_state, is_in_render: true };
+
+			rendered = await with_request_store({ event, state }, async () => {
 				// use relative paths during rendering, so that the resulting HTML is as
 				// portable as possible, but reset afterwards
 				if (paths.relative) paths.override({ base, assets });
@@ -262,25 +278,25 @@ export async function render_response({
 
 			paths.reset(); // just in case `options.root.render(...)` failed
 		}
-
-		for (const { node } of branch) {
-			for (const url of node.imports) modulepreloads.add(url);
-			for (const url of node.stylesheets) stylesheets.add(url);
-			for (const url of node.fonts) fonts.add(url);
-
-			if (node.inline_styles && !client.inline) {
-				Object.entries(await node.inline_styles()).forEach(([filename, css]) => {
-					if (typeof css === 'string') {
-						inline_styles.set(filename, css);
-						return;
-					}
-
-					inline_styles.set(filename, css(`${assets}/${paths.app_dir}/immutable/assets`, assets));
-				});
-			}
-		}
 	} else {
 		rendered = { head: '', html: '', css: { code: '', map: null }, hashes: { script: [] } };
+	}
+
+	for (const { node } of branch) {
+		for (const url of node.imports) modulepreloads.add(url);
+		for (const url of node.stylesheets) stylesheets.add(url);
+		for (const url of node.fonts) fonts.add(url);
+
+		if (node.inline_styles && !client?.inline) {
+			Object.entries(await node.inline_styles()).forEach(([filename, css]) => {
+				if (typeof css === 'string') {
+					inline_styles.set(filename, css);
+					return;
+				}
+
+				inline_styles.set(filename, css(`${assets}/${paths.app_dir}/immutable/assets`, assets));
+			});
+		}
 	}
 
 	const head = new Head(rendered.head, !!state.prerendering);
@@ -297,13 +313,15 @@ export async function render_response({
 		return `${assets}/${path}`;
 	};
 
-	// inline styles can come from `bundleStrategy: 'inline'` or `inlineStyleThreshold`
-	const style = client.inline
+	const style = client?.inline
 		? client.inline?.style
 		: Array.from(inline_styles.values()).join('\n');
 
 	if (style) {
-		const attributes = DEV ? ['data-sveltekit'] : [];
+		// We always inline all styles to avoid FOUC during development.
+		// Once that's accomplished, we find and remove the style node using the
+		// `data-sveltekit` attribute once CSR kicks in
+		const attributes = __SVELTEKIT_DEV__ ? ['data-sveltekit'] : [];
 		if (csp.style_needs_nonce) attributes.push(`nonce="${csp.nonce}"`);
 		csp.add_style(style);
 		head.add_style(style, attributes);
@@ -352,10 +370,16 @@ export async function render_response({
 			.join('\n\t\t\t')}`;
 	}
 
-	if (page_config.csr) {
-		const route = manifest._.client.routes?.find((r) => r.id === event.route.id) ?? null;
+	if (page_config.csr && client) {
+		const route = client.routes?.find((r) => r.id === event.route.id) ?? null;
 
-		if (client.uses_env_dynamic_public && state.prerendering) {
+		// when serving a prerendered page in an app that uses runtime public env vars, we must
+		// import the env.js module so that it evaluates before any user code can evaluate.
+		// TODO revert to using top-level await once https://bugs.webkit.org/show_bug.cgi?id=242740 is fixed
+		// https://github.com/sveltejs/kit/pull/11601
+		const load_env_eagerly = client.uses_env_dynamic_public && !!state.prerendering;
+
+		if (load_env_eagerly) {
 			modulepreloads.add(`${paths.app_dir}/env.js`);
 		}
 
@@ -377,22 +401,16 @@ export async function render_response({
 		}
 
 		// prerender a `/path/to/page/__route.js` module
-		if (manifest._.client.routes && state.prerendering && !state.prerendering.fallback) {
+		if (client.routes && state.prerendering && !state.prerendering.fallback) {
 			const pathname = add_resolution_suffix(event.url.pathname);
 
 			state.prerendering.dependencies.set(
 				pathname,
-				create_server_routing_response(route, event.params, new URL(pathname, event.url), manifest)
+				create_server_routing_response(route, event.params, new URL(pathname, event.url), client)
 			);
 		}
 
 		const blocks = [];
-
-		// when serving a prerendered page in an app that uses $env/dynamic/public, we must
-		// import the env.js module so that it evaluates before any user code can evaluate.
-		// TODO revert to using top-level await once https://bugs.webkit.org/show_bug.cgi?id=242740 is fixed
-		// https://github.com/sveltejs/kit/pull/11601
-		const load_env_eagerly = client.uses_env_dynamic_public && state.prerendering;
 
 		const properties = [`base: ${base_expression}`];
 
@@ -400,7 +418,9 @@ export async function render_response({
 			properties.push(`assets: ${s(paths.assets)}`);
 		}
 
-		if (client.uses_env_dynamic_public) {
+		if (__SVELTEKIT_EXPERIMENTAL_EXPLICIT_ENVIRONMENT_VARIABLES__) {
+			properties.push(`env: ${load_env_eagerly ? 'null' : devalue.uneval(env.rendered_env)}`);
+		} else if (client.uses_env_dynamic_public) {
 			properties.push(`env: ${load_env_eagerly ? 'null' : s(public_env)}`);
 		}
 
@@ -482,9 +502,9 @@ export async function render_response({
 				hydrate.push(`status: ${status}`);
 			}
 
-			if (manifest._.client.routes) {
+			if (client.routes) {
 				if (route) {
-					const stringified = generate_route_object(route, event.url, manifest).replaceAll(
+					const stringified = generate_route_object(route, event.url, client).replaceAll(
 						'\n',
 						'\n\t\t\t\t\t\t\t'
 					); // make output after it's put together with the rest more readable
@@ -498,74 +518,27 @@ export async function render_response({
 			args.push(`{\n${indent}\t${hydrate.join(`,\n${indent}\t`)}\n${indent}}`);
 		}
 
-		const { remote_data: remote_cache } = event_state;
+		const remote_data = await collect_remote_data({}, event, event_state, options);
 
-		let serialized_remote_data = '';
-
-		if (remote_cache) {
-			/** @type {Record<string, any>} */
-			const remote = {};
-
-			for (const [info, cache] of remote_cache) {
-				// remote functions without an `id` aren't exported, and thus
-				// cannot be called from the client
-				if (!info.id) continue;
-
-				for (const key in cache) {
-					const remote_key = create_remote_key(info.id, key);
-
-					if (event_state.refreshes?.[remote_key] !== undefined) {
-						// This entry was refreshed/set by a command or form action.
-						// Always await it so the mutation result is serialized.
-						remote[remote_key] = await cache[key];
-					} else {
-						// Don't block the response on pending remote data - if a query
-						// hasn't settled yet, it wasn't awaited in the template (or is behind a pending boundary).
-						const result = await Promise.race([
-							Promise.resolve(cache[key]).then(
-								(v) => /** @type {const} */ ({ settled: true, value: v }),
-								(e) => /** @type {const} */ ({ settled: true, error: e })
-							),
-							new Promise((resolve) => {
-								queueMicrotask(() => resolve(/** @type {const} */ ({ settled: false })));
-							})
-						]);
-
-						if (result.settled) {
-							if ('error' in result) throw result.error;
-							remote[remote_key] = result.value;
-						}
-					}
-				}
-			}
-
-			// TODO this is repeated in a few places — dedupe it
-			const replacer = (/** @type {any} */ thing) => {
-				for (const key in options.hooks.transport) {
-					const encoded = options.hooks.transport[key].encode(thing);
-					if (encoded) {
-						return `app.decode('${key}', ${devalue.uneval(encoded, replacer)})`;
-					}
-				}
-			};
-
-			serialized_remote_data = `${global}.data = ${devalue.uneval(remote, replacer)};\n\n\t\t\t\t\t\t`;
-		}
+		const serialized_data =
+			Object.keys(remote_data).length > 0
+				? `${global}.data = ${devalue.uneval(remote_data, create_replacer(options.hooks.transport))};\n\n\t\t\t\t\t\t`
+				: '';
 
 		// `client.app` is a proxy for `bundleStrategy === 'split'`
 		const boot = client.inline
 			? `${client.inline.script}
 
-					${serialized_remote_data}${global}.app.start(${args.join(', ')});`
+					${serialized_data}${global}.app.start(${args.join(', ')});`
 			: client.app
 				? `Promise.all([
 						import(${s(prefixed(client.start))}),
 						import(${s(prefixed(client.app))})
 					]).then(([kit, app]) => {
-						${serialized_remote_data}kit.start(app, ${args.join(', ')});
+						${serialized_data}kit.start(app, ${args.join(', ')});
 					});`
 				: `import(${s(prefixed(client.start))}).then((app) => {
-						${serialized_remote_data}app.start(${args.join(', ')})
+						${serialized_data}app.start(${args.join(', ')})
 					});`;
 
 		if (load_env_eagerly) {
@@ -579,10 +552,10 @@ export async function render_response({
 		}
 
 		if (options.service_worker) {
-			let opts = DEV ? ", { type: 'module' }" : '';
+			let opts = __SVELTEKIT_DEV__ ? ", { type: 'module' }" : '';
 			if (options.service_worker_options != null) {
 				const service_worker_options = { ...options.service_worker_options };
-				if (DEV) {
+				if (__SVELTEKIT_DEV__) {
 					service_worker_options.type = 'module';
 				}
 				opts = `, ${s(service_worker_options)}`;
@@ -591,8 +564,14 @@ export async function render_response({
 			// we use an anonymous function instead of an arrow function to support
 			// older browsers (https://github.com/sveltejs/kit/pull/5417)
 			blocks.push(`if ('serviceWorker' in navigator) {
+						const script_url = '${prefixed('service-worker.js')}';
+						const policy = globalThis?.window?.trustedTypes?.createPolicy(
+							'sveltekit-trusted-url',
+							{ createScriptURL(url) { return url; } }
+						);
+						const sanitised = policy?.createScriptURL(script_url) ?? script_url;
 						addEventListener('load', function () {
-							navigator.serviceWorker.register('${prefixed('service-worker.js')}'${opts});
+							navigator.serviceWorker.register(sanitised${opts});
 						});
 					}`);
 		}
@@ -646,7 +625,9 @@ export async function render_response({
 		body,
 		assets,
 		nonce: /** @type {string} */ (csp.nonce),
-		env: public_env
+		env: __SVELTEKIT_EXPERIMENTAL_EXPLICIT_ENVIRONMENT_VARIABLES__
+			? env.explicit_public_env
+			: public_env
 	});
 
 	// TODO flush chunks as early as we can
@@ -662,7 +643,7 @@ export async function render_response({
 
 	if (DEV) {
 		if (page_config.csr) {
-			if (transformed.split('<!--').length < html.split('<!--').length) {
+			if (count_non_ssi_comments(transformed) < count_non_ssi_comments(html)) {
 				// the \u001B stuff is ANSI codes, so that we don't need to add a library to the runtime
 				// https://svelte.dev/playground/1b3f49696f0c44c881c34587f2537aa2?version=4.2.19
 				console.warn(

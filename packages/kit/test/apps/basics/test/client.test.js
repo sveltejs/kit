@@ -219,6 +219,28 @@ test.describe('Load', () => {
 		expect(did_request_data).toBe(false);
 	});
 
+	test('cached base64-serialized response is decoded when replayed', async ({ page, clicknav }) => {
+		// 1. go to the page (first load, we expect the right data)
+		await page.goto('/load/fetch-cache-control/b64');
+		expect(await page.textContent('.test-content')).toBe('[1,2,3,4]');
+
+		// 2. change to another route (client side)
+		await clicknav('[href="/load/fetch-cache-control"]');
+
+		// 3. come back to the original page (client side)
+		let did_request_data = false;
+		page.on('request', (request) => {
+			if (request.url().endsWith('fetch-cache-control/b64/data')) {
+				did_request_data = true;
+			}
+		});
+		await clicknav('[href="/load/fetch-cache-control/b64"]');
+
+		// 4. data should still be the same (and cached)
+		expect(await page.textContent('.test-content')).toBe('[1,2,3,4]');
+		expect(did_request_data).toBe(false);
+	});
+
 	test('do not use cache if headers are different', async ({ page, clicknav }) => {
 		await page.goto('/load/fetch-cache-control/headers-diff');
 
@@ -265,6 +287,7 @@ test.describe('Load', () => {
 	});
 
 	test('permits 3rd party patching of server load fetch requests', async ({ page }) => {
+		/** @type {string[]} */
 		const logs = [];
 		page.on('console', (msg) => {
 			if (msg.type() === 'log') {
@@ -282,6 +305,7 @@ test.describe('Load', () => {
 	});
 
 	test('does not repeat fetch on hydration when using Request object', async ({ page }) => {
+		/** @type {import('@playwright/test').Request[]} */
 		const requests = [];
 		page.on('request', (request) => {
 			if (request.url().includes('/load/fetch-request.json')) {
@@ -1044,7 +1068,7 @@ test.describe('data-sveltekit attributes', () => {
 			// it's chrome-error://chromewebdata/ on ubuntu but not on windows
 			offline_url = /chrome-error:\/\/chromewebdata\/|\/data-sveltekit\/preload-data\/offline/;
 		}
-		expect(page).toHaveURL(offline_url);
+		await expect(page).toHaveURL(offline_url);
 	});
 
 	test('data-sveltekit-preload-data error does not block user navigation', async ({
@@ -1062,7 +1086,7 @@ test.describe('data-sveltekit attributes', () => {
 			page.waitForLoadState('networkidle') // wait for preloading to finish
 		]);
 
-		expect(page).toHaveURL('/data-sveltekit/preload-data/offline');
+		await expect(page).toHaveURL('/data-sveltekit/preload-data/offline');
 
 		await page.locator('#one').dispatchEvent('click');
 		await page.waitForTimeout(100); // wait for navigation to start
@@ -1073,7 +1097,7 @@ test.describe('data-sveltekit attributes', () => {
 			// it's chrome-error://chromewebdata/ on ubuntu but not on windows
 			offline_url = /chrome-error:\/\/chromewebdata\/|\/data-sveltekit\/preload-data\/offline/;
 		}
-		expect(page).toHaveURL(offline_url);
+		await expect(page).toHaveURL(offline_url);
 	});
 
 	test('data-sveltekit-preload does not abort ongoing navigation', async ({ page }) => {
@@ -1087,7 +1111,7 @@ test.describe('data-sveltekit attributes', () => {
 			page.waitForLoadState('networkidle') // wait for preloading to finish
 		]);
 
-		expect(page).toHaveURL('/data-sveltekit/preload-data/offline/slow-navigation');
+		await expect(page).toHaveURL('/data-sveltekit/preload-data/offline/slow-navigation');
 	});
 
 	test('data-sveltekit-preload does not abort ongoing navigation #2', async ({ page }) => {
@@ -1101,8 +1125,63 @@ test.describe('data-sveltekit attributes', () => {
 			page.waitForLoadState('networkidle') // wait for preloading to finish
 		]);
 
-		expect(page).toHaveURL('/data-sveltekit/preload-data/offline/slow-navigation');
+		await expect(page).toHaveURL('/data-sveltekit/preload-data/offline/slow-navigation');
 		await expect(page.getByText('slow navigation', { exact: true })).toBeVisible();
+	});
+
+	test('data-sveltekit-preload repeatedly works on the same anchor element', async ({
+		page,
+		clicknav
+	}) => {
+		/** @type {string[]} */
+		const requests = [];
+		page.on('request', (req) => {
+			if (req.resourceType() === 'script') {
+				req
+					.response()
+					.then(
+						(res) => res?.text(),
+						() => ''
+					)
+					.then((text) => {
+						if (text?.includes('this string should only appear in this preloaded file')) {
+							requests.push(req.url());
+						}
+					});
+			}
+
+			if (req.url().includes('__data.json')) {
+				requests.push(req.url());
+			}
+		});
+
+		await page.goto('/data-sveltekit/preload-data/repeat');
+		await page.locator('#target').hover();
+		await page.locator('#target').dispatchEvent('touchstart');
+		await Promise.all([
+			page.waitForTimeout(100), // wait for preloading to start
+			page.waitForLoadState('networkidle') // wait for preloading to finish
+		]);
+		expect(requests.length).toBe(2);
+
+		requests.length = 0;
+		await clicknav('#target', { waitForURL: '/data-sveltekit/preload-data/repeat/target' });
+		expect(requests.length).toBe(0);
+
+		await clicknav('#home', { waitForURL: '/data-sveltekit/preload-data/repeat' });
+		expect(requests.length).toBe(0);
+
+		await page.locator('#target').hover();
+		await page.locator('#target').dispatchEvent('touchstart');
+		await Promise.all([
+			page.waitForTimeout(100), // wait for preloading to start
+			page.waitForLoadState('networkidle') // wait for preloading to finish
+		]);
+		expect(requests.length).toBe(1);
+
+		requests.length = 0;
+		await clicknav('#target', { waitForURL: '/data-sveltekit/preload-data/repeat/target' });
+		expect(requests.length).toBe(0);
 	});
 
 	test('data-sveltekit-preload-data tap works after data-sveltekit-preload-code hover', async ({
@@ -1252,7 +1331,7 @@ test.describe('env', () => {
 	}) => {
 		await page.goto('/prerendering/env/prerendered');
 		await clicknav('[href="/prerendering/env/dynamic"]');
-		expect(await page.locator('h2')).toHaveText('prerendering: false');
+		await expect(page.locator('h2')).toHaveText('prerendering: false');
 	});
 });
 
@@ -1282,6 +1361,21 @@ test.describe('Snapshots', () => {
 
 		await page.reload();
 		expect(await page.locator('input').inputValue()).toBe('works for reloads');
+	});
+
+	test('restores snapshot after afterNavigate on popstate', async ({ page, clicknav }) => {
+		await page.goto('/snapshot/order');
+		await clicknav('[href="/snapshot/b"]');
+		await page.goBack();
+
+		await expect(page.locator('[data-testid="order"]')).toHaveText('afterNavigate,restore');
+	});
+
+	test('restores snapshot after afterNavigate on reload', async ({ page }) => {
+		await page.goto('/snapshot/order');
+		await page.reload();
+
+		await expect(page.locator('[data-testid="order"]')).toHaveText('afterNavigate,restore');
 	});
 });
 
@@ -1327,7 +1421,11 @@ test.describe('Streaming', () => {
 	// TODO `vite preview` buffers responses, causing these tests to fail
 	if (process.env.DEV) {
 		test('Works for universal load functions (direct hit)', async ({ page }) => {
-			page.goto('/streaming/universal');
+			// `waitUntil: 'commit'` resolves as soon as the streamed response starts (so we can
+			// observe the still-loading state), and `wait_for_started: false` avoids the page
+			// fixture leaving a floating `waitForSelector('body.started')` that rejects with
+			// "Target page... has been closed" when the test ends before hydration completes.
+			await page.goto('/streaming/universal', { waitUntil: 'commit', wait_for_started: false });
 
 			// Write first assertion like this to control the retry interval. Else it might happen that
 			// the test fails because the next retry is too late (probably uses a back-off strategy)
@@ -1347,7 +1445,7 @@ test.describe('Streaming', () => {
 		});
 
 		test('Works for server load functions (direct hit)', async ({ page }) => {
-			page.goto('/streaming/server');
+			await page.goto('/streaming/server', { waitUntil: 'commit', wait_for_started: false });
 
 			// Write first assertion like this to control the retry interval. Else it might happen that
 			// the test fails because the next retry is too late (probably uses a back-off strategy)
@@ -1377,7 +1475,7 @@ test.describe('Streaming', () => {
 		});
 
 		test('Catches fetch errors from server load functions (direct hit)', async ({ page }) => {
-			page.goto('/streaming/server-error');
+			await page.goto('/streaming/server-error', { waitUntil: 'commit', wait_for_started: false });
 			await expect(page.locator('p.eager')).toHaveText('eager');
 			await expect(page.locator('p.fail')).toHaveText('fail');
 		});
@@ -1792,11 +1890,15 @@ test.describe('init', () => {
 test.describe('INP', () => {
 	test('does not block next paint', async ({ page }) => {
 		// Thanks to https://publishing-project.rivendellweb.net/measuring-performance-tasks-with-playwright/#interaction-to-next-paint-inp
+		/** @param {string} selector */
 		async function measureInteractionToPaint(selector) {
 			return page.evaluate(async (selector) => {
 				return new Promise((resolve) => {
 					const startTime = performance.now();
-					document.querySelector(selector).click();
+					const element = document.querySelector(selector);
+					if (element instanceof HTMLAnchorElement) {
+						element.click();
+					}
 					requestAnimationFrame(() => {
 						const endTime = performance.now();
 						resolve(endTime - startTime);

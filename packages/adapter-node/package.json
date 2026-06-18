@@ -44,17 +44,17 @@
 	"devDependencies": {
 		"@polka/url": "catalog:",
 		"@sveltejs/kit": "workspace:^",
-		"@sveltejs/vite-plugin-svelte": "catalog:",
 		"@types/node": "catalog:",
 		"polka": "catalog:",
 		"sirv": "^3.0.2",
-		"typescript": "^5.3.3",
+		"typescript": "catalog:",
 		"vitest": "catalog:"
 	},
 	"dependencies": {
 		"@rollup/plugin-commonjs": "^29.0.0",
 		"@rollup/plugin-json": "^6.1.0",
 		"@rollup/plugin-node-resolve": "^16.0.0",
+		"@rollup/plugin-replace": "^6.0.3",
 		"rollup": "^4.59.0"
 	},
 	"peerDependencies": {

@@ -1,4 +1,4 @@
-/** @import { RequestState } from 'types' */
+/** @import { RequestState, SSRNode } from 'types' */
 import { DEV } from 'esm-env';
 import { json, text } from '@sveltejs/kit';
 import { Redirect, SvelteKitError } from '@sveltejs/kit/internal';
@@ -8,7 +8,7 @@ import { is_endpoint_request, render_endpoint } from './endpoint.js';
 import { render_page } from './page/index.js';
 import { render_response } from './page/render.js';
 import { respond_with_error } from './page/respond_with_error.js';
-import { is_form_content_type } from '../../utils/http.js';
+import { get_set_cookies, is_form_content_type } from '../../utils/http.js';
 import {
 	handle_fatal_error,
 	has_prerendered_path,
@@ -39,9 +39,6 @@ import { server_data_serializer } from './page/data_serializer.js';
 import { get_remote_id, handle_remote_call } from './remote.js';
 import { record_span } from '../telemetry/record_span.js';
 import { otel } from '../telemetry/otel.js';
-import { MUTATIVE_METHODS } from '../../constants.js';
-
-/* global __SVELTEKIT_ADAPTER_NAME__ */
 
 /** @type {import('types').RequiredResolveOptions['transformPageChunk']} */
 const default_transform = ({ html }) => html;
@@ -55,8 +52,6 @@ const default_preload = ({ type }) => type === 'js' || type === 'css';
 const page_methods = new Set(['GET', 'HEAD', 'POST']);
 
 const allowed_page_methods = new Set(['GET', 'HEAD', 'OPTIONS']);
-
-let warned_on_devtools_json_request = false;
 
 export const respond = propagate_context(internal_respond);
 
@@ -150,7 +145,20 @@ export async function internal_respond(request, options, manifest, state) {
 		tracing: {
 			record_span
 		},
-		is_in_remote_function: false
+		remote: {
+			data: null,
+			explicit: null,
+			implicit: null,
+			forms: null,
+			requested: null,
+			batches: null,
+			live_iterators: null
+		},
+		is_in_remote_function: false,
+		is_in_remote_form_or_command: false,
+		is_in_remote_query: false,
+		is_in_render: false,
+		is_in_universal_load: false
 	};
 
 	/** @type {import('@sveltejs/kit').RequestEvent} */
@@ -221,6 +229,7 @@ export async function internal_respond(request, options, manifest, state) {
 		});
 	}
 
+	/** @type {string | null} */
 	let resolved_path = url.pathname;
 
 	if (!remote_id) {
@@ -242,10 +251,24 @@ export async function internal_respond(request, options, manifest, state) {
 		}
 	}
 
+	/** @type {import('types').RequiredResolveOptions} */
+	let resolve_opts = {
+		transformPageChunk: default_transform,
+		filterSerializedResponseHeaders: default_filter,
+		preload: default_preload
+	};
+
+	/** @type {import('types').TrailingSlash} */
+	let trailing_slash = 'never';
+
+	/** @type {PageNodes | undefined} */
+	let page_nodes;
+
 	try {
 		resolved_path = decode_pathname(resolved_path);
 	} catch {
-		return text('Malformed URI', { status: 400 });
+		resolved_path = null;
+		return await handle();
 	}
 
 	// try to serve the rerouted prerendered resource if it exists
@@ -296,7 +319,7 @@ export async function internal_respond(request, options, manifest, state) {
 		return resolve_route(resolved_path, new URL(request.url), manifest);
 	}
 
-	if (resolved_path === `/${app_dir}/env.js`) {
+	if (resolved_path === `/${app_dir}/env.js` || resolved_path === `/${app_dir}/env.script.js`) {
 		return get_public_env(request);
 	}
 
@@ -319,19 +342,8 @@ export async function internal_respond(request, options, manifest, state) {
 		}
 	}
 
-	/** @type {import('types').RequiredResolveOptions} */
-	let resolve_opts = {
-		transformPageChunk: default_transform,
-		filterSerializedResponseHeaders: default_filter,
-		preload: default_preload
-	};
-
-	/** @type {import('types').TrailingSlash} */
-	let trailing_slash = 'never';
-
 	try {
-		/** @type {PageNodes | undefined} */
-		const page_nodes = route?.page
+		page_nodes = route?.page
 			? new PageNodes(await load_page_nodes(route.page, manifest))
 			: undefined;
 
@@ -386,16 +398,36 @@ export async function internal_respond(request, options, manifest, state) {
 					prerender = page_nodes.prerender();
 				}
 
-				if (state.before_handle) {
-					state.before_handle(event, config, prerender);
-				}
-
 				if (state.emulator?.platform) {
 					event.platform = await state.emulator.platform({ config, prerender });
+				}
+
+				if (state.before_handle) {
+					return await state.before_handle(event, config, prerender, handle);
 				}
 			}
 		}
 
+		return await handle();
+	} catch (e) {
+		if (e instanceof Redirect) {
+			try {
+				const response =
+					is_data_request || remote_id
+						? redirect_json_response(e)
+						: route?.page && is_action_json_request(event)
+							? action_json_redirect(e)
+							: redirect_response(e.status, e.location);
+				add_cookies_to_headers(response.headers, new_cookies.values());
+				return response;
+			} catch (err) {
+				return await handle_fatal_error(event, event_state, options, err);
+			}
+		}
+		return await handle_fatal_error(event, event_state, options, e);
+	}
+
+	async function handle() {
 		set_trailing_slash(trailing_slash);
 
 		if (state.prerendering && !state.prerendering.fallback && !state.prerendering.inside_reroute) {
@@ -420,7 +452,7 @@ export async function internal_respond(request, options, manifest, state) {
 						current: root_span
 					}
 				};
-				event_state.allows_commands = MUTATIVE_METHODS.includes(request.method);
+
 				return await with_request_store({ event: traced_event, state: event_state }, () =>
 					options.hooks.handle({
 						event: traced_event,
@@ -481,17 +513,14 @@ export async function internal_respond(request, options, manifest, state) {
 			if (if_none_match_value === etag) {
 				const headers = new Headers({ etag });
 
-				// https://datatracker.ietf.org/doc/html/rfc7232#section-4.1 + set-cookie
-				for (const key of [
-					'cache-control',
-					'content-location',
-					'date',
-					'expires',
-					'vary',
-					'set-cookie'
-				]) {
+				// https://datatracker.ietf.org/doc/html/rfc7232#section-4.1
+				for (const key of ['cache-control', 'content-location', 'date', 'expires', 'vary']) {
 					const value = response.headers.get(key);
 					if (value) headers.set(key, value);
+				}
+
+				for (const cookie of get_set_cookies(response.headers)) {
+					headers.append('set-cookie', cookie);
 				}
 
 				return new Response(undefined, {
@@ -511,18 +540,6 @@ export async function internal_respond(request, options, manifest, state) {
 		}
 
 		return response;
-	} catch (e) {
-		if (e instanceof Redirect) {
-			const response =
-				is_data_request || remote_id
-					? redirect_json_response(e)
-					: route?.page && is_action_json_request(event)
-						? action_json_redirect(e)
-						: redirect_response(e.status, e.location);
-			add_cookies_to_headers(response.headers, new_cookies.values());
-			return response;
-		}
-		return await handle_fatal_error(event, event_state, options, e);
 	}
 
 	/**
@@ -540,6 +557,23 @@ export async function internal_respond(request, options, manifest, state) {
 				};
 			}
 
+			if (resolved_path === null) {
+				return await respond_with_error({
+					event,
+					event_state,
+					options,
+					manifest,
+					state,
+					status: 400,
+					error: new SvelteKitError(
+						400,
+						'Malformed URI',
+						`Failed to decode URI: ${event.url.pathname}`
+					),
+					resolve_opts
+				});
+			}
+
 			if (options.hash_routing || state.prerendering?.fallback) {
 				return await render_response({
 					event,
@@ -550,7 +584,14 @@ export async function internal_respond(request, options, manifest, state) {
 					page_config: { ssr: false, csr: true },
 					status: 200,
 					error: null,
-					branch: [],
+					branch: [
+						// include the root layout because it applies to every page
+						{
+							node: /** @type {SSRNode} */ (await manifest._.nodes[0]()),
+							data: null,
+							server_data: null
+						}
+					],
 					fetched: [],
 					resolve_opts,
 					data_serializer: server_data_serializer(event, event_state, options)
@@ -662,21 +703,6 @@ export async function internal_respond(request, options, manifest, state) {
 			// if this request came direct from the user, rather than
 			// via our own `fetch`, render a 404 page
 			if (state.depth === 0) {
-				// In local development, Chrome requests this file for its 'automatic workspace folders' feature,
-				// causing console spam. If users want to serve this file they can install
-				// https://svelte.dev/docs/cli/devtools-json
-				if (DEV && event.url.pathname === '/.well-known/appspecific/com.chrome.devtools.json') {
-					if (!warned_on_devtools_json_request) {
-						console.log(
-							`\nGoogle Chrome is requesting ${event.url.pathname} to automatically configure devtools project settings. To learn why, and how to prevent this message, see https://svelte.dev/docs/cli/devtools-json\n`
-						);
-
-						warned_on_devtools_json_request = true;
-					}
-
-					return new Response(undefined, { status: 404 });
-				}
-
 				return await respond_with_error({
 					event,
 					event_state,

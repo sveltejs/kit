@@ -1,7 +1,8 @@
+/** @import { Validator } from './types.js' */
+
 import process from 'node:process';
 import colors from 'kleur';
-
-/** @typedef {import('./types.js').Validator} Validator */
+import { supportsTrustedTypes } from '../sync/utils.js';
 
 const directives = object({
 	'child-src': string_array(),
@@ -28,8 +29,14 @@ const directives = object({
 	'navigate-to': string_array(),
 	'report-uri': string_array(),
 	'report-to': string_array(),
-	'require-trusted-types-for': string_array(),
-	'trusted-types': string_array(),
+	'require-trusted-types-for': validate(undefined, (input, keypath) => {
+		assert_trusted_types_supported(keypath);
+		return string_array()(input, keypath);
+	}),
+	'trusted-types': validate(undefined, (input, keypath) => {
+		assert_trusted_types_supported(keypath);
+		return string_array()(input, keypath);
+	}),
 	'upgrade-insecure-requests': boolean(false),
 	'require-sri-for': string_array(),
 	'block-all-mixed-content': boolean(false),
@@ -38,7 +45,7 @@ const directives = object({
 });
 
 /** @type {Validator} */
-const options = object(
+export const options = object(
 	{
 		extensions: validate(['.svelte'], (input, keypath) => {
 			if (!Array.isArray(input) || !input.every((page) => typeof page === 'string')) {
@@ -132,6 +139,7 @@ const options = object(
 				instrumentation: object({
 					server: boolean(false)
 				}),
+				explicitEnvironmentVariables: boolean(false),
 				remoteFunctions: boolean(false),
 				forkPreloads: boolean(false),
 				handleRenderingErrors: boolean(false)
@@ -318,6 +326,17 @@ const options = object(
 	true
 );
 
+// Derive the names of SvelteKit's own config options from the schema, so they
+// stay in sync automatically. These are used to separate Kit's options from
+// `vite-plugin-svelte`'s options when config is passed via the Vite plugin.
+const defaults = /** @type {Record<string, any>} */ (options({}, 'config'));
+
+/** The names of the options that live under the `kit` namespace */
+export const kit_options = Object.keys(defaults.kit);
+
+/** The names of the options that live under the `kit.experimental` namespace */
+export const kit_experimental_options = Object.keys(defaults.kit.experimental);
+
 /**
  * @param {Validator} fn
  * @param {(keypath: string) => string} get_message
@@ -486,4 +505,11 @@ function assert_string(input, keypath) {
 	}
 }
 
-export default options;
+/** @param {string} keypath */
+function assert_trusted_types_supported(keypath) {
+	if (!supportsTrustedTypes()) {
+		throw new Error(
+			`${keypath} is not supported by your version of Svelte. Please upgrade to Svelte 5.51.0 or later to use this directive.`
+		);
+	}
+}

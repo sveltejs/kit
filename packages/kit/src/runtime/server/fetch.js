@@ -1,4 +1,6 @@
 import * as set_cookie_parser from 'set-cookie-parser';
+import { noop } from '../../utils/functions.js';
+import { get_set_cookies } from '../../utils/http.js';
 import { respond } from './respond.js';
 import * as paths from '$app/paths/internal/server';
 import { read_implementation } from '__sveltekit/server';
@@ -151,22 +153,19 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 
 				const response = await internal_fetch(request, options, manifest, state);
 
-				const set_cookie = response.headers.get('set-cookie');
-				if (set_cookie) {
-					for (const str of set_cookie_parser.splitCookiesString(set_cookie)) {
-						const { name, value, ...options } = set_cookie_parser.parseString(str, {
-							decodeValues: false
-						});
+				for (const str of get_set_cookies(response.headers)) {
+					const { name, value, ...options } = set_cookie_parser.parseString(str, {
+						decodeValues: false
+					});
 
-						const path = options.path ?? (url.pathname.split('/').slice(0, -1).join('/') || '/');
+					const path = options.path ?? (url.pathname.split('/').slice(0, -1).join('/') || '/');
 
-						// options.sameSite is string, something more specific is required - type cast is safe
-						set_internal(name, value, {
-							path,
-							encode: (value) => value,
-							.../** @type {import('cookie').CookieSerializeOptions} */ (options)
-						});
-					}
+					// options.sameSite is string, something more specific is required - type cast is safe
+					set_internal(name, value, {
+						path,
+						encode: (value) => value,
+						.../** @type {import('cookie').CookieSerializeOptions} */ (options)
+					});
 				}
 
 				return response;
@@ -175,11 +174,11 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 	};
 
 	// Don't make this function `async`! Otherwise, the user has to `catch` promises they use for streaming responses or else
-	// it will be an unhandled rejection. Instead, we add a `.catch(() => {})` ourselves below to prevent this from happening.
+	// it will be an unhandled rejection. Instead, we add a `.catch(noop)` ourselves below to prevent this from happening.
 	return (input, init) => {
 		// See docs in fetch.js for why we need to do this
 		const response = server_fetch(input, init);
-		response.catch(() => {});
+		response.catch(noop);
 		return response;
 	};
 }
@@ -210,7 +209,7 @@ async function internal_fetch(request, options, manifest, state) {
 			throw new DOMException('The operation was aborted.', 'AbortError');
 		}
 
-		let remove_abort_listener = () => {};
+		let remove_abort_listener = noop;
 		/** @type {Promise<never>} */
 		const abort_promise = new Promise((_, reject) => {
 			const on_abort = () => {

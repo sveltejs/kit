@@ -1,3 +1,4 @@
+/** @type {import("./$types").PageServerLoad} */
 export async function load({ fetch }) {
 	const aborted_controller = new AbortController();
 	aborted_controller.abort();
@@ -6,7 +7,7 @@ export async function load({ fetch }) {
 	try {
 		await fetch('/load/fetch-abort-signal/data', { signal: aborted_controller.signal });
 	} catch (error) {
-		if (error.name === 'AbortError') {
+		if (error instanceof Error && error.name === 'AbortError') {
 			aborted_immediately = true;
 		}
 	}
@@ -15,7 +16,7 @@ export async function load({ fetch }) {
 	try {
 		await fetch('/load/fetch-abort-signal/slow', { signal: AbortSignal.timeout(100) });
 	} catch (error) {
-		if (error.name === 'AbortError') {
+		if (error instanceof Error && error.name === 'AbortError') {
 			aborted_during_request = true;
 		}
 	}
