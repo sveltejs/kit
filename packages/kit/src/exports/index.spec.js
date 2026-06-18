@@ -86,7 +86,7 @@ describe('redirect', () => {
 		assert.equal(e.location, '/path/%ED%95%9C%EA%B8%80?q=%EA%B0%92#%EC%84%B9%EC%85%98');
 	});
 
-	it('uses puny code for non-ASCII hosts', () => {
+	it('uses punycode for non-ASCII hosts', () => {
 		const e = assert.throws(() => redirect(303, 'https://내도메인.한국/'));
 		assert.ok(isRedirect(e));
 		assert.equal(e.status, 303);
