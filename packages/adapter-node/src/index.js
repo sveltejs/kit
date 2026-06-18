@@ -3,7 +3,7 @@ import process from 'node:process';
 import { handler } from './handler.js';
 import { env, timeout_env } from './env.js';
 import polka from 'polka';
-import { unlink } from 'node:fs/promises';
+import { rm } from 'node:fs/promises';
 import { format_listening_address } from '../utils.js';
 
 export const path = env('SOCKET_PATH', false);
@@ -59,13 +59,9 @@ if (socket_activation) {
 	});
 } else {
 	if (path) {
-		try {
-			await unlink(path);
-		} catch (err) {
-			//ignore missing file errors
-			if (err.code !== 'ENOENT') throw err;
-		}
+		await rm(path, { force: true });
 	}
+
 	server.listen({ path, host, port }, () => {
 		console.log(`Listening on ${format_listening_address(path, host, port, httpServer.address())}`);
 	});
