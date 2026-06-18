@@ -1754,7 +1754,7 @@ async function navigate({
 					replace_state
 				);
 			} else {
-				await native_navigation(url, replace_state);
+				return await native_navigation(url, replace_state);
 			}
 		} else {
 			navigation_result = await server_fallback(
