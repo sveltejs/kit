@@ -23,8 +23,6 @@ export class HttpError {
 	}
 }
 
-const url_base_dummy = 'a://a';
-
 export class Redirect {
 	/**
 	 * @param {300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308} status

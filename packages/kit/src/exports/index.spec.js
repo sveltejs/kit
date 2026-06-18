@@ -80,6 +80,20 @@ describe('redirect', () => {
 		assert.equal(e.location, '/%E3%84%B1');
 	});
 
+	it('preserves pathname relative locations', () => {
+		const e = assert.throws(() => redirect(303, '../'));
+		assert.ok(isRedirect(e));
+		assert.equal(e.status, 303);
+		assert.equal(e.location, '../');
+	});
+
+	it('preserves protocol relative locations', () => {
+		const e = assert.throws(() => redirect(303, '//example.com/a'));
+		assert.ok(isRedirect(e));
+		assert.equal(e.status, 303);
+		assert.equal(e.location, '//example.com/a');
+	});
+
 	it('encodes non-ASCII characters while preserving URL structure', () => {
 		const e = assert.throws(() => redirect(303, '/path/한글?q=값#섹션'));
 		assert.ok(isRedirect(e));
