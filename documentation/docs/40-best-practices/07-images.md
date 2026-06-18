@@ -39,6 +39,7 @@ npm i -D @sveltejs/enhanced-img
 Adjust `vite.config.js`:
 
 ```js
+/// file: vite.config.js
 import { sveltekit } from '@sveltejs/kit/vite';
 +++import { enhancedImages } from '@sveltejs/enhanced-img';+++
 import { defineConfig } from 'vite';
@@ -144,6 +145,52 @@ By default, enhanced images will be transformed to more efficient formats. Howev
 ```
 
 [See the imagetools repo for the full list of directives](https://github.com/JonasKruckenberg/imagetools/blob/main/docs/directives.md).
+
+### Advanced configuration
+
+As well as applying directives via query strings like the one above, you can specify default directives via configuration passed to the `enhancedImages(...)` plugin. All properties are optional:
+
+```js
+/// file: vite.config.js
+export default defineConfig({
+	plugins: [
+		enhancedImages({
+			defaultFormats: (metadata) => {
+				// `metadata` comes from the Sharp image processing library, which is used internally.
+				// Reference: https://sharp.pixelplumbing.com/api-input/#metadata
+
+				// this return value is equivalent to appending `?format=avif;webp`
+				// on every image import or `<enhanced:img>` src attribute
+				return `avif;webp`;
+			},
+
+			defaultWidths: (width, sizes) => {
+				// `width` is the actual image width
+				// `sizes` is the value of the `sizes` attribute on `<enhanced:img>`, or `null` if absent
+
+				const small = Math.round(width / 2).toString();
+
+				return {
+					// equivalent to `?w=${small};${width}`
+					w: `${small};${width}`,
+					// optional; if provided, used to generate pixel-density (`x`) descriptors
+					basePixels: small
+				};
+			},
+
+			// Options passed to `vite-imagetools`, which is used internally
+			// Reference: https://github.com/JonasKruckenberg/imagetools/tree/main/packages/vite#options
+			//
+			// - `namedExports` is always `false` and cannot be changed.
+			// - `defaultDirectives` does not apply to images processed via `<enhanced:img>` or `?enhanced`
+			imagetools: {
+				// ...
+			}
+		}),
+		sveltekit()
+	]
+});
+```
 
 ## Loading images dynamically from a CDN
 

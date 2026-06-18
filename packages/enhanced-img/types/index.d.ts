@@ -10,7 +10,7 @@ export type Options = {
 	/**
 	 * Get the default formats for enhanced images.
 	 *
-	 * @param meta Metadata for the source image.
+	 * @param metadata Metadata for the source image.
 	 * @returns A ';'-separated list of output formats like 'avif;webp;jpg'.
 	 *
 	 * The default value is the following function:
@@ -27,7 +27,7 @@ export type Options = {
 	 * }
 	 * ```
 	 */
-	defaultFormats?: (meta: Metadata) => string;
+	defaultFormats?: (metadata: Metadata) => string;
 	/**
 	 * Get the default widths for enhanced images.
 	 *
