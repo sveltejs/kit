@@ -828,10 +828,10 @@ test.describe('remote functions', () => {
 		const overall_fields_status = page.locator('#overall-fields');
 		const overall_form_status = page.locator('#overall-form');
 
-		expect(foo_status).toHaveText('foo: true');
-		expect(nested_bar_status).toHaveText('nested.bar: true');
-		expect(overall_fields_status).toHaveText('overall fields: true');
-		expect(overall_form_status).toHaveText('overall form: true');
+		await expect(foo_status).toHaveText('foo: true');
+		await expect(nested_bar_status).toHaveText('nested.bar: true');
+		await expect(overall_fields_status).toHaveText('overall fields: true');
+		await expect(overall_form_status).toHaveText('overall form: true');
 	});
 
 	test('form isValid set to a correct value', async ({ page, javaScriptEnabled }) => {
@@ -846,23 +846,23 @@ test.describe('remote functions', () => {
 
 		// Invalid, min length is 2
 		await page.fill('input[name="foo"]', 'c');
-		expect(foo_status).toHaveText('foo: false');
-		expect(nested_bar_status).toHaveText('nested.bar: true');
-		expect(overall_fields_status).toHaveText('overall fields: false');
-		expect(overall_form_status).toHaveText('overall form: false');
+		await expect(foo_status).toHaveText('foo: false');
+		await expect(nested_bar_status).toHaveText('nested.bar: true');
+		await expect(overall_fields_status).toHaveText('overall fields: false');
+		await expect(overall_form_status).toHaveText('overall form: false');
 
 		await page.fill('input[name="foo"]', 'cc');
-		expect(foo_status).toHaveText('foo: true');
-		expect(nested_bar_status).toHaveText('nested.bar: true');
-		expect(overall_fields_status).toHaveText('overall fields: true');
-		expect(overall_form_status).toHaveText('overall form: true');
+		await expect(foo_status).toHaveText('foo: true');
+		await expect(nested_bar_status).toHaveText('nested.bar: true');
+		await expect(overall_fields_status).toHaveText('overall fields: true');
+		await expect(overall_form_status).toHaveText('overall form: true');
 
 		// Invalid, max length is 2
 		await page.fill('input[name="nested.bar"]', 'ccc');
-		expect(foo_status).toHaveText('foo: true');
-		expect(nested_bar_status).toHaveText('nested.bar: false');
-		expect(overall_fields_status).toHaveText('overall fields: false');
-		expect(overall_form_status).toHaveText('overall form: false');
+		await expect(foo_status).toHaveText('foo: true');
+		await expect(nested_bar_status).toHaveText('nested.bar: false');
+		await expect(overall_fields_status).toHaveText('overall fields: false');
+		await expect(overall_form_status).toHaveText('overall form: false');
 	});
 });
 
