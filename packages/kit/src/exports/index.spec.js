@@ -67,14 +67,14 @@ describe('redirect', () => {
 		);
 	});
 
-	it('encodes non-ASCII characters in redirect location', () => {
+	it('encodes non-ASCII characters', () => {
 		const e = assert.throws(() => redirect(303, '/ㄱ'));
 		assert.ok(isRedirect(e));
 		assert.equal(e.status, 303);
 		assert.equal(e.location, '/%E3%84%B1');
 	});
 
-	it('preserves already percent-encoded redirect locations', () => {
+	it('preserves already percent-encoded characters', () => {
 		const e = assert.throws(() => redirect(307, '/%E3%84%B1'));
 		assert.ok(isRedirect(e));
 		assert.equal(e.location, '/%E3%84%B1');
@@ -84,5 +84,12 @@ describe('redirect', () => {
 		const e = assert.throws(() => redirect(303, '/path/한글?q=값#섹션'));
 		assert.ok(isRedirect(e));
 		assert.equal(e.location, '/path/%ED%95%9C%EA%B8%80?q=%EA%B0%92#%EC%84%B9%EC%85%98');
+	});
+
+	it('uses puny code for non-ASCII hosts', () => {
+		const e = assert.throws(() => redirect(303, 'https://내도메인.한국/'));
+		assert.ok(isRedirect(e));
+		assert.equal(e.status, 303);
+		assert.equal(e.location, 'https://xn--220b31d95hq8o.xn--3e0b707e/');
 	});
 });
