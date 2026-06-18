@@ -771,6 +771,18 @@ declare module '@sveltejs/kit' {
 			 */
 			handleUnseenRoutes?: PrerenderUnseenRoutesHandlerValue;
 			/**
+			 * How to respond when SvelteKit encounters a URL it cannot parse while crawling prerendered HTML (for example, an AT Protocol URL such as `at://did:plc:...`).
+			 *
+			 * - `'fail'` — fail the build
+			 * - `'ignore'` - silently ignore the failure and continue
+			 * - `'warn'` — continue, but print a warning
+			 * - `(details) => void` — a custom error handler that takes a `details` object with `href`, `referrer` and `message` properties. If you `throw` from this function, the build will fail
+			 *
+			 * @default "fail"
+			 * @since 2.67.0
+			 */
+			handleInvalidUrl?: PrerenderInvalidUrlHandlerValue;
+			/**
 			 * The value of `url.origin` during prerendering; useful if it is included in rendered content.
 			 * @default "http://sveltekit-prerender"
 			 */
@@ -2559,6 +2571,10 @@ declare module '@sveltejs/kit' {
 		(details: { routes: string[]; message: string }): void;
 	}
 
+	interface PrerenderInvalidUrlHandler {
+		(details: { href: string; referrer: string | null; message: string }): void;
+	}
+
 	type PrerenderHttpErrorHandlerValue = 'fail' | 'warn' | 'ignore' | PrerenderHttpErrorHandler;
 	type PrerenderMissingIdHandlerValue = 'fail' | 'warn' | 'ignore' | PrerenderMissingIdHandler;
 	type PrerenderUnseenRoutesHandlerValue =
@@ -2571,6 +2587,11 @@ declare module '@sveltejs/kit' {
 		| 'warn'
 		| 'ignore'
 		| PrerenderEntryGeneratorMismatchHandler;
+	type PrerenderInvalidUrlHandlerValue =
+		| 'fail'
+		| 'warn'
+		| 'ignore'
+		| PrerenderInvalidUrlHandler;
 
 	export type PrerenderOption = boolean | 'auto';
 
