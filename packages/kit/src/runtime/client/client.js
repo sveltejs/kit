@@ -1344,6 +1344,7 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 						// Before reloading, try to update the service worker if it exists
 						await update_service_worker();
 						await native_navigation(url);
+						return;
 					}
 
 					error = await handle_error(err, { params, url, route: { id: route.id } });
@@ -1451,6 +1452,7 @@ async function load_root_error_page({ status, error, url, route }) {
 				// bring us right back here, turning this into an endless loop
 				if (url.origin !== origin || url.pathname !== location.pathname || hydrated) {
 					await native_navigation(url);
+					return;
 				}
 			}
 		}
@@ -1819,7 +1821,7 @@ async function navigate({
 		if (updated) {
 			// Before reloading, try to update the service worker if it exists
 			await update_service_worker();
-			await native_navigation(url, replace_state);
+			return await native_navigation(url, replace_state);
 		}
 	}
 
@@ -2041,7 +2043,8 @@ async function server_fallback(url, route, error, status, replace_state) {
 		debugger; // eslint-disable-line
 	}
 
-	return await native_navigation(url, replace_state);
+	await native_navigation(url, replace_state);
+	return;
 }
 
 if (import.meta.hot) {
@@ -3035,7 +3038,7 @@ async function _hydrate(
 		if (error instanceof Redirect) {
 			// this is a real edge case — `load` would need to return
 			// a redirect but only in the browser
-			await native_navigation(new URL(error.location, location.href));
+			return await native_navigation(new URL(error.location, location.href));
 		}
 
 		result = await load_root_error_page({
