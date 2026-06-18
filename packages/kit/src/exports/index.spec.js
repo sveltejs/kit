@@ -74,10 +74,16 @@ describe('redirect', () => {
 		assert.equal(e.location, '/%E3%84%B1');
 	});
 
-	it('preserves already percent-encoded pathname characters', () => {
+	it('preserves already percent-encoded characters for relative locations', () => {
 		const e = assert.throws(() => redirect(307, '/%E3%84%B1'));
 		assert.ok(isRedirect(e));
 		assert.equal(e.location, '/%E3%84%B1');
+	});
+
+	it('preserves already percent-encoded characters for absolute locations', () => {
+		const e = assert.throws(() => redirect(307, 'http://%E3%84%B1.com/%E3%84%B1'));
+		assert.ok(isRedirect(e));
+		assert.equal(e.location, 'http://xn--ypd.com/%E3%84%B1');
 	});
 
 	it('preserves pathname relative locations', () => {
