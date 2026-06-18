@@ -66,9 +66,14 @@ test.describe('Filesystem updates', () => {
 
 		try {
 			fs.writeFileSync(file, contents.replace(/export const ssr = false;\n/, ''));
-			await page.goto('/universal', { wait_for_started: false });
+			// the file write invalidates the module graph asynchronously, so retry the
+			// navigation until the dev server picks up the change and SSR fails (rather
+			// than racing a fixed `waitForTimeout` against Vite's invalidation)
+			await expect(async () => {
+				await page.goto('/universal', { wait_for_started: false });
+				await expect(page.locator('h1')).toHaveText('Internal Error', { timeout: 1000 });
+			}).toPass();
 			expect(await get_computed_style('body', 'background-color')).not.toBe('rgb(255, 0, 0)');
-			await expect(page.locator('h1')).toHaveText('Internal Error');
 		} finally {
 			fs.writeFileSync(file, contents);
 		}

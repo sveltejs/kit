@@ -22,4 +22,27 @@ test.describe('remote functions', () => {
 		);
 		expect(code.includes('const with_read = prerender(')).toBe(false);
 	});
+
+	test("form doesn't refresh queries when not a remote request", async ({ page }) => {
+		await page.goto(`/remote/form/noop-refresh-non-enhanced/${Date.now()}${Math.random()}`);
+
+		const count = page.locator('#count');
+		await expect(count).toHaveText('Count: 0');
+
+		await page.click('button');
+
+		// Should not have refreshed
+		await expect(count).toHaveText('Count: 0');
+	});
+
+	test(".as('hidden', value) is correctly received on the server", async ({ page }) => {
+		await page.goto('/remote/form/as-value');
+
+		const form1 = page.locator('form').nth(0);
+		await form1.locator('button').click();
+
+		await expect(page.locator('#hidden-string')).toHaveText('hidden string: string');
+		await expect(page.locator('#hidden-number')).toHaveText('hidden number: 1');
+		await expect(page.locator('#hidden-boolean')).toHaveText('hidden boolean: true');
+	});
 });
