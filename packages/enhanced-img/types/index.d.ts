@@ -6,7 +6,7 @@ import type { Metadata } from 'sharp';
 
 export type { Picture };
 
-export type VitePluginOptions = {
+export type Options = {
 	/**
 	 * Get the default formats for enhanced images.
 	 *
@@ -103,4 +103,4 @@ declare module 'svelte/elements' {
 	}
 }
 
-export function enhancedImages(opts?: VitePluginOptions): Promise<Plugin[]>;
+export function enhancedImages(opts?: Options): Promise<Plugin[]>;

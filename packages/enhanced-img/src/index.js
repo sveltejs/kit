@@ -3,7 +3,7 @@ import { imagetools } from 'vite-imagetools';
 import { image_plugin, defaultViteImgtoolsOptions } from './vite-plugin.js';
 
 /**
- * @param {import('types/index.js').VitePluginOptions} [opts]
+ * @param {import('types/index.js').Options} [opts]
  * @returns {import('vite').Plugin[]}
  */
 export function enhancedImages(opts) {
@@ -20,7 +20,7 @@ export function enhancedImages(opts) {
 }
 
 /**
- * @param {Required<import('types/index.js').VitePluginOptions>} opts
+ * @param {Required<import('types/index.js').Options>} opts
  * @returns {import('vite').Plugin}
  */
 function imagetools_plugin(opts) {
