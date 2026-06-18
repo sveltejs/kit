@@ -76,6 +76,8 @@ export function form(id) {
 
 		const issues = $derived(flatten_issues(raw_issues));
 
+		const isFormValid = $derived(raw_issues.length === 0);
+
 		/** @type {any} */
 		let result = $state.raw(initial?.result);
 
@@ -688,6 +690,9 @@ export function form(id) {
 					enhance_callback = callback;
 					return instance;
 				}
+			},
+			isValid: {
+				get: () => isFormValid
 			}
 		});
 

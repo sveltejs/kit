@@ -1997,6 +1997,8 @@ type RemoteFormFieldMethods<T> = {
 	set(input: DeepPartial<T>): DeepPartial<T>;
 	/** Validation issues, if any */
 	issues(): RemoteFormIssue[] | undefined;
+	/** The validity of the field. Defaults to `true` if this field has not been validated */
+	isValid(): boolean;
 };
 
 // These two types use "T extends unknown ? .. : .." to distribute over unions.
@@ -2210,6 +2212,8 @@ export type RemoteForm<Input extends RemoteFormInput | void, Output> = {
 	get result(): Output | undefined;
 	/** The number of pending submissions */
 	get pending(): number;
+	/** The overall validity of the form. Defaults to `true` if `validate` has not been called */
+	get isValid(): boolean;
 	/** Access form fields using object notation */
 	fields: RemoteFormFieldsRoot<Input>;
 };

@@ -669,6 +669,14 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 				return create_field_proxy(issues_func, get_input, set_input, get_issues, [...path, prop]);
 			}
 
+			if (prop === 'isValid') {
+				const is_valid_func = () => {
+					return !((key === '' ? '$' : key) in get_issues());
+				};
+
+				return create_field_proxy(is_valid_func, get_input, set_input, get_issues, [...path, prop]);
+			}
+
 			if (prop === 'as') {
 				/**
 				 * @param {string} type
