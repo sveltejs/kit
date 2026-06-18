@@ -74,7 +74,7 @@ describe('redirect', () => {
 		assert.equal(e.location, '/%E3%84%B1');
 	});
 
-	it('preserves already percent-encoded characters', () => {
+	it('preserves already percent-encoded pathname characters', () => {
 		const e = assert.throws(() => redirect(307, '/%E3%84%B1'));
 		assert.ok(isRedirect(e));
 		assert.equal(e.location, '/%E3%84%B1');
