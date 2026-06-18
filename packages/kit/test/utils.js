@@ -125,9 +125,7 @@ export const test = base.extend({
 					if (javaScriptEnabled && args[1]?.wait_for_started !== false) {
 						// the first navigation to a route triggers on-demand compilation in dev
 						// mode, which can take a while on a cold/overloaded CI runner
-						await page.waitForSelector('body.started', {
-							timeout: process.env.CI ? 30000 : 15000
-						});
+						await page.locator('body.started').waitFor({ timeout: process.env.CI ? 30000 : 15000 });
 					}
 					return res;
 				} catch (e) {

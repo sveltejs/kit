@@ -1828,9 +1828,8 @@ test.describe('reroute', () => {
 		// click the link with the text External URL
 		await page.click("a[data-test='external-url']");
 
-		// The URL should not have the same origin as the current URL. Navigating to the
-		// external URL is not instantaneous, so poll until the origin changes
-		await expect.poll(() => new URL(page.url()).origin).not.toBe(current_url.origin);
+		// The URL should not have the same origin as the current URL
+		await expect(page).not.toHaveURL((url) => url.origin === current_url.origin);
 	});
 
 	test('Falls back to native navigation if reroute throws on the client', async ({ page }) => {
