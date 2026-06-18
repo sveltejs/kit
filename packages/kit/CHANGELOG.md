@@ -113,6 +113,66 @@
 
 - chore: remove dependency on `set-cookie-parser` ([#15384](https://github.com/sveltejs/kit/pull/15384))
 
+## 2.66.0
+### Minor Changes
+
+
+- feat: precompress prerendered `.md` and `.mdx` files ([#15893](https://github.com/sveltejs/kit/pull/15893))
+
+
+- feat: warn the user when they forget to make boolean inputs optional in their form schemas ([#15804](https://github.com/sveltejs/kit/pull/15804))
+
+
+### Patch Changes
+
+
+- fix: blur active element before component update during navigation so that blur/focusout handlers fire while old component data is still valid ([#15452](https://github.com/sveltejs/kit/pull/15452))
+
+
+- fix: ensure `base` is available from `$service-worker` during development ([#15882](https://github.com/sveltejs/kit/pull/15882))
+
+
+- fix: use correct relative asset paths when rendering an error page for a missing `__data.json` request ([#15884](https://github.com/sveltejs/kit/pull/15884))
+
+
+- fix: preserve active `for await` consumers across `query.live` reconnects ([#16022](https://github.com/sveltejs/kit/pull/16022))
+
+
+- fix: settle `query.live` reconnect promise on all exit paths, preventing `invalidateAll()` from deadlocking when a live query is offline or interrupted ([#16022](https://github.com/sveltejs/kit/pull/16022))
+
+
+- fix: preserve last value when a `query.live` stream completes without yielding on reconnect ([#16022](https://github.com/sveltejs/kit/pull/16022))
+
+
+- fix: remove `types: ['node']` from generated tsconfig to avoid errors when `@types/node` is not installed ([#15709](https://github.com/sveltejs/kit/pull/15709))
+
+
+- fix: prefer pages over endpoints when prerendering ([#16076](https://github.com/sveltejs/kit/pull/16076))
+
+
+- fix: restore snapshots after afterNavigate callbacks ([#16066](https://github.com/sveltejs/kit/pull/16066))
+
+
+- fix: support `ws:`/`wss:` and `trusted-types-eval` for CSP sources ([#15938](https://github.com/sveltejs/kit/pull/15938))
+
+
+- fix: omit empty `file` inputs from remote form data ([#15898](https://github.com/sveltejs/kit/pull/15898))
+
+
+- fix: fail early if a route with `+page` and `+server` is marked as prerenderable ([#16075](https://github.com/sveltejs/kit/pull/16075))
+
+
+- fix: wait a tick before resetting forms ([#15805](https://github.com/sveltejs/kit/pull/15805))
+
+
+- fix: `preflight` schemas apply correctly when chained before `for` ([#15863](https://github.com/sveltejs/kit/pull/15863))
+
+
+- fix: blank page in SPA mode when root layout `load()` throws ([#15798](https://github.com/sveltejs/kit/pull/15798))
+
+
+- fix: pass all unknown options from the `sveltekit` Vite plugin through to `vite-plugin-svelte` ([#16010](https://github.com/sveltejs/kit/pull/16010))
+
 ## 2.65.2
 ### Patch Changes
 

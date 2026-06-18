@@ -926,3 +926,10 @@ test('errors with both ts and js handlers for the same route', () => {
 		/^Multiple endpoint files found in samples\/conflicting-ts-js-handlers-server\/ : \+server\.js and \+server\.ts/
 	);
 });
+
+test('errors on prerenderable dual route', () => {
+	assert.throws(
+		() => create('samples/prerendered-dual-route'),
+		'Cannot prerender a route (/x) with both a `+page.svelte` and a `+server.js`'
+	);
+});

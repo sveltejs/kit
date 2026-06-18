@@ -189,7 +189,8 @@ test.describe('request abort', () => {
 
 	test('request.signal fires abort event', async ({ page }) => {
 		await page.goto('/request-abort');
-		await page.waitForTimeout(200);
-		expect(await page.innerText('pre')).toBe('{"aborted":true}');
+		// the abort + subsequent fetch can take longer than a fixed timeout on slow CI,
+		// so use an auto-retrying assertion instead of `waitForTimeout`
+		await expect(page.locator('pre')).toHaveText('{"aborted":true}');
 	});
 });

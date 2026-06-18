@@ -443,7 +443,7 @@ export async function render_response({
 
 			if (Object.keys(options.hooks.transport).length > 0) {
 				if (client.inline) {
-					app_declaration = `const app = __sveltekit_${options.version_hash}.app.app;`;
+					app_declaration = `const app = ${global}.app.app;`;
 				} else if (client.app) {
 					app_declaration = `const app = await import(${s(prefixed(client.app))});`;
 				} else {
