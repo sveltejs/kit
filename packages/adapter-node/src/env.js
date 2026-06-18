@@ -1,4 +1,3 @@
-/* global ENV_PREFIX */
 import process from 'node:process';
 
 const expected = new Set([
@@ -35,7 +34,7 @@ if (ENV_PREFIX) {
 
 /**
  * @param {string} name
- * @param {any} fallback
+ * @param {any} [fallback]
  */
 export function env(name, fallback) {
 	const prefix = expected_unprefixed.has(name) ? '' : ENV_PREFIX;

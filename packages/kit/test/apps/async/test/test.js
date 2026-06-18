@@ -1,3 +1,4 @@
+import process from 'node:process';
 import http from 'node:http';
 import { expect } from '@playwright/test';
 import { test } from '../../../utils.js';
@@ -23,13 +24,6 @@ test.describe('remote functions', () => {
 	test('query.live renders the first yielded value during SSR', async ({ page }) => {
 		await page.goto('/remote/live');
 		await expect(page.locator('#first-value')).toHaveText('0');
-	});
-
-	test('run is blocked during server render', async ({ page }) => {
-		await page.goto('/remote/query-runtime-errors/run-in-render');
-		await expect(page.locator('#error')).toContainText(
-			'On the server, .run() can only be called in universal `load` functions'
-		);
 	});
 
 	test('query redirects on page load (query in common layout)', async ({ page }) => {
@@ -69,6 +63,28 @@ test.describe('remote functions', () => {
 		await page.goto('/remote/query-non-exported');
 
 		await expect(page.locator('h1')).toHaveText('3');
+	});
+
+	test('private (non-exported) query results are not leaked into command responses', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		test.skip(!javaScriptEnabled, 'requires JavaScript to invoke the command');
+
+		await page.goto('/remote/private-query');
+
+		const [response] = await Promise.all([
+			page.waitForResponse((response) => response.url().includes('/reveal')),
+			page.getByRole('button', { name: 'reveal' }).click()
+		]);
+
+		const body = await response.text();
+
+		// the command returns the uppercased secret...
+		expect(body).toContain('PRIVATE-DATA');
+
+		// ...but the raw private query result must never appear in the serialized payload
+		expect(body).not.toContain('private-data');
 	});
 
 	test('queries can access the route/url of the page they were called from', async ({
@@ -271,6 +287,7 @@ test.describe('remote functions', () => {
 
 		if (javaScriptEnabled) {
 			await expect(page.getByText('enhanced.pending:')).toHaveText('enhanced.pending: 1');
+			await expect(page.getByText('enhanced.element:')).toHaveText('enhanced.element: attached');
 
 			await page.getByText('message.current: hello (override)').waitFor();
 
@@ -280,6 +297,12 @@ test.describe('remote functions', () => {
 
 			// enhanced submission should not clear the input; the developer must do that at the appropriate time
 			await expect(page.locator('[data-enhanced] input[name="message"]')).toHaveValue('hello');
+			await expect(page.getByText('enhanced.callback_element_matches:')).toHaveText(
+				'enhanced.callback_element_matches: true'
+			);
+			await expect(page.getByText('enhanced.callback_has_enhance:')).toHaveText(
+				'enhanced.callback_has_enhance: false'
+			);
 		} else {
 			await expect(page.locator('[data-enhanced] input[name="message"]')).toHaveValue('');
 		}
@@ -309,6 +332,29 @@ test.describe('remote functions', () => {
 		await page.locator('[data-enhanced] span').click();
 		await expect(page.getByText('enhanced.submit_result:')).toHaveText(
 			'enhanced.submit_result: false'
+		);
+	});
+
+	test('form submit() enables programmatic submission', async ({ page, javaScriptEnabled }) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/form/enhanced');
+
+		await expect(page.getByText('enhanced.imperative_submit_result:')).toHaveText(
+			'enhanced.imperative_submit_result: none'
+		);
+
+		await page.fill('[data-enhanced] input', 'hello');
+		await page.getByText('submit enhanced programmatically').click();
+
+		await expect(page.getByText('enhanced.pending:')).toHaveText('enhanced.pending: 1');
+
+		await page.getByText('resolve deferreds').click();
+		await expect(page.getByText('enhanced.imperative_submit_result:')).toHaveText(
+			'enhanced.imperative_submit_result: true'
+		);
+		await expect(page.getByText('enhanced.result:')).toHaveText(
+			'enhanced.result: hello (from: enhanced:enhanced)'
 		);
 	});
 
@@ -380,6 +426,26 @@ test.describe('remote functions', () => {
 			timeout: 5000
 		});
 		await expect(page.locator('[data-failing-issue]')).toHaveText('async check failed');
+	});
+
+	test('form preflight before for ordering works', async ({ page, javaScriptEnabled }) => {
+		test.skip(!javaScriptEnabled);
+
+		await page.goto('/remote/form/preflight-for');
+
+		const form = page.locator('[data-preflight-for]');
+		const input = form.locator('input');
+		const button = form.locator('button');
+
+		// Preflight should catch oversized value
+		await input.fill('21');
+		await button.click();
+		await form.getByText('too big').waitFor();
+
+		// After fixing, submission should succeed
+		await input.fill('5');
+		await button.click();
+		await expect(page.getByText('value.current')).toHaveText('value.current: 5');
 	});
 
 	test('form preflight-only validation works', async ({ page, javaScriptEnabled }) => {
@@ -662,6 +728,83 @@ test.describe('remote functions', () => {
 				timeout: 5000
 			});
 		}
+	});
+
+	test('query rendered in its loading state during SSR is fetched on the client', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		await page.goto('/remote/query-loading-state');
+
+		if (javaScriptEnabled) {
+			// the query was still pending when SSR finished, so it must not be
+			// seeded into the hydration cache — the client has to fetch it itself
+			await expect(page.locator('#slow-state')).toHaveText('slow data', {
+				timeout: 5000
+			});
+		} else {
+			await expect(page.locator('#slow-state')).toHaveText('loading');
+		}
+	});
+
+	test('queries cannot set cookies or headers', async ({ page }) => {
+		await page.goto('/remote/query-event-guards');
+
+		await expect(page.locator('#result')).toHaveText(
+			'Cannot set cookies in `query` or `prerender` functions | setHeaders is not allowed in remote functions'
+		);
+	});
+
+	test('queries nested inside live queries are not implicitly serialized', async ({ page }) => {
+		await page.goto('/remote/live-nested-query');
+
+		await expect(page.locator('#live-result')).toHaveText('NESTED-SECRET');
+
+		// the nested query's raw value must not leak into the page payload
+		expect(await page.content()).not.toContain('nested-secret');
+	});
+
+	test('requested(...) works in form handlers regardless of progressive enhancement', async ({
+		page
+	}) => {
+		await page.goto('/remote/form/requested');
+
+		await expect(page.locator('#form-result')).toHaveText('not submitted');
+
+		await page.locator('#requested-submit').click();
+
+		await expect(page.locator('#form-result')).toHaveText('submitted successfully');
+	});
+
+	test('SSR data for query.live is reused on hydration', async ({ page, javaScriptEnabled }) => {
+		await page.goto(`/remote/live-ssr-value?key=${Date.now()}-${Math.random()}`);
+
+		if (javaScriptEnabled) {
+			// the SSR'd first value must be seeded into the live query on hydration —
+			// the reconnect (deliberately blocked server-side) must not reset it to a loading state
+			await expect(page.locator('#live-state')).toHaveText('initial');
+
+			// the live connection still works after seeding
+			await page.click('#notify');
+			await expect(page.locator('#live-state')).toHaveText('updated');
+		} else {
+			await expect(page.locator('#live-state')).toHaveText('loading');
+		}
+	});
+
+	test('prerender functions are deduplicated across prerendered pages during build', async ({
+		page
+	}) => {
+		test.skip(!!process.env.DEV, 'pages are only prerendered when building');
+
+		await page.goto('/remote/prerender-dedupe/a');
+		const a = await page.locator('#count').textContent();
+
+		await page.goto('/remote/prerender-dedupe/b');
+		const b = await page.locator('#count').textContent();
+
+		// the shared prerender function must only have executed once at build time
+		expect(b).toBe(a);
 	});
 
 	test('awaiting multiple queries inside $derived does not fail mutation validation', async ({

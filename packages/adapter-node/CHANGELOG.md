@@ -1,5 +1,17 @@
 # @sveltejs/adapter-node
 
+## 5.5.5
+### Patch Changes
+
+
+- fix: bundle entrypoints alongside app code ([#16069](https://github.com/sveltejs/kit/pull/16069))
+
+
+- fix: log the actual adapter-node listening address ([#15899](https://github.com/sveltejs/kit/pull/15899))
+
+- Updated dependencies [[`63f1b0b`](https://github.com/sveltejs/kit/commit/63f1b0bd0ee2d16ef0c4d1f5bef35afd54d0304a), [`1dbff3f`](https://github.com/sveltejs/kit/commit/1dbff3fec2a335242af8b556c36513dbf9602ea5), [`961ba01`](https://github.com/sveltejs/kit/commit/961ba015ff4f69b954bcb7512a05ccd5ea180eb4), [`d2e108c`](https://github.com/sveltejs/kit/commit/d2e108c13925559c3433b9b46a71174a0f271253), [`d2e108c`](https://github.com/sveltejs/kit/commit/d2e108c13925559c3433b9b46a71174a0f271253), [`d2e108c`](https://github.com/sveltejs/kit/commit/d2e108c13925559c3433b9b46a71174a0f271253), [`860b3c7`](https://github.com/sveltejs/kit/commit/860b3c7d5f52b02fdd07d95305dfdb93357e0ead), [`f8c842c`](https://github.com/sveltejs/kit/commit/f8c842cb8bfb13235bfd6c44f913d51e9e2d70d6), [`d3aa5fe`](https://github.com/sveltejs/kit/commit/d3aa5fe9bdb8fd6bdf0dd75d4575fbcfa37fc560), [`0dd7659`](https://github.com/sveltejs/kit/commit/0dd7659d943e7e635947aed9e96c639e8167b1fb), [`03e9f66`](https://github.com/sveltejs/kit/commit/03e9f660edf026654d65b257d509d4ab190e6f7e), [`57b7b7b`](https://github.com/sveltejs/kit/commit/57b7b7b4f79283b36832450d8476a83cff007526), [`4eabadc`](https://github.com/sveltejs/kit/commit/4eabadca61440dfda690cdd4e8eeb0723fb94258), [`6fbf2b6`](https://github.com/sveltejs/kit/commit/6fbf2b64843123ac2676b04d56085d4c118a91b4), [`276744d`](https://github.com/sveltejs/kit/commit/276744da6585d743d720e8cbaa476bd67ac0fb48), [`8740132`](https://github.com/sveltejs/kit/commit/8740132952c2f7d908b4f1e795f942ad079895be), [`f430a68`](https://github.com/sveltejs/kit/commit/f430a68937744212d2b1bd0ee920cc89cc6f696f), [`1c7a8dc`](https://github.com/sveltejs/kit/commit/1c7a8dca3216b42ff4f69a712e794a485de4d4ee)]:
+  - @sveltejs/kit@2.66.0
+
 ## 5.5.4
 ### Patch Changes
 

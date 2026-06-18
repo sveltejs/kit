@@ -1,7 +1,9 @@
 <script>
-	import { as_value_form, get_values, reset_values } from './form.remote.ts';
+	import { as_value_form, get_values, get_hidden_values, reset_values } from './form.remote.ts';
+	import Form from './Form.svelte';
 
 	const values = $derived(await get_values());
+	const hidden_values = $derived(await get_hidden_values());
 </script>
 
 {#each values as value (value.id)}
@@ -11,33 +13,15 @@
 	</div>
 {/each}
 
+{#each Object.entries(hidden_values) as [key, value] (key)}
+	<div id="hidden-{key}">
+		hidden {key}: {value}
+	</div>
+{/each}
+
 <div class="forms">
 	{#each values as value (value.id)}
-		<form class="form" {...as_value_form.for(value.id)}>
-			<input {...as_value_form.fields.hidden.string.as('hidden', 'string')} />
-			<input {...as_value_form.fields.hidden.number.as('hidden', 1)} />
-			<input {...as_value_form.fields.hidden.boolean.as('hidden', true)} />
-
-			<input {...as_value_form.fields.text_field.as('text', value.text_field)} />
-
-			<input {...as_value_form.fields.number_field.as('number', value.number_field)} />
-
-			<select {...as_value_form.fields.select_field.as('select', value.select_field)}>
-				<option>apple</option>
-				<option>banana</option>
-				<option>cherry</option>
-			</select>
-
-			<input {...as_value_form.fields.color_field.as('color', value.color_field)} />
-
-			<input {...as_value_form.fields.range_field.as('range', value.range_field)} />
-
-			<label
-				>Checkbox
-				<input {...as_value_form.fields.checkbox_field.as('checkbox', value.checkbox_field)} />
-			</label>
-			<button {...as_value_form.fields.id.as('submit', value.id)}>submit</button>
-		</form>
+		<Form {value} />
 	{/each}
 </div>
 
@@ -61,13 +45,5 @@
 		display: flex;
 		flex-wrap: wrap;
 		gap: 0.25rem;
-	}
-	.form {
-		display: flex;
-		flex-direction: column;
-		max-width: 200px;
-		gap: 0.25rem;
-		padding: 0.5rem;
-		background: #eee;
 	}
 </style>
