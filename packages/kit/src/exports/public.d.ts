@@ -2110,7 +2110,7 @@ type MaybeArray<T> = T | T[];
 
 export interface RemoteFormInput {
 	[key: string]:
-		| MaybeArray<string | number | boolean | File | null | undefined | RemoteFormInput>
+		| MaybeArray<string | number | boolean | File | null | RemoteFormInput>
 		| undefined;
 }
 

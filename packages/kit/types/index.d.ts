@@ -2084,7 +2084,7 @@ declare module '@sveltejs/kit' {
 
 	export interface RemoteFormInput {
 		[key: string]:
-			| MaybeArray<string | number | boolean | File | null | undefined | RemoteFormInput>
+			| MaybeArray<string | number | boolean | File | null | RemoteFormInput>
 			| undefined;
 	}
 
