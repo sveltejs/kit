@@ -129,6 +129,7 @@ test.describe('remote functions', () => {
 		await page.locator('button').click();
 
 		await expect(page.locator('#result')).toHaveText('hello');
+		await expect(page.locator('#enhance-result')).toHaveText('hello');
 	});
 
 	test('form updates inputs live', async ({ page, javaScriptEnabled }) => {

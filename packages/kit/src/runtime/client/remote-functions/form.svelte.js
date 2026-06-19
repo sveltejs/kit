@@ -53,7 +53,7 @@ export function form(id) {
 	/** @type {Map<any, { count: number, instance: RemoteForm<TInput, TOutput> }>} */
 	const instances = new Map();
 
-	/** @typedef {Omit<RemoteForm<TInput, TOutput>, 'enhance' | 'element' | 'data'> & { readonly element: HTMLFormElement, readonly data: TInput }} EnhanceCallbackInstance */
+	/** @typedef {Omit<RemoteForm<TInput, TOutput>, 'enhance' | 'element'> & { readonly element: HTMLFormElement}} EnhanceCallbackInstance */
 
 	/** @type {StandardSchemaV1 | null} */
 	let shared_preflight_schema = null;
@@ -91,7 +91,7 @@ export function form(id) {
 		let preflight_schema = undefined;
 
 		/**
-		 * @param {EnhanceCallbackInstance} instance
+		 * @type {(instance: EnhanceCallbackInstance, data: Record<string, any>) => Promise<void>}
 		 */
 		let enhance_callback = async (instance) => {
 			if (await instance.submit()) {
@@ -297,7 +297,10 @@ export function form(id) {
 						...descriptors,
 						data: {
 							get() {
-								return data;
+								// TODO 3.0 remove
+								throw new Error(
+									`The \`data\` property has been moved to the second argument of the \`enhance\` callback. Use \`form.enhance((form, data) => { ... })\` instead.`
+								);
 							}
 						},
 						form: {
@@ -418,7 +421,7 @@ export function form(id) {
 					const valid = await preflight(form_data, data);
 					if (!valid) return;
 
-					await enhance_callback(create_enhance_callback_instance(form, form_data, data));
+					await enhance_callback(create_enhance_callback_instance(form, form_data, data), data);
 				} catch (e) {
 					const error =
 						e instanceof HttpError ? e.body : { message: /** @type {any} */ (e).message };
@@ -693,7 +696,7 @@ export function form(id) {
 			},
 			enhance: {
 				/**
-				 * @param {(instance: EnhanceCallbackInstance) => any} callback
+				 * @param {(instance: EnhanceCallbackInstance, data: Record<string, any>) => any} callback
 				 */
 				value: (callback) => {
 					enhance_callback = callback;

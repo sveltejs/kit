@@ -2147,12 +2147,11 @@ declare module '@sveltejs/kit' {
 		/** Use the `enhance` method to influence what happens when the form is submitted. */
 		enhance(
 			callback: (
-				form: Omit<RemoteForm<Input, Output>, 'enhance' | 'element' | 'data'> & {
+				form: Omit<RemoteForm<Input, Output>, 'enhance' | 'element'> & {
 					/** The <form> element */
 					readonly element: HTMLFormElement;
-					/** The data being submitted */
-					readonly data: Input;
-				}
+				},
+				data: Input
 			) => MaybePromise<void>
 		): {
 			method: 'POST';
@@ -2854,7 +2853,7 @@ declare module '@sveltejs/kit' {
 	 * @throws {HttpError} This error instructs SvelteKit to initiate HTTP error handling.
 	 * @throws {Error} If the provided status is invalid (not between 400 and 599).
 	 */
-	export function error(status: number, body: App.Error): never;
+	function error_1(status: number, body: App.Error): never;
 	/**
 	 * Throws an error with a HTTP status code and an optional message.
 	 * When called during request handling, this will cause SvelteKit to
@@ -2865,7 +2864,7 @@ declare module '@sveltejs/kit' {
 	 * @throws {HttpError} This error instructs SvelteKit to initiate HTTP error handling.
 	 * @throws {Error} If the provided status is invalid (not between 400 and 599).
 	 */
-	export function error(status: number, body?: {
+	function error_1(status: number, body?: {
 		message: string;
 	} extends App.Error ? App.Error | string | undefined : never): never;
 	/**
@@ -3006,7 +3005,7 @@ declare module '@sveltejs/kit' {
 	}
 	const valid_page_options_array: readonly ["ssr", "prerender", "csr", "trailingSlash", "config", "entries", "load"];
 
-	export {};
+	export { error_1 as error };
 }
 
 declare module '@sveltejs/kit/hooks' {
@@ -3362,7 +3361,7 @@ declare module '$app/navigation' {
 }
 
 declare module '$app/paths' {
-	import type { RouteIdWithSearchOrHash, PathnameWithSearchOrHash, ResolvedPathname, RouteId, RouteParams, Asset, Pathname } from '$app/types';
+	import type { RouteIdWithSearchOrHash, PathnameWithSearchOrHash, ResolvedPathname, RouteId, RouteParams, Asset, Pathname as Pathname_1 } from '$app/types';
 	/**
 	 * A string that matches [`config.kit.paths.base`](https://svelte.dev/docs/kit/configuration#paths).
 	 *
@@ -3459,7 +3458,7 @@ declare module '$app/paths' {
 	 * @since 2.52.0
 	 *
 	 * */
-	export function match(url: Pathname | URL | (string & {})): Promise<{
+	export function match(url: Pathname_1 | URL | (string & {})): Promise<{
 		id: RouteId;
 		params: Record<string, string>;
 	} | null>;
@@ -3822,9 +3821,7 @@ declare module '$app/stores' {
 	};
 
 	export {};
-}
-
-/**
+}/**
  * It's possible to tell SvelteKit how to type objects inside your app by declaring the `App` namespace. By default, a new project will have a file called `src/app.d.ts` containing the following:
  *
  * ```ts
