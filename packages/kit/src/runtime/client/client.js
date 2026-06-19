@@ -163,8 +163,8 @@ function clear_onward_history(current_history_index, current_navigation_index) {
  * Returns a `Promise` that never resolves (to prevent any
  * subsequent work, e.g. history manipulation, from happening)
  * @param {URL} url
- * @param {boolean} [replace] If `true`, will replace the current `history` entry rather than creating a new one with `pushState`
- * @returns {Promise<void>}
+ * @param {boolean} [replace] if `true`, will replace the current `history` entry rather than creating a new one with `pushState`
+ * @returns {Promise<any>} a promise that never resolves
  */
 function native_navigation(url, replace = false) {
 	if (replace) {
@@ -671,12 +671,12 @@ async function _preload_code(url) {
 }
 
 /**
- * @param {import('./types.js').NavigationFinished | undefined} result
+ * @param {import('./types.js').NavigationFinished} result
  * @param {HTMLElement} target
  * @param {boolean} hydrate
  */
 async function initialize(result, target, hydrate) {
-	if (__SVELTEKIT_DEV__ && result?.state.error && document.querySelector('vite-error-overlay'))
+	if (__SVELTEKIT_DEV__ && result.state.error && document.querySelector('vite-error-overlay'))
 		return;
 
 	/** @type {import('@sveltejs/kit').NavigationEvent} */
@@ -686,12 +686,10 @@ async function initialize(result, target, hydrate) {
 		url: new URL(location.href)
 	};
 
-	if (result) {
-		current = {
-			...result.state,
-			nav
-		};
-	}
+	current = {
+		...result.state,
+		nav
+	};
 
 	// Removes the style node we used to avoid FOUC during development
 	if (__SVELTEKIT_DEV__) {
@@ -699,11 +697,11 @@ async function initialize(result, target, hydrate) {
 		if (style) style.remove();
 	}
 
-	update(/** @type {import('@sveltejs/kit').Page} */ (result?.props.page));
+	update(/** @type {import('@sveltejs/kit').Page} */ (result.props.page));
 
 	root = new app.root({
 		target,
-		props: { ...result?.props, stores, components },
+		props: { ...result.props, stores, components },
 		hydrate,
 		// @ts-ignore Svelte 5 specific: asynchronously instantiate the component, i.e. don't call flushSync
 		sync: false,
@@ -1356,8 +1354,7 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 					if (updated) {
 						// Before reloading, try to update the service worker if it exists
 						await update_service_worker();
-						await native_navigation(url);
-						return;
+						return await native_navigation(url);
 					}
 
 					error = await handle_error(err, { params, url, route: { id: route.id } });
@@ -1434,7 +1431,7 @@ async function load_nearest_error_page(i, branch, errors) {
  *   url: URL;
  *   route: { id: string | null }
  * }} opts
- * @returns {Promise<import('./types.js').NavigationFinished | undefined>}
+ * @returns {Promise<import('./types.js').NavigationFinished | undefined>} returns `undefined` in case of a redirect
  */
 async function load_root_error_page({ status, error, url, route }) {
 	/** @type {Record<string, string>} */
@@ -1464,8 +1461,7 @@ async function load_root_error_page({ status, error, url, route }) {
 				// at this point we have no choice but to fall back to the server, if it wouldn't
 				// bring us right back here, turning this into an endless loop
 				if (url.origin !== origin || url.pathname !== location.pathname || hydrated) {
-					await native_navigation(url);
-					return;
+					return await native_navigation(url);
 				}
 			}
 		}
@@ -2076,8 +2072,7 @@ async function server_fallback(url, route, error, status, replace_state) {
 		debugger; // eslint-disable-line
 	}
 
-	await native_navigation(url, replace_state);
-	return;
+	return await native_navigation(url, replace_state);
 }
 
 if (import.meta.hot) {
@@ -3087,10 +3082,11 @@ async function _hydrate(
 		hydrate = false;
 	}
 
-	if (result?.props.page) {
-		result.props.page.state = {};
-	}
+	// this happens when we encounter a redirect while loading the root error page.
+	// In that case, `initialize` will be called during navigation
+	if (!result) return;
 
+	result.props.page.state = {};
 	await initialize(result, target, hydrate);
 }
 
