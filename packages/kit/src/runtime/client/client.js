@@ -1496,11 +1496,13 @@ async function load_root_error_page({ status, error, url, route }) {
 			route: null
 		});
 	} catch (error) {
+		// client-side navigation if the root layout loader throws a redirect
 		if (error instanceof Redirect) {
 			await _goto(new URL(error.location, location.href), {}, 0);
 			return;
 		}
 
+		// otherwise, render the static error page
 		const error_template = await app.get_error_template();
 		const handled = await handle_error(error, { url, params, route });
 		const message = String(handled?.message ?? '')
