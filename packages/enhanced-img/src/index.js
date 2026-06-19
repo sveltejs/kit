@@ -57,7 +57,7 @@ function imagetools_plugin(opts) {
 			return new URLSearchParams({
 				as: 'picture',
 				format: opts.defaultFormats(meta),
-				...widthParams
+				...width_params
 			});
 		},
 		namedExports: false
