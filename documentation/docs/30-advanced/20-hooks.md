@@ -143,6 +143,8 @@ export async function handleFetch({ event, request, fetch }) {
 }
 ```
 
+This only forwards cookies on the outgoing request. If the external API responds with a `set-cookie` header, you must handle that separately — for example by reading the response header and writing the cookie with `event.cookies.set(...)` or in an action.
+
 ### handleValidationError
 
 This hook is called when a remote function is called with an argument that does not match the provided [Standard Schema](https://standardschema.dev/). It must return an object matching the shape of [`App.Error`](types#Error).
