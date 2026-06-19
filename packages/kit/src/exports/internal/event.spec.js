@@ -1,6 +1,11 @@
 /** @import { RequestStore } from 'types' */
 import { describe, expect, test } from 'vitest';
-import { with_request_store, try_get_request_store, getRequestEvent } from './event.js';
+import {
+	with_request_store,
+	with_request_store_disposable,
+	try_get_request_store,
+	getRequestEvent
+} from './event.js';
 
 /** @returns {RequestStore} */
 function make_store() {
@@ -47,9 +52,9 @@ describe('with_request_store', () => {
 	// Regression test for https://github.com/sveltejs/kit/issues/15764
 	// Async resources created inside als.run() inherit kResourceStore and can retain the
 	// RequestStore after the render completes (Node.js AsyncLocalStorage leak). The fix wraps
-	// the store in a container object; when gc_barrier=true (the render path), the container is
-	// nulled after render, allowing GC.
-	test('async continuations created inside render cannot access store after render completes', async () => {
+	// the store in a container object; the render path calls dispose() once rendering is done,
+	// nulling the container so the store can be collected.
+	test('async continuations created inside render cannot access store after dispose', async () => {
 		const store = make_store();
 		let store_seen_in_continuation = /** @type {RequestStore | null | undefined} */ (undefined);
 
@@ -57,24 +62,47 @@ describe('with_request_store', () => {
 		// callback inside the ALS context that outlives the render.
 		let late_callback_promise = Promise.resolve(); // typed; overwritten inside render fn
 
-		// gc_barrier=true mirrors the SSR render call in render.js
-		await with_request_store(
-			store,
-			async () => {
-				await Promise.resolve(); // ensure the async code path through with_request_store
-				late_callback_promise = new Promise((resolve) => setTimeout(resolve, 0)).then(() => {
-					// This runs inside the ALS context that was active when setTimeout was called
-					// (i.e. the context from als.run()). Without the fix, try_get_request_store()
-					// returns `store` here. With the fix, the container is nulled so it returns null.
-					store_seen_in_continuation = try_get_request_store();
-				});
-			},
-			true
-		);
+		const { result, dispose } = with_request_store_disposable(store, async () => {
+			await Promise.resolve(); // ensure the async code path through with_request_store
+			late_callback_promise = new Promise((resolve) => setTimeout(resolve, 0)).then(() => {
+				// Without the fix, try_get_request_store() returns `store` here; with the fix the
+				// container has been nulled by dispose(), so it returns null.
+				store_seen_in_continuation = try_get_request_store();
+			});
+		});
+		await result;
+		dispose();
 
 		await late_callback_promise;
 
 		expect(store_seen_in_continuation).toBeNull();
+	});
+
+	// Regression test for the streaming-SSR boundary raised in PR #15770 review: disposal is
+	// caller-controlled, not triggered when the render promise settles. An async resource created
+	// during render that runs after the render promise resolves but before dispose() (e.g. a
+	// streamed chunk being flushed) must still see the store.
+	test('async continuations still see the store after render resolves but before dispose', async () => {
+		const store = make_store();
+		let store_seen_during_stream = /** @type {RequestStore | null | undefined} */ (undefined);
+
+		// A continuation created inside render that fires after the render promise resolves,
+		// mimicking a streamed chunk flushed once the initial render is done.
+		let streamed = Promise.resolve(); // typed; overwritten inside render fn
+
+		const { result, dispose } = with_request_store_disposable(store, async () => {
+			await Promise.resolve(); // exercise the async path through with_request_store
+			streamed = new Promise((resolve) => setTimeout(resolve, 0)).then(() => {
+				store_seen_during_stream = try_get_request_store();
+			});
+		});
+		await result;
+
+		// the render promise has resolved and the "stream" continuation runs here, before dispose()
+		await streamed;
+		expect(store_seen_during_stream).toBe(store);
+
+		dispose();
 	});
 
 	test('getRequestEvent returns event during execution', () => {

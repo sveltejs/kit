@@ -72,47 +72,22 @@ export function try_get_request_store() {
  * @template T
  * @param {RequestStore | null} store
  * @param {() => T} fn
- * @param {boolean} [gc_barrier] - When true, nulls the ALS container after `fn` settles so that
- *   async resources created during `fn` (e.g. Svelte 4 subscription callbacks) cannot retain the
- *   RequestStore beyond the lifetime of the call. Only needed for the SSR render context where
- *   long-lived subscriptions would otherwise pin the RequestEvent in memory.
- *   See https://github.com/nodejs/node/issues/53408
+ * @returns {{ result: T, dispose: () => void }}
  */
-export function with_request_store(store, fn, gc_barrier = false) {
+function run_with_request_store(store, fn) {
 	try {
 		sync_store = store;
 		if (als) {
-			// Wrap the store in a container so that async resources created inside fn only hold a
-			// reference to the container object rather than the full RequestStore. When gc_barrier
-			// is true (SSR render path) we null container.current after fn settles, severing the
-			// only path from lingering async resources back to the RequestStore and allowing GC.
+			// async resources created in `fn` capture the container, not the store, so `dispose()` nulls it to break the retention path
 			const container = /** @type {RequestStoreContainer} */ ({ current: store });
-			const result = als.run(container, fn);
-			if (
-				result !== null &&
-				typeof result === 'object' &&
-				typeof (/** @type {any} */ (result).then) === 'function'
-			) {
-				if (gc_barrier) {
-					return /** @type {T} */ (
-						/** @type {Promise<any>} */ (/** @type {unknown} */ (result)).then(
-							(value) => {
-								container.current = null;
-								return value;
-							},
-							(error) => {
-								container.current = null;
-								throw error;
-							}
-						)
-					);
+			return {
+				result: als.run(container, fn),
+				dispose: () => {
+					container.current = null;
 				}
-				return /** @type {T} */ (result);
-			}
-			if (gc_barrier) container.current = null;
-			return result;
+			};
 		}
-		return fn();
+		return { result: fn(), dispose: () => {} };
 	} finally {
 		// Since AsyncLocalStorage is not working in webcontainers, we don't reset `sync_store`
 		// and handle only one request at a time in `src/runtime/server/index.js`.
@@ -120,4 +95,29 @@ export function with_request_store(store, fn, gc_barrier = false) {
 			sync_store = null;
 		}
 	}
+}
+
+/**
+ * @template T
+ * @param {RequestStore | null} store
+ * @param {() => T} fn
+ * @returns {T}
+ */
+export function with_request_store(store, fn) {
+	return run_with_request_store(store, fn).result;
+}
+
+/**
+ * Like {@link with_request_store}, but also returns `dispose`, which nulls the AsyncLocalStorage
+ * container so async resources created during `fn` can't retain the RequestStore. The SSR render
+ * path calls `dispose()` once rendering has fully finished, including any streamed output; calling
+ * it earlier, such as when the render promise settles, would sever the request context for
+ * still-running async work like streamed SSR. See https://github.com/nodejs/node/issues/53408
+ * @template T
+ * @param {RequestStore | null} store
+ * @param {() => T} fn
+ * @returns {{ result: T, dispose: () => void }}
+ */
+export function with_request_store_disposable(store, fn) {
+	return run_with_request_store(store, fn);
 }

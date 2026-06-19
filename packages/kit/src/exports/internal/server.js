@@ -16,6 +16,7 @@ export function merge_tracing(event_like, current) {
 
 export {
 	with_request_store,
+	with_request_store_disposable,
 	getRequestEvent,
 	get_request_store,
 	try_get_request_store
