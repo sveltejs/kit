@@ -3082,8 +3082,8 @@ async function _hydrate(
 		hydrate = false;
 	}
 
-	// this happens when we encounter a redirect while loading the root error page.
-	// In that case, `initialize` will be called during navigation
+	// Exit early when we encounter a redirect while loading the root error page.
+	// In this case, `initialize` will be called later on
 	if (!result) return;
 
 	result.props.page.state = {};
