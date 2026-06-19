@@ -33,7 +33,7 @@
 		"prettier-plugin-svelte": "catalog:",
 		"vitest": "catalog:"
 	},
-	"packageManager": "pnpm@11.1.3+sha512.c85357fe17ca12dd23dd7071822666dfd7e3cb76fe214e3370b5ea2fb34f2a231185509b63e717f3cd0acb38dd3f8d82bcd5e8172400ae678b70ea4fbed0896d",
+	"packageManager": "pnpm@11.7.0",
 	"engines": {
 		"pnpm": ">=9.0.0"
 	}

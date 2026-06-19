@@ -11,6 +11,50 @@ minimumReleaseAgeExclude:
   - esm-env
   - imagetools-core
   - vite-imagetools
+  - '@img/sharp-darwin-arm64@0.35.2-rc.0'
+  - '@img/sharp-darwin-x64@0.35.2-rc.0'
+  - '@img/sharp-freebsd-wasm32@0.35.2-rc.0'
+  - '@img/sharp-linux-arm64@0.35.2-rc.0'
+  - '@img/sharp-linux-arm@0.35.2-rc.0'
+  - '@img/sharp-linux-ppc64@0.35.2-rc.0'
+  - '@img/sharp-linux-riscv64@0.35.2-rc.0'
+  - '@img/sharp-linux-s390x@0.35.2-rc.0'
+  - '@img/sharp-linux-x64@0.35.2-rc.0'
+  - '@img/sharp-linuxmusl-arm64@0.35.2-rc.0'
+  - '@img/sharp-linuxmusl-x64@0.35.2-rc.0'
+  - '@img/sharp-wasm32@0.35.2-rc.0'
+  - '@img/sharp-webcontainers-wasm32@0.35.2-rc.0'
+  - '@img/sharp-win32-arm64@0.35.2-rc.0'
+  - '@img/sharp-win32-ia32@0.35.2-rc.0'
+  - '@img/sharp-win32-x64@0.35.2-rc.0'
+  - sharp@0.35.2-rc.0
+  - '@img/sharp-darwin-arm64@0.35.2'
+  - '@img/sharp-darwin-x64@0.35.2'
+  - '@img/sharp-freebsd-wasm32@0.35.2'
+  - '@img/sharp-libvips-darwin-arm64@1.3.1'
+  - '@img/sharp-libvips-darwin-x64@1.3.1'
+  - '@img/sharp-libvips-linux-arm64@1.3.1'
+  - '@img/sharp-libvips-linux-arm@1.3.1'
+  - '@img/sharp-libvips-linux-ppc64@1.3.1'
+  - '@img/sharp-libvips-linux-riscv64@1.3.1'
+  - '@img/sharp-libvips-linux-s390x@1.3.1'
+  - '@img/sharp-libvips-linux-x64@1.3.1'
+  - '@img/sharp-libvips-linuxmusl-arm64@1.3.1'
+  - '@img/sharp-libvips-linuxmusl-x64@1.3.1'
+  - '@img/sharp-linux-arm64@0.35.2'
+  - '@img/sharp-linux-arm@0.35.2'
+  - '@img/sharp-linux-ppc64@0.35.2'
+  - '@img/sharp-linux-riscv64@0.35.2'
+  - '@img/sharp-linux-s390x@0.35.2'
+  - '@img/sharp-linux-x64@0.35.2'
+  - '@img/sharp-linuxmusl-arm64@0.35.2'
+  - '@img/sharp-linuxmusl-x64@0.35.2'
+  - '@img/sharp-wasm32@0.35.2'
+  - '@img/sharp-webcontainers-wasm32@0.35.2'
+  - '@img/sharp-win32-arm64@0.35.2'
+  - '@img/sharp-win32-ia32@0.35.2'
+  - '@img/sharp-win32-x64@0.35.2'
+  - sharp@0.35.2
 blockExoticSubdeps: true
 linkWorkspacePackages: true
 shellEmulator: true
@@ -92,6 +136,3 @@ catalogs:
   # vite-beta:
   #   vite: ^9.0.0-beta.0
   #   '@sveltejs/vite-plugin-svelte': ^7.0.0
-overrides:
-# ci script replaces all overrides with the vite-xxx or node-xx catalogs above.
-# if you want to introduce an override, make sure to add it to all of them too
