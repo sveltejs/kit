@@ -123,13 +123,15 @@ test.describe('remote functions', () => {
 		await expect(page.locator('[data-unscoped] input[name="message"]')).toHaveValue('');
 	});
 
-	test('form submitters work', async ({ page }) => {
+	test('form submitters work', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/remote/form/submitter');
 
 		await page.locator('button').click();
 
 		await expect(page.locator('#result')).toHaveText('hello');
-		await expect(page.locator('#enhance-result')).toHaveText('hello');
+		if (javaScriptEnabled) {
+			await expect(page.locator('#enhance-result')).toHaveText('hello');
+		}
 	});
 
 	test('form updates inputs live', async ({ page, javaScriptEnabled }) => {
