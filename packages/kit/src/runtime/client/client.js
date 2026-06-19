@@ -3086,7 +3086,10 @@ async function _hydrate(
 	// In this case, `initialize` will be called later on
 	if (!result) return;
 
-	result.props.page.state = {};
+	if (result.props.page) {
+		result.props.page.state = {};
+	}
+
 	await initialize(result, target, hydrate);
 }
 
