@@ -9,5 +9,6 @@ declare module 'SERVER' {
 
 declare const BASE: string;
 declare const ENV_PREFIX: string;
+declare const ENV_PREFIX_LENGTH: number;
 declare const PRECOMPRESS: boolean;
 declare const PRERENDERED: Set<string>;

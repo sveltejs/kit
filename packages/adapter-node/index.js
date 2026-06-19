@@ -96,6 +96,7 @@ export default function (opts = {}) {
 						values: {
 							BASE: JSON.stringify(builder.config.kit.paths.base),
 							ENV_PREFIX: JSON.stringify(envPrefix),
+							ENV_PREFIX_LENGTH: JSON.stringify(envPrefix.length),
 							PRECOMPRESS: JSON.stringify(precompress),
 							PRERENDERED: `new Set(${JSON.stringify(builder.prerendered.paths)})`
 						},
