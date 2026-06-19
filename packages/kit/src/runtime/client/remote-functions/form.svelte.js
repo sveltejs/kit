@@ -1,13 +1,12 @@
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 /** @import { RemoteFormInput, RemoteForm, RemoteQueryUpdate } from '@sveltejs/kit' */
-/** @import { InternalRemoteFormIssue, RemoteFunctionResponse } from 'types' */
+/** @import { InternalRemoteFormIssue } from 'types' */
 import { app_dir, base } from '$app/paths/internal/client';
-import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
 import { HttpError } from '@sveltejs/kit/internal';
-import { app, query_responses, _goto, set_nearest_error_page, invalidateAll } from '../client.js';
+import { query_responses, _goto, set_nearest_error_page, invalidateAll } from '../client.js';
 import { tick } from 'svelte';
-import { apply_refreshes, categorize_updates, apply_reconnections } from './shared.svelte.js';
+import { categorize_updates, remote_request } from './shared.svelte.js';
 import { createAttachmentKey } from 'svelte/attachments';
 import {
 	convert_formdata,
@@ -56,24 +55,34 @@ export function form(id) {
 
 	/** @typedef {Omit<RemoteForm<TInput, TOutput>, 'enhance' | 'element' | 'data'> & { readonly element: HTMLFormElement, readonly data: TInput }} EnhanceCallbackInstance */
 
+	/** @type {StandardSchemaV1 | null} */
+	let shared_preflight_schema = null;
+
 	/** @param {string | number | boolean} [key] */
 	function create_instance(key) {
 		const action_id_without_key = id;
 		const action_id = id + (key != undefined ? `/${JSON.stringify(key)}` : '');
 		const action = '?/remote=' + encodeURIComponent(action_id);
 
+		// the output of a non-enhanced submission that resulted in this page —
+		// consume it so the form's state survives hydration (form outputs are
+		// always value nodes; the server never serializes them as errors)
+		/** @type {{ input?: Record<string, any>, issues?: InternalRemoteFormIssue[], result?: any } | undefined} */
+		const initial = query_responses[action_id]?.v;
+		delete query_responses[action_id];
+
 		/**
 		 * @type {Record<string, string | string[] | File | File[]>}
 		 */
-		let input = $state({});
+		let input = $state(initial?.input ?? {});
 
 		/** @type {InternalRemoteFormIssue[]} */
-		let raw_issues = $state.raw([]);
+		let raw_issues = $state.raw(initial?.issues ?? []);
 
 		const issues = $derived(flatten_issues(raw_issues));
 
 		/** @type {any} */
-		let result = $state.raw(query_responses[action_id]);
+		let result = $state.raw(initial?.result);
 
 		/** @type {number} */
 		let pending_count = $state(0);
@@ -86,6 +95,7 @@ export function form(id) {
 		 */
 		let enhance_callback = async (instance) => {
 			if (await instance.submit()) {
+				await tick();
 				instance.element.reset();
 			}
 		};
@@ -185,77 +195,54 @@ export function form(id) {
 						remote_refreshes: Array.from(refreshes ?? [])
 					});
 
-					const response = await fetch(`${base}/${app_dir}/remote/${action_id_without_key}`, {
-						method: 'POST',
-						headers: {
-							'Content-Type': BINARY_FORM_CONTENT_TYPE,
-							// Forms cannot be called during rendering, so it's save to use location here
-							'x-sveltekit-pathname': location.pathname,
-							'x-sveltekit-search': location.search
-						},
-						body: blob
-					});
-
-					if (!response.ok) {
-						// We only end up here in case of a network error or if the server has an internal error
-						// (which shouldn't happen because we handle errors on the server and always send a 200 response)
-						throw new Error('Failed to execute remote function');
-					}
-
-					const form_result = /** @type { RemoteFunctionResponse} */ (await response.json());
-
-					// reset issues in case it's a redirect or error (but issues passed in that case)
-					raw_issues = [];
-					result = undefined;
-
-					if (form_result.type === 'result') {
-						({ issues: raw_issues = [], result } = devalue.parse(form_result.result, app.decoders));
-						const succeeded = raw_issues.length === 0;
-
-						if (succeeded) {
-							if (refreshes === null && !form_result.refreshes && !form_result.reconnects) {
-								void invalidateAll();
-							} else {
-								if (form_result.refreshes) {
-									apply_refreshes(form_result.refreshes);
-								}
-								if (form_result.reconnects) {
-									apply_reconnections(form_result.reconnects);
-								}
-							}
-						} else {
-							if (DEV) {
-								warn_on_missing_issue_reads();
-							}
+					const response = await remote_request(
+						`${base}/${app_dir}/remote/${action_id_without_key}`,
+						{
+							method: 'POST',
+							headers: {
+								'Content-Type': BINARY_FORM_CONTENT_TYPE,
+								// Forms cannot be called during rendering, so it's save to use location here
+								'x-sveltekit-pathname': location.pathname,
+								'x-sveltekit-search': location.search
+							},
+							body: blob
 						}
+					);
 
-						return succeeded;
-					} else if (form_result.type === 'redirect') {
-						const stringified_refreshes = form_result.refreshes ?? '';
-						const stringified_reconnects = form_result.reconnects ?? '';
-						if (stringified_refreshes) {
-							apply_refreshes(stringified_refreshes);
-						}
+					({ issues: raw_issues = [], result } = response._ ?? {});
 
-						if (stringified_reconnects) {
-							apply_reconnections(stringified_reconnects);
-						}
+					// if the developer took control of updates via `.updates(...)` (even with
+					// no arguments), or the server performed explicit refreshes, don't invalidateAll
+					const should_invalidate = refreshes === null && !response.r;
 
+					if (response.redirect) {
 						// Use internal version to allow redirects to external URLs
 						void _goto(
-							form_result.location,
+							response.redirect,
 							{
-								invalidateAll:
-									refreshes === null && !stringified_refreshes && !stringified_reconnects
+								invalidateAll: should_invalidate
 							},
 							0
 						);
 						return true;
-					} else {
-						throw new HttpError(form_result.status ?? 500, form_result.error);
 					}
+
+					const succeeded = raw_issues.length === 0;
+
+					if (succeeded) {
+						if (should_invalidate) {
+							void invalidateAll();
+						}
+					} else {
+						if (DEV) {
+							warn_on_missing_issue_reads();
+						}
+					}
+
+					return succeeded;
 				} catch (e) {
 					result = undefined;
+					raw_issues = [];
 					throw e;
 				} finally {
 					overrides?.forEach((fn) => fn());
@@ -337,7 +324,8 @@ export function form(id) {
 		 * @param {Record<string, any>} data
 		 */
 		async function preflight(form_data, data) {
-			const validated = await preflight_schema?.['~standard'].validate(data);
+			const schema = preflight_schema ?? shared_preflight_schema;
+			const validated = await schema?.['~standard'].validate(data);
 
 			if (validated?.issues) {
 				raw_issues = merge_with_server_issues(
@@ -540,7 +528,6 @@ export function form(id) {
 				form.removeEventListener('input', handle_input);
 				form.removeEventListener('reset', handle_reset);
 				element = null;
-				preflight_schema = undefined;
 			};
 		};
 
@@ -585,9 +572,10 @@ export function form(id) {
 
 					const submission = submit(form_data, convert(form_data), true);
 
-					void submission.finally(() => {
+					const decrement = () => {
 						pending_count--;
-					});
+					};
+					void submission.then(decrement, decrement);
 
 					return submission;
 				}
@@ -631,6 +619,11 @@ export function form(id) {
 				/** @type {RemoteForm<TInput, TOutput>['preflight']} */
 				value: (schema) => {
 					preflight_schema = schema;
+
+					if (key === undefined) {
+						shared_preflight_schema = schema;
+					}
+
 					return instance;
 				}
 			},
@@ -654,8 +647,8 @@ export function form(id) {
 					let array = [];
 
 					const data = convert(form_data);
-
-					const validated = await preflight_schema?.['~standard'].validate(data);
+					const schema = preflight_schema ?? shared_preflight_schema;
+					const validated = await schema?.['~standard'].validate(data);
 
 					if (validate_id !== id) {
 						return;
@@ -664,30 +657,27 @@ export function form(id) {
 					if (validated?.issues) {
 						array = validated.issues.map((issue) => normalize_issue(issue, false));
 					} else if (!preflightOnly) {
-						const response = await fetch(`${base}/${app_dir}/remote/${action_id_without_key}`, {
-							method: 'POST',
-							headers: {
-								'Content-Type': BINARY_FORM_CONTENT_TYPE,
-								// Validation should not be and will not be called during rendering, so it's save to use location here
-								'x-sveltekit-pathname': location.pathname,
-								'x-sveltekit-search': location.search
-							},
-							body: serialize_binary_form(data, {
-								validate_only: true
-							}).blob
-						});
-
-						const result = await response.json();
+						const result = await remote_request(
+							`${base}/${app_dir}/remote/${action_id_without_key}`,
+							{
+								method: 'POST',
+								headers: {
+									'Content-Type': BINARY_FORM_CONTENT_TYPE,
+									// Validation should not be and will not be called during rendering, so it's save to use location here
+									'x-sveltekit-pathname': location.pathname,
+									'x-sveltekit-search': location.search
+								},
+								body: serialize_binary_form(data, {
+									validate_only: true
+								}).blob
+							}
+						);
 
 						if (validate_id !== id) {
 							return;
 						}
 
-						if (result.type === 'result') {
-							array = /** @type {InternalRemoteFormIssue[]} */ (
-								devalue.parse(result.result, app.decoders)
-							);
-						}
+						array = /** @type {InternalRemoteFormIssue[]} */ (result._);
 					}
 
 					if (!includeUntouched && !submitted) {

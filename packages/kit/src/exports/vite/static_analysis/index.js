@@ -1,4 +1,6 @@
 /** @import { PageOptions } from './types.js' */
+import process from 'node:process';
+import path from 'node:path';
 import { tsPlugin } from '@sveltejs/acorn-typescript';
 import { Parser } from 'acorn';
 import { read } from '../../../utils/filesystem.js';
@@ -227,7 +229,10 @@ export function get_page_options(filepath) {
 	}
 }
 
-export function create_node_analyser() {
+/**
+ * @param {string} cwd
+ */
+export function create_node_analyser(cwd = process.cwd()) {
 	const static_exports = new Map();
 
 	/**
@@ -271,7 +276,7 @@ export function create_node_analyser() {
 		}
 
 		if (node.server) {
-			const server_page_options = get_page_options(node.server);
+			const server_page_options = get_page_options(path.join(cwd, node.server));
 			if (server_page_options === null) {
 				cache(key, null);
 				return null;
@@ -280,7 +285,7 @@ export function create_node_analyser() {
 		}
 
 		if (node.universal) {
-			const universal_page_options = get_page_options(node.universal);
+			const universal_page_options = get_page_options(path.join(cwd, node.universal));
 			if (universal_page_options === null) {
 				cache(key, null);
 				return null;

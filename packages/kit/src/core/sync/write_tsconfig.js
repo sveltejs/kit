@@ -122,8 +122,7 @@ export function get_tsconfig(kit) {
 			moduleResolution: 'bundler',
 			module: 'esnext',
 			noEmit: true, // prevent tsconfig error "overwriting input files" - Vite handles the build and ignores this
-			target: 'esnext',
-			types: ['node']
+			target: 'esnext'
 		},
 		include: [...include],
 		exclude
