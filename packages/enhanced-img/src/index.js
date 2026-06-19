@@ -52,10 +52,12 @@ function imagetools_plugin(opts) {
 				return new URLSearchParams();
 			}
 
+			const widthParams = qs.has('w') ? {} : opts.defaultWidths(width, qs.get('imgSizes'));
+
 			return new URLSearchParams({
 				as: 'picture',
 				format: opts.defaultFormats(meta),
-				...opts.defaultWidths(width, qs.get('imgSizes'))
+				...widthParams
 			});
 		},
 		namedExports: false
