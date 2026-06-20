@@ -181,9 +181,9 @@ describe('cookies in prod', () => {
 			}
 		});
 		cookies.set('c', 'fö', { path: '/' }); // should use default encoding
-		cookies.set('d', 'fö', { path: '/', encode: () => 'öf' }); // should respect `encode`
+		cookies.set('d', 'fö', { path: '/', encode: () => 'custom-encoded' }); // should respect `encode`
 		const header = get_cookie_header(new URL(href), 'e=f%C3%A4; f=foo+bar');
-		assert.equal(header, 'a=f%C3%BC; b=foo+bar; c=f%C3%B6; d=öf; e=f%C3%A4; f=foo+bar');
+		assert.equal(header, 'a=f%C3%BC; b=foo+bar; c=f%C3%B6; d=custom-encoded; e=f%C3%A4; f=foo+bar');
 	});
 
 	test('get all cookies from header and set calls', () => {
