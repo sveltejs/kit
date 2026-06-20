@@ -514,6 +514,7 @@ export function form(id) {
 				touched[name] = true;
 			};
 
+			/** @param {Event} e */
 			const handle_reset = (e) => {
 				e.preventDefault();
 				input = read_default_values(form, undefined);
