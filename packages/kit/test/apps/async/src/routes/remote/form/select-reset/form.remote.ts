@@ -3,9 +3,12 @@ import * as v from 'valibot';
 
 export const set_favourite = form(
 	v.object({
-		language: v.string()
+		normal: v.string(),
+		with_default: v.string(),
+		disabled_default: v.string(),
+		multiple: v.array(v.picklist(['js', 'ts', 'py']))
 	}),
 	async (data) => {
-		return { language: data.language };
+		return data;
 	}
 );
