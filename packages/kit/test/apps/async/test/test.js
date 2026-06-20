@@ -667,6 +667,79 @@ test.describe('remote functions', () => {
 		await page.fill('input', 'hello');
 		await expect(page.locator('select')).toHaveValue('one');
 	});
+	test('select does not reset to first option after submit', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/form/select-reset');
+
+		await page.locator('select').selectOption('ts');
+		await page.locator('button').click();
+
+		await expect(page.locator('select')).toHaveValue('ts');
+		await expect(page.getByText('result:')).toHaveText('result: ts');
+	});
+	test('select resets to explicitly default-selected option after submit', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/form/select-reset-default');
+
+		// The select initially shows the explicitly <option selected> value
+		await expect(page.locator('select')).toHaveValue('js');
+
+		// Select a different option and submit
+		await page.locator('select').selectOption('ts');
+		await page.locator('button').click();
+
+		// After submit, the select resets to the declared default (like defaultValue
+		// for text inputs), since the option is non-disabled.
+		await expect(page.locator('select')).toHaveValue('js');
+		await expect(page.getByText('result:')).toHaveText('result: ts');
+	});
+	test('select preserves submitted value when default is disabled placeholder', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/form/select-reset-disabled-default');
+
+		// The select initially shows the disabled placeholder
+		await expect(page.locator('select')).toHaveValue('');
+
+		// Select a different option and submit
+		await page.locator('select').selectOption('ts');
+		await page.locator('button').click();
+
+		// After submit, the select keeps the submitted value — disabled placeholders
+		// are not genuine defaults (https://github.com/sveltejs/kit/issues/16093)
+		await expect(page.locator('select')).toHaveValue('ts');
+		await expect(page.getByText('result:')).toHaveText('result: ts');
+	});
+	test('multi-select resets to all default-selected options after submit', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/form/select-multiple-default');
+
+		// Both default-selected options are initially selected
+		await expect(page.locator('select')).toHaveValues(['js', 'ts']);
+
+		// Deselect defaults and pick a different value
+		await page.locator('select').selectOption(['py']);
+		await page.locator('button').click();
+
+		// After submit, both defaults are restored (like defaultValue for text inputs)
+		await expect(page.locator('select')).toHaveValues(['js', 'ts']);
+		await expect(page.getByText('result:')).toHaveText('result: py');
+	});
 	test('file uploads work', async ({ page }) => {
 		await page.goto('/remote/form/file-upload');
 
