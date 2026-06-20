@@ -514,7 +514,7 @@ export function form(id) {
 				touched[name] = true;
 			};
 
-			const handle_reset = async (e) => {
+			const handle_reset = (e) => {
 				e.preventDefault();
 				input = read_default_values(form, undefined);
 			};
