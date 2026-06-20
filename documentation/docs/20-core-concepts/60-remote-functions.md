@@ -188,7 +188,7 @@ The cache is shared as long as the query is in active use — rendered in a comp
 
 ### Refreshing queries
 
-This is the query-side half of [single-flight mutations](#single-flight-mutations), which let mutations update data and return it in one request.
+This is the query-side half of [single-flight mutations](#Single-flight-mutations), which let mutations update data and return it in one request.
 
 Any query can be re-fetched via its `refresh` method, which retrieves the latest value from the server:
 
@@ -1046,7 +1046,7 @@ This schedules a reconnect for the matching active client instances and applies 
 
 ### Client-requested refreshes
 
-This is the client-requested counterpart to [single-flight mutations](#single-flight-mutations).
+This is the client-requested counterpart to [single-flight mutations](#Single-flight-mutations).
 
 Unfortunately, life isn't always as simple as the preceding example. The server always knows which query _functions_ to update, but it may not know which specific query _instances_ to update. For example, if `getPosts({ filter: 'author:santa' })` is rendered on the client, calling `getPosts().refresh()` in the server handler won't update it. You'd need to call `getPosts({ filter: 'author:santa' }).refresh()` instead — but how could you know which specific combinations of filters are currently rendered on the client, especially if your query argument is more complicated than an object with just one key?
 
