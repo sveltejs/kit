@@ -83,7 +83,7 @@ The query returned from `getPosts` works as a [`Promise`](https://developer.mozi
 </ul>
 ```
 
-Until the promise resolves — and if it errors — the nearest [`<svelte:boundary>`](../svelte/svelte-boundary) will be invoked.
+Until the promise resolves — and if it errors — the nearest [`<svelte:boundary>`](../svelte/svelte-boundary) will be invoked. If that boundary defines a `pending` snippet, the awaited query will render the pending state instead of being server-rendered.
 
 While using `await` is recommended, as an alternative the query also has `loading`, `error` and `current` properties:
 
