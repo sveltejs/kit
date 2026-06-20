@@ -3,7 +3,7 @@
 </script>
 
 <form {...set_favourite}>
-	<select multiple {...set_favourite.fields.lang.as('select multiple')}>
+	<select {...set_favourite.fields.lang.as('select multiple')}>
 		<option value="js" selected>JavaScript</option>
 		<option value="ts" selected>TypeScript</option>
 		<option value="py">Python</option>
