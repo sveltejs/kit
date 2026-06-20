@@ -1496,7 +1496,8 @@ async function load_root_error_page({ status, error, url, route }) {
 			route: null
 		});
 	} catch (error) {
-		// client-side navigation if the root layout loader throws a redirect
+		// client-side navigation if the root layout loader throws a redirect while
+		// rendering the default error page
 		if (error instanceof Redirect) {
 			await _goto(new URL(error.location, location.href), {}, 0);
 			return;
