@@ -27,7 +27,8 @@
 		<option value="py">Python</option>
 	</select>
 
-	<button>submit</button>
+	<button type="submit">submit</button>
+	<button type="reset">reset</button>
 </form>
 
 <p>result: {JSON.stringify(set_favourite.result)}</p>

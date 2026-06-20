@@ -514,12 +514,9 @@ export function form(id) {
 				touched[name] = true;
 			};
 
-			const handle_reset = async () => {
-				// need to wait a moment, because the `reset` event occurs before
-				// the inputs are actually updated (so that it can be cancelled)
-				await tick();
-
-				input = convert_formdata(new FormData(form));
+			const handle_reset = async (e) => {
+				e.preventDefault();
+				input = read_default_values(form, undefined);
 			};
 
 			form.addEventListener('submit', handle_submit);
