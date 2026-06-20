@@ -7,14 +7,14 @@
 		"build": "vite build",
 		"preview": "node build",
 		"prepare": "svelte-kit sync || echo ''",
-		"test": "vitest run"
+		"test": "playwright test"
 	},
 	"devDependencies": {
+		"@playwright/test": "catalog:",
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "catalog:",
 		"svelte": "catalog:",
-		"vite": "catalog:",
-		"vitest": "catalog:"
+		"vite": "catalog:"
 	},
 	"type": "module"
 }
