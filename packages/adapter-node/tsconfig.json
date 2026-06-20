@@ -11,6 +11,14 @@
 		},
 		"types": ["node"]
 	},
-	"include": ["index.js", "src/**/*.js", "src/**/*.ts", "test/utils.js", "utils.js", "./*.ts"],
+	"include": [
+		"index.js",
+		"src/**/*.js",
+		"src/**/*.ts",
+		"test/utils.js",
+		"utils.js",
+		"./internal.d.ts",
+		"./*.spec.ts"
+	],
 	"exclude": ["smoke.spec_disabled.js"]
 }
