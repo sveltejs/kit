@@ -10,7 +10,12 @@ const config = {
 		sveltekit({
 			adapter: adapter({
 				envPrefix: 'MY_CUSTOM_'
-			})
+			}),
+			typescript: {
+				config(config) {
+					config.include.push('../playwright.config.js');
+				}
+			}
 		})
 	]
 };
