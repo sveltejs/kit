@@ -6,7 +6,13 @@ const config = {
 	build: {
 		minify: false
 	},
-	plugins: [sveltekit({ adapter: adapter() })]
+	plugins: [
+		sveltekit({
+			adapter: adapter({
+				envPrefix: 'MY_CUSTOM_'
+			})
+		})
+	]
 };
 
 export default config;
