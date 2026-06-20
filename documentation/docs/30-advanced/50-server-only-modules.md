@@ -51,7 +51,7 @@ export const add = (a, b) => a + b;
 ...SvelteKit will error:
 
 ```
-Cannot import $lib/server/db.ts into code that runs in the browser, as this could leak server-only logic.
+Cannot import $lib/server/db.ts into code that runs in the browser, as this could leak sensitive information.
 
  src/routes/+page.svelte imports
   src/routes/utils.js imports
