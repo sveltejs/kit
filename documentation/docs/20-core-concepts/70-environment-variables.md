@@ -4,6 +4,8 @@ title: Environment variables
 
 Environment variables are values your app needs that exist separately from the app's source code. They allow you to use sensitive information like API keys and database credentials without storing them in version control.
 
+If you're configuring a Node server, see the [Node servers](../build-and-deploy/40-adapter-node) page for the runtime-specific variables handled there.
+
 During development, and at build time, variables defined in a `.env` or `.env.local` file will be added to the environment:
 
 ```env

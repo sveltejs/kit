@@ -43,6 +43,8 @@ However, if you're building a [custom server](#Custom-server) and do want to add
 
 ## Environment variables
 
+If you're looking for environment variables used directly in app code, see the [Environment variables](../20-core-concepts/70-environment-variables) page.
+
 In `dev` and `preview`, SvelteKit will read environment variables from your `.env` file (or `.env.local`, or `.env.[mode]`, [as determined by Vite](https://vitejs.dev/guide/env-and-mode.html#env-files).)
 
 In production, `.env` files are _not_ automatically loaded. To do so, install `dotenv` in your project...
