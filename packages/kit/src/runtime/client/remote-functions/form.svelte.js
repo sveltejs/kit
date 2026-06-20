@@ -777,18 +777,6 @@ function validate_form_data(form_data, enctype) {
 }
 
 /**
- * Reads the default values from form elements, respecting defaultValue,
- * defaultChecked for checkboxes/radios. For selects, an option with
- * `defaultSelected && !disabled` is treated as a genuine declared default
- * (like defaultValue for text inputs). A disabled placeholder
- * (`<option selected disabled>`) or a select with no explicit default
- * instead preserves the submitted value, captured at submit time to avoid
- * race conditions with reactive DOM re-renders.
- * @param {HTMLFormElement} form
- * @param {Record<string, any>} [submitted_data]
- * @returns {Record<string, any>}
- */
-/**
  * Looks up a DOM element name in submitted_data, normalizing the name the same
  * way convert_formdata does (stripping n:/b: prefixes and [] suffix, handling
  * nested dotted paths like "address.street").
@@ -813,6 +801,13 @@ function get_submitted(submitted_data, dom_name) {
 	return current;
 }
 
+/**
+ * Resets a form to its default state, optionally using submitted_data to
+ * preserve values that were set before submission.
+ * @param {HTMLFormElement} form
+ * @param {Record<string, any>} [submitted_data]
+ * @returns {Record<string, any>}
+ */
 function read_default_values(form, submitted_data) {
 	/** @type {FormData} */
 	const fd = new FormData();
