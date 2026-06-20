@@ -4,6 +4,6 @@ import { env } from '$env/dynamic/private';
 
 /** @type {import('@sveltejs/kit').Handle} */
 export function handle({ event, resolve }) {
-	console.log({ env });
+	console.log({ FOO: env.MY_CUSTOM_FOO });
 	return resolve(event);
 }
