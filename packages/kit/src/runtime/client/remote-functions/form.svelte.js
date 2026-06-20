@@ -788,6 +788,31 @@ function validate_form_data(form_data, enctype) {
  * @param {Record<string, any>} [submitted_data]
  * @returns {Record<string, any>}
  */
+/**
+ * Looks up a DOM element name in submitted_data, normalizing the name the same
+ * way convert_formdata does (stripping n:/b: prefixes and [] suffix, handling
+ * nested dotted paths like "address.street").
+ * @param {Record<string, any> | undefined} submitted_data
+ * @param {string} dom_name
+ * @returns {any}
+ */
+function get_submitted(submitted_data, dom_name) {
+	if (!submitted_data) return undefined;
+
+	let name = dom_name;
+	if (name.endsWith('[]')) name = name.slice(0, -2);
+	if (name.startsWith('n:')) name = name.slice(2);
+	else if (name.startsWith('b:')) name = name.slice(2);
+
+	const path = name.split(/\.|\[|\]/).filter(Boolean);
+	let current = submitted_data;
+	for (const key of path) {
+		if (current == null || typeof current !== 'object') return undefined;
+		current = current[key];
+	}
+	return current;
+}
+
 function read_default_values(form, submitted_data) {
 	/** @type {FormData} */
 	const fd = new FormData();
@@ -817,26 +842,30 @@ function read_default_values(form, submitted_data) {
 			if (select.multiple) {
 				if (default_options.length > 0) {
 					for (const opt of default_options) fd.append(name, opt.value);
-				} else if (submitted_data && submitted_data[name] !== undefined) {
-					const values = Array.isArray(submitted_data[name])
-						? submitted_data[name]
-						: [submitted_data[name]];
-					for (const val of values) fd.append(name, val);
 				} else {
-					for (const option of select.options) {
-						if (option.selected) fd.append(name, option.value);
+					const submitted = get_submitted(submitted_data, name);
+					if (submitted !== undefined) {
+						const values = Array.isArray(submitted) ? submitted : [submitted];
+						for (const val of values) fd.append(name, val);
+					} else {
+						for (const option of select.options) {
+							if (option.selected) fd.append(name, option.value);
+						}
 					}
 				}
 			} else {
 				if (default_options.length > 0) {
 					fd.append(name, default_options[0].value);
-				} else if (submitted_data && submitted_data[name] !== undefined) {
-					// No usable default — preserve the submitted value, captured at submit
-					// time to avoid race conditions with reactive DOM re-renders
-					// (https://github.com/sveltejs/kit/issues/16093)
-					fd.append(name, submitted_data[name]);
 				} else {
-					fd.append(name, select.value);
+					const submitted = get_submitted(submitted_data, name);
+					if (submitted !== undefined) {
+						// No usable default — preserve the submitted value, captured at submit
+						// time to avoid race conditions with reactive DOM re-renders
+						// (https://github.com/sveltejs/kit/issues/16093)
+						fd.append(name, submitted);
+					} else {
+						fd.append(name, select.value);
+					}
 				}
 			}
 		} else if (tagName === 'TEXTAREA') {
