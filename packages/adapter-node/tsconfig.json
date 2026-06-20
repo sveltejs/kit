@@ -11,6 +11,6 @@
 		},
 		"types": ["node"]
 	},
-	"include": ["index.js", "src/**/*.js", "src/**/*.ts", "test/utils.js", "*.js", "*.ts"],
-	"exclude": ["tests/smoke.spec_disabled.js"]
+	"include": ["src/**/*.js", "src/**/*.ts", "test/utils.js", "*.js", "*.ts"],
+	"exclude": ["smoke.spec_disabled.js", "rollup.config.js"]
 }
