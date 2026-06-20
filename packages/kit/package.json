@@ -22,7 +22,7 @@
 		"@sveltejs/acorn-typescript": "^1.0.9",
 		"@types/cookie": "^0.6.0",
 		"acorn": "^8.16.0",
-		"cookie": "^0.6.0",
+		"cookie": "^0.7.0",
 		"devalue": "^5.8.1",
 		"esm-env": "^1.2.2",
 		"kleur": "^4.1.5",
