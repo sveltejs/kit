@@ -338,7 +338,7 @@ function img_to_picture(content, node, image) {
 		attributes.splice(index, 1);
 	}
 
-	let res = '<picture>';
+	let res = '<picture style="display: contents;">';
 
 	for (const [format, srcset] of Object.entries(image.sources)) {
 		res += `<source srcset=${to_value(srcset)}${sizes_string} type="image/${format}" />`;
@@ -396,7 +396,7 @@ function dynamic_img_to_picture(content, node, src_var_name) {
 		})} />
 	{/if}
 {:else}
-	<picture>
+	<picture style="display: contents;">
 		{#each Object.entries(${src_var_name}.sources) as [format, srcset]}
 			<source {srcset}${sizes_string} type={'image/' + format} />
 		{/each}
