@@ -222,10 +222,13 @@ function create_routes_and_nodes(cwd, config, fallback) {
 
 			// We can't use withFileTypes because of a NodeJs bug which returns wrong results
 			// with isDirectory() in case of symlinks: https://github.com/nodejs/node/issues/30646
-			const files = fs.readdirSync(dir).map((name) => ({
-				is_dir: fs.statSync(path.join(dir, name)).isDirectory(),
-				name
-			}));
+			const files = fs
+				.readdirSync(dir)
+				.sort()
+				.map((name) => ({
+					is_dir: fs.statSync(path.join(dir, name)).isDirectory(),
+					name
+				}));
 
 			// process files first
 			for (const file of files) {

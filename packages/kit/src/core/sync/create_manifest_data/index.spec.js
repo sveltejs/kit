@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { assert, expect, test } from 'vitest';
+import { assert, expect, test, vi } from 'vitest';
 import create_manifest_data from './index.js';
 import { sort_routes } from './sort.js';
 import { validate_config } from '../../config/index.js';
@@ -108,6 +108,25 @@ test('creates routes', () => {
 			page: { layouts: [0], errors: [1], leaf: 5 }
 		}
 	]);
+});
+
+test('creates stable node indexes regardless of directory traversal order', () => {
+	const expected = create('samples/basic');
+	const readdirSync = fs.readdirSync;
+
+	const spy = vi.spyOn(fs, 'readdirSync').mockImplementation((dir, options) => {
+		const entries = readdirSync.call(fs, dir, options);
+		return Array.isArray(entries) ? entries.slice().reverse() : entries;
+	});
+
+	try {
+		const actual = create('samples/basic');
+
+		expect(actual.nodes.map(simplify_node)).toEqual(expected.nodes.map(simplify_node));
+		expect(actual.routes.map(simplify_route)).toEqual(expected.routes.map(simplify_route));
+	} finally {
+		spy.mockRestore();
+	}
 });
 
 const symlink_survived_git = fs
