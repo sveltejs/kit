@@ -161,6 +161,8 @@ export const getPost = query(v.string(), async (slug) => {
 Both the argument and the return value are serialized with [devalue](https://github.com/sveltejs/devalue), which handles types like `Date` and `Map` (and custom types defined in your [transport hook](hooks#Universal-hooks-transport)) in addition to JSON.
 
 > [!NOTE] For `query` and `prerender` arguments (but not return values), objects, maps, and sets are sorted so that instances with the same members result in the same cache key. For example, `getPosts({ limit: 10, offset: 10 })` and `getPosts({ offset: 10, limit: 10 })` will result in the same cache key. If order is important to you, you'll have to use an array.
+>
+> If a query has a schema, the cache key is still based on the argument you pass to the query function before validation. Extra object properties therefore create a different cache key, even if the schema ignores them on the server. Make sure calls that refer to the same query instance use the same argument shape, including calls to `.set(...)` and `.refresh()`. For example, destructure route params before passing them to a query instead of passing `params` directly if it contains unrelated keys.
 
 ### Deduplication
 
