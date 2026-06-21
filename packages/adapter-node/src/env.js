@@ -22,7 +22,7 @@ const expected_unprefixed = new Set(['LISTEN_PID', 'LISTEN_FDS']);
 if (ENV_PREFIX) {
 	for (const name in process.env) {
 		if (name.startsWith(ENV_PREFIX)) {
-			const unprefixed = name.slice(ENV_PREFIX.length);
+			const unprefixed = name.slice(ENV_PREFIX_LENGTH);
 			if (!expected.has(unprefixed)) {
 				throw new Error(
 					`You should change envPrefix (${ENV_PREFIX}) to avoid conflicts with existing environment variables — unexpectedly saw ${name}`
