@@ -1,4 +1,5 @@
 import http from 'node:http';
+import fs from 'node:fs';
 import process from 'node:process';
 import { handler } from './handler.js';
 import { env, timeout_env } from './env.js';
@@ -58,8 +59,8 @@ if (socket_activation) {
 		console.log(`Listening on file descriptor ${SD_LISTEN_FDS_START}`);
 	});
 } else {
-	if (path) {
-		await rm(path, { force: true });
+	if (path && fs.existsSync(path) && fs.statSync(path).size === 0) {
+		await rm(path);
 	}
 
 	server.listen({ path, host, port }, () => {
