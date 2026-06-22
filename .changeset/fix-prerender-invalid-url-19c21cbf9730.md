@@ -2,4 +2,4 @@
 "@sveltejs/kit": minor
 ---
 
-fix: add `handleInvalidUrl` prerender option for non-HTTP URL schemes
+feat: add `prerender.handleInvalidUrl` option for invalid URLs discovered while crawling
