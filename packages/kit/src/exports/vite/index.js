@@ -1147,13 +1147,9 @@ async function kit({ svelte_config }) {
 
 					// we must reference Vite 8 options conditionally. Otherwise, older Vite
 					// versions throw an error about unknown config options
-					if (is_rolldown && !split && new_config.build) {
+					if (is_rolldown && !split && new_config.build?.rollupOptions?.output) {
 						// @ts-ignore only available in Vite 8
-						new_config.build.rolldownOptions = {
-							output: {
-								codeSplitting: false
-							}
-						};
+						new_config.build.rollupOptions.output.codeSplitting = false;
 					}
 				} else {
 					new_config = {
