@@ -1,5 +1,4 @@
 import { readFileSync } from 'node:fs';
-import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { rollup } from 'rollup';
 import { nodeResolve } from '@rollup/plugin-node-resolve';
@@ -83,19 +82,6 @@ export default function (opts = {}) {
 						resolveId(id) {
 							if (id === 'SERVER') return `${server}/index.js`;
 							if (id === 'MANIFEST') return `${server}/manifest.js`;
-						}
-					},
-					// ensure our entries that use `import.meta.url` resolve to the root
-					// even if their code has been moved to a shared chunk directory
-					// see https://rollupjs.org/plugin-development/#resolveimportmeta
-					{
-						name: 'adapter-node:import-meta-url-current-module',
-						resolveImportMeta(property, { moduleId }) {
-							if (property === 'url' && moduleId.startsWith(entries)) {
-								const module_dir = path.dirname(moduleId);
-								return `new URL('${path.relative(module_dir, entries)}', import.meta.url)`;
-							}
-							return null;
 						}
 					},
 					nodeResolve({

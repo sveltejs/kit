@@ -35,7 +35,9 @@
 	"scripts": {
 		"dev": "rollup -cw",
 		"build": "rollup -c",
-		"test": "vitest run",
+		"test:unit": "vitest run",
+		"test:e2e": "pnpm build && pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test",
+		"test": "pnpm test:unit && pnpm test:e2e",
 		"check": "tsc",
 		"lint": "prettier --check .",
 		"format": "pnpm lint --write",

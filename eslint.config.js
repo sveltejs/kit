@@ -69,7 +69,8 @@ export default [
 		ignores: [
 			'packages/adapter-cloudflare/test/apps/**/*',
 			'packages/adapter-netlify/test/apps/**/*',
-			'packages/adapter-node/tests/smoke.spec_disabled.js',
+			'packages/adapter-node/rollup.config.js',
+			'packages/adapter-node/smoke.spec_disabled.js',
 			'packages/adapter-static/test/apps/**/*',
 			'packages/adapter-vercel/test/apps/**/*',
 			'packages/kit/src/core/sync/create_manifest_data/test/samples/**/*',
