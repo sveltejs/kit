@@ -75,6 +75,8 @@ export default function (opts = {}) {
 					// dependencies could have deep exports, so we need a regex
 					...Object.keys(pkg.dependencies || {}).map((d) => new RegExp(`^${d}(\\/.*)?$`))
 				],
+				// helps avoid a circular dependency by preventing chunks from exporting
+				// what our entries already export
 				preserveEntrySignatures: false,
 				plugins: [
 					{
