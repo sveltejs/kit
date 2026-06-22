@@ -109,25 +109,18 @@ export default function (opts = {}) {
 			});
 
 			const server_path_length = server.length + 1;
-			const entry_files = Object.values(input);
-
-			const build_directory = builder.getBuildDirectory('');
 
 			await bundle.write({
 				dir: out,
 				format: 'esm',
 				sourcemap: true,
 				chunkFileNames: 'server/chunks/[name]-[hash].js',
-				// force the server build and the adapter-node code to be in separate
-				// chunks to avoid a circular dependency
+				// force the Vite server output to retain their file structure to avoid
+				// a circular import chain
 				// see https://github.com/sveltejs/kit/issues/16092
 				manualChunks(id) {
 					if (id.startsWith(server)) {
 						return id.slice(server_path_length);
-					}
-
-					if (entry_files.includes(id)) {
-						return id.slice(build_directory.length);
 					}
 				}
 			});
