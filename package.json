@@ -29,23 +29,11 @@
 		"@sveltejs/eslint-config": "catalog:",
 		"@svitejs/changesets-changelog-github-compact": "catalog:",
 		"eslint": "catalog:",
-		"prettier": "^3.6.0",
-		"prettier-plugin-svelte": "^3.4.0"
+		"prettier": "catalog:",
+		"prettier-plugin-svelte": "catalog:"
 	},
-	"packageManager": "pnpm@10.30.0+sha512.2b5753de015d480eeb88f5b5b61e0051f05b4301808a82ec8b840c9d2adf7748eb352c83f5c1593ca703ff1017295bc3fdd3119abb9686efc96b9fcb18200937",
+	"packageManager": "pnpm@10.34.3+sha512.f2c531b08829d7be7f03c90addc266615f9c5477463e4bf1d275cb263ce9ea57cf0d5599110d94649a9bb3fed9f0b5efcea74a7016b61532a24cb9ad87860c1d",
 	"engines": {
 		"pnpm": ">=9.0.0"
-	},
-	"pnpm": {
-		"onlyBuiltDependencies": [
-			"@parcel/watcher",
-			"esbuild",
-			"protobufjs",
-			"rolldown",
-			"sharp",
-			"svelte-preprocess",
-			"unix-dgram",
-			"workerd"
-		]
 	}
 }

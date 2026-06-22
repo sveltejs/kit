@@ -21,6 +21,52 @@ params.foo;
 params.bar; // okay
 params.baz; // okay
 
+/** @type {import('$app/types').RouteParams<'/matcher-test/no-matcher/[locale]'>} */
+const noMatcherPageParams = {
+	locale: 'fr' // any string
+};
+
+/** @type {import('$app/types').LayoutParams<'/matcher-test/no-matcher'>} */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const noMatcherLayoutParams = {};
+
+noMatcherPageParams.locale = 'fr'; // any string
+
+/** @type {import('$app/types').RouteParams<'/matcher-test/with-matcher/[[locale=locale]]'>} */
+const withMatcherPageParams = {};
+
+/** @type {import('$app/types').RouteParams<'/matcher-test/with-matcher/[[locale=locale]]'>} */
+const withMatcherPageParamsWithUndefined = {
+	locale: undefined
+};
+
+// @ts-expect-error locale should be "en" or "nb"
+withMatcherPageParams.locale = 'fr';
+withMatcherPageParams.locale = undefined; // okay
+withMatcherPageParams.locale = 'en'; // okay
+withMatcherPageParams.locale = 'nb'; // okay
+withMatcherPageParamsWithUndefined.locale = 'en'; // okay
+
+/** @type {import('$app/types').LayoutParams<'/matcher-test/with-matcher'>} */
+const withMatcherLayoutParams = {};
+
+/** @type {import('$app/types').LayoutParams<'/matcher-test/with-matcher'>} */
+const withMatcherLayoutParamsWithUndefined = {
+	locale: undefined
+};
+
+// @ts-expect-error locale should be "en" or "nb"
+withMatcherLayoutParams.locale = 'fr';
+withMatcherLayoutParams.locale = undefined; // okay
+withMatcherLayoutParams.locale = 'en'; // okay
+withMatcherLayoutParams.locale = 'nb'; // okay
+withMatcherLayoutParamsWithUndefined.locale = 'nb'; // okay
+
+/** @type {import('$app/types').LayoutParams<'/matcher-test'>} */
+const matcherParentLayoutParams = {};
+
+matcherParentLayoutParams.locale = 'fr'; // any string
+
 /** @type {import('$app/types').Pathname} */
 let pathname;
 

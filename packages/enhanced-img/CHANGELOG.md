@@ -1,5 +1,23 @@
 # @sveltejs/enhanced-img
 
+## 0.11.0
+### Minor Changes
+
+
+- feat: export `EnhancedImgAttributes` type ([#15649](https://github.com/sveltejs/kit/pull/15649))
+
+
+### Patch Changes
+
+
+- fix: exclude imports with `?` character from transformation ([#15617](https://github.com/sveltejs/kit/pull/15617))
+
+## 0.10.4
+### Patch Changes
+
+
+- chore: add support for vite-plugin-svelte 7 ([#15539](https://github.com/sveltejs/kit/pull/15539))
+
 ## 0.10.3
 ### Patch Changes
 

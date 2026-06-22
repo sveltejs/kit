@@ -4,6 +4,7 @@ import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 import colors from 'kleur';
 import { posixify, to_fs } from '../utils/filesystem.js';
+import { noop } from '../utils/functions.js';
 
 /**
  * Resolved path of the `runtime` directory
@@ -23,8 +24,6 @@ export const runtime_directory = posixify(fileURLToPath(new URL('../runtime', im
 export const runtime_base = runtime_directory.startsWith(process.cwd())
 	? `/${path.relative('.', runtime_directory)}`
 	: to_fs(runtime_directory);
-
-function noop() {}
 
 /** @param {{ verbose: boolean }} opts */
 export function logger({ verbose }) {

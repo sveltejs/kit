@@ -61,7 +61,10 @@ export namespace Csp {
 		| 'unsafe-eval'
 		| 'unsafe-hashes'
 		| 'unsafe-inline'
+		| 'unsafe-allow-redirects'
+		| 'unsafe-webtransport-hashes'
 		| 'wasm-unsafe-eval'
+		| 'trusted-types-eval'
 		| 'none';
 	type CryptoSource = `${'nonce' | 'sha256' | 'sha384' | 'sha512'}-${string}`;
 	type FrameSource = HostSource | SchemeSource | 'self' | 'none';
@@ -70,7 +73,16 @@ export namespace Csp {
 	type HostProtocolSchemes = `${string}://` | '';
 	type HttpDelineator = '/' | '?' | '#' | '\\';
 	type PortScheme = `:${number}` | '' | ':*';
-	type SchemeSource = 'http:' | 'https:' | 'data:' | 'mediastream:' | 'blob:' | 'filesystem:';
+	type SchemeSource =
+		| 'http:'
+		| 'https:'
+		| 'ws:'
+		| 'wss:'
+		| 'data:'
+		| 'mediastream:'
+		| 'blob:'
+		| 'filesystem:'
+		| (`${string}:` & {});
 	type Source = HostSource | SchemeSource | CryptoSource | BaseSource;
 	type Sources = Source[];
 }
@@ -243,4 +255,23 @@ export interface RouteSegment {
 /** @default 'never' */
 export type TrailingSlash = 'never' | 'always' | 'ignore';
 
+export type DeepPartial<T> = T extends Record<PropertyKey, unknown> | unknown[]
+	? {
+			[K in keyof T]?: T[K] extends Record<PropertyKey, unknown> | unknown[]
+				? DeepPartial<T[K]>
+				: T[K];
+		}
+	: T | undefined;
+
 export type IsAny<T> = 0 extends 1 & T ? true : false;
+
+export type HasNonOptionalBoolean<T> =
+	IsAny<T> extends true
+		? never
+		: [T] extends [boolean]
+			? true
+			: T extends Array<infer U>
+				? HasNonOptionalBoolean<U>
+				: T extends Record<string, any>
+					? { [K in keyof T]: HasNonOptionalBoolean<T[K]> }[keyof T]
+					: never;

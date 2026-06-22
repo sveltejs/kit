@@ -23,6 +23,7 @@ Inside the service worker you have access to the [`$service-worker` module]($ser
 The following example caches the built app and any files in `static` eagerly, and caches all other requests as they happen. This would make each page work offline once visited.
 
 ```js
+// @errors: 2688
 /// file: src/service-worker.js
 // Disables access to DOM typings like `HTMLElement` which are not available
 // inside a service worker and instantiates the correct globals
@@ -98,7 +99,7 @@ self.addEventListener('fetch', (event) => {
 				throw new Error('invalid response from fetch');
 			}
 
-			if (response.status === 200) {
+			if (response.status === 200 && !response.headers.get('cache-control')?.includes('no-store')) {
 				cache.put(event.request, response.clone());
 			}
 

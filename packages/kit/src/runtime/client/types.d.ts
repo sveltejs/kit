@@ -58,6 +58,12 @@ export interface SvelteKitApp {
 	hash: boolean;
 
 	root: typeof SvelteComponent;
+
+	/**
+	 * Lazily loads the contents of src/error.html, used as a last-resort
+	 * error page when the root layout's load function throws during client-side rendering.
+	 */
+	get_error_template: () => Promise<(data: { status: number; message: string }) => string>;
 }
 
 export type NavigationIntent = {
@@ -85,9 +91,11 @@ export type NavigationFinished = {
 	state: NavigationState;
 	props: {
 		constructors: Array<typeof SvelteComponent>;
+		errors?: Array<typeof SvelteComponent | undefined>;
 		components?: SvelteComponent[];
 		page: Page;
 		form?: Record<string, any> | null;
+		error?: App.Error;
 		[key: `data_${number}`]: Record<string, any>;
 	};
 };
