@@ -123,11 +123,21 @@ export default function (opts = {}) {
 				]
 			});
 
+			const server_path_length = server.length + 1;
+
 			await bundle.write({
 				dir: out,
 				format: 'esm',
 				sourcemap: true,
-				chunkFileNames: 'server/chunks/[name]-[hash].js'
+				chunkFileNames: 'server/chunks/[name]-[hash].js',
+				// force the Vite server output to retain their file structure to avoid
+				// a circular import chain
+				// see https://github.com/sveltejs/kit/issues/16092
+				manualChunks(id) {
+					if (id.startsWith(server)) {
+						return id.slice(server_path_length);
+					}
+				}
 			});
 
 			if (builder.hasServerInstrumentationFile?.()) {
