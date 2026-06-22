@@ -312,6 +312,22 @@ On the server, `for await` likewise joins a per-request shared iteration of the 
 
 > [!NOTE] It's essential that you don't cache live query responses in a service worker, since the cloned response will continue streaming long after the page is closed. Make sure that your caching logic excludes any responses with a `Cache-Control` header that includes `no-store`.
 
+> [!NOTE] If your app is behind nginx, make sure that it does not buffer live query responses. nginx ignores `Cache-Control` when deciding whether to buffer proxied responses, so `query.live` requests may appear to stay disconnected until nginx times out. You can disable `proxy_buffering`, or set `X-Accel-Buffering: no` on remote function responses in `src/hooks.server.js`:
+>
+> ```js
+> /// file: src/hooks.server.js
+> /** @type {import('@sveltejs/kit').Handle} */
+> export async function handle({ event, resolve }) {
+> 	const response = await resolve(event);
+>
+> 	if (event.isRemoteRequest) {
+> 		response.headers.set('X-Accel-Buffering', 'no');
+> 	}
+>
+> 	return response;
+> }
+> ```
+
 ## form
 
 The `form` function makes it easy to write data to the server. It takes a callback that receives `data` constructed from the submitted [`FormData`](https://developer.mozilla.org/en-US/docs/Web/API/FormData)...
