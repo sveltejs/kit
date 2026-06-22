@@ -8,7 +8,7 @@ import { parse as polka_url_parser } from '@polka/url';
 import { getRequest, setResponse, createReadableStream } from '@sveltejs/kit/node';
 import { Server } from 'SERVER';
 import { manifest } from 'MANIFEST';
-import { env } from './env.js';
+import { env, env_prefix } from './env.js';
 import { parse_as_bytes, parse_origin } from '../utils.js';
 
 const prerendered = PRERENDERED;
@@ -121,7 +121,7 @@ const ssr = async (req, res) => {
 					if (!(address_header in req.headers)) {
 						throw new Error(
 							`Address header was specified with ${
-								ENV_PREFIX + 'ADDRESS_HEADER'
+								env_prefix + 'ADDRESS_HEADER'
 							}=${address_header} but is absent from request`
 						);
 					}
@@ -132,12 +132,12 @@ const ssr = async (req, res) => {
 						const addresses = value.split(',');
 
 						if (xff_depth < 1) {
-							throw new Error(`${ENV_PREFIX + 'XFF_DEPTH'} must be a positive integer`);
+							throw new Error(`${env_prefix + 'XFF_DEPTH'} must be a positive integer`);
 						}
 
 						if (xff_depth > addresses.length) {
 							throw new Error(
-								`${ENV_PREFIX + 'XFF_DEPTH'} is ${xff_depth}, but only found ${
+								`${env_prefix + 'XFF_DEPTH'} is ${xff_depth}, but only found ${
 									addresses.length
 								} addresses`
 							);
