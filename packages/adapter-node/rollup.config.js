@@ -49,7 +49,7 @@ export default {
 		dir: 'files',
 		format: 'esm',
 		hoistTransitiveImports: false,
-		chunkFileNames: 'chunks/[hash].js',
+		chunkFileNames: 'chunks/[name].js',
 		// prevent the handler code from becoming a shared chunk when both
 		// handler.js and index.js are input entries
 		manualChunks(id) {
