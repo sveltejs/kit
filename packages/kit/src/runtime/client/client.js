@@ -2612,7 +2612,7 @@ export async function set_nearest_error_page(error, status = 500) {
 			route,
 			// preserve trailingSlash config from the full branch so that
 			// slicing the branch for error handling doesn't lose it
-			// see https://github.com/sveltejs/kit/pull/15358
+			// see https://github.com/sveltejs/kit/issues/13516
 			trailing_slash: get_trailing_slash(branch, url)
 		});
 
