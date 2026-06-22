@@ -1238,7 +1238,6 @@ declare module '@sveltejs/kit' {
 
 	export interface NavigationEnter extends NavigationBase {
 		/**
-		 * The type of navigation:
 		 * - `enter`: The app has hydrated/started
 		 */
 		type: 'enter';
@@ -1258,7 +1257,6 @@ declare module '@sveltejs/kit' {
 
 	export interface NavigationGoto extends NavigationBase {
 		/**
-		 * The type of navigation:
 		 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
 		 */
 		type: 'goto';
@@ -1273,7 +1271,6 @@ declare module '@sveltejs/kit' {
 
 	export interface NavigationLeave extends NavigationBase {
 		/**
-		 * The type of navigation:
 		 * - `leave`: The app is being left either because the tab is being closed or a navigation to a different document is occurring
 		 */
 		type: 'leave';
@@ -1288,7 +1285,6 @@ declare module '@sveltejs/kit' {
 
 	export interface NavigationFormSubmit extends NavigationBase {
 		/**
-		 * The type of navigation:
 		 * - `form`: The user submitted a `<form method="GET">`
 		 */
 		type: 'form';
@@ -1308,7 +1304,6 @@ declare module '@sveltejs/kit' {
 
 	export interface NavigationPopState extends NavigationBase {
 		/**
-		 * The type of navigation:
 		 * - `popstate`: Navigation was triggered by back/forward navigation
 		 */
 		type: 'popstate';
@@ -1326,7 +1321,6 @@ declare module '@sveltejs/kit' {
 
 	export interface NavigationLink extends NavigationBase {
 		/**
-		 * The type of navigation:
 		 * - `link`: Navigation was triggered by a link click
 		 */
 		type: 'link';
