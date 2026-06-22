@@ -45,7 +45,7 @@
 	},
 	"dependencies": {
 		"@iarna/toml": "^2.2.5",
-		"rolldown": "^1.0.0-rc.6"
+		"rolldown": "^1.0.0"
 	},
 	"devDependencies": {
 		"@netlify/dev": "catalog:",
