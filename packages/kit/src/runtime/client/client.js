@@ -633,9 +633,19 @@ async function initialize(result, target, hydrate) {
  *   error: App.Error | null;
  *   route: import('types').CSRRoute | null;
  *   form?: Record<string, any> | null;
+ *   trailing_slash?: import('types').TrailingSlash;
  * }} opts
  */
-function get_navigation_result_from_branch({ url, params, branch, status, error, route, form, trailing_slash }) {
+function get_navigation_result_from_branch({
+	url,
+	params,
+	branch,
+	status,
+	error,
+	route,
+	form,
+	trailing_slash
+}) {
 	/** @type {import('types').TrailingSlash} */
 	let slash = trailing_slash ?? 'never';
 
