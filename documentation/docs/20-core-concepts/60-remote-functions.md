@@ -85,6 +85,8 @@ The query returned from `getPosts` works as a [`Promise`](https://developer.mozi
 
 Until the promise resolves — and if it errors — the nearest [`<svelte:boundary>`](../svelte/svelte-boundary) will be invoked.
 
+If the boundary has a `pending` snippet, server-side rendering will render that pending content instead of waiting for the query. To include the query result in the server-rendered HTML, omit `pending`, or only pass it in the browser with `pending={browser ? pending : undefined}`.
+
 While using `await` is recommended, as an alternative the query also has `loading`, `error` and `current` properties:
 
 ```svelte
