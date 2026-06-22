@@ -1,3 +1,4 @@
+/** @import { Plugin, RollupOptions } from 'rollup' */
 import { nodeResolve } from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import json from '@rollup/plugin-json';
@@ -6,7 +7,7 @@ import { rmSync } from 'node:fs';
 
 /**
  * @param {string} filepath
- * @returns {import('rollup').Plugin}
+ * @returns {Plugin}
  */
 function clearOutput(filepath) {
 	return {
@@ -22,7 +23,7 @@ function clearOutput(filepath) {
 }
 
 /**
- * @returns {import('rollup').Plugin}
+ * @returns {Plugin}
  */
 function prefixBuiltinModules() {
 	return {
@@ -35,23 +36,30 @@ function prefixBuiltinModules() {
 	};
 }
 
+/** @type {RollupOptions} */
 export default {
 	input: {
 		index: 'src/index.js',
 		env: 'src/env.js',
 		handler: 'src/handler.js',
-		shims: 'src/shims.js'
+		shims: 'src/shims.js',
+		utils: 'utils.js'
 	},
 	output: {
 		dir: 'files',
 		format: 'esm',
 		hoistTransitiveImports: false,
-		chunkFileNames: 'chunks/[hash].js'
+		chunkFileNames: 'chunks/[hash].js',
+		// prevent the handler code from becoming a shared chunk when both
+		// handler.js and index.js are input entries
+		preserveModules: true
 	},
 	plugins: [
 		clearOutput('files'),
 		nodeResolve({ preferBuiltins: true }),
+		// @ts-expect-error https://github.com/rollup/plugins/issues/1329
 		commonjs(),
+		// @ts-expect-error https://github.com/rollup/plugins/issues/1329
 		json(),
 		prefixBuiltinModules()
 	],

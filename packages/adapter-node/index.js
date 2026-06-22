@@ -75,6 +75,7 @@ export default function (opts = {}) {
 					// dependencies could have deep exports, so we need a regex
 					...Object.keys(pkg.dependencies || {}).map((d) => new RegExp(`^${d}(\\/.*)?$`))
 				],
+				preserveEntrySignatures: false,
 				plugins: [
 					{
 						name: 'adapter-node:alias',
@@ -108,11 +109,25 @@ export default function (opts = {}) {
 				]
 			});
 
+			const server_path_length = server.length + 1;
+			const entry_files = Object.values(input);
+
 			await bundle.write({
 				dir: out,
 				format: 'esm',
 				sourcemap: true,
-				chunkFileNames: 'server/chunks/[name]-[hash].js'
+				chunkFileNames: 'server/chunks/[name]-[hash].js',
+				// force the server build and the adapter-node code to be in separate
+				// chunks to avoid a circular dependency
+				manualChunks(id) {
+					if (id.startsWith(server)) {
+						return id.slice(server_path_length);
+					}
+
+					if (entry_files.includes(id)) {
+						return id.slice(builder.getBuildDirectory('').length);
+					}
+				}
 			});
 
 			if (builder.hasServerInstrumentationFile?.()) {
