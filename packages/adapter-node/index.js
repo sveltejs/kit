@@ -111,6 +111,8 @@ export default function (opts = {}) {
 			const server_path_length = server.length + 1;
 			const entry_files = Object.values(input);
 
+			const build_directory = builder.getBuildDirectory('');
+
 			await bundle.write({
 				dir: out,
 				format: 'esm',
@@ -125,7 +127,7 @@ export default function (opts = {}) {
 					}
 
 					if (entry_files.includes(id)) {
-						return id.slice(builder.getBuildDirectory('').length);
+						return id.slice(build_directory.length);
 					}
 				}
 			});
