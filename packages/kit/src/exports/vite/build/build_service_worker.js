@@ -165,13 +165,6 @@ export async function build_service_worker(
 		}
 	};
 
-	// we must reference Vite 8 options conditionally. Otherwise, older Vite
-	// versions throw an error about unknown config options
-	if (is_rolldown && config?.build?.rollupOptions?.output) {
-		// @ts-ignore only available in Vite 8
-		config.build.rollupOptions.output.codeSplitting = true;
-	}
-
 	await vite.build(config);
 
 	// rename .mjs to .js to avoid incorrect MIME types with ancient webservers
