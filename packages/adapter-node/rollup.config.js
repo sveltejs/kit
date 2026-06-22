@@ -52,7 +52,9 @@ export default {
 		chunkFileNames: 'chunks/[hash].js',
 		// prevent the handler code from becoming a shared chunk when both
 		// handler.js and index.js are input entries
-		preserveModules: true
+		manualChunks(id) {
+			if (id.includes('node_modules')) return 'vendor';
+		}
 	},
 	plugins: [
 		clearOutput('files'),
