@@ -293,6 +293,18 @@ test.describe('Endpoints', () => {
 		expect(methods).toEqual(unique_methods);
 	});
 
+	test('serves page for GET request when endpoint has no GET handler', async ({ request }) => {
+		const response = await request.fetch('/endpoint-output/post-only-with-page', {
+			headers: {
+				accept: '*/*'
+			}
+		});
+
+		expect(response.status()).toBe(200);
+		expect(response.headers()['content-type']).toContain('text/html');
+		expect(await response.text()).toContain('POST-only endpoint page');
+	});
+
 	// TODO all the remaining tests in this section are really only testing
 	// setResponse, since we're not otherwise changing anything on the response.
 	// might be worth making these unit tests instead

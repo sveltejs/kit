@@ -619,52 +619,61 @@ export async function internal_respond(request, options, manifest, state) {
 						invalidated_data_nodes,
 						trailing_slash
 					);
-				} else if (
-					route.endpoint &&
-					(!route.page || (!state.prerendering && is_endpoint_request(event)))
-				) {
-					response = await render_endpoint(event, event_state, await route.endpoint(), state);
-				} else if (route.page) {
-					if (!page_nodes) {
-						throw new Error('page_nodes not found. This should never happen');
-					} else if (page_methods.has(method)) {
-						response = await render_page(
-							event,
-							event_state,
-							route.page,
-							options,
-							manifest,
-							state,
-							page_nodes,
-							resolve_opts
-						);
-					} else {
-						const allowed_methods = new Set(allowed_page_methods);
-						const node = await manifest._.nodes[route.page.leaf]();
-						if (node?.server?.actions) {
-							allowed_methods.add('POST');
-						}
-
-						if (method === 'OPTIONS') {
-							// This will deny CORS preflight requests implicitly because we don't
-							// add the required CORS headers to the response.
-							response = new Response(null, {
-								status: 204,
-								headers: {
-									allow: Array.from(allowed_methods.values()).join(', ')
-								}
-							});
-						} else {
-							const mod = [...allowed_methods].reduce((acc, curr) => {
-								acc[curr] = true;
-								return acc;
-							}, /** @type {Record<string, any>} */ ({}));
-							response = method_not_allowed(mod, method);
-						}
-					}
 				} else {
-					// a route will always have a page or an endpoint, but TypeScript doesn't know that
-					throw new Error('Route is neither page nor endpoint. This should never happen');
+					const endpoint =
+						route.endpoint &&
+						(!route.page || (!state.prerendering && is_endpoint_request(event)))
+							? await route.endpoint()
+							: undefined;
+
+					if (
+						endpoint &&
+						// Prefer rendering an existing page if the endpoint has no GET handler
+						(!route.page || method !== 'GET' || endpoint.GET || endpoint.fallback)
+					) {
+						response = await render_endpoint(event, event_state, endpoint, state);
+					} else if (route.page) {
+						if (!page_nodes) {
+							throw new Error('page_nodes not found. This should never happen');
+						} else if (page_methods.has(method)) {
+							response = await render_page(
+								event,
+								event_state,
+								route.page,
+								options,
+								manifest,
+								state,
+								page_nodes,
+								resolve_opts
+							);
+						} else {
+							const allowed_methods = new Set(allowed_page_methods);
+							const node = await manifest._.nodes[route.page.leaf]();
+							if (node?.server?.actions) {
+								allowed_methods.add('POST');
+							}
+
+							if (method === 'OPTIONS') {
+								// This will deny CORS preflight requests implicitly because we don't
+								// add the required CORS headers to the response.
+								response = new Response(null, {
+									status: 204,
+									headers: {
+										allow: Array.from(allowed_methods.values()).join(', ')
+									}
+								});
+							} else {
+								const mod = [...allowed_methods].reduce((acc, curr) => {
+									acc[curr] = true;
+									return acc;
+								}, /** @type {Record<string, any>} */ ({}));
+								response = method_not_allowed(mod, method);
+							}
+						}
+					} else {
+						// a route will always have a page or an endpoint, but TypeScript doesn't know that
+						throw new Error('Route is neither page nor endpoint. This should never happen');
+					}
 				}
 
 				// If the route contains a page and an endpoint, we need to add a
