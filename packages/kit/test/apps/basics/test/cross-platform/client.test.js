@@ -1159,7 +1159,9 @@ test.describe('Routing', () => {
 		await page.goto('/routing/trailing-slash/error-boundary/');
 		// The page throws an error, which triggers the error boundary.
 		// The URL should still have the trailing slash from the page's trailingSlash='always' config.
-		expect(new URL(page.url()).pathname).toBe('/routing/trailing-slash/error-boundary/');
+		await expect(page).toHaveURL(
+			(url) => url.pathname === '/routing/trailing-slash/error-boundary/'
+		);
 	});
 });
 
