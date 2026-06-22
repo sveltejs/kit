@@ -85,7 +85,7 @@ export default function (opts = {}) {
 							if (id === 'MANIFEST') return `${server}/manifest.js`;
 						}
 					},
-					// ensure our entries that use `import.meta.url` resolves to the root
+					// ensure our entries that use `import.meta.url` resolve to the root
 					// even if their code has been moved to a shared chunk directory
 					// see https://rollupjs.org/plugin-development/#resolveimportmeta
 					{
