@@ -1,3 +1,5 @@
+/** @import { TrailingSlash } from 'types'; */
+/** @import { BranchNode } from './types.js' */
 import { BROWSER, DEV } from 'esm-env';
 import * as svelte from 'svelte';
 import { HttpError, Redirect, SvelteKitError } from '@sveltejs/kit/internal';
@@ -628,12 +630,12 @@ async function initialize(result, target, hydrate) {
  * @param {{
  *   url: URL;
  *   params: Record<string, string>;
- *   branch: Array<import('./types.js').BranchNode | undefined>;
+ *   branch: Array<BranchNode | undefined>;
  *   status: number;
  *   error: App.Error | null;
  *   route: import('types').CSRRoute | null;
  *   form?: Record<string, any> | null;
- *   trailing_slash?: import('types').TrailingSlash;
+ *   trailing_slash?: TrailingSlash;
  * }} opts
  */
 function get_navigation_result_from_branch({
@@ -646,18 +648,7 @@ function get_navigation_result_from_branch({
 	form,
 	trailing_slash
 }) {
-	/** @type {import('types').TrailingSlash} */
-	let slash = trailing_slash ?? 'never';
-
-	// if `paths.base === '/a/b/c`, then the root route is always `/a/b/c/`, regardless of
-	// the `trailingSlash` route option, so that relative paths to JS and CSS work
-	if (base && (url.pathname === base || url.pathname === base + '/')) {
-		slash = 'always';
-	} else {
-		for (const node of branch) {
-			if (node?.slash !== undefined) slash = node.slash;
-		}
-	}
+	const slash = trailing_slash ?? get_trailing_slash(branch, url);
 
 	url.pathname = normalize_path(url.pathname, slash);
 	// eslint-disable-next-line no-self-assign
@@ -743,7 +734,7 @@ function get_navigation_result_from_branch({
  *   route: { id: string | null };
  * 	 server_data_node: import('./types.js').DataNode | null;
  * }} options
- * @returns {Promise<import('./types.js').BranchNode>}
+ * @returns {Promise<BranchNode>}
  */
 async function load_node({ loader, parent, url, params, route, server_data_node }) {
 	/** @type {Record<string, any> | null} */
@@ -1108,7 +1099,7 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 	const branch_promises = loaders.map(async (loader, i) => {
 		if (!loader) return;
 
-		/** @type {import('./types.js').BranchNode | undefined} */
+		/** @type {BranchNode | undefined} */
 		const previous = current.branch[i];
 
 		const server_data_node = server_data_nodes?.[i];
@@ -1158,7 +1149,7 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 	// if we don't do this, rejections will be unhandled
 	for (const p of branch_promises) p.catch(() => {});
 
-	/** @type {Array<import('./types.js').BranchNode | undefined>} */
+	/** @type {Array<BranchNode | undefined>} */
 	const branch = [];
 
 	for (let i = 0; i < loaders.length; i += 1) {
@@ -1207,13 +1198,6 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 
 				const error_load = await load_nearest_error_page(i, branch, errors);
 				if (error_load) {
-					// preserve trailingSlash config from the full branch so that
-					// slicing the branch for error handling doesn't lose it (#13516)
-					let trailing_slash;
-					for (const node of branch) {
-						if (node?.slash !== undefined) trailing_slash = node.slash;
-					}
-
 					return get_navigation_result_from_branch({
 						url,
 						params,
@@ -1221,7 +1205,10 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 						status,
 						error,
 						route,
-						trailing_slash
+						// preserve trailingSlash config from the full branch so that
+						// slicing the branch for error handling doesn't lose it
+						// see https://github.com/sveltejs/kit/issues/13516
+						trailing_slash: get_trailing_slash(branch, url)
 					});
 				} else {
 					return await server_fallback(url, { id: route.id }, error, status);
@@ -1248,9 +1235,9 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 
 /**
  * @param {number} i Start index to backtrack from
- * @param {Array<import('./types.js').BranchNode | undefined>} branch Branch to backtrack
+ * @param {Array<BranchNode | undefined>} branch Branch to backtrack
  * @param {Array<import('types').CSRPageNodeLoader | undefined>} errors All error pages for this branch
- * @returns {Promise<{idx: number; node: import('./types.js').BranchNode} | undefined>}
+ * @returns {Promise<{idx: number; node: BranchNode} | undefined>}
  */
 async function load_nearest_error_page(i, branch, errors) {
 	while (i--) {
@@ -1328,7 +1315,7 @@ async function load_root_error_page({ status, error, url, route }) {
 			server_data_node: create_data_node(server_data_node)
 		});
 
-		/** @type {import('./types.js').BranchNode} */
+		/** @type {BranchNode} */
 		const root_error = {
 			node: await default_error_loader(),
 			loader: default_error_loader,
@@ -2419,13 +2406,6 @@ export async function set_nearest_error_page(error, status = 500) {
 
 	const error_load = await load_nearest_error_page(current.branch.length, branch, route.errors);
 	if (error_load) {
-		// preserve trailingSlash config from the full branch so that
-		// slicing the branch for error handling doesn't lose it (#13516)
-		let trailing_slash;
-		for (const node of branch) {
-			if (node?.slash !== undefined) trailing_slash = node.slash;
-		}
-
 		const navigation_result = get_navigation_result_from_branch({
 			url,
 			params: current.params,
@@ -2433,7 +2413,10 @@ export async function set_nearest_error_page(error, status = 500) {
 			status,
 			error,
 			route,
-			trailing_slash
+			// preserve trailingSlash config from the full branch so that
+			// slicing the branch for error handling doesn't lose it
+			// see https://github.com/sveltejs/kit/pull/15358
+			trailing_slash: get_trailing_slash(branch, url)
 		});
 
 		current = navigation_result.state;
@@ -2841,7 +2824,7 @@ async function _hydrate(
 			});
 		});
 
-		/** @type {Array<import('./types.js').BranchNode | undefined>} */
+		/** @type {Array<BranchNode | undefined>} */
 		const branch = await Promise.all(branch_promises);
 
 		// server-side will have compacted the branch, reinstate empty slots
@@ -3221,6 +3204,23 @@ function get_id(url) {
 	}
 
 	return decodeURIComponent(id);
+}
+
+/**
+ * @param {(BranchNode | undefined)[]} branch
+ * @param {URL} url
+ * @returns {TrailingSlash}
+ */
+function get_trailing_slash(branch, url) {
+	// if `paths.base === '/a/b/c`, then the root route is always `/a/b/c/`, regardless of
+	// the `trailingSlash` route option, so that relative paths to JS and CSS work
+	if (base && (url.pathname === base || url.pathname === base + '/')) {
+		return 'always';
+	}
+
+	return branch.reduce((value, node) => {
+		return node?.slash ?? value;
+	}, /** @type {TrailingSlash} */ ('never'));
 }
 
 if (DEV) {
