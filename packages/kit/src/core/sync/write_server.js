@@ -15,7 +15,6 @@ import { escape_html } from '../../utils/escape.js';
  *   config: import('types').ValidatedConfig;
  *   has_service_worker: boolean;
  *   template: string;
- *   error_page: string;
  * }} opts
  */
 const server_template = ({
@@ -23,14 +22,13 @@ const server_template = ({
 	server_hooks,
 	universal_hooks,
 	has_service_worker,
-	template,
-	error_page
+	template
 }) => `
 import root from '../root.js';
 import { set_building, set_prerendering } from '$app/env/internal';
 import { set_assets } from '$app/paths/internal/server';
 import { set_manifest, set_read_implementation } from '__sveltekit/server';
-import { set_env } from '__sveltekit/env';
+import error from '../shared/error-template.js';
 
 export const options = {
 	app_template_contains_nonce: ${template.includes('%sveltekit.nonce%')},
@@ -57,9 +55,7 @@ export const options = {
 				/%sveltekit\.env\.([^%]+)%/g,
 				(_match, capture) => `" + (env[${s(capture)}] ?? "") + "`
 			)},
-		error: ({ status, message }) => ${s(error_page)
-			.replace(/%sveltekit\.status%/g, '" + status + "')
-			.replace(/%sveltekit\.error\.message%/g, '" + message + "')}
+		error
 	},
 	version_hash: ${s(hash(config.kit.version.name))}
 };
@@ -87,7 +83,7 @@ export async function get_hooks() {
 	};
 }
 
-export { set_assets, set_building, set_env, set_manifest, set_prerendering, set_read_implementation };
+export { set_assets, set_building, set_manifest, set_prerendering, set_read_implementation };
 `;
 
 // TODO need to re-run this whenever src/app.html or src/error.html are
@@ -120,6 +116,13 @@ export function write_server(config, output, root) {
 		return posixify(path.relative(`${output}/server`, file));
 	}
 
+	write_if_changed(
+		`${output}/shared/error-template.js`,
+		`export default ({ status, message }) => ${s(load_error_page(config))
+			.replace(/%sveltekit\.status%/g, '" + status + "')
+			.replace(/%sveltekit\.error\.message%/g, '" + message + "')};`
+	);
+
 	// Contains the stringified version of
 	/** @type {import('types').SSROptions} */
 	write_if_changed(
@@ -130,8 +133,7 @@ export function write_server(config, output, root) {
 			universal_hooks: universal_hooks_file ? relative(universal_hooks_file) : null,
 			has_service_worker:
 				config.kit.serviceWorker.register && !!resolve_entry(config.kit.files.serviceWorker),
-			template: load_template(root, config),
-			error_page: load_error_page(config)
+			template: load_template(root, config)
 		})
 	);
 }

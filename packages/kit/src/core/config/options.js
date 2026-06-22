@@ -37,7 +37,7 @@ const directives = object({
 });
 
 /** @type {Validator} */
-const options = object(
+export const options = object(
 	{
 		extensions: validate(['.svelte'], (input, keypath) => {
 			if (!Array.isArray(input) || !input.every((page) => typeof page === 'string')) {
@@ -329,6 +329,17 @@ const options = object(
 // 	};
 // }
 
+// Derive the names of SvelteKit's own config options from the schema, so they
+// stay in sync automatically. These are used to separate Kit's options from
+// `vite-plugin-svelte`'s options when config is passed via the Vite plugin.
+const defaults = /** @type {Record<string, any>} */ (options({}, 'config'));
+
+/** The names of the options that live under the `kit` namespace */
+export const kit_options = Object.keys(defaults.kit);
+
+/** The names of the options that live under the `kit.experimental` namespace */
+export const kit_experimental_options = Object.keys(defaults.kit.experimental);
+
 /**
  * @param {(keypath: string) => string} get_message
  * @returns {Validator}
@@ -492,5 +503,3 @@ function assert_string(input, keypath) {
 		throw new Error(`${keypath} should be a string, if specified`);
 	}
 }
-
-export default options;

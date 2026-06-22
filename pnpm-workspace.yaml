@@ -9,6 +9,7 @@ minimumReleaseAgeExclude:
   - prettier-plugin-svelte
   - svelte-check
   - esm-env
+  - dts-buddy
 blockExoticSubdeps: true
 linkWorkspacePackages: true
 shellEmulator: true
@@ -63,7 +64,7 @@ catalog:
   publint: ^0.3.0
   rolldown: ^1.0.0-rc.6
   prettier: ^3.8.1
-  prettier-plugin-svelte: ^3.5.1
+  prettier-plugin-svelte: ^4.1.1
   semver: ^7.5.4
   sirv-cli: ^3.0.0
   svelte: ^5.56.3

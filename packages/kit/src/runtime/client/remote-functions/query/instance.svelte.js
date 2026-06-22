@@ -87,7 +87,9 @@ export class Query {
 		// every time you see this comment, try removing the `tick.then` here and see
 		// if all the tests still pass with the latest svelte version
 		// if they do, congrats, you can remove tick.then
-		void tick().then(() => this.#get_promise());
+		void tick()
+			.then(() => this.#get_promise())
+			.catch(noop);
 	}
 
 	#clear_pending() {
@@ -99,6 +101,11 @@ export class Query {
 		this.#loading = true;
 
 		const { promise, resolve, reject } = Promise.withResolvers();
+
+		// the rejection is surfaced via `.error` / the `then` getter for awaiting
+		// consumers — a purely reactive consumer (`.current`) attaches no handler,
+		// so make sure the stored promise can never become an unhandled rejection
+		promise.catch(noop);
 
 		this.#latest.push(resolve);
 

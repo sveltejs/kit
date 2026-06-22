@@ -4,6 +4,11 @@ import { rolldown } from 'rolldown';
 
 const files = fileURLToPath(new URL('./files', import.meta.url).href);
 
+/** @param {string} str */
+function escape_regex(str) {
+	return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 /** @type {import('./index.js').default} */
 export default function (opts = {}) {
 	const { out = 'build', precompress = true, envPrefix = '' } = opts;
@@ -44,10 +49,19 @@ export default function (opts = {}) {
 
 			const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
 
+			// Copy the prebuilt entrypoints into the build directory so that the
+			// adapter's own bundled dependencies resolve correctly, then bundle them
+			// together with the app's server code. Bundling everything in a single
+			// pass means shared modules (e.g. `SvelteKitError` from `@sveltejs/kit`)
+			// aren't duplicated. See https://github.com/sveltejs/kit/issues/15755
+			const entries = `${tmp}/entries`;
+			builder.copy(files, entries);
+
 			/** @type {Record<string, string>} */
 			const input = {
-				index: `${tmp}/index.js`,
-				manifest: `${tmp}/manifest.js`
+				index: `${entries}/index.js`,
+				env: `${entries}/env.js`,
+				handler: `${entries}/handler.js`
 			};
 
 			if (builder.hasServerInstrumentationFile()) {
@@ -66,31 +80,44 @@ export default function (opts = {}) {
 				platform: 'node',
 				resolve: {
 					conditionNames: ['node']
-				}
+				},
+				plugins: [
+					{
+						// resolve the app's server and manifest, generated above
+						name: 'adapter-node-resolve-app',
+						resolveId(id) {
+							if (id === 'SERVER') return `${tmp}/index.js`;
+							if (id === 'MANIFEST') return `${tmp}/manifest.js`;
+						}
+					},
+					{
+						// replace build-time constants in the adapter's own entrypoints
+						// only, so that identifiers in the app or its dependencies aren't
+						// accidentally replaced
+						name: 'adapter-node-replace-constants',
+						transform: {
+							filter: { id: new RegExp(escape_regex(entries)) },
+							handler(code) {
+								return code
+									.replace(/\bENV_PREFIX\b/g, JSON.stringify(envPrefix))
+									.replace(/\bPRECOMPRESS\b/g, JSON.stringify(precompress));
+							}
+						}
+					}
+				]
 			});
 
 			await bundle.write({
-				dir: `${out}/server`,
+				dir: out,
 				format: 'esm',
 				sourcemap: true,
-				chunkFileNames: 'chunks/[name]-[hash].js'
-			});
-
-			builder.copy(files, out, {
-				replace: {
-					ENV: './env.js',
-					HANDLER: './handler.js',
-					MANIFEST: './server/manifest.js',
-					SERVER: './server/index.js',
-					ENV_PREFIX: JSON.stringify(envPrefix),
-					PRECOMPRESS: JSON.stringify(precompress)
-				}
+				chunkFileNames: 'server/chunks/[name]-[hash].js'
 			});
 
 			if (builder.hasServerInstrumentationFile()) {
 				builder.instrument({
 					entrypoint: `${out}/index.js`,
-					instrumentation: `${out}/server/instrumentation.server.js`,
+					instrumentation: `${out}/instrumentation.server.js`,
 					module: {
 						exports: ['path', 'host', 'port', 'server']
 					}
