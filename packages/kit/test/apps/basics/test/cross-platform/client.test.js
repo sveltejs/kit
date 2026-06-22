@@ -84,15 +84,19 @@ test.describe('a11y', () => {
 
 		await clicknav('[href="/selection/b"]');
 
-		expect(
-			await page.evaluate(() => {
-				const selection = getSelection();
-				if (selection) {
-					return selection.rangeCount;
-				}
-				return -1;
-			})
-		).toBe(0);
+		// the selection is reset in a `setTimeout` that runs after navigation completes,
+		// so we poll until the ranges have been cleared rather than checking immediately
+		await expect
+			.poll(() =>
+				page.evaluate(() => {
+					const selection = getSelection();
+					if (selection) {
+						return selection.rangeCount;
+					}
+					return -1;
+				})
+			)
+			.toBe(0);
 	});
 
 	test('keepfocus works', async ({ page }) => {
@@ -121,6 +125,25 @@ test.describe('a11y', () => {
 			)
 		).toBe('BODY');
 		expect(await page.evaluate(() => document.activeElement?.nodeName)).toBe('BODY');
+	});
+
+	test('blur handler can access data during navigation', async ({ page, app }) => {
+		const errors = /** @type {string[]} */ ([]);
+		page.on('pageerror', (err) => errors.push(err.message));
+
+		await page.goto('/accessibility/blur-during-navigation/page-with-input');
+
+		// Focus the input
+		await page.locator('#blur-input').focus();
+
+		// Navigate away — this triggers blur on the focused input.
+		// Without the fix, data would be nulled before blur fired, causing a TypeError.
+		await app.goto('/accessibility/blur-during-navigation/other');
+
+		expect(errors).toEqual([]);
+
+		// The blur handler should have been able to read data.message
+		expect(await page.evaluate(() => /** @type {any} */ (window).__blur_test_result)).toBe('hello');
 	});
 });
 

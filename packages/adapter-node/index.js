@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { rollup } from 'rollup';
 import { nodeResolve } from '@rollup/plugin-node-resolve';
@@ -49,17 +50,18 @@ export default function (opts = {}) {
 
 			// Copy the entrypoints into `.svelte-kit/adapter-node/entries`,
 			// so that node modules are correctly resolved
-			builder.copy(files, `${tmp}/entries`);
+			const entries = `${tmp}/entries`;
+			builder.copy(files, entries);
 
 			const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
 			const server = builder.getServerDirectory();
 
 			/** @type {Record<string, string>} */
 			const input = {
-				index: `${tmp}/entries/index.js`,
-				env: `${tmp}/entries/env.js`,
-				handler: `${tmp}/entries/handler.js`,
-				shims: `${tmp}/entries/shims.js`
+				index: `${entries}/index.js`,
+				env: `${entries}/env.js`,
+				handler: `${entries}/handler.js`,
+				shims: `${entries}/shims.js`
 			};
 
 			if (builder.hasServerInstrumentationFile?.()) {
@@ -83,6 +85,19 @@ export default function (opts = {}) {
 							if (id === 'MANIFEST') return `${server}/manifest.js`;
 						}
 					},
+					// ensure our entries that use `import.meta.url` resolve to the root
+					// even if their code has been moved to a shared chunk directory
+					// see https://rollupjs.org/plugin-development/#resolveimportmeta
+					{
+						name: 'adapter-node:import-meta-url-current-module',
+						resolveImportMeta(property, { moduleId }) {
+							if (property === 'url' && moduleId.startsWith(entries)) {
+								const module_dir = path.dirname(moduleId);
+								return `new URL('${path.relative(module_dir, entries)}', import.meta.url)`;
+							}
+							return null;
+						}
+					},
 					nodeResolve({
 						preferBuiltins: true,
 						exportConditions: ['node']
@@ -92,7 +107,7 @@ export default function (opts = {}) {
 						// only replace tokens in the adapter's own entrypoints, so that
 						// identifiers like `BASE` in the user's app code or bundled
 						// dependencies aren't accidentally replaced
-						include: [`${tmp}/entries/**`],
+						include: [`${entries}/**`],
 						values: {
 							BASE: JSON.stringify(builder.config.kit.paths.base),
 							ENV_PREFIX: JSON.stringify(envPrefix),
@@ -108,11 +123,21 @@ export default function (opts = {}) {
 				]
 			});
 
+			const server_path_length = server.length + 1;
+
 			await bundle.write({
 				dir: out,
 				format: 'esm',
 				sourcemap: true,
-				chunkFileNames: 'server/chunks/[name]-[hash].js'
+				chunkFileNames: 'server/chunks/[name]-[hash].js',
+				// force the Vite server output to retain their file structure to avoid
+				// a circular import chain
+				// see https://github.com/sveltejs/kit/issues/16092
+				manualChunks(id) {
+					if (id.startsWith(server)) {
+						return id.slice(server_path_length);
+					}
+				}
 			});
 
 			if (builder.hasServerInstrumentationFile?.()) {

@@ -619,7 +619,10 @@ export async function internal_respond(request, options, manifest, state) {
 						invalidated_data_nodes,
 						trailing_slash
 					);
-				} else if (route.endpoint && (!route.page || is_endpoint_request(event))) {
+				} else if (
+					route.endpoint &&
+					(!route.page || (!state.prerendering && is_endpoint_request(event)))
+				) {
 					response = await render_endpoint(event, event_state, await route.endpoint(), state);
 				} else if (route.page) {
 					if (!page_nodes) {

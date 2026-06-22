@@ -1,4 +1,3 @@
-/* global ENV_PREFIX */
 import process from 'node:process';
 
 const expected = new Set([
@@ -20,13 +19,15 @@ const expected = new Set([
 
 const expected_unprefixed = new Set(['LISTEN_PID', 'LISTEN_FDS']);
 
-if (ENV_PREFIX) {
+export const env_prefix = ENV_PREFIX;
+
+if (env_prefix) {
 	for (const name in process.env) {
-		if (name.startsWith(ENV_PREFIX)) {
-			const unprefixed = name.slice(ENV_PREFIX.length);
+		if (name.startsWith(env_prefix)) {
+			const unprefixed = name.slice(env_prefix.length);
 			if (!expected.has(unprefixed)) {
 				throw new Error(
-					`You should change envPrefix (${ENV_PREFIX}) to avoid conflicts with existing environment variables — unexpectedly saw ${name}`
+					`You should change envPrefix (${env_prefix}) to avoid conflicts with existing environment variables — unexpectedly saw ${name}`
 				);
 			}
 		}
@@ -38,7 +39,7 @@ if (ENV_PREFIX) {
  * @param {any} [fallback]
  */
 export function env(name, fallback) {
-	const prefix = expected_unprefixed.has(name) ? '' : ENV_PREFIX;
+	const prefix = expected_unprefixed.has(name) ? '' : env_prefix;
 	const prefixed = prefix + name;
 	return prefixed in process.env ? process.env[prefixed] : fallback;
 }
