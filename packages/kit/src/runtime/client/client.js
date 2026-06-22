@@ -742,17 +742,17 @@ async function initialize(result, target, hydrate) {
 
 /**
  *
- * @param {{
- *   url: URL;
- *   params: Record<string, string>;
- *   branch: Array<BranchNode | undefined>;
- *   errors?: Array<import('types').CSRPageNodeLoader | undefined>;
- *   status: number;
- *   error: App.Error | null;
- *   route: import('types').CSRRoute | null;
- *   form?: Record<string, any> | null;
- *   trailing_slash?: TrailingSlash;
- * }} opts
+ * @param {object} opts
+ * @param {URL} opts.url
+ * @param {Record<string, string>} opts.params
+ * @param {Array<BranchNode | undefined>} opts.branch
+ * @param {Array<import('types').CSRPageNodeLoader | undefined>} [opts.errors]
+ * @param {number} opts.status
+ * @param {App.Error | null} opts.error
+ * @param {import('types').CSRRoute | null} opts.route
+ * @param {Record<string, any> | null} [opts.form]
+ * @param {TrailingSlash} [opts.trailing_slash] the page's trailing slash option
+ * 																							computed before the branch was sliced for the error node
  */
 async function get_navigation_result_from_branch({
 	url,
