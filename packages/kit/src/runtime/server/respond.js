@@ -620,17 +620,25 @@ export async function internal_respond(request, options, manifest, state) {
 						trailing_slash
 					);
 				} else {
-					const endpoint =
+					let endpoint;
+					if (
 						route.endpoint &&
 						(!route.page || (!state.prerendering && is_endpoint_request(event)))
-							? await route.endpoint()
-							: undefined;
-
-					if (
-						endpoint &&
-						// Prefer rendering an existing page if the endpoint has no GET handler
-						(!route.page || method !== 'GET' || endpoint.GET || endpoint.fallback)
 					) {
+						endpoint = await route.endpoint();
+
+						// Can the endpoint handle this request? render_endpoint falls back to
+						// GET for HEAD requests, so account for that.
+						const endpoint_can_handle =
+							endpoint[method] || endpoint.fallback || (method === 'HEAD' && endpoint.GET);
+
+						// Prefer rendering the page if the endpoint can't handle this GET or HEAD request
+						if (route.page && (method === 'GET' || method === 'HEAD') && !endpoint_can_handle) {
+							endpoint = undefined;
+						}
+					}
+
+					if (endpoint) {
 						response = await render_endpoint(event, event_state, endpoint, state);
 					} else if (route.page) {
 						if (!page_nodes) {
@@ -678,7 +686,11 @@ export async function internal_respond(request, options, manifest, state) {
 
 				// If the route contains a page and an endpoint, we need to add a
 				// `Vary: Accept` header to the response because of browser caching
-				if (request.method === 'GET' && route.page && route.endpoint) {
+				if (
+					(request.method === 'GET' || request.method === 'HEAD') &&
+					route.page &&
+					route.endpoint
+				) {
 					const vary = response.headers
 						.get('vary')
 						?.split(',')
