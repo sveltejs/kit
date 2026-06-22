@@ -8,16 +8,18 @@ import { get_cache } from './shared.js';
 import { refresh } from './query.js';
 
 /**
- * In the context of a remote `command` or `form` request, returns an iterable
- * of `{ arg, query }` entries for the refreshes requested by the client, up to
- * the supplied `limit`. Each `query` is a `RemoteQuery` bound to the original
- * client-side cache key, so `refresh()` / `set()` propagate correctly even when
- * the query's schema transforms the input. `arg` is the *validated* argument,
- * i.e. the value after the schema has run (so `InferOutput<Schema>` for queries
- * declared with a Standard Schema).
+ * Inside a remote `command` or `form` callback, returns an iterable of
+ * `{ arg, query }` entries for the query instances the client asked to refresh,
+ * up to the supplied `limit`. Each `query` is a `RemoteQuery` bound to the
+ * original client-side cache key, so `refresh()` / `set()` propagate correctly
+ * even when the query's schema transforms the input. `arg` is the *validated*
+ * argument, i.e. the value after the schema has run (so `InferOutput<Schema>`
+ * for queries declared with a Standard Schema).
  *
  * Arguments that fail validation or exceed `limit` are recorded as failures in
  * the response to the client.
+ * See [Client-requested refreshes](https://svelte.dev/docs/kit/remote-functions#Single-flight-mutations-Client-requested-refreshes)
+ * for usage in a remote `command` or `form`.
  *
  * @example
  * ```ts
@@ -54,14 +56,17 @@ import { refresh } from './query.js';
  * @returns {QueryRequestedResult<Validated, Output>}
  */
 /**
- * In the context of a remote `command` or `form` request, returns an iterable
- * of `{ arg, query }` entries for the reconnects requested by the client, up to
- * the supplied `limit`. Each `query` is a `RemoteLiveQuery` bound to the original
- * client-side cache key, so `reconnect()` propagates correctly even when
- * the query's schema transforms the input. `arg` is the *validated* argument.
+ * Inside a remote `command` or `form` callback, returns an iterable of
+ * `{ arg, query }` entries for the live query instances the client asked to
+ * reconnect, up to the supplied `limit`. Each `query` is a `RemoteLiveQuery`
+ * bound to the original client-side cache key, so `reconnect()` propagates
+ * correctly even when the query's schema transforms the input. `arg` is the
+ * *validated* argument.
  *
  * Arguments that fail validation or exceed `limit` are recorded as failures in
  * the response to the client.
+ * See [Client-requested refreshes](https://svelte.dev/docs/kit/remote-functions#Single-flight-mutations-Client-requested-refreshes)
+ * for usage in a remote `command` or `form`.
  *
  * @example
  * ```ts
