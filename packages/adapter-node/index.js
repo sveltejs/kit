@@ -75,6 +75,10 @@ export default function (opts = {}) {
 					// dependencies could have deep exports, so we need a regex
 					...Object.keys(pkg.dependencies || {}).map((d) => new RegExp(`^${d}(\\/.*)?$`))
 				],
+				// prevent chunks from exporting what our entries already export to
+				// avoid circular dependencies
+				// see https://github.com/sveltejs/kit/issues/16092
+				preserveEntrySignatures: false,
 				plugins: [
 					{
 						name: 'adapter-node:alias',
