@@ -127,9 +127,13 @@ test('missing immutable asset returns 404 with no-store cache-control', async ({
 
 test('valid immutable asset is still cached immutably', async ({ page, request }) => {
 	await page.goto('/');
-	const src = await page.locator('script[src*="/_app/immutable/"]').first().getAttribute('src');
-	expect(src).toBeTruthy();
-	const response = await request.get(src!);
+	// immutable assets are preloaded via <link rel="modulepreload">, not <script src>
+	const href = await page
+		.locator('link[rel="modulepreload"][href*="/_app/immutable/"]')
+		.first()
+		.getAttribute('href');
+	expect(href).toBeTruthy();
+	const response = await request.get(href!.replace(/^\.\//, '/'));
 	expect(response.ok()).toBe(true);
 	expect(response.headers()['cache-control']).toBe('public, immutable, max-age=31536000');
 });
