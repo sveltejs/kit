@@ -224,6 +224,10 @@ export interface PrerenderUnseenRoutesHandler {
 	(details: { routes: string[]; message: string }): void;
 }
 
+export interface PrerenderInvalidUrlHandler {
+	(details: { href: string; referrer: string | null; message: string }): void;
+}
+
 export type PrerenderHttpErrorHandlerValue = 'fail' | 'warn' | 'ignore' | PrerenderHttpErrorHandler;
 export type PrerenderMissingIdHandlerValue = 'fail' | 'warn' | 'ignore' | PrerenderMissingIdHandler;
 export type PrerenderUnseenRoutesHandlerValue =
@@ -236,6 +240,11 @@ export type PrerenderEntryGeneratorMismatchHandlerValue =
 	| 'warn'
 	| 'ignore'
 	| PrerenderEntryGeneratorMismatchHandler;
+export type PrerenderInvalidUrlHandlerValue =
+	| 'fail'
+	| 'warn'
+	| 'ignore'
+	| PrerenderInvalidUrlHandler;
 
 export type PrerenderOption = boolean | 'auto';
 
