@@ -75,8 +75,9 @@ export default function (opts = {}) {
 					// dependencies could have deep exports, so we need a regex
 					...Object.keys(pkg.dependencies || {}).map((d) => new RegExp(`^${d}(\\/.*)?$`))
 				],
-				// helps avoid a circular dependency by preventing chunks from exporting
-				// what our entries already export
+				// prevent chunks from exporting what our entries already export to
+				// avoid circular dependencies
+				// see https://github.com/sveltejs/kit/issues/16092
 				preserveEntrySignatures: false,
 				plugins: [
 					{
@@ -121,6 +122,7 @@ export default function (opts = {}) {
 				chunkFileNames: 'server/chunks/[name]-[hash].js',
 				// force the server build and the adapter-node code to be in separate
 				// chunks to avoid a circular dependency
+				// see https://github.com/sveltejs/kit/issues/16092
 				manualChunks(id) {
 					if (id.startsWith(server)) {
 						return id.slice(server_path_length);
