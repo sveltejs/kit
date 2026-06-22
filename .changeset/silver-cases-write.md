@@ -2,4 +2,4 @@
 '@sveltejs/adapter-node': patch
 ---
 
-fix: correctly resolve client directory
+fix: correctly resolve root directory on the server
