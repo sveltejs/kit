@@ -38,6 +38,10 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
 
+      - name: Build adapter-node files
+        working-directory: packages/adapter-node
+        run: pnpm prepublishOnly
+
       - uses: ./.github/actions/platform-test
         with:
           test-app-dir: packages/adapter-node/test/apps/basic
