@@ -20,9 +20,7 @@
 		"test/utils.js",
 		"tests/**/*.js",
 		"tests/**/*.ts",
-		"utils.js",
 		"./internal.d.ts",
-		"./*.spec.ts",
 		"rollup.config.js"
 	],
 	"exclude": ["smoke.spec_disabled.js"]
