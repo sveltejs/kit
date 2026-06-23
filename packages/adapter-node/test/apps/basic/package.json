@@ -7,7 +7,7 @@
 		"build": "MY_CUSTOM_PORT=5173 vite build",
 		"preview": "MY_CUSTOM_PORT=5173 node build",
 		"prepare": "svelte-kit sync || echo ''",
-		"test": "playwright test"
+		"test:platform": "playwright test"
 	},
 	"devDependencies": {
 		"@playwright/test": "catalog:",
