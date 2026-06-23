@@ -1285,6 +1285,9 @@ export interface NavigationBase {
 	complete: Promise<void>;
 }
 
+/**
+ * The navigation that occurs when the app starts/hydrates
+ */
 export interface NavigationEnter extends NavigationBase {
 	type: 'enter';
 
@@ -1301,6 +1304,9 @@ export interface NavigationEnter extends NavigationBase {
 
 export type NavigationExternal = NavigationGoto | NavigationLeave;
 
+/**
+ * A navigation triggered by a `goto(...)` call or a redirect
+ */
 export interface NavigationGoto extends NavigationBase {
 	type: 'goto';
 
@@ -1312,6 +1318,9 @@ export interface NavigationGoto extends NavigationBase {
 	delta?: undefined;
 }
 
+/**
+ * A navigation triggered by the tab being closed, or the user navigating to a different document
+ */
 export interface NavigationLeave extends NavigationBase {
 	type: 'leave';
 
@@ -1323,6 +1332,9 @@ export interface NavigationLeave extends NavigationBase {
 	delta?: undefined;
 }
 
+/**
+ * A navigation triggered by a `<form method="GET">`
+ */
 export interface NavigationFormSubmit extends NavigationBase {
 	type: 'form';
 
@@ -1339,6 +1351,9 @@ export interface NavigationFormSubmit extends NavigationBase {
 	delta?: undefined;
 }
 
+/**
+ * A navigation triggered by back/forward navigation
+ */
 export interface NavigationPopState extends NavigationBase {
 	type: 'popstate';
 
@@ -1353,6 +1368,9 @@ export interface NavigationPopState extends NavigationBase {
 	event: PopStateEvent;
 }
 
+/**
+ * A navigation triggered by a link click
+ */
 export interface NavigationLink extends NavigationBase {
 	type: 'link';
 
