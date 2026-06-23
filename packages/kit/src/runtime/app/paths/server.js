@@ -1,6 +1,7 @@
 import { base, assets, relative, initial_base } from './internal/server.js';
 import { resolve_route, find_route } from '../../../utils/routing.js';
 import { decode_pathname } from '../../../utils/url.js';
+import { add_data_suffix } from '../../pathname.js';
 import { try_get_request_store } from '@sveltejs/kit/internal/server';
 import { manifest } from '__sveltekit/server';
 import { get_hooks } from '__SERVER__/internal.js';
@@ -26,7 +27,12 @@ export function resolve(id, params) {
 		const store = try_get_request_store();
 
 		if (store && !store.state.prerendering?.fallback) {
-			const after_base = store.event.url.pathname.slice(initial_base.length);
+			// the relative path depth must reflect the URL the browser is actually at, which
+			// for a data request includes the `__data.json` suffix that was stripped during routing
+			const pathname = store.event.isDataRequest
+				? add_data_suffix(store.event.url.pathname)
+				: store.event.url.pathname;
+			const after_base = pathname.slice(initial_base.length);
 			const segments = after_base.split('/').slice(2);
 			const prefix = segments.map(() => '..').join('/') || '.';
 

@@ -1,8 +1,11 @@
 /** @import { RemoteLiveQuery, RemoteLiveQueryFunction, RemoteQuery, RemoteQueryFunction, RequestedResult, QueryRequestedResult, LiveQueryRequestedResult } from '@sveltejs/kit' */
 /** @import { MaybePromise, RemoteAnyQueryInternals } from 'types' */
+import { HttpError } from '@sveltejs/kit/internal';
 import { get_request_store } from '@sveltejs/kit/internal/server';
-import { create_remote_key, parse_remote_arg } from '../../../shared.js';
+import { parse_remote_arg } from '../../../shared.js';
 import { noop } from '../../../../utils/functions.js';
+import { get_cache } from './shared.js';
+import { refresh } from './query.js';
 
 /**
  * In the context of a remote `command` or `form` request, returns an iterable
@@ -95,7 +98,7 @@ import { noop } from '../../../../utils/functions.js';
  * @returns {RequestedResult<Validated, Output>}
  */
 export function requested(query, limit) {
-	const { state } = get_request_store();
+	const { event, state } = get_request_store();
 	const internals = /** @type {RemoteAnyQueryInternals | undefined} */ (
 		/** @type {any} */ (query).__
 	);
@@ -115,15 +118,12 @@ export function requested(query, limit) {
 
 	const requested = state.remote.requested;
 	const payloads = requested?.get(__.id) ?? [];
+
 	// note: don't initialize these maps here -- they will be initialized by the
 	// command/form wrapper when we enter them, and if we initialize them here
 	// we will enable requested(...) in contexts where it shouldn't be allowed,
 	// such as load functions or other server functions
-	const refreshes = state.remote.refreshes;
-	const reconnects = state.remote.reconnects;
-	const store = __.type === 'query_live' ? reconnects : refreshes;
-
-	if (!store) {
+	if (!state.is_in_remote_form_or_command) {
 		throw new Error(
 			'requested(...) can only be called in the context of a command/form remote function'
 		);
@@ -131,6 +131,9 @@ export function requested(query, limit) {
 	const [selected, skipped] = split_limit(payloads, limit);
 
 	/**
+	 * Registers the failure exactly like `.set()` registers a value: the error record
+	 * is serialized to the client (putting the query there into a failed state), and
+	 * subsequent server-side calls of the query with the same argument reject with it.
 	 * @param {string} payload
 	 * @param {unknown} error
 	 */
@@ -138,14 +141,15 @@ export function requested(query, limit) {
 		const promise = Promise.reject(error);
 		promise.catch(noop);
 
-		const key = create_remote_key(__.id, payload);
-		store.set(key, promise);
+		get_cache(__, state)[payload] = promise;
+		refresh(event, state, __, payload, () => promise);
 	};
 
 	for (const payload of skipped) {
 		record_failure(
 			payload,
-			new Error(
+			new HttpError(
+				400,
 				`Requested refresh was rejected because it exceeded requested(${__.name}, ${limit}) limit`
 			)
 		);

@@ -1,6 +1,6 @@
 export default Test;
 type Test = SvelteComponent<$$__sveltets_2_PropsWithChildren<{
-    astring?: string;
+    astring?: string | undefined;
 }, {
     default: {
         astring: string;
@@ -14,12 +14,12 @@ type Test = SvelteComponent<$$__sveltets_2_PropsWithChildren<{
         astring: string;
     };
 }> & {
-    $$bindings?: string;
+    $$bindings?: string | undefined;
 } & {
     astring: string;
 };
 declare const Test: $$__sveltets_2_IsomorphicComponent<$$__sveltets_2_PropsWithChildren<{
-    astring?: string;
+    astring?: string | undefined;
 }, {
     default: {
         astring: string;

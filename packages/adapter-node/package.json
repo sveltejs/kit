@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-node",
-	"version": "5.5.4",
+	"version": "5.5.6",
 	"description": "Adapter for SvelteKit apps that generates a standalone Node server",
 	"keywords": [
 		"adapter",
@@ -35,7 +35,9 @@
 	"scripts": {
 		"dev": "rollup -cw",
 		"build": "rollup -c",
-		"test": "vitest run",
+		"test:unit": "vitest run",
+		"test:e2e": "pnpm build && pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test",
+		"test": "pnpm test:unit && pnpm test:e2e",
 		"check": "tsc",
 		"lint": "prettier --check .",
 		"format": "pnpm lint --write",
@@ -54,6 +56,7 @@
 		"@rollup/plugin-commonjs": "^29.0.0",
 		"@rollup/plugin-json": "^6.1.0",
 		"@rollup/plugin-node-resolve": "^16.0.0",
+		"@rollup/plugin-replace": "^6.0.3",
 		"rollup": "^4.59.0"
 	},
 	"peerDependencies": {

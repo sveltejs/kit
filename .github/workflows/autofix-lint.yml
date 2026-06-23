@@ -28,7 +28,7 @@ jobs:
       - name: Get PR ref
         if: github.event_name != 'workflow_dispatch'
         id: pr
-        uses: actions/github-script@v9
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
             const { data: pull } = await github.rest.pulls.get({
@@ -46,12 +46,12 @@ jobs:
               core.setFailed('PR is from a fork');
             }
             core.setOutput('ref', pull.head.ref);
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         if: github.event_name == 'workflow_dispatch' || steps.pr.outcome == 'success'
         with:
           ref: ${{ github.event_name == 'workflow_dispatch' && github.ref || steps.pr.outputs.ref }}
-      - uses: pnpm/action-setup@v6.0.5
-      - uses: actions/setup-node@v6
+      - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
           node-version: 24
           cache: pnpm
