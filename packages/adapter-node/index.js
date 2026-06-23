@@ -81,6 +81,9 @@ export default function (opts = {}) {
 				resolve: {
 					conditionNames: ['node']
 				},
+				experimental: {
+					nativeMagicString: true
+				},
 				plugins: [
 					{
 						// resolve the app's server and manifest, generated above
@@ -98,11 +101,12 @@ export default function (opts = {}) {
 						transform: {
 							filter: { id: new RegExp(escape_regex(entries)) },
 							handler(_code, _id, { magicString }) {
+								if (!magicString) throw new Error('experimental.nativeMagicString is not enabled');
 								magicString
 									.replace(/\bENV_PREFIX\b/g, JSON.stringify(envPrefix))
 									.replace(/\bPRECOMPRESS\b/g, JSON.stringify(precompress));
 								return {
-									code: magicString.toString(),
+									code: magicString,
 									map: magicString.generateMap().toString()
 								};
 							}
