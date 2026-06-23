@@ -9,6 +9,8 @@ minimumReleaseAgeExclude:
   - prettier-plugin-svelte
   - svelte-check
   - esm-env
+  - imagetools-core
+  - vite-imagetools
 blockExoticSubdeps: true
 linkWorkspacePackages: true
 shellEmulator: true
