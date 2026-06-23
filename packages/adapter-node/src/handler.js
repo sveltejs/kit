@@ -8,7 +8,7 @@ import { Server } from 'SERVER';
 import { manifest, prerendered, base } from 'MANIFEST';
 import { dir } from './dir.js';
 import { env, env_prefix } from './env.js';
-import { parse_as_bytes, parse_origin } from '../utils.js';
+import { parse_as_bytes, parse_origin } from './utils.js';
 
 const server = new Server(manifest);
 
