@@ -34,6 +34,16 @@ function prefixBuiltinModules() {
 	};
 }
 
+/** @param {string} str */
+function posixify(str) {
+	return str.replace(/\\/g, '/');
+}
+
+// The module id `dir.js` resolves to is matched against rolldown module ids.
+// rolldown module ids use the native path separator (backslashes on Windows),
+// so we compare separator-normalized paths to keep the match working cross-platform.
+const dir_id = posixify(resolve(import.meta.dirname, 'src/dir.js'));
+
 /** @type {RolldownOptions} */
 export default {
 	input: {
@@ -53,7 +63,7 @@ export default {
 			groups: [
 				{
 					name: 'dir',
-					test: resolve(import.meta.dirname, 'src/dir.js')
+					test: (id) => posixify(id) === dir_id
 				}
 			]
 		}

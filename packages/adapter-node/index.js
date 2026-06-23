@@ -10,6 +10,11 @@ function escape_regex(str) {
 	return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+/** @param {string} str */
+function posixify(str) {
+	return str.replace(/\\/g, '/');
+}
+
 /** @type {import('./index.js').default} */
 export default function (opts = {}) {
 	const { out = 'build', precompress = true, envPrefix = '' } = opts;
@@ -47,6 +52,11 @@ export default function (opts = {}) {
 			// aren't duplicated. See https://github.com/sveltejs/kit/issues/15755
 			const entries = `${tmp}/entries`;
 			builder.copy(files, entries);
+
+			// The module id `dir.js` resolves to is matched against rolldown module ids.
+			// rolldown module ids use the native path separator (backslashes on Windows),
+			// so we compare separator-normalized paths to keep the match working cross-platform.
+			const dir_id = posixify(resolve(entries, 'dir.js'));
 
 			writeFileSync(
 				`${server}/manifest.js`,
@@ -123,7 +133,7 @@ export default function (opts = {}) {
 					groups: [
 						{
 							name: 'dir',
-							test: resolve(tmp, 'entries/dir.js')
+							test: (id) => posixify(id) === dir_id
 						}
 					]
 				},
