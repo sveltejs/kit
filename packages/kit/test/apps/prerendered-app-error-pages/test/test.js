@@ -15,6 +15,6 @@ test('renders error page after client-side navigation to nonexistent route', asy
 }) => {
 	test.skip(!javaScriptEnabled);
 	await page.goto('/');
-	await Promise.all([page.waitForURL('/nonexistent'), app.goto('/nonexistent').catch(() => {})]);
-	expect(await page.textContent('p')).toBe('This is your custom error page.');
+	await app.goto('/nonexistent').catch(() => {});
+	await expect(page.locator('p')).toHaveText('This is your custom error page.');
 });
