@@ -472,12 +472,12 @@ export function form(id) {
 					return;
 				}
 
-				let name = element.name;
-				if (!name) return;
-
 				if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) {
 					user_edited_text_controls.add(element);
 				}
+
+				let name = element.name;
+				if (!name) return;
 
 				const is_array = name.endsWith('[]');
 				if (is_array) name = name.slice(0, -2);
