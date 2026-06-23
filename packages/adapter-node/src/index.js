@@ -59,8 +59,14 @@ if (socket_activation) {
 		console.log(`Listening on file descriptor ${SD_LISTEN_FDS_START}`);
 	});
 } else {
-	if (path && fs.existsSync(path) && fs.statSync(path).size === 0) {
-		await rm(path);
+	if (path) {
+		try {
+			if (fs.statSync(path).size === 0) {
+				await rm(path);
+			}
+		} catch {
+			// ignore
+		}
 	}
 
 	server.listen({ path, host, port }, () => {
