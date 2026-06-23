@@ -863,6 +863,18 @@ test('creates param matchers', () => {
 	});
 });
 
+test('creates param matchers with parse-only modules', () => {
+	const parsed = path.resolve(cwd, 'params', 'parsed.js');
+	fs.writeFileSync(parsed, 'export function parse(param) { return Number(param); }');
+	try {
+		const { matchers } = create('samples/basic');
+
+		expect(matchers.parsed).toEqual(path.join('params', 'parsed.js'));
+	} finally {
+		fs.unlinkSync(parsed);
+	}
+});
+
 test('errors on param matchers with bad names', () => {
 	const boogaloo = path.resolve(cwd, 'params', 'boo-galoo.js');
 	fs.writeFileSync(boogaloo, '');

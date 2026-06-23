@@ -200,7 +200,7 @@ function update_types(config, routes, route, root, to_delete = new Set()) {
 
 	// returns the predicate of a matcher's type guard - or string if there is no type guard
 	declarations.push(
-		'type MatcherParam<M> = M extends (param : string) => param is (infer U extends string) ? U : string;'
+		'type MatcherParam<M> = M extends { parse: (param: string) => infer R } ? R : M extends { match: (param: string) => param is (infer U extends string) } ? U : string;'
 	);
 
 	declarations.push(
@@ -613,7 +613,7 @@ function generate_params_type(params, outdir, config) {
 			(param) =>
 				`${param.name}${param.optional ? '?' : ''}: ${
 					param.matcher
-						? `MatcherParam<typeof import('${path_to_matcher(param.matcher)}').match>`
+						? `MatcherParam<typeof import('${path_to_matcher(param.matcher)}')>`
 						: 'string'
 				}${param.optional ? ' | undefined' : ''}`
 		)

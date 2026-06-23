@@ -288,7 +288,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, a
 					})
 				),
 				matchers: async () => {
-					/** @type {Record<string, import('@sveltejs/kit').ParamMatcher>} */
+					/** @type {Record<string, import('@sveltejs/kit').ParamMatcherModule>} */
 					const matchers = {};
 
 					for (const key in manifest_data.matchers) {
@@ -296,11 +296,11 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, a
 						const url = path.resolve(root, file);
 						const module = await vite.ssrLoadModule(url, { fixStacktrace: true });
 
-						if (module.match) {
-							matchers[key] = module.match;
-						} else {
-							throw new Error(`${file} does not export a \`match\` function`);
+						if (!module.match && !module.parse) {
+							throw new Error(`${file} must export a \`match\` and/or \`parse\` function`);
 						}
+
+						matchers[key] = { match: module.match, parse: module.parse };
 					}
 
 					return matchers;

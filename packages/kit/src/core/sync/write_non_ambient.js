@@ -98,7 +98,7 @@ function generate_app_types(manifest_data, config) {
 
 		let type = matcher_types.get(matcher);
 		if (!type) {
-			type = `MatcherParam<typeof import('${path_to_matcher(matcher)}').match>`;
+			type = `MatcherParam<typeof import('${path_to_matcher(matcher)}')>`;
 			matcher_types.set(matcher, type);
 		}
 
@@ -239,7 +239,7 @@ function generate_app_types(manifest_data, config) {
 
 	return [
 		'declare module "$app/types" {',
-		'\ttype MatcherParam<M> = M extends (param : string) => param is (infer U extends string) ? U : string;',
+		'\ttype MatcherParam<M> = M extends { parse: (param: string) => infer R } ? R : M extends { match: (param: string) => param is (infer U extends string) } ? U : string;',
 		'',
 		'\texport interface AppTypes {',
 		`\t\tRouteId(): ${manifest_data.routes.map((r) => s(r.id)).join(' | ')};`,

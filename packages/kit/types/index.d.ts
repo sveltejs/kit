@@ -1405,6 +1405,20 @@ declare module '@sveltejs/kit' {
 	export type ParamMatcher = (param: string) => boolean;
 
 	/**
+	 * The shape of a param parser. See [matching](https://svelte.dev/docs/kit/advanced-routing#Matching) for more info.
+	 */
+	export type ParamParser<T = any> = (param: string) => T;
+
+	/**
+	 * A param matcher module can export a `match` function, a `parse` function, or both.
+	 * See [matching](https://svelte.dev/docs/kit/advanced-routing#Matching) for more info.
+	 */
+	export interface ParamMatcherModule {
+		match?: ParamMatcher;
+		parse?: ParamParser;
+	}
+
+	/**
 	 * A single entry yielded by [`requested`](https://svelte.dev/docs/kit/$app-server#requested)
 	 * when called with a regular `query`. `arg` is the validated argument (the input *after*
 	 * the query's schema validated and transformed it, if applicable); `query` is a
@@ -1659,7 +1673,7 @@ declare module '@sveltejs/kit' {
 			remotes: Record<string, () => Promise<any>>;
 			routes: SSRRoute[];
 			prerendered_routes: Set<string>;
-			matchers: () => Promise<Record<string, ParamMatcher>>;
+			matchers: () => Promise<Record<string, ParamMatcherModule>>;
 			/** A `[file]: size` map of all assets imported by server code. */
 			server_assets: Record<string, number>;
 		};

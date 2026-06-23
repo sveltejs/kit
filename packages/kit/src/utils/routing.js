@@ -1,5 +1,4 @@
 import { BROWSER } from 'esm-env';
-import { decode_params } from './url.js';
 
 const param_pattern = /^(\[)?(\.\.\.)?(\w+)(?:=(\w+))?(\])?$/;
 
@@ -137,10 +136,10 @@ export function get_route_segments(route) {
 /**
  * @param {RegExpMatchArray} match
  * @param {import('types').RouteParam[]} params
- * @param {Record<string, import('@sveltejs/kit').ParamMatcher>} matchers
+ * @param {Record<string, import('@sveltejs/kit').ParamMatcherModule>} matchers
  */
 export function exec(match, params, matchers) {
-	/** @type {Record<string, string>} */
+	/** @type {Record<string, any>} */
 	const result = {};
 
 	const values = match.slice(1);
@@ -173,37 +172,53 @@ export function exec(match, params, matchers) {
 			}
 		}
 
-		if (!param.matcher || matchers[param.matcher](value)) {
-			result[param.name] = value;
+		const decoded = decodeURIComponent(value);
 
-			// Now that the params match, reset the buffer if the next param isn't the [...rest]
-			// and the next value is defined, otherwise the buffer will cause us to skip values
-			const next_param = params[i + 1];
-			const next_value = values[i + 1];
-			if (next_param && !next_param.rest && next_param.optional && next_value && param.chained) {
-				buffered = 0;
+		if (param.matcher) {
+			const { match, parse } = matchers[param.matcher];
+
+			if (match && !match(decoded)) {
+				// in the `/[[a=b]]/...` case, if the value didn't satisfy the matcher,
+				// keep track of the number of skipped optional parameters and continue
+				if (param.optional && param.chained) {
+					buffered++;
+					continue;
+				}
+
+				// otherwise, if the matcher returns `false`, the route did not match
+				return;
 			}
 
-			// There are no more params and no more values, but all non-empty values have been matched
-			if (
-				!next_param &&
-				!next_value &&
-				Object.keys(result).length === values_needing_match.length
-			) {
-				buffered = 0;
+			try {
+				result[param.name] = parse ? parse(decoded) : decoded;
+			} catch {
+				// in the `/[[a=b]]/...` case, if the value didn't satisfy the parser,
+				// keep track of the number of skipped optional parameters and continue
+				if (param.optional && param.chained) {
+					buffered++;
+					continue;
+				}
+
+				// otherwise, if the parser threw, the route did not match
+				return;
 			}
-			continue;
+		} else {
+			result[param.name] = decoded;
 		}
 
-		// in the `/[[a=b]]/...` case, if the value didn't satisfy the matcher,
-		// keep track of the number of skipped optional parameters and continue
-		if (param.optional && param.chained) {
-			buffered++;
-			continue;
+		// Now that the params match, reset the buffer if the next param isn't the [...rest]
+		// and the next value is defined, otherwise the buffer will cause us to skip values
+		const next_param = params[i + 1];
+		const next_value = values[i + 1];
+		if (next_param && !next_param.rest && next_param.optional && next_value && param.chained) {
+			buffered = 0;
 		}
 
-		// otherwise, if the matcher returns `false`, the route did not match
-		return;
+		// There are no more params and no more values, but all non-empty values have been matched
+		if (!next_param && !next_value && Object.keys(result).length === values_needing_match.length) {
+			buffered = 0;
+		}
+		continue;
 	}
 
 	if (buffered) return;
@@ -289,8 +304,8 @@ export function has_server_load(node) {
  * @template {{pattern: RegExp, params: import('types').RouteParam[]}} Route
  * @param {string} path - The decoded pathname to match
  * @param {Route[]} routes
- * @param {Record<string, import('@sveltejs/kit').ParamMatcher>} matchers
- * @returns {{ route: Route, params: Record<string, string> } | null}
+ * @param {Record<string, import('@sveltejs/kit').ParamMatcherModule>} matchers
+ * @returns {{ route: Route, params: Record<string, any> } | null}
  */
 export function find_route(path, routes, matchers) {
 	for (const route of routes) {
@@ -301,7 +316,7 @@ export function find_route(path, routes, matchers) {
 		if (matched) {
 			return {
 				route,
-				params: decode_params(matched)
+				params: matched
 			};
 		}
 	}

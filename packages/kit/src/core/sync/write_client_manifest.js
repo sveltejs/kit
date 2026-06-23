@@ -196,8 +196,8 @@ export function write_client_manifest(kit, manifest_data, output, metadata) {
 		for (const key in manifest_data.matchers) {
 			const src = manifest_data.matchers[key];
 
-			imports.push(`import { match as ${key} } from ${s(relative_path(output, src))};`);
-			matchers.push(key);
+			imports.push(`import * as ${key} from ${s(relative_path(output, src))};`);
+			matchers.push(`${key}: { match: ${key}.match, parse: ${key}.parse }`);
 		}
 
 		const module = imports.length

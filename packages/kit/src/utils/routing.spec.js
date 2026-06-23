@@ -299,6 +299,60 @@ describe('exec', () => {
 			expect(actual).toEqual(expected);
 		});
 	}
+
+	test('exec parses params with a parse function', () => {
+		const route = '/items/[id=number]';
+		const { pattern, params } = parse_route_id(route);
+		const match = pattern.exec('/items/42');
+		if (!match) throw new Error('Failed to match');
+
+		const actual = exec(match, params, {
+			number: {
+				parse: (param) => {
+					const n = Number(param);
+					if (!Number.isFinite(n)) throw new Error('not a number');
+					return n;
+				}
+			}
+		});
+
+		expect(actual).toEqual({ id: 42 });
+	});
+
+	test('exec rejects params when parse throws', () => {
+		const route = '/items/[id=number]';
+		const { pattern, params } = parse_route_id(route);
+		const match = pattern.exec('/items/abc');
+		if (!match) throw new Error('Failed to match');
+
+		const actual = exec(match, params, {
+			number: {
+				parse: (param) => {
+					const n = Number(param);
+					if (!Number.isFinite(n)) throw new Error('not a number');
+					return n;
+				}
+			}
+		});
+
+		expect(actual).toBeUndefined();
+	});
+
+	test('exec uses match and parse together', () => {
+		const route = '/items/[id=number]';
+		const { pattern, params } = parse_route_id(route);
+		const match = pattern.exec('/items/42');
+		if (!match) throw new Error('Failed to match');
+
+		const actual = exec(match, params, {
+			number: {
+				match: (param) => /^\d+$/.test(param),
+				parse: (param) => Number(param)
+			}
+		});
+
+		expect(actual).toEqual({ id: 42 });
+	});
 });
 
 describe('resolve_route', () => {
@@ -421,9 +475,9 @@ describe('find_route', () => {
 
 	test('respects matchers', () => {
 		const routes = [create_route('/blog/[slug=word]'), create_route('/blog/[slug]')];
-		/** @type {Record<string, import('@sveltejs/kit').ParamMatcher>} */
+		/** @type {Record<string, import('@sveltejs/kit').ParamMatcherModule>} */
 		const matchers = {
-			word: (param) => /^\w+$/.test(param)
+			word: { match: (param) => /^\w+$/.test(param) }
 		};
 
 		// "hello" matches the word matcher
@@ -433,6 +487,40 @@ describe('find_route', () => {
 		// "hello-world" doesn't match word matcher, falls through to [slug]
 		const result2 = find_route('/blog/hello-world', routes, matchers);
 		assert.equal(result2?.route.id, '/blog/[slug]');
+	});
+
+	test('parses params with a parse function', () => {
+		const routes = [create_route('/items/[id=number]')];
+		/** @type {Record<string, import('@sveltejs/kit').ParamMatcherModule>} */
+		const matchers = {
+			number: {
+				parse: (param) => {
+					const n = Number(param);
+					if (!Number.isFinite(n)) throw new Error('not a number');
+					return n;
+				}
+			}
+		};
+
+		const result = find_route('/items/42', routes, matchers);
+		assert.equal(result?.params.id, 42);
+	});
+
+	test('rejects params when parse throws', () => {
+		const routes = [create_route('/items/[id=number]')];
+		/** @type {Record<string, import('@sveltejs/kit').ParamMatcherModule>} */
+		const matchers = {
+			number: {
+				parse: (param) => {
+					const n = Number(param);
+					if (!Number.isFinite(n)) throw new Error('not a number');
+					return n;
+				}
+			}
+		};
+
+		const result = find_route('/items/abc', routes, matchers);
+		assert.equal(result, null);
 	});
 
 	test('decodes params', () => {
