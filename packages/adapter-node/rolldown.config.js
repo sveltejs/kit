@@ -39,7 +39,6 @@ export default {
 		index: 'src/index.js',
 		env: 'src/env.js',
 		handler: 'src/handler.js',
-		shims: 'src/shims.js',
 		utils: 'utils.js'
 	},
 	output: {
