@@ -6,12 +6,6 @@ inputs:
     description: 'The Node version to install'
     required: true
     default: '24'
-    type: choice
-    options:
-      - 18
-      - 20
-      - 22
-      - 24
 
 runs:
   using: 'composite'
@@ -28,6 +22,7 @@ runs:
       run: pnpm install --frozen-lockfile
 
     - name: setup overrides for inputs.node-version
+      shell: bash
       if: ${{ inputs.node-version == '18' }}
       run:
         | # copies catalogs.node-xx to overrides in pnpm-workspace.yaml so the subsequent `pnpm install` enforces them
