@@ -94,7 +94,9 @@ export function form(id) {
 		let enhance_callback = async (instance) => {
 			if (await instance.submit()) {
 				await tick();
-				instance.element.reset();
+				if (!issues.$) {
+					input = read_default_values(instance.element, capture);
+				}
 			}
 		};
 
@@ -103,6 +105,9 @@ export function form(id) {
 
 		/** @type {Record<string, boolean>} */
 		let touched = {};
+
+		/** @type {Record<string, any> | undefined} */
+		let capture = undefined;
 
 		let submitted = false;
 
@@ -406,6 +411,7 @@ export function form(id) {
 				}
 
 				submitted = true;
+				capture = convert(form_data);
 
 				try {
 					// Increment pending count immediately so that `pending` reflects
@@ -508,12 +514,10 @@ export function form(id) {
 				touched[name] = true;
 			};
 
-			const handle_reset = async () => {
-				// need to wait a moment, because the `reset` event occurs before
-				// the inputs are actually updated (so that it can be cancelled)
-				await tick();
-
-				input = convert_formdata(new FormData(form));
+			/** @param {Event} e */
+			const handle_reset = (e) => {
+				e.preventDefault();
+				input = read_default_values(form, undefined);
 			};
 
 			form.addEventListener('submit', handle_submit);
@@ -768,4 +772,124 @@ function validate_form_data(form_data, enctype) {
 			}
 		}
 	}
+}
+
+/**
+ * Looks up a DOM element name in submitted_data, normalizing the name the same
+ * way convert_formdata does (stripping n:/b: prefixes and [] suffix, handling
+ * nested dotted paths like "address.street").
+ * @param {Record<string, any> | undefined} submitted_data
+ * @param {string} dom_name
+ * @returns {any}
+ */
+function get_submitted(submitted_data, dom_name) {
+	if (!submitted_data) return undefined;
+
+	let name = dom_name;
+	if (name.endsWith('[]')) name = name.slice(0, -2);
+	if (name.startsWith('n:')) name = name.slice(2);
+	else if (name.startsWith('b:')) name = name.slice(2);
+
+	const path = name.split(/\.|\[|\]/).filter(Boolean);
+	let current = submitted_data;
+	for (const key of path) {
+		if (current == null || typeof current !== 'object') return undefined;
+		current = current[key];
+	}
+	return current;
+}
+
+/**
+ * Resets a form to its default state, optionally using submitted_data to
+ * preserve values that were set before submission.
+ * @param {HTMLFormElement} form
+ * @param {Record<string, any>} [submitted_data]
+ * @returns {Record<string, any>}
+ */
+function read_default_values(form, submitted_data) {
+	/** @type {FormData} */
+	const fd = new FormData();
+
+	/** @type {Set<string>} */
+	const radio_names = new Set();
+
+	for (const element of form.elements) {
+		const tagName = element.tagName;
+		if (tagName !== 'INPUT' && tagName !== 'SELECT' && tagName !== 'TEXTAREA') continue;
+
+		const name = /** @type {HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement} */ (element)
+			.name;
+		if (!name) continue;
+
+		if (tagName === 'SELECT') {
+			const select = /** @type {HTMLSelectElement} */ (element);
+
+			// An option with `defaultSelected && !disabled` is a genuine declared
+			// default — respect it, like `defaultValue` for text inputs. A disabled
+			// placeholder (<option selected disabled>) only sets the initial render
+			// and should not be restored after submit.
+			const default_options = Array.from(select.options).filter(
+				(opt) => opt.defaultSelected && !opt.disabled
+			);
+
+			if (select.multiple) {
+				if (default_options.length > 0) {
+					for (const opt of default_options) fd.append(name, opt.value);
+				} else {
+					const submitted = get_submitted(submitted_data, name);
+					if (submitted !== undefined) {
+						const values = Array.isArray(submitted) ? submitted : [submitted];
+						for (const val of values) fd.append(name, val);
+					} else {
+						for (const option of select.options) {
+							if (option.selected) fd.append(name, option.value);
+						}
+					}
+				}
+			} else {
+				if (default_options.length > 0) {
+					fd.append(name, default_options[0].value);
+				} else {
+					const submitted = get_submitted(submitted_data, name);
+					if (submitted !== undefined) {
+						// No usable default — preserve the submitted value, captured at submit
+						// time to avoid race conditions with reactive DOM re-renders
+						// (https://github.com/sveltejs/kit/issues/16093)
+						fd.append(name, submitted);
+					} else {
+						fd.append(name, select.value);
+					}
+				}
+			}
+		} else if (tagName === 'TEXTAREA') {
+			fd.append(name, /** @type {HTMLTextAreaElement} */ (element).defaultValue);
+		} else if (tagName === 'INPUT') {
+			const input_el = /** @type {HTMLInputElement} */ (element);
+			const type = input_el.type;
+
+			if (
+				type === 'file' ||
+				type === 'submit' ||
+				type === 'reset' ||
+				type === 'button' ||
+				type === 'image'
+			)
+				continue;
+
+			if (type === 'checkbox') {
+				if (input_el.defaultChecked) {
+					fd.append(name, input_el.value);
+				}
+			} else if (type === 'radio') {
+				if (input_el.defaultChecked && !radio_names.has(name)) {
+					radio_names.add(name);
+					fd.append(name, input_el.value);
+				}
+			} else {
+				fd.append(name, input_el.defaultValue);
+			}
+		}
+	}
+
+	return convert_formdata(fd);
 }

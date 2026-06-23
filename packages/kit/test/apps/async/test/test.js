@@ -667,6 +667,64 @@ test.describe('remote functions', () => {
 		await page.fill('input', 'hello');
 		await expect(page.locator('select')).toHaveValue('one');
 	});
+	test('select reset behavior after remote submit', async ({ page, javaScriptEnabled }) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/form/select-reset');
+
+		// Assert initial states
+		await expect(page.locator('select[name="normal"]')).toHaveValue('');
+		await expect(page.locator('select[name="with_default"]')).toHaveValue('js');
+		await expect(page.locator('select[name="disabled_default"]')).toHaveValue('');
+		await expect(page.locator('select[name="multiple[]"]')).toHaveValues(['js', 'ts']);
+
+		// Change all selects to non-default values
+		await page.locator('select[name="normal"]').selectOption('ts');
+		await page.locator('select[name="with_default"]').selectOption('ts');
+		await page.locator('select[name="disabled_default"]').selectOption('ts');
+		await page.locator('select[name="multiple[]"]').selectOption(['py']);
+
+		// Submit once
+		await page.locator('button[type="submit"]').click();
+
+		// normal: no declared default → preserves submitted value
+		await expect(page.locator('select[name="normal"]')).toHaveValue('ts');
+
+		// with_default: has genuine default (non-disabled <option selected>) → resets
+		await expect(page.locator('select[name="with_default"]')).toHaveValue('js');
+
+		// disabled_default: disabled placeholder is not a genuine default → preserves submitted value
+		await expect(page.locator('select[name="disabled_default"]')).toHaveValue('ts');
+
+		// multiple: has genuine defaults → resets
+		await expect(page.locator('select[name="multiple[]"]')).toHaveValues(['js', 'ts']);
+	});
+	test('select reset behavior after native form.reset()', async ({ page, javaScriptEnabled }) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/form/select-reset');
+
+		// Change all selects to non-default values
+		await page.locator('select[name="normal"]').selectOption('ts');
+		await page.locator('select[name="with_default"]').selectOption('ts');
+		await page.locator('select[name="disabled_default"]').selectOption('ts');
+		await page.locator('select[name="multiple[]"]').selectOption(['py']);
+
+		// Trigger native form reset
+		await page.locator('button[type="reset"]').click();
+
+		// normal: no declared default, no submitted data → preserves current DOM value
+		await expect(page.locator('select[name="normal"]')).toHaveValue('ts');
+
+		// with_default: has genuine default → resets
+		await expect(page.locator('select[name="with_default"]')).toHaveValue('js');
+
+		// disabled_default: disabled placeholder is not a genuine default → preserves current DOM value
+		await expect(page.locator('select[name="disabled_default"]')).toHaveValue('ts');
+
+		// multiple: has genuine defaults → resets
+		await expect(page.locator('select[name="multiple[]"]')).toHaveValues(['js', 'ts']);
+	});
 	test('file uploads work', async ({ page }) => {
 		await page.goto('/remote/form/file-upload');
 
