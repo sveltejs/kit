@@ -1457,10 +1457,13 @@ async function load_root_error_page({ status, error, url, route }) {
 				}
 
 				server_data_node = server_data.nodes[0] ?? null;
-			} catch {
+			} catch (e) {
 				// at this point we have no choice but to fall back to the server, if it wouldn't
 				// bring us right back here, turning this into an endless loop
-				if (url.origin !== origin || url.pathname !== location.pathname || hydrated) {
+				if (
+					!(e instanceof HttpError && e.status === 404) &&
+					(url.origin !== origin || url.pathname !== location.pathname || hydrated)
+				) {
 					return await native_navigation(url);
 				}
 			}
