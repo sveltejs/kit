@@ -1,4 +1,4 @@
-name: Platform Tests (Vercel)
+name: Platform Tests (Node)
 
 on:
   workflow_dispatch:
@@ -25,21 +25,23 @@ jobs:
   test-basic:
     if: github.repository == 'sveltejs/kit'
     runs-on: ubuntu-latest
-    timeout-minutes: 15
-    environment: '@sveltejs/adapter-vercel platform tests'
+    strategy:
+      matrix:
+        node-version: [18, 20, 22, 24]
+    environment: '@sveltejs/adapter-node platform tests'
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           ref: ${{ inputs.sha || github.sha }}
 
-      - uses: ./.github/actions/vercel-deploy
-        id: deploy
+      - uses: ./.github/actions/node-setup
         with:
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_BASIC }}
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          node-version: ${{ matrix.node-version }}
+
+      - name: Build adapter-node files
+        working-directory: packages/adapter-node
+        run: pnpm prepublishOnly
 
       - uses: ./.github/actions/platform-test
         with:
-          test-app-dir: packages/adapter-vercel/test/apps/basic
-          deployment-url: ${{ steps.deploy.outputs.deployment-url }}
+          test-app-dir: packages/adapter-node/test/apps/basic

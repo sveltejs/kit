@@ -7,7 +7,6 @@ inputs:
     required: true
   deployment-url:
     description: 'URL of the deployed preview to test against'
-    required: true
 
 runs:
   using: 'composite'
