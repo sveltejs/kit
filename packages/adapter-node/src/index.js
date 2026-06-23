@@ -3,7 +3,7 @@ import process from 'node:process';
 import { handler } from './handler.js';
 import { env, timeout_env } from './env.js';
 import polka from 'polka';
-import { format_listening_address } from '../utils.js';
+import { format_listening_address } from './utils.js';
 
 export const path = env('SOCKET_PATH', false);
 export const host = env('HOST', '0.0.0.0');

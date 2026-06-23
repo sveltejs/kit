@@ -1,4 +1,5 @@
 import { readFileSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { rolldown } from 'rolldown';
 
@@ -47,6 +48,8 @@ export default function (opts = {}) {
 			const entries = `${tmp}/entries`;
 			builder.copy(files, entries);
 
+			const dir_id = join(entries, 'dir.js');
+
 			writeFileSync(
 				`${server}/manifest.js`,
 				[
@@ -80,6 +83,9 @@ export default function (opts = {}) {
 				resolve: {
 					conditionNames: ['node']
 				},
+				experimental: {
+					nativeMagicString: true
+				},
 				plugins: [
 					{
 						// resolve the app's server and manifest, generated above
@@ -96,30 +102,36 @@ export default function (opts = {}) {
 						name: 'adapter-node-replace-constants',
 						transform: {
 							filter: { id: new RegExp(escape_regex(entries)) },
-							handler(code) {
-								return code
+							handler(_code, _id, { magicString }) {
+								if (!magicString) throw new Error('experimental.nativeMagicString is not enabled');
+								magicString
 									.replace(/\bENV_PREFIX\b/g, JSON.stringify(envPrefix))
 									.replace(/\bPRECOMPRESS\b/g, JSON.stringify(precompress));
+								return {
+									code: magicString,
+									map: magicString.generateMap().toString()
+								};
 							}
 						}
 					}
 				]
 			});
 
-			const server_path_length = server.length + 1;
-
 			await bundle.write({
 				dir: out,
 				format: 'esm',
 				sourcemap: true,
-				chunkFileNames: 'server/chunks/[name]-[hash].js',
-				// force the Vite server output to retain their file structure to avoid
-				// a circular import chain
-				// see https://github.com/sveltejs/kit/issues/16092
-				manualChunks(id) {
-					if (id.startsWith(server)) {
-						return id.slice(server_path_length);
-					}
+				codeSplitting: {
+					groups: [
+						{
+							name: 'dir',
+							test: dir_id
+						}
+					]
+				},
+				chunkFileNames(chunk) {
+					if (chunk.name === 'dir') return '[name].js';
+					return 'server/chunks/[name]-[hash].js';
 				}
 			});
 

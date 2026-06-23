@@ -6,8 +6,9 @@ import { parse as polka_url_parser } from '@polka/url';
 import { getRequest, setResponse, createReadableStream } from '@sveltejs/kit/node';
 import { Server } from 'SERVER';
 import { manifest, prerendered, base } from 'MANIFEST';
-import { dir, env, env_prefix } from './env.js';
-import { parse_as_bytes, parse_origin } from '../utils.js';
+import { dir } from './dir.js';
+import { env, env_prefix } from './env.js';
+import { parse_as_bytes, parse_origin } from './utils.js';
 
 const server = new Server(manifest);
 
