@@ -1,5 +1,20 @@
 # @sveltejs/adapter-node
 
+## 5.5.6
+### Patch Changes
+
+
+- fix: avoid circular dependency between server initialisation and hook retrieval that causes the app to crash on start ([#16115](https://github.com/sveltejs/kit/pull/16115))
+
+
+- fix: correctly resolve root directory on the server ([#16114](https://github.com/sveltejs/kit/pull/16114))
+
+
+- fix: ensure `ENV_PREFIX` is defined ([#16106](https://github.com/sveltejs/kit/pull/16106))
+
+- Updated dependencies [[`cf15fa0`](https://github.com/sveltejs/kit/commit/cf15fa0f695f6059214bd3fa2c9b18a1f49efb20), [`5c76121`](https://github.com/sveltejs/kit/commit/5c76121be6e4bd7265d31b5821decebb372c3b75), [`2992e17`](https://github.com/sveltejs/kit/commit/2992e172bccd57bc137667c57e98e6710512d844)]:
+  - @sveltejs/kit@2.67.0
+
 ## 5.5.5
 ### Patch Changes
 

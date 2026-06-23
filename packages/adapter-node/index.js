@@ -49,17 +49,18 @@ export default function (opts = {}) {
 
 			// Copy the entrypoints into `.svelte-kit/adapter-node/entries`,
 			// so that node modules are correctly resolved
-			builder.copy(files, `${tmp}/entries`);
+			const entries = `${tmp}/entries`;
+			builder.copy(files, entries);
 
 			const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
 			const server = builder.getServerDirectory();
 
 			/** @type {Record<string, string>} */
 			const input = {
-				index: `${tmp}/entries/index.js`,
-				env: `${tmp}/entries/env.js`,
-				handler: `${tmp}/entries/handler.js`,
-				shims: `${tmp}/entries/shims.js`
+				index: `${entries}/index.js`,
+				env: `${entries}/env.js`,
+				handler: `${entries}/handler.js`,
+				shims: `${entries}/shims.js`
 			};
 
 			if (builder.hasServerInstrumentationFile?.()) {
@@ -92,7 +93,7 @@ export default function (opts = {}) {
 						// only replace tokens in the adapter's own entrypoints, so that
 						// identifiers like `BASE` in the user's app code or bundled
 						// dependencies aren't accidentally replaced
-						include: [`${tmp}/entries/**`],
+						include: [`${entries}/**`],
 						values: {
 							BASE: JSON.stringify(builder.config.kit.paths.base),
 							ENV_PREFIX: JSON.stringify(envPrefix),
@@ -108,11 +109,21 @@ export default function (opts = {}) {
 				]
 			});
 
+			const server_path_length = server.length + 1;
+
 			await bundle.write({
 				dir: out,
 				format: 'esm',
 				sourcemap: true,
-				chunkFileNames: 'server/chunks/[name]-[hash].js'
+				chunkFileNames: 'server/chunks/[name]-[hash].js',
+				// force the Vite server output to retain their file structure to avoid
+				// a circular import chain
+				// see https://github.com/sveltejs/kit/issues/16092
+				manualChunks(id) {
+					if (id.startsWith(server)) {
+						return id.slice(server_path_length);
+					}
+				}
 			});
 
 			if (builder.hasServerInstrumentationFile?.()) {

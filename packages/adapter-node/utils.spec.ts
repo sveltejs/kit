@@ -1,5 +1,5 @@
 import { expect, test, describe } from 'vitest';
-import { format_listening_address, parse_as_bytes, parse_origin } from '../utils.js';
+import { format_listening_address, parse_as_bytes, parse_origin } from './utils.js';
 
 describe('parse_as_bytes', () => {
 	test.each([
