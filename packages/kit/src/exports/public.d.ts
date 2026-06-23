@@ -1265,12 +1265,7 @@ export interface NavigationBase {
 	 * - `popstate`: Navigation was triggered by back/forward navigation
 	 * - `link`: Navigation was triggered by a link click
 	 */
-	type:
-		| NavigationEnter['type']
-		| NavigationExternal['type']
-		| NavigationFormSubmit['type']
-		| NavigationPopState['type']
-		| NavigationLink['type'];
+	type: 'enter' | 'goto' | 'leave' | 'form' | 'popstate' | 'link';
 	/**
 	 * Where navigation was triggered from
 	 */
