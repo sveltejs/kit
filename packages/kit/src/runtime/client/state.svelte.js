@@ -1,4 +1,4 @@
-import { version } from '__sveltekit/environment';
+import { version } from '$app/env';
 import { assets } from '$app/paths';
 import { BROWSER, DEV } from 'esm-env';
 
