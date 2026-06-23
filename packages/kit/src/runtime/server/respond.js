@@ -627,14 +627,12 @@ export async function internal_respond(request, options, manifest, state) {
 					) {
 						endpoint = await route.endpoint();
 
-						// Can the endpoint handle this request? render_endpoint falls back to
-						// GET for HEAD requests, so account for that.
-						const endpoint_can_handle =
-							endpoint[method] || endpoint.fallback || (method === 'HEAD' && endpoint.GET);
-
 						// Prefer rendering the page if the endpoint can't handle this GET or HEAD request
-						if (route.page && (method === 'GET' || method === 'HEAD') && !endpoint_can_handle) {
-							endpoint = undefined;
+						if (route.page && (method === 'GET' || method === 'HEAD')) {
+							const endpoint_can_handle = !!(endpoint.GET || endpoint.fallback || (method === 'HEAD' && endpoint.HEAD));
+							if (!endpoint_can_handle) {
+								endpoint = undefined;
+							}
 						}
 					}
 
