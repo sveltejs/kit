@@ -48,7 +48,7 @@ export default function (opts = {}) {
 			builder.copy(files, entries);
 
 			writeFileSync(
-				`${tmp}/manifest.js`,
+				`${server}/manifest.js`,
 				[
 					`export const manifest = ${builder.generateManifest({ relativePath: './' })};`,
 					`export const prerendered = new Set(${JSON.stringify(builder.prerendered.paths)});`,
@@ -86,7 +86,7 @@ export default function (opts = {}) {
 						name: 'adapter-node-resolve-app',
 						resolveId(id) {
 							if (id === 'SERVER') return `${server}/index.js`;
-							if (id === 'MANIFEST') return `${tmp}/manifest.js`;
+							if (id === 'MANIFEST') return `${server}/manifest.js`;
 						}
 					},
 					{

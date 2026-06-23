@@ -70,6 +70,7 @@ export default [
 			'packages/adapter-cloudflare/test/apps/**/*',
 			'packages/adapter-netlify/test/apps/**/*',
 			'packages/adapter-node/smoke.spec_disabled.js',
+			'packages/adapter-node/test/apps/**/*',
 			'packages/adapter-static/test/apps/**/*',
 			'packages/adapter-vercel/test/apps/**/*',
 			'packages/kit/src/core/sync/create_manifest_data/test/samples/**/*',
