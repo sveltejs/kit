@@ -566,8 +566,8 @@ export function form(id) {
 				user_edited_text_controls = new WeakSet();
 			};
 
-			form.addEventListener('input', handle_input);
 			form.addEventListener('submit', handle_submit);
+			form.addEventListener('input', handle_input);
 			form.addEventListener('reset', handle_reset);
 
 			return () => {
