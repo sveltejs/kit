@@ -1,6 +1,7 @@
 /** @import { Plugin, RolldownOptions } from 'rolldown' */
 import { builtinModules } from 'node:module';
 import { rmSync } from 'node:fs';
+import { resolve } from 'node:path';
 
 /**
  * @param {string} filepath
@@ -37,19 +38,24 @@ function prefixBuiltinModules() {
 export default {
 	input: {
 		index: 'src/index.js',
-		env: 'src/env.js',
 		handler: 'src/handler.js',
-		utils: 'utils.js'
+		env: 'src/env.js'
 	},
 	output: {
 		dir: 'files',
 		format: 'esm',
 		hoistTransitiveImports: false,
-		chunkFileNames: 'chunks/[name].js',
-		// prevent the handler code from becoming a shared chunk when both
-		// handler.js and index.js are input entries
-		manualChunks(id) {
-			if (id.includes('node_modules')) return 'vendor';
+		chunkFileNames(chunk) {
+			if (chunk.name === 'dir') return '[name].js';
+			return 'chunks/[name].js';
+		},
+		codeSplitting: {
+			groups: [
+				{
+					name: 'dir',
+					test: resolve(import.meta.dirname, 'src/dir.js')
+				}
+			]
 		}
 	},
 	plugins: [clearOutput('files'), prefixBuiltinModules()],

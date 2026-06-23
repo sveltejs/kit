@@ -1,4 +1,5 @@
 import { readFileSync, writeFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { rolldown } from 'rolldown';
 
@@ -96,30 +97,35 @@ export default function (opts = {}) {
 						name: 'adapter-node-replace-constants',
 						transform: {
 							filter: { id: new RegExp(escape_regex(entries)) },
-							handler(code) {
-								return code
+							handler(_code, _id, { magicString }) {
+								magicString
 									.replace(/\bENV_PREFIX\b/g, JSON.stringify(envPrefix))
 									.replace(/\bPRECOMPRESS\b/g, JSON.stringify(precompress));
+								return {
+									code: magicString.toString(),
+									map: magicString.generateMap().toString()
+								};
 							}
 						}
 					}
 				]
 			});
 
-			const server_path_length = server.length + 1;
-
 			await bundle.write({
 				dir: out,
 				format: 'esm',
 				sourcemap: true,
-				chunkFileNames: 'server/chunks/[name]-[hash].js',
-				// force the Vite server output to retain their file structure to avoid
-				// a circular import chain
-				// see https://github.com/sveltejs/kit/issues/16092
-				manualChunks(id) {
-					if (id.startsWith(server)) {
-						return id.slice(server_path_length);
-					}
+				codeSplitting: {
+					groups: [
+						{
+							name: 'dir',
+							test: resolve(tmp, 'entries/dir.js')
+						}
+					]
+				},
+				chunkFileNames(chunk) {
+					if (chunk.name === 'dir') return '[name].js';
+					return 'server/chunks/[name]-[hash].js';
 				}
 			});
 
