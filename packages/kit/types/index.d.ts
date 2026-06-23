@@ -1221,9 +1221,9 @@ declare module '@sveltejs/kit' {
 	/**
 	 * - `enter`: The app has hydrated/started
 	 * - `form`: The user submitted a `<form method="GET">`
+	 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
 	 * - `leave`: The app is being left either because the tab is being closed or a navigation to a different document is occurring
 	 * - `link`: Navigation was triggered by a link click
-	 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
 	 * - `popstate`: Navigation was triggered by back/forward navigation
 	 */
 	export type NavigationType = 'enter' | 'form' | 'leave' | 'link' | 'goto' | 'popstate';
@@ -1232,13 +1232,13 @@ declare module '@sveltejs/kit' {
 		/**
 		 * The type of navigation:
 		 * - `enter`: The app has hydrated/started
+		 * - `form`: The user submitted a `<form method="GET">`
 		 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
 		 * - `leave`: The app is being left either because the tab is being closed or a navigation to a different document is occurring
-		 * - `form`: The user submitted a `<form method="GET">`
-		 * - `popstate`: Navigation was triggered by back/forward navigation
 		 * - `link`: Navigation was triggered by a link click
+		 * - `popstate`: Navigation was triggered by back/forward navigation
 		 */
-		type: 'enter' | 'goto' | 'leave' | 'form' | 'popstate' | 'link';
+		type: NavigationType;
 		/**
 		 * Where navigation was triggered from
 		 */
