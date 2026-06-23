@@ -1,4 +1,9 @@
+import path from 'node:path';
 import process from 'node:process';
+import { fileURLToPath } from 'node:url';
+
+// since env.js is an entrypoint, `dir` will point to the output directory
+export const dir = path.dirname(fileURLToPath(import.meta.url));
 
 const expected = new Set([
 	'SOCKET_PATH',

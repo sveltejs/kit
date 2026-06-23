@@ -3,12 +3,11 @@ import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import sirv from 'sirv';
-import { fileURLToPath } from 'node:url';
 import { parse as polka_url_parser } from '@polka/url';
 import { getRequest, setResponse, createReadableStream } from '@sveltejs/kit/node';
 import { Server } from 'SERVER';
 import { manifest } from 'MANIFEST';
-import { env, env_prefix } from './env.js';
+import { dir, env, env_prefix } from './env.js';
 import { parse_as_bytes, parse_origin } from '../utils.js';
 
 const prerendered = PRERENDERED;
@@ -31,8 +30,6 @@ if (isNaN(body_size_limit)) {
 		`Invalid BODY_SIZE_LIMIT: '${env('BODY_SIZE_LIMIT')}'. Please provide a numeric value.`
 	);
 }
-
-const dir = path.dirname(fileURLToPath(import.meta.url));
 
 const asset_dir = `${dir}/client${BASE}`;
 
