@@ -575,7 +575,6 @@ export function form(id) {
 				form.removeEventListener('input', handle_input);
 				form.removeEventListener('reset', handle_reset);
 				element = null;
-				preflight_schema = undefined;
 			};
 		};
 
