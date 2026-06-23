@@ -10,6 +10,12 @@ const config = {
 	clearScreen: false,
 	plugins: [
 		sveltekit({
+			adapter: {
+				name: 'test',
+				adapt(builder) {
+					builder.generateEnvModule();
+				}
+			},
 			compilerOptions: {
 				experimental: {
 					async: true

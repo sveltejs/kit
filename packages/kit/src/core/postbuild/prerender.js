@@ -44,13 +44,19 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 	/** @type {import('types').ServerInternalModule} */
 	const internal = await import(pathToFileURL(`${out}/server/internal.js`).href);
 
-	/** @type {import('types').ServerModule} */
-	const { Server } = await import(pathToFileURL(`${out}/server/index.js`).href);
-
 	// configure `import { building } from `$app/env` —
 	// essential we do this before analysing the code
 	internal.set_building();
 	internal.set_prerendering();
+
+	// `set_env` and `Server` live in modules that import the user's `src/env` config. We import them
+	// *after* `set_building()` so that `building`-dependent expressions resolve correctly
+	/** @type {import('__sveltekit/env')} */
+	const { set_env } = await import(pathToFileURL(`${out}/server/env.js`).href);
+	set_env(env);
+
+	/** @type {import('types').ServerModule} */
+	const { Server } = await import(pathToFileURL(`${out}/server/index.js`).href);
 
 	/**
 	 * @template {{message: string}} T
@@ -177,6 +183,14 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 		({ routes }) => {
 			const list = routes.map((id) => `  - ${id}`).join('\n');
 			return `The following routes were marked as prerenderable, but were not prerendered because they were not found while crawling your app:\n${list}\n\nSee the \`handleUnseenRoutes\` option in https://svelte.dev/docs/kit/configuration#prerender for more info.`;
+		}
+	);
+
+	const handle_invalid_url = normalise_error_handler(
+		log,
+		config.prerender.handleInvalidUrl,
+		({ href, referrer }) => {
+			return `Invalid URL ${href}${referrer ? ` (linked from ${referrer})` : ''}`;
 		}
 	);
 
@@ -334,7 +348,11 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 
 		// if it's a 200 HTML response, crawl it. Skip error responses, as we don't save those
 		if (response.ok && config.prerender.crawl && headers['content-type'] === 'text/html') {
-			const { ids, hrefs } = crawl(body.toString(), decoded);
+			const { ids, hrefs, invalid } = crawl(body.toString(), decoded);
+
+			for (const href of invalid) {
+				handle_invalid_url({ href, referrer: decoded });
+			}
 
 			actual_hashlinks.set(decoded, ids);
 
@@ -387,6 +405,12 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 
 		const type = headers['content-type'];
 		const is_html = response_type === REDIRECT || type === 'text/html';
+
+		if (!is_html && response.status === 200 && decoded.slice(config.paths.base.length + 1) === '') {
+			throw new Error(
+				`Cannot prerender a root +server.js that returns a non-HTML response - static hosts always serve an HTML file for \`${config.paths.base || '/'}\``
+			);
+		}
 
 		const file = output_filename(decoded, is_html);
 		const dest = `${config.outDir}/output/prerendered/${category}/${file}`;
@@ -497,10 +521,8 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 		}
 	}
 
-	// the user's remote function modules may reference environment variables,
-	// `read` or the `manifest` at the top-level so we need to set them before
-	// evaluating those modules to avoid potential runtime errors
-	internal.set_env(env);
+	// the user's remote function modules may reference `read` or the `manifest` at the top-level
+	// so we need to set them before evaluating those modules to avoid potential runtime errors
 	internal.set_manifest(manifest);
 	internal.set_read_implementation((file) => createReadableStream(`${out}/server/${file}`));
 

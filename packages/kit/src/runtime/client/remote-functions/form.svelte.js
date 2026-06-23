@@ -52,6 +52,9 @@ export function form(id) {
 	/** @type {Map<any, { count: number, instance: RemoteForm<T, U> }>} */
 	const instances = new Map();
 
+	/** @type {StandardSchemaV1 | null} */
+	let shared_preflight_schema = null;
+
 	/** @param {string | number | boolean} [key] */
 	function create_instance(key) {
 		const action_id_without_key = id;
@@ -89,7 +92,9 @@ export function form(id) {
 		 */
 		let enhance_callback = async (instance) => {
 			if (await instance.submit()) {
-				instance.element.reset();
+				await tick();
+				// We call reset from the prototype to avoid DOM clobbering
+				HTMLFormElement.prototype.reset.call(instance.element);
 			}
 		};
 
@@ -302,7 +307,8 @@ export function form(id) {
 		 */
 		async function preflight(form_data) {
 			const data = convert(form_data);
-			const validated = await preflight_schema?.['~standard'].validate(data);
+			const schema = preflight_schema ?? shared_preflight_schema;
+			const validated = await schema?.['~standard'].validate(data);
 
 			if (validated?.issues) {
 				raw_issues = merge_with_server_issues(
@@ -503,7 +509,6 @@ export function form(id) {
 				form.removeEventListener('input', handle_input);
 				form.removeEventListener('reset', handle_reset);
 				element = null;
-				preflight_schema = undefined;
 			};
 		};
 
@@ -534,9 +539,10 @@ export function form(id) {
 
 					const submission = submit(form_data, true);
 
-					void submission.finally(() => {
+					const decrement = () => {
 						pending_count--;
-					});
+					};
+					void submission.then(decrement, decrement);
 
 					return submission;
 				}
@@ -580,6 +586,11 @@ export function form(id) {
 				/** @type {RemoteForm<T, U>['preflight']} */
 				value: (schema) => {
 					preflight_schema = schema;
+
+					if (key === undefined) {
+						shared_preflight_schema = schema;
+					}
+
 					return instance;
 				}
 			},
@@ -603,8 +614,8 @@ export function form(id) {
 					let array = [];
 
 					const data = convert(form_data);
-
-					const validated = await preflight_schema?.['~standard'].validate(data);
+					const schema = preflight_schema ?? shared_preflight_schema;
+					const validated = await schema?.['~standard'].validate(data);
 
 					if (validate_id !== id) {
 						return;

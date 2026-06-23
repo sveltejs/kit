@@ -22,7 +22,19 @@ import { reserved } from '../env.js';
 import { handle_issues, validate } from '../../exports/internal/env.js';
 
 const pipe = promisify(pipeline);
-const extensions = ['.html', '.js', '.mjs', '.json', '.css', '.svg', '.xml', '.wasm', '.txt'];
+const extensions = [
+	'.html',
+	'.js',
+	'.mjs',
+	'.json',
+	'.css',
+	'.svg',
+	'.xml',
+	'.wasm',
+	'.txt',
+	'.md',
+	'.mdx'
+];
 
 /**
  * Creates the Builder which is passed to adapters for building the application.
@@ -144,7 +156,7 @@ export function create_builder({
 		generateEnvModule() {
 			if (!build_data.client?.uses_env_dynamic_public) return;
 
-			const dest = `${config.kit.outDir}/output/prerendered/dependencies/${config.kit.appDir}/env.js`;
+			const dest = `${config.kit.outDir}/output/prerendered/dependencies/${config.kit.appDir}`;
 			const env = loadEnv(vite_config.mode, config.kit.env.dir, '');
 
 			/** @type {Record<string, any>} */
@@ -161,7 +173,15 @@ export function create_builder({
 
 			handle_issues(issues);
 
-			write(dest, `export const env=${devalue.uneval(values)}`);
+			const payload = devalue.uneval(values);
+
+			write(`${dest}/env.js`, `export const env=${payload}`);
+
+			// service workers aren't ESM yet, so they load dynamic public env vars at runtime
+			// via `importScripts` of this module rather than importing `env.js`
+			if (build_data.service_worker) {
+				write(`${dest}/env.script.js`, `globalThis.__sveltekit_sw={env:${payload}}`);
+			}
 		},
 
 		generateManifest({ relativePath, routes: subset }) {

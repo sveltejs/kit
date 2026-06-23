@@ -21,6 +21,15 @@ test.describe('remote functions', () => {
 		await page.getByRole('button', { name: 'Refresh' }).click();
 		await expect(page.locator('p')).toHaveText('foobaz');
 	});
+
+	test('remote query responses are not cacheable', async ({ page }) => {
+		// the query is kicked off during SSR but fetched by the client after
+		// hydration, so we can observe the response headers on the wire
+		const response_promise = page.waitForResponse((r) => r.url().includes('/_app/remote/'));
+		await page.goto('/remote/query-loading-state');
+		const response = await response_promise;
+		expect(response.headers()['cache-control']).toBe('private, no-store');
+	});
 });
 
 // have to run in serial because commands mutate in-memory data on the server (should fix this at some point)
@@ -759,6 +768,47 @@ test.describe('remote function mutations', () => {
 		await page.click('#reset');
 	});
 
+	test('for await consumers continue receiving values across invalidateAll-triggered reconnects', async ({
+		page
+	}) => {
+		await page.goto('/remote/live');
+		await page.click('#reset');
+		await expect(page.locator('#count')).toHaveText('0');
+
+		await page.click('#start-stream-log');
+		// the first value should be the current value (0)
+		await expect(page.locator('#stream-log')).toHaveText(/0/);
+
+		// invalidateAll() calls reconnect(), which keeps the existing fan-out
+		// open so active `for await` consumers continue receiving values from
+		// the new connection without interruption.
+		await page.click('#run-invalidate-all');
+		await expect(page.locator('#invalidate-state')).toHaveText('resolved');
+
+		// Trigger a new value — the still-attached consumer must see it.
+		// Before the fix the fan-out was replaced, orphaning the subscriber so
+		// this value never arrived and the loop hung.
+		await page.click('#increment');
+		await expect(page.locator('#stream-log')).toContainText('1');
+
+		await page.click('#reset');
+	});
+
+	test('invalidateAll resolves while a live query is offline', async ({ page, context }) => {
+		await page.goto('/remote/live');
+		await page.click('#reset');
+		await expect(page.locator('#connected')).toHaveText('true');
+
+		await context.setOffline(true);
+
+		// reconnect()'s handshake must settle on every #main exit path (here:
+		// offline) so that awaiting invalidateAll() doesn't deadlock.
+		await page.click('#run-invalidate-all');
+		await expect(page.locator('#invalidate-state')).toHaveText(/resolved|rejected/);
+
+		await context.setOffline(false);
+	});
+
 	test('query.live cleans up server iterator on reload', async ({ page }) => {
 		await page.goto('/remote/live');
 		await page.click('#stats');
@@ -779,6 +829,43 @@ test.describe('remote function mutations', () => {
 				return stats.cleanup_count;
 			})
 			.toBeGreaterThan(before_cleanup);
+	});
+
+	test('query.live surfaces mid-stream HttpError and does not reconnect', async ({ page }) => {
+		await page.goto('/remote/live-terminal');
+
+		await expect(page.locator('#value')).toHaveText('0');
+		await expect(page.locator('#connected')).toHaveText('true');
+
+		await page.click('#refresh-connections');
+		await expect(page.locator('#connections')).not.toHaveText('pending');
+		const before = Number(await page.locator('#connections').textContent());
+
+		await page.click('#trigger-error');
+
+		await expect(page.locator('#error')).toHaveText('418 terminal teapot');
+		await expect(page.locator('#connected')).toHaveText('false');
+		await expect(page.locator('#done')).toHaveText('true');
+
+		// A terminal HttpError must not trigger a reconnect — the connection count
+		// should not increase after the failure.
+		await page.waitForTimeout(500);
+		await page.click('#refresh-connections');
+		await expect
+			.poll(async () => Number(await page.locator('#connections').textContent()))
+			.toBe(before);
+	});
+
+	test('query.live navigates on mid-stream redirect', async ({ page }) => {
+		await page.goto('/remote/live-terminal');
+
+		await expect(page.locator('#value')).toHaveText('0');
+		await expect(page.locator('#connected')).toHaveText('true');
+
+		await page.click('#trigger-redirect');
+
+		await expect(page.locator('#redirect-target')).toBeVisible();
+		expect(page.url()).toMatch(/\/remote\/live-terminal\/target$/);
 	});
 
 	test('refreshAll works with schema transforms (number to string)', async ({ page }) => {
@@ -833,6 +920,27 @@ test.describe('remote function mutations', () => {
 		await page.goto('/remote/transport');
 
 		await expect(page.locator('h1')).toHaveText('hello from remote function!');
+	});
+
+	test('denied by hook: transport 403 surfaces as error.status 403 on query resource', async ({
+		page
+	}) => {
+		await page.goto('/remote/transport-status');
+
+		// initial load should succeed and show the value
+		await expect(page.locator('#value')).toHaveText('ok');
+
+		// set the cookie and trigger a refresh; the handle hook blocks remote requests
+		await page.click('#deny-btn');
+
+		// the query resource should report the 403 status from the hook
+		await expect(page.locator('#status')).toHaveText('403');
+
+		// clean up the cookie so other tests aren't affected
+		await page.click('#clear-btn');
+		await page.evaluate(() => {
+			document.cookie = 'deny-remote=; path=/; max-age=0';
+		});
 	});
 
 	test('form.for() with enhance does not duplicate requests', async ({ page }) => {
@@ -967,6 +1075,14 @@ test.describe('remote function mutations', () => {
 		// the developer took control of updates via `.updates()`, so the query
 		// must not have been refreshed by an implicit invalidateAll
 		await expect(count).toHaveText('Count: 0');
+	});
+
+	test('form submission with element id `reset` resets the form', async ({ page }) => {
+		await page.goto('/remote/form/reset-id');
+		await page.locator('[name="message"]').fill('test');
+		await page.click('button');
+		await expect(page.locator('#result')).toHaveText('test');
+		await expect(page.locator('[name="message"]')).toBeEmpty();
 	});
 });
 
