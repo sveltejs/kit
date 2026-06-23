@@ -1230,6 +1230,21 @@ declare module '@sveltejs/kit' {
 
 	export interface NavigationBase {
 		/**
+		 * The type of navigation:
+		 * - `enter`: The app has hydrated/started
+		 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
+		 * - `leave`: The app is being left either because the tab is being closed or a navigation to a different document is occurring
+		 * - `form`: The user submitted a `<form method="GET">`
+		 * - `popstate`: Navigation was triggered by back/forward navigation
+		 * - `link`: Navigation was triggered by a link click
+		 */
+		type:
+			| NavigationEnter['type']
+			| NavigationExternal['type']
+			| NavigationFormSubmit['type']
+			| NavigationPopState['type']
+			| NavigationLink['type'];
+		/**
 		 * Where navigation was triggered from
 		 */
 		from: NavigationTarget | null;
@@ -1249,9 +1264,6 @@ declare module '@sveltejs/kit' {
 	}
 
 	export interface NavigationEnter extends NavigationBase {
-		/**
-		 * - `enter`: The app has hydrated/started
-		 */
 		type: 'enter';
 
 		/**
@@ -1268,9 +1280,6 @@ declare module '@sveltejs/kit' {
 	export type NavigationExternal = NavigationGoto | NavigationLeave;
 
 	export interface NavigationGoto extends NavigationBase {
-		/**
-		 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
-		 */
 		type: 'goto';
 
 		// TODO 3.0 remove this property, so that it only exists when type is 'popstate'
@@ -1282,9 +1291,6 @@ declare module '@sveltejs/kit' {
 	}
 
 	export interface NavigationLeave extends NavigationBase {
-		/**
-		 * - `leave`: The app is being left either because the tab is being closed or a navigation to a different document is occurring
-		 */
 		type: 'leave';
 
 		// TODO 3.0 remove this property, so that it only exists when type is 'popstate'
@@ -1296,9 +1302,6 @@ declare module '@sveltejs/kit' {
 	}
 
 	export interface NavigationFormSubmit extends NavigationBase {
-		/**
-		 * - `form`: The user submitted a `<form method="GET">`
-		 */
 		type: 'form';
 
 		/**
@@ -1315,9 +1318,6 @@ declare module '@sveltejs/kit' {
 	}
 
 	export interface NavigationPopState extends NavigationBase {
-		/**
-		 * - `popstate`: Navigation was triggered by back/forward navigation
-		 */
 		type: 'popstate';
 
 		/**
@@ -1332,9 +1332,6 @@ declare module '@sveltejs/kit' {
 	}
 
 	export interface NavigationLink extends NavigationBase {
-		/**
-		 * - `link`: Navigation was triggered by a link click
-		 */
 		type: 'link';
 
 		/**
