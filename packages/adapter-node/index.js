@@ -1,5 +1,5 @@
 import { readFileSync, writeFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { rolldown } from 'rolldown';
 
@@ -8,11 +8,6 @@ const files = fileURLToPath(new URL('./files', import.meta.url).href);
 /** @param {string} str */
 function escape_regex(str) {
 	return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
-/** @param {string} str */
-function posixify(str) {
-	return str.replace(/\\/g, '/');
 }
 
 /** @type {import('./index.js').default} */
@@ -53,10 +48,7 @@ export default function (opts = {}) {
 			const entries = `${tmp}/entries`;
 			builder.copy(files, entries);
 
-			// The module id `dir.js` resolves to is matched against rolldown module ids.
-			// rolldown module ids use the native path separator (backslashes on Windows),
-			// so we compare separator-normalized paths to keep the match working cross-platform.
-			const dir_id = posixify(resolve(entries, 'dir.js'));
+			const dir_id = join(entries, 'dir.js');
 
 			writeFileSync(
 				`${server}/manifest.js`,
@@ -133,7 +125,7 @@ export default function (opts = {}) {
 					groups: [
 						{
 							name: 'dir',
-							test: (id) => posixify(id) === dir_id
+							test: dir_id
 						}
 					]
 				},

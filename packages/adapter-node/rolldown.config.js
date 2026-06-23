@@ -1,7 +1,7 @@
 /** @import { Plugin, RolldownOptions } from 'rolldown' */
 import { builtinModules } from 'node:module';
 import { rmSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { join } from 'node:path';
 
 /**
  * @param {string} filepath
@@ -34,15 +34,7 @@ function prefixBuiltinModules() {
 	};
 }
 
-/** @param {string} str */
-function posixify(str) {
-	return str.replace(/\\/g, '/');
-}
-
-// The module id `dir.js` resolves to is matched against rolldown module ids.
-// rolldown module ids use the native path separator (backslashes on Windows),
-// so we compare separator-normalized paths to keep the match working cross-platform.
-const dir_id = posixify(resolve(import.meta.dirname, 'src/dir.js'));
+const dir_id = join(import.meta.dirname, 'src', 'dir.js');
 
 /** @type {RolldownOptions} */
 export default {
@@ -63,7 +55,7 @@ export default {
 			groups: [
 				{
 					name: 'dir',
-					test: (id) => posixify(id) === dir_id
+					test: dir_id
 				}
 			]
 		}
