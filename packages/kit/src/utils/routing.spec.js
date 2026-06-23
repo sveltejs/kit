@@ -293,8 +293,8 @@ describe('exec', () => {
 			const match = pattern.exec(path);
 			if (!match) throw new Error(`Failed to match ${path}`);
 			const actual = exec(match, params, {
-				matches: () => true,
-				doesntmatch: () => false
+				matches: { match: () => true },
+				doesntmatch: { match: () => false }
 			});
 			expect(actual).toEqual(expected);
 		});
