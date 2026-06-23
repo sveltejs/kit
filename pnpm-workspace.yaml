@@ -40,13 +40,13 @@ allowBuilds:
 # wouldn't require publishing a new package version
 # see https://github.com/changesets/changesets/issues/1707
 catalog:
-  '@changesets/cli': ^3.0.0-next.2
+  '@changesets/cli': ^3.0.0-next.5
   '@fontsource/libre-barcode-128-text': ^5.1.0
   '@netlify/dev': ^4.11.2
   '@netlify/edge-functions': ^3.0.0
   '@netlify/functions': ^5.0.0
-  '@opentelemetry/sdk-node': ^0.218.0
-  '@opentelemetry/sdk-trace-node': ^2.0.1
+  '@opentelemetry/sdk-node': ^0.219.0
+  '@opentelemetry/sdk-trace-node': ^2.8.0
   '@playwright/test': ^1.60.0
   '@polka/url': ^1.0.0-next.28
   '@rollup/plugin-commonjs': ^29.0.0
@@ -78,8 +78,8 @@ catalog:
   wrangler: ^4.14.3
 
   # unit test deps that should be upgraded together
-  '@vitest/browser-playwright': ^4.1.7
-  vitest: ^4.1.7
+  '@vitest/browser-playwright': ^4.1.8
+  vitest: ^4.1.8
   jsdom: ^26.1.0
 catalogs:
   vite-baseline:
