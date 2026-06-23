@@ -1264,7 +1264,6 @@ export interface NavigationBase {
 
 export interface NavigationEnter extends NavigationBase {
 	/**
-	 * The type of navigation:
 	 * - `enter`: The app has hydrated/started
 	 */
 	type: 'enter';
@@ -1284,7 +1283,6 @@ export type NavigationExternal = NavigationGoto | NavigationLeave;
 
 export interface NavigationGoto extends NavigationBase {
 	/**
-	 * The type of navigation:
 	 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
 	 */
 	type: 'goto';
@@ -1292,7 +1290,6 @@ export interface NavigationGoto extends NavigationBase {
 
 export interface NavigationLeave extends NavigationBase {
 	/**
-	 * The type of navigation:
 	 * - `leave`: The app is being left either because the tab is being closed or a navigation to a different document is occurring
 	 */
 	type: 'leave';
@@ -1300,7 +1297,6 @@ export interface NavigationLeave extends NavigationBase {
 
 export interface NavigationFormSubmit extends NavigationBase {
 	/**
-	 * The type of navigation:
 	 * - `form`: The user submitted a `<form method="GET">`
 	 */
 	type: 'form';
@@ -1313,7 +1309,6 @@ export interface NavigationFormSubmit extends NavigationBase {
 
 export interface NavigationPopState extends NavigationBase {
 	/**
-	 * The type of navigation:
 	 * - `popstate`: Navigation was triggered by back/forward navigation
 	 */
 	type: 'popstate';
@@ -1331,7 +1326,6 @@ export interface NavigationPopState extends NavigationBase {
 
 export interface NavigationLink extends NavigationBase {
 	/**
-	 * The type of navigation:
 	 * - `link`: Navigation was triggered by a link click
 	 */
 	type: 'link';
