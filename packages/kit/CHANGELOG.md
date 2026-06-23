@@ -12,6 +12,12 @@
 
 - feat: allow queries to refresh other queries ([#16012](https://github.com/sveltejs/kit/pull/16012))
 
+## 2.67.0
+### Minor Changes
+
+
+- feat: add `prerender.handleInvalidUrl` option for invalid URLs discovered while crawling ([#16088](https://github.com/sveltejs/kit/pull/16088))
+
 
 ### Patch Changes
 
@@ -112,6 +118,10 @@
 
 
 - chore: remove dependency on `set-cookie-parser` ([#15384](https://github.com/sveltejs/kit/pull/15384))
+- fix: support `exactOptionalPropertyTypes` for optional form schema fields ([#15866](https://github.com/sveltejs/kit/pull/15866))
+
+
+- fix: avoid unnecessarily overriding a user's Vite 8 `codeSplitting` setting ([#16118](https://github.com/sveltejs/kit/pull/16118))
 
 ## 2.66.0
 ### Minor Changes

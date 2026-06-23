@@ -985,6 +985,9 @@ function kit({ svelte_config, adapter }) {
 				throw new Error('Cannot use service worker alongside config.kit.paths.assets');
 			}
 
+			const user_service_worker_output_config =
+				config.environments?.serviceWorker?.build?.rolldownOptions?.output;
+
 			/** @type {import('vite').UserConfig} */
 			const new_config = {
 				environments: {
@@ -998,7 +1001,10 @@ function kit({ svelte_config, adapter }) {
 								output: {
 									entryFileNames: 'service-worker.js',
 									assetFileNames: `${kit.appDir}/immutable/assets/[name].[hash][extname]`,
-									codeSplitting: false
+									codeSplitting:
+										(Array.isArray(user_service_worker_output_config)
+											? user_service_worker_output_config[0].codeSplitting
+											: user_service_worker_output_config?.codeSplitting) ?? false
 								}
 							},
 							outDir: `${out}/client`,
@@ -1356,7 +1362,8 @@ function kit({ svelte_config, adapter }) {
 											format: inline ? 'iife' : 'esm',
 											entryFileNames: `${prefix}/[name].[hash].js`,
 											chunkFileNames: `${prefix}/chunks/[hash].js`,
-											codeSplitting: svelte_config.kit.output.bundleStrategy === 'split'
+											codeSplitting:
+												svelte_config.kit.output.bundleStrategy === 'split' ? undefined : false
 										},
 										// This silences Rolldown warnings about not supporting `import.meta`
 										// for the `iife` output format. We don't care because it's

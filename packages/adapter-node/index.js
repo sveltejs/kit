@@ -36,7 +36,16 @@ export default function (opts = {}) {
 
 			builder.log.minor('Building server');
 
-			builder.writeServer(tmp);
+			const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
+			const server = builder.getServerDirectory();
+
+			// Copy the prebuilt entrypoints into the build directory so that the
+			// adapter's own bundled dependencies resolve correctly, then bundle them
+			// together with the app's server code. Bundling everything in a single
+			// pass means shared modules (e.g. `SvelteKitError` from `@sveltejs/kit`)
+			// aren't duplicated. See https://github.com/sveltejs/kit/issues/15755
+			const entries = `${tmp}/entries`;
+			builder.copy(files, entries);
 
 			writeFileSync(
 				`${tmp}/manifest.js`,
@@ -47,16 +56,6 @@ export default function (opts = {}) {
 				].join('\n\n')
 			);
 
-			const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
-
-			// Copy the prebuilt entrypoints into the build directory so that the
-			// adapter's own bundled dependencies resolve correctly, then bundle them
-			// together with the app's server code. Bundling everything in a single
-			// pass means shared modules (e.g. `SvelteKitError` from `@sveltejs/kit`)
-			// aren't duplicated. See https://github.com/sveltejs/kit/issues/15755
-			const entries = `${tmp}/entries`;
-			builder.copy(files, entries);
-
 			/** @type {Record<string, string>} */
 			const input = {
 				index: `${entries}/index.js`,
@@ -65,7 +64,7 @@ export default function (opts = {}) {
 			};
 
 			if (builder.hasServerInstrumentationFile()) {
-				input['instrumentation.server'] = `${tmp}/instrumentation.server.js`;
+				input['instrumentation.server'] = `${server}/instrumentation.server.js`;
 			}
 
 			// we bundle the Vite output so that deployments only need
@@ -86,7 +85,7 @@ export default function (opts = {}) {
 						// resolve the app's server and manifest, generated above
 						name: 'adapter-node-resolve-app',
 						resolveId(id) {
-							if (id === 'SERVER') return `${tmp}/index.js`;
+							if (id === 'SERVER') return `${server}/index.js`;
 							if (id === 'MANIFEST') return `${tmp}/manifest.js`;
 						}
 					},
@@ -107,11 +106,21 @@ export default function (opts = {}) {
 				]
 			});
 
+			const server_path_length = server.length + 1;
+
 			await bundle.write({
 				dir: out,
 				format: 'esm',
 				sourcemap: true,
-				chunkFileNames: 'server/chunks/[name]-[hash].js'
+				chunkFileNames: 'server/chunks/[name]-[hash].js',
+				// force the Vite server output to retain their file structure to avoid
+				// a circular import chain
+				// see https://github.com/sveltejs/kit/issues/16092
+				manualChunks(id) {
+					if (id.startsWith(server)) {
+						return id.slice(server_path_length);
+					}
+				}
 			});
 
 			if (builder.hasServerInstrumentationFile()) {

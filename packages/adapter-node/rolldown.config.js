@@ -1,9 +1,10 @@
+/** @import { Plugin, RolldownOptions } from 'rolldown' */
 import { builtinModules } from 'node:module';
 import { rmSync } from 'node:fs';
 
 /**
  * @param {string} filepath
- * @returns {import('rolldown').Plugin}
+ * @returns {Plugin}
  */
 function clearOutput(filepath) {
 	return {
@@ -19,7 +20,7 @@ function clearOutput(filepath) {
 }
 
 /**
- * @returns {import('rolldown').Plugin}
+ * @returns {Plugin}
  */
 function prefixBuiltinModules() {
 	return {
@@ -32,17 +33,25 @@ function prefixBuiltinModules() {
 	};
 }
 
+/** @type {RolldownOptions} */
 export default {
 	input: {
 		index: 'src/index.js',
 		env: 'src/env.js',
-		handler: 'src/handler.js'
+		handler: 'src/handler.js',
+		shims: 'src/shims.js',
+		utils: 'utils.js'
 	},
 	output: {
 		dir: 'files',
 		format: 'esm',
 		hoistTransitiveImports: false,
-		chunkFileNames: 'chunks/[hash].js'
+		chunkFileNames: 'chunks/[name].js',
+		// prevent the handler code from becoming a shared chunk when both
+		// handler.js and index.js are input entries
+		manualChunks(id) {
+			if (id.includes('node_modules')) return 'vendor';
+		}
 	},
 	plugins: [clearOutput('files'), prefixBuiltinModules()],
 	// `MANIFEST` and `SERVER` are resolved at adapt time, and `@sveltejs/kit/node`

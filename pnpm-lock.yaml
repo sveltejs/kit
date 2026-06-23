@@ -351,6 +351,24 @@ importers:
         specifier: 'catalog:'
         version: 4.1.7(@opentelemetry/api@1.9.0)(@types/node@22.19.19)(@vitest/browser-playwright@4.1.7)(jsdom@29.1.1)(vite@8.0.16(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
 
+  packages/adapter-node/test/apps/basic:
+    devDependencies:
+      '@playwright/test':
+        specifier: 'catalog:'
+        version: 1.60.0
+      '@sveltejs/kit':
+        specifier: workspace:^
+        version: link:../../../../kit
+      '@sveltejs/vite-plugin-svelte':
+        specifier: 'catalog:'
+        version: 7.0.0(svelte@5.56.3(@typescript-eslint/types@8.59.4))(vite@8.0.16(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
+      svelte:
+        specifier: 'catalog:'
+        version: 5.56.3(@typescript-eslint/types@8.59.4)
+      vite:
+        specifier: 'catalog:'
+        version: 8.0.16(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3)
+
   packages/adapter-static:
     devDependencies:
       '@playwright/test':
@@ -462,9 +480,6 @@ importers:
 
   packages/enhanced-img:
     dependencies:
-      '@rollup/pluginutils':
-        specifier: ^5.3.0
-        version: 5.4.0
       '@sveltejs/vite-plugin-svelte':
         specifier: ^7.0.0
         version: 7.0.0(svelte@5.56.3(@typescript-eslint/types@8.59.4))(vite@8.0.16(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3))
@@ -3031,15 +3046,6 @@ packages:
   '@rolldown/pluginutils@1.0.1':
     resolution: {integrity: sha512-2j9bGt5Jh8hj+vPtgzPtl72j0yRxHAyumoo6TNfAjsLB04UtpSvPbPcDcBMxz7n+9CYB0c1GxQFxYRg2jimqGw==}
 
-  '@rollup/pluginutils@5.1.3':
-    resolution: {integrity: sha512-Pnsb6f32CD2W3uCaLZIzDmeFyQ2b8UWMFI7xtwUezpcGBDVDW6y9XgAWIlARiGAo6eNF5FK5aQTr0LFyNyqq5A==}
-    engines: {node: '>=14.0.0'}
-    peerDependencies:
-      rollup: ^1.20.0||^2.0.0||^3.0.0||^4.0.0
-    peerDependenciesMeta:
-      rollup:
-        optional: true
-
   '@rollup/pluginutils@5.4.0':
     resolution: {integrity: sha512-MfPp06CjRLfXQ3wY0R8vJDYBy/MvVcc9OulEfR0B8Iv9ko+GCNaRZ+EpJYFl27LhKsZK0o420sYCRHCjfCgeUg==}
     engines: {node: '>=14.0.0'}
@@ -5337,10 +5343,6 @@ packages:
     resolution: {integrity: sha512-W/KYk+NFhkmsYpuHq5JykngiOCnxeVL8v8dFnqxSD8qEEdRfXk1SDM6JzNqcERbcGYj9tMrDQBYV9cjgnunFIg==}
     engines: {node: '>=18'}
 
-  tinyglobby@0.2.16:
-    resolution: {integrity: sha512-pn99VhoACYR8nFHhxqix+uvsbXineAasWm5ojXoN8xEwK5Kd3/TrhNn1wByuD52UxWRLy8pu+kRMniEi6Eq9Zg==}
-    engines: {node: '>=12.0.0'}
-
   tinyglobby@0.2.17:
     resolution: {integrity: sha512-wXR/dYpcqKmfWpEdZjiKJOwCNFndD0DMnrW/cYjVGttEkBfVgcLFHoNrlj47mjOVic9yyNu65alsgF4NQyTa2g==}
     engines: {node: '>=12.0.0'}
@@ -6435,7 +6437,7 @@ snapshots:
 
   '@img/sharp-wasm32@0.34.5':
     dependencies:
-      '@emnapi/runtime': 1.10.0
+      '@emnapi/runtime': 1.11.1
     optional: true
 
   '@img/sharp-win32-arm64@0.34.5':
@@ -6516,7 +6518,7 @@ snapshots:
     dependencies:
       jju: 1.4.0
       js-yaml: 4.1.1
-      tinyglobby: 0.2.16
+      tinyglobby: 0.2.17
 
   '@mapbox/node-pre-gyp@2.0.0':
     dependencies:
@@ -7361,12 +7363,6 @@ snapshots:
 
   '@rolldown/pluginutils@1.0.1': {}
 
-  '@rollup/pluginutils@5.1.3':
-    dependencies:
-      '@types/estree': 1.0.8
-      estree-walker: 2.0.2
-      picomatch: 4.0.4
-
   '@rollup/pluginutils@5.4.0':
     dependencies:
       '@types/estree': 1.0.8
@@ -7545,7 +7541,7 @@ snapshots:
       debug: 4.4.3
       minimatch: 10.2.5
       semver: 7.8.0
-      tinyglobby: 0.2.16
+      tinyglobby: 0.2.17
       ts-api-utils: 2.5.0(typescript@5.8.3)
       typescript: 5.8.3
     transitivePeerDependencies:
@@ -7560,7 +7556,7 @@ snapshots:
       debug: 4.4.3
       minimatch: 10.2.5
       semver: 7.8.0
-      tinyglobby: 0.2.16
+      tinyglobby: 0.2.17
       ts-api-utils: 2.5.0(typescript@6.0.3)
       typescript: 6.0.3
     transitivePeerDependencies:
@@ -7585,7 +7581,7 @@ snapshots:
   '@vercel/nft@0.29.4':
     dependencies:
       '@mapbox/node-pre-gyp': 2.0.0
-      '@rollup/pluginutils': 5.1.3
+      '@rollup/pluginutils': 5.4.0
       acorn: 8.16.0
       acorn-import-attributes: 1.9.5(acorn@8.16.0)
       async-sema: 3.1.1
@@ -7604,7 +7600,7 @@ snapshots:
   '@vercel/nft@1.3.2':
     dependencies:
       '@mapbox/node-pre-gyp': 2.0.0
-      '@rollup/pluginutils': 5.1.3
+      '@rollup/pluginutils': 5.4.0
       acorn: 8.16.0
       acorn-import-attributes: 1.9.5(acorn@8.16.0)
       async-sema: 3.1.1
@@ -8189,7 +8185,7 @@ snapshots:
       locate-character: 3.0.0
       magic-string: 0.30.21
       sade: 1.8.1
-      tinyglobby: 0.2.16
+      tinyglobby: 0.2.17
       ts-api-utils: 1.3.0(typescript@6.0.3)
       typescript: 6.0.3
 
@@ -9848,11 +9844,6 @@ snapshots:
 
   tinyexec@1.0.2: {}
 
-  tinyglobby@0.2.16:
-    dependencies:
-      fdir: 6.5.0(picomatch@4.0.4)
-      picomatch: 4.0.4
-
   tinyglobby@0.2.17:
     dependencies:
       fdir: 6.5.0(picomatch@4.0.4)
@@ -10008,7 +9999,7 @@ snapshots:
 
   vite-imagetools@10.0.0(vite@8.0.16(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3)):
     dependencies:
-      '@rollup/pluginutils': 5.1.3
+      '@rollup/pluginutils': 5.4.0
       imagetools-core: 9.1.0
       sharp: 0.34.5
       vite: 8.0.16(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3)
@@ -10051,7 +10042,7 @@ snapshots:
       std-env: 4.1.0
       tinybench: 2.9.0
       tinyexec: 1.0.2
-      tinyglobby: 0.2.16
+      tinyglobby: 0.2.17
       tinyrainbow: 3.1.0
       vite: 8.0.16(@types/node@22.19.19)(esbuild@0.27.3)(jiti@2.4.2)(yaml@2.8.3)
       why-is-node-running: 2.3.0

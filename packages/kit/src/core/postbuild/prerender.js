@@ -186,6 +186,14 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 		}
 	);
 
+	const handle_invalid_url = normalise_error_handler(
+		log,
+		config.prerender.handleInvalidUrl,
+		({ href, referrer }) => {
+			return `Invalid URL ${href}${referrer ? ` (linked from ${referrer})` : ''}`;
+		}
+	);
+
 	const q = queue(config.prerender.concurrency);
 
 	/**
@@ -340,7 +348,11 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 
 		// if it's a 200 HTML response, crawl it. Skip error responses, as we don't save those
 		if (response.ok && config.prerender.crawl && headers['content-type'] === 'text/html') {
-			const { ids, hrefs } = crawl(body.toString(), decoded);
+			const { ids, hrefs, invalid } = crawl(body.toString(), decoded);
+
+			for (const href of invalid) {
+				handle_invalid_url({ href, referrer: decoded });
+			}
 
 			actual_hashlinks.set(decoded, ids);
 

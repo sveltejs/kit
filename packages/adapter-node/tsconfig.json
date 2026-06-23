@@ -16,10 +16,14 @@
 		"rolldown.config.js",
 		"vitest.config.js",
 		"src/**/*.js",
+		"src/**/*.ts",
+		"test/utils.js",
 		"tests/**/*.js",
 		"tests/**/*.ts",
-		"internal.d.ts",
-		"utils.js"
+		"utils.js",
+		"./internal.d.ts",
+		"./*.spec.ts",
+		"rollup.config.js"
 	],
-	"exclude": ["tests/smoke.spec_disabled.js"]
+	"exclude": ["smoke.spec_disabled.js"]
 }
