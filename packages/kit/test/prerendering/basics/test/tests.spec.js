@@ -227,7 +227,7 @@ test('respects config.prerender.origin', () => {
 	expect(content).toMatch('<h2>http://prerender.origin</h2>');
 });
 
-test('$env - includes environment variables', () => {
+test('$app/env - includes environment variables', () => {
 	const content = read('env.html');
 
 	assert.match(

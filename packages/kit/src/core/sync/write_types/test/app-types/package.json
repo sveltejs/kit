@@ -3,7 +3,7 @@
 	"private": true,
 	"type": "module",
 	"devDependencies": {
-		"typescript": "5.8.3"
+		"typescript": "~6.0.0"
 	},
 	"scripts": {
 		"testtypes": "tsc"

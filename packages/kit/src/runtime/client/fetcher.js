@@ -94,14 +94,15 @@ export function initial_fetch(resource, opts) {
 		script.remove(); // In case multiple script tags match the same selector
 		let { body, ...init } = JSON.parse(script.textContent);
 
-		const ttl = script.getAttribute('data-ttl');
-		if (ttl) cache.set(selector, { body, init, ttl: 1000 * Number(ttl) });
 		const b64 = script.getAttribute('data-b64');
 		if (b64 !== null) {
 			// Can't use native_fetch('data:...;base64,${body}')
 			// csp can block the request
 			body = base64_decode(body);
 		}
+
+		const ttl = script.getAttribute('data-ttl');
+		if (ttl) cache.set(selector, { body, init, ttl: 1000 * Number(ttl) });
 
 		return Promise.resolve(new Response(body, init));
 	}

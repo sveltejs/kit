@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 import { assert, expect, test } from 'vitest';
-import { validate_config, load_config } from './index.js';
+import { validate_config, split_config } from './index.js';
 import process from 'node:process';
 
 /**
@@ -68,9 +68,7 @@ const get_defaults = (prefix = '') => ({
 		},
 		embedded: false,
 		env: {
-			dir: process.cwd(),
-			publicPrefix: 'PUBLIC_',
-			privatePrefix: ''
+			dir: process.cwd()
 		},
 		experimental: {
 			tracing: { server: false },
@@ -96,7 +94,7 @@ const get_defaults = (prefix = '') => ({
 		},
 		inlineStyleThreshold: 0,
 		moduleExtensions: ['.js', '.ts'],
-		output: { bundleStrategy: 'split', preloadStrategy: undefined },
+		output: { bundleStrategy: 'split', preloadStrategy: undefined, linkHeaderPreload: false },
 		outDir: join(prefix, '.svelte-kit'),
 		router: {
 			type: 'pathname',
@@ -358,58 +356,6 @@ validate_paths(
 	}
 );
 
-test('load default config (esm)', async () => {
-	const cwd = join(import.meta.dirname, 'fixtures/default');
-
-	const config = await load_config({ cwd });
-	remove_keys(config, ([, v]) => typeof v === 'function');
-
-	const defaults = get_defaults(cwd + '/');
-	defaults.kit.version.name = config.kit.version.name;
-
-	expect(config).toEqual(defaults);
-});
-
-test('load default config (esm) with .ts extensions', async () => {
-	const cwd = join(import.meta.dirname, 'fixtures/typescript');
-
-	const config = await load_config({ cwd });
-	remove_keys(config, ([, v]) => typeof v === 'function');
-
-	const defaults = get_defaults(cwd + '/');
-	defaults.kit.version.name = config.kit.version.name;
-
-	expect(config).toEqual(defaults);
-});
-
-test('load .js config when both .js and .ts configs are present', async () => {
-	const cwd = join(import.meta.dirname, 'fixtures/multiple');
-
-	const config = await load_config({ cwd });
-	remove_keys(config, ([, v]) => typeof v === 'function');
-
-	const defaults = get_defaults(cwd + '/');
-	defaults.kit.version.name = config.kit.version.name;
-
-	expect(config).toEqual(defaults);
-});
-
-test('errors on loading config with incorrect default export', async () => {
-	let message = null;
-
-	try {
-		const cwd = join(import.meta.dirname, 'fixtures', 'export-string');
-		await load_config({ cwd });
-	} catch (/** @type {any} */ e) {
-		message = e.message;
-	}
-
-	assert.equal(
-		message,
-		'The Svelte config file must have a configuration object as its default export. See https://svelte.dev/docs/kit/configuration'
-	);
-});
-
 test('accepts valid tracing values', () => {
 	assert.doesNotThrow(() => {
 		validate_config({
@@ -501,14 +447,70 @@ test('errors on invalid forkPreloads values', () => {
 	}, /^config\.kit\.experimental\.forkPreloads should be true or false, if specified$/);
 });
 
-test('uses src prefix for other kit.files options', async () => {
-	const cwd = join(import.meta.dirname, 'fixtures/custom-src');
+test('split_config keeps SvelteKit options under the `kit` namespace', () => {
+	const adapter = { name: 'test', adapt: () => {} };
+	const { svelte_config, vite_plugin_svelte_config } = split_config({
+		adapter,
+		paths: { base: '/base' },
+		router: { type: 'hash' }
+	});
 
-	const config = await load_config({ cwd });
-	remove_keys(config, ([, v]) => typeof v === 'function');
+	expect(svelte_config.kit).toEqual({
+		adapter,
+		paths: { base: '/base' },
+		router: { type: 'hash' }
+	});
+	expect(vite_plugin_svelte_config).toEqual({});
+});
 
-	const defaults = get_defaults(cwd + '/');
-	defaults.kit.version.name = config.kit.version.name;
+test('split_config forwards unknown (vite-plugin-svelte) options', () => {
+	const dynamicCompileOptions = () => {};
+	const { svelte_config, vite_plugin_svelte_config } = split_config({
+		paths: { base: '/base' },
+		inspector: true,
+		dynamicCompileOptions
+	});
 
-	expect(config.kit.files.lib).toEqual(join(cwd, 'source/lib'));
+	expect(svelte_config.kit).toEqual({ paths: { base: '/base' } });
+	expect(vite_plugin_svelte_config).toEqual({ inspector: true, dynamicCompileOptions });
+});
+
+test('split_config keeps Svelte-level options out of the `kit` namespace', () => {
+	const preprocess = { markup: () => ({ code: '' }) };
+	const { svelte_config, vite_plugin_svelte_config } = split_config({
+		extensions: ['.svelte', '.svx'],
+		compilerOptions: { runes: true },
+		preprocess,
+		vitePlugin: { inspector: true }
+	});
+
+	expect(svelte_config.extensions).toEqual(['.svelte', '.svx']);
+	expect(svelte_config.compilerOptions).toEqual({ runes: true });
+	expect(svelte_config.preprocess).toBe(preprocess);
+	expect(svelte_config.vitePlugin).toEqual({ inspector: true });
+	expect(svelte_config.kit).toEqual({});
+	expect(vite_plugin_svelte_config).toEqual({});
+});
+
+test('split_config splits the shadowed `experimental` namespace', () => {
+	const { svelte_config, vite_plugin_svelte_config } = split_config({
+		experimental: /** @type {any} */ ({
+			remoteFunctions: true,
+			sendWarningsToBrowser: true
+		})
+	});
+
+	expect(svelte_config.kit?.experimental).toEqual({ remoteFunctions: true });
+	expect(vite_plugin_svelte_config).toEqual({ experimental: { sendWarningsToBrowser: true } });
+});
+
+test('split_config only sets `kit.experimental` when SvelteKit flags are present', () => {
+	const { svelte_config, vite_plugin_svelte_config } = split_config({
+		experimental: /** @type {any} */ ({
+			sendWarningsToBrowser: true
+		})
+	});
+
+	expect(svelte_config.kit).toEqual({});
+	expect(vite_plugin_svelte_config).toEqual({ experimental: { sendWarningsToBrowser: true } });
 });

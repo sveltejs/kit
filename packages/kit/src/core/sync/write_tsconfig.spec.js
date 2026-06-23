@@ -79,6 +79,7 @@ test('Creates tsconfig include from kit.files', () => {
 
 	expect(include).toEqual([
 		'ambient.d.ts',
+		'env.d.ts',
 		'non-ambient.d.ts',
 		'./types/**/$types.d.ts',
 		'../svelte.config.js',

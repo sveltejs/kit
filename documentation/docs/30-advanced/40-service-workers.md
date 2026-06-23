@@ -23,6 +23,7 @@ Inside the service worker you have access to the [`$service-worker` module]($ser
 The following example caches the built app and any files in `static` eagerly, and caches all other requests as they happen. This would make each page work offline once visited.
 
 ```js
+// @errors: 2688
 /// file: src/service-worker.js
 // Disables access to DOM typings like `HTMLElement` which are not available
 // inside a service worker and instantiates the correct globals
@@ -33,8 +34,8 @@ The following example caches the built app and any files in `static` eagerly, an
 // Ensures that the `$service-worker` import has proper type definitions
 /// <reference types="@sveltejs/kit" />
 
-// Only necessary if you have an import from `$env/static/public`
-/// <reference types="../.svelte-kit/ambient.d.ts" />
+// Only necessary if you have an import from `$app/env/*`
+/// <reference types="../.svelte-kit/env.d.ts" />
 
 import { build, files, version } from '$service-worker';
 
@@ -127,7 +128,7 @@ self.addEventListener('fetch', (event) => {
 The service worker is bundled for production, but not during development. For that reason, only browsers that support [modules in service workers](https://web.dev/es-modules-in-sw) will be able to use them at dev time. If you are manually registering your service worker, you will need to pass the `{ type: 'module' }` option in development:
 
 ```js
-import { dev } from '$app/environment';
+import { dev } from '$app/env';
 
 navigator.serviceWorker.register('/service-worker.js', {
 	type: dev ? 'module' : 'classic'

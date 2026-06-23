@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-netlify",
-	"version": "6.0.4",
+	"version": "7.0.0-next.0",
 	"description": "A SvelteKit adapter that creates a Netlify app",
 	"keywords": [
 		"adapter",
@@ -45,7 +45,7 @@
 	},
 	"dependencies": {
 		"@iarna/toml": "^2.2.5",
-		"rolldown": "^1.0.0-rc.6"
+		"rolldown": "^1.0.0"
 	},
 	"devDependencies": {
 		"@netlify/dev": "catalog:",
