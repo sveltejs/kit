@@ -94,7 +94,8 @@ export function form(id) {
 		let enhance_callback = async (instance) => {
 			if (await instance.submit()) {
 				await tick();
-				instance.element.reset();
+				// We call reset from the prototype to avoid DOM clobbering
+				HTMLFormElement.prototype.reset.call(instance.element);
 			}
 		};
 

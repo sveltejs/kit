@@ -1081,6 +1081,14 @@ test.describe('remote function mutations', () => {
 		// must not have been refreshed by an implicit invalidateAll
 		await expect(count).toHaveText('Count: 0');
 	});
+
+	test('form submission with element id `reset` resets the form', async ({ page }) => {
+		await page.goto('/remote/form/reset-id');
+		await page.locator('[name="message"]').fill('test');
+		await page.click('button');
+		await expect(page.locator('#result')).toHaveText('test');
+		await expect(page.locator('[name="message"]')).toBeEmpty();
+	});
 });
 
 test.describe('client error boundaries', () => {
