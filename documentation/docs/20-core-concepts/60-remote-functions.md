@@ -665,6 +665,12 @@ To get a list of _all_ issues, rather than just those belonging to a single fiel
 {/each}
 ```
 
+`fields.allIssues()` is also useful for checking if the form is valid:
+
+```svelte
+<button +++disabled={!!createPost.fields.allIssues()}+++>Publish!</button>
+```
+
 ### Getting/setting inputs
 
 Each field has a `value()` method that reflects its current value. As the user interacts with the form, it is automatically updated:
