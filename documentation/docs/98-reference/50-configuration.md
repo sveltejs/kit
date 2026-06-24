@@ -32,13 +32,11 @@ As well as SvelteKit, the plugin options are used by other tooling that integrat
 Any options that don't belong to SvelteKit are passed through to [`vite-plugin-svelte`](https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/config.md), so you can set options like `inspector` here too. The `experimental` namespace is shared — SvelteKit reads its own flags and forwards the rest.
 
 > [!LEGACY]
-> Before, you had to pass your configuration to the `svelte.config.js` file.
+> Before, you could only pass your configuration to the `svelte.config.js` file.
 > After version 2.62.0, if the config is defined via the plugin, the `svelte.config.js` file is ignored.
 
-## Config
-
-> TYPES: Configuration#Config
-
 ## KitConfig
+
+An extension of [`vite-plugin-svelte`'s options](https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/config.md#config-file).
 
 > EXPANDED_TYPES: Configuration#KitConfig
