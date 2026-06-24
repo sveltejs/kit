@@ -41,7 +41,7 @@ export const test: TestType<
 					url: string,
 					opts?: Parameters<Page['goto']>[1] & {
 						/** Wait for `onMount` to add the 'started' class to the `<body>` */
-						wait_for_started?: boolean
+						wait_for_started?: boolean;
 					}
 				) => ReturnType<Page['goto']>;
 			};
