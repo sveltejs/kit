@@ -1,9 +1,9 @@
-<script>
+<script lang="ts">
 	import { update, release } from './snapshot.remote.ts';
 
 	let status = $state('idle');
-	let captured = $state('none');
-	let live = $state('none');
+	let captured = $state<string | undefined>('none');
+	let live = $state<string | undefined>('none');
 </script>
 
 <form
@@ -19,7 +19,7 @@
 
 		// the snapshot should reflect the values at the time it was taken, not
 		// any changes to the form that happened post-submission
-		captured = data.a.b.c;
+		captured = data.a?.b?.c;
 		live = form.fields.a.b.c.value();
 	})}
 >
