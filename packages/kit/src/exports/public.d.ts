@@ -11,6 +11,7 @@ import {
 	Prerendered,
 	PrerenderEntryGeneratorMismatchHandlerValue,
 	PrerenderHttpErrorHandlerValue,
+	PrerenderInvalidUrlHandlerValue,
 	PrerenderMissingIdHandlerValue,
 	PrerenderUnseenRoutesHandlerValue,
 	PrerenderOption,
@@ -141,7 +142,7 @@ export interface Builder {
 	generateFallback: (dest: string) => Promise<void>;
 
 	/**
-	 * Generate a module exposing build-time environment variables as `$env/dynamic/public` if the app uses it.
+	 * Generate a module exposing build-time environment variables as `$env/dynamic/public` or `$app/env/public` if the app uses it.
 	 */
 	generateEnvModule: () => void;
 
@@ -478,7 +479,7 @@ export interface KitConfig {
 	experimental?: {
 		/**
 		 * Whether to enable explicit environment variables using `src/env.js` or `src/env.ts`.
-		 * @since 2.62.0
+		 * @since 2.63.0
 		 * @default false
 		 */
 		explicitEnvironmentVariables?: boolean;
@@ -796,6 +797,18 @@ export interface KitConfig {
 		 * @since 2.16.0
 		 */
 		handleUnseenRoutes?: PrerenderUnseenRoutesHandlerValue;
+		/**
+		 * How to respond when SvelteKit encounters a URL it cannot parse while crawling prerendered HTML (for example, an AT Protocol URL such as `at://did:plc:...`).
+		 *
+		 * - `'fail'` — fail the build
+		 * - `'ignore'` - silently ignore the failure and continue
+		 * - `'warn'` — continue, but print a warning
+		 * - `(details) => void` — a custom error handler that takes a `details` object with `href`, `referrer` and `message` properties. If you `throw` from this function, the build will fail
+		 *
+		 * @default "fail"
+		 * @since 2.67.0
+		 */
+		handleInvalidUrl?: PrerenderInvalidUrlHandlerValue;
 		/**
 		 * The value of `url.origin` during prerendering; useful if it is included in rendered content.
 		 * @default "http://sveltekit-prerender"
@@ -1235,14 +1248,24 @@ export interface NavigationTarget<
 /**
  * - `enter`: The app has hydrated/started
  * - `form`: The user submitted a `<form method="GET">`
+ * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
  * - `leave`: The app is being left either because the tab is being closed or a navigation to a different document is occurring
  * - `link`: Navigation was triggered by a link click
- * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
  * - `popstate`: Navigation was triggered by back/forward navigation
  */
 export type NavigationType = 'enter' | 'form' | 'leave' | 'link' | 'goto' | 'popstate';
 
 export interface NavigationBase {
+	/**
+	 * The type of navigation:
+	 * - `enter`: The app has hydrated/started
+	 * - `form`: The user submitted a `<form method="GET">`
+	 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
+	 * - `leave`: The app is being left either because the tab is being closed or a navigation to a different document is occurring
+	 * - `link`: Navigation was triggered by a link click
+	 * - `popstate`: Navigation was triggered by back/forward navigation
+	 */
+	type: NavigationType;
 	/**
 	 * Where navigation was triggered from
 	 */
@@ -1262,11 +1285,10 @@ export interface NavigationBase {
 	complete: Promise<void>;
 }
 
+/**
+ * The navigation that occurs when the app starts/hydrates
+ */
 export interface NavigationEnter extends NavigationBase {
-	/**
-	 * The type of navigation:
-	 * - `enter`: The app has hydrated/started
-	 */
 	type: 'enter';
 
 	/**
@@ -1282,11 +1304,10 @@ export interface NavigationEnter extends NavigationBase {
 
 export type NavigationExternal = NavigationGoto | NavigationLeave;
 
+/**
+ * A navigation triggered by a `goto(...)` call or a redirect
+ */
 export interface NavigationGoto extends NavigationBase {
-	/**
-	 * The type of navigation:
-	 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
-	 */
 	type: 'goto';
 
 	// TODO 3.0 remove this property, so that it only exists when type is 'popstate'
@@ -1297,11 +1318,10 @@ export interface NavigationGoto extends NavigationBase {
 	delta?: undefined;
 }
 
+/**
+ * A navigation triggered by the tab being closed, or the user navigating to a different document
+ */
 export interface NavigationLeave extends NavigationBase {
-	/**
-	 * The type of navigation:
-	 * - `leave`: The app is being left either because the tab is being closed or a navigation to a different document is occurring
-	 */
 	type: 'leave';
 
 	// TODO 3.0 remove this property, so that it only exists when type is 'popstate'
@@ -1312,11 +1332,10 @@ export interface NavigationLeave extends NavigationBase {
 	delta?: undefined;
 }
 
+/**
+ * A navigation triggered by a `<form method="GET">`
+ */
 export interface NavigationFormSubmit extends NavigationBase {
-	/**
-	 * The type of navigation:
-	 * - `form`: The user submitted a `<form method="GET">`
-	 */
 	type: 'form';
 
 	/**
@@ -1332,11 +1351,10 @@ export interface NavigationFormSubmit extends NavigationBase {
 	delta?: undefined;
 }
 
+/**
+ * A navigation triggered by back/forward navigation
+ */
 export interface NavigationPopState extends NavigationBase {
-	/**
-	 * The type of navigation:
-	 * - `popstate`: Navigation was triggered by back/forward navigation
-	 */
 	type: 'popstate';
 
 	/**
@@ -1350,11 +1368,10 @@ export interface NavigationPopState extends NavigationBase {
 	event: PopStateEvent;
 }
 
+/**
+ * A navigation triggered by a link click
+ */
 export interface NavigationLink extends NavigationBase {
-	/**
-	 * The type of navigation:
-	 * - `link`: Navigation was triggered by a link click
-	 */
 	type: 'link';
 
 	/**
@@ -1550,6 +1567,10 @@ export interface RequestEvent<
 	locals: App.Locals;
 	/**
 	 * The parameters of the current route - e.g. for a route like `/blog/[slug]`, a `{ slug: string }` object.
+	 *
+	 * In the context of a remote function request initiated by the client, this relates to the page the remote function
+	 * was called from, _not_ the URL of the endpoint SvelteKit creates for the remote function. Never use this to determine
+	 * whether or not a user is authorized to access certain data, as these values are part of the request which could be manipulated.
 	 */
 	params: Params;
 	/**
@@ -1566,6 +1587,10 @@ export interface RequestEvent<
 	route: {
 		/**
 		 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`. It is `null` when no route is matched.
+		 *
+		 * In the context of a remote function request initiated by the client, this relates to the page the remote function
+		 * was called from, _not_ the URL of the endpoint SvelteKit creates for the remote function. Never use this to determine
+		 * whether or not a user is authorized to access certain data, as these values are part of the request which could be manipulated.
 		 */
 		id: RouteId;
 	};
@@ -1594,6 +1619,10 @@ export interface RequestEvent<
 	setHeaders: (headers: Record<string, string>) => void;
 	/**
 	 * The requested URL.
+	 *
+	 * In the context of a remote function request initiated by the client, this relates to the page the remote function
+	 * was called from, _not_ the URL of the endpoint SvelteKit creates for the remote function. Never use this to determine
+	 * whether or not a user is authorized to access certain data, as these values are part of the request which could be manipulated.
 	 */
 	url: URL;
 	/**
@@ -1696,7 +1725,7 @@ export interface SSRManifest {
 
 	/** private fields */
 	_: {
-		client: NonNullable<BuildData['client']>;
+		client: BuildData['client'];
 		nodes: SSRNodeLoader[];
 		/** hashed filename -> import to that file */
 		remotes: Record<string, () => Promise<any>>;
@@ -2097,7 +2126,7 @@ type RecursiveFormFields = RemoteFormFieldContainer<any> & {
 type MaybeArray<T> = T | T[];
 
 export interface RemoteFormInput {
-	[key: string]: MaybeArray<string | number | boolean | File | RemoteFormInput>;
+	[key: string]: MaybeArray<string | number | boolean | File | RemoteFormInput> | undefined;
 }
 
 export interface RemoteFormIssue {

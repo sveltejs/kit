@@ -72,6 +72,10 @@ export async function load_explicit_env(kit, file, mode) {
 	/** @type {Record<string, EnvVarConfig<any>>} */
 	let variables;
 
+	/** @type {import('../runtime/app/env/internal.js')} */ (
+		await server.ssrLoadModule(`${runtime_directory}/app/env/internal.js`)
+	).set_building();
+
 	try {
 		({ variables } = await server.ssrLoadModule(file));
 
@@ -157,7 +161,7 @@ export function create_dynamic_module(type, dev_values, disabled) {
 
 /**
  * Creates the `__sveltekit/env` module
- * @param {Record<string, EnvVarConfig<any>> | null} variables
+ * @param {Record<string, EnvVarConfig<any> | undefined> | null} variables
  * @param {Record<string, string>} env
  * @param {string | null} entry
  */
@@ -176,20 +180,21 @@ export function create_sveltekit_env(variables, env, entry) {
 	const issues = {};
 
 	for (const [name, config] of Object.entries(variables ?? {})) {
-		if (config.static) {
-			const value = validate(variables ?? {}, env[name], name, issues);
-			declarations.push(`export const ${name} = ${devalue.uneval(value)};`);
-
+		if (config?.static) {
 			if (config.public) {
-				declarations.push(`explicit_public_env.${name} = ${name};`);
+				const value = validate(variables ?? {}, env[name], name, issues);
+				declarations.push(`explicit_public_env.${name} = ${devalue.uneval(value)};`);
 			}
 		} else {
-			declarations.push(`export var ${name};`);
-			setters.push(`${name} = validate(variables, env.${name}, ${JSON.stringify(name)}, issues);`);
+			setters.push(
+				`const ${name} = validate(variables, env.${name}, ${JSON.stringify(name)}, issues);`
+			);
 
-			if (config.public) {
+			if (config?.public) {
 				setters.push(`explicit_public_env.${name} = ${name};`);
 				setters.push(`rendered_env.${name} = ${name};`);
+			} else {
+				setters.push(`dynamic_private_env.${name} = ${name};`);
 			}
 		}
 	}
@@ -201,6 +206,7 @@ export function create_sveltekit_env(variables, env, entry) {
 		imports.join('\n'),
 		`const issues = {};`,
 		'export { variables }',
+		'export const dynamic_private_env = {};',
 		'export const explicit_public_env = {};',
 		'export const rendered_env = {};',
 		...declarations,
@@ -219,12 +225,11 @@ export function create_sveltekit_env(variables, env, entry) {
 }
 
 /**
- * Creates the `__sveltekit/env/browser` module
+ * Creates the `__sveltekit/env/private` module
  * @param {Record<string, EnvVarConfig<any>> | null} variables
  * @param {Record<string, string>} env
- * @param {string} global
  */
-export function create_sveltekit_env_browser(variables, env, global) {
+export function create_sveltekit_env_private(variables, env) {
 	if (!variables) {
 		return '';
 	}
@@ -232,18 +237,88 @@ export function create_sveltekit_env_browser(variables, env, global) {
 	/** @type {Record<string, StandardSchemaV1.Issue[]>} */
 	const issues = {};
 
-	const exports = Object.entries(variables).map(([name, config]) => {
-		if (config.static) {
-			const value = validate(variables, env[name], name, issues);
-			return `export const ${name} = ${devalue.uneval(value)};\n`;
-		}
+	/** @type {string[]} */
+	const exports = [];
 
-		return `export const ${name} = env.${name};\n`;
-	});
+	for (const [name, config] of Object.entries(variables)) {
+		if (config.public) continue;
+
+		const value = config.static
+			? devalue.uneval(validate(variables, env[name], name, issues))
+			: `env.${name}`;
+
+		exports.push(`export const ${name} = ${value};\n`);
+	}
 
 	handle_issues(issues);
 
-	return `const env = ${global}.env;\n\n${exports.join('')}`;
+	return `import { dynamic_private_env as env } from '__sveltekit/env';\n\n${exports.join('')}`;
+}
+
+/**
+ * Creates the `__sveltekit/env/public/*` modules
+ * @param {Record<string, EnvVarConfig<any>> | null} variables
+ * @param {Record<string, string>} env
+ * @param {string} prelude
+ */
+export function create_sveltekit_env_public(variables, env, prelude) {
+	if (!variables) {
+		return '';
+	}
+
+	/** @type {Record<string, StandardSchemaV1.Issue[]>} */
+	const issues = {};
+
+	/** @type {string[]} */
+	const exports = [];
+
+	for (const [name, config] of Object.entries(variables)) {
+		if (!config.public) continue;
+
+		const value = config.static
+			? devalue.uneval(validate(variables, env[name], name, issues))
+			: `env.${name}`;
+
+		exports.push(`export const ${name} = ${value};\n`);
+	}
+
+	handle_issues(issues);
+
+	return `${prelude}\n\n${exports.join('')}`;
+}
+
+/**
+ * Creates the `__sveltekit/env/service-worker` module used in development
+ * (but not in prod, which goes through build_service_worker instead)
+ * @param {Record<string, EnvVarConfig<any>> | null} variables
+ * @param {Record<string, string>} env
+ * @param {string} global
+ */
+export function create_sveltekit_env_service_worker_dev(variables, env, global) {
+	/** @type {string[]} */
+	const properties = [];
+
+	/** @type {Record<string, StandardSchemaV1.Issue[]>} */
+	const issues = {};
+
+	for (const [name, config] of Object.entries(variables ?? {})) {
+		if (!config.public) continue;
+
+		const value = validate(variables ?? {}, env[name], name, issues);
+		properties.push(`${name}: ${devalue.uneval(value)}`);
+	}
+
+	handle_issues(issues);
+
+	return dedent`
+		globalThis.__SVELTEKIT_EXPERIMENTAL_EXPLICIT_ENVIRONMENT_VARIABLES__ = true;
+
+		${global} = {
+			env: {
+				${properties.join(',\n\t\t') || '// empty'}
+			}
+		};
+	`;
 }
 
 /** @param {string} description */

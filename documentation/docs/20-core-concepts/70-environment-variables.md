@@ -7,6 +7,7 @@ Environment variables are values your app needs that exist separately from the a
 During development, and at build time, variables defined in a `.env` or `.env.local` file will be added to the environment:
 
 ```env
+/// file: .env.local
 API_KEY=19f401ba-e8b0-48c4-8c77-b0ebb26d97fe
 ```
 
@@ -19,7 +20,7 @@ By default, every environment variable is implicitly available inside your app v
 
 ## Explicit environment variables
 
-As of SvelteKit 2.62, you can opt into _explicit_ environment variables, in which case you instead import environment variables from these modules:
+As of SvelteKit 2.63, you can opt into _explicit_ environment variables, in which case you instead import environment variables from these modules:
 
 - [`$app/env/private`]($app-env-private)
 - [`$app/env/public`]($app-env-public)
@@ -99,7 +100,7 @@ export const variables = defineEnvVars({
 `GOOGLE_ANALYTICS_ID` can now be imported from `$app/env/public`, or used in your `app.html` template as `%sveltekit.env.GOOGLE_ANALYTICS_ID%`:
 
 ```html
-<!--- file: src/app.html -->
+<!--- file: src/app.html --->
 <!doctype html>
 <html lang="en">
 	<head>
@@ -108,13 +109,17 @@ export const variables = defineEnvVars({
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		%sveltekit.head%
 
-+++		<script async src="https://www.googletagmanager.com/gtag/js?id=%sveltekit.env.GOOGLE_ANALYTICS_ID%"></script>
+		<script
+			async
+			src="https://www.googletagmanager.com/gtag/js?id=+++%sveltekit.env.GOOGLE_ANALYTICS_ID%+++"
+		></script>
+
 		<script>
 			window.dataLayer ??= [];
-			function gtag(){dataLayer.push(arguments);}
+			function gtag(){dataLayer.push(arguments)}
 			gtag('js', new Date());
-			gtag('config', '%sveltekit.env.GOOGLE_ANALYTICS_ID%');
-		</script>+++
+			gtag('config', +++'%sveltekit.env.GOOGLE_ANALYTICS_ID%'+++);
+		</script>
 	</head>
 	<body data-sveltekit-preload-data="hover">
 		<div style="display: contents">%sveltekit.body%</div>
@@ -134,12 +139,26 @@ import { defineEnvVars } from '@sveltejs/kit/hooks';
 export const variables = defineEnvVars({
 	GOOGLE_ANALYTICS_ID: {
 		public: true,
-		+++validate: v.pipe(v.string(), v.regex(/G-[A-Z0-9]+/))+++
+		+++schema: v.pipe(v.string(), v.regex(/G-[A-Z0-9]+/))+++
 	}
 });
 ```
 
-If a value is invalid, the app will fail to start (or build).
+If a value is invalid, the app will fail to start (or build). To opt out of one or the other, use [`building`]($app-env#building) from `$app/env` along with a validator that accepts an optional value:
+
+```ts
+/// file: src/env.ts
+import { defineEnvVars } from '@sveltejs/kit/hooks';
++++import { building } from '$app/env'+++
+import * as v from 'valibot';
+
+export const variables = defineEnvVars({
+	SECRET: {
+		// optional when building but required when starting the app
+		+++schema: building ? v.optional(v.string()) : v.string()+++
+	}
+});
+```
 
 You can use validators to make values optional, or transform them (such as turning a string into a boolean, or parsing JSON) — see your validation library's documentation to learn how.
 
@@ -158,7 +177,7 @@ export const variables = defineEnvVars({
 		+++static: true,+++
 
 		// coerce to true/false
-		validate: v.pipe(
+		schema: v.pipe(
 			v.optional(v.string(), ''),
 			v.transform((str) => str !== '')
 		)

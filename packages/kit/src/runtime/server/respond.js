@@ -147,14 +147,16 @@ export async function internal_respond(request, options, manifest, state) {
 		},
 		remote: {
 			data: null,
+			explicit: null,
+			implicit: null,
 			forms: null,
-			refreshes: null,
 			requested: null,
-			reconnects: null,
 			batches: null,
 			live_iterators: null
 		},
 		is_in_remote_function: false,
+		is_in_remote_form_or_command: false,
+		is_in_remote_query: false,
 		is_in_render: false,
 		is_in_universal_load: false
 	};
@@ -317,7 +319,7 @@ export async function internal_respond(request, options, manifest, state) {
 		return resolve_route(resolved_path, new URL(request.url), manifest);
 	}
 
-	if (resolved_path === `/${app_dir}/env.js`) {
+	if (resolved_path === `/${app_dir}/env.js` || resolved_path === `/${app_dir}/env.script.js`) {
 		return get_public_env(request);
 	}
 
@@ -617,7 +619,10 @@ export async function internal_respond(request, options, manifest, state) {
 						invalidated_data_nodes,
 						trailing_slash
 					);
-				} else if (route.endpoint && (!route.page || is_endpoint_request(event))) {
+				} else if (
+					route.endpoint &&
+					(!route.page || (!state.prerendering && is_endpoint_request(event)))
+				) {
 					response = await render_endpoint(event, event_state, await route.endpoint(), state);
 				} else if (route.page) {
 					if (!page_nodes) {

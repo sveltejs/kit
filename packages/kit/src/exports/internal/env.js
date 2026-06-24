@@ -1,7 +1,7 @@
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 /** @import { EnvVarConfig } from '@sveltejs/kit' */
 
-import { stackless } from '../vite/utils.js';
+import { stackless } from '../../utils/error.js';
 
 const MISSING = {
 	message: `Value is missing. If it is optional, add a Standard Schema validator declaring it as such.`
@@ -16,7 +16,7 @@ const ASYNC_VALIDATOR = {
 };
 
 /**
- * @param {Record<string, EnvVarConfig<any>>} variables
+ * @param {Record<string, EnvVarConfig<any> | undefined>} variables
  * @param {string | undefined} value
  * @param {string} name
  * @param {Record<string, StandardSchemaV1.Issue[]>} issues

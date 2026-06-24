@@ -1,5 +1,197 @@
 # @sveltejs/kit
 
+## 2.67.0
+### Minor Changes
+
+
+- feat: add `prerender.handleInvalidUrl` option for invalid URLs discovered while crawling ([#16088](https://github.com/sveltejs/kit/pull/16088))
+
+
+### Patch Changes
+
+
+- fix: support `exactOptionalPropertyTypes` for optional form schema fields ([#15866](https://github.com/sveltejs/kit/pull/15866))
+
+
+- fix: avoid unnecessarily overriding a user's Vite 8 `codeSplitting` setting ([#16118](https://github.com/sveltejs/kit/pull/16118))
+
+## 2.66.0
+### Minor Changes
+
+
+- feat: precompress prerendered `.md` and `.mdx` files ([#15893](https://github.com/sveltejs/kit/pull/15893))
+
+
+- feat: warn the user when they forget to make boolean inputs optional in their form schemas ([#15804](https://github.com/sveltejs/kit/pull/15804))
+
+
+### Patch Changes
+
+
+- fix: blur active element before component update during navigation so that blur/focusout handlers fire while old component data is still valid ([#15452](https://github.com/sveltejs/kit/pull/15452))
+
+
+- fix: ensure `base` is available from `$service-worker` during development ([#15882](https://github.com/sveltejs/kit/pull/15882))
+
+
+- fix: use correct relative asset paths when rendering an error page for a missing `__data.json` request ([#15884](https://github.com/sveltejs/kit/pull/15884))
+
+
+- fix: preserve active `for await` consumers across `query.live` reconnects ([#16022](https://github.com/sveltejs/kit/pull/16022))
+
+
+- fix: settle `query.live` reconnect promise on all exit paths, preventing `invalidateAll()` from deadlocking when a live query is offline or interrupted ([#16022](https://github.com/sveltejs/kit/pull/16022))
+
+
+- fix: preserve last value when a `query.live` stream completes without yielding on reconnect ([#16022](https://github.com/sveltejs/kit/pull/16022))
+
+
+- fix: remove `types: ['node']` from generated tsconfig to avoid errors when `@types/node` is not installed ([#15709](https://github.com/sveltejs/kit/pull/15709))
+
+
+- fix: prefer pages over endpoints when prerendering ([#16076](https://github.com/sveltejs/kit/pull/16076))
+
+
+- fix: restore snapshots after afterNavigate callbacks ([#16066](https://github.com/sveltejs/kit/pull/16066))
+
+
+- fix: support `ws:`/`wss:` and `trusted-types-eval` for CSP sources ([#15938](https://github.com/sveltejs/kit/pull/15938))
+
+
+- fix: omit empty `file` inputs from remote form data ([#15898](https://github.com/sveltejs/kit/pull/15898))
+
+
+- fix: fail early if a route with `+page` and `+server` is marked as prerenderable ([#16075](https://github.com/sveltejs/kit/pull/16075))
+
+
+- fix: wait a tick before resetting forms ([#15805](https://github.com/sveltejs/kit/pull/15805))
+
+
+- fix: `preflight` schemas apply correctly when chained before `for` ([#15863](https://github.com/sveltejs/kit/pull/15863))
+
+
+- fix: blank page in SPA mode when root layout `load()` throws ([#15798](https://github.com/sveltejs/kit/pull/15798))
+
+
+- fix: pass all unknown options from the `sveltekit` Vite plugin through to `vite-plugin-svelte` ([#16010](https://github.com/sveltejs/kit/pull/16010))
+
+## 2.65.2
+### Patch Changes
+
+
+- fix: throw an error when prerendering a root +server.js that returns a non-HTML response ([#15994](https://github.com/sveltejs/kit/pull/15994))
+
+
+- fix: decode base64-serialized fetch bodies before caching them for client-side replay ([#16034](https://github.com/sveltejs/kit/pull/16034))
+
+
+- fix: correctly access explicit dynamic public environment variables from prerendered pages and service workers ([#16024](https://github.com/sveltejs/kit/pull/16024))
+
+
+- fix: allow `preloadCode` to be called during initial page load ([#16028](https://github.com/sveltejs/kit/pull/16028))
+
+
+- fix: send `cache-control: private, no-store` on remote function responses so personalized query results can never be cached by shared caches ([#16020](https://github.com/sveltejs/kit/pull/16020))
+
+
+- fix: preserve the HTTP status and error body when a remote function request fails in transport (e.g. a 401/403 from a `handle` hook), instead of reporting a generic 500 ([#16021](https://github.com/sveltejs/kit/pull/16021))
+
+
+- fix: avoid loading universal nodes during build analysis when the app uses a hash router ([#16042](https://github.com/sveltejs/kit/pull/16042))
+
+
+- fix: correctly serve client entry during development when using the pnpm global virtual store ([#16045](https://github.com/sveltejs/kit/pull/16045))
+
+
+- fix: normalize path separators when comparing config ([#16037](https://github.com/sveltejs/kit/pull/16037))
+
+
+- fix: ensure `building` resolves correctly to allow avoiding build-time explicit environment variable validation ([#16058](https://github.com/sveltejs/kit/pull/16058))
+
+
+- fix: prevent unhandled promise rejections when remote function failures are consumed via `current`/`error` instead of `await` ([#16018](https://github.com/sveltejs/kit/pull/16018))
+
+## 2.65.1
+### Patch Changes
+
+
+- fix: avoid importing the Vite development client code into builds with a non-standard `NODE_ENV` ([#16023](https://github.com/sveltejs/kit/pull/16023))
+
+
+- fix: don't emit the unused bundle and stylesheet files when using `bundleStrategy: 'inline'` ([#16025](https://github.com/sveltejs/kit/pull/16025))
+
+
+- fix: reset queries before navigating when `invalidateAll` is set ([#16014](https://github.com/sveltejs/kit/pull/16014))
+
+
+- fix: regression in loading assets for absolute path apps ([#16026](https://github.com/sveltejs/kit/pull/16026))
+
+## 2.65.0
+### Minor Changes
+
+
+- feat: allow queries to refresh other queries ([#16012](https://github.com/sveltejs/kit/pull/16012))
+
+
+### Patch Changes
+
+
+- fix: dedupe remote data ([#15991](https://github.com/sveltejs/kit/pull/15991))
+
+
+- fix: skip client build if all routes have CSR disabled ([#15936](https://github.com/sveltejs/kit/pull/15936))
+
+## 2.64.0
+### Minor Changes
+
+
+- feat: allow commands to receive `File` objects ([#15978](https://github.com/sveltejs/kit/pull/15978))
+
+
+### Patch Changes
+
+
+- fix: avoid server components from being bundled if SSR is turned off for a route ([#15982](https://github.com/sveltejs/kit/pull/15982))
+
+## 2.63.1
+### Patch Changes
+
+
+- fix: use SSE for `query.live` ([#15957](https://github.com/sveltejs/kit/pull/15957))
+
+
+- fix: use forward slashes in the generated `env.d.ts` import path on Windows ([#15977](https://github.com/sveltejs/kit/pull/15977))
+
+
+- fix: allow `$app/environment` with a warning when `explicitEnvironmentVariables` is enabled ([#15980](https://github.com/sveltejs/kit/pull/15980))
+
+
+- fix: avoid importing Vite while validating explicit environment variables ([#15953](https://github.com/sveltejs/kit/pull/15953))
+
+
+- docs: adjust the release version of explicit env vars ([#15968](https://github.com/sveltejs/kit/pull/15968))
+
+
+- fix: ensure `version` is defined when importing from `$app/env` with explicit environment variables ([#15971](https://github.com/sveltejs/kit/pull/15971))
+
+## 2.63.0
+### Minor Changes
+
+
+- feat: explicit env vars ([#15934](https://github.com/sveltejs/kit/pull/15934))
+
+
+### Patch Changes
+
+
+- fix: remove check for svelte.config.js before running `sync` ([#15946](https://github.com/sveltejs/kit/pull/15946))
+
+
+- fix: generate a placeholder tsconfig.json to squelch sync-time warnings ([#15948](https://github.com/sveltejs/kit/pull/15948))
+
+
+- fix: allow use of `$app/env/public` in service workers ([#15950](https://github.com/sveltejs/kit/pull/15950))
+
 ## 2.62.0
 ### Minor Changes
 
