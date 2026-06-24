@@ -1673,7 +1673,7 @@ function kit({ svelte_config }) {
 
 			if (service_worker_entry_file) {
 				if (kit.paths.assets) {
-					throw new Error('Cannot use service worker alongside config.kit.paths.assets');
+					throw new Error('Cannot use service worker alongside config.paths.assets');
 				}
 
 				log.info('Building service worker');

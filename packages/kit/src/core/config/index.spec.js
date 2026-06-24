@@ -144,7 +144,7 @@ test('errors on invalid values', () => {
 				appDir: 42
 			}
 		});
-	}, /^config\.kit\.appDir should be a string, if specified$/);
+	}, /^config\.appDir should be a string, if specified$/);
 });
 
 test('errors on invalid nested values', () => {
@@ -157,7 +157,7 @@ test('errors on invalid nested values', () => {
 				}
 			}
 		});
-	}, /^Unexpected option config\.kit\.files\.potato$/);
+	}, /^Unexpected option config\.files\.potato$/);
 });
 
 test('does not error on invalid top-level values', () => {
@@ -199,44 +199,44 @@ test('fills in partial blanks', () => {
 	expect(validated).toEqual(config);
 });
 
-test('fails if kit.appDir is blank', () => {
+test('fails if appDir is blank', () => {
 	assert.throws(() => {
 		validate_config({
 			kit: {
 				appDir: ''
 			}
 		});
-	}, /^config\.kit\.appDir cannot be empty$/);
+	}, /^config\.appDir cannot be empty$/);
 });
 
-test('fails if kit.appDir is only slash', () => {
+test('fails if appDir is only slash', () => {
 	assert.throws(() => {
 		validate_config({
 			kit: {
 				appDir: '/'
 			}
 		});
-	}, /^config\.kit\.appDir cannot start or end with '\/'. See https:\/\/svelte\.dev\/docs\/kit\/configuration$/);
+	}, /^config\.appDir cannot start or end with '\/'. See https:\/\/svelte\.dev\/docs\/kit\/configuration$/);
 });
 
-test('fails if kit.appDir starts with slash', () => {
+test('fails if appDir starts with slash', () => {
 	assert.throws(() => {
 		validate_config({
 			kit: {
 				appDir: '/_app'
 			}
 		});
-	}, /^config\.kit\.appDir cannot start or end with '\/'. See https:\/\/svelte\.dev\/docs\/kit\/configuration$/);
+	}, /^config\.appDir cannot start or end with '\/'. See https:\/\/svelte\.dev\/docs\/kit\/configuration$/);
 });
 
-test('fails if kit.appDir ends with slash', () => {
+test('fails if appDir ends with slash', () => {
 	assert.throws(() => {
 		validate_config({
 			kit: {
 				appDir: '_app/'
 			}
 		});
-	}, /^config\.kit\.appDir cannot start or end with '\/'. See https:\/\/svelte\.dev\/docs\/kit\/configuration$/);
+	}, /^config\.appDir cannot start or end with '\/'. See https:\/\/svelte\.dev\/docs\/kit\/configuration$/);
 });
 
 test('fails if paths.base is not root-relative', () => {
@@ -249,7 +249,7 @@ test('fails if paths.base is not root-relative', () => {
 				}
 			}
 		});
-	}, /^config\.kit\.paths\.base option must either be the empty string or a root-relative path that starts but doesn't end with '\/'. See https:\/\/svelte\.dev\/docs\/kit\/configuration#paths$/);
+	}, /^config\.paths\.base option must either be the empty string or a root-relative path that starts but doesn't end with '\/'. See https:\/\/svelte\.dev\/docs\/kit\/configuration#paths$/);
 });
 
 test("fails if paths.base ends with '/'", () => {
@@ -261,7 +261,7 @@ test("fails if paths.base ends with '/'", () => {
 				}
 			}
 		});
-	}, /^config\.kit\.paths\.base option must either be the empty string or a root-relative path that starts but doesn't end with '\/'. See https:\/\/svelte\.dev\/docs\/kit\/configuration#paths$/);
+	}, /^config\.paths\.base option must either be the empty string or a root-relative path that starts but doesn't end with '\/'. See https:\/\/svelte\.dev\/docs\/kit\/configuration#paths$/);
 });
 
 test('fails if paths.assets is relative', () => {
@@ -274,7 +274,7 @@ test('fails if paths.assets is relative', () => {
 				}
 			}
 		});
-	}, /^config\.kit\.paths\.assets option must be an absolute path, if specified. See https:\/\/svelte\.dev\/docs\/kit\/configuration#paths$/);
+	}, /^config\.paths\.assets option must be an absolute path, if specified. See https:\/\/svelte\.dev\/docs\/kit\/configuration#paths$/);
 });
 
 test('fails if paths.assets has trailing slash', () => {
@@ -286,7 +286,7 @@ test('fails if paths.assets has trailing slash', () => {
 				}
 			}
 		});
-	}, /^config\.kit\.paths\.assets option must not end with '\/'. See https:\/\/svelte\.dev\/docs\/kit\/configuration#paths$/);
+	}, /^config\.paths\.assets option must not end with '\/'. See https:\/\/svelte\.dev\/docs\/kit\/configuration#paths$/);
 });
 
 test('fails if prerender.entries are invalid', () => {
@@ -299,7 +299,7 @@ test('fails if prerender.entries are invalid', () => {
 				}
 			}
 		});
-	}, /^Each member of prerender.entries must be either '\*' or an absolute path beginning with '\/' — saw 'foo'$/);
+	}, /^Each member of config.prerender.entries must be either '\*' or an absolute path beginning with '\/' — saw 'foo'$/);
 });
 
 /**
@@ -398,7 +398,7 @@ test('errors on invalid tracing values', () => {
 				}
 			}
 		});
-	}, /^config\.kit\.experimental\.tracing should be an object$/);
+	}, /^config\.experimental\.tracing should be an object$/);
 
 	assert.throws(() => {
 		validate_config({
@@ -409,7 +409,7 @@ test('errors on invalid tracing values', () => {
 				}
 			}
 		});
-	}, /^config\.kit\.experimental\.tracing should be an object$/);
+	}, /^config\.experimental\.tracing should be an object$/);
 
 	assert.throws(() => {
 		validate_config({
@@ -420,7 +420,7 @@ test('errors on invalid tracing values', () => {
 				}
 			}
 		});
-	}, /^config\.kit\.experimental\.tracing\.server should be true or false, if specified$/);
+	}, /^config\.experimental\.tracing\.server should be true or false, if specified$/);
 });
 
 test('errors on invalid forkPreloads values', () => {
@@ -433,7 +433,7 @@ test('errors on invalid forkPreloads values', () => {
 				}
 			}
 		});
-	}, /^config\.kit\.experimental\.forkPreloads should be true or false, if specified$/);
+	}, /^config\.experimental\.forkPreloads should be true or false, if specified$/);
 
 	assert.throws(() => {
 		validate_config({
@@ -444,5 +444,5 @@ test('errors on invalid forkPreloads values', () => {
 				}
 			}
 		});
-	}, /^config\.kit\.experimental\.forkPreloads should be true or false, if specified$/);
+	}, /^config\.experimental\.forkPreloads should be true or false, if specified$/);
 });
