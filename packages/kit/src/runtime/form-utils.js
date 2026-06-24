@@ -611,6 +611,7 @@ function get_type_prefix(field_type, is_array, input_value) {
  * A deep-clone implementation specifically for form data, where
  * we don't need to worry about cycles and whatnot
  * @param {any} value
+ * @returns {any}
  */
 function deep_clone(value) {
 	if (value !== null && typeof value === 'object') {
