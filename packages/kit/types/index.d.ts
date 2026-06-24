@@ -3623,13 +3623,13 @@ declare module '$app/server' {
 		function live<Schema extends StandardSchemaV1, Output>(schema: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => RemoteLiveQueryUserFunctionReturnType<Output>): RemoteLiveQueryFunction<StandardSchemaV1.InferInput<Schema>, Output, StandardSchemaV1.InferOutput<Schema>>;
 	}
 	/**
-	 * Inside a remote `command` or `form` callback, returns an iterable of
-	 * `{ arg, query }` entries for the query instances the client asked to refresh,
-	 * up to the supplied `limit`. Each `query` is a `RemoteQuery` bound to the
-	 * original client-side cache key, so `refresh()` / `set()` propagate correctly
-	 * even when the query's schema transforms the input. `arg` is the *validated*
-	 * argument, i.e. the value after the schema has run (so `InferOutput<Schema>`
-	 * for queries declared with a Standard Schema).
+	 * Inside a remote `command` or `form` callback, returns an iterable
+	 * of `{ arg, query }` entries for the query instances the client asked to refresh, up to
+	 * the supplied `limit`. Each `query` is a `RemoteQuery` bound to the original
+	 * client-side cache key, so `refresh()` / `set()` propagate correctly even when
+	 * the query's schema transforms the input. `arg` is the *validated* argument,
+	 * i.e. the value after the schema has run (so `InferOutput<Schema>` for queries
+	 * declared with a Standard Schema).
 	 *
 	 * Arguments that fail validation or exceed `limit` are recorded as failures in
 	 * the response to the client.
@@ -3665,12 +3665,11 @@ declare module '$app/server' {
 	 * */
 	export function requested<Input, Output, Validated = Input>(query: RemoteQueryFunction<Input, Output, Validated>, limit: number): QueryRequestedResult<Validated, Output>;
 	/**
-	 * Inside a remote `command` or `form` callback, returns an iterable of
-	 * `{ arg, query }` entries for the live query instances the client asked to
-	 * reconnect, up to the supplied `limit`. Each `query` is a `RemoteLiveQuery`
-	 * bound to the original client-side cache key, so `reconnect()` propagates
-	 * correctly even when the query's schema transforms the input. `arg` is the
-	 * *validated* argument.
+	 * Inside a remote `command` or `form` callback, returns an iterable
+	 * of `{ arg, query }` entries for the live query instances the client asked to reconnect, up to
+	 * the supplied `limit`. Each `query` is a `RemoteLiveQuery` bound to the original
+	 * client-side cache key, so `reconnect()` propagates correctly even when
+	 * the query's schema transforms the input. `arg` is the *validated* argument.
 	 *
 	 * Arguments that fail validation or exceed `limit` are recorded as failures in
 	 * the response to the client.
