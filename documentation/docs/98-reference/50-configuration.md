@@ -5,6 +5,15 @@ title: Configuration
 Your project's configuration lives in the `vite.config.js` file at the root of your project. You can pass your configuration to the `sveltekit` plugin, along with the Svelte compiler options:
 
 ```js
+// TODO: remove this and install @sveltejs/adapter-auto in svelte.dev to get the types
+// @filename: ambient.d.ts
+declare module '@sveltejs/adapter-auto' {
+	const plugin: () => import('@sveltejs/kit').Adapter;
+	export default plugin;
+}
+
+// @filename: index.js
+// ---cut---
 /// file: vite.config.js
 import adapter from '@sveltejs/adapter-auto';
 import { sveltekit } from '@sveltejs/kit/vite';
