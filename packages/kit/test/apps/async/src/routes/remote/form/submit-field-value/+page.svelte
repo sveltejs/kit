@@ -1,11 +1,11 @@
-<script>
+<script lang="ts">
 	import { my_form } from './form.remote.ts';
 
 	let captured = $state('');
 
 	my_form.enhance(async ({ fields, submit }) => {
 		// the submit field's value should already reflect the clicked button
-		captured = fields.action.value();
+		captured = fields.action.value()!;
 		await submit();
 	});
 </script>
