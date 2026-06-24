@@ -2,7 +2,8 @@ import { query, prerender, command, form, requested } from '$app/server';
 import { StandardSchemaV1 } from '@standard-schema/spec';
 import {
 	RemoteForm,
-	RemoteFormSubmitFunction,
+	RemoteFormEnhanceCallback,
+	RemoteFormEnhanceInstance,
 	RemoteFormFields,
 	RemoteFormInput,
 	RemoteLiveQueryFunction,
@@ -354,7 +355,7 @@ function form_tests() {
 
 	f.result?.success === true;
 
-	const submit: RemoteFormSubmitFunction<{ input: string }, { success: boolean }> = async (
+	const submit: RemoteFormEnhanceCallback<{ input: string }, { success: boolean }> = async (
 		form
 	) => {
 		const result: { success: boolean } | undefined = form.result;
@@ -368,6 +369,8 @@ function form_tests() {
 	f.enhance(submit);
 
 	f.enhance(async (form) => {
+		const result: RemoteFormEnhanceInstance<{ input: string }, { success: boolean }> = form;
+		result;
 		const x: boolean = await form.submit();
 		x;
 		const y: boolean = await form.submit().updates(

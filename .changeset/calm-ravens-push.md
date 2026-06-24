@@ -2,4 +2,4 @@
 '@sveltejs/kit': minor
 ---
 
-feat: expose `RemoteFormSubmitFunction` type
+feat: expose `RemoteFormEnhanceInstance` and `RemoteFormEnhanceCallback` types

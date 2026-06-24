@@ -2144,16 +2144,22 @@ export interface ValidationError {
 }
 
 /**
- * The callback passed to a remote form's `enhance` method. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
+ * The form instance as received inside an `enhance` callback. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
  */
-export type RemoteFormSubmitFunction<
+export type RemoteFormEnhanceInstance<
 	Input extends RemoteFormInput | void = RemoteFormInput | void,
 	Output = any
-> = (
-	form: Omit<RemoteForm<Input, Output>, 'enhance' | 'element'> & {
-		readonly element: HTMLFormElement;
-	}
-) => MaybePromise<void>;
+> = Omit<RemoteForm<Input, Output>, 'enhance' | 'element'> & {
+	readonly element: HTMLFormElement;
+};
+
+/**
+ * The callback passed to a remote form's `enhance` method. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
+ */
+export type RemoteFormEnhanceCallback<
+	Input extends RemoteFormInput | void = RemoteFormInput | void,
+	Output = any
+> = (form: RemoteFormEnhanceInstance<Input, Output>) => MaybePromise<void>;
 
 /**
  * The type of a remote `form` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
@@ -2171,7 +2177,7 @@ export type RemoteForm<Input extends RemoteFormInput | void, Output> = {
 		updates: (...updates: RemoteQueryUpdate[]) => Promise<boolean>;
 	};
 	/** Use the `enhance` method to influence what happens when the form is submitted. */
-	enhance(callback: RemoteFormSubmitFunction<Input, Output>): {
+	enhance(callback: RemoteFormEnhanceCallback<Input, Output>): {
 		method: 'POST';
 		action: string;
 		[attachment: symbol]: (node: HTMLFormElement) => void;
