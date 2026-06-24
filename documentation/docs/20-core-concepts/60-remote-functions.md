@@ -31,8 +31,6 @@ export default defineConfig({
 		})
 	],
 });
-
-export default config;
 ```
 
 ## Overview
