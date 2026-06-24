@@ -174,20 +174,31 @@ export async function sveltekit(config) {
 
 	vite_plugin_svelte = await import_peer('@sveltejs/vite-plugin-svelte', cwd);
 
+	/** @type {Partial<Options>} */
+	const inline_vps_config = {
+		preprocess: svelte_config.preprocess,
+		...(svelte_config.vitePlugin ?? {}),
+		// pass through any options that SvelteKit doesn't use itself, so that
+		// the options SvelteKit manages always take precedence
+		...split.vite_plugin_svelte_config,
+		// we don't want vite-plugin-svelte to load the svelte.config.js file because
+		// we expect options to be passed through the SvelteKit Vite plugin
+		configFile: false
+	};
+
+	// vite-plugin-svelte inline config options need to be added conditionally
+	// because passing undefined causes it to crash
+	if (svelte_config.extensions) {
+		inline_vps_config.extensions = svelte_config.extensions;
+	}
+
+	if (svelte_config.compilerOptions) {
+		inline_vps_config.compilerOptions = svelte_config.compilerOptions;
+	}
+
 	return [
 		plugin_svelte_config(),
-		...vite_plugin_svelte.svelte({
-			extensions: svelte_config.extensions,
-			compilerOptions: svelte_config.compilerOptions,
-			preprocess: svelte_config.preprocess,
-			...svelte_config.vitePlugin,
-			// pass through any options that SvelteKit doesn't use itself, so that
-			// the options SvelteKit manages always take precedence
-			...split.vite_plugin_svelte_config,
-			// we don't want vite-plugin-svelte to load the svelte.config.js file because
-			// we expect options to be passed through the SvelteKit Vite plugin
-			configFile: false
-		}),
+		...vite_plugin_svelte.svelte(inline_vps_config),
 		...kit({
 			svelte_config
 		})
