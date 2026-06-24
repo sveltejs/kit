@@ -49,6 +49,7 @@ export function convert_formdata(data) {
 		values = values.filter(
 			(entry) => typeof entry === 'string' || entry.name !== '' || entry.size > 0
 		);
+		if (values.length === 0 && !is_array) continue;
 
 		if (key.startsWith('n:')) {
 			key = key.slice(2);

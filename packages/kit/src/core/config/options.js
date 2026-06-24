@@ -1,5 +1,4 @@
 /** @import { Validator } from './types.js' */
-import { dedent } from '../sync/utils.js';
 
 const directives = object({
 	'child-src': string_array(),
@@ -36,7 +35,7 @@ const directives = object({
 });
 
 /** @type {Validator} */
-const options = object(
+export const options = object(
 	{
 		extensions: validate(['.svelte'], (input, keypath) => {
 			if (!Array.isArray(input) || !input.every((page) => typeof page === 'string')) {
@@ -57,18 +56,13 @@ const options = object(
 		}),
 
 		kit: object({
-			adapter: removed((keypath) => {
-				return dedent`
-						${keypath} has been removed. Instead, pass your adapter to the \`sveltekit\` Vite plugin in the \`vite.config.js\` file. For example:
+			adapter: validate(undefined, (input, keypath) => {
+				if (typeof input !== 'object' || !input.adapt) {
+					const message = `The SvelteKit Vite plugin ${keypath} should be an object with an \`adapt\` method`;
+					throw new Error(`${message}. See https://svelte.dev/docs/kit/adapters`);
+				}
 
-						import { defineConfig } from 'vite';
-						import { sveltekit } from '@sveltejs/kit/vite';
-						import adapter from '@sveltejs/adapter-auto';
-
-						export default defineConfig({
-							plugins: [sveltekit({ adapter: adapter() })]
-						});
-					`;
+				return input;
 			}),
 
 			alias: validate({}, (input, keypath) => {
@@ -115,9 +109,7 @@ const options = object(
 			embedded: boolean(false),
 
 			env: object({
-				dir: string(''),
-				publicPrefix: string('PUBLIC_'),
-				privatePrefix: string('')
+				dir: string('')
 			}),
 
 			experimental: object({
@@ -155,6 +147,7 @@ const options = object(
 			outDir: string('.svelte-kit'),
 
 			output: object({
+				linkHeaderPreload: boolean(false),
 				preloadStrategy: removed(
 					(keypath) => `\`${keypath}\` has been removed. modulepreload will always be used`
 				),
@@ -270,6 +263,20 @@ const options = object(
 					}
 				),
 
+				handleInvalidUrl: validate(
+					(/** @type {any} */ { message }) => {
+						throw new Error(
+							message +
+								'\nTo suppress or handle this error, implement `handleInvalidUrl` in https://svelte.dev/docs/kit/configuration#prerender'
+						);
+					},
+					(input, keypath) => {
+						if (typeof input === 'function') return input;
+						if (['fail', 'warn', 'ignore'].includes(input)) return input;
+						throw new Error(`${keypath} should be "fail", "warn", "ignore" or a custom function`);
+					}
+				),
+
 				origin: validate('http://sveltekit-prerender', (input, keypath) => {
 					assert_string(input, keypath);
 
@@ -333,6 +340,17 @@ const options = object(
 // 		return fn(input, keypath);
 // 	};
 // }
+
+// Derive the names of SvelteKit's own config options from the schema, so they
+// stay in sync automatically. These are used to separate Kit's options from
+// `vite-plugin-svelte`'s options when config is passed via the Vite plugin.
+const defaults = /** @type {Record<string, any>} */ (options({}, 'config'));
+
+/** The names of the options that live under the `kit` namespace */
+export const kit_options = Object.keys(defaults.kit);
+
+/** The names of the options that live under the `kit.experimental` namespace */
+export const kit_experimental_options = Object.keys(defaults.kit.experimental);
 
 /**
  * @param {(keypath: string) => string} get_message
@@ -497,5 +515,3 @@ function assert_string(input, keypath) {
 		throw new Error(`${keypath} should be a string, if specified`);
 	}
 }
-
-export default options;

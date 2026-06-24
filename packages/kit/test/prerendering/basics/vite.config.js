@@ -1,3 +1,4 @@
+import { writeFileSync } from 'node:fs';
 import * as path from 'node:path';
 import { sveltekit } from '@sveltejs/kit/vite';
 import adapter from '../../../../adapter-static/index.js';
@@ -14,7 +15,14 @@ const config = {
 
 	plugins: [
 		sveltekit({
-			adapter: adapter()
+			adapter: adapter(),
+			prerender: {
+				handleHttpError: 'warn',
+				origin: 'http://prerender.origin',
+				handleMissingId: ({ id }) => {
+					writeFileSync('./missing_ids/index.jsonl', JSON.stringify(id) + ',', 'utf-8');
+				}
+			}
 		})
 	],
 

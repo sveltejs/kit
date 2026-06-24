@@ -1,4 +1,4 @@
-import { building, dev } from '$app/environment';
+import { building, dev } from '$app/env';
 import { prerender, read } from '$app/server';
 import text from './test.txt?url';
 

@@ -35,7 +35,7 @@ export const prerender = 'auto';
 
 The prerenderer will start at the root of your app and generate files for any prerenderable pages or `+server.js` routes it finds. Each page is scanned for `<a>` elements that point to other pages that are candidates for prerendering — because of this, you generally don't need to specify which pages should be accessed. If you _do_ need to specify which pages should be accessed by the prerenderer, you can do so with [`config.kit.prerender.entries`](configuration#prerender), or by exporting an [`entries`](#entries) function from your dynamic route.
 
-While prerendering, the value of `building` imported from [`$app/environment`]($app-environment) will be `true`.
+While prerendering, the value of `building` imported from [`$app/env`]($app-env) will be `true`.
 
 ### Prerendering server routes
 
@@ -153,7 +153,7 @@ You can enable `csr` during development (for example to take advantage of HMR) l
 
 ```js
 /// file: +page.js
-import { dev } from '$app/environment';
+import { dev } from '$app/env';
 
 export const csr = dev;
 ```

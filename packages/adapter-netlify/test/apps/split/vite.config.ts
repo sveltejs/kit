@@ -8,7 +8,11 @@ const config: UserConfig = {
 	},
 	plugins: [
 		sveltekit({
-			adapter: adapter({ split: true })
+			adapter: adapter({ split: true }),
+			compilerOptions: { experimental: { async: true } },
+			experimental: {
+				remoteFunctions: true
+			}
 		})
 	]
 };

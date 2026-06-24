@@ -147,14 +147,16 @@ export async function internal_respond(request, options, manifest, state) {
 		},
 		remote: {
 			data: null,
+			explicit: null,
+			implicit: null,
 			forms: null,
-			refreshes: null,
 			requested: null,
-			reconnects: null,
 			batches: null,
 			live_iterators: null
 		},
 		is_in_remote_function: false,
+		is_in_remote_form_or_command: false,
+		is_in_remote_query: false,
 		is_in_render: false,
 		is_in_universal_load: false
 	};
@@ -317,7 +319,7 @@ export async function internal_respond(request, options, manifest, state) {
 		return resolve_route(resolved_path, new URL(request.url), manifest);
 	}
 
-	if (resolved_path === `/${app_dir}/env.js`) {
+	if (resolved_path === `/${app_dir}/env.js` || resolved_path === `/${app_dir}/env.script.js`) {
 		return get_public_env(request);
 	}
 
@@ -511,17 +513,14 @@ export async function internal_respond(request, options, manifest, state) {
 			if (if_none_match_value === etag) {
 				const headers = new Headers({ etag });
 
-				// https://datatracker.ietf.org/doc/html/rfc7232#section-4.1 + set-cookie
-				for (const key of [
-					'cache-control',
-					'content-location',
-					'date',
-					'expires',
-					'vary',
-					'set-cookie'
-				]) {
+				// https://datatracker.ietf.org/doc/html/rfc7232#section-4.1
+				for (const key of ['cache-control', 'content-location', 'date', 'expires', 'vary']) {
 					const value = response.headers.get(key);
 					if (value) headers.set(key, value);
+				}
+
+				for (const cookie of response.headers.getSetCookie()) {
+					headers.append('set-cookie', cookie);
 				}
 
 				return new Response(undefined, {
@@ -620,54 +619,80 @@ export async function internal_respond(request, options, manifest, state) {
 						invalidated_data_nodes,
 						trailing_slash
 					);
-				} else if (route.endpoint && (!route.page || is_endpoint_request(event))) {
-					response = await render_endpoint(event, event_state, await route.endpoint(), state);
-				} else if (route.page) {
-					if (!page_nodes) {
-						throw new Error('page_nodes not found. This should never happen');
-					} else if (page_methods.has(method)) {
-						response = await render_page(
-							event,
-							event_state,
-							route.page,
-							options,
-							manifest,
-							state,
-							page_nodes,
-							resolve_opts
-						);
-					} else {
-						const allowed_methods = new Set(allowed_page_methods);
-						const node = await manifest._.nodes[route.page.leaf]();
-						if (node?.server?.actions) {
-							allowed_methods.add('POST');
-						}
+				} else {
+					let endpoint;
+					if (
+						route.endpoint &&
+						(!route.page || (!state.prerendering && is_endpoint_request(event)))
+					) {
+						endpoint = await route.endpoint();
 
-						if (method === 'OPTIONS') {
-							// This will deny CORS preflight requests implicitly because we don't
-							// add the required CORS headers to the response.
-							response = new Response(null, {
-								status: 204,
-								headers: {
-									allow: Array.from(allowed_methods.values()).join(', ')
-								}
-							});
-						} else {
-							const mod = [...allowed_methods].reduce((acc, curr) => {
-								acc[curr] = true;
-								return acc;
-							}, /** @type {Record<string, any>} */ ({}));
-							response = method_not_allowed(mod, method);
+						// Prefer rendering the page if the endpoint can't handle this GET or HEAD request
+						if (route.page && (method === 'GET' || method === 'HEAD')) {
+							const endpoint_can_handle = !!(
+								endpoint.GET ||
+								endpoint.fallback ||
+								(method === 'HEAD' && endpoint.HEAD)
+							);
+							if (!endpoint_can_handle) {
+								endpoint = undefined;
+							}
 						}
 					}
-				} else {
-					// a route will always have a page or an endpoint, but TypeScript doesn't know that
-					throw new Error('Route is neither page nor endpoint. This should never happen');
+
+					if (endpoint) {
+						response = await render_endpoint(event, event_state, endpoint, state);
+					} else if (route.page) {
+						if (!page_nodes) {
+							throw new Error('page_nodes not found. This should never happen');
+						} else if (page_methods.has(method)) {
+							response = await render_page(
+								event,
+								event_state,
+								route.page,
+								options,
+								manifest,
+								state,
+								page_nodes,
+								resolve_opts
+							);
+						} else {
+							const allowed_methods = new Set(allowed_page_methods);
+							const node = await manifest._.nodes[route.page.leaf]();
+							if (node?.server?.actions) {
+								allowed_methods.add('POST');
+							}
+
+							if (method === 'OPTIONS') {
+								// This will deny CORS preflight requests implicitly because we don't
+								// add the required CORS headers to the response.
+								response = new Response(null, {
+									status: 204,
+									headers: {
+										allow: Array.from(allowed_methods.values()).join(', ')
+									}
+								});
+							} else {
+								const mod = [...allowed_methods].reduce((acc, curr) => {
+									acc[curr] = true;
+									return acc;
+								}, /** @type {Record<string, any>} */ ({}));
+								response = method_not_allowed(mod, method);
+							}
+						}
+					} else {
+						// a route will always have a page or an endpoint, but TypeScript doesn't know that
+						throw new Error('Route is neither page nor endpoint. This should never happen');
+					}
 				}
 
 				// If the route contains a page and an endpoint, we need to add a
 				// `Vary: Accept` header to the response because of browser caching
-				if (request.method === 'GET' && route.page && route.endpoint) {
+				if (
+					(request.method === 'GET' || request.method === 'HEAD') &&
+					route.page &&
+					route.endpoint
+				) {
 					const vary = response.headers
 						.get('vary')
 						?.split(',')

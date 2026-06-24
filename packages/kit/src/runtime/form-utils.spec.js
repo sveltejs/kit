@@ -90,6 +90,23 @@ describe('convert_formdata', () => {
 		});
 	});
 
+	test('omits empty file inputs', () => {
+		const data = new FormData();
+
+		data.append('file', new File([], ''));
+
+		expect(convert_formdata(data)).toEqual({});
+	});
+
+	test('keeps real zero-byte files', () => {
+		const data = new FormData();
+		const file = new File([], 'empty.txt');
+
+		data.append('file', file);
+
+		expect(convert_formdata(data)).toEqual({ file });
+	});
+
 	test.each(POLLUTION_ATTACKS)('prevents prototype pollution: %s', (attack) => {
 		const data = new FormData();
 		data.append(attack, 'bad');

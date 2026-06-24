@@ -1,5 +1,29 @@
 # @sveltejs/enhanced-img
 
+## 1.0.0-next.0
+### Major Changes
+
+
+- breaking: require Node 22 or newer ([#12548](https://github.com/sveltejs/kit/pull/12548))
+
+
+### Minor Changes
+
+
+- breaking: require Vite 8 and `vite-plugin-svelte` 7 ([#15542](https://github.com/sveltejs/kit/pull/15542))
+
+## 0.11.0
+### Minor Changes
+
+
+- feat: export `EnhancedImgAttributes` type ([#15649](https://github.com/sveltejs/kit/pull/15649))
+
+
+### Patch Changes
+
+
+- fix: exclude imports with `?` character from transformation ([#15617](https://github.com/sveltejs/kit/pull/15617))
+
 ## 0.10.4
 ### Patch Changes
 
