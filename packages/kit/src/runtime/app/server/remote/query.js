@@ -347,12 +347,7 @@ function batch(validate_or_fn, maybe_fn) {
 								const data = get_result(arg, i);
 								return { type: 'result', data };
 							} catch (error) {
-								const transformed = await handle_error_and_jsonify(
-									event,
-									state,
-									options,
-									error
-								);
+								const transformed = await handle_error_and_jsonify(event, state, options, error);
 
 								return {
 									type: 'error',

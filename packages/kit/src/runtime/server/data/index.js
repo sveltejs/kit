@@ -107,12 +107,7 @@ export async function render_data(
 					// Math.min because array isn't guaranteed to resolve in order
 					length = Math.min(length, i + 1);
 
-					const transformed = await handle_error_and_jsonify(
-						event,
-						event_state,
-						options,
-						error
-					);
+					const transformed = await handle_error_and_jsonify(event, event_state, options, error);
 
 					return /** @type {import('types').ServerErrorNode} */ ({
 						type: 'error',
