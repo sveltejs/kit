@@ -1,8 +1,10 @@
 import http from 'node:http';
+import fs from 'node:fs';
 import process from 'node:process';
 import { handler } from './handler.js';
 import { env, timeout_env } from './env.js';
 import polka from 'polka';
+import { rm } from 'node:fs/promises';
 import { format_listening_address } from './utils.js';
 
 export const path = env('SOCKET_PATH', false);
@@ -57,6 +59,16 @@ if (socket_activation) {
 		console.log(`Listening on file descriptor ${SD_LISTEN_FDS_START}`);
 	});
 } else {
+	if (path) {
+		try {
+			if (fs.statSync(path).size === 0) {
+				await rm(path);
+			}
+		} catch {
+			// ignore
+		}
+	}
+
 	server.listen({ path, host, port }, () => {
 		console.log(`Listening on ${format_listening_address(path, host, port, httpServer.address())}`);
 	});

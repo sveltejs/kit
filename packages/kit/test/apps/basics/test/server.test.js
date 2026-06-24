@@ -293,6 +293,79 @@ test.describe('Endpoints', () => {
 		expect(methods).toEqual(unique_methods);
 	});
 
+	test('serves page for GET request when endpoint has no GET handler', async ({ request }) => {
+		const response = await request.fetch('/endpoint-output/post-only-with-page', {
+			headers: {
+				accept: '*/*'
+			}
+		});
+
+		expect(response.status()).toBe(200);
+		expect(response.headers()['content-type']).toContain('text/html');
+		expect(await response.text()).toContain('POST-only endpoint page');
+	});
+
+	test('serves page for HEAD request when endpoint has no HEAD or GET handler', async ({
+		request
+	}) => {
+		const response = await request.fetch('/endpoint-output/post-only-with-page', {
+			method: 'HEAD',
+			headers: {
+				accept: '*/*'
+			}
+		});
+
+		expect(response.status()).toBe(200);
+		expect(response.headers()['content-type']).toContain('text/html');
+		expect(response.headers()['x-sveltekit-page']).toBe('true');
+		expect(await response.text()).toBe('');
+	});
+
+	test('POST to post-only endpoint with sibling page still hits endpoint', async ({ request }) => {
+		const response = await request.post('/endpoint-output/post-only-with-page');
+
+		expect(response.status()).toBe(200);
+		expect(await response.text()).toBe('ok');
+	});
+
+	test('uses fallback handler instead of page when endpoint has no GET but has fallback', async ({
+		request
+	}) => {
+		const response = await request.fetch('/endpoint-output/fallback-with-page', {
+			headers: {
+				accept: '*/*'
+			}
+		});
+
+		expect(response.status()).toBe(200);
+		expect(await response.text()).toBe('catch-all');
+	});
+
+	test('content negotiation: API requests hit endpoint, browser requests hit page', async ({
+		request
+	}) => {
+		// application/json → endpoint
+		const api_response = await request.fetch('/routing/content-negotiation', {
+			headers: {
+				accept: 'application/json'
+			}
+		});
+
+		expect(api_response.status()).toBe(200);
+		expect(await api_response.text()).toBe('GET');
+
+		// text/html → page
+		const html_response = await request.fetch('/routing/content-negotiation', {
+			headers: {
+				accept: 'text/html'
+			}
+		});
+
+		expect(html_response.status()).toBe(200);
+		expect(html_response.headers()['content-type']).toContain('text/html');
+		expect(await html_response.text()).toContain('Hi');
+	});
+
 	// TODO all the remaining tests in this section are really only testing
 	// setResponse, since we're not otherwise changing anything on the response.
 	// might be worth making these unit tests instead

@@ -43,7 +43,7 @@
 	},
 	"dependencies": {
 		"@vercel/nft": "^1.3.2",
-		"rolldown": "^1.0.0"
+		"rolldown": "^1.1.2"
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:^",
