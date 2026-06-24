@@ -18,7 +18,9 @@ import {
 	build_path_string,
 	normalize_issue,
 	serialize_binary_form,
-	BINARY_FORM_CONTENT_TYPE
+	BINARY_FORM_CONTENT_TYPE,
+	deep_get,
+	split_path
 } from '../../form-utils.js';
 
 /**
@@ -110,8 +112,8 @@ export function form(id) {
 		/** @type {InternalRemoteFormIssue[] | null} */
 		let unread_issues = null;
 
-		/** @type {string | null} */
-		let previous_submitter_name = null;
+		/** @type {{ path: string[], value: unknown } | null} */
+		let previous_submitter = null;
 
 		/**
 		 * In dev, warn if there are validation issues going unread
@@ -405,24 +407,26 @@ export function form(id) {
 
 				const form_data = new FormData(form, event.submitter);
 
-				if (previous_submitter_name !== null) {
-					// Strip any `n:`/`b:` type prefix before clearing, otherwise
-					// `set_nested_value` would coerce `undefined` to `NaN`/`false`
-					// instead of clearing the previously-submitted value.
-					set_nested_value(input, previous_submitter_name.replace(/^[nb]:/, ''), undefined);
+				if (previous_submitter !== null) {
+					const current_value = deep_get(input, previous_submitter.path);
+					// Only overwrite if the value hasn't changed, e.g. by a different field with the same name
+					if (current_value === previous_submitter.value) {
+						deep_set(input, previous_submitter.path, undefined);
+					}
 				}
 
+				previous_submitter = null;
 				if (event.submitter) {
 					const name = event.submitter.getAttribute('name');
 					const value = /** @type {any} */ (event.submitter).value;
 
 					if (name !== null && value !== undefined) {
 						set_nested_value(input, name, value);
+						previous_submitter = {
+							path: split_path(name.replace(/^[nb]:/, '')),
+							value
+						};
 					}
-
-					previous_submitter_name = name;
-				} else {
-					previous_submitter_name = null;
 				}
 
 				if (DEV) {

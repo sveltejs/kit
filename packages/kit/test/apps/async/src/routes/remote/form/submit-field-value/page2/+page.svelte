@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { my_form } from './form.remote.ts';
+	import { my_form } from '../form.remote.ts';
 
 	let captured = $state<number | null>(null);
 
@@ -10,11 +10,9 @@
 	});
 </script>
 
-<a href="/remote/form/submit-field-value/page2">Page 2</a>
-
 <form {...my_form}>
-	<button id="one" {...my_form.fields.quantity.as('submit', 1)}>1</button>
-	<button id="five" {...my_form.fields.quantity.as('submit', 5)}>5</button>
+	<input id="input" {...my_form.fields.quantity.as('number')} />
+	<button id="submit" type="submit">submit</button>
 </form>
 
 <p id="captured">{captured}</p>
