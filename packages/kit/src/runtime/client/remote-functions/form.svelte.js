@@ -405,11 +405,14 @@ export function form(id) {
 
 				const form_data = new FormData(form, event.submitter);
 
-				if (previous_submitter_name !== null && !form_data.has(previous_submitter_name)) {
+				if (
+					previous_submitter_name !== null &&
+					!Array.from(form_data.keys()).map(strip_prefix).includes(previous_submitter_name)
+				) {
 					// Strip any `n:`/`b:` type prefix before clearing, otherwise
 					// `set_nested_value` would coerce `undefined` to `NaN`/`false`
 					// instead of clearing the previously-submitted value.
-					set_nested_value(input, previous_submitter_name.replace(/^[nb]:/, ''), undefined);
+					set_nested_value(input, previous_submitter_name, undefined);
 				}
 
 				if (event.submitter) {
@@ -420,7 +423,7 @@ export function form(id) {
 						set_nested_value(input, name, value);
 					}
 
-					previous_submitter_name = name;
+					previous_submitter_name = strip_prefix(name);
 				} else {
 					previous_submitter_name = null;
 				}
@@ -527,7 +530,7 @@ export function form(id) {
 					);
 				}
 
-				name = name.replace(/^[nb]:/, '');
+				name = strip_prefix(name);
 
 				touched[name] = true;
 			};
@@ -792,4 +795,12 @@ function validate_form_data(form_data, enctype) {
 			}
 		}
 	}
+}
+
+/**
+ * Remove the `n:` or `b:` prefix from a field name
+ * @param {string | null} name
+ */
+function strip_prefix(name) {
+	return name && name.replace(/^[nb]:/, '');
 }
