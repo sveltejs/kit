@@ -177,11 +177,15 @@ export async function sveltekit(config) {
 	return [
 		plugin_svelte_config(),
 		...vite_plugin_svelte.svelte({
+			extensions: svelte_config.extensions,
+			compilerOptions: svelte_config.compilerOptions,
+			preprocess: svelte_config.preprocess,
+			...svelte_config.vitePlugin,
 			// pass through any options that SvelteKit doesn't use itself, so that
 			// the options SvelteKit manages always take precedence
 			...split.vite_plugin_svelte_config,
-			// we don't want vite-plugin-svelte to load the config file itself because
-			// it will try to validate it without knowing that kit options are valid
+			// we don't want vite-plugin-svelte to load the svelte.config.js file because
+			// we expect options to be passed through the SvelteKit Vite plugin
 			configFile: false
 		}),
 		...kit({
