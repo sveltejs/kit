@@ -799,8 +799,10 @@ function validate_form_data(form_data, enctype) {
 
 /**
  * Remove the `n:` or `b:` prefix from a field name
- * @param {string | null} name
+ * @template {string | null} T
+ * @param {T} name
+ * @returns {T}
  */
 function strip_prefix(name) {
-	return name && name.replace(/^[nb]:/, '');
+	return /** @type {T} */ (name && name.replace(/^[nb]:/, ''));
 }
