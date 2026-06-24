@@ -809,6 +809,18 @@ test.describe('remote function mutations', () => {
 		// Should have refreshed
 		await expect(count).toHaveText('Count: 1');
 	});
+
+	test('submit field value is available in the enhance callback', async ({ page }) => {
+		await page.goto('/remote/form/submit-field-value');
+
+		await page.click('#save');
+		await expect(page.locator('#captured')).toHaveText('save');
+		await expect(page.locator('#result')).toHaveText('save');
+
+		await page.click('#delete');
+		await expect(page.locator('#captured')).toHaveText('delete');
+		await expect(page.locator('#result')).toHaveText('delete');
+	});
 });
 
 test.describe('client error boundaries', () => {
