@@ -1208,14 +1208,24 @@ declare module '@sveltejs/kit' {
 	/**
 	 * - `enter`: The app has hydrated/started
 	 * - `form`: The user submitted a `<form method="GET">`
+	 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
 	 * - `leave`: The app is being left either because the tab is being closed or a navigation to a different document is occurring
 	 * - `link`: Navigation was triggered by a link click
-	 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
 	 * - `popstate`: Navigation was triggered by back/forward navigation
 	 */
 	export type NavigationType = 'enter' | 'form' | 'leave' | 'link' | 'goto' | 'popstate';
 
 	export interface NavigationBase {
+		/**
+		 * The type of navigation:
+		 * - `enter`: The app has hydrated/started
+		 * - `form`: The user submitted a `<form method="GET">`
+		 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
+		 * - `leave`: The app is being left either because the tab is being closed or a navigation to a different document is occurring
+		 * - `link`: Navigation was triggered by a link click
+		 * - `popstate`: Navigation was triggered by back/forward navigation
+		 */
+		type: NavigationType;
 		/**
 		 * Where navigation was triggered from
 		 */
@@ -1235,10 +1245,10 @@ declare module '@sveltejs/kit' {
 		complete: Promise<void>;
 	}
 
+	/**
+	 * The navigation that occurs when the app starts/hydrates
+	 */
 	export interface NavigationEnter extends NavigationBase {
-		/**
-		 * - `enter`: The app has hydrated/started
-		 */
 		type: 'enter';
 
 		/**
@@ -1254,24 +1264,24 @@ declare module '@sveltejs/kit' {
 
 	export type NavigationExternal = NavigationGoto | NavigationLeave;
 
+	/**
+	 * A navigation triggered by a `goto(...)` call or a redirect
+	 */
 	export interface NavigationGoto extends NavigationBase {
-		/**
-		 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
-		 */
 		type: 'goto';
 	}
 
+	/**
+	 * A navigation triggered by the tab being closed, or the user navigating to a different document
+	 */
 	export interface NavigationLeave extends NavigationBase {
-		/**
-		 * - `leave`: The app is being left either because the tab is being closed or a navigation to a different document is occurring
-		 */
 		type: 'leave';
 	}
 
+	/**
+	 * A navigation triggered by a `<form method="GET">`
+	 */
 	export interface NavigationFormSubmit extends NavigationBase {
-		/**
-		 * - `form`: The user submitted a `<form method="GET">`
-		 */
 		type: 'form';
 
 		/**
@@ -1280,10 +1290,10 @@ declare module '@sveltejs/kit' {
 		event: SubmitEvent;
 	}
 
+	/**
+	 * A navigation triggered by back/forward navigation
+	 */
 	export interface NavigationPopState extends NavigationBase {
-		/**
-		 * - `popstate`: Navigation was triggered by back/forward navigation
-		 */
 		type: 'popstate';
 
 		/**
@@ -1297,10 +1307,10 @@ declare module '@sveltejs/kit' {
 		event: PopStateEvent;
 	}
 
+	/**
+	 * A navigation triggered by a link click
+	 */
 	export interface NavigationLink extends NavigationBase {
-		/**
-		 * - `link`: Navigation was triggered by a link click
-		 */
 		type: 'link';
 
 		/**

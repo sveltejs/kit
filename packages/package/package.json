@@ -22,7 +22,7 @@
 	"dependencies": {
 		"chokidar": "^5.0.0",
 		"sade": "^1.8.1",
-		"semver": "^7.5.4",
+		"semver": "^7.8.5",
 		"svelte2tsx": "~0.7.55"
 	},
 	"devDependencies": {
