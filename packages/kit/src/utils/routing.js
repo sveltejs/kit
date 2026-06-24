@@ -139,10 +139,6 @@ export function get_route_segments(route) {
  * @returns {{ success: true, value: any } | { success: false }}
  */
 function run_matcher(matcher, value) {
-	if (typeof matcher === 'function') {
-		return matcher(value) ? { success: true, value } : { success: false };
-	}
-
 	if ('~standard' in matcher) {
 		const result = matcher['~standard'].validate(value);
 
@@ -151,6 +147,10 @@ function run_matcher(matcher, value) {
 		}
 
 		return { success: true, value: result.value };
+	}
+
+	if (typeof matcher === 'function') {
+		return matcher(value) ? { success: true, value } : { success: false };
 	}
 
 	return { success: false };
