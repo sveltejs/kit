@@ -107,7 +107,7 @@ You can override the HTTP status code used in the response by returning a `statu
 // Assuming you have this ...
 class NotFound extends Error {}
 
-/** @type {import('./$types').HandleServerError} */
+/** @type {import('@sveltejs/kit').HandleServerError} */
 export function handleError({ error, event, status, message }) {
 	// ... you can do this
 	if (error instanceof NotFound) {
