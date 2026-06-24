@@ -14,6 +14,13 @@ import { DEV } from 'esm-env';
 import { record_span } from '../telemetry/record_span.js';
 import { deserialize_binary_form } from '../form-utils.js';
 
+/**
+ * How long (in milliseconds) to wait after the last message was sent before
+ * sending a `: keep-alive` SSE comment, to prevent proxies/load balancers with
+ * an idle timeout from closing an otherwise-quiet `query.live` connection.
+ */
+const KEEP_ALIVE_INTERVAL = 30_000;
+
 /** @type {typeof handle_remote_call_internal} */
 export async function handle_remote_call(event, state, options, manifest, id) {
 	return record_span({
@@ -41,10 +48,10 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 	const [hash, name, additional_args] = id.split('/');
 	const remotes = manifest._.remotes;
 
-	if (!remotes[hash]) error(404);
+	if (!Object.hasOwn(remotes, hash)) error(404);
 
 	const module = await remotes[hash]();
-	const fn = module.default[name];
+	const fn = Object.hasOwn(module.default, name) ? module.default[name] : undefined;
 
 	if (!fn) error(404);
 
@@ -56,6 +63,9 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 		'sveltekit.remote.call.type': internals.type,
 		'sveltekit.remote.call.name': internals.name
 	});
+
+	/** @type {HeadersInit | undefined} */
+	const headers = state.prerendering ? undefined : { 'cache-control': 'private, no-store' };
 
 	try {
 		/** @type {RemoteFunctionData} */
@@ -79,15 +89,35 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 
 				const encoder = new TextEncoder();
 
+				let closed = false;
+
+				/** @type {ReturnType<typeof setTimeout> | undefined} */
+				let keep_alive;
+
+				/**
+				 * (Re)schedule the keep-alive comment. Called whenever a message is sent, so
+				 * that a keep-alive is only emitted once `KEEP_ALIVE_INTERVAL` has elapsed
+				 * without any other activity.
+				 * @param {ReadableStreamDefaultController} controller
+				 */
+				function schedule_keep_alive(controller) {
+					clearTimeout(keep_alive);
+					keep_alive = setTimeout(() => {
+						if (closed || event.request.signal.aborted) return;
+						// SSE comments (lines starting with `:`) are ignored by the client
+						controller.enqueue(encoder.encode(': keep-alive\n\n'));
+						schedule_keep_alive(controller);
+					}, KEEP_ALIVE_INTERVAL);
+				}
+
 				/**
 				 * @param {ReadableStreamDefaultController} controller
 				 * @param {any} payload
 				 */
 				function send(controller, payload) {
 					controller.enqueue(encoder.encode('data: ' + JSON.stringify(payload) + '\n\n'));
+					schedule_keep_alive(controller);
 				}
-
-				let closed = false;
 
 				/** @type {string | undefined} */
 				let result = undefined;
@@ -95,6 +125,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 				async function cancel() {
 					if (closed) return;
 					closed = true;
+					clearTimeout(keep_alive);
 					await generator.return(undefined);
 				}
 
@@ -102,6 +133,9 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 
 				return new Response(
 					new ReadableStream({
+						start(controller) {
+							schedule_keep_alive(controller);
+						},
 						async pull(controller) {
 							if (event.request.signal.aborted) {
 								await cancel();
@@ -226,7 +260,8 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 						/** @type {RemoteFunctionResponse} */ ({
 							type: 'result',
 							data: stringify(data, transport)
-						})
+						}),
+						{ headers }
 					);
 				}
 
@@ -275,7 +310,8 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 			/** @type {RemoteFunctionResponse} */ ({
 				type: 'result',
 				data: stringify(data, transport)
-			})
+			}),
+			{ headers }
 		);
 	} catch (error) {
 		if (error instanceof Redirect) {
@@ -285,7 +321,8 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 				/** @type {RemoteFunctionResponse} */ ({
 					type: 'result',
 					data: stringify(data, transport)
-				})
+				}),
+				{ headers }
 			);
 		}
 
@@ -468,9 +505,11 @@ async function handle_remote_form_post_internal(event, state, manifest, id) {
 	const [hash, name, ...rest] = id.split('/');
 	const action_id = rest.join('/');
 	const remotes = manifest._.remotes;
-	const module = await remotes[hash]?.();
+	const module = Object.hasOwn(remotes, hash) ? await remotes[hash]() : undefined;
 
-	let form = /** @type {RemoteForm<any, any>} */ (module?.default[name]);
+	let form = /** @type {RemoteForm<any, any>} */ (
+		module && Object.hasOwn(module.default, name) ? module.default[name] : undefined
+	);
 
 	if (!form) {
 		event.setHeaders({

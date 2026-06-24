@@ -1,8 +1,14 @@
 import { readFileSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { rolldown } from 'rolldown';
 
 const files = fileURLToPath(new URL('./files', import.meta.url).href);
+
+/** @param {string} str */
+function escape_regex(str) {
+	return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
 
 /** @type {import('./index.js').default} */
 export default function (opts = {}) {
@@ -31,10 +37,21 @@ export default function (opts = {}) {
 
 			builder.log.minor('Building server');
 
-			builder.writeServer(tmp);
+			const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
+			const server = builder.getServerDirectory();
+
+			// Copy the prebuilt entrypoints into the build directory so that the
+			// adapter's own bundled dependencies resolve correctly, then bundle them
+			// together with the app's server code. Bundling everything in a single
+			// pass means shared modules (e.g. `SvelteKitError` from `@sveltejs/kit`)
+			// aren't duplicated. See https://github.com/sveltejs/kit/issues/15755
+			const entries = `${tmp}/entries`;
+			builder.copy(files, entries);
+
+			const dir_id = join(entries, 'dir.js');
 
 			writeFileSync(
-				`${tmp}/manifest.js`,
+				`${server}/manifest.js`,
 				[
 					`export const manifest = ${builder.generateManifest({ relativePath: './' })};`,
 					`export const prerendered = new Set(${JSON.stringify(builder.prerendered.paths)});`,
@@ -42,16 +59,15 @@ export default function (opts = {}) {
 				].join('\n\n')
 			);
 
-			const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
-
 			/** @type {Record<string, string>} */
 			const input = {
-				index: `${tmp}/index.js`,
-				manifest: `${tmp}/manifest.js`
+				index: `${entries}/index.js`,
+				env: `${entries}/env.js`,
+				handler: `${entries}/handler.js`
 			};
 
 			if (builder.hasServerInstrumentationFile()) {
-				input['instrumentation.server'] = `${tmp}/instrumentation.server.js`;
+				input['instrumentation.server'] = `${server}/instrumentation.server.js`;
 			}
 
 			// we bundle the Vite output so that deployments only need
@@ -66,31 +82,63 @@ export default function (opts = {}) {
 				platform: 'node',
 				resolve: {
 					conditionNames: ['node']
-				}
+				},
+				experimental: {
+					nativeMagicString: true
+				},
+				plugins: [
+					{
+						// resolve the app's server and manifest, generated above
+						name: 'adapter-node-resolve-app',
+						resolveId(id) {
+							if (id === 'SERVER') return `${server}/index.js`;
+							if (id === 'MANIFEST') return `${server}/manifest.js`;
+						}
+					},
+					{
+						// replace build-time constants in the adapter's own entrypoints
+						// only, so that identifiers in the app or its dependencies aren't
+						// accidentally replaced
+						name: 'adapter-node-replace-constants',
+						transform: {
+							filter: { id: new RegExp(escape_regex(entries)) },
+							handler(_code, _id, { magicString }) {
+								if (!magicString) throw new Error('experimental.nativeMagicString is not enabled');
+								magicString
+									.replace(/\bENV_PREFIX\b/g, JSON.stringify(envPrefix))
+									.replace(/\bPRECOMPRESS\b/g, JSON.stringify(precompress));
+								return {
+									code: magicString,
+									map: magicString.generateMap().toString()
+								};
+							}
+						}
+					}
+				]
 			});
 
 			await bundle.write({
-				dir: `${out}/server`,
+				dir: out,
 				format: 'esm',
 				sourcemap: true,
-				chunkFileNames: 'chunks/[name]-[hash].js'
-			});
-
-			builder.copy(files, out, {
-				replace: {
-					ENV: './env.js',
-					HANDLER: './handler.js',
-					MANIFEST: './server/manifest.js',
-					SERVER: './server/index.js',
-					ENV_PREFIX: JSON.stringify(envPrefix),
-					PRECOMPRESS: JSON.stringify(precompress)
+				codeSplitting: {
+					groups: [
+						{
+							name: 'dir',
+							test: dir_id
+						}
+					]
+				},
+				chunkFileNames(chunk) {
+					if (chunk.name === 'dir') return '[name].js';
+					return 'server/chunks/[name]-[hash].js';
 				}
 			});
 
 			if (builder.hasServerInstrumentationFile()) {
 				builder.instrument({
 					entrypoint: `${out}/index.js`,
-					instrumentation: `${out}/server/instrumentation.server.js`,
+					instrumentation: `${out}/instrumentation.server.js`,
 					module: {
 						exports: ['path', 'host', 'port', 'server']
 					}

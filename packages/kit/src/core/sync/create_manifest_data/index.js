@@ -221,10 +221,17 @@ function create_routes_and_nodes(cwd, config, fallback) {
 
 			// We can't use withFileTypes because of a NodeJs bug which returns wrong results
 			// with isDirectory() in case of symlinks: https://github.com/nodejs/node/issues/30646
-			const files = fs.readdirSync(dir).map((name) => ({
-				is_dir: fs.statSync(path.join(dir, name)).isDirectory(),
-				name
-			}));
+			// We sort the entries because `readdirSync` order is not guaranteed and differs
+			// between runtimes (e.g. Node returns entries alphabetically, Bun in directory
+			// order). Node indices are assigned from this traversal order, so without sorting
+			// the SSR and client manifests can disagree, causing hydration mismatches.
+			const files = fs
+				.readdirSync(dir)
+				.sort()
+				.map((name) => ({
+					is_dir: fs.statSync(path.join(dir, name)).isDirectory(),
+					name
+				}));
 
 			// process files first
 			for (const file of files) {
@@ -494,6 +501,17 @@ function create_routes_and_nodes(cwd, config, fallback) {
 	for (const route of routes) {
 		if (route.endpoint) {
 			route.endpoint.page_options = get_page_options(route.endpoint.file, cwd);
+		}
+
+		if (route.page && route.endpoint) {
+			const page = nodes[route.page.leaf];
+			if (page.page_options?.prerender || route.endpoint.page_options?.prerender) {
+				const endpoint_file = route.endpoint.file.split('/').pop();
+
+				throw new Error(
+					`Cannot prerender a route (${route.id}) with both a \`+page.svelte\` and a \`${endpoint_file}\``
+				);
+			}
 		}
 	}
 

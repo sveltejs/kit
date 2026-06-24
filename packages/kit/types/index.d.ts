@@ -766,6 +766,18 @@ declare module '@sveltejs/kit' {
 			 */
 			handleUnseenRoutes?: PrerenderUnseenRoutesHandlerValue;
 			/**
+			 * How to respond when SvelteKit encounters a URL it cannot parse while crawling prerendered HTML (for example, an AT Protocol URL such as `at://did:plc:...`).
+			 *
+			 * - `'fail'` — fail the build
+			 * - `'ignore'` - silently ignore the failure and continue
+			 * - `'warn'` — continue, but print a warning
+			 * - `(details) => void` — a custom error handler that takes a `details` object with `href`, `referrer` and `message` properties. If you `throw` from this function, the build will fail
+			 *
+			 * @default "fail"
+			 * @since 2.67.0
+			 */
+			handleInvalidUrl?: PrerenderInvalidUrlHandlerValue;
+			/**
 			 * The value of `url.origin` during prerendering; useful if it is included in rendered content.
 			 * @default "http://sveltekit-prerender"
 			 */
@@ -1208,14 +1220,24 @@ declare module '@sveltejs/kit' {
 	/**
 	 * - `enter`: The app has hydrated/started
 	 * - `form`: The user submitted a `<form method="GET">`
+	 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
 	 * - `leave`: The app is being left either because the tab is being closed or a navigation to a different document is occurring
 	 * - `link`: Navigation was triggered by a link click
-	 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
 	 * - `popstate`: Navigation was triggered by back/forward navigation
 	 */
 	export type NavigationType = 'enter' | 'form' | 'leave' | 'link' | 'goto' | 'popstate';
 
 	export interface NavigationBase {
+		/**
+		 * The type of navigation:
+		 * - `enter`: The app has hydrated/started
+		 * - `form`: The user submitted a `<form method="GET">`
+		 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
+		 * - `leave`: The app is being left either because the tab is being closed or a navigation to a different document is occurring
+		 * - `link`: Navigation was triggered by a link click
+		 * - `popstate`: Navigation was triggered by back/forward navigation
+		 */
+		type: NavigationType;
 		/**
 		 * Where navigation was triggered from
 		 */
@@ -1235,11 +1257,10 @@ declare module '@sveltejs/kit' {
 		complete: Promise<void>;
 	}
 
+	/**
+	 * The navigation that occurs when the app starts/hydrates
+	 */
 	export interface NavigationEnter extends NavigationBase {
-		/**
-		 * The type of navigation:
-		 * - `enter`: The app has hydrated/started
-		 */
 		type: 'enter';
 
 		/**
@@ -1255,27 +1276,24 @@ declare module '@sveltejs/kit' {
 
 	export type NavigationExternal = NavigationGoto | NavigationLeave;
 
+	/**
+	 * A navigation triggered by a `goto(...)` call or a redirect
+	 */
 	export interface NavigationGoto extends NavigationBase {
-		/**
-		 * The type of navigation:
-		 * - `goto`: Navigation was triggered by a `goto(...)` call or a redirect
-		 */
 		type: 'goto';
 	}
 
+	/**
+	 * A navigation triggered by the tab being closed, or the user navigating to a different document
+	 */
 	export interface NavigationLeave extends NavigationBase {
-		/**
-		 * The type of navigation:
-		 * - `leave`: The app is being left either because the tab is being closed or a navigation to a different document is occurring
-		 */
 		type: 'leave';
 	}
 
+	/**
+	 * A navigation triggered by a `<form method="GET">`
+	 */
 	export interface NavigationFormSubmit extends NavigationBase {
-		/**
-		 * The type of navigation:
-		 * - `form`: The user submitted a `<form method="GET">`
-		 */
 		type: 'form';
 
 		/**
@@ -1284,11 +1302,10 @@ declare module '@sveltejs/kit' {
 		event: SubmitEvent;
 	}
 
+	/**
+	 * A navigation triggered by back/forward navigation
+	 */
 	export interface NavigationPopState extends NavigationBase {
-		/**
-		 * The type of navigation:
-		 * - `popstate`: Navigation was triggered by back/forward navigation
-		 */
 		type: 'popstate';
 
 		/**
@@ -1302,11 +1319,10 @@ declare module '@sveltejs/kit' {
 		event: PopStateEvent;
 	}
 
+	/**
+	 * A navigation triggered by a link click
+	 */
 	export interface NavigationLink extends NavigationBase {
-		/**
-		 * The type of navigation:
-		 * - `link`: Navigation was triggered by a link click
-		 */
 		type: 'link';
 
 		/**
@@ -1495,6 +1511,10 @@ declare module '@sveltejs/kit' {
 		locals: App.Locals;
 		/**
 		 * The parameters of the current route - e.g. for a route like `/blog/[slug]`, a `{ slug: string }` object.
+		 *
+		 * In the context of a remote function request initiated by the client, this relates to the page the remote function
+		 * was called from, _not_ the URL of the endpoint SvelteKit creates for the remote function. Never use this to determine
+		 * whether or not a user is authorized to access certain data, as these values are part of the request which could be manipulated.
 		 */
 		params: Params;
 		/**
@@ -1511,6 +1531,10 @@ declare module '@sveltejs/kit' {
 		route: {
 			/**
 			 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`. It is `null` when no route is matched.
+			 *
+			 * In the context of a remote function request initiated by the client, this relates to the page the remote function
+			 * was called from, _not_ the URL of the endpoint SvelteKit creates for the remote function. Never use this to determine
+			 * whether or not a user is authorized to access certain data, as these values are part of the request which could be manipulated.
 			 */
 			id: RouteId;
 		};
@@ -1539,6 +1563,10 @@ declare module '@sveltejs/kit' {
 		setHeaders: (headers: Record<string, string>) => void;
 		/**
 		 * The requested URL.
+		 *
+		 * In the context of a remote function request initiated by the client, this relates to the page the remote function
+		 * was called from, _not_ the URL of the endpoint SvelteKit creates for the remote function. Never use this to determine
+		 * whether or not a user is authorized to access certain data, as these values are part of the request which could be manipulated.
 		 */
 		url: URL;
 		/**
@@ -2042,7 +2070,7 @@ declare module '@sveltejs/kit' {
 	type MaybeArray<T> = T | T[];
 
 	export interface RemoteFormInput {
-		[key: string]: MaybeArray<string | number | boolean | File | RemoteFormInput>;
+		[key: string]: MaybeArray<string | number | boolean | File | RemoteFormInput> | undefined;
 	}
 
 	export interface RemoteFormIssue {
@@ -2355,7 +2383,10 @@ declare module '@sveltejs/kit' {
 			| 'unsafe-eval'
 			| 'unsafe-hashes'
 			| 'unsafe-inline'
+			| 'unsafe-allow-redirects'
+			| 'unsafe-webtransport-hashes'
 			| 'wasm-unsafe-eval'
+			| 'trusted-types-eval'
 			| 'none';
 		type CryptoSource = `${'nonce' | 'sha256' | 'sha384' | 'sha512'}-${string}`;
 		type FrameSource = HostSource | SchemeSource | 'self' | 'none';
@@ -2364,7 +2395,16 @@ declare module '@sveltejs/kit' {
 		type HostProtocolSchemes = `${string}://` | '';
 		type HttpDelineator = '/' | '?' | '#' | '\\';
 		type PortScheme = `:${number}` | '' | ':*';
-		type SchemeSource = 'http:' | 'https:' | 'data:' | 'mediastream:' | 'blob:' | 'filesystem:';
+		type SchemeSource =
+			| 'http:'
+			| 'https:'
+			| 'ws:'
+			| 'wss:'
+			| 'data:'
+			| 'mediastream:'
+			| 'blob:'
+			| 'filesystem:'
+			| (`${string}:` & {});
 		type Source = HostSource | SchemeSource | CryptoSource | BaseSource;
 		type Sources = Source[];
 	}
@@ -2506,6 +2546,10 @@ declare module '@sveltejs/kit' {
 		(details: { routes: string[]; message: string }): void;
 	}
 
+	interface PrerenderInvalidUrlHandler {
+		(details: { href: string; referrer: string | null; message: string }): void;
+	}
+
 	type PrerenderHttpErrorHandlerValue = 'fail' | 'warn' | 'ignore' | PrerenderHttpErrorHandler;
 	type PrerenderMissingIdHandlerValue = 'fail' | 'warn' | 'ignore' | PrerenderMissingIdHandler;
 	type PrerenderUnseenRoutesHandlerValue =
@@ -2518,6 +2562,11 @@ declare module '@sveltejs/kit' {
 		| 'warn'
 		| 'ignore'
 		| PrerenderEntryGeneratorMismatchHandler;
+	type PrerenderInvalidUrlHandlerValue =
+		| 'fail'
+		| 'warn'
+		| 'ignore'
+		| PrerenderInvalidUrlHandler;
 
 	export type PrerenderOption = boolean | 'auto';
 
@@ -2583,6 +2632,9 @@ declare module '@sveltejs/kit' {
 			routes?: SSRClientRoute[];
 			stylesheets: string[];
 			fonts: string[];
+			/**
+			 * Whether the client uses public dynamic env vars — `$env/dynamic/public` or `$app/env/public`.
+			 */
 			uses_env_dynamic_public: boolean;
 			/** Only set in case of `bundleStrategy === 'inline'`. */
 			inline?: {
@@ -2793,7 +2845,7 @@ declare module '@sveltejs/kit' {
 	 * @throws {import('./public.js').HttpError} This error instructs SvelteKit to initiate HTTP error handling.
 	 * @throws {Error} If the provided status is invalid (not between 400 and 599).
 	 */
-	function error_1(status: number, body: App.Error): never;
+	export function error(status: number, body: App.Error): never;
 	/**
 	 * Throws an error with a HTTP status code and an optional message.
 	 * When called during request handling, this will cause SvelteKit to
@@ -2804,7 +2856,7 @@ declare module '@sveltejs/kit' {
 	 * @throws {import('./public.js').HttpError} This error instructs SvelteKit to initiate HTTP error handling.
 	 * @throws {Error} If the provided status is invalid (not between 400 and 599).
 	 */
-	function error_1(status: number, body?: {
+	export function error(status: number, body?: {
 		message: string;
 	} extends App.Error ? App.Error | string | undefined : never): never;
 	/**
@@ -2930,7 +2982,7 @@ declare module '@sveltejs/kit' {
 	export const VERSION: string;
 	const valid_page_options_array: readonly ["ssr", "prerender", "csr", "trailingSlash", "config", "entries", "load"];
 
-	export { error_1 as error };
+	export {};
 }
 
 declare module '@sveltejs/kit/hooks' {
@@ -3034,16 +3086,18 @@ declare module '@sveltejs/kit/node' {
 
 declare module '@sveltejs/kit/vite' {
 	import type { KitConfig } from '@sveltejs/kit';
-	import type { SvelteConfig } from '@sveltejs/vite-plugin-svelte';
+	import type { Options, SvelteConfig } from '@sveltejs/vite-plugin-svelte';
 	import type { Plugin } from 'vite';
 	/**
 	 * Returns the SvelteKit Vite plugins.
+	 * Any options that don't belong to SvelteKit are passed through to `vite-plugin-svelte`.
 	 *
 	 * Since version 3.0.0 you must pass [configuration](configuration) directly.
 	 *
 	 * Since version 2.62.0 you can pass configuration directly, in which case `svelte.config.js` is ignored.
+	 *
 	 * */
-	export function sveltekit(config?: KitConfig & Omit<SvelteConfig, "onwarn">): Promise<Plugin[]>;
+	export function sveltekit(config?: KitConfig & Omit<Options, "onwarn"> & Pick<SvelteConfig, "vitePlugin">): Promise<Plugin[]>;
 
 	export {};
 }
@@ -3253,7 +3307,7 @@ declare module '$app/navigation' {
 }
 
 declare module '$app/paths' {
-	import type { RouteIdWithSearchOrHash, PathnameWithSearchOrHash, ResolvedPathname, RouteId, RouteParams, Asset, Pathname as Pathname_1 } from '$app/types';
+	import type { RouteIdWithSearchOrHash, PathnameWithSearchOrHash, ResolvedPathname, RouteId, RouteParams, Asset, Pathname } from '$app/types';
 	/**
 	 * A string that matches [`paths.base`](https://svelte.dev/docs/kit/configuration#paths).
 	 *
@@ -3350,7 +3404,7 @@ declare module '$app/paths' {
 	 * @since 2.52.0
 	 *
 	 * */
-	export function match(url: Pathname_1 | URL | (string & {})): Promise<{
+	export function match(url: Pathname | URL | (string & {})): Promise<{
 		id: RouteId;
 		params: Record<string, string>;
 	} | null>;
@@ -3429,7 +3483,7 @@ declare module '$app/server' {
 	 *
 	 * @since 2.27
 	 */
-	export function form<Schema extends StandardSchemaV1<RemoteFormInput, Record<string, any>>, Output>(validate: Schema, fn: (data: StandardSchemaV1.InferOutput<Schema>, issue: InvalidField<StandardSchemaV1.InferInput<Schema>>) => MaybePromise<Output>): RemoteForm<StandardSchemaV1.InferInput<Schema>, Output>;
+	export function form<Schema extends StandardSchemaV1<RemoteFormInput, Record<string, any>>, Output>(validate: true extends HasNonOptionalBoolean<StandardSchemaV1.InferInput<Schema>> ? "Error: All booleans in form schemas must be optional (e.g. `v.optional(v.boolean(), false)`) because checkbox inputs do not send a false value when unchecked." : Schema, fn: (data: StandardSchemaV1.InferOutput<Schema>, issue: InvalidField<StandardSchemaV1.InferInput<Schema>>) => MaybePromise<Output>): RemoteForm<StandardSchemaV1.InferInput<Schema>, Output>;
 	/**
 	 * Creates a remote prerender function. When called from the browser, the function will be invoked on the server via a `fetch` call.
 	 *
@@ -3597,6 +3651,19 @@ declare module '$app/server' {
 	type RemotePrerenderInputsGenerator<Input = any> = () => MaybePromise<Input[]>;
 	type MaybePromise<T> = T | Promise<T>;
 
+	type IsAny<T> = 0 extends 1 & T ? true : false;
+
+	type HasNonOptionalBoolean<T> =
+		IsAny<T> extends true
+			? never
+			: [T] extends [boolean]
+				? true
+				: T extends Array<infer U>
+					? HasNonOptionalBoolean<U>
+					: T extends Record<string, any>
+						? { [K in keyof T]: HasNonOptionalBoolean<T[K]> }[keyof T]
+						: never;
+
 	export {};
 }
 
@@ -3700,7 +3767,9 @@ declare module '$app/stores' {
 	};
 
 	export {};
-}/**
+}
+
+/**
  * It's possible to tell SvelteKit how to type objects inside your app by declaring the `App` namespace. By default, a new project will have a file called `src/app.d.ts` containing the following:
  *
  * ```ts

@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { assert, expect, test } from 'vitest';
+import { assert, expect, test, vi } from 'vitest';
 import create_manifest_data from './index.js';
 import { sort_routes } from './sort.js';
 import { validate_config } from '../../config/index.js';
@@ -107,6 +107,31 @@ test('creates routes', () => {
 			page: { layouts: [0], errors: [1], leaf: 5 }
 		}
 	]);
+});
+
+test('assigns deterministic node indices regardless of readdirSync order', () => {
+	// `readdirSync` order is not guaranteed and differs between runtimes (e.g. Node
+	// returns entries alphabetically, Bun in directory order). Node indices are assigned
+	// from the traversal order, so an unsorted result could make the SSR and client
+	// manifests disagree. Simulate a runtime that returns entries in reverse order and
+	// assert the output matches the normal (sorted) run.
+	const expected = create('samples/basic');
+
+	const actual_readdir = fs.readdirSync;
+	const spy = vi.spyOn(fs, 'readdirSync').mockImplementation((...args) => {
+		const result = /** @type {string[]} */ (
+			/** @type {unknown} */ (actual_readdir(.../** @type {[any, any]} */ (args)))
+		);
+		return /** @type {any} */ ([...result].sort().reverse());
+	});
+
+	try {
+		const actual = create('samples/basic');
+		expect(actual.nodes.map(simplify_node)).toEqual(expected.nodes.map(simplify_node));
+		expect(actual.routes.map(simplify_route)).toEqual(expected.routes.map(simplify_route));
+	} finally {
+		spy.mockRestore();
+	}
 });
 
 const symlink_survived_git = fs
@@ -899,5 +924,12 @@ test('errors with both ts and js handlers for the same route', () => {
 	assert.throws(
 		() => create('samples/conflicting-ts-js-handlers-server'),
 		/^Multiple endpoint files found in samples\/conflicting-ts-js-handlers-server\/ : \+server\.js and \+server\.ts/
+	);
+});
+
+test('errors on prerenderable dual route', () => {
+	assert.throws(
+		() => create('samples/prerendered-dual-route'),
+		'Cannot prerender a route (/x) with both a `+page.svelte` and a `+server.js`'
 	);
 });

@@ -13,6 +13,12 @@ const config = {
 	},
 	plugins: [
 		sveltekit({
+			adapter: {
+				name: 'test',
+				adapt(builder) {
+					builder.generateEnvModule();
+				}
+			},
 			compilerOptions: {
 				experimental: {
 					async: true

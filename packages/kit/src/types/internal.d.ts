@@ -43,7 +43,6 @@ export interface ServerModule {
 export interface ServerInternalModule {
 	set_assets(path: string): void;
 	set_building(): void;
-	set_env(environment: Record<string, string>): void;
 	set_manifest(manifest: SSRManifest): void;
 	set_prerendering(): void;
 	set_read_implementation(implementation: (path: string) => ReadableStream): void;
@@ -100,6 +99,9 @@ export interface BuildData {
 		routes?: SSRClientRoute[];
 		stylesheets: string[];
 		fonts: string[];
+		/**
+		 * Whether the client uses public dynamic env vars — `$env/dynamic/public` or `$app/env/public`.
+		 */
 		uses_env_dynamic_public: boolean;
 		/** Only set in case of `bundleStrategy === 'inline'`. */
 		inline?: {

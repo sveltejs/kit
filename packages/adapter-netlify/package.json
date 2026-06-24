@@ -45,14 +45,14 @@
 	},
 	"dependencies": {
 		"@iarna/toml": "^2.2.5",
-		"rolldown": "^1.0.0-rc.6"
+		"rolldown": "^1.1.2"
 	},
 	"devDependencies": {
 		"@netlify/dev": "catalog:",
 		"@netlify/edge-functions": "catalog:",
 		"@netlify/functions": "catalog:",
 		"@netlify/node-cookies": "^0.1.0",
-		"@netlify/types": "^2.1.0",
+		"@netlify/types": "^2.3.0",
 		"@sveltejs/kit": "workspace:^",
 		"@types/node": "catalog:",
 		"typescript": "catalog:",

@@ -1,5 +1,5 @@
 import { expect, test, describe } from 'vitest';
-import { parse_as_bytes, parse_origin } from '../utils.js';
+import { format_listening_address, parse_as_bytes, parse_origin } from './utils.js';
 
 describe('parse_as_bytes', () => {
 	test.each([
@@ -46,4 +46,38 @@ describe('parse_origin', () => {
 			expect(() => parse_origin(input)).toThrow('Invalid ORIGIN');
 		}
 	);
+});
+
+describe('format_listening_address', () => {
+	test('uses the actual listening port assigned by the server', () => {
+		expect(
+			format_listening_address(false, '0.0.0.0', '0', {
+				address: '0.0.0.0',
+				family: 'IPv4',
+				port: 43521
+			})
+		).toBe('http://0.0.0.0:43521');
+	});
+
+	test('formats IPv6 addresses as valid URLs', () => {
+		expect(
+			format_listening_address(false, '::1', '3000', {
+				address: '::1',
+				family: 'IPv6',
+				port: 3000
+			})
+		).toBe('http://[::1]:3000');
+	});
+
+	test('falls back to configured host and port when the address is unavailable', () => {
+		expect(format_listening_address(false, 'localhost', '3000', null)).toBe(
+			'http://localhost:3000'
+		);
+	});
+
+	test('returns the socket path unchanged', () => {
+		expect(format_listening_address('/tmp/sveltekit.sock', '0.0.0.0', '3000', null)).toBe(
+			'/tmp/sveltekit.sock'
+		);
+	});
 });

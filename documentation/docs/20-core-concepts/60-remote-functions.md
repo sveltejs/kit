@@ -416,7 +416,7 @@ A form is composed of a set of _fields_, which are defined by the schema. In the
 
 These attributes allow SvelteKit to set the correct input type, set a `name` that is used to construct the `data` passed to the handler, populate the `value` of the form (for example following a failed submission, to save the user having to re-enter everything), and set the [`aria-invalid`](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Attributes/aria-invalid) state.
 
-Passing a second argument to `.as(...)` is useful when rendering a form from existing data, such as an edit form or multiple instances created with [`for(...)`](#form-Multiple-instances-of-a-form). `radio`, `submit` and `hidden` inputs always need this value, and `checkbox` inputs need it when they represent one option in an array field. `file` inputs cannot be populated this way.
+Passing a second argument to `.as(...)` is useful when rendering a form from existing data, such as an edit form or multiple instances created with [`for(...)`](#form-Multiple-instances-of-a-form). As well as setting the value of the element when it is rendered, it controls the value of the element when the form is reset. `radio`, `submit` and `hidden` inputs always need this value, and `checkbox` inputs need it when they represent one option in an array field. `file` inputs cannot be populated this way.
 
 > [!NOTE] The generated `name` attribute uses JS object notation (e.g. `nested.array[0].value`). String keys that require quotes such as `object['nested-array'][0].value` are not supported. Under the hood, boolean checkbox and number field names are prefixed with `b:` and `n:`, respectively, to signal SvelteKit to coerce the values from strings prior to validation.
 
@@ -686,7 +686,7 @@ Each field has a `value()` method that reflects its current value. As the user i
 
 Alternatively, `createPost.fields.value()` would return a `{ title, content }` object.
 
-You can update a field (or a collection of fields) via the `set(...)` method:
+The `value()` of a field does _not_ reflect defaults provided as a second argument to `as` (as in `fields.title.as('text', '...')`) until it is edited or submitted. You can programmatically update a field (or a collection of fields) via the `set(...)` method:
 
 ```svelte
 <script>
@@ -1300,7 +1300,7 @@ const getUser = query(async () => {
 Note that some properties of `RequestEvent` are different inside remote functions:
 
 - you cannot set headers (other than writing cookies, and then only inside `form` and `command` functions)
-- `route`, `params` and `url` relate to the page the remote function was called from, _not_ the URL of the endpoint SvelteKit creates for the remote function. Queries are not re-run when the user navigates (unless the argument to the query changes as a result of navigation), and so you should be mindful of how you use these values. In particular, never use them to determine whether or not a user is authorized to access certain data.
+- `route`, `params` and `url` relate to the page the remote function was called from, _not_ the URL of the endpoint SvelteKit creates for the remote function. Never use them to determine whether or not a user is authorized to access certain data, as these values are part of the request which could be manipulated. Queries are also not re-run when the user navigates (unless the argument to the query changes as a result of navigation), and so you should be mindful of how you use these values.
 
 ## Redirects
 
