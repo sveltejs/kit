@@ -1,4 +1,5 @@
 /** @import { RemoteFunctionDataNode, ServerNodesResponse, ServerRedirectNode } from 'types' */
+/** @import { NavigationIntent } from './types.js' */
 /** @import { CacheEntry } from './remote-functions/cache.svelte.js' */
 /** @import { Query } from './remote-functions/query/instance.svelte.js' */
 /** @import { LiveQuery } from './remote-functions/query-live/instance.svelte.js' */
@@ -529,7 +530,7 @@ function persist_state() {
  * @param {{ replaceState?: boolean; noScroll?: boolean; keepFocus?: boolean; invalidateAll?: boolean; invalidate?: Array<string | URL | ((url: URL) => boolean)>; state?: Record<string, any> }} options
  * @param {number} redirect_count
  * @param {{}} [nav_token]
- * @param {import('./types.js').NavigationIntent | undefined} [intent] navigation intent, when already known by the caller (avoids recomputing it)
+ * @param {NavigationIntent | undefined} [intent] navigation intent, when already known by the caller (avoids recomputing it)
  * @returns {Promise<void>}
  */
 export async function _goto(url, options, redirect_count, nav_token, intent) {
@@ -1706,7 +1707,7 @@ function _before_navigate({ url, type, intent, delta, event, scroll }) {
  *   accept?: () => void;
  *   block?: () => void;
  *   event?: Event;
- *   intent?: import('./types.js').NavigationIntent | undefined
+ *   intent?: NavigationIntent | undefined
  * }} opts
  * @returns {Promise<void>}
  */
