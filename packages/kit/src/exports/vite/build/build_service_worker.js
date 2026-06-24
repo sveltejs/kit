@@ -39,6 +39,16 @@ export async function build_service_worker(
 		assets.forEach((file) => build.add(file));
 	}
 
+	if (kit.output.bundleStrategy === 'inline') {
+		// the bundle and stylesheet are inlined into the page and their files
+		// deleted, so they must not appear in the list of cacheable assets
+		for (const file of build) {
+			if (!fs.existsSync(`${out}/client/${file}`)) {
+				build.delete(file);
+			}
+		}
+	}
+
 	// in a service worker, `location` is the location of the service worker itself,
 	// which is guaranteed to be `<base>/service-worker.js`
 	const base = "location.pathname.split('/').slice(0, -1).join('/')";
@@ -96,11 +106,17 @@ export async function build_service_worker(
 			}
 
 			if (id === '\0virtual:app/env/public') {
-				// TODO ideally we would only add the `importScripts` if there are dynamic vars that are known to be used
+				const has_dynamic_public_env = Object.values(env_config ?? {}).some(
+					(variable) => variable.public && !variable.static
+				);
+
 				return create_sveltekit_env_public(
 					env_config,
 					env.all,
-					`importScripts('${kit.paths.base}/${kit.appDir}/env.script.js'); const env = globalThis.__sveltekit_sw.env;`
+					has_dynamic_public_env
+						? // the service worker isn't registered as ESM yet, so we need to use `importScripts`
+							`importScripts('${kit.paths.base}/${kit.appDir}/env.script.js'); const env = globalThis.__sveltekit_sw.env;`
+						: ''
 				);
 			}
 
@@ -148,13 +164,6 @@ export async function build_service_worker(
 			}
 		}
 	};
-
-	// we must reference Vite 8 options conditionally. Otherwise, older Vite
-	// versions throw an error about unknown config options
-	if (is_rolldown && config?.build?.rollupOptions?.output) {
-		// @ts-ignore only available in Vite 8
-		config.build.rollupOptions.output.codeSplitting = true;
-	}
 
 	await vite.build(config);
 

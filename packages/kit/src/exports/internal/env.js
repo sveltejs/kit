@@ -16,7 +16,7 @@ const ASYNC_VALIDATOR = {
 };
 
 /**
- * @param {Record<string, EnvVarConfig<any>>} variables
+ * @param {Record<string, EnvVarConfig<any> | undefined>} variables
  * @param {string | undefined} value
  * @param {string} name
  * @param {Record<string, StandardSchemaV1.Issue[]>} issues

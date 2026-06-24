@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { invalidateAll } from '$app/navigation';
 	import LiveView from './LiveView.svelte';
 	import {
 		increment,
@@ -44,6 +45,39 @@
 			for_await_values = `error: ${(error as Error).message}`;
 		}
 	}
+
+	let stream_log = $state('');
+	let stream_iteration: AbortController | null = null;
+
+	async function start_stream_log() {
+		stream_iteration?.abort();
+		stream_iteration = new AbortController();
+		const signal = stream_iteration.signal;
+		stream_log = '';
+		const collected: number[] = [];
+
+		try {
+			for await (const value of get_count()) {
+				if (signal.aborted) break;
+				collected.push(value);
+				stream_log = collected.join(',');
+			}
+		} catch (error) {
+			stream_log = `error: ${(error as Error).message}`;
+		}
+	}
+
+	let invalidate_state = $state('idle');
+
+	async function run_invalidate_all() {
+		invalidate_state = 'pending';
+		try {
+			await invalidateAll();
+			invalidate_state = 'resolved';
+		} catch {
+			invalidate_state = 'rejected';
+		}
+	}
 </script>
 
 <button id="increment" onclick={() => increment()}>increment</button>
@@ -74,3 +108,8 @@
 <button id="start-for-await" onclick={start_for_await}>start for-await</button>
 <p id="for-await-count">{for_await_count}</p>
 <p id="for-await-values">{for_await_values}</p>
+
+<button id="start-stream-log" onclick={start_stream_log}>start stream log</button>
+<p id="stream-log">{stream_log}</p>
+<button id="run-invalidate-all" onclick={run_invalidate_all}>invalidate all</button>
+<p id="invalidate-state">{invalidate_state}</p>

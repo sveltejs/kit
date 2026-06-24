@@ -72,6 +72,10 @@ export async function load_explicit_env(kit, file, mode) {
 	/** @type {Record<string, EnvVarConfig<any>>} */
 	let variables;
 
+	/** @type {import('../runtime/app/env/internal.js')} */ (
+		await server.ssrLoadModule(`${runtime_directory}/app/env/internal.js`)
+	).set_building();
+
 	try {
 		({ variables } = await server.ssrLoadModule(file));
 
@@ -157,7 +161,7 @@ export function create_dynamic_module(type, dev_values, disabled) {
 
 /**
  * Creates the `__sveltekit/env` module
- * @param {Record<string, EnvVarConfig<any>> | null} variables
+ * @param {Record<string, EnvVarConfig<any> | undefined> | null} variables
  * @param {Record<string, string>} env
  * @param {string | null} entry
  */
@@ -176,7 +180,7 @@ export function create_sveltekit_env(variables, env, entry) {
 	const issues = {};
 
 	for (const [name, config] of Object.entries(variables ?? {})) {
-		if (config.static) {
+		if (config?.static) {
 			if (config.public) {
 				const value = validate(variables ?? {}, env[name], name, issues);
 				declarations.push(`explicit_public_env.${name} = ${devalue.uneval(value)};`);
@@ -186,7 +190,7 @@ export function create_sveltekit_env(variables, env, entry) {
 				`const ${name} = validate(variables, env.${name}, ${JSON.stringify(name)}, issues);`
 			);
 
-			if (config.public) {
+			if (config?.public) {
 				setters.push(`explicit_public_env.${name} = ${name};`);
 				setters.push(`rendered_env.${name} = ${name};`);
 			} else {

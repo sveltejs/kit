@@ -28,14 +28,13 @@ jobs:
     timeout-minutes: 15
     environment: '@sveltejs/adapter-vercel platform tests'
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           ref: ${{ inputs.sha || github.sha }}
 
       - uses: ./.github/actions/vercel-deploy
         id: deploy
         with:
-          test-app-dir: packages/adapter-vercel/test/apps/basic
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_BASIC }}
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}

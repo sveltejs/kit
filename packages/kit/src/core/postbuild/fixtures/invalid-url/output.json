@@ -1,0 +1,11 @@
+{
+	"hrefs": ["/styles.css", "/valid.jpg", "/valid"],
+	"ids": [],
+	"invalid": [
+		"at://did:plc:base",
+		"at://did:plc:abcdefghijklmnop/app.bsky.actor.profile/self",
+		"at://did:plc:ogurl",
+		"at://did:plc:imgsrc",
+		"at://did:plc:srcset"
+	]
+}

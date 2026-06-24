@@ -1,3 +1,4 @@
+/** @import { Plugin, RollupOptions } from 'rollup' */
 import { nodeResolve } from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import json from '@rollup/plugin-json';
@@ -6,7 +7,7 @@ import { rmSync } from 'node:fs';
 
 /**
  * @param {string} filepath
- * @returns {import('rollup').Plugin}
+ * @returns {Plugin}
  */
 function clearOutput(filepath) {
 	return {
@@ -22,7 +23,7 @@ function clearOutput(filepath) {
 }
 
 /**
- * @returns {import('rollup').Plugin}
+ * @returns {Plugin}
  */
 function prefixBuiltinModules() {
 	return {
@@ -35,59 +36,34 @@ function prefixBuiltinModules() {
 	};
 }
 
-export default [
-	{
-		input: 'src/index.js',
-		output: {
-			file: 'files/index.js',
-			format: 'esm'
-		},
-		plugins: [
-			clearOutput('files/index.js'),
-			nodeResolve({ preferBuiltins: true }),
-			commonjs(),
-			json(),
-			prefixBuiltinModules()
-		],
-		external: ['ENV', 'HANDLER']
+/** @type {RollupOptions} */
+export default {
+	input: {
+		index: 'src/index.js',
+		env: 'src/env.js',
+		handler: 'src/handler.js',
+		shims: 'src/shims.js',
+		utils: 'utils.js'
 	},
-	{
-		input: 'src/env.js',
-		output: {
-			file: 'files/env.js',
-			format: 'esm'
-		},
-		plugins: [
-			clearOutput('files/env.js'),
-			nodeResolve(),
-			commonjs(),
-			json(),
-			prefixBuiltinModules()
-		],
-		external: ['HANDLER']
+	output: {
+		dir: 'files',
+		format: 'esm',
+		hoistTransitiveImports: false,
+		chunkFileNames: 'chunks/[name].js',
+		// prevent the handler code from becoming a shared chunk when both
+		// handler.js and index.js are input entries
+		manualChunks(id) {
+			if (id.includes('node_modules')) return 'vendor';
+		}
 	},
-	{
-		input: 'src/handler.js',
-		output: {
-			file: 'files/handler.js',
-			format: 'esm',
-			inlineDynamicImports: true
-		},
-		plugins: [
-			clearOutput('files/handler.js'),
-			nodeResolve(),
-			commonjs(),
-			json(),
-			prefixBuiltinModules()
-		],
-		external: ['ENV', 'MANIFEST', 'SERVER', 'SHIMS']
-	},
-	{
-		input: 'src/shims.js',
-		output: {
-			file: 'files/shims.js',
-			format: 'esm'
-		},
-		plugins: [clearOutput('files/shims.js'), nodeResolve(), commonjs(), prefixBuiltinModules()]
-	}
-];
+	plugins: [
+		clearOutput('files'),
+		nodeResolve({ preferBuiltins: true }),
+		// @ts-expect-error https://github.com/rollup/plugins/issues/1329
+		commonjs(),
+		// @ts-expect-error https://github.com/rollup/plugins/issues/1329
+		json(),
+		prefixBuiltinModules()
+	],
+	external: ['MANIFEST', 'SERVER', '@sveltejs/kit/node', '@sveltejs/kit/node/polyfills']
+};

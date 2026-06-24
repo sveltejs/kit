@@ -119,6 +119,7 @@ export function make_trackable(url, callback, search_params_callback, allow_hash
 	/**
 	 * URL properties that could change during the lifetime of the page,
 	 * which excludes things like `origin`
+	 * @type {(keyof URL)[]}
 	 */
 	const tracked_url_properties = ['href', 'pathname', 'search', 'toString', 'toJSON'];
 	if (allow_hash) tracked_url_properties.push('hash');
@@ -127,7 +128,6 @@ export function make_trackable(url, callback, search_params_callback, allow_hash
 		Object.defineProperty(tracked, property, {
 			get() {
 				callback();
-				// @ts-expect-error
 				return url[property];
 			},
 

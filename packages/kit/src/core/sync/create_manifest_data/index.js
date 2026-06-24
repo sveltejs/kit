@@ -426,7 +426,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 
 	const indexes = new Map(nodes.map((node, i) => [node, i]));
 
-	const node_analyser = create_node_analyser();
+	const node_analyser = create_node_analyser(cwd);
 
 	// add the related layout, page, and error nodes for a route
 	for (const route of routes) {
@@ -495,7 +495,18 @@ function create_routes_and_nodes(cwd, config, fallback) {
 
 	for (const route of routes) {
 		if (route.endpoint) {
-			route.endpoint.page_options = get_page_options(route.endpoint.file);
+			route.endpoint.page_options = get_page_options(path.join(cwd, route.endpoint.file));
+		}
+
+		if (route.page && route.endpoint) {
+			const page = nodes[route.page.leaf];
+			if (page.page_options?.prerender || route.endpoint.page_options?.prerender) {
+				const endpoint_file = route.endpoint.file.split('/').pop();
+
+				throw new Error(
+					`Cannot prerender a route (${route.id}) with both a \`+page.svelte\` and a \`${endpoint_file}\``
+				);
+			}
 		}
 	}
 
