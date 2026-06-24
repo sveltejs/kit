@@ -281,8 +281,8 @@ export async function render_page(
 						return redirect_response(err.status, err.location);
 					}
 
-					const status = get_status(err);
 					const error = await handle_error_and_jsonify(event, event_state, options, err);
+					const status = get_status(error, err);
 
 					while (i--) {
 						if (page.errors[i]) {

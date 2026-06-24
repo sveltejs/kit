@@ -392,7 +392,7 @@ export interface ServerErrorNode {
 	type: 'error';
 	error: App.Error;
 	/**
-	 * Only set for HttpErrors.
+	 * Only set for HttpErrors, or when overridden by `handleError`.
 	 */
 	status?: number;
 }

@@ -1,6 +1,6 @@
 import { text } from '@sveltejs/kit';
-import { HttpError, SvelteKitError, Redirect } from '@sveltejs/kit/internal';
-import { normalize_error } from '../../../utils/error.js';
+import { Redirect } from '@sveltejs/kit/internal';
+import { normalize_error, get_status } from '../../../utils/error.js';
 import { once } from '../../../utils/functions.js';
 import { server_data_serializer_json } from '../page/data_serializer.js';
 import { load_server_data } from '../page/load_data.js';
@@ -107,13 +107,17 @@ export async function render_data(
 					// Math.min because array isn't guaranteed to resolve in order
 					length = Math.min(length, i + 1);
 
+					const transformed = await handle_error_and_jsonify(
+						event,
+						event_state,
+						options,
+						error
+					);
+
 					return /** @type {import('types').ServerErrorNode} */ ({
 						type: 'error',
-						error: await handle_error_and_jsonify(event, event_state, options, error),
-						status:
-							error instanceof HttpError || error instanceof SvelteKitError
-								? error.status
-								: undefined
+						error: transformed,
+						status: get_status(transformed, error)
 					});
 				})
 			)
@@ -156,7 +160,8 @@ export async function render_data(
 		if (error instanceof Redirect) {
 			return redirect_json_response(error);
 		} else {
-			return json_response(await handle_error_and_jsonify(event, event_state, options, error), 500);
+			const transformed = await handle_error_and_jsonify(event, event_state, options, error);
+			return json_response(transformed, get_status(transformed, error));
 		}
 	}
 }

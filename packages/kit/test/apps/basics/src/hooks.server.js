@@ -47,6 +47,13 @@ export const handleError = ({ event, error: e, status, message }) => {
 		message = /** @type {string} */ (ev.locals.message);
 	}
 
+	if (event.url.pathname === '/errors/handle-error-status') {
+		return {
+			status: 404,
+			message: `${error.message} (${status} ${message})`
+		};
+	}
+
 	return event.url.pathname.endsWith('404-fallback')
 		? undefined
 		: { message: `${error.message} (${status} ${message})` };

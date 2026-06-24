@@ -100,6 +100,27 @@ By default, unexpected errors are printed to the console (or, in production, you
 
 Unexpected errors will go through the [`handleError`](hooks#Shared-hooks-handleError) hook, where you can add your own error handling — for example, sending errors to a reporting service, or returning a custom error object which becomes `page.error`.
 
+You can override the HTTP status code used in the response by returning a `status` property:
+
+```js
+/// file: src/hooks.server.js
+// Assuming you have this ...
+class NotFound extends Error {}
+
+/** @type {import('./$types').HandleServerError} */
+export function handleError({ error, event, status, message }) {
+	// ... you can do this
+	if (error instanceof NotFound) {
+		return {
+			status: 404,
+			message: 'Not found'
+		};
+	}
+
+	return { message: 'Something went wrong' };
+}
+```
+
 ## Rendering errors
 
 Ordinarily, if an error happens during server-side rendering (for example inside a component's `<script>` block or template), SvelteKit will return a 500 error page.

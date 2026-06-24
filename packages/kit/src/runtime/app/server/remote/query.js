@@ -14,7 +14,7 @@ import {
 import { noop } from '../../../../utils/functions.js';
 import { SharedIterator } from '../../../../utils/shared-iterator.js';
 import { handle_error_and_jsonify } from '../../../server/utils.js';
-import { HttpError, SvelteKitError } from '@sveltejs/kit/internal';
+import { get_status } from '../../../../utils/error.js';
 
 /**
  * Creates a remote query. When called from the browser, the function will be invoked on the server via a `fetch` call.
@@ -347,13 +347,17 @@ function batch(validate_or_fn, maybe_fn) {
 								const data = get_result(arg, i);
 								return { type: 'result', data };
 							} catch (error) {
+								const transformed = await handle_error_and_jsonify(
+									event,
+									state,
+									options,
+									error
+								);
+
 								return {
 									type: 'error',
-									error: await handle_error_and_jsonify(event, state, options, error),
-									status:
-										error instanceof HttpError || error instanceof SvelteKitError
-											? error.status
-											: 500
+									error: transformed,
+									status: get_status(transformed, error)
 								};
 							}
 						})

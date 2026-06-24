@@ -90,6 +90,8 @@ export async function respond_with_error({
 			);
 		}
 
+		const transformed = await handle_error_and_jsonify(event, event_state, options, error);
+
 		return await render_response({
 			options,
 			manifest,
@@ -98,8 +100,8 @@ export async function respond_with_error({
 				ssr,
 				csr
 			},
-			status,
-			error: await handle_error_and_jsonify(event, event_state, options, error),
+			status: get_status(transformed, error),
+			error: transformed,
 			branch,
 			error_components: [],
 			fetched,
@@ -115,10 +117,8 @@ export async function respond_with_error({
 			return redirect_response(e.status, e.location);
 		}
 
-		return static_error_page(
-			options,
-			get_status(e),
-			(await handle_error_and_jsonify(event, event_state, options, e)).message
-		);
+		const transformed = await handle_error_and_jsonify(event, event_state, options, e);
+
+		return static_error_page(options, get_status(transformed, e), transformed.message);
 	}
 }

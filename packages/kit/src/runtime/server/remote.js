@@ -8,7 +8,7 @@ import { app_dir, base } from '$app/paths/internal/server';
 import { is_form_content_type } from '../../utils/http.js';
 import { create_remote_key, parse_remote_arg, split_remote_key, stringify } from '../shared.js';
 import { handle_error_and_jsonify } from './utils.js';
-import { normalize_error } from '../../utils/error.js';
+import { normalize_error, get_status } from '../../utils/error.js';
 import { check_incorrect_fail_use } from './page/actions.js';
 import { DEV } from 'esm-env';
 import { record_span } from '../telemetry/record_span.js';
@@ -171,15 +171,17 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 											location: error.location
 										});
 									} else {
-										const status =
-											error instanceof HttpError || error instanceof SvelteKitError
-												? error.status
-												: 500;
+										const transformed = await handle_error_and_jsonify(
+											event,
+											state,
+											options,
+											error
+										);
 
 										send(controller, {
 											type: 'error',
-											error: await handle_error_and_jsonify(event, state, options, error),
-											status
+											error: transformed,
+											status: get_status(transformed, error)
 										});
 									}
 								}
@@ -326,13 +328,13 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 			);
 		}
 
-		const status =
-			error instanceof HttpError || error instanceof SvelteKitError ? error.status : 500;
+		const transformed = await handle_error_and_jsonify(event, state, options, error);
+		const status = get_status(transformed, error);
 
 		return json(
 			/** @type {RemoteFunctionResponse} */ ({
 				type: 'error',
-				error: await handle_error_and_jsonify(event, state, options, error),
+				error: transformed,
 				status
 			}),
 			{
@@ -362,10 +364,8 @@ export async function collect_remote_data(data, event, state, options) {
 	 * @returns {Promise<[status: number, error: App.Error]>}
 	 */
 	async function convert_error(error) {
-		const status =
-			error instanceof HttpError || error instanceof SvelteKitError ? error.status : 500;
-
-		return [status, await handle_error_and_jsonify(event, state, options, error)];
+		const transformed = await handle_error_and_jsonify(event, state, options, error);
+		return [get_status(transformed, error), transformed];
 	}
 
 	/** @type {Promise<any>[]} */

@@ -709,7 +709,7 @@ async function initialize(result, target, hydrate) {
 		transformError: __SVELTEKIT_EXPERIMENTAL_USE_TRANSFORM_ERROR__
 			? /** @param {unknown} e */ async (e) => {
 					const error = await handle_error(e, current.nav);
-					rendering_error = { error, status: get_status(e) };
+					rendering_error = { error, status: get_status(error, e) };
 					page.error = error;
 					page.status = rendering_error.status;
 					return error;
@@ -1243,7 +1243,7 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 				}
 
 				return load_root_error_page({
-					status: get_status(error),
+					status: get_status(handled_error, error),
 					error: handled_error,
 					url,
 					route
@@ -1337,17 +1337,20 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 					});
 				}
 
-				let status = get_status(err);
 				/** @type {App.Error} */
 				let error;
+				/** @type {number} */
+				let status;
 
 				if (server_data_nodes?.includes(/** @type {import('types').ServerErrorNode} */ (err))) {
 					// this is the server error rethrown above, reconstruct but don't invoke
 					// the client error handler; it should've already been handled on the server
-					status = /** @type {import('types').ServerErrorNode} */ (err).status ?? status;
 					error = /** @type {import('types').ServerErrorNode} */ (err).error;
+					status =
+						/** @type {import('types').ServerErrorNode} */ (err).status ?? get_status(error, err);
 				} else if (err instanceof HttpError) {
 					error = err.body;
+					status = err.status;
 				} else {
 					// Referenced node could have been removed due to redeploy, check
 					const updated = await stores.updated.check();
@@ -1358,6 +1361,7 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 					}
 
 					error = await handle_error(err, { params, url, route: { id: route.id } });
+					status = get_status(error, err);
 				}
 
 				const error_load = await load_nearest_error_page(i, branch, errors);
@@ -1514,7 +1518,7 @@ async function load_root_error_page({ status, error, url, route }) {
 			.replace(/&/g, '&amp;')
 			.replace(/</g, '&lt;')
 			.replace(/>/g, '&gt;');
-		const html = error_template({ status, message });
+		const html = error_template({ status: get_status(handled, error), message });
 		const parsed = new DOMParser().parseFromString(html, 'text/html');
 		document.documentElement.replaceChild(document.adoptNode(parsed.head), document.head);
 		document.documentElement.replaceChild(document.adoptNode(parsed.body), document.body);
@@ -3078,9 +3082,11 @@ async function _hydrate(
 			return await native_navigation(new URL(error.location, location.href));
 		}
 
+		const handled_error = await handle_error(error, { url, params, route });
+
 		result = await load_root_error_page({
-			status: get_status(error),
-			error: await handle_error(error, { url, params, route }),
+			status: get_status(handled_error, error),
+			error: handled_error,
 			url,
 			route
 		});

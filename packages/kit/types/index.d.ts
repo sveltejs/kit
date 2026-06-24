@@ -912,13 +912,15 @@ declare module '@sveltejs/kit' {
 	 *
 	 * If an unexpected error is thrown during loading or rendering, this function will be called with the error and the event.
 	 * Make sure that this function _never_ throws an error.
+	 *
+	 * The returned object can include a `status` property to override the HTTP status code used in the response.
 	 */
 	export type HandleServerError = (input: {
 		error: unknown;
 		event: RequestEvent;
 		status: number;
 		message: string;
-	}) => MaybePromise<void | App.Error>;
+	}) => MaybePromise<void | (App.Error & { status?: number })>;
 
 	/**
 	 * The [`handleValidationError`](https://svelte.dev/docs/kit/hooks#Server-hooks-handleValidationError) hook runs when the argument to a remote function fails validation.
@@ -933,13 +935,15 @@ declare module '@sveltejs/kit' {
 	 *
 	 * If an unexpected error is thrown during loading or the following render, this function will be called with the error and the event.
 	 * Make sure that this function _never_ throws an error.
+	 *
+	 * The returned object can include a `status` property to override the HTTP status code used in the response.
 	 */
 	export type HandleClientError = (input: {
 		error: unknown;
 		event: NavigationEvent;
 		status: number;
 		message: string;
-	}) => MaybePromise<void | App.Error>;
+	}) => MaybePromise<void | (App.Error & { status?: number })>;
 
 	/**
 	 * The [`handleFetch`](https://svelte.dev/docs/kit/hooks#Server-hooks-handleFetch) hook allows you to modify (or replace) the result of an [`event.fetch`](https://svelte.dev/docs/kit/load#Making-fetch-requests) call that runs on the server (or during prerendering) inside an endpoint, `load`, `action`, `handle`, `handleError` or `reroute`.
