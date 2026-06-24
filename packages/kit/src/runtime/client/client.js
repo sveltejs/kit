@@ -90,8 +90,6 @@ const snapshots = storage.get(SNAPSHOT_KEY) ?? {};
 if (DEV && BROWSER) {
 	let warned = false;
 
-	const current_module_url = import.meta.url.split('?')[0]; // remove query params that vite adds to the URL when it is loaded from node_modules
-
 	const warn = () => {
 		if (warned) return;
 
@@ -100,9 +98,13 @@ if (DEV && BROWSER) {
 		let stack = new Error().stack?.split('\n');
 		if (!stack) return;
 		if (!stack[0].includes('https:') && !stack[0].includes('http:')) stack = stack.slice(1); // Chrome includes the error message in the stack
-		stack = stack.slice(2); // remove `warn` and the place where `warn` was called
-		// Can be falsy if was called directly from an anonymous function
-		if (stack[0]?.includes(current_module_url)) return;
+
+		// skip over `warn` and the place where `warn` was called
+		const frame = stack[2];
+
+		// ignore calls that happen inside dependencies, including SvelteKit.
+		// `frame` can be falsy if we came from an anonymous function
+		if (frame?.includes('node_modules')) return;
 
 		warned = true;
 
@@ -1457,10 +1459,14 @@ async function load_root_error_page({ status, error, url, route }) {
 				}
 
 				server_data_node = server_data.nodes[0] ?? null;
-			} catch {
+			} catch (e) {
 				// at this point we have no choice but to fall back to the server, if it wouldn't
-				// bring us right back here, turning this into an endless loop
-				if (url.origin !== origin || url.pathname !== location.pathname || hydrated) {
+				// bring us right back here, turning this into an endless loop.
+				// if __data.json returned 404, the route doesn't exist — don't reload or we loop
+				if (
+					!(e instanceof HttpError && e.status === 404) &&
+					(url.origin !== origin || url.pathname !== location.pathname || hydrated)
+				) {
 					return await native_navigation(url);
 				}
 			}

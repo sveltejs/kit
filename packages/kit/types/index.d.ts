@@ -2146,6 +2146,24 @@ declare module '@sveltejs/kit' {
 	}
 
 	/**
+	 * The form instance as received inside an `enhance` callback. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
+	 */
+	export type RemoteFormEnhanceInstance<
+		Input extends RemoteFormInput | void = RemoteFormInput | void,
+		Output = any
+	> = Omit<RemoteForm<Input, Output>, 'enhance' | 'element'> & {
+		readonly element: HTMLFormElement;
+	};
+
+	/**
+	 * The callback passed to a remote form's `enhance` method. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
+	 */
+	export type RemoteFormEnhanceCallback<
+		Input extends RemoteFormInput | void = RemoteFormInput | void,
+		Output = any
+	> = (form: RemoteFormEnhanceInstance<Input, Output>) => MaybePromise<void>;
+
+	/**
 	 * The type of a remote `form` function. See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
 	 */
 	export type RemoteForm<Input extends RemoteFormInput | void, Output> = {
@@ -2161,13 +2179,7 @@ declare module '@sveltejs/kit' {
 			updates: (...updates: RemoteQueryUpdate[]) => Promise<boolean>;
 		};
 		/** Use the `enhance` method to influence what happens when the form is submitted. */
-		enhance(
-			callback: (
-				form: Omit<RemoteForm<Input, Output>, 'enhance' | 'element'> & {
-					readonly element: HTMLFormElement;
-				}
-			) => MaybePromise<void>
-		): {
+		enhance(callback: RemoteFormEnhanceCallback<Input, Output>): {
 			method: 'POST';
 			action: string;
 			[attachment: symbol]: (node: HTMLFormElement) => void;
@@ -3648,8 +3660,8 @@ declare module '$app/server' {
 		function live<Schema extends StandardSchemaV1, Output>(schema: Schema, fn: (arg: StandardSchemaV1.InferOutput<Schema>) => RemoteLiveQueryUserFunctionReturnType<Output>): RemoteLiveQueryFunction<StandardSchemaV1.InferInput<Schema>, Output, StandardSchemaV1.InferOutput<Schema>>;
 	}
 	/**
-	 * In the context of a remote `command` or `form` request, returns an iterable
-	 * of `{ arg, query }` entries for the refreshes requested by the client, up to
+	 * Inside a remote `command` or `form` callback, returns an iterable
+	 * of `{ arg, query }` entries for the query instances the client asked to refresh, up to
 	 * the supplied `limit`. Each `query` is a `RemoteQuery` bound to the original
 	 * client-side cache key, so `refresh()` / `set()` propagate correctly even when
 	 * the query's schema transforms the input. `arg` is the *validated* argument,
@@ -3658,6 +3670,8 @@ declare module '$app/server' {
 	 *
 	 * Arguments that fail validation or exceed `limit` are recorded as failures in
 	 * the response to the client.
+	 * See [Client-requested refreshes](https://svelte.dev/docs/kit/remote-functions#Single-flight-mutations-Client-requested-refreshes)
+	 * for usage in a remote `command` or `form`.
 	 *
 	 * @example
 	 * ```ts
@@ -3688,14 +3702,16 @@ declare module '$app/server' {
 	 * */
 	export function requested<Input, Output, Validated = Input>(query: RemoteQueryFunction<Input, Output, Validated>, limit: number): QueryRequestedResult<Validated, Output>;
 	/**
-	 * In the context of a remote `command` or `form` request, returns an iterable
-	 * of `{ arg, query }` entries for the reconnects requested by the client, up to
+	 * Inside a remote `command` or `form` callback, returns an iterable
+	 * of `{ arg, query }` entries for the live query instances the client asked to reconnect, up to
 	 * the supplied `limit`. Each `query` is a `RemoteLiveQuery` bound to the original
 	 * client-side cache key, so `reconnect()` propagates correctly even when
 	 * the query's schema transforms the input. `arg` is the *validated* argument.
 	 *
 	 * Arguments that fail validation or exceed `limit` are recorded as failures in
 	 * the response to the client.
+	 * See [Client-requested refreshes](https://svelte.dev/docs/kit/remote-functions#Single-flight-mutations-Client-requested-refreshes)
+	 * for usage in a remote `command` or `form`.
 	 *
 	 * @example
 	 * ```ts
