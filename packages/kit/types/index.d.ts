@@ -651,6 +651,19 @@ declare module '@sveltejs/kit' {
 			 */
 			base?: '' | `/${string}`;
 			/**
+			 * The origin of your app, used for CSRF protection and prerendering.
+			 *
+			 * By default, this is the empty string, meaning SvelteKit will derive the origin from `request.url` (which is set by the adapter, and ultimately by the platform).
+			 *
+			 * If your app is served from an origin that isn't known at request time — for example because it's deployed to a preview deployment whose URL isn't known at build time, or because it's behind a reverse proxy that doesn't pass the `host` header — you can set this to a string like `https://my-site.com`.
+			 *
+			 * This is also used as the value of `url.origin` during prerendering (when empty, it defaults to `http://sveltekit-prerender`), and as the trusted origin for CSRF checks on form submissions and remote function calls.
+			 *
+			 * @default ""
+			 * @since 3.0
+			 */
+			origin?: '' | `http://${string}` | `https://${string}`;
+			/**
 			 * Whether to use relative asset paths.
 			 *
 			 * If `true`, `base` and `assets` imported from `$app/paths` will be replaced with relative asset paths during server-side rendering, resulting in more portable HTML.
@@ -769,11 +782,6 @@ declare module '@sveltejs/kit' {
 			 * @since 2.67.0
 			 */
 			handleInvalidUrl?: PrerenderInvalidUrlHandlerValue;
-			/**
-			 * The value of `url.origin` during prerendering; useful if it is included in rendered content.
-			 * @default "http://sveltekit-prerender"
-			 */
-			origin?: string;
 		};
 		router?: {
 			/**

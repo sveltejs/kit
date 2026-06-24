@@ -77,18 +77,33 @@ Alternatively, the server can be configured to accept connections on a specified
 SOCKET_PATH=/tmp/socket node build
 ```
 
-### `ORIGIN`, `PROTOCOL_HEADER`, `HOST_HEADER`, and `PORT_HEADER`
+### `PROTOCOL_HEADER`, `HOST_HEADER`, and `PORT_HEADER`
 
-HTTP doesn't give SvelteKit a reliable way to know the URL that is currently being requested. The simplest way to tell SvelteKit where the app is being served is to set the `ORIGIN` environment variable:
+HTTP doesn't give SvelteKit a reliable way to know the URL that is currently being requested. By default, SvelteKit will derive the origin from the request's `host` header (and the `https` protocol, if no `PROTOCOL_HEADER` is set).
 
-```sh
-ORIGIN=https://my.site node build
+If your app is served from an origin that isn't known at request time — for example because it's behind a reverse proxy that doesn't pass the `host` header, or because you want to use a canonical origin for CSRF checks that differs from the request's host — you can set the [`kit.paths.origin`](https://svelte.dev/docs/kit/configuration#paths.origin) option in your `vite.config.js`:
 
-# or e.g. for local previewing and testing
-ORIGIN=http://localhost:3000 node build
+```js
+/// file: vite.config.js
+import adapter from '@sveltejs/adapter-node';
+import { sveltekit } from '@sveltejs/kit/vite';
+import { defineConfig } from 'vite';
+
+export default defineConfig({
+	plugins: [
+		sveltekit({
+			adapter: adapter(),
+			paths: {
+				origin: process.env.ORIGIN ?? ''
+			}
+		})
+	]
+});
 ```
 
-With this, a request for the `/stuff` pathname will correctly resolve to `https://my.site/stuff`. Alternatively, you can specify headers that tell SvelteKit about the request protocol and host, from which it can construct the origin URL:
+When `paths.origin` is the empty string (the default), SvelteKit derives the origin from `request.url`. Otherwise, the configured value is used as the trusted self-origin for CSRF checks on form submissions and remote function calls, and as the value of `url.origin` during prerendering.
+
+Alternatively, you can specify headers that tell SvelteKit about the request protocol and host, from which it can construct the origin URL:
 
 ```sh
 PROTOCOL_HEADER=x-forwarded-proto HOST_HEADER=x-forwarded-host node build
@@ -188,7 +203,6 @@ envPrefix: 'MY_CUSTOM_';
 ```sh
 MY_CUSTOM_HOST=127.0.0.1 \
 MY_CUSTOM_PORT=4000 \
-MY_CUSTOM_ORIGIN=https://my.site \
 node build
 ```
 
@@ -275,6 +289,6 @@ app.listen(3000, () => {
 });
 ```
 
-> [!NOTE] When you use `handler.js` in a custom server, only the environment variables read by the handler itself take effect: `ORIGIN`, `PROTOCOL_HEADER`, `HOST_HEADER`, `PORT_HEADER`, `ADDRESS_HEADER`, `XFF_DEPTH`, and `BODY_SIZE_LIMIT`.
+> [!NOTE] When you use `handler.js` in a custom server, only the environment variables read by the handler itself take effect: `PROTOCOL_HEADER`, `HOST_HEADER`, `PORT_HEADER`, `ADDRESS_HEADER`, `XFF_DEPTH`, and `BODY_SIZE_LIMIT`.
 >
 > The server-lifecycle variables (`PORT`, `HOST`, `SOCKET_PATH`, `SHUTDOWN_TIMEOUT`, `IDLE_TIMEOUT`, `KEEP_ALIVE_TIMEOUT`, `HEADERS_TIMEOUT`, `LISTEN_PID`, `LISTEN_FDS`) are only honored by the default `node build` server. Implement them yourself in a custom server if you need the same behavior — for example, the snippet above listens on a hardcoded `3000` regardless of `PORT`.

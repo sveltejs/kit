@@ -187,6 +187,37 @@ export const options = object(
 
 					return input;
 				}),
+				origin: validate('', (input, keypath) => {
+					assert_string(input, keypath);
+
+					if (input === '') return input;
+
+					let url;
+
+					try {
+						url = new URL(input);
+					} catch {
+						throw new Error(
+							`${keypath} must be a valid origin (e.g. 'https://my-site.com'). '${input}' could not be parsed as a URL`
+						);
+					}
+
+					if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+						throw new Error(
+							`${keypath} must be a valid origin — only 'http' and 'https' protocols are supported, received '${url.protocol}'`
+						);
+					}
+
+					const origin = url.origin;
+
+					if (input !== origin) {
+						throw new Error(
+							`${keypath} must be a valid origin — received '${input}' which contains a path, query, or hash. Use the bare origin '${origin}' instead`
+						);
+					}
+
+					return origin;
+				}),
 				relative: boolean(true)
 			}),
 
@@ -277,25 +308,7 @@ export const options = object(
 						if (['fail', 'warn', 'ignore'].includes(input)) return input;
 						throw new Error(`${keypath} should be "fail", "warn", "ignore" or a custom function`);
 					}
-				),
-
-				origin: validate('http://sveltekit-prerender', (input, keypath) => {
-					assert_string(input, keypath);
-
-					let origin;
-
-					try {
-						origin = new URL(input).origin;
-					} catch {
-						throw new Error(`${keypath} must be a valid origin`);
-					}
-
-					if (input !== origin) {
-						throw new Error(`${keypath} must be a valid origin (${origin} rather than ${input})`);
-					}
-
-					return origin;
-				})
+				)
 			}),
 
 			router: object({

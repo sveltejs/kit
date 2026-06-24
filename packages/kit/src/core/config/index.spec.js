@@ -108,13 +108,13 @@ const get_defaults = (prefix = '') => ({
 		paths: {
 			base: '',
 			assets: '',
+			origin: '',
 			relative: true
 		},
 		prerender: {
 			concurrency: 1,
 			crawl: true,
-			entries: ['*'],
-			origin: 'http://sveltekit-prerender'
+			entries: ['*']
 		},
 		version: {
 			name: Date.now().toString(),
@@ -289,6 +289,68 @@ test('fails if paths.assets has trailing slash', () => {
 	}, /^config\.kit\.paths\.assets option must not end with '\/'. See https:\/\/svelte\.dev\/docs\/kit\/configuration#paths$/);
 });
 
+test('fails if paths.origin is not a valid origin', () => {
+	assert.throws(() => {
+		validate_config({
+			kit: {
+				paths: {
+					// @ts-expect-error
+					origin: 'not an origin'
+				}
+			}
+		});
+	}, /^config\.kit\.paths\.origin must be a valid origin \(e\.g\. 'https:\/\/my-site\.com'\)\. 'not an origin' could not be parsed as a URL$/);
+});
+
+test('fails if paths.origin uses an unsupported protocol', () => {
+	assert.throws(() => {
+		validate_config({
+			kit: {
+				paths: {
+					// ftp:// is a parseable URL whose origin equals the input, so without
+					// a protocol check it would slip through validation.
+					// @ts-expect-error
+					origin: 'ftp://example.com'
+				}
+			}
+		});
+	}, /^config\.kit\.paths\.origin must be a valid origin — only 'http' and 'https' protocols are supported, received 'ftp:'$/);
+});
+
+test('fails if paths.origin contains a path', () => {
+	assert.throws(() => {
+		validate_config({
+			kit: {
+				paths: {
+					origin: 'https://example.com/path'
+				}
+			}
+		});
+	}, /^config\.kit\.paths\.origin must be a valid origin — received 'https:\/\/example\.com\/path' which contains a path, query, or hash\. Use the bare origin 'https:\/\/example\.com' instead$/);
+});
+
+test('passes if paths.origin is a valid origin', () => {
+	const validated = validate_config({
+		kit: {
+			paths: {
+				origin: 'https://example.com'
+			}
+		}
+	});
+	assert.equal(validated.kit.paths.origin, 'https://example.com');
+});
+
+test('passes if paths.origin is the empty string', () => {
+	const validated = validate_config({
+		kit: {
+			paths: {
+				origin: ''
+			}
+		}
+	});
+	assert.equal(validated.kit.paths.origin, '');
+});
+
 test('fails if prerender.entries are invalid', () => {
 	assert.throws(() => {
 		validate_config({
@@ -327,6 +389,7 @@ validate_paths(
 	{
 		base: '/path/to/base',
 		assets: '',
+		origin: '',
 		relative: true
 	}
 );
@@ -339,6 +402,7 @@ validate_paths(
 	{
 		base: '',
 		assets: 'https://cdn.example.com',
+		origin: '',
 		relative: true
 	}
 );
@@ -352,6 +416,7 @@ validate_paths(
 	{
 		base: '/path/to/base',
 		assets: 'https://cdn.example.com',
+		origin: '',
 		relative: true
 	}
 );

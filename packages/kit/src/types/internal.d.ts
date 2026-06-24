@@ -505,6 +505,7 @@ export interface SSROptions {
 	hash_routing: boolean;
 	hooks: ServerHooks;
 	link_header_preload: ValidatedConfig['kit']['output']['linkHeaderPreload'];
+	paths_origin: string;
 	root: SSRComponent['default'];
 	service_worker: boolean;
 	service_worker_options: RegistrationOptions;

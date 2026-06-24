@@ -111,12 +111,14 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 
 	const config = extract_svelte_config(vite_config).kit;
 
+	const prerender_origin = config.paths.origin || 'http://sveltekit-prerender';
+
 	if (hash) {
 		const fallback = await generate_fallback({
 			manifest_path,
 			env,
 			out_dir: config.outDir,
-			origin: config.prerender.origin,
+			origin: prerender_origin,
 			assets: config.files.assets
 		});
 
@@ -265,7 +267,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 		/** @type {Map<string, import('types').PrerenderDependency>} */
 		const dependencies = new Map();
 
-		const response = await server.respond(new Request(config.prerender.origin + encoded), {
+		const response = await server.respond(new Request(prerender_origin + encoded), {
 			getClientAddress() {
 				throw new Error('Cannot read clientAddress during prerendering');
 			},
@@ -358,10 +360,10 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 
 			/** @param {string} href */
 			const removePrerenderOrigin = (href) => {
-				if (href.startsWith(config.prerender.origin)) {
-					if (href === config.prerender.origin) return '/';
-					if (href.at(config.prerender.origin.length) !== '/') return href;
-					return href.slice(config.prerender.origin.length);
+				if (href.startsWith(prerender_origin)) {
+					if (href === prerender_origin) return '/';
+					if (href.at(prerender_origin.length) !== '/') return href;
+					return href.slice(prerender_origin.length);
 				}
 				return href;
 			};

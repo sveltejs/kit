@@ -137,7 +137,7 @@ export function create_builder({
 				manifest_path,
 				env,
 				out_dir: config.kit.outDir,
-				origin: config.kit.prerender.origin,
+				origin: config.kit.paths.origin || 'http://sveltekit-prerender',
 				assets: config.kit.files.assets
 			});
 

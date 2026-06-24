@@ -193,6 +193,7 @@ test('generates a _routes.json file', () => {
 					paths: {
 						base: '/base-path',
 						assets: '',
+						origin: '',
 						relative: true
 					},
 					alias: {},
@@ -271,6 +272,7 @@ test('truncates excess _routes.json exclude rules', () => {
 					paths: {
 						base: '/base-path',
 						assets: '',
+						origin: '',
 						relative: true
 					},
 					alias: {},
