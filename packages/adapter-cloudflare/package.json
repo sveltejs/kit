@@ -44,7 +44,7 @@
 		"prepublishOnly": "pnpm build"
 	},
 	"dependencies": {
-		"@cloudflare/workers-types": "^4.20260219.0",
+		"@cloudflare/workers-types": "^4.20260617.1",
 		"worktop": "0.8.0-next.18"
 	},
 	"devDependencies": {
