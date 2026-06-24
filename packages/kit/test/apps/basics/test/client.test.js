@@ -412,7 +412,8 @@ test.describe('SPA mode / no SSR', () => {
 	test('cannot use browser-only global on page because of ssr config in +page.js', async ({
 		page
 	}) => {
-		await page.goto('/no-ssr/ssr-page-config/layout/overwrite');
+		// the Vite error overlay that appears prevents body.started from being added
+		await page.goto('/no-ssr/ssr-page-config/layout/overwrite', { wait_for_started: false });
 		await expect(page.locator('p')).toHaveText(
 			'This is your custom error page saying: "document is not defined (500 Internal Error)"'
 		);
