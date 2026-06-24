@@ -1,4 +1,7 @@
 {
-	"hrefs": ["/potato.jpg"],
-	"ids": []
+	"hrefs": [
+		"/potato.jpg"
+	],
+	"ids": [],
+	"invalid": []
 }

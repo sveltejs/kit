@@ -1,4 +1,9 @@
 {
-	"hrefs": ["/styles.css", "/favicon.png", "https://external.com/"],
-	"ids": []
+	"hrefs": [
+		"/styles.css",
+		"/favicon.png",
+		"https://external.com/"
+	],
+	"ids": [],
+	"invalid": []
 }
