@@ -2,4 +2,4 @@
 '@sveltejs/kit': minor
 ---
 
-feat: add `parse` function to matcher files
+feat: allow param matcher to be a standard schema

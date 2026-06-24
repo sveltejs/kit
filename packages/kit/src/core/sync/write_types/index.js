@@ -198,11 +198,6 @@ function update_types(config, routes, route, root, to_delete = new Set()) {
 	// Makes sure a type is "repackaged" and therefore more readable
 	declarations.push('type Expand<T> = T extends infer O ? { [K in keyof O]: O[K] } : never;');
 
-	// returns the predicate of a matcher's type guard - or string if there is no type guard
-	declarations.push(
-		'type MatcherParam<M> = M extends { parse: (param: string) => infer R } ? R : M extends { match: (param: string) => param is (infer U extends string) } ? U : string;'
-	);
-
 	declarations.push(
 		'type RouteParams = ' + generate_params_type(route.params, outdir, config) + ';'
 	);
@@ -613,7 +608,7 @@ function generate_params_type(params, outdir, config) {
 			(param) =>
 				`${param.name}${param.optional ? '?' : ''}: ${
 					param.matcher
-						? `MatcherParam<typeof import('${path_to_matcher(param.matcher)}')>`
+						? `Kit.MatcherParam<typeof import('${path_to_matcher(param.matcher)}').match>`
 						: 'string'
 				}${param.optional ? ' | undefined' : ''}`
 		)

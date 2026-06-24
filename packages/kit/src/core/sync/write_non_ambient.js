@@ -98,7 +98,7 @@ function generate_app_types(manifest_data, config) {
 
 		let type = matcher_types.get(matcher);
 		if (!type) {
-			type = `MatcherParam<typeof import('${path_to_matcher(matcher)}')>`;
+			type = `import('@sveltejs/kit').MatcherParam<typeof import('${path_to_matcher(matcher)}').match>`;
 			matcher_types.set(matcher, type);
 		}
 
@@ -239,8 +239,6 @@ function generate_app_types(manifest_data, config) {
 
 	return [
 		'declare module "$app/types" {',
-		'\ttype MatcherParam<M> = M extends { parse: (param: string) => infer R } ? R : M extends { match: (param: string) => param is (infer U extends string) } ? U : string;',
-		'',
 		'\texport interface AppTypes {',
 		`\t\tRouteId(): ${manifest_data.routes.map((r) => s(r.id)).join(' | ')};`,
 		`\t\tRouteParams(): {\n\t\t\t${dynamic_routes.join(';\n\t\t\t')}\n\t\t};`,

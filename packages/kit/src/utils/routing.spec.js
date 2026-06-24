@@ -1,5 +1,9 @@
 import { assert, expect, test, describe } from 'vitest';
+import * as v from 'valibot';
 import { exec, parse_route_id, resolve_route, find_route } from './routing.js';
+
+/** @type {import('@sveltejs/kit').ParamMatcher} */
+const number = v.pipe(v.string(), v.toNumber());
 
 describe('parse_route_id', () => {
 	const tests = {
@@ -293,65 +297,33 @@ describe('exec', () => {
 			const match = pattern.exec(path);
 			if (!match) throw new Error(`Failed to match ${path}`);
 			const actual = exec(match, params, {
-				matches: { match: () => true },
-				doesntmatch: { match: () => false }
+				matches: () => true,
+				doesntmatch: () => false
 			});
 			expect(actual).toEqual(expected);
 		});
 	}
 
-	test('exec parses params with a parse function', () => {
+	test('exec validates and transforms params with a standard schema', () => {
 		const route = '/items/[id=number]';
 		const { pattern, params } = parse_route_id(route);
 		const match = pattern.exec('/items/42');
 		if (!match) throw new Error('Failed to match');
 
-		const actual = exec(match, params, {
-			number: {
-				parse: (param) => {
-					const n = Number(param);
-					if (!Number.isFinite(n)) throw new Error('not a number');
-					return n;
-				}
-			}
-		});
+		const actual = exec(match, params, { number });
 
 		expect(actual).toEqual({ id: 42 });
 	});
 
-	test('exec rejects params when parse throws', () => {
+	test('exec rejects params when a standard schema fails validation', () => {
 		const route = '/items/[id=number]';
 		const { pattern, params } = parse_route_id(route);
 		const match = pattern.exec('/items/abc');
 		if (!match) throw new Error('Failed to match');
 
-		const actual = exec(match, params, {
-			number: {
-				parse: (param) => {
-					const n = Number(param);
-					if (!Number.isFinite(n)) throw new Error('not a number');
-					return n;
-				}
-			}
-		});
+		const actual = exec(match, params, { number });
 
 		expect(actual).toBeUndefined();
-	});
-
-	test('exec uses match and parse together', () => {
-		const route = '/items/[id=number]';
-		const { pattern, params } = parse_route_id(route);
-		const match = pattern.exec('/items/42');
-		if (!match) throw new Error('Failed to match');
-
-		const actual = exec(match, params, {
-			number: {
-				match: (param) => /^\d+$/.test(param),
-				parse: (param) => Number(param)
-			}
-		});
-
-		expect(actual).toEqual({ id: 42 });
 	});
 });
 
@@ -475,9 +447,9 @@ describe('find_route', () => {
 
 	test('respects matchers', () => {
 		const routes = [create_route('/blog/[slug=word]'), create_route('/blog/[slug]')];
-		/** @type {Record<string, import('@sveltejs/kit').ParamMatcherModule>} */
+		/** @type {Record<string, import('@sveltejs/kit').ParamMatcher>} */
 		const matchers = {
-			word: { match: (param) => /^\w+$/.test(param) }
+			word: (param) => /^\w+$/.test(param)
 		};
 
 		// "hello" matches the word matcher
@@ -489,35 +461,19 @@ describe('find_route', () => {
 		assert.equal(result2?.route.id, '/blog/[slug]');
 	});
 
-	test('parses params with a parse function', () => {
+	test('validates and transforms params with a standard schema', () => {
 		const routes = [create_route('/items/[id=number]')];
-		/** @type {Record<string, import('@sveltejs/kit').ParamMatcherModule>} */
-		const matchers = {
-			number: {
-				parse: (param) => {
-					const n = Number(param);
-					if (!Number.isFinite(n)) throw new Error('not a number');
-					return n;
-				}
-			}
-		};
+		/** @type {Record<string, import('@sveltejs/kit').ParamMatcher>} */
+		const matchers = { number };
 
 		const result = find_route('/items/42', routes, matchers);
 		assert.equal(result?.params.id, 42);
 	});
 
-	test('rejects params when parse throws', () => {
+	test('rejects params when a standard schema fails validation', () => {
 		const routes = [create_route('/items/[id=number]')];
-		/** @type {Record<string, import('@sveltejs/kit').ParamMatcherModule>} */
-		const matchers = {
-			number: {
-				parse: (param) => {
-					const n = Number(param);
-					if (!Number.isFinite(n)) throw new Error('not a number');
-					return n;
-				}
-			}
-		};
+		/** @type {Record<string, import('@sveltejs/kit').ParamMatcher>} */
+		const matchers = { number };
 
 		const result = find_route('/items/abc', routes, matchers);
 		assert.equal(result, null);

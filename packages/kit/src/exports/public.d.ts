@@ -1429,21 +1429,17 @@ export interface Page<
 /**
  * The shape of a param matcher. See [matching](https://svelte.dev/docs/kit/advanced-routing#Matching) for more info.
  */
-export type ParamMatcher = (param: string) => boolean;
+export type ParamMatcher = ((param: string) => boolean) | StandardSchemaV1<string, any>;
 
 /**
- * The shape of a param parser. See [matching](https://svelte.dev/docs/kit/advanced-routing#Matching) for more info.
+ * Extracts the param type from a matcher — the output type of a Standard Schema, the predicate of a type guard, or `string`.
  */
-export type ParamParser<T = any> = (param: string) => T;
-
-/**
- * A param matcher module can export a `match` function, a `parse` function, or both.
- * See [matching](https://svelte.dev/docs/kit/advanced-routing#Matching) for more info.
- */
-export interface ParamMatcherModule {
-	match?: ParamMatcher;
-	parse?: ParamParser;
-}
+export type MatcherParam<M> =
+	M extends StandardSchemaV1<any, any>
+		? StandardSchemaV1.InferOutput<M>
+		: M extends ((param: string) => param is infer U extends string)
+			? U
+			: string;
 
 /**
  * A single entry yielded by [`requested`](https://svelte.dev/docs/kit/$app-server#requested)
@@ -1700,7 +1696,7 @@ export interface SSRManifest {
 		remotes: Record<string, () => Promise<any>>;
 		routes: SSRRoute[];
 		prerendered_routes: Set<string>;
-		matchers: () => Promise<Record<string, ParamMatcherModule>>;
+		matchers: () => Promise<Record<string, ParamMatcher>>;
 		/** A `[file]: size` map of all assets imported by server code. */
 		server_assets: Record<string, number>;
 	};

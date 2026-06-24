@@ -3,7 +3,8 @@
 	"private": true,
 	"type": "module",
 	"devDependencies": {
-		"typescript": "~6.0.0"
+		"typescript": "~6.0.0",
+		"valibot": "catalog:"
 	},
 	"scripts": {
 		"testtypes": "tsc"

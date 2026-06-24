@@ -93,54 +93,22 @@ src/routes/fruits/[page+++=fruit+++]
 
 If the pathname doesn't match, SvelteKit will try to match other routes (using the sort order specified below), before eventually returning a 404.
 
-### Parsing
-
-In addition to `match`, a param module can export a `parse` function that converts the parameter string into a more useful type. If `parse` is not defined, the parameter value remains a string. If `match` is not defined, all values are considered valid (equivalent to `() => true`). If `parse` throws an error, the parameter is treated as invalid.
+Instead of a function, `match` can also be a [Standard Schema](https://standardschema.dev) — for example with [Valibot](https://valibot.dev):
 
 ```js
 /// file: src/params/number.js
-/** @type {import('@sveltejs/kit').ParamParser<number>} */
-export function parse(param) {
-	const n = Number(param);
-	if (!Number.isFinite(n)) throw new Error('not a number');
-	return n;
-}
+import * as v from 'valibot';
+
+export const match = v.pipe(v.string(), v.toNumber());
 ```
+
+When a schema is used, SvelteKit validates the parameter and uses the transformed output as the param value. If validation fails, the route does not match.
 
 ```js
 /// file: src/routes/items/[id=number]/+page.js
 /** @type {import('./$types').PageLoad} */
 export function load({ params }) {
 	console.log(typeof params.id); // 'number'
-}
-```
-
-You can use both `match` and `parse` in the same module — `match` validates the string, and `parse` converts it:
-
-```js
-/// file: src/params/number.js
-/** @type {import('@sveltejs/kit').ParamMatcher} */
-export function match(param) {
-	return /^\d+$/.test(param);
-}
-
-/** @type {import('@sveltejs/kit').ParamParser<number>} */
-export function parse(param) {
-	return Number(param);
-}
-```
-
-This also makes it possible to integrate with libraries like Valibot:
-
-```js
-/// file: src/params/number.js
-import * as v from 'valibot';
-
-const min3 = v.pipe(v.string(), v.minLength(3));
-
-/** @type {import('@sveltejs/kit').ParamParser<string>} */
-export function parse(param) {
-	return v.parse(min3, param);
 }
 ```
 

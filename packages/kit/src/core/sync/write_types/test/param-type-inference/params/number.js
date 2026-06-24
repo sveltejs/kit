@@ -1,6 +1,3 @@
-/** @type {import('@sveltejs/kit').ParamParser<number>} */
-export function parse(param) {
-	const n = Number(param);
-	if (!Number.isFinite(n)) throw new Error('not a number');
-	return n;
-}
+import * as v from 'valibot';
+
+export const match = v.pipe(v.string(), v.toNumber());

@@ -863,9 +863,12 @@ test('creates param matchers', () => {
 	});
 });
 
-test('creates param matchers with parse-only modules', () => {
+test('creates param matchers with schema modules', () => {
 	const parsed = path.resolve(cwd, 'params', 'parsed.js');
-	fs.writeFileSync(parsed, 'export function parse(param) { return Number(param); }');
+	fs.writeFileSync(
+		parsed,
+		`export const match = { '~standard': { validate() { return { value: 0 }; } } };`
+	);
 	try {
 		const { matchers } = create('samples/basic');
 

@@ -134,9 +134,32 @@ export function get_route_segments(route) {
 }
 
 /**
+ * @param {import('@sveltejs/kit').ParamMatcher} matcher
+ * @param {string} value
+ * @returns {{ success: true, value: any } | { success: false }}
+ */
+function run_matcher(matcher, value) {
+	if (typeof matcher === 'function') {
+		return matcher(value) ? { success: true, value } : { success: false };
+	}
+
+	if ('~standard' in matcher) {
+		const result = matcher['~standard'].validate(value);
+
+		if (result instanceof Promise || result.issues) {
+			return { success: false };
+		}
+
+		return { success: true, value: result.value };
+	}
+
+	return { success: false };
+}
+
+/**
  * @param {RegExpMatchArray} match
  * @param {import('types').RouteParam[]} params
- * @param {Record<string, import('@sveltejs/kit').ParamMatcherModule>} matchers
+ * @param {Record<string, import('@sveltejs/kit').ParamMatcher>} matchers
  */
 export function exec(match, params, matchers) {
 	/** @type {Record<string, any>} */
@@ -175,9 +198,9 @@ export function exec(match, params, matchers) {
 		const decoded = decodeURIComponent(value);
 
 		if (param.matcher) {
-			const { match, parse } = matchers[param.matcher];
+			const outcome = run_matcher(matchers[param.matcher], decoded);
 
-			if (match && !match(decoded)) {
+			if (!outcome.success) {
 				// in the `/[[a=b]]/...` case, if the value didn't satisfy the matcher,
 				// keep track of the number of skipped optional parameters and continue
 				if (param.optional && param.chained) {
@@ -189,19 +212,7 @@ export function exec(match, params, matchers) {
 				return;
 			}
 
-			try {
-				result[param.name] = parse ? parse(decoded) : decoded;
-			} catch {
-				// in the `/[[a=b]]/...` case, if the value didn't satisfy the parser,
-				// keep track of the number of skipped optional parameters and continue
-				if (param.optional && param.chained) {
-					buffered++;
-					continue;
-				}
-
-				// otherwise, if the parser threw, the route did not match
-				return;
-			}
+			result[param.name] = outcome.value;
 		} else {
 			result[param.name] = decoded;
 		}
@@ -304,7 +315,7 @@ export function has_server_load(node) {
  * @template {{pattern: RegExp, params: import('types').RouteParam[]}} Route
  * @param {string} path - The decoded pathname to match
  * @param {Route[]} routes
- * @param {Record<string, import('@sveltejs/kit').ParamMatcherModule>} matchers
+ * @param {Record<string, import('@sveltejs/kit').ParamMatcher>} matchers
  * @returns {{ route: Route, params: Record<string, any> } | null}
  */
 export function find_route(path, routes, matchers) {

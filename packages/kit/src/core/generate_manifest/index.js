@@ -137,9 +137,9 @@ export function generate_manifest({
 					${Array.from(
 						matchers,
 						type =>
-							`const __matcher_${type} = await import ('${join_relative(relative_path, `/entries/matchers/${type}.js`)}')`
+							`const { match: ${type} } = await import ('${join_relative(relative_path, `/entries/matchers/${type}.js`)}')`
 					).join('\n')}
-					return { ${Array.from(matchers).map((type) => `${type}: { match: __matcher_${type}.match, parse: __matcher_${type}.parse }`).join(', ')} };
+					return { ${Array.from(matchers).join(', ')} };
 				},
 				server_assets: ${s(files)}
 			}

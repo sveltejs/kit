@@ -9,7 +9,7 @@ import {
 	TrailingSlash,
 	Uses
 } from 'types';
-import { Page, ParamMatcherModule } from '@sveltejs/kit';
+import { Page, ParamMatcher } from '@sveltejs/kit';
 
 export interface SvelteKitApp {
 	/**
@@ -39,11 +39,11 @@ export interface SvelteKitApp {
 	dictionary: Record<string, [leaf: number, layouts: number[], errors?: number[]]>;
 
 	/**
-	 * A map of `[matcherName: string]: ParamMatcherModule`, which is used to match and parse route parameters.
+	 * A map of `[matcherName: string]: ParamMatcher`, which is used to match and parse route parameters.
 	 *
 	 * In case of router.resolution=server, this object is empty, as resolution happens on the server.
 	 */
-	matchers: Record<string, ParamMatcherModule>;
+	matchers: Record<string, ParamMatcher>;
 
 	hooks: ClientHooks;
 
