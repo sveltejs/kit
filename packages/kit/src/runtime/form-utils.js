@@ -608,6 +608,33 @@ function get_type_prefix(field_type, is_array, input_value) {
 }
 
 /**
+ * A deep-clone implementation specifically for form data, where
+ * we don't need to worry about cycles and whatnot
+ * @param {any} value
+ */
+function deep_clone(value) {
+	if (value !== null && typeof value === 'object') {
+		if (value instanceof File) {
+			return value;
+		}
+
+		if (Array.isArray(value)) {
+			return value.map(deep_clone);
+		}
+
+		/** @type {Record<string, any>} */
+		const clone = {};
+		for (const key of Object.keys(value)) {
+			clone[key] = deep_clone(value[key]);
+		}
+
+		return clone;
+	}
+
+	return value;
+}
+
+/**
  * Creates a proxy-based field accessor for form data
  * @param {any} target - Function or empty POJO
  * @param {() => Record<string, any>} get_input - Function to get current input data
@@ -618,7 +645,8 @@ function get_type_prefix(field_type, is_array, input_value) {
  */
 export function create_field_proxy(target, get_input, set_input, get_issues, path = []) {
 	const get_value = () => {
-		return deep_get(get_input(), path);
+		const value = deep_get(get_input(), path);
+		return deep_clone(value);
 	};
 
 	return new Proxy(target, {
