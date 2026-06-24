@@ -405,7 +405,7 @@ export function form(id) {
 
 				const form_data = new FormData(form, event.submitter);
 
-				if (previous_submitter_name !== null) {
+				if (previous_submitter_name !== null && !form_data.has(previous_submitter_name)) {
 					// Strip any `n:`/`b:` type prefix before clearing, otherwise
 					// `set_nested_value` would coerce `undefined` to `NaN`/`false`
 					// instead of clearing the previously-submitted value.
