@@ -37,9 +37,9 @@ Remote functions are exported from a `.remote.js` or `.remote.ts` file, and come
 
 ## query
 
-The `query` function allows you to read dynamic data from the server (for _static_ data, consider using [`prerender`](#prerender) instead):
+The `query` function allows you to read dynamic data from the server.
 
-> [!NOTE] `query` functions need a server at runtime. They cannot be used while prerendering (for example when `export const prerender = true` is set on the page or a parent `+layout`). If you need data during prerendering, use [`prerender`](#prerender) instead.
+> [!NOTE] For _static_ data, consider using [`prerender`](#prerender) functions instead. Queries cannot be used when the entire page is prerendered (meaning [`export const prerender = true`](page-options#prerender) is applied to the page or a parent layout), such as when using [`adapter-static`](adapter-static).
 
 ```js
 /// file: src/routes/blog/data.remote.js
@@ -1152,8 +1152,6 @@ export const getPosts = prerender(async () => {
 You can use `prerender` functions on pages that are otherwise dynamic, allowing for partial prerendering of your data. This results in very fast navigation, since prerendered data can live on a CDN along with your other static assets.
 
 In the browser, prerendered data is saved using the [`Cache`](https://developer.mozilla.org/en-US/docs/Web/API/Cache) API. This cache survives page reloads, and will be cleared when the user first visits a new deployment of your app.
-
-> [!NOTE] `prerender` functions run at build time, so they work on prerendered pages and in fully static builds (for example with [`adapter-static`](adapter-static)). The restriction applies to [`query`](#query): it requires a server at runtime and will fail if called during prerendering.
 
 ### Prerender arguments
 
