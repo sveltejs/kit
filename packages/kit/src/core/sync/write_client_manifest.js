@@ -140,6 +140,11 @@ export function write_client_manifest(kit, manifest_data, output, metadata) {
 	write_if_changed(
 		`${output}/app.js`,
 		dedent`
+			// in dev, this makes Vite inject its client as this module's first dependency,
+			// so that global constant replacements are installed before any other module
+			// (including user hooks) evaluates. In build it's inert.
+			import.meta.hot;
+
 			${
 				client_hooks_file
 					? `import * as client_hooks from '${relative_path(output, client_hooks_file)}';`
@@ -178,6 +183,8 @@ export function write_client_manifest(kit, manifest_data, output, metadata) {
 			export const decode = (type, value) => decoders[type](value);
 
 			export { default as root } from '../root.${isSvelte5Plus() ? 'js' : 'svelte'}';
+
+			export const get_error_template = () => import('../shared/error-template.js').then(m => m.default);
 		`
 	);
 

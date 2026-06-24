@@ -7,7 +7,7 @@ import {
 	Page
 } from '@playwright/test';
 import { IncomingMessage, ServerResponse } from 'node:http';
-import '../types/index';
+import '../types/index.d.ts';
 import { AfterNavigate, BeforeNavigate } from '@sveltejs/kit';
 
 export const test: TestType<

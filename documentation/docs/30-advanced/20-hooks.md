@@ -35,6 +35,8 @@ export async function handle({ event, resolve }) {
 
 > [!NOTE] Requests for static assets — which includes pages that were already prerendered — are _not_ handled by SvelteKit.
 
+If the `handle` hook runs as part of a remote function request initiated by the client, `route`, `params` and `url` relate to the page the remote function was called from, _not_ the URL of the endpoint SvelteKit creates for the remote function. Never use them to determine whether or not a user is authorized to access certain data, as these values are part of the request which could be manipulated. Queries are also not re-run when the user navigates (unless the argument to the query changes as a result of navigation), and so you should be mindful of how you use these values.
+
 If unimplemented, defaults to `({ event, resolve }) => resolve(event)`.
 
 During prerendering, SvelteKit crawls your pages for links and renders each route it finds. Rendering the route invokes the `handle` function (and all other route dependencies, like `load`). If you need to exclude some code from running during this phase, check that the app is not [`building`]($app-environment#building) beforehand.

@@ -1,14 +1,14 @@
 /** @import { RemoteResource, RemotePrerenderFunction } from '@sveltejs/kit' */
 /** @import { RemotePrerenderInputsGenerator, RemotePrerenderInternals, MaybePromise } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
-import { error, json } from '@sveltejs/kit';
+import { json, error } from '@sveltejs/kit';
 import { DEV } from 'esm-env';
 import { get_request_store } from '@sveltejs/kit/internal/server';
 import { stringify, stringify_remote_arg } from '../../../shared.js';
+import { noop } from '../../../../utils/functions.js';
 import { app_dir, base } from '$app/paths/internal/server';
 import {
 	create_validator,
-	get_cache,
 	get_response,
 	parse_remote_response,
 	run_remote_function
@@ -88,52 +88,46 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 
 	/** @type {RemotePrerenderFunction<Input, Output> & { __: RemotePrerenderInternals }} */
 	const wrapper = (arg) => {
+		const { event, state } = get_request_store();
+		const payload = stringify_remote_arg(arg, state.transport);
+
+		// `get_response` (as opposed to bare `get_cache`) also registers the call in the
+		// implicit lookup, so that the result is inlined into the page payload (`data.p`)
+		// and the client doesn't need to fetch it again upon hydration
 		/** @type {Promise<Output> & Partial<RemoteResource<Output>>} */
-		const promise = (async () => {
-			const { event, state } = get_request_store();
-			const payload = stringify_remote_arg(arg, state.transport);
+		const promise = get_response(__, payload, state, async () => {
 			const id = __.id;
 			const url = `${base}/${app_dir}/remote/${id}${payload ? `/${payload}` : ''}`;
 
 			if (!state.prerendering && !DEV && !event.isRemoteRequest) {
 				try {
-					return await get_response(__, arg, state, async () => {
-						const key = stringify_remote_arg(arg, state.transport);
-						const cache = get_cache(__, state);
+					// TODO adapters can provide prerendered data more efficiently than
+					// fetching from the public internet
+					const response = await fetch(new URL(url, event.url.origin).href);
 
-						// TODO adapters can provide prerendered data more efficiently than
-						// fetching from the public internet
-						const promise = (cache[key] ??= {
-							serialize: true,
-							data: fetch(new URL(url, event.url.origin).href).then(async (response) => {
-								if (!response.ok) {
-									throw new Error('Prerendered response not found');
-								}
+					if (!response.ok) {
+						throw new Error('Prerendered response not found');
+					}
 
-								const prerendered = await response.json();
+					const prerendered = /** @type {RemoteFunctionResponse} */ await response.json();
 
-								if (prerendered.type === 'error') {
-									error(prerendered.status, prerendered.error);
-								}
+					if (prerendered.type === 'error') {
+						error(prerendered.status, prerendered.error);
+					}
 
-								return prerendered.result;
-							})
-						}).data;
-
-						return parse_remote_response(await promise, state.transport);
-					});
+					return parse_remote_response(prerendered.data, state.transport)._;
 				} catch {
 					// not available prerendered, fallback to normal function
 				}
 			}
 
+			// during a prerender run, the same function might be invoked while rendering
+			// multiple pages — share the result across the entire run
 			if (state.prerendering?.remote_responses.has(url)) {
 				return /** @type {Promise<any>} */ (state.prerendering.remote_responses.get(url));
 			}
 
-			const promise = get_response(__, arg, state, () =>
-				run_remote_function(event, state, false, () => validate(arg), fn)
-			);
+			const promise = run_remote_function(event, state, false, () => validate(arg), fn);
 
 			if (state.prerendering) {
 				state.prerendering.remote_responses.set(url, promise);
@@ -142,7 +136,7 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 			const result = await promise;
 
 			if (state.prerendering) {
-				const body = { type: 'result', result: stringify(result, state.transport) };
+				const body = { type: 'result', data: stringify({ _: result }, state.transport) };
 				state.prerendering.dependencies.set(url, {
 					body: JSON.stringify(body),
 					response: json(body)
@@ -151,9 +145,9 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 
 			// TODO this is missing error/loading/current/status
 			return result;
-		})();
+		});
 
-		promise.catch(() => {});
+		promise.catch(noop);
 
 		return /** @type {RemoteResource<Output>} */ (promise);
 	};

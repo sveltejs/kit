@@ -1,7 +1,6 @@
 /** @import { Transport } from '@sveltejs/kit' */
 import * as devalue from 'devalue';
-import { base64_decode, base64_encode, text_decoder } from './utils.js';
-import * as svelte from 'svelte';
+import { base64_decode, base64_encode, text_encoder } from './utils.js';
 
 /**
  * @param {string} route_id
@@ -97,6 +96,8 @@ function to_sorted(value, clones) {
 const remote_object = '__skrao';
 const remote_map = '__skram';
 const remote_set = '__skras';
+const remote_file = '__skraf';
+const remote_promise_guard = '__skrap';
 const remote_regex_guard = '__skrag';
 const remote_arg_marker = Symbol(remote_object);
 
@@ -108,13 +109,12 @@ const remote_arg_marker = Symbol(remote_object);
 function create_remote_arg_reducers(transport, sort, remote_arg_clones) {
 	/** @type {Record<string, (value: unknown) => unknown>} */
 	const remote_fns_reducers = {
-		[remote_regex_guard]:
-			/** @type {(value: unknown) => void} */
-			(value) => {
-				if (value instanceof RegExp) {
-					throw new Error('Regular expressions are not valid remote function arguments');
-				}
+		/** @param {unknown} value */
+		[remote_regex_guard]: (value) => {
+			if (value instanceof RegExp) {
+				throw new Error('Regular expressions are not valid remote function arguments');
 			}
+		}
 	};
 
 	if (sort) {
@@ -230,6 +230,24 @@ function create_remote_arg_revivers(transport) {
 			}
 
 			return set;
+		},
+		/** @type {(value: any) => File} */
+		[remote_file]: (value) => {
+			if (
+				!value ||
+				typeof value !== 'object' ||
+				typeof value.name !== 'string' ||
+				typeof value.type !== 'string' ||
+				typeof value.size !== 'number' ||
+				typeof value.lastModified !== 'number' ||
+				!(value.data instanceof ArrayBuffer)
+			) {
+				throw new Error('Invalid data for File reviver');
+			}
+
+			const { data, name, ...meta } = value;
+
+			return new File([data], name, meta);
 		}
 	};
 
@@ -250,18 +268,69 @@ function create_remote_arg_revivers(transport) {
  * it is both a valid URL and a valid file name (necessary for prerendering).
  * @param {any} value
  * @param {Transport} transport
- * @param {boolean} [sort]
  */
-export function stringify_remote_arg(value, transport, sort = true) {
+export function stringify_remote_arg(value, transport) {
 	if (value === undefined) return '';
 
 	// If people hit file/url size limits, we can look into using something like compress_and_encode_text from svelte.dev beyond a certain size
-	const json_string = devalue.stringify(
-		value,
-		create_remote_arg_reducers(transport, sort, new Map())
-	);
+	const json = devalue.stringify(value, create_remote_arg_reducers(transport, true, new Map()));
 
-	const bytes = new TextEncoder().encode(json_string);
+	return url_friendly_base64_encode(json);
+}
+
+/**
+ * Stringifies command arguments, including `File` objects.
+ * @param {any} value
+ * @param {Transport} transport
+ */
+export async function stringify_command_arg(value, transport) {
+	if (value === undefined) return '';
+
+	const reducers = create_remote_arg_reducers(transport, false, new Map());
+
+	/** @type {Set<Promise<any>>} */
+	const allowed_promises = new Set();
+
+	/** @param {any} value */
+	reducers[remote_file] = (value) => {
+		if (value instanceof File) {
+			const promise = value.arrayBuffer().then((data) => ({
+				data,
+				lastModified: value.lastModified,
+				name: value.name,
+				size: value.size,
+				type: value.type
+			}));
+
+			allowed_promises.add(promise);
+
+			return promise;
+		}
+	};
+
+	// we don't want to allow arbitrary promises, because they won't
+	// show up as promises on the other side. this is something
+	// we could potentially change in future. stringifyAsync
+	// will await them, so we need to explicitly deny them
+	/** @param {unknown} value */
+	reducers[remote_promise_guard] = (value) => {
+		if (value instanceof Promise && !allowed_promises.has(value)) {
+			throw new Error('Promises are not valid remote function arguments');
+		}
+	};
+
+	const json = await devalue.stringifyAsync(value, reducers);
+
+	return url_friendly_base64_encode(json);
+}
+
+/**
+ * Base64-encodes `string` in such a way that the result is safe to use
+ * as both a URI component and a filename
+ * @param {string} string
+ */
+function url_friendly_base64_encode(string) {
+	const bytes = text_encoder.encode(string);
 	return base64_encode(bytes).replaceAll('=', '').replaceAll('+', '-').replaceAll('/', '_');
 }
 
@@ -273,7 +342,7 @@ export function stringify_remote_arg(value, transport, sort = true) {
 export function parse_remote_arg(string, transport) {
 	if (!string) return undefined;
 
-	const json_string = text_decoder.decode(
+	const json_string = new TextDecoder().decode(
 		// no need to add back `=` characters, atob can handle it
 		base64_decode(string.replaceAll('-', '+').replaceAll('_', '/'))
 	);
@@ -304,18 +373,4 @@ export function split_remote_key(key) {
 		id: key.slice(0, i),
 		payload: key.slice(i + 1)
 	};
-}
-
-/**
- * @template T
- * @param {string} key
- * @param {() => T} fn
- * @returns {T}
- * @deprecated TODO remove in SvelteKit 3.0
- */
-export function unfriendly_hydratable(key, fn) {
-	if (!svelte.hydratable) {
-		throw new Error('Remote functions require Svelte 5.44.0 or later');
-	}
-	return svelte.hydratable(key, fn);
 }

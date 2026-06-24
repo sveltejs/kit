@@ -1,10 +1,11 @@
+/** @import { EnvVarConfig } from '@sveltejs/kit' */
 import fs from 'node:fs';
 import process from 'node:process';
 import * as vite from 'vite';
 import { dedent } from '../../../core/sync/utils.js';
 import { s } from '../../../utils/misc.js';
 import { get_config_aliases, strip_virtual_prefix, get_env, normalize_id } from '../utils.js';
-import { create_static_module } from '../../../core/env.js';
+import { create_static_module, create_sveltekit_env_public } from '../../../core/env.js';
 import { env_static_public, service_worker } from '../module_ids.js';
 
 // @ts-ignore `vite.rolldownVersion` only exists in `rolldown-vite`
@@ -18,6 +19,7 @@ const is_rolldown = !!vite.rolldownVersion;
  * @param {string} service_worker_entry_file
  * @param {import('types').Prerendered} prerendered
  * @param {import('vite').Manifest} client_manifest
+ * @param {Record<string, EnvVarConfig<any>> | null} env_config
  */
 export async function build_service_worker(
 	out,
@@ -26,7 +28,8 @@ export async function build_service_worker(
 	manifest_data,
 	service_worker_entry_file,
 	prerendered,
-	client_manifest
+	client_manifest,
+	env_config
 ) {
 	const build = new Set();
 	for (const key in client_manifest) {
@@ -34,6 +37,16 @@ export async function build_service_worker(
 		build.add(file);
 		css.forEach((file) => build.add(file));
 		assets.forEach((file) => build.add(file));
+	}
+
+	if (kit.output.bundleStrategy === 'inline') {
+		// the bundle and stylesheet are inlined into the page and their files
+		// deleted, so they must not appear in the list of cacheable assets
+		for (const file of build) {
+			if (!fs.existsSync(`${out}/client/${file}`)) {
+				build.delete(file);
+			}
+		}
 	}
 
 	// in a service worker, `location` is the location of the service worker itself,
@@ -85,7 +98,26 @@ export async function build_service_worker(
 			}
 
 			if (id === env_static_public) {
-				return create_static_module('$env/static/public', env.public);
+				return create_static_module(
+					'$env/static/public',
+					env.public,
+					kit.experimental.explicitEnvironmentVariables
+				);
+			}
+
+			if (id === '\0virtual:app/env/public') {
+				const has_dynamic_public_env = Object.values(env_config ?? {}).some(
+					(variable) => variable.public && !variable.static
+				);
+
+				return create_sveltekit_env_public(
+					env_config,
+					env.all,
+					has_dynamic_public_env
+						? // the service worker isn't registered as ESM yet, so we need to use `importScripts`
+							`importScripts('${kit.paths.base}/${kit.appDir}/env.script.js'); const env = globalThis.__sveltekit_sw.env;`
+						: ''
+				);
 			}
 
 			const normalized_cwd = vite.normalizePath(process.cwd());
@@ -93,7 +125,7 @@ export async function build_service_worker(
 			const relative = normalize_id(id, normalized_lib, normalized_cwd);
 			const stripped = strip_virtual_prefix(relative);
 			throw new Error(
-				`Cannot import ${stripped} into service-worker code. Only the modules $service-worker and $env/static/public are available in service workers.`
+				`Cannot import ${stripped} into service-worker code. Only the modules $service-worker, $env/static/public and $app/env/public are available in service workers.`
 			);
 		}
 	};
@@ -110,7 +142,7 @@ export async function build_service_worker(
 					// .mjs so that esbuild doesn't incorrectly inject `export` https://github.com/vitejs/vite/issues/15379
 					entryFileNames: `service-worker.${is_rolldown ? 'js' : 'mjs'}`,
 					assetFileNames: `${kit.appDir}/immutable/assets/[name].[hash][extname]`,
-					inlineDynamicImports: !is_rolldown
+					inlineDynamicImports: !is_rolldown ? true : undefined
 				}
 			},
 			outDir: `${out}/client`,
@@ -132,13 +164,6 @@ export async function build_service_worker(
 			}
 		}
 	};
-
-	// we must reference Vite 8 options conditionally. Otherwise, older Vite
-	// versions throw an error about unknown config options
-	if (is_rolldown && config?.build?.rollupOptions?.output) {
-		// @ts-ignore only available in Vite 8
-		config.build.rollupOptions.output.codeSplitting = true;
-	}
 
 	await vite.build(config);
 

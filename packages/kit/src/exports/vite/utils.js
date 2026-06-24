@@ -4,9 +4,11 @@ import { posixify } from '../../utils/filesystem.js';
 import { negotiate } from '../../utils/http.js';
 import { filter_env } from '../../utils/env.js';
 import { escape_html } from '../../utils/escape.js';
+import { stackless } from '../../utils/error.js';
 import { dedent } from '../../core/sync/utils.js';
 import {
 	app_server,
+	app_env_private,
 	env_dynamic_private,
 	env_dynamic_public,
 	env_static_private,
@@ -71,9 +73,28 @@ export function get_env(env_config, mode) {
 	const env = loadEnv(mode, env_config.dir, '');
 
 	return {
+		all: env,
 		public: filter_env(env, public_prefix, private_prefix),
 		private: filter_env(env, private_prefix, public_prefix)
 	};
+}
+
+/**
+ * Silently respond with 404 for Chrome DevTools workspaces request.
+ * Chrome always requests this at the root, regardless of base path.
+ * Users who want workspaces can install `vite-plugin-devtools-json`,
+ * which takes precedence as Vite plugin middleware runs first.
+ * @param {string} pathname
+ * @param {import('http').ServerResponse} res
+ * @returns {boolean} `true` if the request was handled
+ */
+export function is_chrome_devtools_request(pathname, res) {
+	if (pathname === '/.well-known/appspecific/com.chrome.devtools.json') {
+		res.writeHead(404);
+		res.end('not found');
+		return true;
+	}
+	return false;
 }
 
 /**
@@ -137,6 +158,10 @@ export function normalize_id(id, lib, cwd) {
 		return '$app/server';
 	}
 
+	if (id === app_env_private) {
+		return '$app/env/private';
+	}
+
 	if (id === env_static_private) {
 		return '$env/static/private';
 	}
@@ -158,18 +183,6 @@ export function normalize_id(id, lib, cwd) {
 	}
 
 	return posixify(id);
-}
-
-/**
- * For times when you need to throw an error, but without
- * displaying a useless stack trace (since the developer
- * can't do anything useful with it)
- * @param {string} message
- */
-export function stackless(message) {
-	const error = new Error(message);
-	error.stack = '';
-	return error;
 }
 
 export const strip_virtual_prefix = /** @param {string} id */ (id) => id.replace('\0virtual:', '');
