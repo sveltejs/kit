@@ -94,7 +94,7 @@ export function form(id) {
 		let enhance_callback = async (instance) => {
 			if (await instance.submit()) {
 				await tick();
-				instance.reset({ result: false });
+				instance.reset({ result: false, values: true });
 			}
 		};
 
@@ -725,7 +725,11 @@ export function form(id) {
 					submitted = false;
 
 					if (values === true) {
-						element?.reset();
+						if (element) {
+							// We call reset from the prototype to avoid DOM clobbering
+							HTMLFormElement.prototype.reset.call(element);
+						}
+
 						input = {};
 					} else if (values) {
 						input = values;
