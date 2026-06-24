@@ -41,17 +41,26 @@ test.describe('remote functions', () => {
 		await expect(page.locator('#redirected')).toHaveText('redirected');
 	});
 
-	test('query redirect to a same-origin URL outside the app navigates', async ({ page }) => {
+	test('query redirect to a same-origin URL outside the app navigates', async ({
+		page,
+		javaScriptEnabled
+	}) => {
 		// Regression for https://github.com/sveltejs/kit/issues/14285 — a server-issued
 		// redirect to a URL that is not a client route must still navigate, instead of
 		// being rejected by the stricter `goto` behaviour. `/robots.txt` is a static
 		// asset that is not a SvelteKit route.
 		await page.goto('/remote/redirect-external');
 
-		await page.click('#trigger');
+		if (javaScriptEnabled) {
+			await page.click('#trigger');
 
-		// the redirect performs a full-page navigation to the static asset
-		await expect(page).toHaveURL(/\/robots\.txt$/);
+			// the redirect performs a full-page navigation to the static asset
+			await expect(page).toHaveURL(/\/robots\.txt$/);
+		} else {
+			// without JS the query mutation can't be invoked from the client, so the
+			// page just renders its initial state
+			await expect(page.locator('#status')).toHaveText('idle');
+		}
 	});
 
 	test("query that's awaited and throws a redirect doesn't trigger handleError hook", async ({
