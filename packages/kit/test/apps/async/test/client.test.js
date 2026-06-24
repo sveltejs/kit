@@ -1018,13 +1018,24 @@ test.describe('remote function mutations', () => {
 	test('submit field value is available in the enhance callback', async ({ page }) => {
 		await page.goto('/remote/form/submit-field-value');
 
-		await page.click('#save');
-		await expect(page.locator('#captured')).toHaveText('save');
-		await expect(page.locator('#result')).toHaveText('save');
+		await page.click('#one');
+		await expect(page.locator('#captured')).toHaveText('1');
+		await expect(page.locator('#result')).toHaveText('1');
 
-		await page.click('#delete');
-		await expect(page.locator('#captured')).toHaveText('delete');
-		await expect(page.locator('#result')).toHaveText('delete');
+		await page.click('#five');
+		await expect(page.locator('#captured')).toHaveText('5');
+		await expect(page.locator('#result')).toHaveText('5');
+
+		await page.click('#no-value');
+		await expect(page.locator('#captured')).toBeEmpty();
+		await expect(page.locator('#result')).toBeEmpty();
+
+		await page.click('a');
+
+		await page.locator('#input').fill('100');
+		await page.click('#submit');
+		await expect(page.locator('#captured')).toHaveText('100');
+		await expect(page.locator('#result')).toHaveText('100');
 	});
 
 	test('form result from a native (non-enhanced) submission survives hydration', async ({

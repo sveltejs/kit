@@ -3,9 +3,9 @@ import * as v from 'valibot';
 
 export const my_form = form(
 	v.object({
-		action: v.string()
+		quantity: v.optional(v.number())
 	}),
 	async (data) => {
-		return data.action;
+		return data.quantity;
 	}
 );
