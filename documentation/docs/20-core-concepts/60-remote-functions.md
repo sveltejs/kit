@@ -668,7 +668,10 @@ To get a list of _all_ issues, rather than just those belonging to a single fiel
 `fields.allIssues()` is also useful for checking if the form is valid:
 
 ```svelte
-<button +++disabled={!!createPost.fields.allIssues()}+++>Publish!</button>
+<form {...createPost} oninput={() => createPost.validate()}>
+	<!-- -->
+	<button +++disabled={!!createPost.fields.allIssues()}+++ >Publish!</button>
+</form>
 ```
 
 ### Getting/setting inputs
