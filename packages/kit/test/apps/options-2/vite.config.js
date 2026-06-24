@@ -8,9 +8,6 @@ const config = {
 		minify: false
 	},
 	clearScreen: false,
-	define: {
-		__TEST_USER_DEFINE__: '"works"'
-	},
 	plugins: [
 		sveltekit({
 			adapter: {
@@ -49,6 +46,9 @@ const config = {
 			}
 		})
 	],
+	define: {
+		__TEST_USER_DEFINE__: '"works"'
+	},
 	server: {
 		fs: {
 			allow: [path.resolve('../../../src')]

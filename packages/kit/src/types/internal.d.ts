@@ -195,7 +195,7 @@ export class InternalServer extends Server {
 }
 
 export interface ManifestData {
-	/** Static files from `files.assets`. */
+	/** Static files from `config.files.assets`. */
 	assets: Asset[];
 	hooks: {
 		client: string | null;

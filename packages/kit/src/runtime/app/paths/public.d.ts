@@ -4,7 +4,7 @@ import { ResolveArgs } from './types.js';
 export { resolve, asset, match } from './client.js';
 
 /**
- * A string that matches [`paths.base`](https://svelte.dev/docs/kit/configuration#paths).
+ * A string that matches [`config.paths.base`](https://svelte.dev/docs/kit/configuration#paths).
  *
  * Example usage: `<a href="{base}/your-page">Link</a>`
  *
@@ -13,9 +13,9 @@ export { resolve, asset, match } from './client.js';
 export let base: '' | `/${string}`;
 
 /**
- * An absolute path that matches [`paths.assets`](https://svelte.dev/docs/kit/configuration#paths).
+ * An absolute path that matches [`config.paths.assets`](https://svelte.dev/docs/kit/configuration#paths).
  *
- * > [!NOTE] If a value for `paths.assets` is specified, it will be replaced with `'/_svelte_kit_assets'` during `vite dev` or `vite preview`, since the assets don't yet live at their eventual URL.
+ * > [!NOTE] If a value for `config.paths.assets` is specified, it will be replaced with `'/_svelte_kit_assets'` during `vite dev` or `vite preview`, since the assets don't yet live at their eventual URL.
  *
  * @deprecated Use [`asset(...)`](https://svelte.dev/docs/kit/$app-paths#asset) instead
  */

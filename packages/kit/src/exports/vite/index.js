@@ -380,7 +380,7 @@ function kit({ svelte_config }) {
 						sourcemapIgnoreList,
 						watch: {
 							ignored: [
-								// Ignore all siblings of outDir/generated
+								// Ignore all siblings of config.outDir/generated
 								`${out_dir}/!(generated)`
 							]
 						}

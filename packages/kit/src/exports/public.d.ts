@@ -595,7 +595,7 @@ export interface KitConfig {
 	 */
 	inlineStyleThreshold?: number;
 	/**
-	 * An array of file extensions that SvelteKit will treat as modules. Files with extensions that match neither `extensions` nor `moduleExtensions` will be ignored by the router.
+	 * An array of file extensions that SvelteKit will treat as modules. Files with extensions that match neither `config.extensions` nor `config.moduleExtensions` will be ignored by the router.
 	 * @default [".js", ".ts"]
 	 */
 	moduleExtensions?: string[];
@@ -1690,7 +1690,7 @@ export interface ServerInitOptions {
 export interface SSRManifest {
 	appDir: string;
 	appPath: string;
-	/** Static files from `files.assets` and the service worker (if any). */
+	/** Static files from `config.files.assets` and the service worker (if any). */
 	assets: Set<string>;
 	mimeTypes: Record<string, string>;
 

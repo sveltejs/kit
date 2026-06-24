@@ -5,7 +5,7 @@ import { resolve_route } from '../../../utils/routing.js';
 import { get_navigation_intent } from '../../client/client.js';
 
 /**
- * Resolve the URL of an asset in your `static` directory, by prefixing it with [`paths.assets`](https://svelte.dev/docs/kit/configuration#paths) if configured, or otherwise by prefixing it with the base path.
+ * Resolve the URL of an asset in your `static` directory, by prefixing it with [`config.paths.assets`](https://svelte.dev/docs/kit/configuration#paths) if configured, or otherwise by prefixing it with the base path.
  *
  * During server rendering, the base path is relative and depends on the page currently being rendered.
  *

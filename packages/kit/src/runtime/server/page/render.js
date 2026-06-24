@@ -68,7 +68,7 @@ export async function render_response({
 }) {
 	if (state.prerendering) {
 		if (options.csp.mode === 'nonce') {
-			throw new Error('Cannot use prerendering if csp.mode === "nonce"');
+			throw new Error('Cannot use prerendering if config.csp.mode === "nonce"');
 		}
 
 		if (options.app_template_contains_nonce) {

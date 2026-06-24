@@ -23,7 +23,7 @@ export function get_config_aliases(config, root) {
 	/** @type {import('vite').Alias[]} */
 	const alias = [
 		// For now, we handle `$lib` specially here rather than make it a default value for
-		// `alias` since it has special meaning for packaging, etc.
+		// `config.alias` since it has special meaning for packaging, etc.
 		{ find: '$lib', replacement: config.files.lib }
 	];
 
