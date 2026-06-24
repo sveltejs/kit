@@ -88,8 +88,6 @@ const snapshots = storage.get(SNAPSHOT_KEY) ?? {};
 if (DEV && BROWSER) {
 	let warned = false;
 
-	const current_module_url = import.meta.url.split('?')[0]; // remove query params that vite adds to the URL when it is loaded from node_modules
-
 	const warn = () => {
 		if (warned) return;
 
@@ -98,12 +96,13 @@ if (DEV && BROWSER) {
 		let stack = new Error().stack?.split('\n');
 		if (!stack) return;
 		if (!stack[0].includes('https:') && !stack[0].includes('http:')) stack = stack.slice(1); // Chrome includes the error message in the stack
-		stack = stack.slice(2); // remove `warn` and the place where `warn` was called
-		// Filter out frames from third-party libraries that monkeypatch history methods (e.g. Sentry),
-		// since their presence in the stack doesn't mean the call originated from outside SvelteKit
-		stack = stack.filter((frame) => !frame.includes('node_modules'));
-		// Can be falsy if was called directly from an anonymous function
-		if (stack[0]?.includes(current_module_url)) return;
+
+		// skip over `warn` and the place where `warn` was called
+		const frame = stack[2];
+
+		// ignore calls that happen inside dependencies, including SvelteKit.
+		// `frame` can be falsy if we came from an anonymous function
+		if (frame?.includes('node_modules')) return;
 
 		warned = true;
 
