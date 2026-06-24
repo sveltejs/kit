@@ -9,3 +9,4 @@ edge_functions = ".netlify/v1/edge-functions"
 [[edge_functions]]
 function = "sveltekit-render"
 path = "/*"
+excludedPath = ["/_app/immutable/*", "/_app/version.json", "/.netlify/*"]

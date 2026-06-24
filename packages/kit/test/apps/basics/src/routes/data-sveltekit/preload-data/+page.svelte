@@ -6,7 +6,7 @@
 
 <div data-sveltekit-preload-data>
 	<a id="two" href="/data-sveltekit/preload-data/target">two</a>
-	<a id="three" href="/data-sveltekit/preload-data/target" data-sveltekit-preload-data="off"
+	<a id="three" href="/data-sveltekit/preload-data/target" data-sveltekit-preload-data={false}
 		>three</a
 	>
 </div>

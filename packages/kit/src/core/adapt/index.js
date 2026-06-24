@@ -12,6 +12,7 @@ import { create_builder } from './builder.js';
  * @param {import('types').Logger} log
  * @param {import('types').RemoteChunk[]} remotes
  * @param {import('vite').ResolvedConfig} vite_config
+ * @param {Record<string, import('@sveltejs/kit').EnvVarConfig<any>> | null} explicit_env_config
  */
 export async function adapt(
 	adapter,
@@ -22,7 +23,8 @@ export async function adapt(
 	prerender_map,
 	log,
 	remotes,
-	vite_config
+	vite_config,
+	explicit_env_config
 ) {
 	const { name, adapt } = adapter;
 
@@ -37,7 +39,8 @@ export async function adapt(
 		prerender_map,
 		log,
 		remotes,
-		vite_config
+		vite_config,
+		explicit_env_config
 	});
 
 	await adapt(builder);

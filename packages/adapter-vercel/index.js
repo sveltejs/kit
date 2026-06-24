@@ -630,10 +630,14 @@ function static_vercel_config(builder, config, dir) {
 	// Prevent incorrect caching: if a request to /_app/immutable/* doesn't match
 	// a static file, return 404 instead of falling through to dynamic routes.
 	// Otherwise, we could accidentally immutably cache dynamic content served
-	// by the fallback function.
+	// by the fallback function. `no-store` stops the earlier immutable header
+	// from sticking to this 404, so a missing asset isn't cached for a year.
 	routes.push({
 		src: `/${builder.getAppPath()}/immutable/.+`,
 		status: 404,
+		headers: {
+			'cache-control': 'no-store'
+		},
 		continue: false
 	});
 

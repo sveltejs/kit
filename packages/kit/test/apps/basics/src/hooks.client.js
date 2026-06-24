@@ -1,6 +1,6 @@
-import { env } from '$env/dynamic/public';
+import { PUBLIC_DYNAMIC } from '$app/env/public';
 
-window.PUBLIC_DYNAMIC = env.PUBLIC_DYNAMIC;
+window.PUBLIC_DYNAMIC = PUBLIC_DYNAMIC;
 
 /** @type{import("@sveltejs/kit").HandleClientError} */
 export function handleError({ error, event, status, message }) {

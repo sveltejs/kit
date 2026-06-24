@@ -1,9 +1,11 @@
+/** @import { Plugin, RolldownOptions } from 'rolldown' */
 import { builtinModules } from 'node:module';
 import { rmSync } from 'node:fs';
+import { join } from 'node:path';
 
 /**
  * @param {string} filepath
- * @returns {import('rolldown').Plugin}
+ * @returns {Plugin}
  */
 function clearOutput(filepath) {
 	return {
@@ -19,7 +21,7 @@ function clearOutput(filepath) {
 }
 
 /**
- * @returns {import('rolldown').Plugin}
+ * @returns {Plugin}
  */
 function prefixBuiltinModules() {
 	return {
@@ -32,36 +34,36 @@ function prefixBuiltinModules() {
 	};
 }
 
-export default [
-	{
-		input: 'src/index.js',
-		output: {
-			file: 'files/index.js',
-			format: 'esm'
-		},
-		plugins: [clearOutput('files/index.js'), prefixBuiltinModules()],
-		external: ['ENV', 'HANDLER'],
-		platform: 'node'
+const dir_id = join(import.meta.dirname, 'src', 'dir.js');
+
+/** @type {RolldownOptions} */
+export default {
+	input: {
+		index: 'src/index.js',
+		handler: 'src/handler.js',
+		env: 'src/env.js'
 	},
-	{
-		input: 'src/env.js',
-		output: {
-			file: 'files/env.js',
-			format: 'esm'
+	output: {
+		dir: 'files',
+		format: 'esm',
+		hoistTransitiveImports: false,
+		chunkFileNames(chunk) {
+			if (chunk.name === 'dir') return '[name].js';
+			return 'chunks/[name].js';
 		},
-		plugins: [clearOutput('files/env.js'), prefixBuiltinModules()],
-		external: ['HANDLER'],
-		platform: 'node'
+		codeSplitting: {
+			groups: [
+				{
+					name: 'dir',
+					test: dir_id
+				}
+			]
+		}
 	},
-	{
-		input: 'src/handler.js',
-		output: {
-			file: 'files/handler.js',
-			format: 'esm',
-			codeSplitting: false
-		},
-		plugins: [clearOutput('files/handler.js'), prefixBuiltinModules()],
-		external: ['ENV', 'MANIFEST', 'SERVER'],
-		platform: 'node'
-	}
-];
+	plugins: [clearOutput('files'), prefixBuiltinModules()],
+	// `MANIFEST` and `SERVER` are resolved at adapt time, and `@sveltejs/kit/node`
+	// is kept external so that it gets bundled _alongside_ the app's server code
+	// (rather than duplicated), see https://github.com/sveltejs/kit/issues/15755
+	external: ['MANIFEST', 'SERVER', '@sveltejs/kit/node'],
+	platform: 'node'
+};

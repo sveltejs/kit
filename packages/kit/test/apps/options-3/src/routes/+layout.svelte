@@ -5,3 +5,9 @@
 </script>
 
 <slot />
+
+<style>
+	:global(h1) {
+		color: teal;
+	}
+</style>

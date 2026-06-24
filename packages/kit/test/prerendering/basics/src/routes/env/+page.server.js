@@ -1,4 +1,4 @@
-import { PRIVATE_STATIC } from '$env/static/private';
+import { PRIVATE_STATIC } from '$app/env/private';
 
 export function load() {
 	return {

@@ -16,7 +16,12 @@ const config = {
 
 	plugins: [
 		sveltekit({
-			adapter: adapter()
+			adapter: adapter(),
+
+			paths: {
+				base: '/path-base',
+				relative: false
+			}
 		})
 	],
 

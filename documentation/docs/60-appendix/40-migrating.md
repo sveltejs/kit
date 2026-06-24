@@ -160,7 +160,7 @@ declare module 'html-minifier';
 // @filename: index.js
 // ---cut---
 import { minify } from 'html-minifier';
-import { building } from '$app/environment';
+import { building } from '$app/env';
 
 const minification_options = {
 	collapseBooleanAttributes: true,

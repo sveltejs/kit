@@ -16,7 +16,28 @@ const config = {
 		sveltekit({
 			adapter: adapter({
 				fallback: '200.html'
-			})
+			}),
+
+			compilerOptions: {
+				experimental: {
+					async: true
+				}
+			},
+
+			csp: {
+				directives: {
+					'script-src': ['self']
+				}
+			},
+
+			files: {
+				assets: 'public'
+			},
+
+			paths: {
+				base: '/path-base',
+				assets: 'https://cdn.example.com/stuff'
+			}
 		})
 	],
 

@@ -2,7 +2,7 @@
 
 <div data-sveltekit-replacestate>
 	<a id="two" href="/data-sveltekit/replacestate/target">two</a>
-	<a id="three" href="/data-sveltekit/replacestate/target" data-sveltekit-replacestate="off">
+	<a id="three" href="/data-sveltekit/replacestate/target" data-sveltekit-replacestate={false}>
 		three
 	</a>
 </div>
