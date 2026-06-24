@@ -22,7 +22,7 @@ export default defineConfig({
 		sveltekit({
 			experimental: {
 				+++remoteFunctions: true+++
-			}
+			},
 			compilerOptions: {
 				experimental: {
 					+++async: true+++
