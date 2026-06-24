@@ -422,7 +422,7 @@ export function object(children, allow_unknown = false) {
  */
 export function validate(fallback, fn) {
 	return (input, keypath) => {
-		keypath = keypath.replace('.kit.', '.');
+		keypath = remove_kit_prefix(keypath)
 		return input === undefined ? fallback : fn(input, keypath);
 	};
 }
