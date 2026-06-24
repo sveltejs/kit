@@ -529,9 +529,10 @@ function persist_state() {
  * @param {{ replaceState?: boolean; noScroll?: boolean; keepFocus?: boolean; invalidateAll?: boolean; invalidate?: Array<string | URL | ((url: URL) => boolean)>; state?: Record<string, any> }} options
  * @param {number} redirect_count
  * @param {{}} [nav_token]
+ * @param {import('./types.js').NavigationIntent | undefined} [intent] navigation intent, when already known by the caller (avoids recomputing it)
  * @returns {Promise<void>}
  */
-export async function _goto(url, options, redirect_count, nav_token) {
+export async function _goto(url, options, redirect_count, nav_token, intent) {
 	/** @type {Set<string>} */
 	let query_keys;
 	/** @type {Set<string>} */
@@ -552,6 +553,7 @@ export async function _goto(url, options, redirect_count, nav_token) {
 		state: options.state,
 		redirect_count,
 		nav_token,
+		intent,
 		accept: () => {
 			if (options.invalidateAll) {
 				force_invalidation = true;
@@ -1703,7 +1705,8 @@ function _before_navigate({ url, type, intent, delta, event, scroll }) {
  *   nav_token?: {};
  *   accept?: () => void;
  *   block?: () => void;
- *   event?: Event
+ *   event?: Event;
+ *   intent?: import('./types.js').NavigationIntent | undefined
  * }} opts
  * @returns {Promise<void>}
  */
@@ -1719,12 +1722,13 @@ async function navigate({
 	nav_token = {},
 	accept = noop,
 	block = noop,
-	event
+	event,
+	intent
 }) {
 	const prev_token = token;
 	token = nav_token;
 
-	const intent = await get_navigation_intent(url, false);
+	intent ??= await get_navigation_intent(url, false);
 	const nav =
 		type === 'enter'
 			? create_navigation(current, intent, url, type)
@@ -2311,7 +2315,8 @@ export function disableScrollHandling() {
  * Allows you to navigate programmatically to a given route, with options such as keeping the current element focused.
  * Returns a Promise that resolves when SvelteKit navigates (or fails to navigate, in which case the promise rejects) to the specified `url`.
  *
- * For external URLs, use `window.location = url` instead of calling `goto(url)`.
+ * `goto` is intended for navigations to routes that belong to the app. For external URLs, use `window.location = url` instead of calling `goto(url)`.
+ * If the URL does not resolve to a route within the app, the returned promise will reject — use `window.location = url` to perform a full-page navigation to such URLs.
  *
  * @param {string | URL} url Where to navigate to. Note that if you've set [`config.kit.paths.base`](https://svelte.dev/docs/kit/configuration#paths) and the URL is root-relative, you need to prepend the base path if you want to navigate within the app.
  * @param {Object} [opts] Options related to the navigation
@@ -2323,7 +2328,7 @@ export function disableScrollHandling() {
  * @param {App.PageState} [opts.state] An optional object that will be available as `page.state`
  * @returns {Promise<void>}
  */
-export function goto(url, opts = {}) {
+export async function goto(url, opts = {}) {
 	if (!BROWSER) {
 		throw new Error('Cannot call goto(...) on the server');
 	}
@@ -2331,16 +2336,24 @@ export function goto(url, opts = {}) {
 	url = new URL(resolve_url(url));
 
 	if (url.origin !== origin) {
-		return Promise.reject(
-			new Error(
-				DEV
-					? `Cannot use \`goto\` with an external URL. Use \`window.location = "${url}"\` instead`
-					: 'goto: invalid URL'
-			)
+		throw new Error(
+			DEV
+				? `Cannot use \`goto\` with an external URL. Use \`window.location = "${url}"\` instead`
+				: 'goto: invalid URL'
 		);
 	}
 
-	return _goto(url, opts, 0);
+	const intent = await get_navigation_intent(url, false);
+
+	if (!intent) {
+		throw new Error(
+			DEV
+				? `Cannot use \`goto\` with a URL that does not resolve to a route within the app. Use \`window.location = "${url}"\` instead`
+				: 'goto: invalid URL'
+		);
+	}
+
+	return _goto(url, opts, 0, {}, intent);
 }
 
 /**
