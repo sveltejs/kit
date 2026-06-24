@@ -42,10 +42,6 @@ export function convert_formdata(data) {
 
 		if (is_array) key = key.slice(0, -2);
 
-		if (values.length > 1 && !is_array) {
-			throw new Error(`Form cannot contain duplicated keys — "${key}" has ${values.length} values`);
-		}
-
 		// an empty `<input type="file">` will submit a non-existent file, bizarrely
 		values = values.filter(
 			(entry) => typeof entry === 'string' || entry.name !== '' || entry.size > 0
@@ -58,6 +54,10 @@ export function convert_formdata(data) {
 		} else if (key.startsWith('b:')) {
 			key = key.slice(2);
 			values = values.map((v) => v === 'on');
+		}
+
+		if (values.length > 1 && !is_array) {
+			throw new Error(`Form cannot contain duplicated keys — "${key}" has ${values.length} values`);
 		}
 
 		set_nested_value(result, key, is_array ? values : values[0]);
