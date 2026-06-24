@@ -15,6 +15,7 @@
 <form {...my_form}>
 	<button id="one" {...my_form.fields.quantity.as('submit', 1)}>1</button>
 	<button id="five" {...my_form.fields.quantity.as('submit', 5)}>5</button>
+	<button id="no-value" type="submit">no value</button>
 </form>
 
 <p id="captured">{captured}</p>

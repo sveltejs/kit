@@ -14,6 +14,7 @@ const decoder = new TextDecoder();
  * @param {Record<string, any>} object
  * @param {string} path_string
  * @param {any} value
+ * @returns {unknown} The transformed value that was set
  */
 export function set_nested_value(object, path_string, value) {
 	if (path_string.startsWith('n:')) {
@@ -25,6 +26,7 @@ export function set_nested_value(object, path_string, value) {
 	}
 
 	deep_set(object, split_path(path_string), value);
+	return value;
 }
 
 /**

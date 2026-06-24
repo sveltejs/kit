@@ -1026,6 +1026,10 @@ test.describe('remote function mutations', () => {
 		await expect(page.locator('#captured')).toHaveText('5');
 		await expect(page.locator('#result')).toHaveText('5');
 
+		await page.click('#no-value');
+		await expect(page.locator('#captured')).toBeEmpty();
+		await expect(page.locator('#result')).toBeEmpty();
+
 		await page.click('a');
 
 		await page.locator('#input').fill('100');

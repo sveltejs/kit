@@ -421,10 +421,10 @@ export function form(id) {
 					const value = /** @type {any} */ (event.submitter).value;
 
 					if (name !== null && value !== undefined) {
-						set_nested_value(input, name, value);
+						const set_value = set_nested_value(input, name, value);
 						previous_submitter = {
 							path: split_path(name.replace(/^[nb]:/, '')),
-							value
+							value: set_value
 						};
 					}
 				}
