@@ -1,5 +1,35 @@
 # @sveltejs/kit
 
+## 2.68.0
+### Minor Changes
+
+
+- feat: expose `RemoteFormEnhanceInstance` and `RemoteFormEnhanceCallback` types ([#15816](https://github.com/sveltejs/kit/pull/15816))
+
+
+- feat: set value of `submit` fields when form is submitted ([#15979](https://github.com/sveltejs/kit/pull/15979))
+
+
+### Patch Changes
+
+
+- fix: skip `native_navigation` when `__data.json` returns 404 on a static fallback page ([#16135](https://github.com/sveltejs/kit/pull/16135))
+
+
+- fix: ignore third-party monkeypatches in `pushState`/`replaceState` warning detection ([#15267](https://github.com/sveltejs/kit/pull/15267))
+
+
+- fix: snapshot form fields on read ([#16150](https://github.com/sveltejs/kit/pull/16150))
+
+
+- fix: strip field prefix before erroring on duplicates ([#16151](https://github.com/sveltejs/kit/pull/16151))
+
+
+- fix: call reset function via prototype ([#16138](https://github.com/sveltejs/kit/pull/16138))
+
+
+- chore: fix navigation `type` hover info ([#16147](https://github.com/sveltejs/kit/pull/16147))
+
 ## 2.67.0
 ### Minor Changes
 

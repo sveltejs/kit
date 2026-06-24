@@ -1,5 +1,17 @@
 # @sveltejs/adapter-node
 
+## 5.5.7
+### Patch Changes
+
+
+- fix: add `X-Accel-Buffering: no` header to `text/event-stream` responses to prevent reverse proxies such as nginx from buffering streamed responses ([#16156](https://github.com/sveltejs/kit/pull/16156))
+
+
+- fix: delete existing socket file on startup ([#15449](https://github.com/sveltejs/kit/pull/15449))
+
+- Updated dependencies [[`c426c6e`](https://github.com/sveltejs/kit/commit/c426c6ede7ecd895f7808f2e434d7e8aa5062198), [`81f253e`](https://github.com/sveltejs/kit/commit/81f253eec901101ccbd59befe6aa23a244988476), [`8d3c865`](https://github.com/sveltejs/kit/commit/8d3c8653ff129ae57f69e957bc0b3a94f18a9e2d), [`6bde3b6`](https://github.com/sveltejs/kit/commit/6bde3b697778ef7f8ea4a1293ce3cbe3b8316dda), [`9161740`](https://github.com/sveltejs/kit/commit/9161740c0e4dc61e29d40ca95235639a0ce759c4), [`2184960`](https://github.com/sveltejs/kit/commit/21849601f5b3b552ee0c5628a5d39625c44ba7b9), [`5e319b6`](https://github.com/sveltejs/kit/commit/5e319b6892d584fa3c4dacbd212b51927c50a9dc), [`e82a0a8`](https://github.com/sveltejs/kit/commit/e82a0a8dd19defbe4ad11e36543c17a025004280)]:
+  - @sveltejs/kit@2.68.0
+
 ## 5.5.6
 ### Patch Changes
 
