@@ -1294,7 +1294,7 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 
 		if (server_data_node?.type === 'error') {
 			// rethrow and catch below
-			throw server_data_node;
+			throw new HttpError(server_data_node.status ?? 500, server_data_node.error);
 		}
 
 		return load_node({
