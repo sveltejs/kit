@@ -1,7 +1,8 @@
 <script>
 	import { preloadData } from '$app/navigation';
 
-	let data = {};
+	/** @type {any} */
+	let data;
 </script>
 
 <button
@@ -18,4 +19,4 @@
 	}}>500</button
 >
 
-<p>{`${data.type}`} {`${data.status}`} {`${data.error?.message}`}</p>
+<p>{`${data?.type}`} {`${data?.status}`} {`${data?.error?.message}`}</p>
