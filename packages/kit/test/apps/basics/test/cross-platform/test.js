@@ -339,8 +339,8 @@ test.describe('Errors', () => {
 	test('handleError can override the status code of an unexpected error', async ({ page }) => {
 		const response = await page.goto('/errors/handle-error-status');
 
-		expect(await page.textContent('h1')).toBe('404');
-		expect(await page.textContent('#message')).toBe(
+		await expect(page.locator('h1')).toHaveText('404');
+		await expect(page.locator('#message')).toHaveText(
 			'This is your custom error page saying: "Status override test (500 Internal Error)"'
 		);
 		expect(/** @type {Response} */ (response).status()).toBe(404);
