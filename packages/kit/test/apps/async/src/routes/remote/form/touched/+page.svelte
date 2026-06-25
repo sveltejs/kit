@@ -1,19 +1,13 @@
 <script>
 	import { touched_form } from './touched.remote.js';
-	import { tick } from 'svelte';
-
-	const markNameTouched = async () => {
-		touched_form.fields.name.set('example');
-		await tick();
-	};
 </script>
 
-<h1>Remote Form Touched Test</h1>
+<p id="touched-name">Name touched: {touched_form.fields.name.touched()}</p>
+<p id="touched-age">Age touched: {touched_form.fields.age.touched()}</p>
 
-<p id="touched-name">Name touched: {touched_form.fields.name.touched() ? 'yes' : 'no'}</p>
-<p id="touched-age">Age touched: {touched_form.fields.age.touched() ? 'yes' : 'no'}</p>
-
-<button id="set-btn" type="button" on:click={markNameTouched}> set name programmatically </button>
+<button id="set-btn" type="button" onclick={() => touched_form.fields.name.set('example')}>
+	set name programmatically
+</button>
 
 <form {...touched_form}>
 	<label>

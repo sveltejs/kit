@@ -697,20 +697,20 @@ test.describe('remote functions', () => {
 		const nameTouched = page.locator('#touched-name');
 		const ageTouched = page.locator('#touched-age');
 
-		await expect(nameTouched).toHaveText('Name touched: no');
-		await expect(ageTouched).toHaveText('Age touched: no');
+		await expect(nameTouched).toHaveText('Name touched: false');
+		await expect(ageTouched).toHaveText('Age touched: false');
 
 		await page.click('#set-btn');
-		await expect(nameTouched).toHaveText('Name touched: yes');
+		await expect(nameTouched).toHaveText('Name touched: true');
 
 		await page.click('#reset-btn');
-		await expect(nameTouched).toHaveText('Name touched: no');
+		await expect(nameTouched).toHaveText('Name touched: false');
 
 		await page.fill('#age-input', '42');
-		await expect(ageTouched).toHaveText('Age touched: yes');
+		await expect(ageTouched).toHaveText('Age touched: true');
 
 		await page.click('#reset-btn');
-		await expect(ageTouched).toHaveText('Age touched: no');
+		await expect(ageTouched).toHaveText('Age touched: false');
 	});
 
 	test('selects are not nuked when unrelated controls change', async ({
