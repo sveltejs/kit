@@ -2317,7 +2317,7 @@ export function disableScrollHandling() {
  * Returns a Promise that resolves when SvelteKit navigates (or fails to navigate, in which case the promise rejects) to the specified `url`.
  *
  * `goto` is intended for navigations to routes that belong to the app.
- * If the URL does not resolve to a route within the app, the returned promise will reject. 
+ * If the URL does not resolve to a route within the app, the returned promise will reject.
  * For external URLs, use `window.location = url` to perform a full-page navigation instead of calling `goto(url)`.
  *
  * @param {string | URL} url Where to navigate to. Note that if you've set [`config.kit.paths.base`](https://svelte.dev/docs/kit/configuration#paths) and the URL is root-relative, you need to prepend the base path if you want to navigate within the app.
