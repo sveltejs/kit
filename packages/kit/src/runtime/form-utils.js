@@ -641,7 +641,7 @@ function deep_clone(value) {
  * @param {() => Record<string, any>} get_input - Function to get current input data
  * @param {(path: (string | number)[], value: any) => void} set_input - Function to set input data
  * @param {(path?: (string | number)[], all?: boolean) => Record<string, InternalRemoteFormIssue[]>} get_issues - Function to get current issues
- * @param {() => Record<string, boolean>} [get_touched] - Function to get touched fields
+ * @param {() => Record<string, boolean>} get_touched - Function to get touched fields
  * @param {(string | number)[]} path - Current access path
  * @returns {any} Proxy object with name(), value(), and issues() methods
  */
@@ -650,7 +650,7 @@ export function create_field_proxy(
 	get_input,
 	set_input,
 	get_issues,
-	get_touched = () => ({}),
+	get_touched,
 	path = []
 ) {
 	const get_value = () => {
