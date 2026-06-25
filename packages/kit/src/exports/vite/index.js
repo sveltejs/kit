@@ -994,11 +994,13 @@ function kit({ svelte_config, adapter }) {
 					serviceWorker: {
 						build: {
 							modulePreload: false,
-							rolldownOptions: {
-								input: {
+								rolldownOptions: {
+									external: [`${kit.paths.base}/${kit.appDir}/env.js`],
+									input: {
 									'service-worker': service_worker_entry_file
 								},
 								output: {
+									format: 'es',
 									entryFileNames: 'service-worker.js',
 									assetFileNames: `${kit.appDir}/immutable/assets/[name].[hash][extname]`,
 									codeSplitting:
@@ -1162,10 +1164,8 @@ function kit({ svelte_config, adapter }) {
 				id: service_worker_entry_file || '<skip>'
 			},
 			handler(code) {
-				// in dev, we prepend the service worker with an import that
-				// configures `env`, in case `$app/env/public` is imported,
-				// in prod, where we currently use non-module service
-				// workers, we have to use `importScripts` instead
+				// we prepend the service worker with an import that
+				// configures `env`, in case `$app/env/public` is imported.
 				return {
 					code: `import '__sveltekit/env/service-worker';\n${code}`
 				};

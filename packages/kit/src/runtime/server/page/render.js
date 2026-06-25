@@ -560,12 +560,9 @@ export async function render_response({
 		}
 
 		if (options.service_worker) {
-			let opts = __SVELTEKIT_DEV__ ? ", { type: 'module' }" : '';
+			let opts = ", { type: 'module' }";
 			if (options.service_worker_options != null) {
-				const service_worker_options = { ...options.service_worker_options };
-				if (__SVELTEKIT_DEV__) {
-					service_worker_options.type = 'module';
-				}
+				const service_worker_options = { ...options.service_worker_options, type: 'module' };
 				opts = `, ${s(service_worker_options)}`;
 			}
 

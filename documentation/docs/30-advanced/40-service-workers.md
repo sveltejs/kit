@@ -120,12 +120,10 @@ self.addEventListener('fetch', (event) => {
 You can [disable automatic registration](configuration#serviceWorker) if you need to register the service worker with your own logic. The default registration looks something like this:
 
 ```js
-import { dev } from '$app/env';
-
 if ('serviceWorker' in navigator) {
 	addEventListener('load', function () {
 		navigator.serviceWorker.register('./path/to/service-worker.js', {
-			type: dev ? 'module' : 'classic'
+			type: 'module'
 		});
 	});
 }

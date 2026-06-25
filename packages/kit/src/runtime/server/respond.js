@@ -319,7 +319,7 @@ export async function internal_respond(request, options, manifest, state) {
 		return resolve_route(resolved_path, new URL(request.url), manifest);
 	}
 
-	if (resolved_path === `/${app_dir}/env.js` || resolved_path === `/${app_dir}/env.script.js`) {
+	if (resolved_path === `/${app_dir}/env.js`) {
 		return get_public_env(request);
 	}
 
