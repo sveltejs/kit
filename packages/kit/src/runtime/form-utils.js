@@ -705,17 +705,18 @@ export function create_field_proxy(target, get_input, set_input, get_issues, get
 				const fn = () => {
 					const touched = get_touched();
 
-					if (path.length === 0 || key === '') {
+					if (key === '') {
 						return Object.keys(touched).length > 0;
 					}
 
-					if (touched[key]) return true;
+					if (touched[key]) {
+						return true;
+					}
 
 					for (const candidate in touched) {
-						if (candidate === key) continue;
 						if (!candidate.startsWith(key)) continue;
 
-						const next = candidate.slice(key.length, key.length + 1);
+						const next = candidate[key.length];
 						if (next === '.' || next === '[') {
 							return true;
 						}
