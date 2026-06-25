@@ -1102,9 +1102,18 @@ test.describe('remote function mutations', () => {
 
 	test('form submission with element id `reset` resets the form', async ({ page }) => {
 		await page.goto('/remote/form/reset-id');
-		await page.locator('[name="message"]').fill('test');
+		await page.locator('[name="message"]').fill('short');
 		await page.click('button');
-		await expect(page.locator('#result')).toHaveText('test');
+
+		await expect(page.locator('.error')).toHaveText('too short');
+
+		await page.click('[type="reset"]');
+		await expect(page.locator('.error')).toHaveCount(0);
+
+		await page.locator('[name="message"]').fill('long enough');
+		await page.click('button');
+
+		await expect(page.locator('#result')).toHaveText('long enough');
 		await expect(page.locator('[name="message"]')).toBeEmpty();
 	});
 });

@@ -524,6 +524,8 @@ export function form(id) {
 				await tick();
 
 				input = convert_formdata(new FormData(form));
+				raw_issues = [];
+				touched = {};
 			};
 
 			form.addEventListener('submit', handle_submit);
