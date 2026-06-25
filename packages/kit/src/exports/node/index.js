@@ -4,6 +4,9 @@ import { SvelteKitError } from '../internal/index.js';
 import { noop } from '../../utils/functions.js';
 import { get_set_cookies } from '../../utils/http.js';
 
+/** @type {WeakMap<import('http').IncomingMessage, (chunk: Buffer) => void>} */
+const body_data_listeners = new WeakMap();
+
 /**
  * @param {import('http').IncomingMessage} req
  * @param {number} [body_size_limit]
@@ -52,17 +55,19 @@ function get_raw_body(req, body_size_limit) {
 				return;
 			}
 
-			req.on('error', (error) => {
+			/** @param {Error} error */
+			const on_error = (error) => {
 				cancelled = true;
 				controller.error(error);
-			});
+			};
 
-			req.on('end', () => {
+			const on_end = () => {
 				if (cancelled) return;
 				controller.close();
-			});
+			};
 
-			req.on('data', (chunk) => {
+			/** @param {Buffer} chunk */
+			const on_data = (chunk) => {
 				if (cancelled) return;
 
 				size += chunk.length;
@@ -94,7 +99,12 @@ function get_raw_body(req, body_size_limit) {
 				if (controller.desiredSize === null || controller.desiredSize <= 0) {
 					req.pause();
 				}
-			});
+			};
+
+			req.on('error', on_error);
+			req.on('end', on_end);
+			req.on('data', on_data);
+			body_data_listeners.set(req, on_data);
 		},
 
 		pull() {
@@ -160,6 +170,44 @@ export async function getRequest({ request, base, bodySizeLimit }) {
 }
 
 /**
+ * Drains any unconsumed request body once the response has been sent. When a
+ * route doesn't read the request body (for example a page route receiving a
+ * POST), the unread bytes remain buffered in the socket. On keep-alive
+ * connections Node's HTTP parser then reads those leftover bytes as the next
+ * request, fails to parse them, and resets the connection — losing any
+ * pipelined request. Resuming the request discards the bytes so the connection
+ * stays usable.
+ *
+ * Because `get_raw_body` attaches a `data` listener, Node marks the request as
+ * being consumed (`req._consuming`) and skips its own automatic drain, so we
+ * have to do it ourselves. The whole remaining body is read and discarded; this
+ * is the intended trade-off (keeping the connection reusable) over destroying it.
+ * @see https://github.com/sveltejs/kit/issues/14916
+ * @see https://github.com/sveltejs/kit/issues/15526
+ * @param {import('http').ServerResponse} res
+ */
+function drain_request(res) {
+	const req = res.req;
+	if (!req || req.readableEnded || req.destroyed) return;
+
+	// When the body went unread, get_raw_body's `data` listener is still attached
+	// and enqueues into a ReadableStream nobody consumes; it pauses the request at
+	// the high water mark, so one chunk sits in memory and the rest stays buffered
+	// in the socket. Remove only that `data` listener so the resumed stream drops
+	// the remaining bytes instead of re-buffering them. The `end` and `error`
+	// listeners stay attached so the body's ReadableStream is still closed (or
+	// errored) once draining completes, and a consumer that stopped reading
+	// mid-body sees a clean end instead of hanging.
+	const on_data = body_data_listeners.get(req);
+	if (on_data) {
+		req.removeListener('data', on_data);
+		body_data_listeners.delete(req);
+	}
+
+	req.resume();
+}
+
+/**
  * @param {import('http').ServerResponse} res
  * @param {Response} response
  * @returns {Promise<void>}
@@ -167,6 +215,9 @@ export async function getRequest({ request, base, bodySizeLimit }) {
 // TODO 3.0 make the signature synchronous?
 // eslint-disable-next-line @typescript-eslint/require-await
 export async function setResponse(res, response) {
+	res.once('finish', () => drain_request(res));
+	res.once('close', () => drain_request(res));
+
 	for (const [key, value] of response.headers) {
 		try {
 			res.setHeader(key, key === 'set-cookie' ? get_set_cookies(response.headers) : value);
