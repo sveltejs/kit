@@ -664,6 +664,7 @@ export function create_field_proxy(target, get_input, set_input, get_issues, get
 			}
 
 			const key = build_path_string(path);
+			const next = [...path, prop];
 
 			if (prop === 'set') {
 				const set_func = function (/** @type {any} */ newValue) {
@@ -671,17 +672,11 @@ export function create_field_proxy(target, get_input, set_input, get_issues, get
 					return newValue;
 				};
 
-				return create_field_proxy(set_func, get_input, set_input, get_issues, get_touched, [
-					...path,
-					prop
-				]);
+				return create_field_proxy(set_func, get_input, set_input, get_issues, get_touched, next);
 			}
 
 			if (prop === 'value') {
-				return create_field_proxy(get_value, get_input, set_input, get_issues, get_touched, [
-					...path,
-					prop
-				]);
+				return create_field_proxy(get_value, get_input, set_input, get_issues, get_touched, next);
 			}
 
 			if (prop === 'issues' || prop === 'allIssues') {
@@ -703,14 +698,11 @@ export function create_field_proxy(target, get_input, set_input, get_issues, get
 						}));
 				};
 
-				return create_field_proxy(issues_func, get_input, set_input, get_issues, get_touched, [
-					...path,
-					prop
-				]);
+				return create_field_proxy(issues_func, get_input, set_input, get_issues, get_touched, next);
 			}
 
 			if (prop === 'touched') {
-				const touched_func = () => {
+				const fn = () => {
 					const touched = get_touched();
 
 					if (path.length === 0 || key === '') {
@@ -732,10 +724,7 @@ export function create_field_proxy(target, get_input, set_input, get_issues, get
 					return false;
 				};
 
-				return create_field_proxy(touched_func, get_input, set_input, get_issues, get_touched, [
-					...path,
-					prop
-				]);
+				return create_field_proxy(fn, get_input, set_input, get_issues, get_touched, next);
 			}
 
 			if (prop === 'as') {
@@ -901,14 +890,11 @@ export function create_field_proxy(target, get_input, set_input, get_issues, get
 					});
 				};
 
-				return create_field_proxy(as_func, get_input, set_input, get_issues, get_touched, [
-					...path,
-					'as'
-				]);
+				return create_field_proxy(as_func, get_input, set_input, get_issues, get_touched, next);
 			}
 
 			// Handle property access (nested fields)
-			return create_field_proxy({}, get_input, set_input, get_issues, get_touched, [...path, prop]);
+			return create_field_proxy({}, get_input, set_input, get_issues, get_touched, next);
 		}
 	});
 }
