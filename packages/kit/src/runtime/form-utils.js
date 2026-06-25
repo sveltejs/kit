@@ -645,14 +645,7 @@ function deep_clone(value) {
  * @param {(string | number)[]} path - Current access path
  * @returns {any} Proxy object with name(), value(), and issues() methods
  */
-export function create_field_proxy(
-	target,
-	get_input,
-	set_input,
-	get_issues,
-	get_touched,
-	path = []
-) {
+export function create_field_proxy(target, get_input, set_input, get_issues, get_touched, path) {
 	const get_value = () => {
 		const value = deep_get(get_input(), path);
 		return deep_clone(value);

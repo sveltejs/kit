@@ -203,7 +203,8 @@ export function form(validate_or_fn, maybe_fn) {
 						(cache[''] ??= {}).input = input;
 					},
 					() => flatten_issues(get_cache(__, get_request_store().state)?.['']?.issues ?? []),
-					() => ({})
+					() => ({}),
+					[]
 				);
 			}
 		});
