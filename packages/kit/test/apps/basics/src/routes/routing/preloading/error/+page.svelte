@@ -18,4 +18,4 @@
 	}}>500</button
 >
 
-<p>{data.type} {data.status} {data.error?.message}</p>
+<p>{`${data.type}`} {`${data.status}`} {`${data.error?.message}`}</p>
