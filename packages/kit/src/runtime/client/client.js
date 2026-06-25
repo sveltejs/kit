@@ -1337,12 +1337,11 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 					};
 				}
 
-				let status = get_status(err);
-
 				if (preload && preload_tokens.has(preload)) {
+					const error = await handle_error(err, { params, url, route: { id: route.id } });
 					return preload_error({
-						error: await handle_error(err, { params, url, route: { id: route.id } }),
-						status,
+						error,
+						status: get_status(error, err),
 						url,
 						params,
 						route
