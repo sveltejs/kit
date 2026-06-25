@@ -1,5 +1,5 @@
 <script>
-	import { issue_path_form, my_form, my_form_2 } from './form.remote.js';
+	import { issue_path_form, my_form, my_form_2 } from './form.remote.ts';
 	import * as v from 'valibot';
 
 	const schema = v.object({

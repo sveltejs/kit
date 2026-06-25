@@ -1,6 +1,5 @@
 import { read_implementation, manifest } from '__sveltekit/server';
-import { base } from '$app/paths';
-import { DEV } from 'esm-env';
+import { assets } from '$app/paths/internal/server';
 import { base64_decode } from '../../utils.js';
 
 /**
@@ -55,7 +54,9 @@ export function read(asset) {
 	}
 
 	const file = decodeURIComponent(
-		DEV && asset.startsWith('/@fs') ? asset : asset.slice(base.length + 1)
+		__SVELTEKIT_DEV__ && asset.startsWith(assets + '/@fs')
+			? asset.slice(assets.length)
+			: asset.slice(assets.length + 1)
 	);
 
 	if (file in manifest._.server_assets) {
@@ -75,4 +76,4 @@ export function read(asset) {
 
 export { getRequestEvent } from '@sveltejs/kit/internal/server';
 
-export { query, prerender, command, form } from './remote/index.js';
+export { query, prerender, command, form, requested } from './remote/index.js';

@@ -1,0 +1,132 @@
+/** @import { ServerMetadata } from 'types' */
+/** @import { Rolldown } from 'vite' */
+
+import fs from 'node:fs';
+import path from 'node:path';
+import { Parser } from 'acorn';
+import MagicString from 'magic-string';
+import { posixify } from '../../../utils/os.js';
+
+/**
+ * @param {typeof import('vite')} vite
+ * @param {string} out
+ * @param {Array<{ hash: string, file: string }>} remotes
+ * @param {ServerMetadata} metadata
+ * @param {string} cwd
+ * @param {(Rolldown.OutputAsset | Rolldown.OutputChunk)[]} server_chunks
+ * @param {NonNullable<import('vitest/config').ViteUserConfig['build']>['sourcemap']} sourcemap
+ */
+export async function treeshake_prerendered_remotes(
+	vite,
+	out,
+	remotes,
+	metadata,
+	cwd,
+	server_chunks,
+	sourcemap
+) {
+	if (remotes.length === 0) return;
+
+	/** @type {string[]} */
+	const chunk_paths = [];
+
+	for (const remote of remotes) {
+		const exports_map = metadata.remotes.get(remote.hash);
+		if (!exports_map) continue;
+
+		/** @type {string[]} */
+		const dynamic = [];
+		/** @type {string[]} */
+		const prerendered = [];
+
+		for (const [name, value] of exports_map) {
+			(value.dynamic ? dynamic : prerendered).push(name);
+		}
+
+		if (prerendered.length === 0) continue; // nothing to treeshake
+
+		// remove file extension
+		const remote_filename = path.basename(remote.file).split('.').slice(0, -1).join('.');
+
+		const remote_chunk = server_chunks.find((chunk) => {
+			return chunk.name === remote_filename;
+		});
+
+		if (!remote_chunk) continue;
+
+		const chunk_path = posixify(path.relative(cwd, `${out}/server/${remote_chunk.fileName}`));
+
+		const code = fs.readFileSync(chunk_path, 'utf-8');
+		const parsed = Parser.parse(code, { sourceType: 'module', ecmaVersion: 'latest' });
+		const modified_code = new MagicString(code);
+
+		for (const fn of prerendered) {
+			for (const node of parsed.body) {
+				const declaration =
+					node.type === 'ExportNamedDeclaration'
+						? node.declaration
+						: node.type === 'VariableDeclaration'
+							? node
+							: null;
+
+				if (!declaration || declaration.type !== 'VariableDeclaration') continue;
+
+				for (const declarator of declaration.declarations) {
+					if (declarator.id.type === 'Identifier' && declarator.id.name === fn) {
+						modified_code.overwrite(
+							node.start,
+							node.end,
+							`const ${fn} = prerender('unchecked', () => { throw new Error('Unexpectedly called prerender function. Did you forget to set { dynamic: true } ?') });`
+						);
+					}
+				}
+			}
+		}
+
+		for (const node of parsed.body) {
+			if (node.type === 'ExportDefaultDeclaration') {
+				modified_code.remove(node.start, node.end);
+			}
+		}
+
+		const stubbed = modified_code.toString();
+		fs.writeFileSync(chunk_path, stubbed);
+		chunk_paths.push(chunk_path);
+	}
+
+	if (!chunk_paths.length) return;
+
+	for (const chunk_path of chunk_paths) {
+		const bundle = /** @type {Rolldown.RolldownOutput} */ (
+			await vite.build({
+				configFile: false,
+				build: {
+					write: false,
+					ssr: true,
+					target: 'esnext',
+					sourcemap,
+					rolldownOptions: {
+						// avoid resolving imports
+						external: (id) => !id.endsWith(chunk_path),
+						input: {
+							treeshaken: chunk_path
+						}
+					}
+				}
+			})
+		);
+
+		for (const output of bundle.output) {
+			if (output.type !== 'chunk' || output.name !== 'treeshaken') return;
+
+			fs.writeFileSync(chunk_path, output.code);
+
+			const chunk_sourcemap = bundle.output.find(
+				(o) => o.type === 'asset' && o.fileName === output.fileName + '.map'
+			);
+			if (chunk_sourcemap && chunk_sourcemap.type === 'asset') {
+				fs.writeFileSync(chunk_path + '.map', chunk_sourcemap.source);
+			}
+		}
+	}
+}

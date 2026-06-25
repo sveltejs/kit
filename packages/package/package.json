@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/package",
-	"version": "2.5.7",
+	"version": "3.0.0-next.0",
 	"description": "The fastest way to build Svelte packages",
 	"repository": {
 		"type": "git",
@@ -21,23 +21,30 @@
 	"type": "module",
 	"dependencies": {
 		"chokidar": "^5.0.0",
-		"kleur": "^4.1.5",
 		"sade": "^1.8.1",
-		"semver": "^7.5.4",
-		"svelte2tsx": "~0.7.33"
+		"semver": "^7.8.5",
+		"svelte2tsx": "~0.7.55"
 	},
 	"devDependencies": {
+		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "catalog:",
 		"@types/node": "catalog:",
 		"@types/semver": "catalog:",
-		"prettier": "^3.1.1",
+		"prettier": "catalog:",
 		"svelte": "catalog:",
 		"svelte-preprocess": "catalog:",
-		"typescript": "^5.3.3",
+		"typescript": "catalog:",
+		"vite": "catalog:",
 		"vitest": "catalog:"
 	},
 	"peerDependencies": {
-		"svelte": "^3.44.0 || ^4.0.0 || ^5.0.0-next.1"
+		"svelte": "^3.44.0 || ^4.0.0 || ^5.0.0-next.1",
+		"typescript": "^6.0.0"
+	},
+	"peerDependenciesMeta": {
+		"typescript": {
+			"optional": true
+		}
 	},
 	"bin": {
 		"svelte-package": "svelte-package.js"
@@ -56,6 +63,6 @@
 		"./package.json": "./package.json"
 	},
 	"engines": {
-		"node": "^16.14 || >=18"
+		"node": ">=22"
 	}
 }

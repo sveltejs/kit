@@ -1,8 +1,9 @@
-import { building, dev } from '$app/environment';
+import { building, dev } from '$app/env';
 import { error, json } from '@sveltejs/kit';
 
 export const prerender = 'auto';
 
+/** @type {import('./$types').EntryGenerator} */
 export function entries() {
 	return [
 		{
@@ -11,6 +12,7 @@ export function entries() {
 	];
 }
 
+/** @type {import('./$types').RequestHandler} */
 export async function GET({ params: { option } }) {
 	if ((await entries()).find((entry) => entry.option === option)) {
 		if (dev || building) {

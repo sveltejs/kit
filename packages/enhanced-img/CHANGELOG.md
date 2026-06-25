@@ -1,5 +1,53 @@
 # @sveltejs/enhanced-img
 
+## 1.0.0-next.0
+### Major Changes
+
+
+- breaking: require Node 22 or newer ([#12548](https://github.com/sveltejs/kit/pull/12548))
+
+
+### Minor Changes
+
+
+- breaking: require Vite 8 and `vite-plugin-svelte` 7 ([#15542](https://github.com/sveltejs/kit/pull/15542))
+
+## 0.11.0
+### Minor Changes
+
+
+- feat: export `EnhancedImgAttributes` type ([#15649](https://github.com/sveltejs/kit/pull/15649))
+
+
+### Patch Changes
+
+
+- fix: exclude imports with `?` character from transformation ([#15617](https://github.com/sveltejs/kit/pull/15617))
+
+## 0.10.4
+### Patch Changes
+
+
+- chore: add support for vite-plugin-svelte 7 ([#15539](https://github.com/sveltejs/kit/pull/15539))
+
+## 0.10.3
+### Patch Changes
+
+
+- fix: use jpg as a fallback format when source doesn't have an alpha channel ([#15243](https://github.com/sveltejs/kit/pull/15243))
+
+## 0.10.2
+### Patch Changes
+
+
+- fix: upgrade vite-imagetools to 9.0.3 for fix to caching bug ([#15305](https://github.com/sveltejs/kit/pull/15305))
+
+## 0.10.1
+### Patch Changes
+
+
+- fix: replace erroneous `import.meta.DEV` with `import.meta.env.DEV` in generated code ([#15285](https://github.com/sveltejs/kit/pull/15285))
+
 ## 0.10.0
 ### Minor Changes
 

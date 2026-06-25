@@ -1,4 +1,4 @@
-/** @import { RequestState } from 'types' */
+/** @import { RequestState, SSRNode } from 'types' */
 import { DEV } from 'esm-env';
 import { json, text } from '@sveltejs/kit';
 import { Redirect, SvelteKitError } from '@sveltejs/kit/internal';
@@ -15,8 +15,8 @@ import {
 	method_not_allowed,
 	redirect_response
 } from './utils.js';
-import { decode_pathname, decode_params, disable_search, normalize_path } from '../../utils/url.js';
-import { exec } from '../../utils/routing.js';
+import { decode_pathname, disable_search, normalize_path } from '../../utils/url.js';
+import { find_route } from '../../utils/routing.js';
 import { redirect_json_response, render_data } from './data/index.js';
 import { add_cookies_to_headers, get_cookies } from './cookie.js';
 import { create_fetch } from './fetch.js';
@@ -40,8 +40,6 @@ import { get_remote_id, handle_remote_call } from './remote.js';
 import { record_span } from '../telemetry/record_span.js';
 import { otel } from '../telemetry/otel.js';
 
-/* global __SVELTEKIT_ADAPTER_NAME__ */
-
 /** @type {import('types').RequiredResolveOptions['transformPageChunk']} */
 const default_transform = ({ html }) => html;
 
@@ -54,8 +52,6 @@ const default_preload = ({ type }) => type === 'js' || type === 'css';
 const page_methods = new Set(['GET', 'HEAD', 'POST']);
 
 const allowed_page_methods = new Set(['GET', 'HEAD', 'OPTIONS']);
-
-let warned_on_devtools_json_request = false;
 
 export const respond = propagate_context(internal_respond);
 
@@ -149,7 +145,20 @@ export async function internal_respond(request, options, manifest, state) {
 		tracing: {
 			record_span
 		},
-		is_in_remote_function: false
+		remote: {
+			data: null,
+			explicit: null,
+			implicit: null,
+			forms: null,
+			requested: null,
+			batches: null,
+			live_iterators: null
+		},
+		is_in_remote_function: false,
+		is_in_remote_form_or_command: false,
+		is_in_remote_query: false,
+		is_in_render: false,
+		is_in_universal_load: false
 	};
 
 	/** @type {import('@sveltejs/kit').RequestEvent} */
@@ -220,6 +229,7 @@ export async function internal_respond(request, options, manifest, state) {
 		});
 	}
 
+	/** @type {string | null} */
 	let resolved_path = url.pathname;
 
 	if (!remote_id) {
@@ -241,10 +251,24 @@ export async function internal_respond(request, options, manifest, state) {
 		}
 	}
 
+	/** @type {import('types').RequiredResolveOptions} */
+	let resolve_opts = {
+		transformPageChunk: default_transform,
+		filterSerializedResponseHeaders: default_filter,
+		preload: default_preload
+	};
+
+	/** @type {import('types').TrailingSlash} */
+	let trailing_slash = 'never';
+
+	/** @type {PageNodes | undefined} */
+	let page_nodes;
+
 	try {
 		resolved_path = decode_pathname(resolved_path);
 	} catch {
-		return text('Malformed URI', { status: 400 });
+		resolved_path = null;
+		return await handle();
 	}
 
 	// try to serve the rerouted prerendered resource if it exists
@@ -295,7 +319,7 @@ export async function internal_respond(request, options, manifest, state) {
 		return resolve_route(resolved_path, new URL(request.url), manifest);
 	}
 
-	if (resolved_path === `/${app_dir}/env.js`) {
+	if (resolved_path === `/${app_dir}/env.js` || resolved_path === `/${app_dir}/env.script.js`) {
 		return get_public_env(request);
 	}
 
@@ -309,34 +333,17 @@ export async function internal_respond(request, options, manifest, state) {
 	if (!state.prerendering?.fallback) {
 		// TODO this could theoretically break — should probably be inside a try-catch
 		const matchers = await manifest._.matchers();
+		const result = find_route(resolved_path, manifest._.routes, matchers);
 
-		for (const candidate of manifest._.routes) {
-			const match = candidate.pattern.exec(resolved_path);
-			if (!match) continue;
-
-			const matched = exec(match, candidate.params, matchers);
-			if (matched) {
-				route = candidate;
-				event.route = { id: route.id };
-				event.params = decode_params(matched);
-				break;
-			}
+		if (result) {
+			route = result.route;
+			event.route = { id: route.id };
+			event.params = result.params;
 		}
 	}
 
-	/** @type {import('types').RequiredResolveOptions} */
-	let resolve_opts = {
-		transformPageChunk: default_transform,
-		filterSerializedResponseHeaders: default_filter,
-		preload: default_preload
-	};
-
-	/** @type {import('types').TrailingSlash} */
-	let trailing_slash = 'never';
-
 	try {
-		/** @type {PageNodes | undefined} */
-		const page_nodes = route?.page
+		page_nodes = route?.page
 			? new PageNodes(await load_page_nodes(route.page, manifest))
 			: undefined;
 
@@ -391,16 +398,36 @@ export async function internal_respond(request, options, manifest, state) {
 					prerender = page_nodes.prerender();
 				}
 
-				if (state.before_handle) {
-					state.before_handle(event, config, prerender);
-				}
-
 				if (state.emulator?.platform) {
 					event.platform = await state.emulator.platform({ config, prerender });
+				}
+
+				if (state.before_handle) {
+					return await state.before_handle(event, config, prerender, handle);
 				}
 			}
 		}
 
+		return await handle();
+	} catch (e) {
+		if (e instanceof Redirect) {
+			try {
+				const response =
+					is_data_request || remote_id
+						? redirect_json_response(e)
+						: route?.page && is_action_json_request(event)
+							? action_json_redirect(e)
+							: redirect_response(e.status, e.location);
+				add_cookies_to_headers(response.headers, new_cookies.values());
+				return response;
+			} catch (err) {
+				return await handle_fatal_error(event, event_state, options, err);
+			}
+		}
+		return await handle_fatal_error(event, event_state, options, e);
+	}
+
+	async function handle() {
 		set_trailing_slash(trailing_slash);
 
 		if (state.prerendering && !state.prerendering.fallback && !state.prerendering.inside_reroute) {
@@ -425,6 +452,7 @@ export async function internal_respond(request, options, manifest, state) {
 						current: root_span
 					}
 				};
+
 				return await with_request_store({ event: traced_event, state: event_state }, () =>
 					options.hooks.handle({
 						event: traced_event,
@@ -485,17 +513,14 @@ export async function internal_respond(request, options, manifest, state) {
 			if (if_none_match_value === etag) {
 				const headers = new Headers({ etag });
 
-				// https://datatracker.ietf.org/doc/html/rfc7232#section-4.1 + set-cookie
-				for (const key of [
-					'cache-control',
-					'content-location',
-					'date',
-					'expires',
-					'vary',
-					'set-cookie'
-				]) {
+				// https://datatracker.ietf.org/doc/html/rfc7232#section-4.1
+				for (const key of ['cache-control', 'content-location', 'date', 'expires', 'vary']) {
 					const value = response.headers.get(key);
 					if (value) headers.set(key, value);
+				}
+
+				for (const cookie of response.headers.getSetCookie()) {
+					headers.append('set-cookie', cookie);
 				}
 
 				return new Response(undefined, {
@@ -515,18 +540,6 @@ export async function internal_respond(request, options, manifest, state) {
 		}
 
 		return response;
-	} catch (e) {
-		if (e instanceof Redirect) {
-			const response =
-				is_data_request || remote_id
-					? redirect_json_response(e)
-					: route?.page && is_action_json_request(event)
-						? action_json_redirect(e)
-						: redirect_response(e.status, e.location);
-			add_cookies_to_headers(response.headers, new_cookies.values());
-			return response;
-		}
-		return await handle_fatal_error(event, event_state, options, e);
 	}
 
 	/**
@@ -544,6 +557,23 @@ export async function internal_respond(request, options, manifest, state) {
 				};
 			}
 
+			if (resolved_path === null) {
+				return await respond_with_error({
+					event,
+					event_state,
+					options,
+					manifest,
+					state,
+					status: 400,
+					error: new SvelteKitError(
+						400,
+						'Malformed URI',
+						`Failed to decode URI: ${event.url.pathname}`
+					),
+					resolve_opts
+				});
+			}
+
 			if (options.hash_routing || state.prerendering?.fallback) {
 				return await render_response({
 					event,
@@ -554,7 +584,14 @@ export async function internal_respond(request, options, manifest, state) {
 					page_config: { ssr: false, csr: true },
 					status: 200,
 					error: null,
-					branch: [],
+					branch: [
+						// include the root layout because it applies to every page
+						{
+							node: /** @type {SSRNode} */ (await manifest._.nodes[0]()),
+							data: null,
+							server_data: null
+						}
+					],
 					fetched: [],
 					resolve_opts,
 					data_serializer: server_data_serializer(event, event_state, options)
@@ -582,54 +619,80 @@ export async function internal_respond(request, options, manifest, state) {
 						invalidated_data_nodes,
 						trailing_slash
 					);
-				} else if (route.endpoint && (!route.page || is_endpoint_request(event))) {
-					response = await render_endpoint(event, event_state, await route.endpoint(), state);
-				} else if (route.page) {
-					if (!page_nodes) {
-						throw new Error('page_nodes not found. This should never happen');
-					} else if (page_methods.has(method)) {
-						response = await render_page(
-							event,
-							event_state,
-							route.page,
-							options,
-							manifest,
-							state,
-							page_nodes,
-							resolve_opts
-						);
-					} else {
-						const allowed_methods = new Set(allowed_page_methods);
-						const node = await manifest._.nodes[route.page.leaf]();
-						if (node?.server?.actions) {
-							allowed_methods.add('POST');
-						}
+				} else {
+					let endpoint;
+					if (
+						route.endpoint &&
+						(!route.page || (!state.prerendering && is_endpoint_request(event)))
+					) {
+						endpoint = await route.endpoint();
 
-						if (method === 'OPTIONS') {
-							// This will deny CORS preflight requests implicitly because we don't
-							// add the required CORS headers to the response.
-							response = new Response(null, {
-								status: 204,
-								headers: {
-									allow: Array.from(allowed_methods.values()).join(', ')
-								}
-							});
-						} else {
-							const mod = [...allowed_methods].reduce((acc, curr) => {
-								acc[curr] = true;
-								return acc;
-							}, /** @type {Record<string, any>} */ ({}));
-							response = method_not_allowed(mod, method);
+						// Prefer rendering the page if the endpoint can't handle this GET or HEAD request
+						if (route.page && (method === 'GET' || method === 'HEAD')) {
+							const endpoint_can_handle = !!(
+								endpoint.GET ||
+								endpoint.fallback ||
+								(method === 'HEAD' && endpoint.HEAD)
+							);
+							if (!endpoint_can_handle) {
+								endpoint = undefined;
+							}
 						}
 					}
-				} else {
-					// a route will always have a page or an endpoint, but TypeScript doesn't know that
-					throw new Error('Route is neither page nor endpoint. This should never happen');
+
+					if (endpoint) {
+						response = await render_endpoint(event, event_state, endpoint, state);
+					} else if (route.page) {
+						if (!page_nodes) {
+							throw new Error('page_nodes not found. This should never happen');
+						} else if (page_methods.has(method)) {
+							response = await render_page(
+								event,
+								event_state,
+								route.page,
+								options,
+								manifest,
+								state,
+								page_nodes,
+								resolve_opts
+							);
+						} else {
+							const allowed_methods = new Set(allowed_page_methods);
+							const node = await manifest._.nodes[route.page.leaf]();
+							if (node?.server?.actions) {
+								allowed_methods.add('POST');
+							}
+
+							if (method === 'OPTIONS') {
+								// This will deny CORS preflight requests implicitly because we don't
+								// add the required CORS headers to the response.
+								response = new Response(null, {
+									status: 204,
+									headers: {
+										allow: Array.from(allowed_methods.values()).join(', ')
+									}
+								});
+							} else {
+								const mod = [...allowed_methods].reduce((acc, curr) => {
+									acc[curr] = true;
+									return acc;
+								}, /** @type {Record<string, any>} */ ({}));
+								response = method_not_allowed(mod, method);
+							}
+						}
+					} else {
+						// a route will always have a page or an endpoint, but TypeScript doesn't know that
+						throw new Error('Route is neither page nor endpoint. This should never happen');
+					}
 				}
 
 				// If the route contains a page and an endpoint, we need to add a
 				// `Vary: Accept` header to the response because of browser caching
-				if (request.method === 'GET' && route.page && route.endpoint) {
+				if (
+					(request.method === 'GET' || request.method === 'HEAD') &&
+					route.page &&
+					route.endpoint
+				) {
 					const vary = response.headers
 						.get('vary')
 						?.split(',')
@@ -666,21 +729,6 @@ export async function internal_respond(request, options, manifest, state) {
 			// if this request came direct from the user, rather than
 			// via our own `fetch`, render a 404 page
 			if (state.depth === 0) {
-				// In local development, Chrome requests this file for its 'automatic workspace folders' feature,
-				// causing console spam. If users want to serve this file they can install
-				// https://svelte.dev/docs/cli/devtools-json
-				if (DEV && event.url.pathname === '/.well-known/appspecific/com.chrome.devtools.json') {
-					if (!warned_on_devtools_json_request) {
-						console.log(
-							`\nGoogle Chrome is requesting ${event.url.pathname} to automatically configure devtools project settings. To learn why, and how to prevent this message, see https://svelte.dev/docs/cli/devtools-json\n`
-						);
-
-						warned_on_devtools_json_request = true;
-					}
-
-					return new Response(undefined, { status: 404 });
-				}
-
 				return await respond_with_error({
 					event,
 					event_state,

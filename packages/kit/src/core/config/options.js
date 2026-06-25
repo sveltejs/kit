@@ -1,7 +1,6 @@
-import process from 'node:process';
-import colors from 'kleur';
+/** @import { Validator } from './types.js' */
 
-/** @typedef {import('./types.js').Validator} Validator */
+import process from 'node:process';
 
 const directives = object({
 	'child-src': string_array(),
@@ -38,7 +37,7 @@ const directives = object({
 });
 
 /** @type {Validator} */
-const options = object(
+export const options = object(
 	{
 		extensions: validate(['.svelte'], (input, keypath) => {
 			if (!Array.isArray(input) || !input.every((page) => typeof page === 'string')) {
@@ -59,15 +58,9 @@ const options = object(
 		}),
 
 		kit: object({
-			adapter: validate(null, (input, keypath) => {
+			adapter: validate(undefined, (input, keypath) => {
 				if (typeof input !== 'object' || !input.adapt) {
-					let message = `${keypath} should be an object with an "adapt" method`;
-
-					if (Array.isArray(input) || typeof input === 'string') {
-						// for the early adapter adopters
-						message += ', rather than the name of an adapter';
-					}
-
+					const message = `The SvelteKit Vite plugin ${keypath} should be an object with an \`adapt\` method`;
 					throw new Error(`${message}. See https://svelte.dev/docs/kit/adapters`);
 				}
 
@@ -109,10 +102,8 @@ const options = object(
 			}),
 
 			csrf: object({
-				checkOrigin: deprecate(
-					boolean(true),
-					(keypath) =>
-						`\`${keypath}\` has been deprecated in favour of \`csrf.trustedOrigins\`. It will be removed in a future version`
+				checkOrigin: removed(
+					(keypath) => `\`${keypath}\` has been removed in favour of \`csrf.trustedOrigins\``
 				),
 				trustedOrigins: string_array([])
 			}),
@@ -120,9 +111,7 @@ const options = object(
 			embedded: boolean(false),
 
 			env: object({
-				dir: string(process.cwd()),
-				publicPrefix: string('PUBLIC_'),
-				privatePrefix: string('')
+				dir: string(process.cwd())
 			}),
 
 			experimental: object({
@@ -133,23 +122,24 @@ const options = object(
 					server: boolean(false)
 				}),
 				remoteFunctions: boolean(false),
-				forkPreloads: boolean(false)
+				forkPreloads: boolean(false),
+				handleRenderingErrors: boolean(false)
 			}),
 
 			files: object({
-				src: deprecate(string('src')),
-				assets: deprecate(string('static')),
+				src: string('src'),
+				assets: string('static'),
 				hooks: object({
-					client: deprecate(string(null)),
-					server: deprecate(string(null)),
-					universal: deprecate(string(null))
+					client: string(null),
+					server: string(null),
+					universal: string(null)
 				}),
-				lib: deprecate(string(null)),
-				params: deprecate(string(null)),
-				routes: deprecate(string(null)),
-				serviceWorker: deprecate(string(null)),
-				appTemplate: deprecate(string(null)),
-				errorTemplate: deprecate(string(null))
+				lib: string(null),
+				params: string(null),
+				routes: string(null),
+				serviceWorker: string(null),
+				appTemplate: string(null),
+				errorTemplate: string(null)
 			}),
 
 			inlineStyleThreshold: number(0),
@@ -159,7 +149,10 @@ const options = object(
 			outDir: string('.svelte-kit'),
 
 			output: object({
-				preloadStrategy: list(['modulepreload', 'preload-js', 'preload-mjs']),
+				linkHeaderPreload: boolean(false),
+				preloadStrategy: removed(
+					(keypath) => `\`${keypath}\` has been removed. modulepreload will always be used`
+				),
 				bundleStrategy: list(['split', 'single', 'inline'])
 			}),
 
@@ -272,6 +265,20 @@ const options = object(
 					}
 				),
 
+				handleInvalidUrl: validate(
+					(/** @type {any} */ { message }) => {
+						throw new Error(
+							message +
+								'\nTo suppress or handle this error, implement `handleInvalidUrl` in https://svelte.dev/docs/kit/configuration#prerender'
+						);
+					},
+					(input, keypath) => {
+						if (typeof input === 'function') return input;
+						if (['fail', 'warn', 'ignore'].includes(input)) return input;
+						throw new Error(`${keypath} should be "fail", "warn", "ignore" or a custom function`);
+					}
+				),
+
 				origin: validate('http://sveltekit-prerender', (input, keypath) => {
 					assert_string(input, keypath);
 
@@ -317,22 +324,48 @@ const options = object(
 	true
 );
 
+// /**
+//  * @param {Validator} fn
+//  * @param {(keypath: string) => string} get_message
+//  * @returns {Validator}
+//  */
+// function deprecate(
+// 	fn,
+// 	get_message = (keypath) =>
+// 		`The \`${keypath}\` option is deprecated, and will be removed in a future version`
+// ) {
+// 	return (input, keypath) => {
+// 		if (input !== undefined) {
+// 			console.warn(styleText(['bold', 'yellow'], get_message(keypath)));
+// 		}
+
+// 		return fn(input, keypath);
+// 	};
+// }
+
+// Derive the names of SvelteKit's own config options from the schema, so they
+// stay in sync automatically. These are used to separate Kit's options from
+// `vite-plugin-svelte`'s options when config is passed via the Vite plugin.
+const defaults = /** @type {Record<string, any>} */ (options({}, 'config'));
+
+/** The names of the options that live under the `kit` namespace */
+export const kit_options = Object.keys(defaults.kit);
+
+/** The names of the options that live under the `kit.experimental` namespace */
+export const kit_experimental_options = Object.keys(defaults.kit.experimental);
+
 /**
- * @param {Validator} fn
  * @param {(keypath: string) => string} get_message
  * @returns {Validator}
  */
-function deprecate(
-	fn,
+function removed(
 	get_message = (keypath) =>
-		`The \`${keypath}\` option is deprecated, and will be removed in a future version`
+		`The \`${keypath}\` option has been removed. Please see the list of breaking changes for your major release`
 ) {
 	return (input, keypath) => {
-		if (input !== undefined) {
-			console.warn(colors.bold().yellow(get_message(keypath)));
+		if (typeof input !== 'undefined') {
+			throw new Error(get_message(keypath));
 		}
-
-		return fn(input, keypath);
 	};
 }
 
@@ -341,7 +374,7 @@ function deprecate(
  * @param {boolean} [allow_unknown]
  * @returns {Validator}
  */
-function object(children, allow_unknown = false) {
+export function object(children, allow_unknown = false) {
 	return (input, keypath) => {
 		/** @type {Record<string, any>} */
 		const output = {};
@@ -381,7 +414,7 @@ function object(children, allow_unknown = false) {
  * @param {(value: any, keypath: string) => any} fn
  * @returns {Validator}
  */
-function validate(fallback, fn) {
+export function validate(fallback, fn) {
 	return (input, keypath) => {
 		return input === undefined ? fallback : fn(input, keypath);
 	};
@@ -484,5 +517,3 @@ function assert_string(input, keypath) {
 		throw new Error(`${keypath} should be a string, if specified`);
 	}
 }
-
-export default options;

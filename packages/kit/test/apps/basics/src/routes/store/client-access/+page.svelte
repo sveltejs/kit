@@ -1,6 +1,7 @@
 <script>
 	import { getStores } from '$app/stores';
 
+	/** @type {string} */
 	let pathname;
 </script>
 

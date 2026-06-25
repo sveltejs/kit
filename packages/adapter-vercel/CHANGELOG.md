@@ -1,5 +1,44 @@
 # @sveltejs/adapter-vercel
 
+## 7.0.0-next.0
+### Major Changes
+
+
+- chore: use `rolldown` for edge function bundling ([#15432](https://github.com/sveltejs/kit/pull/15432))
+
+
+- breaking: edge function build target is now `es2022` ([#15432](https://github.com/sveltejs/kit/pull/15432))
+
+
+### Patch Changes
+
+- Updated dependencies [[`fa335bd`](https://github.com/sveltejs/kit/commit/fa335bd8af3a982d68c4d34b813b68887dc7cce8), [`3031d89`](https://github.com/sveltejs/kit/commit/3031d89087d49297e89b6566108a1a1105c38475), [`cb9d416`](https://github.com/sveltejs/kit/commit/cb9d416d05266b6237f2856fb94df5b8a9b04279), [`caf3a18`](https://github.com/sveltejs/kit/commit/caf3a18de6581ab7d454d6fa8ad37ebdbdef95e6), [`4777827`](https://github.com/sveltejs/kit/commit/4777827246727045cf0209399751377564e7951d), [`a2792e2`](https://github.com/sveltejs/kit/commit/a2792e2cdc2dee91c20c7bfd921a104b539abae5), [`ba36148`](https://github.com/sveltejs/kit/commit/ba36148577ed0bc2675034a3d57001d71d328cd1), [`48e8710`](https://github.com/sveltejs/kit/commit/48e8710889b348a039322e05f3d2672327d56184), [`e2f3075`](https://github.com/sveltejs/kit/commit/e2f3075ef299b91175fae116e6a76269002029cf), [`047d6a0`](https://github.com/sveltejs/kit/commit/047d6a0f1c3fd1bc6f90a81177a2834b023a64b3), [`87603d1`](https://github.com/sveltejs/kit/commit/87603d13d009cada171c9b5d5daad5adad4f72de), [`096962c`](https://github.com/sveltejs/kit/commit/096962c47b0b0f63acd0d539d3973797e4867487), [`d545970`](https://github.com/sveltejs/kit/commit/d54597018308068aea5268e6c45b26398cd57607), [`e2f3075`](https://github.com/sveltejs/kit/commit/e2f3075ef299b91175fae116e6a76269002029cf), [`d06affc`](https://github.com/sveltejs/kit/commit/d06affc9246c676fc32b644efc0bbf53b42bc67d), [`8af47eb`](https://github.com/sveltejs/kit/commit/8af47eb06f9a1a883058de059ccf81aab4e85627), [`e2f3075`](https://github.com/sveltejs/kit/commit/e2f3075ef299b91175fae116e6a76269002029cf), [`5c4d130`](https://github.com/sveltejs/kit/commit/5c4d130ea2953464d8b4b462eb5aa4641aa78da1), [`3f11f35`](https://github.com/sveltejs/kit/commit/3f11f35125c5b3625891f0d00d9c7c826e6eaea2), [`caf3a18`](https://github.com/sveltejs/kit/commit/caf3a18de6581ab7d454d6fa8ad37ebdbdef95e6), [`8823037`](https://github.com/sveltejs/kit/commit/8823037b4a341013cc40a9bb688ee23bda3dbb04), [`1d76212`](https://github.com/sveltejs/kit/commit/1d76212740f59ed58839ef569899c653870834fd), [`0dc0548`](https://github.com/sveltejs/kit/commit/0dc0548307a439b6a6f24b14405366ced213f828), [`00d81fa`](https://github.com/sveltejs/kit/commit/00d81fab618435bac95b1bacb5e9734b61ba1af6)]:
+  - @sveltejs/kit@3.0.0-next.0
+
+## 6.3.4
+### Patch Changes
+
+
+- fix: prevent missing immutable assets from being cached as 404s for a year ([#16077](https://github.com/sveltejs/kit/pull/16077))
+
+- Updated dependencies [[`63f1b0b`](https://github.com/sveltejs/kit/commit/63f1b0bd0ee2d16ef0c4d1f5bef35afd54d0304a), [`1dbff3f`](https://github.com/sveltejs/kit/commit/1dbff3fec2a335242af8b556c36513dbf9602ea5), [`961ba01`](https://github.com/sveltejs/kit/commit/961ba015ff4f69b954bcb7512a05ccd5ea180eb4), [`d2e108c`](https://github.com/sveltejs/kit/commit/d2e108c13925559c3433b9b46a71174a0f271253), [`d2e108c`](https://github.com/sveltejs/kit/commit/d2e108c13925559c3433b9b46a71174a0f271253), [`d2e108c`](https://github.com/sveltejs/kit/commit/d2e108c13925559c3433b9b46a71174a0f271253), [`860b3c7`](https://github.com/sveltejs/kit/commit/860b3c7d5f52b02fdd07d95305dfdb93357e0ead), [`f8c842c`](https://github.com/sveltejs/kit/commit/f8c842cb8bfb13235bfd6c44f913d51e9e2d70d6), [`d3aa5fe`](https://github.com/sveltejs/kit/commit/d3aa5fe9bdb8fd6bdf0dd75d4575fbcfa37fc560), [`0dd7659`](https://github.com/sveltejs/kit/commit/0dd7659d943e7e635947aed9e96c639e8167b1fb), [`03e9f66`](https://github.com/sveltejs/kit/commit/03e9f660edf026654d65b257d509d4ab190e6f7e), [`57b7b7b`](https://github.com/sveltejs/kit/commit/57b7b7b4f79283b36832450d8476a83cff007526), [`4eabadc`](https://github.com/sveltejs/kit/commit/4eabadca61440dfda690cdd4e8eeb0723fb94258), [`6fbf2b6`](https://github.com/sveltejs/kit/commit/6fbf2b64843123ac2676b04d56085d4c118a91b4), [`276744d`](https://github.com/sveltejs/kit/commit/276744da6585d743d720e8cbaa476bd67ac0fb48), [`8740132`](https://github.com/sveltejs/kit/commit/8740132952c2f7d908b4f1e795f942ad079895be), [`f430a68`](https://github.com/sveltejs/kit/commit/f430a68937744212d2b1bd0ee920cc89cc6f696f), [`1c7a8dc`](https://github.com/sveltejs/kit/commit/1c7a8dca3216b42ff4f69a712e794a485de4d4ee)]:
+  - @sveltejs/kit@2.66.0
+
+## 6.3.3
+### Patch Changes
+
+
+- fix: ensure build does not copy Vercel build environment system files ([#15400](https://github.com/sveltejs/kit/pull/15400))
+
+## 6.3.2
+### Patch Changes
+
+
+- fix: 404 for immutable assets that don't match static files ([`c67da8a`](https://github.com/sveltejs/kit/commit/c67da8ab6380349b30c353247688369eaef58c05))
+
+- Updated dependencies [[`3e607b3`](https://github.com/sveltejs/kit/commit/3e607b314aec9e5f278d32847945b8b6323e1cb8), [`62991c8`](https://github.com/sveltejs/kit/commit/62991c81db4f50ccfb08a9ac5e05ccba4ddab59e), [`f47c01b`](https://github.com/sveltejs/kit/commit/f47c01bd8100328c24fdb8522fe35913b0735f35)]:
+  - @sveltejs/kit@2.52.2
+
 ## 6.3.1
 ### Patch Changes
 

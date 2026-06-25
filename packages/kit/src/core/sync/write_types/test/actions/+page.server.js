@@ -39,7 +39,7 @@ export const actions = {
 /**
  * Ordinarily this would live in a +page.svelte, but to make it easy to run the tests, we put it here.
  * The `export` is so that eslint doesn't throw a hissy fit about the unused variable
- * @type {import('./.svelte-kit/types/src/core/sync/write_types/test/actions/$types').SubmitFunction}
+ * @type {import('./.svelte-kit/types/$types').SubmitFunction}
  */
 export const submit = () => {
 	return ({ result }) => {

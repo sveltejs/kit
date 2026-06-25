@@ -15,7 +15,7 @@
 		"test:vite-ecosystem-ci": "pnpm --dir packages/kit test",
 		"test:others": "pnpm -r --filter='./packages/*' --filter=!./packages/kit/ --workspace-concurrency=1 test",
 		"check": "pnpm -r prepublishOnly && pnpm -r check",
-		"lint": "pnpm -r lint && eslint --cache --cache-location node_modules/.eslintcache 'packages/**/*.js'",
+		"lint": "pnpm -r lint && echo '\nRunning eslint...' && eslint --cache --cache-location node_modules/.eslintcache 'packages/**/*.js'",
 		"format": "pnpm -r format",
 		"precommit": "pnpm format && pnpm lint",
 		"changeset:version": "changeset version && pnpm -r generate:version && git add --all",
@@ -29,24 +29,12 @@
 		"@sveltejs/eslint-config": "catalog:",
 		"@svitejs/changesets-changelog-github-compact": "catalog:",
 		"eslint": "catalog:",
-		"prettier": "^3.6.0",
-		"prettier-plugin-svelte": "^3.4.0",
-		"typescript-eslint": "catalog:"
+		"prettier": "catalog:",
+		"prettier-plugin-svelte": "catalog:",
+		"vitest": "catalog:"
 	},
-	"packageManager": "pnpm@10.28.2+sha512.41872f037ad22f7348e3b1debbaf7e867cfd448f2726d9cf74c08f19507c31d2c8e7a11525b983febc2df640b5438dee6023ebb1f84ed43cc2d654d2bc326264",
+	"packageManager": "pnpm@11.8.0+sha512.c1f5e7c4cb241c8f174b743851d82f42b802324afc8b0f116b96adb15aa06664948dde36960a3ba1079ba5b4b29dd0140135b94b5b5f5263592249d68e555f26",
 	"engines": {
 		"pnpm": ">=9.0.0"
-	},
-	"pnpm": {
-		"onlyBuiltDependencies": [
-			"@parcel/watcher",
-			"esbuild",
-			"protobufjs",
-			"rolldown",
-			"sharp",
-			"svelte-preprocess",
-			"unix-dgram",
-			"workerd"
-		]
 	}
 }

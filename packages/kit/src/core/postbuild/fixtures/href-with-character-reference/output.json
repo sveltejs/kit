@@ -7,5 +7,6 @@
 		"/test%E2%99%A1decimal",
 		"/test%E2%99%A5hex"
 	],
-	"ids": []
+	"ids": [],
+	"invalid": []
 }

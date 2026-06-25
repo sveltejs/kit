@@ -26,6 +26,7 @@
 				"**/.svelte-kit/**",
 				"**/.custom-out-dir/**",
 				"**/test-results/**",
+				"**/.vercel/**",
 				"**/.wrangler/**",
 				"documentation/**/*.md",
 				"packages/package/test/fixtures/**/expected/**/*",

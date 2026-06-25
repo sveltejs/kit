@@ -1,5 +1,6 @@
 import { deserialize } from '$app/forms';
 
+/** @type {import('./$types').RequestHandler} */
 export async function GET({ fetch }) {
 	const response = await fetch('/serialization-form-non-enhanced', {
 		method: 'POST',

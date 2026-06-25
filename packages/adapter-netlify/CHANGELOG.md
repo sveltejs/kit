@@ -1,5 +1,91 @@
 # @sveltejs/adapter-netlify
 
+## 7.0.0-next.0
+### Major Changes
+
+
+- chore: use `rolldown` for edge function bundling ([#15432](https://github.com/sveltejs/kit/pull/15432))
+
+
+- breaking: write output that conforms to the stable [Netlify Frameworks API](https://docs.netlify.com/build/frameworks/frameworks-api/). ([#15294](https://github.com/sveltejs/kit/pull/15294))
+  
+  Deploying and previewing with Netlify CLI now requires [v17.31.0](https://github.com/netlify/cli/releases/tag/v17.31.0) or later. Run `npm i -g netlify-cli@latest` to upgrade.
+
+- breaking: require SvelteKit 3 ([#15506](https://github.com/sveltejs/kit/pull/15506))
+
+
+- breaking: edge function build target is now `es2022` ([#15432](https://github.com/sveltejs/kit/pull/15432))
+
+
+### Patch Changes
+
+- Updated dependencies [[`fa335bd`](https://github.com/sveltejs/kit/commit/fa335bd8af3a982d68c4d34b813b68887dc7cce8), [`3031d89`](https://github.com/sveltejs/kit/commit/3031d89087d49297e89b6566108a1a1105c38475), [`cb9d416`](https://github.com/sveltejs/kit/commit/cb9d416d05266b6237f2856fb94df5b8a9b04279), [`caf3a18`](https://github.com/sveltejs/kit/commit/caf3a18de6581ab7d454d6fa8ad37ebdbdef95e6), [`4777827`](https://github.com/sveltejs/kit/commit/4777827246727045cf0209399751377564e7951d), [`a2792e2`](https://github.com/sveltejs/kit/commit/a2792e2cdc2dee91c20c7bfd921a104b539abae5), [`ba36148`](https://github.com/sveltejs/kit/commit/ba36148577ed0bc2675034a3d57001d71d328cd1), [`48e8710`](https://github.com/sveltejs/kit/commit/48e8710889b348a039322e05f3d2672327d56184), [`e2f3075`](https://github.com/sveltejs/kit/commit/e2f3075ef299b91175fae116e6a76269002029cf), [`047d6a0`](https://github.com/sveltejs/kit/commit/047d6a0f1c3fd1bc6f90a81177a2834b023a64b3), [`87603d1`](https://github.com/sveltejs/kit/commit/87603d13d009cada171c9b5d5daad5adad4f72de), [`096962c`](https://github.com/sveltejs/kit/commit/096962c47b0b0f63acd0d539d3973797e4867487), [`d545970`](https://github.com/sveltejs/kit/commit/d54597018308068aea5268e6c45b26398cd57607), [`e2f3075`](https://github.com/sveltejs/kit/commit/e2f3075ef299b91175fae116e6a76269002029cf), [`d06affc`](https://github.com/sveltejs/kit/commit/d06affc9246c676fc32b644efc0bbf53b42bc67d), [`8af47eb`](https://github.com/sveltejs/kit/commit/8af47eb06f9a1a883058de059ccf81aab4e85627), [`e2f3075`](https://github.com/sveltejs/kit/commit/e2f3075ef299b91175fae116e6a76269002029cf), [`5c4d130`](https://github.com/sveltejs/kit/commit/5c4d130ea2953464d8b4b462eb5aa4641aa78da1), [`3f11f35`](https://github.com/sveltejs/kit/commit/3f11f35125c5b3625891f0d00d9c7c826e6eaea2), [`caf3a18`](https://github.com/sveltejs/kit/commit/caf3a18de6581ab7d454d6fa8ad37ebdbdef95e6), [`8823037`](https://github.com/sveltejs/kit/commit/8823037b4a341013cc40a9bb688ee23bda3dbb04), [`1d76212`](https://github.com/sveltejs/kit/commit/1d76212740f59ed58839ef569899c653870834fd), [`0dc0548`](https://github.com/sveltejs/kit/commit/0dc0548307a439b6a6f24b14405366ced213f828), [`00d81fa`](https://github.com/sveltejs/kit/commit/00d81fab618435bac95b1bacb5e9734b61ba1af6)]:
+  - @sveltejs/kit@3.0.0-next.0
+
+## 6.0.4
+### Patch Changes
+
+
+- fix: generate a catch-all function that handles remote function requests and unknown routes when the app is configured to use split functions ([#15375](https://github.com/sveltejs/kit/pull/15375))
+
+## 6.0.3
+### Patch Changes
+
+
+- fix: correctly route requests to server load functions when the adapter is configured to used split functions ([#15367](https://github.com/sveltejs/kit/pull/15367))
+
+## 6.0.2
+### Patch Changes
+
+
+- fix: prefix param matcher with alphabetical characters so that it works with URLPattern matching ([#15332](https://github.com/sveltejs/kit/pull/15332))
+
+- Updated dependencies [[`3e607b3`](https://github.com/sveltejs/kit/commit/3e607b314aec9e5f278d32847945b8b6323e1cb8), [`62991c8`](https://github.com/sveltejs/kit/commit/62991c81db4f50ccfb08a9ac5e05ccba4ddab59e), [`f47c01b`](https://github.com/sveltejs/kit/commit/f47c01bd8100328c24fdb8522fe35913b0735f35)]:
+  - @sveltejs/kit@2.52.2
+
+## 6.0.1
+### Patch Changes
+
+
+- fix: export Netlify config directly from the instrumented serverless function ([#15335](https://github.com/sveltejs/kit/pull/15335))
+
+- Updated dependencies [[`e87efba`](https://github.com/sveltejs/kit/commit/e87efba90aeb04227e6a1a5e9017989e7f1c78dc), [`71ddbc7`](https://github.com/sveltejs/kit/commit/71ddbc7ff19a612cfcd483f3b7ba58586372528b), [`1bae374`](https://github.com/sveltejs/kit/commit/1bae374e2e106eb82502afd1ddf0167d66f224a1), [`20dfadf`](https://github.com/sveltejs/kit/commit/20dfadfbef312b4e750318aa871aebbfcb4396a4), [`8c2384a`](https://github.com/sveltejs/kit/commit/8c2384a346825d54eb4281f9da854388fb4d81b3)]:
+  - @sveltejs/kit@2.52.1
+
+## 6.0.0
+### Major Changes
+
+
+- breaking: `platform.context` is now the [modern Netlify Functions ([#15203](https://github.com/sveltejs/kit/pull/15203))
+  context](https://docs.netlify.com/build/functions/api/#netlify-specific-context-object)
+  
+  Previously, this was the [AWS Lambda-style
+  context](https://github.com/netlify/primitives/blob/c1ae30f2745f0a73e26e83334695e205a04ab47d/packages/functions/prod/src/function/handler_context.ts).
+  
+  If you were using this in your app (unlikely), you will need to update your code to read from new fields.
+
+### Minor Changes
+
+
+- feat: Migrate to the modern Netlify Functions API ([#15203](https://github.com/sveltejs/kit/pull/15203))
+  
+  The Netlify adapter now generates "v2" Netlify Functions, which uses modern standards (ESM, `Request`, `Response`) instead of the legacy "Lambda-compatible" or "v1" format. Under the hood, this greatly simplifies the adapter code and improves maintainability.
+  
+  For more details on features this unlocks for your SvelteKit app, see
+  https://developers.netlify.com/guides/migrating-to-the-modern-netlify-functions/.
+
+- feat: allow configuring redirects in `netlify.toml` ([#15203](https://github.com/sveltejs/kit/pull/15203))
+  
+  The limitation of only being able to configure redirects via the `_redirects` file has been removed.
+
+### Patch Changes
+
+
+- fix: populate `App.Platform` with `context` property ([#15203](https://github.com/sveltejs/kit/pull/15203))
+
+- Updated dependencies [[`37293a5`](https://github.com/sveltejs/kit/commit/37293a5c913b014e823bc823f2c8c6da38b88d6e), [`5d05ca6`](https://github.com/sveltejs/kit/commit/5d05ca6f606cf68417e4ed1ccb68cd77383f1f0f), [`ed69b77`](https://github.com/sveltejs/kit/commit/ed69b77cf9ef1af088008ff559f8de2e2a2f6bf4), [`b1fc959`](https://github.com/sveltejs/kit/commit/b1fc95966e0aeee689fdae71fa488c34b4806303), [`159aece`](https://github.com/sveltejs/kit/commit/159aece0654db020f95bc414f6a21f25fbc5f22f), [`c690579`](https://github.com/sveltejs/kit/commit/c690579620e131cd077ded0bc8e55090d3681d35), [`dc8cf2d`](https://github.com/sveltejs/kit/commit/dc8cf2defa71dd987437895eb89587c724f6e9bb), [`ace2116`](https://github.com/sveltejs/kit/commit/ace2116d95e13293dbc1e26b5b7d780202fd02dd), [`0f38f49`](https://github.com/sveltejs/kit/commit/0f38f498e0e7052db7b8cfe9ea892e7882a67b66)]:
+  - @sveltejs/kit@2.51.0
+
 ## 5.2.4
 ### Patch Changes
 

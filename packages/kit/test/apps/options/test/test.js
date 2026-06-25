@@ -60,6 +60,18 @@ test.describe('CSP', () => {
 		expect(hydratable_script_match).not.toBeNull();
 		expect(hydratable_script_match?.[1]).toBe(nonce);
 	});
+
+	test('require-trusted-types-for', async ({ page, javaScriptEnabled }) => {
+		test.skip(!javaScriptEnabled, 'trusted types only affects scripts');
+
+		const errors = [];
+		page.on('pageerror', (err) => {
+			errors.push(err.message);
+		});
+
+		await page.goto('/path-base/csp-trusted-types');
+		expect(errors.length).toEqual(0);
+	});
 });
 
 test.describe('Custom extensions', () => {
@@ -90,11 +102,6 @@ test.describe('env', () => {
 	test('resolves downwards', async ({ page }) => {
 		await page.goto('/path-base/env');
 		expect(await page.textContent('#public')).toBe('and thank you');
-	});
-	test('respects private prefix', async ({ page }) => {
-		await page.goto('/path-base/env');
-		expect(await page.textContent('#private')).toBe('shhhh');
-		expect(await page.textContent('#neither')).toBe('');
 	});
 });
 
@@ -160,7 +167,12 @@ test.describe('trailingSlash', () => {
 
 		/** @type {string[]} */
 		let requests = [];
-		page.on('request', (r) => requests.push(new URL(r.url()).pathname));
+		page.on('request', (r) => {
+			const url = r.url();
+			// Headless Chrome re-requests the favicon.png on every URL change
+			if (url.endsWith('/favicon.png')) return;
+			return requests.push(new URL(url).pathname);
+		});
 
 		// also wait for network processing to complete, see
 		// https://playwright.dev/docs/network#network-events
@@ -170,7 +182,7 @@ test.describe('trailingSlash', () => {
 		if (process.env.DEV) {
 			expect(requests.filter((req) => req.endsWith('.svelte')).length).toBe(1);
 		} else {
-			expect(requests.filter((req) => req.endsWith('.mjs')).length).toBeGreaterThan(0);
+			expect(requests.filter((req) => req.endsWith('.js')).length).toBeGreaterThan(0);
 		}
 
 		requests = [];
@@ -202,7 +214,7 @@ test.describe('trailingSlash', () => {
 		if (process.env.DEV) {
 			expect(requests.filter((req) => req.endsWith('.svelte')).length).toBe(1);
 		} else {
-			expect(requests.filter((req) => req.endsWith('.mjs')).length).toBeGreaterThan(0);
+			expect(requests.filter((req) => req.endsWith('.js')).length).toBeGreaterThan(0);
 		}
 
 		requests = [];
@@ -226,6 +238,24 @@ test.describe('Vite options', () => {
 
 		const mode = process.env.DEV ? 'development' : 'custom';
 		expect(await page.textContent('h2')).toBe(`${mode} === ${mode} === ${mode}`);
+	});
+});
+
+test.describe('$app/paths', () => {
+	test('match() works with base paths', async ({ request }) => {
+		const response = await request.get('/path-base/match');
+
+		expect(await response.json()).toEqual([
+			{
+				path: '/path-base/resolve-route',
+				result: { id: '/resolve-route', params: {} }
+			},
+			{
+				path: '/path-base/resolve-route/resolved',
+				result: { id: '/resolve-route/[foo]', params: { foo: 'resolved' } }
+			},
+			{ path: '/path-base/not-a-real-route-that-exists', result: null }
+		]);
 	});
 });
 

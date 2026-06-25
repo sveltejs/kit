@@ -1,6 +1,9 @@
 import { BROWSER } from 'esm-env';
+import { decode_params } from './url.js';
 
 const param_pattern = /^(\[)?(\.\.\.)?(\w+)(?:=(\w+))?(\])?$/;
+
+const root_group_pattern = /^\/\((?:[^)]+)\)$/;
 
 /**
  * Creates the regex pattern, extracts parameter names, and generates types for a route
@@ -11,7 +14,7 @@ export function parse_route_id(id) {
 	const params = [];
 
 	const pattern =
-		id === '/'
+		id === '/' || root_group_pattern.test(id)
 			? /^\/$/
 			: new RegExp(
 					`^${get_route_segments(id)
@@ -279,4 +282,28 @@ export function resolve_route(id, params) {
  */
 export function has_server_load(node) {
 	return node.server?.load !== undefined || node.server?.trailingSlash !== undefined;
+}
+
+/**
+ * Find the first route that matches the given path
+ * @template {{pattern: RegExp, params: import('types').RouteParam[]}} Route
+ * @param {string} path - The decoded pathname to match
+ * @param {Route[]} routes
+ * @param {Record<string, import('@sveltejs/kit').ParamMatcher>} matchers
+ * @returns {{ route: Route, params: Record<string, string> } | null}
+ */
+export function find_route(path, routes, matchers) {
+	for (const route of routes) {
+		const match = route.pattern.exec(path);
+		if (!match) continue;
+
+		const matched = exec(match, route.params, matchers);
+		if (matched) {
+			return {
+				route,
+				params: decode_params(matched)
+			};
+		}
+	}
+	return null;
 }
