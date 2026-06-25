@@ -2,4 +2,4 @@
 '@sveltejs/kit': major
 ---
 
-feat: add error result type to `preloadData`
+breaking: add 'error' result type to `preloadData`
