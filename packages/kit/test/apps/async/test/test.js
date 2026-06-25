@@ -1,0 +1,915 @@
+import process from 'node:process';
+import http from 'node:http';
+import { expect } from '@playwright/test';
+import { test } from '../../../utils.js';
+
+test.describe('remote functions', () => {
+	test('query returns correct data', async ({ page, javaScriptEnabled }) => {
+		await page.goto('/remote');
+		await expect(page.locator('#echo-result')).toHaveText('Hello world');
+		if (javaScriptEnabled) {
+			await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
+		}
+	});
+
+	test('query.batch renders final values and errors on first load', async ({ page }) => {
+		await page.goto('/remote/batch-ssr');
+
+		await expect(page.locator('#ssr-batch-result-1')).toHaveText('Buy groceries');
+		await expect(page.locator('#ssr-batch-result-2')).toHaveText('Walk the dog');
+		await expect(page.locator('#ssr-batch-result-3')).toHaveText('Not found');
+		await expect(page.locator('body')).not.toContainText('Loading todo');
+	});
+
+	test('query.live renders the first yielded value during SSR', async ({ page }) => {
+		await page.goto('/remote/live');
+		await expect(page.locator('#first-value')).toHaveText('0');
+	});
+
+	test('query redirects on page load (query in common layout)', async ({ page }) => {
+		await page.goto('/remote/query-redirect');
+		await page.click('a[href="/remote/query-redirect/from-common-layout"]');
+		await expect(page.locator('#redirected')).toHaveText('redirected');
+		await expect(page.locator('#layout-query')).toHaveText(
+			'on page /remote/query-redirect/from-common-layout/redirected (== /remote/query-redirect/from-common-layout/redirected)'
+		);
+	});
+
+	test('query redirects on page load (query on page)', async ({ page }) => {
+		await page.goto('/remote/query-redirect');
+		await page.click('a[href="/remote/query-redirect/from-page"]');
+		await expect(page.locator('#redirected')).toHaveText('redirected');
+	});
+
+	test("query that's awaited and throws a redirect doesn't trigger handleError hook", async ({
+		baseURL
+	}) => {
+		const { status, location } = await new Promise((fulfil, reject) => {
+			const request = http.get(`${baseURL}/remote/query-redirect/from-page`, (response) => {
+				fulfil({
+					status: response.statusCode,
+					location: response.headers.location
+				});
+				response.resume();
+			});
+			request.on('error', reject);
+		});
+
+		expect(status).toBe(307);
+		expect(location).toBe('/remote/query-redirect/redirected');
+	});
+
+	test('non-exported queries do not clobber each other', async ({ page }) => {
+		await page.goto('/remote/query-non-exported');
+
+		await expect(page.locator('h1')).toHaveText('3');
+	});
+
+	test('private (non-exported) query results are not leaked into command responses', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		test.skip(!javaScriptEnabled, 'requires JavaScript to invoke the command');
+
+		await page.goto('/remote/private-query');
+
+		const [response] = await Promise.all([
+			page.waitForResponse((response) => response.url().includes('/reveal')),
+			page.getByRole('button', { name: 'reveal' }).click()
+		]);
+
+		const body = await response.text();
+
+		// the command returns the uppercased secret...
+		expect(body).toContain('PRIVATE-DATA');
+
+		// ...but the raw private query result must never appear in the serialized payload
+		expect(body).not.toContain('private-data');
+	});
+
+	test('queries can access the route/url of the page they were called from', async ({
+		page,
+		clicknav
+	}) => {
+		await page.goto('/remote');
+
+		await clicknav('[href="/remote/event"]');
+
+		await expect(page.locator('[data-id="route"]')).toHaveText('route: /remote/event');
+		await expect(page.locator('[data-id="pathname"]')).toHaveText('pathname: /remote/event');
+	});
+
+	test('form works', async ({ page, javaScriptEnabled }) => {
+		await page.goto(`/remote/form/basic-${javaScriptEnabled}`);
+
+		if (javaScriptEnabled) {
+			await expect(page.getByText('message.current:')).toHaveText('message.current: initial');
+		}
+		await expect(page.getByText('await get_message():')).toHaveText('await get_message(): initial');
+		await expect(page.getByText('set_message.submitted:')).toHaveText(
+			'set_message.submitted: false'
+		);
+
+		await page.fill('[data-unscoped] input', 'hello');
+		await page.getByText('set message').click();
+
+		if (javaScriptEnabled) {
+			await expect(page.getByText('set_message.pending:')).toHaveText('set_message.pending: 1');
+			await expect(page.getByText('set_message.submitted:')).toHaveText(
+				'set_message.submitted: true'
+			);
+			await page.getByText('resolve deferreds').click();
+			await expect(page.getByText('set_message.pending:')).toHaveText('set_message.pending: 0');
+			await expect(page.getByText('message.current:')).toHaveText('message.current: hello');
+		}
+
+		await expect(page.getByText('await get_message():')).toHaveText('await get_message(): hello');
+
+		await expect(page.getByText('set_message.result')).toHaveText('set_message.result: hello');
+		await expect(page.locator('[data-unscoped] input[name="message"]')).toHaveValue('');
+	});
+
+	test('form submitters work', async ({ page }) => {
+		await page.goto('/remote/form/submitter');
+
+		await page.locator('button').click();
+
+		await expect(page.locator('#result')).toHaveText('hello');
+	});
+
+	test('form updates inputs live', async ({ page, javaScriptEnabled }) => {
+		await page.goto('/remote/form/live-update');
+
+		await page.fill('input', 'hello');
+
+		if (javaScriptEnabled) {
+			await expect(page.getByText('set_message.input.message:')).toHaveText(
+				'set_message.input.message: hello'
+			);
+		}
+
+		await page.getByText('set message').click();
+
+		if (javaScriptEnabled) {
+			await page.getByText('resolve deferreds').click();
+		}
+
+		await expect(page.getByText('set_message.input.message:')).toHaveText(
+			'set_message.input.message:'
+		);
+	});
+
+	test('form reports validation issues', async ({ page }) => {
+		await page.goto('/remote/form/validation-issues');
+
+		await page.fill('input', 'invalid');
+		await page.getByText('set message').click();
+
+		await page.getByText('message is invalid').waitFor();
+	});
+
+	test('form handles unexpected error', async ({ page }) => {
+		await page.goto('/remote/form/unexpected-error');
+
+		await page.fill('input', 'unexpected error');
+		await page.getByText('set message').click();
+
+		await page
+			.getByText(
+				'This is your custom error page saying: "oops (500 Internal Error, on /remote/form/unexpected-error)"'
+			)
+			.waitFor();
+	});
+
+	test('form handles expected error', async ({ page }) => {
+		await page.goto('/remote/form/expected-error');
+
+		await page.fill('input', 'expected error');
+		await page.getByText('set message').click();
+
+		await page.getByText('This is your custom error page saying: "oops"').waitFor();
+	});
+
+	test('form redirects', async ({ page }) => {
+		await page.goto('/remote/form/redirect');
+
+		await page.fill('input', 'redirect');
+		await page.getByText('set message').click();
+
+		await page.waitForURL('/remote');
+	});
+
+	test('remote form redirect opens in new tab when target=_blank', async ({ page }) => {
+		await page.goto('/remote/form/redirect-target');
+
+		const popup_promise = page.waitForEvent('popup', { timeout: 5000 });
+
+		await page.locator('[data-testid="form-blank"] button').click();
+
+		const popup = await popup_promise;
+		await popup.waitForLoadState();
+
+		expect(popup.url()).toContain('/remote/form/redirect-target/destination');
+
+		expect(page.url()).toContain('/remote/form/redirect-target');
+		expect(page.url()).not.toContain('/destination');
+	});
+
+	test('remote form redirect navigates same tab without target=_blank', async ({ page }) => {
+		await page.goto('/remote/form/redirect-target');
+
+		let popup_opened = false;
+		page.on('popup', () => {
+			popup_opened = true;
+		});
+
+		await page.locator('form:not([target]) button').click();
+		await page.waitForURL('**/remote/form/redirect-target/destination');
+
+		expect(popup_opened).toBe(false);
+		expect(page.url()).toContain('/remote/form/redirect-target/destination');
+	});
+
+	test('remote form redirect opens in new tab when formtarget=_blank on input', async ({
+		page
+	}) => {
+		await page.goto('/remote/form/redirect-target');
+
+		const popup_promise = page.waitForEvent('popup', { timeout: 5000 });
+		await page.locator('[data-testid="form-input-blank"] input').click();
+		const popup = await popup_promise;
+		await popup.waitForLoadState();
+
+		expect(popup.url()).toContain('/remote/form/redirect-target/destination');
+		expect(page.url()).toContain('/remote/form/redirect-target');
+		expect(page.url()).not.toContain('/destination');
+	});
+
+	test('form multiple submit buttons work', async ({ page, javaScriptEnabled }) => {
+		await page.goto('/remote/form/multiple-submit');
+
+		await page.fill('[data-unscoped] input', 'backwards');
+		await page.getByText('set reverse message').click();
+
+		if (javaScriptEnabled) {
+			await page.getByText('resolve deferreds').click();
+			await page.getByText('message.current: sdrawkcab').waitFor();
+			await expect(page.getByText('await get_message():')).toHaveText(
+				'await get_message(): sdrawkcab'
+			);
+		}
+
+		await expect(page.getByText('set_message.result')).toHaveText('set_message.result: sdrawkcab');
+	});
+
+	test('form scoping with for(...) works', async ({ page, javaScriptEnabled }) => {
+		await page.goto('/remote/form/form-scoped');
+
+		await page.fill('[data-scoped] input', 'hello');
+		await page.getByText('set scoped message').click();
+
+		if (javaScriptEnabled) {
+			await expect(page.getByText('scoped.pending:')).toHaveText('scoped.pending: 1');
+			await page.getByText('resolve deferreds').click();
+			await expect(page.getByText('scoped.pending:')).toHaveText('scoped.pending: 0');
+
+			await page.getByText('message.current: hello').waitFor();
+			await expect(page.getByText('await get_message():')).toHaveText('await get_message(): hello');
+		}
+
+		await expect(page.getByText('scoped.result')).toHaveText(
+			'scoped.result: hello (from: scoped:form-scoped)'
+		);
+		await expect(page.locator('[data-scoped] input[name="message"]')).toHaveValue('');
+	});
+
+	test('form enhance(...) works', async ({ page, javaScriptEnabled }) => {
+		await page.goto('/remote/form/enhanced');
+
+		await page.fill('[data-enhanced] input', 'hello');
+
+		// Click on the span inside the button to test the event.target vs event.currentTarget issue (#14159)
+		await page.locator('[data-enhanced] span').click();
+
+		if (javaScriptEnabled) {
+			await expect(page.getByText('enhanced.pending:')).toHaveText('enhanced.pending: 1');
+			await expect(page.getByText('enhanced.element:')).toHaveText('enhanced.element: attached');
+
+			await page.getByText('message.current: hello (override)').waitFor();
+
+			await page.getByText('resolve deferreds').click();
+			await expect(page.getByText('enhanced.pending:')).toHaveText('enhanced.pending: 0');
+			await expect(page.getByText('await get_message():')).toHaveText('await get_message(): hello');
+
+			// enhanced submission should not clear the input; the developer must do that at the appropriate time
+			await expect(page.locator('[data-enhanced] input[name="message"]')).toHaveValue('hello');
+			await expect(page.getByText('enhanced.callback_element_matches:')).toHaveText(
+				'enhanced.callback_element_matches: true'
+			);
+			await expect(page.getByText('enhanced.callback_has_enhance:')).toHaveText(
+				'enhanced.callback_has_enhance: false'
+			);
+		} else {
+			await expect(page.locator('[data-enhanced] input[name="message"]')).toHaveValue('');
+		}
+
+		await expect(page.getByText('enhanced.result')).toHaveText(
+			'enhanced.result: hello (from: enhanced:enhanced)'
+		);
+	});
+
+	test('form enhance submit returns boolean', async ({ page, javaScriptEnabled }) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/form/enhanced');
+
+		await expect(page.getByText('enhanced.submit_result:')).toHaveText(
+			'enhanced.submit_result: none'
+		);
+
+		await page.fill('[data-enhanced] input', 'hello');
+		await page.locator('[data-enhanced] span').click();
+		await page.getByText('resolve deferreds').click();
+		await expect(page.getByText('enhanced.submit_result:')).toHaveText(
+			'enhanced.submit_result: true'
+		);
+
+		await page.fill('[data-enhanced] input', 'invalid');
+		await page.locator('[data-enhanced] span').click();
+		await expect(page.getByText('enhanced.submit_result:')).toHaveText(
+			'enhanced.submit_result: false'
+		);
+	});
+
+	test('form submit() enables programmatic submission', async ({ page, javaScriptEnabled }) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/form/enhanced');
+
+		await expect(page.getByText('enhanced.imperative_submit_result:')).toHaveText(
+			'enhanced.imperative_submit_result: none'
+		);
+
+		await page.fill('[data-enhanced] input', 'hello');
+		await page.getByText('submit enhanced programmatically').click();
+
+		await expect(page.getByText('enhanced.pending:')).toHaveText('enhanced.pending: 1');
+
+		await page.getByText('resolve deferreds').click();
+		await expect(page.getByText('enhanced.imperative_submit_result:')).toHaveText(
+			'enhanced.imperative_submit_result: true'
+		);
+		await expect(page.getByText('enhanced.result:')).toHaveText(
+			'enhanced.result: hello (from: enhanced:enhanced)'
+		);
+	});
+
+	test('form preflight works', async ({ page, javaScriptEnabled }) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/form/preflight');
+
+		for (const enhanced of [true, false]) {
+			const form = page.locator(enhanced ? '[data-enhanced]' : '[data-default]');
+			const input = form.locator('input');
+			const button = page.getByText(enhanced ? 'set enhanced number' : 'set number');
+
+			await input.fill('21');
+			await button.click();
+			await form.getByText('too big').waitFor();
+
+			await input.fill('9');
+			await button.click();
+			await form.getByText('too small').waitFor();
+			await expect(form.getByText('too big')).not.toBeVisible();
+
+			if (enhanced) {
+				// one more time preflight-issue only so that we can test it's cleared
+				// after it passes and before submission.
+				await input.fill('21');
+				await button.click();
+				await form.getByText('too big').waitFor();
+			}
+
+			await input.fill('15');
+			await button.click();
+			await expect(page.getByText('number.current')).toHaveText('number.current: 15');
+		}
+	});
+
+	test('form pending is true immediately during async preflight', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/form/preflight-pending');
+
+		// Test 1: async preflight that passes — pending should be true immediately
+		await expect(page.locator('[data-passing-pending]')).toHaveText('passing pending: 0');
+
+		void page.click('[data-passing] button');
+
+		// pending should be true immediately (before async preflight finishes)
+		await expect(page.locator('[data-passing-pending]')).toHaveText('passing pending: 1');
+
+		// after submission completes, pending should return to 0
+		await expect(page.locator('[data-passing-pending]')).toHaveText('passing pending: 0', {
+			timeout: 5000
+		});
+		await expect(page.locator('[data-passing-result]')).toContainText('created:');
+
+		// Test 2: async preflight that fails — pending should be true during validation, then return to 0
+		await expect(page.locator('[data-failing-pending]')).toHaveText('failing pending: 0');
+
+		void page.click('[data-failing] button');
+
+		// pending should be true immediately
+		await expect(page.locator('[data-failing-pending]')).toHaveText('failing pending: 1');
+
+		// after preflight fails, pending should return to 0 and issues should appear
+		await expect(page.locator('[data-failing-pending]')).toHaveText('failing pending: 0', {
+			timeout: 5000
+		});
+		await expect(page.locator('[data-failing-issue]')).toHaveText('async check failed');
+	});
+
+	test('form preflight before for ordering works', async ({ page, javaScriptEnabled }) => {
+		test.skip(!javaScriptEnabled);
+
+		await page.goto('/remote/form/preflight-for');
+
+		const form = page.locator('[data-preflight-for]');
+		const input = form.locator('input');
+		const button = form.locator('button');
+
+		// Preflight should catch oversized value
+		await input.fill('21');
+		await button.click();
+		await form.getByText('too big').waitFor();
+
+		// After fixing, submission should succeed
+		await input.fill('5');
+		await button.click();
+		await expect(page.getByText('value.current')).toHaveText('value.current: 5');
+	});
+
+	test('form preflight-only validation works', async ({ page, javaScriptEnabled }) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/form/preflight-only');
+
+		const a = page.locator('[name="a"]');
+		const button = page.locator('button');
+		const issues = page.locator('.issues');
+
+		await button.click();
+		await expect(issues).toContainText('a is too short');
+		await expect(issues).toContainText('b is too short');
+		await expect(issues).toContainText('c is too short');
+
+		await a.fill('aaaaaaaa');
+		await expect(issues).toContainText('a is too long');
+
+		// server issues should be preserved...
+		await expect(issues).toContainText('b is too short');
+		await expect(issues).toContainText('c is too short');
+
+		// ...unless overridden by client issues
+		await expect(issues).not.toContainText('a is too short');
+	});
+
+	test('form validate works', async ({ page, javaScriptEnabled }) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/form/validate');
+
+		const myForm = page.locator('form#my-form');
+		const foo = page.locator('input[name="foo"]');
+		const bar = page.locator('input[name="bar"]');
+		const submit = page.locator('button:has-text("imperative validation")');
+
+		await foo.fill('a');
+		await expect(myForm).not.toContainText('Invalid type: Expected');
+
+		await bar.fill('g');
+		await expect(myForm).toContainText('Invalid type: Expected ("d" | "e") but received "g"');
+
+		await bar.fill('d');
+		await expect(myForm).not.toContainText('Invalid type: Expected');
+
+		await page.locator('#trigger-validate').click();
+		await expect(myForm).toContainText(
+			'Invalid type: Expected "submitter" but received "incorrect_value"'
+		);
+
+		// Test imperative validation
+		await foo.fill('c');
+		await bar.fill('d');
+		await submit.click();
+		await expect(myForm).toContainText('Imperative: foo cannot be c');
+
+		const nestedValue = page.locator('input[name="nested.value"]');
+		const validate = page.locator('button#validate');
+		const allIssues = page.locator('#allIssues');
+
+		await nestedValue.fill('in');
+		await validate.click();
+		await expect(allIssues).toContainText('"path":["nested","value"]');
+	});
+
+	test('form validation issues cleared', async ({ page, javaScriptEnabled }) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/form/validate');
+
+		const baz = page.locator('input[name="baz"]');
+		const submit = page.locator('#my-form-2 button');
+
+		await baz.fill('c');
+		await submit.click();
+		await expect(page.locator('#my-form-2')).toContainText('Invalid type: Expected');
+
+		await baz.fill('a');
+		await submit.click();
+		await expect(page.locator('#my-form-2')).not.toContainText('Invalid type: Expected');
+		await expect(page.locator('[data-error]')).toHaveText('An error occurred');
+
+		await baz.fill('c');
+		await submit.click();
+		await expect(page.locator('#my-form-2')).toContainText('Invalid type: Expected');
+
+		await baz.fill('b');
+		await submit.click();
+		await expect(page.locator('#my-form-2')).not.toContainText('Invalid type: Expected');
+		await expect(page.locator('[data-error]')).toHaveText('No error');
+	});
+
+	test('form inputs excludes underscore-prefixed fields', async ({ page, javaScriptEnabled }) => {
+		if (javaScriptEnabled) return;
+
+		await page.goto('/remote/form/underscore');
+
+		await page.fill('input[name="username"]', 'abcdefg');
+		await page.fill('input[name="_password"]', 'pqrstuv');
+		await page.locator('button').click();
+
+		await expect(page.locator('input[name="username"]')).toHaveValue('abcdefg');
+		await expect(page.locator('input[name="_password"]')).toHaveValue('');
+	});
+
+	test('prerendered entries not called in prod', async ({ page, clicknav }) => {
+		await page.goto('/remote/prerender');
+		await clicknav('[href="/remote/prerender/whole-page"]');
+		await expect(page.locator('#prerendered-data')).toHaveText('a c 中文 yes');
+
+		await page.goto('/remote/prerender');
+		await clicknav('[href="/remote/prerender/functions-only"]');
+		await expect(page.locator('#prerendered-data')).toHaveText('a c 中文 yes');
+	});
+
+	test('form.fields.value() returns correct nested object structure', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/form/value');
+
+		// Initially should be empty object or undefined values
+		const initialValue = await page.locator('#full-value').textContent();
+		expect(initialValue ? JSON.parse(initialValue) : null).toEqual({});
+
+		// Fill leaf field
+		await page.fill('input[name="leaf"]', 'leaf-value');
+		const afterLeaf = await page.locator('#full-value').textContent();
+		expect(afterLeaf ? JSON.parse(afterLeaf) : null).toEqual({
+			leaf: 'leaf-value'
+		});
+
+		// Fill object.leaf field
+		await page.fill('input[name="object.leaf"]', 'object-leaf-value');
+		const afterObjectLeaf = await page.locator('#full-value').textContent();
+		expect(afterObjectLeaf ? JSON.parse(afterObjectLeaf) : null).toEqual({
+			leaf: 'leaf-value',
+			object: {
+				leaf: 'object-leaf-value'
+			}
+		});
+
+		// Fill object.array fields
+		await page.fill('input[name="object.array[0]"]', 'array-item-1');
+		const afterArrayItem1 = await page.locator('#full-value').textContent();
+		expect(afterArrayItem1 ? JSON.parse(afterArrayItem1) : null).toEqual({
+			leaf: 'leaf-value',
+			object: {
+				leaf: 'object-leaf-value',
+				array: ['array-item-1']
+			}
+		});
+
+		await page.fill('input[name="object.array[1]"]', 'array-item-2');
+		const afterArrayItem2 = await page.locator('#full-value').textContent();
+		expect(afterArrayItem2 ? JSON.parse(afterArrayItem2) : null).toEqual({
+			leaf: 'leaf-value',
+			object: {
+				leaf: 'object-leaf-value',
+				array: ['array-item-1', 'array-item-2']
+			}
+		});
+
+		// Fill array[0].leaf field
+		await page.fill('input[name="array[0].leaf"]', 'array-0-leaf');
+		const afterArray0 = await page.locator('#full-value').textContent();
+		expect(afterArray0 ? JSON.parse(afterArray0) : null).toEqual({
+			leaf: 'leaf-value',
+			object: {
+				leaf: 'object-leaf-value',
+				array: ['array-item-1', 'array-item-2']
+			},
+			array: [{ leaf: 'array-0-leaf' }]
+		});
+
+		// Fill array[1].leaf field
+		await page.fill('input[name="array[1].leaf"]', 'array-1-leaf');
+		const afterArray1 = await page.locator('#full-value').textContent();
+		expect(afterArray1 ? JSON.parse(afterArray1) : null).toEqual({
+			leaf: 'leaf-value',
+			object: {
+				leaf: 'object-leaf-value',
+				array: ['array-item-1', 'array-item-2']
+			},
+			array: [{ leaf: 'array-0-leaf' }, { leaf: 'array-1-leaf' }]
+		});
+
+		// Test nested object value access
+		const objectValue = await page.locator('#object-value').textContent();
+		expect(objectValue ? JSON.parse(objectValue) : null).toEqual({
+			leaf: 'object-leaf-value',
+			array: ['array-item-1', 'array-item-2']
+		});
+
+		// Test array value access
+		const arrayValue = await page.locator('#array-value').textContent();
+		expect(arrayValue ? JSON.parse(arrayValue) : null).toEqual([
+			{ leaf: 'array-0-leaf' },
+			{ leaf: 'array-1-leaf' }
+		]);
+	});
+
+	test('form.fields.value() returns an immutable snapshot in an enhance callback', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/form/snapshot');
+
+		await page.fill('input[name="a.b.c"]', 'original');
+		await page.getByRole('button', { name: 'submit' }).click();
+
+		// wait until the snapshot has been taken and the submission is in flight
+		await expect(page.locator('#status')).toHaveText('status: submitting');
+
+		// mutate the form state *after* the snapshot was taken
+		await page.fill('input[name="a.b.c"]', 'changed');
+
+		// let the submission complete
+		await page.getByRole('button', { name: 'release' }).click();
+		await expect(page.locator('#status')).toHaveText('status: done');
+
+		// the captured snapshot must not reflect the post-submission change...
+		await expect(page.locator('#captured')).toHaveText('captured: original');
+		// ...while reading the field again reflects the current state
+		await expect(page.locator('#live')).toHaveText('live: changed');
+	});
+
+	test('nested field set is SSR rendered', async ({ page }) => {
+		await page.goto('/remote/form/set-ssr');
+		await expect(page.locator('#description')).toHaveText('Description: nested');
+	});
+
+	test('form fields touched tracks interactions', async ({ page, javaScriptEnabled }) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/form/touched');
+
+		const nameTouched = page.locator('#touched-name');
+		const ageTouched = page.locator('#touched-age');
+
+		await expect(nameTouched).toHaveText('Name touched: no');
+		await expect(ageTouched).toHaveText('Age touched: no');
+
+		await page.click('#set-btn');
+		await expect(nameTouched).toHaveText('Name touched: yes');
+
+		await page.click('#reset-btn');
+		await expect(nameTouched).toHaveText('Name touched: no');
+
+		await page.fill('#age-input', '42');
+		await expect(ageTouched).toHaveText('Age touched: yes');
+
+		await page.click('#reset-btn');
+		await expect(ageTouched).toHaveText('Age touched: no');
+	});
+
+	test('selects are not nuked when unrelated controls change', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/form/select-untouched');
+
+		await page.fill('input', 'hello');
+		await expect(page.locator('select')).toHaveValue('one');
+	});
+	test('file uploads work', async ({ page }) => {
+		await page.goto('/remote/form/file-upload');
+
+		await page.locator('input[name="file1"]').setInputFiles({
+			name: 'a.txt',
+			mimeType: 'text/plain',
+			buffer: Buffer.from('a')
+		});
+		await page.locator('input[name="file2"]').setInputFiles({
+			name: 'b.txt',
+			mimeType: 'text/plain',
+			buffer: Buffer.from('b')
+		});
+		await page.locator('input[type="checkbox"]').check();
+		await page.locator('button').click();
+
+		await expect(page.locator('pre')).toHaveText(
+			JSON.stringify({
+				text: 'Hello world',
+				file1: 'a',
+				file2: 'b'
+			})
+		);
+	});
+	test('large file uploads work', async ({ page }) => {
+		await page.goto('/remote/form/file-upload');
+
+		await page.locator('input[name="file1"]').setInputFiles({
+			name: 'a.txt',
+			mimeType: 'text/plain',
+			buffer: Buffer.alloc(1024 * 1024 * 10)
+		});
+		await page.locator('input[name="file2"]').setInputFiles({
+			name: 'b.txt',
+			mimeType: 'text/plain',
+			buffer: Buffer.from('b')
+		});
+		await page.locator('button').click();
+
+		await expect(page.locator('pre')).toHaveText(
+			JSON.stringify({
+				text: 'Hello world',
+				file1: 1024 * 1024 * 10,
+				file2: 1
+			})
+		);
+	});
+
+	test('query stored as variable does not block SSR inside boundary', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		await page.goto('/remote/query-boundary');
+
+		await expect(page.locator('#delayed-pending')).toHaveText('loading delayed');
+
+		if (javaScriptEnabled) {
+			await expect(page.locator('#delayed-result')).toHaveText('delayed data', {
+				timeout: 5000
+			});
+		}
+	});
+
+	test('query rendered in its loading state during SSR is fetched on the client', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		await page.goto('/remote/query-loading-state');
+
+		if (javaScriptEnabled) {
+			// the query was still pending when SSR finished, so it must not be
+			// seeded into the hydration cache — the client has to fetch it itself
+			await expect(page.locator('#slow-state')).toHaveText('slow data', {
+				timeout: 5000
+			});
+		} else {
+			await expect(page.locator('#slow-state')).toHaveText('loading');
+		}
+	});
+
+	test('queries cannot set cookies or headers', async ({ page }) => {
+		await page.goto('/remote/query-event-guards');
+
+		await expect(page.locator('#result')).toHaveText(
+			'Cannot set cookies in `query` or `prerender` functions | setHeaders is not allowed in remote functions'
+		);
+	});
+
+	test('queries nested inside live queries are not implicitly serialized', async ({ page }) => {
+		await page.goto('/remote/live-nested-query');
+
+		await expect(page.locator('#live-result')).toHaveText('NESTED-SECRET');
+
+		// the nested query's raw value must not leak into the page payload
+		expect(await page.content()).not.toContain('nested-secret');
+	});
+
+	test('requested(...) works in form handlers regardless of progressive enhancement', async ({
+		page
+	}) => {
+		await page.goto('/remote/form/requested');
+
+		await expect(page.locator('#form-result')).toHaveText('not submitted');
+
+		await page.locator('#requested-submit').click();
+
+		await expect(page.locator('#form-result')).toHaveText('submitted successfully');
+	});
+
+	test('SSR data for query.live is reused on hydration', async ({ page, javaScriptEnabled }) => {
+		await page.goto(`/remote/live-ssr-value?key=${Date.now()}-${Math.random()}`);
+
+		if (javaScriptEnabled) {
+			// the SSR'd first value must be seeded into the live query on hydration —
+			// the reconnect (deliberately blocked server-side) must not reset it to a loading state
+			await expect(page.locator('#live-state')).toHaveText('initial');
+
+			// the live connection still works after seeding
+			await page.click('#notify');
+			await expect(page.locator('#live-state')).toHaveText('updated');
+		} else {
+			await expect(page.locator('#live-state')).toHaveText('loading');
+		}
+	});
+
+	test('prerender functions are deduplicated across prerendered pages during build', async ({
+		page
+	}) => {
+		test.skip(!!process.env.DEV, 'pages are only prerendered when building');
+
+		await page.goto('/remote/prerender-dedupe/a');
+		const a = await page.locator('#count').textContent();
+
+		await page.goto('/remote/prerender-dedupe/b');
+		const b = await page.locator('#count').textContent();
+
+		// the shared prerender function must only have executed once at build time
+		expect(b).toBe(a);
+	});
+
+	test('awaiting multiple queries inside $derived does not fail mutation validation', async ({
+		page
+	}) => {
+		await page.goto('/remote/query-derived-awaits');
+
+		await expect(page.locator('#result')).toHaveText('3');
+	});
+
+	test('.as(type, value) renders correct values', async ({ page }) => {
+		await page.goto('/remote/form/as-value');
+
+		const form1 = page.locator('form').nth(0);
+		const form2 = page.locator('form').nth(1);
+
+		// first record values
+		await expect(form1.locator('input[name="text_field"]')).toHaveValue('Example text');
+		await expect(form1.locator('input[name="n:number_field"]')).toHaveValue('42');
+		await expect(form1.locator('select[name="select_field"]')).toHaveValue('apple');
+		await expect(form1.locator('input[name="color_field"]')).toHaveValue('#ff0000');
+		await expect(form1.locator('input[name="n:range_field"]')).toHaveValue('5');
+		await expect(form1.locator('input[name="b:checkbox_field"]')).toBeChecked();
+
+		// second record values
+		await expect(form2.locator('input[name="text_field"]')).toHaveValue('Another example');
+		await expect(form2.locator('input[name="n:number_field"]')).toHaveValue('100');
+		await expect(form2.locator('select[name="select_field"]')).toHaveValue('banana');
+		await expect(form2.locator('input[name="color_field"]')).toHaveValue('#ffff00');
+		await expect(form2.locator('input[name="n:range_field"]')).toHaveValue('8');
+		await expect(form2.locator('input[name="b:checkbox_field"]')).not.toBeChecked();
+	});
+});
+
+test.describe('server error boundaries', () => {
+	test('catches server render error and shows root +error.svelte', async ({ page }) => {
+		await page.goto('/server-error-boundary');
+		await expect(page.locator('#message')).toContainText(
+			'render error (500 Internal Error, on /server-error-boundary)'
+		);
+	});
+
+	test('catches nested server render error and shows nested +error.svelte', async ({ page }) => {
+		await page.goto('/server-error-boundary/nested');
+		await expect(page.locator('#nested-error-message')).toContainText(
+			'nested render error (500 Internal Error, on /server-error-boundary/nested) | true | 500'
+		);
+		// The nested layout should still be visible
+		await expect(page.locator('#nested-layout')).toBeVisible();
+	});
+});

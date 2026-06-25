@@ -1,21 +1,22 @@
-import 'SHIMS';
+import './shims.js';
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import sirv from 'sirv';
-import { fileURLToPath } from 'node:url';
 import { parse as polka_url_parser } from '@polka/url';
 import { getRequest, setResponse, createReadableStream } from '@sveltejs/kit/node';
 import { Server } from 'SERVER';
-import { manifest, prerendered, base } from 'MANIFEST';
-import { env } from 'ENV';
-import { parse_as_bytes } from '../utils.js';
+import { manifest } from 'MANIFEST';
+import { dir, env, env_prefix } from './env.js';
+import { parse_as_bytes, parse_origin } from '../utils.js';
 
-/* global ENV_PREFIX */
+const prerendered = PRERENDERED;
 
 const server = new Server(manifest);
 
-const origin = env('ORIGIN', undefined);
+// parse_origin validates ORIGIN and throws descriptive errors for invalid values
+const origin = parse_origin(env('ORIGIN', undefined));
+
 const xff_depth = parseInt(env('XFF_DEPTH', '1'));
 const address_header = env('ADDRESS_HEADER', '').toLowerCase();
 const protocol_header = env('PROTOCOL_HEADER', '').toLowerCase();
@@ -30,9 +31,7 @@ if (isNaN(body_size_limit)) {
 	);
 }
 
-const dir = path.dirname(fileURLToPath(import.meta.url));
-
-const asset_dir = `${dir}/client${base}`;
+const asset_dir = `${dir}/client${BASE}`;
 
 await server.init({
 	env: /** @type {Record<string, string>} */ (process.env),
@@ -47,8 +46,8 @@ function serve(path, client = false) {
 	return fs.existsSync(path)
 		? sirv(path, {
 				etag: true,
-				gzip: true,
-				brotli: true,
+				gzip: PRECOMPRESS,
+				brotli: PRECOMPRESS,
 				setHeaders: client
 					? (res, pathname) => {
 							// only apply to build directory, not e.g. version.json
@@ -110,53 +109,60 @@ const ssr = async (req, res) => {
 		return;
 	}
 
-	await setResponse(
-		res,
-		await server.respond(request, {
-			platform: { req },
-			getClientAddress: () => {
-				if (address_header) {
-					if (!(address_header in req.headers)) {
-						throw new Error(
-							`Address header was specified with ${
-								ENV_PREFIX + 'ADDRESS_HEADER'
-							}=${address_header} but is absent from request`
-						);
-					}
-
-					const value = /** @type {string} */ (req.headers[address_header]) || '';
-
-					if (address_header === 'x-forwarded-for') {
-						const addresses = value.split(',');
-
-						if (xff_depth < 1) {
-							throw new Error(`${ENV_PREFIX + 'XFF_DEPTH'} must be a positive integer`);
-						}
-
-						if (xff_depth > addresses.length) {
-							throw new Error(
-								`${ENV_PREFIX + 'XFF_DEPTH'} is ${xff_depth}, but only found ${
-									addresses.length
-								} addresses`
-							);
-						}
-						return addresses[addresses.length - xff_depth].trim();
-					}
-
-					return value;
+	const response = await server.respond(request, {
+		platform: { req },
+		getClientAddress: () => {
+			if (address_header) {
+				if (!(address_header in req.headers)) {
+					throw new Error(
+						`Address header was specified with ${
+							env_prefix + 'ADDRESS_HEADER'
+						}=${address_header} but is absent from request`
+					);
 				}
 
-				return (
-					req.connection?.remoteAddress ||
-					// @ts-expect-error
-					req.connection?.socket?.remoteAddress ||
-					req.socket?.remoteAddress ||
-					// @ts-expect-error
-					req.info?.remoteAddress
-				);
+				const value = /** @type {string} */ (req.headers[address_header]) || '';
+
+				if (address_header === 'x-forwarded-for') {
+					const addresses = value.split(',');
+
+					if (xff_depth < 1) {
+						throw new Error(`${env_prefix + 'XFF_DEPTH'} must be a positive integer`);
+					}
+
+					if (xff_depth > addresses.length) {
+						throw new Error(
+							`${env_prefix + 'XFF_DEPTH'} is ${xff_depth}, but only found ${
+								addresses.length
+							} addresses`
+						);
+					}
+					return addresses[addresses.length - xff_depth].trim();
+				}
+
+				return value;
 			}
-		})
-	);
+
+			return (
+				req.connection?.remoteAddress ||
+				// @ts-expect-error
+				req.connection?.socket?.remoteAddress ||
+				req.socket?.remoteAddress ||
+				// @ts-expect-error
+				req.info?.remoteAddress
+			);
+		}
+	});
+
+	// Reverse proxies such as nginx buffer responses by default (ignoring
+	// `cache-control`), which breaks streaming responses like server-sent events.
+	// `X-Accel-Buffering: no` opts out of that buffering and is a no-op on proxies
+	// that don't recognise it. See https://github.com/sveltejs/kit/issues/15790
+	if (response.headers.get('content-type') === 'text/event-stream') {
+		response.headers.set('x-accel-buffering', 'no');
+	}
+
+	await setResponse(res, response);
 };
 
 /** @param {import('polka').Middleware[]} handlers */
@@ -180,13 +186,54 @@ function sequence(handlers) {
 }
 
 /**
+ * @param {string} name
+ * @param {string | string[] | undefined} value
+ * @returns {string | undefined}
+ */
+function normalise_header(name, value) {
+	if (!name) return undefined;
+	if (Array.isArray(value)) {
+		if (value.length === 0) return undefined;
+		if (value.length === 1) return value[0];
+		throw new Error(
+			`Multiple values provided for ${name} header where only one expected: ${value}`
+		);
+	}
+	return value;
+}
+
+/**
  * @param {import('http').IncomingHttpHeaders} headers
- * @returns
+ * @returns {string}
  */
 function get_origin(headers) {
-	const protocol = (protocol_header && headers[protocol_header]) || 'https';
-	const host = (host_header && headers[host_header]) || headers['host'];
-	const port = port_header && headers[port_header];
+	const protocol = decodeURIComponent(
+		normalise_header(protocol_header, headers[protocol_header]) || 'https'
+	);
+
+	// this helps us avoid host injections through the protocol header
+	if (protocol.includes(':')) {
+		throw new Error(
+			`The ${protocol_header} header specified ${protocol} which is an invalid because it includes \`:\`. It should only contain the protocol scheme (e.g. \`https\`)`
+		);
+	}
+
+	const host =
+		normalise_header(host_header, headers[host_header]) ||
+		normalise_header('host', headers['host']);
+	if (!host) {
+		const header_names = host_header ? `${host_header} or host headers` : 'host header';
+		throw new Error(
+			`Could not determine host. The request must have a value provided by the ${header_names}`
+		);
+	}
+
+	const port = normalise_header(port_header, headers[port_header]);
+	if (port && isNaN(+port)) {
+		throw new Error(
+			`The ${port_header} header specified ${port} which is an invalid port because it is not a number. The value should only contain the port number (e.g. 443)`
+		);
+	}
 
 	return port ? `${protocol}://${host}:${port}` : `${protocol}://${host}`;
 }

@@ -1,6 +1,6 @@
 import { expect, test, vi } from 'vitest';
 import path from 'node:path';
-import { should_ignore } from './utils.js';
+import { should_ignore, has_children } from './utils.js';
 
 // Mock the colors module to avoid issues in tests
 vi.mock('kleur', () => ({
@@ -152,4 +152,28 @@ test.each([
 ])('warning behavior: %s', (_description, content, filename, should_warn) => {
 	const result = should_warn_for_content(content, filename);
 	expect(result).toBe(should_warn);
+});
+
+test.each([
+	['layout with @render children()', '{@render children()}', true],
+	['layout with slot', '<slot />', true],
+	['layout with named slot', '<slot name="default" />', true],
+	[
+		'layout forwarding children as shorthand prop',
+		'<script>\n\tlet { children } = $props();\n</script>\n<Layout {children} />',
+		true
+	],
+	[
+		'layout forwarding children as explicit prop',
+		'<script>\n\tlet { children } = $props();\n</script>\n<Layout children={children} />',
+		true
+	],
+	[
+		'layout with no children handling',
+		'<script>\n\tlet { data } = $props();\n</script>\n<div>{data}</div>',
+		false
+	],
+	['empty layout', '', false]
+])('layout children detection: %s', (_description, content, expected) => {
+	expect(has_children(content, true)).toBe(expected);
 });

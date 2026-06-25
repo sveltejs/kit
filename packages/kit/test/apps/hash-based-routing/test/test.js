@@ -126,4 +126,13 @@ test.describe('hash based navigation', () => {
 		await expect(page.locator('#button3')).toBeFocused();
 		await expect(page.locator('button[id="button3"]')).toBeFocused();
 	});
+
+	test('resolve works', async ({ page }) => {
+		await page.goto('/#/resolve');
+		await page.locator('a', { hasText: 'go to home' }).click();
+		await expect(page.locator('p')).toHaveText('home');
+		const url = new URL(page.url());
+		expect(url.pathname).toBe('/');
+		expect(url.hash).toBe('#/');
+	});
 });

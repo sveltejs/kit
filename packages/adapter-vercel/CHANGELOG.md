@@ -1,5 +1,89 @@
 # @sveltejs/adapter-vercel
 
+## 6.3.4
+### Patch Changes
+
+
+- fix: prevent missing immutable assets from being cached as 404s for a year ([#16077](https://github.com/sveltejs/kit/pull/16077))
+
+- Updated dependencies [[`63f1b0b`](https://github.com/sveltejs/kit/commit/63f1b0bd0ee2d16ef0c4d1f5bef35afd54d0304a), [`1dbff3f`](https://github.com/sveltejs/kit/commit/1dbff3fec2a335242af8b556c36513dbf9602ea5), [`961ba01`](https://github.com/sveltejs/kit/commit/961ba015ff4f69b954bcb7512a05ccd5ea180eb4), [`d2e108c`](https://github.com/sveltejs/kit/commit/d2e108c13925559c3433b9b46a71174a0f271253), [`d2e108c`](https://github.com/sveltejs/kit/commit/d2e108c13925559c3433b9b46a71174a0f271253), [`d2e108c`](https://github.com/sveltejs/kit/commit/d2e108c13925559c3433b9b46a71174a0f271253), [`860b3c7`](https://github.com/sveltejs/kit/commit/860b3c7d5f52b02fdd07d95305dfdb93357e0ead), [`f8c842c`](https://github.com/sveltejs/kit/commit/f8c842cb8bfb13235bfd6c44f913d51e9e2d70d6), [`d3aa5fe`](https://github.com/sveltejs/kit/commit/d3aa5fe9bdb8fd6bdf0dd75d4575fbcfa37fc560), [`0dd7659`](https://github.com/sveltejs/kit/commit/0dd7659d943e7e635947aed9e96c639e8167b1fb), [`03e9f66`](https://github.com/sveltejs/kit/commit/03e9f660edf026654d65b257d509d4ab190e6f7e), [`57b7b7b`](https://github.com/sveltejs/kit/commit/57b7b7b4f79283b36832450d8476a83cff007526), [`4eabadc`](https://github.com/sveltejs/kit/commit/4eabadca61440dfda690cdd4e8eeb0723fb94258), [`6fbf2b6`](https://github.com/sveltejs/kit/commit/6fbf2b64843123ac2676b04d56085d4c118a91b4), [`276744d`](https://github.com/sveltejs/kit/commit/276744da6585d743d720e8cbaa476bd67ac0fb48), [`8740132`](https://github.com/sveltejs/kit/commit/8740132952c2f7d908b4f1e795f942ad079895be), [`f430a68`](https://github.com/sveltejs/kit/commit/f430a68937744212d2b1bd0ee920cc89cc6f696f), [`1c7a8dc`](https://github.com/sveltejs/kit/commit/1c7a8dca3216b42ff4f69a712e794a485de4d4ee)]:
+  - @sveltejs/kit@2.66.0
+
+## 6.3.3
+### Patch Changes
+
+
+- fix: ensure build does not copy Vercel build environment system files ([#15400](https://github.com/sveltejs/kit/pull/15400))
+
+## 6.3.2
+### Patch Changes
+
+
+- fix: 404 for immutable assets that don't match static files ([`c67da8a`](https://github.com/sveltejs/kit/commit/c67da8ab6380349b30c353247688369eaef58c05))
+
+- Updated dependencies [[`3e607b3`](https://github.com/sveltejs/kit/commit/3e607b314aec9e5f278d32847945b8b6323e1cb8), [`62991c8`](https://github.com/sveltejs/kit/commit/62991c81db4f50ccfb08a9ac5e05ccba4ddab59e), [`f47c01b`](https://github.com/sveltejs/kit/commit/f47c01bd8100328c24fdb8522fe35913b0735f35)]:
+  - @sveltejs/kit@2.52.2
+
+## 6.3.1
+### Patch Changes
+
+
+- feat: show remote function calls under the /_app/remote route in observability ([#15098](https://github.com/sveltejs/kit/pull/15098))
+
+
+- fix: prevent isr routes from handling remote function calls ([#15098](https://github.com/sveltejs/kit/pull/15098))
+
+- Updated dependencies [[`46c1ebd`](https://github.com/sveltejs/kit/commit/46c1ebd9f662f0de499e921bfee2661316449e9d), [`2dd74c8`](https://github.com/sveltejs/kit/commit/2dd74c8c86ae4855c3e9d74d8cf241e86dcd5b36), [`8871b54`](https://github.com/sveltejs/kit/commit/8871b5444413d0c7d7ef4d260996c3b5c359d0b8)]:
+  - @sveltejs/kit@2.50.1
+
+## 6.3.0
+### Minor Changes
+
+
+- chore: mark `RequestContext` as deprecated and refer to `@vercel/functions` ([#14725](https://github.com/sveltejs/kit/pull/14725))
+
+
+### Patch Changes
+
+- Updated dependencies [[`e67613c`](https://github.com/sveltejs/kit/commit/e67613cf0dde5b7b22e7ef2e2fa2d9171505c784), [`a5c313e`](https://github.com/sveltejs/kit/commit/a5c313e026659874981868fe9628ed6a311dcc06), [`06de550`](https://github.com/sveltejs/kit/commit/06de5506b6db0e39e2ded47e239af39f64d647a8)]:
+  - @sveltejs/kit@2.49.3
+
+## 6.2.0
+### Minor Changes
+
+
+- feat: Node 24 support ([#14982](https://github.com/sveltejs/kit/pull/14982))
+
+## 6.1.2
+### Patch Changes
+
+
+- chore(deps): upgrade to `@vercel/nft` version 1.0.0 to reduce dependencies ([#14950](https://github.com/sveltejs/kit/pull/14950))
+
+- Updated dependencies [[`0889a2a`](https://github.com/sveltejs/kit/commit/0889a2aa897b64194bc55183d7224df65d8147c1), [`2ff3951`](https://github.com/sveltejs/kit/commit/2ff3951e79e59b522c648138c846f31ad858d5b0), [`5b30755`](https://github.com/sveltejs/kit/commit/5b30755a1d84a1054370b211e56d576e3c96d442)]:
+  - @sveltejs/kit@2.48.7
+
+## 6.1.1
+### Patch Changes
+
+
+- chore: improve runtime config parsing ([#14838](https://github.com/sveltejs/kit/pull/14838))
+
+- Updated dependencies [[`cd72d94`](https://github.com/sveltejs/kit/commit/cd72d942a75eed2c1c2ee4b9d6cba5829a4fdb7a), [`53b1b73`](https://github.com/sveltejs/kit/commit/53b1b73256d5b314b1e08ff13f920d520c4a6aed), [`2ccc638`](https://github.com/sveltejs/kit/commit/2ccc63806fa4049c0c05ebc43dce8905e355ed5a)]:
+  - @sveltejs/kit@2.48.3
+
+## 6.1.0
+### Minor Changes
+
+
+- feat: Add experimental support for Bun runtime ([#14817](https://github.com/sveltejs/kit/pull/14817))
+
+
+### Patch Changes
+
+- Updated dependencies [[`102aecf`](https://github.com/sveltejs/kit/commit/102aecfd228dd632664d748b9e87bc6d219294c4)]:
+  - @sveltejs/kit@2.48.1
+
 ## 6.0.0
 ### Major Changes
 

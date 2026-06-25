@@ -1,5 +1,5 @@
 {
-	"name": "~TODO~",
+	"name": "test-static-spa",
 	"version": "0.0.1",
 	"private": true,
 	"scripts": {
@@ -9,7 +9,6 @@
 		"test": "playwright test"
 	},
 	"devDependencies": {
-		"@sveltejs/adapter-node": "workspace:^",
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "catalog:",
 		"sirv-cli": "catalog:",

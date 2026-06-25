@@ -7,7 +7,7 @@ import { HttpError, Redirect, ActionFailure, SvelteKitError } from '@sveltejs/ki
 import { with_request_store, merge_tracing } from '@sveltejs/kit/internal/server';
 import { get_status, normalize_error } from '../../../utils/error.js';
 import { is_form_content_type, negotiate } from '../../../utils/http.js';
-import { handle_error_and_jsonify } from '../utils.js';
+import { create_replacer, handle_error_and_jsonify } from '../utils.js';
 import { record_span } from '../../telemetry/record_span.js';
 
 /** @param {RequestEvent} event */
@@ -266,9 +266,11 @@ async function call_action(event, event_state, actions) {
 		},
 		fn: async (current) => {
 			const traced_event = merge_tracing(event, current);
+
 			const result = await with_request_store({ event: traced_event, state: event_state }, () =>
 				action(traced_event)
 			);
+
 			if (result instanceof ActionFailure) {
 				current.setAttributes({
 					'sveltekit.form_action.result.type': 'failure',
@@ -299,14 +301,7 @@ function validate_action_return(data) {
  * @param {ServerHooks['transport']} transport
  */
 export function uneval_action_response(data, route_id, transport) {
-	const replacer = (/** @type {any} */ thing) => {
-		for (const key in transport) {
-			const encoded = transport[key].encode(thing);
-			if (encoded) {
-				return `app.decode('${key}', ${devalue.uneval(encoded, replacer)})`;
-			}
-		}
-	};
+	const replacer = create_replacer(transport);
 
 	return try_serialize(data, (value) => devalue.uneval(value, replacer), route_id);
 }
@@ -340,7 +335,8 @@ function try_serialize(data, fn, route_id) {
 		// if someone tries to use `json()` in their action
 		if (data instanceof Response) {
 			throw new Error(
-				`Data returned from action inside ${route_id} is not serializable. Form actions need to return plain objects or fail(). E.g. return { success: true } or return fail(400, { message: "invalid" });`
+				`Data returned from action inside ${route_id} is not serializable. Form actions need to return plain objects or fail(). E.g. return { success: true } or return fail(400, { message: "invalid" });`,
+				{ cause: e }
 			);
 		}
 
@@ -348,7 +344,7 @@ function try_serialize(data, fn, route_id) {
 		if ('path' in error) {
 			let message = `Data returned from action inside ${route_id} is not serializable: ${error.message}`;
 			if (error.path !== '') message += ` (data.${error.path})`;
-			throw new Error(message);
+			throw new Error(message, { cause: e });
 		}
 
 		throw error;

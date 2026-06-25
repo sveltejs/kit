@@ -1,3 +1,6 @@
+import * as set_cookie_parser from 'set-cookie-parser';
+import { BINARY_FORM_CONTENT_TYPE } from '../runtime/form-utils.js';
+
 /**
  * Given an Accept header and a list of possible content types, pick
  * the most suitable one to respond with
@@ -55,6 +58,26 @@ export function negotiate(accept, types) {
 }
 
 /**
+ * Reads all `Set-Cookie` headers as separate values. `Headers.get('set-cookie')`
+ * collapses them into a single comma-joined string that browsers cannot parse, so
+ * we use `Headers.getSetCookie()` where available and fall back to splitting the
+ * joined string otherwise.
+ *
+ * TODO 3.0 `getSetCookie` is available in Node 19.7+; once we drop support for
+ * older versions we can use it directly and remove the `splitCookiesString` fallback
+ * @param {Headers} headers
+ * @returns {string[]}
+ */
+export function get_set_cookies(headers) {
+	if (typeof headers.getSetCookie === 'function') {
+		return headers.getSetCookie();
+	}
+
+	const set_cookie = headers.get('set-cookie');
+	return set_cookie ? set_cookie_parser.splitCookiesString(set_cookie) : [];
+}
+
+/**
  * Returns `true` if the request contains a `content-type` header with the given type
  * @param {Request} request
  * @param  {...string} types
@@ -74,6 +97,7 @@ export function is_form_content_type(request) {
 		request,
 		'application/x-www-form-urlencoded',
 		'multipart/form-data',
-		'text/plain'
+		'text/plain',
+		BINARY_FORM_CONTENT_TYPE
 	);
 }

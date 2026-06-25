@@ -1,5 +1,53 @@
 # @sveltejs/adapter-cloudflare
 
+## 7.2.9
+### Patch Changes
+
+
+- fix: avoid type collision with user defined `App.Platform` `env` property ([#16043](https://github.com/sveltejs/kit/pull/16043))
+
+- Updated dependencies [[`80cc084`](https://github.com/sveltejs/kit/commit/80cc0844916f9f80cb91272b3dd8a82a24c7c104), [`cc68acb`](https://github.com/sveltejs/kit/commit/cc68acb816e5a6da9e171d0469e3aa37ae70e182), [`d33bc6b`](https://github.com/sveltejs/kit/commit/d33bc6bc40e6e0977890fbbff4be017582332e43), [`f3f0c94`](https://github.com/sveltejs/kit/commit/f3f0c9428be70ea26621f4045cc9676d2819e34b), [`5ced880`](https://github.com/sveltejs/kit/commit/5ced880ac9fc151aaa376e3ef2cdcfcac4120e7b), [`a34e663`](https://github.com/sveltejs/kit/commit/a34e66369023d7e2d441f43991e1845c17c71ccf), [`ab190ae`](https://github.com/sveltejs/kit/commit/ab190aeed3b7ed586c2b21e7c5213e74f042f856), [`7751d60`](https://github.com/sveltejs/kit/commit/7751d60c3929a3e57431c48833544b3a4167c3c1), [`1cfc838`](https://github.com/sveltejs/kit/commit/1cfc83883fff1aa9e5de4b71ac6836061754f841), [`c3b2c34`](https://github.com/sveltejs/kit/commit/c3b2c34d414d6ca3e1e610ecbe89c690c32d3a07), [`82bcb7d`](https://github.com/sveltejs/kit/commit/82bcb7d8852a0187b1811024b491de6cdedcd548)]:
+  - @sveltejs/kit@2.65.2
+
+## 7.2.8
+### Patch Changes
+
+
+- fix: skip comment lines in `_redirects` file ([#15325](https://github.com/sveltejs/kit/pull/15325))
+
+- Updated dependencies [[`e87efba`](https://github.com/sveltejs/kit/commit/e87efba90aeb04227e6a1a5e9017989e7f1c78dc), [`71ddbc7`](https://github.com/sveltejs/kit/commit/71ddbc7ff19a612cfcd483f3b7ba58586372528b), [`1bae374`](https://github.com/sveltejs/kit/commit/1bae374e2e106eb82502afd1ddf0167d66f224a1), [`20dfadf`](https://github.com/sveltejs/kit/commit/20dfadfbef312b4e750318aa871aebbfcb4396a4), [`8c2384a`](https://github.com/sveltejs/kit/commit/8c2384a346825d54eb4281f9da854388fb4d81b3)]:
+  - @sveltejs/kit@2.52.1
+
+## 7.2.7
+### Patch Changes
+
+
+- fix: error if `_routes.json` is in the `/static` public directory ([#12821](https://github.com/sveltejs/kit/pull/12821))
+
+
+- fix: correctly handle pathnames found in the `_redirects` file ([#12821](https://github.com/sveltejs/kit/pull/12821))
+
+- Updated dependencies [[`37293a5`](https://github.com/sveltejs/kit/commit/37293a5c913b014e823bc823f2c8c6da38b88d6e), [`5d05ca6`](https://github.com/sveltejs/kit/commit/5d05ca6f606cf68417e4ed1ccb68cd77383f1f0f), [`ed69b77`](https://github.com/sveltejs/kit/commit/ed69b77cf9ef1af088008ff559f8de2e2a2f6bf4), [`b1fc959`](https://github.com/sveltejs/kit/commit/b1fc95966e0aeee689fdae71fa488c34b4806303), [`159aece`](https://github.com/sveltejs/kit/commit/159aece0654db020f95bc414f6a21f25fbc5f22f), [`c690579`](https://github.com/sveltejs/kit/commit/c690579620e131cd077ded0bc8e55090d3681d35), [`dc8cf2d`](https://github.com/sveltejs/kit/commit/dc8cf2defa71dd987437895eb89587c724f6e9bb), [`ace2116`](https://github.com/sveltejs/kit/commit/ace2116d95e13293dbc1e26b5b7d780202fd02dd), [`0f38f49`](https://github.com/sveltejs/kit/commit/0f38f498e0e7052db7b8cfe9ea892e7882a67b66)]:
+  - @sveltejs/kit@2.51.0
+
+## 7.2.6
+### Patch Changes
+
+
+- fix: ensure manifest paths are relative when building worker ([#15163](https://github.com/sveltejs/kit/pull/15163))
+
+- Updated dependencies [[`46c1ebd`](https://github.com/sveltejs/kit/commit/46c1ebd9f662f0de499e921bfee2661316449e9d), [`2dd74c8`](https://github.com/sveltejs/kit/commit/2dd74c8c86ae4855c3e9d74d8cf241e86dcd5b36), [`8871b54`](https://github.com/sveltejs/kit/commit/8871b5444413d0c7d7ef4d260996c3b5c359d0b8)]:
+  - @sveltejs/kit@2.50.1
+
+## 7.2.5
+### Patch Changes
+
+
+- fix: await `init` on every request to prevent race condition ([#15161](https://github.com/sveltejs/kit/pull/15161))
+
+- Updated dependencies [[`81cd545`](https://github.com/sveltejs/kit/commit/81cd545dd78b60ee994a04d8abacb58bf63584d7), [`d9ae9b0`](https://github.com/sveltejs/kit/commit/d9ae9b00b14f5574d109f3fd548f960594346226), [`8ed8155`](https://github.com/sveltejs/kit/commit/8ed8155215b9a74012fecffb942ad9a793b274e5)]:
+  - @sveltejs/kit@2.49.5
+
 ## 7.2.4
 ### Patch Changes
 

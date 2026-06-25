@@ -177,6 +177,10 @@ Cookie-based skew protection comes with one caveat: if a user has multiple versi
 
 ## Notes
 
+### Vercel utilities
+
+If you need Vercel-specific utilities like `waitUntil`, use the package [`@vercel/functions`](https://vercel.com/docs/functions/functions-api-reference/vercel-functions-package).
+
 ### Vercel functions
 
 If you have Vercel functions contained in the `api` directory at the project's root, any requests for `/api/*` will _not_ be handled by SvelteKit. You should implement these as [API routes](routing#server) in your SvelteKit app instead, unless you need to use a non-JavaScript language in which case you will need to ensure that you don't have any `/api/*` routes in your SvelteKit app.

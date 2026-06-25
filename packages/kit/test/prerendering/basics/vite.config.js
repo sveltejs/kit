@@ -1,7 +1,7 @@
 import * as path from 'node:path';
 import { sveltekit } from '@sveltejs/kit/vite';
 
-/** @type {import('vitest/config').UserConfig} */
+/** @type {import('vitest/config').ViteUserConfig} */
 const config = {
 	build: {
 		minify: false

@@ -1,5 +1,6 @@
 import * as path from 'node:path';
 import { sveltekit } from '@sveltejs/kit/vite';
+import { playwright } from '@vitest/browser-playwright';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
@@ -25,15 +26,13 @@ export default defineConfig({
 				extends: './vite.config.js',
 				test: {
 					name: 'client',
-					environment: 'browser',
 					browser: {
 						enabled: true,
-						provider: 'playwright',
+						provider: playwright(),
 						instances: [{ browser: 'chromium' }],
 						headless: true
 					},
-					include: ['unit-test/**/*.spec.js'],
-					setupFiles: ['./vitest-setup-client.ts']
+					include: ['unit-test/**/*.spec.js']
 				}
 			}
 		]

@@ -113,7 +113,7 @@ for (const dir of fs.readdirSync(join(__dirname, 'errors'))) {
 				// 	break;
 
 				default:
-					throw new Error('All error test must be handled');
+					throw new Error('All error test must be handled', { cause: error });
 			}
 		} finally {
 			rimraf(output);
@@ -133,6 +133,10 @@ test('create package with typescript using esnext', async () => {
 
 test('create package with typescript using nodenext', async () => {
 	await test_make_package('typescript-nodenext');
+});
+
+test('create package with .ts extension rewrites, including for aliases', async () => {
+	await test_make_package('typescript-ts-extension-rewrites');
 });
 
 // only run this test in newer Node versions

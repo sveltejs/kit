@@ -1,5 +1,11 @@
 # @sveltejs/adapter-auto
 
+## 7.0.1
+### Patch Changes
+
+
+- feat: update adapter-netlify to version 6 ([`77ab341`](https://github.com/sveltejs/kit/commit/77ab3414d548c79bf106408881c397c6039ee885))
+
 ## 7.0.0
 ### Major Changes
 

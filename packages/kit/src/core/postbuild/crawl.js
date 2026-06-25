@@ -1,4 +1,4 @@
-import { resolve } from '../../utils/url.js';
+import { resolve, decode_uri } from '../../utils/url.js';
 import { decode } from './entities.js';
 
 const DOCTYPE = 'DOCTYPE';
@@ -37,6 +37,18 @@ export function crawl(html, base) {
 
 	/** @type {string[]} */
 	const hrefs = [];
+
+	/** @type {string[]} */
+	const invalid = [];
+
+	/** @param {string} url */
+	const push_href = (url) => {
+		try {
+			hrefs.push(resolve(base, url));
+		} catch {
+			invalid.push(url);
+		}
+	};
 
 	let i = 0;
 	main: while (i < html.length) {
@@ -186,22 +198,26 @@ export function crawl(html, base) {
 
 				if (href) {
 					if (tag === 'BASE') {
-						base = resolve(base, href);
+						try {
+							base = resolve(base, href);
+						} catch {
+							invalid.push(href);
+						}
 					} else if (!rel || !/\bexternal\b/i.test(rel)) {
-						hrefs.push(resolve(base, href));
+						push_href(href);
 					}
 				}
 
 				if (id) {
-					ids.push(id);
+					ids.push(decode_uri(id));
 				}
 
 				if (name && tag === 'A') {
-					ids.push(name);
+					ids.push(decode_uri(name));
 				}
 
 				if (src) {
-					hrefs.push(resolve(base, src));
+					push_href(src);
 				}
 
 				if (srcset) {
@@ -222,7 +238,7 @@ export function crawl(html, base) {
 					candidates.push(value);
 					for (const candidate of candidates) {
 						const src = candidate.split(WHITESPACE)[0];
-						if (src) hrefs.push(resolve(base, src));
+						if (src) push_href(src);
 					}
 				}
 
@@ -230,7 +246,7 @@ export function crawl(html, base) {
 					const attr = name ?? property;
 
 					if (attr && CRAWLABLE_META_NAME_ATTRS.has(attr)) {
-						hrefs.push(resolve(base, content));
+						push_href(content);
 					}
 				}
 			}
@@ -239,5 +255,5 @@ export function crawl(html, base) {
 		i += 1;
 	}
 
-	return { ids, hrefs };
+	return { ids, hrefs, invalid };
 }

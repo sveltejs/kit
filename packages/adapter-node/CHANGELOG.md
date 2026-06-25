@@ -1,5 +1,86 @@
 # @sveltejs/adapter-node
 
+## 5.5.7
+### Patch Changes
+
+
+- fix: add `X-Accel-Buffering: no` header to `text/event-stream` responses to prevent reverse proxies such as nginx from buffering streamed responses ([#16156](https://github.com/sveltejs/kit/pull/16156))
+
+
+- fix: delete existing socket file on startup ([#15449](https://github.com/sveltejs/kit/pull/15449))
+
+- Updated dependencies [[`c426c6e`](https://github.com/sveltejs/kit/commit/c426c6ede7ecd895f7808f2e434d7e8aa5062198), [`81f253e`](https://github.com/sveltejs/kit/commit/81f253eec901101ccbd59befe6aa23a244988476), [`8d3c865`](https://github.com/sveltejs/kit/commit/8d3c8653ff129ae57f69e957bc0b3a94f18a9e2d), [`6bde3b6`](https://github.com/sveltejs/kit/commit/6bde3b697778ef7f8ea4a1293ce3cbe3b8316dda), [`9161740`](https://github.com/sveltejs/kit/commit/9161740c0e4dc61e29d40ca95235639a0ce759c4), [`2184960`](https://github.com/sveltejs/kit/commit/21849601f5b3b552ee0c5628a5d39625c44ba7b9), [`5e319b6`](https://github.com/sveltejs/kit/commit/5e319b6892d584fa3c4dacbd212b51927c50a9dc), [`e82a0a8`](https://github.com/sveltejs/kit/commit/e82a0a8dd19defbe4ad11e36543c17a025004280)]:
+  - @sveltejs/kit@2.68.0
+
+## 5.5.6
+### Patch Changes
+
+
+- fix: avoid circular dependency between server initialisation and hook retrieval that causes the app to crash on start ([#16115](https://github.com/sveltejs/kit/pull/16115))
+
+
+- fix: correctly resolve root directory on the server ([#16114](https://github.com/sveltejs/kit/pull/16114))
+
+
+- fix: ensure `ENV_PREFIX` is defined ([#16106](https://github.com/sveltejs/kit/pull/16106))
+
+- Updated dependencies [[`cf15fa0`](https://github.com/sveltejs/kit/commit/cf15fa0f695f6059214bd3fa2c9b18a1f49efb20), [`5c76121`](https://github.com/sveltejs/kit/commit/5c76121be6e4bd7265d31b5821decebb372c3b75), [`2992e17`](https://github.com/sveltejs/kit/commit/2992e172bccd57bc137667c57e98e6710512d844)]:
+  - @sveltejs/kit@2.67.0
+
+## 5.5.5
+### Patch Changes
+
+
+- fix: bundle entrypoints alongside app code ([#16069](https://github.com/sveltejs/kit/pull/16069))
+
+
+- fix: log the actual adapter-node listening address ([#15899](https://github.com/sveltejs/kit/pull/15899))
+
+- Updated dependencies [[`63f1b0b`](https://github.com/sveltejs/kit/commit/63f1b0bd0ee2d16ef0c4d1f5bef35afd54d0304a), [`1dbff3f`](https://github.com/sveltejs/kit/commit/1dbff3fec2a335242af8b556c36513dbf9602ea5), [`961ba01`](https://github.com/sveltejs/kit/commit/961ba015ff4f69b954bcb7512a05ccd5ea180eb4), [`d2e108c`](https://github.com/sveltejs/kit/commit/d2e108c13925559c3433b9b46a71174a0f271253), [`d2e108c`](https://github.com/sveltejs/kit/commit/d2e108c13925559c3433b9b46a71174a0f271253), [`d2e108c`](https://github.com/sveltejs/kit/commit/d2e108c13925559c3433b9b46a71174a0f271253), [`860b3c7`](https://github.com/sveltejs/kit/commit/860b3c7d5f52b02fdd07d95305dfdb93357e0ead), [`f8c842c`](https://github.com/sveltejs/kit/commit/f8c842cb8bfb13235bfd6c44f913d51e9e2d70d6), [`d3aa5fe`](https://github.com/sveltejs/kit/commit/d3aa5fe9bdb8fd6bdf0dd75d4575fbcfa37fc560), [`0dd7659`](https://github.com/sveltejs/kit/commit/0dd7659d943e7e635947aed9e96c639e8167b1fb), [`03e9f66`](https://github.com/sveltejs/kit/commit/03e9f660edf026654d65b257d509d4ab190e6f7e), [`57b7b7b`](https://github.com/sveltejs/kit/commit/57b7b7b4f79283b36832450d8476a83cff007526), [`4eabadc`](https://github.com/sveltejs/kit/commit/4eabadca61440dfda690cdd4e8eeb0723fb94258), [`6fbf2b6`](https://github.com/sveltejs/kit/commit/6fbf2b64843123ac2676b04d56085d4c118a91b4), [`276744d`](https://github.com/sveltejs/kit/commit/276744da6585d743d720e8cbaa476bd67ac0fb48), [`8740132`](https://github.com/sveltejs/kit/commit/8740132952c2f7d908b4f1e795f942ad079895be), [`f430a68`](https://github.com/sveltejs/kit/commit/f430a68937744212d2b1bd0ee920cc89cc6f696f), [`1c7a8dc`](https://github.com/sveltejs/kit/commit/1c7a8dca3216b42ff4f69a712e794a485de4d4ee)]:
+  - @sveltejs/kit@2.66.0
+
+## 5.5.4
+### Patch Changes
+
+
+- chore(deps): bump rollup to 4.59.0 ([#15433](https://github.com/sveltejs/kit/pull/15433))
+
+## 5.5.3
+### Patch Changes
+
+
+- fix: validate `ORIGIN` env var at startup ([#15045](https://github.com/sveltejs/kit/pull/15045))
+
+
+- chore(deps): update dependency `@rollup/plugin-commonjs` to v29 ([#14856](https://github.com/sveltejs/kit/pull/14856))
+
+- Updated dependencies [[`37293a5`](https://github.com/sveltejs/kit/commit/37293a5c913b014e823bc823f2c8c6da38b88d6e), [`5d05ca6`](https://github.com/sveltejs/kit/commit/5d05ca6f606cf68417e4ed1ccb68cd77383f1f0f), [`ed69b77`](https://github.com/sveltejs/kit/commit/ed69b77cf9ef1af088008ff559f8de2e2a2f6bf4), [`b1fc959`](https://github.com/sveltejs/kit/commit/b1fc95966e0aeee689fdae71fa488c34b4806303), [`159aece`](https://github.com/sveltejs/kit/commit/159aece0654db020f95bc414f6a21f25fbc5f22f), [`c690579`](https://github.com/sveltejs/kit/commit/c690579620e131cd077ded0bc8e55090d3681d35), [`dc8cf2d`](https://github.com/sveltejs/kit/commit/dc8cf2defa71dd987437895eb89587c724f6e9bb), [`ace2116`](https://github.com/sveltejs/kit/commit/ace2116d95e13293dbc1e26b5b7d780202fd02dd), [`0f38f49`](https://github.com/sveltejs/kit/commit/0f38f498e0e7052db7b8cfe9ea892e7882a67b66)]:
+  - @sveltejs/kit@2.51.0
+
+## 5.5.2
+### Patch Changes
+
+
+- fix: disable gzip and brotli when precompress=false ([#15182](https://github.com/sveltejs/kit/pull/15182))
+
+- Updated dependencies [[`46c1ebd`](https://github.com/sveltejs/kit/commit/46c1ebd9f662f0de499e921bfee2661316449e9d), [`2dd74c8`](https://github.com/sveltejs/kit/commit/2dd74c8c86ae4855c3e9d74d8cf241e86dcd5b36), [`8871b54`](https://github.com/sveltejs/kit/commit/8871b5444413d0c7d7ef4d260996c3b5c359d0b8)]:
+  - @sveltejs/kit@2.50.1
+
+## 5.5.1
+### Patch Changes
+
+
+- fix: add validations for protocol, host, and port header values ([`d9ae9b0`](https://github.com/sveltejs/kit/commit/d9ae9b00b14f5574d109f3fd548f960594346226))
+
+- Updated dependencies [[`81cd545`](https://github.com/sveltejs/kit/commit/81cd545dd78b60ee994a04d8abacb58bf63584d7), [`d9ae9b0`](https://github.com/sveltejs/kit/commit/d9ae9b00b14f5574d109f3fd548f960594346226), [`8ed8155`](https://github.com/sveltejs/kit/commit/8ed8155215b9a74012fecffb942ad9a793b274e5)]:
+  - @sveltejs/kit@2.49.5
+
+## 5.5.0
+### Minor Changes
+
+
+- feat: add env vars for keepAliveTimeout and headersTimeout ([#15125](https://github.com/sveltejs/kit/pull/15125))
+
 ## 5.4.0
 ### Minor Changes
 

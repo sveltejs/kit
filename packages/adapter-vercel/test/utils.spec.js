@@ -1,8 +1,10 @@
 import { assert, test, describe } from 'vitest';
-import { get_pathname, parse_isr_expiration, pattern_to_src } from '../utils.js';
+import { get_pathname, parse_isr_expiration, pattern_to_src, resolve_runtime } from '../utils.js';
 
 // workaround so that TypeScript doesn't follow that import which makes it pick up that file and then error on missing import aliases
-const { parse_route_id } = await import('../../kit/src/' + 'utils/routing.js');
+const { parse_route_id } = await import(
+	new URL('../../kit/src/' + 'utils/routing.js', import.meta.url).href
+);
 
 /**
  * @param {import('@sveltejs/kit').RouteDefinition<any>['segments']} segments
@@ -169,5 +171,21 @@ describe('parse_isr_expiration', () => {
 			() => parse_isr_expiration('1.1', '/isr'),
 			/value was a string but could not be parsed as an integer, in \/isr/
 		);
+	});
+});
+
+describe('resolve_runtime', () => {
+	test('prefers override_key over default_key', () => {
+		const result = resolve_runtime('nodejs20.x', 'experimental_bun1.x');
+		assert.equal(result, 'bun1.x');
+	});
+
+	test('uses default_key when override_key is undefined', () => {
+		const result = resolve_runtime('experimental_bun1.x');
+		assert.equal(result, 'bun1.x');
+	});
+
+	test('throws an error when resolving to an invalid runtime', () => {
+		assert.throws(() => resolve_runtime('node18.x', undefined), /Unsupported runtime: node18.x/);
 	});
 });
