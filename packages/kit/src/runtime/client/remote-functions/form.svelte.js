@@ -18,7 +18,8 @@ import {
 	build_path_string,
 	normalize_issue,
 	serialize_binary_form,
-	BINARY_FORM_CONTENT_TYPE
+	BINARY_FORM_CONTENT_TYPE,
+	split_path
 } from '../../form-utils.js';
 
 /**
@@ -104,6 +105,9 @@ export function form(id) {
 
 		/** @type {Record<string, boolean>} */
 		let touched = {};
+
+		/** @type {WeakSet<HTMLInputElement | HTMLTextAreaElement>} */
+		let user_edited_text_controls = new WeakSet();
 
 		let submitted = false;
 
@@ -372,6 +376,7 @@ export function form(id) {
 			element = form;
 
 			touched = {};
+			user_edited_text_controls = new WeakSet();
 
 			/** @param {SubmitEvent} event */
 			const handle_submit = async (event) => {
@@ -399,6 +404,34 @@ export function form(id) {
 
 				if (target === '_blank') {
 					return;
+				}
+
+				const no_validate = clone(form).noValidate; // respects <form novalidate>
+				const submitter_no_validate =
+					event.submitter &&
+					/** @type {HTMLButtonElement | HTMLInputElement} */ (event.submitter).hasAttribute(
+						'formnovalidate'
+					);
+
+				if (!no_validate && !submitter_no_validate) {
+					// reportValidity() triggers browser UI; returns false if invalid (minlength/maxlength/pattern/etc.)
+					if (!form.reportValidity()) {
+						event.preventDefault();
+						return;
+					}
+
+					const invalid_length_control = get_invalid_length_control(
+						form,
+						user_edited_text_controls
+					);
+					if (invalid_length_control) {
+						event.preventDefault();
+						// Browser validity can miss minlength/maxlength after a user edit if the
+						// value is later reapplied programmatically. Focus the control so the submit
+						// does not silently disappear when no native message is available.
+						invalid_length_control.focus();
+						return;
+					}
 				}
 
 				event.preventDefault();
@@ -455,9 +488,20 @@ export function form(id) {
 
 			/** @param {Event} e */
 			const handle_input = (e) => {
-				// strictly speaking it can be an HTMLTextAreaElement or HTMLSelectElement
-				// but that makes the types unnecessarily awkward
-				const element = /** @type {HTMLInputElement} */ (e.target);
+				const element = e.target;
+				if (
+					!(
+						element instanceof HTMLInputElement ||
+						element instanceof HTMLTextAreaElement ||
+						element instanceof HTMLSelectElement
+					)
+				) {
+					return;
+				}
+
+				if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) {
+					user_edited_text_controls.add(element);
+				}
 
 				let name = element.name;
 				if (!name) return;
@@ -472,7 +516,7 @@ export function form(id) {
 				if (is_array) {
 					let value;
 
-					if (element.tagName === 'SELECT') {
+					if (element instanceof HTMLSelectElement) {
 						value = Array.from(
 							element.querySelectorAll('option:checked'),
 							(e) => /** @type {HTMLOptionElement} */ (e).value
@@ -502,13 +546,16 @@ export function form(id) {
 
 					set_nested_value(input, name, value);
 				} else if (is_file) {
-					if (DEV && element.multiple) {
+					const input_element = /** @type {HTMLInputElement} */ (element);
+
+					if (DEV && input_element.multiple) {
 						throw new Error(
 							`Can only use the \`multiple\` attribute when \`name\` includes a \`[]\` suffix — consider changing "${name}" to "${name}[]"`
 						);
 					}
 
-					const file = /** @type {HTMLInputElement & { files: FileList }} */ (element).files[0];
+					const file = /** @type {HTMLInputElement & { files: FileList }} */ (input_element)
+						.files[0];
 
 					if (file) {
 						set_nested_value(input, name, file);
@@ -526,7 +573,9 @@ export function form(id) {
 					set_nested_value(
 						input,
 						name,
-						element.type === 'checkbox' && !element.checked ? null : element.value
+						element instanceof HTMLInputElement && element.type === 'checkbox' && !element.checked
+							? null
+							: element.value
 					);
 				}
 
@@ -541,6 +590,7 @@ export function form(id) {
 				await tick();
 
 				input = convert_formdata(new FormData(form));
+				user_edited_text_controls = new WeakSet();
 			};
 
 			form.addEventListener('submit', handle_submit);
@@ -612,11 +662,13 @@ export function form(id) {
 						(path, value) => {
 							if (path.length === 0) {
 								input = value;
+								clear_user_edited_text_controls(element, user_edited_text_controls);
 							} else {
 								deep_set(input, path.map(String), value);
 
 								const key = build_path_string(path);
 								touched[key] = true;
+								clear_user_edited_text_controls(element, user_edited_text_controls, key);
 							}
 						},
 						(path, all) => {
@@ -669,8 +721,16 @@ export function form(id) {
 
 					/** @type {InternalRemoteFormIssue[]} */
 					let array = [];
+					let is_server_validation = false;
 
 					const data = convert(form_data);
+					const html_constraint_issues = get_html_constraint_issues(element, {
+						include_untouched: includeUntouched,
+						submitted,
+						touched,
+						user_edited_text_controls
+					});
+
 					const schema = preflight_schema ?? shared_preflight_schema;
 					const validated = await schema?.['~standard'].validate(data);
 
@@ -680,7 +740,7 @@ export function form(id) {
 
 					if (validated?.issues) {
 						array = validated.issues.map((issue) => normalize_issue(issue, false));
-					} else if (!preflightOnly) {
+					} else if (!preflightOnly && html_constraint_issues.length === 0) {
 						const result = await remote_request(
 							`${base}/${app_dir}/remote/${action_id_without_key}`,
 							{
@@ -702,13 +762,24 @@ export function form(id) {
 						}
 
 						array = /** @type {InternalRemoteFormIssue[]} */ (result._);
+
+						is_server_validation = true;
+					}
+
+					if (html_constraint_issues.length > 0) {
+						const html_constraint_names = new Set(
+							html_constraint_issues.map((issue) => issue.name)
+						);
+
+						array = [
+							...array.filter((issue) => !html_constraint_names.has(issue.name)),
+							...html_constraint_issues
+						];
 					}
 
 					if (!includeUntouched && !submitted) {
 						array = array.filter((issue) => touched[issue.name]);
 					}
-
-					const is_server_validation = !validated?.issues && !preflightOnly;
 
 					raw_issues = is_server_validation
 						? array
@@ -771,6 +842,148 @@ export function form(id) {
  */
 function clone(element) {
 	return /** @type {T} */ (HTMLElement.prototype.cloneNode.call(element));
+}
+
+/**
+ * In some cases programmatic value updates can bypass minlength/maxlength checks during submit.
+ * Re-check text controls whose current value still came from direct user input.
+ * @param {HTMLFormElement} form
+ * @param {WeakSet<HTMLInputElement | HTMLTextAreaElement>} user_edited_text_controls
+ */
+function get_invalid_length_control(form, user_edited_text_controls) {
+	for (const element of form.elements) {
+		if (!(element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement)) continue;
+		if (!element.willValidate || element.disabled || !element.name) continue;
+		if (!user_edited_text_controls.has(element)) continue;
+
+		if (has_invalid_length(element)) return element;
+	}
+
+	return null;
+}
+
+/**
+ * @param {HTMLInputElement | HTMLTextAreaElement} element
+ */
+function has_invalid_length(element) {
+	const value = element.value;
+	const min_length = element.minLength;
+	const max_length = element.maxLength;
+
+	if (value.length > 0 && min_length > -1 && value.length < min_length) return true;
+	if (max_length > -1 && value.length > max_length) return true;
+	return false;
+}
+
+/**
+ * @param {HTMLFormElement} form
+ * @param {{
+ *   include_untouched: boolean,
+ *   submitted: boolean,
+ *   touched: Record<string, boolean>,
+ *   user_edited_text_controls: WeakSet<HTMLInputElement | HTMLTextAreaElement>
+ * }} options
+ * @returns {InternalRemoteFormIssue[]}
+ */
+function get_html_constraint_issues(form, options) {
+	/** @type {InternalRemoteFormIssue[]} */
+	const issues = [];
+	// eslint-disable-next-line svelte/prefer-svelte-reactivity
+	const seen = new Set();
+
+	for (const element of form.elements) {
+		if (
+			!(
+				element instanceof HTMLInputElement ||
+				element instanceof HTMLTextAreaElement ||
+				element instanceof HTMLSelectElement
+			)
+		) {
+			continue;
+		}
+
+		if (!element.willValidate || element.disabled || !element.name) continue;
+
+		const name = normalize_control_name(element.name);
+		const dedupe_key =
+			element instanceof HTMLInputElement && element.type === 'radio' ? `radio:${name}` : null;
+		if (dedupe_key && seen.has(dedupe_key)) continue;
+		if (!options.include_untouched && !options.submitted && !options.touched[name]) continue;
+		const invalid_length =
+			(element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) &&
+			options.user_edited_text_controls.has(element) &&
+			has_invalid_length(element);
+		if (!invalid_length && element.checkValidity()) continue;
+
+		const parsed = parse_issue_path(name);
+		if (!parsed) continue;
+
+		issues.push({
+			name: parsed.name,
+			path: parsed.path,
+			message: element.validationMessage || 'Invalid value',
+			server: false
+		});
+
+		if (dedupe_key) {
+			seen.add(dedupe_key);
+		}
+	}
+
+	return issues;
+}
+
+/**
+ * @param {HTMLFormElement | null} form
+ * @param {WeakSet<HTMLInputElement | HTMLTextAreaElement>} user_edited_text_controls
+ * @param {string | null} [path]
+ */
+function clear_user_edited_text_controls(form, user_edited_text_controls, path = null) {
+	if (!form) return;
+
+	for (const element of form.elements) {
+		if (!(element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement)) {
+			continue;
+		}
+
+		if (path !== null) {
+			const name = normalize_control_name(element.name);
+			if (!matches_path(name, path)) continue;
+		}
+
+		user_edited_text_controls.delete(element);
+	}
+}
+
+/**
+ * @param {string} name
+ */
+function normalize_control_name(name) {
+	if (name.endsWith('[]')) name = name.slice(0, -2);
+	return name.replace(/^[nb]:/, '');
+}
+
+/**
+ * @param {string} name
+ * @returns {{ name: string, path: Array<string | number> } | null}
+ */
+function parse_issue_path(name) {
+	try {
+		return {
+			name,
+			path: split_path(name).map((segment) => (/^\d+$/.test(segment) ? Number(segment) : segment))
+		};
+	} catch {
+		return null;
+	}
+}
+
+/**
+ * @param {string} name
+ * @param {string} path
+ */
+function matches_path(name, path) {
+	return name === path || name.startsWith(path + '.') || name.startsWith(path + '[');
 }
 
 /**
