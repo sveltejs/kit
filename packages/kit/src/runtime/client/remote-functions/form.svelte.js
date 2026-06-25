@@ -467,8 +467,6 @@ export function form(id) {
 
 				const is_file = element.type === 'file';
 
-				touched[name] = true;
-
 				if (is_array) {
 					let value;
 
