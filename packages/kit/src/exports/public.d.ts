@@ -2012,6 +2012,10 @@ type RemoteFormFieldMethods<T> = {
 	value(): DeepPartial<T>;
 	/** Set the values that will be submitted */
 	set(input: DeepPartial<T>): DeepPartial<T>;
+	/** Whether the field or any nested field has been interacted with since the form was mounted */
+	touched(): boolean;
+	/** Whether the field or any nested field has been edited with since the form was mounted */
+	dirty(): boolean;
 	/** Validation issues, if any */
 	issues(): RemoteFormIssue[] | undefined;
 };
@@ -2230,8 +2234,12 @@ export type RemoteForm<Input extends RemoteFormInput | void, Output> = {
 	preflight(schema: StandardSchemaV1<Input, any>): RemoteForm<Input, Output>;
 	/** Validate the form contents programmatically */
 	validate(options?: {
-		/** Set this to `true` to also show validation issues of fields that haven't been touched yet. */
-		includeUntouched?: boolean;
+		/**
+		 * Set this to `true` to also show validation issues of fields that haven't yet been
+		 * edited and blurred. This option is ignored for forms that have previously been
+		 * submitted, in which case all fields are always subject to validation
+		 */
+		all?: boolean;
 		/** Set this to `true` to only run the `preflight` validation. */
 		preflightOnly?: boolean;
 	}): Promise<void>;

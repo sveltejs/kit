@@ -1985,6 +1985,10 @@ declare module '@sveltejs/kit' {
 		value(): DeepPartial<T>;
 		/** Set the values that will be submitted */
 		set(input: DeepPartial<T>): DeepPartial<T>;
+		/** Whether the field or any nested field has been interacted with since the form was mounted */
+		touched(): boolean;
+		/** Whether the field or any nested field has been edited with since the form was mounted */
+		dirty(): boolean;
 		/** Validation issues, if any */
 		issues(): RemoteFormIssue[] | undefined;
 	};
