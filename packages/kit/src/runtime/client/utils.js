@@ -1,6 +1,6 @@
 import { BROWSER, DEV } from 'esm-env';
 import { writable } from 'svelte/store';
-import { assets } from '$app/paths';
+import { assets } from '$app/paths/internal/client';
 import { version } from '$app/env';
 import { noop } from '../../utils/functions.js';
 import { PRELOAD_PRIORITIES } from './constants.js';

@@ -140,6 +140,7 @@ export function process_config(config, { cwd = process.cwd() } = {}) {
 		const validated = validate_config(config, cwd);
 
 		validated.kit.outDir = path.resolve(cwd, validated.kit.outDir);
+		validated.kit.env.dir = path.resolve(cwd, validated.kit.env.dir);
 
 		for (const key in validated.kit.files) {
 			if (key === 'hooks') {

@@ -106,12 +106,18 @@ test.describe('remote functions', () => {
 			await expect(page.getByText('message.current:')).toHaveText('message.current: initial');
 		}
 		await expect(page.getByText('await get_message():')).toHaveText('await get_message(): initial');
+		await expect(page.getByText('set_message.submitted:')).toHaveText(
+			'set_message.submitted: false'
+		);
 
 		await page.fill('[data-unscoped] input', 'hello');
 		await page.getByText('set message').click();
 
 		if (javaScriptEnabled) {
 			await expect(page.getByText('set_message.pending:')).toHaveText('set_message.pending: 1');
+			await expect(page.getByText('set_message.submitted:')).toHaveText(
+				'set_message.submitted: true'
+			);
 			await page.getByText('resolve deferreds').click();
 			await expect(page.getByText('set_message.pending:')).toHaveText('set_message.pending: 0');
 			await expect(page.getByText('message.current:')).toHaveText('message.current: hello');
@@ -649,6 +655,33 @@ test.describe('remote functions', () => {
 			{ leaf: 'array-0-leaf' },
 			{ leaf: 'array-1-leaf' }
 		]);
+	});
+
+	test('form.fields.value() returns an immutable snapshot in an enhance callback', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/form/snapshot');
+
+		await page.fill('input[name="a.b.c"]', 'original');
+		await page.getByRole('button', { name: 'submit' }).click();
+
+		// wait until the snapshot has been taken and the submission is in flight
+		await expect(page.locator('#status')).toHaveText('status: submitting');
+
+		// mutate the form state *after* the snapshot was taken
+		await page.fill('input[name="a.b.c"]', 'changed');
+
+		// let the submission complete
+		await page.getByRole('button', { name: 'release' }).click();
+		await expect(page.locator('#status')).toHaveText('status: done');
+
+		// the captured snapshot must not reflect the post-submission change...
+		await expect(page.locator('#captured')).toHaveText('captured: original');
+		// ...while reading the field again reflects the current state
+		await expect(page.locator('#live')).toHaveText('live: changed');
 	});
 
 	test('nested field set is SSR rendered', async ({ page }) => {

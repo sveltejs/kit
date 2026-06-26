@@ -1,7 +1,6 @@
 import { join } from 'node:path';
 import { assert, expect, test } from 'vitest';
 import { validate_config, split_config } from './index.js';
-import process from 'node:process';
 
 /**
  * mutates and remove keys from an object when check callback returns true
@@ -68,7 +67,7 @@ const get_defaults = (prefix = '') => ({
 		},
 		embedded: false,
 		env: {
-			dir: process.cwd()
+			dir: prefix
 		},
 		experimental: {
 			tracing: { server: false },
