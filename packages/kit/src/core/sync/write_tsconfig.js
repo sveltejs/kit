@@ -174,7 +174,7 @@ function validate_user_config(cwd, out, config) {
 				styleText(
 					['bold', 'yellow'],
 					`You have specified a baseUrl and/or paths in your ${config.kind} which interferes with SvelteKit's auto-generated tsconfig.json. ` +
-						'Remove it to avoid problems with intellisense. For path aliases, use `alias` instead: https://svelte.dev/docs/kit/configuration#alias'
+						'Remove it to avoid problems with intellisense. For path aliases, use `config.alias` instead: https://svelte.dev/docs/kit/configuration#alias'
 				)
 			);
 		}
