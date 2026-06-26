@@ -331,6 +331,11 @@ test.describe('Errors', () => {
 		expect(/** @type {Response} */ (response).status()).toBe(555);
 	});
 
+	test('server-side error from load() still has layout data', async ({ page }) => {
+		await page.goto('/errors/load-error-server/layout-data');
+		expect(await page.textContent('#error-layout-data')).toBe('42');
+	});
+
 	test('error in endpoint', async ({ page, read_errors }) => {
 		const res = await page.goto('/errors/endpoint');
 
@@ -598,6 +603,19 @@ test.describe('Redirects', () => {
 		expect(page.url()).toBe(`${baseURL}/redirect`);
 	});
 
+	test('invalid redirect location in handle hook returns 500 without crashing server', async ({
+		request
+	}) => {
+		const bad_redirect = await request.get(
+			'/redirect/in-handle?location=%2Fredirect%2Fc%0D%0Aset-cookie%3A%20evil%3D1'
+		);
+
+		expect(bad_redirect.status()).toBe(500);
+
+		const follow_up = await request.get('/');
+		expect(follow_up.status()).toBe(200);
+	});
+
 	test('sets cookies when redirect in handle hook', async ({ page, app, javaScriptEnabled }) => {
 		await page.goto('/cookies/set');
 		let span = page.locator('#cookie-value');
@@ -782,8 +800,8 @@ test.describe('Routing', () => {
 	test('focus works if page load has hash', async ({ page, browserName }) => {
 		await page.goto('/routing/hashes/target#p2');
 
+		await page.waitForSelector('#p2:focus');
 		await page.keyboard.press(browserName === 'webkit' ? 'Alt+Tab' : 'Tab');
-
 		await page.waitForSelector('button:focus');
 	});
 
@@ -1072,6 +1090,7 @@ test.describe('$app/server', () => {
 
 		const auto = await page.textContent('[data-testid="auto"]');
 		const url = await page.textContent('[data-testid="url"]');
+		const styles = await page.textContent('[data-testid="styles"]');
 		const local_glob = await page.textContent('[data-testid="local_glob"]');
 		const external_glob = await page.textContent('[data-testid="external_glob"]');
 		const svg = await page.innerHTML('[data-testid="svg"]');
@@ -1084,5 +1103,8 @@ test.describe('$app/server', () => {
 			'Imported with url glob from the read-file test in basics. Placed here outside the app folder to force a /@fs prefix 😎'
 		);
 		expect(svg).toContain('<rect width="24" height="24" rx="2" fill="#ff3e00"></rect>');
+
+		// check that paths in .css files are relative
+		expect(styles).toContain('url(.');
 	});
 });

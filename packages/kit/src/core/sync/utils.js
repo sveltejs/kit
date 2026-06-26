@@ -1,10 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { mkdirp } from '../../utils/filesystem.js';
-import { import_peer } from '../../utils/import.js';
-
-/** @type {{ VERSION: string }} */
-const { VERSION } = await import_peer('svelte/compiler');
 
 /** @type {Map<string, string>} */
 const previous_contents = new Map();
@@ -71,8 +67,4 @@ export function dedent(strings, ...values) {
 	str = str.trim();
 
 	return str;
-}
-
-export function isSvelte5Plus() {
-	return Number(VERSION[0]) >= 5;
 }

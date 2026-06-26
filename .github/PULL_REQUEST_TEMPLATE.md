@@ -1,4 +1,6 @@
-<!-- Your PR description here -->
+closes #<!-- Add the related issue number here. Repeat this line for each additional issue it closes -->
+
+<!-- Explain the goal of the PR, why it is needed, and what has been changed to achieve that goal -->
 
 ---
 

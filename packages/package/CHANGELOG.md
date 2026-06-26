@@ -1,5 +1,80 @@
 # @sveltejs/package
 
+## 3.0.0-next.0
+### Major Changes
+
+
+- breaking: require Node 22 or newer ([#12548](https://github.com/sveltejs/kit/pull/12548))
+
+
+### Patch Changes
+
+
+- chore: remove dependency on kleur ([#12548](https://github.com/sveltejs/kit/pull/12548))
+
+## 2.5.8
+### Patch Changes
+
+
+- chore: bump `svelte2tsx` dependency to support TypeScript 6 ([#15896](https://github.com/sveltejs/kit/pull/15896))
+
+## 2.5.7
+### Patch Changes
+
+
+- chore(deps): update dependency chokidar to v5 ([#14986](https://github.com/sveltejs/kit/pull/14986))
+
+## 2.5.6
+### Patch Changes
+
+
+- fix: transform `.ts` extensions to `.js` in import/export statements of Svelte files when using `rewriteRelativeImportExtensions` ([#14936](https://github.com/sveltejs/kit/pull/14936))
+
+## 2.5.5
+### Patch Changes
+
+
+- fix: resolve aliases before transpiling for `rewriteRelativeImportExtensions` ([#14673](https://github.com/sveltejs/kit/pull/14673))
+
+## 2.5.4
+### Patch Changes
+
+
+- fix: resolve more alias issues ([#14514](https://github.com/sveltejs/kit/pull/14514))
+
+## 2.5.3
+### Patch Changes
+
+
+- fix: handle `import/export name, { ... }` when resolving aliases ([#14462](https://github.com/sveltejs/kit/pull/14462))
+
+## 2.5.2
+### Patch Changes
+
+
+- fix: handle `import/export * (as ...)` when resolving aliases ([#14433](https://github.com/sveltejs/kit/pull/14433))
+
+
+- fix: prevent false-positive alias replacement ([#14433](https://github.com/sveltejs/kit/pull/14433))
+
+## 2.5.1
+### Patch Changes
+
+
+- fix: better alias resolution ([#14413](https://github.com/sveltejs/kit/pull/14413))
+
+## 2.5.0
+### Minor Changes
+
+
+- feat: add `--preserve-output` flag to prevent deletion of the output directory before packaging ([#13055](https://github.com/sveltejs/kit/pull/13055))
+
+## 2.4.1
+### Patch Changes
+
+
+- chore: add `.git` to the end of `package.json` repository url ([#14134](https://github.com/sveltejs/kit/pull/14134))
+
 ## 2.4.0
 ### Minor Changes
 

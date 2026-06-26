@@ -1,76 +1,144 @@
-/** @import { RemoteForm } from '@sveltejs/kit' */
-/** @import { RemoteInfo, MaybePromise } from 'types' */
-import { getRequestEvent } from '../event.js';
-import { check_experimental, run_remote_function } from './shared.js';
-import { get_event_state } from '../../../server/event-state.js';
+/** @import { RemoteFormInput, RemoteForm, InvalidField } from '@sveltejs/kit' */
+/** @import { InternalRemoteFormIssue, MaybePromise, HasNonOptionalBoolean, RemoteFormInternals } from 'types' */
+/** @import { StandardSchemaV1 } from '@standard-schema/spec' */
+import { get_request_store } from '@sveltejs/kit/internal/server';
+import {
+	create_field_proxy,
+	set_nested_value,
+	deep_set,
+	normalize_issue,
+	flatten_issues
+} from '../../../form-utils.js';
+import { get_cache, get_implicit_lookup, run_remote_function } from './shared.js';
+import { ValidationError } from '@sveltejs/kit/internal';
 
 /**
  * Creates a form object that can be spread onto a `<form>` element.
  *
  * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
  *
- * @template T
- * @param {(data: FormData) => MaybePromise<T>} fn
- * @returns {RemoteForm<T>}
+ * @template Output
+ * @overload
+ * @param {() => MaybePromise<Output>} fn
+ * @returns {RemoteForm<void, Output>}
+ * @since 2.27
+ */
+/**
+ * Creates a form object that can be spread onto a `<form>` element.
+ *
+ * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
+ *
+ * @template {RemoteFormInput} Input
+ * @template Output
+ * @overload
+ * @param {'unchecked'} validate
+ * @param {(data: Input, issue: InvalidField<Input>) => MaybePromise<Output>} fn
+ * @returns {RemoteForm<Input, Output>}
+ * @since 2.27
+ */
+/**
+ * Creates a form object that can be spread onto a `<form>` element.
+ *
+ * See [Remote functions](https://svelte.dev/docs/kit/remote-functions#form) for full documentation.
+ *
+ * @template {StandardSchemaV1<RemoteFormInput, Record<string, any>>} Schema
+ * @template Output
+ * @overload
+ * @param {true extends HasNonOptionalBoolean<StandardSchemaV1.InferInput<Schema>> ? 'Error: All booleans in form schemas must be optional (e.g. `v.optional(v.boolean(), false)`) because checkbox inputs do not send a false value when unchecked.' : Schema} validate
+ * @param {(data: StandardSchemaV1.InferOutput<Schema>, issue: InvalidField<StandardSchemaV1.InferInput<Schema>>) => MaybePromise<Output>} fn
+ * @returns {RemoteForm<StandardSchemaV1.InferInput<Schema>, Output>}
+ * @since 2.27
+ */
+/**
+ * @template {RemoteFormInput} Input
+ * @template Output
+ * @param {any} validate_or_fn
+ * @param {(data_or_issue: any, issue?: any) => MaybePromise<Output>} [maybe_fn]
+ * @returns {RemoteForm<Input, Output>}
  * @since 2.27
  */
 /*@__NO_SIDE_EFFECTS__*/
 // @ts-ignore we don't want to prefix `fn` with an underscore, as that will be user-visible
-export function form(fn) {
-	check_experimental('form');
+export function form(validate_or_fn, maybe_fn) {
+	/** @type {any} */
+	const fn = maybe_fn ?? validate_or_fn;
+
+	/** @type {StandardSchemaV1 | null} */
+	const schema =
+		!maybe_fn || validate_or_fn === 'unchecked' ? null : /** @type {any} */ (validate_or_fn);
 
 	/**
 	 * @param {string | number | boolean} [key]
 	 */
 	function create_instance(key) {
-		/** @type {RemoteForm<T>} */
+		/** @type {RemoteForm<Input, Output>} */
 		const instance = {};
 
 		instance.method = 'POST';
-		instance.onsubmit = () => {};
 
 		Object.defineProperty(instance, 'enhance', {
 			value: () => {
-				return { action: instance.action, method: instance.method, onsubmit: instance.onsubmit };
+				return { action: instance.action, method: instance.method };
 			}
 		});
 
-		const button_props = {
-			type: 'submit',
-			onclick: () => {}
-		};
-
-		Object.defineProperty(button_props, 'enhance', {
-			value: () => {
-				return { type: 'submit', formaction: instance.buttonProps.formaction, onclick: () => {} };
-			}
-		});
-
-		Object.defineProperty(instance, 'buttonProps', {
-			value: button_props
-		});
-
-		/** @type {RemoteInfo} */
+		/** @type {RemoteFormInternals} */
 		const __ = {
 			type: 'form',
 			name: '',
 			id: '',
-			/** @param {FormData} form_data */
-			fn: async (form_data) => {
-				const event = getRequestEvent();
-				const state = get_event_state(event);
+			fn: async (data, meta, form_data) => {
+				/** @type {{ submission: true, input?: Record<string, any>, issues?: InternalRemoteFormIssue[], result: Output }} */
+				const output = {};
 
-				state.refreshes ??= {};
+				// make it possible to differentiate between user submission and programmatic `field.set(...)` updates
+				output.submission = true;
 
-				const result = await run_remote_function(event, true, form_data, (d) => d, fn);
+				const { event, state } = get_request_store();
+				const validated = await schema?.['~standard'].validate(data);
+
+				if (meta.validate_only) {
+					return validated?.issues?.map((issue) => normalize_issue(issue, true)) ?? [];
+				}
+
+				if (validated?.issues !== undefined) {
+					handle_issues(output, validated.issues, form_data);
+				} else {
+					if (validated !== undefined) {
+						data = validated.value;
+					}
+
+					const issue = create_issues();
+
+					try {
+						output.result = await run_remote_function(
+							event,
+							state,
+							true,
+							() => data,
+							(data) => (!maybe_fn ? fn() : fn(data, issue))
+						);
+					} catch (e) {
+						if (e instanceof ValidationError) {
+							handle_issues(output, e.issues, form_data);
+						} else {
+							throw e;
+						}
+					}
+				}
 
 				// We don't need to care about args or deduplicating calls, because uneval results are only relevant in full page reloads
 				// where only one form submission is active at the same time
 				if (!event.isRemoteRequest) {
-					state.form_result = [key, result];
+					const cache = get_cache(__, state);
+					cache[''] ??= output;
+
+					// register under the client-side action id so the output is serialized
+					// into the page, allowing the hydrated client to restore `result`/`issues`/`input`
+					get_implicit_lookup(__, state)[__.action_id ?? __.id] = () => cache[''];
 				}
 
-				return result;
+				return output;
 			}
 		};
 
@@ -81,35 +149,91 @@ export function form(fn) {
 			enumerable: true
 		});
 
-		Object.defineProperty(button_props, 'formaction', {
-			get: () => `?/remote=${__.id}`,
-			enumerable: true
+		Object.defineProperty(instance, 'fields', {
+			get() {
+				// the form instance is created once per module and shared across requests,
+				// so the current request's state has to be resolved at access time
+				return create_field_proxy(
+					{},
+					() => get_cache(__, get_request_store().state)?.['']?.input ?? {},
+					(path, value) => {
+						const cache = get_cache(__, get_request_store().state);
+						const entry = cache[''];
+
+						if (entry?.submission) {
+							// don't override a submission
+							return;
+						}
+
+						if (path.length === 0) {
+							(cache[''] ??= {}).input = value;
+							return;
+						}
+
+						const input = entry?.input ?? {};
+						deep_set(input, path.map(String), value);
+						(cache[''] ??= {}).input = input;
+					},
+					() => flatten_issues(get_cache(__, get_request_store().state)?.['']?.issues ?? [])
+				);
+			}
 		});
 
 		Object.defineProperty(instance, 'result', {
 			get() {
 				try {
-					const { form_result } = get_event_state(getRequestEvent());
-					return form_result && form_result[0] === key ? form_result[1] : undefined;
+					return get_cache(__, get_request_store().state)?.['']?.result;
 				} catch {
 					return undefined;
 				}
 			}
 		});
 
+		// On the server, pending is always 0
+		Object.defineProperty(instance, 'pending', {
+			get: () => 0
+		});
+
+		Object.defineProperty(instance, 'submitted', {
+			get: () => false
+		});
+
+		Object.defineProperty(instance, 'preflight', {
+			// preflight is a noop on the server
+			value: () => instance
+		});
+
+		Object.defineProperty(instance, 'validate', {
+			value: () => {
+				throw new Error('Cannot call validate() on the server');
+			}
+		});
+
+		Object.defineProperty(instance, 'submit', {
+			value: () => {
+				throw new Error('Cannot call submit() on the server');
+			}
+		});
+
+		Object.defineProperty(instance, 'element', {
+			get: () => null
+		});
+
 		if (key == undefined) {
 			Object.defineProperty(instance, 'for', {
-				/** @type {RemoteForm<any>['for']} */
+				/** @type {RemoteForm<any, any>['for']} */
 				value: (key) => {
-					const state = get_event_state(getRequestEvent());
-					let instance = (state.form_instances ??= new Map()).get(key);
+					const { state } = get_request_store();
+					const cache_key = __.id + '|' + JSON.stringify(key);
+					let instance = (state.remote.forms ??= new Map()).get(cache_key);
 
 					if (!instance) {
 						instance = create_instance(key);
 						instance.__.id = `${__.id}/${encodeURIComponent(JSON.stringify(key))}`;
+						instance.__.action_id = `${__.id}/${JSON.stringify(key)}`;
 						instance.__.name = __.name;
 
-						state.form_instances.set(key, instance);
+						state.remote.forms.set(cache_key, instance);
 					}
 
 					return instance;
@@ -121,4 +245,98 @@ export function form(fn) {
 	}
 
 	return create_instance();
+}
+
+/**
+ * @param {{ issues?: InternalRemoteFormIssue[], input?: Record<string, any>, result: any }} output
+ * @param {readonly StandardSchemaV1.Issue[]} issues
+ * @param {FormData | null} form_data - null if the form is progressively enhanced
+ */
+function handle_issues(output, issues, form_data) {
+	output.issues = issues.map((issue) => normalize_issue(issue, true));
+
+	// if it was a progressively-enhanced submission, we don't need
+	// to return the input — it's already there
+	if (form_data) {
+		output.input = {};
+
+		for (let key of form_data.keys()) {
+			// redact sensitive fields
+			if (/^[.\]]?_/.test(key)) continue;
+
+			const is_array = key.endsWith('[]');
+			const values = form_data.getAll(key).filter((value) => typeof value === 'string');
+
+			if (is_array) key = key.slice(0, -2);
+
+			set_nested_value(
+				/** @type {Record<string, any>} */ (output.input),
+				key,
+				is_array ? values : values[0]
+			);
+		}
+	}
+}
+
+/**
+ * Creates an invalid function that can be used to imperatively mark form fields as invalid
+ * @returns {InvalidField<any>}
+ */
+function create_issues() {
+	return /** @type {InvalidField<any>} */ (
+		new Proxy(
+			/** @param {string} message */
+			(message) => {
+				return create_issue(message);
+			},
+			{
+				get(target, prop) {
+					if (typeof prop === 'symbol') return /** @type {any} */ (target)[prop];
+
+					return create_issue_proxy(prop, []);
+				}
+			}
+		)
+	);
+
+	/**
+	 * @param {string} message
+	 * @param {(string | number)[]} path
+	 * @returns {StandardSchemaV1.Issue}
+	 */
+	function create_issue(message, path = []) {
+		return {
+			message,
+			path
+		};
+	}
+
+	/**
+	 * Creates a proxy that builds up a path and returns a function to create an issue
+	 * @param {string | number} key
+	 * @param {(string | number)[]} path
+	 */
+	function create_issue_proxy(key, path) {
+		const new_path = [...path, key];
+
+		/**
+		 * @param {string} message
+		 * @returns {StandardSchemaV1.Issue}
+		 */
+		const issue_func = (message) => create_issue(message, new_path);
+
+		return new Proxy(issue_func, {
+			get(target, prop) {
+				if (typeof prop === 'symbol') return /** @type {any} */ (target)[prop];
+
+				// Handle array access like invalid.items[0]
+				if (/^\d+$/.test(prop)) {
+					return create_issue_proxy(parseInt(prop, 10), new_path);
+				}
+
+				// Handle property access like invalid.field.nested
+				return create_issue_proxy(prop, new_path);
+			}
+		});
+	}
 }

@@ -1,6 +1,6 @@
-import { BROWSER, DEV } from 'esm-env';
-export { building, version } from '__sveltekit/environment';
+import { dev } from '../env/index.js';
+export * from '../env/index.js';
 
-export const browser = BROWSER;
-
-export const dev = DEV;
+if (dev) {
+	console.warn('`$app/environment` is now `$app/env`');
+}

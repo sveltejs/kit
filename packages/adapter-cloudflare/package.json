@@ -1,7 +1,7 @@
 {
 	"name": "@sveltejs/adapter-cloudflare",
-	"version": "7.1.2",
-	"description": "Adapter for building SvelteKit applications on Cloudflare Pages with Workers integration",
+	"version": "8.0.0-next.0",
+	"description": "Adapts SvelteKit applications for Cloudflare Workers or Cloudflare Pages",
 	"keywords": [
 		"adapter",
 		"cloudflare pages",
@@ -12,11 +12,11 @@
 	],
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/sveltejs/kit",
+		"url": "git+https://github.com/sveltejs/kit.git",
 		"directory": "packages/adapter-cloudflare"
 	},
 	"license": "MIT",
-	"homepage": "https://svelte.dev",
+	"homepage": "https://svelte.dev/docs/kit/adapter-cloudflare",
 	"type": "module",
 	"exports": {
 		".": {
@@ -34,7 +34,7 @@
 		"ambient.d.ts"
 	],
 	"scripts": {
-		"build": "esbuild src/worker.js --bundle --outfile=files/worker.js --external:SERVER --external:MANIFEST --external:cloudflare:workers --format=esm",
+		"build": "rolldown -c",
 		"lint": "prettier --check .",
 		"format": "pnpm lint --write",
 		"check": "tsc --skipLibCheck",
@@ -44,19 +44,19 @@
 		"prepublishOnly": "pnpm build"
 	},
 	"dependencies": {
-		"@cloudflare/workers-types": "^4.20250507.0",
+		"@cloudflare/workers-types": "^4.20260617.1",
 		"worktop": "0.8.0-next.18"
 	},
 	"devDependencies": {
 		"@playwright/test": "catalog:",
 		"@sveltejs/kit": "workspace:^",
-		"@types/node": "^18.19.119",
-		"esbuild": "^0.25.4",
-		"typescript": "^5.3.3",
+		"@types/node": "catalog:",
+		"rolldown": "catalog:",
+		"typescript": "catalog:",
 		"vitest": "catalog:"
 	},
 	"peerDependencies": {
-		"@sveltejs/kit": "^2.0.0",
-		"wrangler": "^4.0.0"
+		"@sveltejs/kit": "^3.0.0",
+		"wrangler": "^4.67.0"
 	}
 }

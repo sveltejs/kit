@@ -1,0 +1,11 @@
+{
+	"name": "test-write-types-slugs-layout-not-all-pages-have-load",
+	"private": true,
+	"type": "module",
+	"devDependencies": {
+		"typescript": "~6.0.3"
+	},
+	"scripts": {
+		"testtypes": "tsc"
+	}
+}

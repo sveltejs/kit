@@ -1,5 +1,5 @@
 import { assert, expect, test, describe } from 'vitest';
-import { exec, parse_route_id, resolve_route } from './routing.js';
+import { exec, parse_route_id, resolve_route, find_route } from './routing.js';
 
 describe('parse_route_id', () => {
 	const tests = {
@@ -36,11 +36,11 @@ describe('parse_route_id', () => {
 			params: [{ name: 'slug', matcher: undefined, optional: true, rest: false, chained: false }]
 		},
 		'/[...catchall]': {
-			pattern: /^(?:\/(.*))?\/?$/,
+			pattern: /^(?:\/([^]*))?\/?$/,
 			params: [{ name: 'catchall', matcher: undefined, optional: false, rest: true, chained: true }]
 		},
 		'/foo/[...catchall]/bar': {
-			pattern: /^\/foo(?:\/(.*))?\/bar\/?$/,
+			pattern: /^\/foo(?:\/([^]*))?\/bar\/?$/,
 			params: [{ name: 'catchall', matcher: undefined, optional: false, rest: true, chained: true }]
 		},
 		'/matched/[id=uuid]': {
@@ -244,6 +244,46 @@ describe('exec', () => {
 			route: '/[[slug1=doesntmatch]]/[...slug2=doesntmatch]',
 			path: '/a/b/c',
 			expected: undefined
+		},
+		{
+			route: '/[...a=doesntmatch]/[b]',
+			path: '/foo',
+			expected: undefined
+		},
+		{
+			route: '/[...a=matches]/[b]',
+			path: '/foo',
+			expected: { a: '', b: 'foo' }
+		},
+		{
+			route: '/[...a=doesntmatch]/[b]/[c]',
+			path: '/foo/bar',
+			expected: undefined
+		},
+		{
+			route: '/[...a=matches]/[b]/[c]',
+			path: '/foo/bar',
+			expected: { a: '', b: 'foo', c: 'bar' }
+		},
+		{
+			route: '/[...catchall]',
+			path: '/\n',
+			expected: { catchall: '\n' }
+		},
+		{
+			route: '/[[...catchall]]',
+			path: '/\n',
+			expected: { catchall: '\n' }
+		},
+		{
+			route: '/(group)/[[optional]]',
+			path: '/',
+			expected: {}
+		},
+		{
+			route: '/(group1)/[slug]/(group2)',
+			path: '/123',
+			expected: { slug: '123' }
 		}
 	];
 
@@ -269,9 +309,19 @@ describe('resolve_route', () => {
 			expected: '/blog/one/two'
 		},
 		{
+			route: '/blog/[one]/[two]/',
+			params: { one: 'one', two: 'two' },
+			expected: '/blog/one/two/'
+		},
+		{
 			route: '/blog/[one=matcher]/[...two]',
 			params: { one: 'one', two: 'two/three' },
 			expected: '/blog/one/two/three'
+		},
+		{
+			route: '/blog/[one=matcher]/[...two]/',
+			params: { one: 'one', two: 'two/three' },
+			expected: '/blog/one/two/three/'
 		},
 		{
 			route: '/blog/[one=matcher]/[[two]]',
@@ -279,9 +329,19 @@ describe('resolve_route', () => {
 			expected: '/blog/one'
 		},
 		{
+			route: '/blog/[one=matcher]/[[two]]/',
+			params: { one: 'one' },
+			expected: '/blog/one/'
+		},
+		{
 			route: '/blog/[one]/[two]-and-[three]',
 			params: { one: 'one', two: '2', three: '3' },
 			expected: '/blog/one/2-and-3'
+		},
+		{
+			route: '/blog/[one]/[two]-and-[three]/',
+			params: { one: 'one', two: '2', three: '3' },
+			expected: '/blog/one/2-and-3/'
 		},
 		{
 			route: '/blog/[...one]',
@@ -289,9 +349,19 @@ describe('resolve_route', () => {
 			expected: '/blog'
 		},
 		{
+			route: '/blog/[...one]/',
+			params: { one: '' },
+			expected: '/blog/'
+		},
+		{
 			route: '/blog/[one]/[...two]-not-three',
 			params: { one: 'one', two: 'two/2' },
 			expected: '/blog/one/two/2-not-three'
+		},
+		{
+			route: '/blog/[one]/[...two]-not-three/',
+			params: { one: 'one', two: 'two/2' },
+			expected: '/blog/one/two/2-not-three/'
 		}
 	];
 
@@ -317,5 +387,58 @@ describe('resolve_route', () => {
 			() => resolve_route('/blog/[one]/[two]', { one: 'one', two: 'two/' }),
 			"Parameter 'two' in route /blog/[one]/[two] cannot start or end with a slash -- this would cause an invalid route like foo//bar"
 		);
+	});
+});
+
+describe('find_route', () => {
+	/** @param {string} id */
+	function create_route(id) {
+		const { pattern, params } = parse_route_id(id);
+		return { id, pattern, params };
+	}
+
+	test('finds matching route', () => {
+		const routes = [create_route('/blog'), create_route('/blog/[slug]'), create_route('/about')];
+
+		const result = find_route('/blog/hello-world', routes, {});
+		assert.equal(result?.route.id, '/blog/[slug]');
+		assert.deepEqual(result?.params, { slug: 'hello-world' });
+	});
+
+	test('returns first matching route', () => {
+		const routes = [create_route('/blog/[slug]'), create_route('/blog/[...rest]')];
+
+		const result = find_route('/blog/hello', routes, {});
+		assert.equal(result?.route.id, '/blog/[slug]');
+	});
+
+	test('returns null for no match', () => {
+		const routes = [create_route('/blog'), create_route('/about')];
+
+		const result = find_route('/contact', routes, {});
+		assert.equal(result, null);
+	});
+
+	test('respects matchers', () => {
+		const routes = [create_route('/blog/[slug=word]'), create_route('/blog/[slug]')];
+		/** @type {Record<string, import('@sveltejs/kit').ParamMatcher>} */
+		const matchers = {
+			word: (param) => /^\w+$/.test(param)
+		};
+
+		// "hello" matches the word matcher
+		const result1 = find_route('/blog/hello', routes, matchers);
+		assert.equal(result1?.route.id, '/blog/[slug=word]');
+
+		// "hello-world" doesn't match word matcher, falls through to [slug]
+		const result2 = find_route('/blog/hello-world', routes, matchers);
+		assert.equal(result2?.route.id, '/blog/[slug]');
+	});
+
+	test('decodes params', () => {
+		const routes = [create_route('/blog/[slug]')];
+
+		const result = find_route('/blog/hello%20world', routes, {});
+		assert.equal(result?.params.slug, 'hello world');
 	});
 });

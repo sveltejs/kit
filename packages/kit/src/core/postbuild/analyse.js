@@ -1,17 +1,15 @@
+/** @import { Adapter } from '@sveltejs/kit' */
+/** @import { RemoteChunk } from 'types' */
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { validate_server_exports } from '../../utils/exports.js';
-import { load_config } from '../config/index.js';
+import { extract_svelte_config, load_vite_config } from '../config/index.js';
 import { forked } from '../../utils/fork.js';
-import { installPolyfills } from '../../exports/node/polyfills.js';
 import { ENDPOINT_METHODS } from '../../constants.js';
-import { filter_private_env, filter_public_env } from '../../utils/env.js';
 import { has_server_load, resolve_route } from '../../utils/routing.js';
 import { check_feature } from '../../utils/features.js';
 import { createReadableStream } from '@sveltejs/kit/node';
 import { PageNodes } from '../../utils/page_nodes.js';
-import { build_server_nodes } from '../../exports/vite/build/build_server.js';
-import { validate_remote_functions } from '@sveltejs/kit/internal';
 
 export default forked(import.meta.url, analyse);
 
@@ -23,8 +21,8 @@ export default forked(import.meta.url, analyse);
  *   server_manifest: import('vite').Manifest;
  *   tracked_features: Record<string, string[]>;
  *   env: Record<string, string>;
- *   out: string;
- *   output_config: import('types').RecursiveRequired<import('types').ValidatedConfig['kit']['output']>;
+ *   remotes: RemoteChunk[];
+ *   vite_config_file: string | undefined;
  * }} opts
  */
 async function analyse({
@@ -34,51 +32,40 @@ async function analyse({
 	server_manifest,
 	tracked_features,
 	env,
-	out,
-	output_config
+	remotes,
+	vite_config_file
 }) {
 	/** @type {import('@sveltejs/kit').SSRManifest} */
 	const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
 
-	/** @type {import('types').ValidatedKitConfig} */
-	const config = (await load_config()).kit;
+	const vite_config = await load_vite_config(vite_config_file);
+
+	const config = extract_svelte_config(vite_config).kit;
+
+	// TODO i think this can just be config.adapter?
+	/** @type {Adapter | undefined} */
+	const adapter = vite_config.plugins.find(
+		(plugin) => plugin.name === 'vite-plugin-sveltekit-adapter'
+	)?.api?.adapter;
 
 	const server_root = join(config.outDir, 'output');
 
 	/** @type {import('types').ServerInternalModule} */
 	const internal = await import(pathToFileURL(`${server_root}/server/internal.js`).href);
 
-	installPolyfills();
-
-	// configure `import { building } from '$app/environment'` —
+	// configure `import { building } from '$app/env'` —
 	// essential we do this before analysing the code
 	internal.set_building();
 
-	// set env, in case it's used in initialisation
-	const { publicPrefix: public_prefix, privatePrefix: private_prefix } = config.env;
-	const private_env = filter_private_env(env, { public_prefix, private_prefix });
-	const public_env = filter_public_env(env, { public_prefix, private_prefix });
-	internal.set_private_env(private_env);
-	internal.set_public_env(public_env);
-	internal.set_safe_public_env(public_env);
+	// set `read` and `manifest`, in case they're used in initialisation
 	internal.set_manifest(manifest);
 	internal.set_read_implementation((file) => createReadableStream(`${server_root}/server/${file}`));
 
-	/** @type {Map<string, { page_options: Record<string, any> | null, children: string[] }>} */
-	const static_exports = new Map();
-
-	// first, build server nodes without the client manifest so we can analyse it
-	await build_server_nodes(
-		out,
-		config,
-		manifest_data,
-		server_manifest,
-		null,
-		null,
-		null,
-		output_config,
-		static_exports
-	);
+	// `set_env` lives in a separate module that imports the user's `src/env` config. We import it
+	// *after* `set_building()` so that `building`-dependent expressions resolve correctly
+	/** @type {import('__sveltekit/env')} */
+	const { set_env } = await import(pathToFileURL(`${server_root}/server/env.js`).href);
+	set_env(env);
 
 	/** @type {import('types').ServerMetadata} */
 	const metadata = {
@@ -104,7 +91,8 @@ async function analyse({
 		}
 
 		metadata.nodes[node.index] = {
-			has_server_load: has_server_load(node)
+			has_server_load: has_server_load(node),
+			has_universal_load: node.universal?.load !== undefined
 		};
 	}
 
@@ -143,7 +131,7 @@ async function analyse({
 				server_manifest,
 				tracked_features
 			)) {
-				check_feature(route.id, route_config, feature, config.adapter);
+				check_feature(route.id, route_config, feature, adapter);
 			}
 		}
 
@@ -167,28 +155,26 @@ async function analyse({
 	}
 
 	// analyse remotes
-	for (const remote of manifest_data.remotes) {
+	for (const remote of remotes) {
 		const loader = manifest._.remotes[remote.hash];
-		const module = await loader();
-
-		validate_remote_functions(module, remote.file);
+		const { default: functions } = await loader();
 
 		const exports = new Map();
 
-		for (const name in module) {
-			const info = /** @type {import('types').RemoteInfo} */ (module[name].__);
-			const type = info.type;
+		for (const name in functions) {
+			const internals = /** @type {import('types').RemoteInternals} */ (functions[name].__);
+			const type = internals.type;
 
 			exports.set(name, {
 				type,
-				dynamic: type !== 'prerender' || info.dynamic
+				dynamic: type !== 'prerender' || internals.dynamic
 			});
 		}
 
 		metadata.remotes.set(remote.hash, exports);
 	}
 
-	return { metadata, static_exports };
+	return { metadata };
 }
 
 /**
@@ -256,8 +242,12 @@ function list_features(route, manifest_data, server_manifest, tracked_features) 
 		manifest_data.routes.find((r) => r.id === route.id)
 	);
 
+	const visited = new Set();
 	/** @param {string} id */
 	function visit(id) {
+		if (visited.has(id)) return;
+		visited.add(id);
+
 		const chunk = server_manifest[id];
 		if (!chunk) return;
 

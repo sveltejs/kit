@@ -29,3 +29,17 @@ test('prerenders /path-base/assets', () => {
 	const content = read('assets.html');
 	assert.match(content, /<img[^>]+src="\/path-base\//u);
 });
+
+test('prerenders /path-base/assets/emitted', () => {
+	const content = read('assets/emitted.html');
+	assert.ok(content.includes('<p>hello from message.csv'));
+});
+
+test('JS assets are loaded with an absolute path', () => {
+	const files = fs.readdirSync(`${build}/_app/immutable/entry`);
+	const app_file = files.find((file) => file.startsWith('app.'));
+	if (!app_file) throw new Error('app file not found');
+
+	const content = read(`_app/immutable/entry/${app_file}`);
+	assert.ok(!content.includes('./_app/immutable'));
+});

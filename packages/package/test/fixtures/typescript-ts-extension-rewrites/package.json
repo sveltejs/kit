@@ -1,0 +1,16 @@
+{
+	"name": "typescript-ts-extension-rewrites",
+	"private": true,
+	"version": "1.0.0",
+	"description": "typescript package with extension rewrites, including to aliased import paths",
+	"type": "module",
+	"peerDependencies": {
+		"svelte": "^5.0.0"
+	},
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"svelte": "./dist/index.js"
+		}
+	}
+}

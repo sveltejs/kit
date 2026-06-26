@@ -8,59 +8,59 @@ This adapter will be installed by default when you use [`adapter-auto`](adapter-
 
 ## Usage
 
-Install with `npm i -D @sveltejs/adapter-vercel`, then add the adapter to your `svelte.config.js`:
+Install with `npm i -D @sveltejs/adapter-vercel`, then add the adapter to your `vite.config.js`:
 
 ```js
-// @errors: 2307 2345
-/// file: svelte.config.js
+// @errors: 2554
+/// file: vite.config.js
 import adapter from '@sveltejs/adapter-vercel';
+import { sveltekit } from '@sveltejs/kit/vite';
+import { defineConfig } from 'vite';
 
-export default {
-	kit: {
-		adapter: adapter({
-			// see below for options that can be set here
+export default defineConfig({
+	plugins: [
+		sveltekit({
+			adapter: adapter({
+				// see below for options that can be set here
+			})
 		})
-	}
-};
+	]
+});
 ```
+
+> [!LEGACY]
+> The `adapter` option was moved to the SvelteKit Vite plugin in SvelteKit 3.0.0. In earlier versions, you had to add it to the `kit` property in the `svelte.config.js` file instead.
 
 ## Deployment configuration
 
 To control how your routes are deployed to Vercel as functions, you can specify deployment configuration, either through the option shown above or with [`export const config`](page-options#config) inside `+server.js`, `+page(.server).js` and `+layout(.server).js` files.
 
-For example you could deploy some parts of your app as [Edge Functions](https://vercel.com/docs/concepts/functions/edge-functions)...
+For example you could deploy one specific route as an individual serverless function, separate from the rest of your app:
 
 ```js
 /// file: about/+page.js
 /** @type {import('@sveltejs/adapter-vercel').Config} */
 export const config = {
-	runtime: 'edge'
-};
-```
-
-...and others as [Serverless Functions](https://vercel.com/docs/concepts/functions/serverless-functions) (note that by specifying `config` inside a layout, it applies to all child pages):
-
-```js
-/// file: admin/+layout.js
-/** @type {import('@sveltejs/adapter-vercel').Config} */
-export const config = {
-	runtime: 'nodejs22.x'
+	split: true
 };
 ```
 
 The following options apply to all functions:
 
-- `runtime`: `'edge'`, `'nodejs18.x'`, `'nodejs20.x'` or `'nodejs22.x'`. By default, the adapter will select the `'nodejs<version>.x'` corresponding to the Node version your project is configured to use on the Vercel dashboard
+- `runtime`: `'edge'`, `'nodejs20.x'` or `'nodejs22.x'`. By default, the adapter will select the `'nodejs<version>.x'` corresponding to the Node version your project is configured to use on the Vercel dashboard
+  > [!NOTE] This option is deprecated and will be removed in a future version, at which point all your functions will use whichever Node version is specified in the project configuration on Vercel
 - `regions`: an array of [edge network regions](https://vercel.com/docs/concepts/edge-network/regions) (defaulting to `["iad1"]` for serverless functions) or `'all'` if `runtime` is `edge` (its default). Note that multiple regions for serverless functions are only supported on Enterprise plans
 - `split`: if `true`, causes a route to be deployed as an individual function. If `split` is set to `true` at the adapter level, all routes will be deployed as individual functions
 
 Additionally, the following option applies to edge functions:
-- `external`: an array of dependencies that esbuild should treat as external when bundling functions. This should only be used to exclude optional dependencies that will not run outside Node
+- `external`: an array of dependencies that Rolldown should treat as external when bundling functions. This should only be used to exclude optional dependencies that will not run outside Node
 
 And the following option apply to serverless functions:
 - `memory`: the amount of memory available to the function. Defaults to `1024` Mb, and can be decreased to `128` Mb or [increased](https://vercel.com/docs/concepts/limits/overview#serverless-function-memory) in 64Mb increments up to `3008` Mb on Pro or Enterprise accounts
 - `maxDuration`: [maximum execution duration](https://vercel.com/docs/functions/runtimes#max-duration) of the function. Defaults to `10` seconds for Hobby accounts, `15` for Pro and `900` for Enterprise
 - `isr`: configuration Incremental Static Regeneration, described below
+
+Configuration set in a layout applies to all the routes beneath that layout, unless overridden at a more granular level.
 
 If your functions need to access data in a specific region, it's recommended that they be deployed in the same region (or close to it) for optimal performance.
 
@@ -69,35 +69,46 @@ If your functions need to access data in a specific region, it's recommended tha
 You may set the `images` config to control how Vercel builds your images. See the [image configuration reference](https://vercel.com/docs/build-output-api/v3/configuration#images) for full details. As an example, you may set:
 
 ```js
-/// file: svelte.config.js
+// @errors: 2554
+/// file: vite.config.js
 import adapter from '@sveltejs/adapter-vercel';
+import { sveltekit } from '@sveltejs/kit/vite';
+import { defineConfig } from 'vite';
 
-export default {
-	kit: {
-		adapter: adapter({
-			images: {
-				sizes: [640, 828, 1200, 1920, 3840],
-				formats: ['image/avif', 'image/webp'],
-				minimumCacheTTL: 300,
-				domains: ['example-app.vercel.app'],
-			}
+export default defineConfig({
+	plugins: [
+		sveltekit({
+			adapter: adapter({
+				images: {
+					sizes: [640, 828, 1200, 1920, 3840],
+					formats: ['image/avif', 'image/webp'],
+					minimumCacheTTL: 300,
+					domains: ['example-app.vercel.app'],
+				}
+			})
 		})
-	}
-};
+	]
+});
 ```
 
 ## Incremental Static Regeneration
 
 Vercel supports [Incremental Static Regeneration](https://vercel.com/docs/incremental-static-regeneration) (ISR), which provides the performance and cost advantages of prerendered content with the flexibility of dynamically rendered content.
 
-> Use ISR only on routes where every visitor should see the same content (much like when you prerender). If there's anything user-specific happening (like session cookies), they should happen on the client via JavaScript only to not leak sensitive information across visits
+> [!NOTE] Use ISR only on routes where every visitor should see the same content (much like when you prerender). If there's anything user-specific happening (like session cookies), they should happen on the client via JavaScript only to not leak sensitive information across visits
 
 To add ISR to a route, include the `isr` property in your `config` object:
 
 ```js
-// @errors: 2664
-import { BYPASS_TOKEN } from '$env/static/private';
+// @filename: env.d.ts
+declare module '$app/env/private' {
+	export const BYPASS_TOKEN: string;
+}
+// @filename: +page.server.js
+// ---cut---
+import { BYPASS_TOKEN } from '$app/env/private';
 
+/** @type {import('@sveltejs/adapter-vercel').Config} */
 export const config = {
 	isr: {
 		expiration: 60,
@@ -107,7 +118,7 @@ export const config = {
 };
 ```
 
-> Using ISR on a route with `export const prerender = true` will have no effect, since the route is prerendered at build time
+> [!NOTE] Using ISR on a route with `export const prerender = true` will have no effect, since the route is prerendered at build time
 
 The `expiration` property is required; all others are optional. The properties are discussed in more detail below.
 
@@ -139,16 +150,21 @@ vercel env pull .env.development.local
 
 A list of valid query parameters that contribute to the cache key. Other parameters (such as utm tracking codes) will be ignored, ensuring that they do not result in content being re-generated unnecessarily. By default, query parameters are ignored.
 
-> Pages that are  [prerendered](page-options#prerender) will ignore ISR configuration.
+> [!NOTE] Pages that are  [prerendered](page-options#prerender) will ignore ISR configuration.
 
 ## Environment variables
 
-Vercel makes a set of [deployment-specific environment variables](https://vercel.com/docs/concepts/projects/environment-variables#system-environment-variables) available. Like other environment variables, these are accessible from `$env/static/private` and `$env/dynamic/private` (sometimes — more on that later), and inaccessible from their public counterparts. To access one of these variables from the client:
+Vercel makes a set of [deployment-specific environment variables](https://vercel.com/docs/concepts/projects/environment-variables#system-environment-variables) available. Like other environment variables, these are accessible from `$app/env/private` if explicitly defined in `src/env.ts`. To access one of these variables from the client:
 
 ```js
-// @errors: 2305
 /// file: +layout.server.js
-import { VERCEL_COMMIT_REF } from '$env/static/private';
+// @filename: env.d.ts
+declare module '$app/env/private' {
+	export const VERCEL_COMMIT_REF: string;
+}
+// @filename: +layout.server.js
+// ---cut---
+import { VERCEL_COMMIT_REF } from '$app/env/private';
 
 /** @type {import('./$types').LayoutServerLoad} */
 export function load() {
@@ -168,7 +184,7 @@ export function load() {
 <p>This staging environment was deployed from {data.deploymentGitBranch}.</p>
 ```
 
-Since all of these variables are unchanged between build time and run time when building on Vercel, we recommend using `$env/static/private` — which will statically replace the variables, enabling optimisations like dead code elimination — rather than `$env/dynamic/private`.
+Since all of these variables are unchanged between build time and run time when building on Vercel, we recommend configuring the variable with `static: true` — which will statically replace the variables, enabling optimisations like dead code elimination.
 
 ## Skew protection
 
@@ -179,6 +195,10 @@ When a new version of your app is deployed, assets belonging to the previous ver
 Cookie-based skew protection comes with one caveat: if a user has multiple versions of your app open in multiple tabs, requests from older versions will be routed to the newer one, meaning they will fall back to SvelteKit's built-in skew protection.
 
 ## Notes
+
+### Vercel utilities
+
+If you need Vercel-specific utilities like `waitUntil`, use the package [`@vercel/functions`](https://vercel.com/docs/functions/functions-api-reference/vercel-functions-package).
 
 ### Vercel functions
 
@@ -194,6 +214,10 @@ Projects created before a certain date may default to using an older Node versio
 
 You can't use `fs` in edge functions.
 
-You _can_ use it in serverless functions, but it won't work as expected, since files are not copied from your project into your deployment. Instead, use the [`read`]($app-server#read) function from `$app/server` to access your files. `read` does not work inside routes deployed as edge functions (this may change in future).
+You _can_ use it in serverless functions, but it won't work as expected, since files are not copied from your project into your deployment. Instead, use the [`read`]($app-server#read) function from `$app/server` to access your files. It also works inside routes deployed as edge functions by fetching the file from the deployed public assets location.
 
 Alternatively, you can [prerender](page-options#prerender) the routes in question.
+
+### Deployment protection
+
+If using [`read`]($app-server#read) in an edge function, SvelteKit will `fetch` the file in question from your deployment. If you are using [Deployment Protection](https://vercel.com/docs/deployment-protection), you must also enable [Protection Bypass for Automation](https://vercel.com/docs/deployment-protection/methods-to-bypass-deployment-protection/protection-bypass-automation) so that the request does not result in a [401 Unauthorized](https://http.dog/401) response.

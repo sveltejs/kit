@@ -172,6 +172,29 @@ describe('make_trackable', (test) => {
 		url.searchParams.entries();
 		assert.ok(tracked);
 	});
+
+	test('tracks search params when using has(name, value) overload', () => {
+		let tracked = false;
+		const tracked_search_params = new Set();
+		const url = make_trackable(
+			new URL('https://svelte.dev/docs/kit?foo=1&foo=2'),
+			() => {
+				tracked = true;
+			},
+			(search_param) => {
+				tracked_search_params.add(search_param);
+			}
+		);
+
+		// has(name, value) should track the param and return correct result
+		assert.equal(url.searchParams.has('foo', '1'), true);
+		assert.ok(!tracked);
+		assert.ok(tracked_search_params.has('foo'));
+
+		// value argument should be forwarded correctly (not just checking name existence)
+		assert.equal(url.searchParams.has('foo', '3'), false);
+		assert.ok(!tracked);
+	});
 });
 
 describe('disable_search', (test) => {

@@ -48,6 +48,7 @@ test('renders a server-side redirect', () => {
 
 	expect(data).toEqual({
 		type: 'redirect',
+		status: 301,
 		location: 'https://example.com/redirected'
 	});
 });
@@ -200,6 +201,11 @@ test('prerenders binary data', async () => {
 	assert.equal(Buffer.compare(read('fetch-image/image.png', null), read('image.png', null)), 0);
 });
 
+test('generates relative link for resolve helper during prerender', () => {
+	const content = read('resolve-relative/lv1/lv2.html');
+	expect(content).toMatch('href="../../resolve-relative/lv1"');
+});
+
 test('fetches data from local endpoint', () => {
 	const data = JSON.parse(read('origin/__data.json'));
 
@@ -222,7 +228,7 @@ test('respects config.prerender.origin', () => {
 	expect(content).toMatch('<h2>http://prerender.origin</h2>');
 });
 
-test('$env - includes environment variables', () => {
+test('$app/env - includes environment variables', () => {
 	const content = read('env.html');
 
 	assert.match(
@@ -240,7 +246,7 @@ test('prerenders a page in a (group)', () => {
 
 test('injects relative service worker', () => {
 	const content = read('index.html');
-	expect(content).toMatch("navigator.serviceWorker.register('./service-worker.js')");
+	expect(content).toMatch("const script_url = './service-worker.js';");
 });
 
 test('define service worker variables', () => {

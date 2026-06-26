@@ -1,5 +1,128 @@
 # @sveltejs/adapter-cloudflare
 
+## 8.0.0-next.0
+### Major Changes
+
+
+- breaking: upgrade `@cloudflare/workers-types` to 4.20260219.0 ([#15347](https://github.com/sveltejs/kit/pull/15347))
+
+
+- breaking: upgrade minimum `wrangler` version to ^4.67.0 ([#15347](https://github.com/sveltejs/kit/pull/15347))
+
+
+- breaking: remove `platform.context` in favour of `platform.ctx` ([#15347](https://github.com/sveltejs/kit/pull/15347))
+
+
+- breaking: require SvelteKit 3 ([#15506](https://github.com/sveltejs/kit/pull/15506))
+
+
+### Patch Changes
+
+
+- chore: check the `WORKERS_CI` environment variable to determine if we're building for Cloudflare Workers ([#13733](https://github.com/sveltejs/kit/pull/13733))
+
+- Updated dependencies [[`fa335bd`](https://github.com/sveltejs/kit/commit/fa335bd8af3a982d68c4d34b813b68887dc7cce8), [`3031d89`](https://github.com/sveltejs/kit/commit/3031d89087d49297e89b6566108a1a1105c38475), [`cb9d416`](https://github.com/sveltejs/kit/commit/cb9d416d05266b6237f2856fb94df5b8a9b04279), [`caf3a18`](https://github.com/sveltejs/kit/commit/caf3a18de6581ab7d454d6fa8ad37ebdbdef95e6), [`4777827`](https://github.com/sveltejs/kit/commit/4777827246727045cf0209399751377564e7951d), [`a2792e2`](https://github.com/sveltejs/kit/commit/a2792e2cdc2dee91c20c7bfd921a104b539abae5), [`ba36148`](https://github.com/sveltejs/kit/commit/ba36148577ed0bc2675034a3d57001d71d328cd1), [`48e8710`](https://github.com/sveltejs/kit/commit/48e8710889b348a039322e05f3d2672327d56184), [`e2f3075`](https://github.com/sveltejs/kit/commit/e2f3075ef299b91175fae116e6a76269002029cf), [`047d6a0`](https://github.com/sveltejs/kit/commit/047d6a0f1c3fd1bc6f90a81177a2834b023a64b3), [`87603d1`](https://github.com/sveltejs/kit/commit/87603d13d009cada171c9b5d5daad5adad4f72de), [`096962c`](https://github.com/sveltejs/kit/commit/096962c47b0b0f63acd0d539d3973797e4867487), [`d545970`](https://github.com/sveltejs/kit/commit/d54597018308068aea5268e6c45b26398cd57607), [`e2f3075`](https://github.com/sveltejs/kit/commit/e2f3075ef299b91175fae116e6a76269002029cf), [`d06affc`](https://github.com/sveltejs/kit/commit/d06affc9246c676fc32b644efc0bbf53b42bc67d), [`8af47eb`](https://github.com/sveltejs/kit/commit/8af47eb06f9a1a883058de059ccf81aab4e85627), [`e2f3075`](https://github.com/sveltejs/kit/commit/e2f3075ef299b91175fae116e6a76269002029cf), [`5c4d130`](https://github.com/sveltejs/kit/commit/5c4d130ea2953464d8b4b462eb5aa4641aa78da1), [`3f11f35`](https://github.com/sveltejs/kit/commit/3f11f35125c5b3625891f0d00d9c7c826e6eaea2), [`caf3a18`](https://github.com/sveltejs/kit/commit/caf3a18de6581ab7d454d6fa8ad37ebdbdef95e6), [`8823037`](https://github.com/sveltejs/kit/commit/8823037b4a341013cc40a9bb688ee23bda3dbb04), [`1d76212`](https://github.com/sveltejs/kit/commit/1d76212740f59ed58839ef569899c653870834fd), [`0dc0548`](https://github.com/sveltejs/kit/commit/0dc0548307a439b6a6f24b14405366ced213f828), [`00d81fa`](https://github.com/sveltejs/kit/commit/00d81fab618435bac95b1bacb5e9734b61ba1af6)]:
+  - @sveltejs/kit@3.0.0-next.0
+
+## 7.2.9
+### Patch Changes
+
+
+- fix: avoid type collision with user defined `App.Platform` `env` property ([#16043](https://github.com/sveltejs/kit/pull/16043))
+
+- Updated dependencies [[`80cc084`](https://github.com/sveltejs/kit/commit/80cc0844916f9f80cb91272b3dd8a82a24c7c104), [`cc68acb`](https://github.com/sveltejs/kit/commit/cc68acb816e5a6da9e171d0469e3aa37ae70e182), [`d33bc6b`](https://github.com/sveltejs/kit/commit/d33bc6bc40e6e0977890fbbff4be017582332e43), [`f3f0c94`](https://github.com/sveltejs/kit/commit/f3f0c9428be70ea26621f4045cc9676d2819e34b), [`5ced880`](https://github.com/sveltejs/kit/commit/5ced880ac9fc151aaa376e3ef2cdcfcac4120e7b), [`a34e663`](https://github.com/sveltejs/kit/commit/a34e66369023d7e2d441f43991e1845c17c71ccf), [`ab190ae`](https://github.com/sveltejs/kit/commit/ab190aeed3b7ed586c2b21e7c5213e74f042f856), [`7751d60`](https://github.com/sveltejs/kit/commit/7751d60c3929a3e57431c48833544b3a4167c3c1), [`1cfc838`](https://github.com/sveltejs/kit/commit/1cfc83883fff1aa9e5de4b71ac6836061754f841), [`c3b2c34`](https://github.com/sveltejs/kit/commit/c3b2c34d414d6ca3e1e610ecbe89c690c32d3a07), [`82bcb7d`](https://github.com/sveltejs/kit/commit/82bcb7d8852a0187b1811024b491de6cdedcd548)]:
+  - @sveltejs/kit@2.65.2
+
+## 7.2.8
+### Patch Changes
+
+
+- fix: skip comment lines in `_redirects` file ([#15325](https://github.com/sveltejs/kit/pull/15325))
+
+- Updated dependencies [[`e87efba`](https://github.com/sveltejs/kit/commit/e87efba90aeb04227e6a1a5e9017989e7f1c78dc), [`71ddbc7`](https://github.com/sveltejs/kit/commit/71ddbc7ff19a612cfcd483f3b7ba58586372528b), [`1bae374`](https://github.com/sveltejs/kit/commit/1bae374e2e106eb82502afd1ddf0167d66f224a1), [`20dfadf`](https://github.com/sveltejs/kit/commit/20dfadfbef312b4e750318aa871aebbfcb4396a4), [`8c2384a`](https://github.com/sveltejs/kit/commit/8c2384a346825d54eb4281f9da854388fb4d81b3)]:
+  - @sveltejs/kit@2.52.1
+
+## 7.2.7
+### Patch Changes
+
+
+- fix: error if `_routes.json` is in the `/static` public directory ([#12821](https://github.com/sveltejs/kit/pull/12821))
+
+
+- fix: correctly handle pathnames found in the `_redirects` file ([#12821](https://github.com/sveltejs/kit/pull/12821))
+
+- Updated dependencies [[`37293a5`](https://github.com/sveltejs/kit/commit/37293a5c913b014e823bc823f2c8c6da38b88d6e), [`5d05ca6`](https://github.com/sveltejs/kit/commit/5d05ca6f606cf68417e4ed1ccb68cd77383f1f0f), [`ed69b77`](https://github.com/sveltejs/kit/commit/ed69b77cf9ef1af088008ff559f8de2e2a2f6bf4), [`b1fc959`](https://github.com/sveltejs/kit/commit/b1fc95966e0aeee689fdae71fa488c34b4806303), [`159aece`](https://github.com/sveltejs/kit/commit/159aece0654db020f95bc414f6a21f25fbc5f22f), [`c690579`](https://github.com/sveltejs/kit/commit/c690579620e131cd077ded0bc8e55090d3681d35), [`dc8cf2d`](https://github.com/sveltejs/kit/commit/dc8cf2defa71dd987437895eb89587c724f6e9bb), [`ace2116`](https://github.com/sveltejs/kit/commit/ace2116d95e13293dbc1e26b5b7d780202fd02dd), [`0f38f49`](https://github.com/sveltejs/kit/commit/0f38f498e0e7052db7b8cfe9ea892e7882a67b66)]:
+  - @sveltejs/kit@2.51.0
+
+## 7.2.6
+### Patch Changes
+
+
+- fix: ensure manifest paths are relative when building worker ([#15163](https://github.com/sveltejs/kit/pull/15163))
+
+- Updated dependencies [[`46c1ebd`](https://github.com/sveltejs/kit/commit/46c1ebd9f662f0de499e921bfee2661316449e9d), [`2dd74c8`](https://github.com/sveltejs/kit/commit/2dd74c8c86ae4855c3e9d74d8cf241e86dcd5b36), [`8871b54`](https://github.com/sveltejs/kit/commit/8871b5444413d0c7d7ef4d260996c3b5c359d0b8)]:
+  - @sveltejs/kit@2.50.1
+
+## 7.2.5
+### Patch Changes
+
+
+- fix: await `init` on every request to prevent race condition ([#15161](https://github.com/sveltejs/kit/pull/15161))
+
+- Updated dependencies [[`81cd545`](https://github.com/sveltejs/kit/commit/81cd545dd78b60ee994a04d8abacb58bf63584d7), [`d9ae9b0`](https://github.com/sveltejs/kit/commit/d9ae9b00b14f5574d109f3fd548f960594346226), [`8ed8155`](https://github.com/sveltejs/kit/commit/8ed8155215b9a74012fecffb942ad9a793b274e5)]:
+  - @sveltejs/kit@2.49.5
+
+## 7.2.4
+### Patch Changes
+
+
+- chore: update "homepage" field in package.json ([#14579](https://github.com/sveltejs/kit/pull/14579))
+
+## 7.2.3
+### Patch Changes
+
+
+- fix: improve the error message when `read(...)` fails ([#14306](https://github.com/sveltejs/kit/pull/14306))
+
+## 7.2.2
+### Patch Changes
+
+
+- chore: update error message link to the Workers Sites migration guide ([#14237](https://github.com/sveltejs/kit/pull/14237))
+
+- Updated dependencies [[`b2c5d02`](https://github.com/sveltejs/kit/commit/b2c5d02994a6d83275d6fb3645e6f9a2518c8d20), [`0bf6185`](https://github.com/sveltejs/kit/commit/0bf6185748d7b777fa8b8d37cef331be92ecedde), [`b2c5d02`](https://github.com/sveltejs/kit/commit/b2c5d02994a6d83275d6fb3645e6f9a2518c8d20), [`c5f7139`](https://github.com/sveltejs/kit/commit/c5f713951e41af2000f21929d42eb9d30c9d3a5c)]:
+  - @sveltejs/kit@2.34.1
+
+## 7.2.1
+### Patch Changes
+
+
+- fix: avoid erroring on builder properties that only exist on the latest version of SvelteKit ([#14233](https://github.com/sveltejs/kit/pull/14233))
+
+- Updated dependencies [[`f2db41c`](https://github.com/sveltejs/kit/commit/f2db41c0d3a0aefbb080ab6a9aa5822b3e41625c)]:
+  - @sveltejs/kit@2.31.1
+
+## 7.2.0
+### Minor Changes
+
+
+- feat: add `instrumentation.server.ts` for tracing and observability setup ([#13899](https://github.com/sveltejs/kit/pull/13899))
+
+
+### Patch Changes
+
+- Updated dependencies [[`f635678`](https://github.com/sveltejs/kit/commit/f63567812505597b1edc3e01010eca622b03b126), [`f635678`](https://github.com/sveltejs/kit/commit/f63567812505597b1edc3e01010eca622b03b126)]:
+  - @sveltejs/kit@2.31.0
+
+## 7.1.3
+### Patch Changes
+
+
+- chore: add `.git` to the end of `package.json` repository url ([#14134](https://github.com/sveltejs/kit/pull/14134))
+
+- Updated dependencies [[`c968aef`](https://github.com/sveltejs/kit/commit/c968aef5727f978244d5160657b4a7ac651384ae)]:
+  - @sveltejs/kit@2.27.3
+
 ## 7.1.2
 ### Patch Changes
 

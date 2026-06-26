@@ -1,6 +1,6 @@
 /* eslint-disable */
 
-/** @type {import('../../.svelte-kit/types/src/core/sync/write_types/test/param-type-inference/optional/[[optionalNarrowedParam=narrowed]]/$types').PageLoad} */
+/** @type {import('../../.svelte-kit/types/optional/[[optionalNarrowedParam=narrowed]]/$types').PageLoad} */
 export function load({ params }) {
 	if (params.optionalNarrowedParam) {
 		/** @type {"a" | "b"} */

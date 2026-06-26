@@ -1,16 +1,13 @@
-import { existsSync, rmSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { assert, expect, test } from 'vitest';
 import { create_builder } from './builder.js';
-import { posixify } from '../../utils/filesystem.js';
+import { posixify } from '../../utils/os.js';
 import { list_files } from '../utils.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = join(__filename, '..');
-
 test('copy files', () => {
-	const cwd = join(__dirname, 'fixtures/basic');
+	const cwd = join(import.meta.dirname, 'fixtures/basic');
 	const outDir = join(cwd, '.svelte-kit');
 
 	/** @type {import('@sveltejs/kit').Config} */
@@ -19,7 +16,7 @@ test('copy files', () => {
 		kit: {
 			appDir: '_app',
 			files: {
-				assets: join(__dirname, 'fixtures/basic/static')
+				assets: join(import.meta.dirname, 'fixtures/basic/static')
 			},
 			outDir
 		}
@@ -42,7 +39,7 @@ test('copy files', () => {
 		log: {}
 	});
 
-	const dest = join(__dirname, 'output');
+	const dest = join(import.meta.dirname, 'output');
 
 	rmSync(dest, { recursive: true, force: true });
 
@@ -65,10 +62,55 @@ test('compress files', async () => {
 		route_data: []
 	});
 
-	const target = fileURLToPath(new URL('./fixtures/compress/foo.css', import.meta.url));
-	rmSync(target + '.br', { force: true });
-	rmSync(target + '.gz', { force: true });
-	await builder.compress(dirname(target));
-	assert.ok(existsSync(target + '.br'));
-	assert.ok(existsSync(target + '.gz'));
+	const targets = [
+		fileURLToPath(new URL('./fixtures/compress/foo.css', import.meta.url)),
+		fileURLToPath(new URL('./fixtures/compress/foo.md', import.meta.url)),
+		fileURLToPath(new URL('./fixtures/compress/foo.mdx', import.meta.url))
+	];
+	for (const target of targets) {
+		rmSync(target + '.br', { force: true });
+		rmSync(target + '.gz', { force: true });
+	}
+	await builder.compress(dirname(targets[0]));
+	for (const target of targets) {
+		assert.ok(existsSync(target + '.br'));
+		assert.ok(existsSync(target + '.gz'));
+	}
+});
+
+test('instrument generates facade with posix paths', () => {
+	const fixtureDir = join(import.meta.dirname, 'fixtures/instrument');
+	const dest = join(import.meta.dirname, 'output');
+
+	rmSync(dest, { recursive: true, force: true });
+	mkdirSync(join(dest, 'server'), { recursive: true });
+	copyFileSync(join(fixtureDir, 'index.js'), join(dest, 'index.js'));
+	copyFileSync(
+		join(fixtureDir, 'server/instrumentation.server.js'),
+		join(dest, 'server/instrumentation.server.js')
+	);
+
+	const entrypoint = join(dest, 'index.js');
+	const instrumentation = join(dest, 'server', 'instrumentation.server.js');
+
+	// @ts-expect-error - we don't need the whole config for this test
+	const builder = create_builder({ route_data: [] });
+
+	builder.instrument({
+		entrypoint,
+		instrumentation,
+		module: { exports: ['default'] }
+	});
+
+	// Read the generated facade
+	const facade = readFileSync(entrypoint, 'utf-8');
+
+	// Verify it uses forward slashes (not backslashes)
+	// On Windows, path.relative() returns 'server\instrumentation.server.js'
+	// The fix ensures this becomes 'server/instrumentation.server.js'
+	expect(facade).toContain("import './server/instrumentation.server.js'");
+	expect(facade).not.toContain('\\');
+
+	// Cleanup
+	rmSync(dest, { recursive: true, force: true });
 });

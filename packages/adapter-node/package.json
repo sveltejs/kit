@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-node",
-	"version": "5.2.13",
+	"version": "6.0.0-next.0",
 	"description": "Adapter for SvelteKit apps that generates a standalone Node server",
 	"keywords": [
 		"adapter",
@@ -12,11 +12,11 @@
 	],
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/sveltejs/kit",
+		"url": "git+https://github.com/sveltejs/kit.git",
 		"directory": "packages/adapter-node"
 	},
 	"license": "MIT",
-	"homepage": "https://svelte.dev",
+	"homepage": "https://svelte.dev/docs/kit/adapter-node",
 	"type": "module",
 	"exports": {
 		".": {
@@ -33,8 +33,8 @@
 		"ambient.d.ts"
 	],
 	"scripts": {
-		"dev": "rollup -cw",
-		"build": "rollup -c",
+		"dev": "rolldown -cw",
+		"build": "rolldown -c",
 		"test": "vitest run",
 		"check": "tsc",
 		"lint": "prettier --check .",
@@ -42,22 +42,18 @@
 		"prepublishOnly": "pnpm build"
 	},
 	"devDependencies": {
-		"@polka/url": "^1.0.0-next.28",
+		"@polka/url": "catalog:",
 		"@sveltejs/kit": "workspace:^",
-		"@sveltejs/vite-plugin-svelte": "catalog:",
-		"@types/node": "^18.19.119",
-		"polka": "^1.0.0-next.28",
-		"sirv": "^3.0.0",
-		"typescript": "^5.3.3",
+		"@types/node": "catalog:",
+		"polka": "catalog:",
+		"sirv": "^3.0.2",
+		"typescript": "catalog:",
 		"vitest": "catalog:"
 	},
 	"dependencies": {
-		"@rollup/plugin-commonjs": "^28.0.1",
-		"@rollup/plugin-json": "^6.1.0",
-		"@rollup/plugin-node-resolve": "^16.0.0",
-		"rollup": "^4.9.5"
+		"rolldown": "^1.1.2"
 	},
 	"peerDependencies": {
-		"@sveltejs/kit": "^2.4.0"
+		"@sveltejs/kit": "^3.0.0"
 	}
 }

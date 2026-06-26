@@ -1,4 +1,6 @@
-import { HttpError, Redirect, ActionFailure } from './internal/index.js';
+/** @import { StandardSchemaV1 } from '@standard-schema/spec' */
+
+import { HttpError, Redirect, ActionFailure, ValidationError } from './internal/index.js';
 import { BROWSER, DEV } from 'esm-env';
 import {
 	add_data_suffix,
@@ -8,21 +10,9 @@ import {
 	strip_data_suffix,
 	strip_resolution_suffix
 } from '../runtime/pathname.js';
+import { text_encoder } from '../runtime/utils.js';
 
 export { VERSION } from '../version.js';
-
-// TODO 3.0: remove these types as they are not used anymore (we can't remove them yet because that would be a breaking change)
-/**
- * @template {number} TNumber
- * @template {any[]} [TArray=[]]
- * @typedef {TNumber extends TArray['length'] ? TArray[number] : LessThan<TNumber, [...TArray, TArray['length']]>} LessThan
- */
-
-/**
- * @template {number} TStart
- * @template {number} TEnd
- * @typedef {Exclude<TEnd | LessThan<TEnd>, LessThan<TStart>>} NumericRange
- */
 
 // Keep the status codes as `number` because restricting to certain numbers makes it unnecessarily hard to use compared to the benefits
 // (we have runtime errors already to check for invalid codes). Also see https://github.com/sveltejs/kit/issues/11780
@@ -41,7 +31,7 @@ export { VERSION } from '../version.js';
  * @param {number} status
  * @param {App.Error} body
  * @return {never}
- * @throws {HttpError} This error instructs SvelteKit to initiate HTTP error handling.
+ * @throws {import('./public.js').HttpError} This error instructs SvelteKit to initiate HTTP error handling.
  * @throws {Error} If the provided status is invalid (not between 400 and 599).
  */
 /**
@@ -55,7 +45,7 @@ export { VERSION } from '../version.js';
  * @param {number} status
  * @param {{ message: string } extends App.Error ? App.Error | string | undefined : never} [body]
  * @return {never}
- * @throws {HttpError} This error instructs SvelteKit to initiate HTTP error handling.
+ * @throws {import('./public.js').HttpError} This error instructs SvelteKit to initiate HTTP error handling.
  * @throws {Error} If the provided status is invalid (not between 400 and 599).
  */
 /**
@@ -66,7 +56,7 @@ export { VERSION } from '../version.js';
  * @param {number} status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
  * @param {{ message: string } extends App.Error ? App.Error | string | undefined : never} body An object that conforms to the App.Error type. If a string is passed, it will be used as the message property.
  * @return {never}
- * @throws {HttpError} This error instructs SvelteKit to initiate HTTP error handling.
+ * @throws {import('./public.js').HttpError} This error instructs SvelteKit to initiate HTTP error handling.
  * @throws {Error} If the provided status is invalid (not between 400 and 599).
  */
 export function error(status, body) {
@@ -82,7 +72,7 @@ export function error(status, body) {
  * @template {number} T
  * @param {unknown} e
  * @param {T} [status] The status to filter for.
- * @return {e is (HttpError & { status: T extends undefined ? never : T })}
+ * @return {e is (import('./public.js').HttpError & { status: T extends undefined ? never : T })}
  */
 export function isHttpError(e, status) {
 	if (!(e instanceof HttpError)) return false;
@@ -102,8 +92,8 @@ export function isHttpError(e, status) {
  *
  * @param {300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308 | ({} & number)} status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#redirection_messages). Must be in the range 300-308.
  * @param {string | URL} location The location to redirect to.
- * @throws {Redirect} This error instructs SvelteKit to redirect to the specified location.
- * @throws {Error} If the provided status is invalid.
+ * @throws {import('./public.js').Redirect} This error instructs SvelteKit to redirect to the specified location.
+ * @throws {Error} If the provided status is invalid or the location cannot be used as a header value.
  * @return {never}
  */
 export function redirect(status, location) {
@@ -121,7 +111,7 @@ export function redirect(status, location) {
 /**
  * Checks whether this is a redirect thrown by {@link redirect}.
  * @param {unknown} e The object to check.
- * @return {e is Redirect}
+ * @return {e is import('./public.js').Redirect}
  */
 export function isRedirect(e) {
 	return e instanceof Redirect;
@@ -131,10 +121,9 @@ export function isRedirect(e) {
  * Create a JSON `Response` object from the supplied data.
  * @param {any} data The value that will be serialized as JSON.
  * @param {ResponseInit} [init] Options such as `status` and `headers` that will be added to the response. `Content-Type: application/json` and `Content-Length` headers will be added automatically.
+ * @deprecated use `Response.json`
  */
 export function json(data, init) {
-	// TODO deprecate this in favour of `Response.json` when it's
-	// more widely supported
 	const body = JSON.stringify(data);
 
 	// we can't just do `text(JSON.stringify(data), init)` because
@@ -142,7 +131,7 @@ export function json(data, init) {
 	// means less duplicated work
 	const headers = new Headers(init?.headers);
 	if (!headers.has('content-length')) {
-		headers.set('content-length', encoder.encode(body).byteLength.toString());
+		headers.set('content-length', text_encoder.encode(body).byteLength.toString());
 	}
 
 	if (!headers.has('content-type')) {
@@ -155,17 +144,16 @@ export function json(data, init) {
 	});
 }
 
-const encoder = new TextEncoder();
-
 /**
  * Create a `Response` object from the supplied body.
  * @param {string} body The value that will be used as-is.
  * @param {ResponseInit} [init] Options such as `status` and `headers` that will be added to the response. A `Content-Length` header will be added automatically.
+ * @deprecated use `new Response`
  */
 export function text(body, init) {
 	const headers = new Headers(init?.headers);
 	if (!headers.has('content-length')) {
-		const encoded = encoder.encode(body);
+		const encoded = text_encoder.encode(body);
 		headers.set('content-length', encoded.byteLength.toString());
 		return new Response(encoded, {
 			...init,
@@ -217,6 +205,49 @@ export function isActionFailure(e) {
 }
 
 /**
+ * Use this to throw a validation error to imperatively fail form validation.
+ * Can be used in combination with `issue` passed to form actions to create field-specific issues.
+ *
+ * @example
+ * ```ts
+ * import { invalid } from '@sveltejs/kit';
+ * import { form } from '$app/server';
+ * import { tryLogin } from '$lib/server/auth';
+ * import * as v from 'valibot';
+ *
+ * export const login = form(
+ *   v.object({ name: v.string(), _password: v.string() }),
+ *   async ({ name, _password }) => {
+ *     const success = tryLogin(name, _password);
+ *     if (!success) {
+ *       invalid('Incorrect username or password');
+ *     }
+ *
+ *     // ...
+ *   }
+ * );
+ * ```
+ * @param  {...(StandardSchemaV1.Issue | string)} issues
+ * @returns {never}
+ * @since 2.47.3
+ */
+export function invalid(...issues) {
+	throw new ValidationError(
+		issues.map((issue) => (typeof issue === 'string' ? { message: issue } : issue))
+	);
+}
+
+/**
+ * Checks whether this is an validation error thrown by {@link invalid}.
+ * @param {unknown} e The object to check.
+ * @return {e is import('./public.js').ActionFailure}
+ * @since 2.47.3
+ */
+export function isValidationError(e) {
+	return e instanceof ValidationError;
+}
+
+/**
  * Strips possible SvelteKit-internal suffixes and trailing slashes from the URL pathname.
  * Returns the normalized URL as well as a method for adding the potential suffix back
  * based on a new pathname (possibly including search) or URL.
@@ -232,7 +263,7 @@ export function isActionFailure(e) {
  * @since 2.18.0
  */
 export function normalizeUrl(url) {
-	url = new URL(url, 'http://internal');
+	url = new URL(url, 'a://a');
 
 	const is_route_resolution = has_resolution_suffix(url.pathname);
 	const is_data_request = has_data_suffix(url.pathname);

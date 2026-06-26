@@ -3,17 +3,24 @@
 		"allowJs": true,
 		"checkJs": true,
 		"noEmit": true,
-		"noImplicitAny": true,
-		"allowSyntheticDefaultImports": true,
 		"target": "es2022",
 		"module": "node16",
 		"moduleResolution": "node16",
-		"baseUrl": ".",
 		"paths": {
 			"@sveltejs/kit": ["../kit/types/index"]
 		},
-		"skipLibCheck": true
+		"types": ["node"]
 	},
-	"include": ["index.js", "src/**/*.js", "tests/**/*.js", "internal.d.ts", "utils.js"],
-	"exclude": ["tests/smoke.spec_disabled.js"]
+	"include": [
+		"index.js",
+		"rolldown.config.js",
+		"vitest.config.js",
+		"src/**/*.js",
+		"src/**/*.ts",
+		"test/utils.js",
+		"tests/**/*.js",
+		"tests/**/*.ts",
+		"./internal.d.ts"
+	],
+	"exclude": ["smoke.spec_disabled.js"]
 }

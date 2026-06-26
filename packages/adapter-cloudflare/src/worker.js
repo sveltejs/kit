@@ -21,12 +21,17 @@ const initialized = server.init({
 	// @ts-expect-error env contains environment variables and bindings
 	env,
 	read: async (file) => {
+		const url = `${origin}/${file}`;
 		const response = await /** @type {{ ASSETS: { fetch: typeof fetch } }} */ (env).ASSETS.fetch(
-			`${origin}/${file}`
+			url
 		);
+
 		if (!response.ok) {
-			throw new Error(`Failed to fetch ${file}: ${response.status} ${response.statusText}`);
+			throw new Error(
+				`read(...) failed: could not fetch ${url} (${response.status} ${response.statusText})`
+			);
 		}
+
 		return response.body;
 	}
 });
@@ -41,8 +46,10 @@ export default {
 	async fetch(req, env, ctx) {
 		if (!origin) {
 			origin = new URL(req.url).origin;
-			await initialized;
 		}
+
+		// always await initialization to prevent race condition with concurrent requests
+		await initialized;
 
 		// skip cache if "cache-control: no-cache" in request
 		let pragma = req.headers.get('cache-control') || '';
@@ -93,14 +100,13 @@ export default {
 				platform: {
 					env,
 					ctx,
-					context: ctx, // deprecated in favor of ctx
 					// @ts-expect-error webworker types from worktop are not compatible with Cloudflare Workers types
 					caches,
 					// @ts-expect-error the type is correct but ts is confused because platform.cf uses the type from index.ts while req.cf uses the type from index.d.ts
 					cf: req.cf
 				},
 				getClientAddress() {
-					return req.headers.get('cf-connecting-ip');
+					return /** @type {string} */ (req.headers.get('cf-connecting-ip'));
 				}
 			});
 		}

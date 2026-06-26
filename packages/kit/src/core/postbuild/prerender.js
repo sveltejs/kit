@@ -1,12 +1,14 @@
+/** @import { Adapter } from '@sveltejs/kit' */
 import { existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { installPolyfills } from '../../exports/node/polyfills.js';
-import { mkdirp, posixify, walk } from '../../utils/filesystem.js';
+import { mkdirp, walk } from '../../utils/filesystem.js';
+import { posixify } from '../../utils/os.js';
+import { noop } from '../../utils/functions.js';
 import { decode_uri, is_root_relative, resolve } from '../../utils/url.js';
 import { escape_html } from '../../utils/escape.js';
 import { logger } from '../utils.js';
-import { load_config } from '../config/index.js';
+import { extract_svelte_config, load_vite_config } from '../config/index.js';
 import { get_route_segments } from '../../utils/routing.js';
 import { queue } from './queue.js';
 import { crawl } from './crawl.js';
@@ -31,23 +33,30 @@ const SPECIAL_HASHLINKS = new Set(['', 'top']);
  *   manifest_path: string;
  *   metadata: import('types').ServerMetadata;
  *   verbose: boolean;
- *   env: Record<string, string>
+ *   env: Record<string, string>;
+ *   vite_config_file: string | undefined;
  * }} opts
  */
-async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
+async function prerender({ hash, out, manifest_path, metadata, verbose, env, vite_config_file }) {
 	/** @type {import('@sveltejs/kit').SSRManifest} */
 	const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
 
 	/** @type {import('types').ServerInternalModule} */
 	const internal = await import(pathToFileURL(`${out}/server/internal.js`).href);
 
-	/** @type {import('types').ServerModule} */
-	const { Server } = await import(pathToFileURL(`${out}/server/index.js`).href);
-
-	// configure `import { building } from '$app/environment'` —
+	// configure `import { building } from `$app/env` —
 	// essential we do this before analysing the code
 	internal.set_building();
 	internal.set_prerendering();
+
+	// `set_env` and `Server` live in modules that import the user's `src/env` config. We import them
+	// *after* `set_building()` so that `building`-dependent expressions resolve correctly
+	/** @type {import('__sveltekit/env')} */
+	const { set_env } = await import(pathToFileURL(`${out}/server/env.js`).href);
+	set_env(env);
+
+	/** @type {import('types').ServerModule} */
+	const { Server } = await import(pathToFileURL(`${out}/server/index.js`).href);
 
 	/**
 	 * @template {{message: string}} T
@@ -68,7 +77,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 					log.error(format(details));
 				};
 			case 'ignore':
-				return () => {};
+				return noop;
 			default:
 				// @ts-expect-error TS thinks T might be of a different kind, but it's not
 				return (details) => input({ ...details, message: format(details) });
@@ -98,13 +107,17 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 	/** @type {Set<string>} */
 	const prerendered_routes = new Set();
 
-	/** @type {import('types').ValidatedKitConfig} */
-	const config = (await load_config()).kit;
+	const vite_config = await load_vite_config(vite_config_file);
+
+	const config = extract_svelte_config(vite_config).kit;
 
 	if (hash) {
 		const fallback = await generate_fallback({
 			manifest_path,
-			env
+			env,
+			out_dir: config.outDir,
+			origin: config.prerender.origin,
+			assets: config.files.assets
 		});
 
 		const file = output_filename('/', true);
@@ -118,12 +131,16 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 		return { prerendered, prerender_map };
 	}
 
-	const emulator = await config.adapter?.emulate?.();
+	// TODO this can just be config.adapter?
+	/** @type {Adapter | undefined} */
+	const adapter = vite_config.plugins.find(
+		(plugin) => plugin.name === 'vite-plugin-sveltekit-adapter'
+	)?.api?.adapter;
+
+	const emulator = await adapter?.emulate?.();
 
 	/** @type {import('types').Logger} */
 	const log = logger({ verbose });
-
-	installPolyfills();
 
 	/** @type {Map<string, string>} */
 	const saved = new Map();
@@ -160,6 +177,23 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 		}
 	);
 
+	const handle_not_prerendered_route = normalise_error_handler(
+		log,
+		config.prerender.handleUnseenRoutes,
+		({ routes }) => {
+			const list = routes.map((id) => `  - ${id}`).join('\n');
+			return `The following routes were marked as prerenderable, but were not prerendered because they were not found while crawling your app:\n${list}\n\nSee the \`handleUnseenRoutes\` option in https://svelte.dev/docs/kit/configuration#prerender for more info.`;
+		}
+	);
+
+	const handle_invalid_url = normalise_error_handler(
+		log,
+		config.prerender.handleInvalidUrl,
+		({ href, referrer }) => {
+			return `Invalid URL ${href}${referrer ? ` (linked from ${referrer})` : ''}`;
+		}
+	);
+
 	const q = queue(config.prerender.concurrency);
 
 	/**
@@ -190,6 +224,8 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 
 	const seen = new Set();
 	const written = new Set();
+
+	/** @type {Map<string, Promise<any>>} */
 	const remote_responses = new Map();
 
 	/** @type {Map<string, Set<string>>} */
@@ -241,6 +277,11 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 				// stuff we just wrote
 				const filepath = saved.get(file);
 				if (filepath) return readFileSync(filepath);
+
+				// Static assets emitted during build
+				if (file.startsWith(config.appDir)) {
+					return readFileSync(`${out}/server/${file}`);
+				}
 
 				// stuff in `static`
 				return readFileSync(join(config.files.assets, file));
@@ -305,8 +346,13 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 		// avoid triggering `filterSerializeResponseHeaders` guard
 		const headers = Object.fromEntries(response.headers);
 
-		if (config.prerender.crawl && headers['content-type'] === 'text/html') {
-			const { ids, hrefs } = crawl(body.toString(), decoded);
+		// if it's a 200 HTML response, crawl it. Skip error responses, as we don't save those
+		if (response.ok && config.prerender.crawl && headers['content-type'] === 'text/html') {
+			const { ids, hrefs, invalid } = crawl(body.toString(), decoded);
+
+			for (const href of invalid) {
+				handle_invalid_url({ href, referrer: decoded });
+			}
 
 			actual_hashlinks.set(decoded, ids);
 
@@ -359,6 +405,12 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 
 		const type = headers['content-type'];
 		const is_html = response_type === REDIRECT || type === 'text/html';
+
+		if (!is_html && response.status === 200 && decoded.slice(config.paths.base.length + 1) === '') {
+			throw new Error(
+				`Cannot prerender a root +server.js that returns a non-HTML response - static hosts always serve an HTML file for \`${config.paths.base || '/'}\``
+			);
+		}
 
 		const file = output_filename(decoded, is_html);
 		const dest = `${config.outDir}/output/prerendered/${category}/${file}`;
@@ -469,13 +521,18 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 		}
 	}
 
-	/** @type {Array<import('types').RemoteInfo & { type: 'prerender'}>} */
+	// the user's remote function modules may reference `read` or the `manifest` at the top-level
+	// so we need to set them before evaluating those modules to avoid potential runtime errors
+	internal.set_manifest(manifest);
+	internal.set_read_implementation((file) => createReadableStream(`${out}/server/${file}`));
+
+	/** @type {Array<import('types').RemotePrerenderInternals>} */
 	const prerender_functions = [];
 
 	for (const loader of Object.values(manifest._.remotes)) {
 		const module = await loader();
 
-		for (const fn of Object.values(module)) {
+		for (const fn of Object.values(module.default)) {
 			if (fn?.__?.type === 'prerender') {
 				prerender_functions.push(fn.__);
 				should_prerender = true;
@@ -487,13 +544,15 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 		return { prerendered, prerender_map };
 	}
 
-	log.info('Prerendering');
-
+	// only run the server after the `should_prerender` check so that we
+	// don't run the user's init hook unnecessarily
 	const server = new Server(manifest);
 	await server.init({
 		env,
 		read: (file) => createReadableStream(`${config.outDir}/output/server/${file}`)
 	});
+
+	log.info('Prerendering');
 
 	for (const entry of config.prerender.entries) {
 		if (entry === '*') {
@@ -520,13 +579,16 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 	}
 
 	const transport = (await internal.get_hooks()).transport ?? {};
-	for (const info of prerender_functions) {
-		if (info.has_arg) {
-			for (const arg of (await info.inputs?.()) ?? []) {
-				void enqueue(null, remote_prefix + info.id + '/' + stringify_remote_arg(arg, transport));
+	for (const internals of prerender_functions) {
+		if (internals.has_arg) {
+			for (const arg of (await internals.inputs?.()) ?? []) {
+				void enqueue(
+					null,
+					remote_prefix + internals.id + '/' + stringify_remote_arg(arg, transport)
+				);
 			}
 		} else {
-			void enqueue(null, remote_prefix + info.id);
+			void enqueue(null, remote_prefix + internals.id);
 		}
 	}
 
@@ -557,11 +619,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 	}
 
 	if (not_prerendered.length > 0) {
-		const list = not_prerendered.map((id) => `  - ${id}`).join('\n');
-
-		throw new Error(
-			`The following routes were marked as prerenderable, but were not prerendered because they were not found while crawling your app:\n${list}\n\nSee https://svelte.dev/docs/kit/page-options#prerender-troubleshooting for info on how to solve this`
-		);
+		handle_not_prerendered_route({ routes: not_prerendered });
 	}
 
 	return { prerendered, prerender_map };

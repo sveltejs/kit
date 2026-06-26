@@ -1,0 +1,11 @@
+{
+	"name": "test-write-types-simple-page-server-and-shared",
+	"private": true,
+	"type": "module",
+	"devDependencies": {
+		"typescript": "~6.0.3"
+	},
+	"scripts": {
+		"testtypes": "tsc"
+	}
+}

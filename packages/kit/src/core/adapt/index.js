@@ -1,28 +1,34 @@
-import colors from 'kleur';
+/** @import { Adapter } from '@sveltejs/kit' */
+import { styleText } from 'node:util';
 import { create_builder } from './builder.js';
 
 /**
+ * @param {Adapter} adapter
  * @param {import('types').ValidatedConfig} config
  * @param {import('types').BuildData} build_data
  * @param {import('types').ServerMetadata} server_metadata
  * @param {import('types').Prerendered} prerendered
  * @param {import('types').PrerenderMap} prerender_map
  * @param {import('types').Logger} log
+ * @param {import('types').RemoteChunk[]} remotes
  * @param {import('vite').ResolvedConfig} vite_config
+ * @param {Record<string, import('@sveltejs/kit').EnvVarConfig<any>> | null} explicit_env_config
  */
 export async function adapt(
+	adapter,
 	config,
 	build_data,
 	server_metadata,
 	prerendered,
 	prerender_map,
 	log,
-	vite_config
+	remotes,
+	vite_config,
+	explicit_env_config
 ) {
-	// This is only called when adapter is truthy, so the cast is safe
-	const { name, adapt } = /** @type {import('@sveltejs/kit').Adapter} */ (config.kit.adapter);
+	const { name, adapt } = adapter;
 
-	console.log(colors.bold().cyan(`\n> Using ${name}`));
+	console.log(styleText(['bold', 'cyan'], `\n> Using ${name}`));
 
 	const builder = create_builder({
 		config,
@@ -32,7 +38,9 @@ export async function adapt(
 		prerendered,
 		prerender_map,
 		log,
-		vite_config
+		remotes,
+		vite_config,
+		explicit_env_config
 	});
 
 	await adapt(builder);

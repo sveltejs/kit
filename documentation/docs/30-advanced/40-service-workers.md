@@ -4,17 +4,7 @@ title: Service workers
 
 Service workers act as proxy servers that handle network requests inside your app. This makes it possible to make your app work offline, but even if you don't need offline support (or can't realistically implement it because of the type of app you're building), it's often worth using service workers to speed up navigation by precaching your built JS and CSS.
 
-In SvelteKit, if you have a `src/service-worker.js` file (or `src/service-worker/index.js`) it will be bundled and automatically registered. You can change the [location of your service worker](configuration#files) if you need to.
-
-You can [disable automatic registration](configuration#serviceWorker) if you need to register the service worker with your own logic or use another solution. The default registration looks something like this:
-
-```js
-if ('serviceWorker' in navigator) {
-	addEventListener('load', function () {
-		navigator.serviceWorker.register('./path/to/service-worker.js');
-	});
-}
-```
+In SvelteKit, if you have a `src/service-worker.js` file (or `src/service-worker/index.js`) it will be bundled and automatically registered.
 
 ## Inside the service worker
 
@@ -23,9 +13,24 @@ Inside the service worker you have access to the [`$service-worker` module]($ser
 The following example caches the built app and any files in `static` eagerly, and caches all other requests as they happen. This would make each page work offline once visited.
 
 ```js
-// @errors: 2339
+// @errors: 2688
+/// file: src/service-worker.js
+// Disables access to DOM typings like `HTMLElement` which are not available
+// inside a service worker and instantiates the correct globals
+/// <reference no-default-lib="true"/>
+/// <reference lib="esnext" />
+/// <reference lib="webworker" />
+
+// Ensures that the `$service-worker` import has proper type definitions
 /// <reference types="@sveltejs/kit" />
+
+// Only necessary if you have an import from `$app/env/*`
+/// <reference types="../.svelte-kit/env.d.ts" />
+
 import { build, files, version } from '$service-worker';
+
+// This gives `self` the correct types
+const self = /** @type {ServiceWorkerGlobalScope} */ (/** @type {unknown} */ (globalThis.self));
 
 // Create a unique cache name for this deployment
 const CACHE = `cache-${version}`;
@@ -84,7 +89,7 @@ self.addEventListener('fetch', (event) => {
 				throw new Error('invalid response from fetch');
 			}
 
-			if (response.status === 200) {
+			if (response.status === 200 && !response.headers.get('cache-control')?.includes('no-store')) {
 				cache.put(event.request, response.clone());
 			}
 
@@ -108,42 +113,25 @@ self.addEventListener('fetch', (event) => {
 
 > [!NOTE] Be careful when caching! In some cases, stale data might be worse than data that's unavailable while offline. Since browsers will empty caches if they get too full, you should also be careful about caching large assets like video files.
 
-## During development
-
-The service worker is bundled for production, but not during development. For that reason, only browsers that support [modules in service workers](https://web.dev/es-modules-in-sw) will be able to use them at dev time. If you are manually registering your service worker, you will need to pass the `{ type: 'module' }` option in development:
-
-```js
-import { dev } from '$app/environment';
-
-navigator.serviceWorker.register('/service-worker.js', {
-	type: dev ? 'module' : 'classic'
-});
-```
-
 > [!NOTE] `build` and `prerendered` are empty arrays during development
 
-## Type safety
+## Manual registration
 
-Setting up proper types for service workers requires some manual setup. Inside your `service-worker.js`, add the following to the top of your file:
+You can [disable automatic registration](configuration#serviceWorker) if you need to register the service worker with your own logic. The default registration looks something like this:
 
 ```js
-/// <reference types="@sveltejs/kit" />
-/// <reference no-default-lib="true"/>
-/// <reference lib="esnext" />
-/// <reference lib="webworker" />
+import { dev } from '$app/env';
 
-const sw = /** @type {ServiceWorkerGlobalScope} */ (/** @type {unknown} */ (self));
-```
-```ts
-/// <reference types="@sveltejs/kit" />
-/// <reference no-default-lib="true"/>
-/// <reference lib="esnext" />
-/// <reference lib="webworker" />
-
-const sw = self as unknown as ServiceWorkerGlobalScope;
+if ('serviceWorker' in navigator) {
+	addEventListener('load', function () {
+		navigator.serviceWorker.register('./path/to/service-worker.js', {
+			type: dev ? 'module' : 'classic'
+		});
+	});
+}
 ```
 
-This disables access to DOM typings like `HTMLElement` which are not available inside a service worker and instantiates the correct globals. The reassignment of `self` to `sw` allows you to type cast it in the process (there are a couple of ways to do this, but this is the easiest that requires no additional files). Use `sw` instead of `self` in the rest of the file. The reference to the SvelteKit types ensures that the `$service-worker` import has proper type definitions. If you import `$env/static/public` you either have to `// @ts-ignore` the import or add `/// <reference types="../.svelte-kit/ambient.d.ts" />` to the reference types.
+> [!NOTE] The service worker is bundled for production, but not during development.
 
 ## Other solutions
 

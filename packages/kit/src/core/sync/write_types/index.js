@@ -1,23 +1,12 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import process from 'node:process';
 import MagicString from 'magic-string';
-import { posixify, rimraf, walk } from '../../../utils/filesystem.js';
+import { rimraf, walk } from '../../../utils/filesystem.js';
 import { compact } from '../../../utils/array.js';
+import { posixify } from '../../../utils/os.js';
 import { ts } from '../ts.js';
-import { s } from '../../../utils/misc.js';
-import { get_route_segments } from '../../../utils/routing.js';
-
 const remove_relative_parent_traversals = (/** @type {string} */ path) =>
 	path.replace(/\.\.\//g, '');
-const replace_optional_params = (/** @type {string} */ id) =>
-	id.replace(/\/\[\[[^\]]+\]\]/g, '${string}');
-const replace_required_params = (/** @type {string} */ id) =>
-	id.replace(/\/\[[^\]]+\]/g, '/${string}');
-/** Convert route ID to pathname by removing layout groups */
-const remove_group_segments = (/** @type {string} */ id) => {
-	return '/' + get_route_segments(id).join('/');
-};
 const is_whitespace = (/** @type {string} */ char) => /\s/.test(char);
 
 /**
@@ -36,21 +25,20 @@ const is_whitespace = (/** @type {string} */ char) => /\s/.test(char);
  *  @typedef {Map<import('types').PageNode, {route: import('types').RouteData, proxies: Proxies}>} RoutesMap
  */
 
-const cwd = process.cwd();
-
 /**
  * Creates types for the whole manifest
  * @param {import('types').ValidatedConfig} config
  * @param {import('types').ManifestData} manifest_data
+ * @param {string} root The project root directory
  */
-export function write_all_types(config, manifest_data) {
+export function write_all_types(config, manifest_data, root) {
 	if (!ts) return;
 
 	const types_dir = `${config.kit.outDir}/types`;
 
 	// empty out files that no longer need to exist
 	const routes_dir = remove_relative_parent_traversals(
-		posixify(path.relative('.', config.kit.files.routes))
+		posixify(path.relative(root, config.kit.files.routes))
 	);
 	const expected_directories = new Set(
 		manifest_data.routes.map((route) => path.join(routes_dir, route.id))
@@ -64,67 +52,6 @@ export function write_all_types(config, manifest_data) {
 			}
 		}
 	}
-
-	/** @type {Set<string>} */
-	const pathnames = new Set();
-
-	/** @type {string[]} */
-	const dynamic_routes = [];
-
-	/** @type {string[]} */
-	const layouts = [];
-
-	for (const route of manifest_data.routes) {
-		if (route.params.length > 0) {
-			const params = route.params.map((p) => `${p.name}${p.optional ? '?:' : ':'} string`);
-			const route_type = `${s(route.id)}: { ${params.join('; ')} }`;
-
-			dynamic_routes.push(route_type);
-
-			const pathname = remove_group_segments(route.id);
-			pathnames.add(`\`${replace_required_params(replace_optional_params(pathname))}\` & {}`);
-		} else {
-			const pathname = remove_group_segments(route.id);
-			pathnames.add(s(pathname));
-		}
-
-		/** @type {Map<string, boolean>} */
-		const child_params = new Map(route.params.map((p) => [p.name, p.optional]));
-
-		for (const child of manifest_data.routes.filter((r) => r.id.startsWith(route.id))) {
-			for (const p of child.params) {
-				if (!child_params.has(p.name)) {
-					child_params.set(p.name, true); // always optional
-				}
-			}
-		}
-
-		const layout_params = Array.from(child_params)
-			.map(([name, optional]) => `${name}${optional ? '?:' : ':'} string`)
-			.join('; ');
-
-		const layout_type = `${s(route.id)}: ${layout_params.length > 0 ? `{ ${layout_params} }` : 'undefined'}`;
-		layouts.push(layout_type);
-	}
-
-	try {
-		fs.mkdirSync(types_dir, { recursive: true });
-	} catch {}
-
-	fs.writeFileSync(
-		`${types_dir}/index.d.ts`,
-		[
-			`type DynamicRoutes = {\n\t${dynamic_routes.join(';\n\t')}\n};`,
-			`type Layouts = {\n\t${layouts.join(';\n\t')}\n};`,
-			// we enumerate these rather than doing `keyof Routes` so that the list is visible on hover
-			`export type RouteId = ${manifest_data.routes.map((r) => s(r.id)).join(' | ')};`,
-			'export type RouteParams<T extends RouteId> = T extends keyof DynamicRoutes ? DynamicRoutes[T] : Record<string, never>;',
-			'export type LayoutParams<T extends RouteId> = Layouts[T] | Record<string, never>;',
-			`export type Pathname = ${Array.from(pathnames).join(' | ')};`,
-			'export type ResolvedPathname = `${"" | `/${string}`}${Pathname}`;',
-			`export type Asset = ${manifest_data.assets.map((asset) => s('/' + asset.file)).join(' | ') || 'never'};`
-		].join('\n\n')
-	);
 
 	// Read/write meta data on each invocation, not once per node process,
 	// it could be invoked by another process in the meantime.
@@ -181,7 +108,7 @@ export function write_all_types(config, manifest_data) {
 
 		const source_last_updated = Math.max(
 			// ctimeMs includes move operations whereas mtimeMs does not
-			...input_files.map((file) => fs.statSync(file).ctimeMs)
+			...input_files.map((file) => fs.statSync(path.resolve(root, file)).ctimeMs)
 		);
 		const types_last_updated = Math.max(...output_files.map((file) => file.updated));
 
@@ -196,7 +123,7 @@ export function write_all_types(config, manifest_data) {
 		if (should_generate) {
 			// track which old files end up being surplus to requirements
 			const to_delete = new Set(output_files.map((file) => file.name));
-			update_types(config, routes_map, route, to_delete);
+			update_types(config, routes_map, route, root, to_delete);
 			meta_data[route.id] = input_files;
 		}
 	}
@@ -210,8 +137,9 @@ export function write_all_types(config, manifest_data) {
  * @param {import('types').ValidatedConfig} config
  * @param {import('types').ManifestData} manifest_data
  * @param {string} file
+ * @param {string} root The project root directory
  */
-export function write_types(config, manifest_data, file) {
+export function write_types(config, manifest_data, file, root) {
 	if (!ts) return;
 
 	if (!path.basename(file).startsWith('+')) {
@@ -225,7 +153,7 @@ export function write_types(config, manifest_data, file) {
 	if (!route) return;
 	if (!route.leaf && !route.layout && !route.endpoint) return; // nothing to do
 
-	update_types(config, create_routes_map(manifest_data), route);
+	update_types(config, create_routes_map(manifest_data), route, root);
 }
 
 /**
@@ -248,11 +176,12 @@ function create_routes_map(manifest_data) {
  * @param {import('types').ValidatedConfig} config
  * @param {RoutesMap} routes
  * @param {import('types').RouteData} route
+ * @param {string} root The project root directory
  * @param {Set<string>} [to_delete]
  */
-function update_types(config, routes, route, to_delete = new Set()) {
+function update_types(config, routes, route, root, to_delete = new Set()) {
 	const routes_dir = remove_relative_parent_traversals(
-		posixify(path.relative('.', config.kit.files.routes))
+		posixify(path.relative(root, config.kit.files.routes))
 	);
 	const outdir = path.join(config.kit.outDir, 'types', routes_dir, route.id);
 
@@ -271,11 +200,7 @@ function update_types(config, routes, route, to_delete = new Set()) {
 
 	// returns the predicate of a matcher's type guard - or string if there is no type guard
 	declarations.push(
-		// TS complains on infer U, which seems weird, therefore ts-ignore it
-		[
-			'// @ts-ignore',
-			'type MatcherParam<M> = M extends (param : string) => param is infer U ? U extends string ? U : string : string;'
-		].join('\n')
+		'type MatcherParam<M> = M extends (param : string) => param is (infer U extends string) ? U : string;'
 	);
 
 	declarations.push(
@@ -327,7 +252,7 @@ function update_types(config, routes, route, to_delete = new Set()) {
 			declarations: d,
 			exports: e,
 			proxies
-		} = process_node(route.leaf, outdir, true, route_info.proxies);
+		} = process_node(route.leaf, outdir, true, route_info.proxies, root);
 
 		exports.push(...e);
 		declarations.push(...d);
@@ -376,7 +301,7 @@ function update_types(config, routes, route, to_delete = new Set()) {
 					layout_params.push({ ...param, optional: true });
 				}
 
-				ensureProxies(page, leaf.proxies);
+				ensureProxies(page, leaf.proxies, root);
 
 				if (
 					// Be defensive - if a proxy doesn't exist (because it couldn't be created), assume a load function exists.
@@ -412,6 +337,7 @@ function update_types(config, routes, route, to_delete = new Set()) {
 			outdir,
 			false,
 			{ server: null, universal: null },
+			root,
 			all_pages_have_load
 		);
 
@@ -451,9 +377,10 @@ function update_types(config, routes, route, to_delete = new Set()) {
  * @param {string} outdir
  * @param {boolean} is_page
  * @param {Proxies} proxies
+ * @param {string} root The project root directory
  * @param {boolean} [all_pages_have_load]
  */
-function process_node(node, outdir, is_page, proxies, all_pages_have_load = true) {
+function process_node(node, outdir, is_page, proxies, root, all_pages_have_load = true) {
 	const params = `${is_page ? 'Route' : 'Layout'}Params`;
 	const prefix = is_page ? 'Page' : 'Layout';
 
@@ -469,7 +396,7 @@ function process_node(node, outdir, is_page, proxies, all_pages_have_load = true
 	/** @type {string} */
 	let data;
 
-	ensureProxies(node, proxies);
+	ensureProxies(node, proxies, root);
 
 	if (node.server) {
 		const basename = path.basename(node.server);
@@ -502,7 +429,7 @@ function process_node(node, outdir, is_page, proxies, all_pages_have_load = true
 				// The advantage is that type updates are reflected without saving.
 				const from = proxy.modified
 					? `./proxy${replace_ext_with_js(basename)}`
-					: path_to_original(outdir, node.server);
+					: path_to_original(outdir, node.server, root);
 
 				exports.push(
 					'type ExcludeActionFailure<T> = T extends Kit.ActionFailure<any> ? never : T extends void ? never : T;',
@@ -571,7 +498,7 @@ function process_node(node, outdir, is_page, proxies, all_pages_have_load = true
 				// The advantage is that type updates are reflected without saving.
 				const from = proxy.modified
 					? `./proxy${replace_ext_with_js(path.basename(file_path))}`
-					: path_to_original(outdir, file_path);
+					: path_to_original(outdir, file_path, root);
 				const type = `Kit.LoadProperties<Awaited<ReturnType<typeof import('${from}').load>>>`;
 				return expand ? `Expand<OptionalUnion<EnsureDefined<${type}>>>` : type;
 			} else {
@@ -591,24 +518,26 @@ function process_node(node, outdir, is_page, proxies, all_pages_have_load = true
  *
  * @param {import('types').PageNode} node
  * @param {Proxies} proxies
+ * @param {string} root The project root directory
  */
-function ensureProxies(node, proxies) {
+function ensureProxies(node, proxies, root) {
 	if (node.server && !proxies.server) {
-		proxies.server = createProxy(node.server, true);
+		proxies.server = createProxy(node.server, true, root);
 	}
 
 	if (node.universal && !proxies.universal) {
-		proxies.universal = createProxy(node.universal, false);
+		proxies.universal = createProxy(node.universal, false, root);
 	}
 }
 
 /**
  * @param {string} file_path
  * @param {boolean} is_server
+ * @param {string} root The project root directory
  * @returns {Proxy}
  */
-function createProxy(file_path, is_server) {
-	const proxy = tweak_types(fs.readFileSync(file_path, 'utf8'), is_server);
+function createProxy(file_path, is_server, root) {
+	const proxy = tweak_types(fs.readFileSync(path.resolve(root, file_path), 'utf8'), is_server);
 	if (proxy) {
 		return {
 			...proxy,
@@ -653,9 +582,10 @@ function get_parent_type(node, type) {
 /**
  * @param {string} outdir
  * @param {string} file_path
+ * @param {string} root The project root directory
  */
-function path_to_original(outdir, file_path) {
-	return posixify(path.relative(outdir, path.join(cwd, replace_ext_with_js(file_path))));
+function path_to_original(outdir, file_path, root) {
+	return posixify(path.relative(outdir, path.join(root, replace_ext_with_js(file_path))));
 }
 
 /**
@@ -685,7 +615,7 @@ function generate_params_type(params, outdir, config) {
 					param.matcher
 						? `MatcherParam<typeof import('${path_to_matcher(param.matcher)}').match>`
 						: 'string'
-				}`
+				}${param.optional ? ' | undefined' : ''}`
 		)
 		.join('; ')} }`;
 }

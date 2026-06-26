@@ -1,22 +1,28 @@
 import * as devalue from 'devalue';
 import { readable, writable } from 'svelte/store';
 import { DEV } from 'esm-env';
-import { text } from '@sveltejs/kit';
-import * as paths from '__sveltekit/paths';
+import { isRedirect, text } from '@sveltejs/kit';
+import * as paths from '$app/paths/internal/server';
 import { hash } from '../../../utils/hash.js';
 import { serialize_data } from './serialize_data.js';
 import { s } from '../../../utils/misc.js';
 import { Csp } from './csp.js';
 import { uneval_action_response } from './actions.js';
-import { clarify_devalue_error, handle_error_and_jsonify, serialize_uses } from '../utils.js';
-import { public_env, safe_public_env } from '../../shared-server.js';
-import { create_async_iterator } from '../../../utils/streaming.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import { SCHEME } from '../../../utils/url.js';
 import { create_server_routing_response, generate_route_object } from './server_routing.js';
-import { add_resolution_suffix } from '../../pathname.js';
-import { with_event } from '../../app/server/event.js';
-import { get_event_state } from '../event-state.js';
+import { add_data_suffix, add_resolution_suffix } from '../../pathname.js';
+import { try_get_request_store, with_request_store } from '@sveltejs/kit/internal/server';
+import { text_encoder } from '../../utils.js';
+import {
+	count_non_ssi_comments,
+	create_replacer,
+	get_global_name,
+	handle_error_and_jsonify
+} from '../utils.js';
+import { get_status } from '../../../utils/error.js';
+import * as env from '__sveltekit/env';
+import { collect_remote_data } from '../remote.js';
 
 // TODO rename this function/module
 
@@ -24,8 +30,6 @@ const updated = {
 	...readable(false),
 	check: () => false
 };
-
-const encoder = new TextEncoder();
 
 /**
  * Creates the HTML response.
@@ -39,8 +43,11 @@ const encoder = new TextEncoder();
  *   status: number;
  *   error: App.Error | null;
  *   event: import('@sveltejs/kit').RequestEvent;
+ *   event_state: import('types').RequestState;
  *   resolve_opts: import('types').RequiredResolveOptions;
  *   action_result?: import('@sveltejs/kit').ActionResult;
+ *   data_serializer: import('./types.js').ServerDataSerializer;
+ *   error_components?: Array<import('types').SSRComponent | undefined>
  * }} opts
  */
 export async function render_response({
@@ -53,8 +60,11 @@ export async function render_response({
 	status,
 	error = null,
 	event,
+	event_state,
 	resolve_opts,
-	action_result
+	action_result,
+	data_serializer,
+	error_components
 }) {
 	if (state.prerendering) {
 		if (options.csp.mode === 'nonce') {
@@ -68,17 +78,21 @@ export async function render_response({
 
 	const { client } = manifest._;
 
-	const modulepreloads = new Set(client.imports);
-	const stylesheets = new Set(client.stylesheets);
-	const fonts = new Set(client.fonts);
+	const modulepreloads = new Set(client?.imports);
+	const stylesheets = new Set(client?.stylesheets);
+	const fonts = new Set(client?.fonts);
 
-	/** @type {Set<string>} */
-	const link_header_preloads = new Set();
+	/**
+	 * The value of the Link header that is added to the response when not prerendering
+	 * @type {Set<string>}
+	 */
+	const link_headers = new Set();
 
 	/** @type {Map<string, string>} */
 	// TODO if we add a client entry point one day, we will need to include inline_styles with the entry, otherwise stylesheets will be linked even if they are below inlineStyleThreshold
 	const inline_styles = new Map();
 
+	/** @type {ReturnType<typeof options.root.render>} */
 	let rendered;
 
 	const form_value =
@@ -98,10 +112,19 @@ export async function render_response({
 	 */
 	let base_expression = s(paths.base);
 
+	const csp = new Csp(options.csp, {
+		prerender: !!state.prerendering
+	});
+
 	// if appropriate, use relative paths for greater portability
 	if (paths.relative) {
 		if (!state.prerendering?.fallback) {
-			const segments = event.url.pathname.slice(paths.base.length).split('/').slice(2);
+			// the relative path depth must reflect the URL the browser is actually at, which
+			// for a data request includes the `__data.json` suffix that was stripped during routing
+			const pathname = event.isDataRequest
+				? add_data_suffix(event.url.pathname)
+				: event.url.pathname;
+			const segments = pathname.slice(paths.base.length).split('/').slice(2);
 
 			base = segments.map(() => '..').join('/') || '.';
 
@@ -137,6 +160,13 @@ export async function render_response({
 			form: form_value
 		};
 
+		if (error_components) {
+			if (error) {
+				props.error = error;
+			}
+			props.errors = error_components;
+		}
+
 		let data = {};
 
 		// props_n (instead of props[n]) makes it easy to avoid
@@ -157,10 +187,6 @@ export async function render_response({
 			state: {}
 		};
 
-		// use relative paths during rendering, so that the resulting HTML is as
-		// portable as possible, but reset afterwards
-		if (paths.relative) paths.override({ base, assets });
-
 		const render_opts = {
 			context: new Map([
 				[
@@ -169,60 +195,111 @@ export async function render_response({
 						page: props.page
 					}
 				]
-			])
+			]),
+			csp: csp.script_needs_nonce ? { nonce: csp.nonce } : { hash: csp.script_needs_hash },
+			transformError: error_components
+				? /** @param {unknown} e */ async (e) => {
+						if (isRedirect(e)) {
+							throw e;
+						}
+
+						const transformed = await handle_error_and_jsonify(event, event_state, options, e);
+						props.page.error = props.error = error = transformed;
+						props.page.status = status = get_status(e);
+						return transformed;
+					}
+				: undefined
 		};
 
-		if (__SVELTEKIT_DEV__) {
-			const fetch = globalThis.fetch;
-			let warned = false;
-			globalThis.fetch = (info, init) => {
-				if (typeof info === 'string' && !SCHEME.test(info)) {
-					throw new Error(
-						`Cannot call \`fetch\` eagerly during server-side rendering with relative URL (${info}) — put your \`fetch\` calls inside \`onMount\` or a \`load\` function instead`
-					);
-				} else if (!warned) {
-					console.warn(
-						'Avoid calling `fetch` eagerly during server-side rendering — put your `fetch` calls inside `onMount` or a `load` function instead'
-					);
-					warned = true;
+		const fetch = globalThis.fetch;
+
+		try {
+			if (DEV) {
+				let warned = false;
+				globalThis.fetch = (info, init) => {
+					if (typeof info === 'string' && !SCHEME.test(info)) {
+						throw new Error(
+							`Cannot call \`fetch\` eagerly during server-side rendering with relative URL (${info}) — put your \`fetch\` calls inside \`onMount\` or a \`load\` function instead`
+						);
+					} else if (!warned && !try_get_request_store()?.state.is_in_remote_function) {
+						console.warn(
+							'Avoid calling `fetch` eagerly during server-side rendering — put your `fetch` calls inside `onMount` or a `load` function instead'
+						);
+						warned = true;
+					}
+
+					return fetch(info, init);
+				};
+			}
+
+			const state = { ...event_state, is_in_render: true };
+
+			rendered = await with_request_store({ event, state }, async () => {
+				// use relative paths during rendering, so that the resulting HTML is as
+				// portable as possible, but reset afterwards
+				if (paths.relative) paths.override({ base, assets });
+
+				const maybe_promise = options.root.render(props, render_opts);
+				// We have to invoke .then eagerly here in order to kick off rendering: it's only starting on access,
+				// and `await maybe_promise` would eagerly access the .then property but call its function only after a tick, which is too late
+				// for the paths.reset() below and for any eager getRequestEvent() calls during rendering without AsyncLocalStorage available.
+				const rendered =
+					options.async && 'then' in maybe_promise
+						? /** @type {ReturnType<typeof options.root.render> & Promise<any>} */ (
+								maybe_promise
+							).then((r) => r)
+						: maybe_promise;
+
+				// TODO 3.0 remove options.async
+				if (options.async) {
+					// we reset this synchronously, rather than after async rendering is complete,
+					// to avoid cross-talk between requests. This is a breaking change for
+					// anyone who opts into async SSR, since `base` and `assets` will no
+					// longer be relative to the current pathname.
+					// TODO 3.0 remove `base` and `assets` in favour of `resolve(...)` and `asset(...)`
+					paths.reset();
 				}
 
-				return fetch(info, init);
-			};
+				const { head, html, css, hashes } = /** @type {ReturnType<typeof options.root.render>} */ (
+					options.async ? await rendered : rendered
+				);
 
-			try {
-				rendered = with_event(event, () => options.root.render(props, render_opts));
-			} finally {
+				if (hashes) {
+					csp.add_script_hashes(hashes.script);
+				}
+
+				return { head, html, css, hashes };
+			});
+		} finally {
+			if (DEV) {
 				globalThis.fetch = fetch;
-				paths.reset();
 			}
-		} else {
-			try {
-				rendered = with_event(event, () => options.root.render(props, render_opts));
-			} finally {
-				paths.reset();
-			}
-		}
 
-		for (const { node } of branch) {
-			for (const url of node.imports) modulepreloads.add(url);
-			for (const url of node.stylesheets) stylesheets.add(url);
-			for (const url of node.fonts) fonts.add(url);
-
-			if (node.inline_styles && !client.inline) {
-				Object.entries(await node.inline_styles()).forEach(([k, v]) => inline_styles.set(k, v));
-			}
+			paths.reset(); // just in case `options.root.render(...)` failed
 		}
 	} else {
-		rendered = { head: '', html: '', css: { code: '', map: null } };
+		rendered = { head: '', html: '', css: { code: '', map: null }, hashes: { script: [] } };
 	}
 
-	let head = '';
-	let body = rendered.html;
+	for (const { node } of branch) {
+		for (const url of node.imports) modulepreloads.add(url);
+		for (const url of node.stylesheets) stylesheets.add(url);
+		for (const url of node.fonts) fonts.add(url);
 
-	const csp = new Csp(options.csp, {
-		prerender: !!state.prerendering
-	});
+		if (node.inline_styles && !client?.inline) {
+			Object.entries(await node.inline_styles()).forEach(([filename, css]) => {
+				if (typeof css === 'string') {
+					inline_styles.set(filename, css);
+					return;
+				}
+
+				inline_styles.set(filename, css(`${assets}/${paths.app_dir}/immutable/assets`, assets));
+			});
+		}
+	}
+
+	const head = new Head(rendered.head);
+	let body = rendered.html;
 
 	/** @param {string} path */
 	const prefixed = (path) => {
@@ -235,18 +312,18 @@ export async function render_response({
 		return `${assets}/${path}`;
 	};
 
-	// inline styles can come from `bundleStrategy: 'inline'` or `inlineStyleThreshold`
-	const style = client.inline
+	const style = client?.inline
 		? client.inline?.style
 		: Array.from(inline_styles.values()).join('\n');
 
 	if (style) {
-		const attributes = __SVELTEKIT_DEV__ ? [' data-sveltekit'] : [];
-		if (csp.style_needs_nonce) attributes.push(` nonce="${csp.nonce}"`);
-
+		// We always inline all styles to avoid FOUC during development.
+		// Once that's accomplished, we find and remove the style node using the
+		// `data-sveltekit` attribute once CSR kicks in
+		const attributes = __SVELTEKIT_DEV__ ? ['data-sveltekit'] : [];
+		if (csp.style_needs_nonce) attributes.push(`nonce="${csp.nonce}"`);
 		csp.add_style(style);
-
-		head += `\n\t<style${attributes.join('')}>${style}</style>`;
+		head.add_style(style, attributes);
 	}
 
 	for (const dep of stylesheets) {
@@ -259,13 +336,12 @@ export async function render_response({
 			// include them in disabled state so that Vite can detect them and doesn't try to add them
 			attributes.push('disabled', 'media="(max-width: 0)"');
 		} else {
-			if (resolve_opts.preload({ type: 'css', path })) {
-				const preload_atts = ['rel="preload"', 'as="style"'];
-				link_header_preloads.add(`<${encodeURI(path)}>; ${preload_atts.join(';')}; nopush`);
+			if (options.link_header_preload && resolve_opts.preload({ type: 'css', path })) {
+				link_headers.add(`<${encodeURI(path)}>; rel="preload"; as="style"; nopush`);
 			}
 		}
 
-		head += `\n\t\t<link href="${path}" ${attributes.join(' ')}>`;
+		head.add_stylesheet(path, attributes);
 	}
 
 	for (const dep of fonts) {
@@ -273,27 +349,24 @@ export async function render_response({
 
 		if (resolve_opts.preload({ type: 'font', path })) {
 			const ext = dep.slice(dep.lastIndexOf('.') + 1);
-			const attributes = [
-				'rel="preload"',
-				'as="font"',
-				`type="font/${ext}"`,
-				`href="${path}"`,
-				'crossorigin'
-			];
 
-			head += `\n\t\t<link ${attributes.join(' ')}>`;
+			if (options.link_header_preload && !state.prerendering) {
+				link_headers.add(
+					`<${encodeURI(path)}>; rel="preload"; as="font"; type="font/${ext}"; crossorigin; nopush`
+				);
+			} else {
+				head.add_link_tag(path, [
+					'rel="preload"',
+					'as="font"',
+					`type="font/${ext}"`,
+					'crossorigin'
+				]);
+			}
 		}
 	}
 
-	const global = __SVELTEKIT_DEV__ ? '__sveltekit_dev' : `__sveltekit_${options.version_hash}`;
-
-	const { data, chunks } = get_data(
-		event,
-		options,
-		branch.map((b) => b.server_data),
-		csp,
-		global
-	);
+	const global = get_global_name(options);
+	const { data, chunks } = data_serializer.get_data(csp);
 
 	if (page_config.ssr && page_config.csr) {
 		body += `\n\t\t\t${fetched
@@ -303,10 +376,16 @@ export async function render_response({
 			.join('\n\t\t\t')}`;
 	}
 
-	if (page_config.csr) {
-		const route = manifest._.client.routes?.find((r) => r.id === event.route.id) ?? null;
+	if (page_config.csr && client) {
+		const route = client.routes?.find((r) => r.id === event.route.id) ?? null;
 
-		if (client.uses_env_dynamic_public && state.prerendering) {
+		// when serving a prerendered page in an app that uses runtime public env vars, we must
+		// import the env.js module so that it evaluates before any user code can evaluate.
+		// TODO revert to using top-level await once https://bugs.webkit.org/show_bug.cgi?id=242740 is fixed
+		// https://github.com/sveltejs/kit/pull/11601
+		const load_env_eagerly = client.uses_env_dynamic_public && !!state.prerendering;
+
+		if (load_env_eagerly) {
 			modulepreloads.add(`${paths.app_dir}/env.js`);
 		}
 
@@ -315,34 +394,33 @@ export async function render_response({
 				(path) => resolve_opts.preload({ type: 'js', path })
 			);
 
+			/** @type {(path: string) => void} */
+			let add_preload;
+
+			// see the kit.output.preloadStrategy option for details on why we have multiple options here
+			if (options.link_header_preload && !state.prerendering) {
+				add_preload = (path) =>
+					link_headers.add(`<${encodeURI(path)}>; rel="modulepreload"; nopush`);
+			} else {
+				add_preload = (path) => head.add_link_tag(path, ['rel="modulepreload"']);
+			}
+
 			for (const path of included_modulepreloads) {
-				// see the kit.output.preloadStrategy option for details on why we have multiple options here
-				link_header_preloads.add(`<${encodeURI(path)}>; rel="modulepreload"; nopush`);
-				if (options.preload_strategy !== 'modulepreload') {
-					head += `\n\t\t<link rel="preload" as="script" crossorigin="anonymous" href="${path}">`;
-				} else if (state.prerendering) {
-					head += `\n\t\t<link rel="modulepreload" href="${path}">`;
-				}
+				add_preload(path);
 			}
 		}
 
 		// prerender a `/path/to/page/__route.js` module
-		if (manifest._.client.routes && state.prerendering && !state.prerendering.fallback) {
+		if (client.routes && state.prerendering && !state.prerendering.fallback) {
 			const pathname = add_resolution_suffix(event.url.pathname);
 
 			state.prerendering.dependencies.set(
 				pathname,
-				create_server_routing_response(route, event.params, new URL(pathname, event.url), manifest)
+				create_server_routing_response(route, event.params, new URL(pathname, event.url), client)
 			);
 		}
 
 		const blocks = [];
-
-		// when serving a prerendered page in an app that uses $env/dynamic/public, we must
-		// import the env.js module so that it evaluates before any user code can evaluate.
-		// TODO revert to using top-level await once https://bugs.webkit.org/show_bug.cgi?id=242740 is fixed
-		// https://github.com/sveltejs/kit/pull/11601
-		const load_env_eagerly = client.uses_env_dynamic_public && state.prerendering;
 
 		const properties = [`base: ${base_expression}`];
 
@@ -351,7 +429,7 @@ export async function render_response({
 		}
 
 		if (client.uses_env_dynamic_public) {
-			properties.push(`env: ${load_env_eagerly ? 'null' : s(public_env)}`);
+			properties.push(`env: ${load_env_eagerly ? 'null' : devalue.uneval(env.rendered_env)}`);
 		}
 
 		if (chunks) {
@@ -361,9 +439,28 @@ export async function render_response({
 							deferred.set(id, { fulfil, reject });
 						})`);
 
+			let app_declaration = '';
+
+			if (Object.keys(options.hooks.transport).length > 0) {
+				if (client.inline) {
+					app_declaration = `const app = ${global}.app.app;`;
+				} else if (client.app) {
+					app_declaration = `const app = await import(${s(prefixed(client.app))});`;
+				} else {
+					app_declaration = `const { app } = await import(${s(prefixed(client.start))});`;
+				}
+			}
+
+			const prelude = app_declaration
+				? `${app_declaration}
+							const [data, error] = fn(app);`
+				: `const [data, error] = fn();`;
+
 			// When resolving, the id might not yet be available due to the data
 			// be evaluated upon init of kit, so we use a timeout to retry
-			properties.push(`resolve: ({ id, data, error }) => {
+			properties.push(`resolve: async (id, fn) => {
+							${prelude}
+
 							const try_to_resolve = () => {
 								if (!deferred.has(id)) {
 									setTimeout(try_to_resolve, 0);
@@ -388,7 +485,7 @@ export async function render_response({
 		blocks.push('const element = document.currentScript.parentElement;');
 
 		if (page_config.ssr) {
-			const serialized = { form: 'null', error: 'null', remote: 'null' };
+			const serialized = { form: 'null', error: 'null' };
 
 			if (form_value) {
 				serialized.form = uneval_action_response(
@@ -402,44 +499,20 @@ export async function render_response({
 				serialized.error = devalue.uneval(error);
 			}
 
-			const { remote_data } = get_event_state(event);
-
-			if (remote_data) {
-				/** @type {Record<string, any>} */
-				const remote = {};
-
-				for (const key in remote_data) {
-					remote[key] = await remote_data[key];
-				}
-
-				// TODO this is repeated in a few places — dedupe it
-				const replacer = (/** @type {any} */ thing) => {
-					for (const key in options.hooks.transport) {
-						const encoded = options.hooks.transport[key].encode(thing);
-						if (encoded) {
-							return `app.decode('${key}', ${devalue.uneval(encoded, replacer)})`;
-						}
-					}
-				};
-
-				serialized.remote = devalue.uneval(remote, replacer);
-			}
-
 			const hydrate = [
 				`node_ids: [${branch.map(({ node }) => node.index).join(', ')}]`,
 				`data: ${data}`,
 				`form: ${serialized.form}`,
-				`error: ${serialized.error}`,
-				`remote: ${serialized.remote}`
+				`error: ${serialized.error}`
 			];
 
 			if (status !== 200) {
 				hydrate.push(`status: ${status}`);
 			}
 
-			if (manifest._.client.routes) {
+			if (client.routes) {
 				if (route) {
-					const stringified = generate_route_object(route, event.url, manifest).replaceAll(
+					const stringified = generate_route_object(route, event.url, client).replaceAll(
 						'\n',
 						'\n\t\t\t\t\t\t\t'
 					); // make output after it's put together with the rest more readable
@@ -453,20 +526,27 @@ export async function render_response({
 			args.push(`{\n${indent}\t${hydrate.join(`,\n${indent}\t`)}\n${indent}}`);
 		}
 
+		const remote_data = await collect_remote_data({}, event, event_state, options);
+
+		const serialized_data =
+			Object.keys(remote_data).length > 0
+				? `${global}.data = ${devalue.uneval(remote_data, create_replacer(options.hooks.transport))};\n\n\t\t\t\t\t\t`
+				: '';
+
 		// `client.app` is a proxy for `bundleStrategy === 'split'`
 		const boot = client.inline
 			? `${client.inline.script}
 
-					__sveltekit_${options.version_hash}.app.start(${args.join(', ')});`
+					${serialized_data}${global}.app.start(${args.join(', ')});`
 			: client.app
 				? `Promise.all([
 						import(${s(prefixed(client.start))}),
 						import(${s(prefixed(client.app))})
 					]).then(([kit, app]) => {
-						kit.start(app, ${args.join(', ')});
+						${serialized_data}kit.start(app, ${args.join(', ')});
 					});`
 				: `import(${s(prefixed(client.start))}).then((app) => {
-						app.start(${args.join(', ')})
+						${serialized_data}app.start(${args.join(', ')})
 					});`;
 
 		if (load_env_eagerly) {
@@ -480,13 +560,26 @@ export async function render_response({
 		}
 
 		if (options.service_worker) {
-			const opts = __SVELTEKIT_DEV__ ? ", { type: 'module' }" : '';
+			let opts = __SVELTEKIT_DEV__ ? ", { type: 'module' }" : '';
+			if (options.service_worker_options != null) {
+				const service_worker_options = { ...options.service_worker_options };
+				if (__SVELTEKIT_DEV__) {
+					service_worker_options.type = 'module';
+				}
+				opts = `, ${s(service_worker_options)}`;
+			}
 
 			// we use an anonymous function instead of an arrow function to support
 			// older browsers (https://github.com/sveltejs/kit/pull/5417)
 			blocks.push(`if ('serviceWorker' in navigator) {
+						const script_url = '${prefixed('service-worker.js')}';
+						const policy = globalThis?.window?.trustedTypes?.createPolicy(
+							'sveltekit-trusted-url',
+							{ createScriptURL(url) { return url; } }
+						);
+						const sanitised = policy?.createScriptURL(script_url) ?? script_url;
 						addEventListener('load', function () {
-							navigator.serviceWorker.register('${prefixed('service-worker.js')}'${opts});
+							navigator.serviceWorker.register(sanitised${opts});
 						});
 					}`);
 		}
@@ -510,19 +603,15 @@ export async function render_response({
 
 	if (state.prerendering) {
 		// TODO read headers set with setHeaders and convert into http-equiv where possible
-		const http_equiv = [];
-
 		const csp_headers = csp.csp_provider.get_meta();
 		if (csp_headers) {
-			http_equiv.push(csp_headers);
+			head.add_http_equiv(csp_headers);
 		}
 
 		if (state.prerendering.cache) {
-			http_equiv.push(`<meta http-equiv="cache-control" content="${state.prerendering.cache}">`);
-		}
-
-		if (http_equiv.length > 0) {
-			head = http_equiv.join('\n') + head;
+			head.add_http_equiv(
+				`<meta http-equiv="cache-control" content="${state.prerendering.cache}">`
+			);
 		}
 	} else {
 		const csp_header = csp.csp_provider.get_header();
@@ -534,20 +623,17 @@ export async function render_response({
 			headers.set('content-security-policy-report-only', report_only_header);
 		}
 
-		if (link_header_preloads.size) {
-			headers.set('link', Array.from(link_header_preloads).join(', '));
+		if (options.link_header_preload && link_headers.size) {
+			headers.set('link', Array.from(link_headers).join(', '));
 		}
 	}
 
-	// add the content after the script/css links so the link elements are parsed first
-	head += rendered.head;
-
 	const html = options.templates.app({
-		head,
+		head: head.build(),
 		body,
 		assets,
 		nonce: /** @type {string} */ (csp.nonce),
-		env: safe_public_env
+		env: env.explicit_public_env
 	});
 
 	// TODO flush chunks as early as we can
@@ -563,7 +649,7 @@ export async function render_response({
 
 	if (DEV) {
 		if (page_config.csr) {
-			if (transformed.split('<!--').length < html.split('<!--').length) {
+			if (count_non_ssi_comments(transformed) < count_non_ssi_comments(html)) {
 				// the \u001B stuff is ANSI codes, so that we don't need to add a library to the runtime
 				// https://svelte.dev/playground/1b3f49696f0c44c881c34587f2537aa2?version=4.2.19
 				console.warn(
@@ -587,9 +673,9 @@ export async function render_response({
 		: new Response(
 				new ReadableStream({
 					async start(controller) {
-						controller.enqueue(encoder.encode(transformed + '\n'));
+						controller.enqueue(text_encoder.encode(transformed + '\n'));
 						for await (const chunk of chunks) {
-							controller.enqueue(encoder.encode(chunk));
+							if (chunk.length) controller.enqueue(text_encoder.encode(chunk));
 						}
 						controller.close();
 					},
@@ -602,90 +688,62 @@ export async function render_response({
 			);
 }
 
-/**
- * If the serialized data contains promises, `chunks` will be an
- * async iterable containing their resolutions
- * @param {import('@sveltejs/kit').RequestEvent} event
- * @param {import('types').SSROptions} options
- * @param {Array<import('types').ServerDataNode | null>} nodes
- * @param {import('./csp.js').Csp} csp
- * @param {string} global
- * @returns {{ data: string, chunks: AsyncIterable<string> | null }}
- */
-function get_data(event, options, nodes, csp, global) {
-	let promise_id = 1;
-	let count = 0;
+class Head {
+	#rendered;
+	/** @type {string[]} */
+	#http_equiv = [];
+	/** @type {string[]} */
+	#link_tags = [];
+	/** @type {string[]} */
+	#style_tags = [];
+	/** @type {string[]} */
+	#stylesheet_links = [];
 
-	const { iterator, push, done } = create_async_iterator();
-
-	/** @param {any} thing */
-	function replacer(thing) {
-		if (typeof thing?.then === 'function') {
-			const id = promise_id++;
-			count += 1;
-
-			thing
-				.then(/** @param {any} data */ (data) => ({ data }))
-				.catch(
-					/** @param {any} error */ async (error) => ({
-						error: await handle_error_and_jsonify(event, options, error)
-					})
-				)
-				.then(
-					/**
-					 * @param {{data: any; error: any}} result
-					 */
-					async ({ data, error }) => {
-						count -= 1;
-
-						let str;
-						try {
-							str = devalue.uneval({ id, data, error }, replacer);
-						} catch {
-							error = await handle_error_and_jsonify(
-								event,
-								options,
-								new Error(`Failed to serialize promise while rendering ${event.route.id}`)
-							);
-							data = undefined;
-							str = devalue.uneval({ id, data, error }, replacer);
-						}
-
-						const nonce = csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : '';
-						push(`<script${nonce}>${global}.resolve(${str})</script>\n`);
-						if (count === 0) done();
-					}
-				);
-
-			return `${global}.defer(${id})`;
-		} else {
-			for (const key in options.hooks.transport) {
-				const encoded = options.hooks.transport[key].encode(thing);
-				if (encoded) {
-					return `app.decode('${key}', ${devalue.uneval(encoded, replacer)})`;
-				}
-			}
-		}
+	/**
+	 * @param {string} rendered
+	 */
+	constructor(rendered) {
+		this.#rendered = rendered;
 	}
 
-	try {
-		const strings = nodes.map((node) => {
-			if (!node) return 'null';
+	build() {
+		return [
+			...this.#http_equiv,
+			...this.#link_tags,
+			this.#rendered,
+			...this.#style_tags,
+			...this.#stylesheet_links
+		].join('\n\t\t');
+	}
 
-			/** @type {any} */
-			const payload = { type: 'data', data: node.data, uses: serialize_uses(node) };
-			if (node.slash) payload.slash = node.slash;
+	/**
+	 * @param {string} style
+	 * @param {string[]} attributes
+	 */
+	add_style(style, attributes) {
+		this.#style_tags.push(
+			`<style${attributes.length ? ' ' + attributes.join(' ') : ''}>${style}</style>`
+		);
+	}
 
-			return devalue.uneval(payload, replacer);
-		});
+	/**
+	 * @param {string} href
+	 * @param {string[]} attributes
+	 */
+	add_stylesheet(href, attributes) {
+		this.#stylesheet_links.push(`<link href="${href}" ${attributes.join(' ')}>`);
+	}
 
-		return {
-			data: `[${strings.join(',')}]`,
-			chunks: count > 0 ? iterator : null
-		};
-	} catch (e) {
-		// @ts-expect-error
-		e.path = e.path.slice(1);
-		throw new Error(clarify_devalue_error(event, /** @type {any} */ (e)));
+	/**
+	 * @param {string} href
+	 * @param {string[]} attributes
+	 */
+	add_link_tag(href, attributes) {
+		this.#link_tags.push(`<link href="${href}" ${attributes.join(' ')}>`);
+	}
+
+	/** @param {string} tag */
+	add_http_equiv(tag) {
+		this.#http_equiv.push(tag);
 	}
 }

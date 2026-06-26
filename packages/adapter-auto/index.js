@@ -9,7 +9,8 @@ const commands = {
 	npm: (name, version) => `npm install -D ${name}@${version}`,
 	pnpm: (name, version) => `pnpm add -D ${name}@${version}`,
 	yarn: (name, version) => `yarn add -D ${name}@${version}`,
-	bun: (name, version) => `bun add -D ${name}@${version}`
+	bun: (name, version) => `bun add -D ${name}@${version}`,
+	deno: (name, version) => `deno install -D npm:${name}@${version}`
 };
 
 function detect_lockfile() {
@@ -23,6 +24,7 @@ function detect_lockfile() {
 		if (exists('yarn.lock')) return 'yarn';
 		if (exists('package-lock.json')) return 'npm';
 		if (exists('bun.lockb') || exists('bun.lock')) return 'bun';
+		if (exists('deno.lock')) return 'deno';
 	} while (dir !== (dir = path.dirname(dir)));
 
 	return 'npm';
@@ -109,7 +111,7 @@ async function get_adapter() {
 
 			console.log(`Successfully installed ${match.module}.`);
 			console.warn(
-				`\nIf you plan on staying on this deployment platform, consider replacing @sveltejs/adapter-auto with ${match.module}. This will give you faster and more robust installs, and more control over deployment configuration.\n`
+				`\nIf you plan to continue deploying to ${match.name}, consider replacing @sveltejs/adapter-auto with ${match.module}. This will give you faster installs and more control over deployment configuration.\n`
 			);
 		} catch (e) {
 			throw new Error(
@@ -150,6 +152,9 @@ export default () => ({
 			supports_error(
 				'The read function imported from $app/server only works in certain environments'
 			);
+		},
+		instrumentation: () => {
+			supports_error('`instrumentation.server.js` only works in certain environments');
 		}
 	}
 });

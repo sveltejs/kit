@@ -1,0 +1,9 @@
+{
+	"compilerOptions": {
+		"allowJs": true,
+		"checkJs": true,
+		"noEmit": true,
+		"rewriteRelativeImportExtensions": true
+	},
+	"extends": "./.svelte-kit/tsconfig.json"
+}

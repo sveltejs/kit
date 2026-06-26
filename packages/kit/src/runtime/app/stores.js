@@ -1,5 +1,5 @@
 import { getContext } from 'svelte';
-import { BROWSER } from 'esm-env';
+import { BROWSER, DEV } from 'esm-env';
 import { stores as browser_stores } from '../client/client.js';
 
 /**
@@ -35,7 +35,7 @@ export const getStores = () => {
  */
 export const page = {
 	subscribe(fn) {
-		const store = __SVELTEKIT_DEV__ ? get_store('page') : getStores().page;
+		const store = DEV ? get_store('page') : getStores().page;
 		return store.subscribe(fn);
 	}
 };
@@ -52,7 +52,7 @@ export const page = {
  */
 export const navigating = {
 	subscribe(fn) {
-		const store = __SVELTEKIT_DEV__ ? get_store('navigating') : getStores().navigating;
+		const store = DEV ? get_store('navigating') : getStores().navigating;
 		return store.subscribe(fn);
 	}
 };
@@ -67,7 +67,7 @@ export const navigating = {
  */
 export const updated = {
 	subscribe(fn) {
-		const store = __SVELTEKIT_DEV__ ? get_store('updated') : getStores().updated;
+		const store = DEV ? get_store('updated') : getStores().updated;
 
 		if (BROWSER) {
 			updated.check = store.check;

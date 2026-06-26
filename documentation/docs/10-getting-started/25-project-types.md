@@ -22,7 +22,7 @@ Tools built solely to do static site generation may scale the prerendering proce
 
 ## Multi-page app
 
-SvelteKit isn't typically used to build [traditional multi-page apps](glossary#MPA). However, in SvelteKit you can remove all JavaScript on a page with [`csr = false`](page-options#csr), which will render subsequent links on the server, or you can use [`data-sveltekit-reload`](link-options#data-sveltekit-reload) to render specific links on the server.
+SvelteKit isn't typically used to build [traditional multi-page apps](glossary#MPA). However, you can use [`data-sveltekit-reload`](link-options#data-sveltekit-reload) to render all links on the server with `<body data-sveltekit-reload>` or specific links by placing it somewhere more specific. This does not remove the client-side router, but if you don't need JavaScript on a page you can remove all JavaScript on the page with [`csr = false`](page-options#csr), which will also render any links on the server when clicked.
 
 ## Separate backend
 
@@ -32,7 +32,7 @@ If you are using an external backend, you can simply skip over and ignore the pa
 
 ## Serverless app
 
-SvelteKit apps are simple to run on serverless platforms. [The default zero config adapter](adapter-auto) will automatically run your app on a number of supported platforms or you can use [`adapter-vercel`](adapter-vercel), [`adapter-netlify`](adapter-netlify), or [`adapter-cloudflare`](adapter-cloudflare) to provide platform-specific configuration. And [community adapters](https://sveltesociety.dev/packages?category=sveltekit-adapters) allow you to deploy your application to almost any serverless environment. Some of these adapters such as [`adapter-vercel`](adapter-vercel) and [`adapter-netlify`](adapter-netlify) offer an `edge` option, to support [edge rendering](glossary#Edge) for improved latency.
+SvelteKit apps are simple to run on serverless platforms. [The default zero config adapter](adapter-auto) will automatically run your app on a number of supported platforms or you can use [`adapter-vercel`](adapter-vercel), [`adapter-netlify`](adapter-netlify), or [`adapter-cloudflare`](adapter-cloudflare) to provide platform-specific configuration. And [community adapters](/packages#sveltekit-adapters) allow you to deploy your application to almost any serverless environment. Some of these adapters such as [`adapter-vercel`](adapter-vercel) and [`adapter-netlify`](adapter-netlify) offer an `edge` option, to support [edge rendering](glossary#Edge) for improved latency.
 
 ## Your own server
 
@@ -62,7 +62,7 @@ You can turn a [SvelteKit SPA](single-page-apps) into a desktop app with [Tauri]
 
 ## Browser extension
 
-You can build browser extensions using either [`adapter-static`](adapter-static) or [community adapters](https://sveltesociety.dev/packages?category=sveltekit-adapters) specifically tailored towards browser extensions.
+You can build browser extensions using either [`adapter-static`](adapter-static) or [community adapters](/packages#sveltekit-adapters) specifically tailored towards browser extensions.
 
 ## Embedded device
 

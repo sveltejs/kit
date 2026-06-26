@@ -1,7 +1,6 @@
 import { read_implementation, manifest } from '__sveltekit/server';
-import { base } from '__sveltekit/paths';
-import { DEV } from 'esm-env';
-import { b64_decode } from '../../utils.js';
+import { assets } from '$app/paths/internal/server';
+import { base64_decode } from '../../utils.js';
 
 /**
  * Read the contents of an imported asset from the filesystem
@@ -33,8 +32,9 @@ export function read(asset) {
 		const data = asset.slice(match[0].length);
 
 		if (match[2] !== undefined) {
-			const decoded = b64_decode(data);
+			const decoded = base64_decode(data);
 
+			// @ts-ignore passing a Uint8Array to `new Response(...)` is fine
 			return new Response(decoded, {
 				headers: {
 					'Content-Length': decoded.byteLength.toString(),
@@ -54,7 +54,9 @@ export function read(asset) {
 	}
 
 	const file = decodeURIComponent(
-		DEV && asset.startsWith('/@fs') ? asset : asset.slice(base.length + 1)
+		__SVELTEKIT_DEV__ && asset.startsWith(assets + '/@fs')
+			? asset.slice(assets.length)
+			: asset.slice(assets.length + 1)
 	);
 
 	if (file in manifest._.server_assets) {
@@ -72,6 +74,6 @@ export function read(asset) {
 	throw new Error(`Asset does not exist: ${file}`);
 }
 
-export { getRequestEvent } from './event.js';
+export { getRequestEvent } from '@sveltejs/kit/internal/server';
 
-export { query, prerender, command, form } from './remote/index.js';
+export { query, prerender, command, form, requested } from './remote/index.js';

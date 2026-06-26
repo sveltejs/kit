@@ -57,7 +57,6 @@ test.each([
 });
 
 test.each([
-	['load function', 'export async function load () { return {} }'],
 	['private export', "export let _foo = 'bar'"],
 	['export all declaration alias', 'export * as bar from "./foo"'],
 	['non-page option export', "export const foo = 'bar'"]
@@ -185,6 +184,23 @@ test.each([
     `
 	]
 ])('fails when export specifier references: %s', (_, input) => {
+	const exports = statically_analyse_page_options('', input);
+	expect(exports).toEqual(null);
+});
+
+test.each([
+	['(function)', 'export async function load () { return {} }'],
+	['(variable)', 'export const load = () => { return {} }']
+])('special-cases load function %s', (_, input) => {
+	const exports = statically_analyse_page_options('', input);
+	expect(exports).toEqual({ load: null });
+});
+
+test('special-cases load function (static analysis fails)', () => {
+	const input = `
+	export const load = () => { return {} };
+	export const ssr = process.env.SSR;
+	`;
 	const exports = statically_analyse_page_options('', input);
 	expect(exports).toEqual(null);
 });

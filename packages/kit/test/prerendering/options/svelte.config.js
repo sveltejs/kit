@@ -1,27 +1,8 @@
-import adapter from '../../../../adapter-static/index.js';
-
-/** @type {import('@sveltejs/kit').Config} */
-const config = {
-	kit: {
-		adapter: adapter({
-			fallback: '200.html'
-		}),
-
-		csp: {
-			directives: {
-				'script-src': ['self']
-			}
-		},
-
-		files: {
-			assets: 'public'
-		},
-
-		paths: {
-			base: '/path-base',
-			assets: 'https://cdn.example.com/stuff'
+// TODO remove this once svelte-check no longer needs it
+export default {
+	compilerOptions: {
+		experimental: {
+			async: true
 		}
 	}
 };
-
-export default config;

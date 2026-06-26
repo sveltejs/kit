@@ -1,9 +1,9 @@
 /** @import { RemoteCommand } from '@sveltejs/kit' */
-/** @import { RemoteInfo, MaybePromise } from 'types' */
+/** @import { MaybePromise, RemoteCommandInternals } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
-import { getRequestEvent } from '../event.js';
-import { check_experimental, create_validator, run_remote_function } from './shared.js';
-import { get_event_state } from '../../../server/event-state.js';
+import { get_request_store } from '@sveltejs/kit/internal/server';
+import { create_validator, run_remote_function } from './shared.js';
+import { MUTATIVE_METHODS } from '../../../../constants.js';
 
 /**
  * Creates a remote command. When called from the browser, the function will be invoked on the server via a `fetch` call.
@@ -12,7 +12,7 @@ import { get_event_state } from '../../../server/event-state.js';
  *
  * @template Output
  * @overload
- * @param {() => Output} fn
+ * @param {() => MaybePromise<Output>} fn
  * @returns {RemoteCommand<void, Output>}
  * @since 2.27
  */
@@ -25,7 +25,7 @@ import { get_event_state } from '../../../server/event-state.js';
  * @template Output
  * @overload
  * @param {'unchecked'} validate
- * @param {(arg: Input) => Output} fn
+ * @param {(arg: Input) => MaybePromise<Output>} fn
  * @returns {RemoteCommand<Input, Output>}
  * @since 2.27
  */
@@ -38,7 +38,7 @@ import { get_event_state } from '../../../server/event-state.js';
  * @template Output
  * @overload
  * @param {Schema} validate
- * @param {(arg: StandardSchemaV1.InferOutput<Schema>) => Output} fn
+ * @param {(arg: StandardSchemaV1.InferOutput<Schema>) => MaybePromise<Output>} fn
  * @returns {RemoteCommand<StandardSchemaV1.InferInput<Schema>, Output>}
  * @since 2.27
  */
@@ -46,36 +46,40 @@ import { get_event_state } from '../../../server/event-state.js';
  * @template Input
  * @template Output
  * @param {any} validate_or_fn
- * @param {(arg?: Input) => Output} [maybe_fn]
+ * @param {(arg?: Input) => MaybePromise<Output>} [maybe_fn]
  * @returns {RemoteCommand<Input, Output>}
  * @since 2.27
  */
 /*@__NO_SIDE_EFFECTS__*/
 export function command(validate_or_fn, maybe_fn) {
-	check_experimental('command');
-
-	/** @type {(arg?: Input) => Output} */
+	/** @type {(arg?: Input) => MaybePromise<Output>} */
 	const fn = maybe_fn ?? validate_or_fn;
 
 	/** @type {(arg?: any) => MaybePromise<Input>} */
 	const validate = create_validator(validate_or_fn, maybe_fn);
 
-	/** @type {RemoteInfo} */
+	/** @type {RemoteCommandInternals} */
 	const __ = { type: 'command', id: '', name: '' };
 
-	/** @type {RemoteCommand<Input, Output> & { __: RemoteInfo }} */
+	/** @type {RemoteCommand<Input, Output> & { __: RemoteCommandInternals }} */
 	const wrapper = (arg) => {
-		const event = getRequestEvent();
+		const { event, state } = get_request_store();
 
-		if (!event.isRemoteRequest) {
+		if (!MUTATIVE_METHODS.includes(event.request.method)) {
+			throw new Error(
+				`Cannot call a command (\`${__.name}(${maybe_fn ? '...' : ''})\`) from a ${event.request.method} handler`
+			);
+		}
+
+		if (state.is_in_render) {
 			throw new Error(
 				`Cannot call a command (\`${__.name}(${maybe_fn ? '...' : ''})\`) during server-side rendering`
 			);
 		}
 
-		get_event_state(event).refreshes ??= {};
-
-		const promise = Promise.resolve(run_remote_function(event, true, arg, validate, fn));
+		const promise = Promise.resolve(
+			run_remote_function(event, state, true, () => validate(arg), fn)
+		);
 
 		// @ts-expect-error
 		promise.updates = () => {
@@ -86,6 +90,11 @@ export function command(validate_or_fn, maybe_fn) {
 	};
 
 	Object.defineProperty(wrapper, '__', { value: __ });
+
+	// On the server, pending is always 0
+	Object.defineProperty(wrapper, 'pending', {
+		get: () => 0
+	});
 
 	return wrapper;
 }

@@ -9,11 +9,13 @@ The `RequestHandler` and `Load` types both accept a `Params` argument allowing y
 ```js
 /// file: src/routes/[foo]/[bar]/[baz]/+server.js
 // @errors: 2355 2322 1360
-/** @type {import('@sveltejs/kit').RequestHandler<{
-    foo: string;
-    bar: string;
-    baz: string
-  }>} */
+/**
+ * @type {import('@sveltejs/kit').RequestHandler<{
+ *   foo: string;
+ *   bar: string;
+ *   baz: string
+ * }>}
+ */
 export async function GET({ params }) {
 	// ...
 }
@@ -190,9 +192,11 @@ Others are required for SvelteKit to work properly, and should also be left unto
 }
 ```
 
+Use the [`typescript.config` setting](configuration#typescript) in `svelte.config.js` to extend or modify the generated `tsconfig.json`.
+
 ## $lib
 
-This is a simple alias to `src/lib`, or whatever directory is specified as [`config.kit.files.lib`](configuration#files). It allows you to access common components and utility modules without `../../../../` nonsense.
+This is a simple alias to `src/lib`. It allows you to access common components and utility modules without `../../../../` nonsense.
 
 ### $lib/server
 

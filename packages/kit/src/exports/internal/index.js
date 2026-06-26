@@ -1,3 +1,5 @@
+/** @import { StandardSchemaV1 } from '@standard-schema/spec' */
+
 export class HttpError {
 	/**
 	 * @param {number} status
@@ -25,6 +27,15 @@ export class Redirect {
 	 * @param {string} location
 	 */
 	constructor(status, location) {
+		try {
+			new Headers({ location });
+		} catch {
+			throw new Error(
+				`Invalid redirect location ${JSON.stringify(location)}: ` +
+					'this string contains characters that cannot be used in HTTP headers'
+			);
+		}
+
 		this.status = status;
 		this.location = location;
 	}
@@ -62,4 +73,18 @@ export class ActionFailure {
 	}
 }
 
-export { validate_remote_functions } from './remote-functions.js';
+/**
+ * Error thrown when form validation fails imperatively
+ */
+export class ValidationError extends Error {
+	/**
+	 * @param {StandardSchemaV1.Issue[]} issues
+	 */
+	constructor(issues) {
+		super('Validation failed');
+		this.name = 'ValidationError';
+		this.issues = issues;
+	}
+}
+
+export { init_remote_functions } from './remote-functions.js';
