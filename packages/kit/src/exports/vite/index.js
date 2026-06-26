@@ -990,10 +990,12 @@ function kit({ svelte_config }) {
 						build: {
 							modulePreload: false,
 							rolldownOptions: {
+								external: [`${kit.paths.base}/${kit.appDir}/env.js`],
 								input: {
 									'service-worker': service_worker_entry_file
 								},
 								output: {
+									format: 'es',
 									entryFileNames: 'service-worker.js',
 									assetFileNames: `${kit.appDir}/immutable/assets/[name].[hash][extname]`,
 									codeSplitting:
@@ -1157,10 +1159,11 @@ function kit({ svelte_config }) {
 				id: service_worker_entry_file || '<skip>'
 			},
 			handler(code) {
-				// in dev, we prepend the service worker with an import that
-				// configures `env`, in case `$app/env/public` is imported,
-				// in prod, where we currently use non-module service
-				// workers, we have to use `importScripts` instead
+				// prepend the service worker with an import that configures
+				// `env`, in case `$app/env/public` is imported. In production
+				// this is required: dynamic public env vars aren't known at
+				// build time, so `env.js` is loaded at runtime. In dev, the
+				// imported module just inlines the current values instead.
 				return {
 					code: `import '__sveltekit/env/service-worker';\n${code}`
 				};
