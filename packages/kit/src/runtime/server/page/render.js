@@ -8,7 +8,6 @@ import { serialize_data } from './serialize_data.js';
 import { s } from '../../../utils/misc.js';
 import { Csp } from './csp.js';
 import { uneval_action_response } from './actions.js';
-import { public_env } from '../../shared-server.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import { SCHEME } from '../../../utils/url.js';
 import { create_server_routing_response, generate_route_object } from './server_routing.js';
@@ -69,7 +68,7 @@ export async function render_response({
 }) {
 	if (state.prerendering) {
 		if (options.csp.mode === 'nonce') {
-			throw new Error('Cannot use prerendering if config.kit.csp.mode === "nonce"');
+			throw new Error('Cannot use prerendering if config.csp.mode === "nonce"');
 		}
 
 		if (options.app_template_contains_nonce) {
@@ -299,7 +298,7 @@ export async function render_response({
 		}
 	}
 
-	const head = new Head(rendered.head, !!state.prerendering);
+	const head = new Head(rendered.head);
 	let body = rendered.html;
 
 	/** @param {string} path */
@@ -337,7 +336,7 @@ export async function render_response({
 			// include them in disabled state so that Vite can detect them and doesn't try to add them
 			attributes.push('disabled', 'media="(max-width: 0)"');
 		} else {
-			if (resolve_opts.preload({ type: 'css', path })) {
+			if (options.link_header_preload && resolve_opts.preload({ type: 'css', path })) {
 				link_headers.add(`<${encodeURI(path)}>; rel="preload"; as="style"; nopush`);
 			}
 		}
@@ -351,11 +350,18 @@ export async function render_response({
 		if (resolve_opts.preload({ type: 'font', path })) {
 			const ext = dep.slice(dep.lastIndexOf('.') + 1);
 
-			head.add_link_tag(path, ['rel="preload"', 'as="font"', `type="font/${ext}"`, 'crossorigin']);
-
-			link_headers.add(
-				`<${encodeURI(path)}>; rel="preload"; as="font"; type="font/${ext}"; crossorigin; nopush`
-			);
+			if (options.link_header_preload && !state.prerendering) {
+				link_headers.add(
+					`<${encodeURI(path)}>; rel="preload"; as="font"; type="font/${ext}"; crossorigin; nopush`
+				);
+			} else {
+				head.add_link_tag(path, [
+					'rel="preload"',
+					'as="font"',
+					`type="font/${ext}"`,
+					'crossorigin'
+				]);
+			}
 		}
 	}
 
@@ -388,15 +394,19 @@ export async function render_response({
 				(path) => resolve_opts.preload({ type: 'js', path })
 			);
 
-			for (const path of included_modulepreloads) {
-				// see the kit.output.preloadStrategy option for details on why we have multiple options here
-				link_headers.add(`<${encodeURI(path)}>; rel="modulepreload"; nopush`);
+			/** @type {(path: string) => void} */
+			let add_preload;
 
-				if (options.preload_strategy !== 'modulepreload') {
-					head.add_script_preload(path);
-				} else {
-					head.add_link_tag(path, ['rel="modulepreload"']);
-				}
+			// see the output.preloadStrategy option for details on why we have multiple options here
+			if (options.link_header_preload && !state.prerendering) {
+				add_preload = (path) =>
+					link_headers.add(`<${encodeURI(path)}>; rel="modulepreload"; nopush`);
+			} else {
+				add_preload = (path) => head.add_link_tag(path, ['rel="modulepreload"']);
+			}
+
+			for (const path of included_modulepreloads) {
+				add_preload(path);
 			}
 		}
 
@@ -418,10 +428,8 @@ export async function render_response({
 			properties.push(`assets: ${s(paths.assets)}`);
 		}
 
-		if (__SVELTEKIT_EXPERIMENTAL_EXPLICIT_ENVIRONMENT_VARIABLES__) {
+		if (client.uses_env_dynamic_public) {
 			properties.push(`env: ${load_env_eagerly ? 'null' : devalue.uneval(env.rendered_env)}`);
-		} else if (client.uses_env_dynamic_public) {
-			properties.push(`env: ${load_env_eagerly ? 'null' : s(public_env)}`);
 		}
 
 		if (chunks) {
@@ -552,12 +560,9 @@ export async function render_response({
 		}
 
 		if (options.service_worker) {
-			let opts = __SVELTEKIT_DEV__ ? ", { type: 'module' }" : '';
+			let opts = ", { type: 'module' }";
 			if (options.service_worker_options != null) {
-				const service_worker_options = { ...options.service_worker_options };
-				if (__SVELTEKIT_DEV__) {
-					service_worker_options.type = 'module';
-				}
+				const service_worker_options = { ...options.service_worker_options, type: 'module' };
 				opts = `, ${s(service_worker_options)}`;
 			}
 
@@ -615,7 +620,7 @@ export async function render_response({
 			headers.set('content-security-policy-report-only', report_only_header);
 		}
 
-		if (link_headers.size) {
+		if (options.link_header_preload && link_headers.size) {
 			headers.set('link', Array.from(link_headers).join(', '));
 		}
 	}
@@ -625,9 +630,7 @@ export async function render_response({
 		body,
 		assets,
 		nonce: /** @type {string} */ (csp.nonce),
-		env: __SVELTEKIT_EXPERIMENTAL_EXPLICIT_ENVIRONMENT_VARIABLES__
-			? env.explicit_public_env
-			: public_env
+		env: env.explicit_public_env
 	});
 
 	// TODO flush chunks as early as we can
@@ -684,13 +687,10 @@ export async function render_response({
 
 class Head {
 	#rendered;
-	#prerendering;
 	/** @type {string[]} */
 	#http_equiv = [];
 	/** @type {string[]} */
 	#link_tags = [];
-	/** @type {string[]} */
-	#script_preloads = [];
 	/** @type {string[]} */
 	#style_tags = [];
 	/** @type {string[]} */
@@ -698,18 +698,15 @@ class Head {
 
 	/**
 	 * @param {string} rendered
-	 * @param {boolean} prerendering
 	 */
-	constructor(rendered, prerendering) {
+	constructor(rendered) {
 		this.#rendered = rendered;
-		this.#prerendering = prerendering;
 	}
 
 	build() {
 		return [
 			...this.#http_equiv,
 			...this.#link_tags,
-			...this.#script_preloads,
 			this.#rendered,
 			...this.#style_tags,
 			...this.#stylesheet_links
@@ -734,25 +731,16 @@ class Head {
 		this.#stylesheet_links.push(`<link href="${href}" ${attributes.join(' ')}>`);
 	}
 
-	/** @param {string} href */
-	add_script_preload(href) {
-		this.#script_preloads.push(
-			`<link rel="preload" as="script" crossorigin="anonymous" href="${href}">`
-		);
-	}
-
 	/**
 	 * @param {string} href
 	 * @param {string[]} attributes
 	 */
 	add_link_tag(href, attributes) {
-		if (!this.#prerendering) return;
 		this.#link_tags.push(`<link href="${href}" ${attributes.join(' ')}>`);
 	}
 
 	/** @param {string} tag */
 	add_http_equiv(tag) {
-		if (!this.#prerendering) return;
 		this.#http_equiv.push(tag);
 	}
 }

@@ -1,5 +1,5 @@
 <script>
-	import { dev } from '$app/environment';
+	import { dev } from '$app/env';
 </script>
 
 <p>{dev ? 'not prod' : 'prod'}</p>

@@ -1,11 +1,7 @@
-/** @import { PromiseWithResolvers } from '../../utils/promise.js' */
 import { noop } from '../../utils/functions.js';
-import { with_resolvers } from '../../utils/promise.js';
 import { IN_WEBCONTAINER } from './constants.js';
 import { respond } from './respond.js';
-import { set_private_env, set_public_env } from '../shared-server.js';
 import { options, get_hooks } from '__SERVER__/internal.js';
-import { filter_env } from '../../utils/env.js';
 import { format_server_error } from './utils.js';
 import { set_read_implementation, set_manifest } from '__sveltekit/server';
 import { set_env } from '__sveltekit/env';
@@ -37,7 +33,9 @@ export class Server {
 
 			/** @type {typeof respond} */
 			this.respond = async (...args) => {
-				const { promise, resolve } = /** @type {PromiseWithResolvers<void>} */ (with_resolvers());
+				const { promise, resolve } = /** @type {PromiseWithResolvers<void>} */ (
+					Promise.withResolvers()
+				);
 
 				const previous = current;
 				current = promise;
@@ -59,10 +57,6 @@ export class Server {
 		// been done already.
 
 		// set env, in case it's used in initialisation
-		const { env_public_prefix, env_private_prefix } = this.#options;
-
-		set_private_env(filter_env(env, env_private_prefix, env_public_prefix));
-		set_public_env(filter_env(env, env_public_prefix, env_private_prefix));
 		set_env(env);
 
 		if (read) {

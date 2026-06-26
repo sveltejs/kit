@@ -9,6 +9,7 @@ import { negotiate } from '../../utils/http.js';
 import { fix_stack_trace } from '../shared-server.js';
 import { ENDPOINT_METHODS } from '../../constants.js';
 import { escape_html } from '../../utils/escape.js';
+import * as path from '../../utils/path.js';
 
 /**
  * @param {Partial<Record<import('types').HttpMethod, any>>} mod
@@ -212,10 +213,7 @@ let relative = (file) => file;
 
 if (DEV) {
 	try {
-		const path = await import('node:path');
-		const process = await import('node:process');
-
-		relative = (file) => path.relative(process.cwd(), file);
+		relative = (file) => path.relative(__SVELTEKIT_ROOT__, file);
 	} catch {
 		// do nothing
 	}
@@ -230,7 +228,7 @@ export function clean_up_stack_trace(error) {
 		return line.replace(/\((.+)(:\d+:\d+)\)$/, (_, file, loc) => `(${relative(file)}${loc})`);
 	});
 
-	// progressive enhancement for people who haven't configured kit.files.src to something else
+	// progressive enhancement for people who haven't configured files.src to something else
 	const last_line_from_src_code = stack_trace.findLastIndex((line) => /\(src[\\/]/.test(line));
 
 	if (last_line_from_src_code === -1) {

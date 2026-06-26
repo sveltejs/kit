@@ -1,33 +1,29 @@
 import path from 'node:path';
-import { loadEnv } from 'vite';
-import { posixify } from '../../utils/filesystem.js';
+import { posixify } from '../../utils/os.js';
 import { negotiate } from '../../utils/http.js';
-import { filter_env } from '../../utils/env.js';
 import { escape_html } from '../../utils/escape.js';
 import { stackless } from '../../utils/error.js';
 import { dedent } from '../../core/sync/utils.js';
 import {
 	app_server,
 	app_env_private,
-	env_dynamic_private,
-	env_dynamic_public,
-	env_static_private,
-	env_static_public,
-	service_worker
+	service_worker,
+	sveltekit_env_private
 } from './module_ids.js';
 
 /**
- * Transforms kit.alias to a valid vite.resolve.alias array.
+ * Transforms alias to a valid vite.resolve.alias array.
  *
  * Related to tsconfig path alias creation.
  *
  * @param {import('types').ValidatedKitConfig} config
+ * @param {string} root
  * */
-export function get_config_aliases(config) {
+export function get_config_aliases(config, root) {
 	/** @type {import('vite').Alias[]} */
 	const alias = [
 		// For now, we handle `$lib` specially here rather than make it a default value for
-		// `config.kit.alias` since it has special meaning for packaging, etc.
+		// `config.alias` since it has special meaning for packaging, etc.
 		{ find: '$lib', replacement: config.files.lib }
 	];
 
@@ -40,16 +36,16 @@ export function get_config_aliases(config) {
 			// Doing just `{ find: key.slice(0, -2) ,..}` would mean `import .. from "key"` would also be matched, which we don't want
 			alias.push({
 				find: new RegExp(`^${escape_for_regexp(key.slice(0, -2))}\\/(.+)$`),
-				replacement: `${path.resolve(value)}/$1`
+				replacement: `${path.resolve(root, value)}/$1`
 			});
 		} else if (key + '/*' in config.alias) {
 			// key and key/* both exist -> the replacement for key needs to happen _only_ on import .. from "key"
 			alias.push({
 				find: new RegExp(`^${escape_for_regexp(key)}$`),
-				replacement: path.resolve(value)
+				replacement: path.resolve(root, value)
 			});
 		} else {
-			alias.push({ find: key, replacement: path.resolve(value) });
+			alias.push({ find: key, replacement: path.resolve(root, value) });
 		}
 	}
 
@@ -61,22 +57,6 @@ export function get_config_aliases(config) {
  */
 function escape_for_regexp(str) {
 	return str.replace(/[.*+?^${}()|[\]\\]/g, (match) => '\\' + match);
-}
-
-/**
- * Load environment variables from process.env and .env files
- * @param {import('types').ValidatedKitConfig['env']} env_config
- * @param {string} mode
- */
-export function get_env(env_config, mode) {
-	const { publicPrefix: public_prefix, privatePrefix: private_prefix } = env_config;
-	const env = loadEnv(mode, env_config.dir, '');
-
-	return {
-		all: env,
-		public: filter_env(env, public_prefix, private_prefix),
-		private: filter_env(env, private_prefix, public_prefix)
-	};
 }
 
 /**
@@ -158,24 +138,8 @@ export function normalize_id(id, lib, cwd) {
 		return '$app/server';
 	}
 
-	if (id === app_env_private) {
+	if (id === app_env_private || id === sveltekit_env_private) {
 		return '$app/env/private';
-	}
-
-	if (id === env_static_private) {
-		return '$env/static/private';
-	}
-
-	if (id === env_static_public) {
-		return '$env/static/public';
-	}
-
-	if (id === env_dynamic_private) {
-		return '$env/dynamic/private';
-	}
-
-	if (id === env_dynamic_public) {
-		return '$env/dynamic/public';
 	}
 
 	if (id === service_worker) {
@@ -188,18 +152,16 @@ export function normalize_id(id, lib, cwd) {
 export const strip_virtual_prefix = /** @param {string} id */ (id) => id.replace('\0virtual:', '');
 
 /**
- * For `error_for_missing_config('instrumentation.server.js', 'kit.experimental.instrumentation.server', true)`,
+ * For `error_for_missing_config('instrumentation.server.js', 'experimental.instrumentation.server', true)`,
  * returns:
  *
  * ```
- * To enable `instrumentation.server.js`, add the following to your `svelte.config.js`:
+ * To enable `instrumentation.server.js`, add the following to the SvelteKit plugin in your `vite.config.js`:
  *
  *\`\`\`js
- *	kit:
- *		experimental:
- *			instrumentation:
- *				server: true
- *			}
+ *	experimental: {
+ *		instrumentation: {
+ *			server: true
  *		}
  *	}
  *\`\`\`
@@ -221,7 +183,7 @@ export function error_for_missing_config(feature_name, path, value) {
 
 	throw stackless(
 		dedent`\
-			To enable ${feature_name}, add the following to your \`svelte.config.js\`:
+			To enable ${feature_name}, add the following to your SvelteKit plugin in \`vite.config.js\`:
 
 			${result}
 		`

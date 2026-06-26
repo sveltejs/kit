@@ -175,7 +175,7 @@ test.describe('Encoded paths', () => {
 	});
 });
 
-test.describe('$env', () => {
+test.describe('$app/env', () => {
 	test('includes environment variables', async ({ page, clicknav }) => {
 		await page.goto('/env/includes');
 
@@ -722,7 +722,7 @@ test.describe('Page options', () => {
 	});
 });
 
-test.describe('$app/environment', () => {
+test.describe('$app/env', () => {
 	test('includes version', async ({ page }) => {
 		await page.goto('/app-environment');
 		expect(await page.textContent('h1')).toBe('TEST_VERSION');
@@ -730,22 +730,6 @@ test.describe('$app/environment', () => {
 });
 
 test.describe('$app/paths', () => {
-	test('includes paths', async ({ page, javaScriptEnabled }) => {
-		test.skip(
-			process.env.SVELTE_ASYNC === 'true',
-			'does not work with async, should use new functions instead'
-		);
-		await page.goto('/paths');
-
-		let base = javaScriptEnabled ? '' : '.';
-		expect(await page.innerHTML('pre')).toBe(JSON.stringify({ base, assets: base }));
-
-		await page.goto('/paths/deeply/nested');
-
-		base = javaScriptEnabled ? '' : '../..';
-		expect(await page.innerHTML('pre')).toBe(JSON.stringify({ base, assets: base }));
-	});
-
 	// some browsers will re-request assets after a `pushState`
 	// https://github.com/sveltejs/kit/issues/3748#issuecomment-1125980897
 	test('replaces %sveltekit.assets% in template with relative path, and makes it absolute in the client', async ({
@@ -753,10 +737,6 @@ test.describe('$app/paths', () => {
 		page,
 		javaScriptEnabled
 	}) => {
-		test.skip(
-			process.env.SVELTE_ASYNC === 'true',
-			'does not work with async, should use new functions instead'
-		);
 		const absolute = `${baseURL}/favicon.png`;
 
 		await page.goto('/');
@@ -1500,6 +1480,28 @@ test.describe('Actions', () => {
 		expect(error.message).toBe("No action with name 'doesnt-exist' found (404 Not Found)");
 		expect(response.status()).toBe(404);
 	});
+
+	for (const name of ['toString', 'constructor', '__proto__', 'hasOwnProperty']) {
+		test(`submitting to a form action named '${name}' (an Object.prototype member) returns http status code 404`, async ({
+			baseURL,
+			page
+		}) => {
+			const response = await page.request.fetch(
+				`${baseURL}/actions/enhance?/${encodeURIComponent(name)}`,
+				{
+					method: 'POST',
+					data: 'irrelevant',
+					headers: {
+						Origin: `${baseURL}`
+					}
+				}
+			);
+			const { type, error } = await response.json();
+			expect(type).toBe('error');
+			expect(error.message).toBe(`No action with name '${name}' found (404 Not Found)`);
+			expect(response.status()).toBe(404);
+		});
+	}
 });
 
 // Run in serial to not pollute the log with (correct) cookie warnings

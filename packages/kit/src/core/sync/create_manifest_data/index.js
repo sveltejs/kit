@@ -1,14 +1,13 @@
+import { lookup } from 'mrmime';
 import fs from 'node:fs';
 import path from 'node:path';
-import process from 'node:process';
-import colors from 'kleur';
-import { lookup } from 'mrmime';
-import { list_files, runtime_directory } from '../../utils.js';
-import { posixify, resolve_entry } from '../../../utils/filesystem.js';
+import { styleText } from 'node:util';
+import { resolve_entry } from '../../../utils/filesystem.js';
+import { posixify } from '../../../utils/os.js';
 import { parse_route_id } from '../../../utils/routing.js';
+import { list_files, runtime_directory } from '../../utils.js';
 import { prevent_conflicts } from './conflict.js';
 import { sort_routes } from './sort.js';
-import { isSvelte5Plus } from '../utils.js';
 import {
 	create_node_analyser,
 	get_page_options
@@ -19,14 +18,14 @@ import {
  * @param {{
  *   config: import('types').ValidatedConfig;
  *   fallback?: string;
- *   cwd?: string;
+ *   cwd: string;
  * }} opts
  * @returns {import('types').ManifestData}
  */
 export default function create_manifest_data({
 	config,
-	fallback = `${runtime_directory}/components/${isSvelte5Plus() ? 'svelte-5' : 'svelte-4'}`,
-	cwd = process.cwd()
+	fallback = `${runtime_directory}/components`,
+	cwd
 }) {
 	const assets = create_assets(config);
 	const hooks = create_hooks(config, cwd);
@@ -118,8 +117,8 @@ function create_matchers(config, cwd) {
 }
 
 /**
- * @param {import('types').ValidatedConfig} config
  * @param {string} cwd
+ * @param {import('types').ValidatedConfig} config
  * @param {string} fallback
  */
 function create_routes_and_nodes(cwd, config, fallback) {
@@ -222,10 +221,17 @@ function create_routes_and_nodes(cwd, config, fallback) {
 
 			// We can't use withFileTypes because of a NodeJs bug which returns wrong results
 			// with isDirectory() in case of symlinks: https://github.com/nodejs/node/issues/30646
-			const files = fs.readdirSync(dir).map((name) => ({
-				is_dir: fs.statSync(path.join(dir, name)).isDirectory(),
-				name
-			}));
+			// We sort the entries because `readdirSync` order is not guaranteed and differs
+			// between runtimes (e.g. Node returns entries alphabetically, Bun in directory
+			// order). Node indices are assigned from this traversal order, so without sorting
+			// the SSR and client manifests can disagree, causing hydration mismatches.
+			const files = fs
+				.readdirSync(dir)
+				.sort()
+				.map((name) => ({
+					is_dir: fs.statSync(path.join(dir, name)).isDirectory(),
+					name
+				}));
 
 			// process files first
 			for (const file of files) {
@@ -244,12 +250,11 @@ function create_routes_and_nodes(cwd, config, fallback) {
 						);
 					if (typo) {
 						console.log(
-							colors
-								.bold()
-								.yellow(
-									`Missing route file prefix. Did you mean +${file.name}?` +
-										` at ${path.join(dir, file.name)}`
-								)
+							styleText(
+								['bold', 'yellow'],
+								`Missing route file prefix. Did you mean +${file.name}?` +
+									` at ${path.join(dir, file.name)}`
+							)
 						);
 					}
 
@@ -370,7 +375,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 			const root = routes[0];
 			if (!root.leaf && !root.error && !root.layout && !root.endpoint) {
 				throw new Error(
-					'No routes found. If you are using a custom src/routes directory, make sure it is specified in your Svelte config file'
+					'No routes found. If you are using a custom src/routes directory, make sure it is specified in your SvelteKit Vite plugin options'
 				);
 			}
 		}
@@ -495,7 +500,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 
 	for (const route of routes) {
 		if (route.endpoint) {
-			route.endpoint.page_options = get_page_options(path.join(cwd, route.endpoint.file));
+			route.endpoint.page_options = get_page_options(route.endpoint.file, cwd);
 		}
 
 		if (route.page && route.endpoint) {

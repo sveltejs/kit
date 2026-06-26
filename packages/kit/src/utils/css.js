@@ -1,18 +1,9 @@
 import MagicString from 'magic-string';
-import * as svelte from 'svelte/compiler';
+import { parseCss } from 'svelte/compiler';
 
-/** @typedef {ReturnType<typeof import('svelte/compiler').parseCss>['children']} StyleSheetChildren */
+/** @typedef {ReturnType<typeof parseCss>['children']} StyleSheetChildren */
 
 /** @typedef {{ property: string; value: string; start: number; end: number; type: 'Declaration' }} Declaration */
-
-const parse = svelte.parseCss
-	? svelte.parseCss
-	: /** @param {string} css */
-		(css) => {
-			return /** @type {{ css: { children: StyleSheetChildren } }} */ (
-				svelte.parse(`<style>${css}</style>`)
-			).css;
-		};
 
 const SKIP_PARSING_REGEX = /url\(/i;
 
@@ -30,8 +21,6 @@ const HASH_OR_QUERY_REGEX = /[#?]/;
  * with this prefix because Vite emits them into the same directory as the CSS file
  */
 const VITE_ASSET_PREFIX = './';
-
-const AST_OFFSET = '<style>'.length;
 
 /**
  * We need to fix the asset URLs in the CSS before we inline them into a document
@@ -70,7 +59,7 @@ export function fix_css_urls({
 
 	const s = new MagicString(css);
 
-	const parsed = parse(css);
+	const parsed = parseCss(css);
 
 	for (const child of parsed.children) {
 		find_declarations(child, (declaration) => {
@@ -127,11 +116,6 @@ export function fix_css_urls({
 			}
 
 			if (declaration.value === new_value) return;
-
-			if (!svelte.parseCss) {
-				declaration.start = declaration.start - AST_OFFSET;
-				declaration.end = declaration.end - AST_OFFSET;
-			}
 
 			s.update(declaration.start, declaration.end, `${declaration.property}: ${new_value}`);
 		});

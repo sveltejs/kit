@@ -412,7 +412,8 @@ test.describe('SPA mode / no SSR', () => {
 	test('cannot use browser-only global on page because of ssr config in +page.js', async ({
 		page
 	}) => {
-		await page.goto('/no-ssr/ssr-page-config/layout/overwrite');
+		// the Vite error overlay that appears prevents body.started from being added
+		await page.goto('/no-ssr/ssr-page-config/layout/overwrite', { wait_for_started: false });
 		await expect(page.locator('p')).toHaveText(
 			'This is your custom error page saying: "document is not defined (500 Internal Error)"'
 		);
@@ -1531,6 +1532,17 @@ test.describe('goto', () => {
 		await expect(page.locator('p')).toHaveText(message);
 	});
 
+	test('goto fails with a URL that does not resolve to a route', async ({ page }) => {
+		await page.goto('/goto/no-such-route');
+		await page.click('button');
+
+		await expect(page.locator('p')).toContainText(
+			process.env.DEV
+				? 'Cannot use `goto` with a URL that does not resolve to a route within the app'
+				: 'goto: invalid URL'
+		);
+	});
+
 	test.describe('navigation and redirects should be consistent between web native and sveltekit based', () => {
 		const testEntryPage = '/goto/testentry';
 		const testStartPage = '/goto/teststart';
@@ -1562,11 +1574,11 @@ test.describe('goto', () => {
 			test.describe('without replace', () => {
 				const expectGoback = makeExpectGoback(nonexistentPage, testStartPage);
 
-				test('app.goto', async ({ app, page }) => {
-					// navigating to nonexistent page causes playwright's page context to be destroyed
-					// thus this call throws an error unless caught
-					await app.goto(nonexistentPage, { replaceState: false }).catch(() => {});
-					await expectGoback(page);
+				test('app.goto rejects and does not navigate', async ({ app, page }) => {
+					// `goto` is only for routes within the app; navigating to a
+					// non-existent route rejects and leaves the URL unchanged
+					await expect(app.goto(nonexistentPage, { replaceState: false })).rejects.toBeTruthy();
+					await expect(page).toHaveURL(testStartPage);
 				});
 
 				test('location.assign', async ({ page }) => {
@@ -1580,11 +1592,11 @@ test.describe('goto', () => {
 			test.describe('with replace', () => {
 				const expectGoback = makeExpectGoback(nonexistentPage, testEntryPage);
 
-				test('app.goto', async ({ app, page }) => {
-					// navigating to nonexistent page causes playwright's page context to be destroyed
-					// thus this call throws an error unless caught
-					await app.goto(nonexistentPage, { replaceState: true }).catch(() => {});
-					await expectGoback(page);
+				test('app.goto rejects and does not navigate', async ({ app, page }) => {
+					// `goto` is only for routes within the app; navigating to a
+					// non-existent route rejects and leaves the URL unchanged
+					await expect(app.goto(nonexistentPage, { replaceState: true })).rejects.toBeTruthy();
+					await expect(page).toHaveURL(testStartPage);
 				});
 
 				test('location.replace', async ({ page }) => {

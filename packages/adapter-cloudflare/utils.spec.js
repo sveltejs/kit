@@ -68,6 +68,15 @@ describe('detects Cloudflare Workers project', () => {
 			)
 		).toBe(false);
 	});
+
+	test('WORKERS_CI environment variable', () => {
+		vi.stubEnv('WORKERS_CI', '1');
+		const result = is_building_for_cloudflare_pages(
+			/** @type {import('wrangler').Unstable_Config} */ ({})
+		);
+		vi.unstubAllEnvs();
+		expect(result).toBe(false);
+	});
 });
 
 describe('validates Wrangler config', () => {
@@ -217,9 +226,7 @@ test('generates a _routes.json file', () => {
 						reportOnly: {}
 					},
 					env: {
-						dir: '.',
-						publicPrefix: 'PUBLIC_',
-						privatePrefix: ''
+						dir: '.'
 					},
 					outDir: '.svelte-kit'
 				}
@@ -297,9 +304,7 @@ test('truncates excess _routes.json exclude rules', () => {
 						reportOnly: {}
 					},
 					env: {
-						dir: '.',
-						publicPrefix: 'PUBLIC_',
-						privatePrefix: ''
+						dir: '.'
 					},
 					outDir: '.svelte-kit'
 				}

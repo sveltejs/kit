@@ -70,21 +70,21 @@ test.describe('$app/env', () => {
 	}) => {
 		test.skip(javaScriptEnabled || !!process.env.DEV || !process.env.DYNAMIC_PUBLIC_ENV);
 
-		const content = read('/prerendered/dependencies/_app/env.script.js');
+		const content = read('/prerendered/dependencies/_app/env.js');
 		expect(content).toContain('hello');
 
 		const service_worker = read('/client/service-worker.js');
-		expect(service_worker).toContain('importScripts("/basepath/_app/env.script.js");');
+		expect(service_worker).toContain('import { env } from "/basepath/_app/env.js"');
 	});
 
-	test('does not load env.script.js in the service worker when there are no public dynamic environment variables', ({
+	test('does not load env.js in the service worker when there are no public dynamic environment variables', ({
 		javaScriptEnabled
 	}) => {
 		test.skip(javaScriptEnabled || !!process.env.DEV || !!process.env.DYNAMIC_PUBLIC_ENV);
 
 		const serviceWorker = read('/client/service-worker.js');
-		expect(serviceWorker).not.toContain('importScripts("/basepath/_app/env.script.js");');
-		expect(fs.existsSync(`${output}/prerendered/dependencies/_app/env.script.js`)).toBeFalsy();
+		expect(serviceWorker).not.toContain('import { env } from "/basepath/_app/env.js"');
+		expect(fs.existsSync(`${output}/prerendered/dependencies/_app/env.js`)).toBeFalsy();
 	});
 
 	test('runtime-only validation', async ({ page, javaScriptEnabled }) => {

@@ -1,4 +1,3 @@
-import { VERSION } from '@sveltejs/kit';
 import { copyFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
@@ -12,20 +11,18 @@ import {
 } from './utils.js';
 
 const name = '@sveltejs/adapter-cloudflare';
-const [kit_major, kit_minor] = VERSION.split('.');
 
 /** @type {import('./index.js').default} */
 export default function (options = {}) {
 	return {
 		name,
-		/** @param {Builder2_0_0} builder */
 		async adapt(builder) {
 			if (
 				existsSync('_routes.json') ||
 				existsSync(`${builder.config.kit.files.assets}/_routes.json`)
 			) {
 				throw new Error(
-					"Cloudflare Pages' _routes.json should be configured in svelte.config.js. See https://svelte.dev/docs/kit/adapter-cloudflare#Options-routes"
+					"Cloudflare Pages' _routes.json should be configured from the adapter option of the SvelteKit plugin in your vite.config.js. See https://svelte.dev/docs/kit/adapter-cloudflare#Options-routes"
 				);
 			}
 
@@ -126,8 +123,8 @@ export default function (options = {}) {
 					ASSETS: assets_binding
 				}
 			});
-			if (builder.hasServerInstrumentationFile?.()) {
-				builder.instrument?.({
+			if (builder.hasServerInstrumentationFile()) {
+				builder.instrument({
 					entrypoint: worker_dest,
 					instrumentation: `${builder.getServerDirectory()}/instrumentation.server.js`
 				});
@@ -213,16 +210,7 @@ export default function (options = {}) {
 			};
 		},
 		supports: {
-			read: ({ route }) => {
-				// TODO bump peer dep in next adapter major to simplify this
-				if (kit_major === '2' && kit_minor < '25') {
-					throw new Error(
-						`${name}: Cannot use \`read\` from \`$app/server\` in route \`${route.id}\` when using SvelteKit < 2.25.0`
-					);
-				}
-
-				return true;
-			},
+			read: () => true,
 			instrumentation: () => true
 		}
 	};

@@ -3,8 +3,8 @@
 		"allowJs": true,
 		"checkJs": true,
 		"noEmit": true,
-		"target": "es2022",
-		"module": "es2022",
+		"target": "esnext",
+		"module": "esnext",
 		"moduleResolution": "bundler",
 		"paths": {
 			"@sveltejs/kit": ["../../../../../exports/public"],

@@ -1,6 +1,11 @@
 import { Adapter } from '@sveltejs/kit';
 import './ambient.js';
 
+declare global {
+	const ENV_PREFIX: string;
+	const PRECOMPRESS: boolean;
+}
+
 interface AdapterOptions {
 	/**
 	 * The directory to build the server to. It defaults to `build` — i.e.
