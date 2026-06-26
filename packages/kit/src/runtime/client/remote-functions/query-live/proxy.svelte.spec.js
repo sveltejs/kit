@@ -10,7 +10,7 @@ vi.mock(new URL('../../client.js', import.meta.url).pathname, () => ({
 	query_map: new Map(),
 	query_responses: {},
 	live_query_map: new Map(),
-	goto: () => Promise.resolve()
+	_goto: () => Promise.resolve()
 }));
 
 vi.mock(new URL('./instance.svelte.js', import.meta.url).pathname, () => {

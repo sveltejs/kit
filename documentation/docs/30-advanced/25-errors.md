@@ -128,17 +128,19 @@ Ordinarily, if an error happens during server-side rendering (for example inside
 Since SvelteKit 2.54 and Svelte 5.53, you can change this by enabling the experimental `handleRenderingErrors` option in your config:
 
 ```js
-/// file: svelte.config.js
-/** @type {import('@sveltejs/kit').Config} */
-const config = {
-	kit: {
-		experimental: {
-			handleRenderingErrors: true
-		}
-	}
-};
+/// file: vite.config.js
+import { sveltekit } from '@sveltejs/kit/vite';
+import { defineConfig } from 'vite';
 
-export default config;
+export default defineConfig({
+	plugins: [
+		sveltekit({
+			experimental: {
+				handleRenderingErrors: true
+			}
+		})
+	]
+});
 ```
 
 When this is enabled, SvelteKit will wrap your route components in an error boundary. If an error occurs during rendering, the nearest [`+error.svelte`](routing#error) page will be shown, just as if the error had occurred in a `load` function.

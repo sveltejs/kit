@@ -617,6 +617,10 @@ function get_type_prefix(field_type, is_array, input_value) {
  */
 function deep_clone(value) {
 	if (value !== null && typeof value === 'object') {
+		if (value instanceof Date) {
+			return new Date(value.getTime());
+		}
+
 		if (value instanceof File) {
 			return value;
 		}

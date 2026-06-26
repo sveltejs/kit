@@ -116,7 +116,7 @@ export interface Builder {
 	/** Create `dir` and any required parent directories. */
 	mkdirp: (dir: string) => void;
 
-	/** The fully resolved Svelte config. */
+	/** The fully resolved SvelteKit config. */
 	config: ValidatedConfig;
 	/** Information about prerendered pages and assets, if any. */
 	prerendered: Prerendered;
@@ -322,35 +322,37 @@ export interface Emulator {
 }
 
 export interface KitConfig {
-	// TODO: remove this in 4.0
 	/**
 	 * Your [adapter](https://svelte.dev/docs/kit/adapters) is run when executing `vite build`. It determines how the output is converted for different platforms.
 	 * @default undefined
-	 * @deprecated removed in 3.0.0. Adapters should now be passed to the `sveltekit` Vite plugin in `vite.config.js`
 	 */
 	adapter?: Adapter;
 	/**
 	 * An object containing zero or more aliases used to replace values in `import` statements. These aliases are automatically passed to Vite and TypeScript.
 	 *
 	 * ```js
-	 * /// file: svelte.config.js
-	 * /// type: import('@sveltejs/kit').Config
-	 * const config = {
-	 *   kit: {
-	 *     alias: {
-	 *       // this will match a file
-	 *       'my-file': 'path/to/my-file.js',
+	 * /// file: vite.config.js
+	 * import { defineConfig } from 'vite';
+	 * import { sveltekit } from '@sveltejs/kit/vite';
 	 *
-	 *       // this will match a directory and its contents
-	 *       // (`my-directory/x` resolves to `path/to/my-directory/x`)
-	 *       'my-directory': 'path/to/my-directory',
+	 * export default defineConfig({
+	 *   plugins: [
+	 *     sveltekit({
+	 *       alias: {
+	 *         // this will match a file
+	 *         'my-file': 'path/to/my-file.js',
 	 *
-	 *       // an alias ending /* will only match
-	 *       // the contents of a directory, not the directory itself
-	 *       'my-directory/*': 'path/to/my-directory/*'
-	 *     }
-	 *   }
-	 * };
+	 *         // this will match a directory and its contents
+	 *         // (`my-directory/x` resolves to `path/to/my-directory/x`)
+	 *         'my-directory': 'path/to/my-directory',
+	 *
+	 *         // an alias ending /* will only match
+	 *         // the contents of a directory, not the directory itself
+	 *         'my-directory/*': 'path/to/my-directory/*'
+	 *       }
+	 *     })
+	 *   ]
+	 * });
 	 * ```
 	 *
 	 * > [!NOTE] You will need to run `npm run dev` to have SvelteKit automatically generate the required alias configuration in `jsconfig.json` or `tsconfig.json`.
@@ -368,24 +370,26 @@ export interface KitConfig {
 	 * [Content Security Policy](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy) configuration. CSP helps to protect your users against cross-site scripting (XSS) attacks, by limiting the places resources can be loaded from. For example, a configuration like this...
 	 *
 	 * ```js
-	 * /// file: svelte.config.js
-	 * /// type: import('@sveltejs/kit').Config
-	 * const config = {
-	 *   kit: {
-	 *     csp: {
-	 *       directives: {
-	 *         'script-src': ['self']
-	 *       },
-	 *       // must be specified with either the `report-uri` or `report-to` directives, or both
-	 *       reportOnly: {
-	 *         'script-src': ['self'],
-	 *         'report-uri': ['/']
-	 *       }
-	 *     }
-	 *   }
-	 * };
+	 * /// file: vite.config.js
+	 * import { sveltekit } from '@sveltejs/kit/vite';
+	 * import { defineConfig } from 'vite';
 	 *
-	 * export default config;
+	 * export default defineConfig({
+	 * 	plugins: [
+	 * 		sveltekit({
+	 * 			csp: {
+	 * 				directives: {
+	 * 					'script-src': ['self']
+	 * 				},
+	 * 				// must be specified with either the `report-uri` or `report-to` directives, or both
+	 * 				reportOnly: {
+	 * 					'script-src': ['self'],
+	 * 					'report-uri': ['/']
+	 * 				}
+	 * 			}
+	 * 		})
+	 * 	]
+	 * });
 	 * ```
 	 *
 	 * ...would prevent scripts loading from external sites. SvelteKit will augment the specified directives with nonces or hashes (depending on `mode`) for any inline styles and scripts it generates.
@@ -591,7 +595,7 @@ export interface KitConfig {
 	 */
 	inlineStyleThreshold?: number;
 	/**
-	 * An array of file extensions that SvelteKit will treat as modules. Files with extensions that match neither `config.extensions` nor `config.kit.moduleExtensions` will be ignored by the router.
+	 * An array of file extensions that SvelteKit will treat as modules. Files with extensions that match neither `config.extensions` nor `config.moduleExtensions` will be ignored by the router.
 	 * @default [".js", ".ts"]
 	 */
 	moduleExtensions?: string[];
@@ -673,14 +677,14 @@ export interface KitConfig {
 		 */
 		assets?: '' | `http://${string}` | `https://${string}`;
 		/**
-		 * A root-relative path that must start, but not end with `/` (e.g. `/base-path`), unless it is the empty string. This specifies where your app is served from and allows the app to live on a non-root path. Note that you need to prepend all your root-relative links with the base value or they will point to the root of your domain, not your `base` (this is how the browser works). You can use [`base` from `$app/paths`](https://svelte.dev/docs/kit/$app-paths#base) for that: `<a href="{base}/your-page">Link</a>`. If you find yourself writing this often, it may make sense to extract this into a reusable component.
+		 * A root-relative path that must start, but not end with `/` (e.g. `/base-path`), unless it is the empty string. This specifies where your app is served from and allows the app to live on a non-root path. Note that you need to prepend all your root-relative links with the base value or they will point to the root of your domain, not your `base` (this is how the browser works). You can use [`resolve(...)` from `$app/paths`](https://svelte.dev/docs/kit/$app-paths#resolve) for that: `<a href="{resolve('/your-page')}">Link</a>`. If you find yourself writing this often, it may make sense to extract this into a reusable component.
 		 * @default ""
 		 */
 		base?: '' | `/${string}`;
 		/**
 		 * Whether to use relative asset paths.
 		 *
-		 * If `true`, `base` and `assets` imported from `$app/paths` will be replaced with relative asset paths during server-side rendering, resulting in more portable HTML.
+		 * If `true`, paths created with `resolve()` and `asset()` imported from `$app/paths` will be replaced with relative asset paths during server-side rendering, resulting in more portable HTML.
 		 * If `false`, `%sveltekit.assets%` and references to build artifacts will always be root-relative paths, unless `paths.assets` is an external URL
 		 *
 		 * [Single-page app](https://svelte.dev/docs/kit/single-page-apps) fallback pages will always use absolute paths, regardless of this setting.
@@ -722,23 +726,27 @@ export interface KitConfig {
 		 * - `(details) => void` — a custom error handler that takes a `details` object with `status`, `path`, `referrer`, `referenceType` and `message` properties. If you `throw` from this function, the build will fail
 		 *
 		 * ```js
-		 * /// file: svelte.config.js
-		 * /// type: import('@sveltejs/kit').Config
-		 * const config = {
-		 *   kit: {
-		 *     prerender: {
-		 *       handleHttpError: ({ path, referrer, message }) => {
-		 *         // ignore deliberate link to shiny 404 page
-		 *         if (path === '/not-found' && referrer === '/blog/how-we-built-our-404-page') {
-		 *           return;
-		 *         }
+		 * /// file: vite.config.js
+		 * import { sveltekit } from '@sveltejs/kit/vite';
+		 * import { defineConfig } from 'vite';
 		 *
-		 *         // otherwise fail the build
-		 *         throw new Error(message);
-		 *       }
-		 *     }
-		 *   }
-		 * };
+		 * export default defineConfig({
+		 * 	plugins: [
+		 * 		sveltekit({
+		 *  		prerender: {
+		 *  			handleHttpError: ({ path, referrer, message }) => {
+		 * 					// ignore deliberate link to shiny 404 page
+		 * 					if (path === '/not-found' && referrer === '/blog/how-we-built-our-404-page') {
+		 * 						return;
+		 * 					}
+		 *
+		 * 					// otherwise fail the build
+		 * 					throw new Error(message);
+		 * 				}
+		 * 			}
+		 * 		})
+		 * 	]
+		 * });
 		 * ```
 		 *
 		 * @default "fail"
@@ -902,16 +910,20 @@ export interface KitConfig {
 		 * For example, to use the current commit hash, you could do use `git rev-parse HEAD`:
 		 *
 		 * ```js
-		 * /// file: svelte.config.js
+		 * /// file: vite.config.js
 		 * import * as child_process from 'node:child_process';
+		 * import { sveltekit } from '@sveltejs/kit/vite';
+		 * import { defineConfig } from 'vite';
 		 *
-		 * export default {
-		 *   kit: {
-		 *     version: {
-		 *       name: child_process.execSync('git rev-parse HEAD').toString().trim()
-		 *     }
-		 *   }
-		 * };
+		 * export default defineConfig({
+		 * 	plugins: [
+		 * 		sveltekit({
+		 *  		version: {
+		 * 				name: child_process.execSync('git rev-parse HEAD').toString().trim()
+		 * 			}
+		 * 		})
+		 * 	]
+		 * });
 		 * ```
 		 */
 		name?: string;
@@ -1682,7 +1694,7 @@ export interface ServerInitOptions {
 export interface SSRManifest {
 	appDir: string;
 	appPath: string;
-	/** Static files from `kit.config.files.assets` and the service worker (if any). */
+	/** Static files from `config.files.assets` and the service worker (if any). */
 	assets: Set<string>;
 	mimeTypes: Record<string, string>;
 
@@ -2202,6 +2214,8 @@ export type RemoteForm<Input extends RemoteFormInput | void, Output> = {
 	get result(): Output | undefined;
 	/** The number of pending submissions */
 	get pending(): number;
+	/** True if the form has been submitted at least once */
+	get submitted(): boolean;
 	/** Access form fields using object notation */
 	fields: RemoteFormFieldsRoot<Input>;
 };

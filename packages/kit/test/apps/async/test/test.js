@@ -41,6 +41,28 @@ test.describe('remote functions', () => {
 		await expect(page.locator('#redirected')).toHaveText('redirected');
 	});
 
+	test('query redirect to a same-origin URL outside the app navigates', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		// Regression for https://github.com/sveltejs/kit/issues/14285 — a server-issued
+		// redirect to a URL that is not a client route must still navigate, instead of
+		// being rejected by the stricter `goto` behaviour. `/robots.txt` is a static
+		// asset that is not a SvelteKit route.
+		await page.goto('/remote/redirect-external');
+
+		if (javaScriptEnabled) {
+			await page.click('#trigger');
+
+			// the redirect performs a full-page navigation to the static asset
+			await expect(page).toHaveURL(/\/robots\.txt$/);
+		} else {
+			// without JS the query mutation can't be invoked from the client, so the
+			// page just renders its initial state
+			await expect(page.locator('#status')).toHaveText('idle');
+		}
+	});
+
 	test("query that's awaited and throws a redirect doesn't trigger handleError hook", async ({
 		baseURL
 	}) => {
@@ -106,12 +128,18 @@ test.describe('remote functions', () => {
 			await expect(page.getByText('message.current:')).toHaveText('message.current: initial');
 		}
 		await expect(page.getByText('await get_message():')).toHaveText('await get_message(): initial');
+		await expect(page.getByText('set_message.submitted:')).toHaveText(
+			'set_message.submitted: false'
+		);
 
 		await page.fill('[data-unscoped] input', 'hello');
 		await page.getByText('set message').click();
 
 		if (javaScriptEnabled) {
 			await expect(page.getByText('set_message.pending:')).toHaveText('set_message.pending: 1');
+			await expect(page.getByText('set_message.submitted:')).toHaveText(
+				'set_message.submitted: true'
+			);
 			await page.getByText('resolve deferreds').click();
 			await expect(page.getByText('set_message.pending:')).toHaveText('set_message.pending: 0');
 			await expect(page.getByText('message.current:')).toHaveText('message.current: hello');

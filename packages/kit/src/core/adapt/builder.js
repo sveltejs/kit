@@ -176,12 +176,6 @@ export function create_builder({
 			const payload = devalue.uneval(values);
 
 			write(`${dest}/env.js`, `export const env=${payload}`);
-
-			// service workers aren't ESM yet, so they load dynamic public env vars at runtime
-			// via `importScripts` of this module rather than importing `env.js`
-			if (build_data.service_worker) {
-				write(`${dest}/env.script.js`, `globalThis.__sveltekit_sw={env:${payload}}`);
-			}
 		},
 
 		generateManifest({ relativePath, routes: subset }) {
