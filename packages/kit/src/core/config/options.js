@@ -83,7 +83,7 @@ export const options = object(
 				if (input) {
 					if (input.startsWith('/') || input.endsWith('/')) {
 						throw new Error(
-							"config.kit.appDir cannot start or end with '/'. See https://svelte.dev/docs/kit/configuration"
+							`${keypath} cannot start or end with '/'. See https://svelte.dev/docs/kit/configuration`
 						);
 					}
 				} else {
@@ -333,6 +333,8 @@ export const options = object(
 // 		`The \`${keypath}\` option is deprecated, and will be removed in a future version`
 // ) {
 // 	return (input, keypath) => {
+//		keypath = remove_kit_prefix(keypath);
+//
 // 		if (input !== undefined) {
 // 			console.warn(styleText(['bold', 'yellow'], get_message(keypath)));
 // 		}
@@ -361,6 +363,8 @@ function removed(
 		`The \`${keypath}\` option has been removed. Please see the list of breaking changes for your major release`
 ) {
 	return (input, keypath) => {
+		keypath = remove_kit_prefix(keypath);
+
 		if (typeof input !== 'undefined') {
 			throw new Error(get_message(keypath));
 		}
@@ -374,6 +378,8 @@ function removed(
  */
 export function object(children, allow_unknown = false) {
 	return (input, keypath) => {
+		keypath = remove_kit_prefix(keypath);
+
 		/** @type {Record<string, any>} */
 		const output = {};
 
@@ -414,6 +420,7 @@ export function object(children, allow_unknown = false) {
  */
 export function validate(fallback, fn) {
 	return (input, keypath) => {
+		keypath = remove_kit_prefix(keypath);
 		return input === undefined ? fallback : fn(input, keypath);
 	};
 }
@@ -511,7 +518,16 @@ function fun(fallback) {
  * @param {string} keypath
  */
 function assert_string(input, keypath) {
+	keypath = remove_kit_prefix(keypath);
 	if (typeof input !== 'string') {
 		throw new Error(`${keypath} should be a string, if specified`);
 	}
+}
+
+/**
+ * @param {string} keypath
+ * @deprecated TODO get rid of the nesting so this is unnecessary
+ */
+function remove_kit_prefix(keypath) {
+	return keypath.replace('.kit.', '.');
 }

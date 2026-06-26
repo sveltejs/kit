@@ -68,7 +68,7 @@ export async function render_response({
 }) {
 	if (state.prerendering) {
 		if (options.csp.mode === 'nonce') {
-			throw new Error('Cannot use prerendering if config.kit.csp.mode === "nonce"');
+			throw new Error('Cannot use prerendering if config.csp.mode === "nonce"');
 		}
 
 		if (options.app_template_contains_nonce) {
@@ -397,7 +397,7 @@ export async function render_response({
 			/** @type {(path: string) => void} */
 			let add_preload;
 
-			// see the kit.output.preloadStrategy option for details on why we have multiple options here
+			// see the output.preloadStrategy option for details on why we have multiple options here
 			if (options.link_header_preload && !state.prerendering) {
 				add_preload = (path) =>
 					link_headers.add(`<${encodeURI(path)}>; rel="modulepreload"; nopush`);

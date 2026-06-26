@@ -82,7 +82,6 @@ test('Creates tsconfig include from kit.files', () => {
 		'env.d.ts',
 		'non-ambient.d.ts',
 		'./types/**/$types.d.ts',
-		'../svelte.config.js',
 		'../vite.config.js',
 		'../vite.config.ts',
 		'../app/**/*.js',
