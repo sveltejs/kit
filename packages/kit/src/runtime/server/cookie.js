@@ -1,4 +1,4 @@
-import { parse, serialize } from 'cookie';
+import { parseCookie, serialize } from 'cookie';
 import { DEV } from 'esm-env';
 import { normalize_path, resolve } from '../../utils/url.js';
 import { add_data_suffix } from '../pathname.js';
@@ -39,7 +39,7 @@ function generate_cookie_key(domain, path, name) {
 export function get_cookies(request, url) {
 	const header = request.headers.get('cookie') ?? '';
 	const initial_cookies = /** @type {Record<string, string>} */ (
-		parse(header, { decode: (value) => value })
+		parseCookie(header, { decode: (value) => value })
 	);
 
 	/** @type {string | undefined} */
@@ -83,7 +83,7 @@ export function get_cookies(request, url) {
 				return best_match.options.maxAge === 0 ? undefined : best_match.value;
 			}
 
-			const req_cookies = parse(header, { decode: opts?.decode });
+			const req_cookies = parseCookie(header, { decode: opts?.decode });
 			const cookie = req_cookies[name]; // the decoded string or undefined
 
 			// in development, if the cookie was set during this session with `cookies.set`,
@@ -110,7 +110,7 @@ export function get_cookies(request, url) {
 		 * @param {import('cookie').ParseOptions} [opts]
 		 */
 		getAll(opts) {
-			const cookies = parse(header, { decode: opts?.decode });
+			const cookies = parseCookie(header, { decode: opts?.decode });
 
 			// Group cookies by name and find the most specific one for each name
 			const lookup = new Map();
@@ -200,7 +200,7 @@ export function get_cookies(request, url) {
 		// explicit header has highest precedence
 		if (header) {
 			const parsed = /** @type {Record<string, string>} */ (
-				parse(header, { decode: (value) => value })
+				parseCookie(header, { decode: (value) => value })
 			);
 			for (const name in parsed) {
 				combined_cookies[name] = parsed[name];
