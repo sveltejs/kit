@@ -21,6 +21,7 @@ import {
 } from '../../core/env.js';
 import * as sync from '../../core/sync/sync.js';
 import { create_assets } from '../../core/sync/create_manifest_data/index.js';
+import { load_and_validate_params } from '../../utils/params.js';
 import { runtime_directory, logger } from '../../core/utils.js';
 import { generate_manifest } from '../../core/generate_manifest/index.js';
 import { build_server_nodes } from './build/build_server.js';
@@ -1228,11 +1229,10 @@ function kit({ svelte_config, adapter }) {
 						}
 					});
 
-					// ...and every matcher
-					Object.entries(manifest_data.matchers).forEach(([key, file]) => {
-						const name = posixify(path.join('entries/matchers', key));
-						server_input[name] = path.resolve(root, file);
-					});
+					// ...and the params file
+					if (manifest_data.params) {
+						server_input['entries/params'] = path.resolve(root, manifest_data.params);
+					}
 
 					// ...and the hooks files
 					if (manifest_data.hooks.server) {
@@ -1477,6 +1477,12 @@ function kit({ svelte_config, adapter }) {
 				rimraf(out);
 			}
 			mkdirp(out);
+
+			await load_and_validate_params({
+				routes: manifest_data.routes,
+				params_path: manifest_data.params,
+				root
+			});
 
 			const { output: server_chunks } = /** @type {Rolldown.RolldownOutput} */ (
 				await builder.build(builder.environments.ssr)

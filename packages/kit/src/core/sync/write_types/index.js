@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import MagicString from 'magic-string';
-import { rimraf, walk } from '../../../utils/filesystem.js';
+import { rimraf, walk, resolve_entry } from '../../../utils/filesystem.js';
 import { compact } from '../../../utils/array.js';
 import { posixify } from '../../../utils/os.js';
 import { ts } from '../ts.js';
@@ -600,15 +600,22 @@ function replace_ext_with_js(file_path) {
  */
 function generate_params_type(params, outdir, config) {
 	/** @param {string} matcher */
-	const path_to_matcher = (matcher) =>
-		posixify(path.relative(outdir, path.join(config.kit.files.params, matcher + '.js')));
+	const path_to_params = () => {
+		const params_file =
+			resolve_entry(config.kit.files.params) ??
+			path.join(config.kit.files.params.replace(/\.(js|ts)$/, ''), '.js');
+
+		return posixify(path.relative(outdir, params_file));
+	};
+
+	const params_import = path_to_params();
 
 	return `{ ${params
 		.map(
 			(param) =>
 				`${param.name}${param.optional ? '?' : ''}: ${
 					param.matcher
-						? `Kit.MatcherParam<typeof import('${path_to_matcher(param.matcher)}').match>`
+						? `(typeof import('${params_import}').params)[${JSON.stringify(param.matcher)}]`
 						: 'string'
 				}${param.optional ? ' | undefined' : ''}`
 		)

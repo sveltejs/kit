@@ -1,5 +1,5 @@
 ---
-'@sveltejs/kit': minor
+'@sveltejs/kit': major
 ---
 
-feat: allow param matcher to be a standard schema
+breaking: remove param files in folder in favor or `params.js/ts` file

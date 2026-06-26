@@ -1433,17 +1433,41 @@ export interface Page<
 /**
  * The shape of a param matcher. See [matching](https://svelte.dev/docs/kit/advanced-routing#Matching) for more info.
  */
-export type ParamMatcher = ((param: string) => boolean) | StandardSchemaV1<string, any>;
+export type ParamMatcher<Output = any> = StandardSchemaV1<string, Output>;
 
 /**
- * Extracts the param type from a matcher — the output type of a Standard Schema, the predicate of a type guard, or `string`.
+ * A param matcher definition passed to [`defineParams`](https://svelte.dev/docs/kit/@sveltejs-kit#defineParams).
+ */
+export type ParamDefinition = ((param: string) => any) | StandardSchemaV1<string, any>;
+
+/**
+ * The return type of [`defineParams`](https://svelte.dev/docs/kit/@sveltejs-kit#defineParams).
+ */
+export type DefinedParams<T extends Record<string, ParamDefinition>> = {
+	readonly [K in keyof T]: MatcherParam<T[K]>;
+};
+
+/**
+ * Extracts the param type from a matcher — the output type of a Standard Schema, the predicate of a type guard, the return type of a transform function, or `string`.
  */
 export type MatcherParam<M> =
 	M extends StandardSchemaV1<any, any>
 		? StandardSchemaV1.InferOutput<M>
 		: M extends ((param: string) => param is infer U extends string)
 			? U
-			: string;
+			: M extends (param: string) => infer R
+				? R
+				: string;
+
+/**
+ * Define [parameter matchers](https://svelte.dev/docs/kit/advanced-routing#Matching) for your app.
+ *
+ * @template T
+ * @param definitions
+ */
+export function defineParams<T extends Record<string, ParamDefinition>>(
+	definitions: T
+): DefinedParams<T>;
 
 /**
  * A single entry yielded by [`requested`](https://svelte.dev/docs/kit/$app-server#requested)

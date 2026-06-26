@@ -139,21 +139,13 @@ export function get_route_segments(route) {
  * @returns {{ success: true, value: any } | { success: false }}
  */
 function run_matcher(matcher, value) {
-	if ('~standard' in matcher) {
-		const result = matcher['~standard'].validate(value);
+	const result = matcher['~standard'].validate(value);
 
-		if (result instanceof Promise || result.issues) {
-			return { success: false };
-		}
-
-		return { success: true, value: result.value };
+	if (result instanceof Promise || result.issues) {
+		return { success: false };
 	}
 
-	if (typeof matcher === 'function') {
-		return matcher(value) ? { success: true, value } : { success: false };
-	}
-
-	return { success: false };
+	return { success: true, value: result.value };
 }
 
 /**

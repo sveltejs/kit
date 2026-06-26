@@ -13,6 +13,7 @@ import {
 import { text_encoder } from '../runtime/utils.js';
 
 export { VERSION } from '../version.js';
+export { defineParams } from './params.js';
 
 // Keep the status codes as `number` because restricting to certain numbers makes it unnecessarily hard to use compared to the benefits
 // (we have runtime errors already to check for invalid codes). Also see https://github.com/sveltejs/kit/issues/11780

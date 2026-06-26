@@ -2,7 +2,7 @@
 
 /** @type {import('../../.svelte-kit/types/required/[regularParam=not_narrowed]/$types').PageLoad} */
 export function load({ params }) {
-	/** @type {string} a*/
+	/** @type {boolean} a */
 	const a = params.regularParam;
 
 	/** @type {"a" | "b"} b*/

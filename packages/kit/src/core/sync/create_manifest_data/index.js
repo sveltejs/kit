@@ -29,22 +29,13 @@ export default function create_manifest_data({
 }) {
 	const assets = create_assets(config);
 	const hooks = create_hooks(config, cwd);
-	const matchers = create_matchers(config, cwd);
+	const params = resolve_params(config, cwd);
 	const { nodes, routes } = create_routes_and_nodes(cwd, config, fallback);
-
-	// validate matcher names used in parameterised routes
-	for (const route of routes) {
-		for (const param of route.params) {
-			if (param.matcher && !matchers[param.matcher]) {
-				throw new Error(`No matcher found for parameter '${param.matcher}' in route ${route.id}`);
-			}
-		}
-	}
 
 	return {
 		assets,
 		hooks,
-		matchers,
+		params,
 		nodes,
 		routes
 	};
@@ -82,38 +73,9 @@ function create_hooks(config, cwd) {
  * @param {import('types').ValidatedConfig} config
  * @param {string} cwd
  */
-function create_matchers(config, cwd) {
-	const params_base = path.relative(cwd, config.kit.files.params);
-
-	/** @type {Record<string, string>} */
-	const matchers = {};
-	if (fs.existsSync(config.kit.files.params)) {
-		for (const file of fs.readdirSync(config.kit.files.params)) {
-			const ext = path.extname(file);
-			if (!config.kit.moduleExtensions.includes(ext)) continue;
-			const type = file.slice(0, -ext.length);
-
-			if (/^\w+$/.test(type)) {
-				const matcher_file = path.join(params_base, file);
-
-				// Disallow same matcher with different extensions
-				if (matchers[type]) {
-					throw new Error(`Duplicate matchers: ${matcher_file} and ${matchers[type]}`);
-				} else {
-					matchers[type] = matcher_file;
-				}
-			} else {
-				// Allow for matcher test collocation
-				if (type.endsWith('.test') || type.endsWith('.spec')) continue;
-
-				throw new Error(
-					`Matcher names can only have underscores and alphanumeric characters — "${file}" is invalid`
-				);
-			}
-		}
-	}
-
-	return matchers;
+function resolve_params(config, cwd) {
+	const params_file = resolve_entry(config.kit.files.params);
+	return params_file ? posixify(path.relative(cwd, params_file)) : null;
 }
 
 /**

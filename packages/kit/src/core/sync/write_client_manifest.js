@@ -188,21 +188,14 @@ export function write_client_manifest(kit, manifest_data, output, metadata) {
 	);
 
 	if (client_routing) {
-		// write matchers to a separate module so that we don't
-		// need to worry about name conflicts
-		const imports = [];
-		const matchers = [];
+		const uses_matchers = manifest_data.routes.some((route) =>
+			route.params.some((param) => param.matcher)
+		);
 
-		for (const key in manifest_data.matchers) {
-			const src = manifest_data.matchers[key];
-
-			imports.push(`import { match as ${key} } from ${s(relative_path(output, src))};`);
-			matchers.push(key);
-		}
-
-		const module = imports.length
-			? `${imports.join('\n')}\n\nexport const matchers = { ${matchers.join(', ')} };`
-			: 'export const matchers = {};';
+		const module =
+			!manifest_data.params || !uses_matchers
+				? 'export const matchers = {};'
+				: `import { params as matchers } from ${s(relative_path(output, manifest_data.params))};\n\nexport { matchers };`;
 
 		write_if_changed(`${output}/matchers.js`, module);
 	}

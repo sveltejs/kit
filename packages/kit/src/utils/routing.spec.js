@@ -1,5 +1,6 @@
 import { assert, expect, test, describe } from 'vitest';
 import * as v from 'valibot';
+import { normalize_param_definition } from './params.js';
 import { exec, parse_route_id, resolve_route, find_route } from './routing.js';
 
 /** @type {import('@sveltejs/kit').ParamMatcher} */
@@ -297,8 +298,8 @@ describe('exec', () => {
 			const match = pattern.exec(path);
 			if (!match) throw new Error(`Failed to match ${path}`);
 			const actual = exec(match, params, {
-				matches: () => true,
-				doesntmatch: () => false
+				matches: v.string(),
+				doesntmatch: v.never()
 			});
 			expect(actual).toEqual(expected);
 		});
@@ -449,7 +450,7 @@ describe('find_route', () => {
 		const routes = [create_route('/blog/[slug=word]'), create_route('/blog/[slug]')];
 		/** @type {Record<string, import('@sveltejs/kit').ParamMatcher>} */
 		const matchers = {
-			word: (param) => /^\w+$/.test(param)
+			word: v.pipe(v.string(), v.regex(/^\w+$/))
 		};
 
 		// "hello" matches the word matcher

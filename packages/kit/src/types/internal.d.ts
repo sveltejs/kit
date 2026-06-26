@@ -205,7 +205,7 @@ export interface ManifestData {
 	};
 	nodes: PageNode[];
 	routes: RouteData[];
-	matchers: Record<string, string>;
+	params: string | null;
 }
 
 export interface RemoteChunk {

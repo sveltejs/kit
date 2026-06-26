@@ -854,53 +854,20 @@ test('errors on invalid named layout reference', () => {
 	);
 });
 
-test('creates param matchers', () => {
-	const { matchers } = create('samples/basic'); // directory doesn't matter for the test
+test('creates params file path', () => {
+	const { params } = create('samples/basic');
 
-	expect(matchers).toEqual({
-		foo: path.join('params', 'foo.js'),
-		bar: path.join('params', 'bar.js')
-	});
+	expect(params).toBe('params.js');
 });
 
-test('creates param matchers with schema modules', () => {
-	const parsed = path.resolve(cwd, 'params', 'parsed.js');
-	fs.writeFileSync(
-		parsed,
-		`export const match = { '~standard': { validate() { return { value: 0 }; } } };`
-	);
-	try {
-		const { matchers } = create('samples/basic');
+test('returns null params when file is missing', () => {
+	const params_file = path.resolve(cwd, 'params.js');
 
-		expect(matchers.parsed).toEqual(path.join('params', 'parsed.js'));
-	} finally {
-		fs.unlinkSync(parsed);
-	}
-});
-
-test('errors on param matchers with bad names', () => {
-	const boogaloo = path.resolve(cwd, 'params', 'boo-galoo.js');
-	fs.writeFileSync(boogaloo, '');
+	fs.renameSync(params_file, params_file + '.bak');
 	try {
-		assert.throws(() => create('samples/basic'), /Matcher names can only have/);
+		expect(create('samples/basic').params).toBeNull();
 	} finally {
-		fs.unlinkSync(boogaloo);
-	}
-});
-
-test('errors on duplicate matchers', () => {
-	const ts_foo = path.resolve(cwd, 'params', 'foo.ts');
-	fs.writeFileSync(ts_foo, '');
-	try {
-		assert.throws(() => {
-			create('samples/basic', {
-				kit: {
-					moduleExtensions: ['.js', '.ts']
-				}
-			});
-		}, /Duplicate matchers/);
-	} finally {
-		fs.unlinkSync(ts_foo);
+		fs.renameSync(params_file + '.bak', params_file);
 	}
 });
 
