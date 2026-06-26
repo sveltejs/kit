@@ -524,7 +524,10 @@ function assert_string(input, keypath) {
 	}
 }
 
-/** @param {string} keypath */
+/**
+ * @param {string} keypath
+ * @deprecated TODO get rid of the nesting so this is unnecessary
+ */
 function remove_kit_prefix(keypath) {
 	return keypath.replace('.kit.', '.');
 }
