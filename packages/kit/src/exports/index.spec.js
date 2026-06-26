@@ -67,6 +67,69 @@ describe('redirect', () => {
 		}
 	});
 
+	it('throws Redirect for external locations with external: true', () => {
+		try {
+			redirect(307, 'https://google.de', { external: true });
+			assert.fail('Expected redirect to throw');
+		} catch (e) {
+			if (!isRedirect(e)) {
+				assert.fail('Expected a Redirect error');
+			}
+
+			assert.equal(e.status, 307);
+			assert.equal(e.location, 'https://google.de');
+		}
+	});
+
+	it('throws Redirect for allowlisted external locations', () => {
+		try {
+			redirect(307, 'https://google.de/search', { external: ['https://google.de'] });
+			assert.fail('Expected redirect to throw');
+		} catch (e) {
+			if (!isRedirect(e)) {
+				assert.fail('Expected a Redirect error');
+			}
+
+			assert.equal(e.status, 307);
+			assert.equal(e.location, 'https://google.de/search');
+		}
+	});
+
+	it('throws a descriptive error for external redirect locations', () => {
+		assert.throws(
+			() => redirect(307, 'https://google.de'),
+			/Cannot redirect to external URL "https:\/\/google\.de"/
+		);
+	});
+
+	it('throws a descriptive error for javascript URLs with external: true', () => {
+		assert.throws(
+			() => redirect(307, 'javascript:alert(1)', { external: true }),
+			/Cannot redirect to "javascript:alert\(1\)" with `{ external: true }`/
+		);
+	});
+
+	it('throws Redirect for allowlisted javascript URLs', () => {
+		try {
+			redirect(307, 'javascript:alert(1)', { external: ['javascript:'] });
+			assert.fail('Expected redirect to throw');
+		} catch (e) {
+			if (!isRedirect(e)) {
+				assert.fail('Expected a Redirect error');
+			}
+
+			assert.equal(e.status, 307);
+			assert.equal(e.location, 'javascript:alert(1)');
+		}
+	});
+
+	it('throws a descriptive error for disallowed external locations', () => {
+		assert.throws(
+			() => redirect(307, 'https://evil.com', { external: ['https://google.de'] }),
+			/Cannot redirect to "https:\/\/evil\.com": URL is not included in the `external` allowlist/
+		);
+	});
+
 	it('throws a descriptive error for invalid redirect locations', () => {
 		assert.throws(
 			() => redirect(307, '/invalid\r\nset-cookie: x=y'),

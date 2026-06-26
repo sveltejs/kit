@@ -1,4 +1,5 @@
 import { BROWSER, DEV } from 'esm-env';
+import { try_get_request_store } from '../exports/internal/event.js';
 
 /**
  * Matches a URI scheme. See https://www.rfc-editor.org/rfc/rfc3986#section-3.1
@@ -25,6 +26,122 @@ export function resolve(base, path) {
 /** @param {string} path */
 export function is_root_relative(path) {
 	return path[0] === '/' && path[1] !== '/';
+}
+
+/**
+ * Whether a redirect location is absolute, i.e. not a root-relative or path-relative URL.
+ * @param {string} location
+ */
+export function is_external_location(location) {
+	const is_absolute = (location[0] === '/' && location[1] === '/') || SCHEME.test(location);
+
+	if (is_absolute) {
+		// TODO we need base path here but that fails right now because apparently other imports
+		// not using Vite end up here. Ideally we also can determine that a relative link is
+		// not part of the app and therefore also external, for which we would need to check this
+		// all the time
+		if (BROWSER) {
+			if (matches_external_allowlist_entry(location, window.location.origin)) return false;
+		} else {
+			const event = try_get_request_store();
+			if (event && matches_external_allowlist_entry(location, event?.event.url.origin)) {
+				return false;
+			}
+		}
+	}
+
+	return is_absolute;
+}
+
+/**
+ * @param {string} location
+ */
+function is_javascript_location(location) {
+	return /^javascript:/i.test(location);
+}
+
+/**
+ * @param {string} location
+ * @param {string} allowed
+ */
+export function matches_external_allowlist_entry(location, allowed) {
+	if (location === allowed) return true;
+
+	try {
+		const loc = new URL(location);
+		const allow = new URL(allowed);
+
+		if (loc.protocol !== allow.protocol || loc.host !== allow.host) {
+			return false;
+		}
+
+		const allow_path = allow.pathname;
+
+		if (allow.pathname === '/' || allow.pathname === '' /* happens in case of 'javascript:' */) {
+			return true;
+		}
+
+		const loc_path = loc.pathname;
+
+		if (loc_path === allow_path) return true;
+
+		const prefix = allow_path.endsWith('/') ? allow_path : allow_path + '/';
+		return loc_path.startsWith(prefix);
+	} catch {
+		return false;
+	}
+}
+
+/**
+ * @param {string} location
+ * @param {{ external?: boolean | string[] }} [options]
+ */
+export function validate_redirect_location(location, options) {
+	if (!is_external_location(location)) return;
+
+	const external = options?.external;
+
+	if (!external) {
+		throw new Error(
+			DEV
+				? `Cannot redirect to external URL ${JSON.stringify(location)}. ` +
+						'To redirect to an external URL, pass `{ external: true }` or an allowlist of permitted URLs as the third argument to `redirect`' +
+						BROWSER +
+						(BROWSER ? window.location.href : try_get_request_store()?.event.request.url)
+				: 'Cannot redirect to external URL unless explicitly allowed'
+		);
+	}
+
+	if (external === true) {
+		if (is_javascript_location(location)) {
+			throw new Error(
+				DEV
+					? `Cannot redirect to ${JSON.stringify(location)} with \`{ external: true }\`. ` +
+							'JavaScript URLs must be explicitly listed in the `external` allowlist'
+					: 'Cannot redirect to external URL unless explicitly allowed'
+			);
+		}
+
+		return;
+	}
+
+	if (Array.isArray(external)) {
+		if (!external.some((allowed) => matches_external_allowlist_entry(location, allowed))) {
+			throw new Error(
+				DEV
+					? `Cannot redirect to ${JSON.stringify(location)}: URL is not included in the \`external\` allowlist`
+					: 'Cannot redirect to external URL unless explicitly allowed'
+			);
+		}
+
+		return;
+	}
+
+	throw new Error(
+		DEV
+			? '`redirect` options.external must be `true` or an array of allowed URLs'
+			: 'Invalid redirect options.external value'
+	);
 }
 
 /**
