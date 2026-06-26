@@ -1,5 +1,7 @@
 <script>
-	import { base } from '$app/paths';
+	import { resolve } from '$app/paths';
 </script>
 
-<a href="{base}/trailing-slash-server/prerender">{base}/trailing-slash-server/prerender</a>
+<a href={resolve('/trailing-slash-server/prerender')}
+	>{resolve('/trailing-slash-server/prerender')}</a
+>

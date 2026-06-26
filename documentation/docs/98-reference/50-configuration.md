@@ -2,24 +2,10 @@
 title: Configuration
 ---
 
-Your project's configuration lives in a `svelte.config.js` file at the root of your project. As well as SvelteKit, this config object is used by other tooling that integrates with Svelte such as editor extensions.
+Your project's configuration lives in the `vite.config.js` file at the root of your project. You can pass your configuration to the `sveltekit` plugin, along with the Svelte compiler options:
 
 ```js
-/// file: svelte.config.js
-/** @type {import('@sveltejs/kit').Config} */
-const config = {
-	kit: {}
-};
-
-export default config;
-```
-
-<!-- TODO this is now wrong, you will have to pass inline config in v3. we need to overhaul the docs -->
-
-Since version 2.62.0 you can also pass your configuration to the `sveltekit` plugin in your Vite config, along with the Svelte compiler options:
-
-```js
-/// file: vite.config.js
+// TODO: remove this and install @sveltejs/adapter-auto in svelte.dev to get the types
 // @filename: ambient.d.ts
 declare module '@sveltejs/adapter-auto' {
 	const plugin: () => import('@sveltejs/kit').Adapter;
@@ -28,6 +14,7 @@ declare module '@sveltejs/adapter-auto' {
 
 // @filename: index.js
 // ---cut---
+/// file: vite.config.js
 import adapter from '@sveltejs/adapter-auto';
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
@@ -49,18 +36,15 @@ export default defineConfig({
 });
 ```
 
-> [!NOTE] The `kit` namespace is at the same level as the other top level entries; this is the only difference to the `svelte.config.js` layout.
+As well as SvelteKit, the plugin options are used by other tooling that integrates with Svelte such as editor extensions.
 
 Any options that don't belong to SvelteKit are passed through to [`vite-plugin-svelte`](https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/config.md), so you can set options like `inspector` here too. The `experimental` namespace is shared — SvelteKit reads its own flags and forwards the rest.
 
-If the config is defined via the plugin, the `svelte.config.js` file is ignored.
-
-## Config
-
-> TYPES: Configuration#Config
+> [!LEGACY]
+> Prior to SvelteKit 3, config lived in a `svelte.config.js` file, which is no longer supported. The ability to configure SvelteKit via `vite.config.js` was added in version 2.62.
 
 ## KitConfig
 
-The `kit` property configures SvelteKit, and can have the following properties:
+An extension of [`vite-plugin-svelte`'s options](https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/config.md#config-file).
 
 > EXPANDED_TYPES: Configuration#KitConfig
