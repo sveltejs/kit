@@ -32,7 +32,7 @@
 		"prettier": "catalog:",
 		"prettier-plugin-svelte": "catalog:"
 	},
-	"packageManager": "pnpm@10.34.3+sha512.f2c531b08829d7be7f03c90addc266615f9c5477463e4bf1d275cb263ce9ea57cf0d5599110d94649a9bb3fed9f0b5efcea74a7016b61532a24cb9ad87860c1d",
+	"packageManager": "pnpm@10.34.4+sha512.8768be55200ae3f2226b6527fcca2687e14bc4e5f12d7721a0f25da3df47915177058648db4177baf348120fa0ba2752d8d8d93f6beaf1fe64ae18da8de961af",
 	"engines": {
 		"pnpm": ">=9.0.0"
 	}
