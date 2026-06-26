@@ -627,6 +627,8 @@ If the submitted data doesn't pass the schema, the callback will not run. Instea
 </form>
 ```
 
+If the `title` is valid, or has not yet been validated, `createPost.fields.title.issues()` will return undefined.
+
 You don't need to wait until the form is submitted to validate the data — you can call `validate()` programmatically, for example in an `oninput` callback (which will validate the data on every keystroke) or an `onchange` callback:
 
 ```svelte
@@ -666,6 +668,8 @@ To get a list of _all_ issues, rather than just those belonging to a single fiel
 	<p>{issue.message}</p>
 {/each}
 ```
+
+As with individual fields, `createPost.fields.allIssues()` will return `undefined` if the form as a whole is valid (or has not yet been validated).
 
 ### Getting/setting inputs
 
