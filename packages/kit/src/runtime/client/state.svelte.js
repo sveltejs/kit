@@ -1,5 +1,5 @@
 import { version } from '$app/env';
-import { assets } from '$app/paths';
+import { assets } from '$app/paths/internal/client';
 import { BROWSER, DEV } from 'esm-env';
 
 /** @type {import('@sveltejs/kit').Page} */
