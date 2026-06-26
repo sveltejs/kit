@@ -302,7 +302,9 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, a
 					const module = await vite.ssrLoadModule(url, { fixStacktrace: true });
 
 					if (!module.params) {
-						throw new Error(`${manifest_data.params} does not export \`params\` from \`defineParams\``);
+						throw new Error(
+							`${manifest_data.params} does not export \`params\` from \`defineParams\``
+						);
 					}
 
 					return module.params;
