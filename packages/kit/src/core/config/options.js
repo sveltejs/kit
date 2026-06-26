@@ -1,7 +1,5 @@
 /** @import { Validator } from './types.js' */
 
-import process from 'node:process';
-
 const directives = object({
 	'child-src': string_array(),
 	'default-src': string_array(),
@@ -111,7 +109,7 @@ export const options = object(
 			embedded: boolean(false),
 
 			env: object({
-				dir: string(process.cwd())
+				dir: string('')
 			}),
 
 			experimental: object({
