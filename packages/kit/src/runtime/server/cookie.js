@@ -1,4 +1,4 @@
-import { parseCookie, serialize } from 'cookie';
+import { parseCookie, stringifySetCookie } from 'cookie';
 import { DEV } from 'esm-env';
 import { normalize_path, resolve } from '../../utils/url.js';
 import { add_data_suffix } from '../pathname.js';
@@ -48,7 +48,7 @@ export function get_cookies(request, url) {
 	/** @type {Map<string, import('./page/types.js').Cookie>} */
 	const new_cookies = new Map();
 
-	/** @type {import('cookie').SerializeOptions} */
+	/** @type {Omit<import('cookie').SetCookie, 'name' | 'value'>} */
 	const defaults = {
 		httpOnly: true,
 		path: '/',
@@ -163,7 +163,7 @@ export function get_cookies(request, url) {
 		 * @param {string} value
 		 * @param {import('cookie').SerializeOptions} options
 		 */
-		serialize(name, value, options) {
+		serialize(name, value, { encode, ...options }) {
 			let path = options.path ?? '/';
 
 			if (!options.domain || options.domain === url.hostname) {
@@ -173,7 +173,7 @@ export function get_cookies(request, url) {
 				path = resolve(normalized_url, path);
 			}
 
-			return serialize(name, value, { ...defaults, ...options, path });
+			return stringifySetCookie({ name, value, ...defaults, ...options, path }, { encode });
 		}
 	};
 
@@ -238,7 +238,8 @@ export function get_cookies(request, url) {
 		new_cookies.set(cookie_key, cookie);
 
 		if (DEV) {
-			const serialized = serialize(name, value, cookie.options);
+			const { encode, ...rest } = cookie.options;
+			const serialized = stringifySetCookie({ name, value, ...rest }, { encode });
 			if (text_encoder.encode(serialized).byteLength > MAX_COOKIE_SIZE) {
 				throw new Error(`Cookie "${name}" is too large, and will be discarded by the browser`);
 			}
@@ -296,15 +297,22 @@ export function path_matches(path, constraint) {
  */
 export function add_cookies_to_headers(headers, cookies) {
 	for (const new_cookie of cookies) {
-		const { name, value, options } = new_cookie;
-		headers.append('set-cookie', serialize(name, value, options));
+		const {
+			name,
+			value,
+			options: { encode, ...options }
+		} = new_cookie;
+		headers.append('set-cookie', stringifySetCookie({ name, value, ...options }, { encode }));
 
 		// special case — for routes ending with .html, the route data lives in a sibling
 		// `.html__data.json` file rather than a child `/__data.json` file, which means
 		// we need to duplicate the cookie
 		if (options.path.endsWith('.html')) {
 			const path = add_data_suffix(options.path);
-			headers.append('set-cookie', serialize(name, value, { ...options, path }));
+			headers.append(
+				'set-cookie',
+				stringifySetCookie({ name, value, ...options, path }, { encode })
+			);
 		}
 	}
 }
