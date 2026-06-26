@@ -2,7 +2,7 @@
 /** @import { RemoteQueryUpdate } from '@sveltejs/kit' */
 /** @import { CacheEntry } from './cache.svelte.js' */
 import * as devalue from 'devalue';
-import { app, goto, live_query_map, query_map, query_responses } from '../client.js';
+import { app, _goto, live_query_map, query_map, query_responses } from '../client.js';
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
 import { untrack } from 'svelte';
 import { create_remote_key, split_remote_key } from '../../shared.js';
@@ -190,7 +190,8 @@ export async function remote_request(url, init) {
  */
 export async function handle_side_channel_response(response) {
 	if (response.type === 'redirect') {
-		await goto(response.location);
+		// Use internal version to allow redirects to external URLs
+		await _goto(response.location, {}, 0);
 		throw new Redirect(307, response.location);
 	}
 

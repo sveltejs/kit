@@ -12,7 +12,7 @@ vi.mock(new URL('../client.js', import.meta.url).pathname, () => ({
 	query_responses: {},
 	live_query_map: new Map(),
 	prerender_responses: {},
-	goto: () => {}
+	_goto: () => {}
 }));
 
 // `prerender.svelte.js` references the `__SVELTEKIT_DEV__` build-time constant at
