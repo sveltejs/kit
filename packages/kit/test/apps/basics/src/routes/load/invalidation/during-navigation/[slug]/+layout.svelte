@@ -9,14 +9,14 @@
 	<a
 		href="/load/invalidation/during-navigation/b"
 		data-testid="nav-b-invalidate"
-		onclick={() => setTimeout(() => invalidateAll(), 10)}
+		onclick={() => setTimeout(() => invalidateAll(), 50)}
 	>
 		b+invalidate
 	</a>
 	<a
 		href="/load/invalidation/during-navigation/a"
 		data-testid="nav-a-invalidate"
-		onclick={() => setTimeout(() => invalidateAll(), 10)}
+		onclick={() => setTimeout(() => invalidateAll(), 50)}
 	>
 		a+invalidate
 	</a>
