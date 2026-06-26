@@ -1,6 +1,5 @@
 import { assert, expect, test, describe } from 'vitest';
 import * as v from 'valibot';
-import { normalize_param_definition } from './params.js';
 import { exec, parse_route_id, resolve_route, find_route } from './routing.js';
 
 /** @type {import('@sveltejs/kit').ParamMatcher} */

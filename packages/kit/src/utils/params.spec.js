@@ -2,9 +2,9 @@ import { assert, expect, test } from 'vitest';
 import {
 	collect_matcher_names,
 	load_and_validate_params,
-	normalize_param_definition,
 	validate_param_matchers
 } from './params.js';
+import { normalize_param_definition } from '../exports/params.js';
 
 test('collect_matcher_names collects matcher names from routes', () => {
 	const names = collect_matcher_names([

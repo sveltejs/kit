@@ -64,33 +64,3 @@ export async function load_and_validate_params({ routes, params_path, root, load
 
 	return /** @type {Record<string, import('@sveltejs/kit').ParamMatcher>} */ (module.params);
 }
-
-/**
- * @param {import('@sveltejs/kit').ParamDefinition} definition
- * @returns {import('@sveltejs/kit').ParamMatcher}
- */
-export function normalize_param_definition(definition) {
-	if (typeof definition === 'function') {
-		return /** @type {import('@sveltejs/kit').ParamMatcher} */ (
-			/** @type {unknown} */ ({
-				'~standard': {
-					validate(/** @type {unknown} */ value) {
-						try {
-							return { value: definition(/** @type {string} */ (value)) };
-						} catch (error) {
-							return {
-								issues: [{ message: error instanceof Error ? error.message : 'Invalid param' }]
-							};
-						}
-					}
-				}
-			})
-		);
-	}
-
-	if (definition && typeof definition === 'object' && '~standard' in definition) {
-		return definition;
-	}
-
-	throw new Error('Invalid param definition');
-}

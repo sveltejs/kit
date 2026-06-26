@@ -1,5 +1,3 @@
-import { normalize_param_definition } from '../utils/params.js';
-
 /**
  * Define [parameter matchers](https://svelte.dev/docs/kit/advanced-routing#Matching) for your app.
  *
@@ -30,4 +28,34 @@ export function defineParams(definitions) {
 	}
 
 	return /** @type {import('./public.js').DefinedParams<T>} */ (matchers);
+}
+
+/**
+ * @param {import('@sveltejs/kit').ParamDefinition} definition
+ * @returns {import('@sveltejs/kit').ParamMatcher}
+ */
+export function normalize_param_definition(definition) {
+	if (typeof definition === 'function') {
+		return /** @type {import('@sveltejs/kit').ParamMatcher} */ (
+			/** @type {unknown} */ ({
+				'~standard': {
+					validate(/** @type {unknown} */ value) {
+						try {
+							return { value: definition(/** @type {string} */ (value)) };
+						} catch (error) {
+							return {
+								issues: [{ message: error instanceof Error ? error.message : 'Invalid param' }]
+							};
+						}
+					}
+				}
+			})
+		);
+	}
+
+	if (definition && typeof definition === 'object' && '~standard' in definition) {
+		return definition;
+	}
+
+	throw new Error('Invalid param definition');
 }
