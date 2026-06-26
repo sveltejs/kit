@@ -1757,6 +1757,7 @@ async function navigate({
 	intent
 }) {
 	const prev_token = navigation_token;
+	const prev_invalidation_token = invalidation_token;
 	navigation_token = invalidation_token = nav_token;
 
 	intent ??= await get_navigation_intent(url, false);
@@ -1776,6 +1777,7 @@ async function navigate({
 	if (!nav) {
 		block();
 		if (navigation_token === nav_token) navigation_token = prev_token;
+		if (invalidation_token === nav_token) invalidation_token = prev_invalidation_token;
 		return;
 	}
 
