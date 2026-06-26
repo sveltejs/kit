@@ -104,7 +104,7 @@ export function form(id) {
 		/** @type {Record<string, boolean>} */
 		let touched = {};
 
-		let submitted = false;
+		let submitted = $state(false);
 
 		/** @type {InternalRemoteFormIssue[] | null} */
 		let unread_issues = null;
@@ -609,6 +609,9 @@ export function form(id) {
 			},
 			pending: {
 				get: () => pending_count
+			},
+			submitted: {
+				get: () => submitted
 			},
 			preflight: {
 				/** @type {RemoteForm<T, U>['preflight']} */
