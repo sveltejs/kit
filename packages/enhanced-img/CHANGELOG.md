@@ -1,5 +1,11 @@
 # @sveltejs/enhanced-img
 
+## 1.0.0-next.1
+### Major Changes
+
+
+- breaking: require `vite@^8.0.12`, the first Vite 8 release bundling stable `rolldown` 1.0.0 ([#16134](https://github.com/sveltejs/kit/pull/16134))
+
 ## 1.0.0-next.0
 ### Major Changes
 
