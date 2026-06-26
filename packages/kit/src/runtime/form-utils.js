@@ -616,11 +616,11 @@ function get_type_prefix(field_type, is_array, input_value) {
  * @returns {any}
  */
 function deep_clone(value) {
-	if (value instanceof Date) {
-		return new Date(value.getTime());
-	}
-
 	if (value !== null && typeof value === 'object') {
+		if (value instanceof Date) {
+			return new Date(value.getTime());
+		}
+
 		if (value instanceof File) {
 			return value;
 		}
