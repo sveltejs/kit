@@ -296,8 +296,17 @@ let current_history_index;
 /** @type {number} */
 let current_navigation_index;
 
-/** @type {{}} */
-let token;
+/** @type {{}} Token for the latest navigation. Updated on new navigations */
+let navigation_token;
+
+/**
+ * @type {{}}
+ * The latest invalidate(All) token. Superseeded by both later invalidate(All)s and navigations.
+ * This is separate to navigation_token because an invalidate(All) might be triggered while a navigation
+ * is in progress, and we want to be able to finish this navigation (unless the invalidation finishes before
+ * it and redirects, in which case we will do the redirect triggered by the invalidation).
+ */
+let invalidation_token;
 
 /**
  * A set of tokens which are associated to current preloads.
@@ -423,7 +432,9 @@ async function _invalidate(include_load_functions = true, reset_page_state = tru
 	if (!pending_invalidate) return;
 	pending_invalidate = null;
 
-	const nav_token = (token = {});
+	const token = (invalidation_token = {});
+	const nav_token = navigation_token;
+	const navigating = is_navigating;
 	const intent = await get_navigation_intent(current.url, true);
 
 	// Clear preload, it might be affected by the invalidation.
@@ -455,15 +466,23 @@ async function _invalidate(include_load_functions = true, reset_page_state = tru
 	if (include_load_functions) {
 		const prev_state = page.state;
 		const navigation_result = intent && (await load_route(intent));
-		if (!navigation_result || nav_token !== token) return;
+		if (!navigation_result || token !== invalidation_token || nav_token !== navigation_token) {
+			return;
+		}
 
 		if (navigation_result.type === 'redirect') {
 			return _goto(
 				new URL(navigation_result.location, current.url).href,
 				{ replaceState: true },
 				1,
-				nav_token
+				token
 			);
+		}
+
+		// A navigation started before the invalidation and ended before it finished. The invalidation did not redirect,
+		// hence it likely contains outdated data now, so we ignore it.
+		if (navigating && !is_navigating) {
+			return;
 		}
 
 		// This is a bit hacky but allows us not having to pass that boolean around, making things harder to reason about
@@ -1737,8 +1756,8 @@ async function navigate({
 	event,
 	intent
 }) {
-	const prev_token = token;
-	token = nav_token;
+	const prev_token = navigation_token;
+	navigation_token = invalidation_token = nav_token;
 
 	intent ??= await get_navigation_intent(url, false);
 	const nav =
@@ -1756,7 +1775,7 @@ async function navigate({
 
 	if (!nav) {
 		block();
-		if (token === nav_token) token = prev_token;
+		if (navigation_token === nav_token) navigation_token = prev_token;
 		return;
 	}
 
@@ -1820,7 +1839,7 @@ async function navigate({
 	url = intent?.url || url;
 
 	// abort if user navigated during update
-	if (token !== nav_token) {
+	if (navigation_token !== nav_token) {
 		nav.reject(new Error('navigation aborted'));
 		return;
 	}
@@ -1999,7 +2018,7 @@ async function navigate({
 	await svelte.tick();
 	await svelte.tick();
 
-	if (token !== nav_token) {
+	if (navigation_token !== nav_token) {
 		// a new navigation happened while we were waiting for the DOM to update, so abort
 		nav.reject(new Error('navigation aborted'));
 		return;
@@ -2906,7 +2925,7 @@ function _start_router() {
 
 		if (event.state?.[HISTORY_INDEX]) {
 			const history_index = event.state[HISTORY_INDEX];
-			token = {};
+			navigation_token = invalidation_token = {};
 
 			// if a popstate-driven navigation is cancelled, we need to counteract it
 			// with history.go, which means we end up back here, hence this check
@@ -2955,7 +2974,7 @@ function _start_router() {
 				block: () => {
 					history.go(-delta);
 				},
-				nav_token: token,
+				nav_token: navigation_token,
 				event
 			});
 		} else {
