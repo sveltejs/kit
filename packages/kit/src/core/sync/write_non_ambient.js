@@ -98,7 +98,7 @@ function generate_app_types(manifest_data, config) {
 			const path_to_params = () => {
 				const params_file =
 					resolve_entry(config.files.params) ??
-					path.join(config.files.params.replace(/\.(js|ts)$/, ''), '.js');
+					config.files.params.replace(/\.(js|ts)$/, '') + '.js';
 
 				return posixify(path.relative(config.outDir, params_file));
 			};

@@ -603,7 +603,7 @@ function generate_params_type(params, outdir, config) {
 	const path_to_params = () => {
 		const params_file =
 			resolve_entry(config.kit.files.params) ??
-			path.join(config.kit.files.params.replace(/\.(js|ts)$/, ''), '.js');
+			config.kit.files.params.replace(/\.(js|ts)$/, '') + '.js';
 
 		return posixify(path.relative(outdir, params_file));
 	};
