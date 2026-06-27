@@ -69,9 +69,9 @@ export function generate_manifest({
 		assets.push(build_data.service_worker);
 	}
 
-	const uses_matchers = build_data.client?.nodes
-		? build_data.manifest_data.routes.some((route) => route.params.some((param) => param.matcher))
-		: false;
+	const uses_matchers = build_data.manifest_data.routes.some((route) =>
+		route.params.some((param) => param.matcher)
+	);
 
 	/** @param {Array<number | undefined>} indexes */
 	function get_nodes(indexes) {
