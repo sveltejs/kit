@@ -32,7 +32,7 @@ test('load_and_validate_params loads and validates params', async () => {
 		],
 		params_path: 'params.js',
 		root: import.meta.dirname,
-		load: async () => ({ params: { number: () => true } })
+		load: () => Promise.resolve({ params: { number: () => true } })
 	});
 
 	expect(params).toEqual({ number: expect.any(Function) });
