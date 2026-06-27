@@ -9,7 +9,6 @@ minimumReleaseAgeExclude:
   - prettier-plugin-svelte
   - svelte-check
   - esm-env
-  - cookie@2.0.0 # TODO: remove this once it's been released long enough
 blockExoticSubdeps: true
 linkWorkspacePackages: true
 shellEmulator: true
