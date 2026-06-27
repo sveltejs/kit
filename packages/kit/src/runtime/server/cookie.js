@@ -1,4 +1,4 @@
-import { parse, serialize } from 'cookie';
+import { parseCookie, stringifySetCookie } from 'cookie';
 import { DEV } from 'esm-env';
 import { normalize_path, resolve } from '../../utils/url.js';
 import { add_data_suffix } from '../pathname.js';
@@ -39,7 +39,7 @@ function generate_cookie_key(domain, path, name) {
 export function get_cookies(request, url) {
 	const header = request.headers.get('cookie') ?? '';
 	const initial_cookies = /** @type {Record<string, string>} */ (
-		parse(header, { decode: (value) => value })
+		parseCookie(header, { decode: (value) => value })
 	);
 
 	/** @type {string | undefined} */
@@ -48,7 +48,7 @@ export function get_cookies(request, url) {
 	/** @type {Map<string, import('./page/types.js').Cookie>} */
 	const new_cookies = new Map();
 
-	/** @type {import('cookie').SerializeOptions} */
+	/** @type {Omit<import('cookie').SetCookie, 'name' | 'value'>} */
 	const defaults = {
 		httpOnly: true,
 		path: '/',
@@ -83,7 +83,7 @@ export function get_cookies(request, url) {
 				return best_match.options.maxAge === 0 ? undefined : best_match.value;
 			}
 
-			const req_cookies = parse(header, { decode: opts?.decode });
+			const req_cookies = parseCookie(header, { decode: opts?.decode });
 			const cookie = req_cookies[name]; // the decoded string or undefined
 
 			// in development, if the cookie was set during this session with `cookies.set`,
@@ -110,7 +110,7 @@ export function get_cookies(request, url) {
 		 * @param {import('cookie').ParseOptions} [opts]
 		 */
 		getAll(opts) {
-			const cookies = parse(header, { decode: opts?.decode });
+			const cookies = parseCookie(header, { decode: opts?.decode });
 
 			// Group cookies by name and find the most specific one for each name
 			const lookup = new Map();
@@ -163,7 +163,7 @@ export function get_cookies(request, url) {
 		 * @param {string} value
 		 * @param {import('cookie').SerializeOptions} options
 		 */
-		serialize(name, value, options) {
+		serialize(name, value, { encode, ...options }) {
 			let path = options.path ?? '/';
 
 			if (!options.domain || options.domain === url.hostname) {
@@ -173,7 +173,7 @@ export function get_cookies(request, url) {
 				path = resolve(normalized_url, path);
 			}
 
-			return serialize(name, value, { ...defaults, ...options, path });
+			return stringifySetCookie({ name, value, ...defaults, ...options, path }, { encode });
 		}
 	};
 
@@ -200,7 +200,7 @@ export function get_cookies(request, url) {
 		// explicit header has highest precedence
 		if (header) {
 			const parsed = /** @type {Record<string, string>} */ (
-				parse(header, { decode: (value) => value })
+				parseCookie(header, { decode: (value) => value })
 			);
 			for (const name in parsed) {
 				combined_cookies[name] = parsed[name];
@@ -238,7 +238,8 @@ export function get_cookies(request, url) {
 		new_cookies.set(cookie_key, cookie);
 
 		if (DEV) {
-			const serialized = serialize(name, value, cookie.options);
+			const { encode, ...rest } = cookie.options;
+			const serialized = stringifySetCookie({ name, value, ...rest }, { encode });
 			if (text_encoder.encode(serialized).byteLength > MAX_COOKIE_SIZE) {
 				throw new Error(`Cookie "${name}" is too large, and will be discarded by the browser`);
 			}
@@ -296,15 +297,22 @@ export function path_matches(path, constraint) {
  */
 export function add_cookies_to_headers(headers, cookies) {
 	for (const new_cookie of cookies) {
-		const { name, value, options } = new_cookie;
-		headers.append('set-cookie', serialize(name, value, options));
+		const {
+			name,
+			value,
+			options: { encode, ...options }
+		} = new_cookie;
+		headers.append('set-cookie', stringifySetCookie({ name, value, ...options }, { encode }));
 
 		// special case — for routes ending with .html, the route data lives in a sibling
 		// `.html__data.json` file rather than a child `/__data.json` file, which means
 		// we need to duplicate the cookie
 		if (options.path.endsWith('.html')) {
 			const path = add_data_suffix(options.path);
-			headers.append('set-cookie', serialize(name, value, { ...options, path }));
+			headers.append(
+				'set-cookie',
+				stringifySetCookie({ name, value, ...options, path }, { encode })
+			);
 		}
 	}
 }

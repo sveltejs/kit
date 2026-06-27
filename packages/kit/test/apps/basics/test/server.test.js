@@ -867,7 +867,7 @@ test.describe('setHeaders', () => {
 });
 
 test.describe('cookies', () => {
-	test('cookie.serialize created correct cookie header string', async ({ page }) => {
+	test('cookie.stringifySetCookie created correct cookie header string', async ({ page }) => {
 		const response = await page.goto('/cookies/serialize');
 		const cookies = response ? await response.headerValue('set-cookie') : '';
 
