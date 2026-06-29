@@ -599,7 +599,6 @@ function replace_ext_with_js(file_path) {
  * @param {import('types').ValidatedConfig} config
  */
 function generate_params_type(params, outdir, config) {
-	/** @param {string} matcher */
 	const path_to_params = () => {
 		const params_file =
 			resolve_entry(config.kit.files.params) ??
