@@ -4,7 +4,7 @@ declare global {
 			answer: number;
 			name?: string;
 			key: string | null;
-			params: Record<string, string>;
+			params: Record<string, any>;
 			url?: URL;
 			message?: string;
 		}
