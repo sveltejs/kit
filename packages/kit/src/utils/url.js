@@ -29,17 +29,17 @@ export function is_root_relative(path) {
 }
 
 /**
- * Whether a redirect location is absolute, i.e. not a root-relative or path-relative URL.
+ * Whether a redirect location is absolute, i.e. not a root-relative or path-relative URL,
+ * and not pointing to the same origin as we're currently on (if determineable).
  * @param {string} location
  */
 export function is_external_location(location) {
 	const is_absolute = (location[0] === '/' && location[1] === '/') || SCHEME.test(location);
 
 	if (is_absolute) {
-		// TODO we need base path here but that fails right now because apparently other imports
-		// not using Vite end up here. Ideally we also can determine that a relative link is
-		// not part of the app and therefore also external, for which we would need to check this
-		// all the time
+		// Ideally we could be more strict here with checking base path, but that is impossible because
+		// we can't retrieve the base path here, as all of this code needs to be runnable in pure Node without Vite.
+		// As a result, we check origins only, which is already plenty enough.
 		if (BROWSER) {
 			if (matches_external_allowlist_entry(location, window.location.origin)) return false;
 		} else {
