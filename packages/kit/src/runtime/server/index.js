@@ -144,7 +144,7 @@ export class Server {
 						handleError: ({ error }) => console.error(error),
 						handleFetch: ({ request, fetch }) => fetch(request),
 						handleValidationError: () => {
-							return { message: 'Bad Request', status: 400 };
+							return { message: 'Bad Request' };
 						},
 						reroute: noop,
 						transport: {}

@@ -969,7 +969,7 @@ export type HandleServerError = (input: {
  * It will be called with the validation issues and the event, and must return an object shape that matches `App.Error`.
  */
 export type HandleValidationError<Issue extends StandardSchemaV1.Issue = StandardSchemaV1.Issue> =
-	(input: { issues: Issue[]; event: RequestEvent }) => MaybePromise<App.Error>;
+	(input: { issues: Issue[]; event: RequestEvent }) => AppErrorWithOptionalStatus;
 
 /**
  * The client-side [`handleError`](https://svelte.dev/docs/kit/hooks#Shared-hooks-handleError) hook runs when an unexpected error is thrown while navigating.
