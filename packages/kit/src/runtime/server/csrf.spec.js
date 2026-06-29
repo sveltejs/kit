@@ -2,10 +2,10 @@ import { assert, test, describe } from 'vitest';
 import { get_self_origin, is_csrf_forbidden, is_remote_forbidden } from './csrf.js';
 
 describe('get_self_origin', () => {
-	test('falls back to the request URL origin when paths.origin is empty', () => {
-		// The default (`paths.origin: ''`, meaning "auto") derives the self-origin from
+	test('falls back to the request URL origin when paths.origin is unset', () => {
+		// The default (`paths.origin: undefined`, meaning "auto") derives the self-origin from
 		// `request.url`, preserving the historical CSRF behaviour.
-		assert.equal(get_self_origin('', 'http://localhost:4173'), 'http://localhost:4173');
+		assert.equal(get_self_origin(undefined, 'http://localhost:4173'), 'http://localhost:4173');
 	});
 
 	test('uses the configured paths.origin when set, even if it differs from the request URL origin', () => {
@@ -22,8 +22,8 @@ describe('get_self_origin', () => {
 		assert.equal(get_self_origin('https://my-site.com', ''), 'https://my-site.com');
 	});
 
-	test('falls back to the request URL origin when both are empty', () => {
-		assert.equal(get_self_origin('', ''), '');
+	test('falls back to the request URL origin when paths.origin is unset and the URL origin is empty', () => {
+		assert.equal(get_self_origin(undefined, ''), '');
 	});
 });
 

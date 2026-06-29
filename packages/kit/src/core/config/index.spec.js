@@ -108,13 +108,14 @@ const get_defaults = (prefix = '') => ({
 		paths: {
 			base: '',
 			assets: '',
-			origin: '',
+			origin: undefined,
 			relative: true
 		},
 		prerender: {
 			concurrency: 1,
 			crawl: true,
-			entries: ['*']
+			entries: ['*'],
+			origin: undefined
 		},
 		version: {
 			name: Date.now().toString(),
@@ -340,15 +341,22 @@ test('passes if paths.origin is a valid origin', () => {
 	assert.equal(validated.kit.paths.origin, 'https://example.com');
 });
 
-test('passes if paths.origin is the empty string', () => {
-	const validated = validate_config({
-		kit: {
-			paths: {
-				origin: ''
+test('defaults paths.origin to undefined', () => {
+	const validated = validate_config({});
+	assert.equal(validated.kit.paths.origin, undefined);
+});
+
+test('fails if paths.origin is the empty string', () => {
+	assert.throws(() => {
+		validate_config({
+			kit: {
+				paths: {
+					// @ts-expect-error - empty string is no longer a valid value
+					origin: ''
+				}
 			}
-		}
-	});
-	assert.equal(validated.kit.paths.origin, '');
+		});
+	}, /^config\.kit\.paths\.origin must be a valid origin \(e\.g\. 'https:\/\/my-site\.com'\)\. '' could not be parsed as a URL$/);
 });
 
 test('fails if prerender.entries are invalid', () => {
@@ -361,7 +369,20 @@ test('fails if prerender.entries are invalid', () => {
 				}
 			}
 		});
-	}, /^Each member of config\.kit.prerender.entries must be either '\*' or an absolute path beginning with '\/' — saw 'foo'$/);
+	}, /^Each member of config\.kit\.prerender\.entries must be either '\*' or an absolute path beginning with '\/' — saw 'foo'$/);
+});
+
+test('fails if prerender.origin is set', () => {
+	assert.throws(() => {
+		validate_config({
+			kit: {
+				prerender: {
+					// @ts-expect-error - option has been removed
+					origin: 'https://example.com'
+				}
+			}
+		});
+	}, /^`config\.kit\.prerender\.origin` has been removed in favour of `config\.paths\.origin`$/);
 });
 
 /**
@@ -389,7 +410,7 @@ validate_paths(
 	{
 		base: '/path/to/base',
 		assets: '',
-		origin: '',
+		origin: undefined,
 		relative: true
 	}
 );
@@ -402,7 +423,7 @@ validate_paths(
 	{
 		base: '',
 		assets: 'https://cdn.example.com',
-		origin: '',
+		origin: undefined,
 		relative: true
 	}
 );
@@ -416,7 +437,7 @@ validate_paths(
 	{
 		base: '/path/to/base',
 		assets: 'https://cdn.example.com',
-		origin: '',
+		origin: undefined,
 		relative: true
 	}
 );

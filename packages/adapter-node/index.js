@@ -106,7 +106,13 @@ export default function (opts = {}) {
 								if (!magicString) throw new Error('experimental.nativeMagicString is not enabled');
 								magicString
 									.replace(/\bENV_PREFIX\b/g, JSON.stringify(envPrefix))
-									.replace(/\bPRECOMPRESS\b/g, JSON.stringify(precompress));
+									.replace(/\bPRECOMPRESS\b/g, JSON.stringify(precompress))
+									.replace(
+										/\bORIGIN\b/g,
+										builder.config.kit.paths.origin
+											? JSON.stringify(builder.config.kit.paths.origin)
+											: 'undefined'
+									);
 								return {
 									code: magicString,
 									map: magicString.generateMap().toString()

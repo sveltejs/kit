@@ -6,13 +6,13 @@ const mutating_form_methods = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
  * The origin SvelteKit treats as "self" when validating the `Origin` header on
  * cross-site requests.
  *
- * By default (`paths.origin` is the empty string), SvelteKit derives the origin
+ * By default (`paths.origin` is `undefined`), SvelteKit derives the origin
  * from `request.url` (which is set by the adapter, and ultimately by the
  * platform). When `paths.origin` is configured — for example so that a preview
  * deployment whose URL isn't known at build time, or an app behind a reverse
  * proxy, can declare a canonical origin — that value takes precedence.
  *
- * @param {string} paths_origin the configured `kit.paths.origin`
+ * @param {string | undefined} paths_origin the configured `kit.paths.origin`
  * @param {string} url_origin the origin derived from `request.url`
  * @returns {string}
  */

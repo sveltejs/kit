@@ -12,6 +12,8 @@ import { parse_as_bytes } from './utils.js';
 
 const server = new Server(manifest);
 
+const origin = ORIGIN;
+
 const xff_depth = parseInt(env('XFF_DEPTH', '1'));
 const address_header = env('ADDRESS_HEADER', '').toLowerCase();
 const protocol_header = env('PROTOCOL_HEADER', '').toLowerCase();
@@ -94,7 +96,7 @@ const ssr = async (req, res) => {
 
 	try {
 		request = await getRequest({
-			base: get_origin(req.headers),
+			base: origin || get_origin(req.headers),
 			request: req,
 			bodySizeLimit: body_size_limit
 		});

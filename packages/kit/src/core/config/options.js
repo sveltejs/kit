@@ -187,10 +187,8 @@ export const options = object(
 
 					return input;
 				}),
-				origin: validate('', (input, keypath) => {
+				origin: validate(undefined, (input, keypath) => {
 					assert_string(input, keypath);
-
-					if (input === '') return input;
 
 					let url;
 
@@ -308,6 +306,10 @@ export const options = object(
 						if (['fail', 'warn', 'ignore'].includes(input)) return input;
 						throw new Error(`${keypath} should be "fail", "warn", "ignore" or a custom function`);
 					}
+				),
+
+				origin: removed(
+					(keypath) => `\`${keypath}\` has been removed in favour of \`config.paths.origin\``
 				)
 			}),
 

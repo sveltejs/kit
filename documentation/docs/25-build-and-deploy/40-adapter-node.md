@@ -94,14 +94,14 @@ export default defineConfig({
 		sveltekit({
 			adapter: adapter(),
 			paths: {
-				origin: process.env.ORIGIN ?? ''
+				origin: process.env.ORIGIN
 			}
 		})
 	]
 });
 ```
 
-When `paths.origin` is the empty string (the default), SvelteKit derives the origin from `request.url`. Otherwise, the configured value is used as the trusted self-origin for CSRF checks on form submissions and remote function calls, and as the value of `url.origin` during prerendering.
+When `paths.origin` is not set (the default), SvelteKit derives the origin from `request.url`. Otherwise, the configured value is used as the trusted self-origin for CSRF checks on form submissions and remote function calls, and as the value of `url.origin` during prerendering.
 
 Alternatively, you can specify headers that tell SvelteKit about the request protocol and host, from which it can construct the origin URL:
 
