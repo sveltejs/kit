@@ -20,7 +20,6 @@ resolve('/');
 export function error_to_pojo(error) {
 	if (isHttpError(error)) {
 		return {
-			status: error.status,
 			...error.body
 		};
 	}
