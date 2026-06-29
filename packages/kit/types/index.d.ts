@@ -2874,27 +2874,14 @@ declare module '@sveltejs/kit' {
 	 * return an error response without invoking `handleError`.
 	 * Make sure you're not catching the thrown error, which would prevent SvelteKit from handling it.
 	 * @param status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
-	 * @throws {import('./public.js').HttpError} This error instructs SvelteKit to initiate HTTP error handling.
-	 * @throws {Error} If the provided status is invalid (not between 400 and 599).
-	 */
-	export function error(status: {
-		status: number;
-		message: string;
-	} extends App.Error ? number : never): never;
-	/**
-	 * Throws an error with a HTTP status code and an optional message.
-	 * When called during request handling, this will cause SvelteKit to
-	 * return an error response without invoking `handleError`.
-	 * Make sure you're not catching the thrown error, which would prevent SvelteKit from handling it.
-	 * @param status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
 	 * @param body The error message.
 	 * @throws {import('./public.js').HttpError} This error instructs SvelteKit to initiate HTTP error handling.
 	 * @throws {Error} If the provided status is invalid (not between 400 and 599).
 	 */
-	export function error(status: {
+	export function error(status: number, body: {
 		status: number;
 		message: string;
-	} extends App.Error ? number : never, body: string): never;
+	} extends App.Error ? string | void | undefined : never): never;
 	/**
 	 * Throws an error with a HTTP status code and an optional message.
 	 * When called during request handling, this will cause SvelteKit to
@@ -2906,7 +2893,10 @@ declare module '@sveltejs/kit' {
 	 * @throws {import('./public.js').HttpError} This error instructs SvelteKit to initiate HTTP error handling.
 	 * @throws {Error} If the provided status is invalid (not between 400 and 599).
 	 */
-	export function error(status: number, body: string, properties: Omit<App.Error, "status" | "message">): never;
+	export function error(status: number, body: string, properties: {
+		status: number;
+		message: string;
+	} extends App.Error ? never : Omit<App.Error, "status" | "message">): never;
 	/**
 	 * Checks whether this is an error thrown by {@link error}.
 	 * @param status The status to filter for.
