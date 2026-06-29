@@ -103,7 +103,7 @@ export async function handle_fatal_error(event, state, options, error) {
 export async function handle_error_and_jsonify(event, state, options, error) {
 	if (error instanceof HttpError) {
 		// @ts-expect-error custom user errors may not have a message field if App.Error is overwritten
-		return { message: 'Unknown Error', ...error.body };
+		return { message: 'Unknown Error', ...error.body, status: error.status };
 	}
 
 	if (__SVELTEKIT_DEV__ && typeof error == 'object') {
@@ -113,11 +113,11 @@ export async function handle_error_and_jsonify(event, state, options, error) {
 	const status = get_status(error);
 	const message = get_message(error);
 
-	return (
-		(await with_request_store({ event, state }, () =>
-			options.hooks.handleError({ error, event, status, message })
-		)) ?? { message }
-	);
+	const body = (await with_request_store({ event, state }, () =>
+		options.hooks.handleError({ error, event, status, message })
+	)) ?? { message };
+
+	return { ...body, status: body.status ?? status };
 }
 
 /**

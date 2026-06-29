@@ -428,7 +428,9 @@ export function form(id) {
 					await enhance_callback(create_enhance_callback_instance(form, form_data));
 				} catch (e) {
 					const error =
-						e instanceof HttpError ? e.body : { message: /** @type {any} */ (e).message };
+						e instanceof HttpError
+							? e.body
+							: { message: /** @type {any} */ (e).message, status: 500 };
 					const status = e instanceof HttpError ? e.status : 500;
 					void set_nearest_error_page(error, status);
 				} finally {

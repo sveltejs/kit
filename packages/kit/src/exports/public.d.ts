@@ -34,6 +34,8 @@ export { PrerenderOption } from '../types/private.js';
 // @ts-ignore this is an optional peer dependency so could be missing. Written like this so dts-buddy preserves the ts-ignore
 type Span = import('@opentelemetry/api').Span;
 
+type AppErrorWithOptionalStatus = Omit<App.Error, 'status'> & { status?: App.Error['status'] };
+
 /**
  * [Adapters](https://svelte.dev/docs/kit/adapters) are responsible for taking the production build and turning it into something that can be deployed to a platform of your choosing.
  */
@@ -959,7 +961,7 @@ export type HandleServerError = (input: {
 	event: RequestEvent;
 	status: number;
 	message: string;
-}) => MaybePromise<void | (App.Error & { status?: number })>;
+}) => MaybePromise<void | AppErrorWithOptionalStatus>;
 
 /**
  * The [`handleValidationError`](https://svelte.dev/docs/kit/hooks#Server-hooks-handleValidationError) hook runs when the argument to a remote function fails validation.
@@ -982,7 +984,7 @@ export type HandleClientError = (input: {
 	event: NavigationEvent;
 	status: number;
 	message: string;
-}) => MaybePromise<void | (App.Error & { status?: number })>;
+}) => MaybePromise<void | AppErrorWithOptionalStatus>;
 
 /**
  * The [`handleFetch`](https://svelte.dev/docs/kit/hooks#Server-hooks-handleFetch) hook allows you to modify (or replace) the result of an [`event.fetch`](https://svelte.dev/docs/kit/load#Making-fetch-requests) call that runs on the server (or during prerendering) inside an endpoint, `load`, `action`, `handle`, `handleError` or `reroute`.

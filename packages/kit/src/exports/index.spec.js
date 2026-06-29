@@ -1,4 +1,4 @@
-import { isRedirect, normalizeUrl, redirect } from './index.js';
+import { error, isHttpError, isRedirect, normalizeUrl, redirect } from './index.js';
 import { assert, describe, it } from 'vitest';
 
 describe('normalizeUrl', () => {
@@ -72,5 +72,43 @@ describe('redirect', () => {
 			() => redirect(307, '/invalid\r\nset-cookie: x=y'),
 			'Invalid redirect location "/invalid\\r\\nset-cookie: x=y": this string contains characters that cannot be used in HTTP headers'
 		);
+	});
+});
+
+describe('error', () => {
+	it('adds status to the body', () => {
+		try {
+			error(418, 'teapot');
+			assert.fail('Expected error to throw');
+		} catch (e) {
+			if (!isHttpError(e)) {
+				assert.fail('Expected an HttpError');
+			}
+
+			assert.equal(e.status, 418);
+			assert.deepEqual(e.body, { message: 'teapot', status: 418 });
+		}
+	});
+
+	it('merges additional body properties', () => {
+		try {
+			// @ts-expect-error
+			error(400, 'Bad request', { code: 'bad_request' });
+			assert.fail('Expected error to throw');
+		} catch (e) {
+			if (!isHttpError(e)) {
+				assert.fail('Expected an HttpError');
+			}
+
+			assert.equal(e.status, 400);
+			assert.deepEqual(
+				e.body,
+				/** @type {any} */ ({
+					code: 'bad_request',
+					message: 'Bad request',
+					status: 400
+				})
+			);
+		}
 	});
 });
