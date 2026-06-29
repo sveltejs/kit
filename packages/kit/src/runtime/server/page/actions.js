@@ -5,7 +5,7 @@ import { DEV } from 'esm-env';
 import { json } from '@sveltejs/kit';
 import { HttpError, Redirect, ActionFailure, SvelteKitError } from '@sveltejs/kit/internal';
 import { with_request_store, merge_tracing } from '@sveltejs/kit/internal/server';
-import { get_status, normalize_error } from '../../../utils/error.js';
+import { normalize_error } from '../../../utils/error.js';
 import { is_form_content_type, negotiate } from '../../../utils/http.js';
 import { create_replacer, handle_error_and_jsonify } from '../utils.js';
 import { record_span } from '../../telemetry/record_span.js';
@@ -44,7 +44,7 @@ export async function handle_action_json_request(event, event_state, options, se
 				error
 			},
 			{
-				status: get_status(error, no_actions_error),
+				status: error.status,
 				headers: {
 					// https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/405
 					// "The server must generate an Allow header field in a 405 status code response"
@@ -108,7 +108,7 @@ export async function handle_action_json_request(event, event_state, options, se
 				error: transformed
 			},
 			{
-				status: get_status(transformed, err)
+				status: transformed.status
 			}
 		);
 	}

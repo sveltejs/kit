@@ -8,7 +8,7 @@ import { app_dir, base } from '$app/paths/internal/server';
 import { is_form_content_type } from '../../utils/http.js';
 import { create_remote_key, parse_remote_arg, split_remote_key, stringify } from '../shared.js';
 import { handle_error_and_jsonify } from './utils.js';
-import { normalize_error, get_status } from '../../utils/error.js';
+import { normalize_error } from '../../utils/error.js';
 import { check_incorrect_fail_use } from './page/actions.js';
 import { DEV } from 'esm-env';
 import { record_span } from '../telemetry/record_span.js';
@@ -181,7 +181,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 										send(controller, {
 											type: 'error',
 											error: transformed,
-											status: get_status(transformed, error)
+											status: transformed.status
 										});
 									}
 								}
@@ -329,7 +329,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 		}
 
 		const transformed = await handle_error_and_jsonify(event, state, options, error);
-		const status = get_status(transformed, error);
+		const status = transformed.status;
 
 		return json(
 			/** @type {RemoteFunctionResponse} */ ({
@@ -365,7 +365,7 @@ export async function collect_remote_data(data, event, state, options) {
 	 */
 	async function convert_error(error) {
 		const transformed = await handle_error_and_jsonify(event, state, options, error);
-		return [get_status(transformed, error), transformed];
+		return [transformed.status, transformed];
 	}
 
 	/** @type {Promise<any>[]} */

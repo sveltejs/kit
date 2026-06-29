@@ -1,6 +1,6 @@
 import { text } from '@sveltejs/kit';
 import { Redirect } from '@sveltejs/kit/internal';
-import { normalize_error, get_status } from '../../../utils/error.js';
+import { normalize_error } from '../../../utils/error.js';
 import { once } from '../../../utils/functions.js';
 import { server_data_serializer_json } from '../page/data_serializer.js';
 import { load_server_data } from '../page/load_data.js';
@@ -112,7 +112,7 @@ export async function render_data(
 					return /** @type {import('types').ServerErrorNode} */ ({
 						type: 'error',
 						error: transformed,
-						status: get_status(transformed, error)
+						status: transformed.status
 					});
 				})
 			)
@@ -156,7 +156,7 @@ export async function render_data(
 			return redirect_json_response(error);
 		} else {
 			const transformed = await handle_error_and_jsonify(event, event_state, options, error);
-			return json_response(transformed, get_status(transformed, error));
+			return json_response(transformed, transformed.status);
 		}
 	}
 }

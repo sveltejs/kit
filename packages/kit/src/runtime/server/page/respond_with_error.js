@@ -2,7 +2,6 @@ import { Redirect } from '@sveltejs/kit/internal';
 import { render_response } from './render.js';
 import { load_data, load_server_data } from './load_data.js';
 import { handle_error_and_jsonify, static_error_page, redirect_response } from '../utils.js';
-import { get_status } from '../../../utils/error.js';
 import { PageNodes } from '../../../utils/page_nodes.js';
 import { server_data_serializer } from './data_serializer.js';
 
@@ -100,7 +99,7 @@ export async function respond_with_error({
 				ssr,
 				csr
 			},
-			status: get_status(transformed, error),
+			status: transformed.status,
 			error: transformed,
 			branch,
 			error_components: [],
@@ -119,6 +118,6 @@ export async function respond_with_error({
 
 		const transformed = await handle_error_and_jsonify(event, event_state, options, e);
 
-		return static_error_page(options, get_status(transformed, e), transformed.message);
+		return static_error_page(options, transformed.status, transformed.message);
 	}
 }

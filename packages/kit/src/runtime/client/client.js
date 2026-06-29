@@ -714,7 +714,7 @@ async function initialize(result, target, hydrate) {
 		transformError: __SVELTEKIT_EXPERIMENTAL_USE_TRANSFORM_ERROR__
 			? /** @param {unknown} e */ async (e) => {
 					const error = await handle_error(e, current.nav);
-					rendering_error = { error, status: get_status(error, e) };
+					rendering_error = { error, status: error.status };
 					page.error = error;
 					page.status = rendering_error.status;
 					return error;
@@ -1246,8 +1246,7 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 				server_data = await load_data(url, invalid_server_nodes);
 			} catch (error) {
 				const handled_error = await handle_error(error, { url, params, route: { id } });
-
-				const status = get_status(handled_error, error);
+				const status = handled_error.status;
 
 				if (preload && preload_tokens.has(preload)) {
 					return preload_error({ error: handled_error, status, url, params, route });
@@ -1344,7 +1343,7 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 					const error = await handle_error(err, { params, url, route: { id: route.id } });
 					return preload_error({
 						error,
-						status: get_status(error, err),
+						status: error.status,
 						url,
 						params,
 						route
@@ -1360,11 +1359,10 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 					// this is the server error rethrown above, reconstruct but don't invoke
 					// the client error handler; it should've already been handled on the server
 					error = /** @type {import('types').ServerErrorNode} */ (err).error;
-					status =
-						/** @type {import('types').ServerErrorNode} */ (err).status ?? get_status(error, err);
+					status = /** @type {import('types').ServerErrorNode} */ (err).status ?? error.status;
 				} else if (err instanceof HttpError) {
 					error = err.body;
-					status = err.status;
+					status = error.status;
 				} else {
 					// Referenced node could have been removed due to redeploy, check
 					const updated = await stores.updated.check();
@@ -1375,7 +1373,7 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 					}
 
 					error = await handle_error(err, { params, url, route: { id: route.id } });
-					status = get_status(error, err);
+					status = error.status;
 				}
 
 				const error_load = await load_nearest_error_page(i, branch, errors);
@@ -1532,7 +1530,7 @@ async function load_root_error_page({ status, error, url, route }) {
 			.replace(/&/g, '&amp;')
 			.replace(/</g, '&lt;')
 			.replace(/>/g, '&gt;');
-		const html = error_template({ status: get_status(handled, error), message });
+		const html = error_template({ status: handled.status, message });
 		const parsed = new DOMParser().parseFromString(html, 'text/html');
 		document.documentElement.replaceChild(document.adoptNode(parsed.head), document.head);
 		document.documentElement.replaceChild(document.adoptNode(parsed.body), document.body);
@@ -2230,9 +2228,9 @@ function setup_preload() {
 /**
  * @param {unknown} error
  * @param {import('@sveltejs/kit').NavigationEvent} event
- * @returns {import('types').MaybePromise<App.Error>}
+ * @returns {Promise<App.Error>}
  */
-function handle_error(error, event) {
+async function handle_error(error, event) {
 	if (error instanceof HttpError) {
 		return error.body;
 	}
@@ -2244,10 +2242,9 @@ function handle_error(error, event) {
 
 	const status = get_status(error);
 	const message = get_message(error);
+	const app_error = (await app.hooks.handleError({ error, event, status, message })) ?? { message };
 
-	return (
-		app.hooks.handleError({ error, event, status, message }) ?? /** @type {any} */ ({ message })
-	);
+	return { ...app_error, status: get_status(app_error, error) };
 }
 
 /**
@@ -3121,7 +3118,7 @@ async function _hydrate(
 		const handled_error = await handle_error(error, { url, params, route });
 
 		result = await load_root_error_page({
-			status: get_status(handled_error, error),
+			status: handled_error.status,
 			error: handled_error,
 			url,
 			route
