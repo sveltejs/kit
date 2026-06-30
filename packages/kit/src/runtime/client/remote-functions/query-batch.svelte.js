@@ -72,7 +72,7 @@ export function query_batch(id) {
 
 							for (const { resolve, reject } of resolvers) {
 								if (result.type === 'error') {
-									reject(new HttpError(result.status, result.error));
+									reject(new HttpError(result.error.status, result.error));
 								} else {
 									resolve(result.data);
 								}

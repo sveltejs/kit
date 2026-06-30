@@ -928,6 +928,7 @@ declare module '@sveltejs/kit' {
 	 * Make sure that this function _never_ throws an error.
 	 *
 	 * The returned object can include a `status` property to override the HTTP status code used in the response.
+	 * If omitted, the status defaults to 500.
 	 */
 	export type HandleServerError = (input: {
 		error: unknown;
@@ -951,6 +952,7 @@ declare module '@sveltejs/kit' {
 	 * Make sure that this function _never_ throws an error.
 	 *
 	 * The returned object can include a `status` property to override the HTTP status code used in the response.
+	 * If omitted, the status defaults to 500.
 	 */
 	export type HandleClientError = (input: {
 		error: unknown;

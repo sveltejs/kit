@@ -111,8 +111,7 @@ export async function render_data(
 
 					return /** @type {import('types').ServerErrorNode} */ ({
 						type: 'error',
-						error: transformed,
-						status: transformed.status
+						error: transformed
 					});
 				})
 			)

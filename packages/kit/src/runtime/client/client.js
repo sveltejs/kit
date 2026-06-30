@@ -1154,14 +1154,14 @@ function diff_search_params(old_url, new_url) {
 }
 
 /**
- * @param {Omit<import('./types.js').NavigationFinished['state'], 'branch'> & { error: App.Error; status: number }} opts
+ * @param {Omit<import('./types.js').NavigationFinished['state'], 'branch'> & { error: App.Error }} opts
  * @returns {import('./types.js').NavigationFinished}
  */
-function preload_error({ error, status, url, route, params }) {
+function preload_error({ error, url, route, params }) {
 	// we skipped loading the error page, so we need to use the current page
 	// store, but we still pass the updated status to the preloadData function
 	const new_page = clone_page(page);
-	new_page.status = status;
+	new_page.status = error.status;
 	return {
 		type: 'loaded',
 		state: {
@@ -1249,7 +1249,7 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 				const status = handled_error.status;
 
 				if (preload && preload_tokens.has(preload)) {
-					return preload_error({ error: handled_error, status, url, params, route });
+					return preload_error({ error: handled_error, url, params, route });
 				}
 
 				return load_root_error_page({
@@ -1296,7 +1296,7 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 
 		if (server_data_node?.type === 'error') {
 			// rethrow and catch below
-			throw new HttpError(server_data_node.status ?? 500, server_data_node.error);
+			throw new HttpError(server_data_node.error.status, server_data_node.error);
 		}
 
 		return load_node({
@@ -1343,7 +1343,6 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 					const error = await handle_error(err, { params, url, route: { id: route.id } });
 					return preload_error({
 						error,
-						status: error.status,
 						url,
 						params,
 						route
@@ -1352,17 +1351,13 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 
 				/** @type {App.Error} */
 				let error;
-				/** @type {number} */
-				let status;
 
 				if (server_data_nodes?.includes(/** @type {import('types').ServerErrorNode} */ (err))) {
 					// this is the server error rethrown above, reconstruct but don't invoke
 					// the client error handler; it should've already been handled on the server
 					error = /** @type {import('types').ServerErrorNode} */ (err).error;
-					status = /** @type {import('types').ServerErrorNode} */ (err).status ?? error.status;
 				} else if (err instanceof HttpError) {
 					error = err.body;
-					status = error.status;
 				} else {
 					// Referenced node could have been removed due to redeploy, check
 					const updated = await stores.updated.check();
@@ -1373,7 +1368,6 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 					}
 
 					error = await handle_error(err, { params, url, route: { id: route.id } });
-					status = error.status;
 				}
 
 				const error_load = await load_nearest_error_page(i, branch, errors);
@@ -1383,12 +1377,12 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 						params,
 						branch: branch.slice(0, error_load.idx).concat(error_load.node),
 						errors,
-						status,
+						status: error.status,
 						error,
 						route
 					});
 				} else {
-					return await server_fallback(url, { id: route.id }, error, status);
+					return await server_fallback(url, { id: route.id }, error, error.status);
 				}
 			}
 		} else {

@@ -350,8 +350,7 @@ function batch(validate_or_fn, maybe_fn) {
 
 								return {
 									type: 'error',
-									error: transformed,
-									status: transformed.status
+									error: transformed
 								};
 							}
 						})

@@ -180,8 +180,7 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 
 										send(controller, {
 											type: 'error',
-											error: transformed,
-											status: transformed.status
+											error: transformed
 										});
 									}
 								}
@@ -329,18 +328,16 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 		}
 
 		const transformed = await handle_error_and_jsonify(event, state, options, error);
-		const status = transformed.status;
 
 		return json(
 			/** @type {RemoteFunctionResponse} */ ({
 				type: 'error',
-				error: transformed,
-				status
+				error: transformed
 			}),
 			{
 				// By setting a non-200 during prerendering we fail the prerender process (unless handleHttpError handles it).
 				// Errors at runtime will be passed to the client and are handled there
-				status: state.prerendering ? status : undefined,
+				status: state.prerendering ? transformed.status : undefined,
 				headers: {
 					'cache-control': 'private, no-store'
 				}
@@ -361,11 +358,10 @@ export async function collect_remote_data(data, event, state, options) {
 	/**
 	 *
 	 * @param {unknown} error
-	 * @returns {Promise<[status: number, error: App.Error]>}
+	 * @returns {Promise<App.Error>}
 	 */
-	async function convert_error(error) {
-		const transformed = await handle_error_and_jsonify(event, state, options, error);
-		return [transformed.status, transformed];
+	function convert_error(error) {
+		return handle_error_and_jsonify(event, state, options, error);
 	}
 
 	/** @type {Promise<any>[]} */

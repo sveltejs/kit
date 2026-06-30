@@ -91,7 +91,7 @@ export class LiveQuery {
 				// the query failed during SSR — seed the failed state (mirroring `fail()`,
 				// minus its terminal `#done`), so the main loop still connects as usual
 				// and the query can recover
-				const error = new HttpError(node.e[0] ?? 500, node.e[1]);
+				const error = new HttpError(node.e.status, node.e);
 				this.#loading = false;
 				this.#error = error;
 
