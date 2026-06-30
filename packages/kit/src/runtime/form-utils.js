@@ -687,12 +687,14 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 						}));
 					}
 
-					return all_issues
+					const issues = all_issues
 						?.filter((issue) => issue.name === key)
 						?.map((issue) => ({
 							path: issue.path,
 							message: issue.message
 						}));
+
+					return issues?.length ? issues : undefined;
 				};
 
 				return create_field_proxy(issues_func, get_input, set_input, get_issues, [...path, prop]);
