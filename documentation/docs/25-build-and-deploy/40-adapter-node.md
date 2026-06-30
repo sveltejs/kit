@@ -82,7 +82,7 @@ SOCKET_PATH=/tmp/socket node build
 
 HTTP doesn't give SvelteKit a reliable way to know the URL that is currently being requested. By default, SvelteKit will derive the origin from the request's `host` header (and the `https` protocol, if no `PROTOCOL_HEADER` is set).
 
-If your app is served from an origin that isn't known at request time — for example because it's behind a reverse proxy that doesn't pass the `host` header, or because you want to use a canonical origin for CSRF checks that differs from the request's host — you can set the [`kit.paths.origin`](https://svelte.dev/docs/kit/configuration#paths.origin) option in your `vite.config.js`:
+If your app is served from an origin that isn't known at request time — for example because it's behind a reverse proxy that doesn't pass the `host` header, or because you want to use a canonical origin for CSRF checks that differs from the request's host — you can set the [`paths.origin`](https://svelte.dev/docs/kit/configuration#paths.origin) option in your `vite.config.js`:
 
 ```js
 /// file: vite.config.js
