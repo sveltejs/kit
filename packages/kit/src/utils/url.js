@@ -5,7 +5,10 @@ import { try_get_request_store } from '../exports/internal/event.js';
  * Matches a URI scheme. See https://www.rfc-editor.org/rfc/rfc3986#section-3.1
  * @type {RegExp}
  */
-export const SCHEME = /^[a-z][a-z\d+\-.]+:/i;
+export const SCHEME = /^[a-z][a-z\d+\-.]*:/i;
+const REDIRECT_PROTOCOL_RELATIVE = /^[\\/]{2}/;
+const REDIRECT_TRIM_CHARS = /^[\u0000-\u0020]+|[\u0000-\u0020]+$/g;
+const REDIRECT_REMOVE_CHARS = /[\t\n\r]/g;
 
 const internal = new URL('a://');
 
@@ -29,22 +32,32 @@ export function is_root_relative(path) {
 }
 
 /**
+ * Normalize redirect locations the same way the URL parser does before deciding whether
+ * the location points outside the current app.
+ * @param {string} location
+ */
+function normalize_redirect_location(location) {
+	return location.replace(REDIRECT_TRIM_CHARS, '').replace(REDIRECT_REMOVE_CHARS, '');
+}
+
+/**
  * Whether a redirect location is absolute, i.e. not a root-relative or path-relative URL,
  * and not pointing to the same origin as we're currently on (if determineable).
  * @param {string} location
  */
 export function is_external_location(location) {
-	const is_absolute = (location[0] === '/' && location[1] === '/') || SCHEME.test(location);
+	const normalized = normalize_redirect_location(location);
+	const is_absolute = REDIRECT_PROTOCOL_RELATIVE.test(normalized) || SCHEME.test(normalized);
 
 	if (is_absolute) {
 		// Ideally we could be more strict here with checking base path, but that is impossible because
 		// we can't retrieve the base path here, as all of this code needs to be runnable in pure Node without Vite.
 		// As a result, we check origins only, which is already plenty enough.
 		if (BROWSER) {
-			if (matches_external_allowlist_entry(location, window.location.origin)) return false;
+			if (matches_external_allowlist_entry(normalized, window.location.origin)) return false;
 		} else {
 			const event = try_get_request_store();
-			if (event && matches_external_allowlist_entry(location, event?.event.url.origin)) {
+			if (event && matches_external_allowlist_entry(normalized, event?.event.url.origin)) {
 				return false;
 			}
 		}
@@ -57,7 +70,7 @@ export function is_external_location(location) {
  * @param {string} location
  */
 function is_javascript_location(location) {
-	return /^javascript:/i.test(location);
+	return /^javascript:/i.test(normalize_redirect_location(location));
 }
 
 /**

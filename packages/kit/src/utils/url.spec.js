@@ -81,6 +81,12 @@ describe('is_absolute_location', (test) => {
 		assert.equal(is_external_location('//example.com/foo'), true);
 		assert.equal(is_external_location('mailto:hello@svelte.dev'), true);
 		assert.equal(is_external_location('javascript:alert(1)'), true);
+		assert.equal(is_external_location(' https://example.com'), true);
+		assert.equal(is_external_location('\thttps://example.com'), true);
+		assert.equal(is_external_location('java\tscript:alert(1)'), true);
+		assert.equal(is_external_location('\\\\example.com/foo'), true);
+		assert.equal(is_external_location('/\\\\example.com/foo'), true);
+		assert.equal(is_external_location('x:foo'), true);
 	});
 
 	test('detects relative URLs', () => {
@@ -116,6 +122,23 @@ describe('validate_redirect_location', (test) => {
 		assert.throws(
 			() => validate_redirect_location('https://google.de'),
 			/Cannot redirect to external URL "https:\/\/google\.de"/
+		);
+	});
+
+	test('requires permission for locations that parse as absolute after URL normalization', () => {
+		assert.throws(
+			() => validate_redirect_location(' https://google.de'),
+			/Cannot redirect to external URL " https:\/\/google\.de"/
+		);
+
+		assert.throws(
+			() => validate_redirect_location('\\\\google.de'),
+			/Cannot redirect to external URL "\\\\\\\\google\.de"/
+		);
+
+		assert.throws(
+			() => validate_redirect_location('x:foo'),
+			/Cannot redirect to external URL "x:foo"/
 		);
 	});
 });

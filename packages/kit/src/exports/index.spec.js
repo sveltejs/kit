@@ -102,10 +102,34 @@ describe('redirect', () => {
 		);
 	});
 
+	it('throws a descriptive error for redirect locations that parse as external', () => {
+		assert.throws(
+			() => redirect(307, ' https://google.de'),
+			/Cannot redirect to external URL " https:\/\/google\.de"/
+		);
+
+		assert.throws(
+			() => redirect(307, '\\\\google.de'),
+			/Cannot redirect to external URL "\\\\\\\\google\.de"/
+		);
+
+		assert.throws(
+			() => redirect(307, 'x:foo'),
+			/Cannot redirect to external URL "x:foo"/
+		);
+	});
+
 	it('throws a descriptive error for javascript URLs with external: true', () => {
 		assert.throws(
 			() => redirect(307, 'javascript:alert(1)', { external: true }),
 			/Cannot redirect to "javascript:alert\(1\)" with `{ external: true }`/
+		);
+	});
+
+	it('throws a descriptive error for normalized javascript URLs with external: true', () => {
+		assert.throws(
+			() => redirect(307, 'java\tscript:alert(1)', { external: true }),
+			/Cannot redirect to "java\\tscript:alert\(1\)" with `{ external: true }`/
 		);
 	});
 
