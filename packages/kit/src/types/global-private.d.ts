@@ -1,3 +1,5 @@
+import { RemoteFunctionData } from 'types';
+
 declare global {
 	const __SVELTEKIT_ADAPTER_NAME__: string;
 	const __SVELTEKIT_APP_DIR__: string;
@@ -13,13 +15,13 @@ declare global {
 	const __SVELTEKIT_PATHS_ASSETS__: string;
 	const __SVELTEKIT_PATHS_BASE__: string;
 	const __SVELTEKIT_PATHS_RELATIVE__: boolean;
-	/** True if `config.kit.experimental.instrumentation.server` is `true` */
+	/** True if `config.experimental.instrumentation.server` is `true` */
 	const __SVELTEKIT_SERVER_TRACING_ENABLED__: boolean;
-	/** True if `config.kit.experimental.forkPreloads` is `true` */
+	/** True if `config.experimental.forkPreloads` is `true` */
 	const __SVELTEKIT_FORK_PRELOADS__: boolean;
-	/** True if `config.kit.router.resolution === 'client'` */
+	/** True if `config.router.resolution === 'client'` */
 	const __SVELTEKIT_CLIENT_ROUTING__: boolean;
-	/** True if `config.kit.router.type === 'hash'` */
+	/** True if `config.router.type === 'hash'` */
 	const __SVELTEKIT_HASH_ROUTING__: boolean;
 	/**
 	 * True if any node in the manifest has a server load function.
@@ -40,9 +42,7 @@ declare global {
 		/** Public environment variables */
 		env?: Record<string, string>;
 		/** Serialized data from query/form/command functions */
-		query?: Record<string, any>;
-		/** Serialized data from prerender functions */
-		prerender?: Record<string, any>;
+		data?: RemoteFunctionData;
 		/** Create a placeholder promise */
 		defer?: (id: number) => Promise<any>;
 		/** Resolve a placeholder promise */

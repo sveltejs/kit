@@ -1,3 +1,4 @@
+import process from 'node:process';
 import http from 'node:http';
 import { expect } from '@playwright/test';
 import { test } from '../../../utils.js';
@@ -40,6 +41,28 @@ test.describe('remote functions', () => {
 		await expect(page.locator('#redirected')).toHaveText('redirected');
 	});
 
+	test('query redirect to a same-origin URL outside the app navigates', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		// Regression for https://github.com/sveltejs/kit/issues/14285 — a server-issued
+		// redirect to a URL that is not a client route must still navigate, instead of
+		// being rejected by the stricter `goto` behaviour. `/robots.txt` is a static
+		// asset that is not a SvelteKit route.
+		await page.goto('/remote/redirect-external');
+
+		if (javaScriptEnabled) {
+			await page.click('#trigger');
+
+			// the redirect performs a full-page navigation to the static asset
+			await expect(page).toHaveURL(/\/robots\.txt$/);
+		} else {
+			// without JS the query mutation can't be invoked from the client, so the
+			// page just renders its initial state
+			await expect(page.locator('#status')).toHaveText('idle');
+		}
+	});
+
 	test("query that's awaited and throws a redirect doesn't trigger handleError hook", async ({
 		baseURL
 	}) => {
@@ -64,6 +87,28 @@ test.describe('remote functions', () => {
 		await expect(page.locator('h1')).toHaveText('3');
 	});
 
+	test('private (non-exported) query results are not leaked into command responses', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		test.skip(!javaScriptEnabled, 'requires JavaScript to invoke the command');
+
+		await page.goto('/remote/private-query');
+
+		const [response] = await Promise.all([
+			page.waitForResponse((response) => response.url().includes('/reveal')),
+			page.getByRole('button', { name: 'reveal' }).click()
+		]);
+
+		const body = await response.text();
+
+		// the command returns the uppercased secret...
+		expect(body).toContain('PRIVATE-DATA');
+
+		// ...but the raw private query result must never appear in the serialized payload
+		expect(body).not.toContain('private-data');
+	});
+
 	test('queries can access the route/url of the page they were called from', async ({
 		page,
 		clicknav
@@ -83,12 +128,18 @@ test.describe('remote functions', () => {
 			await expect(page.getByText('message.current:')).toHaveText('message.current: initial');
 		}
 		await expect(page.getByText('await get_message():')).toHaveText('await get_message(): initial');
+		await expect(page.getByText('set_message.submitted:')).toHaveText(
+			'set_message.submitted: false'
+		);
 
 		await page.fill('[data-unscoped] input', 'hello');
 		await page.getByText('set message').click();
 
 		if (javaScriptEnabled) {
 			await expect(page.getByText('set_message.pending:')).toHaveText('set_message.pending: 1');
+			await expect(page.getByText('set_message.submitted:')).toHaveText(
+				'set_message.submitted: true'
+			);
 			await page.getByText('resolve deferreds').click();
 			await expect(page.getByText('set_message.pending:')).toHaveText('set_message.pending: 0');
 			await expect(page.getByText('message.current:')).toHaveText('message.current: hello');
@@ -405,6 +456,26 @@ test.describe('remote functions', () => {
 		await expect(page.locator('[data-failing-issue]')).toHaveText('async check failed');
 	});
 
+	test('form preflight before for ordering works', async ({ page, javaScriptEnabled }) => {
+		test.skip(!javaScriptEnabled);
+
+		await page.goto('/remote/form/preflight-for');
+
+		const form = page.locator('[data-preflight-for]');
+		const input = form.locator('input');
+		const button = form.locator('button');
+
+		// Preflight should catch oversized value
+		await input.fill('21');
+		await button.click();
+		await form.getByText('too big').waitFor();
+
+		// After fixing, submission should succeed
+		await input.fill('5');
+		await button.click();
+		await expect(page.getByText('value.current')).toHaveText('value.current: 5');
+	});
+
 	test('form preflight-only validation works', async ({ page, javaScriptEnabled }) => {
 		if (!javaScriptEnabled) return;
 
@@ -608,6 +679,33 @@ test.describe('remote functions', () => {
 		]);
 	});
 
+	test('form.fields.value() returns an immutable snapshot in an enhance callback', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/form/snapshot');
+
+		await page.fill('input[name="a.b.c"]', 'original');
+		await page.getByRole('button', { name: 'submit' }).click();
+
+		// wait until the snapshot has been taken and the submission is in flight
+		await expect(page.locator('#status')).toHaveText('status: submitting');
+
+		// mutate the form state *after* the snapshot was taken
+		await page.fill('input[name="a.b.c"]', 'changed');
+
+		// let the submission complete
+		await page.getByRole('button', { name: 'release' }).click();
+		await expect(page.locator('#status')).toHaveText('status: done');
+
+		// the captured snapshot must not reflect the post-submission change...
+		await expect(page.locator('#captured')).toHaveText('captured: original');
+		// ...while reading the field again reflects the current state
+		await expect(page.locator('#live')).toHaveText('live: changed');
+	});
+
 	test('nested field set is SSR rendered', async ({ page }) => {
 		await page.goto('/remote/form/set-ssr');
 		await expect(page.locator('#description')).toHaveText('Description: nested');
@@ -685,6 +783,83 @@ test.describe('remote functions', () => {
 				timeout: 5000
 			});
 		}
+	});
+
+	test('query rendered in its loading state during SSR is fetched on the client', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		await page.goto('/remote/query-loading-state');
+
+		if (javaScriptEnabled) {
+			// the query was still pending when SSR finished, so it must not be
+			// seeded into the hydration cache — the client has to fetch it itself
+			await expect(page.locator('#slow-state')).toHaveText('slow data', {
+				timeout: 5000
+			});
+		} else {
+			await expect(page.locator('#slow-state')).toHaveText('loading');
+		}
+	});
+
+	test('queries cannot set cookies or headers', async ({ page }) => {
+		await page.goto('/remote/query-event-guards');
+
+		await expect(page.locator('#result')).toHaveText(
+			'Cannot set cookies in `query` or `prerender` functions | setHeaders is not allowed in remote functions'
+		);
+	});
+
+	test('queries nested inside live queries are not implicitly serialized', async ({ page }) => {
+		await page.goto('/remote/live-nested-query');
+
+		await expect(page.locator('#live-result')).toHaveText('NESTED-SECRET');
+
+		// the nested query's raw value must not leak into the page payload
+		expect(await page.content()).not.toContain('nested-secret');
+	});
+
+	test('requested(...) works in form handlers regardless of progressive enhancement', async ({
+		page
+	}) => {
+		await page.goto('/remote/form/requested');
+
+		await expect(page.locator('#form-result')).toHaveText('not submitted');
+
+		await page.locator('#requested-submit').click();
+
+		await expect(page.locator('#form-result')).toHaveText('submitted successfully');
+	});
+
+	test('SSR data for query.live is reused on hydration', async ({ page, javaScriptEnabled }) => {
+		await page.goto(`/remote/live-ssr-value?key=${Date.now()}-${Math.random()}`);
+
+		if (javaScriptEnabled) {
+			// the SSR'd first value must be seeded into the live query on hydration —
+			// the reconnect (deliberately blocked server-side) must not reset it to a loading state
+			await expect(page.locator('#live-state')).toHaveText('initial');
+
+			// the live connection still works after seeding
+			await page.click('#notify');
+			await expect(page.locator('#live-state')).toHaveText('updated');
+		} else {
+			await expect(page.locator('#live-state')).toHaveText('loading');
+		}
+	});
+
+	test('prerender functions are deduplicated across prerendered pages during build', async ({
+		page
+	}) => {
+		test.skip(!!process.env.DEV, 'pages are only prerendered when building');
+
+		await page.goto('/remote/prerender-dedupe/a');
+		const a = await page.locator('#count').textContent();
+
+		await page.goto('/remote/prerender-dedupe/b');
+		const b = await page.locator('#count').textContent();
+
+		// the shared prerender function must only have executed once at build time
+		expect(b).toBe(a);
 	});
 
 	test('awaiting multiple queries inside $derived does not fail mutation validation', async ({

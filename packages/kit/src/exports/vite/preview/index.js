@@ -1,4 +1,4 @@
-/** @import { Adapter, SSRManifest } from '@sveltejs/kit' */
+/** @import { SSRManifest } from '@sveltejs/kit' */
 /** @import { NextHandleFunction } from 'connect' */
 /** @import { ValidatedConfig, ServerInternalModule, ServerModule, InternalServer } from 'types' */
 /** @import { PreviewServer, ResolvedConfig } from 'vite' */
@@ -17,10 +17,9 @@ import { is_chrome_devtools_request, not_found } from '../utils.js';
  * @param {PreviewServer} vite
  * @param {ResolvedConfig} vite_config
  * @param {ValidatedConfig} svelte_config
- * @param {Adapter | undefined} adapter
  */
-export async function preview(vite, vite_config, svelte_config, adapter) {
-	const custom_preview_handling = !!adapter?.vite?.plugins;
+export async function preview(vite, vite_config, svelte_config) {
+	const custom_preview_handling = !!svelte_config.adapter?.vite?.plugins;
 
 	const { paths } = svelte_config.kit;
 	const base = paths.base;
@@ -58,10 +57,19 @@ export async function preview(vite, vite_config, svelte_config, adapter) {
 		set_assets(assets);
 
 		server = new Server(manifest);
-		await server.init({
-			env: loadEnv(vite_config.mode, svelte_config.kit.env.dir, ''),
-			read: (file) => createReadableStream(`${dir}/${file}`)
-		});
+
+		try {
+			await server.init({
+				env: loadEnv(vite_config.mode, svelte_config.kit.env.dir, ''),
+				read: (file) => createReadableStream(`${dir}/${file}`)
+			});
+		} catch (error) {
+			// Vite erases the error message when starting the preview server so we store
+			// it in the stack instead. This ensures errors thrown using `stackless`
+			// are still readable
+			if (error instanceof Error) error.stack = error.message;
+			throw error;
+		}
 	}
 
 	return () => {

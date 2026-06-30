@@ -52,6 +52,11 @@ export class SharedIterator {
 	/** @type {unknown} */
 	#terminal_error = undefined;
 
+	/** Whether `done()` or `fail()` has been broadcast. */
+	get closed() {
+		return this.#closed;
+	}
+
 	/**
 	 * @param {(instance: SharedIterator<T>) => (() => void)} [start]
 	 */

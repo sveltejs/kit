@@ -1,9 +1,7 @@
-/** @import { Adapter } from '@sveltejs/kit' */
 import { styleText } from 'node:util';
 import { create_builder } from './builder.js';
 
 /**
- * @param {Adapter} adapter
  * @param {import('types').ValidatedConfig} config
  * @param {import('types').BuildData} build_data
  * @param {import('types').ServerMetadata} server_metadata
@@ -16,7 +14,6 @@ import { create_builder } from './builder.js';
  * @param {Record<string, import('@sveltejs/kit').EnvVarConfig<any>> | null} explicit_env_config
  */
 export async function adapt(
-	adapter,
 	config,
 	build_data,
 	server_metadata,
@@ -28,7 +25,7 @@ export async function adapt(
 	out,
 	explicit_env_config
 ) {
-	const { name, adapt } = adapter;
+	const { name, adapt } = config.kit.adapter;
 
 	console.log(styleText(['bold', 'cyan'], `\n> Using ${name}`));
 

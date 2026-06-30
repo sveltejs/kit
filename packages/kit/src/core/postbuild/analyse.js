@@ -4,7 +4,6 @@
 import * as devalue from 'devalue';
 import { extract_svelte_config, load_vite_config } from '../config/index.js';
 import { forked } from '../../utils/fork.js';
-import { build_server_nodes } from '../../exports/vite/build/build_server.js';
 import { create_build_server } from '../../exports/vite/build/vite_server.js';
 import { get_port } from '../utils.js';
 
@@ -36,9 +35,6 @@ async function analyse({
 	const vite_config = await load_vite_config(vite_config_file);
 
 	const config = extract_svelte_config(vite_config);
-
-	// first, build server nodes without the client manifest so we can analyse it
-	build_server_nodes(out, config.kit, manifest_data, server_manifest, null, null, null, root);
 
 	const server = await create_build_server({
 		name: 'analyse',

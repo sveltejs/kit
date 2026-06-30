@@ -28,10 +28,9 @@ const vite_css_query_regex = /(?:\?|&)(?:raw|url|inline)(?:&|$)/;
  * @param {ValidatedConfig} svelte_config
  * @param {string} root The project root directory
  * @param {DevContext} dev_context
- * @param {Adapter | undefined} adapter
  * @return {() => void}
  */
-export function dev(server, vite_config, vite, svelte_config, root, dev_context, adapter) {
+export function dev(server, vite_config, vite, svelte_config, root, dev_context) {
 	sync.init(svelte_config, root);
 
 	/** @type {ManifestData} */
@@ -98,9 +97,6 @@ export function dev(server, vite_config, vite, svelte_config, root, dev_context,
 		}, 100);
 	};
 
-	// flag to skip watchers if server is already restarting
-	let restarting = false;
-
 	// Debounce add/unlink events because in case of folder deletion or moves
 	// they fire in rapid succession, causing needless invocations.
 	// These watchers only run for routes, param matchers, and client hooks.
@@ -109,7 +105,7 @@ export function dev(server, vite_config, vite, svelte_config, root, dev_context,
 	watch('change', (file) => {
 		// Don't run for a single file if the whole manifest is about to get updated
 		// Unless it's a file where the trailing slash page option might have changed
-		if (timeout || restarting || !/\+(page|layout|server).*$/.test(file)) return;
+		if (timeout || !/\+(page|layout|server).*$/.test(file)) return;
 		sync.update(svelte_config, manifest_data, file, root);
 
 		const nodes_page_options = manifest_data.nodes.map((node) => node.page_options);
@@ -130,7 +126,7 @@ export function dev(server, vite_config, vite, svelte_config, root, dev_context,
 	// send the vite client a full-reload event without path being set
 	if (appTemplate !== 'index.html') {
 		server.watcher.on('change', (file) => {
-			if (file === appTemplate && !restarting) {
+			if (file === appTemplate) {
 				server.ws.send({ type: 'full-reload' });
 			}
 		});
@@ -144,17 +140,6 @@ export function dev(server, vite_config, vite, svelte_config, root, dev_context,
 			file.startsWith(hooks.server)
 		) {
 			sync.server(svelte_config, root);
-		}
-	});
-
-	server.watcher.on('change', async (file) => {
-		// changing the svelte config requires restarting the dev server
-		// the config is only read on start and passed on to vite-plugin-svelte
-		// which needs up-to-date values to operate correctly
-		if (file.match(/[/\\]svelte\.config\.[jt]s$/)) {
-			console.log(`svelte config changed, restarting vite dev-server. changed file: ${file}`);
-			restarting = true;
-			await server.restart();
 		}
 	});
 
@@ -277,7 +262,12 @@ export function dev(server, vite_config, vite, svelte_config, root, dev_context,
 						return;
 					}
 
-					const result = check_feature(route_id, JSON.parse(config), feature, adapter);
+					const result = check_feature(
+						route_id,
+						JSON.parse(config),
+						feature,
+						svelte_config.adapter
+					);
 
 					res.writeHead(200);
 					res.end(result?.message);
@@ -323,7 +313,7 @@ export function dev(server, vite_config, vite, svelte_config, root, dev_context,
 				}
 
 				// fallback to our own fetch handler if the adapter doesn't provide one
-				if (!adapter?.vite?.plugins) {
+				if (!svelte_config.adapter?.vite?.plugins) {
 					if (!vite.isFetchableDevEnvironment(server.environments.ssr)) {
 						throw new Error(
 							'The Vite configured dev SSR environment must be a FetchableDevEnvironment'

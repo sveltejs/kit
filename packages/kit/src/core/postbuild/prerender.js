@@ -1,5 +1,5 @@
 /** @import { Logger, PrerenderDependency, Prerendered, PrerenderMap, ServerMetadata } from 'types' */
-/** @import { PluginOption } from 'vite' */
+/** @import { Plugin } from 'vite' */
 /** @import { SerialisedResponse } from '../../exports/vite/types.js' */
 import { existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -118,8 +118,8 @@ async function prerender({ out, manifest_path, metadata, verbose, root, vite_con
 		svelte_config.kit.prerender.handleHttpError,
 		({ status, path, referrer, referenceType }) => {
 			const message =
-				status === 404 && !path.startsWith(svelte_config.kit.paths.base)
-					? `${path} does not begin with \`base\`, which is configured in \`paths.base\` and can be imported from \`$app/paths\` - see https://svelte.dev/docs/kit/configuration#paths for more info`
+				status === 404 && !path.startsWith(svelte_config.paths.base)
+					? `${path} does not begin with \`base\`. You can fix this by using \`resolve('${path}')\` from \`$app/paths\`. The base path is configurable from \`paths.base\` - see https://svelte.dev/docs/kit/configuration#paths for more info`
 					: path;
 
 			return `${status} ${message}${referrer ? ` (${referenceType} from ${referrer})` : ''}`;
@@ -154,7 +154,15 @@ async function prerender({ out, manifest_path, metadata, verbose, root, vite_con
 		}
 	);
 
-	const q = queue(svelte_config.kit.prerender.concurrency);
+	const handle_invalid_url = normalise_error_handler(
+		log,
+		svelte_config.kit.prerender.handleInvalidUrl,
+		({ href, referrer }) => {
+			return `Invalid URL ${href}${referrer ? ` (linked from ${referrer})` : ''}`;
+		}
+	);
+
+	const q = queue(svelte_config.prerender.concurrency);
 
 	/**
 	 * @param {string} path
@@ -302,12 +310,12 @@ async function prerender({ out, manifest_path, metadata, verbose, root, vite_con
 		const headers = Object.fromEntries(response.headers);
 
 		// if it's a 200 HTML response, crawl it. Skip error responses, as we don't save those
-		if (
-			response.ok &&
-			svelte_config.kit.prerender.crawl &&
-			headers['content-type'] === 'text/html'
-		) {
-			const { ids, hrefs } = crawl(body.toString(), decoded);
+		if (response.ok && svelte_config.prerender.crawl && headers['content-type'] === 'text/html') {
+			const { ids, hrefs, invalid } = crawl(body.toString(), decoded);
+
+			for (const href of invalid) {
+				handle_invalid_url({ href, referrer: decoded });
+			}
 
 			actual_hashlinks.set(decoded, ids);
 
@@ -363,6 +371,16 @@ async function prerender({ out, manifest_path, metadata, verbose, root, vite_con
 
 		const type = headers['content-type'];
 		const is_html = response_type === REDIRECT || type === 'text/html';
+
+		if (
+			!is_html &&
+			response.status === 200 &&
+			decoded.slice(svelte_config.paths.base.length + 1) === ''
+		) {
+			throw new Error(
+				`Cannot prerender a root +server.js that returns a non-HTML response - static hosts always serve an HTML file for \`${svelte_config.paths.base || '/'}\``
+			);
+		}
 
 		const file = output_filename(decoded, is_html);
 		const dest = `${out}/prerendered/${category}/${file}`;
@@ -479,7 +497,7 @@ async function prerender({ out, manifest_path, metadata, verbose, root, vite_con
 		'/prerender-read'
 	);
 
-	/** @type {PluginOption} */
+	/** @type {Plugin} */
 	const plugin_prerender = {
 		name: 'vite-plugin-sveltekit-compile:prerender',
 		configureServer(vite) {

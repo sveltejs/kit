@@ -51,6 +51,10 @@ export async function load_explicit_env(kit, file, root, mode) {
 	/** @type {Record<string, EnvVarConfig<any>>} */
 	let variables;
 
+	/** @type {import('../runtime/app/env/internal.js')} */ (
+		await server.ssrLoadModule(`${runtime_directory}/app/env/internal.js`)
+	).set_building();
+
 	try {
 		({ variables } = await server.ssrLoadModule(file));
 
@@ -87,7 +91,7 @@ export async function load_explicit_env(kit, file, root, mode) {
 
 /**
  * Creates the `__sveltekit/env` module
- * @param {Record<string, EnvVarConfig<any>> | null} variables
+ * @param {Record<string, EnvVarConfig<any> | undefined> | null} variables
  * @param {Record<string, string>} env
  * @param {string | null} entry
  */
@@ -106,7 +110,7 @@ export function create_sveltekit_env(variables, env, entry) {
 	const issues = {};
 
 	for (const [name, config] of Object.entries(variables ?? {})) {
-		if (config.static) {
+		if (config?.static) {
 			if (config.public) {
 				const value = validate(variables ?? {}, env[name], name, issues);
 				declarations.push(`explicit_public_env.${name} = ${devalue.uneval(value)};`);
@@ -116,7 +120,7 @@ export function create_sveltekit_env(variables, env, entry) {
 				`const ${name} = validate(variables, env.${name}, ${JSON.stringify(name)}, issues);`
 			);
 
-			if (config.public) {
+			if (config?.public) {
 				setters.push(`explicit_public_env.${name} = ${name};`);
 				setters.push(`rendered_env.${name} = ${name};`);
 			} else {
@@ -214,8 +218,35 @@ export function create_sveltekit_env_public(variables, env, prelude) {
 }
 
 /**
+ * Creates the `__sveltekit/env/service-worker` module used in production. When an app uses
+ * dynamic public env vars, they're loaded at runtime via an import of the prerendered
+ * `env.js`. If there are none, values are inlined.
+ * @param {Record<string, EnvVarConfig<any>> | null} variables
+ * @param {Record<string, string>} env
+ * @param {string} global
+ * @param {string} base
+ * @param {string} app_dir
+ */
+export function create_sveltekit_env_service_worker(variables, env, global, base, app_dir) {
+	const has_dynamic_public_env = Object.values(variables ?? {}).some(
+		(config) => config.public && !config.static
+	);
+
+	if (!has_dynamic_public_env) {
+		return create_sveltekit_env_service_worker_dev(variables, env, global);
+	}
+
+	return dedent`
+		import { env } from '${base}/${app_dir}/env.js';
+
+		globalThis.__SVELTEKIT_EXPERIMENTAL_EXPLICIT_ENVIRONMENT_VARIABLES__ = true;
+
+		${global} = { env };
+	`;
+}
+
+/**
  * Creates the `__sveltekit/env/service-worker` module used in development
- * (but not in prod, which goes through build_service_worker instead)
  * @param {Record<string, EnvVarConfig<any>> | null} variables
  * @param {Record<string, string>} env
  * @param {string} global

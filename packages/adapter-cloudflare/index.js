@@ -22,7 +22,7 @@ export default function (options = {}) {
 				existsSync(`${builder.config.kit.files.assets}/_routes.json`)
 			) {
 				throw new Error(
-					"Cloudflare Pages' _routes.json should be configured in svelte.config.js. See https://svelte.dev/docs/kit/adapter-cloudflare#Options-routes"
+					"Cloudflare Pages' _routes.json should be configured from the adapter option of the SvelteKit plugin in your vite.config.js. See https://svelte.dev/docs/kit/adapter-cloudflare#Options-routes"
 				);
 			}
 

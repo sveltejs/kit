@@ -1,7 +1,5 @@
 /** @import { Validator } from './types.js' */
 
-import process from 'node:process';
-
 const directives = object({
 	'child-src': string_array(),
 	'default-src': string_array(),
@@ -37,7 +35,7 @@ const directives = object({
 });
 
 /** @type {Validator} */
-const options = object(
+export const options = object(
 	{
 		extensions: validate(['.svelte'], (input, keypath) => {
 			if (!Array.isArray(input) || !input.every((page) => typeof page === 'string')) {
@@ -85,7 +83,7 @@ const options = object(
 				if (input) {
 					if (input.startsWith('/') || input.endsWith('/')) {
 						throw new Error(
-							"config.kit.appDir cannot start or end with '/'. See https://svelte.dev/docs/kit/configuration"
+							`${keypath} cannot start or end with '/'. See https://svelte.dev/docs/kit/configuration`
 						);
 					}
 				} else {
@@ -111,7 +109,7 @@ const options = object(
 			embedded: boolean(false),
 
 			env: object({
-				dir: string(process.cwd())
+				dir: string('')
 			}),
 
 			experimental: object({
@@ -265,6 +263,20 @@ const options = object(
 					}
 				),
 
+				handleInvalidUrl: validate(
+					(/** @type {any} */ { message }) => {
+						throw new Error(
+							message +
+								'\nTo suppress or handle this error, implement `handleInvalidUrl` in https://svelte.dev/docs/kit/configuration#prerender'
+						);
+					},
+					(input, keypath) => {
+						if (typeof input === 'function') return input;
+						if (['fail', 'warn', 'ignore'].includes(input)) return input;
+						throw new Error(`${keypath} should be "fail", "warn", "ignore" or a custom function`);
+					}
+				),
+
 				origin: validate('http://sveltekit-prerender', (input, keypath) => {
 					assert_string(input, keypath);
 
@@ -321,6 +333,8 @@ const options = object(
 // 		`The \`${keypath}\` option is deprecated, and will be removed in a future version`
 // ) {
 // 	return (input, keypath) => {
+//		keypath = remove_kit_prefix(keypath);
+//
 // 		if (input !== undefined) {
 // 			console.warn(styleText(['bold', 'yellow'], get_message(keypath)));
 // 		}
@@ -328,6 +342,17 @@ const options = object(
 // 		return fn(input, keypath);
 // 	};
 // }
+
+// Derive the names of SvelteKit's own config options from the schema, so they
+// stay in sync automatically. These are used to separate Kit's options from
+// `vite-plugin-svelte`'s options when config is passed via the Vite plugin.
+const defaults = /** @type {Record<string, any>} */ (options({}, 'config'));
+
+/** The names of the options that live under the `kit` namespace */
+export const kit_options = Object.keys(defaults.kit);
+
+/** The names of the options that live under the `kit.experimental` namespace */
+export const kit_experimental_options = Object.keys(defaults.kit.experimental);
 
 /**
  * @param {(keypath: string) => string} get_message
@@ -338,6 +363,8 @@ function removed(
 		`The \`${keypath}\` option has been removed. Please see the list of breaking changes for your major release`
 ) {
 	return (input, keypath) => {
+		keypath = remove_kit_prefix(keypath);
+
 		if (typeof input !== 'undefined') {
 			throw new Error(get_message(keypath));
 		}
@@ -351,6 +378,8 @@ function removed(
  */
 export function object(children, allow_unknown = false) {
 	return (input, keypath) => {
+		keypath = remove_kit_prefix(keypath);
+
 		/** @type {Record<string, any>} */
 		const output = {};
 
@@ -391,6 +420,7 @@ export function object(children, allow_unknown = false) {
  */
 export function validate(fallback, fn) {
 	return (input, keypath) => {
+		keypath = remove_kit_prefix(keypath);
 		return input === undefined ? fallback : fn(input, keypath);
 	};
 }
@@ -488,9 +518,16 @@ function fun(fallback) {
  * @param {string} keypath
  */
 function assert_string(input, keypath) {
+	keypath = remove_kit_prefix(keypath);
 	if (typeof input !== 'string') {
 		throw new Error(`${keypath} should be a string, if specified`);
 	}
 }
 
-export default options;
+/**
+ * @param {string} keypath
+ * @deprecated TODO get rid of the nesting so this is unnecessary
+ */
+function remove_kit_prefix(keypath) {
+	return keypath.replace('.kit.', '.');
+}

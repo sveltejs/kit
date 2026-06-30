@@ -16,7 +16,7 @@ If you'd like to include your application's version number or other information 
 
 ```ts
 // @errors: 2732
-/// file: svelte.config.js
+/// file: vite.config.js
 import pkg from './package.json' with { type: 'json' };
 ```
 
@@ -117,15 +117,15 @@ Finally, you may also consider using an `{#await}` block:
 <script>
 	import { browser } from '$app/env';
 
-	const ComponentConstructor = browser ?
-		import('some-browser-only-library').then((module) => module.Component) :
-		new Promise(() => {});
+	const promise = browser
+		? import('./BrowserComponent.svelte')
+		: import('./ServerComponent.svelte');
 </script>
 
-{#await ComponentConstructor}
+{#await promise}
 	<p>Loading...</p>
-{:then component}
-	<svelte:component this={component} />
+{:then module}
+	<module.default />
 {:catch error}
 	<p>Something went wrong: {error.message}</p>
 {/await}

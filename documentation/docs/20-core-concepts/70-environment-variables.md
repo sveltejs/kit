@@ -2,50 +2,26 @@
 title: Environment variables
 ---
 
-<!-- TODO this is out of date -->
-
 Environment variables are values your app needs that exist separately from the app's source code. They allow you to use sensitive information like API keys and database credentials without storing them in version control.
 
 During development, and at build time, variables defined in a `.env` or `.env.local` file will be added to the environment:
 
 ```env
+/// file: .env.local
 API_KEY=19f401ba-e8b0-48c4-8c77-b0ebb26d97fe
 ```
 
-By default, every environment variable is implicitly available inside your app via the following modules:
-
-- [`$env/static/private`]($env-static-private)
-- [`$env/static/public`]($env-static-public)
-- [`$env/dynamic/private`]($env-dynamic-private)
-- [`$env/dynamic/public`]($env-dynamic-public)
-
-## Explicit environment variables
-
-As of SvelteKit 2.62, you can opt into _explicit_ environment variables, in which case you instead import environment variables from these modules:
+After following the setup below, they can be imported via the following modules:
 
 - [`$app/env/private`]($app-env-private)
 - [`$app/env/public`]($app-env-public)
 
-Additionally, the [`$app/environment`]($app-environment) module is renamed to [`$app/env`]($app-env).
-
-> [!NOTE] Explicit environment variables will become the default in SvelteKit 3. The `$env/*` modules, along with `$app/environment`, will be removed.
+> [!LEGACY]
+> The `$env/*` modules, along with `$app/environment` were removed in SvelteKit 3 in favour of explicit environment variables that were added in SvelteKit 2.62 as an experimental option.
 
 ### Setup
 
-To opt in, update your configuration...
-
-```js
-/// file: svelte.config.js
-export default {
-	kit: {
-		experimental: {
-			+++explicitEnvironmentVariables: true+++
-		}
-	}
-};
-```
-
-...and add a `src/env.ts` (or `src/env.js`) file that exports a `variables` object:
+Add a `src/env.ts` (or `src/env.js`) file that exports a `variables` object:
 
 ```ts
 /// file: src/env.ts
@@ -101,7 +77,7 @@ export const variables = defineEnvVars({
 `GOOGLE_ANALYTICS_ID` can now be imported from `$app/env/public`, or used in your `app.html` template as `%sveltekit.env.GOOGLE_ANALYTICS_ID%`:
 
 ```html
-<!--- file: src/app.html -->
+<!--- file: src/app.html --->
 <!doctype html>
 <html lang="en">
 	<head>
@@ -110,13 +86,17 @@ export const variables = defineEnvVars({
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		%sveltekit.head%
 
-+++		<script async src="https://www.googletagmanager.com/gtag/js?id=%sveltekit.env.GOOGLE_ANALYTICS_ID%"></script>
+		<script
+			async
+			src="https://www.googletagmanager.com/gtag/js?id=+++%sveltekit.env.GOOGLE_ANALYTICS_ID%+++"
+		></script>
+
 		<script>
 			window.dataLayer ??= [];
-			function gtag(){dataLayer.push(arguments);}
+			function gtag(){dataLayer.push(arguments)}
 			gtag('js', new Date());
-			gtag('config', '%sveltekit.env.GOOGLE_ANALYTICS_ID%');
-		</script>+++
+			gtag('config', +++'%sveltekit.env.GOOGLE_ANALYTICS_ID%'+++);
+		</script>
 	</head>
 	<body data-sveltekit-preload-data="hover">
 		<div style="display: contents">%sveltekit.body%</div>
@@ -136,18 +116,32 @@ import { defineEnvVars } from '@sveltejs/kit/hooks';
 export const variables = defineEnvVars({
 	GOOGLE_ANALYTICS_ID: {
 		public: true,
-		+++validate: v.pipe(v.string(), v.regex(/G-[A-Z0-9]+/))+++
+		+++schema: v.pipe(v.string(), v.regex(/G-[A-Z0-9]+/))+++
 	}
 });
 ```
 
-If a value is invalid, the app will fail to start (or build).
+If a value is invalid, the app will fail to start (or build). To opt out of one or the other, use [`building`]($app-env#building) from `$app/env` along with a validator that accepts an optional value:
+
+```ts
+/// file: src/env.ts
+import { defineEnvVars } from '@sveltejs/kit/hooks';
++++import { building } from '$app/env'+++
+import * as v from 'valibot';
+
+export const variables = defineEnvVars({
+	SECRET: {
+		// optional when building but required when starting the app
+		+++schema: building ? v.optional(v.string()) : v.string()+++
+	}
+});
+```
 
 You can use validators to make values optional, or transform them (such as turning a string into a boolean, or parsing JSON) — see your validation library's documentation to learn how.
 
 ### Static variables
 
-If a variable is configured with `static: true`, it will be inlined into your application code, enabling optimisations like dead-code elimination:
+By default, variables are dynamic. If a variable is configured with `static: true`, it will be inlined into your application code, enabling optimisations like dead-code elimination:
 
 ```ts
 /// file: src/env.ts
@@ -160,7 +154,7 @@ export const variables = defineEnvVars({
 		+++static: true,+++
 
 		// coerce to true/false
-		validate: v.pipe(
+		schema: v.pipe(
 			v.optional(v.string(), ''),
 			v.transform((str) => str !== '')
 		)

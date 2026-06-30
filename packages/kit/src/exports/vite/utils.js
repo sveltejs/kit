@@ -2,6 +2,7 @@ import path from 'node:path';
 import { posixify } from '../../utils/os.js';
 import { negotiate } from '../../utils/http.js';
 import { escape_for_regexp, escape_html } from '../../utils/escape.js';
+import { stackless } from '../../utils/error.js';
 import { dedent } from '../../core/sync/utils.js';
 import {
 	app_server,
@@ -11,7 +12,7 @@ import {
 } from './module_ids.js';
 
 /**
- * Transforms kit.alias to a valid vite.resolve.alias array.
+ * Transforms alias to a valid vite.resolve.alias array.
  *
  * Related to tsconfig path alias creation.
  *
@@ -141,33 +142,19 @@ export function normalize_id(id, lib, cwd) {
 	return posixify(id);
 }
 
-/**
- * For times when you need to throw an error, but without
- * displaying a useless stack trace (since the developer
- * can't do anything useful with it)
- * @param {string} message
- */
-export function stackless(message) {
-	const error = new Error(message);
-	error.stack = '';
-	return error;
-}
-
 export const strip_virtual_prefix = /** @param {string} id */ (id) => id.replace('\0virtual:', '');
 
 /**
- * For `error_for_missing_config('instrumentation.server.js', 'kit.experimental.instrumentation.server', true)`,
+ * For `error_for_missing_config('instrumentation.server.js', 'experimental.instrumentation.server', true)`,
  * returns:
  *
  * ```
- * To enable `instrumentation.server.js`, add the following to your `svelte.config.js`:
+ * To enable `instrumentation.server.js`, add the following to the SvelteKit plugin in your `vite.config.js`:
  *
  *\`\`\`js
- *	kit:
- *		experimental:
- *			instrumentation:
- *				server: true
- *			}
+ *	experimental: {
+ *		instrumentation: {
+ *			server: true
  *		}
  *	}
  *\`\`\`
@@ -189,7 +176,7 @@ export function error_for_missing_config(feature_name, path, value) {
 
 	throw stackless(
 		dedent`\
-			To enable ${feature_name}, add the following to your \`svelte.config.js\`:
+			To enable ${feature_name}, add the following to your SvelteKit plugin in \`vite.config.js\`:
 
 			${result}
 		`

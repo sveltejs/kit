@@ -10,6 +10,12 @@ const config = {
 	clearScreen: false,
 	plugins: [
 		sveltekit({
+			adapter: {
+				name: 'test',
+				adapt(builder) {
+					builder.generateEnvModule();
+				}
+			},
 			compilerOptions: {
 				experimental: {
 					async: true
@@ -40,6 +46,9 @@ const config = {
 			}
 		})
 	],
+	define: {
+		__TEST_USER_DEFINE__: '"works"'
+	},
 	server: {
 		fs: {
 			allow: [path.resolve('../../../src')]

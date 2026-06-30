@@ -10,25 +10,27 @@ Remote functions are a tool for type-safe communication between client and serve
 
 Combined with Svelte's experimental support for [`await`](/docs/svelte/await-expressions), it allows you to load and manipulate data directly inside your components.
 
-This feature is currently experimental, meaning it is likely to contain bugs and is subject to change without notice. You must opt in by adding the `compilerOptions.experimental.async` and `kit.experimental.remoteFunctions` options in your `svelte.config.js`:
+This feature is currently experimental, meaning it is likely to contain bugs and is subject to change without notice. You must opt in by adding the `compilerOptions.experimental.async` and `experimental.remoteFunctions` options to the SvelteKit plugin in your `vite.config.js`:
 
 ```js
-/// file: svelte.config.js
-/** @type {import('@sveltejs/kit').Config} */
-const config = {
-	kit: {
-		experimental: {
-			+++remoteFunctions: true+++
-		}
-	},
-	compilerOptions: {
-		experimental: {
-			+++async: true+++
-		}
-	}
-};
+/// file: vite.config.js
+import { sveltekit } from '@sveltejs/kit/vite';
+import { defineConfig } from 'vite';
 
-export default config;
+export default defineConfig({
+	plugins: [
+		sveltekit({
+			experimental: {
+				+++remoteFunctions: true+++
+			},
+			compilerOptions: {
+				experimental: {
+					+++async: true+++
+				}
+			}
+		})
+	],
+});
 ```
 
 ## Overview
@@ -37,7 +39,9 @@ Remote functions are exported from a `.remote.js` or `.remote.ts` file, and come
 
 ## query
 
-The `query` function allows you to read dynamic data from the server (for _static_ data, consider using [`prerender`](#prerender) instead):
+The `query` function allows you to read dynamic data from the server.
+
+> [!NOTE] For _static_ data, consider using [`prerender`](#prerender) functions instead. Queries cannot be used when the entire page is prerendered (meaning [`export const prerender = true`](page-options#prerender) is applied to the page or a parent layout), such as when using [`adapter-static`](adapter-static).
 
 ```js
 /// file: src/routes/blog/data.remote.js
@@ -412,7 +416,7 @@ A form is composed of a set of _fields_, which are defined by the schema. In the
 
 These attributes allow SvelteKit to set the correct input type, set a `name` that is used to construct the `data` passed to the handler, populate the `value` of the form (for example following a failed submission, to save the user having to re-enter everything), and set the [`aria-invalid`](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Attributes/aria-invalid) state.
 
-Passing a second argument to `.as(...)` is useful when rendering a form from existing data, such as an edit form or multiple instances created with [`for(...)`](#form-Multiple-instances-of-a-form). `radio`, `submit` and `hidden` inputs always need this value, and `checkbox` inputs need it when they represent one option in an array field. `file` inputs cannot be populated this way.
+Passing a second argument to `.as(...)` is useful when rendering a form from existing data, such as an edit form or multiple instances created with [`for(...)`](#form-Multiple-instances-of-a-form). As well as setting the value of the element when it is rendered, it controls the value of the element when the form is reset. `radio`, `submit` and `hidden` inputs always need this value, and `checkbox` inputs need it when they represent one option in an array field. `file` inputs cannot be populated this way.
 
 > [!NOTE] The generated `name` attribute uses JS object notation (e.g. `nested.array[0].value`). String keys that require quotes such as `object['nested-array'][0].value` are not supported. Under the hood, boolean checkbox and number field names are prefixed with `b:` and `n:`, respectively, to signal SvelteKit to coerce the values from strings prior to validation.
 
@@ -682,7 +686,7 @@ Each field has a `value()` method that reflects its current value. As the user i
 
 Alternatively, `createPost.fields.value()` would return a `{ title, content }` object.
 
-You can update a field (or a collection of fields) via the `set(...)` method:
+The `value()` of a field does _not_ reflect defaults provided as a second argument to `as` (as in `fields.title.as('text', '...')`) until it is edited or submitted. You can programmatically update a field (or a collection of fields) via the `set(...)` method:
 
 ```svelte
 <script>
@@ -820,7 +824,7 @@ We can customize what happens when the form is submitted with the `enhance` meth
 </form>
 ```
 
-> When using `enhance`, the `<form>` is not automatically reset — you must call `form.element.reset()` if you want to clear the inputs.
+> [!NOTE] When using `enhance`, the `<form>` is not automatically reset — you must call `form.element.reset()` if you want to clear the inputs.
 
 The callback receives a copy of the form instance. It has all the same properties and methods except `enhance`, and `form.submit()` performs the submission directly without re-running the enhance callback. Inside the callback, `form.element` is always defined.
 
@@ -1148,8 +1152,6 @@ You can use `prerender` functions on pages that are otherwise dynamic, allowing 
 
 In the browser, prerendered data is saved using the [`Cache`](https://developer.mozilla.org/en-US/docs/Web/API/Cache) API. This cache survives page reloads, and will be cleared when the user first visits a new deployment of your app.
 
-> [!NOTE] When the entire page has `export const prerender = true`, you cannot use queries, as they are dynamic.
-
 ### Prerender arguments
 
 As with queries, prerender functions can accept an argument, which should be [validated](#query-Query-arguments) with a [Standard Schema](https://standardschema.dev/):
@@ -1296,7 +1298,7 @@ const getUser = query(async () => {
 Note that some properties of `RequestEvent` are different inside remote functions:
 
 - you cannot set headers (other than writing cookies, and then only inside `form` and `command` functions)
-- `route`, `params` and `url` relate to the page the remote function was called from, _not_ the URL of the endpoint SvelteKit creates for the remote function. Queries are not re-run when the user navigates (unless the argument to the query changes as a result of navigation), and so you should be mindful of how you use these values. In particular, never use them to determine whether or not a user is authorized to access certain data.
+- `route`, `params` and `url` relate to the page the remote function was called from, _not_ the URL of the endpoint SvelteKit creates for the remote function. Never use them to determine whether or not a user is authorized to access certain data, as these values are part of the request which could be manipulated. Queries are also not re-run when the user navigates (unless the argument to the query changes as a result of navigation), and so you should be mindful of how you use these values.
 
 ## Redirects
 
