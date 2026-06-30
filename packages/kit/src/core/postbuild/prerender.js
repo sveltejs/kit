@@ -310,7 +310,11 @@ async function prerender({ out, manifest_path, metadata, verbose, root, vite_con
 		const headers = Object.fromEntries(response.headers);
 
 		// if it's a 200 HTML response, crawl it. Skip error responses, as we don't save those
-		if (response.ok && svelte_config.kit.prerender.crawl && headers['content-type'] === 'text/html') {
+		if (
+			response.ok &&
+			svelte_config.kit.prerender.crawl &&
+			headers['content-type'] === 'text/html'
+		) {
 			const { ids, hrefs, invalid } = crawl(body.toString(), decoded);
 
 			for (const href of invalid) {
