@@ -298,6 +298,24 @@ export interface Cookies {
 	delete: (name: string, opts: import('cookie').SerializeOptions) => void;
 
 	/**
+	 * Parses a single `Set-Cookie` header. This allows you to apply cookies received from an external source:
+	 *
+	 * ```js
+	 * const response = await fetch('...');
+	 *
+	 * for (const str of response.headers.getSetCookie()) {
+	 * 	const { name, value, ...options } = cookies.parse(str);
+	 * 	cookies.set(name, value, { ...options, path: '/' });
+	 * }
+	 * ```
+	 *
+	 * Note the use of `headers.getSetCookie()`, which returns an array of cookie headers, _not_ `headers.get('set-cookie')` which returns a single comma-separated string.
+	 *
+	 * @param header A valid `Set-Cookie` header
+	 */
+	parse: (header: string) => import('cookie').SetCookie;
+
+	/**
 	 * Serialize a cookie name-value pair into a `Set-Cookie` header string, but don't apply it to the response.
 	 *
 	 * The `httpOnly` and `secure` options are `true` by default (except on http://localhost, where `secure` is `false`), and must be explicitly disabled if you want cookies to be readable by client-side JavaScript and/or transmitted over HTTP.

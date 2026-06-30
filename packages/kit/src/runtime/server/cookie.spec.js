@@ -287,3 +287,38 @@ describe.skipIf(process.env.NODE_ENV !== 'production')('cookies in prod', () => 
 		expect(duplicate?.value).toEqual('foobar_value');
 	});
 });
+
+describe('cookies.parse', () => {
+	const { cookies } = cookies_setup();
+
+	test('parses a cookie', () => {
+		assert.deepEqual(cookies.parse('foo=bar'), {
+			name: 'foo',
+			value: 'bar'
+		});
+	});
+
+	test('ignores invalid properties', () => {
+		assert.deepEqual(cookies.parse('foo=bar; samesite=laxative'), {
+			name: 'foo',
+			value: 'bar'
+		});
+	});
+
+	test('ignores unknown properties', () => {
+		assert.deepEqual(cookies.parse('foo=bar; potato=salad'), {
+			name: 'foo',
+			value: 'bar'
+		});
+	});
+
+	test('converts expires', () => {
+		const date = new Date();
+
+		assert.deepEqual(cookies.parse(`foo=bar; expires=${date.toISOString()}`), {
+			name: 'foo',
+			value: 'bar',
+			expires: date
+		});
+	});
+});

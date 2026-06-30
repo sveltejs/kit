@@ -158,6 +158,88 @@ export function get_cookies(request, url) {
 			cookies.set(name, '', { ...options, maxAge: 0 });
 		},
 
+		/** @param {string} header */
+		parse(header) {
+			const [head, ...tail] = header.split(';').filter((str) => str.trim() !== '');
+
+			const [name, value] = head.split('=');
+
+			/** @type {import('cookie').SetCookie} */
+			const cookie = { name, value };
+
+			for (const pair of tail) {
+				const parts = pair.split('=', 2);
+
+				const key = parts[0].trim().toLowerCase();
+				const value = parts[1]?.trim();
+
+				switch (key) {
+					case 'expires': {
+						cookie.expires = new Date(value);
+						break;
+					}
+
+					case 'max-age': {
+						const age = parseInt(value, 10);
+						if (!isNaN(age)) cookie.maxAge = age;
+						break;
+					}
+
+					case 'secure': {
+						cookie.secure = true;
+						break;
+					}
+
+					case 'httponly': {
+						cookie.httpOnly = true;
+						break;
+					}
+
+					case 'partitioned': {
+						cookie.partitioned = true;
+						break;
+					}
+
+					case 'samesite': {
+						if (value === undefined) {
+							cookie.sameSite = 'strict';
+						} else {
+							const lower = value.toLowerCase();
+
+							if (lower === 'lax') cookie.sameSite = 'lax';
+							if (lower === 'none') cookie.sameSite = 'none';
+							if (lower === 'strict') cookie.sameSite = 'strict';
+						}
+
+						break;
+					}
+
+					// non-standard, but understood by e.g. Chrome
+					case 'priority': {
+						const lower = value.toLowerCase();
+
+						if (lower === 'low') cookie.priority = 'low';
+						if (lower === 'medium') cookie.priority = 'medium';
+						if (lower === 'high') cookie.priority = 'high';
+
+						break;
+					}
+
+					case 'domain': {
+						cookie.domain = value;
+						break;
+					}
+
+					case 'path': {
+						cookie.path = value;
+						break;
+					}
+				}
+			}
+
+			return cookie;
+		},
+
 		/**
 		 * @param {string} name
 		 * @param {string} value
