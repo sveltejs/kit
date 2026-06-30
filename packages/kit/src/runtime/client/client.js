@@ -6,9 +6,6 @@
 import { BROWSER, DEV } from 'esm-env';
 import * as svelte from 'svelte';
 import { HttpError, Redirect, SvelteKitError } from '@sveltejs/kit/internal';
-const { onMount, tick } = svelte;
-// Svelte 4 and under don't have `untrack`, so we have to fallback if `untrack` is not exported
-const untrack = svelte.untrack ?? ((value) => value());
 import {
 	decode_params,
 	decode_pathname,
@@ -27,8 +24,6 @@ import {
 	is_external_url,
 	origin,
 	scroll_state,
-	notifiable_store,
-	create_updated_store,
 	load_css
 } from './utils.js';
 import { base } from '$app/paths/internal/client';
@@ -53,8 +48,7 @@ import {
 	validate_load_response
 } from '../shared.js';
 import { get_message, get_status } from '../../utils/error.js';
-import { writable } from 'svelte/store';
-import { page, update, navigating } from './state.svelte.js';
+import { page, update, navigating, updated } from './state.svelte.js';
 import { add_data_suffix, add_resolution_suffix } from '../pathname.js';
 import { noop_span } from '../telemetry/noop.js';
 import { read_ndjson } from './ndjson.js';
@@ -126,15 +120,6 @@ if (DEV && BROWSER) {
 		return replace_state.apply(history, args);
 	};
 }
-
-export const stores = {
-	url: /* @__PURE__ */ notifiable_store({}),
-	page: /* @__PURE__ */ notifiable_store({}),
-	navigating: /* @__PURE__ */ writable(
-		/** @type {import('@sveltejs/kit').Navigation | null} */ (null)
-	),
-	updated: /* @__PURE__ */ create_updated_store()
-};
 
 /** @param {number} index */
 function update_scroll_positions(index) {
@@ -704,13 +689,14 @@ async function initialize(result, target, hydrate) {
 
 	update(/** @type {import('@sveltejs/kit').Page} */ (result.props.page));
 
+	// TODO: use mount()
 	root = new app.root({
 		target,
-		props: { ...result.props, stores, components },
+		props: { ...result.props, components },
 		hydrate,
-		// @ts-ignore Svelte 5 specific: asynchronously instantiate the component, i.e. don't call flushSync
+		// Svelte 5 specific: asynchronously instantiate the component, i.e. don't call flushSync
 		sync: false,
-		// @ts-ignore Svelte 5 specific: transformError allows to transform errors before they are passed to boundaries
+		// Svelte 5 specific: transformError allows to transform errors before they are passed to boundaries
 		transformError: __SVELTEKIT_EXPERIMENTAL_USE_TRANSFORM_ERROR__
 			? /** @param {unknown} e */ async (e) => {
 					const error = await handle_error(e, current.nav);
@@ -798,9 +784,8 @@ async function get_navigation_result_from_branch({
 			route
 		},
 		props: {
-			// @ts-ignore Somehow it's getting SvelteComponent and SvelteComponentDev mixed up
 			constructors: compact(branch).map((branch_node) => branch_node.node.component),
-			page: clone_page(page)
+			page
 		}
 	};
 
@@ -1158,10 +1143,6 @@ function diff_search_params(old_url, new_url) {
  * @returns {import('./types.js').NavigationFinished}
  */
 function preload_error({ error, status, url, route, params }) {
-	// we skipped loading the error page, so we need to use the current page
-	// store, but we still pass the updated status to the preloadData function
-	const new_page = clone_page(page);
-	new_page.status = status;
 	return {
 		type: 'loaded',
 		state: {
@@ -1172,7 +1153,12 @@ function preload_error({ error, status, url, route, params }) {
 			branch: []
 		},
 		props: {
-			page: new_page,
+			page: {
+				// we skipped loading the error page, so we have to use the current page
+				// store, but update the status received while preloading
+				...page,
+				status
+			},
 			constructors: []
 		}
 	};
@@ -1364,8 +1350,7 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 					error = err.body;
 				} else {
 					// Referenced node could have been removed due to redeploy, check
-					const updated = await stores.updated.check();
-					if (updated) {
+					if (await updated.check()) {
 						// Before reloading, try to update the service worker if it exists
 						await update_service_worker();
 						return await native_navigation(url);
@@ -1769,7 +1754,7 @@ async function navigate({
 	is_navigating = true;
 
 	if (started && nav.navigation.type !== 'enter') {
-		stores.navigating.set((navigating.current = nav.navigation));
+		navigating.current = nav.navigation;
 	}
 
 	let navigation_result = intent && (await load_route(intent));
@@ -1859,8 +1844,7 @@ async function navigate({
 
 		if (!navigation_result) return;
 	} else if (/** @type {number} */ (navigation_result.props.page.status) >= 400) {
-		const updated = await stores.updated.check();
-		if (updated) {
+		if (await updated.check()) {
 			// Before reloading, try to update the service worker if it exists
 			await update_service_worker();
 			return await native_navigation(url, replace_state);
@@ -1991,13 +1975,7 @@ async function navigate({
 
 	const { activeElement } = document;
 
-	await commit_promise;
-
-	// TODO 3.0 remote — the double tick is probably necessary because
-	// of some store shenanigans. `settled()` and `f.commit()`
-	// should resolve after DOM updates in newer versions
-	await svelte.tick();
-	await svelte.tick();
+	await (commit_promise ?? svelte.tick());
 
 	if (token !== nav_token) {
 		// a new navigation happened while we were waiting for the DOM to update, so abort
@@ -2061,7 +2039,7 @@ async function navigate({
 		restore_snapshot(current_navigation_index);
 	}
 
-	stores.navigating.set((navigating.current = null));
+	navigating.current = null;
 
 	updating = false;
 }
@@ -2252,7 +2230,7 @@ function handle_error(error, event) {
  * @param {T} callback
  */
 function add_navigation_callback(callbacks, callback) {
-	onMount(() => {
+	svelte.onMount(() => {
 		callbacks.add(callback);
 
 		return () => {
@@ -2568,8 +2546,7 @@ export function pushState(url, state) {
 
 	page.state = state;
 	root.$set({
-		// we need to assign a new page object so that subscribers are correctly notified
-		page: untrack(() => clone_page(page))
+		page
 	});
 
 	clear_onward_history(current_history_index, current_navigation_index);
@@ -2612,7 +2589,7 @@ export function replaceState(url, state) {
 
 	page.state = state;
 	root.$set({
-		page: untrack(() => clone_page(page))
+		page
 	});
 }
 
@@ -2642,11 +2619,11 @@ export async function applyAction(result) {
 			// this brings Svelte's view of the world in line with SvelteKit's
 			// after use:enhance reset the form....
 			form: null,
-			page: clone_page(page)
+			page
 		});
 
 		// ...so that setting the `form` prop takes effect and isn't ignored
-		await tick();
+		await svelte.tick();
 		root.$set({ form: result.data });
 
 		if (result.type === 'success') {
@@ -2682,7 +2659,7 @@ export async function set_nearest_error_page(error, status = 500) {
 		root.$set(navigation_result.props);
 		update(navigation_result.props.page);
 
-		void tick().then(() => reset_focus(current.url));
+		void svelte.tick().then(() => reset_focus(current.url));
 	}
 }
 
@@ -3007,7 +2984,7 @@ function _start_router() {
 		// the navigation away from it was successful.
 		// Info about bfcache here: https://web.dev/bfcache
 		if (event.persisted) {
-			stores.navigating.set((navigating.current = null));
+			navigating.current = null;
 		}
 	});
 
@@ -3016,8 +2993,6 @@ function _start_router() {
 	 */
 	function update_url(url) {
 		current.url = page.url = url;
-		stores.page.set(clone_page(page));
-		stores.page.notify();
 	}
 }
 
@@ -3407,28 +3382,6 @@ function create_navigation(current, intent, url, type, target_scroll = null) {
 		fulfil,
 		// @ts-expect-error
 		reject
-	};
-}
-
-/**
- * TODO: remove this in 3.0 when the page store is also removed
- *
- * We need to assign a new page object so that subscribers are correctly notified.
- * However, spreading `{ ...page }` returns an empty object so we manually
- * assign to each property instead.
- *
- * @param {import('@sveltejs/kit').Page} page
- */
-function clone_page(page) {
-	return {
-		data: page.data,
-		error: page.error,
-		form: page.form,
-		params: page.params,
-		route: page.route,
-		state: page.state,
-		status: page.status,
-		url: page.url
 	};
 }
 
