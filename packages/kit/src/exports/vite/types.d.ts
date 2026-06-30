@@ -1,5 +1,5 @@
 import 'vite/types/customEvent.d.ts';
-import type { PageOptions } from './static_analysis/index.js';
+import type { PageOptions } from './static_analysis/types.js';
 
 declare module 'vite/types/customEvent.d.ts' {
 	interface CustomEventMap {

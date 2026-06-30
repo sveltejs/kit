@@ -118,7 +118,7 @@ async function prerender({ out, manifest_path, metadata, verbose, root, vite_con
 		svelte_config.kit.prerender.handleHttpError,
 		({ status, path, referrer, referenceType }) => {
 			const message =
-				status === 404 && !path.startsWith(svelte_config.paths.base)
+				status === 404 && !path.startsWith(svelte_config.kit.paths.base)
 					? `${path} does not begin with \`base\`. You can fix this by using \`resolve('${path}')\` from \`$app/paths\`. The base path is configurable from \`paths.base\` - see https://svelte.dev/docs/kit/configuration#paths for more info`
 					: path;
 
@@ -162,7 +162,7 @@ async function prerender({ out, manifest_path, metadata, verbose, root, vite_con
 		}
 	);
 
-	const q = queue(svelte_config.prerender.concurrency);
+	const q = queue(svelte_config.kit.prerender.concurrency);
 
 	/**
 	 * @param {string} path
@@ -310,7 +310,7 @@ async function prerender({ out, manifest_path, metadata, verbose, root, vite_con
 		const headers = Object.fromEntries(response.headers);
 
 		// if it's a 200 HTML response, crawl it. Skip error responses, as we don't save those
-		if (response.ok && svelte_config.prerender.crawl && headers['content-type'] === 'text/html') {
+		if (response.ok && svelte_config.kit.prerender.crawl && headers['content-type'] === 'text/html') {
 			const { ids, hrefs, invalid } = crawl(body.toString(), decoded);
 
 			for (const href of invalid) {
@@ -375,10 +375,10 @@ async function prerender({ out, manifest_path, metadata, verbose, root, vite_con
 		if (
 			!is_html &&
 			response.status === 200 &&
-			decoded.slice(svelte_config.paths.base.length + 1) === ''
+			decoded.slice(svelte_config.kit.paths.base.length + 1) === ''
 		) {
 			throw new Error(
-				`Cannot prerender a root +server.js that returns a non-HTML response - static hosts always serve an HTML file for \`${svelte_config.paths.base || '/'}\``
+				`Cannot prerender a root +server.js that returns a non-HTML response - static hosts always serve an HTML file for \`${svelte_config.kit.paths.base || '/'}\``
 			);
 		}
 

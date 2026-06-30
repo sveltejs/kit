@@ -266,7 +266,7 @@ export function dev(server, vite_config, vite, svelte_config, root, dev_context)
 						route_id,
 						JSON.parse(config),
 						feature,
-						svelte_config.adapter
+						svelte_config.kit.adapter
 					);
 
 					res.writeHead(200);
@@ -313,7 +313,7 @@ export function dev(server, vite_config, vite, svelte_config, root, dev_context)
 				}
 
 				// fallback to our own fetch handler if the adapter doesn't provide one
-				if (!svelte_config.adapter?.vite?.plugins) {
+				if (!svelte_config.kit.adapter?.vite?.plugins) {
 					if (!vite.isFetchableDevEnvironment(server.environments.ssr)) {
 						throw new Error(
 							'The Vite configured dev SSR environment must be a FetchableDevEnvironment'
