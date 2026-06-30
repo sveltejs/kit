@@ -694,7 +694,7 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 							message: issue.message
 						}));
 
-					return issues && (issues.length > 0 ? issues : undefined);
+					return issues?.length ? issues : undefined);
 				};
 
 				return create_field_proxy(issues_func, get_input, set_input, get_issues, [...path, prop]);
