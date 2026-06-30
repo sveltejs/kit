@@ -105,9 +105,7 @@ export function validate_redirect_location(location, options) {
 		throw new Error(
 			DEV
 				? `Cannot redirect to external URL ${JSON.stringify(location)}. ` +
-						'To redirect to an external URL, pass `{ external: true }` or an allowlist of permitted URLs as the third argument to `redirect`' +
-						BROWSER +
-						(BROWSER ? window.location.href : try_get_request_store()?.event.request.url)
+						'To redirect to an external URL, pass `{ external: true }` or an allowlist of permitted URLs as the third argument to `redirect`'
 				: 'Cannot redirect to external URL unless explicitly allowed'
 		);
 	}
