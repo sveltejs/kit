@@ -84,6 +84,7 @@ export function matches_external_allowlist_entry(location, allowed) {
 		const loc = new URL(location);
 		const allow = new URL(allowed);
 
+		// this is stricter than `loc.origin !== allow.origin`, which can fail in `blob:` cases
 		if (loc.protocol !== allow.protocol || loc.host !== allow.host) {
 			return false;
 		}
