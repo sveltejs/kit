@@ -17,7 +17,7 @@
 
 <button data-id="one" on:click={one}>push state on current page</button>
 <button data-id="two" on:click={two}>push state on child page</button>
-<button data-id="invalidate" on:click={invalidateAll}>invalidate all</button>
+<button data-id="invalidate" on:click={() => invalidateAll()}>invalidate all</button>
 
 <p>active: {page.state.active ?? false}</p>
 <span>{data.now}</span>
