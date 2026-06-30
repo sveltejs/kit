@@ -1,4 +1,4 @@
-/** @import { PluginOption } from 'vite' */
+/** @import { Plugin } from 'vite' */
 import { escape_for_regexp } from '../../utils/escape.js';
 import { create_build_server } from '../../exports/vite/build/vite_server.js';
 import { forked } from '../../utils/fork.js';
@@ -20,7 +20,7 @@ async function generate_fallback({ manifest_path, out, root }) {
 	const vite_config = await load_vite_config(); // TODO configFile
 	const svelte_config = extract_svelte_config(vite_config);
 
-	/** @type {PluginOption} */
+	/** @type {Plugin} */
 	const plugin_generate_fallback = {
 		name: 'vite-plugin-sveltekit-compile:generate-fallback',
 		configureServer(vite) {

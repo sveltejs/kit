@@ -4,7 +4,6 @@
 import { get } from '__sveltekit/ipc';
 import {
 	options,
-	set_env,
 	set_manifest,
 	set_read_implementation,
 	set_building
@@ -18,6 +17,10 @@ import { check_feature } from '../../utils/features.js';
 import { create_synchronous_read } from '../../runtime/server/read.js';
 
 set_building();
+
+// `set_env` lives in a separate module that imports the user's `src/env` config. We import it
+// *after* `set_building()` so that `building`-dependent expressions resolve correctly
+const { set_env } = await import('__SERVER__/env.js');
 
 /** @implements {KitServer} */
 export class Server {

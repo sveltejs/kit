@@ -1,6 +1,6 @@
 /** @import { Adapter } from '@sveltejs/kit' */
 /** @import { ValidatedConfig } from 'types' */
-/** @import { Connect, PluginOption, ViteDevServer } from 'vite' */
+/** @import { Connect, Plugin, PluginOption, ViteDevServer } from 'vite' */
 /** @import { ModuleRunner } from 'vite/module-runner' */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -35,7 +35,7 @@ import { get_port } from '../../../core/utils.js';
  * @param {string} opts.out
  * @param {string} opts.manifest_path
  * @param {string} opts.server_path path to the module with our custom Server export
- * @param {PluginOption} [opts.vite_plugins] additional plugins to customise the Vite behaviour
+ * @param {Plugin[]} [opts.vite_plugins] additional plugins to customise the Vite behaviour
  * @returns {Promise<ViteDevServer>}
  */
 export async function create_build_server({
@@ -70,7 +70,7 @@ export async function create_build_server({
 	 * We can't achieve the same with import.meta.hot and Promise.withResolver()
 	 * because Cloudflare's workerd doesn't like it when we await a promise resolved
 	 * from import.meta.hot
-	 * @type {PluginOption}
+	 * @type {Plugin}
 	 */
 	const plugin_ipc = {
 		name: 'vite-plugin-sveltekit-compile:ipc',
@@ -126,7 +126,7 @@ export async function create_build_server({
 	/** @type {Connect.ServerStackItem | undefined} */
 	let serve_static_middleware;
 
-	/** @type {PluginOption} */
+	/** @type {Plugin} */
 	const plugin_server = {
 		name: 'vite-plugin-sveltekit-compile:build-entry',
 		config(_, vite_config_env) {
@@ -311,7 +311,7 @@ export async function create_build_server({
 	/** @type {string | undefined} */
 	let remote_address;
 
-	/** @type {PluginOption} */
+	/** @type {Plugin} */
 	const plugin_node_environment = {
 		name: 'vite-plugin-sveltekit-compile:node-environment',
 		config() {

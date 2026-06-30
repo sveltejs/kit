@@ -2,12 +2,16 @@
 /** @import { InternalServer, RemotePrerenderInternals } from 'types' */
 /** @import { SerialisedResponse } from '../../exports/vite/types.js' */
 import { get } from '__sveltekit/ipc';
-import { Server as KitServer } from '__SERVER__/index.js';
 import { get_hooks, set_building, set_prerendering } from '__SERVER__/internal.js';
 import { stringify_remote_arg } from '../../runtime/shared.js';
 
 set_building();
 set_prerendering();
+
+// `set_env` and `Server` live in modules that import the user's `src/env` config. We import them
+// *after* `set_building()` so that `building`-dependent expressions resolve correctly
+const { set_env } = await import('__SERVER__/env.js');
+const { Server: KitServer } = await import('__SERVER__/index.js');
 
 export class Server extends KitServer {
 	#manifest;
@@ -24,7 +28,9 @@ export class Server extends KitServer {
 	}
 
 	/** @type {InternalServer['init']} */
-	async init(options) {
+	init(options) {
+		set_env(options.env);
+
 		options.read = async (file) => {
 			const response = await get(`/read?${new URLSearchParams({ file })}`);
 			if (!response.ok) {
