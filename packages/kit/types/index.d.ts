@@ -3154,7 +3154,10 @@ declare module '$app/forms' {
 	 *     body: new FormData(event.target)
 	 *   });
 	 *
-	 *   const result = deserialize(await response.text());
+	 *   const result =
+	 *     response.status === 204
+	 *       ? { type: 'success', status: 204 }
+	 *       : deserialize(await response.text());
 	 *   // ...
 	 * }
 	 * ```
