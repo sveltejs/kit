@@ -113,10 +113,7 @@ describe('redirect', () => {
 			/Cannot redirect to external URL "\\\\\\\\google\.de"/
 		);
 
-		assert.throws(
-			() => redirect(307, 'x:foo'),
-			/Cannot redirect to external URL "x:foo"/
-		);
+		assert.throws(() => redirect(307, 'x:foo'), /Cannot redirect to external URL "x:foo"/);
 	});
 
 	it('throws a descriptive error for javascript URLs with external: true', () => {
