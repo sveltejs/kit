@@ -14,7 +14,6 @@ import {
 import { noop } from '../../../../utils/functions.js';
 import { SharedIterator } from '../../../../utils/shared-iterator.js';
 import { handle_error_and_jsonify } from '../../../server/utils.js';
-import { get_status } from '../../../../utils/error.js';
 
 /**
  * Creates a remote query. When called from the browser, the function will be invoked on the server via a `fetch` call.
@@ -352,7 +351,7 @@ function batch(validate_or_fn, maybe_fn) {
 								return {
 									type: 'error',
 									error: transformed,
-									status: get_status(transformed, error)
+									status: transformed.status
 								};
 							}
 						})
