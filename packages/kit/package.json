@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/kit",
-	"version": "3.0.0-next.4",
+	"version": "3.0.0-next.5",
 	"description": "SvelteKit is the fastest way to build Svelte apps",
 	"keywords": [
 		"framework",
@@ -21,7 +21,7 @@
 		"@standard-schema/spec": "^1.1.0",
 		"@sveltejs/acorn-typescript": "^1.0.10",
 		"acorn": "^8.17.0",
-		"cookie": "^1.1.1",
+		"cookie": "^2.0.0",
 		"devalue": "^5.8.1",
 		"esm-env": "^1.2.2",
 		"magic-string": "^0.30.21",

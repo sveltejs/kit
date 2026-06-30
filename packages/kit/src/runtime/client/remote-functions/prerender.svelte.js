@@ -2,7 +2,7 @@
 import { app_dir, base } from '$app/paths/internal/client';
 import { version } from '$app/env';
 import * as devalue from 'devalue';
-import { app, goto, prerender_responses } from '../client.js';
+import { app, _goto, prerender_responses } from '../client.js';
 import { get_remote_request_headers, remote_request, unwrap_node } from './shared.svelte.js';
 import { create_remote_key, stringify_remote_arg } from '../../shared.js';
 import { noop } from '../../../utils/functions.js';
@@ -98,7 +98,8 @@ export function prerender(id) {
 				const result = await remote_request(url, { headers });
 
 				if (result.redirect) {
-					void goto(result.redirect);
+					// Use internal version to allow redirects to external URLs
+					void _goto(result.redirect, {}, 0);
 					return;
 				}
 

@@ -42,9 +42,6 @@ On some hosts it may be something else entirely — consult your platform's docu
 
 > [!NOTE] Note that the fallback page will always contain absolute asset paths (i.e. beginning with `/` rather than `.`) regardless of the value of [`paths.relative`](configuration#paths), since it is used to respond to requests for arbitrary paths.
 
-> [!LEGACY]
-> The `adapter` option was moved to the SvelteKit Vite plugin in SvelteKit 3.0.0. In earlier versions, you had to add it to the `kit` property in the `svelte.config.js` file instead.
-
 ## Prerendering individual pages
 
 If you want certain pages to be prerendered, you can re-enable `ssr` alongside `prerender` for just those parts of your app:

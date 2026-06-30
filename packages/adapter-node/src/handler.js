@@ -106,53 +106,60 @@ const ssr = async (req, res) => {
 		return;
 	}
 
-	await setResponse(
-		res,
-		await server.respond(request, {
-			platform: { req },
-			getClientAddress: () => {
-				if (address_header) {
-					if (!(address_header in req.headers)) {
-						throw new Error(
-							`Address header was specified with ${
-								env_prefix + 'ADDRESS_HEADER'
-							}=${address_header} but is absent from request`
-						);
-					}
-
-					const value = /** @type {string} */ (req.headers[address_header]) || '';
-
-					if (address_header === 'x-forwarded-for') {
-						const addresses = value.split(',');
-
-						if (xff_depth < 1) {
-							throw new Error(`${env_prefix + 'XFF_DEPTH'} must be a positive integer`);
-						}
-
-						if (xff_depth > addresses.length) {
-							throw new Error(
-								`${env_prefix + 'XFF_DEPTH'} is ${xff_depth}, but only found ${
-									addresses.length
-								} addresses`
-							);
-						}
-						return addresses[addresses.length - xff_depth].trim();
-					}
-
-					return value;
+	const response = await server.respond(request, {
+		platform: { req },
+		getClientAddress: () => {
+			if (address_header) {
+				if (!(address_header in req.headers)) {
+					throw new Error(
+						`Address header was specified with ${
+							env_prefix + 'ADDRESS_HEADER'
+						}=${address_header} but is absent from request`
+					);
 				}
 
-				return (
-					req.connection?.remoteAddress ||
-					// @ts-expect-error
-					req.connection?.socket?.remoteAddress ||
-					req.socket?.remoteAddress ||
-					// @ts-expect-error
-					req.info?.remoteAddress
-				);
+				const value = /** @type {string} */ (req.headers[address_header]) || '';
+
+				if (address_header === 'x-forwarded-for') {
+					const addresses = value.split(',');
+
+					if (xff_depth < 1) {
+						throw new Error(`${env_prefix + 'XFF_DEPTH'} must be a positive integer`);
+					}
+
+					if (xff_depth > addresses.length) {
+						throw new Error(
+							`${env_prefix + 'XFF_DEPTH'} is ${xff_depth}, but only found ${
+								addresses.length
+							} addresses`
+						);
+					}
+					return addresses[addresses.length - xff_depth].trim();
+				}
+
+				return value;
 			}
-		})
-	);
+
+			return (
+				req.connection?.remoteAddress ||
+				// @ts-expect-error
+				req.connection?.socket?.remoteAddress ||
+				req.socket?.remoteAddress ||
+				// @ts-expect-error
+				req.info?.remoteAddress
+			);
+		}
+	});
+
+	// Reverse proxies such as nginx buffer responses by default (ignoring
+	// `cache-control`), which breaks streaming responses like server-sent events.
+	// `X-Accel-Buffering: no` opts out of that buffering and is a no-op on proxies
+	// that don't recognise it. See https://github.com/sveltejs/kit/issues/15790
+	if (response.headers.get('content-type') === 'text/event-stream') {
+		response.headers.set('x-accel-buffering', 'no');
+	}
+
+	await setResponse(res, response);
 };
 
 /** @param {import('polka').Middleware[]} handlers */

@@ -16,12 +16,13 @@ import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-	plugins: [sveltekit({ adapter: adapter() })]
+	plugins: [
+		sveltekit({
+			adapter: adapter()
+		})
+	]
 });
 ```
-
-> [!LEGACY]
-> The `adapter` option was moved to the SvelteKit Vite plugin in SvelteKit 3.0.0. In earlier versions, you had to add it to the `kit` property in the `svelte.config.js` file instead.
 
 ## Deploying
 

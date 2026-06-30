@@ -218,9 +218,9 @@ export function create_sveltekit_env_public(variables, env, prelude) {
 }
 
 /**
- * Creates the `__sveltekit/env/service-worker` module used in production. Service workers
- * aren't ESM yet, so when an app uses dynamic public env vars they're loaded at runtime via
- * `importScripts` of the prerendered `env.script.js`. If there are none, values are inlined.
+ * Creates the `__sveltekit/env/service-worker` module used in production. When an app uses
+ * dynamic public env vars, they're loaded at runtime via an import of the prerendered
+ * `env.js`. If there are none, values are inlined.
  * @param {Record<string, EnvVarConfig<any>> | null} variables
  * @param {Record<string, string>} env
  * @param {string} global
@@ -237,11 +237,11 @@ export function create_sveltekit_env_service_worker(variables, env, global, base
 	}
 
 	return dedent`
+		import { env } from '${base}/${app_dir}/env.js';
+
 		globalThis.__SVELTEKIT_EXPERIMENTAL_EXPLICIT_ENVIRONMENT_VARIABLES__ = true;
 
-		importScripts('${base}/${app_dir}/env.script.js');
-
-		${global} = globalThis.__sveltekit_sw;
+		${global} = { env };
 	`;
 }
 

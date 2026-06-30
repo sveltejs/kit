@@ -1,4 +1,3 @@
-/** @import { Adapter } from '@sveltejs/kit' */
 import { existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -133,13 +132,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 		return { prerendered, prerender_map };
 	}
 
-	// TODO this can just be config.adapter?
-	/** @type {Adapter | undefined} */
-	const adapter = vite_config.plugins.find(
-		(plugin) => plugin.name === 'vite-plugin-sveltekit-adapter'
-	)?.api?.adapter;
-
-	const emulator = await adapter?.emulate?.();
+	const emulator = await config.adapter?.emulate?.();
 
 	/** @type {import('types').Logger} */
 	const log = logger({ verbose });
@@ -153,7 +146,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 		({ status, path, referrer, referenceType }) => {
 			const message =
 				status === 404 && !path.startsWith(config.paths.base)
-					? `${path} does not begin with \`base\`, which is configured in \`paths.base\` and can be imported from \`$app/paths\` - see https://svelte.dev/docs/kit/configuration#paths for more info`
+					? `${path} does not begin with \`base\`. You can fix this by using \`resolve('${path}')\` from \`$app/paths\`. The base path is configurable from \`paths.base\` - see https://svelte.dev/docs/kit/configuration#paths for more info`
 					: path;
 
 			return `${status} ${message}${referrer ? ` (${referenceType} from ${referrer})` : ''}`;

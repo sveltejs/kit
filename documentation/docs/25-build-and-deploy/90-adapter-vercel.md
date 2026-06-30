@@ -28,9 +28,6 @@ export default defineConfig({
 });
 ```
 
-> [!LEGACY]
-> The `adapter` option was moved to the SvelteKit Vite plugin in SvelteKit 3.0.0. In earlier versions, you had to add it to the `kit` property in the `svelte.config.js` file instead.
-
 ## Deployment configuration
 
 To control how your routes are deployed to Vercel as functions, you can specify deployment configuration, either through the option shown above or with [`export const config`](page-options#config) inside `+server.js`, `+page(.server).js` and `+layout(.server).js` files.

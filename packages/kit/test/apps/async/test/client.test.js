@@ -1010,6 +1010,29 @@ test.describe('remote function mutations', () => {
 		await expect(count).toHaveText('Count: 1');
 	});
 
+	test('submit field value is available in the enhance callback', async ({ page }) => {
+		await page.goto('/remote/form/submit-field-value');
+
+		await page.click('#one');
+		await expect(page.locator('#captured')).toHaveText('1');
+		await expect(page.locator('#result')).toHaveText('1');
+
+		await page.click('#five');
+		await expect(page.locator('#captured')).toHaveText('5');
+		await expect(page.locator('#result')).toHaveText('5');
+
+		await page.click('#no-value');
+		await expect(page.locator('#captured')).toBeEmpty();
+		await expect(page.locator('#result')).toBeEmpty();
+
+		await page.click('a');
+
+		await page.locator('#input').fill('100');
+		await page.click('#submit');
+		await expect(page.locator('#captured')).toHaveText('100');
+		await expect(page.locator('#result')).toHaveText('100');
+	});
+
 	test('form result from a native (non-enhanced) submission survives hydration', async ({
 		page
 	}) => {
@@ -1079,9 +1102,18 @@ test.describe('remote function mutations', () => {
 
 	test('form submission with element id `reset` resets the form', async ({ page }) => {
 		await page.goto('/remote/form/reset-id');
-		await page.locator('[name="message"]').fill('test');
+		await page.locator('[name="message"]').fill('short');
 		await page.click('button');
-		await expect(page.locator('#result')).toHaveText('test');
+
+		await expect(page.locator('.error')).toHaveText('too short');
+
+		await page.click('[type="reset"]');
+		await expect(page.locator('.error')).toHaveCount(0);
+
+		await page.locator('[name="message"]').fill('long enough');
+		await page.click('button');
+
+		await expect(page.locator('#result')).toHaveText('long enough');
 		await expect(page.locator('[name="message"]')).toBeEmpty();
 	});
 });
