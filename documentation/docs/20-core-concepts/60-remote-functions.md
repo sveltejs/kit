@@ -627,7 +627,7 @@ If the submitted data doesn't pass the schema, the callback will not run. Instea
 </form>
 ```
 
-If the `title` is valid, or has not yet been validated, `createPost.fields.title.issues()` will return undefined.
+If the `title` is valid, or has not yet been validated, `createPost.fields.title.issues()` will return `undefined`.
 
 You don't need to wait until the form is submitted to validate the data — you can call `validate()` programmatically, for example in an `oninput` callback (which will validate the data on every keystroke) or an `onchange` callback:
 
