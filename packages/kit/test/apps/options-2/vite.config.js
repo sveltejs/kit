@@ -43,6 +43,9 @@ const config = {
 			},
 			experimental: {
 				remoteFunctions: true
+			},
+			router: {
+				linkOptionPreload: false
 			}
 		})
 	],

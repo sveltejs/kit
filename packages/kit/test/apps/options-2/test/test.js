@@ -235,3 +235,43 @@ test.describe('Vite', () => {
 		expect(await page.pageErrors()).toHaveLength(0);
 	});
 });
+
+test.describe('Disabled link option preload', () => {
+	test.skip(({ javaScriptEnabled }) => !javaScriptEnabled);
+
+	test('data-sveltekit-preload-code does nothing', async ({ page }) => {
+		await page.goto('/basepath/navigation-preload');
+
+		/** @type {string[]} */
+		const requests = [];
+		page.on('request', (req) => {
+			if (req.resourceType() === 'script') {
+				requests.push(req.url());
+			}
+		});
+
+		await page.locator('a').hover();
+		await page.locator('a').dispatchEvent('touchstart');
+		await Promise.all([
+			page.waitForTimeout(100), // wait for preloading to start
+			page.waitForLoadState('networkidle') // wait for preloading to finish
+		]);
+		expect(requests.length).toBe(0);
+	});
+
+	test('programmatic preload still works', async ({ page }) => {
+		await page.goto('/basepath/navigation-preload');
+
+		/** @type {string[]} */
+		const requests = [];
+		page.on('request', (req) => {
+			if (req.resourceType() === 'script') {
+				requests.push(req.url());
+			}
+		});
+
+		await page.locator('button').click();
+
+		expect(requests.length).toBe(1);
+	});
+});
