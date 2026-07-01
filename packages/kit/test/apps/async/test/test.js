@@ -728,12 +728,14 @@ test.describe('remote functions', () => {
 		await expect(ageTouched).toHaveText('Age touched: false');
 
 		await page.click('#set-btn');
+		await page.locator('#set-btn').blur();
 		await expect(nameTouched).toHaveText('Name touched: true');
 
 		await page.click('#reset-btn');
 		await expect(nameTouched).toHaveText('Name touched: false');
 
 		await page.fill('#age-input', '42');
+		await page.locator('#age-input').blur();
 		await expect(ageTouched).toHaveText('Age touched: true');
 
 		await page.click('#reset-btn');
