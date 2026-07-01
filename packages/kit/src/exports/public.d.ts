@@ -1983,6 +1983,8 @@ type RemoteFormFieldMethods<T> = {
 	value(): DeepPartial<T>;
 	/** Set the values that will be submitted */
 	set(input: DeepPartial<T>): DeepPartial<T>;
+	/** Whether the field or any nested field has been interacted with since the form was mounted */
+	touched(): boolean;
 	/** Validation issues, if any */
 	issues(): RemoteFormIssue[] | undefined;
 };

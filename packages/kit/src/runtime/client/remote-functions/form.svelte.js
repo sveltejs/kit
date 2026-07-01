@@ -102,7 +102,7 @@ export function form(id) {
 		let element = null;
 
 		/** @type {Record<string, boolean>} */
-		let touched = {};
+		let touched = $state({});
 
 		let submitted = $state(false);
 
@@ -450,8 +450,6 @@ export function form(id) {
 
 				const is_file = element.type === 'file';
 
-				touched[name] = true;
-
 				if (is_array) {
 					let value;
 
@@ -601,7 +599,9 @@ export function form(id) {
 							}
 
 							return issues;
-						}
+						},
+						() => touched,
+						[]
 					)
 			},
 			result: {

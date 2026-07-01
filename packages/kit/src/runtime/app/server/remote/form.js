@@ -174,7 +174,9 @@ export function form(validate_or_fn, maybe_fn) {
 						deep_set(input, path.map(String), value);
 						(cache[''] ??= {}).input = input;
 					},
-					() => flatten_issues(get_cache(__, get_request_store().state)?.['']?.issues ?? [])
+					() => flatten_issues(get_cache(__, get_request_store().state)?.['']?.issues ?? []),
+					() => ({}),
+					[]
 				);
 			}
 		});
