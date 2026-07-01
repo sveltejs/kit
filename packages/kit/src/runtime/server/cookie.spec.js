@@ -321,4 +321,11 @@ describe('cookies.parse', () => {
 			expires: date
 		});
 	});
+
+	test('includes trailing = characters', () => {
+		assert.deepEqual(cookies.parse('foo=bar=baz='), {
+			name: 'foo',
+			value: 'bar=baz='
+		});
+	});
 });
