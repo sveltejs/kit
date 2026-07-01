@@ -239,15 +239,13 @@ test.describe('Vite', () => {
 test.describe('Disabled link option preload', () => {
 	test.skip(({ javaScriptEnabled }) => !javaScriptEnabled);
 
-	test('data-sveltekit-preload-code does nothing', async ({ page }) => {
+	test('link option preload does nothing', async ({ page }) => {
 		await page.goto('/basepath/navigation-preload');
 
 		/** @type {string[]} */
 		const requests = [];
 		page.on('request', (req) => {
-			if (req.resourceType() === 'script') {
-				requests.push(req.url());
-			}
+			requests.push(req.url());
 		});
 
 		await page.locator('a').hover();
@@ -265,9 +263,7 @@ test.describe('Disabled link option preload', () => {
 		/** @type {string[]} */
 		const requests = [];
 		page.on('request', (req) => {
-			if (req.resourceType() === 'script') {
-				requests.push(req.url());
-			}
+			requests.push(req.url());
 		});
 
 		await page.locator('button').click();

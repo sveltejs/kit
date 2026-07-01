@@ -1,17 +1,17 @@
 <script>
 	import { resolve } from '$app/paths';
-	import { preloadCode } from '$app/navigation';
+	import { preloadData } from '$app/navigation';
 
 	let programmatic_preload = $state(false);
 </script>
 
-<a href={resolve('/')} data-sveltekit-preload-code>go home</a>
+<a href={resolve('/navigation-preload/a')} data-sveltekit-preload-data>go to a</a>
 
 <button
 	onclick={async () => {
-		await preloadCode(resolve('/'));
+		await preloadData(resolve('/navigation-preload/a'));
 		programmatic_preload = true;
-	}}>preload home</button
+	}}>preload a</button
 >
 
 <p>{programmatic_preload ? 'programmatically preloaded' : '...'}</p>
