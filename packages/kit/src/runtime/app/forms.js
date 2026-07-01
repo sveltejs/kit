@@ -20,10 +20,7 @@ export { applyAction };
  *     body: new FormData(event.target)
  *   });
  *
- *   const result =
- *     response.status === 204
- *       ? { type: 'success', status: 204 }
- *       : deserialize(await response.text());
+ *   const result = deserialize(await response.text());
  *   // ...
  * }
  * ```
