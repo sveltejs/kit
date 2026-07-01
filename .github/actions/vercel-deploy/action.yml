@@ -24,20 +24,11 @@ outputs:
 runs:
   using: 'composite'
   steps:
-    - uses: pnpm/action-setup@v5.0.0
-
-    - uses: actions/setup-node@v6
-      with:
-        node-version: 24
-        cache: pnpm
-
-    - name: Install dependencies
-      shell: bash
-      run: pnpm install --frozen-lockfile
+    - uses: ./.github/actions/node-setup
 
     - name: Install Vercel CLI
       shell: bash
-      run: npm i -g vercel
+      run: pnpm i -g vercel
 
     - name: Deploy to Vercel
       id: deploy

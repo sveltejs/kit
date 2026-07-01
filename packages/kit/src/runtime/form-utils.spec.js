@@ -2,12 +2,21 @@ import { describe, expect, test } from 'vitest';
 import {
 	BINARY_FORM_CONTENT_TYPE,
 	convert_formdata,
+	create_field_proxy,
 	deep_set,
 	deserialize_binary_form,
 	serialize_binary_form,
 	split_path
 } from './form-utils.js';
 import { text_encoder } from './utils.js';
+
+const POLLUTION_ATTACKS = [
+	'__proto__.polluted',
+	'constructor.polluted',
+	'prototype.polluted',
+	'user.__proto__.polluted',
+	'user.constructor.polluted'
+];
 
 describe('split_path', () => {
 	const good = [
@@ -82,21 +91,28 @@ describe('convert_formdata', () => {
 		});
 	});
 
-	const pollution_attacks = [
-		'__proto__.polluted',
-		'constructor.polluted',
-		'prototype.polluted',
-		'user.__proto__.polluted',
-		'user.constructor.polluted'
-	];
+	test('omits empty file inputs', () => {
+		const data = new FormData();
 
-	for (const attack of pollution_attacks) {
-		test(`prevents prototype pollution: ${attack}`, () => {
-			const data = new FormData();
-			data.append(attack, 'bad');
-			expect(() => convert_formdata(data)).toThrow(/Invalid key "/);
-		});
-	}
+		data.append('file', new File([], ''));
+
+		expect(convert_formdata(data)).toEqual({});
+	});
+
+	test('keeps real zero-byte files', () => {
+		const data = new FormData();
+		const file = new File([], 'empty.txt');
+
+		data.append('file', file);
+
+		expect(convert_formdata(data)).toEqual({ file });
+	});
+
+	test.each(POLLUTION_ATTACKS)('prevents prototype pollution: %s', (attack) => {
+		const data = new FormData();
+		data.append(attack, 'bad');
+		expect(() => convert_formdata(data)).toThrow(/Invalid key "/);
+	});
 });
 
 describe('binary form serializer', () => {
@@ -215,93 +231,54 @@ describe('binary form serializer', () => {
 		expect(world_slice.type).toBe(file.type);
 	});
 
-	test('throws when Content-Length is invalid', async () => {
-		await expect(
-			deserialize_binary_form(
-				new Request('http://test', {
-					method: 'POST',
-					body: 'foo',
-					headers: {
-						'Content-Type': BINARY_FORM_CONTENT_TYPE
-					}
-				})
-			)
-		).rejects.toThrow('invalid Content-Length header');
-		await expect(
-			deserialize_binary_form(
-				new Request('http://test', {
-					method: 'POST',
-					body: 'foo',
-					headers: {
-						'Content-Type': BINARY_FORM_CONTENT_TYPE,
-						'Content-Length': 'invalid'
-					}
-				})
-			)
-		).rejects.toThrow('invalid Content-Length header');
-	});
-
-	test('data length check', async () => {
+	test('works without Content-Length header', async () => {
 		const { blob } = serialize_binary_form(
 			{
-				foo: 'bar'
+				foo: 'bar',
+				file: new File(['hello'], 'hello.txt', { type: 'text/plain' })
 			},
-			{}
+			{ validate_only: true }
 		);
-		await expect(
-			deserialize_binary_form(
-				new Request('http://test', {
-					method: 'POST',
-					body: blob,
-					headers: {
-						'Content-Type': BINARY_FORM_CONTENT_TYPE,
-						'Content-Length': (blob.size - 1).toString()
-					}
-				})
-			)
-		).rejects.toThrow('data overflow');
+		const res = await deserialize_binary_form(
+			new Request('http://test', {
+				method: 'POST',
+				body: blob,
+				headers: {
+					'Content-Type': BINARY_FORM_CONTENT_TYPE
+					// No Content-Length — simulates proxy stripping it
+				}
+			})
+		);
+		expect(res.data.foo).toBe('bar');
+		expect(res.data.file.name).toBe('hello.txt');
+		expect(res.data.file.size).toBe(5);
+		expect(await res.data.file.text()).toBe('hello');
+		expect(res.meta.validate_only).toBe(true);
 	});
 
-	test('file offset table length check', async () => {
+	test('works with Content-Length header', async () => {
 		const { blob } = serialize_binary_form(
 			{
-				file: new File([''], 'a.txt')
+				foo: 'bar',
+				file: new File(['hello'], 'hello.txt', { type: 'text/plain' })
 			},
-			{}
+			{ validate_only: true }
 		);
-		await expect(
-			deserialize_binary_form(
-				new Request('http://test', {
-					method: 'POST',
-					body: blob,
-					headers: {
-						'Content-Type': BINARY_FORM_CONTENT_TYPE,
-						'Content-Length': (blob.size - 1).toString()
-					}
-				})
-			)
-		).rejects.toThrow('file offset table overflow');
-	});
-
-	test('file length check', async () => {
-		const { blob } = serialize_binary_form(
-			{
-				file: new File(['a'], 'a.txt')
-			},
-			{}
+		const res = await deserialize_binary_form(
+			new Request('http://test', {
+				method: 'POST',
+				body: blob,
+				headers: {
+					'Content-Type': BINARY_FORM_CONTENT_TYPE,
+					'Content-Length': blob.size.toString()
+				}
+			})
 		);
-		await expect(
-			deserialize_binary_form(
-				new Request('http://test', {
-					method: 'POST',
-					body: blob,
-					headers: {
-						'Content-Type': BINARY_FORM_CONTENT_TYPE,
-						'Content-Length': (blob.size - 1).toString()
-					}
-				})
-			)
-		).rejects.toThrow('file data overflow');
+		expect(res.data.foo).toBe('bar');
+		expect(res.data.file.name).toBe('hello.txt');
+		expect(res.data.file.size).toBe(5);
+		expect(await res.data.file.text()).toBe('hello');
+		expect(res.meta.validate_only).toBe(true);
 	});
 
 	test('does not preallocate large buffers for incomplete bodies', async () => {
@@ -756,5 +733,42 @@ describe('deep_set', () => {
 		expect(target.toString.property).toBe('hello');
 		// @ts-ignore
 		expect(Object.prototype.toString.property).toBeUndefined();
+	});
+
+	test.each(POLLUTION_ATTACKS)('avoids prototype injection', (attack) => {
+		const target = {};
+		expect(() => deep_set(target, attack.split('.'), 'bad')).toThrow(/Invalid key/);
+	});
+
+	test.each([null, undefined])('creates nested object when intermediate value is %s', (value) => {
+		const target = { nested: value };
+		deep_set(target, ['nested', 'name'], 'hello');
+		expect(target).toEqual({ nested: { name: 'hello' } });
+	});
+});
+
+describe('create_field_proxy', () => {
+	// Regression test for https://github.com/sveltejs/kit/issues/16165
+	// Before the fix, Date values fell through to the generic object branch
+	// of deep_clone, which iterated Object.keys (empty on Date), producing
+	// an empty plain object {} instead of a Date.
+	test('value() returns a Date clone for Date fields', () => {
+		const original = new Date('2025-06-25T00:00:00Z');
+		const input = { created_at: original };
+
+		const proxy = create_field_proxy(
+			{},
+			() => input,
+			() => {},
+			() => ({}),
+			() => ({}),
+			[]
+		);
+
+		const cloned = proxy.created_at.value();
+
+		expect(cloned).toBeInstanceOf(Date);
+		expect(cloned.getTime()).toBe(original.getTime());
+		expect(cloned).not.toBe(original);
 	});
 });

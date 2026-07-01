@@ -1,6 +1,18 @@
 import { HttpError, SvelteKitError } from '@sveltejs/kit/internal';
 
 /**
+ * For times when you need to throw an error, but without
+ * displaying a useless stack trace (since the developer
+ * can't do anything useful with it)
+ * @param {string} message
+ */
+export function stackless(message) {
+	const error = new Error(message);
+	error.stack = '';
+	return error;
+}
+
+/**
  * @param {unknown} err
  * @return {Error}
  */
@@ -24,10 +36,18 @@ export function normalize_error(error) {
 }
 
 /**
- * @param {unknown} error
+ * @param {any} transformed
+ * @param {any} [error]
  */
-export function get_status(error) {
-	return error instanceof HttpError || error instanceof SvelteKitError ? error.status : 500;
+export function get_status(transformed, error) {
+	const err = error ?? transformed;
+	const status = err instanceof HttpError || err instanceof SvelteKitError ? err.status : 500;
+
+	if (error == null || typeof transformed?.status !== 'number') {
+		return status;
+	} else {
+		return transformed.status;
+	}
 }
 
 /**

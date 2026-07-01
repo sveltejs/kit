@@ -16,7 +16,7 @@ If you'd like to include your application's version number or other information 
 
 ```ts
 // @errors: 2732
-/// file: svelte.config.js
+/// file: vite.config.js
 import pkg from './package.json' with { type: 'json' };
 ```
 
@@ -70,7 +70,7 @@ If you need access to the `document` or `window` variables or otherwise need cod
 ```js
 /// <reference types="@sveltejs/kit" />
 // ---cut---
-import { browser } from '$app/environment';
+import { browser } from '$app/env';
 
 if (browser) {
 	// client-only code here
@@ -115,17 +115,17 @@ Finally, you may also consider using an `{#await}` block:
 ```svelte
 <!--- file: index.svelte --->
 <script>
-	import { browser } from '$app/environment';
+	import { browser } from '$app/env';
 
-	const ComponentConstructor = browser ?
-		import('some-browser-only-library').then((module) => module.Component) :
-		new Promise(() => {});
+	const promise = browser
+		? import('./BrowserComponent.svelte')
+		: import('./ServerComponent.svelte');
 </script>
 
-{#await ComponentConstructor}
+{#await promise}
 	<p>Loading...</p>
-{:then component}
-	<svelte:component this={component} />
+{:then module}
+	<module.default />
 {:catch error}
 	<p>Something went wrong: {error.message}</p>
 {/await}
@@ -151,18 +151,16 @@ export function GET({ params, url }) {
 
 ## How do I use middleware?
 
-`adapter-node` builds a middleware that you can use with your own server for production mode. In dev, you can add middleware to Vite by using a Vite plugin. For example:
+`@sveltejs/adapter-node` builds a middleware that you can use with your own server for production mode. In dev, you can add middleware to Vite by using a Vite plugin. For example:
 
 ```js
-// @errors: 2322
-// @filename: ambient.d.ts
-declare module '@sveltejs/kit/vite'; // TODO this feels unnecessary, why can't it 'see' the declarations?
-
-// @filename: index.js
-// ---cut---
+// @errors: 2307
+/// file: vite.config.js
+import adapter from '@sveltejs/adapter-node';
 import { sveltekit } from '@sveltejs/kit/vite';
+import { defineConfig } from 'vite';
 
-/** @type {import('vite').Plugin} */
++++/** @type {import('vite').Plugin} */
 const myPlugin = {
 	name: 'log-request-middleware',
 	configureServer(server) {
@@ -171,14 +169,16 @@ const myPlugin = {
 			next();
 		});
 	}
-};
+};+++
 
-/** @type {import('vite').UserConfig} */
-const config = {
-	plugins: [myPlugin, sveltekit()]
-};
-
-export default config;
+export default defineConfig({
+	plugins: [
+		+++myPlugin,+++
+		sveltekit({
+			adapter: adapter()
+		})
+	]
+});
 ```
 
 See [Vite's `configureServer` docs](https://vitejs.dev/guide/api-plugin.html#configureserver) for more details including how to control ordering.

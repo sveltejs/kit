@@ -1,6 +1,6 @@
 import path from 'node:path';
 import { GENERATED_COMMENT } from '../../constants.js';
-import { posixify } from '../../utils/filesystem.js';
+import { posixify } from '../../utils/os.js';
 import { write_if_changed } from './utils.js';
 import { s } from '../../utils/misc.js';
 import { get_route_segments } from '../../utils/routing.js';
@@ -58,21 +58,21 @@ ${GENERATED_COMMENT}
 
 declare module "svelte/elements" {
 	export interface HTMLAttributes<T> {
-		'data-sveltekit-keepfocus'?: true | '' | 'off' | undefined | null;
-		'data-sveltekit-noscroll'?: true | '' | 'off' | undefined | null;
+		'data-sveltekit-keepfocus'?: true | false | '' | undefined | null;
+		'data-sveltekit-noscroll'?: true | false | '' | undefined | null;
 		'data-sveltekit-preload-code'?:
 			| true
+			| false
 			| ''
 			| 'eager'
 			| 'viewport'
 			| 'hover'
 			| 'tap'
-			| 'off'
 			| undefined
 			| null;
-		'data-sveltekit-preload-data'?: true | '' | 'hover' | 'tap' | 'off' | undefined | null;
-		'data-sveltekit-reload'?: true | '' | 'off' | undefined | null;
-		'data-sveltekit-replacestate'?: true | '' | 'off' | undefined | null;
+		'data-sveltekit-preload-data'?: true | false | '' | 'hover' | 'tap' | undefined | null;
+		'data-sveltekit-reload'?: true | false | '' | undefined | null;
+		'data-sveltekit-replacestate'?: true | false | '' | undefined | null;
 	}
 }
 
@@ -204,7 +204,7 @@ function generate_app_types(manifest_data, config) {
 		if (route.params.length > 0) {
 			const params = route.params.map((p) => {
 				const type = get_matcher_type(p.matcher);
-				return `${p.name}${p.optional ? '?:' : ':'} ${type}`;
+				return `${p.name}${p.optional ? '?:' : ':'} ${type}${p.optional ? ' | undefined' : ''}`;
 			});
 			const route_type = `${s(route.id)}: { ${params.join('; ')} }`;
 
@@ -225,7 +225,7 @@ function generate_app_types(manifest_data, config) {
 			const params = Array.from(layout_params)
 				.map(([name, { optional, matchers }]) => {
 					const type = get_matchers_type(matchers);
-					return `${name}${optional ? '?:' : ':'} ${type}`;
+					return `${name}${optional ? '?:' : ':'} ${type}${optional ? ' | undefined' : ''}`;
 				})
 				.join('; ');
 

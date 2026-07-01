@@ -11,21 +11,9 @@ import {
 	strip_resolution_suffix
 } from '../runtime/pathname.js';
 import { text_encoder } from '../runtime/utils.js';
+import { validate_redirect_location } from '../utils/url.js';
 
 export { VERSION } from '../version.js';
-
-// TODO 3.0: remove these types as they are not used anymore (we can't remove them yet because that would be a breaking change)
-/**
- * @template {number} TNumber
- * @template {any[]} [TArray=[]]
- * @typedef {TNumber extends TArray['length'] ? TArray[number] : LessThan<TNumber, [...TArray, TArray['length']]>} LessThan
- */
-
-/**
- * @template {number} TStart
- * @template {number} TEnd
- * @typedef {Exclude<TEnd | LessThan<TEnd>, LessThan<TStart>>} NumericRange
- */
 
 // Keep the status codes as `number` because restricting to certain numbers makes it unnecessarily hard to use compared to the benefits
 // (we have runtime errors already to check for invalid codes). Also see https://github.com/sveltejs/kit/issues/11780
@@ -39,10 +27,10 @@ export { VERSION } from '../version.js';
  * return an error response without invoking `handleError`.
  * Make sure you're not catching the thrown error, which would prevent SvelteKit from handling it.
  * @param {number} status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
- * @param {App.Error} body An object that conforms to the App.Error type. If a string is passed, it will be used as the message property.
+ * @param {Omit<App.Error, 'status'> & { status?: App.Error['status'] }} body An object that conforms to the App.Error type. If a string is passed, it will be used as the message property.
  * @overload
  * @param {number} status
- * @param {App.Error} body
+ * @param {Omit<App.Error, 'status'> & { status?: App.Error['status'] }} body
  * @return {never}
  * @throws {import('./public.js').HttpError} This error instructs SvelteKit to initiate HTTP error handling.
  * @throws {Error} If the provided status is invalid (not between 400 and 599).
@@ -53,10 +41,10 @@ export { VERSION } from '../version.js';
  * return an error response without invoking `handleError`.
  * Make sure you're not catching the thrown error, which would prevent SvelteKit from handling it.
  * @param {number} status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
- * @param {{ message: string } extends App.Error ? App.Error | string | undefined : never} [body] An object that conforms to the App.Error type. If a string is passed, it will be used as the message property.
+ * @param {{ status: number; message: string } extends App.Error ? string | void | undefined : never} body The error message.
  * @overload
  * @param {number} status
- * @param {{ message: string } extends App.Error ? App.Error | string | undefined : never} [body]
+ * @param {{ status: number; message: string } extends App.Error ? string | void | undefined : never} body
  * @return {never}
  * @throws {import('./public.js').HttpError} This error instructs SvelteKit to initiate HTTP error handling.
  * @throws {Error} If the provided status is invalid (not between 400 and 599).
@@ -67,17 +55,34 @@ export { VERSION } from '../version.js';
  * return an error response without invoking `handleError`.
  * Make sure you're not catching the thrown error, which would prevent SvelteKit from handling it.
  * @param {number} status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
- * @param {{ message: string } extends App.Error ? App.Error | string | undefined : never} body An object that conforms to the App.Error type. If a string is passed, it will be used as the message property.
+ * @param {string} body The error message.
+ * @param {{ status: number; message: string } extends App.Error ? never : Omit<App.Error, 'status' | 'message'>} properties Additional properties of the App.Error type.
+ * @overload
+ * @param {number} status
+ * @param {string} body
+ * @param {{ status: number; message: string } extends App.Error ? never : Omit<App.Error, 'status' | 'message'>} properties
  * @return {never}
  * @throws {import('./public.js').HttpError} This error instructs SvelteKit to initiate HTTP error handling.
  * @throws {Error} If the provided status is invalid (not between 400 and 599).
  */
-export function error(status, body) {
+/**
+ * Throws an error with a HTTP status code and an optional message.
+ * When called during request handling, this will cause SvelteKit to
+ * return an error response without invoking `handleError`.
+ * Make sure you're not catching the thrown error, which would prevent SvelteKit from handling it.
+ * @param {any} status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
+ * @param {any} [body] An object that conforms to the App.Error type. If a string is passed, it will be used as the message property.
+ * @param {any} [properties] Additional properties of the App.Error type when passing a string message.
+ * @return {never}
+ * @throws {import('./public.js').HttpError} This error instructs SvelteKit to initiate HTTP error handling.
+ * @throws {Error} If the provided status is invalid (not between 400 and 599).
+ */
+export function error(status, body, properties) {
 	if ((!BROWSER || DEV) && (isNaN(status) || status < 400 || status > 599)) {
 		throw new Error(`HTTP error status codes must be between 400 and 599 — ${status} is invalid`);
 	}
 
-	throw new HttpError(status, body);
+	throw new HttpError(status, body, properties);
 }
 
 /**
@@ -105,19 +110,23 @@ export function isHttpError(e, status) {
  *
  * @param {300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308 | ({} & number)} status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#redirection_messages). Must be in the range 300-308.
  * @param {string | URL} location The location to redirect to.
+ * @param {{ external?: boolean | string[] }} [options] To redirect to an external URL, you must pass `{ external: true }` to allow any external URL except `javascript:` URLs, or `{ external: [...] }` with an allowlist of permitted origins.
  * @throws {import('./public.js').Redirect} This error instructs SvelteKit to redirect to the specified location.
- * @throws {Error} If the provided status is invalid or the location cannot be used as a header value.
+ * @throws {Error} If the provided status is invalid, the location cannot be used as a header value, or the location is an external URL without permission.
  * @return {never}
  */
-export function redirect(status, location) {
+export function redirect(status, location, options) {
 	if ((!BROWSER || DEV) && (isNaN(status) || status < 300 || status > 308)) {
 		throw new Error('Invalid status code');
 	}
 
+	const href = location.toString();
+	validate_redirect_location(href, options);
+
 	throw new Redirect(
 		// @ts-ignore
 		status,
-		location.toString()
+		href
 	);
 }
 
@@ -137,8 +146,6 @@ export function isRedirect(e) {
  * @deprecated use `Response.json`
  */
 export function json(data, init) {
-	// TODO deprecate this in favour of `Response.json` when it's
-	// more widely supported
 	const body = JSON.stringify(data);
 
 	// we can't just do `text(JSON.stringify(data), init)` because

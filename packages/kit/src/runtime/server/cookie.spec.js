@@ -1,5 +1,5 @@
 import process from 'node:process';
-import { assert, expect, test, describe } from 'vitest';
+import { assert, expect, test, describe, beforeAll } from 'vitest';
 import { domain_matches, path_matches, get_cookies } from './cookie.js';
 
 const domains = {
@@ -36,6 +36,11 @@ const cookies_setup = ({ href, headers } = {}) => {
 };
 
 describe.skipIf(process.env.NODE_ENV === 'production')('cookies in dev', () => {
+	beforeAll(() => {
+		// @ts-expect-error
+		globalThis.__SVELTEKIT_DEV__ = true;
+	});
+
 	test('warns if cookie exceeds 4,129 bytes', () => {
 		try {
 			const { cookies } = cookies_setup();
@@ -49,6 +54,11 @@ describe.skipIf(process.env.NODE_ENV === 'production')('cookies in dev', () => {
 });
 
 describe.skipIf(process.env.NODE_ENV !== 'production')('cookies in prod', () => {
+	beforeAll(() => {
+		// @ts-expect-error
+		globalThis.__SVELTEKIT_DEV__ = false;
+	});
+
 	domains.positive.forEach(([hostname, constraint]) => {
 		test(`${hostname} / ${constraint}`, () => {
 			assert.ok(domain_matches(hostname, constraint));
@@ -275,5 +285,47 @@ describe.skipIf(process.env.NODE_ENV !== 'production')('cookies in prod', () => 
 		const duplicate = all.find((c) => c.name === 'duplicate');
 
 		expect(duplicate?.value).toEqual('foobar_value');
+	});
+});
+
+describe('cookies.parse', () => {
+	const { cookies } = cookies_setup();
+
+	test('parses a cookie', () => {
+		assert.deepEqual(cookies.parse('foo=bar'), {
+			name: 'foo',
+			value: 'bar'
+		});
+	});
+
+	test('ignores invalid properties', () => {
+		assert.deepEqual(cookies.parse('foo=bar; samesite=laxative'), {
+			name: 'foo',
+			value: 'bar'
+		});
+	});
+
+	test('ignores unknown properties', () => {
+		assert.deepEqual(cookies.parse('foo=bar; potato=salad'), {
+			name: 'foo',
+			value: 'bar'
+		});
+	});
+
+	test('converts expires', () => {
+		const date = new Date();
+
+		assert.deepEqual(cookies.parse(`foo=bar; expires=${date.toISOString()}`), {
+			name: 'foo',
+			value: 'bar',
+			expires: date
+		});
+	});
+
+	test('includes trailing = characters', () => {
+		assert.deepEqual(cookies.parse('foo=bar=baz='), {
+			name: 'foo',
+			value: 'bar=baz='
+		});
 	});
 });

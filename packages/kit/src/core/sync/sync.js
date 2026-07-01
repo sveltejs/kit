@@ -12,16 +12,17 @@ import {
 	create_node_analyser,
 	get_page_options
 } from '../../exports/vite/static_analysis/index.js';
+import { load_explicit_env } from '../env.js';
+import { write_env } from './write_env.js';
 
 /**
  * Initialize SvelteKit's generated files that only depend on the config and mode.
  * @param {import('types').ValidatedConfig} config
- * @param {string} mode
  * @param {string} root The project root directory
  */
-export function init(config, mode, root) {
+export function init(config, root) {
 	write_tsconfig(config.kit, root);
-	write_ambient(config.kit, mode);
+	write_ambient(config.kit);
 }
 
 /**
@@ -72,25 +73,38 @@ export function update(config, manifest_data, file, root) {
 /**
  * Run sync.init and sync.create in series, returning the result from sync.create.
  * @param {import('types').ValidatedConfig} config
- * @param {string} mode The Vite mode
  * @param {string} root The project root directory
  */
-export function all(config, mode, root) {
-	init(config, mode, root);
+export function all(config, root) {
+	init(config, root);
 	return create(config, root);
 }
 
 /**
  * Run sync.init and then generate all type files.
  * @param {import('types').ValidatedConfig} config
- * @param {string} mode The Vite mode
  */
-export function all_types(config, mode) {
+export function all_types(config) {
 	const cwd = process.cwd();
-	init(config, mode, cwd);
+	init(config, cwd);
 	const manifest_data = create_manifest_data({ config, cwd });
 	write_all_types(config, manifest_data, cwd);
 	write_non_ambient(config.kit, manifest_data);
+}
+
+/**
+ * Generate modules and types for explicit env vars
+ * @param {import('types').ValidatedKitConfig} kit
+ * @param {string | null} entry
+ * @param {string} root The Vite root
+ * @param {string} mode The Vite mode
+ */
+export async function env(kit, entry, root, mode) {
+	const env_config = await load_explicit_env(kit, entry, root, mode);
+
+	write_env(kit, entry, env_config);
+
+	return env_config;
 }
 
 /**

@@ -58,6 +58,12 @@ export interface SvelteKitApp {
 	hash: boolean;
 
 	root: typeof SvelteComponent;
+
+	/**
+	 * Lazily loads the contents of src/error.html, used as a last-resort
+	 * error page when the root layout's load function throws during client-side rendering.
+	 */
+	get_error_template: () => Promise<(data: { status: number; message: string }) => string>;
 }
 
 export type NavigationIntent = {
@@ -77,6 +83,7 @@ export type NavigationResult = NavigationRedirect | NavigationFinished;
 
 export type NavigationRedirect = {
 	type: 'redirect';
+	status: number;
 	location: string;
 };
 
@@ -119,7 +126,8 @@ export interface NavigationState {
 }
 
 export interface HydrateOptions {
-	status: number;
+	/** Provided in the case of a form action that returns `fail`, but otherwise derived from `error` */
+	status?: number;
 	error: App.Error | null;
 	node_ids: number[];
 	params: Record<string, string>;

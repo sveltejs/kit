@@ -1,12 +1,10 @@
 import { noop } from '../../utils/functions.js';
 import { IN_WEBCONTAINER } from './constants.js';
 import { respond } from './respond.js';
-import { set_private_env, set_public_env } from '../shared-server.js';
 import { options, get_hooks } from '__SERVER__/internal.js';
-import { DEV } from 'esm-env';
-import { filter_env } from '../../utils/env.js';
 import { format_server_error } from './utils.js';
 import { set_read_implementation, set_manifest } from '__sveltekit/server';
+import { set_env } from '__sveltekit/env';
 import { set_app } from './app.js';
 
 /** @type {Promise<any>} */
@@ -59,10 +57,7 @@ export class Server {
 		// been done already.
 
 		// set env, in case it's used in initialisation
-		const { env_public_prefix, env_private_prefix } = this.#options;
-
-		set_private_env(filter_env(env, env_private_prefix, env_public_prefix));
-		set_public_env(filter_env(env, env_public_prefix, env_private_prefix));
+		set_env(env);
 
 		if (read) {
 			// Wrap the read function to handle MaybePromise<ReadableStream>
@@ -102,7 +97,7 @@ export class Server {
 			set_read_implementation(wrapped_read);
 		}
 
-		// During DEV and for some adapters this function might be called in quick succession,
+		// During dev and for some adapters this function might be called in quick succession,
 		// so we need to make sure we're not invoking this logic (most notably the init hook) multiple times
 		await (init_promise ??= (async () => {
 			try {
@@ -125,7 +120,7 @@ export class Server {
 						module.handleValidationError ||
 						(({ issues }) => {
 							console.error('Remote function schema validation failed:', issues);
-							return { message: 'Bad Request' };
+							return { message: 'Bad Request', status: 400 };
 						}),
 					reroute: module.reroute || noop,
 					transport: module.transport || {}
@@ -141,7 +136,7 @@ export class Server {
 					await module.init();
 				}
 			} catch (e) {
-				if (DEV) {
+				if (__SVELTEKIT_DEV__) {
 					this.#options.hooks = {
 						handle: () => {
 							throw e;

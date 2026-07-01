@@ -9,11 +9,13 @@ The `RequestHandler` and `Load` types both accept a `Params` argument allowing y
 ```js
 /// file: src/routes/[foo]/[bar]/[baz]/+server.js
 // @errors: 2355 2322 1360
-/** @type {import('@sveltejs/kit').RequestHandler<{
-    foo: string;
-    bar: string;
-    baz: string
-  }>} */
+/**
+ * @type {import('@sveltejs/kit').RequestHandler<{
+ *   foo: string;
+ *   bar: string;
+ *   baz: string
+ * }>}
+ */
 export async function GET({ params }) {
 	// ...
 }
@@ -190,7 +192,7 @@ Others are required for SvelteKit to work properly, and should also be left unto
 }
 ```
 
-Use the [`typescript.config` setting](configuration#typescript) in `svelte.config.js` to extend or modify the generated `tsconfig.json`.
+Use the [`typescript.config` setting](configuration#typescript) of the SvelteKit plugin in `vite.config.js` to extend or modify the generated `tsconfig.json`.
 
 ## $lib
 

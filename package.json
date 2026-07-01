@@ -33,20 +33,8 @@
 		"prettier-plugin-svelte": "catalog:",
 		"vitest": "catalog:"
 	},
-	"packageManager": "pnpm@10.33.0+sha512.10568bb4a6afb58c9eb3630da90cc9516417abebd3fabbe6739f0ae795728da1491e9db5a544c76ad8eb7570f5c4bb3d6c637b2cb41bfdcdb47fa823c8649319",
+	"packageManager": "pnpm@11.8.0+sha512.c1f5e7c4cb241c8f174b743851d82f42b802324afc8b0f116b96adb15aa06664948dde36960a3ba1079ba5b4b29dd0140135b94b5b5f5263592249d68e555f26",
 	"engines": {
 		"pnpm": ">=9.0.0"
-	},
-	"pnpm": {
-		"onlyBuiltDependencies": [
-			"@parcel/watcher",
-			"esbuild",
-			"protobufjs",
-			"rolldown",
-			"sharp",
-			"svelte-preprocess",
-			"unix-dgram",
-			"workerd"
-		]
 	}
 }

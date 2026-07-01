@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { styleText } from 'node:util';
-import { posixify } from '../../utils/filesystem.js';
+import { posixify } from '../../utils/os.js';
 import { write_if_changed } from './utils.js';
 
 /**
@@ -59,9 +59,9 @@ export function get_tsconfig(kit, cwd) {
 
 	const include = new Set([
 		'ambient.d.ts', // careful: changing this name would be a breaking change, because it's referenced in the service-workers documentation
+		'env.d.ts',
 		'non-ambient.d.ts',
 		'./types/**/$types.d.ts',
-		config_relative('svelte.config.js'),
 		config_relative('vite.config.js'),
 		config_relative('vite.config.ts')
 	]);
@@ -124,8 +124,7 @@ export function get_tsconfig(kit, cwd) {
 			moduleResolution: 'bundler',
 			module: 'esnext',
 			noEmit: true, // prevent tsconfig error "overwriting input files" - Vite handles the build and ignores this
-			target: 'esnext',
-			types: ['node']
+			target: 'esnext'
 		},
 		include: [...include],
 		exclude
@@ -175,7 +174,7 @@ function validate_user_config(cwd, out, config) {
 				styleText(
 					['bold', 'yellow'],
 					`You have specified a baseUrl and/or paths in your ${config.kind} which interferes with SvelteKit's auto-generated tsconfig.json. ` +
-						'Remove it to avoid problems with intellisense. For path aliases, use `kit.alias` instead: https://svelte.dev/docs/kit/configuration#alias'
+						'Remove it to avoid problems with intellisense. For path aliases, use `config.alias` instead: https://svelte.dev/docs/kit/configuration#alias'
 				)
 			);
 		}

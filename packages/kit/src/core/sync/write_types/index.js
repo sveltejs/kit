@@ -1,8 +1,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import MagicString from 'magic-string';
-import { posixify, rimraf, walk } from '../../../utils/filesystem.js';
+import { rimraf, walk } from '../../../utils/filesystem.js';
 import { compact } from '../../../utils/array.js';
+import { posixify } from '../../../utils/os.js';
 import { ts } from '../ts.js';
 const remove_relative_parent_traversals = (/** @type {string} */ path) =>
 	path.replace(/\.\.\//g, '');
@@ -614,7 +615,7 @@ function generate_params_type(params, outdir, config) {
 					param.matcher
 						? `MatcherParam<typeof import('${path_to_matcher(param.matcher)}').match>`
 						: 'string'
-				}`
+				}${param.optional ? ' | undefined' : ''}`
 		)
 		.join('; ')} }`;
 }

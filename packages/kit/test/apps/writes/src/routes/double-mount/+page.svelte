@@ -1,5 +1,5 @@
 <script context="module">
-	import { browser } from '$app/environment';
+	import { browser } from '$app/env';
 
 	if (browser) {
 		window.mounted = window.mounted || 0;
@@ -18,5 +18,5 @@
 </script>
 
 <h1>mounted: {browser ? mounted : 0}</h1>
-<button on:click={() => goto('/double-mount')}>click me</button>
+<button onclick={() => goto('/double-mount')}>click me</button>
 <span hidden>PLACEHOLDER:0</span>

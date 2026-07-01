@@ -1,24 +1,40 @@
+/** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 /** @import { Builder } from '@sveltejs/kit' */
 /** @import { ResolvedConfig } from 'vite' */
-/** @import { RouteDefinition } from '@sveltejs/kit' */
+/** @import { RouteDefinition, EnvVarConfig } from '@sveltejs/kit' */
 /** @import { RouteData, ValidatedConfig, BuildData, ServerMetadata, ServerMetadataRoute, Prerendered, PrerenderMap, Logger, RemoteChunk } from 'types' */
+import { loadEnv } from 'vite';
+import * as devalue from 'devalue';
 import { createReadStream, createWriteStream, existsSync, statSync } from 'node:fs';
 import { extname, resolve, join, dirname, relative } from 'node:path';
 import { pipeline } from 'node:stream';
 import { promisify, styleText } from 'node:util';
 import zlib from 'node:zlib';
-import { copy, rimraf, mkdirp, posixify } from '../../utils/filesystem.js';
+import { copy, rimraf, mkdirp } from '../../utils/filesystem.js';
+import { posixify } from '../../utils/os.js';
 import { generate_manifest } from '../generate_manifest/index.js';
 import { get_route_segments } from '../../utils/routing.js';
-import { get_env } from '../../exports/vite/utils.js';
 import generate_fallback from '../postbuild/fallback.js';
 import { write } from '../sync/utils.js';
 import { list_files } from '../utils.js';
 import { find_server_assets } from '../generate_manifest/find_server_assets.js';
 import { reserved } from '../env.js';
+import { handle_issues, validate } from '../../exports/internal/env.js';
 
 const pipe = promisify(pipeline);
-const extensions = ['.html', '.js', '.mjs', '.json', '.css', '.svg', '.xml', '.wasm', '.txt'];
+const extensions = [
+	'.html',
+	'.js',
+	'.mjs',
+	'.json',
+	'.css',
+	'.svg',
+	'.xml',
+	'.wasm',
+	'.txt',
+	'.md',
+	'.mdx'
+];
 
 /**
  * Creates the Builder which is passed to adapters for building the application.
@@ -31,7 +47,8 @@ const extensions = ['.html', '.js', '.mjs', '.json', '.css', '.svg', '.xml', '.w
  *   prerender_map: PrerenderMap;
  *   log: Logger;
  *   vite_config: ResolvedConfig;
- *   remotes: RemoteChunk[]
+ *   remotes: RemoteChunk[];
+ *   explicit_env_config: Record<string, EnvVarConfig<any>> | null;
  * }} opts
  * @returns {Builder}
  */
@@ -44,7 +61,8 @@ export function create_builder({
 	prerender_map,
 	log,
 	vite_config,
-	remotes
+	remotes,
+	explicit_env_config
 }) {
 	/** @type {Map<RouteDefinition, RouteData>} */
 	const lookup = new Map();
@@ -113,12 +131,14 @@ export function create_builder({
 
 		async generateFallback(dest) {
 			const manifest_path = `${config.kit.outDir}/output/server/manifest-full.js`;
-			const env = get_env(config.kit.env, vite_config.mode);
+			const env = loadEnv(vite_config.mode, config.kit.env.dir, '');
 
 			const fallback = await generate_fallback({
 				manifest_path,
-				env: { ...env.private, ...env.public },
-				root: vite_config.root
+				env,
+				out_dir: config.kit.outDir,
+				origin: config.kit.prerender.origin,
+				assets: config.kit.files.assets
 			});
 
 			if (existsSync(dest)) {
@@ -134,10 +154,28 @@ export function create_builder({
 		},
 
 		generateEnvModule() {
-			const dest = `${config.kit.outDir}/output/prerendered/dependencies/${config.kit.appDir}/env.js`;
-			const env = get_env(config.kit.env, vite_config.mode);
+			if (!build_data.client?.uses_env_dynamic_public) return;
 
-			write(dest, `export const env=${JSON.stringify(env.public)}`);
+			const dest = `${config.kit.outDir}/output/prerendered/dependencies/${config.kit.appDir}`;
+			const env = loadEnv(vite_config.mode, config.kit.env.dir, '');
+
+			/** @type {Record<string, any>} */
+			const values = {};
+			const variables = explicit_env_config ?? {};
+
+			/** @type {Record<string, StandardSchemaV1.Issue[]>} */
+			const issues = {};
+
+			for (const [name, config] of Object.entries(variables)) {
+				if (config.static || !config.public) continue;
+				values[name] = validate(variables, env[name], name, issues);
+			}
+
+			handle_issues(issues);
+
+			const payload = devalue.uneval(values);
+
+			write(`${dest}/env.js`, `export const env=${payload}`);
 		},
 
 		generateManifest({ relativePath, routes: subset }) {

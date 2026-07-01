@@ -1,5 +1,5 @@
 /** @import { RemoteFormInput, RemoteForm, InvalidField } from '@sveltejs/kit' */
-/** @import { InternalRemoteFormIssue, MaybePromise, RemoteFormInternals } from 'types' */
+/** @import { InternalRemoteFormIssue, MaybePromise, HasNonOptionalBoolean, RemoteFormInternals } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 import { get_request_store } from '@sveltejs/kit/internal/server';
 import {
@@ -9,7 +9,7 @@ import {
 	normalize_issue,
 	flatten_issues
 } from '../../../form-utils.js';
-import { get_cache, run_remote_function } from './shared.js';
+import { get_cache, get_implicit_lookup, run_remote_function } from './shared.js';
 import { ValidationError } from '@sveltejs/kit/internal';
 
 /**
@@ -44,7 +44,7 @@ import { ValidationError } from '@sveltejs/kit/internal';
  * @template {StandardSchemaV1<RemoteFormInput, Record<string, any>>} Schema
  * @template Output
  * @overload
- * @param {Schema} validate
+ * @param {true extends HasNonOptionalBoolean<StandardSchemaV1.InferInput<Schema>> ? 'Error: All booleans in form schemas must be optional (e.g. `v.optional(v.boolean(), false)`) because checkbox inputs do not send a false value when unchecked.' : Schema} validate
  * @param {(data: StandardSchemaV1.InferOutput<Schema>, issue: InvalidField<StandardSchemaV1.InferInput<Schema>>) => MaybePromise<Output>} fn
  * @returns {RemoteForm<StandardSchemaV1.InferInput<Schema>, Output>}
  * @since 2.27
@@ -108,8 +108,6 @@ export function form(validate_or_fn, maybe_fn) {
 						data = validated.value;
 					}
 
-					state.remote.refreshes ??= {};
-
 					const issue = create_issues();
 
 					try {
@@ -132,7 +130,12 @@ export function form(validate_or_fn, maybe_fn) {
 				// We don't need to care about args or deduplicating calls, because uneval results are only relevant in full page reloads
 				// where only one form submission is active at the same time
 				if (!event.isRemoteRequest) {
-					get_cache(__, state)[''] ??= { serialize: true, data: output };
+					const cache = get_cache(__, state);
+					cache[''] ??= output;
+
+					// register under the client-side action id so the output is serialized
+					// into the page, allowing the hydrated client to restore `result`/`issues`/`input`
+					get_implicit_lookup(__, state)[__.action_id ?? __.id] = () => cache[''];
 				}
 
 				return output;
@@ -148,28 +151,32 @@ export function form(validate_or_fn, maybe_fn) {
 
 		Object.defineProperty(instance, 'fields', {
 			get() {
+				// the form instance is created once per module and shared across requests,
+				// so the current request's state has to be resolved at access time
 				return create_field_proxy(
 					{},
-					() => get_cache(__)?.['']?.data?.input ?? {},
+					() => get_cache(__, get_request_store().state)?.['']?.input ?? {},
 					(path, value) => {
-						const cache = get_cache(__);
+						const cache = get_cache(__, get_request_store().state);
 						const entry = cache[''];
 
-						if (entry?.data?.submission) {
+						if (entry?.submission) {
 							// don't override a submission
 							return;
 						}
 
 						if (path.length === 0) {
-							(cache[''] ??= { serialize: true, data: {} }).data.input = value;
+							(cache[''] ??= {}).input = value;
 							return;
 						}
 
-						const input = entry?.data?.input ?? {};
+						const input = entry?.input ?? {};
 						deep_set(input, path.map(String), value);
-						(cache[''] ??= { serialize: true, data: {} }).data.input = input;
+						(cache[''] ??= {}).input = input;
 					},
-					() => flatten_issues(get_cache(__)?.['']?.data?.issues ?? [])
+					() => flatten_issues(get_cache(__, get_request_store().state)?.['']?.issues ?? []),
+					() => ({}),
+					[]
 				);
 			}
 		});
@@ -177,7 +184,7 @@ export function form(validate_or_fn, maybe_fn) {
 		Object.defineProperty(instance, 'result', {
 			get() {
 				try {
-					return get_cache(__)?.['']?.data?.result;
+					return get_cache(__, get_request_store().state)?.['']?.result;
 				} catch {
 					return undefined;
 				}
@@ -187,6 +194,10 @@ export function form(validate_or_fn, maybe_fn) {
 		// On the server, pending is always 0
 		Object.defineProperty(instance, 'pending', {
 			get: () => 0
+		});
+
+		Object.defineProperty(instance, 'submitted', {
+			get: () => false
 		});
 
 		Object.defineProperty(instance, 'preflight', {
@@ -200,6 +211,16 @@ export function form(validate_or_fn, maybe_fn) {
 			}
 		});
 
+		Object.defineProperty(instance, 'submit', {
+			value: () => {
+				throw new Error('Cannot call submit() on the server');
+			}
+		});
+
+		Object.defineProperty(instance, 'element', {
+			get: () => null
+		});
+
 		if (key == undefined) {
 			Object.defineProperty(instance, 'for', {
 				/** @type {RemoteForm<any, any>['for']} */
@@ -211,6 +232,7 @@ export function form(validate_or_fn, maybe_fn) {
 					if (!instance) {
 						instance = create_instance(key);
 						instance.__.id = `${__.id}/${encodeURIComponent(JSON.stringify(key))}`;
+						instance.__.action_id = `${__.id}/${JSON.stringify(key)}`;
 						instance.__.name = __.name;
 
 						state.remote.forms.set(cache_key, instance);

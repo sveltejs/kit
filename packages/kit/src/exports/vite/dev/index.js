@@ -9,7 +9,9 @@ import sirv from 'sirv';
 import { isCSSRequest, loadEnv, buildErrorMessage } from 'vite';
 import { createReadableStream, getRequest, setResponse } from '../../../exports/node/index.js';
 import { coalesce_to_error } from '../../../utils/error.js';
-import { from_fs, posixify, resolve_entry, to_fs } from '../../../utils/filesystem.js';
+import { resolve_entry } from '../../../utils/filesystem.js';
+import { from_fs, to_fs } from '../../../utils/vite.js';
+import { posixify } from '../../../utils/os.js';
 import { load_error_page } from '../../../core/config/index.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import * as sync from '../../../core/sync/sync.js';
@@ -58,7 +60,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root) {
 		return fetch(info, init);
 	};
 
-	sync.init(svelte_config, vite_config.mode, root);
+	sync.init(svelte_config, root);
 
 	/** @type {import('types').ManifestData} */
 	let manifest_data;
@@ -98,7 +100,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root) {
 
 	/** @param {string} id */
 	async function resolve(id) {
-		const url = id.startsWith('..') ? to_fs(path.posix.resolve(id)) : `/${id}`;
+		const url = id.startsWith('..') ? to_fs(path.resolve(id)) : `/${id}`;
 
 		const module = await loud_ssr_load_module(url);
 
@@ -319,7 +321,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root) {
 			// ssrFixStacktrace can fail on StackBlitz web containers and we don't know why
 			// by ignoring it the line numbers are wrong, but at least we can show the error
 		}
-		return error.stack;
+		return error.stack?.replaceAll('\0', ''); // remove null bytes from e.g. virtual module IDs, or the response will fail
 	}
 
 	update_manifest();
@@ -353,9 +355,6 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root) {
 		}, 100);
 	};
 
-	// flag to skip watchers if server is already restarting
-	let restarting = false;
-
 	// Debounce add/unlink events because in case of folder deletion or moves
 	// they fire in rapid succession, causing needless invocations.
 	// These watchers only run for routes, param matchers, and client hooks.
@@ -364,7 +363,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root) {
 	watch('change', (file) => {
 		// Don't run for a single file if the whole manifest is about to get updated
 		// Unless it's a file where the trailing slash page option might have changed
-		if (timeout || restarting || !/\+(page|layout|server).*$/.test(file)) return;
+		if (timeout || !/\+(page|layout|server).*$/.test(file)) return;
 		sync.update(svelte_config, manifest_data, file, root);
 	});
 
@@ -375,7 +374,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root) {
 	// send the vite client a full-reload event without path being set
 	if (appTemplate !== 'index.html') {
 		vite.watcher.on('change', (file) => {
-			if (file === appTemplate && !restarting) {
+			if (file === appTemplate) {
 				vite.ws.send({ type: 'full-reload' });
 			}
 		});
@@ -389,17 +388,6 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root) {
 			file.startsWith(hooks.server)
 		) {
 			sync.server(svelte_config, root);
-		}
-	});
-
-	vite.watcher.on('change', async (file) => {
-		// changing the svelte config requires restarting the dev server
-		// the config is only read on start and passed on to vite-plugin-svelte
-		// which needs up-to-date values to operate correctly
-		if (file.match(/[/\\]svelte\.config\.[jt]s$/)) {
-			console.log(`svelte config changed, restarting vite dev-server. changed file: ${file}`);
-			restarting = true;
-			await vite.restart();
 		}
 	});
 
@@ -569,8 +557,10 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root) {
 
 						return fs.readFileSync(path.join(svelte_config.kit.files.assets, file));
 					},
-					before_handle: (event, config, prerender) => {
-						async_local_storage.enterWith({ event, config, prerender });
+					before_handle: async (event, config, prerender, handle) => {
+						// we need to use .run because .enterWith() is not supported in Cloudflare Workers
+						// see https://blog.cloudflare.com/workers-node-js-asynclocalstorage/
+						return await async_local_storage.run({ event, config, prerender }, handle);
 					},
 					emulator
 				});
@@ -586,7 +576,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root) {
 			} catch (e) {
 				const error = coalesce_to_error(e);
 				res.statusCode = 500;
-				res.end(fix_stack_trace(error));
+				res.end(fix_stack_trace(error) || error.message); // handle `stackless` errors
 			}
 		});
 	};

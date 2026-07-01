@@ -8,30 +8,31 @@ This adapter will be installed by default when you use [`adapter-auto`](adapter-
 
 ## Usage
 
-Install with `npm i -D @sveltejs/adapter-netlify`, then add the adapter to your `svelte.config.js`:
+Install with `npm i -D @sveltejs/adapter-netlify`, then add the adapter to your `vite.config.js`:
 
 ```js
-/// file: svelte.config.js
+// @errors: 2307
+/// file: vite.config.js
 import adapter from '@sveltejs/adapter-netlify';
+import { sveltekit } from '@sveltejs/kit/vite';
+import { defineConfig } from 'vite';
 
-/** @type {import('@sveltejs/kit').Config} */
-const config = {
-	kit: {
-		// default options are shown
-		adapter: adapter({
-			// if true, will create a Netlify Edge Function rather
-			// than using standard Node-based functions
-			edge: false,
+export default defineConfig({
+	plugins: [
+		sveltekit({
+			adapter: adapter({
+				// if true, will create a Netlify Edge Function rather
+				// than using standard Node-based functions
+				edge: false,
 
-			// if true, will split your app into multiple functions
-			// instead of creating a single one for the entire app.
-			// if `edge` is true, this option cannot be used
-			split: false
+				// if true, will split your app into multiple functions
+				// instead of creating a single one for the entire app.
+				// if `edge` is true, this option cannot be used
+				split: false
+			})
 		})
-	}
-};
-
-export default config;
+	]
+});
 ```
 
 Then, make sure you have a [netlify.toml](https://docs.netlify.com/configure-builds/file-based-configuration) file in the project root. This will determine where to write static assets based on the `build.publish` settings, as per this sample configuration:
@@ -53,21 +54,23 @@ New projects will use the current Node LTS version by default. However, if you'r
 SvelteKit supports [Netlify Edge Functions](https://docs.netlify.com/build/edge-functions/overview/). If you pass the option `edge: true` to the `adapter` function, server-side rendering will happen in a Deno-based edge function that's deployed close to the site visitor. If set to `false` (the default), the site will deploy to Node-based Netlify Functions.
 
 ```js
-/// file: svelte.config.js
+// @errors: 2307
+/// file: vite.config.js
 import adapter from '@sveltejs/adapter-netlify';
+import { sveltekit } from '@sveltejs/kit/vite';
+import { defineConfig } from 'vite';
 
-/** @type {import('@sveltejs/kit').Config} */
-const config = {
-	kit: {
-		adapter: adapter({
-			// will create a Netlify Edge Function using Deno-based
-			// rather than using standard Node-based functions
-			edge: true
+export default defineConfig({
+	plugins: [
+		sveltekit({
+			adapter: adapter({
+				// will create a Netlify Edge Function using Deno-based
+				// rather than using standard Node-based functions
+				edge: true
+			})
 		})
-	}
-};
-
-export default config;
+	]
+});
 ```
 
 ## Netlify alternatives to SvelteKit functionality
@@ -81,7 +84,7 @@ The [`_headers`](https://docs.netlify.com/routing/headers/#syntax-for-the-header
 ### Netlify Forms
 
 1. Create your Netlify HTML form as described [here](https://docs.netlify.com/forms/setup/#html-forms), e.g. as `/routes/contact/+page.svelte`. (Don't forget to add the hidden `form-name` input element!)
-2. Netlify's build bot parses your HTML files at deploy time, which means your form must be [prerendered](page-options#prerender) as HTML. You can either add `export const prerender = true` to your `contact.svelte` to prerender just that page or set the `kit.prerender.force: true` option to prerender all pages.
+2. Netlify's build bot parses your HTML files at deploy time, which means your form must be [prerendered](page-options#prerender) as HTML. You can either add `export const prerender = true` to your `contact.svelte` to prerender just that page or set the `prerender.force: true` option to prerender all pages.
 3. If your Netlify form has a [custom success message](https://docs.netlify.com/forms/setup/#success-messages) like `<form netlify ... action="/success">` then ensure the corresponding `/routes/success/+page.svelte` exists and is prerendered.
 
 ### Netlify Functions

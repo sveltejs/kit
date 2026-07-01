@@ -146,10 +146,10 @@ If your package has files with side effects, you can specify them in an array:
 ```json
 /// file: package.json
 {
-    "sideEffects": [
-    	"**/*.css",
-    	"./dist/sideEffectfulFile.js"
-    ]
+	"sideEffects": [
+		"**/*.css",
+		"./dist/sideEffectfulFile.js"
+	]
 }
 ```
 
@@ -187,9 +187,9 @@ You can read more about that feature [here](https://www.typescriptlang.org/docs/
 
 ## Best practices
 
-You should avoid using SvelteKit-specific modules like `$app/environment` in your packages unless you intend for them to only be consumable by other SvelteKit projects. E.g. rather than using `import { browser } from '$app/environment'` you could use `import { BROWSER } from 'esm-env'` ([see esm-env docs](https://github.com/benmccann/esm-env)). You may also wish to pass in things like the current URL or a navigation action as a prop rather than relying directly on `$app/state`, `$app/navigation`, etc. Writing your app in this more generic fashion will also make it easier to set up tools for testing, UI demos and so on.
+You should avoid using SvelteKit-specific modules like `$app/env` in your packages unless you intend for them to only be consumable by other SvelteKit projects. E.g. rather than using `import { browser } from '$app/env'` you could use `import { BROWSER } from 'esm-env'` ([see esm-env docs](https://github.com/benmccann/esm-env)). You may also wish to pass in things like the current URL or a navigation action as a prop rather than relying directly on `$app/state`, `$app/navigation`, etc. Writing your app in this more generic fashion will also make it easier to set up tools for testing, UI demos and so on.
 
-Ensure that you add [aliases](configuration#alias) via `svelte.config.js` (not `vite.config.js` or `tsconfig.json`), so that they are processed by `svelte-package`.
+Ensure that you add [aliases](configuration#alias) via the SvelteKit plugin in your `vite.config.js` (not `tsconfig.json`), so that they are processed by `svelte-package`.
 
 You should think carefully about whether or not the changes you make to your package are a bug fix, a new feature, or a breaking change, and update the package version accordingly. Note that if you remove any paths from `exports` or any `export` conditions inside them from your existing library, that should be regarded as a breaking change.
 

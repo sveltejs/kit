@@ -1,10 +1,10 @@
 import path from 'node:path';
 import { styleText } from 'node:util';
 import { hash } from '../../utils/hash.js';
-import { posixify, resolve_entry } from '../../utils/filesystem.js';
+import { resolve_entry } from '../../utils/filesystem.js';
+import { posixify } from '../../utils/os.js';
 import { s } from '../../utils/misc.js';
 import { load_error_page, load_template } from '../config/index.js';
-import { runtime_directory } from '../utils.js';
 import { write_if_changed } from './utils.js';
 import { escape_html } from '../../utils/escape.js';
 
@@ -14,9 +14,7 @@ import { escape_html } from '../../utils/escape.js';
  *   universal_hooks: string | null;
  *   config: import('types').ValidatedConfig;
  *   has_service_worker: boolean;
- *   runtime_directory: string;
  *   template: string;
- *   error_page: string;
  * }} opts
  */
 const server_template = ({
@@ -24,15 +22,13 @@ const server_template = ({
 	server_hooks,
 	universal_hooks,
 	has_service_worker,
-	runtime_directory,
-	template,
-	error_page
+	template
 }) => `
 import root from '../root.js';
-import { set_building, set_prerendering } from '__sveltekit/environment';
+import { set_building, set_prerendering } from '$app/env/internal';
 import { set_assets } from '$app/paths/internal/server';
 import { set_manifest, set_read_implementation } from '__sveltekit/server';
-import { set_private_env, set_public_env } from '${runtime_directory}/shared-server.js';
+import error from '../shared/error-template.js';
 
 export const options = {
 	app_template_contains_nonce: ${template.includes('%sveltekit.nonce%')},
@@ -41,10 +37,9 @@ export const options = {
 	csrf_check_origin: ${s(!config.kit.csrf.trustedOrigins.includes('*'))},
 	csrf_trusted_origins: ${s(config.kit.csrf.trustedOrigins)},
 	embedded: ${config.kit.embedded},
-	env_public_prefix: '${config.kit.env.publicPrefix}',
-	env_private_prefix: '${config.kit.env.privatePrefix}',
 	hash_routing: ${s(config.kit.router.type === 'hash')},
 	hooks: null, // added lazily, via \`get_hooks\`
+	link_header_preload: ${s(config.kit.output.linkHeaderPreload)},
 	root,
 	service_worker: ${has_service_worker},
 	service_worker_options: ${config.kit.serviceWorker.register ? s(config.kit.serviceWorker.options) : 'null'},
@@ -60,9 +55,7 @@ export const options = {
 				/%sveltekit\.env\.([^%]+)%/g,
 				(_match, capture) => `" + (env[${s(capture)}] ?? "") + "`
 			)},
-		error: ({ status, message }) => ${s(error_page)
-			.replace(/%sveltekit\.status%/g, '" + status + "')
-			.replace(/%sveltekit\.error\.message%/g, '" + message + "')}
+		error
 	},
 	version_hash: ${s(hash(config.kit.version.name))}
 };
@@ -90,7 +83,7 @@ export async function get_hooks() {
 	};
 }
 
-export { set_assets, set_building, set_manifest, set_prerendering, set_private_env, set_public_env, set_read_implementation };
+export { set_assets, set_building, set_manifest, set_prerendering, set_read_implementation };
 `;
 
 // TODO need to re-run this whenever src/app.html or src/error.html are
@@ -123,6 +116,13 @@ export function write_server(config, output, root) {
 		return posixify(path.relative(`${output}/server`, file));
 	}
 
+	write_if_changed(
+		`${output}/shared/error-template.js`,
+		`export default ({ status, message }) => ${s(load_error_page(config))
+			.replace(/%sveltekit\.status%/g, '" + status + "')
+			.replace(/%sveltekit\.error\.message%/g, '" + message + "')};`
+	);
+
 	// Contains the stringified version of
 	/** @type {import('types').SSROptions} */
 	write_if_changed(
@@ -133,9 +133,7 @@ export function write_server(config, output, root) {
 			universal_hooks: universal_hooks_file ? relative(universal_hooks_file) : null,
 			has_service_worker:
 				config.kit.serviceWorker.register && !!resolve_entry(config.kit.files.serviceWorker),
-			runtime_directory: relative(runtime_directory),
-			template: load_template(root, config),
-			error_page: load_error_page(config)
+			template: load_template(root, config)
 		})
 	);
 }

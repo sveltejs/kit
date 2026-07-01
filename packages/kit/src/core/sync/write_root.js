@@ -82,7 +82,7 @@ export function write_root(manifest_data, config, output) {
 			<svelte:options runes={true} />
 			<script>
 				import { setContext, onMount, tick } from 'svelte';
-				import { browser } from '$app/environment';
+				import { browser } from '$app/env';
 
 				// stores
 				let { stores, page, constructors, components = [], form, ${use_boundaries ? 'errors = [], error, ' : ''}${levels

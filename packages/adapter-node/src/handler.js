@@ -2,13 +2,13 @@ import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import sirv from 'sirv';
-import { fileURLToPath } from 'node:url';
 import { parse as polka_url_parser } from '@polka/url';
 import { getRequest, setResponse, createReadableStream } from '@sveltejs/kit/node';
 import { Server } from 'SERVER';
 import { manifest, prerendered, base } from 'MANIFEST';
-import { env } from 'ENV';
-import { parse_as_bytes, parse_origin } from '../utils.js';
+import { dir } from './dir.js';
+import { env, env_prefix } from './env.js';
+import { parse_as_bytes, parse_origin } from './utils.js';
 
 const server = new Server(manifest);
 
@@ -28,8 +28,6 @@ if (isNaN(body_size_limit)) {
 		`Invalid BODY_SIZE_LIMIT: '${env('BODY_SIZE_LIMIT')}'. Please provide a numeric value.`
 	);
 }
-
-const dir = path.dirname(fileURLToPath(import.meta.url));
 
 const asset_dir = `${dir}/client${base}`;
 
@@ -109,53 +107,60 @@ const ssr = async (req, res) => {
 		return;
 	}
 
-	await setResponse(
-		res,
-		await server.respond(request, {
-			platform: { req },
-			getClientAddress: () => {
-				if (address_header) {
-					if (!(address_header in req.headers)) {
-						throw new Error(
-							`Address header was specified with ${
-								ENV_PREFIX + 'ADDRESS_HEADER'
-							}=${address_header} but is absent from request`
-						);
-					}
-
-					const value = /** @type {string} */ (req.headers[address_header]) || '';
-
-					if (address_header === 'x-forwarded-for') {
-						const addresses = value.split(',');
-
-						if (xff_depth < 1) {
-							throw new Error(`${ENV_PREFIX + 'XFF_DEPTH'} must be a positive integer`);
-						}
-
-						if (xff_depth > addresses.length) {
-							throw new Error(
-								`${ENV_PREFIX + 'XFF_DEPTH'} is ${xff_depth}, but only found ${
-									addresses.length
-								} addresses`
-							);
-						}
-						return addresses[addresses.length - xff_depth].trim();
-					}
-
-					return value;
+	const response = await server.respond(request, {
+		platform: { req },
+		getClientAddress: () => {
+			if (address_header) {
+				if (!(address_header in req.headers)) {
+					throw new Error(
+						`Address header was specified with ${
+							env_prefix + 'ADDRESS_HEADER'
+						}=${address_header} but is absent from request`
+					);
 				}
 
-				return (
-					req.connection?.remoteAddress ||
-					// @ts-expect-error
-					req.connection?.socket?.remoteAddress ||
-					req.socket?.remoteAddress ||
-					// @ts-expect-error
-					req.info?.remoteAddress
-				);
+				const value = /** @type {string} */ (req.headers[address_header]) || '';
+
+				if (address_header === 'x-forwarded-for') {
+					const addresses = value.split(',');
+
+					if (xff_depth < 1) {
+						throw new Error(`${env_prefix + 'XFF_DEPTH'} must be a positive integer`);
+					}
+
+					if (xff_depth > addresses.length) {
+						throw new Error(
+							`${env_prefix + 'XFF_DEPTH'} is ${xff_depth}, but only found ${
+								addresses.length
+							} addresses`
+						);
+					}
+					return addresses[addresses.length - xff_depth].trim();
+				}
+
+				return value;
 			}
-		})
-	);
+
+			return (
+				req.connection?.remoteAddress ||
+				// @ts-expect-error
+				req.connection?.socket?.remoteAddress ||
+				req.socket?.remoteAddress ||
+				// @ts-expect-error
+				req.info?.remoteAddress
+			);
+		}
+	});
+
+	// Reverse proxies such as nginx buffer responses by default (ignoring
+	// `cache-control`), which breaks streaming responses like server-sent events.
+	// `X-Accel-Buffering: no` opts out of that buffering and is a no-op on proxies
+	// that don't recognise it. See https://github.com/sveltejs/kit/issues/15790
+	if (response.headers.get('content-type') === 'text/event-stream') {
+		response.headers.set('x-accel-buffering', 'no');
+	}
+
+	await setResponse(res, response);
 };
 
 /** @param {import('polka').Middleware[]} handlers */

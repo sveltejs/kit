@@ -2,9 +2,11 @@
 	"compilerOptions": {
 		"allowJs": true,
 		"checkJs": true,
+		"exactOptionalPropertyTypes": true,
 		"noEmit": true,
-		"target": "es2022",
-		"module": "es2022",
+		"strictNullChecks": true,
+		"target": "esnext",
+		"module": "esnext",
 		"moduleResolution": "bundler",
 		"paths": {
 			"@sveltejs/kit": ["../../../../../exports/public"],

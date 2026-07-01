@@ -1,7 +1,7 @@
-/** @import { SpanData, SpanTree } from './types' */
+/** @import { SpanData, SpanTree } from './types.js' */
 // This helps `pnpm check` pass in the test apps without having to include
 // the ambient.d.ts file in each of their tsconfig.json files.
-/** @import {} from './ambient' */
+/** @import {} from './ambient.js' */
 
 import fs from 'node:fs';
 import http from 'node:http';
@@ -11,7 +11,7 @@ import { fileURLToPath } from 'node:url';
 import { defineConfig, test as base, devices } from '@playwright/test';
 import { number_from_env } from '../../../test-utils/index.js';
 
-/** @type {import('./types')['test']} */
+/** @type {typeof import('./types.js')['test']} */
 export const test = base.extend({
 	app: ({ page }, use) => {
 		// these are assumed to have been put in the global scope by the layout
@@ -123,7 +123,9 @@ export const test = base.extend({
 					// @ts-ignore
 					const res = await original_page_fn.apply(page, args);
 					if (javaScriptEnabled && args[1]?.wait_for_started !== false) {
-						await page.waitForSelector('body.started', { timeout: 15000 });
+						// the first navigation to a route triggers on-demand compilation in dev
+						// mode, which can take a while on a cold/overloaded CI runner
+						await page.locator('body.started').waitFor({ timeout: process.env.CI ? 30000 : 15000 });
 					}
 					return res;
 				} catch (e) {

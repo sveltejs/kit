@@ -7,11 +7,11 @@ import {
 	Page
 } from '@playwright/test';
 import { IncomingMessage, ServerResponse } from 'node:http';
-import '../types/index';
+import '../types/index.d.ts';
 import { AfterNavigate, BeforeNavigate } from '@sveltejs/kit';
 
 export const test: TestType<
-	PlaywrightTestArgs &
+	Omit<PlaywrightTestArgs, 'page'> &
 		PlaywrightTestOptions & {
 			app: {
 				goto(url: string, opts?: { replaceState?: boolean }): Promise<void>;
@@ -36,10 +36,13 @@ export const test: TestType<
 			start_server(
 				handler: (req: IncomingMessage, res: ServerResponse) => void
 			): Promise<{ port: number }>;
-			page: Page & {
+			page: Omit<Page, 'goto'> & {
 				goto: (
 					url: string,
-					opts?: Parameters<Page['goto']>[1] & { wait_for_started?: boolean }
+					opts?: Parameters<Page['goto']>[1] & {
+						/** Wait for `onMount` to add the 'started' class to the `<body>` */
+						wait_for_started?: boolean;
+					}
 				) => ReturnType<Page['goto']>;
 			};
 			baseURL: string;

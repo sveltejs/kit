@@ -33,3 +33,19 @@ test('uses correct environment variables for fallback page (mode = staging)', as
 	await page.goto('/fallback/x/y/z');
 	expect(await page.textContent('b')).toEqual('42');
 });
+
+test.describe(() => {
+	// this has to be inside a test.describe block or at the top-level of the module
+	test.use({ javaScriptEnabled: false });
+
+	test('fallback page includes root layout styles before CSR starts', async ({ page }) => {
+		/** @type {string[]} */
+		const requests = [];
+		page.on('request', (request) => {
+			const url = request.url();
+			if (url.endsWith('.css')) requests.push(url);
+		});
+		await page.goto('/');
+		expect(requests.length).toBe(1);
+	});
+});
