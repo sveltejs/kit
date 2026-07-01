@@ -428,7 +428,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root) {
 	const env = loadEnv(vite_config.mode, svelte_config.kit.env.dir, '');
 	const emulator = await svelte_config.kit.adapter?.emulate?.();
 
-	const adapter_dev = svelte_config.kit.adapter?.vite?.plugins.some(
+	const adapter_dev = svelte_config.kit.adapter?.vite?.plugins?.some(
 		(plugin) => plugin.configureServer
 	);
 

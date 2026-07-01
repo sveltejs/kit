@@ -19,7 +19,7 @@ import { is_chrome_devtools_request, not_found } from '../utils.js';
  * @param {ValidatedConfig} svelte_config
  */
 export async function preview(vite, vite_config, svelte_config) {
-	const adapter_preview = svelte_config.kit.adapter?.vite?.plugins.some(
+	const adapter_preview = svelte_config.kit.adapter?.vite?.plugins?.some(
 		(plugin) => plugin.configurePreviewServer
 	);
 
