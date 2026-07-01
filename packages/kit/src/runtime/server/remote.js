@@ -515,6 +515,7 @@ async function handle_remote_form_post_internal(event, state, manifest, id) {
 		});
 		return {
 			type: 'error',
+			// We're lying a bit with the types here; this will be transformed into a proper App.Error object later
 			error: new SvelteKitError(
 				405,
 				'Method Not Allowed',
@@ -561,6 +562,7 @@ async function handle_remote_form_post_internal(event, state, manifest, id) {
 
 		return {
 			type: 'error',
+			// @ts-expect-error We're lying a bit with the types here; this will be transformed into a proper App.Error object later
 			error: check_incorrect_fail_use(err)
 		};
 	}
