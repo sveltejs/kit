@@ -18,9 +18,9 @@
 </script>
 
 <pre>{JSON.stringify(form)}</pre>
-<button class="increment-success" on:click={() => update('success')}>Increment (success)</button>
-<button class="increment-invalid" on:click={() => update('failure')}>Increment (invalid)</button>
-<button class="invalidateAll" on:click={invalidateAll}>Invalidate</button>
-<button class="redirect" on:click={redirect}>Redirect</button>
-<button class="error" on:click={error}>Error</button>
+<button class="increment-success" onclick={() => update('success')}>Increment (success)</button>
+<button class="increment-invalid" onclick={() => update('failure')}>Increment (invalid)</button>
+<button class="invalidateAll" onclick={invalidateAll}>Invalidate</button>
+<button class="redirect" onclick={redirect}>Redirect</button>
+<button class="error" onclick={error}>Error</button>
 <a href="/actions/enhance">To enhance</a>

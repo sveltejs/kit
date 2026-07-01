@@ -12,7 +12,7 @@
 	}
 </script>
 
-<button on:click={onClick}>Preload</button>
+<button onclick={onClick}>Preload</button>
 
 {#if data}
 	<pre>{JSON.stringify(data, null, 2)}</pre>

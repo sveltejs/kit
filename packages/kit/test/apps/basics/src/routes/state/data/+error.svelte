@@ -3,4 +3,4 @@
 	import { goto } from '$app/navigation';
 </script>
 
-<button id="reload-button" on:click={() => goto(page.url.toString())}>Reload</button>
+<button id="reload-button" onclick={() => goto(page.url.toString())}>Reload</button>
