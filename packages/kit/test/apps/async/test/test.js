@@ -515,6 +515,11 @@ test.describe('remote functions', () => {
 		await expect(myForm).not.toContainText('Invalid type: Expected');
 
 		await bar.fill('g');
+		// a field's issues are not surfaced while it is being edited — the user
+		// must edit *and* blur the field before validation kicks in
+		await expect(myForm).not.toContainText('Invalid type: Expected');
+
+		await bar.blur();
 		await expect(myForm).toContainText('Invalid type: Expected ("d" | "e") but received "g"');
 
 		await bar.fill('d');
