@@ -87,6 +87,7 @@ describe('is_absolute_location', (test) => {
 		assert.equal(is_external_location('\\\\example.com/foo'), true);
 		assert.equal(is_external_location('/\\\\example.com/foo'), true);
 		assert.equal(is_external_location('x:foo'), true);
+		assert.equal(is_external_location('blob:https://sveltekit-redirect.invalid/id'), true);
 	});
 
 	test('detects relative URLs', () => {
@@ -99,14 +100,22 @@ describe('is_absolute_location', (test) => {
 });
 
 describe('matches_external_allowlist_entry', (test) => {
-	test('matches allowed origins and paths', () => {
+	test('matches allowed origins', () => {
 		assert.equal(matches_external_allowlist_entry('https://google.de', 'https://google.de'), true);
 		assert.equal(
 			matches_external_allowlist_entry('https://google.de/search', 'https://google.de'),
 			true
 		);
 		assert.equal(
+			matches_external_allowlist_entry('https://google.de/news', 'https://google.de/search'),
+			true
+		);
+		assert.equal(
 			matches_external_allowlist_entry('https://google.de.evil.com', 'https://google.de'),
+			false
+		);
+		assert.equal(
+			matches_external_allowlist_entry('blob:https://google.de/id', 'https://google.de'),
 			false
 		);
 		assert.equal(matches_external_allowlist_entry('https://evil.com', 'https://google.de'), false);

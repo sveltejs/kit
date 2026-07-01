@@ -147,7 +147,7 @@ describe('redirect', () => {
 	it('throws a descriptive error for disallowed external locations', () => {
 		assert.throws(
 			() => redirect(307, 'https://evil.com', { external: ['https://google.de'] }),
-			/Cannot redirect to "https:\/\/evil\.com": URL is not included in the `external` allowlist/
+			/Cannot redirect to "https:\/\/evil\.com": URL origin is not included in the `external` allowlist/
 		);
 	});
 
