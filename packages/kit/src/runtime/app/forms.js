@@ -20,7 +20,10 @@ export { applyAction };
  *     body: new FormData(event.target)
  *   });
  *
- *   const result = deserialize(await response.text());
+ *   const result =
+ *     response.status === 204
+ *       ? { type: 'success', status: 204 }
+ *       : deserialize(await response.text());
  *   // ...
  * }
  * ```
@@ -30,6 +33,10 @@ export { applyAction };
  * @returns {import('@sveltejs/kit').ActionResult<Success, Failure>}
  */
 export function deserialize(result) {
+	if (result === '') {
+		return { type: 'success', status: 204, data: undefined };
+	}
+
 	const parsed = JSON.parse(result);
 
 	if (parsed.data) {
@@ -197,8 +204,14 @@ export function enhance(form_element, submit = noop) {
 				signal: controller.signal
 			});
 
-			result = deserialize(await response.text());
-			if (result.type === 'error') result.status = response.status;
+			if (response.status === 204) {
+				result = { type: 'success', status: 204 };
+			} else {
+				result = deserialize(await response.text());
+				if (result.type === 'error' || result.type === 'failure') {
+					result.status = response.status;
+				}
+			}
 		} catch (error) {
 			if (/** @type {any} */ (error)?.name === 'AbortError') return;
 			result = {

@@ -64,22 +64,27 @@ export async function handle_action_json_request(event, event_state, options, se
 		}
 
 		if (data instanceof ActionFailure) {
-			return action_json({
-				type: 'failure',
-				status: data.status,
-				// @ts-expect-error we assign a string to what is supposed to be an object. That's ok
-				// because we don't use the object outside, and this way we have better code navigation
-				// through knowing where the related interface is used.
-				data: stringify_action_response(
-					data.data,
-					/** @type {string} */ (event.route.id),
-					options.hooks.transport
-				)
-			});
-		} else {
+			return action_json(
+				{
+					type: 'failure',
+					status: data.status,
+					// @ts-expect-error we assign a string to what is supposed to be an object. That's ok
+					// because we don't use the object outside, and this way we have better code navigation
+					// through knowing where the related interface is used.
+					data: stringify_action_response(
+						data.data,
+						/** @type {string} */ (event.route.id),
+						options.hooks.transport
+					)
+				},
+				{
+					status: data.status
+				}
+			);
+		} else if (data) {
 			return action_json({
 				type: 'success',
-				status: data ? 200 : 204,
+				status: 200,
 				// @ts-expect-error see comment above
 				data: stringify_action_response(
 					data,
@@ -87,6 +92,9 @@ export async function handle_action_json_request(event, event_state, options, se
 					options.hooks.transport
 				)
 			});
+		} else {
+			// no data returned — use 204 No Content (without a body, per the spec)
+			return new Response(null, { status: 204 });
 		}
 	} catch (e) {
 		const err = normalize_error(e);

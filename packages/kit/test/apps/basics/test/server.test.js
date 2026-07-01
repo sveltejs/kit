@@ -806,8 +806,23 @@ test.describe('Shadowed pages', () => {
 			}
 		});
 
-		expect(response.status()).toBe(200);
-		expect(await response.json()).toEqual({ data: '-1', type: 'success', status: 204 });
+		expect(response.status()).toBe(204);
+		expect(await response.text()).toBe('');
+	});
+
+	test('Action fail() returns matching HTTP status code', async ({ baseURL, request }) => {
+		const response = await request.post('/actions/form-errors', {
+			form: {},
+			headers: {
+				accept: 'application/json',
+				origin: new URL(baseURL).origin
+			}
+		});
+
+		expect(response.status()).toBe(400);
+		const body = await response.json();
+		expect(body.type).toBe('failure');
+		expect(body.status).toBe(400);
 	});
 });
 
