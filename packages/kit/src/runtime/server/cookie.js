@@ -63,10 +63,6 @@ export function get_cookies(request, url) {
 		// typescript users. `@type {import('@sveltejs/kit').Cookies}` above is not
 		// sufficient to do so.
 
-		/**
-		 * @param {string} name
-		 * @param {import('cookie').ParseOptions} [opts]
-		 */
 		get(name, opts) {
 			// Look for the most specific matching cookie from new_cookies
 			const best_match = Array.from(new_cookies.values())
@@ -106,9 +102,6 @@ export function get_cookies(request, url) {
 			return cookie;
 		},
 
-		/**
-		 * @param {import('cookie').ParseOptions} [opts]
-		 */
 		getAll(opts) {
 			const cookies = parseCookie(header, { decode: opts?.decode });
 
@@ -141,30 +134,16 @@ export function get_cookies(request, url) {
 			);
 		},
 
-		/**
-		 * @param {string} name
-		 * @param {string} value
-		 * @param {import('cookie').SerializeOptions} options
-		 */
 		set(name, value, options) {
 			set_internal(name, value, { ...defaults, ...options });
 		},
 
-		/**
-		 * @param {string} name
-		 * @param {import('cookie').SerializeOptions} options
-		 */
 		delete(name, options) {
 			cookies.set(name, '', { ...options, maxAge: 0 });
 		},
 
 		parse: parseSetCookie,
 
-		/**
-		 * @param {string} name
-		 * @param {string} value
-		 * @param {import('cookie').SerializeOptions} options
-		 */
 		serialize(name, value, { encode, ...options }) {
 			let path = options.path ?? '/';
 
