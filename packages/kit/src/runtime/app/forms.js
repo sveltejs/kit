@@ -2,7 +2,7 @@ import * as devalue from 'devalue';
 import { BROWSER, DEV } from 'esm-env';
 import { noop } from '../../utils/functions.js';
 import { invalidateAll } from './navigation.js';
-import { app as client_app, applyAction } from '../client/client.js';
+import { app as client_app, applyAction, handle_error } from '../client/client.js';
 import { app as server_app } from '../server/app.js';
 
 export { applyAction };
@@ -201,7 +201,14 @@ export function enhance(form_element, submit = noop) {
 			if (result.type === 'error') result.status = response.status;
 		} catch (error) {
 			if (/** @type {any} */ (error)?.name === 'AbortError') return;
-			result = { type: 'error', error };
+			result = {
+				type: 'error',
+				error: await handle_error(error, {
+					params: {},
+					route: { id: null },
+					url: new URL(location.href)
+				})
+			};
 		}
 
 		await callback({

@@ -71,7 +71,7 @@
 	],
 	"scripts": {
 		"lint": "prettier --config ../../.prettierrc --check .",
-		"check": "tsc && cd ./test/types && tsc",
+		"check": "tsc && cd ./test/types && tsc && cd ./app-error-enhanced && tsc",
 		"check:all": "tsc && pnpm -r --filter=\"./**\" check",
 		"format": "prettier --config ../../.prettierrc --write .",
 		"test": "pnpm test:unit && pnpm test:integration",

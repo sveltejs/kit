@@ -20,7 +20,6 @@ import {
 	get_global_name,
 	handle_error_and_jsonify
 } from '../utils.js';
-import { get_status } from '../../../utils/error.js';
 import * as env from '__sveltekit/env';
 import { collect_remote_data } from '../remote.js';
 
@@ -205,7 +204,7 @@ export async function render_response({
 
 						const transformed = await handle_error_and_jsonify(event, event_state, options, e);
 						props.page.error = props.error = error = transformed;
-						props.page.status = status = get_status(e);
+						props.page.status = status = transformed.status;
 						return transformed;
 					}
 				: undefined
@@ -506,7 +505,7 @@ export async function render_response({
 				`error: ${serialized.error}`
 			];
 
-			if (status !== 200) {
+			if (status !== 200 && !error) {
 				hydrate.push(`status: ${status}`);
 			}
 

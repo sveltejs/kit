@@ -733,7 +733,7 @@ async function initialize(result, target, hydrate) {
 		transformError: __SVELTEKIT_EXPERIMENTAL_USE_TRANSFORM_ERROR__
 			? /** @param {unknown} e */ async (e) => {
 					const error = await handle_error(e, current.nav);
-					rendering_error = { error, status: get_status(e) };
+					rendering_error = { error, status: error.status };
 					page.error = error;
 					page.status = rendering_error.status;
 					return error;
@@ -773,7 +773,7 @@ async function initialize(result, target, hydrate) {
  *   params: Record<string, string>;
  *   branch: Array<import('./types.js').BranchNode | undefined>;
  *   errors?: Array<import('types').CSRPageNodeLoader | undefined>;
- *   status: number;
+ *   status?: number;
  *   error: App.Error | null;
  *   route: import('types').CSRRoute | null;
  *   form?: Record<string, any> | null;
@@ -890,7 +890,7 @@ async function get_navigation_result_from_branch({
 				id: route?.id ?? null
 			},
 			state: {},
-			status,
+			status: status ?? error?.status ?? 200,
 			url: new URL(url),
 			form: form ?? null,
 			// The whole page store is updated, but this way the object reference stays the same
@@ -1173,14 +1173,14 @@ function diff_search_params(old_url, new_url) {
 }
 
 /**
- * @param {Omit<import('./types.js').NavigationFinished['state'], 'branch'> & { error: App.Error; status: number }} opts
+ * @param {Omit<import('./types.js').NavigationFinished['state'], 'branch'> & { error: App.Error }} opts
  * @returns {import('./types.js').NavigationFinished}
  */
-function preload_error({ error, status, url, route, params }) {
+function preload_error({ error, url, route, params }) {
 	// we skipped loading the error page, so we need to use the current page
 	// store, but we still pass the updated status to the preloadData function
 	const new_page = clone_page(page);
-	new_page.status = status;
+	new_page.status = error.status;
 	return {
 		type: 'loaded',
 		state: {
@@ -1266,14 +1266,11 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 			} catch (error) {
 				const handled_error = await handle_error(error, { url, params, route: { id } });
 
-				const status = get_status(error);
-
 				if (preload && preload_tokens.has(preload)) {
-					return preload_error({ error: handled_error, status, url, params, route });
+					return preload_error({ error: handled_error, url, params, route });
 				}
 
 				return load_root_error_page({
-					status,
 					error: handled_error,
 					url,
 					route
@@ -1316,7 +1313,7 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 
 		if (server_data_node?.type === 'error') {
 			// rethrow and catch below
-			throw new HttpError(server_data_node.status ?? 500, server_data_node.error);
+			throw new HttpError(server_data_node.error.status, server_data_node.error);
 		}
 
 		return load_node({
@@ -1359,12 +1356,10 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 					};
 				}
 
-				let status = get_status(err);
-
 				if (preload && preload_tokens.has(preload)) {
+					const error = await handle_error(err, { params, url, route: { id: route.id } });
 					return preload_error({
-						error: await handle_error(err, { params, url, route: { id: route.id } }),
-						status,
+						error,
 						url,
 						params,
 						route
@@ -1377,7 +1372,6 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 				if (server_data_nodes?.includes(/** @type {import('types').ServerErrorNode} */ (err))) {
 					// this is the server error rethrown above, reconstruct but don't invoke
 					// the client error handler; it should've already been handled on the server
-					status = /** @type {import('types').ServerErrorNode} */ (err).status ?? status;
 					error = /** @type {import('types').ServerErrorNode} */ (err).error;
 				} else if (err instanceof HttpError) {
 					error = err.body;
@@ -1400,12 +1394,11 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 						params,
 						branch: branch.slice(0, error_load.idx).concat(error_load.node),
 						errors,
-						status,
 						error,
 						route
 					});
 				} else {
-					return await server_fallback(url, { id: route.id }, error, status);
+					return await server_fallback(url, { id: route.id }, error);
 				}
 			}
 		} else {
@@ -1420,7 +1413,6 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 		params,
 		branch,
 		errors,
-		status: 200,
 		error: null,
 		route,
 		// Reset `form` on navigation, but not invalidation
@@ -1459,14 +1451,13 @@ async function load_nearest_error_page(i, branch, errors) {
 
 /**
  * @param {{
- *   status: number;
  *   error: App.Error;
  *   url: URL;
  *   route: { id: string | null }
  * }} opts
  * @returns {Promise<import('./types.js').NavigationFinished | undefined>} returns `undefined` in case of a redirect
  */
-async function load_root_error_page({ status, error, url, route }) {
+async function load_root_error_page({ error, url, route }) {
 	/** @type {Record<string, string>} */
 	const params = {}; // error page does not have params
 
@@ -1527,7 +1518,6 @@ async function load_root_error_page({ status, error, url, route }) {
 			url,
 			params,
 			branch: [root_layout, root_error],
-			status,
 			error,
 			errors: [],
 			route: null
@@ -1547,7 +1537,7 @@ async function load_root_error_page({ status, error, url, route }) {
 			.replace(/&/g, '&amp;')
 			.replace(/</g, '&lt;')
 			.replace(/>/g, '&gt;');
-		const html = error_template({ status, message });
+		const html = error_template({ status: handled.status, message });
 		const parsed = new DOMParser().parseFromString(html, 'text/html');
 		document.documentElement.replaceChild(document.adoptNode(parsed.head), document.head);
 		document.documentElement.replaceChild(document.adoptNode(parsed.body), document.body);
@@ -1815,7 +1805,6 @@ async function navigate({
 							route: { id: null }
 						}
 					),
-					404,
 					replace_state
 				);
 			} else {
@@ -1830,7 +1819,6 @@ async function navigate({
 					params: {},
 					route: { id: null }
 				}),
-				404,
 				replace_state
 			);
 		}
@@ -1868,7 +1856,6 @@ async function navigate({
 		}
 
 		navigation_result = await load_root_error_page({
-			status: 500,
 			error: await handle_error(new Error('Redirect loop'), {
 				url,
 				params: {},
@@ -2092,23 +2079,21 @@ async function navigate({
  * @param {URL} url
  * @param {{ id: string | null }} route
  * @param {App.Error} error
- * @param {number} status
  * @param {boolean} [replace_state]
  * @returns {Promise<import('./types.js').NavigationFinished | undefined>}
  */
-async function server_fallback(url, route, error, status, replace_state) {
+async function server_fallback(url, route, error, replace_state) {
 	if (url.origin === origin && url.pathname === location.pathname && !hydrated) {
 		// We would reload the same page we're currently on, which isn't hydrated,
 		// which means no SSR, which means we would end up in an endless loop
 		return await load_root_error_page({
-			status,
 			error,
 			url,
 			route
 		});
 	}
 
-	if (DEV && status !== 404) {
+	if (DEV && error.status !== 404) {
 		console.error(
 			'An error occurred while loading the page. This will cause a full page reload. (This message will only appear during development.)'
 		);
@@ -2247,9 +2232,9 @@ function setup_preload() {
 /**
  * @param {unknown} error
  * @param {import('@sveltejs/kit').NavigationEvent} event
- * @returns {import('types').MaybePromise<App.Error>}
+ * @returns {Promise<App.Error>}
  */
-function handle_error(error, event) {
+export async function handle_error(error, event) {
 	if (error instanceof HttpError) {
 		return error.body;
 	}
@@ -2261,10 +2246,9 @@ function handle_error(error, event) {
 
 	const status = get_status(error);
 	const message = get_message(error);
+	const app_error = (await app.hooks.handleError({ error, event, status, message })) ?? { message };
 
-	return (
-		app.hooks.handleError({ error, event, status, message }) ?? /** @type {any} */ ({ message })
-	);
+	return { ...app_error, status: get_status(app_error, error) };
 }
 
 /**
@@ -2651,7 +2635,7 @@ export async function applyAction(result) {
 	}
 
 	if (result.type === 'error') {
-		await set_nearest_error_page(result.error, result.status);
+		await set_nearest_error_page(result.error);
 	} else if (result.type === 'redirect') {
 		await _goto(result.location, { invalidateAll: true }, 0);
 	} else {
@@ -2678,9 +2662,8 @@ export async function applyAction(result) {
 
 /**
  * @param {App.Error} error
- * @param {number} status
  */
-export async function set_nearest_error_page(error, status = 500) {
+export async function set_nearest_error_page(error) {
 	const url = new URL(location.href);
 
 	const { branch, route } = current;
@@ -2692,7 +2675,6 @@ export async function set_nearest_error_page(error, status = 500) {
 			url,
 			params: current.params,
 			branch: branch.slice(0, error_load.idx).concat(error_load.node),
-			status,
 			error,
 			// do not set errors, we haven't changed the page so the previous ones are still current
 			route
@@ -3049,7 +3031,7 @@ function _start_router() {
  */
 async function _hydrate(
 	target,
-	{ status = 200, error, node_ids, params, route, server_route, data: server_data_nodes, form }
+	{ status, error, node_ids, params, route, server_route, data: server_data_nodes, form }
 ) {
 	hydrated = true;
 
@@ -3135,9 +3117,10 @@ async function _hydrate(
 			return await native_navigation(new URL(error.location, location.href));
 		}
 
+		const handled_error = await handle_error(error, { url, params, route });
+
 		result = await load_root_error_page({
-			status: get_status(error),
-			error: await handle_error(error, { url, params, route }),
+			error: handled_error,
 			url,
 			route
 		});

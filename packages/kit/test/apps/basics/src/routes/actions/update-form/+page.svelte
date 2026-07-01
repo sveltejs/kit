@@ -13,7 +13,7 @@
 		applyAction({ type: 'redirect', status: 303, location: '/' });
 	}
 	function error() {
-		applyAction({ type: 'error', error: { message: 'Unexpected Form Error' } });
+		applyAction({ type: 'error', error: { status: 400, message: 'Unexpected Form Error' } });
 	}
 </script>
 

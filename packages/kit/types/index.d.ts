@@ -8,6 +8,8 @@ declare module '@sveltejs/kit' {
 	// @ts-ignore this is an optional peer dependency so could be missing. Written like this so dts-buddy preserves the ts-ignore
 	type Span = import('@opentelemetry/api').Span;
 
+	type AppErrorWithOptionalStatus = Omit<App.Error, 'status'> & { status?: App.Error['status'] };
+
 	/**
 	 * [Adapters](https://svelte.dev/docs/kit/adapters) are responsible for taking the production build and turning it into something that can be deployed to a platform of your choosing.
 	 */
@@ -948,13 +950,16 @@ declare module '@sveltejs/kit' {
 	 *
 	 * If an unexpected error is thrown during loading or rendering, this function will be called with the error and the event.
 	 * Make sure that this function _never_ throws an error.
+	 *
+	 * The returned object can include a `status` property to override the HTTP status code used in the response.
+	 * If omitted, the status defaults to 500.
 	 */
 	export type HandleServerError = (input: {
 		error: unknown;
 		event: RequestEvent;
 		status: number;
 		message: string;
-	}) => MaybePromise<void | App.Error>;
+	}) => MaybePromise<void | AppErrorWithOptionalStatus>;
 
 	/**
 	 * The [`handleValidationError`](https://svelte.dev/docs/kit/hooks#Server-hooks-handleValidationError) hook runs when the argument to a remote function fails validation.
@@ -962,20 +967,23 @@ declare module '@sveltejs/kit' {
 	 * It will be called with the validation issues and the event, and must return an object shape that matches `App.Error`.
 	 */
 	export type HandleValidationError<Issue extends StandardSchemaV1.Issue = StandardSchemaV1.Issue> =
-		(input: { issues: Issue[]; event: RequestEvent }) => MaybePromise<App.Error>;
+		(input: { issues: Issue[]; event: RequestEvent }) => MaybePromise<AppErrorWithOptionalStatus>;
 
 	/**
 	 * The client-side [`handleError`](https://svelte.dev/docs/kit/hooks#Shared-hooks-handleError) hook runs when an unexpected error is thrown while navigating.
 	 *
 	 * If an unexpected error is thrown during loading or the following render, this function will be called with the error and the event.
 	 * Make sure that this function _never_ throws an error.
+	 *
+	 * The returned object can include a `status` property to override the HTTP status code used in the response.
+	 * If omitted, the status defaults to 500.
 	 */
 	export type HandleClientError = (input: {
 		error: unknown;
 		event: NavigationEvent;
 		status: number;
 		message: string;
-	}) => MaybePromise<void | App.Error>;
+	}) => MaybePromise<void | AppErrorWithOptionalStatus>;
 
 	/**
 	 * The [`handleFetch`](https://svelte.dev/docs/kit/hooks#Server-hooks-handleFetch) hook allows you to modify (or replace) the result of an [`event.fetch`](https://svelte.dev/docs/kit/load#Making-fetch-requests) call that runs on the server (or during prerendering) inside an endpoint, `load`, `action`, `handle`, `handleError` or `reroute`.
@@ -1831,7 +1839,7 @@ declare module '@sveltejs/kit' {
 		| { type: 'success'; status: number; data?: Success }
 		| { type: 'failure'; status: number; data?: Failure }
 		| { type: 'redirect'; status: number; location: string }
-		| { type: 'error'; status?: number; error: any };
+		| { type: 'error'; status?: number; error: App.Error };
 
 	/**
 	 * The object returned by the [`error`](https://svelte.dev/docs/kit/@sveltejs-kit#error) function.
@@ -2885,20 +2893,38 @@ declare module '@sveltejs/kit' {
 	 * @throws {import('./public.js').HttpError} This error instructs SvelteKit to initiate HTTP error handling.
 	 * @throws {Error} If the provided status is invalid (not between 400 and 599).
 	 */
-	export function error(status: number, body: App.Error): never;
+	export function error(status: number, body: Omit<App.Error, "status"> & {
+		status?: App.Error["status"];
+	}): never;
 	/**
 	 * Throws an error with a HTTP status code and an optional message.
 	 * When called during request handling, this will cause SvelteKit to
 	 * return an error response without invoking `handleError`.
 	 * Make sure you're not catching the thrown error, which would prevent SvelteKit from handling it.
 	 * @param status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
-	 * @param body An object that conforms to the App.Error type. If a string is passed, it will be used as the message property.
+	 * @param body The error message.
 	 * @throws {import('./public.js').HttpError} This error instructs SvelteKit to initiate HTTP error handling.
 	 * @throws {Error} If the provided status is invalid (not between 400 and 599).
 	 */
-	export function error(status: number, body?: {
+	export function error(status: number, body: {
+		status: number;
 		message: string;
-	} extends App.Error ? App.Error | string | undefined : never): never;
+	} extends App.Error ? string | void | undefined : never): never;
+	/**
+	 * Throws an error with a HTTP status code and an optional message.
+	 * When called during request handling, this will cause SvelteKit to
+	 * return an error response without invoking `handleError`.
+	 * Make sure you're not catching the thrown error, which would prevent SvelteKit from handling it.
+	 * @param status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
+	 * @param body The error message.
+	 * @param properties Additional properties of the App.Error type.
+	 * @throws {import('./public.js').HttpError} This error instructs SvelteKit to initiate HTTP error handling.
+	 * @throws {Error} If the provided status is invalid (not between 400 and 599).
+	 */
+	export function error(status: number, body: string, properties: {
+		status: number;
+		message: string;
+	} extends App.Error ? never : Omit<App.Error, "status" | "message">): never;
 	/**
 	 * Checks whether this is an error thrown by {@link error}.
 	 * @param status The status to filter for.
@@ -3825,6 +3851,7 @@ declare namespace App {
 	 * Defines the common shape of expected and unexpected errors. Expected errors are thrown using the `error` function. Unexpected errors are handled by the `handleError` hooks which should return this shape.
 	 */
 	export interface Error {
+		status: number;
 		message: string;
 	}
 

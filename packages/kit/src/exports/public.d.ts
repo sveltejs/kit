@@ -34,6 +34,8 @@ export { PrerenderOption } from '../types/private.js';
 // @ts-ignore this is an optional peer dependency so could be missing. Written like this so dts-buddy preserves the ts-ignore
 type Span = import('@opentelemetry/api').Span;
 
+type AppErrorWithOptionalStatus = Omit<App.Error, 'status'> & { status?: App.Error['status'] };
+
 /**
  * [Adapters](https://svelte.dev/docs/kit/adapters) are responsible for taking the production build and turning it into something that can be deployed to a platform of your choosing.
  */
@@ -975,13 +977,16 @@ export type Handle = (input: {
  *
  * If an unexpected error is thrown during loading or rendering, this function will be called with the error and the event.
  * Make sure that this function _never_ throws an error.
+ *
+ * The returned object can include a `status` property to override the HTTP status code used in the response.
+ * If omitted, the status defaults to 500.
  */
 export type HandleServerError = (input: {
 	error: unknown;
 	event: RequestEvent;
 	status: number;
 	message: string;
-}) => MaybePromise<void | App.Error>;
+}) => MaybePromise<void | AppErrorWithOptionalStatus>;
 
 /**
  * The [`handleValidationError`](https://svelte.dev/docs/kit/hooks#Server-hooks-handleValidationError) hook runs when the argument to a remote function fails validation.
@@ -989,20 +994,23 @@ export type HandleServerError = (input: {
  * It will be called with the validation issues and the event, and must return an object shape that matches `App.Error`.
  */
 export type HandleValidationError<Issue extends StandardSchemaV1.Issue = StandardSchemaV1.Issue> =
-	(input: { issues: Issue[]; event: RequestEvent }) => MaybePromise<App.Error>;
+	(input: { issues: Issue[]; event: RequestEvent }) => MaybePromise<AppErrorWithOptionalStatus>;
 
 /**
  * The client-side [`handleError`](https://svelte.dev/docs/kit/hooks#Shared-hooks-handleError) hook runs when an unexpected error is thrown while navigating.
  *
  * If an unexpected error is thrown during loading or the following render, this function will be called with the error and the event.
  * Make sure that this function _never_ throws an error.
+ *
+ * The returned object can include a `status` property to override the HTTP status code used in the response.
+ * If omitted, the status defaults to 500.
  */
 export type HandleClientError = (input: {
 	error: unknown;
 	event: NavigationEvent;
 	status: number;
 	message: string;
-}) => MaybePromise<void | App.Error>;
+}) => MaybePromise<void | AppErrorWithOptionalStatus>;
 
 /**
  * The [`handleFetch`](https://svelte.dev/docs/kit/hooks#Server-hooks-handleFetch) hook allows you to modify (or replace) the result of an [`event.fetch`](https://svelte.dev/docs/kit/load#Making-fetch-requests) call that runs on the server (or during prerendering) inside an endpoint, `load`, `action`, `handle`, `handleError` or `reroute`.
@@ -1858,7 +1866,7 @@ export type ActionResult<
 	| { type: 'success'; status: number; data?: Success }
 	| { type: 'failure'; status: number; data?: Failure }
 	| { type: 'redirect'; status: number; location: string }
-	| { type: 'error'; status?: number; error: any };
+	| { type: 'error'; status?: number; error: App.Error };
 
 /**
  * The object returned by the [`error`](https://svelte.dev/docs/kit/@sveltejs-kit#error) function.

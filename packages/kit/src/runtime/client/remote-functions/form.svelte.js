@@ -4,7 +4,13 @@
 import { app_dir, base } from '$app/paths/internal/client';
 import { DEV } from 'esm-env';
 import { HttpError } from '@sveltejs/kit/internal';
-import { query_responses, _goto, set_nearest_error_page, invalidateAll } from '../client.js';
+import {
+	query_responses,
+	_goto,
+	set_nearest_error_page,
+	invalidateAll,
+	handle_error
+} from '../client.js';
 import { tick } from 'svelte';
 import { categorize_updates, remote_request } from './shared.svelte.js';
 import { createAttachmentKey } from 'svelte/attachments';
@@ -428,9 +434,14 @@ export function form(id) {
 					await enhance_callback(create_enhance_callback_instance(form, form_data));
 				} catch (e) {
 					const error =
-						e instanceof HttpError ? e.body : { message: /** @type {any} */ (e).message };
-					const status = e instanceof HttpError ? e.status : 500;
-					void set_nearest_error_page(error, status);
+						e instanceof HttpError
+							? e.body
+							: await handle_error(e, {
+									params: {},
+									route: { id: null },
+									url: new URL(location.href)
+								});
+					void set_nearest_error_page(error);
 				} finally {
 					pending_count--;
 				}

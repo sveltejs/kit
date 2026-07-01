@@ -70,7 +70,7 @@ export class Query {
 			delete query_responses[key];
 
 			if (node.e) {
-				this.fail(new HttpError(node.e[0] ?? 500, node.e[1]));
+				this.fail(new HttpError(node.e.status, node.e));
 			} else {
 				this.set(/** @type {T} */ (node.v));
 			}

@@ -310,7 +310,7 @@ export type RemoteFunctionDataNode = {
 	/** value */
 	v?: any;
 	/** error */
-	e?: [status: number, error: any];
+	e?: App.Error;
 };
 
 export type RemoteFunctionData = {
@@ -391,10 +391,6 @@ export interface ServerDataSkippedNode {
 export interface ServerErrorNode {
 	type: 'error';
 	error: App.Error;
-	/**
-	 * Only set for HttpErrors.
-	 */
-	status?: number;
 }
 
 export interface ServerMetadataRoute {
