@@ -16,7 +16,6 @@ import {
 	Reroute,
 	RequestEvent,
 	SSRManifest,
-	Emulator,
 	ServerInit,
 	ClientInit,
 	Transport,
@@ -33,7 +32,8 @@ import {
 	TrailingSlash
 } from './private.js';
 import { Span } from '@opentelemetry/api';
-import { PageOptions } from '../exports/vite/static_analysis/types.js';
+import type { PageOptions } from '../exports/vite/static_analysis/types.js';
+import type { ViteDevServer } from 'vite';
 import { SharedIterator } from '../utils/shared-iterator.js';
 
 export interface ServerModule {
@@ -47,7 +47,6 @@ export interface ServerInternalModule {
 	set_prerendering(): void;
 	set_read_implementation(implementation: (path: string) => ReadableStream): void;
 	set_version(version: string): void;
-	set_fix_stack_trace(fix_stack_trace: (error: unknown) => string): void;
 	get_hooks: () => Promise<Record<string, any>>;
 }
 
@@ -67,8 +66,11 @@ export interface AssetDependencies {
 }
 
 export interface BuildData {
+	/** The _app directory configured. */
 	app_dir: string;
+	/** Path to the _app directory, including any base path. */
 	app_path: string;
+	base: string;
 	manifest_data: ManifestData;
 	out_dir: string;
 	service_worker: string | null;
@@ -181,7 +183,7 @@ export class InternalServer extends Server {
 		options: RequestOptions & {
 			prerendering?: PrerenderOptions;
 			/** @internal for saving dependencies during prerendering and generating fallback pages */
-			read: (file: string) => Buffer<ArrayBuffer>;
+			read: (file: string) => MaybePromise<Buffer<ArrayBuffer>>;
 			/** @internal used during development to check feature availability depending on the current route */
 			before_handle?: (
 				event: RequestEvent,
@@ -189,11 +191,13 @@ export class InternalServer extends Server {
 				prerender: PrerenderOption,
 				handle: () => Promise<Response>
 			) => Promise<Response>;
-			emulator?: Emulator;
 		}
 	): Promise<Response>;
 }
 
+/**
+ * Used to construct the SSR manifest
+ */
 export interface ManifestData {
 	/** Static files from `config.files.assets`. */
 	assets: Asset[];
@@ -419,6 +423,7 @@ export interface ServerMetadata {
 	routes: Map<string, ServerMetadataRoute>;
 	/** For each hashed remote file, a map of export name -> { type, dynamic }, where `dynamic` is `false` for non-dynamic prerender functions */
 	remotes: Map<string, Map<string, { type: RemoteInternals['type']; dynamic: boolean }>>;
+	remotes_with_prerender: Set<string>;
 }
 
 export interface SSRComponent {
@@ -575,8 +580,10 @@ export interface SSRState {
 	 * prerender option is inherited by the endpoint, unless overridden.
 	 */
 	prerender_default?: PrerenderOption;
-	/** @internal reads from the filesystem when user code tries to fetch a static asset */
-	read?: (file: string) => Buffer<ArrayBuffer>;
+	/**
+	 * @internal reads from the filesystem when user code tries to fetch a static asset
+	 */
+	read?: (file: string) => MaybePromise<Buffer<ArrayBuffer>>;
 	/**
 	 * Used to set up `__SVELTEKIT_TRACK__` which checks if a used feature is supported.
 	 * E.g. if `read` from `$app/server` is used, it checks whether the route's config is compatible.
@@ -587,7 +594,6 @@ export interface SSRState {
 		prerender: PrerenderOption,
 		handle: () => Promise<Response>
 	) => Promise<Response>;
-	emulator?: Emulator;
 }
 
 export type StrictBody = string | ArrayBufferView;
@@ -766,6 +772,12 @@ export interface RequestState {
 export interface RequestStore {
 	event: RequestEvent;
 	state: RequestState;
+}
+
+export interface DevContext {
+	server: ViteDevServer;
+	/** used to construct the SSR manifest */
+	manifest_data: ManifestData;
 }
 
 export * from '../exports/index.js';

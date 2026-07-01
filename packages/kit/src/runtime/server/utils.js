@@ -6,7 +6,6 @@ import { HttpError } from '@sveltejs/kit/internal';
 import { with_request_store } from '@sveltejs/kit/internal/server';
 import { coalesce_to_error, get_message, get_status } from '../../utils/error.js';
 import { negotiate } from '../../utils/http.js';
-import { fix_stack_trace } from '../shared-server.js';
 import { ENDPOINT_METHODS } from '../../constants.js';
 import { escape_html } from '../../utils/escape.js';
 import * as path from '../../utils/path.js';
@@ -104,10 +103,6 @@ export async function handle_error_and_jsonify(event, state, options, error) {
 	if (error instanceof HttpError) {
 		// @ts-expect-error custom user errors may not have a message field if App.Error is overwritten
 		return { message: 'Unknown Error', ...error.body };
-	}
-
-	if (__SVELTEKIT_DEV__ && typeof error == 'object') {
-		fix_stack_trace(error);
 	}
 
 	const status = get_status(error);

@@ -81,3 +81,11 @@ export function escape_for_interpolation(str, replacements) {
 	}
 	return escaped;
 }
+
+// TODO: replace this with RegExp.escape when we make Node 24 the minimum
+/**
+ * @param {string} str
+ */
+export function escape_for_regexp(str) {
+	return str.replace(/[.*+?^${}()|[\]\\]/g, (match) => '\\' + match);
+}
