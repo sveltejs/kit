@@ -428,6 +428,10 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root) {
 	const env = loadEnv(vite_config.mode, svelte_config.kit.env.dir, '');
 	const emulator = await svelte_config.kit.adapter?.emulate?.();
 
+	const adapter_dev = svelte_config.kit.adapter?.vite?.plugins.some(
+		(plugin) => plugin.configureServer
+	);
+
 	return () => {
 		const serve_static_middleware = vite.middlewares.stack.find(
 			(middleware) =>
@@ -438,7 +442,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root) {
 		// serving routes with those names. See https://github.com/vitejs/vite/issues/7363
 		remove_static_middlewares(vite.middlewares);
 
-		vite.middlewares.use(async (req, res) => {
+		vite.middlewares.use(async (req, res, next) => {
 			// Vite's base middleware strips out the base path. Restore it
 			const original_url = req.url;
 			req.url = req.originalUrl;
@@ -544,35 +548,41 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root) {
 					return;
 				}
 
-				const rendered = await server.respond(request, {
-					getClientAddress: () => {
-						const { remoteAddress } = req.socket;
-						if (remoteAddress) return remoteAddress;
-						throw new Error('Could not determine clientAddress');
-					},
-					read: (file) => {
-						if (file in manifest._.server_assets) {
-							return fs.readFileSync(from_fs(file));
-						}
+				// fallback to our own server if the adapter doesn't provide one
+				if (!adapter_dev) {
+					const rendered = await server.respond(request, {
+						getClientAddress: () => {
+							const { remoteAddress } = req.socket;
+							if (remoteAddress) return remoteAddress;
+							throw new Error('Could not determine clientAddress');
+						},
+						read: (file) => {
+							if (file in manifest._.server_assets) {
+								return fs.readFileSync(from_fs(file));
+							}
 
-						return fs.readFileSync(path.join(svelte_config.kit.files.assets, file));
-					},
-					before_handle: async (event, config, prerender, handle) => {
-						// we need to use .run because .enterWith() is not supported in Cloudflare Workers
-						// see https://blog.cloudflare.com/workers-node-js-asynclocalstorage/
-						return await async_local_storage.run({ event, config, prerender }, handle);
-					},
-					emulator
-				});
-
-				if (rendered.status === 404) {
-					// @ts-expect-error
-					serve_static_middleware.handle(req, res, () => {
-						void setResponse(res, rendered);
+							return fs.readFileSync(path.join(svelte_config.kit.files.assets, file));
+						},
+						before_handle: async (event, config, prerender, handle) => {
+							// we need to use .run because .enterWith() is not supported in Cloudflare Workers
+							// see https://blog.cloudflare.com/workers-node-js-asynclocalstorage/
+							return await async_local_storage.run({ event, config, prerender }, handle);
+						},
+						emulator
 					});
-				} else {
-					void setResponse(res, rendered);
+
+					if (rendered.status === 404) {
+						// @ts-expect-error
+						serve_static_middleware.handle(req, res, () => {
+							void setResponse(res, rendered);
+						});
+					} else {
+						void setResponse(res, rendered);
+					}
+					return;
 				}
+
+				next();
 			} catch (e) {
 				const error = coalesce_to_error(e);
 				res.statusCode = 500;

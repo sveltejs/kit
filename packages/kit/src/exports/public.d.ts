@@ -23,6 +23,7 @@ import {
 import { BuildData, SSRNodeLoader, SSRRoute, ValidatedConfig } from 'types';
 import { SvelteConfig } from '@sveltejs/vite-plugin-svelte';
 import { StandardSchemaV1 } from '@standard-schema/spec';
+import { Plugin } from 'vite';
 import {
 	RouteId as AppRouteId,
 	LayoutParams as AppLayoutParams,
@@ -68,6 +69,13 @@ export interface Adapter {
 	 * during dev, build and prerendering.
 	 */
 	emulate?: () => MaybePromise<Emulator>;
+	vite?: {
+		/**
+		 * If any of the provided Vite plugins include the `configureServer` or `configurePreviewServer` hooks, it is expected for them to respond to requests using the adapter's build output.
+		 * @since 3.0.0
+		 */
+		plugins?: Plugin[];
+	};
 }
 
 export type LoadProperties<input extends Record<string, any> | void> = input extends void
