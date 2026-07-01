@@ -1,3 +1,7 @@
+/** @import { AfterNavigate } from '@sveltejs/kit' */
+/** @import { Fork } from 'svelte' */
+/** @import { CSRPageNodeLoader } from 'types' */
+/** @import { NavigationFinished, NavigationIntent, NavigationResult, SvelteKitApp } from './types.js' */
 import { DEV } from 'esm-env';
 import * as svelte from 'svelte';
 import { base } from '$app/paths/internal/client';
@@ -21,7 +25,7 @@ import {
  */
 export const preload_tokens = new Set();
 
-/** @typedef {(typeof PRELOAD_PRIORITIES)['hover'] | (typeof PRELOAD_PRIORITIES)['tap']} PreloadDataPriority */
+/** @typedef {typeof PRELOAD_PRIORITIES[keyof Omit<PRELOAD_PRIORITIES, 'eager' | 'viewport'>]} PreloadDataPriority */
 
 /**
  * The anchor element whose href is being preloaded. It is reset after navigation
@@ -40,10 +44,10 @@ export function set_current_a(element) {
 
 /**
  * @param {HTMLElement} container
- * @param {import('./types.js').SvelteKitApp} app
- * @param {Set<(navigation: import('@sveltejs/kit').AfterNavigate) => void>} after_navigate_callbacks
+ * @param {SvelteKitApp} app
+ * @param {Set<(navigation: AfterNavigate) => void>} after_navigate_callbacks
  */
-export function setup(container, app, after_navigate_callbacks) {
+export function setup_preload(container, app, after_navigate_callbacks) {
 	/** @type {number} */
 	let mousemove_timeout;
 	/** @type {PreloadDataPriority} */
@@ -153,14 +157,16 @@ export function setup(container, app, after_navigate_callbacks) {
 	after_navigate();
 }
 
-/** @type {{id: string, token: {}, promise: Promise<import('./types.js').NavigationResult>, fork: Promise<import('svelte').Fork | null> | null} | null} */
+/** @typedef {{ id: string, token: {}, promise: Promise<NavigationResult>, fork: Promise<Fork | null> | null } | null} LoadCache */
+
+/** @type {LoadCache} */
 let load_cache = null;
 
 export function get_load_cache() {
 	return load_cache;
 }
 
-/** @param {{id: string, token: {}, promise: Promise<import('./types.js').NavigationResult>, fork: Promise<import('svelte').Fork | null> | null} | null} cache */
+/** @param {LoadCache} cache */
 export function set_load_cache(cache) {
 	load_cache = cache;
 }
@@ -171,7 +177,7 @@ export function discard_load_cache() {
 	set_current_a(undefined);
 }
 
-/** @param {import('./types.js').NavigationIntent} intent */
+/** @param {NavigationIntent} intent */
 export async function _preload_data(intent) {
 	// Reuse the existing pending preload if it's for the same navigation.
 	// Prevents an edge case where same preload is triggered multiple times,
@@ -230,7 +236,7 @@ export async function _preload_code(url) {
 
 	if (route) {
 		await Promise.all(
-			/** @type {[has_server_load: boolean, node_loader: import('types').CSRPageNodeLoader][]} */ (
+			/** @type {[has_server_load: boolean, node_loader: CSRPageNodeLoader][]} */ (
 				[...route.layouts, route.leaf].filter(Boolean)
 			).map((load) => load[1]())
 		);
@@ -238,8 +244,8 @@ export async function _preload_code(url) {
 }
 
 /**
- * @param {Omit<import('./types.js').NavigationFinished['state'], 'branch'> & { error: App.Error; status: number; }} opts
- * @returns {import('./types.js').NavigationFinished}
+ * @param {Omit<NavigationFinished['state'], 'branch'> & { error: App.Error; status: number; }} opts
+ * @returns {NavigationFinished}
  */
 export function preload_error({ error, status, url, route, params }) {
 	// we skipped loading the error page, so we need to use the current page

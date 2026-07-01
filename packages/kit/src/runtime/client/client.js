@@ -59,7 +59,7 @@ import { page, update, navigating } from './state.svelte.js';
 import { add_data_suffix, add_resolution_suffix } from '../pathname.js';
 import { noop_span } from '../telemetry/noop.js';
 import { read_ndjson } from './ndjson.js';
-import { set_current_a } from './preload.js';
+import { _preload_code, _preload_data, set_current_a, setup_preload } from './preload.js';
 
 export { load_css };
 const ICON_REL_ATTRIBUTES = new Set(['icon', 'shortcut icon', 'apple-touch-icon']);
@@ -2248,8 +2248,7 @@ export async function preloadData(href) {
 		throw new Error(`Attempted to preload a URL that does not belong to this app: ${url}`);
 	}
 
-	preload ??= await import('./preload.js');
-	const result = await preload._preload_data(intent);
+	const result = await _preload_data(intent);
 	if (result.type === 'redirect') {
 		return {
 			type: result.type,
@@ -2313,8 +2312,7 @@ export async function preloadCode(pathname) {
 		}
 	}
 
-	preload ??= await import('./preload.js');
-	return preload._preload_code(url);
+	return _preload_code(url);
 }
 
 /**
@@ -2523,8 +2521,7 @@ async function _start_router() {
 
 	// @ts-expect-error this isn't available on Firefox and Safari yet
 	if (!navigator.connection?.saveData) {
-		preload ??= await import('./preload.js');
-		preload.setup(container, app, after_navigate_callbacks);
+		setup_preload(container, app, after_navigate_callbacks);
 	}
 
 	/** @param {MouseEvent} event */
