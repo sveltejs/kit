@@ -291,10 +291,8 @@ declare module '@sveltejs/kit' {
 		 * ```
 		 *
 		 * Note the use of `headers.getSetCookie()`, which returns an array of cookie headers, _not_ `headers.get('set-cookie')` which returns a single comma-separated string.
-		 *
-		 * @param header A valid `Set-Cookie` header
 		 */
-		parse: (header: string) => import('cookie').SetCookie;
+		parse: typeof import('cookie').parseSetCookie;
 
 		/**
 		 * Serialize a cookie name-value pair into a `Set-Cookie` header string, but don't apply it to the response.
