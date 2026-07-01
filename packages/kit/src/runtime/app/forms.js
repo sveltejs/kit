@@ -33,6 +33,10 @@ export { applyAction };
  * @returns {import('@sveltejs/kit').ActionResult<Success, Failure>}
  */
 export function deserialize(result) {
+	if (result === '') {
+		return { type: 'success', status: 204, data: undefined };
+	}
+
 	const parsed = JSON.parse(result);
 
 	if (parsed.data) {
