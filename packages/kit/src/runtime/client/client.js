@@ -59,7 +59,17 @@ import { page, update, navigating } from './state.svelte.js';
 import { add_data_suffix, add_resolution_suffix } from '../pathname.js';
 import { noop_span } from '../telemetry/noop.js';
 import { read_ndjson } from './ndjson.js';
-import { _preload_code, _preload_data, set_current_a, setup_preload } from './preload.js';
+import {
+	_preload_code,
+	_preload_data,
+	discard_load_cache,
+	get_load_cache,
+	preload_error,
+	preload_tokens,
+	set_current_a,
+	set_load_cache,
+	setup_preload
+} from './preload.js';
 
 export { load_css };
 const ICON_REL_ATTRIBUTES = new Set(['icon', 'shortcut icon', 'apple-touch-icon']);
@@ -423,7 +433,7 @@ async function _invalidate(include_load_functions = true, reset_page_state = tru
 	// Also solves an edge case where a preload is triggered, the navigation for it
 	// was then triggered and is still running while the invalidation kicks in,
 	// at which point the invalidation should take over and "win".
-	preload?.discard_load_cache();
+	discard_load_cache();
 
 	// Rerun queries
 	/** @type {Map<string, Promise<void>>} */
@@ -537,7 +547,7 @@ export async function _goto(url, options, redirect_count, nav_token, intent) {
 	// Clear preload cache when invalidateAll is true to ensure fresh data
 	// after form submissions or explicit invalidations
 	if (options.invalidateAll) {
-		preload?.discard_load_cache();
+		discard_load_cache();
 	}
 
 	await navigate({
@@ -1095,11 +1105,10 @@ function diff_search_params(old_url, new_url) {
  * @returns {Promise<import('./types.js').NavigationResult | undefined>}
  */
 export async function load_route({ id, invalidating, url, params, route, preload_token }) {
-	const load_cache = preload?.get_load_cache();
+	const load_cache = get_load_cache();
 	if (load_cache?.id === id) {
 		// the preload becomes the real navigation
-		// @ts-expect-error TS is too dumb to know that preload is defined if load_cache is also defined
-		preload.preload_tokens.delete(load_cache.token);
+		preload_tokens.delete(load_cache.token);
 		return load_cache.promise;
 	}
 
@@ -1153,8 +1162,8 @@ export async function load_route({ id, invalidating, url, params, route, preload
 
 				const status = get_status(error);
 
-				if (preload_token && preload?.preload_tokens.has(preload_token)) {
-					return preload.preload_error({ error: handled_error, status, url, params, route });
+				if (preload_token && preload_tokens.has(preload_token)) {
+					return preload_error({ error: handled_error, status, url, params, route });
 				}
 
 				return load_root_error_page({
@@ -1246,8 +1255,8 @@ export async function load_route({ id, invalidating, url, params, route, preload
 
 				let status = get_status(err);
 
-				if (preload_token && preload?.preload_tokens.has(preload_token)) {
-					return preload.preload_error({
+				if (preload_token && preload_tokens.has(preload_token)) {
+					return preload_error({
 						error: await handle_error(err, { params, url, route: { id: route.id } }),
 						status,
 						url,
@@ -1800,22 +1809,18 @@ async function navigate({
 		}
 	}
 
-	/** @type {Promise<svelte.Fork | null> | null | undefined} */
-	let load_cache_fork;
-	if (preload) {
-		const load_cache = preload.get_load_cache();
+	const load_cache = get_load_cache();
 
-		// also compare ids to avoid using wrong fork (e.g. a new one could've been added while navigating)
-		load_cache_fork = intent && load_cache?.id === intent.id ? load_cache.fork : null;
+	// also compare ids to avoid using wrong fork (e.g. a new one could've been added while navigating)
+	const load_cache_fork = intent && load_cache?.id === intent.id ? load_cache.fork : null;
 
-		// reset preload synchronously after the history state has been set to avoid race conditions
-		if (load_cache?.fork && !load_cache_fork) {
-			// discard fork of different route
-			preload.discard_load_cache();
-		} else {
-			preload.set_load_cache(null);
-			set_current_a(undefined);
-		}
+	// reset preload synchronously after the history state has been set to avoid race conditions
+	if (load_cache?.fork && !load_cache_fork) {
+		// discard fork of different route
+		discard_load_cache();
+	} else {
+		set_load_cache(null);
+		set_current_a(undefined);
 	}
 
 	navigation_result.props.page.state = state;
@@ -2473,9 +2478,6 @@ export async function set_nearest_error_page(error, status = 500) {
 	}
 }
 
-/** @type {ReturnType<typeof setup_preload> | undefined} */
-let preload;
-
 function _start_router() {
 	history.scrollRestoration = 'manual';
 
@@ -2524,7 +2526,7 @@ function _start_router() {
 		// @ts-expect-error this isn't available on Firefox and Safari yet
 		!navigator.connection?.saveData
 	) {
-		preload = setup_preload(container, app, after_navigate_callbacks);
+		setup_preload(container, app, after_navigate_callbacks);
 	}
 
 	/** @param {MouseEvent} event */

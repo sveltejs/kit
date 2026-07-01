@@ -28,7 +28,7 @@ let load_cache = null;
  * handling logic (for example reloading) is skipped.
  * @type {Set<object>}
  */
-const preload_tokens = new Set();
+export const preload_tokens = new Set();
 
 /** @typedef {typeof PRELOAD_PRIORITIES[keyof Omit<PRELOAD_PRIORITIES, 'eager' | 'viewport'>]} PreloadDataPriority */
 
@@ -160,51 +160,43 @@ export function setup_preload(container, app, after_navigate_callbacks) {
 
 	after_navigate_callbacks.add(after_navigate);
 	after_navigate();
+}
 
-	const get_load_cache = () => {
-		return load_cache;
-	};
+export function get_load_cache() {
+	return load_cache;
+}
 
-	/** @param {LoadCache} cache */
-	const set_load_cache = (cache) => {
-		load_cache = cache;
-	};
+/** @param {LoadCache} cache */
+export function set_load_cache(cache) {
+	load_cache = cache;
+}
 
-	/**
-	 * @param {Omit<NavigationFinished['state'], 'branch'> & { error: App.Error; status: number; }} opts
-	 * @returns {NavigationFinished}
-	 */
-	const preload_error = ({ error, status, url, route, params }) => {
-		// we skipped loading the error page, so we need to use the current page
-		// store, but we still pass the updated status to the preloadData function
-		const new_page = clone_page(page);
-		new_page.status = status;
-		return {
-			type: 'loaded',
-			state: {
-				error,
-				url,
-				route,
-				params,
-				branch: []
-			},
-			props: {
-				page: new_page,
-				constructors: []
-			}
-		};
-	};
-
+/**
+ * @param {Omit<NavigationFinished['state'], 'branch'> & { error: App.Error; status: number; }} opts
+ * @returns {NavigationFinished}
+ */
+export function preload_error({ error, status, url, route, params }) {
+	// we skipped loading the error page, so we need to use the current page
+	// store, but we still pass the updated status to the preloadData function
+	const new_page = clone_page(page);
+	new_page.status = status;
 	return {
-		get_load_cache,
-		set_load_cache,
-		discard_load_cache,
-		preload_error,
-		preload_tokens
+		type: 'loaded',
+		state: {
+			error,
+			url,
+			route,
+			params,
+			branch: []
+		},
+		props: {
+			page: new_page,
+			constructors: []
+		}
 	};
 }
 
-function discard_load_cache() {
+export function discard_load_cache() {
 	void load_cache?.fork?.then((f) => f?.discard());
 	load_cache = null;
 	set_current_a(undefined);
