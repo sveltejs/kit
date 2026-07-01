@@ -1246,14 +1246,12 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 				server_data = await load_data(url, invalid_server_nodes);
 			} catch (error) {
 				const handled_error = await handle_error(error, { url, params, route: { id } });
-				const status = handled_error.status;
 
 				if (preload && preload_tokens.has(preload)) {
 					return preload_error({ error: handled_error, url, params, route });
 				}
 
 				return load_root_error_page({
-					status,
 					error: handled_error,
 					url,
 					route
@@ -1436,14 +1434,13 @@ async function load_nearest_error_page(i, branch, errors) {
 
 /**
  * @param {{
- *   status: number;
  *   error: App.Error;
  *   url: URL;
  *   route: { id: string | null }
  * }} opts
  * @returns {Promise<import('./types.js').NavigationFinished | undefined>} returns `undefined` in case of a redirect
  */
-async function load_root_error_page({ status, error, url, route }) {
+async function load_root_error_page({ error, url, route }) {
 	/** @type {Record<string, string>} */
 	const params = {}; // error page does not have params
 
@@ -1504,7 +1501,7 @@ async function load_root_error_page({ status, error, url, route }) {
 			url,
 			params,
 			branch: [root_layout, root_error],
-			status,
+			status: error.status,
 			error,
 			errors: [],
 			route: null
@@ -1841,7 +1838,6 @@ async function navigate({
 		}
 
 		navigation_result = await load_root_error_page({
-			status: 500,
 			error: await handle_error(new Error('Redirect loop'), {
 				url,
 				params: {},
@@ -2073,7 +2069,6 @@ async function server_fallback(url, route, error, replace_state) {
 		// We would reload the same page we're currently on, which isn't hydrated,
 		// which means no SSR, which means we would end up in an endless loop
 		return await load_root_error_page({
-			status: error.status,
 			error,
 			url,
 			route
@@ -3109,7 +3104,6 @@ async function _hydrate(
 		const handled_error = await handle_error(error, { url, params, route });
 
 		result = await load_root_error_page({
-			status: handled_error.status,
 			error: handled_error,
 			url,
 			route
