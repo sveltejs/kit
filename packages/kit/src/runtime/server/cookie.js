@@ -173,7 +173,7 @@ export function get_cookies(request, url) {
 				const index = pair.indexOf('=');
 
 				const key = (index === -1 ? pair : pair.slice(0, index)).trim().toLowerCase();
-				const value = index === -1 ? undefined : pair.slice(index + 1).trim();
+				const value = index === -1 ? '' : pair.slice(index + 1).trim();
 
 				switch (key) {
 					case 'expires': {
@@ -203,7 +203,7 @@ export function get_cookies(request, url) {
 					}
 
 					case 'samesite': {
-						if (value === undefined) {
+						if (value === '') {
 							cookie.sameSite = 'strict';
 						} else {
 							const lower = value.toLowerCase();
