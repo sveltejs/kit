@@ -17,7 +17,8 @@ import {
 	build_path_string,
 	normalize_issue,
 	serialize_binary_form,
-	BINARY_FORM_CONTENT_TYPE
+	BINARY_FORM_CONTENT_TYPE,
+	deep_get
 } from '../../form-utils.js';
 
 /**
@@ -607,13 +608,12 @@ export function form(id) {
 						(path, value) => {
 							if (path.length === 0) {
 								input = value;
-							} else {
+							} else if (value !== deep_get(input, path)) {
 								deep_set(input, path.map(String), value);
 
 								const key = build_path_string(path);
 
 								if (element) {
-									// TODO only if the value actually changed
 									touched[key] = true;
 									dirty[key] = true;
 									can_validate[key] = true;
