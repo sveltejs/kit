@@ -274,11 +274,19 @@ declare module '@sveltejs/kit' {
 		 * Parses a single `Set-Cookie` header. This allows you to apply cookies received from an external source:
 		 *
 		 * ```js
-		 * const response = await fetch('...');
+		 * import { getRequestEvent } from '$app/server';
 		 *
-		 * for (const str of response.headers.getSetCookie()) {
-		 * 	const { name, value, ...options } = cookies.parse(str);
-		 * 	cookies.set(name, value, { ...options, path: '/' });
+		 * export function GET() {
+		 * 	const { cookies } = getRequestEvent();
+		 *
+		 * 	const response = await fetch('...');
+		 *
+		 * 	for (const str of response.headers.getSetCookie()) {
+		 * 		const { name, value, ...options } = cookies.parse(str);
+		 * 		cookies.set(name, value, { ...options, path: '/' });
+		 * 	}
+		 *
+		 * 	// ...
 		 * }
 		 * ```
 		 *
