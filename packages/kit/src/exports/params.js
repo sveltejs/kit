@@ -49,9 +49,7 @@ export function normalize_param_definition(definition) {
 								typeof result !== 'boolean' &&
 								typeof result !== 'bigint'
 							) {
-								throw new Error(
-									'Param matcher must return a string, number, boolean, or bigint'
-								);
+								throw new Error('Param matcher must return a string, number, boolean, or bigint');
 							}
 
 							return { value: result };
