@@ -33,7 +33,6 @@ export { VERSION } from '../version.js';
  * @return {never}
  * @throws {import('./public.js').HttpError} This error instructs SvelteKit to initiate HTTP error handling.
  * @throws {Error} If the provided status is invalid (not between 400 and 599).
- * @deprecated Passing an `App.Error` body as the second argument is deprecated — pass the `message` as the second argument, and any additional properties as the third
  */
 /**
  * Throws an error with a HTTP status code and an optional message.
