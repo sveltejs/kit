@@ -11,6 +11,7 @@ import {
 	strip_resolution_suffix
 } from '../runtime/pathname.js';
 import { text_encoder } from '../runtime/utils.js';
+import { validate_redirect_location } from '../utils/url.js';
 
 export { VERSION } from '../version.js';
 
@@ -92,19 +93,23 @@ export function isHttpError(e, status) {
  *
  * @param {300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308 | ({} & number)} status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#redirection_messages). Must be in the range 300-308.
  * @param {string | URL} location The location to redirect to.
+ * @param {{ external?: boolean | string[] }} [options] To redirect to an external URL, you must pass `{ external: true }` to allow any external URL except `javascript:` URLs, or `{ external: [...] }` with an allowlist of permitted origins.
  * @throws {import('./public.js').Redirect} This error instructs SvelteKit to redirect to the specified location.
- * @throws {Error} If the provided status is invalid or the location cannot be used as a header value.
+ * @throws {Error} If the provided status is invalid, the location cannot be used as a header value, or the location is an external URL without permission.
  * @return {never}
  */
-export function redirect(status, location) {
+export function redirect(status, location, options) {
 	if ((!BROWSER || DEV) && (isNaN(status) || status < 300 || status > 308)) {
 		throw new Error('Invalid status code');
 	}
 
+	const href = location.toString();
+	validate_redirect_location(href, options);
+
 	throw new Redirect(
 		// @ts-ignore
 		status,
-		location.toString()
+		href
 	);
 }
 
