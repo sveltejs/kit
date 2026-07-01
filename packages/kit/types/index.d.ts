@@ -2192,7 +2192,7 @@ declare module '@sveltejs/kit' {
 		get result(): Output | undefined;
 		/** The number of pending submissions */
 		get pending(): number;
-		/** True if the form has been submitted at least once */
+		/** True if the form has been submitted at least once, and hasn't been reset since */
 		get submitted(): boolean;
 		/** Access form fields using object notation */
 		fields: RemoteFormFieldsRoot<Input>;
