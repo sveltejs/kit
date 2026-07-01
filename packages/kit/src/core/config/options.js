@@ -298,7 +298,8 @@ export const options = object(
 
 			router: object({
 				type: list(['pathname', 'hash']),
-				resolution: list(['client', 'server'])
+				resolution: list(['client', 'server']),
+				linkOptionPreload: boolean(true)
 			}),
 
 			serviceWorker: object({

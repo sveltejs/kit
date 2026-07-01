@@ -97,7 +97,8 @@ const get_defaults = (prefix = '') => ({
 		outDir: join(prefix, '.svelte-kit'),
 		router: {
 			type: 'pathname',
-			resolution: 'client'
+			resolution: 'client',
+			preload: true
 		},
 		serviceWorker: {
 			options: undefined,

@@ -469,7 +469,8 @@ function kit({ svelte_config }) {
 					__SVELTEKIT_SERVER_TRACING_ENABLED__: s(kit.experimental.tracing.server),
 					__SVELTEKIT_EXPERIMENTAL_USE_TRANSFORM_ERROR__: s(kit.experimental.handleRenderingErrors),
 					__SVELTEKIT_ROOT__: s(root),
-					__SVELTEKIT_DEV__: s(!is_build)
+					__SVELTEKIT_DEV__: s(!is_build),
+					__SVELETEKIT_LINK_OPTION_PRELOAD__: s(kit.router.linkOptionPreload)
 				};
 
 				if (is_build) {

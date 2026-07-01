@@ -2519,8 +2519,11 @@ function _start_router() {
 		}
 	});
 
-	// @ts-expect-error this isn't available on Firefox and Safari yet
-	if (!navigator.connection?.saveData) {
+	if (
+		__SVELETEKIT_LINK_OPTION_PRELOAD__ &&
+		// @ts-expect-error this isn't available on Firefox and Safari yet
+		!navigator.connection?.saveData
+	) {
 		preload = setup_preload(container, app, after_navigate_callbacks);
 	}
 

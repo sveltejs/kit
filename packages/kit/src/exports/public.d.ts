@@ -843,6 +843,13 @@ export interface KitConfig {
 		 * @since 2.17.0
 		 */
 		resolution?: 'client' | 'server';
+		/**
+		 * Whether the client should monitor the page for [link options](https://svelte.dev/docs/kit/performance#Navigation-Preloading) that preload code or data.
+		 *
+		 * @default true
+		 * @since 3.0.0
+		 */
+		linkOptionPreload?: boolean;
 	};
 	serviceWorker?: {
 		/**

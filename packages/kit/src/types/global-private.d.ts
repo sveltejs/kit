@@ -53,6 +53,7 @@ declare global {
 	 * for the SSR manifest during development
 	 */
 	const __SVELTEKIT_ROOT__: string;
+	const __SVELETEKIT_LINK_OPTION_PRELOAD__: boolean;
 	/**
 	 * This makes the use of specific features visible at both dev and build time, in such a
 	 * way that we can error when they are not supported by the target platform.
