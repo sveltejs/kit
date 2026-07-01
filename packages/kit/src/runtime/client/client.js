@@ -1382,7 +1382,7 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 						route
 					});
 				} else {
-					return await server_fallback(url, { id: route.id }, error, error.status);
+					return await server_fallback(url, { id: route.id }, error);
 				}
 			}
 		} else {
@@ -1790,7 +1790,6 @@ async function navigate({
 							route: { id: null }
 						}
 					),
-					404,
 					replace_state
 				);
 			} else {
@@ -1805,7 +1804,6 @@ async function navigate({
 					params: {},
 					route: { id: null }
 				}),
-				404,
 				replace_state
 			);
 		}
@@ -2067,23 +2065,22 @@ async function navigate({
  * @param {URL} url
  * @param {{ id: string | null }} route
  * @param {App.Error} error
- * @param {number} status
  * @param {boolean} [replace_state]
  * @returns {Promise<import('./types.js').NavigationFinished | undefined>}
  */
-async function server_fallback(url, route, error, status, replace_state) {
+async function server_fallback(url, route, error, replace_state) {
 	if (url.origin === origin && url.pathname === location.pathname && !hydrated) {
 		// We would reload the same page we're currently on, which isn't hydrated,
 		// which means no SSR, which means we would end up in an endless loop
 		return await load_root_error_page({
-			status,
+			status: error.status,
 			error,
 			url,
 			route
 		});
 	}
 
-	if (DEV && status !== 404) {
+	if (DEV && error.status !== 404) {
 		console.error(
 			'An error occurred while loading the page. This will cause a full page reload. (This message will only appear during development.)'
 		);
