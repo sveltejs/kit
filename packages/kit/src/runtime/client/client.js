@@ -1,4 +1,5 @@
 /** @import { RemoteFunctionDataNode, ServerNodesResponse, ServerRedirectNode } from 'types' */
+/** @import { NavigationIntent } from './types.js' */
 /** @import { CacheEntry } from './remote-functions/cache.svelte.js' */
 /** @import { Query } from './remote-functions/query/instance.svelte.js' */
 /** @import { LiveQuery } from './remote-functions/query-live/instance.svelte.js' */
@@ -24,7 +25,7 @@ import {
 	create_updated_store,
 	load_css
 } from './utils.js';
-import { base } from '$app/paths';
+import { base } from '$app/paths/internal/client';
 import * as devalue from 'devalue';
 import {
 	HISTORY_INDEX,
@@ -84,8 +85,6 @@ const snapshots = storage.get(SNAPSHOT_KEY) ?? {};
 if (DEV && BROWSER) {
 	let warned = false;
 
-	const current_module_url = import.meta.url.split('?')[0]; // remove query params that vite adds to the URL when it is loaded from node_modules
-
 	const warn = () => {
 		if (warned) return;
 
@@ -94,9 +93,13 @@ if (DEV && BROWSER) {
 		let stack = new Error().stack?.split('\n');
 		if (!stack) return;
 		if (!stack[0].includes('https:') && !stack[0].includes('http:')) stack = stack.slice(1); // Chrome includes the error message in the stack
-		stack = stack.slice(2); // remove `warn` and the place where `warn` was called
-		// Can be falsy if was called directly from an anonymous function
-		if (stack[0]?.includes(current_module_url)) return;
+
+		// skip over `warn` and the place where `warn` was called
+		const frame = stack[2];
+
+		// ignore calls that happen inside dependencies, including SvelteKit.
+		// `frame` can be falsy if we came from an anonymous function
+		if (frame?.includes('node_modules')) return;
 
 		warned = true;
 
@@ -182,7 +185,7 @@ async function update_service_worker() {
 	}
 }
 
-/** @type {import('types').CSRRoute[]} All routes of the app. Only available when kit.router.resolution=client */
+/** @type {import('types').CSRRoute[]} All routes of the app. Only available when router.resolution=client */
 let routes;
 /** @type {import('types').CSRPageNodeLoader} */
 let default_layout_loader;
@@ -287,8 +290,17 @@ let current_history_index;
 /** @type {number} */
 let current_navigation_index;
 
-/** @type {{}} */
-let token;
+/** @type {{}} Token for the latest navigation. Updated on new navigations */
+let navigation_token;
+
+/**
+ * @type {{}}
+ * The latest invalidate(All) token. Superseeded by both later invalidate(All)s and navigations.
+ * This is separate to navigation_token because an invalidate(All) might be triggered while a navigation
+ * is in progress, and we want to be able to finish this navigation (unless the invalidation finishes before
+ * it and redirects, in which case we will do the redirect triggered by the invalidation).
+ */
+let invalidation_token;
 
 /**
  * A set of tokens which are associated to current preloads.
@@ -414,7 +426,9 @@ async function _invalidate(include_load_functions = true, reset_page_state = tru
 	if (!pending_invalidate) return;
 	pending_invalidate = null;
 
-	const nav_token = (token = {});
+	const token = (invalidation_token = {});
+	const nav_token = navigation_token;
+	const navigating = is_navigating;
 	const intent = await get_navigation_intent(current.url, true);
 
 	// Clear preload, it might be affected by the invalidation.
@@ -446,15 +460,23 @@ async function _invalidate(include_load_functions = true, reset_page_state = tru
 	if (include_load_functions) {
 		const prev_state = page.state;
 		const navigation_result = intent && (await load_route(intent));
-		if (!navigation_result || nav_token !== token) return;
+		if (!navigation_result || token !== invalidation_token || nav_token !== navigation_token) {
+			return;
+		}
 
 		if (navigation_result.type === 'redirect') {
 			return _goto(
 				new URL(navigation_result.location, current.url).href,
 				{ replaceState: true },
 				1,
-				nav_token
+				token
 			);
+		}
+
+		// A navigation started before the invalidation and ended before it finished. The invalidation did not redirect,
+		// hence it likely contains outdated data now, so we ignore it.
+		if (navigating && !is_navigating) {
+			return;
 		}
 
 		// This is a bit hacky but allows us not having to pass that boolean around, making things harder to reason about
@@ -523,9 +545,10 @@ function persist_state() {
  * @param {{ replaceState?: boolean; noScroll?: boolean; keepFocus?: boolean; invalidateAll?: boolean; invalidate?: Array<string | URL | ((url: URL) => boolean)>; state?: Record<string, any> }} options
  * @param {number} redirect_count
  * @param {{}} [nav_token]
+ * @param {NavigationIntent | undefined} [intent] navigation intent, when already known by the caller (avoids recomputing it)
  * @returns {Promise<void>}
  */
-export async function _goto(url, options, redirect_count, nav_token) {
+export async function _goto(url, options, redirect_count, nav_token, intent) {
 	/** @type {Set<string>} */
 	let query_keys;
 	/** @type {Set<string>} */
@@ -546,6 +569,7 @@ export async function _goto(url, options, redirect_count, nav_token) {
 		state: options.state,
 		redirect_count,
 		nav_token,
+		intent,
 		accept: () => {
 			if (options.invalidateAll) {
 				force_invalidation = true;
@@ -1143,10 +1167,14 @@ function diff_search_params(old_url, new_url) {
 }
 
 /**
- * @param {Omit<import('./types.js').NavigationFinished['state'], 'branch'> & { error: App.Error }} opts
+ * @param {Omit<import('./types.js').NavigationFinished['state'], 'branch'> & { error: App.Error; status: number }} opts
  * @returns {import('./types.js').NavigationFinished}
  */
-function preload_error({ error, url, route, params }) {
+function preload_error({ error, status, url, route, params }) {
+	// we skipped loading the error page, so we need to use the current page
+	// store, but we still pass the updated status to the preloadData function
+	const new_page = clone_page(page);
+	new_page.status = status;
 	return {
 		type: 'loaded',
 		state: {
@@ -1157,7 +1185,7 @@ function preload_error({ error, url, route, params }) {
 			branch: []
 		},
 		props: {
-			page: clone_page(page),
+			page: new_page,
 			constructors: []
 		}
 	};
@@ -1232,12 +1260,14 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 			} catch (error) {
 				const handled_error = await handle_error(error, { url, params, route: { id } });
 
+				const status = get_status(error);
+
 				if (preload && preload_tokens.has(preload)) {
-					return preload_error({ error: handled_error, url, params, route });
+					return preload_error({ error: handled_error, status, url, params, route });
 				}
 
 				return load_root_error_page({
-					status: get_status(error),
+					status,
 					error: handled_error,
 					url,
 					route
@@ -1280,7 +1310,7 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 
 		if (server_data_node?.type === 'error') {
 			// rethrow and catch below
-			throw server_data_node;
+			throw new HttpError(server_data_node.status ?? 500, server_data_node.error);
 		}
 
 		return load_node({
@@ -1318,20 +1348,23 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 				if (err instanceof Redirect) {
 					return {
 						type: 'redirect',
+						status: err.status,
 						location: err.location
 					};
 				}
 
+				let status = get_status(err);
+
 				if (preload && preload_tokens.has(preload)) {
 					return preload_error({
 						error: await handle_error(err, { params, url, route: { id: route.id } }),
+						status,
 						url,
 						params,
 						route
 					});
 				}
 
-				let status = get_status(err);
 				/** @type {App.Error} */
 				let error;
 
@@ -1697,7 +1730,8 @@ function _before_navigate({ url, type, intent, delta, event, scroll }) {
  *   nav_token?: {};
  *   accept?: () => void;
  *   block?: () => void;
- *   event?: Event
+ *   event?: Event;
+ *   intent?: NavigationIntent | undefined
  * }} opts
  * @returns {Promise<void>}
  */
@@ -1713,12 +1747,14 @@ async function navigate({
 	nav_token = {},
 	accept = noop,
 	block = noop,
-	event
+	event,
+	intent
 }) {
-	const prev_token = token;
-	token = nav_token;
+	const prev_token = navigation_token;
+	const prev_invalidation_token = invalidation_token;
+	navigation_token = invalidation_token = nav_token;
 
-	const intent = await get_navigation_intent(url, false);
+	intent ??= await get_navigation_intent(url, false);
 	const nav =
 		type === 'enter'
 			? create_navigation(current, intent, url, type)
@@ -1734,7 +1770,8 @@ async function navigate({
 
 	if (!nav) {
 		block();
-		if (token === nav_token) token = prev_token;
+		if (navigation_token === nav_token) navigation_token = prev_token;
+		if (invalidation_token === nav_token) invalidation_token = prev_invalidation_token;
 		return;
 	}
 
@@ -1798,7 +1835,7 @@ async function navigate({
 	url = intent?.url || url;
 
 	// abort if user navigated during update
-	if (token !== nav_token) {
+	if (navigation_token !== nav_token) {
 		nav.reject(new Error('navigation aborted'));
 		return;
 	}
@@ -1977,7 +2014,7 @@ async function navigate({
 	await svelte.tick();
 	await svelte.tick();
 
-	if (token !== nav_token) {
+	if (navigation_token !== nav_token) {
 		// a new navigation happened while we were waiting for the DOM to update, so abort
 		nav.reject(new Error('navigation aborted'));
 		return;
@@ -2305,9 +2342,11 @@ export function disableScrollHandling() {
  * Allows you to navigate programmatically to a given route, with options such as keeping the current element focused.
  * Returns a Promise that resolves when SvelteKit navigates (or fails to navigate, in which case the promise rejects) to the specified `url`.
  *
- * For external URLs, use `window.location = url` instead of calling `goto(url)`.
+ * `goto` is intended for navigations to routes that belong to the app.
+ * If the URL does not resolve to a route within the app, the returned promise will reject.
+ * For external URLs, use `window.location = url` to perform a full-page navigation instead of calling `goto(url)`.
  *
- * @param {string | URL} url Where to navigate to. Note that if you've set [`config.kit.paths.base`](https://svelte.dev/docs/kit/configuration#paths) and the URL is root-relative, you need to prepend the base path if you want to navigate within the app.
+ * @param {string | URL} url Where to navigate to. Note that if you've set [`config.paths.base`](https://svelte.dev/docs/kit/configuration#paths) and the URL is root-relative, you need to prepend the base path if you want to navigate within the app.
  * @param {Object} [opts] Options related to the navigation
  * @param {boolean} [opts.replaceState] If `true`, will replace the current `history` entry rather than creating a new one with `pushState`
  * @param {boolean} [opts.noScroll] If `true`, the browser will maintain its scroll position rather than scrolling to the top of the page after navigation
@@ -2317,7 +2356,7 @@ export function disableScrollHandling() {
  * @param {App.PageState} [opts.state] An optional object that will be available as `page.state`
  * @returns {Promise<void>}
  */
-export function goto(url, opts = {}) {
+export async function goto(url, opts = {}) {
 	if (!BROWSER) {
 		throw new Error('Cannot call goto(...) on the server');
 	}
@@ -2325,16 +2364,24 @@ export function goto(url, opts = {}) {
 	url = new URL(resolve_url(url));
 
 	if (url.origin !== origin) {
-		return Promise.reject(
-			new Error(
-				DEV
-					? `Cannot use \`goto\` with an external URL. Use \`window.location = "${url}"\` instead`
-					: 'goto: invalid URL'
-			)
+		throw new Error(
+			DEV
+				? `Cannot use \`goto\` with an external URL. Use \`window.location = "${url}"\` instead`
+				: 'goto: invalid URL'
 		);
 	}
 
-	return _goto(url, opts, 0);
+	const intent = await get_navigation_intent(url, false);
+
+	if (!intent) {
+		throw new Error(
+			DEV
+				? `Cannot use \`goto\` with a URL that does not resolve to a route within the app. Use \`window.location = "${url}"\` instead`
+				: 'goto: invalid URL'
+		);
+	}
+
+	return _goto(url, opts, 0, {}, intent);
 }
 
 /**
@@ -2415,7 +2462,7 @@ export function refreshAll({ includeLoadFunctions = true } = {}) {
  * Returns a Promise that resolves with the result of running the new route's `load` functions once the preload is complete.
  *
  * @param {string} href Page to preload
- * @returns {Promise<{ type: 'loaded'; status: number; data: Record<string, any> } | { type: 'redirect'; location: string }>}
+ * @returns {Promise<({ type: 'loaded'; data: Record<string, any> } | { type: 'redirect'; location: string } | { type: 'error'; error: App.Error }) & { status: number; }>}
  */
 export async function preloadData(href) {
 	if (!BROWSER) {
@@ -2433,11 +2480,21 @@ export async function preloadData(href) {
 	if (result.type === 'redirect') {
 		return {
 			type: result.type,
+			status: result.status,
 			location: result.location
 		};
 	}
 
 	const { status, data } = result.props.page ?? page;
+
+	if (result.type === 'loaded' && result.state.error) {
+		return {
+			type: 'error',
+			status,
+			error: result.state.error
+		};
+	}
+
 	return { type: result.type, status, data };
 }
 
@@ -2864,7 +2921,7 @@ function _start_router() {
 
 		if (event.state?.[HISTORY_INDEX]) {
 			const history_index = event.state[HISTORY_INDEX];
-			token = {};
+			navigation_token = invalidation_token = {};
 
 			// if a popstate-driven navigation is cancelled, we need to counteract it
 			// with history.go, which means we end up back here, hence this check
@@ -2913,7 +2970,7 @@ function _start_router() {
 				block: () => {
 					history.go(-delta);
 				},
-				nav_token: token,
+				nav_token: navigation_token,
 				event
 			});
 		} else {

@@ -174,7 +174,9 @@ export function form(validate_or_fn, maybe_fn) {
 						deep_set(input, path.map(String), value);
 						(cache[''] ??= {}).input = input;
 					},
-					() => flatten_issues(get_cache(__, get_request_store().state)?.['']?.issues ?? [])
+					() => flatten_issues(get_cache(__, get_request_store().state)?.['']?.issues ?? []),
+					() => ({}),
+					[]
 				);
 			}
 		});
@@ -192,6 +194,10 @@ export function form(validate_or_fn, maybe_fn) {
 		// On the server, pending is always 0
 		Object.defineProperty(instance, 'pending', {
 			get: () => 0
+		});
+
+		Object.defineProperty(instance, 'submitted', {
+			get: () => false
 		});
 
 		Object.defineProperty(instance, 'preflight', {

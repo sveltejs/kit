@@ -2,6 +2,7 @@ import { describe, expect, test } from 'vitest';
 import {
 	BINARY_FORM_CONTENT_TYPE,
 	convert_formdata,
+	create_field_proxy,
 	deep_set,
 	deserialize_binary_form,
 	serialize_binary_form,
@@ -743,5 +744,31 @@ describe('deep_set', () => {
 		const target = { nested: value };
 		deep_set(target, ['nested', 'name'], 'hello');
 		expect(target).toEqual({ nested: { name: 'hello' } });
+	});
+});
+
+describe('create_field_proxy', () => {
+	// Regression test for https://github.com/sveltejs/kit/issues/16165
+	// Before the fix, Date values fell through to the generic object branch
+	// of deep_clone, which iterated Object.keys (empty on Date), producing
+	// an empty plain object {} instead of a Date.
+	test('value() returns a Date clone for Date fields', () => {
+		const original = new Date('2025-06-25T00:00:00Z');
+		const input = { created_at: original };
+
+		const proxy = create_field_proxy(
+			{},
+			() => input,
+			() => {},
+			() => ({}),
+			() => ({}),
+			[]
+		);
+
+		const cloned = proxy.created_at.value();
+
+		expect(cloned).toBeInstanceOf(Date);
+		expect(cloned.getTime()).toBe(original.getTime());
+		expect(cloned).not.toBe(original);
 	});
 });

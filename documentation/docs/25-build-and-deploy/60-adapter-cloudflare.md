@@ -45,9 +45,6 @@ export default defineConfig({
 });
 ```
 
-> [!LEGACY]
-> The `adapter` option was moved to the SvelteKit Vite plugin in SvelteKit 3.0.0. In earlier versions, you had to add it to the `kit` property in the `svelte.config.js` file instead.
-
 ## Options
 
 ### config

@@ -83,6 +83,7 @@ export type NavigationResult = NavigationRedirect | NavigationFinished;
 
 export type NavigationRedirect = {
 	type: 'redirect';
+	status: number;
 	location: string;
 };
 

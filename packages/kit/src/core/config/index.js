@@ -135,11 +135,12 @@ export function extract_svelte_config(vite_config) {
  * @param {Config} config
  * @returns {ValidatedConfig}
  */
-export function process_config(config, { cwd = process.cwd(), source = 'svelte.config.js' } = {}) {
+export function process_config(config, { cwd = process.cwd() } = {}) {
 	try {
 		const validated = validate_config(config, cwd);
 
 		validated.kit.outDir = path.resolve(cwd, validated.kit.outDir);
+		validated.kit.env.dir = path.resolve(cwd, validated.kit.env.dir);
 
 		for (const key in validated.kit.files) {
 			if (key === 'hooks') {
@@ -160,7 +161,7 @@ export function process_config(config, { cwd = process.cwd(), source = 'svelte.c
 		const error = /** @type {Error} */ (e);
 
 		// redact the stack trace — it's not helpful to users
-		error.stack = `Error loading ${source}: ${error.message}\n`;
+		error.stack = `Error loading SvelteKit options from Vite config: ${error.message}\n`;
 		throw error;
 	}
 }
@@ -173,7 +174,7 @@ export function process_config(config, { cwd = process.cwd(), source = 'svelte.c
 export function validate_config(config, cwd = process.cwd()) {
 	if (typeof config !== 'object') {
 		throw new Error(
-			'The Svelte config file must have a configuration object as its default export. See https://svelte.dev/docs/kit/configuration'
+			'The SvelteKit options from the Vite config must be an object. See https://svelte.dev/docs/kit/configuration'
 		);
 	}
 

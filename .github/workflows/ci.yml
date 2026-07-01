@@ -83,8 +83,6 @@ jobs:
       - run: pnpm playwright install ${{ matrix.e2e-browser }}
       - run: pnpm run sync-all
       - run: pnpm test:kit
-        env:
-          NODE_OPTIONS: ${{matrix.node-version == 22 && '--experimental-strip-types' || ''}} # allows loading svelte.config.ts
       - name: Print flaky test report
         run: node scripts/print-flaky-test-report.js
       - name: Archive test results
@@ -223,7 +221,7 @@ jobs:
       # required for testing netlify edge functions
       - uses: denoland/setup-deno@667a34cdef165d8d2b2e98dde39547c9daac7282 # v2.0.4
         with:
-          deno-version: ^2.2.4
+          deno-version: ~2.8.2 # 2.9.0 crashes when accessing `globalThis.process` with `@netlify/dev`
           cache: true
       - uses: ./.github/actions/node-setup
         with:

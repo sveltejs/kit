@@ -10,25 +10,27 @@ Remote functions are a tool for type-safe communication between client and serve
 
 Combined with Svelte's experimental support for [`await`](/docs/svelte/await-expressions), it allows you to load and manipulate data directly inside your components.
 
-This feature is currently experimental, meaning it is likely to contain bugs and is subject to change without notice. You must opt in by adding the `compilerOptions.experimental.async` and `kit.experimental.remoteFunctions` options in your `svelte.config.js`:
+This feature is currently experimental, meaning it is likely to contain bugs and is subject to change without notice. You must opt in by adding the `compilerOptions.experimental.async` and `experimental.remoteFunctions` options to the SvelteKit plugin in your `vite.config.js`:
 
 ```js
-/// file: svelte.config.js
-/** @type {import('@sveltejs/kit').Config} */
-const config = {
-	kit: {
-		experimental: {
-			+++remoteFunctions: true+++
-		}
-	},
-	compilerOptions: {
-		experimental: {
-			+++async: true+++
-		}
-	}
-};
+/// file: vite.config.js
+import { sveltekit } from '@sveltejs/kit/vite';
+import { defineConfig } from 'vite';
 
-export default config;
+export default defineConfig({
+	plugins: [
+		sveltekit({
+			experimental: {
+				+++remoteFunctions: true+++
+			},
+			compilerOptions: {
+				experimental: {
+					+++async: true+++
+				}
+			}
+		})
+	],
+});
 ```
 
 ## Overview
@@ -37,7 +39,9 @@ Remote functions are exported from a `.remote.js` or `.remote.ts` file, and come
 
 ## query
 
-The `query` function allows you to read dynamic data from the server (for _static_ data, consider using [`prerender`](#prerender) instead):
+The `query` function allows you to read dynamic data from the server.
+
+> [!NOTE] For _static_ data, consider using [`prerender`](#prerender) functions instead. Queries cannot be used when the entire page is prerendered (meaning [`export const prerender = true`](page-options#prerender) is applied to the page or a parent layout), such as when using [`adapter-static`](adapter-static).
 
 ```js
 /// file: src/routes/blog/data.remote.js
@@ -625,6 +629,8 @@ If the submitted data doesn't pass the schema, the callback will not run. Instea
 </form>
 ```
 
+If the `title` is valid, or has not yet been validated, `createPost.fields.title.issues()` will return `undefined`.
+
 You don't need to wait until the form is submitted to validate the data — you can call `validate()` programmatically, for example in an `oninput` callback (which will validate the data on every keystroke) or an `onchange` callback:
 
 ```svelte
@@ -664,6 +670,8 @@ To get a list of _all_ issues, rather than just those belonging to a single fiel
 	<p>{issue.message}</p>
 {/each}
 ```
+
+As with individual fields, `createPost.fields.allIssues()` will return `undefined` if the form as a whole is valid (or has not yet been validated).
 
 ### Getting/setting inputs
 
@@ -1147,8 +1155,6 @@ export const getPosts = prerender(async () => {
 You can use `prerender` functions on pages that are otherwise dynamic, allowing for partial prerendering of your data. This results in very fast navigation, since prerendered data can live on a CDN along with your other static assets.
 
 In the browser, prerendered data is saved using the [`Cache`](https://developer.mozilla.org/en-US/docs/Web/API/Cache) API. This cache survives page reloads, and will be cleared when the user first visits a new deployment of your app.
-
-> [!NOTE] When the entire page has `export const prerender = true`, you cannot use queries, as they are dynamic.
 
 ### Prerender arguments
 

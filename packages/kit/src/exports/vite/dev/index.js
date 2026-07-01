@@ -32,10 +32,9 @@ const vite_css_query_regex = /(?:\?|&)(?:raw|url|inline)(?:&|$)/;
  * @param {import('types').ValidatedConfig} svelte_config
  * @param {() => Array<{ hash: string, file: string }>} get_remotes
  * @param {string} root The project root directory
- * @param {import('@sveltejs/kit').Adapter | undefined} adapter
  * @return {Promise<Promise<() => void>>}
  */
-export async function dev(vite, vite_config, svelte_config, get_remotes, root, adapter) {
+export async function dev(vite, vite_config, svelte_config, get_remotes, root) {
 	/** @type {AsyncLocalStorage<{ event: RequestEvent, config: any, prerender: PrerenderOption }>} */
 	const async_local_storage = new AsyncLocalStorage();
 
@@ -43,7 +42,12 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, a
 		const context = async_local_storage.getStore();
 		if (!context || context.prerender === true) return;
 
-		check_feature(/** @type {string} */ (context.event.route.id), context.config, label, adapter);
+		check_feature(
+			/** @type {string} */ (context.event.route.id),
+			context.config,
+			label,
+			svelte_config.kit.adapter
+		);
 	};
 
 	const fetch = globalThis.fetch;
@@ -357,9 +361,6 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, a
 		}, 100);
 	};
 
-	// flag to skip watchers if server is already restarting
-	let restarting = false;
-
 	// Debounce add/unlink events because in case of folder deletion or moves
 	// they fire in rapid succession, causing needless invocations.
 	// These watchers only run for routes, param matchers, and client hooks.
@@ -368,7 +369,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, a
 	watch('change', (file) => {
 		// Don't run for a single file if the whole manifest is about to get updated
 		// Unless it's a file where the trailing slash page option might have changed
-		if (timeout || restarting || !/\+(page|layout|server).*$/.test(file)) return;
+		if (timeout || !/\+(page|layout|server).*$/.test(file)) return;
 		sync.update(svelte_config, manifest_data, file, root);
 	});
 
@@ -379,7 +380,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, a
 	// send the vite client a full-reload event without path being set
 	if (appTemplate !== 'index.html') {
 		vite.watcher.on('change', (file) => {
-			if (file === appTemplate && !restarting) {
+			if (file === appTemplate) {
 				vite.ws.send({ type: 'full-reload' });
 			}
 		});
@@ -393,17 +394,6 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, a
 			file.startsWith(hooks.server)
 		) {
 			sync.server(svelte_config, root);
-		}
-	});
-
-	vite.watcher.on('change', async (file) => {
-		// changing the svelte config requires restarting the dev server
-		// the config is only read on start and passed on to vite-plugin-svelte
-		// which needs up-to-date values to operate correctly
-		if (file.match(/[/\\]svelte\.config\.[jt]s$/)) {
-			console.log(`svelte config changed, restarting vite dev-server. changed file: ${file}`);
-			restarting = true;
-			await vite.restart();
 		}
 	});
 
@@ -442,7 +432,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, a
 	});
 
 	const env = loadEnv(vite_config.mode, svelte_config.kit.env.dir, '');
-	const emulator = await adapter?.emulate?.();
+	const emulator = await svelte_config.kit.adapter?.emulate?.();
 
 	return () => {
 		const serve_static_middleware = vite.middlewares.stack.find(

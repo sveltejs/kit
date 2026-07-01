@@ -102,12 +102,15 @@ export function form(id) {
 		let element = null;
 
 		/** @type {Record<string, boolean>} */
-		let touched = {};
+		let touched = $state({});
 
-		let submitted = false;
+		let submitted = $state(false);
 
 		/** @type {InternalRemoteFormIssue[] | null} */
 		let unread_issues = null;
+
+		/** @type {string | null} */
+		let previous_submitter_name = null;
 
 		/**
 		 * In dev, warn if there are validation issues going unread
@@ -385,6 +388,29 @@ export function form(id) {
 
 				const form_data = new FormData(form, event.submitter);
 
+				if (
+					previous_submitter_name !== null &&
+					!Array.from(form_data.keys()).map(strip_prefix).includes(previous_submitter_name)
+				) {
+					// Strip any `n:`/`b:` type prefix before clearing, otherwise
+					// `set_nested_value` would coerce `undefined` to `NaN`/`false`
+					// instead of clearing the previously-submitted value.
+					set_nested_value(input, previous_submitter_name, undefined);
+				}
+
+				if (event.submitter) {
+					const name = event.submitter.getAttribute('name');
+					const value = /** @type {any} */ (event.submitter).value;
+
+					if (name !== null && value !== undefined) {
+						set_nested_value(input, name, value);
+					}
+
+					previous_submitter_name = strip_prefix(name);
+				} else {
+					previous_submitter_name = null;
+				}
+
 				if (DEV) {
 					validate_form_data(form_data, clone(form).enctype);
 				}
@@ -423,8 +449,6 @@ export function form(id) {
 				if (is_array) name = name.slice(0, -2);
 
 				const is_file = element.type === 'file';
-
-				touched[name] = true;
 
 				if (is_array) {
 					let value;
@@ -487,7 +511,7 @@ export function form(id) {
 					);
 				}
 
-				name = name.replace(/^[nb]:/, '');
+				name = strip_prefix(name);
 
 				touched[name] = true;
 			};
@@ -498,6 +522,8 @@ export function form(id) {
 				await tick();
 
 				input = convert_formdata(new FormData(form));
+				raw_issues = [];
+				touched = {};
 			};
 
 			form.addEventListener('submit', handle_submit);
@@ -573,7 +599,9 @@ export function form(id) {
 							}
 
 							return issues;
-						}
+						},
+						() => touched,
+						[]
 					)
 			},
 			result: {
@@ -581,6 +609,9 @@ export function form(id) {
 			},
 			pending: {
 				get: () => pending_count
+			},
+			submitted: {
+				get: () => submitted
 			},
 			preflight: {
 				/** @type {RemoteForm<T, U>['preflight']} */
@@ -738,4 +769,14 @@ function validate_form_data(form_data, enctype) {
 			}
 		}
 	}
+}
+
+/**
+ * Remove the `n:` or `b:` prefix from a field name
+ * @template {string | null} T
+ * @param {T} name
+ * @returns {T}
+ */
+function strip_prefix(name) {
+	return /** @type {T} */ (name && name.replace(/^[nb]:/, ''));
 }

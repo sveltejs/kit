@@ -1,5 +1,17 @@
 # @sveltejs/adapter-node
 
+## 6.0.0-next.1
+### Major Changes
+
+
+- breaking: require `vite@^8.0.12`, the first Vite 8 release bundling stable `rolldown` 1.0.0 ([#16134](https://github.com/sveltejs/kit/pull/16134))
+
+
+### Patch Changes
+
+- Updated dependencies [[`a9629f1`](https://github.com/sveltejs/kit/commit/a9629f136d3256b14a8b3c10114c99832b977f6c), [`53d37f9`](https://github.com/sveltejs/kit/commit/53d37f93cf1f46995264398d4e54bb27bd1e75dd), [`dba6239`](https://github.com/sveltejs/kit/commit/dba62390e96f9f40c55ddc203744138664742026), [`ab12cb6`](https://github.com/sveltejs/kit/commit/ab12cb6a07269e2a18c0a3867e608e9838c592f3), [`f0eab52`](https://github.com/sveltejs/kit/commit/f0eab522bdea2d2a00f9b5473cd917d678b20daa), [`cd884c1`](https://github.com/sveltejs/kit/commit/cd884c1ffa6f96e08c70486c52fcca20501d5cef), [`9ed38a8`](https://github.com/sveltejs/kit/commit/9ed38a886be8c247c42c887c15d53b405693e1a9), [`53aa049`](https://github.com/sveltejs/kit/commit/53aa049a06ce7b053bdbe6484f05eecdb09d874e), [`984e57a`](https://github.com/sveltejs/kit/commit/984e57ac95d6ca7911611e1c297eecd1b1d870db), [`51785be`](https://github.com/sveltejs/kit/commit/51785be17ac706659d7fd7b3fca3fcf58dcc5de0), [`4f6bcbb`](https://github.com/sveltejs/kit/commit/4f6bcbbbb6e104238c41172ce7dbdaba486bbf43), [`78e7137`](https://github.com/sveltejs/kit/commit/78e71372ca284160df0aefe407999d46795a1299)]:
+  - @sveltejs/kit@3.0.0-next.5
+
 ## 6.0.0-next.0
 ### Major Changes
 
@@ -14,6 +26,18 @@
 
 - Updated dependencies [[`fa335bd`](https://github.com/sveltejs/kit/commit/fa335bd8af3a982d68c4d34b813b68887dc7cce8), [`3031d89`](https://github.com/sveltejs/kit/commit/3031d89087d49297e89b6566108a1a1105c38475), [`cb9d416`](https://github.com/sveltejs/kit/commit/cb9d416d05266b6237f2856fb94df5b8a9b04279), [`caf3a18`](https://github.com/sveltejs/kit/commit/caf3a18de6581ab7d454d6fa8ad37ebdbdef95e6), [`4777827`](https://github.com/sveltejs/kit/commit/4777827246727045cf0209399751377564e7951d), [`a2792e2`](https://github.com/sveltejs/kit/commit/a2792e2cdc2dee91c20c7bfd921a104b539abae5), [`ba36148`](https://github.com/sveltejs/kit/commit/ba36148577ed0bc2675034a3d57001d71d328cd1), [`48e8710`](https://github.com/sveltejs/kit/commit/48e8710889b348a039322e05f3d2672327d56184), [`e2f3075`](https://github.com/sveltejs/kit/commit/e2f3075ef299b91175fae116e6a76269002029cf), [`047d6a0`](https://github.com/sveltejs/kit/commit/047d6a0f1c3fd1bc6f90a81177a2834b023a64b3), [`87603d1`](https://github.com/sveltejs/kit/commit/87603d13d009cada171c9b5d5daad5adad4f72de), [`096962c`](https://github.com/sveltejs/kit/commit/096962c47b0b0f63acd0d539d3973797e4867487), [`d545970`](https://github.com/sveltejs/kit/commit/d54597018308068aea5268e6c45b26398cd57607), [`e2f3075`](https://github.com/sveltejs/kit/commit/e2f3075ef299b91175fae116e6a76269002029cf), [`d06affc`](https://github.com/sveltejs/kit/commit/d06affc9246c676fc32b644efc0bbf53b42bc67d), [`8af47eb`](https://github.com/sveltejs/kit/commit/8af47eb06f9a1a883058de059ccf81aab4e85627), [`e2f3075`](https://github.com/sveltejs/kit/commit/e2f3075ef299b91175fae116e6a76269002029cf), [`5c4d130`](https://github.com/sveltejs/kit/commit/5c4d130ea2953464d8b4b462eb5aa4641aa78da1), [`3f11f35`](https://github.com/sveltejs/kit/commit/3f11f35125c5b3625891f0d00d9c7c826e6eaea2), [`caf3a18`](https://github.com/sveltejs/kit/commit/caf3a18de6581ab7d454d6fa8ad37ebdbdef95e6), [`8823037`](https://github.com/sveltejs/kit/commit/8823037b4a341013cc40a9bb688ee23bda3dbb04), [`1d76212`](https://github.com/sveltejs/kit/commit/1d76212740f59ed58839ef569899c653870834fd), [`0dc0548`](https://github.com/sveltejs/kit/commit/0dc0548307a439b6a6f24b14405366ced213f828), [`00d81fa`](https://github.com/sveltejs/kit/commit/00d81fab618435bac95b1bacb5e9734b61ba1af6)]:
   - @sveltejs/kit@3.0.0-next.0
+
+## 5.5.7
+### Patch Changes
+
+
+- fix: add `X-Accel-Buffering: no` header to `text/event-stream` responses to prevent reverse proxies such as nginx from buffering streamed responses ([#16156](https://github.com/sveltejs/kit/pull/16156))
+
+
+- fix: delete existing socket file on startup ([#15449](https://github.com/sveltejs/kit/pull/15449))
+
+- Updated dependencies [[`c426c6e`](https://github.com/sveltejs/kit/commit/c426c6ede7ecd895f7808f2e434d7e8aa5062198), [`81f253e`](https://github.com/sveltejs/kit/commit/81f253eec901101ccbd59befe6aa23a244988476), [`8d3c865`](https://github.com/sveltejs/kit/commit/8d3c8653ff129ae57f69e957bc0b3a94f18a9e2d), [`6bde3b6`](https://github.com/sveltejs/kit/commit/6bde3b697778ef7f8ea4a1293ce3cbe3b8316dda), [`9161740`](https://github.com/sveltejs/kit/commit/9161740c0e4dc61e29d40ca95235639a0ce759c4), [`2184960`](https://github.com/sveltejs/kit/commit/21849601f5b3b552ee0c5628a5d39625c44ba7b9), [`5e319b6`](https://github.com/sveltejs/kit/commit/5e319b6892d584fa3c4dacbd212b51927c50a9dc), [`e82a0a8`](https://github.com/sveltejs/kit/commit/e82a0a8dd19defbe4ad11e36543c17a025004280)]:
+  - @sveltejs/kit@2.68.0
 
 ## 5.5.6
 ### Patch Changes
