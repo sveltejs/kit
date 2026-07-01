@@ -405,7 +405,7 @@ export async function start(_app, _target, hydrate) {
 		restore_scroll();
 	}
 
-	await _start_router();
+	_start_router();
 }
 
 async function _invalidate(include_load_functions = true, reset_page_state = true) {
@@ -2473,10 +2473,10 @@ export async function set_nearest_error_page(error, status = 500) {
 	}
 }
 
-/** @type {import('./preload.js') | undefined} */
+/** @type {ReturnType<typeof setup_preload> | undefined} */
 let preload;
 
-async function _start_router() {
+function _start_router() {
 	history.scrollRestoration = 'manual';
 
 	// Adopted from Nuxt.js
@@ -2521,7 +2521,7 @@ async function _start_router() {
 
 	// @ts-expect-error this isn't available on Firefox and Safari yet
 	if (!navigator.connection?.saveData) {
-		setup_preload(container, app, after_navigate_callbacks);
+		preload = setup_preload(container, app, after_navigate_callbacks);
 	}
 
 	/** @param {MouseEvent} event */
