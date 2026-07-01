@@ -158,13 +158,7 @@ export function get_cookies(request, url) {
 			cookies.set(name, '', { ...options, maxAge: 0 });
 		},
 
-		/**
-		 * @param {string} header
-		 * @param {import('cookie').ParseOptions} options
-		 */
-		parse(header, options) {
-			return parseSetCookie(header, options);
-		},
+		parse: parseSetCookie,
 
 		/**
 		 * @param {string} name
