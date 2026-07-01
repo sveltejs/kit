@@ -2213,7 +2213,7 @@ function setup_preload() {
  * @param {import('@sveltejs/kit').NavigationEvent} event
  * @returns {Promise<App.Error>}
  */
-async function handle_error(error, event) {
+export async function handle_error(error, event) {
 	if (error instanceof HttpError) {
 		return error.body;
 	}
