@@ -450,10 +450,7 @@ We can also implement progressive enhancement ourselves, without `use:enhance`, 
 		});
 
 		/** @type {import('@sveltejs/kit').ActionResult} */
-		const result =
-			response.status === 204
-				? { type: 'success', status: 204 }
-				: deserialize(await response.text());
+		const result = deserialize(await response.text());
 
 		if (result.type === 'success') {
 			// rerun all `load` functions, following the successful update
