@@ -2,7 +2,6 @@
 /** @import { PreviewServer, ResolvedConfig } from 'vite' */
 /** @import { Emulator, SSRManifest } from '@sveltejs/kit' */
 /** @import { ValidatedConfig, ServerInternalModule, ServerModule, InternalServer } from 'types' */
-
 import fs from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
