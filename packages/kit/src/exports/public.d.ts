@@ -321,7 +321,7 @@ export interface Cookies {
 	 *
 	 * @param header A valid `Set-Cookie` header
 	 */
-	parse: (header: string) => import('cookie').SetCookie;
+	parse: (header: string, options: import('cookie').ParseOptions) => import('cookie').SetCookie;
 
 	/**
 	 * Serialize a cookie name-value pair into a `Set-Cookie` header string, but don't apply it to the response.

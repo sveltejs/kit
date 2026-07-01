@@ -1,4 +1,4 @@
-import { parseCookie, stringifySetCookie } from 'cookie';
+import { parseCookie, parseSetCookie, stringifySetCookie } from 'cookie';
 import { DEV } from 'esm-env';
 import { normalize_path, resolve } from '../../utils/url.js';
 import { add_data_suffix } from '../pathname.js';
@@ -158,88 +158,12 @@ export function get_cookies(request, url) {
 			cookies.set(name, '', { ...options, maxAge: 0 });
 		},
 
-		/** @param {string} header */
-		parse(header) {
-			const [head, ...tail] = header.split(';').filter((str) => str.trim() !== '');
-
-			const head_index = head.indexOf('=');
-			const name = head_index === -1 ? head : head.slice(0, head_index);
-			const value = head_index === -1 ? '' : head.slice(head_index + 1);
-
-			/** @type {import('cookie').SetCookie} */
-			const cookie = { name, value };
-
-			for (const pair of tail) {
-				const index = pair.indexOf('=');
-
-				const key = (index === -1 ? pair : pair.slice(0, index)).trim().toLowerCase();
-				const value = index === -1 ? '' : pair.slice(index + 1).trim();
-
-				switch (key) {
-					case 'expires': {
-						cookie.expires = new Date(value);
-						break;
-					}
-
-					case 'max-age': {
-						const age = parseInt(value, 10);
-						if (!isNaN(age)) cookie.maxAge = age;
-						break;
-					}
-
-					case 'secure': {
-						cookie.secure = true;
-						break;
-					}
-
-					case 'httponly': {
-						cookie.httpOnly = true;
-						break;
-					}
-
-					case 'partitioned': {
-						cookie.partitioned = true;
-						break;
-					}
-
-					case 'samesite': {
-						if (value === '') {
-							cookie.sameSite = 'strict';
-						} else {
-							const lower = value.toLowerCase();
-
-							if (lower === 'lax') cookie.sameSite = 'lax';
-							if (lower === 'none') cookie.sameSite = 'none';
-							if (lower === 'strict') cookie.sameSite = 'strict';
-						}
-
-						break;
-					}
-
-					// non-standard, but understood by e.g. Chrome
-					case 'priority': {
-						const lower = value.toLowerCase();
-
-						if (lower === 'low') cookie.priority = 'low';
-						if (lower === 'medium') cookie.priority = 'medium';
-						if (lower === 'high') cookie.priority = 'high';
-
-						break;
-					}
-
-					case 'domain': {
-						cookie.domain = value;
-						break;
-					}
-
-					case 'path': {
-						cookie.path = value;
-						break;
-					}
-				}
-			}
-
-			return cookie;
+		/**
+		 * @param {string} header
+		 * @param {import('cookie').ParseOptions} options
+		 */
+		parse(header, options) {
+			return parseSetCookie(header, options);
 		},
 
 		/**
