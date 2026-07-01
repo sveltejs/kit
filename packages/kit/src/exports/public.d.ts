@@ -1985,7 +1985,7 @@ type RemoteFormFieldMethods<T> = {
 	set(input: DeepPartial<T>): DeepPartial<T>;
 	/** Whether the field or any nested field has been interacted with since the form was mounted */
 	touched(): boolean;
-	/** Whether the field or any nested field has been edited with since the form was mounted */
+	/** Whether the field or any nested field has been edited since the form was mounted */
 	dirty(): boolean;
 	/** Validation issues, if any */
 	issues(): RemoteFormIssue[] | undefined;
@@ -2209,6 +2209,7 @@ export type RemoteForm<Input extends RemoteFormInput | void, Output> = {
 		 * Set this to `true` to also show validation issues of fields that haven't yet been
 		 * edited and blurred. This option is ignored for forms that have previously been
 		 * submitted, in which case all fields are always subject to validation
+		 * (unless the form is reset, at which point it is treated as pristine)
 		 */
 		all?: boolean;
 		/** Set this to `true` to only run the `preflight` validation. */
