@@ -161,7 +161,7 @@ jobs:
           npm run build
 
       - name: Upload Artifacts
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           # this should match the `pages` option in your adapter-static options
           path: 'build/'
@@ -181,7 +181,7 @@ jobs:
     steps:
       - name: Deploy
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
 ```
 
 If you're not using GitHub actions to deploy your site (for example, you're pushing the built site to its own repo), add an empty `.nojekyll` file in your `static` directory to prevent Jekyll from interfering.
