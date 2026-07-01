@@ -1,6 +1,6 @@
 /** @import { NextHandleFunction } from 'connect' */
 /** @import { PreviewServer, ResolvedConfig } from 'vite' */
-/** @import { SSRManifest } from '@sveltejs/kit' */
+/** @import { Emulator, SSRManifest } from '@sveltejs/kit' */
 /** @import { ValidatedConfig, ServerInternalModule, ServerModule, InternalServer } from 'types' */
 
 import fs from 'node:fs';
@@ -41,6 +41,8 @@ export async function preview(vite, vite_config, svelte_config) {
 	let server = null;
 	/** @type {SSRManifest} */
 	let manifest;
+	/** @type {Emulator | undefined} */
+	let emulator;
 
 	if (!adapter_preview) {
 		const instrumentation = join(dir, 'instrumentation.server.js');
@@ -72,6 +74,8 @@ export async function preview(vite, vite_config, svelte_config) {
 			if (error instanceof Error) error.stack = error.message;
 			throw error;
 		}
+
+		emulator = await svelte_config.kit.adapter?.emulate?.();
 	}
 
 	return () => {
@@ -237,7 +241,8 @@ export async function preview(vite, vite_config, svelte_config) {
 						}
 
 						return fs.readFileSync(join(svelte_config.kit.files.assets, file));
-					}
+					},
+					emulator
 				})
 			);
 		});
