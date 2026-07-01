@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { match, resolve } from '$app/paths';
 
 // the type check script will see if this is correct
