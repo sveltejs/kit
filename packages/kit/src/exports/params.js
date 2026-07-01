@@ -41,7 +41,20 @@ export function normalize_param_definition(definition) {
 				'~standard': {
 					validate(/** @type {unknown} */ value) {
 						try {
-							return { value: definition(/** @type {string} */ (value)) };
+							const result = definition(/** @type {string} */ (value));
+
+							if (
+								typeof result !== 'string' &&
+								typeof result !== 'number' &&
+								typeof result !== 'boolean' &&
+								typeof result !== 'bigint'
+							) {
+								throw new Error(
+									'Param matcher must return a string, number, boolean, or bigint'
+								);
+							}
+
+							return { value: result };
 						} catch (error) {
 							return {
 								issues: [{ message: error instanceof Error ? error.message : 'Invalid param' }]

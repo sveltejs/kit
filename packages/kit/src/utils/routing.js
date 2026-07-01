@@ -260,7 +260,7 @@ const basic_param_pattern = /\[(\[)?(\.\.\.)?(\w+?)(?:=(\w+))?\]\]?/g;
  * ); // `/blog/hello-world/something/else`
  * ```
  * @param {string} id
- * @param {Record<string, string | undefined>} params
+ * @param {Record<string, import('@sveltejs/kit').ParamValue | undefined>} params
  * @returns {string}
  */
 export function resolve_route(id, params) {
@@ -272,20 +272,33 @@ export function resolve_route(id, params) {
 		segments
 			.map((segment) =>
 				segment.replace(basic_param_pattern, (_, optional, rest, name) => {
-					const param_value = params[name];
+					const value = params[name];
 
-					// This is nested so TS correctly narrows the type
-					if (!param_value) {
+					if (value === undefined || value === '') {
 						if (optional) return '';
-						if (rest && param_value !== undefined) return '';
+						if (rest && value !== undefined) return '';
 						throw new Error(`Missing parameter '${name}' in route ${id}`);
 					}
 
-					if (param_value.startsWith('/') || param_value.endsWith('/'))
-						throw new Error(
-							`Parameter '${name}' in route ${id} cannot start or end with a slash -- this would cause an invalid route like foo//bar`
-						);
-					return param_value;
+					if (typeof value === 'string') {
+						if (value.startsWith('/') || value.endsWith('/')) {
+							throw new Error(
+								`Parameter '${name}' in route ${id} cannot start or end with a slash -- this would cause an invalid route like foo//bar`
+							);
+						}
+
+						return value;
+					}
+
+					if (
+						typeof value === 'number' ||
+						typeof value === 'boolean' ||
+						typeof value === 'bigint'
+					) {
+						return String(value);
+					}
+
+					throw new Error('Parameter values must be a string, number, boolean, or bigint');
 				})
 			)
 			.filter(Boolean)

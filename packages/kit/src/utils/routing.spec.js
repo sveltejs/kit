@@ -375,6 +375,21 @@ describe('resolve_route', () => {
 			expected: '/blog'
 		},
 		{
+			route: '/items/[id=number]',
+			params: { id: 42 },
+			expected: '/items/42'
+		},
+		{
+			route: '/flags/[enabled=bool]',
+			params: { enabled: false },
+			expected: '/flags/false'
+		},
+		{
+			route: '/counts/[n=zero]',
+			params: { n: 0 },
+			expected: '/counts/0'
+		},
+		{
 			route: '/blog/[...one]/',
 			params: { one: '' },
 			expected: '/blog/'

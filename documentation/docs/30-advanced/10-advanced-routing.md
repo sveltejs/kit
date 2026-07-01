@@ -115,6 +115,14 @@ export function load({ params }) {
 }
 ```
 
+Matchers must return a `string`, `boolean`, `number` or `BigInt` value. That way `resolve` can require the correct type and easily stringify them.
+
+```js
+import { resolve } from '$app/paths';
+
+resolve('/blog/[id=number]', { id: 1 });
+```
+
 > [!NOTE] Matchers run both on the server and in the browser.
 
 > [!NOTE] Prior to SvelteKit 3, you had to define each param matcher in a separate file, all listed under a `params` folder (for example `src/params/foo.js` with `export const match = (param) => param === 'foo';`), and matching was determined by whether or not the matcher returns a truthy value (which means no value transformation took place).

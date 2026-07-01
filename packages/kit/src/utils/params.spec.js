@@ -56,3 +56,12 @@ test('normalize_param_definition supports transform functions', () => {
 	if (result instanceof Promise) assert.fail('Expected synchronous validation');
 	assert.ok(result.issues);
 });
+
+test('normalize_param_definition rejects invalid return types', () => {
+	// @ts-expect-error
+	const matcher = normalize_param_definition(() => ({ invalid: true }));
+
+	const result = matcher['~standard'].validate('irrelevant');
+	if (result instanceof Promise) assert.fail('Expected synchronous validation');
+	assert.ok(result.issues);
+});

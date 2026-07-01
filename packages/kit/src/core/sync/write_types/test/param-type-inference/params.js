@@ -10,6 +10,7 @@ export const params = defineParams({
 		if (!['a', 'b'].includes(param)) throw new Error('Invalid param');
 		return /** @type {'a' | 'b'} */ (param);
 	},
-	not_narrowed: () => true,
+	/** @returns {boolean} */
+	boolean: () => true,
 	number: v.pipe(v.string(), v.toNumber())
 });

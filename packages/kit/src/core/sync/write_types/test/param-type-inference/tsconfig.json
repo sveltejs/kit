@@ -9,7 +9,8 @@
 		"paths": {
 			"@sveltejs/kit": ["../../../../../exports/public"],
 			"types": ["../../../../../types/internal"],
-			"$app/types": ["../../../../../types/ambient.d.ts"]
+			"$app/types": ["../../../../../types/ambient.d.ts"],
+			"$app/paths/types.js": ["../../../../../runtime/app/paths/types.d.ts"]
 		},
 		"types": ["node"]
 	},

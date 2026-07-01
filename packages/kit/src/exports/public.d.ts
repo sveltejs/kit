@@ -1436,9 +1436,16 @@ export interface Page<
 export type ParamMatcher<Output = any> = StandardSchemaV1<string, Output>;
 
 /**
+ * A value that can be parsed from a URL param and losslessly encoded with `String(...)`.
+ */
+export type ParamValue = string | number | boolean | bigint;
+
+/**
  * A param matcher definition passed to [`defineParams`](https://svelte.dev/docs/kit/@sveltejs-kit#defineParams).
  */
-export type ParamDefinition = ((param: string) => any) | StandardSchemaV1<string, any>;
+export type ParamDefinition =
+	| ((param: string) => ParamValue)
+	| StandardSchemaV1<string, ParamValue>;
 
 /**
  * The return type of [`defineParams`](https://svelte.dev/docs/kit/@sveltejs-kit#defineParams).
@@ -1448,15 +1455,21 @@ export type DefinedParams<T extends Record<string, ParamDefinition>> = {
 };
 
 /**
- * Extracts the param type from a matcher — the output type of a Standard Schema, the predicate of a type guard, the return type of a transform function, or `string`.
+ * Extracts the param type from a matcher — the output type of a Standard Schema, the predicate of a type guard, or the return type of a transform function.
  */
 export type MatcherParam<M> =
 	M extends StandardSchemaV1<any, any>
-		? StandardSchemaV1.InferOutput<M>
+		? StandardSchemaV1.InferOutput<M> extends ParamValue
+			? StandardSchemaV1.InferOutput<M>
+			: never
 		: M extends ((param: string) => param is infer U extends string)
-			? U
+			? U extends ParamValue
+				? U
+				: never
 			: M extends (param: string) => infer R
-				? R
+				? R extends ParamValue
+					? R
+					: never
 				: string;
 
 /**

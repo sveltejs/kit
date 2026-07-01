@@ -1,6 +1,6 @@
 /* eslint-disable */
 
-/** @type {import('../../.svelte-kit/types/required/[regularParam=not_narrowed]/$types').PageLoad} */
+/** @type {import('../../.svelte-kit/types/required/[regularParam=boolean]/$types').PageLoad} */
 export function load({ params }) {
 	/** @type {boolean} a */
 	const a = params.regularParam;
