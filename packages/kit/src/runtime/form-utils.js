@@ -647,10 +647,11 @@ function deep_clone(value) {
  * @param {() => Record<string, any>} get_input - Function to get current input data
  * @param {(path: (string | number)[], value: any) => void} set_input - Function to set input data
  * @param {(path?: (string | number)[], all?: boolean) => Record<string, InternalRemoteFormIssue[]>} get_issues - Function to get current issues
+ * @param {() => Record<string, boolean>} get_touched - Function to get touched fields
  * @param {(string | number)[]} path - Current access path
  * @returns {any} Proxy object with name(), value(), and issues() methods
  */
-export function create_field_proxy(target, get_input, set_input, get_issues, path = []) {
+export function create_field_proxy(target, get_input, set_input, get_issues, get_touched, path) {
 	const get_value = () => {
 		const value = deep_get(get_input(), path);
 		return deep_clone(value);
@@ -662,24 +663,26 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 
 			// Handle array access like jobs[0]
 			if (/^\d+$/.test(prop)) {
-				return create_field_proxy({}, get_input, set_input, get_issues, [
+				return create_field_proxy({}, get_input, set_input, get_issues, get_touched, [
 					...path,
 					parseInt(prop, 10)
 				]);
 			}
 
 			const key = build_path_string(path);
+			const next = [...path, prop];
 
 			if (prop === 'set') {
 				const set_func = function (/** @type {any} */ newValue) {
 					set_input(path, newValue);
 					return newValue;
 				};
-				return create_field_proxy(set_func, get_input, set_input, get_issues, [...path, prop]);
+
+				return create_field_proxy(set_func, get_input, set_input, get_issues, get_touched, next);
 			}
 
 			if (prop === 'value') {
-				return create_field_proxy(get_value, get_input, set_input, get_issues, [...path, prop]);
+				return create_field_proxy(get_value, get_input, set_input, get_issues, get_touched, next);
 			}
 
 			if (prop === 'issues' || prop === 'allIssues') {
@@ -693,15 +696,44 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 						}));
 					}
 
-					return all_issues
+					const issues = all_issues
 						?.filter((issue) => issue.name === key)
 						?.map((issue) => ({
 							path: issue.path,
 							message: issue.message
 						}));
+
+					return issues?.length ? issues : undefined;
 				};
 
-				return create_field_proxy(issues_func, get_input, set_input, get_issues, [...path, prop]);
+				return create_field_proxy(issues_func, get_input, set_input, get_issues, get_touched, next);
+			}
+
+			if (prop === 'touched') {
+				const fn = () => {
+					const touched = get_touched();
+
+					if (key === '') {
+						return Object.keys(touched).length > 0;
+					}
+
+					if (touched[key]) {
+						return true;
+					}
+
+					for (const candidate in touched) {
+						if (!candidate.startsWith(key)) continue;
+
+						const next = candidate[key.length];
+						if (next === '.' || next === '[') {
+							return true;
+						}
+					}
+
+					return false;
+				};
+
+				return create_field_proxy(fn, get_input, set_input, get_issues, get_touched, next);
 			}
 
 			if (prop === 'as') {
@@ -867,11 +899,11 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 					});
 				};
 
-				return create_field_proxy(as_func, get_input, set_input, get_issues, [...path, 'as']);
+				return create_field_proxy(as_func, get_input, set_input, get_issues, get_touched, next);
 			}
 
 			// Handle property access (nested fields)
-			return create_field_proxy({}, get_input, set_input, get_issues, [...path, prop]);
+			return create_field_proxy({}, get_input, set_input, get_issues, get_touched, next);
 		}
 	});
 }

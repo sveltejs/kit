@@ -1956,6 +1956,8 @@ declare module '@sveltejs/kit' {
 		value(): DeepPartial<T>;
 		/** Set the values that will be submitted */
 		set(input: DeepPartial<T>): DeepPartial<T>;
+		/** Whether the field or any nested field has been interacted with since the form was mounted */
+		touched(): boolean;
 		/** Validation issues, if any */
 		issues(): RemoteFormIssue[] | undefined;
 	};
@@ -2893,10 +2895,13 @@ declare module '@sveltejs/kit' {
 	 *
 	 * @param status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#redirection_messages). Must be in the range 300-308.
 	 * @param location The location to redirect to.
+	 * @param options To redirect to an external URL, you must pass `{ external: true }` to allow any external URL except `javascript:` URLs, or `{ external: [...] }` with an allowlist of permitted origins.
 	 * @throws {import('./public.js').Redirect} This error instructs SvelteKit to redirect to the specified location.
-	 * @throws {Error} If the provided status is invalid or the location cannot be used as a header value.
+	 * @throws {Error} If the provided status is invalid, the location cannot be used as a header value, or the location is an external URL without permission.
 	 * */
-	export function redirect(status: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308 | ({} & number), location: string | URL): never;
+	export function redirect(status: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308 | ({} & number), location: string | URL, options?: {
+		external?: boolean | string[];
+	}): never;
 	/**
 	 * Checks whether this is a redirect thrown by {@link redirect}.
 	 * @param e The object to check.

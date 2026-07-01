@@ -1,5 +1,13 @@
 import { assert, describe } from 'vitest';
-import { resolve, normalize_path, make_trackable, disable_search } from './url.js';
+import {
+	resolve,
+	normalize_path,
+	make_trackable,
+	disable_search,
+	is_external_location,
+	matches_external_allowlist_entry,
+	validate_redirect_location
+} from './url.js';
 
 describe('resolve', (test) => {
 	test('resolves a root-relative path', () => {
@@ -64,6 +72,83 @@ describe('resolve', (test) => {
 
 	test('resolves .', () => {
 		assert.equal(resolve('/a/b/c', '.'), '/a/b/');
+	});
+});
+
+describe('is_absolute_location', (test) => {
+	test('detects absolute URLs', () => {
+		assert.equal(is_external_location('https://example.com'), true);
+		assert.equal(is_external_location('//example.com/foo'), true);
+		assert.equal(is_external_location('mailto:hello@svelte.dev'), true);
+		assert.equal(is_external_location('javascript:alert(1)'), true);
+		assert.equal(is_external_location(' https://example.com'), true);
+		assert.equal(is_external_location('\thttps://example.com'), true);
+		assert.equal(is_external_location('java\tscript:alert(1)'), true);
+		assert.equal(is_external_location('\\\\example.com/foo'), true);
+		assert.equal(is_external_location('/\\\\example.com/foo'), true);
+		assert.equal(is_external_location('x:foo'), true);
+		assert.equal(is_external_location('blob:https://sveltekit-redirect.invalid/id'), true);
+	});
+
+	test('detects relative URLs', () => {
+		assert.equal(is_external_location('/foo'), false);
+		assert.equal(is_external_location('./foo'), false);
+		assert.equal(is_external_location('foo'), false);
+		assert.equal(is_external_location('#hash'), false);
+		assert.equal(is_external_location('?query'), false);
+	});
+});
+
+describe('matches_external_allowlist_entry', (test) => {
+	test('matches allowed origins', () => {
+		assert.equal(matches_external_allowlist_entry('https://google.de', 'https://google.de'), true);
+		assert.equal(
+			matches_external_allowlist_entry('https://google.de/search', 'https://google.de'),
+			true
+		);
+		assert.equal(
+			matches_external_allowlist_entry('https://google.de/news', 'https://google.de/search'),
+			true
+		);
+		assert.equal(
+			matches_external_allowlist_entry('https://google.de.evil.com', 'https://google.de'),
+			false
+		);
+		assert.equal(
+			matches_external_allowlist_entry('blob:https://google.de/id', 'https://google.de'),
+			false
+		);
+		assert.equal(matches_external_allowlist_entry('https://evil.com', 'https://google.de'), false);
+	});
+});
+
+describe('validate_redirect_location', (test) => {
+	test('allows relative locations without options', () => {
+		validate_redirect_location('/foo');
+	});
+
+	test('requires permission for absolute locations', () => {
+		assert.throws(
+			() => validate_redirect_location('https://google.de'),
+			/Cannot redirect to external URL "https:\/\/google\.de"/
+		);
+	});
+
+	test('requires permission for locations that parse as absolute after URL normalization', () => {
+		assert.throws(
+			() => validate_redirect_location(' https://google.de'),
+			/Cannot redirect to external URL " https:\/\/google\.de"/
+		);
+
+		assert.throws(
+			() => validate_redirect_location('\\\\google.de'),
+			/Cannot redirect to external URL "\\\\\\\\google\.de"/
+		);
+
+		assert.throws(
+			() => validate_redirect_location('x:foo'),
+			/Cannot redirect to external URL "x:foo"/
+		);
 	});
 });
 
