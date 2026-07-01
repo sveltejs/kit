@@ -79,8 +79,7 @@ export async function internal_respond(request, options, manifest, state) {
 				is_remote_forbidden({
 					request,
 					request_origin,
-					self_origin,
-					trusted_origins: options.csrf_trusted_origins
+					self_origin
 				})
 			) {
 				const message = 'Cross-site remote requests are forbidden';

@@ -109,7 +109,7 @@ export default function (opts = {}) {
 									.replace(/\bPRECOMPRESS\b/g, JSON.stringify(precompress))
 									.replace(
 										/\bORIGIN\b/g,
-										JSON.stringify(builder.config.kit.paths.origin)
+										JSON.stringify(builder.config.kit.paths.origin) || 'undefined'
 									);
 								return {
 									code: magicString,

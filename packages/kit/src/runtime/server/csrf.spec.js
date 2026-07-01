@@ -53,7 +53,7 @@ describe('is_csrf_forbidden', () => {
 		);
 	});
 
-	test('allows a form submission whose origin matches the request URL origin but not paths.origin', () => {
+	test('forbids a form submission whose origin matches the request URL origin but not paths.origin', () => {
 		// Mirrors the bug fixed by `paths.origin`: when `self_origin` is the configured
 		// `paths.origin` rather than the request URL origin, a request whose `origin`
 		// header matches the request URL origin (but not `paths.origin`) must be blocked.
@@ -207,8 +207,7 @@ describe('is_remote_forbidden', () => {
 					headers: { 'content-type': 'application/json', origin: 'https://malicious.test' }
 				}),
 				request_origin: 'https://malicious.test',
-				self_origin: 'http://self.test',
-				trusted_origins: []
+				self_origin: 'http://self.test'
 			}),
 			true
 		);
@@ -224,8 +223,7 @@ describe('is_remote_forbidden', () => {
 					headers: { 'content-type': 'application/json', origin: 'http://localhost:4173' }
 				}),
 				request_origin: 'http://localhost:4173',
-				self_origin: 'http://configured-origin.test',
-				trusted_origins: []
+				self_origin: 'http://configured-origin.test'
 			}),
 			true
 		);
@@ -238,39 +236,23 @@ describe('is_remote_forbidden', () => {
 					headers: { 'content-type': 'application/json', origin: 'http://self.test' }
 				}),
 				request_origin: 'http://self.test',
-				self_origin: 'http://self.test',
-				trusted_origins: []
+				self_origin: 'http://self.test'
 			}),
 			false
 		);
 	});
 
-	test('allows a non-GET remote call from an origin listed in trusted_origins', () => {
-		// Trusted third-party services (e.g. payment gateways in `csrf.trustedOrigins`)
-		// may call remote functions, just as they may submit forms. Banning them
-		// unconditionally would break the documented `trustedOrigins` use case.
+	test('forbids a non-GET remote call from an external origin, regardless of trusted_origins', () => {
+		// Unlike form submissions, remote function endpoints are an implementation
+		// detail, not a public API — `csrf.trustedOrigins` is not honoured, so even
+		// an origin that would be trusted for form CSRF is forbidden here.
 		assert.equal(
 			is_remote_forbidden({
 				request: remote_call({
 					headers: { 'content-type': 'application/json', origin: 'https://checkout.stripe.com' }
 				}),
 				request_origin: 'https://checkout.stripe.com',
-				self_origin: 'http://self.test',
-				trusted_origins: ['https://checkout.stripe.com']
-			}),
-			false
-		);
-	});
-
-	test('forbids a remote call from an origin not in trusted_origins', () => {
-		assert.equal(
-			is_remote_forbidden({
-				request: remote_call({
-					headers: { 'content-type': 'application/json', origin: 'https://evil.test' }
-				}),
-				request_origin: 'https://evil.test',
-				self_origin: 'http://self.test',
-				trusted_origins: ['https://checkout.stripe.com']
+				self_origin: 'http://self.test'
 			}),
 			true
 		);
@@ -281,8 +263,7 @@ describe('is_remote_forbidden', () => {
 			is_remote_forbidden({
 				request: remote_call(),
 				request_origin: null,
-				self_origin: 'http://self.test',
-				trusted_origins: []
+				self_origin: 'http://self.test'
 			}),
 			true
 		);
@@ -296,8 +277,7 @@ describe('is_remote_forbidden', () => {
 					headers: { origin: 'https://malicious.test' }
 				}),
 				request_origin: 'https://malicious.test',
-				self_origin: 'http://self.test',
-				trusted_origins: []
+				self_origin: 'http://self.test'
 			}),
 			false
 		);
@@ -312,8 +292,7 @@ describe('is_remote_forbidden', () => {
 					headers: { 'content-type': 'application/json', origin: 'https://malicious.test' }
 				}),
 				request_origin: 'https://malicious.test',
-				self_origin: 'http://self.test',
-				trusted_origins: []
+				self_origin: 'http://self.test'
 			}),
 			true
 		);
@@ -329,8 +308,7 @@ describe('is_remote_forbidden', () => {
 						headers: { 'content-type': 'application/json', origin: 'https://malicious.test' }
 					}),
 					request_origin: 'https://malicious.test',
-					self_origin: 'http://self.test',
-					trusted_origins: []
+					self_origin: 'http://self.test'
 				}),
 				true
 			);
