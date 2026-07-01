@@ -219,11 +219,33 @@ test.describe('Load', () => {
 		expect(did_request_data).toBe(false);
 	});
 
+	test('cached base64-serialized response is decoded when replayed', async ({ page, clicknav }) => {
+		// 1. go to the page (first load, we expect the right data)
+		await page.goto('/load/fetch-cache-control/b64');
+		expect(await page.textContent('.test-content')).toBe('[1,2,3,4]');
+
+		// 2. change to another route (client side)
+		await clicknav('[href="/load/fetch-cache-control"]');
+
+		// 3. come back to the original page (client side)
+		let did_request_data = false;
+		page.on('request', (request) => {
+			if (request.url().endsWith('fetch-cache-control/b64/data')) {
+				did_request_data = true;
+			}
+		});
+		await clicknav('[href="/load/fetch-cache-control/b64"]');
+
+		// 4. data should still be the same (and cached)
+		expect(await page.textContent('.test-content')).toBe('[1,2,3,4]');
+		expect(did_request_data).toBe(false);
+	});
+
 	test('do not use cache if headers are different', async ({ page, clicknav }) => {
 		await page.goto('/load/fetch-cache-control/headers-diff');
 
 		// 1. We expect the right data
-		expect(await page.textContent('h2')).toBe('a / b');
+		await expect(page.locator('h2')).toHaveText('a / b');
 
 		// 2. Change to another route (client side)
 		await clicknav('[href="/load/fetch-cache-control"]');
@@ -231,11 +253,16 @@ test.describe('Load', () => {
 		// 3. Come back to the original page (client side)
 		/** @type {string[]} */
 		const requests = [];
-		page.on('request', (request) => requests.push(request.url()));
+		page.on('request', (request) => {
+			const url = request.url();
+			// Headless Chrome re-requests the favicon.png on every URL change
+			if (url.endsWith('/favicon.png')) return;
+			requests.push(url);
+		});
 		await clicknav('[href="/load/fetch-cache-control/headers-diff"]');
 
 		// 4. We expect the same data and no new request (except a navigation request in case of server-side route resolution) because it was cached.
-		expect(await page.textContent('h2')).toBe('a / b');
+		await expect(page.locator('h2')).toHaveText('a / b');
 		expect(requests.filter((r) => !r.includes('/__route.js'))).toEqual([]);
 	});
 
@@ -260,6 +287,7 @@ test.describe('Load', () => {
 	});
 
 	test('permits 3rd party patching of server load fetch requests', async ({ page }) => {
+		/** @type {string[]} */
 		const logs = [];
 		page.on('console', (msg) => {
 			if (msg.type() === 'log') {
@@ -277,6 +305,7 @@ test.describe('Load', () => {
 	});
 
 	test('does not repeat fetch on hydration when using Request object', async ({ page }) => {
+		/** @type {import('@playwright/test').Request[]} */
 		const requests = [];
 		page.on('request', (request) => {
 			if (request.url().includes('/load/fetch-request.json')) {
@@ -383,7 +412,8 @@ test.describe('SPA mode / no SSR', () => {
 	test('cannot use browser-only global on page because of ssr config in +page.js', async ({
 		page
 	}) => {
-		await page.goto('/no-ssr/ssr-page-config/layout/overwrite');
+		// the Vite error overlay that appears prevents body.started from being added
+		await page.goto('/no-ssr/ssr-page-config/layout/overwrite', { wait_for_started: false });
 		await expect(page.locator('p')).toHaveText(
 			'This is your custom error page saying: "document is not defined (500 Internal Error)"'
 		);
@@ -577,34 +607,45 @@ test.describe('Invalidation', () => {
 		expect(await page.textContent('span')).toBe('count: 1');
 	});
 
-	test('server-only load functions are re-run following forced invalidation', async ({ page }) => {
+	test('server-only load functions are re-run following forced invalidation', async ({
+		page,
+		request,
+		baseURL
+	}) => {
+		const res = await request.post(baseURL + '/load/invalidation/forced/reset-states');
+		expect(res.ok()).toBe(true);
+
 		await page.goto('/load/invalidation/forced');
-		expect(await page.textContent('h1')).toBe('a: 0, b: 1');
+		expect(await page.textContent('h1')).toBe('a: 0, b: 0');
 
 		await page.click('button.invalidateall');
 		await page.evaluate(
 			() => /** @type {Window & typeof globalThis & { promise: Promise<void> }} */ (window).promise
 		);
-		expect(await page.textContent('h1')).toBe('a: 2, b: 3');
+		expect(await page.textContent('h1')).toBe('a: 1, b: 1');
 
 		await page.click('button.invalidateall');
 		await page.evaluate(
 			() => /** @type {Window & typeof globalThis & { promise: Promise<void> }} */ (window).promise
 		);
-		expect(await page.textContent('h1')).toBe('a: 4, b: 5');
+		expect(await page.textContent('h1')).toBe('a: 2, b: 2');
 	});
 
 	test('server-only load functions are re-run following goto with forced invalidation', async ({
-		page
+		page,
+		request,
+		baseURL
 	}) => {
+		const res = await request.post(baseURL + '/load/invalidation/forced-goto/reset-states');
+		expect(res.ok()).toBe(true);
 		await page.goto('/load/invalidation/forced-goto');
-		expect(await page.textContent('h1')).toBe('a: 0, b: 1');
+		expect(await page.textContent('h1')).toBe('a: 0, b: 0');
 
 		await page.click('button.goto');
 		await page.evaluate(
 			() => /** @type {Window & typeof globalThis & { promise: Promise<void> }} */ (window).promise
 		);
-		expect(await page.textContent('h1')).toBe('a: 2, b: 3');
+		expect(await page.textContent('h1')).toBe('a: 1, b: 1');
 	});
 
 	test('multiple invalidations run concurrently', async ({ page }) => {
@@ -979,6 +1020,33 @@ test.describe('data-sveltekit attributes', () => {
 			page.waitForLoadState('networkidle') // wait for preloading to finish
 		]);
 		expect(requests.length).toBe(2);
+
+		requests.length = 0;
+		await page.goto('/data-sveltekit/preload-data');
+		await page.locator('#dynamic').hover();
+		await page.locator('#dynamic').dispatchEvent('touchstart');
+		await Promise.all([
+			page.waitForTimeout(100), // wait for preloading to start
+			page.waitForLoadState('networkidle') // wait for preloading to finish
+		]);
+		expect(requests.length).toBe(2);
+		await page.waitForTimeout(100);
+		await page.locator('#dynamic').hover();
+		await page.locator('#dynamic').dispatchEvent('touchstart');
+		await Promise.all([
+			page.waitForTimeout(100), // wait for preloading to start
+			page.waitForLoadState('networkidle') // wait for preloading to finish
+		]);
+		expect(requests.length).toBe(2);
+		await page.locator('#change_dynamic').click();
+		await page.waitForTimeout(100);
+		await page.locator('#dynamic').hover();
+		await page.locator('#dynamic').dispatchEvent('touchstart');
+		await Promise.all([
+			page.waitForTimeout(100), // wait for preloading to start
+			page.waitForLoadState('networkidle') // wait for preloading to finish
+		]);
+		expect(requests.length).toBe(3);
 	});
 
 	test('data-sveltekit-preload-data network failure does not trigger navigation', async ({
@@ -1001,7 +1069,7 @@ test.describe('data-sveltekit attributes', () => {
 			// it's chrome-error://chromewebdata/ on ubuntu but not on windows
 			offline_url = /chrome-error:\/\/chromewebdata\/|\/data-sveltekit\/preload-data\/offline/;
 		}
-		expect(page).toHaveURL(offline_url);
+		await expect(page).toHaveURL(offline_url);
 	});
 
 	test('data-sveltekit-preload-data error does not block user navigation', async ({
@@ -1019,7 +1087,7 @@ test.describe('data-sveltekit attributes', () => {
 			page.waitForLoadState('networkidle') // wait for preloading to finish
 		]);
 
-		expect(page).toHaveURL('/data-sveltekit/preload-data/offline');
+		await expect(page).toHaveURL('/data-sveltekit/preload-data/offline');
 
 		await page.locator('#one').dispatchEvent('click');
 		await page.waitForTimeout(100); // wait for navigation to start
@@ -1030,7 +1098,7 @@ test.describe('data-sveltekit attributes', () => {
 			// it's chrome-error://chromewebdata/ on ubuntu but not on windows
 			offline_url = /chrome-error:\/\/chromewebdata\/|\/data-sveltekit\/preload-data\/offline/;
 		}
-		expect(page).toHaveURL(offline_url);
+		await expect(page).toHaveURL(offline_url);
 	});
 
 	test('data-sveltekit-preload does not abort ongoing navigation', async ({ page }) => {
@@ -1044,7 +1112,77 @@ test.describe('data-sveltekit attributes', () => {
 			page.waitForLoadState('networkidle') // wait for preloading to finish
 		]);
 
-		expect(page).toHaveURL('/data-sveltekit/preload-data/offline/slow-navigation');
+		await expect(page).toHaveURL('/data-sveltekit/preload-data/offline/slow-navigation');
+	});
+
+	test('data-sveltekit-preload does not abort ongoing navigation #2', async ({ page }) => {
+		await page.goto('/data-sveltekit/preload-data/offline');
+
+		await page.locator('#slow-navigation').dispatchEvent('click');
+		await page.waitForTimeout(100); // wait for navigation to start
+		await page.locator('#one').dispatchEvent('mousemove');
+		await Promise.all([
+			page.waitForTimeout(100), // wait for preloading to start
+			page.waitForLoadState('networkidle') // wait for preloading to finish
+		]);
+
+		await expect(page).toHaveURL('/data-sveltekit/preload-data/offline/slow-navigation');
+		await expect(page.getByText('slow navigation', { exact: true })).toBeVisible();
+	});
+
+	test('data-sveltekit-preload repeatedly works on the same anchor element', async ({
+		page,
+		clicknav
+	}) => {
+		/** @type {string[]} */
+		const requests = [];
+		page.on('request', (req) => {
+			if (req.resourceType() === 'script') {
+				req
+					.response()
+					.then(
+						(res) => res?.text(),
+						() => ''
+					)
+					.then((text) => {
+						if (text?.includes('this string should only appear in this preloaded file')) {
+							requests.push(req.url());
+						}
+					});
+			}
+
+			if (req.url().includes('__data.json')) {
+				requests.push(req.url());
+			}
+		});
+
+		await page.goto('/data-sveltekit/preload-data/repeat');
+		await page.locator('#target').hover();
+		await page.locator('#target').dispatchEvent('touchstart');
+		await Promise.all([
+			page.waitForTimeout(100), // wait for preloading to start
+			page.waitForLoadState('networkidle') // wait for preloading to finish
+		]);
+		expect(requests.length).toBe(2);
+
+		requests.length = 0;
+		await clicknav('#target', { waitForURL: '/data-sveltekit/preload-data/repeat/target' });
+		expect(requests.length).toBe(0);
+
+		await clicknav('#home', { waitForURL: '/data-sveltekit/preload-data/repeat' });
+		expect(requests.length).toBe(0);
+
+		await page.locator('#target').hover();
+		await page.locator('#target').dispatchEvent('touchstart');
+		await Promise.all([
+			page.waitForTimeout(100), // wait for preloading to start
+			page.waitForLoadState('networkidle') // wait for preloading to finish
+		]);
+		expect(requests.length).toBe(1);
+
+		requests.length = 0;
+		await clicknav('#target', { waitForURL: '/data-sveltekit/preload-data/repeat/target' });
+		expect(requests.length).toBe(0);
 	});
 
 	test('data-sveltekit-preload-data tap works after data-sveltekit-preload-code hover', async ({
@@ -1089,23 +1227,23 @@ test.describe('data-sveltekit attributes', () => {
 	});
 
 	test('data-sveltekit-reload', async ({ baseURL, page, clicknav }) => {
-		/** @type {string[]} */
-		const requests = [];
-		page.on('request', (r) => requests.push(r.url()));
-
 		await page.goto('/data-sveltekit/reload');
+		let request_promise = page.waitForRequest(`${baseURL}/data-sveltekit/reload/target`);
 		await clicknav('#one');
-		expect(requests).toContain(`${baseURL}/data-sveltekit/reload/target`);
+		await request_promise;
 
-		requests.length = 0;
 		await page.goto('/data-sveltekit/reload');
+		request_promise = page.waitForRequest(`${baseURL}/data-sveltekit/reload/target`);
 		await clicknav('#two');
-		expect(requests).toContain(`${baseURL}/data-sveltekit/reload/target`);
+		await request_promise;
 
-		requests.length = 0;
 		await page.goto('/data-sveltekit/reload');
+		request_promise = page.waitForRequest(`${baseURL}/data-sveltekit/reload/target`, {
+			timeout: 1000
+		});
+		request_promise.catch(() => {});
 		await clicknav('#three');
-		expect(requests).not.toContain(`${baseURL}/data-sveltekit/reload/target`);
+		await expect(request_promise).rejects.toThrow();
 	});
 
 	test('data-sveltekit-noscroll', async ({ page, clicknav }) => {
@@ -1194,7 +1332,7 @@ test.describe('env', () => {
 	}) => {
 		await page.goto('/prerendering/env/prerendered');
 		await clicknav('[href="/prerendering/env/dynamic"]');
-		expect(await page.locator('h2')).toHaveText('prerendering: false');
+		await expect(page.locator('h2')).toHaveText('prerendering: false');
 	});
 });
 
@@ -1224,6 +1362,21 @@ test.describe('Snapshots', () => {
 
 		await page.reload();
 		expect(await page.locator('input').inputValue()).toBe('works for reloads');
+	});
+
+	test('restores snapshot after afterNavigate on popstate', async ({ page, clicknav }) => {
+		await page.goto('/snapshot/order');
+		await clicknav('[href="/snapshot/b"]');
+		await page.goBack();
+
+		await expect(page.locator('[data-testid="order"]')).toHaveText('afterNavigate,restore');
+	});
+
+	test('restores snapshot after afterNavigate on reload', async ({ page }) => {
+		await page.goto('/snapshot/order');
+		await page.reload();
+
+		await expect(page.locator('[data-testid="order"]')).toHaveText('afterNavigate,restore');
 	});
 });
 
@@ -1269,7 +1422,11 @@ test.describe('Streaming', () => {
 	// TODO `vite preview` buffers responses, causing these tests to fail
 	if (process.env.DEV) {
 		test('Works for universal load functions (direct hit)', async ({ page }) => {
-			page.goto('/streaming/universal');
+			// `waitUntil: 'commit'` resolves as soon as the streamed response starts (so we can
+			// observe the still-loading state), and `wait_for_started: false` avoids the page
+			// fixture leaving a floating `waitForSelector('body.started')` that rejects with
+			// "Target page... has been closed" when the test ends before hydration completes.
+			await page.goto('/streaming/universal', { waitUntil: 'commit', wait_for_started: false });
 
 			// Write first assertion like this to control the retry interval. Else it might happen that
 			// the test fails because the next retry is too late (probably uses a back-off strategy)
@@ -1289,7 +1446,7 @@ test.describe('Streaming', () => {
 		});
 
 		test('Works for server load functions (direct hit)', async ({ page }) => {
-			page.goto('/streaming/server');
+			await page.goto('/streaming/server', { waitUntil: 'commit', wait_for_started: false });
 
 			// Write first assertion like this to control the retry interval. Else it might happen that
 			// the test fails because the next retry is too late (probably uses a back-off strategy)
@@ -1319,7 +1476,7 @@ test.describe('Streaming', () => {
 		});
 
 		test('Catches fetch errors from server load functions (direct hit)', async ({ page }) => {
-			page.goto('/streaming/server-error');
+			await page.goto('/streaming/server-error', { waitUntil: 'commit', wait_for_started: false });
 			await expect(page.locator('p.eager')).toHaveText('eager');
 			await expect(page.locator('p.fail')).toHaveText('fail');
 		});
@@ -1375,6 +1532,17 @@ test.describe('goto', () => {
 		await expect(page.locator('p')).toHaveText(message);
 	});
 
+	test('goto fails with a URL that does not resolve to a route', async ({ page }) => {
+		await page.goto('/goto/no-such-route');
+		await page.click('button');
+
+		await expect(page.locator('p')).toContainText(
+			process.env.DEV
+				? 'Cannot use `goto` with a URL that does not resolve to a route within the app'
+				: 'goto: invalid URL'
+		);
+	});
+
 	test.describe('navigation and redirects should be consistent between web native and sveltekit based', () => {
 		const testEntryPage = '/goto/testentry';
 		const testStartPage = '/goto/teststart';
@@ -1406,11 +1574,11 @@ test.describe('goto', () => {
 			test.describe('without replace', () => {
 				const expectGoback = makeExpectGoback(nonexistentPage, testStartPage);
 
-				test('app.goto', async ({ app, page }) => {
-					// navigating to nonexistent page causes playwright's page context to be destroyed
-					// thus this call throws an error unless caught
-					await app.goto(nonexistentPage, { replaceState: false }).catch(() => {});
-					await expectGoback(page);
+				test('app.goto rejects and does not navigate', async ({ app, page }) => {
+					// `goto` is only for routes within the app; navigating to a
+					// non-existent route rejects and leaves the URL unchanged
+					await expect(app.goto(nonexistentPage, { replaceState: false })).rejects.toBeTruthy();
+					await expect(page).toHaveURL(testStartPage);
 				});
 
 				test('location.assign', async ({ page }) => {
@@ -1424,11 +1592,11 @@ test.describe('goto', () => {
 			test.describe('with replace', () => {
 				const expectGoback = makeExpectGoback(nonexistentPage, testEntryPage);
 
-				test('app.goto', async ({ app, page }) => {
-					// navigating to nonexistent page causes playwright's page context to be destroyed
-					// thus this call throws an error unless caught
-					await app.goto(nonexistentPage, { replaceState: true }).catch(() => {});
-					await expectGoback(page);
+				test('app.goto rejects and does not navigate', async ({ app, page }) => {
+					// `goto` is only for routes within the app; navigating to a
+					// non-existent route rejects and leaves the URL unchanged
+					await expect(app.goto(nonexistentPage, { replaceState: true })).rejects.toBeTruthy();
+					await expect(page).toHaveURL(testStartPage);
 				});
 
 				test('location.replace', async ({ page }) => {
@@ -1448,7 +1616,7 @@ test.describe('goto', () => {
 			const expectGoback = makeExpectGoback(testFinishPage, testEntryPage);
 
 			test('app.invalidate', async ({ app, page }) => {
-				await app.invalidate('app:goto', { replaceState: true });
+				await app.invalidate('app:goto');
 				await expectGoback(page);
 			});
 
@@ -1634,9 +1802,9 @@ test.describe('Shallow routing', () => {
 });
 
 test.describe('reroute', () => {
-	test('Apply reroute during client side navigation', async ({ page }) => {
+	test('Apply reroute during client side navigation', async ({ page, clicknav }) => {
 		await page.goto('/reroute/basic');
-		await page.click("a[href='/reroute/basic/a']");
+		await clicknav('a[href="/reroute/basic/a"]', { waitForURL: '/reroute/basic/a' });
 		expect(await page.textContent('h1')).toContain(
 			'Successfully rewritten, URL should still show a: /reroute/basic/a'
 		);
@@ -1688,8 +1856,7 @@ test.describe('reroute', () => {
 		await page.click("a[data-test='external-url']");
 
 		// The URL should not have the same origin as the current URL
-		const new_url = new URL(page.url());
-		expect(current_url.origin).not.toEqual(new_url.origin);
+		await expect(page).not.toHaveURL((url) => url.origin === current_url.origin);
 	});
 
 	test('Falls back to native navigation if reroute throws on the client', async ({ page }) => {
@@ -1734,11 +1901,15 @@ test.describe('init', () => {
 test.describe('INP', () => {
 	test('does not block next paint', async ({ page }) => {
 		// Thanks to https://publishing-project.rivendellweb.net/measuring-performance-tasks-with-playwright/#interaction-to-next-paint-inp
+		/** @param {string} selector */
 		async function measureInteractionToPaint(selector) {
 			return page.evaluate(async (selector) => {
 				return new Promise((resolve) => {
 					const startTime = performance.now();
-					document.querySelector(selector).click();
+					const element = document.querySelector(selector);
+					if (element instanceof HTMLAnchorElement) {
+						element.click();
+					}
 					requestAnimationFrame(() => {
 						const endTime = performance.now();
 						resolve(endTime - startTime);
@@ -1765,7 +1936,7 @@ test.describe('binding_property_non_reactive warn', () => {
 		let is_warning_thrown = false;
 		page.on('console', (m) => {
 			if (
-				m.type() === 'warn' &&
+				m.type() === 'warning' &&
 				m.text().includes('binding_property_non_reactive `bind:this={components[0]}`')
 			) {
 				is_warning_thrown = true;
@@ -1783,270 +1954,5 @@ test.describe('routing', () => {
 		await page.click('a[href="/routing"]');
 		await expect(page.locator('h1')).toHaveText('Great success!');
 		await expect(page).toHaveURL((url) => url.pathname === '/routing');
-	});
-});
-
-test.describe('remote functions', () => {
-	test('preloading data works when the page component and server load both import a remote function', async ({
-		page
-	}) => {
-		test.skip(!process.env.DEV, 'remote functions are only analysed in dev mode');
-		await page.goto('/remote/dev');
-		await page.locator('a[href="/remote/dev/preload"]').hover();
-		await Promise.all([
-			page.waitForTimeout(100), // wait for preloading to start
-			page.waitForLoadState('networkidle') // wait for preloading to finish
-		]);
-		await page.click('a[href="/remote/dev/preload"]');
-		await expect(page.locator('p')).toHaveText('foobar');
-	});
-});
-
-// have to run in serial because commands mutate in-memory data on the server
-test.describe('remote function mutations', () => {
-	test.describe.configure({ mode: 'default' });
-	test.afterEach(async ({ page }) => {
-		if (page.url().endsWith('/remote')) {
-			await page.click('#reset-btn');
-		}
-	});
-
-	test('query.set works', async ({ page }) => {
-		await page.goto('/remote');
-		let request_count = 0;
-		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
-
-		await page.click('#set-btn');
-		await expect(page.locator('#count-result')).toHaveText('999 / 999 (false)');
-		await page.waitForTimeout(100); // allow all requests to finish (in case there are query refreshes which shouldn't happen)
-		expect(request_count).toBe(0);
-	});
-
-	test('hydrated data is reused', async ({ page }) => {
-		let request_count = 0;
-		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
-
-		await page.goto('/remote');
-		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
-		// only the calls in the template are done, not the one in the load function
-		expect(request_count).toBe(2);
-	});
-
-	test('command returns correct sum but does not refresh data by default', async ({ page }) => {
-		await page.goto('/remote');
-		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
-
-		let request_count = 0;
-		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
-
-		await page.click('#multiply-btn');
-		await expect(page.locator('#command-result')).toHaveText('2');
-		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
-		await page.waitForTimeout(100); // allow all requests to finish
-		expect(request_count).toBe(1); // 1 for the command, no refreshes
-	});
-
-	test('command returns correct sum and does client-initiated single flight mutation', async ({
-		page
-	}) => {
-		await page.goto('/remote');
-		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
-
-		let request_count = 0;
-		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
-
-		await page.click('#multiply-refresh-btn');
-		await expect(page.locator('#command-result')).toHaveText('3');
-		await expect(page.locator('#count-result')).toHaveText('3 / 3 (false)');
-		await page.waitForTimeout(100); // allow all requests to finish
-		expect(request_count).toBe(1); // no query refreshes, since that happens as part of the command response
-	});
-
-	test('command does server-initiated single flight mutation (refresh)', async ({ page }) => {
-		await page.goto('/remote');
-		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
-
-		let request_count = 0;
-		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
-
-		await page.click('#multiply-server-refresh-btn');
-		await expect(page.locator('#command-result')).toHaveText('4');
-		await expect(page.locator('#count-result')).toHaveText('4 / 4 (false)');
-		await page.waitForTimeout(100); // allow all requests to finish (in case there are query refreshes which shouldn't happen)
-		expect(request_count).toBe(1); // no query refreshes, since that happens as part of the command response
-	});
-
-	test('command does server-initiated single flight mutation (set)', async ({ page }) => {
-		await page.goto('/remote');
-		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
-
-		let request_count = 0;
-		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
-
-		await page.click('#multiply-server-set-btn');
-		await expect(page.locator('#command-result')).toHaveText('8');
-		await expect(page.locator('#count-result')).toHaveText('8 / 8 (false)');
-		await page.waitForTimeout(100); // allow all requests to finish (in case there are query refreshes which shouldn't happen)
-		expect(request_count).toBe(1); // no query refreshes, since that happens as part of the command response
-	});
-
-	test('command does client-initiated single flight mutation with override', async ({ page }) => {
-		await page.goto('/remote');
-		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
-
-		let request_count = 0;
-		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
-
-		page.click('#multiply-override-refresh-btn');
-		await expect(page.locator('#count-result')).toHaveText('6 / 6 (false)');
-		await expect(page.locator('#command-result')).toHaveText('5');
-		await expect(page.locator('#count-result')).toHaveText('5 / 5 (false)');
-		await page.waitForTimeout(100); // allow all requests to finish (in case there are query refreshes which shouldn't happen)
-		expect(request_count).toBe(1); // no query refreshes, since that happens as part of the command response
-	});
-
-	test('query/command inside endpoint works', async ({ page }) => {
-		await page.goto('/remote/server-endpoint');
-
-		await page.getByRole('button', { name: 'get' }).click();
-		await expect(page.locator('p')).toHaveText('get');
-
-		await page.getByRole('button', { name: 'post' }).click();
-		await expect(page.locator('p')).toHaveText('post');
-	});
-
-	test('prerendered entries not called in prod', async ({ page }) => {
-		let request_count = 0;
-		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
-		await page.goto('/remote/prerender');
-
-		await page.click('#fetch-prerendered');
-		await expect(page.locator('#fetch-prerendered')).toHaveText('yes');
-
-		await page.click('#fetch-not-prerendered');
-		await expect(page.locator('#fetch-not-prerendered')).toHaveText('d');
-	});
-
-	test('refreshAll reloads remote functions and load functions', async ({ page }) => {
-		await page.goto('/remote');
-		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
-
-		let request_count = 0;
-		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
-
-		await page.click('#refresh-all');
-		await page.waitForTimeout(100); // allow things to rerun
-		expect(request_count).toBe(3);
-	});
-
-	test('refreshAll({ includeLoadFunctions: false }) reloads remote functions only', async ({
-		page
-	}) => {
-		await page.goto('/remote');
-		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
-
-		let request_count = 0;
-		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
-
-		await page.click('#refresh-remote-only');
-		await page.waitForTimeout(100); // allow things to rerun
-		expect(request_count).toBe(2);
-	});
-
-	test('command tracks pending state', async ({ page }) => {
-		await page.goto('/remote');
-
-		// Initial pending should be 0
-		await expect(page.locator('#command-pending')).toHaveText('Command pending: 0');
-
-		// Start a slow command - this will hang until we resolve it
-		await page.click('#command-deferred-btn');
-
-		// Check that pending has incremented to 1
-		await expect(page.locator('#command-pending')).toHaveText('Command pending: 1');
-
-		// Resolve the deferred command
-		await page.click('#resolve-deferreds');
-
-		// Wait for the command to complete and pending to go back to 0
-		await expect(page.locator('#command-pending')).toHaveText('Command pending: 0');
-	});
-
-	test('validation works', async ({ page }) => {
-		await page.goto('/remote/validation');
-		await expect(page.locator('p')).toHaveText('pending');
-
-		let request_count = 0;
-		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
-
-		await page.click('button:nth-of-type(1)');
-		await expect(page.locator('p')).toHaveText('success');
-
-		await page.click('button:nth-of-type(2)');
-		await expect(page.locator('p')).toHaveText('success');
-
-		await page.click('button:nth-of-type(3)');
-		await expect(page.locator('p')).toHaveText('success');
-
-		await page.click('button:nth-of-type(4)');
-		await expect(page.locator('p')).toHaveText('success');
-	});
-
-	test('fields.set updates DOM before validate', async ({ page }) => {
-		await page.goto('/remote/form/imperative');
-
-		const input = page.locator('input[name="message"]');
-		await input.fill('123');
-
-		await page.locator('#set-and-validate').click();
-
-		await expect(input).toHaveValue('hello');
-		await expect(page.locator('#issue')).toHaveText('ok');
-	});
-
-	test('command pending state is tracked correctly', async ({ page }) => {
-		await page.goto('/remote');
-
-		// Initially no pending commands
-		await expect(page.locator('#command-pending')).toHaveText('Command pending: 0');
-
-		// Start a slow command - this will hang until we resolve it
-		await page.click('#command-deferred-btn');
-
-		// Check that pending has incremented to 1
-		await expect(page.locator('#command-pending')).toHaveText('Command pending: 1');
-
-		// Resolve the deferred command
-		await page.click('#resolve-deferreds');
-
-		// Wait for the command to complete and verify results
-		await expect(page.locator('#command-result')).toHaveText('7');
-
-		// Verify pending count returns to 0
-		await expect(page.locator('#command-pending')).toHaveText('Command pending: 0');
-	});
-
-	// TODO once we have async SSR adjust the test and move this into test.js
-	test('query.batch works', async ({ page }) => {
-		await page.goto('/remote/batch');
-
-		await expect(page.locator('#batch-result-1')).toHaveText('Buy groceries');
-		await expect(page.locator('#batch-result-2')).toHaveText('Walk the dog');
-		await expect(page.locator('#batch-result-3')).toHaveText('Buy groceries');
-		await expect(page.locator('#batch-result-4')).toHaveText('Error loading todo error: Not found');
-
-		let request_count = 0;
-		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
-
-		await page.click('button');
-		await page.waitForTimeout(100); // allow all requests to finish
-		expect(request_count).toBe(1);
-	});
-
-	// TODO ditto
-	test('query works with transport', async ({ page }) => {
-		await page.goto('/remote/transport');
-
-		await expect(page.locator('h1')).toHaveText('hello from remote function!');
 	});
 });

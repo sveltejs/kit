@@ -11,6 +11,7 @@
 <a id="last-anchor" href="/anchor/anchor#go-to-element">Anchor demo (last)</a>
 <a id="last-anchor-2" href="/anchor/anchor">Anchor demo (last 2)</a>
 <a id="routing-page" href="/routing/hashes/target">Different page</a>
+<a id="to-scroll-margin" href="/anchor/anchor#scroll-margin">Scroll margin anchor</a>
 
 <style>
 	:global(body) {

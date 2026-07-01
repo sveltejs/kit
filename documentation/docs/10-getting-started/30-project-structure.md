@@ -20,13 +20,12 @@ my-project/
 │ ├ hooks.client.js
 │ ├ hooks.server.js
 │ ├ service-worker.js
-│ └ tracing.server.js
+│ └ instrumentation.server.js
 ├ static/
 │ └ [your static assets]
 ├ tests/
 │ └ [your tests]
 ├ package.json
-├ svelte.config.js
 ├ tsconfig.json
 └ vite.config.js
 ```
@@ -48,7 +47,7 @@ The `src` directory contains the meat of your project. Everything except `src/ro
   - `%sveltekit.body%` — the markup for a rendered page. This should live inside a `<div>` or other element, rather than directly inside `<body>`, to prevent bugs caused by browser extensions injecting elements that are then destroyed by the hydration process. SvelteKit will warn you in development if this is not the case
   - `%sveltekit.assets%` — either [`paths.assets`](configuration#paths), if specified, or a relative path to [`paths.base`](configuration#paths)
   - `%sveltekit.nonce%` — a [CSP](configuration#csp) nonce for manually included links and scripts, if used
-  - `%sveltekit.env.[NAME]%` - this will be replaced at render time with the `[NAME]` environment variable, which must begin with the [`publicPrefix`](configuration#env) (usually `PUBLIC_`). It will fallback to `''` if not matched.
+  - `%sveltekit.env.[NAME]%` - this will be replaced at render time with the `[NAME]` environment variable, which must begin with the [`publicPrefix`](configuration#env) (usually `PUBLIC_`), or be defined as a public variable in `src/env` if using [`experimental.explicitEnvironmentVariables`](environment-variables). It will fallback to `''` if not matched.
   - `%sveltekit.version%` — the app version, which can be specified with the [`version`](configuration#version) configuration
 - `error.html` is the page that is rendered when everything else fails. It can contain the following placeholders:
   - `%sveltekit.status%` — the HTTP status
@@ -57,7 +56,7 @@ The `src` directory contains the meat of your project. Everything except `src/ro
 - `hooks.server.js` contains your server [hooks](hooks)
 - `service-worker.js` contains your [service worker](service-workers)
 - `instrumentation.server.js` contains your [observability](observability) setup and instrumentation code
-  - Requires adapter support. If your adapter supports it, it is guarnteed to run prior to loading and running your application code.
+  - Requires adapter support. If your adapter supports it, it is guaranteed to run prior to loading and running your application code.
 
 (Whether the project contains `.js` or `.ts` files depends on whether you opt to use TypeScript when you create your project.)
 
@@ -65,7 +64,7 @@ If you added [Vitest](https://vitest.dev) when you set up your project, your uni
 
 ### static
 
-Any static assets that should be served as-is, like `robots.txt` or `favicon.png`, go in here.
+Any static assets that should be served without any alteration to the name — such as `robots.txt` — go in here. It's generally preferable to minimize the number of assets in `static/` and instead `import` them. Using an `import` allows [Vite's built-in handling](images#Vite's-built-in-handling) to give a unique name to an asset based on a hash of its contents so that it can be cached.
 
 ### tests
 
@@ -77,17 +76,13 @@ Your `package.json` file must include `@sveltejs/kit`, `svelte` and `vite` as `d
 
 When you create a project with `npx sv create`, you'll also notice that `package.json` includes `"type": "module"`. This means that `.js` files are interpreted as native JavaScript modules with `import` and `export` keywords. Legacy CommonJS files need a `.cjs` file extension.
 
-### svelte.config.js
+### vite.config.js
 
-This file contains your Svelte and SvelteKit [configuration](configuration).
+A SvelteKit project is really just a [Vite](https://vitejs.dev) project that uses the [`@sveltejs/kit/vite`](@sveltejs-kit-vite) plugin, along with any other [Vite configuration](https://vitejs.dev/config/). The plugin accepts your Svelte and SvelteKit [configuration](configuration).
 
 ### tsconfig.json
 
 This file (or `jsconfig.json`, if you prefer type-checked `.js` files over `.ts` files) configures TypeScript, if you added typechecking during `npx sv create`. Since SvelteKit relies on certain configuration being set a specific way, it generates its own `.svelte-kit/tsconfig.json` file which your own config `extends`. To make changes to top-level options such as `include` and `exclude`, we recommend extending the generated config; see the [`typescript.config` setting](configuration#typescript) for more details.
-
-### vite.config.js
-
-A SvelteKit project is really just a [Vite](https://vitejs.dev) project that uses the [`@sveltejs/kit/vite`](@sveltejs-kit-vite) plugin, along with any other [Vite configuration](https://vitejs.dev/config/).
 
 ## Other files
 

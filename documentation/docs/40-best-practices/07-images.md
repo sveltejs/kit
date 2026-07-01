@@ -39,14 +39,15 @@ npm i -D @sveltejs/enhanced-img
 Adjust `vite.config.js`:
 
 ```js
-import { sveltekit } from '@sveltejs/kit/vite';
+/// file: vite.config.js
 +++import { enhancedImages } from '@sveltejs/enhanced-img';+++
+import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
 	plugins: [
 		+++enhancedImages(), // must come before the SvelteKit plugin+++
-		sveltekit()
+		sveltekit({/* ... */})
 	]
 });
 ```
@@ -84,7 +85,7 @@ You can also use [Vite's `import.meta.glob`](https://vitejs.dev/guide/features.h
 ```svelte
 <script>
 	const imageModules = import.meta.glob(
-		'/path/to/assets/*.{avif,gif,heif,jpeg,jpg,png,tiff,webp}',
+		'/path/to/assets/*.{avif,AVIF,gif,GIF,heif,HEIF,jpeg,JPEG,jpg,JPG,png,PNG,tiff,TIFF,webp,WEBP}',
 		{
 			eager: true,
 			query: {
@@ -125,10 +126,11 @@ If you have a large image, such as a hero image taking the width of the design, 
 If `sizes` is specified, `<enhanced:img>` will generate small images for smaller devices and populate the `srcset` attribute.
 
 The smallest picture generated automatically will have a width of 540px. If you'd like smaller images or would otherwise like to specify custom widths, you can do that with the `w` query parameter:
+
 ```svelte
 <enhanced:img
-  src="./image.png?w=1280;640;400"
-  sizes="(min-width:1920px) 1280px, (min-width:1080px) 640px, (min-width:768px) 400px"
+	src="./image.png?w=1280;640;400"
+	sizes="(min-width:1920px) 1280px, (min-width:1080px) 640px, (min-width:768px) 400px"
 />
 ```
 
@@ -150,7 +152,7 @@ In some cases, the images may not be accessible at build time — e.g. they may 
 
 Using a content delivery network (CDN) can allow you to optimize these images dynamically, and provides more flexibility with regards to sizes, but it may involve some setup overhead and usage costs. Depending on caching strategy, the browser may not be able to use a cached copy of the asset until a [304 response](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/304) is received from the CDN. Building HTML to target CDNs allows using an `<img>` tag since the CDN can serve the appropriate format based on the `User-Agent` header, whereas build-time optimizations must produce `<picture>` tags with multiple sources. Finally, some CDNs may generate images lazily, which could have a negative performance impact for sites with low traffic and frequently changing images.
 
-CDNs can generally be used without any need for a library. However, there are a number of libraries with Svelte support that make it easier. [`@unpic/svelte`](https://unpic.pics/img/svelte/) is a CDN-agnostic library with support for a large number of providers. You may also find that specific CDNs like [Cloudinary](https://svelte.cloudinary.dev/) have Svelte support. Finally, some content management systems (CMS) which support Svelte (such as [Contentful](https://www.contentful.com/sveltekit-starter-guide/), [Storyblok](https://github.com/storyblok/storyblok-svelte), and [Contentstack](https://www.contentstack.com/docs/developers/sample-apps/build-a-starter-website-with-sveltekit-and-contentstack)) have built-in support for image handling.
+CDNs can generally be used without any need for a library. However, there are a number of libraries with Svelte support that make it easier. [`@unpic/svelte`](https://unpic.pics/img/svelte/) is a CDN-agnostic library with support for a large number of providers. You may also find that specific CDNs like [Cloudinary](https://svelte.cloudinary.dev/) have Svelte support. Finally, some content management systems (CMS) which support Svelte (such as [Contentful](https://www.contentful.com/sveltekit-starter-guide/), [Storyblok](https://www.storyblok.com/docs/guides/svelte), and [Contentstack](https://www.contentstack.com/docs/developers/sample-apps/build-a-starter-website-with-sveltekit-and-contentstack)) have built-in support for image handling.
 
 ## Best practices
 

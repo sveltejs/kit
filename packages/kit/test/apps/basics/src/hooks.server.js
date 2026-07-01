@@ -1,4 +1,4 @@
-import { building, dev } from '$app/environment';
+import { building, dev } from '$app/env';
 import { error, isHttpError, redirect } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
 import fs from 'node:fs';
@@ -6,16 +6,6 @@ import { COOKIE_NAME } from './routes/cookies/shared';
 import { _set_from_init } from './routes/init-hooks/+page.server';
 import { getRequestEvent } from '$app/server';
 import { resolve } from '$app/paths';
-
-// @ts-ignore this doesn't exist in old Node
-Promise.withResolvers ??= () => {
-	const d = {};
-	d.promise = new Promise((resolve, reject) => {
-		d.resolve = resolve;
-		d.reject = reject;
-	});
-	return d;
-};
 
 // check that this doesn't throw when called outside an event context
 resolve('/');
@@ -54,17 +44,12 @@ export const handleError = ({ event, error: e, status, message }) => {
 
 	if (event.url.pathname.startsWith('/get-request-event/')) {
 		const ev = getRequestEvent();
-		message = ev.locals.message;
+		message = /** @type {string} */ (ev.locals.message);
 	}
 
 	return event.url.pathname.endsWith('404-fallback')
 		? undefined
 		: { message: `${error.message} (${status} ${message})` };
-};
-
-/** @type {import('@sveltejs/kit').HandleValidationError} */
-export const handleValidationError = ({ issues }) => {
-	return { message: issues[0].message };
 };
 
 export const handle = sequence(
@@ -144,6 +129,11 @@ export const handle = sequence(
 	},
 	async ({ event, resolve }) => {
 		if (event.url.pathname.includes('/redirect/in-handle')) {
+			const location = event.url.searchParams.get('location');
+			if (location) {
+				redirect(307, location);
+			}
+
 			if (event.url.search === '?throw') {
 				redirect(307, event.url.origin + '/redirect/c');
 			} else if (event.url.search.includes('cookies')) {

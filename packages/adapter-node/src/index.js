@@ -1,7 +1,11 @@
+import http from 'node:http';
+import fs from 'node:fs';
 import process from 'node:process';
-import { handler } from 'HANDLER';
-import { env } from 'ENV';
+import { handler } from './handler.js';
+import { env, timeout_env } from './env.js';
 import polka from 'polka';
+import { rm } from 'node:fs/promises';
+import { format_listening_address } from './utils.js';
 
 export const path = env('SOCKET_PATH', false);
 export const host = env('HOST', '0.0.0.0');
@@ -31,15 +35,42 @@ let shutdown_timeout_id;
 /** @type {NodeJS.Timeout | void} */
 let idle_timeout_id;
 
-const server = polka().use(handler);
+// Initialize the HTTP server here so that we can set properties before starting to listen.
+// Otherwise, polka delays creating the server until listen() is called. Settings these
+// properties after the server has started listening could lead to race conditions.
+const httpServer = http.createServer();
+
+const keep_alive_timeout = timeout_env('KEEP_ALIVE_TIMEOUT');
+if (keep_alive_timeout !== undefined) {
+	// Convert the keep-alive timeout from seconds to milliseconds (the unit Node.js expects).
+	httpServer.keepAliveTimeout = keep_alive_timeout * 1000;
+}
+
+const headers_timeout = timeout_env('HEADERS_TIMEOUT');
+if (headers_timeout !== undefined) {
+	// Convert the headers timeout from seconds to milliseconds (the unit Node.js expects).
+	httpServer.headersTimeout = headers_timeout * 1000;
+}
+
+const server = polka({ server: httpServer }).use(handler);
 
 if (socket_activation) {
 	server.listen({ fd: SD_LISTEN_FDS_START }, () => {
 		console.log(`Listening on file descriptor ${SD_LISTEN_FDS_START}`);
 	});
 } else {
+	if (path) {
+		try {
+			if (fs.statSync(path).size === 0) {
+				await rm(path);
+			}
+		} catch {
+			// ignore
+		}
+	}
+
 	server.listen({ path, host, port }, () => {
-		console.log(`Listening on ${path || `http://${host}:${port}`}`);
+		console.log(`Listening on ${format_listening_address(path, host, port, httpServer.address())}`);
 	});
 }
 
@@ -49,10 +80,9 @@ function graceful_shutdown(reason) {
 
 	// If a connection was opened with a keep-alive header close() will wait for the connection to
 	// time out rather than close it even if it is not handling any requests, so call this first
-	// @ts-expect-error this was added in 18.2.0 but is not reflected in the types
-	server.server.closeIdleConnections();
+	httpServer.closeIdleConnections();
 
-	server.server.close((error) => {
+	httpServer.close((error) => {
 		// occurs if the server is already closed
 		if (error) return;
 
@@ -67,14 +97,10 @@ function graceful_shutdown(reason) {
 		process.emit('sveltekit:shutdown', reason);
 	});
 
-	shutdown_timeout_id = setTimeout(
-		// @ts-expect-error this was added in 18.2.0 but is not reflected in the types
-		() => server.server.closeAllConnections(),
-		shutdown_timeout * 1000
-	);
+	shutdown_timeout_id = setTimeout(() => httpServer.closeAllConnections(), shutdown_timeout * 1000);
 }
 
-server.server.on(
+httpServer.on(
 	'request',
 	/** @param {import('node:http').IncomingMessage} req */
 	(req) => {
@@ -89,8 +115,7 @@ server.server.on(
 
 			if (shutdown_timeout_id) {
 				// close connections as soon as they become idle, so they don't accept new requests
-				// @ts-expect-error this was added in 18.2.0 but is not reflected in the types
-				server.server.closeIdleConnections();
+				httpServer.closeIdleConnections();
 			}
 			if (requests === 0 && socket_activation && idle_timeout) {
 				idle_timeout_id = setTimeout(() => graceful_shutdown('IDLE'), idle_timeout * 1000);

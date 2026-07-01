@@ -33,9 +33,9 @@ export const prerender = 'auto';
 
 > [!NOTE] If your entire app is suitable for prerendering, you can use [`adapter-static`](adapter-static), which will output files suitable for use with any static webserver.
 
-The prerenderer will start at the root of your app and generate files for any prerenderable pages or `+server.js` routes it finds. Each page is scanned for `<a>` elements that point to other pages that are candidates for prerendering — because of this, you generally don't need to specify which pages should be accessed. If you _do_ need to specify which pages should be accessed by the prerenderer, you can do so with [`config.kit.prerender.entries`](configuration#prerender), or by exporting an [`entries`](#entries) function from your dynamic route.
+The prerenderer will start at the root of your app and generate files for any prerenderable pages or `+server.js` routes it finds. Each page is scanned for `<a>` elements that point to other pages that are candidates for prerendering — because of this, you generally don't need to specify which pages should be accessed. If you _do_ need to specify which pages should be accessed by the prerenderer, you can do so with [`config.prerender.entries`](configuration#prerender), or by exporting an [`entries`](#entries) function from your dynamic route.
 
-While prerendering, the value of `building` imported from [`$app/environment`]($app-environment) will be `true`.
+While prerendering, the value of `building` imported from [`$app/env`]($app-env) will be `true`.
 
 ### Prerendering server routes
 
@@ -80,7 +80,7 @@ If you encounter an error like 'The following routes were marked as prerenderabl
 
 Since these routes cannot be dynamically server-rendered, this will cause errors when people try to access the route in question. There are a few ways to fix it:
 
-* Ensure that SvelteKit can find the route by following links from [`config.kit.prerender.entries`](configuration#prerender) or the [`entries`](#entries) page option. Add links to dynamic routes (i.e. pages with `[parameters]` ) to this option if they are not found through crawling the other entry points, else they are not prerendered because SvelteKit doesn't know what value the parameters should have. Pages not marked as prerenderable will be ignored and their links to other pages will not be crawled, even if some of them would be prerenderable.
+* Ensure that SvelteKit can find the route by following links from [`config.prerender.entries`](configuration#prerender) or the [`entries`](#entries) page option. Add links to dynamic routes (i.e. pages with `[parameters]` ) to this option if they are not found through crawling the other entry points, else they are not prerendered because SvelteKit doesn't know what value the parameters should have. Pages not marked as prerenderable will be ignored and their links to other pages will not be crawled, even if some of them would be prerenderable.
 * Ensure that SvelteKit can find the route by discovering a link to it from one of your other prerendered pages that have server-side rendering enabled.
 * Change `export const prerender = true` to `export const prerender = 'auto'`. Routes with `'auto'` can be dynamically server rendered
 
@@ -98,7 +98,7 @@ SvelteKit will discover pages to prerender automatically, by starting at _entry 
 
 Most of the time, that's enough. In some situations, links to pages like `/blog/hello-world` might not exist (or might not exist on prerendered pages), in which case we need to tell SvelteKit about their existence.
 
-This can be done with [`config.kit.prerender.entries`](configuration#prerender), or by exporting an `entries` function from a `+page.js`, a `+page.server.js` or a `+server.js` belonging to a dynamic route:
+This can be done with [`config.prerender.entries`](configuration#prerender), or by exporting an `entries` function from a `+page.js`, a `+page.server.js` or a `+server.js` belonging to a dynamic route:
 
 ```js
 /// file: src/routes/blog/[slug]/+page.server.js
@@ -117,7 +117,9 @@ export const prerender = true;
 
 ## ssr
 
-Normally, SvelteKit renders your page on the server first and sends that HTML to the client where it's [hydrated](glossary#Hydration). If you set `ssr` to `false`, it renders an empty 'shell' page instead. This is useful if your page is unable to be rendered on the server (because you use browser-only globals like `document` for example), but in most situations it's not recommended ([see appendix](glossary#SSR)).
+Normally, SvelteKit renders your page on the server before sending that HTML to the client where it's [hydrated](glossary#Hydration). This is also required for prerendering to save the full contents of a page.
+
+If you set `ssr` to `false`, it renders an empty 'shell' page instead. This is useful if your page is unable to be rendered on the server (because you use browser-only globals like `document` for example), but in most situations it's not recommended ([see appendix](glossary#SSR)).
 
 ```js
 /// file: +page.js
@@ -125,7 +127,7 @@ export const ssr = false;
 // If both `ssr` and `csr` are `false`, nothing will be rendered!
 ```
 
-If you add `export const ssr = false` to your root `+layout.js`, your entire app will only be rendered on the client — which essentially means you turn your app into an SPA.
+If you add `export const ssr = false` to your root `+layout.js`, your entire app will only be rendered on the client — which essentially means you turn your app into an [SPA](glossary#SPA). You should not do this if your goal is to build a [statically generated site](glossary#SSG).
 
 > [!NOTE] If all your page options are boolean or string literal values, SvelteKit will evaluate them statically. If not, it will import your `+page.js` or `+layout.js` file on the server (both at build time, and at runtime if your app isn't fully static) so it can evaluate the options. In the second case, browser-only code must not run when the module is loaded. In practice, this means you should import browser-only code in your `+page.svelte` or `+layout.svelte` file instead.
 
@@ -151,7 +153,7 @@ You can enable `csr` during development (for example to take advantage of HMR) l
 
 ```js
 /// file: +page.js
-import { dev } from '$app/environment';
+import { dev } from '$app/env';
 
 export const csr = dev;
 ```

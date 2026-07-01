@@ -1,8 +1,12 @@
-/** @import { RemoteForm } from '@sveltejs/kit' */
-/** @import { InternalRemoteFormIssue } from 'types' */
+/** @import { BinaryFormMeta, InternalRemoteFormIssue } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 
 import { DEV } from 'esm-env';
+import * as devalue from 'devalue';
+import { text_encoder } from './utils.js';
+import { SvelteKitError } from '@sveltejs/kit/internal';
+
+const decoder = new TextDecoder();
 
 /**
  * Sets a value in a nested object using a path string, mutating the original object
@@ -31,24 +35,17 @@ export function convert_formdata(data) {
 	const result = {};
 
 	for (let key of data.keys()) {
-		if (key.startsWith('sveltekit:')) {
-			continue;
-		}
-
 		const is_array = key.endsWith('[]');
 		/** @type {any[]} */
 		let values = data.getAll(key);
 
 		if (is_array) key = key.slice(0, -2);
 
-		if (values.length > 1 && !is_array) {
-			throw new Error(`Form cannot contain duplicated keys — "${key}" has ${values.length} values`);
-		}
-
 		// an empty `<input type="file">` will submit a non-existent file, bizarrely
 		values = values.filter(
 			(entry) => typeof entry === 'string' || entry.name !== '' || entry.size > 0
 		);
+		if (values.length === 0 && !is_array) continue;
 
 		if (key.startsWith('n:')) {
 			key = key.slice(2);
@@ -58,10 +55,404 @@ export function convert_formdata(data) {
 			values = values.map((v) => v === 'on');
 		}
 
+		if (values.length > 1 && !is_array) {
+			throw new Error(`Form cannot contain duplicated keys — "${key}" has ${values.length} values`);
+		}
+
 		set_nested_value(result, key, is_array ? values : values[0]);
 	}
 
 	return result;
+}
+
+export const BINARY_FORM_CONTENT_TYPE = 'application/x-sveltekit-formdata';
+const BINARY_FORM_VERSION = 0;
+const HEADER_BYTES = 1 + 4 + 2;
+/**
+ * The binary format is as follows:
+ * - 1 byte: Format version
+ * - 4 bytes: Length of the header (u32)
+ * - 2 bytes: Length of the file offset table (u16)
+ * - header: devalue.stringify([data, meta])
+ * - file offset table: JSON.stringify([offset1, offset2, ...]) (empty if no files) (offsets start from the end of the table)
+ * - file1, file2, ...
+ * @param {Record<string, any>} data
+ * @param {BinaryFormMeta} meta
+ */
+export function serialize_binary_form(data, meta) {
+	/** @type {Array<BlobPart>} */
+	const blob_parts = [new Uint8Array([BINARY_FORM_VERSION])];
+
+	/** @type {Array<[file: File, index: number]>} */
+	const files = [];
+
+	const encoded_header = devalue.stringify([data, meta], {
+		File: (file) => {
+			if (!(file instanceof File)) return;
+
+			files.push([file, files.length]);
+			return [file.name, file.type, file.size, file.lastModified, files.length - 1];
+		}
+	});
+
+	const encoded_header_buffer = text_encoder.encode(encoded_header);
+
+	let encoded_file_offsets = '';
+	if (files.length) {
+		// Sort small files to the front
+		files.sort(([a], [b]) => a.size - b.size);
+
+		/** @type {Array<number>} */
+		const file_offsets = new Array(files.length);
+		let start = 0;
+		for (const [file, index] of files) {
+			file_offsets[index] = start;
+			start += file.size;
+		}
+		encoded_file_offsets = JSON.stringify(file_offsets);
+	}
+
+	const length_buffer = new Uint8Array(4);
+	const length_view = new DataView(length_buffer.buffer);
+
+	length_view.setUint32(0, encoded_header_buffer.byteLength, true);
+	blob_parts.push(length_buffer.slice());
+
+	length_view.setUint16(0, encoded_file_offsets.length, true);
+	blob_parts.push(length_buffer.slice(0, 2));
+
+	blob_parts.push(encoded_header_buffer);
+	blob_parts.push(encoded_file_offsets);
+
+	for (const [file] of files) {
+		blob_parts.push(file);
+	}
+
+	return {
+		blob: new Blob(blob_parts)
+	};
+}
+
+/**
+ * @param {Request} request
+ * @returns {Promise<{ data: Record<string, any>; meta: BinaryFormMeta; form_data: FormData | null }>}
+ */
+export async function deserialize_binary_form(request) {
+	if (request.headers.get('content-type') !== BINARY_FORM_CONTENT_TYPE) {
+		const form_data = await request.formData();
+		return { data: convert_formdata(form_data), meta: {}, form_data };
+	}
+	if (!request.body) {
+		throw deserialize_error('no body');
+	}
+
+	// TODO: remove this workaround once we upgrade to TS 6.0
+	const reader = /** @type {ReadableStreamDefaultReader<Uint8Array<ArrayBuffer>>} */ (
+		request.body.getReader()
+	);
+
+	/** @type {Array<Promise<Uint8Array<ArrayBuffer> | undefined>>} */
+	const chunks = [];
+
+	/**
+	 * @param {number} index
+	 * @returns {Promise<Uint8Array<ArrayBuffer> | undefined>}
+	 */
+	function get_chunk(index) {
+		if (index in chunks) return chunks[index];
+
+		let i = chunks.length;
+		while (i <= index) {
+			chunks[i] = reader.read().then((chunk) => chunk.value);
+			i++;
+		}
+		return chunks[index];
+	}
+
+	/**
+	 * @param {number} offset
+	 * @param {number} length
+	 * @returns {Promise<Uint8Array | null>}
+	 */
+	async function get_buffer(offset, length) {
+		/** @type {Uint8Array} */
+		let start_chunk;
+		let chunk_start = 0;
+		/** @type {number} */
+		let chunk_index;
+		for (chunk_index = 0; ; chunk_index++) {
+			const chunk = await get_chunk(chunk_index);
+			if (!chunk) return null;
+
+			const chunk_end = chunk_start + chunk.byteLength;
+			// If this chunk contains the target offset
+			if (offset >= chunk_start && offset < chunk_end) {
+				start_chunk = chunk;
+				break;
+			}
+			chunk_start = chunk_end;
+		}
+		// If the buffer is completely contained in one chunk, do a subarray
+		if (offset + length <= chunk_start + start_chunk.byteLength) {
+			return start_chunk.subarray(offset - chunk_start, offset + length - chunk_start);
+		}
+		// Otherwise, copy the data into a new buffer
+		const chunks = [start_chunk.subarray(offset - chunk_start)];
+		let cursor = start_chunk.byteLength - offset + chunk_start;
+		while (cursor < length) {
+			chunk_index++;
+			let chunk = await get_chunk(chunk_index);
+			if (!chunk) return null;
+			if (chunk.byteLength > length - cursor) {
+				chunk = chunk.subarray(0, length - cursor);
+			}
+			chunks.push(chunk);
+			cursor += chunk.byteLength;
+		}
+		const buffer = new Uint8Array(length);
+		cursor = 0;
+		for (const chunk of chunks) {
+			buffer.set(chunk, cursor);
+			cursor += chunk.byteLength;
+		}
+
+		return buffer;
+	}
+
+	const header = await get_buffer(0, HEADER_BYTES);
+	if (!header) throw deserialize_error('too short');
+
+	if (header[0] !== BINARY_FORM_VERSION) {
+		throw deserialize_error(`got version ${header[0]}, expected version ${BINARY_FORM_VERSION}`);
+	}
+	const header_view = new DataView(header.buffer, header.byteOffset, header.byteLength);
+	const data_length = header_view.getUint32(1, true);
+	const file_offsets_length = header_view.getUint16(5, true);
+
+	// Validation uses embedded binary header fields (data_length, file_offsets_length)
+	// rather than Content-Length, which proxies/middleboxes may strip or corrupt.
+	// See: https://github.com/sveltejs/kit/issues/15299
+
+	// Read the form data
+	const data_buffer = await get_buffer(HEADER_BYTES, data_length);
+	if (!data_buffer) throw deserialize_error('data too short');
+
+	/** @type {Array<number | undefined>} */
+	let file_offsets;
+	/** @type {number} */
+	let files_start_offset;
+	if (file_offsets_length > 0) {
+		// Read the file offset table
+		const file_offsets_buffer = await get_buffer(HEADER_BYTES + data_length, file_offsets_length);
+		if (!file_offsets_buffer) throw deserialize_error('file offset table too short');
+
+		const parsed_offsets = JSON.parse(decoder.decode(file_offsets_buffer));
+
+		if (
+			!Array.isArray(parsed_offsets) ||
+			parsed_offsets.some((n) => typeof n !== 'number' || !Number.isInteger(n) || n < 0)
+		) {
+			throw deserialize_error('invalid file offset table');
+		}
+
+		file_offsets = /** @type {Array<number>} */ (parsed_offsets);
+		files_start_offset = HEADER_BYTES + data_length + file_offsets_length;
+	}
+
+	/** @type {Array<{ offset: number, size: number }>} */
+	const file_spans = [];
+	const [data, meta] = devalue.parse(decoder.decode(data_buffer), {
+		File: ([name, type, size, last_modified, index]) => {
+			if (
+				typeof name !== 'string' ||
+				typeof type !== 'string' ||
+				typeof size !== 'number' ||
+				typeof last_modified !== 'number' ||
+				typeof index !== 'number'
+			) {
+				throw deserialize_error('invalid file metadata');
+			}
+
+			let offset = file_offsets[index];
+
+			// Check that the file offset table entry has not been already
+			// used. If not, immediately mark it as used.
+			if (offset === undefined) {
+				throw deserialize_error('duplicate file offset table index');
+			}
+			file_offsets[index] = undefined;
+
+			offset += files_start_offset;
+
+			file_spans.push({ offset, size });
+
+			return new Proxy(new LazyFile(name, type, size, last_modified, get_chunk, offset), {
+				getPrototypeOf() {
+					// Trick validators into thinking this is a normal File
+					return File.prototype;
+				}
+			});
+		}
+	});
+
+	// Sort file spans in increasing order primarily by offset
+	// and secondarily by size (to allow 0-length files).
+	file_spans.sort((a, b) => a.offset - b.offset || a.size - b.size);
+
+	// Check that file spans do not overlap and there are no gaps between them.
+	for (let i = 1; i < file_spans.length; i++) {
+		const previous = file_spans[i - 1];
+		const current = file_spans[i];
+
+		const previous_end = previous.offset + previous.size;
+		if (previous_end < current.offset) {
+			throw deserialize_error('gaps in file data');
+		}
+		if (previous_end > current.offset) {
+			throw deserialize_error('overlapping file data');
+		}
+	}
+
+	// Read the request body asynchronously so it doesn't stall
+	void (async () => {
+		let has_more = true;
+		while (has_more) {
+			const chunk = await get_chunk(chunks.length);
+			has_more = !!chunk;
+		}
+	})();
+
+	return { data, meta, form_data: null };
+}
+/**
+ * @param {string} message
+ */
+function deserialize_error(message) {
+	return new SvelteKitError(400, 'Bad Request', `Could not deserialize binary form: ${message}`);
+}
+
+/** @implements {File} */
+class LazyFile {
+	/** @type {(index: number) => Promise<Uint8Array<ArrayBuffer> | undefined>} */
+	#get_chunk;
+	/** @type {number} */
+	#offset;
+	/**
+	 * @param {string} name
+	 * @param {string} type
+	 * @param {number} size
+	 * @param {number} last_modified
+	 * @param {(index: number) => Promise<Uint8Array<ArrayBuffer> | undefined>} get_chunk
+	 * @param {number} offset
+	 */
+	constructor(name, type, size, last_modified, get_chunk, offset) {
+		this.name = name;
+		this.type = type;
+		this.size = size;
+		this.lastModified = last_modified;
+		this.webkitRelativePath = '';
+		this.#get_chunk = get_chunk;
+		this.#offset = offset;
+
+		// TODO - hacky, required for private members to be accessed on proxy
+		this.arrayBuffer = this.arrayBuffer.bind(this);
+		this.bytes = this.bytes.bind(this);
+		this.slice = this.slice.bind(this);
+		this.stream = this.stream.bind(this);
+		this.text = this.text.bind(this);
+	}
+	/** @type {ArrayBuffer | undefined} */
+	#buffer;
+	async arrayBuffer() {
+		this.#buffer ??= await new Response(this.stream()).arrayBuffer();
+		return this.#buffer;
+	}
+	async bytes() {
+		return new Uint8Array(await this.arrayBuffer());
+	}
+	/**
+	 * @param {number=} start
+	 * @param {number=} end
+	 * @param {string=} contentType
+	 */
+	slice(start = 0, end = this.size, contentType = this.type) {
+		// https://github.com/nodejs/node/blob/a5f3cd8cb5ba9e7911d93c5fd3ebc6d781220dd8/lib/internal/blob.js#L240
+		if (start < 0) {
+			start = Math.max(this.size + start, 0);
+		} else {
+			start = Math.min(start, this.size);
+		}
+
+		if (end < 0) {
+			end = Math.max(this.size + end, 0);
+		} else {
+			end = Math.min(end, this.size);
+		}
+		const size = Math.max(end - start, 0);
+		const file = new LazyFile(
+			this.name,
+			contentType,
+			size,
+			this.lastModified,
+			this.#get_chunk,
+			this.#offset + start
+		);
+
+		return file;
+	}
+	stream() {
+		let cursor = 0;
+		let chunk_index = 0;
+		return new ReadableStream({
+			start: async (controller) => {
+				let chunk_start = 0;
+				/** @type {Uint8Array} */
+				let start_chunk;
+				for (chunk_index = 0; ; chunk_index++) {
+					const chunk = await this.#get_chunk(chunk_index);
+					if (!chunk) return null;
+
+					const chunk_end = chunk_start + chunk.byteLength;
+					// If this chunk contains the target offset
+					if (this.#offset >= chunk_start && this.#offset < chunk_end) {
+						start_chunk = chunk;
+						break;
+					}
+					chunk_start = chunk_end;
+				}
+				// If the buffer is completely contained in one chunk, do a subarray
+				if (this.#offset + this.size <= chunk_start + start_chunk.byteLength) {
+					controller.enqueue(
+						start_chunk.subarray(this.#offset - chunk_start, this.#offset + this.size - chunk_start)
+					);
+					controller.close();
+				} else {
+					controller.enqueue(start_chunk.subarray(this.#offset - chunk_start));
+					cursor = start_chunk.byteLength - this.#offset + chunk_start;
+				}
+			},
+			pull: async (controller) => {
+				chunk_index++;
+				let chunk = await this.#get_chunk(chunk_index);
+				if (!chunk) {
+					controller.error('incomplete file data');
+					controller.close();
+					return;
+				}
+				if (chunk.byteLength > this.size - cursor) {
+					chunk = chunk.subarray(0, this.size - cursor);
+				}
+				controller.enqueue(chunk);
+				cursor += chunk.byteLength;
+				if (cursor >= this.size) {
+					controller.close();
+				}
+			}
+		});
+	}
+	async text() {
+		return decoder.decode(await this.arrayBuffer());
+	}
 }
 
 const path_regex = /^[a-zA-Z_$]\w*(\.[a-zA-Z_$]\w*|\[\d+\])*$/;
@@ -105,8 +496,8 @@ export function deep_set(object, keys, value) {
 		check_prototype_pollution(key);
 
 		const is_array = /^\d+$/.test(keys[i + 1]);
-		const exists = key in current;
-		const inner = current[key];
+		const inner = Object.hasOwn(current, key) ? current[key] : undefined;
+		const exists = inner != null;
 
 		if (exists && is_array !== Array.isArray(inner)) {
 			throw new Error(`Invalid array key ${keys[i + 1]}`);
@@ -202,17 +593,67 @@ export function deep_get(object, path) {
 }
 
 /**
+ *
+ * @param {string} field_type
+ * @param {boolean} is_array
+ * @param {unknown} input_value
+ */
+function get_type_prefix(field_type, is_array, input_value) {
+	if (field_type === 'number' || field_type === 'range') return 'n:';
+	if (field_type === 'checkbox' && !is_array) return 'b:';
+	if (field_type === 'hidden' || field_type === 'submit') {
+		const input_type = typeof input_value;
+		if (input_type === 'number') return 'n:';
+		if (input_type === 'boolean') return 'b:';
+	}
+	return '';
+}
+
+/**
+ * A deep-clone implementation specifically for form data, where
+ * we don't need to worry about cycles and whatnot
+ * @param {any} value
+ * @returns {any}
+ */
+function deep_clone(value) {
+	if (value !== null && typeof value === 'object') {
+		if (value instanceof Date) {
+			return new Date(value.getTime());
+		}
+
+		if (value instanceof File) {
+			return value;
+		}
+
+		if (Array.isArray(value)) {
+			return value.map(deep_clone);
+		}
+
+		/** @type {Record<string, any>} */
+		const clone = {};
+		for (const key of Object.keys(value)) {
+			clone[key] = deep_clone(value[key]);
+		}
+
+		return clone;
+	}
+
+	return value;
+}
+
+/**
  * Creates a proxy-based field accessor for form data
  * @param {any} target - Function or empty POJO
  * @param {() => Record<string, any>} get_input - Function to get current input data
  * @param {(path: (string | number)[], value: any) => void} set_input - Function to set input data
- * @param {() => Record<string, InternalRemoteFormIssue[]>} get_issues - Function to get current issues
+ * @param {(path?: (string | number)[], all?: boolean) => Record<string, InternalRemoteFormIssue[]>} get_issues - Function to get current issues
  * @param {(string | number)[]} path - Current access path
  * @returns {any} Proxy object with name(), value(), and issues() methods
  */
 export function create_field_proxy(target, get_input, set_input, get_issues, path = []) {
 	const get_value = () => {
-		return deep_get(get_input(), path);
+		const value = deep_get(get_input(), path);
+		return deep_clone(value);
 	};
 
 	return new Proxy(target, {
@@ -243,7 +684,7 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 
 			if (prop === 'issues' || prop === 'allIssues') {
 				const issues_func = () => {
-					const all_issues = get_issues()[key === '' ? '$' : key];
+					const all_issues = get_issues(path, prop === 'allIssues')[key === '' ? '$' : key];
 
 					if (prop === 'allIssues') {
 						return all_issues?.map((issue) => ({
@@ -252,12 +693,14 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 						}));
 					}
 
-					return all_issues
+					const issues = all_issues
 						?.filter((issue) => issue.name === key)
 						?.map((issue) => ({
 							path: issue.path,
 							message: issue.message
 						}));
+
+					return issues?.length ? issues : undefined;
 				};
 
 				return create_field_proxy(issues_func, get_input, set_input, get_issues, [...path, prop]);
@@ -266,7 +709,7 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 			if (prop === 'as') {
 				/**
 				 * @param {string} type
-				 * @param {string} [input_value]
+				 * @param {unknown} [input_value]
 				 */
 				const as_func = (type, input_value) => {
 					const is_array =
@@ -274,12 +717,7 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 						type === 'select multiple' ||
 						(type === 'checkbox' && typeof input_value === 'string');
 
-					const prefix =
-						type === 'number' || type === 'range'
-							? 'n:'
-							: type === 'checkbox' && !is_array
-								? 'b:'
-								: '';
+					const prefix = get_type_prefix(type, is_array, input_value);
 
 					// Base properties for all input types
 					/** @type {Record<string, any>} */
@@ -299,13 +737,16 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 					// Handle submit and hidden inputs
 					if (type === 'submit' || type === 'hidden') {
 						if (DEV) {
-							if (!input_value) {
+							if (input_value === null || input_value === undefined) {
 								throw new Error(`\`${type}\` inputs must have a value`);
 							}
 						}
 
+						const value =
+							typeof input_value === 'boolean' ? (input_value ? 'on' : 'off') : input_value;
+
 						return Object.defineProperties(base_props, {
-							value: { value: input_value, enumerable: true }
+							value: { value, enumerable: true }
 						});
 					}
 
@@ -316,7 +757,7 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 							value: {
 								enumerable: true,
 								get() {
-									return get_value();
+									return get_value() ?? input_value;
 								}
 							}
 						});
@@ -334,6 +775,23 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 							}
 						}
 
+						if (type === 'checkbox' && !is_array) {
+							return Object.defineProperties(base_props, {
+								defaultChecked: {
+									enumerable: true,
+									get() {
+										return input_value;
+									}
+								},
+								checked: {
+									enumerable: true,
+									get() {
+										return get_value() ?? input_value;
+									}
+								}
+							});
+						}
+
 						return Object.defineProperties(base_props, {
 							value: { value: input_value ?? 'on', enumerable: true },
 							checked: {
@@ -345,11 +803,7 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 										return value === input_value;
 									}
 
-									if (is_array) {
-										return (value ?? []).includes(input_value);
-									}
-
-									return value;
+									return (value ?? []).includes(input_value);
 								}
 							}
 						});
@@ -399,10 +853,16 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 
 					// Handle all other input types (text, number, etc.)
 					return Object.defineProperties(base_props, {
+						defaultValue: {
+							enumerable: true,
+							get() {
+								return input_value;
+							}
+						},
 						value: {
 							enumerable: true,
 							get() {
-								const value = get_value();
+								const value = get_value() ?? input_value;
 								return value != null ? String(value) : '';
 							}
 						}
@@ -435,43 +895,4 @@ export function build_path_string(path) {
 	}
 
 	return result;
-}
-
-/**
- * @param {RemoteForm<any, any>} instance
- * @deprecated remove in 3.0
- */
-export function throw_on_old_property_access(instance) {
-	Object.defineProperty(instance, 'field', {
-		value: (/** @type {string} */ name) => {
-			const new_name = name.endsWith('[]') ? name.slice(0, -2) : name;
-			throw new Error(
-				`\`form.field\` has been removed: Instead of \`<input name={form.field('${name}')} />\` do \`<input {...form.fields.${new_name}.as(type)} />\``
-			);
-		}
-	});
-
-	for (const property of ['input', 'issues']) {
-		Object.defineProperty(instance, property, {
-			get() {
-				const new_name = property === 'issues' ? 'issues' : 'value';
-				return new Proxy(
-					{},
-					{
-						get(_, prop) {
-							const prop_string = typeof prop === 'string' ? prop : String(prop);
-							const old =
-								prop_string.includes('[') || prop_string.includes('.')
-									? `['${prop_string}']`
-									: `.${prop_string}`;
-							const replacement = `.${prop_string}.${new_name}()`;
-							throw new Error(
-								`\`form.${property}\` has been removed: Instead of \`form.${property}${old}\` write \`form.fields${replacement}\``
-							);
-						}
-					}
-				);
-			}
-		});
-	}
 }

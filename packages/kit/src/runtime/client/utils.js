@@ -1,7 +1,8 @@
 import { BROWSER, DEV } from 'esm-env';
 import { writable } from 'svelte/store';
-import { assets } from '$app/paths';
-import { version } from '__sveltekit/environment';
+import { assets } from '$app/paths/internal/client';
+import { version } from '$app/env';
+import { noop } from '../../utils/functions.js';
 import { PRELOAD_PRIORITIES } from './constants.js';
 
 /* global __SVELTEKIT_APP_VERSION_FILE__, __SVELTEKIT_APP_VERSION_POLL_INTERVAL__ */
@@ -34,12 +35,12 @@ const warned = new WeakSet();
 /** @typedef {keyof typeof valid_link_options} LinkOptionName */
 
 const valid_link_options = /** @type {const} */ ({
-	'preload-code': ['', 'off', 'false', 'tap', 'hover', 'viewport', 'eager'],
-	'preload-data': ['', 'off', 'false', 'tap', 'hover'],
-	keepfocus: ['', 'true', 'off', 'false'],
-	noscroll: ['', 'true', 'off', 'false'],
-	reload: ['', 'true', 'off', 'false'],
-	replacestate: ['', 'true', 'off', 'false']
+	'preload-code': ['', 'false', 'tap', 'hover', 'viewport', 'eager'],
+	'preload-data': ['', 'false', 'tap', 'hover'],
+	keepfocus: ['', 'true', 'false'],
+	noscroll: ['', 'true', 'false'],
+	reload: ['', 'true', 'false'],
+	replacestate: ['', 'true', 'false']
 });
 
 /**
@@ -193,7 +194,6 @@ export function get_router_options(element) {
 			case '':
 			case 'true':
 				return true;
-			case 'off':
 			case 'false':
 				return false;
 			default:
@@ -202,8 +202,8 @@ export function get_router_options(element) {
 	}
 
 	return {
-		preload_code: levels[preload_code ?? 'off'],
-		preload_data: levels[preload_data ?? 'off'],
+		preload_code: levels[preload_code ?? 'false'],
+		preload_data: levels[preload_data ?? 'false'],
 		keepfocus: get_option_state(keepfocus),
 		noscroll: get_option_state(noscroll),
 		reload: get_option_state(reload),
@@ -242,13 +242,13 @@ export function notifiable_store(value) {
 }
 
 export const updated_listener = {
-	v: () => {}
+	v: noop
 };
 
 export function create_updated_store() {
 	const { set, subscribe } = writable(false);
 
-	if (DEV || !BROWSER) {
+	if (__SVELTEKIT_DEV__ || !BROWSER) {
 		return {
 			subscribe,
 			// eslint-disable-next-line @typescript-eslint/require-await
@@ -270,7 +270,6 @@ export function create_updated_store() {
 		try {
 			const res = await fetch(`${assets}/${__SVELTEKIT_APP_VERSION_FILE__}`, {
 				headers: {
-					pragma: 'no-cache',
 					'cache-control': 'no-cache'
 				}
 			});
@@ -317,23 +316,14 @@ export function is_external_url(url, base, hash_routing) {
 	}
 
 	if (hash_routing) {
-		if (url.pathname === base + '/' || url.pathname === base + '/index.html') {
-			return false;
-		}
-
-		// be lenient if serving from filesystem
-		if (url.protocol === 'file:' && url.pathname.replace(/\/[^/]+\.html?$/, '') === base) {
-			return false;
-		}
-
-		return true;
+		return url.pathname !== location.pathname;
 	}
 
 	return false;
 }
 
-/** @type {Record<string, boolean>} */
-const seen = {};
+/** @type {Set<string> | null} */
+let seen = null;
 
 /**
  * Used for server-side resolution, to replicate Vite's CSS loading behaviour in production.
@@ -350,13 +340,17 @@ export function load_css(deps) {
 	);
 	const csp_nonce = csp_nonce_meta?.nonce || csp_nonce_meta?.getAttribute('nonce');
 
-	for (const dep of deps) {
-		if (dep in seen) continue;
-		seen[dep] = true;
+	seen ??= new Set(
+		Array.from(document.querySelectorAll('link[rel="stylesheet"]')).map((link) => {
+			return /** @type {HTMLLinkElement} */ (link).href;
+		})
+	);
 
-		if (document.querySelector(`link[href="${dep}"][rel="stylesheet"]`)) {
-			continue;
-		}
+	for (const dep of deps) {
+		const href = new URL(dep, document.baseURI).href;
+
+		if (seen.has(href)) continue;
+		seen.add(href);
 
 		const link = document.createElement('link');
 		link.rel = 'stylesheet';

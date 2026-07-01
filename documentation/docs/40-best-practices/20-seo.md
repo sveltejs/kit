@@ -39,12 +39,12 @@ export async function GET() {
 		`
 		<?xml version="1.0" encoding="UTF-8" ?>
 		<urlset
-			xmlns="https://www.sitemaps.org/schemas/sitemap/0.9"
-			xmlns:xhtml="https://www.w3.org/1999/xhtml"
-			xmlns:mobile="https://www.google.com/schemas/sitemap-mobile/1.0"
-			xmlns:news="https://www.google.com/schemas/sitemap-news/0.9"
-			xmlns:image="https://www.google.com/schemas/sitemap-image/1.1"
-			xmlns:video="https://www.google.com/schemas/sitemap-video/1.1"
+			xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+			xmlns:xhtml="http://www.w3.org/1999/xhtml"
+			xmlns:mobile="http://www.google.com/schemas/sitemap-mobile/1.0"
+			xmlns:news="http://www.google.com/schemas/sitemap-news/0.9"
+			xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
+			xmlns:video="http://www.google.com/schemas/sitemap-video/1.1"
 		>
 			<!-- <url> elements go here -->
 		</urlset>`.trim(),
@@ -62,17 +62,19 @@ export async function GET() {
 An unfortunate reality of modern web development is that it is sometimes necessary to create an [Accelerated Mobile Pages (AMP)](https://amp.dev/) version of your site. In SvelteKit this can be done by setting the [`inlineStyleThreshold`](configuration#inlineStyleThreshold) option...
 
 ```js
-/// file: svelte.config.js
-/** @type {import('@sveltejs/kit').Config} */
-const config = {
-	kit: {
-		// since <link rel="stylesheet"> isn't
-		// allowed, inline all styles
-		inlineStyleThreshold: Infinity
-	}
-};
+/// file: vite.config.js
+import { defineConfig } from 'vite';
+import { sveltekit } from '@sveltejs/kit/vite';
 
-export default config;
+export default defineConfig({
+	plugins: [
+		sveltekit({
+			// since <link rel="stylesheet"> isn't
+			// allowed, inline all styles
+			inlineStyleThreshold: Infinity
+		})
+	]
+});
 ```
 
 ...disabling `csr` in your root `+layout.js`/`+layout.server.js`...

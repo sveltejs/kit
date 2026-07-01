@@ -1,6 +1,6 @@
 import { DEV } from 'esm-env';
 import * as svelte from 'svelte';
-import { base } from '$app/paths';
+import { base } from '$app/paths/internal/client';
 import { get_current, get_navigation_intent, load_route, set_root } from './client.js';
 import { PRELOAD_PRIORITIES } from './constants.js';
 import { page, update } from './state.svelte.js';
@@ -17,10 +17,26 @@ import {
  * If a preload becomes a real navigation, it's removed from the set.
  * If a preload token is in the set and the preload errors, the error
  * handling logic (for example reloading) is skipped.
+ * @type {Set<object>}
  */
 export const preload_tokens = new Set();
 
 /** @typedef {(typeof PRELOAD_PRIORITIES)['hover'] | (typeof PRELOAD_PRIORITIES)['tap']} PreloadDataPriority */
+
+/**
+ * The anchor element whose href is being preloaded. It is reset after navigation
+ * or changes when a different anchor element is being preloaded.
+ * @type {{ element: HTMLAnchorElement | SVGAElement | undefined; href: string | SVGAnimatedString | undefined }}
+ */
+let current_a = { element: undefined, href: undefined };
+
+/**
+ *
+ * @param {HTMLAnchorElement | SVGAElement | undefined} element
+ */
+export function set_current_a(element) {
+	current_a = { element, href: element?.href };
+}
 
 /**
  * @param {HTMLElement} container
@@ -28,10 +44,8 @@ export const preload_tokens = new Set();
  * @param {Set<(navigation: import('@sveltejs/kit').AfterNavigate) => void>} after_navigate_callbacks
  */
 export function setup(container, app, after_navigate_callbacks) {
-	/** @type {NodeJS.Timeout} */
+	/** @type {number} */
 	let mousemove_timeout;
-	/** @type {Element} */
-	let current_a;
 	/** @type {PreloadDataPriority} */
 	let current_priority;
 
@@ -39,7 +53,7 @@ export function setup(container, app, after_navigate_callbacks) {
 		const target = /** @type {Element} */ (event.target);
 
 		clearTimeout(mousemove_timeout);
-		mousemove_timeout = setTimeout(() => {
+		mousemove_timeout = window.setTimeout(() => {
 			void preload(target, PRELOAD_PRIORITIES.hover);
 		}, 20);
 	});
@@ -73,7 +87,8 @@ export function setup(container, app, after_navigate_callbacks) {
 		const a = find_anchor(element, container);
 
 		// we don't want to preload data again if the user has already hovered/tapped
-		const interacted = a === current_a && priority >= current_priority;
+		const interacted =
+			a === current_a.element && a?.href === current_a.href && priority >= current_priority;
 		if (!a || interacted) return;
 
 		const { url, external, download } = get_link_info(a, base, app.hash);
@@ -86,7 +101,7 @@ export function setup(container, app, after_navigate_callbacks) {
 		if (options.reload || same_url) return;
 
 		if (priority <= options.preload_data) {
-			current_a = a;
+			set_current_a(a);
 			// we don't want to preload data again on tap if we've already preloaded it on hover
 			current_priority = PRELOAD_PRIORITIES.tap;
 
@@ -108,7 +123,7 @@ export function setup(container, app, after_navigate_callbacks) {
 				void _preload_data(intent);
 			}
 		} else if (priority <= options.preload_code) {
-			current_a = a;
+			set_current_a(a);
 			current_priority = priority;
 			void _preload_code(/** @type {URL} */ (url));
 		}
@@ -153,6 +168,7 @@ export function set_load_cache(cache) {
 export function discard_load_cache() {
 	void load_cache?.fork?.then((f) => f?.discard());
 	load_cache = null;
+	set_current_a(undefined);
 }
 
 /** @param {import('./types.js').NavigationIntent} intent */
@@ -180,7 +196,7 @@ export async function _preload_data(intent) {
 			fork: null
 		};
 
-		if (svelte.fork) {
+		if (__SVELTEKIT_FORK_PRELOADS__ && svelte.fork) {
 			const lc = load_cache;
 
 			lc.fork = lc.promise.then((result) => {
@@ -213,15 +229,23 @@ export async function _preload_code(url) {
 	const route = (await get_navigation_intent(url, false))?.route;
 
 	if (route) {
-		await Promise.all([...route.layouts, route.leaf].map((load) => load?.[1]()));
+		await Promise.all(
+			/** @type {[has_server_load: boolean, node_loader: import('types').CSRPageNodeLoader][]} */ (
+				[...route.layouts, route.leaf].filter(Boolean)
+			).map((load) => load[1]())
+		);
 	}
 }
 
 /**
- * @param {Omit<import('./types.js').NavigationFinished['state'], 'branch'> & { error: App.Error }} opts
+ * @param {Omit<import('./types.js').NavigationFinished['state'], 'branch'> & { error: App.Error; status: number; }} opts
  * @returns {import('./types.js').NavigationFinished}
  */
-export function preload_error({ error, url, route, params }) {
+export function preload_error({ error, status, url, route, params }) {
+	// we skipped loading the error page, so we need to use the current page
+	// store, but we still pass the updated status to the preloadData function
+	const new_page = clone_page(page);
+	new_page.status = status;
 	return {
 		type: 'loaded',
 		state: {
@@ -232,7 +256,7 @@ export function preload_error({ error, url, route, params }) {
 			branch: []
 		},
 		props: {
-			page: clone_page(page),
+			page: new_page,
 			constructors: []
 		}
 	};

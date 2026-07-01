@@ -12,8 +12,6 @@ There are three hooks files, all optional:
 
 Code in these modules will run when the application starts up, making them useful for initializing database clients and so on.
 
-> [!NOTE] You can configure the location of these files with [`config.kit.files.hooks`](configuration#files).
-
 ## Server hooks
 
 The following hooks can be added to `src/hooks.server.js`:
@@ -37,9 +35,11 @@ export async function handle({ event, resolve }) {
 
 > [!NOTE] Requests for static assets — which includes pages that were already prerendered — are _not_ handled by SvelteKit.
 
+If the `handle` hook runs as part of a remote function request initiated by the client, `route`, `params` and `url` relate to the page the remote function was called from, _not_ the URL of the endpoint SvelteKit creates for the remote function. Never use them to determine whether or not a user is authorized to access certain data, as these values are part of the request which could be manipulated. Queries are also not re-run when the user navigates (unless the argument to the query changes as a result of navigation), and so you should be mindful of how you use these values.
+
 If unimplemented, defaults to `({ event, resolve }) => resolve(event)`.
 
-During prerendering, SvelteKit crawls your pages for links and renders each route it finds. Rendering the route invokes the `handle` function (and all other route dependencies, like `load`). If you need to exclude some code from running during this phase, check that the app is not [`building`]($app-environment#building) beforehand.
+During prerendering, SvelteKit crawls your pages for links and renders each route it finds. Rendering the route invokes the `handle` function (and all other route dependencies, like `load`). If you need to exclude some code from running during this phase, check that the app is not [`building`]($app-env#building) beforehand.
 
 ### locals
 
@@ -159,7 +159,7 @@ export const getTodo = query(v.string(), (id) => {
 });
 ```
 
-...but it is called with something that doesn't match the schema — such as a number (e.g `await getTodos(1)`) — then validation will fail, the server will respond with a [400 status code](https://http.dog/400), and the function will throw with the message 'Bad Request'.
+...but it is called with something that doesn't match the schema — such as a number (e.g. `await getTodos(1)`) — then validation will fail, the server will respond with a [400 status code](https://http.dog/400), and the function will throw with the message 'Bad Request'.
 
 To customise this message and add additional properties to the error object, implement `handleValidationError`:
 
@@ -184,11 +184,11 @@ The following can be added to `src/hooks.server.js` _and_ `src/hooks.client.js`:
 If an [unexpected error](errors#Unexpected-errors) is thrown during loading, rendering, or from an endpoint, this function will be called with the `error`, `event`, `status` code and `message`. This allows for two things:
 
 - you can log the error
-- you can generate a custom representation of the error that is safe to show to users, omitting sensitive details like messages and stack traces. The returned value, which defaults to `{ message }`, becomes the value of `$page.error`.
+- you can generate a custom representation of the error that is safe to show to users, omitting sensitive details like messages and stack traces. The returned value, which defaults to `{ message }`, becomes the value of `page.error`.
 
 For errors thrown from your code (or library code called by your code) the status will be 500 and the message will be "Internal Error". While `error.message` may contain sensitive information that should not be exposed to users, `message` is safe (albeit meaningless to the average user).
 
-To add more information to the `$page.error` object in a type-safe way, you can customize the expected shape by declaring an `App.Error` interface (which must include `message: string`, to guarantee sensible fallback behavior). This allows you to — for example — append a tracking ID for users to quote in correspondence with your technical support staff:
+To add more information to the `page.error` object in a type-safe way, you can customize the expected shape by declaring an `App.Error` interface (which must include `message: string`, to guarantee sensible fallback behavior). This allows you to — for example — append a tracking ID for users to quote in correspondence with your technical support staff:
 
 ```ts
 /// file: src/app.d.ts

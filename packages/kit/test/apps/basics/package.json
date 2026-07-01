@@ -25,11 +25,11 @@
 		"@opentelemetry/sdk-trace-node": "catalog:",
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "catalog:",
-		"@vitest/browser": "catalog:",
+		"@vitest/browser-playwright": "catalog:",
 		"svelte": "catalog:",
 		"svelte-check": "catalog:",
 		"test-redirect-importer": "workspace:*",
-		"typescript": "^5.5.4",
+		"typescript": "catalog:",
 		"valibot": "catalog:",
 		"vite": "catalog:",
 		"vitest": "catalog:"

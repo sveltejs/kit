@@ -6,21 +6,22 @@ To generate a standalone Node server, use [`adapter-node`](https://github.com/sv
 
 ## Usage
 
-Install with `npm i -D @sveltejs/adapter-node`, then add the adapter to your `svelte.config.js`:
+Install with `npm i -D @sveltejs/adapter-node`, then add the adapter to your `vite.config.js`:
 
 ```js
-// @errors: 2307
-/// file: svelte.config.js
+// @errors: 2307 2554
+/// file: vite.config.js
 import adapter from '@sveltejs/adapter-node';
+import { sveltekit } from '@sveltejs/kit/vite';
+import { defineConfig } from 'vite';
 
-/** @type {import('@sveltejs/kit').Config} */
-const config = {
-	kit: {
-		adapter: adapter()
-	}
-};
-
-export default config;
+export default defineConfig({
+	plugins: [
+		sveltekit({
+			adapter: adapter()
+		})
+	]
+});
 ```
 
 ## Deploying
@@ -33,7 +34,7 @@ You will need the output directory, the project's `package.json`, and the produc
 node build
 ```
 
-Development dependencies will be bundled into your app using [Rollup](https://rollupjs.org). To control whether a given package is bundled or externalised, place it in `devDependencies` or `dependencies` respectively in your `package.json`.
+Development dependencies will be bundled into your app using [Rolldown](https://rolldown.rs/). To control whether a given package is bundled or externalised, place it in `devDependencies` or `dependencies` respectively in your `package.json`.
 
 ### Compressing responses
 
@@ -140,28 +141,33 @@ The number of seconds to wait before forcefully closing any remaining connection
 
 When using systemd socket activation, `IDLE_TIMEOUT` specifies the number of seconds after which the app is automatically put to sleep when receiving no requests. If not set, the app runs continuously. See [Socket activation](#Socket-activation) for more details.
 
+### `KEEP_ALIVE_TIMEOUT` and `HEADERS_TIMEOUT`
+
+The number of seconds for [`keepAliveTimeout`](https://nodejs.org/api/http.html#serverkeepalivetimeout) and [`headersTimeout`](https://nodejs.org/api/http.html#serverheaderstimeout).
+
 ## Options
 
 The adapter can be configured with various options:
 
 ```js
-// @errors: 2307
-/// file: svelte.config.js
+// @errors: 2307 2554
+/// file: vite.config.js
 import adapter from '@sveltejs/adapter-node';
+import { sveltekit } from '@sveltejs/kit/vite';
+import { defineConfig } from 'vite';
 
-/** @type {import('@sveltejs/kit').Config} */
-const config = {
-	kit: {
-		adapter: adapter({
-			// default options are shown
-			out: 'build',
-			precompress: true,
-			envPrefix: ''
+export default defineConfig({
+	plugins: [
+		sveltekit({
+			adapter: adapter({
+				// default options are shown
+				out: 'build',
+				precompress: true,
+				envPrefix: ''
+			})
 		})
-	}
-};
-
-export default config;
+	]
+});
 ```
 
 ### out
@@ -202,8 +208,8 @@ You can listen to the `sveltekit:shutdown` event which is emitted after the HTTP
 ```js
 // @errors: 2304
 process.on('sveltekit:shutdown', async (reason) => {
-  await jobs.stop();
-  await db.close();
+	await jobs.stop();
+	await db.close();
 });
 ```
 
@@ -269,3 +275,7 @@ app.listen(3000, () => {
 	console.log('listening on port 3000');
 });
 ```
+
+> [!NOTE] When you use `handler.js` in a custom server, only the environment variables read by the handler itself take effect: `ORIGIN`, `PROTOCOL_HEADER`, `HOST_HEADER`, `PORT_HEADER`, `ADDRESS_HEADER`, `XFF_DEPTH`, and `BODY_SIZE_LIMIT`.
+>
+> The server-lifecycle variables (`PORT`, `HOST`, `SOCKET_PATH`, `SHUTDOWN_TIMEOUT`, `IDLE_TIMEOUT`, `KEEP_ALIVE_TIMEOUT`, `HEADERS_TIMEOUT`, `LISTEN_PID`, `LISTEN_FDS`) are only honored by the default `node build` server. Implement them yourself in a custom server if you need the same behavior — for example, the snippet above listens on a hardcoded `3000` regardless of `PORT`.

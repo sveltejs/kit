@@ -71,8 +71,8 @@ export +++async+++ function load({ fetch }) {
 ---	const a = fetch(url1).then(r => r.json());---
 ---	const b = fetch(url2).then(r => r.json());---
 +++	const [a, b] = await Promise.all([
-	  fetch(url1).then(r => r.json()),
-	  fetch(url2).then(r => r.json()),
+		fetch(url1).then(r => r.json()),
+		fetch(url2).then(r => r.json()),
 	]);+++
 	return { a, b };
 }
@@ -143,7 +143,7 @@ If a form contains an `<input type="file">` but does not have an `enctype="multi
 
 ## Generated `tsconfig.json` is more strict
 
-Previously, the generated `tsconfig.json` was trying its best to still produce a somewhat valid config when your `tsconfig.json` included `paths` or `baseUrl`. In SvelteKit 2, the validation is more strict and will warn when you use either `paths` or `baseUrl` in your `tsconfig.json`. These settings are used to generate path aliases and you should use [the `alias` config](configuration#alias) option in your `svelte.config.js` instead, to also create a corresponding alias for the bundler.
+Previously, the generated `tsconfig.json` was trying its best to still produce a somewhat valid config when your `tsconfig.json` included `paths` or `baseUrl`. In SvelteKit 2, the validation is more strict and will warn when you use either `paths` or `baseUrl` in your `tsconfig.json`. These settings are used to generate path aliases and you should use [the `alias` config](configuration#alias) option of the SvelteKit plugin in your `vite.config.js` instead, to also create a corresponding alias for the bundler.
 
 ## `getRequest` no longer throws errors
 

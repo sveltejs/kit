@@ -293,6 +293,79 @@ test.describe('Endpoints', () => {
 		expect(methods).toEqual(unique_methods);
 	});
 
+	test('serves page for GET request when endpoint has no GET handler', async ({ request }) => {
+		const response = await request.fetch('/endpoint-output/post-only-with-page', {
+			headers: {
+				accept: '*/*'
+			}
+		});
+
+		expect(response.status()).toBe(200);
+		expect(response.headers()['content-type']).toContain('text/html');
+		expect(await response.text()).toContain('POST-only endpoint page');
+	});
+
+	test('serves page for HEAD request when endpoint has no HEAD or GET handler', async ({
+		request
+	}) => {
+		const response = await request.fetch('/endpoint-output/post-only-with-page', {
+			method: 'HEAD',
+			headers: {
+				accept: '*/*'
+			}
+		});
+
+		expect(response.status()).toBe(200);
+		expect(response.headers()['content-type']).toContain('text/html');
+		expect(response.headers()['x-sveltekit-page']).toBe('true');
+		expect(await response.text()).toBe('');
+	});
+
+	test('POST to post-only endpoint with sibling page still hits endpoint', async ({ request }) => {
+		const response = await request.post('/endpoint-output/post-only-with-page');
+
+		expect(response.status()).toBe(200);
+		expect(await response.text()).toBe('ok');
+	});
+
+	test('uses fallback handler instead of page when endpoint has no GET but has fallback', async ({
+		request
+	}) => {
+		const response = await request.fetch('/endpoint-output/fallback-with-page', {
+			headers: {
+				accept: '*/*'
+			}
+		});
+
+		expect(response.status()).toBe(200);
+		expect(await response.text()).toBe('catch-all');
+	});
+
+	test('content negotiation: API requests hit endpoint, browser requests hit page', async ({
+		request
+	}) => {
+		// application/json → endpoint
+		const api_response = await request.fetch('/routing/content-negotiation', {
+			headers: {
+				accept: 'application/json'
+			}
+		});
+
+		expect(api_response.status()).toBe(200);
+		expect(await api_response.text()).toBe('GET');
+
+		// text/html → page
+		const html_response = await request.fetch('/routing/content-negotiation', {
+			headers: {
+				accept: 'text/html'
+			}
+		});
+
+		expect(html_response.status()).toBe(200);
+		expect(html_response.headers()['content-type']).toContain('text/html');
+		expect(await html_response.text()).toContain('Hi');
+	});
+
 	// TODO all the remaining tests in this section are really only testing
 	// setResponse, since we're not otherwise changing anything on the response.
 	// might be worth making these unit tests instead
@@ -775,6 +848,12 @@ test.describe('Static files', () => {
 			expect(await response.text()).toBe('hello');
 		});
 	}
+
+	test('returns 404 for Chrome DevTools workspaces request', async ({ request }) => {
+		const response = await request.get('/.well-known/appspecific/com.chrome.devtools.json');
+		expect(response.status()).toBe(404);
+		expect(await response.text()).toBe('not found');
+	});
 });
 
 test.describe('setHeaders', () => {
@@ -788,7 +867,7 @@ test.describe('setHeaders', () => {
 });
 
 test.describe('cookies', () => {
-	test('cookie.serialize created correct cookie header string', async ({ page }) => {
+	test('cookie.stringifySetCookie created correct cookie header string', async ({ page }) => {
 		const response = await page.goto('/cookies/serialize');
 		const cookies = response ? await response.headerValue('set-cookie') : '';
 
@@ -880,7 +959,7 @@ test.describe('$app/forms', () => {
 
 const root = path.resolve(fileURLToPath(import.meta.url), '..', '..');
 
-test.describe('$app/environment', () => {
+test.describe('$app/env', () => {
 	test('treeshakes dev check', async () => {
 		test.skip(!!process.env.DEV, 'skip when in dev mode');
 
@@ -888,8 +967,7 @@ test.describe('$app/environment', () => {
 			path.join(root, '.svelte-kit/output/server/entries/pages/treeshaking/dev/_page.svelte.js'),
 			'utf-8'
 		);
-		// check that import { dev } from '$app/environment' is treeshaken
-		expect(code).not.toContain('dev');
+		expect(code).not.toContain('not prod');
 	});
 
 	test('treeshakes browser check', async () => {
@@ -902,16 +980,15 @@ test.describe('$app/environment', () => {
 			),
 			'utf-8'
 		);
-		// check that import { browser } from '$app/environment' is treeshaken
-		expect(code).not.toContain('browser');
+		expect(code).not.toMatch('client');
 	});
 });
 
 test.describe('tracing', () => {
 	// Helper function to find the resolve.root span deep in the handle.child chain
 	/**
-	 * @param {ReadableSpan} span
-	 * @returns {ReadableSpan | null}
+	 * @param {import('../../../types.js').SpanTree} span
+	 * @returns {import('../../../types.js').SpanTree | null}
 	 */
 	function find_resolve_root_span(span) {
 		if (span.name === 'sveltekit.resolve') {
@@ -1364,49 +1441,24 @@ test.describe('tracing', () => {
 	});
 });
 
-test.describe('remote functions', () => {
-	test("doesn't write bundle to disk when treeshaking prerendered remote functions", () => {
-		test.skip(!!process.env.DEV, 'skip when in dev mode');
-		expect(fs.existsSync(path.join(root, 'dist'))).toBe(false);
-	});
-});
-
 test.describe('asset preload', () => {
-	if (!process.env.DEV) {
-		test('injects Link headers', async ({ request }) => {
-			const response = await request.get('/asset-preload');
+	test.skip(!!process.env.DEV);
 
-			const header = response.headers()['link'];
+	test('does not inject Link headers', async ({ request }) => {
+		const response = await request.get('/asset-preload');
 
-			expect(header).toContain('rel="modulepreload"');
-			expect(header).toContain('as="font"');
-		});
+		const header = response.headers()['link'];
+		expect(header).toBeUndefined();
+	});
 
-		test('does not inject Link headers on prerendered pages', async ({ request }) => {
-			const response = await request.get('/asset-preload/prerendered');
+	test('injects <link> tags', async ({ request }) => {
+		const response = await request.get('/asset-preload');
 
-			const header = response.headers()['link'];
-			expect(header).toBeUndefined();
-		});
+		const body = await response.text();
 
-		test('injects <link> tags on prerendered pages', async ({ request }) => {
-			const response = await request.get('/asset-preload/prerendered');
-
-			const body = await response.text();
-
-			expect(body).toContain('rel="modulepreload"');
-			expect(body).toContain('as="font"');
-		});
-
-		test('does not inject <link> tags on non-prerendered pages', async ({ request }) => {
-			const response = await request.get('/asset-preload');
-
-			const body = await response.text();
-
-			expect(body).not.toContain('rel="modulepreload"');
-			expect(body).not.toContain('as="font"');
-		});
-	}
+		expect(body).toContain('rel="modulepreload"');
+		expect(body).toContain('as="font"');
+	});
 });
 
 test.describe('Streaming', () => {

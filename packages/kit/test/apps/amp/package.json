@@ -19,7 +19,7 @@
 		"dropcss": "catalog:",
 		"svelte": "catalog:",
 		"svelte-check": "catalog:",
-		"typescript": "^5.5.4",
+		"typescript": "catalog:",
 		"vite": "catalog:"
 	},
 	"type": "module"

@@ -296,7 +296,7 @@ export async function load({ fetch, params }) {
 
 ## Cookies
 
-A server `load` function can get and set [`cookies`](@sveltejs-kit#Cookies).
+A server `load` function can get [`cookies`](@sveltejs-kit#Cookies) as shown below. When setting cookies, SvelteKit provides default values for `httpOnly`, `secure`, and `path` — as described in [the API documentation](@sveltejs-kit#Cookies) — in order to improve security and developer experience.
 
 ```js
 /// file: src/routes/+layout.server.js
@@ -745,7 +745,7 @@ export function requireLogin() {
 		const redirectTo = url.pathname + url.search;
 		const params = new URLSearchParams({ redirectTo });
 
-		redirect(307, `/login?${params}`);
+		redirect(303, `/login?${params}`);
 	}
 
 	return locals.user;

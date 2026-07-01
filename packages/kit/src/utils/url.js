@@ -6,7 +6,7 @@ import { BROWSER, DEV } from 'esm-env';
  */
 export const SCHEME = /^[a-z][a-z\d+\-.]+:/i;
 
-const internal = new URL('sveltekit-internal://');
+const internal = new URL('a://');
 
 /**
  * @param {string} base
@@ -98,9 +98,9 @@ export function make_trackable(url, callback, search_params_callback, allow_hash
 		value: new Proxy(tracked.searchParams, {
 			get(obj, key) {
 				if (key === 'get' || key === 'getAll' || key === 'has') {
-					return (/**@type {string}*/ param) => {
+					return (/** @type {string} */ param, /** @type {string[]} */ ...rest) => {
 						search_params_callback(param);
-						return obj[key](param);
+						return obj[key](param, ...rest);
 					};
 				}
 
@@ -119,6 +119,7 @@ export function make_trackable(url, callback, search_params_callback, allow_hash
 	/**
 	 * URL properties that could change during the lifetime of the page,
 	 * which excludes things like `origin`
+	 * @type {(keyof URL)[]}
 	 */
 	const tracked_url_properties = ['href', 'pathname', 'search', 'toString', 'toJSON'];
 	if (allow_hash) tracked_url_properties.push('hash');
@@ -127,7 +128,6 @@ export function make_trackable(url, callback, search_params_callback, allow_hash
 		Object.defineProperty(tracked, property, {
 			get() {
 				callback();
-				// @ts-expect-error
 				return url[property];
 			},
 
@@ -138,12 +138,12 @@ export function make_trackable(url, callback, search_params_callback, allow_hash
 
 	if (!BROWSER) {
 		// @ts-ignore
-		tracked[Symbol.for('nodejs.util.inspect.custom')] = (depth, opts, inspect) => {
+		tracked[Symbol.for('nodejs.util.inspect.custom')] = (_depth, opts, inspect) => {
 			return inspect(url, opts);
 		};
 
 		// @ts-ignore
-		tracked.searchParams[Symbol.for('nodejs.util.inspect.custom')] = (depth, opts, inspect) => {
+		tracked.searchParams[Symbol.for('nodejs.util.inspect.custom')] = (_depth, opts, inspect) => {
 			return inspect(url.searchParams, opts);
 		};
 	}
@@ -194,7 +194,7 @@ export function disable_search(url) {
 function allow_nodejs_console_log(url) {
 	if (!BROWSER) {
 		// @ts-ignore
-		url[Symbol.for('nodejs.util.inspect.custom')] = (depth, opts, inspect) => {
+		url[Symbol.for('nodejs.util.inspect.custom')] = (_depth, opts, inspect) => {
 			return inspect(new URL(url), opts);
 		};
 	}

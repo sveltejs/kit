@@ -8,4 +8,6 @@ export const GENERATED_COMMENT = '// this file is generated — do not edit it\n
 
 export const ENDPOINT_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'];
 
+export const MUTATIVE_METHODS = ['POST', 'PUT', 'PATCH', 'DELETE'];
+
 export const PAGE_METHODS = ['GET', 'POST', 'HEAD'];

@@ -1,5 +1,6 @@
 import * as devalue from 'devalue';
 import { BROWSER, DEV } from 'esm-env';
+import { noop } from '../../utils/functions.js';
 import { invalidateAll } from './navigation.js';
 import { app as client_app, applyAction } from '../client/client.js';
 import { app as server_app } from '../server/app.js';
@@ -33,7 +34,7 @@ export function deserialize(result) {
 
 	if (parsed.data) {
 		// the decoders should never be initialised at the top-level because `app`
-		// will not be initialised yet if `kit.output.bundleStrategy` is 'single' or 'inline'
+		// will not be initialised yet if `output.bundleStrategy` is 'single' or 'inline'
 		parsed.data = devalue.parse(parsed.data, BROWSER ? client_app.decoders : server_app.decoders);
 	}
 
@@ -76,7 +77,7 @@ function clone(element) {
  * @param {HTMLFormElement} form_element The form element
  * @param {import('@sveltejs/kit').SubmitFunction<Success, Failure>} submit Submit callback
  */
-export function enhance(form_element, submit = () => {}) {
+export function enhance(form_element, submit = noop) {
 	if (DEV && clone(form_element).method !== 'post') {
 		throw new Error('use:enhance can only be used on <form> fields with method="POST"');
 	}
