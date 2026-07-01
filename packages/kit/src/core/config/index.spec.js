@@ -98,7 +98,7 @@ const get_defaults = (prefix = '') => ({
 		router: {
 			type: 'pathname',
 			resolution: 'client',
-			preload: true
+			linkOptionPreload: true
 		},
 		serviceWorker: {
 			options: undefined,
