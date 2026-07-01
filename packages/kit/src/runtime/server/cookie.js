@@ -162,16 +162,18 @@ export function get_cookies(request, url) {
 		parse(header) {
 			const [head, ...tail] = header.split(';').filter((str) => str.trim() !== '');
 
-			const [name, value] = head.split('=');
+			const head_index = head.indexOf('=');
+			const name = head_index === -1 ? head : head.slice(0, head_index);
+			const value = head_index === -1 ? '' : head.slice(head_index + 1);
 
 			/** @type {import('cookie').SetCookie} */
 			const cookie = { name, value };
 
 			for (const pair of tail) {
-				const parts = pair.split('=', 2);
+				const index = pair.indexOf('=');
 
-				const key = parts[0].trim().toLowerCase();
-				const value = parts[1]?.trim();
+				const key = (index === -1 ? pair : pair.slice(0, index)).trim().toLowerCase();
+				const value = index === -1 ? undefined : pair.slice(index + 1).trim();
 
 				switch (key) {
 					case 'expires': {
