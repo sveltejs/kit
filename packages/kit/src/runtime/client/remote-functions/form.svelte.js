@@ -535,6 +535,7 @@ export function form(id) {
 				touched = {};
 				dirty = {};
 				can_validate = {};
+				submitted = false;
 			};
 
 			/** @param {Event} e */
