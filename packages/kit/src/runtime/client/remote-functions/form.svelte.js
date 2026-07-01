@@ -431,8 +431,7 @@ export function form(id) {
 						e instanceof HttpError
 							? e.body
 							: { message: /** @type {any} */ (e).message, status: 500 };
-					const status = e instanceof HttpError ? e.status : 500;
-					void set_nearest_error_page(error, status);
+					void set_nearest_error_page(error);
 				} finally {
 					pending_count--;
 				}

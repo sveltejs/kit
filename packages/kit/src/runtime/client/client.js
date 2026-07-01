@@ -754,7 +754,7 @@ async function initialize(result, target, hydrate) {
  *   params: Record<string, string>;
  *   branch: Array<import('./types.js').BranchNode | undefined>;
  *   errors?: Array<import('types').CSRPageNodeLoader | undefined>;
- *   status: number;
+ *   status?: number;
  *   error: App.Error | null;
  *   route: import('types').CSRRoute | null;
  *   form?: Record<string, any> | null;
@@ -871,7 +871,7 @@ async function get_navigation_result_from_branch({
 				id: route?.id ?? null
 			},
 			state: {},
-			status,
+			status: status ?? error?.status ?? 200,
 			url: new URL(url),
 			form: form ?? null,
 			// The whole page store is updated, but this way the object reference stays the same
@@ -1375,7 +1375,6 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 						params,
 						branch: branch.slice(0, error_load.idx).concat(error_load.node),
 						errors,
-						status: error.status,
 						error,
 						route
 					});
@@ -1395,7 +1394,6 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 		params,
 		branch,
 		errors,
-		status: 200,
 		error: null,
 		route,
 		// Reset `form` on navigation, but not invalidation
@@ -1501,7 +1499,6 @@ async function load_root_error_page({ error, url, route }) {
 			url,
 			params,
 			branch: [root_layout, root_error],
-			status: error.status,
 			error,
 			errors: [],
 			route: null
@@ -2617,7 +2614,7 @@ export async function applyAction(result) {
 	}
 
 	if (result.type === 'error') {
-		await set_nearest_error_page(result.error, result.status);
+		await set_nearest_error_page(result.error);
 	} else if (result.type === 'redirect') {
 		await _goto(result.location, { invalidateAll: true }, 0);
 	} else {
@@ -2644,9 +2641,8 @@ export async function applyAction(result) {
 
 /**
  * @param {App.Error} error
- * @param {number} status
  */
-export async function set_nearest_error_page(error, status = 500) {
+export async function set_nearest_error_page(error) {
 	const url = new URL(location.href);
 
 	const { branch, route } = current;
@@ -2658,7 +2654,6 @@ export async function set_nearest_error_page(error, status = 500) {
 			url,
 			params: current.params,
 			branch: branch.slice(0, error_load.idx).concat(error_load.node),
-			status,
 			error,
 			// do not set errors, we haven't changed the page so the previous ones are still current
 			route

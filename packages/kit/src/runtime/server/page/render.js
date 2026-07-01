@@ -505,7 +505,7 @@ export async function render_response({
 				`error: ${serialized.error}`
 			];
 
-			if (status !== 200) {
+			if (status !== 200 && !error) {
 				hydrate.push(`status: ${status}`);
 			}
 
