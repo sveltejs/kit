@@ -23,4 +23,4 @@
 <a id="dynamic" data-sveltekit-preload-data="hover" href="/data-sveltekit/preload-data/target?x={x}"
 	>dynamic</a
 >
-<button id="change_dynamic" type="button" on:click={() => x++}>change dynamic</button>
+<button id="change_dynamic" type="button" onclick={() => x++}>change dynamic</button>

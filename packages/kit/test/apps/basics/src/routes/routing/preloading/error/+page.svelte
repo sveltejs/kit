@@ -7,14 +7,14 @@
 
 <button
 	type="button"
-	on:click={async () => {
+	onclick={async () => {
 		data = await preloadData('/routing/preloading/error/404');
 	}}>404</button
 >
 
 <button
 	type="button"
-	on:click={async () => {
+	onclick={async () => {
 		data = await preloadData('/routing/preloading/error/500');
 	}}>500</button
 >
