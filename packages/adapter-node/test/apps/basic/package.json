@@ -4,7 +4,7 @@
 	"private": true,
 	"scripts": {
 		"dev": "vite dev",
-		"build": "vite build",
+		"build": "MY_CUSTOM_PORT=5173 vite build",
 		"preview": "MY_CUSTOM_PORT=5173 node build",
 		"prepare": "svelte-kit sync || echo ''",
 		"test:platform": "playwright test"

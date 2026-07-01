@@ -1,6 +1,6 @@
 <script>
 	import { deserialize } from '$app/forms';
-	import { browser } from '$app/environment';
+	import { browser } from '$app/env';
 
 	/** @type {import('./$types').ActionData} */
 	export let form;

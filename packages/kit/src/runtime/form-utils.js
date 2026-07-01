@@ -1,4 +1,3 @@
-/** @import { RemoteForm } from '@sveltejs/kit' */
 /** @import { BinaryFormMeta, InternalRemoteFormIssue } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 
@@ -147,7 +146,10 @@ export async function deserialize_binary_form(request) {
 		throw deserialize_error('no body');
 	}
 
-	const reader = request.body.getReader();
+	// TODO: remove this workaround once we upgrade to TS 6.0
+	const reader = /** @type {ReadableStreamDefaultReader<Uint8Array<ArrayBuffer>>} */ (
+		request.body.getReader()
+	);
 
 	/** @type {Array<Promise<Uint8Array<ArrayBuffer> | undefined>>} */
 	const chunks = [];
@@ -615,6 +617,10 @@ function get_type_prefix(field_type, is_array, input_value) {
  */
 function deep_clone(value) {
 	if (value !== null && typeof value === 'object') {
+		if (value instanceof Date) {
+			return new Date(value.getTime());
+		}
+
 		if (value instanceof File) {
 			return value;
 		}
@@ -691,12 +697,14 @@ export function create_field_proxy(target, get, set, get_issues, get_touched, ge
 						}));
 					}
 
-					return all_issues
+					const issues = all_issues
 						?.filter((issue) => issue.name === key)
 						?.map((issue) => ({
 							path: issue.path,
 							message: issue.message
 						}));
+
+					return issues?.length ? issues : undefined;
 				};
 
 				return create_field_proxy(issues_func, get, set, get_issues, get_touched, get_dirty, next);
@@ -919,43 +927,4 @@ export function build_path_string(path) {
 	}
 
 	return result;
-}
-
-/**
- * @param {RemoteForm<any, any>} instance
- * @deprecated remove in 3.0
- */
-export function throw_on_old_property_access(instance) {
-	Object.defineProperty(instance, 'field', {
-		value: (/** @type {string} */ name) => {
-			const new_name = name.endsWith('[]') ? name.slice(0, -2) : name;
-			throw new Error(
-				`\`form.field\` has been removed: Instead of \`<input name={form.field('${name}')} />\` do \`<input {...form.fields.${new_name}.as(type)} />\``
-			);
-		}
-	});
-
-	for (const property of ['input', 'issues']) {
-		Object.defineProperty(instance, property, {
-			get() {
-				const new_name = property === 'issues' ? 'issues' : 'value';
-				return new Proxy(
-					{},
-					{
-						get(_, prop) {
-							const prop_string = typeof prop === 'string' ? prop : String(prop);
-							const old =
-								prop_string.includes('[') || prop_string.includes('.')
-									? `['${prop_string}']`
-									: `.${prop_string}`;
-							const replacement = `.${prop_string}.${new_name}()`;
-							throw new Error(
-								`\`form.${property}\` has been removed: Instead of \`form.${property}${old}\` write \`form.fields${replacement}\``
-							);
-						}
-					}
-				);
-			}
-		});
-	}
 }

@@ -1,4 +1,4 @@
-/** @type {import('../../.svelte-kit/types/src/core/sync/write_types/test/layout-advanced/(main)/sub/$types').PageLoad} */
+/** @type {import('../../.svelte-kit/types/(main)/sub/$types').PageLoad} */
 export async function load({ parent }) {
 	const p = await parent();
 	p.main;
@@ -10,7 +10,7 @@ export async function load({ parent }) {
 	};
 }
 
-/** @type {import('../../.svelte-kit/types/src/core/sync/write_types/test/layout-advanced/(main)/sub/$types').PageData} */
+/** @type {import('../../.svelte-kit/types/(main)/sub/$types').PageData} */
 const data = {
 	main: '',
 	root: '',

@@ -1,8 +1,6 @@
+import process from 'node:process';
 import { assert, expect, test, describe, beforeAll } from 'vitest';
 import { domain_matches, path_matches, get_cookies } from './cookie.js';
-import { installPolyfills } from '@sveltejs/kit/node/polyfills';
-
-installPolyfills();
 
 const domains = {
 	positive: [
@@ -37,7 +35,7 @@ const cookies_setup = ({ href, headers } = {}) => {
 	return result;
 };
 
-describe('cookies in dev', () => {
+describe.skipIf(process.env.NODE_ENV === 'production')('cookies in dev', () => {
 	beforeAll(() => {
 		// @ts-expect-error
 		globalThis.__SVELTEKIT_DEV__ = true;
@@ -55,7 +53,7 @@ describe('cookies in dev', () => {
 	});
 });
 
-describe('cookies in prod', () => {
+describe.skipIf(process.env.NODE_ENV !== 'production')('cookies in prod', () => {
 	beforeAll(() => {
 		// @ts-expect-error
 		globalThis.__SVELTEKIT_DEV__ = false;

@@ -3,7 +3,7 @@ name: CI
 on:
   push:
     branches:
-      - main
+      - version-3
     paths-ignore: &paths_ignore
       - '.changeset/**'
       - '.githooks/**'
@@ -27,9 +27,9 @@ env:
   # we call `pnpm playwright install` instead
   PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
 
-# cancel in-progress runs on new commits to same PR (gitub.event.number)
+# dedupe push/pull_request runs for the same ref and cancel superseded runs
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.number || github.sha }}
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -51,14 +51,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - node-version: 18
-            os: ubuntu-latest
-            e2e-browser: 'chromium'
-            vite: 'baseline'
-          - node-version: 20
-            os: ubuntu-latest
-            e2e-browser: 'chromium'
-            vite: 'current'
           - node-version: 22
             os: ubuntu-latest
             e2e-browser: 'chromium'
@@ -67,10 +59,10 @@ jobs:
             os: ubuntu-latest
             e2e-browser: 'chromium'
             vite: 'current'
-          - node-version: 24
-            os: ubuntu-latest
-            e2e-browser: 'chromium'
-            vite: 'beta'
+#          - node-version: 24
+#            os: ubuntu-latest
+#            e2e-browser: 'chromium'
+#            vite: 'beta'
     env:
       KIT_E2E_BROWSER: ${{matrix.e2e-browser}}
       MATRIX_VITE: ${{matrix.vite}}
@@ -91,8 +83,6 @@ jobs:
       - run: pnpm playwright install ${{ matrix.e2e-browser }}
       - run: pnpm run sync-all
       - run: pnpm test:kit
-        env:
-          NODE_OPTIONS: ${{matrix.node-version == 22 && '--experimental-strip-types' || ''}} # allows loading svelte.config.ts
       - name: Print flaky test report
         run: node scripts/print-flaky-test-report.js
       - name: Archive test results
@@ -225,7 +215,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [18, 20, 22, 24]
+        node-version: [22, 24]
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       # required for testing netlify edge functions
@@ -239,5 +229,3 @@ jobs:
       - run: pnpm playwright install chromium --no-shell
       - run: cd packages/kit && pnpm prepublishOnly
       - run: pnpm run test:others
-        env:
-          NODE_OPTIONS: ${{matrix.node-version == 22 && '--experimental-strip-types' || ''}} # allows loading svelte.config.ts

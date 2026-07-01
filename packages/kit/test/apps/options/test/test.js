@@ -103,11 +103,6 @@ test.describe('env', () => {
 		await page.goto('/path-base/env');
 		expect(await page.textContent('#public')).toBe('and thank you');
 	});
-	test('respects private prefix', async ({ page }) => {
-		await page.goto('/path-base/env');
-		expect(await page.textContent('#private')).toBe('shhhh');
-		expect(await page.textContent('#neither')).toBe('');
-	});
 });
 
 test.describe('trailingSlash', () => {
@@ -187,7 +182,7 @@ test.describe('trailingSlash', () => {
 		if (process.env.DEV) {
 			expect(requests.filter((req) => req.endsWith('.svelte')).length).toBe(1);
 		} else {
-			expect(requests.filter((req) => req.endsWith('.mjs')).length).toBeGreaterThan(0);
+			expect(requests.filter((req) => req.endsWith('.js')).length).toBeGreaterThan(0);
 		}
 
 		requests = [];
@@ -204,7 +199,7 @@ test.describe('trailingSlash', () => {
 		page,
 		javaScriptEnabled
 	}) => {
-		if (!javaScriptEnabled) return;
+		test.skip(!javaScriptEnabled, 'data-sveltekit-* only works with JavaScript');
 
 		await page.goto('/path-base/preloading');
 
@@ -219,7 +214,7 @@ test.describe('trailingSlash', () => {
 		if (process.env.DEV) {
 			expect(requests.filter((req) => req.endsWith('.svelte')).length).toBe(1);
 		} else {
-			expect(requests.filter((req) => req.endsWith('.mjs')).length).toBeGreaterThan(0);
+			expect(requests.filter((req) => req.endsWith('.js')).length).toBeGreaterThan(0);
 		}
 
 		requests = [];
@@ -250,17 +245,20 @@ test.describe('$app/paths', () => {
 	test('match() works with base paths', async ({ request }) => {
 		const response = await request.get('/path-base/match');
 
-		expect(await response.json()).toEqual([
-			{
-				path: '/path-base/resolve-route',
-				result: { id: '/resolve-route', params: {} }
-			},
-			{
-				path: '/path-base/resolve-route/resolved',
-				result: { id: '/resolve-route/[foo]', params: { foo: 'resolved' } }
-			},
-			{ path: '/path-base/not-a-real-route-that-exists', result: null }
-		]);
+		expect(await response.json()).toEqual(
+			/** @satisfies {({ path: import('$app/types').ResolvedPathname ; result: { id: import('$app/types').RouteId; params: Record<string, string> } | null})[]} */
+			([
+				{
+					path: '/path-base/base/',
+					result: { id: '/base', params: {} }
+				},
+				{
+					path: '/path-base/base/resolved/',
+					result: { id: '/base/[slug]', params: { slug: 'resolved' } }
+				},
+				{ path: '/path-base/not-a-real-route-that-exists/', result: null }
+			])
+		);
 	});
 });
 

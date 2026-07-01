@@ -498,13 +498,6 @@ function create_query_resource(__, payload, event, state, fn) {
 
 			refresh(event, state, __, payload, () => p);
 		},
-		// TODO 3.0 remove this
-		// @ts-expect-error This method no longer exists
-		run() {
-			throw new Error(
-				`\`myQuery().run()\` has been removed — please replace it with \`myQuery()\`. See https://github.com/sveltejs/kit/pull/15779 for more details`
-			);
-		},
 		/** @type {Promise<any>['then']} */
 		then(onfulfilled, onrejected) {
 			return get_promise().then(onfulfilled, onrejected);

@@ -243,10 +243,11 @@ async function call_action(event, event_state, actions) {
 		}
 	}
 
-	const action = actions[name];
-	if (!action) {
+	if (!Object.hasOwn(actions, name)) {
 		throw new SvelteKitError(404, 'Not Found', `No action with name '${name}' found`);
 	}
+
+	const action = actions[name];
 
 	if (!is_form_content_type(event.request)) {
 		throw new SvelteKitError(

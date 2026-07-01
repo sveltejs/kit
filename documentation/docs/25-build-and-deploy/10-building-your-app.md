@@ -10,10 +10,10 @@ Secondly, an _adapter_ takes this production build and tunes it for your target 
 
 ## During the build
 
-SvelteKit will load your `+page/layout(.server).js` files (and all files they import) for analysis during the build. Any code that should _not_ be executed at this stage must check that `building` from [`$app/environment`]($app-environment) is `false`:
+SvelteKit will load your `+page/layout(.server).js` files (and all files they import) for analysis during the build. Any code that should _not_ be executed at this stage must check that `building` from [`$app/env`]($app-env) is `false`:
 
 ```js
-+++import { building } from '$app/environment';+++
++++import { building } from '$app/env';+++
 import { initialiseDatabase } from '$lib/server/database';
 
 +++if (!building) {+++

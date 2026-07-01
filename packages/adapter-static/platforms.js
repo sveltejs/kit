@@ -6,12 +6,12 @@ import process from 'node:process';
  *   name: string;
  *   test: () => boolean;
  *   defaults: import('./index.js').AdapterOptions;
- *   done: (builder: import('./internal.js').Builder2_0_0) => void;
+ *   done: (builder: import('@sveltejs/kit').Builder) => void;
  * }}
  * Platform */
 
 // This function is duplicated in adapter-vercel
-/** @param {import('./internal.js').Builder2_0_0} builder */
+/** @param {import('@sveltejs/kit').Builder} builder */
 function static_vercel_config(builder) {
 	/** @type {any[]} */
 	const prerendered_redirects = [];
