@@ -276,7 +276,7 @@ declare module '@sveltejs/kit' {
 		 * ```js
 		 * import { getRequestEvent } from '$app/server';
 		 *
-		 * export function GET() {
+		 * export async function GET() {
 		 * 	const { cookies } = getRequestEvent();
 		 *
 		 * 	const response = await fetch('...');

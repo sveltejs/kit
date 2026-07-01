@@ -303,7 +303,7 @@ export interface Cookies {
 	 * ```js
 	 * import { getRequestEvent } from '$app/server';
 	 *
-	 * export function GET() {
+	 * export async function GET() {
 	 * 	const { cookies } = getRequestEvent();
 	 *
 	 * 	const response = await fetch('...');
