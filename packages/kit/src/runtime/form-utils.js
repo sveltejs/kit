@@ -4,6 +4,7 @@
 import { DEV } from 'esm-env';
 import * as devalue from 'devalue';
 import { text_encoder } from './utils.js';
+import { noop } from '../utils/functions.js';
 import { SvelteKitError } from '@sveltejs/kit/internal';
 
 const decoder = new TextDecoder();
@@ -25,6 +26,9 @@ export function set_nested_value(object, path_string, value) {
 
 	deep_set(object, split_path(path_string), value);
 }
+
+/** Pass this to set_nested_value to delete the last part of the given path */
+export const DELETE_KEY = {};
 
 /**
  * Convert `FormData` into a POJO
@@ -320,7 +324,7 @@ export async function deserialize_binary_form(request) {
 			const chunk = await get_chunk(chunks.length);
 			has_more = !!chunk;
 		}
-	})();
+	})().catch(noop); // prevent unhandled rejection potentially crashing the process
 
 	return { data, meta, form_data: null };
 }
@@ -504,6 +508,10 @@ export function deep_set(object, keys, value) {
 		}
 
 		if (!exists) {
+			if (value === DELETE_KEY) {
+				// don't create the nested structure if we want to delete the key anyway
+				return;
+			}
 			current[key] = is_array ? [] : {};
 		}
 
@@ -512,7 +520,12 @@ export function deep_set(object, keys, value) {
 
 	const final_key = keys[keys.length - 1];
 	check_prototype_pollution(final_key);
-	current[final_key] = value;
+
+	if (value === DELETE_KEY) {
+		delete current[final_key];
+	} else {
+		current[final_key] = value;
+	}
 }
 
 /**
