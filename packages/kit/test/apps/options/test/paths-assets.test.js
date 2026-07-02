@@ -186,8 +186,9 @@ test.describe('inlineStyleThreshold', () => {
 		test.skip(!!process.env.DEV);
 
 		let loaded_css = false;
-		page.on('response', (response) => {
-			if (response.url().endsWith('.css')) {
+		page.on('response', async (response) => {
+			const url = response.url();
+			if (url.includes('Dynamic') && url.endsWith('.css')) {
 				loaded_css = true;
 			}
 		});
