@@ -7,7 +7,9 @@ import { IN_WEBCONTAINER } from '../../runtime/server/constants.js';
 /** @type {RequestStore | null} */
 let sync_store = null;
 
-/** @type {AsyncLocalStorage<RequestStore | null> | null} */
+/** @typedef {{ current: RequestStore | null }} RequestStoreContainer */
+
+/** @type {AsyncLocalStorage<RequestStoreContainer | null> | null} */
 let als;
 
 import('node:async_hooks')
@@ -63,18 +65,29 @@ export function get_request_store() {
 }
 
 export function try_get_request_store() {
-	return sync_store ?? als?.getStore() ?? null;
+	return sync_store ?? als?.getStore()?.current ?? null;
 }
 
 /**
  * @template T
  * @param {RequestStore | null} store
  * @param {() => T} fn
+ * @returns {{ result: T, dispose: () => void }}
  */
-export function with_request_store(store, fn) {
+function run_with_request_store(store, fn) {
 	try {
 		sync_store = store;
-		return als ? als.run(store, fn) : fn();
+		if (als) {
+			// async resources created in `fn` capture the container, not the store, so `dispose()` nulls it to break the retention path
+			const container = /** @type {RequestStoreContainer} */ ({ current: store });
+			return {
+				result: als.run(container, fn),
+				dispose: () => {
+					container.current = null;
+				}
+			};
+		}
+		return { result: fn(), dispose: () => {} };
 	} finally {
 		// Since AsyncLocalStorage is not working in webcontainers, we don't reset `sync_store`
 		// and handle only one request at a time in `src/runtime/server/index.js`.
@@ -82,4 +95,29 @@ export function with_request_store(store, fn) {
 			sync_store = null;
 		}
 	}
+}
+
+/**
+ * @template T
+ * @param {RequestStore | null} store
+ * @param {() => T} fn
+ * @returns {T}
+ */
+export function with_request_store(store, fn) {
+	return run_with_request_store(store, fn).result;
+}
+
+/**
+ * Like {@link with_request_store}, but also returns `dispose`, which nulls the AsyncLocalStorage
+ * container so async resources created during `fn` can't retain the RequestStore. The SSR render
+ * path calls `dispose()` once rendering has fully finished, including any streamed output; calling
+ * it earlier, such as when the render promise settles, would sever the request context for
+ * still-running async work like streamed SSR. See https://github.com/nodejs/node/issues/53408
+ * @template T
+ * @param {RequestStore | null} store
+ * @param {() => T} fn
+ * @returns {{ result: T, dispose: () => void }}
+ */
+export function with_request_store_disposable(store, fn) {
+	return run_with_request_store(store, fn);
 }

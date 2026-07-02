@@ -13,7 +13,10 @@ import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import { SCHEME } from '../../../utils/url.js';
 import { create_server_routing_response, generate_route_object } from './server_routing.js';
 import { add_data_suffix, add_resolution_suffix } from '../../pathname.js';
-import { try_get_request_store, with_request_store } from '@sveltejs/kit/internal/server';
+import {
+	try_get_request_store,
+	with_request_store_disposable
+} from '@sveltejs/kit/internal/server';
 import { text_encoder } from '../../utils.js';
 import {
 	count_non_ssi_comments,
@@ -235,7 +238,7 @@ export async function render_response({
 
 			const state = { ...event_state, is_in_render: true };
 
-			rendered = await with_request_store({ event, state }, async () => {
+			const { result, dispose } = with_request_store_disposable({ event, state }, async () => {
 				// use relative paths during rendering, so that the resulting HTML is as
 				// portable as possible, but reset afterwards
 				if (paths.relative) paths.override({ base, assets });
@@ -271,6 +274,13 @@ export async function render_response({
 
 				return { head, html, css, hashes };
 			});
+
+			// dispose after the output is consumed; see `with_request_store_disposable` for streamed-SSR timing
+			try {
+				rendered = await result;
+			} finally {
+				dispose();
+			}
 		} finally {
 			if (DEV) {
 				globalThis.fetch = fetch;
