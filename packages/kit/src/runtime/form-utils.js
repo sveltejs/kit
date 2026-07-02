@@ -79,8 +79,9 @@ const HEADER_BYTES = 1 + 4 + 2;
  * - file1, file2, ...
  * @param {Record<string, any>} data
  * @param {BinaryFormMeta} meta
+ * @param {Record<string, (value: any) => any>} [reducers]
  */
-export function serialize_binary_form(data, meta) {
+export function serialize_binary_form(data, meta, reducers = {}) {
 	/** @type {Array<BlobPart>} */
 	const blob_parts = [new Uint8Array([BINARY_FORM_VERSION])];
 
@@ -88,6 +89,7 @@ export function serialize_binary_form(data, meta) {
 	const files = [];
 
 	const encoded_header = devalue.stringify([data, meta], {
+		...reducers,
 		File: (file) => {
 			if (!(file instanceof File)) return;
 
@@ -136,9 +138,10 @@ export function serialize_binary_form(data, meta) {
 
 /**
  * @param {Request} request
+ * @param {Record<string, (value: any) => any>} [revivers]
  * @returns {Promise<{ data: Record<string, any>; meta: BinaryFormMeta; form_data: FormData | null }>}
  */
-export async function deserialize_binary_form(request) {
+export async function deserialize_binary_form(request, revivers = {}) {
 	if (request.headers.get('content-type') !== BINARY_FORM_CONTENT_TYPE) {
 		const form_data = await request.formData();
 		return { data: convert_formdata(form_data), meta: {}, form_data };
@@ -260,6 +263,7 @@ export async function deserialize_binary_form(request) {
 	/** @type {Array<{ offset: number, size: number }>} */
 	const file_spans = [];
 	const [data, meta] = devalue.parse(decoder.decode(data_buffer), {
+		...revivers,
 		File: ([name, type, size, last_modified, index]) => {
 			if (
 				typeof name !== 'string' ||
