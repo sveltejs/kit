@@ -700,7 +700,7 @@ declare module '@sveltejs/kit' {
 			 * @default undefined
 			 * @since 3.0
 			 */
-			origin?: `http://${string}` | `https://${string}`;
+			origin?: string;
 			/**
 			 * Whether to use relative asset paths.
 			 *
