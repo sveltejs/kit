@@ -74,11 +74,13 @@
 
 
 - breaking: require `vite@^8.0.12`, the first Vite 8 release bundling stable `rolldown` 1.0.0 ([#16134](https://github.com/sveltejs/kit/pull/16134))
--
+
+
 ### Minor Changes
 
 
 - feat: expose `submitted` property of remote forms ([#14811](https://github.com/sveltejs/kit/pull/14811))
+
 
 ### Patch Changes
 
