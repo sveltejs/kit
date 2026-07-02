@@ -14,7 +14,7 @@ export function load({ params }) {
 		//@ts-expect-error
 		a = params.regularParam;
 
-		/** @type {string} b*/
+		/** @type {boolean} b */
 		const b = params.regularParam;
 	}
 }

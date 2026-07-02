@@ -1,5 +1,4 @@
 import { BROWSER } from 'esm-env';
-import { decode_params } from './url.js';
 
 const param_pattern = /^(\[)?(\.\.\.)?(\w+)(?:=(\w+))?(\])?$/;
 
@@ -135,12 +134,27 @@ export function get_route_segments(route) {
 }
 
 /**
+ * @param {import('@sveltejs/kit').ParamMatcher} matcher
+ * @param {string} value
+ * @returns {{ success: true, value: any } | { success: false }}
+ */
+function run_matcher(matcher, value) {
+	const result = matcher['~standard'].validate(value);
+
+	if (result instanceof Promise || result.issues) {
+		return { success: false };
+	}
+
+	return { success: true, value: result.value };
+}
+
+/**
  * @param {RegExpMatchArray} match
  * @param {import('types').RouteParam[]} params
  * @param {Record<string, import('@sveltejs/kit').ParamMatcher>} matchers
  */
 export function exec(match, params, matchers) {
-	/** @type {Record<string, string>} */
+	/** @type {Record<string, any>} */
 	const result = {};
 
 	const values = match.slice(1);
@@ -173,37 +187,41 @@ export function exec(match, params, matchers) {
 			}
 		}
 
-		if (!param.matcher || matchers[param.matcher](value)) {
-			result[param.name] = value;
+		const decoded = decodeURIComponent(value);
 
-			// Now that the params match, reset the buffer if the next param isn't the [...rest]
-			// and the next value is defined, otherwise the buffer will cause us to skip values
-			const next_param = params[i + 1];
-			const next_value = values[i + 1];
-			if (next_param && !next_param.rest && next_param.optional && next_value && param.chained) {
-				buffered = 0;
+		if (param.matcher) {
+			const outcome = run_matcher(matchers[param.matcher], decoded);
+
+			if (!outcome.success) {
+				// in the `/[[a=b]]/...` case, if the value didn't satisfy the matcher,
+				// keep track of the number of skipped optional parameters and continue
+				if (param.optional && param.chained) {
+					buffered++;
+					continue;
+				}
+
+				// otherwise, if the matcher returns `false`, the route did not match
+				return;
 			}
 
-			// There are no more params and no more values, but all non-empty values have been matched
-			if (
-				!next_param &&
-				!next_value &&
-				Object.keys(result).length === values_needing_match.length
-			) {
-				buffered = 0;
-			}
-			continue;
+			result[param.name] = outcome.value;
+		} else {
+			result[param.name] = decoded;
 		}
 
-		// in the `/[[a=b]]/...` case, if the value didn't satisfy the matcher,
-		// keep track of the number of skipped optional parameters and continue
-		if (param.optional && param.chained) {
-			buffered++;
-			continue;
+		// Now that the params match, reset the buffer if the next param isn't the [...rest]
+		// and the next value is defined, otherwise the buffer will cause us to skip values
+		const next_param = params[i + 1];
+		const next_value = values[i + 1];
+		if (next_param && !next_param.rest && next_param.optional && next_value && param.chained) {
+			buffered = 0;
 		}
 
-		// otherwise, if the matcher returns `false`, the route did not match
-		return;
+		// There are no more params and no more values, but all non-empty values have been matched
+		if (!next_param && !next_value && Object.keys(result).length === values_needing_match.length) {
+			buffered = 0;
+		}
+		continue;
 	}
 
 	if (buffered) return;
@@ -242,7 +260,7 @@ const basic_param_pattern = /\[(\[)?(\.\.\.)?(\w+?)(?:=(\w+))?\]\]?/g;
  * ); // `/blog/hello-world/something/else`
  * ```
  * @param {string} id
- * @param {Record<string, string | undefined>} params
+ * @param {Record<string, import('@sveltejs/kit').ParamValue | undefined>} params
  * @returns {string}
  */
 export function resolve_route(id, params) {
@@ -254,20 +272,33 @@ export function resolve_route(id, params) {
 		segments
 			.map((segment) =>
 				segment.replace(basic_param_pattern, (_, optional, rest, name) => {
-					const param_value = params[name];
+					const value = params[name];
 
-					// This is nested so TS correctly narrows the type
-					if (!param_value) {
+					if (value === undefined || value === '') {
 						if (optional) return '';
-						if (rest && param_value !== undefined) return '';
+						if (rest && value !== undefined) return '';
 						throw new Error(`Missing parameter '${name}' in route ${id}`);
 					}
 
-					if (param_value.startsWith('/') || param_value.endsWith('/'))
-						throw new Error(
-							`Parameter '${name}' in route ${id} cannot start or end with a slash -- this would cause an invalid route like foo//bar`
-						);
-					return param_value;
+					if (typeof value === 'string') {
+						if (value.startsWith('/') || value.endsWith('/')) {
+							throw new Error(
+								`Parameter '${name}' in route ${id} cannot start or end with a slash -- this would cause an invalid route like foo//bar`
+							);
+						}
+
+						return value;
+					}
+
+					if (
+						typeof value === 'number' ||
+						typeof value === 'boolean' ||
+						typeof value === 'bigint'
+					) {
+						return String(value);
+					}
+
+					throw new Error('Parameter values must be a string, number, boolean, or bigint');
 				})
 			)
 			.filter(Boolean)
@@ -290,7 +321,7 @@ export function has_server_load(node) {
  * @param {string} path - The decoded pathname to match
  * @param {Route[]} routes
  * @param {Record<string, import('@sveltejs/kit').ParamMatcher>} matchers
- * @returns {{ route: Route, params: Record<string, string> } | null}
+ * @returns {{ route: Route, params: Record<string, any> } | null}
  */
 export function find_route(path, routes, matchers) {
 	for (const route of routes) {
@@ -301,7 +332,7 @@ export function find_route(path, routes, matchers) {
 		if (matched) {
 			return {
 				route,
-				params: decode_params(matched)
+				params: matched
 			};
 		}
 	}

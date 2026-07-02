@@ -39,7 +39,7 @@ export interface SvelteKitApp {
 	dictionary: Record<string, [leaf: number, layouts: number[], errors?: number[]]>;
 
 	/**
-	 * A map of `[matcherName: string]: (..) => boolean`, which is used to match route parameters.
+	 * A map of `[matcherName: string]: ParamMatcher`, which is used to match and parse route parameters.
 	 *
 	 * In case of router.resolution=server, this object is empty, as resolution happens on the server.
 	 */

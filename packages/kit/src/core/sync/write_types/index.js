@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import MagicString from 'magic-string';
-import { rimraf, walk } from '../../../utils/filesystem.js';
+import { rimraf, walk, resolve_entry } from '../../../utils/filesystem.js';
 import { compact } from '../../../utils/array.js';
 import { posixify } from '../../../utils/os.js';
 import { ts } from '../ts.js';
@@ -197,11 +197,6 @@ function update_types(config, routes, route, root, to_delete = new Set()) {
 	// add 'Expand' helper
 	// Makes sure a type is "repackaged" and therefore more readable
 	declarations.push('type Expand<T> = T extends infer O ? { [K in keyof O]: O[K] } : never;');
-
-	// returns the predicate of a matcher's type guard - or string if there is no type guard
-	declarations.push(
-		'type MatcherParam<M> = M extends (param : string) => param is (infer U extends string) ? U : string;'
-	);
 
 	declarations.push(
 		'type RouteParams = ' + generate_params_type(route.params, outdir, config) + ';'
@@ -604,16 +599,22 @@ function replace_ext_with_js(file_path) {
  * @param {import('types').ValidatedConfig} config
  */
 function generate_params_type(params, outdir, config) {
-	/** @param {string} matcher */
-	const path_to_matcher = (matcher) =>
-		posixify(path.relative(outdir, path.join(config.kit.files.params, matcher + '.js')));
+	const path_to_params = () => {
+		const params_file =
+			resolve_entry(config.kit.files.params) ??
+			config.kit.files.params.replace(/\.(js|ts)$/, '') + '.js';
+
+		return posixify(path.relative(outdir, params_file));
+	};
+
+	const params_import = path_to_params();
 
 	return `{ ${params
 		.map(
 			(param) =>
 				`${param.name}${param.optional ? '?' : ''}: ${
 					param.matcher
-						? `MatcherParam<typeof import('${path_to_matcher(param.matcher)}').match>`
+						? `(typeof import('${params_import}').params)[${JSON.stringify(param.matcher)}]`
 						: 'string'
 				}${param.optional ? ' | undefined' : ''}`
 		)

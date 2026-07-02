@@ -1,5 +1,6 @@
 import path from 'node:path';
 import { GENERATED_COMMENT } from '../../constants.js';
+import { resolve_entry } from '../../utils/filesystem.js';
 import { posixify } from '../../utils/os.js';
 import { write_if_changed } from './utils.js';
 import { s } from '../../utils/misc.js';
@@ -85,10 +86,6 @@ export {};
  * @param {import('types').ValidatedKitConfig} config
  */
 function generate_app_types(manifest_data, config) {
-	/** @param {string} matcher */
-	const path_to_matcher = (matcher) =>
-		posixify(path.relative(config.outDir, path.join(config.files.params, matcher + '.js')));
-
 	/** @type {Map<string, string>} */
 	const matcher_types = new Map();
 
@@ -98,7 +95,15 @@ function generate_app_types(manifest_data, config) {
 
 		let type = matcher_types.get(matcher);
 		if (!type) {
-			type = `MatcherParam<typeof import('${path_to_matcher(matcher)}').match>`;
+			const path_to_params = () => {
+				const params_file =
+					resolve_entry(config.files.params) ??
+					config.files.params.replace(/\.(js|ts)$/, '') + '.js';
+
+				return posixify(path.relative(config.outDir, params_file));
+			};
+
+			type = `(typeof import('${path_to_params()}').params)[${JSON.stringify(matcher)}]`;
 			matcher_types.set(matcher, type);
 		}
 
@@ -239,8 +244,6 @@ function generate_app_types(manifest_data, config) {
 
 	return [
 		'declare module "$app/types" {',
-		'\ttype MatcherParam<M> = M extends (param : string) => param is (infer U extends string) ? U : string;',
-		'',
 		'\texport interface AppTypes {',
 		`\t\tRouteId(): ${manifest_data.routes.map((r) => s(r.id)).join(' | ')};`,
 		`\t\tRouteParams(): {\n\t\t\t${dynamic_routes.join(';\n\t\t\t')}\n\t\t};`,

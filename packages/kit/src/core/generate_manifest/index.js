@@ -69,10 +69,8 @@ export function generate_manifest({
 		assets.push(build_data.service_worker);
 	}
 
-	// In case of server-side route resolution, we need to include all matchers. Prerendered routes are not part
-	// of the server manifest, and they could reference matchers that then would not be included.
-	const matchers = new Set(
-		build_data.client?.nodes ? Object.keys(build_data.manifest_data.matchers) : undefined
+	const uses_matchers = build_data.manifest_data.routes.some((route) =>
+		route.params.some((param) => param.matcher)
 	);
 
 	/** @param {Array<number | undefined>} indexes */
@@ -117,10 +115,6 @@ export function generate_manifest({
 					${routes.map(route => {
 						if (!route.page && !route.endpoint) return;
 
-						route.params.forEach(param => {
-							if (param.matcher) matchers.add(param.matcher);
-						});
-
 						return dedent`
 							{
 								id: ${s(route.id)},
@@ -134,11 +128,14 @@ export function generate_manifest({
 				],
 				prerendered_routes: new Set(${s(prerendered)}),
 				matchers: async () => {
-					${Array.from(
-						matchers,
-						type => `const { match: ${type} } = await import ('${(join_relative(relative_path, `/entries/matchers/${type}.js`))}')`
-					).join('\n')}
-					return { ${Array.from(matchers).join(', ')} };
+					${
+						uses_matchers && build_data.manifest_data.params
+							? dedent`
+								const { params } = await import('${join_relative(relative_path, '/entries/params.js')}');
+								return params;
+							`
+							: 'return {};'
+					}
 				},
 				server_assets: ${s(files)}
 			}
