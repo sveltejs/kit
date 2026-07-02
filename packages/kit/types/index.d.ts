@@ -1998,6 +1998,8 @@ declare module '@sveltejs/kit' {
 		set(input: DeepPartial<T>): DeepPartial<T>;
 		/** Whether the field or any nested field has been interacted with since the form was mounted */
 		touched(): boolean;
+		/** Whether the field or any nested field has been edited since the form was mounted */
+		dirty(): boolean;
 		/** Validation issues, if any */
 		issues(): RemoteFormIssue[] | undefined;
 	};
@@ -2216,8 +2218,13 @@ declare module '@sveltejs/kit' {
 		preflight(schema: StandardSchemaV1<Input, any>): RemoteForm<Input, Output>;
 		/** Validate the form contents programmatically */
 		validate(options?: {
-			/** Set this to `true` to also show validation issues of fields that haven't been touched yet. */
-			includeUntouched?: boolean;
+			/**
+			 * Set this to `true` to also show validation issues of fields that haven't yet been
+			 * edited and blurred. This option is ignored for forms that have previously been
+			 * submitted, in which case all fields are always subject to validation
+			 * (unless the form is reset, at which point it is treated as pristine)
+			 */
+			all?: boolean;
 			/** Set this to `true` to only run the `preflight` validation. */
 			preflightOnly?: boolean;
 		}): Promise<void>;
@@ -2225,7 +2232,7 @@ declare module '@sveltejs/kit' {
 		get result(): Output | undefined;
 		/** The number of pending submissions */
 		get pending(): number;
-		/** True if the form has been submitted at least once */
+		/** True if the form has been submitted at least once, and hasn't been reset since */
 		get submitted(): boolean;
 		/** Access form fields using object notation */
 		fields: RemoteFormFieldsRoot<Input>;

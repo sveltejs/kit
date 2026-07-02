@@ -23,7 +23,8 @@ import {
 	build_path_string,
 	normalize_issue,
 	serialize_binary_form,
-	BINARY_FORM_CONTENT_TYPE
+	BINARY_FORM_CONTENT_TYPE,
+	deep_get
 } from '../../form-utils.js';
 
 /**
@@ -109,6 +110,12 @@ export function form(id) {
 
 		/** @type {Record<string, boolean>} */
 		let touched = $state({});
+
+		/** @type {Record<string, boolean>} */
+		let dirty = $state({});
+
+		/** @type {Record<string, boolean>} */
+		let can_validate = {};
 
 		let submitted = $state(false);
 
@@ -361,6 +368,8 @@ export function form(id) {
 			element = form;
 
 			touched = {};
+			dirty = {};
+			can_validate = {};
 
 			/** @param {SubmitEvent} event */
 			const handle_submit = async (event) => {
@@ -524,7 +533,7 @@ export function form(id) {
 
 				name = strip_prefix(name);
 
-				touched[name] = true;
+				dirty[name] = true;
 			};
 
 			const handle_reset = async () => {
@@ -535,15 +544,34 @@ export function form(id) {
 				input = convert_formdata(new FormData(form));
 				raw_issues = [];
 				touched = {};
+				dirty = {};
+				can_validate = {};
+				submitted = false;
+			};
+
+			/** @param {Event} e */
+			const handle_focusout = (e) => {
+				let name = /** @type {HTMLInputElement} */ (e.target).name;
+				if (!name) return;
+
+				name = strip_prefix(name).replace(/\[\]$/, '');
+
+				touched[name] = true;
+
+				if (Object.hasOwn(dirty, name)) {
+					can_validate[name] = true;
+				}
 			};
 
 			form.addEventListener('submit', handle_submit);
 			form.addEventListener('input', handle_input);
+			form.addEventListener('focusout', handle_focusout);
 			form.addEventListener('reset', handle_reset);
 
 			return () => {
 				form.removeEventListener('submit', handle_submit);
 				form.removeEventListener('input', handle_input);
+				form.removeEventListener('focusout', handle_focusout);
 				form.removeEventListener('reset', handle_reset);
 				element = null;
 			};
@@ -592,11 +620,16 @@ export function form(id) {
 						(path, value) => {
 							if (path.length === 0) {
 								input = value;
-							} else {
+							} else if (value !== deep_get(input, path)) {
 								deep_set(input, path.map(String), value);
 
 								const key = build_path_string(path);
-								touched[key] = true;
+
+								if (element) {
+									touched[key] = true;
+									dirty[key] = true;
+									can_validate[key] = true;
+								}
 							}
 						},
 						(path, all) => {
@@ -612,6 +645,7 @@ export function form(id) {
 							return issues;
 						},
 						() => touched,
+						() => dirty,
 						[]
 					)
 			},
@@ -638,7 +672,12 @@ export function form(id) {
 			},
 			validate: {
 				/** @type {RemoteForm<any, any>['validate']} */
-				value: async ({ includeUntouched = false, preflightOnly = false } = {}) => {
+				value: async ({
+					all = false,
+					preflightOnly = false,
+					// @ts-expect-error TODO remove this in 3.0
+					includeUntouched
+				} = {}) => {
 					if (!element) return;
 
 					const id = ++validate_id;
@@ -689,8 +728,16 @@ export function form(id) {
 						array = /** @type {InternalRemoteFormIssue[]} */ (result._);
 					}
 
-					if (!includeUntouched && !submitted) {
-						array = array.filter((issue) => touched[issue.name]);
+					if (includeUntouched !== undefined) {
+						console.warn(
+							`\`{ includeUntouched: ${includeUntouched} }\` has been replaced with \`{ all: ${includeUntouched} }\``
+						);
+
+						all = includeUntouched;
+					}
+
+					if (!all && !submitted) {
+						array = array.filter((issue) => can_validate[issue.name]);
 					}
 
 					const is_server_validation = !validated?.issues && !preflightOnly;

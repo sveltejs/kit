@@ -644,16 +644,17 @@ function deep_clone(value) {
 /**
  * Creates a proxy-based field accessor for form data
  * @param {any} target - Function or empty POJO
- * @param {() => Record<string, any>} get_input - Function to get current input data
- * @param {(path: (string | number)[], value: any) => void} set_input - Function to set input data
+ * @param {() => Record<string, any>} get - Function to get current input data
+ * @param {(path: (string | number)[], value: any) => void} set - Function to set input data
  * @param {(path?: (string | number)[], all?: boolean) => Record<string, InternalRemoteFormIssue[]>} get_issues - Function to get current issues
  * @param {() => Record<string, boolean>} get_touched - Function to get touched fields
+ * @param {() => Record<string, boolean>} get_dirty - Function to get dirty fields
  * @param {(string | number)[]} path - Current access path
  * @returns {any} Proxy object with name(), value(), and issues() methods
  */
-export function create_field_proxy(target, get_input, set_input, get_issues, get_touched, path) {
+export function create_field_proxy(target, get, set, get_issues, get_touched, get_dirty, path) {
 	const get_value = () => {
-		const value = deep_get(get_input(), path);
+		const value = deep_get(get(), path);
 		return deep_clone(value);
 	};
 
@@ -663,7 +664,7 @@ export function create_field_proxy(target, get_input, set_input, get_issues, get
 
 			// Handle array access like jobs[0]
 			if (/^\d+$/.test(prop)) {
-				return create_field_proxy({}, get_input, set_input, get_issues, get_touched, [
+				return create_field_proxy({}, get, set, get_issues, get_touched, get_dirty, [
 					...path,
 					parseInt(prop, 10)
 				]);
@@ -674,15 +675,15 @@ export function create_field_proxy(target, get_input, set_input, get_issues, get
 
 			if (prop === 'set') {
 				const set_func = function (/** @type {any} */ newValue) {
-					set_input(path, newValue);
+					set(path, newValue);
 					return newValue;
 				};
 
-				return create_field_proxy(set_func, get_input, set_input, get_issues, get_touched, next);
+				return create_field_proxy(set_func, get, set, get_issues, get_touched, get_dirty, next);
 			}
 
 			if (prop === 'value') {
-				return create_field_proxy(get_value, get_input, set_input, get_issues, get_touched, next);
+				return create_field_proxy(get_value, get, set, get_issues, get_touched, get_dirty, next);
 			}
 
 			if (prop === 'issues' || prop === 'allIssues') {
@@ -706,22 +707,23 @@ export function create_field_proxy(target, get_input, set_input, get_issues, get
 					return issues?.length ? issues : undefined;
 				};
 
-				return create_field_proxy(issues_func, get_input, set_input, get_issues, get_touched, next);
+				return create_field_proxy(issues_func, get, set, get_issues, get_touched, get_dirty, next);
 			}
 
-			if (prop === 'touched') {
+			if (prop === 'touched' || prop === 'dirty') {
 				const fn = () => {
-					const touched = get_touched();
+					const object = prop === 'dirty' ? get_dirty() : get_touched();
 
 					if (key === '') {
-						return Object.keys(touched).length > 0;
+						return Object.keys(object).length > 0;
 					}
 
-					if (touched[key]) {
+					if (Object.hasOwn(object, key)) {
 						return true;
 					}
 
-					for (const candidate in touched) {
+					for (const candidate in object) {
+						if (!Object.hasOwn(object, candidate)) continue;
 						if (!candidate.startsWith(key)) continue;
 
 						const next = candidate[key.length];
@@ -733,7 +735,7 @@ export function create_field_proxy(target, get_input, set_input, get_issues, get
 					return false;
 				};
 
-				return create_field_proxy(fn, get_input, set_input, get_issues, get_touched, next);
+				return create_field_proxy(fn, get, set, get_issues, get_touched, get_dirty, next);
 			}
 
 			if (prop === 'as') {
@@ -899,11 +901,11 @@ export function create_field_proxy(target, get_input, set_input, get_issues, get
 					});
 				};
 
-				return create_field_proxy(as_func, get_input, set_input, get_issues, get_touched, next);
+				return create_field_proxy(as_func, get, set, get_issues, get_touched, get_dirty, next);
 			}
 
 			// Handle property access (nested fields)
-			return create_field_proxy({}, get_input, set_input, get_issues, get_touched, next);
+			return create_field_proxy({}, get, set, get_issues, get_touched, get_dirty, next);
 		}
 	});
 }

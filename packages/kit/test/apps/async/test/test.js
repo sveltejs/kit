@@ -515,6 +515,11 @@ test.describe('remote functions', () => {
 		await expect(myForm).not.toContainText('Invalid type: Expected');
 
 		await bar.fill('g');
+		// a field's issues are not surfaced while it is being edited — the user
+		// must edit *and* blur the field before validation kicks in
+		await expect(myForm).not.toContainText('Invalid type: Expected');
+
+		await bar.blur();
 		await expect(myForm).toContainText('Invalid type: Expected ("d" | "e") but received "g"');
 
 		await bar.fill('d');
@@ -723,12 +728,14 @@ test.describe('remote functions', () => {
 		await expect(ageTouched).toHaveText('Age touched: false');
 
 		await page.click('#set-btn');
+		await page.locator('#set-btn').blur();
 		await expect(nameTouched).toHaveText('Name touched: true');
 
 		await page.click('#reset-btn');
 		await expect(nameTouched).toHaveText('Name touched: false');
 
 		await page.fill('#age-input', '42');
+		await page.locator('#age-input').blur();
 		await expect(ageTouched).toHaveText('Age touched: true');
 
 		await page.click('#reset-btn');

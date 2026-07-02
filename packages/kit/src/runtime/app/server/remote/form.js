@@ -176,6 +176,7 @@ export function form(validate_or_fn, maybe_fn) {
 					},
 					() => flatten_issues(get_cache(__, get_request_store().state)?.['']?.issues ?? []),
 					() => ({}),
+					() => ({}),
 					[]
 				);
 			}

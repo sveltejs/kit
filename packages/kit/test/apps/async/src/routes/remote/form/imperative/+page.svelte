@@ -28,7 +28,7 @@
 		type="button"
 		onclick={async () => {
 			set_message.fields.message.set('hello');
-			await set_message.validate({ includeUntouched: true });
+			await set_message.validate({ all: true });
 		}}
 	>
 		Set & validate
