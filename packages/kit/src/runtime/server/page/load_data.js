@@ -377,7 +377,7 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 						}
 
 						void push_fetched(base64_encode(result), true);
-					})();
+					})().catch(noop); // prevent unhandled rejection potentially crashing the process
 
 					return (teed_body = b);
 				}
