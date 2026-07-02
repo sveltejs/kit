@@ -1,5 +1,17 @@
 # @sveltejs/adapter-node
 
+## 6.0.0-next.2
+### Major Changes
+
+
+- breaking: add `kit.paths.origin` config option, remove `kit.prerender.origin` and the `adapter-node` `ORIGIN` environment variable ([#16161](https://github.com/sveltejs/kit/pull/16161))
+
+
+### Patch Changes
+
+- Updated dependencies [[`3c434fb`](https://github.com/sveltejs/kit/commit/3c434fbf12822e19bea833a2084b329590ccf5b1), [`a9284e8`](https://github.com/sveltejs/kit/commit/a9284e8e627b1b0a8d3772c53310c41056e556b1), [`3726a7a`](https://github.com/sveltejs/kit/commit/3726a7a67c949a160283df7db6033b440e229171), [`f9d2240`](https://github.com/sveltejs/kit/commit/f9d22409aa0fca0f5035aead811fe6907f63c293), [`a9284e8`](https://github.com/sveltejs/kit/commit/a9284e8e627b1b0a8d3772c53310c41056e556b1), [`7c040ba`](https://github.com/sveltejs/kit/commit/7c040ba28e98ecbf38acbbf93653fc6c33a506ba), [`223eaad`](https://github.com/sveltejs/kit/commit/223eaadca55c6e73096cd605759d6c7366f260a2), [`223eaad`](https://github.com/sveltejs/kit/commit/223eaadca55c6e73096cd605759d6c7366f260a2), [`3b907d4`](https://github.com/sveltejs/kit/commit/3b907d449a42f9d763cf8eaa6ac5a88975137011), [`fd628a5`](https://github.com/sveltejs/kit/commit/fd628a57348d25fb433f63778e0239892ebb1da2), [`223eaad`](https://github.com/sveltejs/kit/commit/223eaadca55c6e73096cd605759d6c7366f260a2), [`6c1d035`](https://github.com/sveltejs/kit/commit/6c1d03535b09f670164eb22f05405c17120149f1), [`178eac0`](https://github.com/sveltejs/kit/commit/178eac007e648f3235bc45d926cfc029ddf8de07), [`c6562a9`](https://github.com/sveltejs/kit/commit/c6562a92cb908058cab3fabad075a94ad9cc6e39), [`8eca2ab`](https://github.com/sveltejs/kit/commit/8eca2ab8b4760456a782d7a29f83f24a15fac177), [`61cf188`](https://github.com/sveltejs/kit/commit/61cf188e38725b041d0411c6074ad2649a7c42b4)]:
+  - @sveltejs/kit@3.0.0-next.6
+
 ## 6.0.0-next.1
 ### Major Changes
 
