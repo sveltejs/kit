@@ -2,16 +2,16 @@ import { defineParams } from '@sveltejs/kit';
 
 export const params = defineParams({
 	lowercase: (param) => {
-		if (!/^[a-z]+$/.test(param)) throw new Error('Invalid param');
+		if (!/^[a-z]+$/.test(param)) return;
 		return param;
 	},
 	uppercase: (param) => {
-		if (!/^[A-Z]+$/.test(param)) throw new Error('Invalid param');
+		if (!/^[A-Z]+$/.test(param)) return;
 		return param;
 	},
 	numeric: (param) => {
 		const value = parseInt(param);
-		if (isNaN(value)) throw new Error('Invalid param');
+		if (isNaN(value)) return;
 		return value;
 	}
 });

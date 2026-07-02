@@ -8,7 +8,7 @@
  *
  * export const params = defineParams({
  * 	foo: (param) => {
- * 		if (param !== 'bar') throw new Error('Invalid param');
+ * 		if (param !== 'bar') return;
  * 		return param;
  * 	},
  * 	bar: v.string()
@@ -40,24 +40,22 @@ export function normalize_param_definition(definition) {
 			/** @type {unknown} */ ({
 				'~standard': {
 					validate(/** @type {unknown} */ value) {
-						try {
-							const result = definition(/** @type {string} */ (value));
+						const result = definition(/** @type {string} */ (value));
 
-							if (
-								typeof result !== 'string' &&
-								typeof result !== 'number' &&
-								typeof result !== 'boolean' &&
-								typeof result !== 'bigint'
-							) {
-								throw new Error('Param matcher must return a string, number, boolean, or bigint');
-							}
-
-							return { value: result };
-						} catch (error) {
-							return {
-								issues: [{ message: error instanceof Error ? error.message : 'Invalid param' }]
-							};
+						if (result === undefined) {
+							return { issues: [{ message: 'Invalid param' }] };
 						}
+
+						if (
+							typeof result !== 'string' &&
+							typeof result !== 'number' &&
+							typeof result !== 'boolean' &&
+							typeof result !== 'bigint'
+						) {
+							throw new Error('Param matcher must return a string, number, boolean, or bigint');
+						}
+
+						return { value: result };
 					}
 				}
 			})

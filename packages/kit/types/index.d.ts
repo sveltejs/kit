@@ -1429,7 +1429,7 @@ declare module '@sveltejs/kit' {
 	 * A param matcher definition passed to [`defineParams`](https://svelte.dev/docs/kit/@sveltejs-kit#defineParams).
 	 */
 	export type ParamDefinition =
-		| ((param: string) => ParamValue)
+		| ((param: string) => ParamValue | undefined)
 		| StandardSchemaV1<string, ParamValue>;
 
 	/**
@@ -1448,12 +1448,10 @@ declare module '@sveltejs/kit' {
 				? StandardSchemaV1.InferOutput<M>
 				: never
 			: M extends ((param: string) => param is infer U extends string)
-				? U extends ParamValue
-					? U
-					: never
+				? U
 				: M extends (param: string) => infer R
-					? R extends ParamValue
-						? R
+					? Exclude<R, undefined> extends ParamValue
+						? Exclude<R, undefined>
 						: never
 					: string;
 

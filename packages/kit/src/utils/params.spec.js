@@ -44,9 +44,17 @@ test('normalize_param_definition uses the returned value as the parsed param', (
 	assert.deepEqual(matcher['~standard'].validate('x'), { value: true });
 });
 
+test('normalize_param_definition treats undefined as no match', () => {
+	const matcher = normalize_param_definition(() => undefined);
+
+	const result = matcher['~standard'].validate('x');
+	if (result instanceof Promise) assert.fail('Expected synchronous validation');
+	assert.ok(result.issues);
+});
+
 test('normalize_param_definition supports transform functions', () => {
 	const matcher = normalize_param_definition((param) => {
-		if (param !== '42') throw new Error('nope');
+		if (param !== '42') return;
 		return 42;
 	});
 
@@ -57,11 +65,20 @@ test('normalize_param_definition supports transform functions', () => {
 	assert.ok(result.issues);
 });
 
+test('normalize_param_definition propagates thrown errors', () => {
+	const matcher = normalize_param_definition(() => {
+		throw new Error('boom');
+	});
+
+	assert.throws(() => matcher['~standard'].validate('x'), /boom/);
+});
+
 test('normalize_param_definition rejects invalid return types', () => {
 	// @ts-expect-error
 	const matcher = normalize_param_definition(() => ({ invalid: true }));
 
-	const result = matcher['~standard'].validate('irrelevant');
-	if (result instanceof Promise) assert.fail('Expected synchronous validation');
-	assert.ok(result.issues);
+	assert.throws(
+		() => matcher['~standard'].validate('irrelevant'),
+		/Param matcher must return a string, number, boolean, or bigint/
+	);
 });

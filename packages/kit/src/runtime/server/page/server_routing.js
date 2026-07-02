@@ -69,15 +69,19 @@ export async function resolve_route(resolved_path, url, manifest) {
 		return text('Server-side route resolution disabled', { status: 400 });
 	}
 
-	const matchers = await manifest._.matchers();
-	const result = find_route(resolved_path, manifest._.client.routes, matchers);
+	try {
+		const matchers = await manifest._.matchers();
+		const result = find_route(resolved_path, manifest._.client.routes, matchers);
 
-	return create_server_routing_response(
-		result?.route ?? null,
-		result?.params ?? {},
-		url,
-		manifest._.client
-	).response;
+		return create_server_routing_response(
+			result?.route ?? null,
+			result?.params ?? {},
+			url,
+			manifest._.client
+		).response;
+	} catch (e) {
+		return text('Error resolving route', { status: 500 });
+	}
 }
 
 /**
