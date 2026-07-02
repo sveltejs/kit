@@ -1,6 +1,7 @@
 import { beforeAll, describe, expect, test } from 'vitest';
 import {
 	BINARY_FORM_CONTENT_TYPE,
+	DELETE_KEY,
 	convert_formdata,
 	deep_set,
 	deserialize_binary_form,
@@ -753,11 +754,20 @@ describe('deep_set', () => {
 	test.each(POLLUTION_ATTACKS)('avoids prototype injection', (attack) => {
 		const target = {};
 		expect(() => deep_set(target, attack.split('.'), 'bad')).toThrow(/Invalid key/);
+		expect(() => deep_set(target, attack.split('.'), DELETE_KEY)).toThrow(/Invalid key/);
 	});
 
 	test.each([null, undefined])('creates nested object when intermediate value is %s', (value) => {
 		const target = { nested: value };
 		deep_set(target, ['nested', 'name'], 'hello');
 		expect(target).toEqual({ nested: { name: 'hello' } });
+	});
+
+	test('deletes a nested value', () => {
+		const target = { nested: { file: 'hello' } };
+
+		deep_set(target, ['nested', 'file'], DELETE_KEY);
+
+		expect(target).toEqual({ nested: {} });
 	});
 });

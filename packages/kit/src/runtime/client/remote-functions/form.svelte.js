@@ -18,6 +18,7 @@ import {
 	build_path_string,
 	normalize_issue,
 	serialize_binary_form,
+	DELETE_KEY,
 	BINARY_FORM_CONTENT_TYPE
 } from '../../form-utils.js';
 
@@ -513,14 +514,7 @@ export function form(id) {
 					if (file) {
 						set_nested_value(input, name, file);
 					} else {
-						// Remove the property by setting to undefined and clean up
-						const path_parts = name.split(/\.|\[|\]/).filter(Boolean);
-						let current = /** @type {any} */ (input);
-						for (let i = 0; i < path_parts.length - 1; i++) {
-							if (current[path_parts[i]] == null) return;
-							current = current[path_parts[i]];
-						}
-						delete current[path_parts[path_parts.length - 1]];
+						set_nested_value(input, name, DELETE_KEY);
 					}
 				} else {
 					set_nested_value(
