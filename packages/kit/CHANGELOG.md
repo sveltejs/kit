@@ -1,5 +1,20 @@
 # @sveltejs/kit
 
+## 2.69.0
+### Minor Changes
+
+
+- feat: expose `submitted` property of remote forms ([#14811](https://github.com/sveltejs/kit/pull/14811))
+
+
+### Patch Changes
+
+
+- fix: clear issues and touched states on form reset ([#16163](https://github.com/sveltejs/kit/pull/16163))
+
+
+- fix: return `undefined` from `fields.branch.issues()` when only `fields.branch.leaf` has issues ([#16187](https://github.com/sveltejs/kit/pull/16187))
+
 ## 2.68.0
 ### Minor Changes
 
