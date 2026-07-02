@@ -79,7 +79,7 @@ export async function resolve_route(resolved_path, url, manifest) {
 			url,
 			manifest._.client
 		).response;
-	} catch (e) {
+	} catch {
 		return text('Error resolving route', { status: 500 });
 	}
 }
