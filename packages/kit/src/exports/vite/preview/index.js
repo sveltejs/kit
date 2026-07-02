@@ -1,7 +1,3 @@
-/** @import { NextHandleFunction } from 'connect' */
-/** @import { PreviewServer, ResolvedConfig } from 'vite' */
-/** @import { Emulator, SSRManifest } from '@sveltejs/kit' */
-/** @import { ValidatedConfig, ServerInternalModule, ServerModule, InternalServer } from 'types' */
 import fs from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -12,16 +8,16 @@ import { createReadableStream, getRequest, setResponse } from '../../../exports/
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import { is_chrome_devtools_request, not_found } from '../utils.js';
 
+/** @typedef {import('http').IncomingMessage} Req */
+/** @typedef {import('http').ServerResponse} Res */
+/** @typedef {(req: Req, res: Res, next: () => void) => void} Handler */
+
 /**
- * @param {PreviewServer} vite
- * @param {ResolvedConfig} vite_config
- * @param {ValidatedConfig} svelte_config
+ * @param {import('vite').PreviewServer} vite
+ * @param {import('vite').ResolvedConfig} vite_config
+ * @param {import('types').ValidatedConfig} svelte_config
  */
 export async function preview(vite, vite_config, svelte_config) {
-	const adapter_preview = svelte_config.kit.adapter?.vite?.plugins?.some(
-		(plugin) => plugin.configurePreviewServer
-	);
-
 	const { paths } = svelte_config.kit;
 	const base = paths.base;
 	const assets = paths.assets ? SVELTE_KIT_ASSETS : paths.base;
@@ -36,46 +32,37 @@ export async function preview(vite, vite_config, svelte_config) {
 		throw new Error(`Server files not found at ${dir}, did you run \`build\` first?`);
 	}
 
-	/** @type {InternalServer | null} */
-	let server = null;
-	/** @type {SSRManifest} */
-	let manifest;
-	/** @type {Emulator | undefined} */
-	let emulator;
-
-	if (!adapter_preview) {
-		const instrumentation = join(dir, 'instrumentation.server.js');
-		if (fs.existsSync(instrumentation)) {
-			await import(pathToFileURL(instrumentation).href);
-		}
-
-		/** @type {ServerInternalModule} */
-		const { set_assets } = await import(pathToFileURL(join(dir, 'internal.js')).href);
-
-		/** @type {ServerModule} */
-		const { Server } = await import(pathToFileURL(join(dir, 'index.js')).href);
-
-		({ manifest } = await import(pathToFileURL(join(dir, 'manifest.js')).href));
-
-		set_assets(assets);
-
-		server = new Server(manifest);
-
-		try {
-			await server.init({
-				env: loadEnv(vite_config.mode, svelte_config.kit.env.dir, ''),
-				read: (file) => createReadableStream(`${dir}/${file}`)
-			});
-		} catch (error) {
-			// Vite erases the error message when starting the preview server so we store
-			// it in the stack instead. This ensures errors thrown using `stackless`
-			// are still readable
-			if (error instanceof Error) error.stack = error.message;
-			throw error;
-		}
-
-		emulator = await svelte_config.kit.adapter?.emulate?.();
+	const instrumentation = join(dir, 'instrumentation.server.js');
+	if (fs.existsSync(instrumentation)) {
+		await import(pathToFileURL(instrumentation).href);
 	}
+
+	/** @type {import('types').ServerInternalModule} */
+	const { set_assets } = await import(pathToFileURL(join(dir, 'internal.js')).href);
+
+	/** @type {import('types').ServerModule} */
+	const { Server } = await import(pathToFileURL(join(dir, 'index.js')).href);
+
+	const { manifest } = await import(pathToFileURL(join(dir, 'manifest.js')).href);
+
+	set_assets(assets);
+
+	const server = new Server(manifest);
+
+	try {
+		await server.init({
+			env: loadEnv(vite_config.mode, svelte_config.kit.env.dir, ''),
+			read: (file) => createReadableStream(`${dir}/${file}`)
+		});
+	} catch (error) {
+		// Vite erases the error message when starting the preview server so we store
+		// it in the stack instead. This ensures errors thrown using `stackless`
+		// are still readable
+		if (error instanceof Error) error.stack = error.message;
+		throw error;
+	}
+
+	const emulator = await svelte_config.kit.adapter?.emulate?.();
 
 	return () => {
 		// Remove the base middleware. It screws with the URL.
@@ -91,21 +78,19 @@ export async function preview(vite, vite_config, svelte_config) {
 		}
 
 		// generated client assets and the contents of `static`
-		if (!adapter_preview || paths.assets) {
-			vite.middlewares.use(
-				scoped(
-					assets,
-					sirv(join(svelte_config.kit.outDir, 'output/client'), {
-						setHeaders: (res, pathname) => {
-							// only apply to immutable directory, not e.g. version.json
-							if (pathname.startsWith(`/${svelte_config.kit.appDir}/immutable`)) {
-								res.setHeader('cache-control', 'public,max-age=31536000,immutable');
-							}
+		vite.middlewares.use(
+			scoped(
+				assets,
+				sirv(join(svelte_config.kit.outDir, 'output/client'), {
+					setHeaders: (res, pathname) => {
+						// only apply to immutable directory, not e.g. version.json
+						if (pathname.startsWith(`/${svelte_config.kit.appDir}/immutable`)) {
+							res.setHeader('cache-control', 'public,max-age=31536000,immutable');
 						}
-					})
-				)
-			);
-		}
+					}
+				})
+			)
+		);
 
 		vite.middlewares.use((req, res, next) => {
 			const original_url = /** @type {string} */ (req.url);
@@ -134,8 +119,6 @@ export async function preview(vite, vite_config, svelte_config) {
 				not_found(req, res, base);
 			}
 		});
-
-		if (!server) return;
 
 		// prerendered dependencies
 		vite.middlewares.use(
@@ -250,7 +233,7 @@ export async function preview(vite, vite_config, svelte_config) {
 
 /**
  * @param {string} dir
- * @returns {NextHandleFunction}
+ * @returns {Handler}
  */
 const mutable = (dir) =>
 	fs.existsSync(dir)
@@ -262,8 +245,8 @@ const mutable = (dir) =>
 
 /**
  * @param {string} scope
- * @param {NextHandleFunction} handler
- * @returns {NextHandleFunction}
+ * @param {Handler} handler
+ * @returns {Handler}
  */
 function scoped(scope, handler) {
 	if (scope === '') return handler;

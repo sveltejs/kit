@@ -71,7 +71,7 @@ export interface Adapter {
 	emulate?: () => MaybePromise<Emulator>;
 	vite?: {
 		/**
-		 * If any of the provided Vite plugins include the `configureServer` or `configurePreviewServer` hooks, it is expected for them to respond to requests using the adapter's build output.
+		 * Plugins provided by the adapter are placed before any of SvelteKit's own plugins.
 		 * @since 3.0.0
 		 */
 		plugins?: Plugin[];
