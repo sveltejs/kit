@@ -1,5 +1,62 @@
 # @sveltejs/kit
 
+## 3.0.0-next.6
+### Major Changes
+
+
+- breaking: return no content for 204 responses ([#16200](https://github.com/sveltejs/kit/pull/16200))
+
+
+- breaking: form action responses now use the HTTP status code returned from `fail` ([#16200](https://github.com/sveltejs/kit/pull/16200))
+
+
+- breaking: nested server-only directories ([#15685](https://github.com/sveltejs/kit/pull/15685))
+
+
+- breaking: add `kit.paths.origin` config option, remove `kit.prerender.origin` and the `adapter-node` `ORIGIN` environment variable ([#16161](https://github.com/sveltejs/kit/pull/16161))
+
+
+- breaking: don't abort navigation when calling `invalidate(All)` during navigation ([#16188](https://github.com/sveltejs/kit/pull/16188))
+
+
+- breaking: allow `handleError` to influence status code ([#16162](https://github.com/sveltejs/kit/pull/16162))
+
+
+- breaking: forbid external redirects by default ([#16198](https://github.com/sveltejs/kit/pull/16198))
+
+
+### Minor Changes
+
+
+- feat: use `type: 'module'` for service worker registrations ([#16169](https://github.com/sveltejs/kit/pull/16169))
+
+
+- feat: add `dirty()` property to form fields ([#16208](https://github.com/sveltejs/kit/pull/16208))
+
+
+- feat: add `cookies.parse` method ([#16203](https://github.com/sveltejs/kit/pull/16203))
+
+
+### Patch Changes
+
+
+- fix: drain unconsumed request bodies so keep-alive connections don't hang ([#16170](https://github.com/sveltejs/kit/pull/16170))
+
+
+- fix: properly handle Date objects in form.fields.set ([#16168](https://github.com/sveltejs/kit/pull/16168))
+
+
+- fix: skip clean fields when programmatically validating forms ([#16208](https://github.com/sveltejs/kit/pull/16208))
+
+
+- breaking: experimental remote form `validate({ includeUntouched })` option is now `all` ([#16208](https://github.com/sveltejs/kit/pull/16208))
+
+
+- fix: return `undefined` from `fields.branch.issues()` when only `fields.branch.leaf` has issues ([#16187](https://github.com/sveltejs/kit/pull/16187))
+
+
+- feat: add field.touched() helper to remote form fields ([#14692](https://github.com/sveltejs/kit/pull/14692))
+
 ## 3.0.0-next.5
 ### Major Changes
 
