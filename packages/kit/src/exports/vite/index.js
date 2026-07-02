@@ -1846,6 +1846,7 @@ function kit({ svelte_config }) {
 
 	return /** @type {Plugin[]} */ (
 		[
+			svelte_config.kit.adapter?.vite?.plugins,
 			plugin_setup,
 			plugin_remote,
 			plugin_virtual_modules,
@@ -1853,8 +1854,7 @@ function kit({ svelte_config }) {
 			service_worker_entry_file ? plugin_service_worker_env : undefined,
 			plugin_service_worker,
 			plugin_compile,
-			plugin_adapter,
-			svelte_config.kit.adapter?.vite?.plugins
+			plugin_adapter
 		].filter(Boolean)
 	);
 }
