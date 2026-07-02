@@ -141,16 +141,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       # If you're using pnpm, add this step then change the commands and cache key below to use `pnpm`
       # - name: Install pnpm
-      #   uses: pnpm/action-setup@v3
+      #   uses: pnpm/action-setup@v6
       #   with:
       #     version: 8
 
       - name: Install Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 20
           cache: npm
@@ -165,7 +165,7 @@ jobs:
           npm run build
 
       - name: Upload Artifacts
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           # this should match the `pages` option in your adapter-static options
           path: 'build/'
@@ -185,7 +185,7 @@ jobs:
     steps:
       - name: Deploy
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
 ```
 
 If you're not using GitHub actions to deploy your site (for example, you're pushing the built site to its own repo), add an empty `.nojekyll` file in your `static` directory to prevent Jekyll from interfering.
