@@ -75,6 +75,25 @@ export function query(validate_or_fn, maybe_fn) {
 		id: '',
 		name: '',
 		validate,
+		run_with_payload(payload, arg) {
+			if (prerendering) {
+				throw new Error(
+					`Cannot call query '${__.name}' while prerendering, as prerendered pages need static data. Use 'prerender' from $app/server instead`
+				);
+			}
+
+			const { event, state } = get_request_store();
+
+			return create_query_resource(__, payload, event, state, () =>
+				run_remote_function(
+					event,
+					{ ...state, is_in_remote_query: true },
+					false,
+					() => validate(arg),
+					fn
+				)
+			);
+		},
 		bind(payload, validated_arg) {
 			const { event, state } = get_request_store();
 
@@ -92,24 +111,8 @@ export function query(validate_or_fn, maybe_fn) {
 
 	/** @type {RemoteQueryFunction<Input, Output> & { __: RemoteQueryInternals }} */
 	const wrapper = (arg) => {
-		if (prerendering) {
-			throw new Error(
-				`Cannot call query '${__.name}' while prerendering, as prerendered pages need static data. Use 'prerender' from $app/server instead`
-			);
-		}
-
-		const { event, state } = get_request_store();
-		const payload = stringify_remote_arg(arg, state.transport);
-
-		return create_query_resource(__, payload, event, state, () =>
-			run_remote_function(
-				event,
-				{ ...state, is_in_remote_query: true },
-				false,
-				() => validate(arg),
-				fn
-			)
-		);
+		const { state } = get_request_store();
+		return __.run_with_payload(stringify_remote_arg(arg, state.transport), arg);
 	};
 
 	Object.defineProperty(wrapper, '__', { value: __ });

@@ -3,6 +3,7 @@
 import { parse } from 'devalue';
 import { error } from '@sveltejs/kit';
 import { with_request_store, get_request_store } from '@sveltejs/kit/internal/server';
+import { get_transport_decoders } from '../../../shared.js';
 
 /**
  * @param {any} validate_or_fn
@@ -87,13 +88,7 @@ export async function get_response(internals, payload, state, get_result) {
  * @param {ServerHooks['transport']} transport
  */
 export function parse_remote_response(data, transport) {
-	/** @type {Record<string, any>} */
-	const revivers = {};
-	for (const key in transport) {
-		revivers[key] = transport[key].decode;
-	}
-
-	return parse(data, revivers);
+	return parse(data, get_transport_decoders(transport));
 }
 
 /**

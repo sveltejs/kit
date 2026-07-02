@@ -1,5 +1,5 @@
 /** @import { ActionResult, RemoteForm, RequestEvent, SSRManifest } from '@sveltejs/kit' */
-/** @import { RemoteFormInternals, RemoteFunctionData, RemoteFunctionResponse, RemoteInternals, RequestState, SSROptions } from 'types' */
+/** @import { RemoteFormInternals, RemoteFunctionData, RemoteFunctionResponse, RemoteInternals, RemotePrerenderInternals, RemoteQueryInternals, RequestState, SSROptions } from 'types' */
 
 import { json, error } from '@sveltejs/kit';
 import { HttpError, Redirect, SvelteKitError } from '@sveltejs/kit/internal';
@@ -252,21 +252,28 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 			}
 
 			case 'prerender': {
+				const payload = additional_args ?? '';
+
 				data._ = await with_request_store({ event, state }, () =>
-					fn(parse_remote_arg(additional_args, transport))
+					/** @type {RemotePrerenderInternals} */ (internals).run_with_payload(
+						payload,
+						parse_remote_arg(payload, transport)
+					)
 				);
 
 				break;
 			}
 
 			case 'query': {
-				const payload = /** @type {string} */ (
+				const payload =
 					// new URL(...) necessary because we're hiding the URL from the user in the event object
-					new URL(event.request.url).searchParams.get('payload')
-				);
+					new URL(event.request.url).searchParams.get('payload') ?? '';
 
 				data._ = await with_request_store({ event, state }, () =>
-					fn(parse_remote_arg(payload, transport))
+					/** @type {RemoteQueryInternals} */ (internals).run_with_payload(
+						payload,
+						parse_remote_arg(payload, transport)
+					)
 				);
 
 				break;

@@ -780,6 +780,30 @@ test.describe('remote functions', () => {
 		}
 	});
 
+	test('no-argument query fetched via client navigation resolves', async ({
+		page,
+		clicknav,
+		javaScriptEnabled
+	}) => {
+		// regression test: a no-argument query sends no `payload` search param,
+		// so the server reads `null` from the URL. It must normalize that to the
+		// canonical empty payload `''`, otherwise the response is cached under a
+		// key (`id/null`) that doesn't match the one the client listens on
+		// (`id/`), and the query never resolves. This exercises the client-fetch
+		// (endpoint) path — with JS the result comes from the remote endpoint,
+		// not the hydration payload.
+		await page.goto('/remote/query-no-arg');
+
+		await clicknav('[href="/remote/query-no-arg/result"]');
+
+		await expect(page.locator('#no-arg-value')).toHaveText('no-arg value');
+
+		// sanity check we actually landed on the page regardless of JS
+		expect(javaScriptEnabled || (await page.url()).endsWith('/remote/query-no-arg/result')).toBe(
+			true
+		);
+	});
+
 	test('queries cannot set cookies or headers', async ({ page }) => {
 		await page.goto('/remote/query-event-guards');
 
