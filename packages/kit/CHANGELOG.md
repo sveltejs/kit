@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 3.0.0-next.7
+### Major Changes
+
+
+- feat: allow adapters to provide additional Vite plugins ([#16206](https://github.com/sveltejs/kit/pull/16206))
+
 ## 3.0.0-next.6
 ### Major Changes
 
