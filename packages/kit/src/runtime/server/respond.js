@@ -8,7 +8,7 @@ import { is_endpoint_request, render_endpoint } from './endpoint.js';
 import { render_page } from './page/index.js';
 import { render_response } from './page/render.js';
 import { respond_with_error } from './page/respond_with_error.js';
-import { is_form_content_type } from '../../utils/http.js';
+import { get_self_origin, is_csrf_forbidden, is_remote_forbidden } from './csrf.js';
 import {
 	handle_fatal_error,
 	has_prerendered_path,
@@ -72,21 +72,26 @@ export async function internal_respond(request, options, manifest, state) {
 
 	if (!DEV) {
 		const request_origin = request.headers.get('origin');
+		const self_origin = get_self_origin(options.paths_origin, url.origin);
 
 		if (remote_id) {
-			if (request.method !== 'GET' && request_origin !== url.origin) {
+			if (
+				is_remote_forbidden({
+					request,
+					request_origin,
+					self_origin
+				})
+			) {
 				const message = 'Cross-site remote requests are forbidden';
 				return json({ message }, { status: 403 });
 			}
 		} else if (options.csrf_check_origin) {
-			const forbidden =
-				is_form_content_type(request) &&
-				(request.method === 'POST' ||
-					request.method === 'PUT' ||
-					request.method === 'PATCH' ||
-					request.method === 'DELETE') &&
-				request_origin !== url.origin &&
-				(!request_origin || !options.csrf_trusted_origins.includes(request_origin));
+			const forbidden = is_csrf_forbidden({
+				request,
+				request_origin,
+				self_origin,
+				trusted_origins: options.csrf_trusted_origins
+			});
 
 			if (forbidden) {
 				const message = `Cross-site ${request.method} form submissions are forbidden`;

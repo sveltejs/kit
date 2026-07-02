@@ -651,7 +651,10 @@ function kit({ svelte_config }) {
 
 	/** @type {Map<string, Set<string>>} */
 	const import_map = new Map();
-	const server_only_pattern = /.*\.server\..+/;
+	// Matches any ID that has .server. in its filename
+	const server_only_module_pattern = /\.server\.[^/]+$/;
+	// Matches any ID that has /server/ in its path
+	const server_only_directory_pattern = /\/server\//;
 
 	/**
 	 * Ensures that client-side code can't accidentally import server-side code,
@@ -701,8 +704,8 @@ function kit({ svelte_config }) {
 				id: [
 					exactRegex(app_server),
 					exactRegex(app_env_private),
-					/\/server\//,
-					new RegExp(`${server_only_pattern.source}$`)
+					server_only_module_pattern,
+					server_only_directory_pattern
 				]
 			},
 			handler(id) {
@@ -717,8 +720,8 @@ function kit({ svelte_config }) {
 				const is_server_only =
 					normalized === '$app/env/private' ||
 					normalized === '$app/server' ||
-					normalized.startsWith('$lib/server/') ||
-					(is_internal && server_only_pattern.test(path.basename(id)));
+					(normalized.startsWith('$lib/') && server_only_directory_pattern.test(id)) ||
+					(is_internal && server_only_module_pattern.test(id));
 
 				// skip .server.js files outside the cwd or in node_modules, as the filename might not mean 'server-only module' in this context
 				// TODO: address https://github.com/sveltejs/kit/issues/12529
@@ -1171,6 +1174,9 @@ function kit({ svelte_config }) {
 			}
 		}
 	};
+
+	/** @type {() => Promise<void> | undefined} */
+	let finalise;
 
 	/** @type {Plugin} */
 	const plugin_compile = {
@@ -1779,63 +1785,87 @@ function kit({ svelte_config }) {
 				})};\n`
 			);
 
-			if (service_worker_entry_file) {
-				log.info('Building service worker');
+			// defer the adapt step to run after any buildApp hooks the adapter might have
+			finalise = async () => {
+				// defer creating the service worker too because other plugins might build
+				// the client environment again and overwrite our service worker which
+				// outputs to the same directory
+				if (service_worker_entry_file) {
+					log.info('Building service worker');
 
-				// mirror client settings that we couldn't set per environment in the config hook
-				builder.environments.serviceWorker.config.define =
-					builder.environments.client.config.define;
-				builder.environments.serviceWorker.config.resolve.alias = [
-					...get_config_aliases(kit, vite_config.root)
-				];
+					// mirror client settings that we couldn't set per environment in the config hook
+					builder.environments.serviceWorker.config.define =
+						builder.environments.client.config.define;
+					builder.environments.serviceWorker.config.resolve.alias = [
+						...get_config_aliases(kit, vite_config.root)
+					];
 
-				// we have to overwrite this because it can't be configured per environment in the config hook
-				builder.environments.serviceWorker.config.experimental.renderBuiltUrl = (filename) => {
-					return {
-						runtime: `new URL(${JSON.stringify(filename)}, location.href).pathname`
+					// we have to overwrite this because it can't be configured per environment in the config hook
+					builder.environments.serviceWorker.config.experimental.renderBuiltUrl = (filename) => {
+						return {
+							runtime: `new URL(${JSON.stringify(filename)}, location.href).pathname`
+						};
 					};
-				};
 
-				await builder.build(builder.environments.serviceWorker);
-			}
+					await builder.build(builder.environments.serviceWorker);
+				}
 
-			console.log(
-				`\nRun ${styleText(['bold', 'cyan'], 'npm run preview')} to preview your production build locally.`
-			);
-
-			if (kit.adapter) {
-				const { adapt } = await import('../../core/adapt/index.js');
-				await adapt(
-					svelte_config,
-					build_data,
-					metadata,
-					prerendered,
-					prerender_results.prerender_map,
-					log,
-					remotes,
-					vite_config,
-					explicit_env_config
-				);
-			} else {
-				console.log(styleText(['bold', 'yellow'], '\nNo adapter specified'));
-
-				const link = styleText(['bold', 'cyan'], 'https://svelte.dev/docs/kit/adapters');
 				console.log(
-					`See ${link} to learn how to configure your app to run on the platform of your choosing`
+					`\nRun ${styleText(['bold', 'cyan'], 'npm run preview')} to preview your production build locally.`
 				);
+
+				if (kit.adapter) {
+					const { adapt } = await import('../../core/adapt/index.js');
+					await adapt(
+						svelte_config,
+						build_data,
+						metadata,
+						prerendered,
+						prerender_results.prerender_map,
+						log,
+						remotes,
+						vite_config,
+						explicit_env_config
+					);
+				} else {
+					console.log(styleText(['bold', 'yellow'], '\nNo adapter specified'));
+
+					const link = styleText(['bold', 'cyan'], 'https://svelte.dev/docs/kit/adapters');
+					console.log(
+						`See ${link} to learn how to configure your app to run on the platform of your choosing`
+					);
+				}
+			};
+		}
+	};
+
+	/** @type {Plugin} */
+	const plugin_adapter = {
+		name: 'vite-plugin-sveltekit-adapter',
+		apply: 'build',
+		buildApp: {
+			// this will run after any buildApp hooks provided by other Vite plugins
+			// see https://vite.dev/guide/api-environment-frameworks#environments-during-build
+			order: 'post',
+			async handler() {
+				await finalise?.();
 			}
 		}
 	};
 
-	return [
-		plugin_setup,
-		plugin_remote,
-		plugin_virtual_modules,
-		process.env.TEST !== 'true' ? plugin_guard : undefined,
-		service_worker_entry_file && plugin_service_worker_env,
-		plugin_service_worker,
-		plugin_compile
-	].filter((p) => !!p);
+	return /** @type {Plugin[]} */ (
+		[
+			svelte_config.kit.adapter?.vite?.plugins,
+			plugin_setup,
+			plugin_remote,
+			plugin_virtual_modules,
+			process.env.TEST !== 'true' ? plugin_guard : undefined,
+			service_worker_entry_file ? plugin_service_worker_env : undefined,
+			plugin_service_worker,
+			plugin_compile,
+			plugin_adapter
+		].filter(Boolean)
+	);
 }
 
 /**

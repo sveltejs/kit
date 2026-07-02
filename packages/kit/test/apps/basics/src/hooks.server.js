@@ -20,7 +20,6 @@ resolve('/');
 export function error_to_pojo(error) {
 	if (isHttpError(error)) {
 		return {
-			status: error.status,
 			...error.body
 		};
 	}
@@ -45,6 +44,13 @@ export const handleError = ({ event, error: e, status, message }) => {
 	if (event.url.pathname.startsWith('/get-request-event/')) {
 		const ev = getRequestEvent();
 		message = /** @type {string} */ (ev.locals.message);
+	}
+
+	if (event.url.pathname === '/errors/handle-error-status') {
+		return {
+			status: 404,
+			message: `${error.message} (${status} ${message})`
+		};
 	}
 
 	return event.url.pathname.endsWith('404-fallback')
