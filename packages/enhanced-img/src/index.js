@@ -53,8 +53,6 @@ function imagetools_plugin() {
 	};
 
 	// TODO: should we make formats or sizes configurable besides just letting people override defaultDirectives?
-	// TODO: generate img rather than picture if only a single format is provided
-	//     by resolving the directives for the URL in the preprocessor
 	return imagetools(imagetools_opts);
 }
 
