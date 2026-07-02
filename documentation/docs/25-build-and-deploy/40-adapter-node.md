@@ -85,6 +85,7 @@ HTTP doesn't give SvelteKit a reliable way to know the URL that is currently bei
 If your app is served from an origin that isn't known at request time — for example because it's behind a reverse proxy that doesn't pass the `host` header, or because you want to use a canonical origin for CSRF checks that differs from the request's host — you can set the [`paths.origin`](https://svelte.dev/docs/kit/configuration#paths.origin) option in your `vite.config.js`:
 
 ```js
+// @errors: 2307
 /// file: vite.config.js
 import adapter from '@sveltejs/adapter-node';
 import { sveltekit } from '@sveltejs/kit/vite';
@@ -95,7 +96,7 @@ export default defineConfig({
 		sveltekit({
 			adapter: adapter(),
 			paths: {
-				origin: process.env.ORIGIN
+				origin: /** @type {`https://${string}`} */ (process.env.ORIGIN)
 			}
 		})
 	]
