@@ -1,4 +1,4 @@
-import { building, dev } from '$app/environment';
+import { building, dev } from '$app/env';
 import { error, isHttpError, redirect } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
 import fs from 'node:fs';
@@ -6,18 +6,6 @@ import { COOKIE_NAME } from './routes/cookies/shared';
 import { _set_from_init } from './routes/init-hooks/+page.server';
 import { getRequestEvent } from '$app/server';
 import { resolve } from '$app/paths';
-
-// TODO: remove in SvelteKit 3.0
-// @ts-ignore this doesn't exist in old Node
-Promise.withResolvers ??= () => {
-	/** @type {{ promise: Promise<any>, resolve: (value: any) => void, reject: (reason?: any) => void }} */
-	const d = {};
-	d.promise = new Promise((resolve, reject) => {
-		d.resolve = resolve;
-		d.reject = reject;
-	});
-	return d;
-};
 
 // check that this doesn't throw when called outside an event context
 resolve('/');
@@ -32,7 +20,6 @@ resolve('/');
 export function error_to_pojo(error) {
 	if (isHttpError(error)) {
 		return {
-			status: error.status,
 			...error.body
 		};
 	}
@@ -57,6 +44,13 @@ export const handleError = ({ event, error: e, status, message }) => {
 	if (event.url.pathname.startsWith('/get-request-event/')) {
 		const ev = getRequestEvent();
 		message = /** @type {string} */ (ev.locals.message);
+	}
+
+	if (event.url.pathname === '/errors/handle-error-status') {
+		return {
+			status: 404,
+			message: `${error.message} (${status} ${message})`
+		};
 	}
 
 	return event.url.pathname.endsWith('404-fallback')

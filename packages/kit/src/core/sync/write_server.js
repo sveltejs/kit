@@ -1,12 +1,11 @@
 import path from 'node:path';
-import process from 'node:process';
+import { styleText } from 'node:util';
 import { hash } from '../../utils/hash.js';
-import { posixify, resolve_entry } from '../../utils/filesystem.js';
+import { resolve_entry } from '../../utils/filesystem.js';
+import { posixify } from '../../utils/os.js';
 import { s } from '../../utils/misc.js';
 import { load_error_page, load_template } from '../config/index.js';
-import { runtime_directory } from '../utils.js';
-import { isSvelte5Plus, write_if_changed } from './utils.js';
-import colors from 'kleur';
+import { write_if_changed } from './utils.js';
 import { escape_html } from '../../utils/escape.js';
 
 /**
@@ -15,7 +14,6 @@ import { escape_html } from '../../utils/escape.js';
  *   universal_hooks: string | null;
  *   config: import('types').ValidatedConfig;
  *   has_service_worker: boolean;
- *   runtime_directory: string;
  *   template: string;
  * }} opts
  */
@@ -24,28 +22,25 @@ const server_template = ({
 	server_hooks,
 	universal_hooks,
 	has_service_worker,
-	runtime_directory,
 	template
 }) => `
-import root from '../root.${isSvelte5Plus() ? 'js' : 'svelte'}';
+import root from '../root.js';
 import { set_building, set_prerendering } from '$app/env/internal';
 import { set_assets } from '$app/paths/internal/server';
 import { set_manifest, set_read_implementation } from '__sveltekit/server';
-import { set_private_env, set_public_env } from '${runtime_directory}/shared-server.js';
 import error from '../shared/error-template.js';
 
 export const options = {
 	app_template_contains_nonce: ${template.includes('%sveltekit.nonce%')},
 	async: ${s(!!config.compilerOptions?.experimental?.async)},
 	csp: ${s(config.kit.csp)},
-	csrf_check_origin: ${s(config.kit.csrf.checkOrigin && !config.kit.csrf.trustedOrigins.includes('*'))},
+	csrf_check_origin: ${s(!config.kit.csrf.trustedOrigins.includes('*'))},
 	csrf_trusted_origins: ${s(config.kit.csrf.trustedOrigins)},
 	embedded: ${config.kit.embedded},
-	env_public_prefix: '${config.kit.env.publicPrefix}',
-	env_private_prefix: '${config.kit.env.privatePrefix}',
 	hash_routing: ${s(config.kit.router.type === 'hash')},
 	hooks: null, // added lazily, via \`get_hooks\`
-	preload_strategy: ${s(config.kit.output.preloadStrategy)},
+	link_header_preload: ${s(config.kit.output.linkHeaderPreload)},
+	paths_origin: ${s(config.kit.paths.origin)},
 	root,
 	service_worker: ${has_service_worker},
 	service_worker_options: ${config.kit.serviceWorker.register ? s(config.kit.serviceWorker.options) : 'null'},
@@ -89,7 +84,7 @@ export async function get_hooks() {
 	};
 }
 
-export { set_assets, set_building, set_manifest, set_prerendering, set_private_env, set_public_env, set_read_implementation };
+export { set_assets, set_building, set_manifest, set_prerendering, set_read_implementation };
 `;
 
 // TODO need to re-run this whenever src/app.html or src/error.html are
@@ -100,20 +95,20 @@ export { set_assets, set_building, set_manifest, set_prerendering, set_private_e
  * Write server configuration to disk
  * @param {import('types').ValidatedConfig} config
  * @param {string} output
+ * @param {string} root The project root directory
  */
-export function write_server(config, output) {
+export function write_server(config, output, root) {
 	const server_hooks_file = resolve_entry(config.kit.files.hooks.server);
 	const universal_hooks_file = resolve_entry(config.kit.files.hooks.universal);
 
 	const typo = resolve_entry('src/+hooks.server');
 	if (typo) {
 		console.log(
-			colors
-				.bold()
-				.yellow(
-					`Unexpected + prefix. Did you mean ${typo.split('/').at(-1)?.slice(1)}?` +
-						` at ${path.resolve(typo)}`
-				)
+			styleText(
+				['bold', 'yellow'],
+				`Unexpected + prefix. Did you mean ${typo.split('/').at(-1)?.slice(1)}?` +
+					` at ${path.resolve(typo)}`
+			)
 		);
 	}
 
@@ -139,8 +134,7 @@ export function write_server(config, output) {
 			universal_hooks: universal_hooks_file ? relative(universal_hooks_file) : null,
 			has_service_worker:
 				config.kit.serviceWorker.register && !!resolve_entry(config.kit.files.serviceWorker),
-			runtime_directory: relative(runtime_directory),
-			template: load_template(process.cwd(), config)
+			template: load_template(root, config)
 		})
 	);
 }

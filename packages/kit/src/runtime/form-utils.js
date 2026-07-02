@@ -1,4 +1,3 @@
-/** @import { RemoteForm } from '@sveltejs/kit' */
 /** @import { BinaryFormMeta, InternalRemoteFormIssue } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 
@@ -147,7 +146,10 @@ export async function deserialize_binary_form(request) {
 		throw deserialize_error('no body');
 	}
 
-	const reader = request.body.getReader();
+	// TODO: remove this workaround once we upgrade to TS 6.0
+	const reader = /** @type {ReadableStreamDefaultReader<Uint8Array<ArrayBuffer>>} */ (
+		request.body.getReader()
+	);
 
 	/** @type {Array<Promise<Uint8Array<ArrayBuffer> | undefined>>} */
 	const chunks = [];
@@ -615,6 +617,10 @@ function get_type_prefix(field_type, is_array, input_value) {
  */
 function deep_clone(value) {
 	if (value !== null && typeof value === 'object') {
+		if (value instanceof Date) {
+			return new Date(value.getTime());
+		}
+
 		if (value instanceof File) {
 			return value;
 		}
@@ -638,15 +644,17 @@ function deep_clone(value) {
 /**
  * Creates a proxy-based field accessor for form data
  * @param {any} target - Function or empty POJO
- * @param {() => Record<string, any>} get_input - Function to get current input data
- * @param {(path: (string | number)[], value: any) => void} set_input - Function to set input data
+ * @param {() => Record<string, any>} get - Function to get current input data
+ * @param {(path: (string | number)[], value: any) => void} set - Function to set input data
  * @param {(path?: (string | number)[], all?: boolean) => Record<string, InternalRemoteFormIssue[]>} get_issues - Function to get current issues
+ * @param {() => Record<string, boolean>} get_touched - Function to get touched fields
+ * @param {() => Record<string, boolean>} get_dirty - Function to get dirty fields
  * @param {(string | number)[]} path - Current access path
  * @returns {any} Proxy object with name(), value(), and issues() methods
  */
-export function create_field_proxy(target, get_input, set_input, get_issues, path = []) {
+export function create_field_proxy(target, get, set, get_issues, get_touched, get_dirty, path) {
 	const get_value = () => {
-		const value = deep_get(get_input(), path);
+		const value = deep_get(get(), path);
 		return deep_clone(value);
 	};
 
@@ -656,24 +664,26 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 
 			// Handle array access like jobs[0]
 			if (/^\d+$/.test(prop)) {
-				return create_field_proxy({}, get_input, set_input, get_issues, [
+				return create_field_proxy({}, get, set, get_issues, get_touched, get_dirty, [
 					...path,
 					parseInt(prop, 10)
 				]);
 			}
 
 			const key = build_path_string(path);
+			const next = [...path, prop];
 
 			if (prop === 'set') {
 				const set_func = function (/** @type {any} */ newValue) {
-					set_input(path, newValue);
+					set(path, newValue);
 					return newValue;
 				};
-				return create_field_proxy(set_func, get_input, set_input, get_issues, [...path, prop]);
+
+				return create_field_proxy(set_func, get, set, get_issues, get_touched, get_dirty, next);
 			}
 
 			if (prop === 'value') {
-				return create_field_proxy(get_value, get_input, set_input, get_issues, [...path, prop]);
+				return create_field_proxy(get_value, get, set, get_issues, get_touched, get_dirty, next);
 			}
 
 			if (prop === 'issues' || prop === 'allIssues') {
@@ -697,7 +707,35 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 					return issues?.length ? issues : undefined;
 				};
 
-				return create_field_proxy(issues_func, get_input, set_input, get_issues, [...path, prop]);
+				return create_field_proxy(issues_func, get, set, get_issues, get_touched, get_dirty, next);
+			}
+
+			if (prop === 'touched' || prop === 'dirty') {
+				const fn = () => {
+					const object = prop === 'dirty' ? get_dirty() : get_touched();
+
+					if (key === '') {
+						return Object.keys(object).length > 0;
+					}
+
+					if (Object.hasOwn(object, key)) {
+						return true;
+					}
+
+					for (const candidate in object) {
+						if (!Object.hasOwn(object, candidate)) continue;
+						if (!candidate.startsWith(key)) continue;
+
+						const next = candidate[key.length];
+						if (next === '.' || next === '[') {
+							return true;
+						}
+					}
+
+					return false;
+				};
+
+				return create_field_proxy(fn, get, set, get_issues, get_touched, get_dirty, next);
 			}
 
 			if (prop === 'as') {
@@ -863,11 +901,11 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 					});
 				};
 
-				return create_field_proxy(as_func, get_input, set_input, get_issues, [...path, 'as']);
+				return create_field_proxy(as_func, get, set, get_issues, get_touched, get_dirty, next);
 			}
 
 			// Handle property access (nested fields)
-			return create_field_proxy({}, get_input, set_input, get_issues, [...path, prop]);
+			return create_field_proxy({}, get, set, get_issues, get_touched, get_dirty, next);
 		}
 	});
 }
@@ -889,43 +927,4 @@ export function build_path_string(path) {
 	}
 
 	return result;
-}
-
-/**
- * @param {RemoteForm<any, any>} instance
- * @deprecated remove in 3.0
- */
-export function throw_on_old_property_access(instance) {
-	Object.defineProperty(instance, 'field', {
-		value: (/** @type {string} */ name) => {
-			const new_name = name.endsWith('[]') ? name.slice(0, -2) : name;
-			throw new Error(
-				`\`form.field\` has been removed: Instead of \`<input name={form.field('${name}')} />\` do \`<input {...form.fields.${new_name}.as(type)} />\``
-			);
-		}
-	});
-
-	for (const property of ['input', 'issues']) {
-		Object.defineProperty(instance, property, {
-			get() {
-				const new_name = property === 'issues' ? 'issues' : 'value';
-				return new Proxy(
-					{},
-					{
-						get(_, prop) {
-							const prop_string = typeof prop === 'string' ? prop : String(prop);
-							const old =
-								prop_string.includes('[') || prop_string.includes('.')
-									? `['${prop_string}']`
-									: `.${prop_string}`;
-							const replacement = `.${prop_string}.${new_name}()`;
-							throw new Error(
-								`\`form.${property}\` has been removed: Instead of \`form.${property}${old}\` write \`form.fields${replacement}\``
-							);
-						}
-					}
-				);
-			}
-		});
-	}
 }

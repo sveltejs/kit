@@ -1,4 +1,3 @@
-import './shims.js';
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
@@ -6,16 +5,14 @@ import sirv from 'sirv';
 import { parse as polka_url_parser } from '@polka/url';
 import { getRequest, setResponse, createReadableStream } from '@sveltejs/kit/node';
 import { Server } from 'SERVER';
-import { manifest } from 'MANIFEST';
-import { dir, env, env_prefix } from './env.js';
-import { parse_as_bytes, parse_origin } from '../utils.js';
-
-const prerendered = PRERENDERED;
+import { manifest, prerendered, base } from 'MANIFEST';
+import { dir } from './dir.js';
+import { env, env_prefix } from './env.js';
+import { parse_as_bytes } from './utils.js';
 
 const server = new Server(manifest);
 
-// parse_origin validates ORIGIN and throws descriptive errors for invalid values
-const origin = parse_origin(env('ORIGIN', undefined));
+const origin = ORIGIN;
 
 const xff_depth = parseInt(env('XFF_DEPTH', '1'));
 const address_header = env('ADDRESS_HEADER', '').toLowerCase();
@@ -31,7 +28,7 @@ if (isNaN(body_size_limit)) {
 	);
 }
 
-const asset_dir = `${dir}/client${BASE}`;
+const asset_dir = `${dir}/client${base}`;
 
 await server.init({
 	env: /** @type {Record<string, string>} */ (process.env),

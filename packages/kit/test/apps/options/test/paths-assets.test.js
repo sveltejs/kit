@@ -1,6 +1,7 @@
 import process from 'node:process';
 import { expect } from '@playwright/test';
 import { test } from '../../../utils.js';
+import { readdirSync, readFileSync } from 'node:fs';
 
 test.describe.configure({ mode: 'parallel' });
 
@@ -41,10 +42,12 @@ test.describe('base path', () => {
 		expect(await response.text()).toBe('hello there world\n');
 	});
 
-	test('paths available on server side', async ({ page }) => {
+	test('paths available on server side', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/path-base/base/');
-		expect(await page.textContent('[data-source="base"]')).toBe('/path-base');
-		expect(await page.textContent('[data-source="assets"]')).toBe('/_svelte_kit_assets');
+		expect(await page.textContent('[data-source="base"]')).toBe(
+			javaScriptEnabled ? '/path-base/' : '../'
+		);
+		expect(await page.textContent('[data-source="assets"]')).toBe('/_svelte_kit_assets/');
 	});
 
 	test('loads javascript', async ({ page, javaScriptEnabled }) => {
@@ -69,13 +72,6 @@ test.describe('base path', () => {
 
 		await clicknav('[href="/path-base/base/two"]');
 		expect(await page.textContent('h2')).toBe('two');
-	});
-
-	test('resolveRoute accounts for base path', async ({ baseURL, page, clicknav }) => {
-		await page.goto('/path-base/resolve-route');
-		await clicknav('[data-id=target]');
-		expect(page.url()).toBe(`${baseURL}/path-base/resolve-route/resolved/`);
-		expect(await page.textContent('h2')).toBe('resolved');
 	});
 
 	test('server load fetch without base path does not invoke the server', async ({
@@ -116,6 +112,25 @@ test.describe('assets path', () => {
 
 		const response = await request.get(href ?? '');
 		expect(response.status()).toBe(200);
+	});
+
+	test('client avoids generating relative URLs if paths.assets or paths.relative are truthy', async () => {
+		test.skip(!!process.env.DEV, 'only applicable to the build output');
+		const nodes = readdirSync('.custom-out-dir/output/client/_wheee/nested/immutable/nodes');
+		for (const node of nodes) {
+			const code = readFileSync(
+				`.custom-out-dir/output/client/_wheee/nested/immutable/nodes/${node}`,
+				'utf-8'
+			);
+			if (
+				code.includes(
+					'this app has paths.assets set so it should not use relative paths for imported assets in the client code'
+				)
+			) {
+				expect(code).not.toMatch(/new URL\(.*, import\.meta\.url\)\.href/);
+				break;
+			}
+		}
 	});
 });
 
@@ -211,24 +226,5 @@ test.describe('inlineStyleThreshold', () => {
 		await page.locator('button', { hasText: 'show component' }).click();
 		await expect(page.locator('#conditionally')).toBeVisible();
 		expect(await get_computed_style('#conditionally', 'color')).toBe('rgb(0, 0, 255)');
-	});
-
-	test('places preload links before inlined styles', async ({ request }) => {
-		// Skip in dev mode since inlineStyleThreshold works differently there
-		test.skip(!!process.env.DEV);
-
-		const response = await request.get('/path-base/base/');
-		const html = await response.text();
-
-		const preloadMatch = html.match(/<link[^>]+rel="preload"/);
-		const styleMatch = html.match(/<style[^>]*>/);
-
-		expect(preloadMatch).not.toBeNull();
-		expect(styleMatch).not.toBeNull();
-
-		const preloadIndex = html.indexOf(preloadMatch?.[0] || '');
-		const styleIndex = html.indexOf(styleMatch?.[0] || '');
-
-		expect(preloadIndex).toBeLessThan(styleIndex);
 	});
 });

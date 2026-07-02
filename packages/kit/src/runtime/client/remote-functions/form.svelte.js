@@ -4,7 +4,13 @@
 import { app_dir, base } from '$app/paths/internal/client';
 import { DEV } from 'esm-env';
 import { HttpError } from '@sveltejs/kit/internal';
-import { query_responses, _goto, set_nearest_error_page, invalidateAll } from '../client.js';
+import {
+	query_responses,
+	_goto,
+	set_nearest_error_page,
+	invalidateAll,
+	handle_error
+} from '../client.js';
 import { tick } from 'svelte';
 import { categorize_updates, remote_request } from './shared.svelte.js';
 import { createAttachmentKey } from 'svelte/attachments';
@@ -14,11 +20,11 @@ import {
 	create_field_proxy,
 	deep_set,
 	set_nested_value,
-	throw_on_old_property_access,
 	build_path_string,
 	normalize_issue,
 	serialize_binary_form,
-	BINARY_FORM_CONTENT_TYPE
+	BINARY_FORM_CONTENT_TYPE,
+	deep_get
 } from '../../form-utils.js';
 
 /**
@@ -103,7 +109,13 @@ export function form(id) {
 		let element = null;
 
 		/** @type {Record<string, boolean>} */
-		let touched = {};
+		let touched = $state({});
+
+		/** @type {Record<string, boolean>} */
+		let dirty = $state({});
+
+		/** @type {Record<string, boolean>} */
+		let can_validate = {};
 
 		let submitted = $state(false);
 
@@ -295,22 +307,6 @@ export function form(id) {
 					{},
 					{
 						...descriptors,
-						data: {
-							get() {
-								// TODO 3.0 remove
-								throw new Error(
-									`The \`data\` property has been removed from the \`enhance\` callback argument. Use \`instance.fields.value()\` instead.`
-								);
-							}
-						},
-						form: {
-							get() {
-								// TODO 3.0 remove
-								throw new Error(
-									`The \`form\` property has been removed from the \`enhance\` callback argument. To get the current \`<form>\` element, use \`instance.element\` instead.`
-								);
-							}
-						},
 						element: {
 							value: form
 						},
@@ -372,6 +368,8 @@ export function form(id) {
 			element = form;
 
 			touched = {};
+			dirty = {};
+			can_validate = {};
 
 			/** @param {SubmitEvent} event */
 			const handle_submit = async (event) => {
@@ -445,9 +443,14 @@ export function form(id) {
 					await enhance_callback(create_enhance_callback_instance(form, form_data));
 				} catch (e) {
 					const error =
-						e instanceof HttpError ? e.body : { message: /** @type {any} */ (e).message };
-					const status = e instanceof HttpError ? e.status : 500;
-					void set_nearest_error_page(error, status);
+						e instanceof HttpError
+							? e.body
+							: await handle_error(e, {
+									params: {},
+									route: { id: null },
+									url: new URL(location.href)
+								});
+					void set_nearest_error_page(error);
 				} finally {
 					pending_count--;
 				}
@@ -466,8 +469,6 @@ export function form(id) {
 				if (is_array) name = name.slice(0, -2);
 
 				const is_file = element.type === 'file';
-
-				touched[name] = true;
 
 				if (is_array) {
 					let value;
@@ -532,7 +533,7 @@ export function form(id) {
 
 				name = strip_prefix(name);
 
-				touched[name] = true;
+				dirty[name] = true;
 			};
 
 			const handle_reset = async () => {
@@ -543,35 +544,40 @@ export function form(id) {
 				input = convert_formdata(new FormData(form));
 				raw_issues = [];
 				touched = {};
+				dirty = {};
+				can_validate = {};
+				submitted = false;
+			};
+
+			/** @param {Event} e */
+			const handle_focusout = (e) => {
+				let name = /** @type {HTMLInputElement} */ (e.target).name;
+				if (!name) return;
+
+				name = strip_prefix(name).replace(/\[\]$/, '');
+
+				touched[name] = true;
+
+				if (Object.hasOwn(dirty, name)) {
+					can_validate[name] = true;
+				}
 			};
 
 			form.addEventListener('submit', handle_submit);
 			form.addEventListener('input', handle_input);
+			form.addEventListener('focusout', handle_focusout);
 			form.addEventListener('reset', handle_reset);
 
 			return () => {
 				form.removeEventListener('submit', handle_submit);
 				form.removeEventListener('input', handle_input);
+				form.removeEventListener('focusout', handle_focusout);
 				form.removeEventListener('reset', handle_reset);
 				element = null;
 			};
 		};
 
 		let validate_id = 0;
-
-		// TODO 3.0 remove
-		if (DEV) {
-			throw_on_old_property_access(instance);
-
-			Object.defineProperty(instance, 'buttonProps', {
-				get() {
-					throw new Error(
-						'`form.buttonProps` has been removed: Instead of `<button {...form.buttonProps}>, use `<button {...form.fields.action.as("submit", "value")}>`.' +
-							' See the PR for more info: https://github.com/sveltejs/kit/pull/14622'
-					);
-				}
-			});
-		}
 
 		Object.defineProperties(instance, {
 			element: {
@@ -614,11 +620,16 @@ export function form(id) {
 						(path, value) => {
 							if (path.length === 0) {
 								input = value;
-							} else {
+							} else if (value !== deep_get(input, path)) {
 								deep_set(input, path.map(String), value);
 
 								const key = build_path_string(path);
-								touched[key] = true;
+
+								if (element) {
+									touched[key] = true;
+									dirty[key] = true;
+									can_validate[key] = true;
+								}
 							}
 						},
 						(path, all) => {
@@ -632,7 +643,10 @@ export function form(id) {
 							}
 
 							return issues;
-						}
+						},
+						() => touched,
+						() => dirty,
+						[]
 					)
 			},
 			result: {
@@ -658,7 +672,12 @@ export function form(id) {
 			},
 			validate: {
 				/** @type {RemoteForm<any, any>['validate']} */
-				value: async ({ includeUntouched = false, preflightOnly = false } = {}) => {
+				value: async ({
+					all = false,
+					preflightOnly = false,
+					// @ts-expect-error TODO remove this in 3.0
+					includeUntouched
+				} = {}) => {
 					if (!element) return;
 
 					const id = ++validate_id;
@@ -709,8 +728,16 @@ export function form(id) {
 						array = /** @type {InternalRemoteFormIssue[]} */ (result._);
 					}
 
-					if (!includeUntouched && !submitted) {
-						array = array.filter((issue) => touched[issue.name]);
+					if (includeUntouched !== undefined) {
+						console.warn(
+							`\`{ includeUntouched: ${includeUntouched} }\` has been replaced with \`{ all: ${includeUntouched} }\``
+						);
+
+						all = includeUntouched;
+					}
+
+					if (!all && !submitted) {
+						array = array.filter((issue) => can_validate[issue.name]);
 					}
 
 					const is_server_validation = !validated?.issues && !preflightOnly;

@@ -9,6 +9,7 @@ import { negotiate } from '../../utils/http.js';
 import { fix_stack_trace } from '../shared-server.js';
 import { ENDPOINT_METHODS } from '../../constants.js';
 import { escape_html } from '../../utils/escape.js';
+import * as path from '../../utils/path.js';
 
 /**
  * @param {Partial<Record<import('types').HttpMethod, any>>} mod
@@ -74,8 +75,8 @@ export function static_error_page(options, status, message) {
  */
 export async function handle_fatal_error(event, state, options, error) {
 	error = error instanceof HttpError ? error : coalesce_to_error(error);
-	const status = get_status(error);
 	const body = await handle_error_and_jsonify(event, state, options, error);
+	const status = body.status;
 
 	// ideally we'd use sec-fetch-dest instead, but Safari — quelle surprise — doesn't support it
 	const type = negotiate(event.request.headers.get('accept') || 'text/html', [
@@ -112,11 +113,11 @@ export async function handle_error_and_jsonify(event, state, options, error) {
 	const status = get_status(error);
 	const message = get_message(error);
 
-	return (
-		(await with_request_store({ event, state }, () =>
-			options.hooks.handleError({ error, event, status, message })
-		)) ?? { message }
-	);
+	const body = (await with_request_store({ event, state }, () =>
+		options.hooks.handleError({ error, event, status, message })
+	)) ?? { message };
+
+	return { ...body, status: get_status(body, error) };
 }
 
 /**
@@ -212,10 +213,7 @@ let relative = (file) => file;
 
 if (DEV) {
 	try {
-		const path = await import('node:path');
-		const process = await import('node:process');
-
-		relative = (file) => path.relative(process.cwd(), file);
+		relative = (file) => path.relative(__SVELTEKIT_ROOT__, file);
 	} catch {
 		// do nothing
 	}
@@ -230,7 +228,7 @@ export function clean_up_stack_trace(error) {
 		return line.replace(/\((.+)(:\d+:\d+)\)$/, (_, file, loc) => `(${relative(file)}${loc})`);
 	});
 
-	// progressive enhancement for people who haven't configured kit.files.src to something else
+	// progressive enhancement for people who haven't configured files.src to something else
 	const last_line_from_src_code = stack_trace.findLastIndex((line) => /\(src[\\/]/.test(line));
 
 	if (last_line_from_src_code === -1) {

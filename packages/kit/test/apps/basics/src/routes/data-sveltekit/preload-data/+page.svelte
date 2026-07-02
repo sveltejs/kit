@@ -6,7 +6,7 @@
 
 <div data-sveltekit-preload-data>
 	<a id="two" href="/data-sveltekit/preload-data/target">two</a>
-	<a id="three" href="/data-sveltekit/preload-data/target" data-sveltekit-preload-data="off"
+	<a id="three" href="/data-sveltekit/preload-data/target" data-sveltekit-preload-data={false}
 		>three</a
 	>
 </div>
@@ -23,4 +23,4 @@
 <a id="dynamic" data-sveltekit-preload-data="hover" href="/data-sveltekit/preload-data/target?x={x}"
 	>dynamic</a
 >
-<button id="change_dynamic" type="button" on:click={() => x++}>change dynamic</button>
+<button id="change_dynamic" type="button" onclick={() => x++}>change dynamic</button>

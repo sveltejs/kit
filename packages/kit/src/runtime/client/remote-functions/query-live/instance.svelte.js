@@ -1,8 +1,6 @@
-/** @import { PromiseWithResolvers } from '../../../../utils/promise.js' */
 import { query_responses } from '../../client.js';
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
 import { noop, once } from '../../../../utils/functions.js';
-import { with_resolvers } from '../../../../utils/promise.js';
 import { SharedIterator } from '../../../../utils/shared-iterator.js';
 import { tick } from 'svelte';
 import { create_live_iterator } from './iterator.js';
@@ -80,7 +78,7 @@ export class LiveQuery {
 		// the semantics of awaiting a live query are a bit weird, but it's basically:
 		// - It's a promise that resolves to the first value from the server
 		// - Thereafter, it's a promise that immediately resolves to the current value
-		const { promise, resolve, reject } = with_resolvers();
+		const { promise, resolve, reject } = Promise.withResolvers();
 		this.#promise = $state.raw(promise);
 		this.#resolve_first = resolve;
 		this.#reject_first = reject;
@@ -93,7 +91,7 @@ export class LiveQuery {
 				// the query failed during SSR — seed the failed state (mirroring `fail()`,
 				// minus its terminal `#done`), so the main loop still connects as usual
 				// and the query can recover
-				const error = new HttpError(node.e[0] ?? 500, node.e[1]);
+				const error = new HttpError(node.e.status, node.e);
 				this.#loading = false;
 				this.#error = error;
 
@@ -123,7 +121,7 @@ export class LiveQuery {
 		if (this.#interrupt) return;
 
 		/** @type {PromiseWithResolvers<void>} */
-		const { promise: stopped, resolve: on_stop } = with_resolvers();
+		const { promise: stopped, resolve: on_stop } = Promise.withResolvers();
 		let connected = false;
 
 		while (!this.#done) {
@@ -354,7 +352,7 @@ export class LiveQuery {
 	async reconnect() {
 		await this.#interrupt?.();
 		/** @type {PromiseWithResolvers<void>} */
-		const { promise, resolve: on_connect, reject: on_connect_failed } = with_resolvers();
+		const { promise, resolve: on_connect, reject: on_connect_failed } = Promise.withResolvers();
 		promise.catch(noop);
 		this.#done = false;
 		this.#attempt = 0;

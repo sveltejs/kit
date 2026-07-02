@@ -8,7 +8,7 @@ import { is_endpoint_request, render_endpoint } from './endpoint.js';
 import { render_page } from './page/index.js';
 import { render_response } from './page/render.js';
 import { respond_with_error } from './page/respond_with_error.js';
-import { get_set_cookies, is_form_content_type } from '../../utils/http.js';
+import { get_self_origin, is_csrf_forbidden, is_remote_forbidden } from './csrf.js';
 import {
 	handle_fatal_error,
 	has_prerendered_path,
@@ -72,21 +72,26 @@ export async function internal_respond(request, options, manifest, state) {
 
 	if (!DEV) {
 		const request_origin = request.headers.get('origin');
+		const self_origin = get_self_origin(options.paths_origin, url.origin);
 
 		if (remote_id) {
-			if (request.method !== 'GET' && request_origin !== url.origin) {
+			if (
+				is_remote_forbidden({
+					request,
+					request_origin,
+					self_origin
+				})
+			) {
 				const message = 'Cross-site remote requests are forbidden';
 				return json({ message }, { status: 403 });
 			}
 		} else if (options.csrf_check_origin) {
-			const forbidden =
-				is_form_content_type(request) &&
-				(request.method === 'POST' ||
-					request.method === 'PUT' ||
-					request.method === 'PATCH' ||
-					request.method === 'DELETE') &&
-				request_origin !== url.origin &&
-				(!request_origin || !options.csrf_trusted_origins.includes(request_origin));
+			const forbidden = is_csrf_forbidden({
+				request,
+				request_origin,
+				self_origin,
+				trusted_origins: options.csrf_trusted_origins
+			});
 
 			if (forbidden) {
 				const message = `Cross-site ${request.method} form submissions are forbidden`;
@@ -319,7 +324,7 @@ export async function internal_respond(request, options, manifest, state) {
 		return resolve_route(resolved_path, new URL(request.url), manifest);
 	}
 
-	if (resolved_path === `/${app_dir}/env.js` || resolved_path === `/${app_dir}/env.script.js`) {
+	if (resolved_path === `/${app_dir}/env.js`) {
 		return get_public_env(request);
 	}
 
@@ -519,7 +524,7 @@ export async function internal_respond(request, options, manifest, state) {
 					if (value) headers.set(key, value);
 				}
 
-				for (const cookie of get_set_cookies(response.headers)) {
+				for (const cookie of response.headers.getSetCookie()) {
 					headers.append('set-cookie', cookie);
 				}
 
@@ -619,57 +624,80 @@ export async function internal_respond(request, options, manifest, state) {
 						invalidated_data_nodes,
 						trailing_slash
 					);
-				} else if (
-					route.endpoint &&
-					(!route.page || (!state.prerendering && is_endpoint_request(event)))
-				) {
-					response = await render_endpoint(event, event_state, await route.endpoint(), state);
-				} else if (route.page) {
-					if (!page_nodes) {
-						throw new Error('page_nodes not found. This should never happen');
-					} else if (page_methods.has(method)) {
-						response = await render_page(
-							event,
-							event_state,
-							route.page,
-							options,
-							manifest,
-							state,
-							page_nodes,
-							resolve_opts
-						);
-					} else {
-						const allowed_methods = new Set(allowed_page_methods);
-						const node = await manifest._.nodes[route.page.leaf]();
-						if (node?.server?.actions) {
-							allowed_methods.add('POST');
-						}
+				} else {
+					let endpoint;
+					if (
+						route.endpoint &&
+						(!route.page || (!state.prerendering && is_endpoint_request(event)))
+					) {
+						endpoint = await route.endpoint();
 
-						if (method === 'OPTIONS') {
-							// This will deny CORS preflight requests implicitly because we don't
-							// add the required CORS headers to the response.
-							response = new Response(null, {
-								status: 204,
-								headers: {
-									allow: Array.from(allowed_methods.values()).join(', ')
-								}
-							});
-						} else {
-							const mod = [...allowed_methods].reduce((acc, curr) => {
-								acc[curr] = true;
-								return acc;
-							}, /** @type {Record<string, any>} */ ({}));
-							response = method_not_allowed(mod, method);
+						// Prefer rendering the page if the endpoint can't handle this GET or HEAD request
+						if (route.page && (method === 'GET' || method === 'HEAD')) {
+							const endpoint_can_handle = !!(
+								endpoint.GET ||
+								endpoint.fallback ||
+								(method === 'HEAD' && endpoint.HEAD)
+							);
+							if (!endpoint_can_handle) {
+								endpoint = undefined;
+							}
 						}
 					}
-				} else {
-					// a route will always have a page or an endpoint, but TypeScript doesn't know that
-					throw new Error('Route is neither page nor endpoint. This should never happen');
+
+					if (endpoint) {
+						response = await render_endpoint(event, event_state, endpoint, state);
+					} else if (route.page) {
+						if (!page_nodes) {
+							throw new Error('page_nodes not found. This should never happen');
+						} else if (page_methods.has(method)) {
+							response = await render_page(
+								event,
+								event_state,
+								route.page,
+								options,
+								manifest,
+								state,
+								page_nodes,
+								resolve_opts
+							);
+						} else {
+							const allowed_methods = new Set(allowed_page_methods);
+							const node = await manifest._.nodes[route.page.leaf]();
+							if (node?.server?.actions) {
+								allowed_methods.add('POST');
+							}
+
+							if (method === 'OPTIONS') {
+								// This will deny CORS preflight requests implicitly because we don't
+								// add the required CORS headers to the response.
+								response = new Response(null, {
+									status: 204,
+									headers: {
+										allow: Array.from(allowed_methods.values()).join(', ')
+									}
+								});
+							} else {
+								const mod = [...allowed_methods].reduce((acc, curr) => {
+									acc[curr] = true;
+									return acc;
+								}, /** @type {Record<string, any>} */ ({}));
+								response = method_not_allowed(mod, method);
+							}
+						}
+					} else {
+						// a route will always have a page or an endpoint, but TypeScript doesn't know that
+						throw new Error('Route is neither page nor endpoint. This should never happen');
+					}
 				}
 
 				// If the route contains a page and an endpoint, we need to add a
 				// `Vary: Accept` header to the response because of browser caching
-				if (request.method === 'GET' && route.page && route.endpoint) {
+				if (
+					(request.method === 'GET' || request.method === 'HEAD') &&
+					route.page &&
+					route.endpoint
+				) {
 					const vary = response.headers
 						.get('vary')
 						?.split(',')

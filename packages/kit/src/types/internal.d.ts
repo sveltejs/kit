@@ -17,7 +17,6 @@ import {
 	RequestEvent,
 	SSRManifest,
 	Emulator,
-	Adapter,
 	ServerInit,
 	ClientInit,
 	Transport,
@@ -46,8 +45,6 @@ export interface ServerInternalModule {
 	set_building(): void;
 	set_manifest(manifest: SSRManifest): void;
 	set_prerendering(): void;
-	set_private_env(environment: Record<string, string>): void;
-	set_public_env(environment: Record<string, string>): void;
 	set_read_implementation(implementation: (path: string) => ReadableStream): void;
 	set_version(version: string): void;
 	set_fix_stack_trace(fix_stack_trace: (error: unknown) => string): void;
@@ -198,7 +195,7 @@ export class InternalServer extends Server {
 }
 
 export interface ManifestData {
-	/** Static files from `kit.config.files.assets`. */
+	/** Static files from `config.files.assets`. */
 	assets: Asset[];
 	hooks: {
 		client: string | null;
@@ -297,6 +294,7 @@ export interface RouteData {
 
 export type ServerRedirectNode = {
 	type: 'redirect';
+	status: number;
 	location: string;
 };
 
@@ -312,7 +310,7 @@ export type RemoteFunctionDataNode = {
 	/** value */
 	v?: any;
 	/** error */
-	e?: [status: number, error: any];
+	e?: App.Error;
 };
 
 export type RemoteFunctionData = {
@@ -393,10 +391,6 @@ export interface ServerDataSkippedNode {
 export interface ServerErrorNode {
 	type: 'error';
 	error: App.Error;
-	/**
-	 * Only set for HttpErrors.
-	 */
-	status?: number;
 }
 
 export interface ServerMetadataRoute {
@@ -504,11 +498,10 @@ export interface SSROptions {
 	csrf_check_origin: boolean;
 	csrf_trusted_origins: string[];
 	embedded: boolean;
-	env_public_prefix: string;
-	env_private_prefix: string;
 	hash_routing: boolean;
 	hooks: ServerHooks;
-	preload_strategy: ValidatedConfig['kit']['output']['preloadStrategy'];
+	link_header_preload: ValidatedConfig['kit']['output']['linkHeaderPreload'];
+	paths_origin: string | undefined;
 	root: SSRComponent['default'];
 	service_worker: boolean;
 	service_worker_options: RegistrationOptions;
@@ -610,9 +603,7 @@ export type ValidatedConfig = Config & {
 	extensions: string[];
 };
 
-export type ValidatedKitConfig = Omit<RecursiveRequired<KitConfig>, 'adapter'> & {
-	adapter?: Adapter;
-};
+export type ValidatedKitConfig = RecursiveRequired<KitConfig>;
 
 export type BinaryFormMeta = {
 	remote_refreshes?: string[];

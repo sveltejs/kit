@@ -1,9 +1,5 @@
 /** @import { Validator } from './types.js' */
 
-import process from 'node:process';
-import colors from 'kleur';
-import { supportsTrustedTypes } from '../sync/utils.js';
-
 const directives = object({
 	'child-src': string_array(),
 	'default-src': string_array(),
@@ -29,14 +25,8 @@ const directives = object({
 	'navigate-to': string_array(),
 	'report-uri': string_array(),
 	'report-to': string_array(),
-	'require-trusted-types-for': validate(undefined, (input, keypath) => {
-		assert_trusted_types_supported(keypath);
-		return string_array()(input, keypath);
-	}),
-	'trusted-types': validate(undefined, (input, keypath) => {
-		assert_trusted_types_supported(keypath);
-		return string_array()(input, keypath);
-	}),
+	'require-trusted-types-for': string_array(),
+	'trusted-types': string_array(),
 	'upgrade-insecure-requests': boolean(false),
 	'require-sri-for': string_array(),
 	'block-all-mixed-content': boolean(false),
@@ -66,15 +56,9 @@ export const options = object(
 		}),
 
 		kit: object({
-			adapter: validate(null, (input, keypath) => {
+			adapter: validate(undefined, (input, keypath) => {
 				if (typeof input !== 'object' || !input.adapt) {
-					let message = `${keypath} should be an object with an "adapt" method`;
-
-					if (Array.isArray(input) || typeof input === 'string') {
-						// for the early adapter adopters
-						message += ', rather than the name of an adapter';
-					}
-
+					const message = `The SvelteKit Vite plugin ${keypath} should be an object with an \`adapt\` method`;
 					throw new Error(`${message}. See https://svelte.dev/docs/kit/adapters`);
 				}
 
@@ -99,7 +83,7 @@ export const options = object(
 				if (input) {
 					if (input.startsWith('/') || input.endsWith('/')) {
 						throw new Error(
-							"config.kit.appDir cannot start or end with '/'. See https://svelte.dev/docs/kit/configuration"
+							`${keypath} cannot start or end with '/'. See https://svelte.dev/docs/kit/configuration`
 						);
 					}
 				} else {
@@ -116,10 +100,8 @@ export const options = object(
 			}),
 
 			csrf: object({
-				checkOrigin: deprecate(
-					boolean(true),
-					(keypath) =>
-						`\`${keypath}\` has been deprecated in favour of \`csrf.trustedOrigins\`. It will be removed in a future version`
+				checkOrigin: removed(
+					(keypath) => `\`${keypath}\` has been removed in favour of \`csrf.trustedOrigins\``
 				),
 				trustedOrigins: string_array([])
 			}),
@@ -127,9 +109,7 @@ export const options = object(
 			embedded: boolean(false),
 
 			env: object({
-				dir: string(process.cwd()),
-				publicPrefix: string('PUBLIC_'),
-				privatePrefix: string('')
+				dir: string('')
 			}),
 
 			experimental: object({
@@ -139,7 +119,6 @@ export const options = object(
 				instrumentation: object({
 					server: boolean(false)
 				}),
-				explicitEnvironmentVariables: boolean(false),
 				remoteFunctions: boolean(false),
 				forkPreloads: boolean(false),
 				handleRenderingErrors: boolean(false)
@@ -168,7 +147,10 @@ export const options = object(
 			outDir: string('.svelte-kit'),
 
 			output: object({
-				preloadStrategy: list(['modulepreload', 'preload-js', 'preload-mjs']),
+				linkHeaderPreload: boolean(false),
+				preloadStrategy: removed(
+					(keypath) => `\`${keypath}\` has been removed. modulepreload will always be used`
+				),
 				bundleStrategy: list(['split', 'single', 'inline'])
 			}),
 
@@ -202,6 +184,35 @@ export const options = object(
 					}
 
 					return input;
+				}),
+				origin: validate(undefined, (input, keypath) => {
+					assert_string(input, keypath);
+
+					let url;
+
+					try {
+						url = new URL(input);
+					} catch {
+						throw new Error(
+							`${keypath} must be a valid origin (e.g. 'https://my-site.com'). '${input}' could not be parsed as a URL`
+						);
+					}
+
+					if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+						throw new Error(
+							`${keypath} must be a valid origin — only 'http' and 'https' protocols are supported, received '${url.protocol}'`
+						);
+					}
+
+					const origin = url.origin;
+
+					if (input !== origin) {
+						throw new Error(
+							`${keypath} must be a valid origin — received '${input}' which contains a path, query, or hash. Use the bare origin '${origin}' instead`
+						);
+					}
+
+					return origin;
 				}),
 				relative: boolean(true)
 			}),
@@ -295,23 +306,9 @@ export const options = object(
 					}
 				),
 
-				origin: validate('http://sveltekit-prerender', (input, keypath) => {
-					assert_string(input, keypath);
-
-					let origin;
-
-					try {
-						origin = new URL(input).origin;
-					} catch {
-						throw new Error(`${keypath} must be a valid origin`);
-					}
-
-					if (input !== origin) {
-						throw new Error(`${keypath} must be a valid origin (${origin} rather than ${input})`);
-					}
-
-					return origin;
-				})
+				origin: removed(
+					(keypath) => `\`${keypath}\` has been removed in favour of \`config.paths.origin\``
+				)
 			}),
 
 			router: object({
@@ -340,6 +337,27 @@ export const options = object(
 	true
 );
 
+// /**
+//  * @param {Validator} fn
+//  * @param {(keypath: string) => string} get_message
+//  * @returns {Validator}
+//  */
+// function deprecate(
+// 	fn,
+// 	get_message = (keypath) =>
+// 		`The \`${keypath}\` option is deprecated, and will be removed in a future version`
+// ) {
+// 	return (input, keypath) => {
+//		keypath = remove_kit_prefix(keypath);
+//
+// 		if (input !== undefined) {
+// 			console.warn(styleText(['bold', 'yellow'], get_message(keypath)));
+// 		}
+
+// 		return fn(input, keypath);
+// 	};
+// }
+
 // Derive the names of SvelteKit's own config options from the schema, so they
 // stay in sync automatically. These are used to separate Kit's options from
 // `vite-plugin-svelte`'s options when config is passed via the Vite plugin.
@@ -352,21 +370,19 @@ export const kit_options = Object.keys(defaults.kit);
 export const kit_experimental_options = Object.keys(defaults.kit.experimental);
 
 /**
- * @param {Validator} fn
  * @param {(keypath: string) => string} get_message
  * @returns {Validator}
  */
-function deprecate(
-	fn,
+function removed(
 	get_message = (keypath) =>
-		`The \`${keypath}\` option is deprecated, and will be removed in a future version`
+		`The \`${keypath}\` option has been removed. Please see the list of breaking changes for your major release`
 ) {
 	return (input, keypath) => {
-		if (input !== undefined) {
-			console.warn(colors.bold().yellow(get_message(keypath)));
-		}
+		keypath = remove_kit_prefix(keypath);
 
-		return fn(input, keypath);
+		if (typeof input !== 'undefined') {
+			throw new Error(get_message(keypath));
+		}
 	};
 }
 
@@ -375,8 +391,10 @@ function deprecate(
  * @param {boolean} [allow_unknown]
  * @returns {Validator}
  */
-function object(children, allow_unknown = false) {
+export function object(children, allow_unknown = false) {
 	return (input, keypath) => {
+		keypath = remove_kit_prefix(keypath);
+
 		/** @type {Record<string, any>} */
 		const output = {};
 
@@ -415,8 +433,9 @@ function object(children, allow_unknown = false) {
  * @param {(value: any, keypath: string) => any} fn
  * @returns {Validator}
  */
-function validate(fallback, fn) {
+export function validate(fallback, fn) {
 	return (input, keypath) => {
+		keypath = remove_kit_prefix(keypath);
 		return input === undefined ? fallback : fn(input, keypath);
 	};
 }
@@ -514,16 +533,16 @@ function fun(fallback) {
  * @param {string} keypath
  */
 function assert_string(input, keypath) {
+	keypath = remove_kit_prefix(keypath);
 	if (typeof input !== 'string') {
 		throw new Error(`${keypath} should be a string, if specified`);
 	}
 }
 
-/** @param {string} keypath */
-function assert_trusted_types_supported(keypath) {
-	if (!supportsTrustedTypes()) {
-		throw new Error(
-			`${keypath} is not supported by your version of Svelte. Please upgrade to Svelte 5.51.0 or later to use this directive.`
-		);
-	}
+/**
+ * @param {string} keypath
+ * @deprecated TODO get rid of the nesting so this is unnecessary
+ */
+function remove_kit_prefix(keypath) {
+	return keypath.replace('.kit.', '.');
 }

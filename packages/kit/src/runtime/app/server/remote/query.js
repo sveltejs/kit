@@ -14,7 +14,6 @@ import {
 import { noop } from '../../../../utils/functions.js';
 import { SharedIterator } from '../../../../utils/shared-iterator.js';
 import { handle_error_and_jsonify } from '../../../server/utils.js';
-import { HttpError, SvelteKitError } from '@sveltejs/kit/internal';
 
 /**
  * Creates a remote query. When called from the browser, the function will be invoked on the server via a `fetch` call.
@@ -347,13 +346,11 @@ function batch(validate_or_fn, maybe_fn) {
 								const data = get_result(arg, i);
 								return { type: 'result', data };
 							} catch (error) {
+								const transformed = await handle_error_and_jsonify(event, state, options, error);
+
 								return {
 									type: 'error',
-									error: await handle_error_and_jsonify(event, state, options, error),
-									status:
-										error instanceof HttpError || error instanceof SvelteKitError
-											? error.status
-											: 500
+									error: transformed
 								};
 							}
 						})
@@ -497,13 +494,6 @@ function create_query_resource(__, payload, event, state, fn) {
 			get_cache(__, state)[payload] = p;
 
 			refresh(event, state, __, payload, () => p);
-		},
-		// TODO 3.0 remove this
-		// @ts-expect-error This method no longer exists
-		run() {
-			throw new Error(
-				`\`myQuery().run()\` has been removed — please replace it with \`myQuery()\`. See https://github.com/sveltejs/kit/pull/15779 for more details`
-			);
 		},
 		/** @type {Promise<any>['then']} */
 		then(onfulfilled, onrejected) {

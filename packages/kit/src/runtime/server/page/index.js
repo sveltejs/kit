@@ -269,6 +269,7 @@ export async function render_page(
 						if (state.prerendering && should_prerender_data) {
 							const body = JSON.stringify({
 								type: 'redirect',
+								status: err.status,
 								location: err.location
 							});
 
@@ -281,8 +282,8 @@ export async function render_page(
 						return redirect_response(err.status, err.location);
 					}
 
-					const status = get_status(err);
 					const error = await handle_error_and_jsonify(event, event_state, options, err);
+					const status = error.status;
 
 					while (i--) {
 						if (page.errors[i]) {

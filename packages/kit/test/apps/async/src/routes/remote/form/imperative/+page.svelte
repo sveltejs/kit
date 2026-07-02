@@ -26,9 +26,9 @@
 	<button
 		id="set-and-validate"
 		type="button"
-		on:click={async () => {
+		onclick={async () => {
 			set_message.fields.message.set('hello');
-			await set_message.validate({ includeUntouched: true });
+			await set_message.validate({ all: true });
 		}}
 	>
 		Set & validate

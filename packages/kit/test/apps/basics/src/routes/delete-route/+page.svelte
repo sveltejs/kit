@@ -12,7 +12,7 @@
 	}
 </script>
 
-<button class="del" on:click={del}>delete</button>
+<button class="del" onclick={del}>delete</button>
 
 {#if status}
 	<h1>{status}</h1>

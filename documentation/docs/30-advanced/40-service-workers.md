@@ -24,8 +24,8 @@ The following example caches the built app and any files in `static` eagerly, an
 // Ensures that the `$service-worker` import has proper type definitions
 /// <reference types="@sveltejs/kit" />
 
-// Only necessary if you have an import from `$env/static/public`
-/// <reference types="../.svelte-kit/ambient.d.ts" />
+// Only necessary if you have an import from `$app/env/*`
+/// <reference types="../.svelte-kit/env.d.ts" />
 
 import { build, files, version } from '$service-worker';
 
@@ -120,12 +120,10 @@ self.addEventListener('fetch', (event) => {
 You can [disable automatic registration](configuration#serviceWorker) if you need to register the service worker with your own logic. The default registration looks something like this:
 
 ```js
-import { dev } from '$app/environment';
-
 if ('serviceWorker' in navigator) {
 	addEventListener('load', function () {
 		navigator.serviceWorker.register('./path/to/service-worker.js', {
-			type: dev ? 'module' : 'classic'
+			type: 'module'
 		});
 	});
 }

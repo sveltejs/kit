@@ -48,6 +48,7 @@ test('renders a server-side redirect', () => {
 
 	expect(data).toEqual({
 		type: 'redirect',
+		status: 301,
 		location: 'https://example.com/redirected'
 	});
 });
@@ -222,12 +223,12 @@ test('fetches data from local endpoint', () => {
 	assert.equal(read('origin/message.json'), JSON.stringify({ message: 'hello' }));
 });
 
-test('respects config.prerender.origin', () => {
+test('respects config.paths.origin', () => {
 	const content = read('origin.html');
 	expect(content).toMatch('<h2>http://prerender.origin</h2>');
 });
 
-test('$env - includes environment variables', () => {
+test('$app/env - includes environment variables', () => {
 	const content = read('env.html');
 
 	assert.match(
@@ -275,7 +276,7 @@ test('prerenders paths with optional parameters with empty values', () => {
 	expect(content).includes('Path with Value');
 });
 
-test('crawls links that start with config.prerender.origin', () => {
+test('crawls links that start with config.paths.origin', () => {
 	const content = read('prerender-origin/dynamic.html');
 	expect(content).toBeTruthy();
 });

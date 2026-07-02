@@ -2,7 +2,6 @@ import { query_responses } from '../../client.js';
 import { HttpError } from '@sveltejs/kit/internal';
 import { QUERY_OVERRIDE_KEY } from '../shared.svelte.js';
 import { noop } from '../../../../utils/functions.js';
-import { with_resolvers } from '../../../../utils/promise.js';
 import { tick, untrack } from 'svelte';
 
 /**
@@ -71,7 +70,7 @@ export class Query {
 			delete query_responses[key];
 
 			if (node.e) {
-				this.fail(new HttpError(node.e[0] ?? 500, node.e[1]));
+				this.fail(new HttpError(node.e.status, node.e));
 			} else {
 				this.set(/** @type {T} */ (node.v));
 			}
@@ -101,7 +100,7 @@ export class Query {
 	#run() {
 		this.#loading = true;
 
-		const { promise, resolve, reject } = with_resolvers();
+		const { promise, resolve, reject } = Promise.withResolvers();
 
 		// the rejection is surfaced via `.error` / the `then` getter for awaiting
 		// consumers — a purely reactive consumer (`.current`) attaches no handler,

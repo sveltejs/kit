@@ -8,7 +8,16 @@ const config = {
 		sourcemap: true
 	},
 	clearScreen: false,
-	plugins: [sveltekit()],
+	plugins: [
+		sveltekit({
+			output: {
+				bundleStrategy: 'inline'
+			},
+			serviceWorker: {
+				register: false
+			}
+		})
+	],
 	server: {
 		fs: {
 			allow: [path.resolve('../../../src')]
