@@ -5,6 +5,7 @@
 import { DEV } from 'esm-env';
 import * as devalue from 'devalue';
 import { text_encoder } from './utils.js';
+import { noop } from '../utils/functions.js';
 import { SvelteKitError } from '@sveltejs/kit/internal';
 
 const decoder = new TextDecoder();
@@ -318,7 +319,7 @@ export async function deserialize_binary_form(request) {
 			const chunk = await get_chunk(chunks.length);
 			has_more = !!chunk;
 		}
-	})();
+	})().catch(noop); // prevent unhandled rejection potentially crashing the process
 
 	return { data, meta, form_data: null };
 }
