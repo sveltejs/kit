@@ -27,6 +27,9 @@ export function set_nested_value(object, path_string, value) {
 	deep_set(object, split_path(path_string), value);
 }
 
+/** Pass this to set_nested_value to delete the last part of the given path */
+export const DELETE_KEY = {};
+
 /**
  * Convert `FormData` into a POJO
  * @param {FormData} data
@@ -502,6 +505,10 @@ export function deep_set(object, keys, value) {
 		}
 
 		if (!exists) {
+			if (value === DELETE_KEY) {
+				// don't create the nested structure if we want to delete the key anyway
+				return;
+			}
 			current[key] = is_array ? [] : {};
 		}
 
@@ -510,7 +517,12 @@ export function deep_set(object, keys, value) {
 
 	const final_key = keys[keys.length - 1];
 	check_prototype_pollution(final_key);
-	current[final_key] = value;
+
+	if (value === DELETE_KEY) {
+		delete current[final_key];
+	} else {
+		current[final_key] = value;
+	}
 }
 
 /**
