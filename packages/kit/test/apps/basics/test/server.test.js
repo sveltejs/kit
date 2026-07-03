@@ -679,6 +679,23 @@ test.describe('Load', () => {
 		expect(response.headers()['allow']).toBe('GET, HEAD, OPTIONS, POST');
 	});
 
+	test('ignores Object.prototype properties when resolving named actions', async ({ request }) => {
+		const response = await request.post('/actions/enhance?/toString', {
+			form: {
+				message: 'hello'
+			},
+			headers: {
+				accept: 'application/json',
+				origin: 'http://localhost:4173'
+			}
+		});
+		const body = await response.json();
+
+		expect(response.status()).toBe(404);
+		expect(body.type).toBe('error');
+		expect(body.error.message).toContain("No action with name 'toString' found");
+	});
+
 	test('allows logging URL search params', async ({ page }) => {
 		await page.goto('/load/server-log-search-param');
 
