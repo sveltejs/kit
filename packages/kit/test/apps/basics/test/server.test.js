@@ -1495,6 +1495,8 @@ test.describe('Streaming', () => {
 });
 
 test.describe('Build', () => {
+	test.skip(!!process.env.DEV);
+
 	test('node built-ins are not externalised for the browser', async () => {
 		const content = fs.readFileSync(
 			path.join(process.cwd(), '.svelte-kit/output/client/.vite/manifest.json'),
