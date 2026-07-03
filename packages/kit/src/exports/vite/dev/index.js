@@ -16,6 +16,7 @@ import { load_error_page } from '../../../core/config/index.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import * as sync from '../../../core/sync/sync.js';
 import { get_mime_lookup, get_runtime_base } from '../../../core/utils.js';
+import '../../../utils/mime.js'; // extend mrmime with additional types (affects sirv too)
 import { compact } from '../../../utils/array.js';
 import { is_chrome_devtools_request, not_found } from '../utils.js';
 import { SCHEME } from '../../../utils/url.js';
