@@ -380,20 +380,24 @@ export async function collect_remote_data(data, event, state, options) {
 			// `fn` is deferred until now so the query runs after any state mutations
 			// in the command/form body. If the query was re-awaited in the meantime,
 			// `fn` returns the existing (fresh) cache entry rather than re-running.
+			// Kick off the query immediately and collect the promise so that multiple
+			// explicit refreshes run concurrently rather than serially.
 			const promise = fn();
 
-			await promise.then(
-				(v) => {
-					((data[type] ??= {})[remote_key] ??= {}).v = v;
-				},
-				async (e) => {
-					if (e instanceof Redirect) {
-						// already handled elsewhere
-						return;
-					}
+			promises.push(
+				promise.then(
+					(v) => {
+						((data[type] ??= {})[remote_key] ??= {}).v = v;
+					},
+					async (e) => {
+						if (e instanceof Redirect) {
+							// already handled elsewhere
+							return;
+						}
 
-					((data[type] ??= {})[remote_key] ??= {}).e = await convert_error(e);
-				}
+						((data[type] ??= {})[remote_key] ??= {}).e = await convert_error(e);
+					}
+				)
 			);
 		}
 	}
