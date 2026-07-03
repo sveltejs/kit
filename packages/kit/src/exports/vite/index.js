@@ -503,11 +503,7 @@ function kit({ svelte_config }) {
 				if (process.env.VITEST === 'true') {
 					for (const key in new_config.define) {
 						const value = new_config.define[key];
-						if (typeof value === 'string') {
-							try {
-								/** @type {Record<string, any>} */ (globalThis)[key] = JSON.parse(value);
-							} catch {}
-						}
+						/** @type {Record<string, any>} */ (globalThis)[key] = JSON.parse(value);
 					}
 				}
 
