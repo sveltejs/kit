@@ -710,9 +710,8 @@ function kit({ svelte_config }) {
 			handler(id) {
 				if (this.environment.config.consumer !== 'client') return;
 
-				// skip .server.js files outside the cwd or in node_modules, as the filename might not mean 'server-only module' in this context
-				const is_internal =
-					id.startsWith(normalized_cwd) && !id.startsWith(normalized_node_modules);
+				// skip .server.js files in node_modules, as the filename might not mean 'server-only module' in this context
+				const is_internal = !id.startsWith(normalized_node_modules);
 
 				const normalized = normalize_id(id, normalized_lib, normalized_cwd);
 
@@ -722,8 +721,6 @@ function kit({ svelte_config }) {
 					(normalized.startsWith('$lib/') && server_only_directory_pattern.test(id)) ||
 					(is_internal && server_only_module_pattern.test(id));
 
-				// skip .server.js files outside the cwd or in node_modules, as the filename might not mean 'server-only module' in this context
-				// TODO: address https://github.com/sveltejs/kit/issues/12529
 				if (!is_server_only) {
 					return;
 				}

@@ -7,6 +7,9 @@ import { load_pkg_json } from './config.js';
 export function create_validator(options) {
 	const { analyse_code, validate } = _create_validator(options);
 
+	/** @type {import('./types.js').File[]} */
+	let files = [];
+
 	return {
 		/**
 		 * Checks a file content for problematic imports and things like `import.meta`
@@ -16,10 +19,16 @@ export function create_validator(options) {
 		analyse_code(name, content) {
 			analyse_code(name, content);
 		},
+		/**
+		 * @param {import('./types.js').File[]} scanned_files
+		 */
+		set_files(scanned_files) {
+			files = scanned_files;
+		},
 		validate() {
 			/** @type {Record<string, any>} */
 			const pkg = load_pkg_json(options.cwd);
-			const warnings = validate(pkg);
+			const warnings = validate(pkg, files);
 			if (Object.keys(pkg).length === 0) {
 				warnings.push(
 					'No package.json found in the current directory. Please create one or run this command in a directory containing one.'
@@ -75,9 +84,18 @@ export function _create_validator(options) {
 	}
 
 	/**
-	 * @param {Record<string, any>} pkg
+	 * @param {import('./types.js').File} file
+	 * @returns {boolean}
 	 */
-	function validate(pkg) {
+	function is_server_only_file(file) {
+		return file.name.includes('.server.') || /(^|\/)server\//.test(file.name);
+	}
+
+	/**
+	 * @param {Record<string, any>} pkg
+	 * @param {import('./types.js').File[]} files
+	 */
+	function validate(pkg, files) {
 		/** @type {string[]} */
 		const warnings = [];
 
@@ -146,6 +164,18 @@ export function _create_validator(options) {
 			warnings.push(
 				'No `exports` field found in `package.json`, please provide one. ' +
 					'See https://svelte.dev/docs/kit/packaging#anatomy-of-a-package-json-exports for more info'
+			);
+		}
+
+		const server_only_files = files.filter(is_server_only_file);
+		if (server_only_files.length > 0) {
+			const list = server_only_files.map((file) => `- ${file.name}`).join('\n');
+			warnings.push(
+				`The following files contain ".server." in their filename or are in a "server" directory:\n${list}\n` +
+					'These files are not protected from being imported into client-side code when a SvelteKit application imports them from your package. ' +
+					'Unlike in a SvelteKit app, the ".server." convention does not prevent bundlers from including them in client bundles. ' +
+					'If this is a SvelteKit library and you want to ensure these files can only be used on the server, ' +
+					'import "@sveltejs/kit/server-only" at the top of the file. This will cause it to throw when loaded on the client.'
 			);
 		}
 

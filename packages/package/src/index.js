@@ -19,16 +19,17 @@ import { create_validator } from './validate.js';
  * @param {import('./types.js').Options} options
  */
 export async function build(options) {
-	const { analyse_code, validate } = create_validator(options);
-	await do_build(options, analyse_code);
+	const { analyse_code, set_files, validate } = create_validator(options);
+	await do_build(options, analyse_code, set_files);
 	validate();
 }
 
 /**
  * @param {import('./types.js').Options} options
  * @param {(name: string, code: string) => void} analyse_code
+ * @param {(files: import('./types.js').File[]) => void} set_files
  */
-async function do_build(options, analyse_code) {
+async function do_build(options, analyse_code, set_files) {
 	const { input, output, temp, extensions, alias, tsconfig } = normalize_options(options);
 
 	if (!fs.existsSync(input)) {
@@ -39,6 +40,7 @@ async function do_build(options, analyse_code) {
 	mkdirp(temp);
 
 	const files = scan(input, extensions);
+	set_files(files);
 
 	if (options.types) {
 		await emit_dts(input, temp, output, options.cwd, alias, files, tsconfig);
@@ -79,9 +81,9 @@ async function do_build(options, analyse_code) {
  * @param {import('./types.js').Options} options
  */
 export async function watch(options) {
-	const { analyse_code, validate } = create_validator(options);
+	const { analyse_code, set_files, validate } = create_validator(options);
 
-	await do_build(options, analyse_code);
+	await do_build(options, analyse_code, set_files);
 
 	validate();
 
@@ -123,6 +125,7 @@ export async function watch(options) {
 		clearTimeout(timeout);
 		timeout = setTimeout(async () => {
 			const files = scan(input, extensions);
+			set_files(files);
 
 			const events = pending.slice();
 			pending.length = 0;

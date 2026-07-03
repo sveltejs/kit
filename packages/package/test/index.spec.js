@@ -283,7 +283,7 @@ test('validates package (1)', () => {
 	});
 	analyse_code('src/lib/index.js', 'export const a = 1;import.meta.env;');
 	analyse_code('src/lib/C.svelte', '');
-	const warnings = validate({});
+	const warnings = validate({}, []);
 
 	has_warnings(warnings, [
 		'No `exports` field found in `package.json`, please provide one.',
@@ -302,10 +302,13 @@ test('validates package (2)', () => {
 		types: true
 	});
 	analyse_code('src/lib/C.svelte', '');
-	const warnings = validate({
-		exports: { '.': './dist/C.svelte' },
-		peerDependencies: { svelte: '^3.55.0' }
-	});
+	const warnings = validate(
+		{
+			exports: { '.': './dist/C.svelte' },
+			peerDependencies: { svelte: '^3.55.0' }
+		},
+		[]
+	);
 
 	has_warnings(warnings, [
 		'You are using Svelte files, but did not declare a `svelte` condition in one of your `exports` in your `package.json`. '
@@ -322,10 +325,13 @@ test('validates package (all ok 1)', () => {
 		types: true
 	});
 	analyse_code('src/lib/C.svelte', '');
-	const warnings = validate({
-		exports: { '.': { svelte: './dist/C.svelte' } },
-		peerDependencies: { svelte: '^3.55.0' }
-	});
+	const warnings = validate(
+		{
+			exports: { '.': { svelte: './dist/C.svelte' } },
+			peerDependencies: { svelte: '^3.55.0' }
+		},
+		[]
+	);
 
 	expect(warnings.length).toEqual(0);
 });
@@ -340,11 +346,84 @@ test('validates package (all ok 2)', () => {
 		types: true
 	});
 	analyse_code('src/lib/C.svelte', '');
-	const warnings = validate({
-		exports: { '.': { svelte: './dist/C.svelte' } },
-		peerDependencies: { svelte: '^3.55.0' },
-		svelte: './dist/C.svelte'
+	const warnings = validate(
+		{
+			exports: { '.': { svelte: './dist/C.svelte' } },
+			peerDependencies: { svelte: '^3.55.0' },
+			svelte: './dist/C.svelte'
+		},
+		[]
+	);
+
+	expect(warnings.length).toEqual(0);
+});
+
+test('warns about .server. files', () => {
+	const { validate } = _create_validator({
+		config: {},
+		cwd: '',
+		input: '',
+		output: '',
+		preserve_output: false,
+		types: true
 	});
+	const warnings = validate(
+		{
+			exports: { '.': { svelte: './dist/index.js' } },
+			peerDependencies: { svelte: '^3.55.0' }
+		},
+		[
+			{ name: 'index.js', dest: 'index.js', base: 'index', is_svelte: false },
+			{ name: 'utils.server.js', dest: 'utils.server.js', base: 'utils.server', is_svelte: false }
+		]
+	);
+
+	has_warnings(warnings, [
+		'The following files contain ".server." in their filename or are in a "server" directory:\n- utils.server.js'
+	]);
+});
+
+test('warns about files in server directory', () => {
+	const { validate } = _create_validator({
+		config: {},
+		cwd: '',
+		input: '',
+		output: '',
+		preserve_output: false,
+		types: true
+	});
+	const warnings = validate(
+		{
+			exports: { '.': { svelte: './dist/index.js' } },
+			peerDependencies: { svelte: '^3.55.0' }
+		},
+		[
+			{ name: 'index.js', dest: 'index.js', base: 'index', is_svelte: false },
+			{ name: 'server/db.js', dest: 'server/db.js', base: 'server/db', is_svelte: false }
+		]
+	);
+
+	has_warnings(warnings, [
+		'The following files contain ".server." in their filename or are in a "server" directory:\n- server/db.js'
+	]);
+});
+
+test('does not warn about server files when there are none', () => {
+	const { validate } = _create_validator({
+		config: {},
+		cwd: '',
+		input: '',
+		output: '',
+		preserve_output: false,
+		types: true
+	});
+	const warnings = validate(
+		{
+			exports: { '.': { svelte: './dist/index.js' } },
+			peerDependencies: { svelte: '^3.55.0' }
+		},
+		[{ name: 'index.js', dest: 'index.js', base: 'index', is_svelte: false }]
+	);
 
 	expect(warnings.length).toEqual(0);
 });

@@ -131,6 +131,11 @@
 		"./vite": {
 			"types": "./types/index.d.ts",
 			"import": "./src/exports/vite/index.js"
+		},
+		"./server-only": {
+			"types": "./src/exports/server-only/index.d.ts",
+			"browser": "./src/exports/server-only/client.js",
+			"default": "./src/exports/server-only/server.js"
 		}
 	},
 	"types": "types/index.d.ts",
