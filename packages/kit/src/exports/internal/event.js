@@ -10,7 +10,9 @@ let sync_store = null;
 /** @type {AsyncLocalStorage<RequestStore | null> | null} */
 let als;
 
-import('node:async_hooks')
+// mark the import as pure so that it can be treeshaken when we conditionally
+// call any of the functions in this file behind a BROWSER check
+/* @__PURE__ */ import('node:async_hooks')
 	.then((hooks) => (als = new hooks.AsyncLocalStorage()))
 	.catch(() => {
 		// can't use AsyncLocalStorage, but can still call getRequestEvent synchronously.
