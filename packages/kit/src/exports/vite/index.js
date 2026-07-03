@@ -323,6 +323,10 @@ function kit({ svelte_config }) {
 			options: svelte_config
 		},
 
+		applyToEnvironment(environment) {
+			return environment.name !== 'serviceWorker';
+		},
+
 		/**
 		 * Build the SvelteKit-provided Vite config to be merged with the user's vite.config.js file.
 		 * @see https://vitejs.dev/guide/api-plugin.html#config
@@ -517,6 +521,10 @@ function kit({ svelte_config }) {
 	const plugin_virtual_modules = {
 		name: 'vite-plugin-sveltekit-virtual-modules',
 
+		applyToEnvironment(environment) {
+			return environment.name !== 'serviceWorker';
+		},
+
 		async configResolved(config) {
 			explicit_env_entry = resolve_explicit_env_entry(kit);
 			explicit_env_config = await sync.env(kit, explicit_env_entry, config.root, config.mode);
@@ -550,10 +558,6 @@ function kit({ svelte_config }) {
 					server.ws.send({ type: 'full-reload' });
 				}
 			});
-		},
-
-		applyToEnvironment(environment) {
-			return environment.name !== 'serviceWorker';
 		},
 
 		resolveId: {
