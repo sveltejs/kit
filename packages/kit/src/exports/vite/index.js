@@ -542,37 +542,41 @@ function kit({ svelte_config }) {
 	const plugin_node_environment = {
 		name: 'vite-plugin-sveltekit-node-environment',
 		apply: 'serve',
-		config(config) {
-			/** @type {UserConfig} */
-			const new_config = {
-				environments: {
-					ssr: {
-						dev: {
-							createEnvironment(name, config) {
-								return vite.createFetchableDevEnvironment(name, config, {
-									hot: true,
-									transport: vite.createServerHotChannel(),
-									async handleRequest(request) {
-										try {
-											/** @type {import('./dev/ssr_entry.js')} */
-											const { respond } = await runner.import('__sveltekit/dev-server-entry.js');
-											return await respond(request, remote_address);
-										} catch (error) {
-											// Vite doesn't log errors so we do it ourselves
-											console.error(error);
-											throw error;
+		config: {
+			// run it earlier so the adapter Vite plugins can override it easily
+			order: 'pre',
+			handler(config) {
+				/** @type {UserConfig} */
+				const new_config = {
+					environments: {
+						ssr: {
+							dev: {
+								createEnvironment(name, config) {
+									return vite.createFetchableDevEnvironment(name, config, {
+										hot: true,
+										transport: vite.createServerHotChannel(),
+										async handleRequest(request) {
+											try {
+												/** @type {import('./dev/ssr_entry.js')} */
+												const { respond } = await runner.import('__sveltekit/dev-server-entry.js');
+												return await respond(request, remote_address);
+											} catch (error) {
+												// Vite doesn't log errors so we do it ourselves
+												console.error(error);
+												throw error;
+											}
 										}
-									}
-								});
+									});
+								}
 							}
 						}
 					}
-				}
-			};
+				};
 
-			warn_overridden_config(config, new_config);
+				warn_overridden_config(config, new_config);
 
-			return new_config;
+				return new_config;
+			}
 		},
 		async configureServer(server) {
 			if (runner) await runner.close();
@@ -991,7 +995,10 @@ function kit({ svelte_config }) {
 
 	/** @type {Map<string, Set<string>>} */
 	const import_map = new Map();
-	const server_only_pattern = /.*\.server\..+/;
+	// Matches any ID that has .server. in its filename
+	const server_only_module_pattern = /\.server\.[^/]+$/;
+	// Matches any ID that has /server/ in its path
+	const server_only_directory_pattern = /\/server\//;
 
 	/**
 	 * Ensures that client-side code can't accidentally import server-side code,
@@ -1046,8 +1053,8 @@ function kit({ svelte_config }) {
 				id: [
 					exactRegex(app_server),
 					exactRegex(app_env_private),
-					/\/server\//,
-					new RegExp(`${server_only_pattern.source}$`)
+					server_only_module_pattern,
+					server_only_directory_pattern
 				]
 			},
 			handler(id) {
@@ -1062,8 +1069,8 @@ function kit({ svelte_config }) {
 				const is_server_only =
 					normalized === '$app/env/private' ||
 					normalized === '$app/server' ||
-					normalized.startsWith('$lib/server/') ||
-					(is_internal && server_only_pattern.test(path.basename(id)));
+					(normalized.startsWith('$lib/') && server_only_directory_pattern.test(id)) ||
+					(is_internal && server_only_module_pattern.test(id));
 
 				// skip .server.js files outside the cwd or in node_modules, as the filename might not mean 'server-only module' in this context
 				// TODO: address https://github.com/sveltejs/kit/issues/12529
@@ -2181,7 +2188,6 @@ function kit({ svelte_config }) {
 					console.log(styleText(['bold', 'yellow'], '\nNo adapter specified'));
 
 					const link = styleText(['bold', 'cyan'], 'https://svelte.dev/docs/kit/adapters');
-
 					console.log(
 						`See ${link} to learn how to configure your app to run on the platform of your choosing`
 					);
@@ -2206,8 +2212,9 @@ function kit({ svelte_config }) {
 
 	return /** @type {Plugin[]} */ (
 		[
+			svelte_config.kit.adapter?.vite?.plugins,
 			plugin_setup,
-			svelte_config.kit.adapter?.vite?.plugins ? undefined : plugin_node_environment,
+			plugin_node_environment,
 			plugin_remote,
 			plugin_server_filesystem,
 			plugin_dev_ssr,
@@ -2216,8 +2223,7 @@ function kit({ svelte_config }) {
 			service_worker_entry_file ? plugin_service_worker_env : undefined,
 			plugin_service_worker,
 			plugin_compile,
-			plugin_adapter,
-			svelte_config.kit.adapter?.vite?.plugins
+			plugin_adapter
 		].filter(Boolean)
 	);
 }

@@ -515,6 +515,11 @@ test.describe('remote functions', () => {
 		await expect(myForm).not.toContainText('Invalid type: Expected');
 
 		await bar.fill('g');
+		// a field's issues are not surfaced while it is being edited — the user
+		// must edit *and* blur the field before validation kicks in
+		await expect(myForm).not.toContainText('Invalid type: Expected');
+
+		await bar.blur();
 		await expect(myForm).toContainText('Invalid type: Expected ("d" | "e") but received "g"');
 
 		await bar.fill('d');
@@ -709,6 +714,32 @@ test.describe('remote functions', () => {
 	test('nested field set is SSR rendered', async ({ page }) => {
 		await page.goto('/remote/form/set-ssr');
 		await expect(page.locator('#description')).toHaveText('Description: nested');
+	});
+
+	test('form fields touched tracks interactions', async ({ page, javaScriptEnabled }) => {
+		if (!javaScriptEnabled) return;
+
+		await page.goto('/remote/form/touched');
+
+		const nameTouched = page.locator('#touched-name');
+		const ageTouched = page.locator('#touched-age');
+
+		await expect(nameTouched).toHaveText('Name touched: false');
+		await expect(ageTouched).toHaveText('Age touched: false');
+
+		await page.click('#set-btn');
+		await page.locator('#set-btn').blur();
+		await expect(nameTouched).toHaveText('Name touched: true');
+
+		await page.click('#reset-btn');
+		await expect(nameTouched).toHaveText('Name touched: false');
+
+		await page.fill('#age-input', '42');
+		await page.locator('#age-input').blur();
+		await expect(ageTouched).toHaveText('Age touched: true');
+
+		await page.click('#reset-btn');
+		await expect(ageTouched).toHaveText('Age touched: false');
 	});
 
 	test('selects are not nuked when unrelated controls change', async ({

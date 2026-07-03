@@ -28,9 +28,9 @@ async function generate_fallback({ manifest_path, out, root }) {
 				vite.middlewares.use((req, _, next) => {
 					req.url = req.url?.replace(
 						new RegExp(escape_for_regexp(`^http://localhost:${port}`)),
-						svelte_config.kit.prerender.origin
+						svelte_config.kit.paths.origin
 					);
-					req.headers.host = new URL(svelte_config.kit.prerender.origin).host;
+					req.headers.host = new URL(svelte_config.kit.paths.origin).host;
 
 					next();
 				});

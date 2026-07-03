@@ -8,5 +8,5 @@
 	}
 </script>
 
-<button class="redirect" on:click={redirect}>redirect</button>
+<button class="redirect" onclick={redirect}>redirect</button>
 <p class="redirect-state">Redirect state: {$redirect_state}</p>

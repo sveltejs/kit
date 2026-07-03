@@ -4,7 +4,7 @@
 	export let data;
 </script>
 
-<button on:click={async () => await invalidateAll()}>Invalidate</button>
+<button onclick={async () => await invalidateAll()}>Invalidate</button>
 
 {#if data.request}
 	<p>data request: {data.request}</p>

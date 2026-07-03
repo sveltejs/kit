@@ -89,6 +89,8 @@ async function prerender({ out, manifest_path, metadata, verbose, root, vite_con
 
 	const svelte_config = extract_svelte_config(vite_config);
 
+	const prerender_origin = svelte_config.paths.origin || 'http://sveltekit-prerender';
+
 	if (svelte_config.kit.router.type === 'hash') {
 		const fallback = await generate_fallback({
 			manifest_path,
@@ -324,16 +326,16 @@ async function prerender({ out, manifest_path, metadata, verbose, root, vite_con
 			actual_hashlinks.set(decoded, ids);
 
 			/** @param {string} href */
-			const removePrerenderOrigin = (href) => {
-				if (href.startsWith(svelte_config.kit.prerender.origin)) {
-					if (href === svelte_config.kit.prerender.origin) return '/';
-					if (href.at(svelte_config.kit.prerender.origin.length) !== '/') return href;
-					return href.slice(svelte_config.kit.prerender.origin.length);
+			const remove_prerender_origin = (href) => {
+				if (href.startsWith(prerender_origin)) {
+					if (href === prerender_origin) return '/';
+					if (href.at(prerender_origin.length) !== '/') return href;
+					return href.slice(prerender_origin.length);
 				}
 				return href;
 			};
 
-			for (const href of hrefs.map(removePrerenderOrigin)) {
+			for (const href of hrefs.map(remove_prerender_origin)) {
 				if (!is_root_relative(href)) continue;
 
 				const { pathname, search, hash } = new URL(href, 'http://localhost');
@@ -509,9 +511,9 @@ async function prerender({ out, manifest_path, metadata, verbose, root, vite_con
 				vite.middlewares.use((req, res, next) => {
 					req.url = req.url?.replace(
 						new RegExp(escape_for_regexp(`^http://localhost:${port}`)),
-						svelte_config.kit.prerender.origin
+						prerender_origin
 					);
-					req.headers.host = new URL(svelte_config.kit.prerender.origin).host;
+					req.headers.host = new URL(prerender_origin).host;
 
 					const base = `${vite.config.server.https ? 'https' : 'http'}://${
 						req.headers[':authority'] || req.headers.host

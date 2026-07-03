@@ -760,7 +760,10 @@ describe('create_field_proxy', () => {
 			{},
 			() => input,
 			() => {},
-			() => ({})
+			() => ({}),
+			() => ({}),
+			() => ({}),
+			[]
 		);
 
 		const cloned = proxy.created_at.value();

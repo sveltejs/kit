@@ -8,12 +8,11 @@ import { Server } from 'SERVER';
 import { manifest, prerendered, base } from 'MANIFEST';
 import { dir } from './dir.js';
 import { env, env_prefix } from './env.js';
-import { parse_as_bytes, parse_origin } from './utils.js';
+import { parse_as_bytes } from './utils.js';
 
 const server = new Server(manifest);
 
-// parse_origin validates ORIGIN and throws descriptive errors for invalid values
-const origin = parse_origin(env('ORIGIN', undefined));
+const origin = ORIGIN;
 
 const xff_depth = parseInt(env('XFF_DEPTH', '1'));
 const address_header = env('ADDRESS_HEADER', '').toLowerCase();

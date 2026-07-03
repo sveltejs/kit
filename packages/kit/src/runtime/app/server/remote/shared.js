@@ -35,13 +35,11 @@ export function create_validator(validate_or_fn, maybe_fn) {
 
 			// if the `issues` field exists, the validation failed
 			if (result.issues) {
-				error(
-					400,
-					await state.handleValidationError({
-						issues: result.issues,
-						event
-					})
-				);
+				const body = await state.handleValidationError({
+					issues: result.issues,
+					event
+				});
+				error(body.status ?? 400, body);
 			}
 
 			return result.value;

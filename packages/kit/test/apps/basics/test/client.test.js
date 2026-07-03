@@ -902,6 +902,31 @@ test.describe('Invalidation', () => {
 		expect(next_layout_2).toBe(next_layout_1);
 		expect(next_page_2).not.toBe(next_page_1);
 	});
+
+	test('invalidateAll finishing after navigation does not apply stale data', async ({
+		page,
+		clicknav
+	}) => {
+		await page.goto('/load/invalidation/during-navigation/a');
+		await expect(page.locator('[data-testid="scores"]')).toHaveText('1 - 1');
+
+		await clicknav('[data-testid="nav-b-invalidate"]');
+		await expect(page.locator('[data-testid="scores"]')).toHaveText('2 - 2');
+
+		await page.waitForTimeout(400);
+		await expect(page.locator('[data-testid="scores"]')).toHaveText('2 - 2');
+	});
+
+	test('invalidateAll finishing before navigation ends does not prevent navigation', async ({
+		page,
+		clicknav
+	}) => {
+		await page.goto('/load/invalidation/during-navigation/b');
+		await expect(page.locator('[data-testid="scores"]')).toHaveText('2 - 2');
+
+		await clicknav('[data-testid="nav-a-invalidate"]');
+		await expect(page.locator('[data-testid="scores"]')).toHaveText('1 - 1');
+	});
 });
 
 test.describe('data-sveltekit attributes', () => {

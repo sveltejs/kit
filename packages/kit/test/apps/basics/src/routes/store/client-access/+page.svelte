@@ -8,7 +8,7 @@
 <h1>{`${pathname}`}</h1>
 
 <button
-	on:click={() => {
+	onclick={() => {
 		getStores().page.subscribe(($page) => (pathname = $page.url.pathname))();
 	}}>click</button
 >

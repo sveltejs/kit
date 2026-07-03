@@ -9,7 +9,7 @@
 <button
 	type="button"
 	class="shared"
-	on:click={() => (window.promise = invalidate('invalidate-depends:shared'))}
+	onclick={() => (window.promise = invalidate('invalidate-depends:shared'))}
 >
 	invalidate shared
 </button>
@@ -18,7 +18,7 @@
 <button
 	type="button"
 	class="server"
-	on:click={() => (window.promise = invalidate('invalidate-depends:server'))}
+	onclick={() => (window.promise = invalidate('invalidate-depends:server'))}
 >
 	invalidate server
 </button>
@@ -27,7 +27,7 @@
 <button
 	type="button"
 	class="neither"
-	on:click={() => (window.promise = invalidate('invalidate-depends:neither'))}
+	onclick={() => (window.promise = invalidate('invalidate-depends:neither'))}
 >
 	invalidate neither
 </button>

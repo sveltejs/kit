@@ -9,6 +9,8 @@ declare module '@sveltejs/kit' {
 	// @ts-ignore this is an optional peer dependency so could be missing. Written like this so dts-buddy preserves the ts-ignore
 	type Span = import('@opentelemetry/api').Span;
 
+	type AppErrorWithOptionalStatus = Omit<App.Error, 'status'> & { status?: App.Error['status'] };
+
 	/**
 	 * [Adapters](https://svelte.dev/docs/kit/adapters) are responsible for taking the production build and turning it into something that can be deployed to a platform of your choosing.
 	 */
@@ -40,8 +42,7 @@ declare module '@sveltejs/kit' {
 		};
 		vite?: {
 			/**
-			 * Add a Vite plugin here to replace the default Node SSR environment.
-			 * The provided Vite plugins should configure the dev and preview servers
+			 * Plugins provided by the adapter are placed before any of SvelteKit's own plugins.
 			 * @since 3.0.0
 			 */
 			plugins?: Plugin[];
@@ -278,6 +279,30 @@ declare module '@sveltejs/kit' {
 		 * @param opts the options passed to `cookie.stringifySetCookie` with the SvelteKit defaults described above. See documentation [here](https://github.com/jshttp/cookie?tab=readme-ov-file#cookiestringifysetcookiesetcookieobj-options)
 		 */
 		delete: (name: string, opts: import('cookie').SerializeOptions) => void;
+
+		/**
+		 * Parses a single `Set-Cookie` header. This allows you to apply cookies received from an external source:
+		 *
+		 * ```js
+		 * import { getRequestEvent } from '$app/server';
+		 *
+		 * export async function GET() {
+		 * 	const { cookies } = getRequestEvent();
+		 *
+		 * 	const response = await fetch('...');
+		 *
+		 * 	for (const str of response.headers.getSetCookie()) {
+		 * 		const { name, value, ...options } = cookies.parse(str);
+		 * 		cookies.set(name, value, { ...options, path: '/' });
+		 * 	}
+		 *
+		 * 	// ...
+		 * }
+		 * ```
+		 *
+		 * Note the use of `headers.getSetCookie()`, which returns an array of cookie headers, _not_ `headers.get('set-cookie')` which returns a single comma-separated string.
+		 */
+		parse: typeof import('cookie').parseSetCookie;
 
 		/**
 		 * Serialize a cookie name-value pair into a `Set-Cookie` header string, but don't apply it to the response.
@@ -653,6 +678,19 @@ declare module '@sveltejs/kit' {
 			 */
 			base?: '' | `/${string}`;
 			/**
+			 * The origin of your app, used for CSRF protection and prerendering.
+			 *
+			 * By default, this is `undefined`, meaning SvelteKit will derive the origin from `request.url` (which is set by the adapter, and ultimately by the platform).
+			 *
+			 * If your app is served from an origin that isn't known at request time — for example because it's deployed to a preview deployment whose URL isn't known at build time, or because it's behind a reverse proxy that doesn't pass the `host` header — you can set this to a string like `https://my-site.com`.
+			 *
+			 * This is also used as the value of `url.origin` during prerendering (when unset, it defaults to `http://sveltekit-prerender`), and as the trusted origin for CSRF checks on form submissions and remote function calls.
+			 *
+			 * @default undefined
+			 * @since 3.0
+			 */
+			origin?: `http://${string}` | `https://${string}`;
+			/**
 			 * Whether to use relative asset paths.
 			 *
 			 * If `true`, paths created with `resolve()` and `asset()` imported from `$app/paths` will be replaced with relative asset paths during server-side rendering, resulting in more portable HTML.
@@ -775,11 +813,6 @@ declare module '@sveltejs/kit' {
 			 * @since 2.67.0
 			 */
 			handleInvalidUrl?: PrerenderInvalidUrlHandlerValue;
-			/**
-			 * The value of `url.origin` during prerendering; useful if it is included in rendered content.
-			 * @default "http://sveltekit-prerender"
-			 */
-			origin?: string;
 		};
 		router?: {
 			/**
@@ -922,13 +955,16 @@ declare module '@sveltejs/kit' {
 	 *
 	 * If an unexpected error is thrown during loading or rendering, this function will be called with the error and the event.
 	 * Make sure that this function _never_ throws an error.
+	 *
+	 * The returned object can include a `status` property to override the HTTP status code used in the response.
+	 * If omitted, the status defaults to 500.
 	 */
 	export type HandleServerError = (input: {
 		error: unknown;
 		event: RequestEvent;
 		status: number;
 		message: string;
-	}) => MaybePromise<void | App.Error>;
+	}) => MaybePromise<void | AppErrorWithOptionalStatus>;
 
 	/**
 	 * The [`handleValidationError`](https://svelte.dev/docs/kit/hooks#Server-hooks-handleValidationError) hook runs when the argument to a remote function fails validation.
@@ -936,20 +972,23 @@ declare module '@sveltejs/kit' {
 	 * It will be called with the validation issues and the event, and must return an object shape that matches `App.Error`.
 	 */
 	export type HandleValidationError<Issue extends StandardSchemaV1.Issue = StandardSchemaV1.Issue> =
-		(input: { issues: Issue[]; event: RequestEvent }) => MaybePromise<App.Error>;
+		(input: { issues: Issue[]; event: RequestEvent }) => MaybePromise<AppErrorWithOptionalStatus>;
 
 	/**
 	 * The client-side [`handleError`](https://svelte.dev/docs/kit/hooks#Shared-hooks-handleError) hook runs when an unexpected error is thrown while navigating.
 	 *
 	 * If an unexpected error is thrown during loading or the following render, this function will be called with the error and the event.
 	 * Make sure that this function _never_ throws an error.
+	 *
+	 * The returned object can include a `status` property to override the HTTP status code used in the response.
+	 * If omitted, the status defaults to 500.
 	 */
 	export type HandleClientError = (input: {
 		error: unknown;
 		event: NavigationEvent;
 		status: number;
 		message: string;
-	}) => MaybePromise<void | App.Error>;
+	}) => MaybePromise<void | AppErrorWithOptionalStatus>;
 
 	/**
 	 * The [`handleFetch`](https://svelte.dev/docs/kit/hooks#Server-hooks-handleFetch) hook allows you to modify (or replace) the result of an [`event.fetch`](https://svelte.dev/docs/kit/load#Making-fetch-requests) call that runs on the server (or during prerendering) inside an endpoint, `load`, `action`, `handle`, `handleError` or `reroute`.
@@ -1811,7 +1850,7 @@ declare module '@sveltejs/kit' {
 		| { type: 'success'; status: number; data?: Success }
 		| { type: 'failure'; status: number; data?: Failure }
 		| { type: 'redirect'; status: number; location: string }
-		| { type: 'error'; status?: number; error: any };
+		| { type: 'error'; status?: number; error: App.Error };
 
 	/**
 	 * The object returned by the [`error`](https://svelte.dev/docs/kit/@sveltejs-kit#error) function.
@@ -1960,6 +1999,10 @@ declare module '@sveltejs/kit' {
 		value(): DeepPartial<T>;
 		/** Set the values that will be submitted */
 		set(input: DeepPartial<T>): DeepPartial<T>;
+		/** Whether the field or any nested field has been interacted with since the form was mounted */
+		touched(): boolean;
+		/** Whether the field or any nested field has been edited since the form was mounted */
+		dirty(): boolean;
 		/** Validation issues, if any */
 		issues(): RemoteFormIssue[] | undefined;
 	};
@@ -2178,8 +2221,13 @@ declare module '@sveltejs/kit' {
 		preflight(schema: StandardSchemaV1<Input, any>): RemoteForm<Input, Output>;
 		/** Validate the form contents programmatically */
 		validate(options?: {
-			/** Set this to `true` to also show validation issues of fields that haven't been touched yet. */
-			includeUntouched?: boolean;
+			/**
+			 * Set this to `true` to also show validation issues of fields that haven't yet been
+			 * edited and blurred. This option is ignored for forms that have previously been
+			 * submitted, in which case all fields are always subject to validation
+			 * (unless the form is reset, at which point it is treated as pristine)
+			 */
+			all?: boolean;
 			/** Set this to `true` to only run the `preflight` validation. */
 			preflightOnly?: boolean;
 		}): Promise<void>;
@@ -2187,7 +2235,7 @@ declare module '@sveltejs/kit' {
 		get result(): Output | undefined;
 		/** The number of pending submissions */
 		get pending(): number;
-		/** True if the form has been submitted at least once */
+		/** True if the form has been submitted at least once, and hasn't been reset since */
 		get submitted(): boolean;
 		/** Access form fields using object notation */
 		fields: RemoteFormFieldsRoot<Input>;
@@ -2869,20 +2917,38 @@ declare module '@sveltejs/kit' {
 	 * @throws {import('./public.js').HttpError} This error instructs SvelteKit to initiate HTTP error handling.
 	 * @throws {Error} If the provided status is invalid (not between 400 and 599).
 	 */
-	export function error(status: number, body: App.Error): never;
+	export function error(status: number, body: Omit<App.Error, "status"> & {
+		status?: App.Error["status"];
+	}): never;
 	/**
 	 * Throws an error with a HTTP status code and an optional message.
 	 * When called during request handling, this will cause SvelteKit to
 	 * return an error response without invoking `handleError`.
 	 * Make sure you're not catching the thrown error, which would prevent SvelteKit from handling it.
 	 * @param status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
-	 * @param body An object that conforms to the App.Error type. If a string is passed, it will be used as the message property.
+	 * @param body The error message.
 	 * @throws {import('./public.js').HttpError} This error instructs SvelteKit to initiate HTTP error handling.
 	 * @throws {Error} If the provided status is invalid (not between 400 and 599).
 	 */
-	export function error(status: number, body?: {
+	export function error(status: number, body: {
+		status: number;
 		message: string;
-	} extends App.Error ? App.Error | string | undefined : never): never;
+	} extends App.Error ? string | void | undefined : never): never;
+	/**
+	 * Throws an error with a HTTP status code and an optional message.
+	 * When called during request handling, this will cause SvelteKit to
+	 * return an error response without invoking `handleError`.
+	 * Make sure you're not catching the thrown error, which would prevent SvelteKit from handling it.
+	 * @param status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#client_error_responses). Must be in the range 400-599.
+	 * @param body The error message.
+	 * @param properties Additional properties of the App.Error type.
+	 * @throws {import('./public.js').HttpError} This error instructs SvelteKit to initiate HTTP error handling.
+	 * @throws {Error} If the provided status is invalid (not between 400 and 599).
+	 */
+	export function error(status: number, body: string, properties: {
+		status: number;
+		message: string;
+	} extends App.Error ? never : Omit<App.Error, "status" | "message">): never;
 	/**
 	 * Checks whether this is an error thrown by {@link error}.
 	 * @param status The status to filter for.
@@ -2903,10 +2969,13 @@ declare module '@sveltejs/kit' {
 	 *
 	 * @param status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#redirection_messages). Must be in the range 300-308.
 	 * @param location The location to redirect to.
+	 * @param options To redirect to an external URL, you must pass `{ external: true }` to allow any external URL except `javascript:` URLs, or `{ external: [...] }` with an allowlist of permitted origins.
 	 * @throws {import('./public.js').Redirect} This error instructs SvelteKit to redirect to the specified location.
-	 * @throws {Error} If the provided status is invalid or the location cannot be used as a header value.
+	 * @throws {Error} If the provided status is invalid, the location cannot be used as a header value, or the location is an external URL without permission.
 	 * */
-	export function redirect(status: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308 | ({} & number), location: string | URL): never;
+	export function redirect(status: 300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308 | ({} & number), location: string | URL, options?: {
+		external?: boolean | string[];
+	}): never;
 	/**
 	 * Checks whether this is a redirect thrown by {@link redirect}.
 	 * @param e The object to check.
@@ -3806,6 +3875,7 @@ declare namespace App {
 	 * Defines the common shape of expected and unexpected errors. Expected errors are thrown using the `error` function. Unexpected errors are handled by the `handleError` hooks which should return this shape.
 	 */
 	export interface Error {
+		status: number;
 		message: string;
 	}
 
