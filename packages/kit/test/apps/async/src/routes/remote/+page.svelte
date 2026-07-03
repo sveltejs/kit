@@ -11,6 +11,8 @@
 		set_count_partial_refresh_all,
 		set_count_server_refresh,
 		set_count_server_refresh_after_read,
+		set_count_server_refresh_before_mutation,
+		set_count_server_refresh_then_reawait,
 		set_count_server_set,
 		resolve_deferreds
 	} from './query-command.remote.js';
@@ -97,6 +99,22 @@
 	id="multiply-server-refresh-after-read-btn"
 >
 	command (query server refresh after read)
+</button>
+<button
+	onclick={async () => {
+		command_result = await set_count_server_refresh_before_mutation(12);
+	}}
+	id="multiply-server-refresh-before-mutation-btn"
+>
+	command (query server refresh before mutation)
+</button>
+<button
+	onclick={async () => {
+		command_result = await set_count_server_refresh_then_reawait(13);
+	}}
+	id="multiply-server-refresh-then-reawait-btn"
+>
+	command (query server refresh then re-await)
 </button>
 <button
 	onclick={async () => {

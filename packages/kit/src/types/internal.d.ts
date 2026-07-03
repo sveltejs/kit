@@ -727,7 +727,7 @@ export interface RequestState {
 			string,
 			{
 				internals: RemoteInternals;
-				promise: Promise<any>;
+				fn: () => Promise<any>;
 			}
 		>;
 		/** Instances created via `myForm.for(...)` */
