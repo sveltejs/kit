@@ -146,7 +146,7 @@ export function process_config(config, cwd) {
 		config.kit.csp?.directives?.['require-trusted-types-for']?.includes('script') &&
 		config.kit.serviceWorker.register &&
 		resolve_entry(path.resolve(cwd, config.kit.files.serviceWorker)) &&
-		!config.kit.csp?.directives?.['trusted-types']?.includes('svelte-trusted-html')
+		!config.kit.csp?.directives?.['trusted-types']?.includes('sveltekit-trusted-url')
 	) {
 		throw new Error(
 			"The `csp.directives['trusted-types']` option must include 'sveltekit-trusted-url' when `serviceWorker.register` is true"
