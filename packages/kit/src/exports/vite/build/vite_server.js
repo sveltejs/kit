@@ -314,39 +314,42 @@ export async function create_build_server({
 	/** @type {Plugin} */
 	const plugin_node_environment = {
 		name: 'vite-plugin-sveltekit-compile:node-environment',
-		config() {
-			return {
-				environments: {
-					ssr: {
-						dev: {
-							createEnvironment(name, config) {
-								return vite.createFetchableDevEnvironment(name, config, {
-									hot: true,
-									transport: vite.createServerHotChannel(),
-									async handleRequest(request) {
-										try {
-											/** @type {import('../dev/ssr_entry.js')} */
-											const { respond } = await runner.import('__sveltekit/dev-server-entry.js');
-											return await respond(request, remote_address);
-										} catch (error) {
-											// Vite doesn't log errors so we do it ourselves
-											console.error(error);
-											throw error;
+		config: {
+			order: 'pre',
+			handler() {
+				return {
+					environments: {
+						ssr: {
+							dev: {
+								createEnvironment(name, config) {
+									return vite.createFetchableDevEnvironment(name, config, {
+										hot: true,
+										transport: vite.createServerHotChannel(),
+										async handleRequest(request) {
+											try {
+												/** @type {import('../dev/ssr_entry.js')} */
+												const { respond } = await runner.import('__sveltekit/dev-server-entry.js');
+												return await respond(request, remote_address);
+											} catch (error) {
+												// Vite doesn't log errors so we do it ourselves
+												console.error(error);
+												throw error;
+											}
 										}
-									}
-								});
+									});
+								}
 							}
 						}
 					}
-				}
-			};
+				};
+			}
 		},
 		async configureServer(server) {
 			if (runner) await runner.close();
 			runner = vite.createServerModuleRunner(server.environments.ssr);
 
 			return () => {
-				server.middlewares.use(async (req, res, next) => {
+				server.middlewares.use(async (req, res) => {
 					remote_address = req.socket.remoteAddress;
 
 					// Vite's base middleware strips out the base path. Restore it
@@ -356,7 +359,7 @@ export async function create_build_server({
 						req.headers[':authority'] || req.headers.host
 					}`;
 
-					// fallback to our own fetch handler if the adapter doesn't provide one
+					// TODO: allow RunnableDevEnvironment too
 					if (!vite.isFetchableDevEnvironment(server.environments.ssr)) {
 						throw new Error(
 							'The Vite configured dev SSR environment must be a FetchableDevEnvironment'
@@ -377,8 +380,6 @@ export async function create_build_server({
 					} else {
 						void setResponse(res, response);
 					}
-
-					next();
 				});
 			};
 		},
@@ -397,10 +398,11 @@ export async function create_build_server({
 
 	/** @type {PluginOption} */
 	const plugins = [
+		adapter?.vite?.plugins,
 		vite_plugins,
 		plugin_ipc,
 		plugin_server,
-		adapter?.vite?.plugins ?? plugin_node_environment
+		plugin_node_environment
 	].filter(Boolean);
 
 	return await vite.createServer({

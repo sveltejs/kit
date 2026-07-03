@@ -1,8 +1,6 @@
-/** @import { SSRManifest } from '@sveltejs/kit' */
 /** @import { NextHandleFunction } from 'connect' */
-/** @import { ValidatedConfig, ServerInternalModule, ServerModule, InternalServer } from 'types' */
 /** @import { PreviewServer, ResolvedConfig } from 'vite' */
-
+/** @import { ValidatedConfig, ServerInternalModule, ServerModule } from 'types' */
 import fs from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -19,8 +17,6 @@ import { is_chrome_devtools_request, not_found } from '../utils.js';
  * @param {ValidatedConfig} svelte_config
  */
 export async function preview(vite, vite_config, svelte_config) {
-	const custom_preview_handling = !!svelte_config.kit.adapter?.vite?.plugins;
-
 	const { paths } = svelte_config.kit;
 	const base = paths.base;
 	const assets = paths.assets ? SVELTE_KIT_ASSETS : paths.base;
@@ -35,41 +31,34 @@ export async function preview(vite, vite_config, svelte_config) {
 		throw new Error(`Server files not found at ${dir}, did you run \`build\` first?`);
 	}
 
-	/** @type {InternalServer | null} */
-	let server = null;
-	/** @type {SSRManifest} */
-	let manifest;
+	const instrumentation = join(dir, 'instrumentation.server.js');
+	if (fs.existsSync(instrumentation)) {
+		await import(pathToFileURL(instrumentation).href);
+	}
 
-	if (!custom_preview_handling) {
-		const instrumentation = join(dir, 'instrumentation.server.js');
-		if (fs.existsSync(instrumentation)) {
-			await import(pathToFileURL(instrumentation).href);
-		}
+	/** @type {ServerInternalModule} */
+	const { set_assets } = await import(pathToFileURL(join(dir, 'internal.js')).href);
 
-		/** @type {ServerInternalModule} */
-		const { set_assets } = await import(pathToFileURL(join(dir, 'internal.js')).href);
+	/** @type {ServerModule} */
+	const { Server } = await import(pathToFileURL(join(dir, 'index.js')).href);
 
-		/** @type {ServerModule} */
-		const { Server } = await import(pathToFileURL(join(dir, 'index.js')).href);
+	const { manifest } = await import(pathToFileURL(join(dir, 'manifest.js')).href);
 
-		({ manifest } = await import(pathToFileURL(join(dir, 'manifest.js')).href));
+	set_assets(assets);
 
-		set_assets(assets);
+	const server = new Server(manifest);
 
-		server = new Server(manifest);
-
-		try {
-			await server.init({
-				env: loadEnv(vite_config.mode, svelte_config.kit.env.dir, ''),
-				read: (file) => createReadableStream(`${dir}/${file}`)
-			});
-		} catch (error) {
-			// Vite erases the error message when starting the preview server so we store
-			// it in the stack instead. This ensures errors thrown using `stackless`
-			// are still readable
-			if (error instanceof Error) error.stack = error.message;
-			throw error;
-		}
+	try {
+		await server.init({
+			env: loadEnv(vite_config.mode, svelte_config.kit.env.dir, ''),
+			read: (file) => createReadableStream(`${dir}/${file}`)
+		});
+	} catch (error) {
+		// Vite erases the error message when starting the preview server so we store
+		// it in the stack instead. This ensures errors thrown using `stackless`
+		// are still readable
+		if (error instanceof Error) error.stack = error.message;
+		throw error;
 	}
 
 	return () => {
@@ -86,21 +75,19 @@ export async function preview(vite, vite_config, svelte_config) {
 		}
 
 		// generated client assets and the contents of `static`
-		if (!custom_preview_handling || paths.assets) {
-			vite.middlewares.use(
-				scoped(
-					assets,
-					sirv(join(svelte_config.kit.outDir, 'output/client'), {
-						setHeaders: (res, pathname) => {
-							// only apply to immutable directory, not e.g. version.json
-							if (pathname.startsWith(`/${svelte_config.kit.appDir}/immutable`)) {
-								res.setHeader('cache-control', 'public,max-age=31536000,immutable');
-							}
+		vite.middlewares.use(
+			scoped(
+				assets,
+				sirv(join(svelte_config.kit.outDir, 'output/client'), {
+					setHeaders: (res, pathname) => {
+						// only apply to immutable directory, not e.g. version.json
+						if (pathname.startsWith(`/${svelte_config.kit.appDir}/immutable`)) {
+							res.setHeader('cache-control', 'public,max-age=31536000,immutable');
 						}
-					})
-				)
-			);
-		}
+					}
+				})
+			)
+		);
 
 		vite.middlewares.use((req, res, next) => {
 			const original_url = /** @type {string} */ (req.url);

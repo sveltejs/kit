@@ -206,7 +206,7 @@ export function dev(server, vite_config, vite, svelte_config, root, dev_context)
 		// serving routes with those names. See https://github.com/vitejs/vite/issues/7363
 		remove_static_middlewares(server.middlewares);
 
-		server.middlewares.use(async (req, res, next) => {
+		server.middlewares.use(async (req, res) => {
 			// Vite's base middleware strips out the base path. Restore it
 			const original_url = req.url;
 			req.url = req.originalUrl;
@@ -312,32 +312,27 @@ export function dev(server, vite_config, vite, svelte_config, root, dev_context)
 					return;
 				}
 
-				// fallback to our own fetch handler if the adapter doesn't provide one
-				if (!svelte_config.kit.adapter?.vite?.plugins) {
-					if (!vite.isFetchableDevEnvironment(server.environments.ssr)) {
-						throw new Error(
-							'The Vite configured dev SSR environment must be a FetchableDevEnvironment'
-						);
-					}
-
-					const request = await getRequest({
-						base,
-						request: req
-					});
-					const response = await server.environments.ssr.dispatchFetch(request);
-
-					if (response.status === 404) {
-						// @ts-expect-error
-						serve_static_middleware.handle(req, res, () => {
-							void setResponse(res, response);
-						});
-					} else {
-						void setResponse(res, response);
-					}
-					return;
+				// TODO: allow RunnableDevEnvironment too
+				if (!vite.isFetchableDevEnvironment(server.environments.ssr)) {
+					throw new Error(
+						'The Vite configured dev SSR environment must be a FetchableDevEnvironment'
+					);
 				}
 
-				next();
+				const request = await getRequest({
+					base,
+					request: req
+				});
+				const response = await server.environments.ssr.dispatchFetch(request);
+
+				if (response.status === 404) {
+					// @ts-expect-error
+					serve_static_middleware.handle(req, res, () => {
+						void setResponse(res, response);
+					});
+				} else {
+					void setResponse(res, response);
+				}
 			} catch (e) {
 				const error = coalesce_to_error(e);
 				res.statusCode = 500;
