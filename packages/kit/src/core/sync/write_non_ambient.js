@@ -103,7 +103,7 @@ function generate_app_types(manifest_data, config) {
 				return posixify(path.relative(config.outDir, params_file));
 			};
 
-			type = `(typeof import('${path_to_params()}').params)[${JSON.stringify(matcher)}]`;
+			type = `import('@sveltejs/kit').MatcherParam<(typeof import('${path_to_params()}').params)[${JSON.stringify(matcher)}]>`;
 			matcher_types.set(matcher, type);
 		}
 

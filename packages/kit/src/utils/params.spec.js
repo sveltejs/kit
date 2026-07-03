@@ -72,13 +72,3 @@ test('normalize_param_definition propagates thrown errors', () => {
 
 	assert.throws(() => matcher['~standard'].validate('x'), /boom/);
 });
-
-test('normalize_param_definition rejects invalid return types', () => {
-	// @ts-expect-error
-	const matcher = normalize_param_definition(() => ({ invalid: true }));
-
-	assert.throws(
-		() => matcher['~standard'].validate('irrelevant'),
-		/Param matcher must return a string, number, boolean, or bigint/
-	);
-});

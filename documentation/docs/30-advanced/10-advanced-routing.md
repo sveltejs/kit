@@ -79,7 +79,7 @@ import { defineParams } from '@sveltejs/kit';
 
 export const params = defineParams({
 	fruit: (param) => {
-		if (param !== 'apple' && param !== 'orange') throw new Error('Invalid fruit');
+		if (param !== 'apple' && param !== 'orange') return;
 		return param;
 	}
 });

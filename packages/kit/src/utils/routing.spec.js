@@ -1,6 +1,7 @@
 import { assert, expect, test, describe } from 'vitest';
 import * as v from 'valibot';
 import { exec, parse_route_id, resolve_route, find_route } from './routing.js';
+import { defineParams } from '@sveltejs/kit';
 
 /** @type {import('@sveltejs/kit').ParamMatcher} */
 const number = v.pipe(v.string(), v.toNumber());
@@ -462,10 +463,10 @@ describe('find_route', () => {
 
 	test('respects matchers', () => {
 		const routes = [create_route('/blog/[slug=word]'), create_route('/blog/[slug]')];
-		/** @type {Record<string, import('@sveltejs/kit').ParamMatcher>} */
-		const matchers = {
+		const matchers = defineParams({
 			word: v.pipe(v.string(), v.regex(/^\w+$/))
-		};
+		});
+		matchers.word;
 
 		// "hello" matches the word matcher
 		const result1 = find_route('/blog/hello', routes, matchers);
@@ -478,8 +479,7 @@ describe('find_route', () => {
 
 	test('validates and transforms params with a standard schema', () => {
 		const routes = [create_route('/items/[id=number]')];
-		/** @type {Record<string, import('@sveltejs/kit').ParamMatcher>} */
-		const matchers = { number };
+		const matchers = defineParams({ number });
 
 		const result = find_route('/items/42', routes, matchers);
 		assert.equal(result?.params.id, 42);
@@ -487,11 +487,49 @@ describe('find_route', () => {
 
 	test('rejects params when a standard schema fails validation', () => {
 		const routes = [create_route('/items/[id=number]')];
-		/** @type {Record<string, import('@sveltejs/kit').ParamMatcher>} */
-		const matchers = { number };
+		const matchers = defineParams({ number });
 
 		const result = find_route('/items/abc', routes, matchers);
 		assert.equal(result, null);
+	});
+
+	test('rejects invalid return types', () => {
+		const routes = [
+			create_route('/items1/[id=invalid1]'),
+			create_route('/items2/[id=invalid2]'),
+			create_route('/items3/[id=invalid3]'),
+			create_route('/items4/[id=invalid4]')
+		];
+		const matchers = defineParams({
+			// @ts-expect-error
+			invalid1: () => Promise.resolve(),
+			// @ts-expect-error
+			invalid2: () => ({}),
+			// @ts-expect-error
+			invalid3: v.arrayAsync(),
+			// @ts-expect-error
+			invalid4: v.pipe(
+				v.string(),
+				v.transform(() => ({}))
+			)
+		});
+
+		assert.throws(
+			() => find_route('/items1/abc', routes, matchers),
+			/Async param matchers are not supported/
+		);
+		assert.throws(
+			() => find_route('/items2/abc', routes, matchers),
+			/Param matcher must return a string, number, boolean, or bigint/
+		);
+		assert.throws(
+			() => find_route('/items3/abc', routes, matchers),
+			/Async param matchers are not supported/
+		);
+		assert.throws(
+			() => find_route('/items4/abc', routes, matchers),
+			/Param matcher must return a string, number, boolean, or bigint/
+		);
 	});
 
 	test('decodes params', () => {

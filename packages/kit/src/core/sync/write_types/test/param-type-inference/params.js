@@ -6,7 +6,6 @@ export const params = defineParams({
 		if (!['a', 'b'].includes(param)) return;
 		return /** @type {'a' | 'b'} */ (param);
 	},
-	/** @returns {boolean} */
-	boolean: () => true,
+	boolean: () => /** @type {boolean} */ (true),
 	number: v.pipe(v.string(), v.toNumber())
 });

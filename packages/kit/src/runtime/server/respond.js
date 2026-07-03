@@ -758,7 +758,6 @@ export async function internal_respond(request, options, manifest, state) {
 			// TODO if `e` is instead named `error`, some fucked up Vite transformation happens
 			// and I don't even know how to describe it. need to investigate at some point
 
-			console.error(e);
 			// HttpError from endpoint can end up here - TODO should it be handled there instead?
 			return await handle_fatal_error(event, event_state, options, e);
 		} finally {

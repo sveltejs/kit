@@ -7,11 +7,11 @@
  * import * as v from 'valibot';
  *
  * export const params = defineParams({
- * 	foo: (param) => {
- * 		if (param !== 'bar') return;
+ * 	locale: (param) => {
+ * 		if (param !== 'de' && param !== 'en') return;
  * 		return param;
  * 	},
- * 	bar: v.string()
+ * 	number: v.pipe(v.string(), v.toNumber())
  * });
  * ```
  *
@@ -46,14 +46,7 @@ export function normalize_param_definition(definition) {
 							return { issues: [{ message: 'Invalid param' }] };
 						}
 
-						if (
-							typeof result !== 'string' &&
-							typeof result !== 'number' &&
-							typeof result !== 'boolean' &&
-							typeof result !== 'bigint'
-						) {
-							throw new Error('Param matcher must return a string, number, boolean, or bigint');
-						}
+						if (/** @type {any} */ (result) instanceof Promise) return result; // will be validated and rejected upstream
 
 						return { value: result };
 					}

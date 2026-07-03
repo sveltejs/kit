@@ -141,11 +141,26 @@ export function get_route_segments(route) {
 function run_matcher(matcher, value) {
 	const result = matcher['~standard'].validate(value);
 
-	if (result instanceof Promise || result.issues) {
+	if (result instanceof Promise) {
+		throw new Error('Async param matchers are not supported');
+	}
+
+	if (result.issues) {
 		return { success: false };
 	}
 
-	return { success: true, value: result.value };
+	const parsed = result.value;
+
+	if (
+		typeof parsed !== 'string' &&
+		typeof parsed !== 'number' &&
+		typeof parsed !== 'boolean' &&
+		typeof parsed !== 'bigint'
+	) {
+		throw new Error('Param matcher must return a string, number, boolean, or bigint');
+	}
+
+	return { success: true, value: parsed };
 }
 
 /**

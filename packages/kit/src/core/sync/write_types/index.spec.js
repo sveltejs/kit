@@ -31,11 +31,14 @@ function run_test(dir) {
 		cwd: root
 	});
 
+	console.log('write all types', dir);
 	write_all_types(initial, manifest, root);
+	console.log('write non ambient', dir);
 	write_non_ambient(initial.kit, manifest);
+	console.log('done', dir);
 }
 
-test('Creates correct $types', { timeout: 60000 }, () => {
+test.only('Creates correct $types', { timeout: 60000 }, () => {
 	// To save us from creating a real SvelteKit project for each of the tests,
 	// we first run the type generation directly for each test case, and then
 	// call `tsc` to check that the generated types are valid.
