@@ -503,7 +503,12 @@ function kit({ svelte_config }) {
 				if (process.env.VITEST === 'true') {
 					for (const key in new_config.define) {
 						const value = new_config.define[key];
-						/** @type {Record<string, any>} */ (globalThis)[key] = JSON.parse(value);
+						try {
+							/** @type {Record<string, any>} */ (globalThis)[key] = JSON.parse(value);
+						} catch {
+							// `kit_global` isn't JSON, so don't try to parse it. We may one day
+							// need to define it in Vitest somehow but for now, ignore it
+						}
 					}
 				}
 
