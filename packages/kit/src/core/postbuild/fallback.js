@@ -20,6 +20,8 @@ async function generate_fallback({ manifest_path, out, root }) {
 	const vite_config = await load_vite_config(); // TODO configFile
 	const svelte_config = extract_svelte_config(vite_config);
 
+	const prerender_origin = svelte_config.kit.paths.origin || 'http://sveltekit-prerender';
+
 	/** @type {Plugin} */
 	const plugin_generate_fallback = {
 		name: 'vite-plugin-sveltekit-compile:generate-fallback',
@@ -28,9 +30,9 @@ async function generate_fallback({ manifest_path, out, root }) {
 				vite.middlewares.use((req, _, next) => {
 					req.url = req.url?.replace(
 						new RegExp(escape_for_regexp(`^http://localhost:${port}`)),
-						svelte_config.kit.paths.origin
+						prerender_origin
 					);
-					req.headers.host = new URL(svelte_config.kit.paths.origin).host;
+					req.headers.host = new URL(prerender_origin).host;
 
 					next();
 				});
