@@ -495,6 +495,22 @@ function kit({ svelte_config }) {
 					/** @type {NonNullable<UserConfig['ssr']>} */ (new_config.ssr).external = ['cookie'];
 				}
 
+				// Vite's `define` is a compile-time text replacement, but Vitest strips
+				// user `define` from the server config and reinstalls the values only as
+				// `globalThis` properties inside test workers, so anything
+				// that runs outside of a test will freak out over
+				// them not being defined
+				if (process.env.VITEST === 'true') {
+					for (const key in new_config.define) {
+						const value = new_config.define[key];
+						if (typeof value === 'string') {
+							try {
+								/** @type {Record<string, any>} */ (globalThis)[key] = JSON.parse(value);
+							} catch {}
+						}
+					}
+				}
+
 				warn_overridden_config(config, new_config);
 
 				return new_config;
