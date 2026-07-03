@@ -952,28 +952,6 @@ function kit({ svelte_config }) {
 		}
 	};
 
-	/** @type {Plugin} */
-	const plugin_service_worker_env = {
-		name: 'vite-plugin-sveltekit-service-worker-env',
-		applyToEnvironment(environment) {
-			return !!service_worker_entry_file && environment.config.consumer === 'client';
-		},
-		transform: {
-			handler(code, id) {
-				if (id !== service_worker_entry_file) return;
-
-				// prepend the service worker with an import that configures
-				// `env`, in case `$app/env/public` is imported. In production
-				// this is required: dynamic public env vars aren't known at
-				// build time, so `env.js` is loaded at runtime. In dev, the
-				// imported module just inlines the current values instead.
-				return {
-					code: `import '__sveltekit/env/service-worker';\n${code}`
-				};
-			}
-		}
-	};
-
 	/** @type {Manifest} */
 	let vite_server_manifest;
 	/** @type {Manifest | null} */
@@ -1169,6 +1147,28 @@ function kit({ svelte_config }) {
 				throw new Error(
 					`Cannot import ${stripped} into service-worker code. Only the modules $service-worker and $app/env/public are available in service workers.`
 				);
+			}
+		}
+	};
+
+	/** @type {Plugin} */
+	const plugin_service_worker_env = {
+		name: 'vite-plugin-sveltekit-service-worker-env',
+		applyToEnvironment(environment) {
+			return !!service_worker_entry_file && environment.config.consumer === 'client';
+		},
+		transform: {
+			handler(code, id) {
+				if (id !== service_worker_entry_file) return;
+
+				// prepend the service worker with an import that configures
+				// `env`, in case `$app/env/public` is imported. In production
+				// this is required: dynamic public env vars aren't known at
+				// build time, so `env.js` is loaded at runtime. In dev, the
+				// imported module just inlines the current values instead.
+				return {
+					code: `import '__sveltekit/env/service-worker';\n${code}`
+				};
 			}
 		}
 	};
