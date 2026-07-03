@@ -1,4 +1,3 @@
-/** @import { ReadableSpan } from '@opentelemetry/sdk-trace-node' */
 import process from 'node:process';
 import { expect } from '@playwright/test';
 import { test } from '../../../utils.js';
@@ -1492,5 +1491,16 @@ test.describe('Streaming', () => {
 		}
 
 		expect(error).toBeUndefined();
+	});
+});
+
+test.describe('Build', () => {
+	test('node built-ins are not externalised for the browser', async () => {
+		const content = fs.readFileSync(
+			path.join(process.cwd(), '.svelte-kit/output/client/.vite/manifest.json'),
+			'utf-8'
+		);
+		const manifest = JSON.parse(content);
+		expect(manifest['__vite-browser-external']).toBeUndefined();
 	});
 });
