@@ -1,3 +1,5 @@
+import { noop } from './functions.js';
+
 /**
  * Create an async iterator and a function to push values into it
  * @template T
@@ -30,10 +32,18 @@ export function create_async_iterator() {
 			};
 		},
 		add: (promise) => {
-			deferred.push(Promise.withResolvers());
-			void promise.then((value) => {
-				deferred[++resolved].resolve(value);
-			});
+			const next = Promise.withResolvers();
+			void next.promise.catch(noop); // prevent unhandled rejection potentially crashing the process
+			deferred.push(next);
+
+			void promise.then(
+				(value) => {
+					deferred[++resolved].resolve(value);
+				},
+				(error) => {
+					deferred[++resolved].reject(error);
+				}
+			);
 		}
 	};
 }

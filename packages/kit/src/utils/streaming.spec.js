@@ -14,3 +14,12 @@ test('works with fast consecutive promise resolutions', async () => {
 
 	expect(actual).toEqual([10, 20]);
 });
+
+test('rejects iterator entries when promises reject', async () => {
+	const { iterate, add } = create_async_iterator();
+	const error = new Error('nope');
+
+	add(Promise.reject(error));
+
+	await expect(iterate()[Symbol.asyncIterator]().next()).rejects.toBe(error);
+});

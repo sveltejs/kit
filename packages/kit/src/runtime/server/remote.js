@@ -2,7 +2,7 @@
 /** @import { RemoteFormInternals, RemoteFunctionData, RemoteFunctionResponse, RemoteInternals, RequestState, SSROptions } from 'types' */
 
 import { json, error } from '@sveltejs/kit';
-import { HttpError, Redirect, SvelteKitError } from '@sveltejs/kit/internal';
+import { Redirect, SvelteKitError } from '@sveltejs/kit/internal';
 import { with_request_store, merge_tracing } from '@sveltejs/kit/internal/server';
 import { app_dir, base } from '$app/paths/internal/server';
 import { is_form_content_type } from '../../utils/http.js';
@@ -171,15 +171,16 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 											location: error.location
 										});
 									} else {
-										const status =
-											error instanceof HttpError || error instanceof SvelteKitError
-												? error.status
-												: 500;
+										const transformed = await handle_error_and_jsonify(
+											event,
+											state,
+											options,
+											error
+										);
 
 										send(controller, {
 											type: 'error',
-											error: await handle_error_and_jsonify(event, state, options, error),
-											status
+											error: transformed
 										});
 									}
 								}
@@ -326,19 +327,17 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 			);
 		}
 
-		const status =
-			error instanceof HttpError || error instanceof SvelteKitError ? error.status : 500;
+		const transformed = await handle_error_and_jsonify(event, state, options, error);
 
 		return json(
 			/** @type {RemoteFunctionResponse} */ ({
 				type: 'error',
-				error: await handle_error_and_jsonify(event, state, options, error),
-				status
+				error: transformed
 			}),
 			{
 				// By setting a non-200 during prerendering we fail the prerender process (unless handleHttpError handles it).
 				// Errors at runtime will be passed to the client and are handled there
-				status: state.prerendering ? status : undefined,
+				status: state.prerendering ? transformed.status : undefined,
 				headers: {
 					'cache-control': 'private, no-store'
 				}
@@ -359,20 +358,17 @@ export async function collect_remote_data(data, event, state, options) {
 	/**
 	 *
 	 * @param {unknown} error
-	 * @returns {Promise<[status: number, error: App.Error]>}
+	 * @returns {Promise<App.Error>}
 	 */
-	async function convert_error(error) {
-		const status =
-			error instanceof HttpError || error instanceof SvelteKitError ? error.status : 500;
-
-		return [status, await handle_error_and_jsonify(event, state, options, error)];
+	function convert_error(error) {
+		return handle_error_and_jsonify(event, state, options, error);
 	}
 
 	/** @type {Promise<any>[]} */
 	const promises = [];
 
 	if (state.remote.explicit) {
-		for (const [remote_key, { internals, promise }] of state.remote.explicit) {
+		for (const [remote_key, { internals, fn }] of state.remote.explicit) {
 			// there were explicit refreshes/reconnects (via `refresh()`/`set()`/`reconnect()`),
 			// so the client should apply these single-flight updates instead of calling `invalidateAll()`
 			data.r = true;
@@ -381,18 +377,27 @@ export async function collect_remote_data(data, event, state, options) {
 				internals.type === 'query_live' ? 'l' : internals.type[0]
 			);
 
-			await promise.then(
-				(v) => {
-					((data[type] ??= {})[remote_key] ??= {}).v = v;
-				},
-				async (e) => {
-					if (e instanceof Redirect) {
-						// already handled elsewhere
-						return;
-					}
+			// `fn` is deferred until now so the query runs after any state mutations
+			// in the command/form body. If the query was re-awaited in the meantime,
+			// `fn` returns the existing (fresh) cache entry rather than re-running.
+			// Kick off the query immediately and collect the promise so that multiple
+			// explicit refreshes run concurrently rather than serially.
+			const promise = fn();
 
-					((data[type] ??= {})[remote_key] ??= {}).e = await convert_error(e);
-				}
+			promises.push(
+				promise.then(
+					(v) => {
+						((data[type] ??= {})[remote_key] ??= {}).v = v;
+					},
+					async (e) => {
+						if (e instanceof Redirect) {
+							// already handled elsewhere
+							return;
+						}
+
+						((data[type] ??= {})[remote_key] ??= {}).e = await convert_error(e);
+					}
+				)
 			);
 		}
 	}
@@ -519,6 +524,7 @@ async function handle_remote_form_post_internal(event, state, manifest, id) {
 		});
 		return {
 			type: 'error',
+			// We're lying a bit with the types here; this will be transformed into a proper App.Error object later
 			error: new SvelteKitError(
 				405,
 				'Method Not Allowed',
@@ -565,6 +571,7 @@ async function handle_remote_form_post_internal(event, state, manifest, id) {
 
 		return {
 			type: 'error',
+			// @ts-expect-error We're lying a bit with the types here; this will be transformed into a proper App.Error object later
 			error: check_incorrect_fail_use(err)
 		};
 	}

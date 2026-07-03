@@ -141,7 +141,7 @@ You can use validators to make values optional, or transform them (such as turni
 
 ### Static variables
 
-If a variable is configured with `static: true`, it will be inlined into your application code, enabling optimisations like dead-code elimination:
+By default, variables are dynamic. If a variable is configured with `static: true`, it will be inlined into your application code, enabling optimisations like dead-code elimination:
 
 ```ts
 /// file: src/env.ts

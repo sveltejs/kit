@@ -310,7 +310,7 @@ export type RemoteFunctionDataNode = {
 	/** value */
 	v?: any;
 	/** error */
-	e?: [status: number, error: any];
+	e?: App.Error;
 };
 
 export type RemoteFunctionData = {
@@ -391,10 +391,6 @@ export interface ServerDataSkippedNode {
 export interface ServerErrorNode {
 	type: 'error';
 	error: App.Error;
-	/**
-	 * Only set for HttpErrors.
-	 */
-	status?: number;
 }
 
 export interface ServerMetadataRoute {
@@ -505,6 +501,7 @@ export interface SSROptions {
 	hash_routing: boolean;
 	hooks: ServerHooks;
 	link_header_preload: ValidatedConfig['kit']['output']['linkHeaderPreload'];
+	paths_origin: string | undefined;
 	root: SSRComponent['default'];
 	service_worker: boolean;
 	service_worker_options: RegistrationOptions;
@@ -730,7 +727,7 @@ export interface RequestState {
 			string,
 			{
 				internals: RemoteInternals;
-				promise: Promise<any>;
+				fn: () => Promise<any>;
 			}
 		>;
 		/** Instances created via `myForm.for(...)` */

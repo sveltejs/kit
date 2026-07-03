@@ -576,7 +576,8 @@ test.describe('Errors', () => {
 
 			expect(res.status()).toBe(401);
 			expect(await res.json()).toEqual({
-				message: 'You shall not pass'
+				message: 'You shall not pass',
+				status: 401
 			});
 		}
 	});
@@ -610,7 +611,8 @@ test.describe('Errors', () => {
 			error: {
 				message: process.env.DEV
 					? 'POST method not allowed. No form actions exist for the page at /errors/missing-actions (405 Method Not Allowed)'
-					: 'POST method not allowed. No form actions exist for this page (405 Method Not Allowed)'
+					: 'POST method not allowed. No form actions exist for this page (405 Method Not Allowed)',
+				status: 405
 			}
 		});
 	});
@@ -641,7 +643,8 @@ test.describe('Errors', () => {
 			expect(error.stack).toBe(undefined);
 			expect(res.status()).toBe(500);
 			expect(error).toEqual({
-				message: 'Error in handle (500 Internal Error)'
+				message: 'Error in handle (500 Internal Error)',
+				status: 500
 			});
 		}
 	});
@@ -672,7 +675,8 @@ test.describe('Errors', () => {
 			expect(error.stack).toBe(undefined);
 			expect(res.status()).toBe(500);
 			expect(error).toEqual({
-				message: 'Expected error in handle'
+				message: 'Expected error in handle',
+				status: 500
 			});
 		}
 	});
@@ -802,8 +806,23 @@ test.describe('Shadowed pages', () => {
 			}
 		});
 
-		expect(response.status()).toBe(200);
-		expect(await response.json()).toEqual({ data: '-1', type: 'success', status: 204 });
+		expect(response.status()).toBe(204);
+		expect(await response.text()).toBe('');
+	});
+
+	test('Action fail() returns matching HTTP status code', async ({ baseURL, request }) => {
+		const response = await request.post('/actions/form-errors', {
+			form: {},
+			headers: {
+				accept: 'application/json',
+				origin: new URL(baseURL).origin
+			}
+		});
+
+		expect(response.status()).toBe(400);
+		const body = await response.json();
+		expect(body.type).toBe('failure');
+		expect(body.status).toBe(400);
 	});
 });
 
@@ -867,7 +886,7 @@ test.describe('setHeaders', () => {
 });
 
 test.describe('cookies', () => {
-	test('cookie.serialize created correct cookie header string', async ({ page }) => {
+	test('cookie.stringifySetCookie created correct cookie header string', async ({ page }) => {
 		const response = await page.goto('/cookies/serialize');
 		const cookies = response ? await response.headerValue('set-cookie') : '';
 
