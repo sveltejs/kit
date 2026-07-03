@@ -89,7 +89,7 @@ async function prerender({ out, manifest_path, metadata, verbose, root, vite_con
 
 	const svelte_config = extract_svelte_config(vite_config);
 
-	const prerender_origin = svelte_config.paths.origin || 'http://sveltekit-prerender';
+	const prerender_origin = svelte_config.kit.paths.origin || 'http://sveltekit-prerender';
 
 	if (svelte_config.kit.router.type === 'hash') {
 		const fallback = await generate_fallback({
