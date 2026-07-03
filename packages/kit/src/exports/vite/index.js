@@ -54,10 +54,13 @@ import {
 import { import_peer } from '../../utils/import.js';
 import { compact } from '../../utils/array.js';
 import { should_ignore, has_children } from './static_analysis/utils.js';
-import { process_config, split_config } from '../../core/config/index.js';
+import { process_config, split_config, validate_config } from '../../core/config/index.js';
 import { treeshake_prerendered_remotes } from './build/remote.js';
 
-/** @type {string} */
+/**
+ * Populated after Vite plugins' `config` hooks run
+ * @type {string}
+ */
 let root;
 
 /** @type {import('./types.js').EnforcedConfig} */
@@ -162,7 +165,7 @@ export async function sveltekit(config) {
 	// any options passed to the plugin that SvelteKit doesn't use itself are
 	// forwarded to vite-plugin-svelte, which does its own validation
 	const split = split_config(config ?? {});
-	const svelte_config = process_config(split.svelte_config, { cwd });
+	const svelte_config = validate_config(split.svelte_config);
 
 	if (Array.isArray(svelte_config.preprocess)) {
 		svelte_config.preprocess.push(warning_preprocessor);
@@ -197,7 +200,7 @@ export async function sveltekit(config) {
 	}
 
 	return [
-		plugin_svelte_config(),
+		plugin_root(),
 		...vite_plugin_svelte.svelte(inline_vps_config),
 		...kit({
 			svelte_config
@@ -213,7 +216,7 @@ function resolve_root(vite_config) {
 /**
  * @return {Plugin}
  */
-function plugin_svelte_config() {
+function plugin_root() {
 	return {
 		name: 'vite-plugin-sveltekit-resolve-svelte-config',
 		// make sure it runs first
@@ -223,9 +226,8 @@ function plugin_svelte_config() {
 			handler(config) {
 				root = resolve_root(config);
 
-				// TODO: mjs mts?
 				const config_file = ['svelte.config.js', 'svelte.config.ts'].find((file) =>
-					fs.existsSync(`${root}/${file}`)
+					fs.existsSync(path.join(root, file))
 				);
 				if (config_file) {
 					throw new Error(
@@ -255,7 +257,7 @@ function plugin_svelte_config() {
  * - https://rolldown.rs/apis/plugin-api#output-generation-hooks
  *
  * @param {object} opts
- * @param {import('types').ValidatedConfig} opts.svelte_config options are only resolved after the Vite `config` hook runs
+ * @param {import('types').ValidatedConfig} opts.svelte_config
  * @return {Plugin[]}
  */
 function kit({ svelte_config }) {
@@ -291,7 +293,7 @@ function kit({ svelte_config }) {
 	let initial_config;
 
 	/** @type {string | null} */
-	let service_worker_entry_file = resolve_entry(svelte_config.kit.files.serviceWorker);
+	let service_worker_entry_file;
 	/** @type {import('node:path').ParsedPath} */
 	let parsed_service_worker;
 
@@ -335,7 +337,8 @@ function kit({ svelte_config }) {
 				initial_config = config;
 				is_build = config_env.command === 'build';
 
-				({ kit } = svelte_config);
+				kit = process_config(svelte_config, root).kit;
+
 				out_dir = posixify(kit.outDir);
 				out = `${out_dir}/output`;
 
@@ -1022,8 +1025,8 @@ function kit({ svelte_config }) {
 			return new_config;
 		},
 
-		// the serviceWorker environment only applies during build because Vite currently
-		// only supports the default client environment during development
+		// our serviceWorker environment only exists when building because Vite only
+		// supports the default client environment during development (for now)
 		applyToEnvironment(environment) {
 			return environment.name === 'serviceWorker';
 		},
@@ -1150,18 +1153,12 @@ function kit({ svelte_config }) {
 					`Cannot import ${stripped} into service-worker code. Only the modules $service-worker and $app/env/public are available in service workers.`
 				);
 			}
-		}
-	};
-
-	/** @type {Plugin} */
-	const plugin_service_worker_env = {
-		name: 'vite-plugin-sveltekit-service-worker-env',
+		},
 
 		transform: {
-			filter: {
-				id: service_worker_entry_file || '<skip>'
-			},
-			handler(code) {
+			handler(code, id) {
+				if (id !== service_worker_entry_file) return;
+
 				// prepend the service worker with an import that configures
 				// `env`, in case `$app/env/public` is imported. In production
 				// this is required: dynamic public env vars aren't known at
@@ -1854,7 +1851,6 @@ function kit({ svelte_config }) {
 			plugin_remote,
 			plugin_virtual_modules,
 			process.env.TEST !== 'true' ? plugin_guard : undefined,
-			service_worker_entry_file ? plugin_service_worker_env : undefined,
 			plugin_service_worker,
 			plugin_compile,
 			plugin_adapter

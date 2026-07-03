@@ -598,7 +598,7 @@ export interface Uses {
 	search_params: Set<string>;
 }
 
-export type ValidatedConfig = Config & {
+export type ValidatedConfig = Omit<Config, 'kit'> & {
 	kit: ValidatedKitConfig;
 	extensions: string[];
 };

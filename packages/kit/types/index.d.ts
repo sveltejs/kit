@@ -2900,7 +2900,7 @@ declare module '@sveltejs/kit' {
 		leaf: [has_server_load: boolean, node_id: number];
 	}
 
-	type ValidatedConfig = Config & {
+	type ValidatedConfig = Omit<Config, 'kit'> & {
 		kit: ValidatedKitConfig;
 		extensions: string[];
 	};
