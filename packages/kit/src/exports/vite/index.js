@@ -1451,6 +1451,19 @@ function kit({ svelte_config }) {
 			return preview(vite, vite_config, svelte_config);
 		},
 
+		// allows us to treeshake the `node:async_hooks` import from client builds
+		// to avoid the Vite externalised for browser warning but keep it for server
+		// builds where it's needed
+		transform: {
+			filter: {
+				id: path.join(import.meta.dirname, '..', 'internal', 'event.js')
+			},
+			handler(code, _id, opt) {
+				if (!opt?.ssr) return;
+				return code.replace('/*@__PURE__*/', '');
+			}
+		},
+
 		renderChunk(code, chunk) {
 			if (code.includes('__SVELTEKIT_TRACK__')) {
 				return {
