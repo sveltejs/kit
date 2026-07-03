@@ -4,6 +4,7 @@ import './ambient.js';
 declare global {
 	const ENV_PREFIX: string;
 	const PRECOMPRESS: boolean;
+	const ORIGIN: string | undefined;
 }
 
 interface AdapterOptions {
@@ -30,7 +31,6 @@ interface AdapterOptions {
 	 * ```sh
 	 * MY_CUSTOM_HOST=127.0.0.1 \
 	 * MY_CUSTOM_PORT=4000 \
-	 * MY_CUSTOM_ORIGIN=https://my.site \
 	 * node build
 	 * ```
 	 */

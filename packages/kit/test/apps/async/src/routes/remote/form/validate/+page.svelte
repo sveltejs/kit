@@ -11,7 +11,12 @@
 	let error = $state(false);
 </script>
 
-<form id="my-form" {...my_form.preflight(schema)} oninput={() => my_form.validate()}>
+<form
+	id="my-form"
+	{...my_form.preflight(schema)}
+	oninput={() => my_form.validate()}
+	onfocusout={() => my_form.validate()}
+>
 	{#each my_form.fields.foo.issues() as issue}
 		<p>{issue.message}</p>
 	{/each}
@@ -34,17 +39,13 @@
 		submit (imperative validation)
 	</button>
 </form>
-<button id="trigger-validate" onclick={() => my_form.validate({ includeUntouched: true })}>
+<button id="trigger-validate" onclick={() => my_form.validate({ all: true })}>
 	trigger validation
 </button>
 
 <form id="issue-path-form" {...issue_path_form}>
 	<input {...issue_path_form.fields.nested.value.as('text')} />
-	<button
-		type="button"
-		id="validate"
-		onclick={() => issue_path_form.validate({ includeUntouched: true })}
-	>
+	<button type="button" id="validate" onclick={() => issue_path_form.validate({ all: true })}>
 		Validate
 	</button>
 	<pre id="allIssues">{JSON.stringify(issue_path_form.fields.allIssues())}</pre>

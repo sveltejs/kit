@@ -18,5 +18,5 @@
 </script>
 
 <h1>mounted: {browser ? mounted : 0}</h1>
-<button on:click={() => goto('/double-mount')}>click me</button>
+<button onclick={() => goto('/double-mount')}>click me</button>
 <span hidden>PLACEHOLDER:0</span>

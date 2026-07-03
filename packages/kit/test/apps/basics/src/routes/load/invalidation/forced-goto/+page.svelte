@@ -9,14 +9,14 @@
 
 <button
 	class="invalidateall"
-	on:click={() => {
+	onclick={() => {
 		window.promise = invalidateAll();
 	}}>invalidate</button
 >
 
 <button
 	class="goto"
-	on:click={() => {
+	onclick={() => {
 		window.promise = goto('/load/invalidation/forced-goto?test', { invalidateAll: true });
 	}}>goto</button
 >

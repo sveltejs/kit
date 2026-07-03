@@ -16,9 +16,11 @@ const config = {
 	plugins: [
 		sveltekit({
 			adapter: adapter(),
+			paths: {
+				origin: 'http://prerender.origin'
+			},
 			prerender: {
 				handleHttpError: 'warn',
-				origin: 'http://prerender.origin',
 				handleMissingId: ({ id }) => {
 					writeFileSync('./missing_ids/index.jsonl', JSON.stringify(id) + ',', 'utf-8');
 				}

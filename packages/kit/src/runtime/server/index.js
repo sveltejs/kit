@@ -120,7 +120,7 @@ export class Server {
 						module.handleValidationError ||
 						(({ issues }) => {
 							console.error('Remote function schema validation failed:', issues);
-							return { message: 'Bad Request' };
+							return { message: 'Bad Request', status: 400 };
 						}),
 					reroute: module.reroute || noop,
 					transport: module.transport || {}

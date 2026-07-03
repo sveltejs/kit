@@ -12,7 +12,7 @@
 <p data-source="base">{data.paths.base}</p>
 <p data-source="assets">{data.paths.assets}</p>
 
-<button on:click={() => (n += 1)}>clicks: {n}</button>
+<button onclick={() => (n += 1)}>clicks: {n}</button>
 
 {#if n === 1}
 	<h2>button has been clicked 1 time</h2>

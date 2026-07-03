@@ -5,7 +5,7 @@
 </script>
 
 <button
-	on:click={async () => {
+	onclick={async () => {
 		try {
 			await goto('/this-route-does-not-exist');
 		} catch (e) {

@@ -1,7 +1,7 @@
 <script>
 	import { page } from '$app/state';
 
-	let { data } = $props();
+	let { data, children } = $props();
 </script>
 
 <ul>
@@ -14,4 +14,4 @@
 <p data-test-id="pathname-store">{page.url.pathname}</p>
 <p data-test-id="pathname-data">{data.pathname}</p>
 
-<slot />
+{@render children()}

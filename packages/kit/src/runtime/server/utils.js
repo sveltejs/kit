@@ -75,8 +75,8 @@ export function static_error_page(options, status, message) {
  */
 export async function handle_fatal_error(event, state, options, error) {
 	error = error instanceof HttpError ? error : coalesce_to_error(error);
-	const status = get_status(error);
 	const body = await handle_error_and_jsonify(event, state, options, error);
+	const status = body.status;
 
 	// ideally we'd use sec-fetch-dest instead, but Safari — quelle surprise — doesn't support it
 	const type = negotiate(event.request.headers.get('accept') || 'text/html', [
@@ -113,11 +113,11 @@ export async function handle_error_and_jsonify(event, state, options, error) {
 	const status = get_status(error);
 	const message = get_message(error);
 
-	return (
-		(await with_request_store({ event, state }, () =>
-			options.hooks.handleError({ error, event, status, message })
-		)) ?? { message }
-	);
+	const body = (await with_request_store({ event, state }, () =>
+		options.hooks.handleError({ error, event, status, message })
+	)) ?? { message };
+
+	return { ...body, status: get_status(body, error) };
 }
 
 /**

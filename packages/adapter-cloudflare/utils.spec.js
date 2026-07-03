@@ -234,6 +234,7 @@ describe('_routes.json', () => {
 						paths: {
 							base: '/base-path',
 							assets: '',
+							origin: 'http://localhost',
 							relative: true
 						},
 						alias: {},
@@ -312,6 +313,7 @@ describe('_routes.json', () => {
 						paths: {
 							base: '/base-path',
 							assets: '',
+							origin: 'http://localhost',
 							relative: true
 						},
 						alias: {},
