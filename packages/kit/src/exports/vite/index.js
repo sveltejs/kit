@@ -943,7 +943,7 @@ function kit({ svelte_config }) {
 						return create_service_worker_module(svelte_config);
 
 					case sveltekit_env:
-						return create_sveltekit_env(explicit_env_config, env, explicit_env_entry);
+						return create_sveltekit_env(explicit_env_config, env, explicit_env_entry, !is_build);
 
 					case sveltekit_env_public_client:
 						return create_sveltekit_env_public(

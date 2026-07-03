@@ -96,7 +96,7 @@ export default defineConfig({
 		sveltekit({
 			adapter: adapter(),
 			paths: {
-				origin: /** @type {`https://${string}`} */ (process.env.ORIGIN)
+				origin: process.env.ORIGIN
 			}
 		})
 	]
