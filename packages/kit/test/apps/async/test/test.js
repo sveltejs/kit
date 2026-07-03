@@ -81,6 +81,40 @@ test.describe('remote functions', () => {
 		expect(location).toBe('/remote/query-redirect/redirected');
 	});
 
+	test('query redirect does not cache undefined — re-fetches after invalidation', async ({
+		page
+	}) => {
+		// Regression for https://github.com/sveltejs/kit/issues/16192 — when a query
+		// throws a redirect, the `undefined` result must not be cached. Otherwise,
+		// after the redirect condition is resolved (e.g. re-authentication), the
+		// query would return the stale `undefined` instead of re-fetching.
+		await page.goto('/remote/query-redirect-cached');
+		await expect(page.locator('#query-data')).toHaveText('unauthenticated');
+
+		// log in — query re-fetches via invalidateAll and shows 'authenticated'
+		await page.click('#login');
+		await expect(page.locator('#query-data')).toHaveText('authenticated');
+
+		// navigate to the protected page — query succeeds (SSR)
+		await page.goto('/remote/query-redirect-cached/protected');
+		await expect(page.locator('#query-data')).toHaveText('authenticated');
+
+		// log out + invalidateAll — query re-runs on the client and redirects
+		await page.click('#logout');
+		await expect(page.locator('#redirected')).toHaveText('redirected');
+
+		// after the redirect, the query should have re-fetched (not returned
+		// cached undefined). The layout persists, so the cache entry is alive.
+		await expect(page.locator('#query-data')).toHaveText('unauthenticated');
+
+		// log back in and navigate to the protected page — query should re-fetch
+		// and return 'authenticated', not the stale cached undefined
+		await page.click('#login-from-redirected');
+		await expect(page.locator('#query-data')).toHaveText('authenticated');
+		await page.click('a[href="/remote/query-redirect-cached/protected"]');
+		await expect(page.locator('#query-data')).toHaveText('authenticated');
+	});
+
 	test('non-exported queries do not clobber each other', async ({ page }) => {
 		await page.goto('/remote/query-non-exported');
 

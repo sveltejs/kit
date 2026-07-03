@@ -29,8 +29,10 @@ export function query(id) {
 			const result = await remote_request(url, { headers: get_remote_request_headers() });
 
 			if (result.redirect) {
-				// Use internal version to allow redirects to external URLs
-				await _goto(result.redirect, {}, 0);
+				// Use internal version to allow redirects to external URLs.
+				// `invalidateAll` ensures the cache is reset so the query re-fetches
+				// on the next visit, rather than returning the cached `undefined`.
+				await _goto(result.redirect, { invalidateAll: true }, 0);
 			}
 		});
 	};
