@@ -334,7 +334,6 @@ function kit({ svelte_config }) {
 				is_build = config_env.command === 'build';
 
 				({ kit } = process_config(svelte_config, root));
-
 				out_dir = posixify(kit.outDir);
 				out = `${out_dir}/output`;
 
