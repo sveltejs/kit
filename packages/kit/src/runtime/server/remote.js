@@ -368,7 +368,7 @@ export async function collect_remote_data(data, event, state, options) {
 	const promises = [];
 
 	if (state.remote.explicit) {
-		for (const [remote_key, { internals, promise }] of state.remote.explicit) {
+		for (const [remote_key, { internals, fn }] of state.remote.explicit) {
 			// there were explicit refreshes/reconnects (via `refresh()`/`set()`/`reconnect()`),
 			// so the client should apply these single-flight updates instead of calling `invalidateAll()`
 			data.r = true;
@@ -376,6 +376,11 @@ export async function collect_remote_data(data, event, state, options) {
 			const type = /** @type {'p' | 'q' | 'l'} */ (
 				internals.type === 'query_live' ? 'l' : internals.type[0]
 			);
+
+			// `fn` is deferred until now so the query runs after any state mutations
+			// in the command/form body. If the query was re-awaited in the meantime,
+			// `fn` returns the existing (fresh) cache entry rather than re-running.
+			const promise = fn();
 
 			await promise.then(
 				(v) => {

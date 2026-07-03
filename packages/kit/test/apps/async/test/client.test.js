@@ -200,6 +200,36 @@ test.describe('remote function mutations', () => {
 		expect(request_count).toBe(1);
 	});
 
+	test('command refresh before mutation defers the query until after the mutation', async ({
+		page
+	}) => {
+		await page.goto('/remote');
+		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
+
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		await page.click('#multiply-server-refresh-before-mutation-btn');
+		await expect(page.locator('#command-result')).toHaveText('12');
+		await expect(page.locator('#count-result')).toHaveText('12 / 12 (false)');
+		await page.waitForTimeout(100); // allow all requests to finish (in case there are query refreshes which shouldn't happen)
+		expect(request_count).toBe(1);
+	});
+
+	test('command refresh then re-await uses the fresh cache entry', async ({ page }) => {
+		await page.goto('/remote');
+		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
+
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		await page.click('#multiply-server-refresh-then-reawait-btn');
+		await expect(page.locator('#command-result')).toHaveText('13');
+		await expect(page.locator('#count-result')).toHaveText('13 / 13 (false)');
+		await page.waitForTimeout(100); // allow all requests to finish (in case there are query refreshes which shouldn't happen)
+		expect(request_count).toBe(1);
+	});
+
 	test('command does server-initiated single flight mutation (set)', async ({ page }) => {
 		await page.goto('/remote');
 		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
