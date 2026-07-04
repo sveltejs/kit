@@ -1640,6 +1640,30 @@ function warn_overridden_config(config, resolved_config) {
 	}
 }
 
+const case_insensitive_path_keys = new Set([
+	'root',
+	'publicDir',
+	'build.outDir',
+	'build.lib.entry',
+	'build.rollupOptions.input'
+]);
+
+/**
+ * @param {any} value
+ * @param {string} keypath
+ */
+function normalize_config_value(value, keypath) {
+	if (typeof value !== 'string') {
+		return value;
+	}
+
+	const normalized = posixify(value);
+	const is_path_config =
+		case_insensitive_path_keys.has(keypath) || keypath.startsWith('resolve.alias.');
+
+	return process.platform === 'win32' && is_path_config ? normalized.toLowerCase() : normalized;
+}
+
 /**
  * @param {Record<string, any>} config
  * @param {Record<string, any>} resolved_config
@@ -1660,8 +1684,8 @@ function find_overridden_config(config, resolved_config, enforced_config, path, 
 			if (enforced === true) {
 				// Normalize path separators before comparing to avoid false positives on Windows,
 				// where config values like `root` may use backslashes while SvelteKit uses forward slashes.
-				const a = typeof config[key] === 'string' ? posixify(config[key]) : config[key];
-				const b = typeof resolved === 'string' ? posixify(resolved) : resolved;
+				const a = normalize_config_value(config[key], path + key);
+				const b = normalize_config_value(resolved, path + key);
 				if (a !== b) {
 					out.push(path + key);
 				}
