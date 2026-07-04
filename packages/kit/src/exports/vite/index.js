@@ -323,10 +323,6 @@ function kit({ svelte_config }) {
 			options: svelte_config
 		},
 
-		applyToEnvironment(environment) {
-			return environment.name !== 'serviceWorker';
-		},
-
 		/**
 		 * Build the SvelteKit-provided Vite config to be merged with the user's vite.config.js file.
 		 * @see https://vitejs.dev/guide/api-plugin.html#config
@@ -521,10 +517,6 @@ function kit({ svelte_config }) {
 	const plugin_virtual_modules = {
 		name: 'vite-plugin-sveltekit-virtual-modules',
 
-		applyToEnvironment(environment) {
-			return environment.name !== 'serviceWorker';
-		},
-
 		async configResolved(config) {
 			explicit_env_entry = resolve_explicit_env_entry(kit);
 			explicit_env_config = await sync.env(kit, explicit_env_entry, config.root, config.mode);
@@ -558,6 +550,10 @@ function kit({ svelte_config }) {
 					server.ws.send({ type: 'full-reload' });
 				}
 			});
+		},
+
+		applyToEnvironment(environment) {
+			return environment.name !== 'serviceWorker';
 		},
 
 		resolveId: {
@@ -807,7 +803,7 @@ function kit({ svelte_config }) {
 		name: 'vite-plugin-sveltekit-remote',
 
 		applyToEnvironment(environment) {
-			return environment.name !== 'serviceWorker';
+			return svelte_config.kit.experimental.remoteFunctions && environment.name !== 'serviceWorker';
 		},
 
 		// prevent other plugins from resolving our remote virtual module
@@ -825,10 +821,6 @@ function kit({ svelte_config }) {
 				id: prefixRegex('\0sveltekit-remote:')
 			},
 			handler(id) {
-				if (!kit.experimental.remoteFunctions) {
-					return null;
-				}
-
 				// On-the-fly generated entry point for remote file just forwards the original module
 				// We're not using manualChunks because it can cause problems with circular dependencies
 				// (e.g. https://github.com/sveltejs/kit/issues/14679) and module ordering in general
@@ -841,18 +833,10 @@ function kit({ svelte_config }) {
 		},
 
 		configureServer(_dev_server) {
-			if (!kit.experimental.remoteFunctions) {
-				return;
-			}
-
 			dev_server = _dev_server;
 		},
 
 		async transform(code, id) {
-			if (!kit.experimental.remoteFunctions) {
-				return;
-			}
-
 			const normalized = normalize_id(id, normalized_lib, normalized_cwd);
 			if (!svelte_config.kit.moduleExtensions.some((ext) => normalized.endsWith(`.remote${ext}`))) {
 				return;
@@ -1185,10 +1169,6 @@ function kit({ svelte_config }) {
 	const plugin_compile = {
 		name: 'vite-plugin-sveltekit-compile',
 
-		applyToEnvironment(environment) {
-			return environment.name !== 'serviceWorker';
-		},
-
 		/**
 		 * Build the SvelteKit-provided Vite config to be merged with the user's vite.config.js file.
 		 * @see https://vitejs.dev/guide/api-plugin.html#config
@@ -1453,6 +1433,10 @@ function kit({ svelte_config }) {
 		 */
 		configurePreviewServer(vite) {
 			return preview(vite, vite_config, svelte_config);
+		},
+
+		applyToEnvironment(environment) {
+			return environment.name !== 'serviceWorker';
 		},
 
 		renderChunk(code, chunk) {
