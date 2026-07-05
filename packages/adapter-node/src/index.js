@@ -1,5 +1,6 @@
 import http from 'node:http';
 import fs from 'node:fs';
+import cluster from 'node:cluster';
 import process from 'node:process';
 import { handler } from './handler.js';
 import { env, timeout_env } from './env.js';
@@ -61,7 +62,11 @@ if (socket_activation) {
 } else {
 	if (path) {
 		try {
-			if (fs.statSync(path).size === 0) {
+			// In Node cluster mode only the primary process binds the socket;
+			// workers inherit the listening handle and must not touch the file.
+			// A live unix socket also reports size 0, so deleting from a worker
+			// removes the primary's socket and severs all incoming connections.
+			if (!cluster.isWorker && fs.statSync(path).size === 0) {
 				await rm(path);
 			}
 		} catch {
