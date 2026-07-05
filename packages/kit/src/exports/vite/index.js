@@ -981,6 +981,8 @@ function kit({ svelte_config }) {
 
 			if (!service_worker_entry_file) return;
 
+			service_worker_entry_file = posixify(service_worker_entry_file);
+
 			if (kit.paths.assets) {
 				throw new Error('Cannot use service worker alongside config.paths.assets');
 			}
@@ -1162,6 +1164,7 @@ function kit({ svelte_config }) {
 			return !!service_worker_entry_file && environment.config.consumer === 'client';
 		},
 		transform(code, id) {
+			console.log({ service_worker_entry_file, id });
 			if (id !== service_worker_entry_file) return;
 
 			// prepend the service worker with an import that configures
