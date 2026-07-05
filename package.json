@@ -24,10 +24,10 @@
 		"sync-all": "node scripts/sync-all.js"
 	},
 	"devDependencies": {
+		"@changesets/changelog-github": "catalog:",
 		"@changesets/cli": "catalog:",
 		"@playwright/test": "catalog:",
 		"@sveltejs/eslint-config": "catalog:",
-		"@svitejs/changesets-changelog-github-compact": "catalog:",
 		"eslint": "catalog:",
 		"prettier": "catalog:",
 		"prettier-plugin-svelte": "catalog:"
