@@ -1148,7 +1148,6 @@ function kit({ svelte_config }) {
 			return !!service_worker_entry_file && environment.config.consumer === 'client';
 		},
 		transform(code, id) {
-			console.log({ service_worker_entry_file, id });
 			if (id !== service_worker_entry_file) return;
 
 			// prepend the service worker with an import that configures
