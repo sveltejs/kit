@@ -31,11 +31,8 @@ function run_test(dir) {
 		cwd: root
 	});
 
-	console.log('write all types', dir);
 	write_all_types(initial, manifest, root);
-	console.log('write non ambient', dir);
 	write_non_ambient(initial.kit, manifest);
-	console.log('done', dir);
 }
 
 test('Creates correct $types', { timeout: 60000 }, () => {

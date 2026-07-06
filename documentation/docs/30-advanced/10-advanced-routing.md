@@ -105,7 +105,7 @@ export const params = defineParams({
 });
 ```
 
-When a schema is used, SvelteKit validates the parameter and uses the transformed output as the param value. If validation fails, the route does not match.
+If validation fails, the route does not match. If it succeeds, the param is typed with the output type of the schema, which must extend `string`, `boolean`, `number` (as in the example above) or `bigint`:
 
 ```js
 /// file: src/routes/items/[id=number]/+page.js
@@ -115,7 +115,7 @@ export function load({ params }) {
 }
 ```
 
-Matchers must return a `string`, `boolean`, `number` or `BigInt` value. That way `resolve` can require the correct type and easily stringify them.
+Transformations should be _symmetrical_ — if converting to a number, then calling `toString()` on that number should return the original string. This allows the [`resolve`]($app-paths#resolve) function to construct a pathname correctly:
 
 ```js
 import { resolve } from '$app/paths';
