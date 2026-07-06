@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 2.69.2
+
+### Patch Changes
+
+- fix: set `define` values on `globalThis` when running Vitest ([#16246](https://github.com/sveltejs/kit/pull/16246))
+
 ## 2.69.1
 ### Patch Changes
 
