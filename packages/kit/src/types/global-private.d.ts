@@ -37,6 +37,8 @@ declare global {
 	const __SVELTEKIT_PAYLOAD__: {
 		/** The basepath, usually relative to the current page */
 		base: string;
+		/** determinsitically computed from package name + config.appDir + config.base */
+		version?: string;
 		/** Path to externally-hosted assets */
 		assets?: string;
 		/** Public environment variables */

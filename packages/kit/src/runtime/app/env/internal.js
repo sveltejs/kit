@@ -1,4 +1,4 @@
-export const version = __SVELTEKIT_APP_VERSION__;
+export { version } from '#app/env/version';
 export let building = false;
 export let prerendering = false;
 

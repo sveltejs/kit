@@ -412,7 +412,10 @@ export async function render_response({
 
 		const blocks = [];
 
-		const properties = [`base: ${base_expression}`];
+		const properties = [
+			`base: ${base_expression}`,
+			`version: ${devalue.uneval(__SVELTEKIT_APP_VERSION__)}`
+		];
 
 		if (paths.assets) {
 			properties.push(`assets: ${s(paths.assets)}`);

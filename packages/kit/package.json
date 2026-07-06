@@ -98,6 +98,10 @@
 		"#app/env/public": {
 			"browser": "./src/runtime/app/env/public/client.js",
 			"default": "./src/runtime/app/env/public/server.js"
+		},
+		"#app/env/version": {
+			"browser": "./src/runtime/app/env/version/client.js",
+			"default": "./src/runtime/app/env/version/server.js"
 		}
 	},
 	"exports": {
