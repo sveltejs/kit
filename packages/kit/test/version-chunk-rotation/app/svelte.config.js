@@ -6,7 +6,7 @@ const config = {
 	kit: {
 		adapter: adapter(),
 		version: {
-			name: process.env.SK_VERSION || 'control'
+			name: process.env.SK_VERSION || Date.now().toString()
 		}
 	}
 };
