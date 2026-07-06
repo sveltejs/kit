@@ -31,6 +31,15 @@ function build(version) {
 	};
 }
 
+/**
+ * @param {ReturnType<typeof compare>} result
+ * @param {string} when
+ */
+function assert_bundle_unchanged(result, when) {
+	assert.equal(result.mutable.length, 0, `chunks mutated ${when}:\n${format_report(result)}`);
+	assert.equal(result.rotated.length, 0, `chunks rotated ${when}:\n${format_report(result)}`);
+}
+
 /** @type {ReturnType<typeof build>} */
 let control_a;
 /** @type {ReturnType<typeof build>} */
@@ -45,41 +54,18 @@ beforeAll(() => {
 }, timeout);
 
 test('the same version builds an identical client bundle', () => {
-	const result = compare(control_a.chunks, control_b.chunks);
-
-	assert.equal(
-		result.rotated.length,
-		0,
-		`build is nondeterministic at a fixed version — ${result.rotated.length} chunk(s) rotated:\n${format_report(result)}`
-	);
-	assert.equal(
-		result.mutable.length,
-		0,
-		`mutable chunks at a fixed version:\n${format_report(result)}`
-	);
+	assert_bundle_unchanged(compare(control_a.chunks, control_b.chunks), 'at a fixed version');
 });
 
 test('bumping kit.version.name rotates no client chunks', () => {
-	const result = compare(control_a.chunks, bumped.chunks);
-
-	assert.equal(
-		result.mutable.length,
-		0,
-		`chunks changed bytes under a stable filename (breaks immutable caching):\n${format_report(result)}`
-	);
-	assert.equal(
-		result.rotated.length,
-		0,
-		`a version bump rotated ${result.rotated.length} client chunk(s) with no app-code change (#12260):\n${format_report(result)}`
+	assert_bundle_unchanged(
+		compare(control_a.chunks, bumped.chunks),
+		'after a version bump with no app-code change'
 	);
 });
 
 test('the server-rendered payload carries the version of its own build', () => {
 	for (const { version, prerendered_page } of [control_a, bumped]) {
-		assert.include(
-			prerendered_page,
-			`version: "${version}"`,
-			`the payload of the "${version}" build should carry that version`
-		);
+		assert.include(prerendered_page, `version: "${version}"`);
 	}
 });

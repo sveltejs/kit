@@ -212,6 +212,12 @@ export async function sveltekit(config) {
 
 let secondary_build_started = false;
 
+/**
+ * config loads twice so we cache the value of the first load so client and server bundles read the same value
+ * @type {string | undefined}
+ */
+let resolved_version_name;
+
 /** @type {import('types').ManifestData} */
 let manifest_data;
 
@@ -298,6 +304,19 @@ async function kit({ svelte_config }) {
 				initial_config = config;
 				vite_config_env = config_env;
 				is_build = config_env.command === 'build';
+
+				if (is_build) {
+					if (resolved_version_name === undefined) {
+						resolved_version_name = kit.version.name;
+					} else if (kit.version.name !== resolved_version_name) {
+						console.warn(
+							`svelte.config.js computed a different kit.version.name on each load ` +
+								`("${resolved_version_name}" vs "${kit.version.name}"). Using the first value ` +
+								`for the whole build — make version.name deterministic to silence this warning.`
+						);
+					}
+					kit.version.name = resolved_version_name;
+				}
 
 				env = get_env(kit.env, vite_config_env.mode);
 

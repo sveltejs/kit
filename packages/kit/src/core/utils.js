@@ -25,6 +25,8 @@ import { hash } from '../utils/hash.js';
  * @returns {string}
  */
 export function payload_hash(kit) {
+	if (kit.embedded) return hash(kit.version.name);
+
 	const root = path.dirname(kit.outDir);
 
 	let name = '';
@@ -34,6 +36,8 @@ export function payload_hash(kit) {
 	} catch {
 		// TODO log error or similiar
 	}
+
+	if (!name) name = path.basename(root);
 
 	return hash(`${name}\n${kit.paths.base}\n${kit.appDir}`);
 }
