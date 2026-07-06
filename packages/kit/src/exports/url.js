@@ -2,7 +2,10 @@ import { DEV } from 'esm-env';
 // we use the export subpath to conditionally import the client/server `get_origin`
 // so that `node:async_hooks` isn't pulled into the client build
 import { get_origin } from '@sveltejs/kit/internal';
-import { matches_external_allowlist_entry, REDIRECT_BASE } from '../utils/url.js';
+import { matches_external_allowlist_entry } from '../utils/url.js';
+
+// See https://datatracker.ietf.org/doc/html/rfc2606 - no domains under the .invalid TLD can be registered
+const REDIRECT_BASE = 'https://sveltekit-redirect.invalid';
 
 /**
  * Whether a redirect location is absolute, i.e. not a root-relative or path-relative URL,

@@ -5,8 +5,6 @@ import { BROWSER, DEV } from 'esm-env';
  * @type {RegExp}
  */
 export const SCHEME = /^[a-z][a-z\d+\-.]*:/i;
-// See https://datatracker.ietf.org/doc/html/rfc2606 - no domains under the .invalid TLD can be registered
-export const REDIRECT_BASE = 'https://sveltekit-redirect.invalid';
 
 const internal = new URL('a://');
 
