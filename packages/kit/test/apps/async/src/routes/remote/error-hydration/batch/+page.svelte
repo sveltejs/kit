@@ -1,4 +1,5 @@
 <script>
+	import { isHttpError } from '@sveltejs/kit';
 	import { failing_batch } from '../data.remote';
 
 	const q = failing_batch('x');
@@ -17,4 +18,10 @@
 	{/snippet}
 </svelte:boundary>
 
-<div id="batch-error">{q.error ? `${q.error.status}: ${q.error.body?.message}` : 'none'}</div>
+<div id="batch-error">
+	{isHttpError(q.error)
+		? `${q.error.status}: ${q.error.body?.message}`
+		: q.error
+			? JSON.stringify(q.error)
+			: 'none'}
+</div>
