@@ -2378,12 +2378,14 @@ declare module '@sveltejs/kit' {
 		 */
 		public?: boolean;
 		/**
-		 * Whether the value is determined at build time or when the app runs.
-		 * - if `true`, the build time value is inlined into the bundle. This enables optimisations like dead-code elimination
-		 * - if `false`, the value is read from the environment when the app starts
-		 * @default false
+		 * When the variable's value is available, and therefore when it is validated.
+		 * - `'static'` — the value is inlined into the bundle at build time, enabling optimisations like dead-code elimination. It is validated at build time.
+		 * - `'dynamic'` — the value is read from the environment when the app starts. It is validated at both build time and run time.
+		 * - `'build'` — the value is only available during the build. It is validated at build time, but is not accessible from `$app/env/*` at run time.
+		 * - `'runtime'` — the value is only available when the app runs. It is validated at run time only, allowing the build to succeed even if the value is absent.
+		 * @default 'dynamic'
 		 */
-		static?: boolean;
+		availability?: 'static' | 'dynamic' | 'build' | 'runtime';
 		/**
 		 * A [Standard Schema](https://standardschema.dev/) validator that is applied to the value when the app starts.
 		 * The validator can output any value — not necessarily a string — but public, non-static values must be

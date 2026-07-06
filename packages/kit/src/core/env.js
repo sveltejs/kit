@@ -99,6 +99,7 @@ export async function load_explicit_env(kit, file, root, mode) {
 export function create_sveltekit_env(variables, env, entry, is_dev) {
 	const imports = entry
 		? [
+				`import { building } from '$app/env/internal';`,
 				`import { variables } from ${JSON.stringify(entry)};`,
 				`import { validate, handle_issues } from '@sveltejs/kit/internal/env';`
 			]
@@ -106,26 +107,34 @@ export function create_sveltekit_env(variables, env, entry, is_dev) {
 
 	const declarations = [];
 	const setters = [];
+	const runtime_setters = [];
 
 	/** @type {Record<string, StandardSchemaV1.Issue[]>} */
 	const issues = {};
 
 	for (const [name, config] of Object.entries(variables ?? {})) {
-		if (config?.static) {
-			if (config.public) {
+		const availability = config?.availability ?? 'dynamic';
+
+		if (availability === 'static') {
+			if (config?.public) {
 				const value = validate(variables ?? {}, env[name], name, issues);
 				declarations.push(`explicit_public_env.${name} = ${devalue.uneval(value)};`);
 			}
+		} else if (availability === 'build') {
+			// validate at build time, but don't export the value — it isn't available at run time
+			validate(variables ?? {}, env[name], name, issues);
 		} else {
-			setters.push(
+			const target = availability === 'runtime' ? runtime_setters : setters;
+
+			target.push(
 				`const ${name} = validate(variables, env.${name}, ${JSON.stringify(name)}, issues);`
 			);
 
 			if (config?.public) {
-				setters.push(`explicit_public_env.${name} = ${name};`);
-				setters.push(`rendered_env.${name} = ${name};`);
+				target.push(`explicit_public_env.${name} = ${name};`);
+				target.push(`rendered_env.${name} = ${name};`);
 			} else {
-				setters.push(`dynamic_private_env.${name} = ${name};`);
+				target.push(`dynamic_private_env.${name} = ${name};`);
 			}
 		}
 	}
@@ -146,6 +155,11 @@ export function create_sveltekit_env(variables, env, entry, is_dev) {
 			export function set_env(env) {
 				const issues = {};
 				${setters.join('\n')}
+				${
+					runtime_setters.length > 0
+						? `if (!building) {\n\t\t\t\t\t${runtime_setters.join('\n')}\n\t\t\t\t}`
+						: ''
+				}
 				handle_issues(issues);
 			}`
 	];
@@ -187,9 +201,17 @@ export function create_sveltekit_env_private(variables, env) {
 	for (const [name, config] of Object.entries(variables)) {
 		if (config.public) continue;
 
-		const value = config.static
-			? devalue.uneval(validate(variables, env[name], name, issues))
-			: `env.${name}`;
+		const availability = config.availability ?? 'dynamic';
+
+		if (availability === 'build') {
+			// validated in `create_sveltekit_env`; not exported at run time
+			continue;
+		}
+
+		const value =
+			availability === 'static'
+				? devalue.uneval(validate(variables, env[name], name, issues))
+				: `env.${name}`;
 
 		exports.push(`export const ${name} = ${value};\n`);
 	}
@@ -219,9 +241,14 @@ export function create_sveltekit_env_public(variables, env, prelude) {
 	for (const [name, config] of Object.entries(variables)) {
 		if (!config.public) continue;
 
-		const value = config.static
-			? devalue.uneval(validate(variables, env[name], name, issues))
-			: `env.${name}`;
+		const availability = config.availability ?? 'dynamic';
+
+		if (availability === 'build') continue;
+
+		const value =
+			availability === 'static'
+				? devalue.uneval(validate(variables, env[name], name, issues))
+				: `env.${name}`;
 
 		exports.push(`export const ${name} = ${value};\n`);
 	}
@@ -242,9 +269,11 @@ export function create_sveltekit_env_public(variables, env, prelude) {
  * @param {string} app_dir
  */
 export function create_sveltekit_env_service_worker(variables, env, global, base, app_dir) {
-	const has_dynamic_public_env = Object.values(variables ?? {}).some(
-		(config) => config.public && !config.static
-	);
+	const has_dynamic_public_env = Object.values(variables ?? {}).some((config) => {
+		if (!config.public) return false;
+		const availability = config.availability ?? 'dynamic';
+		return availability === 'dynamic' || availability === 'runtime';
+	});
 
 	if (!has_dynamic_public_env) {
 		return create_sveltekit_env_service_worker_dev(variables, env, global);
@@ -274,6 +303,7 @@ export function create_sveltekit_env_service_worker_dev(variables, env, global) 
 
 	for (const [name, config] of Object.entries(variables ?? {})) {
 		if (!config.public) continue;
+		if ((config.availability ?? 'dynamic') === 'build') continue;
 
 		const value = validate(variables ?? {}, env[name], name, issues);
 		properties.push(`${name}: ${devalue.uneval(value)}`);
@@ -308,6 +338,7 @@ function create_jsdoc(description) {
 export function create_explicit_env_types(variables, relative, type) {
 	const declarations = Object.entries(variables)
 		.filter(([_, config]) => !!config.public === (type === 'public'))
+		.filter(([_, config]) => (config.availability ?? 'dynamic') !== 'build')
 		.map(([name, config]) => {
 			const comment = config.description ? `${create_jsdoc(config.description)}\n` : '';
 			const type = config.schema

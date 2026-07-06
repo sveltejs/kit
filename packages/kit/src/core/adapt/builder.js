@@ -167,7 +167,10 @@ export function create_builder({
 			const issues = {};
 
 			for (const [name, config] of Object.entries(variables)) {
-				if (config.static || !config.public) continue;
+				const availability = config.availability ?? 'dynamic';
+				// only `dynamic` public vars are included in the prerendered env.js —
+				// `static` is inlined, `build` isn't exported, and `runtime` isn't available at build time
+				if (!config.public || availability !== 'dynamic') continue;
 				values[name] = validate(variables, env[name], name, issues);
 			}
 

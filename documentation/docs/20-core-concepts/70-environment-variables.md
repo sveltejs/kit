@@ -121,27 +121,32 @@ export const variables = defineEnvVars({
 });
 ```
 
-If a value is invalid, the app will fail to start (or build). To opt out of one or the other, use [`building`]($app-env#building) from `$app/env` along with a validator that accepts an optional value:
+If a value is invalid, the app will fail to start (or build). If the variable is only available at run time (for example a secret that isn't set during the build), use `availability: 'runtime'` so that it is only validated when the app starts:
 
 ```ts
 /// file: src/env.ts
 import { defineEnvVars } from '@sveltejs/kit/hooks';
-+++import { building } from '$app/env'+++
 import * as v from 'valibot';
 
 export const variables = defineEnvVars({
 	SECRET: {
-		// optional when building but required when starting the app
-		+++schema: building ? v.optional(v.string()) : v.string()+++
+		// required when the app starts, but not validated during the build
+		+++availability: 'runtime',+++
+		schema: v.string()
 	}
 });
 ```
 
 You can use validators to make values optional, or transform them (such as turning a string into a boolean, or parsing JSON) — see your validation library's documentation to learn how.
 
-### Static variables
+### Availability
 
-By default, variables are dynamic. If a variable is configured with `static: true`, it will be inlined into your application code, enabling optimisations like dead-code elimination:
+The `availability` property controls when a variable's value is available, and therefore when it is validated. It has four possible values:
+
+- `'dynamic'` (default) — the value is read from the environment when the app starts, and is also validated at build time. Use this when the value is the same at build time and run time.
+- `'static'` — the value is inlined into your application code at build time, enabling optimisations like dead-code elimination. It is validated at build time.
+- `'runtime'` — the value is only available when the app runs. It is validated at run time only, so the build will succeed even if the value is absent. Use this for secrets and other variables that aren't set during the build.
+- `'build'` — the value is only available during the build. It is validated at build time, but is not accessible from `$app/env/*` at run time. Use this for variables that only affect the build, such as feature flags that gate what gets compiled.
 
 ```ts
 /// file: src/env.ts
@@ -151,7 +156,7 @@ import * as v from 'valibot';
 export const variables = defineEnvVars({
 	SHOW_DEBUG_OVERLAY: {
 		public: true,
-		+++static: true,+++
+		+++availability: 'static',+++
 
 		// coerce to true/false
 		schema: v.pipe(
