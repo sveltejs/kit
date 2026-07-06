@@ -5,6 +5,38 @@ import { fileURLToPath } from 'node:url';
 import colors from 'kleur';
 import { posixify, to_fs } from '../utils/filesystem.js';
 import { noop } from '../utils/functions.js';
+import { hash } from '../utils/hash.js';
+
+/**
+ * Returns a deterministic identifier for the `globalThis.__sveltekit_${payload_hash}`
+ * payload global.
+ *
+ * It must not be derived from `kit.version.name`: the name is inlined into
+ * content-hashed client chunks in `__SVELTEKIT_PAYLOAD__` via the
+ * `$env/dynamic/public` virtual module, so a version-derived identifier rotates the
+ * hashed filename of every chunk referencing it on each deploy (#12260).
+ *
+ * It must still distinguish SvelteKit apps from different projects embedded in the
+ * same document (#9576), so it is derived from the project's `package.json` name
+ * plus `paths.base` and `appDir` — all deterministic across repeated config loads
+ * within a build and across machines.
+ *
+ * @param {import('types').ValidatedKitConfig} kit
+ * @returns {string}
+ */
+export function payload_hash(kit) {
+	const root = path.dirname(kit.outDir);
+
+	let name = '';
+
+	try {
+		name = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf-8')).name ?? '';
+	} catch {
+		// TODO log error or similiar
+	}
+
+	return hash(`${name}\n${kit.paths.base}\n${kit.appDir}`);
+}
 
 /**
  * Resolved path of the `runtime` directory

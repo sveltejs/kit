@@ -21,7 +21,7 @@ import {
 } from '../../core/env.js';
 import * as sync from '../../core/sync/sync.js';
 import { create_assets } from '../../core/sync/create_manifest_data/index.js';
-import { runtime_directory, logger } from '../../core/utils.js';
+import { runtime_directory, logger, payload_hash } from '../../core/utils.js';
 import { load_svelte_config, process_config, split_config } from '../../core/config/index.js';
 import { generate_manifest } from '../../core/generate_manifest/index.js';
 import { build_server_nodes } from './build/build_server.js';
@@ -244,7 +244,7 @@ async function kit({ svelte_config }) {
 	/** The base directory for the Vite builds */
 	const out = `${out_dir}/output`;
 
-	const version_hash = hash(kit.version.name);
+	const version_hash = payload_hash(kit);
 
 	/** @type {ResolvedConfig} */
 	let vite_config;

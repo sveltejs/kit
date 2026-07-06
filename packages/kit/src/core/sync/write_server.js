@@ -1,10 +1,9 @@
 import path from 'node:path';
 import process from 'node:process';
-import { hash } from '../../utils/hash.js';
 import { posixify, resolve_entry } from '../../utils/filesystem.js';
 import { s } from '../../utils/misc.js';
 import { load_error_page, load_template } from '../config/index.js';
-import { runtime_directory } from '../utils.js';
+import { runtime_directory, payload_hash } from '../utils.js';
 import { isSvelte5Plus, write_if_changed } from './utils.js';
 import colors from 'kleur';
 import { escape_html } from '../../utils/escape.js';
@@ -63,7 +62,7 @@ export const options = {
 			)},
 		error
 	},
-	version_hash: ${s(hash(config.kit.version.name))}
+	version_hash: ${s(payload_hash(config.kit))}
 };
 
 export async function get_hooks() {
