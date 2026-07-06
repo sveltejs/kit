@@ -1,5 +1,4 @@
 /** @import { Span } from '@opentelemetry/api' */
-import { try_get_request_store } from './event.js';
 
 /**
  * @template {{ tracing: { enabled: boolean, root: Span, current: Span } }} T
@@ -15,10 +14,6 @@ export function merge_tracing(event_like, current) {
 			current
 		}
 	};
-}
-
-export function get_origin() {
-	return try_get_request_store()?.event.url.origin;
 }
 
 export {
