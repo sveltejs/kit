@@ -2792,23 +2792,23 @@ declare module '@sveltejs/kit' {
 		} | null;
 	}
 
+	// TODO get rid of this in favor us using just import('svelte').Component<any, any, any>
 	interface SSRComponent {
 		default: {
 			render(
 				props: Record<string, any>,
 				opts: { context: Map<any, any>; csp?: { nonce?: string; hash?: boolean } }
-			): {
-				html: string;
+			): Promise<{
+				body: string;
 				head: string;
 				css: {
 					code: string;
 					map: any; // TODO
 				};
-				/** Until we require all Svelte versions that support hashes, this might not be defined */
-				hashes?: {
+				hashes: {
 					script: Array<`sha256-${string}`>;
 				};
-			};
+			}>;
 		};
 	}
 
