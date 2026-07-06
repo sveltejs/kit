@@ -97,6 +97,10 @@
 		"#app/env/public": {
 			"browser": "./src/runtime/app/env/public/client.js",
 			"default": "./src/runtime/app/env/public/server.js"
+		},
+		"#internal": {
+			"browser": "./src/exports/internal/client.js",
+			"default": "./src/exports/internal/server/index.js"
 		}
 	},
 	"exports": {
@@ -107,8 +111,7 @@
 		},
 		"./internal": {
 			"types": "./types/index.d.ts",
-			"browser": "./src/exports/internal/client.js",
-			"import": "./src/exports/internal/server.js"
+			"import": "./src/exports/internal/index.js"
 		},
 		"./internal/env": {
 			"types": "./types/index.d.ts",

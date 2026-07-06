@@ -1,7 +1,7 @@
 import { DEV } from 'esm-env';
 // we use the export subpath to conditionally import the client/server `get_origin`
 // so that `node:async_hooks` isn't pulled into the client build
-import { get_origin } from '@sveltejs/kit/internal';
+import { get_origin } from '#internal';
 import { matches_external_allowlist_entry } from '../utils/url.js';
 
 // See https://datatracker.ietf.org/doc/html/rfc2606 - no domains under the .invalid TLD can be registered
