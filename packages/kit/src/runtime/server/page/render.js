@@ -251,7 +251,8 @@ export async function render_response({
 				// TODO 3.0 remove `base` and `assets` in favour of `resolve(...)` and `asset(...)`
 				paths.reset();
 
-				const { head, body, css, hashes } = await rendered;
+				// @ts-expect-error the legacy `render` API only returns html still, but the new API uses body
+				const { head, html: body, css, hashes } = await rendered;
 
 				if (hashes) {
 					csp.add_script_hashes(hashes.script);
@@ -289,6 +290,7 @@ export async function render_response({
 
 	const head = new Head(rendered.head);
 	let body = rendered.body;
+	console.log('wtttf', body);
 
 	/** @param {string} path */
 	const prefixed = (path) => {
