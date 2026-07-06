@@ -860,7 +860,7 @@ function kit({ svelte_config }) {
 					'\n\n' +
 					dedent`
 					import * as $$_self_$$ from './${path.basename(id)}';
-					import { init_remote_functions as $$_init_$$ } from '@sveltejs/kit/internal';
+					import { init_remote_functions as $$_init_$$ } from '@sveltejs/kit/internal/server';
 
 					${dev_server ? 'await Promise.resolve()' : ''}
 

@@ -1,6 +1,5 @@
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
-
-import { HttpError, Redirect, ActionFailure, ValidationError } from './internal/index.js';
+import { HttpError, Redirect, ActionFailure, ValidationError } from './internal/shared.js';
 import { BROWSER, DEV } from 'esm-env';
 import {
 	add_data_suffix,
@@ -11,7 +10,7 @@ import {
 	strip_resolution_suffix
 } from '../runtime/pathname.js';
 import { text_encoder } from '../runtime/utils.js';
-import { validate_redirect_location } from '../utils/url.js';
+import { validate_redirect_location } from './url.js';
 
 export { VERSION } from '../version.js';
 

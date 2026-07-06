@@ -1,4 +1,3 @@
-/** @import { ReadableSpan } from '@opentelemetry/sdk-trace-node' */
 import process from 'node:process';
 import { expect } from '@playwright/test';
 import { test } from '../../../utils.js';
