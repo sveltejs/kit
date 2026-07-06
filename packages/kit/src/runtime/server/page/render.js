@@ -290,7 +290,6 @@ export async function render_response({
 
 	const head = new Head(rendered.head);
 	let body = rendered.body;
-	console.log('wtttf', body);
 
 	/** @param {string} path */
 	const prefixed = (path) => {
