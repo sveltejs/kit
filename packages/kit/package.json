@@ -107,7 +107,8 @@
 		},
 		"./internal": {
 			"types": "./types/index.d.ts",
-			"import": "./src/exports/internal/index.js"
+			"browser": "./src/exports/internal/client.js",
+			"import": "./src/exports/internal/server.js"
 		},
 		"./internal/env": {
 			"types": "./types/index.d.ts",
@@ -118,7 +119,7 @@
 		},
 		"./internal/server": {
 			"types": "./types/index.d.ts",
-			"import": "./src/exports/internal/server.js"
+			"import": "./src/exports/internal/server/index.js"
 		},
 		"./node": {
 			"types": "./types/index.d.ts",

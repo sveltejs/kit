@@ -30,7 +30,7 @@ export function coalesce_to_error(err) {
  * @param {unknown} error
  */
 export function normalize_error(error) {
-	return /** @type {import('../exports/internal/index.js').Redirect | HttpError | SvelteKitError | Error} */ (
+	return /** @type {import('../exports/internal/shared.js').Redirect | HttpError | SvelteKitError | Error} */ (
 		error
 	);
 }

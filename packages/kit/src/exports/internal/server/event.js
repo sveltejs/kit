@@ -1,8 +1,7 @@
 /** @import { RequestEvent } from '@sveltejs/kit' */
 /** @import { RequestStore } from 'types' */
 /** @import { AsyncLocalStorage } from 'node:async_hooks' */
-
-import { IN_WEBCONTAINER } from '../../runtime/server/constants.js';
+import { IN_WEBCONTAINER } from '../../../runtime/server/constants.js';
 
 /** @type {RequestStore | null} */
 let sync_store = null;
@@ -10,9 +9,7 @@ let sync_store = null;
 /** @type {AsyncLocalStorage<RequestStore | null> | null} */
 let als;
 
-// mark the import as pure so we can treeshake it for the client build but
-// we remove it in a Vite `transform` hook for server builds
-/*@__PURE__*/ import('node:async_hooks')
+import('node:async_hooks')
 	.then((hooks) => (als = new hooks.AsyncLocalStorage()))
 	.catch(() => {
 		// can't use AsyncLocalStorage, but can still call getRequestEvent synchronously.

@@ -876,7 +876,7 @@ function kit({ svelte_config }) {
 					'\n\n' +
 					dedent`
 					import * as $$_self_$$ from './${path.basename(id)}';
-					import { init_remote_functions as $$_init_$$ } from '@sveltejs/kit/internal';
+					import { init_remote_functions as $$_init_$$ } from '@sveltejs/kit/internal/server';
 
 					${dev_server ? 'await Promise.resolve()' : ''}
 
@@ -1449,19 +1449,6 @@ function kit({ svelte_config }) {
 		 */
 		configurePreviewServer(vite) {
 			return preview(vite, vite_config, svelte_config);
-		},
-
-		// allows us to treeshake the `node:async_hooks` import from client builds
-		// to avoid the Vite externalised for browser warning but keep it for server
-		// builds where it's needed
-		transform: {
-			filter: {
-				id: path.join(import.meta.dirname, '..', 'internal', 'event.js')
-			},
-			handler(code, _id, opt) {
-				if (!opt?.ssr) return;
-				return code.replace('/*@__PURE__*/', '');
-			}
 		},
 
 		renderChunk(code, chunk) {

@@ -87,5 +87,3 @@ export class ValidationError extends Error {
 		this.issues = issues;
 	}
 }
-
-export { init_remote_functions } from './remote-functions.js';

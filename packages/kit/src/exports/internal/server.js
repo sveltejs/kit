@@ -1,22 +1,7 @@
-/**
- * @template {{ tracing: { enabled: boolean, root: import('@opentelemetry/api').Span, current: import('@opentelemetry/api').Span } }} T
- * @param {T} event_like
- * @param {import('@opentelemetry/api').Span} current
- * @returns {T}
- */
-export function merge_tracing(event_like, current) {
-	return {
-		...event_like,
-		tracing: {
-			...event_like.tracing,
-			current
-		}
-	};
+import { try_get_request_store } from './server/event.js';
+
+export function get_origin() {
+	return try_get_request_store()?.event.url.origin;
 }
 
-export {
-	with_request_store,
-	getRequestEvent,
-	get_request_store,
-	try_get_request_store
-} from './event.js';
+export * from './shared.js';
