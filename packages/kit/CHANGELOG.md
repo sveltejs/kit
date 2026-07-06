@@ -114,6 +114,15 @@
 
 - feat: allow queries to refresh other queries ([#16012](https://github.com/sveltejs/kit/pull/16012))
 
+## 2.69.1
+### Patch Changes
+
+
+- fix: prevent prototype pollution when deleting file inputs ([#16218](https://github.com/sveltejs/kit/pull/16218))
+
+
+- fix: prevent unhandled promise rejection ([#16219](https://github.com/sveltejs/kit/pull/16219))
+
 ## 2.69.0
 
 ### Minor Changes
