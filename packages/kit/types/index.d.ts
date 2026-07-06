@@ -700,7 +700,7 @@ declare module '@sveltejs/kit' {
 			 * @default undefined
 			 * @since 3.0
 			 */
-			origin?: `http://${string}` | `https://${string}`;
+			origin?: string;
 			/**
 			 * Whether to use relative asset paths.
 			 *
@@ -2749,7 +2749,7 @@ declare module '@sveltejs/kit' {
 		// Recursive implementation of TypeScript's Required utility type.
 		// Will recursively continue until it reaches a primitive or Function
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
-		[K in keyof T]-?: Extract<T[K], Function> extends never // If it does not have a Function type
+		[K in keyof T]-?: Extract<T[K], Function | (`${string}:` & {})> extends never // If it does not have a Function type
 			? RecursiveRequired<T[K]> // recursively continue through.
 			: T[K]; // Use the exact type for everything else
 	};
@@ -2900,7 +2900,7 @@ declare module '@sveltejs/kit' {
 		leaf: [has_server_load: boolean, node_id: number];
 	}
 
-	type ValidatedConfig = Config & {
+	type ValidatedConfig = Omit<Config, 'kit'> & {
 		kit: ValidatedKitConfig;
 		extensions: string[];
 	};
@@ -3487,8 +3487,8 @@ declare module '$app/paths' {
 }
 
 declare module '$app/server' {
-	import type { RequestEvent, RemoteCommand, RemoteForm, RemoteFormInput, InvalidField, RemotePrerenderFunction, RemoteQueryFunction, RemoteLiveQueryFunction, QueryRequestedResult, LiveQueryRequestedResult } from '@sveltejs/kit';
 	import type { StandardSchemaV1 } from '@standard-schema/spec';
+	import type { RequestEvent, RemoteCommand, RemoteForm, RemoteFormInput, InvalidField, RemotePrerenderFunction, RemoteQueryFunction, RemoteLiveQueryFunction, QueryRequestedResult, LiveQueryRequestedResult } from '@sveltejs/kit';
 	/**
 	 * Read the contents of an imported asset from the filesystem
 	 * @example

@@ -1,7 +1,7 @@
 /** @import { RemoteChunk } from 'types' */
 import fs from 'node:fs';
 import path from 'node:path';
-import * as mime from 'mrmime';
+import { lookup as mime_lookup } from '../../utils/mime.js';
 import { s } from '../../utils/misc.js';
 import { get_mime_lookup } from '../utils.js';
 import { resolve_symlinks } from '../../exports/vite/build/utils.js';
@@ -93,7 +93,7 @@ export function generate_manifest({
 		files[file] = fs.statSync(path.resolve(build_data.out_dir, 'server', file)).size;
 
 		const ext = path.extname(file);
-		mime_types[ext] ??= mime.lookup(ext) || '';
+		mime_types[ext] ??= mime_lookup(ext) || '';
 	}
 
 	// prettier-ignore

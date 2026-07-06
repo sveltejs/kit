@@ -294,7 +294,6 @@ test('fails if paths.origin is not a valid origin', () => {
 		validate_config({
 			kit: {
 				paths: {
-					// @ts-expect-error
 					origin: 'not an origin'
 				}
 			}
@@ -309,7 +308,6 @@ test('fails if paths.origin uses an unsupported protocol', () => {
 				paths: {
 					// ftp:// is a parseable URL whose origin equals the input, so without
 					// a protocol check it would slip through validation.
-					// @ts-expect-error
 					origin: 'ftp://example.com'
 				}
 			}
@@ -350,7 +348,6 @@ test('fails if paths.origin is the empty string', () => {
 		validate_config({
 			kit: {
 				paths: {
-					// @ts-expect-error - empty string is no longer a valid value
 					origin: ''
 				}
 			}
