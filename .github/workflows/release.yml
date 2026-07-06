@@ -38,13 +38,13 @@ jobs:
 
       - name: Create Release Pull Request or Publish to npm
         id: changesets
-        uses: changesets/action@a45c4d594aa4e2c509dc14a9f2b3b67ba3780d0d # v1.9.0
+        uses: changesets/action@c47fa68bd43bb8ae0bae7e558622593deebf5955 # v2.0.0-next.3
         with:
           # This expects you to have a script called release which does a build for your packages and calls changeset publish
-          publish: pnpm changeset:release
-          version: pnpm changeset:version
+          publish-script: pnpm changeset:release
+          version-script: pnpm changeset:version
+          github-token: ${{ secrets.GITHUB_TOKEN }}
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_CONFIG_PROVENANCE: true
 
       # TODO alert discord
