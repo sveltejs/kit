@@ -482,6 +482,23 @@ async function kit({ svelte_config }) {
 					];
 				}
 
+				// Vite's `define` is a compile-time text replacement, but Vitest strips
+				// user `define` from the server config and reinstalls the values only as
+				// `globalThis` properties inside test workers, so anything
+				// that runs outside of a test will freak out over
+				// them not being defined
+				if (process.env.VITEST === 'true') {
+					for (const key in new_config.define) {
+						const value = new_config.define[key];
+						try {
+							/** @type {Record<string, any>} */ (globalThis)[key] = JSON.parse(value);
+						} catch {
+							// `kit_global` isn't JSON, so don't try to parse it. We may one day
+							// need to define it in Vitest somehow but for now, ignore it
+						}
+					}
+				}
+
 				warn_overridden_config(config, new_config);
 
 				return new_config;
