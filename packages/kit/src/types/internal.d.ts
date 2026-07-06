@@ -417,23 +417,23 @@ export interface ServerMetadata {
 	remotes: Map<string, Map<string, { type: RemoteInternals['type']; dynamic: boolean }>>;
 }
 
+// TODO get rid of this in favor us using just import('svelte').Component<any, any, any>
 export interface SSRComponent {
 	default: {
 		render(
 			props: Record<string, any>,
 			opts: { context: Map<any, any>; csp?: { nonce?: string; hash?: boolean } }
-		): {
-			html: string;
+		): Promise<{
+			body: string;
 			head: string;
 			css: {
 				code: string;
 				map: any; // TODO
 			};
-			/** Until we require all Svelte versions that support hashes, this might not be defined */
-			hashes?: {
+			hashes: {
 				script: Array<`sha256-${string}`>;
 			};
-		};
+		}>;
 	};
 }
 
@@ -493,7 +493,6 @@ export type SSRNodeLoader = () => Promise<SSRNode>;
 
 export interface SSROptions {
 	app_template_contains_nonce: boolean;
-	async: boolean;
 	csp: ValidatedConfig['kit']['csp'];
 	csrf_check_origin: boolean;
 	csrf_trusted_origins: string[];
