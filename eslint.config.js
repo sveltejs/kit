@@ -77,6 +77,7 @@ export default [
 			'packages/kit/test/apps/**/*',
 			'packages/kit/test/build-errors/**/*',
 			'packages/kit/test/prerendering/**/*',
+			'packages/kit/test/version-chunk-rotation/**/*',
 			'packages/test-redirect-importer/index.js',
 			'packages/adapter-netlify/test/preview.js'
 		]

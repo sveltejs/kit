@@ -25,6 +25,8 @@ packages:
   - packages/kit/test/prerendering/*
   - packages/kit/test/build-errors/**
   - packages/kit/test/build-errors/apps/*
+  - packages/kit/test/version-chunk-rotation
+  - packages/kit/test/version-chunk-rotation/app
   - '!.test-tmp/**'
   - playgrounds/*
 allowBuilds:

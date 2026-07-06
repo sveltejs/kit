@@ -1,0 +1,13 @@
+{
+	"name": "test-version-chunk-rotation",
+	"private": true,
+	"version": "0.0.0",
+	"type": "module",
+	"scripts": {
+		"test": "vitest run",
+		"test:cross-platform:build": "vitest run"
+	},
+	"devDependencies": {
+		"vitest": "catalog:"
+	}
+}
