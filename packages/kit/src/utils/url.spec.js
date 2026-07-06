@@ -4,7 +4,7 @@ import {
 	normalize_path,
 	make_trackable,
 	disable_search,
-	matches_external_allowlist_entry,
+	matches_external_allowlist_entry
 } from './url.js';
 
 describe('resolve', (test) => {
