@@ -838,6 +838,12 @@ test.describe('Static files', () => {
 
 		response = await request.get('/favicon.ico');
 		expect(response.status()).toBe(200);
+
+		// .ico files should be served with the correct Content-Type
+		// https://github.com/sveltejs/kit/issues/13753
+		response = await request.get('/test.ico');
+		expect(response.status()).toBe(200);
+		expect(response.headers()['content-type']).toBe('image/x-icon');
 	});
 
 	test('does not use Vite to serve contents of static directory', async ({ request }) => {
