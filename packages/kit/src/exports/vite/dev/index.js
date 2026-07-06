@@ -84,16 +84,25 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root) {
 				vite.config.logger.error(msg, { error: err });
 			}
 
-			vite.ws.send({
-				type: 'error',
-				err: /** @type {import('vite').ErrorPayload['err']} */ ({
-					...err,
-					// these properties are non-enumerable and will
-					// not be serialized unless we explicitly include them
-					message: err.message,
-					stack: err.stack ?? ''
-				})
-			});
+			setTimeout(
+				() => {
+					vite.ws.send({
+						type: 'error',
+						err: /** @type {import('vite').ErrorPayload['err']} */ ({
+							...err,
+							// these properties are non-enumerable and will
+							// not be serialized unless we explicitly include them
+							message: err.message,
+							stack: err.stack ?? ''
+						})
+					});
+				},
+				// In case the error is sent right on startup, before the browser even has rendered, we would send the web socket message into the void,
+				// or it would flicker for unknown reasons. Waiting a second ensure the browser has time to initialize and then show the message properly.
+				// This isn't a perfect solution because on repeated refreshes the websocket already has listeners (from the old browser instance) but
+				// it's the best we can do for now.
+				vite.ws.clients.size > 0 ? 0 : 1000
+			);
 
 			throw err;
 		}

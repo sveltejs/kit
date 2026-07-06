@@ -759,7 +759,6 @@ function kit({ svelte_config }) {
 				const chain = [normalized];
 
 				let current = normalized;
-				let includes_remote_file = false;
 
 				while (true) {
 					const importers = import_map.get(current);
@@ -770,10 +769,6 @@ function kit({ svelte_config }) {
 
 					chain.push((current = candidates[0]));
 
-					includes_remote_file ||= svelte_config.kit.moduleExtensions.some((ext) => {
-						return current.endsWith(`.remote${ext}`);
-					});
-
 					if (entrypoints.has(current)) {
 						const pyramid = chain
 							.reverse()
@@ -781,14 +776,6 @@ function kit({ svelte_config }) {
 								return `${' '.repeat(i + 1)}${id}`;
 							})
 							.join(' imports\n');
-
-						if (includes_remote_file) {
-							error_for_missing_config(
-								'remote functions',
-								'kit.experimental.remoteFunctions',
-								'true'
-							);
-						}
 
 						let message = `Cannot import ${normalized} into code that runs in the browser, as this could leak sensitive information.`;
 						message += `\n\n${pyramid}`;
@@ -954,6 +941,26 @@ function kit({ svelte_config }) {
 			return {
 				code: result
 			};
+		}
+	};
+
+	/** @type {Plugin} */
+	const plugin_remote_guard = {
+		name: 'vite-plugin-sveltekit-remote-guard',
+
+		applyToEnvironment() {
+			return !svelte_config.kit.experimental.remoteFunctions;
+		},
+
+		transform: {
+			filter: {
+				id: new RegExp(
+					`.remote(${svelte_config.kit.moduleExtensions.join('|')})$`.replaceAll('.', '\\.')
+				)
+			},
+			handler() {
+				error_for_missing_config('remote functions', 'experimental.remoteFunctions', 'true');
+			}
 		}
 	};
 
@@ -1260,7 +1267,7 @@ function kit({ svelte_config }) {
 						if (!kit.experimental.instrumentation.server) {
 							error_for_missing_config(
 								'`instrumentation.server.js`',
-								'kit.experimental.instrumentation.server',
+								'experimental.instrumentation.server',
 								'true'
 							);
 						}
@@ -1855,6 +1862,7 @@ function kit({ svelte_config }) {
 		[
 			svelte_config.kit.adapter?.vite?.plugins,
 			plugin_setup,
+			plugin_remote_guard,
 			plugin_remote,
 			plugin_virtual_modules,
 			process.env.TEST !== 'true' ? plugin_guard : undefined,
