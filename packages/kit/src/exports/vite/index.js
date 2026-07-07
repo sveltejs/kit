@@ -464,7 +464,7 @@ function kit({ svelte_config }) {
 					__SVELTEKIT_PATHS_RELATIVE__: s(kit.paths.relative),
 					__SVELTEKIT_CLIENT_ROUTING__: s(kit.router.resolution === 'client'),
 					__SVELTEKIT_HASH_ROUTING__: s(kit.router.type === 'hash'),
-					__SVELTEKIT_SERVER_TRACING_ENABLED__: s(kit.experimental.tracing.server),
+					__SVELTEKIT_SERVER_TRACING_ENABLED__: s(kit.tracing.server),
 					__SVELTEKIT_EXPERIMENTAL_USE_TRANSFORM_ERROR__: s(kit.experimental.handleRenderingErrors),
 					__SVELTEKIT_ROOT__: s(root),
 					__SVELTEKIT_DEV__: s(!is_build)
@@ -783,11 +783,7 @@ function kit({ svelte_config }) {
 							.join(' imports\n');
 
 						if (includes_remote_file) {
-							error_for_missing_config(
-								'remote functions',
-								'kit.experimental.remoteFunctions',
-								'true'
-							);
+							error_for_missing_config('remote functions', 'experimental.remoteFunctions', 'true');
 						}
 
 						let message = `Cannot import ${normalized} into code that runs in the browser, as this could leak sensitive information.`;
@@ -1256,13 +1252,6 @@ function kit({ svelte_config }) {
 					if (server_instrumentation) {
 						if (kit.adapter && !kit.adapter.supports?.instrumentation?.()) {
 							throw new Error(`${server_instrumentation} is unsupported in ${kit.adapter.name}.`);
-						}
-						if (!kit.experimental.instrumentation.server) {
-							error_for_missing_config(
-								'`instrumentation.server.js`',
-								'kit.experimental.instrumentation.server',
-								'true'
-							);
 						}
 						server_input['instrumentation.server'] = server_instrumentation;
 					}
