@@ -115,13 +115,13 @@ export function create_sveltekit_env(variables, env, entry, is_dev) {
 	for (const [name, config] of Object.entries(variables ?? {})) {
 		const availability = config?.availability ?? 'dynamic';
 
-		if (availability === 'static') {
+		if (availability === 'inline') {
 			if (config?.public) {
 				const value = validate(variables ?? {}, env[name], name, issues);
 				declarations.push(`explicit_public_env.${name} = ${devalue.uneval(value)};`);
 			}
-		} else if (availability === 'build') {
-			// validate at build time, but don't export the value — it isn't available at run time
+		} else if (availability === 'buildtime') {
+			// validate at build time, but the value is `undefined` at run time
 			validate(variables ?? {}, env[name], name, issues);
 		} else {
 			const target = availability === 'runtime' ? runtime_setters : setters;
@@ -203,15 +203,12 @@ export function create_sveltekit_env_private(variables, env) {
 
 		const availability = config.availability ?? 'dynamic';
 
-		if (availability === 'build') {
-			// validated in `create_sveltekit_env`; not exported at run time
-			continue;
-		}
-
 		const value =
-			availability === 'static'
+			availability === 'inline'
 				? devalue.uneval(validate(variables, env[name], name, issues))
-				: `env.${name}`;
+				: availability === 'buildtime'
+					? 'undefined'
+					: `env.${name}`;
 
 		exports.push(`export const ${name} = ${value};\n`);
 	}
@@ -243,12 +240,12 @@ export function create_sveltekit_env_public(variables, env, prelude) {
 
 		const availability = config.availability ?? 'dynamic';
 
-		if (availability === 'build') continue;
-
 		const value =
-			availability === 'static'
+			availability === 'inline'
 				? devalue.uneval(validate(variables, env[name], name, issues))
-				: `env.${name}`;
+				: availability === 'buildtime'
+					? 'undefined'
+					: `env.${name}`;
 
 		exports.push(`export const ${name} = ${value};\n`);
 	}
@@ -303,7 +300,7 @@ export function create_sveltekit_env_service_worker_dev(variables, env, global) 
 
 	for (const [name, config] of Object.entries(variables ?? {})) {
 		if (!config.public) continue;
-		if ((config.availability ?? 'dynamic') === 'build') continue;
+		if ((config.availability ?? 'dynamic') === 'buildtime') continue;
 
 		const value = validate(variables ?? {}, env[name], name, issues);
 		properties.push(`${name}: ${devalue.uneval(value)}`);
@@ -338,12 +335,15 @@ function create_jsdoc(description) {
 export function create_explicit_env_types(variables, relative, type) {
 	const declarations = Object.entries(variables)
 		.filter(([_, config]) => !!config.public === (type === 'public'))
-		.filter(([_, config]) => (config.availability ?? 'dynamic') !== 'build')
 		.map(([name, config]) => {
 			const comment = config.description ? `${create_jsdoc(config.description)}\n` : '';
+			const availability = config.availability ?? 'dynamic';
+			const maybe_undefined = availability === 'buildtime' || availability === 'runtime';
 			const type = config.schema
-				? `import('@sveltejs/kit/internal/types').StandardSchemaV1.InferOutput<typeof import('${relative}').variables.${name}.schema>`
-				: 'string';
+				? `import('@sveltejs/kit/internal/types').StandardSchemaV1.InferOutput<typeof import('${relative}').variables.${name}.schema>${maybe_undefined ? ' | undefined' : ''}`
+				: maybe_undefined
+					? 'string | undefined'
+					: 'string';
 			return `${comment}export const ${name}: ${type};`;
 		});
 

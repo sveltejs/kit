@@ -1656,7 +1656,7 @@ function kit({ svelte_config }) {
 				);
 
 				// the app only depends on runtime public env if it imports `$app/env/public`
-				// *and* at least one public env var is read at run time (i.e. not static or build)
+				// *and* at least one public env var is read at run time (i.e. not inline or buildtime)
 				const uses_env_dynamic_public =
 					has_explicit_dynamic_public_env &&
 					client_chunks.some(

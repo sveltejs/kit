@@ -144,9 +144,9 @@ You can use validators to make values optional, or transform them (such as turni
 The `availability` property controls when a variable's value is available, and therefore when it is validated. It has four possible values:
 
 - `'dynamic'` (default) — the value is read from the environment when the app starts, and is also validated at build time. Use this when the value is the same at build time and run time.
-- `'static'` — the value is inlined into your application code at build time, enabling optimisations like dead-code elimination. It is validated at build time.
-- `'runtime'` — the value is only available when the app runs. It is validated at run time only, so the build will succeed even if the value is absent. Use this for secrets and other variables that aren't set during the build.
-- `'build'` — the value is only available during the build. It is validated at build time, but is not accessible from `$app/env/*` at run time. Use this for variables that only affect the build, such as feature flags that gate what gets compiled.
+- `'inline'` — the value is inlined into your application code at build time, enabling optimisations like dead-code elimination. It is validated at build time.
+- `'runtime'` — the value is only available when the app runs. It is validated at runtime only, so the build will succeed even if the value is absent. The value is `undefined` during the build, so the variable is typed as `T | undefined`.
+- `'buildtime'` — the value is only available during the build. It is validated at buildtime, but is `undefined` at runtime. The variable is typed as `T | undefined`.
 
 ```ts
 /// file: src/env.ts
@@ -156,7 +156,7 @@ import * as v from 'valibot';
 export const variables = defineEnvVars({
 	SHOW_DEBUG_OVERLAY: {
 		public: true,
-		+++availability: 'static',+++
+		+++availability: 'inline',+++
 
 		// coerce to true/false
 		schema: v.pipe(
@@ -167,7 +167,7 @@ export const variables = defineEnvVars({
 });
 ```
 
-Because this variable is `static`, the `<DebugOverlay>` component shown here will be excluded from the JavaScript bundle unless `SHOW_DEBUG_OVERLAY` is truthy:
+Because this variable is `inline`, the `<DebugOverlay>` component shown here will be excluded from the JavaScript bundle unless `SHOW_DEBUG_OVERLAY` is truthy:
 
 ```svelte
 <script>
