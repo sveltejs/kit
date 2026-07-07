@@ -16,6 +16,7 @@ export const page = new (class Page {
 })();
 
 export const navigating = new (class Navigating {
+	/** @type {import('@sveltejs/kit').Navigation | null} */
 	current = $state.raw(null);
 })();
 
