@@ -51,9 +51,6 @@ This throws an exception that SvelteKit catches, causing it to set the response 
 <h1>{page.error.message}</h1>
 ```
 
-> [!LEGACY]
-> `$app/state` was added in SvelteKit 2.12. If you're using an earlier version or are using Svelte 4, use `$app/stores` instead.
-
 You can add extra properties to the error object if needed...
 
 ```js
