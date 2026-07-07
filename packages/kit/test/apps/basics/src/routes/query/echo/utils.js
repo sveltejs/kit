@@ -1,6 +1,6 @@
 /** @typedef {Record<string, string[]>} Query */
 
-/** @param {Pick<URLSearchParams, 'forEach'>} query */
+/** @param {import("@sveltejs/kit").ReadonlyURLSearchParams} query */
 export function to_pojo(query) {
 	/** @type {Query}*/
 	const values = {};

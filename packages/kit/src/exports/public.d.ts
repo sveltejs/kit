@@ -1456,7 +1456,7 @@ export interface Page<
 	 */
 	url: Readonly<
 		Omit<URL, 'searchParams'> & { pathname: ResolvedPathname } & {
-			searchParams: Omit<URLSearchParams, 'set' | 'append' | 'delete' | 'sort'>;
+			searchParams: ReadonlyURLSearchParams;
 		}
 	>;
 	/**
@@ -1998,6 +1998,8 @@ export interface Snapshot<T = any> {
 	capture: () => T;
 	restore: (snapshot: T) => void;
 }
+
+export type ReadonlyURLSearchParams = Omit<URLSearchParams, 'set' | 'append' | 'delete' | 'sort'>;
 
 // If T is unknown or has an index signature, the types below will recurse indefinitely and create giant unions that TS can't handle
 type WillRecurseIndefinitely<T> = unknown extends T ? true : string extends keyof T ? true : false;
