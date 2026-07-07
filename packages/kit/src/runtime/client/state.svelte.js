@@ -20,7 +20,6 @@ export const navigating = new (class Navigating {
 	current = $state.raw(null);
 })();
 
-/** @type {{ current: boolean; check: () => Promise<boolean> }} */
 export const updated = new (class Updated {
 	current = $state.raw(false);
 	// eslint-disable-next-line @typescript-eslint/require-await
