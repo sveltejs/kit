@@ -92,15 +92,12 @@ export function write_root(manifest_data, config, output) {
 				let navigated = $state(false);
 				let title = $state(null);
 
-				let initialised = false;
-
 				afterNavigate(() => {
-					if (initialised) {
+					if (mounted) {
 						navigated = true;
 						title = document.title || 'untitled page';
 					} else {
 						mounted = true;
-						initialised = true;
 					}
 				});
 
