@@ -38,9 +38,9 @@
 		"check": "tsc",
 		"lint": "prettier --check .",
 		"format": "pnpm lint --write",
-		"test": "pnpm test:unit && pnpm test:integration",
 		"test:unit": "vitest run",
-		"test:integration": "pnpm build && pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test",
+		"test:build": "pnpm build && pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" build",
+		"test": "pnpm test:unit && pnpm test:build",
 		"prepublishOnly": "pnpm build"
 	},
 	"dependencies": {
@@ -49,8 +49,7 @@
 		"rolldown": "^1.1.2"
 	},
 	"devDependencies": {
-		"@netlify/dev": "catalog:",
-		"@netlify/edge-functions": "catalog:",
+		"@netlify/edge-functions": "^3.0.8",
 		"@sveltejs/kit": "workspace:^",
 		"@types/node": "catalog:",
 		"typescript": "catalog:",
