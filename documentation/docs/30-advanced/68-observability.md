@@ -13,9 +13,9 @@ Sometimes, you may need to observe how your application is behaving in order to 
 - [Form actions](form-actions)
 - [Remote functions](remote-functions)
 
-Just telling SvelteKit to emit spans won't get you far, though — you need to actually collect them somewhere to be able to view them. SvelteKit provides `src/instrumentation.server.ts` as a place to write your tracing setup and instrumentation code. It's guaranteed to be run prior to your application code being imported, providing your deployment platform supports it and your adapter is aware of it.
+Just telling SvelteKit to emit spans won't get you far, though — you need to actually collect them somewhere to be able to view them. SvelteKit provides `src/instrumentation.server.ts` as a place to write your tracing setup and instrumentation code. If this file exists, it is loaded before your application code (provided your deployment platform supports it and your adapter is aware of it).
 
-Both of these features are currently experimental, meaning they are likely to contain bugs and are subject to change without notice. You must opt in by adding the `experimental.tracing.server` and `experimental.instrumentation.server` option of the SvelteKit plugin in your `vite.config.js`:
+To enable SvelteKit's built-in span emission, set the `tracing.server` option of the SvelteKit plugin in your `vite.config.js` to `true`:
 
 ```js
 /// file: vite.config.js
@@ -25,14 +25,9 @@ import { defineConfig } from 'vite';
 export default defineConfig({
 	plugins: [
 		sveltekit({
-			experimental: {
-				+++tracing: {
-					server: true
-				},
-				instrumentation: {
-					server: true
-				}+++
-			}
+			+++tracing: {
+				server: true
+			}+++
 		})
 	]
 });
@@ -68,7 +63,7 @@ async function authenticate() {
 
 To view your first trace, you'll need to set up a local collector. We'll use [Jaeger](https://www.jaegertracing.io/docs/getting-started/) in this example, as they provide an easy-to-use quickstart command. Once your collector is running locally:
 
-- Turn on the experimental flags mentioned earlier in your `vite.config.js` file
+- Enable tracing as described earlier in your `vite.config.js` file, and create `src/instrumentation.server.js` (which SvelteKit will load automatically)
 - Use your package manager to install the dependencies you'll need:
   ```sh
   npm i @opentelemetry/sdk-node @opentelemetry/auto-instrumentations-node @opentelemetry/exporter-trace-otlp-proto import-in-the-middle

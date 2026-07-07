@@ -119,12 +119,14 @@ export const validate_kit_options = object({
 	}),
 
 	experimental: object({
-		tracing: object({
-			server: boolean(false)
-		}),
-		instrumentation: object({
-			server: boolean(false)
-		}),
+		tracing: removed(
+			(keypath) =>
+				`\`${keypath}\` has been removed. Server-side tracing is now configured via \`tracing.server\``
+		),
+		instrumentation: removed(
+			(keypath) =>
+				`\`${keypath}\` has been removed. \`src/instrumentation.server.js\` is now included in the build automatically when it exists; no opt-in is required`
+		),
 		remoteFunctions: boolean(false),
 		forkPreloads: boolean(false),
 		handleRenderingErrors: boolean(false)
@@ -328,6 +330,10 @@ export const validate_kit_options = object({
 		// it's an object since the type comes from the browser itself
 		options: validate(undefined, object({}, true)),
 		files: fun((filename) => !/\.DS_Store/.test(filename))
+	}),
+
+	tracing: object({
+		server: boolean(false)
 	}),
 
 	typescript: object({
