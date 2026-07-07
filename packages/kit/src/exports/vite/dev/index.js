@@ -84,25 +84,20 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root) {
 				vite.config.logger.error(msg, { error: err });
 			}
 
-			setTimeout(
-				() => {
-					vite.ws.send({
-						type: 'error',
-						err: /** @type {import('vite').ErrorPayload['err']} */ ({
-							...err,
-							// these properties are non-enumerable and will
-							// not be serialized unless we explicitly include them
-							message: err.message,
-							stack: err.stack ?? ''
-						})
-					});
-				},
-				// In case the error is sent right on startup, before the browser even has rendered, we would send the web socket message into the void,
-				// or it would flicker for unknown reasons. Waiting a second ensure the browser has time to initialize and then show the message properly.
-				// This isn't a perfect solution because on repeated refreshes the websocket already has listeners (from the old browser instance) but
-				// it's the best we can do for now.
-				vite.ws.clients.size > 0 ? 0 : 1000
-			);
+			// TODO this is inadequate — it doesn't reliably show the overlay on every page load,
+			// and when it does appear it may immediately vanish. `vite.ws.send` broadcasts
+			// to all connected clients, even ones that are unaffected by the error.
+			// we need a more considered approach
+			vite.ws.send({
+				type: 'error',
+				err: /** @type {import('vite').ErrorPayload['err']} */ ({
+					...err,
+					// these properties are non-enumerable and will
+					// not be serialized unless we explicitly include them
+					message: err.message,
+					stack: err.stack ?? ''
+				})
+			});
 
 			throw err;
 		}
