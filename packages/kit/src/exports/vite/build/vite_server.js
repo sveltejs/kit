@@ -146,7 +146,7 @@ export async function create_build_server({
 				},
 				publicDir: `${out}/client`,
 				define: {
-					__SERVER__: out
+					__SVELTEKIT_OUT_DIR__: s(out)
 				},
 				resolve: {
 					alias: [

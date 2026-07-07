@@ -1,3 +1,5 @@
+// this file needs to be runtime agnostic and avoid importing from `node:*` since
+// it may not be available in edge environments
 import { join } from './path.js';
 
 /**
