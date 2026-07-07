@@ -209,14 +209,14 @@ export async function render_response({
 							return handled.then((e) => {
 								error = e;
 								props.page.error = error;
-								props.page.status = error.status;
+								props.page.status = status = error.status;
 								return error;
 							});
 						}
 
 						error = handled;
 						props.page.error = error;
-						props.page.status = error.status;
+						props.page.status = status = error.status;
 
 						return error;
 					}
