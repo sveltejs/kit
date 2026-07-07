@@ -51,6 +51,8 @@ export function _create_validator(options) {
 	const imports = new Set();
 	let uses_import_meta = false;
 	let has_svelte_files = false;
+	/** @type {Map<string, boolean>} */
+	const unprotected_server_only_files = new Map();
 
 	/**
 	 * Checks a file content for problematic imports and things like `import.meta`
@@ -65,13 +67,20 @@ export function _create_validator(options) {
 
 		const file_imports = [
 			...content.matchAll(/from\s+('|")([^"';,]+?)\1/g),
-			...content.matchAll(/import\s*\(\s*('|")([^"';,]+?)\1\s*\)/g)
+			...content.matchAll(/import\s*\(\s*('|")([^"';,]+?)\1\s*\)/g),
+			...content.matchAll(/import\s+('|")([^"';,]+?)\1/g)
 		];
+		let has_guard_import = false;
 		for (const [, , import_path] of file_imports) {
 			if (import_path.startsWith('$app/')) {
 				imports.add(import_path);
 			}
+			if (import_path === '$app/server' || import_path === '$app/env/private') {
+				has_guard_import = true;
+			}
 		}
+		const is_server_only = name.includes('.server.') || /(^|\/)server\//.test(name);
+		unprotected_server_only_files.set(name, is_server_only && !has_guard_import);
 	}
 
 	/**
@@ -146,6 +155,19 @@ export function _create_validator(options) {
 			warnings.push(
 				'No `exports` field found in `package.json`, please provide one. ' +
 					'See https://svelte.dev/docs/kit/packaging#anatomy-of-a-package-json-exports for more info'
+			);
+		}
+
+		const unprotected = [...unprotected_server_only_files]
+			.filter(([, is_unprotected]) => is_unprotected)
+			.map(([name]) => name);
+		if (unprotected.length > 0) {
+			const list = unprotected.map((name) => `- ${name}`).join('\n');
+			warnings.push(
+				`The following server-only files do not import \`$app/server\` or \`$app/env/private\`:\n${list}\n` +
+					'These files will not be blocked from being imported on the client. ' +
+					'If you intend to use this package within a SvelteKit application and want to prevent this, add `import "$app/server"` or an import from `$app/env/private` to each file — both throw when imported on the client.\n' +
+					'These files were deemed server-only because they either contain `.server.` in their filename or are located in a `server` directory, which have special meaning within SvelteKit apps.'
 			);
 		}
 

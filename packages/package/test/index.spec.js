@@ -349,6 +349,101 @@ test('validates package (all ok 2)', () => {
 	expect(warnings.length).toEqual(0);
 });
 
+test('warns about .server. files that do not import $app/server', () => {
+	const { analyse_code, validate } = _create_validator({
+		config: {},
+		cwd: '',
+		input: '',
+		output: '',
+		preserve_output: false,
+		types: true
+	});
+	analyse_code('utils.server.js', 'export const x = 1;');
+	const warnings = validate({
+		exports: { '.': { svelte: './dist/index.js' } },
+		peerDependencies: { svelte: '^3.55.0' }
+	});
+
+	has_warnings(warnings, [
+		'The following server-only files do not import `$app/server` or `$app/env/private`:\n- utils.server.js\n' +
+			'These files will not be blocked from being imported on the client.'
+	]);
+});
+
+test('warns about files in a server directory that do not import $app/server', () => {
+	const { analyse_code, validate } = _create_validator({
+		config: {},
+		cwd: '',
+		input: '',
+		output: '',
+		preserve_output: false,
+		types: true
+	});
+	analyse_code('server/db.js', 'export const db = null;');
+	const warnings = validate({
+		exports: { '.': { svelte: './dist/index.js' } },
+		peerDependencies: { svelte: '^3.55.0' }
+	});
+
+	has_warnings(warnings, [
+		'The following server-only files do not import `$app/server` or `$app/env/private`:\n- server/db.js\n' +
+			'These files will not be blocked from being imported on the client.'
+	]);
+});
+
+test('does not warn about server files that import $app/server', () => {
+	const { analyse_code, validate } = _create_validator({
+		config: {},
+		cwd: '',
+		input: '',
+		output: '',
+		preserve_output: false,
+		types: true
+	});
+	analyse_code('utils.server.js', `import '$app/server';`);
+	const warnings = validate({
+		exports: { '.': { svelte: './dist/index.js' } },
+		peerDependencies: { svelte: '^3.55.0', '@sveltejs/kit': '^2.0.0' }
+	});
+
+	expect(warnings.length).toEqual(0);
+});
+
+test('does not warn about server files that import $app/env/private', () => {
+	const { analyse_code, validate } = _create_validator({
+		config: {},
+		cwd: '',
+		input: '',
+		output: '',
+		preserve_output: false,
+		types: true
+	});
+	analyse_code('server/db.js', `import { env } from '$app/env/private';`);
+	const warnings = validate({
+		exports: { '.': { svelte: './dist/index.js' } },
+		peerDependencies: { svelte: '^3.55.0', '@sveltejs/kit': '^2.0.0' }
+	});
+
+	expect(warnings.length).toEqual(0);
+});
+
+test('does not warn about server files when there are none', () => {
+	const { validate } = _create_validator({
+		config: {},
+		cwd: '',
+		input: '',
+		output: '',
+		preserve_output: false,
+		types: true
+	});
+	const warnings = validate({
+		exports: { '.': { svelte: './dist/index.js' } },
+		peerDependencies: { svelte: '^3.55.0' }
+	});
+
+	expect(warnings.length).toEqual(0);
+});
+
 test('create package with preserved output', async () => {
 	const output = join(import.meta.dirname, 'fixtures', 'preserve-output', 'dist');
 	rimraf(output);
