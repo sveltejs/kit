@@ -2649,7 +2649,7 @@ export async function applyAction(result) {
 		root.$set({ form: result.data });
 
 		if (result.type === 'success') {
-			reset_focus(page.url);
+			reset_focus(/** @type {URL} */ (page.url));
 		}
 	}
 }

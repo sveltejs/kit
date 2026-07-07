@@ -1,6 +1,6 @@
 /** @typedef {Record<string, string[]>} Query */
 
-/** @param {URLSearchParams} query */
+/** @param {Pick<URLSearchParams, 'forEach'>} query */
 export function to_pojo(query) {
 	/** @type {Query}*/
 	const values = {};

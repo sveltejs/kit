@@ -1454,7 +1454,11 @@ export interface Page<
 	/**
 	 * The URL of the current page.
 	 */
-	url: URL & { pathname: ResolvedPathname };
+	url: Readonly<
+		Omit<URL, 'searchParams'> & { pathname: ResolvedPathname } & {
+			searchParams: Omit<URLSearchParams, 'set' | 'append' | 'delete' | 'sort'>;
+		}
+	>;
 	/**
 	 * The parameters of the current page - e.g. for a route like `/blog/[slug]`, a `{ slug: string }` object.
 	 */
