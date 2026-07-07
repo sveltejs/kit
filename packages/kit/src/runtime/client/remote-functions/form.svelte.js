@@ -666,12 +666,7 @@ export function form(id) {
 			},
 			validate: {
 				/** @type {RemoteForm<any, any>['validate']} */
-				value: async ({
-					all = false,
-					preflightOnly = false,
-					// @ts-expect-error TODO remove this in 3.0
-					includeUntouched
-				} = {}) => {
+				value: async ({ all = false, preflightOnly = false } = {}) => {
 					if (!element) return;
 
 					const id = ++validate_id;
@@ -720,14 +715,6 @@ export function form(id) {
 						}
 
 						array = /** @type {InternalRemoteFormIssue[]} */ (result._);
-					}
-
-					if (includeUntouched !== undefined) {
-						console.warn(
-							`\`{ includeUntouched: ${includeUntouched} }\` has been replaced with \`{ all: ${includeUntouched} }\``
-						);
-
-						all = includeUntouched;
 					}
 
 					if (!all && !submitted) {

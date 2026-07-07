@@ -71,18 +71,18 @@ Note that an optional route parameter cannot follow a rest parameter (`[...rest]
 
 ## Matching
 
-A route like `src/routes/fruits/[page]` would match `/fruits/apple`, but it would also match `/fruits/rocketship`. We don't want that. You can ensure that route parameters are well-formed by adding a _matcher_ — which takes the parameter string (`"apple"` or `"rocketship"`) and returns `true` if it is valid — to your `src/params` directory...
+A route like `src/routes/fruits/[page]` would match `/fruits/apple`, but it would also match `/fruits/rocketship`. We don't want that. You can ensure that route parameters are well-formed by adding a _matcher_ to your `src/params.js` file (or `src/params.ts`)...
 
 ```js
-/// file: src/params/fruit.js
-/**
- * @param {string} param
- * @return {param is ('apple' | 'orange')}
- * @satisfies {import('@sveltejs/kit').ParamMatcher}
- */
-export function match(param) {
-	return param === 'apple' || param === 'orange';
-}
+/// file: src/params.js
+import { defineParams } from '@sveltejs/kit';
+
+export const params = defineParams({
+	fruit: (param) => {
+		if (param !== 'apple' && param !== 'orange') return;
+		return param;
+	}
+});
 ```
 
 ...and augmenting your routes:
@@ -91,11 +91,41 @@ export function match(param) {
 src/routes/fruits/[page+++=fruit+++]
 ```
 
-If the pathname doesn't match, SvelteKit will try to match other routes (using the sort order specified below), before eventually returning a 404.
+If the pathname doesn't match, SvelteKit will try to match other routes (using the sort order specified below), before eventually returning a 404. If it does match, the returned value is passed as the param value.
 
-Each module in the `params` directory corresponds to a matcher, with the exception of `*.test.js` and `*.spec.js` files which may be used to unit test your matchers.
+You can also use a [Standard Schema](https://standardschema.dev) — for example with [Valibot](https://valibot.dev):
+
+```js
+/// file: src/params.js
+import { defineParams } from '@sveltejs/kit';
+import * as v from 'valibot';
+
+export const params = defineParams({
+	number: v.pipe(v.string(), v.toNumber())
+});
+```
+
+If validation fails, the route does not match. If it succeeds, the param is typed with the output type of the schema, which must extend `string`, `boolean`, `number` (as in the example above) or `bigint`:
+
+```js
+/// file: src/routes/items/[id=number]/+page.js
+/** @type {import('./$types').PageLoad} */
+export function load({ params }) {
+	console.log(typeof params.id); // 'number'
+}
+```
+
+Transformations should be _symmetrical_ — if converting to a number, then calling `toString()` on that number should return the original string. This allows the [`resolve`]($app-paths#resolve) function to construct a pathname correctly:
+
+```js
+import { resolve } from '$app/paths';
+
+resolve('/blog/[id=number]', { id: 1 });
+```
 
 > [!NOTE] Matchers run both on the server and in the browser.
+
+> [!NOTE] Prior to SvelteKit 3, you had to define each param matcher in a separate file, all listed under a `params` folder (for example `src/params/foo.js` with `export const match = (param) => param === 'foo';`), and matching was determined by whether or not the matcher returns a truthy value (which means no value transformation took place).
 
 ## Sorting
 

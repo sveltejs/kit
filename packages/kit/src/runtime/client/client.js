@@ -6,13 +6,7 @@
 import { BROWSER, DEV } from 'esm-env';
 import * as svelte from 'svelte';
 import { HttpError, Redirect, SvelteKitError } from '@sveltejs/kit/internal';
-import {
-	decode_params,
-	decode_pathname,
-	strip_hash,
-	make_trackable,
-	normalize_path
-} from '../../utils/url.js';
+import { decode_pathname, strip_hash, make_trackable, normalize_path } from '../../utils/url.js';
 import { dev_fetch, initial_fetch, lock_fetch, subsequent_fetch, unlock_fetch } from './fetcher.js';
 import { parse, parse_server_route } from './parse.js';
 import * as storage from './session-storage.js';
@@ -1616,7 +1610,7 @@ export async function get_navigation_intent(url, invalidating) {
 					id: get_page_key(url),
 					invalidating,
 					route,
-					params: decode_params(params),
+					params,
 					url
 				};
 			}

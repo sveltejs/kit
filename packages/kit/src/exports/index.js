@@ -1,6 +1,5 @@
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
-
-import { HttpError, Redirect, ActionFailure, ValidationError } from './internal/index.js';
+import { HttpError, Redirect, ActionFailure, ValidationError } from './internal/shared.js';
 import { BROWSER, DEV } from 'esm-env';
 import {
 	add_data_suffix,
@@ -11,9 +10,10 @@ import {
 	strip_resolution_suffix
 } from '../runtime/pathname.js';
 import { text_encoder } from '../runtime/utils.js';
-import { validate_redirect_location } from '../utils/url.js';
+import { validate_redirect_location } from './url.js';
 
 export { VERSION } from '../version.js';
+export { defineParams } from './params.js';
 
 // Keep the status codes as `number` because restricting to certain numbers makes it unnecessarily hard to use compared to the benefits
 // (we have runtime errors already to check for invalid codes). Also see https://github.com/sveltejs/kit/issues/11780
