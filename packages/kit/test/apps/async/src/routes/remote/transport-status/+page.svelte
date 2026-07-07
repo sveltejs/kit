@@ -1,5 +1,4 @@
 <script>
-	import { isHttpError } from '@sveltejs/kit';
 	import { get_data } from './data.remote.js';
 
 	const result = get_data();
@@ -21,7 +20,7 @@
 >
 
 {#if result.error}
-	<p id="status">{isHttpError(result.error) ? result.error.status : ''}</p>
+	<p id="status">{result.error.status}</p>
 {:else if result.current !== undefined}
 	<p id="value">{result.current}</p>
 {/if}

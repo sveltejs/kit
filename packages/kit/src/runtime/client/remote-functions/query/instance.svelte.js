@@ -1,4 +1,4 @@
-import { query_responses } from '../../client.js';
+import { query_responses, handle_error } from '../../client.js';
 import { HttpError } from '@sveltejs/kit/internal';
 import { QUERY_OVERRIDE_KEY } from '../shared.svelte.js';
 import { noop } from '../../../../utils/functions.js';
@@ -37,7 +37,7 @@ export class Query {
 		return this.#overrides.reduce((v, r) => r(v), /** @type {T} */ (this.#raw));
 	});
 
-	/** @type {any} */
+	/** @type {App.Error | undefined} */
 	#error = $state.raw(undefined);
 
 	/** @type {Promise<T>['then']} */
@@ -126,7 +126,7 @@ export class Query {
 
 				resolve(undefined);
 			})
-			.catch((e) => {
+			.catch(async (e) => {
 				// TODO: Our behavior here could be better:
 				// - We should not reject on redirects, but should hook into the router
 				//   to ensure the query is properly refreshed before the navigation completes
@@ -135,13 +135,19 @@ export class Query {
 				const idx = this.#latest.indexOf(resolve);
 				if (idx === -1) return;
 
+				const error = await handle_error(e, {
+					params: {},
+					route: { id: null },
+					url: new URL(location.href)
+				});
+
 				untrack(() => {
 					this.#latest.splice(0, idx).forEach((r) => r(undefined));
-					this.#error = e;
+					this.#error = error;
 					this.#loading = false;
 				});
 
-				reject(e);
+				reject(new HttpError(error.status, error)); // so that transformError doesn't transform it again
 			});
 
 		return promise;
@@ -229,9 +235,7 @@ export class Query {
 		this.#promise = Promise.resolve();
 	}
 
-	/**
-	 * @param {unknown} error
-	 */
+	/** @param {HttpError} error */
 	fail(error) {
 		// normally consumed in the constructor, but make sure a leftover
 		// SSR record can never shadow the newly-set error
@@ -239,7 +243,7 @@ export class Query {
 
 		this.#clear_pending();
 		this.#loading = false;
-		this.#error = error;
+		this.#error = error.body;
 
 		const promise = Promise.reject(error);
 

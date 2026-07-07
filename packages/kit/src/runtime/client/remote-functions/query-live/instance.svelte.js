@@ -1,4 +1,4 @@
-import { query_responses } from '../../client.js';
+import { query_responses, handle_error } from '../../client.js';
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
 import { noop, once } from '../../../../utils/functions.js';
 import { SharedIterator } from '../../../../utils/shared-iterator.js';
@@ -24,7 +24,7 @@ export class LiveQuery {
 	#done = $state(false);
 	/** @type {T | undefined} */
 	#raw = $state.raw();
-	/** @type {any} */
+	/** @type {App.Error | undefined} */
 	#error = $state.raw(undefined);
 	/** @type {Promise<void>} */
 	#promise;
@@ -93,7 +93,7 @@ export class LiveQuery {
 				// and the query can recover
 				const error = new HttpError(node.e.status, node.e);
 				this.#loading = false;
-				this.#error = error;
+				this.#error = error.body;
 
 				promise.catch(noop);
 				this.#reject_first?.(error);
@@ -175,7 +175,7 @@ export class LiveQuery {
 
 				if (!this.#ready) {
 					// If we haven't successfully connected and received a value yet, surface the error
-					this.fail(error);
+					await this.#fail(error);
 					on_connect_failed(error);
 					break;
 				}
@@ -385,10 +385,10 @@ export class LiveQuery {
 		this.#fan_out.push(value);
 	}
 
-	/** @param {unknown} error */
+	/** @param {HttpError} error */
 	fail(error) {
 		this.#loading = false;
-		this.#error = error;
+		this.#error = error.body;
 		// `fail` is terminal — once a live query has hard-failed, the only way to start
 		// streaming again is via `reconnect()`. Mark it done and abort any in-flight
 		// request so that callers from outside the main loop (e.g. `apply_reconnections`)
@@ -408,6 +408,16 @@ export class LiveQuery {
 		}
 
 		this.#fan_out.fail(error);
+	}
+
+	/** @param {unknown} e */
+	async #fail(e) {
+		const error = await handle_error(e, {
+			params: {},
+			route: { id: null },
+			url: new URL(location.href)
+		});
+		this.fail(new HttpError(error.status, error));
 	}
 
 	get [Symbol.toStringTag]() {

@@ -1,5 +1,4 @@
 <script>
-	import { isHttpError } from '@sveltejs/kit';
 	import { get_value, get_connection_count, trigger } from './data.remote.js';
 
 	const live = get_value();
@@ -18,11 +17,7 @@
 
 <p id="value">{live.current}</p>
 <p id="error">
-	{isHttpError(live.error)
-		? `${live.error.status} ${live.error.body.message}`
-		: live.error
-			? JSON.stringify(live.error)
-			: ''}
+	{live.error ? `${live.error.status} ${live.error.message}` : ''}
 </p>
 <p id="connected">{String(live.connected)}</p>
 <p id="done">{String(live.done)}</p>
