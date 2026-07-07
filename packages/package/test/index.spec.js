@@ -358,7 +358,7 @@ test('validates package (all ok 2)', () => {
 	expect(warnings.length).toEqual(0);
 });
 
-test('warns about .server. files', () => {
+test('warns about .server. files when @sveltejs/kit is not a dependency', () => {
 	const { validate } = _create_validator({
 		config: {},
 		cwd: '',
@@ -379,11 +379,13 @@ test('warns about .server. files', () => {
 	);
 
 	has_warnings(warnings, [
-		'The following files contain ".server." in their filename or are in a "server" directory:\n- utils.server.js'
+		'The following files contain ".server." in their filename or are in a "server" directory:\n- utils.server.js\n' +
+			'These files are not protected from being imported into client-side code when a SvelteKit application imports them from your package. ' +
+			'To have them protected, add `@sveltejs/kit` to your `dependencies` or `peerDependencies` in `package.json`.'
 	]);
 });
 
-test('warns about files in server directory', () => {
+test('warns about files in server directory when @sveltejs/kit is not a dependency', () => {
 	const { validate } = _create_validator({
 		config: {},
 		cwd: '',
@@ -404,7 +406,9 @@ test('warns about files in server directory', () => {
 	);
 
 	has_warnings(warnings, [
-		'The following files contain ".server." in their filename or are in a "server" directory:\n- server/db.js'
+		'The following files contain ".server." in their filename or are in a "server" directory:\n- server/db.js\n' +
+			'These files are not protected from being imported into client-side code when a SvelteKit application imports them from your package. ' +
+			'To have them protected, add `@sveltejs/kit` to your `dependencies` or `peerDependencies` in `package.json`.'
 	]);
 });
 

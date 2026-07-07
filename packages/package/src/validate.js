@@ -168,14 +168,15 @@ export function _create_validator(options) {
 		}
 
 		const server_only_files = files.filter(is_server_only_file);
-		if (server_only_files.length > 0) {
+		const has_kit_dep =
+			pkg.dependencies?.['@sveltejs/kit'] || pkg.peerDependencies?.['@sveltejs/kit'];
+		if (server_only_files.length > 0 && !has_kit_dep) {
 			const list = server_only_files.map((file) => `- ${file.name}`).join('\n');
 			warnings.push(
 				`The following files contain ".server." in their filename or are in a "server" directory:\n${list}\n` +
 					'These files are not protected from being imported into client-side code when a SvelteKit application imports them from your package. ' +
-					'Unlike in a SvelteKit app, the ".server." convention does not prevent bundlers from including them in client bundles. ' +
-					'If this is a SvelteKit library and you want to ensure these files can only be used on the server, ' +
-					'import "@sveltejs/kit/server-only" at the top of the file. This will cause it to throw when loaded on the client.'
+					'To have them protected, add `@sveltejs/kit` to your `dependencies` or `peerDependencies` in `package.json`. ' +
+					'Without it, SvelteKit cannot detect that these files are meant to be server-only.'
 			);
 		}
 

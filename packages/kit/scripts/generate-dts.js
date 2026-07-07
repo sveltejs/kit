@@ -8,7 +8,6 @@ await createBundle({
 		'@sveltejs/kit/hooks': 'src/exports/hooks/index.js',
 		'@sveltejs/kit/node': 'src/exports/node/index.js',
 		'@sveltejs/kit/vite': 'src/exports/vite/index.js',
-		'@sveltejs/kit/server-only': 'src/exports/server-only/server.js',
 		'$app/env': 'src/runtime/app/env/types.d.ts',
 		'$app/forms': 'src/runtime/app/forms.js',
 		'$app/navigation': 'src/runtime/app/navigation.js',

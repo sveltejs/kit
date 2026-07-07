@@ -60,3 +60,34 @@ test('$lib/**/server/* is not dynamically importable from the client', { timeout
 		/.*Cannot import \$lib\/blah\/server\/something\/private.js into code that runs in the browser.*/gs
 	);
 });
+
+test(
+	'*.server.* in node_modules is importable from the client when the package does not depend on @sveltejs/kit',
+	{ timeout },
+	() => {
+		// Should not throw — the build should succeed because the package is not a SvelteKit package
+		execSync('pnpm build', {
+			cwd: path.join(import.meta.dirname, 'apps/server-only-module-in-node-modules-no-kit'),
+			stdio: 'pipe',
+			timeout,
+			env
+		});
+	}
+);
+
+test(
+	'*.server.* in node_modules is not importable from the client when the package depends on @sveltejs/kit',
+	{ timeout },
+	() => {
+		assert.throws(
+			() =>
+				execSync('pnpm build', {
+					cwd: path.join(import.meta.dirname, 'apps/server-only-module-in-node-modules-with-kit'),
+					stdio: 'pipe',
+					timeout,
+					env
+				}),
+			/.*Cannot import.*index\.server\.js into code that runs in the browser.*/gs
+		);
+	}
+);

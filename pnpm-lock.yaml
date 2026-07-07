@@ -1269,6 +1269,56 @@ importers:
         specifier: 'catalog:'
         version: 8.0.16(@types/node@22.19.19)(esbuild@0.28.1)(jiti@2.4.2)(yaml@2.8.3)
 
+  packages/kit/test/build-errors/apps/server-only-module-in-node-modules-no-kit:
+    dependencies:
+      fake-no-kit-dep:
+        specifier: file:./fake-no-kit-dep.tgz
+        version: file:packages/kit/test/build-errors/apps/server-only-module-in-node-modules-no-kit/fake-no-kit-dep.tgz
+    devDependencies:
+      '@sveltejs/kit':
+        specifier: workspace:^
+        version: link:../../../..
+      '@sveltejs/vite-plugin-svelte':
+        specifier: 'catalog:'
+        version: 7.0.0(svelte@5.56.3(@typescript-eslint/types@8.61.1))(vite@8.0.16(@types/node@22.19.19)(esbuild@0.28.1)(jiti@2.4.2)(yaml@2.8.3))
+      svelte:
+        specifier: 'catalog:'
+        version: 5.56.3(@typescript-eslint/types@8.61.1)
+      svelte-check:
+        specifier: 'catalog:'
+        version: 4.7.0(picomatch@4.0.4)(svelte@5.56.3(@typescript-eslint/types@8.61.1))(typescript@6.0.3)
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+      vite:
+        specifier: 'catalog:'
+        version: 8.0.16(@types/node@22.19.19)(esbuild@0.28.1)(jiti@2.4.2)(yaml@2.8.3)
+
+  packages/kit/test/build-errors/apps/server-only-module-in-node-modules-with-kit:
+    dependencies:
+      fake-kit-dep:
+        specifier: file:./fake-kit-dep.tgz
+        version: file:packages/kit/test/build-errors/apps/server-only-module-in-node-modules-with-kit/fake-kit-dep.tgz(@sveltejs/kit@packages+kit)
+    devDependencies:
+      '@sveltejs/kit':
+        specifier: workspace:^
+        version: link:../../../..
+      '@sveltejs/vite-plugin-svelte':
+        specifier: 'catalog:'
+        version: 7.0.0(svelte@5.56.3(@typescript-eslint/types@8.61.1))(vite@8.0.16(@types/node@22.19.19)(esbuild@0.28.1)(jiti@2.4.2)(yaml@2.8.3))
+      svelte:
+        specifier: 'catalog:'
+        version: 5.56.3(@typescript-eslint/types@8.61.1)
+      svelte-check:
+        specifier: 'catalog:'
+        version: 4.7.0(picomatch@4.0.4)(svelte@5.56.3(@typescript-eslint/types@8.61.1))(typescript@6.0.3)
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+      vite:
+        specifier: 'catalog:'
+        version: 8.0.16(@types/node@22.19.19)(esbuild@0.28.1)(jiti@2.4.2)(yaml@2.8.3)
+
   packages/kit/test/build-errors/apps/syntax-error:
     devDependencies:
       '@sveltejs/kit':
@@ -4116,6 +4166,16 @@ packages:
     resolution: {integrity: sha512-GDhU9ntwuKyGXdZBUgTIe+vXnWj0fppUEtMDL0+idd5Sta8TGpHssn/eusA9mrPr9qNDym6SxAYZjNvCn/9RBg==}
     engines: {node: '>= 10.17.0'}
     hasBin: true
+
+  fake-kit-dep@file:packages/kit/test/build-errors/apps/server-only-module-in-node-modules-with-kit/fake-kit-dep.tgz:
+    resolution: {integrity: sha512-Wpc+X0ywmN0WHWTCMPTkBa2GFmtLkCgzQvtEXFJRioqOg9ClMKS7KkW4EetlCcNNKwmzUzQHhKar4gp5iutP9Q==, tarball: file:packages/kit/test/build-errors/apps/server-only-module-in-node-modules-with-kit/fake-kit-dep.tgz}
+    version: 1.0.0
+    peerDependencies:
+      '@sveltejs/kit': '*'
+
+  fake-no-kit-dep@file:packages/kit/test/build-errors/apps/server-only-module-in-node-modules-no-kit/fake-no-kit-dep.tgz:
+    resolution: {integrity: sha512-XfEXQl+z+w5ylUv5y4VGwLjFTFjWo7s5vmM7KagvQEQZrwy3pozbdPl/EMSERQB0Z3vF6sxr7NDcDDNaHqEqkQ==, tarball: file:packages/kit/test/build-errors/apps/server-only-module-in-node-modules-no-kit/fake-no-kit-dep.tgz}
+    version: 1.0.0
 
   fast-deep-equal@3.1.3:
     resolution: {integrity: sha512-f3qQ9oQy9j2AhBe/H9VC91wLmKBCCU/gDOnKNAYG5hswO7BLKj09Hc5HYNz9cGI++xlpDCIgDaitVs03ATR84Q==}
@@ -8705,6 +8765,12 @@ snapshots:
       '@types/yauzl': 2.10.3
     transitivePeerDependencies:
       - supports-color
+
+  fake-kit-dep@file:packages/kit/test/build-errors/apps/server-only-module-in-node-modules-with-kit/fake-kit-dep.tgz(@sveltejs/kit@packages+kit):
+    dependencies:
+      '@sveltejs/kit': link:packages/kit
+
+  fake-no-kit-dep@file:packages/kit/test/build-errors/apps/server-only-module-in-node-modules-no-kit/fake-no-kit-dep.tgz: {}
 
   fast-deep-equal@3.1.3: {}
 

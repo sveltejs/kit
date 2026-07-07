@@ -57,6 +57,68 @@ import { should_ignore, has_children } from './static_analysis/utils.js';
 import { process_config, split_config } from '../../core/config/index.js';
 import { treeshake_prerendered_remotes } from './build/remote.js';
 
+/** @type {Map<string, { pkg: Record<string, any>, dir: string } | null>} */
+const package_cache = new Map();
+
+/**
+ * Walks up from a file path to find the nearest `package.json` with a `name` field,
+ * and returns the parsed contents along with the directory containing it.
+ * Stops at the project root so that the project's own `package.json` is never
+ * returned (we're interested in dependency packages, not the app itself).
+ * Results are cached by directory.
+ * @param {string} id
+ * @param {string} project_root
+ * @returns {{ pkg: Record<string, any>, dir: string } | null}
+ */
+function get_owning_package(id, project_root) {
+	/** @type {string[]} */
+	const visited = [];
+	let dir = path.dirname(id);
+	while (true) {
+		// Don't return the project's own package.json — we only care about
+		// dependency packages. Stop walking once we reach the project root.
+		if (project_root && dir === project_root) {
+			for (const d of visited) package_cache.set(`${project_root}\0${d}`, null);
+			return null;
+		}
+
+		const cache_key = `${project_root}\0${dir}`;
+		const cached = package_cache.get(cache_key);
+		if (cached !== undefined) {
+			for (const d of visited) package_cache.set(`${project_root}\0${d}`, cached);
+			return cached;
+		}
+
+		visited.push(dir);
+
+		const pkg_path = path.join(dir, 'package.json');
+		/** @type {{ pkg: Record<string, any>, dir: string } | null} */
+		let result = null;
+		if (fs.existsSync(pkg_path)) {
+			try {
+				const pkg = JSON.parse(fs.readFileSync(pkg_path, 'utf-8'));
+				if (pkg.name) {
+					result = { pkg, dir };
+				}
+			} catch {
+				// ignore parse errors
+			}
+		}
+
+		if (result) {
+			for (const d of visited) package_cache.set(`${project_root}\0${d}`, result);
+			return result;
+		}
+
+		const parent = path.dirname(dir);
+		if (parent === dir) {
+			for (const d of visited) package_cache.set(`${project_root}\0${d}`, null);
+			return null;
+		}
+		dir = parent;
+	}
+}
+
 /** @type {string} */
 let root;
 
@@ -653,7 +715,7 @@ function kit({ svelte_config }) {
 	// Matches any ID that has .server. in its filename
 	const server_only_module_pattern = /\.server\.[^/]+$/;
 	// Matches any ID that has /server/ in its path
-	const server_only_directory_pattern = /\/server\//;
+	const server_only_directory_pattern = /(^|\/)server\//;
 
 	/**
 	 * Ensures that client-side code can't accidentally import server-side code,
@@ -669,6 +731,61 @@ function kit({ svelte_config }) {
 
 		applyToEnvironment(environment) {
 			return environment.name !== 'serviceWorker';
+		},
+
+		config() {
+			return {
+				optimizeDeps: {
+					rolldownOptions: {
+						plugins: [
+							{
+								name: 'vite-plugin-sveltekit-guard:rolldown',
+								// optimizeDeps is dev-only and client-only and the entry points ensure we don't start at a server
+								// file, so the pure loading of a server file already indicates a leak (i.e. we don't need to use resolveId here).
+								load: {
+									filter: {
+										id: [server_only_module_pattern, server_only_directory_pattern]
+									},
+									handler(id) {
+										// optimizeDeps only processes files in node_modules,
+										// but the filter can still match files outside it.
+										if (!id.includes('/node_modules/')) return;
+
+										const owned = get_owning_package(id, root);
+										if (!owned) return;
+
+										const { pkg, dir: pkg_dir } = owned;
+										if (
+											!(
+												pkg.dependencies?.['@sveltejs/kit'] ||
+												pkg.peerDependencies?.['@sveltejs/kit']
+											)
+										) {
+											return;
+										}
+
+										// Check the path relative to the package directory to avoid
+										// false positives from a `server` directory outside the package
+										const relative = posixify(path.relative(pkg_dir, id));
+										if (
+											!server_only_module_pattern.test(relative) &&
+											!server_only_directory_pattern.test(relative)
+										) {
+											return;
+										}
+
+										this.error(
+											`Cannot import ${id} into code that runs in the browser, as this could leak sensitive information. ` +
+												`The file has ".server." in its filename or is in a "server" directory, ` +
+												`and the package "${pkg.name}" depends on @sveltejs/kit, so it is treated as server-only.`
+										);
+									}
+								}
+							}
+						]
+					}
+				}
+			};
 		},
 
 		resolveId: {
@@ -710,16 +827,39 @@ function kit({ svelte_config }) {
 			handler(id) {
 				if (this.environment.config.consumer !== 'client') return;
 
-				// skip .server.js files in node_modules, as the filename might not mean 'server-only module' in this context
-				const is_internal = !id.startsWith(normalized_node_modules);
+				const is_in_node_modules = id.startsWith(normalized_node_modules);
 
 				const normalized = normalize_id(id, normalized_lib, normalized_cwd);
 
-				const is_server_only =
+				// Check if this file belongs to a separate package.
+				// Such files should only be treated as server-only if the owning
+				// package depends on @sveltejs/kit, regardless of whether they're
+				// physically inside the project cwd.
+				const owned = id.includes('/node_modules/') && get_owning_package(id, root);
+				const is_owned_by_kit_dep = !!(
+					owned &&
+					(owned.pkg.dependencies?.['@sveltejs/kit'] ||
+						owned.pkg.peerDependencies?.['@sveltejs/kit'])
+				);
+
+				// A file is "internal" (part of the user's own code) if it's not in
+				// node_modules and not owned by a separate package
+				const is_internal = !is_in_node_modules && !owned;
+
+				let is_server_only =
 					normalized === '$app/env/private' ||
 					normalized === '$app/server' ||
 					(normalized.startsWith('$lib/') && server_only_directory_pattern.test(id)) ||
 					(is_internal && server_only_module_pattern.test(id));
+
+				// For files that belong to a package depending on @sveltejs/kit,
+				// treat .server. files and server/ directories as server-only
+				if (!is_server_only && owned && is_owned_by_kit_dep) {
+					const relative = posixify(path.relative(owned.dir, id));
+					is_server_only =
+						server_only_module_pattern.test(relative) ||
+						server_only_directory_pattern.test(relative);
+				}
 
 				if (!is_server_only) {
 					return;

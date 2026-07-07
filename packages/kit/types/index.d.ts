@@ -3194,11 +3194,6 @@ declare module '@sveltejs/kit/vite' {
 	export {};
 }
 
-declare module '@sveltejs/kit/server-only' {
-
-	export {};
-}
-
 declare module '$app/env' {
 	/**
 	 * `true` if the app is running in the browser.
