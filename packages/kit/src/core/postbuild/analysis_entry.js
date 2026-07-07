@@ -94,8 +94,8 @@ export class Server {
 async function analyse({ server_manifest, tracked_features, manifest, manifest_data, hash }) {
 	await load_and_validate_params({
 		routes: manifest_data.routes,
-		params_path: manifest_data.params,
-		root: `${__SVELTEKIT_OUT_DIR__}/server/entries`,
+		params_path: 'entries/params.js',
+		root: `${__SVELTEKIT_OUT_DIR__}/server`,
 		load: (file) => loud_ssr_load_module(file)
 	});
 
