@@ -8,12 +8,7 @@ const config: UserConfig = {
 	},
 	plugins: [
 		sveltekit({
-			adapter: adapter(),
-			experimental: {
-				instrumentation: {
-					server: true
-				}
-			}
+			adapter: adapter()
 		})
 	]
 };

@@ -10,12 +10,14 @@ import { isCSSRequest, loadEnv, buildErrorMessage } from 'vite';
 import { createReadableStream, getRequest, setResponse } from '../../../exports/node/index.js';
 import { coalesce_to_error } from '../../../utils/error.js';
 import { resolve_entry } from '../../../utils/filesystem.js';
+import { load_and_validate_params } from '../../../utils/params.js';
 import { from_fs, to_fs } from '../../../utils/vite.js';
 import { posixify } from '../../../utils/os.js';
 import { load_error_page } from '../../../core/config/index.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import * as sync from '../../../core/sync/sync.js';
 import { get_mime_lookup, get_runtime_base } from '../../../core/utils.js';
+import '../../../utils/mime.js'; // extend mrmime with additional types (affects sirv too)
 import { compact } from '../../../utils/array.js';
 import { is_chrome_devtools_request, not_found } from '../utils.js';
 import { SCHEME } from '../../../utils/url.js';
@@ -83,6 +85,10 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root) {
 				vite.config.logger.error(msg, { error: err });
 			}
 
+			// TODO this is inadequate — it doesn't reliably show the overlay on every page load,
+			// and when it does appear it may immediately vanish. `vite.ws.send` broadcasts
+			// to all connected clients, even ones that are unaffected by the error.
+			// we need a more considered approach
 			vite.ws.send({
 				type: 'error',
 				err: /** @type {import('vite').ErrorPayload['err']} */ ({
@@ -110,9 +116,16 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root) {
 		return { module, module_node, url };
 	}
 
-	function update_manifest() {
+	async function update_manifest() {
 		try {
 			({ manifest_data } = sync.create(svelte_config, root));
+
+			await load_and_validate_params({
+				routes: manifest_data.routes,
+				params_path: manifest_data.params,
+				root,
+				load: (file) => loud_ssr_load_module(file)
+			});
 
 			if (manifest_error) {
 				manifest_error = null;
@@ -292,22 +305,18 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root) {
 					})
 				),
 				matchers: async () => {
-					/** @type {Record<string, import('@sveltejs/kit').ParamMatcher>} */
-					const matchers = {};
+					if (!manifest_data.params) return {};
 
-					for (const key in manifest_data.matchers) {
-						const file = manifest_data.matchers[key];
-						const url = path.resolve(root, file);
-						const module = await vite.ssrLoadModule(url, { fixStacktrace: true });
+					const url = path.resolve(root, manifest_data.params);
+					const module = await vite.ssrLoadModule(url, { fixStacktrace: true });
 
-						if (module.match) {
-							matchers[key] = module.match;
-						} else {
-							throw new Error(`${file} does not export a \`match\` function`);
-						}
+					if (!module.params) {
+						throw new Error(
+							`${manifest_data.params} does not export \`params\` from \`defineParams\``
+						);
 					}
 
-					return matchers;
+					return module.params;
 				}
 			}
 		};
@@ -324,7 +333,9 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root) {
 		return error.stack?.replaceAll('\0', ''); // remove null bytes from e.g. virtual module IDs, or the response will fail
 	}
 
-	update_manifest();
+	await update_manifest();
+
+	const params_file = resolve_entry(svelte_config.kit.files.params);
 
 	/**
 	 * @param {string} event
@@ -334,7 +345,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root) {
 		vite.watcher.on(event, (file) => {
 			if (
 				file.startsWith(svelte_config.kit.files.routes + path.sep) ||
-				file.startsWith(svelte_config.kit.files.params + path.sep) ||
+				(params_file && file === params_file) ||
 				svelte_config.kit.moduleExtensions.some((ext) => file.endsWith(`.remote${ext}`)) ||
 				// in contrast to server hooks, client hooks are written to the client manifest
 				// and therefore need rebuilding when they are added/removed

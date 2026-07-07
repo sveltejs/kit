@@ -21,7 +21,7 @@ export function resolve(id, params) {
 		);
 	}
 
-	const resolved = resolve_route(id, /** @type {Record<string, string>} */ (params));
+	const resolved = resolve_route(id, params ?? {});
 
 	if (relative) {
 		const store = try_get_request_store();
