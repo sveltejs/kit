@@ -129,7 +129,7 @@ export const validate_kit_options = object({
 		),
 		remoteFunctions: boolean(false),
 		forkPreloads: boolean(false),
-		handleRenderingErrors: boolean(false)
+		handleRenderingErrors: removed()
 	}),
 
 	files: object({
