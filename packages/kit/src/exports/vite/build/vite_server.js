@@ -132,22 +132,27 @@ export async function create_build_server({
 		config(_, vite_config_env) {
 			env = loadEnv(vite_config_env.mode, svelte_config.kit.env.dir, '');
 
+			const server_dir = `${out}/server`;
+
 			return {
 				appType: 'custom',
 				cacheDir: `node_modules/.vite-${name}`,
 				environments: {
 					ssr: {
 						build: {
-							outDir: `${out}/server`
+							outDir: server_dir
 						}
 					}
 				},
 				publicDir: `${out}/client`,
+				define: {
+					__SERVER__: out
+				},
 				resolve: {
 					alias: [
 						{
 							find: '__SERVER__',
-							replacement: `${out}/server`
+							replacement: server_dir
 						}
 					]
 				},

@@ -1455,7 +1455,62 @@ declare module '@sveltejs/kit' {
 	/**
 	 * The shape of a param matcher. See [matching](https://svelte.dev/docs/kit/advanced-routing#Matching) for more info.
 	 */
-	export type ParamMatcher = (param: string) => boolean;
+	export type ParamMatcher<Output = any> = StandardSchemaV1<string, Output>;
+
+	/**
+	 * A value that can be parsed from a URL param and losslessly encoded with `String(...)`.
+	 */
+	export type ParamValue = string | number | boolean | bigint;
+
+	/**
+	 * A param matcher definition passed to [`defineParams`](https://svelte.dev/docs/kit/@sveltejs-kit#defineParams).
+	 */
+	export type ParamDefinition =
+		| ((param: string) => ParamValue | undefined)
+		| StandardSchemaV1<string, ParamValue>;
+
+	/**
+	 * The return type of [`defineParams`](https://svelte.dev/docs/kit/@sveltejs-kit#defineParams).
+	 */
+	export type DefinedParams<T extends Record<string, ParamDefinition>> = {
+		readonly [K in keyof T]: ParamEntry<T[K]>;
+	};
+
+	/**
+	 * Normalizes a property of defineParams (schema or function) to standard schema.
+	 */
+	type ParamEntry<M> =
+		M extends StandardSchemaV1<any, any>
+			? StandardSchemaV1.InferOutput<M> extends ParamValue
+				? StandardSchemaV1<any, M>
+				: StandardSchemaV1<any, never>
+			: M extends (param: string) => infer R
+				? Exclude<R, undefined> extends ParamValue
+					? StandardSchemaV1<any, Exclude<R, undefined>>
+					: StandardSchemaV1<any, never>
+				: never;
+
+	/**
+	 * Extracts the param type from a matcher.
+	 */
+	export type MatcherParam<M extends StandardSchemaV1<any, any>> =
+		M extends StandardSchemaV1<any, infer Inner>
+			? Inner extends ParamValue
+				? Inner
+				: Inner extends StandardSchemaV1<any, any>
+					? StandardSchemaV1.InferOutput<Inner> extends ParamValue
+						? StandardSchemaV1.InferOutput<Inner>
+						: never
+					: never
+			: never;
+
+	/**
+	 * Define [parameter matchers](https://svelte.dev/docs/kit/advanced-routing#Matching) for your app.
+	 *
+	 * */
+	export function defineParams<T extends Record<string, ParamDefinition>>(
+		definitions: T
+	): DefinedParams<T>;
 
 	/**
 	 * A single entry yielded by [`requested`](https://svelte.dev/docs/kit/$app-server#requested)
@@ -2727,7 +2782,7 @@ declare module '@sveltejs/kit' {
 		};
 		nodes: PageNode[];
 		routes: RouteData[];
-		matchers: Record<string, string>;
+		params: string | null;
 	}
 
 	interface PageNode {
@@ -2750,7 +2805,7 @@ declare module '@sveltejs/kit' {
 		// Recursive implementation of TypeScript's Required utility type.
 		// Will recursively continue until it reaches a primitive or Function
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
-		[K in keyof T]-?: Extract<T[K], Function> extends never // If it does not have a Function type
+		[K in keyof T]-?: Extract<T[K], Function | (`${string}:` & {})> extends never // If it does not have a Function type
 			? RecursiveRequired<T[K]> // recursively continue through.
 			: T[K]; // Use the exact type for everything else
 	};
@@ -2793,23 +2848,23 @@ declare module '@sveltejs/kit' {
 		} | null;
 	}
 
+	// TODO get rid of this in favor us using just import('svelte').Component<any, any, any>
 	interface SSRComponent {
 		default: {
 			render(
 				props: Record<string, any>,
 				opts: { context: Map<any, any>; csp?: { nonce?: string; hash?: boolean } }
-			): {
-				html: string;
+			): Promise<{
+				body: string;
 				head: string;
 				css: {
 					code: string;
 					map: any; // TODO
 				};
-				/** Until we require all Svelte versions that support hashes, this might not be defined */
-				hashes?: {
+				hashes: {
 					script: Array<`sha256-${string}`>;
 				};
-			};
+			}>;
 		};
 	}
 
@@ -2901,7 +2956,7 @@ declare module '@sveltejs/kit' {
 		leaf: [has_server_load: boolean, node_id: number];
 	}
 
-	type ValidatedConfig = Config & {
+	type ValidatedConfig = Omit<Config, 'kit'> & {
 		kit: ValidatedKitConfig;
 		extensions: string[];
 	};
@@ -3463,10 +3518,10 @@ declare module '$app/paths' {
 	 * @since 2.52.0
 	 *
 	 * */
-	export function match(url: Pathname | URL | (string & {})): Promise<{
-		id: RouteId;
-		params: Record<string, string>;
-	} | null>;
+	export function match(url: Pathname | URL | (string & {})): Promise<{ [K in RouteId]: {
+		id: K;
+		params: RouteParams<K>;
+	}; }[RouteId] | null>;
 	type StripSearchOrHash<T extends string> = T extends `${infer Pathname}?${string}`
 		? Pathname
 		: T extends `${infer Pathname}#${string}`
@@ -3488,8 +3543,8 @@ declare module '$app/paths' {
 }
 
 declare module '$app/server' {
-	import type { RequestEvent, RemoteCommand, RemoteForm, RemoteFormInput, InvalidField, RemotePrerenderFunction, RemoteQueryFunction, RemoteLiveQueryFunction, QueryRequestedResult, LiveQueryRequestedResult } from '@sveltejs/kit';
 	import type { StandardSchemaV1 } from '@standard-schema/spec';
+	import type { RequestEvent, RemoteCommand, RemoteForm, RemoteFormInput, InvalidField, RemotePrerenderFunction, RemoteQueryFunction, RemoteLiveQueryFunction, QueryRequestedResult, LiveQueryRequestedResult } from '@sveltejs/kit';
 	/**
 	 * Read the contents of an imported asset from the filesystem
 	 * @example

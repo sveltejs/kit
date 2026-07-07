@@ -9,14 +9,15 @@ import sirv from 'sirv';
 import { getRequest, setResponse } from '../../../exports/node/index.js';
 import { coalesce_to_error } from '../../../utils/error.js';
 import { resolve_entry } from '../../../utils/filesystem.js';
+import { to_fs } from '../../../utils/vite.js';
 import { posixify } from '../../../utils/os.js';
 import { load_error_page } from '../../../core/config/index.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import * as sync from '../../../core/sync/sync.js';
+import '../../../utils/mime.js'; // extend mrmime with additional types (affects sirv too)
 import { is_chrome_devtools_request, not_found } from '../utils.js';
 import { escape_for_regexp, escape_html } from '../../../utils/escape.js';
 import { sveltekit_ipc, sveltekit_manifest_data } from '../module_ids.js';
-import { to_fs } from '../../../utils/vite.js';
 
 // vite-specifc queries that we should skip handling for css urls
 const vite_css_query_regex = /(?:\?|&)(?:raw|url|inline)(?:&|$)/;
@@ -68,6 +69,8 @@ export function dev(server, vite_config, vite, svelte_config, root, dev_context)
 
 	update_manifest();
 
+	const params_file = resolve_entry(svelte_config.kit.files.params);
+
 	/**
 	 * @param {string} event
 	 * @param {(file: string) => void} cb
@@ -76,7 +79,7 @@ export function dev(server, vite_config, vite, svelte_config, root, dev_context)
 		server.watcher.on(event, (file) => {
 			if (
 				file.startsWith(svelte_config.kit.files.routes + path.sep) ||
-				file.startsWith(svelte_config.kit.files.params + path.sep) ||
+				(params_file && file === params_file) ||
 				svelte_config.kit.moduleExtensions.some((ext) => file.endsWith(`.remote${ext}`)) ||
 				// in contrast to server hooks, client hooks are written to the client manifest
 				// and therefore need rebuilding when they are added/removed

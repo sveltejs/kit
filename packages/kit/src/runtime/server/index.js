@@ -28,7 +28,7 @@ export class Server {
 		this.#manifest = manifest;
 
 		// Since AsyncLocalStorage is not working in webcontainers, we don't reset `sync_store`
-		// in `src/exports/internal/event.js` and handle only one request at a time.
+		// in `src/exports/internal/server/event.js` and handle only one request at a time.
 		if (IN_WEBCONTAINER) {
 			const respond = this.respond.bind(this);
 

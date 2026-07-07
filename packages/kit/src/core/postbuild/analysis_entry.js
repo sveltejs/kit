@@ -14,7 +14,9 @@ import { has_server_load, resolve_route } from '../../utils/routing.js';
 import { validate_server_exports } from '../../utils/exports.js';
 import { PageNodes } from '../../utils/page_nodes.js';
 import { check_feature } from '../../utils/features.js';
+import { load_and_validate_params } from '../../utils/params.js';
 import { create_synchronous_read } from '../../runtime/server/read.js';
+import { loud_ssr_load_module } from '../../exports/vite/dev/utils.js';
 
 set_building();
 
@@ -90,6 +92,13 @@ export class Server {
  * @returns {Promise<ServerMetadata>}
  */
 async function analyse({ server_manifest, tracked_features, manifest, manifest_data, hash }) {
+	await load_and_validate_params({
+		routes: manifest_data.routes,
+		params_path: manifest_data.params,
+		root: `${__SVELTEKIT_OUT_DIR__}/server/entries`,
+		load: (file) => loud_ssr_load_module(file)
+	});
+
 	/** @type {import('types').ServerMetadata} */
 	const metadata = {
 		nodes: [],

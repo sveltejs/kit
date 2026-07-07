@@ -3,6 +3,7 @@ import { server_assets } from '__sveltekit/server-assets';
 import { remotes } from '__sveltekit/remotes';
 import { manifest_data, mime_types } from '__sveltekit/manifest-data';
 import { get } from '__sveltekit/ipc';
+import { resolve } from './utils.js';
 import { to_fs } from '../../../utils/vite.js';
 import { compact } from '../../../utils/array.js';
 import { join } from '../../../utils/path.js';
@@ -160,43 +161,16 @@ export const manifest = {
 			})
 		),
 		matchers: async () => {
-			const importing_matchers = Object.entries(manifest_data.matchers).map(
-				async ([name, file]) => {
-					const url = join(__SVELTEKIT_ROOT__, file);
-					const { module } = await resolve(url);
-					if (!module.match) {
-						throw new Error(`${file} does not export a \`match\` function`);
-					}
-					return [name, module.match];
-				}
-			);
-			return Object.fromEntries(await Promise.all(importing_matchers));
+			if (!manifest_data.params) return {};
+
+			const url = join(__SVELTEKIT_ROOT__, manifest_data.params);
+			const { module } = await resolve(url);
+
+			if (!module.params) {
+				throw new Error(`${manifest_data.params} does not export \`params\` from \`defineParams\``);
+			}
+
+			return module.params;
 		}
 	}
 };
-
-/** @param {string} url */
-async function loud_ssr_load_module(url) {
-	try {
-		return await import(/* @vite-ignore */ url);
-	} catch (err) {
-		if (err instanceof Error) {
-			import.meta.hot?.send('sveltekit:ssr-load-module-error', {
-				...err,
-				// these properties are non-enumerable and will not be
-				// serialized unless we explicitly include them
-				message: err.message,
-				stack: err.stack
-			});
-		}
-
-		throw err;
-	}
-}
-
-/** @param {string} id */
-async function resolve(id) {
-	const url = id.startsWith('..') ? to_fs(id) : `file:///${id}`;
-	const module = await loud_ssr_load_module(url);
-	return { module, url };
-}

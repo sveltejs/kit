@@ -1,4 +1,4 @@
-/** @import { Asset, RouteId, RouteIdWithSearchOrHash, Pathname, PathnameWithSearchOrHash, ResolvedPathname } from '$app/types' */
+/** @import { Asset, RouteId, RouteIdWithSearchOrHash, Pathname, PathnameWithSearchOrHash, ResolvedPathname, RouteParams } from '$app/types' */
 /** @import { ResolveArgs } from './types.js' */
 import { base, assets, hash_routing } from './internal/client.js';
 import { resolve_route } from '../../../utils/routing.js';
@@ -59,11 +59,7 @@ export function resolve(...args) {
 		);
 	}
 
-	// The type error is correct here, and if someone doesn't pass params when they should there's a runtime error,
-	// but we don't want to adjust the internal resolve_route function to accept `undefined`, hence the type cast.
-	return (
-		base + pathname_prefix + resolve_route(args[0], /** @type {Record<string, string>} */ (args[1]))
-	);
+	return base + pathname_prefix + resolve_route(args[0], args[1] ?? {});
 }
 
 /**
@@ -84,7 +80,7 @@ export function resolve(...args) {
  * @since 2.52.0
  *
  * @param {Pathname | URL | (string & {})} url
- * @returns {Promise<{ id: RouteId, params: Record<string, string> } | null>}
+ * @returns {Promise<{ [K in RouteId]: { id: K; params: RouteParams<K>; } }[RouteId] | null>}
  */
 export async function match(url) {
 	if (typeof url === 'string') {
