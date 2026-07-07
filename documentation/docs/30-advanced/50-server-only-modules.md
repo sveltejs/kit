@@ -19,6 +19,8 @@ You can make your own modules server-only in two ways:
 - For single modules, add `.server` to the filename, e.g. `secrets.server.js`. This works for _any_ file in the project directory, including within `$lib`.
 - Directories named `server` under `$lib`, at any depth, mark _all_ code within as server-only, e.g. `$lib/server/config.js` or `$lib/data/server/user/profile.js`.
 
+Dependencies within a `node_modules` folder that have `@sveltejs/kit` as a (peer) dependency are subject to the same rules.
+
 ## How it works
 
 Any time you have public-facing code that imports server-only code (whether directly or indirectly)...
