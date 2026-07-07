@@ -58,7 +58,8 @@ test.describe('$app/env', () => {
 				PRIVATE_EXPLICIT_ENV: 'secret resolved at runtime',
 				PRIVATE_STATIC_EXPLICIT_ENV: 'secret resolved at build time',
 				PRIVATE_VALIDATED_DEFAULT_ENV: 'foo',
-				RUNTIME_ONLY: 'secret'
+				RUNTIME_ONLY: 'secret',
+				BUILDTIME_ONLY: undefined
 			})
 		);
 
@@ -104,5 +105,14 @@ test.describe('$app/env', () => {
 			expect(output).toContain('Invalid environment variables');
 			expect(output).toContain('RUNTIME_ONLY');
 		}
+	});
+
+	test('buildtime-only variable is undefined at runtime', async ({ page, javaScriptEnabled }) => {
+		test.skip(javaScriptEnabled);
+
+		await page.goto('/basepath/env/buildtime-only');
+		await expect(page.locator('p')).toHaveText(
+			'buildtime-only environment variable exists: undefined'
+		);
 	});
 });
