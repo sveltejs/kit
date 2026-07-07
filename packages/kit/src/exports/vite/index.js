@@ -756,36 +756,56 @@ function kit({ svelte_config }) {
 				if (manifest_data.hooks.client) entrypoints.add(manifest_data.hooks.client);
 				if (manifest_data.hooks.universal) entrypoints.add(manifest_data.hooks.universal);
 
-				const chain = [normalized];
+				// Walk up the import graph from the server-only module, looking for a chain
+				// that leads back to a client entrypoint. We search all candidates (not just
+				// the first) because a module can be imported by both server and client code,
+				// and a greedy first-match could follow a server-only branch that never
+				// reaches an entrypoint — see https://github.com/sveltejs/kit/issues/16232
+				/** @type {Set<string>} */
+				const visited = new Set([normalized]);
 
-				let current = normalized;
-
-				while (true) {
+				/**
+				 * @param {string} current
+				 * @param {string[]} chain
+				 * @returns {string[] | null}
+				 */
+				function find_chain(current, chain) {
 					const importers = import_map.get(current);
-					if (!importers) break;
+					if (!importers) return null;
 
-					const candidates = Array.from(importers).filter((importer) => !chain.includes(importer));
-					if (candidates.length === 0) break;
+					for (const importer of importers) {
+						if (visited.has(importer)) continue;
+						visited.add(importer);
 
-					chain.push((current = candidates[0]));
-
-					if (entrypoints.has(current)) {
-						const pyramid = chain
-							.reverse()
-							.map((id, i) => {
-								return `${' '.repeat(i + 1)}${id}`;
-							})
-							.join(' imports\n');
-
-						let message = `Cannot import ${normalized} into code that runs in the browser, as this could leak sensitive information.`;
-						message += `\n\n${pyramid}`;
-						message += `\n\nIf you're only using the import as a type, change it to \`import type\`.`;
-
-						throw stackless(message);
+						const next_chain = [...chain, importer];
+						if (entrypoints.has(importer)) {
+							return next_chain;
+						}
+						const result = find_chain(importer, next_chain);
+						if (result) return result;
 					}
+					return null;
 				}
 
-				throw new Error('An impossible situation occurred');
+				const chain = find_chain(normalized, [normalized]);
+
+				if (chain) {
+					const pyramid = chain
+						.reverse()
+						.map((id, i) => {
+							return `${' '.repeat(i + 1)}${id}`;
+						})
+						.join(' imports\n');
+
+					let message = `Cannot import ${normalized} into code that runs in the browser, as this could leak sensitive information.`;
+					message += `\n\n${pyramid}`;
+					message += `\n\nIf you're only using the import as a type, change it to \`import type\`.`;
+
+					throw stackless(message);
+				}
+
+				// No chain from this server-only module to a client entrypoint was found —
+				// the module is only imported from server code, which is valid.
 			}
 		}
 	};
