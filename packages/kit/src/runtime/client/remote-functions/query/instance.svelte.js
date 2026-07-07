@@ -132,14 +132,19 @@ export class Query {
 				//   to ensure the query is properly refreshed before the navigation completes
 				// - Instead of failing on transport-level errors, we should probably do what
 				//   LiveQuery does and preserve the last known good value and retry the connection
-				const idx = this.#latest.indexOf(resolve);
-				if (idx === -1) return;
+				if (this.#latest.indexOf(resolve) === -1) return;
 
 				const error = await handle_error(e, {
 					params: {},
 					route: { id: null },
 					url: new URL(location.href)
 				});
+
+				// Re-check after the async `handle_error` gap: a later request may have
+				// resolved/rejected while we were awaiting and superseded this one, so
+				// recompute the index and bail out if this request is no longer current
+				const idx = this.#latest.indexOf(resolve);
+				if (idx === -1) return;
 
 				untrack(() => {
 					this.#latest.splice(0, idx).forEach((r) => r(undefined));
