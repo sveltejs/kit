@@ -198,24 +198,33 @@ export function create_sveltekit_env_private(variables, env) {
 	/** @type {string[]} */
 	const exports = [];
 
+	let has_buildtime = false;
+
 	for (const [name, config] of Object.entries(variables)) {
 		if (config.public) continue;
 
 		const availability = config.availability ?? 'dynamic';
 
-		const value =
-			availability === 'inline'
-				? devalue.uneval(validate(variables, env[name], name, issues))
-				: availability === 'buildtime'
-					? 'undefined'
-					: `env.${name}`;
+		/** @type {string} */
+		let value;
+
+		if (availability === 'inline') {
+			value = devalue.uneval(validate(variables, env[name], name, issues));
+		} else if (availability === 'buildtime') {
+			has_buildtime = true;
+			value = `building ? ${devalue.uneval(validate(variables, env[name], name, issues))} : undefined`;
+		} else {
+			value = `env.${name}`;
+		}
 
 		exports.push(`export const ${name} = ${value};\n`);
 	}
 
 	handle_issues(issues);
 
-	return `import { dynamic_private_env as env } from '__sveltekit/env';\n\n${exports.join('')}`;
+	const import_building = has_buildtime ? `import { building } from '$app/env/internal';\n` : '';
+
+	return `${import_building}import { dynamic_private_env as env } from '__sveltekit/env';\n\n${exports.join('')}`;
 }
 
 /**
@@ -235,24 +244,33 @@ export function create_sveltekit_env_public(variables, env, prelude) {
 	/** @type {string[]} */
 	const exports = [];
 
+	let has_buildtime = false;
+
 	for (const [name, config] of Object.entries(variables)) {
 		if (!config.public) continue;
 
 		const availability = config.availability ?? 'dynamic';
 
-		const value =
-			availability === 'inline'
-				? devalue.uneval(validate(variables, env[name], name, issues))
-				: availability === 'buildtime'
-					? 'undefined'
-					: `env.${name}`;
+		/** @type {string} */
+		let value;
+
+		if (availability === 'inline') {
+			value = devalue.uneval(validate(variables, env[name], name, issues));
+		} else if (availability === 'buildtime') {
+			has_buildtime = true;
+			value = `building ? ${devalue.uneval(validate(variables, env[name], name, issues))} : undefined`;
+		} else {
+			value = `env.${name}`;
+		}
 
 		exports.push(`export const ${name} = ${value};\n`);
 	}
 
 	handle_issues(issues);
 
-	return `${prelude}\n\n${exports.join('')}`;
+	const import_building = has_buildtime ? `import { building } from '$app/env/internal';\n` : '';
+
+	return `${import_building}${prelude}\n\n${exports.join('')}`;
 }
 
 /**

@@ -2,6 +2,6 @@
 	export let data;
 </script>
 
-<p>
+<p data-testid="buildtime-only">
 	buildtime-only environment variable exists: {data.buildtime_environment_variable ?? 'undefined'}
 </p>
