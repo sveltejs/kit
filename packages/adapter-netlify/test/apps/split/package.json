@@ -5,9 +5,9 @@
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
-		"preview": "node ../../preview.js",
+		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",
-		"test": "playwright test"
+		"test:platform": "playwright test"
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:^",
