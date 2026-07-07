@@ -1044,7 +1044,7 @@ declare module '@sveltejs/kit' {
 	 */
 	export interface Transporter<
 		T = any,
-		U = Exclude<any, false | 0 | '' | null | undefined | typeof NaN>
+		U = any /* minus falsy values, but we can't properly express that */
 	> {
 		encode: (value: T) => false | U;
 		decode: (data: U) => T;
@@ -2305,8 +2305,8 @@ declare module '@sveltejs/kit' {
 		| RemoteQueryOverride;
 
 	export type RemoteResource<T> = Promise<T> & {
-		/** The error in case the query fails. Most often this is a [`HttpError`](https://svelte.dev/docs/kit/@sveltejs-kit#HttpError) but it isn't guaranteed to be. */
-		get error(): any;
+		/** The error in case the query fails. */
+		get error(): App.Error | undefined;
 		/** `true` before the first result is available and during refreshes */
 		get loading(): boolean;
 	} & (

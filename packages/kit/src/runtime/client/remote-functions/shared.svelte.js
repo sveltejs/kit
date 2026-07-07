@@ -137,9 +137,8 @@ export async function remote_request(url, init) {
 	);
 
 	/**
-	 *
 	 * @param {string} key
-	 * @param {CacheEntry<any> | undefined} entry
+	 * @param {CacheEntry | undefined} entry
 	 * @param {any} result
 	 */
 	function refresh(key, entry, result) {
