@@ -499,32 +499,6 @@ export interface KitConfig {
 	/** Experimental features. Here be dragons. These are not subject to semantic versioning, so breaking changes or removal can happen in any release. */
 	experimental?: {
 		/**
-		 * Options for enabling server-side [OpenTelemetry](https://opentelemetry.io/) tracing for SvelteKit operations including the [`handle` hook](https://svelte.dev/docs/kit/hooks#Server-hooks-handle), [`load` functions](https://svelte.dev/docs/kit/load), [form actions](https://svelte.dev/docs/kit/form-actions), and [remote functions](https://svelte.dev/docs/kit/remote-functions).
-		 * @default { server: false, serverFile: false }
-		 * @since 2.31.0
-		 */
-		tracing?: {
-			/**
-			 * Enables server-side [OpenTelemetry](https://opentelemetry.io/) span emission for SvelteKit operations including the [`handle` hook](https://svelte.dev/docs/kit/hooks#Server-hooks-handle), [`load` functions](https://svelte.dev/docs/kit/load), [form actions](https://svelte.dev/docs/kit/form-actions), and [remote functions](https://svelte.dev/docs/kit/remote-functions).
-			 * @default false
-			 * @since 2.31.0
-			 */
-			server?: boolean;
-		};
-
-		/**
-		 * @since 2.31.0
-		 */
-		instrumentation?: {
-			/**
-			 * Enables `instrumentation.server.js` for tracing and observability instrumentation.
-			 * @default false
-			 * @since 2.31.0
-			 */
-			server?: boolean;
-		};
-
-		/**
 		 * Whether to enable the experimental remote functions feature. This feature is not yet stable and may be changed or removed at any time.
 		 * @default false
 		 */
@@ -912,6 +886,17 @@ export interface KitConfig {
 				register?: false;
 		  }
 	);
+	/**
+	 * Options for enabling [OpenTelemetry](https://opentelemetry.io/) tracing for SvelteKit operations.
+	 * @default { server: false }
+	 */
+	tracing?: {
+		/**
+		 * Enables server-side [OpenTelemetry](https://opentelemetry.io/) span emission for SvelteKit operations including the [`handle` hook](https://svelte.dev/docs/kit/hooks#Server-hooks-handle), [`load` functions](https://svelte.dev/docs/kit/load), [form actions](https://svelte.dev/docs/kit/form-actions), and [remote functions](https://svelte.dev/docs/kit/remote-functions). Tracing — and more significantly, observability instrumentation — can have a nontrivial overhead, so consider whether you really need it, or if it might be more appropriate to turn it on in development and preview environments only.
+		 * @default false
+		 */
+		server?: boolean;
+	};
 	typescript?: {
 		/**
 		 * A function that allows you to edit the generated `tsconfig.json`. You can mutate the config (recommended) or return a new one.
@@ -1086,7 +1071,7 @@ export type Transport = Record<string, Transporter>;
  */
 export interface Transporter<
 	T = any,
-	U = Exclude<any, false | 0 | '' | null | undefined | typeof NaN>
+	U = any /* minus falsy values, but we can't properly express that */
 > {
 	encode: (value: T) => false | U;
 	decode: (data: U) => T;
@@ -1493,7 +1478,64 @@ export interface Page<
 /**
  * The shape of a param matcher. See [matching](https://svelte.dev/docs/kit/advanced-routing#Matching) for more info.
  */
-export type ParamMatcher = (param: string) => boolean;
+export type ParamMatcher<Output = any> = StandardSchemaV1<string, Output>;
+
+/**
+ * A value that can be parsed from a URL param and losslessly encoded with `String(...)`.
+ */
+export type ParamValue = string | number | boolean | bigint;
+
+/**
+ * A param matcher definition passed to [`defineParams`](https://svelte.dev/docs/kit/@sveltejs-kit#defineParams).
+ */
+export type ParamDefinition =
+	| ((param: string) => ParamValue | undefined)
+	| StandardSchemaV1<string, ParamValue>;
+
+/**
+ * The return type of [`defineParams`](https://svelte.dev/docs/kit/@sveltejs-kit#defineParams).
+ */
+export type DefinedParams<T extends Record<string, ParamDefinition>> = {
+	readonly [K in keyof T]: ParamEntry<T[K]>;
+};
+
+/**
+ * Normalizes a property of defineParams (schema or function) to standard schema.
+ */
+type ParamEntry<M> =
+	M extends StandardSchemaV1<any, any>
+		? StandardSchemaV1.InferOutput<M> extends ParamValue
+			? StandardSchemaV1<any, M>
+			: StandardSchemaV1<any, never>
+		: M extends (param: string) => infer R
+			? Exclude<R, undefined> extends ParamValue
+				? StandardSchemaV1<any, Exclude<R, undefined>>
+				: StandardSchemaV1<any, never>
+			: never;
+
+/**
+ * Extracts the param type from a matcher.
+ */
+export type MatcherParam<M extends StandardSchemaV1<any, any>> =
+	M extends StandardSchemaV1<any, infer Inner>
+		? Inner extends ParamValue
+			? Inner
+			: Inner extends StandardSchemaV1<any, any>
+				? StandardSchemaV1.InferOutput<Inner> extends ParamValue
+					? StandardSchemaV1.InferOutput<Inner>
+					: never
+				: never
+		: never;
+
+/**
+ * Define [parameter matchers](https://svelte.dev/docs/kit/advanced-routing#Matching) for your app.
+ *
+ * @template T
+ * @param definitions
+ */
+export function defineParams<T extends Record<string, ParamDefinition>>(
+	definitions: T
+): DefinedParams<T>;
 
 /**
  * A single entry yielded by [`requested`](https://svelte.dev/docs/kit/$app-server#requested)
@@ -2292,8 +2334,8 @@ export type RemoteQueryUpdate =
 	| RemoteQueryOverride;
 
 export type RemoteResource<T> = Promise<T> & {
-	/** The error in case the query fails. Most often this is a [`HttpError`](https://svelte.dev/docs/kit/@sveltejs-kit#HttpError) but it isn't guaranteed to be. */
-	get error(): any;
+	/** The error in case the query fails. */
+	get error(): App.Error | undefined;
 	/** `true` before the first result is available and during refreshes */
 	get loading(): boolean;
 } & (

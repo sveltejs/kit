@@ -204,7 +204,7 @@ export interface ManifestData {
 	};
 	nodes: PageNode[];
 	routes: RouteData[];
-	matchers: Record<string, string>;
+	params: string | null;
 }
 
 export interface RemoteChunk {
@@ -247,7 +247,7 @@ export type RecursiveRequired<T> = {
 	// Recursive implementation of TypeScript's Required utility type.
 	// Will recursively continue until it reaches a primitive or Function
 	// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
-	[K in keyof T]-?: Extract<T[K], Function> extends never // If it does not have a Function type
+	[K in keyof T]-?: Extract<T[K], Function | (`${string}:` & {})> extends never // If it does not have a Function type
 		? RecursiveRequired<T[K]> // recursively continue through.
 		: T[K]; // Use the exact type for everything else
 };
@@ -417,23 +417,23 @@ export interface ServerMetadata {
 	remotes: Map<string, Map<string, { type: RemoteInternals['type']; dynamic: boolean }>>;
 }
 
+// TODO get rid of this in favor us using just import('svelte').Component<any, any, any>
 export interface SSRComponent {
 	default: {
 		render(
 			props: Record<string, any>,
 			opts: { context: Map<any, any>; csp?: { nonce?: string; hash?: boolean } }
-		): {
-			html: string;
+		): Promise<{
+			body: string;
 			head: string;
 			css: {
 				code: string;
 				map: any; // TODO
 			};
-			/** Until we require all Svelte versions that support hashes, this might not be defined */
-			hashes?: {
+			hashes: {
 				script: Array<`sha256-${string}`>;
 			};
-		};
+		}>;
 	};
 }
 
@@ -493,7 +493,6 @@ export type SSRNodeLoader = () => Promise<SSRNode>;
 
 export interface SSROptions {
 	app_template_contains_nonce: boolean;
-	async: boolean;
 	csp: ValidatedConfig['kit']['csp'];
 	csrf_check_origin: boolean;
 	csrf_trusted_origins: string[];
@@ -598,7 +597,7 @@ export interface Uses {
 	search_params: Set<string>;
 }
 
-export type ValidatedConfig = Config & {
+export type ValidatedConfig = Omit<Config, 'kit'> & {
 	kit: ValidatedKitConfig;
 	extensions: string[];
 };

@@ -91,7 +91,7 @@ export async function render_response({
 	// TODO if we add a client entry point one day, we will need to include inline_styles with the entry, otherwise stylesheets will be linked even if they are below inlineStyleThreshold
 	const inline_styles = new Map();
 
-	/** @type {ReturnType<typeof options.root.render>} */
+	/** @type {Awaited<ReturnType<typeof options.root.render>>} */
 	let rendered;
 
 	const form_value =
@@ -238,36 +238,27 @@ export async function render_response({
 				// portable as possible, but reset afterwards
 				if (paths.relative) paths.override({ base, assets });
 
-				const maybe_promise = options.root.render(props, render_opts);
 				// We have to invoke .then eagerly here in order to kick off rendering: it's only starting on access,
 				// and `await maybe_promise` would eagerly access the .then property but call its function only after a tick, which is too late
 				// for the paths.reset() below and for any eager getRequestEvent() calls during rendering without AsyncLocalStorage available.
-				const rendered =
-					options.async && 'then' in maybe_promise
-						? /** @type {ReturnType<typeof options.root.render> & Promise<any>} */ (
-								maybe_promise
-							).then((r) => r)
-						: maybe_promise;
+				// TODO use render from 'svelte/server' here
+				const rendered = options.root.render(props, render_opts).then((r) => r);
 
-				// TODO 3.0 remove options.async
-				if (options.async) {
-					// we reset this synchronously, rather than after async rendering is complete,
-					// to avoid cross-talk between requests. This is a breaking change for
-					// anyone who opts into async SSR, since `base` and `assets` will no
-					// longer be relative to the current pathname.
-					// TODO 3.0 remove `base` and `assets` in favour of `resolve(...)` and `asset(...)`
-					paths.reset();
-				}
+				// we reset this synchronously, rather than after async rendering is complete,
+				// to avoid cross-talk between requests. This is a breaking change for
+				// anyone who opts into async SSR, since `base` and `assets` will no
+				// longer be relative to the current pathname.
+				// TODO 3.0 remove `base` and `assets` in favour of `resolve(...)` and `asset(...)`
+				paths.reset();
 
-				const { head, html, css, hashes } = /** @type {ReturnType<typeof options.root.render>} */ (
-					options.async ? await rendered : rendered
-				);
+				// @ts-expect-error the legacy `render` API only returns html still, but the new API uses body
+				const { head, html: body, css, hashes } = await rendered;
 
 				if (hashes) {
 					csp.add_script_hashes(hashes.script);
 				}
 
-				return { head, html, css, hashes };
+				return { head, body, css, hashes };
 			});
 		} finally {
 			if (DEV) {
@@ -277,7 +268,7 @@ export async function render_response({
 			paths.reset(); // just in case `options.root.render(...)` failed
 		}
 	} else {
-		rendered = { head: '', html: '', css: { code: '', map: null }, hashes: { script: [] } };
+		rendered = { head: '', body: '', css: { code: '', map: null }, hashes: { script: [] } };
 	}
 
 	for (const { node } of branch) {
@@ -298,7 +289,7 @@ export async function render_response({
 	}
 
 	const head = new Head(rendered.head);
-	let body = rendered.html;
+	let body = rendered.body;
 
 	/** @param {string} path */
 	const prefixed = (path) => {

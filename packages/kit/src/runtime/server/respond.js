@@ -336,14 +336,17 @@ export async function internal_respond(request, options, manifest, state) {
 	}
 
 	if (!state.prerendering?.fallback) {
-		// TODO this could theoretically break — should probably be inside a try-catch
-		const matchers = await manifest._.matchers();
-		const result = find_route(resolved_path, manifest._.routes, matchers);
+		try {
+			const matchers = await manifest._.matchers();
+			const result = find_route(resolved_path, manifest._.routes, matchers);
 
-		if (result) {
-			route = result.route;
-			event.route = { id: route.id };
-			event.params = result.params;
+			if (result) {
+				route = result.route;
+				event.route = { id: route.id };
+				event.params = result.params;
+			}
+		} catch (e) {
+			return await handle_fatal_error(event, event_state, options, e);
 		}
 	}
 

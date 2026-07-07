@@ -51,19 +51,13 @@ test('error_for_missing_config - simple single level config', () => {
 
 test('error_for_missing_config - nested config', () => {
 	expect(() =>
-		error_for_missing_config(
-			'instrumentation.server.js',
-			'experimental.instrumentation.server',
-			'true'
-		)
+		error_for_missing_config('remote functions', 'experimental.remoteFunctions', 'true')
 	).toThrow(
 		dedent`
-			To enable instrumentation.server.js, add the following to your SvelteKit plugin in \`vite.config.js\`:
+			To enable remote functions, add the following to your SvelteKit plugin in \`vite.config.js\`:
 
 			experimental: {
-			  instrumentation: {
-			    server: true
-			  }
+			  remoteFunctions: true
 			}
 		`
 	);

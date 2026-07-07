@@ -1,0 +1,42 @@
+name: 'Netlify Deploy'
+description: 'Set up the repo and deploy a test app to Netlify'
+
+inputs:
+  test-app-dir:
+    description: 'Path to the test app directory'
+    required: true
+  netlify-project-id:
+    description: 'Netlify project ID'
+    required: true
+  netlify-token:
+    description: 'Netlify authentication token'
+    required: true
+outputs:
+  deployment-url:
+    description: 'URL of the deployed preview'
+    value: ${{ steps.deploy.outputs.url }}
+
+runs:
+  using: 'composite'
+  steps:
+    - uses: ./.github/actions/node-setup
+
+    - name: Build adapter-netlify files
+      shell: bash
+      working-directory: packages/adapter-netlify
+      run: pnpm prepublishOnly
+
+    - name: Install Netlify CLI
+      shell: bash
+      run: pnpm i -g netlify-cli
+
+    - name: Deploy to Netlify
+      id: deploy
+      shell: bash
+      env:
+        TEST_APP_DIR: ${{ inputs.test-app-dir }}
+        NETLIFY_AUTH_TOKEN: ${{ inputs.netlify-token }}
+        NETLIFY_PROJECT_ID: ${{ inputs.netlify-project-id }}
+      run: |
+        TEST_APP_NAME=$(cat "$TEST_APP_DIR/package.json" | jq -r '.name')
+        echo "url=$(netlify deploy --json --filter="$TEST_APP_NAME" --dir="$TEST_APP_DIR/build" --functions=".netlify/v1/functions" --auth="$NETLIFY_AUTH_TOKEN" --site="$NETLIFY_PROJECT_ID" | jq -r '.deploy_url')" >> "$GITHUB_OUTPUT"
