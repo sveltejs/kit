@@ -375,3 +375,73 @@ export const reserved = new Set([
 ]);
 
 export const valid_identifier = /^[a-zA-Z_$][a-zA-Z0-9_$]*$/;
+
+/**
+ * Generates `export const` declarations (and, for reserved-word names that need
+ * aliasing, `const` + re-export specifiers) for a set of named exports.
+ *
+ * For regular names, emits a single efficient `export const name = expr;` statement.
+ * For reserved-word names (e.g. `delete`, `class`), emits `const alias = expr;` plus
+ * a re-export specifier (`alias as name`), since reserved words can't be `const`
+ * binding names but CAN appear in export specifiers.
+ *
+ * You can do evil things like `export { c as class }`. In order to import/re-export
+ * these, you need to alias the binding, then un-alias it when re-exporting:
+ *
+ *   const _0 = ...; // safe binding name
+ *   export { _0 as class }; // valid — `class` is allowed in export specifiers
+ *
+ * Aliases are chosen to avoid collisions with any of the supplied names. The
+ * namespace binding (used to hold the imported module) is likewise chosen to
+ * avoid collisions.
+ *
+ * @param {Iterable<string>} names — the export names
+ * @param {(name: string, namespace: string) => string} build_expression —
+ *   called for each name to produce the right-hand side of the declaration;
+ *   receives the chosen namespace binding so it can reference the imported module
+ * @param {string} namespace_prefix — the preferred binding name for the namespace
+ *   (suffixed with a number if it collides with any export name)
+ * @returns {{ namespace: string, declarations: string[], reexports: string[] }}
+ */
+export function create_exported_declarations(names, build_expression, namespace_prefix) {
+	/** @type {Set<string>} */
+	const set = new Set(names);
+
+	let namespace = namespace_prefix;
+	let namespace_index = 0;
+	while (set.has(namespace)) {
+		namespace = `${namespace_prefix}${namespace_index++}`;
+	}
+
+	let alias_index = 0;
+	/** @type {Map<string, string>} */
+	const aliases = new Map();
+
+	for (const name of set) {
+		if (!reserved.has(name)) continue;
+
+		let alias = `_${alias_index++}`;
+		while (set.has(alias)) {
+			alias = `_${alias_index++}`;
+		}
+		aliases.set(name, alias);
+	}
+
+	/** @type {string[]} */
+	const declarations = [];
+	/** @type {string[]} */
+	const reexports = [];
+
+	for (const name of set) {
+		const alias = aliases.get(name);
+		const expr = build_expression(name, namespace);
+		if (alias) {
+			declarations.push(`const ${alias} = ${expr};`);
+			reexports.push(`${alias} as ${name}`);
+		} else {
+			declarations.push(`export const ${name} = ${expr};`);
+		}
+	}
+
+	return { namespace, declarations, reexports };
+}
