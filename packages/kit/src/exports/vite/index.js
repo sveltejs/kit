@@ -21,6 +21,7 @@ import {
 } from '../../core/env.js';
 import * as sync from '../../core/sync/sync.js';
 import { create_assets } from '../../core/sync/create_manifest_data/index.js';
+import { load_and_validate_params } from '../../utils/params.js';
 import { runtime_directory, logger } from '../../core/utils.js';
 import { generate_manifest } from '../../core/generate_manifest/index.js';
 import { build_server_nodes } from './build/build_server.js';
@@ -464,7 +465,7 @@ function kit({ svelte_config }) {
 					__SVELTEKIT_PATHS_RELATIVE__: s(kit.paths.relative),
 					__SVELTEKIT_CLIENT_ROUTING__: s(kit.router.resolution === 'client'),
 					__SVELTEKIT_HASH_ROUTING__: s(kit.router.type === 'hash'),
-					__SVELTEKIT_SERVER_TRACING_ENABLED__: s(kit.experimental.tracing.server),
+					__SVELTEKIT_SERVER_TRACING_ENABLED__: s(kit.tracing.server),
 					__SVELTEKIT_EXPERIMENTAL_USE_TRANSFORM_ERROR__: s(kit.experimental.handleRenderingErrors),
 					__SVELTEKIT_ROOT__: s(root),
 					__SVELTEKIT_DEV__: s(!is_build)
@@ -1259,11 +1260,10 @@ function kit({ svelte_config }) {
 						}
 					});
 
-					// ...and every matcher
-					Object.entries(manifest_data.matchers).forEach(([key, file]) => {
-						const name = posixify(path.join('entries/matchers', key));
-						server_input[name] = path.resolve(root, file);
-					});
+					// ...and the params file
+					if (manifest_data.params) {
+						server_input['entries/params'] = path.resolve(root, manifest_data.params);
+					}
 
 					// ...and the hooks files
 					if (manifest_data.hooks.server) {
@@ -1283,13 +1283,6 @@ function kit({ svelte_config }) {
 					if (server_instrumentation) {
 						if (kit.adapter && !kit.adapter.supports?.instrumentation?.()) {
 							throw new Error(`${server_instrumentation} is unsupported in ${kit.adapter.name}.`);
-						}
-						if (!kit.experimental.instrumentation.server) {
-							error_for_missing_config(
-								'`instrumentation.server.js`',
-								'experimental.instrumentation.server',
-								'true'
-							);
 						}
 						server_input['instrumentation.server'] = server_instrumentation;
 					}
@@ -1512,6 +1505,12 @@ function kit({ svelte_config }) {
 				rimraf(out);
 			}
 			mkdirp(out);
+
+			await load_and_validate_params({
+				routes: manifest_data.routes,
+				params_path: manifest_data.params,
+				root
+			});
 
 			const { output: server_chunks } = /** @type {Rolldown.RolldownOutput} */ (
 				await builder.build(builder.environments.ssr)

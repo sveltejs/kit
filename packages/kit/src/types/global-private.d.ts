@@ -15,7 +15,7 @@ declare global {
 	const __SVELTEKIT_PATHS_ASSETS__: string;
 	const __SVELTEKIT_PATHS_BASE__: string;
 	const __SVELTEKIT_PATHS_RELATIVE__: boolean;
-	/** True if `config.experimental.instrumentation.server` is `true` */
+	/** True if `config.tracing.server` is `true` */
 	const __SVELTEKIT_SERVER_TRACING_ENABLED__: boolean;
 	/** True if `config.experimental.forkPreloads` is `true` */
 	const __SVELTEKIT_FORK_PRELOADS__: boolean;
