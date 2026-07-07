@@ -17,7 +17,8 @@ import {
 	resolve_explicit_env_entry,
 	create_sveltekit_env_service_worker,
 	create_sveltekit_env_service_worker_dev,
-	create_sveltekit_env_private
+	create_sveltekit_env_private,
+	create_exported_declarations
 } from '../../core/env.js';
 import * as sync from '../../core/sync/sync.js';
 import { create_assets } from '../../core/sync/create_manifest_data/index.js';
@@ -937,15 +938,17 @@ function kit({ svelte_config }) {
 				}
 			}
 
-			let namespace = '__remote';
-			let uid = 1;
-			while (map.has(namespace)) namespace = `__remote${uid++}`;
+			const { namespace, declarations, reexports } = create_exported_declarations(
+				map.keys(),
+				(name, ns) => `${ns}.${map.get(name)}('${remote.hash}/${name}')`,
+				'__remote'
+			);
 
-			const exports = Array.from(map).map(([name, type]) => {
-				return `export const ${name} = ${namespace}.${type}('${remote.hash}/${name}');`;
-			});
-
-			let result = `import * as ${namespace} from '__sveltekit/remote';\n\n${exports.join('\n')}\n`;
+			let result = `import * as ${namespace} from '__sveltekit/remote';\n\n${declarations.join('\n')}`;
+			if (reexports.length > 0) {
+				result += `\nexport { ${reexports.join(', ')} };`;
+			}
+			result += '\n';
 
 			if (dev_server) {
 				result += `\nimport.meta.hot?.accept();\n`;
