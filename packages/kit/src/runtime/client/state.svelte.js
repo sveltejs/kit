@@ -15,7 +15,6 @@ export const page = new (class Page {
 	url = $state.raw(new URL('a:'));
 })();
 
-/** @type {{ current: import('@sveltejs/kit').Navigation | null }} */
 export const navigating = new (class Navigating {
 	current = $state.raw(null);
 })();
