@@ -70,8 +70,6 @@ const get_defaults = (prefix = '') => ({
 			dir: prefix
 		},
 		experimental: {
-			tracing: { server: false },
-			instrumentation: { server: false },
 			remoteFunctions: false,
 			forkPreloads: false,
 			handleRenderingErrors: false
@@ -103,6 +101,7 @@ const get_defaults = (prefix = '') => ({
 			options: undefined,
 			register: true
 		},
+		tracing: { server: false },
 		typescript: {},
 		paths: {
 			base: '',
@@ -442,9 +441,7 @@ test('accepts valid tracing values', () => {
 	assert.doesNotThrow(() => {
 		validate_config({
 			kit: {
-				experimental: {
-					tracing: { server: true }
-				}
+				tracing: { server: true }
 			}
 		});
 	});
@@ -452,9 +449,7 @@ test('accepts valid tracing values', () => {
 	assert.doesNotThrow(() => {
 		validate_config({
 			kit: {
-				experimental: {
-					tracing: { server: false }
-				}
+				tracing: { server: false }
 			}
 		});
 	});
@@ -462,9 +457,7 @@ test('accepts valid tracing values', () => {
 	assert.doesNotThrow(() => {
 		validate_config({
 			kit: {
-				experimental: {
-					tracing: undefined
-				}
+				tracing: undefined
 			}
 		});
 	});
@@ -474,35 +467,53 @@ test('errors on invalid tracing values', () => {
 	assert.throws(() => {
 		validate_config({
 			kit: {
+				// @ts-expect-error - given value expected to throw
+				tracing: true
+			}
+		});
+	}, /^config\.tracing should be an object$/);
+
+	assert.throws(() => {
+		validate_config({
+			kit: {
+				// @ts-expect-error - given value expected to throw
+				tracing: 'server'
+			}
+		});
+	}, /^config\.tracing should be an object$/);
+
+	assert.throws(() => {
+		validate_config({
+			kit: {
+				// @ts-expect-error - given value expected to throw
+				tracing: { server: 'invalid' }
+			}
+		});
+	}, /^config\.tracing\.server should be true or false, if specified$/);
+});
+
+test('errors on removed experimental.tracing and experimental.instrumentation', () => {
+	assert.throws(() => {
+		validate_config({
+			kit: {
 				experimental: {
-					// @ts-expect-error - given value expected to throw
-					tracing: true
+					// @ts-expect-error - removed option expected to throw
+					tracing: { server: true }
 				}
 			}
 		});
-	}, /^config\.experimental\.tracing should be an object$/);
+	}, /`config\.experimental\.tracing` has been removed/);
 
 	assert.throws(() => {
 		validate_config({
 			kit: {
 				experimental: {
-					// @ts-expect-error - given value expected to throw
-					tracing: 'server'
+					// @ts-expect-error - removed option expected to throw
+					instrumentation: { server: true }
 				}
 			}
 		});
-	}, /^config\.experimental\.tracing should be an object$/);
-
-	assert.throws(() => {
-		validate_config({
-			kit: {
-				experimental: {
-					// @ts-expect-error - given value expected to throw
-					tracing: { server: 'invalid' }
-				}
-			}
-		});
-	}, /^config\.experimental\.tracing\.server should be true or false, if specified$/);
+	}, /`config\.experimental\.instrumentation` has been removed/);
 });
 
 test('errors on invalid forkPreloads values', () => {

@@ -461,32 +461,6 @@ declare module '@sveltejs/kit' {
 		/** Experimental features. Here be dragons. These are not subject to semantic versioning, so breaking changes or removal can happen in any release. */
 		experimental?: {
 			/**
-			 * Options for enabling server-side [OpenTelemetry](https://opentelemetry.io/) tracing for SvelteKit operations including the [`handle` hook](https://svelte.dev/docs/kit/hooks#Server-hooks-handle), [`load` functions](https://svelte.dev/docs/kit/load), [form actions](https://svelte.dev/docs/kit/form-actions), and [remote functions](https://svelte.dev/docs/kit/remote-functions).
-			 * @default { server: false, serverFile: false }
-			 * @since 2.31.0
-			 */
-			tracing?: {
-				/**
-				 * Enables server-side [OpenTelemetry](https://opentelemetry.io/) span emission for SvelteKit operations including the [`handle` hook](https://svelte.dev/docs/kit/hooks#Server-hooks-handle), [`load` functions](https://svelte.dev/docs/kit/load), [form actions](https://svelte.dev/docs/kit/form-actions), and [remote functions](https://svelte.dev/docs/kit/remote-functions).
-				 * @default false
-				 * @since 2.31.0
-				 */
-				server?: boolean;
-			};
-
-			/**
-			 * @since 2.31.0
-			 */
-			instrumentation?: {
-				/**
-				 * Enables `instrumentation.server.js` for tracing and observability instrumentation.
-				 * @default false
-				 * @since 2.31.0
-				 */
-				server?: boolean;
-			};
-
-			/**
 			 * Whether to enable the experimental remote functions feature. This feature is not yet stable and may be changed or removed at any time.
 			 * @default false
 			 */
@@ -874,6 +848,17 @@ declare module '@sveltejs/kit' {
 					register?: false;
 			  }
 		);
+		/**
+		 * Options for enabling [OpenTelemetry](https://opentelemetry.io/) tracing for SvelteKit operations.
+		 * @default { server: false }
+		 */
+		tracing?: {
+			/**
+			 * Enables server-side [OpenTelemetry](https://opentelemetry.io/) span emission for SvelteKit operations including the [`handle` hook](https://svelte.dev/docs/kit/hooks#Server-hooks-handle), [`load` functions](https://svelte.dev/docs/kit/load), [form actions](https://svelte.dev/docs/kit/form-actions), and [remote functions](https://svelte.dev/docs/kit/remote-functions). Tracing — and more significantly, observability instrumentation — can have a nontrivial overhead, so consider whether you really need it, or if it might be more appropriate to turn it on in development and preview environments only.
+			 * @default false
+			 */
+			server?: boolean;
+		};
 		typescript?: {
 			/**
 			 * A function that allows you to edit the generated `tsconfig.json`. You can mutate the config (recommended) or return a new one.
@@ -1048,7 +1033,7 @@ declare module '@sveltejs/kit' {
 	 */
 	export interface Transporter<
 		T = any,
-		U = Exclude<any, false | 0 | '' | null | undefined | typeof NaN>
+		U = any /* minus falsy values, but we can't properly express that */
 	> {
 		encode: (value: T) => false | U;
 		decode: (data: U) => T;
@@ -2315,8 +2300,8 @@ declare module '@sveltejs/kit' {
 		| RemoteQueryOverride;
 
 	export type RemoteResource<T> = Promise<T> & {
-		/** The error in case the query fails. Most often this is a [`HttpError`](https://svelte.dev/docs/kit/@sveltejs-kit#HttpError) but it isn't guaranteed to be. */
-		get error(): any;
+		/** The error in case the query fails. */
+		get error(): App.Error | undefined;
 		/** `true` before the first result is available and during refreshes */
 		get loading(): boolean;
 	} & (

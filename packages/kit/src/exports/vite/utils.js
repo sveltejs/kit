@@ -145,17 +145,15 @@ export function normalize_id(id, lib, cwd) {
 export const strip_virtual_prefix = /** @param {string} id */ (id) => id.replace('\0virtual:', '');
 
 /**
- * For `error_for_missing_config('instrumentation.server.js', 'experimental.instrumentation.server', true)`,
+ * For `error_for_missing_config('remote functions', 'experimental.remoteFunctions', 'true')`,
  * returns:
  *
  * ```
- * To enable `instrumentation.server.js`, add the following to the SvelteKit plugin in your `vite.config.js`:
+ * To enable remote functions, add the following to the SvelteKit plugin in your `vite.config.js`:
  *
  *\`\`\`js
  *	experimental: {
- *		instrumentation: {
- *			server: true
- *		}
+ *		remoteFunctions: true
  *	}
  *\`\`\`
  *```
