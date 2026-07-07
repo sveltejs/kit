@@ -49,7 +49,7 @@
 		"rolldown": "^1.1.2"
 	},
 	"devDependencies": {
-		"@netlify/edge-functions": "catalog:",
+		"@netlify/edge-functions": "^3.0.8",
 		"@sveltejs/kit": "workspace:^",
 		"@types/node": "catalog:",
 		"typescript": "catalog:",
