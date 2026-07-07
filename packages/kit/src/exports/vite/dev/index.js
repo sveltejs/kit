@@ -85,6 +85,10 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root) {
 				vite.config.logger.error(msg, { error: err });
 			}
 
+			// TODO this is inadequate — it doesn't reliably show the overlay on every page load,
+			// and when it does appear it may immediately vanish. `vite.ws.send` broadcasts
+			// to all connected clients, even ones that are unaffected by the error.
+			// we need a more considered approach
 			vite.ws.send({
 				type: 'error',
 				err: /** @type {import('vite').ErrorPayload['err']} */ ({
