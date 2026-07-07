@@ -197,15 +197,28 @@ export async function render_response({
 			]),
 			csp: csp.script_needs_nonce ? { nonce: csp.nonce } : { hash: csp.script_needs_hash },
 			transformError: error_components
-				? /** @param {unknown} e */ async (e) => {
+				? /** @param {unknown} e */ (e) => {
 						if (isRedirect(e)) {
 							throw e;
 						}
 
-						const transformed = await handle_error_and_jsonify(event, event_state, options, e);
-						props.page.error = props.error = error = transformed;
-						props.page.status = status = transformed.status;
-						return transformed;
+						const handled = handle_error_and_jsonify(event, event_state, options, e);
+
+						// TODO 4.0 make this an async function and await `handled`
+						if (handled instanceof Promise) {
+							return handled.then((e) => {
+								error = e;
+								props.page.error = error;
+								props.page.status = error.status;
+								return error;
+							});
+						}
+
+						error = handled;
+						props.page.error = error;
+						props.page.status = error.status;
+
+						return error;
 					}
 				: undefined
 		};
