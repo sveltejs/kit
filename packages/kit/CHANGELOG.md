@@ -1,5 +1,41 @@
 # @sveltejs/kit
 
+## 3.0.0-next.7
+
+### Major Changes
+
+- breaking: change `form.error` type from `any` to `App.Error | undefined` ([#16245](https://github.com/sveltejs/kit/pull/16245))
+
+- feat: allow adapters to provide additional Vite plugins ([#16206](https://github.com/sveltejs/kit/pull/16206))
+
+- breaking: move tracing out of the experimental namespace and remove the instrumentation flag ([#16260](https://github.com/sveltejs/kit/pull/16260))
+
+- breaking: remove `$app/stores` ([#15499](https://github.com/sveltejs/kit/pull/15499))
+
+- breaking: disallow `*.remote.ts/js` files unless `experimental.remoteFunctions` is enabled ([#16247](https://github.com/sveltejs/kit/pull/16247))
+
+- breaking: remove param files in folder in favor of `params.js/ts` file ([#16189](https://github.com/sveltejs/kit/pull/16189))
+
+### Patch Changes
+
+- fix: defer `query.refresh()` in server commands until after the command body completes ([#16225](https://github.com/sveltejs/kit/pull/16225))
+
+- fix: resolve service worker and `tsconfig.json` based on Vite `root` setting ([#16229](https://github.com/sveltejs/kit/pull/16229))
+
+- fix: populate `$app/env/*` dynamic variables in contexts that don't run the dev server, such as `vite-node` ([#16223](https://github.com/sveltejs/kit/pull/16223))
+
+- fix: no longer throw "An impossible situation occurred" when a server-only module is imported by both server and client code ([#16257](https://github.com/sveltejs/kit/pull/16257))
+
+- fix: set `define` values on `globalThis` when running Vitest ([#16246](https://github.com/sveltejs/kit/pull/16246))
+
+- fix: serve `.ico` files with `image/x-icon` Content-Type ([#16234](https://github.com/sveltejs/kit/pull/16234))
+
+- fix: make `paths.origin` type looser ([#16215](https://github.com/sveltejs/kit/pull/16215))
+
+- fix: avoid client build warning about externalising `node:async_hooks` ([#16244](https://github.com/sveltejs/kit/pull/16244))
+
+- fix: allow reserved words (e.g. `delete`, `class`) as remote function export names ([#16264](https://github.com/sveltejs/kit/pull/16264))
+
 ## 3.0.0-next.6
 ### Major Changes
 
