@@ -20,7 +20,8 @@ import {
 	resolve_explicit_env_entry,
 	create_sveltekit_env_service_worker,
 	create_sveltekit_env_service_worker_dev,
-	create_sveltekit_env_private
+	create_sveltekit_env_private,
+	create_exported_declarations
 } from '../../core/env.js';
 import * as sync from '../../core/sync/sync.js';
 import { create_assets } from '../../core/sync/create_manifest_data/index.js';
@@ -1117,45 +1118,56 @@ function kit({ svelte_config }) {
 				if (manifest_data.hooks.client) entrypoints.add(manifest_data.hooks.client);
 				if (manifest_data.hooks.universal) entrypoints.add(manifest_data.hooks.universal);
 
-				const chain = [normalized];
+				// Walk up the import graph from the server-only module, looking for a chain
+				// that leads back to a client entrypoint. We search all candidates (not just
+				// the first) because a module can be imported by both server and client code,
+				// and a greedy first-match could follow a server-only branch that never
+				// reaches an entrypoint — see https://github.com/sveltejs/kit/issues/16232
+				/** @type {Set<string>} */
+				const visited = new Set([normalized]);
 
-				let current = normalized;
-				let includes_remote_file = false;
-
-				while (true) {
+				/**
+				 * @param {string} current
+				 * @param {string[]} chain
+				 * @returns {string[] | null}
+				 */
+				function find_chain(current, chain) {
 					const importers = import_map.get(current);
-					if (!importers) break;
+					if (!importers) return null;
 
-					const candidates = Array.from(importers).filter((importer) => !chain.includes(importer));
-					if (candidates.length === 0) break;
+					for (const importer of importers) {
+						if (visited.has(importer)) continue;
+						visited.add(importer);
 
-					chain.push((current = candidates[0]));
-
-					includes_remote_file ||= kit.moduleExtensions.some((ext) => {
-						return current.endsWith(`.remote${ext}`);
-					});
-
-					if (entrypoints.has(current)) {
-						const pyramid = chain
-							.reverse()
-							.map((id, i) => {
-								return `${' '.repeat(i + 1)}${id}`;
-							})
-							.join(' imports\n');
-
-						if (includes_remote_file) {
-							error_for_missing_config('remote functions', 'experimental.remoteFunctions', 'true');
+						const next_chain = [...chain, importer];
+						if (entrypoints.has(importer)) {
+							return next_chain;
 						}
-
-						let message = `Cannot import ${normalized} into code that runs in the browser, as this could leak sensitive information.`;
-						message += `\n\n${pyramid}`;
-						message += `\n\nIf you're only using the import as a type, change it to \`import type\`.`;
-
-						throw stackless(message);
+						const result = find_chain(importer, next_chain);
+						if (result) return result;
 					}
+					return null;
 				}
 
-				throw new Error('An impossible situation occurred');
+				const chain = find_chain(normalized, [normalized]);
+
+				if (chain) {
+					const pyramid = chain
+						.reverse()
+						.map((id, i) => {
+							return `${' '.repeat(i + 1)}${id}`;
+						})
+						.join(' imports\n');
+
+					let message = `Cannot import ${normalized} into code that runs in the browser, as this could leak sensitive information.`;
+					message += `\n\n${pyramid}`;
+					message += `\n\nIf you're only using the import as a type, change it to \`import type\`.`;
+
+					throw stackless(message);
+				}
+
+				// No chain from this server-only module to a client entrypoint was found —
+				// the module is only imported from server code, which is valid.
 			}
 		}
 	};
@@ -1304,15 +1316,17 @@ function kit({ svelte_config }) {
 				}
 			}
 
-			let namespace = '__remote';
-			let uid = 1;
-			while (map.has(namespace)) namespace = `__remote${uid++}`;
+			const { namespace, declarations, reexports } = create_exported_declarations(
+				map.keys(),
+				(name, ns) => `${ns}.${map.get(name)}('${remote.hash}/${name}')`,
+				'__remote'
+			);
 
-			const exports = Array.from(map).map(([name, type]) => {
-				return `export const ${name} = ${namespace}.${type}('${remote.hash}/${name}');`;
-			});
-
-			let result = `import * as ${namespace} from '__sveltekit/remote';\n\n${exports.join('\n')}\n`;
+			let result = `import * as ${namespace} from '__sveltekit/remote';\n\n${declarations.join('\n')}`;
+			if (reexports.length > 0) {
+				result += `\nexport { ${reexports.join(', ')} };`;
+			}
+			result += '\n';
 
 			if (dev_context?.server) {
 				result += `\nimport.meta.hot?.accept();\n`;
@@ -1321,6 +1335,26 @@ function kit({ svelte_config }) {
 			return {
 				code: result
 			};
+		}
+	};
+
+	/** @type {Plugin} */
+	const plugin_remote_guard = {
+		name: 'vite-plugin-sveltekit-remote-guard',
+
+		applyToEnvironment() {
+			return !svelte_config.kit.experimental.remoteFunctions;
+		},
+
+		transform: {
+			filter: {
+				id: new RegExp(
+					`.remote(${svelte_config.kit.moduleExtensions.join('|')})$`.replaceAll('.', '\\.')
+				)
+			},
+			handler() {
+				error_for_missing_config('remote functions', 'experimental.remoteFunctions', 'true');
+			}
 		}
 	};
 
@@ -2223,6 +2257,7 @@ function kit({ svelte_config }) {
 			svelte_config.kit.adapter?.vite?.plugins,
 			plugin_setup,
 			plugin_node_environment,
+			plugin_remote_guard,
 			plugin_remote,
 			plugin_server_filesystem,
 			plugin_dev_ssr,
