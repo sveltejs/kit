@@ -535,6 +535,9 @@ importers:
       cookie:
         specifier: ^2.0.0
         version: 2.0.0
+      devalue:
+        specifier: ^5.8.1
+        version: 5.8.1
       esm-env:
         specifier: ^1.2.2
         version: 1.2.2
@@ -563,9 +566,6 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 22.19.19
-      devalue:
-        specifier: ^5.8.1
-        version: 5.8.1
       dts-buddy:
         specifier: ^0.8.1
         version: 0.8.1(typescript@6.0.3)
