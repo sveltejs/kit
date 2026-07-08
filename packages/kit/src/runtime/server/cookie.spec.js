@@ -1,8 +1,6 @@
+import process from 'node:process';
 import { assert, expect, test, describe, beforeAll } from 'vitest';
 import { domain_matches, path_matches, get_cookies } from './cookie.js';
-import { installPolyfills } from '@sveltejs/kit/node/polyfills';
-
-installPolyfills();
 
 const domains = {
 	positive: [
@@ -37,7 +35,7 @@ const cookies_setup = ({ href, headers } = {}) => {
 	return result;
 };
 
-describe('cookies in dev', () => {
+describe.skipIf(process.env.NODE_ENV === 'production')('cookies in dev', () => {
 	beforeAll(() => {
 		// @ts-expect-error
 		globalThis.__SVELTEKIT_DEV__ = true;
@@ -55,7 +53,7 @@ describe('cookies in dev', () => {
 	});
 });
 
-describe('cookies in prod', () => {
+describe.skipIf(process.env.NODE_ENV !== 'production')('cookies in prod', () => {
 	beforeAll(() => {
 		// @ts-expect-error
 		globalThis.__SVELTEKIT_DEV__ = false;
@@ -287,5 +285,47 @@ describe('cookies in prod', () => {
 		const duplicate = all.find((c) => c.name === 'duplicate');
 
 		expect(duplicate?.value).toEqual('foobar_value');
+	});
+});
+
+describe('cookies.parse', () => {
+	const { cookies } = cookies_setup();
+
+	test('parses a cookie', () => {
+		assert.deepEqual(cookies.parse('foo=bar'), {
+			name: 'foo',
+			value: 'bar'
+		});
+	});
+
+	test('ignores invalid properties', () => {
+		assert.deepEqual(cookies.parse('foo=bar; samesite=laxative'), {
+			name: 'foo',
+			value: 'bar'
+		});
+	});
+
+	test('ignores unknown properties', () => {
+		assert.deepEqual(cookies.parse('foo=bar; potato=salad'), {
+			name: 'foo',
+			value: 'bar'
+		});
+	});
+
+	test('converts expires', () => {
+		const date = new Date();
+
+		assert.deepEqual(cookies.parse(`foo=bar; expires=${date.toISOString()}`), {
+			name: 'foo',
+			value: 'bar',
+			expires: date
+		});
+	});
+
+	test('includes trailing = characters', () => {
+		assert.deepEqual(cookies.parse('foo=bar=baz='), {
+			name: 'foo',
+			value: 'bar=baz='
+		});
 	});
 });

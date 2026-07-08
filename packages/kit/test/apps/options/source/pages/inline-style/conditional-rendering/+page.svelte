@@ -6,7 +6,7 @@
 
 <h1 id="always">This is always rendered</h1>
 
-<button on:click={() => (show = !show)}>show component</button>
+<button onclick={() => (show = !show)}>show component</button>
 
 {#if show}
 	<Component />

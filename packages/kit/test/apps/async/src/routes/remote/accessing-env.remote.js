@@ -1,8 +1,8 @@
 import { query } from '$app/server';
-import { env } from '$env/dynamic/private';
-import { env as public_env } from '$env/dynamic/public';
+import { PRIVATE_DYNAMIC } from '$app/env/private';
+import { PUBLIC_DYNAMIC } from '$app/env/public';
 
-if (!env.PRIVATE_DYNAMIC || !public_env.PUBLIC_DYNAMIC) {
+if (!PRIVATE_DYNAMIC || !PUBLIC_DYNAMIC) {
 	// This checks that dynamic env vars are available when prerendering remote functions
 	// https://github.com/sveltejs/kit/pull/14219
 	// and are not in the same chunk as this one

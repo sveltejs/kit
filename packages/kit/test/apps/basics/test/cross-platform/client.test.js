@@ -103,7 +103,7 @@ test.describe('a11y', () => {
 		await page.goto('/keepfocus');
 
 		await Promise.all([
-			page.type('#input', 'bar'),
+			page.locator('#input').pressSequentially('bar', { delay: 100 }),
 			page.waitForFunction(() => window.location.search === '?foo=bar')
 		]);
 		await expect(page.locator('#input')).toBeFocused();
@@ -926,6 +926,18 @@ test.describe('Prefetching', () => {
 		await app.preloadData('/routing/preloading/preload-error');
 		await app.goto('/routing/preloading/preload-error');
 		await expect(page.locator('p')).toHaveText('hello');
+	});
+
+	test('preloads errors', async ({ page }) => {
+		await page.goto('/routing/preloading/error');
+
+		await expect(page.locator('p')).toHaveText('undefined undefined undefined');
+
+		page.locator('button', { hasText: '404' }).click();
+		await expect(page.locator('p')).toHaveText('error 404 Not found');
+
+		page.locator('button', { hasText: '500' }).click();
+		await expect(page.locator('p')).toHaveText('error 500 Oopsie (500 Internal Error)');
 	});
 });
 

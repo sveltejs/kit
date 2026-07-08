@@ -3,7 +3,7 @@
 		"allowJs": true,
 		"checkJs": true,
 		"noEmit": true,
-		"allowImportingTsExtensions": true
+		"rewriteRelativeImportExtensions": true
 	},
 	"extends": "./.svelte-kit/tsconfig.json"
 }

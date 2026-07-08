@@ -4,5 +4,5 @@
 
 <div data-sveltekit-noscroll>
 	<a id="two" href="/data-sveltekit/noscroll/target">two</a>
-	<a id="three" href="/data-sveltekit/noscroll/target" data-sveltekit-noscroll="off">three</a>
+	<a id="three" href="/data-sveltekit/noscroll/target" data-sveltekit-noscroll={false}>three</a>
 </div>

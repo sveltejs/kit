@@ -9,3 +9,6 @@ export function set_building() {
 export function set_prerendering() {
 	prerendering = true;
 }
+
+// force /@vite/client to be injected
+import.meta.hot;

@@ -8,8 +8,6 @@ A typical SvelteKit project looks like this:
 my-project/
 ├ src/
 │ ├ lib/
-│ │ ├ server/
-│ │ │ └ [your server-only lib files]
 │ │ └ [your lib files]
 │ ├ params/
 │ │ └ [your param matchers]
@@ -26,7 +24,6 @@ my-project/
 ├ tests/
 │ └ [your tests]
 ├ package.json
-├ svelte.config.js
 ├ tsconfig.json
 └ vite.config.js
 ```
@@ -40,7 +37,7 @@ You'll also find common files like `.gitignore` and `.npmrc` (and `.prettierrc` 
 The `src` directory contains the meat of your project. Everything except `src/routes` and `src/app.html` is optional.
 
 - `lib` contains your library code (utilities and components), which can be imported via the [`$lib`]($lib) alias, or packaged up for distribution using [`svelte-package`](packaging)
-  - `server` contains your server-only library code. It can be imported by using the [`$lib/server`](server-only-modules) alias. SvelteKit will prevent you from importing these in client code.
+  - directories named `server`, at any depth, mark any code within as [server only](server-only-modules). SvelteKit will prevent you from importing these in client code.
 - `params` contains any [param matchers](advanced-routing#Matching) your app needs
 - `routes` contains the [routes](routing) of your application. You can also colocate other components that are only used within a single route here
 - `app.html` is your page template — an HTML document containing the following placeholders:
@@ -77,17 +74,13 @@ Your `package.json` file must include `@sveltejs/kit`, `svelte` and `vite` as `d
 
 When you create a project with `npx sv create`, you'll also notice that `package.json` includes `"type": "module"`. This means that `.js` files are interpreted as native JavaScript modules with `import` and `export` keywords. Legacy CommonJS files need a `.cjs` file extension.
 
-### svelte.config.js
+### vite.config.js
 
-This file contains your Svelte and SvelteKit [configuration](configuration).
+A SvelteKit project is really just a [Vite](https://vitejs.dev) project that uses the [`@sveltejs/kit/vite`](@sveltejs-kit-vite) plugin, along with any other [Vite configuration](https://vitejs.dev/config/). The plugin accepts your Svelte and SvelteKit [configuration](configuration).
 
 ### tsconfig.json
 
 This file (or `jsconfig.json`, if you prefer type-checked `.js` files over `.ts` files) configures TypeScript, if you added typechecking during `npx sv create`. Since SvelteKit relies on certain configuration being set a specific way, it generates its own `.svelte-kit/tsconfig.json` file which your own config `extends`. To make changes to top-level options such as `include` and `exclude`, we recommend extending the generated config; see the [`typescript.config` setting](configuration#typescript) for more details.
-
-### vite.config.js
-
-A SvelteKit project is really just a [Vite](https://vitejs.dev) project that uses the [`@sveltejs/kit/vite`](@sveltejs-kit-vite) plugin, along with any other [Vite configuration](https://vitejs.dev/config/).
 
 ## Other files
 
