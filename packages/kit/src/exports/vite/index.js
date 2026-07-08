@@ -363,11 +363,11 @@ function kit({ svelte_config }) {
 				out = `${out_dir}/output`;
 
 				version_hash = hash(kit.version.name);
-				env = loadEnv(config_env.mode, kit.env.dir, '');
 				kit_global = is_build
 					? `globalThis.__sveltekit_${version_hash}`
 					: 'globalThis.__sveltekit_dev';
 
+				env = loadEnv(config_env.mode, kit.env.dir, '');
 				server_instrumentation = resolve_entry(path.join(kit.files.src, 'instrumentation.server'));
 
 				vite = await import_peer('vite', posixify(root));
@@ -425,8 +425,11 @@ function kit({ svelte_config }) {
 					preview: {
 						cors: { preflightContinue: true }
 					},
-					// By default, only client environments inherit the top-level `optimizeDeps`
-					// but we manually pass it down in adapters that use `optimizeDeps` for "full-bundle mode"
+					// TODO: this won't be necessary when the Cloudflare adapter supports Vite's official full-bundle mode
+					// By default, only client environments inherit the top-level `optimizeDeps`.
+					// Therefore, we copy need to copy this setting to other environments
+					// in the adapter code if it uses `optimizeDeps` for "full-bundle mode"
+					// such as the Cloudflare adapter
 					optimizeDeps: {
 						entries: [`${kit.files.routes}/**/+*.{svelte,js,ts}`],
 						exclude: [
@@ -479,10 +482,8 @@ function kit({ svelte_config }) {
 					});
 				}
 
-				const app_dir = posixify(kit.appDir);
-
 				const define = {
-					__SVELTEKIT_APP_DIR__: s(app_dir),
+					__SVELTEKIT_APP_DIR__: s(posixify(kit.appDir)),
 					__SVELTEKIT_OUT_DIR__: s(out_dir),
 					__SVELTEKIT_APP_VERSION__: s(kit.version.name),
 					__SVELTEKIT_EMBEDDED__: s(kit.embedded),
@@ -1221,7 +1222,7 @@ function kit({ svelte_config }) {
 
 		async transform(code, id) {
 			const normalized = normalize_id(id, normalized_lib, normalized_cwd);
-			if (!kit.moduleExtensions.some((ext) => normalized.endsWith(`.remote${ext}`))) {
+			if (!svelte_config.kit.moduleExtensions.some((ext) => normalized.endsWith(`.remote${ext}`))) {
 				return;
 			}
 
@@ -1240,7 +1241,7 @@ function kit({ svelte_config }) {
 			if (this.environment.config.consumer !== 'client') {
 				// we need to add an `await Promise.resolve()` because if the user imports this function
 				// on the client AND in a load function when loading the client module we will trigger
-				// a ssrLoadModule during dev. During a link preload, the module can be mistakenly
+				// an ssrLoadModule during dev. During a link preload, the module can be mistakenly
 				// loaded and transformed twice and the first time all its exports would be undefined
 				// triggering a dev server error. By adding a microtask we ensure that the module is fully loaded
 
@@ -1369,7 +1370,7 @@ function kit({ svelte_config }) {
 	/** @type {import('types').Prerendered} */
 	let prerendered;
 
-	/** @type {Set<string>} client output and static files */
+	/** @type {Set<string>} client build output and files from the static dir */
 	let build_files;
 	/** @type {string} */
 	let service_worker_code;
@@ -1670,7 +1671,7 @@ function kit({ svelte_config }) {
 					/** @type {Record<string, string>} */
 					const client_input = {};
 
-					if (kit.output.bundleStrategy !== 'split') {
+					if (svelte_config.kit.output.bundleStrategy !== 'split') {
 						client_input['bundle'] = `${runtime_directory}/client/bundle.js`;
 					} else {
 						client_input['entry/start'] = `${runtime_directory}/client/entry.js`;
@@ -1682,7 +1683,7 @@ function kit({ svelte_config }) {
 						});
 					}
 
-					const inline = kit.output.bundleStrategy === 'inline';
+					const inline = svelte_config.kit.output.bundleStrategy === 'inline';
 
 					/** @type {string} */
 					const base = (kit.paths.assets || kit.paths.base) + '/';
@@ -1766,7 +1767,8 @@ function kit({ svelte_config }) {
 											format: inline ? 'iife' : 'esm',
 											entryFileNames: `${prefix}/[name].[hash].js`,
 											chunkFileNames: `${prefix}/chunks/[hash].js`,
-											codeSplitting: kit.output.bundleStrategy === 'split' ? undefined : false
+											codeSplitting:
+												svelte_config.kit.output.bundleStrategy === 'split' ? undefined : false
 										},
 										// This silences Rolldown warnings about not supporting `import.meta`
 										// for the `iife` output format. We don't care because it's
