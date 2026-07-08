@@ -9,6 +9,7 @@ const config = {
 	kit: {
 		experimental: {
 			remoteFunctions: true,
+			handleRenderingErrors: true,
 			forkPreloads: true
 		}
 	}

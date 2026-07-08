@@ -226,8 +226,8 @@ test.describe('inlineStyleThreshold', () => {
 		expect(preloadMatch).not.toBeNull();
 		expect(styleMatch).not.toBeNull();
 
-		const preloadIndex = html.indexOf(preloadMatch[0]);
-		const styleIndex = html.indexOf(styleMatch[0]);
+		const preloadIndex = html.indexOf(preloadMatch?.[0] || '');
+		const styleIndex = html.indexOf(styleMatch?.[0] || '');
 
 		expect(preloadIndex).toBeLessThan(styleIndex);
 	});

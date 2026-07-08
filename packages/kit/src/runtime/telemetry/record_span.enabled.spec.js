@@ -17,14 +17,16 @@ const { tracer, span } = vi.hoisted(() => {
 		})
 	);
 
-	const mock_tracer = /** @type {Tracer} */ ({
-		startActiveSpan: vi.fn((_name, _options, fn) => {
-			return fn(span);
-		}),
-		startSpan: vi.fn((_name, _options, fn) => {
-			return fn(span);
+	const mock_tracer = /** @type {Tracer} */ (
+		/** @type {unknown} */ ({
+			startActiveSpan: vi.fn((_name, _options, fn) => {
+				return fn(span);
+			}),
+			startSpan: vi.fn((_name, _options, fn) => {
+				return fn(span);
+			})
 		})
-	});
+	);
 
 	return { tracer: mock_tracer, span: mock_span };
 });

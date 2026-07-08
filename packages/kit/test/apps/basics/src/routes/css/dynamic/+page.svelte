@@ -1,4 +1,5 @@
 <script>
+	/** @type {typeof import('./Dynamic.svelte').default}*/
 	let Dynamic;
 </script>
 

@@ -312,7 +312,9 @@ function get_netlify_config() {
 	try {
 		return /** @type {NetlifyConfig} */ (toml.parse(readFileSync('netlify.toml', 'utf-8')));
 	} catch (err) {
-		err.message = `Error parsing netlify.toml: ${err.message}`;
+		if (err instanceof Error) {
+			err.message = `Error parsing netlify.toml: ${err.message}`;
+		}
 		throw err;
 	}
 }

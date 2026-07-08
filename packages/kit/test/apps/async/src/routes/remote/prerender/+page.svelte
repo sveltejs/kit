@@ -1,9 +1,9 @@
-<script>
+<script lang="ts">
 	import { prerendered, prerendered_entries, with_read } from './prerender.remote.js';
 
-	let prerendered_result = $state(null);
-	let live_result = $state(null);
-	let read_result = $state(null);
+	let prerendered_result = $state<string | null>(null);
+	let live_result = $state<string | null>(null);
+	let read_result = $state<string | null>(null);
 </script>
 
 <a href="/remote/prerender/whole-page">whole-page</a>

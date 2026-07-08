@@ -3,6 +3,9 @@ const config = {
 	kit: {
 		output: {
 			bundleStrategy: 'inline'
+		},
+		serviceWorker: {
+			register: false
 		}
 	}
 };

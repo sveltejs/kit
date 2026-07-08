@@ -1,9 +1,10 @@
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { rollup } from 'rollup';
 import { nodeResolve } from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import json from '@rollup/plugin-json';
+import replace from '@rollup/plugin-replace';
 
 /**
  * @template T
@@ -46,27 +47,24 @@ export default function (opts = {}) {
 
 			builder.log.minor('Building server');
 
-			builder.writeServer(tmp);
-
-			writeFileSync(
-				`${tmp}/manifest.js`,
-				[
-					`export const manifest = ${builder.generateManifest({ relativePath: './' })};`,
-					`export const prerendered = new Set(${JSON.stringify(builder.prerendered.paths)});`,
-					`export const base = ${JSON.stringify(builder.config.kit.paths.base)};`
-				].join('\n\n')
-			);
+			// Copy the entrypoints into `.svelte-kit/adapter-node/entries`,
+			// so that node modules are correctly resolved
+			const entries = `${tmp}/entries`;
+			builder.copy(files, entries);
 
 			const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
+			const server = builder.getServerDirectory();
 
 			/** @type {Record<string, string>} */
 			const input = {
-				index: `${tmp}/index.js`,
-				manifest: `${tmp}/manifest.js`
+				index: `${entries}/index.js`,
+				env: `${entries}/env.js`,
+				handler: `${entries}/handler.js`,
+				shims: `${entries}/shims.js`
 			};
 
 			if (builder.hasServerInstrumentationFile?.()) {
-				input['instrumentation.server'] = `${tmp}/instrumentation.server.js`;
+				input['instrumentation.server'] = `${server}/instrumentation.server.js`;
 			}
 
 			// we bundle the Vite output so that deployments only need
@@ -79,40 +77,59 @@ export default function (opts = {}) {
 					...Object.keys(pkg.dependencies || {}).map((d) => new RegExp(`^${d}(\\/.*)?$`))
 				],
 				plugins: [
+					{
+						name: 'adapter-node:alias',
+						resolveId(id) {
+							if (id === 'SERVER') return `${server}/index.js`;
+							if (id === 'MANIFEST') return `${server}/manifest.js`;
+						}
+					},
 					nodeResolve({
 						preferBuiltins: true,
 						exportConditions: ['node']
 					}),
-					// @ts-ignore https://github.com/rollup/plugins/issues/1329
+					// @ts-expect-error https://github.com/rollup/plugins/issues/1329
+					replace({
+						// only replace tokens in the adapter's own entrypoints, so that
+						// identifiers like `BASE` in the user's app code or bundled
+						// dependencies aren't accidentally replaced
+						include: [`${entries}/**`],
+						values: {
+							BASE: JSON.stringify(builder.config.kit.paths.base),
+							ENV_PREFIX: JSON.stringify(envPrefix),
+							PRECOMPRESS: JSON.stringify(precompress),
+							PRERENDERED: `new Set(${JSON.stringify(builder.prerendered.paths)})`
+						},
+						preventAssignment: true
+					}),
+					// @ts-expect-error https://github.com/rollup/plugins/issues/1329
 					commonjs({ strictRequires: true }),
-					// @ts-ignore https://github.com/rollup/plugins/issues/1329
+					// @ts-expect-error https://github.com/rollup/plugins/issues/1329
 					json()
 				]
 			});
 
+			const server_path_length = server.length + 1;
+
 			await bundle.write({
-				dir: `${out}/server`,
+				dir: out,
 				format: 'esm',
 				sourcemap: true,
-				chunkFileNames: 'chunks/[name]-[hash].js'
-			});
-
-			builder.copy(files, out, {
-				replace: {
-					ENV: './env.js',
-					HANDLER: './handler.js',
-					MANIFEST: './server/manifest.js',
-					SERVER: './server/index.js',
-					SHIMS: './shims.js',
-					ENV_PREFIX: JSON.stringify(envPrefix),
-					PRECOMPRESS: JSON.stringify(precompress)
+				chunkFileNames: 'server/chunks/[name]-[hash].js',
+				// force the Vite server output to retain their file structure to avoid
+				// a circular import chain
+				// see https://github.com/sveltejs/kit/issues/16092
+				manualChunks(id) {
+					if (id.startsWith(server)) {
+						return id.slice(server_path_length);
+					}
 				}
 			});
 
 			if (builder.hasServerInstrumentationFile?.()) {
 				builder.instrument?.({
 					entrypoint: `${out}/index.js`,
-					instrumentation: `${out}/server/instrumentation.server.js`,
+					instrumentation: `${out}/instrumentation.server.js`,
 					module: {
 						exports: ['path', 'host', 'port', 'server']
 					}

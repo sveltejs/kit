@@ -6,7 +6,9 @@ export default [
 	...svelte_config,
 	{
 		rules: {
-			'no-undef': 'off'
+			'no-undef': 'off',
+			// we have some non-reactive state in our runtime modules, and we don't want to be nagged about it
+			'svelte/prefer-svelte-reactivity': 'off'
 		}
 	},
 	{
@@ -50,13 +52,25 @@ export default [
 			'@typescript-eslint/await-thenable': 'error',
 			'@typescript-eslint/no-unused-expressions': 'off',
 			'@typescript-eslint/require-await': 'error',
-			'@typescript-eslint/no-floating-promises': 'error'
+			'@typescript-eslint/no-floating-promises': 'error',
+			'@typescript-eslint/no-unused-vars': [
+				'error',
+				{
+					args: 'all',
+					argsIgnorePattern: '^_',
+					caughtErrors: 'all',
+					caughtErrorsIgnorePattern: '^_',
+					destructuredArrayIgnorePattern: '^_',
+					varsIgnorePattern: '^_',
+					ignoreRestSiblings: true
+				}
+			]
 		},
 		ignores: [
 			'packages/adapter-cloudflare/test/apps/**/*',
 			'packages/adapter-netlify/test/apps/**/*',
 			'packages/adapter-node/rollup.config.js',
-			'packages/adapter-node/tests/smoke.spec_disabled.js',
+			'packages/adapter-node/smoke.spec_disabled.js',
 			'packages/adapter-static/test/apps/**/*',
 			'packages/adapter-vercel/test/apps/**/*',
 			'packages/kit/src/core/sync/create_manifest_data/test/samples/**/*',

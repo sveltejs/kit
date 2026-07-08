@@ -274,6 +274,16 @@ describe('exec', () => {
 			route: '/[[...catchall]]',
 			path: '/\n',
 			expected: { catchall: '\n' }
+		},
+		{
+			route: '/(group)/[[optional]]',
+			path: '/',
+			expected: {}
+		},
+		{
+			route: '/(group1)/[slug]/(group2)',
+			path: '/123',
+			expected: { slug: '123' }
 		}
 	];
 

@@ -1,4 +1,4 @@
-import { normalizeUrl } from './index.js';
+import { isRedirect, normalizeUrl, redirect } from './index.js';
 import { assert, describe, it } from 'vitest';
 
 describe('normalizeUrl', () => {
@@ -49,5 +49,28 @@ describe('normalizeUrl', () => {
 		assert.equal(url.href, 'http://example.com/foo');
 		assert.equal(denormalize().href, original.href);
 		assert.equal(denormalize('/baz').href, 'http://example.com/baz/__route.js');
+	});
+});
+
+describe('redirect', () => {
+	it('throws Redirect for valid locations', () => {
+		try {
+			redirect(307, '/valid-location');
+			assert.fail('Expected redirect to throw');
+		} catch (e) {
+			if (!isRedirect(e)) {
+				assert.fail('Expected a Redirect error');
+			}
+
+			assert.equal(e.status, 307);
+			assert.equal(e.location, '/valid-location');
+		}
+	});
+
+	it('throws a descriptive error for invalid redirect locations', () => {
+		assert.throws(
+			() => redirect(307, '/invalid\r\nset-cookie: x=y'),
+			'Invalid redirect location "/invalid\\r\\nset-cookie: x=y": this string contains characters that cannot be used in HTTP headers'
+		);
 	});
 });

@@ -117,15 +117,15 @@ Finally, you may also consider using an `{#await}` block:
 <script>
 	import { browser } from '$app/environment';
 
-	const ComponentConstructor = browser ?
-		import('some-browser-only-library').then((module) => module.Component) :
-		new Promise(() => {});
+	const promise = browser
+		? import('./BrowserComponent.svelte')
+		: import('./ServerComponent.svelte');
 </script>
 
-{#await ComponentConstructor}
+{#await promise}
 	<p>Loading...</p>
-{:then component}
-	<svelte:component this={component} />
+{:then module}
+	<module.default />
 {:catch error}
 	<p>Something went wrong: {error.message}</p>
 {/await}
@@ -154,12 +154,7 @@ export function GET({ params, url }) {
 `adapter-node` builds a middleware that you can use with your own server for production mode. In dev, you can add middleware to Vite by using a Vite plugin. For example:
 
 ```js
-// @errors: 2322
-// @filename: ambient.d.ts
-declare module '@sveltejs/kit/vite'; // TODO this feels unnecessary, why can't it 'see' the declarations?
-
-// @filename: index.js
-// ---cut---
+/// file: vite.config.js
 import { sveltekit } from '@sveltejs/kit/vite';
 
 /** @type {import('vite').Plugin} */

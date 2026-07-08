@@ -2,4 +2,4 @@
 	export let data;
 </script>
 
-<p>{data.data.text}</p>
+<p>{data.data?.text}</p>

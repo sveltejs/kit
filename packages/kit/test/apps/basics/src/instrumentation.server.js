@@ -8,6 +8,7 @@ import fs from 'node:fs';
 class FilesystemSpanExporter {
 	#path;
 
+	/** @param {string} path */
 	constructor(path) {
 		fs.rmSync(path, { force: true });
 		this.#path = path;
@@ -24,7 +25,9 @@ class FilesystemSpanExporter {
 				status: span.status,
 				start_time: span.startTime,
 				end_time: span.endTime,
+				// @ts-ignore we do not care if the attribute value is undefined
 				attributes: span.attributes,
+				// @ts-ignore we do not care if the attribute value is undefined
 				links: span.links,
 				trace_id: span_context.traceId,
 				span_id: span_context.spanId,

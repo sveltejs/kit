@@ -71,8 +71,8 @@ export +++async+++ function load({ fetch }) {
 ---	const a = fetch(url1).then(r => r.json());---
 ---	const b = fetch(url2).then(r => r.json());---
 +++	const [a, b] = await Promise.all([
-	  fetch(url1).then(r => r.json()),
-	  fetch(url2).then(r => r.json()),
+		fetch(url1).then(r => r.json()),
+		fetch(url2).then(r => r.json()),
 	]);+++
 	return { a, b };
 }

@@ -41,3 +41,15 @@ test('an error in a `prerender` function should fail the build', { timeout }, ()
 		/remote function blew up/
 	);
 });
+
+test('a root +server.js returning non-HTML cannot be prerendered', { timeout }, () => {
+	assert.throws(
+		() =>
+			execSync('pnpm build', {
+				cwd: path.join(process.cwd(), 'apps/prerender-root-non-html-server'),
+				stdio: 'pipe',
+				timeout
+			}),
+		/Cannot prerender a root \+server\.js that returns a non-HTML response/
+	);
+});

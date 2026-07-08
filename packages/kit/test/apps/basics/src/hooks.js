@@ -1,6 +1,7 @@
 import { browser } from '$app/environment';
 import { Foo } from './lib';
 
+/** @type {Record<string, string>} */
 const mapping = {
 	'/reroute/basic/a': '/reroute/basic/b',
 	'/reroute/client-only-redirect/a': '/reroute/client-only-redirect/b',
