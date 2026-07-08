@@ -8,7 +8,7 @@
 	function update_q() {
 		// @ts-expect-error set is not in the types; we wanna test here that we guard against mutation in goto, too
 		page.url.searchParams.set('q', 'updated');
-		// @ts-expect-error TODO should we relax goto to accept page.url?
+		// @ts-expect-error
 		goto(page.url);
 	}
 </script>
