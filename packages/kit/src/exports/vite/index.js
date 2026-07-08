@@ -860,7 +860,7 @@ function kit({ svelte_config }) {
 						const entries = Array.from(server_assets);
 
 						return dedent`
-							import { parse } from 'devalue';
+							import { parse } from '@sveltejs/kit/internal';
 
 							export const server_assets = {
 								${entries
