@@ -17,6 +17,7 @@ import { check_feature } from '../../utils/features.js';
 import { load_and_validate_params } from '../../utils/params.js';
 import { create_synchronous_read } from '../../runtime/server/read.js';
 import { loud_ssr_load_module } from '../../exports/vite/dev/utils.js';
+import { to_fs } from '../../utils/vite.js';
 
 set_building();
 
@@ -95,7 +96,7 @@ async function analyse({ server_manifest, tracked_features, manifest, manifest_d
 	await load_and_validate_params({
 		routes: manifest_data.routes,
 		params_path: 'entries/params.js',
-		root: `${__SVELTEKIT_OUT_DIR__}/server`,
+		root: to_fs(`${__SVELTEKIT_OUT_DIR__}/server`),
 		load: (file) => loud_ssr_load_module(file)
 	});
 
