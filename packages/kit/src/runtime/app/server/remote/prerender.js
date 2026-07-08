@@ -102,8 +102,6 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 						const key = stringify_remote_arg(arg, state.transport);
 						const cache = get_cache(__, state);
 
-						// TODO adapters can provide prerendered data more efficiently than
-						// fetching from the public internet
 						const response = (cache[key] ??= read(url));
 						if (!response.ok) {
 							throw new Error('Prerendered response not found');
