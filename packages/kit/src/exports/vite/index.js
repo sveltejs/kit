@@ -280,7 +280,7 @@ function kit({ svelte_config }) {
 	let out;
 
 	/** @type {string} */
-	const version_hash = payload_hash(kit);
+	let version_hash;
 
 	/** @type {ResolvedConfig} */
 	let vite_config;
@@ -357,6 +357,8 @@ function kit({ svelte_config }) {
 					}
 					kit.version.name = resolved_version_name;
 				}
+
+				version_hash = payload_hash(kit);
 
 				kit_global = is_build
 					? `globalThis.__sveltekit_${version_hash}`

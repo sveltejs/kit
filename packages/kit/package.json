@@ -102,7 +102,7 @@
 		"#app/env/version": {
 			"browser": "./src/runtime/app/env/version/client.js",
 			"default": "./src/runtime/app/env/version/server.js"
-    },
+		},
 		"#internal": {
 			"browser": "./src/exports/internal/client.js",
 			"default": "./src/exports/internal/server/index.js"
