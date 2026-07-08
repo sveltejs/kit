@@ -55,6 +55,48 @@ describe('parse_route_id', () => {
 		'/@-symbol/[id]': {
 			pattern: /^\/@-symbol\/([^/]+?)\/?$/,
 			params: [{ name: 'id', matcher: undefined, optional: false, rest: false, chained: false }]
+		},
+		'/blog/[page-slug]': {
+			pattern: /^\/blog\/([^/]+?)\/?$/,
+			params: [
+				{ name: 'page-slug', matcher: undefined, optional: false, rest: false, chained: false }
+			]
+		},
+		'/blog/[page-slug=positive-integer]': {
+			pattern: /^\/blog\/([^/]+?)\/?$/,
+			params: [
+				{
+					name: 'page-slug',
+					matcher: 'positive-integer',
+					optional: false,
+					rest: false,
+					chained: false
+				}
+			]
+		},
+		'/blog/[[page-slug=positive-integer]]/sub': {
+			pattern: /^\/blog(?:\/([^/]+))?\/sub\/?$/,
+			params: [
+				{
+					name: 'page-slug',
+					matcher: 'positive-integer',
+					optional: true,
+					rest: false,
+					chained: true
+				}
+			]
+		},
+		'/[...catch-all]': {
+			pattern: /^(?:\/([^]*))?\/?$/,
+			params: [
+				{ name: 'catch-all', matcher: undefined, optional: false, rest: true, chained: true }
+			]
+		},
+		'/[...catch-all=some-matcher]': {
+			pattern: /^(?:\/([^]*))?\/?$/,
+			params: [
+				{ name: 'catch-all', matcher: 'some-matcher', optional: false, rest: true, chained: true }
+			]
 		}
 	};
 
@@ -404,6 +446,21 @@ describe('resolve_route', () => {
 			route: '/blog/[one]/[...two]-not-three/',
 			params: { one: 'one', two: 'two/2' },
 			expected: '/blog/one/two/2-not-three/'
+		},
+		{
+			route: '/blog/[page-slug]',
+			params: { 'page-slug': 'hello' },
+			expected: '/blog/hello'
+		},
+		{
+			route: '/blog/[page-slug=positive-integer]',
+			params: { 'page-slug': '42' },
+			expected: '/blog/42'
+		},
+		{
+			route: '/[...catch-all=some-matcher]',
+			params: { 'catch-all': 'a/b' },
+			expected: '/a/b'
 		}
 	];
 
@@ -417,6 +474,12 @@ describe('resolve_route', () => {
 	test('resolvePath errors on missing params for required param', () => {
 		expect(() => resolve_route('/blog/[one]/[two]', { one: 'one' })).toThrow(
 			"Missing parameter 'two' in route /blog/[one]/[two]"
+		);
+	});
+
+	test('resolvePath errors on missing params for required param with hyphenated name', () => {
+		expect(() => resolve_route('/blog/[page-slug]', {})).toThrow(
+			"Missing parameter 'page-slug' in route /blog/[page-slug]"
 		);
 	});
 
@@ -530,6 +593,22 @@ describe('find_route', () => {
 			() => find_route('/items4/abc', routes, matchers),
 			/Param matcher must return a string, number, boolean, or bigint/
 		);
+	});
+
+	test('respects matchers with hyphenated names', () => {
+		const routes = [create_route('/blog/[slug=positive-integer]'), create_route('/blog/[slug]')];
+		/** @type {import('@sveltejs/kit').ParamMatcher} */
+		const positive_integer = (param) => (/^\d+$/.test(param) ? param : undefined);
+		const matchers = defineParams({ 'positive-integer': positive_integer });
+
+		// "42" matches the positive-integer matcher
+		const result1 = find_route('/blog/42', routes, matchers);
+		assert.equal(result1?.route.id, '/blog/[slug=positive-integer]');
+		assert.deepEqual(result1?.params, { slug: '42' });
+
+		// "hello" doesn't match, falls through to [slug]
+		const result2 = find_route('/blog/hello', routes, matchers);
+		assert.equal(result2?.route.id, '/blog/[slug]');
 	});
 
 	test('decodes params', () => {

@@ -125,6 +125,8 @@ resolve('/blog/[id=number]', { id: 1 });
 
 > [!NOTE] Matchers run both on the server and in the browser.
 
+> [!NOTE] Param and matcher names may contain underscores, hyphens and alphanumeric characters.
+
 > [!NOTE] Prior to SvelteKit 3, you had to define each param matcher in a separate file, all listed under a `params` folder (for example `src/params/foo.js` with `export const match = (param) => param === 'foo';`), and matching was determined by whether or not the matcher returns a truthy value (which means no value transformation took place).
 
 ## Sorting
