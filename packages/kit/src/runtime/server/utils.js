@@ -124,6 +124,10 @@ export function handle_error_and_jsonify(event, state, options, error) {
 				`To use an async \`handleError\` hook to handle errors that occur during rendering, you must enable \`compilerOptions.experimental.async\` in the SvelteKit plugin of your Vite config. The returned error has been replaced with a generic object`
 			);
 
+			// we're discarding the result, but we still need to prevent an unhandled
+			// rejection if the user's async `handleError` hook rejects
+			result.catch(() => {});
+
 			return {
 				status,
 				message: 'Internal Error'
