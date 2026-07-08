@@ -40,15 +40,15 @@ export async function load({ params }) {
 }
 ```
 
-This throws an exception that SvelteKit catches, causing it to set the response status code to 404 and render an [`+error.svelte`](routing#error) component, where `page.error` is the object provided as the second argument to `error(...)`.
+This throws an exception that SvelteKit catches, causing it to set the response status code to 404 and render an [`+error.svelte`](routing#error) component, where the `error` is the object provided as the second argument to `error(...)`.
 
 ```svelte
 <!--- file: src/routes/+error.svelte --->
 <script>
-	import { page } from '$app/state';
+	let { error } = $props();
 </script>
 
-<h1>{page.error.message}</h1>
+<h1>{error.message}</h1>
 ```
 
 You can add extra properties to the error object if needed...
@@ -92,10 +92,10 @@ An _unexpected_ error is any other exception that occurs while handling a reques
 By default, unexpected errors are printed to the console (or, in production, your server logs), while the error that is exposed to the user has a generic shape:
 
 ```json
-{ "message": "Internal Error" }
+{ "status": 500, "message": "Internal Error" }
 ```
 
-Unexpected errors will go through the [`handleError`](hooks#Shared-hooks-handleError) hook, where you can add your own error handling — for example, sending errors to a reporting service, or returning a custom error object which becomes `page.error`.
+Unexpected errors will go through the [`handleError`](hooks#Shared-hooks-handleError) hook, where you can add your own error handling — for example, sending errors to a reporting service, or returning a custom error object which becomes the `error` prop passed to `+error.svelte`.
 
 You can override the HTTP status code used in the response by returning a `status` property:
 
@@ -118,51 +118,15 @@ export function handleError({ error, event, status, message }) {
 }
 ```
 
-## Rendering errors
+## Error boundaries
 
-Ordinarily, if an error happens during server-side rendering (for example inside a component's `<script>` block or template), SvelteKit will return a 500 error page.
-
-Since SvelteKit 2.54 and Svelte 5.53, you can change this by enabling the experimental `handleRenderingErrors` option in your config:
-
-```js
-/// file: vite.config.js
-import { sveltekit } from '@sveltejs/kit/vite';
-import { defineConfig } from 'vite';
-
-export default defineConfig({
-	plugins: [
-		sveltekit({
-			experimental: {
-				handleRenderingErrors: true
-			}
-		})
-	]
-});
-```
-
-When this is enabled, SvelteKit will wrap your route components in an error boundary. If an error occurs during rendering, the nearest [`+error.svelte`](routing#error) page will be shown, just as if the error had occurred in a `load` function.
-
-The error is first passed to [`handleError`](hooks#Shared-hooks-handleError), allowing you to report it and transform it, before the resulting object is passed to the `+error.svelte` component.
-
-> [!NOTE]
-> Since rendering errors occur after the page has started rendering, and multiple boundaries could in parallel catch distinct errors, the [`page`]($app-state#page) object (and its `error` property) will not be updated. Instead, the error is passed directly to the `+error.svelte` component as a prop.
-
-```svelte
-<!--- file: +error.svelte --->
-<script>
-	let { error } = $props();
-</script>
-
-<h1>{error.message}</h1>
-```
-
-The same applies for other error boundaries you define in your code:
+Errors that occur during `load` or rendering (for example inside a component's `<script>` block or template) bubble up to the nearest `+error.svelte` component. To handle errors at a more granular level, you can use a [`<svelte:boundary>`](../svelte/svelte-boundary):
 
 ```svelte
 <svelte:boundary>
 	...
 	{#snippet failed(error: App.Error)}
-		<!-- error went through handleError and is of type App.Error -->
+		<!-- error went through the `handleError` hook and is of type `App.Error` -->
 		{error.message}
 	{/snippet}
 </svelte:boundary>
@@ -213,7 +177,7 @@ declare global {
 export {};
 ```
 
-This interface always includes a `message: string` property.
+This interface always includes `status: number` and `message: string` properties.
 
 ## Further reading
 
