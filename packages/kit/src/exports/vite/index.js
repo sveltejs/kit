@@ -655,10 +655,10 @@ function kit({ svelte_config }) {
 				const [filepath, raw_query] = id.split('?', 2);
 
 				const query = new URLSearchParams('?' + raw_query);
-				const absolute_filepath = path.resolve(root, filepath);
+				const absolute_filepath = posixify(path.resolve(root, filepath));
 
 				if (
-					(query.has('url') || vite_config.assetsInclude(filepath)) &&
+					(query.has('url') || vite_config.assetsInclude(absolute_filepath)) &&
 					fs.existsSync(absolute_filepath)
 				) {
 					const key = get_server_asset_key(absolute_filepath);
