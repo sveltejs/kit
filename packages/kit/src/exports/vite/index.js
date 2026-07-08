@@ -652,17 +652,18 @@ function kit({ svelte_config }) {
 			handler(id) {
 				if (!dev_context) return;
 
-				const { searchParams, search } = new URL(id, `file://`);
-				const filepath = path.resolve(root, id.replace(search, ''));
+				const [filepath, raw_query] = id.split('?', 2);
+
+				const query = new URLSearchParams('?' + raw_query);
+				const absolute_filepath = path.resolve(root, filepath);
 
 				if (
-					(searchParams.has('url') || vite_config.assetsInclude(filepath)) &&
-					fs.existsSync(filepath)
+					(query.has('url') || vite_config.assetsInclude(absolute_filepath)) &&
+					fs.existsSync(absolute_filepath)
 				) {
-					// relative to project root or absolute if it's outside the project root
-					const key = get_server_asset_key(filepath);
+					const key = get_server_asset_key(absolute_filepath);
 					// it should be a typed array for devalue to serialise it
-					const data = new Uint8Array(fs.readFileSync(filepath));
+					const data = new Uint8Array(fs.readFileSync(absolute_filepath));
 					const size = data.byteLength;
 
 					// update it immediately
