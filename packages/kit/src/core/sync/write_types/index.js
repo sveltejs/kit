@@ -231,7 +231,9 @@ function update_types(config, routes, route, root, to_delete = new Set()) {
 			'type OptionalUnion<U extends Record<string, any>, A extends keyof U = U extends U ? keyof U : never> = U extends unknown ? { [P in Exclude<A, keyof U>]?: never } & U : never;',
 
 			// Re-export `Snapshot` from @sveltejs/kit — in future we could use this to infer <T> from the return type of `snapshot.capture`
-			'export type Snapshot<T = any> = Kit.Snapshot<T>;'
+			'export type Snapshot<T = any> = Kit.Snapshot<T>;',
+
+			'export type ErrorProps = { error: App.Error };'
 		);
 	}
 
@@ -263,15 +265,8 @@ function update_types(config, routes, route, root, to_delete = new Set()) {
 
 		if (route.leaf.server) {
 			exports.push(
-				'export type Action<OutputData extends Record<string, any> | void = Record<string, any> | void> = Kit.Action<RouteParams, OutputData, RouteId>'
-			);
-			exports.push(
-				'export type Actions<OutputData extends Record<string, any> | void = Record<string, any> | void> = Kit.Actions<RouteParams, OutputData, RouteId>'
-			);
-		}
-
-		if (route.leaf.server) {
-			exports.push(
+				'export type Action<OutputData extends Record<string, any> | void = Record<string, any> | void> = Kit.Action<RouteParams, OutputData, RouteId>',
+				'export type Actions<OutputData extends Record<string, any> | void = Record<string, any> | void> = Kit.Actions<RouteParams, OutputData, RouteId>',
 				'export type PageProps = { params: RouteParams; data: PageData; form: ActionData }'
 			);
 		} else {
