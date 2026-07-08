@@ -444,6 +444,89 @@ test('does not warn about server files when there are none', () => {
 	expect(warnings.length).toEqual(0);
 });
 
+test('does not warn about server files that transitively import $app/env/private', () => {
+	const { analyse_code, validate } = _create_validator({
+		config: {},
+		cwd: '',
+		input: '',
+		output: '',
+		preserve_output: false,
+		types: true
+	});
+	analyse_code('server/api.js', `import { db } from './db.js';`);
+	analyse_code(
+		'server/db.js',
+		`import { DATABASE_URL } from '$app/env/private';\nimport { createClient } from 'database-library';\nexport const db = createClient(DATABASE_URL);`
+	);
+	const warnings = validate({
+		exports: { '.': { svelte: './dist/index.js' } },
+		peerDependencies: { svelte: '^3.55.0', '@sveltejs/kit': '^2.0.0' }
+	});
+
+	expect(warnings.length).toEqual(0);
+});
+
+test('does not warn about .server. files that transitively import $app/server', () => {
+	const { analyse_code, validate } = _create_validator({
+		config: {},
+		cwd: '',
+		input: '',
+		output: '',
+		preserve_output: false,
+		types: true
+	});
+	analyse_code('a.server.js', `export * from './b.js';`);
+	analyse_code('b.js', `import { c } from './c.js';`);
+	analyse_code('c.js', `import '$app/server';`);
+	const warnings = validate({
+		exports: { '.': { svelte: './dist/index.js' } },
+		peerDependencies: { svelte: '^3.55.0', '@sveltejs/kit': '^2.0.0' }
+	});
+
+	expect(warnings.length).toEqual(0);
+});
+
+test('warns about server files whose transitive imports do not reach a guard import', () => {
+	const { analyse_code, validate } = _create_validator({
+		config: {},
+		cwd: '',
+		input: '',
+		output: '',
+		preserve_output: false,
+		types: true
+	});
+	analyse_code('server/api.js', `import { db } from './db.js';`);
+	analyse_code('server/db.js', `import { createClient } from 'database-library';`);
+	const warnings = validate({
+		exports: { '.': { svelte: './dist/index.js' } },
+		peerDependencies: { svelte: '^3.55.0', '@sveltejs/kit': '^2.0.0' }
+	});
+
+	has_warnings(warnings, [
+		'The following server-only files do not import `$app/server` or `$app/env/private`:\n- server/api.js\n- server/db.js\n' +
+			'These files will not be blocked from being imported on the client.'
+	]);
+});
+
+test('does not warn about server files that import a .ts file which imports $app/server', () => {
+	const { analyse_code, validate } = _create_validator({
+		config: {},
+		cwd: '',
+		input: '',
+		output: '',
+		preserve_output: false,
+		types: true
+	});
+	analyse_code('server/api.js', `import { db } from './db.js';`);
+	analyse_code('server/db.ts', `import '$app/server';\nexport const db = 1;`);
+	const warnings = validate({
+		exports: { '.': { svelte: './dist/index.js' } },
+		peerDependencies: { svelte: '^3.55.0', '@sveltejs/kit': '^2.0.0' }
+	});
+
+	expect(warnings.length).toEqual(0);
+});
+
 test('create package with preserved output', async () => {
 	const output = join(import.meta.dirname, 'fixtures', 'preserve-output', 'dist');
 	rimraf(output);
