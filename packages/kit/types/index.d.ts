@@ -3204,9 +3204,9 @@ declare module '@sveltejs/kit/node' {
 		request: import("http").IncomingMessage;
 		base: string;
 		bodySizeLimit?: number;
-	}): Promise<Request>;
+	}): Request;
 
-	export function setResponse(res: import("http").ServerResponse, response: Response): Promise<void>;
+	export function setResponse(res: import("http").ServerResponse, response: Response): void;
 	/**
 	 * Converts a file on disk to a readable stream
 	 * @since 2.4.0
