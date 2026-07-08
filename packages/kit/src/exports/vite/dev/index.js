@@ -322,19 +322,19 @@ export function dev(server, vite_config, vite, svelte_config, root, dev_context)
 					);
 				}
 
-				const request = await getRequest({
+				const request = getRequest({
 					base,
 					request: req
 				});
-				const response = await server.environments.ssr.dispatchFetch(request);
+				const rendered = await server.environments.ssr.dispatchFetch(request);
 
-				if (response.status === 404) {
+				if (rendered.status === 404) {
 					// @ts-expect-error
 					serve_static_middleware.handle(req, res, () => {
-						void setResponse(res, response);
+						setResponse(res, rendered);
 					});
 				} else {
-					void setResponse(res, response);
+					setResponse(res, rendered);
 				}
 			} catch (e) {
 				const error = coalesce_to_error(e);

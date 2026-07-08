@@ -371,7 +371,7 @@ export async function create_build_server({
 						);
 					}
 
-					const request = await getRequest({
+					const request = getRequest({
 						base,
 						request: req
 					});
