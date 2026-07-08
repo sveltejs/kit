@@ -2541,9 +2541,6 @@ export function pushState(url, state) {
 	has_navigated = true;
 
 	page.state = state;
-	root.$set({
-		page
-	});
 
 	clear_onward_history(current_history_index, current_navigation_index);
 }
@@ -2584,9 +2581,6 @@ export function replaceState(url, state) {
 	history.replaceState(opts, '', resolve_url(url));
 
 	page.state = state;
-	root.$set({
-		page
-	});
 }
 
 /**
@@ -2614,8 +2608,7 @@ export async function applyAction(result) {
 		root.$set({
 			// this brings Svelte's view of the world in line with SvelteKit's
 			// after use:enhance reset the form....
-			form: null,
-			page
+			form: null
 		});
 
 		// ...so that setting the `form` prop takes effect and isn't ignored
