@@ -125,6 +125,9 @@
 			"types": "./types/index.d.ts",
 			"import": "./src/exports/internal/server/index.js"
 		},
+		"./internal/devalue": {
+			"import": "./src/exports/internal/devalue.js"
+		},
 		"./node": {
 			"types": "./types/index.d.ts",
 			"import": "./src/exports/node/index.js"

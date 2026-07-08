@@ -3260,7 +3260,6 @@ declare module '$app/env' {
 }
 
 declare module '$app/forms' {
-	export { parse as  } from 'devalue';
 	/**
 	 * Use this function to deserialize the response from a form submission.
 	 * Usage:
@@ -3316,7 +3315,6 @@ declare module '$app/forms' {
 }
 
 declare module '$app/navigation' {
-	export { parse as  } from 'devalue';
 	/**
 	 * A lifecycle function that runs the supplied `callback` when the current component mounts, and also whenever we navigate to a URL.
 	 *

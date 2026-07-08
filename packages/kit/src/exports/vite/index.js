@@ -861,7 +861,7 @@ function kit({ svelte_config }) {
 						const entries = Array.from(server_assets);
 
 						return dedent`
-							import { parse } from '@sveltejs/kit/internal';
+							import * as devalue from '@sveltejs/kit/internal/devalue';
 
 							export const server_assets = {
 								${entries
@@ -877,7 +877,7 @@ function kit({ svelte_config }) {
 
 							import.meta.hot?.on('sveltekit:server-assets', async ({ filepath, size, data }) => {
 								server_assets[filepath] = size;
-								server_assets_content[filepath] = parse(data);
+								server_assets_content[filepath] = devalue.parse(data);
 							});
 						`;
 					}
