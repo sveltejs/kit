@@ -186,6 +186,8 @@ export async function render_response({
 			state: {}
 		};
 
+		const render_state = { ...event_state, is_in_render: true };
+
 		const render_opts = {
 			context: new Map([
 				[
@@ -197,15 +199,28 @@ export async function render_response({
 			]),
 			csp: csp.script_needs_nonce ? { nonce: csp.nonce } : { hash: csp.script_needs_hash },
 			transformError: error_components
-				? /** @param {unknown} e */ async (e) => {
+				? /** @param {unknown} e */ (e) => {
 						if (isRedirect(e)) {
 							throw e;
 						}
 
-						const transformed = await handle_error_and_jsonify(event, event_state, options, e);
-						props.page.error = props.error = error = transformed;
-						props.page.status = status = transformed.status;
-						return transformed;
+						const handled = handle_error_and_jsonify(event, render_state, options, e);
+
+						// TODO 4.0 make this an async function and await `handled`
+						if (handled instanceof Promise) {
+							return handled.then((e) => {
+								error = e;
+								props.page.error = error;
+								props.page.status = status = error.status;
+								return error;
+							});
+						}
+
+						error = handled;
+						props.page.error = error;
+						props.page.status = status = error.status;
+
+						return error;
 					}
 				: undefined
 		};
@@ -231,9 +246,7 @@ export async function render_response({
 				};
 			}
 
-			const state = { ...event_state, is_in_render: true };
-
-			rendered = await with_request_store({ event, state }, async () => {
+			rendered = await with_request_store({ event, state: render_state }, async () => {
 				// We have to invoke .then eagerly here in order to kick off rendering: it's only starting on access,
 				// and `await maybe_promise` would eagerly access the .then property but call its function only after a tick, which is too late
 				// for the paths.reset() below and for any eager getRequestEvent() calls during rendering without AsyncLocalStorage available.

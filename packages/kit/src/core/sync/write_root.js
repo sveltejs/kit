@@ -2,13 +2,10 @@ import { dedent, write_if_changed } from './utils.js';
 
 /**
  * @param {import('types').ManifestData} manifest_data
- * @param {import('types').ValidatedConfig} config
  * @param {string} output
  */
-export function write_root(manifest_data, config, output) {
+export function write_root(manifest_data, output) {
 	// TODO remove default layout altogether
-
-	const use_boundaries = config.kit.experimental.handleRenderingErrors;
 
 	const max_depth = Math.max(
 		...manifest_data.routes.map((route) =>
@@ -22,58 +19,32 @@ export function write_root(manifest_data, config, output) {
 		levels.push(i);
 	}
 
-	let l = max_depth;
-	/** @type {string} */
-	let pyramid;
-
-	if (use_boundaries) {
-		// with the @const we force the data[depth] access to be derived, which is important to not fire updates needlessly
-		// TODO in Svelte 5 we should rethink the client.js side, we can likely make data a $state and only update indexes that changed there, simplifying this a lot
-		pyramid = dedent`
-			{#snippet pyramid(depth)}
-				{@const Pyramid = constructors[depth]}
-				{#snippet failed(error)}
-					{@const ErrorPage = errors[depth]}
-					<ErrorPage {error} />
-				{/snippet}
-				<svelte:boundary failed={errors[depth] ? failed : undefined}>
-					{#if constructors[depth + 1]}
-						{@const d = data[depth]}
-						<!-- svelte-ignore binding_property_non_reactive -->
-						<Pyramid bind:this={components[depth]} data={d} {form} params={page.params}>
-							{@render pyramid(depth + 1)}
-						</Pyramid>
-					{:else}
-						{@const d = data[depth]}
-						<!-- svelte-ignore binding_property_non_reactive -->
-						<Pyramid bind:this={components[depth]} data={d} {form} params={page.params} {error} />
-					{/if}
-				</svelte:boundary>
+	// with the @const we force the data[depth] access to be derived, which is important to not fire updates needlessly
+	// TODO in Svelte 5 we should rethink the client.js side, we can likely make data a $state and only update indexes that changed there, simplifying this a lot
+	const pyramid = dedent`
+		{#snippet pyramid(depth)}
+			{@const Pyramid = constructors[depth]}
+			{#snippet failed(error)}
+				{@const ErrorPage = errors[depth]}
+				<ErrorPage {error} />
 			{/snippet}
+			<svelte:boundary failed={errors[depth] ? failed : undefined}>
+				{#if constructors[depth + 1]}
+					{@const d = data[depth]}
+					<!-- svelte-ignore binding_property_non_reactive -->
+					<Pyramid bind:this={components[depth]} data={d} {form} params={page.params}>
+						{@render pyramid(depth + 1)}
+					</Pyramid>
+				{:else}
+					{@const d = data[depth]}
+					<!-- svelte-ignore binding_property_non_reactive -->
+					<Pyramid bind:this={components[depth]} data={d} {form} params={page.params} {error} />
+				{/if}
+			</svelte:boundary>
+		{/snippet}
 
-			{@render pyramid(0)}
-		`;
-	} else {
-		pyramid = dedent`
-		<!-- svelte-ignore binding_property_non_reactive -->
-		<Pyramid_${l} bind:this={components[${l}]} data={data_${l}} {form} params={page.params} />`;
-
-		while (l--) {
-			pyramid = dedent`
-			{#if constructors[${l + 1}]}
-				{@const Pyramid_${l} = constructors[${l}]}
-				<!-- svelte-ignore binding_property_non_reactive -->
-				<Pyramid_${l} bind:this={components[${l}]} data={data_${l}} {form} params={page.params}>
-					${pyramid}
-				</Pyramid_${l}>
-			{:else}
-				{@const Pyramid_${l} = constructors[${l}]}
-				<!-- svelte-ignore binding_property_non_reactive -->
-				<Pyramid_${l} bind:this={components[${l}]} data={data_${l}} {form} params={page.params} />
-			{/if}
-		`;
-		}
-	}
+		{@render pyramid(0)}
+	`;
 
 	write_if_changed(
 		`${output}/root.svelte`,
@@ -83,10 +54,10 @@ export function write_root(manifest_data, config, output) {
 			<script>
 				import { afterNavigate } from '$app/navigation';
 
-				let { page, constructors, components = [], form, ${use_boundaries ? 'errors = [], error, ' : ''}${levels
+				let { page, constructors, components = [], form, errors = [], error, ${levels
 					.map((l) => `data_${l} = null`)
 					.join(', ')} } = $props();
-				${use_boundaries ? `let data = $derived({${levels.map((l) => `'${l}': data_${l}`).join(', ')}})` : ''}
+				let data = $derived({${levels.map((l) => `'${l}': data_${l}`).join(', ')}});
 
 				let mounted = $state(false);
 				let navigated = $state(false);
