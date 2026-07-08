@@ -2351,5 +2351,5 @@ const create_service_worker_module = (config) => dedent`
 
 /** @param {string} filepath */
 function get_server_asset_key(filepath) {
-	return posixify(filepath.startsWith(root) ? path.relative(root, filepath) : to_fs(filepath));
+	return filepath.startsWith(root) ? posixify(path.relative(root, filepath)) : to_fs(filepath);
 }
