@@ -709,16 +709,13 @@ async function initialize(result, target, hydrate) {
 		hydrate,
 		// Svelte 5 specific: asynchronously instantiate the component, i.e. don't call flushSync
 		sync: false,
-		// Svelte 5 specific: transformError allows to transform errors before they are passed to boundaries
-		transformError: __SVELTEKIT_EXPERIMENTAL_USE_TRANSFORM_ERROR__
-			? /** @param {unknown} e */ async (e) => {
-					const error = await handle_error(e, current.nav);
-					rendering_error = { error, status: error.status };
-					page.error = error;
-					page.status = rendering_error.status;
-					return error;
-				}
-			: undefined
+		transformError: /** @param {unknown} e */ async (e) => {
+			const error = await handle_error(e, current.nav);
+			rendering_error = { error, status: error.status };
+			page.error = error;
+			page.status = rendering_error.status;
+			return error;
+		}
 	});
 
 	// Wait for a microtask in case svelte experimental async is enabled,
@@ -802,7 +799,7 @@ async function get_navigation_result_from_branch({
 		}
 	};
 
-	if (errors && __SVELTEKIT_EXPERIMENTAL_USE_TRANSFORM_ERROR__) {
+	if (errors) {
 		let last_idx = -1;
 		result.props.errors = await Promise.all(
 			// eslint-disable-next-line @typescript-eslint/await-thenable
@@ -824,7 +821,7 @@ async function get_navigation_result_from_branch({
 		);
 	}
 
-	if (error && __SVELTEKIT_EXPERIMENTAL_USE_TRANSFORM_ERROR__) {
+	if (error) {
 		result.props.error = error;
 	}
 

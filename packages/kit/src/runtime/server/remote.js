@@ -361,7 +361,8 @@ export async function collect_remote_data(data, event, state, options) {
 	 * @returns {Promise<App.Error>}
 	 */
 	function convert_error(error) {
-		return handle_error_and_jsonify(event, state, options, error);
+		// TODO 4.0 remove the `Promise.resolve(...)`
+		return Promise.resolve(handle_error_and_jsonify(event, state, options, error));
 	}
 
 	/** @type {Promise<any>[]} */

@@ -467,7 +467,9 @@ function kit({ svelte_config }) {
 					__SVELTEKIT_CLIENT_ROUTING__: s(kit.router.resolution === 'client'),
 					__SVELTEKIT_HASH_ROUTING__: s(kit.router.type === 'hash'),
 					__SVELTEKIT_SERVER_TRACING_ENABLED__: s(kit.tracing.server),
-					__SVELTEKIT_EXPERIMENTAL_USE_TRANSFORM_ERROR__: s(kit.experimental.handleRenderingErrors),
+					__SVELTEKIT_SUPPORTS_ASYNC__: s(
+						svelte_config.compilerOptions?.experimental?.async ?? false
+					),
 					__SVELTEKIT_ROOT__: s(root),
 					__SVELTEKIT_DEV__: s(!is_build)
 				};

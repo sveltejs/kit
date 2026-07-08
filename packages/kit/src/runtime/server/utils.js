@@ -98,9 +98,9 @@ export async function handle_fatal_error(event, state, options, error) {
  * @param {import('types').RequestState} state
  * @param {import('types').SSROptions} options
  * @param {any} error
- * @returns {Promise<App.Error>}
+ * @returns {App.Error | Promise<App.Error>}
  */
-export async function handle_error_and_jsonify(event, state, options, error) {
+export function handle_error_and_jsonify(event, state, options, error) {
 	if (error instanceof HttpError) {
 		// @ts-expect-error custom user errors may not have a message field if App.Error is overwritten
 		return { message: 'Unknown Error', ...error.body };
@@ -113,11 +113,34 @@ export async function handle_error_and_jsonify(event, state, options, error) {
 	const status = get_status(error);
 	const message = get_message(error);
 
-	const body = (await with_request_store({ event, state }, () =>
+	// TODO 4.0 await this, rather than handling the non-Promise case
+	const result = with_request_store({ event, state }, () =>
 		options.hooks.handleError({ error, event, status, message })
-	)) ?? { message };
+	) ?? { status, message };
 
-	return { ...body, status: get_status(body, error) };
+	if (result instanceof Promise) {
+		if (!__SVELTEKIT_SUPPORTS_ASYNC__ && state.is_in_render) {
+			console.warn(
+				`To use an async \`handleError\` hook to handle errors that occur during rendering, you must enable \`compilerOptions.experimental.async\` in the SvelteKit plugin of your Vite config. The returned error has been replaced with a generic object`
+			);
+
+			// we're discarding the result, but we still need to prevent an unhandled
+			// rejection if the user's async `handleError` hook rejects
+			result.catch(() => {});
+
+			return {
+				status,
+				message: 'Internal Error'
+			};
+		}
+
+		return result.then((body) => {
+			body ??= { status, message };
+			return { ...body, status: get_status(body, error) };
+		});
+	}
+
+	return { ...result, status: get_status(result, error) };
 }
 
 /**

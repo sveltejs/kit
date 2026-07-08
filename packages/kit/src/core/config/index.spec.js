@@ -71,8 +71,7 @@ const get_defaults = (prefix = '') => ({
 		},
 		experimental: {
 			remoteFunctions: false,
-			forkPreloads: false,
-			handleRenderingErrors: false
+			forkPreloads: false
 		},
 		files: {
 			src: join(prefix, 'src'),
