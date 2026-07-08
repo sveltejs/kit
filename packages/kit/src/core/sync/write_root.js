@@ -19,33 +19,6 @@ export function write_root(manifest_data, output) {
 		levels.push(i);
 	}
 
-	// with the @const we force the data[depth] access to be derived, which is important to not fire updates needlessly
-	// TODO in Svelte 5 we should rethink the client.js side, we can likely make data a $state and only update indexes that changed there, simplifying this a lot
-	const pyramid = dedent`
-		{#snippet pyramid(depth)}
-			{@const Pyramid = constructors[depth]}
-			{#snippet failed(error)}
-				{@const ErrorPage = errors[depth]}
-				<ErrorPage {error} />
-			{/snippet}
-			<svelte:boundary failed={errors[depth] ? failed : undefined}>
-				{#if constructors[depth + 1]}
-					{@const d = data[depth]}
-					<!-- svelte-ignore binding_property_non_reactive -->
-					<Pyramid bind:this={components[depth]} data={d} {form} params={page.params}>
-						{@render pyramid(depth + 1)}
-					</Pyramid>
-				{:else}
-					{@const d = data[depth]}
-					<!-- svelte-ignore binding_property_non_reactive -->
-					<Pyramid bind:this={components[depth]} data={d} {form} params={page.params} {error} />
-				{/if}
-			</svelte:boundary>
-		{/snippet}
-
-		{@render pyramid(0)}
-	`;
-
 	write_if_changed(
 		`${output}/root.svelte`,
 		dedent`
@@ -71,11 +44,30 @@ export function write_root(manifest_data, output) {
 						mounted = true;
 					}
 				});
-
-				const Pyramid_${max_depth} = $derived(constructors[${max_depth}]);
 			</script>
 
-			${pyramid}
+			{#snippet pyramid(depth)}
+				{@const Pyramid = constructors[depth]}
+				{#snippet failed(error)}
+					{@const ErrorPage = errors[depth]}
+					<ErrorPage {error} />
+				{/snippet}
+				<svelte:boundary failed={errors[depth] ? failed : undefined}>
+					{#if constructors[depth + 1]}
+						{@const d = data[depth]}
+						<!-- svelte-ignore binding_property_non_reactive -->
+						<Pyramid bind:this={components[depth]} data={d} {form} params={page.params}>
+							{@render pyramid(depth + 1)}
+						</Pyramid>
+					{:else}
+						{@const d = data[depth]}
+						<!-- svelte-ignore binding_property_non_reactive -->
+						<Pyramid bind:this={components[depth]} data={d} {form} params={page.params} {error} />
+					{/if}
+				</svelte:boundary>
+			{/snippet}
+
+			{@render pyramid(0)}
 
 			{#if mounted}
 				<div id="svelte-announcer" aria-live="assertive" aria-atomic="true" style="position: absolute; left: 0; top: 0; clip: rect(0 0 0 0); clip-path: inset(50%); overflow: hidden; white-space: nowrap; width: 1px; height: 1px">
