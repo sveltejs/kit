@@ -52,6 +52,6 @@
 		"vitest": "catalog:"
 	},
 	"peerDependencies": {
-		"@sveltejs/kit": "^3.0.0"
+		"@sveltejs/kit": "^3.0.0-next.0"
 	}
 }
