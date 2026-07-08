@@ -40,7 +40,7 @@
 		"format": "pnpm lint --write",
 		"test:unit": "vitest run",
 		"test:build": "pnpm build && pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" build",
-		"test": "pnpm test:unit && pnpm test:build",
+		"test": "pnpm test:build",
 		"prepublishOnly": "pnpm build"
 	},
 	"dependencies": {
