@@ -658,7 +658,7 @@ function kit({ svelte_config }) {
 				const absolute_filepath = path.resolve(root, filepath);
 
 				if (
-					(query.has('url') || vite_config.assetsInclude(absolute_filepath)) &&
+					(query.has('url') || vite_config.assetsInclude(filepath)) &&
 					fs.existsSync(absolute_filepath)
 				) {
 					const key = get_server_asset_key(absolute_filepath);
@@ -2351,5 +2351,5 @@ const create_service_worker_module = (config) => dedent`
 
 /** @param {string} filepath */
 function get_server_asset_key(filepath) {
-	return filepath.startsWith(root) ? path.relative(root, filepath) : to_fs(filepath);
+	return posixify(filepath.startsWith(root) ? path.relative(root, filepath) : to_fs(filepath));
 }
