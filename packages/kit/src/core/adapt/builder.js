@@ -33,7 +33,8 @@ const extensions = [
 	'.wasm',
 	'.txt',
 	'.md',
-	'.mdx'
+	'.mdx',
+	'.woff2'
 ];
 
 /**
