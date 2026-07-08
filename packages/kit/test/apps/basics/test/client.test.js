@@ -1245,7 +1245,10 @@ test.describe('data-sveltekit attributes', () => {
 		await expect(request_promise).rejects.toThrow();
 	});
 
-	test('scroll resets to top when navigating with scroll-behavior: smooth', async ({ page, clicknav }) => {
+	test('scroll resets to top when navigating with scroll-behavior: smooth', async ({
+		page,
+		clicknav
+	}) => {
 		await page.goto('/scroll/smooth');
 		await page.evaluate(() => window.scrollTo({ top: 9999, behavior: 'instant' }));
 		expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
