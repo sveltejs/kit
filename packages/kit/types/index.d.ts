@@ -1427,7 +1427,7 @@ declare module '@sveltejs/kit' {
 		/**
 		 * The URL of the current page.
 		 */
-		url: ReadonlyURL & { pathname: ResolvedPathname | (string & {}) };
+		url: ReadonlyURL & { readonly pathname: ResolvedPathname | (string & {}) };
 		/**
 		 * The parameters of the current page - e.g. for a route like `/blog/[slug]`, a `{ slug: string }` object.
 		 */
