@@ -6,7 +6,7 @@ Errors are an inevitable fact of software development. SvelteKit handles errors 
 
 ## Error objects
 
-SvelteKit distinguishes between expected and unexpected errors, both of which are represented as simple `{ message: string }` objects by default.
+SvelteKit distinguishes between expected and unexpected errors, both of which are represented as simple `{ status: number, message: string }` objects by default.
 
 You can add additional properties, like a `code` or a tracking `id`, as shown in the examples below. (When using TypeScript this requires you to redefine the `Error` type as described in  [type safety](errors#Type-safety)).
 
@@ -31,9 +31,7 @@ export async function load({ params }) {
 	const post = await db.getPost(params.slug);
 
 	if (!post) {
-		error(404, {
-			message: 'Not found'
-		});
+		error(404, 'Not found');
 	}
 
 	return { post };
@@ -51,7 +49,7 @@ This throws an exception that SvelteKit catches, causing it to set the response 
 <h1>{error.message}</h1>
 ```
 
-You can add extra properties to the error object if needed...
+You can add extra properties to the error object if needed:
 
 ```js
 // @filename: ambient.d.ts
@@ -68,19 +66,9 @@ export {}
 // @filename: index.js
 import { error } from '@sveltejs/kit';
 // ---cut---
-error(404, {
-	message: 'Not found',
+error(404, 'Not found', {
 	+++code: 'NOT_FOUND'+++
 });
-```
-
-...otherwise, for convenience, you can pass a string as the second argument:
-
-```js
-import { error } from '@sveltejs/kit';
-// ---cut---
----error(404, { message: 'Not found' });---
-+++error(404, 'Not found');+++
 ```
 
 > [!NOTE] [In SvelteKit 1.x](migrating-to-sveltekit-2#redirect-and-error-are-no-longer-thrown-by-you) you had to `throw` the `error` yourself
