@@ -119,6 +119,17 @@ export function handle_error_and_jsonify(event, state, options, error) {
 	) ?? { status, message };
 
 	if (result instanceof Promise) {
+		if (!__SVELTEKIT_SUPPORTS_ASYNC__ && state.is_in_render) {
+			console.warn(
+				`To use an async \`handleError\` hook to handle errors that occur during rendering, you must enable \`compilerOptions.experimental.async\` in the SvelteKit plugin of your Vite config. The returned error has been replaced with a generic object`
+			);
+
+			return {
+				status,
+				message: 'Internal Error'
+			};
+		}
+
 		return result.then((body) => {
 			body ??= { status, message };
 			return { ...body, status: get_status(body, error) };
