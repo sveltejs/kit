@@ -49,7 +49,7 @@ import prerender from '../../core/postbuild/prerender.js';
 import analyse from '../../core/postbuild/analyse.js';
 import { s } from '../../utils/misc.js';
 import { hash } from '../../utils/hash.js';
-import { dedent, write_if_changed } from '../../core/sync/utils.js';
+import { dedent } from '../../core/sync/utils.js';
 import {
 	app_env_private,
 	app_server,
@@ -63,7 +63,8 @@ import {
 	sveltekit_env_private,
 	sveltekit_env_service_worker,
 	sveltekit_env_public_client,
-	sveltekit_env_public_server
+	sveltekit_env_public_server,
+	sveltekit_server_assets
 } from './module_ids.js';
 import { to_fs } from '../../utils/vite.js';
 import { import_peer } from '../../utils/import.js';
@@ -632,8 +633,13 @@ function kit({ svelte_config }) {
 	const plugin_server_filesystem = {
 		name: 'vite-plugin-sveltekit-dev-server-filesystem',
 		apply: 'serve',
-		configureServer() {
+		configureServer(server) {
 			server_assets = new Map();
+
+			server.watcher.on('unlink', (filepath) => {
+				const key = get_server_asset_key(filepath);
+				if (server_assets.has(key)) server_assets.delete(key);
+			});
 		},
 
 		applyToEnvironment(environment) {
@@ -646,29 +652,29 @@ function kit({ svelte_config }) {
 				if (!dev_context) return;
 
 				const { searchParams, search } = new URL(id, `file://`);
-				const pathname = id.replace(search, '');
+				const filepath = path.resolve(root, id.replace(search, ''));
 
 				if (
-					(searchParams.has('url') || vite_config.assetsInclude(pathname)) &&
-					fs.existsSync(pathname)
+					(searchParams.has('url') || vite_config.assetsInclude(filepath)) &&
+					fs.existsSync(filepath)
 				) {
-					const filepath = pathname.startsWith(root)
-						? posixify(path.relative(root, pathname))
-						: to_fs(pathname);
+					// relative to project root or absolute if it's outside the project root
+					const key = get_server_asset_key(filepath);
 					// it should be a typed array for devalue to serialise it
-					const data = new Uint8Array(fs.readFileSync(pathname));
+					const data = new Uint8Array(fs.readFileSync(filepath));
 					const size = data.byteLength;
 
 					// update it immediately
 					dev_context.server.environments.ssr.hot.send('sveltekit:server-assets', {
-						filepath,
+						filepath: key,
 						size,
 						data: devalue.stringify(data)
 					});
 
 					// persist changes in case of server reload
-					server_assets.set(filepath, { size, data });
-					invalidate_module(dev_context.server, '__sveltekit/server-assets');
+					server_assets.set(key, { size, data });
+					invalidate_module(dev_context.server, sveltekit_server_assets);
+					invalidate_module(dev_context.server, '__sveltekit/server');
 				}
 			}
 		}
@@ -724,36 +730,7 @@ function kit({ svelte_config }) {
 				}
 
 				if (id === '__sveltekit/server-assets') {
-					/** @type {Array<[string, { size: number; data: Uint8Array<ArrayBuffer> }]>} */
-					const entries = [];
-
-					for (const asset of server_assets) {
-						entries.push(asset);
-					}
-
-					const content = dedent`
-						import { devalue } from '@sveltejs/kit/internal';
-
-						export const server_assets = {
-							${entries
-								.map(([filepath, { size }]) => {
-									return `${s(filepath)}: ${size}`;
-								})
-								.join(',\n')}
-						};
-
-						export const server_assets_content = ${devalue.uneval(
-							Object.fromEntries(entries.map(([filepath, { data }]) => [filepath, data]))
-						)};
-
-						import.meta.hot?.on('sveltekit:server-assets', async ({ filepath, size, data }) => {
-							server_assets[filepath] = size;
-							server_assets_content[filepath] = devalue.parse(data);
-						});
-					`;
-					const filepath = `${out_dir}/generated/server/server-assets.js`;
-					write_if_changed(filepath, content);
-					return filepath;
+					return sveltekit_server_assets;
 				}
 			}
 		},
@@ -764,7 +741,8 @@ function kit({ svelte_config }) {
 					exactRegex(sveltekit_ipc),
 					exactRegex(sveltekit_remotes),
 					exactRegex(sveltekit_manifest_data),
-					exactRegex(sveltekit_traced)
+					exactRegex(sveltekit_traced),
+					exactRegex(sveltekit_server_assets)
 				]
 			},
 			handler(id) {
@@ -875,6 +853,32 @@ function kit({ svelte_config }) {
 
 					case 'sveltekit:env': {
 						return `export const env = ${s(env)};`;
+					}
+
+					case sveltekit_server_assets: {
+						/** @type {Array<[string, { size: number; data: Uint8Array<ArrayBuffer> }]>} */
+						const entries = Array.from(server_assets);
+
+						return dedent`
+							import { parse } from 'devalue';
+
+							export const server_assets = {
+								${entries
+									.map(([filepath, { size }]) => {
+										return `${s(filepath)}: ${size}`;
+									})
+									.join(',\n')}
+							};
+
+							export const server_assets_content = ${devalue.uneval(
+								Object.fromEntries(entries.map(([filepath, { data }]) => [filepath, data]))
+							)};
+
+							import.meta.hot?.on('sveltekit:server-assets', async ({ filepath, size, data }) => {
+								server_assets[filepath] = size;
+								server_assets_content[filepath] = parse(data);
+							});
+						`;
 					}
 				}
 			}
@@ -2340,3 +2344,8 @@ const create_service_worker_module = (config) => dedent`
 	export const prerendered = [];
 	export const version = ${s(config.kit.version.name)};
 `;
+
+/** @param {string} filepath */
+function get_server_asset_key(filepath) {
+	return filepath.startsWith(root) ? posixify(path.relative(root, filepath)) : to_fs(filepath);
+}
