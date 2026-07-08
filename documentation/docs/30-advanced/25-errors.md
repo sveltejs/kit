@@ -38,7 +38,7 @@ export async function load({ params }) {
 }
 ```
 
-This throws an exception that SvelteKit catches, causing it to set the response status code to 404 and render an [`+error.svelte`](routing#error) component, where the `error` is the object provided as the second argument to `error(...)`.
+This throws an exception that SvelteKit catches, causing it to set the response status code to 404 and render an [`+error.svelte`](routing#error) component, where the `error` is an `App.Error` object with the provided `status` and `message`.
 
 ```svelte
 <!--- file: src/routes/+error.svelte --->
