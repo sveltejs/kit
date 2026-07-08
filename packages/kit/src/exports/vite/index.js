@@ -796,6 +796,7 @@ function kit({ svelte_config }) {
 						return dedent`
 							import { set_assets } from '__SERVER__/internal.js';
 							import { load_and_validate_params } from '__SVELTEKIT__/utils/params.js';
+							import { to_fs } from '__SVELTEKIT__/utils/vite.js';
 							import { loud_ssr_load_module } from '__SVELTEKIT__/exports/vite/dev/utils.js';
 
 							set_assets(${s(assets)});
@@ -815,7 +816,7 @@ function kit({ svelte_config }) {
 							await load_and_validate_params({
 								routes: manifest_data.routes,
 								params_path: manifest_data.params,
-								root: __SVELTEKIT_ROOT__,
+								root: to_fs(__SVELTEKIT_ROOT__),
 								load: (file) => loud_ssr_load_module(file)
 							});
 
