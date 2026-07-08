@@ -12,4 +12,4 @@
 </script>
 
 <h1>{data.q}</h1>
-<button on:click={update_q}>update q</button>
+<button onclick={update_q}>update q</button>

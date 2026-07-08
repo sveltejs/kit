@@ -1,5 +1,7 @@
 <script>
 	import { preloadData } from '$app/navigation';
+
+	/** @type {Record<string, any> | null} */
 	let data = null;
 
 	async function onClick() {
@@ -10,7 +12,7 @@
 	}
 </script>
 
-<button on:click={onClick}>Preload</button>
+<button onclick={onClick}>Preload</button>
 
 {#if data}
 	<pre>{JSON.stringify(data, null, 2)}</pre>

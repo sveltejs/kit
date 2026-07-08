@@ -171,10 +171,6 @@ In some cases, we might need the opposite — a parent layout might need to acce
 
 Type information for `page.data` is provided by `App.PageData`.
 
-> [!LEGACY]
-> `$app/state` was added in SvelteKit 2.12. If you're using an earlier version or are using Svelte 4, use `$app/stores` instead.
-> It provides a `page` store with the same interface that you can subscribe to, e.g. `$page.data.title`.
-
 ## Universal vs server
 
 As we've seen, there are two types of `load` function:
@@ -296,7 +292,7 @@ export async function load({ fetch, params }) {
 
 ## Cookies
 
-A server `load` function can get and set [`cookies`](@sveltejs-kit#Cookies).
+A server `load` function can get [`cookies`](@sveltejs-kit#Cookies) as shown below. When setting cookies, SvelteKit provides default values for `httpOnly`, `secure`, and `path` — as described in [the API documentation](@sveltejs-kit#Cookies) — in order to improve security and developer experience.
 
 ```js
 /// file: src/routes/+layout.server.js
@@ -745,7 +741,7 @@ export function requireLogin() {
 		const redirectTo = url.pathname + url.search;
 		const params = new URLSearchParams({ redirectTo });
 
-		redirect(307, `/login?${params}`);
+		redirect(303, `/login?${params}`);
 	}
 
 	return locals.user;

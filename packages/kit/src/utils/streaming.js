@@ -1,4 +1,4 @@
-import { with_resolvers } from './promise.js';
+import { noop } from './functions.js';
 
 /**
  * Create an async iterator and a function to push values into it
@@ -12,7 +12,7 @@ export function create_async_iterator() {
 	let resolved = -1;
 	let returned = -1;
 
-	/** @type {import('./promise.js').PromiseWithResolvers<T>[]} */
+	/** @type {PromiseWithResolvers<T>[]} */
 	const deferred = [];
 
 	return {
@@ -32,10 +32,18 @@ export function create_async_iterator() {
 			};
 		},
 		add: (promise) => {
-			deferred.push(with_resolvers());
-			void promise.then((value) => {
-				deferred[++resolved].resolve(value);
-			});
+			const next = Promise.withResolvers();
+			void next.promise.catch(noop); // prevent unhandled rejection potentially crashing the process
+			deferred.push(next);
+
+			void promise.then(
+				(value) => {
+					deferred[++resolved].resolve(value);
+				},
+				(error) => {
+					deferred[++resolved].reject(error);
+				}
+			);
 		}
 	};
 }

@@ -175,7 +175,7 @@ test.describe('Encoded paths', () => {
 	});
 });
 
-test.describe('$env', () => {
+test.describe('$app/env', () => {
 	test('includes environment variables', async ({ page, clicknav }) => {
 		await page.goto('/env/includes');
 
@@ -722,7 +722,7 @@ test.describe('Page options', () => {
 	});
 });
 
-test.describe('$app/environment', () => {
+test.describe('$app/env', () => {
 	test('includes version', async ({ page }) => {
 		await page.goto('/app-environment');
 		expect(await page.textContent('h1')).toBe('TEST_VERSION');
@@ -730,22 +730,6 @@ test.describe('$app/environment', () => {
 });
 
 test.describe('$app/paths', () => {
-	test('includes paths', async ({ page, javaScriptEnabled }) => {
-		test.skip(
-			process.env.SVELTE_ASYNC === 'true',
-			'does not work with async, should use new functions instead'
-		);
-		await page.goto('/paths');
-
-		let base = javaScriptEnabled ? '' : '.';
-		expect(await page.innerHTML('pre')).toBe(JSON.stringify({ base, assets: base }));
-
-		await page.goto('/paths/deeply/nested');
-
-		base = javaScriptEnabled ? '' : '../..';
-		expect(await page.innerHTML('pre')).toBe(JSON.stringify({ base, assets: base }));
-	});
-
 	// some browsers will re-request assets after a `pushState`
 	// https://github.com/sveltejs/kit/issues/3748#issuecomment-1125980897
 	test('replaces %sveltekit.assets% in template with relative path, and makes it absolute in the client', async ({
@@ -753,10 +737,6 @@ test.describe('$app/paths', () => {
 		page,
 		javaScriptEnabled
 	}) => {
-		test.skip(
-			process.env.SVELTE_ASYNC === 'true',
-			'does not work with async, should use new functions instead'
-		);
 		const absolute = `${baseURL}/favicon.png`;
 
 		await page.goto('/');
@@ -774,129 +754,32 @@ test.describe('$app/paths', () => {
 			javaScriptEnabled ? absolute : '../../../../favicon.png'
 		);
 	});
-});
 
-// TODO SvelteKit 3: remove these tests
-test.describe('$app/stores', () => {
-	test('can access page.url', async ({ baseURL, page }) => {
-		await page.goto('/origin');
-		expect(await page.textContent('h1')).toBe(baseURL);
-	});
-
-	test('page store contains data', async ({ page, clicknav }) => {
-		await page.goto('/store/data/www');
-
-		const foo = { bar: 'Custom layout' };
-
-		expect(await page.textContent('#store-data')).toBe(
-			JSON.stringify({ foo, name: 'SvelteKit', value: 456, page: 'www' })
-		);
-
-		await clicknav('a[href="/store/data/zzz"]');
-		expect(await page.textContent('#store-data')).toBe(
-			JSON.stringify({ foo, name: 'SvelteKit', value: 456, page: 'zzz' })
-		);
-
-		await clicknav('a[href="/store/data/xxx"]');
-		expect(await page.textContent('#store-data')).toBe(
-			JSON.stringify({ foo, name: 'SvelteKit', value: 123 })
-		);
-		expect(await page.textContent('#store-error')).toBe('Params = xxx');
-
-		await clicknav('a[href="/store/data/yyy"]');
-		expect(await page.textContent('#store-data')).toBe(
-			JSON.stringify({ foo, name: 'SvelteKit', value: 123 })
-		);
-		expect(await page.textContent('#store-error')).toBe('Params = yyy');
-	});
-
-	test('should load data after reloading by goto', async ({
-		page,
-		clicknav,
-		javaScriptEnabled
-	}) => {
-		await page.goto('/store/data/foo?reset=true');
-		const stuff1 = { foo: { bar: 'Custom layout' }, name: 'SvelteKit', value: 123 };
-		const stuff2 = { ...stuff1, foo: true, number: 2 };
-		const stuff3 = { ...stuff2 };
-		await page.goto('/store/data/www');
-
-		await clicknav('a[href="/store/data/foo"]');
-		expect(JSON.parse((await page.textContent('#store-data')) ?? '')).toEqual(stuff1);
-
-		await clicknav('#reload-button');
-		expect(JSON.parse((await page.textContent('#store-data')) ?? '')).toEqual(
-			javaScriptEnabled ? stuff2 : stuff1
-		);
-
-		await clicknav('a[href="/store/data/zzz"]');
-		await clicknav('a[href="/store/data/foo"]');
-		expect(JSON.parse((await page.textContent('#store-data')) ?? '')).toEqual(stuff3);
-	});
-
-	test('navigating store contains from, to and type', async ({ app, page, javaScriptEnabled }) => {
-		await page.goto('/store/navigating/a');
-
-		expect(await page.textContent('#nav-status')).toBe('not currently navigating');
-
-		if (javaScriptEnabled) {
-			await app.preloadCode('/store/navigating/b');
-
-			const res = await Promise.all([
-				page.click('a[href="/store/navigating/b"]'),
-				page.textContent('#navigating')
-			]);
-
-			expect(res[1]).toBe('navigating from /store/navigating/a to /store/navigating/b (link)');
-
-			await page.waitForSelector('#not-navigating');
-			expect(await page.textContent('#nav-status')).toBe('not currently navigating');
-
-			await Promise.all([
-				expect(page.locator('#navigating')).toHaveText(
-					'navigating from /store/navigating/b to /store/navigating/a (popstate)'
-				),
-				page.goBack()
-			]);
-		}
-	});
-
-	test('navigating store clears after aborted navigation', async ({ page, javaScriptEnabled }) => {
-		await page.goto('/store/navigating/a');
-
-		expect(await page.textContent('#nav-status')).toBe('not currently navigating');
-
-		if (javaScriptEnabled) {
-			await page.click('a[href="/store/navigating/c"]');
-			await page.waitForTimeout(100); // gross, but necessary since no navigation occurs
-			await page.click('a[href="/store/navigating/a"]');
-
-			await page.waitForSelector('#not-navigating', { timeout: 5000 });
-			expect(await page.textContent('#nav-status')).toBe('not currently navigating');
-		}
-	});
-
-	test('should update page store when URL hash is changed through the address bar', async ({
-		baseURL,
+	test('match() returns route id and params for matching routes', async ({
 		page,
 		javaScriptEnabled
 	}) => {
-		const href = `${baseURL}/store/data/zzz`;
-		await page.goto(href);
+		await page.goto('/match');
 
-		expect(await page.textContent('#url-hash')).toBe('');
+		const samples = [
+			{ path: '/match/load/foo', expected: { id: '/match/load/foo', params: {} } },
+			{
+				path: '/match/slug/test-slug',
+				expected: { id: '/match/slug/[slug]', params: { slug: 'test-slug' } }
+			},
+			{
+				path: '/match/slug/test-slug?from=query',
+				expected: { id: '/match/slug/[slug]', params: { slug: 'test-slug' } }
+			},
+			{ path: '/match/not-a-real-route-that-exists', expected: null },
+			{ path: '/reroute/basic/a', expected: { id: '/reroute/basic/b', params: {} } }
+		];
 
-		if (javaScriptEnabled) {
-			for (const urlHash of ['#1', '#2', '#5', '#8']) {
-				await page.evaluate(
-					({ href, urlHash }) => {
-						location.href = `${href}${urlHash}`;
-					},
-					{ href, urlHash }
-				);
-
-				expect(await page.textContent('#url-hash')).toBe(urlHash);
-			}
+		for (const { path, expected } of samples) {
+			const results = javaScriptEnabled
+				? page.locator('#client-results')
+				: page.locator('#server-results');
+			await expect(results.locator(`[data-path="${path}"]`)).toHaveText(JSON.stringify(expected));
 		}
 	});
 });
@@ -1472,6 +1355,28 @@ test.describe('Actions', () => {
 		expect(error.message).toBe("No action with name 'doesnt-exist' found (404 Not Found)");
 		expect(response.status()).toBe(404);
 	});
+
+	for (const name of ['toString', 'constructor', '__proto__', 'hasOwnProperty']) {
+		test(`submitting to a form action named '${name}' (an Object.prototype member) returns http status code 404`, async ({
+			baseURL,
+			page
+		}) => {
+			const response = await page.request.fetch(
+				`${baseURL}/actions/enhance?/${encodeURIComponent(name)}`,
+				{
+					method: 'POST',
+					data: 'irrelevant',
+					headers: {
+						Origin: `${baseURL}`
+					}
+				}
+			);
+			const { type, error } = await response.json();
+			expect(type).toBe('error');
+			expect(error.message).toBe(`No action with name '${name}' found (404 Not Found)`);
+			expect(response.status()).toBe(404);
+		});
+	}
 });
 
 // Run in serial to not pollute the log with (correct) cookie warnings

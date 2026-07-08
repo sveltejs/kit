@@ -2,7 +2,7 @@
 
 This guide is for AI coding agents working in the SvelteKit monorepo.
 
-**Important:** Read and follow `CONTRIBUTING.md` as well - it contains essential information about testing, code structure, and contribution guidelines that applies here.
+**Important:** Read and follow [`CONTRIBUTING.md`](./CONTRIBUTING.md) as well - it contains essential information about testing, code structure, and contribution guidelines that applies here.
 
 ## Quick Reference
 
@@ -48,6 +48,8 @@ pnpm test:others
 ```
 
 ### Pre-submission Checklist
+
+Before opening a PR, **all of these must pass** (see also the [PR template](./.github/PULL_REQUEST_TEMPLATE.md)):
 
 1. `pnpm run format` - Auto-format code
 2. `pnpm run lint` - Check code style (don't cancel early)

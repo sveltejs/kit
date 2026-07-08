@@ -3,7 +3,7 @@ import path from 'node:path';
 import { expect, it } from 'vitest';
 import { image_plugin, parse_object } from '../src/vite-plugin.js';
 
-const resolve = /** @param {string} file */ (file) => path.resolve(__dirname, file);
+const resolve = /** @param {string} file */ (file) => path.resolve(import.meta.dirname, file);
 
 it('Image preprocess snapshot test', async () => {
 	const filename = 'Input.svelte';
@@ -41,7 +41,7 @@ it('Image preprocess snapshot test', async () => {
 	if (!transformed.code) throw new Error('transform did not return any code');
 
 	// Make imports readable
-	const ouput = transformed.code.replace(/import/g, '\n\timport');
+	const ouput = transformed.code.toString().replace(/import/g, '\n\timport');
 
 	await expect(ouput).toMatchFileSnapshot('./Output.svelte');
 });

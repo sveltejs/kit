@@ -37,7 +37,7 @@ The bulk of your app, in `src/routes`, can be left where it is, but several proj
 
 ### Configuration
 
-Your `webpack.config.js` or `rollup.config.js` should be replaced with a `svelte.config.js`, as documented [here](configuration). Svelte preprocessor options should be moved to `config.preprocess`.
+Your `webpack.config.js` or `rollup.config.js` should be replaced with a `vite.config.js`, as documented [here](configuration). Svelte preprocessor options should be moved to the SvelteKit plugin `config.preprocess` setting.
 
 You will need to add an [adapter](adapters). `sapper build` is roughly equivalent to [adapter-node](adapter-node) while `sapper export` is roughly equivalent to [adapter-static](adapter-static), though you might prefer to use an adapter designed for the platform you're deploying to.
 
@@ -74,7 +74,7 @@ A common pattern in Sapper apps is to put your internal library in a directory i
 
 ### Renamed files
 
-Routes now are made up of the folder name exclusively to remove ambiguity, the folder names leading up to a `+page.svelte` correspond to the route. See [the routing docs](routing) for an overview. The following shows a old/new comparison:
+Routes now are made up of the folder name exclusively to remove ambiguity, the folder names leading up to a `+page.svelte` correspond to the route. See [the routing docs](routing) for an overview. The following shows a comparison between old and new routing structures:
 
 | Old                       | New                       |
 | ------------------------- | ------------------------- |
@@ -160,7 +160,7 @@ declare module 'html-minifier';
 // @filename: index.js
 // ---cut---
 import { minify } from 'html-minifier';
-import { building } from '$app/environment';
+import { building } from '$app/env';
 
 const minification_options = {
 	collapseBooleanAttributes: true,

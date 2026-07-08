@@ -7,20 +7,21 @@ title: Integrations
 [`vitePreprocess`](https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/preprocess.md) preprocesses `<style>` and `<script>` tags in `.svelte` files.
 
 ```js
-// svelte.config.js
+// vite.config.js
+import { sveltekit } from '@sveltejs/kit/vite';
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
+import { defineConfig } from 'vite';
 
-/** @type {import('@sveltejs/kit').Config} */
-const config = {
-  preprocess: [
-    vitePreprocess({
-      style: true,      // default value
-      script: false     // default value
-    })
-  ]
-};
-
-export default config;
+export default defineConfig({
+	plugins: [
+		sveltekit({
+			preprocess: vitePreprocess({
+				style: true,      // default value
+				script: false     // default value
+			})
+		})
+	]
+});
 ```
 
 ### `style`
@@ -29,7 +30,7 @@ Use `vitePreprocess()` to enable CSS preprocessors in `<style>` tags: PostCSS, S
 
 ### `script`
 
-Use `vitePreprocess({ script: true })` if: 
+Use `vitePreprocess({ script: true })` if:
 - your project is before Svelte 5
 - you are using advanced TypeScript features that emit code _(check [`vitePreprocess`](https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/preprocess.md) documentation)_
 
@@ -38,17 +39,19 @@ TypeScript is supported natively in Svelte 5, so if you are using Svelte 5 and y
 
 ## Add-ons
 
-Run [`npx sv add`](/docs/cli/sv-add) to setup many different complex integrations with a single command including:
+Run [`npx sv add`](/docs/cli/sv-add) to set up many different complex integrations with a single command including:
 - prettier (formatting)
 - eslint (linting)
 - vitest (unit testing)
 - playwright (e2e testing)
-- lucia (auth)
+- better-auth (auth)
 - tailwind (CSS)
 - drizzle (DB)
 - paraglide (i18n)
 - mdsvex (markdown)
 - storybook (frontend workshop)
+- adapters (hosting)
+- mcp (LLM tooling)
 
 ## Packages
 
@@ -60,7 +63,7 @@ Check out [the packages page](/packages) for a curated set of high quality Svelt
 
 `svelte-preprocess` has some additional functionality not found in `vitePreprocess` such as support for Pug, Babel, and global styles. However, `vitePreprocess` may be faster and require less configuration, so it is used by default. Note that CoffeeScript is [not supported](https://github.com/sveltejs/kit/issues/2920#issuecomment-996469815) by SvelteKit.
 
-You will need to install `svelte-preprocess` with `npm i -D svelte-preprocess` and [add it to your `svelte.config.js`](https://github.com/sveltejs/svelte-preprocess/blob/main/docs/usage.md#with-svelte-config). After that, you will often need to [install the corresponding library](https://github.com/sveltejs/svelte-preprocess/blob/main/docs/getting-started.md) such as `npm i -D sass` or `npm i -D less`.
+You will need to install `svelte-preprocess` with `npm i -D svelte-preprocess` and [add it to your `vite.config.js`](https://github.com/sveltejs/svelte-preprocess/blob/main/docs/usage.md#with-svelte-config). After that, you will often need to [install the corresponding library](https://github.com/sveltejs/svelte-preprocess/blob/main/docs/getting-started.md) such as `npm i -D sass` or `npm i -D less`.
 
 ## Vite plugins
 

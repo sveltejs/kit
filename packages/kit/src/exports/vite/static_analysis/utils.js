@@ -1,4 +1,21 @@
 /**
+ * Check if content has children rendering (slot, @render, or children prop forwarding)
+ * @param {string} content - The markup content
+ * @param {boolean} is_svelte_5_plus - Whether the project uses Svelte 5+
+ * @returns {boolean}
+ */
+export function has_children(content, is_svelte_5_plus) {
+	return (
+		content.includes('<slot') ||
+		(is_svelte_5_plus &&
+			(content.includes('{@render') ||
+				// children may be forwarded to a child component as a prop
+				content.includes('{children}') ||
+				content.includes('children={')))
+	);
+}
+
+/**
  * Check if a match position is within a comment or a string
  * @param {string} content - The full content
  * @param {number} match_index - The index where the match starts

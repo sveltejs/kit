@@ -4,6 +4,7 @@
 
 	let { data } = $props();
 
+	/** @type {Record<string, { title: string }>} */
 	const modal_contents = {
 		'please-dont-show-me': {
 			title: 'Oopsie'
@@ -13,7 +14,8 @@
 		}
 	};
 
-	let modal = undefined;
+	/** @type {{ title: string } | undefined} */
+	let modal = $state(undefined);
 
 	const show_modal = () => {
 		const hash = page.url.hash.substring(1);

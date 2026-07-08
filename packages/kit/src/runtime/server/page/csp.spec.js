@@ -1,15 +1,13 @@
 import process from 'node:process';
-import { webcrypto } from 'node:crypto';
-import { assert, test, describe } from 'vitest';
+import { assert, test, describe, beforeAll } from 'vitest';
 import { Csp } from './csp.js';
 
-// TODO: remove after bumping peer dependency to require Node 20
-if (!globalThis.crypto) {
-	// @ts-expect-error
-	globalThis.crypto = webcrypto;
-}
-
 describe.skipIf(process.env.NODE_ENV === 'production')('CSPs in dev', () => {
+	beforeAll(() => {
+		// @ts-expect-error
+		globalThis.__SVELTEKIT_DEV__ = true;
+	});
+
 	test('adds unsafe-inline styles', () => {
 		const csp = new Csp(
 			{
@@ -71,6 +69,11 @@ describe.skipIf(process.env.NODE_ENV === 'production')('CSPs in dev', () => {
 });
 
 describe.skipIf(process.env.NODE_ENV !== 'production')('CSPs in prod', () => {
+	beforeAll(() => {
+		// @ts-expect-error
+		globalThis.__SVELTEKIT_DEV__ = false;
+	});
+
 	test('generates blank CSP header', () => {
 		const csp = new Csp(
 			{

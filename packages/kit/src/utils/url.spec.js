@@ -1,5 +1,11 @@
 import { assert, describe } from 'vitest';
-import { resolve, normalize_path, make_trackable, disable_search } from './url.js';
+import {
+	resolve,
+	normalize_path,
+	make_trackable,
+	disable_search,
+	matches_external_allowlist_entry
+} from './url.js';
 
 describe('resolve', (test) => {
 	test('resolves a root-relative path', () => {
@@ -64,6 +70,29 @@ describe('resolve', (test) => {
 
 	test('resolves .', () => {
 		assert.equal(resolve('/a/b/c', '.'), '/a/b/');
+	});
+});
+
+describe('matches_external_allowlist_entry', (test) => {
+	test('matches allowed origins', () => {
+		assert.equal(matches_external_allowlist_entry('https://google.de', 'https://google.de'), true);
+		assert.equal(
+			matches_external_allowlist_entry('https://google.de/search', 'https://google.de'),
+			true
+		);
+		assert.equal(
+			matches_external_allowlist_entry('https://google.de/news', 'https://google.de/search'),
+			true
+		);
+		assert.equal(
+			matches_external_allowlist_entry('https://google.de.evil.com', 'https://google.de'),
+			false
+		);
+		assert.equal(
+			matches_external_allowlist_entry('blob:https://google.de/id', 'https://google.de'),
+			false
+		);
+		assert.equal(matches_external_allowlist_entry('https://evil.com', 'https://google.de'), false);
 	});
 });
 

@@ -1,5 +1,5 @@
 <script>
-	import { get, set } from './form.remote.js';
+	import { get, set } from './form.remote.ts';
 	import * as v from 'valibot';
 
 	const data = get();

@@ -1,5 +1,5 @@
 <script>
-	import { PUBLIC_STATIC } from '$env/static/public';
+	import { PUBLIC_STATIC } from '$app/env/public';
 
 	/** @type {import('./$types').PageData} */
 	export let data;

@@ -13,27 +13,24 @@ Sometimes, you may need to observe how your application is behaving in order to 
 - [Form actions](form-actions)
 - [Remote functions](remote-functions)
 
-Just telling SvelteKit to emit spans won't get you far, though — you need to actually collect them somewhere to be able to view them. SvelteKit provides `src/instrumentation.server.ts` as a place to write your tracing setup and instrumentation code. It's guaranteed to be run prior to your application code being imported, providing your deployment platform supports it and your adapter is aware of it.
+Just telling SvelteKit to emit spans won't get you far, though — you need to actually collect them somewhere to be able to view them. SvelteKit provides `src/instrumentation.server.ts` as a place to write your tracing setup and instrumentation code. If this file exists, it is loaded before your application code (provided your deployment platform supports it and your adapter is aware of it).
 
-Both of these features are currently experimental, meaning they are likely to contain bugs and are subject to change without notice. You must opt in by adding the `kit.experimental.tracing.server` and `kit.experimental.instrumentation.server` option in your `svelte.config.js`:
+To enable SvelteKit's built-in span emission, set the `tracing.server` option of the SvelteKit plugin in your `vite.config.js` to `true`:
 
 ```js
-/// file: svelte.config.js
-/** @type {import('@sveltejs/kit').Config} */
-const config = {
-	kit: {
-		experimental: {
+/// file: vite.config.js
+import { sveltekit } from '@sveltejs/kit/vite';
+import { defineConfig } from 'vite';
+
+export default defineConfig({
+	plugins: [
+		sveltekit({
 			+++tracing: {
 				server: true
-			},
-			instrumentation: {
-				server: true
 			}+++
-		}
-	}
-};
-
-export default config;
+		})
+	]
+});
 ```
 
 > [!NOTE] Tracing — and more significantly, observability instrumentation — can have a nontrivial overhead. Before you go all-in on tracing, consider whether or not you really need it, or if it might be more appropriate to turn it on in development and preview environments only.
@@ -66,7 +63,7 @@ async function authenticate() {
 
 To view your first trace, you'll need to set up a local collector. We'll use [Jaeger](https://www.jaegertracing.io/docs/getting-started/) in this example, as they provide an easy-to-use quickstart command. Once your collector is running locally:
 
-- Turn on the experimental flags mentioned earlier in your `svelte.config.js` file
+- Enable tracing as described earlier in your `vite.config.js` file, and create `src/instrumentation.server.js` (which SvelteKit will load automatically)
 - Use your package manager to install the dependencies you'll need:
   ```sh
   npm i @opentelemetry/sdk-node @opentelemetry/auto-instrumentations-node @opentelemetry/exporter-trace-otlp-proto import-in-the-middle
@@ -74,15 +71,14 @@ To view your first trace, you'll need to set up a local collector. We'll use [Ja
 - Create `src/instrumentation.server.js` with the following:
 
 ```js
+// @errors: 2307
 /// file: src/instrumentation.server.js
 import { NodeSDK } from '@opentelemetry/sdk-node';
 import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-proto';
-import { createAddHookMessageChannel } from 'import-in-the-middle';
-import { register } from 'node:module';
+import { register } from 'import-in-the-middle/register-hooks.mjs';
 
-const { registerOptions } = createAddHookMessageChannel();
-register('import-in-the-middle/hook.mjs', import.meta.url, registerOptions);
+register();
 
 const sdk = new NodeSDK({
 	serviceName: 'test-sveltekit-tracing',
@@ -95,6 +91,38 @@ sdk.start();
 
 Now, server-side requests will begin generating traces, which you can view in Jaeger's web console at [localhost:16686](http://localhost:16686).
 
+> [!NOTE] `import-in-the-middle/register-hooks.mjs` registers the loader via [`module.registerHooks()`](https://nodejs.org/api/module.html#moduleregisterhooksoptions), which runs the hooks synchronously on the application thread. This avoids the inter-thread message channel that the older `module.register()`-based setup required.
+>
+> The synchronous loader needs Node.js 22.22.3+, 24.11.1+, 25.1.0+, or 26.0.0+. `register()` will throw on older Node.js versions. If you need to support them, fall back to the asynchronous loader:
+>
+> ```js
+> // @errors: 2307
+> /// file: src/instrumentation.server.js
+> import { NodeSDK } from '@opentelemetry/sdk-node';
+> import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
+> import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-proto';
+> import { register, supportsSyncHooks } from 'import-in-the-middle/register-hooks.mjs';
+> import { createAddHookMessageChannel } from 'import-in-the-middle';
+> import { register as registerAsync } from 'node:module';
+>
+> if (supportsSyncHooks()) {
+> 	register();
+> } else {
+> 	const { registerOptions } = createAddHookMessageChannel();
+> 	registerAsync('import-in-the-middle/hook.mjs', import.meta.url, registerOptions);
+> }
+>
+> const sdk = new NodeSDK({
+> 	serviceName: 'test-sveltekit-tracing',
+> 	traceExporter: new OTLPTraceExporter(),
+> 	instrumentations: [getNodeAutoInstrumentations()]
+> });
+>
+> sdk.start();
+> ```
+>
+> The asynchronous `module.register()` API was deprecated in Node.js 25.9.0 and emits a runtime deprecation warning from 26.0.0, so prefer the synchronous path whenever your Node.js version supports it.
+
 ## `@opentelemetry/api`
 
-SvelteKit uses `@opentelemetry/api` to generate its spans. This is declared as an optional peer dependency so that users not needing traces see no impact on install size or runtime performance. In most cases, if you're configuring your application to collect SvelteKit's spans, you'll end up installing a library like `@opentelemetry/sdk-node` or `@vercel/otel`, which in turn depend on `@opentelemetry/api`, which will satisfy SvelteKit's dependency as well. If you see an error from SvelteKit telling you it can't find `@opentelemetry/api`, it may just be because you haven't set up your trace collection yet. If you _have_ done that and are still seeing the error, you can install `@opentelemetry/api` yourself. 
+SvelteKit uses `@opentelemetry/api` to generate its spans. This is declared as an optional peer dependency so that users not needing traces see no impact on install size or runtime performance. In most cases, if you're configuring your application to collect SvelteKit's spans, you'll end up installing a library like `@opentelemetry/sdk-node` or `@vercel/otel`, which in turn depend on `@opentelemetry/api`, which will satisfy SvelteKit's dependency as well. If you see an error from SvelteKit telling you it can't find `@opentelemetry/api`, it may just be because you haven't set up your trace collection yet. If you _have_ done that and are still seeing the error, you can install `@opentelemetry/api` yourself.

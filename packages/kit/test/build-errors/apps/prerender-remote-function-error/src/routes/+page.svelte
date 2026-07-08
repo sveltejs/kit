@@ -1,5 +1,5 @@
 <script>
-	import { throws } from './data.remote.js';
+	import { throws } from './data.remote.ts';
 </script>
 
 {#await throws() then value}
