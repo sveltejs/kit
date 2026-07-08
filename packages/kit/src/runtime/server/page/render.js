@@ -247,22 +247,11 @@ export async function render_response({
 			}
 
 			rendered = await with_request_store({ event, state: render_state }, async () => {
-				// use relative paths during rendering, so that the resulting HTML is as
-				// portable as possible, but reset afterwards
-				if (paths.relative) paths.override({ base, assets });
-
 				// We have to invoke .then eagerly here in order to kick off rendering: it's only starting on access,
 				// and `await maybe_promise` would eagerly access the .then property but call its function only after a tick, which is too late
 				// for the paths.reset() below and for any eager getRequestEvent() calls during rendering without AsyncLocalStorage available.
 				// TODO use render from 'svelte/server' here
 				const rendered = options.root.render(props, render_opts).then((r) => r);
-
-				// we reset this synchronously, rather than after async rendering is complete,
-				// to avoid cross-talk between requests. This is a breaking change for
-				// anyone who opts into async SSR, since `base` and `assets` will no
-				// longer be relative to the current pathname.
-				// TODO 3.0 remove `base` and `assets` in favour of `resolve(...)` and `asset(...)`
-				paths.reset();
 
 				// @ts-expect-error the legacy `render` API only returns html still, but the new API uses body
 				const { head, html: body, css, hashes } = await rendered;
@@ -277,8 +266,6 @@ export async function render_response({
 			if (DEV) {
 				globalThis.fetch = fetch;
 			}
-
-			paths.reset(); // just in case `options.root.render(...)` failed
 		}
 	} else {
 		rendered = { head: '', body: '', css: { code: '', map: null }, hashes: { script: [] } };
