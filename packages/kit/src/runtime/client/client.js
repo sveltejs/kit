@@ -822,7 +822,6 @@ async function get_navigation_result_from_branch({
 
 		if (node?.data !== prev?.data) data_changed = true;
 		if (!node) continue;
-		if (!node.node.component) continue;
 
 		data = { ...data, ...node.data };
 

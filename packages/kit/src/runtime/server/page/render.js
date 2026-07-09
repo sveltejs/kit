@@ -156,7 +156,6 @@ export async function render_response({
 
 		for (let i = 0; i < branch.length; i += 1) {
 			const node = branch[i];
-			if (!node.node.component) continue;
 
 			data = { ...data, ...node.data };
 
@@ -164,7 +163,7 @@ export async function render_response({
 			const error = error_components?.slice(0, i + 1).findLast((x) => x);
 
 			current_node.error = error;
-			current_node.component = await node.node.component();
+			current_node.component = await node.node.component?.();
 			current_node.data = data;
 
 			if (i < branch.length - 1) {
