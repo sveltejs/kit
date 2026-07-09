@@ -27,7 +27,7 @@ export function write_root(manifest_data, output) {
 			<script>
 				import { afterNavigate } from '$app/navigation';
 
-				let { page, constructors, components = [], form, errors = [], error, ${levels
+				let { page, constructors, components = [], form, errors = [], error, resetters = [], ${levels
 					.map((l) => `data_${l} = null`)
 					.join(', ')} } = $props();
 				let data = $derived({${levels.map((l) => `'${l}': data_${l}`).join(', ')}});
@@ -52,7 +52,7 @@ export function write_root(manifest_data, output) {
 					{@const ErrorPage = errors[depth]}
 					<ErrorPage {error} />
 				{/snippet}
-				<svelte:boundary failed={errors[depth] ? failed : undefined}>
+				<svelte:boundary failed={errors[depth] ? failed : undefined} onerror={errors[depth] ? (_, reset) => (resetters[depth] = reset) : undefined}>
 					{#if constructors[depth + 1]}
 						{@const d = data[depth]}
 						<!-- svelte-ignore binding_property_non_reactive -->
