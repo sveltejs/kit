@@ -769,7 +769,6 @@ export interface RequestStore {
 
 export interface DevContext {
 	server: ViteDevServer;
-	/** used to construct the SSR manifest */
 	manifest_data: ManifestData;
 }
 
