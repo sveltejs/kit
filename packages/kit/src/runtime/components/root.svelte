@@ -7,8 +7,8 @@
 		page: Page;
 		root: RenderNode;
 		components: any[];
-		form: any;
-		error: App.Error | undefined;
+		form?: any;
+		error?: App.Error;
 	}
 
 	const { page, root, components = [], form, error }: Props = $props();

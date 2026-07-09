@@ -34,7 +34,6 @@ import {
 } from './constants.js';
 import { validate_page_exports } from '../../utils/exports.js';
 import { noop } from '../../utils/functions.js';
-import { compact } from '../../utils/array.js';
 import {
 	INVALIDATED_PARAM,
 	TRAILING_SLASH_PARAM,

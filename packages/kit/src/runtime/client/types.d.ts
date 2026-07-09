@@ -58,8 +58,6 @@ export interface SvelteKitApp {
 	 */
 	hash: boolean;
 
-	root: typeof SvelteComponent;
-
 	/**
 	 * Lazily loads the contents of src/error.html, used as a last-resort
 	 * error page when the root layout's load function throws during client-side rendering.
