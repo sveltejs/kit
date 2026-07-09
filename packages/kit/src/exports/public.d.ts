@@ -114,6 +114,12 @@ type UnpackValidationError<T> =
 			? undefined // needs to be undefined, because void will corrupt union type
 			: T;
 
+export interface ManifestGenerationOptions {
+	/** A relative path to the base directory of the server build output */
+	relativePath: string;
+	routes?: RouteDefinition[];
+}
+
 /**
  * This object is passed to the `adapt` function of adapters.
  * It contains various methods and properties that are useful for adapting the app.
@@ -159,7 +165,7 @@ export interface Builder {
 	 * Generate a server-side manifest to initialise the SvelteKit [server](https://svelte.dev/docs/kit/@sveltejs-kit#Server) with.
 	 * @param opts a relative path to the base directory of the app and optionally in which format (esm or cjs) the manifest should be generated
 	 */
-	generateManifest: (opts: { relativePath: string; routes?: RouteDefinition[] }) => string;
+	generateManifest: (opts: ManifestGenerationOptions) => string;
 
 	/**
 	 * Resolve a path to the `name` directory inside `outDir`, e.g. `/path/to/.svelte-kit/my-adapter`.
@@ -1768,19 +1774,24 @@ export interface ServerInitOptions {
 	read?: (file: string) => MaybePromise<ReadableStream | null>;
 }
 
+/**
+ * Information required to instantiate a new `Server` instance.
+ */
 export interface SSRManifest {
+	/** The directory where SvelteKit keeps its stuff, including static assets (such as JS and CSS) and internally-used routes. */
 	appDir: string;
+	/** The `base` and `appDir` settings combined without a leading slash. */
 	appPath: string;
 	/** Static files from `config.files.assets` and the service worker (if any). */
 	assets: Set<string>;
 	mimeTypes: Record<string, string>;
 
-	/** private fields */
+	/** @internal private fields */
 	_: {
 		client: BuildData['client'];
 		nodes: SSRNodeLoader[];
 		/** hashed filename -> import to that file */
-		remotes: Record<string, () => Promise<any>>;
+		remotes: Record<string, () => Promise<{ default: Record<string, any> }>>;
 		routes: SSRRoute[];
 		prerendered_routes: Set<string>;
 		matchers: () => Promise<Record<string, ParamMatcher>>;
