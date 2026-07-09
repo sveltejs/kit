@@ -143,10 +143,9 @@ You can use validators to make values optional, or transform them (such as turni
 
 The `availability` property controls when a variable's value is available, and therefore when it is validated. It has four possible values:
 
-- `'dynamic'` (default) — the value is read from the environment when the app starts, and is also validated at build time. Use this when the value is the same at build time and run time.
+- `'dynamic'` (default) — the value is validated and used during runtime and buildtime.
 - `'inline'` — the value is inlined into your application code at build time, enabling optimisations like dead-code elimination. It is validated at build time.
-- `'runtime'` — the value is only available when the app runs. It is validated at runtime only, so the build will succeed even if the value is absent. The value is `undefined` during the build, so the variable is typed as `T | undefined`.
-- `'buildtime'` — the value is only available during the build. It is validated at buildtime, but is `undefined` at runtime. The variable is typed as `T | undefined`.
+- `'runtime'` — the value is validated and used during runtime only. The value is `undefined` during the build, so the variable is typed as `T | undefined`.
 
 ```ts
 /// file: src/env.ts

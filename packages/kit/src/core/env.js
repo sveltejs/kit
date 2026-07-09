@@ -120,9 +120,6 @@ export function create_sveltekit_env(variables, env, entry, is_dev) {
 				const value = validate(variables ?? {}, env[name], name, issues);
 				declarations.push(`explicit_public_env.${name} = ${devalue.uneval(value)};`);
 			}
-		} else if (availability === 'buildtime') {
-			// validate at build time, but the value is `undefined` at run time
-			validate(variables ?? {}, env[name], name, issues);
 		} else {
 			const target = availability === 'runtime' ? runtime_setters : setters;
 
@@ -198,8 +195,6 @@ export function create_sveltekit_env_private(variables, env) {
 	/** @type {string[]} */
 	const exports = [];
 
-	let has_buildtime = false;
-
 	for (const [name, config] of Object.entries(variables)) {
 		if (config.public) continue;
 
@@ -210,9 +205,6 @@ export function create_sveltekit_env_private(variables, env) {
 
 		if (availability === 'inline') {
 			value = devalue.uneval(validate(variables, env[name], name, issues));
-		} else if (availability === 'buildtime') {
-			has_buildtime = true;
-			value = `building ? ${devalue.uneval(validate(variables, env[name], name, issues))} : undefined`;
 		} else {
 			value = `env.${name}`;
 		}
@@ -222,9 +214,7 @@ export function create_sveltekit_env_private(variables, env) {
 
 	handle_issues(issues);
 
-	const import_building = has_buildtime ? `import { building } from '$app/env/internal';\n` : '';
-
-	return `${import_building}import { dynamic_private_env as env } from '__sveltekit/env';\n\n${exports.join('')}`;
+	return `import { dynamic_private_env as env } from '__sveltekit/env';\n\n${exports.join('')}`;
 }
 
 /**
@@ -244,8 +234,6 @@ export function create_sveltekit_env_public(variables, env, prelude) {
 	/** @type {string[]} */
 	const exports = [];
 
-	let has_buildtime = false;
-
 	for (const [name, config] of Object.entries(variables)) {
 		if (!config.public) continue;
 
@@ -256,9 +244,6 @@ export function create_sveltekit_env_public(variables, env, prelude) {
 
 		if (availability === 'inline') {
 			value = devalue.uneval(validate(variables, env[name], name, issues));
-		} else if (availability === 'buildtime') {
-			has_buildtime = true;
-			value = `building ? ${devalue.uneval(validate(variables, env[name], name, issues))} : undefined`;
 		} else {
 			value = `env.${name}`;
 		}
@@ -268,9 +253,7 @@ export function create_sveltekit_env_public(variables, env, prelude) {
 
 	handle_issues(issues);
 
-	const import_building = has_buildtime ? `import { building } from '$app/env/internal';\n` : '';
-
-	return `${import_building}${prelude}\n\n${exports.join('')}`;
+	return `${prelude}\n\n${exports.join('')}`;
 }
 
 /**
@@ -318,7 +301,6 @@ export function create_sveltekit_env_service_worker_dev(variables, env, global) 
 
 	for (const [name, config] of Object.entries(variables ?? {})) {
 		if (!config.public) continue;
-		if ((config.availability ?? 'dynamic') === 'buildtime') continue;
 
 		const value = validate(variables ?? {}, env[name], name, issues);
 		properties.push(`${name}: ${devalue.uneval(value)}`);
@@ -356,7 +338,7 @@ export function create_explicit_env_types(variables, relative, type) {
 		.map(([name, config]) => {
 			const comment = config.description ? `${create_jsdoc(config.description)}\n` : '';
 			const availability = config.availability ?? 'dynamic';
-			const maybe_undefined = availability === 'buildtime' || availability === 'runtime';
+			const maybe_undefined = availability === 'runtime';
 			const type = config.schema
 				? `import('@sveltejs/kit/internal/types').StandardSchemaV1.InferOutput<typeof import('${relative}').variables.${name}.schema>${maybe_undefined ? ' | undefined' : ''}`
 				: maybe_undefined

@@ -58,8 +58,7 @@ test.describe('$app/env', () => {
 				PRIVATE_EXPLICIT_ENV: 'secret resolved at runtime',
 				PRIVATE_STATIC_EXPLICIT_ENV: 'secret resolved at build time',
 				PRIVATE_VALIDATED_DEFAULT_ENV: 'foo',
-				RUNTIME_ONLY: 'secret',
-				BUILDTIME_ONLY: undefined
+				RUNTIME_ONLY: 'secret'
 			})
 		);
 
@@ -104,25 +103,6 @@ test.describe('$app/env', () => {
 			});
 			expect(output).toContain('Invalid environment variables');
 			expect(output).toContain('RUNTIME_ONLY');
-		}
-	});
-
-	test('buildtime-only variable has its value during build but is undefined at runtime', async ({
-		page,
-		javaScriptEnabled
-	}) => {
-		test.skip(javaScriptEnabled);
-
-		if (process.env.DEV) {
-			// in dev, building is false so the value is undefined
-			await page.goto('/basepath/env/buildtime-only');
-			await expect(page.locator('[data-testid="buildtime-only"]')).toHaveText(
-				'buildtime-only environment variable exists: undefined'
-			);
-		} else {
-			// the page is prerendered during build, so the build-time value is baked into the HTML
-			const html = read('prerendered/pages/env/buildtime-only.html');
-			expect(html).toContain('buildtime-only environment variable exists: built at build time');
 		}
 	});
 });

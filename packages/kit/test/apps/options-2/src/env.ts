@@ -17,9 +17,5 @@ export const variables = {
 	RUNTIME_ONLY: {
 		availability: 'runtime',
 		schema: v.string()
-	},
-	BUILDTIME_ONLY: {
-		availability: 'buildtime',
-		schema: v.string()
 	}
 };
