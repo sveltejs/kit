@@ -105,8 +105,11 @@ export function create_sveltekit_env(variables, env, entry, is_dev) {
 			]
 		: [`const variables = {};`, `const handle_issues = () => {};`];
 
+	/** @type {string[]} */
 	const declarations = [];
+	/** @type {string[]} */
 	const setters = [];
+	/** @type {string[]} */
 	const runtime_setters = [];
 
 	/** @type {Record<string, StandardSchemaV1.Issue[]>} */
