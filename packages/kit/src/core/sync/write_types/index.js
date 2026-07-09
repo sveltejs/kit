@@ -607,7 +607,7 @@ function generate_params_type(params, outdir, config) {
 	return `{ ${params
 		.map(
 			(param) =>
-				`${param.name}${param.optional ? '?' : ''}: ${
+				`${/^\w+$/.test(param.name) ? param.name : `'${param.name}'`}${param.optional ? '?' : ''}: ${
 					param.matcher
 						? `import('@sveltejs/kit').MatcherParam<(typeof import('${params_import}').params)[${JSON.stringify(param.matcher)}]>`
 						: 'string'
