@@ -1257,7 +1257,7 @@ importers:
         specifier: 'catalog:'
         version: 8.0.16(@types/node@22.19.19)(esbuild@0.28.1)(jiti@2.4.2)(yaml@2.9.0)
 
-  packages/kit/test/build-errors/apps/server-only-shared:
+  packages/kit/test/build-errors/apps/server-only-module-dynamic-import:
     devDependencies:
       '@sveltejs/kit':
         specifier: workspace:^
@@ -1278,7 +1278,7 @@ importers:
         specifier: 'catalog:'
         version: 8.0.16(@types/node@22.19.19)(esbuild@0.28.1)(jiti@2.4.2)(yaml@2.9.0)
 
-  packages/kit/test/build-errors/apps/server-only-module-dynamic-import:
+  packages/kit/test/build-errors/apps/server-only-shared:
     devDependencies:
       '@sveltejs/kit':
         specifier: workspace:^
