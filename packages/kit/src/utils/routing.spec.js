@@ -597,7 +597,7 @@ describe('find_route', () => {
 
 	test('respects matchers with hyphenated names', () => {
 		const routes = [create_route('/blog/[slug=positive-integer]'), create_route('/blog/[slug]')];
-		/** @type {import('@sveltejs/kit').ParamMatcher} */
+		/** @type {import('@sveltejs/kit').ParamDefinition} */
 		const positive_integer = (param) => (/^\d+$/.test(param) ? param : undefined);
 		const matchers = defineParams({ 'positive-integer': positive_integer });
 
