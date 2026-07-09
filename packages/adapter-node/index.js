@@ -148,6 +148,7 @@ export default function (opts = {}) {
 				builder.instrument({
 					entrypoint: `${out}/index.js`,
 					instrumentation: `${out}/instrumentation.server.js`,
+					env: 'process.env',
 					module: {
 						exports: ['path', 'host', 'port', 'server']
 					}

@@ -127,7 +127,11 @@ export default function (options = {}) {
 			if (builder.hasServerInstrumentationFile()) {
 				builder.instrument({
 					entrypoint: worker_dest,
-					instrumentation: `${builder.getServerDirectory()}/instrumentation.server.js`
+					instrumentation: `${builder.getServerDirectory()}/instrumentation.server.js`,
+					env: {
+						imports: [`import { env } from 'cloudflare:workers';`],
+						expression: 'env'
+					}
 				});
 			}
 

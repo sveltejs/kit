@@ -103,7 +103,8 @@ const plugin = function (defaults = {}) {
 				if (builder.hasServerInstrumentationFile()) {
 					builder.instrument({
 						entrypoint: `${tmp}/index.js`,
-						instrumentation: `${builder.getServerDirectory()}/instrumentation.server.js`
+						instrumentation: `${builder.getServerDirectory()}/instrumentation.server.js`,
+						env: 'process.env'
 					});
 				}
 
@@ -826,7 +827,9 @@ function is_prerendered(route) {
  */
 function generate_traced_edge_module({ instrumentation, start }) {
 	return `\
-import './${instrumentation}';
+const { set_env } = await import('./env.js');
+set_env(process.env);
+await import('./${instrumentation}');
 const promise = import('./${start}');
 
 /**
