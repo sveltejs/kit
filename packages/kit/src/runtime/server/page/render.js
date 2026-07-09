@@ -186,6 +186,30 @@ export async function render_response({
 			state: {}
 		};
 
+		const root = /** @type {import('../../types.js').RenderNode} */ ({});
+		let current_node = root;
+		let current_data = {};
+
+		for (let i = 0; i < branch.length; i += 1) {
+			const node = branch[i];
+			if (!node) continue;
+
+			const data = { ...current_data, ...node.data };
+
+			// const error_loader = errors?.slice(0, i + 1).findLast((x) => x) ?? default_error_loader;
+
+			// current_node.error = (await error_loader())?.component;
+			current_node.component = await node.node.component?.();
+			current_node.data = current_data = data;
+
+			if (i < branch.length - 1) {
+				current_node.child = /** @type {import('../../types.js').RenderNode} */ ({});
+				current_node = current_node.child;
+			}
+		}
+
+		props.root = root;
+
 		const render_state = { ...event_state, is_in_render: true };
 
 		const render_opts = {

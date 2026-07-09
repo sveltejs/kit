@@ -27,10 +27,7 @@ export function write_root(manifest_data, output) {
 			<script>
 				import { afterNavigate } from '$app/navigation';
 
-				let { page, constructors, components = [], form, errors = [], error, ${levels
-					.map((l) => `data_${l} = null`)
-					.join(', ')} } = $props();
-				let data = $derived({${levels.map((l) => `'${l}': data_${l}`).join(', ')}});
+				let { page, root, components = [], form, error } = $props();
 
 				let mounted = $state(false);
 				let navigated = $state(false);
@@ -46,28 +43,25 @@ export function write_root(manifest_data, output) {
 				});
 			</script>
 
-			{#snippet pyramid(depth)}
-				{@const Pyramid = constructors[depth]}
-				{#snippet failed(error)}
-					{@const ErrorPage = errors[depth]}
-					<ErrorPage {error} />
-				{/snippet}
-				<svelte:boundary failed={errors[depth] ? failed : undefined}>
-					{#if constructors[depth + 1]}
-						{@const d = data[depth]}
+			{#snippet node(n, depth)}
+				<svelte:boundary>
+					{#if n.child}
 						<!-- svelte-ignore binding_property_non_reactive -->
-						<Pyramid bind:this={components[depth]} data={d} {form} params={page.params}>
-							{@render pyramid(depth + 1)}
-						</Pyramid>
+						<n.component bind:this={components[depth]} data={n.data} {form} params={page.params}>
+							{@render node(n.child, depth + 1)}
+						</n.component>
 					{:else}
-						{@const d = data[depth]}
 						<!-- svelte-ignore binding_property_non_reactive -->
-						<Pyramid bind:this={components[depth]} data={d} {form} params={page.params} {error} />
+						<n.component bind:this={components[depth]} data={n.data} {form} params={page.params} {error} />
 					{/if}
+
+					{#snippet failed(error)}
+						<n.error {error} />
+					{/snippet}
 				</svelte:boundary>
 			{/snippet}
 
-			{@render pyramid(0)}
+			{@render node(root, 0)}
 
 			{#if mounted}
 				<div id="svelte-announcer" aria-live="assertive" aria-atomic="true" style="position: absolute; left: 0; top: 0; clip: rect(0 0 0 0); clip-path: inset(50%); overflow: hidden; white-space: nowrap; width: 1px; height: 1px">
