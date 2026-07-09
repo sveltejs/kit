@@ -575,9 +575,7 @@ export interface SSRState {
 	 * prerender option is inherited by the endpoint, unless overridden.
 	 */
 	prerender_default?: PrerenderOption;
-	/**
-	 * @internal reads from the filesystem when user code tries to fetch a static asset
-	 */
+	/** @internal reads from the filesystem when user code tries to fetch a static asset */
 	read?: (file: string) => MaybePromise<Buffer<ArrayBuffer>>;
 	/**
 	 * Used to set up `__SVELTEKIT_TRACK__` which checks if a used feature is supported.
