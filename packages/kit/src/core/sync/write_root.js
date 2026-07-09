@@ -27,7 +27,7 @@ export function write_root(manifest_data, output) {
 			<script>
 				import { setContext } from 'svelte';
 				import { afterNavigate } from '$app/navigation';
-				import { browser } from '$app/environment';
+				import { browser } from '$app/env';
 
 				let { page, constructors, components = [], form, fork, errors = [], error, ${levels
 					.map((l) => `data_${l} = null`)
