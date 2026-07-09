@@ -10,6 +10,7 @@ import {
 	Uses
 } from 'types';
 import { Page, ParamMatcher } from '@sveltejs/kit';
+import { RenderNode } from '../types.js';
 
 export interface SvelteKitApp {
 	/**
@@ -91,13 +92,11 @@ export type NavigationFinished = {
 	type: 'loaded';
 	state: NavigationState;
 	props: {
-		constructors: Array<typeof SvelteComponent>;
-		errors?: Array<typeof SvelteComponent | undefined>;
 		components?: SvelteComponent[];
 		page: Page;
 		form?: Record<string, any> | null;
 		error?: App.Error;
-		[key: `data_${number}`]: Record<string, any>;
+		root: RenderNode;
 	};
 };
 

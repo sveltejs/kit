@@ -1,5 +1,6 @@
 /** @import { RemoteFunctionDataNode, ServerNodesResponse, ServerRedirectNode } from 'types' */
 /** @import { NavigationIntent } from './types.js' */
+/** @import { RenderNode } from '../types.js' */
 /** @import { CacheEntry } from './remote-functions/cache.svelte.js' */
 /** @import { Query } from './remote-functions/query/instance.svelte.js' */
 /** @import { LiveQuery } from './remote-functions/query-live/instance.svelte.js' */
@@ -798,32 +799,10 @@ async function get_navigation_result_from_branch({
 			route
 		},
 		props: {
-			constructors: compact(branch).map((branch_node) => branch_node.node.component),
-			page
+			page,
+			root: /** @type {RenderNode} */ ({})
 		}
 	};
-
-	if (errors) {
-		let last_idx = -1;
-		result.props.errors = await Promise.all(
-			// eslint-disable-next-line @typescript-eslint/await-thenable
-			branch
-				.map((b, i) => {
-					if (i === 0) return undefined; // root layout wraps root error component, not the other way around
-					if (!b) return null;
-
-					i--;
-					// Find the closest error component up to the previous branch
-					while (i > last_idx + 1 && !errors[i]) i -= 1;
-					last_idx = i;
-					return errors[i]?.()
-						.then((e) => e.component)
-						.catch(() => undefined);
-				})
-				// filter out indexes where there was no branch, but keep indexes where there was a branch but no error component
-				.filter((e) => e !== null)
-		);
-	}
 
 	if (error) {
 		result.props.error = error;
@@ -878,8 +857,7 @@ async function get_navigation_result_from_branch({
 		};
 	}
 
-	const root = /** @type {import('../types.js').RenderNode} */ ({});
-	let current_node = root;
+	let current_node = result.props.root;
 	let current_data = {};
 
 	for (let i = 0; i < branch.length; i += 1) {
@@ -899,8 +877,6 @@ async function get_navigation_result_from_branch({
 			current_node = current_node.child;
 		}
 	}
-
-	result.props.root = root;
 
 	return result;
 }
