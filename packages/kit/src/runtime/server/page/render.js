@@ -1,5 +1,6 @@
+/** @import { RenderNode } from '../../types.js' */
 import * as devalue from 'devalue';
-import { readable, writable } from 'svelte/store';
+import { readable } from 'svelte/store';
 import { DEV } from 'esm-env';
 import { isRedirect, text } from '@sveltejs/kit';
 import * as paths from '$app/paths/internal/server';
@@ -145,37 +146,31 @@ export async function render_response({
 	if (page_config.ssr) {
 		/** @type {Record<string, any>} */
 		const props = {
-			stores: {
-				page: writable(null),
-				navigating: writable(null),
-				updated
-			},
-			constructors: await Promise.all(
-				branch.map(({ node }) => {
-					if (!node.component) {
-						// Can only be the leaf, layouts have a fallback component generated
-						throw new Error(`Missing +page.svelte component for route ${event.route.id}`);
-					}
-					return node.component();
-				})
-			),
-			form: form_value
+			form: form_value,
+			root: /** @type {RenderNode} */ ({}),
+			error
 		};
 
-		if (error_components) {
-			if (error) {
-				props.error = error;
-			}
-			props.errors = error_components;
-		}
-
+		let current_node = props.root;
 		let data = {};
 
-		// props_n (instead of props[n]) makes it easy to avoid
-		// unnecessary updates for layout components
 		for (let i = 0; i < branch.length; i += 1) {
-			data = { ...data, ...branch[i].data };
-			props[`data_${i}`] = data;
+			const node = branch[i];
+			if (!node.node.component) continue;
+
+			data = { ...data, ...node.data };
+
+			// TODO this is undefined sometimes... where does the default error component come from?
+			const error = error_components?.slice(0, i + 1).findLast((x) => x);
+
+			current_node.error = error;
+			current_node.component = await node.node.component();
+			current_node.data = data;
+
+			if (i < branch.length - 1) {
+				current_node.child = /** @type {import('../../types.js').RenderNode} */ ({});
+				current_node = current_node.child;
+			}
 		}
 
 		props.page = {
@@ -188,31 +183,6 @@ export async function render_response({
 			form: form_value,
 			state: {}
 		};
-
-		const root = /** @type {import('../../types.js').RenderNode} */ ({});
-		let current_node = root;
-		let current_data = {};
-
-		for (let i = 0; i < branch.length; i += 1) {
-			const node = branch[i];
-			if (!node.node.component) continue;
-
-			const data = { ...current_data, ...node.data };
-
-			// TODO this is undefined sometimes... where does the default error component come from?
-			const error = error_components?.slice(0, i + 1).findLast((x) => x);
-
-			current_node.error = error;
-			current_node.component = await node.node.component();
-			current_node.data = current_data = data;
-
-			if (i < branch.length - 1) {
-				current_node.child = /** @type {import('../../types.js').RenderNode} */ ({});
-				current_node = current_node.child;
-			}
-		}
-
-		props.root = root;
 
 		const render_state = { ...event_state, is_in_render: true };
 
