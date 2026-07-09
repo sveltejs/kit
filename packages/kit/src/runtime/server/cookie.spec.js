@@ -85,6 +85,16 @@ describe.skipIf(process.env.NODE_ENV !== 'production')('cookies in prod', () => 
 		assert.isUndefined(cookies.get('a'));
 	});
 
+	test('getAll should not include deleted cookies', () => {
+		const { cookies } = cookies_setup({ headers: { cookie: 'session=abc' } });
+		cookies.set('session', 'abc', { path: '/' });
+		expect(cookies.getAll()).toEqual([{ name: 'session', value: 'abc' }]);
+
+		cookies.delete('session', { path: '/' });
+		assert.isUndefined(cookies.get('session'));
+		expect(cookies.getAll()).toEqual([]);
+	});
+
 	test('default values when set is called', () => {
 		const { cookies, new_cookies } = cookies_setup();
 		cookies.set('a', 'b', { path: '/' });
