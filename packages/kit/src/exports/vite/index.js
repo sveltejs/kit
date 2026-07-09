@@ -1112,17 +1112,17 @@ function kit({ svelte_config }) {
 					return;
 				}
 
-				const manifest_data = dev_context?.manifest_data ?? manifest_data;
+				const { nodes, hooks } = dev_context?.manifest_data ?? manifest_data;
 
 				/** @type {Set<string>} */
 				const entrypoints = new Set();
-				for (const node of manifest_data.nodes) {
+				for (const node of nodes) {
 					if (node.component) entrypoints.add(node.component);
 					if (node.universal) entrypoints.add(node.universal);
 				}
 
-				if (manifest_data.hooks.client) entrypoints.add(manifest_data.hooks.client);
-				if (manifest_data.hooks.universal) entrypoints.add(manifest_data.hooks.universal);
+				if (hooks.client) entrypoints.add(hooks.client);
+				if (hooks.universal) entrypoints.add(hooks.universal);
 
 				// Walk up the import graph from the server-only module, looking for a chain
 				// that leads back to a client entrypoint. We search all candidates (not just
