@@ -2,8 +2,8 @@
 /** @import { EnvVarConfig, KitConfig } from '@sveltejs/kit' */
 /** @import { Options, SvelteConfig } from '@sveltejs/vite-plugin-svelte' */
 /** @import { PreprocessorGroup } from 'svelte/compiler' */
-/** @import { DevContext, ValidatedConfig, ValidatedKitConfig } from 'types' */
-/** @import { Plugin, Manifest, ResolvedConfig, UserConfig, Rolldown } from 'vite' */
+/** @import { BuildData, DevContext, ManifestData, Prerendered, ServerMetadata, RemoteInternals, ValidatedConfig, ValidatedKitConfig } from 'types' */
+/** @import { Manifest, Plugin, ResolvedConfig, Rolldown, UserConfig } from 'vite' */
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
@@ -278,7 +278,7 @@ function plugin_root() {
  * - https://rolldown.rs/apis/plugin-api#output-generation-hooks
  *
  * @param {object} opts
- * @param {import('types').ValidatedConfig} opts.svelte_config
+ * @param {ValidatedConfig} opts.svelte_config
  * @return {Plugin[]}
  */
 function kit({ svelte_config }) {
@@ -304,10 +304,10 @@ function kit({ svelte_config }) {
 	/** @type {Record<string, string>} */
 	let env;
 
-	/** @type {import('types').ManifestData} */
+	/** @type {ManifestData} */
 	let manifest_data;
 
-	/** @type {import('types').ServerMetadata | undefined} only set at build time once analysis is finished */
+	/** @type {ServerMetadata | undefined} only set at build time once analysis is finished */
 	let build_metadata = undefined;
 
 	/** @type {UserConfig} */
@@ -1281,7 +1281,7 @@ function kit({ svelte_config }) {
 
 			// For the client, read the exports and create a new module that only contains fetch functions with the correct metadata
 
-			/** @type {Map<string, import('types').RemoteInternals['type']>} */
+			/** @type {Map<string, RemoteInternals['type']>} */
 			const map = new Map();
 
 			// in dev, load the server module here (which will result in this hook
@@ -1368,7 +1368,7 @@ function kit({ svelte_config }) {
 	let vite_server_manifest;
 	/** @type {Manifest | null} */
 	let vite_client_manifest = null;
-	/** @type {import('types').Prerendered} */
+	/** @type {Prerendered} */
 	let prerendered;
 
 	/** @type {Set<string>} client build output and files from the static dir */
@@ -1900,7 +1900,7 @@ function kit({ svelte_config }) {
 			/** @type {Manifest} */
 			vite_server_manifest = JSON.parse(read(`${out}/server/.vite/manifest.json`));
 
-			/** @type {import('types').BuildData} */
+			/** @type {BuildData} */
 			const build_data = {
 				app_dir: kit.appDir,
 				app_path: `${kit.paths.base.slice(1)}${kit.paths.base ? '/' : ''}${kit.appDir}`,
