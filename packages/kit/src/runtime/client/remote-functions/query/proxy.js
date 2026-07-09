@@ -1,9 +1,11 @@
 import { app, query_map } from '../../client.js';
 import {
+	is_in_effect,
 	pin_in_effect,
 	pin_while_resolving,
 	QUERY_OVERRIDE_KEY,
-	QUERY_RESOURCE_KEY
+	QUERY_RESOURCE_KEY,
+	register_fork_in_effect
 } from '../shared.svelte.js';
 import { create_remote_key, stringify_remote_arg } from '../../../shared.js';
 import { Query } from './instance.svelte.js';
@@ -45,6 +47,10 @@ export class QueryProxy {
 		);
 
 		cache.ref(this, entry, this.#id, this.#payload);
+
+		if (is_in_effect()) {
+			register_fork_in_effect(this.#key);
+		}
 	}
 
 	#get_cached_query() {

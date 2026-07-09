@@ -2,9 +2,16 @@
 /** @import { RemoteQueryUpdate } from '@sveltejs/kit' */
 /** @import { CacheEntry } from './cache.svelte.js' */
 import * as devalue from 'devalue';
-import { app, _goto, live_query_map, query_map, query_responses } from '../client.js';
+import {
+	app,
+	_goto,
+	live_query_map,
+	query_map,
+	query_responses,
+	redirect_fork
+} from '../client.js';
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
-import { untrack } from 'svelte';
+import { getContext, untrack } from 'svelte';
 import { create_remote_key, split_remote_key } from '../../shared.js';
 import { navigating, page } from '../state.svelte.js';
 
@@ -14,6 +21,81 @@ export const QUERY_FUNCTION_ID = Symbol('sveltekit.query_function_id');
 export const QUERY_OVERRIDE_KEY = Symbol('sveltekit.query_override_key');
 /** Indicates a query instance */
 export const QUERY_RESOURCE_KEY = Symbol('sveltekit.query_resource_key');
+
+/** @typedef {import('svelte').Fork & { discarded: boolean; committed: boolean }} SvelteKitFork */
+
+/** @type {Map<string, Map<SvelteKitFork | null, number>>} */
+const forks_by_key = new Map();
+
+/**
+ * @returns {() => SvelteKitFork | null}
+ */
+function get_fork_context() {
+	try {
+		return getContext('__sveltekit_fork');
+	} catch {
+		return () => null;
+	}
+}
+
+/**
+ * @param {string} key
+ * @returns {() => void}
+ */
+export function register_fork(key) {
+	const get_fork = get_fork_context()();
+	const instances = forks_by_key.get(key) ?? new Map();
+
+	instances.set(get_fork, (instances.get(get_fork) ?? 0) + 1);
+	forks_by_key.set(key, instances);
+
+	return () => {
+		const current = forks_by_key.get(key);
+		if (!current) return;
+
+		const count = current.get(get_fork);
+		if (count === undefined) return;
+
+		if (count > 1) {
+			current.set(get_fork, count - 1);
+		} else {
+			current.delete(get_fork);
+		}
+
+		if (current.size === 0) {
+			forks_by_key.delete(key);
+		}
+	};
+}
+
+/**
+ * @param {string} key
+ * @param {string} location
+ */
+export async function handle_remote_redirect(key, location) {
+	const forks = forks_by_key.get(key) ?? new Map();
+	let target;
+
+	for (const fork of forks.keys()) {
+		if (!fork || fork.committed) {
+			await _goto(location, {}, 0);
+			throw new Redirect(307, location);
+		} else if (!fork.discarded) {
+			target = fork;
+		}
+	}
+
+	if (target) {
+		await redirect_fork(target, location);
+		// This request happened in a speculative fork and has been routed through the fork loader.
+		// Keep the promise pending to avoid turning the redirect into a render error in the current world.
+		// TODO this is a Svelte bug we need to fix that
+		return new Promise(() => {});
+	}
+
+	await _goto(location, {}, 0);
+	throw new Redirect(307, location);
+}
 
 /**
  * If we're inside a reactive context, pin a cache entry for as long as the
@@ -48,8 +130,8 @@ export function pin_in_effect(cache_map, cache, id, payload) {
  * cache entry stays pinned for the lifetime of the awaited promise. Without
  * this, a proxy awaited outside any effect (e.g. in an event handler) could
  * be GC'd between the `.then` getter returning the thenable and the
- * underlying promise settling, causing the FinalizationRegistry to evict the
- * cache entry mid-flight and the awaited value to resolve to Svelte's
+ * underlying promise settling, causing the FinalizationRegistry to evict
+ * the cache entry mid-flight and the awaited value to resolve to Svelte's
  * `UNINITIALIZED` sentinel from a torn-down `$derived`.
  *
  * @template TResource
@@ -278,4 +360,31 @@ export function categorize_updates(updates) {
 	}
 
 	return { overrides, refreshes };
+}
+
+/**
+ * @returns {boolean} Returns `true` if we are in an effect
+ */
+export function is_in_effect() {
+	try {
+		$effect.pre(() => {});
+		return true;
+	} catch {
+		return false;
+	}
+}
+
+/**
+ * Registers a fork for the given key and ties its cleanup to the surrounding
+ * effect. Must be called from within a reactive context (i.e. when
+ * `is_in_effect()` returns `true`).
+ *
+ * @param {string} key
+ */
+export function register_fork_in_effect(key) {
+	const release = register_fork(key);
+
+	$effect.pre(() => () => {
+		release();
+	});
 }

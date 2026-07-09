@@ -2,8 +2,15 @@
 import { app_dir, base } from '$app/paths/internal/client';
 import { version } from '$app/env';
 import * as devalue from 'devalue';
-import { app, _goto, handle_error, prerender_responses } from '../client.js';
-import { get_remote_request_headers, remote_request, unwrap_node } from './shared.svelte.js';
+import { app, handle_error, prerender_responses } from '../client.js';
+import {
+	get_remote_request_headers,
+	handle_remote_redirect,
+	is_in_effect,
+	register_fork,
+	remote_request,
+	unwrap_node
+} from './shared.svelte.js';
 import { create_remote_key, stringify_remote_arg } from '../../shared.js';
 import { noop } from '../../../utils/functions.js';
 import { HttpError } from '@sveltejs/kit/internal';
@@ -60,6 +67,14 @@ export function prerender(id) {
 		const payload = stringify_remote_arg(arg, app.hooks.transport);
 		const cache_key = create_remote_key(id, payload);
 
+		if (is_in_effect()) {
+			const release = register_fork(cache_key);
+
+			$effect.pre(() => () => {
+				release();
+			});
+		}
+
 		let resource = prerender_resources.get(cache_key)?.deref();
 
 		if (!resource) {
@@ -99,8 +114,7 @@ export function prerender(id) {
 				const result = await remote_request(url, { headers });
 
 				if (result.redirect) {
-					// Use internal version to allow redirects to external URLs
-					void _goto(result.redirect, {}, 0);
+					await handle_remote_redirect(cache_key, result.redirect);
 					return;
 				}
 

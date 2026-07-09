@@ -8,6 +8,7 @@
 
 <a href="/remote/prerender/whole-page">whole-page</a>
 <a href="/remote/prerender/functions-only">functions-only</a>
+<a data-sveltekit-preload-data="hover" href="/remote/prerender/redirect">redirect</a>
 
 <button id="fetch-prerendered" onclick={async () => (prerendered_result = await prerendered())}>
 	{prerendered_result}

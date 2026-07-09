@@ -1,9 +1,15 @@
 /** @import { RemoteQueryFunction } from '@sveltejs/kit' */
 import { app_dir, base } from '$app/paths/internal/client';
-import { _goto, query_map } from '../../client.js';
-import { get_remote_request_headers, QUERY_FUNCTION_ID, remote_request } from '../shared.svelte.js';
+import { query_map } from '../../client.js';
+import {
+	get_remote_request_headers,
+	handle_remote_redirect,
+	QUERY_FUNCTION_ID,
+	remote_request
+} from '../shared.svelte.js';
 import { DEV } from 'esm-env';
 import { QueryProxy } from './proxy.js';
+import { create_remote_key } from '../../../shared.js';
 
 /**
  * @param {string} id
@@ -29,8 +35,7 @@ export function query(id) {
 			const result = await remote_request(url, { headers: get_remote_request_headers() });
 
 			if (result.redirect) {
-				// Use internal version to allow redirects to external URLs
-				await _goto(result.redirect, {}, 0);
+				await handle_remote_redirect(create_remote_key(id, payload), result.redirect);
 			}
 		});
 	};
