@@ -117,8 +117,6 @@ export async function preview(vite, vite_config, svelte_config) {
 			}
 		});
 
-		if (!server) return;
-
 		// prerendered dependencies
 		vite.middlewares.use(
 			scoped(base, mutable(join(svelte_config.kit.outDir, 'output/prerendered/dependencies')))
