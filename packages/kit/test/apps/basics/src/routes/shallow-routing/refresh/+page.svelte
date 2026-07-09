@@ -1,5 +1,5 @@
 <script>
-	import { invalidate, invalidateAll, refresh, refreshAll, pushState } from '$app/navigation';
+	import { invalidate, invalidateAll, refreshAll, pushState } from '$app/navigation';
 	import { page } from '$app/state';
 
 	let { data } = $props();
@@ -12,7 +12,6 @@
 <h1>refresh</h1>
 
 <button data-id="activate" onclick={activate}>push state</button>
-<button data-id="refresh" onclick={() => (window.promise = refresh('refresh:now'))}>refresh</button>
 <button data-id="refreshAll" onclick={() => (window.promise = refreshAll())}>refreshAll</button>
 <button data-id="invalidate" onclick={() => (window.promise = invalidate('refresh:now'))}
 	>invalidate</button

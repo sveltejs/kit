@@ -1,5 +1,5 @@
 <script>
-	import { refresh, refreshAll } from '$app/navigation';
+	import { invalidate, refreshAll } from '$app/navigation';
 	import { page } from '$app/state';
 	import { increment_layout, increment_page } from './state';
 
@@ -15,7 +15,7 @@
 		if (str === 'all') {
 			refreshAll();
 		} else {
-			refresh(`invalid:${str}`);
+			invalidate(`invalid:${str}`);
 		}
 	}
 </script>

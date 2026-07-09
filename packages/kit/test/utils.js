@@ -20,8 +20,6 @@ export const test = base.extend({
 
 			invalidate: (url) => page.evaluate((url) => invalidate(url), url),
 
-			refresh: (url) => page.evaluate((url) => refresh(url), url),
-
 			beforeNavigate: (fn) => page.evaluate((fn) => beforeNavigate(fn), fn),
 
 			afterNavigate: () => page.evaluate(() => afterNavigate(() => {})),

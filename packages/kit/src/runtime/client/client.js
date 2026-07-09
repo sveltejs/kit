@@ -523,7 +523,7 @@ function persist_state() {
 
 /**
  * @param {string | URL} url
- * @param {{ replaceState?: boolean; noScroll?: boolean; keepFocus?: boolean; refreshAll?: boolean; refresh?: Array<string | URL | ((url: URL) => boolean)>; state?: Record<string, any> }} options
+ * @param {{ replaceState?: boolean; noScroll?: boolean; keepFocus?: boolean; refreshAll?: boolean; invalidate?: Array<string | URL | ((url: URL) => boolean)>; state?: Record<string, any> }} options
  * @param {number} redirect_count
  * @param {{}} [nav_token]
  * @param {NavigationIntent | undefined} [intent] navigation intent, when already known by the caller (avoids recomputing it)
@@ -572,8 +572,8 @@ export async function _goto(url, options, redirect_count, nav_token, intent) {
 				}
 			}
 
-			if (options.refresh) {
-				options.refresh.forEach(push_invalidated);
+			if (options.invalidate) {
+				options.invalidate.forEach(push_invalidated);
 			}
 		}
 	});
@@ -2307,9 +2307,8 @@ export function disableScrollHandling() {
  * @param {boolean} [opts.noScroll] If `true`, the browser will maintain its scroll position rather than scrolling to the top of the page after navigation
  * @param {boolean} [opts.keepFocus] If `true`, the currently focused element will retain focus after navigation. Otherwise, focus will be reset to the body
  * @param {boolean} [opts.refreshAll] If `true`, all `load` functions and queries of the page will be rerun. See https://svelte.dev/docs/kit/load#rerunning-load-functions for more info on invalidation.
- * @param {Array<string | URL | ((url: URL) => boolean)>} [opts.refresh] Causes any load functions to re-run if they depend on one of the urls
+ * @param {Array<string | URL | ((url: URL) => boolean)>} [opts.invalidate] Causes any load functions to re-run if they depend on one of the urls
  * @param {boolean} [opts.invalidateAll] Deprecated in favor of opts.refreshAll.
- * @param {Array<string | URL | ((url: URL) => boolean)>} [opts.invalidate] Deprecated in favor of opts.refresh.
  * @param {App.PageState} [opts.state] An optional object that will be available as `page.state`
  * @returns {Promise<void>}
  */
@@ -2338,7 +2337,6 @@ export async function goto(url, opts = {}) {
 		);
 	}
 
-	opts.refresh = opts.refresh ?? opts.invalidate;
 	opts.refreshAll = opts.refreshAll ?? opts.invalidateAll;
 	return _goto(url, opts, 0, {}, intent);
 }
@@ -2358,49 +2356,18 @@ export async function goto(url, opts = {}) {
  *
  * invalidate((url) => url.pathname === '/path');
  * ```
- *
- * Note that this resets `page.state` to an empty object. If you want to preserve `page.state` (for example when using [shallow routing](https://svelte.dev/docs/kit/shallow-routing)), use `refresh` instead.
- *
- * @deprecated Use [`refresh`](https://svelte.dev/docs/kit/$app-navigation#refresh) instead. Unlike `invalidate`, `refresh` does not reset `page.state`.
  * @param {string | URL | ((url: URL) => boolean)} resource The invalidated URL
+ * @param {boolean} [keep_state] If `true` (the default), the current `page.state` will be preserved. Otherwise, it will be reset to an empty object.
  * @returns {Promise<void>}
  */
-export function invalidate(resource) {
+export function invalidate(resource, keep_state = false) {
 	if (!BROWSER) {
 		throw new Error('Cannot call invalidate(...) on the server');
 	}
 
 	push_invalidated(resource);
 
-	return _invalidate();
-}
-
-/**
- * Causes any `load` functions belonging to the currently active page to re-run if they depend on the `url` in question, via `fetch` or `depends`. Returns a `Promise` that resolves when the page is subsequently updated.
- *
- * If the argument is given as a `string` or `URL`, it must resolve to the same URL that was passed to `fetch` or `depends` (including query parameters).
- * To create a custom identifier, use a string beginning with `[a-z]+:` (e.g. `custom:state`) — this is a valid URL.
- *
- * The `function` argument can be used define a custom predicate. It receives the full `URL` and causes `load` to rerun if `true` is returned.
- * This can be useful if you want to invalidate based on a pattern instead of a exact match.
- *
- * ```ts
- * // Example: Match '/path' regardless of the query parameters
- * import { refresh } from '$app/navigation';
- *
- * refresh((url) => url.pathname === '/path');
- * ```
- * @param {string | URL | ((url: URL) => boolean)} resource The invalidated URL
- * @returns {Promise<void>}
- */
-export function refresh(resource) {
-	if (!BROWSER) {
-		throw new Error('Cannot call refresh(...) on the server');
-	}
-
-	push_invalidated(resource);
-
-	return _invalidate(false);
+	return _invalidate(!keep_state);
 }
 
 /**

@@ -1,5 +1,5 @@
 <script>
-	import { refresh } from '$app/navigation';
+	import { invalidate } from '$app/navigation';
 
 	/** @type {import('./$types').PageData} */
 	export let data;
@@ -8,7 +8,7 @@
 	async function update() {
 		ticker += 1;
 		await fetch('/load/cache-control/default/increment');
-		await refresh('/load/cache-control/default/count');
+		await invalidate('/load/cache-control/default/count');
 		ticker += 1;
 	}
 </script>

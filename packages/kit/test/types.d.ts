@@ -16,7 +16,6 @@ export const test: TestType<
 			app: {
 				goto(url: string, opts?: { replaceState?: boolean }): Promise<void>;
 				invalidate(url: string): Promise<void>;
-				refresh(url: string): Promise<void>;
 				beforeNavigate(fn: (navigation: BeforeNavigate) => void | boolean): void;
 				afterNavigate(fn: (navigation: AfterNavigate) => void): void;
 				preloadCode(pathname: string): Promise<void>;

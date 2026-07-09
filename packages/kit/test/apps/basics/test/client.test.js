@@ -59,24 +59,24 @@ test.describe('Load', () => {
 		await app.goto('/load/change-detection/one/b');
 		expect(await page.textContent('h2')).toBe('x: b: 3');
 
-		await app.refresh('/load/change-detection/data.json');
+		await app.invalidate('/load/change-detection/data.json');
 		expect(await page.textContent('h1')).toBe('layout loads: 2');
 		expect(await page.textContent('h2')).toBe('x: b: 3');
 
-		await app.refresh('/load/change-detection/data.json');
+		await app.invalidate('/load/change-detection/data.json');
 		expect(await page.textContent('h1')).toBe('layout loads: 3');
 		expect(await page.textContent('h2')).toBe('x: b: 3');
 
-		await app.refresh('custom:change-detection-layout');
+		await app.invalidate('custom:change-detection-layout');
 		expect(await page.textContent('h1')).toBe('layout loads: 4');
 		expect(await page.textContent('h2')).toBe('x: b: 3');
 
-		await page.click('button:has-text("refresh change-detection/data.json")');
+		await page.click('button:has-text("invalidate change-detection/data.json")');
 		await page.waitForFunction('window.invalidated');
 		expect(await page.textContent('h1')).toBe('layout loads: 5');
 		expect(await page.textContent('h2')).toBe('x: b: 3');
 
-		await page.click('button:has-text("refresh all")');
+		await page.click('button:has-text("invalidate all")');
 		await page.waitForFunction('window.invalidated');
 		expect(await page.textContent('h1')).toBe('layout loads: 6');
 		expect(await page.textContent('h2')).toBe('x: b: 4');
@@ -628,7 +628,7 @@ test.describe('Invalidation', () => {
 		const selector = '[data-testid="count"]';
 
 		expect(await page.textContent(selector)).toBe('1');
-		await app.refresh('/load/invalidation/server-fetch/count.json');
+		await app.invalidate('/load/invalidation/server-fetch/count.json');
 		expect(await page.textContent(selector)).toBe('1');
 	});
 
@@ -795,14 +795,14 @@ test.describe('Invalidation', () => {
 		await expect(page.getByText('updated')).toBeVisible();
 	});
 
-	test('goto after refresh does not reset state', async ({ page }) => {
+	test('goto after invalidate does not reset state', async ({ page }) => {
 		await page.goto('/load/invalidation/invalidate-then-goto');
 		const layout = await page.textContent('p.layout');
 		const _page = await page.textContent('p.page');
 		expect(layout).toBeDefined();
 		expect(_page).toBeDefined();
 
-		await page.click('button.refresh');
+		await page.click('button.invalidate');
 		await page.evaluate(
 			() => /** @type {Window & typeof globalThis & { promise: Promise<void> }} */ (window).promise
 		);
@@ -1558,8 +1558,8 @@ test.describe('goto', () => {
 
 			const expectGoback = makeExpectGoback(testFinishPage, testEntryPage);
 
-			test('app.refresh', async ({ app, page }) => {
-				await app.refresh('app:goto');
+			test('app.invalidate', async ({ app, page }) => {
+				await app.invalidate('app:goto');
 				await expectGoback(page);
 			});
 
@@ -1667,7 +1667,7 @@ test.describe('Shallow routing', () => {
 		await expect(page.locator('p')).toHaveText('active: true');
 	});
 
-	test('Refreshes the correct route after pushing state to a new URL', async ({
+	test('Invalidates the correct route after pushing state to a new URL', async ({
 		baseURL,
 		page
 	}) => {
@@ -1679,7 +1679,7 @@ test.describe('Shallow routing', () => {
 		await page.locator('[data-id="two"]').click();
 		expect(page.url()).toBe(`${baseURL}/shallow-routing/push-state/a`);
 
-		await page.locator('[data-id="refresh"]').click();
+		await page.locator('[data-id="invalidate"]').click();
 		await expect(page.locator('h1')).toHaveText('parent');
 		await expect(page.locator('span')).not.toHaveText(now);
 	});
@@ -1741,21 +1741,6 @@ test.describe('Shallow routing', () => {
 		await expect(page.locator('p')).toHaveText('count: 0');
 		await page.locator('button').click();
 		await expect(page.locator('p')).toHaveText('count: 1');
-	});
-
-	test('refresh reruns load functions without resetting page.state', async ({ page }) => {
-		await page.goto('/shallow-routing/refresh');
-		await expect(page.locator('p')).toHaveText('active: false');
-
-		const now = /** @type {string} */ (await page.locator('span').textContent());
-
-		await page.locator('[data-id="activate"]').click();
-		await expect(page.locator('p')).toHaveText('active: true');
-
-		await page.locator('[data-id="refresh"]').click();
-		await page.evaluate(() => window.promise);
-		await expect(page.locator('p')).toHaveText('active: true');
-		await expect(page.locator('span')).not.toHaveText(now);
 	});
 
 	test('refreshAll reruns load functions without resetting page.state', async ({ page }) => {
@@ -1871,7 +1856,7 @@ test.describe('reroute', () => {
 		expect(await page.textContent('h1')).toContain('Full Navigation');
 	});
 
-	test('reroute works with refresh', async ({ page }) => {
+	test('reroute works with invalidate', async ({ page }) => {
 		await page.goto('/reroute/invalidate/a');
 		await page.click('button');
 		await expect(page.locator('p')).toHaveText('data request: true');

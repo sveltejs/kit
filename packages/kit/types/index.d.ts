@@ -3362,9 +3362,8 @@ declare module '$app/navigation' {
 		noScroll?: boolean | undefined;
 		keepFocus?: boolean | undefined;
 		refreshAll?: boolean | undefined;
-		refresh?: (string | URL | ((url: URL) => boolean))[] | undefined;
-		invalidateAll?: boolean | undefined;
 		invalidate?: (string | URL | ((url: URL) => boolean))[] | undefined;
+		invalidateAll?: boolean | undefined;
 		state?: App.PageState | undefined;
 	}): Promise<void>;
 	/**
@@ -3382,31 +3381,10 @@ declare module '$app/navigation' {
 	 *
 	 * invalidate((url) => url.pathname === '/path');
 	 * ```
-	 *
-	 * Note that this resets `page.state` to an empty object. If you want to preserve `page.state` (for example when using [shallow routing](https://svelte.dev/docs/kit/shallow-routing)), use `refresh` instead.
-	 *
-	 * @deprecated Use [`refresh`](https://svelte.dev/docs/kit/$app-navigation#refresh) instead. Unlike `invalidate`, `refresh` does not reset `page.state`.
 	 * @param resource The invalidated URL
+	 * @param keep_state If `true` (the default), the current `page.state` will be preserved. Otherwise, it will be reset to an empty object.
 	 * */
-	export function invalidate(resource: string | URL | ((url: URL) => boolean)): Promise<void>;
-	/**
-	 * Causes any `load` functions belonging to the currently active page to re-run if they depend on the `url` in question, via `fetch` or `depends`. Returns a `Promise` that resolves when the page is subsequently updated.
-	 *
-	 * If the argument is given as a `string` or `URL`, it must resolve to the same URL that was passed to `fetch` or `depends` (including query parameters).
-	 * To create a custom identifier, use a string beginning with `[a-z]+:` (e.g. `custom:state`) — this is a valid URL.
-	 *
-	 * The `function` argument can be used define a custom predicate. It receives the full `URL` and causes `load` to rerun if `true` is returned.
-	 * This can be useful if you want to invalidate based on a pattern instead of a exact match.
-	 *
-	 * ```ts
-	 * // Example: Match '/path' regardless of the query parameters
-	 * import { refresh } from '$app/navigation';
-	 *
-	 * refresh((url) => url.pathname === '/path');
-	 * ```
-	 * @param resource The invalidated URL
-	 * */
-	export function refresh(resource: string | URL | ((url: URL) => boolean)): Promise<void>;
+	export function invalidate(resource: string | URL | ((url: URL) => boolean), keep_state?: boolean): Promise<void>;
 	/**
 	 * Causes all `load` and `query` functions belonging to the currently active page to re-run. Returns a `Promise` that resolves when the page is subsequently updated.
 	 *

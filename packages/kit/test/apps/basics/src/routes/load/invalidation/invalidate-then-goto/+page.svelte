@@ -1,5 +1,5 @@
 <script>
-	import { refresh, goto } from '$app/navigation';
+	import { invalidate, goto } from '$app/navigation';
 
 	/** @type {import('./$types').PageData} */
 	export let data;
@@ -9,10 +9,10 @@
 <p class="page">{data.pageDate}</p>
 <button
 	type="button"
-	class="refresh"
-	onclick={() => (window.promise = refresh('invalidate-depends:goto'))}
+	class="invalidate"
+	onclick={() => (window.promise = invalidate('invalidate-depends:goto'))}
 >
-	refresh
+	invalidate
 </button>
 <button
 	type="button"

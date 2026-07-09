@@ -5,7 +5,6 @@ export {
 	goto,
 	invalidate,
 	invalidateAll,
-	refresh,
 	refreshAll,
 	onNavigate,
 	preloadCode,

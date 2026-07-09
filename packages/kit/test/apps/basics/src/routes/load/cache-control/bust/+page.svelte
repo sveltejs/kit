@@ -1,5 +1,5 @@
 <script>
-	import { refresh } from '$app/navigation';
+	import { invalidate } from '$app/navigation';
 
 	/** @type {import('./$types').PageData} */
 	export let data;
@@ -7,7 +7,7 @@
 	async function update() {
 		await fetch('/load/cache-control/bust/increment');
 		await fetch('/load/cache-control/bust/count', { method: 'POST' });
-		refresh('/load/cache-control/bust/count');
+		invalidate('/load/cache-control/bust/count');
 	}
 </script>
 
