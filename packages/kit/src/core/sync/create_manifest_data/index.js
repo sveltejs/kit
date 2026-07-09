@@ -142,7 +142,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 				throw new Error(`Route ${id} should be renamed to ${id.replace(/#/g, '[x+23]')}`);
 			}
 
-			if (/\[\.\.\.\w+\]\/\[\[/.test(id)) {
+			if (/\[\.\.\.[\w-]+\]\/\[\[/.test(id)) {
 				throw new Error(
 					`Invalid route ${id} — an [[optional]] route segment cannot follow a [...rest] route segment`
 				);
