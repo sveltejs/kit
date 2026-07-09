@@ -880,13 +880,13 @@ async function get_navigation_result_from_branch({
 
 	for (let i = 0; i < branch.length; i += 1) {
 		const node = branch[i];
-		if (!node) continue;
+		if (!node?.node.component) continue;
 
 		const data = { ...current_data, ...node.data };
 
 		const error_loader = errors?.slice(0, i + 1).findLast((x) => x) ?? default_error_loader;
 
-		current_node.error = (await error_loader())?.component;
+		current_node.error = (await error_loader()).component;
 		current_node.component = node.node.component;
 		current_node.data = current_data = data;
 

@@ -192,14 +192,15 @@ export async function render_response({
 
 		for (let i = 0; i < branch.length; i += 1) {
 			const node = branch[i];
-			if (!node) continue;
+			if (!node.node.component) continue;
 
 			const data = { ...current_data, ...node.data };
 
-			// const error_loader = errors?.slice(0, i + 1).findLast((x) => x) ?? default_error_loader;
+			// TODO this is undefined sometimes... where does the default error component come from?
+			const error = error_components?.slice(0, i + 1).findLast((x) => x);
 
-			// current_node.error = (await error_loader())?.component;
-			current_node.component = await node.node.component?.();
+			current_node.error = error;
+			current_node.component = await node.node.component();
 			current_node.data = current_data = data;
 
 			if (i < branch.length - 1) {
