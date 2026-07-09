@@ -72,7 +72,7 @@ export function parse_route_id(id) {
 										const match = /** @type {RegExpExecArray} */ (param_pattern.exec(content));
 										if (!BROWSER && !match) {
 											throw new Error(
-												`Invalid param: ${content}. Params and matcher names can only have underscores, hyphens and alphanumeric characters.`
+												`Invalid param: ${content}. Params and matcher names can only have underscores, hyphens, and alphanumeric characters.`
 											);
 										}
 
