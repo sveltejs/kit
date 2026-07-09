@@ -39,14 +39,15 @@ npm i -D @sveltejs/enhanced-img
 Adjust `vite.config.js`:
 
 ```js
-import { sveltekit } from '@sveltejs/kit/vite';
+/// file: vite.config.js
 +++import { enhancedImages } from '@sveltejs/enhanced-img';+++
+import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
 	plugins: [
 		+++enhancedImages(), // must come before the SvelteKit plugin+++
-		sveltekit()
+		sveltekit({/* ... */})
 	]
 });
 ```

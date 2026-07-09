@@ -17,7 +17,6 @@ import {
 	RequestEvent,
 	SSRManifest,
 	Emulator,
-	Adapter,
 	ServerInit,
 	ClientInit,
 	Transport,
@@ -46,8 +45,6 @@ export interface ServerInternalModule {
 	set_building(): void;
 	set_manifest(manifest: SSRManifest): void;
 	set_prerendering(): void;
-	set_private_env(environment: Record<string, string>): void;
-	set_public_env(environment: Record<string, string>): void;
 	set_read_implementation(implementation: (path: string) => ReadableStream): void;
 	set_version(version: string): void;
 	set_fix_stack_trace(fix_stack_trace: (error: unknown) => string): void;
@@ -198,7 +195,7 @@ export class InternalServer extends Server {
 }
 
 export interface ManifestData {
-	/** Static files from `kit.config.files.assets`. */
+	/** Static files from `config.files.assets`. */
 	assets: Asset[];
 	hooks: {
 		client: string | null;
@@ -207,7 +204,7 @@ export interface ManifestData {
 	};
 	nodes: PageNode[];
 	routes: RouteData[];
-	matchers: Record<string, string>;
+	params: string | null;
 }
 
 export interface RemoteChunk {
@@ -250,7 +247,7 @@ export type RecursiveRequired<T> = {
 	// Recursive implementation of TypeScript's Required utility type.
 	// Will recursively continue until it reaches a primitive or Function
 	// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
-	[K in keyof T]-?: Extract<T[K], Function> extends never // If it does not have a Function type
+	[K in keyof T]-?: Extract<T[K], Function | (`${string}:` & {})> extends never // If it does not have a Function type
 		? RecursiveRequired<T[K]> // recursively continue through.
 		: T[K]; // Use the exact type for everything else
 };
@@ -297,6 +294,7 @@ export interface RouteData {
 
 export type ServerRedirectNode = {
 	type: 'redirect';
+	status: number;
 	location: string;
 };
 
@@ -312,7 +310,7 @@ export type RemoteFunctionDataNode = {
 	/** value */
 	v?: any;
 	/** error */
-	e?: [status: number, error: any];
+	e?: App.Error;
 };
 
 export type RemoteFunctionData = {
@@ -393,10 +391,6 @@ export interface ServerDataSkippedNode {
 export interface ServerErrorNode {
 	type: 'error';
 	error: App.Error;
-	/**
-	 * Only set for HttpErrors.
-	 */
-	status?: number;
 }
 
 export interface ServerMetadataRoute {
@@ -423,23 +417,23 @@ export interface ServerMetadata {
 	remotes: Map<string, Map<string, { type: RemoteInternals['type']; dynamic: boolean }>>;
 }
 
+// TODO get rid of this in favor us using just import('svelte').Component<any, any, any>
 export interface SSRComponent {
 	default: {
 		render(
 			props: Record<string, any>,
 			opts: { context: Map<any, any>; csp?: { nonce?: string; hash?: boolean } }
-		): {
-			html: string;
+		): Promise<{
+			body: string;
 			head: string;
 			css: {
 				code: string;
 				map: any; // TODO
 			};
-			/** Until we require all Svelte versions that support hashes, this might not be defined */
-			hashes?: {
+			hashes: {
 				script: Array<`sha256-${string}`>;
 			};
-		};
+		}>;
 	};
 }
 
@@ -499,20 +493,17 @@ export type SSRNodeLoader = () => Promise<SSRNode>;
 
 export interface SSROptions {
 	app_template_contains_nonce: boolean;
-	async: boolean;
 	csp: ValidatedConfig['kit']['csp'];
 	csrf_check_origin: boolean;
 	csrf_trusted_origins: string[];
 	embedded: boolean;
-	env_public_prefix: string;
-	env_private_prefix: string;
 	hash_routing: boolean;
 	hooks: ServerHooks;
-	preload_strategy: ValidatedConfig['kit']['output']['preloadStrategy'];
+	link_header_preload: ValidatedConfig['kit']['output']['linkHeaderPreload'];
+	paths_origin: string | undefined;
 	root: SSRComponent['default'];
 	service_worker: boolean;
 	service_worker_options: RegistrationOptions;
-	server_error_boundaries: boolean;
 	templates: {
 		app(values: {
 			head: string;
@@ -605,14 +596,12 @@ export interface Uses {
 	search_params: Set<string>;
 }
 
-export type ValidatedConfig = Config & {
+export type ValidatedConfig = Omit<Config, 'kit'> & {
 	kit: ValidatedKitConfig;
 	extensions: string[];
 };
 
-export type ValidatedKitConfig = Omit<RecursiveRequired<KitConfig>, 'adapter'> & {
-	adapter?: Adapter;
-};
+export type ValidatedKitConfig = RecursiveRequired<KitConfig>;
 
 export type BinaryFormMeta = {
 	remote_refreshes?: string[];
@@ -736,7 +725,7 @@ export interface RequestState {
 			string,
 			{
 				internals: RemoteInternals;
-				promise: Promise<any>;
+				fn: () => Promise<any>;
 			}
 		>;
 		/** Instances created via `myForm.for(...)` */

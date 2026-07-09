@@ -3,22 +3,22 @@
 /** @import { ResolvedConfig } from 'vite' */
 /** @import { RouteDefinition, EnvVarConfig } from '@sveltejs/kit' */
 /** @import { RouteData, ValidatedConfig, BuildData, ServerMetadata, ServerMetadataRoute, Prerendered, PrerenderMap, Logger, RemoteChunk } from 'types' */
-import colors from 'kleur';
+import { loadEnv } from 'vite';
 import * as devalue from 'devalue';
 import { createReadStream, createWriteStream, existsSync, statSync } from 'node:fs';
 import { extname, resolve, join, dirname, relative } from 'node:path';
 import { pipeline } from 'node:stream';
-import { promisify } from 'node:util';
+import { promisify, styleText } from 'node:util';
 import zlib from 'node:zlib';
-import { copy, rimraf, mkdirp, posixify } from '../../utils/filesystem.js';
+import { copy, rimraf, mkdirp } from '../../utils/filesystem.js';
+import { posixify } from '../../utils/os.js';
 import { generate_manifest } from '../generate_manifest/index.js';
 import { get_route_segments } from '../../utils/routing.js';
-import { get_env } from '../../exports/vite/utils.js';
 import generate_fallback from '../postbuild/fallback.js';
 import { write } from '../sync/utils.js';
 import { list_files } from '../utils.js';
 import { find_server_assets } from '../generate_manifest/find_server_assets.js';
-import { reserved } from '../env.js';
+import { create_exported_declarations } from '../env.js';
 import { handle_issues, validate } from '../../exports/internal/env.js';
 
 const pipe = promisify(pipeline);
@@ -121,83 +121,32 @@ export function create_builder({
 			);
 		},
 
-		async createEntries(fn) {
-			const seen = new Set();
-
-			for (let i = 0; i < route_data.length; i += 1) {
-				const route = route_data[i];
-				if (prerender_map.get(route.id) === true) continue;
-				const { id, filter, complete } = fn(routes[i]);
-
-				if (seen.has(id)) continue;
-				seen.add(id);
-
-				const group = [route];
-
-				// figure out which lower priority routes should be considered fallbacks
-				for (let j = i + 1; j < route_data.length; j += 1) {
-					if (prerender_map.get(routes[j].id) === true) continue;
-					if (filter(routes[j])) {
-						group.push(route_data[j]);
-					}
-				}
-
-				const filtered = new Set(group);
-
-				// heuristic: if /foo/[bar] is included, /foo/[bar].json should
-				// also be included, since the page likely needs the endpoint
-				// TODO is this still necessary, given the new way of doing things?
-				filtered.forEach((route) => {
-					if (route.page) {
-						const endpoint = route_data.find((candidate) => candidate.id === route.id + '.json');
-
-						if (endpoint) {
-							filtered.add(endpoint);
-						}
-					}
-				});
-
-				if (filtered.size > 0) {
-					await complete({
-						generateManifest: ({ relativePath }) =>
-							generate_manifest({
-								build_data,
-								prerendered: [],
-								relative_path: relativePath,
-								routes: Array.from(filtered),
-								remotes
-							})
-					});
-				}
-			}
-		},
-
 		findServerAssets(route_data) {
 			return find_server_assets(
 				build_data,
-				route_data.map((route) => /** @type {import('types').RouteData} */ (lookup.get(route)))
+				route_data.map((route) => /** @type {import('types').RouteData} */ (lookup.get(route))),
+				vite_config.root
 			);
 		},
 
 		async generateFallback(dest) {
 			const manifest_path = `${config.kit.outDir}/output/server/manifest-full.js`;
-			const env = get_env(config.kit.env, vite_config.mode);
+			const env = loadEnv(vite_config.mode, config.kit.env.dir, '');
 
 			const fallback = await generate_fallback({
 				manifest_path,
-				env: env.all,
+				env,
 				out_dir: config.kit.outDir,
-				origin: config.kit.prerender.origin,
+				origin: config.kit.paths.origin || 'http://sveltekit-prerender',
 				assets: config.kit.files.assets
 			});
 
 			if (existsSync(dest)) {
 				console.log(
-					colors
-						.bold()
-						.yellow(
-							`Overwriting ${dest} with fallback page. Consider using a different name for the fallback.`
-						)
+					styleText(
+						['bold', 'yellow'],
+						`Overwriting ${dest} with fallback page. Consider using a different name for the fallback.`
+					)
 				);
 			}
 
@@ -205,43 +154,28 @@ export function create_builder({
 		},
 
 		generateEnvModule() {
-			const env = get_env(config.kit.env, vite_config.mode);
+			if (!build_data.client?.uses_env_dynamic_public) return;
 
 			const dest = `${config.kit.outDir}/output/prerendered/dependencies/${config.kit.appDir}`;
+			const env = loadEnv(vite_config.mode, config.kit.env.dir, '');
 
-			/** @type {string} */
-			let payload;
+			/** @type {Record<string, any>} */
+			const values = {};
+			const variables = explicit_env_config ?? {};
 
-			if (config.kit.experimental.explicitEnvironmentVariables) {
-				const variables = explicit_env_config ?? {};
+			/** @type {Record<string, StandardSchemaV1.Issue[]>} */
+			const issues = {};
 
-				/** @type {Record<string, StandardSchemaV1.Issue[]>} */
-				const issues = {};
-
-				/** @type {Record<string, any>} */
-				const values = {};
-
-				for (const [name, config] of Object.entries(variables)) {
-					if (config.static || !config.public) continue;
-					values[name] = validate(variables, env.all[name], name, issues);
-				}
-
-				handle_issues(issues);
-
-				if (Object.keys(values).length === 0) return;
-
-				payload = devalue.uneval(values);
-
-				if (build_data.service_worker) {
-					write(`${dest}/env.script.js`, `globalThis.__sveltekit_sw={env:${payload}}`);
-				}
-			} else {
-				payload = devalue.uneval(env.public);
+			for (const [name, config] of Object.entries(variables)) {
+				if (config.static || !config.public) continue;
+				values[name] = validate(variables, env[name], name, issues);
 			}
 
-			if (build_data.client?.uses_env_dynamic_public) {
-				write(`${dest}/env.js`, `export const env=${payload}`);
-			}
+			handle_issues(issues);
+
+			const payload = devalue.uneval(values);
+
+			write(`${dest}/env.js`, `export const env=${payload}`);
 		},
 
 		generateManifest({ relativePath, routes: subset }) {
@@ -252,7 +186,8 @@ export function create_builder({
 				routes: subset
 					? subset.map((route) => /** @type {import('types').RouteData} */ (lookup.get(route)))
 					: route_data.filter((route) => prerender_map.get(route.id) !== true),
-				remotes
+				remotes,
+				root: vite_config.root
 			});
 		},
 
@@ -370,53 +305,25 @@ async function compress_file(file, format = 'gz') {
  * - Imports `exports` from the entrypoint (dynamically, if `tla` is true)
  * - Re-exports `exports` from the entrypoint
  *
- * `default` receives special treatment: It will be imported as `default` and exported with `export default`.
- *
  * @param {{ instrumentation: string; start: string; exports: string[] }} opts
  * @returns {string}
  */
 function create_instrumentation_facade({ instrumentation, start, exports }) {
 	const import_instrumentation = `import './${instrumentation}';`;
 
-	let alias_index = 0;
-	const aliases = new Map();
+	const { namespace, declarations, reexports } = create_exported_declarations(
+		exports,
+		(name, ns) => `${ns}.${name}`,
+		'__mod'
+	);
 
-	for (const name of exports.filter((name) => reserved.has(name))) {
-		/*
-		 * you can do evil things like `export { c as class }`.
-		 * in order to import these, you need to alias them, and then un-alias them when re-exporting
-		 * this map will allow us to generate the following:
-		 * import { class as _1 } from 'entrypoint';
-		 * export { _1 as class };
-		 */
-		let alias = `_${alias_index++}`;
-		while (exports.includes(alias)) {
-			alias = `_${alias_index++}`;
-		}
-
-		aliases.set(name, alias);
-	}
-
-	const import_statements = [];
-	const export_statements = [];
-
-	for (const name of exports) {
-		const alias = aliases.get(name);
-		if (alias) {
-			import_statements.push(`${name}: ${alias}`);
-			export_statements.push(`${alias} as ${name}`);
-		} else {
-			import_statements.push(`${name}`);
-			export_statements.push(`${name}`);
-		}
-	}
-
-	const entrypoint_facade = [
-		`const { ${import_statements.join(', ')} } = await import('./${start}');`,
-		export_statements.length > 0 ? `export { ${export_statements.join(', ')} };` : ''
+	const parts = [
+		`const ${namespace} = await import('./${start}');`,
+		declarations.join('\n'),
+		reexports.length > 0 ? `export { ${reexports.join(', ')} };` : ''
 	]
 		.filter(Boolean)
 		.join('\n');
 
-	return `${import_instrumentation}\n${entrypoint_facade}`;
+	return `${import_instrumentation}\n${parts}`;
 }

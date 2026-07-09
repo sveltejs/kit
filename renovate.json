@@ -8,7 +8,7 @@
 	"pin": {
 		"enabled": false
 	},
-	"ignoreDeps": ["@types/node", "cookie", "esbuild", "rollup", "typescript"],
+	"ignoreDeps": ["@types/node"],
 	"packageRules": [
 		{
 			"matchPackageNames": ["vite"],

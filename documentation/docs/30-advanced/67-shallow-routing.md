@@ -37,9 +37,6 @@ The second argument is the new page state, which can be accessed via the [page o
 
 To set page state without creating a new history entry, use `replaceState` instead of `pushState`.
 
-> [!LEGACY]
-> `page.state` from `$app/state` was added in SvelteKit 2.12. If you're using an earlier version or are using Svelte 4, use `$page.state` from `$app/stores` instead.
-
 ## Loading data for a route
 
 When shallow routing, you may want to render another `+page.svelte` inside the current page. For example, clicking on a photo thumbnail could pop up the detail view without navigating to the photo page.

@@ -1,9 +1,6 @@
 import process from 'node:process';
 import { expect } from '@playwright/test';
 import { test } from '../../../utils.js';
-const is_node18 = process.versions.node.startsWith('18.');
-import { version as vite_version } from 'vite';
-const is_vite5 = vite_version.startsWith('5.');
 
 test.skip(({ javaScriptEnabled }) => !javaScriptEnabled);
 
@@ -13,8 +10,6 @@ test.describe('remote functions', () => {
 		clicknav
 	}) => {
 		test.skip(!process.env.DEV, 'remote functions are only analysed in dev mode');
-		// TODO: remove with SvelteKit 3
-		test.skip(is_node18 && is_vite5, 'vite5 in node18 fails to resolve remote function export');
 		await page.goto('/remote/dev');
 		await page.locator('a[href="/remote/dev/preload"]').hover();
 		await Promise.all([
@@ -237,6 +232,36 @@ test.describe('remote function mutations', () => {
 		expect(request_count).toBe(1);
 	});
 
+	test('command refresh before mutation defers the query until after the mutation', async ({
+		page
+	}) => {
+		await page.goto('/remote');
+		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
+
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		await page.click('#multiply-server-refresh-before-mutation-btn');
+		await expect(page.locator('#command-result')).toHaveText('12');
+		await expect(page.locator('#count-result')).toHaveText('12 / 12 (false)');
+		await page.waitForTimeout(100); // allow all requests to finish (in case there are query refreshes which shouldn't happen)
+		expect(request_count).toBe(1);
+	});
+
+	test('command refresh then re-await uses the fresh cache entry', async ({ page }) => {
+		await page.goto('/remote');
+		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
+
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		await page.click('#multiply-server-refresh-then-reawait-btn');
+		await expect(page.locator('#command-result')).toHaveText('13');
+		await expect(page.locator('#count-result')).toHaveText('13 / 13 (false)');
+		await page.waitForTimeout(100); // allow all requests to finish (in case there are query refreshes which shouldn't happen)
+		expect(request_count).toBe(1);
+	});
+
 	test('command does server-initiated single flight mutation (set)', async ({ page }) => {
 		await page.goto('/remote');
 		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
@@ -427,6 +452,14 @@ test.describe('remote function mutations', () => {
 
 		await page.click('button:nth-of-type(4)');
 		await expect(page.locator('p')).toHaveText('success');
+	});
+
+	test('reserved words can be used as remote function export names', async ({ page }) => {
+		await page.goto('/remote/reserved');
+		await expect(page.locator('#reserved-result')).toHaveText('pending');
+
+		await page.click('#reserved-run');
+		await expect(page.locator('#reserved-result')).toHaveText('deleted/classy/42');
 	});
 
 	test('fields.set updates DOM before validate', async ({ page }) => {

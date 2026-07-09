@@ -3,14 +3,11 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { assert, expect, test } from 'vitest';
 import { create_builder } from './builder.js';
-import { posixify } from '../../utils/filesystem.js';
+import { posixify } from '../../utils/os.js';
 import { list_files } from '../utils.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = join(__filename, '..');
-
 test('copy files', () => {
-	const cwd = join(__dirname, 'fixtures/basic');
+	const cwd = join(import.meta.dirname, 'fixtures/basic');
 	const outDir = join(cwd, '.svelte-kit');
 
 	/** @type {import('@sveltejs/kit').Config} */
@@ -19,7 +16,7 @@ test('copy files', () => {
 		kit: {
 			appDir: '_app',
 			files: {
-				assets: join(__dirname, 'fixtures/basic/static')
+				assets: join(import.meta.dirname, 'fixtures/basic/static')
 			},
 			outDir
 		}
@@ -42,7 +39,7 @@ test('copy files', () => {
 		log: {}
 	});
 
-	const dest = join(__dirname, 'output');
+	const dest = join(import.meta.dirname, 'output');
 
 	rmSync(dest, { recursive: true, force: true });
 
@@ -82,8 +79,8 @@ test('compress files', async () => {
 });
 
 test('instrument generates facade with posix paths', () => {
-	const fixtureDir = join(__dirname, 'fixtures/instrument');
-	const dest = join(__dirname, 'output');
+	const fixtureDir = join(import.meta.dirname, 'fixtures/instrument');
+	const dest = join(import.meta.dirname, 'output');
 
 	rmSync(dest, { recursive: true, force: true });
 	mkdirSync(join(dest, 'server'), { recursive: true });

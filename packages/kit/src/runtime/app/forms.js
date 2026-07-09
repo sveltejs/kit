@@ -2,7 +2,7 @@ import * as devalue from 'devalue';
 import { BROWSER, DEV } from 'esm-env';
 import { noop } from '../../utils/functions.js';
 import { invalidateAll } from './navigation.js';
-import { app as client_app, applyAction } from '../client/client.js';
+import { app as client_app, applyAction, handle_error } from '../client/client.js';
 import { app as server_app } from '../server/app.js';
 
 export { applyAction };
@@ -30,11 +30,15 @@ export { applyAction };
  * @returns {import('@sveltejs/kit').ActionResult<Success, Failure>}
  */
 export function deserialize(result) {
+	if (result === '') {
+		return { type: 'success', status: 204, data: undefined };
+	}
+
 	const parsed = JSON.parse(result);
 
 	if (parsed.data) {
 		// the decoders should never be initialised at the top-level because `app`
-		// will not be initialised yet if `kit.output.bundleStrategy` is 'single' or 'inline'
+		// will not be initialised yet if `output.bundleStrategy` is 'single' or 'inline'
 		parsed.data = devalue.parse(parsed.data, BROWSER ? client_app.decoders : server_app.decoders);
 	}
 
@@ -197,11 +201,24 @@ export function enhance(form_element, submit = noop) {
 				signal: controller.signal
 			});
 
-			result = deserialize(await response.text());
-			if (result.type === 'error') result.status = response.status;
+			if (response.status === 204) {
+				result = { type: 'success', status: 204 };
+			} else {
+				result = deserialize(await response.text());
+				if (result.type === 'error' || result.type === 'failure') {
+					result.status = response.status;
+				}
+			}
 		} catch (error) {
 			if (/** @type {any} */ (error)?.name === 'AbortError') return;
-			result = { type: 'error', error };
+			result = {
+				type: 'error',
+				error: await handle_error(error, {
+					params: {},
+					route: { id: null },
+					url: new URL(location.href)
+				})
+			};
 		}
 
 		await callback({

@@ -2,7 +2,14 @@
 /** @import { RemoteQueryUpdate } from '@sveltejs/kit' */
 /** @import { CacheEntry } from './cache.svelte.js' */
 import * as devalue from 'devalue';
-import { app, goto, live_query_map, query_map, query_responses, redirect_fork } from '../client.js';
+import {
+	app,
+	_goto,
+	live_query_map,
+	query_map,
+	query_responses,
+	redirect_fork
+} from '../client.js';
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
 import { getContext, untrack } from 'svelte';
 import { create_remote_key, split_remote_key } from '../../shared.js';
@@ -71,7 +78,7 @@ export async function handle_remote_redirect(key, location) {
 
 	for (const fork of forks.keys()) {
 		if (!fork || fork.committed) {
-			await goto(location);
+			await _goto(location, {}, 0);
 			throw new Redirect(307, location);
 		} else if (!fork.discarded) {
 			target = fork;
@@ -86,7 +93,7 @@ export async function handle_remote_redirect(key, location) {
 		return new Promise(() => {});
 	}
 
-	await goto(location);
+	await _goto(location, {}, 0);
 	throw new Redirect(307, location);
 }
 
@@ -161,7 +168,7 @@ export function pin_while_resolving(cache_map, cache, id, payload, then) {
  */
 export function unwrap_node(node) {
 	if (node.e) {
-		throw new HttpError(node.e[0] ?? 500, node.e[1]);
+		throw new HttpError(node.e.status, node.e);
 	}
 
 	return node.v;
@@ -195,13 +202,16 @@ export async function remote_request(url, init) {
 			error: response.statusText
 		}));
 
-		throw new HttpError(result.status ?? response.status ?? 500, result.error);
+		throw new HttpError(
+			result.error?.status ?? result.status ?? response.status ?? 500,
+			result.error
+		);
 	}
 
 	const result = /** @type {RemoteFunctionResponse} */ (await response.json());
 
 	if (result.type === 'error') {
-		throw new HttpError(result.status ?? 500, result.error);
+		throw new HttpError(result.error.status, result.error);
 	}
 
 	const data = /** @type {RemoteFunctionData} */ (
@@ -209,15 +219,14 @@ export async function remote_request(url, init) {
 	);
 
 	/**
-	 *
 	 * @param {string} key
-	 * @param {CacheEntry<any> | undefined} entry
+	 * @param {CacheEntry | undefined} entry
 	 * @param {any} result
 	 */
 	function refresh(key, entry, result) {
 		if (entry?.resource) {
 			if (result.e) {
-				entry.resource.fail(new HttpError(result.e[0] ?? 500, result.e[1]));
+				entry.resource.fail(new HttpError(result.e.status, result.e));
 			} else {
 				entry.resource.set(result.v);
 			}
@@ -265,12 +274,13 @@ export async function remote_request(url, init) {
  */
 export async function handle_side_channel_response(response) {
 	if (response.type === 'redirect') {
-		await goto(response.location);
+		// Use internal version to allow redirects to external URLs
+		await _goto(response.location, {}, 0);
 		throw new Redirect(307, response.location);
 	}
 
 	if (response.type === 'error') {
-		throw new HttpError(response.status ?? 500, response.error);
+		throw new HttpError(response.error.status, response.error);
 	}
 
 	return response;

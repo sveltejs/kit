@@ -1,6 +1,5 @@
-import * as set_cookie_parser from 'set-cookie-parser';
+import { parseSetCookie } from 'cookie';
 import { noop } from '../../utils/functions.js';
-import { get_set_cookies } from '../../utils/http.js';
 import { respond } from './respond.js';
 import * as paths from '$app/paths/internal/server';
 import { read_implementation } from '__sveltekit/server';
@@ -83,9 +82,8 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 
 				// handle fetch requests for static assets. e.g. prebaked data, etc.
 				// we need to support everything the browser's fetch supports
-				const prefix = paths.assets || paths.base;
 				const filename = (
-					decoded.startsWith(prefix) ? decoded.slice(prefix.length) : decoded
+					decoded.startsWith(paths.assets) ? decoded.slice(paths.assets.length) : decoded
 				).slice(1);
 				const filename_html = `${filename}/index.html`; // path may also match path/index.html
 
@@ -153,18 +151,16 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 
 				const response = await internal_fetch(request, options, manifest, state);
 
-				for (const str of get_set_cookies(response.headers)) {
-					const { name, value, ...options } = set_cookie_parser.parseString(str, {
-						decodeValues: false
-					});
+				for (const str of response.headers.getSetCookie()) {
+					const { name, value, ...options } = parseSetCookie(str, { decode: (v) => v });
 
 					const path = options.path ?? (url.pathname.split('/').slice(0, -1).join('/') || '/');
 
 					// options.sameSite is string, something more specific is required - type cast is safe
-					set_internal(name, value, {
+					set_internal(name, /** @type {string} */ (value), {
 						path,
 						encode: (value) => value,
-						.../** @type {import('cookie').CookieSerializeOptions} */ (options)
+						.../** @type {import('cookie').SerializeOptions} */ (options)
 					});
 				}
 

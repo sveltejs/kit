@@ -1,6 +1,6 @@
 /* eslint-disable */
 
-/** @type {import('../.svelte-kit/types/src/core/sync/write_types/test/param-type-inference/required/$types').LayoutLoad} */
+/** @type {import('../.svelte-kit/types/required/$types').LayoutLoad} */
 export function load({ params }) {
 	if (params.narrowedParam) {
 		/** @type {"a" | "b"} */
@@ -14,7 +14,7 @@ export function load({ params }) {
 		//@ts-expect-error
 		a = params.regularParam;
 
-		/** @type {string} b*/
+		/** @type {boolean} b */
 		const b = params.regularParam;
 	}
 }

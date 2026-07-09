@@ -2,7 +2,7 @@
 import { app_dir, base } from '$app/paths/internal/client';
 import { version } from '$app/env';
 import * as devalue from 'devalue';
-import { app, prerender_responses } from '../client.js';
+import { app, handle_error, prerender_responses } from '../client.js';
 import {
 	get_remote_request_headers,
 	handle_remote_redirect,
@@ -13,6 +13,7 @@ import {
 } from './shared.svelte.js';
 import { create_remote_key, stringify_remote_arg } from '../../shared.js';
 import { noop } from '../../../utils/functions.js';
+import { HttpError } from '@sveltejs/kit/internal';
 
 // Initialize Cache API for prerender functions
 const CACHE_NAME = __SVELTEKIT_DEV__ ? `sveltekit:${Date.now()}` : `sveltekit:${version}`;
@@ -162,6 +163,7 @@ class Prerender {
 	/** @type {T | undefined} */
 	#current = $state.raw();
 
+	/** @type {App.Error | undefined} */
 	#error = $state.raw(undefined);
 
 	/**
@@ -176,10 +178,15 @@ class Prerender {
 				this.#error = undefined;
 				return value;
 			},
-			(error) => {
+			async (e) => {
+				const error = await handle_error(e, {
+					params: {},
+					route: { id: null },
+					url: new URL(location.href)
+				});
 				this.#loading = false;
 				this.#error = error;
-				throw error;
+				throw new HttpError(error.status, error); // so that transformError doesn't transform it again
 			}
 		);
 

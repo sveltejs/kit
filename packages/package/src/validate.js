@@ -1,4 +1,4 @@
-import colors from 'kleur';
+import { styleText } from 'node:util';
 import { load_pkg_json } from './config.js';
 
 /**
@@ -31,12 +31,13 @@ export function create_validator(options) {
 			// - maybe there's a custom post-build script that fixes some of these
 			if (warnings.length) {
 				console.log(
-					colors
-						.bold()
-						.yellow('@sveltejs/package found the following issues while packaging your library:')
+					styleText(
+						['bold', 'yellow'],
+						'@sveltejs/package found the following issues while packaging your library:'
+					)
 				);
 				for (const warning of warnings) {
-					console.log(colors.yellow(`${warning}\n`));
+					console.log(styleText('yellow', `${warning}\n`));
 				}
 			}
 		}
@@ -80,12 +81,9 @@ export function _create_validator(options) {
 		/** @type {string[]} */
 		const warnings = [];
 
-		if (
-			imports.has('$app/environment') &&
-			[...imports].filter((i) => i.startsWith('$app/')).length === 1
-		) {
+		if (imports.has('$app/env') && [...imports].filter((i) => i.startsWith('$app/')).length === 1) {
 			warnings.push(
-				'Avoid usage of `$app/environment` in your code, if you want the library to work for people not using SvelteKit (only regular Svelte, for example). ' +
+				'Avoid usage of `$app/env` in your code, if you want the library to work for people not using SvelteKit (only regular Svelte, for example). ' +
 					'Consider using packages like `esm-env` instead which provide cross-bundler-compatible environment variables.'
 			);
 		}

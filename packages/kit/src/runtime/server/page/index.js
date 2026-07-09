@@ -269,6 +269,7 @@ export async function render_page(
 						if (state.prerendering && should_prerender_data) {
 							const body = JSON.stringify({
 								type: 'redirect',
+								status: err.status,
 								location: err.location
 							});
 
@@ -281,8 +282,8 @@ export async function render_page(
 						return redirect_response(err.status, err.location);
 					}
 
-					const status = get_status(err);
 					const error = await handle_error_and_jsonify(event, event_state, options, err);
+					const status = error.status;
 
 					while (i--) {
 						if (page.errors[i]) {
@@ -315,13 +316,7 @@ export async function render_page(
 								},
 								status,
 								error,
-								error_components: await load_error_components(
-									options,
-									ssr,
-									error_branch,
-									page,
-									manifest
-								),
+								error_components: await load_error_components(ssr, error_branch, page, manifest),
 								branch: error_branch,
 								fetched,
 								data_serializer
@@ -373,7 +368,7 @@ export async function render_page(
 			action_result,
 			fetched,
 			data_serializer: !ssr ? server_data_serializer(event, event_state, options) : data_serializer,
-			error_components: await load_error_components(options, ssr, branch, page, manifest)
+			error_components: await load_error_components(ssr, branch, page, manifest)
 		});
 	} catch (e) {
 		// a remote function could have thrown a redirect during render
@@ -397,18 +392,16 @@ export async function render_page(
 }
 
 /**
- *
- * @param {SSROptions} options
  * @param {boolean} ssr
  * @param {Array<import('./types.js').Loaded | null>} branch
  * @param {PageNodeIndexes} page
  * @param {SSRManifest} manifest
  */
-async function load_error_components(options, ssr, branch, page, manifest) {
+async function load_error_components(ssr, branch, page, manifest) {
 	/** @type {Array<SSRComponent | undefined> | undefined} */
 	let error_components;
 
-	if (options.server_error_boundaries && ssr) {
+	if (ssr) {
 		let last_idx = -1;
 		error_components = await Promise.all(
 			// eslint-disable-next-line @typescript-eslint/await-thenable

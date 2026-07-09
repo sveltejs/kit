@@ -1,19 +1,29 @@
 /* eslint-disable n/prefer-global/process */
 import { describe, expect, test, vi } from 'vitest';
 import { tick } from 'svelte';
+import { HttpError } from '@sveltejs/kit/internal';
 
 // Mock `client.js` because the real one pulls in the SvelteKit
 // router/hydration machinery and resolves `$app/paths` to a server-side
 // virtual module that only exists during a real SvelteKit build. We only need
 // the cache `Map`s and a stub `app` for the instances' interactions.
-vi.mock(new URL('../client.js', import.meta.url).pathname, () => ({
-	app: { hooks: { transport: {} }, decoders: {}, encoders: {} },
-	query_map: new Map(),
-	query_responses: {},
-	live_query_map: new Map(),
-	prerender_responses: {},
-	goto: () => {}
-}));
+vi.mock(new URL('../client.js', import.meta.url).pathname, async () => {
+	const { HttpError } = await import('@sveltejs/kit/internal');
+	return {
+		app: { hooks: { transport: {} }, decoders: {}, encoders: {} },
+		query_map: new Map(),
+		query_responses: {},
+		live_query_map: new Map(),
+		prerender_responses: {},
+		_goto: () => {},
+		handle_error: (/** @type {any} */ error) =>
+			Promise.resolve(
+				error instanceof HttpError
+					? error.body
+					: { message: error?.message ?? String(error), status: 500 }
+			)
+	};
+});
 
 // `prerender.svelte.js` references the `__SVELTEKIT_DEV__` build-time constant at
 // module scope; it isn't provided by the unit-test config, so define it here.
@@ -48,7 +58,7 @@ describe('reactive consumption never produces unhandled rejections', () => {
 			const q = new Query('id/payload', () => Promise.reject(new Error('nope')));
 			void q.current; // reactive read triggers start()
 			await flush();
-			expect(q.error).toBeInstanceOf(Error);
+			expect(q.error).toEqual({ message: 'nope', status: 500 });
 			expect(tracker.unhandled).toEqual([]);
 		} finally {
 			tracker.stop();
@@ -59,9 +69,9 @@ describe('reactive consumption never produces unhandled rejections', () => {
 		const tracker = track_unhandled();
 		try {
 			const instance = new LiveQuery('id', 'id/payload', 'payload');
-			instance.fail(new Error('nope'));
+			instance.fail(new HttpError(500, 'nope'));
 			await flush();
-			expect(instance.error).toBeInstanceOf(Error);
+			expect(instance.error).toEqual({ message: 'nope', status: 500 });
 			expect(tracker.unhandled).toEqual([]);
 		} finally {
 			tracker.stop();
@@ -76,7 +86,7 @@ describe('reactive consumption never produces unhandled rejections', () => {
 			const resource = prerender('id')(undefined);
 			void resource.current; // reactive read, no awaiting
 			await flush();
-			expect(resource.error).toBeInstanceOf(Error);
+			expect(resource.error).toEqual({ message: 'nope', status: 500 });
 			expect(tracker.unhandled).toEqual([]);
 		} finally {
 			globalThis.fetch = original_fetch;
