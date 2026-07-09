@@ -22,6 +22,8 @@ import {
 } from '../utils.js';
 import * as env from '__sveltekit/env';
 import { collect_remote_data } from '../remote.js';
+import Root from '../../components/root.svelte';
+import { render } from 'svelte/server';
 
 // TODO rename this function/module
 
@@ -275,11 +277,10 @@ export async function render_response({
 				// We have to invoke .then eagerly here in order to kick off rendering: it's only starting on access,
 				// and `await maybe_promise` would eagerly access the .then property but call its function only after a tick, which is too late
 				// for the paths.reset() below and for any eager getRequestEvent() calls during rendering without AsyncLocalStorage available.
-				// TODO use render from 'svelte/server' here
-				const rendered = options.root.render(props, render_opts).then((r) => r);
+				const rendered = render(Root, { ...render_opts, props });
 
 				// @ts-expect-error the legacy `render` API only returns html still, but the new API uses body
-				const { head, html: body, css, hashes } = await rendered;
+				const { head, body, css, hashes } = await rendered;
 
 				if (hashes) {
 					csp.add_script_hashes(hashes.script);
