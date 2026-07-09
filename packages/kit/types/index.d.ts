@@ -471,15 +471,6 @@ declare module '@sveltejs/kit' {
 			 * @default false
 			 */
 			forkPreloads?: boolean;
-
-			/**
-			 * Whether to enable the experimental handling of rendering errors.
-			 * When enabled, `<svelte:boundary>` is used to wrap components at each level
-			 * where there's an `+error.svelte`, rendering the error page if the component fails.
-			 * In addition, error boundaries also work on the server and the error object goes through `handleError`.
-			 * @default false
-			 */
-			handleRenderingErrors?: boolean;
 		};
 		/**
 		 * Where to find various files within your project.
@@ -1401,7 +1392,7 @@ declare module '@sveltejs/kit' {
 		/**
 		 * The URL of the current page.
 		 */
-		url: URL & { pathname: ResolvedPathname };
+		url: ReadonlyURL & { readonly pathname: ResolvedPathname | (string & {}) };
 		/**
 		 * The parameters of the current page - e.g. for a route like `/blog/[slug]`, a `{ slug: string }` object.
 		 */
@@ -1945,6 +1936,14 @@ declare module '@sveltejs/kit' {
 		capture: () => T;
 		restore: (snapshot: T) => void;
 	}
+
+	export type ReadonlyURLSearchParams = Omit<URLSearchParams, 'set' | 'append' | 'delete' | 'sort'>;
+
+	export type ReadonlyURL = Readonly<
+		Omit<URL, 'searchParams'> & {
+			searchParams: ReadonlyURLSearchParams;
+		}
+	>;
 
 	// If T is unknown or has an index signature, the types below will recurse indefinitely and create giant unions that TS can't handle
 	type WillRecurseIndefinitely<T> = unknown extends T ? true : string extends keyof T ? true : false;

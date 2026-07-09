@@ -509,7 +509,6 @@ export interface SSROptions {
 	root: SSRComponent['default'];
 	service_worker: boolean;
 	service_worker_options: RegistrationOptions;
-	server_error_boundaries: boolean;
 	templates: {
 		app(values: {
 			head: string;

@@ -709,16 +709,13 @@ async function initialize(result, target, hydrate) {
 		hydrate,
 		// Svelte 5 specific: asynchronously instantiate the component, i.e. don't call flushSync
 		sync: false,
-		// Svelte 5 specific: transformError allows to transform errors before they are passed to boundaries
-		transformError: __SVELTEKIT_EXPERIMENTAL_USE_TRANSFORM_ERROR__
-			? /** @param {unknown} e */ async (e) => {
-					const error = await handle_error(e, current.nav);
-					rendering_error = { error, status: error.status };
-					page.error = error;
-					page.status = rendering_error.status;
-					return error;
-				}
-			: undefined
+		transformError: /** @param {unknown} e */ async (e) => {
+			const error = await handle_error(e, current.nav);
+			rendering_error = { error, status: error.status };
+			page.error = error;
+			page.status = rendering_error.status;
+			return error;
+		}
 	});
 
 	// Wait for a microtask in case svelte experimental async is enabled,
@@ -802,7 +799,7 @@ async function get_navigation_result_from_branch({
 		}
 	};
 
-	if (errors && __SVELTEKIT_EXPERIMENTAL_USE_TRANSFORM_ERROR__) {
+	if (errors) {
 		let last_idx = -1;
 		result.props.errors = await Promise.all(
 			// eslint-disable-next-line @typescript-eslint/await-thenable
@@ -824,7 +821,7 @@ async function get_navigation_result_from_branch({
 		);
 	}
 
-	if (error && __SVELTEKIT_EXPERIMENTAL_USE_TRANSFORM_ERROR__) {
+	if (error) {
 		result.props.error = error;
 	}
 
@@ -2544,9 +2541,6 @@ export function pushState(url, state) {
 	has_navigated = true;
 
 	page.state = state;
-	root.$set({
-		page
-	});
 
 	clear_onward_history(current_history_index, current_navigation_index);
 }
@@ -2587,9 +2581,6 @@ export function replaceState(url, state) {
 	history.replaceState(opts, '', resolve_url(url));
 
 	page.state = state;
-	root.$set({
-		page
-	});
 }
 
 /**
@@ -2617,8 +2608,7 @@ export async function applyAction(result) {
 		root.$set({
 			// this brings Svelte's view of the world in line with SvelteKit's
 			// after use:enhance reset the form....
-			form: null,
-			page
+			form: null
 		});
 
 		// ...so that setting the `form` prop takes effect and isn't ignored
@@ -2626,7 +2616,7 @@ export async function applyAction(result) {
 		root.$set({ form: result.data });
 
 		if (result.type === 'success') {
-			reset_focus(page.url);
+			reset_focus(/** @type {URL} */ (page.url));
 		}
 	}
 }
