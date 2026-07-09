@@ -76,7 +76,7 @@ test.describe('Load', () => {
 		expect(await page.textContent('h1')).toBe('layout loads: 5');
 		expect(await page.textContent('h2')).toBe('x: b: 3');
 
-		await page.click('button:has-text("invalidate all")');
+		await page.click('button:has-text("refresh all")');
 		await page.waitForFunction('window.invalidated');
 		expect(await page.textContent('h1')).toBe('layout loads: 6');
 		expect(await page.textContent('h2')).toBe('x: b: 4');
@@ -1679,7 +1679,7 @@ test.describe('Shallow routing', () => {
 		await page.locator('[data-id="two"]').click();
 		expect(page.url()).toBe(`${baseURL}/shallow-routing/push-state/a`);
 
-		await page.locator('[data-id="invalidate"]').click();
+		await page.locator('[data-id="refresh"]').click();
 		await expect(page.locator('h1')).toHaveText('parent');
 		await expect(page.locator('span')).not.toHaveText(now);
 	});
