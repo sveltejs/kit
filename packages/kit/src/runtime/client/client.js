@@ -1,4 +1,4 @@
-/** @import { CSRPageNodeLoader, RemoteFunctionDataNode, ServerNodesResponse, ServerRedirectNode } from 'types' */
+/** @import { RemoteFunctionDataNode, ServerNodesResponse, ServerRedirectNode } from 'types' */
 /** @import { NavigationIntent } from './types.js' */
 /** @import { CacheEntry } from './remote-functions/cache.svelte.js' */
 /** @import { Query } from './remote-functions/query/instance.svelte.js' */
