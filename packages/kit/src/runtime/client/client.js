@@ -815,23 +815,28 @@ async function get_navigation_result_from_branch({
 	let data = {};
 	let data_changed = !page;
 
-	let p = 0;
+	let current_node = result.props.root;
 
-	for (let i = 0; i < Math.max(branch.length, current.branch.length); i += 1) {
+	for (let i = 0; i < branch.length; i += 1) {
 		const node = branch[i];
 		const prev = current.branch[i];
 
 		if (node?.data !== prev?.data) data_changed = true;
 		if (!node) continue;
+		if (!node.node.component) continue;
 
 		data = { ...data, ...node.data };
 
-		// Only set props if the node actually updated. This prevents needless rerenders.
-		if (data_changed) {
-			result.props[`data_${p}`] = data;
-		}
+		const error_loader = errors?.slice(0, i + 1).findLast((x) => x) ?? default_error_loader;
 
-		p += 1;
+		current_node.error = (await error_loader()).component;
+		current_node.component = node.node.component;
+		current_node.data = data;
+
+		if (i < branch.length - 1) {
+			current_node.child = /** @type {import('../types.js').RenderNode} */ ({});
+			current_node = current_node.child;
+		}
 	}
 
 	const page_changed =
@@ -855,27 +860,6 @@ async function get_navigation_result_from_branch({
 			// The whole page store is updated, but this way the object reference stays the same
 			data: data_changed ? data : page.data
 		};
-	}
-
-	let current_node = result.props.root;
-	let current_data = {};
-
-	for (let i = 0; i < branch.length; i += 1) {
-		const node = branch[i];
-		if (!node?.node.component) continue;
-
-		const data = { ...current_data, ...node.data };
-
-		const error_loader = errors?.slice(0, i + 1).findLast((x) => x) ?? default_error_loader;
-
-		current_node.error = (await error_loader()).component;
-		current_node.component = node.node.component;
-		current_node.data = current_data = data;
-
-		if (i < branch.length - 1) {
-			current_node.child = /** @type {import('../types.js').RenderNode} */ ({});
-			current_node = current_node.child;
-		}
 	}
 
 	return result;
