@@ -1466,16 +1466,16 @@ function kit({ svelte_config }) {
 		 * Adds the SvelteKit middleware to do SSR in dev mode.
 		 * @see https://vitejs.dev/guide/api-plugin.html#configureserver
 		 */
-		async configureServer(vite) {
-			return await dev(vite, vite_config, svelte_config, () => remotes, root);
+		async configureServer(server) {
+			return await dev(server, vite_config, svelte_config, () => remotes, root);
 		},
 
 		/**
 		 * Adds the SvelteKit middleware to do SSR in preview mode.
 		 * @see https://vitejs.dev/guide/api-plugin.html#configurepreviewserver
 		 */
-		configurePreviewServer(vite) {
-			return preview(vite, vite_config, svelte_config);
+		configurePreviewServer(server) {
+			return preview(server, vite_config, svelte_config);
 		},
 
 		applyToEnvironment(environment) {
