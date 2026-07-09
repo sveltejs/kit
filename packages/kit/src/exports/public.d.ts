@@ -114,12 +114,6 @@ type UnpackValidationError<T> =
 			? undefined // needs to be undefined, because void will corrupt union type
 			: T;
 
-export interface ManifestGenerationOptions {
-	/** A relative path to the base directory of the server build output */
-	relativePath: string;
-	routes?: RouteDefinition[];
-}
-
 /**
  * This object is passed to the `adapt` function of adapters.
  * It contains various methods and properties that are useful for adapting the app.
@@ -163,9 +157,10 @@ export interface Builder {
 
 	/**
 	 * Generate a server-side manifest to initialise the SvelteKit [server](https://svelte.dev/docs/kit/@sveltejs-kit#Server) with.
-	 * @param opts a relative path to the base directory of the app and optionally in which format (esm or cjs) the manifest should be generated
+	 * @param opts
+	 * @param opts.relativePath  A relative path to the base directory of the server build output
 	 */
-	generateManifest: (opts: ManifestGenerationOptions) => string;
+	generateManifest: (opts: { relativePath: string; routes?: RouteDefinition[] }) => string;
 
 	/**
 	 * Resolve a path to the `name` directory inside `outDir`, e.g. `/path/to/.svelte-kit/my-adapter`.
