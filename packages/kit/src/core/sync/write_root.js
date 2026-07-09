@@ -5,20 +5,6 @@ import { dedent, write_if_changed } from './utils.js';
  * @param {string} output
  */
 export function write_root(manifest_data, output) {
-	// TODO remove default layout altogether
-
-	const max_depth = Math.max(
-		...manifest_data.routes.map((route) =>
-			route.page ? route.page.layouts.filter(Boolean).length + 1 : 0
-		),
-		1
-	);
-
-	const levels = [];
-	for (let i = 0; i <= max_depth; i += 1) {
-		levels.push(i);
-	}
-
 	write_if_changed(
 		`${output}/root.svelte`,
 		dedent`

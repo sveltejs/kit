@@ -46,6 +46,10 @@ import { page, update, navigating, updated } from './state.svelte.js';
 import { add_data_suffix, add_resolution_suffix } from '../pathname.js';
 import { noop_span } from '../telemetry/noop.js';
 import { read_ndjson } from './ndjson.js';
+import RootModern from '../components/root.svelte';
+import { asClassComponent } from 'svelte/legacy';
+
+const Root = asClassComponent(RootModern);
 
 export { load_css };
 const ICON_REL_ATTRIBUTES = new Set(['icon', 'shortcut icon', 'apple-touch-icon']);
@@ -703,7 +707,7 @@ async function initialize(result, target, hydrate) {
 	update(/** @type {import('@sveltejs/kit').Page} */ (result.props.page));
 
 	// TODO: use mount()
-	root = new app.root({
+	root = new Root({
 		target,
 		props: { ...result.props, components },
 		hydrate,
