@@ -44,19 +44,22 @@ export function write_root(manifest_data, output) {
 			</script>
 
 			{#snippet node(n, depth)}
+				{@const Component = n.component}
+
 				<svelte:boundary>
 					{#if n.child}
 						<!-- svelte-ignore binding_property_non_reactive -->
-						<n.component bind:this={components[depth]} data={n.data} {form} params={page.params}>
+						<Component bind:this={components[depth]} data={n.data} {form} params={page.params}>
 							{@render node(n.child, depth + 1)}
-						</n.component>
+						</Component>
 					{:else}
 						<!-- svelte-ignore binding_property_non_reactive -->
-						<n.component bind:this={components[depth]} data={n.data} {form} params={page.params} {error} />
+						<Component bind:this={components[depth]} data={n.data} {form} params={page.params} {error} />
 					{/if}
 
 					{#snippet failed(error)}
-						<n.error {error} />
+						{@const ErrorPage = n.error}
+						<ErrorPage {error} />
 					{/snippet}
 				</svelte:boundary>
 			{/snippet}
