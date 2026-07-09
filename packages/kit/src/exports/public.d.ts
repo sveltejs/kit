@@ -1139,7 +1139,7 @@ export interface LoadEvent<
 	 */
 	parent: () => Promise<ParentData>;
 	/**
-	 * This function declares that the `load` function has a _dependency_ on one or more URLs or custom identifiers, which can subsequently be used with [`refresh()`](https://svelte.dev/docs/kit/$app-navigation#refresh) to cause `load` to rerun.
+	 * This function declares that the `load` function has a _dependency_ on one or more URLs or custom identifiers, which can subsequently be used with [`invalidate()`](https://svelte.dev/docs/kit/$app-navigation#invalidate) to cause `load` to rerun.
 	 *
 	 * Most of the time you won't need this, as `fetch` calls `depends` on your behalf — it's only necessary if you're using a custom API client that bypasses `fetch`.
 	 *
@@ -1147,7 +1147,7 @@ export interface LoadEvent<
 	 *
 	 * Custom identifiers have to be prefixed with one or more lowercase letters followed by a colon to conform to the [URI specification](https://www.rfc-editor.org/rfc/rfc3986.html).
 	 *
-	 * The following example shows how to use `depends` to register a dependency on a custom identifier, which is `refresh`ed after a button click, making the `load` function rerun.
+	 * The following example shows how to use `depends` to register a dependency on a custom identifier, which is `invalidate`ed after a button click, making the `load` function rerun.
 	 *
 	 * ```js
 	 * /// file: src/routes/+page.js
@@ -1162,12 +1162,12 @@ export interface LoadEvent<
 	 * ```html
 	 * /// file: src/routes/+page.svelte
 	 * <script>
-	 * 	import { refresh } from '$app/navigation';
+	 * 	import { invalidate } from '$app/navigation';
 	 *
 	 * 	let { data } = $props();
 	 *
 	 * 	const increase = async () => {
-	 * 		await refresh('increase:count');
+	 * 		await invalidate('increase:count');
 	 * 	}
 	 * </script>
 	 *

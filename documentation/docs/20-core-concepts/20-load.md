@@ -638,9 +638,9 @@ export async function load({ untrack, url }) {
 
 ### Manual invalidation
 
-You can also rerun `load` functions that apply to the current page using [`refresh(url)`]($app-navigation#refresh), which reruns all `load` functions that depend on `url`, and [`refreshAll()`]($app-navigation#refreshAll), which reruns every `load` function and all active queries. Server load functions will never automatically depend on a fetched `url` to avoid leaking secrets to the client.
+You can also rerun `load` functions that apply to the current page using [`invalidate(url)`]($app-navigation#invalidate), which reruns all `load` functions that depend on `url`, and [`refreshAll()`]($app-navigation#refreshAll), which reruns every `load` function and all active queries. Server load functions will never automatically depend on a fetched `url` to avoid leaking secrets to the client.
 
-> [!NOTE] `refresh` and `refreshAll` do _not_ reset `page.state`. This is useful when you're using [shallow routing](shallow-routing) and want to refresh data without losing the current page state. The deprecated `invalidate` and `invalidateAll` functions _do_ reset `page.state` — prefer `refresh` and `refreshAll`.
+> [!NOTE] `refreshAll` does _not_ reset `page.state`, unlike its deprecated predecessor `invalidateAll`.
 
 A `load` function depends on `url` if it calls `fetch(url)` or `depends(url)`. Note that `url` can be a custom identifier that starts with `[a-z]:`:
 
@@ -648,10 +648,10 @@ A `load` function depends on `url` if it calls `fetch(url)` or `depends(url)`. N
 /// file: src/routes/random-number/+page.js
 /** @type {import('./$types').PageLoad} */
 export async function load({ fetch, depends }) {
-	// load reruns when `refresh('https://api.example.com/random-number')` is called...
+	// load reruns when `invalidate('https://api.example.com/random-number')` is called...
 	const response = await fetch('https://api.example.com/random-number');
 
-	// ...or when `refresh('app:random')` is called
+	// ...or when `invalidate('app:random')` is called
 	depends('app:random');
 
 	return {
@@ -663,16 +663,16 @@ export async function load({ fetch, depends }) {
 ```svelte
 <!--- file: src/routes/random-number/+page.svelte --->
 <script>
-	import { refresh, refreshAll } from '$app/navigation';
+	import { invalidate, refreshAll } from '$app/navigation';
 
 	/** @type {import('./$types').PageProps} */
 	let { data } = $props();
 
 	function rerunLoadFunction() {
 		// any of these will cause the `load` function to rerun
-		refresh('app:random');
-		refresh('https://api.example.com/random-number');
-		refresh(url => url.href.includes('random-number'));
+		invalidate('app:random');
+		invalidate('https://api.example.com/random-number');
+		invalidate(url => url.href.includes('random-number'));
 		refreshAll();
 	}
 </script>
@@ -690,7 +690,7 @@ To summarize, a `load` function will rerun in the following situations:
 - It calls `url.searchParams.get(...)`, `url.searchParams.getAll(...)` or `url.searchParams.has(...)` and the parameter in question changes. Accessing other properties of `url.searchParams` will have the same effect as accessing `url.search`.
 - It calls `await parent()` and a parent `load` function reran
 - A child `load` function calls `await parent()` and is rerunning, and the parent is a server load function
-- It declared a dependency on a specific URL via [`fetch`](#Making-fetch-requests) (universal load only) or [`depends`](@sveltejs-kit#LoadEvent), and that URL was marked invalid with [`refresh(url)`]($app-navigation#refresh)
+- It declared a dependency on a specific URL via [`fetch`](#Making-fetch-requests) (universal load only) or [`depends`](@sveltejs-kit#LoadEvent), and that URL was marked invalid with [`invalidate(url)`]($app-navigation#invalidate)
 - All active `load` functions were forcibly rerun with [`refreshAll()`]($app-navigation#refreshAll)
 
 `params` and `url` can change in response to a `<a href="..">` link click, a [`<form>` interaction](form-actions#GET-vs-POST), a [`goto`]($app-navigation#goto) invocation, or a [`redirect`](@sveltejs-kit#redirect).

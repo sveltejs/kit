@@ -2357,7 +2357,7 @@ export async function goto(url, opts = {}) {
  * invalidate((url) => url.pathname === '/path');
  * ```
  * @param {string | URL | ((url: URL) => boolean)} resource The invalidated URL
- * @param {boolean} [keep_state] If `true` (the default), the current `page.state` will be preserved. Otherwise, it will be reset to an empty object.
+ * @param {boolean} [keep_state] If `true`, the current `page.state` will be preserved. Otherwise, it will be reset to an empty object. `false` by default.
  * @returns {Promise<void>}
  */
 export function invalidate(resource, keep_state = false) {
