@@ -305,7 +305,7 @@ function kit({ svelte_config }) {
 	let env;
 
 	/** @type {import('types').ManifestData} */
-	let build_manifest_data;
+	let manifest_data;
 
 	/** @type {import('types').ServerMetadata | undefined} only set at build time once analysis is finished */
 	let build_metadata = undefined;
@@ -370,7 +370,7 @@ function kit({ svelte_config }) {
 				env = loadEnv(config_env.mode, kit.env.dir, '');
 				server_instrumentation = resolve_entry(path.join(kit.files.src, 'instrumentation.server'));
 
-				vite = await import_peer('vite', posixify(root));
+				vite = await import_peer('vite', root);
 
 				normalized_cwd = vite.normalizePath(root);
 				normalized_lib = vite.normalizePath(kit.files.lib);
@@ -425,7 +425,6 @@ function kit({ svelte_config }) {
 					preview: {
 						cors: { preflightContinue: true }
 					},
-					// TODO: this won't be necessary when the Cloudflare adapter supports Vite's official full-bundle mode
 					// By default, only client environments inherit the top-level `optimizeDeps`.
 					// Therefore, we copy need to copy this setting to other environments
 					// in the adapter code if it uses `optimizeDeps` for "full-bundle mode"
@@ -503,8 +502,6 @@ function kit({ svelte_config }) {
 				};
 
 				if (is_build) {
-					if (!new_config.build) new_config.build = {};
-
 					new_config.define = {
 						...define,
 						__SVELTEKIT_ADAPTER_NAME__: s(kit.adapter?.name),
@@ -512,7 +509,7 @@ function kit({ svelte_config }) {
 						__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: s(kit.version.pollInterval)
 					};
 
-					build_manifest_data = sync.all(svelte_config, root).manifest_data;
+					manifest_data = sync.all(svelte_config, root).manifest_data;
 				} else {
 					new_config.define = {
 						...define,
@@ -1115,7 +1112,7 @@ function kit({ svelte_config }) {
 					return;
 				}
 
-				const manifest_data = dev_context?.manifest_data ?? build_manifest_data;
+				const manifest_data = dev_context?.manifest_data ?? manifest_data;
 
 				/** @type {Set<string>} */
 				const entrypoints = new Set();
@@ -1519,7 +1516,7 @@ function kit({ svelte_config }) {
 					];
 
 					export const files = [
-						${build_manifest_data.assets
+						${manifest_data.assets
 							.filter((asset) => kit.serviceWorker.files(asset.file))
 							.map((asset) => `base + ${s(`/${asset.file}`)}`)
 							.join(',\n')}
@@ -1618,7 +1615,7 @@ function kit({ svelte_config }) {
 					};
 
 					// add entry points for every endpoint...
-					build_manifest_data.routes.forEach((route) => {
+					manifest_data.routes.forEach((route) => {
 						if (route.endpoint) {
 							const resolved = path.resolve(root, route.endpoint.file);
 							const relative = decodeURIComponent(path.relative(kit.files.routes, resolved));
@@ -1628,7 +1625,7 @@ function kit({ svelte_config }) {
 					});
 
 					// ...and every component used by pages...
-					build_manifest_data.nodes.forEach((node) => {
+					manifest_data.nodes.forEach((node) => {
 						for (const file of [node.component, node.universal, node.server]) {
 							if (file) {
 								const resolved = path.resolve(root, file);
@@ -1643,21 +1640,18 @@ function kit({ svelte_config }) {
 					});
 
 					// ...and the params file
-					if (build_manifest_data.params) {
-						server_input['entries/params'] = path.resolve(root, build_manifest_data.params);
+					if (manifest_data.params) {
+						server_input['entries/params'] = path.resolve(root, manifest_data.params);
 					}
 
 					// ...and the hooks files
-					if (build_manifest_data.hooks.server) {
-						server_input['entries/hooks.server'] = path.resolve(
-							root,
-							build_manifest_data.hooks.server
-						);
+					if (manifest_data.hooks.server) {
+						server_input['entries/hooks.server'] = path.resolve(root, manifest_data.hooks.server);
 					}
-					if (build_manifest_data.hooks.universal) {
+					if (manifest_data.hooks.universal) {
 						server_input['entries/hooks.universal'] = path.resolve(
 							root,
-							build_manifest_data.hooks.universal
+							manifest_data.hooks.universal
 						);
 					}
 
@@ -1680,7 +1674,7 @@ function kit({ svelte_config }) {
 					} else {
 						client_input['entry/start'] = `${runtime_directory}/client/entry.js`;
 						client_input['entry/app'] = `${out_dir}/generated/client-optimized/app.js`;
-						build_manifest_data.nodes.forEach((node, i) => {
+						manifest_data.nodes.forEach((node, i) => {
 							if (node.component || node.universal) {
 								client_input[`nodes/${i}`] = `${out_dir}/generated/client-optimized/nodes/${i}.js`;
 							}
@@ -1911,7 +1905,7 @@ function kit({ svelte_config }) {
 				app_dir: kit.appDir,
 				app_path: `${kit.paths.base.slice(1)}${kit.paths.base ? '/' : ''}${kit.appDir}`,
 				base: kit.paths.base,
-				manifest_data: build_manifest_data,
+				manifest_data,
 				out_dir: out,
 				service_worker: service_worker_entry_file ? 'service-worker.js' : null, // TODO make file configurable?
 				client: null,
@@ -1925,7 +1919,7 @@ function kit({ svelte_config }) {
 					build_data,
 					prerendered: [],
 					relative_path: '.',
-					routes: build_manifest_data.routes,
+					routes: manifest_data.routes,
 					remotes,
 					root
 				})};\n`
@@ -1937,7 +1931,7 @@ function kit({ svelte_config }) {
 			build_server_nodes(
 				out,
 				kit,
-				build_manifest_data,
+				manifest_data,
 				vite_server_manifest,
 				null,
 				assets_path,
@@ -1949,7 +1943,7 @@ function kit({ svelte_config }) {
 
 			const { metadata } = await analyse({
 				manifest_path,
-				manifest_data: build_manifest_data,
+				manifest_data,
 				server_manifest: vite_server_manifest,
 				tracked_features,
 				out,
@@ -1965,7 +1959,7 @@ function kit({ svelte_config }) {
 			// create client build
 			write_client_manifest(
 				kit,
-				build_manifest_data,
+				manifest_data,
 				`${out_dir}/generated/client-optimized`,
 				metadata.nodes
 			);
@@ -1973,7 +1967,7 @@ function kit({ svelte_config }) {
 			const server_assets = `${out}/server/${assets_path}`;
 			const client_assets = `${out}/client/${assets_path}`;
 
-			const skip_client_build = build_manifest_data.nodes.every(
+			const skip_client_build = manifest_data.nodes.every(
 				(node) => node.page_options?.csr === false
 			);
 
@@ -2061,7 +2055,7 @@ function kit({ svelte_config }) {
 					// similar to that on the client, with as much information computed upfront so that we
 					// don't need to include any code of the actual routes in the server bundle.
 					if (svelte_config.kit.router.resolution === 'server') {
-						const nodes = build_manifest_data.nodes.map((node, i) => {
+						const nodes = manifest_data.nodes.map((node, i) => {
 							if (node.component || node.universal) {
 								const entry = `${out_dir}/generated/client-optimized/nodes/${i}.js`;
 								const deps = deps_of(entry, true);
@@ -2078,7 +2072,7 @@ function kit({ svelte_config }) {
 						build_data.client.css = nodes.map((node) => node?.css);
 
 						build_data.client.routes = compact(
-							build_manifest_data.routes.map((route) => {
+							manifest_data.routes.map((route) => {
 								if (!route.page) return;
 
 								return {
@@ -2135,7 +2129,7 @@ function kit({ svelte_config }) {
 						build_data,
 						prerendered: [],
 						relative_path: '.',
-						routes: build_manifest_data.routes,
+						routes: manifest_data.routes,
 						remotes,
 						root
 					})};\n`
@@ -2145,7 +2139,7 @@ function kit({ svelte_config }) {
 				build_server_nodes(
 					out,
 					kit,
-					build_manifest_data,
+					manifest_data,
 					vite_server_manifest,
 					vite_client_manifest,
 					assets_path,
@@ -2185,7 +2179,7 @@ function kit({ svelte_config }) {
 					build_data,
 					prerendered: prerendered.paths,
 					relative_path: '.',
-					routes: build_manifest_data.routes.filter(
+					routes: manifest_data.routes.filter(
 						(route) => prerender_results.prerender_map.get(route.id) !== true
 					),
 					remotes,
