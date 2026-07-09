@@ -3361,6 +3361,8 @@ declare module '$app/navigation' {
 		replaceState?: boolean | undefined;
 		noScroll?: boolean | undefined;
 		keepFocus?: boolean | undefined;
+		refreshAll?: boolean | undefined;
+		refresh?: (string | URL | ((url: URL) => boolean))[] | undefined;
 		invalidateAll?: boolean | undefined;
 		invalidate?: (string | URL | ((url: URL) => boolean))[] | undefined;
 		state?: App.PageState | undefined;
