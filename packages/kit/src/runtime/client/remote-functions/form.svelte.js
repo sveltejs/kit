@@ -8,8 +8,8 @@ import {
 	query_responses,
 	_goto,
 	set_nearest_error_page,
-	invalidateAll,
-	handle_error
+	handle_error,
+	refreshAll
 } from '../client.js';
 import { tick } from 'svelte';
 import { categorize_updates, remote_request } from './shared.svelte.js';
@@ -227,14 +227,14 @@ export function form(id) {
 
 					// if the developer took control of updates via `.updates(...)` (even with
 					// no arguments), or the server performed explicit refreshes, don't invalidateAll
-					const should_invalidate = refreshes === null && !response.r;
+					const should_refresh = refreshes === null && !response.r;
 
 					if (response.redirect) {
 						// Use internal version to allow redirects to external URLs
 						void _goto(
 							response.redirect,
 							{
-								invalidateAll: should_invalidate
+								refreshAll: should_refresh
 							},
 							0
 						);
@@ -244,8 +244,8 @@ export function form(id) {
 					const succeeded = raw_issues.length === 0;
 
 					if (succeeded) {
-						if (should_invalidate) {
-							void invalidateAll();
+						if (should_refresh) {
+							void refreshAll();
 						}
 					} else {
 						if (DEV) {

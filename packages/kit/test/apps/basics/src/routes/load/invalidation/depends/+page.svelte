@@ -1,5 +1,5 @@
 <script>
-	import { invalidate } from '$app/navigation';
+	import { refresh } from '$app/navigation';
 
 	/** @type {import('./$types').PageData} */
 	export let data;
@@ -9,25 +9,25 @@
 <button
 	type="button"
 	class="shared"
-	onclick={() => (window.promise = invalidate('invalidate-depends:shared'))}
+	onclick={() => (window.promise = refresh('invalidate-depends:shared'))}
 >
-	invalidate shared
+	refresh shared
 </button>
 
 <p class="server">{data.server}</p>
 <button
 	type="button"
 	class="server"
-	onclick={() => (window.promise = invalidate('invalidate-depends:server'))}
+	onclick={() => (window.promise = refresh('invalidate-depends:server'))}
 >
-	invalidate server
+	refresh server
 </button>
 
 <p class="neither">neither</p>
 <button
 	type="button"
 	class="neither"
-	onclick={() => (window.promise = invalidate('invalidate-depends:neither'))}
+	onclick={() => (window.promise = refresh('invalidate-depends:neither'))}
 >
-	invalidate neither
+	refresh neither
 </button>

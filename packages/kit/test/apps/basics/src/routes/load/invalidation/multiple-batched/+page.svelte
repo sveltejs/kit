@@ -1,5 +1,5 @@
 <script>
-	import { invalidate } from '$app/navigation';
+	import { refresh } from '$app/navigation';
 
 	export let data;
 </script>
@@ -9,11 +9,11 @@
 		id="multiple-batched"
 		onclick={(event) => {
 			const btn = event.currentTarget;
-			invalidate('multiple:invalidations-go-brr');
-			invalidate('multiple:invalidations-go-brr');
+			refresh('multiple:invalidations-go-brr');
+			refresh('multiple:invalidations-go-brr');
 
 			Promise.resolve()
-				.then(() => invalidate('multiple:invalidations-go-brr'))
+				.then(() => refresh('multiple:invalidations-go-brr'))
 				.then(() => {
 					btn.dataset.done = 'true';
 				});

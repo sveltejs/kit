@@ -59,24 +59,24 @@ test.describe('Load', () => {
 		await app.goto('/load/change-detection/one/b');
 		expect(await page.textContent('h2')).toBe('x: b: 3');
 
-		await app.invalidate('/load/change-detection/data.json');
+		await app.refresh('/load/change-detection/data.json');
 		expect(await page.textContent('h1')).toBe('layout loads: 2');
 		expect(await page.textContent('h2')).toBe('x: b: 3');
 
-		await app.invalidate('/load/change-detection/data.json');
+		await app.refresh('/load/change-detection/data.json');
 		expect(await page.textContent('h1')).toBe('layout loads: 3');
 		expect(await page.textContent('h2')).toBe('x: b: 3');
 
-		await app.invalidate('custom:change-detection-layout');
+		await app.refresh('custom:change-detection-layout');
 		expect(await page.textContent('h1')).toBe('layout loads: 4');
 		expect(await page.textContent('h2')).toBe('x: b: 3');
 
-		await page.click('button:has-text("invalidate change-detection/data.json")');
+		await page.click('button:has-text("refresh change-detection/data.json")');
 		await page.waitForFunction('window.invalidated');
 		expect(await page.textContent('h1')).toBe('layout loads: 5');
 		expect(await page.textContent('h2')).toBe('x: b: 3');
 
-		await page.click('button:has-text("invalidate all")');
+		await page.click('button:has-text("refresh all")');
 		await page.waitForFunction('window.invalidated');
 		expect(await page.textContent('h1')).toBe('layout loads: 6');
 		expect(await page.textContent('h2')).toBe('x: b: 4');
@@ -536,13 +536,13 @@ test.describe('Invalidation', () => {
 		await page.goto('/load/invalidation/forced');
 		expect(await page.textContent('h1')).toBe('a: 0, b: 0');
 
-		await page.click('button.invalidateall');
+		await page.click('button.refreshall');
 		await page.evaluate(
 			() => /** @type {Window & typeof globalThis & { promise: Promise<void> }} */ (window).promise
 		);
 		expect(await page.textContent('h1')).toBe('a: 1, b: 1');
 
-		await page.click('button.invalidateall');
+		await page.click('button.refreshall');
 		await page.evaluate(
 			() => /** @type {Window & typeof globalThis & { promise: Promise<void> }} */ (window).promise
 		);
@@ -590,7 +590,7 @@ test.describe('Invalidation', () => {
 		await expect(btn).toHaveText('2');
 	});
 
-	test('invalidateAll persists through redirects', async ({ page }) => {
+	test('refreshAll persists through redirects', async ({ page }) => {
 		await page.goto('/load/invalidation/multiple/redirect');
 		await page.locator('button.redirect').click();
 		await expect(page.locator('p.redirect-state')).toHaveText('Redirect state: done');
@@ -628,7 +628,7 @@ test.describe('Invalidation', () => {
 		const selector = '[data-testid="count"]';
 
 		expect(await page.textContent(selector)).toBe('1');
-		await app.invalidate('/load/invalidation/server-fetch/count.json');
+		await app.refresh('/load/invalidation/server-fetch/count.json');
 		expect(await page.textContent(selector)).toBe('1');
 	});
 
@@ -795,14 +795,14 @@ test.describe('Invalidation', () => {
 		await expect(page.getByText('updated')).toBeVisible();
 	});
 
-	test('goto after invalidation does not reset state', async ({ page }) => {
+	test('goto after refresh does not reset state', async ({ page }) => {
 		await page.goto('/load/invalidation/invalidate-then-goto');
 		const layout = await page.textContent('p.layout');
 		const _page = await page.textContent('p.page');
 		expect(layout).toBeDefined();
 		expect(_page).toBeDefined();
 
-		await page.click('button.invalidate');
+		await page.click('button.refresh');
 		await page.evaluate(
 			() => /** @type {Window & typeof globalThis & { promise: Promise<void> }} */ (window).promise
 		);
@@ -821,28 +821,28 @@ test.describe('Invalidation', () => {
 		expect(next_page_2).not.toBe(next_page_1);
 	});
 
-	test('invalidateAll finishing after navigation does not apply stale data', async ({
+	test('refreshAll finishing after navigation does not apply stale data', async ({
 		page,
 		clicknav
 	}) => {
 		await page.goto('/load/invalidation/during-navigation/a');
 		await expect(page.locator('[data-testid="scores"]')).toHaveText('1 - 1');
 
-		await clicknav('[data-testid="nav-b-invalidate"]');
+		await clicknav('[data-testid="nav-b-refresh"]');
 		await expect(page.locator('[data-testid="scores"]')).toHaveText('2 - 2');
 
 		await page.waitForTimeout(400);
 		await expect(page.locator('[data-testid="scores"]')).toHaveText('2 - 2');
 	});
 
-	test('invalidateAll finishing before navigation ends does not prevent navigation', async ({
+	test('refreshAll finishing before navigation ends does not prevent navigation', async ({
 		page,
 		clicknav
 	}) => {
 		await page.goto('/load/invalidation/during-navigation/b');
 		await expect(page.locator('[data-testid="scores"]')).toHaveText('2 - 2');
 
-		await clicknav('[data-testid="nav-a-invalidate"]');
+		await clicknav('[data-testid="nav-a-refresh"]');
 		await expect(page.locator('[data-testid="scores"]')).toHaveText('1 - 1');
 	});
 });
@@ -1558,8 +1558,8 @@ test.describe('goto', () => {
 
 			const expectGoback = makeExpectGoback(testFinishPage, testEntryPage);
 
-			test('app.invalidate', async ({ app, page }) => {
-				await app.invalidate('app:goto');
+			test('app.refresh', async ({ app, page }) => {
+				await app.refresh('app:goto');
 				await expectGoback(page);
 			});
 
@@ -1667,7 +1667,7 @@ test.describe('Shallow routing', () => {
 		await expect(page.locator('p')).toHaveText('active: true');
 	});
 
-	test('Invalidates the correct route after pushing state to a new URL', async ({
+	test('Refreshes the correct route after pushing state to a new URL', async ({
 		baseURL,
 		page
 	}) => {
@@ -1679,7 +1679,7 @@ test.describe('Shallow routing', () => {
 		await page.locator('[data-id="two"]').click();
 		expect(page.url()).toBe(`${baseURL}/shallow-routing/push-state/a`);
 
-		await page.locator('[data-id="invalidate"]').click();
+		await page.locator('[data-id="refresh"]').click();
 		await expect(page.locator('h1')).toHaveText('parent');
 		await expect(page.locator('span')).not.toHaveText(now);
 	});
@@ -1741,6 +1741,66 @@ test.describe('Shallow routing', () => {
 		await expect(page.locator('p')).toHaveText('count: 0');
 		await page.locator('button').click();
 		await expect(page.locator('p')).toHaveText('count: 1');
+	});
+
+	test('refresh reruns load functions without resetting page.state', async ({ page }) => {
+		await page.goto('/shallow-routing/refresh');
+		await expect(page.locator('p')).toHaveText('active: false');
+
+		const now = /** @type {string} */ (await page.locator('span').textContent());
+
+		await page.locator('[data-id="activate"]').click();
+		await expect(page.locator('p')).toHaveText('active: true');
+
+		await page.locator('[data-id="refresh"]').click();
+		await page.evaluate(() => window.promise);
+		await expect(page.locator('p')).toHaveText('active: true');
+		await expect(page.locator('span')).not.toHaveText(now);
+	});
+
+	test('refreshAll reruns load functions without resetting page.state', async ({ page }) => {
+		await page.goto('/shallow-routing/refresh');
+		await expect(page.locator('p')).toHaveText('active: false');
+
+		const now = /** @type {string} */ (await page.locator('span').textContent());
+
+		await page.locator('[data-id="activate"]').click();
+		await expect(page.locator('p')).toHaveText('active: true');
+
+		await page.locator('[data-id="refreshAll"]').click();
+		await page.evaluate(() => window.promise);
+		await expect(page.locator('p')).toHaveText('active: true');
+		await expect(page.locator('span')).not.toHaveText(now);
+	});
+
+	test('invalidate resets page.state', async ({ page }) => {
+		await page.goto('/shallow-routing/refresh');
+		await expect(page.locator('p')).toHaveText('active: false');
+
+		const now = /** @type {string} */ (await page.locator('span').textContent());
+
+		await page.locator('[data-id="activate"]').click();
+		await expect(page.locator('p')).toHaveText('active: true');
+
+		await page.locator('[data-id="invalidate"]').click();
+		await page.evaluate(() => window.promise);
+		await expect(page.locator('p')).toHaveText('active: false');
+		await expect(page.locator('span')).not.toHaveText(now);
+	});
+
+	test('invalidateAll resets page.state', async ({ page }) => {
+		await page.goto('/shallow-routing/refresh');
+		await expect(page.locator('p')).toHaveText('active: false');
+
+		const now = /** @type {string} */ (await page.locator('span').textContent());
+
+		await page.locator('[data-id="activate"]').click();
+		await expect(page.locator('p')).toHaveText('active: true');
+
+		await page.locator('[data-id="invalidateAll"]').click();
+		await page.evaluate(() => window.promise);
+		await expect(page.locator('p')).toHaveText('active: false');
+		await expect(page.locator('span')).not.toHaveText(now);
 	});
 });
 
@@ -1811,7 +1871,7 @@ test.describe('reroute', () => {
 		expect(await page.textContent('h1')).toContain('Full Navigation');
 	});
 
-	test('reroute works with invalidate', async ({ page }) => {
+	test('reroute works with refresh', async ({ page }) => {
 		await page.goto('/reroute/invalidate/a');
 		await page.click('button');
 		await expect(page.locator('p')).toHaveText('data request: true');

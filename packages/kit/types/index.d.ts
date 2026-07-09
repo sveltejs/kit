@@ -1112,7 +1112,7 @@ declare module '@sveltejs/kit' {
 		 */
 		parent: () => Promise<ParentData>;
 		/**
-		 * This function declares that the `load` function has a _dependency_ on one or more URLs or custom identifiers, which can subsequently be used with [`invalidate()`](https://svelte.dev/docs/kit/$app-navigation#invalidate) to cause `load` to rerun.
+		 * This function declares that the `load` function has a _dependency_ on one or more URLs or custom identifiers, which can subsequently be used with [`refresh()`](https://svelte.dev/docs/kit/$app-navigation#refresh) to cause `load` to rerun.
 		 *
 		 * Most of the time you won't need this, as `fetch` calls `depends` on your behalf — it's only necessary if you're using a custom API client that bypasses `fetch`.
 		 *
@@ -1120,7 +1120,7 @@ declare module '@sveltejs/kit' {
 		 *
 		 * Custom identifiers have to be prefixed with one or more lowercase letters followed by a colon to conform to the [URI specification](https://www.rfc-editor.org/rfc/rfc3986.html).
 		 *
-		 * The following example shows how to use `depends` to register a dependency on a custom identifier, which is `invalidate`d after a button click, making the `load` function rerun.
+		 * The following example shows how to use `depends` to register a dependency on a custom identifier, which is `refresh`ed after a button click, making the `load` function rerun.
 		 *
 		 * ```js
 		 * /// file: src/routes/+page.js
@@ -1135,12 +1135,12 @@ declare module '@sveltejs/kit' {
 		 * ```html
 		 * /// file: src/routes/+page.svelte
 		 * <script>
-		 * 	import { invalidate } from '$app/navigation';
+		 * 	import { refresh } from '$app/navigation';
 		 *
 		 * 	let { data } = $props();
 		 *
 		 * 	const increase = async () => {
-		 * 		await invalidate('increase:count');
+		 * 		await refresh('increase:count');
 		 * 	}
 		 * </script>
 		 *
@@ -1783,7 +1783,7 @@ declare module '@sveltejs/kit' {
 		 */
 		parent: () => Promise<ParentData>;
 		/**
-		 * This function declares that the `load` function has a _dependency_ on one or more URLs or custom identifiers, which can subsequently be used with [`invalidate()`](https://svelte.dev/docs/kit/$app-navigation#invalidate) to cause `load` to rerun.
+		 * This function declares that the `load` function has a _dependency_ on one or more URLs or custom identifiers, which can subsequently be used with [`refresh()`](https://svelte.dev/docs/kit/$app-navigation#refresh) to cause `load` to rerun.
 		 *
 		 * Most of the time you won't need this, as `fetch` calls `depends` on your behalf — it's only necessary if you're using a custom API client that bypasses `fetch`.
 		 *
@@ -1791,7 +1791,7 @@ declare module '@sveltejs/kit' {
 		 *
 		 * Custom identifiers have to be prefixed with one or more lowercase letters followed by a colon to conform to the [URI specification](https://www.rfc-editor.org/rfc/rfc3986.html).
 		 *
-		 * The following example shows how to use `depends` to register a dependency on a custom identifier, which is `invalidate`d after a button click, making the `load` function rerun.
+		 * The following example shows how to use `depends` to register a dependency on a custom identifier, which is `refresh`ed after a button click, making the `load` function rerun.
 		 *
 		 * ```js
 		 * /// file: src/routes/+page.js
@@ -1806,12 +1806,12 @@ declare module '@sveltejs/kit' {
 		 * ```html
 		 * /// file: src/routes/+page.svelte
 		 * <script>
-		 * 	import { invalidate } from '$app/navigation';
+		 * 	import { refresh } from '$app/navigation';
 		 *
 		 * 	let { data } = $props();
 		 *
 		 * 	const increase = async () => {
-		 * 		await invalidate('increase:count');
+		 * 		await refresh('increase:count');
 		 * 	}
 		 * </script>
 		 *
@@ -3380,20 +3380,44 @@ declare module '$app/navigation' {
 	 *
 	 * invalidate((url) => url.pathname === '/path');
 	 * ```
+	 *
+	 * Note that this resets `page.state` to an empty object. If you want to preserve `page.state` (for example when using [shallow routing](https://svelte.dev/docs/kit/shallow-routing)), use `refresh` instead.
+	 *
+	 * @deprecated Use [`refresh`](https://svelte.dev/docs/kit/$app-navigation#refresh) instead. Unlike `invalidate`, `refresh` does not reset `page.state`.
 	 * @param resource The invalidated URL
 	 * */
 	export function invalidate(resource: string | URL | ((url: URL) => boolean)): Promise<void>;
 	/**
+	 * Causes any `load` functions belonging to the currently active page to re-run if they depend on the `url` in question, via `fetch` or `depends`. Returns a `Promise` that resolves when the page is subsequently updated.
+	 *
+	 * If the argument is given as a `string` or `URL`, it must resolve to the same URL that was passed to `fetch` or `depends` (including query parameters).
+	 * To create a custom identifier, use a string beginning with `[a-z]+:` (e.g. `custom:state`) — this is a valid URL.
+	 *
+	 * The `function` argument can be used define a custom predicate. It receives the full `URL` and causes `load` to rerun if `true` is returned.
+	 * This can be useful if you want to invalidate based on a pattern instead of a exact match.
+	 *
+	 * ```ts
+	 * // Example: Match '/path' regardless of the query parameters
+	 * import { refresh } from '$app/navigation';
+	 *
+	 * refresh((url) => url.pathname === '/path');
+	 * ```
+	 * @param resource The invalidated URL
+	 * */
+	export function refresh(resource: string | URL | ((url: URL) => boolean)): Promise<void>;
+	/**
 	 * Causes all `load` and `query` functions belonging to the currently active page to re-run. Returns a `Promise` that resolves when the page is subsequently updated.
+	 *
+	 * Note that this resets `page.state` to an empty object. If you want to preserve `page.state` (for example when using [shallow routing](https://svelte.dev/docs/kit/shallow-routing)), use `refreshAll` instead.
+	 *
+	 * @deprecated Use [`refreshAll`](https://svelte.dev/docs/kit/$app-navigation#refreshAll) instead. Unlike `invalidateAll`, `refreshAll` does not reset `page.state`.
 	 * */
 	export function invalidateAll(): Promise<void>;
 	/**
-	 * Causes all currently active remote functions to refresh, and all `load` functions belonging to the currently active page to re-run (unless disabled via the option argument).
+	 * Causes all currently active remote functions to refresh, and all `load` functions belonging to the currently active page to re-run.
 	 * Returns a `Promise` that resolves when the page is subsequently updated.
 	 * */
-	export function refreshAll({ includeLoadFunctions }?: {
-		includeLoadFunctions?: boolean;
-	}): Promise<void>;
+	export function refreshAll(): Promise<void>;
 	/**
 	 * Programmatically preloads the given page, which means
 	 *  1. ensuring that the code for the page is loaded, and

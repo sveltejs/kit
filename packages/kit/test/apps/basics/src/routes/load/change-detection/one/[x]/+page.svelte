@@ -1,5 +1,5 @@
 <script>
-	import { invalidate, invalidateAll } from '$app/navigation';
+	import { refresh, refreshAll } from '$app/navigation';
 
 	/** @type {import('./$types').PageData} */
 	export let data;
@@ -10,15 +10,15 @@
 <button
 	onclick={async () => {
 		window.invalidated = false;
-		await invalidate((url) => url.pathname.includes('change-detection/data.json'));
+		await refresh((url) => url.pathname.includes('change-detection/data.json'));
 		window.invalidated = true;
-	}}>invalidate change-detection/data.json</button
+	}}>refresh change-detection/data.json</button
 >
 
 <button
 	onclick={async () => {
 		window.invalidated = false;
-		await invalidateAll();
+		await refreshAll();
 		window.invalidated = true;
-	}}>invalidate all</button
+	}}>refresh all</button
 >
