@@ -1,5 +1,44 @@
 # @sveltejs/adapter-node
 
+## 5.5.7
+### Patch Changes
+
+
+- fix: add `X-Accel-Buffering: no` header to `text/event-stream` responses to prevent reverse proxies such as nginx from buffering streamed responses ([#16156](https://github.com/sveltejs/kit/pull/16156))
+
+
+- fix: delete existing socket file on startup ([#15449](https://github.com/sveltejs/kit/pull/15449))
+
+- Updated dependencies [[`c426c6e`](https://github.com/sveltejs/kit/commit/c426c6ede7ecd895f7808f2e434d7e8aa5062198), [`81f253e`](https://github.com/sveltejs/kit/commit/81f253eec901101ccbd59befe6aa23a244988476), [`8d3c865`](https://github.com/sveltejs/kit/commit/8d3c8653ff129ae57f69e957bc0b3a94f18a9e2d), [`6bde3b6`](https://github.com/sveltejs/kit/commit/6bde3b697778ef7f8ea4a1293ce3cbe3b8316dda), [`9161740`](https://github.com/sveltejs/kit/commit/9161740c0e4dc61e29d40ca95235639a0ce759c4), [`2184960`](https://github.com/sveltejs/kit/commit/21849601f5b3b552ee0c5628a5d39625c44ba7b9), [`5e319b6`](https://github.com/sveltejs/kit/commit/5e319b6892d584fa3c4dacbd212b51927c50a9dc), [`e82a0a8`](https://github.com/sveltejs/kit/commit/e82a0a8dd19defbe4ad11e36543c17a025004280)]:
+  - @sveltejs/kit@2.68.0
+
+## 5.5.6
+### Patch Changes
+
+
+- fix: avoid circular dependency between server initialisation and hook retrieval that causes the app to crash on start ([#16115](https://github.com/sveltejs/kit/pull/16115))
+
+
+- fix: correctly resolve root directory on the server ([#16114](https://github.com/sveltejs/kit/pull/16114))
+
+
+- fix: ensure `ENV_PREFIX` is defined ([#16106](https://github.com/sveltejs/kit/pull/16106))
+
+- Updated dependencies [[`cf15fa0`](https://github.com/sveltejs/kit/commit/cf15fa0f695f6059214bd3fa2c9b18a1f49efb20), [`5c76121`](https://github.com/sveltejs/kit/commit/5c76121be6e4bd7265d31b5821decebb372c3b75), [`2992e17`](https://github.com/sveltejs/kit/commit/2992e172bccd57bc137667c57e98e6710512d844)]:
+  - @sveltejs/kit@2.67.0
+
+## 5.5.5
+### Patch Changes
+
+
+- fix: bundle entrypoints alongside app code ([#16069](https://github.com/sveltejs/kit/pull/16069))
+
+
+- fix: log the actual adapter-node listening address ([#15899](https://github.com/sveltejs/kit/pull/15899))
+
+- Updated dependencies [[`63f1b0b`](https://github.com/sveltejs/kit/commit/63f1b0bd0ee2d16ef0c4d1f5bef35afd54d0304a), [`1dbff3f`](https://github.com/sveltejs/kit/commit/1dbff3fec2a335242af8b556c36513dbf9602ea5), [`961ba01`](https://github.com/sveltejs/kit/commit/961ba015ff4f69b954bcb7512a05ccd5ea180eb4), [`d2e108c`](https://github.com/sveltejs/kit/commit/d2e108c13925559c3433b9b46a71174a0f271253), [`d2e108c`](https://github.com/sveltejs/kit/commit/d2e108c13925559c3433b9b46a71174a0f271253), [`d2e108c`](https://github.com/sveltejs/kit/commit/d2e108c13925559c3433b9b46a71174a0f271253), [`860b3c7`](https://github.com/sveltejs/kit/commit/860b3c7d5f52b02fdd07d95305dfdb93357e0ead), [`f8c842c`](https://github.com/sveltejs/kit/commit/f8c842cb8bfb13235bfd6c44f913d51e9e2d70d6), [`d3aa5fe`](https://github.com/sveltejs/kit/commit/d3aa5fe9bdb8fd6bdf0dd75d4575fbcfa37fc560), [`0dd7659`](https://github.com/sveltejs/kit/commit/0dd7659d943e7e635947aed9e96c639e8167b1fb), [`03e9f66`](https://github.com/sveltejs/kit/commit/03e9f660edf026654d65b257d509d4ab190e6f7e), [`57b7b7b`](https://github.com/sveltejs/kit/commit/57b7b7b4f79283b36832450d8476a83cff007526), [`4eabadc`](https://github.com/sveltejs/kit/commit/4eabadca61440dfda690cdd4e8eeb0723fb94258), [`6fbf2b6`](https://github.com/sveltejs/kit/commit/6fbf2b64843123ac2676b04d56085d4c118a91b4), [`276744d`](https://github.com/sveltejs/kit/commit/276744da6585d743d720e8cbaa476bd67ac0fb48), [`8740132`](https://github.com/sveltejs/kit/commit/8740132952c2f7d908b4f1e795f942ad079895be), [`f430a68`](https://github.com/sveltejs/kit/commit/f430a68937744212d2b1bd0ee920cc89cc6f696f), [`1c7a8dc`](https://github.com/sveltejs/kit/commit/1c7a8dca3216b42ff4f69a712e794a485de4d4ee)]:
+  - @sveltejs/kit@2.66.0
+
 ## 5.5.4
 ### Patch Changes
 

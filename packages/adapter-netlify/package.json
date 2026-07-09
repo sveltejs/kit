@@ -38,21 +38,18 @@
 		"check": "tsc",
 		"lint": "prettier --check .",
 		"format": "pnpm lint --write",
-		"test": "pnpm test:integration",
 		"test:unit": "vitest run",
-		"test:integration": "pnpm build && pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test",
+		"test:build": "pnpm build && pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" build",
+		"test": "pnpm test:build",
 		"prepublishOnly": "pnpm build"
 	},
 	"dependencies": {
 		"@iarna/toml": "^2.2.5",
-		"esbuild": "^0.25.4"
+		"esbuild": "^0.28.1"
 	},
 	"devDependencies": {
-		"@netlify/dev": "catalog:",
 		"@netlify/edge-functions": "catalog:",
 		"@netlify/functions": "catalog:",
-		"@netlify/node-cookies": "^0.1.0",
-		"@netlify/types": "^2.1.0",
 		"@rollup/plugin-commonjs": "catalog:",
 		"@rollup/plugin-json": "catalog:",
 		"@rollup/plugin-node-resolve": "catalog:",

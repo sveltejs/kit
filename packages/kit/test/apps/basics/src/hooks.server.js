@@ -141,6 +141,11 @@ export const handle = sequence(
 	},
 	async ({ event, resolve }) => {
 		if (event.url.pathname.includes('/redirect/in-handle')) {
+			const location = event.url.searchParams.get('location');
+			if (location) {
+				redirect(307, location);
+			}
+
 			if (event.url.search === '?throw') {
 				redirect(307, event.url.origin + '/redirect/c');
 			} else if (event.url.search.includes('cookies')) {

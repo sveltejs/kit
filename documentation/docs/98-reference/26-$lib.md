@@ -12,7 +12,7 @@ A reusable component
 ```svelte
 <!--- file: src/routes/+page.svelte --->
 <script>
-    import Component from '$lib/Component.svelte';
+	import Component from '$lib/Component.svelte';
 </script>
 
 <Component />

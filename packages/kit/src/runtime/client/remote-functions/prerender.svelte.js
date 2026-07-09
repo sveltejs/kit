@@ -1,19 +1,21 @@
 /** @import { RemotePrerenderFunction } from '@sveltejs/kit' */
 import { app_dir, base } from '$app/paths/internal/client';
-import { version } from '__sveltekit/environment';
+import { version } from '$app/env';
 import * as devalue from 'devalue';
-import { DEV } from 'esm-env';
 import { app, prerender_responses } from '../client.js';
 import {
 	get_remote_request_headers,
+	handle_remote_redirect,
 	is_in_effect,
 	register_fork,
-	remote_request
+	remote_request,
+	unwrap_node
 } from './shared.svelte.js';
 import { create_remote_key, stringify_remote_arg } from '../../shared.js';
+import { noop } from '../../../utils/functions.js';
 
 // Initialize Cache API for prerender functions
-const CACHE_NAME = DEV ? `sveltekit:${Date.now()}` : `sveltekit:${version}`;
+const CACHE_NAME = __SVELTEKIT_DEV__ ? `sveltekit:${Date.now()}` : `sveltekit:${version}`;
 /** @type {Cache | undefined} */
 let prerender_cache;
 
@@ -81,7 +83,7 @@ export function prerender(id) {
 				const url = `${base}/${app_dir}/remote/${id}${payload ? `/${payload}` : ''}`;
 
 				if (Object.hasOwn(prerender_responses, cache_key)) {
-					const data = prerender_responses[cache_key];
+					const data = unwrap_node(prerender_responses[cache_key]);
 
 					if (prerender_cache) {
 						void put(url, devalue.stringify(data, app.encoders));
@@ -91,6 +93,7 @@ export function prerender(id) {
 				}
 
 				// Do this here, after await Svelte' reactivity context is gone.
+				// TODO we really don't want to be sending these specific headers here?
 				const headers = get_remote_request_headers();
 
 				// Check the Cache API first
@@ -107,14 +110,21 @@ export function prerender(id) {
 					}
 				}
 
-				const encoded = await remote_request(url, headers, cache_key);
+				const result = await remote_request(url, { headers });
+
+				if (result.redirect) {
+					await handle_remote_redirect(cache_key, result.redirect);
+					return;
+				}
+
+				const data = result._;
 
 				// For successful prerender requests, save to cache
 				if (prerender_cache) {
-					void put(url, encoded);
+					void put(url, devalue.stringify(data, app.encoders));
 				}
 
-				return devalue.parse(encoded, app.decoders);
+				return data;
 			});
 
 			prerender_resources.set(cache_key, new WeakRef(resource));
@@ -172,6 +182,10 @@ class Prerender {
 				throw error;
 			}
 		);
+
+		// rejections are surfaced via `.error` for reactive consumers — make sure the
+		// stored promise (consumed without `await`) never becomes an unhandled rejection
+		this.#promise.catch(noop);
 	}
 
 	/**

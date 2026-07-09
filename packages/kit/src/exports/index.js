@@ -106,7 +106,7 @@ export function isHttpError(e, status) {
  * @param {300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308 | ({} & number)} status The [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#redirection_messages). Must be in the range 300-308.
  * @param {string | URL} location The location to redirect to.
  * @throws {Redirect} This error instructs SvelteKit to redirect to the specified location.
- * @throws {Error} If the provided status is invalid.
+ * @throws {Error} If the provided status is invalid or the location cannot be used as a header value.
  * @return {never}
  */
 export function redirect(status, location) {

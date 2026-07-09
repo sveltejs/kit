@@ -775,6 +775,12 @@ test.describe('Static files', () => {
 			expect(await response.text()).toBe('hello');
 		});
 	}
+
+	test('returns 404 for Chrome DevTools workspaces request', async ({ request }) => {
+		const response = await request.get('/.well-known/appspecific/com.chrome.devtools.json');
+		expect(response.status()).toBe(404);
+		expect(await response.text()).toBe('not found');
+	});
 });
 
 test.describe('setHeaders', () => {

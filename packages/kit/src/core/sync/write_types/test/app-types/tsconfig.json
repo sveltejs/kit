@@ -2,7 +2,9 @@
 	"compilerOptions": {
 		"allowJs": true,
 		"checkJs": true,
+		"exactOptionalPropertyTypes": true,
 		"noEmit": true,
+		"strictNullChecks": true,
 		"target": "es2022",
 		"module": "es2022",
 		"moduleResolution": "bundler",
