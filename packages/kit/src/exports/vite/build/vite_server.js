@@ -9,7 +9,6 @@ import { exactRegex } from 'rolldown/filter';
 import sirv from 'sirv';
 import { getRequest, setResponse } from '@sveltejs/kit/node';
 import { sveltekit_ipc } from '../module_ids.js';
-import { dedent } from '../../../core/sync/utils.js';
 import {
 	check_feature,
 	create_app_dir_matcher,
@@ -17,10 +16,12 @@ import {
 	invalidate_module,
 	remove_static_middlewares
 } from '../dev/index.js';
-import { s } from '../../../utils/misc.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
-import { import_peer } from '../../../utils/import.js';
 import { get_port } from '../../../core/utils.js';
+import { dedent } from '../../../core/sync/utils.js';
+import { s } from '../../../utils/misc.js';
+import { import_peer } from '../../../utils/import.js';
+import { coalesce_to_error } from '../../../utils/error.js';
 
 /**
  * Spins up a Vite dev server along with the build output so that we can run
