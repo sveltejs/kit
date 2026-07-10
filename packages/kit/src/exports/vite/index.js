@@ -1,7 +1,8 @@
 /** @import { EnvVarConfig, KitConfig } from '@sveltejs/kit' */
 /** @import { Options, SvelteConfig } from '@sveltejs/vite-plugin-svelte' */
 /** @import { PreprocessorGroup } from 'svelte/compiler' */
-/** @import { Plugin, Manifest, ResolvedConfig, UserConfig, ViteDevServer, Rolldown } from 'vite' */
+/** @import { BuildData, ManifestData, Prerendered, ServerMetadata, RemoteInternals, ValidatedConfig, ValidatedKitConfig } from 'types' */
+/** @import { Manifest, Plugin, ResolvedConfig, Rolldown, UserConfig, ViteDevServer } from 'vite' */
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
@@ -60,6 +61,7 @@ import { process_config, split_config, validate_config } from '../../core/config
 import { treeshake_prerendered_remotes } from './build/remote.js';
 
 /**
+ * The posix-ified root of the project based on the Vite configuration.
  * Populated after Vite plugins' `config` hooks run
  * @type {string}
  */
@@ -265,14 +267,14 @@ function plugin_root() {
  * - https://rolldown.rs/apis/plugin-api#output-generation-hooks
  *
  * @param {object} opts
- * @param {import('types').ValidatedConfig} opts.svelte_config
+ * @param {ValidatedConfig} opts.svelte_config
  * @return {Plugin[]}
  */
 function kit({ svelte_config }) {
 	/** @type {typeof import('vite')} */
 	let vite;
 
-	/** @type {import('types').ValidatedKitConfig} */
+	/** @type {ValidatedKitConfig} */
 	let kit;
 	/** @type {string} `kit.outDir` but posix-ified */
 	let out_dir;
@@ -291,10 +293,10 @@ function kit({ svelte_config }) {
 	/** @type {Record<string, string>} */
 	let env;
 
-	/** @type {import('types').ManifestData} */
+	/** @type {ManifestData} */
 	let manifest_data;
 
-	/** @type {import('types').ServerMetadata | undefined} only set at build time once analysis is finished */
+	/** @type {ServerMetadata | undefined} only set at build time once analysis is finished */
 	let build_metadata = undefined;
 
 	/** @type {UserConfig} */
@@ -476,7 +478,7 @@ function kit({ svelte_config }) {
 				}
 
 				const define = {
-					__SVELTEKIT_APP_DIR__: s(kit.appDir),
+					__SVELTEKIT_APP_DIR__: s(posixify(kit.appDir)),
 					__SVELTEKIT_APP_VERSION__: s(kit.version.name),
 					__SVELTEKIT_EMBEDDED__: s(kit.embedded),
 					__SVELTEKIT_FORK_PRELOADS__: s(kit.experimental.forkPreloads),
@@ -486,7 +488,9 @@ function kit({ svelte_config }) {
 					__SVELTEKIT_CLIENT_ROUTING__: s(kit.router.resolution === 'client'),
 					__SVELTEKIT_HASH_ROUTING__: s(kit.router.type === 'hash'),
 					__SVELTEKIT_SERVER_TRACING_ENABLED__: s(kit.tracing.server),
-					__SVELTEKIT_EXPERIMENTAL_USE_TRANSFORM_ERROR__: s(kit.experimental.handleRenderingErrors),
+					__SVELTEKIT_SUPPORTS_ASYNC__: s(
+						svelte_config.compilerOptions?.experimental?.async ?? false
+					),
 					__SVELTEKIT_ROOT__: s(root),
 					__SVELTEKIT_DEV__: s(!is_build)
 				};
@@ -666,18 +670,18 @@ function kit({ svelte_config }) {
 
 					case sveltekit_server: {
 						return dedent`
-						export let read_implementation = null;
+							export let read_implementation = null;
 
-						export let manifest = null;
+							export let manifest = null;
 
-						export function set_read_implementation(fn) {
-							read_implementation = fn;
-						}
+							export function set_read_implementation(fn) {
+								read_implementation = fn;
+							}
 
-						export function set_manifest(_) {
-							manifest = _;
-						}
-					`;
+							export function set_manifest(_) {
+								manifest = _;
+							}
+						`;
 					}
 				}
 			}
@@ -937,7 +941,7 @@ function kit({ svelte_config }) {
 
 			// For the client, read the exports and create a new module that only contains fetch functions with the correct metadata
 
-			/** @type {Map<string, import('types').RemoteInternals['type']>} */
+			/** @type {Map<string, RemoteInternals['type']>} */
 			const map = new Map();
 
 			// in dev, load the server module here (which will result in this hook
@@ -1011,7 +1015,7 @@ function kit({ svelte_config }) {
 	let vite_server_manifest;
 	/** @type {Manifest | null} */
 	let vite_client_manifest = null;
-	/** @type {import('types').Prerendered} */
+	/** @type {Prerendered} */
 	let prerendered;
 
 	/** @type {Set<string>} */
@@ -1392,7 +1396,7 @@ function kit({ svelte_config }) {
 										}
 									}
 								},
-								// during the initial server build we don't know yet
+								// these are stubs that will be replaced after the initial server build
 								define: {
 									__SVELTEKIT_HAS_SERVER_LOAD__: 'true',
 									__SVELTEKIT_HAS_UNIVERSAL_LOAD__: 'true',
@@ -1481,16 +1485,16 @@ function kit({ svelte_config }) {
 		 * Adds the SvelteKit middleware to do SSR in dev mode.
 		 * @see https://vitejs.dev/guide/api-plugin.html#configureserver
 		 */
-		async configureServer(vite) {
-			return await dev(vite, vite_config, svelte_config, () => remotes, root);
+		async configureServer(server) {
+			return await dev(server, vite_config, svelte_config, () => remotes, root);
 		},
 
 		/**
 		 * Adds the SvelteKit middleware to do SSR in preview mode.
 		 * @see https://vitejs.dev/guide/api-plugin.html#configurepreviewserver
 		 */
-		configurePreviewServer(vite) {
-			return preview(vite, vite_config, svelte_config);
+		configurePreviewServer(server) {
+			return preview(server, vite_config, svelte_config);
 		},
 
 		applyToEnvironment(environment) {
@@ -1538,13 +1542,13 @@ function kit({ svelte_config }) {
 				await builder.build(builder.environments.ssr)
 			);
 
-			const verbose = vite_config.logLevel === 'info';
+			const verbose = builder.config.logLevel === 'info';
 			const log = logger({ verbose });
 
 			/** @type {Manifest} */
 			vite_server_manifest = JSON.parse(read(`${out}/server/.vite/manifest.json`));
 
-			/** @type {import('types').BuildData} */
+			/** @type {BuildData} */
 			const build_data = {
 				app_dir: kit.appDir,
 				app_path: `${kit.paths.base.slice(1)}${kit.paths.base ? '/' : ''}${kit.appDir}`,
@@ -1966,7 +1970,7 @@ function find_overridden_config(config, resolved_config, enforced_config, path, 
 }
 
 /**
- * @param {import('types').ValidatedConfig} config
+ * @param {ValidatedConfig} config
  */
 const create_service_worker_module = (config) => dedent`
 	if (typeof self === 'undefined' || self instanceof ServiceWorkerGlobalScope === false) {

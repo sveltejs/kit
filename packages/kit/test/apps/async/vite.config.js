@@ -17,7 +17,6 @@ const config = {
 
 			experimental: {
 				remoteFunctions: true,
-				handleRenderingErrors: true,
 				forkPreloads: true
 			}
 		})

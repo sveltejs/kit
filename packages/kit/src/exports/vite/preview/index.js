@@ -1,3 +1,6 @@
+/** @import { NextHandleFunction } from 'connect' */
+/** @import { PreviewServer, ResolvedConfig } from 'vite' */
+/** @import { ValidatedConfig, ServerInternalModule, ServerModule } from 'types' */
 import fs from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -8,14 +11,10 @@ import { createReadableStream, getRequest, setResponse } from '../../../exports/
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import { is_chrome_devtools_request, not_found } from '../utils.js';
 
-/** @typedef {import('http').IncomingMessage} Req */
-/** @typedef {import('http').ServerResponse} Res */
-/** @typedef {(req: Req, res: Res, next: () => void) => void} Handler */
-
 /**
- * @param {import('vite').PreviewServer} vite
- * @param {import('vite').ResolvedConfig} vite_config
- * @param {import('types').ValidatedConfig} svelte_config
+ * @param {PreviewServer} vite
+ * @param {ResolvedConfig} vite_config
+ * @param {ValidatedConfig} svelte_config
  */
 export async function preview(vite, vite_config, svelte_config) {
 	const { paths } = svelte_config.kit;
@@ -37,10 +36,10 @@ export async function preview(vite, vite_config, svelte_config) {
 		await import(pathToFileURL(instrumentation).href);
 	}
 
-	/** @type {import('types').ServerInternalModule} */
+	/** @type {ServerInternalModule} */
 	const { set_assets } = await import(pathToFileURL(join(dir, 'internal.js')).href);
 
-	/** @type {import('types').ServerModule} */
+	/** @type {ServerModule} */
 	const { Server } = await import(pathToFileURL(join(dir, 'index.js')).href);
 
 	const { manifest } = await import(pathToFileURL(join(dir, 'manifest.js')).href);
@@ -204,12 +203,12 @@ export async function preview(vite, vite_config, svelte_config) {
 		vite.middlewares.use(async (req, res) => {
 			const host = req.headers[':authority'] || req.headers.host;
 
-			const request = await getRequest({
+			const request = getRequest({
 				base: `${protocol}://${host}`,
 				request: req
 			});
 
-			await setResponse(
+			setResponse(
 				res,
 				await server.respond(request, {
 					getClientAddress: () => {
@@ -233,7 +232,7 @@ export async function preview(vite, vite_config, svelte_config) {
 
 /**
  * @param {string} dir
- * @returns {Handler}
+ * @returns {NextHandleFunction}
  */
 const mutable = (dir) =>
 	fs.existsSync(dir)
@@ -245,8 +244,8 @@ const mutable = (dir) =>
 
 /**
  * @param {string} scope
- * @param {Handler} handler
- * @returns {Handler}
+ * @param {NextHandleFunction} handler
+ * @returns {NextHandleFunction}
  */
 function scoped(scope, handler) {
 	if (scope === '') return handler;

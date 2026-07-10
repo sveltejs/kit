@@ -157,7 +157,8 @@ export interface Builder {
 
 	/**
 	 * Generate a server-side manifest to initialise the SvelteKit [server](https://svelte.dev/docs/kit/@sveltejs-kit#Server) with.
-	 * @param opts a relative path to the base directory of the app and optionally in which format (esm or cjs) the manifest should be generated
+	 * @param opts
+	 * @param opts.relativePath  A relative path to the base directory of the server build output
 	 */
 	generateManifest: (opts: { relativePath: string; routes?: RouteDefinition[] }) => string;
 
@@ -509,15 +510,6 @@ export interface KitConfig {
 		 * @default false
 		 */
 		forkPreloads?: boolean;
-
-		/**
-		 * Whether to enable the experimental handling of rendering errors.
-		 * When enabled, `<svelte:boundary>` is used to wrap components at each level
-		 * where there's an `+error.svelte`, rendering the error page if the component fails.
-		 * In addition, error boundaries also work on the server and the error object goes through `handleError`.
-		 * @default false
-		 */
-		handleRenderingErrors?: boolean;
 	};
 	/**
 	 * Where to find various files within your project.
@@ -1439,7 +1431,7 @@ export interface Page<
 	/**
 	 * The URL of the current page.
 	 */
-	url: URL & { pathname: ResolvedPathname };
+	url: ReadonlyURL & { readonly pathname: ResolvedPathname | (string & {}) };
 	/**
 	 * The parameters of the current page - e.g. for a route like `/blog/[slug]`, a `{ slug: string }` object.
 	 */
@@ -1777,19 +1769,24 @@ export interface ServerInitOptions {
 	read?: (file: string) => MaybePromise<ReadableStream | null>;
 }
 
+/**
+ * Information required to instantiate a new `Server` instance.
+ */
 export interface SSRManifest {
+	/** The directory where SvelteKit keeps its stuff, including static assets (such as JS and CSS) and internally-used routes. */
 	appDir: string;
+	/** The `base` and `appDir` settings combined without a leading slash. */
 	appPath: string;
 	/** Static files from `config.files.assets` and the service worker (if any). */
 	assets: Set<string>;
 	mimeTypes: Record<string, string>;
 
-	/** private fields */
+	/** @internal private fields */
 	_: {
 		client: BuildData['client'];
 		nodes: SSRNodeLoader[];
 		/** hashed filename -> import to that file */
-		remotes: Record<string, () => Promise<any>>;
+		remotes: Record<string, () => Promise<{ default: Record<string, any> }>>;
 		routes: SSRRoute[];
 		prerendered_routes: Set<string>;
 		matchers: () => Promise<Record<string, ParamMatcher>>;
@@ -1979,6 +1976,14 @@ export interface Snapshot<T = any> {
 	capture: () => T;
 	restore: (snapshot: T) => void;
 }
+
+export type ReadonlyURLSearchParams = Omit<URLSearchParams, 'set' | 'append' | 'delete' | 'sort'>;
+
+export type ReadonlyURL = Readonly<
+	Omit<URL, 'searchParams'> & {
+		searchParams: ReadonlyURLSearchParams;
+	}
+>;
 
 // If T is unknown or has an index signature, the types below will recurse indefinitely and create giant unions that TS can't handle
 type WillRecurseIndefinitely<T> = unknown extends T ? true : string extends keyof T ? true : false;

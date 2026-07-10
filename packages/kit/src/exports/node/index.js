@@ -119,11 +119,9 @@ function get_raw_body(req, body_size_limit) {
  *   base: string;
  *   bodySizeLimit?: number;
  * }} options
- * @returns {Promise<Request>}
+ * @returns {Request}
  */
-// TODO 3.0 make the signature synchronous?
-// eslint-disable-next-line @typescript-eslint/require-await
-export async function getRequest({ request, base, bodySizeLimit }) {
+export function getRequest({ request, base, bodySizeLimit }) {
 	let headers = /** @type {Record<string, string>} */ (request.headers);
 	if (request.httpVersionMajor >= 2) {
 		// the Request constructor rejects headers with ':' in the name
@@ -205,11 +203,9 @@ function drain_request(res) {
 /**
  * @param {import('http').ServerResponse} res
  * @param {Response} response
- * @returns {Promise<void>}
+ * @returns {void}
  */
-// TODO 3.0 make the signature synchronous?
-// eslint-disable-next-line @typescript-eslint/require-await
-export async function setResponse(res, response) {
+export function setResponse(res, response) {
 	res.once('finish', () => drain_request(res));
 	res.once('close', () => drain_request(res));
 

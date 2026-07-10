@@ -8,6 +8,7 @@ import { hash } from '../utils/hash.js';
 import { posixify } from '../utils/os.js';
 
 /**
+<<<<<<< version-chunk-rotation-fix
  * Returns a deterministic identifier for the `globalThis.__sveltekit_${payload_hash}`
  * payload global.
  *
@@ -44,6 +45,9 @@ export function payload_hash(kit) {
 
 /**
  * Resolved path of the `runtime` directory
+=======
+ * Resolved path of the `runtime` directory posix-ified
+>>>>>>> version-3
  *
  * TODO Windows issue:
  * Vite or sth else somehow sets the driver letter inconsistently to lower or upper case depending on the run environment.
@@ -61,7 +65,7 @@ export const runtime_directory = posixify(fileURLToPath(new URL('../runtime', im
  */
 export function get_runtime_base(root) {
 	return runtime_directory.startsWith(root)
-		? `/${path.relative(root, runtime_directory)}`
+		? `/${posixify(path.relative(root, runtime_directory))}`
 		: to_fs(runtime_directory);
 }
 
