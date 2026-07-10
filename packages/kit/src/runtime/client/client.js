@@ -2409,7 +2409,22 @@ export async function preloadData(href) {
 		throw new Error(`Attempted to preload a URL that does not belong to this app: ${url}`);
 	}
 
-	const result = await _preload_data(intent);
+	/** @type {Awaited<ReturnType<typeof _preload_data>>} */
+	let result;
+
+	try {
+		result = await _preload_data(intent);
+	} catch (error) {
+		// `load_route` throws the handled error (an `App.Error` with a `status`)
+		// when a preload fails, so surface it in the documented `{ type: 'error' }` shape
+		const handled = /** @type {App.Error & { status?: number }} */ (error);
+		return {
+			type: 'error',
+			status: handled?.status ?? 500,
+			error: handled
+		};
+	}
+
 	if (result.type === 'redirect') {
 		return {
 			type: result.type,
@@ -2419,14 +2434,6 @@ export async function preloadData(href) {
 	}
 
 	const { status, data } = result.props.page ?? page;
-
-	if (result.type === 'loaded' && result.state.error) {
-		return {
-			type: 'error',
-			status,
-			error: result.state.error
-		};
-	}
 
 	return { type: result.type, status, data };
 }
