@@ -412,7 +412,7 @@ export async function render_response({
 
 		const blocks = [];
 
-		const properties = [`base: ${base_expression}`];
+		const properties = [`base: ${base_expression}`, `version: ${s(__SVELTEKIT_APP_VERSION__)}`];
 
 		if (paths.assets) {
 			properties.push(`assets: ${s(paths.assets)}`);
@@ -435,7 +435,9 @@ export async function render_response({
 				if (client.inline) {
 					app_declaration = `const app = ${global}.app.app;`;
 				} else if (client.app) {
-					app_declaration = `const app = await import(${s(prefixed(client.app))});`;
+					app_declaration = `const kit = await import(${s(prefixed(client.start))});
+							kit.init(${global});
+							const app = await import(${s(prefixed(client.app))});`;
 				} else {
 					app_declaration = `const { app } = await import(${s(prefixed(client.start))});`;
 				}
@@ -529,10 +531,9 @@ export async function render_response({
 
 					${serialized_data}${global}.app.start(${args.join(', ')});`
 			: client.app
-				? `Promise.all([
-						import(${s(prefixed(client.start))}),
-						import(${s(prefixed(client.app))})
-					]).then(([kit, app]) => {
+				? `import(${s(prefixed(client.start))}).then(async (kit) => {
+						kit.init(${global});
+						const app = await import(${s(prefixed(client.app))});
 						${serialized_data}kit.start(app, ${args.join(', ')});
 					});`
 				: `import(${s(prefixed(client.start))}).then((app) => {

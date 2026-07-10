@@ -763,5 +763,23 @@ export interface RequestStore {
 	state: RequestState;
 }
 
+/** Type of the `__sveltekit_abc123` object in the init `<script>` */
+export interface SvelteKitPayload {
+	/** The application version */
+	version: string;
+	/** The basepath, usually relative to the current page */
+	base: string;
+	/** Path to externally-hosted assets */
+	assets?: string;
+	/** Public environment variables */
+	env?: Record<string, string>;
+	/** Serialized data from query/form/command functions */
+	data?: RemoteFunctionData;
+	/** Create a placeholder promise */
+	defer?: (id: number) => Promise<any>;
+	/** Resolve a placeholder promise */
+	resolve?: (data: { id: number; data: any; error: any }) => void;
+}
+
 export * from '../exports/index.js';
 export * from './private.js';
