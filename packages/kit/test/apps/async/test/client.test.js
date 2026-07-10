@@ -1177,6 +1177,68 @@ test.describe('client error boundaries', () => {
 		// The nested layout should still be visible
 		await expect(page.locator('#nested-layout')).toBeVisible();
 	});
+
+	test('client navigation away from a render error tears down the stale +error.svelte', async ({
+		page,
+		app
+	}) => {
+		await page.goto('/');
+		await app.goto('/server-error-boundary');
+		await expect(page.locator('#message')).toContainText(
+			'render error (500 Internal Error, on /server-error-boundary)'
+		);
+
+		await app.goto('/');
+		await expect(page.locator('#message')).toHaveCount(0);
+		await expect(page.locator('h3')).toHaveText('Tests');
+	});
+
+	test('client navigation away from a nested render error tears down the stale +error.svelte', async ({
+		page,
+		app
+	}) => {
+		await page.goto('/');
+		await app.goto('/server-error-boundary/nested');
+		await expect(page.locator('#nested-error-message')).toBeVisible();
+
+		await app.goto('/');
+		await expect(page.locator('#nested-error-message')).toHaveCount(0);
+		await expect(page.locator('#nested-layout')).toHaveCount(0);
+		await expect(page.locator('h3')).toHaveText('Tests');
+	});
+
+	test('client navigation away from an async render error tears down the stale +error.svelte', async ({
+		page,
+		app
+	}) => {
+		await page.goto('/');
+		await app.goto('/server-error-boundary/async');
+		// the awaited throw surfaces as a 404 through the root error boundary
+		await expect(page.locator('h1')).toHaveText('404');
+
+		await app.goto('/');
+		await expect(page.locator('#message')).toHaveCount(0);
+		await expect(page.locator('h3')).toHaveText('Tests');
+	});
+
+	test('client navigation using preloaded data away from a render error tears down the stale +error.svelte', async ({
+		page,
+		app
+	}) => {
+		await page.goto('/');
+		await app.goto('/server-error-boundary');
+		await expect(page.locator('#message')).toContainText('render error');
+
+		// preloading the home route creates a fork (forkPreloads is enabled);
+		// navigating via that fork must still tear down the failed boundary (#15694)
+		await app.preloadData('/');
+		await page.evaluate(() => new Promise((r) => setTimeout(r, 0)));
+		await page.locator('#error-home').click();
+		await expect(page).toHaveURL('/');
+		await expect(page.locator('#message')).toHaveCount(0);
+		await expect(page.locator('h3')).toHaveText('Tests');
+	});
+
 	test('redirecting from form clears result', async ({ page }) => {
 		await page.goto('/remote/form/reset-on-redirect');
 
