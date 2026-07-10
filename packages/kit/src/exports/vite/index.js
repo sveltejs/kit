@@ -981,7 +981,7 @@ async function kit({ svelte_config }) {
 
 				if (is_build) {
 					const ssr = /** @type {boolean} */ (config.build?.ssr);
-					const prefix = `${kit.appDir}/immutable`;
+					const app_immutable = `${kit.appDir}/immutable`;
 
 					/** @type {Record<string, string>} */
 					const input = {};
@@ -1071,9 +1071,9 @@ async function kit({ svelte_config }) {
 
 					/** @type {string} */
 					const base = (kit.paths.assets || kit.paths.base) + '/';
-					const root_to_assets = prefix + '/assets/';
+					const root_to_assets = app_immutable + '/assets/';
 					const assets_to_root =
-						prefix
+						app_immutable
 							.split('/')
 							.map(() => '..')
 							.join('/') + '/../';
@@ -1099,9 +1099,11 @@ async function kit({ svelte_config }) {
 								output: {
 									format: inline ? 'iife' : 'esm',
 									name: `__sveltekit_${version_hash}.app`,
-									entryFileNames: ssr ? '[name].js' : `${prefix}/[name].[hash].${ext}`,
-									chunkFileNames: ssr ? 'chunks/[name].js' : `${prefix}/chunks/[hash].${ext}`,
-									assetFileNames: `${prefix}/assets/[name].[hash][extname]`,
+									entryFileNames: ssr ? '[name].js' : `${app_immutable}/[name].[hash].${ext}`,
+									chunkFileNames: ssr
+										? 'chunks/[name].js'
+										: `${app_immutable}/chunks/[hash].${ext}`,
+									assetFileNames: `${app_immutable}/assets/[name].[hash][extname]`,
 									hoistTransitiveImports: false,
 									sourcemapIgnoreList,
 									inlineDynamicImports: is_rolldown ? undefined : !split
@@ -1129,9 +1131,9 @@ async function kit({ svelte_config }) {
 						worker: {
 							rollupOptions: {
 								output: {
-									entryFileNames: `${prefix}/workers/[name]-[hash].js`,
-									chunkFileNames: `${prefix}/workers/chunks/[hash].js`,
-									assetFileNames: `${prefix}/workers/assets/[name]-[hash][extname]`,
+									entryFileNames: `${app_immutable}/workers/[name]-[hash].js`,
+									chunkFileNames: `${app_immutable}/workers/chunks/[hash].js`,
+									assetFileNames: `${app_immutable}/workers/assets/[name]-[hash][extname]`,
 									hoistTransitiveImports: false
 								}
 							}
@@ -1150,6 +1152,11 @@ async function kit({ svelte_config }) {
 									// causing us to do a more expensive hydration check.
 									return { relative };
 								}
+
+								if (!relative) return;
+
+								// ensure assets loaded by CSS files are loaded relative to the
+								// CSS file rather than the default of relative to the root
 
 								// _app/immutable/assets files
 								if (filename.startsWith(root_to_assets)) {
