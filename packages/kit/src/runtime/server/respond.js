@@ -221,7 +221,7 @@ export async function internal_respond(request, state) {
 					// appendHeaders-style for Server-Timing https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Server-Timing
 					if (lower === 'server-timing') {
 						headers[lower] += ', ' + value;
-					} else {
+					} else if (!state.error) {
 						throw new Error(`"${key}" header is already set`);
 					}
 				} else {
