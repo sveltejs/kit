@@ -19,15 +19,7 @@ declare module 'vite/types/customEvent.d.ts' {
 			endpoints_page_options: Array<PageOptions | null | undefined>;
 		};
 		'sveltekit:ssr-load-module-error': Error;
-		'sveltekit:prerender-assets': string;
 	}
-}
-
-export interface SerialisedResponse {
-	status: number;
-	statusText: string;
-	headers: Record<string, string>;
-	body: ArrayBuffer;
 }
 
 export interface EnforcedConfig {
