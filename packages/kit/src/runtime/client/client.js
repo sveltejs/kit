@@ -2293,6 +2293,8 @@ export function disableScrollHandling() {
 	}
 }
 
+let warned_on_invalidate_all = false;
+
 /**
  * Allows you to navigate programmatically to a given route, with options such as keeping the current element focused.
  * Returns a Promise that resolves when SvelteKit navigates (or fails to navigate, in which case the promise rejects) to the specified `url`.
@@ -2334,6 +2336,13 @@ export async function goto(url, opts = {}) {
 			DEV
 				? `Cannot use \`goto\` with a URL that does not resolve to a route within the app. Use \`window.location = "${url}"\` instead`
 				: 'goto: invalid URL'
+		);
+	}
+
+	if (DEV && 'invalidateAll' in opts && !warned_on_invalidate_all) {
+		warned_on_invalidate_all = true;
+		console.warn(
+			`The \`goto(..., { invalidateAll: ${opts.invalidateAll} })\` option has been deprecated in favour of \`refreshAll\``
 		);
 	}
 
