@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix: don't disable CSRF protection in builds with a non-production NODE_ENV
+fix: enable CSRF protection in builds with a non-production `NODE_ENV` value
