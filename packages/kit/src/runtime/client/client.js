@@ -1155,7 +1155,8 @@ function preload_error({ error, url, route, params }) {
 				...page,
 				status: error.status
 			},
-			constructors: []
+			// TODO understand why this is never used
+			root: /** @type {RenderNode} */ ({})
 		}
 	};
 }

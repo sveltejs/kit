@@ -1,4 +1,4 @@
-import { SvelteComponent } from 'svelte';
+import { Component } from 'svelte';
 import {
 	Config,
 	ServerLoad,
@@ -113,7 +113,7 @@ export interface BuildData {
 }
 
 export interface CSRPageNode {
-	component: typeof SvelteComponent;
+	component: Component;
 	universal: {
 		load?: Load;
 		trailingSlash?: TrailingSlash;
