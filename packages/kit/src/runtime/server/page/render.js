@@ -1,6 +1,5 @@
 /** @import { RenderNode } from '../../types.js' */
 import * as devalue from 'devalue';
-import { readable } from 'svelte/store';
 import { DEV } from 'esm-env';
 import { isRedirect, text } from '@sveltejs/kit';
 import * as paths from '$app/paths/internal/server';
