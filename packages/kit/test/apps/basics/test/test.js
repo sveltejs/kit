@@ -1255,6 +1255,18 @@ test.describe('Actions', () => {
 		await expect(page.locator('input[name=username]')).toHaveValue('');
 	});
 
+	test('use:enhance renders an error page for a non-ActionResult error response', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		test.skip(!javaScriptEnabled, 'Skip when JavaScript is disabled');
+		await page.goto('/actions/enhance-non-action-response');
+		await page.locator('button').click();
+
+		await expect(page.locator('h1')).toHaveText('403');
+		await expect(page.locator('p')).toHaveText('Cross-site POST form submissions are forbidden');
+	});
+
 	test('use:enhance abort controller', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/actions/enhance');
 
