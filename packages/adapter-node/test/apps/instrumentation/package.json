@@ -7,7 +7,7 @@
 		"dev": "vite dev",
 		"build": "vite build",
 		"prepare": "svelte-kit sync || echo ''",
-		"test": "pnpm build && node test/boot.js"
+		"test": "MY_BASE_URL=https://api.example pnpm build && node test/boot.js"
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:^",
