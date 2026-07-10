@@ -115,7 +115,12 @@ async function analyse({
 		const prerender = page?.prerender ?? endpoint?.prerender;
 
 		if (prerender !== true) {
-			for (const _ of list_features(route, manifest_data, server_manifest, tracked_features)) {
+			for (const _ of list_features(
+				route,
+				manifest_data,
+				server_manifest,
+				tracked_features
+			)) {
 				// TODO: check feature while inside the environment
 			}
 		}
