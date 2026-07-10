@@ -2423,7 +2423,7 @@ declare module '@sveltejs/kit' {
 		public?: boolean;
 		/**
 		 * When the variable's value is available, and therefore when it is validated.
-		 * - `'dynamic'` — the value is validated and used during runtime and buildtime.
+		 * - `'dynamic'` — the value is validated and used during runtime and build time.
 		 * - `'inline'` — the value is inlined into your application code at build time, enabling optimisations like dead-code elimination. It is validated at build time.
 		 * - `'runtime'` — the value is validated and used during runtime only. The value is `undefined` during the build, so the variable is typed as `T | undefined`.
 		 * @default 'dynamic'
