@@ -110,6 +110,16 @@ export function build_server_nodes(
 	/** path to the `.svelte-kit` directory */
 	const out_dir = normalizePath(kit.outDir);
 
+	/** @type {string[] | undefined} */
+	let root_stylesheets;
+	if (client_manifest && kit.output.bundleStrategy === 'split') {
+		root_stylesheets = find_deps(
+			client_manifest,
+			`${normalizePath(kit.outDir)}/generated/client-optimized/app.js`,
+			false
+		).stylesheets;
+	}
+
 	for (let i = 0; i < manifest_data.nodes.length; i++) {
 		const node = manifest_data.nodes[i];
 
@@ -185,6 +195,9 @@ export function build_server_nodes(
 				universal = find_deps(server_manifest, node.universal, true);
 			}
 
+			/** @type {Set<string>} */
+			const eager_css = new Set(root_stylesheets);
+
 			if (client_manifest) {
 				const entry_path = `${out_dir}/generated/client-optimized/nodes/${i}.js`;
 				const entry = find_deps(client_manifest, entry_path, true);
@@ -192,9 +205,6 @@ export function build_server_nodes(
 				// Eagerly load client stylesheets and fonts imported by the SSR-ed page to avoid FOUC.
 				// However, if it is not used during SSR (not present in the server manifest),
 				// then it can be lazily loaded in the browser.
-
-				/** @type {Set<string>} */
-				const eager_css = new Set();
 
 				entry.stylesheet_map.forEach((value, filepath) => {
 					// pages and layouts are renamed to node indexes when optimised for the client
@@ -213,6 +223,7 @@ export function build_server_nodes(
 				stylesheets = Array.from(eager_css);
 				fonts = filter_fonts(Array.from(eager_assets));
 			} else {
+				stylesheets.push(...eager_css);
 				for (const entry of [component, universal]) {
 					if (!entry) continue;
 					imported.push(...entry.imports);
