@@ -205,9 +205,28 @@ export function enhance(form_element, submit = noop) {
 			if (response.status === 204) {
 				result = { type: 'success', status: 204 };
 			} else {
-				result = deserialize(await response.text());
-				if (result.type === 'error' || result.type === 'failure') {
-					result.status = response.status;
+				const parsed = /** @type {any} */ (deserialize(await response.text()));
+
+				if (
+					parsed?.type === 'success' ||
+					parsed?.type === 'failure' ||
+					parsed?.type === 'redirect' ||
+					parsed?.type === 'error'
+				) {
+					result = parsed;
+					if (result.type === 'error' || result.type === 'failure') {
+						result.status = response.status;
+					}
+				} else if (!response.ok) {
+					// the action never ran, e.g. the CSRF check rejected the request
+					// `status` on the error object is where the client reads the page status from
+					result = {
+						type: 'error',
+						status: response.status,
+						error: { ...parsed, status: response.status }
+					};
+				} else {
+					result = parsed;
 				}
 			}
 		} catch (error) {
