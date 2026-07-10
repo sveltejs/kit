@@ -7,7 +7,7 @@
 		page: Page;
 		root: RenderNode;
 		components: any[];
-		resetters: Array<() => void>;
+		resetters: Array<(() => void) | undefined>;
 		form?: any;
 		error?: App.Error;
 	}

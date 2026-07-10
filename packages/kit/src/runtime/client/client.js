@@ -636,16 +636,13 @@ async function _preload_data(intent) {
 		load_cache = {
 			id: intent.id,
 			token: preload,
-			promise: load_route({ ...intent, preload }).then((result) => {
+			promise: load_route({ ...intent, preload }).finally(() => {
 				preload_tokens.delete(preload);
-				if (result.type === 'loaded' && result.state.error) {
-					// Don't cache errors, because they might be transient
-					discard_load_cache();
-				}
-				return result;
 			}),
 			fork: null
 		};
+
+		load_cache.promise.catch(discard_load_cache);
 
 		if (__SVELTEKIT_FORK_PRELOADS__ && svelte.fork) {
 			const lc = load_cache;
@@ -1146,33 +1143,6 @@ function diff_search_params(old_url, new_url) {
 }
 
 /**
- * @param {Omit<import('./types.js').NavigationFinished['state'], 'branch'> & { error: App.Error }} opts
- * @returns {import('./types.js').NavigationFinished}
- */
-function preload_error({ error, url, route, params }) {
-	return {
-		type: 'loaded',
-		state: {
-			error,
-			url,
-			route,
-			params,
-			branch: []
-		},
-		props: {
-			page: {
-				// we skipped loading the error page, so we have to use the current page
-				// store, but update the status received while preloading
-				...page,
-				status: error.status
-			},
-			// TODO understand why this is never used
-			root: /** @type {RenderNode} */ ({})
-		}
-	};
-}
-
-/**
  * @overload
  * @param {import('./types.js').NavigationIntent} intent
  * @returns {Promise<import('./types.js').NavigationResult | undefined>}
@@ -1242,7 +1212,7 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 				const handled_error = await handle_error(error, { url, params, route: { id } });
 
 				if (preload && preload_tokens.has(preload)) {
-					return preload_error({ error: handled_error, url, params, route });
+					throw handled_error;
 				}
 
 				return load_root_error_page({
@@ -1332,13 +1302,7 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 				}
 
 				if (preload && preload_tokens.has(preload)) {
-					const error = await handle_error(err, { params, url, route: { id: route.id } });
-					return preload_error({
-						error,
-						url,
-						params,
-						route
-					});
+					throw await handle_error(err, { params, url, route: { id: route.id } });
 				}
 
 				/** @type {App.Error} */
@@ -2166,15 +2130,13 @@ function setup_preload() {
 			if (!intent) return;
 
 			if (DEV) {
-				void _preload_data(intent).then((result) => {
-					if (result.type === 'loaded' && result.state.error) {
-						console.warn(
-							`Preloading data for ${intent.url.pathname} failed with the following error: ${result.state.error.message}\n` +
-								'If this error is transient, you can ignore it. Otherwise, consider disabling preloading for this route. ' +
-								'This route was preloaded due to a data-sveltekit-preload-data attribute. ' +
-								'See https://svelte.dev/docs/kit/link-options for more info'
-						);
-					}
+				void _preload_data(intent).catch((error) => {
+					console.warn(
+						`Preloading data for ${intent.url.pathname} failed with the following error: ${error.message}\n` +
+							'If this error is transient, you can ignore it. Otherwise, consider disabling preloading for this route. ' +
+							'This route was preloaded due to a data-sveltekit-preload-data attribute. ' +
+							'See https://svelte.dev/docs/kit/link-options for more info'
+					);
 				});
 			} else {
 				void _preload_data(intent);
