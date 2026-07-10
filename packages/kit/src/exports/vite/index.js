@@ -7,6 +7,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
+import { pathToFileURL } from 'node:url';
 import { styleText } from 'node:util';
 import * as devalue from 'devalue';
 import { loadEnv } from 'vite';
@@ -1895,7 +1896,7 @@ function kit({ svelte_config }) {
 				routes: manifest_data.routes,
 				params_path: manifest_data.params,
 				root,
-				load: (file) => import(file)
+				load: (file) => import(pathToFileURL(file).href)
 			});
 
 			const { output: server_chunks } = /** @type {Rolldown.RolldownOutput} */ (
