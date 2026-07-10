@@ -28,11 +28,6 @@ import { render } from 'svelte/server';
 
 // TODO rename this function/module
 
-const updated = {
-	...readable(false),
-	check: () => false
-};
-
 /**
  * Creates the HTML response.
  * @param {{
