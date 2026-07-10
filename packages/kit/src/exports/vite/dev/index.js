@@ -528,7 +528,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root) {
 					read: (file) => createReadableStream(from_fs(file))
 				});
 
-				const request = await getRequest({
+				const request = getRequest({
 					base,
 					request: req
 				});
@@ -579,10 +579,10 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root) {
 				if (rendered.status === 404) {
 					// @ts-expect-error
 					serve_static_middleware.handle(req, res, () => {
-						void setResponse(res, rendered);
+						setResponse(res, rendered);
 					});
 				} else {
-					void setResponse(res, rendered);
+					setResponse(res, rendered);
 				}
 			} catch (e) {
 				const error = coalesce_to_error(e);

@@ -7,7 +7,7 @@ import { noop } from '../utils/functions.js';
 import { posixify } from '../utils/os.js';
 
 /**
- * Resolved path of the `runtime` directory
+ * Resolved path of the `runtime` directory posix-ified
  *
  * TODO Windows issue:
  * Vite or sth else somehow sets the driver letter inconsistently to lower or upper case depending on the run environment.
@@ -25,7 +25,7 @@ export const runtime_directory = posixify(fileURLToPath(new URL('../runtime', im
  */
 export function get_runtime_base(root) {
 	return runtime_directory.startsWith(root)
-		? `/${path.relative(root, runtime_directory)}`
+		? `/${posixify(path.relative(root, runtime_directory))}`
 		: to_fs(runtime_directory);
 }
 

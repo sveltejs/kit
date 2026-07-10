@@ -95,7 +95,7 @@ const ssr = async (req, res) => {
 	let request;
 
 	try {
-		request = await getRequest({
+		request = getRequest({
 			base: origin || get_origin(req.headers),
 			request: req,
 			bodySizeLimit: body_size_limit
@@ -159,7 +159,7 @@ const ssr = async (req, res) => {
 		response.headers.set('x-accel-buffering', 'no');
 	}
 
-	await setResponse(res, response);
+	setResponse(res, response);
 };
 
 /** @param {import('polka').Middleware[]} handlers */

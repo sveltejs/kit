@@ -54,6 +54,10 @@ declare global {
 	 */
 	const __SVELTEKIT_ROOT__: string;
 	/**
+	 * Whether the `experimental.async` flag is applied
+	 */
+	const __SVELTEKIT_SUPPORTS_ASYNC__: boolean;
+	/**
 	 * This makes the use of specific features visible at both dev and build time, in such a
 	 * way that we can error when they are not supported by the target platform.
 	 *
@@ -68,7 +72,6 @@ declare global {
 	 * to throw an error if the feature would fail in production.
 	 */
 	var __SVELTEKIT_TRACK__: (label: string) => void;
-	var __SVELTEKIT_EXPERIMENTAL_USE_TRANSFORM_ERROR__: boolean;
 	var Bun: object;
 	var Deno: object;
 }

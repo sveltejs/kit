@@ -422,6 +422,14 @@ test.describe('remote function mutations', () => {
 		await expect(page.locator('p')).toHaveText('success');
 	});
 
+	test('reserved words can be used as remote function export names', async ({ page }) => {
+		await page.goto('/remote/reserved');
+		await expect(page.locator('#reserved-result')).toHaveText('pending');
+
+		await page.click('#reserved-run');
+		await expect(page.locator('#reserved-result')).toHaveText('deleted/classy/42');
+	});
+
 	test('fields.set updates DOM before validate', async ({ page }) => {
 		await page.goto('/remote/form/imperative');
 

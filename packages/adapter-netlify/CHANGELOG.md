@@ -1,5 +1,13 @@
 # @sveltejs/adapter-netlify
 
+## 7.0.0-next.2
+
+### Patch Changes
+
+- fix: ensure types for `platform.context` work ([#16255](https://github.com/sveltejs/kit/pull/16255))
+- Updated dependencies [[`ba78a0b`](https://github.com/sveltejs/kit/commit/ba78a0bcc4ada3c649cb5d077d0a94c78045b389), [`a248c9b`](https://github.com/sveltejs/kit/commit/a248c9b6bd0593d0d28b7193fc14071944214dc3), [`7596981`](https://github.com/sveltejs/kit/commit/7596981950f534c61a0d23e73ec5dd8d5679d95c), [`be72ed9`](https://github.com/sveltejs/kit/commit/be72ed98cddf240af56d8595e4809cfbd478eec0), [`a5bd7e2`](https://github.com/sveltejs/kit/commit/a5bd7e22e94def2061f3dff9f7ff41f445cdb7a6), [`dec671f`](https://github.com/sveltejs/kit/commit/dec671f6634570053a1439a62440f2edb3044aeb), [`82f3867`](https://github.com/sveltejs/kit/commit/82f38673765e5b561da70fca25e7a4e9e5fec33b), [`97eb324`](https://github.com/sveltejs/kit/commit/97eb3247fc17a8ec6d2acfe854397eb6fe667617), [`e2a9ac0`](https://github.com/sveltejs/kit/commit/e2a9ac01ce9953eb45193f33cf31e203bb2f3656), [`309bfb4`](https://github.com/sveltejs/kit/commit/309bfb4da61b0d97623e17d4e5fdd70dbd4f970e), [`522a86b`](https://github.com/sveltejs/kit/commit/522a86b7b57099b407d213b558a1733583b9811c), [`0ff547f`](https://github.com/sveltejs/kit/commit/0ff547fe596a00b1d67f3b68d57f18a4a8f003da), [`3d4ff91`](https://github.com/sveltejs/kit/commit/3d4ff91cb7c948270ddc3e206413dd6d2da93b16), [`c925f2a`](https://github.com/sveltejs/kit/commit/c925f2a323dca6c7206e8ddd2c516f30bb89e6f7), [`7daf445`](https://github.com/sveltejs/kit/commit/7daf44551b6540244900a281a7bddd31241d65f3)]:
+  - @sveltejs/kit@3.0.0-next.7
+
 ## 7.0.0-next.1
 ### Major Changes
 
