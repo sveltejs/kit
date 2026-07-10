@@ -2,4 +2,4 @@
 '@sveltejs/kit': major
 ---
 
-breaking: add `refresh`/`refreshAll` and deprecate `invalidate`/`invalidateAll`
+breaking: add `refreshAll` and deprecate `invalidateAll`

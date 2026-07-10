@@ -2308,7 +2308,7 @@ export function disableScrollHandling() {
  * @param {boolean} [opts.keepFocus] If `true`, the currently focused element will retain focus after navigation. Otherwise, focus will be reset to the body
  * @param {boolean} [opts.refreshAll] If `true`, all `load` functions and queries of the page will be rerun. See https://svelte.dev/docs/kit/load#rerunning-load-functions for more info on invalidation.
  * @param {Array<string | URL | ((url: URL) => boolean)>} [opts.invalidate] Causes any load functions to re-run if they depend on one of the urls
- * @param {boolean} [opts.invalidateAll] Deprecated in favor of opts.refreshAll.
+ * @param {boolean} [opts.invalidateAll] Deprecated in favour of opts.refreshAll.
  * @param {App.PageState} [opts.state] An optional object that will be available as `page.state`
  * @returns {Promise<void>}
  */
@@ -2357,17 +2357,17 @@ export async function goto(url, opts = {}) {
  * invalidate((url) => url.pathname === '/path');
  * ```
  * @param {string | URL | ((url: URL) => boolean)} resource The invalidated URL
- * @param {boolean} [keep_state] If `true`, the current `page.state` will be preserved. Otherwise, it will be reset to an empty object. `false` by default.
+ * @param {boolean} [keepState] If `true`, the current `page.state` will be preserved. Otherwise, it will be reset to an empty object. `false` by default.
  * @returns {Promise<void>}
  */
-export function invalidate(resource, keep_state = false) {
+export function invalidate(resource, keepState = false) {
 	if (!BROWSER) {
 		throw new Error('Cannot call invalidate(...) on the server');
 	}
 
 	push_invalidated(resource);
 
-	return _invalidate(!keep_state);
+	return _invalidate(!keepState);
 }
 
 /**
