@@ -1,0 +1,17 @@
+{
+	"name": "csrf-non-production-node-env",
+	"private": true,
+	"version": "0.0.1",
+	"scripts": {
+		"build": "vite build",
+		"prepare": "svelte-kit sync"
+	},
+	"devDependencies": {
+		"@sveltejs/adapter-auto": "workspace:^",
+		"@sveltejs/kit": "workspace:^",
+		"@sveltejs/vite-plugin-svelte": "catalog:",
+		"svelte": "catalog:",
+		"vite": "catalog:"
+	},
+	"type": "module"
+}
