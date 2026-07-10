@@ -183,7 +183,7 @@ export class InternalServer extends Server {
 		options: RequestOptions & {
 			prerendering?: PrerenderOptions;
 			/** @internal for saving dependencies during prerendering and generating fallback pages */
-			read: (file: string) => Buffer<ArrayBuffer>;
+			read: (file: string) => MaybePromise<Buffer<ArrayBuffer>>;
 			/** @internal used during development to check feature availability depending on the current route */
 			before_handle?: (
 				event: RequestEvent,
@@ -419,6 +419,7 @@ export interface ServerMetadata {
 	routes: Map<string, ServerMetadataRoute>;
 	/** For each hashed remote file, a map of export name -> { type, dynamic }, where `dynamic` is `false` for non-dynamic prerender functions */
 	remotes: Map<string, Map<string, { type: RemoteInternals['type']; dynamic: boolean }>>;
+	remotes_with_prerender: Set<string>;
 }
 
 // TODO get rid of this in favor us using just import('svelte').Component<any, any, any>
@@ -575,7 +576,7 @@ export interface SSRState {
 	 */
 	prerender_default?: PrerenderOption;
 	/** @internal reads from the filesystem when user code tries to fetch a static asset */
-	read?: (file: string) => Buffer<ArrayBuffer>;
+	read?: (file: string) => MaybePromise<Buffer<ArrayBuffer>>;
 	/**
 	 * Used to set up `__SVELTEKIT_TRACK__` which checks if a used feature is supported.
 	 * E.g. if `read` from `$app/server` is used, it checks whether the route's config is compatible.

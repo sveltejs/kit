@@ -25,7 +25,6 @@ import {
 } from '../../core/env.js';
 import * as sync from '../../core/sync/sync.js';
 import { create_assets } from '../../core/sync/create_manifest_data/index.js';
-import { load_and_validate_params } from '../../utils/params.js';
 import {
 	logger,
 	get_mime_lookup,
@@ -1891,13 +1890,6 @@ function kit({ svelte_config }) {
 			}
 			mkdirp(out);
 
-			await load_and_validate_params({
-				routes: manifest_data.routes,
-				params_path: manifest_data.params,
-				root,
-				load: (file) => import(file)
-			});
-
 			const { output: server_chunks } = /** @type {Rolldown.RolldownOutput} */ (
 				await builder.build(builder.environments.ssr)
 			);
@@ -1950,13 +1942,13 @@ function kit({ svelte_config }) {
 			log.info('Analysing routes');
 
 			const { metadata } = await analyse({
-				hash: kit.router.type === 'hash',
 				manifest_path,
 				manifest_data,
 				server_manifest: vite_server_manifest,
 				tracked_features,
-				env,
+				out,
 				remotes,
+				root,
 				vite_config_file: vite_config.configFile
 			});
 
@@ -2161,12 +2153,11 @@ function kit({ svelte_config }) {
 
 			// ...and prerender
 			const prerender_results = await prerender({
-				hash: kit.router.type === 'hash',
 				out,
 				manifest_path,
 				metadata,
 				verbose,
-				env,
+				root,
 				vite_config_file: vite_config.configFile
 			});
 			prerendered = prerender_results.prerendered;
@@ -2236,6 +2227,7 @@ function kit({ svelte_config }) {
 						log,
 						remotes,
 						vite_config,
+						out,
 						explicit_env_config
 					);
 				} else {
