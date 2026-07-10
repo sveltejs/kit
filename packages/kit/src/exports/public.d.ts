@@ -1734,7 +1734,8 @@ export interface ResolveOptions {
 	 */
 	filterSerializedResponseHeaders?: (name: string, value: string) => boolean;
 	/**
-	 * Determines what should be added to the `<head>` tag to preload it.
+	 * Determines which files should be preloaded, via the `Link` response header for dynamically rendered pages
+	 * or `<link>` tags in the `<head>` for prerendered pages.
 	 * By default, `js` and `css` files will be preloaded.
 	 * @param input the type of the file and its path
 	 */
