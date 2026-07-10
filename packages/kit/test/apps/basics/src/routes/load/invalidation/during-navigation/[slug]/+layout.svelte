@@ -1,5 +1,5 @@
 <script>
-	import { invalidateAll } from '$app/navigation';
+	import { refreshAll } from '$app/navigation';
 	let { children } = $props();
 </script>
 
@@ -8,17 +8,17 @@
 	<a href="/load/invalidation/during-navigation/b" data-testid="nav-b">b</a>
 	<a
 		href="/load/invalidation/during-navigation/b"
-		data-testid="nav-b-invalidate"
-		onclick={() => setTimeout(() => invalidateAll(), 50)}
+		data-testid="nav-b-refresh"
+		onclick={() => setTimeout(() => refreshAll(), 50)}
 	>
-		b+invalidate
+		b+refresh
 	</a>
 	<a
 		href="/load/invalidation/during-navigation/a"
-		data-testid="nav-a-invalidate"
-		onclick={() => setTimeout(() => invalidateAll(), 50)}
+		data-testid="nav-a-refresh"
+		onclick={() => setTimeout(() => refreshAll(), 50)}
 	>
-		a+invalidate
+		a+refresh
 	</a>
 </nav>
 

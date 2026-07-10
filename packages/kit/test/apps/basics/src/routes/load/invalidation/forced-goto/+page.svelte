@@ -1,5 +1,5 @@
 <script>
-	import { invalidateAll, goto } from '$app/navigation';
+	import { refreshAll, goto } from '$app/navigation';
 
 	/** @type {import('./$types').PageData} */
 	export let data;
@@ -8,10 +8,10 @@
 <h1>a: {data.a}, b: {data.b}</h1>
 
 <button
-	class="invalidateall"
+	class="refreshall"
 	onclick={() => {
-		window.promise = invalidateAll();
-	}}>invalidate</button
+		window.promise = refreshAll();
+	}}>refresh</button
 >
 
 <button

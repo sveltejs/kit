@@ -172,9 +172,6 @@
 </button>
 
 <button id="refresh-all" onclick={() => refreshAll()}>refreshAll</button>
-<button id="refresh-remote-only" onclick={() => refreshAll({ includeLoadFunctions: false })}>
-	refreshAll (remote functions only)
-</button>
 <button id="resolve-deferreds" onclick={() => resolve_deferreds()}>Resolve Deferreds</button>
 
 <a href="/remote/event">/remote/event</a>
