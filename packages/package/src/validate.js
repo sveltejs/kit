@@ -224,7 +224,7 @@ export function _create_validator(options) {
 			warnings.push(
 				`The following server-only files do not import \`$app/server\` or \`$app/env/private\`:\n${list}\n` +
 					'These files will not be blocked from being imported on the client. ' +
-					'If you intend to use this package within a SvelteKit application and want to prevent this, add `import \'$app/server\'` which will throw when imported on the client.\n' +
+					"If you intend to use this package within a SvelteKit application and want to prevent this, add `import '$app/server'` which will throw when imported on the client.\n" +
 					'These files were deemed server-only because they either contain `.server.` in their filename or are located in a `server` directory, which have special meaning within SvelteKit apps.'
 			);
 		}
