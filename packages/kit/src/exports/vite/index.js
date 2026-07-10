@@ -1648,15 +1648,11 @@ function kit({ svelte_config }) {
 					find_deps(vite_manifest, posixify(path.relative(root, entry)), add_dynamic_css, root);
 
 				const has_explicit_dynamic_public_env = Object.values(explicit_env_config ?? {}).some(
-					(variable) => {
-						if (!variable.public) return false;
-						const availability = variable.availability ?? 'dynamic';
-						return availability === 'dynamic' || availability === 'runtime';
-					}
+					(variable) => variable.public && variable.availability !== 'inline'
 				);
 
 				// the app only depends on runtime public env if it imports `$app/env/public`
-				// *and* at least one public env var is read at run time (i.e. not inline or buildtime)
+				// *and* at least one public env var is actually dynamic (not inlined at build time)
 				const uses_env_dynamic_public =
 					has_explicit_dynamic_public_env &&
 					client_chunks.some(

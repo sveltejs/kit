@@ -201,16 +201,10 @@ export function create_sveltekit_env_private(variables, env) {
 	for (const [name, config] of Object.entries(variables)) {
 		if (config.public) continue;
 
-		const availability = config.availability ?? 'dynamic';
-
-		/** @type {string} */
-		let value;
-
-		if (availability === 'inline') {
-			value = devalue.uneval(validate(variables, env[name], name, issues));
-		} else {
-			value = `env.${name}`;
-		}
+		const value =
+			config.availability === 'inline'
+				? devalue.uneval(validate(variables, env[name], name, issues))
+				: `env.${name}`;
 
 		exports.push(`export const ${name} = ${value};\n`);
 	}
@@ -240,16 +234,10 @@ export function create_sveltekit_env_public(variables, env, prelude) {
 	for (const [name, config] of Object.entries(variables)) {
 		if (!config.public) continue;
 
-		const availability = config.availability ?? 'dynamic';
-
-		/** @type {string} */
-		let value;
-
-		if (availability === 'inline') {
-			value = devalue.uneval(validate(variables, env[name], name, issues));
-		} else {
-			value = `env.${name}`;
-		}
+		const value =
+			config.availability === 'inline'
+				? devalue.uneval(validate(variables, env[name], name, issues))
+				: `env.${name}`;
 
 		exports.push(`export const ${name} = ${value};\n`);
 	}
@@ -270,11 +258,9 @@ export function create_sveltekit_env_public(variables, env, prelude) {
  * @param {string} app_dir
  */
 export function create_sveltekit_env_service_worker(variables, env, global, base, app_dir) {
-	const has_dynamic_public_env = Object.values(variables ?? {}).some((config) => {
-		if (!config.public) return false;
-		const availability = config.availability ?? 'dynamic';
-		return availability === 'dynamic' || availability === 'runtime';
-	});
+	const has_dynamic_public_env = Object.values(variables ?? {}).some(
+		(config) => config.public && config.availability !== 'inline'
+	);
 
 	if (!has_dynamic_public_env) {
 		return create_sveltekit_env_service_worker_dev(variables, env, global);
@@ -340,8 +326,7 @@ export function create_explicit_env_types(variables, relative, type) {
 		.filter(([_, config]) => !!config.public === (type === 'public'))
 		.map(([name, config]) => {
 			const comment = config.description ? `${create_jsdoc(config.description)}\n` : '';
-			const availability = config.availability ?? 'dynamic';
-			const maybe_undefined = availability === 'runtime';
+			const maybe_undefined = config.availability === 'runtime';
 			const type = config.schema
 				? `import('@sveltejs/kit/internal/types').StandardSchemaV1.InferOutput<typeof import('${relative}').variables.${name}.schema>${maybe_undefined ? ' | undefined' : ''}`
 				: maybe_undefined
