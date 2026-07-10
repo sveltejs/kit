@@ -29,7 +29,8 @@
 </script>
 
 {#snippet node(n: RenderNode, depth: number)}
-	{@const Component = n.component}
+	{const Component = $derived(n.component)}
+	{const Error = $derived(n.error)}
 
 	<svelte:boundary onerror={(_, reset) => (resetters[depth] = reset)}>
 		{#if n.child}
@@ -43,8 +44,7 @@
 		{/if}
 
 		{#snippet failed(error)}
-			{@const ErrorPage = n.error}
-			<ErrorPage {error} />
+			<Error {error} />
 		{/snippet}
 	</svelte:boundary>
 {/snippet}
