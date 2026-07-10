@@ -417,27 +417,7 @@ export interface ServerMetadata {
 	remotes: Map<string, Map<string, { type: RemoteInternals['type']; dynamic: boolean }>>;
 }
 
-// TODO get rid of this in favor us using just import('svelte').Component<any, any, any>
-export interface SSRComponent {
-	default: {
-		render(
-			props: Record<string, any>,
-			opts: { context: Map<any, any>; csp?: { nonce?: string; hash?: boolean } }
-		): Promise<{
-			body: string;
-			head: string;
-			css: {
-				code: string;
-				map: any; // TODO
-			};
-			hashes: {
-				script: Array<`sha256-${string}`>;
-			};
-		}>;
-	};
-}
-
-export type SSRComponentLoader = () => Promise<SSRComponent>;
+export type SSRComponentLoader = () => Promise<Component>;
 
 export interface UniversalNode {
 	/** Is `null` in case static analysis succeeds but the node is ssr=false */
@@ -501,7 +481,7 @@ export interface SSROptions {
 	hooks: ServerHooks;
 	link_header_preload: ValidatedConfig['kit']['output']['linkHeaderPreload'];
 	paths_origin: string | undefined;
-	root: SSRComponent['default'];
+	root: Component;
 	service_worker: boolean;
 	service_worker_options: RegistrationOptions;
 	templates: {

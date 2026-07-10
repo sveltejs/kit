@@ -43,7 +43,7 @@ import { render } from 'svelte/server';
  *   resolve_opts: import('types').RequiredResolveOptions;
  *   action_result?: import('@sveltejs/kit').ActionResult;
  *   data_serializer: import('./types.js').ServerDataSerializer;
- *   error_components?: Array<import('types').SSRComponent | undefined>
+ *   error_components?: Array<import('svelte').Component | undefined>
  * }} opts
  */
 export async function render_response({
