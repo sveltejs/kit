@@ -6,7 +6,6 @@ import { format_server_error } from './utils.js';
 import { set_read_implementation, set_manifest } from '__sveltekit/server';
 import { set_env } from '__sveltekit/env';
 import { set_app } from './app.js';
-import { create_synchronous_read } from './read.js';
 
 /** @type {Promise<any>} */
 let init_promise;
@@ -61,7 +60,41 @@ export class Server {
 		set_env(env);
 
 		if (read) {
-			set_read_implementation(create_synchronous_read(read));
+			// Wrap the read function to handle MaybePromise<ReadableStream>
+			// and ensure the public API stays synchronous
+			/** @param {string} file */
+			const wrapped_read = (file) => {
+				const result = read(file);
+				if (result instanceof ReadableStream) {
+					return result;
+				} else {
+					return new ReadableStream({
+						async start(controller) {
+							try {
+								const stream = await Promise.resolve(result);
+								if (!stream) {
+									controller.close();
+									return;
+								}
+
+								const reader = stream.getReader();
+
+								while (true) {
+									const { done, value } = await reader.read();
+									if (done) break;
+									controller.enqueue(value);
+								}
+
+								controller.close();
+							} catch (error) {
+								controller.error(error);
+							}
+						}
+					});
+				}
+			};
+
+			set_read_implementation(wrapped_read);
 		}
 
 		// During dev and for some adapters this function might be called in quick succession,

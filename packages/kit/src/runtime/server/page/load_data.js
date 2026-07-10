@@ -291,10 +291,7 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 
 		if (same_origin) {
 			if (state.prerendering) {
-				// the prerender code needs to read and serialise the response body
-				// from the environment to the Vite process so we clone the response
-				// to ensure its body remains unused until then
-				dependency = { response: response.clone(), body: null };
+				dependency = { response, body: null };
 				state.prerendering.dependencies.set(url.pathname, dependency);
 			}
 		} else if (url.protocol === 'https:' || url.protocol === 'http:') {
