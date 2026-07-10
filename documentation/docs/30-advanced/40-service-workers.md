@@ -142,8 +142,6 @@ SvelteKit calls [`registration.update()`](https://developer.mozilla.org/en-US/do
 If you want new deployments to be picked up more eagerly, you can trigger an update check yourself — for example on every client-side navigation, in your root layout:
 
 ```js
-/// <reference types="@sveltejs/kit" />
-// ---cut---
 import { afterNavigate } from '$app/navigation';
 
 afterNavigate(async () => {
