@@ -4,6 +4,7 @@
 // and (2) a module-scope `$app/env/private` read observes the runtime value —
 // regression for sveltejs/kit#16288.
 import { spawn } from 'node:child_process';
+import process from 'node:process';
 
 const PORT = 3399;
 const EXPECTED = 'https://api.example';

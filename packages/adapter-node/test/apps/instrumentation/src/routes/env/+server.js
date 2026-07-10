@@ -1,3 +1,4 @@
+import process from 'node:process';
 import { json } from '@sveltejs/kit';
 import { CAPTURED_AT_MODULE_SCOPE } from '$lib/server/api-client.js';
 
