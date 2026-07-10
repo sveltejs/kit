@@ -116,6 +116,10 @@ export function create_sveltekit_env(variables, env, entry, is_dev) {
 	const issues = {};
 
 	for (const [name, config] of Object.entries(variables ?? {})) {
+		if (/** @type {any} */ (config)?.static) {
+			throw new Error('`static: true` has been removed. Use `availability: "inline"` instead.');
+		}
+
 		const availability = config?.availability ?? 'dynamic';
 
 		if (availability === 'inline') {
