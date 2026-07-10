@@ -224,52 +224,55 @@ export async function create_build_server({
 				remove_static_middlewares(vite.middlewares);
 
 				vite.middlewares.use((req, res, next) => {
-					// Vite's base middleware strips out the base path. Restore it
-					req.url = req.originalUrl;
+					try {
+						const base = `${vite.config.server.https ? 'https' : 'http'}://${
+							req.headers[':authority'] || req.headers.host
+						}`;
 
-					const base = `${vite.config.server.https ? 'https' : 'http'}://${
-						req.headers[':authority'] || req.headers.host
-					}`;
+						const url = new URL(base + req.url);
+						const decoded = decodeURI(url.pathname);
 
-					const url = new URL(base + req.url);
-					const decoded = decodeURI(url.pathname);
+						if (decoded.match(check_feature_pathname)) {
+							const route_id = url.searchParams.get('route_id');
+							const config = url.searchParams.get('config');
+							const feature = url.searchParams.get('feature');
 
-					if (decoded.match(check_feature_pathname)) {
-						const route_id = url.searchParams.get('route_id');
-						const config = url.searchParams.get('config');
-						const feature = url.searchParams.get('feature');
+							if (!route_id || !config || !feature) {
+								res.writeHead(400);
+								res.end('Must have route_id, config, and feature query arguments');
+								return;
+							}
 
-						if (!route_id || !config || !feature) {
-							res.writeHead(400);
-							res.end('Must have route_id, config, and feature query arguments');
+							const result = check_feature(route_id, JSON.parse(config), feature, adapter);
+
+							res.writeHead(200);
+							res.end(result?.message);
 							return;
 						}
 
-						const result = check_feature(route_id, JSON.parse(config), feature, adapter);
+						if (decoded.match(read_pathname)) {
+							const file = url.searchParams.get('file');
+							if (!file) {
+								res.writeHead(400);
+								res.end('Missing file query argument');
+								return;
+							}
 
-						res.writeHead(200);
-						res.end(result?.message);
-						return;
-					}
+							const readable_stream = fs.createReadStream(
+								`${svelte_config.kit.outDir}/output/server/${file}`
+							);
 
-					if (decoded.match(read_pathname)) {
-						const file = url.searchParams.get('file');
-						if (!file) {
-							res.writeHead(400);
-							res.end('Missing file query argument');
+							res.writeHead(200);
+							readable_stream.pipe(res);
 							return;
 						}
 
-						const readable_stream = fs.createReadStream(
-							`${svelte_config.kit.outDir}/output/server/${file}`
-						);
-
-						res.writeHead(200);
-						readable_stream.pipe(res);
-						return;
+						next();
+					} catch (e) {
+						const error = coalesce_to_error(e);
+						res.statusCode = 500;
+						res.end(error.message);
 					}
-
-					next();
 				});
 			};
 		},
