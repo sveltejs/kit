@@ -898,6 +898,14 @@ test.describe('setHeaders', () => {
 		expect(cookies).toMatch('cookie1=value1');
 		expect(cookies).toMatch('cookie2=value2');
 	});
+
+	test('renders the error page when the root layout sets headers', async ({ request }) => {
+		const response = await request.get('/errors/error-page-setheaders');
+
+		expect(response.status()).toBe(500);
+		expect(response.headers()['cache-control']).toBe('private, max-age=60');
+		expect(await response.text()).toContain('This is your custom error page saying:');
+	});
 });
 
 test.describe('cookies', () => {
