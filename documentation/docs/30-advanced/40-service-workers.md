@@ -133,6 +133,27 @@ if ('serviceWorker' in navigator) {
 
 > [!NOTE] The service worker is bundled for production, but not during development.
 
+## Updating the service worker
+
+Browsers check for an updated service worker when a full-page navigation happens within its scope, and after functional events such as `push` and `sync`. Client-side navigations are neither, so navigating around your app will not by itself cause a new deployment's service worker to be picked up.
+
+SvelteKit calls [`registration.update()`](https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerRegistration/update) only as part of error recovery — if a route module fails to load or a navigation results in an error status, and [version polling](configuration#version) detects that the app has been redeployed, the service worker is updated before SvelteKit falls back to a full-page navigation.
+
+If you want new deployments to be picked up more eagerly, you can trigger an update check yourself — for example on every client-side navigation, in your root layout:
+
+```js
+/// <reference types="@sveltejs/kit" />
+// ---cut---
+import { afterNavigate } from '$app/navigation';
+
+afterNavigate(async () => {
+	if ('serviceWorker' in navigator) {
+		const registration = await navigator.serviceWorker.getRegistration();
+		await registration?.update();
+	}
+});
+```
+
 ## Other solutions
 
 SvelteKit's service worker implementation is designed to be easy to work with and is probably a good solution for most users. However, outside of SvelteKit, many PWA applications leverage the [Workbox](https://web.dev/learn/pwa/workbox) library. If you're used to using Workbox you may prefer [Vite PWA plugin](https://vite-pwa-org.netlify.app/frameworks/sveltekit.html).
