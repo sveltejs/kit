@@ -144,11 +144,21 @@ export async function render_response({
 			resetters: [],
 			form: form_value,
 			root: /** @type {RenderNode} */ ({}),
-			error
+			error,
+			page: {
+				error,
+				params: /** @type {Record<string, any>} */ (event.params),
+				route: event.route,
+				status,
+				url: event.url,
+				data: {},
+				form: form_value,
+				state: {}
+			}
 		};
 
 		let current_node = props.root;
-		let data = {};
+		let data = props.page.data;
 
 		for (let i = 0; i < branch.length; i += 1) {
 			const node = branch[i];
@@ -168,16 +178,7 @@ export async function render_response({
 			}
 		}
 
-		props.page = {
-			error,
-			params: /** @type {Record<string, any>} */ (event.params),
-			route: event.route,
-			status,
-			url: event.url,
-			data,
-			form: form_value,
-			state: {}
-		};
+		props.page.data = data;
 
 		const render_state = { ...event_state, is_in_render: true };
 
