@@ -1709,6 +1709,24 @@ test.describe('Shallow routing', () => {
 		await expect(page.locator('p')).toHaveText('active: true');
 	});
 
+	test('Loads the pushed URL when returning from a subsequent navigation', async ({
+		baseURL,
+		page,
+		clicknav
+	}) => {
+		await page.goto('/shallow-routing/push-state');
+		await page.locator('[data-id="two"]').click();
+		expect(page.url()).toBe(`${baseURL}/shallow-routing/push-state/a`);
+		await expect(page.locator('h1')).toHaveText('parent');
+
+		await clicknav('a[href="/shallow-routing/push-state/b"]');
+		await page.goBack();
+
+		expect(page.url()).toBe(`${baseURL}/shallow-routing/push-state/a`);
+		await expect(page.locator('h1')).toHaveText('a');
+		await expect(page.locator('p')).toHaveText('active: true');
+	});
+
 	test('Replaces state on the current URL', async ({ baseURL, page, clicknav }) => {
 		await page.goto('/shallow-routing/replace-state/b');
 		await clicknav('[href="/shallow-routing/replace-state"]');
@@ -1739,7 +1757,7 @@ test.describe('Shallow routing', () => {
 
 		await page.goForward();
 		expect(page.url()).toBe(`${baseURL}/shallow-routing/replace-state/a`);
-		await expect(page.locator('h1')).toHaveText('parent');
+		await expect(page.locator('h1')).toHaveText('a');
 		await expect(page.locator('p')).toHaveText('active: true');
 	});
 

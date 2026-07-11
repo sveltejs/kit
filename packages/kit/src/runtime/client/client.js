@@ -2587,14 +2587,17 @@ export function pushState(url, state) {
 
 	update_scroll_positions(current_history_index);
 
+	const resolved = resolve_url(url);
+
 	const opts = {
 		[HISTORY_INDEX]: (current_history_index += 1),
 		[NAVIGATION_INDEX]: current_navigation_index,
-		[PAGE_URL_KEY]: page.url.href,
+		// store the address bar URL, so returning to this entry loads what the user saw
+		[PAGE_URL_KEY]: resolved.href,
 		[STATES_KEY]: state
 	};
 
-	history.pushState(opts, '', resolve_url(url));
+	history.pushState(opts, '', resolved);
 	has_navigated = true;
 
 	page.state = state;
@@ -2628,14 +2631,16 @@ export function replaceState(url, state) {
 		}
 	}
 
+	const resolved = resolve_url(url);
+
 	const opts = {
 		[HISTORY_INDEX]: current_history_index,
 		[NAVIGATION_INDEX]: current_navigation_index,
-		[PAGE_URL_KEY]: page.url.href,
+		[PAGE_URL_KEY]: resolved.href,
 		[STATES_KEY]: state
 	};
 
-	history.replaceState(opts, '', resolve_url(url));
+	history.replaceState(opts, '', resolved);
 
 	page.state = state;
 }
