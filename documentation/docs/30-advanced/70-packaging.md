@@ -146,10 +146,10 @@ If your package has files with side effects, you can specify them in an array:
 ```json
 /// file: package.json
 {
-    "sideEffects": [
-    	"**/*.css",
-    	"./dist/sideEffectfulFile.js"
-    ]
+	"sideEffects": [
+		"**/*.css",
+		"./dist/sideEffectfulFile.js"
+	]
 }
 ```
 

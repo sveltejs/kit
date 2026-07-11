@@ -7,7 +7,7 @@ import { loadEnv, normalizePath } from 'vite';
 import { createReadableStream, getRequest, setResponse } from '../../../exports/node/index.js';
 import { installPolyfills } from '../../../exports/node/polyfills.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
-import { not_found } from '../utils.js';
+import { is_chrome_devtools_request, not_found } from '../utils.js';
 
 /** @typedef {import('http').IncomingMessage} Req */
 /** @typedef {import('http').ServerResponse} Res */
@@ -51,10 +51,19 @@ export async function preview(vite, vite_config, svelte_config) {
 	set_assets(assets);
 
 	const server = new Server(manifest);
-	await server.init({
-		env: loadEnv(vite_config.mode, svelte_config.kit.env.dir, ''),
-		read: (file) => createReadableStream(`${dir}/${file}`)
-	});
+
+	try {
+		await server.init({
+			env: loadEnv(vite_config.mode, svelte_config.kit.env.dir, ''),
+			read: (file) => createReadableStream(`${dir}/${file}`)
+		});
+	} catch (error) {
+		// Vite erases the error message when starting the preview server so we store
+		// it in the stack instead. This ensures errors thrown using `stackless`
+		// are still readable
+		if (error instanceof Error) error.stack = error.message;
+		throw error;
+	}
 
 	const emulator = await svelte_config.kit.adapter?.emulate?.();
 
@@ -99,6 +108,10 @@ export async function preview(vite, vite_config, svelte_config) {
 					location
 				});
 				res.end();
+				return;
+			}
+
+			if (is_chrome_devtools_request(pathname, res)) {
 				return;
 			}
 

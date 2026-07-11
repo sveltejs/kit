@@ -199,11 +199,7 @@ function update_types(config, routes, route, to_delete = new Set()) {
 
 	// returns the predicate of a matcher's type guard - or string if there is no type guard
 	declarations.push(
-		// TS complains on infer U, which seems weird, therefore ts-ignore it
-		[
-			'// @ts-ignore',
-			'type MatcherParam<M> = M extends (param : string) => param is infer U ? U extends string ? U : string : string;'
-		].join('\n')
+		'type MatcherParam<M> = M extends (param : string) => param is (infer U extends string) ? U : string;'
 	);
 
 	declarations.push(
@@ -613,7 +609,7 @@ function generate_params_type(params, outdir, config) {
 					param.matcher
 						? `MatcherParam<typeof import('${path_to_matcher(param.matcher)}').match>`
 						: 'string'
-				}`
+				}${param.optional ? ' | undefined' : ''}`
 		)
 		.join('; ')} }`;
 }

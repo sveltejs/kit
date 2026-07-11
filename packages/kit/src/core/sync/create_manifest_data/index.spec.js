@@ -87,7 +87,7 @@ test('creates routes', () => {
 		{
 			id: '/blog.json',
 			pattern: '/^/blog.json/?$/',
-			endpoint: { file: 'samples/basic/blog.json/+server.js', page_options: null }
+			endpoint: { file: 'samples/basic/blog.json/+server.js', page_options: {} }
 		},
 		{
 			id: '/blog',
@@ -99,7 +99,7 @@ test('creates routes', () => {
 			pattern: '/^/blog/([^/]+?).json/?$/',
 			endpoint: {
 				file: 'samples/basic/blog/[slug].json/+server.ts',
-				page_options: null
+				page_options: {}
 			}
 		},
 		{
@@ -111,7 +111,7 @@ test('creates routes', () => {
 });
 
 const symlink_survived_git = fs
-	.statSync(path.join(cwd, 'samples/symlinks/routes/foo'))
+	.lstatSync(path.join(cwd, 'samples/symlinks/routes/foo'))
 	.isSymbolicLink();
 
 const test_symlinks = symlink_survived_git ? test : test.skip;
@@ -122,21 +122,21 @@ test_symlinks('creates symlinked routes', () => {
 	expect(nodes.map(simplify_node)).toEqual([
 		default_layout,
 		default_error,
-		{ component: 'samples/symlinks/routes/foo/index.svelte' },
-		{ component: 'samples/symlinks/routes/index.svelte' }
+		{ component: 'samples/symlinks/routes/+page.svelte' },
+		{ component: 'samples/symlinks/routes/foo/+page.svelte' }
 	]);
 
-	expect(routes).toEqual([
+	expect(routes.map(simplify_route)).toEqual([
 		{
 			id: '/',
 			pattern: '/^/$/',
-			page: { layouts: [0], errors: [1], leaf: 1 }
+			page: { layouts: [0], errors: [1], leaf: 2 }
 		},
 
 		{
 			id: '/foo',
 			pattern: '/^/foo/?$/',
-			page: { layouts: [0], errors: [1], leaf: 2 }
+			page: { layouts: [0], errors: [1], leaf: 3 }
 		}
 	]);
 });
@@ -310,7 +310,7 @@ test('allows rest parameters inside segments', () => {
 			pattern: '/^/([^]*?).json/?$/',
 			endpoint: {
 				file: 'samples/rest-prefix-suffix/[...rest].json/+server.js',
-				page_options: null
+				page_options: {}
 			}
 		}
 	]);
@@ -348,7 +348,7 @@ test('optional parameters', () => {
 		{
 			id: '/[[foo]]bar',
 			pattern: '/^/([^/]*)?bar/?$/',
-			endpoint: { file: 'samples/optional/[[foo]]bar/+server.js', page_options: null }
+			endpoint: { file: 'samples/optional/[[foo]]bar/+server.js', page_options: {} }
 		},
 		{ id: '/nested', pattern: '/^/nested/?$/' },
 		{
@@ -456,6 +456,82 @@ test('group preceding optional parameters', () => {
 	]);
 });
 
+test('optional parameters adjacent to another route', () => {
+	const { nodes, routes } = create('samples/optional-adjacent');
+
+	expect(nodes.map(simplify_node)).toEqual([
+		default_layout,
+		default_error,
+		{
+			component: 'samples/optional-adjacent/+page.svelte'
+		},
+		{
+			component: 'samples/optional-adjacent/[[optional]]/+page.svelte'
+		}
+	]);
+
+	expect(routes.map(simplify_route)).toEqual([
+		{
+			id: '/',
+			pattern: '/^/$/',
+			page: {
+				layouts: [0],
+				errors: [1],
+				leaf: nodes.findIndex((node) => node.component?.includes('/optional-adjacent/+page.svelte'))
+			}
+		},
+		{
+			id: '/[[optional]]',
+			pattern: '/^(?:/([^/]+))?/?$/',
+			page: {
+				layouts: [0],
+				errors: [1],
+				leaf: nodes.findIndex((node) => node.component?.includes('/[[optional]]'))
+			}
+		}
+	]);
+});
+
+test('optional parameters inside a group adjacent to another route', () => {
+	const { nodes, routes } = create('samples/group-optional');
+
+	expect(nodes.map(simplify_node)).toEqual([
+		default_layout,
+		default_error,
+		{
+			component: 'samples/group-optional/+page.svelte'
+		},
+		{
+			component: 'samples/group-optional/(group)/[[optional]]/+page.svelte'
+		}
+	]);
+
+	expect(routes.map(simplify_route)).toEqual([
+		{
+			id: '/(group)',
+			pattern: '/^/$/'
+		},
+		{
+			id: '/',
+			pattern: '/^/$/',
+			page: {
+				layouts: [0],
+				errors: [1],
+				leaf: nodes.findIndex((node) => node.component?.includes('/group-optional/+page.svelte'))
+			}
+		},
+		{
+			id: '/(group)/[[optional]]',
+			pattern: '/^(?:/([^/]+))?/?$/',
+			page: {
+				layouts: [0],
+				errors: [1],
+				leaf: nodes.findIndex((node) => node.component?.includes('/(group)/[[optional]]'))
+			}
+		}
+	]);
+});
+
 test('ignores files and directories with leading underscores', () => {
 	const { routes } = create('samples/hidden-underscore');
 
@@ -481,7 +557,7 @@ test('allows multiple slugs', () => {
 			pattern: '/^/([^/]+?).([^/]+?)/?$/',
 			endpoint: {
 				file: 'samples/multiple-slugs/[file].[ext]/+server.js',
-				page_options: null
+				page_options: {}
 			}
 		}
 	]);
@@ -506,7 +582,7 @@ test('ignores things that look like lockfiles', () => {
 			pattern: '/^/foo/?$/',
 			endpoint: {
 				file: 'samples/lockfiles/foo/+server.js',
-				page_options: null
+				page_options: {}
 			}
 		}
 	]);
@@ -542,7 +618,7 @@ test('works with custom extensions', () => {
 			pattern: '/^/blog.json/?$/',
 			endpoint: {
 				file: 'samples/custom-extension/blog.json/+server.js',
-				page_options: null
+				page_options: {}
 			}
 		},
 		{
@@ -555,7 +631,7 @@ test('works with custom extensions', () => {
 			pattern: '/^/blog/([^/]+?).json/?$/',
 			endpoint: {
 				file: 'samples/custom-extension/blog/[slug].json/+server.js',
-				page_options: null
+				page_options: {}
 			}
 		},
 		{
@@ -824,5 +900,12 @@ test('errors with both ts and js handlers for the same route', () => {
 	assert.throws(
 		() => create('samples/conflicting-ts-js-handlers-server'),
 		/^Multiple endpoint files found in samples\/conflicting-ts-js-handlers-server\/ : \+server\.js and \+server\.ts/
+	);
+});
+
+test('errors on prerenderable dual route', () => {
+	assert.throws(
+		() => create('samples/prerendered-dual-route'),
+		'Cannot prerender a route (/x) with both a `+page.svelte` and a `+server.js`'
 	);
 });

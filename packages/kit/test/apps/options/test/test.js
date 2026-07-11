@@ -6,7 +6,7 @@ import { test } from '../../../utils.js';
 
 test.describe.configure({ mode: 'parallel' });
 
-test.skip(!!process.env.PATHS_ASSETS);
+test.skip(!!process.env.PATHS_ASSETS || process.env.PATHS_RELATIVE === 'false');
 
 test.describe('CSP', () => {
 	test('blocks script from external site', async ({ page, start_server }) => {
@@ -60,6 +60,18 @@ test.describe('CSP', () => {
 		);
 		expect(hydratable_script_match).not.toBeNull();
 		expect(hydratable_script_match?.[1]).toBe(nonce);
+	});
+
+	test('require-trusted-types-for', async ({ page, javaScriptEnabled }) => {
+		test.skip(!javaScriptEnabled, 'trusted types only affects scripts');
+
+		const errors = [];
+		page.on('pageerror', (err) => {
+			errors.push(err.message);
+		});
+
+		await page.goto('/path-base/csp-trusted-types');
+		expect(errors.length).toEqual(0);
 	});
 });
 

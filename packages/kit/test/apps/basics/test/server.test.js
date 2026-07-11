@@ -775,6 +775,12 @@ test.describe('Static files', () => {
 			expect(await response.text()).toBe('hello');
 		});
 	}
+
+	test('returns 404 for Chrome DevTools workspaces request', async ({ request }) => {
+		const response = await request.get('/.well-known/appspecific/com.chrome.devtools.json');
+		expect(response.status()).toBe(404);
+		expect(await response.text()).toBe('not found');
+	});
 });
 
 test.describe('setHeaders', () => {
@@ -888,8 +894,7 @@ test.describe('$app/environment', () => {
 			path.join(root, '.svelte-kit/output/server/entries/pages/treeshaking/dev/_page.svelte.js'),
 			'utf-8'
 		);
-		// check that import { dev } from '$app/environment' is treeshaken
-		expect(code).not.toContain('dev');
+		expect(code).not.toContain('not prod');
 	});
 
 	test('treeshakes browser check', async () => {
@@ -902,8 +907,7 @@ test.describe('$app/environment', () => {
 			),
 			'utf-8'
 		);
-		// check that import { browser } from '$app/environment' is treeshaken
-		expect(code).not.toContain('browser');
+		expect(code).not.toMatch('client');
 	});
 });
 

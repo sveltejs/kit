@@ -8,7 +8,8 @@ const config = {
 		csp: {
 			directives: {
 				'script-src': ['self'],
-				'require-trusted-types-for': ['script']
+				'require-trusted-types-for': ['script'],
+				'trusted-types': ['svelte-trusted-html']
 			}
 		},
 		files: {
@@ -33,7 +34,8 @@ const config = {
 		paths: {
 			base: '/path-base',
 			// @ts-expect-error our env var string can't match the https template literal
-			assets: process.env.PATHS_ASSETS || ''
+			assets: process.env.PATHS_ASSETS || '',
+			relative: process.env.PATHS_RELATIVE !== 'false'
 		},
 		env: {
 			dir: './env-dir',

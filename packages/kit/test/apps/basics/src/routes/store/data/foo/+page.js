@@ -1,5 +1,6 @@
 let is_first = true;
 
+/** @type {import('./$types').PageLoad} */
 export function load({ url }) {
 	if (url.searchParams.get('reset')) {
 		is_first = true;

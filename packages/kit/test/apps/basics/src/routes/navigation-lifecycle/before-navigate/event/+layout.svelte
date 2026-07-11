@@ -6,7 +6,7 @@
 	beforeNavigate((navigation) => {
 		if (navigation.type === 'link' || navigation.type === 'popstate') {
 			console.log(
-				`${navigation.event.type} ${navigation.from.url.pathname} -> ${navigation.to.url.pathname}`
+				`${navigation.event.type} ${navigation.from?.url.pathname} -> ${navigation.to?.url.pathname}`
 			);
 		}
 	});

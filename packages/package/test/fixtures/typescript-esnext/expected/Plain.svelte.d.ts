@@ -4,7 +4,7 @@ type Plain = SvelteComponent<{
 }, {
     [evt: string]: CustomEvent<any>;
 }, {}> & {
-    $$bindings?: string;
+    $$bindings?: string | undefined;
 };
 declare const Plain: $$__sveltets_2_IsomorphicComponent<{
     foo: import("./foo").Foo;

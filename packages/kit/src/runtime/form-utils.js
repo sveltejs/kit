@@ -4,8 +4,11 @@
 
 import { DEV } from 'esm-env';
 import * as devalue from 'devalue';
-import { text_decoder, text_encoder } from './utils.js';
+import { text_encoder } from './utils.js';
+import { noop } from '../utils/functions.js';
 import { SvelteKitError } from '@sveltejs/kit/internal';
+
+const decoder = new TextDecoder();
 
 /**
  * Sets a value in a nested object using a path string, mutating the original object
@@ -25,6 +28,9 @@ export function set_nested_value(object, path_string, value) {
 	deep_set(object, split_path(path_string), value);
 }
 
+/** Pass this to set_nested_value to delete the last part of the given path */
+export const DELETE_KEY = {};
+
 /**
  * Convert `FormData` into a POJO
  * @param {FormData} data
@@ -40,14 +46,11 @@ export function convert_formdata(data) {
 
 		if (is_array) key = key.slice(0, -2);
 
-		if (values.length > 1 && !is_array) {
-			throw new Error(`Form cannot contain duplicated keys — "${key}" has ${values.length} values`);
-		}
-
 		// an empty `<input type="file">` will submit a non-existent file, bizarrely
 		values = values.filter(
 			(entry) => typeof entry === 'string' || entry.name !== '' || entry.size > 0
 		);
+		if (values.length === 0 && !is_array) continue;
 
 		if (key.startsWith('n:')) {
 			key = key.slice(2);
@@ -55,6 +58,10 @@ export function convert_formdata(data) {
 		} else if (key.startsWith('b:')) {
 			key = key.slice(2);
 			values = values.map((v) => v === 'on');
+		}
+
+		if (values.length > 1 && !is_array) {
+			throw new Error(`Form cannot contain duplicated keys — "${key}" has ${values.length} values`);
 		}
 
 		set_nested_value(result, key, is_array ? values : values[0]);
@@ -83,10 +90,6 @@ export function serialize_binary_form(data, meta) {
 
 	/** @type {Array<[file: File, index: number]>} */
 	const files = [];
-
-	if (!meta.remote_refreshes?.length) {
-		delete meta.remote_refreshes;
-	}
 
 	const encoded_header = devalue.stringify([data, meta], {
 		File: (file) => {
@@ -146,10 +149,6 @@ export async function deserialize_binary_form(request) {
 	}
 	if (!request.body) {
 		throw deserialize_error('no body');
-	}
-	const content_length = parseInt(request.headers.get('content-length') ?? '');
-	if (Number.isNaN(content_length)) {
-		throw deserialize_error('invalid Content-Length header');
 	}
 
 	const reader = request.body.getReader();
@@ -230,16 +229,11 @@ export async function deserialize_binary_form(request) {
 	}
 	const header_view = new DataView(header.buffer, header.byteOffset, header.byteLength);
 	const data_length = header_view.getUint32(1, true);
-
-	if (HEADER_BYTES + data_length > content_length) {
-		throw deserialize_error('data overflow');
-	}
-
 	const file_offsets_length = header_view.getUint16(5, true);
 
-	if (HEADER_BYTES + data_length + file_offsets_length > content_length) {
-		throw deserialize_error('file offset table overflow');
-	}
+	// Validation uses embedded binary header fields (data_length, file_offsets_length)
+	// rather than Content-Length, which proxies/middleboxes may strip or corrupt.
+	// See: https://github.com/sveltejs/kit/issues/15299
 
 	// Read the form data
 	const data_buffer = await get_buffer(HEADER_BYTES, data_length);
@@ -254,7 +248,7 @@ export async function deserialize_binary_form(request) {
 		const file_offsets_buffer = await get_buffer(HEADER_BYTES + data_length, file_offsets_length);
 		if (!file_offsets_buffer) throw deserialize_error('file offset table too short');
 
-		const parsed_offsets = JSON.parse(text_decoder.decode(file_offsets_buffer));
+		const parsed_offsets = JSON.parse(decoder.decode(file_offsets_buffer));
 
 		if (
 			!Array.isArray(parsed_offsets) ||
@@ -269,7 +263,7 @@ export async function deserialize_binary_form(request) {
 
 	/** @type {Array<{ offset: number, size: number }>} */
 	const file_spans = [];
-	const [data, meta] = devalue.parse(text_decoder.decode(data_buffer), {
+	const [data, meta] = devalue.parse(decoder.decode(data_buffer), {
 		File: ([name, type, size, last_modified, index]) => {
 			if (
 				typeof name !== 'string' ||
@@ -291,9 +285,6 @@ export async function deserialize_binary_form(request) {
 			file_offsets[index] = undefined;
 
 			offset += files_start_offset;
-			if (offset + size > content_length) {
-				throw deserialize_error('file data overflow');
-			}
 
 			file_spans.push({ offset, size });
 
@@ -324,14 +315,14 @@ export async function deserialize_binary_form(request) {
 		}
 	}
 
-	// Read the request body asyncronously so it doesn't stall
+	// Read the request body asynchronously so it doesn't stall
 	void (async () => {
 		let has_more = true;
 		while (has_more) {
 			const chunk = await get_chunk(chunks.length);
 			has_more = !!chunk;
 		}
-	})();
+	})().catch(noop); // prevent unhandled rejection potentially crashing the process
 
 	return { data, meta, form_data: null };
 }
@@ -462,7 +453,7 @@ class LazyFile {
 		});
 	}
 	async text() {
-		return text_decoder.decode(await this.arrayBuffer());
+		return decoder.decode(await this.arrayBuffer());
 	}
 }
 
@@ -507,14 +498,18 @@ export function deep_set(object, keys, value) {
 		check_prototype_pollution(key);
 
 		const is_array = /^\d+$/.test(keys[i + 1]);
-		const exists = Object.hasOwn(current, key);
-		const inner = current[key];
+		const inner = Object.hasOwn(current, key) ? current[key] : undefined;
+		const exists = inner != null;
 
 		if (exists && is_array !== Array.isArray(inner)) {
 			throw new Error(`Invalid array key ${keys[i + 1]}`);
 		}
 
 		if (!exists) {
+			if (value === DELETE_KEY) {
+				// don't create the nested structure if we want to delete the key anyway
+				return;
+			}
 			current[key] = is_array ? [] : {};
 		}
 
@@ -523,7 +518,12 @@ export function deep_set(object, keys, value) {
 
 	const final_key = keys[keys.length - 1];
 	check_prototype_pollution(final_key);
-	current[final_key] = value;
+
+	if (value === DELETE_KEY) {
+		delete current[final_key];
+	} else {
+		current[final_key] = value;
+	}
 }
 
 /**
@@ -604,17 +604,63 @@ export function deep_get(object, path) {
 }
 
 /**
+ *
+ * @param {string} field_type
+ * @param {boolean} is_array
+ * @param {unknown} input_value
+ */
+function get_type_prefix(field_type, is_array, input_value) {
+	if (field_type === 'number' || field_type === 'range') return 'n:';
+	if (field_type === 'checkbox' && !is_array) return 'b:';
+	if (field_type === 'hidden' || field_type === 'submit') {
+		const input_type = typeof input_value;
+		if (input_type === 'number') return 'n:';
+		if (input_type === 'boolean') return 'b:';
+	}
+	return '';
+}
+
+/**
+ * A deep-clone implementation specifically for form data, where
+ * we don't need to worry about cycles and whatnot
+ * @param {any} value
+ * @returns {any}
+ */
+function deep_clone(value) {
+	if (value !== null && typeof value === 'object') {
+		if (value instanceof File) {
+			return value;
+		}
+
+		if (Array.isArray(value)) {
+			return value.map(deep_clone);
+		}
+
+		/** @type {Record<string, any>} */
+		const clone = {};
+		for (const key of Object.keys(value)) {
+			clone[key] = deep_clone(value[key]);
+		}
+
+		return clone;
+	}
+
+	return value;
+}
+
+/**
  * Creates a proxy-based field accessor for form data
  * @param {any} target - Function or empty POJO
  * @param {() => Record<string, any>} get_input - Function to get current input data
  * @param {(path: (string | number)[], value: any) => void} set_input - Function to set input data
- * @param {() => Record<string, InternalRemoteFormIssue[]>} get_issues - Function to get current issues
+ * @param {(path?: (string | number)[], all?: boolean) => Record<string, InternalRemoteFormIssue[]>} get_issues - Function to get current issues
  * @param {(string | number)[]} path - Current access path
  * @returns {any} Proxy object with name(), value(), and issues() methods
  */
 export function create_field_proxy(target, get_input, set_input, get_issues, path = []) {
 	const get_value = () => {
-		return deep_get(get_input(), path);
+		const value = deep_get(get_input(), path);
+		return deep_clone(value);
 	};
 
 	return new Proxy(target, {
@@ -645,7 +691,7 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 
 			if (prop === 'issues' || prop === 'allIssues') {
 				const issues_func = () => {
-					const all_issues = get_issues()[key === '' ? '$' : key];
+					const all_issues = get_issues(path, prop === 'allIssues')[key === '' ? '$' : key];
 
 					if (prop === 'allIssues') {
 						return all_issues?.map((issue) => ({
@@ -654,12 +700,14 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 						}));
 					}
 
-					return all_issues
+					const issues = all_issues
 						?.filter((issue) => issue.name === key)
 						?.map((issue) => ({
 							path: issue.path,
 							message: issue.message
 						}));
+
+					return issues?.length ? issues : undefined;
 				};
 
 				return create_field_proxy(issues_func, get_input, set_input, get_issues, [...path, prop]);
@@ -668,7 +716,7 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 			if (prop === 'as') {
 				/**
 				 * @param {string} type
-				 * @param {string} [input_value]
+				 * @param {unknown} [input_value]
 				 */
 				const as_func = (type, input_value) => {
 					const is_array =
@@ -676,12 +724,7 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 						type === 'select multiple' ||
 						(type === 'checkbox' && typeof input_value === 'string');
 
-					const prefix =
-						type === 'number' || type === 'range'
-							? 'n:'
-							: type === 'checkbox' && !is_array
-								? 'b:'
-								: '';
+					const prefix = get_type_prefix(type, is_array, input_value);
 
 					// Base properties for all input types
 					/** @type {Record<string, any>} */
@@ -701,13 +744,16 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 					// Handle submit and hidden inputs
 					if (type === 'submit' || type === 'hidden') {
 						if (DEV) {
-							if (!input_value) {
+							if (input_value === null || input_value === undefined) {
 								throw new Error(`\`${type}\` inputs must have a value`);
 							}
 						}
 
+						const value =
+							typeof input_value === 'boolean' ? (input_value ? 'on' : 'off') : input_value;
+
 						return Object.defineProperties(base_props, {
-							value: { value: input_value, enumerable: true }
+							value: { value, enumerable: true }
 						});
 					}
 
@@ -718,7 +764,7 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 							value: {
 								enumerable: true,
 								get() {
-									return get_value();
+									return get_value() ?? input_value;
 								}
 							}
 						});
@@ -736,6 +782,23 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 							}
 						}
 
+						if (type === 'checkbox' && !is_array) {
+							return Object.defineProperties(base_props, {
+								defaultChecked: {
+									enumerable: true,
+									get() {
+										return input_value;
+									}
+								},
+								checked: {
+									enumerable: true,
+									get() {
+										return get_value() ?? input_value;
+									}
+								}
+							});
+						}
+
 						return Object.defineProperties(base_props, {
 							value: { value: input_value ?? 'on', enumerable: true },
 							checked: {
@@ -747,11 +810,7 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 										return value === input_value;
 									}
 
-									if (is_array) {
-										return (value ?? []).includes(input_value);
-									}
-
-									return value;
+									return (value ?? []).includes(input_value);
 								}
 							}
 						});
@@ -801,10 +860,16 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 
 					// Handle all other input types (text, number, etc.)
 					return Object.defineProperties(base_props, {
+						defaultValue: {
+							enumerable: true,
+							get() {
+								return input_value;
+							}
+						},
 						value: {
 							enumerable: true,
 							get() {
-								const value = get_value();
+								const value = get_value() ?? input_value;
 								return value != null ? String(value) : '';
 							}
 						}

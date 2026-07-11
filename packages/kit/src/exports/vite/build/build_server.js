@@ -1,20 +1,29 @@
+/** @import { AssetDependencies, ManifestData, SSRNode, ValidatedKitConfig } from 'types' */
+/** @import { Manifest, Rollup } from 'vite' */
 import fs from 'node:fs';
 import { mkdirp } from '../../../utils/filesystem.js';
-import { create_function_as_string, filter_fonts, find_deps, resolve_symlinks } from './utils.js';
+import {
+	create_function_as_string,
+	filter_fonts,
+	find_deps,
+	generate_placeholder,
+	resolve_symlinks
+} from './utils.js';
 import { s } from '../../../utils/misc.js';
 import { normalizePath } from 'vite';
 import { basename } from 'node:path';
 import { fix_css_urls } from '../../../utils/css.js';
+import { escape_for_interpolation } from '../../../utils/escape.js';
 
 /**
  * @param {string} out
- * @param {import('types').ValidatedKitConfig} kit
- * @param {import('types').ManifestData} manifest_data
- * @param {import('vite').Manifest} server_manifest
- * @param {import('vite').Manifest | null} client_manifest
- * @param {string | null} assets_path
- * @param {import('vite').Rollup.RollupOutput['output'] | null} client_chunks
- * @param {import('types').RecursiveRequired<import('types').ValidatedConfig['kit']['output']>} output_config
+ * @param {ValidatedKitConfig} kit
+ * @param {ManifestData} manifest_data
+ * @param {Manifest} server_manifest
+ * @param {Manifest | null} client_manifest
+ * @param {string} assets_path
+ * @param {(Rollup.OutputAsset | Rollup.OutputChunk)[]} chunks
+ * @returns {void}
  */
 export function build_server_nodes(
 	out,
@@ -23,8 +32,7 @@ export function build_server_nodes(
 	server_manifest,
 	client_manifest,
 	assets_path,
-	client_chunks,
-	output_config
+	chunks
 ) {
 	mkdirp(`${out}/server/nodes`);
 	mkdirp(`${out}/server/stylesheets`);
@@ -42,8 +50,8 @@ export function build_server_nodes(
 	 */
 	let prepare_css_for_inlining = (css) => s(css);
 
-	if (client_chunks && kit.inlineStyleThreshold > 0 && output_config.bundleStrategy === 'split') {
-		for (const chunk of client_chunks) {
+	if (chunks && kit.inlineStyleThreshold > 0 && kit.output.bundleStrategy === 'split') {
+		for (const chunk of chunks) {
 			if (chunk.type !== 'asset' || !chunk.fileName.endsWith('.css')) {
 				continue;
 			}
@@ -67,24 +75,40 @@ export function build_server_nodes(
 			const static_asset_prefix = segments.map(() => '..').join('/') + '/';
 
 			prepare_css_for_inlining = (css, eager_assets) => {
+				const assets_placeholder = generate_placeholder(css, 'ASSETS');
+				const base_placeholder = generate_placeholder(css, 'BASE');
+
 				const transformed_css = fix_css_urls({
 					css,
 					vite_assets: eager_assets,
 					static_assets,
-					paths_assets: '${assets}',
-					base: '${base}',
+					paths_assets: assets_placeholder,
+					base: base_placeholder,
 					static_asset_prefix
 				});
 
 				// only convert to a function if we have adjusted any URLs
 				if (css !== transformed_css) {
-					return create_function_as_string('css', ['assets', 'base'], transformed_css);
+					const escaped = escape_for_interpolation(transformed_css, [
+						{
+							placeholder: assets_placeholder,
+							replacement: '${assets}'
+						},
+						{
+							placeholder: base_placeholder,
+							replacement: '${base}'
+						}
+					]);
+					return create_function_as_string('css', ['assets', 'base'], escaped);
 				}
 
 				return s(css);
 			};
 		}
 	}
+
+	/** path to the `.svelte-kit` directory */
+	const out_dir = normalizePath(kit.outDir);
 
 	for (let i = 0; i < manifest_data.nodes.length; i++) {
 		const node = manifest_data.nodes[i];
@@ -93,7 +117,7 @@ export function build_server_nodes(
 		const imports = [];
 
 		// String representation of
-		/** @type {import('types').SSRNode} */
+		/** @type {SSRNode} */
 		/** @type {string[]} */
 		const exports = [`export const index = ${i};`];
 
@@ -107,9 +131,13 @@ export function build_server_nodes(
 		let fonts = [];
 
 		/** @type {Set<string>} */
-		let eager_assets = new Set();
+		const eager_assets = new Set();
 
-		if (node.component && client_manifest) {
+		const uses_server_component = node.child_pages
+			? node.child_pages.some((child) => child.page_options?.ssr !== false)
+			: node.page_options?.ssr !== false;
+
+		if (node.component && uses_server_component) {
 			exports.push(
 				'let component_cache;',
 				`export const component = async () => component_cache ??= (await import('../${
@@ -119,7 +147,12 @@ export function build_server_nodes(
 		}
 
 		if (node.universal) {
-			if (!!node.page_options && node.page_options.ssr === false) {
+			if (
+				(kit.router.type === 'hash' &&
+					node.page_options !== null &&
+					node.page_options?.ssr === undefined) ||
+				(node.page_options && node.page_options.ssr === false)
+			) {
 				exports.push(`export const universal = ${s(node.page_options, null, 2)};`);
 			} else {
 				imports.push(
@@ -139,49 +172,54 @@ export function build_server_nodes(
 			exports.push(`export const server_id = ${s(node.server)};`);
 		}
 
-		if (
-			client_manifest &&
-			(node.universal || node.component) &&
-			output_config.bundleStrategy === 'split'
-		) {
-			const entry_path = `${normalizePath(kit.outDir)}/generated/client-optimized/nodes/${i}.js`;
-			const entry = find_deps(client_manifest, entry_path, true);
-
-			// Eagerly load client stylesheets and fonts imported by the SSR-ed page to avoid FOUC.
-			// However, if it is not used during SSR (not present in the server manifest),
-			// then it can be lazily loaded in the browser.
-
-			/** @type {import('types').AssetDependencies | undefined} */
+		if ((node.universal || node.component) && kit.output.bundleStrategy === 'split') {
+			/** @type {AssetDependencies | undefined} */
 			let component;
 			if (node.component) {
 				component = find_deps(server_manifest, node.component, true);
 			}
 
-			/** @type {import('types').AssetDependencies | undefined} */
+			/** @type {AssetDependencies | undefined} */
 			let universal;
 			if (node.universal) {
 				universal = find_deps(server_manifest, node.universal, true);
 			}
 
-			/** @type {Set<string>} */
-			const eager_css = new Set();
+			if (client_manifest) {
+				const entry_path = `${out_dir}/generated/client-optimized/nodes/${i}.js`;
+				const entry = find_deps(client_manifest, entry_path, true);
 
-			entry.stylesheet_map.forEach((value, filepath) => {
-				// pages and layouts are renamed to node indexes when optimised for the client
-				// so we use the original filename instead to check against the server manifest
-				if (filepath === entry_path) {
-					filepath = node.component ?? filepath;
+				// Eagerly load client stylesheets and fonts imported by the SSR-ed page to avoid FOUC.
+				// However, if it is not used during SSR (not present in the server manifest),
+				// then it can be lazily loaded in the browser.
+
+				/** @type {Set<string>} */
+				const eager_css = new Set();
+
+				entry.stylesheet_map.forEach((value, filepath) => {
+					// pages and layouts are renamed to node indexes when optimised for the client
+					// so we use the original filename instead to check against the server manifest
+					if (filepath === entry_path) {
+						filepath = node.component ?? filepath;
+					}
+
+					if (component?.stylesheet_map.has(filepath) || universal?.stylesheet_map.has(filepath)) {
+						value.css.forEach((file) => eager_css.add(file));
+						value.assets.forEach((file) => eager_assets.add(file));
+					}
+				});
+
+				imported = entry.imports;
+				stylesheets = Array.from(eager_css);
+				fonts = filter_fonts(Array.from(eager_assets));
+			} else {
+				for (const entry of [component, universal]) {
+					if (!entry) continue;
+					imported.push(...entry.imports);
+					stylesheets.push(...entry.stylesheets);
+					fonts.push(...entry.fonts);
 				}
-
-				if (component?.stylesheet_map.has(filepath) || universal?.stylesheet_map.has(filepath)) {
-					value.css.forEach((file) => eager_css.add(file));
-					value.assets.forEach((file) => eager_assets.add(file));
-				}
-			});
-
-			imported = entry.imports;
-			stylesheets = Array.from(eager_css);
-			fonts = filter_fonts(Array.from(eager_assets));
+			}
 		}
 
 		exports.push(
@@ -198,7 +236,7 @@ export function build_server_nodes(
 
 		// Keep track of Vite asset filenames so that we avoid touching unrelated ones
 		// when adjusting the inlined CSS
-		if (stylesheets_to_inline.size && assets_path && eager_assets.size) {
+		if (stylesheets_to_inline.size && eager_assets.size) {
 			vite_assets = new Set(
 				Array.from(eager_assets).map((asset) => {
 					return decodeURIComponent(asset.replace(`${assets_path}/`, ''));
@@ -215,7 +253,7 @@ export function build_server_nodes(
 					const filename = basename(file);
 					const dest = `${out}/server/stylesheets/${filename}.js`;
 
-					let css = /** @type {string} */ (stylesheets_to_inline.get(file));
+					const css = /** @type {string} */ (stylesheets_to_inline.get(file));
 
 					fs.writeFileSync(
 						dest,
