@@ -5,7 +5,7 @@ import { test } from '../../../utils.js';
 
 test.describe.configure({ mode: 'parallel' });
 
-test.skip(!!process.env.PATHS_ASSETS);
+test.skip(!!process.env.PATHS_ASSETS || process.env.PATHS_RELATIVE === 'false');
 
 test.describe('CSP', () => {
 	test('blocks script from external site', async ({ page, start_server }) => {
