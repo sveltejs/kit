@@ -1301,3 +1301,36 @@ Note that some properties of `RequestEvent` are different inside remote function
 ## Redirects
 
 Inside `query`, `form` and `prerender` functions it is possible to use the [`redirect(...)`](@sveltejs-kit#redirect) function. It is *not* possible inside `command` functions, as you should avoid redirecting here. (If you absolutely have to, you can return a `{ redirect: location }` object and deal with it in the client.)
+
+This matters when a shared helper built on [`getRequestEvent`]($app-server#getRequestEvent) throws a `redirect()` — reused inside a `command`, it will fail with an error. Catch it with [`isRedirect`](@sveltejs-kit#isRedirect) and return the location instead:
+
+```js
+/// file: src/routes/todos.remote.js
+import { command } from '$app/server';
+import { isRedirect } from '@sveltejs/kit';
+import { requireLogin } from '$lib/server/auth';
+import * as db from '$lib/server/database';
+
+export const addTodo = command('unchecked', async (text) => {
+	try {
+		const user = requireLogin();
+		await db.addTodo(user, text);
+	} catch (e) {
+		if (isRedirect(e)) return { redirect: e.location };
+		throw e;
+	}
+});
+```
+
+```svelte
+<!--- file: src/routes/+page.svelte --->
+<script>
+	import { goto } from '$app/navigation';
+	import { addTodo } from './todos.remote';
+
+	async function add(text) {
+		const result = await addTodo(text);
+		if (result?.redirect) goto(result.redirect);
+	}
+</script>
+```
