@@ -140,6 +140,8 @@ export async function render_response({
 	if (page_config.ssr) {
 		/** @type {Record<string, any>} */
 		const props = {
+			components: [],
+			resetters: [],
 			form: form_value,
 			root: /** @type {RenderNode} */ ({}),
 			error
