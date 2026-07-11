@@ -89,7 +89,7 @@ export async function render_response({
 	const inline_styles = new Map();
 
 	// TODO `svelte/server` should expose `RenderOutput`
-	/** @type {{ head: string, body: string, css: { code: string, map: any }, hashes: { script: string[] } }} */
+	/** @type {{ head: string, body: string, hashes: { script: string[] } }} */
 	let rendered;
 
 	const form_value =
@@ -243,14 +243,13 @@ export async function render_response({
 				// for the paths.reset() below and for any eager getRequestEvent() calls during rendering without AsyncLocalStorage available.
 				const rendered = render(Root, { ...render_opts, props });
 
-				// @ts-expect-error the legacy `render` API only returns html still, but the new API uses body
-				const { head, body, css, hashes } = await rendered;
+				const { head, body, hashes } = await rendered;
 
 				if (hashes) {
 					csp.add_script_hashes(hashes.script);
 				}
 
-				return { head, body, css, hashes };
+				return { head, body, hashes };
 			});
 		} finally {
 			if (DEV) {
@@ -258,7 +257,7 @@ export async function render_response({
 			}
 		}
 	} else {
-		rendered = { head: '', body: '', css: { code: '', map: null }, hashes: { script: [] } };
+		rendered = { head: '', body: '', hashes: { script: [] } };
 	}
 
 	for (const { node } of branch) {
