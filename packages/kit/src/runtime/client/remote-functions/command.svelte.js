@@ -3,8 +3,6 @@ import { app_dir, base } from '$app/paths/internal/client';
 import { app } from '../client.js';
 import { stringify_command_arg } from '../../shared.js';
 import { get_remote_request_headers, categorize_updates, remote_request } from './shared.svelte.js';
-import { Redirect } from '#internal';
-import { DEV } from 'esm-env';
 
 /**
  * Client-version of the `command` function from `$app/server`.
@@ -55,29 +53,6 @@ export function command(id) {
 					}),
 					headers
 				});
-
-				if (response.redirect) {
-					let message = `To redirect from a command, catch the redirect and use \`goto\``;
-
-					if (DEV) {
-						message += `:
-
-						import { isRedirect } from '@sveltejs/kit';
-						import { goto } from '$app/navigation';
-
-						try {
-							await ${id.split('/')[1]}(...);
-						} catch (e) {
-							if (isRedirect(e)) {
-								goto(e.location);
-							} else {
-								throw e;
-							}
-						}`;
-					}
-
-					throw new Redirect(300, response.redirect, message.replace(/^\t{6}/gm, ''));
-				}
 
 				return response._;
 			} finally {

@@ -152,7 +152,7 @@ export class Query {
 					this.#loading = false;
 				});
 
-				reject(new HttpError(error.status, error)); // so that transformError doesn't transform it again
+				reject(error);
 			});
 
 		return promise;

@@ -243,6 +243,10 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 				const { data: input, meta, form_data } = await deserialize_binary_form(event.request);
 				state.remote.requested = create_requested_map(meta.remote_refreshes);
 
+				if (meta.remote_refreshes) {
+					data.r = true;
+				}
+
 				// If this is a keyed form instance (created via form.for(key)), add the key to the form data (unless already set)
 				// Note that additional_args will only be set if the form is not enhanced, as enhanced forms transfer the key inside `data`.
 				if (additional_args && !('id' in input)) {
@@ -316,11 +320,13 @@ async function handle_remote_call_internal(event, state, options, manifest, id) 
 		);
 	} catch (error) {
 		if (error instanceof Redirect) {
-			const data = await collect_remote_data({ redirect: error.location }, event, state, options);
+			const data = await collect_remote_data({}, event, state, options);
 
 			return json(
 				/** @type {RemoteFunctionResponse} */ ({
-					type: 'result',
+					type: 'redirect',
+					status: error.status,
+					location: error.location,
 					data: stringify(data, transport)
 				}),
 				{ headers }

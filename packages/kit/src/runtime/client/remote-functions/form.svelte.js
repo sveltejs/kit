@@ -3,7 +3,7 @@
 /** @import { InternalRemoteFormIssue } from 'types' */
 import { app_dir, base } from '$app/paths/internal/client';
 import { DEV } from 'esm-env';
-import { HttpError } from '@sveltejs/kit/internal';
+import { HttpError, Redirect } from '@sveltejs/kit/internal';
 import {
 	query_responses,
 	_goto,
@@ -206,7 +206,7 @@ export function form(id) {
 					}
 
 					const { blob } = serialize_binary_form(convert(form_data), {
-						remote_refreshes: Array.from(refreshes ?? [])
+						remote_refreshes: refreshes ? Array.from(refreshes) : undefined
 					});
 
 					const response = await remote_request(
@@ -225,26 +225,12 @@ export function form(id) {
 
 					({ issues: raw_issues = [], result } = response._ ?? {});
 
-					// if the developer took control of updates via `.updates(...)` (even with
-					// no arguments), or the server performed explicit refreshes, don't invalidateAll
-					const should_refresh = refreshes === null && !response.r;
-
-					if (response.redirect) {
-						// Use internal version to allow redirects to external URLs
-						void _goto(
-							response.redirect,
-							{
-								refreshAll: should_refresh
-							},
-							0
-						);
-						return true;
-					}
-
 					const succeeded = raw_issues.length === 0;
 
 					if (succeeded) {
-						if (should_refresh) {
+						// if the developer took control of updates via `.updates(...)` (even with
+						// no arguments), or the server performed explicit refreshes, don't refreshAll
+						if (!response.r) {
 							void refreshAll();
 						}
 					} else {
@@ -255,6 +241,17 @@ export function form(id) {
 
 					return succeeded;
 				} catch (e) {
+					if (e instanceof Redirect) {
+						// Use internal version to allow redirects to external URLs
+						void _goto(
+							e.location,
+							{
+								refreshAll: e.refresh
+							},
+							0
+						);
+					}
+
 					result = undefined;
 					raw_issues = [];
 					throw e;

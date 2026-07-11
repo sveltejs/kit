@@ -680,6 +680,9 @@ async function _preload_code(url) {
 	}
 }
 
+/** @type {WeakSet<App.Error>} */
+const transformed_errors = new WeakSet();
+
 /**
  * @param {import('./types.js').NavigationFinished} result
  * @param {HTMLElement} target
@@ -717,10 +720,25 @@ async function initialize(result, target, hydrate) {
 		// Svelte 5 specific: asynchronously instantiate the component, i.e. don't call flushSync
 		sync: false,
 		transformError: /** @param {unknown} e */ async (e) => {
+			if (typeof e === 'object' && transformed_errors.has(/** @type {App.Error} */ (e))) {
+				return e;
+			}
+
+			if (e instanceof Redirect) {
+				void goto(e.location, {
+					refreshAll: e.refresh
+				});
+
+				transformed_errors.add(e);
+				return e;
+			}
+
 			const error = await handle_error(e, current.nav);
 			rendering_error = { error, status: error.status };
 			page.error = error;
 			page.status = rendering_error.status;
+
+			transformed_errors.add(error);
 			return error;
 		}
 	});
@@ -2227,6 +2245,10 @@ function setup_preload() {
 export async function handle_error(error, event) {
 	if (error instanceof HttpError) {
 		return error.body;
+	}
+
+	if (error instanceof Redirect) {
+		return error;
 	}
 
 	if (DEV) {
