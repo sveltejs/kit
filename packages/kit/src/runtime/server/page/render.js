@@ -143,7 +143,7 @@ export async function render_response({
 			components: [],
 			resetters: [],
 			form: form_value,
-			root: /** @type {RenderNode} */ ({}),
+			tree: /** @type {RenderNode} */ ({}),
 			error,
 			page: {
 				error,
@@ -157,7 +157,7 @@ export async function render_response({
 			}
 		};
 
-		let current_node = props.root;
+		let current_node = props.tree;
 		let data = props.page.data;
 
 		for (let i = 0; i < branch.length; i += 1) {

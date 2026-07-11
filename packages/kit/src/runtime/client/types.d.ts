@@ -93,7 +93,7 @@ export type NavigationFinished = {
 		page: Page;
 		form?: Record<string, any> | null;
 		error?: App.Error;
-		root: RenderNode;
+		tree: RenderNode;
 	};
 };
 

@@ -807,7 +807,7 @@ async function get_navigation_result_from_branch({
 		},
 		props: {
 			page,
-			root: /** @type {RenderNode} */ ({})
+			tree: /** @type {RenderNode} */ ({})
 		}
 	};
 
@@ -822,7 +822,7 @@ async function get_navigation_result_from_branch({
 	let data = {};
 	let data_changed = !page;
 
-	let current_node = result.props.root;
+	let current_node = result.props.tree;
 
 	for (let i = 0; i < branch.length; i += 1) {
 		const node = branch[i];

@@ -5,14 +5,14 @@
 
 	interface Props {
 		page: Page;
-		root: RenderNode;
+		tree: RenderNode;
 		components: any[];
 		resetters: Array<(() => void) | undefined>;
 		form?: any;
 		error?: App.Error;
 	}
 
-	const { page, components, resetters, root, form, error }: Props = $props();
+	const { page, components, resetters, tree, form, error }: Props = $props();
 
 	let mounted = $state(false);
 	let navigated = $state(false);
@@ -49,7 +49,7 @@
 	</svelte:boundary>
 {/snippet}
 
-{@render node(root, 0)}
+{@render node(tree, 0)}
 
 {#if mounted}
 	<div
