@@ -31,16 +31,17 @@
 {#snippet node(n: RenderNode, depth: number)}
 	{const Component = $derived(n.component)}
 	{const Error = $derived(n.error)}
+	{const data = $derived(n.data)}
 
 	<svelte:boundary onerror={(_, reset) => (resetters[depth] = reset)}>
 		{#if n.child}
 			<!-- svelte-ignore binding_property_non_reactive -->
-			<Component bind:this={components[depth]} data={n.data} {form} params={page.params}>
+			<Component bind:this={components[depth]} {data} {form} params={page.params}>
 				{@render node(n.child, depth + 1)}
 			</Component>
 		{:else}
 			<!-- svelte-ignore binding_property_non_reactive -->
-			<Component bind:this={components[depth]} data={n.data} {form} params={page.params} {error} />
+			<Component bind:this={components[depth]} {data} {form} params={page.params} {error} />
 		{/if}
 
 		{#snippet failed(error)}

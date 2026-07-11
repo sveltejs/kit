@@ -91,6 +91,11 @@ const scroll_positions = storage.get(SCROLL_KEY) ?? {};
  */
 const snapshots = storage.get(SNAPSHOT_KEY) ?? {};
 
+/**
+ * @deprecated this is a temporary measure to avoid a regression, replace with nested `RenderNode` classes
+ */
+let current_tree = /** @type {RenderNode} */ ({});
+
 if (DEV && BROWSER) {
 	let warned = false;
 
@@ -487,6 +492,7 @@ async function _invalidate(include_load_functions = true, reset_page_state = tru
 		current = { ...navigation_result.state, nav: current.nav };
 		reset_invalidation();
 		root.$set(navigation_result.props);
+		current_tree = navigation_result.props.tree;
 	} else {
 		reset_invalidation();
 	}
@@ -655,6 +661,7 @@ async function _preload_data(intent) {
 						return svelte.fork(() => {
 							root.$set(result.props);
 							update(result.props.page);
+							current_tree = result.props.tree;
 						});
 					} catch {
 						// if it errors, it's because the experimental flag isn't enabled in Svelte
@@ -713,6 +720,7 @@ async function initialize(result, target, hydrate) {
 	}
 
 	update(/** @type {import('@sveltejs/kit').Page} */ (result.props.page));
+	current_tree = result.props.tree;
 
 	// TODO: use mount()
 	root = new Root({
@@ -824,24 +832,39 @@ async function get_navigation_result_from_branch({
 
 	let current_node = result.props.tree;
 
+	/** @type {RenderNode | undefined} */
+	let previous_node = current_tree;
+
 	for (let i = 0; i < branch.length; i += 1) {
 		const node = branch[i];
 		const prev = current.branch[i];
 
-		if (node?.data !== prev?.data) data_changed = true;
 		if (!node) continue;
-
-		data = { ...data, ...node.data };
 
 		const error_loader = errors?.slice(0, i + 1).findLast((x) => x) ?? default_error_loader;
 
 		current_node.error = (await error_loader()).component;
 		current_node.component = node.node.component;
-		current_node.data = data;
+
+		if (
+			!previous_node ||
+			node?.data !== prev?.data ||
+			node.node.component !== prev.node.component
+		) {
+			current_node.data = { ...data, ...node.data };
+			data_changed = true;
+		} else {
+			// use existing object — prevents effects re-running unnecessarily
+			current_node.data = previous_node.data;
+		}
+
+		data = current_node.data;
 
 		if (i < branch.length - 1) {
 			current_node.child = /** @type {import('../types.js').RenderNode} */ ({});
 			current_node = current_node.child;
+
+			previous_node = previous_node?.child;
 		}
 	}
 
@@ -863,8 +886,7 @@ async function get_navigation_result_from_branch({
 			status: status ?? error?.status ?? 200,
 			url: new URL(url),
 			form: form ?? null,
-			// The whole page store is updated, but this way the object reference stays the same
-			data: data_changed ? data : page.data
+			data
 		};
 	}
 
@@ -1927,6 +1949,7 @@ async function navigate({
 		} else {
 			rendering_error = null; // TODO this can break with forks, rethink for SvelteKit 3 where we can assume Svelte 5
 			root.$set(navigation_result.props);
+			current_tree = navigation_result.props.tree;
 			// Reset any boundaries that failed on a previous navigation now that the
 			// new props are applied, otherwise the stale `+error.svelte` stays
 			// mounted above the new route's content. See sveltejs/kit#15694.
@@ -2625,6 +2648,7 @@ export async function set_nearest_error_page(error) {
 		current = { ...navigation_result.state, nav: current.nav };
 
 		root.$set(navigation_result.props);
+		current_tree = navigation_result.props.tree;
 		update(navigation_result.props.page);
 
 		void svelte.tick().then(() => reset_focus(current.url));
