@@ -423,7 +423,7 @@ export async function start(_app, _target, hydrate) {
 	_start_router();
 }
 
-async function _invalidate(include_load_functions = true, reset_page_state = true) {
+async function _invalidate(reset_page_state = true) {
 	// Accept all invalidations as they come, don't swallow any while another invalidation
 	// is running because subsequent invalidations may make earlier ones outdated,
 	// but batch multiple synchronous invalidations.
@@ -462,40 +462,36 @@ async function _invalidate(include_load_functions = true, reset_page_state = tru
 		}
 	}
 
-	if (include_load_functions) {
-		const prev_state = page.state;
-		const navigation_result = intent && (await load_route(intent));
-		if (!navigation_result || token !== invalidation_token || nav_token !== navigation_token) {
-			return;
-		}
-
-		if (navigation_result.type === 'redirect') {
-			return _goto(
-				new URL(navigation_result.location, current.url).href,
-				{ replaceState: true },
-				1,
-				token
-			);
-		}
-
-		// A navigation started before the invalidation and ended before it finished. The invalidation did not redirect,
-		// hence it likely contains outdated data now, so we ignore it.
-		if (navigating && !is_navigating) {
-			return;
-		}
-
-		// This is a bit hacky but allows us not having to pass that boolean around, making things harder to reason about
-		if (!reset_page_state) {
-			navigation_result.props.page.state = prev_state;
-		}
-		update(navigation_result.props.page);
-		current = { ...navigation_result.state, nav: current.nav };
-		reset_invalidation();
-		root.$set(navigation_result.props);
-		current_tree = navigation_result.props.tree;
-	} else {
-		reset_invalidation();
+	const prev_state = page.state;
+	const navigation_result = intent && (await load_route(intent));
+	if (!navigation_result || token !== invalidation_token || nav_token !== navigation_token) {
+		return;
 	}
+
+	if (navigation_result.type === 'redirect') {
+		return _goto(
+			new URL(navigation_result.location, current.url).href,
+			{ replaceState: true },
+			1,
+			token
+		);
+	}
+
+	// A navigation started before the invalidation and ended before it finished. The invalidation did not redirect,
+	// hence it likely contains outdated data now, so we ignore it.
+	if (navigating && !is_navigating) {
+		return;
+	}
+
+	// Preserve `page.state` when invalidating without resetting it (e.g. `refresh`/`refreshAll`)
+	if (!reset_page_state) {
+		navigation_result.props.page.state = prev_state;
+	}
+	update(navigation_result.props.page);
+	current_tree = navigation_result.props.tree;
+	current = { ...navigation_result.state, nav: current.nav };
+	reset_invalidation();
+	root.$set(navigation_result.props);
 
 	// only wait for promises that are connected to queries that still exist
 	/** @type {Promise<any>[]} */
@@ -548,7 +544,7 @@ function persist_state() {
 
 /**
  * @param {string | URL} url
- * @param {{ replaceState?: boolean; noScroll?: boolean; keepFocus?: boolean; invalidateAll?: boolean; invalidate?: Array<string | URL | ((url: URL) => boolean)>; state?: Record<string, any> }} options
+ * @param {{ replaceState?: boolean; noScroll?: boolean; keepFocus?: boolean; refreshAll?: boolean; invalidate?: Array<string | URL | ((url: URL) => boolean)>; state?: Record<string, any> }} options
  * @param {number} redirect_count
  * @param {{}} [nav_token]
  * @param {NavigationIntent | undefined} [intent] navigation intent, when already known by the caller (avoids recomputing it)
@@ -560,9 +556,9 @@ export async function _goto(url, options, redirect_count, nav_token, intent) {
 	/** @type {Set<string>} */
 	let live_query_keys;
 
-	// Clear preload cache when invalidateAll is true to ensure fresh data
+	// Clear preload cache when refreshAll is true to ensure fresh data
 	// after form submissions or explicit invalidations
-	if (options.invalidateAll) {
+	if (options.refreshAll) {
 		discard_load_cache();
 	}
 
@@ -577,7 +573,7 @@ export async function _goto(url, options, redirect_count, nav_token, intent) {
 		nav_token,
 		intent,
 		accept: () => {
-			if (options.invalidateAll) {
+			if (options.refreshAll) {
 				force_invalidation = true;
 				query_keys = new Set();
 				for (const [id, entries] of query_map) {
@@ -603,7 +599,7 @@ export async function _goto(url, options, redirect_count, nav_token, intent) {
 		}
 	});
 
-	if (options.invalidateAll) {
+	if (options.refreshAll) {
 		// TODO the ticks shouldn't be necessary, something inside Svelte itself is buggy
 		// when a query in a layout that still exists after page change is refreshed earlier than this
 		void svelte
@@ -2294,6 +2290,8 @@ export function disableScrollHandling() {
 	}
 }
 
+let warned_on_invalidate_all = false;
+
 /**
  * Allows you to navigate programmatically to a given route, with options such as keeping the current element focused.
  * Returns a Promise that resolves when SvelteKit navigates (or fails to navigate, in which case the promise rejects) to the specified `url`.
@@ -2307,8 +2305,9 @@ export function disableScrollHandling() {
  * @param {boolean} [opts.replaceState] If `true`, will replace the current `history` entry rather than creating a new one with `pushState`
  * @param {boolean} [opts.noScroll] If `true`, the browser will maintain its scroll position rather than scrolling to the top of the page after navigation
  * @param {boolean} [opts.keepFocus] If `true`, the currently focused element will retain focus after navigation. Otherwise, focus will be reset to the body
- * @param {boolean} [opts.invalidateAll] If `true`, all `load` functions of the page will be rerun. See https://svelte.dev/docs/kit/load#rerunning-load-functions for more info on invalidation.
+ * @param {boolean} [opts.refreshAll] If `true`, all `load` functions and queries of the page will be rerun. See https://svelte.dev/docs/kit/load#rerunning-load-functions for more info on invalidation.
  * @param {Array<string | URL | ((url: URL) => boolean)>} [opts.invalidate] Causes any load functions to re-run if they depend on one of the urls
+ * @param {boolean} [opts.invalidateAll] Deprecated in favour of opts.refreshAll.
  * @param {App.PageState} [opts.state] An optional object that will be available as `page.state`
  * @returns {Promise<void>}
  */
@@ -2337,6 +2336,14 @@ export async function goto(url, opts = {}) {
 		);
 	}
 
+	if (DEV && 'invalidateAll' in opts && !warned_on_invalidate_all) {
+		warned_on_invalidate_all = true;
+		console.warn(
+			`The \`goto(..., { invalidateAll: ${opts.invalidateAll} })\` option has been deprecated in favour of \`refreshAll\``
+		);
+	}
+
+	opts.refreshAll = opts.refreshAll ?? opts.invalidateAll;
 	return _goto(url, opts, 0, {}, intent);
 }
 
@@ -2356,16 +2363,17 @@ export async function goto(url, opts = {}) {
  * invalidate((url) => url.pathname === '/path');
  * ```
  * @param {string | URL | ((url: URL) => boolean)} resource The invalidated URL
+ * @param {boolean} [keepState] If `true`, the current `page.state` will be preserved. Otherwise, it will be reset to an empty object. `false` by default.
  * @returns {Promise<void>}
  */
-export function invalidate(resource) {
+export function invalidate(resource, keepState = false) {
 	if (!BROWSER) {
 		throw new Error('Cannot call invalidate(...) on the server');
 	}
 
 	push_invalidated(resource);
 
-	return _invalidate();
+	return _invalidate(!keepState);
 }
 
 /**
@@ -2382,6 +2390,10 @@ function push_invalidated(resource) {
 
 /**
  * Causes all `load` and `query` functions belonging to the currently active page to re-run. Returns a `Promise` that resolves when the page is subsequently updated.
+ *
+ * Note that this resets `page.state` to an empty object. If you want to preserve `page.state` (for example when using [shallow routing](https://svelte.dev/docs/kit/shallow-routing)), use `refreshAll` instead.
+ *
+ * @deprecated Use [`refreshAll`](https://svelte.dev/docs/kit/$app-navigation#refreshAll) instead. Unlike `invalidateAll`, `refreshAll` does not reset `page.state`.
  * @returns {Promise<void>}
  */
 export function invalidateAll() {
@@ -2394,18 +2406,17 @@ export function invalidateAll() {
 }
 
 /**
- * Causes all currently active remote functions to refresh, and all `load` functions belonging to the currently active page to re-run (unless disabled via the option argument).
+ * Causes all currently active remote functions to refresh, and all `load` functions belonging to the currently active page to re-run.
  * Returns a `Promise` that resolves when the page is subsequently updated.
- * @param {{ includeLoadFunctions?: boolean }} [options]
  * @returns {Promise<void>}
  */
-export function refreshAll({ includeLoadFunctions = true } = {}) {
+export function refreshAll() {
 	if (!BROWSER) {
 		throw new Error('Cannot call refreshAll() on the server');
 	}
 
 	force_invalidation = true;
-	return _invalidate(includeLoadFunctions, false);
+	return _invalidate(false);
 }
 
 /**
@@ -2603,7 +2614,7 @@ export async function applyAction(result) {
 	if (result.type === 'error') {
 		await set_nearest_error_page(result.error);
 	} else if (result.type === 'redirect') {
-		await _goto(result.location, { invalidateAll: true }, 0);
+		await _goto(result.location, { refreshAll: true }, 0);
 	} else {
 		page.form = result.data;
 		page.status = result.status;
