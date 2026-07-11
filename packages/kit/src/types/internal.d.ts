@@ -481,7 +481,6 @@ export interface SSROptions {
 	hooks: ServerHooks;
 	link_header_preload: ValidatedConfig['kit']['output']['linkHeaderPreload'];
 	paths_origin: string | undefined;
-	root: Component;
 	service_worker: boolean;
 	service_worker_options: RegistrationOptions;
 	templates: {
