@@ -22,12 +22,13 @@ export class HttpError {
 	}
 }
 
-export class Redirect {
+export class Redirect extends Error {
 	/**
 	 * @param {300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308} status
 	 * @param {string} location
+	 * @param {string} message
 	 */
-	constructor(status, location) {
+	constructor(status, location, message = 'A redirect was thrown from somewhere unexpected') {
 		try {
 			new Headers({ location });
 		} catch {
@@ -36,6 +37,8 @@ export class Redirect {
 					'this string contains characters that cannot be used in HTTP headers'
 			);
 		}
+
+		super(message);
 
 		this.status = status;
 		this.location = location;
