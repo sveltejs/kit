@@ -6,6 +6,7 @@ declare module '@sveltejs/kit' {
 	import type { StandardSchemaV1 } from '@standard-schema/spec';
 	import type { Plugin } from 'vite';
 	import type { RouteId as AppRouteId, LayoutParams as AppLayoutParams, ResolvedPathname } from '$app/types';
+	import type { Component } from 'svelte';
 	// @ts-ignore this is an optional peer dependency so could be missing. Written like this so dts-buddy preserves the ts-ignore
 	type Span = import('@opentelemetry/api').Span;
 
@@ -2836,27 +2837,7 @@ declare module '@sveltejs/kit' {
 		} | null;
 	}
 
-	// TODO get rid of this in favor us using just import('svelte').Component<any, any, any>
-	interface SSRComponent {
-		default: {
-			render(
-				props: Record<string, any>,
-				opts: { context: Map<any, any>; csp?: { nonce?: string; hash?: boolean } }
-			): Promise<{
-				body: string;
-				head: string;
-				css: {
-					code: string;
-					map: any; // TODO
-				};
-				hashes: {
-					script: Array<`sha256-${string}`>;
-				};
-			}>;
-		};
-	}
-
-	type SSRComponentLoader = () => Promise<SSRComponent>;
+	type SSRComponentLoader = () => Promise<Component>;
 
 	interface UniversalNode {
 		/** Is `null` in case static analysis succeeds but the node is ssr=false */

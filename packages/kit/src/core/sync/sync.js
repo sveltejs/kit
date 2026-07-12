@@ -2,7 +2,6 @@ import path from 'node:path';
 import process from 'node:process';
 import create_manifest_data from './create_manifest_data/index.js';
 import { write_client_manifest } from './write_client_manifest.js';
-import { write_root } from './write_root.js';
 import { write_tsconfig } from './write_tsconfig.js';
 import { write_types, write_all_types } from './write_types/index.js';
 import { write_ambient } from './write_ambient.js';
@@ -37,7 +36,6 @@ export function create(config, root) {
 
 	write_client_manifest(config.kit, manifest_data, `${output}/client`);
 	write_server(config, output, root);
-	write_root(manifest_data, output);
 	write_all_types(config, manifest_data, root);
 	write_non_ambient(config.kit, manifest_data);
 
