@@ -847,8 +847,7 @@ async function get_navigation_result_from_branch({
 			// accumulated `data` differs from the previous render, so we must re-merge
 			data_changed ||
 			!previous_node ||
-			node?.data !== prev?.data ||
-			node.node.component !== prev.node.component
+			node?.data !== prev?.data
 		) {
 			current_node.data = { ...data, ...node.data };
 			data_changed = true;
