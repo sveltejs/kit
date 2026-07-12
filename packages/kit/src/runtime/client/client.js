@@ -725,9 +725,15 @@ async function initialize(result, target, hydrate) {
 			}
 
 			if (e instanceof Redirect) {
-				void goto(e.location, {
-					refreshAll: e.refresh
-				});
+				await _goto(
+					e.location,
+					{
+						refreshAll: e.refresh
+					},
+					0
+				);
+
+				await new Promise((f) => setTimeout(f, 1000));
 
 				transformed_errors.add(e);
 				return e;

@@ -1,19 +1,12 @@
 <script>
 	import { redirectOutsideApp } from './redirect.remote.js';
 
-	let status = $state('idle');
+	let condition = $state(false);
 
 	async function run() {
-		status = 'pending';
-
-		try {
-			await redirectOutsideApp();
-			status = 'resolved';
-		} catch {
-			status = 'rejected';
-		}
+		condition = true;
 	}
 </script>
 
 <button id="trigger" onclick={run}>trigger</button>
-<p id="status">{status}</p>
+<p id="status">{await redirectOutsideApp(condition)}</p>

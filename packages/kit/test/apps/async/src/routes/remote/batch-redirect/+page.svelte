@@ -1,4 +1,5 @@
 <script>
+	import { isRedirect } from '@sveltejs/kit';
 	import { batch_redirect } from './data.remote.js';
 
 	let status = $state('idle');
@@ -9,8 +10,8 @@
 		try {
 			await batch_redirect('a');
 			status = 'resolved';
-		} catch {
-			status = 'rejected';
+		} catch (e) {
+			status = isRedirect(e) ? 'redirected' : 'rejected';
 		}
 	}
 </script>

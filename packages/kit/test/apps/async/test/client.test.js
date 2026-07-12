@@ -543,8 +543,10 @@ test.describe('remote function mutations', () => {
 		await page.click('#trigger');
 
 		// the redirect must both navigate and settle the awaited query
-		await expect(page.locator('#status')).toHaveText('resolved');
-		expect(page.url()).toContain('#redirected');
+		await expect(page.locator('#status')).toHaveText('redirected');
+
+		// the query ran outside render, so should not cause a redirect
+		expect(page.url()).not.toContain('#redirected');
 	});
 
 	test('non-exported remote functions are never serialized into responses', async ({ page }) => {
