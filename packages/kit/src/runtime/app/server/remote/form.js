@@ -183,26 +183,29 @@ export function form(validate_or_fn, maybe_fn) {
 				// so the current request's state has to be resolved at access time
 				return create_field_proxy(
 					{},
-					() => get_cache(__, get_request_store().state)?.['']?.input ?? {},
-					(path, value) => {
-						const cache = get_cache(__, get_request_store().state);
-						const entry = cache[''];
+					{
+						get_input: () => get_cache(__, get_request_store().state)?.['']?.input ?? {},
+						set_input: (path, value) => {
+							const cache = get_cache(__, get_request_store().state);
+							const entry = cache[''];
 
-						if (entry?.submission) {
-							// don't override a submission
-							return;
-						}
+							if (entry?.submission) {
+								// don't override a submission
+								return;
+							}
 
-						if (path.length === 0) {
-							(cache[''] ??= {}).input = value;
-							return;
-						}
+							if (path.length === 0) {
+								(cache[''] ??= {}).input = value;
+								return;
+							}
 
-						const input = entry?.input ?? {};
-						deep_set(input, path.map(String), value);
-						(cache[''] ??= {}).input = input;
-					},
-					() => flatten_issues(get_cache(__, get_request_store().state)?.['']?.issues ?? [])
+							const input = entry?.input ?? {};
+							deep_set(input, path.map(String), value);
+							(cache[''] ??= {}).input = input;
+						},
+						get_issues: () =>
+							flatten_issues(get_cache(__, get_request_store().state)?.['']?.issues ?? [])
+					}
 				);
 			}
 		});

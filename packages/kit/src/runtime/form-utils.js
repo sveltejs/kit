@@ -651,15 +651,13 @@ function deep_clone(value) {
 /**
  * Creates a proxy-based field accessor for form data
  * @param {any} target - Function or empty POJO
- * @param {() => Record<string, any>} get_input - Function to get current input data
- * @param {(path: (string | number)[], value: any) => void} set_input - Function to set input data
- * @param {(path?: (string | number)[], all?: boolean) => Record<string, InternalRemoteFormIssue[]>} get_issues - Function to get current issues
+ * @param {{ get_input: () => Record<string, any>, set_input: (path: (string | number)[], value: any) => void, get_issues: (path?: (string | number)[], all?: boolean) => Record<string, InternalRemoteFormIssue[]> }} accessors - Accessor functions
  * @param {(string | number)[]} path - Current access path
  * @returns {any} Proxy object with name(), value(), and issues() methods
  */
-export function create_field_proxy(target, get_input, set_input, get_issues, path = []) {
+export function create_field_proxy(target, accessors, path = []) {
 	const get_value = () => {
-		const value = deep_get(get_input(), path);
+		const value = deep_get(accessors.get_input(), path);
 		return deep_clone(value);
 	};
 
@@ -669,29 +667,28 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 
 			// Handle array access like jobs[0]
 			if (/^\d+$/.test(prop)) {
-				return create_field_proxy({}, get_input, set_input, get_issues, [
-					...path,
-					parseInt(prop, 10)
-				]);
+				return create_field_proxy({}, accessors, [...path, parseInt(prop, 10)]);
 			}
 
 			const key = build_path_string(path);
 
 			if (prop === 'set') {
 				const set_func = function (/** @type {any} */ newValue) {
-					set_input(path, newValue);
+					accessors.set_input(path, newValue);
 					return newValue;
 				};
-				return create_field_proxy(set_func, get_input, set_input, get_issues, [...path, prop]);
+				return create_field_proxy(set_func, accessors, [...path, prop]);
 			}
 
 			if (prop === 'value') {
-				return create_field_proxy(get_value, get_input, set_input, get_issues, [...path, prop]);
+				return create_field_proxy(get_value, accessors, [...path, prop]);
 			}
 
 			if (prop === 'issues' || prop === 'allIssues') {
 				const issues_func = () => {
-					const all_issues = get_issues(path, prop === 'allIssues')[key === '' ? '$' : key];
+					const all_issues = accessors.get_issues(path, prop === 'allIssues')[
+						key === '' ? '$' : key
+					];
 
 					if (prop === 'allIssues') {
 						return all_issues?.map((issue) => ({
@@ -710,7 +707,7 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 					return issues?.length ? issues : undefined;
 				};
 
-				return create_field_proxy(issues_func, get_input, set_input, get_issues, [...path, prop]);
+				return create_field_proxy(issues_func, accessors, [...path, prop]);
 			}
 
 			if (prop === 'as') {
@@ -724,14 +721,14 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 						type === 'select multiple' ||
 						(type === 'checkbox' && typeof input_value === 'string');
 
-					const prefix = get_type_prefix(type, is_array, input_value);
+					const type_prefix = get_type_prefix(type, is_array, input_value);
 
 					// Base properties for all input types
 					/** @type {Record<string, any>} */
 					const base_props = {
-						name: prefix + key + (is_array ? '[]' : ''),
+						name: type_prefix + key + (is_array ? '[]' : ''),
 						get 'aria-invalid'() {
-							const issues = get_issues();
+							const issues = accessors.get_issues();
 							return key in issues ? 'true' : undefined;
 						}
 					};
@@ -876,11 +873,11 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 					});
 				};
 
-				return create_field_proxy(as_func, get_input, set_input, get_issues, [...path, 'as']);
+				return create_field_proxy(as_func, accessors, [...path, 'as']);
 			}
 
 			// Handle property access (nested fields)
-			return create_field_proxy({}, get_input, set_input, get_issues, [...path, prop]);
+			return create_field_proxy({}, accessors, [...path, prop]);
 		}
 	});
 }

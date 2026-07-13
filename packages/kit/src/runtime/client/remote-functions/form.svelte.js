@@ -604,28 +604,30 @@ export function form(id) {
 				get: () =>
 					create_field_proxy(
 						{},
-						() => input,
-						(path, value) => {
-							if (path.length === 0) {
-								input = value;
-							} else {
-								deep_set(input, path.map(String), value);
+						{
+							get_input: () => input,
+							set_input: (path, value) => {
+								if (path.length === 0) {
+									input = value;
+								} else {
+									deep_set(input, path.map(String), value);
 
-								const key = build_path_string(path);
-								touched[key] = true;
-							}
-						},
-						(path, all) => {
-							if (DEV && unread_issues !== null && path !== undefined) {
-								unread_issues = unread_issues.filter((issue) => {
-									return (
-										(all ? issue.path.slice(0, path.length) : issue.path).join('.') !==
-										path.join('.')
-									);
-								});
-							}
+									const key = build_path_string(path);
+									touched[key] = true;
+								}
+							},
+							get_issues: (path, all) => {
+								if (DEV && unread_issues !== null && path !== undefined) {
+									unread_issues = unread_issues.filter((issue) => {
+										return (
+											(all ? issue.path.slice(0, path.length) : issue.path).join('.') !==
+											path.join('.')
+										);
+									});
+								}
 
-							return issues;
+								return issues;
+							}
 						}
 					)
 			},
