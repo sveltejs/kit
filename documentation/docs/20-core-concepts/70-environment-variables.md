@@ -121,27 +121,31 @@ export const variables = defineEnvVars({
 });
 ```
 
-If a value is invalid, the app will fail to start (or build). To opt out of one or the other, use [`building`]($app-env#building) from `$app/env` along with a validator that accepts an optional value:
+If a value is invalid, the app will fail to start (or build). If the variable is only available at run time (for example a secret that isn't set during the build), use `availability: 'runtime'` so that it is only validated when the app starts:
 
 ```ts
 /// file: src/env.ts
 import { defineEnvVars } from '@sveltejs/kit/hooks';
-+++import { building } from '$app/env'+++
 import * as v from 'valibot';
 
 export const variables = defineEnvVars({
 	SECRET: {
-		// optional when building but required when starting the app
-		+++schema: building ? v.optional(v.string()) : v.string()+++
+		// required when the app starts, but not validated during the build
+		+++availability: 'runtime',+++
+		schema: v.string()
 	}
 });
 ```
 
 You can use validators to make values optional, or transform them (such as turning a string into a boolean, or parsing JSON) — see your validation library's documentation to learn how.
 
-### Static variables
+### Availability
 
-By default, variables are dynamic. If a variable is configured with `static: true`, it will be inlined into your application code, enabling optimisations like dead-code elimination:
+The `availability` property controls when a variable's value is available, and therefore when it is validated. It has three possible values:
+
+- `'dynamic'` (default) — the value is validated and used during runtime and build time.
+- `'inline'` — the value is inlined into your application code at build time, enabling optimisations like dead-code elimination. It is validated at build time.
+- `'runtime'` — the value is validated and used during runtime only. The value is `undefined` during the build, so the variable is typed as `T | undefined`.
 
 ```ts
 /// file: src/env.ts
@@ -151,7 +155,7 @@ import * as v from 'valibot';
 export const variables = defineEnvVars({
 	SHOW_DEBUG_OVERLAY: {
 		public: true,
-		+++static: true,+++
+		+++availability: 'inline',+++
 
 		// coerce to true/false
 		schema: v.pipe(
@@ -162,7 +166,7 @@ export const variables = defineEnvVars({
 });
 ```
 
-Because this variable is `static`, the `<DebugOverlay>` component shown here will be excluded from the JavaScript bundle unless `SHOW_DEBUG_OVERLAY` is truthy:
+Because this variable is `inline`, the `<DebugOverlay>` component shown here will be excluded from the JavaScript bundle unless `SHOW_DEBUG_OVERLAY` is truthy:
 
 ```svelte
 <script>

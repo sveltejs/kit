@@ -1,5 +1,5 @@
 <script>
-	import { invalidateAll, pushState } from '$app/navigation';
+	import { refreshAll, pushState } from '$app/navigation';
 	import { page } from '$app/state';
 
 	let { data } = $props();
@@ -17,7 +17,7 @@
 
 <button data-id="one" onclick={one}>push state on current page</button>
 <button data-id="two" onclick={two}>push state on child page</button>
-<button data-id="invalidate" onclick={invalidateAll}>invalidate all</button>
+<button data-id="refresh" onclick={refreshAll}>refresh all</button>
 
 <p>active: {page.state.active ?? false}</p>
 <span>{data.now}</span>

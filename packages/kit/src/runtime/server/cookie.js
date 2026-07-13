@@ -12,10 +12,11 @@ import { text_encoder } from '../utils.js';
 const cookie_paths = {};
 
 /**
- * Cookies that are larger than this size (including the name and other
- * attributes) are discarded by browsers
+ * Cookies whose name and value combined are larger than this size are
+ * discarded by browsers. This is the limit codified for the name/value pair
+ * in RFC 6265bis: https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-rfc6265bis-20#section-5.6-7.5.1
  */
-const MAX_COOKIE_SIZE = 4129;
+const MAX_COOKIE_SIZE = 4096;
 
 /**
  * Generates a unique key for a cookie based on its domain, path, and name in
@@ -225,9 +226,12 @@ export function get_cookies(request, url) {
 		new_cookies.set(cookie_key, cookie);
 
 		if (DEV) {
-			const { encode, ...rest } = cookie.options;
-			const serialized = stringifySetCookie({ name, value, ...rest }, { encode });
-			if (text_encoder.encode(serialized).byteLength > MAX_COOKIE_SIZE) {
+			const size =
+				// only the name/value pair counts towards MAX_COOKIE_SIZE, not the other attributes
+				text_encoder.encode(name).byteLength +
+				text_encoder.encode((options.encode ?? encodeURIComponent)(value)).byteLength;
+
+			if (size > MAX_COOKIE_SIZE) {
 				throw new Error(`Cookie "${name}" is too large, and will be discarded by the browser`);
 			}
 

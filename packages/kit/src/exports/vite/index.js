@@ -1108,11 +1108,7 @@ function kit({ svelte_config }) {
 					(normalized.startsWith('$lib/') && server_only_directory_pattern.test(id)) ||
 					(is_internal && server_only_module_pattern.test(id));
 
-				// skip .server.js files outside the cwd or in node_modules, as the filename might not mean 'server-only module' in this context
-				// TODO: address https://github.com/sveltejs/kit/issues/12529
-				if (!is_server_only) {
-					return;
-				}
+				if (!is_server_only) return;
 
 				const { nodes, hooks } = dev_context?.manifest_data ?? manifest_data;
 
@@ -1606,7 +1602,7 @@ function kit({ svelte_config }) {
 				let new_config;
 
 				if (is_build) {
-					const prefix = `${kit.appDir}/immutable`;
+					const app_immutable = `${kit.appDir}/immutable`;
 
 					/** @type {Record<string, string>} */
 					const server_input = {
@@ -1687,9 +1683,9 @@ function kit({ svelte_config }) {
 
 					/** @type {string} */
 					const base = (kit.paths.assets || kit.paths.base) + '/';
-					const root_to_assets = prefix + '/assets/';
+					const root_to_assets = app_immutable + '/assets/';
 					const assets_to_root =
-						prefix
+						app_immutable
 							.split('/')
 							.map(() => '..')
 							.join('/') + '/../';
@@ -1712,7 +1708,7 @@ function kit({ svelte_config }) {
 							rolldownOptions: {
 								output: {
 									name: `__sveltekit_${version_hash}.app`,
-									assetFileNames: `${prefix}/assets/[name].[hash][extname]`,
+									assetFileNames: `${app_immutable}/assets/[name].[hash][extname]`,
 									hoistTransitiveImports: false,
 									sourcemapIgnoreList
 								},
@@ -1765,8 +1761,8 @@ function kit({ svelte_config }) {
 										input: inline ? client_input['bundle'] : client_input,
 										output: {
 											format: inline ? 'iife' : 'esm',
-											entryFileNames: `${prefix}/[name].[hash].js`,
-											chunkFileNames: `${prefix}/chunks/[hash].js`,
+											entryFileNames: `${app_immutable}/[name].[hash].js`,
+											chunkFileNames: `${app_immutable}/chunks/[hash].js`,
 											codeSplitting:
 												svelte_config.kit.output.bundleStrategy === 'split' ? undefined : false
 										},
@@ -1801,6 +1797,11 @@ function kit({ svelte_config }) {
 									// causing us to do a more expensive hydration check.
 									return { relative };
 								}
+
+								if (!relative) return;
+
+								// ensure assets loaded by CSS files are loaded relative to the
+								// CSS file rather than the default of relative to the root
 
 								// _app/immutable/assets files
 								if (filename.startsWith(root_to_assets)) {
@@ -2036,11 +2037,11 @@ function kit({ svelte_config }) {
 					find_deps(vite_manifest, posixify(path.relative(root, entry)), add_dynamic_css, root);
 
 				const has_explicit_dynamic_public_env = Object.values(explicit_env_config ?? {}).some(
-					(variable) => variable.public && !variable.static
+					(variable) => variable.public && variable.availability !== 'inline'
 				);
 
 				// the app only depends on runtime public env if it imports `$app/env/public`
-				// *and* at least one public env var is actually dynamic (non-static)
+				// *and* at least one public env var is actually dynamic (not inlined at build time)
 				const uses_env_dynamic_public =
 					has_explicit_dynamic_public_env &&
 					client_chunks.some(
