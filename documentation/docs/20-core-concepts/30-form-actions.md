@@ -433,7 +433,7 @@ We can also implement progressive enhancement ourselves, without `use:enhance`, 
 ```svelte
 <!--- file: src/routes/login/+page.svelte --->
 <script>
-	import { invalidateAll, goto } from '$app/navigation';
+	import { refreshAll, goto } from '$app/navigation';
 	import { applyAction, deserialize } from '$app/forms';
 
 	/** @type {import('./$types').PageProps} */
@@ -453,8 +453,8 @@ We can also implement progressive enhancement ourselves, without `use:enhance`, 
 		const result = deserialize(await response.text());
 
 		if (result.type === 'success') {
-			// rerun all `load` functions, following the successful update
-			await invalidateAll();
+			// rerun all `load` functions and queries, following the successful update
+			await refreshAll();
 		}
 
 		applyAction(result);

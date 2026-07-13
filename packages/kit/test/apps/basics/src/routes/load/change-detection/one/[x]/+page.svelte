@@ -1,5 +1,5 @@
 <script>
-	import { invalidate, invalidateAll } from '$app/navigation';
+	import { invalidate, refreshAll } from '$app/navigation';
 
 	/** @type {import('./$types').PageData} */
 	export let data;
@@ -18,7 +18,7 @@
 <button
 	onclick={async () => {
 		window.invalidated = false;
-		await invalidateAll();
+		await refreshAll();
 		window.invalidated = true;
-	}}>invalidate all</button
+	}}>refresh all</button
 >

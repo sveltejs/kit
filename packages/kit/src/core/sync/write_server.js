@@ -24,7 +24,6 @@ const server_template = ({
 	has_service_worker,
 	template
 }) => `
-import root from '../root.js';
 import { set_building, set_prerendering } from '$app/env/internal';
 import { set_assets } from '$app/paths/internal/server';
 import { set_manifest, set_read_implementation } from '__sveltekit/server';
@@ -40,7 +39,6 @@ export const options = {
 	hooks: null, // added lazily, via \`get_hooks\`
 	link_header_preload: ${s(config.kit.output.linkHeaderPreload)},
 	paths_origin: ${s(config.kit.paths.origin)},
-	root,
 	service_worker: ${has_service_worker},
 	service_worker_options: ${config.kit.serviceWorker.register ? s(config.kit.serviceWorker.options) : 'null'},
 	templates: {

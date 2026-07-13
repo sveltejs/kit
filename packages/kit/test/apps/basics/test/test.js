@@ -1078,7 +1078,7 @@ test.describe('Actions', () => {
 		}
 	});
 
-	test('form prop stays after invalidation and is reset on navigation', async ({
+	test('form prop stays after refresh and is reset on navigation', async ({
 		page,
 		app,
 		javaScriptEnabled
@@ -1090,7 +1090,7 @@ test.describe('Actions', () => {
 			await page.locator('button.increment-success').click();
 			await expect(page.locator('pre')).toHaveText(JSON.stringify({ count: 0 }));
 
-			await page.locator('button.invalidateAll').click();
+			await page.locator('button.refreshAll').click();
 			await page.waitForTimeout(500);
 			await expect(page.locator('pre')).toHaveText(JSON.stringify({ count: 0 }));
 			await app.goto('/actions/enhance');

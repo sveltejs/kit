@@ -372,20 +372,6 @@ test.describe('remote function mutations', () => {
 		expect(request_count).toBe(5);
 	});
 
-	test('refreshAll({ includeLoadFunctions: false }) reloads remote functions only', async ({
-		page
-	}) => {
-		await page.goto('/remote');
-		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
-
-		let request_count = 0;
-		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
-
-		await page.click('#refresh-remote-only');
-		await page.waitForTimeout(100); // allow things to rerun
-		expect(request_count).toBe(4);
-	});
-
 	test('command tracks pending state', async ({ page }) => {
 		await page.goto('/remote');
 
@@ -806,7 +792,7 @@ test.describe('remote function mutations', () => {
 		await page.click('#reset');
 	});
 
-	test('for await consumers continue receiving values across invalidateAll-triggered reconnects', async ({
+	test('for await consumers continue receiving values across refreshAll-triggered reconnects', async ({
 		page
 	}) => {
 		await page.goto('/remote/live');
@@ -817,11 +803,11 @@ test.describe('remote function mutations', () => {
 		// the first value should be the current value (0)
 		await expect(page.locator('#stream-log')).toHaveText(/0/);
 
-		// invalidateAll() calls reconnect(), which keeps the existing fan-out
+		// refreshAll() calls reconnect(), which keeps the existing fan-out
 		// open so active `for await` consumers continue receiving values from
 		// the new connection without interruption.
-		await page.click('#run-invalidate-all');
-		await expect(page.locator('#invalidate-state')).toHaveText('resolved');
+		await page.click('#run-refresh-all');
+		await expect(page.locator('#refresh-state')).toHaveText('resolved');
 
 		// Trigger a new value — the still-attached consumer must see it.
 		// Before the fix the fan-out was replaced, orphaning the subscriber so
@@ -832,7 +818,7 @@ test.describe('remote function mutations', () => {
 		await page.click('#reset');
 	});
 
-	test('invalidateAll resolves while a live query is offline', async ({ page, context }) => {
+	test('refreshAll resolves while a live query is offline', async ({ page, context }) => {
 		await page.goto('/remote/live');
 		await page.click('#reset');
 		await expect(page.locator('#connected')).toHaveText('true');
@@ -840,9 +826,9 @@ test.describe('remote function mutations', () => {
 		await context.setOffline(true);
 
 		// reconnect()'s handshake must settle on every #main exit path (here:
-		// offline) so that awaiting invalidateAll() doesn't deadlock.
-		await page.click('#run-invalidate-all');
-		await expect(page.locator('#invalidate-state')).toHaveText(/resolved|rejected/);
+		// offline) so that awaiting refreshAll() doesn't deadlock.
+		await page.click('#run-refresh-all');
+		await expect(page.locator('#refresh-state')).toHaveText(/resolved|rejected/);
 
 		await context.setOffline(false);
 	});
@@ -1177,6 +1163,68 @@ test.describe('client error boundaries', () => {
 		// The nested layout should still be visible
 		await expect(page.locator('#nested-layout')).toBeVisible();
 	});
+
+	test('client navigation away from a render error tears down the stale +error.svelte', async ({
+		page,
+		app
+	}) => {
+		await page.goto('/');
+		await app.goto('/server-error-boundary');
+		await expect(page.locator('#message')).toContainText(
+			'render error (500 Internal Error, on /server-error-boundary)'
+		);
+
+		await app.goto('/');
+		await expect(page.locator('#message')).toHaveCount(0);
+		await expect(page.locator('h3')).toHaveText('Tests');
+	});
+
+	test('client navigation away from a nested render error tears down the stale +error.svelte', async ({
+		page,
+		app
+	}) => {
+		await page.goto('/');
+		await app.goto('/server-error-boundary/nested');
+		await expect(page.locator('#nested-error-message')).toBeVisible();
+
+		await app.goto('/');
+		await expect(page.locator('#nested-error-message')).toHaveCount(0);
+		await expect(page.locator('#nested-layout')).toHaveCount(0);
+		await expect(page.locator('h3')).toHaveText('Tests');
+	});
+
+	test('client navigation away from an async render error tears down the stale +error.svelte', async ({
+		page,
+		app
+	}) => {
+		await page.goto('/');
+		await app.goto('/server-error-boundary/async');
+		// the awaited throw surfaces as a 404 through the root error boundary
+		await expect(page.locator('h1')).toHaveText('404');
+
+		await app.goto('/');
+		await expect(page.locator('#message')).toHaveCount(0);
+		await expect(page.locator('h3')).toHaveText('Tests');
+	});
+
+	test('client navigation using preloaded data away from a render error tears down the stale +error.svelte', async ({
+		page,
+		app
+	}) => {
+		await page.goto('/');
+		await app.goto('/server-error-boundary');
+		await expect(page.locator('#message')).toContainText('render error');
+
+		// preloading the home route creates a fork (forkPreloads is enabled);
+		// navigating via that fork must still tear down the failed boundary (#15694)
+		await app.preloadData('/');
+		await page.evaluate(() => new Promise((r) => setTimeout(r, 0)));
+		await page.locator('#error-home').click();
+		await expect(page).toHaveURL('/');
+		await expect(page.locator('#message')).toHaveCount(0);
+		await expect(page.locator('h3')).toHaveText('Tests');
+	});
+
 	test('redirecting from form clears result', async ({ page }) => {
 		await page.goto('/remote/form/reset-on-redirect');
 

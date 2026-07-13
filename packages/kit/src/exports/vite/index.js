@@ -1232,7 +1232,7 @@ function kit({ svelte_config }) {
 				let new_config;
 
 				if (is_build) {
-					const prefix = `${kit.appDir}/immutable`;
+					const app_immutable = `${kit.appDir}/immutable`;
 
 					/** @type {Record<string, string>} */
 					const server_input = {
@@ -1314,9 +1314,9 @@ function kit({ svelte_config }) {
 
 					/** @type {string} */
 					const base = (kit.paths.assets || kit.paths.base) + '/';
-					const root_to_assets = prefix + '/assets/';
+					const root_to_assets = app_immutable + '/assets/';
 					const assets_to_root =
-						prefix
+						app_immutable
 							.split('/')
 							.map(() => '..')
 							.join('/') + '/../';
@@ -1339,7 +1339,7 @@ function kit({ svelte_config }) {
 							rolldownOptions: {
 								output: {
 									name: `__sveltekit_${version_hash}.app`,
-									assetFileNames: `${prefix}/assets/[name].[hash][extname]`,
+									assetFileNames: `${app_immutable}/assets/[name].[hash][extname]`,
 									hoistTransitiveImports: false,
 									sourcemapIgnoreList
 								},
@@ -1392,8 +1392,8 @@ function kit({ svelte_config }) {
 										input: inline ? client_input['bundle'] : client_input,
 										output: {
 											format: inline ? 'iife' : 'esm',
-											entryFileNames: `${prefix}/[name].[hash].js`,
-											chunkFileNames: `${prefix}/chunks/[hash].js`,
+											entryFileNames: `${app_immutable}/[name].[hash].js`,
+											chunkFileNames: `${app_immutable}/chunks/[hash].js`,
 											codeSplitting:
 												svelte_config.kit.output.bundleStrategy === 'split' ? undefined : false
 										},
@@ -1429,6 +1429,11 @@ function kit({ svelte_config }) {
 									// causing us to do a more expensive hydration check.
 									return { relative };
 								}
+
+								if (!relative) return;
+
+								// ensure assets loaded by CSS files are loaded relative to the
+								// CSS file rather than the default of relative to the root
 
 								// _app/immutable/assets files
 								if (filename.startsWith(root_to_assets)) {
