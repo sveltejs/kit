@@ -8,7 +8,6 @@ import { hash } from '../utils/hash.js';
 import { posixify } from '../utils/os.js';
 
 /**
-<<<<<<< version-chunk-rotation-fix
  * Returns a deterministic identifier for the `globalThis.__sveltekit_${payload_hash}`
  * payload global.
  *
@@ -44,10 +43,7 @@ export function payload_hash(kit) {
 }
 
 /**
- * Resolved path of the `runtime` directory
-=======
  * Resolved path of the `runtime` directory posix-ified
->>>>>>> version-3
  *
  * TODO Windows issue:
  * Vite or sth else somehow sets the driver letter inconsistently to lower or upper case depending on the run environment.
