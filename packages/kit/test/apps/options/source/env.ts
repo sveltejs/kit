@@ -5,6 +5,6 @@ export const variables = defineEnvVars({
 		public: true
 	},
 	TOP_SECRET_SHH_PLS: {
-		static: true
+		availability: 'inline'
 	}
 });

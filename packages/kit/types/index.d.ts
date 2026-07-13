@@ -6,6 +6,7 @@ declare module '@sveltejs/kit' {
 	import type { StandardSchemaV1 } from '@standard-schema/spec';
 	import type { Plugin } from 'vite';
 	import type { RouteId as AppRouteId, LayoutParams as AppLayoutParams, ResolvedPathname } from '$app/types';
+	import type { Component } from 'svelte';
 	// @ts-ignore this is an optional peer dependency so could be missing. Written like this so dts-buddy preserves the ts-ignore
 	type Span = import('@opentelemetry/api').Span;
 
@@ -2407,12 +2408,13 @@ declare module '@sveltejs/kit' {
 		 */
 		public?: boolean;
 		/**
-		 * Whether the value is determined at build time or when the app runs.
-		 * - if `true`, the build time value is inlined into the bundle. This enables optimisations like dead-code elimination
-		 * - if `false`, the value is read from the environment when the app starts
-		 * @default false
+		 * When the variable's value is available, and therefore when it is validated.
+		 * - `'dynamic'` — the value is validated and used during runtime and build time.
+		 * - `'inline'` — the value is inlined into your application code at build time, enabling optimisations like dead-code elimination. It is validated at build time.
+		 * - `'runtime'` — the value is validated and used during runtime only. The value is `undefined` during the build, so the variable is typed as `T | undefined`.
+		 * @default 'dynamic'
 		 */
-		static?: boolean;
+		availability?: 'inline' | 'dynamic' | 'runtime';
 		/**
 		 * A [Standard Schema](https://standardschema.dev/) validator that is applied to the value when the app starts.
 		 * The validator can output any value — not necessarily a string — but public, non-static values must be
@@ -2827,27 +2829,7 @@ declare module '@sveltejs/kit' {
 		} | null;
 	}
 
-	// TODO get rid of this in favor us using just import('svelte').Component<any, any, any>
-	interface SSRComponent {
-		default: {
-			render(
-				props: Record<string, any>,
-				opts: { context: Map<any, any>; csp?: { nonce?: string; hash?: boolean } }
-			): Promise<{
-				body: string;
-				head: string;
-				css: {
-					code: string;
-					map: any; // TODO
-				};
-				hashes: {
-					script: Array<`sha256-${string}`>;
-				};
-			}>;
-		};
-	}
-
-	type SSRComponentLoader = () => Promise<SSRComponent>;
+	type SSRComponentLoader = () => Promise<Component>;
 
 	interface UniversalNode {
 		/** Is `null` in case static analysis succeeds but the node is ssr=false */
@@ -3357,8 +3339,9 @@ declare module '$app/navigation' {
 		replaceState?: boolean | undefined;
 		noScroll?: boolean | undefined;
 		keepFocus?: boolean | undefined;
-		invalidateAll?: boolean | undefined;
+		refreshAll?: boolean | undefined;
 		invalidate?: (string | URL | ((url: URL) => boolean))[] | undefined;
+		invalidateAll?: boolean | undefined;
 		state?: App.PageState | undefined;
 	}): Promise<void>;
 	/**
@@ -3377,19 +3360,22 @@ declare module '$app/navigation' {
 	 * invalidate((url) => url.pathname === '/path');
 	 * ```
 	 * @param resource The invalidated URL
+	 * @param keepState If `true`, the current `page.state` will be preserved. Otherwise, it will be reset to an empty object. `false` by default.
 	 * */
-	export function invalidate(resource: string | URL | ((url: URL) => boolean)): Promise<void>;
+	export function invalidate(resource: string | URL | ((url: URL) => boolean), keepState?: boolean): Promise<void>;
 	/**
 	 * Causes all `load` and `query` functions belonging to the currently active page to re-run. Returns a `Promise` that resolves when the page is subsequently updated.
+	 *
+	 * Note that this resets `page.state` to an empty object. If you want to preserve `page.state` (for example when using [shallow routing](https://svelte.dev/docs/kit/shallow-routing)), use `refreshAll` instead.
+	 *
+	 * @deprecated Use [`refreshAll`](https://svelte.dev/docs/kit/$app-navigation#refreshAll) instead. Unlike `invalidateAll`, `refreshAll` does not reset `page.state`.
 	 * */
 	export function invalidateAll(): Promise<void>;
 	/**
-	 * Causes all currently active remote functions to refresh, and all `load` functions belonging to the currently active page to re-run (unless disabled via the option argument).
+	 * Causes all currently active remote functions to refresh, and all `load` functions belonging to the currently active page to re-run.
 	 * Returns a `Promise` that resolves when the page is subsequently updated.
 	 * */
-	export function refreshAll({ includeLoadFunctions }?: {
-		includeLoadFunctions?: boolean;
-	}): Promise<void>;
+	export function refreshAll(): Promise<void>;
 	/**
 	 * Programmatically preloads the given page, which means
 	 *  1. ensuring that the code for the page is loaded, and

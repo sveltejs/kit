@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { invalidateAll } from '$app/navigation';
+	import { refreshAll } from '$app/navigation';
 	import LiveView from './LiveView.svelte';
 	import {
 		increment,
@@ -67,15 +67,15 @@
 		}
 	}
 
-	let invalidate_state = $state('idle');
+	let refresh_state = $state('idle');
 
-	async function run_invalidate_all() {
-		invalidate_state = 'pending';
+	async function run_refresh_all() {
+		refresh_state = 'pending';
 		try {
-			await invalidateAll();
-			invalidate_state = 'resolved';
+			await refreshAll();
+			refresh_state = 'resolved';
 		} catch {
-			invalidate_state = 'rejected';
+			refresh_state = 'rejected';
 		}
 	}
 </script>
@@ -111,5 +111,5 @@
 
 <button id="start-stream-log" onclick={start_stream_log}>start stream log</button>
 <p id="stream-log">{stream_log}</p>
-<button id="run-invalidate-all" onclick={run_invalidate_all}>invalidate all</button>
-<p id="invalidate-state">{invalidate_state}</p>
+<button id="run-refresh-all" onclick={run_refresh_all}>refresh all</button>
+<p id="refresh-state">{refresh_state}</p>

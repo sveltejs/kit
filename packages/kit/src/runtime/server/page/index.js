@@ -1,5 +1,6 @@
+/** @import { Component } from 'svelte' */
 /** @import { ActionResult, RequestEvent, SSRManifest } from '@sveltejs/kit' */
-/** @import { PageNodeIndexes, RequestState, RequiredResolveOptions, ServerDataNode, SSRComponent, SSRNode, SSROptions, SSRState } from 'types' */
+/** @import { PageNodeIndexes, RequestState, RequiredResolveOptions, ServerDataNode, SSRNode, SSROptions, SSRState } from 'types' */
 import { text } from '@sveltejs/kit';
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
 import { compact } from '../../../utils/array.js';
@@ -398,7 +399,7 @@ export async function render_page(
  * @param {SSRManifest} manifest
  */
 async function load_error_components(ssr, branch, page, manifest) {
-	/** @type {Array<SSRComponent | undefined> | undefined} */
+	/** @type {Array<Component | undefined> | undefined} */
 	let error_components;
 
 	if (ssr) {

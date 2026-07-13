@@ -10,6 +10,7 @@ import {
 	Uses
 } from 'types';
 import { Page, ParamMatcher } from '@sveltejs/kit';
+import { RenderNode } from '../types.js';
 
 export interface SvelteKitApp {
 	/**
@@ -57,8 +58,6 @@ export interface SvelteKitApp {
 	 */
 	hash: boolean;
 
-	root: typeof SvelteComponent;
-
 	/**
 	 * Lazily loads the contents of src/error.html, used as a last-resort
 	 * error page when the root layout's load function throws during client-side rendering.
@@ -91,13 +90,10 @@ export type NavigationFinished = {
 	type: 'loaded';
 	state: NavigationState;
 	props: {
-		constructors: Array<typeof SvelteComponent>;
-		errors?: Array<typeof SvelteComponent | undefined>;
-		components?: SvelteComponent[];
 		page: Page;
 		form?: Record<string, any> | null;
 		error?: App.Error;
-		[key: `data_${number}`]: Record<string, any>;
+		tree: RenderNode;
 	};
 };
 
