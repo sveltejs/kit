@@ -1,4 +1,4 @@
-/* if `bundleStrategy` is 'split', this file is used as the entry point */
+/* in development or if `bundleStrategy` is 'split', this file is used as the entry point */
 
 import { set_payload } from './payload.js';
 
@@ -22,3 +22,8 @@ export async function start(...args) {
 export async function load_css(...args) {
 	return (await client).load_css(...args);
 }
+
+// this makes Vite inject its dev client code as this module's first dependency
+// so that global constant replacements are done before any other module evaluates.
+// For build, it's inert.
+import.meta.hot;
