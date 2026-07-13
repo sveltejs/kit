@@ -256,7 +256,10 @@ export function get_cookies(request, url) {
 
 		if (DEV) {
 			// only the name/value pair counts towards MAX_COOKIE_SIZE, not the other attributes
-			if (text_encoder.encode(`${name}=${value}`).byteLength > MAX_COOKIE_SIZE) {
+			const encoder = cookie.options.encode || encodeURIComponent;
+			const size =
+				text_encoder.encode(name).byteLength + text_encoder.encode(encoder(value)).byteLength;
+			if (size > MAX_COOKIE_SIZE) {
 				throw new Error(`Cookie "${name}" is too large, and will be discarded by the browser`);
 			}
 
