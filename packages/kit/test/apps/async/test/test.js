@@ -148,7 +148,7 @@ test.describe('remote functions', () => {
 		await expect(page.getByText('await get_message():')).toHaveText('await get_message(): hello');
 
 		await expect(page.getByText('set_message.result')).toHaveText('set_message.result: hello');
-		await expect(page.locator('[data-unscoped] input[name="message"]')).toHaveValue('');
+		await expect(page.locator('[data-unscoped] input[name^="message"]')).toHaveValue('');
 	});
 
 	test('form submitters work', async ({ page }) => {
@@ -302,7 +302,7 @@ test.describe('remote functions', () => {
 		await expect(page.getByText('scoped.result')).toHaveText(
 			'scoped.result: hello (from: scoped:form-scoped)'
 		);
-		await expect(page.locator('[data-scoped] input[name="message"]')).toHaveValue('');
+		await expect(page.locator('[data-scoped] input[name^="message"]')).toHaveValue('');
 	});
 
 	test('form enhance(...) works', async ({ page, javaScriptEnabled }) => {
@@ -324,7 +324,7 @@ test.describe('remote functions', () => {
 			await expect(page.getByText('await get_message():')).toHaveText('await get_message(): hello');
 
 			// enhanced submission should not clear the input; the developer must do that at the appropriate time
-			await expect(page.locator('[data-enhanced] input[name="message"]')).toHaveValue('hello');
+			await expect(page.locator('[data-enhanced] input[name^="message"]')).toHaveValue('hello');
 			await expect(page.getByText('enhanced.callback_element_matches:')).toHaveText(
 				'enhanced.callback_element_matches: true'
 			);
@@ -332,7 +332,7 @@ test.describe('remote functions', () => {
 				'enhanced.callback_has_enhance: false'
 			);
 		} else {
-			await expect(page.locator('[data-enhanced] input[name="message"]')).toHaveValue('');
+			await expect(page.locator('[data-enhanced] input[name^="message"]')).toHaveValue('');
 		}
 
 		await expect(page.getByText('enhanced.result')).toHaveText(
@@ -481,7 +481,7 @@ test.describe('remote functions', () => {
 
 		await page.goto('/remote/form/preflight-only');
 
-		const a = page.locator('[name="a"]');
+		const a = page.locator('[name^="a"]');
 		const button = page.locator('button');
 		const issues = page.locator('.issues');
 
@@ -507,8 +507,8 @@ test.describe('remote functions', () => {
 		await page.goto('/remote/form/validate');
 
 		const myForm = page.locator('form#my-form');
-		const foo = page.locator('input[name="foo"]');
-		const bar = page.locator('input[name="bar"]');
+		const foo = page.locator('input[name^="foo"]');
+		const bar = page.locator('input[name^="bar"]');
 		const submit = page.locator('button:has-text("imperative validation")');
 
 		await foo.fill('a');
@@ -536,7 +536,7 @@ test.describe('remote functions', () => {
 		await submit.click();
 		await expect(myForm).toContainText('Imperative: foo cannot be c');
 
-		const nestedValue = page.locator('input[name="nested.value"]');
+		const nestedValue = page.locator('input[name^="nested.value"]');
 		const validate = page.locator('button#validate');
 		const allIssues = page.locator('#allIssues');
 
@@ -550,7 +550,7 @@ test.describe('remote functions', () => {
 
 		await page.goto('/remote/form/validate');
 
-		const baz = page.locator('input[name="baz"]');
+		const baz = page.locator('input[name^="baz"]');
 		const submit = page.locator('#my-form-2 button');
 
 		await baz.fill('c');
@@ -577,12 +577,12 @@ test.describe('remote functions', () => {
 
 		await page.goto('/remote/form/underscore');
 
-		await page.fill('input[name="username"]', 'abcdefg');
-		await page.fill('input[name="_password"]', 'pqrstuv');
+		await page.fill('input[name^="username"]', 'abcdefg');
+		await page.fill('input[name^="_password"]', 'pqrstuv');
 		await page.locator('button').click();
 
-		await expect(page.locator('input[name="username"]')).toHaveValue('abcdefg');
-		await expect(page.locator('input[name="_password"]')).toHaveValue('');
+		await expect(page.locator('input[name^="username"]')).toHaveValue('abcdefg');
+		await expect(page.locator('input[name^="_password"]')).toHaveValue('');
 	});
 
 	test('prerendered entries not called in prod', async ({ page, clicknav }) => {
@@ -608,14 +608,14 @@ test.describe('remote functions', () => {
 		expect(initialValue ? JSON.parse(initialValue) : null).toEqual({});
 
 		// Fill leaf field
-		await page.fill('input[name="leaf"]', 'leaf-value');
+		await page.fill('input[name^="leaf"]', 'leaf-value');
 		const afterLeaf = await page.locator('#full-value').textContent();
 		expect(afterLeaf ? JSON.parse(afterLeaf) : null).toEqual({
 			leaf: 'leaf-value'
 		});
 
 		// Fill object.leaf field
-		await page.fill('input[name="object.leaf"]', 'object-leaf-value');
+		await page.fill('input[name^="object.leaf"]', 'object-leaf-value');
 		const afterObjectLeaf = await page.locator('#full-value').textContent();
 		expect(afterObjectLeaf ? JSON.parse(afterObjectLeaf) : null).toEqual({
 			leaf: 'leaf-value',
@@ -625,7 +625,7 @@ test.describe('remote functions', () => {
 		});
 
 		// Fill object.array fields
-		await page.fill('input[name="object.array[0]"]', 'array-item-1');
+		await page.fill('input[name^="object.array[0]"]', 'array-item-1');
 		const afterArrayItem1 = await page.locator('#full-value').textContent();
 		expect(afterArrayItem1 ? JSON.parse(afterArrayItem1) : null).toEqual({
 			leaf: 'leaf-value',
@@ -635,7 +635,7 @@ test.describe('remote functions', () => {
 			}
 		});
 
-		await page.fill('input[name="object.array[1]"]', 'array-item-2');
+		await page.fill('input[name^="object.array[1]"]', 'array-item-2');
 		const afterArrayItem2 = await page.locator('#full-value').textContent();
 		expect(afterArrayItem2 ? JSON.parse(afterArrayItem2) : null).toEqual({
 			leaf: 'leaf-value',
@@ -646,7 +646,7 @@ test.describe('remote functions', () => {
 		});
 
 		// Fill array[0].leaf field
-		await page.fill('input[name="array[0].leaf"]', 'array-0-leaf');
+		await page.fill('input[name^="array[0].leaf"]', 'array-0-leaf');
 		const afterArray0 = await page.locator('#full-value').textContent();
 		expect(afterArray0 ? JSON.parse(afterArray0) : null).toEqual({
 			leaf: 'leaf-value',
@@ -658,7 +658,7 @@ test.describe('remote functions', () => {
 		});
 
 		// Fill array[1].leaf field
-		await page.fill('input[name="array[1].leaf"]', 'array-1-leaf');
+		await page.fill('input[name^="array[1].leaf"]', 'array-1-leaf');
 		const afterArray1 = await page.locator('#full-value').textContent();
 		expect(afterArray1 ? JSON.parse(afterArray1) : null).toEqual({
 			leaf: 'leaf-value',
@@ -692,14 +692,14 @@ test.describe('remote functions', () => {
 
 		await page.goto('/remote/form/snapshot');
 
-		await page.fill('input[name="a.b.c"]', 'original');
+		await page.fill('input[name^="a.b.c"]', 'original');
 		await page.getByRole('button', { name: 'submit' }).click();
 
 		// wait until the snapshot has been taken and the submission is in flight
 		await expect(page.locator('#status')).toHaveText('status: submitting');
 
 		// mutate the form state *after* the snapshot was taken
-		await page.fill('input[name="a.b.c"]', 'changed');
+		await page.fill('input[name^="a.b.c"]', 'changed');
 
 		// let the submission complete
 		await page.getByRole('button', { name: 'release' }).click();
@@ -756,12 +756,12 @@ test.describe('remote functions', () => {
 	test('file uploads work', async ({ page }) => {
 		await page.goto('/remote/form/file-upload');
 
-		await page.locator('input[name="file1"]').setInputFiles({
+		await page.locator('input[name^="file1"]').setInputFiles({
 			name: 'a.txt',
 			mimeType: 'text/plain',
 			buffer: Buffer.from('a')
 		});
-		await page.locator('input[name="file2"]').setInputFiles({
+		await page.locator('input[name^="file2"]').setInputFiles({
 			name: 'b.txt',
 			mimeType: 'text/plain',
 			buffer: Buffer.from('b')
@@ -780,12 +780,12 @@ test.describe('remote functions', () => {
 	test('large file uploads work', async ({ page }) => {
 		await page.goto('/remote/form/file-upload');
 
-		await page.locator('input[name="file1"]').setInputFiles({
+		await page.locator('input[name^="file1"]').setInputFiles({
 			name: 'a.txt',
 			mimeType: 'text/plain',
 			buffer: Buffer.alloc(1024 * 1024 * 10)
 		});
-		await page.locator('input[name="file2"]').setInputFiles({
+		await page.locator('input[name^="file2"]').setInputFiles({
 			name: 'b.txt',
 			mimeType: 'text/plain',
 			buffer: Buffer.from('b')
@@ -908,20 +908,20 @@ test.describe('remote functions', () => {
 		const form2 = page.locator('form').nth(1);
 
 		// first record values
-		await expect(form1.locator('input[name="text_field"]')).toHaveValue('Example text');
-		await expect(form1.locator('input[name="n:number_field"]')).toHaveValue('42');
-		await expect(form1.locator('select[name="select_field"]')).toHaveValue('apple');
-		await expect(form1.locator('input[name="color_field"]')).toHaveValue('#ff0000');
-		await expect(form1.locator('input[name="n:range_field"]')).toHaveValue('5');
-		await expect(form1.locator('input[name="b:checkbox_field"]')).toBeChecked();
+		await expect(form1.locator('input[name^="text_field"]')).toHaveValue('Example text');
+		await expect(form1.locator('input[name^="n:number_field"]')).toHaveValue('42');
+		await expect(form1.locator('select[name^="select_field"]')).toHaveValue('apple');
+		await expect(form1.locator('input[name^="color_field"]')).toHaveValue('#ff0000');
+		await expect(form1.locator('input[name^="n:range_field"]')).toHaveValue('5');
+		await expect(form1.locator('input[name^="b:checkbox_field"]')).toBeChecked();
 
 		// second record values
-		await expect(form2.locator('input[name="text_field"]')).toHaveValue('Another example');
-		await expect(form2.locator('input[name="n:number_field"]')).toHaveValue('100');
-		await expect(form2.locator('select[name="select_field"]')).toHaveValue('banana');
-		await expect(form2.locator('input[name="color_field"]')).toHaveValue('#ffff00');
-		await expect(form2.locator('input[name="n:range_field"]')).toHaveValue('8');
-		await expect(form2.locator('input[name="b:checkbox_field"]')).not.toBeChecked();
+		await expect(form2.locator('input[name^="text_field"]')).toHaveValue('Another example');
+		await expect(form2.locator('input[name^="n:number_field"]')).toHaveValue('100');
+		await expect(form2.locator('select[name^="select_field"]')).toHaveValue('banana');
+		await expect(form2.locator('input[name^="color_field"]')).toHaveValue('#ffff00');
+		await expect(form2.locator('input[name^="n:range_field"]')).toHaveValue('8');
+		await expect(form2.locator('input[name^="b:checkbox_field"]')).not.toBeChecked();
 	});
 });
 
