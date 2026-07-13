@@ -2138,16 +2138,16 @@ function setup_preload() {
 		const a = find_anchor(event.target, container);
 		if (!a || a === hovered_a) return;
 
+		clear_hover_preload();
+		hovered_a = a;
+
 		// Instead of just preloading right away, we start a mousemove listener to implement
 		// "mouse comes to a rest" behavior. This avoid false positives when you just move
 		// your mouse across the screen and happen to pass over a link.
 		a.addEventListener('mousemove', start_hover_preload);
 		a.addEventListener('mouseleave', clear_hover_preload, { once: true });
 
-		clear_hover_preload();
 		start_hover_preload();
-
-		hovered_a = a;
 	});
 
 	/** @param {Event} event */
