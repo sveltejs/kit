@@ -34,12 +34,6 @@ test('build /basepath/service-worker.js', async ({ baseURL, request }) => {
 
 	const pathname = '/basepath/service-worker.js';
 
-	// stubs for explicit environment variables in service workers
-	globalThis.importScripts = () => {};
-	globalThis.__sveltekit_sw = {
-		env: {}
-	};
-
 	fn(self, {
 		href: baseURL + pathname,
 		pathname

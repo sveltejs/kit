@@ -1,4 +1,4 @@
-import { base, assets, relative, initial_base } from './internal/server.js';
+import { base, assets, relative } from './internal/server.js';
 import { resolve_route, find_route } from '../../../utils/routing.js';
 import { decode_pathname } from '../../../utils/url.js';
 import { add_data_suffix } from '../../pathname.js';
@@ -21,7 +21,7 @@ export function resolve(id, params) {
 		);
 	}
 
-	const resolved = resolve_route(id, /** @type {Record<string, string>} */ (params));
+	const resolved = resolve_route(id, params ?? {});
 
 	if (relative) {
 		const store = try_get_request_store();
@@ -32,7 +32,7 @@ export function resolve(id, params) {
 			const pathname = store.event.isDataRequest
 				? add_data_suffix(store.event.url.pathname)
 				: store.event.url.pathname;
-			const after_base = pathname.slice(initial_base.length);
+			const after_base = pathname.slice(base.length);
 			const segments = after_base.split('/').slice(2);
 			const prefix = segments.map(() => '..').join('/') || '.';
 
@@ -80,5 +80,3 @@ export async function match(url) {
 
 	return null;
 }
-
-export { base, assets, resolve as resolveRoute };

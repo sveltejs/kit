@@ -1,8 +1,6 @@
-/** @import { PromiseWithResolvers } from '../../../../utils/promise.js' */
-import { query_responses } from '../../client.js';
+import { query_responses, handle_error } from '../../client.js';
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
 import { noop, once } from '../../../../utils/functions.js';
-import { with_resolvers } from '../../../../utils/promise.js';
 import { SharedIterator } from '../../../../utils/shared-iterator.js';
 import { tick } from 'svelte';
 import { create_live_iterator } from './iterator.js';
@@ -26,7 +24,7 @@ export class LiveQuery {
 	#done = $state(false);
 	/** @type {T | undefined} */
 	#raw = $state.raw();
-	/** @type {any} */
+	/** @type {App.Error | undefined} */
 	#error = $state.raw(undefined);
 	/** @type {Promise<void>} */
 	#promise;
@@ -80,7 +78,7 @@ export class LiveQuery {
 		// the semantics of awaiting a live query are a bit weird, but it's basically:
 		// - It's a promise that resolves to the first value from the server
 		// - Thereafter, it's a promise that immediately resolves to the current value
-		const { promise, resolve, reject } = with_resolvers();
+		const { promise, resolve, reject } = Promise.withResolvers();
 		this.#promise = $state.raw(promise);
 		this.#resolve_first = resolve;
 		this.#reject_first = reject;
@@ -93,9 +91,9 @@ export class LiveQuery {
 				// the query failed during SSR — seed the failed state (mirroring `fail()`,
 				// minus its terminal `#done`), so the main loop still connects as usual
 				// and the query can recover
-				const error = new HttpError(node.e[0] ?? 500, node.e[1]);
+				const error = new HttpError(node.e.status, node.e);
 				this.#loading = false;
-				this.#error = error;
+				this.#error = error.body;
 
 				promise.catch(noop);
 				this.#reject_first?.(error);
@@ -123,7 +121,7 @@ export class LiveQuery {
 		if (this.#interrupt) return;
 
 		/** @type {PromiseWithResolvers<void>} */
-		const { promise: stopped, resolve: on_stop } = with_resolvers();
+		const { promise: stopped, resolve: on_stop } = Promise.withResolvers();
 		let connected = false;
 
 		while (!this.#done) {
@@ -177,7 +175,7 @@ export class LiveQuery {
 
 				if (!this.#ready) {
 					// If we haven't successfully connected and received a value yet, surface the error
-					this.fail(error);
+					await this.#fail(error);
 					on_connect_failed(error);
 					break;
 				}
@@ -354,7 +352,7 @@ export class LiveQuery {
 	async reconnect() {
 		await this.#interrupt?.();
 		/** @type {PromiseWithResolvers<void>} */
-		const { promise, resolve: on_connect, reject: on_connect_failed } = with_resolvers();
+		const { promise, resolve: on_connect, reject: on_connect_failed } = Promise.withResolvers();
 		promise.catch(noop);
 		this.#done = false;
 		this.#attempt = 0;
@@ -387,10 +385,10 @@ export class LiveQuery {
 		this.#fan_out.push(value);
 	}
 
-	/** @param {unknown} error */
+	/** @param {HttpError} error */
 	fail(error) {
 		this.#loading = false;
-		this.#error = error;
+		this.#error = error.body;
 		// `fail` is terminal — once a live query has hard-failed, the only way to start
 		// streaming again is via `reconnect()`. Mark it done and abort any in-flight
 		// request so that callers from outside the main loop (e.g. `apply_reconnections`)
@@ -410,6 +408,16 @@ export class LiveQuery {
 		}
 
 		this.#fan_out.fail(error);
+	}
+
+	/** @param {unknown} e */
+	async #fail(e) {
+		const error = await handle_error(e, {
+			params: {},
+			route: { id: null },
+			url: new URL(location.href)
+		});
+		this.fail(new HttpError(error.status, error));
 	}
 
 	get [Symbol.toStringTag]() {

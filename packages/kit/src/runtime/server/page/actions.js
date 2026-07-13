@@ -5,7 +5,7 @@ import { DEV } from 'esm-env';
 import { json } from '@sveltejs/kit';
 import { HttpError, Redirect, ActionFailure, SvelteKitError } from '@sveltejs/kit/internal';
 import { with_request_store, merge_tracing } from '@sveltejs/kit/internal/server';
-import { get_status, normalize_error } from '../../../utils/error.js';
+import { normalize_error } from '../../../utils/error.js';
 import { is_form_content_type, negotiate } from '../../../utils/http.js';
 import { create_replacer, handle_error_and_jsonify } from '../utils.js';
 import { record_span } from '../../telemetry/record_span.js';
@@ -36,13 +36,15 @@ export async function handle_action_json_request(event, event_state, options, se
 			`POST method not allowed. No form actions exist for ${DEV ? `the page at ${event.route.id}` : 'this page'}`
 		);
 
+		const error = await handle_error_and_jsonify(event, event_state, options, no_actions_error);
+
 		return action_json(
 			{
 				type: 'error',
-				error: await handle_error_and_jsonify(event, event_state, options, no_actions_error)
+				error
 			},
 			{
-				status: no_actions_error.status,
+				status: error.status,
 				headers: {
 					// https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/405
 					// "The server must generate an Allow header field in a 405 status code response"
@@ -62,22 +64,27 @@ export async function handle_action_json_request(event, event_state, options, se
 		}
 
 		if (data instanceof ActionFailure) {
-			return action_json({
-				type: 'failure',
-				status: data.status,
-				// @ts-expect-error we assign a string to what is supposed to be an object. That's ok
-				// because we don't use the object outside, and this way we have better code navigation
-				// through knowing where the related interface is used.
-				data: stringify_action_response(
-					data.data,
-					/** @type {string} */ (event.route.id),
-					options.hooks.transport
-				)
-			});
-		} else {
+			return action_json(
+				{
+					type: 'failure',
+					status: data.status,
+					// @ts-expect-error we assign a string to what is supposed to be an object. That's ok
+					// because we don't use the object outside, and this way we have better code navigation
+					// through knowing where the related interface is used.
+					data: stringify_action_response(
+						data.data,
+						/** @type {string} */ (event.route.id),
+						options.hooks.transport
+					)
+				},
+				{
+					status: data.status
+				}
+			);
+		} else if (data) {
 			return action_json({
 				type: 'success',
-				status: data ? 200 : 204,
+				status: 200,
 				// @ts-expect-error see comment above
 				data: stringify_action_response(
 					data,
@@ -85,6 +92,9 @@ export async function handle_action_json_request(event, event_state, options, se
 					options.hooks.transport
 				)
 			});
+		} else {
+			// no data returned — use 204 No Content (without a body, per the spec)
+			return new Response(null, { status: 204 });
 		}
 	} catch (e) {
 		const err = normalize_error(e);
@@ -93,18 +103,20 @@ export async function handle_action_json_request(event, event_state, options, se
 			return action_json_redirect(err);
 		}
 
+		const transformed = await handle_error_and_jsonify(
+			event,
+			event_state,
+			options,
+			check_incorrect_fail_use(err)
+		);
+
 		return action_json(
 			{
 				type: 'error',
-				error: await handle_error_and_jsonify(
-					event,
-					event_state,
-					options,
-					check_incorrect_fail_use(err)
-				)
+				error: transformed
 			},
 			{
-				status: get_status(err)
+				status: transformed.status
 			}
 		);
 	}
@@ -163,6 +175,7 @@ export async function handle_action_request(event, event_state, server) {
 		});
 		return {
 			type: 'error',
+			// We're lying a bit with the types here; this will be transformed into a proper App.Error object later
 			error: new SvelteKitError(
 				405,
 				'Method Not Allowed',
@@ -207,6 +220,7 @@ export async function handle_action_request(event, event_state, server) {
 
 		return {
 			type: 'error',
+			// @ts-expect-error We're lying a bit with the types here; this will be transformed into a proper App.Error object later
 			error: check_incorrect_fail_use(err)
 		};
 	}
@@ -243,10 +257,11 @@ async function call_action(event, event_state, actions) {
 		}
 	}
 
-	const action = actions[name];
-	if (!action) {
+	if (!Object.hasOwn(actions, name)) {
 		throw new SvelteKitError(404, 'Not Found', `No action with name '${name}' found`);
 	}
+
+	const action = actions[name];
 
 	if (!is_form_content_type(event.request)) {
 		throw new SvelteKitError(

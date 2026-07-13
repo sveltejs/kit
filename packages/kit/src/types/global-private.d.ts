@@ -15,13 +15,13 @@ declare global {
 	const __SVELTEKIT_PATHS_ASSETS__: string;
 	const __SVELTEKIT_PATHS_BASE__: string;
 	const __SVELTEKIT_PATHS_RELATIVE__: boolean;
-	/** True if `config.kit.experimental.instrumentation.server` is `true` */
+	/** True if `config.tracing.server` is `true` */
 	const __SVELTEKIT_SERVER_TRACING_ENABLED__: boolean;
-	/** True if `config.kit.experimental.forkPreloads` is `true` */
+	/** True if `config.experimental.forkPreloads` is `true` */
 	const __SVELTEKIT_FORK_PRELOADS__: boolean;
-	/** True if `config.kit.router.resolution === 'client'` */
+	/** True if `config.router.resolution === 'client'` */
 	const __SVELTEKIT_CLIENT_ROUTING__: boolean;
-	/** True if `config.kit.router.type === 'hash'` */
+	/** True if `config.router.type === 'hash'` */
 	const __SVELTEKIT_HASH_ROUTING__: boolean;
 	/**
 	 * True if any node in the manifest has a server load function.
@@ -49,6 +49,15 @@ declare global {
 		resolve?: (data: { id: number; data: any; error: any }) => void;
 	};
 	/**
+	 * The Vite `root` setting used to construct paths to nodes and components
+	 * for the SSR manifest during development
+	 */
+	const __SVELTEKIT_ROOT__: string;
+	/**
+	 * Whether the `experimental.async` flag is applied
+	 */
+	const __SVELTEKIT_SUPPORTS_ASYNC__: boolean;
+	/**
 	 * This makes the use of specific features visible at both dev and build time, in such a
 	 * way that we can error when they are not supported by the target platform.
 	 *
@@ -63,8 +72,6 @@ declare global {
 	 * to throw an error if the feature would fail in production.
 	 */
 	var __SVELTEKIT_TRACK__: (label: string) => void;
-	var __SVELTEKIT_EXPERIMENTAL_USE_TRANSFORM_ERROR__: boolean;
-	var __SVELTEKIT_EXPERIMENTAL_EXPLICIT_ENVIRONMENT_VARIABLES__: boolean;
 	var Bun: object;
 	var Deno: object;
 }

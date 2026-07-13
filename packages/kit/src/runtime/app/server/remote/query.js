@@ -14,7 +14,6 @@ import {
 import { noop } from '../../../../utils/functions.js';
 import { SharedIterator } from '../../../../utils/shared-iterator.js';
 import { handle_error_and_jsonify } from '../../../server/utils.js';
-import { HttpError, SvelteKitError } from '@sveltejs/kit/internal';
 
 /**
  * Creates a remote query. When called from the browser, the function will be invoked on the server via a `fetch` call.
@@ -347,13 +346,11 @@ function batch(validate_or_fn, maybe_fn) {
 								const data = get_result(arg, i);
 								return { type: 'result', data };
 							} catch (error) {
+								const transformed = await handle_error_and_jsonify(event, state, options, error);
+
 								return {
 									type: 'error',
-									error: await handle_error_and_jsonify(event, state, options, error),
-									status:
-										error instanceof HttpError || error instanceof SvelteKitError
-											? error.status
-											: 500
+									error: transformed
 								};
 							}
 						})
@@ -414,20 +411,14 @@ export function refresh(event, state, internals, payload, fn) {
 
 	const key = create_remote_key(internals.id, payload);
 
-	// `fn()` is invoked eagerly here, which starts running the query immediately.
-	// The resulting promise is normally awaited (and its rejection handled) in
-	// `collect_remote_data`, but some code paths (e.g. a command throwing a
-	// non-redirect error) never reach that point. Attach a no-op `catch` to the
-	// promise so a rejection is always considered handled and can never become an
-	// unhandled promise rejection (which crashes the process on modern Node).
-	// We still store the original promise so `collect_remote_data` can serialize
-	// either its value or its error as before.
-	const promise = fn();
-	promise.catch(() => {});
-
+	// `fn` is stored rather than invoked eagerly. The query is run at the end of
+	// the command/form (in `collect_remote_data`), so that it observes any state
+	// mutations that happen after `refresh()` is called. If the developer re-awaits
+	// the query before the command finishes, the cache entry created by that await
+	// is reused instead of re-running the query.
 	(state.remote.explicit ??= new Map()).set(key, {
 		internals,
-		promise
+		fn
 	});
 }
 
@@ -497,13 +488,6 @@ function create_query_resource(__, payload, event, state, fn) {
 			get_cache(__, state)[payload] = p;
 
 			refresh(event, state, __, payload, () => p);
-		},
-		// TODO 3.0 remove this
-		// @ts-expect-error This method no longer exists
-		run() {
-			throw new Error(
-				`\`myQuery().run()\` has been removed — please replace it with \`myQuery()\`. See https://github.com/sveltejs/kit/pull/15779 for more details`
-			);
 		},
 		/** @type {Promise<any>['then']} */
 		then(onfulfilled, onrejected) {

@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { posixify } from './os.js';
 
 /** @param {string} dir */
 export function mkdirp(dir) {
@@ -110,11 +111,6 @@ export function walk(cwd, dirs = false) {
 	return (walk_dir(''), all_files);
 }
 
-/** @param {string} str */
-export function posixify(str) {
-	return str.replace(/\\/g, '/');
-}
-
 /**
  * Like `path.join`, but posixified and with a leading `./` if necessary
  * @param {string[]} str
@@ -136,31 +132,6 @@ export function join_relative(...str) {
  */
 export function relative_path(from, to) {
 	return join_relative(path.relative(from, to));
-}
-
-/**
- * Prepend given path with `/@fs` prefix
- * @param {string} str
- */
-export function to_fs(str) {
-	str = posixify(str);
-	return `/@fs${
-		// Windows/Linux separation - Windows starts with a drive letter, we need a / in front there
-		str.startsWith('/') ? '' : '/'
-	}${str}`;
-}
-
-/**
- * Removes `/@fs` prefix from given path and posixifies it
- * @param {string} str
- */
-export function from_fs(str) {
-	str = posixify(str);
-	if (!str.startsWith('/@fs')) return str;
-
-	str = str.slice(4);
-	// Windows/Linux separation - Windows starts with a drive letter, we need to strip the additional / here
-	return str[2] === ':' && /[A-Z]/.test(str[1]) ? str.slice(1) : str;
 }
 
 /**

@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-netlify",
-	"version": "6.0.4",
+	"version": "7.0.0-next.2",
 	"description": "A SvelteKit adapter that creates a Netlify app",
 	"keywords": [
 		"adapter",
@@ -29,33 +29,30 @@
 	"files": [
 		"files",
 		"index.js",
+		"utils.js",
 		"index.d.ts",
 		"ambient.d.ts"
 	],
 	"scripts": {
-		"dev": "rollup -cw",
-		"build": "rollup -c",
+		"dev": "rolldown -cw",
+		"build": "rolldown -c",
 		"check": "tsc",
 		"lint": "prettier --check .",
 		"format": "pnpm lint --write",
 		"test:unit": "vitest run",
 		"test:build": "pnpm build && pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" build",
-		"test": "pnpm test:build",
+		"test": "pnpm test:unit && pnpm test:build",
 		"prepublishOnly": "pnpm build"
 	},
 	"dependencies": {
 		"@iarna/toml": "^2.2.5",
-		"esbuild": "^0.28.1"
+		"@netlify/functions": "^5.3.0",
+		"rolldown": "^1.1.2"
 	},
 	"devDependencies": {
-		"@netlify/edge-functions": "catalog:",
-		"@netlify/functions": "catalog:",
-		"@rollup/plugin-commonjs": "catalog:",
-		"@rollup/plugin-json": "catalog:",
-		"@rollup/plugin-node-resolve": "catalog:",
+		"@netlify/edge-functions": "^3.0.8",
 		"@sveltejs/kit": "workspace:^",
 		"@types/node": "catalog:",
-		"rollup": "^4.59.0",
 		"typescript": "catalog:",
 		"vitest": "catalog:"
 	},

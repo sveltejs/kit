@@ -15,7 +15,7 @@ test('Creates tsconfig path aliases from kit.alias', () => {
 		}
 	});
 
-	const { compilerOptions } = get_tsconfig(kit);
+	const { compilerOptions } = get_tsconfig(kit, '.');
 
 	// $lib isn't part of the outcome because there's a "path exists"
 	// check in the implementation
@@ -42,7 +42,7 @@ test('Allows generated tsconfig to be mutated', () => {
 		}
 	});
 
-	const config = get_tsconfig(kit);
+	const config = get_tsconfig(kit, '.');
 
 	// @ts-expect-error
 	assert.equal(config.extends, 'some/other/tsconfig.json');
@@ -60,7 +60,7 @@ test('Allows generated tsconfig to be replaced', () => {
 		}
 	});
 
-	const config = get_tsconfig(kit);
+	const config = get_tsconfig(kit, '.');
 
 	// @ts-expect-error
 	assert.equal(config.extends, 'some/other/tsconfig.json');
@@ -75,7 +75,7 @@ test('Creates tsconfig include from kit.files', () => {
 		}
 	});
 
-	const { include } = get_tsconfig(kit);
+	const { include } = get_tsconfig(kit, '.');
 
 	expect(include).toEqual([
 		'ambient.d.ts',

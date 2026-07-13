@@ -2,11 +2,9 @@
 /** @import { InternalRemoteFormIssue, MaybePromise, HasNonOptionalBoolean, RemoteFormInternals } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 import { get_request_store } from '@sveltejs/kit/internal/server';
-import { DEV } from 'esm-env';
 import {
 	create_field_proxy,
 	set_nested_value,
-	throw_on_old_property_access,
 	deep_set,
 	normalize_issue,
 	flatten_issues
@@ -90,32 +88,6 @@ export function form(validate_or_fn, maybe_fn) {
 			name: '',
 			id: '',
 			fn: async (data, meta, form_data) => {
-				// TODO 3.0 remove this warning
-				if (DEV && !data) {
-					const error = () => {
-						throw new Error(
-							'Remote form functions no longer get passed a FormData object. ' +
-								"`form` now has the same signature as `query` or `command`, i.e. it expects to be invoked like `form(schema, callback)` or `form('unchecked', callback)`. " +
-								'The payload of the callback function is now a POJO instead of a FormData object. See https://kit.svelte.dev/docs/remote-functions#form for details.'
-						);
-					};
-					data = {};
-					for (const key of [
-						'append',
-						'delete',
-						'entries',
-						'forEach',
-						'get',
-						'getAll',
-						'has',
-						'keys',
-						'set',
-						'values'
-					]) {
-						Object.defineProperty(data, key, { get: error });
-					}
-				}
-
 				/** @type {{ submission: true, input?: Record<string, any>, issues?: InternalRemoteFormIssue[], result: Output }} */
 				const output = {};
 
@@ -183,8 +155,8 @@ export function form(validate_or_fn, maybe_fn) {
 				// so the current request's state has to be resolved at access time
 				return create_field_proxy({
 					form_id: __.id,
-					get_input: () => get_cache(__, get_request_store().state)?.['']?.input ?? {},
-					set_input: (path, value) => {
+					get: () => get_cache(__, get_request_store().state)?.['']?.input ?? {},
+					set: (path, value) => {
 						const cache = get_cache(__, get_request_store().state);
 						const entry = cache[''];
 
@@ -203,24 +175,12 @@ export function form(validate_or_fn, maybe_fn) {
 						(cache[''] ??= {}).input = input;
 					},
 					get_issues: () =>
-						flatten_issues(get_cache(__, get_request_store().state)?.['']?.issues ?? [])
+						flatten_issues(get_cache(__, get_request_store().state)?.['']?.issues ?? []),
+					get_touched: () => ({}),
+					get_dirty: () => ({})
 				});
 			}
 		});
-
-		// TODO 3.0 remove
-		if (DEV) {
-			throw_on_old_property_access(instance);
-
-			Object.defineProperty(instance, 'buttonProps', {
-				get() {
-					throw new Error(
-						'`form.buttonProps` has been removed: Instead of `<button {...form.buttonProps}>, use `<button {...form.fields.action.as("submit", "value")}>`.' +
-							' See the PR for more info: https://github.com/sveltejs/kit/pull/14622'
-					);
-				}
-			});
-		}
 
 		Object.defineProperty(instance, 'result', {
 			get() {
@@ -333,15 +293,6 @@ function create_issues() {
 		new Proxy(
 			/** @param {string} message */
 			(message) => {
-				// TODO 3.0 remove
-				if (typeof message !== 'string') {
-					throw new Error(
-						'`invalid` should now be imported from `@sveltejs/kit` to throw validation issues. ' +
-							"The second parameter provided to the form function (renamed to `issue`) is still used to construct issues, e.g. `invalid(issue.field('message'))`. " +
-							'For more info see https://github.com/sveltejs/kit/pulls/14768'
-					);
-				}
-
 				return create_issue(message);
 			},
 			{
