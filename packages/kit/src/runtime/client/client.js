@@ -3286,9 +3286,6 @@ function reset_focus(url, scroll = true) {
 			const tabindex = root.getAttribute('tabindex');
 
 			root.tabIndex = -1;
-			// TODO: remove this when we switch to TypeScript 6
-			// @ts-ignore options.focusVisible is only typed in TypeScript 6
-			// See https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/focus#browser_compatibility
 			root.focus({ preventScroll: true, focusVisible: false });
 
 			// restore `tabindex` as to prevent `root` from stealing input from elements
