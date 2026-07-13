@@ -1734,9 +1734,9 @@ export interface ResolveOptions {
 	 */
 	filterSerializedResponseHeaders?: (name: string, value: string) => boolean;
 	/**
-	 * Determines which files should be preloaded. When a page is rendered dynamically, files are preloaded
-	 * via the [`Link` response header](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Link);
-	 * prerendered pages have `<link>` tags added to the `<head>` tag instead.
+	 * Determines which files should be preloaded. Files are preloaded via `<link>` tags added to the
+	 * `<head>` tag; if `output.linkHeaderPreload` is enabled, dynamically rendered pages use the
+	 * [`Link` response header](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Link) instead.
 	 * By default, `js` and `css` files will be preloaded.
 	 * @param input the type of the file and its path
 	 */
