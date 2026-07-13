@@ -162,7 +162,7 @@ export function form(id) {
 		 */
 		function convert(form_data) {
 			const data = convert_formdata(action_id_without_key, form_data);
-			if (key !== undefined && !form_data.has('id')) {
+			if (key !== undefined && !('id' in data)) {
 				data.id = key;
 			}
 			return data;
@@ -407,7 +407,9 @@ export function form(id) {
 
 				if (
 					previous_submitter_name !== null &&
-					!Array.from(form_data.keys()).map(strip_prefix).includes(previous_submitter_name)
+					!Array.from(form_data.keys())
+						.map((k) => strip_prefix(validate_field_name(action_id_without_key, k)))
+						.includes(previous_submitter_name)
 				) {
 					// Strip any `n:`/`b:` type prefix before clearing, otherwise
 					// `set_nested_value` would coerce `undefined` to `NaN`/`false`
@@ -552,7 +554,7 @@ export function form(id) {
 				let name = /** @type {HTMLInputElement} */ (e.target).name;
 				if (!name) return;
 
-				name = strip_prefix(name).replace(/\[\]$/, '');
+				name = strip_prefix(validate_field_name(action_id_without_key, name)).replace(/\[\]$/, '');
 
 				touched[name] = true;
 
