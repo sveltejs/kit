@@ -2119,28 +2119,16 @@ function setup_preload() {
 
 	function clear_hover_preload() {
 		clearTimeout(mousemove_timeout);
+		hovered_a?.removeEventListener('mousemove', start_hover_preload);
 		hovered_a = undefined;
-		container.removeEventListener('mousemove', mousemove);
 	}
 
 	function start_hover_preload() {
 		clearTimeout(mousemove_timeout);
 		mousemove_timeout = setTimeout(() => {
-			if (hovered_a) {
-				void preload(hovered_a, PRELOAD_PRIORITIES.hover);
-			}
+			if (!hovered_a) return;
+			void preload(hovered_a, PRELOAD_PRIORITIES.hover);
 		}, 20);
-	}
-
-	/** @param {MouseEvent} event */
-	function mousemove(event) {
-		const target = event.target;
-		if (!(target instanceof Node) || !hovered_a?.contains(target)) {
-			clear_hover_preload();
-			return;
-		}
-
-		start_hover_preload();
 	}
 
 	// Use mouseover initially instead of mousemove to avoid cluttering the event queue
@@ -2150,13 +2138,16 @@ function setup_preload() {
 		const a = find_anchor(event.target, container);
 		if (!a || a === hovered_a) return;
 
-		clear_hover_preload();
-		hovered_a = a;
-		start_hover_preload();
 		// Instead of just preloading right away, we start a mousemove listener to implement
 		// "mouse comes to a rest" behavior. This avoid false positives when you just move
 		// your mouse across the screen and happen to pass over a link.
-		container.addEventListener('mousemove', mousemove);
+		a.addEventListener('mousemove', start_hover_preload);
+		a.addEventListener('mouseleave', clear_hover_preload, { once: true });
+
+		clear_hover_preload();
+		start_hover_preload();
+
+		hovered_a = a;
 	});
 
 	/** @param {Event} event */
