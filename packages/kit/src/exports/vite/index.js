@@ -489,6 +489,7 @@ function kit({ svelte_config }) {
 					new_config.define = {
 						...define,
 						__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: '0',
+						__SVELTEKIT_PAYLOAD__: kit_global, // only relevant when bundleStrategy !== 'split'
 						__SVELTEKIT_HAS_SERVER_LOAD__: 'true',
 						__SVELTEKIT_HAS_UNIVERSAL_LOAD__: 'true'
 					};
@@ -1380,7 +1381,8 @@ function kit({ svelte_config }) {
 								// these are stubs that will be replaced after the initial server build
 								define: {
 									__SVELTEKIT_HAS_SERVER_LOAD__: 'true',
-									__SVELTEKIT_HAS_UNIVERSAL_LOAD__: 'true'
+									__SVELTEKIT_HAS_UNIVERSAL_LOAD__: 'true',
+									__SVELTEKIT_PAYLOAD__: '{}'
 								}
 							},
 							client: {
@@ -1406,6 +1408,10 @@ function kit({ svelte_config }) {
 												}
 											: undefined
 									}
+								},
+								define: {
+									__SVELTEKIT_PAYLOAD__:
+										svelte_config.kit.output.bundleStrategy !== 'split' ? kit_global : 'undefined'
 								}
 							}
 						},

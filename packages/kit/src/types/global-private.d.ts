@@ -1,4 +1,4 @@
-import { RemoteFunctionData } from 'types';
+import { SvelteKitPayload } from 'types';
 
 declare global {
 	const __SVELTEKIT_ADAPTER_NAME__: string;
@@ -33,6 +33,11 @@ declare global {
 	 * Used for treeshaking universal load code from client bundles when no universal loads exist.
 	 */
 	const __SVELTEKIT_HAS_UNIVERSAL_LOAD__: boolean;
+	/**
+	 * The `__sveltekit_abc123` object in the init `<script>`.
+	 * Should only be used when bundleStrategy !== 'inline' to avoid SvelteKit runtime changing on every build, preventing cacheability.
+	 */
+	const __SVELTEKIT_PAYLOAD__: SvelteKitPayload;
 	/**
 	 * The Vite `root` setting used to construct paths to nodes and components
 	 * for the SSR manifest during development

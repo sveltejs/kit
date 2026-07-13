@@ -1,3 +1,5 @@
+/* if `bundleStrategy` is 'split', this file is used as the entry point */
+
 import { set_payload } from './payload.js';
 
 /** @type {Promise<typeof import('./client-entry.js')>} */
