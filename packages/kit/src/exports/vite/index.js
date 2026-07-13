@@ -743,11 +743,7 @@ function kit({ svelte_config }) {
 					(normalized.startsWith('$lib/') && server_only_directory_pattern.test(id)) ||
 					(is_internal && server_only_module_pattern.test(id));
 
-				// skip .server.js files outside the cwd or in node_modules, as the filename might not mean 'server-only module' in this context
-				// TODO: address https://github.com/sveltejs/kit/issues/12529
-				if (!is_server_only) {
-					return;
-				}
+				if (!is_server_only) return;
 
 				// in dev, this doesn't exist, so we need to create it
 				manifest_data ??= sync.all(svelte_config, root).manifest_data;
