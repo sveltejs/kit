@@ -787,13 +787,14 @@ describe('create_field_proxy', () => {
 		const input = { created_at: original };
 
 		const proxy = create_field_proxy(
-			{},
-			() => input,
-			() => {},
-			() => ({}),
-			() => ({}),
-			() => ({}),
-			[]
+			{
+				form_id: 'form',
+				get: () => input,
+				set: () => {},
+				get_issues: () => ({}),
+				get_touched: () => ({}),
+				get_dirty: () => ({})
+			},
 		);
 
 		const cloned = proxy.created_at.value();
