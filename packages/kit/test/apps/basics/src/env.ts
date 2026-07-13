@@ -3,30 +3,30 @@ import { defineEnvVars } from '@sveltejs/kit/hooks';
 export const variables = defineEnvVars({
 	PRIVATE_STATIC: {
 		public: false,
-		availability: 'inline'
+		static: true
 	},
 	PRIVATE_DYNAMIC: {
 		public: false,
-		availability: 'dynamic'
+		static: false
 	},
 	PUBLIC_STATIC: {
 		public: true,
-		availability: 'inline'
+		static: true
 	},
 	PUBLIC_DYNAMIC: {
 		public: true,
-		availability: 'dynamic'
+		static: false
 	},
 	PUBLIC_THEME: {
 		public: true,
-		availability: 'dynamic'
+		static: false
 	},
 	PUBLIC_PRERENDERING: {
 		public: true,
-		availability: 'dynamic'
+		static: false
 	},
 	SOME_JSON: {
 		public: false,
-		availability: 'inline'
+		static: true
 	}
 });
