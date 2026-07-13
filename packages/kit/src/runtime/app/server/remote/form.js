@@ -7,7 +7,8 @@ import {
 	set_nested_value,
 	deep_set,
 	normalize_issue,
-	flatten_issues
+	flatten_issues,
+	validate_field_name
 } from '../../../form-utils.js';
 import { get_cache, get_implicit_lookup, run_remote_function } from './shared.js';
 import { ValidationError } from '@sveltejs/kit/internal';
@@ -102,7 +103,7 @@ export function form(validate_or_fn, maybe_fn) {
 				}
 
 				if (validated?.issues !== undefined) {
-					handle_issues(output, validated.issues, form_data);
+					handle_issues(output, validated.issues, form_data, __.id);
 				} else {
 					if (validated !== undefined) {
 						data = validated.value;
@@ -120,7 +121,7 @@ export function form(validate_or_fn, maybe_fn) {
 						);
 					} catch (e) {
 						if (e instanceof ValidationError) {
-							handle_issues(output, e.issues, form_data);
+							handle_issues(output, e.issues, form_data, __.id);
 						} else {
 							throw e;
 						}
@@ -257,8 +258,9 @@ export function form(validate_or_fn, maybe_fn) {
  * @param {{ issues?: InternalRemoteFormIssue[], input?: Record<string, any>, result: any }} output
  * @param {readonly StandardSchemaV1.Issue[]} issues
  * @param {FormData | null} form_data - null if the form is progressively enhanced
+ * @param {string} form_id - hash/name of the form
  */
-function handle_issues(output, issues, form_data) {
+function handle_issues(output, issues, form_data, form_id) {
 	output.issues = issues.map((issue) => normalize_issue(issue, true));
 
 	// if it was a progressively-enhanced submission, we don't need
@@ -269,6 +271,8 @@ function handle_issues(output, issues, form_data) {
 		for (let key of form_data.keys()) {
 			// redact sensitive fields
 			if (/^[.\]]?_/.test(key)) continue;
+
+			key = validate_field_name(form_id, key);
 
 			const is_array = key.endsWith('[]');
 			const values = form_data.getAll(key).filter((value) => typeof value === 'string');
