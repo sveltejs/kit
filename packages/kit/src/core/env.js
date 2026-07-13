@@ -313,7 +313,7 @@ export function create_explicit_env_types(variables, relative, type) {
 			const type = config.schema
 				? `import('@sveltejs/kit/internal/types').StandardSchemaV1.InferOutput<typeof import('${relative}').variables.${name}.schema>`
 				: 'string';
-			return `${comment}export const ${name}: ${type};`;
+			return `${comment}export const ${name}: ${config.optional ? `${type} | undefined` : type};`;
 		});
 
 	return dedent`

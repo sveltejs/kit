@@ -4,7 +4,7 @@
 import { stackless } from '../../utils/error.js';
 
 const MISSING = {
-	message: `Value is missing. If it is optional, add a Standard Schema validator declaring it as such.`
+	message: `Value is missing. If it is optional, set \`optional: true\` or add a Standard Schema validator declaring it as such.`
 };
 
 const BAD_VALIDATOR = {
@@ -25,6 +25,10 @@ const ASYNC_VALIDATOR = {
 export function validate(variables, value, name, issues) {
 	const config = variables[name] ?? {};
 	const validator = config.schema;
+
+	if (config.optional && !value) {
+		return undefined;
+	}
 
 	if (!validator) {
 		if (!value) issues[name] = [MISSING];

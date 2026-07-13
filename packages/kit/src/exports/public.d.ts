@@ -2472,6 +2472,13 @@ export interface EnvVarConfig<T> {
 	 * A description of the variable that will be used for inline documentation on hover.
 	 */
 	description?: string;
+	/**
+	 * Whether the variable is required.
+	 * - if `true`, validation will not fail when the value is `undefined`. Its type will be `T | undefined`
+	 * - if `false`, the value must be present (and pass validation, if a `schema` is provided)
+	 * @default false
+	 */
+	optional?: boolean;
 }
 
 export * from './index.js';

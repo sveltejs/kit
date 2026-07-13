@@ -139,6 +139,24 @@ export const variables = defineEnvVars({
 
 You can use validators to make values optional, or transform them (such as turning a string into a boolean, or parsing JSON) — see your validation library's documentation to learn how.
 
+### Optional variables
+
+By default, every variable is required: if a value is missing when the app runs, validation will fail. To allow a variable to be missing, set `optional: true`:
+
+```ts
+/// file: src/env.ts
+import { defineEnvVars } from '@sveltejs/kit/hooks';
+
+export const variables = defineEnvVars({
+	GOOGLE_ANALYTICS_ID: {
+		public: true,
+		+++optional: true+++
+	}
+});
+```
+
+When a variable is optional, its type is `string | undefined` (or, if a `schema` is provided, the schema's output type `| undefined`), and validation is skipped when the value is missing. This is equivalent to using a schema that accepts an optional value, but without the boilerplate.
+
 ### Static variables
 
 By default, variables are dynamic. If a variable is configured with `static: true`, it will be inlined into your application code, enabling optimisations like dead-code elimination:
