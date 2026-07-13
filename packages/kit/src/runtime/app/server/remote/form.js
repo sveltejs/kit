@@ -163,7 +163,7 @@ export function form(validate_or_fn, maybe_fn) {
 
 					// register under the client-side action id so the output is serialized
 					// into the page, allowing the hydrated client to restore `result`/`issues`/`input`
-					get_implicit_lookup(__, state)[__.action_id ?? __.id] = () => cache[''];
+					get_implicit_lookup(__, state)[__.key ? `${__.id}/${__.key}` : __.id] = () => cache[''];
 				}
 
 				return output;
@@ -173,7 +173,7 @@ export function form(validate_or_fn, maybe_fn) {
 		Object.defineProperty(instance, '__', { value: __ });
 
 		Object.defineProperty(instance, 'action', {
-			get: () => `?/remote=${__.id}`,
+			get: () => `?/remote=${__.key ? `${__.id}/${encodeURIComponent(__.key)}` : __.id}`,
 			enumerable: true
 		});
 
@@ -181,32 +181,30 @@ export function form(validate_or_fn, maybe_fn) {
 			get() {
 				// the form instance is created once per module and shared across requests,
 				// so the current request's state has to be resolved at access time
-				return create_field_proxy(
-					{},
-					{
-						get_input: () => get_cache(__, get_request_store().state)?.['']?.input ?? {},
-						set_input: (path, value) => {
-							const cache = get_cache(__, get_request_store().state);
-							const entry = cache[''];
+				return create_field_proxy({
+					form_id: __.id,
+					get_input: () => get_cache(__, get_request_store().state)?.['']?.input ?? {},
+					set_input: (path, value) => {
+						const cache = get_cache(__, get_request_store().state);
+						const entry = cache[''];
 
-							if (entry?.submission) {
-								// don't override a submission
-								return;
-							}
+						if (entry?.submission) {
+							// don't override a submission
+							return;
+						}
 
-							if (path.length === 0) {
-								(cache[''] ??= {}).input = value;
-								return;
-							}
+						if (path.length === 0) {
+							(cache[''] ??= {}).input = value;
+							return;
+						}
 
-							const input = entry?.input ?? {};
-							deep_set(input, path.map(String), value);
-							(cache[''] ??= {}).input = input;
-						},
-						get_issues: () =>
-							flatten_issues(get_cache(__, get_request_store().state)?.['']?.issues ?? [])
-					}
-				);
+						const input = entry?.input ?? {};
+						deep_set(input, path.map(String), value);
+						(cache[''] ??= {}).input = input;
+					},
+					get_issues: () =>
+						flatten_issues(get_cache(__, get_request_store().state)?.['']?.issues ?? [])
+				});
 			}
 		});
 
@@ -270,12 +268,15 @@ export function form(validate_or_fn, maybe_fn) {
 				value: (key) => {
 					const { state } = get_request_store();
 					const cache_key = __.id + '|' + JSON.stringify(key);
+					/** @type {RemoteForm<Input, Output> & { __: RemoteFormInternals }} */
 					let instance = (state.remote.forms ??= new Map()).get(cache_key);
 
 					if (!instance) {
-						instance = create_instance(key);
-						instance.__.id = `${__.id}/${encodeURIComponent(JSON.stringify(key))}`;
-						instance.__.action_id = `${__.id}/${JSON.stringify(key)}`;
+						instance = /** @type {RemoteForm<Input, Output> & { __: RemoteFormInternals }} */ (
+							create_instance(key)
+						);
+						instance.__.id = __.id;
+						instance.__.key = JSON.stringify(key);
 						instance.__.name = __.name;
 
 						state.remote.forms.set(cache_key, instance);

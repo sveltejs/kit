@@ -28,21 +28,36 @@ export function set_nested_value(object, path_string, value) {
 	deep_set(object, split_path(path_string), value);
 }
 
+/**
+ * Validates that an input's name starts with the form's id, and strips the prefix.
+ * @param {string} form_id
+ * @param {string} name
+ */
+export function validate_field_name(form_id, name) {
+	if (!name.endsWith('/' + form_id)) {
+		throw new Error(`Form contained a field that wasn't created with form.fields.as(...): ${name}`);
+	}
+	return name.slice(0, -form_id.length - 1);
+}
+
 /** Pass this to set_nested_value to delete the last part of the given path */
 export const DELETE_KEY = {};
 
 /**
  * Convert `FormData` into a POJO
+ * @param {string} form_id
  * @param {FormData} data
  */
-export function convert_formdata(data) {
+export function convert_formdata(form_id, data) {
 	/** @type {Record<string, any>} */
 	const result = {};
 
 	for (let key of data.keys()) {
-		const is_array = key.endsWith('[]');
 		/** @type {any[]} */
 		let values = data.getAll(key);
+
+		key = validate_field_name(form_id, key);
+		const is_array = key.endsWith('[]');
 
 		if (is_array) key = key.slice(0, -2);
 
@@ -140,12 +155,13 @@ export function serialize_binary_form(data, meta) {
 
 /**
  * @param {Request} request
+ * @param {string} form_id
  * @returns {Promise<{ data: Record<string, any>; meta: BinaryFormMeta; form_data: FormData | null }>}
  */
-export async function deserialize_binary_form(request) {
+export async function deserialize_binary_form(request, form_id) {
 	if (request.headers.get('content-type') !== BINARY_FORM_CONTENT_TYPE) {
 		const form_data = await request.formData();
-		return { data: convert_formdata(form_data), meta: {}, form_data };
+		return { data: convert_formdata(form_id, form_data), meta: {}, form_data };
 	}
 	if (!request.body) {
 		throw deserialize_error('no body');
@@ -650,14 +666,19 @@ function deep_clone(value) {
 
 /**
  * Creates a proxy-based field accessor for form data
+ * @param {{
+ * 	form_id: string,
+ * 	get_input: () => Record<string, any>,
+ * 	set_input: (path: (string | number)[], value: any) => void,
+ * 	get_issues: (path?: (string | number)[], all?: boolean) => Record<string, InternalRemoteFormIssue[]>
+ * }} context - Form context, including value accessors and form metadata
  * @param {any} target - Function or empty POJO
- * @param {{ get_input: () => Record<string, any>, set_input: (path: (string | number)[], value: any) => void, get_issues: (path?: (string | number)[], all?: boolean) => Record<string, InternalRemoteFormIssue[]> }} accessors - Accessor functions
  * @param {(string | number)[]} path - Current access path
  * @returns {any} Proxy object with name(), value(), and issues() methods
  */
-export function create_field_proxy(target, accessors, path = []) {
+export function create_field_proxy(context, target = {}, path = []) {
 	const get_value = () => {
-		const value = deep_get(accessors.get_input(), path);
+		const value = deep_get(context.get_input(), path);
 		return deep_clone(value);
 	};
 
@@ -667,28 +688,26 @@ export function create_field_proxy(target, accessors, path = []) {
 
 			// Handle array access like jobs[0]
 			if (/^\d+$/.test(prop)) {
-				return create_field_proxy({}, accessors, [...path, parseInt(prop, 10)]);
+				return create_field_proxy(context, {}, [...path, parseInt(prop, 10)]);
 			}
 
 			const key = build_path_string(path);
 
 			if (prop === 'set') {
 				const set_func = function (/** @type {any} */ newValue) {
-					accessors.set_input(path, newValue);
+					context.set_input(path, newValue);
 					return newValue;
 				};
-				return create_field_proxy(set_func, accessors, [...path, prop]);
+				return create_field_proxy(context, set_func, [...path, prop]);
 			}
 
 			if (prop === 'value') {
-				return create_field_proxy(get_value, accessors, [...path, prop]);
+				return create_field_proxy(context, get_value, [...path, prop]);
 			}
 
 			if (prop === 'issues' || prop === 'allIssues') {
 				const issues_func = () => {
-					const all_issues = accessors.get_issues(path, prop === 'allIssues')[
-						key === '' ? '$' : key
-					];
+					const all_issues = context.get_issues(path, prop === 'allIssues')[key === '' ? '$' : key];
 
 					if (prop === 'allIssues') {
 						return all_issues?.map((issue) => ({
@@ -707,7 +726,7 @@ export function create_field_proxy(target, accessors, path = []) {
 					return issues?.length ? issues : undefined;
 				};
 
-				return create_field_proxy(issues_func, accessors, [...path, prop]);
+				return create_field_proxy(context, issues_func, [...path, prop]);
 			}
 
 			if (prop === 'as') {
@@ -726,9 +745,9 @@ export function create_field_proxy(target, accessors, path = []) {
 					// Base properties for all input types
 					/** @type {Record<string, any>} */
 					const base_props = {
-						name: type_prefix + key + (is_array ? '[]' : ''),
+						name: type_prefix + key + (is_array ? '[]' : '') + '/' + context.form_id,
 						get 'aria-invalid'() {
-							const issues = accessors.get_issues();
+							const issues = context.get_issues();
 							return key in issues ? 'true' : undefined;
 						}
 					};
@@ -873,11 +892,11 @@ export function create_field_proxy(target, accessors, path = []) {
 					});
 				};
 
-				return create_field_proxy(as_func, accessors, [...path, 'as']);
+				return create_field_proxy(context, as_func, [...path, 'as']);
 			}
 
 			// Handle property access (nested fields)
-			return create_field_proxy({}, accessors, [...path, prop]);
+			return create_field_proxy(context, {}, [...path, prop]);
 		}
 	});
 }

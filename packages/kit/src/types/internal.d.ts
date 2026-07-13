@@ -675,7 +675,7 @@ export interface RemoteFormInternals extends BaseRemoteInternals {
 	 * For keyed (`form.for(key)`) instances: the id as the client computes it
 	 * (the key is JSON-stringified but not URI-encoded, unlike `id`)
 	 */
-	action_id?: string;
+	key?: string;
 	fn(body: Record<string, any>, meta: BinaryFormMeta, form_data: FormData | null): Promise<any>;
 }
 

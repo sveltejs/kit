@@ -19,7 +19,8 @@ import {
 	normalize_issue,
 	serialize_binary_form,
 	DELETE_KEY,
-	BINARY_FORM_CONTENT_TYPE
+	BINARY_FORM_CONTENT_TYPE,
+	validate_field_name
 } from '../../form-utils.js';
 
 /**
@@ -148,7 +149,7 @@ export function form(id) {
 		 * @returns {Record<string, any>}
 		 */
 		function convert(form_data) {
-			const data = convert_formdata(form_data);
+			const data = convert_formdata(action_id_without_key, form_data);
 			if (key !== undefined && !form_data.has('id')) {
 				data.id = key;
 			}
@@ -417,10 +418,12 @@ export function form(id) {
 				}
 
 				if (event.submitter) {
-					const name = event.submitter.getAttribute('name');
+					let name = event.submitter.getAttribute('name');
+
 					const value = /** @type {any} */ (event.submitter).value;
 
 					if (name !== null && value !== undefined) {
+						name = validate_field_name(action_id_without_key, name);
 						set_nested_value(input, name, value);
 					}
 
@@ -462,6 +465,7 @@ export function form(id) {
 
 				let name = element.name;
 				if (!name) return;
+				name = validate_field_name(action_id_without_key, name);
 
 				const is_array = name.endsWith('[]');
 				if (is_array) name = name.slice(0, -2);
@@ -534,7 +538,7 @@ export function form(id) {
 				// the inputs are actually updated (so that it can be cancelled)
 				await tick();
 
-				input = convert_formdata(new FormData(form));
+				input = convert_formdata(action_id_without_key, new FormData(form));
 				raw_issues = [];
 				touched = {};
 			};
@@ -602,34 +606,32 @@ export function form(id) {
 			},
 			fields: {
 				get: () =>
-					create_field_proxy(
-						{},
-						{
-							get_input: () => input,
-							set_input: (path, value) => {
-								if (path.length === 0) {
-									input = value;
-								} else {
-									deep_set(input, path.map(String), value);
+					create_field_proxy({
+						form_id: action_id_without_key,
+						get_input: () => input,
+						set_input: (path, value) => {
+							if (path.length === 0) {
+								input = value;
+							} else {
+								deep_set(input, path.map(String), value);
 
-									const key = build_path_string(path);
-									touched[key] = true;
-								}
-							},
-							get_issues: (path, all) => {
-								if (DEV && unread_issues !== null && path !== undefined) {
-									unread_issues = unread_issues.filter((issue) => {
-										return (
-											(all ? issue.path.slice(0, path.length) : issue.path).join('.') !==
-											path.join('.')
-										);
-									});
-								}
-
-								return issues;
+								const key = build_path_string(path);
+								touched[key] = true;
 							}
+						},
+						get_issues: (path, all) => {
+							if (DEV && unread_issues !== null && path !== undefined) {
+								unread_issues = unread_issues.filter((issue) => {
+									return (
+										(all ? issue.path.slice(0, path.length) : issue.path).join('.') !==
+										path.join('.')
+									);
+								});
+							}
+
+							return issues;
 						}
-					)
+					})
 			},
 			result: {
 				get: () => result
