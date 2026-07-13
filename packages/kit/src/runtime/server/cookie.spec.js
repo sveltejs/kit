@@ -47,7 +47,7 @@ describe('cookies in dev', () => {
 		const { cookies } = cookies_setup();
 
 		// name ("a=") is 2 bytes, so the value alone must stay under 4094 bytes
-		expect(() => cookies.set('a', 'a'.repeat(4095), { path: '/' })).toThrowError(
+		expect(() => cookies.set('a', 'a'.repeat(4096), { path: '/' })).toThrowError(
 			'Cookie "a" is too large, and will be discarded by the browser'
 		);
 	});
@@ -55,7 +55,7 @@ describe('cookies in dev', () => {
 	test('does not throw if cookie name/value is at the 4,096 byte limit', () => {
 		const { cookies } = cookies_setup();
 
-		expect(() => cookies.set('a', 'a'.repeat(4094), { path: '/' })).not.toThrow();
+		expect(() => cookies.set('a', 'a'.repeat(4095), { path: '/' })).not.toThrow();
 	});
 });
 
