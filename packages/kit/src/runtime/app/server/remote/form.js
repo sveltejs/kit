@@ -272,10 +272,10 @@ function handle_issues(output, issues, form_data, form_id) {
 			// redact sensitive fields
 			if (/^[.\]]?_/.test(key)) continue;
 
+			const values = form_data.getAll(key).filter((value) => typeof value === 'string');
 			key = validate_field_name(form_id, key);
 
 			const is_array = key.endsWith('[]');
-			const values = form_data.getAll(key).filter((value) => typeof value === 'string');
 
 			if (is_array) key = key.slice(0, -2);
 
