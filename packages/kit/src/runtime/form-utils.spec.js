@@ -786,16 +786,14 @@ describe('create_field_proxy', () => {
 		const original = new Date('2025-06-25T00:00:00Z');
 		const input = { created_at: original };
 
-		const proxy = create_field_proxy(
-			{
-				form_id: 'form',
-				get: () => input,
-				set: () => {},
-				get_issues: () => ({}),
-				get_touched: () => ({}),
-				get_dirty: () => ({})
-			},
-		);
+		const proxy = create_field_proxy({
+			form_id: 'form',
+			get: () => input,
+			set: () => {},
+			get_issues: () => ({}),
+			get_touched: () => ({}),
+			get_dirty: () => ({})
+		});
 
 		const cloned = proxy.created_at.value();
 
