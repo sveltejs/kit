@@ -1,3 +1,4 @@
+/** @import { Transport } from '@sveltejs/kit' */
 import buffer from 'node:buffer';
 import { describe, expect, test } from 'vitest';
 import { parse_remote_arg, stringify_command_arg, stringify_remote_arg } from './shared.js';
@@ -263,6 +264,118 @@ describe('stringify_command_arg', () => {
 
 		expect(parsed.myfile).toBeInstanceOf(File);
 		expect(parsed.myfile.name).toBe('hello.md');
+	});
+});
+
+describe('transport caching', () => {
+	test('repeated stringify with the same transport object is stable and independent', () => {
+		/** @type {Transport} */
+		const transport = {};
+
+		const first_shared = { z: 1, a: 2 };
+		const first = { items: [first_shared, first_shared] };
+
+		const second_shared = { y: 3, b: 4 };
+		const second = { nested: { items: [second_shared, second_shared] } };
+
+		const first_parsed = parse_remote_arg(stringify_remote_arg(first, transport), transport);
+		const second_parsed = parse_remote_arg(stringify_remote_arg(second, transport), transport);
+
+		expect(first_parsed.items[0]).toBe(first_parsed.items[1]);
+		expect(Object.keys(first_parsed.items[0])).toEqual(['a', 'z']);
+
+		expect(second_parsed.nested.items[0]).toBe(second_parsed.nested.items[1]);
+		expect(Object.keys(second_parsed.nested.items[0])).toEqual(['b', 'y']);
+
+		// the first value's clones map must not bleed into the second
+		const first_again = parse_remote_arg(stringify_remote_arg(first, transport), transport);
+		expect(first_again).toEqual(first_parsed);
+	});
+
+	test('reentrant transport encoders round-trip without corrupting state', () => {
+		class Wrapper {
+			/** @param {any} inner */
+			constructor(inner) {
+				this.inner = inner;
+			}
+		}
+
+		/** @type {Record<string, { encode: (value: any) => any; decode: (value: any) => any }>} */
+		const transport = {
+			Wrapper: {
+				encode: (value) =>
+					value instanceof Wrapper && stringify_remote_arg({ b: 2, a: value.inner }, transport),
+				decode: (s) => new Wrapper(/** @type {any} */ (parse_remote_arg(s, transport)).a)
+			}
+		};
+
+		const shared = { z: 1, a: 2 };
+		const value = {
+			items: [shared, shared],
+			wrapped: new Wrapper({ d: 4, c: 3 })
+		};
+
+		const parsed = parse_remote_arg(stringify_remote_arg(value, transport), transport);
+
+		expect(parsed.items[0]).toBe(parsed.items[1]);
+		expect(Object.keys(parsed.items[0])).toEqual(['a', 'z']);
+		expect(parsed.wrapped).toBeInstanceOf(Wrapper);
+		expect(parsed.wrapped.inner).toEqual({ c: 3, d: 4 });
+	});
+
+	test('different transports do not bleed into each other', () => {
+		const transport_a = {
+			Thing: {
+				/** @param {unknown} value */
+				encode: (value) => (value instanceof Thing ? ['a', value.a, value.z] : undefined),
+				/** @param {[string, number, number]} value */
+				decode: (value) => new Thing(value[1], value[2])
+			}
+		};
+
+		const transport_b = {
+			Thing: {
+				/** @param {unknown} value */
+				encode: (value) => (value instanceof Thing ? ['b', value.z, value.a] : undefined),
+				/** @param {[string, number, number]} value */
+				decode: (value) => new Thing(value[2], value[1])
+			}
+		};
+
+		const a = stringify_remote_arg(new Thing(1, 2), transport_a);
+		const b = stringify_remote_arg(new Thing(1, 2), transport_b);
+
+		expect(a).not.toBe(b);
+
+		const parsed_a = parse_remote_arg(a, transport_a);
+		const parsed_b = parse_remote_arg(b, transport_b);
+
+		expect(parsed_a).toMatchObject({ a: 1, z: 2 });
+		expect(parsed_b).toMatchObject({ a: 1, z: 2 });
+	});
+
+	test('concurrent stringify_command_arg calls with files round-trip', async () => {
+		/** @type {Transport} */
+		const transport = {};
+
+		const first = stringify_command_arg(
+			{ file: new File(['one'], 'one.md', { type: 'text/markdown', lastModified: -1 }) },
+			transport
+		);
+		const second = stringify_command_arg(
+			{ file: new File(['two'], 'two.md', { type: 'text/markdown', lastModified: -1 }) },
+			transport
+		);
+
+		const [first_serialized, second_serialized] = await Promise.all([first, second]);
+
+		const first_parsed = parse_remote_arg(first_serialized, transport);
+		const second_parsed = parse_remote_arg(second_serialized, transport);
+
+		expect(first_parsed.file).toBeInstanceOf(File);
+		expect(first_parsed.file.name).toBe('one.md');
+		expect(second_parsed.file).toBeInstanceOf(File);
+		expect(second_parsed.file.name).toBe('two.md');
 	});
 });
 

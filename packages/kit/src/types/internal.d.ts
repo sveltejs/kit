@@ -24,7 +24,8 @@ import {
 	HandleValidationError,
 	RemoteFormIssue,
 	RemoteQuery,
-	RemoteLiveQuery
+	RemoteLiveQuery,
+	RemoteResource
 } from '@sveltejs/kit';
 import {
 	HttpMethod,
@@ -629,6 +630,14 @@ export interface RemoteQueryInternals extends BaseRemoteInternals {
 	type: 'query';
 	validate: (arg?: any) => MaybePromise<any>;
 	/**
+	 * Runs the query for a specific client-supplied payload (the stringified raw
+	 * argument). Exists so the server can reuse the payload the client sent
+	 * instead of re-deriving it from the parsed argument with another
+	 * `stringify_remote_arg` round trip (which is both wasteful and, for exotic
+	 * transports, not guaranteed to reproduce the same cache key).
+	 */
+	run_with_payload(payload: string, arg: any): RemoteQuery<any>;
+	/**
 	 * Creates a `RemoteQuery` bound directly to a specific client payload (the
 	 * stringified raw argument) and a pre-validated argument, skipping the query
 	 * wrapper's re-validation step. Used by `requested(query)` to ensure
@@ -684,6 +693,13 @@ export interface RemotePrerenderInternals extends BaseRemoteInternals {
 	has_arg: boolean;
 	dynamic?: boolean;
 	inputs?: RemotePrerenderInputsGenerator;
+	/**
+	 * Runs the prerender function for a specific client-supplied payload (the
+	 * stringified raw argument). Exists so the server can reuse the payload the
+	 * client sent instead of re-deriving it from the parsed argument with another
+	 * `stringify_remote_arg` round trip.
+	 */
+	run_with_payload(payload: string, arg: any): RemoteResource<any>;
 }
 
 export type RemoteAnyQueryInternals =
