@@ -764,7 +764,7 @@ function kit({ svelte_config }) {
 							const native_fetch = globalThis.fetch;
 
 							export function get(pathname) {
-								return native_fetch(\`\${address}${app_path}\${pathname}\`);
+								return native_fetch(\`\${address}${app_path.slice(1)}\${pathname}\`);
 							}
 
 							let address${address ? ` = '${address}'` : ''};

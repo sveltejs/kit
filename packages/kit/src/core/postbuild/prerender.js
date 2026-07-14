@@ -252,7 +252,7 @@ async function prerender({ out, manifest_path, metadata, verbose, root, vite_con
 		};
 		server.environments.ssr.hot.on(event, handle_dependencies);
 
-		const response = await fetch(address + encoded, { redirect: 'manual' });
+		const response = await fetch(address + encoded.slice(1), { redirect: 'manual' });
 
 		const encoded_id = response.headers.get('x-sveltekit-routeid');
 		const decoded_id = encoded_id && decode_uri(encoded_id);
