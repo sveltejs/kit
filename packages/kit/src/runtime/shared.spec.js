@@ -1,5 +1,12 @@
+import buffer from 'node:buffer';
 import { describe, expect, test } from 'vitest';
-import { parse_remote_arg, stringify_remote_arg } from './shared.js';
+import { parse_remote_arg, stringify_command_arg, stringify_remote_arg } from './shared.js';
+
+if (!globalThis.File) {
+	// TODO remove in SvelteKit 3 — we only need it for node 18
+	// @ts-expect-error
+	globalThis.File = /** @type {import('node:buffer') & { File?: File}} */ (buffer).File;
+}
 
 class Thing {
 	/** @param {number} a @param {number} z */
@@ -143,13 +150,6 @@ describe('stringify_remote_arg', () => {
 		expect(a).toBe(b);
 	});
 
-	test('preserves input ordering when sort is false', () => {
-		const a = stringify_remote_arg({ limit: 10, offset: 20 }, {}, false);
-		const b = stringify_remote_arg({ offset: 20, limit: 10 }, {}, false);
-
-		expect(a).not.toBe(b);
-	});
-
 	test('produces the same key for transported values nested inside Maps and Sets', () => {
 		const a = stringify_remote_arg(
 			map([
@@ -237,6 +237,32 @@ describe('stringify_remote_arg', () => {
 		expect(parsed).toHaveLength(1_000_001);
 		expect(0 in parsed).toBe(false);
 		expect(Object.keys(parsed[1_000_000])).toEqual(['a', 'b']);
+	});
+});
+
+describe('stringify_command_arg', () => {
+	test('preserves input ordering', async () => {
+		const a = await stringify_command_arg({ limit: 10, offset: 20 }, {});
+		const b = await stringify_command_arg({ offset: 20, limit: 10 }, {});
+
+		expect(a).not.toBe(b);
+	});
+
+	test('serializes files', async () => {
+		const serialized = await stringify_command_arg(
+			{
+				myfile: new File(['hello'], 'hello.md', {
+					type: 'text/markdown',
+					lastModified: -1
+				})
+			},
+			{}
+		);
+
+		const parsed = parse_remote_arg(serialized, {});
+
+		expect(parsed.myfile).toBeInstanceOf(File);
+		expect(parsed.myfile.name).toBe('hello.md');
 	});
 });
 

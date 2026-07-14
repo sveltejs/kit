@@ -34,6 +34,7 @@
 
 <p>set_message.input.message: {set_message.fields.message.value()}</p>
 <p>set_message.pending: {set_message.pending}</p>
+<p>set_message.submitted: {set_message.submitted}</p>
 <p>set_message.result: {set_message.result}</p>
 
 <hr />

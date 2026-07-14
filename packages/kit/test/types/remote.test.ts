@@ -2,6 +2,8 @@ import { query, prerender, command, form, requested } from '$app/server';
 import { StandardSchemaV1 } from '@standard-schema/spec';
 import {
 	RemoteForm,
+	RemoteFormEnhanceCallback,
+	RemoteFormEnhanceInstance,
 	RemoteFormFields,
 	RemoteFormInput,
 	RemoteLiveQueryFunction,
@@ -353,7 +355,22 @@ function form_tests() {
 
 	f.result?.success === true;
 
+	const submit: RemoteFormEnhanceCallback<{ input: string }, { success: boolean }> = async (
+		form
+	) => {
+		const result: { success: boolean } | undefined = form.result;
+		result;
+		// @ts-expect-error
+		form.enhance(() => {});
+		const x: boolean = await form.submit();
+		x;
+	};
+
+	f.enhance(submit);
+
 	f.enhance(async (form) => {
+		const result: RemoteFormEnhanceInstance<{ input: string }, { success: boolean }> = form;
+		result;
 		const x: boolean = await form.submit();
 		x;
 		const y: boolean = await form.submit().updates(
@@ -634,6 +651,36 @@ function form_tests() {
 	f11_field2.propA;
 	// @ts-expect-error
 	f11_field2.propB;
+
+	// non-optional booleans
+	form(
+		// @ts-expect-error
+		null as unknown as StandardSchemaV1<{
+			a: boolean;
+		}>,
+		() => {}
+	);
+	form(
+		// @ts-expect-error
+		null as unknown as StandardSchemaV1<{
+			a: boolean[];
+		}>,
+		() => {}
+	);
+	form(
+		// @ts-expect-error
+		null as unknown as StandardSchemaV1<{
+			nested?: { a: boolean };
+			b?: boolean;
+		}>,
+		() => {}
+	);
+	form(
+		null as unknown as StandardSchemaV1<{
+			a?: boolean;
+		}>,
+		() => {}
+	);
 }
 form_tests();
 

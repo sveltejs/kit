@@ -43,15 +43,19 @@ describe('cookies in dev', () => {
 		globalThis.__SVELTEKIT_DEV__ = true;
 	});
 
-	test('warns if cookie exceeds 4,129 bytes', () => {
-		try {
-			const { cookies } = cookies_setup();
-			cookies.set('a', 'a'.repeat(4097), { path: '/' });
-		} catch (e) {
-			const error = /** @type {Error} */ (e);
+	test('throws if cookie name/value exceeds 4,096 bytes', () => {
+		const { cookies } = cookies_setup();
 
-			assert.equal(error.message, 'Cookie "a" is too large, and will be discarded by the browser');
-		}
+		// name ("a=") is 2 bytes, so the value alone must stay under 4094 bytes
+		expect(() => cookies.set('a', 'a'.repeat(4096), { path: '/' })).toThrowError(
+			'Cookie "a" is too large, and will be discarded by the browser'
+		);
+	});
+
+	test('does not throw if cookie name/value is at the 4,096 byte limit', () => {
+		const { cookies } = cookies_setup();
+
+		expect(() => cookies.set('a', 'a'.repeat(4095), { path: '/' })).not.toThrow();
 	});
 });
 

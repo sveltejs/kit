@@ -1,12 +1,10 @@
 /** @import { PromiseWithResolvers } from '../../../../utils/promise.js' */
-import { app } from '../../client.js';
-import * as devalue from 'devalue';
+import { query_responses } from '../../client.js';
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
 import { noop, once } from '../../../../utils/functions.js';
 import { with_resolvers } from '../../../../utils/promise.js';
 import { SharedIterator } from '../../../../utils/shared-iterator.js';
 import { tick } from 'svelte';
-import { unfriendly_hydratable } from '../../../shared.js';
 import { create_live_iterator } from './iterator.js';
 
 /**
@@ -87,9 +85,25 @@ export class LiveQuery {
 		this.#resolve_first = resolve;
 		this.#reject_first = reject;
 
-		const serialized = unfriendly_hydratable(key, () => undefined);
-		if (serialized !== undefined) {
-			this.set(devalue.parse(serialized, app.decoders));
+		if (Object.hasOwn(query_responses, key)) {
+			const node = query_responses[key];
+			delete query_responses[key];
+
+			if (node.e) {
+				// the query failed during SSR — seed the failed state (mirroring `fail()`,
+				// minus its terminal `#done`), so the main loop still connects as usual
+				// and the query can recover
+				const error = new HttpError(node.e[0] ?? 500, node.e[1]);
+				this.#loading = false;
+				this.#error = error;
+
+				promise.catch(noop);
+				this.#reject_first?.(error);
+				this.#resolve_first = null;
+				this.#reject_first = null;
+			} else {
+				this.set(node.v);
+			}
 		}
 	}
 
@@ -110,6 +124,7 @@ export class LiveQuery {
 
 		/** @type {PromiseWithResolvers<void>} */
 		const { promise: stopped, resolve: on_stop } = with_resolvers();
+		let connected = false;
 
 		while (!this.#done) {
 			const controller = new AbortController();
@@ -122,16 +137,22 @@ export class LiveQuery {
 			const generator = create_live_iterator(this.#id, this.#payload, controller, () => {
 				this.#connected = true;
 				this.#attempt = 0;
+				connected = true;
 				on_connect();
 			});
 
 			try {
 				const { done, value } = await generator.next();
 
-				// TODO how much special handling does this need?
-				// should we even try to reconnect if this is the case?
-				if (done && !this.#ready) {
-					throw new Error('Live query completed before yielding a value');
+				if (done) {
+					if (!this.#ready) {
+						throw new Error('Live query completed before yielding a value');
+					}
+					// stream completed without yielding (e.g. the generator returned
+					// immediately on reconnect) — keep the last good value
+					this.#done = true;
+					this.#fan_out.done();
+					break;
 				}
 
 				this.set(value);
@@ -188,6 +209,12 @@ export class LiveQuery {
 		}
 
 		this.#interrupt = null;
+		// If the loop exited without ever successfully connecting, settle the
+		// reconnect handshake so callers (e.g. `invalidateAll()`) never await
+		// a forever-pending promise.
+		if (!connected) {
+			on_connect_failed(this.#error ?? new Error('Live query connection was interrupted'));
+		}
 		on_stop();
 	}
 
@@ -331,10 +358,13 @@ export class LiveQuery {
 		promise.catch(noop);
 		this.#done = false;
 		this.#attempt = 0;
-		// The previous fan-out may have been closed by `done()`/`fail()`. Future
-		// `for await` consumers need a fresh, open fan-out attached to the new
-		// `#main` lifetime.
-		this.#fan_out = new SharedIterator();
+		// Keep the existing fan-out open so active `for await` consumers
+		// continue receiving values from the new connection without interruption.
+		// Only replace it if it was already closed by a prior `done()`/`fail()`
+		// (e.g. reconnecting after a finite or hard-failed stream)
+		if (this.#fan_out.closed) {
+			this.#fan_out = new SharedIterator();
+		}
 		this.#main({ on_connect, on_connect_failed }).catch(noop);
 		await promise;
 	}
@@ -369,6 +399,7 @@ export class LiveQuery {
 		void this.#interrupt?.();
 
 		if (this.#reject_first) {
+			this.#promise.catch(noop);
 			this.#reject_first(error);
 			this.#resolve_first = null;
 			this.#reject_first = null;

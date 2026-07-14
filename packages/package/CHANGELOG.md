@@ -1,5 +1,11 @@
 # @sveltejs/package
 
+## 2.5.8
+### Patch Changes
+
+
+- chore: bump `svelte2tsx` dependency to support TypeScript 6 ([#15896](https://github.com/sveltejs/kit/pull/15896))
+
 ## 2.5.7
 ### Patch Changes
 

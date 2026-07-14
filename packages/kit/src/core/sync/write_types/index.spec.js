@@ -187,6 +187,16 @@ test('Rewrites types for a JavaScript module with `const`', () => {
 	);
 });
 
+test('Detects destructured exports', () => {
+	const source = `
+		export const { load, actions } = create_page();
+	`;
+
+	const rewritten = tweak_types(source, true);
+
+	expect(rewritten?.exports).toEqual(['load', 'actions']);
+});
+
 test('Appends @ts-nocheck after @ts-check', () => {
 	const source = `// @ts-check
 		/** @type {import('./$types').Get} */

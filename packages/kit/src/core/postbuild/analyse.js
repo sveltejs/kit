@@ -11,7 +11,6 @@ import { has_server_load, resolve_route } from '../../utils/routing.js';
 import { check_feature } from '../../utils/features.js';
 import { createReadableStream } from '@sveltejs/kit/node';
 import { PageNodes } from '../../utils/page_nodes.js';
-import { build_server_nodes } from '../../exports/vite/build/build_server.js';
 
 export default forked(import.meta.url, analyse);
 
@@ -34,7 +33,6 @@ async function analyse({
 	server_manifest,
 	tracked_features,
 	env,
-	out,
 	remotes
 }) {
 	/** @type {import('@sveltejs/kit').SSRManifest} */
@@ -50,7 +48,7 @@ async function analyse({
 
 	installPolyfills();
 
-	// configure `import { building } from '$app/environment'` —
+	// configure `import { building } from '$app/environment'` and `$app/env` —
 	// essential we do this before analysing the code
 	internal.set_building();
 
@@ -63,8 +61,9 @@ async function analyse({
 	internal.set_manifest(manifest);
 	internal.set_read_implementation((file) => createReadableStream(`${server_root}/server/${file}`));
 
-	// first, build server nodes without the client manifest so we can analyse it
-	build_server_nodes(out, config, manifest_data, server_manifest, null, null, null);
+	/** @type {import('__sveltekit/env')} */
+	const { set_env } = await import(pathToFileURL(`${server_root}/server/env.js`).href);
+	set_env(env);
 
 	/** @type {import('types').ServerMetadata} */
 	const metadata = {

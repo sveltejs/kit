@@ -1,8 +1,8 @@
 import { createReadStream } from 'node:fs';
 import { Readable } from 'node:stream';
-import * as set_cookie_parser from 'set-cookie-parser';
 import { SvelteKitError } from '../internal/index.js';
 import { noop } from '../../utils/functions.js';
+import { get_set_cookies } from '../../utils/http.js';
 
 /**
  * @param {import('http').IncomingMessage} req
@@ -169,15 +169,7 @@ export async function getRequest({ request, base, bodySizeLimit }) {
 export async function setResponse(res, response) {
 	for (const [key, value] of response.headers) {
 		try {
-			res.setHeader(
-				key,
-				key === 'set-cookie'
-					? set_cookie_parser.splitCookiesString(
-							// This is absurd but necessary, TODO: investigate why
-							/** @type {string}*/ (response.headers.get(key))
-						)
-					: value
-			);
+			res.setHeader(key, key === 'set-cookie' ? get_set_cookies(response.headers) : value);
 		} catch (error) {
 			res.getHeaderNames().forEach((name) => res.removeHeader(name));
 			res.writeHead(500).end(String(error));

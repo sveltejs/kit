@@ -1,5 +1,6 @@
 import * as set_cookie_parser from 'set-cookie-parser';
 import { noop } from '../../utils/functions.js';
+import { get_set_cookies } from '../../utils/http.js';
 import { respond } from './respond.js';
 import * as paths from '$app/paths/internal/server';
 import { read_implementation } from '__sveltekit/server';
@@ -152,22 +153,19 @@ export function create_fetch({ event, options, manifest, state, get_cookie_heade
 
 				const response = await internal_fetch(request, options, manifest, state);
 
-				const set_cookie = response.headers.get('set-cookie');
-				if (set_cookie) {
-					for (const str of set_cookie_parser.splitCookiesString(set_cookie)) {
-						const { name, value, ...options } = set_cookie_parser.parseString(str, {
-							decodeValues: false
-						});
+				for (const str of get_set_cookies(response.headers)) {
+					const { name, value, ...options } = set_cookie_parser.parseString(str, {
+						decodeValues: false
+					});
 
-						const path = options.path ?? (url.pathname.split('/').slice(0, -1).join('/') || '/');
+					const path = options.path ?? (url.pathname.split('/').slice(0, -1).join('/') || '/');
 
-						// options.sameSite is string, something more specific is required - type cast is safe
-						set_internal(name, value, {
-							path,
-							encode: (value) => value,
-							.../** @type {import('cookie').CookieSerializeOptions} */ (options)
-						});
-					}
+					// options.sameSite is string, something more specific is required - type cast is safe
+					set_internal(name, value, {
+						path,
+						encode: (value) => value,
+						.../** @type {import('cookie').CookieSerializeOptions} */ (options)
+					});
 				}
 
 				return response;

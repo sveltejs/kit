@@ -33,6 +33,7 @@ export default function create_manifest_data({
 	const matchers = create_matchers(config, cwd);
 	const { nodes, routes } = create_routes_and_nodes(cwd, config, fallback);
 
+	// validate matcher names used in parameterised routes
 	for (const route of routes) {
 		for (const param of route.params) {
 			if (param.matcher && !matchers[param.matcher]) {
@@ -51,6 +52,7 @@ export default function create_manifest_data({
 }
 
 /**
+ * Returns a list of files in the `static` directory.
  * @param {import('types').ValidatedConfig} config
  */
 export function create_assets(config) {
@@ -131,6 +133,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 	/** @type {import('types').PageNode[]} */
 	const nodes = [];
 
+	// create route data by processing files in `src/routes`
 	if (fs.existsSync(config.kit.files.routes)) {
 		/**
 		 * @param {number} depth
@@ -390,6 +393,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 
 	prevent_conflicts(routes);
 
+	// fallback root layout and root error components
 	const root = routes[0];
 
 	if (!root.layout?.component) {
@@ -398,10 +402,11 @@ function create_routes_and_nodes(cwd, config, fallback) {
 	}
 
 	if (!root.error?.component) {
-		if (!root.error) root.error = { depth: 0 };
+		if (!root.error) root.error = { depth: 0, parent: root.layout };
 		root.error.component = posixify(path.relative(cwd, `${fallback}/error.svelte`));
 	}
 
+	// populate the page nodes list
 	// we do layouts/errors first as they are more likely to be reused,
 	// and smaller indexes take fewer bytes. also, this guarantees that
 	// the default error/layout are 0/1
@@ -421,8 +426,9 @@ function create_routes_and_nodes(cwd, config, fallback) {
 
 	const indexes = new Map(nodes.map((node, i) => [node, i]));
 
-	const node_analyser = create_node_analyser();
+	const node_analyser = create_node_analyser(cwd);
 
+	// add the related layout, page, and error nodes for a route
 	for (const route of routes) {
 		if (!route.leaf) continue;
 
@@ -467,13 +473,40 @@ function create_routes_and_nodes(cwd, config, fallback) {
 		}
 	}
 
+	// add parents to error nodes so that we can compute which page options apply to them
+	for (const route of routes) {
+		if (!route.error) continue;
+
+		/** @type {import('types').RouteData | null} */
+		let current_route = route;
+		while (current_route) {
+			if (current_route.layout) {
+				route.error.parent = current_route.layout;
+				break;
+			}
+			current_route = current_route.parent;
+		}
+	}
+
+	// compute the final page options for each page node
 	for (const node of nodes) {
 		node.page_options = node_analyser.get_page_options(node);
 	}
 
 	for (const route of routes) {
 		if (route.endpoint) {
-			route.endpoint.page_options = get_page_options(route.endpoint.file);
+			route.endpoint.page_options = get_page_options(path.join(cwd, route.endpoint.file));
+		}
+
+		if (route.page && route.endpoint) {
+			const page = nodes[route.page.leaf];
+			if (page.page_options?.prerender || route.endpoint.page_options?.prerender) {
+				const endpoint_file = route.endpoint.file.split('/').pop();
+
+				throw new Error(
+					`Cannot prerender a route (${route.id}) with both a \`+page.svelte\` and a \`${endpoint_file}\``
+				);
+			}
 		}
 	}
 
@@ -484,6 +517,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 }
 
 /**
+ * Determine if and how the file is relevant to the routing system.
  * @param {string} project_relative
  * @param {string} file
  * @param {string[]} component_extensions

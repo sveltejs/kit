@@ -43,13 +43,17 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 	/** @type {import('types').ServerInternalModule} */
 	const internal = await import(pathToFileURL(`${out}/server/internal.js`).href);
 
-	/** @type {import('types').ServerModule} */
-	const { Server } = await import(pathToFileURL(`${out}/server/index.js`).href);
-
-	// configure `import { building } from '$app/environment'` —
+	// configure `import { building } from '$app/environment'` and `$app/env` —
 	// essential we do this before analysing the code
 	internal.set_building();
 	internal.set_prerendering();
+
+	/** @type {import('__sveltekit/env')} */
+	const { set_env } = await import(pathToFileURL(`${out}/server/env.js`).href);
+	set_env(env);
+
+	/** @type {import('types').ServerModule} */
+	const { Server } = await import(pathToFileURL(`${out}/server/index.js`).href);
 
 	/**
 	 * @template {{message: string}} T
@@ -106,7 +110,10 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 	if (hash) {
 		const fallback = await generate_fallback({
 			manifest_path,
-			env
+			env,
+			out_dir: config.outDir,
+			origin: config.prerender.origin,
+			assets: config.files.assets
 		});
 
 		const file = output_filename('/', true);
@@ -171,6 +178,14 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 		}
 	);
 
+	const handle_invalid_url = normalise_error_handler(
+		log,
+		config.prerender.handleInvalidUrl,
+		({ href, referrer }) => {
+			return `Invalid URL ${href}${referrer ? ` (linked from ${referrer})` : ''}`;
+		}
+	);
+
 	const q = queue(config.prerender.concurrency);
 
 	/**
@@ -201,6 +216,8 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 
 	const seen = new Set();
 	const written = new Set();
+
+	/** @type {Map<string, Promise<any>>} */
 	const remote_responses = new Map();
 
 	/** @type {Map<string, Set<string>>} */
@@ -323,7 +340,11 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 
 		// if it's a 200 HTML response, crawl it. Skip error responses, as we don't save those
 		if (response.ok && config.prerender.crawl && headers['content-type'] === 'text/html') {
-			const { ids, hrefs } = crawl(body.toString(), decoded);
+			const { ids, hrefs, invalid } = crawl(body.toString(), decoded);
+
+			for (const href of invalid) {
+				handle_invalid_url({ href, referrer: decoded });
+			}
 
 			actual_hashlinks.set(decoded, ids);
 
@@ -376,6 +397,12 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env }) {
 
 		const type = headers['content-type'];
 		const is_html = response_type === REDIRECT || type === 'text/html';
+
+		if (!is_html && response.status === 200 && decoded.slice(config.paths.base.length + 1) === '') {
+			throw new Error(
+				`Cannot prerender a root +server.js that returns a non-HTML response - static hosts always serve an HTML file for \`${config.paths.base || '/'}\``
+			);
+		}
 
 		const file = output_filename(decoded, is_html);
 		const dest = `${config.outDir}/output/prerendered/${category}/${file}`;

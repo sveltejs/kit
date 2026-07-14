@@ -25,7 +25,7 @@ export class QueryProxy {
 	/**
 	 * @param {string} id
 	 * @param {any} arg
-	 * @param {(key: string, payload: string) => Promise<T>} fn
+	 * @param {(payload: string) => Promise<T>} fn
 	 */
 	constructor(id, arg, fn) {
 		this.#id = id;
@@ -41,7 +41,7 @@ export class QueryProxy {
 			this.#payload,
 			// IMPORTANT: This cannot close over `this` or it becomes impossible to
 			// garbage collect the QueryProxy and thus impossible to evict cache entries.
-			() => new Query(key, () => fn(key, payload))
+			() => new Query(key, () => fn(payload))
 		);
 
 		cache.ref(this, entry, this.#id, this.#payload);
@@ -98,7 +98,7 @@ export class QueryProxy {
 			this.#payload,
 			// IMPORTANT: This cannot close over `this` or it becomes impossible to
 			// garbage collect the QueryProxy and thus impossible to evict cache entries.
-			() => new Query(key_ref, () => fn_ref(key_ref, payload_ref))
+			() => new Query(key_ref, () => fn_ref(payload_ref))
 		);
 
 		const deref = cache.manual_ref(entry, this.#id, this.#payload);

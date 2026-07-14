@@ -53,11 +53,17 @@ ${create_dynamic_types('public', env, prefixes)}
  * @param {string} mode The Vite mode
  */
 export function write_ambient(config, mode) {
-	const env = get_env(config.env, mode);
-	const { publicPrefix: public_prefix, privatePrefix: private_prefix } = config.env;
+	/** @type {string} */
+	let content;
 
-	write_if_changed(
-		path.join(config.outDir, 'ambient.d.ts'),
-		template(env, { public_prefix, private_prefix })
-	);
+	if (config.experimental.explicitEnvironmentVariables) {
+		content = `${GENERATED_COMMENT}\n/// <reference types="@sveltejs/kit" />`;
+	} else {
+		const env = get_env(config.env, mode);
+		const { publicPrefix: public_prefix, privatePrefix: private_prefix } = config.env;
+
+		content = template(env, { public_prefix, private_prefix });
+	}
+
+	write_if_changed(path.join(config.outDir, 'ambient.d.ts'), content);
 }

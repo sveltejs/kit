@@ -37,7 +37,9 @@ Remote functions are exported from a `.remote.js` or `.remote.ts` file, and come
 
 ## query
 
-The `query` function allows you to read dynamic data from the server (for _static_ data, consider using [`prerender`](#prerender) instead):
+The `query` function allows you to read dynamic data from the server.
+
+> [!NOTE] For _static_ data, consider using [`prerender`](#prerender) functions instead. Queries cannot be used when the entire page is prerendered (meaning [`export const prerender = true`](page-options#prerender) is applied to the page or a parent layout), such as when using [`adapter-static`](adapter-static).
 
 ```js
 /// file: src/routes/blog/data.remote.js
@@ -291,7 +293,11 @@ Unlike `query`, live queries do not have a `refresh()` method, as they are self-
 If you need direct, imperative access to the underlying stream of values (rather than the reactive `current` property), live query instances are themselves [async-iterable](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/for-await...of). You can `for await` over the instance directly:
 
 ```js
-// @errors: 7006
+// @filename: time.remote.ts
+import { RemoteLiveQueryFunction } from '@sveltejs/kit';
+export declare const getTime: RemoteLiveQueryFunction<undefined, Date>;
+// @errors: 2304
+// @filename: index.js
 import { getTime } from './time.remote.js';
 // ---cut---
 async function logTimes() {
@@ -408,7 +414,7 @@ A form is composed of a set of _fields_, which are defined by the schema. In the
 
 These attributes allow SvelteKit to set the correct input type, set a `name` that is used to construct the `data` passed to the handler, populate the `value` of the form (for example following a failed submission, to save the user having to re-enter everything), and set the [`aria-invalid`](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Attributes/aria-invalid) state.
 
-Passing a second argument to `.as(...)` is useful when rendering a form from existing data, such as an edit form or multiple instances created with [`for(...)`](#form-Multiple-instances-of-a-form). `radio`, `submit` and `hidden` inputs always need this value, and `checkbox` inputs need it when they represent one option in an array field. `file` inputs cannot be populated this way.
+Passing a second argument to `.as(...)` is useful when rendering a form from existing data, such as an edit form or multiple instances created with [`for(...)`](#form-Multiple-instances-of-a-form). As well as setting the value of the element when it is rendered, it controls the value of the element when the form is reset. `radio`, `submit` and `hidden` inputs always need this value, and `checkbox` inputs need it when they represent one option in an array field. `file` inputs cannot be populated this way.
 
 > [!NOTE] The generated `name` attribute uses JS object notation (e.g. `nested.array[0].value`). String keys that require quotes such as `object['nested-array'][0].value` are not supported. Under the hood, boolean checkbox and number field names are prefixed with `b:` and `n:`, respectively, to signal SvelteKit to coerce the values from strings prior to validation.
 
@@ -621,6 +627,8 @@ If the submitted data doesn't pass the schema, the callback will not run. Instea
 </form>
 ```
 
+If the `title` is valid, or has not yet been validated, `createPost.fields.title.issues()` will return `undefined`.
+
 You don't need to wait until the form is submitted to validate the data — you can call `validate()` programmatically, for example in an `oninput` callback (which will validate the data on every keystroke) or an `onchange` callback:
 
 ```svelte
@@ -661,6 +669,8 @@ To get a list of _all_ issues, rather than just those belonging to a single fiel
 {/each}
 ```
 
+As with individual fields, `createPost.fields.allIssues()` will return `undefined` if the form as a whole is valid (or has not yet been validated).
+
 ### Getting/setting inputs
 
 Each field has a `value()` method that reflects its current value. As the user interacts with the form, it is automatically updated:
@@ -678,7 +688,7 @@ Each field has a `value()` method that reflects its current value. As the user i
 
 Alternatively, `createPost.fields.value()` would return a `{ title, content }` object.
 
-You can update a field (or a collection of fields) via the `set(...)` method:
+The `value()` of a field does _not_ reflect defaults provided as a second argument to `as` (as in `fields.title.as('text', '...')`) until it is edited or submitted. You can programmatically update a field (or a collection of fields) via the `set(...)` method:
 
 ```svelte
 <script>
@@ -816,7 +826,7 @@ We can customize what happens when the form is submitted with the `enhance` meth
 </form>
 ```
 
-> When using `enhance`, the `<form>` is not automatically reset — you must call `form.element.reset()` if you want to clear the inputs.
+> [!NOTE] When using `enhance`, the `<form>` is not automatically reset — you must call `form.element.reset()` if you want to clear the inputs.
 
 The callback receives a copy of the form instance. It has all the same properties and methods except `enhance`, and `form.submit()` performs the submission directly without re-running the enhance callback. Inside the callback, `form.element` is always defined.
 
@@ -1013,7 +1023,7 @@ export const updatePost = form(
 );
 ```
 
-Because queries are keyed based on their arguments, `await getPost(post.id).set(result)` on the server knows to look up the matching `getPost(id)` on the client to update it. The same goes for `getPosts().refresh()` -- it knows to look up `getPosts()` with no argument on the client.
+Because queries are keyed based on their arguments, `getPost(post.id).set(result)` on the server knows to look up the matching `getPost(id)` on the client to update it. The same goes for `getPosts().refresh()` -- it knows to look up `getPosts()` with no argument on the client.
 
 ### Reconnecting live queries in mutations
 
@@ -1143,8 +1153,6 @@ export const getPosts = prerender(async () => {
 You can use `prerender` functions on pages that are otherwise dynamic, allowing for partial prerendering of your data. This results in very fast navigation, since prerendered data can live on a CDN along with your other static assets.
 
 In the browser, prerendered data is saved using the [`Cache`](https://developer.mozilla.org/en-US/docs/Web/API/Cache) API. This cache survives page reloads, and will be cleared when the user first visits a new deployment of your app.
-
-> [!NOTE] When the entire page has `export const prerender = true`, you cannot use queries, as they are dynamic.
 
 ### Prerender arguments
 
@@ -1292,7 +1300,7 @@ const getUser = query(async () => {
 Note that some properties of `RequestEvent` are different inside remote functions:
 
 - you cannot set headers (other than writing cookies, and then only inside `form` and `command` functions)
-- `route`, `params` and `url` relate to the page the remote function was called from, _not_ the URL of the endpoint SvelteKit creates for the remote function. Queries are not re-run when the user navigates (unless the argument to the query changes as a result of navigation), and so you should be mindful of how you use these values. In particular, never use them to determine whether or not a user is authorized to access certain data.
+- `route`, `params` and `url` relate to the page the remote function was called from, _not_ the URL of the endpoint SvelteKit creates for the remote function. Never use them to determine whether or not a user is authorized to access certain data, as these values are part of the request which could be manipulated. Queries are also not re-run when the user navigates (unless the argument to the query changes as a result of navigation), and so you should be mindful of how you use these values.
 
 ## Redirects
 

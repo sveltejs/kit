@@ -636,6 +636,16 @@ export function tweak_types(content, is_server) {
 		const code = new MagicString(content);
 
 		const exports = new Map();
+		/** @param {import('typescript').BindingName} name */
+		function add_export(name) {
+			if (ts.isIdentifier(name)) {
+				if (names.has(name.text)) exports.set(name.text, name.text);
+			} else {
+				for (const element of name.elements) {
+					if (ts.isBindingElement(element)) add_export(element.name);
+				}
+			}
+		}
 
 		ast.forEachChild((node) => {
 			if (
@@ -662,9 +672,7 @@ export function tweak_types(content, is_server) {
 
 				if (ts.isVariableStatement(node)) {
 					node.declarationList.declarations.forEach((declaration) => {
-						if (ts.isIdentifier(declaration.name) && names.has(declaration.name.text)) {
-							exports.set(declaration.name.text, declaration.name.text);
-						}
+						add_export(declaration.name);
 					});
 				}
 			}

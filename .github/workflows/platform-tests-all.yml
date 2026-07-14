@@ -18,9 +18,21 @@ jobs:
       sha: ${{ inputs.sha }}
     secrets: inherit
 
+  netlify:
+    uses: ./.github/workflows/platform-tests-netlify.yml
+    with:
+      sha: ${{ inputs.sha }}
+    secrets: inherit
+
+  node:
+    uses: ./.github/workflows/platform-tests-node.yml
+    with:
+      sha: ${{ inputs.sha }}
+    secrets: inherit
+
   report-status:
     if: always()
-    needs: [vercel]
+    needs: [vercel, netlify, node]
     runs-on: ubuntu-latest
     steps:
       - name: Determine outcome

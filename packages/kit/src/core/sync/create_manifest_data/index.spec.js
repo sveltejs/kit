@@ -87,7 +87,7 @@ test('creates routes', () => {
 		{
 			id: '/blog.json',
 			pattern: '/^/blog.json/?$/',
-			endpoint: { file: 'samples/basic/blog.json/+server.js', page_options: null }
+			endpoint: { file: 'samples/basic/blog.json/+server.js', page_options: {} }
 		},
 		{
 			id: '/blog',
@@ -99,7 +99,7 @@ test('creates routes', () => {
 			pattern: '/^/blog/([^/]+?).json/?$/',
 			endpoint: {
 				file: 'samples/basic/blog/[slug].json/+server.ts',
-				page_options: null
+				page_options: {}
 			}
 		},
 		{
@@ -310,7 +310,7 @@ test('allows rest parameters inside segments', () => {
 			pattern: '/^/([^]*?).json/?$/',
 			endpoint: {
 				file: 'samples/rest-prefix-suffix/[...rest].json/+server.js',
-				page_options: null
+				page_options: {}
 			}
 		}
 	]);
@@ -348,7 +348,7 @@ test('optional parameters', () => {
 		{
 			id: '/[[foo]]bar',
 			pattern: '/^/([^/]*)?bar/?$/',
-			endpoint: { file: 'samples/optional/[[foo]]bar/+server.js', page_options: null }
+			endpoint: { file: 'samples/optional/[[foo]]bar/+server.js', page_options: {} }
 		},
 		{ id: '/nested', pattern: '/^/nested/?$/' },
 		{
@@ -557,7 +557,7 @@ test('allows multiple slugs', () => {
 			pattern: '/^/([^/]+?).([^/]+?)/?$/',
 			endpoint: {
 				file: 'samples/multiple-slugs/[file].[ext]/+server.js',
-				page_options: null
+				page_options: {}
 			}
 		}
 	]);
@@ -582,7 +582,7 @@ test('ignores things that look like lockfiles', () => {
 			pattern: '/^/foo/?$/',
 			endpoint: {
 				file: 'samples/lockfiles/foo/+server.js',
-				page_options: null
+				page_options: {}
 			}
 		}
 	]);
@@ -618,7 +618,7 @@ test('works with custom extensions', () => {
 			pattern: '/^/blog.json/?$/',
 			endpoint: {
 				file: 'samples/custom-extension/blog.json/+server.js',
-				page_options: null
+				page_options: {}
 			}
 		},
 		{
@@ -631,7 +631,7 @@ test('works with custom extensions', () => {
 			pattern: '/^/blog/([^/]+?).json/?$/',
 			endpoint: {
 				file: 'samples/custom-extension/blog/[slug].json/+server.js',
-				page_options: null
+				page_options: {}
 			}
 		},
 		{
@@ -900,5 +900,12 @@ test('errors with both ts and js handlers for the same route', () => {
 	assert.throws(
 		() => create('samples/conflicting-ts-js-handlers-server'),
 		/^Multiple endpoint files found in samples\/conflicting-ts-js-handlers-server\/ : \+server\.js and \+server\.ts/
+	);
+});
+
+test('errors on prerenderable dual route', () => {
+	assert.throws(
+		() => create('samples/prerendered-dual-route'),
+		'Cannot prerender a route (/x) with both a `+page.svelte` and a `+server.js`'
 	);
 });

@@ -13,7 +13,7 @@ const ValueSchema = v.object({
 	hidden: v.object({
 		string: v.string(),
 		number: v.number(),
-		boolean: v.boolean()
+		boolean: v.optional(v.boolean(), false)
 	})
 });
 

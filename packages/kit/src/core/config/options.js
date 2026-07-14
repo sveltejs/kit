@@ -45,7 +45,7 @@ const directives = object({
 });
 
 /** @type {Validator} */
-const options = object(
+export const options = object(
 	{
 		extensions: validate(['.svelte'], (input, keypath) => {
 			if (!Array.isArray(input) || !input.every((page) => typeof page === 'string')) {
@@ -139,6 +139,7 @@ const options = object(
 				instrumentation: object({
 					server: boolean(false)
 				}),
+				explicitEnvironmentVariables: boolean(false),
 				remoteFunctions: boolean(false),
 				forkPreloads: boolean(false),
 				handleRenderingErrors: boolean(false)
@@ -280,6 +281,20 @@ const options = object(
 					}
 				),
 
+				handleInvalidUrl: validate(
+					(/** @type {any} */ { message }) => {
+						throw new Error(
+							message +
+								'\nTo suppress or handle this error, implement `handleInvalidUrl` in https://svelte.dev/docs/kit/configuration#prerender'
+						);
+					},
+					(input, keypath) => {
+						if (typeof input === 'function') return input;
+						if (['fail', 'warn', 'ignore'].includes(input)) return input;
+						throw new Error(`${keypath} should be "fail", "warn", "ignore" or a custom function`);
+					}
+				),
+
 				origin: validate('http://sveltekit-prerender', (input, keypath) => {
 					assert_string(input, keypath);
 
@@ -324,6 +339,17 @@ const options = object(
 	},
 	true
 );
+
+// Derive the names of SvelteKit's own config options from the schema, so they
+// stay in sync automatically. These are used to separate Kit's options from
+// `vite-plugin-svelte`'s options when config is passed via the Vite plugin.
+const defaults = /** @type {Record<string, any>} */ (options({}, 'config'));
+
+/** The names of the options that live under the `kit` namespace */
+export const kit_options = Object.keys(defaults.kit);
+
+/** The names of the options that live under the `kit.experimental` namespace */
+export const kit_experimental_options = Object.keys(defaults.kit.experimental);
 
 /**
  * @param {Validator} fn
@@ -501,5 +527,3 @@ function assert_trusted_types_supported(keypath) {
 		);
 	}
 }
-
-export default options;

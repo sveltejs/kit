@@ -1,5 +1,9 @@
-/* global ENV_PREFIX */
+import path from 'node:path';
 import process from 'node:process';
+import { fileURLToPath } from 'node:url';
+
+// since env.js is an entrypoint, `dir` will point to the output directory
+export const dir = path.dirname(fileURLToPath(import.meta.url));
 
 const expected = new Set([
 	'SOCKET_PATH',
@@ -20,13 +24,15 @@ const expected = new Set([
 
 const expected_unprefixed = new Set(['LISTEN_PID', 'LISTEN_FDS']);
 
-if (ENV_PREFIX) {
+export const env_prefix = ENV_PREFIX;
+
+if (env_prefix) {
 	for (const name in process.env) {
-		if (name.startsWith(ENV_PREFIX)) {
-			const unprefixed = name.slice(ENV_PREFIX.length);
+		if (name.startsWith(env_prefix)) {
+			const unprefixed = name.slice(env_prefix.length);
 			if (!expected.has(unprefixed)) {
 				throw new Error(
-					`You should change envPrefix (${ENV_PREFIX}) to avoid conflicts with existing environment variables — unexpectedly saw ${name}`
+					`You should change envPrefix (${env_prefix}) to avoid conflicts with existing environment variables — unexpectedly saw ${name}`
 				);
 			}
 		}
@@ -35,10 +41,10 @@ if (ENV_PREFIX) {
 
 /**
  * @param {string} name
- * @param {any} fallback
+ * @param {any} [fallback]
  */
 export function env(name, fallback) {
-	const prefix = expected_unprefixed.has(name) ? '' : ENV_PREFIX;
+	const prefix = expected_unprefixed.has(name) ? '' : env_prefix;
 	const prefixed = prefix + name;
 	return prefixed in process.env ? process.env[prefixed] : fallback;
 }

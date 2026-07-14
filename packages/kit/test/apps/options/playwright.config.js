@@ -9,7 +9,8 @@ export default defineConfig({
 		command: process.env.DEV ? `pnpm dev` : `pnpm build && pnpm preview`,
 		env: {
 			ROUTER_RESOLUTION: process.env.ROUTER_RESOLUTION ?? 'client',
-			PATHS_ASSETS: process.env.PATHS_ASSETS ?? ''
+			PATHS_ASSETS: process.env.PATHS_ASSETS ?? '',
+			PATHS_RELATIVE: process.env.PATHS_RELATIVE ?? 'true'
 		}
 	}
 });
