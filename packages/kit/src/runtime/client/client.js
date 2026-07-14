@@ -43,6 +43,7 @@ import {
 } from '../shared.js';
 import { get_message, get_status } from '../../utils/error.js';
 import { page, update, navigating, updated } from './state.svelte.js';
+import { payload } from './payload.js';
 import { add_data_suffix, add_resolution_suffix } from '../pathname.js';
 import { noop_span } from '../telemetry/noop.js';
 import { read_ndjson } from './ndjson.js';
@@ -343,8 +344,8 @@ export async function start(_app, _target, hydrate) {
 		);
 	}
 
-	if (__SVELTEKIT_PAYLOAD__.data) {
-		const { q = {}, p = {}, l = {}, f = {} } = __SVELTEKIT_PAYLOAD__.data;
+	if (payload.data) {
+		const { q = {}, p = {}, l = {}, f = {} } = payload.data;
 
 		// store the whole nodes — error records seed the corresponding
 		// resources in a failed state when they are created during hydration
