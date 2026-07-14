@@ -49,10 +49,10 @@ describe('validate', () => {
 		/** @type {any} */
 		const validator = {
 			'~standard': {
-			validate(/** @type {any} */ value) {
-				if (value === undefined) return { issues: [{ message: 'nope' }] };
-				return { value };
-			}
+				validate(/** @type {any} */ value) {
+					if (value === undefined) return { issues: [{ message: 'nope' }] };
+					return { value };
+				}
 			}
 		};
 		const { result, issues } = run(
@@ -68,9 +68,9 @@ describe('validate', () => {
 		/** @type {any} */
 		const validator = {
 			'~standard': {
-			validate(/** @type {any} */ value) {
-				return { value: `validated:${value}` };
-			}
+				validate(/** @type {any} */ value) {
+					return { value: `validated:${value}` };
+				}
 			}
 		};
 		const { result, issues } = run({ FOO: { optional: true, schema: validator } }, 'bar', 'FOO');
