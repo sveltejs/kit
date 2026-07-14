@@ -28,7 +28,7 @@ import { create_assets } from '../../core/sync/create_manifest_data/index.js';
 import {
 	logger,
 	get_mime_lookup,
-	get_port,
+	get_address,
 	runtime_directory,
 	get_runtime_base
 } from '../../core/utils.js';
@@ -681,8 +681,8 @@ function kit({ svelte_config }) {
 		}
 	};
 
-	/** @type {number | undefined} */
-	let port;
+	/** @type {string | undefined} */
+	let current_address;
 
 	/** @type {Plugin} */
 	const plugin_dev_ssr = {
@@ -691,11 +691,11 @@ function kit({ svelte_config }) {
 		configureServer(server) {
 			return () => {
 				server.middlewares.use((_req, _res, next) => {
-					// ensure the server port is up-to-date
-					const current_port = get_port(server);
-					if (current_port && current_port !== port) {
-						port = current_port;
-						server.environments.ssr.hot.send('sveltekit:port', port);
+					// ensure the server address is up-to-date
+					const address = get_address(server);
+					if (address && address !== current_address) {
+						current_address = address;
+						server.environments.ssr.hot.send('sveltekit:server-address', current_address);
 						invalidate_module(server, sveltekit_ipc);
 					}
 
@@ -757,18 +757,18 @@ function kit({ svelte_config }) {
 							`${svelte_config.kit.paths.base}/${svelte_config.kit.appDir}`
 						);
 
-						const port = get_port(dev_context.server);
+						const address = get_address(dev_context.server);
 
 						return dedent`
 							// helps us avoid global fetch warnings we emit when the user uses it incorrectly
 							const native_fetch = globalThis.fetch;
 
 							export function get(pathname) {
-								return native_fetch(\`http://localhost:\${port}${app_path}\${pathname}\`);
+								return native_fetch(\`\${address}${app_path}\${pathname}\`);
 							}
 
-							let port${port ? ` = ${port}` : ''};
-							import.meta.hot?.on('sveltekit:port', (update) => { port = update });
+							let address${address ? ` = ${address}` : ''};
+							import.meta.hot?.on('sveltekit:server-address', (update) => { address = update });
 						`;
 					}
 

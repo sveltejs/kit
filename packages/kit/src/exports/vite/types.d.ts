@@ -3,7 +3,7 @@ import type { PageOptions } from './static_analysis/types.js';
 
 declare module 'vite/types/customEvent.d.ts' {
 	interface CustomEventMap {
-		'sveltekit:port': number;
+		'sveltekit:server-address': string;
 		'sveltekit:remotes': {
 			hash: string;
 			file: string;
