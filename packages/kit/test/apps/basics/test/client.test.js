@@ -1801,6 +1801,19 @@ test.describe('Shallow routing', () => {
 		await expect(page.locator('p')).toHaveText('active: false');
 		await expect(page.locator('span')).not.toHaveText(now);
 	});
+
+	test('pushState can be called in $effect during initial render', async ({ page }) => {
+		await page.goto('/shallow-routing/push-state/initial-effect');
+		await expect(page.locator('p')).toHaveText('initial: true');
+
+		await page.goBack();
+		await expect(page.locator('p')).toHaveText('initial: false');
+	});
+
+	test('replaceState can be called in $effect during initial render', async ({ page }) => {
+		await page.goto('/shallow-routing/replace-state/initial-effect');
+		await expect(page.locator('p')).toHaveText('initial: true');
+	});
 });
 
 test.describe('reroute', () => {

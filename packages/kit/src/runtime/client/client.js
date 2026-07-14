@@ -278,6 +278,8 @@ let current = {
 /** this being true means we SSR'd */
 let hydrated = false;
 let started = false;
+/** True once shallow routing can be used, which is before `started` since effects run during initial render (#15927) */
+let router_initialized = false;
 let autoscroll = true;
 let updating = false;
 let is_navigating = false;
@@ -718,6 +720,10 @@ async function initialize(result, target, hydrate) {
 
 	update(/** @type {import('@sveltejs/kit').Page} */ (result.props.page));
 	current_tree = result.props.tree;
+
+	// effects flush synchronously while the root component is created below,
+	// so anything shallow routing needs must be ready before this point
+	router_initialized = true;
 
 	// TODO: use mount()
 	root = new Root({
@@ -2572,7 +2578,7 @@ export function pushState(url, state) {
 	}
 
 	if (DEV) {
-		if (!started) {
+		if (!router_initialized) {
 			throw new Error('Cannot call pushState(...) before router is initialized');
 		}
 
@@ -2590,7 +2596,8 @@ export function pushState(url, state) {
 	const opts = {
 		[HISTORY_INDEX]: (current_history_index += 1),
 		[NAVIGATION_INDEX]: current_navigation_index,
-		[PAGE_URL_KEY]: page.url.href,
+		// untracked so that effects calling this function don't depend on `page.url`
+		[PAGE_URL_KEY]: svelte.untrack(() => page.url.href),
 		[STATES_KEY]: state
 	};
 
@@ -2615,7 +2622,7 @@ export function replaceState(url, state) {
 	}
 
 	if (DEV) {
-		if (!started) {
+		if (!router_initialized) {
 			throw new Error('Cannot call replaceState(...) before router is initialized');
 		}
 
@@ -2631,7 +2638,8 @@ export function replaceState(url, state) {
 	const opts = {
 		[HISTORY_INDEX]: current_history_index,
 		[NAVIGATION_INDEX]: current_navigation_index,
-		[PAGE_URL_KEY]: page.url.href,
+		// untracked so that effects calling this function don't depend on `page.url`
+		[PAGE_URL_KEY]: svelte.untrack(() => page.url.href),
 		[STATES_KEY]: state
 	};
 
