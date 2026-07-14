@@ -1,5 +1,6 @@
 import { DEV } from 'esm-env';
 import { SNAPSHOT_KEY } from './constants.js';
+import * as storage from './session-storage.js';
 
 const STORE = 'snapshots';
 
@@ -56,8 +57,10 @@ export async function init() {
 			})
 		);
 	} catch {
-		// IndexedDB may be unavailable (e.g. private browsing) — return what we have
 		failed = true;
+
+		// fall back to sessionStorage
+		Object.assign(snapshots, storage.get(SNAPSHOT_KEY));
 	}
 }
 
@@ -70,7 +73,9 @@ export async function init() {
  */
 export function set(index, value) {
 	snapshots[index] = $state.snapshot(value);
+
 	void put(index, snapshots[index]);
+	storage.set(SNAPSHOT_KEY, snapshots);
 }
 
 /**
@@ -95,6 +100,8 @@ export function truncate(index) {
 		delete snapshots[i];
 		void del(i);
 	}
+
+	storage.set(SNAPSHOT_KEY, snapshots);
 }
 
 /**
