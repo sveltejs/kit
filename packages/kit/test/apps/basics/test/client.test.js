@@ -530,7 +530,9 @@ test.describe('Invalidation', () => {
 		request,
 		baseURL
 	}) => {
-		const res = await request.post(baseURL + '/load/invalidation/forced/reset-states');
+		const res = await request.post(baseURL + '/load/invalidation/forced/reset-states', {
+			headers: { origin: 'https://trusted.example.com' }
+		});
 		expect(res.ok()).toBe(true);
 
 		await page.goto('/load/invalidation/forced');
@@ -554,7 +556,9 @@ test.describe('Invalidation', () => {
 		request,
 		baseURL
 	}) => {
-		const res = await request.post(baseURL + '/load/invalidation/forced-goto/reset-states');
+		const res = await request.post(baseURL + '/load/invalidation/forced-goto/reset-states', {
+			headers: { origin: 'https://trusted.example.com' }
+		});
 		expect(res.ok()).toBe(true);
 		await page.goto('/load/invalidation/forced-goto');
 		expect(await page.textContent('h1')).toBe('a: 0, b: 0');

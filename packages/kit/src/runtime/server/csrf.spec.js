@@ -119,6 +119,22 @@ describe('is_csrf_forbidden', () => {
 		);
 	});
 
+	test('forbids a request with no content-type header', () => {
+		assert.equal(
+			is_csrf_forbidden({
+				request: form_post({
+					headers: {
+						origin: 'https://malicious.test'
+					}
+				}),
+				request_origin: 'https://malicious.test',
+				self_origin: 'http://self.test',
+				trusted_origins: []
+			}),
+			true
+		);
+	});
+
 	test('allows GET requests regardless of origin', () => {
 		assert.equal(
 			is_csrf_forbidden({
