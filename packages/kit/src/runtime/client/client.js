@@ -516,9 +516,6 @@ function reset_invalidation() {
 /** @param {number} index */
 function capture_snapshot(index) {
 	if (components.some((c) => c?.snapshot)) {
-		// write through to IndexedDB; fire-and-forget on the navigation path
-		// (the page stays alive, so the write lands) — `persist_state` relies
-		// on `commit()` inside the storage layer to flush before unload
 		void snapshots.set(
 			index,
 			components.map((c) => c?.snapshot?.capture())
