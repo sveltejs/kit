@@ -2120,6 +2120,7 @@ function setup_preload() {
 	function clear_hover_preload() {
 		clearTimeout(mousemove_timeout);
 		hovered_a?.removeEventListener('mousemove', start_hover_preload);
+		hovered_a?.removeEventListener('mouseleave', clear_hover_preload);
 		hovered_a = undefined;
 	}
 
