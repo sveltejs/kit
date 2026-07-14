@@ -1865,7 +1865,7 @@ declare module '@sveltejs/kit' {
 		Params extends AppLayoutParams<'/'> = AppLayoutParams<'/'>,
 		OutputData extends Record<string, any> | void = Record<string, any> | void,
 		RouteId extends AppRouteId | null = AppRouteId | null
-	> = (event: RequestEvent<Params, RouteId>) => MaybePromise<OutputData>;
+	> = (event: RequestEvent<Params, RouteId>) => Promise<OutputData>;
 
 	/**
 	 * Shape of the `export const actions = {...}` object in `+page.server.js`.
