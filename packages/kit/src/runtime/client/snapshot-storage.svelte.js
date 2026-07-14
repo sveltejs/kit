@@ -150,7 +150,7 @@ export async function init() {
 				request.onsuccess = () => {
 					const cursor = request.result;
 					if (cursor) {
-						const key = cursor.key;
+						const key = /** @type {[string, number]} */ (cursor.key);
 						if (Array.isArray(key) && key[0] === current) {
 							// only load the current session's snapshots into memory
 							snapshots[/** @type {number} */ (key[1])] = cursor.value;
