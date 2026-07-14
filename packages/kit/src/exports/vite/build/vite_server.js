@@ -137,6 +137,7 @@ export async function create_build_server({
 
 			return {
 				appType: 'custom',
+				logLevel: 'silent',
 				cacheDir: `node_modules/.vite-${name}`,
 				environments: {
 					ssr: {
