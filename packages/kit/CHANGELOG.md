@@ -1,5 +1,39 @@
 # @sveltejs/kit
 
+## 3.0.0-next.8
+
+### Major Changes
+
+- breaking: remove `experimental.handleRenderingErrors` flag ([#16265](https://github.com/sveltejs/kit/pull/16265))
+
+- breaking: make `getRequest` and `setResponse` synchronous ([#16280](https://github.com/sveltejs/kit/pull/16280))
+
+- breaking: make `page.url` immutable on a type level ([#16256](https://github.com/sveltejs/kit/pull/16256))
+
+- breaking: add `refreshAll` and deprecate `invalidateAll` ([#16289](https://github.com/sveltejs/kit/pull/16289))
+
+### Minor Changes
+
+- feat: allow hyphens in param and matcher names ([#16284](https://github.com/sveltejs/kit/pull/16284))
+
+- feat: add `ErrorProps` to generated types ([#16272](https://github.com/sveltejs/kit/pull/16272))
+
+### Patch Changes
+
+- fix: detect destructured `load` and `actions` exports during type generation ([#16329](https://github.com/sveltejs/kit/pull/16329))
+
+- fix: ensure CSS URL references are absolute when `paths.relative` is `false` ([#16315](https://github.com/sveltejs/kit/pull/16315))
+
+- fix: exclude deleted cookies from `cookies.getAll()` so it stays consistent with `cookies.get()` ([#16297](https://github.com/sveltejs/kit/pull/16297))
+
+- fix: reset failed `<svelte:boundary>` on client navigation so a stale `+error.svelte` is torn down ([#16296](https://github.com/sveltejs/kit/pull/16296))
+
+- fix: preserve shared client chunk hashes when the app version changes ([#16324](https://github.com/sveltejs/kit/pull/16324))
+
+- fix: align MAX_COOKIE_SIZE with RFC 6265bis ([#16322](https://github.com/sveltejs/kit/pull/16322))
+
+- fix: use mouseover+mousemove for preloading to reduce events ([#16325](https://github.com/sveltejs/kit/pull/16325))
+
 ## 3.0.0-next.7
 ### Major Changes
 
