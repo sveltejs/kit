@@ -355,6 +355,7 @@ export async function start(_app, _target, hydrate) {
 
 	app = _app;
 
+	await snapshots.init();
 	await _app.hooks.init?.();
 
 	routes = __SVELTEKIT_CLIENT_ROUTING__ ? parse(_app) : [];
@@ -386,8 +387,6 @@ export async function start(_app, _target, hydrate) {
 			''
 		);
 	}
-
-	await snapshots.init();
 
 	// if we reload the page, or Cmd-Shift-T back to it,
 	// recover scroll position
