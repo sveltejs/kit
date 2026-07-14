@@ -166,8 +166,7 @@ test.describe("bundleStrategy: 'single'", () => {
 });
 
 test.describe('CSRF', () => {
-	// this app is built with NODE_ENV=custom, which must not disable CSRF protection
-	test('blocks cross-origin form submissions', async ({ baseURL }) => {
+	test('blocks cross-origin form submissions when custom NODE_ENV is set', async ({ baseURL }) => {
 		test.skip(!!process.env.DEV);
 
 		const res = await fetch(`${baseURL}/basepath`, {
