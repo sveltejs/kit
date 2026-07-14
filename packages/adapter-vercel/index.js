@@ -59,6 +59,7 @@ const plugin = function (defaults = {}) {
 			const files = fileURLToPath(new URL('./files', import.meta.url).href);
 
 			const dirs = {
+				immutable: `${dir}/_vercel/immutable${builder.config.kit.paths.base}`,
 				static: `${dir}/static${builder.config.kit.paths.base}`,
 				functions: `${dir}/functions`
 			};
@@ -67,6 +68,13 @@ const plugin = function (defaults = {}) {
 
 			builder.writeClient(dirs.static);
 			builder.writePrerendered(dirs.static);
+
+			// move immutable files to `_vercel/immutable`, so that they persist between deployments
+			builder.mkdirp(`${dirs.immutable}/${builder.config.kit.appDir}`);
+			fs.renameSync(
+				`${dirs.static}/${builder.config.kit.appDir}/immutable`,
+				`${dirs.immutable}/${builder.config.kit.appDir}/immutable`
+			);
 
 			const static_config = static_vercel_config(builder, defaults, dirs.static);
 
