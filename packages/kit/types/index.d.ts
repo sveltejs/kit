@@ -2444,7 +2444,7 @@ declare module '@sveltejs/kit' {
 		 */
 		description?: string;
 		/**
-		 * Whether the variable is required.
+		 * Whether the variable is optional.
 		 * - if `true`, validation will not fail when the value is `undefined`. Its type will be `T | undefined`
 		 * - if `false`, the value must be present (and pass validation, if a `schema` is provided)
 		 * @default false
