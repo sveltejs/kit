@@ -68,11 +68,7 @@ function get_session() {
 			// automatically when the tab is closed or crashes. The callback
 			// promise intentionally never resolves — do NOT await this.
 			navigator.locks
-				.request(
-					`${LOCK_PREFIX}${session}`,
-					{ mode: 'exclusive' },
-					() => new Promise(() => {})
-				)
+				.request(`${LOCK_PREFIX}${session}`, { mode: 'exclusive' }, () => new Promise(() => {}))
 				.catch(() => {
 					// best-effort; if the lock can't be acquired we simply won't
 					// advertise this session as active (pruning stays conservative)
