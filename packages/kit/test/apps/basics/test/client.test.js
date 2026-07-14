@@ -1366,6 +1366,16 @@ test.describe('Streaming', () => {
 		expect(page.locator('p.fail')).toBeVisible();
 	});
 
+	test('Catches rejected streamed server data after another load delays data serialization', async ({
+		page
+	}) => {
+		await page.goto('/streaming');
+		await page.click('[href="/streaming/server/delayed-rejection"]');
+
+		await expect(page.locator('p.eager')).toHaveText('eager');
+		await expect(page.locator('p.fail')).toHaveText('delayed rejection (500 Internal Error)');
+	});
+
 	// TODO `vite preview` buffers responses, causing these tests to fail
 	if (process.env.DEV) {
 		test('Works for universal load functions (direct hit)', async ({ page }) => {
