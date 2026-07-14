@@ -514,7 +514,7 @@ function kit({ svelte_config }) {
 					new_config.define = {
 						...define,
 						__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: '0',
-						__SVELTEKIT_PAYLOAD__: kit_global,
+						__SVELTEKIT_PAYLOAD__: kit_global, // only relevant when bundleStrategy !== 'split'
 						__SVELTEKIT_HAS_SERVER_LOAD__: 'true',
 						__SVELTEKIT_HAS_UNIVERSAL_LOAD__: 'true',
 						__SVELTEKIT_FILES_ASSETS__: s(posixify(kit.files.assets))
@@ -983,7 +983,7 @@ function kit({ svelte_config }) {
 						return create_sveltekit_env_public(
 							explicit_env_config,
 							env,
-							`const env = ${kit_global}.env;`
+							`import { payload } from ${s(`${runtime_directory}/client/payload.js`)};\nconst env = payload.env;`
 						);
 
 					case sveltekit_env_public_server:
@@ -1669,6 +1669,7 @@ function kit({ svelte_config }) {
 						client_input['bundle'] = `${runtime_directory}/client/bundle.js`;
 					} else {
 						client_input['entry/start'] = `${runtime_directory}/client/entry.js`;
+						client_input['entry/payload'] = `${runtime_directory}/client/payload.js`;
 						client_input['entry/app'] = `${out_dir}/generated/client-optimized/app.js`;
 						manifest_data.nodes.forEach((node, i) => {
 							if (node.component || node.universal) {
@@ -1777,7 +1778,8 @@ function kit({ svelte_config }) {
 									}
 								},
 								define: {
-									__SVELTEKIT_PAYLOAD__: kit_global
+									__SVELTEKIT_PAYLOAD__:
+										svelte_config.kit.output.bundleStrategy !== 'split' ? kit_global : 'undefined'
 								}
 							}
 						},
@@ -2028,11 +2030,11 @@ function kit({ svelte_config }) {
 					find_deps(vite_manifest, posixify(path.relative(root, entry)), add_dynamic_css, root);
 
 				const has_explicit_dynamic_public_env = Object.values(explicit_env_config ?? {}).some(
-					(variable) => variable.public && variable.availability !== 'inline'
+					(variable) => variable.public && !variable.static
 				);
 
 				// the app only depends on runtime public env if it imports `$app/env/public`
-				// *and* at least one public env var is actually dynamic (not inlined at build time)
+				// *and* at least one public env var is actually dynamic (non-static)
 				const uses_env_dynamic_public =
 					has_explicit_dynamic_public_env &&
 					client_chunks.some(
@@ -2040,15 +2042,28 @@ function kit({ svelte_config }) {
 					);
 
 				if (svelte_config.kit.output.bundleStrategy === 'split') {
-					const start = deps_of(`${runtime_directory}/client/entry.js`);
+					const start_entry = posixify(path.relative(root, `${runtime_directory}/client/entry.js`));
+					const start = find_deps(vite_manifest, start_entry, false, root);
+					const runtime_entry = resolve_symlinks(vite_manifest, start_entry, root).chunk
+						.dynamicImports?.[0]; // client/entry.js dynamically imports client/client-entry.js
+					if (!runtime_entry) throw new Error('Could not find the client runtime chunk');
+					const runtime = find_deps(vite_manifest, runtime_entry, false, root);
 					const app = deps_of(`${out_dir}/generated/client-optimized/app.js`);
 
 					build_data.client = {
 						start: start.file,
 						app: app.file,
-						imports: [...start.imports, ...app.imports],
-						stylesheets: [...start.stylesheets, ...app.stylesheets],
-						fonts: [...start.fonts, ...app.fonts],
+						imports: Array.from(
+							new Set([
+								...start.imports,
+								runtime.file,
+								...runtime.imports,
+								app.file,
+								...app.imports
+							])
+						),
+						stylesheets: [...start.stylesheets, ...runtime.stylesheets, ...app.stylesheets],
+						fonts: [...start.fonts, ...runtime.fonts, ...app.fonts],
 						uses_env_dynamic_public
 					};
 

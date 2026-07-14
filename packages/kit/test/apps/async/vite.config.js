@@ -1,8 +1,8 @@
 import * as path from 'node:path';
 import { sveltekit } from '@sveltejs/kit/vite';
+import { defineConfig } from 'vitest/config';
 
-/** @type {import('vite').UserConfig} */
-const config = {
+export default defineConfig({
 	build: {
 		minify: false
 	},
@@ -25,7 +25,8 @@ const config = {
 		fs: {
 			allow: [path.resolve('../../../src')]
 		}
+	},
+	test: {
+		include: ['unit-test/**/node.spec.js']
 	}
-};
-
-export default config;
+});
