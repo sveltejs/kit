@@ -54,6 +54,14 @@ export function get_cookies(request, url) {
 		return opts?.decode ? parseCookie(header, opts) : (default_cookies ??= parseCookie(header));
 	}
 
+	/** @param {import('./page/types.js').Cookie} cookie */
+	function matches_url(cookie) {
+		return (
+			domain_matches(url.hostname, cookie.options.domain) &&
+			path_matches(url.pathname, cookie.options.path)
+		);
+	}
+
 	/** @type {string | undefined} */
 	let normalized_url;
 
@@ -82,8 +90,7 @@ export function get_cookies(request, url) {
 			for (const c of new_cookies.values()) {
 				if (
 					c.name === name &&
-					domain_matches(url.hostname, c.options.domain) &&
-					path_matches(url.pathname, c.options.path) &&
+					matches_url(c) &&
 					(!best_match || c.options.path.length > best_match.options.path.length)
 				) {
 					best_match = c;
@@ -124,10 +131,7 @@ export function get_cookies(request, url) {
 			const lookup = new Map();
 
 			for (const c of new_cookies.values()) {
-				if (
-					domain_matches(url.hostname, c.options.domain) &&
-					path_matches(url.pathname, c.options.path)
-				) {
+				if (matches_url(c)) {
 					const existing = lookup.get(c.name);
 
 					// If no existing cookie or this one has a more specific (longer) path, use this one
