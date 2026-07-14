@@ -2083,22 +2083,63 @@ let current_a = { element: undefined, href: undefined };
 function setup_preload() {
 	/** @type {NodeJS.Timeout} */
 	let mousemove_timeout;
+	/** @type {HTMLAnchorElement | SVGAElement | undefined} */
+	let hovered_a;
 	/** @type {PreloadDataPriority} */
 	let current_priority;
 
-	container.addEventListener('mousemove', (event) => {
-		const target = /** @type {Element} */ (event.target);
+	function clear_hover_preload() {
+		clearTimeout(mousemove_timeout);
+		hovered_a?.removeEventListener('mousemove', start_hover_preload);
+		hovered_a?.removeEventListener('mouseleave', clear_hover_preload);
+		hovered_a = undefined;
+	}
 
+	function start_hover_preload() {
 		clearTimeout(mousemove_timeout);
 		mousemove_timeout = setTimeout(() => {
-			void preload(target, PRELOAD_PRIORITIES.hover);
+			if (!hovered_a) return;
+			void preload(hovered_a, PRELOAD_PRIORITIES.hover);
 		}, 20);
+	}
+
+	// Use mouseover initially instead of mousemove to avoid cluttering the event queue
+	container.addEventListener('mouseover', (event) => {
+		if (!(event.target instanceof Element)) return;
+
+		const a = find_anchor(event.target, container);
+		if (!a || a === hovered_a) return;
+
+		clear_hover_preload();
+		hovered_a = a;
+
+		const options = get_router_options(a);
+
+		if (
+			options.preload_code < PRELOAD_PRIORITIES.hover &&
+			options.preload_data < PRELOAD_PRIORITIES.hover
+		) {
+			// don't add event listeners if no preloading will happen
+			return;
+		}
+
+		// Instead of just preloading right away, we start a mousemove listener to implement
+		// "mouse comes to a rest" behavior. This avoid false positives when you just move
+		// your mouse across the screen and happen to pass over a link.
+		a.addEventListener('mousemove', start_hover_preload);
+		a.addEventListener('mouseleave', clear_hover_preload, { once: true });
+
+		start_hover_preload();
 	});
 
 	/** @param {Event} event */
 	function tap(event) {
 		if (event.defaultPrevented) return;
-		void preload(/** @type {Element} */ (event.composedPath()[0]), PRELOAD_PRIORITIES.tap);
+
+		const a = find_anchor(/** @type {Element} */ (event.composedPath()[0]), container);
+		if (!a) return;
+
+		void preload(a, PRELOAD_PRIORITIES.tap);
 	}
 
 	container.addEventListener('mousedown', tap);
@@ -2117,12 +2158,10 @@ function setup_preload() {
 	);
 
 	/**
-	 * @param {Element} element
+	 * @param {HTMLAnchorElement | SVGAElement} a
 	 * @param {PreloadDataPriority} priority
 	 */
-	async function preload(element, priority) {
-		const a = find_anchor(element, container);
-
+	async function preload(a, priority) {
 		// we don't want to preload data again if the user has already hovered/tapped
 		const interacted =
 			a === current_a.element && a?.href === current_a.href && priority >= current_priority;

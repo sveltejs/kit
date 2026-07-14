@@ -36,7 +36,7 @@ export function get_self_origin(paths_origin, url_origin) {
  */
 export function is_csrf_forbidden({ request, request_origin, self_origin, trusted_origins }) {
 	return (
-		is_form_content_type(request) &&
+		(!request.headers.get('content-type') || is_form_content_type(request)) &&
 		mutating_form_methods.has(request.method) &&
 		request_origin !== self_origin &&
 		(!request_origin || !trusted_origins.includes(request_origin))
