@@ -769,7 +769,7 @@ function kit({ svelte_config }) {
 								return native_fetch(\`\${address}${app_path}\${pathname}\`);
 							}
 
-							let address${address ? ` = ${address}` : ''};
+							let address${address ? ` = '${address}'` : ''};
 							import.meta.hot?.on('sveltekit:server-address', (update) => { address = update });
 						`;
 					}
