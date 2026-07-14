@@ -429,7 +429,7 @@ async function _invalidate(reset_page_state = true) {
 	// is running because subsequent invalidations may make earlier ones outdated,
 	// but batch multiple synchronous invalidations.
 	await (pending_invalidate ||= Promise.resolve());
-	if (!pending_invalidate) return;
+	if (pending_invalidate === null) return;
 	pending_invalidate = null;
 
 	const token = (invalidation_token = {});
@@ -1191,8 +1191,8 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 	// preload modules to avoid waterfall, but handle rejections
 	// so they don't get reported to Sentry et al (we don't need
 	// to act on the failures at this point)
-	errors.forEach((loader) => loader?.().catch(noop));
-	loaders.forEach((loader) => loader?.[1]().catch(noop));
+	errors.forEach((loader) => void loader?.().catch(noop));
+	loaders.forEach((loader) => void loader?.[1]().catch(noop));
 
 	/** @type {import('types').ServerNodesResponse | import('types').ServerRedirectNode | null} */
 	let server_data = null;

@@ -935,8 +935,8 @@ declare module '@sveltejs/kit' {
 	 */
 	export type Handle = (input: {
 		event: RequestEvent;
-		resolve: (event: RequestEvent, opts?: ResolveOptions) => MaybePromise<Response>;
-	}) => MaybePromise<Response>;
+		resolve: (event: RequestEvent, opts?: ResolveOptions) => Promise<Response>;
+	}) => Promise<Response>;
 
 	/**
 	 * The server-side [`handleError`](https://svelte.dev/docs/kit/hooks#Shared-hooks-handleError) hook runs when an unexpected error is thrown while responding to a request.
@@ -1939,7 +1939,7 @@ declare module '@sveltejs/kit' {
 				 * @param invalidateAll Set `invalidateAll: false` if you don't want the action to call `invalidateAll` after submission.
 				 */
 				update: (options?: { reset?: boolean; invalidateAll?: boolean }) => Promise<void>;
-		  }) => MaybePromise<void>)
+		  }) => Promise<void>)
 	>;
 
 	/**
@@ -2878,7 +2878,10 @@ declare module '@sveltejs/kit' {
 
 		/**
 		 * During development, all styles are inlined for the page to avoid FOUC.
-		 * But in production, this stores styles that are below the inline threshold
+		 * But in production, this stores styles that are below the inline threshold.
+		 * It returns a Promise during development because Vite needs to load the
+		 * modules on demand. But in production, the contents have been precomputed
+		 * during the build, so it can return synchronously.
 		 */
 		inline_styles?(): MaybePromise<
 			Record<string, string | ((assets: string, base: string) => string)>

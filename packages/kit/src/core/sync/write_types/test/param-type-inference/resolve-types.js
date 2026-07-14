@@ -1,5 +1,3 @@
-/* eslint-disable */
-
 /** @typedef {import('$app/paths/types.js').ResolveArgs<'/parsed/[id=number]'>} ParsedResolveArgs */
 
 /** @type {ParsedResolveArgs} */

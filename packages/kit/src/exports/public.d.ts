@@ -962,8 +962,8 @@ export interface KitConfig {
  */
 export type Handle = (input: {
 	event: RequestEvent;
-	resolve: (event: RequestEvent, opts?: ResolveOptions) => MaybePromise<Response>;
-}) => MaybePromise<Response>;
+	resolve: (event: RequestEvent, opts?: ResolveOptions) => Promise<Response>;
+}) => Promise<Response>;
 
 /**
  * The server-side [`handleError`](https://svelte.dev/docs/kit/hooks#Shared-hooks-handleError) hook runs when an unexpected error is thrown while responding to a request.
@@ -1968,7 +1968,7 @@ export type SubmitFunction<
 			 * @param invalidateAll Set `invalidateAll: false` if you don't want the action to call `invalidateAll` after submission.
 			 */
 			update: (options?: { reset?: boolean; invalidateAll?: boolean }) => Promise<void>;
-	  }) => MaybePromise<void>)
+	  }) => Promise<void>)
 >;
 
 /**

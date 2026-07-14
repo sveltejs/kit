@@ -456,7 +456,10 @@ export interface SSRNode {
 
 	/**
 	 * During development, all styles are inlined for the page to avoid FOUC.
-	 * But in production, this stores styles that are below the inline threshold
+	 * But in production, this stores styles that are below the inline threshold.
+	 * It returns a Promise during development because Vite needs to load the
+	 * modules on demand. But in production, the contents have been precomputed
+	 * during the build, so it can return synchronously.
 	 */
 	inline_styles?(): MaybePromise<
 		Record<string, string | ((assets: string, base: string) => string)>
