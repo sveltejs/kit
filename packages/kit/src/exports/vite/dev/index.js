@@ -197,7 +197,7 @@ export function dev(server, vite_config, vite, svelte_config, root, dev_context)
 	);
 
 	return () => {
-		// ensure it has the correct server port
+		// ensure it has the correct server address
 		invalidate_module(server, sveltekit_ipc);
 
 		const serve_static_middleware = server.middlewares.stack.find(
