@@ -38,6 +38,7 @@ export async function load_explicit_env(kit, file, root, mode) {
 		logLevel: 'silent',
 		mode,
 		define: {
+			__SVELTEKIT_PAYLOAD__: 'undefined', // coming in through static import in env/internal.js but will end up unused
 			__SVELTEKIT_APP_VERSION__: JSON.stringify(kit.version.name) // needed by $app/env
 		},
 		resolve: {
@@ -99,46 +100,33 @@ export async function load_explicit_env(kit, file, root, mode) {
 export function create_sveltekit_env(variables, env, entry, is_dev) {
 	const imports = entry
 		? [
-				`import { building } from '$app/env/internal';`,
 				`import { variables } from ${JSON.stringify(entry)};`,
 				`import { validate, handle_issues } from '@sveltejs/kit/internal/env';`
 			]
 		: [`const variables = {};`, `const handle_issues = () => {};`];
 
-	/** @type {string[]} */
 	const declarations = [];
-	/** @type {string[]} */
 	const setters = [];
-	/** @type {string[]} */
-	const runtime_setters = [];
 
 	/** @type {Record<string, StandardSchemaV1.Issue[]>} */
 	const issues = {};
 
 	for (const [name, config] of Object.entries(variables ?? {})) {
-		if (/** @type {any} */ (config)?.static) {
-			throw new Error('`static: true` has been removed. Use `availability: "inline"` instead.');
-		}
-
-		const availability = config?.availability ?? 'dynamic';
-
-		if (availability === 'inline') {
-			if (config?.public) {
+		if (config?.static) {
+			if (config.public) {
 				const value = validate(variables ?? {}, env[name], name, issues);
 				declarations.push(`explicit_public_env.${name} = ${devalue.uneval(value)};`);
 			}
 		} else {
-			const target = availability === 'runtime' ? runtime_setters : setters;
-
-			target.push(
+			setters.push(
 				`const ${name} = validate(variables, env.${name}, ${JSON.stringify(name)}, issues);`
 			);
 
 			if (config?.public) {
-				target.push(`explicit_public_env.${name} = ${name};`);
-				target.push(`rendered_env.${name} = ${name};`);
+				setters.push(`explicit_public_env.${name} = ${name};`);
+				setters.push(`rendered_env.${name} = ${name};`);
 			} else {
-				target.push(`dynamic_private_env.${name} = ${name};`);
+				setters.push(`dynamic_private_env.${name} = ${name};`);
 			}
 		}
 	}
@@ -159,11 +147,6 @@ export function create_sveltekit_env(variables, env, entry, is_dev) {
 			export function set_env(env) {
 				const issues = {};
 				${setters.join('\n')}
-				${
-					runtime_setters.length > 0
-						? `if (!building) {\n\t\t\t\t\t${runtime_setters.join('\n')}\n\t\t\t\t}`
-						: ''
-				}
 				handle_issues(issues);
 			}`
 	];
@@ -205,10 +188,9 @@ export function create_sveltekit_env_private(variables, env) {
 	for (const [name, config] of Object.entries(variables)) {
 		if (config.public) continue;
 
-		const value =
-			config.availability === 'inline'
-				? devalue.uneval(validate(variables, env[name], name, issues))
-				: `env.${name}`;
+		const value = config.static
+			? devalue.uneval(validate(variables, env[name], name, issues))
+			: `env.${name}`;
 
 		exports.push(`export const ${name} = ${value};\n`);
 	}
@@ -238,10 +220,9 @@ export function create_sveltekit_env_public(variables, env, prelude) {
 	for (const [name, config] of Object.entries(variables)) {
 		if (!config.public) continue;
 
-		const value =
-			config.availability === 'inline'
-				? devalue.uneval(validate(variables, env[name], name, issues))
-				: `env.${name}`;
+		const value = config.static
+			? devalue.uneval(validate(variables, env[name], name, issues))
+			: `env.${name}`;
 
 		exports.push(`export const ${name} = ${value};\n`);
 	}
@@ -263,7 +244,7 @@ export function create_sveltekit_env_public(variables, env, prelude) {
  */
 export function create_sveltekit_env_service_worker(variables, env, global, base, app_dir) {
 	const has_dynamic_public_env = Object.values(variables ?? {}).some(
-		(config) => config.public && config.availability !== 'inline'
+		(config) => config.public && !config.static
 	);
 
 	if (!has_dynamic_public_env) {
@@ -330,12 +311,9 @@ export function create_explicit_env_types(variables, relative, type) {
 		.filter(([_, config]) => !!config.public === (type === 'public'))
 		.map(([name, config]) => {
 			const comment = config.description ? `${create_jsdoc(config.description)}\n` : '';
-			const maybe_undefined = config.availability === 'runtime';
 			const type = config.schema
-				? `import('@sveltejs/kit/internal/types').StandardSchemaV1.InferOutput<typeof import('${relative}').variables.${name}.schema>${maybe_undefined ? ' | undefined' : ''}`
-				: maybe_undefined
-					? 'string | undefined'
-					: 'string';
+				? `import('@sveltejs/kit/internal/types').StandardSchemaV1.InferOutput<typeof import('${relative}').variables.${name}.schema>`
+				: 'string';
 			return `${comment}export const ${name}: ${type};`;
 		});
 

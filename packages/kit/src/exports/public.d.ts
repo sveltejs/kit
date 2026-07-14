@@ -2439,13 +2439,12 @@ export interface EnvVarConfig<T> {
 	 */
 	public?: boolean;
 	/**
-	 * When the variable's value is available, and therefore when it is validated.
-	 * - `'dynamic'` — the value is validated and used during runtime and build time.
-	 * - `'inline'` — the value is inlined into your application code at build time, enabling optimisations like dead-code elimination. It is validated at build time.
-	 * - `'runtime'` — the value is validated and used during runtime only. The value is `undefined` during the build, so the variable is typed as `T | undefined`.
-	 * @default 'dynamic'
+	 * Whether the value is determined at build time or when the app runs.
+	 * - if `true`, the build time value is inlined into the bundle. This enables optimisations like dead-code elimination
+	 * - if `false`, the value is read from the environment when the app starts
+	 * @default false
 	 */
-	availability?: 'inline' | 'dynamic' | 'runtime';
+	static?: boolean;
 	/**
 	 * A [Standard Schema](https://standardschema.dev/) validator that is applied to the value when the app starts.
 	 * The validator can output any value — not necessarily a string — but public, non-static values must be
