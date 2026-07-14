@@ -270,9 +270,9 @@ test.describe('Endpoints', () => {
 		}
 	});
 
-	test('invalid request method returns allow header', async ({ request, baseURL }) => {
+	test('invalid request method returns allow header', async ({ request }) => {
 		const response = await request.post('/endpoint-output/body', {
-			headers: { origin: baseURL }
+			headers: { origin: 'https://trusted.example.com' }
 		});
 
 		expect(response.status()).toBe(405);
@@ -282,9 +282,9 @@ test.describe('Endpoints', () => {
 		expect(allow_header).toMatch(/\bHEAD\b/);
 	});
 
-	test('405 allow header has no duplicate methods listed', async ({ request, baseURL }) => {
+	test('405 allow header has no duplicate methods listed', async ({ request }) => {
 		const response = await request.post('/endpoint-output/head-handler', {
-			headers: { origin: baseURL }
+			headers: { origin: 'https://trusted.example.com' }
 		});
 
 		expect(response.status()).toBe(405);
@@ -324,12 +324,9 @@ test.describe('Endpoints', () => {
 		expect(await response.text()).toBe('');
 	});
 
-	test('POST to post-only endpoint with sibling page still hits endpoint', async ({
-		request,
-		baseURL
-	}) => {
+	test('POST to post-only endpoint with sibling page still hits endpoint', async ({ request }) => {
 		const response = await request.post('/endpoint-output/post-only-with-page', {
-			headers: { origin: baseURL }
+			headers: { origin: 'https://trusted.example.com' }
 		});
 
 		expect(response.status()).toBe(200);
@@ -519,9 +516,9 @@ test.describe('Errors', () => {
 		);
 	});
 
-	test('unhandled http method', async ({ request, baseURL }) => {
+	test('unhandled http method', async ({ request }) => {
 		const response = await request.put('/errors/invalid-route-response', {
-			headers: { origin: baseURL }
+			headers: { origin: 'https://trusted.example.com' }
 		});
 
 		expect(response.status()).toBe(405);
@@ -602,18 +599,19 @@ test.describe('Errors', () => {
 		expect(await page.textContent('h1')).toBe('the answer is 42');
 	});
 
-	test('POST to missing page endpoint', async ({ request, baseURL }) => {
+	test('POST to missing page endpoint', async ({ request }) => {
 		const res = await request.post('/errors/missing-actions', {
 			headers: {
 				accept: 'text/html',
-				origin: baseURL
+				origin: 'https://trusted.example.com'
 			}
 		});
 		expect(res?.status()).toBe(405);
 
 		const res_json = await request.post('/errors/missing-actions', {
 			headers: {
-				accept: 'application/json'
+				accept: 'application/json',
+				origin: 'https://trusted.example.com'
 			}
 		});
 		expect(res_json?.status()).toBe(405);
