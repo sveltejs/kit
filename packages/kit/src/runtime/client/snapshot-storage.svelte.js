@@ -1,15 +1,25 @@
+import { DEV } from 'esm-env';
 import { SNAPSHOT_KEY } from './constants.js';
 
 const STORE = 'snapshots';
 
+/**
+ * In-memory map of snapshots, populated once from IndexedDB during client
+ * initialisation (see `initialize`) so that restores stay synchronous
+ *
+ * @type {Record<string, any[]>}
+ */
+const snapshots = {};
+
 /** @type {Promise<IDBDatabase> | null} */
 let db_promise = null;
 
+let failed = false;
+let warned = false;
+
 /** @returns {Promise<IDBDatabase>} */
 function open() {
-	if (db_promise) return db_promise;
-
-	db_promise = new Promise((resolve, reject) => {
+	return (db_promise ??= new Promise((resolve, reject) => {
 		/** @type {IDBOpenDBRequest} */
 		const request = indexedDB.open(SNAPSHOT_KEY, 1);
 
@@ -19,25 +29,13 @@ function open() {
 
 		request.onsuccess = () => resolve(request.result);
 		request.onerror = () => reject(request.error);
-	});
-
-	return db_promise;
+	}));
 }
 
 /**
  * Load all snapshots into an in-memory map keyed by navigation index.
- *
- * Values are stored via the structured clone algorithm, so `File`/`Blob`/`Map`/
- * `Set`/cyclic structures etc. are supported without serialization. Call this
- * once during client initialisation (before any `restore_snapshot`) so that
- * restores can stay synchronous.
- *
- * @returns {Promise<Record<number, any>>}
  */
-export async function load_all() {
-	/** @type {Record<number, any>} */
-	const result = {};
-
+export async function init() {
 	try {
 		const db = await open();
 		await /** @type {Promise<void>} */ (
@@ -47,7 +45,7 @@ export async function load_all() {
 				request.onsuccess = () => {
 					const cursor = request.result;
 					if (cursor) {
-						result[/** @type {number} */ (cursor.key)] = cursor.value;
+						snapshots[/** @type {number} */ (cursor.key)] = cursor.value;
 						cursor.continue();
 					}
 				};
@@ -59,24 +57,54 @@ export async function load_all() {
 		);
 	} catch {
 		// IndexedDB may be unavailable (e.g. private browsing) — return what we have
+		failed = true;
 	}
-
-	return result;
 }
 
 /**
- * Persist a snapshot value for a given navigation index.
+ * Persist a snapshot value for a given navigation index in memory,
+ * and (in the background, fire-and-forget style) to IndexedDB
  *
- * Values are stored via the structured clone algorithm, so `File`/`Blob`/`Map`/
- * `Set`/cyclic structures etc. are supported without serialization. The returned
- * promise resolves once the write is durable; callers that fire-and-forget
- * (e.g. the navigation capture path, where the page stays alive) may ignore it.
+ * @param {number} index
+ * @param {any} value
+ */
+export function set(index, value) {
+	snapshots[index] = $state.snapshot(value);
+	void put(index, snapshots[index]);
+}
+
+/**
+ * @param {number} index
+ */
+export function get(index) {
+	if (DEV && failed && !warned) {
+		warned = true;
+		console.warn('Failed to restore snapshots from IndexedDB');
+	}
+
+	return snapshots[index];
+}
+
+/**
+ * @param {number} index
+ */
+export function truncate(index) {
+	let i = index;
+
+	while (snapshots[++i]) {
+		delete snapshots[i];
+		void del(i);
+	}
+}
+
+/**
+ * Persist a snapshot value to IndexedDB
  *
  * @param {number} index
  * @param {any} value
  * @returns {Promise<void>}
  */
-export async function set(index, value) {
+export async function put(index, value) {
 	try {
 		const db = await open();
 		await /** @type {Promise<void>} */ (
@@ -93,8 +121,10 @@ export async function set(index, value) {
 				transaction.onabort = () => reject(transaction.error);
 			})
 		);
-	} catch {
-		// snapshot persistence is best-effort
+	} catch (e) {
+		if (DEV && /** @type {Error} */ (e).name === 'DataCloneError') {
+			console.warn('Could not serialize snapshot value. It will not survive a page reload');
+		}
 	}
 }
 
@@ -104,7 +134,7 @@ export async function set(index, value) {
  * @param {number} index
  * @returns {Promise<void>}
  */
-export async function del(index) {
+async function del(index) {
 	try {
 		const db = await open();
 		await /** @type {Promise<void>} */ (

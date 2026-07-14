@@ -3,7 +3,9 @@
 
 	/** @type {import('./$types').Snapshot<File | null>} */
 	export const snapshot = {
-		capture: () => file,
+		capture: () => {
+			return file;
+		},
 		restore: (value) => {
 			file = value;
 		}

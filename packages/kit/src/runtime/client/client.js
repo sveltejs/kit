@@ -11,7 +11,7 @@ import { decode_pathname, strip_hash, make_trackable, normalize_path } from '../
 import { dev_fetch, initial_fetch, lock_fetch, subsequent_fetch, unlock_fetch } from './fetcher.js';
 import { parse, parse_server_route } from './parse.js';
 import * as storage from './session-storage.js';
-import * as snapshot_storage from './snapshot-storage.js';
+import * as snapshots from './snapshot-storage.svelte.js';
 import {
 	find_anchor,
 	resolve_url,
@@ -87,19 +87,6 @@ const resetters = [];
 const scroll_positions = storage.get(SCROLL_KEY) ?? {};
 
 /**
- * navigation index -> any
- *
- * In-memory map of snapshots, populated once from IndexedDB during client
- * initialisation (see `initialize`) so that restores stay synchronous. The
- * persistent backing store is IndexedDB (see `snapshot-storage.js`), which uses
- * the structured clone algorithm and therefore supports values —
- * `File`/`Blob`/`Map`/`Set`/cyclic structures — that `sessionStorage` cannot
- * represent. New captures write through to IndexedDB so they survive reload.
- * @type {Record<string, any[]>}
- */
-const snapshots = {};
-
-/**
  * @deprecated this is a temporary measure to avoid a regression, replace with nested `RenderNode` classes
  */
 let current_tree = /** @type {RenderNode} */ ({});
@@ -161,12 +148,7 @@ function clear_onward_history(current_history_index, current_navigation_index) {
 		i += 1;
 	}
 
-	i = current_navigation_index + 1;
-	while (snapshots[i]) {
-		delete snapshots[i];
-		void snapshot_storage.del(i);
-		i += 1;
-	}
+	snapshots.truncate(current_navigation_index);
 }
 
 /**
@@ -405,11 +387,7 @@ export async function start(_app, _target, hydrate) {
 		);
 	}
 
-	// populate the in-memory snapshot map from IndexedDB once, up front, so
-	// that `restore_snapshot` (called below during hydrate/navigate, and later
-	// on popstate) never needs to read from disk asynchronously
-	const persisted_snapshots = await snapshot_storage.load_all();
-	for (const k in persisted_snapshots) snapshots[k] = persisted_snapshots[k];
+	await snapshots.init();
 
 	// if we reload the page, or Cmd-Shift-T back to it,
 	// recover scroll position
@@ -538,17 +516,19 @@ function reset_invalidation() {
 /** @param {number} index */
 function capture_snapshot(index) {
 	if (components.some((c) => c?.snapshot)) {
-		snapshots[index] = components.map((c) => c?.snapshot?.capture());
 		// write through to IndexedDB; fire-and-forget on the navigation path
 		// (the page stays alive, so the write lands) — `persist_state` relies
 		// on `commit()` inside the storage layer to flush before unload
-		void snapshot_storage.set(index, snapshots[index]);
+		void snapshots.set(
+			index,
+			components.map((c) => c?.snapshot?.capture())
+		);
 	}
 }
 
 /** @param {number} index */
 function restore_snapshot(index) {
-	snapshots[index]?.forEach((value, i) => {
+	snapshots.get(index)?.forEach((value, i) => {
 		components[i]?.snapshot?.restore(value);
 	});
 }
