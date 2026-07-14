@@ -270,8 +270,10 @@ test.describe('Endpoints', () => {
 		}
 	});
 
-	test('invalid request method returns allow header', async ({ request }) => {
-		const response = await request.post('/endpoint-output/body');
+	test('invalid request method returns allow header', async ({ request, baseURL }) => {
+		const response = await request.post('/endpoint-output/body', {
+			headers: { origin: baseURL }
+		});
 
 		expect(response.status()).toBe(405);
 
@@ -280,8 +282,10 @@ test.describe('Endpoints', () => {
 		expect(allow_header).toMatch(/\bHEAD\b/);
 	});
 
-	test('405 allow header has no duplicate methods listed', async ({ request }) => {
-		const response = await request.post('/endpoint-output/head-handler');
+	test('405 allow header has no duplicate methods listed', async ({ request, baseURL }) => {
+		const response = await request.post('/endpoint-output/head-handler', {
+			headers: { origin: baseURL }
+		});
 
 		expect(response.status()).toBe(405);
 
@@ -320,8 +324,13 @@ test.describe('Endpoints', () => {
 		expect(await response.text()).toBe('');
 	});
 
-	test('POST to post-only endpoint with sibling page still hits endpoint', async ({ request }) => {
-		const response = await request.post('/endpoint-output/post-only-with-page');
+	test('POST to post-only endpoint with sibling page still hits endpoint', async ({
+		request,
+		baseURL
+	}) => {
+		const response = await request.post('/endpoint-output/post-only-with-page', {
+			headers: { origin: baseURL }
+		});
 
 		expect(response.status()).toBe(200);
 		expect(await response.text()).toBe('ok');
@@ -510,8 +519,10 @@ test.describe('Errors', () => {
 		);
 	});
 
-	test('unhandled http method', async ({ request }) => {
-		const response = await request.put('/errors/invalid-route-response');
+	test('unhandled http method', async ({ request, baseURL }) => {
+		const response = await request.put('/errors/invalid-route-response', {
+			headers: { origin: baseURL }
+		});
 
 		expect(response.status()).toBe(405);
 		expect(await response.text()).toMatch('PUT method not allowed');
@@ -591,10 +602,11 @@ test.describe('Errors', () => {
 		expect(await page.textContent('h1')).toBe('the answer is 42');
 	});
 
-	test('POST to missing page endpoint', async ({ request }) => {
+	test('POST to missing page endpoint', async ({ request, baseURL }) => {
 		const res = await request.post('/errors/missing-actions', {
 			headers: {
-				accept: 'text/html'
+				accept: 'text/html',
+				origin: baseURL
 			}
 		});
 		expect(res?.status()).toBe(405);
