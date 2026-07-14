@@ -17,7 +17,7 @@ import {
 	remove_static_middlewares
 } from '../dev/index.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
-import { get_port } from '../../../core/utils.js';
+import { get_address } from '../../../core/utils.js';
 import { dedent } from '../../../core/sync/utils.js';
 import { s } from '../../../utils/misc.js';
 import { import_peer } from '../../../utils/import.js';
@@ -58,8 +58,8 @@ export async function create_build_server({
 		(plugin) => plugin.name === 'vite-plugin-sveltekit-adapter'
 	)?.api?.adapter;
 
-	/** @type {number | undefined} */
-	let port;
+	/** @type {string | undefined} */
+	let current_address;
 
 	const app_path = `${svelte_config.kit.paths.base}/${svelte_config.kit.appDir}`;
 
@@ -78,11 +78,11 @@ export async function create_build_server({
 		configureServer(server) {
 			return () => {
 				server.middlewares.use((_req, _res, next) => {
-					// ensure the server port is up-to-date
-					const current_port = get_port(server);
-					if (current_port && current_port !== port) {
-						port = current_port;
-						server.environments.ssr.hot.send('sveltekit:port', port);
+					// ensure the server address is up-to-date
+					const address = get_address(server);
+					if (address && address !== current_address) {
+						current_address = address;
+						server.environments.ssr.hot.send('sveltekit:server-address', current_address);
 						invalidate_module(server, sveltekit_ipc);
 					}
 
@@ -111,11 +111,11 @@ export async function create_build_server({
 					const native_fetch = globalThis.fetch;
 
 					export function get(pathname) {
-						return native_fetch(\`http://localhost:\${port}${app_path}\${pathname}\`);
+						return native_fetch(\`\${address}${app_path}\${pathname}\`);
 					}
 
-					let port${port ? ` = ${port}` : ''};
-					import.meta.hot?.on('sveltekit:port', (update) => { port = update });
+					let address${current_address ? ` = '${current_address}'` : ''};
+					import.meta.hot?.on('sveltekit:server-address', (update) => { address = update });
 				`;
 			}
 		}

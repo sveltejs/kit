@@ -2,7 +2,7 @@
 import { escape_for_regexp } from '../../utils/escape.js';
 import { create_build_server } from '../../exports/vite/build/vite_server.js';
 import { forked } from '../../utils/fork.js';
-import { get_port } from '../utils.js';
+import { get_address } from '../utils.js';
 import { extract_svelte_config, load_vite_config } from '../config/index.js';
 
 export default forked(import.meta.url, generate_fallback);
@@ -29,7 +29,7 @@ async function generate_fallback({ manifest_path, out, root }) {
 			return () => {
 				vite.middlewares.use((req, _, next) => {
 					req.url = req.url?.replace(
-						new RegExp(escape_for_regexp(`^http://localhost:${port}`)),
+						new RegExp(escape_for_regexp(`^${address}`)),
 						prerender_origin
 					);
 					req.headers.host = new URL(prerender_origin).host;
@@ -52,8 +52,8 @@ async function generate_fallback({ manifest_path, out, root }) {
 
 	await server.listen();
 
-	const port = get_port(server);
-	const response = await fetch(`http://localhost:${port}/[fallback]`);
+	const address = get_address(server);
+	const response = await fetch(new URL('/[fallback]', address));
 
 	await server.close();
 

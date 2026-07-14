@@ -5,7 +5,7 @@ import * as devalue from 'devalue';
 import { extract_svelte_config, load_vite_config } from '../config/index.js';
 import { forked } from '../../utils/fork.js';
 import { create_build_server } from '../../exports/vite/build/vite_server.js';
-import { get_port } from '../utils.js';
+import { get_address } from '../utils.js';
 
 export default forked(import.meta.url, analyse);
 
@@ -47,8 +47,7 @@ async function analyse({
 
 	await server.listen();
 
-	const port = get_port(server);
-	const response = await fetch(new URL(`http://localhost:${port}`), {
+	const response = await fetch(get_address(server), {
 		method: 'POST',
 		headers: {
 			'content-type': 'application/json'

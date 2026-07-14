@@ -7,7 +7,7 @@ import { mkdirp, walk } from '../../utils/filesystem.js';
 import { noop } from '../../utils/functions.js';
 import { decode_uri, is_root_relative, resolve } from '../../utils/url.js';
 import { escape_for_regexp, escape_html } from '../../utils/escape.js';
-import { get_port, logger } from '../utils.js';
+import { get_address, logger } from '../utils.js';
 import { get_route_segments } from '../../utils/routing.js';
 import { queue } from './queue.js';
 import { crawl } from './crawl.js';
@@ -252,7 +252,7 @@ async function prerender({ out, manifest_path, metadata, verbose, root, vite_con
 		};
 		server.environments.ssr.hot.on(event, handle_dependencies);
 
-		const response = await fetch(`http://localhost:${port}${encoded}`, { redirect: 'manual' });
+		const response = await fetch(address + encoded, { redirect: 'manual' });
 
 		const encoded_id = response.headers.get('x-sveltekit-routeid');
 		const decoded_id = encoded_id && decode_uri(encoded_id);
@@ -510,7 +510,7 @@ async function prerender({ out, manifest_path, metadata, verbose, root, vite_con
 			return () => {
 				vite.middlewares.use((req, res, next) => {
 					req.url = req.url?.replace(
-						new RegExp(escape_for_regexp(`^http://localhost:${port}`)),
+						new RegExp(escape_for_regexp(`^${address}`)),
 						prerender_origin
 					);
 					req.headers.host = new URL(prerender_origin).host;
@@ -571,7 +571,7 @@ async function prerender({ out, manifest_path, metadata, verbose, root, vite_con
 	// that we don't run the user's `init` hook unnecessarily
 	await server.listen();
 
-	const port = get_port(server);
+	const address = get_address(server);
 
 	for (const entry of svelte_config.kit.prerender.entries) {
 		if (entry === '*') {
@@ -599,7 +599,7 @@ async function prerender({ out, manifest_path, metadata, verbose, root, vite_con
 
 	const url = new URL(
 		`${svelte_config.kit.paths.base}/${svelte_config.kit.appDir}/prerender-functions`,
-		`http://localhost:${port}`
+		address
 	);
 	for (const name of metadata.remotes_with_prerender) {
 		url.searchParams.append('name', name);
