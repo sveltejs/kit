@@ -76,7 +76,7 @@ const plugin = function (defaults = {}) {
 				`${dirs.immutable}/${builder.config.kit.appDir}/immutable`
 			);
 
-			const static_config = static_vercel_config(builder, defaults, dirs.static);
+			const static_config = static_vercel_config(builder, defaults, dirs.immutable);
 
 			builder.log.minor('Generating serverless function...');
 
