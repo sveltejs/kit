@@ -39,7 +39,7 @@
 		"rolldown": "catalog:",
 		"svelte": "catalog:",
 		"svelte-preprocess": "catalog:",
-		"typescript": "~6.0.3",
+		"typescript": "~7.0.0",
 		"valibot": "catalog:",
 		"vite": "catalog:",
 		"vitest": "catalog:"
@@ -48,7 +48,7 @@
 		"@opentelemetry/api": "^1.0.0",
 		"@sveltejs/vite-plugin-svelte": "^7.0.0",
 		"svelte": "^5.56.4",
-		"typescript": "^6.0.0",
+		"typescript": "^7.0.0",
 		"vite": "^8.0.12"
 	},
 	"peerDependenciesMeta": {
