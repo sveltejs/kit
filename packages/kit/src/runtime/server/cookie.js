@@ -43,6 +43,17 @@ export function get_cookies(request, url) {
 		parseCookie(header, { decode: (value) => value })
 	);
 
+	/** @type {ReturnType<typeof parseCookie> | undefined} */
+	let default_cookies;
+
+	/**
+	 * The header never changes during the request, so the default-decode parse is cached
+	 * @param {import('cookie').ParseOptions} [opts]
+	 */
+	function parse_header(opts) {
+		return opts?.decode ? parseCookie(header, opts) : (default_cookies ??= parseCookie(header));
+	}
+
 	/** @type {string | undefined} */
 	let normalized_url;
 
@@ -66,22 +77,24 @@ export function get_cookies(request, url) {
 
 		get(name, opts) {
 			// Look for the most specific matching cookie from new_cookies
-			const best_match = Array.from(new_cookies.values())
-				.filter((c) => {
-					return (
-						c.name === name &&
-						domain_matches(url.hostname, c.options.domain) &&
-						path_matches(url.pathname, c.options.path)
-					);
-				})
-				.sort((a, b) => b.options.path.length - a.options.path.length)[0];
+			/** @type {import('./page/types.js').Cookie | undefined} */
+			let best_match;
+			for (const c of new_cookies.values()) {
+				if (
+					c.name === name &&
+					domain_matches(url.hostname, c.options.domain) &&
+					path_matches(url.pathname, c.options.path) &&
+					(!best_match || c.options.path.length > best_match.options.path.length)
+				) {
+					best_match = c;
+				}
+			}
 
 			if (best_match) {
 				return best_match.options.maxAge === 0 ? undefined : best_match.value;
 			}
 
-			const req_cookies = parseCookie(header, { decode: opts?.decode });
-			const cookie = req_cookies[name]; // the decoded string or undefined
+			const cookie = parse_header(opts)[name]; // the decoded string or undefined
 
 			// in development, if the cookie was set during this session with `cookies.set`,
 			// but at a different path, warn the user. (ignore cookies from request headers,
@@ -104,7 +117,8 @@ export function get_cookies(request, url) {
 		},
 
 		getAll(opts) {
-			const cookies = parseCookie(header, { decode: opts?.decode });
+			// copy, so the cached parse isn't mutated below
+			const cookies = { ...parse_header(opts) };
 
 			// Group cookies by name and find the most specific one for each name
 			const lookup = new Map();
