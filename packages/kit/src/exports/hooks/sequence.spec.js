@@ -55,7 +55,10 @@ test('applies handlers in sequence', async () => {
 
 	const response = new Response();
 
-	assert.equal(await handler({ event: dummy_event, resolve: () => Promise.resolve(response) }), response);
+	assert.equal(
+		await handler({ event: dummy_event, resolve: () => Promise.resolve(response) }),
+		response
+	);
 	expect(order).toEqual(['1a', '2a', '3a', '3b', '2b', '1b']);
 });
 
