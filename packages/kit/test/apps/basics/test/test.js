@@ -742,8 +742,8 @@ test.describe('$app/manifest', () => {
 	test('exposes static files', async ({ page }) => {
 		await page.goto('/app-manifest');
 		const files = JSON.parse((await page.textContent('[data-name="files"] pre')) ?? '');
-		expect(files).toContain('/favicon.png');
-		expect(files).toContain('/static.json');
+		expect(files).toContain('favicon.png');
+		expect(files).toContain('static.json');
 	});
 
 	test('exposes build files', async ({ page }) => {
@@ -751,9 +751,9 @@ test.describe('$app/manifest', () => {
 		await page.goto('/app-manifest');
 		const build = JSON.parse((await page.textContent('[data-name="build"] pre')) ?? '');
 		// should include the manifest chunk itself
-		expect(build.some((f) => f.includes('/_app/manifest.js'))).toBe(true);
+		expect(build.some((f) => f.includes('_app/manifest.js'))).toBe(true);
 		// should include immutable chunks
-		expect(build.some((f) => f.includes('/_app/immutable/'))).toBe(true);
+		expect(build.some((f) => f.includes('_app/immutable/'))).toBe(true);
 	});
 
 	test('exposes prerendered paths', async ({ page }) => {
@@ -762,7 +762,7 @@ test.describe('$app/manifest', () => {
 		const prerendered = JSON.parse((await page.textContent('[data-name="prerendered"] pre')) ?? '');
 		// the test app prerenders '*' — some known prerendered routes
 		expect(prerendered.length).toBeGreaterThan(0);
-		expect(prerendered).toContain('/prerendering/no-ssr');
+		expect(prerendered).toContain('prerendering/no-ssr');
 	});
 });
 

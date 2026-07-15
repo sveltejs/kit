@@ -1164,16 +1164,16 @@ function kit({ svelte_config }) {
 					manifest_data_code = dedent`
 					export const build = [
 						${Array.from(build_files)
-							.map((file) => s(`/${file}`))
+							.map((file) => s(file))
 							.join(',\n')}
 					];
 
 					export const files = [
-						${manifest_data.assets.map((asset) => s(`/${asset.file}`)).join(',\n')}
+						${manifest_data.assets.map((asset) => s(asset.file)).join(',\n')}
 					];
 
 					export const prerendered = [
-						${prerendered.paths.map((path) => s(path.replace(kit.paths.base, ''))).join(',\n')}
+						${prerendered.paths.map((path) => s(path.replace(kit.paths.base, '').slice(1))).join(',\n')}
 					];
 
 					export const routes = [
@@ -1598,7 +1598,7 @@ function kit({ svelte_config }) {
 			// known yet — they get sentinel strings that are replaced after
 			// the client build and after prerendering respectively.
 			replace_manifest_placeholders(server_chunks, `${out}/server`, {
-				files: manifest_data.assets.map((asset) => `/${asset.file}`),
+				files: manifest_data.assets.map((asset) => asset.file),
 				routes: manifest_data.routes.map((route) => ({ id: route.id }))
 			});
 
@@ -1749,15 +1749,15 @@ function kit({ svelte_config }) {
 				}
 
 				replace_manifest_placeholders(client_chunks, `${out}/client`, {
-					build: Array.from(build_files_list).map((file) => `/${file}`),
-					files: manifest_data.assets.map((asset) => `/${asset.file}`),
+					build: Array.from(build_files_list).map((file) => file),
+					files: manifest_data.assets.map((asset) => asset.file),
 					routes: manifest_data.routes.map((route) => ({ id: route.id }))
 				});
 
 				// Now that the client build is done, replace the `build` sentinel
 				// in the SSR output with the real build files
 				replace_manifest_sentinels(`${out}/server`, {
-					build: Array.from(build_files_list).map((file) => `/${file}`)
+					build: Array.from(build_files_list).map((file) => file)
 				});
 
 				/**
@@ -1920,7 +1920,9 @@ function kit({ svelte_config }) {
 			// Replace the `prerendered` sentinel in both SSR and client output
 			// with the real prerendered paths. The other sentinels (`build`)
 			// were already replaced after the client build.
-			const prerendered_paths = prerendered.paths.map((p) => p.replace(kit.paths.base, ''));
+			const prerendered_paths = prerendered.paths.map((p) =>
+				p.replace(kit.paths.base, '').slice(1)
+			);
 
 			replace_manifest_sentinels(`${out}/server`, { prerendered: prerendered_paths });
 			replace_manifest_sentinels(`${out}/client`, { prerendered: prerendered_paths });
@@ -2149,9 +2151,7 @@ const create_manifest_data_module = (is_build, manifest_data) => {
 		? manifest_data.routes.map((route) => s({ id: route.id })).join(',\n')
 		: '';
 
-	const files = manifest_data
-		? manifest_data.assets.map((asset) => s(`/${asset.file}`)).join(',\n')
-		: '';
+	const files = manifest_data ? manifest_data.assets.map((asset) => s(asset.file)).join(',\n') : '';
 
 	return dedent`
 		export const build = [];
