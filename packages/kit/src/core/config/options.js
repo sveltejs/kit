@@ -140,7 +140,6 @@ export const validate_kit_options = object({
 			server: string(null),
 			universal: string(null)
 		}),
-		lib: string(null),
 		params: string(null),
 		routes: string(null),
 		serviceWorker: string(null),

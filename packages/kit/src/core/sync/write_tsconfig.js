@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { styleText } from 'node:util';
 import { posixify } from '../../utils/os.js';
+import { read_package_imports, normalize_import_value } from '../../utils/imports.js';
 import { write_if_changed } from './utils.js';
 
 /**
@@ -65,7 +66,7 @@ export function get_tsconfig(kit, cwd) {
 		config_relative('vite.config.js'),
 		config_relative('vite.config.ts')
 	]);
-	const src_includes = [kit.files.routes, kit.files.lib, kit.files.src].filter((dir) => {
+	const src_includes = [kit.files.routes, kit.files.src].filter((dir) => {
 		const relative = path.relative(kit.files.src, dir);
 		return !relative || relative.startsWith('..');
 	});
@@ -198,36 +199,7 @@ const alias_regex = /^(.+?)(\/\*)?$/;
 const value_regex = /^(.*?)((\/\*)|(\.\w+))?$/;
 
 /**
- * @param {string} cwd
- * @returns {Record<string, string | Record<string, string>> | undefined}
- */
-function read_package_imports(cwd) {
-	const pkg_path = path.resolve(cwd, 'package.json');
-	if (fs.existsSync(pkg_path)) {
-		try {
-			return JSON.parse(fs.readFileSync(pkg_path, 'utf-8')).imports;
-		} catch {
-			// malformed package.json — ignore, the user will see other errors
-		}
-	}
-}
-
-/**
- * @param {string | Record<string, string>} value
- * @returns {string | null}
- */
-function normalize_import_value(value) {
-	if (typeof value === 'string') {
-		return value.replace(/^\.\//, '');
-	}
-	if (value && typeof value === 'object' && typeof value.default === 'string') {
-		return value.default.replace(/^\.\//, '');
-	}
-	return null;
-}
-
-/**
- * Generates tsconfig path aliases from kit's aliases.
+ * Generates tsconfig path aliases from kit's aliases and the package.json `imports` field.
  * Related to vite alias creation.
  *
  * @param {import('types').ValidatedKitConfig} config
@@ -245,15 +217,15 @@ function get_tsconfig_paths(config, cwd) {
 
 	const alias = { ...config.alias };
 
+	// Add all `#`-prefixed imports from package.json as path aliases
 	const imports = read_package_imports(cwd);
 	if (imports) {
-		const lib = normalize_import_value(imports['#lib']);
-		if (lib) {
-			alias['#lib'] = lib;
-		}
-		const lib_star = normalize_import_value(imports['#lib/*']);
-		if (lib_star) {
-			alias['#lib/*'] = lib_star;
+		for (const [key, raw_value] of Object.entries(imports)) {
+			if (!key.startsWith('#')) continue;
+			const value = normalize_import_value(raw_value);
+			if (value) {
+				alias[key] = value;
+			}
 		}
 	}
 
