@@ -55,10 +55,7 @@ test('applies handlers in sequence', async () => {
 
 	const response = new Response();
 
-	assert.equal(
-		await handler({ event: dummy_event, resolve: () => Promise.resolve(response) }),
-		response
-	);
+	assert.equal(await handler({ event: dummy_event, resolve: () => response }), response);
 	expect(order).toEqual(['1a', '2a', '3a', '3b', '2b', '1b']);
 });
 
@@ -151,7 +148,7 @@ test('uses first defined preload option', async () => {
 			html += preload({ path: '', type: 'js' });
 			html += preload({ path: '', type: 'css' });
 
-			return Promise.resolve(new Response(html));
+			return new Response(html);
 		}
 	});
 
@@ -183,7 +180,7 @@ test('uses first defined filterSerializedResponseHeaders option', async () => {
 			html += filterSerializedResponseHeaders('a', '');
 			html += filterSerializedResponseHeaders('b', '');
 
-			return Promise.resolve(new Response(html));
+			return new Response(html);
 		}
 	});
 
