@@ -17,8 +17,8 @@ test('Creates tsconfig path aliases from kit.alias', () => {
 
 	const { compilerOptions } = get_tsconfig(kit, '.');
 
-	// $lib isn't part of the outcome because there's a "path exists"
-	// check in the implementation
+	// #lib isn't part of the outcome because the package.json at the test cwd
+	// doesn't have a #lib entry in its imports field
 	expect(compilerOptions.paths).toEqual({
 		'$app/types': ['./types/index.d.ts'],
 		simpleKey: ['../simple/value'],

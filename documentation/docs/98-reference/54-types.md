@@ -132,8 +132,8 @@ The generated `.svelte-kit/tsconfig.json` file contains a mixture of options. So
 {
 	"compilerOptions": {
 		"paths": {
-			"$lib": ["../src/lib"],
-			"$lib/*": ["../src/lib/*"]
+			"#lib": ["../src/lib/index.js"],
+			"#lib/*": ["../src/lib/*"]
 		},
 		"rootDirs": ["..", "./types"]
 	},
@@ -194,13 +194,13 @@ Others are required for SvelteKit to work properly, and should also be left unto
 
 Use the [`typescript.config` setting](configuration#typescript) of the SvelteKit plugin in `vite.config.js` to extend or modify the generated `tsconfig.json`.
 
-## $lib
+## #lib
 
-This is a simple alias to `src/lib`. It allows you to access common components and utility modules without `../../../../` nonsense.
+This is a simple alias to `src/lib`, configured via the [`imports`](https://nodejs.org/api/packages.html#subpath-imports) field in your `package.json`. It allows you to access common components and utility modules without `../../../../` nonsense.
 
-### $lib/server
+### #lib/server
 
-A subdirectory of `$lib`. SvelteKit will prevent you from importing any modules in `$lib/server` into client-side code. See [server-only modules](server-only-modules).
+A subdirectory of `#lib`. SvelteKit will prevent you from importing any modules in `#lib/server` into client-side code. See [server-only modules](server-only-modules).
 
 ## app.d.ts
 

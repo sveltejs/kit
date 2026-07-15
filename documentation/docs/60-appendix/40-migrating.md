@@ -89,7 +89,7 @@ The `goto`, `prefetch` and `prefetchRoutes` imports from `@sapper/app` should be
 
 The `stores` import from `@sapper/app` should be replaced — see the [Stores](migrating#Pages-and-layouts-Stores) section below.
 
-Any files you previously imported from directories in `src/node_modules` will need to be replaced with [`$lib`]($lib) imports.
+Any files you previously imported from directories in `src/node_modules` will need to be replaced with [`#lib`]($lib) imports.
 
 ### Preload
 

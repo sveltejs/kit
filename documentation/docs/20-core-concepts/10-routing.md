@@ -444,7 +444,7 @@ You can read more about omitting `$types` in our [blog post](/blog/zero-config-t
 
 Any other files inside a route directory are ignored by SvelteKit. This means you can colocate components and utility modules with the routes that need them.
 
-If components and modules are needed by multiple routes, it's a good idea to put them in [`$lib`]($lib).
+If components and modules are needed by multiple routes, it's a good idea to put them in [`#lib`]($lib).
 
 ## Further reading
 

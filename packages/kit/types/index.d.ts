@@ -524,7 +524,7 @@ declare module '@sveltejs/kit' {
 				universal?: string;
 			};
 			/**
-			 * Your app's internal library, accessible throughout the codebase as `$lib`.
+			 * Your app's internal library, accessible throughout the codebase as `#lib`.
 			 * @deprecated this feature is still supported, but it's generally recommended to use [monorepos](https://levelup.video/tutorials/monorepos-with-pnpm) instead
 			 * @default "src/lib"
 			 */
@@ -3045,7 +3045,7 @@ declare module '@sveltejs/kit' {
 	 * ```ts
 	 * import { invalid } from '@sveltejs/kit';
 	 * import { form } from '$app/server';
-	 * import { tryLogin } from '$lib/server/auth';
+	 * import { tryLogin } from '#lib/server/auth';
 	 * import * as v from 'valibot';
 	 *
 	 * export const login = form(

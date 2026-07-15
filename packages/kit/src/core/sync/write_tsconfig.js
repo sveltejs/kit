@@ -198,6 +198,35 @@ const alias_regex = /^(.+?)(\/\*)?$/;
 const value_regex = /^(.*?)((\/\*)|(\.\w+))?$/;
 
 /**
+ * @param {string} cwd
+ * @returns {Record<string, string | Record<string, string>> | undefined}
+ */
+function read_package_imports(cwd) {
+	const pkg_path = path.resolve(cwd, 'package.json');
+	if (fs.existsSync(pkg_path)) {
+		try {
+			return JSON.parse(fs.readFileSync(pkg_path, 'utf-8')).imports;
+		} catch {
+			// malformed package.json — ignore, the user will see other errors
+		}
+	}
+}
+
+/**
+ * @param {string | Record<string, string>} value
+ * @returns {string | null}
+ */
+function normalize_import_value(value) {
+	if (typeof value === 'string') {
+		return value.replace(/^\.\//, '');
+	}
+	if (value && typeof value === 'object' && typeof value.default === 'string') {
+		return value.default.replace(/^\.\//, '');
+	}
+	return null;
+}
+
+/**
  * Generates tsconfig path aliases from kit's aliases.
  * Related to vite alias creation.
  *
@@ -215,8 +244,17 @@ function get_tsconfig_paths(config, cwd) {
 	};
 
 	const alias = { ...config.alias };
-	if (fs.existsSync(project_relative(cwd, config.files.lib))) {
-		alias['$lib'] = project_relative(cwd, config.files.lib);
+
+	const imports = read_package_imports(cwd);
+	if (imports) {
+		const lib = normalize_import_value(imports['#lib']);
+		if (lib) {
+			alias['#lib'] = lib;
+		}
+		const lib_star = normalize_import_value(imports['#lib/*']);
+		if (lib_star) {
+			alias['#lib/*'] = lib_star;
+		}
 	}
 
 	/** @type {Record<string, string[]>} */

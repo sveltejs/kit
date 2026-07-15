@@ -551,7 +551,7 @@ export interface KitConfig {
 			universal?: string;
 		};
 		/**
-		 * Your app's internal library, accessible throughout the codebase as `$lib`.
+		 * Your app's internal library, accessible throughout the codebase as `#lib` (configured via the `imports` field in your `package.json`).
 		 * @deprecated this feature is still supported, but it's generally recommended to use [monorepos](https://levelup.video/tutorials/monorepos-with-pnpm) instead
 		 * @default "src/lib"
 		 */

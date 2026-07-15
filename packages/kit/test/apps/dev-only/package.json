@@ -28,5 +28,8 @@
 		"typescript": "catalog:",
 		"vite": "catalog:"
 	},
+	"imports": {
+		"#lib/*": "./src/lib/*"
+	},
 	"type": "module"
 }

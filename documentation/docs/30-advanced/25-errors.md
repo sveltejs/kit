@@ -17,14 +17,14 @@ An _expected_ error is one created with the [`error`](@sveltejs-kit#error) helpe
 ```js
 /// file: src/routes/blog/[slug]/+page.server.js
 // @filename: ambient.d.ts
-declare module '$lib/server/database' {
+declare module '#lib/server/database' {
 	export function getPost(slug: string): Promise<{ title: string, content: string } | undefined>
 }
 
 // @filename: index.js
 // ---cut---
 import { error } from '@sveltejs/kit';
-import * as db from '$lib/server/database';
+import * as db from '#lib/server/database';
 
 /** @type {import('./$types').PageServerLoad} */
 export async function load({ params }) {

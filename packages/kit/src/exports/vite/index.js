@@ -97,7 +97,6 @@ const enforced_config = {
 	resolve: {
 		alias: {
 			$app: true,
-			$lib: true,
 			'$service-worker': true
 		}
 	}
@@ -678,7 +677,7 @@ function kit({ svelte_config }) {
 
 	/**
 	 * Ensures that client-side code can't accidentally import server-side code,
-	 * whether in `*.server.js` files, `$app/server`, `$lib/server`, or `$app/env/private`
+	 * whether in `*.server.js` files, `$app/server`, `#lib/server`, or `$app/env/private`
 	 * @type {Plugin}
 	 */
 	const plugin_guard = {
@@ -740,7 +739,7 @@ function kit({ svelte_config }) {
 				const is_server_only =
 					normalized === '$app/env/private' ||
 					normalized === '$app/server' ||
-					(normalized.startsWith('$lib/') && server_only_directory_pattern.test(id)) ||
+					(normalized.startsWith('#lib/') && server_only_directory_pattern.test(id)) ||
 					(is_internal && server_only_module_pattern.test(id));
 
 				if (!is_server_only) return;

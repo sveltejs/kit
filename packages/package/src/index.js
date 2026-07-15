@@ -218,6 +218,7 @@ function normalize_options(options) {
 	const tsconfig = options.tsconfig ? path.resolve(options.cwd, options.tsconfig) : undefined;
 
 	const alias = {
+		// We use #lib in SvelteKit 3+ but for backwards compat we still resolve $lib
 		$lib: path.resolve(options.cwd, options.config.kit?.files?.lib ?? 'src/lib'),
 		...(options.config.kit?.alias ?? {})
 	};
