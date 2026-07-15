@@ -214,17 +214,17 @@ test.describe('$app/env', () => {
 	test('legacy $env/* imports still work', async ({ page }) => {
 		await page.goto('/env/legacy');
 
-		expect(await page.textContent('#static-private')).toBe(
+		await expect(page.locator('#static-private')).toHaveText(
 			'PRIVATE_STATIC: accessible to server-side code/replaced at build time'
 		);
-		expect(await page.textContent('#dynamic-private')).toBe(
+		await expect(page.locator('#dynamic-private')).toHaveText(
 			'PRIVATE_DYNAMIC: accessible to server-side code/evaluated at run time'
 		);
 
-		expect(await page.textContent('#static-public')).toBe(
+		await expect(page.locator('#static-public')).toHaveText(
 			'PUBLIC_STATIC: accessible anywhere/replaced at build time'
 		);
-		expect(await page.textContent('#dynamic-public')).toBe(
+		await expect(page.locator('#dynamic-public')).toHaveText(
 			'PUBLIC_DYNAMIC: accessible anywhere/evaluated at run time'
 		);
 	});
