@@ -1,6 +1,6 @@
 /** @import { EnvVarConfig } from '@sveltejs/kit' */
 import path from 'node:path';
-import { create_explicit_env_types, create_legacy_env_types } from '../env.js';
+import { create_explicit_env_types } from '../env.js';
 import { write_if_changed } from './utils.js';
 import { posixify } from '../../utils/os.js';
 
@@ -23,17 +23,13 @@ export function write_env(kit, entry, env_config) {
 		content.push(
 			`// This file is generated from ${relative}.\n${DOCS}`,
 			create_explicit_env_types(env_config, relative, 'private'),
-			create_explicit_env_types(env_config, relative, 'public'),
-			create_legacy_env_types(env_config, relative, 'private'),
-			create_legacy_env_types(env_config, relative, 'public')
+			create_explicit_env_types(env_config, relative, 'public')
 		);
 	} else {
 		content.push(
 			DOCS,
 			create_explicit_env_types({}, '', 'private'),
-			create_explicit_env_types({}, '', 'public'),
-			create_legacy_env_types({}, '', 'private'),
-			create_legacy_env_types({}, '', 'public')
+			create_explicit_env_types({}, '', 'public')
 		);
 	}
 

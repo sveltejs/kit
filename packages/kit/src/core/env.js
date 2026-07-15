@@ -323,53 +323,6 @@ export function create_explicit_env_types(variables, relative, type) {
 	`;
 }
 
-/**
- * Creates type declarations for the legacy `$env/static/*` and `$env/dynamic/*` modules,
- * which re-export from `$app/env/*`.
- * @param {Record<string, EnvVarConfig<any>>} variables
- * @param {string} relative
- * @param {EnvType} type
- */
-export function create_legacy_env_types(variables, relative, type) {
-	const entries = Object.entries(variables)
-		.filter(([_, config]) => !!config.public === (type === 'public'))
-		.map(([name, config]) => {
-			const comment = config.description ? `${create_jsdoc(config.description)}\n` : '';
-			const var_type = config.schema
-				? `import('@sveltejs/kit/internal/types').StandardSchemaV1.InferOutput<typeof import('${relative}').variables.${name}.schema>`
-				: 'string';
-			return { name, comment, var_type };
-		});
-
-	const static_declarations = entries
-		.map(
-			({ name, var_type }) =>
-				`/** @deprecated This variable was imported from the deprecated '$env/static/${type}' module. Import it from '$app/env/${type}' instead */\nexport const ${name}: ${var_type};`
-		)
-		.join('\n');
-
-	const dynamic_properties = entries
-		.map(({ name, var_type }) => `${name}: ${var_type};`)
-		.join('\n');
-
-	const empty = `// no ${type} environment variables were defined`;
-
-	return dedent`
-		/** @deprecated Use \`$app/env/${type}\` instead */
-		declare module '$env/static/${type}' {
-			${static_declarations || empty}
-		}
-
-		/** @deprecated Use \`$app/env/${type}\` instead */
-		declare module '$env/dynamic/${type}' {
-			/** @deprecated Importing env.* from the '$env/dynamic/${type}' module is deprecated. Import it from '$app/env/${type}' instead */\n
-			export const env: {
-				${dynamic_properties || empty}
-			};
-		}
-	`;
-}
-
 export const reserved = new Set([
 	'do',
 	'if',

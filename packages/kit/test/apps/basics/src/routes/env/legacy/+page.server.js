@@ -1,4 +1,6 @@
+// @ts-expect-error no type definitions since deprecated
 import { PRIVATE_STATIC } from '$env/static/private';
+// @ts-expect-error no type definitions since deprecated
 import { env as dynamic_private } from '$env/dynamic/private';
 
 export function load() {

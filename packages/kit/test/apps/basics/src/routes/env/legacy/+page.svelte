@@ -1,5 +1,7 @@
 <script>
+	// @ts-expect-error no type definitions since deprecated
 	import { PUBLIC_STATIC } from '$env/static/public';
+	// @ts-expect-error no type definitions since deprecated
 	import { env as dynamic_public } from '$env/dynamic/public';
 
 	/** @type {import('./$types').PageData} */
