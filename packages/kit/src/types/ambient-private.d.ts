@@ -43,3 +43,11 @@ declare module '__sveltekit/env/public/client' {
 declare module '__sveltekit/env/public/server' {
 	// exported environment variables are defined in env.d.ts
 }
+
+/** Internal version of $app/manifest */
+declare module '__sveltekit/manifest-data' {
+	export const build: string[];
+	export const files: string[];
+	export const prerendered: string[];
+	export const routes: { id: string }[];
+}
