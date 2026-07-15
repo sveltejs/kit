@@ -96,6 +96,9 @@ export default defineConfig({
 	server: {
 		fs: {
 			allow: [path.resolve('../../../src')]
+		},
+		cors: {
+			origin: '*'
 		}
 	},
 	test: {
