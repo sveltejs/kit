@@ -729,6 +729,43 @@ test.describe('$app/env', () => {
 	});
 });
 
+test.describe('$app/manifest', () => {
+	test('exposes routes', async ({ page }) => {
+		await page.goto('/app-manifest');
+		const routes = JSON.parse((await page.textContent('[data-name="routes"] pre')) ?? '');
+		const ids = routes.map((r) => r.id);
+		expect(ids).toContain('/');
+		expect(ids).toContain('/app-manifest');
+		expect(ids).toContain('/routing');
+	});
+
+	test('exposes static files', async ({ page }) => {
+		await page.goto('/app-manifest');
+		const files = JSON.parse((await page.textContent('[data-name="files"] pre')) ?? '');
+		expect(files).toContain('/favicon.png');
+		expect(files).toContain('/static.json');
+	});
+
+	test('exposes build files', async ({ page }) => {
+		test.skip(!!process.env.DEV, 'build files are only known after build');
+		await page.goto('/app-manifest');
+		const build = JSON.parse((await page.textContent('[data-name="build"] pre')) ?? '');
+		// should include the manifest chunk itself
+		expect(build.some((f) => f.includes('/_app/manifest.js'))).toBe(true);
+		// should include immutable chunks
+		expect(build.some((f) => f.includes('/_app/immutable/'))).toBe(true);
+	});
+
+	test('exposes prerendered paths', async ({ page }) => {
+		test.skip(!!process.env.DEV, 'prerendered paths are only known after build');
+		await page.goto('/app-manifest');
+		const prerendered = JSON.parse((await page.textContent('[data-name="prerendered"] pre')) ?? '');
+		// the test app prerenders '*' — some known prerendered routes
+		expect(prerendered.length).toBeGreaterThan(0);
+		expect(prerendered).toContain('/prerendering/no-ssr');
+	});
+});
+
 test.describe('$app/paths', () => {
 	// some browsers will re-request assets after a `pushState`
 	// https://github.com/sveltejs/kit/issues/3748#issuecomment-1125980897

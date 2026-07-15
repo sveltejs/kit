@@ -2149,7 +2149,9 @@ const create_manifest_data_module = (is_build, manifest_data) => {
 		? manifest_data.routes.map((route) => s({ id: route.id })).join(',\n')
 		: '';
 
-	const files = manifest_data ? manifest_data.assets.map((asset) => s(asset.file)).join(',\n') : '';
+	const files = manifest_data
+		? manifest_data.assets.map((asset) => s(`/${asset.file}`)).join(',\n')
+		: '';
 
 	return dedent`
 		export const build = [];
