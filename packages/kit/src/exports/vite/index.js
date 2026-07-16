@@ -97,6 +97,7 @@ const enforced_config = {
 	resolve: {
 		alias: {
 			$app: true,
+			$env: true,
 			$lib: true,
 			'$service-worker': true
 		}
@@ -386,6 +387,7 @@ function kit({ svelte_config }) {
 						alias: [
 							{ find: '__SERVER__', replacement: `${generated}/server` },
 							{ find: '$app', replacement: `${runtime_directory}/app` },
+							{ find: '$env', replacement: `${runtime_directory}/env` },
 							...get_config_aliases(kit, root)
 						]
 					},
