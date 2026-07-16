@@ -11,7 +11,6 @@ export const page = new (class Page {
 	route = $state.raw({ id: null });
 	state = $state.raw({});
 	status = $state.raw(-1);
-	// eslint-disable-next-line svelte/prefer-svelte-reactivity
 	url = $state.raw(new URL('a:'));
 })();
 

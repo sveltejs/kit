@@ -38,6 +38,7 @@ export async function load_explicit_env(kit, file, root, mode) {
 		logLevel: 'silent',
 		mode,
 		define: {
+			__SVELTEKIT_PAYLOAD__: 'undefined', // coming in through static import in env/internal.js but will end up unused
 			__SVELTEKIT_APP_VERSION__: JSON.stringify(kit.version.name) // needed by $app/env
 		},
 		resolve: {

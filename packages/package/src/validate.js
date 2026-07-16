@@ -1,4 +1,5 @@
 import { styleText } from 'node:util';
+import * as path from 'node:path';
 import { load_pkg_json } from './config.js';
 
 /**
@@ -51,6 +52,8 @@ export function _create_validator(options) {
 	const imports = new Set();
 	let uses_import_meta = false;
 	let has_svelte_files = false;
+	/** @type {Map<string, { has_guard_import: boolean, relative_imports: string[] }>} */
+	const analysed_files = new Map();
 
 	/**
 	 * Checks a file content for problematic imports and things like `import.meta`
@@ -65,13 +68,75 @@ export function _create_validator(options) {
 
 		const file_imports = [
 			...content.matchAll(/from\s+('|")([^"';,]+?)\1/g),
-			...content.matchAll(/import\s*\(\s*('|")([^"';,]+?)\1\s*\)/g)
+			...content.matchAll(/import\s*\(\s*('|")([^"';,]+?)\1\s*\)/g),
+			...content.matchAll(/import\s+('|")([^"';,]+?)\1/g)
 		];
+		let has_guard_import = false;
+		/** @type {string[]} */
+		const relative_imports = [];
 		for (const [, , import_path] of file_imports) {
 			if (import_path.startsWith('$app/')) {
 				imports.add(import_path);
 			}
+			if (import_path === '$app/server' || import_path === '$app/env/private') {
+				has_guard_import = true;
+			}
+			if (import_path.startsWith('./') || import_path.startsWith('../')) {
+				relative_imports.push(import_path);
+			}
 		}
+		analysed_files.set(name, { has_guard_import, relative_imports });
+	}
+
+	/**
+	 * Resolves a relative import path to a file name that was seen by `analyse_code`,
+	 * trying common extension swaps (e.g. `.js` -> `.ts`) since transpiled content
+	 * references output paths while files are keyed by their source name.
+	 * @param {string} importer The file name of the importing file
+	 * @param {string} import_path The relative import path
+	 * @returns {string | undefined}
+	 */
+	function resolve_relative_import(importer, import_path) {
+		const resolved = path.posix.join(path.posix.dirname(importer), import_path);
+		if (analysed_files.has(resolved)) return resolved;
+		const ext = path.posix.extname(resolved);
+		if (ext === '.js' || ext === '.ts') {
+			const base = resolved.slice(0, -ext.length);
+			for (const candidate of ['.js', '.ts']) {
+				const candidate_path = base + candidate;
+				if (analysed_files.has(candidate_path)) return candidate_path;
+			}
+		} else {
+			return analysed_files.has(resolved) ? resolved : undefined;
+		}
+	}
+
+	/**
+	 * Walks the chain of relative imports starting from `name` to check whether any
+	 * transitively reachable file imports `$app/server` or `$app/env/private`.
+	 * @param {string} name
+	 * @returns {boolean}
+	 */
+	function reaches_guard_import(name) {
+		/** @type {Set<string>} */
+		const visited = new Set();
+		/**
+		 * @param {string} current
+		 * @returns {boolean}
+		 */
+		function visit(current) {
+			if (visited.has(current)) return false;
+			visited.add(current);
+			const file = analysed_files.get(current);
+			if (!file) return false;
+			if (file.has_guard_import) return true;
+			for (const import_path of file.relative_imports) {
+				const resolved = resolve_relative_import(current, import_path);
+				if (resolved && visit(resolved)) return true;
+			}
+			return false;
+		}
+		return visit(name);
 	}
 
 	/**
@@ -146,6 +211,21 @@ export function _create_validator(options) {
 			warnings.push(
 				'No `exports` field found in `package.json`, please provide one. ' +
 					'See https://svelte.dev/docs/kit/packaging#anatomy-of-a-package-json-exports for more info'
+			);
+		}
+
+		const unprotected = [...analysed_files.keys()].filter((name) => {
+			const is_server_only =
+				path.basename(name).includes('.server.') || /(^|\/)server\//.test(name);
+			return is_server_only && !reaches_guard_import(name);
+		});
+		if (unprotected.length > 0) {
+			const list = unprotected.map((name) => `- ${name}`).join('\n');
+			warnings.push(
+				`The following server-only files do not import \`$app/server\` or \`$app/env/private\`:\n${list}\n` +
+					'These files will not be blocked from being imported on the client. ' +
+					"If you intend to use this package within a SvelteKit application and want to prevent this, add `import '$app/server'` which will throw when imported on the client.\n" +
+					'These files were deemed server-only because they either contain `.server.` in their filename or are located in a `server` directory, which have special meaning within SvelteKit apps.'
 			);
 		}
 

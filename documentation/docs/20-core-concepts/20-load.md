@@ -638,7 +638,9 @@ export async function load({ untrack, url }) {
 
 ### Manual invalidation
 
-You can also rerun `load` functions that apply to the current page using [`invalidate(url)`]($app-navigation#invalidate), which reruns all `load` functions that depend on `url`, and [`invalidateAll()`]($app-navigation#invalidateAll), which reruns every `load` function. Server load functions will never automatically depend on a fetched `url` to avoid leaking secrets to the client.
+You can also rerun `load` functions that apply to the current page using [`invalidate(url)`]($app-navigation#invalidate), which reruns all `load` functions that depend on `url`, and [`refreshAll()`]($app-navigation#refreshAll), which reruns every `load` function and all active queries. Server load functions will never automatically depend on a fetched `url` to avoid leaking secrets to the client.
+
+> [!NOTE] `refreshAll` does _not_ reset `page.state`, unlike its deprecated predecessor `invalidateAll`.
 
 A `load` function depends on `url` if it calls `fetch(url)` or `depends(url)`. Note that `url` can be a custom identifier that starts with `[a-z]:`:
 
@@ -661,7 +663,7 @@ export async function load({ fetch, depends }) {
 ```svelte
 <!--- file: src/routes/random-number/+page.svelte --->
 <script>
-	import { invalidate, invalidateAll } from '$app/navigation';
+	import { invalidate, refreshAll } from '$app/navigation';
 
 	/** @type {import('./$types').PageProps} */
 	let { data } = $props();
@@ -671,7 +673,7 @@ export async function load({ fetch, depends }) {
 		invalidate('app:random');
 		invalidate('https://api.example.com/random-number');
 		invalidate(url => url.href.includes('random-number'));
-		invalidateAll();
+		refreshAll();
 	}
 </script>
 
@@ -689,7 +691,7 @@ To summarize, a `load` function will rerun in the following situations:
 - It calls `await parent()` and a parent `load` function reran
 - A child `load` function calls `await parent()` and is rerunning, and the parent is a server load function
 - It declared a dependency on a specific URL via [`fetch`](#Making-fetch-requests) (universal load only) or [`depends`](@sveltejs-kit#LoadEvent), and that URL was marked invalid with [`invalidate(url)`]($app-navigation#invalidate)
-- All active `load` functions were forcibly rerun with [`invalidateAll()`]($app-navigation#invalidateAll)
+- All active `load` functions were forcibly rerun with [`refreshAll()`]($app-navigation#refreshAll)
 
 `params` and `url` can change in response to a `<a href="..">` link click, a [`<form>` interaction](form-actions#GET-vs-POST), a [`goto`]($app-navigation#goto) invocation, or a [`redirect`](@sveltejs-kit#redirect).
 

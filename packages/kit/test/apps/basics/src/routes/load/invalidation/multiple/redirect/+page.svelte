@@ -1,10 +1,10 @@
 <script>
-	import { invalidateAll } from '$app/navigation';
+	import { refreshAll } from '$app/navigation';
 	import { redirect_state } from '../state';
 
 	function redirect() {
 		redirect_state.set('start');
-		invalidateAll();
+		refreshAll();
 	}
 </script>
 

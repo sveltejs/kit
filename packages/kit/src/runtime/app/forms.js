@@ -1,7 +1,7 @@
 import * as devalue from 'devalue';
 import { BROWSER, DEV } from 'esm-env';
 import { noop } from '../../utils/functions.js';
-import { invalidateAll } from './navigation.js';
+import { refreshAll } from './navigation.js';
 import { app as client_app, applyAction, handle_error } from '../client/client.js';
 import { app as server_app } from '../server/app.js';
 
@@ -106,7 +106,7 @@ export function enhance(form_element, submit = noop) {
 				HTMLFormElement.prototype.reset.call(form_element);
 			}
 			if (shouldInvalidateAll) {
-				await invalidateAll();
+				await refreshAll();
 			}
 		}
 

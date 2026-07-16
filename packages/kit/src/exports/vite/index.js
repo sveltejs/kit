@@ -97,6 +97,7 @@ const enforced_config = {
 	resolve: {
 		alias: {
 			$app: true,
+			$env: true,
 			$lib: true,
 			'$service-worker': true
 		}
@@ -386,6 +387,7 @@ function kit({ svelte_config }) {
 						alias: [
 							{ find: '__SERVER__', replacement: `${generated}/server` },
 							{ find: '$app', replacement: `${runtime_directory}/app` },
+							{ find: '$env', replacement: `${runtime_directory}/env` },
 							...get_config_aliases(kit, root)
 						]
 					},
@@ -489,7 +491,7 @@ function kit({ svelte_config }) {
 					new_config.define = {
 						...define,
 						__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: '0',
-						__SVELTEKIT_PAYLOAD__: kit_global,
+						__SVELTEKIT_PAYLOAD__: kit_global, // only relevant when bundleStrategy !== 'split'
 						__SVELTEKIT_HAS_SERVER_LOAD__: 'true',
 						__SVELTEKIT_HAS_UNIVERSAL_LOAD__: 'true'
 					};
@@ -625,7 +627,7 @@ function kit({ svelte_config }) {
 						return create_sveltekit_env_public(
 							explicit_env_config,
 							env,
-							`const env = ${kit_global}.env;`
+							`import { payload } from ${s(`${runtime_directory}/client/payload.js`)};\nconst env = payload.env;`
 						);
 
 					case sveltekit_env_public_server:
@@ -743,11 +745,7 @@ function kit({ svelte_config }) {
 					(normalized.startsWith('$lib/') && server_only_directory_pattern.test(id)) ||
 					(is_internal && server_only_module_pattern.test(id));
 
-				// skip .server.js files outside the cwd or in node_modules, as the filename might not mean 'server-only module' in this context
-				// TODO: address https://github.com/sveltejs/kit/issues/12529
-				if (!is_server_only) {
-					return;
-				}
+				if (!is_server_only) return;
 
 				// in dev, this doesn't exist, so we need to create it
 				manifest_data ??= sync.all(svelte_config, root).manifest_data;
@@ -1232,7 +1230,7 @@ function kit({ svelte_config }) {
 				let new_config;
 
 				if (is_build) {
-					const prefix = `${kit.appDir}/immutable`;
+					const app_immutable = `${kit.appDir}/immutable`;
 
 					/** @type {Record<string, string>} */
 					const server_input = {
@@ -1301,6 +1299,7 @@ function kit({ svelte_config }) {
 						client_input['bundle'] = `${runtime_directory}/client/bundle.js`;
 					} else {
 						client_input['entry/start'] = `${runtime_directory}/client/entry.js`;
+						client_input['entry/payload'] = `${runtime_directory}/client/payload.js`;
 						client_input['entry/app'] = `${out_dir}/generated/client-optimized/app.js`;
 						manifest_data.nodes.forEach((node, i) => {
 							if (node.component || node.universal) {
@@ -1313,9 +1312,9 @@ function kit({ svelte_config }) {
 
 					/** @type {string} */
 					const base = (kit.paths.assets || kit.paths.base) + '/';
-					const root_to_assets = prefix + '/assets/';
+					const root_to_assets = app_immutable + '/assets/';
 					const assets_to_root =
-						prefix
+						app_immutable
 							.split('/')
 							.map(() => '..')
 							.join('/') + '/../';
@@ -1338,7 +1337,7 @@ function kit({ svelte_config }) {
 							rolldownOptions: {
 								output: {
 									name: `__sveltekit_${version_hash}.app`,
-									assetFileNames: `${prefix}/assets/[name].[hash][extname]`,
+									assetFileNames: `${app_immutable}/assets/[name].[hash][extname]`,
 									hoistTransitiveImports: false,
 									sourcemapIgnoreList
 								},
@@ -1391,8 +1390,8 @@ function kit({ svelte_config }) {
 										input: inline ? client_input['bundle'] : client_input,
 										output: {
 											format: inline ? 'iife' : 'esm',
-											entryFileNames: `${prefix}/[name].[hash].js`,
-											chunkFileNames: `${prefix}/chunks/[hash].js`,
+											entryFileNames: `${app_immutable}/[name].[hash].js`,
+											chunkFileNames: `${app_immutable}/chunks/[hash].js`,
 											codeSplitting:
 												svelte_config.kit.output.bundleStrategy === 'split' ? undefined : false
 										},
@@ -1409,7 +1408,8 @@ function kit({ svelte_config }) {
 									}
 								},
 								define: {
-									__SVELTEKIT_PAYLOAD__: kit_global
+									__SVELTEKIT_PAYLOAD__:
+										svelte_config.kit.output.bundleStrategy !== 'split' ? kit_global : 'undefined'
 								}
 							}
 						},
@@ -1427,6 +1427,11 @@ function kit({ svelte_config }) {
 									// causing us to do a more expensive hydration check.
 									return { relative };
 								}
+
+								if (!relative) return;
+
+								// ensure assets loaded by CSS files are loaded relative to the
+								// CSS file rather than the default of relative to the root
 
 								// _app/immutable/assets files
 								if (filename.startsWith(root_to_assets)) {
@@ -1667,15 +1672,28 @@ function kit({ svelte_config }) {
 					);
 
 				if (svelte_config.kit.output.bundleStrategy === 'split') {
-					const start = deps_of(`${runtime_directory}/client/entry.js`);
+					const start_entry = posixify(path.relative(root, `${runtime_directory}/client/entry.js`));
+					const start = find_deps(vite_manifest, start_entry, false, root);
+					const runtime_entry = resolve_symlinks(vite_manifest, start_entry, root).chunk
+						.dynamicImports?.[0]; // client/entry.js dynamically imports client/client-entry.js
+					if (!runtime_entry) throw new Error('Could not find the client runtime chunk');
+					const runtime = find_deps(vite_manifest, runtime_entry, false, root);
 					const app = deps_of(`${out_dir}/generated/client-optimized/app.js`);
 
 					build_data.client = {
 						start: start.file,
 						app: app.file,
-						imports: [...start.imports, ...app.imports],
-						stylesheets: [...start.stylesheets, ...app.stylesheets],
-						fonts: [...start.fonts, ...app.fonts],
+						imports: Array.from(
+							new Set([
+								...start.imports,
+								runtime.file,
+								...runtime.imports,
+								app.file,
+								...app.imports
+							])
+						),
+						stylesheets: [...start.stylesheets, ...runtime.stylesheets, ...app.stylesheets],
+						fonts: [...start.fonts, ...runtime.fonts, ...app.fonts],
 						uses_env_dynamic_public
 					};
 

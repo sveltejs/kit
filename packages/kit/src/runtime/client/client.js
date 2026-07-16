@@ -1,5 +1,6 @@
 /** @import { RemoteFunctionDataNode, ServerNodesResponse, ServerRedirectNode } from 'types' */
 /** @import { NavigationIntent } from './types.js' */
+/** @import { RenderNode } from '../types.js' */
 /** @import { CacheEntry } from './remote-functions/cache.svelte.js' */
 /** @import { Query } from './remote-functions/query/instance.svelte.js' */
 /** @import { LiveQuery } from './remote-functions/query-live/instance.svelte.js' */
@@ -33,7 +34,6 @@ import {
 } from './constants.js';
 import { validate_page_exports } from '../../utils/exports.js';
 import { noop } from '../../utils/functions.js';
-import { compact } from '../../utils/array.js';
 import {
 	INVALIDATED_PARAM,
 	TRAILING_SLASH_PARAM,
@@ -43,9 +43,14 @@ import {
 } from '../shared.js';
 import { get_message, get_status } from '../../utils/error.js';
 import { page, update, navigating, updated } from './state.svelte.js';
+import { payload } from './payload.js';
 import { add_data_suffix, add_resolution_suffix } from '../pathname.js';
 import { noop_span } from '../telemetry/noop.js';
 import { read_ndjson } from './ndjson.js';
+import RootModern from '../components/root.svelte';
+import { asClassComponent } from 'svelte/legacy';
+
+const Root = asClassComponent(RootModern);
 
 export { load_css };
 const ICON_REL_ATTRIBUTES = new Set(['icon', 'shortcut icon', 'apple-touch-icon']);
@@ -59,6 +64,17 @@ let errored = false;
  * @type {{ error: App.Error, status: number } | null}
  */
 let rendering_error = null;
+
+/**
+ * `reset` functions for `<svelte:boundary>`s in the generated root that have
+ * failed. A failed boundary stays failed until `reset()` is called — prop
+ * updates alone don't re-render its content — so without resetting, a client
+ * navigation away from a render error would leave the stale `+error.svelte`
+ * mounted. The boundary's `onerror` populates this array; `navigate` drains it
+ * after applying the new props. See sveltejs/kit#15694.
+ * @type {Array<(() => void) | undefined>}
+ */
+const resetters = [];
 
 // We track the scroll position associated with each history entry in sessionStorage,
 // rather than on history.state itself, because when navigation is driven by
@@ -75,6 +91,11 @@ const scroll_positions = storage.get(SCROLL_KEY) ?? {};
  * @type {Record<string, any[]>}
  */
 const snapshots = storage.get(SNAPSHOT_KEY) ?? {};
+
+/**
+ * @deprecated this is a temporary measure to avoid a regression, replace with nested `RenderNode` classes
+ */
+let current_tree = /** @type {RenderNode} */ ({});
 
 if (DEV && BROWSER) {
 	let warned = false;
@@ -323,8 +344,8 @@ export async function start(_app, _target, hydrate) {
 		);
 	}
 
-	if (__SVELTEKIT_PAYLOAD__.data) {
-		const { q = {}, p = {}, l = {}, f = {} } = __SVELTEKIT_PAYLOAD__.data;
+	if (payload.data) {
+		const { q = {}, p = {}, l = {}, f = {} } = payload.data;
 
 		// store the whole nodes — error records seed the corresponding
 		// resources in a failed state when they are created during hydration
@@ -403,12 +424,12 @@ export async function start(_app, _target, hydrate) {
 	_start_router();
 }
 
-async function _invalidate(include_load_functions = true, reset_page_state = true) {
+async function _invalidate(reset_page_state = true) {
 	// Accept all invalidations as they come, don't swallow any while another invalidation
 	// is running because subsequent invalidations may make earlier ones outdated,
 	// but batch multiple synchronous invalidations.
 	await (pending_invalidate ||= Promise.resolve());
-	if (!pending_invalidate) return;
+	if (pending_invalidate === null) return;
 	pending_invalidate = null;
 
 	const token = (invalidation_token = {});
@@ -442,39 +463,36 @@ async function _invalidate(include_load_functions = true, reset_page_state = tru
 		}
 	}
 
-	if (include_load_functions) {
-		const prev_state = page.state;
-		const navigation_result = intent && (await load_route(intent));
-		if (!navigation_result || token !== invalidation_token || nav_token !== navigation_token) {
-			return;
-		}
-
-		if (navigation_result.type === 'redirect') {
-			return _goto(
-				new URL(navigation_result.location, current.url).href,
-				{ replaceState: true },
-				1,
-				token
-			);
-		}
-
-		// A navigation started before the invalidation and ended before it finished. The invalidation did not redirect,
-		// hence it likely contains outdated data now, so we ignore it.
-		if (navigating && !is_navigating) {
-			return;
-		}
-
-		// This is a bit hacky but allows us not having to pass that boolean around, making things harder to reason about
-		if (!reset_page_state) {
-			navigation_result.props.page.state = prev_state;
-		}
-		update(navigation_result.props.page);
-		current = { ...navigation_result.state, nav: current.nav };
-		reset_invalidation();
-		root.$set(navigation_result.props);
-	} else {
-		reset_invalidation();
+	const prev_state = page.state;
+	const navigation_result = intent && (await load_route(intent));
+	if (!navigation_result || token !== invalidation_token || nav_token !== navigation_token) {
+		return;
 	}
+
+	if (navigation_result.type === 'redirect') {
+		return _goto(
+			new URL(navigation_result.location, current.url).href,
+			{ replaceState: true },
+			1,
+			token
+		);
+	}
+
+	// A navigation started before the invalidation and ended before it finished. The invalidation did not redirect,
+	// hence it likely contains outdated data now, so we ignore it.
+	if (navigating && !is_navigating) {
+		return;
+	}
+
+	// Preserve `page.state` when invalidating without resetting it (e.g. `refresh`/`refreshAll`)
+	if (!reset_page_state) {
+		navigation_result.props.page.state = prev_state;
+	}
+	update(navigation_result.props.page);
+	current_tree = navigation_result.props.tree;
+	current = { ...navigation_result.state, nav: current.nav };
+	reset_invalidation();
+	root.$set(navigation_result.props);
 
 	// only wait for promises that are connected to queries that still exist
 	/** @type {Promise<any>[]} */
@@ -527,7 +545,7 @@ function persist_state() {
 
 /**
  * @param {string | URL} url
- * @param {{ replaceState?: boolean; noScroll?: boolean; keepFocus?: boolean; invalidateAll?: boolean; invalidate?: Array<string | URL | ((url: URL) => boolean)>; state?: Record<string, any> }} options
+ * @param {{ replaceState?: boolean; noScroll?: boolean; keepFocus?: boolean; refreshAll?: boolean; invalidate?: Array<string | URL | ((url: URL) => boolean)>; state?: Record<string, any> }} options
  * @param {number} redirect_count
  * @param {{}} [nav_token]
  * @param {NavigationIntent | undefined} [intent] navigation intent, when already known by the caller (avoids recomputing it)
@@ -539,9 +557,9 @@ export async function _goto(url, options, redirect_count, nav_token, intent) {
 	/** @type {Set<string>} */
 	let live_query_keys;
 
-	// Clear preload cache when invalidateAll is true to ensure fresh data
+	// Clear preload cache when refreshAll is true to ensure fresh data
 	// after form submissions or explicit invalidations
-	if (options.invalidateAll) {
+	if (options.refreshAll) {
 		discard_load_cache();
 	}
 
@@ -556,7 +574,7 @@ export async function _goto(url, options, redirect_count, nav_token, intent) {
 		nav_token,
 		intent,
 		accept: () => {
-			if (options.invalidateAll) {
+			if (options.refreshAll) {
 				force_invalidation = true;
 				query_keys = new Set();
 				for (const [id, entries] of query_map) {
@@ -582,7 +600,7 @@ export async function _goto(url, options, redirect_count, nav_token, intent) {
 		}
 	});
 
-	if (options.invalidateAll) {
+	if (options.refreshAll) {
 		// TODO the ticks shouldn't be necessary, something inside Svelte itself is buggy
 		// when a query in a layout that still exists after page change is refreshed earlier than this
 		void svelte
@@ -621,16 +639,13 @@ async function _preload_data(intent) {
 		load_cache = {
 			id: intent.id,
 			token: preload,
-			promise: load_route({ ...intent, preload }).then((result) => {
+			promise: load_route({ ...intent, preload }).finally(() => {
 				preload_tokens.delete(preload);
-				if (result.type === 'loaded' && result.state.error) {
-					// Don't cache errors, because they might be transient
-					discard_load_cache();
-				}
-				return result;
 			}),
 			fork: null
 		};
+
+		load_cache.promise.catch(discard_load_cache);
 
 		if (__SVELTEKIT_FORK_PRELOADS__ && svelte.fork) {
 			const lc = load_cache;
@@ -643,6 +658,7 @@ async function _preload_data(intent) {
 						return svelte.fork(() => {
 							root.$set(result.props);
 							update(result.props.page);
+							current_tree = result.props.tree;
 						});
 					} catch {
 						// if it errors, it's because the experimental flag isn't enabled in Svelte
@@ -701,11 +717,12 @@ async function initialize(result, target, hydrate) {
 	}
 
 	update(/** @type {import('@sveltejs/kit').Page} */ (result.props.page));
+	current_tree = result.props.tree;
 
 	// TODO: use mount()
-	root = new app.root({
+	root = new Root({
 		target,
-		props: { ...result.props, components },
+		props: { ...result.props, components, resetters },
 		hydrate,
 		// Svelte 5 specific: asynchronously instantiate the component, i.e. don't call flushSync
 		sync: false,
@@ -794,32 +811,10 @@ async function get_navigation_result_from_branch({
 			route
 		},
 		props: {
-			constructors: compact(branch).map((branch_node) => branch_node.node.component),
-			page
+			page,
+			tree: /** @type {RenderNode} */ ({})
 		}
 	};
-
-	if (errors) {
-		let last_idx = -1;
-		result.props.errors = await Promise.all(
-			// eslint-disable-next-line @typescript-eslint/await-thenable
-			branch
-				.map((b, i) => {
-					if (i === 0) return undefined; // root layout wraps root error component, not the other way around
-					if (!b) return null;
-
-					i--;
-					// Find the closest error component up to the previous branch
-					while (i > last_idx + 1 && !errors[i]) i -= 1;
-					last_idx = i;
-					return errors[i]?.()
-						.then((e) => e.component)
-						.catch(() => undefined);
-				})
-				// filter out indexes where there was no branch, but keep indexes where there was a branch but no error component
-				.filter((e) => e !== null)
-		);
-	}
 
 	if (error) {
 		result.props.error = error;
@@ -832,23 +827,44 @@ async function get_navigation_result_from_branch({
 	let data = {};
 	let data_changed = !page;
 
-	let p = 0;
+	let current_node = result.props.tree;
 
-	for (let i = 0; i < Math.max(branch.length, current.branch.length); i += 1) {
+	/** @type {RenderNode | undefined} */
+	let previous_node = current_tree;
+
+	for (let i = 0; i < branch.length; i += 1) {
 		const node = branch[i];
 		const prev = current.branch[i];
 
-		if (node?.data !== prev?.data) data_changed = true;
 		if (!node) continue;
 
-		data = { ...data, ...node.data };
+		const error_loader = errors?.slice(0, i + 1).findLast((x) => x) ?? default_error_loader;
 
-		// Only set props if the node actually updated. This prevents needless rerenders.
-		if (data_changed) {
-			result.props[`data_${p}`] = data;
+		current_node.error = (await error_loader()).component;
+		current_node.component = node.node.component;
+
+		if (
+			// if an ancestor node in this path changed, `data_changed` is already true and the
+			// accumulated `data` differs from the previous render, so we must re-merge
+			data_changed ||
+			!previous_node ||
+			node?.data !== prev?.data
+		) {
+			current_node.data = { ...data, ...node.data };
+			data_changed = true;
+		} else {
+			// use existing object — prevents effects re-running unnecessarily
+			current_node.data = previous_node.data;
 		}
 
-		p += 1;
+		data = current_node.data;
+
+		if (i < branch.length - 1) {
+			current_node.child = /** @type {import('../types.js').RenderNode} */ ({});
+			current_node = current_node.child;
+
+			previous_node = previous_node?.child;
+		}
 	}
 
 	const page_changed =
@@ -869,8 +885,7 @@ async function get_navigation_result_from_branch({
 			status: status ?? error?.status ?? 200,
 			url: new URL(url),
 			form: form ?? null,
-			// The whole page store is updated, but this way the object reference stays the same
-			data: data_changed ? data : page.data
+			data
 		};
 	}
 
@@ -1149,32 +1164,6 @@ function diff_search_params(old_url, new_url) {
 }
 
 /**
- * @param {Omit<import('./types.js').NavigationFinished['state'], 'branch'> & { error: App.Error }} opts
- * @returns {import('./types.js').NavigationFinished}
- */
-function preload_error({ error, url, route, params }) {
-	return {
-		type: 'loaded',
-		state: {
-			error,
-			url,
-			route,
-			params,
-			branch: []
-		},
-		props: {
-			page: {
-				// we skipped loading the error page, so we have to use the current page
-				// store, but update the status received while preloading
-				...page,
-				status: error.status
-			},
-			constructors: []
-		}
-	};
-}
-
-/**
  * @overload
  * @param {import('./types.js').NavigationIntent} intent
  * @returns {Promise<import('./types.js').NavigationResult | undefined>}
@@ -1244,7 +1233,7 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 				const handled_error = await handle_error(error, { url, params, route: { id } });
 
 				if (preload && preload_tokens.has(preload)) {
-					return preload_error({ error: handled_error, url, params, route });
+					throw handled_error;
 				}
 
 				return load_root_error_page({
@@ -1334,13 +1323,7 @@ async function load_route({ id, invalidating, url, params, route, preload }) {
 				}
 
 				if (preload && preload_tokens.has(preload)) {
-					const error = await handle_error(err, { params, url, route: { id: route.id } });
-					return preload_error({
-						error,
-						url,
-						params,
-						route
-					});
+					throw await handle_error(err, { params, url, route: { id: route.id } });
 				}
 
 				/** @type {App.Error} */
@@ -1955,9 +1938,24 @@ async function navigate({
 
 		if (fork) {
 			commit_promise = fork.commit();
+			// `fork.commit()` applies the preloaded state synchronously before the
+			// first `await`, so reset any previously-failed boundaries now so the
+			// stale `+error.svelte` is torn down. See sveltejs/kit#15694.
+			for (const reset of resetters) {
+				reset?.();
+			}
+			resetters.length = 0;
 		} else {
 			rendering_error = null; // TODO this can break with forks, rethink for SvelteKit 3 where we can assume Svelte 5
 			root.$set(navigation_result.props);
+			current_tree = navigation_result.props.tree;
+			// Reset any boundaries that failed on a previous navigation now that the
+			// new props are applied, otherwise the stale `+error.svelte` stays
+			// mounted above the new route's content. See sveltejs/kit#15694.
+			for (const reset of resetters) {
+				reset?.();
+			}
+			resetters.length = 0;
 			// Check for sync rendering error
 			if (rendering_error) {
 				Object.assign(navigation_result.props.page, rendering_error);
@@ -2091,22 +2089,63 @@ let current_a = { element: undefined, href: undefined };
 function setup_preload() {
 	/** @type {NodeJS.Timeout} */
 	let mousemove_timeout;
+	/** @type {HTMLAnchorElement | SVGAElement | undefined} */
+	let hovered_a;
 	/** @type {PreloadDataPriority} */
 	let current_priority;
 
-	container.addEventListener('mousemove', (event) => {
-		const target = /** @type {Element} */ (event.target);
+	function clear_hover_preload() {
+		clearTimeout(mousemove_timeout);
+		hovered_a?.removeEventListener('mousemove', start_hover_preload);
+		hovered_a?.removeEventListener('mouseleave', clear_hover_preload);
+		hovered_a = undefined;
+	}
 
+	function start_hover_preload() {
 		clearTimeout(mousemove_timeout);
 		mousemove_timeout = setTimeout(() => {
-			void preload(target, PRELOAD_PRIORITIES.hover);
+			if (!hovered_a) return;
+			void preload(hovered_a, PRELOAD_PRIORITIES.hover);
 		}, 20);
+	}
+
+	// Use mouseover initially instead of mousemove to avoid cluttering the event queue
+	container.addEventListener('mouseover', (event) => {
+		if (!(event.target instanceof Element)) return;
+
+		const a = find_anchor(event.target, container);
+		if (!a || a === hovered_a) return;
+
+		clear_hover_preload();
+		hovered_a = a;
+
+		const options = get_router_options(a);
+
+		if (
+			options.preload_code < PRELOAD_PRIORITIES.hover &&
+			options.preload_data < PRELOAD_PRIORITIES.hover
+		) {
+			// don't add event listeners if no preloading will happen
+			return;
+		}
+
+		// Instead of just preloading right away, we start a mousemove listener to implement
+		// "mouse comes to a rest" behavior. This avoid false positives when you just move
+		// your mouse across the screen and happen to pass over a link.
+		a.addEventListener('mousemove', start_hover_preload);
+		a.addEventListener('mouseleave', clear_hover_preload, { once: true });
+
+		start_hover_preload();
 	});
 
 	/** @param {Event} event */
 	function tap(event) {
 		if (event.defaultPrevented) return;
-		void preload(/** @type {Element} */ (event.composedPath()[0]), PRELOAD_PRIORITIES.tap);
+
+		const a = find_anchor(/** @type {Element} */ (event.composedPath()[0]), container);
+		if (!a) return;
+
+		void preload(a, PRELOAD_PRIORITIES.tap);
 	}
 
 	container.addEventListener('mousedown', tap);
@@ -2125,12 +2164,10 @@ function setup_preload() {
 	);
 
 	/**
-	 * @param {Element} element
+	 * @param {HTMLAnchorElement | SVGAElement} a
 	 * @param {PreloadDataPriority} priority
 	 */
-	async function preload(element, priority) {
-		const a = find_anchor(element, container);
-
+	async function preload(a, priority) {
 		// we don't want to preload data again if the user has already hovered/tapped
 		const interacted =
 			a === current_a.element && a?.href === current_a.href && priority >= current_priority;
@@ -2154,15 +2191,13 @@ function setup_preload() {
 			if (!intent) return;
 
 			if (DEV) {
-				void _preload_data(intent).then((result) => {
-					if (result.type === 'loaded' && result.state.error) {
-						console.warn(
-							`Preloading data for ${intent.url.pathname} failed with the following error: ${result.state.error.message}\n` +
-								'If this error is transient, you can ignore it. Otherwise, consider disabling preloading for this route. ' +
-								'This route was preloaded due to a data-sveltekit-preload-data attribute. ' +
-								'See https://svelte.dev/docs/kit/link-options for more info'
-						);
-					}
+				void _preload_data(intent).catch((error) => {
+					console.warn(
+						`Preloading data for ${intent.url.pathname} failed with the following error: ${error.message}\n` +
+							'If this error is transient, you can ignore it. Otherwise, consider disabling preloading for this route. ' +
+							'This route was preloaded due to a data-sveltekit-preload-data attribute. ' +
+							'See https://svelte.dev/docs/kit/link-options for more info'
+					);
 				});
 			} else {
 				void _preload_data(intent);
@@ -2297,6 +2332,8 @@ export function disableScrollHandling() {
 	}
 }
 
+let warned_on_invalidate_all = false;
+
 /**
  * Allows you to navigate programmatically to a given route, with options such as keeping the current element focused.
  * Returns a Promise that resolves when SvelteKit navigates (or fails to navigate, in which case the promise rejects) to the specified `url`.
@@ -2310,8 +2347,9 @@ export function disableScrollHandling() {
  * @param {boolean} [opts.replaceState] If `true`, will replace the current `history` entry rather than creating a new one with `pushState`
  * @param {boolean} [opts.noScroll] If `true`, the browser will maintain its scroll position rather than scrolling to the top of the page after navigation
  * @param {boolean} [opts.keepFocus] If `true`, the currently focused element will retain focus after navigation. Otherwise, focus will be reset to the body
- * @param {boolean} [opts.invalidateAll] If `true`, all `load` functions of the page will be rerun. See https://svelte.dev/docs/kit/load#rerunning-load-functions for more info on invalidation.
+ * @param {boolean} [opts.refreshAll] If `true`, all `load` functions and queries of the page will be rerun. See https://svelte.dev/docs/kit/load#rerunning-load-functions for more info on invalidation.
  * @param {Array<string | URL | ((url: URL) => boolean)>} [opts.invalidate] Causes any load functions to re-run if they depend on one of the urls
+ * @param {boolean} [opts.invalidateAll] Deprecated in favour of opts.refreshAll.
  * @param {App.PageState} [opts.state] An optional object that will be available as `page.state`
  * @returns {Promise<void>}
  */
@@ -2340,6 +2378,14 @@ export async function goto(url, opts = {}) {
 		);
 	}
 
+	if (DEV && 'invalidateAll' in opts && !warned_on_invalidate_all) {
+		warned_on_invalidate_all = true;
+		console.warn(
+			`The \`goto(..., { invalidateAll: ${opts.invalidateAll} })\` option has been deprecated in favour of \`refreshAll\``
+		);
+	}
+
+	opts.refreshAll = opts.refreshAll ?? opts.invalidateAll;
 	return _goto(url, opts, 0, {}, intent);
 }
 
@@ -2359,16 +2405,17 @@ export async function goto(url, opts = {}) {
  * invalidate((url) => url.pathname === '/path');
  * ```
  * @param {string | URL | ((url: URL) => boolean)} resource The invalidated URL
+ * @param {boolean} [keepState] If `true`, the current `page.state` will be preserved. Otherwise, it will be reset to an empty object. `false` by default.
  * @returns {Promise<void>}
  */
-export function invalidate(resource) {
+export function invalidate(resource, keepState = false) {
 	if (!BROWSER) {
 		throw new Error('Cannot call invalidate(...) on the server');
 	}
 
 	push_invalidated(resource);
 
-	return _invalidate();
+	return _invalidate(!keepState);
 }
 
 /**
@@ -2385,6 +2432,10 @@ function push_invalidated(resource) {
 
 /**
  * Causes all `load` and `query` functions belonging to the currently active page to re-run. Returns a `Promise` that resolves when the page is subsequently updated.
+ *
+ * Note that this resets `page.state` to an empty object. If you want to preserve `page.state` (for example when using [shallow routing](https://svelte.dev/docs/kit/shallow-routing)), use `refreshAll` instead.
+ *
+ * @deprecated Use [`refreshAll`](https://svelte.dev/docs/kit/$app-navigation#refreshAll) instead. Unlike `invalidateAll`, `refreshAll` does not reset `page.state`.
  * @returns {Promise<void>}
  */
 export function invalidateAll() {
@@ -2397,18 +2448,17 @@ export function invalidateAll() {
 }
 
 /**
- * Causes all currently active remote functions to refresh, and all `load` functions belonging to the currently active page to re-run (unless disabled via the option argument).
+ * Causes all currently active remote functions to refresh, and all `load` functions belonging to the currently active page to re-run.
  * Returns a `Promise` that resolves when the page is subsequently updated.
- * @param {{ includeLoadFunctions?: boolean }} [options]
  * @returns {Promise<void>}
  */
-export function refreshAll({ includeLoadFunctions = true } = {}) {
+export function refreshAll() {
 	if (!BROWSER) {
 		throw new Error('Cannot call refreshAll() on the server');
 	}
 
 	force_invalidation = true;
-	return _invalidate(includeLoadFunctions, false);
+	return _invalidate(false);
 }
 
 /**
@@ -2435,7 +2485,22 @@ export async function preloadData(href) {
 		throw new Error(`Attempted to preload a URL that does not belong to this app: ${url}`);
 	}
 
-	const result = await _preload_data(intent);
+	/** @type {Awaited<ReturnType<typeof _preload_data>>} */
+	let result;
+
+	try {
+		result = await _preload_data(intent);
+	} catch (error) {
+		// `load_route` throws the handled error (an `App.Error` with a `status`)
+		// when a preload fails, so surface it in the documented `{ type: 'error' }` shape
+		const handled = /** @type {App.Error & { status?: number }} */ (error);
+		return {
+			type: 'error',
+			status: handled?.status ?? 500,
+			error: handled
+		};
+	}
+
 	if (result.type === 'redirect') {
 		return {
 			type: result.type,
@@ -2445,14 +2510,6 @@ export async function preloadData(href) {
 	}
 
 	const { status, data } = result.props.page ?? page;
-
-	if (result.type === 'loaded' && result.state.error) {
-		return {
-			type: 'error',
-			status,
-			error: result.state.error
-		};
-	}
 
 	return { type: result.type, status, data };
 }
@@ -2599,7 +2656,7 @@ export async function applyAction(result) {
 	if (result.type === 'error') {
 		await set_nearest_error_page(result.error);
 	} else if (result.type === 'redirect') {
-		await _goto(result.location, { invalidateAll: true }, 0);
+		await _goto(result.location, { refreshAll: true }, 0);
 	} else {
 		page.form = result.data;
 		page.status = result.status;
@@ -2644,6 +2701,7 @@ export async function set_nearest_error_page(error) {
 		current = { ...navigation_result.state, nav: current.nav };
 
 		root.$set(navigation_result.props);
+		current_tree = navigation_result.props.tree;
 		update(navigation_result.props.page);
 
 		void svelte.tick().then(() => reset_focus(current.url));
@@ -3268,9 +3326,6 @@ function reset_focus(url, scroll = true) {
 			const tabindex = root.getAttribute('tabindex');
 
 			root.tabIndex = -1;
-			// TODO: remove this when we switch to TypeScript 6
-			// @ts-ignore options.focusVisible is only typed in TypeScript 6
-			// See https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/focus#browser_compatibility
 			root.focus({ preventScroll: true, focusVisible: false });
 
 			// restore `tabindex` as to prevent `root` from stealing input from elements

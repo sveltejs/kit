@@ -1,4 +1,4 @@
-import { SvelteComponent } from 'svelte';
+import { Component } from 'svelte';
 import {
 	Config,
 	ServerLoad,
@@ -113,7 +113,7 @@ export interface BuildData {
 }
 
 export interface CSRPageNode {
-	component: typeof SvelteComponent;
+	component: Component;
 	universal: {
 		load?: Load;
 		trailingSlash?: TrailingSlash;
@@ -417,27 +417,7 @@ export interface ServerMetadata {
 	remotes: Map<string, Map<string, { type: RemoteInternals['type']; dynamic: boolean }>>;
 }
 
-// TODO get rid of this in favor us using just import('svelte').Component<any, any, any>
-export interface SSRComponent {
-	default: {
-		render(
-			props: Record<string, any>,
-			opts: { context: Map<any, any>; csp?: { nonce?: string; hash?: boolean } }
-		): Promise<{
-			body: string;
-			head: string;
-			css: {
-				code: string;
-				map: any; // TODO
-			};
-			hashes: {
-				script: Array<`sha256-${string}`>;
-			};
-		}>;
-	};
-}
-
-export type SSRComponentLoader = () => Promise<SSRComponent>;
+export type SSRComponentLoader = () => Promise<Component>;
 
 export interface UniversalNode {
 	/** Is `null` in case static analysis succeeds but the node is ssr=false */
@@ -476,7 +456,10 @@ export interface SSRNode {
 
 	/**
 	 * During development, all styles are inlined for the page to avoid FOUC.
-	 * But in production, this stores styles that are below the inline threshold
+	 * But in production, this stores styles that are below the inline threshold.
+	 * It returns a Promise during development because Vite needs to load the
+	 * modules on demand. But in production, the contents have been precomputed
+	 * during the build, so it can return synchronously.
 	 */
 	inline_styles?(): MaybePromise<
 		Record<string, string | ((assets: string, base: string) => string)>
@@ -501,7 +484,6 @@ export interface SSROptions {
 	hooks: ServerHooks;
 	link_header_preload: ValidatedConfig['kit']['output']['linkHeaderPreload'];
 	paths_origin: string | undefined;
-	root: SSRComponent['default'];
 	service_worker: boolean;
 	service_worker_options: RegistrationOptions;
 	templates: {
@@ -761,6 +743,24 @@ export interface RequestState {
 export interface RequestStore {
 	event: RequestEvent;
 	state: RequestState;
+}
+
+/** Type of the `__sveltekit_abc123` object in the init `<script>` */
+export interface SvelteKitPayload {
+	/** The application version */
+	version: string;
+	/** The basepath, usually relative to the current page */
+	base: string;
+	/** Path to externally-hosted assets */
+	assets?: string;
+	/** Public environment variables */
+	env?: Record<string, string>;
+	/** Serialized data from query/form/command functions */
+	data?: RemoteFunctionData;
+	/** Create a placeholder promise */
+	defer?: (id: number) => Promise<any>;
+	/** Resolve a placeholder promise */
+	resolve?: (data: { id: number; data: any; error: any }) => void;
 }
 
 export * from '../exports/index.js';

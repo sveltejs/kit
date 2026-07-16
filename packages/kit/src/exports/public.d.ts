@@ -962,7 +962,7 @@ export interface KitConfig {
  */
 export type Handle = (input: {
 	event: RequestEvent;
-	resolve: (event: RequestEvent, opts?: ResolveOptions) => MaybePromise<Response>;
+	resolve: (event: RequestEvent, opts?: ResolveOptions) => Promise<Response>;
 }) => MaybePromise<Response>;
 
 /**
@@ -1734,7 +1734,9 @@ export interface ResolveOptions {
 	 */
 	filterSerializedResponseHeaders?: (name: string, value: string) => boolean;
 	/**
-	 * Determines what should be added to the `<head>` tag to preload it.
+	 * Determines which files should be preloaded. Files are preloaded via `<link>` tags added to the
+	 * `<head>` tag; if `output.linkHeaderPreload` is enabled, dynamically rendered pages use the
+	 * [`Link` response header](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Link) instead.
 	 * By default, `js` and `css` files will be preloaded.
 	 * @param input the type of the file and its path
 	 */

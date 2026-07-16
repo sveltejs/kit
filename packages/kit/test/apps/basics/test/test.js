@@ -210,6 +210,24 @@ test.describe('$app/env', () => {
 			'PUBLIC_DYNAMIC: accessible anywhere/evaluated at run time'
 		);
 	});
+
+	test('legacy $env/* imports still work', async ({ page }) => {
+		await page.goto('/env/legacy');
+
+		await expect(page.locator('#static-private')).toHaveText(
+			'PRIVATE_STATIC: accessible to server-side code/replaced at build time'
+		);
+		await expect(page.locator('#dynamic-private')).toHaveText(
+			'PRIVATE_DYNAMIC: accessible to server-side code/evaluated at run time'
+		);
+
+		await expect(page.locator('#static-public')).toHaveText(
+			'PUBLIC_STATIC: accessible anywhere/replaced at build time'
+		);
+		await expect(page.locator('#dynamic-public')).toHaveText(
+			'PUBLIC_DYNAMIC: accessible anywhere/evaluated at run time'
+		);
+	});
 });
 
 test.describe('Load', () => {
@@ -1078,7 +1096,7 @@ test.describe('Actions', () => {
 		}
 	});
 
-	test('form prop stays after invalidation and is reset on navigation', async ({
+	test('form prop stays after refresh and is reset on navigation', async ({
 		page,
 		app,
 		javaScriptEnabled
@@ -1090,7 +1108,7 @@ test.describe('Actions', () => {
 			await page.locator('button.increment-success').click();
 			await expect(page.locator('pre')).toHaveText(JSON.stringify({ count: 0 }));
 
-			await page.locator('button.invalidateAll').click();
+			await page.locator('button.refreshAll').click();
 			await page.waitForTimeout(500);
 			await expect(page.locator('pre')).toHaveText(JSON.stringify({ count: 0 }));
 			await app.goto('/actions/enhance');

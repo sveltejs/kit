@@ -1,5 +1,5 @@
+/** @import { RenderNode } from '../../types.js' */
 import * as devalue from 'devalue';
-import { readable, writable } from 'svelte/store';
 import { DEV } from 'esm-env';
 import { isRedirect, text } from '@sveltejs/kit';
 import * as paths from '$app/paths/internal/server';
@@ -22,13 +22,10 @@ import {
 } from '../utils.js';
 import * as env from '__sveltekit/env';
 import { collect_remote_data } from '../remote.js';
+import Root from '../../components/root.svelte';
+import { render } from 'svelte/server';
 
 // TODO rename this function/module
-
-const updated = {
-	...readable(false),
-	check: () => false
-};
 
 /**
  * Creates the HTML response.
@@ -46,7 +43,7 @@ const updated = {
  *   resolve_opts: import('types').RequiredResolveOptions;
  *   action_result?: import('@sveltejs/kit').ActionResult;
  *   data_serializer: import('./types.js').ServerDataSerializer;
- *   error_components?: Array<import('types').SSRComponent | undefined>
+ *   error_components?: Array<import('svelte').Component | undefined>
  * }} opts
  */
 export async function render_response({
@@ -91,7 +88,8 @@ export async function render_response({
 	// TODO if we add a client entry point one day, we will need to include inline_styles with the entry, otherwise stylesheets will be linked even if they are below inlineStyleThreshold
 	const inline_styles = new Map();
 
-	/** @type {Awaited<ReturnType<typeof options.root.render>>} */
+	// TODO `svelte/server` should expose `RenderOutput`
+	/** @type {{ head: string, body: string, hashes: { script: string[] } }} */
 	let rendered;
 
 	const form_value =
@@ -142,49 +140,45 @@ export async function render_response({
 	if (page_config.ssr) {
 		/** @type {Record<string, any>} */
 		const props = {
-			stores: {
-				page: writable(null),
-				navigating: writable(null),
-				updated
-			},
-			constructors: await Promise.all(
-				branch.map(({ node }) => {
-					if (!node.component) {
-						// Can only be the leaf, layouts have a fallback component generated
-						throw new Error(`Missing +page.svelte component for route ${event.route.id}`);
-					}
-					return node.component();
-				})
-			),
-			form: form_value
-		};
-
-		if (error_components) {
-			if (error) {
-				props.error = error;
-			}
-			props.errors = error_components;
-		}
-
-		let data = {};
-
-		// props_n (instead of props[n]) makes it easy to avoid
-		// unnecessary updates for layout components
-		for (let i = 0; i < branch.length; i += 1) {
-			data = { ...data, ...branch[i].data };
-			props[`data_${i}`] = data;
-		}
-
-		props.page = {
-			error,
-			params: /** @type {Record<string, any>} */ (event.params),
-			route: event.route,
-			status,
-			url: event.url,
-			data,
+			components: [],
+			resetters: [],
 			form: form_value,
-			state: {}
+			tree: /** @type {RenderNode} */ ({}),
+			error,
+			page: {
+				error,
+				params: /** @type {Record<string, any>} */ (event.params),
+				route: event.route,
+				status,
+				url: event.url,
+				data: {},
+				form: form_value,
+				state: {}
+			}
 		};
+
+		let current_node = props.tree;
+		let data = props.page.data;
+
+		for (let i = 0; i < branch.length; i += 1) {
+			const node = branch[i];
+
+			data = { ...data, ...node.data };
+
+			// TODO this is undefined sometimes... where does the default error component come from?
+			const error = error_components?.slice(0, i + 1).findLast((x) => x);
+
+			current_node.error = error;
+			current_node.component = await node.node.component?.();
+			current_node.data = data;
+
+			if (i < branch.length - 1) {
+				current_node.child = /** @type {import('../../types.js').RenderNode} */ ({});
+				current_node = current_node.child;
+			}
+		}
+
+		props.page.data = data;
 
 		const render_state = { ...event_state, is_in_render: true };
 
@@ -250,17 +244,15 @@ export async function render_response({
 				// We have to invoke .then eagerly here in order to kick off rendering: it's only starting on access,
 				// and `await maybe_promise` would eagerly access the .then property but call its function only after a tick, which is too late
 				// for the paths.reset() below and for any eager getRequestEvent() calls during rendering without AsyncLocalStorage available.
-				// TODO use render from 'svelte/server' here
-				const rendered = options.root.render(props, render_opts).then((r) => r);
+				const rendered = render(Root, { ...render_opts, props });
 
-				// @ts-expect-error the legacy `render` API only returns html still, but the new API uses body
-				const { head, html: body, css, hashes } = await rendered;
+				const { head, body, hashes } = await rendered;
 
 				if (hashes) {
 					csp.add_script_hashes(hashes.script);
 				}
 
-				return { head, body, css, hashes };
+				return { head, body, hashes };
 			});
 		} finally {
 			if (DEV) {
@@ -268,7 +260,7 @@ export async function render_response({
 			}
 		}
 	} else {
-		rendered = { head: '', body: '', css: { code: '', map: null }, hashes: { script: [] } };
+		rendered = { head: '', body: '', hashes: { script: [] } };
 	}
 
 	for (const { node } of branch) {
@@ -412,7 +404,7 @@ export async function render_response({
 
 		const blocks = [];
 
-		const properties = [`base: ${base_expression}`];
+		const properties = [`base: ${base_expression}`, `version: ${s(__SVELTEKIT_APP_VERSION__)}`];
 
 		if (paths.assets) {
 			properties.push(`assets: ${s(paths.assets)}`);
@@ -435,7 +427,9 @@ export async function render_response({
 				if (client.inline) {
 					app_declaration = `const app = ${global}.app.app;`;
 				} else if (client.app) {
-					app_declaration = `const app = await import(${s(prefixed(client.app))});`;
+					app_declaration = `const kit = await import(${s(prefixed(client.start))});
+							kit.init(${global});
+							const app = await import(${s(prefixed(client.app))});`;
 				} else {
 					app_declaration = `const { app } = await import(${s(prefixed(client.start))});`;
 				}
@@ -529,10 +523,9 @@ export async function render_response({
 
 					${serialized_data}${global}.app.start(${args.join(', ')});`
 			: client.app
-				? `Promise.all([
-						import(${s(prefixed(client.start))}),
-						import(${s(prefixed(client.app))})
-					]).then(([kit, app]) => {
+				? `import(${s(prefixed(client.start))}).then(async (kit) => {
+						kit.init(${global});
+						const app = await import(${s(prefixed(client.app))});
 						${serialized_data}kit.start(app, ${args.join(', ')});
 					});`
 				: `import(${s(prefixed(client.start))}).then((app) => {
