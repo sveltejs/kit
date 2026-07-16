@@ -194,14 +194,6 @@ Others are required for SvelteKit to work properly, and should also be left unto
 
 Use the [`typescript.config` setting](configuration#typescript) of the SvelteKit plugin in `vite.config.js` to extend or modify the generated `tsconfig.json`.
 
-## #lib
-
-This is a simple alias to `src/lib`, configured via the [`imports`](https://nodejs.org/api/packages.html#subpath-imports) field in your `package.json`. It allows you to access common components and utility modules without `../../../../` nonsense.
-
-### #lib/server
-
-A subdirectory of `#lib`. SvelteKit will prevent you from importing any modules in `#lib/server` into client-side code. See [server-only modules](server-only-modules).
-
 ## app.d.ts
 
 The `app.d.ts` file is home to the ambient types of your apps, i.e. types that are available without explicitly importing them.

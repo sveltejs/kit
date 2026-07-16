@@ -15,7 +15,8 @@ When scaffolding a new SvelteKit project through the [`sv` CLI](/docs/cli/overvi
 
 The `#` prefix leverages Node's built-in [subpath imports](https://nodejs.org/api/packages.html#subpath-imports) feature, which reserves `#` for package-internal aliases. Vite and TypeScript both resolve these natively.
 
-> [!NOTE] Previously, this alias was `$lib` and was automatically configured by SvelteKit. It is now `#lib` and must be declared in your `package.json` `imports` field. `import { foo } from '$lib/foo.js'` becomes `import { foo } from '#lib/foo.js'`.
+> [!LEGACY]
+> Previously, this alias was `$lib` and was automatically configured by SvelteKit. It is now `#lib` and must be declared in your `package.json` `imports` field. `import { foo } from '$lib/foo.js'` becomes `import { foo } from '#lib/foo.js'`.
 
 ```svelte
 <!--- file: src/lib/Component.svelte --->
