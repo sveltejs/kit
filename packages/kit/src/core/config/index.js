@@ -161,7 +161,7 @@ export function process_config(config, cwd) {
 			config.kit.files.hooks.client = path.resolve(cwd, config.kit.files.hooks.client);
 			config.kit.files.hooks.server = path.resolve(cwd, config.kit.files.hooks.server);
 			config.kit.files.hooks.universal = path.resolve(cwd, config.kit.files.hooks.universal);
-		} else {
+		} else if (key !== 'lib' /* TODO remove when we remove the `lib` option altogether */) {
 			// @ts-expect-error
 			config.kit.files[key] = path.resolve(cwd, config.kit.files[key]);
 		}
