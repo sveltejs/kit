@@ -92,14 +92,17 @@
 	},
 	"imports": {
 		"#app/paths": {
+			"workerd": "./src/runtime/app/paths/server.js",
 			"browser": "./src/runtime/app/paths/client.js",
 			"default": "./src/runtime/app/paths/server.js"
 		},
 		"#app/env/public": {
+			"workerd": "./src/runtime/app/env/public/server.js",
 			"browser": "./src/runtime/app/env/public/client.js",
 			"default": "./src/runtime/app/env/public/server.js"
 		},
 		"#internal": {
+			"workerd": "./src/exports/internal/server/index.js",
 			"browser": "./src/exports/internal/client.js",
 			"default": "./src/exports/internal/server/index.js"
 		}
