@@ -17,7 +17,7 @@ After following the setup below, they can be imported via the following modules:
 - [`$app/env/public`]($app-env-public)
 
 > [!LEGACY]
-> The `$env/*` modules, along with `$app/environment` were removed in SvelteKit 3 in favour of explicit environment variables that were added in SvelteKit 2.62 as an experimental option.
+> The `$env/*` modules, along with `$app/environment` were deprecated in SvelteKit 3 (and will be removed in SvelteKit 4) in favour of explicit environment variables that were added in SvelteKit 2.62 as an experimental option.
 
 ### Setup
 

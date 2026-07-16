@@ -1,5 +1,4 @@
 /** @import { Handle, RequestEvent, ResolveOptions } from '@sveltejs/kit' */
-/** @import { MaybePromise } from 'types' */
 import {
 	merge_tracing,
 	get_request_store,
@@ -89,7 +88,7 @@ export function sequence(...handlers) {
 		 * @param {number} i
 		 * @param {RequestEvent} event
 		 * @param {ResolveOptions | undefined} parent_options
-		 * @returns {MaybePromise<Response>}
+		 * @returns {Promise<Response>}
 		 */
 		function apply_handle(i, event, parent_options) {
 			const handle = handlers[i];

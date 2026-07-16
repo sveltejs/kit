@@ -28,8 +28,8 @@ catalogs:
       specifier: ^1.0.0-next.28
       version: 1.0.0-next.28
     '@sveltejs/eslint-config':
-      specifier: ^10.0.0
-      version: 10.0.0
+      specifier: ^10.0.1
+      version: 10.0.1
     '@sveltejs/vite-plugin-svelte':
       specifier: ^7.0.0
       version: 7.0.0
@@ -115,7 +115,7 @@ importers:
         version: 1.60.0
       '@sveltejs/eslint-config':
         specifier: 'catalog:'
-        version: 10.0.0(@eslint/js@10.0.1(eslint@10.0.0(jiti@2.4.2)))(@stylistic/eslint-plugin@5.10.0(eslint@10.0.0(jiti@2.4.2)))(eslint-config-prettier@9.1.0(eslint@10.0.0(jiti@2.4.2)))(eslint-plugin-n@17.24.0(eslint@10.0.0(jiti@2.4.2))(typescript@6.0.3))(eslint-plugin-svelte@3.15.0(eslint@10.0.0(jiti@2.4.2))(svelte@5.56.3(@typescript-eslint/types@8.61.1)))(eslint@10.0.0(jiti@2.4.2))(typescript-eslint@8.58.0(eslint@10.0.0(jiti@2.4.2))(typescript@6.0.3))(typescript@6.0.3)
+        version: 10.0.1(@eslint/js@10.0.1(eslint@10.0.0(jiti@2.4.2)))(@stylistic/eslint-plugin@5.10.0(eslint@10.0.0(jiti@2.4.2)))(eslint-config-prettier@9.1.0(eslint@10.0.0(jiti@2.4.2)))(eslint-plugin-n@17.24.0(eslint@10.0.0(jiti@2.4.2))(typescript@6.0.3))(eslint-plugin-svelte@3.15.0(eslint@10.0.0(jiti@2.4.2))(svelte@5.56.3(@typescript-eslint/types@8.61.1)))(eslint@10.0.0(jiti@2.4.2))(typescript-eslint@8.58.0(eslint@10.0.0(jiti@2.4.2))(typescript@6.0.3))(typescript@6.0.3)
       eslint:
         specifier: 'catalog:'
         version: 10.0.0(jiti@2.4.2)
@@ -2781,8 +2781,8 @@ packages:
     peerDependencies:
       acorn: ^8.9.0
 
-  '@sveltejs/eslint-config@10.0.0':
-    resolution: {integrity: sha512-Cns6frzTmYtV+eWrg6qK2G0dVFpeVc1vyCx0DMqE3+JJW5cudynu54KKsTFqAIuNuShonUhDDGE8bO1cJRUVJQ==}
+  '@sveltejs/eslint-config@10.0.1':
+    resolution: {integrity: sha512-ptg19oeZoQebmLEvRIQ9hlnZqSoVYRXCS4H2RVMVFy9yGgj8LogYjitFwwPASt0KKA5tvAcZ3/yni4OgslYBDA==}
     peerDependencies:
       '@eslint/js': '>= 10'
       '@stylistic/eslint-plugin': '>= 5'
@@ -5351,7 +5351,7 @@ snapshots:
     dependencies:
       acorn: 8.17.0
 
-  '@sveltejs/eslint-config@10.0.0(@eslint/js@10.0.1(eslint@10.0.0(jiti@2.4.2)))(@stylistic/eslint-plugin@5.10.0(eslint@10.0.0(jiti@2.4.2)))(eslint-config-prettier@9.1.0(eslint@10.0.0(jiti@2.4.2)))(eslint-plugin-n@17.24.0(eslint@10.0.0(jiti@2.4.2))(typescript@6.0.3))(eslint-plugin-svelte@3.15.0(eslint@10.0.0(jiti@2.4.2))(svelte@5.56.3(@typescript-eslint/types@8.61.1)))(eslint@10.0.0(jiti@2.4.2))(typescript-eslint@8.58.0(eslint@10.0.0(jiti@2.4.2))(typescript@6.0.3))(typescript@6.0.3)':
+  '@sveltejs/eslint-config@10.0.1(@eslint/js@10.0.1(eslint@10.0.0(jiti@2.4.2)))(@stylistic/eslint-plugin@5.10.0(eslint@10.0.0(jiti@2.4.2)))(eslint-config-prettier@9.1.0(eslint@10.0.0(jiti@2.4.2)))(eslint-plugin-n@17.24.0(eslint@10.0.0(jiti@2.4.2))(typescript@6.0.3))(eslint-plugin-svelte@3.15.0(eslint@10.0.0(jiti@2.4.2))(svelte@5.56.3(@typescript-eslint/types@8.61.1)))(eslint@10.0.0(jiti@2.4.2))(typescript-eslint@8.58.0(eslint@10.0.0(jiti@2.4.2))(typescript@6.0.3))(typescript@6.0.3)':
     dependencies:
       '@eslint/js': 10.0.1(eslint@10.0.0(jiti@2.4.2))
       '@stylistic/eslint-plugin': 5.10.0(eslint@10.0.0(jiti@2.4.2))

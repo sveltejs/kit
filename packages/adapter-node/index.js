@@ -1,5 +1,4 @@
 import { readFileSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { rolldown } from 'rolldown';
 
@@ -45,10 +44,10 @@ export default function (opts = {}) {
 			// together with the app's server code. Bundling everything in a single
 			// pass means shared modules (e.g. `SvelteKitError` from `@sveltejs/kit`)
 			// aren't duplicated. See https://github.com/sveltejs/kit/issues/15755
-			const entries = `${tmp}/entries`;
+			const entries = posixify(`${tmp}/entries`);
 			builder.copy(files, entries);
 
-			const dir_id = join(entries, 'dir.js');
+			const dir_id = `${entries}/dir.js`;
 
 			writeFileSync(
 				`${server}/manifest.js`,
@@ -155,4 +154,9 @@ export default function (opts = {}) {
 			instrumentation: () => true
 		}
 	};
+}
+
+/** @param {string} str */
+function posixify(str) {
+	return str.replace(/\\/g, '/');
 }

@@ -322,8 +322,8 @@ test.describe('remote function mutations', () => {
 		await expect(page.locator('#result')).toHaveText('action: hello');
 	});
 
-	test('command inside handle hook works with POST', async ({ request }) => {
-		const response = await request.post('/remote/hook-command');
+	test('command inside handle hook works with POST', async ({ request, baseURL }) => {
+		const response = await request.post('/remote/hook-command', { headers: { origin: baseURL } });
 		expect(response.status()).toBe(200);
 		const data = await response.json();
 		expect(data.result).toBe('action: from-hook');

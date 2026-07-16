@@ -96,16 +96,13 @@ export async function render_data(
 			return fn();
 		});
 
-		let length = promises.length;
-		const nodes = await Promise.all(
-			promises.map((p, i) =>
-				p.catch(async (error) => {
+		const data_serializer = server_data_serializer_json(event, event_state, options);
+		await Promise.all(
+			promises.map(async (p, i) => {
+				const node = await p.catch(async (error) => {
 					if (error instanceof Redirect) {
 						throw error;
 					}
-
-					// Math.min because array isn't guaranteed to resolve in order
-					length = Math.min(length, i + 1);
 
 					const transformed = await handle_error_and_jsonify(event, event_state, options, error);
 
@@ -113,12 +110,11 @@ export async function render_data(
 						type: 'error',
 						error: transformed
 					});
-				})
-			)
-		);
+				});
 
-		const data_serializer = server_data_serializer_json(event, event_state, options);
-		for (let i = 0; i < nodes.length; i++) data_serializer.add_node(i, nodes[i]);
+				data_serializer.add_node(i, node);
+			})
+		);
 		const { data, chunks } = data_serializer.get_data();
 
 		if (!chunks) {

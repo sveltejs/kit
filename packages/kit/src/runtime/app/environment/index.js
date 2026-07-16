@@ -1,6 +1,6 @@
-import { dev } from '../env/index.js';
+import { DEV } from 'esm-env';
 export * from '../env/index.js';
 
-if (dev) {
-	console.warn('`$app/environment` is now `$app/env`');
+if (DEV) {
+	console.warn('`$app/environment` is deprecated, use `$app/env` instead');
 }

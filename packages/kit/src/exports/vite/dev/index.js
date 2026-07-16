@@ -407,10 +407,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root) {
 		dev: true,
 		etag: true,
 		maxAge: 0,
-		extensions: [],
-		setHeaders: (res) => {
-			res.setHeader('access-control-allow-origin', '*');
-		}
+		extensions: []
 	});
 
 	vite.middlewares.use((req, res, next) => {

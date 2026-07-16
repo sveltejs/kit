@@ -530,7 +530,9 @@ test.describe('Invalidation', () => {
 		request,
 		baseURL
 	}) => {
-		const res = await request.post(baseURL + '/load/invalidation/forced/reset-states');
+		const res = await request.post(baseURL + '/load/invalidation/forced/reset-states', {
+			headers: { origin: 'https://trusted.example.com' }
+		});
 		expect(res.ok()).toBe(true);
 
 		await page.goto('/load/invalidation/forced');
@@ -554,7 +556,9 @@ test.describe('Invalidation', () => {
 		request,
 		baseURL
 	}) => {
-		const res = await request.post(baseURL + '/load/invalidation/forced-goto/reset-states');
+		const res = await request.post(baseURL + '/load/invalidation/forced-goto/reset-states', {
+			headers: { origin: 'https://trusted.example.com' }
+		});
 		expect(res.ok()).toBe(true);
 		await page.goto('/load/invalidation/forced-goto');
 		expect(await page.textContent('h1')).toBe('a: 0, b: 0');
@@ -1360,6 +1364,16 @@ test.describe('Streaming', () => {
 
 		await expect(page.locator('p.eager')).toHaveText('eager');
 		expect(page.locator('p.fail')).toBeVisible();
+	});
+
+	test('Catches rejected streamed server data after another load delays data serialization', async ({
+		page
+	}) => {
+		await page.goto('/streaming');
+		await page.click('[href="/streaming/server/delayed-rejection"]');
+
+		await expect(page.locator('p.eager')).toHaveText('eager');
+		await expect(page.locator('p.fail')).toHaveText('delayed rejection (500 Internal Error)');
 	});
 
 	// TODO `vite preview` buffers responses, causing these tests to fail
