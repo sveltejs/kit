@@ -73,7 +73,7 @@ import {
  * first post-processing
  * ```
  *
- * A handler cannot prevent the rest of the sequence from running. To conditionally skip the work of later handlers while still rendering the page, set a flag on `event.locals` and check it in those handlers.
+ * Calling `resolve` invokes the next handler in the sequence (or SvelteKit itself, if it is the last one). To pass data between handlers, use `event.locals`.
  *
  * @param {...Handle} handlers The chain of `handle` functions
  * @returns {Handle}
