@@ -1,6 +1,6 @@
 import { existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { mkdirp, walk } from '../../utils/filesystem.js';
 import { posixify } from '../../utils/os.js';
 import { noop } from '../../utils/functions.js';
@@ -63,24 +63,92 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 	 * @param {import('types').Logger} log
 	 * @param {'fail' | 'warn' | 'ignore' | ((details: T) => void)} input
 	 * @param {(details: K) => string} format
-	 * @returns {(details: K) => void}
+	 * @returns {(details: K & { error?: unknown }) => void}
 	 */
 	function normalise_error_handler(log, input, format) {
 		switch (input) {
 			case 'fail':
 				return (details) => {
-					throw new Error(format(details));
+					const message = format(details);
+					const cause = details.error instanceof Error ? details.error : undefined;
+
+					const error = new Error(message, cause ? { cause } : undefined);
+					error.stack = ''; // useless internal stack trace noise
+					throw error;
 				};
 			case 'warn':
 				return (details) => {
-					log.error(format(details));
+					const message = format(details);
+					const error = details.error;
+
+					if (error instanceof Error) {
+						log.error(`${message}\n${error.stack ?? `${error.name}: ${error.message}`}`);
+					} else {
+						log.error(message);
+					}
 				};
 			case 'ignore':
 				return noop;
 			default:
-				// @ts-expect-error TS thinks T might be of a different kind, but it's not
-				return (details) => input({ ...details, message: format(details) });
+				return (details) => {
+					try {
+						// @ts-expect-error TS thinks T might be of a different kind, but it's not
+						input({ ...details, message: format(details) });
+					} catch (error) {
+						if (error instanceof Error && details.error instanceof Error && details.error.stack) {
+							const stack = error.stack ?? '';
+							const idx = stack.indexOf(import.meta.dirname);
+							if (idx !== -1) {
+								// Cut the stack trace off at the point when our internal one starts
+								error.stack = stack.slice(0, stack.lastIndexOf('\n', idx));
+							}
+							error.cause = details.error;
+						}
+						throw error;
+					}
+				};
 		}
+	}
+
+	/** @type {Map<string, Array<string | undefined>>} */
+	const source_regions = new Map();
+
+	/** @param {unknown} error */
+	function annotate_stack_trace(error) {
+		if (!(error instanceof Error) || !error.stack) return;
+
+		error.stack = error.stack
+			.split('\n')
+			.map((line) => {
+				const match = line.match(/(file:\/\/\/.*):(\d+):(\d+)(\)?)$/);
+				if (!match) return line;
+
+				const file = fileURLToPath(match[1]);
+				// Only annotate files from our own server directory
+				if (!file.startsWith(`${out}/server/`)) return line;
+
+				let regions = source_regions.get(file);
+				if (!regions) {
+					/** @type {string | undefined} */
+					let source;
+					regions = readFileSync(file, 'utf8')
+						.split('\n')
+						.map((line) => {
+							// Vite will merge multiple files into one but add region markers
+							// with the original file names, which we try to extract here.
+							const start = line.match(/^\/\/#region (.+)$/);
+							if (start) source = start[1];
+							if (line === '//#endregion') source = undefined;
+							return source;
+						});
+					source_regions.set(file, regions);
+				}
+
+				const source = regions[Number(match[2]) - 1];
+				// Output is something like "at file:///... [src/routes/+page.svelte]"
+				return source ? `${line} [${source}]` : line;
+			})
+			.join('\n');
 	}
 
 	const OK = 2;
@@ -149,7 +217,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 					? `${path} does not begin with \`base\`. You can fix this by using \`resolve('${path}')\` from \`$app/paths\`. The base path is configurable from \`paths.base\` - see https://svelte.dev/docs/kit/configuration#paths for more info`
 					: path;
 
-			return `${status} ${message}${referrer ? ` (${referenceType} from ${referrer})` : ''}`;
+			return `${status} while prerendering ${message}${referrer ? ` (${referenceType} from ${referrer})` : ''}`;
 		}
 	);
 
@@ -222,6 +290,8 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 
 	/** @type {Map<string, Promise<any>>} */
 	const remote_responses = new Map();
+	/** @type {Map<string, unknown>} */
+	const errors = new Map();
 
 	/** @type {Map<string, Set<string>>} */
 	const expected_hashlinks = new Map();
@@ -266,6 +336,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 			},
 			prerendering: {
 				dependencies,
+				errors,
 				remote_responses
 			},
 			read: (file) => {
@@ -492,7 +563,15 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 
 			prerendered.paths.push(decoded);
 		} else if (response_type !== OK) {
-			handle_http_error({ status: response.status, path: decoded, referrer, referenceType });
+			const error = errors.get(encoded);
+			annotate_stack_trace(error);
+			handle_http_error({
+				status: response.status,
+				path: decoded,
+				referrer,
+				referenceType,
+				error
+			});
 		}
 
 		manifest.assets.add(file);

@@ -106,6 +106,10 @@ export function handle_error_and_jsonify(event, state, options, error) {
 		return { message: 'Unknown Error', ...error.body };
 	}
 
+	if (state.prerendering?.errors && !state.prerendering.errors.has(event.url.pathname)) {
+		state.prerendering.errors.set(event.url.pathname, coalesce_to_error(error));
+	}
+
 	if (__SVELTEKIT_DEV__ && typeof error == 'object') {
 		fix_stack_trace(error);
 	}
