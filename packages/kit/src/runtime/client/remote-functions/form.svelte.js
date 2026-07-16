@@ -11,6 +11,7 @@ import {
 	handle_error,
 	refreshAll
 } from '../client.js';
+import { page } from '../state.svelte.js';
 import { tick } from 'svelte';
 import { categorize_updates, remote_request } from './shared.svelte.js';
 import { createAttachmentKey } from 'svelte/attachments';
@@ -69,7 +70,15 @@ export function form(id) {
 	function create_instance(key) {
 		const action_id_without_key = id;
 		const action_id = id + (key != undefined ? `/${JSON.stringify(key)}` : '');
-		const action = '?/remote=' + encodeURIComponent(action_id);
+
+		/** @returns {string} */
+		function get_action() {
+			const search = new URLSearchParams(page.url.search);
+			search.delete('/remote');
+
+			const query = search.toString();
+			return `?${query ? `${query}&` : ''}/remote=${encodeURIComponent(action_id)}`;
+		}
 
 		// the output of a non-enhanced submission that resulted in this page —
 		// consume it so the form's state survives hydration (form outputs are
@@ -355,7 +364,10 @@ export function form(id) {
 		const instance = {};
 
 		instance.method = 'POST';
-		instance.action = action;
+		Object.defineProperty(instance, 'action', {
+			get: get_action,
+			enumerable: true
+		});
 
 		instance[createAttachmentKey()] = (/** @type {HTMLFormElement} */ form) => {
 			if (element) {
