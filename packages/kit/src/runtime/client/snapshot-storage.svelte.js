@@ -153,7 +153,7 @@ export async function init() {
 						const key = /** @type {[string, number]} */ (cursor.key);
 						if (Array.isArray(key) && key[0] === current) {
 							// only load the current session's snapshots into memory
-							snapshots[/** @type {number} */ (key[1])] = cursor.value;
+							snapshots[key[1]] = cursor.value;
 						} else if (active && !(Array.isArray(key) && active.has(key[0]))) {
 							// stale (closed session) or legacy (non-namespaced) entry —
 							// only delete when Web Locks let us prove it isn't active
