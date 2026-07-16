@@ -10,7 +10,7 @@ import { styleText } from 'node:util';
 import { loadEnv } from 'vite';
 import { exactRegex, prefixRegex } from 'rolldown/filter';
 
-import { copy, mkdirp, read, resolve_entry, rimraf } from '../../utils/filesystem.js';
+import { copy, mkdirp, read, resolve_entry, rimraf, walk } from '../../utils/filesystem.js';
 import { posixify } from '../../utils/os.js';
 import {
 	create_sveltekit_env,
@@ -1512,6 +1512,15 @@ function kit({ svelte_config }) {
 		},
 
 		async buildApp(builder) {
+			const sourcemap = builder.config.build.sourcemap;
+			const ssr_sourcemap = builder.environments.ssr.config.build.sourcemap;
+			const temporary_sourcemap = !(ssr_sourcemap ?? sourcemap);
+
+			if (temporary_sourcemap) {
+				// Temporarily override so that we get better stack traces for prerendering errors
+				builder.environments.ssr.config.build.sourcemap = 'hidden';
+			}
+
 			// clears the output directories
 			if (!builder.config.build.watch) {
 				rimraf(out);
@@ -1798,15 +1807,29 @@ function kit({ svelte_config }) {
 			}
 
 			// ...and prerender
-			const prerender_results = await prerender({
-				hash: kit.router.type === 'hash',
-				out,
-				manifest_path,
-				metadata,
-				verbose,
-				env,
-				vite_config_file: vite_config.configFile
-			});
+			let prerender_results;
+			try {
+				prerender_results = await prerender({
+					hash: kit.router.type === 'hash',
+					out,
+					manifest_path,
+					metadata,
+					verbose,
+					env,
+					vite_config_file: vite_config.configFile
+				});
+			} finally {
+				if (temporary_sourcemap) {
+					// If we did override it, set it back to false and remove the sourcemaps
+					builder.environments.ssr.config.build.sourcemap = ssr_sourcemap;
+
+					for (const file of walk(`${out}/server`)) {
+						if (file.endsWith('.js.map')) {
+							fs.rmSync(`${out}/server/${file}`);
+						}
+					}
+				}
+			}
 			prerendered = prerender_results.prerendered;
 
 			await treeshake_prerendered_remotes(

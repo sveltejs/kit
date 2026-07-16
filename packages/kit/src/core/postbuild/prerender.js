@@ -1,5 +1,6 @@
 import { existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { SourceMap } from 'node:module';
+import { dirname, join, relative, resolve as resolve_path } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { mkdirp, walk } from '../../utils/filesystem.js';
 import { posixify } from '../../utils/os.js';
@@ -110,8 +111,45 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 		}
 	}
 
+	/** @type {Map<string, { map: SourceMap; directory: string } | null>} */
+	const source_maps = new Map();
 	/** @type {Map<string, Array<string | undefined>>} */
 	const source_regions = new Map();
+
+	/** @param {string} file */
+	function get_source_map(file) {
+		if (source_maps.has(file)) return source_maps.get(file);
+
+		let source;
+		let directory = dirname(file);
+		try {
+			const code = readFileSync(file, 'utf8');
+			const matches = Array.from(code.matchAll(/\/\/[#@]\s*sourceMappingURL=(\S+)/g));
+			const url = matches.at(-1)?.[1];
+
+			if (url?.startsWith('data:')) {
+				const comma = url.indexOf(',');
+				const metadata = url.slice(5, comma);
+				const data = url.slice(comma + 1);
+				source = metadata.endsWith(';base64')
+					? Buffer.from(data, 'base64').toString()
+					: decodeURIComponent(data);
+			} else {
+				const map_file = url ? resolve_path(dirname(file), decodeURIComponent(url)) : `${file}.map`;
+				if (existsSync(map_file)) {
+					directory = dirname(map_file);
+					source = readFileSync(map_file, 'utf8');
+				}
+			}
+
+			const source_map = source ? { map: new SourceMap(JSON.parse(source)), directory } : null;
+			source_maps.set(file, source_map);
+			return source_map;
+		} catch {
+			source_maps.set(file, null);
+			return null;
+		}
+	}
 
 	/** @param {unknown} error */
 	function annotate_stack_trace(error) {
@@ -126,6 +164,24 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 				const file = fileURLToPath(match[1]);
 				// Only annotate files from our own server directory
 				if (!file.startsWith(`${out}/server/`)) return line;
+
+				const source_map = get_source_map(file);
+				const entry = source_map?.map.findEntry(Number(match[2]) - 1, Number(match[3]) - 1);
+				if (
+					source_map &&
+					entry &&
+					'originalSource' in entry &&
+					entry.originalSource &&
+					typeof entry.originalLine === 'number' &&
+					typeof entry.originalColumn === 'number'
+				) {
+					const source = entry.originalSource.startsWith('file:')
+						? fileURLToPath(entry.originalSource)
+						: resolve_path(source_map.directory, entry.originalSource);
+					const location = `${match[1]}:${match[2]}:${match[3]}`;
+					const original = `${posixify(relative(vite_config.root, source))}:${entry.originalLine + 1}:${entry.originalColumn + 1}`;
+					return line.replace(location, original);
+				}
 
 				let regions = source_regions.get(file);
 				if (!regions) {
