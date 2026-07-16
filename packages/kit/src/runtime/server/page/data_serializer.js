@@ -45,12 +45,14 @@ export function server_data_serializer(event, event_state, options) {
 							let str;
 							try {
 								str = devalue.uneval(error ? [, error] : [data], replacer);
-							} catch {
+							} catch (e) {
 								error = await handle_error_and_jsonify(
 									event,
 									event_state,
 									options,
-									new Error(`Failed to serialize promise while rendering ${event.route.id}`)
+									new Error(`Failed to serialize promise while rendering ${event.route.id}`, {
+										cause: e
+									})
 								);
 								str = devalue.uneval([, error], replacer);
 							}
@@ -164,12 +166,14 @@ export function server_data_serializer_json(event, event_state, options) {
 						let str;
 						try {
 							str = devalue.stringify(value, reducers);
-						} catch {
+						} catch (e) {
 							const error = await handle_error_and_jsonify(
 								event,
 								event_state,
 								options,
-								new Error(`Failed to serialize promise while rendering ${event.route.id}`)
+								new Error(`Failed to serialize promise while rendering ${event.route.id}`, {
+									cause: e
+								})
 							);
 
 							key = 'error';
