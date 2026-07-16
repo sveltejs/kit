@@ -2,7 +2,7 @@
 import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
 import { json, text } from '@sveltejs/kit';
-import { HttpError } from '@sveltejs/kit/internal';
+import { HttpError, SvelteKitError } from '@sveltejs/kit/internal';
 import { with_request_store } from '@sveltejs/kit/internal/server';
 import { coalesce_to_error, get_message, get_status } from '../../utils/error.js';
 import { negotiate } from '../../utils/http.js';
@@ -106,7 +106,11 @@ export function handle_error_and_jsonify(event, state, options, error) {
 		return { message: 'Unknown Error', ...error.body };
 	}
 
-	if (state.prerendering?.errors && !state.prerendering.errors.has(event.url.pathname)) {
+	if (
+		!(error instanceof SvelteKitError) &&
+		state.prerendering?.errors &&
+		!state.prerendering.errors.has(event.url.pathname)
+	) {
 		state.prerendering.errors.set(event.url.pathname, coalesce_to_error(error));
 	}
 
@@ -118,9 +122,15 @@ export function handle_error_and_jsonify(event, state, options, error) {
 	const message = get_message(error);
 
 	// TODO 4.0 await this, rather than handling the non-Promise case
-	const result = with_request_store({ event, state }, () =>
-		options.hooks.handleError({ error, event, status, message })
-	) ?? { status, message };
+	let result;
+	try {
+		result = with_request_store({ event, state }, () =>
+			options.hooks.handleError({ error, event, status, message })
+		) ?? { status, message };
+	} catch (hook_error) {
+		log_handle_error_hook_failure(error, hook_error);
+		return { status, message: 'Internal Error' };
+	}
 
 	if (result instanceof Promise) {
 		if (!__SVELTEKIT_SUPPORTS_ASYNC__ && state.is_in_render) {
@@ -130,7 +140,7 @@ export function handle_error_and_jsonify(event, state, options, error) {
 
 			// we're discarding the result, but we still need to prevent an unhandled
 			// rejection if the user's async `handleError` hook rejects
-			result.catch(() => {});
+			result.catch((hook_error) => log_handle_error_hook_failure(error, hook_error));
 
 			return {
 				status,
@@ -138,13 +148,36 @@ export function handle_error_and_jsonify(event, state, options, error) {
 			};
 		}
 
-		return result.then((body) => {
-			body ??= { status, message };
-			return { ...body, status: get_status(body, error) };
-		});
+		return result.then(
+			(body) => {
+				body ??= { status, message };
+				return { ...body, status: get_status(body, error) };
+			},
+			(hook_error) => {
+				log_handle_error_hook_failure(error, hook_error);
+				return { status, message: 'Internal Error' };
+			}
+		);
 	}
 
 	return { ...result, status: get_status(result, error) };
+}
+
+/**
+ * @param {unknown} error
+ * @param {unknown} hook_error
+ */
+function log_handle_error_hook_failure(error, hook_error) {
+	const failure = new Error('The `handleError` hook failed', {
+		cause: coalesce_to_error(hook_error)
+	});
+	failure.stack = failure.message;
+	console.error(failure);
+	if (error instanceof SvelteKitError) {
+		console.error(`Original error: ${error.status} ${error.text}: ${error.message}`);
+	} else {
+		console.error('Original error:', error);
+	}
 }
 
 /**
@@ -229,7 +262,22 @@ export function format_server_error(status, error, event) {
 		return formatted_text;
 	}
 
-	return `${formatted_text}\n${DEV ? clean_up_stack_trace(error) : error.stack}`;
+	return `${formatted_text}\n${format_error_stack(error)}`;
+}
+
+/**
+ * @param {Error & { cause?: unknown }} error
+ * @returns {string | undefined}
+ */
+function format_error_stack(error) {
+	if (error.cause === undefined) {
+		return DEV ? clean_up_stack_trace(error) : error.stack;
+	}
+
+	/** @type {string | undefined} */
+	const cause =
+		error.cause instanceof Error ? format_error_stack(error.cause) : String(error.cause);
+	return `${error.name}: ${error.message}\nCaused by: ${cause}`;
 }
 
 /**
