@@ -3182,6 +3182,8 @@ declare module '@sveltejs/kit/hooks' {
 	 * first post-processing
 	 * ```
 	 *
+	 * Calling `resolve` invokes the next handler in the sequence (or SvelteKit itself, if it is the last one). To pass data between handlers, use `event.locals`.
+	 *
 	 * @param handlers The chain of `handle` functions
 	 * */
 	export function sequence(...handlers: Handle[]): Handle;
