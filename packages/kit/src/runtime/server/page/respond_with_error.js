@@ -33,12 +33,12 @@ export async function respond_with_error({
 }) {
 	// reroute to the fallback page to prevent an infinite chain of requests.
 	if (event.request.headers.get('x-sveltekit-error')) {
-		return static_error_page(options, status, /** @type {Error} */ (error).message);
+		const transformed = await handle_error_and_jsonify(event, event_state, options, error);
+		return static_error_page(options, status, transformed.message);
 	}
 
 	/** @type {import('./types.js').Fetched[]} */
 	const fetched = [];
-
 	try {
 		const branch = [];
 		const default_layout = await manifest._.nodes[0](); // 0 is always the root layout
@@ -46,6 +46,8 @@ export async function respond_with_error({
 		const ssr = nodes.ssr();
 		const csr = nodes.csr();
 		const data_serializer = server_data_serializer(event, event_state, options);
+		// Do this here first in case the awaits below before rendering themselves error
+		const transformed = await handle_error_and_jsonify(event, event_state, options, error);
 
 		if (ssr) {
 			state.error = true;
@@ -88,8 +90,6 @@ export async function respond_with_error({
 				}
 			);
 		}
-
-		const transformed = await handle_error_and_jsonify(event, event_state, options, error);
 
 		return await render_response({
 			options,
