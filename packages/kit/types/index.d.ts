@@ -3182,6 +3182,8 @@ declare module '@sveltejs/kit/hooks' {
 	 * first post-processing
 	 * ```
 	 *
+	 * A handler cannot prevent the rest of the sequence from running. To conditionally skip the work of later handlers while still rendering the page, set a flag on `event.locals` and check it in those handlers.
+	 *
 	 * @param handlers The chain of `handle` functions
 	 * */
 	export function sequence(...handlers: Handle[]): Handle;
