@@ -140,6 +140,10 @@ export const validate_kit_options = object({
 			server: string(null),
 			universal: string(null)
 		}),
+		lib: removed(
+			(keypath) =>
+				`\`${keypath}\` has been removed. Use #lib instead of $lib: https://svelte.dev/docs/kit/$lib`
+		),
 		params: string(null),
 		routes: string(null),
 		serviceWorker: string(null),
