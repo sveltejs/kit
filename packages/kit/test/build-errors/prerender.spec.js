@@ -1,7 +1,6 @@
 import { assert, test } from 'vitest';
 import { execSync } from 'node:child_process';
 import path from 'node:path';
-import { EOL } from 'node:os';
 
 const timeout = 60_000;
 
@@ -25,7 +24,7 @@ test('entry generators should match their own route', { timeout }, () => {
 				stdio: 'pipe',
 				timeout
 			}),
-		`Error: The entries export from /[slug]/[notSpecific] generated entry /whatever/specific, which was matched by /[slug]/specific - see the \`handleEntryGeneratorMismatch\` option in https://svelte.dev/docs/kit/configuration#prerender for more info.${EOL}To suppress or handle this error, implement \`handleEntryGeneratorMismatch\` in https://svelte.dev/docs/kit/configuration#prerender`
+		/Error: The entries export from \/\[slug\]\/\[notSpecific\] generated entry \/whatever\/specific, which was matched by \/\[slug\]\/specific - see the `handleEntryGeneratorMismatch` option in https:\/\/svelte\.dev\/docs\/kit\/configuration#prerender for more info\.\r?\nTo suppress or handle this error, implement `handleEntryGeneratorMismatch` in https:\/\/svelte\.dev\/docs\/kit\/configuration#prerender/
 	);
 });
 
