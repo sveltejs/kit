@@ -60,9 +60,13 @@ export function forked(module, callback) {
 				}
 			);
 
+			worker.once('error', reject);
+
 			worker.on('exit', (code) => {
 				if (code) {
-					reject(new Error(`Failed with code ${code}`));
+					const error = new Error(`Failed with code ${code}`);
+					error.stack = error.message;
+					reject(error);
 				}
 			});
 		});
