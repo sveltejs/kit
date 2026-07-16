@@ -1,6 +1,6 @@
 import http from 'node:http';
 import fs from 'node:fs';
-import cluster from 'node:cluster';
+import net from 'node:net';
 import process from 'node:process';
 import { handler } from './handler.js';
 import { env, timeout_env } from './env.js';
@@ -53,6 +53,49 @@ if (headers_timeout !== undefined) {
 	httpServer.headersTimeout = headers_timeout * 1000;
 }
 
+/**
+ * Probe a unix socket path and remove it only if nothing is listening.
+ * Conservative: any outcome other than ECONNREFUSED is treated as "live".
+ * @param {string} socket_path
+ */
+async function remove_stale_socket(socket_path) {
+	let before;
+	try {
+		before = fs.statSync(socket_path);
+	} catch {
+		return; // path doesn't exist
+	}
+	if (!before.isSocket()) return; // don't touch non-socket files
+
+	const alive = await new Promise((resolve) => {
+		const socket = net.connect(socket_path);
+		const timer = setTimeout(() => {
+			socket.destroy();
+			resolve(true); // unresponsive but bound — be conservative
+		}, 1000);
+		socket.once('connect', () => {
+			clearTimeout(timer);
+			socket.destroy();
+			resolve(true);
+		});
+		socket.once('error', (err) => {
+			clearTimeout(timer);
+			resolve(err.code !== 'ECONNREFUSED');
+		});
+	});
+	if (alive) return;
+
+	try {
+		// Re-stat and compare inode to guard against a concurrent bind between
+		// our probe and the remove (another process cleaned up and re-bound).
+		const now = fs.statSync(socket_path);
+		if (now.ino !== before.ino || now.dev !== before.dev || !now.isSocket()) return;
+		await rm(socket_path, { force: true });
+	} catch {
+		// ENOENT: another instance already cleaned up
+	}
+}
+
 const server = polka({ server: httpServer }).use(handler);
 
 if (socket_activation) {
@@ -61,17 +104,7 @@ if (socket_activation) {
 	});
 } else {
 	if (path) {
-		try {
-			// In Node cluster mode only the primary process binds the socket;
-			// workers inherit the listening handle and must not touch the file.
-			// A live unix socket also reports size 0, so deleting from a worker
-			// removes the primary's socket and severs all incoming connections.
-			if (!cluster.isWorker && fs.statSync(path).size === 0) {
-				await rm(path);
-			}
-		} catch {
-			// ignore
-		}
+		await remove_stale_socket(path);
 	}
 
 	server.listen({ path, host, port }, () => {
