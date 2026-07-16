@@ -4,4 +4,4 @@ This is a simple alias to `src/lib`, configured via the [`imports`](https://node
 
 ### `#lib/server`
 
-A subdirectory of `#lib`. SvelteKit 2 prevented you from importing any modules in `#lib/server` into client-side code. In SvelteKit 3 _all_ files within your project in a `server` folder (except the routes and assets folder) are treated as server-only. Also see [server-only modules](https://svelte.dev/docs/kit/server-only-modules).
+A subdirectory of `#lib`. SvelteKit 2 prevented you from importing any modules in `#lib/server` into client-side code. In SvelteKit 3 _all_ files within your project in a `server` folder (except the routes and assets folder) are treated as [server-only modules](https://svelte.dev/docs/kit/server-only-modules).
