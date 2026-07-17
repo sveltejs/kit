@@ -721,6 +721,9 @@ function kit({ svelte_config }) {
 			// 	include(importerId(/.+/))
 			// ]),
 			async handler(id, importer, options) {
+				// the import map is only read for client-side violations in `load`, so skip other environments
+				if (this.environment.config.consumer !== 'client') return;
+
 				if (importer && !importer.endsWith('index.html')) {
 					const resolved = await this.resolve(id, importer, { ...options, skipSelf: true });
 
