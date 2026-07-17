@@ -706,7 +706,8 @@ function kit({ svelte_config }) {
 		enforce: 'pre',
 
 		applyToEnvironment(environment) {
-			return environment.name !== 'serviceWorker';
+			// the import map is only read for client-side violations in `load`, so skip other environments
+			return environment.config.consumer === 'client' && environment.name !== 'serviceWorker';
 		},
 
 		resolveId: {
@@ -746,8 +747,6 @@ function kit({ svelte_config }) {
 				]
 			},
 			handler(id) {
-				if (this.environment.config.consumer !== 'client') return;
-
 				const normalized = normalize_id(id, normalized_aliases, normalized_cwd);
 
 				let is_server_only = normalized === '$app/env/private' || normalized === '$app/server';
