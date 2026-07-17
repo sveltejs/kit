@@ -1,6 +1,6 @@
 import { enhancedImages } from '@sveltejs/enhanced-img';
 import { sveltekit } from '@sveltejs/kit/vite';
-import adapter from '@sveltejs/adapter-node';
+import adapter from '@sveltejs/adapter-static';
 
 export default {
 	plugins: [
@@ -12,7 +12,9 @@ export default {
 				}
 			},
 
-			adapter: adapter(),
+			adapter: adapter({
+				fallback: 'prerendered.html'
+			}),
 			experimental: {
 				remoteFunctions: true
 			}

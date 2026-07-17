@@ -142,11 +142,8 @@ export function create_builder({
 			});
 
 			if (existsSync(dest)) {
-				console.log(
-					styleText(
-						['bold', 'yellow'],
-						`Overwriting ${dest} with fallback page. Consider using a different name for the fallback.`
-					)
+				log.warn(
+					`\nOverwriting ${dest} with fallback page. Consider using a different name for the fallback.\n`
 				);
 			}
 
