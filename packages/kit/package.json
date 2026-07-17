@@ -128,10 +128,6 @@
 			"types": "./types/index.d.ts",
 			"import": "./src/exports/internal/server/index.js"
 		},
-		"./env": {
-			"types": "./types/index.d.ts",
-			"import": "./src/exports/env/index.js"
-		},
 		"./node": {
 			"types": "./types/index.d.ts",
 			"import": "./src/exports/node/index.js"
