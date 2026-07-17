@@ -28,5 +28,8 @@
 		"vite": "catalog:",
 		"vitest": "catalog:"
 	},
+	"imports": {
+		"#lib/*": "./source/components/*"
+	},
 	"type": "module"
 }

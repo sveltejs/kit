@@ -11,5 +11,6 @@ export { sequence } from './sequence.js';
  * @deprecated Import `defineEnvVars` from `@sveltejs/kit/env` instead
  */
 export function defineEnvVars(variables) {
+	console.warn(`\`defineEnvVars\` has moved — import it from \`@sveltejs/kit/env\` instead`);
 	return variables;
 }

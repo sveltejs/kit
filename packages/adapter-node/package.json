@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-node",
-	"version": "6.0.0-next.3",
+	"version": "6.0.0-next.4",
 	"description": "Adapter for SvelteKit apps that generates a standalone Node server",
 	"keywords": [
 		"adapter",

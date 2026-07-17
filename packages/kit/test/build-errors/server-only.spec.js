@@ -9,7 +9,7 @@ const timeout = 60_000;
 /** @type {Record<string, any>} */
 const env = { ...process.env, TEST: false };
 
-test('$lib/*.server.* is not statically importable from the client', { timeout }, () => {
+test('#lib/*.server.* is not statically importable from the client', { timeout }, () => {
 	assert.throws(
 		() =>
 			execSync('pnpm build', {
@@ -18,11 +18,11 @@ test('$lib/*.server.* is not statically importable from the client', { timeout }
 				timeout,
 				env
 			}),
-		/.*Cannot import \$lib\/test.server.js into code that runs in the browser.*/gs
+		/.*Cannot import #lib\/test.server.js into code that runs in the browser.*/gs
 	);
 });
 
-test('$lib/*.server.* is not dynamically importable from the client', { timeout }, () => {
+test('#lib/*.server.* is not dynamically importable from the client', { timeout }, () => {
 	assert.throws(
 		() =>
 			execSync('pnpm build', {
@@ -31,11 +31,11 @@ test('$lib/*.server.* is not dynamically importable from the client', { timeout 
 				timeout,
 				env
 			}),
-		/.*Cannot import \$lib\/test.server.js into code that runs in the browser.*/gs
+		/.*Cannot import #lib\/test.server.js into code that runs in the browser.*/gs
 	);
 });
 
-test('$lib/**/server/* is not statically importable from the client', { timeout }, () => {
+test('#lib/**/server/* is not statically importable from the client', { timeout }, () => {
 	assert.throws(
 		() =>
 			execSync('pnpm build', {
@@ -44,11 +44,11 @@ test('$lib/**/server/* is not statically importable from the client', { timeout 
 				timeout,
 				env
 			}),
-		/.*Cannot import \$lib\/blah\/server\/something\/private.js into code that runs in the browser.*/gs
+		/.*Cannot import #lib\/blah\/server\/something\/private.js into code that runs in the browser.*/gs
 	);
 });
 
-test('$lib/**/server/* is not dynamically importable from the client', { timeout }, () => {
+test('#lib/**/server/* is not dynamically importable from the client', { timeout }, () => {
 	assert.throws(
 		() =>
 			execSync('pnpm build', {
@@ -57,7 +57,7 @@ test('$lib/**/server/* is not dynamically importable from the client', { timeout
 				timeout,
 				env
 			}),
-		/.*Cannot import \$lib\/blah\/server\/something\/private.js into code that runs in the browser.*/gs
+		/.*Cannot import #lib\/blah\/server\/something\/private.js into code that runs in the browser.*/gs
 	);
 });
 
@@ -77,7 +77,7 @@ test(
 					timeout,
 					env
 				}),
-			/.*Cannot import \$lib\/secret.server.js into code that runs in the browser.*/gs
+			/.*Cannot import #lib\/secret.server.js into code that runs in the browser.*/gs
 		);
 	}
 );

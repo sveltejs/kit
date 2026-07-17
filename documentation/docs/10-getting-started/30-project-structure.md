@@ -36,7 +36,7 @@ You'll also find common files like `.gitignore` and `.npmrc` (and `.prettierrc` 
 
 The `src` directory contains the meat of your project. Everything except `src/routes` and `src/app.html` is optional.
 
-- `lib` contains your library code (utilities and components), which can be imported via the [`$lib`]($lib) alias, or packaged up for distribution using [`svelte-package`](packaging)
+- `lib` contains your library code (utilities and components), which can be imported via the [`#lib`]($lib) alias, or packaged up for distribution using [`svelte-package`](packaging)
   - directories named `server`, at any depth, mark any code within as [server only](server-only-modules). SvelteKit will prevent you from importing these in client code.
 - `params` contains any [param matchers](advanced-routing#Matching) your app needs
 - `routes` contains the [routes](routing) of your application. You can also colocate other components that are only used within a single route here

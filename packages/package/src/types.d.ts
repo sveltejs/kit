@@ -11,7 +11,9 @@ export interface Options {
 		extensions?: string[];
 		kit?: {
 			alias?: Record<string, string>;
+			/** @deprecated SvelteKit 2 had this, which we still support */
 			files?: {
+				/** @deprecated SvelteKit 2 had this, which we still support */
 				lib?: string;
 			};
 			outDir?: string;
