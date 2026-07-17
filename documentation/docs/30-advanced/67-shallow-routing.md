@@ -15,8 +15,8 @@ SvelteKit makes this possible with the [`pushState`]($app-navigation#pushState) 
 	import { page } from '$app/state';
 	import Modal from './Modal.svelte';
 
-	function showModal() {
-		pushState('', {
+	async function showModal() {
+		await pushState('', {
 			showModal: true
 		});
 	}
@@ -31,11 +31,25 @@ The modal can be dismissed by navigating back (unsetting `page.state.showModal`)
 
 ## API
 
-The first argument to `pushState` is the URL, relative to the current URL. To stay on the current URL, use `''`.
+The first argument to `pushState` is the URL, relative to the current URL. A non-empty URL performs a shallow navigation: [`beforeNavigate`]($app-navigation#beforeNavigate), [`onNavigate`]($app-navigation#onNavigate), [`onNavigate`]($app-navigation#onNavigate), [`onNavigate`]($app-navigation#onNavigate) and [`afterNavigate`]($app-navigation#afterNavigate) will run with `navigation.type === 'shallow'`.
+
+Once shallow routing is active, `page.shallow` is set with the URL, parameters and route id that is user-visible. `page.url`, `page.params` and `page.route` remain as they were before the shallow navigation.
+
+To keep the current URL, use `''`. This only updates history and page state, and does not call navigation lifecycle functions. If the page is already showing a shallow route, `page.shallow` is preserved; otherwise it remains `null`.
+
+Passing `null` as the first argument will exit shallow routing (as do `goto` or link clicks). This reverts the visible URL to what it was before and sets `page.shallow` to `null`.
 
 The second argument is the new page state, which can be accessed via the [page object]($app-state#page) as `page.state`. You can make page state type-safe by declaring an [`App.PageState`](types#PageState) interface (usually in `src/app.d.ts`).
 
-To set page state without creating a new history entry, use `replaceState` instead of `pushState`.
+After a shallow navigation, `page.shallow` contains the target `url`, `params` and `route`. The actual page has not changed, so `page.url`, `page.params` and `page.route` continue to describe the page that is currently rendered.
+
+`pushState` and `replaceState` return promises that resolve after the page state change has been applied to the DOM. To set page state without creating a new history entry, use `replaceState` instead of `pushState`.
+
+By default, state set through `pushState` or `replaceState` is discarded on a full page reload. Pass `{ persist: true }` as the third argument to restore it in the browser after reloading, independently of whether the call performs a shallow navigation:
+
+```js
+await pushState('', { showModal: true }, { persist: true });
+```
 
 ## Loading data for a route
 
@@ -74,7 +88,7 @@ For this to work, you need to load the data that the `+page.svelte` expects. A c
 			const result = await preloadData(href);
 
 			if (result.type === 'loaded' && result.status === 200) {
-				pushState(href, { selected: result.data });
+				await pushState(href, { selected: result.data });
 			} else {
 				// something bad happened! try navigating
 				goto(href);
@@ -96,6 +110,6 @@ For this to work, you need to load the data that the `+page.svelte` expects. A c
 
 ## Caveats
 
-During server-side rendering, `page.state` is always an empty object. The same is true for the first page the user lands on — if the user reloads the page (or returns from another document), state will _not_ be applied until they navigate.
+During server-side rendering, `page.state` is always an empty object. State set through `goto` is always restored in the browser after a reload. State set through `pushState` or `replaceState` is only restored if `{ persist: true }` was passed.
 
 Shallow routing is a feature that requires JavaScript to work. Be mindful when using it and try to think of sensible fallback behavior in case JavaScript isn't available.

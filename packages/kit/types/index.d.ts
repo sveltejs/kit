@@ -1240,8 +1240,9 @@ declare module '@sveltejs/kit' {
 	 * - `leave`: The app is being left either because the tab is being closed or a navigation to a different document is occurring
 	 * - `link`: Navigation was triggered by a link click
 	 * - `popstate`: Navigation was triggered by back/forward navigation
+	 * - `shallow`: Navigation was triggered by a `pushState(...)` or `replaceState(...)` call with a non-empty URL
 	 */
-	export type NavigationType = 'enter' | 'form' | 'leave' | 'link' | 'goto' | 'popstate';
+	export type NavigationType = 'enter' | 'form' | 'leave' | 'link' | 'goto' | 'popstate' | 'shallow';
 
 	export interface NavigationBase {
 		/**
@@ -1252,6 +1253,7 @@ declare module '@sveltejs/kit' {
 		 * - `leave`: The app is being left either because the tab is being closed or a navigation to a different document is occurring
 		 * - `link`: Navigation was triggered by a link click
 		 * - `popstate`: Navigation was triggered by back/forward navigation
+		 * - `shallow`: Navigation was triggered by a `pushState(...)` or `replaceState(...)` call with a non-empty URL
 		 */
 		type: NavigationType;
 		/**
@@ -1297,6 +1299,13 @@ declare module '@sveltejs/kit' {
 	 */
 	export interface NavigationGoto extends NavigationBase {
 		type: 'goto';
+	}
+
+	/**
+	 * A navigation triggered by a `pushState(...)` or `replaceState(...)` call with a non-empty URL
+	 */
+	export interface NavigationShallow extends NavigationBase {
+		type: 'shallow';
 	}
 
 	/**
@@ -1351,7 +1360,8 @@ declare module '@sveltejs/kit' {
 		| NavigationExternal
 		| NavigationFormSubmit
 		| NavigationPopState
-		| NavigationLink;
+		| NavigationLink
+		| NavigationShallow;
 
 	/**
 	 * The argument passed to [`beforeNavigate`](https://svelte.dev/docs/kit/$app-navigation#beforeNavigate) callbacks.
@@ -1425,6 +1435,17 @@ declare module '@sveltejs/kit' {
 		 * The page state, which can be manipulated using the [`pushState`](https://svelte.dev/docs/kit/$app-navigation#pushState) and [`replaceState`](https://svelte.dev/docs/kit/$app-navigation#replaceState) functions from `$app/navigation`.
 		 */
 		state: App.PageState;
+		/**
+		 * Information about the target of the most recent shallow navigation, or `null` if no shallow navigation has occurred.
+		 */
+		shallow: {
+			/** Parameters of the target route, or `null` if the URL does not resolve to a route. */
+			params: AppLayoutParams<'/'> | null;
+			/** Info about the target route, or `null` if the URL does not resolve to a route. */
+			route: { id: AppRouteId } | null;
+			/** The normalized URL passed to `pushState` or `replaceState`. */
+			url: ReadonlyURL;
+		} | null;
 		/**
 		 * Filled only after a form submission. See [form actions](https://svelte.dev/docs/kit/form-actions) for more info.
 		 */
@@ -3066,7 +3087,7 @@ declare module '$app/navigation' {
 	 * */
 	export function afterNavigate(callback: (navigation: import("@sveltejs/kit").AfterNavigate) => void): void;
 	/**
-	 * A navigation interceptor that triggers before we navigate to a URL, whether by clicking a link, calling `goto(...)`, or using the browser back/forward controls.
+	 * A navigation interceptor that triggers before we navigate to a URL, whether by clicking a link, calling `goto(...)`, `pushState(...)` or `replaceState(...)` with a non-empty URL, or using the browser back/forward controls.
 	 *
 	 * Calling `cancel()` will prevent the navigation from completing. If `navigation.type === 'leave'` — meaning the user is navigating away from the app (or closing the tab) — calling `cancel` will trigger the native browser unload confirmation dialog. In this case, the navigation may or may not be cancelled depending on the user's response.
 	 *
@@ -3179,15 +3200,23 @@ declare module '$app/navigation' {
 	 * */
 	export function preloadCode(pathname: string): Promise<void>;
 	/**
-	 * Programmatically create a new history entry with the given `page.state`. To use the current URL, you can pass `''` as the first argument. Used for [shallow routing](https://svelte.dev/docs/kit/shallow-routing).
+	 * Programmatically create a new history entry with the given `page.state`. To keep the current URL and shallow routing context, pass `''` as the first argument. Otherwise, this triggers the navigation lifecycle hooks with a `navigation.type` of `'shallow'`. Used for [shallow routing](https://svelte.dev/docs/kit/shallow-routing).
+	 *
+	 * Passing `null` as the first argument ends shallow routing and reverts the URL to the value of page.url.
 	 *
 	 * */
-	export function pushState(url: string | URL, state: App.PageState): void;
+	export function pushState(url: string | URL | null, state: App.PageState, options?: {
+		persist?: boolean | undefined;
+	}): Promise<void>;
 	/**
-	 * Programmatically replace the current history entry with the given `page.state`. To use the current URL, you can pass `''` as the first argument. Used for [shallow routing](https://svelte.dev/docs/kit/shallow-routing).
+	 * Programmatically replace the current history entry with the given `page.state`. To keep the current URL and shallow routing context, pass `''` as the first argument. Otherwise, this triggers the navigation lifecycle hooks with a `navigation.type` of `'shallow'`. Used for [shallow routing](https://svelte.dev/docs/kit/shallow-routing).
+	 *
+	 * Passing `null` as the first argument ends shallow routing and reverts the URL to the value of page.url.
 	 *
 	 * */
-	export function replaceState(url: string | URL, state: App.PageState): void;
+	export function replaceState(url: string | URL | null, state: App.PageState, options?: {
+		persist?: boolean | undefined;
+	}): Promise<void>;
 	type MaybePromise<T> = T | Promise<T>;
 
 	export {};
@@ -3540,7 +3569,7 @@ declare module '$app/state' {
 	 * - retrieving the combined `data` of all pages/layouts anywhere in your component tree (also see [loading data](https://svelte.dev/docs/kit/load))
 	 * - retrieving the current value of the `form` prop anywhere in your component tree (also see [form actions](https://svelte.dev/docs/kit/form-actions))
 	 * - retrieving the page state that was set through `goto`, `pushState` or `replaceState` (also see [goto](https://svelte.dev/docs/kit/$app-navigation#goto) and [shallow routing](https://svelte.dev/docs/kit/shallow-routing))
-	 * - retrieving metadata such as the URL you're on, the current route and its parameters, and whether or not there was an error
+	 * - retrieving metadata such as the URL you're on, the current route and its parameters, the target of a shallow navigation, and whether or not there was an error
 	 *
 	 * ```svelte
 	 * <!--- file: +layout.svelte --->
@@ -3641,7 +3670,7 @@ declare namespace App {
 	export interface PageData {}
 
 	/**
-	 * The shape of the `page.state` object, which can be manipulated using the [`pushState`](https://svelte.dev/docs/kit/$app-navigation#pushState) and [`replaceState`](https://svelte.dev/docs/kit/$app-navigation#replaceState) functions from `$app/navigation`.
+	 * The shape of the `page.state` object, which can be manipulated using [`goto`](https://svelte.dev/docs/kit/$app-navigation#goto), [`pushState`](https://svelte.dev/docs/kit/$app-navigation#pushState) and [`replaceState`](https://svelte.dev/docs/kit/$app-navigation#replaceState).
 	 */
 	// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 	export interface PageState {}

@@ -153,6 +153,7 @@ export async function render_response({
 				url: event.url,
 				data: {},
 				form: form_value,
+				shallow: null,
 				state: {}
 			}
 		};

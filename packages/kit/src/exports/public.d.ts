@@ -1268,8 +1268,9 @@ export interface NavigationTarget<
  * - `leave`: The app is being left either because the tab is being closed or a navigation to a different document is occurring
  * - `link`: Navigation was triggered by a link click
  * - `popstate`: Navigation was triggered by back/forward navigation
+ * - `shallow`: Navigation was triggered by a `pushState(...)` or `replaceState(...)` call with a non-empty URL
  */
-export type NavigationType = 'enter' | 'form' | 'leave' | 'link' | 'goto' | 'popstate';
+export type NavigationType = 'enter' | 'form' | 'leave' | 'link' | 'goto' | 'popstate' | 'shallow';
 
 export interface NavigationBase {
 	/**
@@ -1280,6 +1281,7 @@ export interface NavigationBase {
 	 * - `leave`: The app is being left either because the tab is being closed or a navigation to a different document is occurring
 	 * - `link`: Navigation was triggered by a link click
 	 * - `popstate`: Navigation was triggered by back/forward navigation
+	 * - `shallow`: Navigation was triggered by a `pushState(...)` or `replaceState(...)` call with a non-empty URL
 	 */
 	type: NavigationType;
 	/**
@@ -1325,6 +1327,13 @@ export type NavigationExternal = NavigationGoto | NavigationLeave;
  */
 export interface NavigationGoto extends NavigationBase {
 	type: 'goto';
+}
+
+/**
+ * A navigation triggered by a `pushState(...)` or `replaceState(...)` call with a non-empty URL
+ */
+export interface NavigationShallow extends NavigationBase {
+	type: 'shallow';
 }
 
 /**
@@ -1379,7 +1388,8 @@ export type Navigation =
 	| NavigationExternal
 	| NavigationFormSubmit
 	| NavigationPopState
-	| NavigationLink;
+	| NavigationLink
+	| NavigationShallow;
 
 /**
  * The argument passed to [`beforeNavigate`](https://svelte.dev/docs/kit/$app-navigation#beforeNavigate) callbacks.
@@ -1453,6 +1463,17 @@ export interface Page<
 	 * The page state, which can be manipulated using the [`pushState`](https://svelte.dev/docs/kit/$app-navigation#pushState) and [`replaceState`](https://svelte.dev/docs/kit/$app-navigation#replaceState) functions from `$app/navigation`.
 	 */
 	state: App.PageState;
+	/**
+	 * Information about the target of the most recent shallow navigation, or `null` if no shallow navigation has occurred.
+	 */
+	shallow: {
+		/** Parameters of the target route, or `null` if the URL does not resolve to a route. */
+		params: AppLayoutParams<'/'> | null;
+		/** Info about the target route, or `null` if the URL does not resolve to a route. */
+		route: { id: AppRouteId } | null;
+		/** The normalized URL passed to `pushState` or `replaceState`. */
+		url: ReadonlyURL;
+	} | null;
 	/**
 	 * Filled only after a form submission. See [form actions](https://svelte.dev/docs/kit/form-actions) for more info.
 	 */

@@ -1645,16 +1645,19 @@ test.describe('untrack', () => {
 	});
 });
 
-test.describe('Shallow routing', () => {
+test.describe.only('Shallow routing', () => {
 	test('Pushes state to the current URL', async ({ page }) => {
 		await page.goto('/shallow-routing/push-state');
 		await expect(page.locator('p')).toHaveText('active: false');
 
 		await page.locator('[data-id="one"]').click();
 		await expect(page.locator('p')).toHaveText('active: true');
+		await expect(page.locator('[data-id="shallow"]')).toHaveText('null');
+		expect(await page.evaluate(() => window.shallow_navigation_log)).toEqual([]);
 
 		await page.goBack();
 		await expect(page.locator('p')).toHaveText('active: false');
+		await expect(page.locator('[data-id="shallow"]')).toHaveText('null');
 	});
 
 	test('Pushes state to a new URL', async ({ baseURL, page }) => {
@@ -1662,13 +1665,17 @@ test.describe('Shallow routing', () => {
 		await expect(page.locator('p')).toHaveText('active: false');
 
 		await page.locator('[data-id="two"]').click();
-		expect(page.url()).toBe(`${baseURL}/shallow-routing/push-state/a`);
+		await expect(page).toHaveURL(`${baseURL}/shallow-routing/push-state/a`);
 		await expect(page.locator('h1')).toHaveText('parent');
 		await expect(page.locator('p')).toHaveText('active: true');
+		await expect(page.locator('[data-id="shallow"]')).toHaveText(
+			'/shallow-routing/push-state/a /shallow-routing/push-state/a {}'
+		);
 
 		await page.reload();
 		await expect(page.locator('h1')).toHaveText('a');
 		await expect(page.locator('p')).toHaveText('active: false');
+		await expect(page.locator('[data-id="shallow"]')).toHaveText('null');
 
 		await page.goBack();
 		expect(page.url()).toBe(`${baseURL}/shallow-routing/push-state`);
@@ -1679,6 +1686,147 @@ test.describe('Shallow routing', () => {
 		expect(page.url()).toBe(`${baseURL}/shallow-routing/push-state/a`);
 		await expect(page.locator('h1')).toHaveText('parent');
 		await expect(page.locator('p')).toHaveText('active: true');
+		await expect(page.locator('[data-id="shallow"]')).toHaveText(
+			'/shallow-routing/push-state/a /shallow-routing/push-state/a {}'
+		);
+	});
+
+	test('Exposes the shallow target and runs navigation lifecycle hooks', async ({
+		baseURL,
+		page
+	}) => {
+		await page.goto('/shallow-routing/push-state');
+		await page.locator('[data-id="params"]').click();
+
+		await expect(page).toHaveURL(`${baseURL}/shallow-routing/push-state/hello`);
+		await expect(page.locator('h1')).toHaveText('parent');
+		await expect(page.locator('[data-id="shallow"]')).toHaveText(
+			'/shallow-routing/push-state/hello /shallow-routing/push-state/[param] {"param":"hello"}'
+		);
+		await expect(page.locator('[data-id="resolved"]')).toHaveText('active: true');
+		await expect.poll(() => page.evaluate(() => window.shallow_navigation_log.length)).toBe(4);
+
+		expect(await page.evaluate(() => window.shallow_navigation_log)).toEqual([
+			{
+				hook: 'before',
+				params: { param: 'hello' },
+				path: '/shallow-routing/push-state/hello',
+				route: '/shallow-routing/push-state/[param]',
+				type: 'shallow'
+			},
+			{ hook: 'on', type: 'shallow' },
+			{ hook: 'after', state: 'active: true', type: 'shallow' },
+			{ hook: 'complete' }
+		]);
+	});
+
+	test('Can cancel a shallow navigation', async ({ baseURL, page }) => {
+		await page.goto('/shallow-routing/push-state');
+		await page.locator('[data-id="cancel"]').click();
+
+		expect(page.url()).toBe(`${baseURL}/shallow-routing/push-state`);
+		await expect(page.locator('p')).toHaveText('active: false');
+		await expect(page.locator('[data-id="shallow"]')).toHaveText('null');
+		expect(await page.evaluate(() => window.shallow_navigation_log)).toEqual([
+			{
+				hook: 'before',
+				params: {},
+				path: '/shallow-routing/push-state',
+				route: '/shallow-routing/push-state',
+				type: 'shallow'
+			}
+		]);
+	});
+
+	test('Pushes state without a shallow navigation and does not restore it by default', async ({
+		baseURL,
+		page
+	}) => {
+		await page.goto('/shallow-routing/push-state');
+		await page.locator('[data-id="state-only"]').click();
+
+		expect(page.url()).toBe(`${baseURL}/shallow-routing/push-state`);
+		await expect(page.locator('p')).toHaveText('active: true');
+		await expect(page.locator('[data-id="shallow"]')).toHaveText('null');
+		expect(await page.evaluate(() => window.shallow_navigation_log)).toEqual([]);
+
+		await page.reload();
+		await expect(page.locator('p')).toHaveText('active: false');
+		await expect(page.locator('[data-id="shallow"]')).toHaveText('null');
+	});
+
+	test('Persists state without a shallow navigation when requested', async ({ page }) => {
+		await page.goto('/shallow-routing/push-state');
+		await page.locator('[data-id="state-only-persist"]').click();
+		await expect(page.locator('p')).toHaveText('active: true');
+		await expect(page.locator('[data-id="shallow"]')).toHaveText('null');
+
+		await page.reload();
+		await expect(page.locator('p')).toHaveText('active: true');
+	});
+
+	test('Persists state from a shallow navigation when requested', async ({ page }) => {
+		await page.goto('/shallow-routing/push-state');
+		await page.locator('[data-id="shallow-persist"]').click();
+		await expect(page.locator('p')).toHaveText('active: true');
+
+		await page.reload();
+		await expect(page.locator('h1')).toHaveText('a');
+		await expect(page.locator('p')).toHaveText('active: true');
+		await expect(page.locator('[data-id="shallow"]')).toHaveText('null');
+	});
+
+	test('Keeps the current shallow routing context when pushing state', async ({ page }) => {
+		await page.goto('/shallow-routing/push-state');
+		await page.locator('[data-id="two"]').click();
+		await expect(page.locator('[data-id="shallow"]')).toHaveText(
+			'/shallow-routing/push-state/a /shallow-routing/push-state/a {}'
+		);
+
+		await page.evaluate(() => (window.shallow_navigation_log = []));
+		await page.locator('[data-id="one"]').click();
+		await expect(page.locator('[data-id="shallow"]')).toHaveText(
+			'/shallow-routing/push-state/a /shallow-routing/push-state/a {}'
+		);
+		expect(await page.evaluate(() => window.shallow_navigation_log)).toEqual([]);
+
+		await page.goBack();
+		await page.goForward();
+		await expect(page.locator('[data-id="shallow"]')).toHaveText(
+			'/shallow-routing/push-state/a /shallow-routing/push-state/a {}'
+		);
+	});
+
+	test('Ends the current shallow routing context when pushing state with null', async ({
+		page
+	}) => {
+		await page.goto('/shallow-routing/push-state');
+		await page.locator('[data-id="two"]').click();
+		await expect(page.locator('[data-id="shallow"]')).toHaveText(
+			'/shallow-routing/push-state/a /shallow-routing/push-state/a {}'
+		);
+
+		await page.evaluate(() => (window.shallow_navigation_log = []));
+		await page.locator('[data-id="end-shallow"]').click();
+		await expect(page.locator('[data-id="shallow"]')).toHaveText('null');
+		expect(await page.evaluate(() => window.shallow_navigation_log)).toEqual([]);
+		expect(new URL(page.url()).pathname).toBe('/shallow-routing/push-state');
+
+		await page.goBack();
+		await expect(page.locator('[data-id="shallow"]')).toHaveText(
+			'/shallow-routing/push-state/a /shallow-routing/push-state/a {}'
+		);
+		await page.goForward();
+		await expect(page.locator('[data-id="shallow"]')).toHaveText('null');
+	});
+
+	test('Restores state set through goto on reload', async ({ page }) => {
+		await page.goto('/shallow-routing/push-state');
+		await page.locator('[data-id="goto-state"]').click();
+		await expect(page.locator('p')).toHaveText('active: true');
+
+		await page.reload();
+		await expect(page.locator('p')).toHaveText('active: true');
 	});
 
 	test('Invalidates the correct route after pushing state to a new URL', async ({
@@ -1688,19 +1836,20 @@ test.describe('Shallow routing', () => {
 		await page.goto('/shallow-routing/push-state');
 		await expect(page.locator('p')).toHaveText('active: false');
 
-		const now = /** @type {string} */ (await page.locator('span').textContent());
+		const now = /** @type {string} */ (await page.locator('[data-id="now"]').textContent());
 
 		await page.locator('[data-id="two"]').click();
-		expect(page.url()).toBe(`${baseURL}/shallow-routing/push-state/a`);
+		await expect(page).toHaveURL(`${baseURL}/shallow-routing/push-state/a`);
 
 		await page.locator('[data-id="refresh"]').click();
 		await expect(page.locator('h1')).toHaveText('parent');
-		await expect(page.locator('span')).not.toHaveText(now);
+		await expect(page.locator('[data-id="now"]')).not.toHaveText(now);
 	});
 
 	test('Does not navigate when going back to shallow route', async ({ baseURL, page }) => {
 		await page.goto('/shallow-routing/push-state');
 		await page.locator('[data-id="two"]').click();
+		await expect(page).toHaveURL(`${baseURL}/shallow-routing/push-state/a`);
 		await page.goBack();
 		await page.goForward();
 
@@ -1715,6 +1864,8 @@ test.describe('Shallow routing', () => {
 
 		await page.locator('[data-id="one"]').click();
 		await expect(page.locator('p')).toHaveText('active: true');
+		await expect(page.locator('[data-id="shallow"]')).toHaveText('null');
+		expect(await page.evaluate(() => window.shallow_navigation_log)).toEqual([]);
 
 		await page.goBack();
 		expect(page.url()).toBe(`${baseURL}/shallow-routing/replace-state/b`);
@@ -1732,6 +1883,19 @@ test.describe('Shallow routing', () => {
 
 		await page.locator('[data-id="two"]').click();
 		await expect(page.locator('p')).toHaveText('active: true');
+		await expect.poll(() => page.evaluate(() => window.shallow_navigation_log.length)).toBe(3);
+		expect(await page.evaluate(() => window.shallow_navigation_log)).toEqual([
+			{ hook: 'before', type: 'shallow' },
+			{ hook: 'on', type: 'shallow' },
+			{ hook: 'after', type: 'shallow' }
+		]);
+
+		await page.evaluate(() => (window.shallow_navigation_log = []));
+		await page.locator('[data-id="one"]').click();
+		await expect(page.locator('[data-id="shallow"]')).toHaveText(
+			'/shallow-routing/replace-state/a'
+		);
+		expect(await page.evaluate(() => window.shallow_navigation_log)).toEqual([]);
 
 		await page.goBack();
 		expect(page.url()).toBe(`${baseURL}/shallow-routing/replace-state/b`);
@@ -1741,6 +1905,35 @@ test.describe('Shallow routing', () => {
 		expect(page.url()).toBe(`${baseURL}/shallow-routing/replace-state/a`);
 		await expect(page.locator('h1')).toHaveText('parent');
 		await expect(page.locator('p')).toHaveText('active: true');
+	});
+
+	test('Persists replaced state when requested', async ({ baseURL, page }) => {
+		await page.goto('/shallow-routing/replace-state');
+		await page.locator('[data-id="state-only"]').click();
+
+		expect(page.url()).toBe(`${baseURL}/shallow-routing/replace-state`);
+		await expect(page.locator('p')).toHaveText('active: true');
+		await expect(page.locator('[data-id="shallow"]')).toHaveText('null');
+		expect(await page.evaluate(() => window.shallow_navigation_log)).toEqual([]);
+
+		await page.reload();
+		await expect(page.locator('p')).toHaveText('active: true');
+	});
+
+	test('Ends the current shallow routing context when replacing state with null', async ({
+		page
+	}) => {
+		await page.goto('/shallow-routing/replace-state');
+		await page.locator('[data-id="two"]').click();
+		await expect(page.locator('[data-id="shallow"]')).toHaveText(
+			'/shallow-routing/replace-state/a'
+		);
+
+		await page.evaluate(() => (window.shallow_navigation_log = []));
+		await page.locator('[data-id="end-shallow"]').click();
+		await expect(page.locator('[data-id="shallow"]')).toHaveText('null');
+		expect(await page.evaluate(() => window.shallow_navigation_log)).toEqual([]);
+		expect(new URL(page.url()).pathname).toBe('/shallow-routing/replace-state');
 	});
 
 	test('pushState does not loop infinitely in $effect', async ({ page }) => {

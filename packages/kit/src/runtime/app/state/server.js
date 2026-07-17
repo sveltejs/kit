@@ -33,6 +33,9 @@ export const page = {
 	get route() {
 		return (DEV ? context_dev('page.route') : context()).page.route;
 	},
+	get shallow() {
+		return (DEV ? context_dev('page.shallow') : context()).page.shallow;
+	},
 	get state() {
 		return (DEV ? context_dev('page.state') : context()).page.state;
 	},

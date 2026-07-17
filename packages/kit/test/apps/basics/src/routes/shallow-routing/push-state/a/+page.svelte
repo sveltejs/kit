@@ -5,3 +5,4 @@
 <h1>a</h1>
 
 <p>active: {page.state.active ?? false}</p>
+<span data-id="shallow">{page.shallow ? page.shallow.url.pathname : 'null'}</span>

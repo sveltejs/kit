@@ -44,7 +44,7 @@ declare namespace App {
 	export interface PageData {}
 
 	/**
-	 * The shape of the `page.state` object, which can be manipulated using the [`pushState`](https://svelte.dev/docs/kit/$app-navigation#pushState) and [`replaceState`](https://svelte.dev/docs/kit/$app-navigation#replaceState) functions from `$app/navigation`.
+	 * The shape of the `page.state` object, which can be manipulated using [`goto`](https://svelte.dev/docs/kit/$app-navigation#goto), [`pushState`](https://svelte.dev/docs/kit/$app-navigation#pushState) and [`replaceState`](https://svelte.dev/docs/kit/$app-navigation#replaceState).
 	 */
 	// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 	export interface PageState {}

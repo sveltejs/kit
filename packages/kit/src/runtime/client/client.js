@@ -5,7 +5,7 @@
 /** @import { Query } from './remote-functions/query/instance.svelte.js' */
 /** @import { LiveQuery } from './remote-functions/query-live/instance.svelte.js' */
 import { BROWSER, DEV } from 'esm-env';
-import * as svelte from 'svelte';
+import { settled, tick, fork, onMount, untrack } from 'svelte';
 import { HttpError, Redirect, SvelteKitError } from '@sveltejs/kit/internal';
 import { decode_pathname, strip_hash, make_trackable, normalize_path } from '../../utils/url.js';
 import { dev_fetch, initial_fetch, lock_fetch, subsequent_fetch, unlock_fetch } from './fetcher.js';
@@ -29,6 +29,7 @@ import {
 	PRELOAD_PRIORITIES,
 	SCROLL_KEY,
 	STATES_KEY,
+	STATES_PERSISTED_KEY,
 	SNAPSHOT_KEY,
 	PAGE_URL_KEY
 } from './constants.js';
@@ -415,7 +416,8 @@ export async function start(_app, _target, hydrate) {
 		await navigate({
 			type: 'enter',
 			url: resolve_url(app.hash ? decode_hash(new URL(location.href)) : location.href),
-			replace_state: true
+			replace_state: true,
+			state: history.state?.[STATES_PERSISTED_KEY] ? (history.state[STATES_KEY] ?? {}) : {}
 		});
 
 		restore_scroll();
@@ -464,6 +466,7 @@ async function _invalidate(reset_page_state = true) {
 	}
 
 	const prev_state = page.state;
+	const prev_shallow = page.shallow;
 	const navigation_result = intent && (await load_route(intent));
 	if (!navigation_result || token !== invalidation_token || nav_token !== navigation_token) {
 		return;
@@ -488,6 +491,7 @@ async function _invalidate(reset_page_state = true) {
 	if (!reset_page_state) {
 		navigation_result.props.page.state = prev_state;
 	}
+	navigation_result.props.page.shallow = prev_shallow;
 	update(navigation_result.props.page);
 	current_tree = navigation_result.props.tree;
 	current = { ...navigation_result.state, nav: current.nav };
@@ -603,9 +607,8 @@ export async function _goto(url, options, redirect_count, nav_token, intent) {
 	if (options.refreshAll) {
 		// TODO the ticks shouldn't be necessary, something inside Svelte itself is buggy
 		// when a query in a layout that still exists after page change is refreshed earlier than this
-		void svelte
-			.tick()
-			.then(svelte.tick)
+		void tick()
+			.then(tick)
 			.then(() => {
 				for (const [id, entries] of query_map) {
 					for (const [payload, { resource }] of entries) {
@@ -647,7 +650,7 @@ async function _preload_data(intent) {
 
 		load_cache.promise.catch(discard_load_cache);
 
-		if (__SVELTEKIT_FORK_PRELOADS__ && svelte.fork) {
+		if (__SVELTEKIT_FORK_PRELOADS__) {
 			const lc = load_cache;
 
 			lc.fork = lc.promise.then((result) => {
@@ -655,7 +658,7 @@ async function _preload_data(intent) {
 				// resolve, bail rather than creating an orphan fork
 				if (lc === load_cache && result.type === 'loaded') {
 					try {
-						return svelte.fork(() => {
+						return fork(() => {
 							root.$set(result.props);
 							update(result.props.page);
 							current_tree = result.props.tree;
@@ -882,6 +885,7 @@ async function get_navigation_result_from_branch({
 				id: route?.id ?? null
 			},
 			state: {},
+			shallow: null,
 			status: status ?? error?.status ?? 200,
 			url: new URL(url),
 			form: form ?? null,
@@ -1662,6 +1666,9 @@ function _before_navigate({ url, type, intent, delta, event, scroll }) {
 
 	if (!is_navigating) {
 		// Don't run the event during redirects
+		// TODO this isn't fully right: if you do a goto(...) while another goto(...) is in progress,
+		// or you click a link while a navigation is in progress, the beforNavigate calls are not triggered,
+		// and maybe they should be?
 		before_navigate_callbacks.forEach((fn) => fn(cancellable));
 	}
 
@@ -1856,6 +1863,7 @@ async function navigate({
 		const entry = {
 			[HISTORY_INDEX]: (current_history_index += change),
 			[NAVIGATION_INDEX]: (current_navigation_index += change),
+			[STATES_PERSISTED_KEY]: true,
 			[STATES_KEY]: state
 		};
 
@@ -1879,6 +1887,7 @@ async function navigate({
 	}
 
 	navigation_result.props.page.state = state;
+	navigation_result.props.page.shallow = null;
 
 	/**
 	 * @type {Promise<void> | undefined}
@@ -1962,7 +1971,7 @@ async function navigate({
 			}
 			update(navigation_result.props.page);
 
-			commit_promise = svelte.settled?.();
+			commit_promise = settled();
 		}
 
 		has_navigated = true;
@@ -1972,7 +1981,7 @@ async function navigate({
 
 	const { activeElement } = document;
 
-	await (commit_promise ?? svelte.tick());
+	await commit_promise;
 
 	if (navigation_token !== nav_token) {
 		// a new navigation happened while we were waiting for the DOM to update, so abort
@@ -2261,7 +2270,7 @@ export async function handle_error(error, event) {
  * @param {T} callback
  */
 function add_navigation_callback(callbacks, callback) {
-	svelte.onMount(() => {
+	onMount(() => {
 		callbacks.add(callback);
 
 		return () => {
@@ -2282,7 +2291,7 @@ export function afterNavigate(callback) {
 }
 
 /**
- * A navigation interceptor that triggers before we navigate to a URL, whether by clicking a link, calling `goto(...)`, or using the browser back/forward controls.
+ * A navigation interceptor that triggers before we navigate to a URL, whether by clicking a link, calling `goto(...)`, `pushState(...)` or `replaceState(...)` with a non-empty URL, or using the browser back/forward controls.
  *
  * Calling `cancel()` will prevent the navigation from completing. If `navigation.type === 'leave'` — meaning the user is navigating away from the app (or closing the tab) — calling `cancel` will trigger the native browser unload confirmation dialog. In this case, the navigation may or may not be cancelled depending on the user's response.
  *
@@ -2560,63 +2569,57 @@ export async function preloadCode(pathname) {
 }
 
 /**
- * Programmatically create a new history entry with the given `page.state`. To use the current URL, you can pass `''` as the first argument. Used for [shallow routing](https://svelte.dev/docs/kit/shallow-routing).
+ * Programmatically create a new history entry with the given `page.state`. To keep the current URL and shallow routing context, pass `''` as the first argument. Otherwise, this triggers the navigation lifecycle hooks with a `navigation.type` of `'shallow'`. Used for [shallow routing](https://svelte.dev/docs/kit/shallow-routing).
  *
- * @param {string | URL} url
+ * Passing `null` as the first argument ends shallow routing and reverts the URL to the value of page.url.
+ *
+ * @param {string | URL | null} url
  * @param {App.PageState} state
- * @returns {void}
+ * @param {Object} [options]
+ * @param {boolean} [options.persist] Whether to persist the state across a full page reload. Defaults to `false`.
+ * @returns {Promise<void>}
  */
-export function pushState(url, state) {
+export async function pushState(url, state, options = {}) {
 	if (!BROWSER) {
 		throw new Error('Cannot call pushState(...) on the server');
 	}
 
-	if (DEV) {
-		if (!started) {
-			throw new Error('Cannot call pushState(...) before router is initialized');
-		}
-
-		try {
-			// use `devalue.stringify` as a convenient way to ensure we exclude values that can't be properly rehydrated, such as custom class instances
-			devalue.stringify(state);
-		} catch (error) {
-			// @ts-expect-error
-			throw new Error(`Could not serialize state${error.path}`, { cause: error });
-		}
-	}
-
-	update_scroll_positions(current_history_index);
-
-	const opts = {
-		[HISTORY_INDEX]: (current_history_index += 1),
-		[NAVIGATION_INDEX]: current_navigation_index,
-		[PAGE_URL_KEY]: page.url.href,
-		[STATES_KEY]: state
-	};
-
-	history.pushState(opts, '', resolve_url(url));
-	has_navigated = true;
-
-	page.state = state;
-
-	clear_onward_history(current_history_index, current_navigation_index);
+	// Untrack to avoid triggering outer reactive contexts because we access page.X inside
+	await untrack(() => update_state(url, state, false, options.persist ?? false));
 }
 
 /**
- * Programmatically replace the current history entry with the given `page.state`. To use the current URL, you can pass `''` as the first argument. Used for [shallow routing](https://svelte.dev/docs/kit/shallow-routing).
+ * Programmatically replace the current history entry with the given `page.state`. To keep the current URL and shallow routing context, pass `''` as the first argument. Otherwise, this triggers the navigation lifecycle hooks with a `navigation.type` of `'shallow'`. Used for [shallow routing](https://svelte.dev/docs/kit/shallow-routing).
  *
- * @param {string | URL} url
+ * Passing `null` as the first argument ends shallow routing and reverts the URL to the value of page.url.
+ *
+ * @param {string | URL | null} url
  * @param {App.PageState} state
- * @returns {void}
+ * @param {Object} [options]
+ * @param {boolean} [options.persist] Whether to persist the state across a full page reload. Defaults to `false`.
+ * @returns {Promise<void>}
  */
-export function replaceState(url, state) {
+export async function replaceState(url, state, options = {}) {
 	if (!BROWSER) {
 		throw new Error('Cannot call replaceState(...) on the server');
 	}
 
+	// Untrack to avoid triggering outer reactive contexts because we access page.X inside
+	await untrack(() => update_state(url, state, true, options.persist ?? false));
+}
+
+/**
+ * @param {string | URL | null} url
+ * @param {App.PageState} state
+ * @param {boolean} replace
+ * @param {boolean} persist
+ */
+async function update_state(url, state, replace, persist) {
 	if (DEV) {
 		if (!started) {
-			throw new Error('Cannot call replaceState(...) before router is initialized');
+			throw new Error(
+				`Cannot call ${replace ? 'replaceState' : 'pushState'}(...) before router is initialized`
+			);
 		}
 
 		try {
@@ -2628,16 +2631,97 @@ export function replaceState(url, state) {
 		}
 	}
 
-	const opts = {
-		[HISTORY_INDEX]: current_history_index,
+	const resolved = !url ? null : resolve_url(url);
+	const intent = resolved ? await get_navigation_intent(resolved, false) : undefined;
+	const nav = resolved ? _before_navigate({ url: resolved, type: 'shallow', intent }) : undefined;
+
+	if (resolved && !nav) return;
+
+	const nav_token = {};
+
+	if (nav) {
+		navigation_token = invalidation_token = nav_token;
+		is_navigating = true;
+		navigating.current = nav.navigation;
+		updating = true;
+	}
+
+	if (!replace) update_scroll_positions(current_history_index);
+
+	const entry = {
+		[HISTORY_INDEX]: (current_history_index += replace ? 0 : 1),
 		[NAVIGATION_INDEX]: current_navigation_index,
-		[PAGE_URL_KEY]: page.url.href,
+		...((resolved || (url === '' && page.shallow)) && { [PAGE_URL_KEY]: page.url.href }),
+		[STATES_PERSISTED_KEY]: persist,
 		[STATES_KEY]: state
 	};
 
-	history.replaceState(opts, '', resolve_url(url));
+	const fn = replace ? history.replaceState : history.pushState;
+	if (resolved) {
+		fn.call(history, entry, '', resolved);
+	} else {
+		fn.call(history, entry, '', url == null ? page.url.href : undefined);
+	}
+
+	if (!replace) {
+		has_navigated = true;
+		clear_onward_history(current_history_index, current_navigation_index);
+	}
+
+	if (nav) {
+		const after_navigate = (
+			await Promise.all(
+				// eslint-disable-next-line @typescript-eslint/await-thenable -- we need to await because they can be asynchronous
+				Array.from(on_navigate_callbacks, (fn) =>
+					fn(/** @type {import('@sveltejs/kit').OnNavigate} */ (nav.navigation))
+				)
+			)
+		).filter(/** @returns {value is () => void} */ (value) => typeof value === 'function');
+
+		if (after_navigate.length > 0) {
+			function cleanup() {
+				after_navigate.forEach((fn) => after_navigate_callbacks.delete(fn));
+			}
+
+			after_navigate.push(cleanup);
+			after_navigate.forEach((fn) => after_navigate_callbacks.add(fn));
+		}
+	}
 
 	page.state = state;
+	if (resolved) {
+		page.shallow = {
+			params: intent?.params ?? null,
+			route: intent ? { id: intent.route.id } : null,
+			url: resolved
+		};
+	} else if (url === null) {
+		page.shallow = null;
+	}
+
+	if (!nav) return;
+
+	await settled();
+
+	if (navigation_token !== nav_token) {
+		// a new navigation happened while we were waiting for the DOM to update, so abort
+		nav.reject(new Error('navigation aborted'));
+		return;
+	}
+
+	is_navigating = false;
+	nav.fulfil(undefined);
+
+	if (nav.navigation.to) {
+		nav.navigation.to.scroll = scroll_state();
+	}
+
+	after_navigate_callbacks.forEach((fn) =>
+		fn(/** @type {import('@sveltejs/kit').AfterNavigate} */ (nav.navigation))
+	);
+
+	navigating.current = null;
+	updating = false;
 }
 
 /**
@@ -2669,7 +2753,7 @@ export async function applyAction(result) {
 		});
 
 		// ...so that setting the `form` prop takes effect and isn't ignored
-		await svelte.tick();
+		await tick();
 		root.$set({ form: result.data });
 
 		if (result.type === 'success') {
@@ -2704,7 +2788,7 @@ export async function set_nearest_error_page(error) {
 		current_tree = navigation_result.props.tree;
 		update(navigation_result.props.page);
 
-		void svelte.tick().then(() => reset_focus(current.url));
+		void tick().then(() => reset_focus(current.url));
 	}
 }
 
@@ -2951,6 +3035,16 @@ function _start_router() {
 					page.state = state;
 				}
 
+				const shallow_url = event.state[PAGE_URL_KEY] ? new URL(location.href) : null;
+				const intent = shallow_url ? await get_navigation_intent(shallow_url, false) : undefined;
+				page.shallow = shallow_url
+					? {
+							params: intent?.params ?? null,
+							route: intent ? { id: intent.route.id } : null,
+							url: shallow_url
+						}
+					: null;
+
 				update_url(url);
 
 				scroll_positions[current_history_index] = scroll_state();
@@ -3151,7 +3245,9 @@ async function _hydrate(
 	if (!result) return;
 
 	if (result.props.page) {
-		result.props.page.state = {};
+		result.props.page.state = history.state?.[STATES_PERSISTED_KEY]
+			? (history.state[STATES_KEY] ?? {})
+			: {};
 	}
 
 	await initialize(result, target, hydrate);
@@ -3414,7 +3510,7 @@ function create_navigation(current, intent, url, type, target_scroll = null) {
 			url,
 			scroll: target_scroll
 		},
-		willUnload: !intent,
+		willUnload: type !== 'shallow' && !intent,
 		type,
 		complete
 	});
