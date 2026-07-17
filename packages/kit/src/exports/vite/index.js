@@ -754,10 +754,10 @@ function kit({ svelte_config }) {
 				// skip .server.js files outside the cwd or in node_modules, as the filename might not mean 'server-only module' in this context
 				if (id.startsWith(normalized_cwd) && !id.startsWith(normalized_node_modules)) {
 					// e.g. `server.ts` or `foo.server.ts`
-					is_server_only ??= server_only_module_pattern.test(id);
+					is_server_only ||= server_only_module_pattern.test(id);
 
 					// e.g. `server/foo.ts`, unless in `src/routes` or `static`
-					is_server_only ??=
+					is_server_only ||=
 						server_only_directory_pattern.test(id) &&
 						!id.startsWith(normalized_routes + '/') &&
 						!id.startsWith(normalized_assets + '/');
