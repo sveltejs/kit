@@ -101,6 +101,8 @@ let current_tree = /** @type {RenderNode} */ ({});
 if (DEV && BROWSER) {
 	let warned = false;
 
+	const current_module_url = import.meta.url.split('?')[0]; // remove query params that vite adds to the URL when it is loaded from node_modules
+
 	const warn = () => {
 		if (warned) return;
 
@@ -113,9 +115,10 @@ if (DEV && BROWSER) {
 		// skip over `warn` and the place where `warn` was called
 		const frame = stack[2];
 
-		// ignore calls that happen inside dependencies, including SvelteKit.
+		// Ignore calls that happen inside dependencies, including SvelteKit.
+		// The second condition is only relevant when developing SvelteKit and running it, as there's no node_modules in the stack then (but we still do it to not get repeatedly confused)
 		// `frame` can be falsy if we came from an anonymous function
-		if (frame?.includes('node_modules')) return;
+		if (frame?.includes('node_modules') || frame.includes(current_module_url)) return;
 
 		warned = true;
 
