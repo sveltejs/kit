@@ -886,32 +886,30 @@ function kit({ svelte_config }) {
 			dev_server = _dev_server;
 		},
 
-		// TODO this should use a filter, surely?
-		async transform(code, id) {
-			const normalized = normalize_id(id, normalized_aliases, normalized_cwd);
-			if (!remote_module_pattern.test(normalized)) {
-				return;
-			}
+		transform: {
+			filter: {
+				id: remote_module_pattern
+			},
+			async handler(code, id) {
+				const file = posixify(path.relative(root, id));
+				const remote = {
+					hash: hash(file),
+					file
+				};
 
-			const file = posixify(path.relative(root, id));
-			const remote = {
-				hash: hash(file),
-				file
-			};
+				remotes.push(remote);
 
-			remotes.push(remote);
+				if (this.environment.config.consumer !== 'client') {
+					// we need to add an `await Promise.resolve()` because if the user imports this function
+					// on the client AND in a load function when loading the client module we will trigger
+					// an ssrLoadModule during dev. During a link preload, the module can be mistakenly
+					// loaded and transformed twice and the first time all its exports would be undefined
+					// triggering a dev server error. By adding a microtask we ensure that the module is fully loaded
 
-			if (this.environment.config.consumer !== 'client') {
-				// we need to add an `await Promise.resolve()` because if the user imports this function
-				// on the client AND in a load function when loading the client module we will trigger
-				// an ssrLoadModule during dev. During a link preload, the module can be mistakenly
-				// loaded and transformed twice and the first time all its exports would be undefined
-				// triggering a dev server error. By adding a microtask we ensure that the module is fully loaded
-
-				// Extra newlines to prevent syntax errors around missing semicolons or comments
-				code +=
-					'\n\n' +
-					dedent`
+					// Extra newlines to prevent syntax errors around missing semicolons or comments
+					code +=
+						'\n\n' +
+						dedent`
 					import * as $$_self_$$ from './${path.basename(id)}';
 					import { init_remote_functions as $$_init_$$ } from '@sveltejs/kit/internal/server';
 
@@ -925,71 +923,72 @@ function kit({ svelte_config }) {
 					}
 				`;
 
-				// Emit a dedicated entry chunk for this remote in SSR builds (prod only)
-				if (!dev_server) {
-					remote_original_by_hash.set(remote.hash, id);
-					if (!emitted_remote_hashes.has(remote.hash)) {
-						this.emitFile({
-							type: 'chunk',
-							id: `\0sveltekit-remote:${remote.hash}`,
-							name: `remote-${remote.hash}`
-						});
-						emitted_remote_hashes.add(remote.hash);
+					// Emit a dedicated entry chunk for this remote in SSR builds (prod only)
+					if (!dev_server) {
+						remote_original_by_hash.set(remote.hash, id);
+						if (!emitted_remote_hashes.has(remote.hash)) {
+							this.emitFile({
+								type: 'chunk',
+								id: `\0sveltekit-remote:${remote.hash}`,
+								name: `remote-${remote.hash}`
+							});
+							emitted_remote_hashes.add(remote.hash);
+						}
+					}
+
+					return code;
+				}
+
+				// For the client, read the exports and create a new module that only contains fetch functions with the correct metadata
+
+				/** @type {Map<string, RemoteInternals['type']>} */
+				const map = new Map();
+
+				// in dev, load the server module here (which will result in this hook
+				// being called again with `opts.ssr === true` if the module isn't
+				// already loaded) so we can determine what it exports
+				if (dev_server) {
+					const module = await dev_server.ssrLoadModule(id);
+
+					for (const [name, value] of Object.entries(module)) {
+						const type = value?.__?.type;
+						if (type) {
+							map.set(name, type);
+						}
 					}
 				}
 
-				return code;
-			}
+				// in prod, we already built and analysed the server code before
+				// building the client code, so `remotes` is populated
+				else if (build_metadata?.remotes) {
+					const exports = build_metadata?.remotes.get(remote.hash);
+					if (!exports) throw new Error('Expected to find metadata for remote file ' + id);
 
-			// For the client, read the exports and create a new module that only contains fetch functions with the correct metadata
-
-			/** @type {Map<string, RemoteInternals['type']>} */
-			const map = new Map();
-
-			// in dev, load the server module here (which will result in this hook
-			// being called again with `opts.ssr === true` if the module isn't
-			// already loaded) so we can determine what it exports
-			if (dev_server) {
-				const module = await dev_server.ssrLoadModule(id);
-
-				for (const [name, value] of Object.entries(module)) {
-					const type = value?.__?.type;
-					if (type) {
-						map.set(name, type);
+					for (const [name, value] of exports) {
+						map.set(name, value.type);
 					}
 				}
-			}
 
-			// in prod, we already built and analysed the server code before
-			// building the client code, so `remotes` is populated
-			else if (build_metadata?.remotes) {
-				const exports = build_metadata?.remotes.get(remote.hash);
-				if (!exports) throw new Error('Expected to find metadata for remote file ' + id);
+				const { namespace, declarations, reexports } = create_exported_declarations(
+					map.keys(),
+					(name, ns) => `${ns}.${map.get(name)}('${remote.hash}/${name}')`,
+					'__remote'
+				);
 
-				for (const [name, value] of exports) {
-					map.set(name, value.type);
+				let result = `import * as ${namespace} from '__sveltekit/remote';\n\n${declarations.join('\n')}`;
+				if (reexports.length > 0) {
+					result += `\nexport { ${reexports.join(', ')} };`;
 				}
+				result += '\n';
+
+				if (dev_server) {
+					result += `\nimport.meta.hot?.accept();\n`;
+				}
+
+				return {
+					code: result
+				};
 			}
-
-			const { namespace, declarations, reexports } = create_exported_declarations(
-				map.keys(),
-				(name, ns) => `${ns}.${map.get(name)}('${remote.hash}/${name}')`,
-				'__remote'
-			);
-
-			let result = `import * as ${namespace} from '__sveltekit/remote';\n\n${declarations.join('\n')}`;
-			if (reexports.length > 0) {
-				result += `\nexport { ${reexports.join(', ')} };`;
-			}
-			result += '\n';
-
-			if (dev_server) {
-				result += `\nimport.meta.hot?.accept();\n`;
-			}
-
-			return {
-				code: result
-			};
 		}
 	};
 
