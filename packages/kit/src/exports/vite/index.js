@@ -462,8 +462,7 @@ function kit({ svelte_config }) {
 
 				if (kit.experimental.remoteFunctions) {
 					// treat .remote.js files as empty for the purposes of prebundling
-					const extensions = kit.moduleExtensions.join('|').replaceAll('.', '\\.');
-					const remote_id_filter = new RegExp(`[/.]remote(\\.[^/]+)*(?:${extensions})$`);
+					const remote_id_filter = /[/.]remote(\.[^/]+)+$/;
 
 					// @ts-expect-error optimizeDeps is already set above
 					new_config.optimizeDeps.rolldownOptions ??= {};
@@ -695,7 +694,7 @@ function kit({ svelte_config }) {
 	/** @type {Map<string, Set<string>>} */
 	const import_map = new Map();
 	// Matches any ID with `server` as a filename segment
-	const server_only_module_pattern = /(?:^|[\\/])server\.[^/]+$|\.server\.[^/]+$/;
+	const server_only_module_pattern = /[/.]server(\.[^/]+)+$/;
 	// Matches any ID that has /server/ in its path
 	const server_only_directory_pattern = /\/server\//;
 
