@@ -18,6 +18,7 @@ import { createReadableStream } from '@sveltejs/kit/node';
 import generate_fallback from './fallback.js';
 import { stringify_remote_arg } from '../../runtime/shared.js';
 import { SRC_ROOT } from '../../constants.js';
+import { coalesce_to_error } from '../../utils/error.js';
 
 export default forked(import.meta.url, prerender);
 
@@ -67,38 +68,46 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 	 * @template {{message: string}} T
 	 * @template {Omit<T, 'message'>} K
 	 * @param {import('types').Logger} log
-	 * @param {'fail' | 'warn' | 'ignore' | ((details: T) => void)} input
+	 * @param {string} name
+	 * @param {'fail' | 'warn' | 'ignore' | undefined | ((details: T) => void)} input
 	 * @param {(details: K) => string} format
 	 * @returns {(details: K & { error?: unknown }) => void}
 	 */
-	function normalise_error_handler(log, input, format) {
+	function normalise_error_handler(log, name, input, format) {
+		/**
+		 * @param {any} details
+		 */
+		function log_failure(details) {
+			const message = format(details);
+
+			log.error(`\n${message}\n`);
+
+			if (details.error instanceof Error && details.error.stack) {
+				log.err(details.error.stack + '\n');
+			}
+		}
+
 		switch (input) {
 			case 'fail':
 				return (details) => {
-					const message = format(details);
-					const error = details.error;
-
-					if (error instanceof Error) {
-						log.error(`${message}\n${error.stack ?? `${error.name}: ${error.message}`}`);
-					} else {
-						log.error(message);
-					}
-
+					log_failure(details);
 					throw_handled();
 				};
 			case 'warn':
-				return (details) => {
-					const message = format(details);
-					const error = details.error;
-
-					if (error instanceof Error) {
-						log.error(`${message}\n${error.stack ?? `${error.name}: ${error.message}`}`);
-					} else {
-						log.error(message);
-					}
-				};
+				return log_failure;
 			case 'ignore':
 				return noop;
+			case undefined: {
+				return (details) => {
+					log_failure(details);
+
+					log.err(
+						`To suppress or handle this error, implement \`${name}\` in https://svelte.dev/docs/kit/configuration#prerender\n`
+					);
+
+					throw_handled();
+				};
+			}
 			default:
 				return (details) => {
 					const message = format(details);
@@ -107,40 +116,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 						// @ts-expect-error TS thinks T might be of a different kind, but it's not
 						input({ ...details, message });
 					} catch (error) {
-						if (error instanceof Error && details.error instanceof Error && details.error.stack) {
-							const stack = error.stack ?? '';
-							const idx = stack.indexOf(import.meta.dirname);
-							if (idx !== -1) {
-								// Cut the stack trace off at the point when our internal one starts
-								error.stack = stack.slice(0, stack.lastIndexOf('\n', idx));
-							}
-
-							log.error(
-								`${error.message.includes(message) ? '' : message}\n${message.includes(error.message) ? '' : error.message}\n${details.error.stack ?? `${details.error.name}: ${details.error.message}`}`
-							);
-						} else {
-							const e =
-								details.error instanceof Error
-									? details.error
-									: error instanceof Error
-										? error
-										: undefined;
-
-							if (e instanceof Error) {
-								const is_ours = /** @type {string} */ (e.message.split('\n').pop()).startsWith(
-									'To suppress or handle this error, implement'
-								);
-								if (is_ours) {
-									// We know this is our default message, stack is useless in this case
-									log.error(e.message);
-								} else {
-									log.error(e.stack ?? `${e.name}: ${e.message}`);
-								}
-							} else {
-								log.error(typeof error === 'string' ? error : message);
-							}
-						}
-
+						log.prettyError(error, import.meta.dirname);
 						throw_handled();
 					}
 				};
@@ -314,11 +290,12 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 
 	const handle_http_error = normalise_error_handler(
 		log,
+		'handleHttpError',
 		config.prerender.handleHttpError,
 		({ status, path, referrer, referenceType }) => {
 			const message =
 				status === 404 && !path.startsWith(config.paths.base)
-					? `${path} does not begin with \`base\`. You can fix this by using \`resolve('${path}')\` from \`$app/paths\`. The base path is configurable from \`paths.base\` - see https://svelte.dev/docs/kit/configuration#paths for more info`
+					? `${path} does not begin with \`base\`. You can fix this by using \`resolve('${path}')\` from \`$app/paths\`. The base path is configurable from \`paths.base\`:`
 					: `while prerendering ${path}`;
 
 			return `${status} ${message}${referrer ? ` (${referenceType} from ${referrer})` : ''}`;
@@ -327,10 +304,11 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 
 	const handle_missing_id = normalise_error_handler(
 		log,
+		'handleMissingId',
 		config.prerender.handleMissingId,
 		({ path, id, referrers }) => {
 			return (
-				`The following pages contain links to ${path}#${id}, but no element with id="${id}" exists on ${path} - see the \`handleMissingId\` option in https://svelte.dev/docs/kit/configuration#prerender for more info:` +
+				`The following pages contain links to ${path}#${id}, but no element with id="${id}" exists on ${path}:` +
 				referrers.map((l) => `\n  - ${l}`).join('')
 			);
 		}
@@ -338,23 +316,26 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 
 	const handle_entry_generator_mismatch = normalise_error_handler(
 		log,
+		'handleEntryGeneratorMismatch',
 		config.prerender.handleEntryGeneratorMismatch,
 		({ generatedFromId, entry, matchedId }) => {
-			return `The entries export from ${generatedFromId} generated entry ${entry}, which was matched by ${matchedId} - see the \`handleEntryGeneratorMismatch\` option in https://svelte.dev/docs/kit/configuration#prerender for more info.`;
+			return `The entries export from ${generatedFromId} generated entry ${entry}, which was matched by ${matchedId === entry ? 'a static route' : matchedId}`;
 		}
 	);
 
 	const handle_not_prerendered_route = normalise_error_handler(
 		log,
+		'handleUnseenRoutes',
 		config.prerender.handleUnseenRoutes,
 		({ routes }) => {
 			const list = routes.map((id) => `  - ${id}`).join('\n');
-			return `The following routes were marked as prerenderable, but were not prerendered because they were not found while crawling your app:\n${list}\n\nSee the \`handleUnseenRoutes\` option in https://svelte.dev/docs/kit/configuration#prerender for more info.`;
+			return `The following routes were marked as prerenderable, but were not prerendered because they were not found while crawling your app:\n${list}`;
 		}
 	);
 
 	const handle_invalid_url = normalise_error_handler(
 		log,
+		'handleInvalidUrl',
 		config.prerender.handleInvalidUrl,
 		({ href, referrer }) => {
 			return `Invalid URL ${href}${referrer ? ` (linked from ${referrer})` : ''}`;
@@ -674,7 +655,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 				path: decoded,
 				referrer,
 				referenceType,
-				error
+				error: coalesce_to_error(error)
 			});
 		}
 

@@ -1846,6 +1846,9 @@ function kit({ svelte_config }) {
 					env,
 					vite_config_file: vite_config.configFile
 				});
+
+				// this silly hack is necessary to ensure that stderr from prerender is flushed before we continue
+				await new Promise((f) => setTimeout(f, 0));
 			} catch (e) {
 				if (e instanceof Error && e.message === '__handled__') {
 					// error details are already logged inside `prerender`, don't duplicate them
