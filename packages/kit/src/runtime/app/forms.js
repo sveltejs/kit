@@ -205,7 +205,17 @@ export function enhance(form_element, submit = noop) {
 			if (response.status === 204) {
 				result = { type: 'success', status: 204 };
 			} else {
-				const parsed = /** @type {any} */ (deserialize(await response.text()));
+				const text = await response.text();
+
+				/** @type {any} */
+				let parsed;
+				try {
+					// an empty body carries no result for an error response
+					parsed = text === '' && !response.ok ? undefined : deserialize(text);
+				} catch (error) {
+					// only an error response may have a non-ActionResult body, e.g. an HTML error page
+					if (response.ok) throw error;
+				}
 
 				if (
 					parsed?.type === 'success' ||
@@ -218,12 +228,18 @@ export function enhance(form_element, submit = noop) {
 						result.status = response.status;
 					}
 				} else if (!response.ok) {
-					// the action never ran, e.g. the CSRF check rejected the request
+					// the action never ran, e.g. the CSRF check or a proxy rejected the request
 					// `status` on the error object is where the client reads the page status from
 					result = {
 						type: 'error',
 						status: response.status,
-						error: { ...parsed, status: response.status }
+						error:
+							parsed && typeof parsed === 'object'
+								? { ...parsed, status: response.status }
+								: {
+										message: typeof parsed === 'string' ? parsed : response.statusText,
+										status: response.status
+									}
 					};
 				} else {
 					result = parsed;
