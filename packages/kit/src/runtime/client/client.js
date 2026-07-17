@@ -1457,8 +1457,6 @@ async function load_root_error_page({ error, url, route }) {
 
 					server_data_node = server_data.nodes[0] ?? null;
 				} catch (e) {
-					// at this point we have no choice but to fall back to the server, if it wouldn't
-					// bring us right back here, turning this into an endless loop.
 					// if __data.json returned 404, the route doesn't exist — don't reload or we loop
 					if (
 						!(e instanceof HttpError && e.status === 404) &&

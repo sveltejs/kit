@@ -372,13 +372,16 @@ test.describe('Load', () => {
 	test('reuses root layout server data when rendering the error page', async ({ page, app }) => {
 		await page.goto('/');
 
-		/** @type {string[]} */
-		const urls = [];
-		page.on('request', (request) => urls.push(request.url()));
-		await app.goto('/this-route-does-not-exist');
+		let data_requests = 0;
+		await page.route('**/__data.json*', (route) => {
+			data_requests += 1;
+			return route.fulfill({ status: 500, body: 'nope' });
+		});
 
-		expect(await page.textContent('h1')).toBe('404');
-		expect(urls.some((url) => url.includes('__data.json'))).toBe(false);
+		await app.goto('/serialization-basic');
+
+		expect(await page.textContent('#message')).toContain('Internal Error');
+		expect(data_requests).toBe(1);
 	});
 });
 
