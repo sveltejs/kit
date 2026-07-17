@@ -9,7 +9,7 @@ inputs:
   e2e-browser:
     description: 'E2E browser'
     required: true
-    default: 'chromium'
+    default: 'chromium  --no-shell'
 
 runs:
   using: 'composite'
@@ -24,4 +24,4 @@ runs:
     - name: Install Playwright browsers and system dependencies
       shell: bash
       if: steps.playwright-cache.outputs.cache-hit != 'true'
-      run: pnpm playwright install ${{ inputs.e2e-browser }} --no-shell
+      run: pnpm playwright install ${{ inputs.e2e-browser }}
