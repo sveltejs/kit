@@ -33,6 +33,8 @@ import { preview } from './preview/index.js';
 import {
 	error_for_missing_config,
 	get_config_aliases,
+	is_remote_module,
+	is_server_only_module,
 	normalize_id,
 	strip_virtual_prefix
 } from './utils.js';
@@ -460,8 +462,11 @@ function kit({ svelte_config }) {
 
 				if (kit.experimental.remoteFunctions) {
 					// treat .remote.js files as empty for the purposes of prebundling
+					const extensions = kit.moduleExtensions
+						.map((extension) => extension.replaceAll('.', '\\.'))
+						.join('|');
 					const remote_id_filter = new RegExp(
-						`.remote(${kit.moduleExtensions.join('|')})$`.replaceAll('.', '\\.')
+						`(?:^|[\\\\/])remote(?:${extensions})$|\\.remote(?:\\..*)?(?:${extensions})$`
 					);
 					// @ts-expect-error optimizeDeps is already set above
 					new_config.optimizeDeps.rolldownOptions ??= {};
@@ -692,8 +697,8 @@ function kit({ svelte_config }) {
 
 	/** @type {Map<string, Set<string>>} */
 	const import_map = new Map();
-	// Matches any ID that has .server. in its filename
-	const server_only_module_pattern = /\.server\.[^/]+$/;
+	// Matches any ID with `server` as a filename segment
+	const server_only_module_pattern = /(?:^|[\\/])server\.[^/]+$|\.server\.[^/]+$/;
 	// Matches any ID that has /server/ in its path
 	const server_only_directory_pattern = /\/server\//;
 
@@ -769,7 +774,7 @@ function kit({ svelte_config }) {
 					normalized === '$app/env/private' ||
 					normalized === '$app/server' ||
 					is_server_only_directory ||
-					(is_internal && server_only_module_pattern.test(id));
+					(is_internal && is_server_only_module(id, svelte_config.kit.moduleExtensions));
 
 				if (!is_server_only) return;
 
@@ -820,6 +825,10 @@ function kit({ svelte_config }) {
 				const chain = find_chain(normalized, [normalized]);
 
 				if (chain) {
+					if (chain.some((id) => is_remote_module(id, svelte_config.kit.moduleExtensions))) {
+						error_for_missing_config('remote functions', 'experimental.remoteFunctions', 'true');
+					}
+
 					const pyramid = chain
 						.reverse()
 						.map((id, i) => {
@@ -892,7 +901,7 @@ function kit({ svelte_config }) {
 
 		async transform(code, id) {
 			const normalized = normalize_id(id, normalized_aliases, normalized_cwd);
-			if (!svelte_config.kit.moduleExtensions.some((ext) => normalized.endsWith(`.remote${ext}`))) {
+			if (!is_remote_module(normalized, svelte_config.kit.moduleExtensions)) {
 				return;
 			}
 

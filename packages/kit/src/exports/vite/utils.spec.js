@@ -3,7 +3,12 @@ import { expect, test } from 'vitest';
 import { validate_config } from '../../core/config/index.js';
 import { posixify } from '../../utils/os.js';
 import { dedent } from '../../core/sync/utils.js';
-import { get_config_aliases, error_for_missing_config } from './utils.js';
+import {
+	error_for_missing_config,
+	get_config_aliases,
+	is_remote_module,
+	is_server_only_module
+} from './utils.js';
 
 test('transform kit.alias to resolve.alias', () => {
 	const config = validate_config({
@@ -36,6 +41,25 @@ test('transform kit.alias to resolve.alias', () => {
 		{ find: /^\$regexChar$/.toString(), replacement: 'windows/path' },
 		{ find: /^\$regexChar\/(.+)$/.toString(), replacement: 'windows/path/$1' }
 	]);
+});
+
+test('recognizes server-only module filenames', () => {
+	const extensions = ['.js', '.ts'];
+
+	expect(is_server_only_module('server.js', extensions)).toBe(true);
+	expect(is_server_only_module('module.server.ts', extensions)).toBe(true);
+	expect(is_server_only_module('module.server.test.js', extensions)).toBe(true);
+	expect(is_server_only_module('server.test.ts', extensions)).toBe(false);
+	expect(is_server_only_module('module.serverish.js', extensions)).toBe(false);
+});
+
+test('recognizes remote module filenames', () => {
+	const extensions = ['.js', '.ts'];
+
+	expect(is_remote_module('remote.js', extensions)).toBe(true);
+	expect(is_remote_module('module.remote.ts', extensions)).toBe(true);
+	expect(is_remote_module('module.remote.test.js', extensions)).toBe(true);
+	expect(is_remote_module('module.remotely.js', extensions)).toBe(false);
 });
 
 test('error_for_missing_config - simple single level config', () => {

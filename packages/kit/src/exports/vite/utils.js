@@ -149,6 +149,33 @@ export function normalize_id(id, aliases, cwd) {
 	return posixify(id);
 }
 
+/**
+ * @param {string} id
+ * @param {string[]} module_extensions
+ */
+export function is_server_only_module(id, module_extensions) {
+	const filename = path.basename(id);
+
+	return (
+		filename.includes('.server.') ||
+		module_extensions.some((extension) => filename === `server${extension}`)
+	);
+}
+
+/**
+ * @param {string} id
+ * @param {string[]} module_extensions
+ */
+export function is_remote_module(id, module_extensions) {
+	const filename = path.basename(id);
+
+	return module_extensions.some(
+		(extension) =>
+			filename === `remote${extension}` ||
+			(filename.endsWith(extension) && filename.includes('.remote.'))
+	);
+}
+
 export const strip_virtual_prefix = /** @param {string} id */ (id) => id.replace('\0virtual:', '');
 
 /**
