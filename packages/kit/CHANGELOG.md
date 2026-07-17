@@ -1,5 +1,33 @@
 # @sveltejs/kit
 
+## 3.0.0-next.9
+
+### Major Changes
+
+- breaking: `handle`'s `resolve` is now typed to always return a `Promise` ([#16352](https://github.com/sveltejs/kit/pull/16352))
+
+- breaking: replace the `$lib` alias with `#lib` and remove `files.lib` config. ([#16360](https://github.com/sveltejs/kit/pull/16360))
+
+- breaking: disallow cross-origin form submissions without a `Content-Type` header ([#16347](https://github.com/sveltejs/kit/pull/16347))
+
+- breaking: Server-only directories (`/server/` in the path) are now treated as server-only everywhere inside the project (except `src/routes` and the assets directory) ([#16360](https://github.com/sveltejs/kit/pull/16360))
+
+- breaking: delegate CORS handling to Vite for static directory requests during development ([#16357](https://github.com/sveltejs/kit/pull/16357))
+
+### Minor Changes
+
+- feat: reinstate `$env/static/private`, `$env/dynamic/private`, `$env/static/public`, `$env/dynamic/public` and `$app/environment` as deprecated aliases for `$app/env/private` `$app/env/public` and `$app/env` ([#16334](https://github.com/sveltejs/kit/pull/16334))
+
+### Patch Changes
+
+- perf: cache the default cookie header parse and avoid allocations in `cookies.get` ([#16341](https://github.com/sveltejs/kit/pull/16341))
+
+- fix: avoid client-side code being bundled by Cloudflare Wrangler ([#16364](https://github.com/sveltejs/kit/pull/16364))
+
+- fix: handle rejected streamed server data after delayed loads ([#16268](https://github.com/sveltejs/kit/pull/16268))
+
+- fix: enable CSRF protection in builds with a non-production `NODE_ENV` value ([#16313](https://github.com/sveltejs/kit/pull/16313))
+
 ## 3.0.0-next.8
 
 ### Major Changes
