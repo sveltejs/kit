@@ -1818,6 +1818,9 @@ function kit({ svelte_config }) {
 					env,
 					vite_config_file: vite_config.configFile
 				});
+			} catch {
+				// error details are already logged inside `prerender`, don't duplicate them
+				throw stackless('Prerendering failed');
 			} finally {
 				if (temporary_sourcemap) {
 					// If we did override it, set it back to false and remove the sourcemaps
