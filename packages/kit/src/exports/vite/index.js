@@ -748,24 +748,21 @@ function kit({ svelte_config }) {
 			handler(id) {
 				if (this.environment.config.consumer !== 'client') return;
 
-				// skip .server.js files outside the cwd or in node_modules, as the filename might not mean 'server-only module' in this context
-				const is_internal =
-					id.startsWith(normalized_cwd) && !id.startsWith(normalized_node_modules);
-
 				const normalized = normalize_id(id, normalized_aliases, normalized_cwd);
 
-				// server-only directories: any file in a `/server/` folder inside the cwd,
-				// except those inside the routes or assets directories
-				const is_in_routes = id.startsWith(normalized_routes + '/');
-				const is_in_assets = id.startsWith(normalized_assets + '/');
-				const is_server_only_directory =
-					is_internal && !is_in_routes && !is_in_assets && server_only_directory_pattern.test(id);
+				let is_server_only = normalized === '$app/env/private' || normalized === '$app/server';
 
-				const is_server_only =
-					normalized === '$app/env/private' ||
-					normalized === '$app/server' ||
-					is_server_only_directory ||
-					(is_internal && server_only_module_pattern.test(id));
+				// skip .server.js files outside the cwd or in node_modules, as the filename might not mean 'server-only module' in this context
+				if (id.startsWith(normalized_cwd) && !id.startsWith(normalized_node_modules)) {
+					// e.g. `server.ts` or `foo.server.ts`
+					is_server_only ??= server_only_module_pattern.test(id);
+
+					// e.g. `server/foo.ts`, unless in `src/routes` or `static`
+					is_server_only ??=
+						server_only_directory_pattern.test(id) &&
+						!id.startsWith(normalized_routes + '/') &&
+						!id.startsWith(normalized_assets + '/');
+				}
 
 				if (!is_server_only) return;
 
