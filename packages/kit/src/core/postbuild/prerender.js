@@ -161,7 +161,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 	}
 
 	/** @param {unknown} error */
-	function annotate_stack_trace(error) {
+	function adjust_stack_trace(error) {
 		if (!(error instanceof Error) || !error.stack) return;
 
 		error.stack = error.stack
@@ -171,6 +171,13 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 				if (!match) return line;
 
 				const file = fileURLToPath(match[1]);
+				// Filter out internal stack trace lines
+				if (
+					file.includes('/svelte/src/internal/server/') ||
+					file.includes('/kit/src/runtime/components/root.svelte')
+				) {
+					return null;
+				}
 				// Only annotate files from our own server directory
 				if (!file.startsWith(`${out}/server/`)) return line;
 
@@ -189,6 +196,15 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 						: resolve_path(source_map.directory, entry.originalSource);
 					const location = `${match[1]}:${match[2]}:${match[3]}`;
 					const original = `${posixify(relative(vite_config.root, source))}:${entry.originalLine + 1}:${entry.originalColumn + 1}`;
+
+					// Filter out internal stack trace lines (gotta do this again here on the original)
+					if (
+						original.includes('/svelte/src/internal/server/') ||
+						original.includes('/kit/src/runtime/components/root.svelte')
+					) {
+						return null;
+					}
+
 					return line.replace(location, original);
 				}
 
@@ -213,6 +229,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 				// Output is something like "at file:///... [src/routes/+page.svelte]"
 				return source ? `${line} [${source}]` : line;
 			})
+			.filter(Boolean)
 			.join('\n');
 	}
 
@@ -629,7 +646,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 			prerendered.paths.push(decoded);
 		} else if (response_type !== OK) {
 			const error = errors.get(encoded);
-			annotate_stack_trace(error);
+			adjust_stack_trace(error);
 			handle_http_error({
 				status: response.status,
 				path: decoded,
