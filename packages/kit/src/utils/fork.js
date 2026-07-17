@@ -38,7 +38,8 @@ export function forked(module, callback) {
 			const worker = new Worker(fileURLToPath(module), {
 				env: {
 					...process.env,
-					SVELTEKIT_FORK: 'true'
+					SVELTEKIT_FORK: 'true',
+					FORCE_COLOR: '1'
 				}
 			});
 
