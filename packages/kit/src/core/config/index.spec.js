@@ -1,4 +1,5 @@
 import { join } from 'node:path';
+import { stripVTControlCharacters } from 'node:util';
 import { assert, expect, test } from 'vitest';
 import { validate_config, split_config } from './index.js';
 
@@ -35,13 +36,10 @@ function assert_logs_error_and_throws(fn, pattern) {
 		console.log = original_log;
 	}
 
-	/** @param {string} str */
-	const strip_ansi = (str) =>
-		str.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '');
-	const has_match = logs.some((log) => pattern.test(strip_ansi(log).trim()));
+	const has_match = logs.some((log) => pattern.test(stripVTControlCharacters(log).trim()));
 	if (!has_match) {
 		throw new Error(
-			`Expected console.log to match ${pattern}, but got:\n${logs.map((log) => JSON.stringify(strip_ansi(log).trim())).join('\n')}`
+			`Expected console.log to match ${pattern}, but got:\n${logs.map((log) => JSON.stringify(stripVTControlCharacters(log).trim())).join('\n')}`
 		);
 	}
 }

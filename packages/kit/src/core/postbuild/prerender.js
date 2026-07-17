@@ -58,6 +58,10 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 	/** @type {import('types').ServerModule} */
 	const { Server } = await import(pathToFileURL(`${out}/server/index.js`).href);
 
+	const throw_handled = () => {
+		throw new Error('__handled__');
+	};
+
 	/**
 	 * @template {{message: string}} T
 	 * @template {Omit<T, 'message'>} K
@@ -75,11 +79,11 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 
 					if (error instanceof Error) {
 						log.error(`${message}\n${error.stack ?? `${error.name}: ${error.message}`}`);
+					} else {
+						log.error(message);
 					}
 
-					const wrapped = new Error(message);
-					wrapped.stack = wrapped.message;
-					throw wrapped;
+					throw_handled();
 				};
 			case 'warn':
 				return (details) => {
@@ -113,8 +117,30 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 							log.error(
 								`${error.message.includes(message) ? '' : message}\n${message.includes(error.message) ? '' : error.message}\n${details.error.stack ?? `${details.error.name}: ${details.error.message}`}`
 							);
+						} else {
+							const e =
+								details.error instanceof Error
+									? details.error
+									: error instanceof Error
+										? error
+										: undefined;
+
+							if (e instanceof Error) {
+								const is_ours = /** @type {string} */ (e.message.split('\n').pop()).startsWith(
+									'To suppress or handle this error, implement'
+								);
+								if (is_ours) {
+									// We know this is our default message, stack is useless in this case
+									log.error(e.message);
+								} else {
+									log.error(e.stack ?? `${e.name}: ${e.message}`);
+								}
+							} else {
+								log.error(typeof error === 'string' ? error : message);
+							}
 						}
-						throw error;
+
+						throw_handled();
 					}
 				};
 		}
@@ -295,9 +321,9 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 			const message =
 				status === 404 && !path.startsWith(config.paths.base)
 					? `${path} does not begin with \`base\`. You can fix this by using \`resolve('${path}')\` from \`$app/paths\`. The base path is configurable from \`paths.base\` - see https://svelte.dev/docs/kit/configuration#paths for more info`
-					: path;
+					: `while prerendering ${path}`;
 
-			return `${status} while prerendering ${message}${referrer ? ` (${referenceType} from ${referrer})` : ''}`;
+			return `${status} ${message}${referrer ? ` (${referenceType} from ${referrer})` : ''}`;
 		}
 	);
 
