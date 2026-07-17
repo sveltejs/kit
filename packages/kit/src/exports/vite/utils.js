@@ -154,11 +154,9 @@ export function normalize_id(id, aliases, cwd) {
  * @param {string[]} module_extensions
  */
 export function is_server_only_module(id, module_extensions) {
-	const filename = path.basename(id);
-
 	return (
-		filename.includes('.server.') ||
-		module_extensions.some((extension) => filename === `server${extension}`)
+		module_extensions.some((ext) => id.endsWith(ext)) &&
+		path.basename(id).split('.').includes('server')
 	);
 }
 
@@ -167,12 +165,9 @@ export function is_server_only_module(id, module_extensions) {
  * @param {string[]} module_extensions
  */
 export function is_remote_module(id, module_extensions) {
-	const filename = path.basename(id);
-
-	return module_extensions.some(
-		(extension) =>
-			filename === `remote${extension}` ||
-			(filename.endsWith(extension) && filename.includes('.remote.'))
+	return (
+		module_extensions.some((ext) => id.endsWith(ext)) &&
+		path.basename(id).split('.').includes('remote')
 	);
 }
 

@@ -49,7 +49,7 @@ test('recognizes server-only module filenames', () => {
 	expect(is_server_only_module('server.js', extensions)).toBe(true);
 	expect(is_server_only_module('module.server.ts', extensions)).toBe(true);
 	expect(is_server_only_module('module.server.test.js', extensions)).toBe(true);
-	expect(is_server_only_module('server.test.ts', extensions)).toBe(false);
+	expect(is_server_only_module('server.test.ts', extensions)).toBe(true);
 	expect(is_server_only_module('module.serverish.js', extensions)).toBe(false);
 });
 
