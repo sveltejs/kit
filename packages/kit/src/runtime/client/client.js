@@ -1428,7 +1428,8 @@ async function load_root_error_page({ error, url, route }) {
 
 		if (default_layout_has_server_load) {
 			const previous = current.branch[0];
-			const route_changed = current.route ? route.id !== current.route.id : false;
+			// current.route is null after an error-page render, so a missing route counts as changed
+			const route_changed = !current.route || route.id !== current.route.id;
 			const url_changed = current.url ? get_page_key(url) !== get_page_key(current.url) : false;
 			const search_params_changed = diff_search_params(current.url, url);
 
