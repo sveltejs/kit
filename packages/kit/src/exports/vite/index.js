@@ -462,12 +462,9 @@ function kit({ svelte_config }) {
 
 				if (kit.experimental.remoteFunctions) {
 					// treat .remote.js files as empty for the purposes of prebundling
-					const extensions = kit.moduleExtensions
-						.map((extension) => extension.replaceAll('.', '\\.'))
-						.join('|');
-					const remote_id_filter = new RegExp(
-						`(?:^|[\\\\/])remote(?:${extensions})$|\\.remote(?:\\..*)?(?:${extensions})$`
-					);
+					const extensions = kit.moduleExtensions.join('|').replaceAll('.', '\\.');
+					const remote_id_filter = new RegExp(`[/.]remote(\\.[^/]+)*(?:${extensions})$`);
+
 					// @ts-expect-error optimizeDeps is already set above
 					new_config.optimizeDeps.rolldownOptions ??= {};
 					// @ts-expect-error
