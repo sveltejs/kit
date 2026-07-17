@@ -2339,7 +2339,7 @@ declare module '@sveltejs/kit' {
 
 	/**
 	 * [Environment variables](https://svelte.dev/docs/kit/environment-variables) can be configured by exporting
-	 * a `variables` object from `src/env.ts`, using [`defineEnvVars`](https://svelte.dev/docs/kit/@sveltejs-kit-hooks#defineEnvVars).
+	 * a `variables` object from `src/env.ts`, using [`defineEnvVars`](https://svelte.dev/docs/kit/@sveltejs-kit-env#defineEnvVars).
 	 */
 	export interface EnvVarConfig<T> {
 		/**
@@ -3050,7 +3050,8 @@ declare module '@sveltejs/kit/hooks' {
 	/**
 	 * Utility for defining [environment variables](https://svelte.dev/docs/kit/environment-variables),
 	 * which are made available via `$app/env/public` and `$app/env/private`.
-	 * */
+	 * @deprecated Import `defineEnvVars` from `@sveltejs/kit/env` instead
+	 */
 	export function defineEnvVars<T extends Record<string, EnvVarConfig<any>>>(variables: T): T;
 	/**
 	 * A helper function for sequencing multiple `handle` calls in a middleware-like manner.

@@ -48,14 +48,14 @@ export default {
 
 ```ts
 /// file: src/env.ts
-import { defineEnvVars } from '@sveltejs/kit/hooks';
+import { defineEnvVars } from '@sveltejs/kit/env';
 
 export const variables = defineEnvVars({
 	// ...
 });
 ```
 
-Each value in the object passed to [`defineEnvVars`](@sveltejs-kit-hooks#defineEnvVars) is an [`EnvVarConfig`](@sveltejs-kit#EnvVarConfig) object that configures the environment variable.
+Each value in the object passed to [`defineEnvVars`](@sveltejs-kit-env#defineEnvVars) is an [`EnvVarConfig`](@sveltejs-kit#EnvVarConfig) object that configures the environment variable.
 
 > [!NOTE] `defineEnvVars` returns its argument unaltered — it exists purely to help with type safety.
 
@@ -65,7 +65,7 @@ By default, all variables are considered private. For example, you don't want to
 
 ```ts
 /// file: src/env.ts
-import { defineEnvVars } from '@sveltejs/kit/hooks';
+import { defineEnvVars } from '@sveltejs/kit/env';
 
 export const variables = defineEnvVars({
 	+++API_KEY: {}+++
@@ -88,7 +88,7 @@ Some variables are perfectly safe — necessary, even — to expose to the brow
 
 ```ts
 /// file: src/env.ts
-import { defineEnvVars } from '@sveltejs/kit/hooks';
+import { defineEnvVars } from '@sveltejs/kit/env';
 
 export const variables = defineEnvVars({
 	GOOGLE_ANALYTICS_ID: {
@@ -133,7 +133,7 @@ You can specify a [Standard Schema](https://standardschema.dev/) validator such 
 
 ```ts
 /// file: src/env.ts
-import { defineEnvVars } from '@sveltejs/kit/hooks';
+import { defineEnvVars } from '@sveltejs/kit/env';
 +++import * as v from 'valibot';+++
 
 export const variables = defineEnvVars({
@@ -148,7 +148,7 @@ If a value is invalid, the app will fail to start (or build). To opt out of one 
 
 ```ts
 /// file: src/env.ts
-import { defineEnvVars } from '@sveltejs/kit/hooks';
+import { defineEnvVars } from '@sveltejs/kit/env';
 +++import { building } from '$app/env'+++
 import * as v from 'valibot';
 
@@ -168,7 +168,7 @@ By default, variables are dynamic. If a variable is configured with `static: tru
 
 ```ts
 /// file: src/env.ts
-import { defineEnvVars } from '@sveltejs/kit/hooks';
+import { defineEnvVars } from '@sveltejs/kit/env';
 import * as v from 'valibot';
 
 export const variables = defineEnvVars({
@@ -212,7 +212,7 @@ You can document the purpose of an environment variable by adding a `description
 
 ```ts
 /// file: src/env.ts
-import { defineEnvVars } from '@sveltejs/kit/hooks';
+import { defineEnvVars } from '@sveltejs/kit/env';
 
 export const variables = defineEnvVars({
 	CACHE_TTL_SECONDS: {

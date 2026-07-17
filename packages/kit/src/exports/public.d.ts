@@ -2366,7 +2366,7 @@ export type RemoteLiveQueryFunction<Input, Output, _Validated = Input> = (
 
 /**
  * [Environment variables](https://svelte.dev/docs/kit/environment-variables) can be configured by exporting
- * a `variables` object from `src/env.ts`, using [`defineEnvVars`](https://svelte.dev/docs/kit/@sveltejs-kit-hooks#defineEnvVars).
+ * a `variables` object from `src/env.ts`, using [`defineEnvVars`](https://svelte.dev/docs/kit/@sveltejs-kit-env#defineEnvVars).
  */
 export interface EnvVarConfig<T> {
 	/**
