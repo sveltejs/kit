@@ -19,7 +19,7 @@ runs:
       uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
       with:
         path: ~/.cache/ms-playwright
-        key: ${{ inputs.os }}-playwright-${{ hashFiles('pnpm-lock.yaml') }}
+        key: ${{ inputs.os }}-playwright-${{ inputs.e2e-browser }}-${{ hashFiles('pnpm-lock.yaml') }}
 
     - name: Install Playwright browsers and system dependencies
       shell: bash
