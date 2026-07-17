@@ -118,7 +118,7 @@ if (DEV && BROWSER) {
 		// Ignore calls that happen inside dependencies, including SvelteKit.
 		// The second condition is only relevant when developing SvelteKit and running it, as there's no node_modules in the stack then (but we still do it to not get repeatedly confused)
 		// `frame` can be falsy if we came from an anonymous function
-		if (frame?.includes('node_modules') || frame.includes(current_module_url)) return;
+		if (frame?.includes('node_modules') || frame?.includes(current_module_url)) return;
 
 		warned = true;
 
