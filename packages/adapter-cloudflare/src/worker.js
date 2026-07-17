@@ -72,9 +72,7 @@ export default {
 			is_static_asset =
 				manifest.assets.has(filename) ||
 				manifest.assets.has(filename + '/index.html') ||
-				// @ts-expect-error _ property exists on manifest but not part of public types
 				filename in manifest._.server_assets ||
-				// @ts-expect-error _ property exists on manifest but not part of public types
 				filename + '/index.html' in manifest._.server_assets;
 		}
 
