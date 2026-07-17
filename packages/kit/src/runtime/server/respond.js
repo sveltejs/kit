@@ -737,6 +737,20 @@ export async function internal_respond(request, options, manifest, state) {
 			// if this request came direct from the user, rather than
 			// via our own `fetch`, render a 404 page
 			if (state.depth === 0) {
+				// Error-page data requests only invalidate the root layout.
+				if (!state.prerendering && is_data_request && invalidated_data_nodes?.length === 1) {
+					return await render_data(
+						event,
+						event_state,
+						{ page: { layouts: [], leaf: 0 } },
+						options,
+						manifest,
+						state,
+						invalidated_data_nodes,
+						trailing_slash
+					);
+				}
+
 				return await respond_with_error({
 					event,
 					event_state,
