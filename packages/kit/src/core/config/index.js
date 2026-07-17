@@ -14,6 +14,7 @@ import {
 } from './options.js';
 import { resolve_entry } from '../../utils/filesystem.js';
 import { import_peer } from '../../utils/import.js';
+import { stackless } from '../../utils/error.js';
 
 /**
  * Splits the config passed to the `sveltekit` Vite plugin into the options that
@@ -222,9 +223,6 @@ export function validate_config(config) {
 		return validated;
 	} catch (e) {
 		const error = /** @type {Error} */ (e);
-
-		// redact the stack trace — it's not helpful to users
-		error.stack = `Error loading SvelteKit options from Vite config: ${error.message}\n`;
-		throw error;
+		throw stackless(`Error loading SvelteKit options from Vite config: ${error.message}`);
 	}
 }
