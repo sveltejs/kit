@@ -2872,13 +2872,7 @@ declare module '@sveltejs/kit/env' {
 }
 
 declare module '@sveltejs/kit/hooks' {
-	import type { EnvVarConfig, Handle } from '@sveltejs/kit';
-	/**
-	 * Utility for defining [environment variables](https://svelte.dev/docs/kit/environment-variables),
-	 * which are made available via `$app/env/public` and `$app/env/private`.
-	 * @deprecated Import `defineEnvVars` from `@sveltejs/kit/env` instead
-	 */
-	export function defineEnvVars<T extends Record<string, EnvVarConfig<any>>>(variables: T): T;
+	import type { Handle } from '@sveltejs/kit';
 	/**
 	 * A helper function for sequencing multiple `handle` calls in a middleware-like manner.
 	 * The behavior for the `handle` options is as follows:
