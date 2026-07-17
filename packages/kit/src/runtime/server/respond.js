@@ -738,7 +738,12 @@ export async function internal_respond(request, options, manifest, state) {
 			// via our own `fetch`, render a 404 page
 			if (state.depth === 0) {
 				// Error-page data requests only invalidate the root layout.
-				if (!state.prerendering && is_data_request && invalidated_data_nodes?.length === 1) {
+				if (
+					!state.prerendering &&
+					is_data_request &&
+					invalidated_data_nodes?.length === 1 &&
+					invalidated_data_nodes[0]
+				) {
 					return await render_data(
 						event,
 						event_state,
@@ -747,7 +752,9 @@ export async function internal_respond(request, options, manifest, state) {
 						manifest,
 						state,
 						invalidated_data_nodes,
-						trailing_slash
+						// there is no route to take a trailing slash option from, and the
+						// SSR'd error page sees the pathname as-is
+						'ignore'
 					);
 				}
 
