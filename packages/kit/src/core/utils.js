@@ -30,7 +30,7 @@ export function get_runtime_base(root) {
 }
 
 /** @param {{ verbose: boolean }} opts */
-export function logger({ verbose }) {
+export function logger({ verbose } = { verbose: true }) {
 	/** @type {import('types').Logger} */
 	const log = (msg) => console.log(msg.replace(/^/gm, '  '));
 
