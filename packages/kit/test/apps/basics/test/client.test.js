@@ -368,6 +368,18 @@ test.describe('Load', () => {
 			expect(pathnames).not.toContain('/load/no-server-load/b/__data.json');
 		});
 	}
+
+	test('reuses root layout server data when rendering the error page', async ({ page, app }) => {
+		await page.goto('/');
+
+		/** @type {string[]} */
+		const urls = [];
+		page.on('request', (request) => urls.push(request.url()));
+		await app.goto('/this-route-does-not-exist');
+
+		expect(await page.textContent('h1')).toBe('404');
+		expect(urls.some((url) => url.includes('__data.json'))).toBe(false);
+	});
 });
 
 test.describe('SPA mode / no SSR', () => {

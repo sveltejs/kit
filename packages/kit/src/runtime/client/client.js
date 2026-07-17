@@ -1427,28 +1427,45 @@ async function load_root_error_page({ error, url, route }) {
 		const default_layout_has_server_load = app.server_loads[0] === 0;
 
 		if (default_layout_has_server_load) {
-			// TODO post-https://github.com/sveltejs/kit/discussions/6124 we can use
-			// existing root layout data
-			try {
-				const server_data = await load_data(url, [true]);
+			const previous = current.branch[0];
+			const route_changed = current.route ? route.id !== current.route.id : false;
+			const url_changed = current.url ? get_page_key(url) !== get_page_key(current.url) : false;
+			const search_params_changed = diff_search_params(current.url, url);
 
-				if (
-					server_data.type !== 'data' ||
-					(server_data.nodes[0] && server_data.nodes[0].type !== 'data')
-				) {
-					throw 0;
-				}
+			if (
+				previous?.server &&
+				!has_changed(
+					false,
+					route_changed,
+					url_changed,
+					search_params_changed,
+					previous.server.uses,
+					params
+				)
+			) {
+				server_data_node = previous.server;
+			} else {
+				try {
+					const server_data = await load_data(url, [true]);
 
-				server_data_node = server_data.nodes[0] ?? null;
-			} catch (e) {
-				// at this point we have no choice but to fall back to the server, if it wouldn't
-				// bring us right back here, turning this into an endless loop.
-				// if __data.json returned 404, the route doesn't exist — don't reload or we loop
-				if (
-					!(e instanceof HttpError && e.status === 404) &&
-					(url.origin !== origin || url.pathname !== location.pathname || hydrated)
-				) {
-					return await native_navigation(url);
+					if (
+						server_data.type !== 'data' ||
+						(server_data.nodes[0] && server_data.nodes[0].type !== 'data')
+					) {
+						throw 0;
+					}
+
+					server_data_node = server_data.nodes[0] ?? null;
+				} catch (e) {
+					// at this point we have no choice but to fall back to the server, if it wouldn't
+					// bring us right back here, turning this into an endless loop.
+					// if __data.json returned 404, the route doesn't exist — don't reload or we loop
+					if (
+						!(e instanceof HttpError && e.status === 404) &&
+						(url.origin !== origin || url.pathname !== location.pathname || hydrated)
+					) {
+						return await native_navigation(url);
+					}
 				}
 			}
 		}
