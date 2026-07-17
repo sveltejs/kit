@@ -555,7 +555,7 @@ function kit({ svelte_config }) {
 				const log = logger({ verbose });
 
 				const list = unsupported_plugins
-					.map((plugin) => `  - ${plugin.name || 'missing plugin name'}`)
+					.map((plugin) => `  - ${plugin.name || '(missing plugin name)'}`)
 					.join('\n');
 
 				log.warn(
