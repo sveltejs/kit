@@ -17,6 +17,7 @@ import * as devalue from 'devalue';
 import { createReadableStream } from '@sveltejs/kit/node';
 import generate_fallback from './fallback.js';
 import { stringify_remote_arg } from '../../runtime/shared.js';
+import { SRC_ROOT } from '../../constants.js';
 
 export default forked(import.meta.url, prerender);
 
@@ -186,9 +187,6 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 		}
 	}
 
-	// The SvelteKit src folder
-	const root = dirname(dirname(dirname(import.meta.dirname)));
-
 	/** @param {unknown} error */
 	function adjust_stack_trace(error) {
 		if (!(error instanceof Error) || !error.stack) return;
@@ -201,7 +199,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 
 				const file = fileURLToPath(match[1]);
 				// Filter out internal stack trace lines
-				if (file.includes('/svelte/src/internal/server/') || file.startsWith(root)) {
+				if (file.includes('/svelte/src/internal/server/') || file.startsWith(SRC_ROOT)) {
 					return null;
 				}
 				// Only annotate files from our own server directory
@@ -222,7 +220,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 						: resolve_path(source_map.directory, entry.originalSource);
 
 					// Filter out internal stack trace lines (gotta do this again here on the original)
-					if (source.includes('/svelte/src/internal/server/') || source.startsWith(root)) {
+					if (source.includes('/svelte/src/internal/server/') || source.startsWith(SRC_ROOT)) {
 						return null;
 					}
 
