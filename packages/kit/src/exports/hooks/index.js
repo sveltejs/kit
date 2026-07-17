@@ -1,6 +1,15 @@
+/** @import { EnvVarConfig } from '@sveltejs/kit' */
+
 export { sequence } from './sequence.js';
 
-/** @internal */
-export function defineEnvVars() {
-	throw new Error(`\`defineEnvVars\` has moved — it should be imported from @sveltejs/kit/env`);
+/**
+ * Utility for defining [environment variables](https://svelte.dev/docs/kit/environment-variables),
+ * which are made available via `$app/env/public` and `$app/env/private`.
+ * @template {Record<string, EnvVarConfig<any>>} T
+ * @param {T} variables
+ * @returns {T}
+ * @deprecated Import `defineEnvVars` from `@sveltejs/kit/env` instead
+ */
+export function defineEnvVars(variables) {
+	return variables;
 }
