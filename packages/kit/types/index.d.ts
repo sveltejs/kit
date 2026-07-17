@@ -807,7 +807,7 @@ declare module '@sveltejs/kit' {
 			 * - The list of routes is hidden from public view
 			 * - The server has an opportunity to intercept each navigation (for example through middleware in front of SvelteKit, such as a reverse proxy or your platform's edge functions), enabling (for example) A/B testing opaque to SvelteKit
 			 *
-			 * Route resolution requests do not run the `handle` hook. They do run the `reroute` hook, which is the way to intercept them within SvelteKit itself.
+			 * Route resolution requests are answered as soon as the route has been looked up, before the `handle` hook is invoked. To intercept them within SvelteKit itself, use the `reroute` hook, which runs for these requests too.
 			 *
 			 * The drawback is that for unvisited paths, resolution will take slightly longer (though this is mitigated by [preloading](https://svelte.dev/docs/kit/link-options#data-sveltekit-preload-data)).
 			 *
