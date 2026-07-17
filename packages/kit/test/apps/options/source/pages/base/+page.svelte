@@ -1,5 +1,5 @@
 <script>
-	import SvelteLogo from '$lib/SvelteLogo.svelte';
+	import SvelteLogo from '#lib/SvelteLogo.svelte';
 
 	/** @type {import('./$types').PageData} */
 	export let data;

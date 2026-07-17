@@ -524,12 +524,6 @@ declare module '@sveltejs/kit' {
 				universal?: string;
 			};
 			/**
-			 * Your app's internal library, accessible throughout the codebase as `$lib`.
-			 * @deprecated this feature is still supported, but it's generally recommended to use [monorepos](https://levelup.video/tutorials/monorepos-with-pnpm) instead
-			 * @default "src/lib"
-			 */
-			lib?: string;
-			/**
 			 * A directory containing [parameter matchers](https://svelte.dev/docs/kit/advanced-routing#Matching).
 			 * @deprecated this feature is still supported, but it's generally recommended to use [monorepos](https://levelup.video/tutorials/monorepos-with-pnpm) instead
 			 * @default "src/params"
@@ -3048,7 +3042,7 @@ declare module '@sveltejs/kit' {
 	 * ```ts
 	 * import { invalid } from '@sveltejs/kit';
 	 * import { form } from '$app/server';
-	 * import { tryLogin } from '$lib/server/auth';
+	 * import { tryLogin } from '#lib/server/auth';
 	 * import * as v from 'valibot';
 	 *
 	 * export const login = form(

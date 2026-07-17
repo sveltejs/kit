@@ -28,7 +28,6 @@ const config = {
 			files: {
 				src: 'source',
 				assets: 'public',
-				lib: 'source/components',
 				routes: 'source/pages',
 				appTemplate: 'source/template.html',
 				hooks: {
