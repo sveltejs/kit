@@ -51,13 +51,13 @@ A more realistic version of your blog post's `load` function, that only runs on 
 ```js
 /// file: src/routes/blog/[slug]/+page.server.js
 // @filename: ambient.d.ts
-declare module '$lib/server/database' {
+declare module '#lib/server/database' {
 	export function getPost(slug: string): Promise<{ title: string, content: string }>
 }
 
 // @filename: index.js
 // ---cut---
-import * as db from '$lib/server/database';
+import * as db from '#lib/server/database';
 
 /** @type {import('./$types').PageServerLoad} */
 export async function load({ params }) {
@@ -76,13 +76,13 @@ Your `+layout.svelte` files can also load data, via `+layout.js` or `+layout.ser
 ```js
 /// file: src/routes/blog/[slug]/+layout.server.js
 // @filename: ambient.d.ts
-declare module '$lib/server/database' {
+declare module '#lib/server/database' {
 	export function getPostSummaries(): Promise<Array<{ title: string, slug: string }>>
 }
 
 // @filename: index.js
 // ---cut---
-import * as db from '$lib/server/database';
+import * as db from '#lib/server/database';
 
 /** @type {import('./$types').LayoutServerLoad} */
 export async function load() {
@@ -297,13 +297,13 @@ A server `load` function can get [`cookies`](@sveltejs-kit#Cookies) as shown bel
 ```js
 /// file: src/routes/+layout.server.js
 // @filename: ambient.d.ts
-declare module '$lib/server/database' {
+declare module '#lib/server/database' {
 	export function getUser(sessionid: string | undefined): Promise<{ name: string, avatar: string }>
 }
 
 // @filename: index.js
 // ---cut---
-import * as db from '$lib/server/database';
+import * as db from '#lib/server/database';
 
 /** @type {import('./$types').LayoutServerLoad} */
 export async function load({ cookies }) {
@@ -578,13 +578,13 @@ For example, given a pair of `load` functions like these...
 ```js
 /// file: src/routes/blog/[slug]/+page.server.js
 // @filename: ambient.d.ts
-declare module '$lib/server/database' {
+declare module '#lib/server/database' {
 	export function getPost(slug: string): Promise<{ title: string, content: string }>
 }
 
 // @filename: index.js
 // ---cut---
-import * as db from '$lib/server/database';
+import * as db from '#lib/server/database';
 
 /** @type {import('./$types').PageServerLoad} */
 export async function load({ params }) {
@@ -597,13 +597,13 @@ export async function load({ params }) {
 ```js
 /// file: src/routes/blog/[slug]/+layout.server.js
 // @filename: ambient.d.ts
-declare module '$lib/server/database' {
+declare module '#lib/server/database' {
 	export function getPostSummaries(): Promise<Array<{ title: string, slug: string }>>
 }
 
 // @filename: index.js
 // ---cut---
-import * as db from '$lib/server/database';
+import * as db from '#lib/server/database';
 
 /** @type {import('./$types').LayoutServerLoad} */
 export async function load() {
@@ -756,7 +756,7 @@ Now, you can call `requireLogin` in any `load` function (or [form action](form-a
 /// file: +page.server.js
 // @filename: ambient.d.ts
 
-declare module '$lib/server/auth' {
+declare module '#lib/server/auth' {
 	interface User {
 		name: string;
 	}
@@ -766,7 +766,7 @@ declare module '$lib/server/auth' {
 
 // @filename: index.ts
 // ---cut---
-import { requireLogin } from '$lib/server/auth';
+import { requireLogin } from '#lib/server/auth';
 
 export function load() {
 	const user = requireLogin();

@@ -43,6 +43,7 @@ import analyse from '../../core/postbuild/analyse.js';
 import { s } from '../../utils/misc.js';
 import { hash } from '../../utils/hash.js';
 import { dedent } from '../../core/sync/utils.js';
+import { get_import_aliases, get_hash_import_keys } from '../../utils/imports.js';
 import {
 	app_env_private,
 	app_server,
@@ -98,7 +99,6 @@ const enforced_config = {
 		alias: {
 			$app: true,
 			$env: true,
-			$lib: true,
 			'$service-worker': true
 		}
 	}
@@ -304,10 +304,14 @@ function kit({ svelte_config }) {
 
 	/** @type {string} */
 	let normalized_cwd;
-	/** @type {string} */
-	let normalized_lib;
+	/** @type {Array<{ alias: string, path: string }>} */
+	let normalized_aliases;
 	/** @type {string} */
 	let normalized_node_modules;
+	/** @type {string} */
+	let normalized_routes;
+	/** @type {string} */
+	let normalized_assets;
 	/**
 	 * A map showing which features (such as `$app/server:read`) are defined
 	 * in which chunks, so that we can later determine which routes use which features
@@ -353,11 +357,21 @@ function kit({ svelte_config }) {
 				vite = await import_peer('vite', root);
 
 				normalized_cwd = vite.normalizePath(root);
-				normalized_lib = vite.normalizePath(kit.files.lib);
+				normalized_aliases = get_import_aliases(root, vite.normalizePath.bind(vite));
 				normalized_node_modules = vite.normalizePath(path.resolve(root, 'node_modules'));
+				normalized_routes = vite.normalizePath(path.resolve(root, kit.files.routes));
+				normalized_assets = vite.normalizePath(path.resolve(root, kit.files.assets));
+
+				// Add `#`-prefixed import keys to the enforced config so users are warned
+				// if they try to set them in their Vite config's resolve.alias
+				const enforced_alias = /** @type {Record<string, true>} */ (
+					/** @type {any} */ (enforced_config.resolve).alias
+				);
+				for (const key of get_hash_import_keys(root)) {
+					enforced_alias[key] = true;
+				}
 
 				const allow = new Set([
-					kit.files.lib,
 					kit.files.routes,
 					kit.files.src,
 					kit.outDir,
@@ -372,6 +386,11 @@ function kit({ svelte_config }) {
 					// see https://vite.dev/guide/api-javascript#searchforworkspaceroot
 					path.resolve(vite.searchForWorkspaceRoot(process.cwd()), 'node_modules')
 				]);
+
+				// Add directories from `#`-prefixed package.json imports to the allow list
+				for (const { path: alias_path } of normalized_aliases) {
+					allow.add(alias_path);
+				}
 
 				// We can only add directories to the allow list, so we find out
 				// if there's a client hooks file and pass its directory
@@ -680,7 +699,7 @@ function kit({ svelte_config }) {
 
 	/**
 	 * Ensures that client-side code can't accidentally import server-side code,
-	 * whether in `*.server.js` files, `$app/server`, `$lib/server`, or `$app/env/private`
+	 * whether in `*.server.js` files, `$app/server`, any `/server/` directory, or `$app/env/private`
 	 * @type {Plugin}
 	 */
 	const plugin_guard = {
@@ -691,7 +710,8 @@ function kit({ svelte_config }) {
 		enforce: 'pre',
 
 		applyToEnvironment(environment) {
-			return environment.name !== 'serviceWorker';
+			// the import map is only read for client-side violations in `load`, so skip other environments
+			return environment.config.consumer === 'client' && environment.name !== 'serviceWorker';
 		},
 
 		resolveId: {
@@ -706,7 +726,7 @@ function kit({ svelte_config }) {
 					const resolved = await this.resolve(id, importer, { ...options, skipSelf: true });
 
 					if (resolved) {
-						const normalized = normalize_id(resolved.id, normalized_lib, normalized_cwd);
+						const normalized = normalize_id(resolved.id, normalized_aliases, normalized_cwd);
 
 						let importers = import_map.get(normalized);
 
@@ -715,7 +735,7 @@ function kit({ svelte_config }) {
 							import_map.set(normalized, importers);
 						}
 
-						importers.add(normalize_id(importer, normalized_lib, normalized_cwd));
+						importers.add(normalize_id(importer, normalized_aliases, normalized_cwd));
 					}
 				}
 			}
@@ -731,18 +751,23 @@ function kit({ svelte_config }) {
 				]
 			},
 			handler(id) {
-				if (this.environment.config.consumer !== 'client') return;
-
 				// skip .server.js files outside the cwd or in node_modules, as the filename might not mean 'server-only module' in this context
 				const is_internal =
 					id.startsWith(normalized_cwd) && !id.startsWith(normalized_node_modules);
 
-				const normalized = normalize_id(id, normalized_lib, normalized_cwd);
+				const normalized = normalize_id(id, normalized_aliases, normalized_cwd);
+
+				// server-only directories: any file in a `/server/` folder inside the cwd,
+				// except those inside the routes or assets directories
+				const is_in_routes = id.startsWith(normalized_routes + '/');
+				const is_in_assets = id.startsWith(normalized_assets + '/');
+				const is_server_only_directory =
+					is_internal && !is_in_routes && !is_in_assets && server_only_directory_pattern.test(id);
 
 				const is_server_only =
 					normalized === '$app/env/private' ||
 					normalized === '$app/server' ||
-					(normalized.startsWith('$lib/') && server_only_directory_pattern.test(id)) ||
+					is_server_only_directory ||
 					(is_internal && server_only_module_pattern.test(id));
 
 				if (!is_server_only) return;
@@ -865,7 +890,7 @@ function kit({ svelte_config }) {
 		},
 
 		async transform(code, id) {
-			const normalized = normalize_id(id, normalized_lib, normalized_cwd);
+			const normalized = normalize_id(id, normalized_aliases, normalized_cwd);
 			if (!svelte_config.kit.moduleExtensions.some((ext) => normalized.endsWith(`.remote${ext}`))) {
 				return;
 			}
@@ -1086,7 +1111,7 @@ function kit({ svelte_config }) {
 					throw new Error(
 						`Cannot import ${normalize_id(
 							id,
-							normalized_lib,
+							normalized_aliases,
 							normalized_cwd
 						)} into service-worker code. Only the modules $service-worker and $app/env/public are available in service workers.`
 					);
@@ -1180,9 +1205,12 @@ function kit({ svelte_config }) {
 					);
 				}
 
-				const normalized_cwd = vite.normalizePath(vite_config.root);
-				const normalized_lib = vite.normalizePath(kit.files.lib);
-				const relative = normalize_id(id, normalized_lib, normalized_cwd);
+				const sw_normalized_cwd = vite.normalizePath(vite_config.root);
+				const sw_normalized_aliases = get_import_aliases(
+					vite_config.root,
+					vite.normalizePath.bind(vite)
+				);
+				const relative = normalize_id(id, sw_normalized_aliases, sw_normalized_cwd);
 				const stripped = strip_virtual_prefix(relative);
 				throw new Error(
 					`Cannot import ${stripped} into service-worker code. Only the modules $service-worker and $app/env/public are available in service workers.`

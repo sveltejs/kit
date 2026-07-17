@@ -1,5 +1,11 @@
 # @sveltejs/enhanced-img
 
+## 1.0.0-next.2
+
+### Patch Changes
+
+- chore: replace the `$lib` alias with `#lib` in docs ([#16360](https://github.com/sveltejs/kit/pull/16360))
+
 ## 1.0.0-next.1
 ### Major Changes
 

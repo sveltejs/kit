@@ -22,12 +22,14 @@ export function is_external_location(location) {
 	}
 }
 
+const javascript_protocols = new Set(['javascript:', 'data:']);
+
 /**
  * @param {string} location
  */
 function is_javascript_location(location) {
 	try {
-		return new URL(location, REDIRECT_BASE).protocol === 'javascript:';
+		return javascript_protocols.has(new URL(location, REDIRECT_BASE).protocol);
 	} catch {
 		return false;
 	}
@@ -56,7 +58,7 @@ export function validate_redirect_location(location, options) {
 			throw new Error(
 				DEV
 					? `Cannot redirect to ${JSON.stringify(location)} with \`{ external: true }\`. ` +
-							'The `:javascript` protocol must be explicitly listed in the `external` allowlist'
+							'The `javascript:` and `data:` protocols must be explicitly listed in the `external` allowlist'
 					: 'Cannot redirect to external URL unless explicitly allowed'
 			);
 		}

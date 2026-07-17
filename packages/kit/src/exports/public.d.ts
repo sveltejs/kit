@@ -435,8 +435,6 @@ export interface KitConfig {
 	 *
 	 * > [!NOTE] When `mode` is `'auto'`, SvelteKit will use nonces for dynamically rendered pages and hashes for prerendered pages. Using nonces with prerendered pages is insecure and therefore forbidden.
 	 *
-	 * > [!NOTE] Note that most [Svelte transitions](https://svelte.dev/tutorial/svelte/transition) work by creating an inline `<style>` element. If you use these in your app, you must either leave the `style-src` directive unspecified or add `unsafe-inline`.
-	 *
 	 * If this level of configuration is insufficient and you have more dynamic requirements, you can use the [`handle` hook](https://svelte.dev/docs/kit/hooks#Server-hooks-handle) to roll your own CSP.
 	 */
 	csp?: {
@@ -550,12 +548,6 @@ export interface KitConfig {
 			 */
 			universal?: string;
 		};
-		/**
-		 * Your app's internal library, accessible throughout the codebase as `$lib`.
-		 * @deprecated this feature is still supported, but it's generally recommended to use [monorepos](https://levelup.video/tutorials/monorepos-with-pnpm) instead
-		 * @default "src/lib"
-		 */
-		lib?: string;
 		/**
 		 * A directory containing [parameter matchers](https://svelte.dev/docs/kit/advanced-routing#Matching).
 		 * @deprecated this feature is still supported, but it's generally recommended to use [monorepos](https://levelup.video/tutorials/monorepos-with-pnpm) instead
@@ -2443,7 +2435,7 @@ export type RemoteLiveQueryFunction<Input, Output, _Validated = Input> = (
 
 /**
  * [Environment variables](https://svelte.dev/docs/kit/environment-variables) can be configured by exporting
- * a `variables` object from `src/env.ts`, using [`defineEnvVars`](https://svelte.dev/docs/kit/@sveltejs-kit-hooks#defineEnvVars).
+ * a `variables` object from `src/env.ts`, using [`defineEnvVars`](https://svelte.dev/docs/kit/@sveltejs-kit-env#defineEnvVars).
  */
 export interface EnvVarConfig<T> {
 	/**

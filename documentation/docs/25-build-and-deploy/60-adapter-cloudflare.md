@@ -155,7 +155,7 @@ export async function POST({ request, platform }) {
 }
 ```
 
-> [!NOTE] SvelteKit's built-in [`$env` module]($env-static-private) should be preferred for environment variables.
+> [!NOTE] SvelteKit's built-in [`$app/env/*` modules](environment-variables) should be preferred for environment variables.
 
 To make these types available to your app, install [`@cloudflare/workers-types`](https://www.npmjs.com/package/@cloudflare/workers-types) and reference them in your `src/app.d.ts`:
 

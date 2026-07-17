@@ -15,6 +15,7 @@ import {
 } from './options.js';
 import { resolve_entry } from '../../utils/filesystem.js';
 import { import_peer } from '../../utils/import.js';
+import { stackless } from '../../utils/error.js';
 
 /**
  * Splits the config passed to the `sveltekit` Vite plugin into the options that
@@ -162,7 +163,7 @@ export function process_config(config, cwd) {
 			config.kit.files.hooks.client = path.resolve(cwd, config.kit.files.hooks.client);
 			config.kit.files.hooks.server = path.resolve(cwd, config.kit.files.hooks.server);
 			config.kit.files.hooks.universal = path.resolve(cwd, config.kit.files.hooks.universal);
-		} else {
+		} else if (key !== 'lib' /* TODO remove when we remove the `lib` option altogether */) {
 			// @ts-expect-error
 			config.kit.files[key] = path.resolve(cwd, config.kit.files[key]);
 		}
@@ -192,7 +193,6 @@ export function validate_config(config) {
 		files.hooks.client ??= path.join(files.src, 'hooks.client');
 		files.hooks.server ??= path.join(files.src, 'hooks.server');
 		files.hooks.universal ??= path.join(files.src, 'hooks');
-		files.lib ??= path.join(files.src, 'lib');
 		files.params ??= path.join(files.src, 'params');
 		files.routes ??= path.join(files.src, 'routes');
 		files.serviceWorker ??= path.join(files.src, 'service-worker');
@@ -226,14 +226,8 @@ export function validate_config(config) {
 		const error = /** @type {Error} */ (e);
 
 		// Print a nicer version of the error to the console
-		console.log(
-			styleText(
-				['bold', 'red'],
-				`Error loading SvelteKit options from Vite config: ${error.message}\n`
-			)
-		);
-		// redact the stack trace — it's not helpful to users
-		error.stack = '';
-		throw error;
+		console.log(styleText(['bold', 'red'], `\n${error.message}\n`));
+
+		throw stackless('Failed to load SvelteKit options from Vite config');
 	}
 }

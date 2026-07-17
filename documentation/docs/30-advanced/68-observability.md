@@ -40,17 +40,17 @@ export default defineConfig({
 SvelteKit provides access to the `root` span and the `current` span on the request event. The root span is the one associated with your root `handle` function, and the current span could be associated with `handle`, `load`, a form action, or a remote function, depending on the context. You can annotate these spans with any attributes you wish to record:
 
 ```js
-/// file: $lib/authenticate.ts
+/// file: #lib/authenticate.ts
 
 // @filename: ambient.d.ts
-declare module '$lib/auth-core' {
+declare module '#lib/auth-core' {
 	export function getAuthenticatedUser(): Promise<{ id: string }>
 }
 
 // @filename: index.js
 // ---cut---
 import { getRequestEvent } from '$app/server';
-import { getAuthenticatedUser } from '$lib/auth-core';
+import { getAuthenticatedUser } from '#lib/auth-core';
 
 async function authenticate() {
 	const user = await getAuthenticatedUser();
