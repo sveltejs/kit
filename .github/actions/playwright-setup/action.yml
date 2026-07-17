@@ -29,4 +29,4 @@ runs:
     - name: Install OS dependencies for browsers
       shell: bash
       if: steps.playwright-cache.outputs.cache-hit == 'true'
-      run: pnpm playwright install-deps ${{ inputs.e2e-browser }} --no-shell
+      run: pnpm playwright install-deps ${{ inputs.e2e-browser }}
