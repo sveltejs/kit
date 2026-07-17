@@ -22,14 +22,14 @@ export function is_external_location(location) {
 	}
 }
 
+const javascript_protocols = new Set(['javascript:', 'data:']);
+
 /**
  * @param {string} location
  */
 function is_javascript_location(location) {
 	try {
-		return ['javascript:', 'data:', 'vbscript:'].includes(
-			new URL(location, REDIRECT_BASE).protocol
-		);
+		return javascript_protocols.has(new URL(location, REDIRECT_BASE).protocol);
 	} catch {
 		return false;
 	}
