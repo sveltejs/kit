@@ -1261,10 +1261,22 @@ test.describe('Actions', () => {
 	}) => {
 		test.skip(!javaScriptEnabled, 'Skip when JavaScript is disabled');
 		await page.goto('/actions/enhance-non-action-response');
-		await page.locator('button').click();
+		await page.locator('button.json').click();
 
 		await expect(page.locator('h1')).toHaveText('403');
 		await expect(page.locator('p')).toHaveText('Cross-site POST form submissions are forbidden');
+
+		await page.goto('/actions/enhance-non-action-response');
+		await page.locator('button.html').click();
+
+		await expect(page.locator('h1')).toHaveText('502');
+		await expect(page.locator('p')).toHaveText('Bad Gateway');
+
+		await page.goto('/actions/enhance-non-action-response');
+		await page.locator('button.empty').click();
+
+		await expect(page.locator('h1')).toHaveText('403');
+		await expect(page.locator('p')).toHaveText('Forbidden');
 	});
 
 	test('use:enhance abort controller', async ({ page, javaScriptEnabled }) => {
