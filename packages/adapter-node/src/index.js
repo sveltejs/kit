@@ -78,7 +78,7 @@ async function remove_stale_socket(socket_path) {
 			socket.destroy();
 			resolve(true);
 		});
-		socket.once('error', (err) => {
+		socket.once('error', (/** @type {NodeJS.ErrnoException} */ err) => {
 			clearTimeout(timer);
 			resolve(err.code !== 'ECONNREFUSED');
 		});
