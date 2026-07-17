@@ -27,7 +27,9 @@ export function is_external_location(location) {
  */
 function is_javascript_location(location) {
 	try {
-		return new URL(location, REDIRECT_BASE).protocol === 'javascript:';
+		return ['javascript:', 'data:', 'vbscript:'].includes(
+			new URL(location, REDIRECT_BASE).protocol
+		);
 	} catch {
 		return false;
 	}
@@ -56,7 +58,7 @@ export function validate_redirect_location(location, options) {
 			throw new Error(
 				DEV
 					? `Cannot redirect to ${JSON.stringify(location)} with \`{ external: true }\`. ` +
-							'The `:javascript` protocol must be explicitly listed in the `external` allowlist'
+							'The `javascript:`, `data:`, and `vbscript:` protocols must be explicitly listed in the `external` allowlist'
 					: 'Cannot redirect to external URL unless explicitly allowed'
 			);
 		}
