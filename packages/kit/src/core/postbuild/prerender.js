@@ -111,7 +111,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 							}
 
 							log.error(
-								`${message === error.message ? '' : message}\n${error.message}\n${details.error.stack ?? `${details.error.name}: ${details.error.message}`}`
+								`${error.message.includes(message) ? '' : message}\n${message.includes(error.message) ? '' : error.message}\n${details.error.stack ?? `${details.error.name}: ${details.error.message}`}`
 							);
 						}
 						throw error;
@@ -160,6 +160,9 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 		}
 	}
 
+	// The SvelteKit src folder
+	const root = dirname(dirname(dirname(import.meta.dirname)));
+
 	/** @param {unknown} error */
 	function adjust_stack_trace(error) {
 		if (!(error instanceof Error) || !error.stack) return;
@@ -172,10 +175,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 
 				const file = fileURLToPath(match[1]);
 				// Filter out internal stack trace lines
-				if (
-					file.includes('/svelte/src/internal/server/') ||
-					file.includes('/kit/src/runtime/components/root.svelte')
-				) {
+				if (file.includes('/svelte/src/internal/server/') || file.startsWith(root)) {
 					return null;
 				}
 				// Only annotate files from our own server directory
@@ -194,16 +194,14 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 					const source = entry.originalSource.startsWith('file:')
 						? fileURLToPath(entry.originalSource)
 						: resolve_path(source_map.directory, entry.originalSource);
-					const location = `${match[1]}:${match[2]}:${match[3]}`;
-					const original = `${posixify(relative(vite_config.root, source))}:${entry.originalLine + 1}:${entry.originalColumn + 1}`;
 
 					// Filter out internal stack trace lines (gotta do this again here on the original)
-					if (
-						original.includes('/svelte/src/internal/server/') ||
-						original.includes('/kit/src/runtime/components/root.svelte')
-					) {
+					if (source.includes('/svelte/src/internal/server/') || source.startsWith(root)) {
 						return null;
 					}
+
+					const location = `${match[1]}:${match[2]}:${match[3]}`;
+					const original = `${posixify(relative(vite_config.root, source))}:${entry.originalLine + 1}:${entry.originalColumn + 1}`;
 
 					return line.replace(location, original);
 				}
