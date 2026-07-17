@@ -548,6 +548,24 @@ function kit({ svelte_config }) {
 		 */
 		configResolved(config) {
 			vite_config = config;
+
+			const unsupported_plugins = vite_config.plugins.filter((plugin) => plugin.transformIndexHtml);
+			if (unsupported_plugins.length) {
+				const verbose = vite_config.logLevel === 'info';
+				const log = logger({ verbose });
+
+				const list = unsupported_plugins
+					.map((plugin) => `  - ${plugin.name || '(missing plugin name)'}`)
+					.join('\n');
+
+				log.warn(
+					dedent`
+						The following plugins may not work correctly because they use the \`transformIndexHtml\` hook which is not supported:
+
+						${list}
+					`
+				);
+			}
 		}
 	};
 
@@ -1905,7 +1923,7 @@ function kit({ svelte_config }) {
 						explicit_env_config
 					);
 				} else {
-					console.log(styleText(['bold', 'yellow'], '\nNo adapter specified'));
+					log.warn('\nNo adapter specified');
 
 					const link = styleText(['bold', 'cyan'], 'https://svelte.dev/docs/kit/adapters');
 					console.log(
