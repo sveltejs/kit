@@ -133,6 +133,10 @@
 			"types": "./types/index.d.ts",
 			"import": "./src/exports/hooks/index.js"
 		},
+		"./env": {
+			"types": "./types/index.d.ts",
+			"import": "./src/exports/env/index.js"
+		},
 		"./vite": {
 			"types": "./types/index.d.ts",
 			"import": "./src/exports/vite/index.js"
