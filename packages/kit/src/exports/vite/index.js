@@ -33,9 +33,10 @@ import { preview } from './preview/index.js';
 import {
 	error_for_missing_config,
 	get_config_aliases,
-	is_remote_module,
-	is_server_only_module,
 	normalize_id,
+	remote_module_pattern,
+	server_only_directory_pattern,
+	server_only_module_pattern,
 	strip_virtual_prefix
 } from './utils.js';
 import { stackless } from '../../utils/error.js';
@@ -460,10 +461,8 @@ function kit({ svelte_config }) {
 					}
 				};
 
+				// treat .remote.js files as empty for the purposes of prebundling
 				if (kit.experimental.remoteFunctions) {
-					// treat .remote.js files as empty for the purposes of prebundling
-					const remote_id_filter = /[/.]remote(\.[^/]+)+$/;
-
 					// @ts-expect-error optimizeDeps is already set above
 					new_config.optimizeDeps.rolldownOptions ??= {};
 					// @ts-expect-error
@@ -472,7 +471,7 @@ function kit({ svelte_config }) {
 					new_config.optimizeDeps.rolldownOptions.plugins.push({
 						name: 'vite-plugin-sveltekit-setup:optimize-remote-functions',
 						load: {
-							filter: { id: remote_id_filter },
+							filter: { id: remote_module_pattern },
 							handler() {
 								return '';
 							}
@@ -693,10 +692,6 @@ function kit({ svelte_config }) {
 
 	/** @type {Map<string, Set<string>>} */
 	const import_map = new Map();
-	// Matches any ID with `server` as a filename segment
-	const server_only_module_pattern = /[/.]server(\.[^/]+)+$/;
-	// Matches any ID that has /server/ in its path
-	const server_only_directory_pattern = /\/server\//;
 
 	/**
 	 * Ensures that client-side code can't accidentally import server-side code,
@@ -770,7 +765,7 @@ function kit({ svelte_config }) {
 					normalized === '$app/env/private' ||
 					normalized === '$app/server' ||
 					is_server_only_directory ||
-					(is_internal && is_server_only_module(id, svelte_config.kit.moduleExtensions));
+					(is_internal && server_only_module_pattern.test(id));
 
 				if (!is_server_only) return;
 
@@ -821,7 +816,7 @@ function kit({ svelte_config }) {
 				const chain = find_chain(normalized, [normalized]);
 
 				if (chain) {
-					if (chain.some((id) => is_remote_module(id, svelte_config.kit.moduleExtensions))) {
+					if (chain.some((id) => remote_module_pattern.test(id))) {
 						error_for_missing_config('remote functions', 'experimental.remoteFunctions', 'true');
 					}
 
@@ -895,9 +890,10 @@ function kit({ svelte_config }) {
 			dev_server = _dev_server;
 		},
 
+		// TODO this should use a filter, surely?
 		async transform(code, id) {
 			const normalized = normalize_id(id, normalized_aliases, normalized_cwd);
-			if (!is_remote_module(normalized, svelte_config.kit.moduleExtensions)) {
+			if (!remote_module_pattern.test(normalized)) {
 				return;
 			}
 

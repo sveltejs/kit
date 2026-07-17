@@ -6,8 +6,8 @@ import { dedent } from '../../core/sync/utils.js';
 import {
 	error_for_missing_config,
 	get_config_aliases,
-	is_remote_module,
-	is_server_only_module
+	remote_module_pattern,
+	server_only_module_pattern
 } from './utils.js';
 
 test('transform kit.alias to resolve.alias', () => {
@@ -44,22 +44,18 @@ test('transform kit.alias to resolve.alias', () => {
 });
 
 test('recognizes server-only module filenames', () => {
-	const extensions = ['.js', '.ts'];
-
-	expect(is_server_only_module('server.js', extensions)).toBe(true);
-	expect(is_server_only_module('module.server.ts', extensions)).toBe(true);
-	expect(is_server_only_module('module.server.test.js', extensions)).toBe(true);
-	expect(is_server_only_module('server.test.ts', extensions)).toBe(true);
-	expect(is_server_only_module('module.serverish.js', extensions)).toBe(false);
+	expect(server_only_module_pattern.test('dir/server.js')).toBe(true);
+	expect(server_only_module_pattern.test('dir/module.server.ts')).toBe(true);
+	expect(server_only_module_pattern.test('dir/module.server.test.js')).toBe(true);
+	expect(server_only_module_pattern.test('dir/server.test.ts')).toBe(true);
+	expect(server_only_module_pattern.test('dir/module.serverish.js')).toBe(false);
 });
 
 test('recognizes remote module filenames', () => {
-	const extensions = ['.js', '.ts'];
-
-	expect(is_remote_module('remote.js', extensions)).toBe(true);
-	expect(is_remote_module('module.remote.ts', extensions)).toBe(true);
-	expect(is_remote_module('module.remote.test.js', extensions)).toBe(true);
-	expect(is_remote_module('module.remotely.js', extensions)).toBe(false);
+	expect(remote_module_pattern.test('dir/remote.js')).toBe(true);
+	expect(remote_module_pattern.test('dir/module.remote.ts')).toBe(true);
+	expect(remote_module_pattern.test('dir/module.remote.test.js')).toBe(true);
+	expect(remote_module_pattern.test('dir/module.remotely.js')).toBe(false);
 });
 
 test('error_for_missing_config - simple single level config', () => {

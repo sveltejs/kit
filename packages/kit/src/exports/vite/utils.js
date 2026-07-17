@@ -149,30 +149,9 @@ export function normalize_id(id, aliases, cwd) {
 	return posixify(id);
 }
 
-/**
- * @param {string} kind
- * @param {string} id
- * @param {string[]} extensions
- */
-function is_special_module(kind, id, extensions) {
-	return extensions.some((ext) => id.endsWith(ext)) && path.basename(id).split('.').includes(kind);
-}
-
-/**
- * @param {string} id
- * @param {string[]} extensions
- */
-export function is_server_only_module(id, extensions) {
-	return is_special_module('server', id, extensions);
-}
-
-/**
- * @param {string} id
- * @param {string[]} extensions
- */
-export function is_remote_module(id, extensions) {
-	return is_special_module('remote', id, extensions);
-}
+export const remote_module_pattern = /[/.]remote(\.[^/]+)+$/;
+export const server_only_module_pattern = /[/.]server(\.[^/]+)+$/;
+export const server_only_directory_pattern = /\/server\//;
 
 export const strip_virtual_prefix = /** @param {string} id */ (id) => id.replace('\0virtual:', '');
 
