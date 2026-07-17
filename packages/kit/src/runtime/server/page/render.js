@@ -21,7 +21,7 @@ import {
 	handle_error_and_jsonify
 } from '../utils.js';
 import * as env from '__sveltekit/env';
-import { collect_remote_data } from '../remote.js';
+import { collect_remote_data } from '../remote-functions.js';
 import Root from '../../components/root.svelte';
 import { render } from 'svelte/server';
 
