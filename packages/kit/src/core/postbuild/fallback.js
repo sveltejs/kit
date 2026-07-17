@@ -2,6 +2,8 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { forked } from '../../utils/fork.js';
+import { styleText } from 'node:util';
+import { stackless } from '../../utils/error.js';
 
 export default forked(import.meta.url, generate_fallback);
 
@@ -49,12 +51,14 @@ async function generate_fallback({ manifest_path, env, out_dir, origin, assets }
 		return await response.text();
 	}
 
-	const error = new Error(
-		`Could not create a fallback page — failed with status ${response.status}`,
-		{
-			cause: errors.get('/[fallback]')
-		}
-	);
-	error.stack = error.message;
-	throw error;
+	const e = errors.get('/[fallback]');
+
+	if (e) {
+		console.error(styleText(['bold', 'red'], `\n${e.message}\n`));
+		if (e.stack) console.error(e.stack + '\n');
+	} else {
+		console.error(styleText(['bold', 'red'], '\nSomething went wrong\n'));
+	}
+
+	throw stackless('Could not create a fallback page');
 }
