@@ -71,11 +71,15 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 			case 'fail':
 				return (details) => {
 					const message = format(details);
-					const cause = details.error instanceof Error ? details.error : undefined;
+					const error = details.error;
 
-					const error = new Error(message, cause ? { cause } : undefined);
-					error.stack = ''; // useless internal stack trace noise
-					throw error;
+					if (error instanceof Error) {
+						log.error(`${message}\n${error.stack ?? `${error.name}: ${error.message}`}`);
+					}
+
+					const wrapped = new Error(message);
+					wrapped.stack = wrapped.message;
+					throw wrapped;
 				};
 			case 'warn':
 				return (details) => {
@@ -92,9 +96,11 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 				return noop;
 			default:
 				return (details) => {
+					const message = format(details);
+
 					try {
 						// @ts-expect-error TS thinks T might be of a different kind, but it's not
-						input({ ...details, message: format(details) });
+						input({ ...details, message });
 					} catch (error) {
 						if (error instanceof Error && details.error instanceof Error && details.error.stack) {
 							const stack = error.stack ?? '';
@@ -103,7 +109,10 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 								// Cut the stack trace off at the point when our internal one starts
 								error.stack = stack.slice(0, stack.lastIndexOf('\n', idx));
 							}
-							error.cause = details.error;
+
+							log.error(
+								`${message === error.message ? '' : message}\n${error.message}\n${details.error.stack ?? `${details.error.name}: ${details.error.message}`}`
+							);
 						}
 						throw error;
 					}

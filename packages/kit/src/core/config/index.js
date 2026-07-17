@@ -6,6 +6,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import * as url from 'node:url';
+import { styleText } from 'node:util';
 import {
 	validate_kit_options,
 	kit_options,
@@ -224,8 +225,15 @@ export function validate_config(config) {
 	} catch (e) {
 		const error = /** @type {Error} */ (e);
 
+		// Print a nicer version of the error to the console
+		console.log(
+			styleText(
+				['bold', 'red'],
+				`Error loading SvelteKit options from Vite config: ${error.message}\n`
+			)
+		);
 		// redact the stack trace — it's not helpful to users
-		error.stack = `Error loading SvelteKit options from Vite config: ${error.message}\n`;
+		error.stack = '';
 		throw error;
 	}
 }
