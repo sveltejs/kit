@@ -738,6 +738,25 @@ test.describe('Errors', () => {
 		// the hydration script should not be present if the csr page option is respected
 		expect(content).not.toContain('kit.start(app');
 	});
+
+	test('returns root layout data for a missing route error page data request', async ({
+		request
+	}) => {
+		const data_response = await request.get(
+			'/this-route-does-not-exist/__data.json?x-sveltekit-invalidated=1'
+		);
+		expect(data_response.status()).toBe(200);
+		expect(data_response.headers()['content-type']).toContain('application/json');
+
+		const data = await data_response.json();
+		expect(data.type).toBe('data');
+		expect(data.nodes[0].type).toBe('data');
+		expect(data.nodes[0].data).toContain('rootlayout');
+
+		const page_response = await request.get('/this-route-does-not-exist/__data.json');
+		expect(page_response.status()).toBe(404);
+		expect(page_response.headers()['content-type']).toContain('text/html');
+	});
 });
 
 test.describe('Load', () => {
