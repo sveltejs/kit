@@ -2560,6 +2560,15 @@ export async function preloadCode(pathname) {
 }
 
 /**
+ * Resolves a shallow routing `url` argument, where `''` means the current URL.
+ * `new URL('', ...)` drops the fragment, which would lose the hash route or anchor.
+ * @param {string | URL} url
+ */
+function resolve_shallow_url(url) {
+	return url === '' ? new URL(location.href) : resolve_url(url);
+}
+
+/**
  * Programmatically create a new history entry with the given `page.state`. To use the current URL, you can pass `''` as the first argument. Used for [shallow routing](https://svelte.dev/docs/kit/shallow-routing).
  *
  * @param {string | URL} url
@@ -2587,7 +2596,7 @@ export function pushState(url, state) {
 
 	update_scroll_positions(current_history_index);
 
-	const resolved = resolve_url(url);
+	const resolved = resolve_shallow_url(url);
 
 	const opts = {
 		[HISTORY_INDEX]: (current_history_index += 1),
@@ -2631,7 +2640,7 @@ export function replaceState(url, state) {
 		}
 	}
 
-	const resolved = resolve_url(url);
+	const resolved = resolve_shallow_url(url);
 
 	const opts = {
 		[HISTORY_INDEX]: current_history_index,

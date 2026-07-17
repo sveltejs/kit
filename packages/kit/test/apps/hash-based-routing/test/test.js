@@ -50,6 +50,23 @@ test.describe('hash based navigation', () => {
 		expect(url.hash).toBe('#/a#b');
 	});
 
+	test('pushState with empty url keeps the hash route', async ({ page }) => {
+		await page.goto('/#/a');
+		await expect(page.locator('p')).toHaveText('a');
+
+		await page.locator('button[data-push-current]').click();
+		let url = new URL(page.url());
+		expect(url.hash).toBe('#/a');
+
+		await page.locator('a[href="/#/b"]').click();
+		await expect(page.locator('p')).toHaveText('b');
+
+		await page.goBack();
+		await expect(page.locator('p')).toHaveText('a');
+		url = new URL(page.url());
+		expect(url.hash).toBe('#/a');
+	});
+
 	test('navigates to correct page on load', async ({ page }) => {
 		await page.goto('/#/a');
 		await expect(page.locator('p')).toHaveText('a');

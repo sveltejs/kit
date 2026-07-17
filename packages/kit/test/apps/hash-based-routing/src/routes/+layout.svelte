@@ -17,6 +17,7 @@
 <a href="/#/reroute-b">/#/reroute-b</a>
 <button data-goto onclick={() => goto('/#/b')}>goto /#/b</button>
 <button data-push onclick={() => pushState('/#/b', {})}>pushState /#/b</button>
+<button data-push-current onclick={() => pushState('', {})}>pushState ''</button>
 <button data-replace onclick={() => replaceState('/#/a#b', {})}>replaceState /#/a#b</button>
 
 {@render children()}
