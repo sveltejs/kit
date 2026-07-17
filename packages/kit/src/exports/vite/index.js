@@ -710,7 +710,8 @@ function kit({ svelte_config }) {
 		enforce: 'pre',
 
 		applyToEnvironment(environment) {
-			return environment.name !== 'serviceWorker';
+			// the import map is only read for client-side violations in `load`, so skip other environments
+			return environment.config.consumer === 'client' && environment.name !== 'serviceWorker';
 		},
 
 		resolveId: {
@@ -721,9 +722,6 @@ function kit({ svelte_config }) {
 			// 	include(importerId(/.+/))
 			// ]),
 			async handler(id, importer, options) {
-				// the import map is only read for client-side violations in `load`, so skip other environments
-				if (this.environment.config.consumer !== 'client') return;
-
 				if (importer && !importer.endsWith('index.html')) {
 					const resolved = await this.resolve(id, importer, { ...options, skipSelf: true });
 
@@ -753,8 +751,6 @@ function kit({ svelte_config }) {
 				]
 			},
 			handler(id) {
-				if (this.environment.config.consumer !== 'client') return;
-
 				// skip .server.js files outside the cwd or in node_modules, as the filename might not mean 'server-only module' in this context
 				const is_internal =
 					id.startsWith(normalized_cwd) && !id.startsWith(normalized_node_modules);
