@@ -58,7 +58,7 @@ export function validate_redirect_location(location, options) {
 			throw new Error(
 				DEV
 					? `Cannot redirect to ${JSON.stringify(location)} with \`{ external: true }\`. ` +
-							'The `javascript:`, `data:`, and `vbscript:` protocols must be explicitly listed in the `external` allowlist'
+							'The `javascript:` and `data:` protocols must be explicitly listed in the `external` allowlist'
 					: 'Cannot redirect to external URL unless explicitly allowed'
 			);
 		}
