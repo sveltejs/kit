@@ -7,7 +7,6 @@ import fs from 'node:fs';
 import http from 'node:http';
 import path from 'node:path';
 import process from 'node:process';
-import { fileURLToPath } from 'node:url';
 import { defineConfig, test as base, devices } from '@playwright/test';
 import { number_from_env } from '../../../test-utils/index.js';
 
@@ -282,6 +281,7 @@ if (!test_browser_device) {
 }
 
 export const config = defineConfig({
+	fullyParallel: true,
 	forbidOnly: !!process.env.CI,
 	// generous timeouts on CI
 	timeout: process.env.CI ? 45000 : 15000,
@@ -309,12 +309,9 @@ export const config = defineConfig({
 		screenshot: 'only-on-failure',
 		trace: 'retain-on-failure'
 	},
-	workers: process.env.CI ? 2 : number_from_env('KIT_E2E_WORKERS', undefined),
+	workers: process.env.CI ? '50%' : number_from_env('KIT_E2E_WORKERS', undefined),
 	reporter: process.env.CI
-		? [
-				['dot'],
-				[path.resolve(fileURLToPath(import.meta.url), '../github-flaky-warning-reporter.js')]
-			]
+		? [['dot'], [path.join(import.meta.dirname, 'github-flaky-warning-reporter.js')]]
 		: 'list',
 	testDir: 'test',
 	testMatch: /(.+\.)?(test|spec)\.[jt]s/
