@@ -8,7 +8,7 @@ import * as devalue from 'devalue';
 import { createReadStream, createWriteStream, existsSync, statSync } from 'node:fs';
 import { extname, resolve, join, dirname, relative } from 'node:path';
 import { pipeline } from 'node:stream';
-import { promisify, styleText } from 'node:util';
+import { promisify } from 'node:util';
 import zlib from 'node:zlib';
 import { copy, rimraf, mkdirp } from '../../utils/filesystem.js';
 import { posixify } from '../../utils/os.js';

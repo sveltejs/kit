@@ -18,7 +18,6 @@ import { createReadableStream } from '@sveltejs/kit/node';
 import generate_fallback from './fallback.js';
 import { stringify_remote_arg } from '../../runtime/shared.js';
 import { SRC_ROOT } from '../../constants.js';
-import { coalesce_to_error } from '../../utils/error.js';
 import { log_response } from '../../exports/vite/utils.js';
 
 export default forked(import.meta.url, prerender);
