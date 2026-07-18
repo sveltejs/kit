@@ -349,7 +349,8 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root) {
 						return line;
 					}
 
-					const file = line.replace(/:\d+:\d+$/, '');
+					const loc = match[1] ?? match[2];
+					const file = loc.replace(/:\d+:\d+$/, '');
 
 					if (fs.existsSync(file)) {
 						if (!file.includes('node_modules') && !file.includes(SRC_ROOT)) {
