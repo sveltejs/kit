@@ -339,10 +339,10 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root) {
 		if (error.stack) {
 			let end = 0;
 
-			console.log('windows debugging');
-			console.log(process.cwd());
-			console.log({ SRC_ROOT });
-			console.log(error.stack);
+			console.error('windows debugging');
+			console.error(process.cwd());
+			console.error({ SRC_ROOT });
+			console.error(error.stack);
 
 			error.stack = error.stack
 				.replaceAll('\0', '') // remove null bytes from e.g. virtual module IDs, or the response will fail
