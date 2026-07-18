@@ -35,6 +35,15 @@ export function defineParams(definitions) {
  * @returns {import('@sveltejs/kit').ParamMatcher}
  */
 export function normalize_param_definition(definition) {
+	// standard schemas can be callable (e.g. ArkType), so this must be checked before the function case
+	if (
+		definition &&
+		(typeof definition === 'object' || typeof definition === 'function') &&
+		'~standard' in definition
+	) {
+		return definition;
+	}
+
 	if (typeof definition === 'function') {
 		return /** @type {import('@sveltejs/kit').ParamMatcher} */ (
 			/** @type {unknown} */ ({
@@ -53,10 +62,6 @@ export function normalize_param_definition(definition) {
 				}
 			})
 		);
-	}
-
-	if (definition && typeof definition === 'object' && '~standard' in definition) {
-		return definition;
 	}
 
 	throw new Error('Invalid param definition');

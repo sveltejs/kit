@@ -32,7 +32,7 @@ declare module '@sveltejs/kit' {
 			 * Test support for `read` from `$app/server`.
 			 * @param details.config The merged adapter-specific route config exported from the route with `export const config`
 			 */
-			read?: (details: { config: any; route: { id: string } }) => boolean;
+			read?: (details: { config: Record<string, any>; route: { id: string } }) => boolean;
 
 			/**
 			 * Test support for `instrumentation.server.js`. To pass, the adapter must support running `instrumentation.server.js` prior to the application code.
@@ -805,8 +805,10 @@ declare module '@sveltejs/kit' {
 			 * This has several advantages:
 			 * - The client does not need to load the routing manifest upfront, which can lead to faster initial page loads
 			 * - The list of routes is hidden from public view
-			 * - The server has an opportunity to intercept each navigation (for example through a middleware), enabling (for example) A/B testing opaque to SvelteKit
-
+			 * - The server has an opportunity to intercept each navigation (for example through middleware in front of SvelteKit, such as a reverse proxy or your platform's edge functions), enabling (for example) A/B testing opaque to SvelteKit
+			 *
+			 * Route resolution requests are answered as soon as the route has been looked up, before the `handle` hook is invoked. To intercept them within SvelteKit itself, use the `reroute` hook, which runs for these requests too.
+			 *
 			 * The drawback is that for unvisited paths, resolution will take slightly longer (though this is mitigated by [preloading](https://svelte.dev/docs/kit/link-options#data-sveltekit-preload-data)).
 			 *
 			 * > [!NOTE] When using server-side route resolution and prerendering, the resolution is prerendered along with the route itself.
@@ -2596,10 +2598,18 @@ declare module '@sveltejs/kit' {
 	interface Logger {
 		(msg: string): void;
 		success(msg: string): void;
+		/** Print a bold red message to stderr */
 		error(msg: string): void;
+		/** Print a bold yellow message to stderr */
 		warn(msg: string): void;
+		/** Print faded text to stdout if `verbose === true` */
 		minor(msg: string): void;
+		/** Print to stdout if `verbose === true` */
 		info(msg: string): void;
+		/** Print to stderr without formatting */
+		err(msg: string): void;
+		/** Print a bold red message, followed by a stack trace for each error (following `.cause` chains) */
+		prettyError(error: unknown, caller?: string): void;
 	}
 
 	type MaybePromise<T> = T | Promise<T>;
