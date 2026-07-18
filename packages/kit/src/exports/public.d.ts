@@ -2457,7 +2457,7 @@ export interface EnvVarConfig<T> {
 	 * The validator can output any value — not necessarily a string — but public, non-static values must be
 	 * serializable by [devalue](https://github.com/sveltejs/devalue) so that they can be sent to the browser.
 	 *
-	 * If omitted, the value must be a non-empty string.
+	 * If omitted, the value must be set, but may be an empty string.
 	 */
 	schema?: StandardSchemaV1<string | undefined, T>;
 	/**
