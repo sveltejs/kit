@@ -3,7 +3,7 @@ import { HttpError, SvelteKitError } from '@sveltejs/kit/internal';
 import { with_request_store } from '@sveltejs/kit/internal/server';
 import { coalesce_to_error, get_message, get_status } from '../../utils/error.js';
 import { negotiate } from '../../utils/http.js';
-import { fix_stack_trace } from '__sveltekit/server';
+import { fix_stack_trace } from './internal.js';
 import { escape_html } from '../../utils/escape.js';
 
 /**

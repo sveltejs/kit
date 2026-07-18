@@ -546,7 +546,9 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root) {
 					})
 				);
 
-				const { set_fix_stack_trace } = await vite.ssrLoadModule(`__sveltekit/server`);
+				const { set_fix_stack_trace } = await vite.ssrLoadModule(
+					`${get_runtime_base(root)}/server/internal.js`
+				);
 				set_fix_stack_trace(fix_stack_trace);
 
 				const { set_assets } = await vite.ssrLoadModule('$app/paths/internal/server');

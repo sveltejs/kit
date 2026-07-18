@@ -51,7 +51,6 @@ import {
 	sveltekit_env,
 	sveltekit_env_private,
 	sveltekit_env_service_worker,
-	sveltekit_server,
 	sveltekit_env_public_client,
 	sveltekit_env_public_server
 } from './module_ids.js';
@@ -407,6 +406,10 @@ function kit({ svelte_config }) {
 							{ find: '__SERVER__', replacement: `${generated}/server` },
 							{ find: '$app', replacement: `${runtime_directory}/app` },
 							{ find: '$env', replacement: `${runtime_directory}/env` },
+							{
+								find: '__sveltekit/server',
+								replacement: `${runtime_directory}/server/internal.js`
+							},
 							...get_config_aliases(kit, root)
 						]
 					},
@@ -629,8 +632,7 @@ function kit({ svelte_config }) {
 					exactRegex(sveltekit_env_private),
 					exactRegex(sveltekit_env_public_client),
 					exactRegex(sveltekit_env_public_server),
-					exactRegex(sveltekit_env_service_worker),
-					exactRegex(sveltekit_server)
+					exactRegex(sveltekit_env_service_worker)
 				]
 			},
 			handler(id) {
@@ -668,28 +670,6 @@ function kit({ svelte_config }) {
 									kit.appDir
 								)
 							: create_sveltekit_env_service_worker_dev(explicit_env_config, env, kit_global);
-
-					case sveltekit_server: {
-						return dedent`
-							export let fix_stack_trace = () => {};
-
-							export let read_implementation = null;
-
-							export let manifest = null;
-
-							export function set_fix_stack_trace(value) {
-								fix_stack_trace = value;
-							}
-
-							export function set_read_implementation(fn) {
-								read_implementation = fn;
-							}
-
-							export function set_manifest(_) {
-								manifest = _;
-							}
-						`;
-					}
 				}
 			}
 		}
