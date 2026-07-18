@@ -13,8 +13,10 @@ declare module '__sveltekit/paths' {
 declare module '__sveltekit/server' {
 	import { SSRManifest } from '@sveltejs/kit';
 
+	export let fix_stack_trace: (error: Error) => string;
 	export let manifest: SSRManifest;
 	export function read_implementation(path: string): ReadableStream;
+	export function set_fix_stack_trace(fn: (error: Error) => string): void;
 	export function set_manifest(manifest: SSRManifest): void;
 	export function set_read_implementation(fn: (path: string) => ReadableStream): void;
 }

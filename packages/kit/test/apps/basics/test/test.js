@@ -184,6 +184,24 @@ test.describe('$app/env', () => {
 			'PUBLIC_DYNAMIC: accessible anywhere/evaluated at run time'
 		);
 	});
+
+	test('legacy $env/* imports still work', async ({ page }) => {
+		await page.goto('/env/legacy');
+
+		await expect(page.locator('#static-private')).toHaveText(
+			'PRIVATE_STATIC: accessible to server-side code/replaced at build time'
+		);
+		await expect(page.locator('#dynamic-private')).toHaveText(
+			'PRIVATE_DYNAMIC: accessible to server-side code/evaluated at run time'
+		);
+
+		await expect(page.locator('#static-public')).toHaveText(
+			'PUBLIC_STATIC: accessible anywhere/replaced at build time'
+		);
+		await expect(page.locator('#dynamic-public')).toHaveText(
+			'PUBLIC_DYNAMIC: accessible anywhere/evaluated at run time'
+		);
+	});
 });
 
 test.describe('Load', () => {

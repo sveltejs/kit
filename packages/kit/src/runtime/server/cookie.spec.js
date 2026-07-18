@@ -212,6 +212,14 @@ describe.skipIf(process.env.NODE_ENV !== 'production')('cookies in prod', () => 
 		]);
 	});
 
+	test('get with a custom decode is not served from the cached default parse', () => {
+		const { cookies } = cookies_setup({ headers: { cookie: 'enc=hello%20world' } });
+
+		expect(cookies.get('enc')).toEqual('hello world');
+		expect(cookies.get('enc', { decode: (value) => value })).toEqual('hello%20world');
+		expect(cookies.get('enc')).toEqual('hello world');
+	});
+
 	test("set_internal isn't affected by defaults", () => {
 		const { cookies, new_cookies, set_internal } = cookies_setup({
 			href: 'https://example.com/a/b/c'

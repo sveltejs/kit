@@ -28,7 +28,7 @@ export function queue(concurrency) {
 
 			if (task) {
 				current += 1;
-				const promise = Promise.resolve(task.fn());
+				const promise = (async () => task.fn())(); // could throw synchronously
 
 				void promise
 					.then(task.fulfil, (err) => {
@@ -54,6 +54,7 @@ export function queue(concurrency) {
 			const promise = new Promise((fulfil, reject) => {
 				tasks.push({ fn, fulfil, reject });
 			});
+			promise.catch(() => {});
 
 			dequeue();
 			return promise;

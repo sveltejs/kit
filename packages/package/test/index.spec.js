@@ -94,7 +94,7 @@ for (const dir of fs.readdirSync(join(import.meta.dirname, 'errors'))) {
 		const config = await load_config();
 		process.chdir(original_cwd);
 
-		const input = resolve(cwd, config.kit?.files?.lib ?? 'src/lib');
+		const input = resolve(cwd, 'src/lib');
 
 		try {
 			await build({ cwd, input, output, types: true, config, preserve_output: false });
@@ -164,8 +164,9 @@ test('create package with SvelteComponentTyped for backwards compatibility', asy
 	await test_make_package('svelte-3-types');
 });
 
-test('SvelteKit interop', async () => {
-	await test_make_package('svelte-kit');
+test('Custom lib folder with #lib import', async () => {
+	const cwd = join(import.meta.dirname, 'fixtures', 'svelte-kit');
+	await test_make_package('svelte-kit', { input: resolve(cwd, 'src/kitlib') });
 });
 
 test('create package with declaration map', async () => {

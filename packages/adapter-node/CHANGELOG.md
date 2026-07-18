@@ -1,5 +1,13 @@
 # @sveltejs/adapter-node
 
+## 6.0.0-next.4
+
+### Patch Changes
+
+- fix: correctly bundle entrypoints on Windows ([#16367](https://github.com/sveltejs/kit/pull/16367))
+- Updated dependencies [[`c1ee782`](https://github.com/sveltejs/kit/commit/c1ee7829b0c7ec9a874c86d7fd1e952f875f5bed), [`1a1b3ea`](https://github.com/sveltejs/kit/commit/1a1b3ea53bdff1d83c4f22e934e825810a088688), [`6423d98`](https://github.com/sveltejs/kit/commit/6423d9827cd31dd7b26c4c611dbabe6d636fc91c), [`6d1f4f0`](https://github.com/sveltejs/kit/commit/6d1f4f0cea991c532cfad49eec8662dac31dfe2b), [`5ca9906`](https://github.com/sveltejs/kit/commit/5ca990646d886d184216995b01d10f5cc649ceed), [`b148d31`](https://github.com/sveltejs/kit/commit/b148d31398f6c0219d553a172d8cf46223d5db53), [`5ca9906`](https://github.com/sveltejs/kit/commit/5ca990646d886d184216995b01d10f5cc649ceed), [`9f3d9bb`](https://github.com/sveltejs/kit/commit/9f3d9bbb0c63e7197c23f7529565542c2d77e592), [`7bfd922`](https://github.com/sveltejs/kit/commit/7bfd922b367571426dcc5c573317bab8beac35f6), [`ffa0e3b`](https://github.com/sveltejs/kit/commit/ffa0e3b06e82d7023dd2189ccfe1fc191c90b941)]:
+  - @sveltejs/kit@3.0.0-next.9
+
 ## 6.0.0-next.3
 
 ### Patch Changes

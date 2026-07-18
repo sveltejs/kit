@@ -47,6 +47,7 @@ export interface ServerInternalModule {
 	set_prerendering(): void;
 	set_read_implementation(implementation: (path: string) => ReadableStream): void;
 	set_version(version: string): void;
+	set_fix_stack_trace(fix_stack_trace: (error: Error) => void): void;
 	get_hooks: () => Promise<Record<string, any>>;
 }
 
@@ -460,7 +461,10 @@ export interface SSRNode {
 
 	/**
 	 * During development, all styles are inlined for the page to avoid FOUC.
-	 * But in production, this stores styles that are below the inline threshold
+	 * But in production, this stores styles that are below the inline threshold.
+	 * It returns a Promise during development because Vite needs to load the
+	 * modules on demand. But in production, the contents have been precomputed
+	 * during the build, so it can return synchronously.
 	 */
 	inline_styles?(): MaybePromise<
 		Record<string, string | ((assets: string, base: string) => string)>

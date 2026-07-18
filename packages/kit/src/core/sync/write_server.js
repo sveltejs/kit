@@ -26,7 +26,7 @@ const server_template = ({
 }) => `
 import { set_building, set_prerendering } from '$app/env/internal';
 import { set_assets } from '$app/paths/internal/server';
-import { set_manifest, set_read_implementation } from '__sveltekit/server';
+import { set_fix_stack_trace, set_manifest, set_read_implementation } from '__sveltekit/server';
 import error from '../shared/error-template.js';
 
 export const options = {
@@ -80,7 +80,7 @@ export async function get_hooks() {
 	};
 }
 
-export { set_assets, set_building, set_manifest, set_prerendering, set_read_implementation };
+export { set_assets, set_building, set_fix_stack_trace, set_manifest, set_prerendering, set_read_implementation };
 `;
 
 // TODO need to re-run this whenever src/app.html or src/error.html are

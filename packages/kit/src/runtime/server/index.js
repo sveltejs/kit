@@ -2,8 +2,7 @@ import { noop } from '../../utils/functions.js';
 import { IN_WEBCONTAINER } from './constants.js';
 import { respond } from './respond.js';
 import { options, get_hooks } from '__SERVER__/internal.js';
-import { format_server_error } from './utils.js';
-import { set_read_implementation, set_manifest } from '__sveltekit/server';
+import { set_read_implementation, set_manifest } from './internal.js';
 import { set_env } from '__sveltekit/env';
 import { set_app } from './app.js';
 
@@ -107,13 +106,18 @@ export class Server {
 					handle: module.handle || (({ event, resolve }) => resolve(event)),
 					handleError:
 						module.handleError ||
-						(({ status, error, event }) => {
-							const error_message = format_server_error(
-								status,
-								/** @type {Error} */ (error),
-								event
-							);
-							console.error(error_message);
+						(({ error }) => {
+							let e = error;
+							while (e instanceof Error) {
+								if (e.stack) {
+									console.error(e.stack);
+								}
+								e = e.cause;
+							}
+
+							if (e) {
+								console.error(String(e));
+							}
 						}),
 					handleFetch: module.handleFetch || (({ request, fetch }) => fetch(request)),
 					handleValidationError:
@@ -164,7 +168,7 @@ export class Server {
 	 * @param {Request} request
 	 * @param {import('types').RequestOptions} options
 	 */
-	async respond(request, options) {
+	respond(request, options) {
 		return respond(request, this.#options, this.#manifest, {
 			...options,
 			error: false,

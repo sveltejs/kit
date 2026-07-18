@@ -1,5 +1,47 @@
 # @sveltejs/kit
 
+## 3.0.0-next.10
+
+### Major Changes
+
+- breaking: move `defineEnvVars` to `@sveltejs/kit/env` ([#16375](https://github.com/sveltejs/kit/pull/16375))
+
+### Patch Changes
+
+- fix: treat `data:` protocol URLs as external for redirect ([#16392](https://github.com/sveltejs/kit/pull/16392))
+
+- perf: skip import graph collection outside client environments ([#16383](https://github.com/sveltejs/kit/pull/16383))
+
+- fix: warn if there are plugins using `transformIndexHtml` ([#16394](https://github.com/sveltejs/kit/pull/16394))
+
+## 3.0.0-next.9
+
+### Major Changes
+
+- breaking: `handle`'s `resolve` is now typed to always return a `Promise` ([#16352](https://github.com/sveltejs/kit/pull/16352))
+
+- breaking: replace the `$lib` alias with `#lib` and remove `files.lib` config. ([#16360](https://github.com/sveltejs/kit/pull/16360))
+
+- breaking: disallow cross-origin form submissions without a `Content-Type` header ([#16347](https://github.com/sveltejs/kit/pull/16347))
+
+- breaking: Server-only directories (`/server/` in the path) are now treated as server-only everywhere inside the project (except `src/routes` and the assets directory) ([#16360](https://github.com/sveltejs/kit/pull/16360))
+
+- breaking: delegate CORS handling to Vite for static directory requests during development ([#16357](https://github.com/sveltejs/kit/pull/16357))
+
+### Minor Changes
+
+- feat: reinstate `$env/static/private`, `$env/dynamic/private`, `$env/static/public`, `$env/dynamic/public` and `$app/environment` as deprecated aliases for `$app/env/private` `$app/env/public` and `$app/env` ([#16334](https://github.com/sveltejs/kit/pull/16334))
+
+### Patch Changes
+
+- perf: cache the default cookie header parse and avoid allocations in `cookies.get` ([#16341](https://github.com/sveltejs/kit/pull/16341))
+
+- fix: avoid client-side code being bundled by Cloudflare Wrangler ([#16364](https://github.com/sveltejs/kit/pull/16364))
+
+- fix: handle rejected streamed server data after delayed loads ([#16268](https://github.com/sveltejs/kit/pull/16268))
+
+- fix: enable CSRF protection in builds with a non-production `NODE_ENV` value ([#16313](https://github.com/sveltejs/kit/pull/16313))
+
 ## 3.0.0-next.8
 
 ### Major Changes
@@ -17,6 +59,28 @@
 - feat: allow hyphens in param and matcher names ([#16284](https://github.com/sveltejs/kit/pull/16284))
 
 - feat: add `ErrorProps` to generated types ([#16272](https://github.com/sveltejs/kit/pull/16272))
+
+## 2.70.0
+
+### Minor Changes
+
+- feat: move `defineEnvVars` to `@sveltejs/kit/env` ([#16378](https://github.com/sveltejs/kit/pull/16378))
+
+### Patch Changes
+
+- fix: enable CSRF protection in builds with a non-production `NODE_ENV` value ([#16313](https://github.com/sveltejs/kit/pull/16313))
+
+## 2.69.3
+
+### Patch Changes
+
+- fix: detect destructured `load` and `actions` exports during type generation ([#16329](https://github.com/sveltejs/kit/pull/16329))
+
+- fix: ensure CSS URL references are absolute when `paths.relative` is `false` ([#16315](https://github.com/sveltejs/kit/pull/16315))
+
+- fix: align MAX_COOKIE_SIZE with RFC 6265bis ([#16322](https://github.com/sveltejs/kit/pull/16322))
+
+## 2.69.2
 
 ### Patch Changes
 

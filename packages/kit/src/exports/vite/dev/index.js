@@ -15,7 +15,7 @@ import { load_error_page } from '../../../core/config/index.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import * as sync from '../../../core/sync/sync.js';
 import '../../../utils/mime.js'; // extend mrmime with additional types (affects sirv too)
-import { is_chrome_devtools_request, not_found } from '../utils.js';
+import { is_chrome_devtools_request, log_response, not_found } from '../utils.js';
 import { escape_for_regexp, escape_html } from '../../../utils/escape.js';
 import { sveltekit_ipc, sveltekit_manifest_data } from '../module_ids.js';
 
@@ -152,10 +152,7 @@ export function dev(server, vite_config, vite, svelte_config, root, dev_context)
 		dev: true,
 		etag: true,
 		maxAge: 0,
-		extensions: [],
-		setHeaders: (res) => {
-			res.setHeader('access-control-allow-origin', '*');
-		}
+		extensions: []
 	});
 
 	server.middlewares.use((req, res, next) => {
@@ -331,9 +328,11 @@ export function dev(server, vite_config, vite, svelte_config, root, dev_context)
 				if (rendered.status === 404) {
 					// @ts-expect-error
 					serve_static_middleware.handle(req, res, () => {
+						log_response(rendered.status, request);
 						setResponse(res, rendered);
 					});
 				} else {
+					log_response(rendered.status, request);
 					setResponse(res, rendered);
 				}
 			} catch (e) {
