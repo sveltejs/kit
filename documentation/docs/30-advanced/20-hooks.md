@@ -14,7 +14,7 @@ Code in these modules will run when the application starts up, making them usefu
 
 ## handle
 
-> [!NOTE] Declared in `src/hooks.server.js`
+> [!NOTE] Can be added to `src/hooks.server.js`
 
 This function runs every time the SvelteKit server receives a [request](web-standards#Fetch-APIs-Request) — whether that happens while the app is running, or during [prerendering](page-options#prerender) — and determines the [response](web-standards#Fetch-APIs-Response). It receives an `event` object representing the request and a function called `resolve`, which renders the route and generates a `Response`. This allows you to modify response headers or bodies, or bypass SvelteKit entirely (for implementing routes programmatically, for example).
 
@@ -104,7 +104,7 @@ export async function handle({ event, resolve }) {
 
 ## handleFetch
 
-> [!NOTE] Declared in `src/hooks.server.js`
+> [!NOTE] Can be added to `src/hooks.server.js`
 
 This function allows you to modify (or replace) the result of an [`event.fetch`](load#Making-fetch-requests) call that runs on the server (or during prerendering) inside an endpoint, `load`, `action`, `handle`, `handleError` or `reroute`.
 
@@ -145,7 +145,7 @@ export async function handleFetch({ event, request, fetch }) {
 
 ## handleValidationError
 
-> [!NOTE] Declared in `src/hooks.server.js`
+> [!NOTE] Can be added to `src/hooks.server.js`
 
 This hook is called when a remote function is called with an argument that does not match the provided [Standard Schema](https://standardschema.dev/). It must return an object matching the shape of [`App.Error`](types#Error).
 
@@ -179,7 +179,7 @@ Be thoughtful about what information you expose here, as the most likely reason 
 
 ## handleError
 
-> [!NOTE] Declared in `src/hooks.server.js` and `src/hooks.client.js`
+> [!NOTE] Can be added to `src/hooks.server.js` and `src/hooks.client.js`
 
 If an [unexpected error](errors#Unexpected-errors) is thrown during loading, rendering, or from an endpoint, this function will be called with the `error`, `event`, `status` code and `message`. This allows for two things:
 
@@ -276,7 +276,7 @@ During development, if an error occurs because of a syntax error in your Svelte 
 
 ## init
 
-> [!NOTE] Declared in `src/hooks.server.js` and `src/hooks.client.js`
+> [!NOTE] Can be added to `src/hooks.server.js` and `src/hooks.client.js`
 
 This function runs once, when the server is created or the app starts in the browser, and is a useful place to do asynchronous work such as initializing a database connection.
 
@@ -298,7 +298,7 @@ export async function init() {
 
 ## reroute
 
-> [!NOTE] Declared in `src/hooks.js`, and runs on both server and client
+> [!NOTE] Can be added to `src/hooks.js`; it runs on both server and client
 
 This function runs before `handle` and allows you to change how URLs are translated into routes. The returned pathname (which defaults to `url.pathname`) is used to select the route and its parameters.
 
@@ -351,7 +351,7 @@ export async function reroute({ url, fetch }) {
 
 ## transport
 
-> [!NOTE] Declared in `src/hooks.js`, and runs on both server and client
+> [!NOTE] Can be added to `src/hooks.js`; it runs on both server and client
 
 This is a collection of _transporters_, which allow you to pass custom types — returned from `load` and form actions — across the server/client boundary. Each transporter contains an `encode` function, which encodes values on the server (or returns a falsy value for anything that isn't an instance of the type) and a corresponding `decode` function:
 
