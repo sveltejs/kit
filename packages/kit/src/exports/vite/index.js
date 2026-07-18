@@ -10,7 +10,7 @@ import { styleText } from 'node:util';
 import { loadEnv } from 'vite';
 import { exactRegex, prefixRegex } from 'rolldown/filter';
 
-import { copy, mkdirp, read, resolve_entry, rimraf, walk } from '../../utils/filesystem.js';
+import { copy, mkdirp, read, resolve_entry, rimraf } from '../../utils/filesystem.js';
 import { posixify } from '../../utils/os.js';
 import {
 	create_sveltekit_env,
@@ -1862,10 +1862,8 @@ function kit({ svelte_config }) {
 					// If we did override it, set it back to false and remove the sourcemaps
 					builder.environments.ssr.config.build.sourcemap = ssr_sourcemap;
 
-					for (const file of walk(`${out}/server`)) {
-						if (file.endsWith('.js.map')) {
-							fs.rmSync(`${out}/server/${file}`);
-						}
+					for (const file of fs.globSync(`${out}/server/**/*.js.map`)) {
+						fs.rmSync(file);
 					}
 				}
 			}
