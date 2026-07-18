@@ -27,7 +27,7 @@ export function validate(variables, value, name, issues) {
 	const validator = config.schema;
 
 	if (!validator) {
-		if (!value) issues[name] = [MISSING];
+		if (value === undefined) issues[name] = [MISSING];
 		return value;
 	}
 
