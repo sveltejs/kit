@@ -353,8 +353,10 @@ test.describe('Errors', () => {
 		const lines = read_errors('/errors/endpoint.json').stack.split('\n');
 		expect(lines[0]).toMatch('nope');
 
+		console.log(lines);
+
 		if (process.env.DEV) {
-			expect(lines[1]).toMatch('endpoint.json');
+			expect(lines[1], lines).toMatch('endpoint.json');
 		}
 
 		expect(res && res.status()).toBe(500);

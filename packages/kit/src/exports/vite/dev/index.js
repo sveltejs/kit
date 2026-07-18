@@ -362,7 +362,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root) {
 
 					return line;
 				})
-				.slice(0, end)
+				// .slice(0, end)
 				.join('\n');
 
 			return error.stack;
