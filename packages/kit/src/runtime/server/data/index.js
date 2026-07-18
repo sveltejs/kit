@@ -4,7 +4,7 @@ import { normalize_error } from '../../../utils/error.js';
 import { once } from '../../../utils/functions.js';
 import { server_data_serializer_json } from '../page/data_serializer.js';
 import { load_server_data } from '../page/load_data.js';
-import { handle_error_and_jsonify } from '../utils.js';
+import { handle_error_and_jsonify } from '../errors.js';
 import { normalize_path } from '../../../utils/url.js';
 import { text_encoder } from '../../utils.js';
 

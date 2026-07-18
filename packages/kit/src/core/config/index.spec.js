@@ -1,4 +1,5 @@
 import { join } from 'node:path';
+import { stripVTControlCharacters } from 'node:util';
 import { assert, expect, test } from 'vitest';
 import { validate_config, split_config } from './index.js';
 
@@ -14,6 +15,32 @@ function remove_keys(o, check) {
 		if (check([key, o[key]])) delete o[key];
 		const nested = typeof o[key] === 'object' && !Array.isArray(o[key]);
 		if (nested) remove_keys(o[key], check);
+	}
+}
+
+/**
+ * @param {() => void} fn
+ * @param {RegExp} pattern
+ */
+function assert_logs_error_and_throws(fn, pattern) {
+	const original_log = console.log;
+	/** @type {string[]} */
+	const logs = [];
+	console.log = (...args) => {
+		logs.push(args.join(' '));
+	};
+
+	try {
+		assert.throws(fn);
+	} finally {
+		console.log = original_log;
+	}
+
+	const has_match = logs.some((log) => pattern.test(stripVTControlCharacters(log).trim()));
+	if (!has_match) {
+		throw new Error(
+			`Expected console.log to match ${pattern}, but got:\n${logs.map((log) => JSON.stringify(stripVTControlCharacters(log).trim())).join('\n')}`
+		);
 	}
 }
 
@@ -134,18 +161,18 @@ test('fills in defaults', () => {
 });
 
 test('errors on invalid values', () => {
-	assert.throws(() => {
+	assert_logs_error_and_throws(() => {
 		validate_config({
 			kit: {
 				// @ts-expect-error - given value expected to throw
 				appDir: 42
 			}
 		});
-	}, /^Error loading SvelteKit options from Vite config: config\.appDir should be a string, if specified$/);
+	}, /^config\.appDir should be a string, if specified$/);
 });
 
 test('errors on invalid nested values', () => {
-	assert.throws(() => {
+	assert_logs_error_and_throws(() => {
 		validate_config({
 			kit: {
 				files: {
@@ -154,7 +181,7 @@ test('errors on invalid nested values', () => {
 				}
 			}
 		});
-	}, /^Error loading SvelteKit options from Vite config: Unexpected option config\.files\.potato$/);
+	}, /^Unexpected option config\.files\.potato$/);
 });
 
 test('does not error on invalid top-level values', () => {
@@ -166,7 +193,7 @@ test('does not error on invalid top-level values', () => {
 });
 
 test('errors on extension without leading .', () => {
-	assert.throws(() => {
+	assert_logs_error_and_throws(() => {
 		validate_config({
 			extensions: ['blah']
 		});
@@ -197,47 +224,47 @@ test('fills in partial blanks', () => {
 });
 
 test('fails if appDir is blank', () => {
-	assert.throws(() => {
+	assert_logs_error_and_throws(() => {
 		validate_config({
 			kit: {
 				appDir: ''
 			}
 		});
-	}, /^Error loading SvelteKit options from Vite config: config\.appDir cannot be empty$/);
+	}, /^config\.appDir cannot be empty$/);
 });
 
 test('fails if appDir is only slash', () => {
-	assert.throws(() => {
+	assert_logs_error_and_throws(() => {
 		validate_config({
 			kit: {
 				appDir: '/'
 			}
 		});
-	}, /^Error loading SvelteKit options from Vite config: config\.appDir cannot start or end with '\/'. See https:\/\/svelte\.dev\/docs\/kit\/configuration$/);
+	}, /^config\.appDir cannot start or end with '\/'. See https:\/\/svelte\.dev\/docs\/kit\/configuration$/);
 });
 
 test('fails if appDir starts with slash', () => {
-	assert.throws(() => {
+	assert_logs_error_and_throws(() => {
 		validate_config({
 			kit: {
 				appDir: '/_app'
 			}
 		});
-	}, /^Error loading SvelteKit options from Vite config: config\.appDir cannot start or end with '\/'. See https:\/\/svelte\.dev\/docs\/kit\/configuration$/);
+	}, /^config\.appDir cannot start or end with '\/'. See https:\/\/svelte\.dev\/docs\/kit\/configuration$/);
 });
 
 test('fails if appDir ends with slash', () => {
-	assert.throws(() => {
+	assert_logs_error_and_throws(() => {
 		validate_config({
 			kit: {
 				appDir: '_app/'
 			}
 		});
-	}, /^Error loading SvelteKit options from Vite config: config\.appDir cannot start or end with '\/'. See https:\/\/svelte\.dev\/docs\/kit\/configuration$/);
+	}, /^config\.appDir cannot start or end with '\/'. See https:\/\/svelte\.dev\/docs\/kit\/configuration$/);
 });
 
 test('fails if paths.base is not root-relative', () => {
-	assert.throws(() => {
+	assert_logs_error_and_throws(() => {
 		validate_config({
 			kit: {
 				paths: {
@@ -246,11 +273,11 @@ test('fails if paths.base is not root-relative', () => {
 				}
 			}
 		});
-	}, /^Error loading SvelteKit options from Vite config: config\.paths\.base option must either be the empty string or a root-relative path that starts but doesn't end with '\/'. See https:\/\/svelte\.dev\/docs\/kit\/configuration#paths$/);
+	}, /^config\.paths\.base option must either be the empty string or a root-relative path that starts but doesn't end with '\/'. See https:\/\/svelte\.dev\/docs\/kit\/configuration#paths$/);
 });
 
 test("fails if paths.base ends with '/'", () => {
-	assert.throws(() => {
+	assert_logs_error_and_throws(() => {
 		validate_config({
 			kit: {
 				paths: {
@@ -258,11 +285,11 @@ test("fails if paths.base ends with '/'", () => {
 				}
 			}
 		});
-	}, /^Error loading SvelteKit options from Vite config: config\.paths\.base option must either be the empty string or a root-relative path that starts but doesn't end with '\/'. See https:\/\/svelte\.dev\/docs\/kit\/configuration#paths$/);
+	}, /^config\.paths\.base option must either be the empty string or a root-relative path that starts but doesn't end with '\/'. See https:\/\/svelte\.dev\/docs\/kit\/configuration#paths$/);
 });
 
 test('fails if paths.assets is relative', () => {
-	assert.throws(() => {
+	assert_logs_error_and_throws(() => {
 		validate_config({
 			kit: {
 				paths: {
@@ -271,11 +298,11 @@ test('fails if paths.assets is relative', () => {
 				}
 			}
 		});
-	}, /^Error loading SvelteKit options from Vite config: config\.paths\.assets option must be an absolute path, if specified. See https:\/\/svelte\.dev\/docs\/kit\/configuration#paths$/);
+	}, /^config\.paths\.assets option must be an absolute path, if specified. See https:\/\/svelte\.dev\/docs\/kit\/configuration#paths$/);
 });
 
 test('fails if paths.assets has trailing slash', () => {
-	assert.throws(() => {
+	assert_logs_error_and_throws(() => {
 		validate_config({
 			kit: {
 				paths: {
@@ -283,11 +310,11 @@ test('fails if paths.assets has trailing slash', () => {
 				}
 			}
 		});
-	}, /^Error loading SvelteKit options from Vite config: config\.paths\.assets option must not end with '\/'. See https:\/\/svelte\.dev\/docs\/kit\/configuration#paths$/);
+	}, /^config\.paths\.assets option must not end with '\/'. See https:\/\/svelte\.dev\/docs\/kit\/configuration#paths$/);
 });
 
 test('fails if paths.origin is not a valid origin', () => {
-	assert.throws(() => {
+	assert_logs_error_and_throws(() => {
 		validate_config({
 			kit: {
 				paths: {
@@ -295,11 +322,11 @@ test('fails if paths.origin is not a valid origin', () => {
 				}
 			}
 		});
-	}, /^Error loading SvelteKit options from Vite config: config.paths.origin must be a valid origin \(e\.g\. 'https:\/\/my-site\.com'\)\. 'not an origin' could not be parsed as a URL$/);
+	}, /^config.paths.origin must be a valid origin \(e\.g\. 'https:\/\/my-site\.com'\)\. 'not an origin' could not be parsed as a URL$/);
 });
 
 test('fails if paths.origin uses an unsupported protocol', () => {
-	assert.throws(() => {
+	assert_logs_error_and_throws(() => {
 		validate_config({
 			kit: {
 				paths: {
@@ -309,11 +336,11 @@ test('fails if paths.origin uses an unsupported protocol', () => {
 				}
 			}
 		});
-	}, /^Error loading SvelteKit options from Vite config: config.paths.origin must be a valid origin — only 'http' and 'https' protocols are supported, received 'ftp:'$/);
+	}, /^config.paths.origin must be a valid origin — only 'http' and 'https' protocols are supported, received 'ftp:'$/);
 });
 
 test('fails if paths.origin contains a path', () => {
-	assert.throws(() => {
+	assert_logs_error_and_throws(() => {
 		validate_config({
 			kit: {
 				paths: {
@@ -321,7 +348,7 @@ test('fails if paths.origin contains a path', () => {
 				}
 			}
 		});
-	}, /^Error loading SvelteKit options from Vite config: config.paths.origin must be a valid origin — received 'https:\/\/example\.com\/path' which contains a path, query, or hash\. Use the bare origin 'https:\/\/example\.com' instead$/);
+	}, /^config.paths.origin must be a valid origin — received 'https:\/\/example\.com\/path' which contains a path, query, or hash\. Use the bare origin 'https:\/\/example\.com' instead$/);
 });
 
 test('passes if paths.origin is a valid origin', () => {
@@ -341,7 +368,7 @@ test('defaults paths.origin to undefined', () => {
 });
 
 test('fails if paths.origin is the empty string', () => {
-	assert.throws(() => {
+	assert_logs_error_and_throws(() => {
 		validate_config({
 			kit: {
 				paths: {
@@ -349,11 +376,11 @@ test('fails if paths.origin is the empty string', () => {
 				}
 			}
 		});
-	}, /^Error loading SvelteKit options from Vite config: config.paths.origin must be a valid origin \(e\.g\. 'https:\/\/my-site\.com'\)\. '' could not be parsed as a URL$/);
+	}, /^config.paths.origin must be a valid origin \(e\.g\. 'https:\/\/my-site\.com'\)\. '' could not be parsed as a URL$/);
 });
 
 test('fails if prerender.entries are invalid', () => {
-	assert.throws(() => {
+	assert_logs_error_and_throws(() => {
 		validate_config({
 			kit: {
 				prerender: {
@@ -362,11 +389,11 @@ test('fails if prerender.entries are invalid', () => {
 				}
 			}
 		});
-	}, /^Error loading SvelteKit options from Vite config: Each member of config.prerender.entries must be either '\*' or an absolute path beginning with '\/' — saw 'foo'$/);
+	}, /^Each member of config.prerender.entries must be either '\*' or an absolute path beginning with '\/' — saw 'foo'$/);
 });
 
 test('fails if prerender.origin is set', () => {
-	assert.throws(() => {
+	assert_logs_error_and_throws(() => {
 		validate_config({
 			kit: {
 				prerender: {
@@ -375,7 +402,7 @@ test('fails if prerender.origin is set', () => {
 				}
 			}
 		});
-	}, /^Error loading SvelteKit options from Vite config: `config.prerender.origin` has been removed in favour of `config.paths.origin`$/);
+	}, /^`config.prerender.origin` has been removed in favour of `config.paths.origin`$/);
 });
 
 /**
@@ -462,36 +489,36 @@ test('accepts valid tracing values', () => {
 });
 
 test('errors on invalid tracing values', () => {
-	assert.throws(() => {
+	assert_logs_error_and_throws(() => {
 		validate_config({
 			kit: {
 				// @ts-expect-error - given value expected to throw
 				tracing: true
 			}
 		});
-	}, /^Error loading SvelteKit options from Vite config: config\.tracing should be an object$/);
+	}, /^config\.tracing should be an object$/);
 
-	assert.throws(() => {
+	assert_logs_error_and_throws(() => {
 		validate_config({
 			kit: {
 				// @ts-expect-error - given value expected to throw
 				tracing: 'server'
 			}
 		});
-	}, /^Error loading SvelteKit options from Vite config: config\.tracing should be an object$/);
+	}, /^config\.tracing should be an object$/);
 
-	assert.throws(() => {
+	assert_logs_error_and_throws(() => {
 		validate_config({
 			kit: {
 				// @ts-expect-error - given value expected to throw
 				tracing: { server: 'invalid' }
 			}
 		});
-	}, /^Error loading SvelteKit options from Vite config: config\.tracing\.server should be true or false, if specified$/);
+	}, /^config\.tracing\.server should be true or false, if specified$/);
 });
 
 test('errors on removed experimental.tracing and experimental.instrumentation', () => {
-	assert.throws(() => {
+	assert_logs_error_and_throws(() => {
 		validate_config({
 			kit: {
 				experimental: {
@@ -502,7 +529,7 @@ test('errors on removed experimental.tracing and experimental.instrumentation', 
 		});
 	}, /`config\.experimental\.tracing` has been removed/);
 
-	assert.throws(() => {
+	assert_logs_error_and_throws(() => {
 		validate_config({
 			kit: {
 				experimental: {
@@ -515,7 +542,7 @@ test('errors on removed experimental.tracing and experimental.instrumentation', 
 });
 
 test('errors on invalid forkPreloads values', () => {
-	assert.throws(() => {
+	assert_logs_error_and_throws(() => {
 		validate_config({
 			kit: {
 				experimental: {
@@ -524,9 +551,9 @@ test('errors on invalid forkPreloads values', () => {
 				}
 			}
 		});
-	}, /^Error loading SvelteKit options from Vite config: config\.experimental\.forkPreloads should be true or false, if specified$/);
+	}, /^config\.experimental\.forkPreloads should be true or false, if specified$/);
 
-	assert.throws(() => {
+	assert_logs_error_and_throws(() => {
 		validate_config({
 			kit: {
 				experimental: {
@@ -535,7 +562,7 @@ test('errors on invalid forkPreloads values', () => {
 				}
 			}
 		});
-	}, /^Error loading SvelteKit options from Vite config: config\.experimental\.forkPreloads should be true or false, if specified$/);
+	}, /^config\.experimental\.forkPreloads should be true or false, if specified$/);
 });
 
 test('split_config keeps SvelteKit options under the `kit` namespace', () => {
