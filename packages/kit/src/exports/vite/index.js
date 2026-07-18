@@ -1682,11 +1682,7 @@ function find_overridden_config(config, resolved_config, enforced_config, path, 
 			const resolved = resolved_config[key];
 
 			if (enforced === true) {
-				// Normalize path separators before comparing to avoid false positives on Windows,
-				// where config values like `root` may use backslashes while SvelteKit uses forward slashes.
-				const a = typeof config[key] === 'string' ? posixify(config[key]) : config[key];
-				const b = typeof resolved === 'string' ? posixify(resolved) : resolved;
-				if (a !== b) {
+				if (comparable(config[key]) !== comparable(resolved)) {
 					out.push(path + key);
 				}
 			} else {
@@ -1695,6 +1691,17 @@ function find_overridden_config(config, resolved_config, enforced_config, path, 
 		}
 	}
 	return out;
+}
+
+/**
+ * Normalizes a config value for comparison, since Windows paths may use backslashes
+ * and differ in casing (e.g. the drive letter) depending on where they came from.
+ * @param {any} value
+ */
+function comparable(value) {
+	if (typeof value !== 'string') return value;
+	const normalized = posixify(value);
+	return process.platform === 'win32' ? normalized.toLowerCase() : normalized;
 }
 
 /**
