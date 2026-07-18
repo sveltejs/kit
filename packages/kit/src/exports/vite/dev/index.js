@@ -339,11 +339,6 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root) {
 		if (error.stack) {
 			let end = 0;
 
-			console.error('windows debugging');
-			console.error(process.cwd());
-			console.error({ SRC_ROOT });
-			console.error(error.stack);
-
 			error.stack = error.stack
 				.replaceAll('\0', '') // remove null bytes from e.g. virtual module IDs, or the response will fail
 				.split('\n')
@@ -354,20 +349,19 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root) {
 						return line;
 					}
 
-					const loc = match[1] ?? match[2];
+					const file = line.replace(/:\d+:\d+$/, '');
 
-					const file = loc.slice(0, loc.indexOf(':'));
 					if (fs.existsSync(file)) {
 						if (!file.includes('node_modules') && !file.includes(SRC_ROOT)) {
 							end = i + 1;
 						}
 
-						return line.replace(loc, path.posix.relative(process.cwd(), loc));
+						return line.replace(file, path.posix.relative(process.cwd(), file));
 					}
 
 					return line;
 				})
-				// .slice(0, end)
+				.slice(0, end)
 				.join('\n');
 
 			return error.stack;
