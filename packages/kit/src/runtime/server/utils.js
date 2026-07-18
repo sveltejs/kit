@@ -285,6 +285,24 @@ export function count_non_ssi_comments(str) {
 	return (str.match(/<!--(?!#)/g) ?? []).length;
 }
 
+/** @type {WeakMap<ServerHooks['transport'], Record<string, (value: any) => any>>} */
+const encoders = new WeakMap();
+
+/**
+ * Derives the devalue encoders from the app's transport hook, once per transport object
+ * @param {ServerHooks['transport']} transport
+ */
+export function get_encoders(transport) {
+	let cached = encoders.get(transport);
+	if (cached === undefined) {
+		cached = Object.fromEntries(
+			Object.entries(transport).map(([key, value]) => [key, value.encode])
+		);
+		encoders.set(transport, cached);
+	}
+	return cached;
+}
+
 /**
  * Creates a serialiser for non-arbitrary POJOs using the app's transport hook
  * @param {ServerHooks['transport']} transport

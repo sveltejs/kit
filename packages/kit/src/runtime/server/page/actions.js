@@ -7,7 +7,7 @@ import { HttpError, Redirect, ActionFailure, SvelteKitError } from '@sveltejs/ki
 import { with_request_store, merge_tracing } from '@sveltejs/kit/internal/server';
 import { normalize_error } from '../../../utils/error.js';
 import { is_form_content_type, negotiate } from '../../../utils/http.js';
-import { create_replacer, handle_error_and_jsonify } from '../utils.js';
+import { create_replacer, get_encoders, handle_error_and_jsonify } from '../utils.js';
 import { record_span } from '../../telemetry/record_span.js';
 
 /** @param {RequestEvent} event */
@@ -328,11 +328,11 @@ export function uneval_action_response(data, route_id, transport) {
  * @param {ServerHooks['transport']} transport
  */
 function stringify_action_response(data, route_id, transport) {
-	const encoders = Object.fromEntries(
-		Object.entries(transport).map(([key, value]) => [key, value.encode])
+	return try_serialize(
+		data,
+		(value) => devalue.stringify(value, get_encoders(transport)),
+		route_id
 	);
-
-	return try_serialize(data, (value) => devalue.stringify(value, encoders), route_id);
 }
 
 /**

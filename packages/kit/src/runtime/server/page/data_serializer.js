@@ -3,6 +3,7 @@ import { compact } from '../../../utils/array.js';
 import { create_async_iterator } from '../../../utils/streaming.js';
 import {
 	clarify_devalue_error,
+	get_encoders,
 	get_global_name,
 	handle_error_and_jsonify,
 	serialize_uses
@@ -137,9 +138,7 @@ export function server_data_serializer_json(event, event_state, options) {
 	const iterator = create_async_iterator();
 
 	const reducers = {
-		...Object.fromEntries(
-			Object.entries(options.hooks.transport).map(([key, value]) => [key, value.encode])
-		),
+		...get_encoders(options.hooks.transport),
 		/** @param {any} thing */
 		Promise: (thing) => {
 			if (typeof thing?.then !== 'function') {
