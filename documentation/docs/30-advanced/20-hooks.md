@@ -39,7 +39,7 @@ If unimplemented, defaults to `({ event, resolve }) => resolve(event)`.
 
 During prerendering, SvelteKit crawls your pages for links and renders each route it finds. Rendering the route invokes the `handle` function (and all other route dependencies, like `load`). If you need to exclude some code from running during this phase, check that the app is not [`building`]($app-env#building) beforehand.
 
-You can define multiple `handle` functions and execute them with [the `sequence` helper function](@sveltejs-kit-hooks).
+You can define multiple `handle` functions and execute them with the [`sequence`](@sveltejs-kit-hooks) helper function.
 
 `resolve` also supports a second, optional parameter that gives you more control over how the response will be rendered. That parameter is an object that can have the following fields:
 
@@ -63,7 +63,7 @@ export async function handle({ event, resolve }) {
 
 Note that `resolve(...)` will never throw an error, it will always return a `Promise<Response>` with the appropriate status code. If an error is thrown elsewhere during `handle`, it is treated as fatal, and SvelteKit will respond with a JSON representation of the error or a fallback error page — which can be customised via `src/error.html` — depending on the `Accept` header. You can read more about error handling [here](errors).
 
-## locals
+### locals
 
 To add custom data to the request, which is passed to handlers in `+server.js` and server `load` functions, populate the `event.locals` object, as shown below.
 
