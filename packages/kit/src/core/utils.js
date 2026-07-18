@@ -45,10 +45,6 @@ export function logger({ verbose } = { verbose: true }) {
 	log.err = err;
 
 	log.prettyError = (error, caller) => {
-		if (error instanceof Error) {
-			log.error(`\n${error.message}`);
-		}
-
 		/** @type {unknown} */
 		let e = error;
 
@@ -61,14 +57,14 @@ export function logger({ verbose } = { verbose: true }) {
 					stack = stack.slice(0, stack.lastIndexOf('\n', i));
 				}
 
-				err(stack + '\n');
+				err(stack);
 			}
 
 			e = e.cause;
 		}
 
 		if (e) {
-			err(String(e) + '\n');
+			err(String(e));
 		}
 	};
 
