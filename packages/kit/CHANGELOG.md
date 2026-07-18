@@ -1,5 +1,19 @@
 # @sveltejs/kit
 
+## 3.0.0-next.10
+
+### Major Changes
+
+- breaking: move `defineEnvVars` to `@sveltejs/kit/env` ([#16375](https://github.com/sveltejs/kit/pull/16375))
+
+### Patch Changes
+
+- fix: treat `data:` protocol URLs as external for redirect ([#16392](https://github.com/sveltejs/kit/pull/16392))
+
+- perf: skip import graph collection outside client environments ([#16383](https://github.com/sveltejs/kit/pull/16383))
+
+- fix: warn if there are plugins using `transformIndexHtml` ([#16394](https://github.com/sveltejs/kit/pull/16394))
+
 ## 3.0.0-next.9
 
 ### Major Changes
