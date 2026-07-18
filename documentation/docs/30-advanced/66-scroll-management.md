@@ -36,7 +36,7 @@ Since only your app knows which element scrolls, you can manage the container yo
 </div>
 ```
 
-On every navigation, `capture` saves the container's scroll position against the outgoing history entry immediately before the page updates, and `afterNavigate` scrolls new pages to the top. On back and forward navigations, `restore` is called with the saved position after the `afterNavigate` callbacks have run, so the two don't conflict. Snapshots are persisted to `sessionStorage`, so the position also survives a reload. Links with a `#hash` keep working, since SvelteKit scrolls the targeted element into view within its container after the reset.
+On every navigation, `capture` saves the container's scroll position against the outgoing history entry immediately before the page updates, and `afterNavigate` scrolls new pages to the top. On back and forward navigations, `restore` is called with the saved position after the `afterNavigate` callbacks have run, so the two don't conflict. Snapshots are persisted to `sessionStorage`, so the position also survives a reload. Links with a `#hash` still end up at the targeted element.
 
 Note that `afterNavigate` callbacks can't tell whether a navigation used [`data-sveltekit-noscroll`](link-options#data-sveltekit-noscroll) or `goto`'s `noScroll` option, so the container is also reset on those navigations.
 
