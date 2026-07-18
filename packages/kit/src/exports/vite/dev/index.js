@@ -1,5 +1,6 @@
 /** @import { RequestEvent } from '@sveltejs/kit' */
 /** @import { PrerenderOption, UniversalNode } from 'types' */
+import process from 'node:process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { URL } from 'node:url';
@@ -14,7 +15,7 @@ import { load_and_validate_params } from '../../../utils/params.js';
 import { from_fs, to_fs } from '../../../utils/vite.js';
 import { posixify } from '../../../utils/os.js';
 import { load_error_page } from '../../../core/config/index.js';
-import { SVELTE_KIT_ASSETS } from '../../../constants.js';
+import { SRC_ROOT, SVELTE_KIT_ASSETS } from '../../../constants.js';
 import * as sync from '../../../core/sync/sync.js';
 import { get_mime_lookup, get_runtime_base } from '../../../core/utils.js';
 import '../../../utils/mime.js'; // extend mrmime with additional types (affects sirv too)
@@ -324,13 +325,48 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root) {
 
 	/** @param {Error} error */
 	function fix_stack_trace(error) {
+		if (!error.stack) {
+			return;
+		}
+
 		try {
 			vite.ssrFixStacktrace(error);
 		} catch {
 			// ssrFixStacktrace can fail on StackBlitz web containers and we don't know why
 			// by ignoring it the line numbers are wrong, but at least we can show the error
 		}
-		return error.stack?.replaceAll('\0', ''); // remove null bytes from e.g. virtual module IDs, or the response will fail
+
+		if (error.stack) {
+			let end = 0;
+
+			error.stack = error.stack
+				.replaceAll('\0', '') // remove null bytes from e.g. virtual module IDs, or the response will fail
+				.split('\n')
+				.map((line, i) => {
+					const match = /^ {4}at (?:[^ ]+ \((.+)\)|(.+))$/.exec(line);
+					if (!match) {
+						end = i + 1;
+						return line;
+					}
+
+					const loc = match[1] ?? match[2];
+
+					const file = loc.slice(0, loc.indexOf(':'));
+					if (fs.existsSync(file)) {
+						if (!file.includes('node_modules') && !file.includes(SRC_ROOT)) {
+							end = i + 1;
+						}
+
+						return line.replace(loc, path.relative(process.cwd(), loc));
+					}
+
+					return line;
+				})
+				.slice(0, end)
+				.join('\n');
+
+			return error.stack;
+		}
 	}
 
 	await update_manifest();

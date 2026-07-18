@@ -114,8 +114,12 @@ export function handle_error_and_jsonify(event, state, options, error) {
 		state.prerendering.errors.set(event.url.pathname, coalesce_to_error(error));
 	}
 
-	if (__SVELTEKIT_DEV__ && typeof error == 'object') {
-		fix_stack_trace(error);
+	if (__SVELTEKIT_DEV__) {
+		let e = error;
+		while (e instanceof Error) {
+			fix_stack_trace(e);
+			e = e.cause;
+		}
 	}
 
 	const status = get_status(error);
