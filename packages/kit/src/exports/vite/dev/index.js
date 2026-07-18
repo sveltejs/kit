@@ -20,7 +20,7 @@ import * as sync from '../../../core/sync/sync.js';
 import { get_mime_lookup, get_runtime_base } from '../../../core/utils.js';
 import '../../../utils/mime.js'; // extend mrmime with additional types (affects sirv too)
 import { compact } from '../../../utils/array.js';
-import { is_chrome_devtools_request, not_found } from '../utils.js';
+import { is_chrome_devtools_request, log_response, not_found } from '../utils.js';
 import { SCHEME } from '../../../utils/url.js';
 import { check_feature } from '../../../utils/features.js';
 import { escape_html } from '../../../utils/escape.js';
@@ -610,9 +610,11 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root) {
 				if (rendered.status === 404) {
 					// @ts-expect-error
 					serve_static_middleware.handle(req, res, () => {
+						log_response(rendered.status, request);
 						setResponse(res, rendered);
 					});
 				} else {
+					log_response(rendered.status, request);
 					setResponse(res, rendered);
 				}
 			} catch (e) {

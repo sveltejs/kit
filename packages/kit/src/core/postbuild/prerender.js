@@ -19,6 +19,7 @@ import generate_fallback from './fallback.js';
 import { stringify_remote_arg } from '../../runtime/shared.js';
 import { SRC_ROOT } from '../../constants.js';
 import { coalesce_to_error } from '../../utils/error.js';
+import { log_response } from '../../exports/vite/utils.js';
 
 export default forked(import.meta.url, prerender);
 
@@ -378,8 +379,6 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 
 	/** @type {Map<string, Promise<any>>} */
 	const remote_responses = new Map();
-	/** @type {Map<string, unknown>} */
-	const errors = new Map();
 
 	/** @type {Map<string, Set<string>>} */
 	const expected_hashlinks = new Map();
@@ -418,7 +417,9 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 		/** @type {Map<string, import('types').PrerenderDependency>} */
 		const dependencies = new Map();
 
-		const response = await server.respond(new Request(prerender_origin + encoded), {
+		const request = new Request(prerender_origin + encoded);
+
+		const response = await server.respond(request, {
 			getClientAddress() {
 				throw new Error('Cannot read clientAddress during prerendering');
 			},
@@ -455,6 +456,8 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 				matchedId: decoded_id
 			});
 		}
+
+		log_response(response.status, request);
 
 		const body = Buffer.from(await response.arrayBuffer());
 

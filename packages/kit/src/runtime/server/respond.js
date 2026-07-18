@@ -35,7 +35,6 @@ import { server_data_serializer } from './page/data_serializer.js';
 import { get_remote_id, handle_remote_call } from './remote.js';
 import { record_span } from '../telemetry/record_span.js';
 import { otel } from '../telemetry/otel.js';
-import { styleText } from 'node:util';
 
 /** @type {import('types').RequiredResolveOptions['transformPageChunk']} */
 const default_transform = ({ html }) => html;
@@ -795,38 +794,15 @@ export function load_page_nodes(page, manifest) {
  * @returns {typeof internal_respond}
  */
 function propagate_context(fn) {
-	/** @type {typeof internal_respond} */
-	const respond = (req, ...rest) => {
-		return fn(req, ...rest).then((response) => {
-			log_response(response.status, req);
-			return response;
-		});
-	};
-
 	return async (req, ...rest) => {
 		if (otel === null) {
-			return respond(req, ...rest);
+			return fn(req, ...rest);
 		}
 
 		const { propagation, context } = await otel;
 		const c = propagation.extract(context.active(), Object.fromEntries(req.headers));
 		return context.with(c, async () => {
-			return await respond(req, ...rest);
+			return await fn(req, ...rest);
 		});
 	};
-}
-
-/**
- * @param {number} status
- * @param {Request} request
- */
-function log_response(status, request) {
-	const url = new URL(request.url);
-	const log = `[${status}] ${request.method} ${url.href.replace(url.origin, '')}`;
-
-	if (status < 400) {
-		console.log(log);
-	} else {
-		console.error(styleText(['bold', 'red'], log));
-	}
 }
