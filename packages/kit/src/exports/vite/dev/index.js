@@ -357,7 +357,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root) {
 							end = i + 1;
 						}
 
-						return line.replace(loc, path.relative(process.cwd(), loc));
+						return line.replace(loc, path.posix.relative(process.cwd(), loc));
 					}
 
 					return line;
