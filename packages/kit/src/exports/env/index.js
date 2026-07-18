@@ -18,7 +18,7 @@
  * 		schema: (value) => {
  * 			if (value === undefined) return 3000;
  * 			const port = Number(value);
- * 			if (!Number.isInteger(port)) return;
+ * 			if (!Number.isInteger(port)) throw new Error('PORT must be an integer');
  * 			return port;
  * 		}
  * 	}
@@ -65,10 +65,6 @@ function normalize_env_schema(fn) {
 								}
 							]
 						};
-					}
-
-					if (result === undefined) {
-						return { issues: [{ message: 'Invalid value' }] };
 					}
 
 					if (result instanceof Promise) return result; // will be rejected upstream

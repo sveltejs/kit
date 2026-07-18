@@ -29,12 +29,12 @@ const variables = defineEnvVars({
 });
 
 // function schemas are normalized to standard schemas, mirroring the generated env.d.ts types
-variables.PORT.schema satisfies StandardSchemaV1<string | undefined, number>;
+variables.PORT.schema satisfies StandardSchemaV1<string | undefined, number | undefined>;
 type PortOutput = StandardSchemaV1.InferOutput<typeof variables.PORT.schema>;
 
 3000 satisfies PortOutput;
 
-// @ts-expect-error `undefined` is excluded from the inferred output
+// returning `undefined` is valid, so it stays in the inferred output
 undefined satisfies PortOutput;
 
 // standard schema configs keep their type

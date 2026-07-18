@@ -2484,7 +2484,7 @@ type EnvVarEntry<C extends EnvVarConfig<any>> =
 	C['schema'] extends StandardSchemaV1<any, any>
 		? C
 		: C['schema'] extends (value: any) => infer R
-			? Omit<C, 'schema'> & { schema: StandardSchemaV1<string | undefined, Exclude<R, undefined>> }
+			? Omit<C, 'schema'> & { schema: StandardSchemaV1<string | undefined, R> }
 			: C;
 
 export * from './index.js';

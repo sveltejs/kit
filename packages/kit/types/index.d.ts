@@ -2441,7 +2441,7 @@ declare module '@sveltejs/kit' {
 		C['schema'] extends StandardSchemaV1<any, any>
 			? C
 			: C['schema'] extends (value: any) => infer R
-				? Omit<C, 'schema'> & { schema: StandardSchemaV1<string | undefined, Exclude<R, undefined>> }
+				? Omit<C, 'schema'> & { schema: StandardSchemaV1<string | undefined, R> }
 				: C;
 	interface AdapterEntry {
 		/**
@@ -2908,7 +2908,7 @@ declare module '@sveltejs/kit/env' {
 	 * 		schema: (value) => {
 	 * 			if (value === undefined) return 3000;
 	 * 			const port = Number(value);
-	 * 			if (!Number.isInteger(port)) return;
+	 * 			if (!Number.isInteger(port)) throw new Error('PORT must be an integer');
 	 * 			return port;
 	 * 		}
 	 * 	}

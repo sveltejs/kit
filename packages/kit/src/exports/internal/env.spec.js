@@ -39,8 +39,9 @@ test('wraps function validators', () => {
 	assert.equal(validate(variables, '8080', 'PORT', issues), 8080);
 	assert.deepEqual(issues, {});
 
-	validate(variables, 'nope', 'PORT', issues);
-	assert.deepEqual(issues.PORT, [{ message: 'Invalid value' }]);
+	// returning undefined is valid, so a function validator can describe an optional variable
+	assert.equal(validate(variables, 'nope', 'PORT', issues), undefined);
+	assert.deepEqual(issues, {});
 
 	validate(variables, '', 'NAME', issues);
 	assert.deepEqual(issues.NAME, [{ message: 'NAME must not be empty' }]);

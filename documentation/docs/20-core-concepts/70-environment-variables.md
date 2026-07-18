@@ -121,7 +121,7 @@ export const variables = defineEnvVars({
 });
 ```
 
-If you don't want to bring in a schema library, you can pass a function that returns the (possibly transformed) value, returns `undefined` if the value is invalid, or throws an error explaining the problem:
+If you don't want to bring in a schema library, you can pass a function that returns the (possibly transformed) value, or throws an error explaining the problem:
 
 ```ts
 /// file: src/env.ts
@@ -131,7 +131,7 @@ export const variables = defineEnvVars({
 	GOOGLE_ANALYTICS_ID: {
 		public: true,
 		schema: (value) => {
-			if (!value?.startsWith('G-')) return;
+			if (!value?.startsWith('G-')) throw new Error('expected a Google Analytics ID');
 			return value;
 		}
 	}
