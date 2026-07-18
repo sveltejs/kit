@@ -1,6 +1,6 @@
 /**
  * @param {string} route_id
- * @param {Record<string, unknown>} config
+ * @param {Record<string, any>} config
  * @param {string} feature
  * @param {import('@sveltejs/kit').Adapter | undefined} adapter
  */
