@@ -546,9 +546,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root) {
 					})
 				);
 
-				const { set_fix_stack_trace } = await vite.ssrLoadModule(
-					`${get_runtime_base(root)}/shared-server.js`
-				);
+				const { set_fix_stack_trace } = await vite.ssrLoadModule(`__sveltekit/server`);
 				set_fix_stack_trace(fix_stack_trace);
 
 				const { set_assets } = await vite.ssrLoadModule('$app/paths/internal/server');
@@ -620,7 +618,8 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root) {
 			} catch (e) {
 				const error = coalesce_to_error(e);
 				res.statusCode = 500;
-				res.end(fix_stack_trace(error) || error.message); // handle `stackless` errors
+				fix_stack_trace(error);
+				res.end(error.stack || error.message); // handle `stackless` errors
 			}
 		});
 	};

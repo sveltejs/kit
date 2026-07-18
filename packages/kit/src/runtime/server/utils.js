@@ -6,7 +6,7 @@ import { HttpError, SvelteKitError } from '@sveltejs/kit/internal';
 import { with_request_store } from '@sveltejs/kit/internal/server';
 import { coalesce_to_error, get_message, get_status } from '../../utils/error.js';
 import { negotiate } from '../../utils/http.js';
-import { fix_stack_trace } from '../shared-server.js';
+import { fix_stack_trace } from '__sveltekit/server';
 import { ENDPOINT_METHODS } from '../../constants.js';
 import { escape_html } from '../../utils/escape.js';
 import * as path from '../../utils/path.js';
@@ -114,12 +114,10 @@ export function handle_error_and_jsonify(event, state, options, error) {
 		state.prerendering.errors.set(event.url.pathname, coalesce_to_error(error));
 	}
 
-	if (__SVELTEKIT_DEV__) {
-		let e = error;
-		while (e instanceof Error) {
-			fix_stack_trace(e);
-			e = e.cause;
-		}
+	let e = error;
+	while (e instanceof Error) {
+		fix_stack_trace(e);
+		e = e.cause;
 	}
 
 	const status = get_status(error);

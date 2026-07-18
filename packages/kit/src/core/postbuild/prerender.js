@@ -50,6 +50,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 	// essential we do this before analysing the code
 	internal.set_building();
 	internal.set_prerendering();
+	internal.set_fix_stack_trace(adjust_stack_trace);
 
 	// `set_env` and `Server` live in modules that import the user's `src/env` config. We import them
 	// *after* `set_building()` so that `building`-dependent expressions resolve correctly
@@ -650,14 +651,11 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 
 			prerendered.paths.push(decoded);
 		} else if (response_type !== OK) {
-			const error = errors.get(encoded);
-			adjust_stack_trace(error);
 			handle_http_error({
 				status: response.status,
 				path: decoded,
 				referrer,
-				referenceType,
-				error: coalesce_to_error(error)
+				referenceType
 			});
 		}
 

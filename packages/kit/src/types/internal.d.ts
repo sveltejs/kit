@@ -47,7 +47,7 @@ export interface ServerInternalModule {
 	set_prerendering(): void;
 	set_read_implementation(implementation: (path: string) => ReadableStream): void;
 	set_version(version: string): void;
-	set_fix_stack_trace(fix_stack_trace: (error: unknown) => string): void;
+	set_fix_stack_trace(fix_stack_trace: (error: Error) => void): void;
 	get_hooks: () => Promise<Record<string, any>>;
 }
 

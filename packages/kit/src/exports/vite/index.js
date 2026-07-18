@@ -672,9 +672,15 @@ function kit({ svelte_config }) {
 
 					case sveltekit_server: {
 						return dedent`
+							export let fix_stack_trace = () => {};
+
 							export let read_implementation = null;
 
 							export let manifest = null;
+
+							export function set_fix_stack_trace(value) {
+								fix_stack_trace = value;
+							}
 
 							export function set_read_implementation(fn) {
 								read_implementation = fn;
