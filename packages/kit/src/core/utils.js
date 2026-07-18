@@ -32,10 +32,10 @@ export function get_runtime_base(root) {
 /** @param {{ verbose: boolean }} opts */
 export function logger({ verbose } = { verbose: true }) {
 	/** @type {import('types').Logger} */
-	const log = (msg) => console.log(msg.replace(/^/gm, '  '));
+	const log = (msg) => console.log(msg);
 
 	/** @param {string} msg */
-	const err = (msg) => console.error(msg.replace(/^/gm, '  '));
+	const err = (msg) => console.error(msg);
 
 	log.success = (msg) => log(styleText('green', `✔ ${msg}`));
 	log.error = (msg) => err(styleText(['bold', 'red'], msg));
@@ -46,7 +46,7 @@ export function logger({ verbose } = { verbose: true }) {
 
 	log.prettyError = (error, caller) => {
 		if (error instanceof Error) {
-			log.error(`\n${error.message}\n`);
+			log.error(`\n${error.message}`);
 		}
 
 		/** @type {unknown} */
