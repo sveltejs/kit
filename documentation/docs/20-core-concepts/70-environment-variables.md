@@ -121,6 +121,23 @@ export const variables = defineEnvVars({
 });
 ```
 
+If you don't want to bring in a schema library, you can pass a function that returns the (possibly transformed) value, returns `undefined` if the value is invalid, or throws an error explaining the problem:
+
+```ts
+/// file: src/env.ts
+import { defineEnvVars } from '@sveltejs/kit/env';
+
+export const variables = defineEnvVars({
+	GOOGLE_ANALYTICS_ID: {
+		public: true,
+		schema: (value) => {
+			if (!value?.startsWith('G-')) return;
+			return value;
+		}
+	}
+});
+```
+
 If a value is invalid, the app will fail to start (or build). To opt out of one or the other, use [`building`]($app-env#building) from `$app/env` along with a validator that accepts an optional value:
 
 ```ts
