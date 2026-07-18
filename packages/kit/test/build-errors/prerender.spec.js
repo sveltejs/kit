@@ -39,7 +39,7 @@ test('entry generators should match their own route', { timeout }, () => {
 
 	assert.match(
 		stderr,
-		/The entries export from \/\[slug\]\/\[notSpecific\] generated entry \/whatever\/specific, which was matched by \/\[slug\]\/specific - see the `handleEntryGeneratorMismatch` option in https:\/\/svelte\.dev\/docs\/kit\/configuration#prerender for more info\.\s+To suppress or handle this error, implement `handleEntryGeneratorMismatch` in https:\/\/svelte\.dev\/docs\/kit\/configuration#prerender/
+		/The entries export from \/\[slug\]\/\[notSpecific\] generated entry \/whatever\/specific, which was matched by \/\[slug\]\/specific/
 	);
 });
 
