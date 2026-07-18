@@ -1,9 +1,7 @@
 /** @import { ServerHooks } from 'types' */
 import * as devalue from 'devalue';
-import { DEV } from 'esm-env';
 import { text } from '@sveltejs/kit';
 import { ENDPOINT_METHODS } from '../../constants.js';
-import * as path from '../../utils/path.js';
 
 /**
  * @param {Partial<Record<import('types').HttpMethod, any>>} mod
@@ -107,71 +105,6 @@ export function has_prerendered_path(manifest, pathname) {
 		manifest._.prerendered_routes.has(pathname) ||
 		(pathname.at(-1) === '/' && manifest._.prerendered_routes.has(pathname.slice(0, -1)))
 	);
-}
-
-/**
- * Formats the error into a nice message with sanitized stack trace
- * @param {number} status
- * @param {Error} error
- * @param {import('@sveltejs/kit').RequestEvent} event
- */
-export function format_server_error(status, error, event) {
-	const formatted_text = `\n\x1b[1;31m[${status}] ${event.request.method} ${event.url.pathname}\x1b[0m`;
-
-	if (status === 404) {
-		return formatted_text;
-	}
-
-	return `${formatted_text}\n${format_error_stack(error)}`;
-}
-
-/**
- * @param {Error & { cause?: unknown }} error
- * @returns {string | undefined}
- */
-function format_error_stack(error) {
-	if (error.cause === undefined) {
-		return DEV ? clean_up_stack_trace(error) : error.stack;
-	}
-
-	/** @type {string | undefined} */
-	const cause =
-		error.cause instanceof Error ? format_error_stack(error.cause) : String(error.cause);
-	return `${error.name}: ${error.message}\nCaused by: ${cause}`;
-}
-
-/**
- * In dev, tidy up stack traces by making paths relative to the current project directory
- * @param {string} file
- */
-let relative = (file) => file;
-
-if (DEV) {
-	try {
-		relative = (file) => path.relative(__SVELTEKIT_ROOT__, file);
-	} catch {
-		// do nothing
-	}
-}
-
-/**
- * Provides a refined stack trace by excluding lines following the last occurrence of a line containing +page. +layout. or +server.
- * @param {Error} error
- */
-export function clean_up_stack_trace(error) {
-	const stack_trace = (error.stack?.split('\n') ?? []).map((line) => {
-		return line.replace(/\((.+)(:\d+:\d+)\)$/, (_, file, loc) => `(${relative(file)}${loc})`);
-	});
-
-	// progressive enhancement for people who haven't configured files.src to something else
-	const last_line_from_src_code = stack_trace.findLastIndex((line) => /\(src[\\/]/.test(line));
-
-	if (last_line_from_src_code === -1) {
-		// default to the whole stack trace
-		return error.stack;
-	}
-
-	return stack_trace.slice(0, last_line_from_src_code + 1).join('\n');
 }
 
 /**
