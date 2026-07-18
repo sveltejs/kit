@@ -2635,7 +2635,6 @@ declare module '@sveltejs/kit' {
 			referrer: string | null;
 			referenceType: 'linked' | 'fetched';
 			message: string;
-			error?: Error;
 		}): void;
 	}
 

@@ -79,12 +79,7 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 		 */
 		function log_failure(details) {
 			const message = format(details);
-
 			log.error(`\n${message}\n`);
-
-			if (details.error instanceof Error && details.error.stack) {
-				log.err(details.error.stack + '\n');
-			}
 		}
 
 		switch (input) {
@@ -293,12 +288,19 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 		'handleHttpError',
 		config.prerender.handleHttpError,
 		({ status, path, referrer, referenceType }) => {
-			const message =
-				status === 404 && !path.startsWith(config.paths.base)
-					? `${path} does not begin with \`base\`. You can fix this by using \`resolve('${path}')\` from \`$app/paths\`. The base path is configurable from \`paths.base\`:`
-					: `while prerendering ${path}`;
+			let message = `Failed to prerender ${path}`;
 
-			return `${status} ${message}${referrer ? ` (${referenceType} from ${referrer})` : ''}`;
+			if (status === 404) {
+				if (!path.startsWith(config.paths.base)) {
+					message = referrer ? `${path} (${referenceType} from ${referrer})` : path;
+
+					message += ` does not begin with \`base\`. You can fix this by using \`resolve('${path}')\` from \`$app/paths\`. The base path is configurable from \`paths.base\``;
+				} else if (referrer) {
+					message = `${path} was ${referenceType} from ${referrer}`;
+				}
+			}
+
+			return message;
 		}
 	);
 

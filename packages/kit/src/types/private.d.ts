@@ -217,7 +217,6 @@ export interface PrerenderHttpErrorHandler {
 		referrer: string | null;
 		referenceType: 'linked' | 'fetched';
 		message: string;
-		error?: Error;
 	}): void;
 }
 
