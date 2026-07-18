@@ -49,7 +49,7 @@ test('wraps function validators', () => {
 
 test('rejects async function validators', () => {
 	const variables = defineEnvVars({
-		FOO: { schema: async (value) => value }
+		FOO: { schema: (value) => Promise.resolve(value) }
 	});
 
 	/** @type {Record<string, import('@standard-schema/spec').StandardSchemaV1.Issue[]>} */
