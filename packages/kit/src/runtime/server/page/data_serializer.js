@@ -1,12 +1,8 @@
 import * as devalue from 'devalue';
 import { compact } from '../../../utils/array.js';
 import { create_async_iterator } from '../../../utils/streaming.js';
-import {
-	clarify_devalue_error,
-	get_global_name,
-	handle_error_and_jsonify,
-	serialize_uses
-} from '../utils.js';
+import { clarify_devalue_error, get_global_name, serialize_uses } from '../utils.js';
+import { handle_error_and_jsonify } from '../errors.js';
 
 /**
  * If the serialized data contains promises, `chunks` will be an

@@ -424,7 +424,6 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 			},
 			prerendering: {
 				dependencies,
-				errors,
 				remote_responses
 			},
 			read: (file) => {

@@ -3,7 +3,6 @@ import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { forked } from '../../utils/fork.js';
 import { stackless } from '../../utils/error.js';
-import { logger } from '../utils.js';
 
 export default forked(import.meta.url, generate_fallback);
 
@@ -33,7 +32,6 @@ async function generate_fallback({ manifest_path, env, out_dir, origin, assets }
 	const server = new Server(manifest);
 	await server.init({ env });
 
-	const errors = new Map();
 	const response = await server.respond(new Request(origin + '/[fallback]'), {
 		getClientAddress: () => {
 			throw new Error('Cannot read clientAddress during prerendering');
@@ -41,7 +39,6 @@ async function generate_fallback({ manifest_path, env, out_dir, origin, assets }
 		prerendering: {
 			fallback: true,
 			dependencies: new Map(),
-			errors,
 			remote_responses: new Map()
 		},
 		read: (file) => readFileSync(join(assets, file))
@@ -50,8 +47,6 @@ async function generate_fallback({ manifest_path, env, out_dir, origin, assets }
 	if (response.ok) {
 		return await response.text();
 	}
-
-	logger().prettyError(errors.get('/[fallback]') ?? stackless('Something went wrong'));
 
 	throw stackless('Could not create a fallback page');
 }
