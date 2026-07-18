@@ -7,6 +7,8 @@ const path = globalThis.process?.getBuiltinModule?.('node:path');
 const module = globalThis.process?.getBuiltinModule?.('node:module');
 
 /**
+ * Applies sourcemaps, makes paths relative to the cwd, and truncates
+ * non-user code from the bottom of the stack
  * @param {Error} error
  * @returns void
  */
@@ -22,13 +24,17 @@ export let fix_stack_trace = (error) => {
 			const match = line.match(/(file:\/\/\/.*):(\d+):(\d+)(\)?)$/);
 
 			if (!match) {
-				end = i + 1;
+				if (!line.includes('node:internal/')) {
+					end = i + 1;
+				}
+
 				return line;
 			}
 
 			const file = url.fileURLToPath(match[1]);
 			const traced = trace(file, Number(match[2]) - 1, Number(match[3]) - 1);
 
+			// truncate non-user code from the bottom of the stack (but leave it in otherwise)
 			if (!/[\\/]node_modules[\\/]/.test(traced?.file ?? file)) {
 				end = i + 1;
 			}
