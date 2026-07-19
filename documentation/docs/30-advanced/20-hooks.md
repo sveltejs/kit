@@ -12,11 +12,9 @@ There are three hooks files, all optional:
 
 Code in these modules will run when the application starts up, making them useful for initializing database clients and so on.
 
-## Server hooks
+## handle
 
-The following hooks can be added to `src/hooks.server.js`:
-
-### handle
+> [!NOTE] Can be added to `src/hooks.server.js`
 
 This function runs every time the SvelteKit server receives a [request](web-standards#Fetch-APIs-Request) — whether that happens while the app is running, or during [prerendering](page-options#prerender) — and determines the [response](web-standards#Fetch-APIs-Response). It receives an `event` object representing the request and a function called `resolve`, which renders the route and generates a `Response`. This allows you to modify response headers or bodies, or bypass SvelteKit entirely (for implementing routes programmatically, for example).
 
@@ -40,6 +38,30 @@ If the `handle` hook runs as part of a remote function request initiated by the 
 If unimplemented, defaults to `({ event, resolve }) => resolve(event)`.
 
 During prerendering, SvelteKit crawls your pages for links and renders each route it finds. Rendering the route invokes the `handle` function (and all other route dependencies, like `load`). If you need to exclude some code from running during this phase, check that the app is not [`building`]($app-env#building) beforehand.
+
+You can define multiple `handle` functions and execute them with the [`sequence`](@sveltejs-kit-hooks) helper function.
+
+`resolve` also supports a second, optional parameter that gives you more control over how the response will be rendered. That parameter is an object that can have the following fields:
+
+- `transformPageChunk(opts: { html: string, done: boolean }): MaybePromise<string | undefined>` — applies custom transforms to HTML. If `done` is true, it's the final chunk. Chunks are not guaranteed to be well-formed HTML (they could include an element's opening tag but not its closing tag, for example) but they will always be split at sensible boundaries such as `%sveltekit.head%` or layout/page components.
+- `filterSerializedResponseHeaders(name: string, value: string): boolean` — determines which headers should be included in serialized responses when a `load` function loads a resource with `fetch`. By default, none will be included.
+- `preload(input: { type: 'js' | 'css' | 'font' | 'asset', path: string }): boolean` — determines which files should be preloaded. Files are preloaded via `<link>` tags added to the `<head>` tag; if [`output.linkHeaderPreload`](configuration#output) is enabled, dynamically rendered pages use the [`Link` response header](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Link) instead. The method is called with each file that was found at build time while constructing the code chunks — so if you for example have `import './styles.css` in your `+page.svelte`, `preload` will be called with the resolved path to that CSS file when visiting that page. Note that in dev mode `preload` is _not_ called, since it depends on analysis that happens at build time. Preloading can improve performance by downloading assets sooner, but it can also hurt if too much is downloaded unnecessarily. By default, `js` and `css` files will be preloaded. `asset` files are not preloaded at all currently, but we may add this later after evaluating feedback.
+
+```js
+/// file: src/hooks.server.js
+/** @type {import('@sveltejs/kit').Handle} */
+export async function handle({ event, resolve }) {
+	const response = await resolve(event, {
+		transformPageChunk: ({ html }) => html.replace('old', 'new'),
+		filterSerializedResponseHeaders: (name) => name.startsWith('x-'),
+		preload: ({ type, path }) => type === 'js' || path.includes('/important/')
+	});
+
+	return response;
+}
+```
+
+Note that `resolve(...)` will never throw an error, it will always return a `Promise<Response>` with the appropriate status code. If an error is thrown elsewhere during `handle`, it is treated as fatal, and SvelteKit will respond with a JSON representation of the error or a fallback error page — which can be customised via `src/error.html` — depending on the `Accept` header. You can read more about error handling [here](errors).
 
 ### locals
 
@@ -80,31 +102,9 @@ export async function handle({ event, resolve }) {
 }
 ```
 
-You can define multiple `handle` functions and execute them with [the `sequence` helper function](@sveltejs-kit-hooks).
+## handleFetch
 
-`resolve` also supports a second, optional parameter that gives you more control over how the response will be rendered. That parameter is an object that can have the following fields:
-
-- `transformPageChunk(opts: { html: string, done: boolean }): MaybePromise<string | undefined>` — applies custom transforms to HTML. If `done` is true, it's the final chunk. Chunks are not guaranteed to be well-formed HTML (they could include an element's opening tag but not its closing tag, for example) but they will always be split at sensible boundaries such as `%sveltekit.head%` or layout/page components.
-- `filterSerializedResponseHeaders(name: string, value: string): boolean` — determines which headers should be included in serialized responses when a `load` function loads a resource with `fetch`. By default, none will be included.
-- `preload(input: { type: 'js' | 'css' | 'font' | 'asset', path: string }): boolean` — determines which files should be preloaded. Files are preloaded via `<link>` tags added to the `<head>` tag; if [`output.linkHeaderPreload`](configuration#output) is enabled, dynamically rendered pages use the [`Link` response header](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Link) instead. The method is called with each file that was found at build time while constructing the code chunks — so if you for example have `import './styles.css` in your `+page.svelte`, `preload` will be called with the resolved path to that CSS file when visiting that page. Note that in dev mode `preload` is _not_ called, since it depends on analysis that happens at build time. Preloading can improve performance by downloading assets sooner, but it can also hurt if too much is downloaded unnecessarily. By default, `js` and `css` files will be preloaded. `asset` files are not preloaded at all currently, but we may add this later after evaluating feedback.
-
-```js
-/// file: src/hooks.server.js
-/** @type {import('@sveltejs/kit').Handle} */
-export async function handle({ event, resolve }) {
-	const response = await resolve(event, {
-		transformPageChunk: ({ html }) => html.replace('old', 'new'),
-		filterSerializedResponseHeaders: (name) => name.startsWith('x-'),
-		preload: ({ type, path }) => type === 'js' || path.includes('/important/')
-	});
-
-	return response;
-}
-```
-
-Note that `resolve(...)` will never throw an error, it will always return a `Promise<Response>` with the appropriate status code. If an error is thrown elsewhere during `handle`, it is treated as fatal, and SvelteKit will respond with a JSON representation of the error or a fallback error page — which can be customised via `src/error.html` — depending on the `Accept` header. You can read more about error handling [here](errors).
-
-### handleFetch
+> [!NOTE] Can be added to `src/hooks.server.js`
 
 This function allows you to modify (or replace) the result of an [`event.fetch`](load#Making-fetch-requests) call that runs on the server (or during prerendering) inside an endpoint, `load`, `action`, `handle`, `handleError` or `reroute`.
 
@@ -143,7 +143,9 @@ export async function handleFetch({ event, request, fetch }) {
 }
 ```
 
-### handleValidationError
+## handleValidationError
+
+> [!NOTE] Can be added to `src/hooks.server.js`
 
 This hook is called when a remote function is called with an argument that does not match the provided [Standard Schema](https://standardschema.dev/). It must return an object matching the shape of [`App.Error`](types#Error).
 
@@ -175,11 +177,9 @@ export function handleValidationError({ issues }) {
 
 Be thoughtful about what information you expose here, as the most likely reason for validation to fail is that someone is sending malicious requests to your server.
 
-## Shared hooks
+## handleError
 
-The following can be added to `src/hooks.server.js` _and_ `src/hooks.client.js`:
-
-### handleError
+> [!NOTE] Can be added to `src/hooks.server.js` and `src/hooks.client.js`
 
 If an [unexpected error](errors#Unexpected-errors) is thrown during loading, rendering, or from an endpoint, this function will be called with the `error`, `event`, `status` code and `message`. This allows for two things:
 
@@ -274,7 +274,9 @@ During development, if an error occurs because of a syntax error in your Svelte 
 
 > [!NOTE] Make sure that `handleError` _never_ throws an error
 
-### init
+## init
+
+> [!NOTE] Can be added to `src/hooks.server.js` and `src/hooks.client.js`
 
 This function runs once, when the server is created or the app starts in the browser, and is a useful place to do asynchronous work such as initializing a database connection.
 
@@ -294,11 +296,9 @@ export async function init() {
 > [!NOTE]
 > In the browser, asynchronous work in `init` will delay hydration, so be mindful of what you put in there.
 
-## Universal hooks
+## reroute
 
-The following can be added to `src/hooks.js`. Universal hooks run on both server and client (not to be confused with shared hooks, which are environment-specific).
-
-### reroute
+> [!NOTE] Can be added to `src/hooks.js`; it runs on both server and client
 
 This function runs before `handle` and allows you to change how URLs are translated into routes. The returned pathname (which defaults to `url.pathname`) is used to select the route and its parameters.
 
@@ -349,7 +349,9 @@ export async function reroute({ url, fetch }) {
 
 > [!NOTE] `reroute` is considered a pure, idempotent function. As such, it must always return the same output for the same input and not have side effects. Under these assumptions, SvelteKit caches the result of `reroute` on the client so it is only called once per unique URL.
 
-### transport
+## transport
+
+> [!NOTE] Can be added to `src/hooks.js`; it runs on both server and client
 
 This is a collection of _transporters_, which allow you to pass custom types — returned from `load` and form actions — across the server/client boundary. Each transporter contains an `encode` function, which encodes values on the server (or returns a falsy value for anything that isn't an instance of the type) and a corresponding `decode` function:
 
