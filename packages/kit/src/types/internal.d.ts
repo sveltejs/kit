@@ -326,8 +326,6 @@ export type RemoteFunctionData = {
 	f?: Record<string, RemoteFunctionDataNode>;
 	/** Whether there were any refreshes/reconnects during the request */
 	r?: true;
-	/** The redirect location, if any */
-	redirect?: string;
 };
 
 export type RemoteFunctionResponse =

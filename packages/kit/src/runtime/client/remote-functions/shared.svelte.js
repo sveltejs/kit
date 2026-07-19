@@ -183,6 +183,10 @@ export async function remote_request(url, init) {
 		}
 	}
 
+	if (result.type === 'redirect') {
+		throw new Redirect(/** @type {300} */ (result.status), result.location, !data.r);
+	}
+
 	return data;
 }
 

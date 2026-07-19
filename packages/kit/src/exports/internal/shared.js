@@ -22,12 +22,12 @@ export class HttpError {
 	}
 }
 
-export class Redirect {
+export class Redirect extends Error {
 	/**
 	 * @param {300 | 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308} status
 	 * @param {string} location
 	 */
-	constructor(status, location) {
+	constructor(status, location, refresh = false) {
 		try {
 			new Headers({ location });
 		} catch {
@@ -37,8 +37,31 @@ export class Redirect {
 			);
 		}
 
+		const message = `
+			A redirect was thrown outside render. To navigate, catch the error and use \`goto\`:
+
+			import { isRedirect } from '@sveltejs/kit';
+			import { goto } from '$app/navigation';
+
+			try {
+				...
+			} catch (e) {
+				if (isRedirect(e)) {
+					goto(e.location);
+				} else {
+					throw e;
+				}
+			}
+		`;
+
+		super(message.replace(/^\t{3}/gm, '').trim());
+
 		this.status = status;
 		this.location = location;
+
+		// TODO this is only needed for `form`, so that we add `refreshAll: true` to
+		// the `goto` call in the `catch` clause. ideally it wouldn't be exposed
+		this.refresh = refresh;
 	}
 }
 

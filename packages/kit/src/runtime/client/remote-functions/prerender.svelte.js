@@ -98,12 +98,6 @@ export function prerender(id) {
 
 				const result = await remote_request(url, { headers });
 
-				if (result.redirect) {
-					// Use internal version to allow redirects to external URLs
-					void _goto(result.redirect, {}, 0);
-					return;
-				}
-
 				const data = result._;
 
 				// For successful prerender requests, save to cache

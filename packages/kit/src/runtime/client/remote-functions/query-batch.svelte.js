@@ -49,21 +49,6 @@ export function query_batch(id) {
 							headers
 						});
 
-						if (response.redirect) {
-							// Use internal version to allow redirects to external URLs
-							await _goto(response.redirect, {}, 0);
-
-							// settle all batched promises (with `undefined`, like a redirect
-							// from a non-batched query) so that callers don't hang forever
-							for (const resolvers of batched.values()) {
-								for (const { resolve } of resolvers) {
-									resolve(undefined);
-								}
-							}
-
-							return;
-						}
-
 						const results = response._;
 						let i = 0;
 

@@ -54,12 +54,6 @@ export function command(id) {
 					headers
 				});
 
-				if (response.redirect) {
-					throw new Error(
-						'Redirects are not allowed in commands. Return a result instead and use goto on the client'
-					);
-				}
-
 				return response._;
 			} finally {
 				overrides?.forEach((fn) => fn());
