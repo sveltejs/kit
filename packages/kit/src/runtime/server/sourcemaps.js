@@ -21,7 +21,7 @@ export let fix_stack_trace = (error) => {
 	error.stack = error.stack
 		.split('\n')
 		.map((line, i) => {
-			const match = line.match(/(file:\/\/\/.*):(\d+):(\d+)(\)?)$/);
+			const match = line.match(/^ {4}at.+(file:\/\/\/.*):(\d+):(\d+)(\)?)$/);
 
 			if (!match) {
 				if (!line.includes('node:internal/')) {
