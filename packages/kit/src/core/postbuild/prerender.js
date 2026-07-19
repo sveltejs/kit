@@ -65,13 +65,12 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 	/**
 	 * @template {{message: string}} T
 	 * @template {Omit<T, 'message'>} K
-	 * @param {import('types').Logger} log
 	 * @param {string} name
 	 * @param {'fail' | 'warn' | 'ignore' | undefined | ((details: T) => void)} input
 	 * @param {(details: K) => string} format
 	 * @returns {(details: K & { error?: unknown }) => void}
 	 */
-	function normalise_error_handler(log, name, input, format) {
+	function normalise_error_handler(name, input, format) {
 		/**
 		 * @param {any} details
 		 */
@@ -174,7 +173,6 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 	const saved = new Map();
 
 	const handle_http_error = normalise_error_handler(
-		log,
 		'handleHttpError',
 		config.prerender.handleHttpError,
 		({ status, path, referrer, referenceType }) => {
@@ -195,7 +193,6 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 	);
 
 	const handle_missing_id = normalise_error_handler(
-		log,
 		'handleMissingId',
 		config.prerender.handleMissingId,
 		({ path, id, referrers }) => {
@@ -207,7 +204,6 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 	);
 
 	const handle_entry_generator_mismatch = normalise_error_handler(
-		log,
 		'handleEntryGeneratorMismatch',
 		config.prerender.handleEntryGeneratorMismatch,
 		({ generatedFromId, entry, matchedId }) => {
@@ -216,7 +212,6 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 	);
 
 	const handle_not_prerendered_route = normalise_error_handler(
-		log,
 		'handleUnseenRoutes',
 		config.prerender.handleUnseenRoutes,
 		({ routes }) => {
@@ -226,7 +221,6 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 	);
 
 	const handle_invalid_url = normalise_error_handler(
-		log,
 		'handleInvalidUrl',
 		config.prerender.handleInvalidUrl,
 		({ href, referrer }) => {
@@ -477,8 +471,6 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 				if (!headers['x-sveltekit-normalize']) {
 					mkdirp(dirname(dest));
 
-					log.warn(`${response.status} ${decoded} -> ${location}`);
-
 					writeFileSync(
 						dest,
 						`<script>location.href=${devalue.uneval(
@@ -525,7 +517,6 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 
 			mkdirp(dir);
 
-			log.info(`${response.status} ${decoded}`);
 			writeFileSync(dest, body);
 			written.add(file);
 
