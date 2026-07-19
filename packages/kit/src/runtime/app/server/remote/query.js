@@ -404,8 +404,8 @@ export function refresh(event, state, internals, payload, fn) {
 		return;
 	}
 
-	if (!event.isRemoteRequest) {
-		// or this is a no-JS form submission
+	if (!event.isRemoteRequest && state.is_in_remote_form_or_command) {
+		// or this is a no-JS form submission, where the page re-renders anyway
 		return;
 	}
 
