@@ -7,7 +7,8 @@ import { HttpError, Redirect, ActionFailure, SvelteKitError } from '@sveltejs/ki
 import { with_request_store, merge_tracing } from '@sveltejs/kit/internal/server';
 import { normalize_error } from '../../../utils/error.js';
 import { is_form_content_type, negotiate } from '../../../utils/http.js';
-import { create_replacer, handle_error_and_jsonify } from '../utils.js';
+import { create_replacer } from '../utils.js';
+import { handle_error_and_jsonify } from '../errors.js';
 import { record_span } from '../../telemetry/record_span.js';
 
 /** @param {RequestEvent} event */

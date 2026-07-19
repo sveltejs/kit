@@ -429,7 +429,7 @@ async function _invalidate(reset_page_state = true) {
 	// is running because subsequent invalidations may make earlier ones outdated,
 	// but batch multiple synchronous invalidations.
 	await (pending_invalidate ||= Promise.resolve());
-	if (!pending_invalidate) return;
+	if (pending_invalidate === null) return;
 	pending_invalidate = null;
 
 	const token = (invalidation_token = {});

@@ -30,7 +30,6 @@ test('transform kit.alias to resolve.alias', () => {
 	});
 
 	expect(transformed).toEqual([
-		{ find: '$lib', replacement: 'src/lib' },
 		{ find: 'simpleKey', replacement: 'simple/value' },
 		{ find: /^key$/.toString(), replacement: 'value' },
 		{ find: /^key\/(.+)$/.toString(), replacement: 'value/$1' },

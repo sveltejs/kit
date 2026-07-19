@@ -47,7 +47,7 @@ export interface ServerInternalModule {
 	set_prerendering(): void;
 	set_read_implementation(implementation: (path: string) => ReadableStream): void;
 	set_version(version: string): void;
-	set_fix_stack_trace(fix_stack_trace: (error: unknown) => string): void;
+	set_fix_stack_trace(fix_stack_trace: (error: Error) => void): void;
 	get_hooks: () => Promise<Record<string, any>>;
 }
 
@@ -394,7 +394,7 @@ export interface ServerErrorNode {
 }
 
 export interface ServerMetadataRoute {
-	config: any;
+	config: Record<string, any>;
 	api: {
 		methods: Array<HttpMethod | '*'>;
 	};
@@ -426,7 +426,7 @@ export interface UniversalNode {
 	ssr?: boolean;
 	csr?: boolean;
 	trailingSlash?: TrailingSlash;
-	config?: any;
+	config?: Record<string, any>;
 	entries?: PrerenderEntryGenerator;
 }
 
@@ -437,7 +437,7 @@ export interface ServerNode {
 	csr?: boolean;
 	trailingSlash?: TrailingSlash;
 	actions?: Actions;
-	config?: any;
+	config?: Record<string, any>;
 	entries?: PrerenderEntryGenerator;
 }
 
@@ -456,7 +456,10 @@ export interface SSRNode {
 
 	/**
 	 * During development, all styles are inlined for the page to avoid FOUC.
-	 * But in production, this stores styles that are below the inline threshold
+	 * But in production, this stores styles that are below the inline threshold.
+	 * It returns a Promise during development because Vite needs to load the
+	 * modules on demand. But in production, the contents have been precomputed
+	 * during the build, so it can return synchronously.
 	 */
 	inline_styles?(): MaybePromise<
 		Record<string, string | ((assets: string, base: string) => string)>
@@ -508,7 +511,7 @@ export type RemotePrerenderInputsGenerator<Input = any> = () => MaybePromise<Inp
 export type SSREndpoint = Partial<Record<HttpMethod, RequestHandler>> & {
 	prerender?: PrerenderOption;
 	trailingSlash?: TrailingSlash;
-	config?: any;
+	config?: Record<string, any>;
 	entries?: PrerenderEntryGenerator;
 	fallback?: RequestHandler;
 };
@@ -557,7 +560,7 @@ export interface SSRState {
 	 */
 	before_handle?: (
 		event: RequestEvent,
-		config: any,
+		config: Record<string, any>,
 		prerender: PrerenderOption,
 		handle: () => Promise<Response>
 	) => Promise<Response>;

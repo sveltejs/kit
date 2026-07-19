@@ -251,7 +251,6 @@ describe('_routes.json', () => {
 								server: 'src/hooks.server.js',
 								universal: 'src/hooks.js'
 							},
-							lib: 'src/lib',
 							params: 'src/params',
 							routes: 'src/routes',
 							serviceWorker: 'src/service-worker.js',
@@ -330,7 +329,6 @@ describe('_routes.json', () => {
 								server: 'src/hooks.server.js',
 								universal: 'src/hooks.js'
 							},
-							lib: 'src/lib',
 							params: 'src/params',
 							routes: 'src/routes',
 							serviceWorker: 'src/service-worker.js',

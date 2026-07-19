@@ -8,7 +8,7 @@ title: Observability
 
 Sometimes, you may need to observe how your application is behaving in order to improve performance or find the root cause of a pesky bug. To help with this, SvelteKit can emit server-side [OpenTelemetry](https://opentelemetry.io) spans for the following:
 
-- The [`handle`](hooks#Server-hooks-handle) hook and `handle` functions running in a [`sequence`](@sveltejs-kit-hooks#sequence) (these will show up as children of each other and the root `handle` hook)
+- The [`handle`](hooks#handle) hook and `handle` functions running in a [`sequence`](@sveltejs-kit-hooks#sequence) (these will show up as children of each other and the root `handle` hook)
 - Server [`load`](load) functions and universal `load` functions when they're run on the server
 - [Form actions](form-actions)
 - [Remote functions](remote-functions)
@@ -40,17 +40,17 @@ export default defineConfig({
 SvelteKit provides access to the `root` span and the `current` span on the request event. The root span is the one associated with your root `handle` function, and the current span could be associated with `handle`, `load`, a form action, or a remote function, depending on the context. You can annotate these spans with any attributes you wish to record:
 
 ```js
-/// file: $lib/authenticate.ts
+/// file: #lib/authenticate.ts
 
 // @filename: ambient.d.ts
-declare module '$lib/auth-core' {
+declare module '#lib/auth-core' {
 	export function getAuthenticatedUser(): Promise<{ id: string }>
 }
 
 // @filename: index.js
 // ---cut---
 import { getRequestEvent } from '$app/server';
-import { getAuthenticatedUser } from '$lib/auth-core';
+import { getAuthenticatedUser } from '#lib/auth-core';
 
 async function authenticate() {
 	const user = await getAuthenticatedUser();

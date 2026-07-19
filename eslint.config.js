@@ -53,6 +53,17 @@ export default [
 			'@typescript-eslint/no-unused-expressions': 'off',
 			'@typescript-eslint/require-await': 'error',
 			'@typescript-eslint/no-floating-promises': 'error',
+			'@typescript-eslint/no-misused-promises': [
+				'error',
+				{
+					// we turn these off because it's common to pass an async callback to
+					// a synchronous callback parameter such as `setTimeout(...)`
+					checksVoidReturn: {
+						arguments: false,
+						properties: false
+					}
+				}
+			],
 			'@typescript-eslint/no-unused-vars': [
 				'error',
 				{

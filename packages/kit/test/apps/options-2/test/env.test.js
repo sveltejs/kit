@@ -36,13 +36,14 @@ test.describe('env', () => {
 		await expect(page.locator('body')).toHaveAttribute('data-message', 'hello');
 	});
 
-	test('does not import env.js from prerendered pages when there are no public dynamic environment variables', ({
+	test('does not import env.js or embed env in prerendered pages when there are no public dynamic environment variables', ({
 		javaScriptEnabled
 	}) => {
 		test.skip(javaScriptEnabled || !!process.env.DEV || !!process.env.DYNAMIC_PUBLIC_ENV);
 
 		const root_page = read('prerendered/pages/env/prerendered.html');
 		expect(root_page).not.toContain('_app/env.js');
+		expect(root_page).not.toMatch(/env: /);
 		expect(fs.existsSync(`${output}/prerendered/dependencies/_app/env.js`)).toBeFalsy();
 	});
 });

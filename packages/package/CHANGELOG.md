@@ -1,5 +1,11 @@
 # @sveltejs/package
 
+## 3.0.0-next.3
+
+### Minor Changes
+
+- feat: transform import aliases into relative imports in files ([#16360](https://github.com/sveltejs/kit/pull/16360))
+
 ## 3.0.0-next.2
 
 ### Minor Changes

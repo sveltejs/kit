@@ -72,3 +72,23 @@ test('normalize_param_definition propagates thrown errors', () => {
 
 	assert.throws(() => matcher['~standard'].validate('x'), /boom/);
 });
+
+test('normalize_param_definition passes callable standard schemas through untouched', () => {
+	// standard schemas can be callable (e.g. ArkType)
+	const callable = /** @type {import('@sveltejs/kit').ParamMatcher} */ (
+		/** @type {unknown} */ (
+			Object.assign(() => 'from-call', {
+				'~standard': {
+					version: 1,
+					vendor: 'test',
+					validate: () => ({ value: 'from-schema' })
+				}
+			})
+		)
+	);
+
+	const matcher = normalize_param_definition(callable);
+
+	assert.equal(matcher, callable);
+	assert.deepEqual(matcher['~standard'].validate('x'), { value: 'from-schema' });
+});
