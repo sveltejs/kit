@@ -12,6 +12,7 @@ import { exactRegex, prefixRegex } from 'rolldown/filter';
 
 import { copy, mkdirp, read, resolve_entry, rimraf } from '../../utils/filesystem.js';
 import { posixify } from '../../utils/os.js';
+import { to_fs } from '../../utils/vite.js';
 import {
 	create_sveltekit_env,
 	create_sveltekit_env_public,
@@ -471,22 +472,20 @@ function kit({ svelte_config }) {
 					// @ts-expect-error
 					new_config.optimizeDeps.rolldownOptions.plugins ??= [];
 					// @ts-expect-error
-					new_config.optimizeDeps.rolldownOptions.plugins.push({
-						name: 'vite-plugin-sveltekit-setup:optimize-remote-functions',
-						resolveId: {
-							filter: { id: remote_id_filter },
-							/**
-							 * @this {import('rolldown').PluginContext}
-							 * @param {string} id
-							 * @param {string | undefined} importer
-							 * @returns {Promise<{ id: string, external: true }>}
-							 */
-							async handler(id, importer) {
-								const resolved = await this.resolve(id, importer, { skipSelf: true });
-								return { id: resolved?.id ?? id, external: true };
+					new_config.optimizeDeps.rolldownOptions.plugins.push(
+						/** @type {Rolldown.Plugin} */ ({
+							name: 'vite-plugin-sveltekit-setup:optimize-remote-functions',
+							resolveId: {
+								filter: { id: remote_id_filter },
+								async handler(id, importer) {
+									const resolved = await this.resolve(id, importer, { skipSelf: true });
+									if (!resolved) return { id, external: true };
+									// a servable /@fs url; 'absolute' stops rolldown relativizing it in the deps bundle
+									return { id: to_fs(resolved.id), external: 'absolute' };
+								}
 							}
-						}
-					});
+						})
+					);
 				}
 
 				const define = {
