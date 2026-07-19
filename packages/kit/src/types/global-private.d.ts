@@ -39,11 +39,6 @@ declare global {
 	 */
 	const __SVELTEKIT_PAYLOAD__: SvelteKitPayload;
 	/**
-	 * The Vite `root` setting used to construct paths to nodes and components
-	 * for the SSR manifest during development
-	 */
-	const __SVELTEKIT_ROOT__: string;
-	/**
 	 * Whether the `experimental.async` flag is applied
 	 */
 	const __SVELTEKIT_SUPPORTS_ASYNC__: boolean;

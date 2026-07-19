@@ -9,12 +9,8 @@ import { render_page } from './page/index.js';
 import { render_response } from './page/render.js';
 import { respond_with_error } from './page/respond_with_error.js';
 import { get_self_origin, is_csrf_forbidden, is_remote_forbidden } from './csrf.js';
-import {
-	handle_fatal_error,
-	has_prerendered_path,
-	method_not_allowed,
-	redirect_response
-} from './utils.js';
+import { has_prerendered_path, method_not_allowed, redirect_response } from './utils.js';
+import { handle_fatal_error } from './errors.js';
 import { decode_pathname, disable_search, normalize_path } from '../../utils/url.js';
 import { find_route } from '../../utils/routing.js';
 import { redirect_json_response, render_data } from './data/index.js';

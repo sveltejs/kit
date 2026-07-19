@@ -7,7 +7,8 @@ import { compact } from '../../../utils/array.js';
 import { get_status, normalize_error } from '../../../utils/error.js';
 import { noop } from '../../../utils/functions.js';
 import { add_data_suffix } from '../../pathname.js';
-import { redirect_response, static_error_page, handle_error_and_jsonify } from '../utils.js';
+import { redirect_response } from '../utils.js';
+import { static_error_page, handle_error_and_jsonify } from '../errors.js';
 import {
 	handle_action_json_request,
 	handle_action_request,
