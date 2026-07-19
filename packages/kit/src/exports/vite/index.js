@@ -462,7 +462,7 @@ function kit({ svelte_config }) {
 				};
 
 				if (kit.experimental.remoteFunctions) {
-					// treat .remote.js files as empty for the purposes of prebundling
+					// externalize .remote.js files to stop dependency tracing during prebundling
 					const remote_id_filter = new RegExp(
 						`.remote(${kit.moduleExtensions.join('|')})$`.replaceAll('.', '\\.')
 					);
@@ -473,10 +473,17 @@ function kit({ svelte_config }) {
 					// @ts-expect-error
 					new_config.optimizeDeps.rolldownOptions.plugins.push({
 						name: 'vite-plugin-sveltekit-setup:optimize-remote-functions',
-						load: {
+						resolveId: {
 							filter: { id: remote_id_filter },
-							handler() {
-								return '';
+							/**
+							 * @this {import('rolldown').PluginContext}
+							 * @param {string} id
+							 * @param {string | undefined} importer
+							 * @returns {Promise<{ id: string, external: true }>}
+							 */
+							async handler(id, importer) {
+								const resolved = await this.resolve(id, importer, { skipSelf: true });
+								return { id: resolved?.id ?? id, external: true };
 							}
 						}
 					});
