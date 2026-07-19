@@ -22,6 +22,10 @@ const remove_group_segments = (/** @type {string} */ id) => {
  * @returns {string[]}
  */
 function get_pathnames_for_trailing_slash(pathname, route) {
+	if (pathname === '/') {
+		return [pathname];
+	}
+
 	/** @type {Set<string>} */
 	const pathnames = new Set();
 
@@ -197,7 +201,7 @@ function generate_app_types(manifest_data, config) {
 
 	for (const route of manifest_data.routes) {
 		const pathname = remove_group_segments(route.id);
-		let normalized_pathname = pathname.slice(1);
+		let normalized_pathname = pathname;
 
 		/** @type {(path: string) => string} */
 		let serialise = s;
@@ -211,7 +215,7 @@ function generate_app_types(manifest_data, config) {
 
 			dynamic_routes.push(route_type);
 
-			normalized_pathname = replace_required_params(replace_optional_params(pathname)).slice(1);
+			normalized_pathname = replace_required_params(replace_optional_params(pathname));
 			serialise = (p) => `\`${p}\` & {}`;
 		}
 
@@ -236,7 +240,7 @@ function generate_app_types(manifest_data, config) {
 		layouts.push(`${s(route.id)}: ${layout_type}`);
 	}
 
-	const assets = manifest_data.assets.map((asset) => s(asset.file));
+	const assets = manifest_data.assets.map((asset) => s('/' + asset.file));
 
 	return [
 		'declare module "$app/types" {',

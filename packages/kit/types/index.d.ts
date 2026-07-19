@@ -3317,13 +3317,16 @@ declare module '$app/paths' {
 			? Pathname
 			: T;
 
-	type ResolveArgs<T> = T extends `/${string}`
-		? StripSearchOrHash<T> extends infer U extends RouteId
-			? RouteParams<U> extends Record<string, never>
+	type ResolveArgs<T extends RouteIdWithSearchOrHash | PathnameWithSearchOrHash> =
+		T extends RouteId
+			? RouteParams<T> extends Record<string, never>
 				? [route: T]
-				: [route: T, params: RouteParams<U>]
-			: [never]
-		: [pathname: T];
+				: [route: T, params: RouteParams<T>]
+			: StripSearchOrHash<T> extends infer U extends RouteId
+				? RouteParams<U> extends Record<string, never>
+					? [route: T]
+					: [route: T, params: RouteParams<U>]
+				: [route: T];
 
 	export {};
 }

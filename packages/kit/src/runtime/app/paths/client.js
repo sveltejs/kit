@@ -3,7 +3,6 @@
 import { base, assets, hash_routing } from './internal/client.js';
 import { resolve_route } from '../../../utils/routing.js';
 import { get_navigation_intent } from '../../client/client.js';
-import { DEV } from 'esm-env';
 
 /**
  * Resolve the URL of an asset in your `static` directory, by prefixing it with [`config.paths.assets`](https://svelte.dev/docs/kit/configuration#paths) if configured, or otherwise by prefixing it with the base path.
@@ -24,16 +23,7 @@ import { DEV } from 'esm-env';
  * @returns {string}
  */
 export function asset(file) {
-	// TODO 4.0 remove this
-	if (file[0] === '/') {
-		if (DEV) {
-			console.warn(`\`asset('${file}')\` should now be \`asset('${file.slice(1)}')\``);
-		}
-
-		file = file.slice(1);
-	}
-
-	return (assets || base) + '/' + file;
+	return (assets || base) + file;
 }
 
 const pathname_prefix = hash_routing ? '#' : '';
@@ -62,18 +52,14 @@ const pathname_prefix = hash_routing ? '#' : '';
  * @returns {ResolvedPathname}
  */
 export function resolve(...args) {
-	if (args[0][0] === '/') {
-		const [id, params] = args;
-
-		// route ID
-		if (id.includes('[') && !params) {
-			throw new Error(`Missing params for dynamic route ID ${id}`);
-		}
-
-		return base + pathname_prefix + resolve_route(args[0], args[1] ?? {});
+	if (!args[0].startsWith('/')) {
+		throw new Error(
+			`Cannot use \`resolve(...)\` with a non-absolute pathname or route ID (got "${args[0]}"). ` +
+				'`resolve` is only for internal pathnames and route IDs; external URLs should be used directly.'
+		);
 	}
 
-	return base + pathname_prefix + '/' + args[0];
+	return base + pathname_prefix + resolve_route(args[0], args[1] ?? {});
 }
 
 /**

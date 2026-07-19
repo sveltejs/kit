@@ -5,29 +5,20 @@ import { add_data_suffix } from '../../pathname.js';
 import { try_get_request_store } from '@sveltejs/kit/internal/server';
 import { manifest } from '../../server/internal.js';
 import { get_hooks } from '__SERVER__/internal.js';
-import { DEV } from 'esm-env';
 
 /** @type {import('./client.js').asset} */
 export function asset(file) {
-	// TODO 4.0 remove this
-	if (file[0] === '/') {
-		if (DEV) {
-			console.warn(`\`asset('${file}')\` should now be \`asset('${file.slice(1)}')\``);
-		}
-
-		file = file.slice(1);
-	}
-
-	return assets !== base ? `${assets}/${file}` : resolve(file);
+	// @ts-expect-error we use the `resolve` mechanism, but with the 'wrong' input
+	return assets && assets !== base ? assets + file : resolve(file);
 }
 
 /** @type {import('./client.js').resolve} */
 export function resolve(id, params) {
-	if (id[0] === '/') {
-		// route ID
-		if (id.includes('[') && !params) {
-			throw new Error(`Missing params for dynamic route ID ${id}`);
-		}
+	if (!id.startsWith('/')) {
+		throw new Error(
+			`Cannot use \`resolve(...)\` with a non-absolute pathname or route ID (got "${id}"). ` +
+				'`resolve` is only for internal pathnames and route IDs; external URLs should be used directly.'
+		);
 	}
 
 	const resolved = resolve_route(id, params ?? {});
