@@ -5,6 +5,7 @@ import { options, get_hooks } from '__SERVER__/internal.js';
 import { set_read_implementation, set_manifest } from './internal.js';
 import { set_env } from '__sveltekit/env';
 import { set_app } from './app.js';
+import { SvelteKitError } from '@sveltejs/kit/internal';
 
 /** @type {Promise<any>} */
 let init_promise;
@@ -107,6 +108,11 @@ export class Server {
 					handleError:
 						module.handleError ||
 						(({ error }) => {
+							if (error instanceof SvelteKitError) {
+								// don't log stack traces for 404s etc, it's all internal gubbins
+								return;
+							}
+
 							let e = error;
 							while (e instanceof Error) {
 								if (e.stack) {
