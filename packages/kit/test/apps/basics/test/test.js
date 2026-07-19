@@ -747,7 +747,7 @@ test.describe('$app/env', () => {
 	});
 });
 
-test.describe.only('$app/manifest', () => {
+test.describe('$app/manifest', () => {
 	test('exposes routes', async ({ page }) => {
 		await page.goto('/app-manifest');
 		const routes = JSON.parse((await page.textContent('[data-name="routes"] pre')) ?? '');
