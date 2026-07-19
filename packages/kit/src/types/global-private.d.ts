@@ -48,8 +48,8 @@ declare global {
 	 * references. They are replaced with real values by scanning the output
 	 * chunks after each build completes.
 	 */
-	const __SVELTEKIT_MANIFEST_BUILD__: string[];
-	const __SVELTEKIT_MANIFEST_FILES__: string[];
+	const __SVELTEKIT_MANIFEST_IMMUTABLE__: string[];
+	const __SVELTEKIT_MANIFEST_ASSETS__: string[];
 	const __SVELTEKIT_MANIFEST_PRERENDERED__: string[];
 	const __SVELTEKIT_MANIFEST_ROUTES__: { id: string }[];
 	/**

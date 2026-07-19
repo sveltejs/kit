@@ -48,8 +48,8 @@ declare module '__sveltekit/env/public/server' {
 
 /** Internal version of $app/manifest */
 declare module '__sveltekit/manifest-data' {
-	export const build: string[];
-	export const files: string[];
-	export const prerendered: string[];
-	export const routes: { id: string }[];
+	export const immutable: Array<{ path: string }>;
+	export const assets: Array<{ path: string }>;
+	export const prerendered: Array<{ path: string }>;
+	export const routes: Array<{ id: string }>;
 }

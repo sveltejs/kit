@@ -1,1 +1,1 @@
-export { build, files, prerendered, routes } from '__sveltekit/manifest-data';
+export * from '__sveltekit/manifest-data';

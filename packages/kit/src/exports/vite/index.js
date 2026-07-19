@@ -1194,18 +1194,18 @@ function kit({ svelte_config }) {
 					`;
 
 					manifest_data_code = dedent`
-					export const build = [
+					export const immutable = [
 						${Array.from(build_files)
-							.map((file) => s(file))
+							.map((file) => s({ path: file }))
 							.join(',\n')}
 					];
 
-					export const files = [
-						${manifest_data.assets.map((asset) => s(asset.file)).join(',\n')}
+					export const assets = [
+						${manifest_data.assets.map((asset) => s({ path: asset.file })).join(',\n')}
 					];
 
 					export const prerendered = [
-						${prerendered.paths.map((path) => s(path.replace(kit.paths.base, '').slice(1))).join(',\n')}
+						${prerendered.paths.map((path) => s({ path: path.replace(kit.paths.base, '').slice(1) })).join(',\n')}
 					];
 
 					export const routes = [
@@ -1219,7 +1219,7 @@ function kit({ svelte_config }) {
 				}
 
 				if (id === '\0virtual:app/manifest') {
-					return `export { build, files, prerendered, routes } from '__sveltekit/manifest-data';`;
+					return `export { immutable, assets, prerendered, routes } from '__sveltekit/manifest-data';`;
 				}
 
 				if (id === sveltekit_manifest_data) {
@@ -1642,7 +1642,7 @@ function kit({ svelte_config }) {
 			// known yet — they get sentinel strings that are replaced after
 			// the client build and after prerendering respectively.
 			replace_manifest_placeholders(server_chunks, `${out}/server`, {
-				files: manifest_data.assets.map((asset) => asset.file),
+				assets: manifest_data.assets.map((asset) => ({ path: asset.file })),
 				routes: manifest_data.routes.map((route) => ({ id: route.id }))
 			});
 
@@ -1774,7 +1774,9 @@ function kit({ svelte_config }) {
 				// computed from the Vite client manifest, `files` and `routes`
 				// from `manifest_data`. `prerendered` is left as a placeholder
 				// for now — it's replaced after prerendering completes.
+				/** @type {Set<string>} */
 				const build_files_list = new Set();
+
 				for (const key in vite_manifest) {
 					const { file, css = [], assets = [] } = vite_manifest[key];
 					build_files_list.add(file);
@@ -1793,15 +1795,15 @@ function kit({ svelte_config }) {
 				}
 
 				replace_manifest_placeholders(client_chunks, `${out}/client`, {
-					build: Array.from(build_files_list).map((file) => file),
-					files: manifest_data.assets.map((asset) => asset.file),
+					immutable: Array.from(build_files_list).map((file) => ({ path: file })),
+					assets: manifest_data.assets.map((asset) => ({ path: asset.file })),
 					routes: manifest_data.routes.map((route) => ({ id: route.id }))
 				});
 
 				// Now that the client build is done, replace the `build` sentinel
 				// in the SSR output with the real build files
 				replace_manifest_sentinels(`${out}/server`, {
-					build: Array.from(build_files_list).map((file) => file)
+					immutable: Array.from(build_files_list).map((file) => ({ path: file }))
 				});
 
 				/**
@@ -1987,9 +1989,9 @@ function kit({ svelte_config }) {
 			// Replace the `prerendered` sentinel in both SSR and client output
 			// with the real prerendered paths. The other sentinels (`build`)
 			// were already replaced after the client build.
-			const prerendered_paths = prerendered.paths.map((p) =>
-				p.replace(kit.paths.base, '').slice(1)
-			);
+			const prerendered_paths = prerendered.paths.map((p) => {
+				return { path: p.replace(kit.paths.base, '').slice(1) };
+			});
 
 			replace_manifest_sentinels(`${out}/server`, { prerendered: prerendered_paths });
 			replace_manifest_sentinels(`${out}/client`, { prerendered: prerendered_paths });
@@ -2204,8 +2206,8 @@ const create_manifest_data_module = (is_build, manifest_data) => {
 		// with real values by `replace_manifest_placeholders` after each
 		// build completes.
 		return dedent`
-			export const build = __SVELTEKIT_MANIFEST_BUILD__;
-			export const files = __SVELTEKIT_MANIFEST_FILES__;
+			export const immutable = __SVELTEKIT_MANIFEST_IMMUTABLE__;
+			export const assets = __SVELTEKIT_MANIFEST_ASSETS__;
 			export const prerendered = __SVELTEKIT_MANIFEST_PRERENDERED__;
 			export const routes = __SVELTEKIT_MANIFEST_ROUTES__;
 		`;
@@ -2218,11 +2220,13 @@ const create_manifest_data_module = (is_build, manifest_data) => {
 		? manifest_data.routes.map((route) => s({ id: route.id })).join(',\n')
 		: '';
 
-	const files = manifest_data ? manifest_data.assets.map((asset) => s(asset.file)).join(',\n') : '';
+	const files = manifest_data
+		? manifest_data.assets.map((asset) => s({ path: asset.file })).join(',\n')
+		: '';
 
 	return dedent`
-		export const build = [];
-		export const files = [
+		export const immutable = [];
+		export const assets = [
 			${files}
 		];
 		export const prerendered = [];
@@ -2241,17 +2245,19 @@ const create_manifest_data_module = (is_build, manifest_data) => {
  * @param {Rolldown.RolldownOutput['output']} chunks
  * @param {string} output_dir
  * @param {{
- *   build?: string[];
- *   files?: string[];
- *   prerendered?: string[];
- *   routes?: { id: string }[];
+ *   immutable?: Array<{ path: string }>;
+ *   assets?: Array<{ path: string }>;
+ *   prerendered?: Array<{ path: string }>;
+ *   routes?: Array<{ id: string }>;
  * }} values
  */
 const replace_manifest_placeholders = (chunks, output_dir, values) => {
 	/** @type {Record<string, string>} */
 	const replacements = {
-		__SVELTEKIT_MANIFEST_BUILD__: JSON.stringify(values.build ?? '__sveltekit_manifest_build__'),
-		__SVELTEKIT_MANIFEST_FILES__: JSON.stringify(values.files ?? '__sveltekit_manifest_files__'),
+		__SVELTEKIT_MANIFEST_IMMUTABLE__: JSON.stringify(
+			values.immutable ?? '__sveltekit_manifest_build__'
+		),
+		__SVELTEKIT_MANIFEST_ASSETS__: JSON.stringify(values.assets ?? '__sveltekit_manifest_files__'),
 		__SVELTEKIT_MANIFEST_PRERENDERED__: JSON.stringify(
 			values.prerendered ?? '__sveltekit_manifest_prerendered__'
 		),
@@ -2281,16 +2287,16 @@ const replace_manifest_placeholders = (chunks, output_dir, values) => {
  *
  * @param {string} dir Directory to scan for .js files
  * @param {{
- *   build?: string[];
- *   prerendered?: string[];
+ *   immutable?: Array<{ path: string }>;
+ *   prerendered?: Array<{ path: string }>;
  * }} values
  */
 const replace_manifest_sentinels = (dir, values) => {
 	/** @type {Record<string, string>} */
 	const replacements = {};
 
-	if (values.build !== undefined) {
-		replacements['__sveltekit_manifest_build__'] = JSON.stringify(values.build);
+	if (values.immutable !== undefined) {
+		replacements['__sveltekit_manifest_build__'] = JSON.stringify(values.immutable);
 	}
 	if (values.prerendered !== undefined) {
 		replacements['__sveltekit_manifest_prerendered__'] = JSON.stringify(values.prerendered);
