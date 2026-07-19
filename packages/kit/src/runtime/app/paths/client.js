@@ -1,4 +1,4 @@
-/** @import { Asset, RouteId, RouteIdWithSearchOrHash, Path, PathnameWithSearchOrHash, ResolvedPathname, RouteParams } from '$app/types' */
+/** @import { AssetPath, RouteId, RouteIdWithSearchOrHash, Path, PathnameWithSearchOrHash, ResolvedPathname, RouteParams } from '$app/types' */
 /** @import { ResolveArgs } from './types.js' */
 import { base, assets, hash_routing } from './internal/client.js';
 import { resolve_route } from '../../../utils/routing.js';
@@ -20,7 +20,7 @@ import { DEV } from 'esm-env';
  * ```
  * @since 2.26
  *
- * @param {Asset} file
+ * @param {AssetPath} file
  * @returns {string}
  */
 export function asset(file) {
@@ -83,7 +83,7 @@ export function resolve(...args) {
  * ```js
  * import { match } from '$app/paths';
  *
- * const route = await match('/blog/hello-world');
+ * const route = await match('blog/hello-world');
  *
  * if (route?.id === '/blog/[slug]') {
  * 	const slug = route.params.slug;

@@ -101,7 +101,7 @@ declare module '$app/types' {
 		LayoutParams(): Record<string, Record<string, string>>;
 		Path(): string;
 		ResolvedPathname(): string;
-		Asset(): string;
+		AssetPath(): string;
 	}
 
 	/**
@@ -129,7 +129,7 @@ declare module '$app/types' {
 		: Record<string, never>;
 
 	/**
-	 * A union of all valid pathnames in your app.
+	 * A union of all valid pathnames in your app, relative to the `base` path.
 	 */
 	export type Path = ReturnType<AppTypes['Path']>;
 
@@ -144,7 +144,7 @@ declare module '$app/types' {
 	export type ResolvedPathname = ReturnType<AppTypes['ResolvedPathname']>;
 
 	/**
-	 * A union of all the filenames of assets contained in your `static` directory.
+	 * A union of all the filenames of assets contained in your `static` directory, relative to the `base` path.
 	 */
-	export type Asset = ReturnType<AppTypes['Asset']>;
+	export type AssetPath = ReturnType<AppTypes['AssetPath']>;
 }

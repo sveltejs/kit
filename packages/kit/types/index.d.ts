@@ -3250,7 +3250,7 @@ declare module '$app/navigation' {
 }
 
 declare module '$app/paths' {
-	import type { Asset, RouteIdWithSearchOrHash, PathnameWithSearchOrHash, ResolvedPathname, Path, RouteId, RouteParams } from '$app/types';
+	import type { AssetPath, RouteIdWithSearchOrHash, PathnameWithSearchOrHash, ResolvedPathname, Path, RouteId, RouteParams } from '$app/types';
 	/**
 	 * Resolve the URL of an asset in your `static` directory, by prefixing it with [`config.paths.assets`](https://svelte.dev/docs/kit/configuration#paths) if configured, or otherwise by prefixing it with the base path.
 	 *
@@ -3267,7 +3267,7 @@ declare module '$app/paths' {
 	 * @since 2.26
 	 *
 	 * */
-	export function asset(file: Asset): string;
+	export function asset(file: AssetPath): string;
 	/**
 	 * Resolve a pathname by prefixing it with the base path, if any, or resolve a route ID by populating dynamic segments with parameters.
 	 *
@@ -3296,7 +3296,7 @@ declare module '$app/paths' {
 	 * ```js
 	 * import { match } from '$app/paths';
 	 *
-	 * const route = await match('/blog/hello-world');
+	 * const route = await match('blog/hello-world');
 	 *
 	 * if (route?.id === '/blog/[slug]') {
 	 * 	const slug = route.params.slug;
@@ -3751,7 +3751,7 @@ declare module '$app/types' {
 		LayoutParams(): Record<string, Record<string, string>>;
 		Path(): string;
 		ResolvedPathname(): string;
-		Asset(): string;
+		AssetPath(): string;
 	}
 
 	/**
@@ -3779,7 +3779,7 @@ declare module '$app/types' {
 		: Record<string, never>;
 
 	/**
-	 * A union of all valid pathnames in your app.
+	 * A union of all valid pathnames in your app, relative to the `base` path.
 	 */
 	export type Path = ReturnType<AppTypes['Path']>;
 
@@ -3794,9 +3794,9 @@ declare module '$app/types' {
 	export type ResolvedPathname = ReturnType<AppTypes['ResolvedPathname']>;
 
 	/**
-	 * A union of all the filenames of assets contained in your `static` directory.
+	 * A union of all the filenames of assets contained in your `static` directory, relative to the `base` path.
 	 */
-	export type Asset = ReturnType<AppTypes['Asset']>;
+	export type AssetPath = ReturnType<AppTypes['AssetPath']>;
 }
 
 //# sourceMappingURL=index.d.ts.map
