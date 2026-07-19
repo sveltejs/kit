@@ -1,4 +1,3 @@
-/* eslint-disable n/prefer-global/process */
 /** @import { SSRManifest } from '@sveltejs/kit'; */
 
 /**
