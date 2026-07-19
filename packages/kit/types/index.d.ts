@@ -3262,7 +3262,7 @@ declare module '$app/paths' {
 	 * 	import { asset } from '$app/paths';
 	 * </script>
 	 *
-	 * <img alt="a potato" src={asset('/potato.jpg')} />
+	 * <img alt="a potato" src={asset('potato.jpg')} />
 	 * ```
 	 * @since 2.26
 	 *
@@ -3278,7 +3278,7 @@ declare module '$app/paths' {
 	 * import { resolve } from '$app/paths';
 	 *
 	 * // using a pathname
-	 * const resolved = resolve(`/blog/hello-world`);
+	 * const resolved = resolve(`blog/hello-world`);
 	 *
 	 * // using a route ID plus parameters
 	 * const resolved = resolve('/blog/[slug]', {

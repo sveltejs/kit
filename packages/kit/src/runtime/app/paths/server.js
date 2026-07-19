@@ -31,7 +31,7 @@ export function resolve(id, params) {
 			throw new Error(`Missing params for dynamic route ID ${id}`);
 		}
 
-		resolved = resolve_route(id, params ?? {});
+		resolved = params ? resolve_route(id, params) : id;
 	} else {
 		resolved = '/' + id;
 	}
