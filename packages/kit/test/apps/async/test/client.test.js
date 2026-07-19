@@ -62,6 +62,23 @@ test.describe('remote function mutations', () => {
 		expect(request_count).toBe(0);
 	});
 
+	test('query values seeded during SSR are reused on navigation', async ({ page }) => {
+		await page.goto('/remote/set-during-ssr');
+		await expect(page.locator('#hydrated')).toHaveText('true');
+
+		let request_count = 0;
+		page.on(
+			'request',
+			(r) =>
+				(request_count += r.url().includes('/_app/remote/') && r.url().includes('get_item') ? 1 : 0)
+		);
+
+		await page.getByRole('link', { name: 'item 1' }).click();
+		await expect(page.locator('#item')).toHaveText('seeded-1');
+		await page.waitForTimeout(100);
+		expect(request_count).toBe(0);
+	});
+
 	test('hydrated prerender data is reused', async ({ page }) => {
 		let request_count = 0;
 		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));

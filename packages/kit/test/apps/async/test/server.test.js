@@ -23,6 +23,15 @@ test.describe('remote functions', () => {
 		expect(code.includes('const with_read = prerender(')).toBe(false);
 	});
 
+	test('query values seeded with .set() are serialized during SSR', async ({ page }) => {
+		await page.goto('/remote/set-during-ssr');
+		const html = await page.content();
+
+		expect(html).toContain('seeded-1');
+		expect(html).toContain('seeded-2');
+		expect(html).toContain('seeded-3');
+	});
+
 	test("form doesn't refresh queries when not a remote request", async ({ page }) => {
 		await page.goto(`/remote/form/noop-refresh-non-enhanced/${Date.now()}${Math.random()}`);
 
