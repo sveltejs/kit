@@ -108,14 +108,18 @@ test.describe('env', () => {
 test.describe('trailingSlash', () => {
 	test('adds trailing slash', async ({ baseURL, page, clicknav }) => {
 		// we can't use Playwright's `request` here, because it resolves redirects
-		const status = await new Promise((fulfil, reject) => {
-			const request = http.get(`${baseURL}/path-base/slash`);
-			request.on('error', reject);
-			request.on('response', (response) => {
-				fulfil(response.statusCode);
-			});
-		});
+		const [status, location] =
+			await /** @type {Promise<[number | undefined, string | undefined]>} */ (
+				new Promise((fulfil, reject) => {
+					const request = http.get(`${baseURL}/path-base/slash`);
+					request.on('error', reject);
+					request.on('response', (response) => {
+						fulfil([response.statusCode, response.headers.location]);
+					});
+				})
+			);
 		expect(status).toBe(308);
+		expect(location).toBe('slash/');
 
 		await page.goto('/path-base/slash');
 
@@ -128,6 +132,19 @@ test.describe('trailingSlash', () => {
 	});
 
 	test('removes trailing slash on endpoint', async ({ baseURL, request }) => {
+		const [status, location] =
+			await /** @type {Promise<[number | undefined, string | undefined]>} */ (
+				new Promise((fulfil, reject) => {
+					const request = http.get(`${baseURL}/path-base/endpoint/`);
+					request.on('error', reject);
+					request.on('response', (response) => {
+						fulfil([response.statusCode, response.headers.location]);
+					});
+				})
+			);
+		expect(status).toBe(308);
+		expect(location).toBe('../endpoint');
+
 		const r1 = await request.get('/path-base/endpoint/');
 		expect(r1.url()).toBe(`${baseURL}/path-base/endpoint`);
 		expect(await r1.text()).toBe('hi');

@@ -28,6 +28,18 @@ export function is_root_relative(path) {
 }
 
 /**
+ * @param {string} from
+ * @param {string} to
+ * @returns {string}
+ */
+export function relative_pathname(from, to) {
+	const pathname = from.endsWith('/') ? to : from;
+	const segment = pathname.slice(pathname.lastIndexOf('/') + 1);
+
+	return from.endsWith('/') ? `../${segment}` : `${segment}/`;
+}
+
+/**
  * @param {string} location
  * @param {string} allowed
  */
