@@ -1568,7 +1568,10 @@ function kit({ svelte_config }) {
 					manifest_data = data;
 					// Invalidate the manifest data module so it reloads with new routes/files
 					const module = server.moduleGraph.getModuleById(sveltekit_manifest_data);
-					if (module) server.moduleGraph.invalidateModule(module);
+					if (module) {
+						server.moduleGraph.invalidateModule(module);
+						void server.reloadModule(module);
+					}
 				}
 			);
 		},
