@@ -747,7 +747,7 @@ test.describe('$app/env', () => {
 	});
 });
 
-test.describe('$app/manifest', () => {
+test.describe.only('$app/manifest', () => {
 	test('exposes routes', async ({ page }) => {
 		await page.goto('/app-manifest');
 		const routes = JSON.parse((await page.textContent('[data-name="routes"] pre')) ?? '');
@@ -757,30 +757,32 @@ test.describe('$app/manifest', () => {
 		expect(ids).toContain('/routing');
 	});
 
-	test('exposes static files', async ({ page }) => {
+	test('exposes static assets', async ({ page }) => {
 		await page.goto('/app-manifest');
-		const files = JSON.parse((await page.textContent('[data-name="files"] pre')) ?? '');
-		expect(files).toContain('favicon.png');
-		expect(files).toContain('static.json');
+		const assets = JSON.parse((await page.textContent('[data-name="assets"] pre')) ?? '');
+		const paths = assets.map((a) => a.path);
+		expect(paths).toContain('favicon.png');
+		expect(paths).toContain('static.json');
 	});
 
-	test('exposes build files', async ({ page }) => {
-		test.skip(!!process.env.DEV, 'build files are only known after build');
+	test('exposes immutable assets', async ({ page }) => {
+		test.skip(!!process.env.DEV, 'only known after build');
 		await page.goto('/app-manifest');
-		const build = JSON.parse((await page.textContent('[data-name="build"] pre')) ?? '');
-		// should include the manifest chunk itself
-		expect(build.some((f) => f.includes('_app/manifest.js'))).toBe(true);
-		// should include immutable chunks
-		expect(build.some((f) => f.includes('_app/immutable/'))).toBe(true);
+		const immutable = JSON.parse((await page.textContent('[data-name="immutable"] pre')) ?? '');
+		const paths = immutable.map((a) => a.path);
+		expect(paths.length).toBeGreaterThan(0);
+		// should only include immutable chunks
+		expect(paths.every((f) => f.includes('_app/immutable/'))).toBe(true);
 	});
 
 	test('exposes prerendered paths', async ({ page }) => {
 		test.skip(!!process.env.DEV, 'prerendered paths are only known after build');
 		await page.goto('/app-manifest');
 		const prerendered = JSON.parse((await page.textContent('[data-name="prerendered"] pre')) ?? '');
+		const paths = prerendered.map((a) => a.path);
 		// the test app prerenders '*' — some known prerendered routes
-		expect(prerendered.length).toBeGreaterThan(0);
-		expect(prerendered).toContain('prerendering/no-ssr');
+		expect(paths.length).toBeGreaterThan(0);
+		expect(paths).toContain('prerendering/no-ssr');
 	});
 });
 

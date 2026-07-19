@@ -1,10 +1,10 @@
 <script>
-	import { build, files, prerendered, routes } from '$app/manifest';
+	import { immutable, assets, prerendered, routes } from '$app/manifest';
 
 	let prerendered_json = JSON.stringify(prerendered, null, '  ');
 	let routes_json = JSON.stringify(routes, null, '  ');
-	let files_json = JSON.stringify(files, null, '  ');
-	let build_json = JSON.stringify(build, null, '  ');
+	let files_json = JSON.stringify(assets, null, '  ');
+	let build_json = JSON.stringify(immutable, null, '  ');
 </script>
 
 <h1>$app/manifest</h1>
@@ -14,8 +14,8 @@
 	<pre>{routes_json}</pre>
 </section>
 
-<section data-name="files">
-	<h2>files</h2>
+<section data-name="assets">
+	<h2>assets</h2>
 	<pre>{files_json}</pre>
 </section>
 
@@ -24,7 +24,7 @@
 	<pre>{prerendered_json}</pre>
 </section>
 
-<section data-name="build">
-	<h2>build</h2>
+<section data-name="immutable">
+	<h2>immutable</h2>
 	<pre>{build_json}</pre>
 </section>
