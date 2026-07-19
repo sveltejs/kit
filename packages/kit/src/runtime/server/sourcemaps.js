@@ -14,7 +14,6 @@ const module = globalThis.process?.getBuiltinModule?.('node:module');
  */
 export let fix_stack_trace = (error) => {
 	if (!error.stack || !fs) return;
-	if (!fs) return;
 
 	let end = 0;
 
