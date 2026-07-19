@@ -21,24 +21,12 @@ const escape_html_dict = {
 	'<': '&lt;'
 };
 
-const surrogates = // high surrogate without paired low surrogate
-	'[\\ud800-\\udbff](?![\\udc00-\\udfff])|' +
-	// a valid surrogate pair, the only match with 2 code units
-	// we match it so that we can match unpaired low surrogates in the same pass
-	// TODO: use lookbehind assertions once they are widely supported: (?<![\ud800-udbff])[\udc00-\udfff]
-	'[\\ud800-\\udbff][\\udc00-\\udfff]|' +
-	// unpaired low surrogate (see previous match)
-	'[\\udc00-\\udfff]';
+// `\p{Surrogate}` only matches unpaired surrogates with the `u` flag (a pair is one code point)
+/** @param {Record<string, string>} dict */
+const escape_regex = (dict) => new RegExp(`[${Object.keys(dict).join('')}]|\\p{Surrogate}`, 'gu');
 
-const escape_html_attr_regex = new RegExp(
-	`[${Object.keys(escape_html_attr_dict).join('')}]|` + surrogates,
-	'g'
-);
-
-const escape_html_regex = new RegExp(
-	`[${Object.keys(escape_html_dict).join('')}]|` + surrogates,
-	'g'
-);
+const escape_html_attr_regex = escape_regex(escape_html_attr_dict);
+const escape_html_regex = escape_regex(escape_html_dict);
 
 /**
  * Escapes unpaired surrogates (which are allowed in js strings but invalid in HTML) and
@@ -51,14 +39,10 @@ const escape_html_regex = new RegExp(
  */
 export function escape_html(str, is_attr) {
 	const dict = is_attr ? escape_html_attr_dict : escape_html_dict;
-	const escaped_str = str.replace(is_attr ? escape_html_attr_regex : escape_html_regex, (match) => {
-		if (match.length === 2) {
-			// valid surrogate pair
-			return match;
-		}
-
-		return dict[match] ?? `&#${match.charCodeAt(0)};`;
-	});
+	const escaped_str = str.replace(
+		is_attr ? escape_html_attr_regex : escape_html_regex,
+		(match) => dict[match] ?? `&#${match.charCodeAt(0)};`
+	);
 
 	return escaped_str;
 }

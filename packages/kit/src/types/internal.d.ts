@@ -399,7 +399,7 @@ export interface ServerErrorNode {
 }
 
 export interface ServerMetadataRoute {
-	config: any;
+	config: Record<string, any>;
 	api: {
 		methods: Array<HttpMethod | '*'>;
 	};
@@ -431,7 +431,7 @@ export interface UniversalNode {
 	ssr?: boolean;
 	csr?: boolean;
 	trailingSlash?: TrailingSlash;
-	config?: any;
+	config?: Record<string, any>;
 	entries?: PrerenderEntryGenerator;
 }
 
@@ -442,7 +442,7 @@ export interface ServerNode {
 	csr?: boolean;
 	trailingSlash?: TrailingSlash;
 	actions?: Actions;
-	config?: any;
+	config?: Record<string, any>;
 	entries?: PrerenderEntryGenerator;
 }
 
@@ -516,7 +516,7 @@ export type RemotePrerenderInputsGenerator<Input = any> = () => MaybePromise<Inp
 export type SSREndpoint = Partial<Record<HttpMethod, RequestHandler>> & {
 	prerender?: PrerenderOption;
 	trailingSlash?: TrailingSlash;
-	config?: any;
+	config?: Record<string, any>;
 	entries?: PrerenderEntryGenerator;
 	fallback?: RequestHandler;
 };
@@ -565,7 +565,7 @@ export interface SSRState {
 	 */
 	before_handle?: (
 		event: RequestEvent,
-		config: any,
+		config: Record<string, any>,
 		prerender: PrerenderOption,
 		handle: () => Promise<Response>
 	) => Promise<Response>;

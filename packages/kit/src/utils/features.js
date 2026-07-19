@@ -2,7 +2,7 @@ import { get } from '__sveltekit/ipc';
 
 /**
  * @param {string} route_id
- * @param {unknown} config
+ * @param {Record<string, any>} config
  * @param {string} feature
  */
 export async function check_feature(route_id, config, feature) {
