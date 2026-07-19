@@ -93,10 +93,24 @@ function serve_prerendered() {
 const ssr = async (req, res) => {
 	/** @type {Request} */
 	let request;
+	let request_origin = origin;
+
+	if (!request_origin) {
+		try {
+			request_origin = get_origin(req.headers);
+		} catch (error) {
+			console.error(
+				`Could not determine request origin: ${error instanceof Error ? error.message : String(error)}`
+			);
+			res.statusCode = 400;
+			res.end('Bad Request');
+			return;
+		}
+	}
 
 	try {
 		request = getRequest({
-			base: origin || get_origin(req.headers),
+			base: request_origin,
 			request: req,
 			bodySizeLimit: body_size_limit
 		});

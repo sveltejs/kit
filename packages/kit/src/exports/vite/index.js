@@ -54,7 +54,6 @@ import {
 	sveltekit_env,
 	sveltekit_env_private,
 	sveltekit_env_service_worker,
-	sveltekit_server,
 	sveltekit_env_public_client,
 	sveltekit_env_public_server
 } from './module_ids.js';
@@ -410,6 +409,10 @@ function kit({ svelte_config }) {
 							{ find: '__SERVER__', replacement: `${generated}/server` },
 							{ find: '$app', replacement: `${runtime_directory}/app` },
 							{ find: '$env', replacement: `${runtime_directory}/env` },
+							{
+								find: '__sveltekit/server',
+								replacement: `${runtime_directory}/server/internal.js`
+							},
 							...get_config_aliases(kit, root)
 						]
 					},
@@ -493,7 +496,6 @@ function kit({ svelte_config }) {
 					__SVELTEKIT_SUPPORTS_ASYNC__: s(
 						svelte_config.compilerOptions?.experimental?.async ?? false
 					),
-					__SVELTEKIT_ROOT__: s(root),
 					__SVELTEKIT_DEV__: s(!is_build)
 				};
 
@@ -548,6 +550,24 @@ function kit({ svelte_config }) {
 		 */
 		configResolved(config) {
 			vite_config = config;
+
+			const unsupported_plugins = vite_config.plugins.filter((plugin) => plugin.transformIndexHtml);
+			if (unsupported_plugins.length) {
+				const verbose = vite_config.logLevel === 'info';
+				const log = logger({ verbose });
+
+				const list = unsupported_plugins
+					.map((plugin) => `  - ${plugin.name || '(missing plugin name)'}`)
+					.join('\n');
+
+				log.warn(
+					dedent`
+						The following plugins may not work correctly because they use the \`transformIndexHtml\` hook which is not supported:
+
+						${list}
+					`
+				);
+			}
 		}
 	};
 
@@ -630,8 +650,7 @@ function kit({ svelte_config }) {
 					exactRegex(sveltekit_env_private),
 					exactRegex(sveltekit_env_public_client),
 					exactRegex(sveltekit_env_public_server),
-					exactRegex(sveltekit_env_service_worker),
-					exactRegex(sveltekit_server)
+					exactRegex(sveltekit_env_service_worker)
 				]
 			},
 			handler(id) {
@@ -669,22 +688,6 @@ function kit({ svelte_config }) {
 									kit.appDir
 								)
 							: create_sveltekit_env_service_worker_dev(explicit_env_config, env, kit_global);
-
-					case sveltekit_server: {
-						return dedent`
-							export let read_implementation = null;
-
-							export let manifest = null;
-
-							export function set_read_implementation(fn) {
-								read_implementation = fn;
-							}
-
-							export function set_manifest(_) {
-								manifest = _;
-							}
-						`;
-					}
 				}
 			}
 		}
@@ -1538,6 +1541,15 @@ function kit({ svelte_config }) {
 		},
 
 		async buildApp(builder) {
+			const sourcemap = builder.config.build.sourcemap;
+			const ssr_sourcemap = builder.environments.ssr.config.build.sourcemap;
+			const temporary_sourcemap = !(ssr_sourcemap ?? sourcemap);
+
+			if (temporary_sourcemap) {
+				// Temporarily override so that we get better stack traces for prerendering errors
+				builder.environments.ssr.config.build.sourcemap = 'hidden';
+			}
+
 			// clears the output directories
 			if (!builder.config.build.watch) {
 				rimraf(out);
@@ -1824,15 +1836,38 @@ function kit({ svelte_config }) {
 			}
 
 			// ...and prerender
-			const prerender_results = await prerender({
-				hash: kit.router.type === 'hash',
-				out,
-				manifest_path,
-				metadata,
-				verbose,
-				env,
-				vite_config_file: vite_config.configFile
-			});
+			let prerender_results;
+			try {
+				prerender_results = await prerender({
+					hash: kit.router.type === 'hash',
+					out,
+					manifest_path,
+					metadata,
+					verbose,
+					env,
+					vite_config_file: vite_config.configFile
+				});
+
+				// this silly hack is necessary to ensure that stderr from prerender is flushed before we continue
+				await new Promise((f) => setTimeout(f, 0));
+			} catch (e) {
+				if (e instanceof Error && e.message === '__handled__') {
+					// error details are already logged inside `prerender`, don't duplicate them
+					throw stackless('Prerendering failed');
+				} else {
+					// Unforeseen error, rethrow as-is
+					throw e;
+				}
+			} finally {
+				if (temporary_sourcemap) {
+					// If we did override it, set it back to false and remove the sourcemaps
+					builder.environments.ssr.config.build.sourcemap = ssr_sourcemap;
+
+					for (const file of fs.globSync(`${out}/server/**/*.js.map`)) {
+						fs.rmSync(file);
+					}
+				}
+			}
 			prerendered = prerender_results.prerendered;
 
 			await treeshake_prerendered_remotes(
@@ -1903,7 +1938,7 @@ function kit({ svelte_config }) {
 						explicit_env_config
 					);
 				} else {
-					console.log(styleText(['bold', 'yellow'], '\nNo adapter specified'));
+					log.warn('\nNo adapter specified');
 
 					const link = styleText(['bold', 'cyan'], 'https://svelte.dev/docs/kit/adapters');
 					console.log(
