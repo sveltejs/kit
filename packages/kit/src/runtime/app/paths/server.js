@@ -23,14 +23,18 @@ export function asset(file) {
 
 /** @type {import('./client.js').resolve} */
 export function resolve(id, params) {
+	let resolved;
+
 	if (id[0] === '/') {
 		// route ID
 		if (id.includes('[') && !params) {
 			throw new Error(`Missing params for dynamic route ID ${id}`);
 		}
-	}
 
-	const resolved = resolve_route(id, params ?? {});
+		resolved = resolve_route(id, params ?? {});
+	} else {
+		resolved = '/' + id;
+	}
 
 	if (relative) {
 		const store = try_get_request_store();
