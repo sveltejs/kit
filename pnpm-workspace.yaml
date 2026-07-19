@@ -46,9 +46,9 @@ catalog:
   '@changesets/cli': ^3.0.0-next.8
   # pin the version of changelog-github because we're using the experimental
   # template feature which can change in a patch version
-  '@changesets/changelog-github': 1.0.0-next.6
+  '@changesets/changelog-github': 1.0.0-next.7
   '@fontsource/libre-barcode-128-text': ^5.1.0
-  '@opentelemetry/sdk-node': ^0.219.0
+  '@opentelemetry/sdk-node': ^0.220.0
   '@opentelemetry/sdk-trace-node': ^2.8.0
   '@playwright/test': ^1.61.1
   '@polka/url': ^1.0.0-next.28
