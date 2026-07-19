@@ -62,14 +62,18 @@ const pathname_prefix = hash_routing ? '#' : '';
  * @returns {ResolvedPathname}
  */
 export function resolve(...args) {
-	if (!args[0].startsWith('/')) {
-		throw new Error(
-			`Cannot use \`resolve(...)\` with a non-absolute pathname or route ID (got "${args[0]}"). ` +
-				'`resolve` is only for internal pathnames and route IDs; external URLs should be used directly.'
-		);
+	if (args[0][0] === '/') {
+		const [id, params] = args;
+
+		// route ID
+		if (id.includes('[') && !params) {
+			throw new Error(`Missing params for dynamic route ID ${id}`);
+		}
+
+		return base + pathname_prefix + resolve_route(args[0], args[1] ?? {});
 	}
 
-	return base + pathname_prefix + resolve_route(args[0], args[1] ?? {});
+	return base + pathname_prefix + '/' + args[0];
 }
 
 /**

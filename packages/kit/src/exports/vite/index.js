@@ -1770,32 +1770,32 @@ function kit({ svelte_config }) {
 					read(`${out}/client/.vite/manifest.json`)
 				));
 
-				// Replace manifest placeholders in client output. `build` is
-				// computed from the Vite client manifest, `files` and `routes`
+				// Replace manifest placeholders in client output. `immutable` is
+				// computed from the Vite client manifest, `assets` and `routes`
 				// from `manifest_data`. `prerendered` is left as a placeholder
 				// for now — it's replaced after prerendering completes.
 				/** @type {Set<string>} */
-				const build_files_list = new Set();
+				const immutable = new Set();
+
+				/** @param {string} file */
+				const add_immutable = (file) => {
+					if (
+						file.startsWith(`${kit.appDir}/immutable`) &&
+						fs.existsSync(`${out}/client/${file}`)
+					) {
+						immutable.add(file);
+					}
+				};
 
 				for (const key in vite_manifest) {
 					const { file, css = [], assets = [] } = vite_manifest[key];
-					build_files_list.add(file);
-					css.forEach((/** @type {string} */ file) => build_files_list.add(file));
-					assets.forEach((/** @type {string} */ file) => build_files_list.add(file));
-				}
-
-				if (kit.output.bundleStrategy === 'inline') {
-					// the bundle and stylesheet are inlined into the page and their files
-					// deleted, so they must not appear in the list of cacheable assets
-					for (const file of build_files_list) {
-						if (!fs.existsSync(`${out}/client/${file}`)) {
-							build_files_list.delete(file);
-						}
-					}
+					add_immutable(file);
+					css.forEach(add_immutable);
+					assets.forEach(add_immutable);
 				}
 
 				replace_manifest_placeholders(client_chunks, `${out}/client`, {
-					immutable: Array.from(build_files_list).map((file) => ({ path: file })),
+					immutable: Array.from(immutable).map((file) => ({ path: file })),
 					assets: manifest_data.assets.map((asset) => ({ path: asset.file })),
 					routes: manifest_data.routes.map((route) => ({ id: route.id }))
 				});
@@ -1803,7 +1803,7 @@ function kit({ svelte_config }) {
 				// Now that the client build is done, replace the `build` sentinel
 				// in the SSR output with the real build files
 				replace_manifest_sentinels(`${out}/server`, {
-					immutable: Array.from(build_files_list).map((file) => ({ path: file }))
+					immutable: Array.from(immutable).map((file) => ({ path: file }))
 				});
 
 				/**
