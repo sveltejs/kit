@@ -67,15 +67,11 @@ test.describe('remote function mutations', () => {
 		await expect(page.locator('#hydrated')).toHaveText('true');
 
 		let request_count = 0;
-		page.on(
-			'request',
-			(r) =>
-				(request_count += r.url().includes('/_app/remote/') && r.url().includes('get_item') ? 1 : 0)
-		);
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
 
 		await page.getByRole('link', { name: 'item 1' }).click();
 		await expect(page.locator('#item')).toHaveText('seeded-1');
-		await page.waitForTimeout(100);
+		await page.waitForTimeout(100); // allow all requests to finish (there shouldn't be any)
 		expect(request_count).toBe(0);
 	});
 
