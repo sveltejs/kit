@@ -1568,9 +1568,7 @@ function kit({ svelte_config }) {
 					manifest_data = data;
 					// Invalidate the manifest data module so it reloads with new routes/files
 					const module = server.moduleGraph.getModuleById(sveltekit_manifest_data);
-					if (module) {
-						server.moduleGraph.invalidateModule(module);
-					}
+					if (module) server.moduleGraph.invalidateModule(module);
 				}
 			);
 		},
@@ -2216,20 +2214,18 @@ const create_manifest_data_module = (is_build, manifest_data) => {
 	// In dev, `manifest_data` may not be set yet on the very first load,
 	// but `configureServer` (which calls `sync.create`) runs before any
 	// module is served, so it will be set by the time this is called.
-	const routes = manifest_data
-		? manifest_data.routes.map((route) => s({ id: route.id })).join(',\n')
-		: '';
-
-	const files = manifest_data
-		? manifest_data.assets.map((asset) => s({ path: asset.file })).join(',\n')
-		: '';
+	const routes = manifest_data?.routes.map((route) => s({ id: route.id })).join(',\n') ?? '';
+	const assets = manifest_data?.assets.map((asset) => s({ path: asset.file })).join(',\n') ?? '';
 
 	return dedent`
+		// empty during dev
 		export const immutable = [];
-		export const assets = [
-			${files}
-		];
 		export const prerendered = [];
+
+		export const assets = [
+			${assets}
+		];
+
 		export const routes = [
 			${routes}
 		];
