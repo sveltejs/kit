@@ -14,12 +14,8 @@ import { create_server_routing_response, generate_route_object } from './server_
 import { add_data_suffix, add_resolution_suffix } from '../../pathname.js';
 import { try_get_request_store, with_request_store } from '@sveltejs/kit/internal/server';
 import { text_encoder } from '../../utils.js';
-import {
-	count_non_ssi_comments,
-	create_replacer,
-	get_global_name,
-	handle_error_and_jsonify
-} from '../utils.js';
+import { count_non_ssi_comments, create_replacer, get_global_name } from '../utils.js';
+import { handle_error_and_jsonify } from '../errors.js';
 import * as env from '__sveltekit/env';
 import { collect_remote_data } from '../remote-functions.js';
 import Root from '../../components/root.svelte';
