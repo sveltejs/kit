@@ -339,7 +339,9 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 			});
 		}
 
-		log_response(response.status, request);
+		if (response.status !== 204) {
+			log_response(response.status, request);
+		}
 
 		const body = Buffer.from(await response.arrayBuffer());
 
