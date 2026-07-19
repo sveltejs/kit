@@ -19,6 +19,7 @@ import {
 	get_router_options,
 	is_external_url,
 	origin,
+	scroll_to,
 	scroll_state,
 	load_css
 } from './utils.js';
@@ -421,7 +422,7 @@ export async function start(_app, _target, hydrate) {
 	function restore_scroll() {
 		if (scroll) {
 			history.scrollRestoration = 'manual';
-			scrollTo(scroll.x, scroll.y);
+			scroll_to(scroll.x, scroll.y);
 		}
 	}
 
@@ -2011,14 +2012,14 @@ async function navigate({
 	if (autoscroll) {
 		const scroll = popped ? popped.scroll : noscroll ? scroll_state() : null;
 		if (scroll) {
-			scrollTo(scroll.x, scroll.y);
+			scroll_to(scroll.x, scroll.y);
 		} else if ((deep_linked = get_hash_element(url))) {
 			// Here we use `scrollIntoView` on the element instead of `scrollTo`
 			// because it natively supports the `scroll-margin` and `scroll-behavior`
 			// CSS properties.
 			deep_linked.scrollIntoView();
 		} else {
-			scrollTo(0, 0);
+			scroll_to(0, 0);
 		}
 	}
 
@@ -2854,7 +2855,7 @@ function _start_router() {
 				// /#top and click on a link that goes to /#top. In those cases just go to
 				// the top of the page, and avoid a history change.
 				if (hash === '' || (hash === 'top' && a.ownerDocument.getElementById('top') === null)) {
-					scrollTo({ top: 0 });
+					scroll_to({ top: 0 });
 				} else {
 					const element = a.ownerDocument.getElementById(decodeURIComponent(hash));
 					if (element) {
@@ -2979,7 +2980,7 @@ function _start_router() {
 				update_url(url);
 
 				scroll_positions[current_history_index] = scroll_state();
-				if (scroll) scrollTo(scroll.x, scroll.y);
+				if (scroll) scroll_to(scroll.x, scroll.y);
 
 				current_history_index = history_index;
 				return;
@@ -3341,7 +3342,7 @@ function reset_focus(url, scroll = true) {
 
 				// If scroll management has already happened earlier, we need to restore
 				// the scroll position after setting the sequential focus navigation starting point
-				if (scroll) scrollTo(x, y);
+				if (scroll) scroll_to(x, y);
 				resetting_focus = false;
 			});
 		} else {

@@ -102,6 +102,18 @@ In certain cases, you may wish to disable this behaviour. Adding a `data-sveltek
 
 ...will prevent scrolling after the link is clicked.
 
+## data-sveltekit-scroll-container
+
+SvelteKit applies its scroll management to the window by default. If your app keeps the document fixed and scrolls inside an app-owned container instead, mark the scrollable element that should own route scroll state with `data-sveltekit-scroll-container`:
+
+```svelte
+<main data-sveltekit-scroll-container>
+	<slot />
+</main>
+```
+
+SvelteKit will read and restore that element's `scrollLeft` and `scrollTop` when navigating between routes. Unlike the link options above, this attribute applies to the scrollable app shell element itself. Use a single scroll container for the app shell; if multiple elements have the attribute, the first one in the document whose value is not `"false"` is used.
+
 ## Disabling options
 
 To disable any of these options inside an element where they have been enabled, use the `"false"` value:

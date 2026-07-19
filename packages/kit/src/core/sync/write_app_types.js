@@ -68,6 +68,7 @@ declare module "svelte/elements" {
 		'data-sveltekit-preload-data'?: true | false | '' | 'hover' | 'tap' | undefined | null;
 		'data-sveltekit-reload'?: true | false | '' | undefined | null;
 		'data-sveltekit-replacestate'?: true | false | '' | undefined | null;
+		'data-sveltekit-scroll-container'?: true | false | '' | undefined | null;
 	}
 }
 `;
