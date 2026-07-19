@@ -8,6 +8,9 @@ const module = globalThis.process?.getBuiltinModule?.('node:module');
 
 const cwd = globalThis.process?.cwd?.();
 
+/** @type {(file: string) => string} */
+const relative = cwd ? (file) => path.relative(cwd, file) : (file) => file;
+
 /**
  * Applies sourcemaps, makes paths relative to the cwd, and truncates
  * non-user code from the bottom of the stack
@@ -41,17 +44,14 @@ export let fix_stack_trace = (error) => {
 			}
 
 			if (traced?.line) {
-				const relative = cwd ? path.relative(cwd, traced.file) : traced.file;
-
 				const location = `${match[1]}:${match[2]}:${match[3]}`;
-				const original = `${relative}:${traced.line}:${traced.column}`;
+				const original = `${relative(traced.file)}:${traced.line}:${traced.column}`;
 
 				return line.replace(location, original);
 			}
 
 			if (traced) {
-				const relative = cwd ? path.relative(cwd, file) : file;
-				return `${line.replace(match[1], relative)} [${traced.file}]`;
+				return `${line.replace(match[1], relative(file))} [${traced.file}]`;
 			}
 
 			return line;
