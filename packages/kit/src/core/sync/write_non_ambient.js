@@ -244,8 +244,8 @@ function generate_app_types(manifest_data, config) {
 		`\t\tRouteId(): ${manifest_data.routes.map((r) => s(r.id)).join(' | ')};`,
 		`\t\tRouteParams(): {\n\t\t\t${dynamic_routes.join(';\n\t\t\t')}\n\t\t};`,
 		`\t\tLayoutParams(): {\n\t\t\t${layouts.join(';\n\t\t\t')}\n\t\t};`,
-		`\t\tPathname(): ${Array.from(pathnames).join(' | ')};`,
-		'\t\tResolvedPathname(): `${"" | `/${string}`}${ReturnType<AppTypes[\'Pathname\']>}`;',
+		`\t\tPath(): ${Array.from(pathnames).join(' | ')};`,
+		'\t\tResolvedPathname(): `${"" | `/${string}`}${ReturnType<AppTypes[\'Path\']>}`;',
 		`\t\tAsset(): ${assets.concat('string & {}').join(' | ')};`,
 		'\t}',
 		'}'

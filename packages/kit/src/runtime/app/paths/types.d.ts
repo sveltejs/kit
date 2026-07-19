@@ -1,9 +1,9 @@
 import { RouteId, RouteParams } from '$app/types';
 
-export type StripSearchOrHash<T extends string> = T extends `${infer Pathname}?${string}`
-	? Pathname
-	: T extends `${infer Pathname}#${string}`
-		? Pathname
+export type StripSearchOrHash<T extends string> = T extends `${infer U}?${string}`
+	? U
+	: T extends `${infer U}#${string}`
+		? U
 		: T;
 
 export type ResolveArgs<T> = T extends `/${string}`

@@ -67,7 +67,7 @@ const matcherParentLayoutParams = {};
 
 matcherParentLayoutParams.locale = 'fr'; // any string
 
-/** @type {import('$app/types').Pathname} */
+/** @type {import('$app/types').Path} */
 let pathname;
 
 // @ts-expect-error route doesn't exist

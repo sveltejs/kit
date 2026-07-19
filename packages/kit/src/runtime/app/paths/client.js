@@ -1,4 +1,4 @@
-/** @import { Asset, RouteId, RouteIdWithSearchOrHash, Pathname, PathnameWithSearchOrHash, ResolvedPathname, RouteParams } from '$app/types' */
+/** @import { Asset, RouteId, RouteIdWithSearchOrHash, Path, PathnameWithSearchOrHash, ResolvedPathname, RouteParams } from '$app/types' */
 /** @import { ResolveArgs } from './types.js' */
 import { base, assets, hash_routing } from './internal/client.js';
 import { resolve_route } from '../../../utils/routing.js';
@@ -93,7 +93,7 @@ export function resolve(...args) {
  * ```
  * @since 2.52.0
  *
- * @param {Pathname | URL | (string & {})} url
+ * @param {Path | URL | (string & {})} url
  * @returns {Promise<{ [K in RouteId]: { id: K; params: RouteParams<K>; } }[RouteId] | null>}
  */
 export async function match(url) {
