@@ -60,6 +60,12 @@
 
 - feat: add `ErrorProps` to generated types ([#16272](https://github.com/sveltejs/kit/pull/16272))
 
+## 2.70.1
+
+### Patch Changes
+
+- docs: update links to hooks documentation ([#16417](https://github.com/sveltejs/kit/pull/16417))
+
 ## 2.70.0
 
 ### Minor Changes

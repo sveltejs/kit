@@ -421,6 +421,14 @@ function kit({ svelte_config }) {
 				// dev and preview config can be shared
 				/** @type {UserConfig} */
 				const new_config = {
+					environments: {
+						ssr: {
+							build: {
+								sourcemap:
+									config.environments?.ssr?.build?.sourcemap ?? config.build?.sourcemap ?? true
+							}
+						}
+					},
 					resolve: {
 						alias: [
 							{ find: '__SERVER__', replacement: `${out_dir}/generated/server` },
@@ -1922,15 +1930,6 @@ function kit({ svelte_config }) {
 		},
 
 		async buildApp(builder) {
-			const sourcemap = builder.config.build.sourcemap;
-			const ssr_sourcemap = builder.environments.ssr.config.build.sourcemap;
-			const temporary_sourcemap = !(ssr_sourcemap ?? sourcemap);
-
-			if (temporary_sourcemap) {
-				// Temporarily override so that we get better stack traces for prerendering errors
-				builder.environments.ssr.config.build.sourcemap = 'hidden';
-			}
-
 			// clears the output directories
 			if (!builder.config.build.watch) {
 				rimraf(out);
@@ -2241,16 +2240,8 @@ function kit({ svelte_config }) {
 					// Unforeseen error, rethrow as-is
 					throw e;
 				}
-			} finally {
-				if (temporary_sourcemap) {
-					// If we did override it, set it back to false and remove the sourcemaps
-					builder.environments.ssr.config.build.sourcemap = ssr_sourcemap;
-
-					for (const file of fs.globSync(`${out}/server/**/*.js.map`)) {
-						fs.rmSync(file);
-					}
-				}
 			}
+
 			prerendered = prerender_results.prerendered;
 
 			await treeshake_prerendered_remotes(
