@@ -61,7 +61,7 @@ export function load(event) {
 }
 ```
 
-> [!NOTE] If you don't handle 404 cases, they will appear in [`handleError`](hooks#Shared-hooks-handleError)
+> [!NOTE] If you don't handle 404 cases, they will appear in [`handleError`](hooks#handleError)
 
 ## Optional parameters
 
