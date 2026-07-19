@@ -240,7 +240,7 @@ function generate_app_types(manifest_data, config) {
 		layouts.push(`${s(route.id)}: ${layout_type}`);
 	}
 
-	const assets = manifest_data.assets.map((asset) => s('/' + asset.file));
+	const assets = manifest_data.assets.map((asset) => s(asset.file));
 
 	return [
 		'declare module "$app/types" {',

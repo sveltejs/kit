@@ -3,6 +3,7 @@
 import { base, assets, hash_routing } from './internal/client.js';
 import { resolve_route } from '../../../utils/routing.js';
 import { get_navigation_intent } from '../../client/client.js';
+import { DEV } from 'esm-env';
 
 /**
  * Resolve the URL of an asset in your `static` directory, by prefixing it with [`config.paths.assets`](https://svelte.dev/docs/kit/configuration#paths) if configured, or otherwise by prefixing it with the base path.
@@ -23,7 +24,16 @@ import { get_navigation_intent } from '../../client/client.js';
  * @returns {string}
  */
 export function asset(file) {
-	return (assets || base) + file;
+	// TODO 4.0 remove this
+	if (file[0] === '/') {
+		if (DEV) {
+			console.warn(`\`asset('${file}')\` should now be \`asset('${file.slice(1)}')\``);
+		}
+
+		file = file.slice(1);
+	}
+
+	return (assets || base) + '/' + file;
 }
 
 const pathname_prefix = hash_routing ? '#' : '';

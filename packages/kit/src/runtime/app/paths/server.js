@@ -5,11 +5,21 @@ import { add_data_suffix } from '../../pathname.js';
 import { try_get_request_store } from '@sveltejs/kit/internal/server';
 import { manifest } from '__sveltekit/server';
 import { get_hooks } from '__SERVER__/internal.js';
+import { DEV } from 'esm-env';
 
 /** @type {import('./client.js').asset} */
 export function asset(file) {
+	// TODO 4.0 remove this
+	if (file[0] === '/') {
+		if (DEV) {
+			console.warn(`\`asset('${file}')\` should now be \`asset('${file.slice(1)}')\``);
+		}
+
+		file = file.slice(1);
+	}
+
 	// @ts-expect-error we use the `resolve` mechanism, but with the 'wrong' input
-	return assets && assets !== base ? assets + file : resolve(file);
+	return assets && assets !== base ? assets + '/' + file : resolve('/' + file);
 }
 
 /** @type {import('./client.js').resolve} */
