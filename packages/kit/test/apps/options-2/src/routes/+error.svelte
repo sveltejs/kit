@@ -5,5 +5,5 @@
 
 <h1 data-testid="error-status">{page.status}</h1>
 
-<p data-testid="base">base: {resolve('/')}</p>
-<p data-testid="assets">assets: {asset('/')}</p>
+<p data-testid="base">base: {resolve('')}</p>
+<p data-testid="assets">assets: {asset('')}</p>

@@ -245,7 +245,7 @@ function generate_app_types(manifest_data, config) {
 		`\t\tRouteParams(): {\n\t\t\t${dynamic_routes.join(';\n\t\t\t')}\n\t\t};`,
 		`\t\tLayoutParams(): {\n\t\t\t${layouts.join(';\n\t\t\t')}\n\t\t};`,
 		`\t\tPath(): ${Array.from(pathnames).join(' | ')};`,
-		'\t\tResolvedPathname(): `${"" | `/${string}`}${ReturnType<AppTypes[\'Path\']>}`;',
+		'\t\tResolvedPathname(): `${"/" | `/${string}/`}${ReturnType<AppTypes[\'Path\']>}`;',
 		`\t\tAssetPath(): ${assets.concat('string & {}').join(' | ')};`,
 		'\t}',
 		'}'
