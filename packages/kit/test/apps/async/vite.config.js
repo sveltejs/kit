@@ -21,7 +21,7 @@ export default defineConfig({
 			},
 			typescript: {
 				config(config) {
-					config.include.push('../unit-test/*.js', '../test/*.js', '../playwright.config.js')
+					config.include.push('../unit-test/*.js', '../test/*.js', '../playwright.config.js');
 				}
 			}
 		})
