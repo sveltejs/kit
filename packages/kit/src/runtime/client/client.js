@@ -1,3 +1,4 @@
+/** @import { RouteId } from '$app/types' */
 /** @import { RemoteFunctionDataNode, ServerNodesResponse, ServerRedirectNode } from 'types' */
 /** @import { NavigationIntent } from './types.js' */
 /** @import { RenderNode } from '../types.js' */
@@ -21,7 +22,7 @@ import {
 	scroll_state,
 	load_css
 } from './utils.js';
-import { base } from '$app/paths/internal/client';
+import { base, set_match_implementation } from '$app/paths/internal/client';
 import * as devalue from 'devalue';
 import {
 	HISTORY_INDEX,
@@ -364,6 +365,23 @@ export async function start(_app, _target, hydrate) {
 	}
 
 	app = _app;
+
+	set_match_implementation(async (url) => {
+		if (typeof url === 'string') {
+			url = new URL(url, location.href);
+		}
+
+		const intent = await get_navigation_intent(url, false);
+
+		if (intent) {
+			return {
+				id: /** @type {RouteId} */ (intent.route.id),
+				params: intent.params
+			};
+		}
+
+		return null;
+	});
 
 	await _app.hooks.init?.();
 
