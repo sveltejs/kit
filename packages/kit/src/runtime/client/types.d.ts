@@ -10,6 +10,7 @@ import {
 	Uses
 } from 'types';
 import { Page, ParamMatcher } from '@sveltejs/kit';
+import { RenderNode } from '../types.js';
 
 export interface SvelteKitApp {
 	/**
@@ -39,7 +40,7 @@ export interface SvelteKitApp {
 	dictionary: Record<string, [leaf: number, layouts: number[], errors?: number[]]>;
 
 	/**
-	 * A map of `[matcherName: string]: (..) => boolean`, which is used to match route parameters.
+	 * A map of `[matcherName: string]: ParamMatcher`, which is used to match and parse route parameters.
 	 *
 	 * In case of router.resolution=server, this object is empty, as resolution happens on the server.
 	 */
@@ -57,7 +58,11 @@ export interface SvelteKitApp {
 	 */
 	hash: boolean;
 
-	root: typeof SvelteComponent;
+	/**
+	 * Lazily loads the contents of src/error.html, used as a last-resort
+	 * error page when the root layout's load function throws during client-side rendering.
+	 */
+	get_error_template: () => Promise<(data: { status: number; message: string }) => string>;
 }
 
 export type NavigationIntent = {
@@ -77,6 +82,7 @@ export type NavigationResult = NavigationRedirect | NavigationFinished;
 
 export type NavigationRedirect = {
 	type: 'redirect';
+	status: number;
 	location: string;
 };
 
@@ -84,11 +90,10 @@ export type NavigationFinished = {
 	type: 'loaded';
 	state: NavigationState;
 	props: {
-		constructors: Array<typeof SvelteComponent>;
-		components?: SvelteComponent[];
 		page: Page;
 		form?: Record<string, any> | null;
-		[key: `data_${number}`]: Record<string, any>;
+		error?: App.Error;
+		tree: RenderNode;
 	};
 };
 
@@ -117,7 +122,8 @@ export interface NavigationState {
 }
 
 export interface HydrateOptions {
-	status: number;
+	/** Provided in the case of a form action that returns `fail`, but otherwise derived from `error` */
+	status?: number;
 	error: App.Error | null;
 	node_ids: number[];
 	params: Record<string, string>;

@@ -45,13 +45,13 @@ For the same reason, your `load` functions should be _pure_ — no side-effects 
 ```js
 /// file: +page.js
 // @filename: ambient.d.ts
-declare module '$lib/user' {
+declare module '#lib/user' {
 	export const user: { set: (value: any) => void };
 }
 
 // @filename: index.js
 // ---cut---
-import { user } from '$lib/user';
+import { user } from '#lib/user';
 
 /** @type {import('./$types').PageLoad} */
 export async function load({ fetch }) {
@@ -82,7 +82,7 @@ If you're not using SSR, then there's no risk of accidentally exposing one user'
 
 ## Using state and stores with context
 
-You might wonder how we're able to use `page.data` and other [app state]($app-state) (or [app stores]($app-stores)) if we can't use global state. The answer is that app state and app stores on the server use Svelte's [context API](/tutorial/svelte/context-api) — the state (or store) is attached to the component tree with `setContext`, and when you subscribe you retrieve it with `getContext`. We can do the same thing with our own state:
+You might wonder how we're able to use `page.data` and other [app state]($app-state) if we can't use global state. The answer is that app state and app stores on the server use Svelte's [context API](/tutorial/svelte/context-api) — the state (or store) is attached to the component tree with `setContext`, and when you subscribe you retrieve it with `getContext`. We can do the same thing with our own state:
 
 ```svelte
 <!--- file: src/routes/+layout.svelte --->

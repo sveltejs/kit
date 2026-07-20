@@ -4,17 +4,6 @@ import path from 'node:path';
 import fs from 'node:fs';
 import process from 'node:process';
 
-/**
- * @template T
- * @template {keyof T} K
- * @typedef {Partial<Omit<T, K>> & Required<Pick<T, K>>} PartialExcept
- */
-
-/**
- * We use a custom `Builder` type here to support the minimum version of SvelteKit.
- * @typedef {PartialExcept<import('@sveltejs/kit').Builder, 'log' | 'rimraf' | 'mkdirp' | 'config' | 'prerendered' | 'routes' | 'createEntries' | 'generateFallback' | 'generateEnvModule' | 'generateManifest' | 'getBuildDirectory' | 'getClientDirectory' | 'getServerDirectory' | 'getAppPath' | 'writeClient' | 'writePrerendered' | 'writePrerendered' | 'writeServer' | 'copy' | 'compress'>} Builder2_0_0
- */
-
 /** @type {Record<string, (name: string, version: string) => string>} */
 const commands = {
 	npm: (name, version) => `npm install -D ${name}@${version}`,
@@ -149,11 +138,10 @@ async function get_adapter() {
 /** @type {() => Adapter} */
 export default () => ({
 	name: '@sveltejs/adapter-auto',
-	/** @param {Builder2_0_0} builder */
 	adapt: async (builder) => {
 		const adapter = await get_adapter();
 
-		if (adapter) return adapter.adapt(/** @type {import('@sveltejs/kit').Builder} */ (builder));
+		if (adapter) return adapter.adapt(builder);
 
 		builder.log.warn(
 			'Could not detect a supported production environment. See https://svelte.dev/docs/kit/adapters to learn how to configure your app to run on the platform of your choosing'

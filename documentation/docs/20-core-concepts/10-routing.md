@@ -107,7 +107,7 @@ You can find more information about these in [page options](page-options).
 
 ### +page.server.js
 
-If your `load` function can only run on the server — for example, if it needs to fetch data from a database or you need to access private [environment variables]($env-static-private) like API keys — then you can rename `+page.js` to `+page.server.js` and change the `PageLoad` type to `PageServerLoad`.
+If your `load` function can only run on the server — for example, if it needs to fetch data from a database or you need to access private [environment variables](environment-variables) like API keys — then you can rename `+page.js` to `+page.server.js` and change the `PageLoad` type to `PageServerLoad`.
 
 ```js
 /// file: src/routes/blog/[slug]/+page.server.js
@@ -157,16 +157,13 @@ If an error occurs during `load`, SvelteKit will render a default error page. Yo
 <h1>{page.status}: {page.error.message}</h1>
 ```
 
-> [!LEGACY]
-> `$app/state` was added in SvelteKit 2.12. If you're using an earlier version or are using Svelte 4, use `$app/stores` instead.
-
 SvelteKit will 'walk up the tree' looking for the closest error boundary — if the file above didn't exist it would try `src/routes/blog/+error.svelte` and then `src/routes/+error.svelte` before rendering the default error page. If _that_ fails (or if the error was thrown from the `load` function of the root `+layout`, which sits 'above' the root `+error`), SvelteKit will bail out and render a static fallback error page, which you can customise by creating a `src/error.html` file.
 
 If the error occurs inside a `load` function in `+layout(.server).js`, the closest error boundary in the tree is an `+error.svelte` file _above_ that layout (not next to it).
 
 If no route can be found (404), `src/routes/+error.svelte` (or the default error page, if that file does not exist) will be used.
 
-> [!NOTE] `+error.svelte` is _not_ used when an error occurs inside [`handle`](hooks#Server-hooks-handle) or a [+server.js](#server) request handler.
+> [!NOTE] `+error.svelte` is _not_ used when an error occurs inside [`handle`](hooks#handle) or a [+server.js](#server) request handler.
 
 You can read more about error handling [here](errors).
 
@@ -327,7 +324,7 @@ If an error is thrown (either `error(...)` or an unexpected error), the response
 
 > [!NOTE] When creating an `OPTIONS` handler, note that Vite will inject `Access-Control-Allow-Origin` and `Access-Control-Allow-Methods` headers — these will not be present in production unless you add them.
 
-> [!NOTE] `+layout` files have no effect on `+server.js` files. If you want to run some logic before each request, add it to the server [`handle`](hooks#Server-hooks-handle) hook.
+> [!NOTE] `+layout` files have no effect on `+server.js` files. If you want to run some logic before each request, add it to the server [`handle`](hooks#handle) hook.
 
 ### Receiving data
 
@@ -447,7 +444,7 @@ You can read more about omitting `$types` in our [blog post](/blog/zero-config-t
 
 Any other files inside a route directory are ignored by SvelteKit. This means you can colocate components and utility modules with the routes that need them.
 
-If components and modules are needed by multiple routes, it's a good idea to put them in [`$lib`]($lib).
+If components and modules are needed by multiple routes, it's a good idea to put them in [`#lib`]($lib).
 
 ## Further reading
 

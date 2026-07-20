@@ -1,7 +1,6 @@
 import { BROWSER } from 'esm-env';
 
 export const text_encoder = new TextEncoder();
-export const text_decoder = new TextDecoder();
 
 /**
  * Like node's path.relative, but without using node

@@ -14,33 +14,35 @@ This adapter will be installed by default when you use [`adapter-auto`](adapter-
 
 ## Usage
 
-Install with `npm i -D @sveltejs/adapter-cloudflare`, then add the adapter to your `svelte.config.js`:
+Install with `npm i -D @sveltejs/adapter-cloudflare`, then add the adapter to your `vite.config.js`:
 
 ```js
-/// file: svelte.config.js
+// @errors: 2307
+/// file: vite.config.js
 import adapter from '@sveltejs/adapter-cloudflare';
+import { sveltekit } from '@sveltejs/kit/vite';
+import { defineConfig } from 'vite';
 
-/** @type {import('@sveltejs/kit').Config} */
-const config = {
-	kit: {
-		adapter: adapter({
-			// See below for an explanation of these options
-			config: undefined,
-			platformProxy: {
-				configPath: undefined,
-				environment: undefined,
-				persist: undefined
-			},
-			fallback: 'plaintext',
-			routes: {
-				include: ['/*'],
-				exclude: ['<all>']
-			}
+export default defineConfig({
+	plugins: [
+		sveltekit({
+			adapter: adapter({
+				// See below for an explanation of these options
+				config: undefined,
+				platformProxy: {
+					configPath: undefined,
+					environment: undefined,
+					persist: undefined
+				},
+				fallback: 'plaintext',
+				routes: {
+					include: ['/*'],
+					exclude: ['<all>']
+				}
+			})
 		})
-	}
-};
-
-export default config;
+	]
+});
 ```
 
 ## Options
@@ -116,7 +118,7 @@ If you're using the [Git integration](https://developers.cloudflare.com/pages/ge
 - Build output directory – `.svelte-kit/cloudflare`
 
 
-Once configured, go to the **Runtime** section of your project settings, and add the `nodejs_als` compability flag to enable the [Node.js AsyncLocalStorage](https://developers.cloudflare.com/workers/configuration/compatibility-flags/#nodejs-asynclocalstorage). Alternatively, do this in your wrangler config using the `compatibility_flags` array.
+Once configured, go to the **Runtime** section of your project settings, and add the `nodejs_als` compatibility flag to enable the [Node.js AsyncLocalStorage](https://developers.cloudflare.com/workers/configuration/compatibility-flags/#nodejs-asynclocalstorage). Alternatively, do this in your wrangler config using the `compatibility_flags` array.
 
 ### Further reading
 
@@ -153,7 +155,7 @@ export async function POST({ request, platform }) {
 }
 ```
 
-> [!NOTE] SvelteKit's built-in [`$env` module]($env-static-private) should be preferred for environment variables.
+> [!NOTE] SvelteKit's built-in [`$app/env/*` modules](environment-variables) should be preferred for environment variables.
 
 To make these types available to your app, install [`@cloudflare/workers-types`](https://www.npmjs.com/package/@cloudflare/workers-types) and reference them in your `src/app.d.ts`:
 
@@ -185,7 +187,7 @@ For testing the build, you should use [Wrangler](https://developers.cloudflare.c
 
 The [`_headers`](https://developers.cloudflare.com/pages/configuration/headers/) and [`_redirects`](https://developers.cloudflare.com/pages/configuration/redirects/) files, specific to Cloudflare, can be used for static asset responses (like images) by putting them into the project root folder.
 
-However, they will have no effect on responses dynamically rendered by SvelteKit, which should return custom headers or redirect responses from [server endpoints](routing#server) or with the [`handle`](hooks#Server-hooks-handle) hook.
+However, they will have no effect on responses dynamically rendered by SvelteKit, which should return custom headers or redirect responses from [server endpoints](routing#server) or with the [`handle`](hooks#handle) hook.
 
 ## Troubleshooting
 
@@ -216,22 +218,20 @@ Alternatively, you can [prerender](page-options#prerender) the routes in questio
 
 Cloudflare no longer recommends using [Workers Sites](https://developers.cloudflare.com/workers/configuration/sites/configuration/) and instead recommends using [Workers Static Assets](https://developers.cloudflare.com/workers/static-assets/). To migrate, replace `@sveltejs/adapter-cloudflare-workers` with `@sveltejs/adapter-cloudflare` and remove all `site` configuration settings from your Wrangler configuration file, then add the `assets.directory` and `assets.binding` configuration settings:
 
-### svelte.config.js
-
 ```js
 // @errors: 2307
-/// file: svelte.config.js
----import adapter from '@sveltejs/adapter-cloudflare-workers';---
+/// file: vite.config.js
 +++import adapter from '@sveltejs/adapter-cloudflare';+++
+import { sveltekit } from '@sveltejs/kit/vite';
+import { defineConfig } from 'vite';
 
-/** @type {import('@sveltejs/kit').Config} */
-const config = {
-	kit: {
-		adapter: adapter()
-	}
-};
-
-export default config;
+export default defineConfig({
+	plugins: [
+		sveltekit({
+			+++adapter: adapter()+++
+		})
+	]
+});
 ```
 
 ### wrangler.toml

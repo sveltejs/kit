@@ -70,10 +70,7 @@ export default {
 		const filename = stripped_pathname.slice(base_path.length + 1);
 		if (filename) {
 			is_static_asset =
-				manifest.assets.has(filename) ||
-				manifest.assets.has(filename + '/index.html') ||
-				filename in manifest._.server_assets ||
-				filename + '/index.html' in manifest._.server_assets;
+				manifest.assets.has(filename) || manifest.assets.has(filename + '/index.html');
 		}
 
 		let location = pathname.at(-1) === '/' ? stripped_pathname : pathname + '/';
@@ -100,7 +97,6 @@ export default {
 				platform: {
 					env,
 					ctx,
-					context: ctx, // deprecated in favor of ctx
 					// @ts-expect-error webworker types from worktop are not compatible with Cloudflare Workers types
 					caches,
 					// @ts-expect-error the type is correct but ts is confused because platform.cf uses the type from index.ts while req.cf uses the type from index.d.ts

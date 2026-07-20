@@ -1,7 +1,6 @@
 import fs from 'node:fs';
 import process from 'node:process';
 import { join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
 
 import prettier from 'prettier';
 import { test, expect } from 'vitest';
@@ -12,19 +11,20 @@ import { rimraf, walk } from '../src/filesystem.js';
 import { _create_validator } from '../src/validate.js';
 import { resolve_aliases } from '../src/utils.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = join(__filename, '..');
+const original_cwd = process.cwd();
 
 /**
  * @param {string} path
  * @param {Partial<import('../src/types.js').Options>} [options]
  */
 async function test_make_package(path, options) {
-	const cwd = join(__dirname, 'fixtures', path);
+	const cwd = join(import.meta.dirname, 'fixtures', path);
 	const ewd = join(cwd, 'expected');
 	const output = join(cwd, 'dist');
 
-	const config = await load_config({ cwd });
+	process.chdir(cwd);
+	const config = await load_config();
+	process.chdir(original_cwd);
 
 	const input = resolve(cwd, config.kit?.files?.lib ?? 'src/lib');
 
@@ -85,14 +85,16 @@ async function format(file, content) {
 	});
 }
 
-for (const dir of fs.readdirSync(join(__dirname, 'errors'))) {
+for (const dir of fs.readdirSync(join(import.meta.dirname, 'errors'))) {
 	test(`package error [${dir}]`, async () => {
-		const cwd = join(__dirname, 'errors', dir);
+		const cwd = join(import.meta.dirname, 'errors', dir);
 		const output = join(cwd, 'dist');
 
-		const config = await load_config({ cwd });
+		process.chdir(cwd);
+		const config = await load_config();
+		process.chdir(original_cwd);
 
-		const input = resolve(cwd, config.kit?.files?.lib ?? 'src/lib');
+		const input = resolve(cwd, 'src/lib');
 
 		try {
 			await build({ cwd, input, output, types: true, config, preserve_output: false });
@@ -162,8 +164,9 @@ test('create package with SvelteComponentTyped for backwards compatibility', asy
 	await test_make_package('svelte-3-types');
 });
 
-test('SvelteKit interop', async () => {
-	await test_make_package('svelte-kit');
+test('Custom lib folder with #lib import', async () => {
+	const cwd = join(import.meta.dirname, 'fixtures', 'svelte-kit');
+	await test_make_package('svelte-kit', { input: resolve(cwd, 'src/kitlib') });
 });
 
 test('create package with declaration map', async () => {
@@ -177,9 +180,11 @@ test('create package with tsconfig specified', async () => {
 // chokidar doesn't fire events in github actions :shrug:
 if (!process.env.CI) {
 	test('watches for changes', async () => {
-		const cwd = join(__dirname, 'watch');
+		const cwd = join(import.meta.dirname, 'watch');
 
-		const config = await load_config({ cwd });
+		process.chdir(cwd);
+		const config = await load_config();
+		process.chdir(original_cwd);
 
 		const { watcher, ready, settled } = await watch({
 			cwd,
@@ -197,7 +202,7 @@ if (!process.env.CI) {
 
 		/** @param {string} file */
 		function read(file) {
-			return fs.readFileSync(join(__dirname, 'watch', file), 'utf-8');
+			return fs.readFileSync(join(import.meta.dirname, 'watch', file), 'utf-8');
 		}
 
 		/**
@@ -205,12 +210,12 @@ if (!process.env.CI) {
 		 * @param {string} data
 		 */
 		function write(file, data) {
-			return fs.writeFileSync(join(__dirname, 'watch', file), data);
+			return fs.writeFileSync(join(import.meta.dirname, 'watch', file), data);
 		}
 
 		/** @param {string} file */
 		function remove(file) {
-			const filepath = join(__dirname, 'watch', file);
+			const filepath = join(import.meta.dirname, 'watch', file);
 			if (fs.existsSync(filepath)) fs.unlinkSync(filepath);
 		}
 
@@ -345,8 +350,186 @@ test('validates package (all ok 2)', () => {
 	expect(warnings.length).toEqual(0);
 });
 
+test('warns about .server. files that do not import $app/server', () => {
+	const { analyse_code, validate } = _create_validator({
+		config: {},
+		cwd: '',
+		input: '',
+		output: '',
+		preserve_output: false,
+		types: true
+	});
+	analyse_code('utils.server.js', 'export const x = 1;');
+	const warnings = validate({
+		exports: { '.': { svelte: './dist/index.js' } },
+		peerDependencies: { svelte: '^3.55.0' }
+	});
+
+	has_warnings(warnings, [
+		'The following server-only files do not import `$app/server` or `$app/env/private`:\n- utils.server.js\n' +
+			'These files will not be blocked from being imported on the client.'
+	]);
+});
+
+test('warns about files in a server directory that do not import $app/server', () => {
+	const { analyse_code, validate } = _create_validator({
+		config: {},
+		cwd: '',
+		input: '',
+		output: '',
+		preserve_output: false,
+		types: true
+	});
+	analyse_code('server/db.js', 'export const db = null;');
+	const warnings = validate({
+		exports: { '.': { svelte: './dist/index.js' } },
+		peerDependencies: { svelte: '^3.55.0' }
+	});
+
+	has_warnings(warnings, [
+		'The following server-only files do not import `$app/server` or `$app/env/private`:\n- server/db.js\n' +
+			'These files will not be blocked from being imported on the client.'
+	]);
+});
+
+test('does not warn about server files that import $app/server', () => {
+	const { analyse_code, validate } = _create_validator({
+		config: {},
+		cwd: '',
+		input: '',
+		output: '',
+		preserve_output: false,
+		types: true
+	});
+	analyse_code('utils.server.js', `import '$app/server';`);
+	const warnings = validate({
+		exports: { '.': { svelte: './dist/index.js' } },
+		peerDependencies: { svelte: '^3.55.0', '@sveltejs/kit': '^2.0.0' }
+	});
+
+	expect(warnings.length).toEqual(0);
+});
+
+test('does not warn about server files that import $app/env/private', () => {
+	const { analyse_code, validate } = _create_validator({
+		config: {},
+		cwd: '',
+		input: '',
+		output: '',
+		preserve_output: false,
+		types: true
+	});
+	analyse_code('server/db.js', `import { env } from '$app/env/private';`);
+	const warnings = validate({
+		exports: { '.': { svelte: './dist/index.js' } },
+		peerDependencies: { svelte: '^3.55.0', '@sveltejs/kit': '^2.0.0' }
+	});
+
+	expect(warnings.length).toEqual(0);
+});
+
+test('does not warn about server files when there are none', () => {
+	const { validate } = _create_validator({
+		config: {},
+		cwd: '',
+		input: '',
+		output: '',
+		preserve_output: false,
+		types: true
+	});
+	const warnings = validate({
+		exports: { '.': { svelte: './dist/index.js' } },
+		peerDependencies: { svelte: '^3.55.0' }
+	});
+
+	expect(warnings.length).toEqual(0);
+});
+
+test('does not warn about server files that transitively import $app/env/private', () => {
+	const { analyse_code, validate } = _create_validator({
+		config: {},
+		cwd: '',
+		input: '',
+		output: '',
+		preserve_output: false,
+		types: true
+	});
+	analyse_code('server/api.js', `import { db } from './db.js';`);
+	analyse_code(
+		'server/db.js',
+		`import { DATABASE_URL } from '$app/env/private';\nimport { createClient } from 'database-library';\nexport const db = createClient(DATABASE_URL);`
+	);
+	const warnings = validate({
+		exports: { '.': { svelte: './dist/index.js' } },
+		peerDependencies: { svelte: '^3.55.0', '@sveltejs/kit': '^2.0.0' }
+	});
+
+	expect(warnings.length).toEqual(0);
+});
+
+test('does not warn about .server. files that transitively import $app/server', () => {
+	const { analyse_code, validate } = _create_validator({
+		config: {},
+		cwd: '',
+		input: '',
+		output: '',
+		preserve_output: false,
+		types: true
+	});
+	analyse_code('a.server.js', `export * from './b.js';`);
+	analyse_code('b.js', `import { c } from './c.js';`);
+	analyse_code('c.js', `import '$app/server';`);
+	const warnings = validate({
+		exports: { '.': { svelte: './dist/index.js' } },
+		peerDependencies: { svelte: '^3.55.0', '@sveltejs/kit': '^2.0.0' }
+	});
+
+	expect(warnings.length).toEqual(0);
+});
+
+test('warns about server files whose transitive imports do not reach a guard import', () => {
+	const { analyse_code, validate } = _create_validator({
+		config: {},
+		cwd: '',
+		input: '',
+		output: '',
+		preserve_output: false,
+		types: true
+	});
+	analyse_code('server/api.js', `import { db } from './db.js';`);
+	analyse_code('server/db.js', `import { createClient } from 'database-library';`);
+	const warnings = validate({
+		exports: { '.': { svelte: './dist/index.js' } },
+		peerDependencies: { svelte: '^3.55.0', '@sveltejs/kit': '^2.0.0' }
+	});
+
+	has_warnings(warnings, [
+		'The following server-only files do not import `$app/server` or `$app/env/private`:\n- server/api.js\n- server/db.js\n' +
+			'These files will not be blocked from being imported on the client.'
+	]);
+});
+
+test('does not warn about server files that import a .ts file which imports $app/server', () => {
+	const { analyse_code, validate } = _create_validator({
+		config: {},
+		cwd: '',
+		input: '',
+		output: '',
+		preserve_output: false,
+		types: true
+	});
+	analyse_code('server/api.js', `import { db } from './db.js';`);
+	analyse_code('server/db.ts', `import '$app/server';\nexport const db = 1;`);
+	const warnings = validate({
+		exports: { '.': { svelte: './dist/index.js' } },
+		peerDependencies: { svelte: '^3.55.0', '@sveltejs/kit': '^2.0.0' }
+	});
+
+	expect(warnings.length).toEqual(0);
+});
+
 test('create package with preserved output', async () => {
-	const output = join(__dirname, 'fixtures', 'preserve-output', 'dist');
+	const output = join(import.meta.dirname, 'fixtures', 'preserve-output', 'dist');
 	rimraf(output);
 	fs.mkdirSync(join(output, 'assets'), { recursive: true });
 	fs.writeFileSync(join(output, 'assets', 'theme.css'), ':root { color: red }');

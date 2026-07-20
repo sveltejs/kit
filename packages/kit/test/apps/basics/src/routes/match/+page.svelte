@@ -5,6 +5,7 @@
 
 	let { data } = $props();
 
+	/** @type {Array<{ path: string; result: { id: import('$app/types').RouteId; params: Record<string, import('@sveltejs/kit').ParamValue> } | null }>} */
 	const clientResults = $state([]);
 
 	onMount(async () => {

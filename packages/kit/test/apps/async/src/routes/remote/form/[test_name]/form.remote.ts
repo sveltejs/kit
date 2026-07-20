@@ -44,6 +44,8 @@ export const set_message = form(
 			instance.message = data.uppercase === 'true' ? data.message.toUpperCase() : data.message;
 		}
 
+		get_message(data.test_name).set(instance.message);
+
 		if (getRequestEvent().isRemoteRequest) {
 			const deferred = Promise.withResolvers<void>();
 			instance.deferreds.push(deferred);

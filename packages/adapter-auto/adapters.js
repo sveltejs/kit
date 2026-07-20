@@ -7,19 +7,19 @@ export const adapters = [
 		name: 'Vercel',
 		test: () => !!process.env.VERCEL,
 		module: '@sveltejs/adapter-vercel',
-		version: '6'
+		version: '7'
 	},
 	{
 		name: 'Cloudflare Pages',
 		test: () => !!process.env.CF_PAGES,
 		module: '@sveltejs/adapter-cloudflare',
-		version: '7'
+		version: '8'
 	},
 	{
 		name: 'Netlify',
 		test: () => !!process.env.NETLIFY,
 		module: '@sveltejs/adapter-netlify',
-		version: '6'
+		version: '7'
 	},
 	{
 		name: 'Azure Static Web Apps',
@@ -37,6 +37,6 @@ export const adapters = [
 		name: 'Google Cloud Run',
 		test: () => !!process.env.GCP_BUILDPACKS,
 		module: '@sveltejs/adapter-node',
-		version: '5'
+		version: '6'
 	}
 ];

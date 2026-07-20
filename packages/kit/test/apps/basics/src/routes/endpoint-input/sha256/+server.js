@@ -1,9 +1,13 @@
 import { createHash } from 'node:crypto';
 
-/** @type {import('@sveltejs/kit').RequestHandler} */
+/** @type {import('./$types').RequestHandler} */
 export async function PUT({ request }) {
 	const hash = createHash('sha256');
-	const reader = request.body.getReader();
+	const reader = request.body?.getReader();
+
+	if (!reader) {
+		return new Response('no body', { status: 400 });
+	}
 
 	for (;;) {
 		const { done, value } = await reader.read();

@@ -2,9 +2,10 @@
 	"compilerOptions": {
 		"checkJs": true,
 		"noEmit": true,
+		"strict": true,
 		"module": "ESNext",
 		"target": "ESNext",
 		"moduleResolution": "bundler"
 	},
-	"include": ["eslint.config.js", ".eslint/*.js"]
+	"include": ["eslint.config.js", ".eslint/*.js", "scripts", "vitest.config.js"]
 }

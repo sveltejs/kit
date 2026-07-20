@@ -1,8 +1,8 @@
 import { Redirect } from '@sveltejs/kit/internal';
 import { render_response } from './render.js';
 import { load_data, load_server_data } from './load_data.js';
-import { handle_error_and_jsonify, static_error_page, redirect_response } from '../utils.js';
-import { get_status } from '../../../utils/error.js';
+import { redirect_response } from '../utils.js';
+import { handle_error_and_jsonify, static_error_page } from '../errors.js';
 import { PageNodes } from '../../../utils/page_nodes.js';
 import { server_data_serializer } from './data_serializer.js';
 
@@ -34,12 +34,12 @@ export async function respond_with_error({
 }) {
 	// reroute to the fallback page to prevent an infinite chain of requests.
 	if (event.request.headers.get('x-sveltekit-error')) {
-		return static_error_page(options, status, /** @type {Error} */ (error).message);
+		const transformed = await handle_error_and_jsonify(event, event_state, options, error);
+		return static_error_page(options, status, transformed.message);
 	}
 
 	/** @type {import('./types.js').Fetched[]} */
 	const fetched = [];
-
 	try {
 		const branch = [];
 		const default_layout = await manifest._.nodes[0](); // 0 is always the root layout
@@ -47,6 +47,8 @@ export async function respond_with_error({
 		const ssr = nodes.ssr();
 		const csr = nodes.csr();
 		const data_serializer = server_data_serializer(event, event_state, options);
+		// Do this here first in case the awaits below before rendering themselves error
+		const transformed = await handle_error_and_jsonify(event, event_state, options, error);
 
 		if (ssr) {
 			state.error = true;
@@ -98,9 +100,10 @@ export async function respond_with_error({
 				ssr,
 				csr
 			},
-			status,
-			error: await handle_error_and_jsonify(event, event_state, options, error),
+			status: transformed.status,
+			error: transformed,
 			branch,
+			error_components: [],
 			fetched,
 			event,
 			event_state,
@@ -114,10 +117,8 @@ export async function respond_with_error({
 			return redirect_response(e.status, e.location);
 		}
 
-		return static_error_page(
-			options,
-			get_status(e),
-			(await handle_error_and_jsonify(event, event_state, options, e)).message
-		);
+		const transformed = await handle_error_and_jsonify(event, event_state, options, e);
+
+		return static_error_page(options, transformed.status, transformed.message);
 	}
 }

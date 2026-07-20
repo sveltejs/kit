@@ -6,6 +6,7 @@ import {
 } from './exports.js';
 
 export class PageNodes {
+	/** All layout nodes and the page node, if any */
 	data;
 
 	/**
@@ -68,7 +69,7 @@ export class PageNodes {
 	}
 
 	get_config() {
-		/** @type {any} */
+		/** @type {Record<string, any>} */
 		let current = {};
 
 		for (const node of this.data) {
@@ -76,13 +77,11 @@ export class PageNodes {
 
 			current = {
 				...current,
-				// TODO: should we override the server config value with the universal value similar to other page options?
-				...node?.universal?.config,
-				...node?.server?.config
+				...node?.server?.config,
+				...node?.universal?.config
 			};
 		}
 
-		// TODO 3.0 always return `current`? then we can get rid of `?? {}` in other places
 		return Object.keys(current).length ? current : undefined;
 	}
 

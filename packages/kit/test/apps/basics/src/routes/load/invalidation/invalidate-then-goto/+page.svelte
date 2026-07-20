@@ -10,14 +10,14 @@
 <button
 	type="button"
 	class="invalidate"
-	on:click={() => (window.promise = invalidate('invalidate-depends:goto'))}
+	onclick={() => (window.promise = invalidate('invalidate-depends:goto'))}
 >
 	invalidate
 </button>
 <button
 	type="button"
 	class="goto"
-	on:click={() => (window.promise = goto('/load/invalidation/invalidate-then-goto?x'))}
+	onclick={() => (window.promise = goto('/load/invalidation/invalidate-then-goto?x'))}
 >
 	goto
 </button>

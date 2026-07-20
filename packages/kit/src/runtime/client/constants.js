@@ -11,6 +11,5 @@ export const PRELOAD_PRIORITIES = /** @type {const} */ ({
 	hover: 2,
 	viewport: 3,
 	eager: 4,
-	off: -1,
 	false: -1
 });

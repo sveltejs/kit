@@ -12,13 +12,23 @@ const schema = /** @type {import("@standard-schema/spec").StandardSchemaV1<strin
 	}
 });
 
-export const validated_query_no_args = query((arg) => (arg === undefined ? 'success' : 'failure'));
+export const validated_query_no_args = query(
+	/** @param {string} [arg] */
+	(arg) => (arg === undefined ? 'success' : 'failure')
+);
 export const validated_query_with_arg = query(schema, (...arg) =>
 	typeof arg[0] === 'string' && arg.length === 1 ? 'success' : 'failure'
 );
+export const validated_live_query_no_args = query.live(function* (arg) {
+	yield arg === undefined ? 'success' : 'failure';
+});
+export const validated_live_query_with_arg = query.live(schema, function* (arg) {
+	yield typeof arg === 'string' ? 'success' : 'failure';
+});
 
-export const validated_prerendered_query_no_args = prerender((arg) =>
-	arg === undefined ? 'success' : 'failure'
+export const validated_prerendered_query_no_args = prerender(
+	/** @param {string} [arg] */
+	(arg) => (arg === undefined ? 'success' : 'failure')
 );
 export const validated_prerendered_query_with_arg = prerender(
 	schema,
@@ -29,8 +39,9 @@ export const validated_prerendered_query_with_arg = prerender(
 	}
 );
 
-export const validated_command_no_args = command((arg) =>
-	arg === undefined ? 'success' : 'failure'
+export const validated_command_no_args = command(
+	/** @param {string} [arg] */
+	(arg) => (arg === undefined ? 'success' : 'failure')
 );
 export const validated_command_with_arg = command(schema, (...arg) =>
 	typeof arg[0] === 'string' && arg.length === 1 ? 'success' : 'failure'

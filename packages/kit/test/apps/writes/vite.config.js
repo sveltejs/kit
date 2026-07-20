@@ -7,7 +7,13 @@ const config = {
 		minify: false
 	},
 	clearScreen: false,
-	plugins: [sveltekit()],
+	plugins: [
+		sveltekit({
+			prerender: {
+				handleHttpError: 'warn'
+			}
+		})
+	],
 	server: {
 		fs: {
 			allow: [path.resolve('../../../src')]

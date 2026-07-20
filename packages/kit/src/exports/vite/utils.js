@@ -1,33 +1,28 @@
 import path from 'node:path';
-import { loadEnv } from 'vite';
-import { posixify } from '../../utils/filesystem.js';
+import { posixify } from '../../utils/os.js';
 import { negotiate } from '../../utils/http.js';
-import { filter_env } from '../../utils/env.js';
 import { escape_html } from '../../utils/escape.js';
+import { stackless } from '../../utils/error.js';
 import { dedent } from '../../core/sync/utils.js';
 import {
 	app_server,
-	env_dynamic_private,
-	env_dynamic_public,
-	env_static_private,
-	env_static_public,
-	service_worker
+	app_env_private,
+	service_worker,
+	sveltekit_env_private
 } from './module_ids.js';
+import { styleText } from 'node:util';
 
 /**
- * Transforms kit.alias to a valid vite.resolve.alias array.
+ * Transforms alias to a valid vite.resolve.alias array.
  *
  * Related to tsconfig path alias creation.
  *
  * @param {import('types').ValidatedKitConfig} config
- * */
-export function get_config_aliases(config) {
+ * @param {string} root
+ */
+export function get_config_aliases(config, root) {
 	/** @type {import('vite').Alias[]} */
-	const alias = [
-		// For now, we handle `$lib` specially here rather than make it a default value for
-		// `config.kit.alias` since it has special meaning for packaging, etc.
-		{ find: '$lib', replacement: config.files.lib }
-	];
+	const alias = [];
 
 	for (let [key, value] of Object.entries(config.alias)) {
 		value = posixify(value);
@@ -38,16 +33,16 @@ export function get_config_aliases(config) {
 			// Doing just `{ find: key.slice(0, -2) ,..}` would mean `import .. from "key"` would also be matched, which we don't want
 			alias.push({
 				find: new RegExp(`^${escape_for_regexp(key.slice(0, -2))}\\/(.+)$`),
-				replacement: `${path.resolve(value)}/$1`
+				replacement: `${posixify(path.resolve(root, value))}/$1`
 			});
 		} else if (key + '/*' in config.alias) {
 			// key and key/* both exist -> the replacement for key needs to happen _only_ on import .. from "key"
 			alias.push({
 				find: new RegExp(`^${escape_for_regexp(key)}$`),
-				replacement: path.resolve(value)
+				replacement: posixify(path.resolve(root, value))
 			});
 		} else {
-			alias.push({ find: key, replacement: path.resolve(value) });
+			alias.push({ find: key, replacement: posixify(path.resolve(root, value)) });
 		}
 	}
 
@@ -62,18 +57,21 @@ function escape_for_regexp(str) {
 }
 
 /**
- * Load environment variables from process.env and .env files
- * @param {import('types').ValidatedKitConfig['env']} env_config
- * @param {string} mode
+ * Silently respond with 404 for Chrome DevTools workspaces request.
+ * Chrome always requests this at the root, regardless of base path.
+ * Users who want workspaces can install `vite-plugin-devtools-json`,
+ * which takes precedence as Vite plugin middleware runs first.
+ * @param {string} pathname
+ * @param {import('http').ServerResponse} res
+ * @returns {boolean} `true` if the request was handled
  */
-export function get_env(env_config, mode) {
-	const { publicPrefix: public_prefix, privatePrefix: private_prefix } = env_config;
-	const env = loadEnv(mode, env_config.dir, '');
-
-	return {
-		public: filter_env(env, public_prefix, private_prefix),
-		private: filter_env(env, private_prefix, public_prefix)
-	};
+export function is_chrome_devtools_request(pathname, res) {
+	if (pathname === '/.well-known/appspecific/com.chrome.devtools.json') {
+		res.writeHead(404);
+		res.end('not found');
+		return true;
+	}
+	return false;
 }
 
 /**
@@ -117,16 +115,20 @@ export function not_found(req, res, base) {
 const query_pattern = /\?.*$/s;
 
 /**
- * Removes cwd/lib path from the start of the id
+ * Removes cwd path from the start of the id and replaces any `#`-prefixed
+ * import alias target paths with their alias names.
  * @param {string} id
- * @param {string} lib
+ * @param {Array<{ alias: string, path: string }>} aliases — sorted by path length descending
  * @param {string} cwd
  */
-export function normalize_id(id, lib, cwd) {
+export function normalize_id(id, aliases, cwd) {
 	id = id.replace(query_pattern, '');
 
-	if (id.startsWith(lib)) {
-		id = id.replace(lib, '$lib');
+	for (const { alias, path } of aliases) {
+		if (id === path || id.startsWith(path + '/')) {
+			id = id.replace(path, alias);
+			break;
+		}
 	}
 
 	if (id.startsWith(cwd)) {
@@ -137,20 +139,8 @@ export function normalize_id(id, lib, cwd) {
 		return '$app/server';
 	}
 
-	if (id === env_static_private) {
-		return '$env/static/private';
-	}
-
-	if (id === env_static_public) {
-		return '$env/static/public';
-	}
-
-	if (id === env_dynamic_private) {
-		return '$env/dynamic/private';
-	}
-
-	if (id === env_dynamic_public) {
-		return '$env/dynamic/public';
+	if (id === app_env_private || id === sveltekit_env_private) {
+		return '$app/env/private';
 	}
 
 	if (id === service_worker) {
@@ -160,34 +150,22 @@ export function normalize_id(id, lib, cwd) {
 	return posixify(id);
 }
 
-/**
- * For times when you need to throw an error, but without
- * displaying a useless stack trace (since the developer
- * can't do anything useful with it)
- * @param {string} message
- */
-export function stackless(message) {
-	const error = new Error(message);
-	error.stack = '';
-	return error;
-}
+export const remote_module_pattern = /[/.]remote(\.[^/]+)+$/;
+export const server_only_module_pattern = /[/.]server(\.[^/]+)+$/;
+export const server_only_directory_pattern = /\/server\//;
 
 export const strip_virtual_prefix = /** @param {string} id */ (id) => id.replace('\0virtual:', '');
 
 /**
- * For `error_for_missing_config('instrumentation.server.js', 'kit.experimental.instrumentation.server', true)`,
+ * For `error_for_missing_config('remote functions', 'experimental.remoteFunctions', 'true')`,
  * returns:
  *
  * ```
- * To enable `instrumentation.server.js`, add the following to your `svelte.config.js`:
+ * To enable remote functions, add the following to the SvelteKit plugin in your `vite.config.js`:
  *
  *\`\`\`js
- *	kit:
- *		experimental:
- *			instrumentation:
- *				server: true
- *			}
- *		}
+ *	experimental: {
+ *		remoteFunctions: true
  *	}
  *\`\`\`
  *```
@@ -208,9 +186,24 @@ export function error_for_missing_config(feature_name, path, value) {
 
 	throw stackless(
 		dedent`\
-			To enable ${feature_name}, add the following to your \`svelte.config.js\`:
+			To enable ${feature_name}, add the following to your SvelteKit plugin in \`vite.config.js\`:
 
 			${result}
 		`
 	);
+}
+
+/**
+ * @param {number} status
+ * @param {Request} request
+ */
+export function log_response(status, request) {
+	const url = new URL(request.url);
+	const log = `[${status}] ${request.method} ${url.href.replace(url.origin, '')}`;
+
+	if (status < 400) {
+		console.log(log);
+	} else {
+		console.error(styleText(['bold', 'red'], log));
+	}
 }

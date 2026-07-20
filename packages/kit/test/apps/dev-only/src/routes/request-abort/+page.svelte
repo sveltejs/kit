@@ -1,16 +1,22 @@
-<script>
+<script lang="ts">
 	import { onMount } from 'svelte';
 
-	let result;
+	let result: { ok: true } | { aborted: boolean };
 
 	function test_abort() {
 		const controller = new AbortController();
 		fetch('/request-abort', { method: 'POST', signal: controller.signal }).then((r) => r.json());
-		setTimeout(() => {
+		setTimeout(async () => {
 			controller.abort();
-			fetch('/request-abort', { headers: { accept: 'application/json' } }).then(
-				async (r) => (result = await r.json())
-			);
+
+			// the server doesn't necessarily observe the abort immediately, so poll the
+			// status endpoint until it reports that the request was aborted
+			for (let i = 0; i < 50; i += 1) {
+				const r = await fetch('/request-abort', { headers: { accept: 'application/json' } });
+				result = await r.json();
+				if (result && 'aborted' in result && result.aborted) return;
+				await new Promise((r) => setTimeout(r, 50));
+			}
 		}, 50);
 	}
 

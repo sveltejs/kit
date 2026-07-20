@@ -1,2 +1,6 @@
-export { BROWSER as browser, DEV as dev } from 'esm-env';
-export { building, version } from '__sveltekit/environment';
+import { DEV } from 'esm-env';
+export * from '../env/index.js';
+
+if (DEV) {
+	console.warn('`$app/environment` is deprecated, use `$app/env` instead');
+}

@@ -29,10 +29,14 @@
 		"svelte": "catalog:",
 		"svelte-check": "catalog:",
 		"test-redirect-importer": "workspace:*",
-		"typescript": "^5.5.4",
+		"typescript": "catalog:",
 		"valibot": "catalog:",
 		"vite": "catalog:",
 		"vitest": "catalog:"
+	},
+	"imports": {
+		"#lib": "./src/lib/index.js",
+		"#lib/*": "./src/lib/*"
 	},
 	"type": "module"
 }

@@ -1,4 +1,6 @@
-import { base, build, version } from '$service-worker';
+import { base, build } from '$service-worker';
+import { version } from '$app/env';
+import { MESSAGE } from '$app/env/public';
 import src from './image.jpg?url';
 
 //@ts-ignore
@@ -13,6 +15,7 @@ const name = `cache-${version}`;
 self.addEventListener('install', (event) => {
 	// @ts-expect-error
 	event.waitUntil(caches.open(name).then((cache) => cache.addAll(build)));
+	console.log(MESSAGE);
 });
 
 self.addEventListener('activate', (event) => {
