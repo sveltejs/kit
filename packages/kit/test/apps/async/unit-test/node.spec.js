@@ -1,13 +1,15 @@
-import { execSync } from 'node:child_process';
+import { execSync, spawnSync } from 'node:child_process';
 import path from 'node:path';
 import fs from 'node:fs';
 import { expect, test } from 'vitest';
 
 const timeout = 60_000;
 
+const cwd = path.resolve(import.meta.dirname, '..');
+
 test('SvelteKit runtime JS files stay stable between rebuilds', { timeout }, () => {
 	execSync('pnpm build', {
-		cwd: path.join(import.meta.dirname, '../'),
+		cwd,
 		stdio: 'pipe',
 		timeout
 	});
@@ -15,7 +17,7 @@ test('SvelteKit runtime JS files stay stable between rebuilds', { timeout }, () 
 	const before = get_client_chunk_name();
 
 	execSync('pnpm build', {
-		cwd: path.join(import.meta.dirname, '../'),
+		cwd,
 		stdio: 'pipe',
 		timeout
 	});
@@ -45,4 +47,15 @@ test('SvelteKit runtime JS files stay stable between rebuilds', { timeout }, () 
 		}
 		return chunk_file;
 	}
+});
+
+test("Sourcemaps aren't broken", { timeout }, () => {
+	const result = spawnSync('pnpm', ['build'], {
+		cwd,
+		encoding: 'utf-8',
+		timeout
+	});
+
+	expect(result.error).toBeUndefined();
+	expect(result.stderr).not.toContain('[SOURCEMAP_BROKEN] Sourcemap is likely to be incorrect');
 });
