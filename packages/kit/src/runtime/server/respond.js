@@ -11,7 +11,12 @@ import { respond_with_error } from './page/respond_with_error.js';
 import { get_self_origin, is_csrf_forbidden, is_remote_forbidden } from './csrf.js';
 import { has_prerendered_path, method_not_allowed, redirect_response } from './utils.js';
 import { handle_fatal_error } from './errors.js';
-import { decode_pathname, disable_search, normalize_path } from '../../utils/url.js';
+import {
+	decode_pathname,
+	disable_search,
+	normalize_path,
+	relative_pathname
+} from '../../utils/url.js';
 import { find_route } from '../../utils/routing.js';
 import { redirect_json_response, render_data } from './data/index.js';
 import { add_cookies_to_headers, get_cookies } from './cookie.js';
@@ -378,10 +383,9 @@ export async function internal_respond(request, options, manifest, state) {
 						status: 308,
 						headers: {
 							'x-sveltekit-normalize': '1',
+							// relative so (possibly invisible) path prefixes are preserved
 							location:
-								// ensure paths starting with '//' are not treated as protocol-relative
-								(normalized.startsWith('//') ? url.origin + normalized : normalized) +
-								(url.search === '?' ? '' : url.search)
+								relative_pathname(url.pathname, normalized) + (url.search === '?' ? '' : url.search)
 						}
 					});
 				}
