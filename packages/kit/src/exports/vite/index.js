@@ -1638,8 +1638,8 @@ function kit({ svelte_config }) {
 				await builder.build(builder.environments.ssr)
 			);
 
-			// Replace manifest placeholders in SSR output. `files` and `routes`
-			// are known from `manifest_data`. `build` and `prerendered` are not
+			// Replace manifest placeholders in SSR output. `assets` and `routes`
+			// are known from `manifest_data`. `immutable` and `prerendered` are not
 			// known yet — they get sentinel strings that are replaced after
 			// the client build and after prerendering respectively.
 			replace_manifest_placeholders(server_chunks, `${out}/server`, {
@@ -2187,7 +2187,7 @@ const create_service_worker_module = (config) => dedent`
 
 /**
  * Creates the `$app/manifest` data module. During development, real values
- * are emitted for `files` and `routes` (the only data known at that point).
+ * are emitted for `assets` and `routes` (the only data known at that point).
  *
  * During build, bare identifier placeholders (fake globals) are emitted.
  * The bundler leaves these as unresolved global references in the output,
