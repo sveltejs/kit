@@ -22,6 +22,7 @@ const remove_group_segments = (/** @type {string} */ id) => {
  * @returns {string[]}
  */
 function get_pathnames_for_trailing_slash(pathname, route) {
+	// the root pathname never gains a trailing slash (mirrors normalize_path)
 	if (pathname === '') return [''];
 
 	/** @type {Set<string>} */
