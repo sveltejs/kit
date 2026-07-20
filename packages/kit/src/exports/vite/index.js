@@ -958,7 +958,7 @@ function kit({ svelte_config }) {
 
 					return {
 						code: ms.toString(),
-						map: ms.generateMap()
+						map: ms.generateMap({ hires: 'boundary' })
 					};
 				}
 
