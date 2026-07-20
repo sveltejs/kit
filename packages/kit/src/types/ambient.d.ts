@@ -129,7 +129,7 @@ declare module '$app/types' {
 		: Record<string, never>;
 
 	/**
-	 * A union of all valid pathnames in your app, relative to the `base` path.
+	 * A union of all valid paths in your app, relative to the `base` path.
 	 */
 	export type Path = ReturnType<AppTypes['Path']>;
 
