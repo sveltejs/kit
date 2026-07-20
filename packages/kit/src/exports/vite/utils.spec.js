@@ -7,6 +7,7 @@ import {
 	error_for_missing_config,
 	get_config_aliases,
 	remote_module_pattern,
+	server_only_directory_pattern,
 	server_only_module_pattern
 } from './utils.js';
 
@@ -49,6 +50,8 @@ test('recognizes server-only module filenames', () => {
 	expect(server_only_module_pattern.test('dir/module.server.test.js')).toBe(true);
 	expect(server_only_module_pattern.test('dir/server.test.ts')).toBe(true);
 	expect(server_only_module_pattern.test('dir/module.serverish.js')).toBe(false);
+	expect(server_only_module_pattern.test('dir/server/module.js')).toBe(false);
+	expect(server_only_directory_pattern.test('dir/server/module.js')).toBe(true);
 });
 
 test('recognizes remote module filenames', () => {
@@ -56,6 +59,7 @@ test('recognizes remote module filenames', () => {
 	expect(remote_module_pattern.test('dir/module.remote.ts')).toBe(true);
 	expect(remote_module_pattern.test('dir/module.remote.test.js')).toBe(true);
 	expect(remote_module_pattern.test('dir/module.remotely.js')).toBe(false);
+	expect(remote_module_pattern.test('dir/remote/module.js')).toBe(false);
 });
 
 test('error_for_missing_config - simple single level config', () => {
