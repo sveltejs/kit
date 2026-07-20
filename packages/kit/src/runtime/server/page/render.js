@@ -345,9 +345,11 @@ export async function render_response({
 	for (const dep of fonts) {
 		const path = prefixed(dep);
 
-		if (resolve_opts.preload({ type: 'font', path })) {
-			const ext = dep.slice(dep.lastIndexOf('.') + 1);
+		// assets are emitted as `[name].[hash][extname]`
+		const name = dep.slice(dep.lastIndexOf('/') + 1).replace(/\.[^.]+(?=\.[^.]+$)/, '');
+		const ext = name.slice(name.lastIndexOf('.') + 1);
 
+		if (resolve_opts.preload({ type: 'font', path, name })) {
 			add_preload(path, ['rel="preload"', 'as="font"', `type="font/${ext}"`, 'crossorigin']);
 		}
 	}
