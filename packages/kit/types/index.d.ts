@@ -1703,9 +1703,10 @@ declare module '@sveltejs/kit' {
 		 * [`Link` response header](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Link) instead.
 		 * By default, `js` and `css` files will be preloaded.
 		 *
-		 * `font` and `asset` files also receive `name`, the source file name before hashing, so that a
-		 * filter can match on it instead of the hashed path. `js` and `css` files are bundled and have no
-		 * single source file name.
+		 * For `font` and `asset` files, `input` also has a `name` property, the file name before hashing,
+		 * so that a filter can match on it instead of the hashed path. Some characters are replaced in
+		 * emitted file names, so a font saved as `inter+bold.woff2` has a `name` of `inter_bold.woff2`.
+		 * `js` and `css` files are bundled and have no single source file name.
 		 * @param input the type of the file and its path
 		 */
 		preload?: (
