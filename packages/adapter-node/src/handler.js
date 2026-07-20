@@ -94,8 +94,7 @@ function serve_prerendered() {
 		// remove or add trailing slash as appropriate
 		const inverted = pathname.at(-1) === '/' ? pathname.slice(0, -1) : pathname + '/';
 		if (prerendered.has(inverted)) {
-			let location = relative_pathname(pathname, inverted);
-			if (query) location += search;
+			const location = relative_pathname(pathname, inverted) + (query ? search : '');
 			res.writeHead(308, { location }).end();
 		} else {
 			void next();
