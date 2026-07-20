@@ -39,9 +39,10 @@ const vite_css_query_regex = /(?:\?|&)(?:raw|url|inline)(?:&|$)/;
  * @param {import('types').ValidatedConfig} svelte_config
  * @param {() => Array<{ hash: string, file: string }>} get_remotes
  * @param {string} root The project root directory
+ * @param {(manifest_data: import('types').ManifestData) => void} set_manifest_data
  * @return {Promise<Promise<() => void>>}
  */
-export async function dev(vite, vite_config, svelte_config, get_remotes, root) {
+export async function dev(vite, vite_config, svelte_config, get_remotes, root, set_manifest_data) {
 	/** @type {AsyncLocalStorage<{ event: RequestEvent, config: any, prerender: PrerenderOption }>} */
 	const async_local_storage = new AsyncLocalStorage();
 
@@ -125,6 +126,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root) {
 	async function update_manifest() {
 		try {
 			({ manifest_data } = sync.create(svelte_config, root));
+			set_manifest_data(manifest_data);
 
 			await load_and_validate_params({
 				routes: manifest_data.routes,
@@ -386,6 +388,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root) {
 		vite.watcher.on(event, (file) => {
 			if (
 				file.startsWith(svelte_config.kit.files.routes + path.sep) ||
+				file.startsWith(svelte_config.kit.files.assets + path.sep) ||
 				(params_file && file === params_file) ||
 				remote_module_pattern.test(file) ||
 				// in contrast to server hooks, client hooks are written to the client manifest

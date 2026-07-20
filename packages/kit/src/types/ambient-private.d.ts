@@ -45,3 +45,11 @@ declare module '__sveltekit/env/public/client' {
 declare module '__sveltekit/env/public/server' {
 	// exported environment variables are defined in env.d.ts
 }
+
+/** Internal version of $app/manifest */
+declare module '__sveltekit/manifest-data' {
+	export const immutable: Array<{ path: string }>;
+	export const assets: Array<{ path: string }>;
+	export const prerendered: Array<{ path: string }>;
+	export const routes: Array<{ id: string }>;
+}
