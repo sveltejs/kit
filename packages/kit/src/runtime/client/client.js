@@ -2004,14 +2004,14 @@ async function navigate({
 	}
 
 	// we reset scroll before dealing with focus, to avoid a flash of unscrolled content
-	/** @type {Element | null | ''} */
+	/** @type {Element | null} */
 	let deep_linked = null;
 
 	if (autoscroll) {
 		const scroll = popped ? popped.scroll : noscroll ? scroll_state() : null;
 		if (scroll) {
 			scrollTo(scroll.x, scroll.y);
-		} else if ((deep_linked = url.hash && document.getElementById(get_id(url)))) {
+		} else if ((deep_linked = get_hash_element(url))) {
 			// Here we use `scrollIntoView` on the element instead of `scrollTo`
 			// because it natively supports the `scroll-margin` and `scroll-behavior`
 			// CSS properties.
@@ -3312,8 +3312,8 @@ function reset_focus(url, scroll = true) {
 
 		// Mimic the browsers' behaviour and set the sequential focus navigation
 		// starting point to the fragment identifier.
-		const id = get_id(url);
-		if (id && document.getElementById(id)) {
+		const element = get_hash_element(url);
+		if (element) {
 			const { x, y } = scroll_state();
 
 			// `element.focus()` doesn't work on Safari and Firefox Ubuntu so we need
@@ -3322,7 +3322,7 @@ function reset_focus(url, scroll = true) {
 				const history_state = history.state;
 
 				resetting_focus = true;
-				location.replace(new URL(`#${id}`, location.href));
+				location.replace(new URL(`#${element.id}`, location.href));
 
 				// Firefox has a bug that sets the history state to `null` so we need to
 				// restore it after. See https://bugzilla.mozilla.org/show_bug.cgi?id=1199924
@@ -3472,6 +3472,15 @@ function get_id(url) {
 	}
 
 	return decodeURIComponent(id);
+}
+
+/**
+ * @param {URL} url
+ * @returns {Element | null}
+ */
+function get_hash_element(url) {
+	const id = get_id(url);
+	return id ? document.getElementById(id) : null;
 }
 
 if (DEV) {
