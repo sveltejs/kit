@@ -291,7 +291,7 @@ export async function render_response({
 	};
 
 	/**
-	 * see the `output.preloadStrategy` option for details on why we have multiple options here
+	 * see the `output.linkHeaderPreload` option for details on why we have multiple options here
 	 * @param {string} path
 	 * @param {string[]} attributes
 	 */
