@@ -691,11 +691,17 @@ function kit({ svelte_config }) {
 							? create_sveltekit_env_service_worker(
 									explicit_env_config,
 									env,
+									kit.version.name,
 									kit_global,
 									kit.paths.base,
 									kit.appDir
 								)
-							: create_sveltekit_env_service_worker_dev(explicit_env_config, env, kit_global);
+							: create_sveltekit_env_service_worker_dev(
+									explicit_env_config,
+									env,
+									kit.version.name,
+									kit_global
+								);
 				}
 			}
 		}
@@ -1198,11 +1204,17 @@ function kit({ svelte_config }) {
 						? create_sveltekit_env_service_worker(
 								explicit_env_config,
 								env,
+								kit.version.name,
 								kit_global,
 								kit.paths.base,
 								kit.appDir
 							)
-						: create_sveltekit_env_service_worker_dev(explicit_env_config, env, kit_global);
+						: create_sveltekit_env_service_worker_dev(
+								explicit_env_config,
+								env,
+								kit.version.name,
+								kit_global
+							);
 				}
 
 				if (id === sveltekit_env_public_client) {
@@ -1233,17 +1245,19 @@ function kit({ svelte_config }) {
 		applyToEnvironment(environment) {
 			return !!service_worker_entry_file && environment.config.consumer === 'client';
 		},
-		transform(code, id) {
-			if (id !== service_worker_entry_file) return;
+		transform: {
+			handler(code, id) {
+				if (id !== service_worker_entry_file) return;
 
-			// prepend the service worker with an import that configures
-			// `env`, in case `$app/env/public` is imported. In production
-			// this is required: dynamic public env vars aren't known at
-			// build time, so `env.js` is loaded at runtime. In dev, the
-			// imported module just inlines the current values instead.
-			return {
-				code: `import '__sveltekit/env/service-worker';\n${code}`
-			};
+				// prepend the service worker with an import that configures
+				// `env`, in case `$app/env/public` is imported. In production
+				// this is required: dynamic public env vars aren't known at
+				// build time, so `env.js` is loaded at runtime. In dev, the
+				// imported module just inlines the current values instead.
+				return {
+					code: `import '__sveltekit/env/service-worker';\n${code}`
+				};
+			}
 		}
 	};
 

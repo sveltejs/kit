@@ -238,23 +238,31 @@ export function create_sveltekit_env_public(variables, env, prelude) {
  * `env.js`. If there are none, values are inlined.
  * @param {Record<string, EnvVarConfig<any>> | null} variables
  * @param {Record<string, string>} env
+ * @param {string} version
  * @param {string} global
  * @param {string} base
  * @param {string} app_dir
  */
-export function create_sveltekit_env_service_worker(variables, env, global, base, app_dir) {
+export function create_sveltekit_env_service_worker(
+	variables,
+	env,
+	version,
+	global,
+	base,
+	app_dir
+) {
 	const has_dynamic_public_env = Object.values(variables ?? {}).some(
 		(config) => config.public && !config.static
 	);
 
 	if (!has_dynamic_public_env) {
-		return create_sveltekit_env_service_worker_dev(variables, env, global);
+		return create_sveltekit_env_service_worker_dev(variables, env, version, global);
 	}
 
 	return dedent`
 		import { env } from '${base}/${app_dir}/env.js';
 
-		${global} = { env };
+		${global} = { env, version: ${JSON.stringify(version)} };
 	`;
 }
 
@@ -262,9 +270,10 @@ export function create_sveltekit_env_service_worker(variables, env, global, base
  * Creates the `__sveltekit/env/service-worker` module used in development
  * @param {Record<string, EnvVarConfig<any>> | null} variables
  * @param {Record<string, string>} env
+ * @param {string} version
  * @param {string} global
  */
-export function create_sveltekit_env_service_worker_dev(variables, env, global) {
+export function create_sveltekit_env_service_worker_dev(variables, env, version, global) {
 	/** @type {string[]} */
 	const properties = [];
 
@@ -284,7 +293,8 @@ export function create_sveltekit_env_service_worker_dev(variables, env, global) 
 		${global} = {
 			env: {
 				${properties.join(',\n\t\t') || '// empty'}
-			}
+			},
+			version: ${JSON.stringify(version)}
 		};
 	`;
 }
