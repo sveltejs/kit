@@ -28,6 +28,7 @@ export function is_root_relative(path) {
 }
 
 /**
+ * Relative reference from `from` to `to`, which must differ only by a trailing slash
  * @param {string} from
  * @param {string} to
  * @returns {string}

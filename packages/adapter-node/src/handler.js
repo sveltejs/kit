@@ -61,6 +61,7 @@ function serve(path, client = false) {
 }
 
 /**
+ * Relative reference from `from` to `to`, which must differ only by a trailing slash
  * @param {string} from
  * @param {string} to
  * @returns {string}
