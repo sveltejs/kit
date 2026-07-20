@@ -192,14 +192,14 @@ export class Query {
 	#first_then_invocation = false;
 
 	get then() {
-		// TODO this should be unnecessary but due to the bug described
-		// in #start, we need to do this in some circumstances
-		this.start();
 		if (this.#first_then_invocation) {
 			this.#resolve_started();
 		} else {
 			this.#first_then_invocation = true;
 		}
+		// TODO this should be unnecessary but due to the bug described
+		// in #start, we need to do this in some circumstances
+		this.start();
 		return this.#then;
 	}
 
