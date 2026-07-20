@@ -1,7 +1,6 @@
 import { existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
-import { SourceMap } from 'node:module';
-import { dirname, join, relative, resolve as resolve_path } from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { dirname, join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { mkdirp, walk } from '../../utils/filesystem.js';
 import { posixify } from '../../utils/os.js';
 import { noop } from '../../utils/functions.js';
@@ -17,7 +16,6 @@ import * as devalue from 'devalue';
 import { createReadableStream } from '@sveltejs/kit/node';
 import generate_fallback from './fallback.js';
 import { stringify_remote_arg } from '../../runtime/shared.js';
-import { SRC_ROOT } from '../../constants.js';
 import { log_response } from '../../exports/vite/utils.js';
 
 export default forked(import.meta.url, prerender);
@@ -50,7 +48,6 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 	// essential we do this before analysing the code
 	internal.set_building();
 	internal.set_prerendering();
-	internal.set_fix_stack_trace(adjust_stack_trace);
 
 	// `set_env` and `Server` live in modules that import the user's `src/env` config. We import them
 	// *after* `set_building()` so that `building`-dependent expressions resolve correctly
@@ -68,13 +65,12 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 	/**
 	 * @template {{message: string}} T
 	 * @template {Omit<T, 'message'>} K
-	 * @param {import('types').Logger} log
 	 * @param {string} name
 	 * @param {'fail' | 'warn' | 'ignore' | undefined | ((details: T) => void)} input
 	 * @param {(details: K) => string} format
 	 * @returns {(details: K & { error?: unknown }) => void}
 	 */
-	function normalise_error_handler(log, name, input, format) {
+	function normalise_error_handler(name, input, format) {
 		/**
 		 * @param {any} details
 		 */
@@ -117,114 +113,6 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 					}
 				};
 		}
-	}
-
-	/** @type {Map<string, { map: SourceMap; directory: string } | null>} */
-	const source_maps = new Map();
-	/** @type {Map<string, Array<string | undefined>>} */
-	const source_regions = new Map();
-
-	/** @param {string} file */
-	function get_source_map(file) {
-		if (source_maps.has(file)) return source_maps.get(file);
-
-		let source;
-		let directory = dirname(file);
-		try {
-			const code = readFileSync(file, 'utf8');
-			const matches = Array.from(code.matchAll(/\/\/[#@]\s*sourceMappingURL=(\S+)/g));
-			const url = matches.at(-1)?.[1];
-
-			if (url?.startsWith('data:')) {
-				const comma = url.indexOf(',');
-				const metadata = url.slice(5, comma);
-				const data = url.slice(comma + 1);
-				source = metadata.endsWith(';base64')
-					? Buffer.from(data, 'base64').toString()
-					: decodeURIComponent(data);
-			} else {
-				const map_file = url ? resolve_path(dirname(file), decodeURIComponent(url)) : `${file}.map`;
-				if (existsSync(map_file)) {
-					directory = dirname(map_file);
-					source = readFileSync(map_file, 'utf8');
-				}
-			}
-
-			const source_map = source ? { map: new SourceMap(JSON.parse(source)), directory } : null;
-			source_maps.set(file, source_map);
-			return source_map;
-		} catch {
-			source_maps.set(file, null);
-			return null;
-		}
-	}
-
-	/** @param {unknown} error */
-	function adjust_stack_trace(error) {
-		if (!(error instanceof Error) || !error.stack) return;
-
-		error.stack = error.stack
-			.split('\n')
-			.map((line) => {
-				const match = line.match(/(file:\/\/\/.*):(\d+):(\d+)(\)?)$/);
-				if (!match) return line;
-
-				const file = fileURLToPath(match[1]);
-				// Filter out internal stack trace lines
-				if (file.includes('/svelte/src/internal/server/') || file.startsWith(SRC_ROOT)) {
-					return null;
-				}
-				// Only annotate files from our own server directory
-				if (!file.startsWith(`${out}/server/`)) return line;
-
-				const source_map = get_source_map(file);
-				const entry = source_map?.map.findEntry(Number(match[2]) - 1, Number(match[3]) - 1);
-				if (
-					source_map &&
-					entry &&
-					'originalSource' in entry &&
-					entry.originalSource &&
-					typeof entry.originalLine === 'number' &&
-					typeof entry.originalColumn === 'number'
-				) {
-					const source = entry.originalSource.startsWith('file:')
-						? fileURLToPath(entry.originalSource)
-						: resolve_path(source_map.directory, entry.originalSource);
-
-					// Filter out internal stack trace lines (gotta do this again here on the original)
-					if (source.includes('/svelte/src/internal/server/') || source.startsWith(SRC_ROOT)) {
-						return null;
-					}
-
-					const location = `${match[1]}:${match[2]}:${match[3]}`;
-					const original = `${posixify(relative(vite_config.root, source))}:${entry.originalLine + 1}:${entry.originalColumn + 1}`;
-
-					return line.replace(location, original);
-				}
-
-				let regions = source_regions.get(file);
-				if (!regions) {
-					/** @type {string | undefined} */
-					let source;
-					regions = readFileSync(file, 'utf8')
-						.split('\n')
-						.map((line) => {
-							// Vite will merge multiple files into one but add region markers
-							// with the original file names, which we try to extract here.
-							const start = line.match(/^\/\/#region (.+)$/);
-							if (start) source = start[1];
-							if (line === '//#endregion') source = undefined;
-							return source;
-						});
-					source_regions.set(file, regions);
-				}
-
-				const source = regions[Number(match[2]) - 1];
-				// Output is something like "at file:///... [src/routes/+page.svelte]"
-				return source ? `${line} [${source}]` : line;
-			})
-			.filter(Boolean)
-			.join('\n');
 	}
 
 	const OK = 2;
@@ -285,7 +173,6 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 	const saved = new Map();
 
 	const handle_http_error = normalise_error_handler(
-		log,
 		'handleHttpError',
 		config.prerender.handleHttpError,
 		({ status, path, referrer, referenceType }) => {
@@ -306,7 +193,6 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 	);
 
 	const handle_missing_id = normalise_error_handler(
-		log,
 		'handleMissingId',
 		config.prerender.handleMissingId,
 		({ path, id, referrers }) => {
@@ -318,7 +204,6 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 	);
 
 	const handle_entry_generator_mismatch = normalise_error_handler(
-		log,
 		'handleEntryGeneratorMismatch',
 		config.prerender.handleEntryGeneratorMismatch,
 		({ generatedFromId, entry, matchedId }) => {
@@ -327,7 +212,6 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 	);
 
 	const handle_not_prerendered_route = normalise_error_handler(
-		log,
 		'handleUnseenRoutes',
 		config.prerender.handleUnseenRoutes,
 		({ routes }) => {
@@ -337,7 +221,6 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 	);
 
 	const handle_invalid_url = normalise_error_handler(
-		log,
 		'handleInvalidUrl',
 		config.prerender.handleInvalidUrl,
 		({ href, referrer }) => {
@@ -456,7 +339,9 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 			});
 		}
 
-		log_response(response.status, request);
+		if (response.status !== 204) {
+			log_response(response.status, request);
+		}
 
 		const body = Buffer.from(await response.arrayBuffer());
 
@@ -588,8 +473,6 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 				if (!headers['x-sveltekit-normalize']) {
 					mkdirp(dirname(dest));
 
-					log.warn(`${response.status} ${decoded} -> ${location}`);
-
 					writeFileSync(
 						dest,
 						`<script>location.href=${devalue.uneval(
@@ -636,7 +519,6 @@ async function prerender({ hash, out, manifest_path, metadata, verbose, env, vit
 
 			mkdirp(dir);
 
-			log.info(`${response.status} ${decoded}`);
 			writeFileSync(dest, body);
 			written.add(file);
 

@@ -35,6 +35,9 @@ import {
 	error_for_missing_config,
 	get_config_aliases,
 	normalize_id,
+	remote_module_pattern,
+	server_only_directory_pattern,
+	server_only_module_pattern,
 	strip_virtual_prefix
 } from './utils.js';
 import { stackless } from '../../utils/error.js';
@@ -402,6 +405,14 @@ function kit({ svelte_config }) {
 				// dev and preview config can be shared
 				/** @type {UserConfig} */
 				const new_config = {
+					environments: {
+						ssr: {
+							build: {
+								sourcemap:
+									config.environments?.ssr?.build?.sourcemap ?? config.build?.sourcemap ?? true
+							}
+						}
+					},
 					resolve: {
 						alias: [
 							{ find: '__SERVER__', replacement: `${generated}/server` },
@@ -462,11 +473,8 @@ function kit({ svelte_config }) {
 					}
 				};
 
+				// externalize .remote.js files to stop dependency tracing during prebundling
 				if (kit.experimental.remoteFunctions) {
-					// externalize .remote.js files to stop dependency tracing during prebundling
-					const remote_id_filter = new RegExp(
-						`.remote(${kit.moduleExtensions.join('|')})$`.replaceAll('.', '\\.')
-					);
 					// @ts-expect-error optimizeDeps is already set above
 					new_config.optimizeDeps.rolldownOptions ??= {};
 					// @ts-expect-error
@@ -476,7 +484,7 @@ function kit({ svelte_config }) {
 						/** @type {Rolldown.Plugin} */ ({
 							name: 'vite-plugin-sveltekit-setup:optimize-remote-functions',
 							resolveId: {
-								filter: { id: remote_id_filter },
+								filter: { id: remote_module_pattern },
 								async handler(id, importer) {
 									const resolved = await this.resolve(id, importer, { skipSelf: true });
 									if (!resolved) return { id, external: true };
@@ -689,11 +697,17 @@ function kit({ svelte_config }) {
 							? create_sveltekit_env_service_worker(
 									explicit_env_config,
 									env,
+									kit.version.name,
 									kit_global,
 									kit.paths.base,
 									kit.appDir
 								)
-							: create_sveltekit_env_service_worker_dev(explicit_env_config, env, kit_global);
+							: create_sveltekit_env_service_worker_dev(
+									explicit_env_config,
+									env,
+									kit.version.name,
+									kit_global
+								);
 				}
 			}
 		}
@@ -701,10 +715,6 @@ function kit({ svelte_config }) {
 
 	/** @type {Map<string, Set<string>>} */
 	const import_map = new Map();
-	// Matches any ID that has .server. in its filename
-	const server_only_module_pattern = /\.server\.[^/]+$/;
-	// Matches any ID that has /server/ in its path
-	const server_only_directory_pattern = /\/server\//;
 
 	/**
 	 * Ensures that client-side code can't accidentally import server-side code,
@@ -760,24 +770,21 @@ function kit({ svelte_config }) {
 				]
 			},
 			handler(id) {
-				// skip .server.js files outside the cwd or in node_modules, as the filename might not mean 'server-only module' in this context
-				const is_internal =
-					id.startsWith(normalized_cwd) && !id.startsWith(normalized_node_modules);
-
 				const normalized = normalize_id(id, normalized_aliases, normalized_cwd);
 
-				// server-only directories: any file in a `/server/` folder inside the cwd,
-				// except those inside the routes or assets directories
-				const is_in_routes = id.startsWith(normalized_routes + '/');
-				const is_in_assets = id.startsWith(normalized_assets + '/');
-				const is_server_only_directory =
-					is_internal && !is_in_routes && !is_in_assets && server_only_directory_pattern.test(id);
+				let is_server_only = normalized === '$app/env/private' || normalized === '$app/server';
 
-				const is_server_only =
-					normalized === '$app/env/private' ||
-					normalized === '$app/server' ||
-					is_server_only_directory ||
-					(is_internal && server_only_module_pattern.test(id));
+				// skip .server.js files outside the cwd or in node_modules, as the filename might not mean 'server-only module' in this context
+				if (id.startsWith(normalized_cwd) && !id.startsWith(normalized_node_modules)) {
+					// e.g. `server.ts` or `foo.server.ts`
+					is_server_only ||= server_only_module_pattern.test(id);
+
+					// e.g. `server/foo.ts`, unless in `src/routes` or `static`
+					is_server_only ||=
+						server_only_directory_pattern.test(id) &&
+						!id.startsWith(normalized_routes + '/') &&
+						!id.startsWith(normalized_assets + '/');
+				}
 
 				if (!is_server_only) return;
 
@@ -828,6 +835,10 @@ function kit({ svelte_config }) {
 				const chain = find_chain(normalized, [normalized]);
 
 				if (chain) {
+					if (chain.some((id) => remote_module_pattern.test(id))) {
+						error_for_missing_config('remote functions', 'experimental.remoteFunctions', 'true');
+					}
+
 					const pyramid = chain
 						.reverse()
 						.map((id, i) => {
@@ -898,31 +909,30 @@ function kit({ svelte_config }) {
 			dev_server = _dev_server;
 		},
 
-		async transform(code, id) {
-			const normalized = normalize_id(id, normalized_aliases, normalized_cwd);
-			if (!svelte_config.kit.moduleExtensions.some((ext) => normalized.endsWith(`.remote${ext}`))) {
-				return;
-			}
+		transform: {
+			filter: {
+				id: remote_module_pattern
+			},
+			async handler(code, id) {
+				const file = posixify(path.relative(root, id));
+				const remote = {
+					hash: hash(file),
+					file
+				};
 
-			const file = posixify(path.relative(root, id));
-			const remote = {
-				hash: hash(file),
-				file
-			};
+				remotes.push(remote);
 
-			remotes.push(remote);
+				if (this.environment.config.consumer !== 'client') {
+					// we need to add an `await Promise.resolve()` because if the user imports this function
+					// on the client AND in a load function when loading the client module we will trigger
+					// an ssrLoadModule during dev. During a link preload, the module can be mistakenly
+					// loaded and transformed twice and the first time all its exports would be undefined
+					// triggering a dev server error. By adding a microtask we ensure that the module is fully loaded
 
-			if (this.environment.config.consumer !== 'client') {
-				// we need to add an `await Promise.resolve()` because if the user imports this function
-				// on the client AND in a load function when loading the client module we will trigger
-				// an ssrLoadModule during dev. During a link preload, the module can be mistakenly
-				// loaded and transformed twice and the first time all its exports would be undefined
-				// triggering a dev server error. By adding a microtask we ensure that the module is fully loaded
-
-				// Extra newlines to prevent syntax errors around missing semicolons or comments
-				code +=
-					'\n\n' +
-					dedent`
+					// Extra newlines to prevent syntax errors around missing semicolons or comments
+					code +=
+						'\n\n' +
+						dedent`
 					import * as $$_self_$$ from './${path.basename(id)}';
 					import { init_remote_functions as $$_init_$$ } from '@sveltejs/kit/internal/server';
 
@@ -936,71 +946,72 @@ function kit({ svelte_config }) {
 					}
 				`;
 
-				// Emit a dedicated entry chunk for this remote in SSR builds (prod only)
-				if (!dev_server) {
-					remote_original_by_hash.set(remote.hash, id);
-					if (!emitted_remote_hashes.has(remote.hash)) {
-						this.emitFile({
-							type: 'chunk',
-							id: `\0sveltekit-remote:${remote.hash}`,
-							name: `remote-${remote.hash}`
-						});
-						emitted_remote_hashes.add(remote.hash);
+					// Emit a dedicated entry chunk for this remote in SSR builds (prod only)
+					if (!dev_server) {
+						remote_original_by_hash.set(remote.hash, id);
+						if (!emitted_remote_hashes.has(remote.hash)) {
+							this.emitFile({
+								type: 'chunk',
+								id: `\0sveltekit-remote:${remote.hash}`,
+								name: `remote-${remote.hash}`
+							});
+							emitted_remote_hashes.add(remote.hash);
+						}
+					}
+
+					return code;
+				}
+
+				// For the client, read the exports and create a new module that only contains fetch functions with the correct metadata
+
+				/** @type {Map<string, RemoteInternals['type']>} */
+				const map = new Map();
+
+				// in dev, load the server module here (which will result in this hook
+				// being called again with `opts.ssr === true` if the module isn't
+				// already loaded) so we can determine what it exports
+				if (dev_server) {
+					const module = await dev_server.ssrLoadModule(id);
+
+					for (const [name, value] of Object.entries(module)) {
+						const type = value?.__?.type;
+						if (type) {
+							map.set(name, type);
+						}
 					}
 				}
 
-				return code;
-			}
+				// in prod, we already built and analysed the server code before
+				// building the client code, so `remotes` is populated
+				else if (build_metadata?.remotes) {
+					const exports = build_metadata?.remotes.get(remote.hash);
+					if (!exports) throw new Error('Expected to find metadata for remote file ' + id);
 
-			// For the client, read the exports and create a new module that only contains fetch functions with the correct metadata
-
-			/** @type {Map<string, RemoteInternals['type']>} */
-			const map = new Map();
-
-			// in dev, load the server module here (which will result in this hook
-			// being called again with `opts.ssr === true` if the module isn't
-			// already loaded) so we can determine what it exports
-			if (dev_server) {
-				const module = await dev_server.ssrLoadModule(id);
-
-				for (const [name, value] of Object.entries(module)) {
-					const type = value?.__?.type;
-					if (type) {
-						map.set(name, type);
+					for (const [name, value] of exports) {
+						map.set(name, value.type);
 					}
 				}
-			}
 
-			// in prod, we already built and analysed the server code before
-			// building the client code, so `remotes` is populated
-			else if (build_metadata?.remotes) {
-				const exports = build_metadata?.remotes.get(remote.hash);
-				if (!exports) throw new Error('Expected to find metadata for remote file ' + id);
+				const { namespace, declarations, reexports } = create_exported_declarations(
+					map.keys(),
+					(name, ns) => `${ns}.${map.get(name)}('${remote.hash}/${name}')`,
+					'__remote'
+				);
 
-				for (const [name, value] of exports) {
-					map.set(name, value.type);
+				let result = `import * as ${namespace} from '__sveltekit/remote';\n\n${declarations.join('\n')}`;
+				if (reexports.length > 0) {
+					result += `\nexport { ${reexports.join(', ')} };`;
 				}
+				result += '\n';
+
+				if (dev_server) {
+					result += `\nimport.meta.hot?.accept();\n`;
+				}
+
+				return {
+					code: result
+				};
 			}
-
-			const { namespace, declarations, reexports } = create_exported_declarations(
-				map.keys(),
-				(name, ns) => `${ns}.${map.get(name)}('${remote.hash}/${name}')`,
-				'__remote'
-			);
-
-			let result = `import * as ${namespace} from '__sveltekit/remote';\n\n${declarations.join('\n')}`;
-			if (reexports.length > 0) {
-				result += `\nexport { ${reexports.join(', ')} };`;
-			}
-			result += '\n';
-
-			if (dev_server) {
-				result += `\nimport.meta.hot?.accept();\n`;
-			}
-
-			return {
-				code: result
-			};
 		}
 	};
 
@@ -1199,11 +1210,17 @@ function kit({ svelte_config }) {
 						? create_sveltekit_env_service_worker(
 								explicit_env_config,
 								env,
+								kit.version.name,
 								kit_global,
 								kit.paths.base,
 								kit.appDir
 							)
-						: create_sveltekit_env_service_worker_dev(explicit_env_config, env, kit_global);
+						: create_sveltekit_env_service_worker_dev(
+								explicit_env_config,
+								env,
+								kit.version.name,
+								kit_global
+							);
 				}
 
 				if (id === sveltekit_env_public_client) {
@@ -1234,17 +1251,19 @@ function kit({ svelte_config }) {
 		applyToEnvironment(environment) {
 			return !!service_worker_entry_file && environment.config.consumer === 'client';
 		},
-		transform(code, id) {
-			if (id !== service_worker_entry_file) return;
+		transform: {
+			handler(code, id) {
+				if (id !== service_worker_entry_file) return;
 
-			// prepend the service worker with an import that configures
-			// `env`, in case `$app/env/public` is imported. In production
-			// this is required: dynamic public env vars aren't known at
-			// build time, so `env.js` is loaded at runtime. In dev, the
-			// imported module just inlines the current values instead.
-			return {
-				code: `import '__sveltekit/env/service-worker';\n${code}`
-			};
+				// prepend the service worker with an import that configures
+				// `env`, in case `$app/env/public` is imported. In production
+				// this is required: dynamic public env vars aren't known at
+				// build time, so `env.js` is loaded at runtime. In dev, the
+				// imported module just inlines the current values instead.
+				return {
+					code: `import '__sveltekit/env/service-worker';\n${code}`
+				};
+			}
 		}
 	};
 
@@ -1549,15 +1568,6 @@ function kit({ svelte_config }) {
 		},
 
 		async buildApp(builder) {
-			const sourcemap = builder.config.build.sourcemap;
-			const ssr_sourcemap = builder.environments.ssr.config.build.sourcemap;
-			const temporary_sourcemap = !(ssr_sourcemap ?? sourcemap);
-
-			if (temporary_sourcemap) {
-				// Temporarily override so that we get better stack traces for prerendering errors
-				builder.environments.ssr.config.build.sourcemap = 'hidden';
-			}
-
 			// clears the output directories
 			if (!builder.config.build.watch) {
 				rimraf(out);
@@ -1866,16 +1876,8 @@ function kit({ svelte_config }) {
 					// Unforeseen error, rethrow as-is
 					throw e;
 				}
-			} finally {
-				if (temporary_sourcemap) {
-					// If we did override it, set it back to false and remove the sourcemaps
-					builder.environments.ssr.config.build.sourcemap = ssr_sourcemap;
-
-					for (const file of fs.globSync(`${out}/server/**/*.js.map`)) {
-						fs.rmSync(file);
-					}
-				}
 			}
+
 			prerendered = prerender_results.prerendered;
 
 			await treeshake_prerendered_remotes(

@@ -14,10 +14,13 @@ The [`$app/server`]($app-server) module, which contains a [`read`]($app-server#r
 
 ## Your modules
 
-You can make your own modules server-only in two ways:
+You can make a module server-only in two ways:
 
-- For single modules, add `.server` to the filename, e.g. `secrets.server.js`. This works for _any_ file in the project directory.
-- Directories named `server` anywhere in your project (except inside `src/routes` or the assets directory) mark _all_ code within as server-only, e.g. `src/lib/server/config.js` or `src/lib/data/server/user/profile.js`. (In SvelteKit 2, this only applied to the `src/lib` folder.)
+- Add a `server` segment to the filename, e.g. `server.js` or `secrets.server.ts`. This works for any file in the project directory.
+- Place it in a `server` directory anywhere in your project except inside `src/routes` or the `static` directory, e.g `src/lib/server/config.js` or `src/lib/data/server/user/profile.js`.
+
+> [!LEGACY]
+>  In SvelteKit 2, `server` directories were only recognised in the `src/lib` folder.
 
 > [!NOTE] Modules outside your working directory and those inside `node_modules` (e.g. packages from npm) are _not_ subject to these rules. If you want to publish a package with a server-only module, add `import '$app/server'` to the top of that file.
 
