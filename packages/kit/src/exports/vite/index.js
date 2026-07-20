@@ -34,6 +34,9 @@ import {
 	error_for_missing_config,
 	get_config_aliases,
 	normalize_id,
+	remote_module_pattern,
+	server_only_directory_pattern,
+	server_only_module_pattern,
 	strip_virtual_prefix
 } from './utils.js';
 import { stackless } from '../../utils/error.js';
@@ -469,11 +472,8 @@ function kit({ svelte_config }) {
 					}
 				};
 
+				// treat .remote.js files as empty for the purposes of prebundling
 				if (kit.experimental.remoteFunctions) {
-					// treat .remote.js files as empty for the purposes of prebundling
-					const remote_id_filter = new RegExp(
-						`.remote(${kit.moduleExtensions.join('|')})$`.replaceAll('.', '\\.')
-					);
 					// @ts-expect-error optimizeDeps is already set above
 					new_config.optimizeDeps.rolldownOptions ??= {};
 					// @ts-expect-error
@@ -482,7 +482,7 @@ function kit({ svelte_config }) {
 					new_config.optimizeDeps.rolldownOptions.plugins.push({
 						name: 'vite-plugin-sveltekit-setup:optimize-remote-functions',
 						load: {
-							filter: { id: remote_id_filter },
+							filter: { id: remote_module_pattern },
 							handler() {
 								return '';
 							}
@@ -703,10 +703,6 @@ function kit({ svelte_config }) {
 
 	/** @type {Map<string, Set<string>>} */
 	const import_map = new Map();
-	// Matches any ID that has .server. in its filename
-	const server_only_module_pattern = /\.server\.[^/]+$/;
-	// Matches any ID that has /server/ in its path
-	const server_only_directory_pattern = /\/server\//;
 
 	/**
 	 * Ensures that client-side code can't accidentally import server-side code,
@@ -762,24 +758,21 @@ function kit({ svelte_config }) {
 				]
 			},
 			handler(id) {
-				// skip .server.js files outside the cwd or in node_modules, as the filename might not mean 'server-only module' in this context
-				const is_internal =
-					id.startsWith(normalized_cwd) && !id.startsWith(normalized_node_modules);
-
 				const normalized = normalize_id(id, normalized_aliases, normalized_cwd);
 
-				// server-only directories: any file in a `/server/` folder inside the cwd,
-				// except those inside the routes or assets directories
-				const is_in_routes = id.startsWith(normalized_routes + '/');
-				const is_in_assets = id.startsWith(normalized_assets + '/');
-				const is_server_only_directory =
-					is_internal && !is_in_routes && !is_in_assets && server_only_directory_pattern.test(id);
+				let is_server_only = normalized === '$app/env/private' || normalized === '$app/server';
 
-				const is_server_only =
-					normalized === '$app/env/private' ||
-					normalized === '$app/server' ||
-					is_server_only_directory ||
-					(is_internal && server_only_module_pattern.test(id));
+				// skip .server.js files outside the cwd or in node_modules, as the filename might not mean 'server-only module' in this context
+				if (id.startsWith(normalized_cwd) && !id.startsWith(normalized_node_modules)) {
+					// e.g. `server.ts` or `foo.server.ts`
+					is_server_only ||= server_only_module_pattern.test(id);
+
+					// e.g. `server/foo.ts`, unless in `src/routes` or `static`
+					is_server_only ||=
+						server_only_directory_pattern.test(id) &&
+						!id.startsWith(normalized_routes + '/') &&
+						!id.startsWith(normalized_assets + '/');
+				}
 
 				if (!is_server_only) return;
 
@@ -830,6 +823,10 @@ function kit({ svelte_config }) {
 				const chain = find_chain(normalized, [normalized]);
 
 				if (chain) {
+					if (chain.some((id) => remote_module_pattern.test(id))) {
+						error_for_missing_config('remote functions', 'experimental.remoteFunctions', 'true');
+					}
+
 					const pyramid = chain
 						.reverse()
 						.map((id, i) => {
@@ -900,9 +897,10 @@ function kit({ svelte_config }) {
 			dev_server = _dev_server;
 		},
 
+		// TODO this should use a filter, surely?
 		async transform(code, id) {
 			const normalized = normalize_id(id, normalized_aliases, normalized_cwd);
-			if (!svelte_config.kit.moduleExtensions.some((ext) => normalized.endsWith(`.remote${ext}`))) {
+			if (!remote_module_pattern.test(normalized)) {
 				return;
 			}
 
