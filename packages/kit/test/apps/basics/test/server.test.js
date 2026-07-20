@@ -789,6 +789,22 @@ test.describe('Routing', () => {
 		expect(data).toEqual({ surprise: 'lol' });
 	});
 
+	test('falls back to page actions if sibling endpoint has no POST handler', async ({
+		baseURL,
+		request
+	}) => {
+		const response = await request.post('/endpoint-output/actions-with-endpoint', {
+			form: {},
+			headers: {
+				accept: 'application/json',
+				origin: new URL(baseURL).origin
+			}
+		});
+
+		expect(response.status()).toBe(200);
+		expect((await response.json()).type).toBe('success');
+	});
+
 	test('Vite trailing slash redirect for prerendered pages retains URL query string', async ({
 		request
 	}) => {
