@@ -1,6 +1,6 @@
 import { RouteId, RouteParams } from '$app/types';
 
-export type StripSearchOrHash<T extends string> = T extends `${infer U}?${string}`
+type StripSearchOrHash<T extends string> = T extends `${infer U}?${string}`
 	? U
 	: T extends `${infer U}#${string}`
 		? U
