@@ -1,4 +1,4 @@
-/** @import { RouteId, Path, RouteParams } from '$app/types' */
+/** @import { RouteId, Path } from '$app/types' */
 import { payload } from '../../../client/payload.js';
 
 export const base = payload.base ?? __SVELTEKIT_PATHS_BASE__;
@@ -10,7 +10,7 @@ export const hash_routing = __SVELTEKIT_HASH_ROUTING__;
  * We make this configurable per-environment so that it's possible to import `$app/paths`
  * into a service worker without importing the entire client
  * @param {Path | URL | (string & {})} _url
- * @returns {Promise<{ [K in RouteId]: { id: K; params: RouteParams<K>; } }[RouteId] | null>}
+ * @returns {Promise<{ [K in RouteId]: { id: K; params: import('$app/types').RouteParams<K>; } }[RouteId] | null>}
  */
 // eslint-disable-next-line @typescript-eslint/require-await
 export let match_implementation = async (_url) => {
