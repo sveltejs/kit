@@ -12,6 +12,7 @@ import { exactRegex, prefixRegex } from 'rolldown/filter';
 
 import { copy, mkdirp, read, resolve_entry, rimraf } from '../../utils/filesystem.js';
 import { posixify } from '../../utils/os.js';
+import { to_fs } from '../../utils/vite.js';
 import {
 	create_sveltekit_env,
 	create_sveltekit_env_public,
@@ -474,22 +475,27 @@ function kit({ svelte_config }) {
 					}
 				};
 
-				// treat .remote.js files as empty for the purposes of prebundling
+				// externalize .remote.js files to stop dependency tracing during prebundling
 				if (kit.experimental.remoteFunctions) {
 					// @ts-expect-error optimizeDeps is already set above
 					new_config.optimizeDeps.rolldownOptions ??= {};
 					// @ts-expect-error
 					new_config.optimizeDeps.rolldownOptions.plugins ??= [];
 					// @ts-expect-error
-					new_config.optimizeDeps.rolldownOptions.plugins.push({
-						name: 'vite-plugin-sveltekit-setup:optimize-remote-functions',
-						load: {
-							filter: { id: remote_module_pattern },
-							handler() {
-								return '';
+					new_config.optimizeDeps.rolldownOptions.plugins.push(
+						/** @type {Rolldown.Plugin} */ ({
+							name: 'vite-plugin-sveltekit-setup:optimize-remote-functions',
+							resolveId: {
+								filter: { id: remote_module_pattern },
+								async handler(id, importer) {
+									const resolved = await this.resolve(id, importer, { skipSelf: true });
+									if (!resolved) return { id, external: true };
+									// a servable /@fs url; 'absolute' stops rolldown relativizing it in the deps bundle
+									return { id: to_fs(resolved.id), external: 'absolute' };
+								}
 							}
-						}
-					});
+						})
+					);
 				}
 
 				const define = {
