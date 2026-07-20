@@ -13,7 +13,7 @@ import {
 } from './shared.js';
 import { noop } from '../../../../utils/functions.js';
 import { SharedIterator } from '../../../../utils/shared-iterator.js';
-import { handle_error_and_jsonify } from '../../../server/utils.js';
+import { handle_error_and_jsonify } from '../../../server/errors.js';
 
 /**
  * Creates a remote query. When called from the browser, the function will be invoked on the server via a `fetch` call.

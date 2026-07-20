@@ -30,18 +30,43 @@ export function get_runtime_base(root) {
 }
 
 /** @param {{ verbose: boolean }} opts */
-export function logger({ verbose }) {
+export function logger({ verbose } = { verbose: true }) {
 	/** @type {import('types').Logger} */
-	const log = (msg) => console.log(msg.replace(/^/gm, '  '));
+	const log = (msg) => console.log(msg);
 
 	/** @param {string} msg */
-	const err = (msg) => console.error(msg.replace(/^/gm, '  '));
+	const err = (msg) => console.error(msg);
 
 	log.success = (msg) => log(styleText('green', `✔ ${msg}`));
 	log.error = (msg) => err(styleText(['bold', 'red'], msg));
 	log.warn = (msg) => log(styleText(['bold', 'yellow'], msg));
 	log.minor = verbose ? (msg) => log(styleText('grey', msg)) : noop;
 	log.info = verbose ? log : noop;
+	log.err = err;
+
+	log.prettyError = (error, caller) => {
+		/** @type {unknown} */
+		let e = error;
+
+		while (e instanceof Error) {
+			let stack = e.stack;
+			if (stack) {
+				if (caller) {
+					const i = stack.indexOf(caller);
+					// Cut the stack trace off at the point when our internal one starts
+					stack = stack.slice(0, stack.lastIndexOf('\n', i));
+				}
+
+				err(stack);
+			}
+
+			e = e.cause;
+		}
+
+		if (e) {
+			err(String(e));
+		}
+	};
 
 	return log;
 }

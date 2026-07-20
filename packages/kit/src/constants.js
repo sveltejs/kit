@@ -11,3 +11,5 @@ export const ENDPOINT_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIO
 export const MUTATIVE_METHODS = ['POST', 'PUT', 'PATCH', 'DELETE'];
 
 export const PAGE_METHODS = ['GET', 'POST', 'HEAD'];
+
+export const SRC_ROOT = import.meta.dirname;

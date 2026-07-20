@@ -10,6 +10,7 @@ import { loadEnv, normalizePath } from 'vite';
 import { createReadableStream, getRequest, setResponse } from '../../../exports/node/index.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import { is_chrome_devtools_request, not_found } from '../utils.js';
+import { stackless } from '../../../utils/error.js';
 
 /**
  * @param {PreviewServer} vite
@@ -27,8 +28,8 @@ export async function preview(vite, vite_config, svelte_config) {
 
 	const dir = join(svelte_config.kit.outDir, 'output/server');
 
-	if (!fs.existsSync(dir)) {
-		throw new Error(`Server files not found at ${dir}, did you run \`build\` first?`);
+	if (!fs.existsSync(`${dir}/manifest.js`)) {
+		throw stackless(`Server files not found at ${dir}, did you run \`build\` first?`);
 	}
 
 	const instrumentation = join(dir, 'instrumentation.server.js');

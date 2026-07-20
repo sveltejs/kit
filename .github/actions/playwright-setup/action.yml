@@ -1,0 +1,27 @@
+name: 'Playwright Setup'
+description: 'Install Playwright browser and system dependencies'
+
+inputs:
+  os:
+    description: 'Operating system'
+    required: true
+    default: 'ubuntu-latest'
+  e2e-browser:
+    description: 'E2E browser'
+    required: true
+    default: 'chromium  --no-shell'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Cache Playwright browsers
+      id: playwright-cache
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+      with:
+        path: ${{ inputs.os == 'windows-latest' && '~\AppData\Local\ms-playwright' || inputs.os == 'macOS-latest' && '~/Library/Caches/ms-playwright' || '~/.cache/ms-playwright' }}
+        key: ${{ inputs.os }}-${{ inputs.e2e-browser }}-playwright-${{ hashFiles('pnpm-lock.yaml') }}
+
+    - name: Install Playwright browsers and system dependencies
+      shell: bash
+      if: steps.playwright-cache.outputs.cache-hit != 'true'
+      run: pnpm playwright install ${{ inputs.e2e-browser }}

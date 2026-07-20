@@ -1,4 +1,5 @@
-import { build, version } from '$service-worker';
+import { build } from '$service-worker';
+import { version } from '$app/env';
 import { PUBLIC_STATIC } from '$app/env/public';
 
 const name = `cache-${version}-${PUBLIC_STATIC}`;
