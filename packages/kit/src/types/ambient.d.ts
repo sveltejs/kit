@@ -71,12 +71,12 @@ declare module '$app/manifest' {
 	 * An array of `{ path: AssetPath }` objects representing the files in your `static` directory, or whatever directory is specified by `config.files.assets`.
 	 * The path is relative to the [base path](https://svelte.dev/docs/kit/configuration#paths), and can be used with [`asset(...)`](https://svelte.dev/docs/kit/$app-paths#asset).
 	 */
-	export const assets: Array<{ path: import('$app/types').Asset }>;
+	export const assets: Array<{ path: import('$app/types').AssetPath }>;
 	/**
 	 * An array of `{ path: Path }` objects representing prerendered pages and endpoints, relative to the [base path](https://svelte.dev/docs/kit/configuration#paths).
 	 * During development, this is an empty array.
 	 */
-	export const prerendered: Array<{ path: import('$app/types').Pathname }>;
+	export const prerendered: Array<{ path: import('$app/types').Path }>;
 	/**
 	 * An array of objects with an `id` property representing the routes in your app.
 	 */
