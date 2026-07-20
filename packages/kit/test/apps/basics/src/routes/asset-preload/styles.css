@@ -3,3 +3,9 @@
 	font-family: 'Shlop';
 	src: url(./shlop.woff2);
 }
+
+@font-face {
+	/* the dot in the file name must survive hash stripping */
+	font-family: 'Shlop Var';
+	src: url(./shlop.var.woff2);
+}
