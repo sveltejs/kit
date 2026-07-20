@@ -5,7 +5,7 @@
 <h1>Hello</h1>
 
 <p data-testid="base">base: {resolve('')}</p>
-<p data-testid="assets">assets: {asset(/** @type {any} */ '')}</p>
+<p data-testid="assets">assets: {asset('answer.txt').replace('answer.txt', '')}</p>
 
 <a href={resolve('/hello')} data-testid="link">Go to /hello</a>
 
