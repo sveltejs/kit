@@ -1,7 +1,6 @@
 import { json } from '@sveltejs/kit';
 import { match } from '$app/paths';
 
-/** @satisfies {import('$app/types').ResolvedPathname[]} */
 const test_paths = [
 	'/path-base/base/',
 	'/path-base/base/resolved/',
