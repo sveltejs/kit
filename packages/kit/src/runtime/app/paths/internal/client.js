@@ -1,4 +1,4 @@
-/** @import { RouteId, Path } from '$app/types' */
+/** @import { RouteId, Path, RouteParams } from '$app/types' */
 import { payload } from '../../../client/payload.js';
 
 export const base = payload.base ?? __SVELTEKIT_PATHS_BASE__;
