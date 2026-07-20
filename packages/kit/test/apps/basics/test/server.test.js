@@ -1593,6 +1593,7 @@ test.describe('asset preload', () => {
 
 		expect(body).toContain('rel="modulepreload"');
 		expect(body).toContain('as="font"');
+		expect(body).toMatch(/href="[^"]+\/shlop\.[^".]+\.woff2"/);
 	});
 });
 
