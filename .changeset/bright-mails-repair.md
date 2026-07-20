@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix: `AsArgs` default value type
+fix: allow `undefined` values to be passed to form field `.as(...)` where applicable
