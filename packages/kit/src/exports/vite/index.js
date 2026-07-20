@@ -1204,11 +1204,17 @@ function kit({ svelte_config }) {
 						? create_sveltekit_env_service_worker(
 								explicit_env_config,
 								env,
+								kit.version.name,
 								kit_global,
 								kit.paths.base,
 								kit.appDir
 							)
-						: create_sveltekit_env_service_worker_dev(explicit_env_config, env, kit_global);
+						: create_sveltekit_env_service_worker_dev(
+								explicit_env_config,
+								env,
+								kit.version.name,
+								kit_global
+							);
 				}
 
 				if (id === sveltekit_env_public_client) {
