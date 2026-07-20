@@ -63,7 +63,7 @@ export async function handle({ event, resolve }) {
 }
 ```
 
-A filter that names a font it can no longer find preloads nothing, with no warning. If you would rather find out at build time, import the font with Vite's [`?url` suffix](https://vitejs.dev/guide/assets.html#explicit-url-imports) somewhere in your app, so that removing it fails the build.
+A filter that names a font it can no longer find preloads nothing, with no warning. If you would rather find out at build time, import the font with Vite's [`?url` suffix](https://vitejs.dev/guide/assets.html#explicit-url-imports) in a module that already uses it, so that removing the font fails the build.
 
 You can reduce the size of font files by [subsetting](https://web.dev/learn/performance/optimize-web-fonts#subset_your_web_fonts) your fonts.
 
