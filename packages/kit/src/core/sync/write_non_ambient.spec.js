@@ -3,69 +3,50 @@ import { validate_config } from '../config/index.js';
 import { generate_app_types } from './write_non_ambient.js';
 
 /**
- * @param {string} output
- * @param {string} declaration
+ * @param {string} id
+ * @param {import('types').TrailingSlash} trailingSlash
  */
-const find_line = (output, declaration) =>
-	output.split('\n').find((line) => line.includes(declaration));
+const page = (id, trailingSlash) => ({
+	id,
+	params: [],
+	leaf: { page_options: { trailingSlash } },
+	endpoint: null
+});
+
+/**
+ * @param {ReturnType<typeof page>[]} routes
+ * @param {import('@sveltejs/kit').Config} [config]
+ */
+const generate = (routes, config = {}) =>
+	generate_app_types(
+		/** @type {import('types').ManifestData} */ (/** @type {unknown} */ ({ assets: [], routes })),
+		validate_config(config).kit
+	);
+
+/**
+ * @param {string} output
+ * @param {string} name
+ */
+const declaration = (output, name) =>
+	output.split('\n').find((line) => line.startsWith(`\t\t${name}():`));
 
 test('generates paths with the configured trailing slash', () => {
-	const { kit } = validate_config({});
-
 	for (const trailingSlash of /** @type {const} */ (['always', 'ignore'])) {
-		const output = generate_app_types(
-			/** @type {import('types').ManifestData} */ (
-				/** @type {unknown} */ ({
-					assets: [],
-					routes: [
-						{
-							id: '/',
-							params: [],
-							leaf: { page_options: { trailingSlash } },
-							endpoint: null
-						}
-					]
-				})
-			),
-			kit
-		);
+		const output = generate([page('/', trailingSlash)]);
 
-		expect(find_line(output, '\tPath():')).toBe('\t\tPath(): "";');
-		expect(find_line(output, '\tResolvedPathname():')).toBe(
+		expect(declaration(output, 'Path')).toBe('\t\tPath(): "";');
+		expect(declaration(output, 'ResolvedPathname')).toBe(
 			'\t\tResolvedPathname(): `${"/"}${ReturnType<AppTypes[\'Path\']>}`;'
 		);
 	}
 
-	const output = generate_app_types(
-		/** @type {import('types').ManifestData} */ (
-			/** @type {unknown} */ ({
-				assets: [],
-				routes: [
-					{
-						id: '/about',
-						params: [],
-						leaf: { page_options: { trailingSlash: 'always' } },
-						endpoint: null
-					}
-				]
-			})
-		),
-		kit
-	);
-
-	expect(find_line(output, '\tPath():')).toBe('\t\tPath(): "about/";');
+	expect(declaration(generate([page('/about', 'always')]), 'Path')).toBe('\t\tPath(): "about/";');
 });
 
 test('generates resolved pathnames with the configured base path', () => {
-	const { kit } = validate_config({ kit: { paths: { base: '/path-base' } } });
-	const output = generate_app_types(
-		/** @type {import('types').ManifestData} */ (
-			/** @type {unknown} */ ({ assets: [], routes: [] })
-		),
-		kit
-	);
+	const output = generate([], { kit: { paths: { base: '/path-base' } } });
 
-	expect(find_line(output, '\tResolvedPathname():')).toBe(
+	expect(declaration(output, 'ResolvedPathname')).toBe(
 		'\t\tResolvedPathname(): `${"/path-base/"}${ReturnType<AppTypes[\'Path\']>}`;'
 	);
 });
