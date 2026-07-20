@@ -1,5 +1,35 @@
 # @sveltejs/kit
 
+## 3.0.0-next.11
+
+### Major Changes
+
+- breaking: `config` exported from a universal route file takes precedence over a server one ([#16400](https://github.com/sveltejs/kit/pull/16400))
+
+- breaking: consistent special filename patterns ([#16382](https://github.com/sveltejs/kit/pull/16382))
+
+### Minor Changes
+
+- feat: support sourcemaps in production ([#16412](https://github.com/sveltejs/kit/pull/16412))
+
+- feat: support function validators for environment variables ([#16402](https://github.com/sveltejs/kit/pull/16402))
+
+- feat: better error logging ([#16374](https://github.com/sveltejs/kit/pull/16374))
+
+### Patch Changes
+
+- fix: don't treat callable standard schemas as function param matchers ([#16403](https://github.com/sveltejs/kit/pull/16403))
+
+- fix: reject malformed streamed data encoding ([#16423](https://github.com/sveltejs/kit/pull/16423))
+
+- fix: hide stack traces for internal errors like 404s ([#16411](https://github.com/sveltejs/kit/pull/16411))
+
+- perf: match only unpaired surrogates when escaping HTML ([#16407](https://github.com/sveltejs/kit/pull/16407))
+
+- fix: don't report empty environment variables as missing ([#16401](https://github.com/sveltejs/kit/pull/16401))
+
+- chore: clarify which hooks run during server route resolution ([#16397](https://github.com/sveltejs/kit/pull/16397))
+
 ## 3.0.0-next.10
 
 ### Major Changes
