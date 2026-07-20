@@ -22,6 +22,8 @@ const remove_group_segments = (/** @type {string} */ id) => {
  * @returns {string[]}
  */
 function get_pathnames_for_trailing_slash(pathname, route) {
+	if (pathname === '') return [''];
+
 	/** @type {Set<string>} */
 	const pathnames = new Set();
 
@@ -81,7 +83,7 @@ export {};
  * @param {import('types').ManifestData} manifest_data
  * @param {import('types').ValidatedKitConfig} config
  */
-function generate_app_types(manifest_data, config) {
+export function generate_app_types(manifest_data, config) {
 	/** @type {Map<string, string>} */
 	const matcher_types = new Map();
 
@@ -245,7 +247,7 @@ function generate_app_types(manifest_data, config) {
 		`\t\tRouteParams(): {\n\t\t\t${dynamic_routes.join(';\n\t\t\t')}\n\t\t};`,
 		`\t\tLayoutParams(): {\n\t\t\t${layouts.join(';\n\t\t\t')}\n\t\t};`,
 		`\t\tPath(): ${Array.from(pathnames).join(' | ')};`,
-		'\t\tResolvedPathname(): `${"/" | `/${string}/`}${ReturnType<AppTypes[\'Path\']>}`;',
+		`\t\tResolvedPathname(): \`\${${s(config.paths.base + '/')}}\${ReturnType<AppTypes['Path']>}\`;`,
 		`\t\tAssetPath(): ${assets.join(' | ') || 'never'};`,
 		'\t}',
 		'}'
