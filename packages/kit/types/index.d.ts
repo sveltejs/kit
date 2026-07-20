@@ -3250,7 +3250,7 @@ declare module '$app/navigation' {
 }
 
 declare module '$app/paths' {
-	import type { Asset, RouteIdWithSearchOrHash, PathnameWithSearchOrHash, ResolvedPathname, Pathname, RouteId, RouteParams } from '$app/types';
+	import type { AssetPath, RouteIdWithSearchOrHash, PathnameWithSearchOrHash, ResolvedPathname, Path, RouteId, RouteParams } from '$app/types';
 	/**
 	 * Resolve the URL of an asset in your `static` directory, by prefixing it with [`config.paths.assets`](https://svelte.dev/docs/kit/configuration#paths) if configured, or otherwise by prefixing it with the base path.
 	 *
@@ -3262,12 +3262,12 @@ declare module '$app/paths' {
 	 * 	import { asset } from '$app/paths';
 	 * </script>
 	 *
-	 * <img alt="a potato" src={asset('/potato.jpg')} />
+	 * <img alt="a potato" src={asset('potato.jpg')} />
 	 * ```
 	 * @since 2.26
 	 *
 	 * */
-	export function asset(file: Asset): string;
+	export function asset(file: AssetPath): string;
 	/**
 	 * Resolve a pathname by prefixing it with the base path, if any, or resolve a route ID by populating dynamic segments with parameters.
 	 *
@@ -3278,7 +3278,7 @@ declare module '$app/paths' {
 	 * import { resolve } from '$app/paths';
 	 *
 	 * // using a pathname
-	 * const resolved = resolve(`/blog/hello-world`);
+	 * const resolved = resolve(`blog/hello-world`);
 	 *
 	 * // using a route ID plus parameters
 	 * const resolved = resolve('/blog/[slug]', {
@@ -3296,7 +3296,7 @@ declare module '$app/paths' {
 	 * ```js
 	 * import { match } from '$app/paths';
 	 *
-	 * const route = await match('/blog/hello-world');
+	 * const route = await match('blog/hello-world');
 	 *
 	 * if (route?.id === '/blog/[slug]') {
 	 * 	const slug = route.params.slug;
@@ -3307,26 +3307,23 @@ declare module '$app/paths' {
 	 * @since 2.52.0
 	 *
 	 * */
-	export function match(url: Pathname | URL | (string & {})): Promise<{ [K in RouteId]: {
+	export function match(url: Path | URL | (string & {})): Promise<{ [K in RouteId]: {
 		id: K;
 		params: RouteParams<K>;
 	}; }[RouteId] | null>;
-	type StripSearchOrHash<T extends string> = T extends `${infer Pathname}?${string}`
-		? Pathname
-		: T extends `${infer Pathname}#${string}`
-			? Pathname
+	type StripSearchOrHash<T extends string> = T extends `${infer U}?${string}`
+		? U
+		: T extends `${infer U}#${string}`
+			? U
 			: T;
 
-	type ResolveArgs<T extends RouteIdWithSearchOrHash | PathnameWithSearchOrHash> =
-		T extends RouteId
-			? RouteParams<T> extends Record<string, never>
+	type ResolveArgs<T> = T extends `/${string}`
+		? StripSearchOrHash<T> extends infer U extends RouteId
+			? RouteParams<U> extends Record<string, never>
 				? [route: T]
-				: [route: T, params: RouteParams<T>]
-			: StripSearchOrHash<T> extends infer U extends RouteId
-				? RouteParams<U> extends Record<string, never>
-					? [route: T]
-					: [route: T, params: RouteParams<U>]
-				: [route: T];
+				: [route: T, params: RouteParams<U>]
+			: [never]
+		: [pathname: T];
 
 	export {};
 }
@@ -3752,9 +3749,9 @@ declare module '$app/types' {
 		RouteId(): string;
 		RouteParams(): Record<string, Record<string, string>>;
 		LayoutParams(): Record<string, Record<string, string>>;
-		Pathname(): string;
+		Path(): string;
 		ResolvedPathname(): string;
-		Asset(): string;
+		AssetPath(): string;
 	}
 
 	/**
@@ -3782,27 +3779,24 @@ declare module '$app/types' {
 		: Record<string, never>;
 
 	/**
-	 * A union of all valid pathnames in your app.
+	 * A union of all valid paths in your app, relative to the `base` path.
 	 */
-	export type Pathname = ReturnType<AppTypes['Pathname']>;
+	export type Path = ReturnType<AppTypes['Path']>;
 
 	/**
-	 * `Pathname`, but possibly suffixed with a search string and/or hash.
+	 * `Path`, but possibly suffixed with a search string and/or hash.
 	 */
-	export type PathnameWithSearchOrHash =
-		| Pathname
-		| `${Pathname}?${string}`
-		| `${Pathname}#${string}`;
+	export type PathnameWithSearchOrHash = Path | `${Path}?${string}` | `${Path}#${string}`;
 
 	/**
-	 * `Pathname`, but possibly prefixed with a base path. Used for `page.url.pathname`.
+	 * `Path`, but prefixed with a base path. Used for `page.url.pathname`.
 	 */
 	export type ResolvedPathname = ReturnType<AppTypes['ResolvedPathname']>;
 
 	/**
-	 * A union of all the filenames of assets contained in your `static` directory.
+	 * A union of all the filenames of assets contained in your `static` directory, relative to the `base` path.
 	 */
-	export type Asset = ReturnType<AppTypes['Asset']>;
+	export type AssetPath = ReturnType<AppTypes['AssetPath']>;
 }
 
 //# sourceMappingURL=index.d.ts.map
