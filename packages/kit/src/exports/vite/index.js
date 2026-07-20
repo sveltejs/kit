@@ -1652,7 +1652,7 @@ function kit({ svelte_config }) {
 			// are known from `manifest_data`. `immutable` and `prerendered` are not
 			// known yet — they get sentinel strings that are replaced after
 			// the client build and after prerendering respectively.
-			replace_manifest_placeholders(server_chunks, `${out}/server`, {
+			replace_manifest_placeholder_variables(server_chunks, `${out}/server`, {
 				assets: manifest_data.assets.map((asset) => ({ path: asset.file })),
 				routes: manifest_data.routes.map((route) => ({ id: route.id }))
 			});
@@ -1805,7 +1805,7 @@ function kit({ svelte_config }) {
 					assets.forEach(add_immutable);
 				}
 
-				replace_manifest_placeholders(client_chunks, `${out}/client`, {
+				replace_manifest_placeholder_variables(client_chunks, `${out}/client`, {
 					immutable: Array.from(immutable).map((file) => ({ path: file })),
 					assets: manifest_data.assets.map((asset) => ({ path: asset.file })),
 					routes: manifest_data.routes.map((route) => ({ id: route.id }))
@@ -1813,7 +1813,7 @@ function kit({ svelte_config }) {
 
 				// Now that the client build is done, replace the `build` sentinel
 				// in the SSR output with the real build files
-				replace_manifest_sentinels(`${out}/server`, {
+				replace_manifest_placeholder_strings(`${out}/server`, {
 					immutable: Array.from(immutable).map((file) => ({ path: file }))
 				});
 
@@ -1996,8 +1996,8 @@ function kit({ svelte_config }) {
 				return { path: p.replace(kit.paths.base, '').slice(1) };
 			});
 
-			replace_manifest_sentinels(`${out}/server`, { prerendered: prerendered_paths });
-			replace_manifest_sentinels(`${out}/client`, { prerendered: prerendered_paths });
+			replace_manifest_placeholder_strings(`${out}/server`, { prerendered: prerendered_paths });
+			replace_manifest_placeholder_strings(`${out}/client`, { prerendered: prerendered_paths });
 
 			// For `inline` strategy, the entry file was deleted and read into
 			// `build_data.client.inline.script` — replace the sentinel there too
@@ -2206,8 +2206,8 @@ const create_manifest_data_module = (is_build, manifest_data) => {
 	if (is_build) {
 		// Bare identifiers (fake globals) — the bundler leaves these as
 		// unresolved global references in the output. They are replaced
-		// with real values by `replace_manifest_placeholders` after each
-		// build completes.
+		// with real values by `replace_manifest_placeholder_variables`
+		// after each build completes.
 		return dedent`
 			export const immutable = __SVELTEKIT_MANIFEST_IMMUTABLE__;
 			export const assets = __SVELTEKIT_MANIFEST_ASSETS__;
@@ -2239,9 +2239,8 @@ const create_manifest_data_module = (is_build, manifest_data) => {
 
 /**
  * Replaces manifest data placeholder identifiers in output chunks with real
- * values or sentinels. Sentinels are string values that are valid JS (so the
- * code doesn't crash during prerendering) but findable on disk for later
- * replacement by `replace_manifest_sentinels`.
+ * values, or strings that are valid JS (so thecode doesn't crash during prerendering)
+ * but findable on disk for later replacement by `replace_manifest_placeholder_strings`.
  *
  * @param {Rolldown.RolldownOutput['output']} chunks
  * @param {string} output_dir
@@ -2252,7 +2251,7 @@ const create_manifest_data_module = (is_build, manifest_data) => {
  *   routes?: Array<{ id: string }>;
  * }} values
  */
-const replace_manifest_placeholders = (chunks, output_dir, values) => {
+const replace_manifest_placeholder_variables = (chunks, output_dir, values) => {
 	/** @type {Record<string, string>} */
 	const replacements = {
 		__SVELTEKIT_MANIFEST_IMMUTABLE__: JSON.stringify(
@@ -2292,7 +2291,7 @@ const replace_manifest_placeholders = (chunks, output_dir, values) => {
  *   prerendered?: Array<{ path: string }>;
  * }} values
  */
-const replace_manifest_sentinels = (dir, values) => {
+const replace_manifest_placeholder_strings = (dir, values) => {
 	/** @type {Record<string, string>} */
 	const replacements = {};
 
@@ -2308,7 +2307,7 @@ const replace_manifest_sentinels = (dir, values) => {
 		const stat = fs.statSync(file_path);
 
 		if (stat.isDirectory()) {
-			replace_manifest_sentinels(file_path, values);
+			replace_manifest_placeholder_strings(file_path, values);
 			continue;
 		}
 
