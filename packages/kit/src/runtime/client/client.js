@@ -333,6 +333,23 @@ export const query_map = new Map();
  */
 export const live_query_map = new Map();
 
+set_match_implementation(async (url) => {
+	if (typeof url === 'string') {
+		url = new URL(url, location.href);
+	}
+
+	const intent = await get_navigation_intent(url, false);
+
+	if (intent) {
+		return {
+			id: /** @type {RouteId} */ (intent.route.id),
+			params: intent.params
+		};
+	}
+
+	return null;
+});
+
 /**
  * @param {import('./types.js').SvelteKitApp} _app
  * @param {HTMLElement} _target
@@ -365,23 +382,6 @@ export async function start(_app, _target, hydrate) {
 	}
 
 	app = _app;
-
-	set_match_implementation(async (url) => {
-		if (typeof url === 'string') {
-			url = new URL(url, location.href);
-		}
-
-		const intent = await get_navigation_intent(url, false);
-
-		if (intent) {
-			return {
-				id: /** @type {RouteId} */ (intent.route.id),
-				params: intent.params
-			};
-		}
-
-		return null;
-	});
 
 	await _app.hooks.init?.();
 
