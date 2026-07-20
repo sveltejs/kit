@@ -1,11 +1,11 @@
-/** @import { Asset, RouteId, RouteIdWithSearchOrHash, Pathname, PathnameWithSearchOrHash, ResolvedPathname } from '$app/types' */
+/** @import { Asset, RouteId, RouteIdWithSearchOrHash, Pathname, PathnameWithSearchOrHash, ResolvedPathname, RouteParams } from '$app/types' */
 /** @import { ResolveArgs } from './types.js' */
 import { base, assets, hash_routing } from './internal/client.js';
 import { resolve_route } from '../../../utils/routing.js';
 import { get_navigation_intent } from '../../client/client.js';
 
 /**
- * Resolve the URL of an asset in your `static` directory, by prefixing it with [`config.kit.paths.assets`](https://svelte.dev/docs/kit/configuration#paths) if configured, or otherwise by prefixing it with the base path.
+ * Resolve the URL of an asset in your `static` directory, by prefixing it with [`config.paths.assets`](https://svelte.dev/docs/kit/configuration#paths) if configured, or otherwise by prefixing it with the base path.
  *
  * During server rendering, the base path is relative and depends on the page currently being rendered.
  *
@@ -52,11 +52,14 @@ const pathname_prefix = hash_routing ? '#' : '';
  * @returns {ResolvedPathname}
  */
 export function resolve(...args) {
-	// The type error is correct here, and if someone doesn't pass params when they should there's a runtime error,
-	// but we don't want to adjust the internal resolve_route function to accept `undefined`, hence the type cast.
-	return (
-		base + pathname_prefix + resolve_route(args[0], /** @type {Record<string, string>} */ (args[1]))
-	);
+	if (!args[0].startsWith('/')) {
+		throw new Error(
+			`Cannot use \`resolve(...)\` with a non-absolute pathname or route ID (got "${args[0]}"). ` +
+				'`resolve` is only for internal pathnames and route IDs; external URLs should be used directly.'
+		);
+	}
+
+	return base + pathname_prefix + resolve_route(args[0], args[1] ?? {});
 }
 
 /**
@@ -77,7 +80,7 @@ export function resolve(...args) {
  * @since 2.52.0
  *
  * @param {Pathname | URL | (string & {})} url
- * @returns {Promise<{ id: RouteId, params: Record<string, string> } | null>}
+ * @returns {Promise<{ [K in RouteId]: { id: K; params: RouteParams<K>; } }[RouteId] | null>}
  */
 export async function match(url) {
 	if (typeof url === 'string') {
@@ -95,5 +98,3 @@ export async function match(url) {
 
 	return null;
 }
-
-export { base, assets, resolve as resolveRoute };

@@ -1,7 +1,7 @@
 /** @import { RemoteChunk } from 'types' */
 import fs from 'node:fs';
 import path from 'node:path';
-import * as mime from 'mrmime';
+import { lookup as mime_lookup } from '../../utils/mime.js';
 import { s } from '../../utils/misc.js';
 import { get_mime_lookup } from '../utils.js';
 import { resolve_symlinks } from '../../exports/vite/build/utils.js';
@@ -20,9 +20,17 @@ import { uneval } from 'devalue';
  *   relative_path: string;
  *   routes: import('types').RouteData[];
  *   remotes: RemoteChunk[];
+ *   root: string;
  * }} opts
  */
-export function generate_manifest({ build_data, prerendered, relative_path, routes, remotes }) {
+export function generate_manifest({
+	build_data,
+	prerendered,
+	relative_path,
+	routes,
+	remotes,
+	root
+}) {
 	/**
 	 * @type {Map<any, number>} The new index of each node in the filtered nodes array
 	 */
@@ -34,7 +42,7 @@ export function generate_manifest({ build_data, prerendered, relative_path, rout
 	 */
 	const used_nodes = new Set([0, 1]);
 
-	const server_assets = find_server_assets(build_data, routes);
+	const server_assets = find_server_assets(build_data, routes, root);
 
 	for (const route of routes) {
 		if (route.page) {
@@ -61,10 +69,8 @@ export function generate_manifest({ build_data, prerendered, relative_path, rout
 		assets.push(build_data.service_worker);
 	}
 
-	// In case of server-side route resolution, we need to include all matchers. Prerendered routes are not part
-	// of the server manifest, and they could reference matchers that then would not be included.
-	const matchers = new Set(
-		build_data.client?.nodes ? Object.keys(build_data.manifest_data.matchers) : undefined
+	const uses_matchers = build_data.manifest_data.routes.some((route) =>
+		route.params.some((param) => param.matcher)
 	);
 
 	/** @param {Array<number | undefined>} indexes */
@@ -85,7 +91,7 @@ export function generate_manifest({ build_data, prerendered, relative_path, rout
 		files[file] = fs.statSync(path.resolve(build_data.out_dir, 'server', file)).size;
 
 		const ext = path.extname(file);
-		mime_types[ext] ??= mime.lookup(ext) || '';
+		mime_types[ext] ??= mime_lookup(ext) || '';
 	}
 
 	// prettier-ignore
@@ -109,28 +115,27 @@ export function generate_manifest({ build_data, prerendered, relative_path, rout
 					${routes.map(route => {
 						if (!route.page && !route.endpoint) return;
 
-						route.params.forEach(param => {
-							if (param.matcher) matchers.add(param.matcher);
-						});
-
 						return dedent`
 							{
 								id: ${s(route.id)},
 								pattern: ${route.pattern},
 								params: ${s(route.params)},
 								page: ${route.page ? `{ layouts: ${get_nodes(route.page.layouts)}, errors: ${get_nodes(route.page.errors)}, leaf: ${reindexed.get(route.page.leaf)} }` : 'null'},
-								endpoint: ${route.endpoint ? loader(join_relative(relative_path, resolve_symlinks(build_data.server_manifest, route.endpoint.file).chunk.file)) : 'null'}
+								endpoint: ${route.endpoint ? loader(join_relative(relative_path, resolve_symlinks(build_data.server_manifest, route.endpoint.file, root).chunk.file)) : 'null'}
 							}
 						`;
 					}).filter(Boolean).join(',\n')}
 				],
 				prerendered_routes: new Set(${s(prerendered)}),
 				matchers: async () => {
-					${Array.from(
-						matchers,
-						type => `const { match: ${type} } = await import ('${(join_relative(relative_path, `/entries/matchers/${type}.js`))}')`
-					).join('\n')}
-					return { ${Array.from(matchers).join(', ')} };
+					${
+						uses_matchers && build_data.manifest_data.params
+							? dedent`
+								const { params } = await import('${join_relative(relative_path, '/entries/params.js')}');
+								return params;
+							`
+							: 'return {};'
+					}
 				},
 				server_assets: ${s(files)}
 			}

@@ -84,22 +84,26 @@ test.describe('a11y', () => {
 
 		await clicknav('[href="/selection/b"]');
 
-		expect(
-			await page.evaluate(() => {
-				const selection = getSelection();
-				if (selection) {
-					return selection.rangeCount;
-				}
-				return -1;
-			})
-		).toBe(0);
+		// the selection is reset in a `setTimeout` that runs after navigation completes,
+		// so we poll until the ranges have been cleared rather than checking immediately
+		await expect
+			.poll(() =>
+				page.evaluate(() => {
+					const selection = getSelection();
+					if (selection) {
+						return selection.rangeCount;
+					}
+					return -1;
+				})
+			)
+			.toBe(0);
 	});
 
 	test('keepfocus works', async ({ page }) => {
 		await page.goto('/keepfocus');
 
 		await Promise.all([
-			page.type('#input', 'bar'),
+			page.locator('#input').pressSequentially('bar', { delay: 100 }),
 			page.waitForFunction(() => window.location.search === '?foo=bar')
 		]);
 		await expect(page.locator('#input')).toBeFocused();
@@ -121,6 +125,25 @@ test.describe('a11y', () => {
 			)
 		).toBe('BODY');
 		expect(await page.evaluate(() => document.activeElement?.nodeName)).toBe('BODY');
+	});
+
+	test('blur handler can access data during navigation', async ({ page, app }) => {
+		const errors = /** @type {string[]} */ ([]);
+		page.on('pageerror', (err) => errors.push(err.message));
+
+		await page.goto('/accessibility/blur-during-navigation/page-with-input');
+
+		// Focus the input
+		await page.locator('#blur-input').focus();
+
+		// Navigate away — this triggers blur on the focused input.
+		// Without the fix, data would be nulled before blur fired, causing a TypeError.
+		await app.goto('/accessibility/blur-during-navigation/other');
+
+		expect(errors).toEqual([]);
+
+		// The blur handler should have been able to read data.message
+		expect(await page.evaluate(() => /** @type {any} */ (window).__blur_test_result)).toBe('hello');
 	});
 });
 
@@ -501,11 +524,12 @@ test.describe('Scrolling', () => {
 	test('scrolling to url-supplied anchor respects scroll-margin', async ({ page, clicknav }) => {
 		await page.goto('/anchor');
 		await clicknav('#to-scroll-margin');
-		expect(
-			await page.evaluate(
-				() => document.getElementById('scroll-margin')?.getBoundingClientRect().top
-			)
-		).toBe(40);
+		const top = await page.evaluate(
+			() => document.getElementById('scroll-margin')?.getBoundingClientRect().top
+		);
+		// `scroll-margin-top` is 40px; allow sub-pixel rounding (e.g. on
+		// fractional/high-DPR displays `getBoundingClientRect` returns 40.0667)
+		expect(top).toBeCloseTo(40, 0);
 	});
 
 	test('no-anchor url will scroll to top when navigated from bottom of page', async ({
@@ -903,6 +927,18 @@ test.describe('Prefetching', () => {
 		await app.goto('/routing/preloading/preload-error');
 		await expect(page.locator('p')).toHaveText('hello');
 	});
+
+	test('preloads errors', async ({ page }) => {
+		await page.goto('/routing/preloading/error');
+
+		await expect(page.locator('p')).toHaveText('undefined undefined undefined');
+
+		page.locator('button', { hasText: '404' }).click();
+		await expect(page.locator('p')).toHaveText('error 404 Not found');
+
+		page.locator('button', { hasText: '500' }).click();
+		await expect(page.locator('p')).toHaveText('error 500 Oopsie (500 Internal Error)');
+	});
 });
 
 test.describe('Routing', () => {
@@ -1188,6 +1224,13 @@ test.describe('cookies', () => {
 		await expect(page.locator('p')).toHaveText('foo=bar');
 	});
 
+	test('etag forwards multiple cookies', async ({ page }) => {
+		await page.goto('/cookies/forwarded-in-etag-multiple');
+		await expect(page.locator('p')).toHaveText('one=1; three=3; two=2');
+		await page.locator('button').click();
+		await expect(page.locator('p')).toHaveText('one=1; three=3; two=2');
+	});
+
 	test("fetch during SSR doesn't un- and re-escape cookies", async ({ page }) => {
 		await page.goto('/cookies/collect-without-re-escaping');
 		await expect(page.locator('p')).toHaveText('cookie-special-characters="foo"');
@@ -1236,4 +1279,21 @@ test.describe('Load', () => {
 			);
 		});
 	}
+});
+
+test.describe('preloadCode', () => {
+	test('can be called during initial load (#13297)', async ({ page }) => {
+		// the thrown error is caught by the load machinery and surfaces as a console
+		// error (not an uncaught pageerror), so capture console output to detect it
+		/** @type {string[]} */
+		const errors = [];
+		page.on('console', (msg) => {
+			if (msg.type() === 'error') errors.push(msg.text());
+		});
+
+		await page.goto('/preload-code-on-load');
+
+		await expect(page.locator('h1')).toHaveText('preload code on load');
+		expect(errors.filter((e) => e.includes('Invalid base URL'))).toEqual([]);
+	});
 });

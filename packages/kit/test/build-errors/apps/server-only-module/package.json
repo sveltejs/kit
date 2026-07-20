@@ -15,8 +15,11 @@
 		"@sveltejs/vite-plugin-svelte": "catalog:",
 		"svelte": "catalog:",
 		"svelte-check": "catalog:",
-		"typescript": "^6.0.0",
+		"typescript": "catalog:",
 		"vite": "catalog:"
+	},
+	"imports": {
+		"#lib/*": "./src/lib/*"
 	},
 	"type": "module"
 }

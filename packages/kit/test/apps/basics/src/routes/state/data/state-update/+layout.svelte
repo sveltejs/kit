@@ -15,7 +15,7 @@
 </script>
 
 <p>page.data was updated {count} time(s)</p>
-<a href="/state/data/store-updates/a">a</a>
-<a href="/state/data/store-updates/b">b</a>
+<a href="/state/data/state-update/a">a</a>
+<a href="/state/data/state-update/b">b</a>
 
 {@render children()}

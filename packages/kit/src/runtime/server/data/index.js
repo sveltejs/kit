@@ -1,10 +1,10 @@
 import { text } from '@sveltejs/kit';
-import { HttpError, SvelteKitError, Redirect } from '@sveltejs/kit/internal';
+import { Redirect } from '@sveltejs/kit/internal';
 import { normalize_error } from '../../../utils/error.js';
 import { once } from '../../../utils/functions.js';
 import { server_data_serializer_json } from '../page/data_serializer.js';
 import { load_server_data } from '../page/load_data.js';
-import { handle_error_and_jsonify } from '../utils.js';
+import { handle_error_and_jsonify } from '../errors.js';
 import { normalize_path } from '../../../utils/url.js';
 import { text_encoder } from '../../utils.js';
 
@@ -96,31 +96,25 @@ export async function render_data(
 			return fn();
 		});
 
-		let length = promises.length;
-		const nodes = await Promise.all(
-			promises.map((p, i) =>
-				p.catch(async (error) => {
+		const data_serializer = server_data_serializer_json(event, event_state, options);
+		await Promise.all(
+			promises.map(async (p, i) => {
+				const node = await p.catch(async (error) => {
 					if (error instanceof Redirect) {
 						throw error;
 					}
 
-					// Math.min because array isn't guaranteed to resolve in order
-					length = Math.min(length, i + 1);
+					const transformed = await handle_error_and_jsonify(event, event_state, options, error);
 
 					return /** @type {import('types').ServerErrorNode} */ ({
 						type: 'error',
-						error: await handle_error_and_jsonify(event, event_state, options, error),
-						status:
-							error instanceof HttpError || error instanceof SvelteKitError
-								? error.status
-								: undefined
+						error: transformed
 					});
-				})
-			)
-		);
+				});
 
-		const data_serializer = server_data_serializer_json(event, event_state, options);
-		for (let i = 0; i < nodes.length; i++) data_serializer.add_node(i, nodes[i]);
+				data_serializer.add_node(i, node);
+			})
+		);
 		const { data, chunks } = data_serializer.get_data();
 
 		if (!chunks) {
@@ -156,7 +150,8 @@ export async function render_data(
 		if (error instanceof Redirect) {
 			return redirect_json_response(error);
 		} else {
-			return json_response(await handle_error_and_jsonify(event, event_state, options, error), 500);
+			const transformed = await handle_error_and_jsonify(event, event_state, options, error);
+			return json_response(transformed, transformed.status);
 		}
 	}
 }
@@ -182,6 +177,7 @@ export function redirect_json_response(redirect) {
 	return json_response(
 		/** @type {import('types').ServerRedirectNode} */ ({
 			type: 'redirect',
+			status: redirect.status,
 			location: redirect.location
 		})
 	);

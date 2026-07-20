@@ -9,9 +9,10 @@
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",
 		"check": "svelte-kit sync && tsc && svelte-check",
-		"test": "pnpm test:dev && pnpm test:build",
+		"test": "pnpm test:unit && pnpm test:dev && pnpm test:build",
 		"test:dev": "DEV=true playwright test",
-		"test:build": "playwright test"
+		"test:build": "playwright test",
+		"test:unit": "vitest run"
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:^",
@@ -21,5 +22,9 @@
 		"typescript": "catalog:",
 		"valibot": "catalog:",
 		"vite": "catalog:"
+	},
+	"imports": {
+		"#lib": "./src/lib/index.js",
+		"#lib/*": "./src/lib/*"
 	}
 }

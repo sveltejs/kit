@@ -7,20 +7,21 @@ title: Integrations
 [`vitePreprocess`](https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/preprocess.md) preprocesses `<style>` and `<script>` tags in `.svelte` files.
 
 ```js
-// svelte.config.js
+// vite.config.js
+import { sveltekit } from '@sveltejs/kit/vite';
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
+import { defineConfig } from 'vite';
 
-/** @type {import('@sveltejs/kit').Config} */
-const config = {
-  preprocess: [
-    vitePreprocess({
-      style: true,      // default value
-      script: false     // default value
-    })
-  ]
-};
-
-export default config;
+export default defineConfig({
+	plugins: [
+		sveltekit({
+			preprocess: vitePreprocess({
+				style: true,      // default value
+				script: false     // default value
+			})
+		})
+	]
+});
 ```
 
 ### `style`
@@ -62,7 +63,7 @@ Check out [the packages page](/packages) for a curated set of high quality Svelt
 
 `svelte-preprocess` has some additional functionality not found in `vitePreprocess` such as support for Pug, Babel, and global styles. However, `vitePreprocess` may be faster and require less configuration, so it is used by default. Note that CoffeeScript is [not supported](https://github.com/sveltejs/kit/issues/2920#issuecomment-996469815) by SvelteKit.
 
-You will need to install `svelte-preprocess` with `npm i -D svelte-preprocess` and [add it to your `svelte.config.js`](https://github.com/sveltejs/svelte-preprocess/blob/main/docs/usage.md#with-svelte-config). After that, you will often need to [install the corresponding library](https://github.com/sveltejs/svelte-preprocess/blob/main/docs/getting-started.md) such as `npm i -D sass` or `npm i -D less`.
+You will need to install `svelte-preprocess` with `npm i -D svelte-preprocess` and [add it to your `vite.config.js`](https://github.com/sveltejs/svelte-preprocess/blob/main/docs/usage.md#with-svelte-config). After that, you will often need to [install the corresponding library](https://github.com/sveltejs/svelte-preprocess/blob/main/docs/getting-started.md) such as `npm i -D sass` or `npm i -D less`.
 
 ## Vite plugins
 

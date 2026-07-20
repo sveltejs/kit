@@ -51,13 +51,13 @@ A more realistic version of your blog post's `load` function, that only runs on 
 ```js
 /// file: src/routes/blog/[slug]/+page.server.js
 // @filename: ambient.d.ts
-declare module '$lib/server/database' {
+declare module '#lib/server/database' {
 	export function getPost(slug: string): Promise<{ title: string, content: string }>
 }
 
 // @filename: index.js
 // ---cut---
-import * as db from '$lib/server/database';
+import * as db from '#lib/server/database';
 
 /** @type {import('./$types').PageServerLoad} */
 export async function load({ params }) {
@@ -76,13 +76,13 @@ Your `+layout.svelte` files can also load data, via `+layout.js` or `+layout.ser
 ```js
 /// file: src/routes/blog/[slug]/+layout.server.js
 // @filename: ambient.d.ts
-declare module '$lib/server/database' {
+declare module '#lib/server/database' {
 	export function getPostSummaries(): Promise<Array<{ title: string, slug: string }>>
 }
 
 // @filename: index.js
 // ---cut---
-import * as db from '$lib/server/database';
+import * as db from '#lib/server/database';
 
 /** @type {import('./$types').LayoutServerLoad} */
 export async function load() {
@@ -171,10 +171,6 @@ In some cases, we might need the opposite — a parent layout might need to acce
 
 Type information for `page.data` is provided by `App.PageData`.
 
-> [!LEGACY]
-> `$app/state` was added in SvelteKit 2.12. If you're using an earlier version or are using Svelte 4, use `$app/stores` instead.
-> It provides a `page` store with the same interface that you can subscribe to, e.g. `$page.data.title`.
-
 ## Universal vs server
 
 As we've seen, there are two types of `load` function:
@@ -206,7 +202,7 @@ Universal `load` functions are called with a `LoadEvent`, which has a `data` pro
 
 A universal `load` function can return an object containing any values, including things like custom classes and component constructors.
 
-A server `load` function must return data that can be serialized with [devalue](https://github.com/rich-harris/devalue) — anything that can be represented as JSON plus things like `BigInt`, `Date`, `Map`, `Set` and `RegExp`, or repeated/cyclical references — so that it can be transported over the network. Your data can include [promises](#Streaming-with-promises), in which case it will be streamed to browsers. If you need to serialize/deserialize custom types, use [transport hooks](hooks#Universal-hooks-transport).
+A server `load` function must return data that can be serialized with [devalue](https://github.com/rich-harris/devalue) — anything that can be represented as JSON plus things like `BigInt`, `Date`, `Map`, `Set` and `RegExp`, or repeated/cyclical references — so that it can be transported over the network. Your data can include [promises](#Streaming-with-promises), in which case it will be streamed to browsers. If you need to serialize/deserialize custom types, use [transport hooks](hooks#transport).
 
 ### When to use which
 
@@ -280,7 +276,7 @@ To get data from an external API or a `+server.js` handler, you can use the prov
 - It can be used to make credentialed requests on the server, as it inherits the `cookie` and `authorization` headers for the page request.
 - It can make relative requests on the server (ordinarily, `fetch` requires a URL with an origin when used in a server context).
 - Internal requests (e.g. for `+server.js` routes) go directly to the handler function when running on the server, without the overhead of an HTTP call.
-- During server-side rendering, the response will be captured and inlined into the rendered HTML by hooking into the `text`, `json` and `arrayBuffer` methods of the `Response` object. Note that headers will _not_ be serialized, unless explicitly included via [`filterSerializedResponseHeaders`](hooks#Server-hooks-handle).
+- During server-side rendering, the response will be captured and inlined into the rendered HTML by hooking into the `text`, `json` and `arrayBuffer` methods of the `Response` object. Note that headers will _not_ be serialized, unless explicitly included via [`filterSerializedResponseHeaders`](hooks#handle).
 - During hydration, the response will be read from the HTML, guaranteeing consistency and preventing an additional network request - if you received a warning in your browser console when using the browser `fetch` instead of the `load` `fetch`, this is why.
 
 ```js
@@ -296,18 +292,18 @@ export async function load({ fetch, params }) {
 
 ## Cookies
 
-A server `load` function can get and set [`cookies`](@sveltejs-kit#Cookies).
+A server `load` function can get [`cookies`](@sveltejs-kit#Cookies) as shown below. When setting cookies, SvelteKit provides default values for `httpOnly`, `secure`, and `path` — as described in [the API documentation](@sveltejs-kit#Cookies) — in order to improve security and developer experience.
 
 ```js
 /// file: src/routes/+layout.server.js
 // @filename: ambient.d.ts
-declare module '$lib/server/database' {
+declare module '#lib/server/database' {
 	export function getUser(sessionid: string | undefined): Promise<{ name: string, avatar: string }>
 }
 
 // @filename: index.js
 // ---cut---
-import * as db from '$lib/server/database';
+import * as db from '#lib/server/database';
 
 /** @type {import('./$types').LayoutServerLoad} */
 export async function load({ cookies }) {
@@ -327,7 +323,7 @@ For example, if SvelteKit is serving my.domain.com:
 - api.domain.com WILL NOT receive cookies
 - sub.my.domain.com WILL receive cookies
 
-Other cookies will not be passed when `credentials: 'include'` is set, because SvelteKit does not know which domain which cookie belongs to (the browser does not pass this information along), so it's not safe to forward any of them. Use the [handleFetch hook](hooks#Server-hooks-handleFetch) to work around it.
+Other cookies will not be passed when `credentials: 'include'` is set, because SvelteKit does not know which domain which cookie belongs to (the browser does not pass this information along), so it's not safe to forward any of them. Use the [handleFetch hook](hooks#handleFetch) to work around it.
 
 ## Headers
 
@@ -457,7 +453,7 @@ export function load({ locals }) {
 
 Calling `error(...)` will throw an exception, making it easy to stop execution from inside helper functions.
 
-If an [_unexpected_](errors#Unexpected-errors) error is thrown, SvelteKit will invoke [`handleError`](hooks#Shared-hooks-handleError) and treat it as a 500 Internal Error.
+If an [_unexpected_](errors#Unexpected-errors) error is thrown, SvelteKit will invoke [`handleError`](hooks#handleError) and treat it as a 500 Internal Error.
 
 > [!NOTE] [In SvelteKit 1.x](migrating-to-sveltekit-2#redirect-and-error-are-no-longer-thrown-by-you) you had to `throw` the error yourself
 
@@ -582,13 +578,13 @@ For example, given a pair of `load` functions like these...
 ```js
 /// file: src/routes/blog/[slug]/+page.server.js
 // @filename: ambient.d.ts
-declare module '$lib/server/database' {
+declare module '#lib/server/database' {
 	export function getPost(slug: string): Promise<{ title: string, content: string }>
 }
 
 // @filename: index.js
 // ---cut---
-import * as db from '$lib/server/database';
+import * as db from '#lib/server/database';
 
 /** @type {import('./$types').PageServerLoad} */
 export async function load({ params }) {
@@ -601,13 +597,13 @@ export async function load({ params }) {
 ```js
 /// file: src/routes/blog/[slug]/+layout.server.js
 // @filename: ambient.d.ts
-declare module '$lib/server/database' {
+declare module '#lib/server/database' {
 	export function getPostSummaries(): Promise<Array<{ title: string, slug: string }>>
 }
 
 // @filename: index.js
 // ---cut---
-import * as db from '$lib/server/database';
+import * as db from '#lib/server/database';
 
 /** @type {import('./$types').LayoutServerLoad} */
 export async function load() {
@@ -642,7 +638,9 @@ export async function load({ untrack, url }) {
 
 ### Manual invalidation
 
-You can also rerun `load` functions that apply to the current page using [`invalidate(url)`]($app-navigation#invalidate), which reruns all `load` functions that depend on `url`, and [`invalidateAll()`]($app-navigation#invalidateAll), which reruns every `load` function. Server load functions will never automatically depend on a fetched `url` to avoid leaking secrets to the client.
+You can also rerun `load` functions that apply to the current page using [`invalidate(url)`]($app-navigation#invalidate), which reruns all `load` functions that depend on `url`, and [`refreshAll()`]($app-navigation#refreshAll), which reruns every `load` function and all active queries. Server load functions will never automatically depend on a fetched `url` to avoid leaking secrets to the client.
+
+> [!NOTE] `refreshAll` does _not_ reset `page.state`, unlike its deprecated predecessor `invalidateAll`.
 
 A `load` function depends on `url` if it calls `fetch(url)` or `depends(url)`. Note that `url` can be a custom identifier that starts with `[a-z]:`:
 
@@ -665,7 +663,7 @@ export async function load({ fetch, depends }) {
 ```svelte
 <!--- file: src/routes/random-number/+page.svelte --->
 <script>
-	import { invalidate, invalidateAll } from '$app/navigation';
+	import { invalidate, refreshAll } from '$app/navigation';
 
 	/** @type {import('./$types').PageProps} */
 	let { data } = $props();
@@ -675,7 +673,7 @@ export async function load({ fetch, depends }) {
 		invalidate('app:random');
 		invalidate('https://api.example.com/random-number');
 		invalidate(url => url.href.includes('random-number'));
-		invalidateAll();
+		refreshAll();
 	}
 </script>
 
@@ -693,7 +691,7 @@ To summarize, a `load` function will rerun in the following situations:
 - It calls `await parent()` and a parent `load` function reran
 - A child `load` function calls `await parent()` and is rerunning, and the parent is a server load function
 - It declared a dependency on a specific URL via [`fetch`](#Making-fetch-requests) (universal load only) or [`depends`](@sveltejs-kit#LoadEvent), and that URL was marked invalid with [`invalidate(url)`]($app-navigation#invalidate)
-- All active `load` functions were forcibly rerun with [`invalidateAll()`]($app-navigation#invalidateAll)
+- All active `load` functions were forcibly rerun with [`refreshAll()`]($app-navigation#refreshAll)
 
 `params` and `url` can change in response to a `<a href="..">` link click, a [`<form>` interaction](form-actions#GET-vs-POST), a [`goto`]($app-navigation#goto) invocation, or a [`redirect`](@sveltejs-kit#redirect).
 
@@ -758,7 +756,7 @@ Now, you can call `requireLogin` in any `load` function (or [form action](form-a
 /// file: +page.server.js
 // @filename: ambient.d.ts
 
-declare module '$lib/server/auth' {
+declare module '#lib/server/auth' {
 	interface User {
 		name: string;
 	}
@@ -768,7 +766,7 @@ declare module '$lib/server/auth' {
 
 // @filename: index.ts
 // ---cut---
-import { requireLogin } from '$lib/server/auth';
+import { requireLogin } from '#lib/server/auth';
 
 export function load() {
 	const user = requireLogin();

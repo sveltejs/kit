@@ -1,4 +1,4 @@
-import { building, dev } from '$app/environment';
+import { building, dev } from '$app/env';
 import { command, form, prerender, query } from '$app/server';
 import * as v from 'valibot';
 

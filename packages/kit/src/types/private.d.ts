@@ -61,7 +61,10 @@ export namespace Csp {
 		| 'unsafe-eval'
 		| 'unsafe-hashes'
 		| 'unsafe-inline'
+		| 'unsafe-allow-redirects'
+		| 'unsafe-webtransport-hashes'
 		| 'wasm-unsafe-eval'
+		| 'trusted-types-eval'
 		| 'none';
 	type CryptoSource = `${'nonce' | 'sha256' | 'sha384' | 'sha512'}-${string}`;
 	type FrameSource = HostSource | SchemeSource | 'self' | 'none';
@@ -70,7 +73,16 @@ export namespace Csp {
 	type HostProtocolSchemes = `${string}://` | '';
 	type HttpDelineator = '/' | '?' | '#' | '\\';
 	type PortScheme = `:${number}` | '' | ':*';
-	type SchemeSource = 'http:' | 'https:' | 'data:' | 'mediastream:' | 'blob:' | 'filesystem:';
+	type SchemeSource =
+		| 'http:'
+		| 'https:'
+		| 'ws:'
+		| 'wss:'
+		| 'data:'
+		| 'mediastream:'
+		| 'blob:'
+		| 'filesystem:'
+		| (`${string}:` & {});
 	type Source = HostSource | SchemeSource | CryptoSource | BaseSource;
 	type Sources = Source[];
 }
@@ -147,10 +159,18 @@ export type HttpMethod = 'GET' | 'HEAD' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 
 export interface Logger {
 	(msg: string): void;
 	success(msg: string): void;
+	/** Print a bold red message to stderr */
 	error(msg: string): void;
+	/** Print a bold yellow message to stderr */
 	warn(msg: string): void;
+	/** Print faded text to stdout if `verbose === true` */
 	minor(msg: string): void;
+	/** Print to stdout if `verbose === true` */
 	info(msg: string): void;
+	/** Print to stderr without formatting */
+	err(msg: string): void;
+	/** Print a bold red message, followed by a stack trace for each error (following `.cause` chains) */
+	prettyError(error: unknown, caller?: string): void;
 }
 
 export type MaybePromise<T> = T | Promise<T>;
@@ -212,6 +232,10 @@ export interface PrerenderUnseenRoutesHandler {
 	(details: { routes: string[]; message: string }): void;
 }
 
+export interface PrerenderInvalidUrlHandler {
+	(details: { href: string; referrer: string | null; message: string }): void;
+}
+
 export type PrerenderHttpErrorHandlerValue = 'fail' | 'warn' | 'ignore' | PrerenderHttpErrorHandler;
 export type PrerenderMissingIdHandlerValue = 'fail' | 'warn' | 'ignore' | PrerenderMissingIdHandler;
 export type PrerenderUnseenRoutesHandlerValue =
@@ -224,6 +248,11 @@ export type PrerenderEntryGeneratorMismatchHandlerValue =
 	| 'warn'
 	| 'ignore'
 	| PrerenderEntryGeneratorMismatchHandler;
+export type PrerenderInvalidUrlHandlerValue =
+	| 'fail'
+	| 'warn'
+	| 'ignore'
+	| PrerenderInvalidUrlHandler;
 
 export type PrerenderOption = boolean | 'auto';
 
@@ -252,3 +281,14 @@ export type DeepPartial<T> = T extends Record<PropertyKey, unknown> | unknown[]
 	: T | undefined;
 
 export type IsAny<T> = 0 extends 1 & T ? true : false;
+
+export type HasNonOptionalBoolean<T> =
+	IsAny<T> extends true
+		? never
+		: [T] extends [boolean]
+			? true
+			: T extends Array<infer U>
+				? HasNonOptionalBoolean<U>
+				: T extends Record<string, any>
+					? { [K in keyof T]: HasNonOptionalBoolean<T[K]> }[keyof T]
+					: never;

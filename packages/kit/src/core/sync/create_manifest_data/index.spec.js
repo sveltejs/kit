@@ -1,12 +1,11 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { assert, expect, test } from 'vitest';
+import { assert, expect, test, vi } from 'vitest';
 import create_manifest_data from './index.js';
 import { sort_routes } from './sort.js';
 import { validate_config } from '../../config/index.js';
 
-const cwd = fileURLToPath(new URL('./test', import.meta.url));
+const cwd = path.join(import.meta.dirname, 'test');
 
 /**
  * @param {string} dir
@@ -87,7 +86,7 @@ test('creates routes', () => {
 		{
 			id: '/blog.json',
 			pattern: '/^/blog.json/?$/',
-			endpoint: { file: 'samples/basic/blog.json/+server.js', page_options: null }
+			endpoint: { file: 'samples/basic/blog.json/+server.js', page_options: {} }
 		},
 		{
 			id: '/blog',
@@ -99,7 +98,7 @@ test('creates routes', () => {
 			pattern: '/^/blog/([^/]+?).json/?$/',
 			endpoint: {
 				file: 'samples/basic/blog/[slug].json/+server.ts',
-				page_options: null
+				page_options: {}
 			}
 		},
 		{
@@ -108,6 +107,31 @@ test('creates routes', () => {
 			page: { layouts: [0], errors: [1], leaf: 5 }
 		}
 	]);
+});
+
+test('assigns deterministic node indices regardless of readdirSync order', () => {
+	// `readdirSync` order is not guaranteed and differs between runtimes (e.g. Node
+	// returns entries alphabetically, Bun in directory order). Node indices are assigned
+	// from the traversal order, so an unsorted result could make the SSR and client
+	// manifests disagree. Simulate a runtime that returns entries in reverse order and
+	// assert the output matches the normal (sorted) run.
+	const expected = create('samples/basic');
+
+	const actual_readdir = fs.readdirSync;
+	const spy = vi.spyOn(fs, 'readdirSync').mockImplementation((...args) => {
+		const result = /** @type {string[]} */ (
+			/** @type {unknown} */ (actual_readdir(.../** @type {[any, any]} */ (args)))
+		);
+		return /** @type {any} */ ([...result].sort().reverse());
+	});
+
+	try {
+		const actual = create('samples/basic');
+		expect(actual.nodes.map(simplify_node)).toEqual(expected.nodes.map(simplify_node));
+		expect(actual.routes.map(simplify_route)).toEqual(expected.routes.map(simplify_route));
+	} finally {
+		spy.mockRestore();
+	}
 });
 
 const symlink_survived_git = fs
@@ -310,7 +334,7 @@ test('allows rest parameters inside segments', () => {
 			pattern: '/^/([^]*?).json/?$/',
 			endpoint: {
 				file: 'samples/rest-prefix-suffix/[...rest].json/+server.js',
-				page_options: null
+				page_options: {}
 			}
 		}
 	]);
@@ -348,7 +372,7 @@ test('optional parameters', () => {
 		{
 			id: '/[[foo]]bar',
 			pattern: '/^/([^/]*)?bar/?$/',
-			endpoint: { file: 'samples/optional/[[foo]]bar/+server.js', page_options: null }
+			endpoint: { file: 'samples/optional/[[foo]]bar/+server.js', page_options: {} }
 		},
 		{ id: '/nested', pattern: '/^/nested/?$/' },
 		{
@@ -456,6 +480,82 @@ test('group preceding optional parameters', () => {
 	]);
 });
 
+test('optional parameters adjacent to another route', () => {
+	const { nodes, routes } = create('samples/optional-adjacent');
+
+	expect(nodes.map(simplify_node)).toEqual([
+		default_layout,
+		default_error,
+		{
+			component: 'samples/optional-adjacent/+page.svelte'
+		},
+		{
+			component: 'samples/optional-adjacent/[[optional]]/+page.svelte'
+		}
+	]);
+
+	expect(routes.map(simplify_route)).toEqual([
+		{
+			id: '/',
+			pattern: '/^/$/',
+			page: {
+				layouts: [0],
+				errors: [1],
+				leaf: nodes.findIndex((node) => node.component?.includes('/optional-adjacent/+page.svelte'))
+			}
+		},
+		{
+			id: '/[[optional]]',
+			pattern: '/^(?:/([^/]+))?/?$/',
+			page: {
+				layouts: [0],
+				errors: [1],
+				leaf: nodes.findIndex((node) => node.component?.includes('/[[optional]]'))
+			}
+		}
+	]);
+});
+
+test('optional parameters inside a group adjacent to another route', () => {
+	const { nodes, routes } = create('samples/group-optional');
+
+	expect(nodes.map(simplify_node)).toEqual([
+		default_layout,
+		default_error,
+		{
+			component: 'samples/group-optional/+page.svelte'
+		},
+		{
+			component: 'samples/group-optional/(group)/[[optional]]/+page.svelte'
+		}
+	]);
+
+	expect(routes.map(simplify_route)).toEqual([
+		{
+			id: '/(group)',
+			pattern: '/^/$/'
+		},
+		{
+			id: '/',
+			pattern: '/^/$/',
+			page: {
+				layouts: [0],
+				errors: [1],
+				leaf: nodes.findIndex((node) => node.component?.includes('/group-optional/+page.svelte'))
+			}
+		},
+		{
+			id: '/(group)/[[optional]]',
+			pattern: '/^(?:/([^/]+))?/?$/',
+			page: {
+				layouts: [0],
+				errors: [1],
+				leaf: nodes.findIndex((node) => node.component?.includes('/(group)/[[optional]]'))
+			}
+		}
+	]);
+});
+
 test('ignores files and directories with leading underscores', () => {
 	const { routes } = create('samples/hidden-underscore');
 
@@ -481,7 +581,7 @@ test('allows multiple slugs', () => {
 			pattern: '/^/([^/]+?).([^/]+?)/?$/',
 			endpoint: {
 				file: 'samples/multiple-slugs/[file].[ext]/+server.js',
-				page_options: null
+				page_options: {}
 			}
 		}
 	]);
@@ -506,7 +606,7 @@ test('ignores things that look like lockfiles', () => {
 			pattern: '/^/foo/?$/',
 			endpoint: {
 				file: 'samples/lockfiles/foo/+server.js',
-				page_options: null
+				page_options: {}
 			}
 		}
 	]);
@@ -542,7 +642,7 @@ test('works with custom extensions', () => {
 			pattern: '/^/blog.json/?$/',
 			endpoint: {
 				file: 'samples/custom-extension/blog.json/+server.js',
-				page_options: null
+				page_options: {}
 			}
 		},
 		{
@@ -555,7 +655,7 @@ test('works with custom extensions', () => {
 			pattern: '/^/blog/([^/]+?).json/?$/',
 			endpoint: {
 				file: 'samples/custom-extension/blog/[slug].json/+server.js',
-				page_options: null
+				page_options: {}
 			}
 		},
 		{
@@ -754,38 +854,20 @@ test('errors on invalid named layout reference', () => {
 	);
 });
 
-test('creates param matchers', () => {
-	const { matchers } = create('samples/basic'); // directory doesn't matter for the test
+test('creates params file path', () => {
+	const { params } = create('samples/basic');
 
-	expect(matchers).toEqual({
-		foo: path.join('params', 'foo.js'),
-		bar: path.join('params', 'bar.js')
-	});
+	expect(params).toBe('params.js');
 });
 
-test('errors on param matchers with bad names', () => {
-	const boogaloo = path.resolve(cwd, 'params', 'boo-galoo.js');
-	fs.writeFileSync(boogaloo, '');
-	try {
-		assert.throws(() => create('samples/basic'), /Matcher names can only have/);
-	} finally {
-		fs.unlinkSync(boogaloo);
-	}
-});
+test('returns null params when file is missing', () => {
+	const params_file = path.resolve(cwd, 'params.js');
 
-test('errors on duplicate matchers', () => {
-	const ts_foo = path.resolve(cwd, 'params', 'foo.ts');
-	fs.writeFileSync(ts_foo, '');
+	fs.renameSync(params_file, params_file + '.bak');
 	try {
-		assert.throws(() => {
-			create('samples/basic', {
-				kit: {
-					moduleExtensions: ['.js', '.ts']
-				}
-			});
-		}, /Duplicate matchers/);
+		expect(create('samples/basic').params).toBeNull();
 	} finally {
-		fs.unlinkSync(ts_foo);
+		fs.renameSync(params_file + '.bak', params_file);
 	}
 });
 
@@ -824,5 +906,12 @@ test('errors with both ts and js handlers for the same route', () => {
 	assert.throws(
 		() => create('samples/conflicting-ts-js-handlers-server'),
 		/^Multiple endpoint files found in samples\/conflicting-ts-js-handlers-server\/ : \+server\.js and \+server\.ts/
+	);
+});
+
+test('errors on prerenderable dual route', () => {
+	assert.throws(
+		() => create('samples/prerendered-dual-route'),
+		'Cannot prerender a route (/x) with both a `+page.svelte` and a `+server.js`'
 	);
 });

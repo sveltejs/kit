@@ -1,14 +1,15 @@
 /** @import { RemotePrerenderFunction } from '@sveltejs/kit' */
 import { app_dir, base } from '$app/paths/internal/client';
-import { version } from '__sveltekit/environment';
+import { version } from '$app/env';
 import * as devalue from 'devalue';
-import { DEV } from 'esm-env';
-import { app, prerender_responses } from '../client.js';
-import { get_remote_request_headers, remote_request } from './shared.svelte.js';
+import { app, _goto, handle_error, prerender_responses } from '../client.js';
+import { get_remote_request_headers, remote_request, unwrap_node } from './shared.svelte.js';
 import { create_remote_key, stringify_remote_arg } from '../../shared.js';
+import { noop } from '../../../utils/functions.js';
+import { HttpError } from '@sveltejs/kit/internal';
 
 // Initialize Cache API for prerender functions
-const CACHE_NAME = DEV ? `sveltekit:${Date.now()}` : `sveltekit:${version}`;
+const CACHE_NAME = __SVELTEKIT_DEV__ ? `sveltekit:${Date.now()}` : `sveltekit:${version}`;
 /** @type {Cache | undefined} */
 let prerender_cache;
 
@@ -68,7 +69,7 @@ export function prerender(id) {
 				const url = `${base}/${app_dir}/remote/${id}${payload ? `/${payload}` : ''}`;
 
 				if (Object.hasOwn(prerender_responses, cache_key)) {
-					const data = prerender_responses[cache_key];
+					const data = unwrap_node(prerender_responses[cache_key]);
 
 					if (prerender_cache) {
 						void put(url, devalue.stringify(data, app.encoders));
@@ -78,6 +79,7 @@ export function prerender(id) {
 				}
 
 				// Do this here, after await Svelte' reactivity context is gone.
+				// TODO we really don't want to be sending these specific headers here?
 				const headers = get_remote_request_headers();
 
 				// Check the Cache API first
@@ -94,14 +96,22 @@ export function prerender(id) {
 					}
 				}
 
-				const encoded = await remote_request(url, headers);
+				const result = await remote_request(url, { headers });
+
+				if (result.redirect) {
+					// Use internal version to allow redirects to external URLs
+					void _goto(result.redirect, {}, 0);
+					return;
+				}
+
+				const data = result._;
 
 				// For successful prerender requests, save to cache
 				if (prerender_cache) {
-					void put(url, encoded);
+					void put(url, devalue.stringify(data, app.encoders));
 				}
 
-				return devalue.parse(encoded, app.decoders);
+				return data;
 			});
 
 			prerender_resources.set(cache_key, new WeakRef(resource));
@@ -139,6 +149,7 @@ class Prerender {
 	/** @type {T | undefined} */
 	#current = $state.raw();
 
+	/** @type {App.Error | undefined} */
 	#error = $state.raw(undefined);
 
 	/**
@@ -153,12 +164,21 @@ class Prerender {
 				this.#error = undefined;
 				return value;
 			},
-			(error) => {
+			async (e) => {
+				const error = await handle_error(e, {
+					params: {},
+					route: { id: null },
+					url: new URL(location.href)
+				});
 				this.#loading = false;
 				this.#error = error;
-				throw error;
+				throw new HttpError(error.status, error); // so that transformError doesn't transform it again
 			}
 		);
+
+		// rejections are surfaced via `.error` for reactive consumers — make sure the
+		// stored promise (consumed without `await`) never becomes an unhandled rejection
+		this.#promise.catch(noop);
 	}
 
 	/**

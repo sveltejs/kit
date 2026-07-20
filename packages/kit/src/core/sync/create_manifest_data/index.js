@@ -1,13 +1,13 @@
+import { lookup } from '../../../utils/mime.js';
 import fs from 'node:fs';
 import path from 'node:path';
-import process from 'node:process';
-import colors from 'kleur';
-import { lookup } from 'mrmime';
-import { list_files, runtime_directory } from '../../utils.js';
-import { posixify, resolve_entry } from '../../../utils/filesystem.js';
+import { styleText } from 'node:util';
+import { resolve_entry } from '../../../utils/filesystem.js';
+import { posixify } from '../../../utils/os.js';
 import { parse_route_id } from '../../../utils/routing.js';
+import { list_files, runtime_directory } from '../../utils.js';
+import { prevent_conflicts } from './conflict.js';
 import { sort_routes } from './sort.js';
-import { isSvelte5Plus } from '../utils.js';
 import {
 	create_node_analyser,
 	get_page_options
@@ -18,38 +18,31 @@ import {
  * @param {{
  *   config: import('types').ValidatedConfig;
  *   fallback?: string;
- *   cwd?: string;
+ *   cwd: string;
  * }} opts
  * @returns {import('types').ManifestData}
  */
 export default function create_manifest_data({
 	config,
-	fallback = `${runtime_directory}/components/${isSvelte5Plus() ? 'svelte-5' : 'svelte-4'}`,
-	cwd = process.cwd()
+	fallback = `${runtime_directory}/components`,
+	cwd
 }) {
 	const assets = create_assets(config);
 	const hooks = create_hooks(config, cwd);
-	const matchers = create_matchers(config, cwd);
+	const params = resolve_params(config, cwd);
 	const { nodes, routes } = create_routes_and_nodes(cwd, config, fallback);
-
-	for (const route of routes) {
-		for (const param of route.params) {
-			if (param.matcher && !matchers[param.matcher]) {
-				throw new Error(`No matcher found for parameter '${param.matcher}' in route ${route.id}`);
-			}
-		}
-	}
 
 	return {
 		assets,
 		hooks,
-		matchers,
+		params,
 		nodes,
 		routes
 	};
 }
 
 /**
+ * Returns a list of files in the `static` directory.
  * @param {import('types').ValidatedConfig} config
  */
 export function create_assets(config) {
@@ -80,43 +73,14 @@ function create_hooks(config, cwd) {
  * @param {import('types').ValidatedConfig} config
  * @param {string} cwd
  */
-function create_matchers(config, cwd) {
-	const params_base = path.relative(cwd, config.kit.files.params);
-
-	/** @type {Record<string, string>} */
-	const matchers = {};
-	if (fs.existsSync(config.kit.files.params)) {
-		for (const file of fs.readdirSync(config.kit.files.params)) {
-			const ext = path.extname(file);
-			if (!config.kit.moduleExtensions.includes(ext)) continue;
-			const type = file.slice(0, -ext.length);
-
-			if (/^\w+$/.test(type)) {
-				const matcher_file = path.join(params_base, file);
-
-				// Disallow same matcher with different extensions
-				if (matchers[type]) {
-					throw new Error(`Duplicate matchers: ${matcher_file} and ${matchers[type]}`);
-				} else {
-					matchers[type] = matcher_file;
-				}
-			} else {
-				// Allow for matcher test collocation
-				if (type.endsWith('.test') || type.endsWith('.spec')) continue;
-
-				throw new Error(
-					`Matcher names can only have underscores and alphanumeric characters — "${file}" is invalid`
-				);
-			}
-		}
-	}
-
-	return matchers;
+function resolve_params(config, cwd) {
+	const params_file = resolve_entry(config.kit.files.params);
+	return params_file ? posixify(path.relative(cwd, params_file)) : null;
 }
 
 /**
- * @param {import('types').ValidatedConfig} config
  * @param {string} cwd
+ * @param {import('types').ValidatedConfig} config
  * @param {string} fallback
  */
 function create_routes_and_nodes(cwd, config, fallback) {
@@ -130,6 +94,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 	/** @type {import('types').PageNode[]} */
 	const nodes = [];
 
+	// create route data by processing files in `src/routes`
 	if (fs.existsSync(config.kit.files.routes)) {
 		/**
 		 * @param {number} depth
@@ -177,7 +142,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 				throw new Error(`Route ${id} should be renamed to ${id.replace(/#/g, '[x+23]')}`);
 			}
 
-			if (/\[\.\.\.\w+\]\/\[\[/.test(id)) {
+			if (/\[\.\.\.[\w-]+\]\/\[\[/.test(id)) {
 				throw new Error(
 					`Invalid route ${id} — an [[optional]] route segment cannot follow a [...rest] route segment`
 				);
@@ -218,10 +183,17 @@ function create_routes_and_nodes(cwd, config, fallback) {
 
 			// We can't use withFileTypes because of a NodeJs bug which returns wrong results
 			// with isDirectory() in case of symlinks: https://github.com/nodejs/node/issues/30646
-			const files = fs.readdirSync(dir).map((name) => ({
-				is_dir: fs.statSync(path.join(dir, name)).isDirectory(),
-				name
-			}));
+			// We sort the entries because `readdirSync` order is not guaranteed and differs
+			// between runtimes (e.g. Node returns entries alphabetically, Bun in directory
+			// order). Node indices are assigned from this traversal order, so without sorting
+			// the SSR and client manifests can disagree, causing hydration mismatches.
+			const files = fs
+				.readdirSync(dir)
+				.sort()
+				.map((name) => ({
+					is_dir: fs.statSync(path.join(dir, name)).isDirectory(),
+					name
+				}));
 
 			// process files first
 			for (const file of files) {
@@ -240,12 +212,11 @@ function create_routes_and_nodes(cwd, config, fallback) {
 						);
 					if (typo) {
 						console.log(
-							colors
-								.bold()
-								.yellow(
-									`Missing route file prefix. Did you mean +${file.name}?` +
-										` at ${path.join(dir, file.name)}`
-								)
+							styleText(
+								['bold', 'yellow'],
+								`Missing route file prefix. Did you mean +${file.name}?` +
+									` at ${path.join(dir, file.name)}`
+							)
 						);
 					}
 
@@ -366,7 +337,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 			const root = routes[0];
 			if (!root.leaf && !root.error && !root.layout && !root.endpoint) {
 				throw new Error(
-					'No routes found. If you are using a custom src/routes directory, make sure it is specified in your Svelte config file'
+					'No routes found. If you are using a custom src/routes directory, make sure it is specified in your SvelteKit Vite plugin options'
 				);
 			}
 		}
@@ -389,6 +360,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 
 	prevent_conflicts(routes);
 
+	// fallback root layout and root error components
 	const root = routes[0];
 
 	if (!root.layout?.component) {
@@ -397,10 +369,11 @@ function create_routes_and_nodes(cwd, config, fallback) {
 	}
 
 	if (!root.error?.component) {
-		if (!root.error) root.error = { depth: 0 };
+		if (!root.error) root.error = { depth: 0, parent: root.layout };
 		root.error.component = posixify(path.relative(cwd, `${fallback}/error.svelte`));
 	}
 
+	// populate the page nodes list
 	// we do layouts/errors first as they are more likely to be reused,
 	// and smaller indexes take fewer bytes. also, this guarantees that
 	// the default error/layout are 0/1
@@ -420,8 +393,9 @@ function create_routes_and_nodes(cwd, config, fallback) {
 
 	const indexes = new Map(nodes.map((node, i) => [node, i]));
 
-	const node_analyser = create_node_analyser();
+	const node_analyser = create_node_analyser(cwd);
 
+	// add the related layout, page, and error nodes for a route
 	for (const route of routes) {
 		if (!route.leaf) continue;
 
@@ -466,13 +440,40 @@ function create_routes_and_nodes(cwd, config, fallback) {
 		}
 	}
 
+	// add parents to error nodes so that we can compute which page options apply to them
+	for (const route of routes) {
+		if (!route.error) continue;
+
+		/** @type {import('types').RouteData | null} */
+		let current_route = route;
+		while (current_route) {
+			if (current_route.layout) {
+				route.error.parent = current_route.layout;
+				break;
+			}
+			current_route = current_route.parent;
+		}
+	}
+
+	// compute the final page options for each page node
 	for (const node of nodes) {
 		node.page_options = node_analyser.get_page_options(node);
 	}
 
 	for (const route of routes) {
 		if (route.endpoint) {
-			route.endpoint.page_options = get_page_options(route.endpoint.file);
+			route.endpoint.page_options = get_page_options(route.endpoint.file, cwd);
+		}
+
+		if (route.page && route.endpoint) {
+			const page = nodes[route.page.leaf];
+			if (page.page_options?.prerender || route.endpoint.page_options?.prerender) {
+				const endpoint_file = route.endpoint.file.split('/').pop();
+
+				throw new Error(
+					`Cannot prerender a route (${route.id}) with both a \`+page.svelte\` and a \`${endpoint_file}\``
+				);
+			}
 		}
 	}
 
@@ -483,6 +484,7 @@ function create_routes_and_nodes(cwd, config, fallback) {
 }
 
 /**
+ * Determine if and how the file is relevant to the routing system.
  * @param {string} project_relative
  * @param {string} file
  * @param {string[]} component_extensions
@@ -545,69 +547,4 @@ function count_occurrences(needle, haystack) {
 		if (haystack[i] === needle) count += 1;
 	}
 	return count;
-}
-
-/** @param {import('types').RouteData[]} routes */
-function prevent_conflicts(routes) {
-	/** @type {Map<string, string>} */
-	const lookup = new Map();
-
-	for (const route of routes) {
-		if (!route.leaf && !route.endpoint) continue;
-
-		const normalized = normalize_route_id(route.id);
-
-		// find all permutations created by optional parameters
-		const split = normalized.split(/<\?(.+?)>/g);
-
-		let permutations = [/** @type {string} */ (split[0])];
-
-		// turn `x/[[optional]]/y` into `x/y` and `x/[required]/y`
-		for (let i = 1; i < split.length; i += 2) {
-			const matcher = split[i];
-			const next = split[i + 1];
-
-			permutations = permutations.reduce((a, b) => {
-				a.push(b + next);
-				if (!(matcher === '*' && b.endsWith('//'))) a.push(b + `<${matcher}>${next}`);
-				return a;
-			}, /** @type {string[]} */ ([]));
-		}
-
-		for (const permutation of permutations) {
-			// remove leading/trailing/duplicated slashes caused by prior
-			// manipulation of optional parameters and (groups)
-			const key = permutation
-				.replace(/\/{2,}/, '/')
-				.replace(/^\//, '')
-				.replace(/\/$/, '');
-
-			if (lookup.has(key)) {
-				throw new Error(
-					`The "${lookup.get(key)}" and "${route.id}" routes conflict with each other`
-				);
-			}
-
-			lookup.set(key, route.id);
-		}
-	}
-}
-
-/** @param {string} id */
-function normalize_route_id(id) {
-	return (
-		id
-			// remove groups
-			.replace(/(?<=^|\/)\(.+?\)(?=$|\/)/g, '')
-
-			.replace(/\[[ux]\+([0-9a-f]+)\]/g, (_, x) =>
-				String.fromCharCode(parseInt(x, 16)).replace(/\//g, '%2f')
-			)
-
-			// replace `[param]` with `<*>`, `[param=x]` with `<x>`, and `[[param]]` with `<?*>`
-			.replace(
-				/\[(?:(\[)|(\.\.\.))?.+?(=.+?)?\]\]?/g,
-				(_, optional, rest, matcher) => `<${optional ? '?' : ''}${rest ?? ''}${matcher ?? '*'}>`
-			)
-	);
 }

@@ -1,4 +1,4 @@
-import { building, dev } from '$app/environment';
+import { building, dev } from '$app/env';
 import { error, json } from '@sveltejs/kit';
 
 export const prerender = 'auto';

@@ -1,5 +1,5 @@
 import { error, redirect } from '@sveltejs/kit';
-import { SOME_JSON } from '$env/static/private';
+import { SOME_JSON } from '$app/env/private';
 
 // https://github.com/sveltejs/kit/issues/8646
 if (JSON.parse(SOME_JSON).answer !== 42) {

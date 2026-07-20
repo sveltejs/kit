@@ -1,10 +1,14 @@
+/** @import { Component } from 'svelte' */
+/** @import { ActionResult, RequestEvent, SSRManifest } from '@sveltejs/kit' */
+/** @import { PageNodeIndexes, RequestState, RequiredResolveOptions, ServerDataNode, SSRNode, SSROptions, SSRState } from 'types' */
 import { text } from '@sveltejs/kit';
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
 import { compact } from '../../../utils/array.js';
 import { get_status, normalize_error } from '../../../utils/error.js';
 import { noop } from '../../../utils/functions.js';
 import { add_data_suffix } from '../../pathname.js';
-import { redirect_response, static_error_page, handle_error_and_jsonify } from '../utils.js';
+import { redirect_response } from '../utils.js';
+import { static_error_page, handle_error_and_jsonify } from '../errors.js';
 import {
 	handle_action_json_request,
 	handle_action_request,
@@ -16,7 +20,7 @@ import { load_data, load_server_data } from './load_data.js';
 import { render_response } from './render.js';
 import { respond_with_error } from './respond_with_error.js';
 import { DEV } from 'esm-env';
-import { get_remote_action, handle_remote_form_post } from '../remote.js';
+import { get_remote_action, handle_remote_form_post } from '../remote-functions.js';
 import { PageNodes } from '../../../utils/page_nodes.js';
 
 /**
@@ -25,14 +29,14 @@ import { PageNodes } from '../../../utils/page_nodes.js';
 const MAX_DEPTH = 10;
 
 /**
- * @param {import('@sveltejs/kit').RequestEvent} event
- * @param {import('types').RequestState} event_state
- * @param {import('types').PageNodeIndexes} page
- * @param {import('types').SSROptions} options
- * @param {import('@sveltejs/kit').SSRManifest} manifest
- * @param {import('types').SSRState} state
+ * @param {RequestEvent} event
+ * @param {RequestState} event_state
+ * @param {PageNodeIndexes} page
+ * @param {SSROptions} options
+ * @param {SSRManifest} manifest
+ * @param {SSRState} state
  * @param {import('../../../utils/page_nodes.js').PageNodes} nodes
- * @param {import('types').RequiredResolveOptions} resolve_opts
+ * @param {RequiredResolveOptions} resolve_opts
  * @returns {Promise<Response>}
  */
 export async function render_page(
@@ -58,11 +62,11 @@ export async function render_page(
 	}
 
 	try {
-		const leaf_node = /** @type {import('types').SSRNode} */ (nodes.page());
+		const leaf_node = /** @type {SSRNode} */ (nodes.page());
 
 		let status = 200;
 
-		/** @type {import('@sveltejs/kit').ActionResult | undefined} */
+		/** @type {ActionResult | undefined} */
 		let action_result = undefined;
 
 		if (is_action_request(event)) {
@@ -135,7 +139,15 @@ export async function render_page(
 			}
 
 			return await render_response({
-				branch: [],
+				// provide nodes without running load functions so that the styles and
+				// fonts are linked in the head before CSR takes over
+				branch: compact(nodes.data).map((node) => {
+					return {
+						node,
+						data: null,
+						server_data: null
+					};
+				}),
 				fetched,
 				page_config: {
 					ssr: false,
@@ -165,7 +177,7 @@ export async function render_page(
 				? server_data_serializer_json(event, event_state, options)
 				: null;
 
-		/** @type {Array<Promise<import('types').ServerDataNode | null>>} */
+		/** @type {Array<Promise<ServerDataNode | null>>} */
 		const server_promises = nodes.data.map((node, i) => {
 			if (load_error) {
 				// if an error happens immediately, don't bother with the rest of the nodes
@@ -259,6 +271,7 @@ export async function render_page(
 						if (state.prerendering && should_prerender_data) {
 							const body = JSON.stringify({
 								type: 'redirect',
+								status: err.status,
 								location: err.location
 							});
 
@@ -271,8 +284,8 @@ export async function render_page(
 						return redirect_response(err.status, err.location);
 					}
 
-					const status = get_status(err);
 					const error = await handle_error_and_jsonify(event, event_state, options, err);
+					const status = error.status;
 
 					while (i--) {
 						if (page.errors[i]) {
@@ -305,13 +318,7 @@ export async function render_page(
 								},
 								status,
 								error,
-								error_components: await load_error_components(
-									options,
-									ssr,
-									error_branch,
-									page,
-									manifest
-								),
+								error_components: await load_error_components(ssr, error_branch, page, manifest),
 								branch: error_branch,
 								fetched,
 								data_serializer
@@ -359,11 +366,11 @@ export async function render_page(
 			},
 			status,
 			error: null,
-			branch: !ssr ? [] : compact(branch),
+			branch: compact(branch),
 			action_result,
 			fetched,
 			data_serializer: !ssr ? server_data_serializer(event, event_state, options) : data_serializer,
-			error_components: await load_error_components(options, ssr, branch, page, manifest)
+			error_components: await load_error_components(ssr, branch, page, manifest)
 		});
 	} catch (e) {
 		// a remote function could have thrown a redirect during render
@@ -387,18 +394,16 @@ export async function render_page(
 }
 
 /**
- *
- * @param {import('types').SSROptions} options
  * @param {boolean} ssr
  * @param {Array<import('./types.js').Loaded | null>} branch
- * @param {import('types').PageNodeIndexes} page
- * @param {import('@sveltejs/kit').SSRManifest} manifest
+ * @param {PageNodeIndexes} page
+ * @param {SSRManifest} manifest
  */
-async function load_error_components(options, ssr, branch, page, manifest) {
-	/** @type {Array<import('types').SSRComponent | undefined> | undefined} */
+async function load_error_components(ssr, branch, page, manifest) {
+	/** @type {Array<Component | undefined> | undefined} */
 	let error_components;
 
-	if (options.server_error_boundaries && ssr) {
+	if (ssr) {
 		let last_idx = -1;
 		error_components = await Promise.all(
 			// eslint-disable-next-line @typescript-eslint/await-thenable

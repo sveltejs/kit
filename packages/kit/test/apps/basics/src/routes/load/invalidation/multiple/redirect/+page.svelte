@@ -1,12 +1,12 @@
 <script>
-	import { invalidateAll } from '$app/navigation';
+	import { refreshAll } from '$app/navigation';
 	import { redirect_state } from '../state';
 
 	function redirect() {
 		redirect_state.set('start');
-		invalidateAll();
+		refreshAll();
 	}
 </script>
 
-<button class="redirect" on:click={redirect}>redirect</button>
+<button class="redirect" onclick={redirect}>redirect</button>
 <p class="redirect-state">Redirect state: {$redirect_state}</p>
