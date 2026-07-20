@@ -127,6 +127,23 @@ test.describe('hash based navigation', () => {
 		await expect(page.locator('button[id="button3"]')).toBeFocused();
 	});
 
+	test('does not look up an empty anchor id on navigation', async ({ page }) => {
+		await page.addInitScript(`
+			window.empty_id_lookups = 0;
+			const get_element_by_id = Document.prototype.getElementById;
+			Document.prototype.getElementById = function (id) {
+				if (id === '') window.empty_id_lookups++;
+				return get_element_by_id.call(this, id);
+			};
+		`);
+
+		await page.goto('/');
+		await page.locator('a[href="/#/a"]').click();
+		await expect(page.locator('p')).toHaveText('a');
+
+		expect(await page.evaluate('window.empty_id_lookups')).toBe(0);
+	});
+
 	test('resolve works', async ({ page }) => {
 		await page.goto('/#/resolve');
 		await page.locator('a', { hasText: 'go to home' }).click();
