@@ -341,9 +341,7 @@ export async function render_response({
 		if (resolve_opts.preload({ type: 'font', path })) {
 			const ext = dep.slice(dep.lastIndexOf('.') + 1);
 
-			if (resolve_opts.preload({ type: 'font', path })) {
-				add_preload(path, ['rel="preload"', 'as="font"', `type="font/${ext}"`, 'crossorigin']);
-			}
+			add_preload(path, ['rel="preload"', 'as="font"', `type="font/${ext}"`, 'crossorigin']);
 		}
 	}
 
