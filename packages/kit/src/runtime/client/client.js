@@ -2299,7 +2299,7 @@ export function beforeNavigate(callback) {
 }
 
 /**
- * A lifecycle function that runs the supplied `callback` immediately before we navigate to a new URL except during full-page navigations.
+ * A lifecycle function that runs the supplied `callback` immediately before SvelteKit renders the target page and navigates to a new URL, except during full-page navigations. Unlike `beforeNavigate`, `onNavigate` runs once the navigation is already committed and cannot cancel it.
  *
  * If you return a `Promise`, SvelteKit will wait for it to resolve before completing the navigation. This allows you to — for example — use `document.startViewTransition`. Avoid promises that are slow to resolve, since navigation will appear stalled to the user.
  *
