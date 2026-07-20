@@ -61,14 +61,14 @@ function serve(path, client = false) {
 }
 
 /**
- * Relative reference from `from` to `to`, which must differ only by a trailing slash
+ * Relative reference from `from` to `to`, which must differ only by a trailing slash.
+ * Keep in sync with the copy in `packages/kit/src/utils/url.js`
  * @param {string} from
  * @param {string} to
  * @returns {string}
  */
 function relative_pathname(from, to) {
-	const pathname = from.endsWith('/') ? to : from;
-	const segment = pathname.slice(pathname.lastIndexOf('/') + 1);
+	const segment = to.replace(/\/$/, '').split('/').at(-1);
 
 	return from.endsWith('/') ? `../${segment}` : `${segment}/`;
 }

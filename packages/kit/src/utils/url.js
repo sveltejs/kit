@@ -34,8 +34,7 @@ export function is_root_relative(path) {
  * @returns {string}
  */
 export function relative_pathname(from, to) {
-	const pathname = from.endsWith('/') ? to : from;
-	const segment = pathname.slice(pathname.lastIndexOf('/') + 1);
+	const segment = to.replace(/\/$/, '').split('/').at(-1);
 
 	return from.endsWith('/') ? `../${segment}` : `${segment}/`;
 }
