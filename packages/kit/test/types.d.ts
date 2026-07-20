@@ -14,7 +14,16 @@ export const test: TestType<
 	Omit<PlaywrightTestArgs, 'page'> &
 		PlaywrightTestOptions & {
 			app: {
-				goto(url: string, opts?: { replaceState?: boolean }): Promise<void>;
+				goto(
+					url: string | null,
+					opts?: {
+						replace?: boolean;
+						replaceState?: boolean;
+						shallow?: boolean;
+						persistState?: boolean;
+						state?: App.PageState;
+					}
+				): Promise<void>;
 				invalidate(url: string): Promise<void>;
 				beforeNavigate(fn: (navigation: BeforeNavigate) => void | boolean): void;
 				afterNavigate(fn: (navigation: AfterNavigate) => void): void;

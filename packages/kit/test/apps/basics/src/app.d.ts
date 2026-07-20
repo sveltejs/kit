@@ -23,6 +23,7 @@ declare global {
 			route?: string | null;
 			state?: string | null;
 			type?: string;
+			shallow?: boolean;
 		}>;
 	}
 }

@@ -7,20 +7,32 @@
 	});
 
 	beforeNavigate((navigation) => {
-		if (navigation.type === 'shallow') {
-			window.shallow_navigation_log.push({ hook: 'before', type: navigation.type });
+		if (navigation.shallow) {
+			window.shallow_navigation_log.push({
+				hook: 'before',
+				shallow: navigation.shallow,
+				type: navigation.type
+			});
 		}
 	});
 
 	onNavigate((navigation) => {
-		if (navigation.type === 'shallow') {
-			window.shallow_navigation_log.push({ hook: 'on', type: navigation.type });
+		if (navigation.shallow) {
+			window.shallow_navigation_log.push({
+				hook: 'on',
+				shallow: navigation.shallow,
+				type: navigation.type
+			});
 		}
 	});
 
 	afterNavigate((navigation) => {
-		if (navigation.type === 'shallow') {
-			window.shallow_navigation_log.push({ hook: 'after', type: navigation.type });
+		if (navigation.shallow) {
+			window.shallow_navigation_log.push({
+				hook: 'after',
+				shallow: navigation.shallow,
+				type: navigation.type
+			});
 		}
 	});
 </script>

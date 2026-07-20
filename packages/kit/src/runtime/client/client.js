@@ -123,7 +123,7 @@ if (DEV && BROWSER) {
 		warned = true;
 
 		console.warn(
-			"Avoid using `history.pushState(...)` and `history.replaceState(...)` as these will conflict with SvelteKit's router. Use the `pushState` and `replaceState` imports from `$app/navigation` instead."
+			"Avoid using `history.pushState(...)` and `history.replaceState(...)` as these will conflict with SvelteKit's router. Use `goto(...)` from `$app/navigation` instead."
 		);
 	};
 
@@ -420,7 +420,8 @@ export async function start(_app, _target, hydrate) {
 			type: 'enter',
 			url: resolve_url(app.hash ? decode_hash(new URL(location.href)) : location.href),
 			replace_state: true,
-			state: history.state?.[STATES_PERSISTED_KEY] ? (history.state[STATES_KEY] ?? {}) : {}
+			state: history.state?.[STATES_PERSISTED_KEY] ? (history.state[STATES_KEY] ?? {}) : {},
+			persist_state: history.state?.[STATES_PERSISTED_KEY] ?? false
 		});
 
 		restore_scroll();
@@ -478,7 +479,7 @@ async function _invalidate(reset_page_state = true) {
 	if (navigation_result.type === 'redirect') {
 		return _goto(
 			new URL(navigation_result.location, current.url).href,
-			{ replaceState: true },
+			{ replace: true },
 			1,
 			token
 		);
@@ -552,7 +553,7 @@ function persist_state() {
 
 /**
  * @param {string | URL} url
- * @param {{ replaceState?: boolean; noScroll?: boolean; keepFocus?: boolean; refreshAll?: boolean; invalidate?: Array<string | URL | ((url: URL) => boolean)>; state?: Record<string, any> }} options
+ * @param {{ replace?: boolean; noScroll?: boolean; keepFocus?: boolean; refreshAll?: boolean; invalidate?: Array<string | URL | ((url: URL) => boolean)>; state?: Record<string, any>; persistState?: boolean }} options
  * @param {number} redirect_count
  * @param {{}} [nav_token]
  * @param {NavigationIntent | undefined} [intent] navigation intent, when already known by the caller (avoids recomputing it)
@@ -575,8 +576,9 @@ export async function _goto(url, options, redirect_count, nav_token, intent) {
 		url: resolve_url(url),
 		keepfocus: options.keepFocus,
 		noscroll: options.noScroll,
-		replace_state: options.replaceState,
+		replace_state: options.replace,
 		state: options.state,
+		persist_state: options.persistState,
 		redirect_count,
 		nav_token,
 		intent,
@@ -755,6 +757,7 @@ async function initialize(result, target, hydrate) {
 			},
 			willUnload: false,
 			type: 'enter',
+			shallow: false,
 			complete: Promise.resolve()
 		};
 
@@ -1643,12 +1646,14 @@ function get_page_key(url) {
  *   delta?: number;
  *   event?: PopStateEvent | MouseEvent;
  *   scroll?: { x: number, y: number };
+ *   shallow?: boolean;
+ *   target?: { params: Record<string, string> | null; route: { id: string } | null; url: URL };
  * }} opts
  */
-function _before_navigate({ url, type, intent, delta, event, scroll }) {
+function _before_navigate({ url, type, intent, delta, event, scroll, shallow = false, target }) {
 	let should_block = false;
 
-	const nav = create_navigation(current, intent, url, type, scroll ?? null);
+	const nav = create_navigation(current, intent, url, type, scroll ?? null, shallow, target);
 
 	if (nav.navigation.type === 'popstate' && delta !== undefined) {
 		nav.navigation.delta = delta;
@@ -1686,11 +1691,13 @@ function _before_navigate({ url, type, intent, delta, event, scroll }) {
  *     state: Record<string, any>;
  *     scroll: { x: number, y: number };
  *     delta: number;
+ *     shallow: { params: Record<string, string> | null; route: { id: string } | null; url: URL } | null;
  *   };
  *   keepfocus?: boolean;
  *   noscroll?: boolean;
  *   replace_state?: boolean;
  *   state?: Record<string, any>;
+ *   persist_state?: boolean;
  *   redirect_count?: number;
  *   nav_token?: {};
  *   accept?: () => void;
@@ -1708,6 +1715,7 @@ async function navigate({
 	noscroll,
 	replace_state,
 	state = {},
+	persist_state = false,
 	redirect_count = 0,
 	nav_token = {},
 	accept = noop,
@@ -1729,6 +1737,8 @@ async function navigate({
 					delta: popped?.delta,
 					intent,
 					scroll: popped?.scroll,
+					shallow: !!popped?.shallow,
+					target: popped?.shallow ?? undefined,
 					// @ts-ignore
 					event
 				});
@@ -1816,6 +1826,7 @@ async function navigate({
 				noscroll,
 				replace_state,
 				state,
+				persist_state,
 				redirect_count: redirect_count + 1,
 				nav_token
 			});
@@ -1866,7 +1877,7 @@ async function navigate({
 		const entry = {
 			[HISTORY_INDEX]: (current_history_index += change),
 			[NAVIGATION_INDEX]: (current_navigation_index += change),
-			[STATES_PERSISTED_KEY]: true,
+			[STATES_PERSISTED_KEY]: persist_state,
 			[STATES_KEY]: state
 		};
 
@@ -1890,7 +1901,7 @@ async function navigate({
 	}
 
 	navigation_result.props.page.state = state;
-	navigation_result.props.page.shallow = null;
+	navigation_result.props.page.shallow = popped?.shallow ?? null;
 
 	/**
 	 * @type {Promise<void> | undefined}
@@ -1921,7 +1932,13 @@ async function navigate({
 		}
 
 		// Type-casts are save because we know this resolved a proper SvelteKit route
-		const target = /** @type {import('@sveltejs/kit').NavigationTarget} */ (nav.navigation.to);
+		const target = popped?.shallow
+			? {
+					params: navigation_result.state.params,
+					route: { id: navigation_result.state.route?.id ?? null },
+					url: navigation_result.state.url
+				}
+			: /** @type {import('@sveltejs/kit').NavigationTarget} */ (nav.navigation.to);
 		current = {
 			...navigation_result.state,
 			nav: {
@@ -2294,7 +2311,7 @@ export function afterNavigate(callback) {
 }
 
 /**
- * A navigation interceptor that triggers before we navigate to a URL, whether by clicking a link, calling `goto(...)`, `pushState(...)` or `replaceState(...)` with a non-empty URL, or using the browser back/forward controls.
+ * A navigation interceptor that triggers before we navigate to a URL, whether by clicking a link, calling `goto(...)`, or using the browser back/forward controls.
  *
  * Calling `cancel()` will prevent the navigation from completing. If `navigation.type === 'leave'` — meaning the user is navigating away from the app (or closing the tab) — calling `cancel` will trigger the native browser unload confirmation dialog. In this case, the navigation may or may not be cancelled depending on the user's response.
  *
@@ -2345,29 +2362,41 @@ export function disableScrollHandling() {
 }
 
 let warned_on_invalidate_all = false;
+let warned_on_replace_state = false;
+let warned_on_push_state = false;
+let warned_on_replace_state_function = false;
 
 /**
- * Allows you to navigate programmatically to a given route, with options such as keeping the current element focused.
- * Returns a Promise that resolves when SvelteKit navigates (or fails to navigate, in which case the promise rejects) to the specified `url`.
+ * Allows you to navigate programmatically to a given route, with options such as keeping the current element focused. Pass `null` to update `page.state` without changing the URL.
+ * Returns a Promise that resolves when SvelteKit navigates (or fails to navigate, in which case the promise rejects) or the state change has been applied.
  *
- * `goto` is intended for navigations to routes that belong to the app.
- * If the URL does not resolve to a route within the app, the returned promise will reject.
+ * Unless `shallow` is `true`, `goto` is intended for navigations to routes that belong to the app.
+ * If the URL does not resolve to a route within the app, the returned promise will reject unless `shallow` is `true`.
  * For external URLs, use `window.location = url` to perform a full-page navigation instead of calling `goto(url)`.
  *
- * @param {string | URL} url Where to navigate to. Note that if you've set [`config.paths.base`](https://svelte.dev/docs/kit/configuration#paths) and the URL is root-relative, you need to prepend the base path if you want to navigate within the app.
- * @param {Object} [opts] Options related to the navigation
- * @param {boolean} [opts.replaceState] If `true`, will replace the current `history` entry rather than creating a new one with `pushState`
- * @param {boolean} [opts.noScroll] If `true`, the browser will maintain its scroll position rather than scrolling to the top of the page after navigation
- * @param {boolean} [opts.keepFocus] If `true`, the currently focused element will retain focus after navigation. Otherwise, focus will be reset to the body
- * @param {boolean} [opts.refreshAll] If `true`, all `load` functions and queries of the page will be rerun. See https://svelte.dev/docs/kit/load#rerunning-load-functions for more info on invalidation.
- * @param {Array<string | URL | ((url: URL) => boolean)>} [opts.invalidate] Causes any load functions to re-run if they depend on one of the urls
- * @param {boolean} [opts.invalidateAll] Deprecated in favour of opts.refreshAll.
- * @param {App.PageState} [opts.state] An optional object that will be available as `page.state`
+ * @param {string | URL | null} url Where to navigate to. Note that if you've set [`config.paths.base`](https://svelte.dev/docs/kit/configuration#paths) and the URL is root-relative, you need to prepend the base path if you want to navigate within the app.
+ * @param {import('@sveltejs/kit').GotoOptions} [opts] Options related to the navigation
  * @returns {Promise<void>}
  */
 export async function goto(url, opts = {}) {
 	if (!BROWSER) {
 		throw new Error('Cannot call goto(...) on the server');
+	}
+
+	if (DEV && 'replaceState' in opts && !warned_on_replace_state) {
+		warned_on_replace_state = true;
+		console.warn(
+			`The \`goto(..., { replaceState: ${opts.replaceState} })\` option has been deprecated in favour of \`replace\``
+		);
+	}
+
+	const replace = opts.replace ?? opts.replaceState ?? false;
+
+	if (url === null) {
+		// Untrack to avoid triggering outer reactive contexts because we access page.X inside
+		return untrack(() =>
+			update_state(null, opts.state ?? {}, replace, opts.persistState ?? false, 'goto')
+		);
 	}
 
 	url = new URL(resolve_url(url));
@@ -2377,6 +2406,13 @@ export async function goto(url, opts = {}) {
 			DEV
 				? `Cannot use \`goto\` with an external URL. Use \`window.location = "${url}"\` instead`
 				: 'goto: invalid URL'
+		);
+	}
+
+	if (opts.shallow) {
+		// Untrack to avoid triggering outer reactive contexts because we access page.X inside
+		return untrack(() =>
+			update_state(url, opts.state ?? {}, replace, opts.persistState ?? false, 'goto')
 		);
 	}
 
@@ -2397,8 +2433,13 @@ export async function goto(url, opts = {}) {
 		);
 	}
 
-	opts.refreshAll = opts.refreshAll ?? opts.invalidateAll;
-	return _goto(url, opts, 0, {}, intent);
+	return _goto(
+		url,
+		{ ...opts, replace, refreshAll: opts.refreshAll ?? opts.invalidateAll },
+		0,
+		{},
+		intent
+	);
 }
 
 /**
@@ -2572,11 +2613,10 @@ export async function preloadCode(pathname) {
 }
 
 /**
- * Programmatically create a new history entry with the given `page.state`. To keep the current URL and shallow routing context, pass `''` as the first argument. Otherwise, this triggers the navigation lifecycle hooks with a `navigation.type` of `'shallow'`. Used for [shallow routing](https://svelte.dev/docs/kit/shallow-routing).
+ * Programmatically create a new history entry with the given `page.state`. Used for [shallow routing](https://svelte.dev/docs/kit/shallow-routing).
  *
- * Passing `null` as the first argument ends shallow routing and reverts the URL to the value of page.url.
- *
- * @param {string | URL | null} url
+ * @deprecated Use `goto(url, { state, shallow: true })` instead. To keep the current URL, use `goto(null, { state })`.
+ * @param {string | URL} url
  * @param {App.PageState} state
  * @param {Object} [options]
  * @param {boolean} [options.persist] Whether to persist the state across a full page reload. Defaults to `false`.
@@ -2587,16 +2627,22 @@ export async function pushState(url, state, options = {}) {
 		throw new Error('Cannot call pushState(...) on the server');
 	}
 
+	if (DEV && !warned_on_push_state) {
+		warned_on_push_state = true;
+		console.warn(
+			'`pushState(...)` is deprecated. Use `goto(url, { state, shallow: true })` instead. To keep the current URL, use `goto(null, { state })`.'
+		);
+	}
+
 	// Untrack to avoid triggering outer reactive contexts because we access page.X inside
-	await untrack(() => update_state(url, state, false, options.persist ?? false));
+	await untrack(() => update_state(url, state, false, options.persist ?? false, 'pushState'));
 }
 
 /**
- * Programmatically replace the current history entry with the given `page.state`. To keep the current URL and shallow routing context, pass `''` as the first argument. Otherwise, this triggers the navigation lifecycle hooks with a `navigation.type` of `'shallow'`. Used for [shallow routing](https://svelte.dev/docs/kit/shallow-routing).
+ * Programmatically replace the current history entry with the given `page.state`. Used for [shallow routing](https://svelte.dev/docs/kit/shallow-routing).
  *
- * Passing `null` as the first argument ends shallow routing and reverts the URL to the value of page.url.
- *
- * @param {string | URL | null} url
+ * @deprecated Use `goto(url, { state, shallow: true, replace: true })` instead. To keep the current URL, use `goto(null, { state, replace: true })`.
+ * @param {string | URL} url
  * @param {App.PageState} state
  * @param {Object} [options]
  * @param {boolean} [options.persist] Whether to persist the state across a full page reload. Defaults to `false`.
@@ -2607,8 +2653,15 @@ export async function replaceState(url, state, options = {}) {
 		throw new Error('Cannot call replaceState(...) on the server');
 	}
 
+	if (DEV && !warned_on_replace_state_function) {
+		warned_on_replace_state_function = true;
+		console.warn(
+			'`replaceState(...)` is deprecated. Use `goto(url, { state, shallow: true, replace: true })` instead. To keep the current URL, use `goto(null, { state, replace: true })`.'
+		);
+	}
+
 	// Untrack to avoid triggering outer reactive contexts because we access page.X inside
-	await untrack(() => update_state(url, state, true, options.persist ?? false));
+	await untrack(() => update_state(url, state, true, options.persist ?? false, 'replaceState'));
 }
 
 /**
@@ -2616,13 +2669,12 @@ export async function replaceState(url, state, options = {}) {
  * @param {App.PageState} state
  * @param {boolean} replace
  * @param {boolean} persist
+ * @param {'goto' | 'pushState' | 'replaceState'} caller
  */
-async function update_state(url, state, replace, persist) {
+async function update_state(url, state, replace, persist, caller) {
 	if (DEV) {
 		if (!started) {
-			throw new Error(
-				`Cannot call ${replace ? 'replaceState' : 'pushState'}(...) before router is initialized`
-			);
+			throw new Error(`Cannot call ${caller}(...) before router is initialized`);
 		}
 
 		try {
@@ -2636,9 +2688,13 @@ async function update_state(url, state, replace, persist) {
 
 	const resolved = !url ? null : resolve_url(url);
 	const intent = resolved ? await get_navigation_intent(resolved, false) : undefined;
-	const nav = resolved ? _before_navigate({ url: resolved, type: 'shallow', intent }) : undefined;
+	const nav =
+		// For backwards compatibility we don't trigger navigation hooks etc for push/replaceState
+		resolved && caller === 'goto'
+			? _before_navigate({ url: resolved, type: 'goto', intent, shallow: true })
+			: undefined;
 
-	if (resolved && !nav) return;
+	if (resolved && !nav && caller === 'goto') return;
 
 	const nav_token = {};
 
@@ -2654,7 +2710,7 @@ async function update_state(url, state, replace, persist) {
 	const entry = {
 		[HISTORY_INDEX]: (current_history_index += replace ? 0 : 1),
 		[NAVIGATION_INDEX]: current_navigation_index,
-		...((resolved || (url === '' && page.shallow)) && { [PAGE_URL_KEY]: page.url.href }),
+		...((resolved || page.shallow) && { [PAGE_URL_KEY]: page.url.href }),
 		[STATES_PERSISTED_KEY]: persist,
 		[STATES_KEY]: state
 	};
@@ -2663,7 +2719,7 @@ async function update_state(url, state, replace, persist) {
 	if (resolved) {
 		fn.call(history, entry, '', resolved);
 	} else {
-		fn.call(history, entry, '', url == null ? page.url.href : undefined);
+		fn.call(history, entry, '');
 	}
 
 	if (!replace) {
@@ -2698,8 +2754,6 @@ async function update_state(url, state, replace, persist) {
 			route: intent ? { id: intent.route.id } : null,
 			url: resolved
 		};
-	} else if (url === null) {
-		page.shallow = null;
 	}
 
 	if (!nav) return;
@@ -3028,6 +3082,17 @@ function _start_router() {
 			const is_hash_change = current.url ? strip_hash(location) === strip_hash(current.url) : false;
 			const shallow =
 				navigation_index === current_navigation_index && (has_navigated || is_hash_change);
+			const shallow_url = event.state[PAGE_URL_KEY] ? new URL(location.href) : null;
+			const shallow_intent = shallow_url
+				? await get_navigation_intent(shallow_url, false)
+				: undefined;
+			const shallow_target = shallow_url
+				? {
+						params: shallow_intent?.params ?? null,
+						route: shallow_intent ? { id: shallow_intent.route.id } : null,
+						url: shallow_url
+					}
+				: null;
 
 			if (shallow) {
 				// We don't need to navigate, we just need to update scroll and/or state.
@@ -3038,15 +3103,7 @@ function _start_router() {
 					page.state = state;
 				}
 
-				const shallow_url = event.state[PAGE_URL_KEY] ? new URL(location.href) : null;
-				const intent = shallow_url ? await get_navigation_intent(shallow_url, false) : undefined;
-				page.shallow = shallow_url
-					? {
-							params: intent?.params ?? null,
-							route: intent ? { id: intent.route.id } : null,
-							url: shallow_url
-						}
-					: null;
+				page.shallow = shallow_target;
 
 				update_url(url);
 
@@ -3065,7 +3122,8 @@ function _start_router() {
 				popped: {
 					state,
 					scroll,
-					delta
+					delta,
+					shallow: shallow_target
 				},
 				accept: () => {
 					current_history_index = history_index;
@@ -3483,8 +3541,18 @@ function reset_focus(url, scroll = true) {
  * @param {URL | null} url
  * @param {T} type
  * @param {{ x: number, y: number } | null} [target_scroll] The scroll position for the target (for popstate navigations)
+ * @param {boolean} [shallow]
+ * @param {{ params: Record<string, string> | null; route: { id: string } | null; url: URL }} [target]
  */
-function create_navigation(current, intent, url, type, target_scroll = null) {
+function create_navigation(
+	current,
+	intent,
+	url,
+	type,
+	target_scroll = null,
+	shallow = false,
+	target
+) {
 	/** @type {(value: any) => void} */
 	let fulfil;
 
@@ -3508,13 +3576,14 @@ function create_navigation(current, intent, url, type, target_scroll = null) {
 			scroll: scroll_state()
 		},
 		to: url && {
-			params: intent?.params ?? null,
-			route: { id: intent?.route?.id ?? null },
-			url,
+			params: target ? target.params : (intent?.params ?? null),
+			route: { id: target ? (target.route?.id ?? null) : (intent?.route?.id ?? null) },
+			url: target?.url ?? url,
 			scroll: target_scroll
 		},
-		willUnload: type !== 'shallow' && !intent,
+		willUnload: !shallow && !intent,
 		type,
+		shallow,
 		complete
 	});
 

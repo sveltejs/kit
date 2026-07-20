@@ -1,5 +1,5 @@
 <script>
-	import { goto, refreshAll, pushState } from '$app/navigation';
+	import { goto, refreshAll } from '$app/navigation';
 	import { page } from '$app/state';
 
 	let { data } = $props();
@@ -7,40 +7,65 @@
 	let resolved = $state(null);
 
 	function one() {
-		void pushState('', { active: true });
+		void goto(null, { state: { active: true } });
 	}
 
 	function two() {
-		void pushState('/shallow-routing/push-state/a', { active: true });
+		void goto('/shallow-routing/push-state/a', {
+			state: { active: true },
+			shallow: true
+		});
 	}
 
 	async function params() {
-		await pushState('/shallow-routing/push-state/hello', { active: true });
+		await goto('/shallow-routing/push-state/hello', {
+			state: { active: true },
+			shallow: true
+		});
 		resolved = document.querySelector('p')?.textContent ?? null;
 	}
 </script>
 
 <h1>parent</h1>
 
-<button data-id="one" onclick={one}>push state on current page</button>
-<button data-id="two" onclick={two}>push state on child page</button>
-<button data-id="params" onclick={params}>push state on parameterized page</button>
-<button data-id="cancel" onclick={() => pushState('?cancel', { active: true })}>cancel</button>
-<button data-id="state-only" onclick={() => pushState('', { active: true })}>state only</button>
-<button data-id="end-shallow" onclick={() => pushState(null, { active: true })}>end shallow</button>
+<button data-id="one" onclick={one}>add state on current page</button>
+<button data-id="two" onclick={two}>shallow navigate to child page</button>
+<button data-id="params" onclick={params}>shallow navigate to parameterized page</button>
+<button data-id="cancel" onclick={() => goto('?cancel', { shallow: true, state: { active: true } })}
+	>cancel</button
+>
+<button data-id="state-only" onclick={() => goto(null, { state: { active: true } })}
+	>state only</button
+>
 <button
 	data-id="state-only-persist"
-	onclick={() => pushState('', { active: true }, { persist: true })}>persist state</button
+	onclick={() => goto(null, { state: { active: true }, persistState: true })}
+	>persist state only</button
 >
 <button
 	data-id="shallow-persist"
-	onclick={() => pushState('/shallow-routing/push-state/a', { active: true }, { persist: true })}
-	>persist shallow state</button
+	onclick={() =>
+		goto('/shallow-routing/push-state/a', {
+			shallow: true,
+			state: { active: true },
+			persistState: true
+		})}>persist shallow state</button
 >
 <button
 	data-id="goto-state"
 	onclick={() => goto('/shallow-routing/push-state', { state: { active: true } })}
 	>goto with state</button
+>
+<button
+	data-id="goto-persist"
+	onclick={() =>
+		goto('/shallow-routing/push-state', { state: { active: true }, persistState: true })}
+	>persist goto state</button
+>
+<button
+	data-id="end-shallow"
+	onclick={() => goto('/shallow-routing/push-state', { state: { active: true } })}
+	>end shallow</button
 >
 <button data-id="refresh" onclick={refreshAll}>refresh all</button>
 

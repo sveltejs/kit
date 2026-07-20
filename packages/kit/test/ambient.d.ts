@@ -7,9 +7,13 @@ declare global {
 	}
 
 	const goto: (
-		href: string,
+		href: string | null,
 		opts?: {
+			replace?: boolean;
 			replaceState?: boolean;
+			shallow?: boolean;
+			persistState?: boolean;
+			state?: App.PageState;
 			noScroll?: boolean;
 		}
 	) => Promise<void>;

@@ -2,4 +2,4 @@
 '@sveltejs/kit': minor
 ---
 
-breaking: adjust how `pushState/replaceState` behave
+feat: add shallow routing to `goto` and deprecate `pushState` and `replaceState`

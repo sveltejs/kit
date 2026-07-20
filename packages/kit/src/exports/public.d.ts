@@ -1263,6 +1263,29 @@ export interface NavigationTarget<
 	scroll: { x: number; y: number } | null;
 }
 
+export interface GotoOptions {
+	/** If `true`, replaces the current history entry rather than creating a new one. */
+	replace?: boolean;
+	/** @deprecated Use `replace` instead. */
+	replaceState?: boolean;
+	/** If `true`, updates the URL and `page.state` without navigating. */
+	shallow?: boolean;
+	/** If `true`, preserves the browser's scroll position. */
+	noScroll?: boolean;
+	/** If `true`, keeps the currently focused element focused. */
+	keepFocus?: boolean;
+	/** If `true`, reruns all `load` functions and queries of the page. */
+	refreshAll?: boolean;
+	/** Causes any `load` functions to rerun if they depend on one of the URLs. */
+	invalidate?: Array<string | URL | ((url: URL) => boolean)>;
+	/** @deprecated Use `refreshAll` instead. */
+	invalidateAll?: boolean;
+	/** An optional object that will be available as `page.state`. */
+	state?: App.PageState;
+	/** If `true`, `page.state` will be restored after a full page reload. */
+	persistState?: boolean;
+}
+
 /**
  * - `enter`: The app has hydrated/started
  * - `form`: The user submitted a `<form method="GET">`
@@ -1270,9 +1293,8 @@ export interface NavigationTarget<
  * - `leave`: The app is being left either because the tab is being closed or a navigation to a different document is occurring
  * - `link`: Navigation was triggered by a link click
  * - `popstate`: Navigation was triggered by back/forward navigation
- * - `shallow`: Navigation was triggered by a `pushState(...)` or `replaceState(...)` call with a non-empty URL
  */
-export type NavigationType = 'enter' | 'form' | 'leave' | 'link' | 'goto' | 'popstate' | 'shallow';
+export type NavigationType = 'enter' | 'form' | 'leave' | 'link' | 'goto' | 'popstate';
 
 export interface NavigationBase {
 	/**
@@ -1283,9 +1305,10 @@ export interface NavigationBase {
 	 * - `leave`: The app is being left either because the tab is being closed or a navigation to a different document is occurring
 	 * - `link`: Navigation was triggered by a link click
 	 * - `popstate`: Navigation was triggered by back/forward navigation
-	 * - `shallow`: Navigation was triggered by a `pushState(...)` or `replaceState(...)` call with a non-empty URL
 	 */
 	type: NavigationType;
+	/** Whether this is a shallow navigation. */
+	shallow: boolean;
 	/**
 	 * Where navigation was triggered from
 	 */
@@ -1329,13 +1352,6 @@ export type NavigationExternal = NavigationGoto | NavigationLeave;
  */
 export interface NavigationGoto extends NavigationBase {
 	type: 'goto';
-}
-
-/**
- * A navigation triggered by a `pushState(...)` or `replaceState(...)` call with a non-empty URL
- */
-export interface NavigationShallow extends NavigationBase {
-	type: 'shallow';
 }
 
 /**
@@ -1390,8 +1406,7 @@ export type Navigation =
 	| NavigationExternal
 	| NavigationFormSubmit
 	| NavigationPopState
-	| NavigationLink
-	| NavigationShallow;
+	| NavigationLink;
 
 /**
  * The argument passed to [`beforeNavigate`](https://svelte.dev/docs/kit/$app-navigation#beforeNavigate) callbacks.
@@ -1462,7 +1477,7 @@ export interface Page<
 	 */
 	data: App.PageData & Record<string, any>;
 	/**
-	 * The page state, which can be manipulated using the [`pushState`](https://svelte.dev/docs/kit/$app-navigation#pushState) and [`replaceState`](https://svelte.dev/docs/kit/$app-navigation#replaceState) functions from `$app/navigation`.
+	 * The page state, which can be manipulated using [`goto`](https://svelte.dev/docs/kit/$app-navigation#goto) from `$app/navigation`.
 	 */
 	state: App.PageState;
 	/**
@@ -1473,7 +1488,7 @@ export interface Page<
 		params: AppLayoutParams<'/'> | null;
 		/** Info about the target route, or `null` if the URL does not resolve to a route. */
 		route: { id: AppRouteId } | null;
-		/** The normalized URL passed to `pushState` or `replaceState`. */
+		/** The normalized URL passed to `goto(..., { shallow: true })`. */
 		url: ReadonlyURL;
 	} | null;
 	/**

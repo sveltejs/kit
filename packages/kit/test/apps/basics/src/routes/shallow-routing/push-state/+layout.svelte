@@ -7,13 +7,14 @@
 	});
 
 	beforeNavigate((navigation) => {
-		if (navigation.type !== 'shallow') return;
+		if (!navigation.shallow) return;
 
 		window.shallow_navigation_log.push({
 			hook: 'before',
 			params: navigation.to?.params,
 			path: navigation.to?.url.pathname,
 			route: navigation.to?.route.id,
+			shallow: navigation.shallow,
 			type: navigation.type
 		});
 
@@ -27,15 +28,20 @@
 	});
 
 	onNavigate((navigation) => {
-		if (navigation.type === 'shallow') {
-			window.shallow_navigation_log.push({ hook: 'on', type: navigation.type });
+		if (navigation.shallow) {
+			window.shallow_navigation_log.push({
+				hook: 'on',
+				shallow: navigation.shallow,
+				type: navigation.type
+			});
 		}
 	});
 
 	afterNavigate((navigation) => {
-		if (navigation.type === 'shallow') {
+		if (navigation.shallow) {
 			window.shallow_navigation_log.push({
 				hook: 'after',
+				shallow: navigation.shallow,
 				state: document.querySelector('p')?.textContent ?? null,
 				type: navigation.type
 			});

@@ -2,4 +2,4 @@
 '@sveltejs/kit': minor
 ---
 
-feat: provide possibility to preserve state across reloads when using `pushState/replaceState`
+feat: preserve page state set through `goto(..., { state, persistState: true })` across reloads
