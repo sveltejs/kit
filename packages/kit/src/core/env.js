@@ -254,8 +254,6 @@ export function create_sveltekit_env_service_worker(variables, env, global, base
 	return dedent`
 		import { env } from '${base}/${app_dir}/env.js';
 
-		globalThis.__SVELTEKIT_EXPERIMENTAL_EXPLICIT_ENVIRONMENT_VARIABLES__ = true;
-
 		${global} = { env };
 	`;
 }
@@ -283,8 +281,6 @@ export function create_sveltekit_env_service_worker_dev(variables, env, global) 
 	handle_issues(issues);
 
 	return dedent`
-		globalThis.__SVELTEKIT_EXPERIMENTAL_EXPLICIT_ENVIRONMENT_VARIABLES__ = true;
-
 		${global} = {
 			env: {
 				${properties.join(',\n\t\t') || '// empty'}
