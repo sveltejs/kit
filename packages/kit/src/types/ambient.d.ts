@@ -68,22 +68,19 @@ declare module '$app/manifest' {
 	 */
 	export const immutable: Array<{ path: string }>;
 	/**
-	 * An array of `{ path: string }` objects representing the files in your `static` directory, or whatever directory is specified by `config.files.assets`.
-	 * `base` from `$app/paths`and can be used with [`asset(...)`](https://svelte.dev/docs/kit/$app-paths#asset).
+	 * An array of `{ path: AssetPath }` objects representing the files in your `static` directory, or whatever directory is specified by `config.files.assets`.
+	 * The path is relative to `base` from `$app/paths`, and can be used with [`asset(...)`](https://svelte.dev/docs/kit/$app-paths#asset).
 	 */
+	export const assets: Array<{ path: import('$app/types').Asset }>;
 	/**
-	 * An array of paths (relative to `base` from `$app/paths`) representing the files in your static directory, or whatever directory is specified by `config.files.assets`.
-	 */
-	export const assets: Array<{ path: string }>;
-	/**
-	 * An array of `{ path: string }` objects representing prerendered pages and endpoints.
+	 * An array of `{ path: Path }` objects representing prerendered pages and endpoints.
 	 * During development, this is an empty array.
 	 */
-	export const prerendered: Array<{ path: string }>;
+	export const prerendered: Array<{ path: import('$app/types').Pathname }>;
 	/**
 	 * An array of objects with an `id` property representing the routes in your app.
 	 */
-	export const routes: { id: import('$app/types').RouteId }[];
+	export const routes: Array<{ id: import('$app/types').RouteId }>;
 }
 
 /**
