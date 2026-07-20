@@ -273,8 +273,7 @@ export const validate_kit_options = object({
 		register: boolean(true),
 		// options could be undefined but if it is defined we only validate that
 		// it's an object since the type comes from the browser itself
-		options: validate(undefined, object({}, true)),
-		files: fun((filename) => !/\.DS_Store/.test(filename))
+		options: validate(undefined, object({}, true))
 	}),
 
 	tracing: object({

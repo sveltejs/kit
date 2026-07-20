@@ -150,8 +150,6 @@ const get_defaults = (prefix = '') => ({
 test('fills in defaults', () => {
 	const validated = validate_config({});
 
-	assert.equal(validated.kit.serviceWorker.files(''), true);
-
 	remove_keys(validated, ([, v]) => typeof v === 'function');
 
 	const defaults = get_defaults();
@@ -211,8 +209,6 @@ test('fills in partial blanks', () => {
 			}
 		}
 	});
-
-	assert.equal(validated.kit.serviceWorker.files(''), true);
 
 	remove_keys(validated, ([, v]) => typeof v === 'function');
 

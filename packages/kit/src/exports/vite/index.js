@@ -24,7 +24,6 @@ import {
 	create_exported_declarations
 } from '../../core/env.js';
 import * as sync from '../../core/sync/sync.js';
-import { create_assets } from '../../core/sync/create_manifest_data/index.js';
 import { load_and_validate_params } from '../../utils/params.js';
 import { runtime_directory, logger } from '../../core/utils.js';
 import { generate_manifest } from '../../core/generate_manifest/index.js';
@@ -52,7 +51,6 @@ import { get_import_aliases, get_hash_import_keys } from '../../utils/imports.js
 import {
 	app_env_private,
 	app_server,
-	service_worker,
 	sveltekit_env,
 	sveltekit_env_private,
 	sveltekit_env_service_worker,
@@ -104,8 +102,7 @@ const enforced_config = {
 	resolve: {
 		alias: {
 			$app: true,
-			$env: true,
-			'$service-worker': true
+			$env: true
 		}
 	}
 };
@@ -639,16 +636,11 @@ function kit({ svelte_config }) {
 
 		resolveId: {
 			filter: {
-				id: [exactRegex('$service-worker'), prefixRegex('__sveltekit/')]
+				id: [prefixRegex('__sveltekit/')]
 			},
 			handler(id) {
 				if (id === '__sveltekit/manifest') {
 					return `${out_dir}/generated/client-optimized/app.js`;
-				}
-
-				if (id === '$service-worker') {
-					// ids with :$ don't work with reverse proxies like nginx
-					return `\0virtual:${id.substring(1)}`;
 				}
 
 				if (id === '__sveltekit/remote') {
@@ -662,7 +654,6 @@ function kit({ svelte_config }) {
 		load: {
 			filter: {
 				id: [
-					exactRegex(service_worker),
 					exactRegex(sveltekit_env),
 					exactRegex(sveltekit_env_private),
 					exactRegex(sveltekit_env_public_client),
@@ -674,9 +665,6 @@ function kit({ svelte_config }) {
 			},
 			handler(id) {
 				switch (id) {
-					case service_worker:
-						return create_service_worker_module(svelte_config);
-
 					case sveltekit_manifest_data:
 						return create_manifest_data_module(is_build, manifest_data);
 
@@ -1059,8 +1047,6 @@ function kit({ svelte_config }) {
 	/** @type {Set<string>} */
 	let build_files;
 	/** @type {string} */
-	let service_worker_code;
-	/** @type {string} */
 	let manifest_data_code;
 
 	/**
@@ -1140,22 +1126,22 @@ function kit({ svelte_config }) {
 
 				if (
 					importer_is_service_worker &&
-					id !== '$service-worker' &&
 					id !== '$app/manifest' &&
 					id !== 'virtual:$app/env/public' &&
 					id !== '__sveltekit/env/service-worker'
 				) {
+					// TODO this... doesn't seem to be happening? we can import `$app/paths` just fine?
 					throw new Error(
 						`Cannot import ${normalize_id(
 							id,
 							normalized_aliases,
 							normalized_cwd
-						)} into service-worker code. Only the modules $service-worker, $app/manifest and $app/env/public are available in service workers.`
+						)} into service-worker code. Only the modules $app/manifest and $app/env/public are available in service workers.`
 					);
 				}
 			}
 
-			if (id.startsWith('$app/') || id === '$service-worker') {
+			if (id.startsWith('$app/')) {
 				// ids with :$ don't work with reverse proxies like nginx
 				return `\0virtual:${id.substring(1)}`;
 			}
@@ -1190,33 +1176,6 @@ function kit({ svelte_config }) {
 						}
 					}
 
-					// in a service worker, `location` is the location of the service worker itself,
-					// which is guaranteed to be `<base>/service-worker.js`
-					const base = "location.pathname.split('/').slice(0, -1).join('/')";
-
-					service_worker_code = dedent`
-					export const base = /*@__PURE__*/ ${base};
-
-					export const build = [
-						${Array.from(build_files)
-							.map((file) => `base + ${s(`/${file}`)}`)
-							.join(',\n')}
-					];
-
-					export const files = [
-						${manifest_data.assets
-							.filter((asset) => kit.serviceWorker.files(asset.file))
-							.map((asset) => `base + ${s(`/${asset.file}`)}`)
-							.join(',\n')}
-					];
-
-					export const prerendered = [
-						${prerendered.paths.map((path) => `base + ${s(path.replace(kit.paths.base, ''))}`).join(',\n')}
-					];
-
-					export const version = ${s(kit.version.name)};
-					`;
-
 					manifest_data_code = dedent`
 					export const immutable = [
 						${Array.from(build_files)
@@ -1236,10 +1195,6 @@ function kit({ svelte_config }) {
 						${manifest_data.routes.map((route) => s({ id: route.id })).join(',\n')}
 					];
 					`;
-				}
-
-				if (id === service_worker) {
-					return service_worker_code;
 				}
 
 				if (id === '\0virtual:app/manifest') {
@@ -1283,8 +1238,10 @@ function kit({ svelte_config }) {
 				);
 				const relative = normalize_id(id, sw_normalized_aliases, sw_normalized_cwd);
 				const stripped = strip_virtual_prefix(relative);
+
+				// TODO this doesn't seem to be happening
 				throw new Error(
-					`Cannot import ${stripped} into service-worker code. Only the modules $service-worker, $app/manifest and $app/env/public are available in service workers.`
+					`Cannot import ${stripped} into service-worker code. Only the modules $app/manifest and $app/env/public are available in service workers.`
 				);
 			}
 		}
@@ -2179,26 +2136,6 @@ function find_overridden_config(config, resolved_config, enforced_config, path, 
 	}
 	return out;
 }
-
-/**
- * @param {ValidatedConfig} config
- */
-const create_service_worker_module = (config) => dedent`
-	if (typeof self === 'undefined' || self instanceof ServiceWorkerGlobalScope === false) {
-		throw new Error('This module can only be imported inside a service worker');
-	}
-
-	export const base = location.pathname.split('/').slice(0, -1).join('/');
-	export const build = [];
-	export const files = [
-		${create_assets(config)
-			.filter((asset) => config.kit.serviceWorker.files(asset.file))
-			.map((asset) => `${s(`${config.kit.paths.base}/${asset.file}`)}`)
-			.join(',\n')}
-	];
-	export const prerendered = [];
-	export const version = ${s(config.kit.version.name)};
-`;
 
 /**
  * Creates the `$app/manifest` data module. During development, real values

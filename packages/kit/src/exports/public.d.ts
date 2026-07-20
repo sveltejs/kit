@@ -846,13 +846,7 @@ export interface KitConfig {
 		 */
 		resolution?: 'client' | 'server';
 	};
-	serviceWorker?: {
-		/**
-		 * Determine which files in your `static` directory will be available in `$service-worker.files`.
-		 * @default (filename) => !/\.DS_Store/.test(filename)
-		 */
-		files?: (file: string) => boolean;
-	} & (
+	serviceWorker?:
 		| {
 				/**
 				 * Whether to automatically register the service worker, if it exists.
@@ -870,8 +864,7 @@ export interface KitConfig {
 				 * @default true
 				 */
 				register?: false;
-		  }
-	);
+		  };
 	/**
 	 * Options for enabling [OpenTelemetry](https://opentelemetry.io/) tracing for SvelteKit operations.
 	 * @default { server: false }

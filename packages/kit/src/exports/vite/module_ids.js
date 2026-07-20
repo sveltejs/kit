@@ -7,8 +7,6 @@ export const sveltekit_env_public_server = '\0virtual:__sveltekit/env/public/ser
 export const sveltekit_env_private = '\0virtual:__sveltekit/env/private';
 export const sveltekit_env_service_worker = '\0virtual:__sveltekit/env/service-worker';
 
-export const service_worker = '\0virtual:service-worker';
-
 export const sveltekit_server = '\0virtual:__sveltekit/server';
 
 export const sveltekit_manifest_data = '\0virtual:__sveltekit/manifest-data';
