@@ -1704,6 +1704,7 @@ test.describe('Shallow routing', () => {
 			'/shallow-routing/push-state/a /shallow-routing/push-state/a {}'
 		);
 
+		// Reload should mean we don't do shallow routing and instead show the real page
 		await page.reload();
 		await expect(page.locator('h1')).toHaveText('a');
 		await expect(page.locator('p')).toHaveText('active: false');
@@ -1714,7 +1715,27 @@ test.describe('Shallow routing', () => {
 		await expect(page.locator('h1')).toHaveText('parent');
 		await expect(page.locator('p')).toHaveText('active: false');
 
+		// Going forward again should reactivate shallow routing
 		await page.goForward();
+		expect(page.url()).toBe(`${baseURL}/shallow-routing/push-state/a`);
+		await expect(page.locator('h1')).toHaveText('parent');
+		await expect(page.locator('p')).toHaveText('active: true');
+		await expect(page.locator('[data-id="shallow"]')).toHaveText(
+			'/shallow-routing/push-state/a /shallow-routing/push-state/a {}'
+		);
+
+		await page.reload();
+		await expect(page.locator('h1')).toHaveText('a');
+		await expect(page.locator('p')).toHaveText('active: false');
+		await expect(page.locator('[data-id="shallow"]')).toHaveText('null');
+
+		await page.locator('[data-id="shallow-b"]').click();
+		expect(page.url()).toBe(`${baseURL}/shallow-routing/push-state/b`);
+		await expect(page.locator('h1')).toHaveText('a');
+		await expect(page.locator('p')).toHaveText('active: true');
+
+		// After reload + pushState + back, we should reactivate shallow routing
+		await page.goBack();
 		expect(page.url()).toBe(`${baseURL}/shallow-routing/push-state/a`);
 		await expect(page.locator('h1')).toHaveText('parent');
 		await expect(page.locator('p')).toHaveText('active: true');

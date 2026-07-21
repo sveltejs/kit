@@ -3079,9 +3079,15 @@ function _start_router() {
 			const state = event.state[STATES_KEY] ?? {};
 			const url = new URL(event.state[PAGE_URL_KEY] ?? location.href);
 			const navigation_index = event.state[NAVIGATION_INDEX];
-			const is_hash_change = current.url ? strip_hash(location) === strip_hash(current.url) : false;
+			const is_hash_change =
+				current.url && (location.href + current.url.href).includes('#') // check if even has a hash
+					? strip_hash(location) === strip_hash(current.url)
+					: false;
 			const shallow =
-				navigation_index === current_navigation_index && (has_navigated || is_hash_change);
+				navigation_index === current_navigation_index &&
+				((has_navigated &&
+					(!event.state?.[PAGE_URL_KEY] || event.state[PAGE_URL_KEY] === location.href)) ||
+					is_hash_change);
 			const shallow_url = event.state[PAGE_URL_KEY] ? new URL(location.href) : null;
 			const shallow_intent = shallow_url
 				? await get_navigation_intent(shallow_url, false)
