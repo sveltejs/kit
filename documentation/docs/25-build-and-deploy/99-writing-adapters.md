@@ -76,7 +76,11 @@ The main Vite server environment SvelteKit uses is named `ssr`. You can change i
 ```js
 // @errors: 2304 1005 1109
 config(userConfig) {
-	userConfig.environments.ssr = { ... }
+	userConfig.environments = {
+		ssr: {
+			// ...
+		}
+	}
 }
 ```
 
