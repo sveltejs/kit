@@ -130,6 +130,29 @@ test.describe('remote functions', () => {
 		await expect(page.locator('[data-id="results"]')).toHaveText(expected);
 	});
 
+	test('forged url headers do not expose event.url to a query', async ({
+		page,
+		clicknav,
+		javaScriptEnabled,
+		request
+	}) => {
+		test.skip(!javaScriptEnabled, 'requires JavaScript to capture the query request');
+
+		// capture the real query request so the replay hits the exact endpoint
+		const captured = page.waitForRequest((req) => req.url().includes('/get_event'));
+		await page.goto('/remote');
+		await clicknav('[href="/remote/event"]');
+
+		const response = await request.fetch((await captured).url(), {
+			headers: { 'x-sveltekit-pathname': '/forged', 'x-sveltekit-search': '?forged=1' }
+		});
+
+		const body = await response.text();
+		for (const property of ['url', 'params', 'route']) {
+			expect(body).toContain(`Cannot access event.${property} in a query`);
+		}
+	});
+
 	test('queries can read prerendered data during SSR', async ({ page }) => {
 		await page.goto('/remote/prerender-in-query');
 		await expect(page.locator('[data-id="nested-prerender"]')).toHaveText('yes');
