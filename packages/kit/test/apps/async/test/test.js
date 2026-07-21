@@ -130,6 +130,11 @@ test.describe('remote functions', () => {
 		await expect(page.locator('[data-id="results"]')).toHaveText(expected);
 	});
 
+	test('queries can read prerendered data during SSR', async ({ page }) => {
+		await page.goto('/remote/prerender-in-query');
+		await expect(page.locator('[data-id="nested-prerender"]')).toHaveText('yes');
+	});
+
 	test('form works', async ({ page, javaScriptEnabled }) => {
 		await page.goto(`/remote/form/basic-${javaScriptEnabled}`);
 
