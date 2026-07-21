@@ -37,7 +37,7 @@ export function create_validator(validate_or_fn, maybe_fn) {
 			if (result.issues) {
 				const body = await state.handleValidationError({
 					issues: result.issues,
-					event
+					event: state.original_event ?? event
 				});
 				error(body.status ?? 400, body);
 			}
@@ -136,8 +136,7 @@ function derive_remote_function_event(event, state, allow_cookies) {
 
 	if (state.is_in_remote_query) {
 		for (const property of ['url', 'params', 'route']) {
-			// non-enumerable so that deriving the event again for a nested query
-			// doesn't invoke the getter while spreading
+			// non-enumerable so spreading for a nested derivation doesn't invoke the getter
 			Object.defineProperty(derived, property, {
 				enumerable: false,
 				get() {
@@ -153,6 +152,7 @@ function derive_remote_function_event(event, state, allow_cookies) {
 		event: derived,
 		state: {
 			...state,
+			original_event: state.original_event ?? event,
 			is_in_remote_function: true
 		}
 	};
