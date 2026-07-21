@@ -3587,6 +3587,12 @@ declare module '$app/server' {
 	export {};
 }
 
+declare module '$app/service-worker' {
+	export const self: ServiceWorkerGlobalScope;
+
+	export {};
+}
+
 declare module '$app/state' {
 	/**
 	 * A read-only reactive object with information about the current page, serving several use cases:

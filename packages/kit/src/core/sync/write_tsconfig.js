@@ -42,23 +42,31 @@ function remove_trailing_slashstar(file) {
  * @param {string} root
  */
 export function write_tsconfig(kit, root) {
-	const out = path.join(root, 'node_modules/$app/tsconfig/tsconfig.json');
-
 	const user_config = load_user_tsconfig(root);
 	if (user_config) validate_user_config(user_config);
 
-	write_if_changed(out, JSON.stringify(get_tsconfig(out, kit, root), null, '\t'));
+	const dir = path.join(root, 'node_modules/$app/tsconfig');
+
+	write_if_changed(
+		path.join(dir, 'tsconfig.json'),
+		JSON.stringify(get_tsconfig(dir, kit, root), null, '\t')
+	);
+
+	write_if_changed(
+		path.join(dir, 'service-worker/tsconfig.json'),
+		JSON.stringify(get_tsconfig_serviceworker(), null, '\t')
+	);
 }
 
 /**
  * Generates the tsconfig that the user's tsconfig inherits from.
- * @param {string} out The file we're writing to
+ * @param {string} dir The directory we're writing to
  * @param {import('types').ValidatedKitConfig} kit
  * @param {string} cwd
  */
-export function get_tsconfig(out, kit, cwd) {
+export function get_tsconfig(dir, kit, cwd) {
 	/** @param {string} file */
-	const config_relative = (file) => posixify(path.relative(path.dirname(out), file));
+	const config_relative = (file) => posixify(path.relative(dir, file));
 
 	const config = {
 		compilerOptions: {
@@ -99,6 +107,15 @@ export function get_tsconfig(out, kit, cwd) {
 	};
 
 	return kit.typescript.config(config) ?? config;
+}
+
+function get_tsconfig_serviceworker() {
+	return {
+		compilerOptions: {
+			lib: ['ESNext', 'WebWorker'],
+			types: ['$app/types']
+		}
+	};
 }
 
 /** @param {string} cwd */

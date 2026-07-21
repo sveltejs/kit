@@ -119,16 +119,16 @@ Starting with version 2.16.0, two additional helper types are provided: `PagePro
 > </script>
 > ```
 
-> [!NOTE] For this to work, your own `tsconfig.json` or `jsconfig.json` should extend from the generated `.svelte-kit/tsconfig.json` (where `.svelte-kit` is your [`outDir`](configuration#outDir)):
+> [!NOTE] For this to work, your own `tsconfig.json` or `jsconfig.json` should extend from the generated `$app/types`:
 >
-> `{ "extends": "./.svelte-kit/tsconfig.json" }`
+> `{ "extends": "$app/tsconfig" }`
 
 ### Default tsconfig.json
 
-The generated `.svelte-kit/tsconfig.json` file contains a mixture of options. Some are generated programmatically based on your project configuration, and should generally not be overridden without good reason:
+The generated `$app/types` file contains a mixture of options. Some are generated programmatically based on your project configuration, and should generally not be overridden without good reason:
 
 ```json
-/// file: .svelte-kit/tsconfig.json
+/// file: $app/types
 {
 	"compilerOptions": {
 		"paths": {
