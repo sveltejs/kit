@@ -101,38 +101,53 @@ export function parse_remote_response(data, transport) {
  * @returns {RequestStore}
  */
 function derive_remote_function_event(event, state, allow_cookies) {
-	return {
-		event: {
-			...event,
-			setHeaders: () => {
-				throw new Error('setHeaders is not allowed in remote functions');
-			},
-			cookies: {
-				...event.cookies,
-				set: (name, value, opts) => {
-					if (!allow_cookies) {
-						throw new Error('Cannot set cookies in `query` or `prerender` functions');
-					}
-
-					if (opts.path && !opts.path.startsWith('/')) {
-						throw new Error('Cookies set in remote functions must have an absolute path');
-					}
-
-					return event.cookies.set(name, value, opts);
-				},
-				delete: (name, opts) => {
-					if (!allow_cookies) {
-						throw new Error('Cannot delete cookies in `query` or `prerender` functions');
-					}
-
-					if (opts.path && !opts.path.startsWith('/')) {
-						throw new Error('Cookies deleted in remote functions must have an absolute path');
-					}
-
-					return event.cookies.delete(name, opts);
-				}
-			}
+	/** @type {RequestEvent} */
+	const derived = {
+		...event,
+		setHeaders: () => {
+			throw new Error('setHeaders is not allowed in remote functions');
 		},
+		cookies: {
+			...event.cookies,
+			set: (name, value, opts) => {
+				if (!allow_cookies) {
+					throw new Error('Cannot set cookies in `query` or `prerender` functions');
+				}
+
+				if (opts.path && !opts.path.startsWith('/')) {
+					throw new Error('Cookies set in remote functions must have an absolute path');
+				}
+
+				return event.cookies.set(name, value, opts);
+			},
+			delete: (name, opts) => {
+				if (!allow_cookies) {
+					throw new Error('Cannot delete cookies in `query` or `prerender` functions');
+				}
+
+				if (opts.path && !opts.path.startsWith('/')) {
+					throw new Error('Cookies deleted in remote functions must have an absolute path');
+				}
+
+				return event.cookies.delete(name, opts);
+			}
+		}
+	};
+
+	if (state.is_in_remote_query) {
+		for (const property of ['url', 'params', 'route']) {
+			Object.defineProperty(derived, property, {
+				get() {
+					throw new Error(
+						`Cannot access event.${property} in a query. Pass the value as an argument to the query instead`
+					);
+				}
+			});
+		}
+	}
+
+	return {
+		event: derived,
 		state: {
 			...state,
 			is_in_remote_function: true

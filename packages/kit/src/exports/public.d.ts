@@ -1615,9 +1615,10 @@ export interface RequestEvent<
 	/**
 	 * The parameters of the current route - e.g. for a route like `/blog/[slug]`, a `{ slug: string }` object.
 	 *
-	 * In the context of a remote function request initiated by the client, this relates to the page the remote function
-	 * was called from, _not_ the URL of the endpoint SvelteKit creates for the remote function. Never use this to determine
-	 * whether or not a user is authorized to access certain data, as these values are part of the request which could be manipulated.
+	 * Inside `query` functions (including `query.batch` and `query.live`), accessing this property throws an error.
+	 * Pass values from the page as arguments to the query instead. Inside `form` and `command` functions it relates to the page
+	 * the remote function was called from, _not_ the URL of the endpoint SvelteKit creates for the remote function. Never use it
+	 * to determine whether or not a user is authorized to access certain data, as these values are part of the request which could be manipulated.
 	 */
 	params: Params;
 	/**
@@ -1635,9 +1636,10 @@ export interface RequestEvent<
 		/**
 		 * The ID of the current route - e.g. for `src/routes/blog/[slug]`, it would be `/blog/[slug]`. It is `null` when no route is matched.
 		 *
-		 * In the context of a remote function request initiated by the client, this relates to the page the remote function
-		 * was called from, _not_ the URL of the endpoint SvelteKit creates for the remote function. Never use this to determine
-		 * whether or not a user is authorized to access certain data, as these values are part of the request which could be manipulated.
+		 * Inside `query` functions (including `query.batch` and `query.live`), accessing this property throws an error.
+		 * Pass values from the page as arguments to the query instead. Inside `form` and `command` functions it relates to the page
+		 * the remote function was called from, _not_ the URL of the endpoint SvelteKit creates for the remote function. Never use it
+		 * to determine whether or not a user is authorized to access certain data, as these values are part of the request which could be manipulated.
 		 */
 		id: RouteId;
 	};
@@ -1667,9 +1669,10 @@ export interface RequestEvent<
 	/**
 	 * The requested URL.
 	 *
-	 * In the context of a remote function request initiated by the client, this relates to the page the remote function
-	 * was called from, _not_ the URL of the endpoint SvelteKit creates for the remote function. Never use this to determine
-	 * whether or not a user is authorized to access certain data, as these values are part of the request which could be manipulated.
+	 * Inside `query` functions (including `query.batch` and `query.live`), accessing this property throws an error.
+	 * Pass values from the page as arguments to the query instead. Inside `form` and `command` functions it relates to the page
+	 * the remote function was called from, _not_ the URL of the endpoint SvelteKit creates for the remote function. Never use it
+	 * to determine whether or not a user is authorized to access certain data, as these values are part of the request which could be manipulated.
 	 */
 	url: URL;
 	/**

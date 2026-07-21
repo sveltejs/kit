@@ -109,16 +109,25 @@ test.describe('remote functions', () => {
 		expect(body).not.toContain('private-data');
 	});
 
-	test('queries can access the route/url of the page they were called from', async ({
+	test('queries cannot access the route/url of the page they were called from', async ({
 		page,
 		clicknav
 	}) => {
+		const expected = ['url', 'params', 'route']
+			.map(
+				(property) =>
+					`Cannot access event.${property} in a query. Pass the value as an argument to the query instead`
+			)
+			.join(' | ');
+
+		// direct navigation renders the errors during SSR
+		await page.goto('/remote/event');
+		await expect(page.locator('[data-id="results"]')).toHaveText(expected);
+
+		// client-side navigation calls the query over HTTP
 		await page.goto('/remote');
-
 		await clicknav('[href="/remote/event"]');
-
-		await expect(page.locator('[data-id="route"]')).toHaveText('route: /remote/event');
-		await expect(page.locator('[data-id="pathname"]')).toHaveText('pathname: /remote/event');
+		await expect(page.locator('[data-id="results"]')).toHaveText(expected);
 	});
 
 	test('form works', async ({ page, javaScriptEnabled }) => {
