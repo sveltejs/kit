@@ -57,7 +57,6 @@ import {
 	sveltekit_env_private,
 	sveltekit_env_service_worker,
 	sveltekit_manifest_data,
-	sveltekit_server,
 	sveltekit_env_public_client,
 	sveltekit_env_public_server
 } from './module_ids.js';
@@ -668,8 +667,7 @@ function kit({ svelte_config }) {
 					exactRegex(sveltekit_env_public_client),
 					exactRegex(sveltekit_env_public_server),
 					exactRegex(sveltekit_env_service_worker),
-					exactRegex(sveltekit_manifest_data),
-					exactRegex(sveltekit_server)
+					exactRegex(sveltekit_manifest_data)
 				]
 			},
 			handler(id) {
