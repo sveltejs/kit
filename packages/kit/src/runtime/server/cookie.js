@@ -53,7 +53,7 @@ export function get_cookies(request, url) {
 		httpOnly: true,
 		path: '/',
 		sameSite: 'lax',
-		secure: !DEV && !(url.hostname === 'localhost' && url.protocol === 'http')
+		secure: !__SVELTEKIT_DEV__ && !(url.hostname === 'localhost' && url.protocol === 'http')
 	};
 
 	/** @type {import('@sveltejs/kit').Cookies} */
