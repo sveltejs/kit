@@ -16,7 +16,7 @@ Doing this manually is tedious. There are a variety of techniques you can use, d
 
 ```svelte
 <script>
-	import logo from '$lib/assets/logo.png';
+	import logo from '#lib/assets/logo.png';
 </script>
 
 <img alt="The project logo" src={logo} />

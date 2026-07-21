@@ -39,14 +39,19 @@ declare global {
 	 */
 	const __SVELTEKIT_PAYLOAD__: SvelteKitPayload;
 	/**
-	 * The Vite `root` setting used to construct paths to nodes and components
-	 * for the SSR manifest during development
-	 */
-	const __SVELTEKIT_ROOT__: string;
-	/**
 	 * Whether the `experimental.async` flag is applied
 	 */
 	const __SVELTEKIT_SUPPORTS_ASYNC__: boolean;
+	/**
+	 * Manifest data placeholders used by `$app/manifest`. During build, these
+	 * are bare identifiers (fake globals) that the bundler leaves as unresolved
+	 * references. They are replaced with real values by scanning the output
+	 * chunks after each build completes.
+	 */
+	const __SVELTEKIT_MANIFEST_IMMUTABLE__: string[];
+	const __SVELTEKIT_MANIFEST_ASSETS__: string[];
+	const __SVELTEKIT_MANIFEST_PRERENDERED__: string[];
+	const __SVELTEKIT_MANIFEST_ROUTES__: { id: string }[];
 	/**
 	 * This makes the use of specific features visible at both dev and build time, in such a
 	 * way that we can error when they are not supported by the target platform.

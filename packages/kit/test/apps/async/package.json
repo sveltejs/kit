@@ -21,6 +21,11 @@
 		"svelte-check": "catalog:",
 		"typescript": "catalog:",
 		"valibot": "catalog:",
-		"vite": "catalog:"
+		"vite": "catalog:",
+		"e2e-test-dep-remote": "file:./_test_dependencies/remote-lib"
+	},
+	"imports": {
+		"#lib": "./src/lib/index.js",
+		"#lib/*": "./src/lib/*"
 	}
 }

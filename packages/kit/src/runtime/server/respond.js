@@ -9,13 +9,14 @@ import { render_page } from './page/index.js';
 import { render_response } from './page/render.js';
 import { respond_with_error } from './page/respond_with_error.js';
 import { get_self_origin, is_csrf_forbidden, is_remote_forbidden } from './csrf.js';
+import { has_prerendered_path, method_not_allowed, redirect_response } from './utils.js';
+import { handle_fatal_error } from './errors.js';
 import {
-	handle_fatal_error,
-	has_prerendered_path,
-	method_not_allowed,
-	redirect_response
-} from './utils.js';
-import { decode_pathname, disable_search, normalize_path } from '../../utils/url.js';
+	decode_pathname,
+	disable_search,
+	normalize_path,
+	relative_pathname
+} from '../../utils/url.js';
 import { find_route } from '../../utils/routing.js';
 import { redirect_json_response, render_data } from './data/index.js';
 import { add_cookies_to_headers, get_cookies } from './cookie.js';
@@ -36,7 +37,7 @@ import {
 	strip_resolution_suffix
 } from '../pathname.js';
 import { server_data_serializer } from './page/data_serializer.js';
-import { get_remote_id, handle_remote_call } from './remote.js';
+import { get_remote_id, handle_remote_call } from './remote-functions.js';
 import { record_span } from '../telemetry/record_span.js';
 import { otel } from '../telemetry/otel.js';
 
@@ -382,10 +383,9 @@ export async function internal_respond(request, options, manifest, state) {
 						status: 308,
 						headers: {
 							'x-sveltekit-normalize': '1',
+							// relative so (possibly invisible) path prefixes are preserved
 							location:
-								// ensure paths starting with '//' are not treated as protocol-relative
-								(normalized.startsWith('//') ? url.origin + normalized : normalized) +
-								(url.search === '?' ? '' : url.search)
+								relative_pathname(url.pathname, normalized) + (url.search === '?' ? '' : url.search)
 						}
 					});
 				}
@@ -635,13 +635,12 @@ export async function internal_respond(request, options, manifest, state) {
 					) {
 						endpoint = await route.endpoint();
 
-						// Prefer rendering the page if the endpoint can't handle this GET or HEAD request
-						if (route.page && (method === 'GET' || method === 'HEAD')) {
-							const endpoint_can_handle = !!(
-								endpoint.GET ||
-								endpoint.fallback ||
-								(method === 'HEAD' && endpoint.HEAD)
-							);
+						// Prefer rendering the page if the endpoint can't handle this GET, HEAD, or POST request
+						if (route.page && (method === 'GET' || method === 'HEAD' || method === 'POST')) {
+							const endpoint_can_handle =
+								method === 'POST'
+									? !!(endpoint.POST || endpoint.fallback)
+									: !!(endpoint.GET || endpoint.fallback || (method === 'HEAD' && endpoint.HEAD));
 							if (!endpoint_can_handle) {
 								endpoint = undefined;
 							}

@@ -4,7 +4,7 @@ import path from 'node:path';
 
 const timeout = 60_000;
 
-test('$lib/*.server.* is not statically importable from the client', { timeout }, () => {
+test('#lib/*.server.* is not statically importable from the client', { timeout }, () => {
 	try {
 		execSync('pnpm build', {
 			cwd: path.join(import.meta.dirname, 'apps/syntax-error'),

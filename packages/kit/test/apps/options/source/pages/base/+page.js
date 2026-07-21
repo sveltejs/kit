@@ -4,8 +4,8 @@ import { resolve, asset } from '$app/paths';
 export async function load() {
 	return {
 		paths: {
-			base: resolve('/'),
-			assets: asset('/')
+			base: resolve(''),
+			assets: asset(/** @type {any} */ (''))
 		}
 	};
 }

@@ -19,5 +19,9 @@
 		"typescript": "catalog:",
 		"vite": "catalog:"
 	},
+	"imports": {
+		"#lib": "./src/lib/index.js",
+		"#lib/*": "./src/lib/*"
+	},
 	"type": "module"
 }

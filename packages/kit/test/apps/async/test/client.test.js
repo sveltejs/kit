@@ -30,6 +30,13 @@ test.describe('remote functions', () => {
 		const response = await response_promise;
 		expect(response.headers()['cache-control']).toBe('private, no-store');
 	});
+
+	test('packages can re-export remote functions', async ({ page }) => {
+		await page.goto('/remote-lib');
+		await expect(page.locator('h1')).toHaveText('lib says hello');
+		await page.getByRole('button', { name: 'call remote function' }).click();
+		await expect(page.locator('p')).toHaveText('lib says client');
+	});
 });
 
 // have to run in serial because commands mutate in-memory data on the server (should fix this at some point)

@@ -11,30 +11,45 @@ export default function (options) {
 				if (dynamic_routes.length > 0 && options?.strict !== false) {
 					const prefix = path.relative('.', builder.config.kit.files.routes);
 					const has_param_routes = builder.routes.some((route) => route.id.includes('['));
-					const config_option =
-						has_param_routes || JSON.stringify(builder.config.kit.prerender.entries) !== '["*"]'
-							? `  - adjust the \`prerender.entries\` config option ${
-									has_param_routes
-										? '(routes with parameters are not part of entry points by default)'
-										: ''
-								} — see https://svelte.dev/docs/kit/configuration#prerender for more info.`
-							: '';
 
 					builder.log.error(
-						`@sveltejs/adapter-static: all routes must be fully prerenderable, but found the following routes that are dynamic:
-${dynamic_routes.map((route) => `  - ${path.posix.join(prefix, route.id)}`).join('\n')}
-
-You have the following options:
-  - set the \`fallback\` option — see https://svelte.dev/docs/kit/single-page-apps#usage for more info.
-  - add \`export const prerender = true\` to your root \`+layout.js/.ts\` or \`+layout.server.js/.ts\` file. This will try to prerender all pages.
-  - add \`export const prerender = true\` to any \`+server.js/ts\` files that are not fetched by page \`load\` functions.
-${config_option}
-  - pass \`strict: false\` to \`adapter-static\` to ignore this error. Only do this if you are sure you don't need the routes in question in your final app, as they will be unavailable. See https://github.com/sveltejs/kit/tree/main/packages/adapter-static#strict for more info.
-
-If this doesn't help, you may need to use a different adapter. @sveltejs/adapter-static can only be used for sites that don't need a server for dynamic rendering, and can run on just a static file server.
-See https://svelte.dev/docs/kit/page-options#prerender for more details`
+						`\n@sveltejs/adapter-static: all routes must be fully prerenderable, but found the following routes that are dynamic:
+${dynamic_routes.map((route) => `  - ${path.posix.join(prefix, route.id)}`).join('\n')}\n`
 					);
-					throw new Error('Encountered dynamic routes');
+
+					const options = [
+						'set the `fallback` option — see https://svelte.dev/docs/kit/single-page-apps#usage for more info.',
+						'add `export const prerender = true` to your root `+layout.js/.ts` or `+layout.server.js/.ts` file. This will try to prerender all pages.',
+						'add `export const prerender = true` to any `+server.js/ts` files that are not fetched by page `load` functions.'
+					];
+
+					if (
+						has_param_routes ||
+						JSON.stringify(builder.config.kit.prerender.entries) !== '["*"]'
+					) {
+						let option = 'adjust the `prerender.entries` config option';
+						if (has_param_routes)
+							option += ' (routes with parameters are not part of entry points by default)';
+						options.push(option);
+					}
+
+					options.push(
+						"pass `strict: false` to `adapter-static` to ignore this error. Only do this if you are sure you don't need the routes in question in your final app, as they will be unavailable. See https://github.com/sveltejs/kit/tree/main/packages/adapter-static#strict for more info."
+					);
+
+					builder.log(
+						`You have the following options:${options.map((o) => `\n  - ${o}`).join('')}\n`
+					);
+
+					builder.log(
+						`If this doesn't help, you may need to use a different adapter. @sveltejs/adapter-static can only be used for sites that don't need a server for dynamic rendering, and can run on just a static file server.\n`
+					);
+
+					builder.log(`See https://svelte.dev/docs/kit/page-options#prerender for more details\n`);
+
+					const error = new Error('Encountered dynamic routes');
+					error.stack = '';
+					throw error;
 				}
 			}
 

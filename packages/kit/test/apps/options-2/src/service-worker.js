@@ -1,9 +1,11 @@
-import { base, build, version } from '$service-worker';
+import { build } from '$service-worker';
+import { version } from '$app/env';
 import { MESSAGE } from '$app/env/public';
+import { resolve } from '$app/paths';
 import src from './image.jpg?url';
 
 //@ts-ignore
-self.base = base;
+self.base = resolve('');
 //@ts-ignore
 self.build = build;
 //@ts-ignore
