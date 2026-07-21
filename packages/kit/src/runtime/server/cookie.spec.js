@@ -39,7 +39,7 @@ const cookies_setup = ({ href, headers } = {}) => {
 
 describe.skipIf(process.env.NODE_ENV === 'production')('cookies in dev', () => {
 	beforeAll(() => {
-			vi.stubGlobal('__SVELTEKIT_DEV__', true);
+		vi.stubGlobal('__SVELTEKIT_DEV__', true);
 	});
 
 	test('warns if cookie exceeds 4,129 bytes', () => {
