@@ -51,6 +51,20 @@ describe.skipIf(process.env.NODE_ENV === 'production')('cookies in dev', () => {
 			assert.equal(error.message, 'Cookie "a" is too large, and will be discarded by the browser');
 		}
 	});
+
+	test('secure defaults to false when served over http (e.g. --host)', () => {
+		const { cookies, new_cookies } = cookies_setup({ href: 'http://192.168.0.1:5173' });
+		cookies.set('a', 'b', { path: '/' });
+		const opts = new_cookies.get('/?a')?.options;
+		assert.equal(opts?.secure, false);
+	});
+
+	test('secure defaults to false even when served over https', () => {
+		const { cookies, new_cookies } = cookies_setup({ href: 'https://192.168.0.1:5173' });
+		cookies.set('a', 'b', { path: '/' });
+		const opts = new_cookies.get('/?a')?.options;
+		assert.equal(opts?.secure, false);
+	});
 });
 
 describe.skipIf(process.env.NODE_ENV !== 'production')('cookies in prod', () => {
@@ -110,6 +124,13 @@ describe.skipIf(process.env.NODE_ENV !== 'production')('cookies in prod', () => 
 		cookies.set('a', 'b', { path: '/' });
 		const opts = new_cookies.get('/?a')?.options;
 		assert.equal(opts?.secure, false);
+	});
+
+	test('secure defaults to true on http on a non-localhost host', () => {
+		const { cookies, new_cookies } = cookies_setup({ href: 'http://192.168.0.1:5173' });
+		cookies.set('a', 'b', { path: '/' });
+		const opts = new_cookies.get('/?a')?.options;
+		assert.equal(opts?.secure, true);
 	});
 
 	test('overridden defaults when set is called', () => {
