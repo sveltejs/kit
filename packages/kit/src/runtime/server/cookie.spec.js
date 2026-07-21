@@ -1,5 +1,5 @@
 import process from 'node:process';
-import { assert, expect, test, describe, beforeAll } from 'vitest';
+import { assert, expect, test, describe, beforeAll, vi } from 'vitest';
 import { domain_matches, path_matches, get_cookies } from './cookie.js';
 
 const domains = {
@@ -37,8 +37,7 @@ const cookies_setup = ({ href, headers } = {}) => {
 
 describe.skipIf(process.env.NODE_ENV === 'production')('cookies in dev', () => {
 	beforeAll(() => {
-		// @ts-expect-error
-		globalThis.__SVELTEKIT_DEV__ = true;
+		vi.stubGlobal('__SVELTEKIT_DEV__', true);
 	});
 
 	test('warns if cookie exceeds 4,129 bytes', () => {
@@ -69,8 +68,7 @@ describe.skipIf(process.env.NODE_ENV === 'production')('cookies in dev', () => {
 
 describe.skipIf(process.env.NODE_ENV !== 'production')('cookies in prod', () => {
 	beforeAll(() => {
-		// @ts-expect-error
-		globalThis.__SVELTEKIT_DEV__ = false;
+		vi.stubGlobal('__SVELTEKIT_DEV__', false);
 	});
 
 	domains.positive.forEach(([hostname, constraint]) => {
