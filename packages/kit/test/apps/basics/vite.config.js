@@ -88,7 +88,7 @@ export default defineConfig({
 
 			typescript: {
 				config: (config) => {
-					config.include.push('../unit-test');
+					config.include = ['**', '../unit-test'];
 				}
 			}
 		})

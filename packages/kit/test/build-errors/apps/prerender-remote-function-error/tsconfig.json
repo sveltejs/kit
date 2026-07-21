@@ -5,5 +5,5 @@
 		"noEmit": true,
 		"rewriteRelativeImportExtensions": true
 	},
-	"extends": "./.svelte-kit/tsconfig.json"
+	"extends": "$app/tsconfig"
 }
