@@ -1,17 +1,18 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
-import { check_feature } from '../../../utils/features.js';
-import { SCHEME } from '../../../utils/url.js';
+import { Server as KitServer } from '../../../runtime/server/index.js';
 import { fix_stack_trace } from './sourcemaps.js';
 import { get_svelte_config } from './context.js';
-import { set_fix_stack_trace } from '../../../runtime/server/internal.js';
-import { set_assets } from '$app/paths/internal/server';
+import { check_feature } from '../../../utils/features.js';
+import { SCHEME } from '../../../utils/url.js';
 
+const { set_fix_stack_trace } = await import(/* @vite-ignore */ '__sveltekit/server');
 set_fix_stack_trace(fix_stack_trace);
-set_assets(__SVELTEKIT_PATHS_ASSETS__);
 
-const KitServer = (
-	await import(/* @vite-ignore */ import.meta.resolve('../../../runtime/server/index.js'))
-).Server;
+/** @type {typeof import('../../../runtime/app/paths/internal/server.js')} */
+const { set_assets } = await import(
+	/* @vite-ignore */ import.meta.resolve('../../../runtime/app/paths/internal/server.js')
+);
+set_assets(__SVELTEKIT_PATHS_ASSETS__);
 
 const async_local_storage = new AsyncLocalStorage();
 

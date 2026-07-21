@@ -3,11 +3,11 @@
 import fs from 'node:fs';
 import { isCSSRequest } from 'vite';
 import { manifest_data, mime_types } from '__sveltekit/manifest-data';
+import { get_dev_server, get_remotes } from './context.js';
 import { resolve } from './utils.js';
-import { from_fs, to_fs } from '../../../utils/vite.js';
 import { compact } from '../../../utils/array.js';
 import { join } from '../../../utils/path.js';
-import { get_dev_server, get_remotes } from './context.js';
+import { from_fs, to_fs } from '../../../utils/vite.js';
 
 // vite-specifc queries that we should skip handling for css urls
 const vite_css_query_regex = /(?:\?|&)(?:raw|url|inline)(?:&|$)/;

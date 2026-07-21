@@ -544,7 +544,9 @@ function kit({ svelte_config }) {
 						__SVELTEKIT_PAYLOAD__: kit_global, // only relevant when bundleStrategy !== 'split'
 						__SVELTEKIT_HAS_SERVER_LOAD__: 'true',
 						__SVELTEKIT_HAS_UNIVERSAL_LOAD__: 'true',
-						__SVELTEKIT_PATHS_ASSETS__: kit.paths.assets ? s(SVELTE_KIT_ASSETS) : 'undefined',
+						__SVELTEKIT_PATHS_ASSETS__: kit.paths.assets
+							? s(SVELTE_KIT_ASSETS)
+							: s(kit.paths.assets),
 						__SVELTEKIT_FILES_ASSETS__: s(posixify(kit.files.assets))
 					};
 
@@ -603,22 +605,6 @@ function kit({ svelte_config }) {
 	};
 
 	/** @type {Plugin} */
-	const plugin_node_environment = {
-		name: 'vite-plugin-sveltekit-node-environment',
-		apply: 'serve',
-		resolveId: {
-			filter: {
-				id: exactRegex('__sveltekit/dev-server-entry.js')
-			},
-			handler() {
-				return server_instrumentation
-					? sveltekit_traced
-					: posixify(path.join(import.meta.dirname, 'dev/ssr_entry.js'));
-			}
-		}
-	};
-
-	/** @type {Plugin} */
 	const plugin_dev_ssr = {
 		name: 'vite-plugin-sveltekit-dev-ssr',
 		apply: 'serve',
@@ -630,12 +616,19 @@ function kit({ svelte_config }) {
 		resolveId: {
 			filter: {
 				id: [
+					exactRegex('__sveltekit/dev-server-entry.js'),
 					exactRegex('sveltekit:server-manifest'),
 					exactRegex('sveltekit:server'),
 					exactRegex('sveltekit:env')
 				]
 			},
 			handler(id) {
+				if (id === '__sveltekit/dev-server-entry.js') {
+					return server_instrumentation
+						? sveltekit_traced
+						: posixify(path.join(import.meta.dirname, 'dev/ssr_entry.js'));
+				}
+
 				if (id === 'sveltekit:server-manifest') {
 					return path.join(import.meta.dirname, 'dev/ssr_manifest.js');
 				}
@@ -1107,7 +1100,11 @@ function kit({ svelte_config }) {
 				// being called again with `opts.ssr === true` if the module isn't
 				// already loaded) so we can determine what it exports
 				if (dev_server) {
-					const module = await dev_server.ssrLoadModule(id);
+					if (!isRunnableDevEnvironment(dev_server.environments.ssr)) {
+						throw new Error('The configured Vite SSR environment must be a RunnableDevEnvironment');
+					}
+
+					const module = await dev_server.environments.ssr.runner.import(id);
 
 					for (const [name, value] of Object.entries(module)) {
 						const type = value?.__?.type;
@@ -2240,7 +2237,6 @@ function kit({ svelte_config }) {
 		[
 			svelte_config.kit.adapter?.vite?.plugins,
 			plugin_setup,
-			plugin_node_environment,
 			plugin_remote_guard,
 			plugin_remote,
 			plugin_dev_ssr,

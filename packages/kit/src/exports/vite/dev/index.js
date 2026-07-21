@@ -22,6 +22,7 @@ import {
 } from '../utils.js';
 import { escape_html } from '../../../utils/escape.js';
 import { fix_stack_trace } from './sourcemaps.js';
+import { sveltekit_manifest_data } from '../module_ids.js';
 
 /**
  * @param {import('vite').ViteDevServer} vite
@@ -29,9 +30,9 @@ import { fix_stack_trace } from './sourcemaps.js';
  * @param {import('types').ValidatedConfig} svelte_config
  * @param {string} root The project root directory
  * @param {(manifest_data: import('types').ManifestData) => void} set_manifest_data
- * @return {() => void}
+ * @return {Promise<() => void>}
  */
-export function dev(vite, vite_config, svelte_config, root, set_manifest_data) {
+export async function dev(vite, vite_config, svelte_config, root, set_manifest_data) {
 	sync.init(svelte_config, root);
 
 	/** @type {import('types').ManifestData} */
@@ -109,7 +110,7 @@ export function dev(vite, vite_config, svelte_config, root, set_manifest_data) {
 		// Unless it's a file where the trailing slash page option might have changed
 		if (timeout || !/\+(page|layout|server).*$/.test(file)) return;
 		sync.update(svelte_config, manifest_data, file, root);
-		// invalidate_module(vite, sveltekit_manifest_data);
+		invalidate_module(vite, sveltekit_manifest_data);
 	});
 
 	const { appTemplate, errorTemplate, serviceWorker, hooks } = svelte_config.kit.files;
@@ -166,6 +167,13 @@ export function dev(vite, vite_config, svelte_config, root, set_manifest_data) {
 
 		next();
 	});
+
+	if (!isRunnableDevEnvironment(vite.environments.ssr)) {
+		throw new Error('The configured Vite SSR environment must be a RunnableDevEnvironment');
+	}
+
+	/** @type {import('./ssr_entry.js')} */
+	const { respond } = await vite.environments.ssr.runner.import('__sveltekit/dev-server-entry.js');
 
 	return () => {
 		const serve_static_middleware = vite.middlewares.stack.find(
@@ -248,19 +256,10 @@ export function dev(vite, vite_config, svelte_config, root, set_manifest_data) {
 					return;
 				}
 
-				if (!isRunnableDevEnvironment(vite.environments.ssr)) {
-					throw new Error('The configured Vite SSR environment must be a RunnableDevEnvironment');
-				}
-
 				const request = getRequest({
 					base,
 					request: req
 				});
-
-				/** @type {import('./ssr_entry.js')} */
-				const { respond } = await vite.environments.ssr.runner.import(
-					'__sveltekit/dev-server-entry.js'
-				);
 
 				const rendered = await respond(request, req.socket.remoteAddress);
 

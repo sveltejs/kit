@@ -52,12 +52,16 @@ export async function load_explicit_env(kit, file, root, mode) {
 	/** @type {Record<string, EnvVarConfig<any>>} */
 	let variables;
 
+	if (!vite.isRunnableDevEnvironment(server.environments.ssr)) {
+		throw new Error('The configured Vite SSR environment must be a RunnableDevEnvironment');
+	}
+
 	/** @type {import('../runtime/app/env/internal.js')} */ (
-		await server.ssrLoadModule(`${runtime_directory}/app/env/internal.js`)
+		await server.environments.ssr.runner.import(`${runtime_directory}/app/env/internal.js`)
 	).set_building();
 
 	try {
-		({ variables } = await server.ssrLoadModule(file));
+		({ variables } = await server.environments.ssr.runner.import(file));
 
 		if (!variables || typeof variables !== 'object') {
 			throw new Error(`${file} must export a variables object`);
