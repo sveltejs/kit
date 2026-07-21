@@ -138,7 +138,7 @@ The generated `.svelte-kit/tsconfig.json` file contains a mixture of options. So
 		"rootDirs": ["..", "./types"]
 	},
 	"include": [
-		"ambient.d.ts",
+		"env.d.ts",
 		"non-ambient.d.ts",
 		"./types/**/$types.d.ts",
 		"../vite.config.js",

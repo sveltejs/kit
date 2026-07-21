@@ -15,7 +15,7 @@ const DOCS = '// See https://svelte.dev/docs/kit/environment-variables for more 
  * @param {Record<string, EnvVarConfig<any>> | null} env_config
  */
 export function write_env(kit, entry, env_config) {
-	const content = [];
+	const content = ['/// <reference types="@sveltejs/kit" />'];
 	const out = path.join(kit.outDir, 'env.d.ts');
 
 	if (entry && env_config) {

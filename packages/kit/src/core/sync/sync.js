@@ -4,7 +4,6 @@ import create_manifest_data from './create_manifest_data/index.js';
 import { write_client_manifest } from './write_client_manifest.js';
 import { write_tsconfig } from './write_tsconfig.js';
 import { write_types, write_all_types } from './write_types/index.js';
-import { write_ambient } from './write_ambient.js';
 import { write_non_ambient } from './write_non_ambient.js';
 import { write_server } from './write_server.js';
 import {
@@ -21,7 +20,6 @@ import { write_env } from './write_env.js';
  */
 export function init(config, root) {
 	write_tsconfig(config.kit, root);
-	write_ambient(config.kit);
 }
 
 /**

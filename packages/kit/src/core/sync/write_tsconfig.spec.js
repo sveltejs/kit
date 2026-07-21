@@ -92,7 +92,6 @@ test('Creates tsconfig include from kit.files', () => {
 	const { include } = get_tsconfig(kit, '.');
 
 	expect(include).toEqual([
-		'ambient.d.ts',
 		'env.d.ts',
 		'non-ambient.d.ts',
 		'./types/**/$types.d.ts',

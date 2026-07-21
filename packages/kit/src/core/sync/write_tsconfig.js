@@ -59,7 +59,6 @@ export function get_tsconfig(kit, cwd) {
 	const config_relative = (file) => posixify(path.relative(kit.outDir, file));
 
 	const include = new Set([
-		'ambient.d.ts', // careful: changing this name would be a breaking change, because it's referenced in the service-workers documentation
 		'env.d.ts',
 		'non-ambient.d.ts',
 		'./types/**/$types.d.ts',
