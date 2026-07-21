@@ -116,20 +116,27 @@ export function resolve_symlinks(manifest, file, root) {
 	return { chunk, file };
 }
 
+/** @type {WeakMap<import('vite').Manifest, Map<string, string>>} */
+const source_maps = new WeakMap();
+
 /**
  * @param {string[]} assets
  * @param {import('vite').Manifest} manifest
  * @returns {import('types').FontDependency[]}
  */
 export function filter_fonts(assets, manifest) {
-	/** @type {Map<string, string>} */
-	const sources = new Map();
+	let sources = source_maps.get(manifest);
 
-	// identical files are emitted once but can have several sources — keep the first
-	for (const key of Object.keys(manifest).sort()) {
-		const { file, src } = manifest[key];
-		if (src && !sources.has(file)) {
-			sources.set(file, src);
+	if (!sources) {
+		sources = new Map();
+		source_maps.set(manifest, sources);
+
+		// identical files are emitted once but can have several sources — keep the first
+		for (const key of Object.keys(manifest).sort()) {
+			const { file, src } = manifest[key];
+			if (src && !sources.has(file)) {
+				sources.set(file, src);
+			}
 		}
 	}
 
