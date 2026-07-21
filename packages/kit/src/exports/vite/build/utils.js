@@ -144,7 +144,7 @@ export function filter_fonts(assets, manifest) {
 		.filter((asset) => /\.(woff2?|ttf|otf)$/.test(asset))
 		.map((file) => {
 			const src = sources.get(file) ?? file;
-			return { file, name: src.slice(src.lastIndexOf('/') + 1) };
+			return { file, name: path.basename(src) };
 		});
 }
 
