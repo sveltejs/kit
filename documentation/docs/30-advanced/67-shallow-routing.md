@@ -1,5 +1,5 @@
 ---
-title: Shallow routing
+title: History state & shallow routing
 ---
 
 As you navigate around a SvelteKit app, you create _history entries_. Clicking the back and forward buttons traverses through this list of entries, re-running any `load` functions and replacing page components as necessary.
@@ -15,12 +15,14 @@ SvelteKit makes this possible with the [`goto`]($app-navigation#goto) function, 
 	import { page } from '$app/state';
 	import Modal from './Modal.svelte';
 
-	async function showModal() {
-		await goto(null, {
+	function showModal() {
+		goto(null, {
 			state: { showModal: true }
 		});
 	}
 </script>
+
+<button onclick={showModal}>open</button>
 
 {#if page.state.showModal}
 	<Modal close={() => history.back()} />
@@ -29,12 +31,18 @@ SvelteKit makes this possible with the [`goto`]($app-navigation#goto) function, 
 
 The modal can be dismissed by navigating back (unsetting `page.state.showModal`) or by interacting with it in a way that causes the `close` callback to run, which will navigate back programmatically.
 
-## API
+The above sets state and creates a new navigation entry. If you don't want that, use `replace: true` (i.e. `goto(null, { state, replace: true })`). Doing so replaces the current history entry and no new entry is created.
 
-To perform a shallow navigation, call `goto` with the `shallow` option:
+`state` can be accessed through the [page object]($app-state#page) as `page.state`. You can make page state type-safe by declaring an [`App.PageState`](types#PageState) interface (usually in `src/app.d.ts`).
+
+By default, state set through `goto` is not restored in the browser after a reload. To preserve it across full page reloads, use `goto(..., { state, persistState: true })`. Keep in mind that `page.state` is only populated after JavaScript is loaded, so there could be flickers from changing UI elements if you use this option.
+
+## Shallow routing
+
+The above writes to the history state but not the URL. You can also write to the URL without performing a real navigation - a so-called shallow navigation - by using `goto` with the `shallow` option:
 
 ```js
-await goto('/photos/1', {
+goto('/photos/1', {
 	shallow: true,
 	state: { showModal: true }
 });
@@ -42,24 +50,28 @@ await goto('/photos/1', {
 
 This updates the visible URL and `page.state` without running `load` functions or changing the rendered page. [`beforeNavigate`]($app-navigation#beforeNavigate), [`onNavigate`]($app-navigation#onNavigate) and [`afterNavigate`]($app-navigation#afterNavigate) will run with `navigation.type === 'goto'` and `navigation.shallow === true`.
 
-Once shallow routing is active, `page.shallow` is set with the visible URL, parameters and route id. `page.url`, `page.params` and `page.route` continue to describe the page that was last rendered as a result of an actual navigation. A regular `goto` call without `shallow: true`, or a link click, exits shallow routing.
+Once shallow routing is active, `page.shallow` is set with the visible URL, parameters and route id. `page.url`, `page.params` and `page.route` continue to describe the page that was last rendered as a result of an actual navigation.
 
-To create a history entry with new page state without changing the URL, pass `null` instead:
+```svelte
+<!--- file: +page.svelte --->
+<script>
+	import { goto } from '$app/navigation';
+	import { page } from '$app/state';
+</script>
 
-```js
-await goto(null, { state: { showModal: true } });
+<p>The user-visible URL is {page.shallow?.url.href ?? page.url.href}</p>
+<p>The actual page you're on is {page.url.href}</p>
+
+<button onclick={() => goto('/shallow', { shallow: true })}>enter shallow route</button>
 ```
 
-This does not call navigation lifecycle functions. If the page is already showing a shallow route, `page.shallow` and the visible URL are preserved. Otherwise, `page.shallow` remains `null`.
-
-In both cases, `state` can be accessed through the [page object]($app-state#page) as `page.state`. You can make page state type-safe by declaring an [`App.PageState`](types#PageState) interface (usually in `src/app.d.ts`).
-
-By default, `goto` creates a new history entry. To replace the current entry, pass `replace: true`.
-
-By default, state set through `goto` is not restored in the browser after a reload. To preserve it across full page reloads, use `goto(..., { state, persistState: true })`.
+A regular `goto` call without `shallow: true`, or a link click, exits shallow routing.
 
 > [!NOTE]
-> `pushState` and `replaceState` are deprecated. Use `goto` with `shallow: true` or a `null` URL instead, and use the `replace` option when replacing the current history entry.
+> `goto(null, { state: ... });` does _not_ trigger the navigation hooks, and does not change in what mode the navigation is: If the page is already showing a shallow route, `page.shallow` and the visible URL are preserved. Otherwise, `page.shallow` remains `null`.
+
+> [!NOTE]
+> In SvelteKit 2 this functionality was achieved using `pushState` and `replaceState`, which are now deprecated. Use `goto` with `shallow: true` instead, and use the `replace` option when replacing the current history entry.
 
 ## Loading data for a route
 
@@ -123,3 +135,5 @@ For this to work, you need to load the data that the `+page.svelte` expects. A c
 During server-side rendering, `page.state` is always an empty object.
 
 Shallow routing is a feature that requires JavaScript to work. Be mindful when using it and try to think of sensible fallback behavior in case JavaScript isn't available.
+
+If you navigate to another page via shallow routing, reloading on that route will not start the app in shallow routing mode. Instead the actual page on that URL is loaded. On the server this is unavoidable (because history state isn't available at that point), and hence it would mean too much of a UI flicker if it would change the page and enter shallow routing once JavaScript is loaded.
