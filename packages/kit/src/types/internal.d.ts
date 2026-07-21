@@ -62,8 +62,15 @@ export interface AssetDependencies {
 	file: string;
 	imports: string[];
 	stylesheets: string[];
-	fonts: string[];
+	fonts: FontDependency[];
 	stylesheet_map: Map<string, { css: Set<string>; assets: Set<string> }>;
+}
+
+export interface FontDependency {
+	/** emitted file path, relative to the client output directory */
+	file: string;
+	/** the source file's basename, before hashing and character sanitization */
+	name: string;
 }
 
 export interface BuildData {
@@ -98,7 +105,7 @@ export interface BuildData {
 		 */
 		routes?: SSRClientRoute[];
 		stylesheets: string[];
-		fonts: string[];
+		fonts: FontDependency[];
 		/**
 		 * Whether the client uses public dynamic env vars — `$env/dynamic/public` or `$app/env/public`.
 		 */
@@ -449,7 +456,7 @@ export interface SSRNode {
 	/** external CSS files that are loaded on the client */
 	stylesheets: string[];
 	/** external font files that are loaded on the client */
-	fonts: string[];
+	fonts: FontDependency[];
 
 	universal_id?: string;
 	server_id?: string;

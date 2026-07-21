@@ -9,3 +9,8 @@
 	font-family: 'Shlop Var';
 	src: url(./shlop.var.woff2);
 }
+
+@font-face {
+	font-family: 'shlopbold';
+	src: url('./shlop+bold.woff2') format('woff2');
+}

@@ -195,7 +195,8 @@ export const handle = sequence(
 		return resolve(event, {
 			// needed for asset-preload tests, which assert `name` is the unhashed file name
 			preload: (input) =>
-				input.type !== 'font' || ['shlop.woff2', 'shlop.var.woff2'].includes(input.name)
+				input.type !== 'font' ||
+				['shlop.woff2', 'shlop.var.woff2', 'shlop+bold.woff2'].includes(input.name)
 		});
 	}
 );
