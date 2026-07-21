@@ -76,8 +76,9 @@ declare module "svelte/elements" {
  * Generate app types interface extension
  * @param {import('types').ManifestData} manifest_data
  * @param {import('types').ValidatedKitConfig} config
+ * @param {string} dir
  */
-function generate_app_types(manifest_data, config) {
+function generate_app_types(manifest_data, config, dir) {
 	/** @type {Map<string, string>} */
 	const matcher_types = new Map();
 
@@ -92,7 +93,7 @@ function generate_app_types(manifest_data, config) {
 					resolve_entry(config.files.params) ??
 					config.files.params.replace(/\.(js|ts)$/, '') + '.js';
 
-				return posixify(path.relative(config.outDir, params_file));
+				return posixify(path.relative(dir, params_file));
 			};
 
 			type = `import('@sveltejs/kit').MatcherParam<(typeof import('${path_to_params()}').params)[${JSON.stringify(matcher)}]>`;
@@ -255,12 +256,14 @@ function generate_app_types(manifest_data, config) {
  * @param {string} root
  */
 export function write_non_ambient(config, manifest_data, root) {
+	const dir = path.join(root, 'node_modules/$app/types');
+
 	const content = [
 		GENERATED_COMMENT,
 		`import '@sveltejs/kit';\nimport './env';`,
-		generate_app_types(manifest_data, config),
+		generate_app_types(manifest_data, config, dir),
 		template.trim()
 	].join('\n\n');
 
-	write_if_changed(path.join(root, 'node_modules/$app/types/index.d.ts'), content);
+	write_if_changed(path.join(dir, 'index.d.ts'), content);
 }
