@@ -4,5 +4,5 @@
 		"checkJs": true,
 		"noEmit": true
 	},
-	"extends": "./.custom-out-dir/tsconfig.json"
+	"extends": "$app/tsconfig"
 }
