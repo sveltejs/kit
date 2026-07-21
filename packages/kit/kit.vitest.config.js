@@ -46,6 +46,8 @@ export default defineConfig({
 			},
 			{
 				extends: true,
+				// resolve the browser build of `svelte` so specs can `mount` components
+				resolve: { conditions: ['browser'] },
 				test: {
 					name: 'client',
 					environment: 'jsdom',

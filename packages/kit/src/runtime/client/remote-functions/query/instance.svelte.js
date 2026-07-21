@@ -30,6 +30,11 @@ export class Query {
 	/** @type {Array<(old: T) => T>} */
 	#overrides = $state([]);
 
+	// Plain (non-reactive) fields: batch/fork snapshotting must never
+	// hide a reset from #get_promise
+	#reset_generation = 0;
+	#promise_generation = 0;
+
 	/** @type {T | undefined} */
 	#current = $derived.by(() => {
 		// don't reduce undefined value
@@ -79,7 +84,12 @@ export class Query {
 	}
 
 	#get_promise() {
-		void untrack(() => (this.#promise ??= this.#run()));
+		void untrack(() => {
+			if (this.#promise === null || this.#promise_generation !== this.#reset_generation) {
+				this.#promise_generation = this.#reset_generation;
+				this.#promise = this.#run();
+			}
+		});
 		return /** @type {Promise<T>} */ (this.#promise);
 	}
 
@@ -211,6 +221,7 @@ export class Query {
 	 */
 	refresh() {
 		delete query_responses[this.#key];
+		this.#promise_generation = this.#reset_generation;
 		return (this.#promise = this.#run());
 	}
 
@@ -227,6 +238,7 @@ export class Query {
 		this.#loading = false;
 		this.#error = undefined;
 		this.#raw = value;
+		this.#promise_generation = this.#reset_generation;
 		this.#promise = Promise.resolve();
 	}
 
@@ -245,6 +257,7 @@ export class Query {
 		const promise = Promise.reject(error);
 
 		promise.catch(noop);
+		this.#promise_generation = this.#reset_generation;
 		this.#promise = promise;
 	}
 
@@ -275,6 +288,7 @@ export class Query {
 	 * rendered queries to get fresh data
 	 */
 	reset() {
+		this.#reset_generation += 1;
 		this.#promise = null;
 		delete query_responses[this.#key];
 	}
