@@ -2,12 +2,16 @@ import { test, expect } from 'vitest';
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 
+const timeout = 60_000;
+
 const cwd = path.resolve(import.meta.dirname, '..');
 
 test('no overridden options warning', () => {
 	const result = spawnSync('vitest', ['run', '--config', './vite.custom.config.js', '-t', 'noop'], {
 		cwd,
-		encoding: 'utf-8'
+		stdio: 'pipe',
+		encoding: 'utf-8',
+		timeout
 	});
 
 	expect(result.error).toBeUndefined();

@@ -290,19 +290,6 @@ export async function render_response({
 		return `${assets}/${path}`;
 	};
 
-	/**
-	 * see the `output.linkHeaderPreload` option for details on why we have multiple options here
-	 * @param {string} path
-	 * @param {string[]} attributes
-	 */
-	const add_preload = (path, attributes) => {
-		if (options.link_header_preload && !state.prerendering) {
-			link_headers.add(`<${encodeURI(path)}>; ${attributes.join('; ')}; nopush`);
-		} else {
-			head.add_link_tag(path, attributes);
-		}
-	};
-
 	const style = client?.inline
 		? client.inline?.style
 		: Array.from(inline_styles.values()).join('\n');
@@ -316,6 +303,19 @@ export async function render_response({
 		csp.add_style(style);
 		head.add_style(style, attributes);
 	}
+
+	/**
+	 * see the `output.linkHeaderPreload` option for details on why we have multiple options here
+	 * @param {string} path
+	 * @param {string[]} attributes
+	 */
+	const add_preload = (path, attributes) => {
+		if (options.link_header_preload && !state.prerendering) {
+			link_headers.add(`<${encodeURI(path)}>; ${attributes.join('; ')}; nopush`);
+		} else {
+			head.add_link_tag(path, attributes);
+		}
+	};
 
 	for (const dep of stylesheets) {
 		const path = prefixed(dep);
@@ -340,9 +340,10 @@ export async function render_response({
 
 		// assets are emitted as `[name].[hash][extname]`
 		const name = dep.slice(dep.lastIndexOf('/') + 1).replace(/\.[^.]+(?=\.[^.]+$)/, '');
-		const ext = name.slice(name.lastIndexOf('.') + 1);
 
 		if (resolve_opts.preload({ type: 'font', path, name })) {
+			const ext = dep.slice(dep.lastIndexOf('.') + 1);
+
 			add_preload(path, ['rel="preload"', 'as="font"', `type="font/${ext}"`, 'crossorigin']);
 		}
 	}
