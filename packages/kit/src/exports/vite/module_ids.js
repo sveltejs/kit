@@ -12,6 +12,7 @@ export const service_worker = '\0virtual:service-worker';
 export const sveltekit_server = '\0virtual:__sveltekit/server';
 
 export const sveltekit_manifest_data = '\0virtual:__sveltekit/manifest-data';
+export const sveltekit_traced = '\0virtual:__sveltekit/traced';
 
 export const app_server = posixify(
 	fileURLToPath(new URL('../../runtime/app/server/index.js', import.meta.url))

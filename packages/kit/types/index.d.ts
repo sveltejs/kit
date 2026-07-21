@@ -1745,6 +1745,7 @@ declare module '@sveltejs/kit' {
 		appPath: string;
 		/** Static files from `config.files.assets` and the service worker (if any). */
 		assets: Set<string>;
+		base: string;
 		mimeTypes: Record<string, string>;
 	}
 
@@ -3824,6 +3825,59 @@ declare module '$app/types' {
 	 * A union of all the filenames of assets contained in your `static` directory, relative to the `base` path.
 	 */
 	export type AssetPath = ReturnType<AppTypes['AssetPath']>;
+}
+
+/**
+ * Exports the `Server` class for creating custom server entry points.
+ * @example
+ * ```js
+ * import { env } from 'sveltekit:env';
+ * import { Server } from 'sveltekit:server';
+ * import { manifest } from 'sveltekit:server-manifest';
+ *
+ * const server = new Server(manifest);
+ *
+ * await server.init({ env });
+ * ```
+ */
+declare module 'sveltekit:server' {
+	export { Server } from '@sveltejs/kit';
+}
+
+/**
+ * Exports the SSR manifest used to initialise the server.
+ * @example
+ * ```js
+ * import { env } from 'sveltekit:env';
+ * import { Server } from 'sveltekit:server';
+ * import { manifest } from 'sveltekit:server-manifest';
+ *
+ * const server = new Server(manifest);
+ *
+ * await server.init({ env });
+ * ```
+ */
+declare module 'sveltekit:server-manifest' {
+	import { SSRManifest } from '@sveltejs/kit';
+
+	export const manifest: SSRManifest;
+}
+
+/**
+ * Exports the environment variables loaded by Vite. Used when initialising the server.
+ * @example
+ * ```js
+ * import { env } from 'sveltekit:env';
+ * import { Server } from 'sveltekit:server';
+ * import { manifest } from 'sveltekit:server-manifest';
+ *
+ * const server = new Server(manifest);
+ *
+ * await server.init({ env });
+ * ```
+ */
+declare module 'sveltekit:env' {
+	export const env: Record<string, string>;
 }
 
 //# sourceMappingURL=index.d.ts.map

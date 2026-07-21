@@ -1,5 +1,4 @@
 import path from 'node:path';
-import { pathToFileURL } from 'node:url';
 
 /**
  * @param {import('types').RouteData[]} routes
@@ -36,7 +35,7 @@ export function validate_param_matchers(params, names, file) {
  *   routes: import('types').RouteData[];
  *   params_path: string | null;
  *   root: string;
- *   load?: (file: string) => Promise<Record<string, unknown>>;
+ *   load: (file: string) => Promise<Record<string, unknown>>;
  * }} opts
  * @returns {Promise<Record<string, import('@sveltejs/kit').ParamMatcher> | null>}
  */
@@ -50,7 +49,7 @@ export async function load_and_validate_params({ routes, params_path, root, load
 	}
 
 	const file = path.resolve(root, params_path);
-	const module = load ? await load(file) : await import(pathToFileURL(file).href);
+	const module = await load(file);
 
 	if (!module.params || typeof module.params !== 'object') {
 		throw new Error(`${params_path} does not export \`params\` from \`defineParams\``);
