@@ -30,8 +30,7 @@ export class Query {
 	/** @type {Array<(old: T) => T>} */
 	#overrides = $state([]);
 
-	// Plain (non-reactive) field: batch/fork snapshotting must never
-	// hide a reset from #get_promise
+	// plain (non-reactive) so a batch snapshot can never hide a reset from #get_promise
 	#stale = false;
 
 	/** @type {T | undefined} */

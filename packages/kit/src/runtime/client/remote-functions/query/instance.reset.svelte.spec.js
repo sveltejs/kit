@@ -36,13 +36,8 @@ function deferred() {
 }
 
 describe('Query.reset', () => {
-	// Regression test for #16444: a remote form redirect navigation resets all
-	// cached queries, but the destination page's query is re-rendered from a
-	// different batch than the one holding the reset. While the reset batch is
-	// still pending (the persistent layout's re-fired `await` keeps it so),
-	// Svelte's time-travel overlay hands the render the pre-reset promise, and
-	// the lazy init in `#get_promise` used to write that stale promise back
-	// permanently, so the destination rendered stale data and never refetched.
+	// #16444: a render that evaluates while the resetting batch is still pending
+	// reads the pre-reset promise through Svelte's time-travel overlay
 	test('a reset survives a render that evaluates while the resetting batch is pending', async () => {
 		const target = document.createElement('div');
 		document.body.appendChild(target);
@@ -77,38 +72,30 @@ describe('Query.reset', () => {
 			'initial render'
 		);
 
-		// navigate away from the page. The spec holds `page_query`, so the cached
-		// instance survives, as it does in a real app whenever the proxies have
-		// not been garbage collected yet
+		// the held `page_query` keeps the instance cached, like un-collected proxies do
 		page.show = false;
 		await tick();
 		expect(text('page')).toBe(undefined);
 
-		// the next layout fetch hangs until we release it, which keeps the batch
-		// created below pending across the page's re-render
+		// an unresolved layout fetch keeps the reset batch pending
 		const gate = deferred();
 		user_gate = gate;
 
-		// redirect lands: reset all queries, as `_goto` does in its `accept`
-		// callback. Resetting `layout_query` re-fires the layout's `await`, so
-		// this batch stays pending on `user_gate`
+		// what `_goto` does in `accept` when a redirect lands
 		layout_query.reset();
 		page_query.reset();
 
-		// give the reset batch a chance to start processing, then re-render the
-		// destination page from a separate batch, as a real navigation does
+		// re-render the destination from a separate batch, as a real navigation does
 		await Promise.resolve();
 		page.show = true;
 
-		// release the layout fetch so everything can settle
 		await Promise.resolve();
 		gate.resolve('user-2');
 
 		await wait_for(() => text('page') === 'items-2', 'page to show refetched data');
 		await wait_for(() => text('layout') === 'user-2', 'layout to show refetched data');
 
-		// exactly one refetch each: the reset must trigger a new fetch, but not
-		// a duplicate one
+		// a new fetch each, but not a duplicate one
 		expect(items_calls).toBe(2);
 		expect(user_calls).toBe(2);
 
