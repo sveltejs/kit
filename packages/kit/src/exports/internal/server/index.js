@@ -2,7 +2,7 @@
 import { try_get_request_store } from './event.js';
 
 export function get_origin() {
-	// derived from the request rather than `event.url`, which queries cannot access
+	// `request.url` rather than `event.url`, which throws inside queries
 	const request = try_get_request_store()?.event.request;
 	return request && new URL(request.url).origin;
 }

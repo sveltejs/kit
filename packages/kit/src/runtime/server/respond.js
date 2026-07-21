@@ -138,8 +138,7 @@ export async function internal_respond(request, options, manifest, state) {
 		const type = fn?.__?.type;
 		is_remote_query = type === 'query' || type === 'query_batch' || type === 'query_live';
 
-		// queries have no access to `event.url`/`event.params`/`event.route`, so the
-		// calling page's URL is only forwarded for other remote function flavors
+		// the calling page's URL is only forwarded for flavors that can access `event.url`
 		if (!is_remote_query) {
 			url.pathname = request.headers.get('x-sveltekit-pathname') ?? base;
 			url.search = request.headers.get('x-sveltekit-search') ?? '';
