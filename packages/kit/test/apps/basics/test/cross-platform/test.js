@@ -221,7 +221,7 @@ test.describe('Shadowed pages', () => {
 			expect(await page.textContent('h1')).toBe('500');
 			expect(await page.textContent('#message')).toBe(
 				'This is your custom error page saying: "Data returned from `load` while rendering /shadowed/serialization is not serializable: Cannot stringify arbitrary non-POJOs (data.nope).' +
-					' If you need to serialize/deserialize custom types, use transport hooks: https://svelte.dev/docs/kit/hooks#Universal-hooks-transport. (500 Internal Error)"'
+					' If you need to serialize/deserialize custom types, use transport hooks: https://svelte.dev/docs/kit/hooks#transport. (500 Internal Error)"'
 			);
 		});
 	}
@@ -334,6 +334,16 @@ test.describe('Errors', () => {
 	test('server-side error from load() still has layout data', async ({ page }) => {
 		await page.goto('/errors/load-error-server/layout-data');
 		expect(await page.textContent('#error-layout-data')).toBe('42');
+	});
+
+	test('handleError can override the status code of an unexpected error', async ({ page }) => {
+		const response = await page.goto('/errors/handle-error-status');
+
+		await expect(page.locator('h1')).toHaveText('404');
+		await expect(page.locator('#message')).toHaveText(
+			'This is your custom error page saying: "Status override test (500 Internal Error)"'
+		);
+		expect(/** @type {Response} */ (response).status()).toBe(404);
 	});
 
 	test('error in endpoint', async ({ page, read_errors }) => {

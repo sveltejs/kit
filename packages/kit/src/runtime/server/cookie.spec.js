@@ -41,15 +41,19 @@ describe.skipIf(process.env.NODE_ENV === 'production')('cookies in dev', () => {
 		globalThis.__SVELTEKIT_DEV__ = true;
 	});
 
-	test('warns if cookie exceeds 4,129 bytes', () => {
-		try {
-			const { cookies } = cookies_setup();
-			cookies.set('a', 'a'.repeat(4097), { path: '/' });
-		} catch (e) {
-			const error = /** @type {Error} */ (e);
+	test('throws if cookie name/value exceeds 4,096 bytes', () => {
+		const { cookies } = cookies_setup();
 
-			assert.equal(error.message, 'Cookie "a" is too large, and will be discarded by the browser');
-		}
+		// name ("a=") is 2 bytes, so the value alone must stay under 4094 bytes
+		expect(() => cookies.set('a', 'a'.repeat(4096), { path: '/' })).toThrowError(
+			'Cookie "a" is too large, and will be discarded by the browser'
+		);
+	});
+
+	test('does not throw if cookie name/value is at the 4,096 byte limit', () => {
+		const { cookies } = cookies_setup();
+
+		expect(() => cookies.set('a', 'a'.repeat(4095), { path: '/' })).not.toThrow();
 	});
 });
 
@@ -83,6 +87,16 @@ describe.skipIf(process.env.NODE_ENV !== 'production')('cookies in prod', () => 
 		expect(cookies.get('a')).toEqual('b');
 		cookies.delete('a', { path: '/' });
 		assert.isUndefined(cookies.get('a'));
+	});
+
+	test('getAll should not include deleted cookies', () => {
+		const { cookies } = cookies_setup({ headers: { cookie: 'session=abc' } });
+		cookies.set('session', 'abc', { path: '/' });
+		expect(cookies.getAll()).toEqual([{ name: 'session', value: 'abc' }]);
+
+		cookies.delete('session', { path: '/' });
+		assert.isUndefined(cookies.get('session'));
+		expect(cookies.getAll()).toEqual([]);
 	});
 
 	test('default values when set is called', () => {
@@ -198,6 +212,14 @@ describe.skipIf(process.env.NODE_ENV !== 'production')('cookies in prod', () => 
 		]);
 	});
 
+	test('get with a custom decode is not served from the cached default parse', () => {
+		const { cookies } = cookies_setup({ headers: { cookie: 'enc=hello%20world' } });
+
+		expect(cookies.get('enc')).toEqual('hello world');
+		expect(cookies.get('enc', { decode: (value) => value })).toEqual('hello%20world');
+		expect(cookies.get('enc')).toEqual('hello world');
+	});
+
 	test("set_internal isn't affected by defaults", () => {
 		const { cookies, new_cookies, set_internal } = cookies_setup({
 			href: 'https://example.com/a/b/c'
@@ -285,5 +307,47 @@ describe.skipIf(process.env.NODE_ENV !== 'production')('cookies in prod', () => 
 		const duplicate = all.find((c) => c.name === 'duplicate');
 
 		expect(duplicate?.value).toEqual('foobar_value');
+	});
+});
+
+describe('cookies.parse', () => {
+	const { cookies } = cookies_setup();
+
+	test('parses a cookie', () => {
+		assert.deepEqual(cookies.parse('foo=bar'), {
+			name: 'foo',
+			value: 'bar'
+		});
+	});
+
+	test('ignores invalid properties', () => {
+		assert.deepEqual(cookies.parse('foo=bar; samesite=laxative'), {
+			name: 'foo',
+			value: 'bar'
+		});
+	});
+
+	test('ignores unknown properties', () => {
+		assert.deepEqual(cookies.parse('foo=bar; potato=salad'), {
+			name: 'foo',
+			value: 'bar'
+		});
+	});
+
+	test('converts expires', () => {
+		const date = new Date();
+
+		assert.deepEqual(cookies.parse(`foo=bar; expires=${date.toISOString()}`), {
+			name: 'foo',
+			value: 'bar',
+			expires: date
+		});
+	});
+
+	test('includes trailing = characters', () => {
+		assert.deepEqual(cookies.parse('foo=bar=baz='), {
+			name: 'foo',
+			value: 'bar=baz='
+		});
 	});
 });

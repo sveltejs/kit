@@ -4,6 +4,7 @@
 import { DEV } from 'esm-env';
 import * as devalue from 'devalue';
 import { text_encoder } from './utils.js';
+import { noop } from '../utils/functions.js';
 import { SvelteKitError } from '@sveltejs/kit/internal';
 
 const decoder = new TextDecoder();
@@ -26,6 +27,9 @@ export function set_nested_value(object, path_string, value) {
 	deep_set(object, split_path(path_string), value);
 }
 
+/** Pass this to set_nested_value to delete the last part of the given path */
+export const DELETE_KEY = {};
+
 /**
  * Convert `FormData` into a POJO
  * @param {FormData} data
@@ -41,10 +45,6 @@ export function convert_formdata(data) {
 
 		if (is_array) key = key.slice(0, -2);
 
-		if (values.length > 1 && !is_array) {
-			throw new Error(`Form cannot contain duplicated keys — "${key}" has ${values.length} values`);
-		}
-
 		// an empty `<input type="file">` will submit a non-existent file, bizarrely
 		values = values.filter(
 			(entry) => typeof entry === 'string' || entry.name !== '' || entry.size > 0
@@ -57,6 +57,10 @@ export function convert_formdata(data) {
 		} else if (key.startsWith('b:')) {
 			key = key.slice(2);
 			values = values.map((v) => v === 'on');
+		}
+
+		if (values.length > 1 && !is_array) {
+			throw new Error(`Form cannot contain duplicated keys — "${key}" has ${values.length} values`);
 		}
 
 		set_nested_value(result, key, is_array ? values : values[0]);
@@ -146,10 +150,7 @@ export async function deserialize_binary_form(request) {
 		throw deserialize_error('no body');
 	}
 
-	// TODO: remove this workaround once we upgrade to TS 6.0
-	const reader = /** @type {ReadableStreamDefaultReader<Uint8Array<ArrayBuffer>>} */ (
-		request.body.getReader()
-	);
+	const reader = request.body.getReader();
 
 	/** @type {Array<Promise<Uint8Array<ArrayBuffer> | undefined>>} */
 	const chunks = [];
@@ -320,7 +321,7 @@ export async function deserialize_binary_form(request) {
 			const chunk = await get_chunk(chunks.length);
 			has_more = !!chunk;
 		}
-	})();
+	})().catch(noop); // prevent unhandled rejection potentially crashing the process
 
 	return { data, meta, form_data: null };
 }
@@ -504,6 +505,10 @@ export function deep_set(object, keys, value) {
 		}
 
 		if (!exists) {
+			if (value === DELETE_KEY) {
+				// don't create the nested structure if we want to delete the key anyway
+				return;
+			}
 			current[key] = is_array ? [] : {};
 		}
 
@@ -512,7 +517,12 @@ export function deep_set(object, keys, value) {
 
 	const final_key = keys[keys.length - 1];
 	check_prototype_pollution(final_key);
-	current[final_key] = value;
+
+	if (value === DELETE_KEY) {
+		delete current[final_key];
+	} else {
+		current[final_key] = value;
+	}
 }
 
 /**
@@ -610,17 +620,52 @@ function get_type_prefix(field_type, is_array, input_value) {
 }
 
 /**
+ * A deep-clone implementation specifically for form data, where
+ * we don't need to worry about cycles and whatnot
+ * @param {any} value
+ * @returns {any}
+ */
+function deep_clone(value) {
+	if (value !== null && typeof value === 'object') {
+		if (value instanceof Date) {
+			return new Date(value.getTime());
+		}
+
+		if (value instanceof File) {
+			return value;
+		}
+
+		if (Array.isArray(value)) {
+			return value.map(deep_clone);
+		}
+
+		/** @type {Record<string, any>} */
+		const clone = {};
+		for (const key of Object.keys(value)) {
+			clone[key] = deep_clone(value[key]);
+		}
+
+		return clone;
+	}
+
+	return value;
+}
+
+/**
  * Creates a proxy-based field accessor for form data
  * @param {any} target - Function or empty POJO
- * @param {() => Record<string, any>} get_input - Function to get current input data
- * @param {(path: (string | number)[], value: any) => void} set_input - Function to set input data
+ * @param {() => Record<string, any>} get - Function to get current input data
+ * @param {(path: (string | number)[], value: any) => void} set - Function to set input data
  * @param {(path?: (string | number)[], all?: boolean) => Record<string, InternalRemoteFormIssue[]>} get_issues - Function to get current issues
+ * @param {() => Record<string, boolean>} get_touched - Function to get touched fields
+ * @param {() => Record<string, boolean>} get_dirty - Function to get dirty fields
  * @param {(string | number)[]} path - Current access path
  * @returns {any} Proxy object with name(), value(), and issues() methods
  */
-export function create_field_proxy(target, get_input, set_input, get_issues, path = []) {
+export function create_field_proxy(target, get, set, get_issues, get_touched, get_dirty, path) {
 	const get_value = () => {
-		return deep_get(get_input(), path);
+		const value = deep_get(get(), path);
+		return deep_clone(value);
 	};
 
 	return new Proxy(target, {
@@ -629,24 +674,26 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 
 			// Handle array access like jobs[0]
 			if (/^\d+$/.test(prop)) {
-				return create_field_proxy({}, get_input, set_input, get_issues, [
+				return create_field_proxy({}, get, set, get_issues, get_touched, get_dirty, [
 					...path,
 					parseInt(prop, 10)
 				]);
 			}
 
 			const key = build_path_string(path);
+			const next = [...path, prop];
 
 			if (prop === 'set') {
 				const set_func = function (/** @type {any} */ newValue) {
-					set_input(path, newValue);
+					set(path, newValue);
 					return newValue;
 				};
-				return create_field_proxy(set_func, get_input, set_input, get_issues, [...path, prop]);
+
+				return create_field_proxy(set_func, get, set, get_issues, get_touched, get_dirty, next);
 			}
 
 			if (prop === 'value') {
-				return create_field_proxy(get_value, get_input, set_input, get_issues, [...path, prop]);
+				return create_field_proxy(get_value, get, set, get_issues, get_touched, get_dirty, next);
 			}
 
 			if (prop === 'issues' || prop === 'allIssues') {
@@ -660,15 +707,45 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 						}));
 					}
 
-					return all_issues
+					const issues = all_issues
 						?.filter((issue) => issue.name === key)
 						?.map((issue) => ({
 							path: issue.path,
 							message: issue.message
 						}));
+
+					return issues?.length ? issues : undefined;
 				};
 
-				return create_field_proxy(issues_func, get_input, set_input, get_issues, [...path, prop]);
+				return create_field_proxy(issues_func, get, set, get_issues, get_touched, get_dirty, next);
+			}
+
+			if (prop === 'touched' || prop === 'dirty') {
+				const fn = () => {
+					const object = prop === 'dirty' ? get_dirty() : get_touched();
+
+					if (key === '') {
+						return Object.keys(object).length > 0;
+					}
+
+					if (Object.hasOwn(object, key)) {
+						return true;
+					}
+
+					for (const candidate in object) {
+						if (!Object.hasOwn(object, candidate)) continue;
+						if (!candidate.startsWith(key)) continue;
+
+						const next = candidate[key.length];
+						if (next === '.' || next === '[') {
+							return true;
+						}
+					}
+
+					return false;
+				};
+
+				return create_field_proxy(fn, get, set, get_issues, get_touched, get_dirty, next);
 			}
 
 			if (prop === 'as') {
@@ -834,11 +911,11 @@ export function create_field_proxy(target, get_input, set_input, get_issues, pat
 					});
 				};
 
-				return create_field_proxy(as_func, get_input, set_input, get_issues, [...path, 'as']);
+				return create_field_proxy(as_func, get, set, get_issues, get_touched, get_dirty, next);
 			}
 
 			// Handle property access (nested fields)
-			return create_field_proxy({}, get_input, set_input, get_issues, [...path, prop]);
+			return create_field_proxy({}, get, set, get_issues, get_touched, get_dirty, next);
 		}
 	});
 }

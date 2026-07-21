@@ -15,10 +15,11 @@ test('Creates tsconfig path aliases from kit.alias', () => {
 		}
 	});
 
-	const { compilerOptions } = get_tsconfig(kit, '.');
+	// Use a cwd without a package.json so no `#`-prefixed imports are picked up
+	const { compilerOptions } = get_tsconfig(kit, import.meta.dirname);
 
-	// $lib isn't part of the outcome because there's a "path exists"
-	// check in the implementation
+	// No `#`-prefixed path aliases because the package.json at the test cwd
+	// doesn't have an `imports` field
 	expect(compilerOptions.paths).toEqual({
 		'$app/types': ['./types/index.d.ts'],
 		simpleKey: ['../simple/value'],
@@ -28,6 +29,19 @@ test('Creates tsconfig path aliases from kit.alias', () => {
 		keyToFile: ['../path/to/file.ts'],
 		$routes: ['./types/src/routes'],
 		'$routes/*': ['./types/src/routes/*']
+	});
+});
+
+test('Creates tsconfig path aliases from package.json import map', () => {
+	const { kit } = validate_config({});
+	const { compilerOptions } = get_tsconfig(kit, import.meta.dirname + '/write_tsconfig_test');
+
+	// No `#`-prefixed path aliases because the package.json at the test cwd
+	// doesn't have an `imports` field
+	expect(compilerOptions.paths).toEqual({
+		'$app/types': ['./types/index.d.ts'],
+		'#lib': ['../src/lib'],
+		'#lib/*': ['../src/lib/*']
 	});
 });
 
@@ -70,7 +84,7 @@ test('Creates tsconfig include from kit.files', () => {
 	const { kit } = validate_config({
 		kit: {
 			files: {
-				lib: 'app'
+				routes: 'app'
 			}
 		}
 	});
@@ -82,7 +96,6 @@ test('Creates tsconfig include from kit.files', () => {
 		'env.d.ts',
 		'non-ambient.d.ts',
 		'./types/**/$types.d.ts',
-		'../svelte.config.js',
 		'../vite.config.js',
 		'../vite.config.ts',
 		'../app/**/*.js',

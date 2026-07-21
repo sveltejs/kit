@@ -4,7 +4,13 @@
 import { app_dir, base } from '$app/paths/internal/client';
 import { DEV } from 'esm-env';
 import { HttpError } from '@sveltejs/kit/internal';
-import { query_responses, _goto, set_nearest_error_page, invalidateAll } from '../client.js';
+import {
+	query_responses,
+	_goto,
+	set_nearest_error_page,
+	handle_error,
+	refreshAll
+} from '../client.js';
 import { tick } from 'svelte';
 import { categorize_updates, remote_request } from './shared.svelte.js';
 import { createAttachmentKey } from 'svelte/attachments';
@@ -17,6 +23,8 @@ import {
 	build_path_string,
 	normalize_issue,
 	serialize_binary_form,
+	deep_get,
+	DELETE_KEY,
 	BINARY_FORM_CONTENT_TYPE
 } from '../../form-utils.js';
 
@@ -93,7 +101,8 @@ export function form(id) {
 		let enhance_callback = async (instance) => {
 			if (await instance.submit()) {
 				await tick();
-				instance.element.reset();
+				// We call reset from the prototype to avoid DOM clobbering
+				HTMLFormElement.prototype.reset.call(instance.element);
 			}
 		};
 
@@ -101,12 +110,21 @@ export function form(id) {
 		let element = null;
 
 		/** @type {Record<string, boolean>} */
-		let touched = {};
+		let touched = $state({});
 
-		let submitted = false;
+		/** @type {Record<string, boolean>} */
+		let dirty = $state({});
+
+		/** @type {Record<string, boolean>} */
+		let can_validate = {};
+
+		let submitted = $state(false);
 
 		/** @type {InternalRemoteFormIssue[] | null} */
 		let unread_issues = null;
+
+		/** @type {string | null} */
+		let previous_submitter_name = null;
 
 		/**
 		 * In dev, warn if there are validation issues going unread
@@ -209,14 +227,14 @@ export function form(id) {
 
 					// if the developer took control of updates via `.updates(...)` (even with
 					// no arguments), or the server performed explicit refreshes, don't invalidateAll
-					const should_invalidate = refreshes === null && !response.r;
+					const should_refresh = refreshes === null && !response.r;
 
 					if (response.redirect) {
 						// Use internal version to allow redirects to external URLs
 						void _goto(
 							response.redirect,
 							{
-								invalidateAll: should_invalidate
+								refreshAll: should_refresh
 							},
 							0
 						);
@@ -226,8 +244,8 @@ export function form(id) {
 					const succeeded = raw_issues.length === 0;
 
 					if (succeeded) {
-						if (should_invalidate) {
-							void invalidateAll();
+						if (should_refresh) {
+							void refreshAll();
 						}
 					} else {
 						if (DEV) {
@@ -351,6 +369,8 @@ export function form(id) {
 			element = form;
 
 			touched = {};
+			dirty = {};
+			can_validate = {};
 
 			/** @param {SubmitEvent} event */
 			const handle_submit = async (event) => {
@@ -384,6 +404,29 @@ export function form(id) {
 
 				const form_data = new FormData(form, event.submitter);
 
+				if (
+					previous_submitter_name !== null &&
+					!Array.from(form_data.keys()).map(strip_prefix).includes(previous_submitter_name)
+				) {
+					// Strip any `n:`/`b:` type prefix before clearing, otherwise
+					// `set_nested_value` would coerce `undefined` to `NaN`/`false`
+					// instead of clearing the previously-submitted value.
+					set_nested_value(input, previous_submitter_name, undefined);
+				}
+
+				if (event.submitter) {
+					const name = event.submitter.getAttribute('name');
+					const value = /** @type {any} */ (event.submitter).value;
+
+					if (name !== null && value !== undefined) {
+						set_nested_value(input, name, value);
+					}
+
+					previous_submitter_name = strip_prefix(name);
+				} else {
+					previous_submitter_name = null;
+				}
+
 				if (DEV) {
 					validate_form_data(form_data, clone(form).enctype);
 				}
@@ -401,9 +444,14 @@ export function form(id) {
 					await enhance_callback(create_enhance_callback_instance(form, form_data));
 				} catch (e) {
 					const error =
-						e instanceof HttpError ? e.body : { message: /** @type {any} */ (e).message };
-					const status = e instanceof HttpError ? e.status : 500;
-					void set_nearest_error_page(error, status);
+						e instanceof HttpError
+							? e.body
+							: await handle_error(e, {
+									params: {},
+									route: { id: null },
+									url: new URL(location.href)
+								});
+					void set_nearest_error_page(error);
 				} finally {
 					pending_count--;
 				}
@@ -422,8 +470,6 @@ export function form(id) {
 				if (is_array) name = name.slice(0, -2);
 
 				const is_file = element.type === 'file';
-
-				touched[name] = true;
 
 				if (is_array) {
 					let value;
@@ -469,14 +515,7 @@ export function form(id) {
 					if (file) {
 						set_nested_value(input, name, file);
 					} else {
-						// Remove the property by setting to undefined and clean up
-						const path_parts = name.split(/\.|\[|\]/).filter(Boolean);
-						let current = /** @type {any} */ (input);
-						for (let i = 0; i < path_parts.length - 1; i++) {
-							if (current[path_parts[i]] == null) return;
-							current = current[path_parts[i]];
-						}
-						delete current[path_parts[path_parts.length - 1]];
+						set_nested_value(input, name, DELETE_KEY);
 					}
 				} else {
 					set_nested_value(
@@ -486,9 +525,9 @@ export function form(id) {
 					);
 				}
 
-				name = name.replace(/^[nb]:/, '');
+				name = strip_prefix(name);
 
-				touched[name] = true;
+				dirty[name] = true;
 			};
 
 			const handle_reset = async () => {
@@ -497,15 +536,36 @@ export function form(id) {
 				await tick();
 
 				input = convert_formdata(new FormData(form));
+				raw_issues = [];
+				touched = {};
+				dirty = {};
+				can_validate = {};
+				submitted = false;
+			};
+
+			/** @param {Event} e */
+			const handle_focusout = (e) => {
+				let name = /** @type {HTMLInputElement} */ (e.target).name;
+				if (!name) return;
+
+				name = strip_prefix(name).replace(/\[\]$/, '');
+
+				touched[name] = true;
+
+				if (Object.hasOwn(dirty, name)) {
+					can_validate[name] = true;
+				}
 			};
 
 			form.addEventListener('submit', handle_submit);
 			form.addEventListener('input', handle_input);
+			form.addEventListener('focusout', handle_focusout);
 			form.addEventListener('reset', handle_reset);
 
 			return () => {
 				form.removeEventListener('submit', handle_submit);
 				form.removeEventListener('input', handle_input);
+				form.removeEventListener('focusout', handle_focusout);
 				form.removeEventListener('reset', handle_reset);
 				element = null;
 			};
@@ -554,11 +614,16 @@ export function form(id) {
 						(path, value) => {
 							if (path.length === 0) {
 								input = value;
-							} else {
+							} else if (value !== deep_get(input, path)) {
 								deep_set(input, path.map(String), value);
 
 								const key = build_path_string(path);
-								touched[key] = true;
+
+								if (element) {
+									touched[key] = true;
+									dirty[key] = true;
+									can_validate[key] = true;
+								}
 							}
 						},
 						(path, all) => {
@@ -572,7 +637,10 @@ export function form(id) {
 							}
 
 							return issues;
-						}
+						},
+						() => touched,
+						() => dirty,
+						[]
 					)
 			},
 			result: {
@@ -580,6 +648,9 @@ export function form(id) {
 			},
 			pending: {
 				get: () => pending_count
+			},
+			submitted: {
+				get: () => submitted
 			},
 			preflight: {
 				/** @type {RemoteForm<T, U>['preflight']} */
@@ -595,7 +666,7 @@ export function form(id) {
 			},
 			validate: {
 				/** @type {RemoteForm<any, any>['validate']} */
-				value: async ({ includeUntouched = false, preflightOnly = false } = {}) => {
+				value: async ({ all = false, preflightOnly = false } = {}) => {
 					if (!element) return;
 
 					const id = ++validate_id;
@@ -646,8 +717,8 @@ export function form(id) {
 						array = /** @type {InternalRemoteFormIssue[]} */ (result._);
 					}
 
-					if (!includeUntouched && !submitted) {
-						array = array.filter((issue) => touched[issue.name]);
+					if (!all && !submitted) {
+						array = array.filter((issue) => can_validate[issue.name]);
 					}
 
 					const is_server_validation = !validated?.issues && !preflightOnly;
@@ -737,4 +808,14 @@ function validate_form_data(form_data, enctype) {
 			}
 		}
 	}
+}
+
+/**
+ * Remove the `n:` or `b:` prefix from a field name
+ * @template {string | null} T
+ * @param {T} name
+ * @returns {T}
+ */
+function strip_prefix(name) {
+	return /** @type {T} */ (name && name.replace(/^[nb]:/, ''));
 }

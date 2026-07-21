@@ -45,13 +45,11 @@ export default defineConfig({
 			},
 
 			experimental: {
-				remoteFunctions: true,
-				tracing: {
-					server: true
-				},
-				instrumentation: {
-					server: true
-				}
+				remoteFunctions: true
+			},
+
+			tracing: {
+				server: true
 			},
 
 			csrf: {
@@ -98,6 +96,9 @@ export default defineConfig({
 	server: {
 		fs: {
 			allow: [path.resolve('../../../src')]
+		},
+		cors: {
+			origin: '*'
 		}
 	},
 	test: {

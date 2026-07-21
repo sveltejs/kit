@@ -3,7 +3,7 @@ import process from 'node:process';
 import fs from 'node:fs';
 
 /**
- * Loads and validates Svelte config file
+ * Loads and validates the SvelteKit config
  * @returns {Promise<import('./types.js').Options['config']>}
  */
 export async function load_config() {

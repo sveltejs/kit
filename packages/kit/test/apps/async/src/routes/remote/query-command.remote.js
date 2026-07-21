@@ -116,6 +116,25 @@ export const set_count_server_refresh_after_read = command('unchecked', async (c
 	return c;
 });
 
+export const set_count_server_refresh_before_mutation = command('unchecked', async (c) => {
+	// refresh BEFORE the mutation — the deferred refresh must see the new value
+	get_count().refresh();
+	await new Promise((resolve) => setTimeout(resolve, 10));
+	session().count = c;
+	return c;
+});
+
+export const set_count_server_refresh_then_reawait = command('unchecked', async (c) => {
+	// refresh BEFORE the mutation, then re-await to get fresh data within the command
+	get_count().refresh();
+	session().count = c;
+	const fresh = await get_count();
+	if (fresh !== c) {
+		throw new Error(`expected fresh value ${c}, got ${fresh}`);
+	}
+	return c;
+});
+
 export const set_count_server_set = command('unchecked', async (c) => {
 	const event = getRequestEvent();
 	session().count = c;

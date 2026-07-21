@@ -1,34 +1,24 @@
 /** @import { AST } from 'svelte/compiler' */
 import { existsSync } from 'node:fs';
 import path from 'node:path';
-import { createFilter } from '@rollup/pluginutils';
 import MagicString from 'magic-string';
 import sharp from 'sharp';
 import { parse } from 'svelte-parse-markup';
 import { walk } from 'zimmerframe';
 
-// copied from vite-imagetools.
 // TODO: expose this in vite-imagetools rather than duplicating it
-/** @satisfies {import('vite-imagetools').VitePluginOptions} */
-export const defaultViteImgtoolsOptions = /** @type {const} */ ({
-	include: /^[^?]+\.(avif|gif|heif|jpeg|jpg|png|tiff|webp)(\?.*)?$/,
-	exclude: 'public/**/*',
-	removeMetadata: true
-});
+const OPTIMIZABLE = /^[^?]+\.(avif|heif|gif|jpeg|jpg|png|tiff|webp)(\?.*)?$/;
 
 /**
  * Creates the Svelte image plugin.
  * @param {import('vite').Plugin<void>} imagetools_plugin
- * @param {import('vite-imagetools').VitePluginOptions} opts
  * @returns {import('vite').Plugin<void>}
  */
-export function image_plugin(imagetools_plugin, opts) {
+export function image_plugin(imagetools_plugin) {
 	/** @type {import('vite').ResolvedConfig} */
 	let vite_config;
 
 	const name = 'vite-plugin-enhanced-img-markup';
-
-	const optimizable_filter = createFilter(opts.include, opts.exclude);
 
 	/** @type {import('vite').Plugin<void>} */
 	const plugin = {
@@ -97,7 +87,7 @@ export function image_plugin(imagetools_plugin, opts) {
 					const original_url = src_attribute.raw.trim();
 					let url = original_url;
 
-					if (optimizable_filter(url)) {
+					if (OPTIMIZABLE.test(url)) {
 						const sizes = get_attr_value(node, 'sizes');
 						const width = get_attr_value(node, 'width');
 						url += url.includes('?') ? '&' : '?';
@@ -126,7 +116,7 @@ export function image_plugin(imagetools_plugin, opts) {
 						);
 					}
 
-					if (optimizable_filter(url)) {
+					if (OPTIMIZABLE.test(url)) {
 						const image = await process_id(resolved_id, plugin_context, imagetools_plugin);
 						s.update(node.start, node.end, img_to_picture(content, node, image));
 					} else {

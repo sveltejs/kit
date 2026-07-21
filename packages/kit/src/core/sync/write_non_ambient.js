@@ -1,5 +1,6 @@
 import path from 'node:path';
 import { GENERATED_COMMENT } from '../../constants.js';
+import { resolve_entry } from '../../utils/filesystem.js';
 import { posixify } from '../../utils/os.js';
 import { write_if_changed } from './utils.js';
 import { s } from '../../utils/misc.js';
@@ -21,10 +22,6 @@ const remove_group_segments = (/** @type {string} */ id) => {
  * @returns {string[]}
  */
 function get_pathnames_for_trailing_slash(pathname, route) {
-	if (pathname === '/') {
-		return [pathname];
-	}
-
 	/** @type {Set<string>} */
 	const pathnames = new Set();
 
@@ -85,10 +82,6 @@ export {};
  * @param {import('types').ValidatedKitConfig} config
  */
 function generate_app_types(manifest_data, config) {
-	/** @param {string} matcher */
-	const path_to_matcher = (matcher) =>
-		posixify(path.relative(config.outDir, path.join(config.files.params, matcher + '.js')));
-
 	/** @type {Map<string, string>} */
 	const matcher_types = new Map();
 
@@ -98,7 +91,15 @@ function generate_app_types(manifest_data, config) {
 
 		let type = matcher_types.get(matcher);
 		if (!type) {
-			type = `MatcherParam<typeof import('${path_to_matcher(matcher)}').match>`;
+			const path_to_params = () => {
+				const params_file =
+					resolve_entry(config.files.params) ??
+					config.files.params.replace(/\.(js|ts)$/, '') + '.js';
+
+				return posixify(path.relative(config.outDir, params_file));
+			};
+
+			type = `import('@sveltejs/kit').MatcherParam<(typeof import('${path_to_params()}').params)[${JSON.stringify(matcher)}]>`;
 			matcher_types.set(matcher, type);
 		}
 
@@ -196,7 +197,7 @@ function generate_app_types(manifest_data, config) {
 
 	for (const route of manifest_data.routes) {
 		const pathname = remove_group_segments(route.id);
-		let normalized_pathname = pathname;
+		let normalized_pathname = pathname.slice(1);
 
 		/** @type {(path: string) => string} */
 		let serialise = s;
@@ -204,13 +205,13 @@ function generate_app_types(manifest_data, config) {
 		if (route.params.length > 0) {
 			const params = route.params.map((p) => {
 				const type = get_matcher_type(p.matcher);
-				return `${p.name}${p.optional ? '?:' : ':'} ${type}${p.optional ? ' | undefined' : ''}`;
+				return `${/^\w+$/.test(p.name) ? p.name : `'${p.name}'`}${p.optional ? '?:' : ':'} ${type}${p.optional ? ' | undefined' : ''}`;
 			});
 			const route_type = `${s(route.id)}: { ${params.join('; ')} }`;
 
 			dynamic_routes.push(route_type);
 
-			normalized_pathname = replace_required_params(replace_optional_params(pathname));
+			normalized_pathname = replace_required_params(replace_optional_params(pathname)).slice(1);
 			serialise = (p) => `\`${p}\` & {}`;
 		}
 
@@ -225,7 +226,7 @@ function generate_app_types(manifest_data, config) {
 			const params = Array.from(layout_params)
 				.map(([name, { optional, matchers }]) => {
 					const type = get_matchers_type(matchers);
-					return `${name}${optional ? '?:' : ':'} ${type}${optional ? ' | undefined' : ''}`;
+					return `${/^\w+$/.test(name) ? name : `'${name}'`}${optional ? '?:' : ':'} ${type}${optional ? ' | undefined' : ''}`;
 				})
 				.join('; ');
 
@@ -235,19 +236,17 @@ function generate_app_types(manifest_data, config) {
 		layouts.push(`${s(route.id)}: ${layout_type}`);
 	}
 
-	const assets = manifest_data.assets.map((asset) => s('/' + asset.file));
+	const assets = manifest_data.assets.map((asset) => s(asset.file));
 
 	return [
 		'declare module "$app/types" {',
-		'\ttype MatcherParam<M> = M extends (param : string) => param is (infer U extends string) ? U : string;',
-		'',
 		'\texport interface AppTypes {',
 		`\t\tRouteId(): ${manifest_data.routes.map((r) => s(r.id)).join(' | ')};`,
 		`\t\tRouteParams(): {\n\t\t\t${dynamic_routes.join(';\n\t\t\t')}\n\t\t};`,
 		`\t\tLayoutParams(): {\n\t\t\t${layouts.join(';\n\t\t\t')}\n\t\t};`,
-		`\t\tPathname(): ${Array.from(pathnames).join(' | ')};`,
-		'\t\tResolvedPathname(): `${"" | `/${string}`}${ReturnType<AppTypes[\'Pathname\']>}`;',
-		`\t\tAsset(): ${assets.concat('string & {}').join(' | ')};`,
+		`\t\tPath(): ${Array.from(pathnames).join(' | ')};`,
+		'\t\tResolvedPathname(): `${"/" | `/${string}/`}${ReturnType<AppTypes[\'Path\']>}`;',
+		`\t\tAssetPath(): ${assets.join(' | ') || 'never'};`,
 		'\t}',
 		'}'
 	].join('\n');

@@ -16,7 +16,6 @@ let headers;
  */
 export function get_public_env(request) {
 	const env = rendered_env;
-	const script = request.url.endsWith('.script.js');
 
 	payload ??= devalue.uneval(env);
 	etag ??= `W/${Date.now()}`;
@@ -27,10 +26,6 @@ export function get_public_env(request) {
 
 	if (request.headers.get('if-none-match') === etag) {
 		return new Response(undefined, { status: 304, headers });
-	}
-
-	if (script) {
-		return new Response(`globalThis.__sveltekit_sw={env:${payload}}`, { headers });
 	}
 
 	return new Response(`export const env=${payload}`, { headers });

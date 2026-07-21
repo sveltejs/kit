@@ -45,9 +45,6 @@ Then, make sure you have a [netlify.toml](https://docs.netlify.com/configure-bui
 
 If the `netlify.toml` file or the `build.publish` value is missing, a default value of `"build"` will be used. Note that if you have set the publish directory in the Netlify UI to something else then you will need to set it in `netlify.toml` too, or use the default value of `"build"`.
 
-> [!LEGACY]
-> The `adapter` option was moved to the SvelteKit Vite plugin in SvelteKit 3.0.0. In earlier versions, you had to add it to the `kit` property in the `svelte.config.js` file instead.
-
 ### Node version
 
 New projects will use the current Node LTS version by default. However, if you're upgrading a project you created a while ago it may be stuck on an older version. See [the Netlify docs](https://docs.netlify.com/configure-builds/manage-dependencies/#node-js-and-javascript) for details on manually specifying a current Node version.
@@ -87,7 +84,7 @@ The [`_headers`](https://docs.netlify.com/routing/headers/#syntax-for-the-header
 ### Netlify Forms
 
 1. Create your Netlify HTML form as described [here](https://docs.netlify.com/forms/setup/#html-forms), e.g. as `/routes/contact/+page.svelte`. (Don't forget to add the hidden `form-name` input element!)
-2. Netlify's build bot parses your HTML files at deploy time, which means your form must be [prerendered](page-options#prerender) as HTML. You can either add `export const prerender = true` to your `contact.svelte` to prerender just that page or set the `kit.prerender.force: true` option to prerender all pages.
+2. Netlify's build bot parses your HTML files at deploy time, which means your form must be [prerendered](page-options#prerender) as HTML. You can either add `export const prerender = true` to your `contact.svelte` to prerender just that page or set the `prerender.force: true` option to prerender all pages.
 3. If your Netlify form has a [custom success message](https://docs.netlify.com/forms/setup/#success-messages) like `<form netlify ... action="/success">` then ensure the corresponding `/routes/success/+page.svelte` exists and is prerendered.
 
 ### Netlify Functions

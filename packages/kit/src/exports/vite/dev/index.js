@@ -1,5 +1,6 @@
 /** @import { RequestEvent } from '@sveltejs/kit' */
 /** @import { PrerenderOption, UniversalNode } from 'types' */
+import process from 'node:process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { URL } from 'node:url';
@@ -10,14 +11,21 @@ import { isCSSRequest, loadEnv, buildErrorMessage } from 'vite';
 import { createReadableStream, getRequest, setResponse } from '../../../exports/node/index.js';
 import { coalesce_to_error } from '../../../utils/error.js';
 import { resolve_entry } from '../../../utils/filesystem.js';
+import { load_and_validate_params } from '../../../utils/params.js';
 import { from_fs, to_fs } from '../../../utils/vite.js';
 import { posixify } from '../../../utils/os.js';
 import { load_error_page } from '../../../core/config/index.js';
-import { SVELTE_KIT_ASSETS } from '../../../constants.js';
+import { SRC_ROOT, SVELTE_KIT_ASSETS } from '../../../constants.js';
 import * as sync from '../../../core/sync/sync.js';
 import { get_mime_lookup, get_runtime_base } from '../../../core/utils.js';
+import '../../../utils/mime.js'; // extend mrmime with additional types (affects sirv too)
 import { compact } from '../../../utils/array.js';
-import { is_chrome_devtools_request, not_found } from '../utils.js';
+import {
+	is_chrome_devtools_request,
+	log_response,
+	not_found,
+	remote_module_pattern
+} from '../utils.js';
 import { SCHEME } from '../../../utils/url.js';
 import { check_feature } from '../../../utils/features.js';
 import { escape_html } from '../../../utils/escape.js';
@@ -31,10 +39,10 @@ const vite_css_query_regex = /(?:\?|&)(?:raw|url|inline)(?:&|$)/;
  * @param {import('types').ValidatedConfig} svelte_config
  * @param {() => Array<{ hash: string, file: string }>} get_remotes
  * @param {string} root The project root directory
- * @param {import('@sveltejs/kit').Adapter | undefined} adapter
+ * @param {(manifest_data: import('types').ManifestData) => void} set_manifest_data
  * @return {Promise<Promise<() => void>>}
  */
-export async function dev(vite, vite_config, svelte_config, get_remotes, root, adapter) {
+export async function dev(vite, vite_config, svelte_config, get_remotes, root, set_manifest_data) {
 	/** @type {AsyncLocalStorage<{ event: RequestEvent, config: any, prerender: PrerenderOption }>} */
 	const async_local_storage = new AsyncLocalStorage();
 
@@ -42,7 +50,12 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, a
 		const context = async_local_storage.getStore();
 		if (!context || context.prerender === true) return;
 
-		check_feature(/** @type {string} */ (context.event.route.id), context.config, label, adapter);
+		check_feature(
+			/** @type {string} */ (context.event.route.id),
+			context.config,
+			label,
+			svelte_config.kit.adapter
+		);
 	};
 
 	const fetch = globalThis.fetch;
@@ -79,6 +92,10 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, a
 				vite.config.logger.error(msg, { error: err });
 			}
 
+			// TODO this is inadequate — it doesn't reliably show the overlay on every page load,
+			// and when it does appear it may immediately vanish. `vite.ws.send` broadcasts
+			// to all connected clients, even ones that are unaffected by the error.
+			// we need a more considered approach
 			vite.ws.send({
 				type: 'error',
 				err: /** @type {import('vite').ErrorPayload['err']} */ ({
@@ -106,9 +123,17 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, a
 		return { module, module_node, url };
 	}
 
-	function update_manifest() {
+	async function update_manifest() {
 		try {
 			({ manifest_data } = sync.create(svelte_config, root));
+			set_manifest_data(manifest_data);
+
+			await load_and_validate_params({
+				routes: manifest_data.routes,
+				params_path: manifest_data.params,
+				root,
+				load: (file) => loud_ssr_load_module(file)
+			});
 
 			if (manifest_error) {
 				manifest_error = null;
@@ -288,22 +313,18 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, a
 					})
 				),
 				matchers: async () => {
-					/** @type {Record<string, import('@sveltejs/kit').ParamMatcher>} */
-					const matchers = {};
+					if (!manifest_data.params) return {};
 
-					for (const key in manifest_data.matchers) {
-						const file = manifest_data.matchers[key];
-						const url = path.resolve(root, file);
-						const module = await vite.ssrLoadModule(url, { fixStacktrace: true });
+					const url = path.resolve(root, manifest_data.params);
+					const module = await vite.ssrLoadModule(url, { fixStacktrace: true });
 
-						if (module.match) {
-							matchers[key] = module.match;
-						} else {
-							throw new Error(`${file} does not export a \`match\` function`);
-						}
+					if (!module.params) {
+						throw new Error(
+							`${manifest_data.params} does not export \`params\` from \`defineParams\``
+						);
 					}
 
-					return matchers;
+					return module.params;
 				}
 			}
 		};
@@ -311,16 +332,53 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, a
 
 	/** @param {Error} error */
 	function fix_stack_trace(error) {
+		if (!error.stack) {
+			return;
+		}
+
 		try {
 			vite.ssrFixStacktrace(error);
 		} catch {
 			// ssrFixStacktrace can fail on StackBlitz web containers and we don't know why
 			// by ignoring it the line numbers are wrong, but at least we can show the error
 		}
-		return error.stack?.replaceAll('\0', ''); // remove null bytes from e.g. virtual module IDs, or the response will fail
+
+		if (error.stack) {
+			let end = 0;
+
+			error.stack = error.stack
+				.replaceAll('\0', '') // remove null bytes from e.g. virtual module IDs, or the response will fail
+				.split('\n')
+				.map((line, i) => {
+					const match = /^ {4}at (?:[^ ]+ \((.+)\)|(.+))$/.exec(line);
+					if (!match) {
+						end = i + 1;
+						return line;
+					}
+
+					const loc = match[1] ?? match[2];
+					const file = loc.replace(/:\d+:\d+$/, '');
+
+					if (fs.existsSync(file)) {
+						if (!file.includes('node_modules') && !file.includes(SRC_ROOT)) {
+							end = i + 1;
+						}
+
+						return line.replace(file, path.relative(process.cwd(), file));
+					}
+
+					return line;
+				})
+				.slice(0, end)
+				.join('\n');
+
+			return error.stack;
+		}
 	}
 
-	update_manifest();
+	await update_manifest();
+
+	const params_file = resolve_entry(svelte_config.kit.files.params);
 
 	/**
 	 * @param {string} event
@@ -330,8 +388,9 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, a
 		vite.watcher.on(event, (file) => {
 			if (
 				file.startsWith(svelte_config.kit.files.routes + path.sep) ||
-				file.startsWith(svelte_config.kit.files.params + path.sep) ||
-				svelte_config.kit.moduleExtensions.some((ext) => file.endsWith(`.remote${ext}`)) ||
+				file.startsWith(svelte_config.kit.files.assets + path.sep) ||
+				(params_file && file === params_file) ||
+				remote_module_pattern.test(file) ||
 				// in contrast to server hooks, client hooks are written to the client manifest
 				// and therefore need rebuilding when they are added/removed
 				file.startsWith(svelte_config.kit.files.hooks.client)
@@ -351,9 +410,6 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, a
 		}, 100);
 	};
 
-	// flag to skip watchers if server is already restarting
-	let restarting = false;
-
 	// Debounce add/unlink events because in case of folder deletion or moves
 	// they fire in rapid succession, causing needless invocations.
 	// These watchers only run for routes, param matchers, and client hooks.
@@ -362,7 +418,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, a
 	watch('change', (file) => {
 		// Don't run for a single file if the whole manifest is about to get updated
 		// Unless it's a file where the trailing slash page option might have changed
-		if (timeout || restarting || !/\+(page|layout|server).*$/.test(file)) return;
+		if (timeout || !/\+(page|layout|server).*$/.test(file)) return;
 		sync.update(svelte_config, manifest_data, file, root);
 	});
 
@@ -373,7 +429,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, a
 	// send the vite client a full-reload event without path being set
 	if (appTemplate !== 'index.html') {
 		vite.watcher.on('change', (file) => {
-			if (file === appTemplate && !restarting) {
+			if (file === appTemplate) {
 				vite.ws.send({ type: 'full-reload' });
 			}
 		});
@@ -390,26 +446,12 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, a
 		}
 	});
 
-	vite.watcher.on('change', async (file) => {
-		// changing the svelte config requires restarting the dev server
-		// the config is only read on start and passed on to vite-plugin-svelte
-		// which needs up-to-date values to operate correctly
-		if (file.match(/[/\\]svelte\.config\.[jt]s$/)) {
-			console.log(`svelte config changed, restarting vite dev-server. changed file: ${file}`);
-			restarting = true;
-			await vite.restart();
-		}
-	});
-
 	const assets = svelte_config.kit.paths.assets ? SVELTE_KIT_ASSETS : svelte_config.kit.paths.base;
 	const asset_server = sirv(svelte_config.kit.files.assets, {
 		dev: true,
 		etag: true,
 		maxAge: 0,
-		extensions: [],
-		setHeaders: (res) => {
-			res.setHeader('access-control-allow-origin', '*');
-		}
+		extensions: []
 	});
 
 	vite.middlewares.use((req, res, next) => {
@@ -436,7 +478,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, a
 	});
 
 	const env = loadEnv(vite_config.mode, svelte_config.kit.env.dir, '');
-	const emulator = await adapter?.emulate?.();
+	const emulator = await svelte_config.kit.adapter?.emulate?.();
 
 	return () => {
 		const serve_static_middleware = vite.middlewares.stack.find(
@@ -513,7 +555,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, a
 				);
 
 				const { set_fix_stack_trace } = await vite.ssrLoadModule(
-					`${get_runtime_base(root)}/shared-server.js`
+					`${get_runtime_base(root)}/server/internal.js`
 				);
 				set_fix_stack_trace(fix_stack_trace);
 
@@ -527,7 +569,7 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, a
 					read: (file) => createReadableStream(from_fs(file))
 				});
 
-				const request = await getRequest({
+				const request = getRequest({
 					base,
 					request: req
 				});
@@ -578,15 +620,18 @@ export async function dev(vite, vite_config, svelte_config, get_remotes, root, a
 				if (rendered.status === 404) {
 					// @ts-expect-error
 					serve_static_middleware.handle(req, res, () => {
-						void setResponse(res, rendered);
+						log_response(rendered.status, request);
+						setResponse(res, rendered);
 					});
 				} else {
-					void setResponse(res, rendered);
+					log_response(rendered.status, request);
+					setResponse(res, rendered);
 				}
 			} catch (e) {
 				const error = coalesce_to_error(e);
 				res.statusCode = 500;
-				res.end(fix_stack_trace(error) || error.message); // handle `stackless` errors
+				fix_stack_trace(error);
+				res.end(error.stack || error.message); // handle `stackless` errors
 			}
 		});
 	};

@@ -3,7 +3,6 @@ import {
 	navigating as _navigating,
 	updated as _updated
 } from '../../client/state.svelte.js';
-import { stores } from '../../client/client.js';
 
 export const page = {
 	get data() {
@@ -57,5 +56,5 @@ export const updated = {
 	get current() {
 		return _updated.current;
 	},
-	check: stores.updated.check
+	check: _updated.check
 };

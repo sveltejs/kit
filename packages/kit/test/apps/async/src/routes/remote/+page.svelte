@@ -11,6 +11,8 @@
 		set_count_partial_refresh_all,
 		set_count_server_refresh,
 		set_count_server_refresh_after_read,
+		set_count_server_refresh_before_mutation,
+		set_count_server_refresh_then_reawait,
 		set_count_server_set,
 		resolve_deferreds
 	} from './query-command.remote.js';
@@ -100,6 +102,22 @@
 </button>
 <button
 	onclick={async () => {
+		command_result = await set_count_server_refresh_before_mutation(12);
+	}}
+	id="multiply-server-refresh-before-mutation-btn"
+>
+	command (query server refresh before mutation)
+</button>
+<button
+	onclick={async () => {
+		command_result = await set_count_server_refresh_then_reawait(13);
+	}}
+	id="multiply-server-refresh-then-reawait-btn"
+>
+	command (query server refresh then re-await)
+</button>
+<button
+	onclick={async () => {
 		// slow, else test will not be able to see the override
 		// (which we deliberately set to a wrong optimistic value to see it applied before the refresh)
 		command_result = await set_count({ c: 5, slow: true }).updates(
@@ -154,9 +172,6 @@
 </button>
 
 <button id="refresh-all" onclick={() => refreshAll()}>refreshAll</button>
-<button id="refresh-remote-only" onclick={() => refreshAll({ includeLoadFunctions: false })}>
-	refreshAll (remote functions only)
-</button>
 <button id="resolve-deferreds" onclick={() => resolve_deferreds()}>Resolve Deferreds</button>
 
 <a href="/remote/event">/remote/event</a>

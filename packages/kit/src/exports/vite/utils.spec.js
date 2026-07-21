@@ -3,7 +3,13 @@ import { expect, test } from 'vitest';
 import { validate_config } from '../../core/config/index.js';
 import { posixify } from '../../utils/os.js';
 import { dedent } from '../../core/sync/utils.js';
-import { get_config_aliases, error_for_missing_config } from './utils.js';
+import {
+	error_for_missing_config,
+	get_config_aliases,
+	remote_module_pattern,
+	server_only_directory_pattern,
+	server_only_module_pattern
+} from './utils.js';
 
 test('transform kit.alias to resolve.alias', () => {
 	const config = validate_config({
@@ -30,7 +36,6 @@ test('transform kit.alias to resolve.alias', () => {
 	});
 
 	expect(transformed).toEqual([
-		{ find: '$lib', replacement: 'src/lib' },
 		{ find: 'simpleKey', replacement: 'simple/value' },
 		{ find: /^key$/.toString(), replacement: 'value' },
 		{ find: /^key\/(.+)$/.toString(), replacement: 'value/$1' },
@@ -39,35 +44,43 @@ test('transform kit.alias to resolve.alias', () => {
 	]);
 });
 
-test('error_for_missing_config - simple single level config', () => {
-	expect(() => error_for_missing_config('feature', 'kit.adapter', 'true')).toThrow(
-		dedent`
-			To enable feature, add the following to your \`svelte.config.js\`:
+test('recognizes server-only module filenames', () => {
+	expect(server_only_module_pattern.test('dir/server.js')).toBe(true);
+	expect(server_only_module_pattern.test('dir/module.server.ts')).toBe(true);
+	expect(server_only_module_pattern.test('dir/module.server.test.js')).toBe(true);
+	expect(server_only_module_pattern.test('dir/server.test.ts')).toBe(true);
+	expect(server_only_module_pattern.test('dir/module.serverish.js')).toBe(false);
+	expect(server_only_module_pattern.test('dir/server/module.js')).toBe(false);
+	expect(server_only_directory_pattern.test('dir/server/module.js')).toBe(true);
+});
 
-			kit: {
-			  adapter: true
-			}
+test('recognizes remote module filenames', () => {
+	expect(remote_module_pattern.test('dir/remote.js')).toBe(true);
+	expect(remote_module_pattern.test('dir/module.remote.ts')).toBe(true);
+	expect(remote_module_pattern.test('dir/module.remote.test.js')).toBe(true);
+	expect(remote_module_pattern.test('dir/module.remotely.js')).toBe(false);
+	expect(remote_module_pattern.test('dir/remote/module.js')).toBe(false);
+});
+
+test('error_for_missing_config - simple single level config', () => {
+	expect(() => error_for_missing_config('feature', 'adapter', 'true')).toThrow(
+		dedent`
+			To enable feature, add the following to your SvelteKit plugin in \`vite.config.js\`:
+
+			adapter: true
 		`
 	);
 });
 
 test('error_for_missing_config - nested config', () => {
 	expect(() =>
-		error_for_missing_config(
-			'instrumentation.server.js',
-			'kit.experimental.instrumentation.server',
-			'true'
-		)
+		error_for_missing_config('remote functions', 'experimental.remoteFunctions', 'true')
 	).toThrow(
 		dedent`
-			To enable instrumentation.server.js, add the following to your \`svelte.config.js\`:
+			To enable remote functions, add the following to your SvelteKit plugin in \`vite.config.js\`:
 
-			kit: {
-			  experimental: {
-			    instrumentation: {
-			      server: true
-			    }
-			  }
+			experimental: {
+			  remoteFunctions: true
 			}
 		`
 	);
@@ -76,7 +89,7 @@ test('error_for_missing_config - nested config', () => {
 test('error_for_missing_config - deeply nested config', () => {
 	expect(() => error_for_missing_config('deep feature', 'a.b.c.d.e', '"value"')).toThrow(
 		dedent`
-			To enable deep feature, add the following to your \`svelte.config.js\`:
+			To enable deep feature, add the following to your SvelteKit plugin in \`vite.config.js\`:
 
 			a: {
 			  b: {
@@ -92,27 +105,23 @@ test('error_for_missing_config - deeply nested config', () => {
 });
 
 test('error_for_missing_config - two level config', () => {
-	expect(() => error_for_missing_config('some feature', 'kit.someFeature', 'false')).toThrow(
+	expect(() => error_for_missing_config('some feature', 'someFeature', 'false')).toThrow(
 		dedent`
-			To enable some feature, add the following to your \`svelte.config.js\`:
+			To enable some feature, add the following to your SvelteKit plugin in \`vite.config.js\`:
 
-			kit: {
-			  someFeature: false
-			}
+			someFeature: false
 		`
 	);
 });
 
 test('error_for_missing_config - handles special characters in feature name', () => {
 	expect(() =>
-		error_for_missing_config('special-feature.js', 'kit.special', '{ enabled: true }')
+		error_for_missing_config('special-feature.js', 'special', '{ enabled: true }')
 	).toThrow(
 		dedent`
-			To enable special-feature.js, add the following to your \`svelte.config.js\`:
+			To enable special-feature.js, add the following to your SvelteKit plugin in \`vite.config.js\`:
 
-			kit: {
-			  special: { enabled: true }
-			}
+			special: { enabled: true }
 		`
 	);
 });

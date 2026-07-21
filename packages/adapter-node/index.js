@@ -36,26 +36,27 @@ export default function (opts = {}) {
 
 			builder.log.minor('Building server');
 
-			builder.writeServer(tmp);
-
-			writeFileSync(
-				`${tmp}/manifest.js`,
-				[
-					`export const manifest = ${builder.generateManifest({ relativePath: './' })};`,
-					`export const prerendered = new Set(${JSON.stringify(builder.prerendered.paths)});`,
-					`export const base = ${JSON.stringify(builder.config.kit.paths.base)};`
-				].join('\n\n')
-			);
-
 			const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
+			const server = builder.getServerDirectory();
 
 			// Copy the prebuilt entrypoints into the build directory so that the
 			// adapter's own bundled dependencies resolve correctly, then bundle them
 			// together with the app's server code. Bundling everything in a single
 			// pass means shared modules (e.g. `SvelteKitError` from `@sveltejs/kit`)
 			// aren't duplicated. See https://github.com/sveltejs/kit/issues/15755
-			const entries = `${tmp}/entries`;
+			const entries = posixify(`${tmp}/entries`);
 			builder.copy(files, entries);
+
+			const dir_id = `${entries}/dir.js`;
+
+			writeFileSync(
+				`${server}/manifest.js`,
+				[
+					`export const manifest = ${builder.generateManifest({ relativePath: './' })};`,
+					`export const prerendered = new Set(${JSON.stringify(builder.prerendered.paths)});`,
+					`export const base = ${JSON.stringify(builder.config.kit.paths.base)};`
+				].join('\n\n')
+			);
 
 			/** @type {Record<string, string>} */
 			const input = {
@@ -65,7 +66,7 @@ export default function (opts = {}) {
 			};
 
 			if (builder.hasServerInstrumentationFile()) {
-				input['instrumentation.server'] = `${tmp}/instrumentation.server.js`;
+				input['instrumentation.server'] = `${server}/instrumentation.server.js`;
 			}
 
 			// we bundle the Vite output so that deployments only need
@@ -81,13 +82,16 @@ export default function (opts = {}) {
 				resolve: {
 					conditionNames: ['node']
 				},
+				experimental: {
+					nativeMagicString: true
+				},
 				plugins: [
 					{
 						// resolve the app's server and manifest, generated above
 						name: 'adapter-node-resolve-app',
 						resolveId(id) {
-							if (id === 'SERVER') return `${tmp}/index.js`;
-							if (id === 'MANIFEST') return `${tmp}/manifest.js`;
+							if (id === 'SERVER') return `${server}/index.js`;
+							if (id === 'MANIFEST') return `${server}/manifest.js`;
 						}
 					},
 					{
@@ -97,10 +101,19 @@ export default function (opts = {}) {
 						name: 'adapter-node-replace-constants',
 						transform: {
 							filter: { id: new RegExp(escape_regex(entries)) },
-							handler(code) {
-								return code
+							handler(_code, _id, { magicString }) {
+								if (!magicString) throw new Error('experimental.nativeMagicString is not enabled');
+								magicString
 									.replace(/\bENV_PREFIX\b/g, JSON.stringify(envPrefix))
-									.replace(/\bPRECOMPRESS\b/g, JSON.stringify(precompress));
+									.replace(/\bPRECOMPRESS\b/g, JSON.stringify(precompress))
+									.replace(
+										/\bORIGIN\b/g,
+										JSON.stringify(builder.config.kit.paths.origin) || 'undefined'
+									);
+								return {
+									code: magicString,
+									map: magicString.generateMap().toString()
+								};
 							}
 						}
 					}
@@ -111,7 +124,18 @@ export default function (opts = {}) {
 				dir: out,
 				format: 'esm',
 				sourcemap: true,
-				chunkFileNames: 'server/chunks/[name]-[hash].js'
+				codeSplitting: {
+					groups: [
+						{
+							name: 'dir',
+							test: dir_id
+						}
+					]
+				},
+				chunkFileNames(chunk) {
+					if (chunk.name === 'dir') return '[name].js';
+					return 'server/chunks/[name]-[hash].js';
+				}
 			});
 
 			if (builder.hasServerInstrumentationFile()) {
@@ -130,4 +154,9 @@ export default function (opts = {}) {
 			instrumentation: () => true
 		}
 	};
+}
+
+/** @param {string} str */
+function posixify(str) {
+	return str.replace(/\\/g, '/');
 }

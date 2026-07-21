@@ -1,9 +1,11 @@
+/** @import { Plugin, RolldownOptions } from 'rolldown' */
 import { builtinModules } from 'node:module';
 import { rmSync } from 'node:fs';
+import { join } from 'node:path';
 
 /**
  * @param {string} filepath
- * @returns {import('rolldown').Plugin}
+ * @returns {Plugin}
  */
 function clearOutput(filepath) {
 	return {
@@ -19,7 +21,7 @@ function clearOutput(filepath) {
 }
 
 /**
- * @returns {import('rolldown').Plugin}
+ * @returns {Plugin}
  */
 function prefixBuiltinModules() {
 	return {
@@ -32,17 +34,31 @@ function prefixBuiltinModules() {
 	};
 }
 
+const dir_id = join(import.meta.dirname, 'src', 'dir.js');
+
+/** @type {RolldownOptions} */
 export default {
 	input: {
 		index: 'src/index.js',
-		env: 'src/env.js',
-		handler: 'src/handler.js'
+		handler: 'src/handler.js',
+		env: 'src/env.js'
 	},
 	output: {
 		dir: 'files',
 		format: 'esm',
 		hoistTransitiveImports: false,
-		chunkFileNames: 'chunks/[hash].js'
+		chunkFileNames(chunk) {
+			if (chunk.name === 'dir') return '[name].js';
+			return 'chunks/[name].js';
+		},
+		codeSplitting: {
+			groups: [
+				{
+					name: 'dir',
+					test: dir_id
+				}
+			]
+		}
 	},
 	plugins: [clearOutput('files'), prefixBuiltinModules()],
 	// `MANIFEST` and `SERVER` are resolved at adapt time, and `@sveltejs/kit/node`

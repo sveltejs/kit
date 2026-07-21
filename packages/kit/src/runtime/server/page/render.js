@@ -1,5 +1,5 @@
+/** @import { RenderNode } from '../../types.js' */
 import * as devalue from 'devalue';
-import { readable, writable } from 'svelte/store';
 import { DEV } from 'esm-env';
 import { isRedirect, text } from '@sveltejs/kit';
 import * as paths from '$app/paths/internal/server';
@@ -14,22 +14,14 @@ import { create_server_routing_response, generate_route_object } from './server_
 import { add_data_suffix, add_resolution_suffix } from '../../pathname.js';
 import { try_get_request_store, with_request_store } from '@sveltejs/kit/internal/server';
 import { text_encoder } from '../../utils.js';
-import {
-	count_non_ssi_comments,
-	create_replacer,
-	get_global_name,
-	handle_error_and_jsonify
-} from '../utils.js';
-import { get_status } from '../../../utils/error.js';
+import { count_non_ssi_comments, create_replacer, get_global_name } from '../utils.js';
+import { handle_error_and_jsonify } from '../errors.js';
 import * as env from '__sveltekit/env';
-import { collect_remote_data } from '../remote.js';
+import { collect_remote_data } from '../remote-functions.js';
+import Root from '../../components/root.svelte';
+import { render } from 'svelte/server';
 
 // TODO rename this function/module
-
-const updated = {
-	...readable(false),
-	check: () => false
-};
 
 /**
  * Creates the HTML response.
@@ -47,7 +39,7 @@ const updated = {
  *   resolve_opts: import('types').RequiredResolveOptions;
  *   action_result?: import('@sveltejs/kit').ActionResult;
  *   data_serializer: import('./types.js').ServerDataSerializer;
- *   error_components?: Array<import('types').SSRComponent | undefined>
+ *   error_components?: Array<import('svelte').Component | undefined>
  * }} opts
  */
 export async function render_response({
@@ -68,7 +60,7 @@ export async function render_response({
 }) {
 	if (state.prerendering) {
 		if (options.csp.mode === 'nonce') {
-			throw new Error('Cannot use prerendering if config.kit.csp.mode === "nonce"');
+			throw new Error('Cannot use prerendering if config.csp.mode === "nonce"');
 		}
 
 		if (options.app_template_contains_nonce) {
@@ -92,7 +84,8 @@ export async function render_response({
 	// TODO if we add a client entry point one day, we will need to include inline_styles with the entry, otherwise stylesheets will be linked even if they are below inlineStyleThreshold
 	const inline_styles = new Map();
 
-	/** @type {ReturnType<typeof options.root.render>} */
+	// TODO `svelte/server` should expose `RenderOutput`
+	/** @type {{ head: string, body: string, hashes: { script: string[] } }} */
 	let rendered;
 
 	const form_value =
@@ -143,49 +136,47 @@ export async function render_response({
 	if (page_config.ssr) {
 		/** @type {Record<string, any>} */
 		const props = {
-			stores: {
-				page: writable(null),
-				navigating: writable(null),
-				updated
-			},
-			constructors: await Promise.all(
-				branch.map(({ node }) => {
-					if (!node.component) {
-						// Can only be the leaf, layouts have a fallback component generated
-						throw new Error(`Missing +page.svelte component for route ${event.route.id}`);
-					}
-					return node.component();
-				})
-			),
-			form: form_value
-		};
-
-		if (error_components) {
-			if (error) {
-				props.error = error;
-			}
-			props.errors = error_components;
-		}
-
-		let data = {};
-
-		// props_n (instead of props[n]) makes it easy to avoid
-		// unnecessary updates for layout components
-		for (let i = 0; i < branch.length; i += 1) {
-			data = { ...data, ...branch[i].data };
-			props[`data_${i}`] = data;
-		}
-
-		props.page = {
-			error,
-			params: /** @type {Record<string, any>} */ (event.params),
-			route: event.route,
-			status,
-			url: event.url,
-			data,
+			components: [],
+			resetters: [],
 			form: form_value,
-			state: {}
+			tree: /** @type {RenderNode} */ ({}),
+			error,
+			page: {
+				error,
+				params: /** @type {Record<string, any>} */ (event.params),
+				route: event.route,
+				status,
+				url: event.url,
+				data: {},
+				form: form_value,
+				state: {}
+			}
 		};
+
+		let current_node = props.tree;
+		let data = props.page.data;
+
+		for (let i = 0; i < branch.length; i += 1) {
+			const node = branch[i];
+
+			data = { ...data, ...node.data };
+
+			// TODO this is undefined sometimes... where does the default error component come from?
+			const error = error_components?.slice(0, i + 1).findLast((x) => x);
+
+			current_node.error = error;
+			current_node.component = await node.node.component?.();
+			current_node.data = data;
+
+			if (i < branch.length - 1) {
+				current_node.child = /** @type {import('../../types.js').RenderNode} */ ({});
+				current_node = current_node.child;
+			}
+		}
+
+		props.page.data = data;
+
+		const render_state = { ...event_state, is_in_render: true };
 
 		const render_opts = {
 			context: new Map([
@@ -198,15 +189,28 @@ export async function render_response({
 			]),
 			csp: csp.script_needs_nonce ? { nonce: csp.nonce } : { hash: csp.script_needs_hash },
 			transformError: error_components
-				? /** @param {unknown} e */ async (e) => {
+				? /** @param {unknown} e */ (e) => {
 						if (isRedirect(e)) {
 							throw e;
 						}
 
-						const transformed = await handle_error_and_jsonify(event, event_state, options, e);
-						props.page.error = props.error = error = transformed;
-						props.page.status = status = get_status(e);
-						return transformed;
+						const handled = handle_error_and_jsonify(event, render_state, options, e);
+
+						// TODO 4.0 make this an async function and await `handled`
+						if (handled instanceof Promise) {
+							return handled.then((e) => {
+								error = e;
+								props.page.error = error;
+								props.page.status = status = error.status;
+								return error;
+							});
+						}
+
+						error = handled;
+						props.page.error = error;
+						props.page.status = status = error.status;
+
+						return error;
 					}
 				: undefined
 		};
@@ -232,53 +236,27 @@ export async function render_response({
 				};
 			}
 
-			const state = { ...event_state, is_in_render: true };
-
-			rendered = await with_request_store({ event, state }, async () => {
-				// use relative paths during rendering, so that the resulting HTML is as
-				// portable as possible, but reset afterwards
-				if (paths.relative) paths.override({ base, assets });
-
-				const maybe_promise = options.root.render(props, render_opts);
+			rendered = await with_request_store({ event, state: render_state }, async () => {
 				// We have to invoke .then eagerly here in order to kick off rendering: it's only starting on access,
 				// and `await maybe_promise` would eagerly access the .then property but call its function only after a tick, which is too late
 				// for the paths.reset() below and for any eager getRequestEvent() calls during rendering without AsyncLocalStorage available.
-				const rendered =
-					options.async && 'then' in maybe_promise
-						? /** @type {ReturnType<typeof options.root.render> & Promise<any>} */ (
-								maybe_promise
-							).then((r) => r)
-						: maybe_promise;
+				const rendered = render(Root, { ...render_opts, props });
 
-				// TODO 3.0 remove options.async
-				if (options.async) {
-					// we reset this synchronously, rather than after async rendering is complete,
-					// to avoid cross-talk between requests. This is a breaking change for
-					// anyone who opts into async SSR, since `base` and `assets` will no
-					// longer be relative to the current pathname.
-					// TODO 3.0 remove `base` and `assets` in favour of `resolve(...)` and `asset(...)`
-					paths.reset();
-				}
-
-				const { head, html, css, hashes } = /** @type {ReturnType<typeof options.root.render>} */ (
-					options.async ? await rendered : rendered
-				);
+				const { head, body, hashes } = await rendered;
 
 				if (hashes) {
 					csp.add_script_hashes(hashes.script);
 				}
 
-				return { head, html, css, hashes };
+				return { head, body, hashes };
 			});
 		} finally {
 			if (DEV) {
 				globalThis.fetch = fetch;
 			}
-
-			paths.reset(); // just in case `options.root.render(...)` failed
 		}
 	} else {
-		rendered = { head: '', html: '', css: { code: '', map: null }, hashes: { script: [] } };
+		rendered = { head: '', body: '', hashes: { script: [] } };
 	}
 
 	for (const { node } of branch) {
@@ -299,7 +277,7 @@ export async function render_response({
 	}
 
 	const head = new Head(rendered.head);
-	let body = rendered.html;
+	let body = rendered.body;
 
 	/** @param {string} path */
 	const prefixed = (path) => {
@@ -326,6 +304,19 @@ export async function render_response({
 		head.add_style(style, attributes);
 	}
 
+	/**
+	 * see the `output.linkHeaderPreload` option for details on why we have multiple options here
+	 * @param {string} path
+	 * @param {string[]} attributes
+	 */
+	const add_preload = (path, attributes) => {
+		if (options.link_header_preload && !state.prerendering) {
+			link_headers.add(`<${encodeURI(path)}>; ${attributes.join('; ')}; nopush`);
+		} else {
+			head.add_link_tag(path, attributes);
+		}
+	};
+
 	for (const dep of stylesheets) {
 		const path = prefixed(dep);
 
@@ -350,18 +341,7 @@ export async function render_response({
 		if (resolve_opts.preload({ type: 'font', path })) {
 			const ext = dep.slice(dep.lastIndexOf('.') + 1);
 
-			if (options.link_header_preload && !state.prerendering) {
-				link_headers.add(
-					`<${encodeURI(path)}>; rel="preload"; as="font"; type="font/${ext}"; crossorigin; nopush`
-				);
-			} else {
-				head.add_link_tag(path, [
-					'rel="preload"',
-					'as="font"',
-					`type="font/${ext}"`,
-					'crossorigin'
-				]);
-			}
+			add_preload(path, ['rel="preload"', 'as="font"', `type="font/${ext}"`, 'crossorigin']);
 		}
 	}
 
@@ -390,23 +370,12 @@ export async function render_response({
 		}
 
 		if (!client.inline) {
-			const included_modulepreloads = Array.from(modulepreloads, (dep) => prefixed(dep)).filter(
-				(path) => resolve_opts.preload({ type: 'js', path })
-			);
+			for (const dep of modulepreloads) {
+				const path = prefixed(dep);
 
-			/** @type {(path: string) => void} */
-			let add_preload;
-
-			// see the kit.output.preloadStrategy option for details on why we have multiple options here
-			if (options.link_header_preload && !state.prerendering) {
-				add_preload = (path) =>
-					link_headers.add(`<${encodeURI(path)}>; rel="modulepreload"; nopush`);
-			} else {
-				add_preload = (path) => head.add_link_tag(path, ['rel="modulepreload"']);
-			}
-
-			for (const path of included_modulepreloads) {
-				add_preload(path);
+				if (resolve_opts.preload({ type: 'js', path })) {
+					add_preload(path, ['rel="modulepreload"']);
+				}
 			}
 		}
 
@@ -422,7 +391,7 @@ export async function render_response({
 
 		const blocks = [];
 
-		const properties = [`base: ${base_expression}`];
+		const properties = [`base: ${base_expression}`, `version: ${s(__SVELTEKIT_APP_VERSION__)}`];
 
 		if (paths.assets) {
 			properties.push(`assets: ${s(paths.assets)}`);
@@ -445,7 +414,9 @@ export async function render_response({
 				if (client.inline) {
 					app_declaration = `const app = ${global}.app.app;`;
 				} else if (client.app) {
-					app_declaration = `const app = await import(${s(prefixed(client.app))});`;
+					app_declaration = `const kit = await import(${s(prefixed(client.start))});
+							kit.init(${global});
+							const app = await import(${s(prefixed(client.app))});`;
 				} else {
 					app_declaration = `const { app } = await import(${s(prefixed(client.start))});`;
 				}
@@ -506,7 +477,7 @@ export async function render_response({
 				`error: ${serialized.error}`
 			];
 
-			if (status !== 200) {
+			if (status !== 200 && !error) {
 				hydrate.push(`status: ${status}`);
 			}
 
@@ -539,10 +510,9 @@ export async function render_response({
 
 					${serialized_data}${global}.app.start(${args.join(', ')});`
 			: client.app
-				? `Promise.all([
-						import(${s(prefixed(client.start))}),
-						import(${s(prefixed(client.app))})
-					]).then(([kit, app]) => {
+				? `import(${s(prefixed(client.start))}).then(async (kit) => {
+						kit.init(${global});
+						const app = await import(${s(prefixed(client.app))});
 						${serialized_data}kit.start(app, ${args.join(', ')});
 					});`
 				: `import(${s(prefixed(client.start))}).then((app) => {
@@ -560,12 +530,9 @@ export async function render_response({
 		}
 
 		if (options.service_worker) {
-			let opts = __SVELTEKIT_DEV__ ? ", { type: 'module' }" : '';
+			let opts = ", { type: 'module' }";
 			if (options.service_worker_options != null) {
-				const service_worker_options = { ...options.service_worker_options };
-				if (__SVELTEKIT_DEV__) {
-					service_worker_options.type = 'module';
-				}
+				const service_worker_options = { ...options.service_worker_options, type: 'module' };
 				opts = `, ${s(service_worker_options)}`;
 			}
 

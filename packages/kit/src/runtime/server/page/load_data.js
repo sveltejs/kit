@@ -377,7 +377,7 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 						}
 
 						void push_fetched(base64_encode(result), true);
-					})();
+					})().catch(noop); // prevent unhandled rejection potentially crashing the process
 
 					return (teed_body = b);
 				}
@@ -465,7 +465,7 @@ export function create_universal_fetch(event, state, fetched, csr, resolve_opts)
 					const included = resolve_opts.filterSerializedResponseHeaders(lower, value);
 					if (!included) {
 						throw new Error(
-							`Failed to get response header "${lower}" — it must be included by the \`filterSerializedResponseHeaders\` option: https://svelte.dev/docs/kit/hooks#Server-hooks-handle (at ${event.route.id})`
+							`Failed to get response header "${lower}" — it must be included by the \`filterSerializedResponseHeaders\` option: https://svelte.dev/docs/kit/hooks#handle (at ${event.route.id})`
 						);
 					}
 				}

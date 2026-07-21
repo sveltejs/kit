@@ -76,7 +76,7 @@ test.describe('Load', () => {
 		expect(await page.textContent('h1')).toBe('layout loads: 5');
 		expect(await page.textContent('h2')).toBe('x: b: 3');
 
-		await page.click('button:has-text("invalidate all")');
+		await page.click('button:has-text("refresh all")');
 		await page.waitForFunction('window.invalidated');
 		expect(await page.textContent('h1')).toBe('layout loads: 6');
 		expect(await page.textContent('h2')).toBe('x: b: 4');
@@ -412,7 +412,8 @@ test.describe('SPA mode / no SSR', () => {
 	test('cannot use browser-only global on page because of ssr config in +page.js', async ({
 		page
 	}) => {
-		await page.goto('/no-ssr/ssr-page-config/layout/overwrite');
+		// the Vite error overlay that appears prevents body.started from being added
+		await page.goto('/no-ssr/ssr-page-config/layout/overwrite', { wait_for_started: false });
 		await expect(page.locator('p')).toHaveText(
 			'This is your custom error page saying: "document is not defined (500 Internal Error)"'
 		);
@@ -421,88 +422,6 @@ test.describe('SPA mode / no SSR', () => {
 	test('afterNavigate is only called once during start', async ({ page }) => {
 		await page.goto('/no-ssr/after-navigate');
 		await expect(page.locator('p')).toHaveText('enter 1');
-	});
-});
-
-// TODO SvelteKit 3: remove these tests
-test.describe('$app/stores', () => {
-	test('can use $app/stores from anywhere on client', async ({ page }) => {
-		await page.goto('/store/client-access');
-		await expect(page.locator('h1')).toHaveText('undefined');
-		await page.locator('button').click();
-		await expect(page.locator('h1')).toHaveText('/store/client-access');
-	});
-
-	test('$page.data does not update if data is unchanged', async ({ page, app }) => {
-		await page.goto('/store/data/store-update/a');
-		await app.goto('/store/data/store-update/b');
-		await expect(page.locator('p')).toHaveText('$page.data was updated 0 time(s)');
-	});
-
-	test('$page.data does update if keys did not change but data did', async ({ page, app }) => {
-		await page.goto('/store/data/store-update/same-keys/same');
-		await app.goto('/store/data/store-update/same-keys');
-		await expect(page.locator('p')).toHaveText('$page.data was updated 1 time(s)');
-	});
-
-	test('$page.data does update if keys did not change but data did (2)', async ({ page, app }) => {
-		await page.goto('/store/data/store-update/same-keys/same-deep/nested');
-		await app.goto('/store/data/store-update/same-keys');
-		await expect(page.locator('p')).toHaveText('$page.data was updated 1 time(s)');
-	});
-
-	test('page subscribers are notified when invalidate is called', async ({ page }) => {
-		await page.goto('/store/subscribe');
-		await expect(page.locator('p')).toHaveText('1');
-		await page.locator('button', { hasText: 'invalidate' }).click();
-		await expect(page.locator('p')).toHaveText('2');
-		await page.locator('button', { hasText: 'invalidate' }).click();
-		await expect(page.locator('p')).toHaveText('3');
-	});
-
-	test('page subscribers are notified when replaceState is called', async ({ page }) => {
-		await page.goto('/store/subscribe');
-		await expect(page.locator('p')).toHaveText('1');
-		await page.locator('button', { hasText: 'replaceState' }).click();
-		await expect(page.locator('p')).toHaveText('2');
-		await page.locator('button', { hasText: 'replaceState' }).click();
-		await expect(page.locator('p')).toHaveText('3');
-	});
-
-	test('page subscribers are notified when pushState is called', async ({ page }) => {
-		await page.goto('/store/subscribe');
-		await expect(page.locator('p')).toHaveText('1');
-		await page.locator('button', { hasText: 'pushState' }).click();
-		await expect(page.locator('p')).toHaveText('2');
-		await page.locator('button', { hasText: 'pushState' }).click();
-		await expect(page.locator('p')).toHaveText('3');
-	});
-
-	test('page subscribers are notified when goto is called', async ({ page }) => {
-		await page.goto('/store/subscribe');
-		await expect(page.locator('p')).toHaveText('1');
-		await page.locator('button', { hasText: 'goto' }).click();
-		await expect(page.locator('p')).toHaveText('2');
-		await page.locator('button', { hasText: 'goto' }).click();
-		await expect(page.locator('p')).toHaveText('3');
-	});
-
-	test('page subscribers are notified when applyAction is called', async ({ page }) => {
-		await page.goto('/store/subscribe');
-		await expect(page.locator('p')).toHaveText('1');
-		await page.locator('button', { hasText: 'applyAction' }).click();
-		await expect(page.locator('p')).toHaveText('2');
-		await page.locator('button', { hasText: 'applyAction' }).click();
-		await expect(page.locator('p')).toHaveText('3');
-	});
-
-	test('page subscribers are notified only once after popstate', async ({ page }) => {
-		await page.goto('/store/subscribe');
-		await expect(page.locator('p')).toHaveText('1');
-		await page.locator('button', { hasText: 'pushState' }).click();
-		await expect(page.locator('p')).toHaveText('2');
-		await page.goBack();
-		await expect(page.locator('p')).toHaveText('3');
 	});
 });
 
@@ -611,19 +530,21 @@ test.describe('Invalidation', () => {
 		request,
 		baseURL
 	}) => {
-		const res = await request.post(baseURL + '/load/invalidation/forced/reset-states');
+		const res = await request.post(baseURL + '/load/invalidation/forced/reset-states', {
+			headers: { origin: 'https://trusted.example.com' }
+		});
 		expect(res.ok()).toBe(true);
 
 		await page.goto('/load/invalidation/forced');
 		expect(await page.textContent('h1')).toBe('a: 0, b: 0');
 
-		await page.click('button.invalidateall');
+		await page.click('button.refreshall');
 		await page.evaluate(
 			() => /** @type {Window & typeof globalThis & { promise: Promise<void> }} */ (window).promise
 		);
 		expect(await page.textContent('h1')).toBe('a: 1, b: 1');
 
-		await page.click('button.invalidateall');
+		await page.click('button.refreshall');
 		await page.evaluate(
 			() => /** @type {Window & typeof globalThis & { promise: Promise<void> }} */ (window).promise
 		);
@@ -635,7 +556,9 @@ test.describe('Invalidation', () => {
 		request,
 		baseURL
 	}) => {
-		const res = await request.post(baseURL + '/load/invalidation/forced-goto/reset-states');
+		const res = await request.post(baseURL + '/load/invalidation/forced-goto/reset-states', {
+			headers: { origin: 'https://trusted.example.com' }
+		});
 		expect(res.ok()).toBe(true);
 		await page.goto('/load/invalidation/forced-goto');
 		expect(await page.textContent('h1')).toBe('a: 0, b: 0');
@@ -671,7 +594,7 @@ test.describe('Invalidation', () => {
 		await expect(btn).toHaveText('2');
 	});
 
-	test('invalidateAll persists through redirects', async ({ page }) => {
+	test('refreshAll persists through redirects', async ({ page }) => {
 		await page.goto('/load/invalidation/multiple/redirect');
 		await page.locator('button.redirect').click();
 		await expect(page.locator('p.redirect-state')).toHaveText('Redirect state: done');
@@ -876,7 +799,7 @@ test.describe('Invalidation', () => {
 		await expect(page.getByText('updated')).toBeVisible();
 	});
 
-	test('goto after invalidation does not reset state', async ({ page }) => {
+	test('goto after invalidate does not reset state', async ({ page }) => {
 		await page.goto('/load/invalidation/invalidate-then-goto');
 		const layout = await page.textContent('p.layout');
 		const _page = await page.textContent('p.page');
@@ -900,6 +823,31 @@ test.describe('Invalidation', () => {
 		const next_page_2 = await page.textContent('p.page');
 		expect(next_layout_2).toBe(next_layout_1);
 		expect(next_page_2).not.toBe(next_page_1);
+	});
+
+	test('refreshAll finishing after navigation does not apply stale data', async ({
+		page,
+		clicknav
+	}) => {
+		await page.goto('/load/invalidation/during-navigation/a');
+		await expect(page.locator('[data-testid="scores"]')).toHaveText('1 - 1');
+
+		await clicknav('[data-testid="nav-b-refresh"]');
+		await expect(page.locator('[data-testid="scores"]')).toHaveText('2 - 2');
+
+		await page.waitForTimeout(400);
+		await expect(page.locator('[data-testid="scores"]')).toHaveText('2 - 2');
+	});
+
+	test('refreshAll finishing before navigation ends does not prevent navigation', async ({
+		page,
+		clicknav
+	}) => {
+		await page.goto('/load/invalidation/during-navigation/b');
+		await expect(page.locator('[data-testid="scores"]')).toHaveText('2 - 2');
+
+		await clicknav('[data-testid="nav-a-refresh"]');
+		await expect(page.locator('[data-testid="scores"]')).toHaveText('1 - 1');
 	});
 });
 
@@ -1418,6 +1366,16 @@ test.describe('Streaming', () => {
 		expect(page.locator('p.fail')).toBeVisible();
 	});
 
+	test('Catches rejected streamed server data after another load delays data serialization', async ({
+		page
+	}) => {
+		await page.goto('/streaming');
+		await page.click('[href="/streaming/server/delayed-rejection"]');
+
+		await expect(page.locator('p.eager')).toHaveText('eager');
+		await expect(page.locator('p.fail')).toHaveText('delayed rejection (500 Internal Error)');
+	});
+
 	// TODO `vite preview` buffers responses, causing these tests to fail
 	if (process.env.DEV) {
 		test('Works for universal load functions (direct hit)', async ({ page }) => {
@@ -1531,6 +1489,17 @@ test.describe('goto', () => {
 		await expect(page.locator('p')).toHaveText(message);
 	});
 
+	test('goto fails with a URL that does not resolve to a route', async ({ page }) => {
+		await page.goto('/goto/no-such-route');
+		await page.click('button');
+
+		await expect(page.locator('p')).toContainText(
+			process.env.DEV
+				? 'Cannot use `goto` with a URL that does not resolve to a route within the app'
+				: 'goto: invalid URL'
+		);
+	});
+
 	test.describe('navigation and redirects should be consistent between web native and sveltekit based', () => {
 		const testEntryPage = '/goto/testentry';
 		const testStartPage = '/goto/teststart';
@@ -1562,11 +1531,11 @@ test.describe('goto', () => {
 			test.describe('without replace', () => {
 				const expectGoback = makeExpectGoback(nonexistentPage, testStartPage);
 
-				test('app.goto', async ({ app, page }) => {
-					// navigating to nonexistent page causes playwright's page context to be destroyed
-					// thus this call throws an error unless caught
-					await app.goto(nonexistentPage, { replaceState: false }).catch(() => {});
-					await expectGoback(page);
+				test('app.goto rejects and does not navigate', async ({ app, page }) => {
+					// `goto` is only for routes within the app; navigating to a
+					// non-existent route rejects and leaves the URL unchanged
+					await expect(app.goto(nonexistentPage, { replaceState: false })).rejects.toBeTruthy();
+					await expect(page).toHaveURL(testStartPage);
 				});
 
 				test('location.assign', async ({ page }) => {
@@ -1580,11 +1549,11 @@ test.describe('goto', () => {
 			test.describe('with replace', () => {
 				const expectGoback = makeExpectGoback(nonexistentPage, testEntryPage);
 
-				test('app.goto', async ({ app, page }) => {
-					// navigating to nonexistent page causes playwright's page context to be destroyed
-					// thus this call throws an error unless caught
-					await app.goto(nonexistentPage, { replaceState: true }).catch(() => {});
-					await expectGoback(page);
+				test('app.goto rejects and does not navigate', async ({ app, page }) => {
+					// `goto` is only for routes within the app; navigating to a
+					// non-existent route rejects and leaves the URL unchanged
+					await expect(app.goto(nonexistentPage, { replaceState: true })).rejects.toBeTruthy();
+					await expect(page).toHaveURL(testStartPage);
 				});
 
 				test('location.replace', async ({ page }) => {
@@ -1724,7 +1693,7 @@ test.describe('Shallow routing', () => {
 		await page.locator('[data-id="two"]').click();
 		expect(page.url()).toBe(`${baseURL}/shallow-routing/push-state/a`);
 
-		await page.locator('[data-id="invalidate"]').click();
+		await page.locator('[data-id="refresh"]').click();
 		await expect(page.locator('h1')).toHaveText('parent');
 		await expect(page.locator('span')).not.toHaveText(now);
 	});
@@ -1786,6 +1755,51 @@ test.describe('Shallow routing', () => {
 		await expect(page.locator('p')).toHaveText('count: 0');
 		await page.locator('button').click();
 		await expect(page.locator('p')).toHaveText('count: 1');
+	});
+
+	test('refreshAll reruns load functions without resetting page.state', async ({ page }) => {
+		await page.goto('/shallow-routing/refresh');
+		await expect(page.locator('p')).toHaveText('active: false');
+
+		const now = /** @type {string} */ (await page.locator('span').textContent());
+
+		await page.locator('[data-id="activate"]').click();
+		await expect(page.locator('p')).toHaveText('active: true');
+
+		await page.locator('[data-id="refreshAll"]').click();
+		await page.evaluate(() => window.promise);
+		await expect(page.locator('p')).toHaveText('active: true');
+		await expect(page.locator('span')).not.toHaveText(now);
+	});
+
+	test('invalidate resets page.state', async ({ page }) => {
+		await page.goto('/shallow-routing/refresh');
+		await expect(page.locator('p')).toHaveText('active: false');
+
+		const now = /** @type {string} */ (await page.locator('span').textContent());
+
+		await page.locator('[data-id="activate"]').click();
+		await expect(page.locator('p')).toHaveText('active: true');
+
+		await page.locator('[data-id="invalidate"]').click();
+		await page.evaluate(() => window.promise);
+		await expect(page.locator('p')).toHaveText('active: false');
+		await expect(page.locator('span')).not.toHaveText(now);
+	});
+
+	test('invalidateAll resets page.state', async ({ page }) => {
+		await page.goto('/shallow-routing/refresh');
+		await expect(page.locator('p')).toHaveText('active: false');
+
+		const now = /** @type {string} */ (await page.locator('span').textContent());
+
+		await page.locator('[data-id="activate"]').click();
+		await expect(page.locator('p')).toHaveText('active: true');
+
+		await page.locator('[data-id="invalidateAll"]').click();
+		await page.evaluate(() => window.promise);
+		await expect(page.locator('p')).toHaveText('active: false');
+		await expect(page.locator('span')).not.toHaveText(now);
 	});
 });
 

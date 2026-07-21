@@ -3,10 +3,10 @@
 
 	const { params } = $props();
 
-	const message = get_message(params.test_name);
+	const message = $derived(get_message(params.test_name));
 
-	const scoped = set_message.for(`scoped:${params.test_name}`);
-	const enhanced = set_message.for(`enhanced:${params.test_name}`);
+	const scoped = $derived(set_message.for(`scoped:${params.test_name}`));
+	const enhanced = $derived(set_message.for(`enhanced:${params.test_name}`));
 
 	let submit_result = $state('none');
 	let imperative_submit_result = $state('none');
@@ -34,6 +34,7 @@
 
 <p>set_message.input.message: {set_message.fields.message.value()}</p>
 <p>set_message.pending: {set_message.pending}</p>
+<p>set_message.submitted: {set_message.submitted}</p>
 <p>set_message.result: {set_message.result}</p>
 
 <hr />

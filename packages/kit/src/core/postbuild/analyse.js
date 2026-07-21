@@ -1,4 +1,3 @@
-/** @import { Adapter } from '@sveltejs/kit' */
 /** @import { RemoteChunk } from 'types' */
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -39,15 +38,7 @@ async function analyse({
 	const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
 
 	const vite_config = await load_vite_config(vite_config_file);
-
 	const config = extract_svelte_config(vite_config).kit;
-
-	// TODO i think this can just be config.adapter?
-	/** @type {Adapter | undefined} */
-	const adapter = vite_config.plugins.find(
-		(plugin) => plugin.name === 'vite-plugin-sveltekit-adapter'
-	)?.api?.adapter;
-
 	const server_root = join(config.outDir, 'output');
 
 	/** @type {import('types').ServerInternalModule} */
@@ -131,7 +122,7 @@ async function analyse({
 				server_manifest,
 				tracked_features
 			)) {
-				check_feature(route.id, route_config, feature, adapter);
+				check_feature(route.id, route_config, feature, config.adapter);
 			}
 		}
 

@@ -8,7 +8,7 @@ import * as devalue from 'devalue';
 import { createReadStream, createWriteStream, existsSync, statSync } from 'node:fs';
 import { extname, resolve, join, dirname, relative } from 'node:path';
 import { pipeline } from 'node:stream';
-import { promisify, styleText } from 'node:util';
+import { promisify } from 'node:util';
 import zlib from 'node:zlib';
 import { copy, rimraf, mkdirp } from '../../utils/filesystem.js';
 import { posixify } from '../../utils/os.js';
@@ -18,7 +18,7 @@ import generate_fallback from '../postbuild/fallback.js';
 import { write } from '../sync/utils.js';
 import { list_files } from '../utils.js';
 import { find_server_assets } from '../generate_manifest/find_server_assets.js';
-import { reserved } from '../env.js';
+import { create_exported_declarations } from '../env.js';
 import { handle_issues, validate } from '../../exports/internal/env.js';
 
 const pipe = promisify(pipeline);
@@ -137,16 +137,13 @@ export function create_builder({
 				manifest_path,
 				env,
 				out_dir: config.kit.outDir,
-				origin: config.kit.prerender.origin,
+				origin: config.kit.paths.origin || 'http://sveltekit-prerender',
 				assets: config.kit.files.assets
 			});
 
 			if (existsSync(dest)) {
-				console.log(
-					styleText(
-						['bold', 'yellow'],
-						`Overwriting ${dest} with fallback page. Consider using a different name for the fallback.`
-					)
+				log.warn(
+					`\nOverwriting ${dest} with fallback page. Consider using a different name for the fallback.\n`
 				);
 			}
 
@@ -176,12 +173,6 @@ export function create_builder({
 			const payload = devalue.uneval(values);
 
 			write(`${dest}/env.js`, `export const env=${payload}`);
-
-			// service workers aren't ESM yet, so they load dynamic public env vars at runtime
-			// via `importScripts` of this module rather than importing `env.js`
-			if (build_data.service_worker) {
-				write(`${dest}/env.script.js`, `globalThis.__sveltekit_sw={env:${payload}}`);
-			}
 		},
 
 		generateManifest({ relativePath, routes: subset }) {
@@ -311,53 +302,25 @@ async function compress_file(file, format = 'gz') {
  * - Imports `exports` from the entrypoint (dynamically, if `tla` is true)
  * - Re-exports `exports` from the entrypoint
  *
- * `default` receives special treatment: It will be imported as `default` and exported with `export default`.
- *
  * @param {{ instrumentation: string; start: string; exports: string[] }} opts
  * @returns {string}
  */
 function create_instrumentation_facade({ instrumentation, start, exports }) {
 	const import_instrumentation = `import './${instrumentation}';`;
 
-	let alias_index = 0;
-	const aliases = new Map();
+	const { namespace, declarations, reexports } = create_exported_declarations(
+		exports,
+		(name, ns) => `${ns}.${name}`,
+		'__mod'
+	);
 
-	for (const name of exports.filter((name) => reserved.has(name))) {
-		/*
-		 * you can do evil things like `export { c as class }`.
-		 * in order to import these, you need to alias them, and then un-alias them when re-exporting
-		 * this map will allow us to generate the following:
-		 * import { class as _1 } from 'entrypoint';
-		 * export { _1 as class };
-		 */
-		let alias = `_${alias_index++}`;
-		while (exports.includes(alias)) {
-			alias = `_${alias_index++}`;
-		}
-
-		aliases.set(name, alias);
-	}
-
-	const import_statements = [];
-	const export_statements = [];
-
-	for (const name of exports) {
-		const alias = aliases.get(name);
-		if (alias) {
-			import_statements.push(`${name}: ${alias}`);
-			export_statements.push(`${alias} as ${name}`);
-		} else {
-			import_statements.push(`${name}`);
-			export_statements.push(`${name}`);
-		}
-	}
-
-	const entrypoint_facade = [
-		`const { ${import_statements.join(', ')} } = await import('./${start}');`,
-		export_statements.length > 0 ? `export { ${export_statements.join(', ')} };` : ''
+	const parts = [
+		`const ${namespace} = await import('./${start}');`,
+		declarations.join('\n'),
+		reexports.length > 0 ? `export { ${reexports.join(', ')} };` : ''
 	]
 		.filter(Boolean)
 		.join('\n');
 
-	return `${import_instrumentation}\n${entrypoint_facade}`;
+	return `${import_instrumentation}\n${parts}`;
 }

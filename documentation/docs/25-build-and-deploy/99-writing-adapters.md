@@ -39,6 +39,11 @@ export default function (options) {
 				// Return `true` if this adapter supports loading `instrumentation.server.js`.
 				// Return `false if it can't, or throw a descriptive error.
 			}
+		},
+		vite: {
+			plugins: [
+				// add plugins here to integrate with Vite
+			]
 		}
 	};
 
@@ -46,7 +51,7 @@ export default function (options) {
 }
 ```
 
-Of these, `name` and `adapt` are required. `emulate` and `supports` are optional.
+Of these, `name` and `adapt` are required. `emulate`, `vite.plugins` and `supports` are optional.
 
 Within the `adapt` method, there are a number of things that an adapter should do:
 

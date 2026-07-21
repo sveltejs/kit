@@ -1,4 +1,4 @@
-import { SvelteComponent } from 'svelte';
+import { Component } from 'svelte';
 import {
 	Config,
 	ServerLoad,
@@ -17,7 +17,6 @@ import {
 	RequestEvent,
 	SSRManifest,
 	Emulator,
-	Adapter,
 	ServerInit,
 	ClientInit,
 	Transport,
@@ -48,7 +47,7 @@ export interface ServerInternalModule {
 	set_prerendering(): void;
 	set_read_implementation(implementation: (path: string) => ReadableStream): void;
 	set_version(version: string): void;
-	set_fix_stack_trace(fix_stack_trace: (error: unknown) => string): void;
+	set_fix_stack_trace(fix_stack_trace: (error: Error) => void): void;
 	get_hooks: () => Promise<Record<string, any>>;
 }
 
@@ -114,7 +113,7 @@ export interface BuildData {
 }
 
 export interface CSRPageNode {
-	component: typeof SvelteComponent;
+	component: Component;
 	universal: {
 		load?: Load;
 		trailingSlash?: TrailingSlash;
@@ -196,7 +195,7 @@ export class InternalServer extends Server {
 }
 
 export interface ManifestData {
-	/** Static files from `kit.config.files.assets`. */
+	/** Static files from `config.files.assets`. */
 	assets: Asset[];
 	hooks: {
 		client: string | null;
@@ -205,7 +204,7 @@ export interface ManifestData {
 	};
 	nodes: PageNode[];
 	routes: RouteData[];
-	matchers: Record<string, string>;
+	params: string | null;
 }
 
 export interface RemoteChunk {
@@ -248,7 +247,7 @@ export type RecursiveRequired<T> = {
 	// Recursive implementation of TypeScript's Required utility type.
 	// Will recursively continue until it reaches a primitive or Function
 	// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
-	[K in keyof T]-?: Extract<T[K], Function> extends never // If it does not have a Function type
+	[K in keyof T]-?: Extract<T[K], Function | (`${string}:` & {})> extends never // If it does not have a Function type
 		? RecursiveRequired<T[K]> // recursively continue through.
 		: T[K]; // Use the exact type for everything else
 };
@@ -295,6 +294,7 @@ export interface RouteData {
 
 export type ServerRedirectNode = {
 	type: 'redirect';
+	status: number;
 	location: string;
 };
 
@@ -310,7 +310,7 @@ export type RemoteFunctionDataNode = {
 	/** value */
 	v?: any;
 	/** error */
-	e?: [status: number, error: any];
+	e?: App.Error;
 };
 
 export type RemoteFunctionData = {
@@ -391,14 +391,10 @@ export interface ServerDataSkippedNode {
 export interface ServerErrorNode {
 	type: 'error';
 	error: App.Error;
-	/**
-	 * Only set for HttpErrors.
-	 */
-	status?: number;
 }
 
 export interface ServerMetadataRoute {
-	config: any;
+	config: Record<string, any>;
 	api: {
 		methods: Array<HttpMethod | '*'>;
 	};
@@ -421,27 +417,7 @@ export interface ServerMetadata {
 	remotes: Map<string, Map<string, { type: RemoteInternals['type']; dynamic: boolean }>>;
 }
 
-export interface SSRComponent {
-	default: {
-		render(
-			props: Record<string, any>,
-			opts: { context: Map<any, any>; csp?: { nonce?: string; hash?: boolean } }
-		): {
-			html: string;
-			head: string;
-			css: {
-				code: string;
-				map: any; // TODO
-			};
-			/** Until we require all Svelte versions that support hashes, this might not be defined */
-			hashes?: {
-				script: Array<`sha256-${string}`>;
-			};
-		};
-	};
-}
-
-export type SSRComponentLoader = () => Promise<SSRComponent>;
+export type SSRComponentLoader = () => Promise<Component>;
 
 export interface UniversalNode {
 	/** Is `null` in case static analysis succeeds but the node is ssr=false */
@@ -450,7 +426,7 @@ export interface UniversalNode {
 	ssr?: boolean;
 	csr?: boolean;
 	trailingSlash?: TrailingSlash;
-	config?: any;
+	config?: Record<string, any>;
 	entries?: PrerenderEntryGenerator;
 }
 
@@ -461,7 +437,7 @@ export interface ServerNode {
 	csr?: boolean;
 	trailingSlash?: TrailingSlash;
 	actions?: Actions;
-	config?: any;
+	config?: Record<string, any>;
 	entries?: PrerenderEntryGenerator;
 }
 
@@ -480,7 +456,10 @@ export interface SSRNode {
 
 	/**
 	 * During development, all styles are inlined for the page to avoid FOUC.
-	 * But in production, this stores styles that are below the inline threshold
+	 * But in production, this stores styles that are below the inline threshold.
+	 * It returns a Promise during development because Vite needs to load the
+	 * modules on demand. But in production, the contents have been precomputed
+	 * during the build, so it can return synchronously.
 	 */
 	inline_styles?(): MaybePromise<
 		Record<string, string | ((assets: string, base: string) => string)>
@@ -497,7 +476,6 @@ export type SSRNodeLoader = () => Promise<SSRNode>;
 
 export interface SSROptions {
 	app_template_contains_nonce: boolean;
-	async: boolean;
 	csp: ValidatedConfig['kit']['csp'];
 	csrf_check_origin: boolean;
 	csrf_trusted_origins: string[];
@@ -505,10 +483,9 @@ export interface SSROptions {
 	hash_routing: boolean;
 	hooks: ServerHooks;
 	link_header_preload: ValidatedConfig['kit']['output']['linkHeaderPreload'];
-	root: SSRComponent['default'];
+	paths_origin: string | undefined;
 	service_worker: boolean;
 	service_worker_options: RegistrationOptions;
-	server_error_boundaries: boolean;
 	templates: {
 		app(values: {
 			head: string;
@@ -534,7 +511,7 @@ export type RemotePrerenderInputsGenerator<Input = any> = () => MaybePromise<Inp
 export type SSREndpoint = Partial<Record<HttpMethod, RequestHandler>> & {
 	prerender?: PrerenderOption;
 	trailingSlash?: TrailingSlash;
-	config?: any;
+	config?: Record<string, any>;
 	entries?: PrerenderEntryGenerator;
 	fallback?: RequestHandler;
 };
@@ -583,7 +560,7 @@ export interface SSRState {
 	 */
 	before_handle?: (
 		event: RequestEvent,
-		config: any,
+		config: Record<string, any>,
 		prerender: PrerenderOption,
 		handle: () => Promise<Response>
 	) => Promise<Response>;
@@ -601,13 +578,12 @@ export interface Uses {
 	search_params: Set<string>;
 }
 
-export type ValidatedConfig = Config & {
+export type ValidatedConfig = Omit<Config, 'kit'> & {
 	kit: ValidatedKitConfig;
 	extensions: string[];
 };
 
-// TODO: remove the omit in 4.0
-export type ValidatedKitConfig = Omit<RecursiveRequired<KitConfig>, 'adapter'>;
+export type ValidatedKitConfig = RecursiveRequired<KitConfig>;
 
 export type BinaryFormMeta = {
 	remote_refreshes?: string[];
@@ -770,6 +746,24 @@ export interface RequestState {
 export interface RequestStore {
 	event: RequestEvent;
 	state: RequestState;
+}
+
+/** Type of the `__sveltekit_abc123` object in the init `<script>` */
+export interface SvelteKitPayload {
+	/** The application version */
+	version: string;
+	/** The basepath, usually relative to the current page */
+	base: string;
+	/** Path to externally-hosted assets */
+	assets?: string;
+	/** Public environment variables */
+	env?: Record<string, string>;
+	/** Serialized data from query/form/command functions */
+	data?: RemoteFunctionData;
+	/** Create a placeholder promise */
+	defer?: (id: number) => Promise<any>;
+	/** Resolve a placeholder promise */
+	resolve?: (data: { id: number; data: any; error: any }) => void;
 }
 
 export * from '../exports/index.js';

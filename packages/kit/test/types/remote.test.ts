@@ -2,6 +2,8 @@ import { query, prerender, command, form, requested } from '$app/server';
 import { StandardSchemaV1 } from '@standard-schema/spec';
 import {
 	RemoteForm,
+	RemoteFormEnhanceCallback,
+	RemoteFormEnhanceInstance,
 	RemoteFormFields,
 	RemoteFormInput,
 	RemoteLiveQueryFunction,
@@ -353,7 +355,22 @@ function form_tests() {
 
 	f.result?.success === true;
 
+	const submit: RemoteFormEnhanceCallback<{ input: string }, { success: boolean }> = async (
+		form
+	) => {
+		const result: { success: boolean } | undefined = form.result;
+		result;
+		// @ts-expect-error
+		form.enhance(() => {});
+		const x: boolean = await form.submit();
+		x;
+	};
+
+	f.enhance(submit);
+
 	f.enhance(async (form) => {
+		const result: RemoteFormEnhanceInstance<{ input: string }, { success: boolean }> = form;
+		result;
 		const x: boolean = await form.submit();
 		x;
 		const y: boolean = await form.submit().updates(
@@ -408,7 +425,7 @@ function form_tests() {
 
 	// all schema properties optional
 	const f3 = form(
-		null as any as StandardSchemaV1<{ a?: string; nested?: { prop?: string } }>,
+		null as any as StandardSchemaV1<{ a?: string; b?: number; nested?: { prop?: string } }>,
 		(data, issue) => {
 			data.a === '';
 			data.nested?.prop === '';
@@ -435,6 +452,9 @@ function form_tests() {
 	f3.fields.as('text');
 	f3.fields.a.issues();
 	f3.fields.a.value();
+	f3.fields.a.as('text', undefined);
+	// @ts-expect-error
+	f3.fields.b.as('number', '');
 	f3.fields.nested.prop.issues();
 	f3.fields.nested.prop.value();
 	// @ts-expect-error

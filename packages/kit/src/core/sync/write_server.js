@@ -24,15 +24,13 @@ const server_template = ({
 	has_service_worker,
 	template
 }) => `
-import root from '../root.js';
 import { set_building, set_prerendering } from '$app/env/internal';
 import { set_assets } from '$app/paths/internal/server';
-import { set_manifest, set_read_implementation } from '__sveltekit/server';
+import { set_fix_stack_trace, set_manifest, set_read_implementation } from '__sveltekit/server';
 import error from '../shared/error-template.js';
 
 export const options = {
 	app_template_contains_nonce: ${template.includes('%sveltekit.nonce%')},
-	async: ${s(!!config.compilerOptions?.experimental?.async)},
 	csp: ${s(config.kit.csp)},
 	csrf_check_origin: ${s(!config.kit.csrf.trustedOrigins.includes('*'))},
 	csrf_trusted_origins: ${s(config.kit.csrf.trustedOrigins)},
@@ -40,10 +38,9 @@ export const options = {
 	hash_routing: ${s(config.kit.router.type === 'hash')},
 	hooks: null, // added lazily, via \`get_hooks\`
 	link_header_preload: ${s(config.kit.output.linkHeaderPreload)},
-	root,
+	paths_origin: ${s(config.kit.paths.origin)},
 	service_worker: ${has_service_worker},
 	service_worker_options: ${config.kit.serviceWorker.register ? s(config.kit.serviceWorker.options) : 'null'},
-	server_error_boundaries: ${s(!!config.kit.experimental.handleRenderingErrors)},
 	templates: {
 		app: ({ head, body, assets, nonce, env }) => ${s(template)
 			.replace('%sveltekit.head%', '" + head + "')
@@ -83,7 +80,7 @@ export async function get_hooks() {
 	};
 }
 
-export { set_assets, set_building, set_manifest, set_prerendering, set_read_implementation };
+export { set_assets, set_building, set_fix_stack_trace, set_manifest, set_prerendering, set_read_implementation };
 `;
 
 // TODO need to re-run this whenever src/app.html or src/error.html are

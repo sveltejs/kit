@@ -34,18 +34,12 @@ test('build /basepath/service-worker.js', async ({ baseURL, request }) => {
 
 	const pathname = '/basepath/service-worker.js';
 
-	// stubs for explicit environment variables in service workers
-	globalThis.importScripts = () => {};
-	globalThis.__sveltekit_sw = {
-		env: {}
-	};
-
 	fn(self, {
 		href: baseURL + pathname,
 		pathname
 	});
 
-	expect(self.base).toBe('/basepath');
+	expect(self.base).toBe('/basepath/');
 	expect(self.build?.[0]).toMatch(/\/basepath\/_app\/immutable\/bundle\.[\w-]+\.js/);
 	expect(self.image_src).toMatch(/\/basepath\/_app\/immutable\/assets\/image\.[\w-]+\.jpg/);
 });

@@ -8,7 +8,7 @@ The most important aspect of SEO is to create high-quality content that is widel
 
 ### SSR
 
-While search engines have got better in recent years at indexing content that was rendered with client-side JavaScript, server-side rendered content is indexed more frequently and reliably. SvelteKit employs SSR by default, and while you can disable it in [`handle`](hooks#Server-hooks-handle), you should leave it on unless you have a good reason not to.
+While search engines have got better in recent years at indexing content that was rendered with client-side JavaScript, server-side rendered content is indexed more frequently and reliably. SvelteKit employs SSR by default, and while you can disable it in [`handle`](hooks#handle), you should leave it on unless you have a good reason not to.
 
 > [!NOTE] SvelteKit's rendering is highly configurable and you can implement [dynamic rendering](https://developers.google.com/search/docs/advanced/javascript/dynamic-rendering) if necessary. It's not generally recommended, since SSR has other benefits beyond SEO.
 
@@ -62,17 +62,19 @@ export async function GET() {
 An unfortunate reality of modern web development is that it is sometimes necessary to create an [Accelerated Mobile Pages (AMP)](https://amp.dev/) version of your site. In SvelteKit this can be done by setting the [`inlineStyleThreshold`](configuration#inlineStyleThreshold) option...
 
 ```js
-/// file: svelte.config.js
-/** @type {import('@sveltejs/kit').Config} */
-const config = {
-	kit: {
-		// since <link rel="stylesheet"> isn't
-		// allowed, inline all styles
-		inlineStyleThreshold: Infinity
-	}
-};
+/// file: vite.config.js
+import { defineConfig } from 'vite';
+import { sveltekit } from '@sveltejs/kit/vite';
 
-export default config;
+export default defineConfig({
+	plugins: [
+		sveltekit({
+			// since <link rel="stylesheet"> isn't
+			// allowed, inline all styles
+			inlineStyleThreshold: Infinity
+		})
+	]
+});
 ```
 
 ...disabling `csr` in your root `+layout.js`/`+layout.server.js`...

@@ -56,7 +56,7 @@ By default, SvelteKit's page template sets the default language of the document 
 <html lang="de">
 ```
 
-If your content is available in multiple languages, you should set the `lang` attribute based on the language of the current page. You can do this with SvelteKit's [handle hook](hooks#Server-hooks-handle):
+If your content is available in multiple languages, you should set the `lang` attribute based on the language of the current page. You can do this with SvelteKit's [handle hook](hooks#handle):
 
 ```html
 /// file: src/app.html

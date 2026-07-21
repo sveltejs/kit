@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { styleText } from 'node:util';
 import { posixify } from '../../utils/os.js';
+import { read_package_imports, normalize_import_value } from '../../utils/imports.js';
 import { write_if_changed } from './utils.js';
 
 /**
@@ -62,11 +63,10 @@ export function get_tsconfig(kit, cwd) {
 		'env.d.ts',
 		'non-ambient.d.ts',
 		'./types/**/$types.d.ts',
-		config_relative('svelte.config.js'),
 		config_relative('vite.config.js'),
 		config_relative('vite.config.ts')
 	]);
-	const src_includes = [kit.files.routes, kit.files.lib, kit.files.src].filter((dir) => {
+	const src_includes = [kit.files.routes, kit.files.src].filter((dir) => {
 		const relative = path.relative(kit.files.src, dir);
 		return !relative || relative.startsWith('..');
 	});
@@ -175,7 +175,7 @@ function validate_user_config(cwd, out, config) {
 				styleText(
 					['bold', 'yellow'],
 					`You have specified a baseUrl and/or paths in your ${config.kind} which interferes with SvelteKit's auto-generated tsconfig.json. ` +
-						'Remove it to avoid problems with intellisense. For path aliases, use `kit.alias` instead: https://svelte.dev/docs/kit/configuration#alias'
+						'Remove it to avoid problems with intellisense. For path aliases, use `config.alias` instead: https://svelte.dev/docs/kit/configuration#alias'
 				)
 			);
 		}
@@ -199,7 +199,7 @@ const alias_regex = /^(.+?)(\/\*)?$/;
 const value_regex = /^(.*?)((\/\*)|(\.\w+))?$/;
 
 /**
- * Generates tsconfig path aliases from kit's aliases.
+ * Generates tsconfig path aliases from kit's aliases and the package.json `imports` field.
  * Related to vite alias creation.
  *
  * @param {import('types').ValidatedKitConfig} config
@@ -216,8 +216,17 @@ function get_tsconfig_paths(config, cwd) {
 	};
 
 	const alias = { ...config.alias };
-	if (fs.existsSync(project_relative(cwd, config.files.lib))) {
-		alias['$lib'] = project_relative(cwd, config.files.lib);
+
+	// Add all `#`-prefixed imports from package.json as path aliases
+	const imports = read_package_imports(cwd);
+	if (imports) {
+		for (const [key, raw_value] of Object.entries(imports)) {
+			if (!key.startsWith('#')) continue;
+			const value = normalize_import_value(raw_value);
+			if (value) {
+				alias[key] = value;
+			}
+		}
 	}
 
 	/** @type {Record<string, string[]>} */

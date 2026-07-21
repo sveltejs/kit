@@ -13,8 +13,7 @@ import {
 } from './shared.js';
 import { noop } from '../../../../utils/functions.js';
 import { SharedIterator } from '../../../../utils/shared-iterator.js';
-import { handle_error_and_jsonify } from '../../../server/utils.js';
-import { HttpError, SvelteKitError } from '@sveltejs/kit/internal';
+import { handle_error_and_jsonify } from '../../../server/errors.js';
 
 /**
  * Creates a remote query. When called from the browser, the function will be invoked on the server via a `fetch` call.
@@ -347,13 +346,11 @@ function batch(validate_or_fn, maybe_fn) {
 								const data = get_result(arg, i);
 								return { type: 'result', data };
 							} catch (error) {
+								const transformed = await handle_error_and_jsonify(event, state, options, error);
+
 								return {
 									type: 'error',
-									error: await handle_error_and_jsonify(event, state, options, error),
-									status:
-										error instanceof HttpError || error instanceof SvelteKitError
-											? error.status
-											: 500
+									error: transformed
 								};
 							}
 						})
@@ -419,8 +416,11 @@ export function refresh(event, state, internals, payload, fn) {
 
 	const key = create_remote_key(internals.id, payload);
 
-	// `fn` is stored, not invoked. It is called lazily at the end of the request
-	// by `collect_remote_data`.
+	// `fn` is stored rather than invoked eagerly. The query is run at the end of
+	// the request (in `collect_remote_data`), so that it observes any state
+	// mutations that happen after `refresh()` is called. If the developer re-awaits
+	// the query before the request finishes, the cache entry created by that await
+	// is reused instead of re-running the query.
 	(state.remote.explicit ??= new Map()).set(key, {
 		internals,
 		fn

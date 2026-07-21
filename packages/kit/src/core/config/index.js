@@ -6,9 +6,16 @@ import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import * as url from 'node:url';
-import { options, kit_options, kit_experimental_options } from './options.js';
+import { styleText } from 'node:util';
+import {
+	validate_kit_options,
+	kit_options,
+	kit_experimental_options,
+	validate_svelte_options
+} from './options.js';
 import { resolve_entry } from '../../utils/filesystem.js';
 import { import_peer } from '../../utils/import.js';
+import { stackless } from '../../utils/error.js';
 
 /**
  * Splits the config passed to the `sveltekit` Vite plugin into the options that
@@ -128,98 +135,99 @@ export async function load_vite_config(config) {
  */
 export function extract_svelte_config(vite_config) {
 	const plugin = vite_config.plugins.find((p) => p.name === 'vite-plugin-sveltekit-setup');
-	return plugin?.api.options ?? process_config({});
+	return plugin?.api.options ?? process_config(validate_config({}), vite_config.root);
+}
+
+/**
+ * @param {ValidatedConfig} config
+ * @param {string} cwd
+ * @returns {ValidatedConfig}
+ */
+export function process_config(config, cwd) {
+	if (
+		config.kit.csp?.directives?.['require-trusted-types-for']?.includes('script') &&
+		config.kit.serviceWorker.register &&
+		resolve_entry(path.resolve(cwd, config.kit.files.serviceWorker)) &&
+		!config.kit.csp?.directives?.['trusted-types']?.includes('sveltekit-trusted-url')
+	) {
+		throw new Error(
+			"The `csp.directives['trusted-types']` option must include 'sveltekit-trusted-url' when `serviceWorker.register` is true"
+		);
+	}
+
+	config.kit.outDir = path.resolve(cwd, config.kit.outDir);
+	config.kit.env.dir = path.resolve(cwd, config.kit.env.dir);
+
+	for (const key in config.kit.files) {
+		if (key === 'hooks') {
+			config.kit.files.hooks.client = path.resolve(cwd, config.kit.files.hooks.client);
+			config.kit.files.hooks.server = path.resolve(cwd, config.kit.files.hooks.server);
+			config.kit.files.hooks.universal = path.resolve(cwd, config.kit.files.hooks.universal);
+		} else if (key !== 'lib' /* TODO remove when we remove the `lib` option altogether */) {
+			// @ts-expect-error
+			config.kit.files[key] = path.resolve(cwd, config.kit.files[key]);
+		}
+	}
+
+	return config;
 }
 
 /**
  * @param {Config} config
  * @returns {ValidatedConfig}
  */
-export function process_config(config, { cwd = process.cwd(), source = 'svelte.config.js' } = {}) {
+export function validate_config(config) {
 	try {
-		const validated = validate_config(config, cwd);
+		if (typeof config !== 'object') {
+			throw new Error(
+				'The SvelteKit options from the Vite config must be an object. See https://svelte.dev/docs/kit/configuration'
+			);
+		}
 
-		validated.kit.outDir = path.resolve(cwd, validated.kit.outDir);
+		const validated = /** @type {ValidatedConfig} */ ({
+			...validate_svelte_options(config, 'config'),
+			kit: validate_kit_options(config.kit, 'config')
+		});
+		const files = validated.kit.files;
 
-		for (const key in validated.kit.files) {
-			if (key === 'hooks') {
-				validated.kit.files.hooks.client = path.resolve(cwd, validated.kit.files.hooks.client);
-				validated.kit.files.hooks.server = path.resolve(cwd, validated.kit.files.hooks.server);
-				validated.kit.files.hooks.universal = path.resolve(
-					cwd,
-					validated.kit.files.hooks.universal
+		files.hooks.client ??= path.join(files.src, 'hooks.client');
+		files.hooks.server ??= path.join(files.src, 'hooks.server');
+		files.hooks.universal ??= path.join(files.src, 'hooks');
+		files.params ??= path.join(files.src, 'params');
+		files.routes ??= path.join(files.src, 'routes');
+		files.serviceWorker ??= path.join(files.src, 'service-worker');
+		files.appTemplate ??= path.join(files.src, 'app.html');
+		files.errorTemplate ??= path.join(files.src, 'error.html');
+
+		if (validated.kit.router.resolution === 'server') {
+			if (validated.kit.router.type === 'hash') {
+				throw new Error(
+					"The `router.resolution` option cannot be 'server' if `router.type` is 'hash'"
 				);
-			} else {
-				// @ts-expect-error
-				validated.kit.files[key] = path.resolve(cwd, validated.kit.files[key]);
 			}
+			if (validated.kit.output.bundleStrategy !== 'split') {
+				throw new Error(
+					"The `router.resolution` option cannot be 'server' if `output.bundleStrategy` is 'inline' or 'single'"
+				);
+			}
+		}
+
+		if (
+			validated.kit.csp?.directives?.['require-trusted-types-for']?.includes('script') &&
+			!validated.kit.csp?.directives?.['trusted-types']?.includes('svelte-trusted-html')
+		) {
+			throw new Error(
+				"The `csp.directives['trusted-types']` option must include 'svelte-trusted-html'"
+			);
 		}
 
 		return validated;
 	} catch (e) {
 		const error = /** @type {Error} */ (e);
 
-		// redact the stack trace — it's not helpful to users
-		error.stack = `Error loading ${source}: ${error.message}\n`;
-		throw error;
+		// Print a nicer version of the error to the console
+		console.log(styleText(['bold', 'red'], `\n${error.message}\n`));
+
+		throw stackless('Failed to load SvelteKit options from Vite config');
 	}
-}
-
-/**
- * @param {Config} config
- * @param {string} [cwd]
- * @returns {ValidatedConfig}
- */
-export function validate_config(config, cwd = process.cwd()) {
-	if (typeof config !== 'object') {
-		throw new Error(
-			'The Svelte config file must have a configuration object as its default export. See https://svelte.dev/docs/kit/configuration'
-		);
-	}
-
-	/** @type {ValidatedConfig} */
-	const validated = options(config, 'config');
-	const files = validated.kit.files;
-
-	files.hooks.client ??= path.join(files.src, 'hooks.client');
-	files.hooks.server ??= path.join(files.src, 'hooks.server');
-	files.hooks.universal ??= path.join(files.src, 'hooks');
-	files.lib ??= path.join(files.src, 'lib');
-	files.params ??= path.join(files.src, 'params');
-	files.routes ??= path.join(files.src, 'routes');
-	files.serviceWorker ??= path.join(files.src, 'service-worker');
-	files.appTemplate ??= path.join(files.src, 'app.html');
-	files.errorTemplate ??= path.join(files.src, 'error.html');
-
-	if (validated.kit.router.resolution === 'server') {
-		if (validated.kit.router.type === 'hash') {
-			throw new Error(
-				"The `router.resolution` option cannot be 'server' if `router.type` is 'hash'"
-			);
-		}
-		if (validated.kit.output.bundleStrategy !== 'split') {
-			throw new Error(
-				"The `router.resolution` option cannot be 'server' if `output.bundleStrategy` is 'inline' or 'single'"
-			);
-		}
-	}
-
-	if (validated.kit.csp?.directives?.['require-trusted-types-for']?.includes('script')) {
-		if (!validated.kit.csp?.directives?.['trusted-types']?.includes('svelte-trusted-html')) {
-			throw new Error(
-				"The `csp.directives['trusted-types']` option must include 'svelte-trusted-html'"
-			);
-		}
-		if (
-			validated.kit.serviceWorker?.register &&
-			resolve_entry(path.resolve(cwd, validated.kit.files.serviceWorker)) &&
-			!validated.kit.csp?.directives?.['trusted-types']?.includes('sveltekit-trusted-url')
-		) {
-			throw new Error(
-				"The `csp.directives['trusted-types']` option must include 'sveltekit-trusted-url' when `serviceWorker.register` is true"
-			);
-		}
-	}
-
-	return validated;
 }
