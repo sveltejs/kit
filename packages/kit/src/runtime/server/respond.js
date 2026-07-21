@@ -50,6 +50,7 @@ const default_filter = () => false;
 /** @type {import('types').RequiredResolveOptions['preload']} */
 const default_preload = ({ type }) => type === 'js' || type === 'css';
 
+// `Sec-Fetch-Dest` values for subresource requests that can never render an HTML error page
 const non_html_fetch_destinations = new Set([
 	'audio',
 	'audioworklet',

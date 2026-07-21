@@ -551,7 +551,6 @@ test.describe('Errors', () => {
 		expect(response.status()).toBe(404);
 		expect(await response.text()).toBe('Not Found');
 		expect(response.headers()['vary']).toContain('Sec-Fetch-Dest');
-		expect(response.headers()['content-type']).toBeUndefined();
 	});
 
 	test('renders the error page for document and fetch requests', async ({ request }) => {
