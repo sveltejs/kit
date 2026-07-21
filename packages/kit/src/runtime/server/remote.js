@@ -371,11 +371,20 @@ export async function collect_remote_data(data, event, state, options) {
 	/** @type {Promise<any>[]} */
 	const promises = [];
 
+	// Keys handled by the explicit pass. Invoking a query's `fn` there can, as a
+	// side effect, register the same query in `state.remote.implicit` (via
+	// `get_response`), so we skip those keys in the implicit pass below to avoid
+	// processing them twice.
+	/** @type {Set<string>} */
+	const explicit_keys = new Set();
+
 	if (state.remote.explicit) {
 		for (const [remote_key, { internals, fn }] of state.remote.explicit) {
 			// there were explicit refreshes/reconnects (via `refresh()`/`set()`/`reconnect()`),
 			// so the client should apply these single-flight updates instead of calling `invalidateAll()`
 			data.r = true;
+
+			explicit_keys.add(remote_key);
 
 			const type = /** @type {'p' | 'q' | 'l'} */ (
 				internals.type === 'query_live' ? 'l' : internals.type[0]
@@ -384,18 +393,21 @@ export async function collect_remote_data(data, event, state, options) {
 			// `fn` is invoked here, at the end of the request. If the query was
 			// already read earlier (repopulating the cache) `fn` reuses that cached
 			// promise and does no additional work; otherwise it runs the query now.
-			await fn().then(
-				(v) => {
-					((data[type] ??= {})[remote_key] ??= {}).v = v;
-				},
-				async (e) => {
-					if (e instanceof Redirect) {
-						// already handled elsewhere
-						return;
-					}
+			// All entries are kicked off before awaiting so refreshes run concurrently.
+			promises.push(
+				fn().then(
+					(v) => {
+						((data[type] ??= {})[remote_key] ??= {}).v = v;
+					},
+					async (e) => {
+						if (e instanceof Redirect) {
+							// already handled elsewhere
+							return;
+						}
 
-					((data[type] ??= {})[remote_key] ??= {}).e = await convert_error(e);
-				}
+						((data[type] ??= {})[remote_key] ??= {}).e = await convert_error(e);
+					}
+				)
 			);
 		}
 	}
@@ -412,6 +424,10 @@ export async function collect_remote_data(data, event, state, options) {
 			for (const key in record) {
 				// form outputs are registered under the client-side action id directly
 				const remote_key = internals.type === 'form' ? key : create_remote_key(internals.id, key);
+
+				// already serialized by the explicit pass (which always awaits and wins),
+				// so don't reprocess it here with the implicit "still loading" heuristic
+				if (explicit_keys.has(remote_key)) continue;
 
 				const type = /** @type {'p' | 'q' | 'l' | 'f'} */ (
 					internals.type === 'query_live' ? 'l' : internals.type[0]
