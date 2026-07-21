@@ -8,10 +8,7 @@ import { SCHEME } from '../../../utils/url.js';
 const { set_fix_stack_trace } = await import(/* @vite-ignore */ '__sveltekit/server');
 set_fix_stack_trace(fix_stack_trace);
 
-/** @type {typeof import('../../../runtime/app/paths/internal/server.js')} */
-const { set_assets } = await import(
-	/* @vite-ignore */ import.meta.resolve('../../../runtime/app/paths/internal/server.js')
-);
+const { set_assets } = await import(/* @vite-ignore */ '$app/paths/internal/server');
 set_assets(__SVELTEKIT_PATHS_ASSETS__);
 
 const async_local_storage = new AsyncLocalStorage();
@@ -36,7 +33,7 @@ globalThis.fetch = (info, init) => {
 	return fetch(info, init);
 };
 
-const emulator = await get_svelte_config().kit.adapter?.emulate?.();
+const emulator = await get_svelte_config()?.kit.adapter?.emulate?.();
 
 export class Server extends KitServer {
 	/** @type {import('types').InternalServer['respond']} */
