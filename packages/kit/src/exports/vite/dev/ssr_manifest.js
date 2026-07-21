@@ -146,7 +146,10 @@ export const manifest = {
 			return Object.fromEntries(
 				get_remotes().map((remote) => [
 					remote.hash,
-					() => import(/* @vite-ignore */ remote.file).then((module) => ({ default: module }))
+					() =>
+						import(/* @vite-ignore */ join(__SVELTEKIT_ROOT__, remote.file)).then((module) => ({
+							default: module
+						}))
 				])
 			);
 		},
