@@ -83,6 +83,38 @@ test.describe('remote function mutations', () => {
 		expect(request_count).toBe(0);
 	});
 
+	test('query.set from within a query during SSR inlines the set values', async ({ page }) => {
+		await page.goto('/remote/query-set-inline');
+
+		// start counting after navigation, so we only observe requests triggered by
+		// creating the `get_thing(id)` resources — they should reuse the inlined values
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		await page.click('#show');
+		await expect(page.locator('#thing-1')).toHaveText('one');
+		await expect(page.locator('#thing-2')).toHaveText('two');
+		await expect(page.locator('#thing-3')).toHaveText('three');
+		await page.waitForTimeout(100); // allow all requests to finish (there shouldn't be any)
+		expect(request_count).toBe(0);
+	});
+
+	test('query.refresh from within a query during SSR inlines the refreshed values', async ({
+		page
+	}) => {
+		await page.goto('/remote/query-set-inline/refresh');
+
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		await page.click('#show');
+		await expect(page.locator('#thing-1')).toHaveText('one');
+		await expect(page.locator('#thing-2')).toHaveText('two');
+		await expect(page.locator('#thing-3')).toHaveText('three');
+		await page.waitForTimeout(100); // allow all requests to finish (there shouldn't be any)
+		expect(request_count).toBe(0);
+	});
+
 	test('hydrated query errors are reused', async ({ page }) => {
 		let request_count = 0;
 		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));

@@ -407,27 +407,23 @@ export function refresh(event, state, internals, payload, fn) {
 		return;
 	}
 
-	if (!event.isRemoteRequest) {
-		// or this is a no-JS form submission
+	if (!event.isRemoteRequest && state.is_in_remote_form_or_command) {
+		// ...or this is a no-JS (native) form submission, where the page re-renders
+		// anyway so there's no live client cache to apply a single-flight update to.
+		//
+		// SSR render also has `isRemoteRequest === false`, but the flag is `false`
+		// there, so it falls through — we *do* want to serialize the value during
+		// render so the hydrating client can reuse it without a network call.
 		return;
 	}
 
 	const key = create_remote_key(internals.id, payload);
 
-	// `fn()` is invoked eagerly here, which starts running the query immediately.
-	// The resulting promise is normally awaited (and its rejection handled) in
-	// `collect_remote_data`, but some code paths (e.g. a command throwing a
-	// non-redirect error) never reach that point. Attach a no-op `catch` to the
-	// promise so a rejection is always considered handled and can never become an
-	// unhandled promise rejection (which crashes the process on modern Node).
-	// We still store the original promise so `collect_remote_data` can serialize
-	// either its value or its error as before.
-	const promise = fn();
-	promise.catch(() => {});
-
+	// `fn` is stored, not invoked. It is called lazily at the end of the request
+	// by `collect_remote_data`.
 	(state.remote.explicit ??= new Map()).set(key, {
 		internals,
-		promise
+		fn
 	});
 }
 
