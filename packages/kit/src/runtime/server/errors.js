@@ -17,7 +17,7 @@ export async function handle_fatal_error(event, state, options, error) {
 	const body = await handle_error_and_jsonify(event, state, options, error);
 	const status = body.status;
 
-	// sec-fetch-dest would be nicer, but it's absent for old browsers, non-browser clients and plain HTTP
+	// sec-fetch-dest would be nicer, but non-browser clients and plain HTTP hosts don't send it
 	const type = negotiate(event.request.headers.get('accept') || 'text/html', [
 		'application/json',
 		'text/html'
