@@ -17,7 +17,7 @@ export async function handle_fatal_error(event, state, options, error) {
 	const body = await handle_error_and_jsonify(event, state, options, error);
 	const status = body.status;
 
-	// ideally we'd use sec-fetch-dest instead, but Safari — quelle surprise — doesn't support it
+	// Accept remains: sec-fetch is absent for old browsers, non-browser clients and HTTP off localhost
 	const type = negotiate(event.request.headers.get('accept') || 'text/html', [
 		'application/json',
 		'text/html'
