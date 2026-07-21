@@ -4,6 +4,7 @@ import { styleText } from 'node:util';
 import { posixify } from '../../utils/os.js';
 import { read_package_imports, normalize_import_value } from '../../utils/imports.js';
 import { write_if_changed } from './utils.js';
+import { exclude } from 'rolldown/filter';
 
 /**
  * @param {string} cwd
@@ -38,77 +39,31 @@ function remove_trailing_slashstar(file) {
 /**
  * Generates the tsconfig that the user's tsconfig inherits from.
  * @param {import('types').ValidatedKitConfig} kit
- * @param {string} cwd
+ * @param {string} root
  */
-export function write_tsconfig(kit, cwd) {
-	const out = path.join(kit.outDir, 'tsconfig.json');
+export function write_tsconfig(kit, root) {
+	const out = path.join(root, 'node_modules/$app/tsconfig/tsconfig.json');
 
-	const user_config = load_user_tsconfig(cwd);
-	if (user_config) validate_user_config(cwd, out, user_config);
+	const user_config = load_user_tsconfig(root);
+	if (user_config) validate_user_config(user_config);
 
-	write_if_changed(out, JSON.stringify(get_tsconfig(kit, cwd), null, '\t'));
+	write_if_changed(out, JSON.stringify(get_tsconfig(out, kit, root), null, '\t'));
 }
 
 /**
  * Generates the tsconfig that the user's tsconfig inherits from.
+ * @param {string} out The file we're writing to
  * @param {import('types').ValidatedKitConfig} kit
  * @param {string} cwd
  */
-export function get_tsconfig(kit, cwd) {
+export function get_tsconfig(out, kit, cwd) {
 	/** @param {string} file */
-	const config_relative = (file) => posixify(path.relative(kit.outDir, file));
-
-	const include = new Set([
-		'ambient.d.ts', // careful: changing this name would be a breaking change, because it's referenced in the service-workers documentation
-		'env.d.ts',
-		'non-ambient.d.ts',
-		'./types/**/$types.d.ts',
-		config_relative('vite.config.js'),
-		config_relative('vite.config.ts')
-	]);
-	const src_includes = [kit.files.routes, kit.files.src].filter((dir) => {
-		const relative = path.relative(kit.files.src, dir);
-		return !relative || relative.startsWith('..');
-	});
-	for (const dir of src_includes) {
-		include.add(config_relative(`${dir}/**/*.js`));
-		include.add(config_relative(`${dir}/**/*.ts`));
-		include.add(config_relative(`${dir}/**/*.svelte`));
-	}
-
-	// Test folder is a special case - we advocate putting tests in a top-level test folder
-	// and it's not configurable (should we make it?)
-	const test_folder = project_relative(cwd, 'test');
-	include.add(config_relative(`${test_folder}/**/*.js`));
-	include.add(config_relative(`${test_folder}/**/*.ts`));
-	include.add(config_relative(`${test_folder}/**/*.svelte`));
-	const tests_folder = project_relative(cwd, 'tests');
-	include.add(config_relative(`${tests_folder}/**/*.js`));
-	include.add(config_relative(`${tests_folder}/**/*.ts`));
-	include.add(config_relative(`${tests_folder}/**/*.svelte`));
-
-	const exclude = [config_relative('node_modules/**')];
-	// Add service worker to exclude list so that worker types references in it don't spill over into the rest of the app
-	// (i.e. suddenly ServiceWorkerGlobalScope would be available throughout the app, and some types might even clash)
-	if (path.extname(kit.files.serviceWorker)) {
-		exclude.push(config_relative(kit.files.serviceWorker));
-	} else {
-		exclude.push(config_relative(`${kit.files.serviceWorker}.js`));
-		exclude.push(config_relative(`${kit.files.serviceWorker}/**/*.js`));
-		exclude.push(config_relative(`${kit.files.serviceWorker}.ts`));
-		exclude.push(config_relative(`${kit.files.serviceWorker}/**/*.ts`));
-		exclude.push(config_relative(`${kit.files.serviceWorker}.d.ts`));
-		exclude.push(config_relative(`${kit.files.serviceWorker}/**/*.d.ts`));
-	}
+	const config_relative = (file) => posixify(path.relative(path.dirname(out), file));
 
 	const config = {
 		compilerOptions: {
-			// generated options
-			paths: {
-				...get_tsconfig_paths(kit, cwd),
-				'$app/types': ['./types/index.d.ts']
-			},
-			rootDirs: [config_relative('.'), './types'],
+			rootDirs: [config_relative('.'), config_relative(`${kit.outDir}/types`)],
+			types: ['$app/types'],
 
 			// essential options
 			// svelte-preprocess cannot figure out whether you have a value or a type, so tell TypeScript
@@ -119,6 +74,12 @@ export function get_tsconfig(kit, cwd) {
 			// Vite compiles modules one at a time
 			isolatedModules: true,
 
+			// recommended options
+			allowJs: true,
+			checkJs: true,
+			forceConsistentCasingInFileNames: true,
+			resolveJsonModule: true,
+
 			// This is required for svelte-package to work as expected
 			// Can be overwritten
 			lib: ['esnext', 'DOM', 'DOM.Iterable'],
@@ -127,8 +88,13 @@ export function get_tsconfig(kit, cwd) {
 			noEmit: true, // prevent tsconfig error "overwriting input files" - Vite handles the build and ignores this
 			target: 'esnext'
 		},
-		include: [...include],
-		exclude
+		exclude: [
+			config_relative(
+				path.extname(kit.files.serviceWorker)
+					? kit.files.serviceWorker
+					: `${kit.files.serviceWorker}/**`
+			)
+		]
 	};
 
 	return kit.typescript.config(config) ?? config;
@@ -150,18 +116,16 @@ function load_user_tsconfig(cwd) {
 }
 
 /**
- * @param {string} cwd
- * @param {string} out
  * @param {{ kind: string, options: any }} config
  */
-function validate_user_config(cwd, out, config) {
+function validate_user_config(config) {
 	// we need to check that the user's tsconfig extends the framework config
 	const extend = config.options.extends;
 	const extends_framework_config =
 		typeof extend === 'string'
-			? path.resolve(cwd, extend) === out
+			? extend === '$app/tsconfig'
 			: Array.isArray(extend)
-				? extend.some((e) => path.resolve(cwd, e) === out)
+				? extend.includes('$app/tsconfig')
 				: false;
 
 	const options = config.options.compilerOptions || {};
@@ -180,16 +144,13 @@ function validate_user_config(cwd, out, config) {
 			);
 		}
 	} else {
-		let relative = posixify(path.relative(cwd, out));
-		if (!relative.startsWith('./')) relative = './' + relative;
-
 		console.warn(
 			styleText(
 				['bold', 'yellow'],
 				`Your ${config.kind} should extend the configuration generated by SvelteKit:`
 			)
 		);
-		console.warn(`{\n  "extends": "${relative}"\n}`);
+		console.warn(`{\n  "extends": "$app/tsconfig"\n}`);
 	}
 }
 

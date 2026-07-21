@@ -37,7 +37,7 @@ export function create(config, root) {
 	write_client_manifest(config.kit, manifest_data, `${output}/client`);
 	write_server(config, output, root);
 	write_all_types(config, manifest_data, root);
-	write_non_ambient(config.kit, manifest_data);
+	write_non_ambient(config.kit, manifest_data, root);
 
 	return { manifest_data };
 }
@@ -81,13 +81,13 @@ export function all(config, root) {
 /**
  * Run sync.init and then generate all type files.
  * @param {import('types').ValidatedConfig} config
+ * @param {string} root
  */
-export function all_types(config) {
-	const cwd = process.cwd();
-	init(config, cwd);
-	const manifest_data = create_manifest_data({ config, cwd });
-	write_all_types(config, manifest_data, cwd);
-	write_non_ambient(config.kit, manifest_data);
+export function all_types(config, root) {
+	init(config, root);
+	const manifest_data = create_manifest_data({ config, cwd: root });
+	write_all_types(config, manifest_data, root);
+	write_non_ambient(config.kit, manifest_data, root);
 }
 
 /**
@@ -100,7 +100,7 @@ export function all_types(config) {
 export async function env(kit, entry, root, mode) {
 	const env_config = await load_explicit_env(kit, entry, root, mode);
 
-	write_env(kit, entry, env_config);
+	write_env(kit, entry, env_config, root);
 
 	return env_config;
 }

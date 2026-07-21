@@ -13,13 +13,16 @@ const DOCS = '// See https://svelte.dev/docs/kit/environment-variables for more 
  * @param {import('types').ValidatedKitConfig} kit
  * @param {string | null} entry
  * @param {Record<string, EnvVarConfig<any>> | null} env_config
+ * @param {string} root
  */
-export function write_env(kit, entry, env_config) {
+export function write_env(kit, entry, env_config, root) {
 	const content = [];
-	const out = path.join(kit.outDir, 'env.d.ts');
+
+	const dir = path.join(root, 'node_modules/$app/types');
+	const out = path.join(dir, 'env.d.ts');
 
 	if (entry && env_config) {
-		const relative = posixify(path.relative(kit.outDir, entry));
+		const relative = posixify(path.relative(dir, entry));
 		content.push(
 			`// This file is generated from ${relative}.\n${DOCS}`,
 			create_explicit_env_types(env_config, relative, 'private'),

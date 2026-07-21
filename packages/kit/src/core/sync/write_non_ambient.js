@@ -51,8 +51,6 @@ function get_pathnames_for_trailing_slash(pathname, route) {
 // people could use to type their own components.
 // The T generic is needed or else there's a "all declarations must have identical type parameters" error.
 const template = `
-${GENERATED_COMMENT}
-
 declare module "svelte/elements" {
 	export interface HTMLAttributes<T> {
 		'data-sveltekit-keepfocus'?: true | false | '' | undefined | null;
@@ -72,8 +70,6 @@ declare module "svelte/elements" {
 		'data-sveltekit-replacestate'?: true | false | '' | undefined | null;
 	}
 }
-
-export {};
 `;
 
 /**
@@ -256,10 +252,15 @@ function generate_app_types(manifest_data, config) {
  * Writes non-ambient declarations to the output directory
  * @param {import('types').ValidatedKitConfig} config
  * @param {import('types').ManifestData} manifest_data
+ * @param {string} root
  */
-export function write_non_ambient(config, manifest_data) {
-	const app_types = generate_app_types(manifest_data, config);
-	const content = [template, app_types].join('\n\n');
+export function write_non_ambient(config, manifest_data, root) {
+	const content = [
+		GENERATED_COMMENT,
+		`import '@sveltejs/kit';\nimport './env';`,
+		generate_app_types(manifest_data, config),
+		template.trim()
+	].join('\n\n');
 
-	write_if_changed(path.join(config.outDir, 'non-ambient.d.ts'), content);
+	write_if_changed(path.join(root, 'node_modules/$app/types/index.d.ts'), content);
 }
