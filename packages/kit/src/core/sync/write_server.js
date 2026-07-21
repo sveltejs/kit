@@ -83,10 +83,6 @@ export async function get_hooks() {
 export { set_assets, set_building, set_fix_stack_trace, set_manifest, set_prerendering, set_read_implementation };
 `;
 
-// TODO need to re-run this whenever src/app.html or src/error.html are
-// created or changed, or src/service-worker.js is created or deleted.
-// Also, need to check that updating hooks.server.js works
-
 /**
  * Write server configuration to disk
  * @param {import('types').ValidatedConfig} config
